@@ -57,7 +57,7 @@ this.TestingCrashManager = function (options) {
 this.TestingCrashManager.prototype = {
   __proto__: CrashManager.prototype,
 
-  createDummyDump: function (submitted=false, date=new Date(), hr=false) {
+  createDummyDump: function (submitted = false, date = new Date(), hr = false) {
     let uuid = Cc["@mozilla.org/uuid-generator;1"]
                 .getService(Ci.nsIUUIDGenerator)
                 .generateUUID()
@@ -89,7 +89,7 @@ this.TestingCrashManager.prototype = {
     });
   },
 
-  createIgnoredDumpFile: function (filename, submitted=false) {
+  createIgnoredDumpFile: function (filename, submitted = false) {
     let path;
     if (submitted) {
       path = OS.Path.join(this._submittedDumpsDir, filename);
@@ -104,7 +104,7 @@ this.TestingCrashManager.prototype = {
     });
   },
 
-  createEventsFile: function (filename, type, date, content, index=0) {
+  createEventsFile: function (filename, type, date, content, index = 0) {
     let path = OS.Path.join(this._eventsDirs[index], filename);
 
     let data = type + "\n" +
@@ -150,7 +150,7 @@ this.getManager = function () {
     const dirMode = OS.Constants.libc.S_IRWXU;
     let baseFile = OS.Constants.Path.profileDir;
 
-    function makeDir(create=true) {
+    function makeDir(create = true) {
       return Task.spawn(function* () {
         let path = OS.Path.join(baseFile, "dummy-dir-" + DUMMY_DIR_COUNT++);
 

@@ -36,7 +36,7 @@ function promiseNotification(aBrowser, value, expected, input) {
   return deferred.promise;
 }
 
-function* runURLBarSearchTest({valueToOpen, expectSearch, expectNotification, aWindow=window}) {
+function* runURLBarSearchTest({valueToOpen, expectSearch, expectNotification, aWindow = window}) {
   aWindow.gURLBar.value = valueToOpen;
   let expectedURI;
   if (!expectSearch) {

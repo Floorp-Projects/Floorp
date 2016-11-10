@@ -19,7 +19,7 @@ var progressParams = null;
 
 function ellipseString(aStr, doFront)
 {
-  if (aStr.length > 3 && (aStr.substr(0, 3) == "..." || aStr.substr(aStr.length-4, 3) == "..."))
+  if (aStr.length > 3 && (aStr.substr(0, 3) == "..." || aStr.substr(aStr.length - 4, 3) == "..."))
     return aStr;
 
   var fixedLen = 64;
@@ -27,7 +27,7 @@ function ellipseString(aStr, doFront)
     return aStr;
 
   if (doFront)
-    return "..." + aStr.substr(aStr.length-fixedLen, fixedLen);
+    return "..." + aStr.substr(aStr.length - fixedLen, fixedLen);
 
   return aStr.substr(0, fixedLen) + "...";
 }
@@ -121,7 +121,7 @@ function getString (stringId) {
   // Check if we've fetched this string already.
   if (!(stringId in dialog.strings)) {
     // Try to get it.
-    var elem = document.getElementById( "dialog.strings."+stringId);
+    var elem = document.getElementById( "dialog.strings." + stringId);
     try {
       if (elem && elem.childNodes && elem.childNodes[0] &&
           elem.childNodes[0].nodeValue)

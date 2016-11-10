@@ -29,7 +29,7 @@ function run_test() {
 
     PlacesUtils.bookmarks.removeItem(queryId);
 
-    do_check_eq(root.childCount, oldCount-1);
+    do_check_eq(root.childCount, oldCount - 1);
 
     root.containerOpen = false;
 }

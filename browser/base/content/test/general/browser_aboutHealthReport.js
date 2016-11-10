@@ -119,7 +119,7 @@ function test()
   });
 }
 
-function promiseNewTabLoadEvent(aUrl, aEventType="load")
+function promiseNewTabLoadEvent(aUrl, aEventType = "load")
 {
   let deferred = Promise.defer();
   let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);

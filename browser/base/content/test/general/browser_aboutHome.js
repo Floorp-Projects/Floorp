@@ -292,7 +292,7 @@ add_task(function* () {
         }
 
         if (n > 0) {
-          executeSoon(() => check(n-1));
+          executeSoon(() => check(n - 1));
         } else {
           resolve();
         }

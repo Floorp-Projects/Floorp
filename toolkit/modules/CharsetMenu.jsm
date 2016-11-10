@@ -120,7 +120,7 @@ function UpdateDetectorMenu(event) {
 var gDetectorInfoCache, gCharsetInfoCache, gPinnedInfoCache;
 
 var CharsetMenu = {
-  build: function(parent, deprecatedShowAccessKeys=true, showDetector=true) {
+  build: function(parent, deprecatedShowAccessKeys = true, showDetector = true) {
     if (!deprecatedShowAccessKeys) {
       Deprecated.warning("CharsetMenu no longer supports building a menu with no access keys.",
                          "https://bugzilla.mozilla.org/show_bug.cgi?id=1088710");
@@ -190,7 +190,7 @@ var CharsetMenu = {
     }));
   },
 
-  getCharsetInfo: function(charsets, sort=true) {
+  getCharsetInfo: function(charsets, sort = true) {
     let list = Array.from(charsets, charset => ({
       label: this._getCharsetLabel(charset),
       accesskey: this._getCharsetAccessKey(charset),

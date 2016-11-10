@@ -1619,7 +1619,7 @@ var PlacesControllerDragHelper = {
       let dragginUp = insertionPoint.itemId == unwrapped.parent &&
                       index < PlacesUtils.bookmarks.getItemIndex(unwrapped.id);
       if (index != -1 && dragginUp)
-        index+= movedCount++;
+        index += movedCount++;
 
       // If dragging over a tag container we should tag the item.
       if (insertionPoint.isTag) {

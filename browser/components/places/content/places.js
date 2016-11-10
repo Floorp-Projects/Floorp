@@ -709,12 +709,12 @@ var PlacesOrganizer = {
     ctx.save();
     ctx.fillStyle = "-moz-Dialog";
     ctx.fillRect(0, 0, width, height);
-    ctx.translate(width/2, height/2);
+    ctx.translate(width / 2, height / 2);
 
     ctx.fillStyle = "GrayText";
     ctx.mozTextStyle = "12pt sans serif";
     var len = ctx.mozMeasureText(notAvailableText);
-    ctx.translate(-len/2, 0);
+    ctx.translate(-len / 2, 0);
     ctx.mozDrawText(notAvailableText);
     ctx.restore();
   },

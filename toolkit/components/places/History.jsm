@@ -943,7 +943,7 @@ var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
  * @return (PageInfo)
  *      A PageInfo object populated with data from updateInfo.
  */
-function mergeUpdateInfoIntoPageInfo(updateInfo, pageInfo={}) {
+function mergeUpdateInfoIntoPageInfo(updateInfo, pageInfo = {}) {
   pageInfo.guid = updateInfo.guid;
   if (!pageInfo.url) {
     pageInfo.url = new URL(updateInfo.uri.spec);

@@ -59,7 +59,7 @@ const BackgroundPageThumbs = {
    *                 elapsed after the capture has progressed to the head of
    *                 the queue and started.  Defaults to 30000 (30 seconds).
    */
-  capture: function (url, options={}) {
+  capture: function (url, options = {}) {
     if (!PageThumbs._prefEnabled()) {
       if (options.onDone)
         schedule(() => options.onDone(url));
@@ -94,7 +94,7 @@ const BackgroundPageThumbs = {
    *                 capture() for description.
    * @return {Promise} A Promise that resolves when this task completes
    */
-  captureIfMissing: Task.async(function* (url, options={}) {
+  captureIfMissing: Task.async(function* (url, options = {}) {
     // The fileExistsForURL call is an optimization, potentially but unlikely
     // incorrect, and no big deal when it is.  After the capture is done, we
     // atomically test whether the file exists before writing it.

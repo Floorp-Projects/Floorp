@@ -2073,7 +2073,7 @@ UnifiedComplete.prototype = {
    *        Indicates if we should notify the AutoComplete listener about our
    *        results or not.
    */
-  finishSearch: function (notify=false) {
+  finishSearch: function (notify = false) {
     TelemetryStopwatch.cancel(TELEMETRY_1ST_RESULT, this);
     TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, this);
     // Clear state now to avoid race conditions, see below.

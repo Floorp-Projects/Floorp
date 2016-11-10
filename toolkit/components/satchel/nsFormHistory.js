@@ -430,7 +430,7 @@ FormHistory.prototype = {
         let uuid = this.uuidService.generateUUID().toString();
         let raw = ""; // A string with the low bytes set to random values
         let bytes = 0;
-        for (let i = 1; bytes < 12 ; i+= 2) {
+        for (let i = 1; bytes < 12 ; i += 2) {
             // Skip dashes
             if (uuid[i] == "-")
                 i++;

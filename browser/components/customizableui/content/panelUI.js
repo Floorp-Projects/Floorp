@@ -221,7 +221,7 @@ const PanelUI = {
    *
    * @return a Promise that resolves once the panel is ready to roll.
    */
-  ensureReady: function(aCustomizing=false) {
+  ensureReady: function(aCustomizing = false) {
     if (this._readyPromise) {
       return this._readyPromise;
     }

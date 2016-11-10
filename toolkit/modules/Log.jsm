@@ -699,7 +699,7 @@ ParameterFormatter.prototype = {
 
 function Appender(formatter) {
   this._name = "Appender";
-  this._formatter = formatter? formatter : new BasicFormatter();
+  this._formatter = formatter ? formatter : new BasicFormatter();
 }
 Appender.prototype = {
   level: Log.Level.All,
@@ -922,7 +922,7 @@ FileAppender.prototype = {
  * (as defined by formatted.length) exceeds maxSize, existing messages
  * will be discarded, and subsequent writes will be appended to a new log file.
  */
-function BoundedFileAppender(path, formatter, maxSize=2*ONE_MEGABYTE) {
+function BoundedFileAppender(path, formatter, maxSize = 2 * ONE_MEGABYTE) {
   FileAppender.call(this, path, formatter);
   this._name = "BoundedFileAppender";
   this._size = 0;

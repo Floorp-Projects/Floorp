@@ -52,7 +52,7 @@ function isLast(containerId, defaultPlacements, id) {
      "Widget " + id + " should be in " + containerId + " in other window.");
 }
 
-function getLastVisibleNodeInToolbar(containerId, win=window) {
+function getLastVisibleNodeInToolbar(containerId, win = window) {
   let container = win.document.getElementById(containerId).customizationTarget;
   let rv = container.lastChild;
   while (rv && (rv.getAttribute('hidden') == 'true' || (rv.firstChild && rv.firstChild.getAttribute('hidden') == 'true'))) {

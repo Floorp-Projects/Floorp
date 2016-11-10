@@ -660,7 +660,7 @@ function setUp(aNoEngine) {
   });
 }
 
-function msg(type, data=null) {
+function msg(type, data = null) {
   gMsgMan.sendAsyncMessage(TEST_MSG, {
     type: type,
     data: data,

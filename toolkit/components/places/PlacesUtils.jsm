@@ -519,7 +519,7 @@ this.PlacesUtils = {
    * @throws if the object contains invalid data.
    * @note any unknown properties are pass-through.
    */
-  validateItemProperties(validators, props, behavior={}) {
+  validateItemProperties(validators, props, behavior = {}) {
     if (!props)
       throw new Error("Input should be a valid object");
     // Make a shallow copy of `props` to avoid mutating the original object
@@ -923,11 +923,11 @@ this.PlacesUtils = {
         // but drag and drop of files from the shell has parts.length = 1
         if (parts.length != 1 && parts.length % 2)
           break;
-        for (let i = 0; i < parts.length; i=i+2) {
+        for (let i = 0; i < parts.length; i = i + 2) {
           let uriString = parts[i];
           let titleString = "";
-          if (parts.length > i+1)
-            titleString = parts[i+1];
+          if (parts.length > i + 1)
+            titleString = parts[i + 1];
           else {
             // for drag and drop of files, try to use the leafName as title
             try {
@@ -2145,7 +2145,7 @@ var Keywords = {
    * @resolves to an object in the form: { keyword, url, postData },
    *           or null if a keyword entry was not found.
    */
-  fetch(keywordOrEntry, onResult=null) {
+  fetch(keywordOrEntry, onResult = null) {
     if (typeof(keywordOrEntry) == "string")
       keywordOrEntry = { keyword: keywordOrEntry };
 

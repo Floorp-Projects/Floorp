@@ -121,7 +121,7 @@ this.Social = {
     return SocialService.getManifestByOrigin(origin);
   },
 
-  installProvider: function(data, installCallback, options={}) {
+  installProvider: function(data, installCallback, options = {}) {
     SocialService.installProvider(data, installCallback, options);
   },
 

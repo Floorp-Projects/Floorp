@@ -277,7 +277,7 @@ function restore() {
 /**
  * Wait until a given condition becomes true.
  */
-function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
+function waitForCondition(aConditionFn, aMaxTries = 50, aCheckInterval = 100) {
   return new Promise((resolve, reject) => {
     let tries = 0;
 

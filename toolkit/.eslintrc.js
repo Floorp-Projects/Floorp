@@ -179,7 +179,7 @@ module.exports = {
     // "space-in-parens": ["error", "never"],
 
     // Require spaces around operators
-    // "space-infix-ops": "error",
+    "space-infix-ops": ["error", { "int32Hint": true }],
 
     // ++ and -- should not need spacing
     // "space-unary-ops": ["error", { "words": true, "nonwords": false }],

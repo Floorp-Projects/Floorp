@@ -336,7 +336,7 @@ GMPAddon.prototype = {
     return this.id + " (" +
            "isValid: " + this.isValid +
            ", isInstalled: " + this.isInstalled +
-           ", hashFunction: " + this.hashFunction+
+           ", hashFunction: " + this.hashFunction +
            ", hashValue: " + this.hashValue +
            (this.size !== undefined ? ", size: " + this.size : "" ) +
            ")";

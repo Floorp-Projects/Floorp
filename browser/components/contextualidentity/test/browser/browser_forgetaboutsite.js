@@ -137,7 +137,7 @@ function* test_cookie_cleared() {
     let value = USER_CONTEXTS[userContextId];
 
     // Open our tab in the given user context.
-    tabs[userContextId] = yield* openTabInUserContext(TEST_URL+ "file_reflect_cookie_into_title.html?" + value, userContextId);
+    tabs[userContextId] = yield* openTabInUserContext(TEST_URL + "file_reflect_cookie_into_title.html?" + value, userContextId);
 
     // Close this tab.
     yield BrowserTestUtils.removeTab(tabs[userContextId].tab);
@@ -242,7 +242,7 @@ function* test_storage_cleared() {
     let value = USER_CONTEXTS[userContextId];
 
     // Open our tab in the given user context.
-    let tabInfo = yield* openTabInUserContext(TEST_URL+ "file_set_storages.html?" + value, userContextId);
+    let tabInfo = yield* openTabInUserContext(TEST_URL + "file_set_storages.html?" + value, userContextId);
 
     // Check that the storages has been set correctly.
     yield ContentTask.spawn(tabInfo.browser, { userContext: USER_CONTEXTS[userContextId] }, function* (arg) {
@@ -285,7 +285,7 @@ function* test_storage_cleared() {
   // local storage has been cleared or not.
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
     // Open our tab in the given user context without setting local storage.
-    let tabInfo = yield* openTabInUserContext(TEST_URL+ "file_set_storages.html", userContextId);
+    let tabInfo = yield* openTabInUserContext(TEST_URL + "file_set_storages.html", userContextId);
 
     // Check that do storages be cleared or not.
     yield ContentTask.spawn(tabInfo.browser, null, function* () {

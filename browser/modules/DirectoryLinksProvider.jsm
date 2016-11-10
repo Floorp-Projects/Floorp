@@ -88,7 +88,7 @@ const DEFAULT_TOTAL_FREQUENCY_CAP = 10;
 
 // Default timeDelta to prune unused frequency cap objects
 // currently set to 10 days in milliseconds
-const DEFAULT_PRUNE_TIME_DELTA = 10*24*60*60*1000;
+const DEFAULT_PRUNE_TIME_DELTA = 10 * 24 * 60 * 60 * 1000;
 
 // The min number of visible (not blocked) history tiles to have before showing suggested tiles
 const MIN_VISIBLE_HISTORY_TILES = 8;
@@ -106,7 +106,7 @@ const INADJACENCY_SOURCE = "chrome://browser/content/newtab/newTab.inadjacent.js
 const FAKE_SUGGESTED_BLOCK_URL = "ignore://suggested_block";
 
 // Time before suggested tile is allowed to play again after block - default to 1 day
-const AFTER_SUGGESTED_BLOCK_DECAY_TIME = 24*60*60*1000;
+const AFTER_SUGGESTED_BLOCK_DECAY_TIME = 24 * 60 * 60 * 1000;
 
 /**
  * Singleton that serves as the provider of directory links.
@@ -331,7 +331,7 @@ var DirectoryLinksProvider = {
    * Downloads directory links if needed
    * @return promise resolved immediately if no download needed, or upon completion
    */
-  _fetchAndCacheLinksIfNecessary: function DirectoryLinksProvider_fetchAndCacheLinksIfNecessary(forceDownload=false) {
+  _fetchAndCacheLinksIfNecessary: function DirectoryLinksProvider_fetchAndCacheLinksIfNecessary(forceDownload = false) {
     if (this._downloadDeferred) {
       // fetching links already - just return the promise
       return this._downloadDeferred.promise;

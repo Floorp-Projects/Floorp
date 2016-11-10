@@ -130,7 +130,7 @@ function test()
  *        The load event type to wait for.  Defaults to "load".
  * @return {Promise} resolved when the event is handled.
  */
-function promiseTabLoadEvent(aTab, aURL, aEventType="load")
+function promiseTabLoadEvent(aTab, aURL, aEventType = "load")
 {
   return new Promise(resolve => {
     info("Wait tab event: " + aEventType);

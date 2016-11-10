@@ -200,7 +200,7 @@ var pktUI = (function() {
             startheight = overflowMenuHeight;
         }
 
-        var panelId = showPanel("about:pocket-saved?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&premiumStatus=" + (pktApi.isPremiumUser() ? '1' : '0') + '&inoverflowmenu='+inOverflowMenu + "&locale=" + getUILocale(), {
+        var panelId = showPanel("about:pocket-saved?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&premiumStatus=" + (pktApi.isPremiumUser() ? '1' : '0') + '&inoverflowmenu=' + inOverflowMenu + "&locale=" + getUILocale(), {
             onShow: function() {
                 var saveLinkMessageId = 'saveLink';
 

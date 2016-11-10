@@ -260,7 +260,7 @@ this.BrowserUITelemetry = {
   },
 
   _countableEvents: {},
-  _countEvent: function(aKeyArray, root=this._countableEvents) {
+  _countEvent: function(aKeyArray, root = this._countableEvents) {
     let countObject = this._ensureObjectChain(aKeyArray, 0, root);
     let lastItemKey = aKeyArray[aKeyArray.length - 1];
     countObject[lastItemKey]++;

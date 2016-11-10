@@ -101,7 +101,7 @@ var TabsInTitlebar = {
                    Services.prefs.getBoolPref(this._prefName));
   },
 
-  _update: function (aForce=false) {
+  _update: function (aForce = false) {
     let $ = id => document.getElementById(id);
     let rect = ele => ele.getBoundingClientRect();
     let verticalMargins = cstyle => parseFloat(cstyle.marginBottom) + parseFloat(cstyle.marginTop);
@@ -254,7 +254,7 @@ var TabsInTitlebar = {
   },
 
   _sizePlaceholder: function (type, width) {
-    Array.forEach(document.querySelectorAll(".titlebar-placeholder[type='"+ type +"']"),
+    Array.forEach(document.querySelectorAll(".titlebar-placeholder[type='" + type + "']"),
                   function (node) { node.width = width; });
   },
 

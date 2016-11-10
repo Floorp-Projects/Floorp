@@ -92,7 +92,7 @@ function ensure_tag_results(uris, searchTerm)
                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
     do_check_eq(controller.matchCount, uris.length);
     let vals = [];
-    for (let i=0; i<controller.matchCount; i++) {
+    for (let i = 0; i < controller.matchCount; i++) {
       // Keep the URL for later because order of tag results is undefined
       vals.push(controller.getValueAt(i));
       do_check_eq(controller.getStyleAt(i), "bookmark-tag");

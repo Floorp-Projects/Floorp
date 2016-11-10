@@ -23,7 +23,7 @@ add_task(function* setup() {
 
 function* promiseSearch(searchtext) {
   gURLBar.focus();
-  gURLBar.inputField.value = searchtext.substr(0, searchtext.length -1);
+  gURLBar.inputField.value = searchtext.substr(0, searchtext.length - 1);
   EventUtils.synthesizeKey(searchtext.substr(-1, 1), {});
   yield promiseSearchComplete();
 }

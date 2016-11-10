@@ -66,11 +66,11 @@ add_task(function*() {
                 data: "mochi.test/11\nTITLE11"}]], 1);
 });
 
-function dropText(text, expectedWindowOpenCount=0) {
+function dropText(text, expectedWindowOpenCount = 0) {
   return drop([[{type: "text/plain", data: text}]], expectedWindowOpenCount);
 }
 
-function* drop(dragData, expectedWindowOpenCount=0) {
+function* drop(dragData, expectedWindowOpenCount = 0) {
   let dragDataString = JSON.stringify(dragData);
   info(`Starting test for datagData:${dragDataString}; expectedWindowOpenCount:${expectedWindowOpenCount}`);
   let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].

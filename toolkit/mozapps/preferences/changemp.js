@@ -14,7 +14,7 @@ const nsIPK11Token = Components.interfaces.nsIPK11Token;
 
 
 var params;
-var tokenName="";
+var tokenName = "";
 var pw1;
 
 function init()
@@ -163,34 +163,34 @@ function setPasswordStrength()
 // non-alpha-numeric chars
 // upper and lower case characters
 
-  var pw=document.getElementById('pw1').value;
+  var pw = document.getElementById('pw1').value;
 
 // length of the password
-  var pwlength=(pw.length);
-  if (pwlength>5)
-    pwlength=5;
+  var pwlength = (pw.length);
+  if (pwlength > 5)
+    pwlength = 5;
 
 
 // use of numbers in the password
   var numnumeric = pw.replace (/[0-9]/g, "");
-  var numeric=(pw.length - numnumeric.length);
-  if (numeric>3)
-    numeric=3;
+  var numeric = (pw.length - numnumeric.length);
+  if (numeric > 3)
+    numeric = 3;
 
 // use of symbols in the password
   var symbols = pw.replace (/\W/g, "");
-  var numsymbols=(pw.length - symbols.length);
-  if (numsymbols>3)
-    numsymbols=3;
+  var numsymbols = (pw.length - symbols.length);
+  if (numsymbols > 3)
+    numsymbols = 3;
 
 // use of uppercase in the password
   var numupper = pw.replace (/[A-Z]/g, "");
-  var upper=(pw.length - numupper.length);
-  if (upper>3)
-    upper=3;
+  var upper = (pw.length - numupper.length);
+  if (upper > 3)
+    upper = 3;
 
 
-  var pwstrength=((pwlength*10)-20) + (numeric*10) + (numsymbols*15) + (upper*10);
+  var pwstrength = ((pwlength * 10) - 20) + (numeric * 10) + (numsymbols * 15) + (upper * 10);
 
   // make sure we're give a value between 0 and 100
   if ( pwstrength < 0 ) {
@@ -201,7 +201,7 @@ function setPasswordStrength()
     pwstrength = 100;
   }
 
-  var mymeter=document.getElementById('pwmeter');
+  var mymeter = document.getElementById('pwmeter');
   mymeter.value = pwstrength;
 
   return;
@@ -209,9 +209,9 @@ function setPasswordStrength()
 
 function checkPasswords()
 {
-  var pw1=document.getElementById('pw1').value;
-  var pw2=document.getElementById('pw2').value;
-  var ok=document.documentElement.getButton("accept");
+  var pw1 = document.getElementById('pw1').value;
+  var pw2 = document.getElementById('pw2').value;
+  var ok = document.documentElement.getButton("accept");
 
   var oldpwbox = document.getElementById("oldpw");
   if (oldpwbox) {

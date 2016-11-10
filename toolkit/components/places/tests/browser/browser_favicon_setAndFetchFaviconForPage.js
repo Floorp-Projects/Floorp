@@ -10,7 +10,7 @@ function test() {
   let favIconLocation =
     "http://example.org/tests/toolkit/components/places/tests/browser/favicon-normal32.png";
   let favIconURI = NetUtil.newURI(favIconLocation);
-  let favIconMimeType= "image/png";
+  let favIconMimeType = "image/png";
   let pageURI;
   let favIconData;
 

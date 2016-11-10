@@ -575,7 +575,7 @@ this.SocialService = {
                                         action, [], options);
   },
 
-  installProvider: function(data, installCallback, options={}) {
+  installProvider: function(data, installCallback, options = {}) {
     data.installType = getOriginActivationType(data.origin);
     // if we get data, we MUST have a valid manifest generated from the data
     let manifest = this._manifestFromData(data.installType, data.manifest, data.origin);

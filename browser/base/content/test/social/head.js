@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 function promiseObserverNotified(aTopic) {
   return new Promise(resolve => {
     Services.obs.addObserver(function onNotification(aSubject, aTopic, aData) {
-      dump("notification promised "+aTopic);
+      dump("notification promised " + aTopic);
       Services.obs.removeObserver(onNotification, aTopic);
       TestUtils.executeSoon(() => resolve({subject: aSubject, data: aData}));
     }, aTopic, false);
@@ -180,7 +180,7 @@ function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
         try {
           func.call(tests, cleanupAndRunNextTest);
         } catch (ex) {
-          ok(false, "sub-test " + name + " failed: " + ex.toString() +"\n"+ex.stack);
+          ok(false, "sub-test " + name + " failed: " + ex.toString() + "\n" + ex.stack);
           cleanupAndRunNextTest();
         }
       })

@@ -15,7 +15,7 @@ function run_test() {
   run_next_test();
 }
 
-function monkeypatchStartupInfo(recorder, start=new Date(), offset=500) {
+function monkeypatchStartupInfo(recorder, start = new Date(), offset = 500) {
   Object.defineProperty(recorder, "_getStartupInfo", {
     value: function _getStartupInfo() {
       return {
@@ -245,7 +245,7 @@ add_task(function* test_multiple_sessions() {
     do_check_eq(session.activeTicks, i);
 
     if (i > 0) {
-      do_check_true(session.startDate.getTime() > sessions[i-1].startDate.getTime());
+      do_check_true(session.startDate.getTime() > sessions[i - 1].startDate.getTime());
     }
   }
 

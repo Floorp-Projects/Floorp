@@ -134,7 +134,7 @@ Notification.prototype = {
       return anchorElement;
 
     if (!anchorElement && this.anchorID)
-      anchorElement = iconBox.querySelector("#"+this.anchorID);
+      anchorElement = iconBox.querySelector("#" + this.anchorID);
 
     // Use a default anchor icon if it's available
     if (!anchorElement)
@@ -774,7 +774,7 @@ PopupNotifications.prototype = {
     }, this);
   },
 
-  _setNotificationUIState(notification, state={}) {
+  _setNotificationUIState(notification, state = {}) {
     notification.setAttribute("mainactiondisabled", state.disableMainAction || "false");
 
     if (state.warningLabel) {

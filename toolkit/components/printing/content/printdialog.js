@@ -173,7 +173,7 @@ function setPrinterDefaultsForSelectedPrinter()
   printService.initPrintSettingsFromPrefs(gPrintSettings, true, gPrintSetInterface.kInitSaveAll);
 
   if (doDebug) {
-    dump("setPrinterDefaultsForSelectedPrinter: printerName='"+gPrintSettings.printerName+"', paperName='"+gPrintSettings.paperName+"'\n");
+    dump("setPrinterDefaultsForSelectedPrinter: printerName='" + gPrintSettings.printerName + "', paperName='" + gPrintSettings.paperName + "'\n");
   }
 }
 
@@ -245,10 +245,10 @@ function loadDialog()
 
   if (doDebug) {
     dump("loadDialog*********************************************\n");
-    dump("print_tofile            "+print_tofile+"\n");
-    dump("print_frame             "+print_frametype+"\n");
-    dump("print_howToEnableUI     "+print_howToEnableUI+"\n");
-    dump("selection_radio_enabled "+print_selection_radio_enabled+"\n");
+    dump("print_tofile            " + print_tofile + "\n");
+    dump("print_frame             " + print_frametype + "\n");
+    dump("print_howToEnableUI     " + print_howToEnableUI + "\n");
+    dump("selection_radio_enabled " + print_selection_radio_enabled + "\n");
   }
 
   dialog.printrangeGroup.selectedItem = dialog.allpagesRadio;
@@ -263,7 +263,7 @@ function loadDialog()
   dialog.numCopiesInput.value = print_copies;
 
   if (doDebug) {
-    dump("print_howToEnableUI: "+print_howToEnableUI+"\n");
+    dump("print_howToEnableUI: " + print_howToEnableUI + "\n");
   }
 
   // print frame
@@ -356,13 +356,13 @@ function onAccept()
     gPrintSettings.printFrameType = frametype;
     if (doDebug) {
       dump("onAccept*********************************************\n");
-      dump("frametype      "+frametype+"\n");
-      dump("numCopies      "+gPrintSettings.numCopies+"\n");
-      dump("printRange     "+gPrintSettings.printRange+"\n");
-      dump("printerName    "+gPrintSettings.printerName+"\n");
-      dump("startPageRange "+gPrintSettings.startPageRange+"\n");
-      dump("endPageRange   "+gPrintSettings.endPageRange+"\n");
-      dump("printToFile    "+gPrintSettings.printToFile+"\n");
+      dump("frametype      " + frametype + "\n");
+      dump("numCopies      " + gPrintSettings.numCopies + "\n");
+      dump("printRange     " + gPrintSettings.printRange + "\n");
+      dump("printerName    " + gPrintSettings.printerName + "\n");
+      dump("startPageRange " + gPrintSettings.startPageRange + "\n");
+      dump("endPageRange   " + gPrintSettings.endPageRange + "\n");
+      dump("printToFile    " + gPrintSettings.printToFile + "\n");
     }
   }
 

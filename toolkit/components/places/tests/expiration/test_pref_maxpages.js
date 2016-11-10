@@ -76,7 +76,7 @@ add_task(function* test_pref_maxpages() {
   setInterval(3600); // 1h
 
   for (let testIndex = 1; testIndex <= tests.length; testIndex++) {
-    let currentTest = tests[testIndex -1];
+    let currentTest = tests[testIndex - 1];
     print("\nTEST " + testIndex + ": " + currentTest.desc);
     currentTest.receivedNotifications = 0;
 

@@ -792,7 +792,7 @@ this.AeroPeek = {
 
   resetCacheTimer: function () {
     this.cacheTimer.cancel();
-    this.cacheTimer.init(this, 1000*this.cacheLifespan, Ci.nsITimer.TYPE_ONE_SHOT);
+    this.cacheTimer.init(this, 1000 * this.cacheLifespan, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   // nsIObserver

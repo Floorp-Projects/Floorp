@@ -217,7 +217,7 @@ Services.prefs.addObserver(PREF_DEBUG_LOG, function() {
   DEBUG_LOG = Services.prefs.getBoolPref(PREF_DEBUG_LOG);
 }, false);
 
-function debug(msg, error=null) {
+function debug(msg, error = null) {
   if (DEBUG_LOG) {
     log(msg, "DEBUG: ", error);
   }
