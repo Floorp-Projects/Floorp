@@ -777,7 +777,7 @@ IsHeapAccessAddress(const Instance &instance, uint8_t* faultingAddress)
 
 #if defined(XP_WIN)
 
-MOZ_ASAN_BLACKLIST static bool
+static bool
 HandleFault(PEXCEPTION_POINTERS exception)
 {
     EXCEPTION_RECORD* record = exception->ExceptionRecord;
@@ -831,7 +831,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
     return true;
 }
 
-MOZ_ASAN_BLACKLIST static LONG WINAPI
+static LONG WINAPI
 WasmFaultHandler(LPEXCEPTION_POINTERS exception)
 {
     if (HandleFault(exception))

@@ -29,3 +29,7 @@ The current data collection possibilities include:
    histograms
    measuring-time
    custom-pings
+
+Browser Usage Telemetry
+~~~~~~~~~~~~~~~~~~~~~~~
+For more information, see :ref:`browserusagetelemetry`.

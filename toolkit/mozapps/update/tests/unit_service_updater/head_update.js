@@ -4,4 +4,5 @@
 
 const IS_SERVICE_TEST = true;
 
+/* import-globals-from ../data/xpcshellUtilsAUS.js */
 load("../data/xpcshellUtilsAUS.js");

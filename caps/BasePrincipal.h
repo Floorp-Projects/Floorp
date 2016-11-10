@@ -61,13 +61,13 @@ public:
 
   void SetFromGenericAttributes(const GenericOriginAttributes& aAttrs);
 
+  // check if "privacy.firstparty.isolate" is enabled.
+  static bool IsFirstPartyEnabled();
+
 protected:
   OriginAttributes() {}
   explicit OriginAttributes(const OriginAttributesDictionary& aOther)
     : OriginAttributesDictionary(aOther) {}
-
-  // check if "privacy.firstparty.isolate" is enabled.
-  bool IsFirstPartyEnabled();
 };
 
 class PrincipalOriginAttributes;

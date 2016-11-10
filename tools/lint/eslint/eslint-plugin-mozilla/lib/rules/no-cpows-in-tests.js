@@ -68,7 +68,7 @@ module.exports = function(context) {
     },
 
     MemberExpression: function(node) {
-      if (!helpers.getIsBrowserMochitest(this)) {
+      if (helpers.getTestType(this) != "browser") {
         return;
       }
 
@@ -92,7 +92,7 @@ module.exports = function(context) {
     },
 
     Identifier: function(node) {
-      if (!helpers.getIsBrowserMochitest(this)) {
+      if (helpers.getTestType(this) != "browser") {
         return;
       }
 

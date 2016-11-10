@@ -155,6 +155,10 @@ case "$target" in
         # Make sure compilers are valid
         CFLAGS="$CFLAGS -TC -nologo"
         CXXFLAGS="$CXXFLAGS -TP -nologo"
+        if test -z "$CLANG_CL"; then
+            CFLAGS="$CFLAGS -utf-8"
+            CXXFLAGS="$CXXFLAGS -utf-8"
+        fi
         # MSVC warning C4345 warns of newly conformant behavior as of VS2003.
         # MSVC warning C4351 warns of newly conformant behavior as of VS2005.
         # MSVC warning C4800 warns when a value is implicitly cast to bool,
@@ -163,12 +167,9 @@ case "$target" in
         # that behavior) that it's better to turn it off.
         # _CRT_SECURE_NO_WARNINGS disables warnings about using MSVC-specific
         # secure CRT functions.
-        # MSVC warning C4819 warns some UTF-8 characters (e.g. copyright sign)
-        # on non-Western system locales even if it is in a comment.
         # MSVC warning wd4595 warns non-member operator new or delete functions
         # may not be declared inline, as of VS2015 Update 2.
-        CFLAGS="$CFLAGS -wd4819"
-        CXXFLAGS="$CXXFLAGS -wd4345 -wd4351 -wd4800 -wd4819 -wd4595 -D_CRT_SECURE_NO_WARNINGS"
+        CXXFLAGS="$CXXFLAGS -wd4345 -wd4351 -wd4800 -wd4595 -D_CRT_SECURE_NO_WARNINGS"
         AC_LANG_SAVE
         AC_LANG_C
         AC_TRY_COMPILE([#include <stdio.h>],

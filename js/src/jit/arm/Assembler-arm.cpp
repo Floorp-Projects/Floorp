@@ -590,32 +590,22 @@ Operand2::toOp2Reg() const {
     return *(Op2Reg*)this;
 }
 
-O2RegImmShift
-Op2Reg::toO2RegImmShift() const {
-    return *(O2RegImmShift*)this;
-}
-
-O2RegRegShift
-Op2Reg::toO2RegRegShift() const {
-    return *(O2RegRegShift*)this;
-}
-
 Imm16::Imm16(Instruction& inst)
-  : lower(inst.encode() & 0xfff),
-    upper(inst.encode() >> 16),
-    invalid(0xfff)
+  : lower_(inst.encode() & 0xfff),
+    upper_(inst.encode() >> 16),
+    invalid_(0xfff)
 { }
 
 Imm16::Imm16(uint32_t imm)
-  : lower(imm & 0xfff), pad(0),
-    upper((imm >> 12) & 0xf),
-    invalid(0)
+  : lower_(imm & 0xfff), pad_(0),
+    upper_((imm >> 12) & 0xf),
+    invalid_(0)
 {
     MOZ_ASSERT(decode() == imm);
 }
 
 Imm16::Imm16()
-  : invalid(0xfff)
+  : invalid_(0xfff)
 { }
 
 void
@@ -935,10 +925,10 @@ Assembler::trace(JSTracer* trc)
 {
     for (size_t i = 0; i < jumps_.length(); i++) {
         RelativePatch& rp = jumps_[i];
-        if (rp.kind == Relocation::JITCODE) {
-            JitCode* code = JitCode::FromExecutable((uint8_t*)rp.target);
+        if (rp.kind() == Relocation::JITCODE) {
+            JitCode* code = JitCode::FromExecutable((uint8_t*)rp.target());
             TraceManuallyBarrieredEdge(trc, &code, "masmrel32");
-            MOZ_ASSERT(code == JitCode::FromExecutable((uint8_t*)rp.target));
+            MOZ_ASSERT(code == JitCode::FromExecutable((uint8_t*)rp.target()));
         }
     }
 
@@ -1293,14 +1283,14 @@ static js::jit::DoubleEncoder doubleEncoder;
 
 js::jit::VFPImm::VFPImm(uint32_t top)
 {
-    data = -1;
+    data_ = -1;
     datastore::Imm8VFPImmData tmp;
     if (doubleEncoder.lookup(top, &tmp))
-        data = tmp.encode();
+        data_ = tmp.encode();
 }
 
-BOffImm::BOffImm(Instruction& inst)
-  : data(inst.encode() & 0x00ffffff)
+BOffImm::BOffImm(const Instruction& inst)
+  : data_(inst.encode() & 0x00ffffff)
 {
 }
 
@@ -1310,7 +1300,7 @@ BOffImm::getDest(Instruction* src) const
     // TODO: It is probably worthwhile to verify that src is actually a branch.
     // NOTE: This does not explicitly shift the offset of the destination left by 2,
     // since it is indexing into an array of instruction sized objects.
-    return &src[(((int32_t)data << 8) >> 8) + 2];
+    return &src[((int32_t(data_) << 8) >> 8) + 2];
 }
 
 const js::jit::DoubleEncoder::DoubleEntry js::jit::DoubleEncoder::table[256] = {

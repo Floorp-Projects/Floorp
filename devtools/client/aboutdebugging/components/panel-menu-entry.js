@@ -4,11 +4,19 @@
 
 "use strict";
 
-const { createClass, DOM: dom } =
+const { createClass, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 
 module.exports = createClass({
   displayName: "PanelMenuEntry",
+
+  propTypes: {
+    icon: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    selected: PropTypes.bool,
+    selectPanel: PropTypes.func.isRequired
+  },
 
   onClick() {
     this.props.selectPanel(this.props.id);

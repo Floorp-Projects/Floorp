@@ -8,7 +8,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDeviceContextSpec.h"
-#include "nsIPrintOptions.h" // For nsIPrinterEnumerator
+#include "nsIPrinterEnumerator.h"
 #include "nsIPrintSettings.h"
 #include "nsISupportsPrimitives.h"
 #include <windows.h>

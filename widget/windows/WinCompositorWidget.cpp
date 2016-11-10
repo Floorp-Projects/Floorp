@@ -278,8 +278,8 @@ WinCompositorWidget::ClearTransparentWindow()
 
   IntSize size = mTransparentSurface->GetSize();
   if (!size.IsEmpty()) {
-    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
-      CreateDrawTargetForSurface(mTransparentSurface, size);
+    RefPtr<DrawTarget> drawTarget =
+      gfxPlatform::CreateDrawTargetForSurface(mTransparentSurface, size);
     drawTarget->ClearRect(Rect(0, 0, size.width, size.height));
     RedrawTransparentWindow();
   }

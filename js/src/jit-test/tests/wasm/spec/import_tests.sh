@@ -11,6 +11,5 @@ rm -f *.fail.wast
 
 for i in $(ls *.wast);
 do
-    echo "// |jit-test| test-also-wasm-baseline" > $i.js
-    echo "var importedArgs = ['$i']; load(scriptdir + '../spec.js');" >> $i.js
+    echo "var importedArgs = ['$i']; load(scriptdir + '../spec.js');" > $i.js
 done;

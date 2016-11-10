@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* () {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+      ],
+    },
+
+    background() {
+      browser.webRequest.onBeforeSendHeaders.addListener(details => {
+        let requestHeaders = details.requestHeaders.concat({name: "Foo", value: "Bar"});
+
+        return new Promise(resolve => {
+          setTimeout(resolve, 500);
+        }).then(() => {
+          return {requestHeaders};
+        });
+      },
+      {urls: ["<all_urls>"]},
+      ["blocking", "requestHeaders"]);
+    },
+  });
+
+  yield extension.startup();
+
+  let result = yield fetch(SimpleTest.getTestFileURL("return_headers.sjs"));
+
+  let headers = JSON.parse(yield result.text());
+
+  is(headers.foo, "Bar", "Request header was correctly set on suspended request");
+
+  yield extension.unload();
+});
+
+</script>
+</body>
+</html>

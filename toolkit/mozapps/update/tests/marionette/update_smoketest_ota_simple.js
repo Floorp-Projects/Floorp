@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from ../../../../../testing/marionette/harness/marionette/atoms/b2g_update_test.js */
+/* globals Services */
+
 function testForceCheck() {
   addChromeEventListener("update-available", function(evt) {
     isFinishUpdate(evt.detail);

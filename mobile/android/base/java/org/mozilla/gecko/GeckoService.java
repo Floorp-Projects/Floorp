@@ -11,6 +11,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import java.io.File;
@@ -204,5 +206,31 @@ public class GeckoService extends Service {
     @Override // Service
     public IBinder onBind(final Intent intent) {
         return null;
+    }
+
+    public static void startGecko(final GeckoProfile profile, final String args, final Context context) {
+        if (GeckoThread.isLaunched()) {
+            if (DEBUG) {
+                Log.v(LOGTAG, "already launched");
+            }
+            return;
+        }
+
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                GeckoAppShell.ensureCrashHandling();
+                GeckoAppShell.setApplicationContext(context);
+                GeckoThread.onResume();
+
+                GeckoThread.init(profile, args, null, false);
+                GeckoThread.launch();
+
+                if (DEBUG) {
+                    Log.v(LOGTAG, "warmed up (launched)");
+                }
+            }
+        });
     }
 }

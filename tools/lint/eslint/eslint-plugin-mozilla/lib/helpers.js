@@ -11,8 +11,10 @@ var espree = require("espree");
 var estraverse = require("estraverse");
 var path = require("path");
 var fs = require("fs");
+var ini = require("ini-parser");
 
 var modules = null;
+var directoryManifests = new Map();
 
 var definitions = [
   /^loader\.lazyGetter\(this, "(\w+)"/,
@@ -317,35 +319,89 @@ module.exports = {
   },
 
   /**
-   * Check whether we might be in an xpcshell test.
+   * Gets the head files for a potential test file
    *
    * @param  {RuleContext} scope
    *         You should pass this from within a rule
-   *         e.g. helpers.getIsXpcshellTest(this)
+   *         e.g. helpers.getIsHeadFile(this)
    *
-   * @return {Boolean}
-   *         True or false
+   * @return {String[]}
+   *         Paths to head files to load for the test
    */
-  getIsXpcshellTest: function(scope) {
-    var pathAndFilename = this.cleanUpPath(scope.getFilename());
+  getTestHeadFiles: function(scope) {
+    if (!this.getIsTest(scope)) {
+      return [];
+    }
 
-    return /.*[\\/]test_.+\.js$/.test(pathAndFilename);
+    let filepath = this.cleanUpPath(scope.getFilename());
+    let dir = path.dirname(filepath);
+
+    let names = fs.readdirSync(dir)
+                  .filter(name => name.startsWith("head") && name.endsWith(".js"))
+                  .map(name => path.join(dir, name));
+    return names;
   },
 
   /**
-   * Check whether we are in a browser mochitest.
+   * Gets all the test manifest data for a directory
+   *
+   * @param  {String} dir
+   *         The directory
+   *
+   * @return {Array}
+   *         An array of objects with file and manifest properties
+   */
+  getManifestsForDirectory: function(dir) {
+    if (directoryManifests.has(dir)) {
+      return directoryManifests.get(dir);
+    }
+
+    let manifests = [];
+
+    let names = fs.readdirSync(dir);
+    for (let name of names) {
+      if (!name.endsWith(".ini")) {
+        continue;
+      }
+
+      try {
+        let manifest = ini.parse(fs.readFileSync(path.join(dir, name), 'utf8'));
+
+        manifests.push({
+          file: path.join(dir, name),
+          manifest
+        })
+      } catch (e) {
+      }
+    }
+
+    directoryManifests.set(dir, manifests);
+    return manifests;
+  },
+
+  /**
+   * Gets the manifest file a test is listed in
    *
    * @param  {RuleContext} scope
    *         You should pass this from within a rule
-   *         e.g. helpers.getIsBrowserMochitest(this)
+   *         e.g. helpers.getIsHeadFile(this)
    *
-   * @return {Boolean}
-   *         True or false
+   * @return {String}
+   *         The path to the test manifest file
    */
-  getIsBrowserMochitest: function(scope) {
-    var pathAndFilename = this.cleanUpPath(scope.getFilename());
+  getTestManifest: function(scope) {
+    let filepath = this.cleanUpPath(scope.getFilename());
 
-    return /.*[\\/]browser_.+\.js$/.test(pathAndFilename);
+    let dir = path.dirname(filepath);
+    let filename = path.basename(filepath);
+
+    for (let manifest of this.getManifestsForDirectory(dir)) {
+      if (filename in manifest.manifest) {
+        return manifest.file;
+      }
+    }
+
+    return null;
   },
 
   /**
@@ -359,11 +415,48 @@ module.exports = {
    *         True or false
    */
   getIsTest: function(scope) {
-    if (this.getIsXpcshellTest(scope)) {
+    // Regardless of the manifest name being in a manifest means we're a test.
+    let manifest = this.getTestManifest(scope);
+    if (manifest) {
       return true;
     }
 
-    return this.getIsBrowserMochitest(scope);
+    return !!this.getTestType(scope);
+  },
+
+  /**
+   * Gets the type of test or null if this isn't a test.
+   *
+   * @param  {RuleContext} scope
+   *         You should pass this from within a rule
+   *         e.g. helpers.getIsHeadFile(this)
+   *
+   * @return {String or null}
+   *         Test type: xpcshell, browser, chrome, mochitest
+   */
+  getTestType: function(scope) {
+    let manifest = this.getTestManifest(scope);
+    if (manifest) {
+      let name = path.basename(manifest);
+      for (let testType of ["browser", "xpcshell", "chrome", "mochitest"]) {
+        if (name.startsWith(testType)) {
+          return testType;
+        }
+      }
+    }
+
+    let filepath = this.cleanUpPath(scope.getFilename());
+    let filename = path.basename(filepath);
+
+    if (filename.startsWith("browser_")) {
+      return "browser";
+    }
+
+    if (filename.startsWith("test_")) {
+      return "xpcshell";
+    }
+
+    return null;
   },
 
   /**

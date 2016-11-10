@@ -410,6 +410,8 @@ MacroAssembler::cmpPtrSet(Condition cond, T1 lhs, T2 rhs, Register dest)
     ma_cmp_set(dest, lhs, rhs, cond);
 }
 
+// Also see below for specializations of cmpPtrSet.
+
 template <typename T1, typename T2>
 void
 MacroAssembler::cmp32Set(Condition cond, T1 lhs, T2 rhs, Register dest)
@@ -710,6 +712,37 @@ MacroAssembler::wasmPatchBoundsCheck(uint8_t* patchAt, uint32_t limit)
 
 //}}} check_macroassembler_style
 // ===============================================================
+
+// The specializations for cmpPtrSet are outside the braces because check_macroassembler_style can't yet
+// deal with specializations.
+
+template<>
+inline void
+MacroAssembler::cmpPtrSet(Assembler::Condition cond, Address lhs, ImmPtr rhs,
+                          Register dest)
+{
+    loadPtr(lhs, ScratchRegister);
+    movePtr(rhs, SecondScratchReg);
+    cmpPtrSet(cond, ScratchRegister, SecondScratchReg, dest);
+}
+
+template<>
+inline void
+MacroAssembler::cmpPtrSet(Assembler::Condition cond, Register lhs, Address rhs,
+                          Register dest)
+{
+    loadPtr(rhs, ScratchRegister);
+    cmpPtrSet(cond, lhs, ScratchRegister, dest);
+}
+
+template<>
+inline void
+MacroAssembler::cmp32Set(Assembler::Condition cond, Register lhs, Address rhs,
+                         Register dest)
+{
+    load32(rhs, ScratchRegister);
+    cmp32Set(cond, lhs, ScratchRegister, dest);
+}
 
 void
 MacroAssemblerMIPS64Compat::incrementInt32Value(const Address& addr)

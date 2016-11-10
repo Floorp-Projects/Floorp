@@ -9,3 +9,4 @@ This is the nascent documentation of the Firefox front-end code.
 
    DirectoryLinksProvider
    UITelemetry
+   BrowserUsageTelemetry

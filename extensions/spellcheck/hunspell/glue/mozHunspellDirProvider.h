@@ -12,11 +12,11 @@
  * License.
  * 
  * The Initial Developers of the Original Code are Kevin Hendricks (MySpell)
- * and László Németh (Hunspell). Portions created by the Initial Developers
+ * and LÃ¡szlÃ³ NÃ©meth (Hunspell). Portions created by the Initial Developers
  * are Copyright (C) 2002-2005 the Initial Developers. All Rights Reserved.
  * 
  * Contributor(s): Benjamin Smedberg (benjamin@smedbergs.us) (Original Code)
- *                 László Németh (nemethl@gyorsposta.hu)
+ *                 LÃ¡szlÃ³ NÃ©meth (nemethl@gyorsposta.hu)
  *                 Ryan VanderMeulen (ryanvm@gmail.com)
  * 
  * Alternatively, the contents of this file may be used under the terms of

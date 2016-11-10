@@ -511,6 +511,9 @@ Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize,
     }
 #endif
   case FontType::CAIRO:
+#ifdef USE_SKIA
+  case FontType::SKIA:
+#endif
     {
 #ifdef WIN32
       if (GetDirect3D11Device()) {
