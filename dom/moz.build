@@ -58,7 +58,6 @@ DIRS += [
     'geolocation',
     'grid',
     'html',
-    'inputport',
     'json',
     'jsurl',
     'asmjscache',
