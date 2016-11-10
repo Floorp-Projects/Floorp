@@ -38617,6 +38617,12 @@
             "url": "/WebCryptoAPI/generateKey/successes_RSASSA-PKCS1-v1_5.worker"
           }
         ],
+        "html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/resume-timer-on-history-back.html": [
+          {
+            "path": "html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/resume-timer-on-history-back.html",
+            "url": "/html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/resume-timer-on-history-back.html"
+          }
+        ],
         "html/browsers/the-window-object/window-open-noopener.html": [
           {
             "path": "html/browsers/the-window-object/window-open-noopener.html",
