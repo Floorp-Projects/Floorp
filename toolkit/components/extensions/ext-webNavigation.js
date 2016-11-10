@@ -15,7 +15,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   SingletonEventManager,
   ignoreEvent,
-  runSafe,
 } = ExtensionUtils;
 
 const defaultTransitionTypes = {
@@ -128,7 +127,7 @@ function WebNavigationEventManager(context, eventName) {
 
       fillTransitionProperties(eventName, data, data2);
 
-      runSafe(context, callback, data2);
+      context.runSafe(callback, data2);
     };
 
     WebNavigation[eventName].addListener(listener, filters);
