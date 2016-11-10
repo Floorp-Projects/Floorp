@@ -73,6 +73,21 @@ ServoRestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
   NS_WARNING("stylo: ServoRestyleManager::PostRebuildAllStyleDataEvent not implemented");
 }
 
+static void
+MarkSelfAndDescendantsAsNotDirtyForServo(nsIContent* aContent)
+{
+  aContent->UnsetIsDirtyForServo();
+
+  if (aContent->HasDirtyDescendantsForServo()) {
+    aContent->UnsetHasDirtyDescendantsForServo();
+
+    StyleChildrenIterator it(aContent);
+    for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+      MarkSelfAndDescendantsAsNotDirtyForServo(n);
+    }
+  }
+}
+
 void
 ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
                                            nsStyleContext* aParentContext,
@@ -85,6 +100,7 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
   if (!primaryFrame && !aContent->IsDirtyForServo()) {
     // This happens when, for example, a display: none child of a
     // HAS_DIRTY_DESCENDANTS content is reached as part of the traversal.
+    MarkSelfAndDescendantsAsNotDirtyForServo(aContent);
     return;
   }
 
@@ -145,7 +161,19 @@ ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
     // Note that we must leave the old style on an existing frame that is
     // about to be reframed, since some frame constructor code wants to
     // inspect the old style to work out what to do.
-    if (!primaryFrame || (changeHint & nsChangeHint_ReconstructFrame)) {
+    if (changeHint & nsChangeHint_ReconstructFrame) {
+      // Since we might still have some dirty bits set on descendants,
+      // inconsistent with the clearing of HasDirtyDescendants we will do as
+      // we return from these recursive RecreateStyleContexts calls, we
+      // explicitly clear them here.  Otherwise we will trigger assertions
+      // when we soon process the frame reconstruction.
+      MarkSelfAndDescendantsAsNotDirtyForServo(element);
+      return;
+    }
+
+    // If there is no frame, and we didn't generate a ReconstructFrame change
+    // hint, then we don't need to do any more work.
+    if (!primaryFrame) {
       aContent->UnsetIsDirtyForServo();
       return;
     }
@@ -334,21 +362,40 @@ ServoRestyleManager::ProcessPendingRestyles()
   nsIDocument* doc = PresContext()->Document();
   Element* root = doc->GetRootElement();
   if (root) {
-    for (auto iter = mModifiedElements.Iter(); !iter.Done(); iter.Next()) {
-      ServoElementSnapshot* snapshot = iter.UserData();
-      Element* element = iter.Key();
+    // ProcessPendingRestyles can generate new restyles (e.g. from the
+    // frame constructor if it decides that a ReconstructFrame change must
+    // apply to the parent of the element that generated that hint).  So
+    // we loop while mModifiedElements still has some restyles in it, clearing
+    // it after each RecreateStyleContexts call below.
+    while (!mModifiedElements.IsEmpty()) {
+      for (auto iter = mModifiedElements.Iter(); !iter.Done(); iter.Next()) {
+        ServoElementSnapshot* snapshot = iter.UserData();
+        Element* element = iter.Key();
 
-      // TODO: avoid the ComputeRestyleHint call if we already have the highest
-      // explicit restyle hint?
-      nsRestyleHint hint = styleSet->ComputeRestyleHint(element, snapshot);
-      hint |= snapshot->ExplicitRestyleHint();
+        // The element is no longer in the document, so don't bother computing
+        // a final restyle hint for it.
+        //
+        // XXXheycam RestyleTracker checks that the element's GetComposedDoc()
+        // matches the document we're restyling.  Do we need to do that too?
+        if (!element->IsInComposedDoc()) {
+          continue;
+        }
 
-      if (hint) {
-        NoteRestyleHint(element, hint);
+        // TODO: avoid the ComputeRestyleHint call if we already have the highest
+        // explicit restyle hint?
+        nsRestyleHint hint = styleSet->ComputeRestyleHint(element, snapshot);
+        hint |= snapshot->ExplicitRestyleHint();
+
+        if (hint) {
+          NoteRestyleHint(element, hint);
+        }
       }
-    }
 
-    if (root->IsDirtyForServo() || root->HasDirtyDescendantsForServo()) {
+      if (!root->IsDirtyForServo() && !root->HasDirtyDescendantsForServo()) {
+        mModifiedElements.Clear();
+        break;
+      }
+
       mInStyleRefresh = true;
       styleSet->StyleDocument(/* aLeaveDirtyBits = */ true);
 
@@ -364,6 +411,8 @@ ServoRestyleManager::ProcessPendingRestyles()
 
       nsStyleChangeList changeList;
       RecreateStyleContexts(root, nullptr, styleSet, changeList);
+
+      mModifiedElements.Clear();
       ProcessRestyledFrames(changeList);
 
       mInStyleRefresh = false;
@@ -372,8 +421,6 @@ ServoRestyleManager::ProcessPendingRestyles()
 
   MOZ_ASSERT(!doc->IsDirtyForServo());
   doc->UnsetHasDirtyDescendantsForServo();
-
-  mModifiedElements.Clear();
 
   IncrementRestyleGeneration();
 }

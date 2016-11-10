@@ -94,7 +94,7 @@ class TextureChild final : PTextureChild
   {
     // We should have deallocated mTextureData in ActorDestroy
     MOZ_ASSERT(!mTextureData);
-    MOZ_ASSERT(mOwnerCalledDestroy);
+    MOZ_ASSERT_IF(!mOwnerCalledDestroy, !mTextureClient);
   }
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureChild)
@@ -935,11 +935,20 @@ TextureClient::InitIPDLActor(KnowsCompositor* aForwarder)
     return false;
   }
 
-  mActor = static_cast<TextureChild*>(fwd->CreateTexture(desc,
-                                      aForwarder->GetCompositorBackendType(),
-                                      GetFlags(),
-                                      mSerial));
-  MOZ_ASSERT(mActor);
+  PTextureChild* actor = fwd->CreateTexture(
+    desc,
+    aForwarder->GetCompositorBackendType(),
+    GetFlags(),
+    mSerial);
+  if (!actor) {
+    gfxCriticalNote << static_cast<int32_t>(desc.type()) << ", "
+                    << static_cast<int32_t>(aForwarder->GetCompositorBackendType()) << ", "
+                    << static_cast<uint32_t>(GetFlags())
+                    << ", " << mSerial;
+    return false;
+  }
+
+  mActor = static_cast<TextureChild*>(actor);
   mActor->mTextureForwarder = fwd;
   mActor->mTextureClient = this;
   mActor->mMainThreadOnly = !!(mFlags & TextureFlags::DEALLOCATE_MAIN_THREAD);

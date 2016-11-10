@@ -94,6 +94,13 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
     GYP_DIRS['signaling'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
     GYP_DIRS['signaling'].non_unified_sources += signaling_non_unified_sources
 
+    if CONFIG['_MSC_VER']:
+        # Avoid warnings from third-party code that we can not modify.
+        if CONFIG['CLANG_CL']:
+            CXXFLAGS += ['-Wno-invalid-source-encoding']
+        else:
+            CXXFLAGS += ['-validate-charset-']
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     GYP_DIRS += ['trunk/testing']
     GYP_DIRS['trunk/testing'].input = 'trunk/testing/gtest.gyp'

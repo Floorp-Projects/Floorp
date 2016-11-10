@@ -20,13 +20,15 @@ EXPORTS.testing += [
 ]
 
 SimplePrograms([
-    'nsIFileEnumerator',
     'TestArguments',
     'TestBlockingProcess',
-    'TestCallTemplates',
-    'TestINIParser',
     'TestPRIntN',
     'TestQuickReturn',
+])
+
+GeckoSimplePrograms([
+    'TestCallTemplates',
+    'TestINIParser',
     'TestRacingServiceManager',
     'TestRegistrationOrder',
     'TestThreadPoolListener',
@@ -44,15 +46,6 @@ if CONFIG['WRAP_STL_INCLUDES'] and not CONFIG['CLANG_CL']:
     ])
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
-
-GeckoCppUnitTests([
-    'TestTimers'
-])
-
-if CONFIG['MOZ_MEMORY']:
-    GeckoCppUnitTests([
-        'TestJemalloc',
-    ])
 
 # FIXME: bug 577500 TestStaticAtoms fails when run in dist/bin
 #CPP_UNIT_TESTS += [

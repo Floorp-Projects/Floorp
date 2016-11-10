@@ -55,7 +55,7 @@ const SCRIPTS = [
 module.exports = function(context) {
   return {
     Program: function(node) {
-      if (!helpers.getIsBrowserMochitest(this) &&
+      if (helpers.getTestType(this) != "browser" &&
           !helpers.getIsHeadFile(this)) {
         return;
       }

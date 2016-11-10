@@ -1,4 +1,3 @@
-// |jit-test| test-also-noasmjs
 load(libdir + "asm.js");
 
 var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i,j) {i=i|0;j=j|0; u32[((i<<2)+32 & 0xffff)>>2] = j } return f');

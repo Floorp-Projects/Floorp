@@ -1,6 +1,10 @@
 load(libdir + "asm.js");
 load(libdir + "asserts.js");
 
+// Run test only for asm.js
+if (!isAsmJSCompilationAvailable())
+    quit();
+
 // Single-step profiling currently only works in the ARM simulator
 if (!getBuildConfiguration()["arm-simulator"])
     quit();

@@ -1904,6 +1904,8 @@ OptimizeMIR(MIRGenerator* mir)
         AssertGraphCoherency(graph);
     }
 
+    DumpMIRExpressions(graph);
+
     return true;
 }
 
