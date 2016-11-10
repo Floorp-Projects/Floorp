@@ -30,115 +30,13 @@ DocAccessibleChild::~DocAccessibleChild()
   MOZ_COUNT_DTOR_INHERITED(DocAccessibleChild, DocAccessibleChildBase);
 }
 
-bool
-DocAccessibleChild::RecvParentCOMProxy(const IAccessibleHolder& aParentCOMProxy)
-{
-  MOZ_ASSERT(!mParentProxy && !aParentCOMProxy.IsNull());
-  mParentProxy.reset(const_cast<IAccessibleHolder&>(aParentCOMProxy).Release());
-
-  for (uint32_t i = 0, l = mDeferredEvents.Length(); i < l; ++i) {
-    mDeferredEvents[i]->Dispatch(this);
-  }
-
-  mDeferredEvents.Clear();
-
-  return true;
-}
-
-bool
-DocAccessibleChild::SendEvent(const uint64_t& aID, const uint32_t& aType)
-{
-  if (mParentProxy) {
-    return PDocAccessibleChild::SendEvent(aID, aType);
-  }
-
-  mDeferredEvents.AppendElement(MakeUnique<SerializedEvent>(aID, aType));
-  return false;
-}
-
 void
-DocAccessibleChild::MaybeSendShowEvent(ShowEventData& aData, bool aFromUser)
+DocAccessibleChild::SendCOMProxy(const IAccessibleHolder& aProxy)
 {
-  if (mParentProxy) {
-    Unused << SendShowEvent(aData, aFromUser);
-    return;
-  }
-
-  mDeferredEvents.AppendElement(MakeUnique<SerializedShow>(aData, aFromUser));
+  IAccessibleHolder parentProxy;
+  PDocAccessibleChild::SendCOMProxy(aProxy, &parentProxy);
+  mParentProxy.reset(parentProxy.Release());
 }
-
-bool
-DocAccessibleChild::SendHideEvent(const uint64_t& aRootID,
-                                  const bool& aFromUser)
-{
-  if (mParentProxy) {
-    return PDocAccessibleChild::SendHideEvent(aRootID, aFromUser);
-  }
-
-  mDeferredEvents.AppendElement(MakeUnique<SerializedHide>(aRootID, aFromUser));
-  return true;
-}
-
-bool
-DocAccessibleChild::SendStateChangeEvent(const uint64_t& aID,
-                                         const uint64_t& aState,
-                                         const bool& aEnabled)
-{
-  if (mParentProxy) {
-    return PDocAccessibleChild::SendStateChangeEvent(aID, aState, aEnabled);
-  }
-
-  mDeferredEvents.AppendElement(MakeUnique<SerializedStateChange>(aID, aState,
-                                                                  aEnabled));
-  return true;
-}
-
-bool
-DocAccessibleChild::SendCaretMoveEvent(const uint64_t& aID,
-                                       const int32_t& aOffset)
-{
-  if (mParentProxy) {
-    return PDocAccessibleChild::SendCaretMoveEvent(aID, aOffset);
-  }
-
-  mDeferredEvents.AppendElement(MakeUnique<SerializedCaretMove>(aID, aOffset));
-  return true;
-}
-
-bool
-DocAccessibleChild::SendTextChangeEvent(const uint64_t& aID,
-                                        const nsString& aStr,
-                                        const int32_t& aStart,
-                                        const uint32_t& aLen,
-                                        const bool& aIsInsert,
-                                        const bool& aFromUser)
-{
-  if (mParentProxy) {
-    return PDocAccessibleChild::SendTextChangeEvent(aID, aStr, aStart,
-                                                    aLen, aIsInsert, aFromUser);
-  }
-
-  mDeferredEvents.AppendElement(MakeUnique<SerializedTextChange>(aID, aStr,
-                                                                 aStart, aLen,
-                                                                 aIsInsert,
-                                                                 aFromUser));
-  return true;
-}
-
-bool
-DocAccessibleChild::SendSelectionEvent(const uint64_t& aID,
-                                       const uint64_t& aWidgetID,
-                                       const uint32_t& aType)
-{
-  if (mParentProxy) {
-    return PDocAccessibleChild::SendSelectionEvent(aID, aWidgetID, aType);
-  }
-
-  mDeferredEvents.AppendElement(MakeUnique<SerializedSelection>(aID, aWidgetID,
-                                                                aType));
-  return true;
-}
-
 
 } // namespace a11y
 } // namespace mozilla
