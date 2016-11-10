@@ -68,14 +68,14 @@ class TestElementsChrome(MarionetteTestCase):
         self.assertEqual(el, found_el)
 
     def test_not_found(self):
-        self.marionette.set_search_timeout(1000)
+        self.marionette.timeout.implicit = 1
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "I'm not on the page")
-        self.marionette.set_search_timeout(0)
+        self.marionette.timeout.implicit = 0
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "I'm not on the page")
 
     def test_timeout(self):
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "myid")
-        self.assertTrue(True, self.marionette.set_search_timeout(4000))
+        self.marionette.timeout.implicit = 4
         self.marionette.execute_script("window.setTimeout(function() {var b = window.document.createElement('button'); b.id = 'myid'; document.getElementById('things').appendChild(b);}, 1000)")
         self.assertEqual(HTMLElement, type(self.marionette.find_element(By.ID, "myid")))
         self.marionette.execute_script("window.document.getElementById('things').removeChild(window.document.getElementById('myid'));")
