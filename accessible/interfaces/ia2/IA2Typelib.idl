@@ -32,6 +32,30 @@ typedef [wire_marshal(mozHRGN)] void* HRGN;
 typedef [wire_marshal(mozHMONITOR)] void* HMONITOR;
 cpp_quote("#endif // 0")
 
+import "Accessible2.idl";
+import "Accessible2_2.idl";
+import "Accessible2_3.idl";
+import "AccessibleAction.idl";
+import "AccessibleApplication.idl";
+import "AccessibleComponent.idl";
+import "AccessibleDocument.idl";
+import "AccessibleEditableText.idl";
+import "AccessibleEventId.idl";
+import "AccessibleHyperlink.idl";
+import "AccessibleHypertext.idl";
+import "AccessibleHypertext2.idl";
+import "AccessibleImage.idl";
+import "AccessibleRelation.idl";
+import "AccessibleRole.idl";
+import "AccessibleStates.idl";
+import "AccessibleTable.idl";
+import "AccessibleTable2.idl";
+import "AccessibleTableCell.idl";
+import "AccessibleText.idl";
+import "AccessibleText2.idl";
+import "AccessibleValue.idl";
+import "IA2CommonTypes.idl";
+
 // We are explicitly using #include instead of import so that the imported
 // IDL is treated as part of this IDL file.
-#include "ia2_api_all.idl"
+#include "IA2TypeLibrary.idl"

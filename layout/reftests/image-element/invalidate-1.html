@@ -1,5 +1,16 @@
 <!DOCTYPE HTML>
-<html>
+<html class="reftest-wait">
+<script>
+  /* this test shouldn't need reftest-wait, but if the reftest snapshot is triggered before we've painted,
+   * then we might not get a chance to invalidate the -moz-element div in time
+   * See Bug 1283302
+   */
+  window.addEventListener("MozReftestInvalidate", endTest);
+
+  function endTest() {
+    document.documentElement.removeAttribute("class");
+  }
+</script>
 <body>
 <div id="A" style="background:url(repeatable-diagonal-gradient.png?1234); width:100px; height:100px"></div>
 <div style="background:-moz-element(#A); width:100px; height:100px;"></div>

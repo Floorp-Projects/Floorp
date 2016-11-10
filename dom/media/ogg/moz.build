@@ -9,7 +9,6 @@ EXPORTS += [
     'OggCodecStore.h',
     'OggDecoder.h',
     'OggDemuxer.h',
-    'OggReader.h',
     'OggWriter.h',
     'OpusParser.h',
 ]
@@ -19,7 +18,6 @@ UNIFIED_SOURCES += [
     'OggCodecStore.cpp',
     'OggDecoder.cpp',
     'OggDemuxer.cpp',
-    'OggReader.cpp',
     'OggWriter.cpp',
     'OpusParser.cpp',
 ]

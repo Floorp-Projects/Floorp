@@ -622,6 +622,9 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
 
         if (NS_FAILED(rv)) {
           if (rv != NS_ERROR_OUT_OF_MEMORY) {
+#ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
+            DumpFailedUpdate();
+#endif
             AbortUpdateAndReset(updateTable);
           }
           return rv;
@@ -790,6 +793,84 @@ Classifier::CleanToDelete()
 
   return NS_OK;
 }
+
+#ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
+
+already_AddRefed<nsIFile>
+Classifier::GetFailedUpdateDirectroy()
+{
+  nsCString failedUpdatekDirName = STORE_DIRECTORY + nsCString("-failedupdate");
+
+  nsCOMPtr<nsIFile> failedUpdatekDirectory;
+  if (NS_FAILED(mCacheDirectory->Clone(getter_AddRefs(failedUpdatekDirectory))) ||
+      NS_FAILED(failedUpdatekDirectory->AppendNative(failedUpdatekDirName))) {
+    LOG(("Failed to init failedUpdatekDirectory."));
+    return nullptr;
+  }
+
+  return failedUpdatekDirectory.forget();
+}
+
+nsresult
+Classifier::DumpRawTableUpdates(const nsACString& aRawUpdates)
+{
+  // DumpFailedUpdate() MUST be called first to create the
+  // "failed update" directory
+
+  LOG(("Dumping raw table updates..."));
+
+  nsCOMPtr<nsIFile> failedUpdatekDirectory = GetFailedUpdateDirectroy();
+
+  // Create tableupdate.bin and dump raw table update data.
+  nsCOMPtr<nsIFile> rawTableUpdatesFile;
+  nsCOMPtr<nsIOutputStream> outputStream;
+  if (NS_FAILED(failedUpdatekDirectory->Clone(getter_AddRefs(rawTableUpdatesFile))) ||
+      NS_FAILED(rawTableUpdatesFile->AppendNative(nsCString("tableupdates.bin"))) ||
+      NS_FAILED(NS_NewLocalFileOutputStream(getter_AddRefs(outputStream),
+                                            rawTableUpdatesFile,
+                                            PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE))) {
+    LOG(("Failed to create file to dump raw table updates."));
+    return NS_ERROR_FAILURE;
+  }
+
+  // Write out the data.
+  uint32_t written;
+  nsresult rv = outputStream->Write(aRawUpdates.BeginReading(),
+                                    aRawUpdates.Length(), &written);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(written == aRawUpdates.Length(), NS_ERROR_FAILURE);
+
+  return rv;
+}
+
+nsresult
+Classifier::DumpFailedUpdate()
+{
+  LOG(("Dumping failed update..."));
+
+  nsCOMPtr<nsIFile> failedUpdatekDirectory = GetFailedUpdateDirectroy();
+
+  // Remove the "failed update" directory no matter it exists or not.
+  // Failure is fine because the directory may not exist.
+  failedUpdatekDirectory->Remove(true);
+
+  nsCString failedUpdatekDirName;
+  nsresult rv = failedUpdatekDirectory->GetNativeLeafName(failedUpdatekDirName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Move backup to a clean "failed update" directory.
+  nsCOMPtr<nsIFile> backupDirectory;
+  if (NS_FAILED(mBackupDirectory->Clone(getter_AddRefs(backupDirectory))) ||
+      NS_FAILED(backupDirectory->MoveToNative(nullptr, failedUpdatekDirName))) {
+    LOG(("Failed to move backup to the \"failed update\" directory %s",
+         failedUpdatekDirName.get()));
+    return NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
+
+#endif // MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
 
 nsresult
 Classifier::BackupTables()

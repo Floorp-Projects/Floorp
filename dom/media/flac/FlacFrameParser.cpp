@@ -8,6 +8,7 @@
 #include "mp4_demuxer/ByteReader.h"
 #include "nsTArray.h"
 #include "OggCodecState.h"
+#include "OpusParser.h"
 #include "VideoUtils.h"
 
 using mp4_demuxer::ByteReader;
@@ -40,6 +41,10 @@ FlacFrameParser::FlacFrameParser()
   , mNumFrames(0)
   , mFullMetadata(false)
   , mPacketCount(0)
+{
+}
+
+FlacFrameParser::~FlacFrameParser()
 {
 }
 

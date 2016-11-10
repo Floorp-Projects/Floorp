@@ -16,7 +16,6 @@ XPCSHELL_TESTS_MANIFESTS += [
     'favicons/xpcshell.ini',
     'history/xpcshell.ini',
     'migration/xpcshell.ini',
-    'network/xpcshell.ini',
     'queries/xpcshell.ini',
     'unifiedcomplete/xpcshell.ini',
     'unit/xpcshell.ini',
@@ -66,4 +65,3 @@ TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.chrom
     'chrome/rss_as_html.rss^headers^',
     'chrome/sample_feed.atom',
 ]
-

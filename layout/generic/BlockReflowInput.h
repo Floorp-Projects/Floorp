@@ -376,6 +376,12 @@ public:
   // The amount of computed block-direction size "consumed" by previous-in-flows.
   nscoord mConsumedBSize;
 
+  // Cache the current line's BSize if nsBlockFrame::PlaceLine() fails to
+  // place the line. When redoing the line, it will be used to query the
+  // accurate float available space in AddFloat() and
+  // nsBlockFrame::PlaceLine().
+  mozilla::Maybe<nscoord> mLineBSize;
+
 private:
   bool CanPlaceFloat(nscoord aFloatISize,
                      const nsFlowAreaRect& aFloatAvailableSpace);

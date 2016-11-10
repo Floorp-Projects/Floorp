@@ -22,6 +22,8 @@
 SERVO_BINDING_FUNC(Servo_Node_ClearNodeData, void, RawGeckoNodeBorrowed node)
 
 // Styleset and Stylesheet management
+SERVO_BINDING_FUNC(Servo_StyleSheet_Empty, RawServoStyleSheetStrong,
+                   mozilla::css::SheetParsingMode parsing_mode)
 SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetStrong,
                    const nsACString* data,
                    mozilla::css::SheetParsingMode parsing_mode,

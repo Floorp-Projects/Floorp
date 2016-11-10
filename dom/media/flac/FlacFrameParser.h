@@ -26,6 +26,7 @@ class FlacFrameParser
 {
 public:
   FlacFrameParser();
+  ~FlacFrameParser();
 
   bool IsHeaderBlock(const uint8_t* aPacket, size_t aLength) const;
   // Return the length of the block header (METADATA_BLOCK_HEADER+
@@ -56,7 +57,6 @@ private:
 
   // Used to decode the vorbis comment metadata.
   nsAutoPtr<OpusParser> mParser;
-
 };
 
 }

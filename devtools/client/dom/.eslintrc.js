@@ -11,7 +11,7 @@ module.exports = {
     "MessageEvent": true
   },
   "rules": {
-    "indent": 0,
-    "padded-blocks": 0,
+    "indent": "off",
+    "padded-blocks": "off",
   }
 };
