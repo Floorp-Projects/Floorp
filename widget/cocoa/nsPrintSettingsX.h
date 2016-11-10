@@ -31,6 +31,13 @@ public:
   PMPageFormat GetPMPageFormat();
   void SetPMPageFormat(PMPageFormat aPageFormat);
 
+  // Re-initialize mUnwriteableMargin with values from mPageFormat.
+  // Should be called whenever mPageFormat is initialized or overwritten.
+  nsresult InitUnwriteableMargin();
+
+  void SetInchesScale(float aWidthScale, float aHeightScale);
+  void GetInchesScale(float *aWidthScale, float *aHeightScale);
+
 protected:
   virtual ~nsPrintSettingsX();
 
@@ -40,15 +47,16 @@ protected:
   nsresult _Clone(nsIPrintSettings **_retval) override;
   nsresult _Assign(nsIPrintSettings *aPS) override;
 
-  // Re-initialize mUnwriteableMargin with values from mPageFormat.
-  // Should be called whenever mPageFormat is initialized or overwritten.
-  nsresult InitUnwriteableMargin();
-
   // The out param has a ref count of 1 on return so caller needs to PMRelase() when done.
   OSStatus CreateDefaultPageFormat(PMPrintSession aSession, PMPageFormat& outFormat);
   OSStatus CreateDefaultPrintSettings(PMPrintSession aSession, PMPrintSettings& outSettings);
 
   NSPrintInfo* mPrintInfo;
+
+  // Scaling factors used to convert the NSPrintInfo
+  // paper size units to inches
+  float mWidthScale;
+  float mHeightScale;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPrintSettingsX, NS_PRINTSETTINGSX_IID)

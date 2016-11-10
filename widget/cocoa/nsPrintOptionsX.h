@@ -22,6 +22,13 @@ public:
              nsPrintOptionsX();
   virtual    ~nsPrintOptionsX();
 
+  /*
+   * These serialize and deserialize methods are not symmetrical in that
+   * printSettingsX != deserialize(serialize(printSettingsX)). This is because
+   * the native print settings stored in the nsPrintSettingsX's NSPrintInfo
+   * object are not fully serialized. Only the values needed for successful
+   * printing are.
+   */
   NS_IMETHODIMP SerializeToPrintData(nsIPrintSettings* aSettings,
                                      nsIWebBrowserPrint* aWBP,
                                      mozilla::embedding::PrintData* data);
