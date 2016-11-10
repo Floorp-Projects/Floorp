@@ -927,6 +927,7 @@ EditorBase::BeginPlaceHolderTransaction(nsIAtom* aName)
     if (selection) {
       mSelState = new SelectionState();
       mSelState->SaveSelection(selection);
+      mRangeUpdater.RegisterSelectionState(*mSelState);
     }
   }
   mPlaceHolderBatch++;
@@ -978,6 +979,7 @@ EditorBase::EndPlaceHolderTransaction()
     if (mSelState) {
       // we saved the selection state, but never got to hand it to placeholder
       // (else we ould have nulled out this pointer), so destroy it to prevent leaks.
+      mRangeUpdater.DropSelectionState(*mSelState);
       delete mSelState;
       mSelState = nullptr;
     }
