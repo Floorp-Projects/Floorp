@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <vector>
 #include <zlib.h>
+#include <pthread.h>
 #include "Utils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/RefCounted.h"
@@ -459,6 +460,8 @@ private:
 
   /* Pointer to the Directory entries */
   mutable const DirectoryEntry *entries;
+
+  mutable pthread_mutex_t mutex;
 };
 
 /**
