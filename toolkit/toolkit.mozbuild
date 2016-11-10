@@ -187,6 +187,9 @@ if CONFIG['ENABLE_TESTS']:
     if CONFIG['MOZ_CRASHREPORTER']:
         DIRS += ['/testing/tools/fileid']
 
+    if CONFIG['MOZ_MEMORY']:
+        DIRS += ['/memory/gtest']
+
     if CONFIG['MOZ_WEBRTC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and not CONFIG['MOZ_TASK_TRACER']:
             DIRS += [
                 '/media/webrtc/signaling/test',
@@ -195,6 +198,3 @@ if CONFIG['ENABLE_TESTS']:
 
 if CONFIG['FUZZING']:
     DIRS += ['/tools/fuzzing']
-
-if CONFIG['MOZ_MEMORY']:
-    DIRS += ['/memory/gtest']
