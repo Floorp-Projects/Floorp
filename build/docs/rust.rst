@@ -23,6 +23,7 @@ Linking Rust Crates into libxul
 
 Rust crates that you want to link into libxul should be listed in the
 ``dependencies`` section of `toolkit/library/rust/shared/Cargo.toml <https://dxr.mozilla.org/mozilla-central/source/toolkit/library/rust/shared/Cargo.toml>`_.
+You'll also need to add an ``extern crate`` reference to `toolkit/library/rust/shared/lib.rs <https://dxr.mozilla.org/mozilla-central/source/toolkit/library/rust/shared/lib.rs>`_.
 This ensures that the Rust code will be linked properly into libxul as well
 as the copy of libxul used for gtests.
 
