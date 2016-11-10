@@ -9,6 +9,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
+#include <string>
 
 #include "Mappable.h"
 
@@ -31,6 +32,7 @@ class CacheValidator
 {
 public:
   CacheValidator(const char* aCachedLibPath, Zip* aZip, Zip::Stream* aStream)
+    : mCachedLibPath(aCachedLibPath)
   {
     static const char kChecksumSuffix[] = ".crc";
 
@@ -60,7 +62,10 @@ public:
       WARN("Couldn't map %s to validate checksum", mCachedChecksumPath.get());
       return false;
     }
-    return !memcmp(checksumBuf, &mChecksum, sizeof(mChecksum));
+    if (memcmp(checksumBuf, &mChecksum, sizeof(mChecksum))) {
+      return false;
+    }
+    return !access(mCachedLibPath.c_str(), R_OK);
   }
 
   // Caches the APK-provided checksum used in future cache validations.
@@ -93,6 +98,7 @@ public:
   }
 
 private:
+  const std::string mCachedLibPath;
   UniquePtr<char[]> mCachedChecksumPath;
   uint32_t mChecksum;
 };
