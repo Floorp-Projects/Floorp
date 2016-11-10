@@ -635,14 +635,10 @@ class Decoder
 // encoders (AsmJS/WasmTextToBinary) and all the decoders
 // (WasmCompile/WasmIonCompile/WasmBaselineCompile/WasmBinaryToText).
 
-MOZ_MUST_USE bool
-DecodePreamble(Decoder& d);
+// Misc helpers.
 
 MOZ_MUST_USE bool
 CheckValType(Decoder& d, ValType type);
-
-MOZ_MUST_USE bool
-DecodeTypeSection(Decoder& d, SigWithIdVector* sigs);
 
 UniqueChars
 DecodeName(Decoder& d);
@@ -652,15 +648,6 @@ DecodeTableLimits(Decoder& d, TableDescVector* tables);
 
 MOZ_MUST_USE bool
 GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable);
-
-MOZ_MUST_USE bool
-DecodeImportSection(Decoder& d, const SigWithIdVector& sigs, Uint32Vector* funcSigIndices,
-                    GlobalDescVector* globals, TableDescVector* tables, Maybe<Limits>* memory,
-                    ImportVector* imports);
-
-MOZ_MUST_USE bool
-DecodeFunctionSection(Decoder& d, const SigWithIdVector& sigs, size_t numImportedFunc,
-                      Uint32Vector* funcSigIndexes);
 
 MOZ_MUST_USE bool
 EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
@@ -679,14 +666,31 @@ MOZ_MUST_USE bool
 DecodeLimits(Decoder& d, Limits* limits);
 
 MOZ_MUST_USE bool
+DecodeMemoryLimits(Decoder& d, bool hasMemory, Limits* memory);
+
+// Section macros.
+
+MOZ_MUST_USE bool
+DecodePreamble(Decoder& d);
+
+MOZ_MUST_USE bool
+DecodeTypeSection(Decoder& d, SigWithIdVector* sigs);
+
+MOZ_MUST_USE bool
+DecodeImportSection(Decoder& d, const SigWithIdVector& sigs, Uint32Vector* funcSigIndices,
+                    GlobalDescVector* globals, TableDescVector* tables, Maybe<Limits>* memory,
+                    ImportVector* imports);
+
+MOZ_MUST_USE bool
+DecodeFunctionSection(Decoder& d, const SigWithIdVector& sigs, size_t numImportedFunc,
+                      Uint32Vector* funcSigIndexes);
+
+MOZ_MUST_USE bool
 DecodeUnknownSections(Decoder& d);
 
 MOZ_MUST_USE bool
 DecodeDataSection(Decoder& d, bool usesMemory, uint32_t minMemoryByteLength,
                   const GlobalDescVector& globals, DataSegmentVector* segments);
-
-MOZ_MUST_USE bool
-DecodeMemoryLimits(Decoder& d, bool hasMemory, Limits* memory);
 
 MOZ_MUST_USE bool
 DecodeMemorySection(Decoder& d, bool hasMemory, Limits* memory, bool* present);
