@@ -24,10 +24,6 @@ SimplePrograms([
     'TestBlockingProcess',
     'TestPRIntN',
     'TestQuickReturn',
-])
-
-GeckoSimplePrograms([
-    'TestRegistrationOrder',
     'TestUnicodeArguments',
 ])
 
