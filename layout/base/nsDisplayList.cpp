@@ -1027,12 +1027,46 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   mIsInChromePresContext = pc->IsChrome();
 }
 
+// A non-blank paint is a paint that does not just contain the canvas background.
+static bool
+DisplayListIsNonBlank(nsDisplayList* aList)
+{
+  for (nsDisplayItem* i = aList->GetBottom(); i != nullptr; i = i->GetAbove()) {
+    switch (i->GetType()) {
+      case nsDisplayItem::TYPE_LAYER_EVENT_REGIONS:
+      case nsDisplayItem::TYPE_CANVAS_BACKGROUND_COLOR:
+      case nsDisplayItem::TYPE_CANVAS_BACKGROUND_IMAGE:
+        continue;
+      case nsDisplayItem::TYPE_SOLID_COLOR:
+      case nsDisplayItem::TYPE_BACKGROUND:
+      case nsDisplayItem::TYPE_BACKGROUND_COLOR:
+        if (i->Frame()->GetType() == nsGkAtoms::canvasFrame) {
+          continue;
+        }
+        return true;
+      default:
+        return true;
+    }
+  }
+  return false;
+}
+
 void
-nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame)
+nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame, nsDisplayList* aPaintedContents)
 {
   NS_ASSERTION(CurrentPresShellState()->mPresShell ==
       aReferenceFrame->PresContext()->PresShell(),
       "Presshell mismatch");
+
+  if (mIsPaintingToWindow) {
+    nsPresContext* pc = aReferenceFrame->PresContext();
+    if (!pc->HadNonBlankPaint()) {
+      if (!CurrentPresShellState()->mIsBackgroundOnly &&
+          DisplayListIsNonBlank(aPaintedContents)) {
+        pc->NotifyNonBlankPaint();
+      }
+    }
+  }
 
   ResetMarkedFramesForDisplayList();
   mPresShellStates.SetLength(mPresShellStates.Length() - 1);
