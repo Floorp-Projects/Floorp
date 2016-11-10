@@ -183,7 +183,7 @@ nsresult nsExtProtocolChannel::OpenURL()
   }
 
 finish:
-  mCallbacks = 0;
+  mCallbacks = nullptr;
   return rv;
 }
 

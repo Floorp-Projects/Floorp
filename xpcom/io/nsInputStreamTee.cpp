@@ -179,7 +179,7 @@ nsInputStreamTee::TeeSegment(const char* aBuf, uint32_t aCount)
         NS_WARNING("Write failed (non-fatal)");
         // catch possible misuse of the input stream tee
         NS_ASSERTION(rv != NS_BASE_STREAM_WOULD_BLOCK, "sink must be a blocking stream");
-        mSink = 0;
+        mSink = nullptr;
         break;
       }
       totalBytesWritten += bytesWritten;
@@ -217,8 +217,8 @@ nsInputStreamTee::Close()
     return NS_ERROR_NOT_INITIALIZED;
   }
   nsresult rv = mSource->Close();
-  mSource = 0;
-  mSink = 0;
+  mSource = nullptr;
+  mSink = nullptr;
   return rv;
 }
 

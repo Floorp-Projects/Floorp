@@ -291,14 +291,14 @@ WyciwygChannelChild::OnStopRequest(const nsresult& statusCode)
 
     mListener->OnStopRequest(this, mListenerContext, statusCode);
 
-    mListener = 0;
-    mListenerContext = 0;
+    mListener = nullptr;
+    mListenerContext = nullptr;
 
     if (mLoadGroup)
       mLoadGroup->RemoveRequest(this, nullptr, mStatus);
 
-    mCallbacks = 0;
-    mProgressSink = 0;
+    mCallbacks = nullptr;
+    mProgressSink = nullptr;
   }
 
   if (mIPCOpen)
