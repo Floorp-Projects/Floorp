@@ -144,7 +144,8 @@ public:
     { return mChildDocs[aIdx]; }
 
 #if defined(XP_WIN)
-  void SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy);
+  virtual bool RecvCOMProxy(const IAccessibleHolder& aCOMProxy,
+                            IAccessibleHolder* aParentCOMProxy) override;
 #endif
 
 private:
