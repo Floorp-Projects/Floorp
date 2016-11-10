@@ -23,9 +23,11 @@ using namespace mozilla;
 #ifdef ANDROID
 extern "C" {
   void report_mapping(char *name, void *base, uint32_t len, uint32_t offset);
+  void delete_mapping(const char *name);
 }
 #else
 #define report_mapping(...)
+#define delete_mapping(...)
 #endif
 
 const Ehdr *Ehdr::validate(const void *buf)
@@ -276,6 +278,7 @@ CustomElf::~CustomElf()
    * calls destructors once, so call it in all cases. */
   ElfLoader::__wrap_cxa_finalize(this);
   ElfLoader::Singleton.Forget(this);
+  delete_mapping(GetName());
 }
 
 void *
