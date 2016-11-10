@@ -1353,7 +1353,7 @@ class Marionette(object):
 
         """
         try:
-            self._send_message("timeouts", {"script": timeout})
+            self._send_message("setTimeouts", {"script": timeout})
         except errors.MarionetteException as e:
             # remove when 52.0a is stable
             if "Not a Number" in e.message:
@@ -1376,7 +1376,7 @@ class Marionette(object):
 
         """
         try:
-            self._send_message("timeouts", {"implicit": timeout})
+            self._send_message("setTimeouts", {"implicit": timeout})
         except errors.MarionetteException as e:
             # remove when 52.0a is stable
             if "Not a Number" in e.message:
@@ -1395,7 +1395,7 @@ class Marionette(object):
 
         """
         try:
-            self._send_message("timeouts", {"page load": timeout})
+            self._send_message("setTimeouts", {"page load": timeout})
         except errors.MarionetteException as e:
             # remove when 52.0a is stable
             if "Not a Number" in e.message:
