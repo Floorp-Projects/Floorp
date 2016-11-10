@@ -101,6 +101,7 @@
 #include "CacheControlParser.h"
 #include "nsMixedContentBlocker.h"
 #include "HSTSPrimerListener.h"
+#include "CacheStorageService.h"
 
 namespace mozilla { namespace net {
 
@@ -242,6 +243,8 @@ nsHttpChannel::nsHttpChannel()
     , mOfflineCacheLastModifiedTime(0)
     , mInterceptCache(DO_NOT_INTERCEPT)
     , mInterceptionID(gNumIntercepted++)
+    , mCacheOpenWithPriority(false)
+    , mCacheQueueSizeWhenOpen(0)
     , mCachedContentIsValid(false)
     , mCachedContentIsPartial(false)
     , mCacheOnlyMetadata(false)
@@ -3566,6 +3569,10 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
             MOZ_ASSERT(NS_SUCCEEDED(cacheStorage->Exists(openURI, extension, &exists)) && exists,
                        "The entry must exist in the cache after we create it here");
         }
+
+        mCacheOpenWithPriority = cacheEntryOpenFlags & nsICacheStorage::OPEN_PRIORITY;
+        mCacheQueueSizeWhenOpen = CacheStorageService::CacheQueueSize(mCacheOpenWithPriority);
+
         rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
         NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -6369,6 +6376,7 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
                "If we have both pumps, the cache content must be partial");
 
     mAfterOnStartRequestBegun = true;
+    mOnStartRequestTimestamp = TimeStamp::Now();
 
     if (!mSecurityInfo && !mCachePump && mTransaction) {
         // grab the security info from the connection object; the transaction
@@ -6526,6 +6534,8 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
 
     if (mTimingEnabled && request == mCachePump) {
         mCacheReadEnd = TimeStamp::Now();
+
+        ReportNetVSCacheTelemetry();
     }
 
     // allow content to be cached if it was loaded successfully (bug #482935)
@@ -6605,6 +6615,20 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         }
 
         mTransferSize = mTransaction->GetTransferSize();
+
+        // If we are using the transaction to serve content, we also save the
+        // time since async open in the cache entry so we can compare telemetry
+        // between cache and net response.
+        if (request == mTransactionPump && mCacheEntry &&
+            !mAsyncOpenTime.IsNull() && !mOnStartRequestTimestamp.IsNull()) {
+            nsAutoCString onStartTime;
+            onStartTime.AppendInt( (uint64_t) (mOnStartRequestTimestamp - mAsyncOpenTime).ToMilliseconds());
+            mCacheEntry->SetMetaDataElement("net-response-time-onstart", onStartTime.get());
+
+            nsAutoCString responseTime;
+            responseTime.AppendInt( (uint64_t) (TimeStamp::Now() - mAsyncOpenTime).ToMilliseconds());
+            mCacheEntry->SetMetaDataElement("net-response-time-onstop", responseTime.get());
+        }
 
         // at this point, we're done with the transaction
         mTransactionTimings = mTransaction->Timings();
@@ -8151,6 +8175,137 @@ nsHttpChannel::SetDoNotTrack()
                            NS_LITERAL_CSTRING("1"),
                            false);
   }
+}
+
+
+void
+nsHttpChannel::ReportNetVSCacheTelemetry()
+{
+    nsresult rv;
+    if (!mCacheEntry) {
+        return;
+    }
+
+    // We only report telemetry if the entry is persistent (on disk)
+    bool persistent;
+    rv = mCacheEntry->GetPersistent(&persistent);
+    if (NS_FAILED(rv) || !persistent) {
+        return;
+    }
+
+    nsXPIDLCString tmpStr;
+    rv = mCacheEntry->GetMetaDataElement("net-response-time-onstart",
+                                         getter_Copies(tmpStr));
+    if (NS_FAILED(rv)) {
+        return;
+    }
+    uint64_t onStartNetTime = tmpStr.ToInteger64(&rv);
+    if (NS_FAILED(rv)) {
+        return;
+    }
+
+    tmpStr.Truncate();
+    rv = mCacheEntry->GetMetaDataElement("net-response-time-onstop",
+                                         getter_Copies(tmpStr));
+    if (NS_FAILED(rv)) {
+        return;
+    }
+    uint64_t onStopNetTime = tmpStr.ToInteger64(&rv);
+    if (NS_FAILED(rv)) {
+        return;
+    }
+
+    uint64_t onStartCacheTime = (mOnStartRequestTimestamp - mAsyncOpenTime).ToMilliseconds();
+    int64_t onStartDiff = onStartNetTime - onStartCacheTime;
+    onStartDiff += 500; // We offset the difference by 500 ms to report positive values in telemetry
+
+    uint64_t onStopCacheTime = (mCacheReadEnd - mAsyncOpenTime).ToMilliseconds();
+    int64_t onStopDiff = onStopNetTime - onStopCacheTime;
+    onStopDiff += 500; // We offset the difference by 500 ms
+
+    if (mDidReval) {
+        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_REVALIDATED, onStartDiff);
+        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_REVALIDATED, onStopDiff);
+    } else {
+        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_NOTREVALIDATED, onStartDiff);
+        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_NOTREVALIDATED, onStopDiff);
+    }
+
+    if (mDidReval) {
+        // We don't report revalidated probes as the data would be skewed.
+        return;
+    }
+
+    uint32_t diskStorageSizeK = 0;
+    rv = mCacheEntry->GetDiskStorageSizeInKB(&diskStorageSizeK);
+    if (NS_FAILED(rv)) {
+        return;
+    }
+
+    nsAutoCString contentType;
+    if (mResponseHead && mResponseHead->HasContentType()) {
+        mResponseHead->ContentType(contentType);
+    }
+    bool isImage = StringBeginsWith(contentType, NS_LITERAL_CSTRING("image/"));
+    if (isImage) {
+        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_ISIMG, onStartDiff);
+        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_ISIMG, onStopDiff);
+    } else {
+        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_NOTIMG, onStartDiff);
+        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_NOTIMG, onStopDiff);
+    }
+
+    if (mCacheQueueSizeWhenOpen < 10) {
+        if (mCacheOpenWithPriority) {
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_QSMALL_HIGHPRI, onStartDiff);
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_QSMALL_HIGHPRI, onStopDiff);
+        } else {
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_QSMALL_NORMALPRI, onStartDiff);
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_QSMALL_NORMALPRI, onStopDiff);
+        }
+    } else if (mCacheQueueSizeWhenOpen < 50) {
+        if (mCacheOpenWithPriority) {
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_QMED_HIGHPRI, onStartDiff);
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_QMED_HIGHPRI, onStopDiff);
+        } else {
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_QMED_NORMALPRI, onStartDiff);
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_QMED_NORMALPRI, onStopDiff);
+        }
+    } else {
+        if (mCacheOpenWithPriority) {
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_QBIG_HIGHPRI, onStartDiff);
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_QBIG_HIGHPRI, onStopDiff);
+        } else {
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_QBIG_NORMALPRI, onStartDiff);
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_QBIG_NORMALPRI, onStopDiff);
+        }
+    }
+
+    if (diskStorageSizeK < 32) {
+        if (mCacheOpenWithPriority) {
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_SMALL_HIGHPRI, onStartDiff);
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_SMALL_HIGHPRI, onStopDiff);
+        } else {
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_SMALL_NORMALPRI, onStartDiff);
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_SMALL_NORMALPRI, onStopDiff);
+        }
+    } else if (diskStorageSizeK < 256) {
+        if (mCacheOpenWithPriority) {
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_MED_HIGHPRI, onStartDiff);
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_MED_HIGHPRI, onStopDiff);
+        } else {
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_MED_NORMALPRI, onStartDiff);
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_MED_NORMALPRI, onStopDiff);
+        }
+    } else {
+        if (mCacheOpenWithPriority) {
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_LARGE_HIGHPRI, onStartDiff);
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_LARGE_HIGHPRI, onStopDiff);
+        } else {
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_LARGE_NORMALPRI, onStartDiff);
+            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_LARGE_NORMALPRI, onStopDiff);
+        }
+    }
 }
 
 } // namespace net

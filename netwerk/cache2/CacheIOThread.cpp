@@ -341,6 +341,17 @@ bool CacheIOThread::IsCurrentThread()
   return mThread == PR_GetCurrentThread();
 }
 
+uint32_t CacheIOThread::QueueSize(bool highPriority)
+{
+  MonitorAutoLock lock(mMonitor);
+  if (highPriority) {
+    return mQueueLength[OPEN_PRIORITY] + mQueueLength[READ_PRIORITY];
+  }
+
+  return mQueueLength[OPEN_PRIORITY] + mQueueLength[READ_PRIORITY] +
+         mQueueLength[MANAGEMENT] + mQueueLength[OPEN] + mQueueLength[READ];
+}
+
 bool CacheIOThread::YieldInternal()
 {
   if (!IsCurrentThread()) {

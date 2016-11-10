@@ -105,6 +105,11 @@ public:
                        mOldDesc->SetMetaDataElement(key, value);
   }
 
+  NS_IMETHOD GetDiskStorageSizeInKB(uint32_t *aDiskStorageSize) override
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   // nsICacheEntryInfo
   NS_IMETHOD GetKey(nsACString & aKey) override
   {
