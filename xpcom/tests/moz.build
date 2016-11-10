@@ -27,11 +27,6 @@ SimplePrograms([
     'TestUnicodeArguments',
 ])
 
-if CONFIG['OS_TARGET'] == 'WINNT':
-    GeckoSimplePrograms([
-        'TestBase64',
-    ])
-
 if CONFIG['WRAP_STL_INCLUDES'] and not CONFIG['CLANG_CL']:
     GeckoSimplePrograms([
         'TestSTLWrappers',
