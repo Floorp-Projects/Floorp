@@ -17,8 +17,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
-                                  "resource://gre/modules/ExtensionUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionChild",
+                                  "resource://gre/modules/ExtensionChild.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
@@ -231,7 +231,7 @@ this.NativeApp = class extends EventEmitter {
    */
   static onConnectNative(context, messageManager, portId, sender, application) {
     let app = new NativeApp(context, application);
-    let port = new ExtensionUtils.Port(context, messageManager, [messageManager], "", portId, sender, sender);
+    let port = new ExtensionChild.Port(context, messageManager, [messageManager], "", portId, sender, sender);
     app.once("disconnect", (what, err) => port.disconnect(err));
 
     /* eslint-disable mozilla/balanced-listeners */

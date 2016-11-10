@@ -2,9 +2,9 @@
 
 Components.utils.import("resource://gre/modules/Schemas.jsm");
 Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
-Components.utils.import("resource://gre/modules/ExtensionUtils.jsm");
+Components.utils.import("resource://gre/modules/ExtensionCommon.jsm");
 
-let {LocalAPIImplementation, SchemaAPIInterface} = ExtensionUtils;
+let {LocalAPIImplementation, SchemaAPIInterface} = ExtensionCommon;
 
 let json = [
   {namespace: "testing",

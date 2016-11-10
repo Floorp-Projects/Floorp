@@ -3,7 +3,7 @@
 /* global OS, HostManifestManager, NativeApp */
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
-Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Schemas.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -84,7 +84,7 @@ let context = {
   forgetOnClose: () => {},
 };
 
-class MockContext extends ExtensionUtils.BaseContext {
+class MockContext extends ExtensionCommon.BaseContext {
   constructor(extensionId) {
     let fakeExtension = {id: extensionId};
     super("testEnv", fakeExtension);

@@ -22,12 +22,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "Extension",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+Cu.import("resource://gre/modules/ExtensionChild.jsm");
+Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 
 var {
   BaseContext,
+} = ExtensionCommon;
+
+var {
   Messenger,
-} = ExtensionUtils;
+} = ExtensionChild;
 
 /**
  * Instances created from this class provide to a legacy extension

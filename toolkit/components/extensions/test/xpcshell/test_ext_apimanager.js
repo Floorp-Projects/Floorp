@@ -4,7 +4,11 @@
 
 "use strict";
 
-let {ExtensionUtils: {SchemaAPIManager}} = Cu.import("resource://gre/modules/ExtensionUtils.jsm", {});
+Cu.import("resource://gre/modules/ExtensionCommon.jsm");
+
+const {
+  SchemaAPIManager,
+} = ExtensionCommon;
 
 this.unknownvar = "Some module-global var";
 
