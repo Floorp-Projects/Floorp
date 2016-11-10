@@ -36,6 +36,9 @@ module.exports = {
     // Always require a trailing EOL
     "eol-last": "error",
 
+    // No spaces between function name and parentheses
+    "func-call-spacing": "error",
+
     // Require function* name()
     // "generator-star-spacing": ["error", {"before": false, "after": true}],
 
@@ -137,9 +140,6 @@ module.exports = {
 
     // No declaring variables that hide things like arguments
     "no-shadow-restricted-names": "error",
-
-    // No spaces between function name and parentheses
-    // "no-spaced-func": "error",
 
     // No trailing whitespace
     "no-trailing-spaces": "error",

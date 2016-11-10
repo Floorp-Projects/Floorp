@@ -1221,7 +1221,7 @@ WidgetStack.prototype = {
 
     this._widgetState[wid] = state;
 
-    log ("(New widget: " + wid + (state.viewport ? " [viewport]" : "") + " at: " + state.rect + ")");
+    log("(New widget: " + wid + (state.viewport ? " [viewport]" : "") + " at: " + state.rect + ")");
   },
 
   _removeWidget: function (w) {

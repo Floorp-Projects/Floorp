@@ -68,7 +68,7 @@ var selectBookmarksIn = Task.async(function* (organizer, bookmarks, aLeftPaneQue
   let ids = [];
   for (let {guid} of bookmarks) {
     let bookmark = yield PlacesUtils.bookmarks.fetch(guid);
-    is (bookmark.parentGuid, PlacesOrganizer._places.selectedNode.targetFolderGuid,
+    is(bookmark.parentGuid, PlacesOrganizer._places.selectedNode.targetFolderGuid,
         "Bookmark has the right parent");
     ids.push(yield PlacesUtils.promiseItemId(bookmark.guid));
   }

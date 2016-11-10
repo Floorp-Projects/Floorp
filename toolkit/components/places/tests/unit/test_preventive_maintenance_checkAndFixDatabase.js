@@ -20,7 +20,7 @@ function run_test() {
     let infos = [];
 
     aLog.forEach(function (aMsg) {
-      print (aMsg);
+      print(aMsg);
       switch (aMsg.substr(0, 1)) {
         case "+":
           positives.push(aMsg);
