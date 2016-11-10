@@ -5384,18 +5384,17 @@ nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
   nscoord absOffset = (side == eLogicalSideBStart) != aWM.IsLineInverted() ?
     baseFontMetrics->MaxAscent() + fm->MaxDescent() :
     baseFontMetrics->MaxDescent() + fm->MaxAscent();
-  nscoord startLeading = 0;
-  nscoord endLeading = 0;
+  RubyBlockLeadings leadings;
   if (nsRubyFrame* ruby = FindRubyAncestor(this)) {
-    ruby->GetBlockLeadings(startLeading, endLeading);
+    leadings = ruby->GetBlockLeadings();
   }
   if (side == eLogicalSideBStart) {
-    info->baselineOffset = -absOffset - startLeading;
-    overflowRect.BStart(aWM) = -overflowRect.BSize(aWM) - startLeading;
+    info->baselineOffset = -absOffset - leadings.mStart;
+    overflowRect.BStart(aWM) = -overflowRect.BSize(aWM) - leadings.mStart;
   } else {
     MOZ_ASSERT(side == eLogicalSideBEnd);
-    info->baselineOffset = absOffset + endLeading;
-    overflowRect.BStart(aWM) = frameSize.BSize(aWM) + endLeading;
+    info->baselineOffset = absOffset + leadings.mEnd;
+    overflowRect.BStart(aWM) = frameSize.BSize(aWM) + leadings.mEnd;
   }
   // If text combined, fix the gap between the text frame and its parent.
   if (isTextCombined) {
