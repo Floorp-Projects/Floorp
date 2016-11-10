@@ -12,7 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "nsXPCOM.h"
-#include "nsXPCOMGlue.h"
 
 #include "mozilla/RefPtr.h"
 #include "nsIComponentManager.h"
