@@ -648,9 +648,6 @@ UniqueChars
 DecodeName(Decoder& d);
 
 MOZ_MUST_USE bool
-DecodeSignatureIndex(Decoder& d, const SigWithIdVector& sigs, uint32_t* sigIndex);
-
-MOZ_MUST_USE bool
 DecodeTableLimits(Decoder& d, TableDescVector* tables);
 
 MOZ_MUST_USE bool
@@ -660,6 +657,10 @@ MOZ_MUST_USE bool
 DecodeImportSection(Decoder& d, const SigWithIdVector& sigs, Uint32Vector* funcSigIndices,
                     GlobalDescVector* globals, TableDescVector* tables, Maybe<Limits>* memory,
                     ImportVector* imports);
+
+MOZ_MUST_USE bool
+DecodeFunctionSection(Decoder& d, const SigWithIdVector& sigs, size_t numImportedFunc,
+                      Uint32Vector* funcSigIndexes);
 
 MOZ_MUST_USE bool
 EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
