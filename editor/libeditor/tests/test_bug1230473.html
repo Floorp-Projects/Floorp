@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1230473
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1230473</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1230473">Mozilla Bug 1230473</a>
+<input id="input">
+<textarea id="textarea"></textarea>
+<div id="div" contenteditable></div>
+<script type="application/javascript">
+/** Test for Bug 1230473 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(()=>{
+  function runTest(aEditor) {
+    function committer() {
+      aEditor.blur();
+      aEditor.focus();
+    }
+    function isNSEditableElement() {
+      return aEditor.tagName.toLowerCase() == "input" || aEditor.tagName.toLowerCase() == "textarea";
+    }
+    function value() {
+      return isNSEditableElement() ? aEditor.value : aEditor.textContent;
+    }
+    function isComposing() {
+      return isNSEditableElement() ?  SpecialPowers.wrap(aEditor)
+                                                   .QueryInterface(SpecialPowers.Ci.nsIDOMNSEditableElement)
+                                                   .editor
+                                                   .QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport)
+                                                   .composing :
+                                      SpecialPowers.wrap(window)
+                                                   .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                                                   .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+                                                   .QueryInterface(SpecialPowers.Ci.nsIDocShell)
+                                                   .editor
+                                                   .QueryInterface(SpecialPowers.Ci.nsIEditorIMESupport)
+                                                   .composing;
+    }
+    function clear() {
+      if (isNSEditableElement()) {
+        aEditor.value = "";
+      } else {
+        aEditor.textContent = "";
+      }
+    }
+
+    clear();
+
+    // Committing at compositionstart
+    aEditor.focus();
+    aEditor.addEventListener("compositionstart", committer, true);
+    synthesizeCompositionChange({ composition: { string: "a", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                  caret: { start: 1, length: 0 }});
+    aEditor.removeEventListener("compositionstart", committer, true);
+    ok(!isComposing(), "composition in " + aEditor.id + " should be committed by compositionstart event handler");
+    is(value(), "", "composition in " + aEditor.id + " shouldn't insert any text since it's committed at compositionstart");
+    clear();
+
+    // Committing at first compositionupdate
+    aEditor.focus();
+    aEditor.addEventListener("compositionupdate", committer, true);
+    synthesizeCompositionChange({ composition: { string: "a", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                  caret: { start: 1, length: 0 }});
+    aEditor.removeEventListener("compositionupdate", committer, true);
+    ok(!isComposing(), "composition in " + aEditor.id + " should be committed by compositionupdate event handler");
+    is(value(), "", "composition in " + aEditor.id + " shouldn't have inserted any text since it's committed at first compositionupdate");
+    clear();
+
+    // Committing at first text (eCompositionChange)
+    aEditor.focus();
+    aEditor.addEventListener("text", committer, true);
+    synthesizeCompositionChange({ composition: { string: "a", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                  caret: { start: 1, length: 0 }});
+    aEditor.removeEventListener("text", committer, true);
+    ok(!isComposing(), "composition in " + aEditor.id + " should be committed by text event handler");
+    is(value(), "", "composition in " + aEditor.id + " should have inserted any text since it's committed at first text");
+    clear();
+
+    // Committing at second compositionupdate
+    aEditor.focus();
+    synthesizeComposition({ type: "compositionstart" });
+    synthesizeCompositionChange({ composition: { string: "a", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                  caret: { start: 1, length: 0 }});
+    ok(isComposing(), "composition should be in " + aEditor.id + " before dispatching second compositionupdate");
+    is(value(), "a", "composition in " + aEditor.id + " should be 'a' before dispatching second compositionupdate");
+    aEditor.addEventListener("compositionupdate", committer, true);
+    synthesizeCompositionChange({ composition: { string: "ab", clauses: [{length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                  caret: { start: 2, length: 0 }});
+    aEditor.removeEventListener("compositionupdate", committer, true);
+    ok(!isComposing(), "composition in " + aEditor.id + " should be committed by compositionupdate event handler");
+    todo_is(value(), "a", "composition in " + aEditor.id + " shouldn't have been modified since it's committed at second compositionupdate");
+    clear();
+
+    // Committing at second text (eCompositionChange)
+    aEditor.focus();
+    synthesizeComposition({ type: "compositionstart" });
+    synthesizeCompositionChange({ composition: { string: "a", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                  caret: { start: 1, length: 0 }});
+    ok(isComposing(), "composition should be in " + aEditor.id + " before dispatching second text");
+    is(value(), "a", "composition in " + aEditor.id + " should be 'a' before dispatching second text");
+    aEditor.addEventListener("text", committer, true);
+    synthesizeCompositionChange({ composition: { string: "ab", clauses: [{length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }] },
+                                  caret: { start: 2, length: 0 }});
+    aEditor.removeEventListener("text", committer, true);
+    ok(!isComposing(), "composition in " + aEditor.id + " should be committed by text event handler");
+    todo_is(value(), "a", "composition in " + aEditor.id + " shouldn't have been modified since it's committed at second text");
+    clear();
+  }
+  runTest(document.getElementById("input"));
+  runTest(document.getElementById("textarea"));
+  runTest(document.getElementById("div"));
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>
