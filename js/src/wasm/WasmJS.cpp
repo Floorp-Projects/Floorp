@@ -1714,13 +1714,8 @@ WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    if (CanUseExtraThreads()) {
-        if (!StartPromiseTask(cx, Move(task)))
-            return false;
-    } else {
-        task->execute();
-        task->finishPromise(cx, promise);
-    }
+    if (!StartPromiseTask(cx, Move(task)))
+        return false;
 
     callArgs.rval().setObject(*promise);
     return true;
