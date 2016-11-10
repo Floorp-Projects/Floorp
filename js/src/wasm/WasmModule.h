@@ -211,6 +211,7 @@ class Module : public JS::WasmModule
 
     const Metadata& metadata() const { return *metadata_; }
     const ImportVector& imports() const { return imports_; }
+    const ExportVector& exports() const { return exports_; }
 
     // Instantiate this module with the given imports:
 
