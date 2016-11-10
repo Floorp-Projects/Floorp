@@ -8187,7 +8187,8 @@
     "description": "How often are secure cookies set from non-secure origins, and vice-versa? 0=nonsecure/http, 1=nonsecure/https, 2=secure/http, 3=secure/https"
   },
   "COOKIE_LEAVE_SECURE_ALONE": {
-    "alert_emails": ["seceng@mozilla.org"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [976073],
     "expires_in_version": "57",
     "kind": "enumerated",
     "n_values": 10,
