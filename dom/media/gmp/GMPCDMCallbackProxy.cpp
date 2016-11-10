@@ -22,6 +22,19 @@ GMPCDMCallbackProxy::GMPCDMCallbackProxy(CDMProxy* aProxy)
 {}
 
 void
+GMPCDMCallbackProxy::SetDecryptorId(uint32_t aId)
+{
+  MOZ_ASSERT(mProxy->IsOnOwnerThread());
+
+  RefPtr<CDMProxy> proxy = mProxy;
+  NS_DispatchToMainThread(
+    NS_NewRunnableFunction([proxy, aId] ()
+    {
+      proxy->OnSetDecryptorId(aId);
+    })
+  );}
+
+void
 GMPCDMCallbackProxy::SetSessionId(uint32_t aToken,
                                   const nsCString& aSessionId)
 {
