@@ -4,33 +4,33 @@ module.exports = { // eslint-disable-line no-undef
   "extends": "../../.eslintrc.js",
   "rules": {
     // Require spacing around =>
-    "arrow-spacing": 2,
+    "arrow-spacing": "error",
 
     // No newline before open brace for a block
-    "brace-style": [2, "1tbs", {"allowSingleLine": true}],
+    "brace-style": ["error", "1tbs", {"allowSingleLine": true}],
 
     // No space before always a space after a comma
-    "comma-spacing": [2, {"before": false, "after": true}],
+    "comma-spacing": ["error", {"before": false, "after": true}],
 
     // Commas at the end of the line not the start
-    "comma-style": 2,
+    "comma-style": "error",
 
     // Use [] instead of Array()
-    "no-array-constructor": 2,
+    "no-array-constructor": "error",
 
     // Use {} instead of new Object()
-    "no-new-object": 2,
+    "no-new-object": "error",
 
     // No using undeclared variables
-    "no-undef": 2,
+    "no-undef": "error",
 
     // Don't allow unused local variables unless they match the pattern
-    "no-unused-vars": [2, {"args": "none", "vars": "local", "varsIgnorePattern": "^(ids|ignored|unused)$"}],
+    "no-unused-vars": ["error", {"args": "none", "vars": "local", "varsIgnorePattern": "^(ids|ignored|unused)$"}],
 
     // Always require semicolon at end of statement
-    "semi": [2, "always"],
+    "semi": ["error", "always"],
 
     // Require spaces around operators
-    "space-infix-ops": 2,
+    "space-infix-ops": "error",
   }
 };

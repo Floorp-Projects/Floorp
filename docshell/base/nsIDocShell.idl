@@ -852,6 +852,11 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] readonly attribute boolean isInMozBrowserOrApp;
 
   /**
+   * Returns true if this docshell is the top level content docshell.
+   */
+  [infallible] readonly attribute boolean isTopLevelContentDocShell;
+
+  /**
    * Returns the id of the app associated with this docshell.  If this docshell
    * is an <iframe mozbrowser> inside an <iframe mozapp>, we return the app's
    * appId.

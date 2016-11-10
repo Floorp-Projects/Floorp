@@ -4,18 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <string.h>
-
-#include "mozilla/DebugOnly.h"
+#include <algorithm>
 #include "mozilla/EndianUtils.h"
-#include <stdint.h>
 
 #include "OpusParser.h"
-
-#include "nsDebug.h"
-#include "MediaDecoderReader.h"
 #include "VideoUtils.h"
-#include <algorithm>
 
 #include "opus/opus.h"
 extern "C" {

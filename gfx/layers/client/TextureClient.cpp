@@ -1211,9 +1211,8 @@ TextureClient::CreateForYCbCr(KnowsCompositor* aAllocator,
                               YUVColorSpace aYUVColorSpace,
                               TextureFlags aTextureFlags)
 {
-  // The only reason we allow aAllocator to be null is for gtests
   MOZ_ASSERT(!aAllocator || aAllocator->GetLayersIPCActor()->IPCOpen());
-  if (aAllocator && !aAllocator->GetLayersIPCActor()->IPCOpen()) {
+  if (!aAllocator || !aAllocator->GetLayersIPCActor()->IPCOpen()) {
     return nullptr;
   }
 
@@ -1229,7 +1228,7 @@ TextureClient::CreateForYCbCr(KnowsCompositor* aAllocator,
   }
 
   return MakeAndAddRef<TextureClient>(data, aTextureFlags,
-                                      aAllocator ? aAllocator->GetTextureForwarder() : nullptr);
+                                      aAllocator->GetTextureForwarder());
 }
 
 // static
@@ -1241,7 +1240,7 @@ TextureClient::CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
 {
   // also test the validity of aAllocator
   MOZ_ASSERT(!aAllocator || aAllocator->GetLayersIPCActor()->IPCOpen());
-  if (aAllocator && !aAllocator->GetLayersIPCActor()->IPCOpen()) {
+  if (!aAllocator || !aAllocator->GetLayersIPCActor()->IPCOpen()) {
     return nullptr;
   }
 
@@ -1253,7 +1252,7 @@ TextureClient::CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
   }
 
   return MakeAndAddRef<TextureClient>(data, aTextureFlags,
-                                      aAllocator ? aAllocator->GetTextureForwarder() : 0);
+                                      aAllocator->GetTextureForwarder());
 }
 
 TextureClient::TextureClient(TextureData* aData, TextureFlags aFlags, LayersIPCChannel* aAllocator)

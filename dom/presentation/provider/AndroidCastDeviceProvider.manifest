@@ -1,0 +1,4 @@
+# AndroidCastDeviceProvider.js
+component {7394f24c-dbc3-48c8-8a47-cd10169b7c6b} AndroidCastDeviceProvider.js
+contract @mozilla.org/presentation-device/android-cast-device-provider;1 {7394f24c-dbc3-48c8-8a47-cd10169b7c6b}
+category presentation-device-provider AndroidCastDeviceProvider @mozilla.org/presentation-device/android-cast-device-provider;1

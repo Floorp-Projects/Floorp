@@ -17,9 +17,6 @@ public:
   MediaDecoder* Clone(MediaDecoderOwner* aOwner) override;
   MediaDecoderStateMachine* CreateStateMachine() override;
 
-  // Returns true if the WAV backend is pref'ed on, and we're running on a
-  // platform that is likely to have decoders for the format.
-  static bool IsEnabled();
   static bool CanHandleMediaType(const nsACString& aType,
                                  const nsAString& aCodecs);
 };

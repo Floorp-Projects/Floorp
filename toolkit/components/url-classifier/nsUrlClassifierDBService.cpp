@@ -557,6 +557,11 @@ nsUrlClassifierDBServiceWorker::FinishStream()
     // parser.
     mTableUpdates.AppendElements(mProtocolParser->GetTableUpdates());
     mProtocolParser->ForgetTableUpdates();
+
+#ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
+    // The assignment involves no string copy since the source string is sharable.
+    mRawTableUpdates = mProtocolParser->GetRawTableUpdates();
+#endif
   } else {
     LOG(("nsUrlClassifierDBService::FinishStream Failed to parse the stream "
          "using mProtocolParser."));
@@ -622,7 +627,17 @@ nsresult
 nsUrlClassifierDBServiceWorker::ApplyUpdate()
 {
   LOG(("nsUrlClassifierDBServiceWorker::ApplyUpdate()"));
-  return mClassifier->ApplyUpdates(&mTableUpdates);
+  nsresult rv = mClassifier->ApplyUpdates(&mTableUpdates);
+
+#ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
+  if (NS_FAILED(rv) && NS_ERROR_OUT_OF_MEMORY != rv) {
+    mClassifier->DumpRawTableUpdates(mRawTableUpdates);
+  }
+  // Invalidate the raw table updates.
+  mRawTableUpdates = EmptyCString();
+#endif
+
+  return rv;
 }
 
 NS_IMETHODIMP

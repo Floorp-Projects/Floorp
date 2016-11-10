@@ -270,6 +270,7 @@ private:
   class ShutdownState;
 
   static const char* ToStateStr(State aState);
+  static const char* ToStr(NextFrameStatus aStatus);
   const char* ToStateStr();
 
   // Functions used by assertions to ensure we're calling things
@@ -401,6 +402,7 @@ protected:
   // Recomputes mNextFrameStatus, possibly dispatching notifications to interested
   // parties.
   void UpdateNextFrameStatus();
+  void UpdateNextFrameStatus(NextFrameStatus aStatus);
 
   // Return the current time, either the audio clock if available (if the media
   // has audio, and the playback is possible), or a clock for the video.
@@ -560,9 +562,7 @@ private:
   // the decoder, state machine, and main threads.
   MediaQueue<MediaData> mVideoQueue;
 
-  // The decoder monitor must be obtained before modifying this state.
-  // Accessed on state machine, audio, main, and AV thread.
-  Watchable<State> mState;
+  State mState = DECODER_STATE_DECODING_METADATA;
 
   UniquePtr<StateObject> mStateObj;
 
@@ -679,17 +679,11 @@ private:
   // it has stopped.
   bool mAudioCaptured;
 
-  // True if the audio playback thread has finished. It is finished
-  // when either all the audio frames have completed playing, or we've moved
-  // into shutdown state, and the threads are to be
-  // destroyed. Written by the audio playback thread and read and written by
-  // the state machine thread. Synchronised via decoder monitor.
-  // When data is being sent to a MediaStream, this is true when all data has
-  // been written to the MediaStream.
-  Watchable<bool> mAudioCompleted;
+  // True if all audio frames are already rendered.
+  bool mAudioCompleted = false;
 
   // True if all video frames are already rendered.
-  Watchable<bool> mVideoCompleted;
+  bool mVideoCompleted = false;
 
   // Flag whether we notify metadata before decoding the first frame or after.
   //

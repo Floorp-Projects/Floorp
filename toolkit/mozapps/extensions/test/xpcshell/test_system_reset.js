@@ -50,10 +50,14 @@ function* check_installed(conditions) {
       do_check_eq(addon.version, version);
       do_check_true(addon.isActive);
       do_check_false(addon.foreignInstall);
-      do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_UPGRADE));
-      do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL));
       do_check_true(addon.hidden);
       do_check_true(addon.isSystem);
+      do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_UPGRADE));
+      if (isUpgrade) {
+        do_check_true(hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL));
+      } else {
+        do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL));
+      }
 
       // Verify the add-ons file is in the right place
       let file = expectedDir.clone();
@@ -366,6 +370,45 @@ add_task(function* test_bad_app_cert() {
   let conditions = [
       { isUpgrade: false, version: "1.0" },
       { isUpgrade: false, version: null },
+      { isUpgrade: false, version: "1.0" },
+  ];
+
+  yield check_installed(conditions);
+
+  yield promiseShutdownManager();
+});
+
+// A failed upgrade should revert to the default set.
+add_task(function* test_updated() {
+  // Create a random dir to install into
+  let dirname = makeUUID();
+  FileUtils.getDir("ProfD", ["features", dirname], true);
+  updatesDir.append(dirname);
+
+  // Copy in the system add-ons
+  let file = do_get_file("data/system_addons/system2_2.xpi");
+  file.copyTo(updatesDir, "system2@tests.mozilla.org.xpi");
+  file = do_get_file("data/system_addons/system_failed_update.xpi");
+  file.copyTo(updatesDir, "system_failed_update@tests.mozilla.org.xpi");
+
+  // Inject it into the system set
+  let addonSet = {
+    schema: 1,
+    directory: updatesDir.leafName,
+    addons: {
+      "system2@tests.mozilla.org": {
+        version: "2.0"
+      },
+      "system_failed_update@tests.mozilla.org": {
+        version: "1.0"
+      },
+    }
+  };
+  Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(addonSet));
+
+  startupManager(false);
+
+  let conditions = [
       { isUpgrade: false, version: "1.0" },
   ];
 

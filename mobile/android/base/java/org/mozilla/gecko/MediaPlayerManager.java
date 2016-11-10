@@ -24,6 +24,7 @@ import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -88,7 +89,8 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
                                                                   "MediaPlayer:Mirror",
                                                                   "MediaPlayer:Message",
                                                                   "AndroidCastDevice:Start",
-                                                                  "AndroidCastDevice:Stop");
+                                                                  "AndroidCastDevice:Stop",
+                                                                  "AndroidCastDevice:SyncDevice");
     }
 
     @Override
@@ -105,7 +107,8 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
                                                                     "MediaPlayer:Mirror",
                                                                     "MediaPlayer:Message",
                                                                     "AndroidCastDevice:Start",
-                                                                    "AndroidCastDevice:Stop");
+                                                                    "AndroidCastDevice:Stop",
+                                                                    "AndroidCastDevice:SyncDevice");
     }
 
     // GeckoEventListener implementation
@@ -145,16 +148,29 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
         }
 
         if (event.startsWith("AndroidCastDevice:")) {
-            final GeckoPresentationDisplay display = displays.get(message.getString("id"));
-            if (display == null) {
-                Log.e(LOGTAG, "Couldn't find a display for this id: " + message.getString("id") + " for message: " + event);
-                return;
-            }
-
             if ("AndroidCastDevice:Start".equals(event)) {
+                final GeckoPresentationDisplay display = displays.get(message.getString("id"));
+                if (display == null) {
+                    Log.e(LOGTAG, "Couldn't find a display for this id: " + message.getString("id") + " for message: " + event);
+                    return;
+                }
                 display.start(callback);
             } else if ("AndroidCastDevice:Stop".equals(event)) {
+                final GeckoPresentationDisplay display = displays.get(message.getString("id"));
+                if (display == null) {
+                    Log.e(LOGTAG, "Couldn't find a display for this id: " + message.getString("id") + " for message: " + event);
+                    return;
+                }
                 display.stop(callback);
+            } else if ("AndroidCastDevice:SyncDevice".equals(event)) {
+                for (Map.Entry<String, GeckoPresentationDisplay> entry : displays.entrySet()) {
+                    GeckoPresentationDisplay display = entry.getValue();
+                    JSONObject json = display.toJSON();
+                    if (json == null) {
+                        break;
+                    }
+                    GeckoAppShell.notifyObservers("AndroidCastDevice:Added", json.toString());
+                }
             }
         }
     }
