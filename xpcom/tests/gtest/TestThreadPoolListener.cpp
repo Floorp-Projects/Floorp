@@ -6,6 +6,7 @@
 #include "nsIThread.h"
 #include "nsIThreadPool.h"
 
+#include "nsComponentManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "pratom.h"
