@@ -69,8 +69,8 @@ function startServer(cert, rc4only) {
       equal(status.macLength, rc4only ? 160 : 128, "Using MAC of expected length");
 
       input.asyncWait({
-        onInputStreamReady: function(streamReadyInput) {
-          NetUtil.asyncCopy(streamReadyInput, output);
+        onInputStreamReady: function(input) {
+          NetUtil.asyncCopy(input, output);
         }
       }, 0, 0, Services.tm.currentThread);
     },
@@ -115,17 +115,15 @@ function startClient(port, expectedResult, options = {}) {
 
   let handler = {
 
-    onTransportStatus: function(unused, status) {
+    onTransportStatus: function(transport, status) {
       if (status === Ci.nsISocketTransport.STATUS_CONNECTED_TO) {
         output.asyncWait(handler, 0, 0, Services.tm.currentThread);
       }
     },
 
-    onInputStreamReady: function(streamReadyInput) {
+    onInputStreamReady: function(input) {
       try {
-        let data =
-          NetUtil.readInputStreamToString(streamReadyInput,
-                                          streamReadyInput.available());
+        let data = NetUtil.readInputStreamToString(input, input.available());
         equal(Cr.NS_OK, expectedResult, "Connection should succeed");
         equal(data, "HELLO", "Echoed data received");
       } catch (e) {
@@ -134,25 +132,25 @@ function startClient(port, expectedResult, options = {}) {
           deferred.reject(e);
         }
       }
-      streamReadyInput.close();
+      input.close();
       output.close();
       deferred.resolve();
     },
 
-    onOutputStreamReady: function(streamReadyOutput) {
+    onOutputStreamReady: function(output) {
       try {
         try {
-          streamReadyOutput.write("HELLO", 5);
+          output.write("HELLO", 5);
         } catch (e) {
           if (e.result == Cr.NS_BASE_STREAM_WOULD_BLOCK) {
-            streamReadyOutput.asyncWait(handler, 0, 0, Services.tm.currentThread);
+            output.asyncWait(handler, 0, 0, Services.tm.currentThread);
             return;
           }
           if (e.result != Cr.NS_OK) {
             ok((e.result === expectedResult) ||
                (options.allowReset && (e.result === Cr.NS_ERROR_NET_RESET)),
                "Actual and expected connection result should match");
-            streamReadyOutput.close();
+            output.close();
             deferred.resolve();
             return;
           }

@@ -247,7 +247,7 @@ function setTimeout(fun, timeout) {
   let timer = Components.classes["@mozilla.org/timer;1"]
                         .createInstance(Components.interfaces.nsITimer);
   var event = {
-    notify: function () {
+    notify: function (timer) {
       fun();
     }
   };
@@ -1662,8 +1662,8 @@ add_task(function* test_inadjecentSites() {
       badSiteB64.push(DirectoryLinksProvider._generateHash(site));
     });
     let theList = {"domains": badSiteB64};
-    let uri = 'data:application/json,' + JSON.stringify(theList);
-    DirectoryLinksProvider._inadjacentSitesUrl = uri;
+    let dataURI = 'data:application/json,' + JSON.stringify(theList);
+    DirectoryLinksProvider._inadjacentSitesUrl = dataURI;
     return DirectoryLinksProvider._loadInadjacentSites();
   }
 

@@ -272,8 +272,8 @@ while True:
     yield writeManifest(manifestPath, manifest);
   }
 
-  let mockContext = new MockContext(ID);
-  let app = new NativeApp(mockContext, "wontdie");
+  let context = new MockContext(ID);
+  let app = new NativeApp(context, "wontdie");
 
   // send a message and wait for the reply to make sure the app is running
   let MSG = "test";
@@ -286,7 +286,7 @@ while True:
     app.on("message", listener);
   });
 
-  let buffer = NativeApp.encodeMessage(mockContext, MSG);
+  let buffer = NativeApp.encodeMessage(context, MSG);
   app.send(buffer);
   yield recvPromise;
 

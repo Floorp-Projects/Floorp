@@ -418,9 +418,9 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
 
       onStartRequest: function (aRequest, aContext)
       {
-        let requestChannel = aRequest.QueryInterface(Ci.nsIChannel);
+        let channel = aRequest.QueryInterface(Ci.nsIChannel);
         this.contentListener = gExternalHelperAppService.doContent(
-                                     requestChannel.contentType, aRequest, null, true);
+                                     channel.contentType, aRequest, null, true);
         this.contentListener.onStartRequest(aRequest, aContext);
       },
 

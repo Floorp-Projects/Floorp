@@ -29,11 +29,11 @@ updateAppInfo({
 
 // we need to ensure we setup revocation data before certDB, or we'll start with
 // no revocation.txt in the profile
-var gProfile = do_get_profile();
+var profile = do_get_profile();
 
 // Write out an empty blocklist.xml file to the profile to ensure nothing
 // is blocklisted by default
-var blockFile = gProfile.clone();
+var blockFile = profile.clone();
 blockFile.append("blocklist.xml");
 var stream = Cc["@mozilla.org/network/file-output-stream;1"]
                .createInstance(Ci.nsIFileOutputStream);
@@ -50,11 +50,11 @@ stream.close();
 const PREF_BLOCKLIST_UPDATE_ENABLED = "services.blocklist.update_enabled";
 const PREF_ONECRL_VIA_AMO = "security.onecrl.via.amo";
 
-var gRevocations = gProfile.clone();
-gRevocations.append("revocations.txt");
-if (!gRevocations.exists()) {
+var revocations = profile.clone();
+revocations.append("revocations.txt");
+if (!revocations.exists()) {
   let existing = do_get_file("test_onecrl/sample_revocations.txt", false);
-  existing.copyTo(gProfile, "revocations.txt");
+  existing.copyTo(profile, "revocations.txt");
 }
 
 var certDB = Cc["@mozilla.org/security/x509certdb;1"]
@@ -319,12 +319,12 @@ function run_test() {
     verify_cert(file, SEC_ERROR_UNKNOWN_ISSUER);
 
     // check that save with no further update is a no-op
-    let lastModified = gRevocations.lastModifiedTime;
+    let lastModified = revocations.lastModifiedTime;
     // add an already existing entry
     certList.revokeCertByIssuerAndSerial("YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy",
                                          "c2VyaWFsMi4=");
     certList.saveEntries();
-    let newModified = gRevocations.lastModifiedTime;
+    let newModified = revocations.lastModifiedTime;
     equal(lastModified, newModified,
           "saveEntries with no modifications should not update the backing file");
 

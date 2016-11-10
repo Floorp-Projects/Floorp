@@ -79,13 +79,13 @@ function readFileToString(aFilename) {
 function promiseSaverComplete(aSaver, aOnTargetChangeFn) {
   let deferred = Promise.defer();
   aSaver.observer = {
-    onTargetChange: function BFSO_onSaveComplete(unused, aTarget)
+    onTargetChange: function BFSO_onSaveComplete(aSaver, aTarget)
     {
       if (aOnTargetChangeFn) {
         aOnTargetChangeFn(aTarget);
       }
     },
-    onSaveComplete: function BFSO_onSaveComplete(unused, aStatus)
+    onSaveComplete: function BFSO_onSaveComplete(aSaver, aStatus)
     {
       if (Components.isSuccessCode(aStatus)) {
         deferred.resolve();

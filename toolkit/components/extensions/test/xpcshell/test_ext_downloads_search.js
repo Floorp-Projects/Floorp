@@ -156,12 +156,12 @@ add_task(function* test_search() {
   // Search for each individual download and check
   // the corresponding DownloadItem.
   function* checkDownloadItem(id, expect) {
-    let item = yield search({id});
-    equal(item.status, "success", "search() succeeded");
-    equal(item.downloads.length, 1, "search() found exactly 1 download");
+    let msg = yield search({id});
+    equal(msg.status, "success", "search() succeeded");
+    equal(msg.downloads.length, 1, "search() found exactly 1 download");
 
     Object.keys(expect).forEach(function(field) {
-      equal(item.downloads[0][field], expect[field], `DownloadItem.${field} is correct"`);
+      equal(msg.downloads[0][field], expect[field], `DownloadItem.${field} is correct"`);
     });
   }
   yield checkDownloadItem(downloadIds.txt1, {
@@ -209,11 +209,11 @@ add_task(function* test_search() {
   });
 
   function* checkSearch(query, expected, description, exact) {
-    let item = yield search(query);
-    equal(item.status, "success", "search() succeeded");
-    equal(item.downloads.length, expected.length, `search() for ${description} found exactly ${expected.length} downloads`);
+    let msg = yield search(query);
+    equal(msg.status, "success", "search() succeeded");
+    equal(msg.downloads.length, expected.length, `search() for ${description} found exactly ${expected.length} downloads`);
 
-    let receivedIds = item.downloads.map(i => i.id);
+    let receivedIds = msg.downloads.map(item => item.id);
     if (exact) {
       receivedIds.forEach((id, idx) => {
         equal(id, downloadIds[expected[idx]], `search() for ${description} returned ${expected[idx]} in position ${idx}`);
@@ -381,9 +381,9 @@ add_task(function* test_search() {
 
   // Check bad arguments.
   function* checkBadSearch(query, pattern, description) {
-    let item = yield search(query);
-    equal(item.status, "error", "search() failed");
-    ok(pattern.test(item.errmsg), `error message for ${description} was correct (${item.errmsg}).`);
+    let msg = yield search(query);
+    equal(msg.status, "error", "search() failed");
+    ok(pattern.test(msg.errmsg), `error message for ${description} was correct (${msg.errmsg}).`);
   }
 
   yield checkBadSearch("myquery", /Incorrect argument type/, "query is not an object");
