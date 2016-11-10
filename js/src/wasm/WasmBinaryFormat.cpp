@@ -154,8 +154,8 @@ wasm::DecodeName(Decoder& d)
     return name;
 }
 
-bool
-wasm::DecodeSignatureIndex(Decoder& d, const SigWithIdVector& sigs, uint32_t* sigIndex)
+static bool
+DecodeSignatureIndex(Decoder& d, const SigWithIdVector& sigs, uint32_t* sigIndex)
 {
     if (!d.readVarU32(sigIndex))
         return d.fail("expected signature index");
@@ -290,6 +290,40 @@ wasm::DecodeImportSection(Decoder& d, const SigWithIdVector& sigs, Uint32Vector*
     }
 
     if (!d.finishSection(sectionStart, sectionSize, "import"))
+        return false;
+
+    return true;
+}
+
+bool
+wasm::DecodeFunctionSection(Decoder& d, const SigWithIdVector& sigs, size_t numImportedFunc,
+                            Uint32Vector* funcSigIndexes)
+{
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(SectionId::Function, &sectionStart, &sectionSize, "function"))
+        return false;
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    uint32_t numDefs;
+    if (!d.readVarU32(&numDefs))
+        return d.fail("expected number of function definitions");
+
+    uint32_t numFuncs = numImportedFunc + numDefs;
+    if (numFuncs > MaxFuncs)
+        return d.fail("too many functions");
+
+    if (!funcSigIndexes->reserve(numDefs))
+        return false;
+
+    for (uint32_t i = 0; i < numDefs; i++) {
+        uint32_t sigIndex;
+        if (!DecodeSignatureIndex(d, sigs, &sigIndex))
+            return false;
+        funcSigIndexes->infallibleAppend(sigIndex);
+    }
+
+    if (!d.finishSection(sectionStart, sectionSize, "function"))
         return false;
 
     return true;
