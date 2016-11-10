@@ -26,9 +26,9 @@ function cleanAndGo(server) {
   server.stop(run_next_test);
 }
 
-function promiseClean(server) {
+async function promiseClean(server) {
   clean();
-  return new Promise(resolve => server.stop(resolve));
+  await promiseStopServer(server);
 }
 
 function configureService(server, username, password) {
@@ -676,7 +676,7 @@ add_test(function test_processIncoming_mobile_batchSize() {
 });
 
 
-add_task(function *test_processIncoming_store_toFetch() {
+add_task(async function test_processIncoming_store_toFetch() {
   _("If processIncoming fails in the middle of a batch on mobile, state is saved in toFetch and lastSync.");
   Service.identity.username = "foo";
   Svc.Prefs.set("client.type", "mobile");
@@ -723,7 +723,7 @@ add_task(function *test_processIncoming_store_toFetch() {
 
     let error;
     try {
-      yield sync_engine_and_validate_telem(engine, true);
+      await sync_engine_and_validate_telem(engine, true);
     } catch (ex) {
       error = ex;
     }
@@ -738,7 +738,7 @@ add_task(function *test_processIncoming_store_toFetch() {
     do_check_eq(engine.lastSync, collection.wbo("record-no-99").modified);
 
   } finally {
-    yield promiseClean(server);
+    await promiseClean(server);
   }
 });
 
@@ -1229,7 +1229,7 @@ add_test(function test_processIncoming_failed_records() {
 });
 
 
-add_task(function *test_processIncoming_decrypt_failed() {
+add_task(async function test_processIncoming_decrypt_failed() {
   _("Ensure that records failing to decrypt are either replaced or refetched.");
 
   Service.identity.username = "foo";
@@ -1288,7 +1288,7 @@ add_task(function *test_processIncoming_decrypt_failed() {
     });
 
     engine.lastSync = collection.wbo("nojson").modified - 1;
-    let ping = yield sync_engine_and_validate_telem(engine, true);
+    let ping = await sync_engine_and_validate_telem(engine, true);
     do_check_eq(ping.engines[0].incoming.applied, 2);
     do_check_eq(ping.engines[0].incoming.failed, 4);
     do_check_eq(ping.engines[0].incoming.newFailed, 4);
@@ -1305,7 +1305,7 @@ add_task(function *test_processIncoming_decrypt_failed() {
     do_check_eq(observerSubject.failed, 4);
 
   } finally {
-    yield promiseClean(server);
+    await promiseClean(server);
   }
 });
 
@@ -1369,7 +1369,7 @@ add_test(function test_uploadOutgoing_toEmptyServer() {
 });
 
 
-add_task(function *test_uploadOutgoing_failed() {
+add_task(async function test_uploadOutgoing_failed() {
   _("SyncEngine._uploadOutgoing doesn't clear the tracker of objects that failed to upload.");
 
   Service.identity.username = "foo";
@@ -1412,7 +1412,7 @@ add_task(function *test_uploadOutgoing_failed() {
     do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
 
     engine.enabled = true;
-    yield sync_engine_and_validate_telem(engine, true);
+    await sync_engine_and_validate_telem(engine, true);
 
     // Local timestamp has been set.
     do_check_true(engine.lastSyncLocal > 0);
@@ -1427,7 +1427,7 @@ add_task(function *test_uploadOutgoing_failed() {
     do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
 
   } finally {
-    yield promiseClean(server);
+    await promiseClean(server);
   }
 });
 
@@ -1667,7 +1667,7 @@ add_test(function test_syncFinish_deleteLotsInBatches() {
 });
 
 
-add_task(function *test_sync_partialUpload() {
+add_task(async function test_sync_partialUpload() {
   _("SyncEngine.sync() keeps changedIDs that couldn't be uploaded.");
 
   Service.identity.username = "foo";
@@ -1715,7 +1715,7 @@ add_task(function *test_sync_partialUpload() {
     engine.enabled = true;
     let error;
     try {
-      yield sync_engine_and_validate_telem(engine, true);
+      await sync_engine_and_validate_telem(engine, true);
     } catch (ex) {
       error = ex;
     }
@@ -1738,7 +1738,7 @@ add_task(function *test_sync_partialUpload() {
     }
 
   } finally {
-    yield promiseClean(server);
+    await promiseClean(server);
   }
 });
 

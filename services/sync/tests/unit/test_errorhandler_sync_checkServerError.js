@@ -16,12 +16,6 @@ initTestLogging("Trace");
 var engineManager = Service.engineManager;
 engineManager.clear();
 
-function promiseStopServer(server) {
-  let deferred = Promise.defer();
-  server.stop(deferred.resolve);
-  return deferred.promise;
-}
-
 function CatapultEngine() {
   SyncEngine.call(this, "Catapult", Service);
 }
@@ -59,8 +53,8 @@ function sync_httpd_setup() {
   return httpd_setup(handlers);
 }
 
-function* setUp(server) {
-  yield configureIdentity({username: "johndoe"});
+async function setUp(server) {
+  await configureIdentity({username: "johndoe"});
   Service.serverURL = server.baseURI + "/";
   Service.clusterURL = server.baseURI + "/";
   new FakeCryptoService();
@@ -75,10 +69,10 @@ function generateAndUploadKeys(server) {
 }
 
 
-add_identity_test(this, function* test_backoff500() {
+add_identity_test(this, async function test_backoff500() {
   _("Test: HTTP 500 sets backoff status.");
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   let engine = engineManager.get("catapult");
   engine.enabled = true;
@@ -99,13 +93,13 @@ add_identity_test(this, function* test_backoff500() {
     Status.resetBackoff();
     Service.startOver();
   }
-  yield promiseStopServer(server);
+  await promiseStopServer(server);
 });
 
-add_identity_test(this, function* test_backoff503() {
+add_identity_test(this, async function test_backoff503() {
   _("Test: HTTP 503 with Retry-After header leads to backoff notification and sets backoff status.");
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   const BACKOFF = 42;
   let engine = engineManager.get("catapult");
@@ -135,13 +129,13 @@ add_identity_test(this, function* test_backoff503() {
     Status.resetSync();
     Service.startOver();
   }
-  yield promiseStopServer(server);
+  await promiseStopServer(server);
 });
 
-add_identity_test(this, function* test_overQuota() {
+add_identity_test(this, async function test_overQuota() {
   _("Test: HTTP 400 with body error code 14 means over quota.");
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   let engine = engineManager.get("catapult");
   engine.enabled = true;
@@ -164,67 +158,60 @@ add_identity_test(this, function* test_overQuota() {
     Status.resetSync();
     Service.startOver();
   }
-  yield promiseStopServer(server);
+  await promiseStopServer(server);
 });
 
-add_identity_test(this, function* test_service_networkError() {
+add_identity_test(this, async function test_service_networkError() {
   _("Test: Connection refused error from Service.sync() leads to the right status code.");
   let server = sync_httpd_setup();
-  yield setUp(server);
-  let deferred = Promise.defer();
-  server.stop(() => {
-    // Provoke connection refused.
-    Service.clusterURL = "http://localhost:12345/";
+  await setUp(server);
+  await promiseStopServer(server);
+  // Provoke connection refused.
+  Service.clusterURL = "http://localhost:12345/";
 
-    try {
-      do_check_eq(Status.sync, SYNC_SUCCEEDED);
+  try {
+    do_check_eq(Status.sync, SYNC_SUCCEEDED);
 
-      Service._loggedIn = true;
-      Service.sync();
+    Service._loggedIn = true;
+    Service.sync();
 
-      do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
-      do_check_eq(Status.service, SYNC_FAILED);
-    } finally {
-      Status.resetSync();
-      Service.startOver();
-    }
-    deferred.resolve();
-  });
-  yield deferred.promise;
+    do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_eq(Status.service, SYNC_FAILED);
+  } finally {
+    Status.resetSync();
+    Service.startOver();
+  }
 });
 
-add_identity_test(this, function* test_service_offline() {
+add_identity_test(this, async function test_service_offline() {
   _("Test: Wanting to sync in offline mode leads to the right status code but does not increment the ignorable error count.");
   let server = sync_httpd_setup();
-  yield setUp(server);
-  let deferred = Promise.defer();
-  server.stop(() => {
-    Services.io.offline = true;
-    Services.prefs.setBoolPref("network.dns.offline-localhost", false);
+  await setUp(server);
 
-    try {
-      do_check_eq(Status.sync, SYNC_SUCCEEDED);
+  await promiseStopServer(server);
+  Services.io.offline = true;
+  Services.prefs.setBoolPref("network.dns.offline-localhost", false);
 
-      Service._loggedIn = true;
-      Service.sync();
+  try {
+    do_check_eq(Status.sync, SYNC_SUCCEEDED);
 
-      do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
-      do_check_eq(Status.service, SYNC_FAILED);
-    } finally {
-      Status.resetSync();
-      Service.startOver();
-    }
-    Services.io.offline = false;
-    Services.prefs.clearUserPref("network.dns.offline-localhost");
-    deferred.resolve();
-  });
-  yield deferred.promise;
+    Service._loggedIn = true;
+    Service.sync();
+
+    do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_eq(Status.service, SYNC_FAILED);
+  } finally {
+    Status.resetSync();
+    Service.startOver();
+  }
+  Services.io.offline = false;
+  Services.prefs.clearUserPref("network.dns.offline-localhost");
 });
 
-add_identity_test(this, function* test_engine_networkError() {
+add_identity_test(this, async function test_engine_networkError() {
   _("Test: Network related exceptions from engine.sync() lead to the right status code.");
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   let engine = engineManager.get("catapult");
   engine.enabled = true;
@@ -245,12 +232,12 @@ add_identity_test(this, function* test_engine_networkError() {
     Status.resetSync();
     Service.startOver();
   }
-  yield promiseStopServer(server);
+  await promiseStopServer(server);
 });
 
-add_identity_test(this, function* test_resource_timeout() {
+add_identity_test(this, async function test_resource_timeout() {
   let server = sync_httpd_setup();
-  yield setUp(server);
+  await setUp(server);
 
   let engine = engineManager.get("catapult");
   engine.enabled = true;
@@ -272,7 +259,7 @@ add_identity_test(this, function* test_resource_timeout() {
     Status.resetSync();
     Service.startOver();
   }
-  yield promiseStopServer(server);
+  await promiseStopServer(server);
 });
 
 function run_test() {
