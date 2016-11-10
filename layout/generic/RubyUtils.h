@@ -209,6 +209,26 @@ private:
   bool mAtIntraLevelWhitespace;
 };
 
+/**
+ * Stores block-axis leadings produced from ruby annotations.
+ */
+struct RubyBlockLeadings
+{
+  nscoord mStart = 0;
+  nscoord mEnd = 0;
+
+  void Reset() {
+    mStart = mEnd = 0;
+  }
+  void Update(nscoord aStart, nscoord aEnd) {
+    mStart = std::max(mStart, aStart);
+    mEnd = std::max(mEnd, aEnd);
+  }
+  void Update(const RubyBlockLeadings& aOther) {
+    Update(aOther.mStart, aOther.mEnd);
+  }
+};
+
 } // namespace mozilla
 
 #endif /* !defined(mozilla_RubyUtils_h_) */
