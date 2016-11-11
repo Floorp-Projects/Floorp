@@ -20,6 +20,27 @@
 
 #include <stdarg.h>
 
+// We need a definition of gettid(), but glibc doesn't provide a
+// wrapper for it.
+#if defined(__GLIBC__)
+#include <unistd.h>
+#include <sys/syscall.h>
+static inline pid_t gettid()
+{
+  return (pid_t) syscall(SYS_gettid);
+}
+#elif defined(XP_MACOSX)
+#include <unistd.h>
+#include <sys/syscall.h>
+static inline pid_t gettid()
+{
+  return (pid_t) syscall(SYS_thread_selfid);
+}
+#elif defined(LINUX)
+#include <sys/types.h>
+pid_t gettid();
+#endif
+
 // NS_ENSURE_TRUE_VOID() without the warning on the debug build.
 #define ENSURE_TRUE_VOID(x)   \
   do {                        \
@@ -163,7 +184,7 @@ SetLogStarted(bool aIsStartLogging)
 static void
 CleanUp()
 {
-  MOZ_ASSERT(!IsStartLogging());
+  SetLogStarted(false);
   StaticMutexAutoLock lock(sMutex);
 
   if (sTraceInfos) {
@@ -209,7 +230,9 @@ InitTaskTracer(uint32_t aFlags)
   MOZ_ASSERT(!sTraceInfos);
   sTraceInfos = new nsTArray<UniquePtr<TraceInfo>>();
 
-  sTraceInfoTLS.init();
+  if (!sTraceInfoTLS.initialized()) {
+    Unused << sTraceInfoTLS.init();
+  }
 }
 
 void
@@ -223,9 +246,7 @@ FreeTraceInfo(TraceInfo* aTraceInfo)
 {
   StaticMutexAutoLock lock(sMutex);
   if (aTraceInfo) {
-    UniquePtr<TraceInfo> traceinfo(aTraceInfo);
-    sTraceInfos->RemoveElement(traceinfo);
-    Unused << traceinfo.release(); // A dirty hack to prevent double free.
+    sTraceInfos->RemoveElement(aTraceInfo);
   }
 }
 
@@ -237,7 +258,7 @@ void FreeTraceInfo()
 TraceInfo*
 GetOrCreateTraceInfo()
 {
-  ENSURE_TRUE(sTraceInfoTLS.init(), nullptr);
+  ENSURE_TRUE(sTraceInfoTLS.initialized(), nullptr);
   ENSURE_TRUE(IsStartLogging(), nullptr);
 
   TraceInfo* info = sTraceInfoTLS.get();
