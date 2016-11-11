@@ -37,11 +37,11 @@ add_task(function*() {
   yield testLink(5, true, false);
 
   // Pinned: Link to an about: URI should not open a new tab
-  // Tests link to about:mozilla
+  // Tests link to about:logo
   yield testLink(function(doc) {
     let link = doc.createElement("a");
     link.textContent = "Link to Mozilla";
-    link.href = "about:mozilla";
+    link.href = "about:logo";
     doc.body.appendChild(link);
     return link;
   }, true, false, false, "about:robots");
