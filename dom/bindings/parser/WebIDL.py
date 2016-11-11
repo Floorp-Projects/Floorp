@@ -4226,6 +4226,7 @@ class IDLAttribute(IDLInterfaceMember):
               identifier == "NewObject" or
               identifier == "UnsafeInPrerendering" or
               identifier == "NeedsSubjectPrincipal" or
+              identifier == "NeedsCallerType" or
               identifier == "ReturnValueNeedsContainsHack" or
               identifier == "BinaryName"):
             # Known attributes that we don't need to do anything with here
@@ -4944,6 +4945,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "SecureContext" or
               identifier == "BinaryName" or
               identifier == "NeedsSubjectPrincipal" or
+              identifier == "NeedsCallerType" or
               identifier == "StaticClassOverride"):
             # Known attributes that we don't need to do anything with here
             pass
