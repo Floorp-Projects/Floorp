@@ -31,6 +31,7 @@
 #include "GMPUtils.h" // For SplitAt. TODO: Move SplitAt to a central place.
 #include "MP4Decoder.h"
 #include "VPXDecoder.h"
+#include "mozilla/SyncRunnable.h"
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
@@ -372,7 +373,9 @@ WMFVideoMFTManager::InitializeDXVA(bool aForceD3D9)
   if (NS_IsMainThread()) {
     event->Run();
   } else {
-    NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
+    // This logic needs to run on the main thread
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    mozilla::SyncRunnable::DispatchToThread(mainThread, event);
   }
   mDXVA2Manager = event->mDXVA2Manager;
 
@@ -608,7 +611,9 @@ WMFVideoMFTManager::CanUseDXVA(IMFMediaType* aType)
   if (NS_IsMainThread()) {
     event->Run();
   } else {
-    NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
+    // This logic needs to run on the main thread
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    mozilla::SyncRunnable::DispatchToThread(mainThread, event);
   }
 
   return event->mSupportsConfig;
