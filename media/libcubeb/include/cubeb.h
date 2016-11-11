@@ -167,7 +167,7 @@ typedef enum {
 
 /** An opaque handle used to refer a particular input or output device
  *  across calls. */
-typedef void * cubeb_devid;
+typedef void const * cubeb_devid;
 
 /** Level (verbosity) of logging for a particular cubeb context. */
 typedef enum {
@@ -276,10 +276,10 @@ typedef enum {
  *  `cubeb_device_info_destroy`. */
 typedef struct {
   cubeb_devid devid;          /**< Device identifier handle. */
-  char * device_id;           /**< Device identifier which might be presented in a UI. */
-  char * friendly_name;       /**< Friendly device name which might be presented in a UI. */
-  char * group_id;            /**< Two devices have the same group identifier if they belong to the same physical device; for example a headset and microphone. */
-  char * vendor_name;         /**< Optional vendor name, may be NULL. */
+  char const * device_id;     /**< Device identifier which might be presented in a UI. */
+  char const * friendly_name; /**< Friendly device name which might be presented in a UI. */
+  char const * group_id;      /**< Two devices have the same group identifier if they belong to the same physical device; for example a headset and microphone. */
+  char const * vendor_name;   /**< Optional vendor name, may be NULL. */
 
   cubeb_device_type type;     /**< Type of device (Input/Output). */
   cubeb_device_state state;   /**< State of device disabled/enabled/unplugged. */
@@ -322,7 +322,7 @@ typedef struct {
             and the stream will enter a shutdown state. */
 typedef long (* cubeb_data_callback)(cubeb_stream * stream,
                                      void * user_ptr,
-                                     const void * input_buffer,
+                                     void const * input_buffer,
                                      void * output_buffer,
                                      long nframes);
 
@@ -347,7 +347,7 @@ typedef void (* cubeb_device_collection_changed_callback)(cubeb * context,
                                                           void * user_ptr);
 
 /** User supplied callback called when a message needs logging. */
-typedef void (* cubeb_log_callback)(const char * fmt, ...);
+typedef void (* cubeb_log_callback)(char const * fmt, ...);
 
 /** Initialize an application context.  This will perform any library or
     application scoped initialization.
