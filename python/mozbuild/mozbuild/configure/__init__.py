@@ -210,7 +210,7 @@ class ConfigureSandbox(dict):
         self._all_paths = set()
         self._templates = set()
         # Associate SandboxDependsFunctions to DependsFunctions.
-        self._depends = {}
+        self._depends = OrderedDict()
         self._seen = set()
         # Store the @imports added to a given function.
         self._imports = {}
@@ -387,6 +387,9 @@ class ConfigureSandbox(dict):
                 not (inspect.isclass(value) and issubclass(value, Exception))):
             raise KeyError('Cannot assign `%s` because it is neither a '
                            '@depends nor a @template' % key)
+
+        if isinstance(value, SandboxDependsFunction):
+            self._depends[value].func.__name__ = key
 
         return super(ConfigureSandbox, self).__setitem__(key, value)
 
