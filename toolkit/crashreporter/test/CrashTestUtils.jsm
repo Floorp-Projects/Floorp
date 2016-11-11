@@ -6,7 +6,6 @@ this.EXPORTED_SYMBOLS = ["CrashTestUtils"];
 this.CrashTestUtils = {
   // These will be defined using ctypes APIs below.
   crash: null,
-  lockDir: null,
   dumpHasStream: null,
   dumpHasInstructionPointerMemory: null,
 
@@ -40,12 +39,6 @@ CrashTestUtils.crash = lib.declare("Crash",
 CrashTestUtils.saveAppMemory = lib.declare("SaveAppMemory",
                                            ctypes.default_abi,
                                            ctypes.uint64_t);
-
-CrashTestUtils.lockDir = lib.declare("LockDir",
-                                     ctypes.default_abi,
-                                     ctypes.voidptr_t,   // nsILocalFile*
-                                     ctypes.voidptr_t);  // nsISupports*
-
 
 try {
   CrashTestUtils.TryOverrideExceptionHandler = lib.declare("TryOverrideExceptionHandler",
