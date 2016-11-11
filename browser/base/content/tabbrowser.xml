@@ -4553,9 +4553,14 @@
                 "tabs.muteAudio.tooltip";
               label = stringWithShortcut(stringID, "key_toggleMute");
             } else {
-              stringID = tab.linkedBrowser.audioMuted ?
-                "tabs.unmuteAudio.background.tooltip" :
-                "tabs.muteAudio.background.tooltip";
+              if (tab.linkedBrowser.audioBlocked) {
+                stringID = "tabs.unblockAudio.tooltip";
+              } else {
+                stringID = tab.linkedBrowser.audioMuted ?
+                  "tabs.unmuteAudio.background.tooltip" :
+                  "tabs.muteAudio.background.tooltip";
+              }
+
               label = this.mStringBundle.getString(stringID);
             }
           } else {
