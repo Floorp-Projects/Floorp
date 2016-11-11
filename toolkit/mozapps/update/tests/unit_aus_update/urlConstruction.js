@@ -53,7 +53,7 @@ function run_test_pt1() {
             "%SYSTEM_CAPABILITIES%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/" +
             "updates.xml";
   debugDump("testing url construction - url: " + url);
-  setUpdateURLOverride(url);
+  setUpdateURL(url);
   try {
     gUpdateChecker.checkForUpdates(updateCheckListener, true);
   } catch (e) {
@@ -87,7 +87,7 @@ function run_test_pt2() {
   gCheckFunc = check_test_pt2;
   let url = URL_PREFIX + "%CHANNEL%/updates.xml?custom=%CUSTOM%";
   debugDump("testing url constructed with %CHANNEL% - " + url);
-  setUpdateURLOverride(url);
+  setUpdateURL(url);
   gDefaultPrefBranch.setCharPref(PREFBRANCH_APP_PARTNER + "test_partner1",
                                  "test_partner1");
   gDefaultPrefBranch.setCharPref(PREFBRANCH_APP_PARTNER + "test_partner2",

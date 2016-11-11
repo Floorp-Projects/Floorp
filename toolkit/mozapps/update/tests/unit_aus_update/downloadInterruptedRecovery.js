@@ -23,7 +23,7 @@ function run_test() {
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
   start_httpserver();
-  setUpdateURLOverride(gURLData + gHTTPHandlerPath);
+  setUpdateURL(gURLData + gHTTPHandlerPath);
   standardInit();
   do_execute_soon(run_test_pt1);
 }

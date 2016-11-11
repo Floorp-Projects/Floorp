@@ -36,7 +36,7 @@ function runTest() {
 
   let url = URL_HTTP_UPDATE_XML + "?showDetails=1&invalidPartialSize=1" +
             "&invalidCompleteSize=1" + getVersionParams();
-  setUpdateURLOverride(url);
+  setUpdateURL(url);
 
   gUP.checkForUpdates();
 }
