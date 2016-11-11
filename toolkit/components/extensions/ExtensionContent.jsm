@@ -49,6 +49,7 @@ Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
+  EventEmitter,
   LocaleData,
   defineLazyGetter,
   flushJarCache,
@@ -763,46 +764,67 @@ DocumentManager = {
 };
 
 // Represents a browser extension in the content process.
-function BrowserExtensionContent(data) {
-  this.id = data.id;
-  this.uuid = data.uuid;
-  this.data = data;
-  this.scripts = data.content_scripts.map(scriptData => new Script(this, scriptData));
-  this.webAccessibleResources = new MatchGlobs(data.webAccessibleResources);
-  this.whiteListedHosts = new MatchPattern(data.whiteListedHosts);
-  this.permissions = data.permissions;
-  this.principal = data.principal;
+class BrowserExtensionContent extends EventEmitter {
+  constructor(data) {
+    super();
 
-  this.localeData = new LocaleData(data.localeData);
+    this.id = data.id;
+    this.uuid = data.uuid;
+    this.data = data;
+    this.instanceId = data.instanceId;
 
-  this.manifest = data.manifest;
-  this.baseURI = Services.io.newURI(data.baseURL, null, null);
+    this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
+    Services.cpmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
-  // Only used in addon processes.
-  this.views = new Set();
+    this.scripts = data.content_scripts.map(scriptData => new Script(this, scriptData));
+    this.webAccessibleResources = new MatchGlobs(data.webAccessibleResources);
+    this.whiteListedHosts = new MatchPattern(data.whiteListedHosts);
+    this.permissions = data.permissions;
+    this.principal = data.principal;
 
-  let uri = Services.io.newURI(data.resourceURL, null, null);
+    this.localeData = new LocaleData(data.localeData);
 
-  if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-    // Extension.jsm takes care of this in the parent.
-    ExtensionManagement.startupExtension(this.uuid, uri, this);
+    this.manifest = data.manifest;
+    this.baseURI = Services.io.newURI(data.baseURL, null, null);
+
+    // Only used in addon processes.
+    this.views = new Set();
+
+    let uri = Services.io.newURI(data.resourceURL, null, null);
+
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+      // Extension.jsm takes care of this in the parent.
+      ExtensionManagement.startupExtension(this.uuid, uri, this);
+    }
   }
-}
 
-BrowserExtensionContent.prototype = {
   shutdown() {
+    Services.cpmm.removeMessageListener(this.MESSAGE_EMIT_EVENT, this);
+
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
       ExtensionManagement.shutdownExtension(this.uuid);
     }
-  },
+  }
+
+  emit(event, ...args) {
+    Services.cpmm.sendAsyncMessage(this.MESSAGE_EMIT_EVENT, {event, args});
+
+    super.emit(event, ...args);
+  }
+
+  receiveMessage({name, data}) {
+    if (name === this.MESSAGE_EMIT_EVENT) {
+      super.emit(data.event, ...data.args);
+    }
+  }
 
   localizeMessage(...args) {
     return this.localeData.localizeMessage(...args);
-  },
+  }
 
   localize(...args) {
     return this.localeData.localize(...args);
-  },
+  }
 
   hasPermission(perm) {
     let match = /^manifest:(.*)/.exec(perm);
@@ -810,8 +832,8 @@ BrowserExtensionContent.prototype = {
       return this.manifest[match[1]] != null;
     }
     return this.permissions.has(perm);
-  },
-};
+  }
+}
 
 ExtensionManager = {
   // Map[extensionId, BrowserExtensionContent]
@@ -843,8 +865,11 @@ ExtensionManager = {
     switch (name) {
       case "Extension:Startup": {
         extension = new BrowserExtensionContent(data);
+
         this.extensions.set(data.id, extension);
+
         DocumentManager.startupExtension(data.id);
+
         Services.cpmm.sendAsyncMessage("Extension:StartupComplete");
         break;
       }
@@ -852,7 +877,9 @@ ExtensionManager = {
       case "Extension:Shutdown": {
         extension = this.extensions.get(data.id);
         extension.shutdown();
+
         DocumentManager.shutdownExtension(data.id);
+
         this.extensions.delete(data.id);
         break;
       }
