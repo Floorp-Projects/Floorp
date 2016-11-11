@@ -474,6 +474,22 @@
         </body>
       </method>
 
+      <method name="getTabFromAudioEvent">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
+              !aEvent.isTrusted) {
+            return null;
+          }
+
+          var browser = aEvent.originalTarget;
+          var tab = this.getTabForBrowser(browser);
+          return tab;
+        ]]>
+        </body>
+      </method>
+
       <method name="_callProgressListeners">
         <parameter name="aBrowser"/>
         <parameter name="aMethod"/>
@@ -5064,14 +5080,10 @@
       </handler>
       <handler event="DOMAudioPlaybackStarted">
         <![CDATA[
-          if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
-              !event.isTrusted)
+          var tab = getTabFromAudioEvent(event)
+          if (!tab) {
             return;
-
-          var browser = event.originalTarget;
-          var tab = this.getTabForBrowser(browser);
-          if (!tab)
-            return;
+          }
 
           clearTimeout(tab._soundPlayingAttrRemovalTimer);
           tab._soundPlayingAttrRemovalTimer = 0;
@@ -5092,14 +5104,10 @@
       </handler>
       <handler event="DOMAudioPlaybackStopped">
         <![CDATA[
-          if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
-              !event.isTrusted)
+          var tab = getTabFromAudioEvent(event)
+          if (!tab) {
             return;
-
-          var browser = event.originalTarget;
-          var tab = this.getTabForBrowser(browser);
-          if (!tab)
-            return;
+          }
 
           if (tab.hasAttribute("soundplaying")) {
             let removalDelay = Services.prefs.getIntPref("browser.tabs.delayHidingAudioPlayingIconMS");
@@ -5114,6 +5122,26 @@
               this._tabAttrModified(tab, ["soundplaying", "soundplaying-scheduledremoval"]);
             }, removalDelay);
           }
+        ]]>
+      </handler>
+      <handler event="DOMAudioPlaybackBlockStarted">
+        <![CDATA[
+          var tab = getTabFromAudioEvent(event)
+          if (!tab) {
+            return;
+          }
+
+          // TODO : implement media-blocking icon in next patch.
+        ]]>
+      </handler>
+      <handler event="DOMAudioPlaybackBlockStopped">
+        <![CDATA[
+          var tab = getTabFromAudioEvent(event)
+          if (!tab) {
+            return;
+          }
+
+          // TODO : implement media-blocking icon in next patch.
         ]]>
       </handler>
     </handlers>
