@@ -4665,20 +4665,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems that cannot stage updates (timer initiated)"
   },
-  "UPDATE_HAS_PREF_URL_OVERRIDE_EXTERNAL": {
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "Update: count of systems that have an app.update.url.override preference (externally initiated)"
-  },
-  "UPDATE_HAS_PREF_URL_OVERRIDE_NOTIFY": {
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "Update: count of systems that have an app.update.url.override preference (timer initiated)"
-  },
   "UPDATE_PREF_UPDATE_CANCELATIONS_EXTERNAL": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
