@@ -80,6 +80,11 @@ add_task(function* test_webRequest_background_events() {
       function listener(name, details) {
         browser.test.assertTrue(eventNames.has(name), `recieved ${name}`);
         eventNames.delete(name);
+
+        if (eventNames.size === 0) {
+          browser.test.assertEq(0, eventNames.size, "messages recieved");
+          browser.test.sendMessage("done");
+        }
       }
 
       for (let name of eventNames) {
@@ -90,8 +95,7 @@ add_task(function* test_webRequest_background_events() {
       }
 
       fetch("https://example.com/example.txt").then(() => {
-        browser.test.assertEq(0, eventNames.size, "messages recieved");
-        browser.test.sendMessage("done");
+        browser.test.pass("Fetch succeeded.");
       }, () => {
         browser.test.fail("fetch recieved");
         browser.test.sendMessage("done");
