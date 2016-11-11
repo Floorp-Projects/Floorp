@@ -101,6 +101,22 @@ if test "$OS_TARGET" = "Android"; then
                 AC_MSG_ERROR([Couldn't find path to llvm-libc++ in the android ndk])
             fi
 
+            if ! test -e "$cxx_include"; then
+                # NDK r13 removes the inner "libcxx" directory.
+                cxx_include="$cxx_base/include"
+                if ! test -e "$cxx_include"; then
+                    AC_MSG_ERROR([Couldn't find path to libc++ includes in the android ndk])
+                fi
+            fi
+
+            if ! test -e "$cxxabi_include"; then
+                # NDK r13 removes the inner "libcxxabi" directory.
+                cxxabi_include="$cxxabi_base/include"
+                if ! test -e "$cxxabi_include"; then
+                    AC_MSG_ERROR([Couldn't find path to libc++abi includes in the android ndk])
+                fi
+            fi
+
             STLPORT_LIBS="-L$cxx_libs -lc++_static"
             # NDK r12 split the libc++ runtime libraries into pieces.
             for lib in c++abi unwind android_support; do
