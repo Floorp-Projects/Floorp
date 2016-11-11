@@ -4716,19 +4716,25 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
                         *inlineStyleCoord, aFlags);
   } else if (MOZ_UNLIKELY(isGridItem) &&
              !IS_TRUE_OVERFLOW_CONTAINER(this)) {
+    // 'auto' inline-size for grid-level box - fill the CB for 'stretch' /
+    // 'normal' and clamp it to the CB if requested:
+    bool stretch = false;
     if (!(aFlags & nsIFrame::eShrinkWrap) &&
         !StyleMargin()->HasInlineAxisAuto(aWM)) {
-      // 'auto' inline-size for grid-level box - apply 'stretch' as needed:
       auto inlineAxisAlignment =
         aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
           StylePosition()->UsedAlignSelf(GetParent()->StyleContext()) :
           StylePosition()->UsedJustifySelf(GetParent()->StyleContext());
-      if (inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-          inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
-        result.ISize(aWM) = std::max(nscoord(0), aCBSize.ISize(aWM) -
-                                                 aPadding.ISize(aWM) -
-                                                 aBorder.ISize(aWM) -
-                                                 aMargin.ISize(aWM));
+      stretch = inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
+                inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+    }
+    if (stretch || (aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize)) {
+      auto iSizeToFillCB = std::max(nscoord(0), aCBSize.ISize(aWM) -
+                                                aPadding.ISize(aWM) -
+                                                aBorder.ISize(aWM) -
+                                                aMargin.ISize(aWM));
+      if (stretch || result.ISize(aWM) > iSizeToFillCB) {
+        result.ISize(aWM) = iSizeToFillCB;
       }
     }
   }
@@ -4796,20 +4802,28 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
     } else if (MOZ_UNLIKELY(isGridItem) &&
                blockStyleCoord->GetUnit() == eStyleUnit_Auto &&
                !IS_TRUE_OVERFLOW_CONTAINER(this)) {
-      // 'auto' block-size for grid-level box - apply 'stretch' as needed:
       auto cbSize = aCBSize.BSize(aWM);
-      if (cbSize != NS_AUTOHEIGHT &&
-          !StyleMargin()->HasBlockAxisAuto(aWM)) {
-        auto blockAxisAlignment =
-          !aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
-            StylePosition()->UsedAlignSelf(StyleContext()->GetParent()) :
-            StylePosition()->UsedJustifySelf(StyleContext()->GetParent());
-        if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-            blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
-          result.BSize(aWM) = std::max(nscoord(0), cbSize -
-                                                   aPadding.BSize(aWM) -
-                                                   aBorder.BSize(aWM) -
-                                                   aMargin.BSize(aWM));
+      if (cbSize != NS_AUTOHEIGHT) {
+        // 'auto' block-size for grid-level box - fill the CB for 'stretch' /
+        // 'normal' and clamp it to the CB if requested:
+        bool stretch = false;
+        if (!StyleMargin()->HasBlockAxisAuto(aWM)) {
+          auto blockAxisAlignment =
+            !aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
+              StylePosition()->UsedAlignSelf(StyleContext()->GetParent()) :
+              StylePosition()->UsedJustifySelf(StyleContext()->GetParent());
+          stretch = blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
+                    blockAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+        }
+        if (stretch || (aFlags & ComputeSizeFlags::eBClampMarginBoxMinSize)) {
+          auto bSizeToFillCB = std::max(nscoord(0), cbSize -
+                                                    aPadding.BSize(aWM) -
+                                                    aBorder.BSize(aWM) -
+                                                    aMargin.BSize(aWM));
+          if (stretch || (result.BSize(aWM) != NS_AUTOHEIGHT &&
+                          result.BSize(aWM) > bSizeToFillCB)) {
+            result.BSize(aWM) = bSizeToFillCB;
+          }
         }
       }
     }
