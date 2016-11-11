@@ -46,8 +46,8 @@ function URLFetcher(url, timeout) {
   xhr.setRequestHeader("Pragma", "no-cache");
 
   xhr.timeout = timeout;
-  xhr.ontimeout = function () { self.ontimeout(); };
-  xhr.onerror = function () { self.onerror(); };
+  xhr.ontimeout = function() { self.ontimeout(); };
+  xhr.onerror = function() { self.onerror(); };
   xhr.onreadystatechange = function(oEvent) {
     if (xhr.readyState === 4) {
       if (self._isAborted) {
@@ -111,7 +111,7 @@ function LoginObserver(captivePortalDetector) {
                                 captivePortalDetector._maxWaitingTime);
     urlFetcher.ontimeout = pageCheckingDone;
     urlFetcher.onerror = pageCheckingDone;
-    urlFetcher.onsuccess = function (content) {
+    urlFetcher.onsuccess = function(content) {
       if (captivePortalDetector.validateContent(content)) {
         urlFetcher = null;
         captivePortalDetector.executeCallback(true);
@@ -315,7 +315,7 @@ CaptivePortalDetector.prototype = {
 
     urlFetcher.ontimeout = mayRetry;
     urlFetcher.onerror = mayRetry;
-    urlFetcher.onsuccess = function (content) {
+    urlFetcher.onsuccess = function(content) {
       if (self.validateContent(content)) {
         self.executeCallback(true);
       } else {
@@ -323,7 +323,7 @@ CaptivePortalDetector.prototype = {
         self._startLogin();
       }
     };
-    urlFetcher.onredirectorerror = function (status) {
+    urlFetcher.onredirectorerror = function(status) {
       if (status >= 300 && status <= 399) {
         // The canonical website has been redirected to an unknown location
         self._startLogin();
@@ -466,11 +466,11 @@ CaptivePortalDetector.prototype = {
 
 var debug;
 if (DEBUG) {
-  debug = function (s) {
+  debug = function(s) {
     dump('-*- CaptivePortalDetector component: ' + s + '\n');
   };
 } else {
-  debug = function (s) {};
+  debug = function(s) {};
 }
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([CaptivePortalDetector]);

@@ -44,7 +44,7 @@ function testCacheWorks(uri, prefName) {
   do_check_neq(cacheValue, dbValue);
 
   do_test_pending();
-  cps.getPref(uri, prefName, function (value) {
+  cps.getPref(uri, prefName, function(value) {
     do_check_eq(dbValue, NEW_VALUE);
     do_check_eq(value, CACHED_VALUE);
     do_check_neq(value, dbValue);

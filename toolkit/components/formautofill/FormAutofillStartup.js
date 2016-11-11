@@ -31,7 +31,7 @@ FormAutofillStartup.prototype = {
   ]),
 
   // nsIObserver
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     // This method is called by the "profile-after-change" category on startup,
     // which is called before any web page loads.  At this time, we need to
     // register a global message listener in the parent process preemptively,
@@ -44,7 +44,7 @@ FormAutofillStartup.prototype = {
   },
 
   // nsIFrameMessageListener
-  receiveMessage: function (aMessage) {
+  receiveMessage: function(aMessage) {
     // Process the "FormAutofill:RequestAutocomplete" message.  Any exception
     // raised in the parent process is caught and serialized into the reply
     // message that is sent to the requesting child process.

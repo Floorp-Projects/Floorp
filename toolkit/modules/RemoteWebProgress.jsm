@@ -64,16 +64,16 @@ RemoteWebProgress.prototype = {
   get isTopLevel() { return this._isTopLevel },
   get loadType() { return this._loadType; },
 
-  addProgressListener: function (aListener) {
+  addProgressListener: function(aListener) {
     this._manager.addProgressListener(aListener);
   },
 
-  removeProgressListener: function (aListener) {
+  removeProgressListener: function(aListener) {
     this._manager.removeProgressListener(aListener);
   }
 };
 
-function RemoteWebProgressManager (aBrowser) {
+function RemoteWebProgressManager(aBrowser) {
   this._topLevelWebProgress = new RemoteWebProgress(this, true);
   this._progressListeners = [];
 
@@ -134,17 +134,17 @@ RemoteWebProgressManager.prototype = {
     return this._topLevelWebProgress;
   },
 
-  addProgressListener: function (aListener) {
+  addProgressListener: function(aListener) {
     let listener = aListener.QueryInterface(Ci.nsIWebProgressListener);
     this._progressListeners.push(listener);
   },
 
-  removeProgressListener: function (aListener) {
+  removeProgressListener: function(aListener) {
     this._progressListeners =
       this._progressListeners.filter(l => l != aListener);
   },
 
-  _fixSSLStatusAndState: function (aStatus, aState) {
+  _fixSSLStatusAndState: function(aStatus, aState) {
     let deserialized = null;
     if (aStatus) {
       let helper = Cc["@mozilla.org/network/serialization-helper;1"]
@@ -157,7 +157,7 @@ RemoteWebProgressManager.prototype = {
     return [deserialized, aState];
   },
 
-  setCurrentURI: function (aURI) {
+  setCurrentURI: function(aURI) {
     // This function is simpler than nsDocShell::SetCurrentURI since
     // it doesn't have to deal with child docshells.
     let remoteWebNav = this._browser._remoteWebNavigationImpl;
@@ -181,7 +181,7 @@ RemoteWebProgressManager.prototype = {
     }
   },
 
-  receiveMessage: function (aMessage) {
+  receiveMessage: function(aMessage) {
     let json = aMessage.json;
     let objects = aMessage.objects;
     // This message is a custom one we send as a result of a loadURI call.

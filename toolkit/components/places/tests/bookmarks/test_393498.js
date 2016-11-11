@@ -7,12 +7,12 @@
 var observer = {
   __proto__: NavBookmarkObserver.prototype,
 
-  onItemAdded: function (id, folder, index) {
+  onItemAdded: function(id, folder, index) {
     this._itemAddedId = id;
     this._itemAddedParent = folder;
     this._itemAddedIndex = index;
   },
-  onItemChanged: function (id, property, isAnnotationProperty, value) {
+  onItemChanged: function(id, property, isAnnotationProperty, value) {
     this._itemChangedId = id;
     this._itemChangedProperty = property;
     this._itemChanged_isAnnotationProperty = isAnnotationProperty;
@@ -21,7 +21,7 @@ var observer = {
 };
 PlacesUtils.bookmarks.addObserver(observer, false);
 
-do_register_cleanup(function () {
+do_register_cleanup(function() {
   PlacesUtils.bookmarks.removeObserver(observer);
 });
 

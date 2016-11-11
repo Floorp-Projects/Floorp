@@ -99,7 +99,7 @@ function listElement(aListElement)
 listElement.prototype =
   {
     clearList:
-      function ()
+      function()
         {
           // remove the menupopup node child of the menulist.
           var popup = this.listElement.firstChild;
@@ -109,7 +109,7 @@ listElement.prototype =
         },
 
     appendPrinterNames:
-      function (aDataObject)
+      function(aDataObject)
         {
           if ((null == aDataObject) || !aDataObject.hasMore()) {
             // disable dialog

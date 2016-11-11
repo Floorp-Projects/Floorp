@@ -64,7 +64,7 @@ function test() {
     doTest(true, aWin, initialURL, function() {
       // then test when not on private mode
       testOnWindow({}, function(aWin2) {
-        doTest(false, aWin2, finalURL, function () {
+        doTest(false, aWin2, finalURL, function() {
           PlacesTestUtils.clearHistory().then(finish);
         });
       });

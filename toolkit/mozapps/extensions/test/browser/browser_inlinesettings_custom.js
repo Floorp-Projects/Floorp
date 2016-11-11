@@ -22,7 +22,7 @@ function installAddon(aCallback) {
 function test() {
   waitForExplicitFinish();
 
-  installAddon(function () {
+  installAddon(function() {
     open_manager("addons://list/extension", function(aWindow) {
       gManagerWindow = aWindow;
       gCategoryUtilities = new CategoryUtilities(gManagerWindow);

@@ -24,11 +24,11 @@ function run_test() {
       var prefValue = Math.floor(Math.random() * 100);
 
       if (shouldThrow) {
-        do_check_thrown(function () { cps.getPref(aGroup, prefName); });
-        do_check_thrown(function () { cps.setPref(aGroup, prefName, prefValue); });
-        do_check_thrown(function () { cps.hasPref(aGroup, prefName); });
-        do_check_thrown(function () { cps.removePref(aGroup, prefName); });
-        do_check_thrown(function () { cps.getPrefs(aGroup); });
+        do_check_thrown(function() { cps.getPref(aGroup, prefName); });
+        do_check_thrown(function() { cps.setPref(aGroup, prefName, prefValue); });
+        do_check_thrown(function() { cps.hasPref(aGroup, prefName); });
+        do_check_thrown(function() { cps.removePref(aGroup, prefName); });
+        do_check_thrown(function() { cps.getPrefs(aGroup); });
       } else {
         do_check_eq(cps.setPref(aGroup, prefName, prefValue), undefined);
         do_check_true(cps.hasPref(aGroup, prefName));
@@ -98,7 +98,7 @@ function run_test() {
   }
 }
 
-function do_check_thrown (aCallback) {
+function do_check_thrown(aCallback) {
   var exThrown = false;
   try {
     aCallback();

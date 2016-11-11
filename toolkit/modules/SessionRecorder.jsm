@@ -58,7 +58,7 @@ const LOGGER_PREFIX = "SessionRecorder::";
  * @param branch
  *        (string) Preferences branch on which to record state.
  */
-this.SessionRecorder = function (branch) {
+this.SessionRecorder = function(branch) {
   if (!branch) {
     throw new Error("branch argument must be defined.");
   }
@@ -115,7 +115,7 @@ SessionRecorder.prototype = Object.freeze({
     return this._prefs.get("current.activeTicks", 0);
   },
 
-  incrementActiveTicks: function () {
+  incrementActiveTicks: function() {
     this._prefs.set("current.activeTicks", ++this._activeTicks);
   },
 
@@ -128,7 +128,7 @@ SessionRecorder.prototype = Object.freeze({
     return this._prefs.get("current.totalTime", 0);
   },
 
-  updateTotalTime: function () {
+  updateTotalTime: function() {
     // We store millisecond precision internally to prevent drift from
     // repeated rounding.
     this.fineTotalTime = Date.now() - this.startDate;
@@ -171,7 +171,7 @@ SessionRecorder.prototype = Object.freeze({
     this._prefs.set("current.sessionRestored", value);
   },
 
-  getPreviousSessions: function () {
+  getPreviousSessions: function() {
     let result = {};
 
     for (let i = this._prunedIndex; i < this._currentIndex; i++) {
@@ -186,7 +186,7 @@ SessionRecorder.prototype = Object.freeze({
     return result;
   },
 
-  getPreviousSession: function (index) {
+  getPreviousSession: function(index) {
     return this._deserialize(this._prefs.get("previous." + index));
   },
 
@@ -194,7 +194,7 @@ SessionRecorder.prototype = Object.freeze({
    * Prunes old, completed sessions that started earlier than the
    * specified date.
    */
-  pruneOldSessions: function (date) {
+  pruneOldSessions: function(date) {
     for (let i = this._prunedIndex; i < this._currentIndex; i++) {
       let s = this.getPreviousSession(i);
       if (!s) {
@@ -211,7 +211,7 @@ SessionRecorder.prototype = Object.freeze({
     }
   },
 
-  recordStartupFields: function () {
+  recordStartupFields: function() {
     let si = this._getStartupInfo();
 
     if (!si.process) {
@@ -247,7 +247,7 @@ SessionRecorder.prototype = Object.freeze({
     }
   },
 
-  _clearStartupTimer: function () {
+  _clearStartupTimer: function() {
     if (this._timer) {
       this._timer.cancel();
       delete this._timer;
@@ -259,7 +259,7 @@ SessionRecorder.prototype = Object.freeze({
    *
    * This is typically called in a "profile-do-change" handler.
    */
-  onStartup: function () {
+  onStartup: function() {
     if (this._started) {
       throw new Error("onStartup has already been called.");
     }
@@ -289,7 +289,7 @@ SessionRecorder.prototype = Object.freeze({
   /**
    * Record application activity.
    */
-  onActivity: function (active) {
+  onActivity: function(active) {
     let updateActive = active && !this._lastActivityWasInactive;
     this._lastActivityWasInactive = !active;
 
@@ -300,7 +300,7 @@ SessionRecorder.prototype = Object.freeze({
     }
   },
 
-  onShutdown: function () {
+  onShutdown: function() {
     this._log.info("Recording clean session shutdown.");
     this._prefs.set("current.clean", true);
     this.updateTotalTime();
@@ -323,7 +323,7 @@ SessionRecorder.prototype = Object.freeze({
   ],
 
   // This is meant to be called only during onStartup().
-  _moveCurrentToPrevious: function () {
+  _moveCurrentToPrevious: function() {
     try {
       if (!this.startDate.getTime()) {
         this._log.info("No previous session. Is this first app run?");
@@ -355,7 +355,7 @@ SessionRecorder.prototype = Object.freeze({
     }
   },
 
-  _deserialize: function (s) {
+  _deserialize: function(s) {
     let o;
     try {
       o = JSON.parse(s);
@@ -375,13 +375,13 @@ SessionRecorder.prototype = Object.freeze({
   },
 
   // Implemented as a function to allow for monkeypatching in tests.
-  _getStartupInfo: function () {
+  _getStartupInfo: function() {
     return Cc["@mozilla.org/toolkit/app-startup;1"]
              .getService(Ci.nsIAppStartup)
              .getStartupInfo();
   },
 
-  observe: function (subject, topic, data) {
+  observe: function(subject, topic, data) {
     switch (topic) {
       case "profile-before-change":
         this.onShutdown();

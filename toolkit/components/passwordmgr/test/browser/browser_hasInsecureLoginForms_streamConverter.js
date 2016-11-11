@@ -58,7 +58,7 @@ function* registerConverter() {
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   registrar.registerFactory(TestStreamConverter.prototype.classID, "",
                             TestStreamConverter.prototype.contractID, factory);
-  this.cleanupFunction = function () {
+  this.cleanupFunction = function() {
     registrar.unregisterFactory(TestStreamConverter.prototype.classID, factory);
   };
 }

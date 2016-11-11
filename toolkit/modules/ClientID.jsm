@@ -85,7 +85,7 @@ var ClientIDImpl = {
   _saveClientIdTask: null,
   _logger: null,
 
-  _loadClientID: function () {
+  _loadClientID: function() {
     if (this._loadClientIdTask) {
       return this._loadClientIdTask;
     }
@@ -207,7 +207,7 @@ var ClientIDImpl = {
    * @return {Boolean} True when the client ID has valid format, or False
    * otherwise.
    */
-  updateClientID: function (id) {
+  updateClientID: function(id) {
     if (!isValidClientID(id)) {
       this._log.error("updateClientID - invalid client ID", id);
       return false;

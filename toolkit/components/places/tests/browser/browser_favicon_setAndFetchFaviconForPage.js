@@ -65,7 +65,7 @@ function test() {
     );
 
     addVisits({uri: pageURI, transition: TRANSITION_TYPED}, aWindow,
-      function () {
+      function() {
         aWindow.PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI, favIconURI,
           true, aWindow.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
           Services.scriptSecurityManager.getSystemPrincipal());
@@ -132,13 +132,13 @@ function test() {
     aWindow.Services.prefs.setBoolPref("places.history.enabled", true);
   }
 
-  getIconFile(function () {
+  getIconFile(function() {
     testOnWindow({}, function(aWin) {
-      testNormal(aWin, function () {
+      testNormal(aWin, function() {
         testOnWindow({}, function(aWin2) {
-          testAboutURIBookmarked(aWin2, function () {
+          testAboutURIBookmarked(aWin2, function() {
             testOnWindow({private: true}, function(aWin3) {
-              testPrivateBrowsingBookmarked(aWin3, function () {
+              testPrivateBrowsingBookmarked(aWin3, function() {
                 testOnWindow({}, function(aWin4) {
                   testDisabledHistoryBookmarked(aWin4, finish);
                 });

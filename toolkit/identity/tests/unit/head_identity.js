@@ -145,7 +145,7 @@ function makeObserver(aObserveTopic, aObserveFunc) {
     // nsIObserver is to be an observer
     QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports, Ci.nsIObserver]),
 
-    observe: function (aSubject, aTopic, aData) {
+    observe: function(aSubject, aTopic, aData) {
       if (aTopic == aObserveTopic) {
         aObserveFunc(aSubject, aTopic, aData);
         Services.obs.removeObserver(observer, aObserveTopic);

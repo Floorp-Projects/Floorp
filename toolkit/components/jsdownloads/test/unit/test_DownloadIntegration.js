@@ -215,7 +215,7 @@ add_task(function* test_getTemporaryDownloadsDirectory()
 add_task(function* test_observers_setup()
 {
   DownloadIntegration.allowObservers = true;
-  do_register_cleanup(function () {
+  do_register_cleanup(function() {
     DownloadIntegration.allowObservers = false;
   });
 });

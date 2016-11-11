@@ -302,7 +302,7 @@ this.SearchSuggestionController.prototype = {
   /**
    * Called when this._remoteResultTimer fires indicating the remote request took too long.
    */
-  _onRemoteTimeout: function () {
+  _onRemoteTimeout: function() {
     this._request = null;
 
     // FIXME: bug 387341

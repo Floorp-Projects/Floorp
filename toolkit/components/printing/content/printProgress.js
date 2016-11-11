@@ -263,7 +263,7 @@ function onUnload()
 }
 
 // If the user presses cancel, tell the app launcher and close the dialog...
-function onCancel ()
+function onCancel()
 {
   // Cancel app launcher.
    try

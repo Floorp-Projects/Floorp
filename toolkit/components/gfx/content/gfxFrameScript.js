@@ -35,7 +35,7 @@ const gfxFrameScript = {
     return aUri.endsWith("/sanitytest.html");
   },
 
-  onStateChange: function (webProgress, req, flags, status) {
+  onStateChange: function(webProgress, req, flags, status) {
     if (webProgress.isTopLevel &&
         (flags & Ci.nsIWebProgressListener.STATE_STOP) &&
         this.isSanityTest(req.name)) {

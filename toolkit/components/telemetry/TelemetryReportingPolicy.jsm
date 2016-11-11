@@ -95,7 +95,7 @@ NotifyPolicyRequest.prototype = Object.freeze({
   /**
    * Called when the user is notified of the policy.
    */
-  onUserNotifyComplete: function () {
+  onUserNotifyComplete: function() {
     return TelemetryReportingPolicyImpl._infobarShownCallback();
    },
 
@@ -105,7 +105,7 @@ NotifyPolicyRequest.prototype = Object.freeze({
    * @param error
    *        (Error) Explains what went wrong.
    */
-  onUserNotifyFailed: function (error) {
+  onUserNotifyFailed: function(error) {
     this._log.error("onUserNotifyFailed - " + error);
   },
 });

@@ -66,7 +66,7 @@ function getTempFile(aLeafName)
   let file = FileUtils.getFile("TmpD", [leafName]);
   ok(!file.exists(), "Temp file does not exist");
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     if (file.exists()) {
       file.remove(false);
     }

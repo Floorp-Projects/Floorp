@@ -27,7 +27,7 @@ Cu.import("resource://gre/modules/Timer.jsm", this);
 
 var loggingConfigured = false;
 
-this.configureLogging = function () {
+this.configureLogging = function() {
   if (loggingConfigured) {
     return;
   }
@@ -40,7 +40,7 @@ this.configureLogging = function () {
   loggingConfigured = true;
 };
 
-this.sleep = function (wait) {
+this.sleep = function(wait) {
   let deferred = Promise.defer();
 
   setTimeout(() => {
@@ -50,14 +50,14 @@ this.sleep = function (wait) {
   return deferred.promise;
 };
 
-this.TestingCrashManager = function (options) {
+this.TestingCrashManager = function(options) {
   CrashManager.call(this, options);
 }
 
 this.TestingCrashManager.prototype = {
   __proto__: CrashManager.prototype,
 
-  createDummyDump: function (submitted = false, date = new Date(), hr = false) {
+  createDummyDump: function(submitted = false, date = new Date(), hr = false) {
     let uuid = Cc["@mozilla.org/uuid-generator;1"]
                 .getService(Ci.nsIUUIDGenerator)
                 .generateUUID()
@@ -89,7 +89,7 @@ this.TestingCrashManager.prototype = {
     });
   },
 
-  createIgnoredDumpFile: function (filename, submitted = false) {
+  createIgnoredDumpFile: function(filename, submitted = false) {
     let path;
     if (submitted) {
       path = OS.Path.join(this._submittedDumpsDir, filename);
@@ -104,7 +104,7 @@ this.TestingCrashManager.prototype = {
     });
   },
 
-  createEventsFile: function (filename, type, date, content, index = 0) {
+  createEventsFile: function(filename, type, date, content, index = 0) {
     let path = OS.Path.join(this._eventsDirs[index], filename);
 
     let data = type + "\n" +
@@ -124,7 +124,7 @@ this.TestingCrashManager.prototype = {
    *
    * We can probably delete this once we have actual events defined.
    */
-  _handleEventFilePayload: function (store, entry, type, date, payload) {
+  _handleEventFilePayload: function(store, entry, type, date, payload) {
     if (type == "test.1") {
       if (payload == "malformed") {
         return this.EVENT_FILE_ERROR_MALFORMED;
@@ -145,7 +145,7 @@ this.TestingCrashManager.prototype = {
 
 var DUMMY_DIR_COUNT = 0;
 
-this.getManager = function () {
+this.getManager = function() {
   return Task.spawn(function* () {
     const dirMode = OS.Constants.libc.S_IRWXU;
     let baseFile = OS.Constants.Path.profileDir;

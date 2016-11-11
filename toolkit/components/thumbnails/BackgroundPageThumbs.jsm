@@ -59,7 +59,7 @@ const BackgroundPageThumbs = {
    *                 elapsed after the capture has progressed to the head of
    *                 the queue and started.  Defaults to 30000 (30 seconds).
    */
-  capture: function (url, options = {}) {
+  capture: function(url, options = {}) {
     if (!PageThumbs._prefEnabled()) {
       if (options.onDone)
         schedule(() => options.onDone(url));
@@ -150,7 +150,7 @@ const BackgroundPageThumbs = {
    * @return  True if the parent window is completely initialized and can be
    *          used, and false if initialization has started but not completed.
    */
-  _ensureParentWindowReady: function () {
+  _ensureParentWindowReady: function() {
     if (this._parentWin)
       // Already fully initialized.
       return true;
@@ -182,7 +182,7 @@ const BackgroundPageThumbs = {
    * Destroys the service.  Queued and pending captures will never complete, and
    * their consumer callbacks will never be called.
    */
-  _destroy: function () {
+  _destroy: function() {
     if (this._captureQueue)
       this._captureQueue.forEach(cap => cap.destroy());
     this._destroyBrowser();
@@ -197,7 +197,7 @@ const BackgroundPageThumbs = {
   /**
    * Creates the thumbnail browser if it doesn't already exist.
    */
-  _ensureBrowser: function () {
+  _ensureBrowser: function() {
     if (this._thumbBrowser && !this._renewThumbBrowser)
       return;
 
@@ -264,7 +264,7 @@ const BackgroundPageThumbs = {
     this._thumbBrowser = browser;
   },
 
-  _destroyBrowser: function () {
+  _destroyBrowser: function() {
     if (!this._thumbBrowser)
       return;
     this._thumbBrowser.remove();
@@ -275,7 +275,7 @@ const BackgroundPageThumbs = {
    * Starts the next capture if the queue is not empty and the service is fully
    * initialized.
    */
-  _processCaptureQueue: function () {
+  _processCaptureQueue: function() {
     if (!this._captureQueue.length ||
         this._captureQueue[0].pending ||
         !this._ensureParentWindowReady())
@@ -294,7 +294,7 @@ const BackgroundPageThumbs = {
    * Called when the current capture completes or fails (eg, times out, remote
    * process crashes.)
    */
-  _onCaptureOrTimeout: function (capture) {
+  _onCaptureOrTimeout: function(capture) {
     // Since timeouts start as an item is being processed, only the first
     // item in the queue can be passed to this method.
     if (capture !== this._captureQueue[0])
@@ -363,7 +363,7 @@ Capture.prototype = {
    *
    * @param messageManager  The nsIMessageSender of the thumbnail browser.
    */
-  start: function (messageManager) {
+  start: function(messageManager) {
     this.startDate = new Date();
     tel("CAPTURE_QUEUE_TIME_MS", this.startDate - this.creationDate);
 
@@ -387,7 +387,7 @@ Capture.prototype = {
    * uninitializing and doing things like destroying the thumbnail browser.  In
    * that case the consumer's completion callback will never be called.
    */
-  destroy: function () {
+  destroy: function() {
     // This method may be called for captures that haven't started yet, so
     // guard against not yet having _timeoutTimer, _msgMan etc properties...
     if (this._timeoutTimer) {
@@ -405,7 +405,7 @@ Capture.prototype = {
   },
 
   // Called when the didCapture message is received.
-  receiveMessage: function (msg) {
+  receiveMessage: function(msg) {
     if (msg.data.imageData)
       tel("CAPTURE_SERVICE_TIME_MS", new Date() - this.startDate);
 
@@ -424,11 +424,11 @@ Capture.prototype = {
   },
 
   // Called when the timeout timer fires.
-  notify: function () {
+  notify: function() {
     this._done(null, TEL_CAPTURE_DONE_TIMEOUT);
   },
 
-  _done: function (data, reason) {
+  _done: function(data, reason) {
     // Note that _done will be called only once, by either receiveMessage or
     // notify, since it calls destroy here, which cancels the timeout timer and
     // removes the didCapture message listener.

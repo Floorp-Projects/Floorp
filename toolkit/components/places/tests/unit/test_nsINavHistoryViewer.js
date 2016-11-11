@@ -45,7 +45,7 @@ var resultObserver = {
   },
   openedContainer: null,
   closedContainer: null,
-  containerStateChanged: function (aNode, aOldState, aNewState) {
+  containerStateChanged: function(aNode, aOldState, aNewState) {
     if (aNewState == Ci.nsINavHistoryContainerResultNode.STATE_OPENED) {
       this.openedContainer = aNode;
     }
@@ -109,7 +109,7 @@ add_test(function check_history_query() {
     do_check_eq(root.uri, resultObserver.nodeChangedByHistoryDetails.uri);
 
     // nsINavHistoryResultObserver.itemTitleChanged for a leaf node
-    PlacesTestUtils.addVisits({ uri: testURI, title: "baz" }).then(function () {
+    PlacesTestUtils.addVisits({ uri: testURI, title: "baz" }).then(function() {
       do_check_eq(resultObserver.nodeChangedByTitle.title, "baz");
 
       // nsINavHistoryResultObserver.nodeRemoved
@@ -135,13 +135,13 @@ add_test(function check_history_query() {
           // nsINavHistoryResultObserver.batching
           do_check_false(resultObserver.inBatchMode);
           histsvc.runInBatchMode({
-            runBatched: function (aUserData) {
+            runBatched: function(aUserData) {
               do_check_true(resultObserver.inBatchMode);
             }
           }, null);
           do_check_false(resultObserver.inBatchMode);
           bmsvc.runInBatchMode({
-            runBatched: function (aUserData) {
+            runBatched: function(aUserData) {
               do_check_true(resultObserver.inBatchMode);
             }
           }, null);
@@ -203,13 +203,13 @@ add_test(function check_bookmarks_query() {
   // nsINavHistoryResultObserver.batching
   do_check_false(resultObserver.inBatchMode);
   histsvc.runInBatchMode({
-    runBatched: function (aUserData) {
+    runBatched: function(aUserData) {
       do_check_true(resultObserver.inBatchMode);
     }
   }, null);
   do_check_false(resultObserver.inBatchMode);
   bmsvc.runInBatchMode({
-    runBatched: function (aUserData) {
+    runBatched: function(aUserData) {
       do_check_true(resultObserver.inBatchMode);
     }
   }, null);
@@ -236,13 +236,13 @@ add_test(function check_mixed_query() {
   // nsINavHistoryResultObserver.batching
   do_check_false(resultObserver.inBatchMode);
   histsvc.runInBatchMode({
-    runBatched: function (aUserData) {
+    runBatched: function(aUserData) {
       do_check_true(resultObserver.inBatchMode);
     }
   }, null);
   do_check_false(resultObserver.inBatchMode);
   bmsvc.runInBatchMode({
-    runBatched: function (aUserData) {
+    runBatched: function(aUserData) {
       do_check_true(resultObserver.inBatchMode);
     }
   }, null);

@@ -10,7 +10,7 @@ function test() {
 
   is(imported.Debugging.fake, false, "Battery spoofing is initially false")
 
-  GetBattery().then(function (battery) {
+  GetBattery().then(function(battery) {
     for (let k of ["charging", "chargingTime", "dischargingTime", "level"]) {
       let backup = battery[k];
       battery[k] = "__magic__";
@@ -20,7 +20,7 @@ function test() {
     imported.Debugging.fake = true;
 
     // reload again to get the fake one
-    GetBattery().then(function (battery) {
+    GetBattery().then(function(battery) {
       battery.charging = true;
       battery.chargingTime = 100;
       battery.level = 0.5;

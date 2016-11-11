@@ -326,9 +326,9 @@ Sntp.prototype = {
 
 var debug;
 if (DEBUG) {
-  debug = function (s) {
+  debug = function(s) {
     dump("-*- Sntp: " + s + "\n");
   };
 } else {
-  debug = function (s) {};
+  debug = function(s) {};
 }

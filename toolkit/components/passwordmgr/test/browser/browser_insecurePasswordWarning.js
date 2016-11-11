@@ -60,7 +60,7 @@ add_task(function* testInsecurePasswordWarning() {
   ]) {
     let testURL = origin + TEST_URL_PATH + testFile;
     let promiseConsoleMessages = new Promise(resolve => {
-      warningPatternHandler = function (warning, originMessage) {
+      warningPatternHandler = function(warning, originMessage) {
         ok(warning, "Handling a warning pattern");
         let fullMessage = `[${warning.msg} {file: "${testURL}" line: 0 column: 0 source: "0"}]`;
         is(originMessage, fullMessage, "Message full matched:" + originMessage);

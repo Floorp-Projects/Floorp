@@ -287,7 +287,7 @@ this.TelemetryStopwatchImpl = {
     return Timers.put(histogram, object, key, Components.utils.now());
   },
 
-  cancel: function (histogram, object, key) {
+  cancel: function(histogram, object, key) {
     return Timers.delete(histogram, object, key);
   },
 

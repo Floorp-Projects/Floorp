@@ -342,7 +342,7 @@ function stopLogging() {
   updateLogFile();
 }
 
-function confirm () {
+function confirm() {
   let div = document.getElementById("warning_message");
   div.classList.remove("active");
   div.hidden = true;

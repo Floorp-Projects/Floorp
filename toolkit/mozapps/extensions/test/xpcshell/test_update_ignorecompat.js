@@ -36,7 +36,7 @@ for (let test of testParams) {
 
   // Test that the update check correctly observes the
   // extensions.strictCompatibility pref and compatibility overrides.
-  add_test(function () {
+  add_test(function() {
     writeInstallRDFForExtension({
       id: "addon9@tests.mozilla.org",
       version: "1.0",
@@ -71,7 +71,7 @@ for (let test of testParams) {
 
   // Test that the update check correctly observes when an addon opts-in to
   // strict compatibility checking.
-  add_test(function () {
+  add_test(function() {
     writeInstallRDFForExtension({
       id: "addon11@tests.mozilla.org",
       version: "1.0",

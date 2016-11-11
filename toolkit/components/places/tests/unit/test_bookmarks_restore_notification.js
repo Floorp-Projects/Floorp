@@ -47,7 +47,7 @@ function* addBookmarks() {
  */
 function checkBookmarksExist() {
   let hs = PlacesUtils.history;
-  let queries = uris.map(function (u) {
+  let queries = uris.map(function(u) {
     let q = hs.getNewQuery();
     q.uri = uri(u);
     return q;

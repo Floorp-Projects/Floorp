@@ -179,7 +179,7 @@ function runTest() {
     case 7:
         checkForm("");
         countEntries("field1", "historyvalue",
-          function (num) {
+          function(num) {
             ok(!num, testNum + " checking that form history value was deleted");
             runTest();
           });

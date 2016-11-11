@@ -330,36 +330,36 @@ function check_children_sorting(aRootNode, aExpectedSortingMode) {
   var comparator;
   switch (aExpectedSortingMode) {
     case Ci.nsINavHistoryQueryOptions.SORT_BY_NONE:
-      comparator = function (a, b) {
+      comparator = function(a, b) {
         return 0;
       }
       break;
     case Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING:
-      comparator = function (a, b) {
+      comparator = function(a, b) {
         return caseInsensitiveStringComparator(a.title, b.title);
       }
       break;
     case Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_DESCENDING:
-      comparator = function (a, b) {
+      comparator = function(a, b) {
         return -caseInsensitiveStringComparator(a.title, b.title);
       }
       break;
     case Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING:
-      comparator = function (a, b) {
+      comparator = function(a, b) {
         return a.time - b.time;
       }
       break;
     case Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING:
-      comparator = function (a, b) {
+      comparator = function(a, b) {
         return b.time - a.time;
       }
     case Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_ASCENDING:
-      comparator = function (a, b) {
+      comparator = function(a, b) {
         return a.dateAdded - b.dateAdded;
       }
       break;
     case Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING:
-      comparator = function (a, b) {
+      comparator = function(a, b) {
         return b.dateAdded - a.dateAdded;
       }
       break;

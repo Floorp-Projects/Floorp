@@ -5,7 +5,7 @@ function test() {
 
   gBrowser.selectedTab = gBrowser.addTab();
 
-  ContentTask.spawn(gBrowser.selectedBrowser, TESTROOT + "enabled.html", function (url) {
+  ContentTask.spawn(gBrowser.selectedBrowser, TESTROOT + "enabled.html", function(url) {
     return new Promise(resolve => {
       function page_loaded() {
         content.removeEventListener("PageLoaded", page_loaded, false);

@@ -238,8 +238,8 @@ var dataProviders = {
   },
 
   extensions: function extensions(done) {
-    AddonManager.getAddonsByTypes(["extension"], function (extensions) {
-      extensions.sort(function (a, b) {
+    AddonManager.getAddonsByTypes(["extension"], function(extensions) {
+      extensions.sort(function(a, b) {
         if (a.isActive != b.isActive)
           return b.isActive ? 1 : -1;
 
@@ -254,8 +254,8 @@ var dataProviders = {
         return 0;
       });
       let props = ["name", "version", "isActive", "id"];
-      done(extensions.map(function (ext) {
-        return props.reduce(function (extData, prop) {
+      done(extensions.map(function(ext) {
+        return props.reduce(function(extData, prop) {
           extData[prop] = ext[prop];
           return extData;
         }, {});

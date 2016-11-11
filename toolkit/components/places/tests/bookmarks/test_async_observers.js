@@ -18,18 +18,18 @@ var observer = {
    * directly in the observer because there are cases where we must wait for
    * other asynchronous events to be completed in addition to this.
    */
-  setupCompletionPromise: function ()
+  setupCompletionPromise: function()
   {
     this.observedBookmarks = 0;
     this.deferred = Promise.defer();
     return this.deferred.promise;
   },
 
-  onBeginUpdateBatch: function () {},
-  onEndUpdateBatch: function () {},
-  onItemAdded: function () {},
-  onItemRemoved: function () {},
-  onItemMoved: function () {},
+  onBeginUpdateBatch: function() {},
+  onEndUpdateBatch: function() {},
+  onItemAdded: function() {},
+  onItemRemoved: function() {},
+  onItemMoved: function() {},
   onItemChanged: function(aItemId, aProperty, aIsAnnotation, aNewValue,
                           aLastModified, aItemType)
   {
@@ -86,7 +86,7 @@ add_task(function* test_add_visit()
     handleError: function TAV_handleError() {
       deferUpdatePlaces.reject(new Error("Unexpected error in adding visit."));
     },
-    handleResult: function (aPlaceInfo) {
+    handleResult: function(aPlaceInfo) {
       visitId = aPlaceInfo.visits[0].visitId;
     },
     handleCompletion: function TAV_handleCompletion() {

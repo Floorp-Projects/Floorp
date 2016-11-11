@@ -785,7 +785,7 @@ XMLPropertyListReader.prototype = {
    * @return Returns value of "name" property of target by default. Otherwise returns
    *         updated target.
    */
-function LazyMapProxyHandler () {
+function LazyMapProxyHandler() {
   return {
     _lazyGetters: new Set(),
     get: function(target, name) {

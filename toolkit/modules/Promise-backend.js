@@ -432,7 +432,7 @@ this.Promise = function Promise(aExecutor)
  *       the returned promise instead, to process any exception occurred in
  *       either of the callbacks registered on this promise.
  */
-Promise.prototype.then = function (aOnResolve, aOnReject)
+Promise.prototype.then = function(aOnResolve, aOnReject)
 {
   let handler = new Handler(this, aOnResolve, aOnReject);
   this[N_INTERNALS].handlers.push(handler);
@@ -466,7 +466,7 @@ Promise.prototype.then = function (aOnResolve, aOnReject)
  *
  * @see Promise.prototype.then
  */
-Promise.prototype.catch = function (aOnReject)
+Promise.prototype.catch = function(aOnReject)
 {
   return this.then(undefined, aOnReject);
 };
@@ -478,7 +478,7 @@ Promise.prototype.catch = function (aOnReject)
  *         and the methods to change its state in the "resolve" and "reject"
  *         properties.  See the Deferred documentation for details.
  */
-Promise.defer = function ()
+Promise.defer = function()
 {
   return new Deferred();
 };
@@ -495,7 +495,7 @@ Promise.defer = function ()
  *
  * @return A promise that can be pending, resolved, or rejected.
  */
-Promise.resolve = function (aValue)
+Promise.resolve = function(aValue)
 {
   if (aValue && typeof(aValue) == "function" && aValue.isAsyncFunction) {
     throw new TypeError(
@@ -526,7 +526,7 @@ Promise.resolve = function (aValue)
  *       promise for the value of aReason would make the rejection reason
  *       equal to the rejected promise itself, and not its rejection reason.
  */
-Promise.reject = function (aReason)
+Promise.reject = function(aReason)
 {
   return new Promise((_, aReject) => aReject(aReason));
 };
@@ -547,7 +547,7 @@ Promise.reject = function (aReason)
  *         reason will be forwarded from the first promise in the list of
  *         given promises to be rejected.
  */
-Promise.all = function (aValues)
+Promise.all = function(aValues)
 {
   if (aValues == null || typeof(aValues[Symbol.iterator]) != "function") {
     throw new Error("Promise.all() expects an iterable.");
@@ -598,7 +598,7 @@ Promise.all = function (aValues)
  *         rejected. Its resolution value will be forwarded from the resolution
  *         value or rejection reason.
  */
-Promise.race = function (aValues)
+Promise.race = function(aValues)
 {
   if (aValues == null || typeof(aValues[Symbol.iterator]) != "function") {
     throw new Error("Promise.race() expects an iterable.");
@@ -688,7 +688,7 @@ this.PromiseWalker = {
    * @param aValue
    *        Associated resolution value or rejection reason.
    */
-  completePromise: function (aPromise, aStatus, aValue)
+  completePromise: function(aPromise, aStatus, aValue)
   {
     // Do nothing if the promise is already resolved or rejected.
     if (aPromise[N_INTERNALS].status != STATUS_PENDING) {
@@ -763,7 +763,7 @@ this.PromiseWalker = {
    *        Resolved or rejected promise whose handlers should be processed.  It
    *        is expected that this promise has at least one handler to process.
    */
-  schedulePromise: function (aPromise)
+  schedulePromise: function(aPromise)
   {
     // Migrate the handlers from the provided promise to the global list.
     for (let handler of aPromise[N_INTERNALS].handlers) {
@@ -790,7 +790,7 @@ this.PromiseWalker = {
    *
    * This function is called with "this" bound to the PromiseWalker object.
    */
-  walkerLoop: function ()
+  walkerLoop: function()
   {
     // If there is more than one handler waiting, reschedule the walker loop
     // immediately.  Otherwise, use walkerLoopScheduled to tell schedulePromise()

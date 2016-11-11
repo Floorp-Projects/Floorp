@@ -21,7 +21,7 @@ var MockWebChannelBroker = {
       this._channelMap.set(channel);
     }
   },
-  unregisterChannel: function (channelToRemove) {
+  unregisterChannel: function(channelToRemove) {
     this._channelMap.delete(channelToRemove)
   }
 };

@@ -1674,7 +1674,7 @@ function setupListeners() {
   }, false);
 
   document.getElementById("chrome-hangs-fetch-symbols").addEventListener("click",
-    function () {
+    function() {
       if (!gPingData) {
         return;
       }
@@ -1689,7 +1689,7 @@ function setupListeners() {
   }, false);
 
   document.getElementById("chrome-hangs-hide-symbols").addEventListener("click",
-    function () {
+    function() {
       if (!gPingData) {
         return;
       }
@@ -1698,7 +1698,7 @@ function setupListeners() {
   }, false);
 
   document.getElementById("late-writes-fetch-symbols").addEventListener("click",
-    function () {
+    function() {
       if (!gPingData) {
         return;
       }
@@ -1712,7 +1712,7 @@ function setupListeners() {
   }, false);
 
   document.getElementById("late-writes-hide-symbols").addEventListener("click",
-    function () {
+    function() {
       if (!gPingData) {
         return;
       }

@@ -7,22 +7,22 @@ function run_test() {
 
   var uri = ContentPrefTest.getURI("http://www.example.com/");
 
-  do_check_thrown(function () { cps.setPref(uri, null, 8); });
-  do_check_thrown(function () { cps.hasPref(uri, null); });
-  do_check_thrown(function () { cps.getPref(uri, null); });
-  do_check_thrown(function () { cps.removePref(uri, null); });
-  do_check_thrown(function () { cps.getPrefsByName(null); });
-  do_check_thrown(function () { cps.removePrefsByName(null); });
+  do_check_thrown(function() { cps.setPref(uri, null, 8); });
+  do_check_thrown(function() { cps.hasPref(uri, null); });
+  do_check_thrown(function() { cps.getPref(uri, null); });
+  do_check_thrown(function() { cps.removePref(uri, null); });
+  do_check_thrown(function() { cps.getPrefsByName(null); });
+  do_check_thrown(function() { cps.removePrefsByName(null); });
 
-  do_check_thrown(function () { cps.setPref(uri, "", 21); });
-  do_check_thrown(function () { cps.hasPref(uri, ""); });
-  do_check_thrown(function () { cps.getPref(uri, ""); });
-  do_check_thrown(function () { cps.removePref(uri, ""); });
-  do_check_thrown(function () { cps.getPrefsByName(""); });
-  do_check_thrown(function () { cps.removePrefsByName(""); });
+  do_check_thrown(function() { cps.setPref(uri, "", 21); });
+  do_check_thrown(function() { cps.hasPref(uri, ""); });
+  do_check_thrown(function() { cps.getPref(uri, ""); });
+  do_check_thrown(function() { cps.removePref(uri, ""); });
+  do_check_thrown(function() { cps.getPrefsByName(""); });
+  do_check_thrown(function() { cps.removePrefsByName(""); });
 }
 
-function do_check_thrown (aCallback) {
+function do_check_thrown(aCallback) {
   var exThrown = false;
   try {
     aCallback();
