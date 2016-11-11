@@ -11,7 +11,6 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and
         'jsep_track_unittest',
         'mediaconduit_unittests',
         'mediapipeline_unittest',
-        'sdp_file_parser',
         'sdp_unittests',
         'signaling_unittests',
     ])
