@@ -69,6 +69,11 @@ class GamepadManager final : public nsIObserver,
   void NewAxisMoveEvent(uint32_t aIndex, GamepadServiceType aServiceType,
                         uint32_t aAxis, double aValue);
 
+  // Update the state of |aState| for the gamepad at |aIndex| for all
+  // windows that are listening and visible.
+  void NewPoseEvent(uint32_t aIndex, GamepadServiceType aServiceType,
+                    const GamepadPoseState& aState);
+
   // Synchronize the state of |aGamepad| to match the gamepad stored at |aIndex|
   void SyncGamepadState(uint32_t aIndex, Gamepad* aGamepad);
 

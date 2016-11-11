@@ -124,6 +124,9 @@ private:
                                  uint64_t aButtonPressed) override;
   virtual void HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
                               float aValue) override;
+  virtual void HandlePoseTracking(uint32_t aControllerIdx,
+                                  const dom::GamepadPoseState& aPose,
+                                  VRControllerHost* aController) override;
 
   bool mOpenVRInstalled;
   nsTArray<RefPtr<impl::VRControllerOpenVR>> mOpenVRController;

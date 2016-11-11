@@ -694,7 +694,7 @@ public:
    * It starts when a dead key is down and ends when another key down causes
    * inactivating the dead key state.
    */
-  bool IsInDeadKeySequence() const { return mActiveDeadKey >= 0; }
+  bool IsInDeadKeySequence() const { return !mActiveDeadKeys.IsEmpty(); }
 
   /**
    * IsSysKey() returns true if aVirtualKey with aModKeyState causes WM_SYSKEY*
@@ -811,8 +811,14 @@ private:
 
   VirtualKey mVirtualKeys[NS_NUM_OF_KEYS];
   DeadKeyTableListEntry* mDeadKeyTableListHead;
-  int32_t mActiveDeadKey;                 // -1 = no active dead-key
-  VirtualKey::ShiftState mDeadKeyShiftState;
+  // When mActiveDeadKeys is empty, it's not in dead key sequence.
+  // Otherwise, it contains virtual keycodes which are pressed in current
+  // dead key sequence.
+  nsTArray<uint8_t> mActiveDeadKeys;
+  // mDeadKeyShiftStates is always same length as mActiveDeadKeys.
+  // This stores shift states at pressing each dead key stored in
+  // mActiveDeadKeys.
+  nsTArray<VirtualKey::ShiftState> mDeadKeyShiftStates;
 
   bool mIsOverridden;
   bool mIsPendingToRestoreKeyboardLayout;
@@ -884,15 +890,19 @@ private:
                          VirtualKey::ShiftState aShiftState) const;
 
   /**
+   * GetDeadUniCharsAndModifiers() returns dead chars which are stored in
+   * current dead key sequence.  So, this is stateful.
+   */
+  UniCharsAndModifiers GetDeadUniCharsAndModifiers() const;
+
+  /**
    * GetCompositeChar() returns a composite character with dead character
-   * caused by aVirtualKeyOfDeadKey and aShiftStateOfDeadKey and a base
-   * character (aBaseChar).
+   * caused by mActiveDeadKeys, mDeadKeyShiftStates and a base character
+   * (aBaseChar).
    * If the combination of the dead character and the base character doesn't
    * cause a composite character, this returns 0.
    */
-  char16_t GetCompositeChar(uint8_t aVirtualKeyOfDeadKey,
-                            VirtualKey::ShiftState aShiftStateOfDeadKey,
-                            char16_t aBaseChar) const;
+  char16_t GetCompositeChar(char16_t aBaseChar) const;
 
   // NativeKey class should access InitNativeKey() directly, but it shouldn't
   // be available outside of NativeKey.  So, let's make NativeKey a friend

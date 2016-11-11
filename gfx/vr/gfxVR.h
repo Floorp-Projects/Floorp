@@ -20,6 +20,10 @@ namespace mozilla {
 namespace layers {
 class PTextureParent;
 }
+namespace dom {
+enum class GamepadMappingType : uint32_t;
+struct GamepadPoseState;
+}
 namespace gfx {
 class VRLayerParent;
 class VRDisplayHost;
@@ -252,6 +256,7 @@ public:
   virtual void ScanForDevices() = 0;
   void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed);
   void NewAxisMove(uint32_t aIndex, uint32_t aAxis, double aValue);
+  void NewPoseState(uint32_t aIndex, const dom::GamepadPoseState& aPose);
   void AddGamepad(const char* aID, uint32_t aMapping,
                   uint32_t aNumButtons, uint32_t aNumAxes);
   void RemoveGamepad(uint32_t aIndex);
@@ -269,6 +274,9 @@ private:
                                  uint64_t aButtonPressed) = 0;
   virtual void HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
                               float aValue) = 0;
+  virtual void HandlePoseTracking(uint32_t aControllerIdx,
+                                  const dom::GamepadPoseState& aPose,
+                                  VRControllerHost* aController) = 0;
 };
 
 } // namespace gfx

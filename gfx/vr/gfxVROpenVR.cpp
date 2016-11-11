@@ -490,7 +490,7 @@ VRControllerOpenVR::VRControllerOpenVR()
   MOZ_COUNT_CTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
   mControllerInfo.mControllerName.AssignLiteral("OpenVR HMD");
 #ifdef MOZ_GAMEPAD
-  mControllerInfo.mMappingType = static_cast<uint32_t>(dom::GamepadMappingType::_empty);
+  mControllerInfo.mMappingType = static_cast<uint32_t>(GamepadMappingType::_empty);
 #else
   mControllerInfo.mMappingType = 0;
 #endif
@@ -583,6 +583,9 @@ VRControllerManagerOpenVR::HandleInput()
 
   MOZ_ASSERT(mVRSystem);
 
+  vr::TrackedDevicePose_t poses[vr::k_unMaxTrackedDeviceCount];
+  mVRSystem->GetDeviceToAbsoluteTrackingPose(vr::TrackingUniverseSeated, 0.0f,
+                                             poses, vr::k_unMaxTrackedDeviceCount);
   // Process OpenVR controller state
   for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
     controller = mOpenVRController[i];
@@ -604,6 +607,44 @@ VRControllerManagerOpenVR::HandleInput()
       axis = static_cast<uint32_t>(VRControllerAxisType::Trigger);
       HandleAxisMove(controller->GetIndex(), axis,
                      state.rAxis[gOpenVRAxes[axis]].x);
+    }
+
+    // Start to process pose
+    const ::vr::TrackedDevicePose_t& pose = poses[controller->GetTrackedIndex()];
+
+    if (pose.bDeviceIsConnected && pose.bPoseIsValid &&
+      pose.eTrackingResult == vr::TrackingResult_Running_OK) {
+      gfx::Matrix4x4 m;
+
+      // NOTE! mDeviceToAbsoluteTracking is a 3x4 matrix, not 4x4.  But
+      // because of its arrangement, we can copy the 12 elements in and
+      // then transpose them to the right place.  We do this so we can
+      // pull out a Quaternion.
+      memcpy(&m.components, &pose.mDeviceToAbsoluteTracking, sizeof(float) * 12);
+      m.Transpose();
+
+      gfx::Quaternion rot;
+      rot.SetFromRotationMatrix(m);
+      rot.Invert();
+
+      GamepadPoseState poseState;
+      poseState.flags |= GamepadCapabilityFlags::Cap_Orientation;
+      poseState.orientation[0] = rot.x;
+      poseState.orientation[1] = rot.y;
+      poseState.orientation[2] = rot.z;
+      poseState.orientation[3] = rot.w;
+      poseState.angularVelocity[0] = pose.vAngularVelocity.v[0];
+      poseState.angularVelocity[1] = pose.vAngularVelocity.v[1];
+      poseState.angularVelocity[2] = pose.vAngularVelocity.v[2];
+
+      poseState.flags |= GamepadCapabilityFlags::Cap_Position;
+      poseState.position[0] = m._41;
+      poseState.position[1] = m._42;
+      poseState.position[2] = m._43;
+      poseState.linearVelocity[0] = pose.vVelocity.v[0];
+      poseState.linearVelocity[1] = pose.vVelocity.v[1];
+      poseState.linearVelocity[2] = pose.vVelocity.v[2];
+      HandlePoseTracking(controller->GetIndex(), poseState, controller);
     }
   }
 }
@@ -641,6 +682,17 @@ VRControllerManagerOpenVR::HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxi
 {
   if (aValue != 0.0f) {
     NewAxisMove(aControllerIdx, aAxis, aValue);
+  }
+}
+
+void
+VRControllerManagerOpenVR::HandlePoseTracking(uint32_t aControllerIdx,
+                                              const GamepadPoseState& aPose,
+                                              VRControllerHost* aController)
+{
+  if (aPose != aController->GetPose()) {
+    aController->SetPose(aPose);
+    NewPoseState(aControllerIdx, aPose);
   }
 }
 
