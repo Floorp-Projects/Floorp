@@ -775,6 +775,8 @@ interface TestExampleInterface {
   [SetterThrows] attribute boolean throwingSetterAttr;
   [NeedsSubjectPrincipal] void needsSubjectPrincipalMethod();
   [NeedsSubjectPrincipal] attribute boolean needsSubjectPrincipalAttr;
+  [NeedsCallerType] void needsCallerTypeMethod();
+  [NeedsCallerType] attribute boolean needsCallerTypeAttr;
   legacycaller short(unsigned long arg1, TestInterface arg2);
   void passArgsWithDefaults(optional long arg1,
                             optional TestInterface? arg2 = null,
@@ -798,4 +800,12 @@ interface TestExampleProxyInterface {
   getter short shortNameGetter(DOMString nom);
   deleter void (DOMString nomnom);
   setter creator void shortNamedSetter(DOMString me, short value);
+};
+
+[Exposed=(Window,Worker)]
+interface TestExampleWorkerInterface {
+  [NeedsSubjectPrincipal] void needsSubjectPrincipalMethod();
+  [NeedsSubjectPrincipal] attribute boolean needsSubjectPrincipalAttr;
+  [NeedsCallerType] void needsCallerTypeMethod();
+  [NeedsCallerType] attribute boolean needsCallerTypeAttr;
 };
