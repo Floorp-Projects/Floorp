@@ -66,6 +66,11 @@ DriverCrashGuard::InitializeIfNeeded()
 static inline bool
 AreCrashGuardsEnabled()
 {
+  // Crash guard isn't supported in the GPU process since the entire
+  // process is basically a crash guard.
+  if (XRE_IsGPUProcess()) {
+    return false;
+  }
 #ifdef NIGHTLY_BUILD
   // We only use the crash guard on non-nightly channels, since the nightly
   // channel is for development and having graphics features perma-disabled
