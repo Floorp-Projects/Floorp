@@ -18,6 +18,7 @@ add_test(function test_createAction() {
   Assert.throws(
       () => new action.Action(1, 2, "sometype"), /Expected string/, "Non-string arguments.");
   ok(new action.Action("id", "sometype", "sometype"));
+
   run_next_test();
 });
 
@@ -37,8 +38,7 @@ add_test(function test_processPointerParameters() {
   check(/Unknown pointerType/, message, parametersData);
   parametersData.pointerType = "pen";
   parametersData.primary = "a";
-  check(/Expected boolean \(primary\)/, message, parametersData);
-
+  check(/Expected \[object String\] "a" to be boolean/, message, parametersData);
   parametersData.primary = false;
   deepEqual(action.PointerParameters.fromJson(parametersData),
       {pointerType: action.PointerType.Pen, primary: false});
@@ -52,7 +52,7 @@ add_test(function test_processPointerUpDownAction() {
   for (let d of [-1, "a"]) {
     actionItem.button = d;
     checkErrors(
-        /integer >= 0/, action.Action.fromJson, [actionSequence, actionItem],
+        /Expected 'button' \(.*\) to be >= 0/, action.Action.fromJson, [actionSequence, actionItem],
         `button: ${actionItem.button}`);
   }
   actionItem.button = 5;
@@ -69,7 +69,7 @@ add_test(function test_validateActionDurationAndCoordinates() {
     message = message || `duration: ${actionItem.duration}, subtype: ${subtype}`;
     actionItem.type = subtype;
     actionSequence.type = type;
-    checkErrors(/integer >= 0/,
+    checkErrors(/Expected '.*' \(.*\) to be >= 0/,
         action.Action.fromJson, [actionSequence, actionItem], message);
   };
   for (let d of [-1, "a"]) {
@@ -97,7 +97,7 @@ add_test(function test_processPointerMoveActionElementValidation() {
         [actionSequence, actionItem],
         `actionItem.element: (${getTypeString(d)})`);
   }
-  actionItem.element = {[element.Key]:"something"};
+  actionItem.element = {[element.Key]: "something"};
   let a = action.Action.fromJson(actionSequence, actionItem);
   deepEqual(a.element, actionItem.element);
 

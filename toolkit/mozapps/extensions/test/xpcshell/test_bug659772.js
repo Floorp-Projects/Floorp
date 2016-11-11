@@ -148,45 +148,45 @@ function run_test_1() {
                                    "addon2@tests.mozilla.org",
                                    "addon3@tests.mozilla.org",
                                    "addon4@tests.mozilla.org"],
-                                  function([a1, a2, a3, a4]) {
-        do_check_neq(a1, null);
-        do_check_eq(a1.version, "2.0");
-        do_check_false(a1.appDisabled);
-        do_check_false(a1.userDisabled);
-        do_check_true(a1.isActive);
+                                  function([a1_2, a2_2, a3_2, a4_2]) {
+        do_check_neq(a1_2, null);
+        do_check_eq(a1_2.version, "2.0");
+        do_check_false(a1_2.appDisabled);
+        do_check_false(a1_2.userDisabled);
+        do_check_true(a1_2.isActive);
         do_check_true(isExtensionInAddonsList(profileDir, addon1.id));
 
-        do_check_neq(a2, null);
-        do_check_eq(a2.version, "2.0");
-        do_check_false(a2.appDisabled);
-        do_check_false(a2.userDisabled);
-        do_check_true(a2.isActive);
+        do_check_neq(a2_2, null);
+        do_check_eq(a2_2.version, "2.0");
+        do_check_false(a2_2.appDisabled);
+        do_check_false(a2_2.userDisabled);
+        do_check_true(a2_2.isActive);
         do_check_true(isExtensionInAddonsList(profileDir, addon2.id));
 
         // Should stay enabled because we migrate the compat info from
         // the previous version of the DB
-        do_check_neq(a3, null);
-        do_check_eq(a3.version, "2.0");
-        todo_check_false(a3.appDisabled); // XXX unresolved issue
-        do_check_false(a3.userDisabled);
-        todo_check_true(a3.isActive); // XXX same
+        do_check_neq(a3_2, null);
+        do_check_eq(a3_2.version, "2.0");
+        todo_check_false(a3_2.appDisabled); // XXX unresolved issue
+        do_check_false(a3_2.userDisabled);
+        todo_check_true(a3_2.isActive); // XXX same
         todo_check_true(isExtensionInAddonsList(profileDir, addon3.id)); // XXX same
 
-        do_check_neq(a4, null);
-        do_check_eq(a4.version, "2.0");
-        do_check_true(a4.appDisabled);
-        do_check_false(a4.userDisabled);
-        do_check_false(a4.isActive);
+        do_check_neq(a4_2, null);
+        do_check_eq(a4_2.version, "2.0");
+        do_check_true(a4_2.appDisabled);
+        do_check_false(a4_2.userDisabled);
+        do_check_false(a4_2.isActive);
         do_check_false(isExtensionInAddonsList(profileDir, addon4.id));
 
         // Check that install and uninstall haven't been called on the bootstrapped addon
         do_check_false(Services.prefs.prefHasUserValue("bootstraptest.install_reason"));
         do_check_false(Services.prefs.prefHasUserValue("bootstraptest.uninstall_reason"));
 
-        a1.uninstall();
-        a2.uninstall();
-        a3.uninstall();
-        a4.uninstall();
+        a1_2.uninstall();
+        a2_2.uninstall();
+        a3_2.uninstall();
+        a4_2.uninstall();
         do_execute_soon(run_test_2);
       });
     });
@@ -290,45 +290,45 @@ function run_test_2() {
                                    "addon2@tests.mozilla.org",
                                    "addon3@tests.mozilla.org",
                                    "addon4@tests.mozilla.org"],
-                                  callback_soon(function([a1, a2, a3, a4]) {
-        do_check_neq(a1, null);
-        do_check_eq(a1.version, "2.0");
-        do_check_true(a1.appDisabled);
-        do_check_false(a1.userDisabled);
-        do_check_false(a1.isActive);
+                                  callback_soon(function([a1_2, a2_2, a3_2, a4_2]) {
+        do_check_neq(a1_2, null);
+        do_check_eq(a1_2.version, "2.0");
+        do_check_true(a1_2.appDisabled);
+        do_check_false(a1_2.userDisabled);
+        do_check_false(a1_2.isActive);
         do_check_false(isExtensionInAddonsList(profileDir, addon1.id));
 
-        do_check_neq(a2, null);
-        do_check_eq(a2.version, "2.0");
-        do_check_false(a2.appDisabled);
-        do_check_false(a2.userDisabled);
-        do_check_true(a2.isActive);
+        do_check_neq(a2_2, null);
+        do_check_eq(a2_2.version, "2.0");
+        do_check_false(a2_2.appDisabled);
+        do_check_false(a2_2.userDisabled);
+        do_check_true(a2_2.isActive);
         do_check_true(isExtensionInAddonsList(profileDir, addon2.id));
 
         // Should become appDisabled because we migrate the compat info from
         // the previous version of the DB
-        do_check_neq(a3, null);
-        do_check_eq(a3.version, "2.0");
-        todo_check_true(a3.appDisabled);
-        do_check_false(a3.userDisabled);
-        todo_check_false(a3.isActive);
+        do_check_neq(a3_2, null);
+        do_check_eq(a3_2.version, "2.0");
+        todo_check_true(a3_2.appDisabled);
+        do_check_false(a3_2.userDisabled);
+        todo_check_false(a3_2.isActive);
         todo_check_false(isExtensionInAddonsList(profileDir, addon3.id));
 
-        do_check_neq(a4, null);
-        do_check_eq(a4.version, "2.0");
-        do_check_false(a4.appDisabled);
-        do_check_false(a4.userDisabled);
-        do_check_true(a4.isActive);
+        do_check_neq(a4_2, null);
+        do_check_eq(a4_2.version, "2.0");
+        do_check_false(a4_2.appDisabled);
+        do_check_false(a4_2.userDisabled);
+        do_check_true(a4_2.isActive);
         do_check_true(isExtensionInAddonsList(profileDir, addon4.id));
 
         // Check that install and uninstall haven't been called on the bootstrapped addon
         do_check_false(Services.prefs.prefHasUserValue("bootstraptest.install_reason"));
         do_check_false(Services.prefs.prefHasUserValue("bootstraptest.uninstall_reason"));
 
-        a1.uninstall();
-        a2.uninstall();
-        a3.uninstall();
-        a4.uninstall();
+        a1_2.uninstall();
+        a2_2.uninstall();
+        a3_2.uninstall();
+        a4_2.uninstall();
         restartManager();
 
         shutdownManager();

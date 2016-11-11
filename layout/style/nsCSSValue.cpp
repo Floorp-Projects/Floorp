@@ -494,12 +494,20 @@ void nsCSSValue::SetColorValue(nscolor aValue)
   SetIntegerColorValue(aValue, eCSSUnit_RGBAColor);
 }
 
+
+
 void nsCSSValue::SetIntegerColorValue(nscolor aValue, nsCSSUnit aUnit)
 {
   Reset();
   mUnit = aUnit;
   MOZ_ASSERT(IsIntegerColorUnit(), "bad unit");
   mValue.mColor = aValue;
+}
+
+void nsCSSValue::SetIntegerCoordValue(nscoord aValue)
+{
+  SetFloatValue(nsPresContext::AppUnitsToFloatCSSPixels(aValue),
+                eCSSUnit_Pixel);
 }
 
 void nsCSSValue::SetFloatColorValue(float aComponent1,
@@ -807,6 +815,21 @@ void nsCSSValue::SetDummyInheritValue()
 {
   Reset();
   mUnit = eCSSUnit_DummyInherit;
+}
+
+void nsCSSValue::SetCalcValue(const nsStyleCoord::CalcValue* aCalc)
+{
+  RefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
+  if (!aCalc->mHasPercent) {
+    arr->Item(0).SetIntegerCoordValue(aCalc->mLength);
+  } else {
+    nsCSSValue::Array *arr2 = nsCSSValue::Array::Create(2);
+    arr->Item(0).SetArrayValue(arr2, eCSSUnit_Calc_Plus);
+    arr2->Item(0).SetIntegerCoordValue(aCalc->mLength);
+    arr2->Item(1).SetPercentValue(aCalc->mPercent);
+  }
+
+  SetArrayValue(arr, eCSSUnit_Calc);
 }
 
 void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const

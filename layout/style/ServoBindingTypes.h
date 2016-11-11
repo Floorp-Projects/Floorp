@@ -22,6 +22,7 @@ class StyleChildrenIterator;
 } // namespace dom
 } // namespace mozilla
 
+class nsCSSValue;
 class nsIDocument;
 class nsINode;
 
@@ -93,6 +94,8 @@ DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawGeckoElement)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoDocument)
 DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawGeckoDocument)
 DECL_BORROWED_MUT_REF_TYPE_FOR(StyleChildrenIterator)
+DECL_BORROWED_REF_TYPE_FOR(nsCSSValue)
+DECL_BORROWED_MUT_REF_TYPE_FOR(nsCSSValue)
 
 #undef DECL_ARC_REF_TYPE_FOR
 #undef DECL_OWNED_REF_TYPE_FOR

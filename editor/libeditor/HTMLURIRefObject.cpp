@@ -243,7 +243,7 @@ HTMLURIRefObject::SetNode(nsIDOMNode* aNode)
 
   // If there weren't any URIs in the attributes,
   // then don't accept this node.
-  mNode = 0;
+  mNode = nullptr;
   return NS_ERROR_INVALID_ARG;
 }
 

@@ -22,7 +22,7 @@ VariableRefExpr::VariableRefExpr(nsIAtom* aPrefix, nsIAtom* aLocalName,
 {
     NS_ASSERTION(mLocalName, "VariableRefExpr without local name?");
     if (mPrefix == nsGkAtoms::_empty)
-        mPrefix = 0;
+        mPrefix = nullptr;
 }
 
 /**

@@ -67,7 +67,7 @@ nsScanner::nsScanner(const nsAString& anHTMLString)
   }
   mMarkPosition = mCurrentPosition;
   mIncremental = false;
-  mUnicodeDecoder = 0;
+  mUnicodeDecoder = nullptr;
   mCharsetSource = kCharsetUninitialized;
   mHasInvalidCharacter = false;
   mReplacementCharacter = char16_t(0x0);
@@ -99,7 +99,7 @@ nsScanner::nsScanner(nsString& aFilename, bool aCreateStream)
   mFirstNonWhitespacePosition = -1;
   mCountRemaining = 0;
 
-  mUnicodeDecoder = 0;
+  mUnicodeDecoder = nullptr;
   mCharsetSource = kCharsetUninitialized;
   mHasInvalidCharacter = false;
   mReplacementCharacter = char16_t(0x0);

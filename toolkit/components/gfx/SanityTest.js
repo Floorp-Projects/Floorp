@@ -180,7 +180,6 @@ var listener = {
   },
 
   receiveMessage(message) {
-    let data = message.data;
     switch (message.name) {
       case "gfxSanity:ContentLoaded":
         this.runSanityTest();
@@ -244,7 +243,6 @@ SanityTest.prototype = {
   shouldRunTest: function() {
     // Only test gfx features if firefox has updated, or if the user has a new
     // gpu or drivers.
-    var appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
     var buildId = Services.appinfo.platformBuildID;
     var gfxinfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
 

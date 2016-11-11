@@ -1,6 +1,5 @@
 function check(aBrowser, aElementName, aBarred, aType) {
   return ContentTask.spawn(aBrowser, [aElementName, aBarred, aType], function*([aElementName, aBarred, aType]) {
-    let doc = content.document;
     let e = content.document.createElement(aElementName);
     let contentElement = content.document.getElementById('content');
     contentElement.appendChild(e);
@@ -39,7 +38,6 @@ function check(aBrowser, aElementName, aBarred, aType) {
 
 function todo_check(aBrowser, aElementName, aBarred) {
   return ContentTask.spawn(aBrowser, [aElementName, aBarred], function*([aElementName, aBarred]) {
-    let doc = content.document;
     let e = content.document.createElement(aElementName);
     let contentElement = content.document.getElementById('content');
     contentElement.appendChild(e);
@@ -87,4 +85,3 @@ add_task(function*() {
     }
   });
 });
-

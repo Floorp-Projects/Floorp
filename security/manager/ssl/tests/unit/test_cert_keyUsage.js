@@ -46,12 +46,12 @@ const expectedUsagesMap = {
 add_task(function* () {
   for (let ca of caList) {
     addCertFromFile(certdb, "test_cert_keyUsage/" + ca + ".pem", "CTu,CTu,CTu");
-    let cert = constructCertFromFile("test_cert_keyUsage/" + ca + ".pem");
-    yield asyncTestCertificateUsages(certdb, cert, expectedUsagesMap[ca]);
+    let caCert = constructCertFromFile("test_cert_keyUsage/" + ca + ".pem");
+    yield asyncTestCertificateUsages(certdb, caCert, expectedUsagesMap[ca]);
     for (let ee of eeList) {
       let eeFullName = ee + "-" + ca;
-      let cert = constructCertFromFile("test_cert_keyUsage/" + eeFullName + ".pem");
-      yield asyncTestCertificateUsages(certdb, cert, expectedUsagesMap[eeFullName]);
+      let eeCert = constructCertFromFile("test_cert_keyUsage/" + eeFullName + ".pem");
+      yield asyncTestCertificateUsages(certdb, eeCert, expectedUsagesMap[eeFullName]);
     }
   }
 });

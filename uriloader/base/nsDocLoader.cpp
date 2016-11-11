@@ -356,7 +356,7 @@ nsDocLoader::Destroy()
   mListenerInfoList.Clear();
   mListenerInfoList.Compact();
 
-  mDocumentRequest = 0;
+  mDocumentRequest = nullptr;
 
   if (mLoadGroup)
     mLoadGroup->SetGroupObserver(nullptr);
@@ -699,7 +699,7 @@ void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout)
 
       nsCOMPtr<nsIRequest> docRequest = mDocumentRequest;
 
-      mDocumentRequest = 0;
+      mDocumentRequest = nullptr;
       mIsLoadingDocument = false;
 
       // Update the progress status state - the document is done

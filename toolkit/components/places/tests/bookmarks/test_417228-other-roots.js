@@ -129,9 +129,6 @@ add_task(function* () {
   // make json file
   let jsonFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.json");
 
-  // array of ids not to delete when restoring
-  var excludedItemsFromRestore = [];
-
   // populate db
   tests.forEach(function(aTest) {
     aTest.populate();

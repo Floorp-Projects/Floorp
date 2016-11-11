@@ -188,7 +188,7 @@ add_task(function* test_import_chromefavicon()
   yield PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("Insert bookmark");
-  let bookmark = yield PlacesUtils.bookmarks.insert({
+  yield PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: PAGE_URI,
     title: "Test"

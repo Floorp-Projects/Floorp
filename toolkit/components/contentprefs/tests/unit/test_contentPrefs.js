@@ -197,33 +197,34 @@ function run_test() {
 
   // Site-Specificity
 
-  // These are all different sites, and setting a pref for one of them
-  // shouldn't set it for the others.
-  var uri1 = ContentPrefTest.getURI("http://www.domain1.com/");
-  var uri2 = ContentPrefTest.getURI("http://foo.domain1.com/");
-  var uri3 = ContentPrefTest.getURI("http://domain1.com/");
-  var uri4 = ContentPrefTest.getURI("http://www.domain2.com/");
+  {
+    // These are all different sites, and setting a pref for one of them
+    // shouldn't set it for the others.
+    let uri1 = ContentPrefTest.getURI("http://www.domain1.com/");
+    let uri2 = ContentPrefTest.getURI("http://foo.domain1.com/");
+    let uri3 = ContentPrefTest.getURI("http://domain1.com/");
+    let uri4 = ContentPrefTest.getURI("http://www.domain2.com/");
 
-  cps.setPref(uri1, "test.site-specificity.uri1", 5);
-  do_check_false(cps.hasPref(uri2, "test.site-specificity.uri1"));
-  do_check_false(cps.hasPref(uri3, "test.site-specificity.uri1"));
-  do_check_false(cps.hasPref(uri4, "test.site-specificity.uri1"));
+    cps.setPref(uri1, "test.site-specificity.uri1", 5);
+    do_check_false(cps.hasPref(uri2, "test.site-specificity.uri1"));
+    do_check_false(cps.hasPref(uri3, "test.site-specificity.uri1"));
+    do_check_false(cps.hasPref(uri4, "test.site-specificity.uri1"));
 
-  cps.setPref(uri2, "test.site-specificity.uri2", 5);
-  do_check_false(cps.hasPref(uri1, "test.site-specificity.uri2"));
-  do_check_false(cps.hasPref(uri3, "test.site-specificity.uri2"));
-  do_check_false(cps.hasPref(uri4, "test.site-specificity.uri2"));
+    cps.setPref(uri2, "test.site-specificity.uri2", 5);
+    do_check_false(cps.hasPref(uri1, "test.site-specificity.uri2"));
+    do_check_false(cps.hasPref(uri3, "test.site-specificity.uri2"));
+    do_check_false(cps.hasPref(uri4, "test.site-specificity.uri2"));
 
-  cps.setPref(uri3, "test.site-specificity.uri3", 5);
-  do_check_false(cps.hasPref(uri1, "test.site-specificity.uri3"));
-  do_check_false(cps.hasPref(uri2, "test.site-specificity.uri3"));
-  do_check_false(cps.hasPref(uri4, "test.site-specificity.uri3"));
+    cps.setPref(uri3, "test.site-specificity.uri3", 5);
+    do_check_false(cps.hasPref(uri1, "test.site-specificity.uri3"));
+    do_check_false(cps.hasPref(uri2, "test.site-specificity.uri3"));
+    do_check_false(cps.hasPref(uri4, "test.site-specificity.uri3"));
 
-  cps.setPref(uri4, "test.site-specificity.uri4", 5);
-  do_check_false(cps.hasPref(uri1, "test.site-specificity.uri4"));
-  do_check_false(cps.hasPref(uri2, "test.site-specificity.uri4"));
-  do_check_false(cps.hasPref(uri3, "test.site-specificity.uri4"));
-
+    cps.setPref(uri4, "test.site-specificity.uri4", 5);
+    do_check_false(cps.hasPref(uri1, "test.site-specificity.uri4"));
+    do_check_false(cps.hasPref(uri2, "test.site-specificity.uri4"));
+    do_check_false(cps.hasPref(uri3, "test.site-specificity.uri4"));
+  }
 
   // Observers
 

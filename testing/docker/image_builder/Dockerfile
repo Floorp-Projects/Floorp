@@ -1,34 +1,40 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
-WORKDIR /home/worker/bin
+# %include testing/docker/recipes/tooltool.py
+ADD topsrcdir/testing/docker/recipes/tooltool.py /setup/tooltool.py
 
-RUN apt-get update && apt-get install -y apt-transport-https
-RUN sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9 && \
-    sudo sh -c "echo deb https://get.docker.io/ubuntu docker main\
-    > /etc/apt/sources.list.d/docker.list"
-RUN apt-get update && apt-get install -y \
-    lxc-docker-1.6.1 \
-    curl \
-    wget \
-    git \
-    mercurial \
-    tar \
-    zip \
-    unzip \
-    vim \
-    sudo \
-    ca-certificates \
-    build-essential
+# %include testing/docker/recipes/common.sh
+ADD topsrcdir/testing/docker/recipes/common.sh /setup/common.sh
 
-ENV NODE_VERSION v0.12.4
-RUN cd /usr/local/ && \
-    curl https://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-x64.tar.gz | tar -xz --strip-components 1 && \
-    node -v
+# %include testing/docker/recipes/install-mercurial.sh
+ADD topsrcdir/testing/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
 
-RUN npm install -g taskcluster-vcs@2.3.11
+# %include testing/mozharness/external_tools/robustcheckout.py
+ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
 
-ADD bin /home/worker/bin
-RUN chmod +x /home/worker/bin/*
+# %include testing/docker/recipes/run-task
+ADD topsrcdir/testing/docker/recipes/run-task /usr/local/bin/run-task
 
-# Set a default command useful for debugging
-CMD ["/bin/bash", "--login"]
+# Add and run setup script
+ADD build-image.sh      /usr/local/bin/build-image.sh
+ADD setup.sh            /setup/setup.sh
+RUN bash /setup/setup.sh
+
+# Setup a workspace that won't use AUFS
+VOLUME /home/worker/workspace
+
+# Set variable normally configured at login, by the shells parent process, these
+# are taken from GNU su manual
+ENV           HOME          /home/worker
+ENV           SHELL         /bin/bash
+ENV           USER          worker
+ENV           LOGNAME       worker
+ENV           HOSTNAME      taskcluster-worker
+ENV           LC_ALL        C
+
+# Create worker user
+RUN useradd -d /home/worker -s /bin/bash -m worker
+
+# Set some sane defaults
+WORKDIR /home/worker/
+CMD     build-image.sh
