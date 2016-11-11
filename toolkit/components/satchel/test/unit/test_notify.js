@@ -54,8 +54,6 @@ var testnum = 0;
 var testdesc = "Setup of test form history entries";
 
 var entry1 = ["entry1", "value1"];
-var entry2 = ["entry2", "value2"];
-
 
 /* ========== 1 ========== */
 testnum = 1;

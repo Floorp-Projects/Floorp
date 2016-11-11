@@ -13,21 +13,21 @@
 add_task(function* tags_getter_setter() {
   do_print("Tags getter/setter should work correctly");
   do_print("Without setting tags, tags getter should return empty array");
-  var [query, dummy] = makeQuery();
+  var [query] = makeQuery();
   do_check_eq(query.tags.length, 0);
 
   do_print("Setting tags to an empty array, tags getter should return "+
            "empty array");
-  [query, dummy] = makeQuery([]);
+  [query] = makeQuery([]);
   do_check_eq(query.tags.length, 0);
 
   do_print("Setting a few tags, tags getter should return correct array");
   var tags = ["bar", "baz", "foo"];
-  [query, dummy] = makeQuery(tags);
+  [query] = makeQuery(tags);
   setsAreEqual(query.tags, tags, true);
 
   do_print("Setting some dupe tags, tags getter return unique tags");
-  [query, dummy] = makeQuery(["foo", "foo", "bar", "foo", "baz", "bar"]);
+  [query] = makeQuery(["foo", "foo", "bar", "foo", "baz", "bar"]);
   setsAreEqual(query.tags, ["bar", "baz", "foo"], true);
 });
 
@@ -417,7 +417,7 @@ add_task(function* duplicate_tags() {
     title: tagName
   });
 
-  let bm = yield PlacesUtils.bookmarks.insert({
+  yield PlacesUtils.bookmarks.insert({
     parentGuid: dupTag.guid,
     title: "title",
     url: TEST_URI
@@ -442,7 +442,7 @@ add_task(function* folder_named_as_tag() {
   PlacesUtils.tagging.tagURI(TEST_URI, [tagName]);
 
   do_print("Create folder with same name as tag");
-  let folder = yield PlacesUtils.bookmarks.insert({
+  yield PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     title: tagName
@@ -481,40 +481,40 @@ add_task(function* ORed_queries() {
 
   do_print("Query for /1 OR query for /2 should match both /1 and /2");
   var [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
-  var [query2, dummy] = makeQuery(urisAndTags["http://example.com/2"]);
+  var [query2] = makeQuery(urisAndTags["http://example.com/2"]);
   var root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
   queryResultsAre(root, ["http://example.com/1", "http://example.com/2"]);
 
   do_print("Query for /1 OR query on bogus tag should match only /1");
   [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
-  [query2, dummy] = makeQuery(["bogus"]);
+  [query2] = makeQuery(["bogus"]);
   root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
   queryResultsAre(root, ["http://example.com/1"]);
 
   do_print("Query for /1 OR query for /1 should match only /1");
   [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
-  [query2, dummy] = makeQuery(urisAndTags["http://example.com/1"]);
+  [query2] = makeQuery(urisAndTags["http://example.com/1"]);
   root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
   queryResultsAre(root, ["http://example.com/1"]);
 
   do_print("Query for /1 with tagsAreNot OR query for /2 with tagsAreNot " +
            "should match both /1 and /2");
   [query1, opts] = makeQuery(urisAndTags["http://example.com/1"], true);
-  [query2, dummy] = makeQuery(urisAndTags["http://example.com/2"], true);
+  [query2] = makeQuery(urisAndTags["http://example.com/2"], true);
   root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
   queryResultsAre(root, ["http://example.com/1", "http://example.com/2"]);
 
   do_print("Query for /1 OR query for /2 with tagsAreNot should match " +
            "only /1");
   [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
-  [query2, dummy] = makeQuery(urisAndTags["http://example.com/2"], true);
+  [query2] = makeQuery(urisAndTags["http://example.com/2"], true);
   root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
   queryResultsAre(root, ["http://example.com/1"]);
 
   do_print("Query for /1 OR query for /1 with tagsAreNot should match " +
            "both URIs");
   [query1, opts] = makeQuery(urisAndTags["http://example.com/1"]);
-  [query2, dummy] = makeQuery(urisAndTags["http://example.com/1"], true);
+  [query2] = makeQuery(urisAndTags["http://example.com/1"], true);
   root = PlacesUtils.history.executeQueries([query1, query2], 2, opts).root;
   queryResultsAre(root, ["http://example.com/1", "http://example.com/2"]);
 

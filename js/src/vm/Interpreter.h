@@ -201,7 +201,7 @@ Execute(JSContext* cx, HandleScript script, JSObject& scopeChain, Value* rval);
 class ExecuteState;
 class InvokeState;
 
-// RunState is passed to RunScript and RunScript then eiter passes it to the
+// RunState is passed to RunScript and RunScript then either passes it to the
 // interpreter or to the JITs. RunState contains all information we need to
 // construct an interpreter or JIT frame.
 class RunState

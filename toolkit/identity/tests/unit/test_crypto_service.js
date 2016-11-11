@@ -59,9 +59,9 @@ function test_dsa() {
     // XXX: test that RSA parameters throw the correct error
 
     log("about to sign with DSA key");
-    keyPair.sign("foo", function (rv, signature) {
-      log("DSA sign finished ", rv, signature);
-      do_check_true(Components.isSuccessCode(rv));
+    keyPair.sign("foo", function (rv2, signature) {
+      log("DSA sign finished ", rv2, signature);
+      do_check_true(Components.isSuccessCode(rv2));
       do_check_true(signature.length > 1);
       // TODO: verify the signature with the public key
       run_next_test();
@@ -80,9 +80,9 @@ function test_rsa() {
     do_check_true(keyPair.hexRSAPublicKeyExponent.length > 1);
 
     log("about to sign with RSA key");
-    keyPair.sign("foo", function (rv, signature) {
-      log("RSA sign finished ", rv, signature);
-      do_check_true(Components.isSuccessCode(rv));
+    keyPair.sign("foo", function (rv2, signature) {
+      log("RSA sign finished ", rv2, signature);
+      do_check_true(Components.isSuccessCode(rv2));
       do_check_true(signature.length > 1);
       run_next_test();
     });

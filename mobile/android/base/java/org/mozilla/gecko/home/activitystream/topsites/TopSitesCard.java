@@ -19,6 +19,7 @@ import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.util.DrawableUtil;
+import org.mozilla.gecko.util.ViewUtil;
 import org.mozilla.gecko.util.TouchTargetUtil;
 import org.mozilla.gecko.widget.FaviconView;
 
@@ -53,6 +54,8 @@ class TopSitesCard extends RecyclerView.ViewHolder
 
         TouchTargetUtil.ensureTargetHitArea(menuButton, card);
         menuButton.setOnClickListener(this);
+
+        ViewUtil.enableTouchRipple(menuButton);
     }
 
     void bind(final TopSitesPageAdapter.TopSite topSite) {

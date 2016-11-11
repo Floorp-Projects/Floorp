@@ -100,7 +100,7 @@ struct nsWatcherWindowEntry
       supportsweak->GetWeakReference(getter_AddRefs(mChromeWeak));
     } else {
       mChrome = aChrome;
-      mChromeWeak = 0;
+      mChromeWeak = nullptr;
     }
     ReferenceSelf();
   }
@@ -1491,7 +1491,7 @@ nsWindowWatcher::AddWindow(mozIDOMWindowProxy* aWindow, nsIWebBrowserChrome* aCh
         supportsweak->GetWeakReference(getter_AddRefs(info->mChromeWeak));
       } else {
         info->mChrome = aChrome;
-        info->mChromeWeak = 0;
+        info->mChromeWeak = nullptr;
       }
       return NS_OK;
     }

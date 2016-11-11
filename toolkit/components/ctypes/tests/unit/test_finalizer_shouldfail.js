@@ -113,7 +113,7 @@ function test_null_dispose()
 
   exception = false;
   try {
-    let v = ctypes.CDataFinalizer(acquire(0), null_dispose);
+    ctypes.CDataFinalizer(acquire(0), null_dispose);
   } catch (x) {
     exception = true;
   }

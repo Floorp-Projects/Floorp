@@ -474,6 +474,22 @@
         </body>
       </method>
 
+      <method name="getTabFromAudioEvent">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
+              !aEvent.isTrusted) {
+            return null;
+          }
+
+          var browser = aEvent.originalTarget;
+          var tab = this.getTabForBrowser(browser);
+          return tab;
+        ]]>
+        </body>
+      </method>
+
       <method name="_callProgressListeners">
         <parameter name="aBrowser"/>
         <parameter name="aMethod"/>
@@ -4541,9 +4557,14 @@
                 "tabs.muteAudio.tooltip";
               label = stringWithShortcut(stringID, "key_toggleMute");
             } else {
-              stringID = tab.linkedBrowser.audioMuted ?
-                "tabs.unmuteAudio.background.tooltip" :
-                "tabs.muteAudio.background.tooltip";
+              if (tab.linkedBrowser.audioBlocked) {
+                stringID = "tabs.unblockAudio.tooltip";
+              } else {
+                stringID = tab.linkedBrowser.audioMuted ?
+                  "tabs.unmuteAudio.background.tooltip" :
+                  "tabs.muteAudio.background.tooltip";
+              }
+
               label = this.mStringBundle.getString(stringID);
             }
           } else {
@@ -5069,14 +5090,10 @@
       </handler>
       <handler event="DOMAudioPlaybackStarted">
         <![CDATA[
-          if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
-              !event.isTrusted)
+          var tab = getTabFromAudioEvent(event)
+          if (!tab) {
             return;
-
-          var browser = event.originalTarget;
-          var tab = this.getTabForBrowser(browser);
-          if (!tab)
-            return;
+          }
 
           clearTimeout(tab._soundPlayingAttrRemovalTimer);
           tab._soundPlayingAttrRemovalTimer = 0;
@@ -5097,14 +5114,10 @@
       </handler>
       <handler event="DOMAudioPlaybackStopped">
         <![CDATA[
-          if (!Services.prefs.getBoolPref("browser.tabs.showAudioPlayingIcon") ||
-              !event.isTrusted)
+          var tab = getTabFromAudioEvent(event)
+          if (!tab) {
             return;
-
-          var browser = event.originalTarget;
-          var tab = this.getTabForBrowser(browser);
-          if (!tab)
-            return;
+          }
 
           if (tab.hasAttribute("soundplaying")) {
             let removalDelay = Services.prefs.getIntPref("browser.tabs.delayHidingAudioPlayingIconMS");
@@ -5118,6 +5131,32 @@
               tab.removeAttribute("soundplaying");
               this._tabAttrModified(tab, ["soundplaying", "soundplaying-scheduledremoval"]);
             }, removalDelay);
+          }
+        ]]>
+      </handler>
+      <handler event="DOMAudioPlaybackBlockStarted">
+        <![CDATA[
+          var tab = getTabFromAudioEvent(event)
+          if (!tab) {
+            return;
+          }
+
+          if (!tab.hasAttribute("blocked")) {
+            tab.setAttribute("blocked", true);
+            this._tabAttrModified(tab, ["blocked"]);
+          }
+        ]]>
+      </handler>
+      <handler event="DOMAudioPlaybackBlockStopped">
+        <![CDATA[
+          var tab = getTabFromAudioEvent(event)
+          if (!tab) {
+            return;
+          }
+
+          if (tab.hasAttribute("blocked")) {
+            tab.removeAttribute("blocked");
+            this._tabAttrModified(tab, ["blocked"]);
           }
         ]]>
       </handler>
@@ -6616,7 +6655,7 @@
                      anonid="sharing-icon"
                      class="tab-sharing-icon-overlay"
                      role="presentation"/>
-          <xul:image xbl:inherits="crashed,busy,soundplaying,soundplaying-scheduledremoval,pinned,muted,selected=visuallyselected"
+          <xul:image xbl:inherits="crashed,busy,soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected"
                      anonid="overlay-icon"
                      class="tab-icon-overlay"
                      role="presentation"/>
@@ -6624,7 +6663,7 @@
                      xbl:inherits="value=label,crop,accesskey,fadein,pinned,selected=visuallyselected,attention"
                      class="tab-text tab-label"
                      role="presentation"/>
-          <xul:image xbl:inherits="soundplaying,soundplaying-scheduledremoval,pinned,muted,selected=visuallyselected"
+          <xul:image xbl:inherits="soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected"
                      anonid="soundplaying-icon"
                      class="tab-icon-sound"
                      role="presentation"/>
@@ -6697,6 +6736,11 @@
           return this.getAttribute("muted") == "true";
         </getter>
       </property>
+      <property name="blocked" readonly="true">
+        <getter>
+          return this.getAttribute("blocked") == "true";
+        </getter>
+      </property>
       <!--
       Describes how the tab ended up in this mute state. May be any of:
 
@@ -6739,7 +6783,8 @@
       <property name="_overPlayingIcon" readonly="true">
         <getter><![CDATA[
           let iconVisible = this.hasAttribute("soundplaying") ||
-                            this.hasAttribute("muted");
+                            this.hasAttribute("muted") ||
+                            this.hasAttribute("blocked");
           let soundPlayingIcon =
             document.getAnonymousElementByAttribute(this, "anonid", "soundplaying-icon");
           let overlayIcon =
@@ -6812,17 +6857,34 @@
         <![CDATA[
           let tabContainer = this.parentNode;
           let browser = this.linkedBrowser;
-          if (browser.audioMuted) {
-            browser.unmute();
-            this.removeAttribute("muted");
-            BrowserUITelemetry.countTabMutingEvent("unmute", aMuteReason);
+          let modifiedAttrs = [];
+          if (browser.audioBlocked) {
+            this.removeAttribute("blocked");
+            modifiedAttrs.push("blocked");
+
+            // We don't want sound icon flickering between "blocked", "none" and
+            // "sound-playing", here adding the "soundplaying" is to keep the
+            // transition smoothly.
+            if (!this.hasAttribute("soundplaying")) {
+              this.setAttribute("soundplaying", true);
+              modifiedAttrs.push("soundplaying");
+            }
+
+            browser.resumeMedia();
           } else {
-            browser.mute();
-            this.setAttribute("muted", "true");
-            BrowserUITelemetry.countTabMutingEvent("mute", aMuteReason);
+            if (browser.audioMuted) {
+              browser.unmute();
+              this.removeAttribute("muted");
+              BrowserUITelemetry.countTabMutingEvent("unmute", aMuteReason);
+            } else {
+              browser.mute();
+              this.setAttribute("muted", "true");
+              BrowserUITelemetry.countTabMutingEvent("mute", aMuteReason);
+            }
+            this.muteReason = aMuteReason || null;
+            modifiedAttrs.push("muted");
           }
-          this.muteReason = aMuteReason || null;
-          tabContainer.tabbrowser._tabAttrModified(this, ["muted"]);
+          tabContainer.tabbrowser._tabAttrModified(this, modifiedAttrs);
         ]]>
         </body>
       </method>

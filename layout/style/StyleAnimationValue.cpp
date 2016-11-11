@@ -271,13 +271,6 @@ ToPrimitive(nsCSSValue::Array* aArray)
   return arr.forget();
 }
 
-inline void
-nscoordToCSSValue(nscoord aCoord, nsCSSValue& aCSSValue)
-{
-  aCSSValue.SetFloatValue(nsPresContext::AppUnitsToFloatCSSPixels(aCoord),
-                          eCSSUnit_Pixel);
-}
-
 static void
 AppendCSSShadowValue(const nsCSSShadowItem *aShadow,
                      nsCSSValueList **&aResultTail)
@@ -286,12 +279,12 @@ AppendCSSShadowValue(const nsCSSShadowItem *aShadow,
 
   // X, Y, Radius, Spread, Color, Inset
   RefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(6);
-  nscoordToCSSValue(aShadow->mXOffset, arr->Item(0));
-  nscoordToCSSValue(aShadow->mYOffset, arr->Item(1));
-  nscoordToCSSValue(aShadow->mRadius, arr->Item(2));
+  arr->Item(0).SetIntegerCoordValue(aShadow->mXOffset);
+  arr->Item(1).SetIntegerCoordValue(aShadow->mYOffset);
+  arr->Item(2).SetIntegerCoordValue(aShadow->mRadius);
   // NOTE: This code sometimes stores mSpread: 0 even when
   // the parser would be required to leave it null.
-  nscoordToCSSValue(aShadow->mSpread, arr->Item(3));
+  arr->Item(3).SetIntegerCoordValue(aShadow->mSpread);
   if (aShadow->mHasColor) {
     arr->Item(4).SetColorValue(aShadow->mColor);
   }
@@ -388,23 +381,13 @@ ExtractCalcValue(const nsCSSValue& aValue)
 }
 
 static void
-SetCalcValue(const nsStyleCoord::CalcValue* aCalc, nsCSSValue& aValue)
+CalcValueToCSSValue(const nsStyleCoord::CalcValue* aCalc, nsCSSValue& aValue)
 {
-  RefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
-  if (!aCalc->mHasPercent) {
-    nscoordToCSSValue(aCalc->mLength, arr->Item(0));
-  } else {
-    nsCSSValue::Array *arr2 = nsCSSValue::Array::Create(2);
-    arr->Item(0).SetArrayValue(arr2, eCSSUnit_Calc_Plus);
-    nscoordToCSSValue(aCalc->mLength, arr2->Item(0));
-    arr2->Item(1).SetPercentValue(aCalc->mPercent);
-  }
-
-  aValue.SetArrayValue(arr, eCSSUnit_Calc);
+  aValue.SetCalcValue(aCalc);
 }
 
 static void
-SetCalcValue(const PixelCalcValue& aCalc, nsCSSValue& aValue)
+CalcValueToCSSValue(const PixelCalcValue& aCalc, nsCSSValue& aValue)
 {
   RefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
   if (!aCalc.mHasPercent) {
@@ -588,7 +571,7 @@ AddCSSValueCanonicalCalc(double aCoeff1, const nsCSSValue &aValue1,
   result.mHasPercent = v1.mHasPercent || v2.mHasPercent;
   MOZ_ASSERT(result.mHasPercent || result.mPercent == 0.0f,
              "can't have a nonzero percentage part without having percentages");
-  SetCalcValue(result, aResult);
+  CalcValueToCSSValue(result, aResult);
 }
 
 static inline void
@@ -3502,7 +3485,7 @@ StyleAnimationValue::UncomputeValue(nsCSSPropertyID aProperty,
         SetIntValue(aComputedValue.GetIntValue(), eCSSUnit_Integer);
       break;
     case eUnit_Coord:
-      nscoordToCSSValue(aComputedValue.GetCoordValue(), aSpecifiedValue);
+      aSpecifiedValue.SetIntegerCoordValue(aComputedValue.GetCoordValue());
       break;
     case eUnit_Percent:
       aSpecifiedValue.SetPercentValue(aComputedValue.GetPercentValue());
@@ -3693,7 +3676,7 @@ StyleCoordToValue(const nsStyleCoord& aCoord, StyleAnimationValue& aValue)
       break;
     case eStyleUnit_Calc: {
       nsAutoPtr<nsCSSValue> val(new nsCSSValue);
-      SetCalcValue(aCoord.GetCalcValue(), *val);
+      CalcValueToCSSValue(aCoord.GetCalcValue(), *val);
       aValue.SetAndAdoptCSSValueValue(val.forget(),
                                       StyleAnimationValue::eUnit_Calc);
       break;
@@ -3709,7 +3692,7 @@ StyleCoordToCSSValue(const nsStyleCoord& aCoord, nsCSSValue& aCSSValue)
 {
   switch (aCoord.GetUnit()) {
     case eStyleUnit_Coord:
-      nscoordToCSSValue(aCoord.GetCoordValue(), aCSSValue);
+      aCSSValue.SetIntegerCoordValue(aCoord.GetCoordValue());
       break;
     case eStyleUnit_Factor:
       aCSSValue.SetFloatValue(aCoord.GetFactorValue(), eCSSUnit_Number);
@@ -3718,7 +3701,7 @@ StyleCoordToCSSValue(const nsStyleCoord& aCoord, nsCSSValue& aCSSValue)
       aCSSValue.SetPercentValue(aCoord.GetPercentValue());
       break;
     case eStyleUnit_Calc:
-      SetCalcValue(aCoord.GetCalcValue(), aCSSValue);
+      CalcValueToCSSValue(aCoord.GetCalcValue(), aCSSValue);
       break;
     case eStyleUnit_Degree:
       aCSSValue.SetFloatValue(aCoord.GetAngleValue(), eCSSUnit_Degree);
@@ -3753,8 +3736,8 @@ SetPositionValue(const Position& aPos, nsCSSValue& aCSSValue)
   nsCSSValue& xValue = posArray->Item(1);
   nsCSSValue& yValue = posArray->Item(3);
 
-  SetCalcValue(&aPos.mXPosition, xValue);
-  SetCalcValue(&aPos.mYPosition, yValue);
+  CalcValueToCSSValue(&aPos.mXPosition, xValue);
+  CalcValueToCSSValue(&aPos.mYPosition, yValue);
 }
 
 static void
@@ -3771,7 +3754,7 @@ SetPositionCoordValue(const Position::Coord& aPosCoord,
   // we'll just have a normalized "x"/"y" position, with no edge names needed.
   nsCSSValue& value = posArray->Item(1);
 
-  SetCalcValue(&aPosCoord, value);
+  CalcValueToCSSValue(&aPosCoord, value);
 }
 
 /*
@@ -3793,7 +3776,7 @@ SubstitutePixelValues(nsStyleContext* aStyleContext,
     c2.mLength = c.mLength;
     c2.mPercent = c.mPercent;
     c2.mHasPercent = true; // doesn't matter for transform translate
-    SetCalcValue(&c2, aOutput);
+    CalcValueToCSSValue(&c2, aOutput);
   } else if (aInput.UnitHasArrayValue()) {
     const nsCSSValue::Array *inputArray = aInput.GetArrayValue();
     RefPtr<nsCSSValue::Array> outputArray =
@@ -3881,19 +3864,19 @@ ExtractImageLayerSizePairList(const nsStyleImageLayers& aLayer,
         break;
       case nsStyleImageLayers::Size::eLengthPercentage:
         // XXXbz is there a good reason we can't just
-        // SetCalcValue(&size.mWidth, item->mXValue) here?
+        // CalcValueToCSSValue(&size.mWidth, item->mXValue) here?
         if (!size.mWidth.mHasPercent &&
             // negative values must have come from calc()
             size.mWidth.mLength >= 0) {
           MOZ_ASSERT(size.mWidth.mPercent == 0.0f,
                      "Shouldn't have mPercent");
-          nscoordToCSSValue(size.mWidth.mLength, item->mXValue);
+          item->mXValue.SetIntegerCoordValue(size.mWidth.mLength);
         } else if (size.mWidth.mLength == 0 &&
                    // negative values must have come from calc()
                    size.mWidth.mPercent >= 0.0f) {
           item->mXValue.SetPercentValue(size.mWidth.mPercent);
         } else {
-          SetCalcValue(&size.mWidth, item->mXValue);
+          CalcValueToCSSValue(&size.mWidth, item->mXValue);
         }
         break;
     }
@@ -3908,19 +3891,19 @@ ExtractImageLayerSizePairList(const nsStyleImageLayers& aLayer,
         break;
       case nsStyleImageLayers::Size::eLengthPercentage:
         // XXXbz is there a good reason we can't just
-        // SetCalcValue(&size.mHeight, item->mYValue) here?
+        // CalcValueToCSSValue(&size.mHeight, item->mYValue) here?
         if (!size.mHeight.mHasPercent &&
             // negative values must have come from calc()
             size.mHeight.mLength >= 0) {
           MOZ_ASSERT(size.mHeight.mPercent == 0.0f,
                      "Shouldn't have mPercent");
-          nscoordToCSSValue(size.mHeight.mLength, item->mYValue);
+          item->mYValue.SetIntegerCoordValue(size.mHeight.mLength);
         } else if (size.mHeight.mLength == 0 &&
                    // negative values must have come from calc()
                    size.mHeight.mPercent >= 0.0f) {
           item->mYValue.SetPercentValue(size.mHeight.mPercent);
         } else {
-          SetCalcValue(&size.mHeight, item->mYValue);
+          CalcValueToCSSValue(&size.mHeight, item->mYValue);
         }
         break;
     }
@@ -4085,8 +4068,8 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
           const nsStyleTableBorder *styleTableBorder =
             static_cast<const nsStyleTableBorder*>(styleStruct);
           nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
-          nscoordToCSSValue(styleTableBorder->mBorderSpacingCol, pair->mXValue);
-          nscoordToCSSValue(styleTableBorder->mBorderSpacingRow, pair->mYValue);
+          pair->mXValue.SetIntegerCoordValue(styleTableBorder->mBorderSpacingCol);
+          pair->mYValue.SetIntegerCoordValue(styleTableBorder->mBorderSpacingRow);
           aComputedValue.SetAndAdoptCSSValuePairValue(pair.forget(),
                                                       eUnit_CSSValuePair);
           break;
@@ -4206,10 +4189,10 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
           }
 
           nsCSSRect *vrect = new nsCSSRect;
-          nscoordToCSSValue(srect.x, vrect->mLeft);
-          nscoordToCSSValue(srect.y, vrect->mTop);
-          nscoordToCSSValue(srect.XMost(), vrect->mRight);
-          nscoordToCSSValue(srect.YMost(), vrect->mBottom);
+          vrect->mLeft.SetIntegerCoordValue(srect.x);
+          vrect->mTop.SetIntegerCoordValue(srect.y);
+          vrect->mRight.SetIntegerCoordValue(srect.XMost());
+          vrect->mBottom.SetIntegerCoordValue(srect.YMost());
           aComputedValue.SetAndAdoptCSSRectValue(vrect, eUnit_CSSRect);
           break;
         }
@@ -4225,22 +4208,22 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
             if (effects->mClipFlags & NS_STYLE_CLIP_TOP_AUTO) {
               vrect->mTop.SetAutoValue();
             } else {
-              nscoordToCSSValue(srect.y, vrect->mTop);
+              vrect->mTop.SetIntegerCoordValue(srect.y);
             }
             if (effects->mClipFlags & NS_STYLE_CLIP_RIGHT_AUTO) {
               vrect->mRight.SetAutoValue();
             } else {
-              nscoordToCSSValue(srect.XMost(), vrect->mRight);
+              vrect->mRight.SetIntegerCoordValue(srect.XMost());
             }
             if (effects->mClipFlags & NS_STYLE_CLIP_BOTTOM_AUTO) {
               vrect->mBottom.SetAutoValue();
             } else {
-              nscoordToCSSValue(srect.YMost(), vrect->mBottom);
+              vrect->mBottom.SetIntegerCoordValue(srect.YMost());
             }
             if (effects->mClipFlags & NS_STYLE_CLIP_LEFT_AUTO) {
               vrect->mLeft.SetAutoValue();
             } else {
-              nscoordToCSSValue(srect.x, vrect->mLeft);
+              vrect->mLeft.SetIntegerCoordValue(srect.x);
             }
             aComputedValue.SetAndAdoptCSSRectValue(vrect, eUnit_CSSRect);
           }

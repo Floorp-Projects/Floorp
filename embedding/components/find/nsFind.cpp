@@ -1044,7 +1044,7 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
       tc = do_QueryInterface(mIterNode);
       if (!tc || !(frag = tc->GetText())) { // Out of nodes
         mIterator = nullptr;
-        mLastBlockParent = 0;
+        mLastBlockParent = nullptr;
         ResetAll();
         return NS_OK;
       }

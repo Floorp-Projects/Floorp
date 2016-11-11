@@ -31,7 +31,7 @@ add_test(function test_identifier() {
   let engineTemplateFile = do_get_file("data/engine.xml");
   engineTemplateFile.copyTo(engineFile.parent, "test-search-engine.xml");
 
-  let search = Services.search.init(function initComplete(aResult) {
+  Services.search.init(function initComplete(aResult) {
     do_print("init'd search service");
     do_check_true(Components.isSuccessCode(aResult));
 

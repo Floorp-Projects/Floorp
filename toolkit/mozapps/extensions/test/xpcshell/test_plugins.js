@@ -156,14 +156,14 @@ function run_test_2(p) {
   do_check_false(p.appDisabled);
   do_check_false(p.isActive);
 
-  AddonManager.getAddonByID(gID, function(p) {
-    do_check_neq(p, null);
-    do_check_true(p.userDisabled);
-    do_check_false(p.appDisabled);
-    do_check_false(p.isActive);
-    do_check_eq(p.name, "Shockwave Flash");
+  AddonManager.getAddonByID(gID, function(p2) {
+    do_check_neq(p2, null);
+    do_check_true(p2.userDisabled);
+    do_check_false(p2.appDisabled);
+    do_check_false(p2.isActive);
+    do_check_eq(p2.name, "Shockwave Flash");
 
-    run_test_3(p);
+    run_test_3(p2);
   });
 }
 
@@ -184,12 +184,12 @@ function run_test_3(p) {
   do_check_false(p.appDisabled);
   do_check_true(p.isActive);
 
-  AddonManager.getAddonByID(gID, function(p) {
-    do_check_neq(p, null);
-    do_check_false(p.userDisabled);
-    do_check_false(p.appDisabled);
-    do_check_true(p.isActive);
-    do_check_eq(p.name, "Shockwave Flash");
+  AddonManager.getAddonByID(gID, function(p2) {
+    do_check_neq(p2, null);
+    do_check_false(p2.userDisabled);
+    do_check_false(p2.appDisabled);
+    do_check_true(p2.isActive);
+    do_check_eq(p2.name, "Shockwave Flash");
 
     do_execute_soon(run_test_4);
   });

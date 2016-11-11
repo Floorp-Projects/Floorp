@@ -92,13 +92,13 @@ add_task(function* test_bookmarks() {
 
   // test getFolderIdForItem() with bogus item id will throw
   try {
-    let id = bs.getFolderIdForItem(0);
+    bs.getFolderIdForItem(0);
     do_throw("getFolderIdForItem accepted bad input");
   } catch (ex) {}
 
   // test getFolderIdForItem() with bogus item id will throw
   try {
-    let id = bs.getFolderIdForItem(-1);
+    bs.getFolderIdForItem(-1);
     do_throw("getFolderIdForItem accepted bad input");
   } catch (ex) {}
 

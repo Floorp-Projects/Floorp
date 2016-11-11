@@ -15,7 +15,7 @@ addAccessibleTask('<select id="select"></select>', function*(browser, accDoc) {
   // Create a combobox with grouping and 2 standalone options
   yield ContentTask.spawn(browser, {}, () => {
     let doc = content.document;
-    let select = doc.getElementById('select');
+    let contentSelect = doc.getElementById('select');
     let optGroup = doc.createElement('optgroup');
 
     for (let i = 0; i < 2; i++) {
@@ -24,13 +24,13 @@ addAccessibleTask('<select id="select"></select>', function*(browser, accDoc) {
       opt.text = 'Option: Value ' + i;
       optGroup.appendChild(opt);
     }
-    select.add(optGroup, null);
+    contentSelect.add(optGroup, null);
 
     for (let i = 0; i < 2; i++) {
       let opt = doc.createElement('option');
-      select.add(opt, null);
+      contentSelect.add(opt, null);
     }
-    select.firstChild.firstChild.id = 'option1Node';
+    contentSelect.firstChild.firstChild.id = 'option1Node';
   });
   let event = yield onEvent;
   let option1Node = findAccessibleChildByID(event.accessible, 'option1Node');
@@ -55,8 +55,8 @@ addAccessibleTask('<select id="select"></select>', function*(browser, accDoc) {
   onEvent = waitForEvent(EVENT_REORDER, 'select');
   // Remove grouping from combobox
   yield ContentTask.spawn(browser, {}, () => {
-    let select = content.document.getElementById('select');
-    select.removeChild(select.firstChild);
+    let contentSelect = content.document.getElementById('select');
+    contentSelect.removeChild(contentSelect.firstChild);
   });
   yield onEvent;
 
@@ -75,9 +75,9 @@ addAccessibleTask('<select id="select"></select>', function*(browser, accDoc) {
   onEvent = waitForEvent(EVENT_REORDER, 'select');
   // Remove all options from combobox
   yield ContentTask.spawn(browser, {}, () => {
-    let select = content.document.getElementById('select');
-    while (select.length) {
-      select.remove(0);
+    let contentSelect = content.document.getElementById('select');
+    while (contentSelect.length) {
+      contentSelect.remove(0);
     }
   });
   yield onEvent;

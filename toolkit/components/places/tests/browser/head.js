@@ -125,7 +125,6 @@ function waitForFaviconChanged(aExpectedPageURI, aExpectedFaviconURI, aWindow,
  *        The stack frame used to report errors.
  */
 function addVisits(aPlaceInfo, aWindow, aCallback, aStack) {
-  let stack = aStack || Components.stack.caller;
   let places = [];
   if (aPlaceInfo instanceof Ci.nsIURI) {
     places.push({ uri: aPlaceInfo });

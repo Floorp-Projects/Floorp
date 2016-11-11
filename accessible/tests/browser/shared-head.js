@@ -114,13 +114,13 @@ function invokeSetAttribute(browser, id, attr, value) {
   } else {
     Logger.log(`Removing ${attr} attribute from node with id: ${id}`);
   }
-  return ContentTask.spawn(browser, { id, attr, value },
-    ({ id, attr, value }) => {
-      let elm = content.document.getElementById(id);
-      if (value) {
-        elm.setAttribute(attr, value);
+  return ContentTask.spawn(browser, [id, attr, value],
+    ([contentId, contentAttr, contentValue]) => {
+      let elm = content.document.getElementById(contentId);
+      if (contentValue) {
+        elm.setAttribute(contentAttr, contentValue);
       } else {
-        elm.removeAttribute(attr);
+        elm.removeAttribute(contentAttr);
       }
     });
 }
@@ -141,13 +141,13 @@ function invokeSetStyle(browser, id, style, value) {
   } else {
     Logger.log(`Removing ${style} style from node with id: ${id}`);
   }
-  return ContentTask.spawn(browser, { id, style, value },
-    ({ id, style, value }) => {
-      let elm = content.document.getElementById(id);
-      if (value) {
-        elm.style[style] = value;
+  return ContentTask.spawn(browser, [id, style, value],
+    ([contentId, contentStyle, contentValue]) => {
+      let elm = content.document.getElementById(contentId);
+      if (contentValue) {
+        elm.style[contentStyle] = contentValue;
       } else {
-        delete elm.style[style];
+        delete elm.style[contentStyle];
       }
     });
 }
@@ -161,8 +161,8 @@ function invokeSetStyle(browser, id, style, value) {
  */
 function invokeFocus(browser, id) {
   Logger.log(`Setting focus on a node with id: ${id}`);
-  return ContentTask.spawn(browser, id, id => {
-    let elm = content.document.getElementById(id);
+  return ContentTask.spawn(browser, id, contentId => {
+    let elm = content.document.getElementById(contentId);
     if (elm instanceof Ci.nsIDOMNSEditableElement && elm.editor ||
         elm instanceof Ci.nsIDOMXULTextBoxElement) {
       elm.selectionStart = elm.selectionEnd = elm.value.length;

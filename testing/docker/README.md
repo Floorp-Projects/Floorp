@@ -39,7 +39,7 @@ To use within an in-tree task definition, the format is:
 ```yaml
 image:
   type: 'task-image'
-  path: 'public/image.tar'
+  path: 'public/image.tar.zst'
   taskId: '{{#task_id_for_image}}builder{{/task_id_for_image}}'
 ```
 
@@ -67,9 +67,9 @@ in different hashes being generated.
 Images that are built on push and uploaded as an artifact of a task will be indexed under the
 following namespaces.
 
-* docker.images.v1.{project}.{image_name}.latest
-* docker.images.v1.{project}.{image_name}.pushdate.{year}.{month}-{day}-{pushtime}
-* docker.images.v1.{project}.{image_name}.hash.{context_hash}
+* docker.images.v2.level-{level}.{image_name}.latest
+* docker.images.v2.level-{level}.{image_name}.pushdate.{year}.{month}-{day}-{pushtime}
+* docker.images.v2.level-{level}.{image_name}.hash.{context_hash}
 
 Not only can images be browsed by the pushdate and context hash, but the 'latest' namespace
 is meant to view the latest built image.  This functions similarly to the 'latest' tag
