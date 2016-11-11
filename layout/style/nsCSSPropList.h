@@ -469,7 +469,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kAppearanceKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     backface-visibility,
     backface_visibility,
@@ -479,7 +479,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kBackfaceVisibilityKTable,
     offsetof(nsStyleDisplay, mBackfaceVisibility),
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     background,
     background,
@@ -498,7 +498,7 @@ CSS_PROP_BACKGROUND(
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerAttachmentKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BACKGROUND(
     background-blend-mode,
     background_blend_mode,
@@ -511,7 +511,7 @@ CSS_PROP_BACKGROUND(
     VARIANT_KEYWORD, // used by list parsing
     kBlendModeKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BACKGROUND(
     background-clip,
     background_clip,
@@ -524,7 +524,7 @@ CSS_PROP_BACKGROUND(
     VARIANT_KEYWORD, // used by list parsing
     kBackgroundClipKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BACKGROUND(
     background-color,
     background_color,
@@ -553,7 +553,7 @@ CSS_PROP_BACKGROUND(
     VARIANT_IMAGE, // used by list parsing
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BACKGROUND(
     background-origin,
     background_origin,
@@ -566,7 +566,7 @@ CSS_PROP_BACKGROUND(
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerOriginKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     background-position,
     background_position,
@@ -614,7 +614,7 @@ CSS_PROP_BACKGROUND(
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerRepeatKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BACKGROUND(
     background-size,
     background_size,
@@ -803,7 +803,7 @@ CSS_PROP_BORDER(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BORDER(
     border-bottom-left-radius,
     border_bottom_left_radius,
@@ -840,7 +840,7 @@ CSS_PROP_BORDER(
     VARIANT_HK,
     kBorderStyleKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)  // on/off will need reflow
+    eStyleAnimType_Discrete)  // on/off will need reflow
 CSS_PROP_BORDER(
     border-bottom-width,
     border_bottom_width,
@@ -864,7 +864,7 @@ CSS_PROP_TABLEBORDER(
     VARIANT_HK,
     kBorderCollapseKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     border-color,
     border_color,
@@ -888,7 +888,7 @@ CSS_PROP_BORDER(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BORDER(
     border-image-repeat,
     border_image_repeat,
@@ -899,7 +899,7 @@ CSS_PROP_BORDER(
     0,
     kBorderImageRepeatKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BORDER(
     border-image-slice,
     border_image_slice,
@@ -910,7 +910,7 @@ CSS_PROP_BORDER(
     0,
     kBorderImageSliceKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BORDER(
     border-image-source,
     border_image_source,
@@ -922,7 +922,7 @@ CSS_PROP_BORDER(
     VARIANT_IMAGE | VARIANT_INHERIT,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BORDER(
     border-image-width,
     border_image_width,
@@ -933,7 +933,7 @@ CSS_PROP_BORDER(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     border-inline-end,
     border_inline_end,
@@ -1067,7 +1067,7 @@ CSS_PROP_BORDER(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BORDER(
     border-left-style,
     border_left_style,
@@ -1078,7 +1078,7 @@ CSS_PROP_BORDER(
     VARIANT_HK,
     kBorderStyleKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BORDER(
     border-left-width,
     border_left_width,
@@ -1129,7 +1129,7 @@ CSS_PROP_BORDER(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BORDER(
     border-right-style,
     border_right_style,
@@ -1140,7 +1140,7 @@ CSS_PROP_BORDER(
     VARIANT_HK,
     kBorderStyleKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BORDER(
     border-right-width,
     border_right_width,
@@ -1203,7 +1203,7 @@ CSS_PROP_BORDER(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BORDER(
     border-top-left-radius,
     border_top_left_radius,
@@ -1240,7 +1240,7 @@ CSS_PROP_BORDER(
     VARIANT_HK,
     kBorderStyleKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)  // on/off will need reflow
+    eStyleAnimType_Discrete)  // on/off will need reflow
 CSS_PROP_BORDER(
     border-top-width,
     border_top_width,
@@ -1284,7 +1284,7 @@ CSS_PROP_XUL(
     VARIANT_HK,
     kBoxAlignKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    eStyleAnimType_Discrete) // XXX bug 3935
 CSS_PROP_BORDER(
     box-decoration-break,
     box_decoration_break,
@@ -1294,7 +1294,7 @@ CSS_PROP_BORDER(
     VARIANT_HK,
     kBoxDecorationBreakKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_XUL(
     -moz-box-direction,
     box_direction,
@@ -1304,7 +1304,7 @@ CSS_PROP_XUL(
     VARIANT_HK,
     kBoxDirectionKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    eStyleAnimType_Discrete) // XXX bug 3935
 CSS_PROP_XUL(
     -moz-box-flex,
     box_flex,
@@ -1326,7 +1326,7 @@ CSS_PROP_XUL(
     VARIANT_HI,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_XUL(
     -moz-box-orient,
     box_orient,
@@ -1336,7 +1336,7 @@ CSS_PROP_XUL(
     VARIANT_HK,
     kBoxOrientKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    eStyleAnimType_Discrete) // XXX bug 3935
 CSS_PROP_XUL(
     -moz-box-pack,
     box_pack,
@@ -1346,7 +1346,7 @@ CSS_PROP_XUL(
     VARIANT_HK,
     kBoxPackKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    eStyleAnimType_Discrete) // XXX bug 3935
 CSS_PROP_EFFECTS(
     box-shadow,
     box_shadow,
@@ -1370,7 +1370,7 @@ CSS_PROP_POSITION(
     VARIANT_HK,
     kBoxSizingKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_TABLEBORDER(
     caption-side,
     caption_side,
@@ -1380,7 +1380,7 @@ CSS_PROP_TABLEBORDER(
     VARIANT_HK,
     kCaptionSideKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     clear,
     clear,
@@ -1390,7 +1390,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kClearKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_EFFECTS(
     clip,
     clip,
@@ -1448,7 +1448,7 @@ CSS_PROP_VISIBILITY(
     VARIANT_HK,
     kColorAdjustKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SVG(
     color-interpolation,
     color_interpolation,
@@ -1491,7 +1491,7 @@ CSS_PROP_COLUMN(
     VARIANT_HK,
     kColumnFillKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_COLUMN(
     column-gap,
     column_gap,
@@ -1529,7 +1529,7 @@ CSS_PROP_COLUMN(
     VARIANT_HK,
     kBorderStyleKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_COLUMN(
     column-rule-width,
     column_rule_width,
@@ -1570,7 +1570,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK | VARIANT_NONE,
     kContainKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_CONTENT(
     content,
     content,
@@ -1581,7 +1581,7 @@ CSS_PROP_CONTENT(
     0,
     kContentKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_TEXT(
     -moz-control-character-visibility,
@@ -1604,7 +1604,7 @@ CSS_PROP_CONTENT(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 137285
+    eStyleAnimType_Discrete) // XXX bug 137285
 CSS_PROP_CONTENT(
     counter-reset,
     counter_reset,
@@ -1614,7 +1614,7 @@ CSS_PROP_CONTENT(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 137285
+    eStyleAnimType_Discrete) // XXX bug 137285
 CSS_PROP_USERINTERFACE(
     cursor,
     cursor,
@@ -1627,7 +1627,7 @@ CSS_PROP_USERINTERFACE(
     0,
     kCursorKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 #ifndef CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
 CSS_PROP_VISIBILITY(
     direction,
@@ -1638,7 +1638,7 @@ CSS_PROP_VISIBILITY(
     VARIANT_HK,
     kDirectionKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 #endif // !defined(CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND)
 CSS_PROP_DISPLAY(
     display,
@@ -1673,7 +1673,7 @@ CSS_PROP_TABLEBORDER(
     VARIANT_HK,
     kEmptyCellsKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SVG(
     fill,
     fill,
@@ -1801,7 +1801,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kFloatKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_BORDER(
     -moz-float-edge,
     float_edge,
@@ -1811,7 +1811,7 @@ CSS_PROP_BORDER(
     VARIANT_HK,
     kFloatEdgeKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    eStyleAnimType_Discrete) // XXX bug 3935
 CSS_PROP_SVGRESET(
     flood-color,
     flood_color,
@@ -1850,7 +1850,7 @@ CSS_PROP_FONT(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_FONT(
     font-feature-settings,
     font_feature_settings,
@@ -1863,7 +1863,7 @@ CSS_PROP_FONT(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_FONT(
     font-kerning,
     font_kerning,
@@ -1875,7 +1875,7 @@ CSS_PROP_FONT(
     VARIANT_HK,
     kFontKerningKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_FONT(
     font-language-override,
     font_language_override,
@@ -1887,7 +1887,7 @@ CSS_PROP_FONT(
     VARIANT_NORMAL | VARIANT_INHERIT | VARIANT_STRING,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_FONT(
     font-size,
     font_size,
@@ -1953,7 +1953,7 @@ CSS_PROP_FONT(
     0,
     kFontSynthesisKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     font-variant,
     font_variant,
@@ -1972,7 +1972,7 @@ CSS_PROP_FONT(
     0,
     kFontVariantAlternatesKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_FONT(
     font-variant-caps,
     font_variant_caps,
@@ -1984,7 +1984,7 @@ CSS_PROP_FONT(
     VARIANT_HMK,
     kFontVariantCapsKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_FONT(
     font-variant-east-asian,
     font_variant_east_asian,
@@ -1997,7 +1997,7 @@ CSS_PROP_FONT(
     0,
     kFontVariantEastAsianKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_FONT(
     font-variant-ligatures,
     font_variant_ligatures,
@@ -2010,7 +2010,7 @@ CSS_PROP_FONT(
     0,
     kFontVariantLigaturesKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_FONT(
     font-variant-numeric,
     font_variant_numeric,
@@ -2023,7 +2023,7 @@ CSS_PROP_FONT(
     0,
     kFontVariantNumericKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_FONT(
     font-variant-position,
     font_variant_position,
@@ -2035,7 +2035,7 @@ CSS_PROP_FONT(
     VARIANT_HMK,
     kFontVariantPositionKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_FONT(
     font-weight,
     font_weight,
@@ -2060,7 +2060,7 @@ CSS_PROP_UIRESET(
     VARIANT_HI,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // bug 58646
+    eStyleAnimType_Discrete) // bug 58646
 CSS_PROP_SHORTHAND(
     grid,
     grid,
@@ -2084,7 +2084,7 @@ CSS_PROP_POSITION(
     0,
     kGridTrackBreadthKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     grid-auto-flow,
     grid_auto_flow,
@@ -2095,7 +2095,7 @@ CSS_PROP_POSITION(
     0,
     kGridAutoFlowKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     grid-auto-rows,
     grid_auto_rows,
@@ -2107,7 +2107,7 @@ CSS_PROP_POSITION(
     0,
     kGridTrackBreadthKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     grid-column,
     grid_column,
@@ -2123,7 +2123,7 @@ CSS_PROP_POSITION(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     grid-column-gap,
     grid_column_gap,
@@ -2145,7 +2145,7 @@ CSS_PROP_POSITION(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     grid-gap,
     grid_gap,
@@ -2167,7 +2167,7 @@ CSS_PROP_POSITION(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     grid-row-gap,
     grid_row_gap,
@@ -2189,7 +2189,7 @@ CSS_PROP_POSITION(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     grid-template,
     grid_template,
@@ -2206,7 +2206,7 @@ CSS_PROP_POSITION(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     grid-template-columns,
     grid_template_columns,
@@ -2219,7 +2219,7 @@ CSS_PROP_POSITION(
     0,
     kGridTrackBreadthKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     grid-template-rows,
     grid_template_rows,
@@ -2232,7 +2232,7 @@ CSS_PROP_POSITION(
     0,
     kGridTrackBreadthKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     height,
     height,
@@ -2256,7 +2256,7 @@ CSS_PROP_TEXT(
     VARIANT_HK,
     kHyphensKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_TEXTRESET(
     initial-letter,
     initial_letter,
@@ -2267,7 +2267,7 @@ CSS_PROP_TEXTRESET(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_VISIBILITY(
     image-orientation,
     image_orientation,
@@ -2278,7 +2278,7 @@ CSS_PROP_VISIBILITY(
     0,
     kImageOrientationKTable,
     offsetof(nsStyleVisibility, mImageOrientation),
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_LIST(
     -moz-image-region,
     image_region,
@@ -2308,7 +2308,7 @@ CSS_PROP_UIRESET(
     VARIANT_HK,
     kIMEModeKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_LOGICAL(
     inline-size,
     inline_size,
@@ -2336,7 +2336,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kIsolationKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     justify-content,
     justify_content,
@@ -2449,7 +2449,7 @@ CSS_PROP_LIST(
     VARIANT_HUO,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_LIST(
     list-style-position,
     list_style_position,
@@ -2459,7 +2459,7 @@ CSS_PROP_LIST(
     VARIANT_HK,
     kListStylePositionKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_LIST(
     list-style-type,
     list_style_type,
@@ -2470,7 +2470,7 @@ CSS_PROP_LIST(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     margin,
     margin,
@@ -2624,7 +2624,7 @@ CSS_PROP_SVG(
     VARIANT_HUO,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SVG(
     marker-mid,
     marker_mid,
@@ -2634,7 +2634,7 @@ CSS_PROP_SVG(
     VARIANT_HUO,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SVG(
     marker-start,
     marker_start,
@@ -2644,7 +2644,7 @@ CSS_PROP_SVG(
     VARIANT_HUO,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 #ifndef MOZ_ENABLE_MASK_AS_SHORTHAND
 CSS_PROP_SVGRESET(
     mask,
@@ -2656,7 +2656,7 @@ CSS_PROP_SVGRESET(
     VARIANT_HUO,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 #else
 CSS_PROP_SHORTHAND(
     mask,
@@ -2674,7 +2674,7 @@ CSS_PROP_SVGRESET(
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerOriginKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SVGRESET(
     mask-composite,
     mask_composite,
@@ -2685,7 +2685,7 @@ CSS_PROP_SVGRESET(
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerCompositeKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SVGRESET(
     mask-image,
     mask_image,
@@ -2698,7 +2698,7 @@ CSS_PROP_SVGRESET(
     VARIANT_IMAGE, // used by list parsing
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SVGRESET(
     mask-mode,
     mask_mode,
@@ -2709,7 +2709,7 @@ CSS_PROP_SVGRESET(
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerModeKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SVGRESET(
     mask-origin,
     mask_origin,
@@ -2720,7 +2720,7 @@ CSS_PROP_SVGRESET(
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerOriginKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     mask-position,
     mask_position,
@@ -2762,7 +2762,7 @@ CSS_PROP_SVGRESET(
     VARIANT_KEYWORD, // used by list parsing
     kImageLayerRepeatKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SVGRESET(
     mask-size,
     mask_size,
@@ -2960,7 +2960,7 @@ CSS_PROP_EFFECTS(
     VARIANT_HK,
     kBlendModeKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     object-fit,
     object_fit,
@@ -2971,7 +2971,7 @@ CSS_PROP_POSITION(
     VARIANT_HK,
     kObjectFitKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     object-position,
     object_position,
@@ -3080,7 +3080,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kOrientKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_FONT(
     -moz-osx-font-smoothing,
     osx_font_smoothing,
@@ -3092,7 +3092,7 @@ CSS_PROP_FONT(
     VARIANT_HK,
     kFontSmoothingKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     outline,
     outline,
@@ -3183,7 +3183,7 @@ CSS_PROP_OUTLINE(
     VARIANT_HK,
     kOutlineStyleKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_OUTLINE(
     outline-width,
     outline_width,
@@ -3212,7 +3212,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kOverflowClipBoxKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     overflow-x,
     overflow_x,
@@ -3224,7 +3224,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kOverflowSubKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     overflow-y,
     overflow_y,
@@ -3236,7 +3236,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kOverflowSubKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     padding,
     padding,
@@ -3401,7 +3401,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kPageBreakKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // temp fix for bug 24000
+    eStyleAnimType_Discrete) // temp fix for bug 24000
 CSS_PROP_DISPLAY(
     page-break-before,
     page_break_before,
@@ -3411,7 +3411,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kPageBreakKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // temp fix for bug 24000
+    eStyleAnimType_Discrete) // temp fix for bug 24000
 CSS_PROP_DISPLAY(
     page-break-inside,
     page_break_inside,
@@ -3421,7 +3421,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kPageBreakInsideKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SVG(
     paint-order,
     paint_order,
@@ -3431,7 +3431,7 @@ CSS_PROP_SVG(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     perspective,
     perspective,
@@ -3480,7 +3480,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kPositionKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_LIST(
     quotes,
     quotes,
@@ -3490,7 +3490,7 @@ CSS_PROP_LIST(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     resize,
     resize,
@@ -3504,7 +3504,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kResizeKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     right,
     right,
@@ -3591,7 +3591,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kScrollBehaviorKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     scroll-snap-coordinate,
     scroll_snap_coordinate,
@@ -3604,7 +3604,7 @@ CSS_PROP_DISPLAY(
     0,
     kImageLayerPositionKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     scroll-snap-destination,
     scroll_snap_destination,
@@ -3616,7 +3616,7 @@ CSS_PROP_DISPLAY(
     0,
     kImageLayerPositionKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     scroll-snap-points-x,
     scroll_snap_points_x,
@@ -3628,7 +3628,7 @@ CSS_PROP_DISPLAY(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     scroll-snap-points-y,
     scroll_snap_points_y,
@@ -3640,7 +3640,7 @@ CSS_PROP_DISPLAY(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     scroll-snap-type,
     scroll_snap_type,
@@ -3656,7 +3656,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kScrollSnapTypeKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     scroll-snap-type-y,
     scroll_snap_type_y,
@@ -3666,7 +3666,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kScrollSnapTypeKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     shape-outside,
     shape_outside,
@@ -3678,7 +3678,7 @@ CSS_PROP_DISPLAY(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // FIXME: Bug 1289049 for adding animation support
+    eStyleAnimType_Discrete) // FIXME: Bug 1289049 for adding animation support
 CSS_PROP_SVG(
     shape-rendering,
     shape_rendering,
@@ -3713,7 +3713,7 @@ CSS_PROP_XUL(
     VARIANT_HK,
     kStackSizingKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SVGRESET(
     stop-color,
     stop_color,
@@ -3846,7 +3846,7 @@ CSS_PROP_TEXT(
     VARIANT_HI,
     nullptr,
     offsetof(nsStyleText, mTabSize),
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_TABLE(
     table-layout,
     table_layout,
@@ -3856,7 +3856,7 @@ CSS_PROP_TABLE(
     VARIANT_HK,
     kTableLayoutKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_TEXT(
     text-align,
     text_align,
@@ -3869,7 +3869,7 @@ CSS_PROP_TEXT(
     VARIANT_HK /* | VARIANT_STRING */,
     kTextAlignKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_TEXT(
     text-align-last,
     text_align_last,
@@ -3879,7 +3879,7 @@ CSS_PROP_TEXT(
     VARIANT_HK,
     kTextAlignLastKTable,
     offsetof(nsStyleText, mTextAlignLast),
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SVG(
     text-anchor,
     text_anchor,
@@ -3944,7 +3944,7 @@ CSS_PROP_TEXTRESET(
     VARIANT_HK,
     kTextDecorationStyleKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     text-emphasis,
     text_emphasis,
@@ -3972,7 +3972,7 @@ CSS_PROP_TEXT(
     0,
     kTextEmphasisPositionKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_TEXT(
     text-emphasis-style,
     text_emphasis_style,
@@ -3983,7 +3983,7 @@ CSS_PROP_TEXT(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_TEXT(
     -webkit-text-fill-color,
     _webkit_text_fill_color,
@@ -4030,7 +4030,7 @@ CSS_PROP_TEXTRESET(
     0,
     kTextOverflowKTable,
     offsetof(nsStyleTextReset, mTextOverflow),
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_TEXT(
     text-rendering,
     text_rendering,
@@ -4065,7 +4065,7 @@ CSS_PROP_TEXT(
     VARIANT_AUTO | VARIANT_NONE | VARIANT_INHERIT,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     -webkit-text-stroke,
     _webkit_text_stroke,
@@ -4097,7 +4097,7 @@ CSS_PROP_TEXT(
     VARIANT_HKL | VARIANT_CALC,
     kBorderWidthKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_TEXT(
     text-transform,
     text_transform,
@@ -4109,7 +4109,7 @@ CSS_PROP_TEXT(
     VARIANT_HK,
     kTextTransformKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 #ifndef CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_FONT(
@@ -4162,7 +4162,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kTouchActionKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     transform,
     transform,
@@ -4195,7 +4195,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kTransformBoxKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_DISPLAY(
     transform-origin,
     transform_origin,
@@ -4219,7 +4219,7 @@ CSS_PROP_DISPLAY(
     VARIANT_HK,
     kTransformStyleKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(
     transition,
     transition,
@@ -4280,7 +4280,7 @@ CSS_PROP_TEXTRESET(
     VARIANT_HK,
     kUnicodeBidiKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 #endif // CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
 CSS_PROP_USERINTERFACE(
     -moz-user-focus,
@@ -4291,7 +4291,7 @@ CSS_PROP_USERINTERFACE(
     VARIANT_HK,
     kUserFocusKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    eStyleAnimType_Discrete) // XXX bug 3935
 CSS_PROP_USERINTERFACE(
     -moz-user-input,
     user_input,
@@ -4301,7 +4301,7 @@ CSS_PROP_USERINTERFACE(
     VARIANT_HK,
     kUserInputKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX ??? // XXX bug 3935
+    eStyleAnimType_Discrete) // XXX ??? // XXX bug 3935
 CSS_PROP_USERINTERFACE(
     -moz-user-modify,
     user_modify,
@@ -4311,7 +4311,7 @@ CSS_PROP_USERINTERFACE(
     VARIANT_HK,
     kUserModifyKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    eStyleAnimType_Discrete) // XXX bug 3935
 CSS_PROP_UIRESET(
     -moz-user-select,
     user_select,
@@ -4321,7 +4321,7 @@ CSS_PROP_UIRESET(
     VARIANT_HK,
     kUserSelectKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    eStyleAnimType_Discrete) // XXX bug 3935
 CSS_PROP_SVGRESET(
     vector-effect,
     vector_effect,
@@ -4370,7 +4370,7 @@ CSS_PROP_TEXT(
     VARIANT_HK,
     kWhitespaceKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_POSITION(
     width,
     width,
@@ -4395,7 +4395,7 @@ CSS_PROP_DISPLAY(
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_UIRESET(
     -moz-window-dragging,
     _moz_window_dragging,
@@ -4405,7 +4405,7 @@ CSS_PROP_UIRESET(
     VARIANT_HK,
     kWindowDraggingKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_UIRESET(
     -moz-window-shadow,
@@ -4453,7 +4453,7 @@ CSS_PROP_TEXT(
     VARIANT_HK,
     kOverflowWrapKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Discrete)
 CSS_PROP_VISIBILITY(
     writing-mode,
     writing_mode,
