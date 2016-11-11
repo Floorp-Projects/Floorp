@@ -100,6 +100,12 @@ button,
 xul|button,
 * > input:not([type="image"]) {
   -moz-appearance: none !important;  /* See bug 598421 for fixing the platform */
+}
+
+textarea,
+button,
+xul|button,
+* > input:not(:-moz-any([type="image"], [type="checkbox"], [type="radio"])) {
   border-radius: var(--form_border_radius);
 }
 
@@ -107,7 +113,7 @@ select[size],
 select[multiple],
 select[size][multiple],
 textarea,
-* > input:not([type="image"]):not([type="image"]) {
+* > input:not([type="image"]) {
   border-style: solid;
   border-color: var(--form_border);
   color: var(--form_text);
@@ -133,11 +139,11 @@ button {
 }
 
 input[type="checkbox"] {
-  background: var(--form_background);
+  background-color: var(--form_background);
 }
 
 input[type="radio"] {
-  background: var(--form_background)
+  background-color: var(--form_background)
 }
 
 select {
@@ -233,11 +239,11 @@ input[type="radio"]:focus {
 }
 
 input[type="checkbox"]:focus {
-  background: var(--form_background);
+  background-color: var(--form_background);
 }
 
 input[type="radio"]:focus {
-  background: var(--form_background);
+  background-color: var(--form_background);
 }
 
 /* we need to be specific for selects because the above rules are specific too */
@@ -256,13 +262,13 @@ button:disabled:active,
   border-color: var(--form_border);
   border-style: solid;
   border-width: 1px;
-  background: var(--form_background_disabled);
+  background-color: var(--form_background_disabled);
 }
 
 select:not([size]):not([multiple]):disabled,
 select[size="0"]:disabled,
 select[size="1"]:disabled {
-  background: var(--form_background_disabled);
+  background-color: var(--form_background_disabled);
 }
 
 input[type="button"]:disabled,
@@ -277,7 +283,7 @@ button:disabled:active {
   padding-inline-end: 7px;
   padding-block-start: 0;
   padding-block-end: 0;
-  background: var(--form_background_disabled);
+  background-color: var(--form_background_disabled);
 }
 
 input[type="radio"]:disabled,
