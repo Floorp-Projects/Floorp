@@ -33,7 +33,7 @@ function run_test() {
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
 
   start_httpserver();
-  setUpdateURLOverride(gURLData + gHTTPHandlerPath);
+  setUpdateURL(gURLData + gHTTPHandlerPath);
   standardInit();
 
   let windowWatcherCID =
