@@ -4,12 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TestHarness.h"
+#include "gtest/gtest.h"
 #include "nsMemory.h"
 #include "nsThreadUtils.h"
 #include "nsDocShellCID.h"
 
 #include "nsToolkitCompsCID.h"
+#include "nsServiceManagerUtils.h"
 #include "nsINavHistoryService.h"
 #include "nsIObserverService.h"
 #include "nsIURI.h"
@@ -28,60 +29,24 @@
 #define WAITFORTOPIC_TIMEOUT_SECONDS 5
 
 
-static size_t gTotalTests = 0;
-static size_t gPassedTests = 0;
-
 #define do_check_true(aCondition) \
-  PR_BEGIN_MACRO \
-    gTotalTests++; \
-    if (aCondition) { \
-      gPassedTests++; \
-    } else { \
-      fail("%s | Expected true, got false at line %d", __FILE__, __LINE__); \
-    } \
-  PR_END_MACRO
+  EXPECT_TRUE(aCondition)
 
 #define do_check_false(aCondition) \
-  PR_BEGIN_MACRO \
-    gTotalTests++; \
-    if (!aCondition) { \
-      gPassedTests++; \
-    } else { \
-      fail("%s | Expected false, got true at line %d", __FILE__, __LINE__); \
-    } \
-  PR_END_MACRO
+  EXPECT_FALSE(aCondition)
 
 #define do_check_success(aResult) \
   do_check_true(NS_SUCCEEDED(aResult))
 
-#ifdef LINUX
-// XXX Linux opt builds on tinderbox are orange due to linking with stdlib.
-// This is sad and annoying, but it's a workaround that works.
 #define do_check_eq(aExpected, aActual) \
   do_check_true(aExpected == aActual)
-#else
-#include <sstream>
-
-#define do_check_eq(aActual, aExpected) \
-  PR_BEGIN_MACRO \
-    gTotalTests++; \
-    if (aExpected == aActual) { \
-      gPassedTests++; \
-    } else { \
-      std::ostringstream temp; \
-      temp << __FILE__ << " | Expected '" << aExpected << "', got '"; \
-      temp << aActual <<"' at line " << __LINE__; \
-      fail(temp.str().c_str()); \
-    } \
-  PR_END_MACRO
-#endif
 
 struct Test
 {
   void (*func)(void);
   const char* const name;
 };
-#define TEST(aName) \
+#define PTEST(aName) \
   {aName, #aName}
 
 /**
