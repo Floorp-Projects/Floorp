@@ -17,6 +17,7 @@
 #include "mozilla/layers/VideoBridgeChild.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/SyncRunnable.h"
 
 #if XP_WIN
 #include <objbase.h>
@@ -103,11 +104,19 @@ VideoDecoderManagerParent::ShutdownThreads()
   sManagerTaskQueue->AwaitShutdownAndIdle();
   sManagerTaskQueue = nullptr;
 
-  sVideoDecoderManagerThread->Dispatch(NS_NewRunnableFunction([]() {
-    layers::VideoBridgeChild::Shutdown();
-  }), NS_DISPATCH_SYNC);
   sVideoDecoderManagerThread->Shutdown();
   sVideoDecoderManagerThread = nullptr;
+}
+
+void
+VideoDecoderManagerParent::ShutdownVideoBridge()
+{
+  if (sVideoDecoderManagerThread) {
+    RefPtr<Runnable> task = NS_NewRunnableFunction([]() {
+      VideoBridgeChild::Shutdown();
+    });
+    SyncRunnable::DispatchToThread(sVideoDecoderManagerThread, task);
+  }
 }
 
 bool
