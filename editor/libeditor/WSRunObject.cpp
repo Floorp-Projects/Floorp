@@ -483,14 +483,12 @@ WSRunObject::PriorVisibleNode(nsINode* aNode,
   for (; run; run = run->mLeft) {
     if (run->mType == WSType::normalWS) {
       WSPoint point = GetCharBefore(aNode, aOffset);
-      if (point.mTextNode) {
+      // When it's a non-empty text node, return it.
+      if (point.mTextNode && point.mTextNode->Length()) {
         *outVisNode = point.mTextNode;
         *outVisOffset = point.mOffset + 1;
         if (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == nbsp) {
           *outType = WSType::normalWS;
-        } else if (!point.mChar) {
-          // MOOSE: not possible?
-          *outType = WSType::none;
         } else {
           *outType = WSType::text;
         }
@@ -527,14 +525,12 @@ WSRunObject::NextVisibleNode(nsINode* aNode,
   for (; run; run = run->mRight) {
     if (run->mType == WSType::normalWS) {
       WSPoint point = GetCharAfter(aNode, aOffset);
-      if (point.mTextNode) {
+      // When it's a non-empty text node, return it.
+      if (point.mTextNode && point.mTextNode->Length()) {
         *outVisNode = point.mTextNode;
         *outVisOffset = point.mOffset;
         if (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == nbsp) {
           *outType = WSType::normalWS;
-        } else if (!point.mChar) {
-          // MOOSE: not possible?
-          *outType = WSType::none;
         } else {
           *outType = WSType::text;
         }
