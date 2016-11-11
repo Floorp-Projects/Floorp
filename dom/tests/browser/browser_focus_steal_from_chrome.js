@@ -30,19 +30,6 @@ add_task(function* () {
       tagName: "INPUT", methodName: "click event on the label element" },
   ];
 
-  if (navigator.platform.indexOf("Mac") == -1) {
-    // clicking buttons doesn't focus on mac, so skip this test
-    testingList.push(
-      { uri: "data:text/html,<body onload=\"setTimeout(function () {" +
-        "  var element = document.getElementById('target');" +
-        "  var event = document.createEvent('MouseEvent');" +
-        "  event.initMouseEvent('mousedown', true, true, window," +
-        "    0, 0, 0, 0, 0, false, false, false, false, 0, element);" +
-        "  element.dispatchEvent(event); }, 10);\">" +
-        "<button id='target'>button</button></body>",
-        tagName: "BUTTON", methodName: "mousedown event on the button element" });
-  }
-
   yield BrowserTestUtils.withNewTab("about:blank", function*(bg) {
     yield BrowserTestUtils.withNewTab("about:blank", function*(fg) {
       for (let test of testingList) {
