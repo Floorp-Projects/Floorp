@@ -49,6 +49,7 @@ const {
   findPathInObject,
   getInnerWindowID,
   getMessageManager,
+  getUniqueId,
   injectAPI,
 } = ExtensionUtils;
 
@@ -60,8 +61,6 @@ const {
 } = ExtensionCommon;
 
 var ExtensionChild;
-
-let gNextPortId = 1;
 
 /**
  * Abstraction for a Port object in the extension API.
@@ -104,10 +103,6 @@ class Port {
     MessageChannel.addListener(this.receiverMMs, "Extension:Port:Disconnect", this.disconnectHandler);
 
     this.context.callOnClose(this);
-  }
-
-  static getNextID() {
-    return `${gNextPortId++}-${Services.appinfo.uniqueProcessID}`;
   }
 
   api() {
@@ -402,7 +397,7 @@ class Messenger {
   }
 
   connect(messageManager, name, recipient) {
-    let portId = Port.getNextID();
+    let portId = getUniqueId();
 
     let port = new Port(this.context, messageManager, this.messageManagers, name, portId, null, recipient);
 
@@ -410,7 +405,7 @@ class Messenger {
   }
 
   connectNative(messageManager, name, recipient) {
-    let portId = Port.getNextID();
+    let portId = getUniqueId();
 
     let port = new NativePort(this.context, messageManager, this.messageManagers, name, portId, null, recipient);
 
@@ -538,8 +533,6 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
   }
 }
 
-let nextId = 1;
-
 // We create one instance of this class for every extension context that
 // needs to use remote APIs. It uses the message manager to communicate
 // with the ParentAPIManager singleton in ExtensionParent.jsm. It
@@ -618,7 +611,7 @@ class ChildAPIManagerBase {
    *     promise otherwise. The promise is resolved when the function completes.
    */
   callParentAsyncFunction(path, args, callback) {
-    let callId = nextId++;
+    let callId = getUniqueId();
     let deferred = PromiseUtils.defer();
     this.callPromises.set(callId, deferred);
 
