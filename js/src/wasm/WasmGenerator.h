@@ -20,7 +20,6 @@
 #define wasm_generator_h
 
 #include "jit/MacroAssembler.h"
-#include "wasm/WasmBinary.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmModule.h"
 

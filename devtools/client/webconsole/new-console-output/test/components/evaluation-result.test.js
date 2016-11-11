@@ -72,4 +72,13 @@ describe("EvaluationResult component:", () => {
     wrapper = render(EvaluationResult({ message}));
     expect(wrapper.find(".indent").prop("style").width).toBe(`0`);
   });
+
+  it("has location information", () => {
+    const message = stubPreparedMessages.get("1 + @");
+    const wrapper = render(EvaluationResult({ message }));
+
+    const locationLink = wrapper.find(`.message-location`);
+    expect(locationLink.length).toBe(1);
+    expect(locationLink.text()).toBe("debugger eval code:1:4");
+  });
 });

@@ -150,6 +150,7 @@ class TlsAgent : public PollTarget {
   void SetDowngradeCheckVersion(uint16_t version);
   void CheckSecretsDestroyed();
   void ConfigNamedGroups(const std::vector<SSLNamedGroup>& groups);
+  void DisableECDHEServerKeyReuse();
 
   const std::string& name() const { return name_; }
 

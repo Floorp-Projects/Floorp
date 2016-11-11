@@ -130,13 +130,12 @@ const Message = createClass({
     const repeat = this.props.repeat ? MessageRepeat({repeat: this.props.repeat}) : null;
 
     // Configure the location.
-    const shouldRenderFrame = frame && frame.source !== "debugger eval code";
     const location = dom.span({ className: "message-location devtools-monospace" },
-      shouldRenderFrame ? FrameView({
+      frame ? FrameView({
         frame,
-        onClick: serviceContainer.onViewSourceInDebugger,
+        onClick: serviceContainer ? serviceContainer.onViewSourceInDebugger : undefined,
         showEmptyPathAsHost: true,
-        sourceMapService: serviceContainer.sourceMapService
+        sourceMapService: serviceContainer ? serviceContainer.sourceMapService : undefined
       }) : null
     );
 

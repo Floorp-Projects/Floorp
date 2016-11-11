@@ -154,6 +154,25 @@ class TlsExtensionTestBase : public TlsConnectTestBase {
     extension->Write(3, namelen, 2);
     extension->Write(5, reinterpret_cast<const uint8_t*>(name), namelen);
   }
+
+  void HrrThenRemoveExtensionsTest(SSLExtensionType type, PRInt32 client_error,
+                                   PRInt32 server_error) {
+    static const std::vector<SSLNamedGroup> client_groups = {
+        ssl_grp_ec_secp384r1, ssl_grp_ec_curve25519};
+    static const std::vector<SSLNamedGroup> server_groups = {
+        ssl_grp_ec_curve25519, ssl_grp_ec_secp384r1};
+    client_->ConfigNamedGroups(client_groups);
+    server_->ConfigNamedGroups(server_groups);
+    EnsureTlsSetup();
+    client_->StartConnect();
+    server_->StartConnect();
+    client_->Handshake();  // Send ClientHello
+    server_->Handshake();  // Send HRR.
+    client_->SetPacketFilter(new TlsExtensionDropper(type));
+    Handshake();
+    client_->CheckErrorCode(client_error);
+    server_->CheckErrorCode(server_error);
+  }
 };
 
 class TlsExtensionTestDtls : public TlsExtensionTestBase,
@@ -770,6 +789,24 @@ TEST_P(TlsExtensionTest13, RemoveTls13FromVersionListBothV12) {
   client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
   server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
 #endif
+}
+
+TEST_P(TlsExtensionTest13, HrrThenRemoveSignatureAlgorithms) {
+  HrrThenRemoveExtensionsTest(ssl_signature_algorithms_xtn,
+                              SSL_ERROR_MISSING_EXTENSION_ALERT,
+                              SSL_ERROR_MISSING_SIGNATURE_ALGORITHMS_EXTENSION);
+}
+
+TEST_P(TlsExtensionTest13, HrrThenRemoveKeyShare) {
+  HrrThenRemoveExtensionsTest(ssl_tls13_key_share_xtn,
+                              SSL_ERROR_ILLEGAL_PARAMETER_ALERT,
+                              SSL_ERROR_BAD_2ND_CLIENT_HELLO);
+}
+
+TEST_P(TlsExtensionTest13, HrrThenRemoveSupportedGroups) {
+  HrrThenRemoveExtensionsTest(ssl_supported_groups_xtn,
+                              SSL_ERROR_MISSING_EXTENSION_ALERT,
+                              SSL_ERROR_MISSING_SUPPORTED_GROUPS_EXTENSION);
 }
 
 TEST_P(TlsExtensionTest13, EmptyVersionList) {

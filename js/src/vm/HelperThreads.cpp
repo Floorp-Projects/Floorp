@@ -1689,6 +1689,10 @@ js::StartOffThreadCompression(ExclusiveContext* cx, SourceCompressionTask* task)
 bool
 js::StartPromiseTask(JSContext* cx, UniquePtr<PromiseTask> task)
 {
+    // Execute synchronously if there are no helper threads.
+    if (!CanUseExtraThreads())
+        return task->executeAndFinish(cx);
+
     // If we fail to start, by interface contract, it is because the JSContext
     // is in the process of shutting down. Since promise handlers are not
     // necessarily run while shutting down *anyway*, we simply ignore the error.

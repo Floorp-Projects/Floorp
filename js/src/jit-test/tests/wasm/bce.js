@@ -1,3 +1,4 @@
+// |jit-test| test-also-wasm-check-bce
 load(libdir + "wasm.js");
 
 mem='\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f'+
@@ -5,24 +6,22 @@ mem='\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f'+
     '\x00'.repeat(65488) +
     '\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff'
 
-print (mem.lengt)
-
 let accessWidth = {
   '8_s':  1,
-  '8_u':    1,
+  '8_u':  1,
   '16_s': 2,
-  '16_u':   2,
-  '': 4,
+  '16_u': 2,
+  '':     4,
   'f32':  4,
   'f64':  8,
 }
 
 let baseOp = {
   '8_s':  'i32',
-  '8_u':    'i32',
+  '8_u':  'i32',
   '16_s': 'i32',
-  '16_u':   'i32',
-  '': 'i32',
+  '16_u': 'i32',
+  '':     'i32',
   'f32':  'f32',
   'f64':  'f64',
 }
@@ -149,12 +148,11 @@ for (let offset of [0, 1, 2, 3, 4, 8, 16, 41, 0xfff8]) {
 
   var widths = ['8_s', '8_u', '16_s', '16_u', '']
 
-  for(let width of widths) {
+  for (let width of widths) {
     // Accesses of 1 byte.
     let lastValidIndex = 0x10000 - offset - accessWidth[width];
     let op = baseOp[width];
 
-    print("Width: " + width + " offset: " + offset + " op: " + op)
     var mod = loadTwiceModule(op, width, offset, align);
 
     // Two consecutive loads from two different bases

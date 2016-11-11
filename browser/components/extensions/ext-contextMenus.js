@@ -223,8 +223,6 @@ function contextMenuObserver(subject, topic, data) {
 function getContexts(contextData) {
   let contexts = new Set(["all"]);
 
-  contexts.add("page");
-
   if (contextData.inFrame) {
     contexts.add("frame");
   }
@@ -251,6 +249,10 @@ function getContexts(contextData) {
 
   if (contextData.onAudio) {
     contexts.add("audio");
+  }
+
+  if (contexts.size == 1) {
+    contexts.add("page");
   }
 
   return contexts;

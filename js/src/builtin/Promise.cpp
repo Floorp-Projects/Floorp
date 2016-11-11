@@ -2688,6 +2688,14 @@ PromiseTask::cancel(JSContext* cx)
     js_delete(this);
 }
 
+bool
+PromiseTask::executeAndFinish(JSContext* cx)
+{
+    MOZ_ASSERT(!CanUseExtraThreads());
+    execute();
+    return finishPromise(cx, promise_);
+}
+
 static JSObject*
 CreatePromisePrototype(JSContext* cx, JSProtoKey key)
 {

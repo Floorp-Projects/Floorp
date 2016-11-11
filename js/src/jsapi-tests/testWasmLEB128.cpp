@@ -6,7 +6,7 @@
 
 #include "jsapi-tests/tests.h"
 
-#include "wasm/WasmBinary.h"
+#include "wasm/WasmBinaryFormat.h"
 
 static bool WriteValidBytes(js::wasm::Encoder& encoder, bool* passed)
 {

@@ -40,6 +40,11 @@ queue.filter(task => {
     }
   }
 
+  // GYP builds with -Ddisable_libpkix=1 by default.
+  if (task.collection == "gyp" && task.tests == "chains") {
+    return false;
+  }
+
   return true;
 });
 
