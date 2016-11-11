@@ -79,6 +79,7 @@ var {
 const {
   EventEmitter,
   LocaleData,
+  getUniqueId,
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
@@ -564,8 +565,6 @@ this.ExtensionData = class {
 
 let _browserUpdated = false;
 
-let nextId = 0;
-
 const PROXIED_EVENTS = new Set(["test-harness-message"]);
 
 // We create one instance of this class per extension. |addonData|
@@ -575,7 +574,7 @@ this.Extension = class extends ExtensionData {
     super(addonData.resourceURI);
 
     this.uuid = UUIDMap.get(addonData.id);
-    this.instanceId = nextId++;
+    this.instanceId = getUniqueId();
 
     this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
     Services.ppmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
