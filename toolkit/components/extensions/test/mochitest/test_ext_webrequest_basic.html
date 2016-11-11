@@ -1,0 +1,282 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <script type="text/javascript" src="head_webrequest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+let extension;
+add_task(function* setup() {
+  // Clear the image cache, since it gets in the way otherwise.
+  let imgTools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(SpecialPowers.Ci.imgITools);
+  let cache = imgTools.getImgCacheForDocument(document);
+  cache.clearCache(false);
+
+  extension = makeExtension();
+  yield extension.startup();
+});
+
+// expect is a set of test values used by the background script.
+//
+// type: type of request action
+// events: optional, If defined only the events listed are expected for the
+//                   request. If undefined, all events except onErrorOccurred
+//                   and onBeforeRedirect are expected.  Must be in order received.
+// redirect: url to redirect to during onBeforeSendHeaders
+// status: number    expected status during onHeadersReceived, 200 default
+// cancel: event in which we return cancel=true.  cancelled message is sent.
+// cached: expected fromCache value, default is false, checked in onCompletion
+// headers: request or response headers to modify
+
+add_task(function* test_webRequest_links() {
+  let expect = {
+    "file_style_bad.css": {
+      type: "stylesheet",
+      events: ["onBeforeRequest", "onErrorOccurred"],
+      cancel: "onBeforeRequest",
+    },
+    "file_style_redirect.css": {
+      status: 302,
+      type: "stylesheet",
+      events: ["onBeforeRequest", "onBeforeSendHeaders", "onBeforeRedirect"],
+      redirect: "file_style_good.css",
+    },
+    "file_style_good.css": {
+      type: "stylesheet",
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  yield extension.awaitMessage("continue");
+  addStylesheet("file_style_bad.css");
+  yield extension.awaitMessage("cancelled");
+  // we redirect to style_good which completes the test
+  addStylesheet("file_style_redirect.css");
+  yield extension.awaitMessage("done");
+
+  let style = window.getComputedStyle(document.getElementById("test"), null);
+  is(style.getPropertyValue("color"), "rgb(255, 0, 0)", "Good CSS loaded");
+});
+
+add_task(function* test_webRequest_images() {
+  let expect = {
+    "file_image_bad.png": {
+      type: "image",
+      events: ["onBeforeRequest", "onErrorOccurred"],
+      cancel: "onBeforeRequest",
+    },
+    "file_image_redirect.png": {
+      status: 302,
+      type: "image",
+      events: ["onBeforeRequest", "onBeforeSendHeaders", "onBeforeRedirect"],
+      redirect: "file_image_good.png",
+    },
+    "file_image_good.png": {
+      type: "image",
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  yield extension.awaitMessage("continue");
+  addImage("file_image_bad.png");
+  yield extension.awaitMessage("cancelled");
+  // we redirect to image_good which completes the test
+  addImage("file_image_redirect.png");
+  yield extension.awaitMessage("done");
+});
+
+add_task(function* test_webRequest_scripts() {
+  let expect = {
+    "file_script_bad.js": {
+      type: "script",
+      events: ["onBeforeRequest", "onErrorOccurred"],
+      cancel: "onBeforeRequest",
+    },
+    "file_script_redirect.js": {
+      status: 302,
+      type: "script",
+      events: ["onBeforeRequest", "onBeforeSendHeaders", "onBeforeRedirect"],
+      redirect: "file_script_good.js",
+    },
+    "file_script_good.js": {
+      type: "script",
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  yield extension.awaitMessage("continue");
+  addScript("file_script_bad.js");
+  yield extension.awaitMessage("cancelled");
+  // we redirect to script_good which completes the test
+  addScript("file_script_redirect.js");
+  yield extension.awaitMessage("done");
+
+  is(window.success, 1, "Good script ran");
+  is(window.failure, undefined, "Failure script didn't run");
+});
+
+add_task(function* test_webRequest_xhr_get() {
+  let expect = {
+    "file_script_xhr.js": {
+      type: "script",
+    },
+    "xhr_resource": {
+      status: 404,
+      type: "xmlhttprequest",
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  yield extension.awaitMessage("continue");
+  addScript("file_script_xhr.js");
+  yield extension.awaitMessage("done");
+});
+
+add_task(function* test_webRequest_nonexistent() {
+  let expect = {
+    "nonexistent_script_url.js": {
+      status: 404,
+      type: "script",
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  yield extension.awaitMessage("continue");
+  addScript("nonexistent_script_url.js");
+  yield extension.awaitMessage("done");
+});
+
+add_task(function* test_webRequest_checkCached() {
+  let expect = {
+    "file_image_good.png": {
+      type: "image",
+      cached: true,
+    },
+    "file_script_good.js": {
+      type: "script",
+      cached: true,
+    },
+    "file_style_good.css": {
+      type: "stylesheet",
+      cached: true,
+    },
+    "nonexistent_script_url.js": {
+      status: 404,
+      type: "script",
+      cached: false,
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  yield extension.awaitMessage("continue");
+  addImage("file_image_good.png");
+  addScript("file_script_good.js");
+  addStylesheet("file_style_good.css");
+  addScript("nonexistent_script_url.js");
+  yield extension.awaitMessage("done");
+
+  is(window.success, 2, "Good script ran");
+  is(window.failure, undefined, "Failure script didn't run");
+});
+
+add_task(function* test_webRequest_headers() {
+  let expect = {
+    "file_script_nonexistent.js": {
+      type: "script",
+      status: 404,
+      headers: {
+        request: {
+          add: {
+            "X-WebRequest-request": "text",
+            "X-WebRequest-request-binary": "binary",
+          },
+          modify: {
+            "user-agent": "WebRequest",
+          },
+          remove: [
+            "referer",
+          ],
+        },
+        response: {
+          add: {
+            "X-WebRequest-response": "text",
+            "X-WebRequest-response-binary": "binary",
+          },
+          modify: {
+            "server": "WebRequest",
+            "content-type": "text/html; charset=utf-8",
+          },
+          remove: [
+            "connection",
+          ],
+        },
+      },
+      completion: "onCompleted",
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  yield extension.awaitMessage("continue");
+  addScript("file_script_nonexistent.js");
+  yield extension.awaitMessage("done");
+});
+
+add_task(function* test_webRequest_tabId() {
+  let expect = {
+    "file_WebRequest_page3.html": {
+      type: "main_frame",
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  yield extension.awaitMessage("continue");
+  let a = addLink("file_WebRequest_page3.html?trigger=a");
+  a.click();
+  yield extension.awaitMessage("done");
+});
+
+add_task(function* test_webRequest_frames() {
+  let expect = {
+    "text/plain,webRequestTest": {
+      type: "sub_frame",
+      events: ["onBeforeRequest", "onCompleted"],
+    },
+    "text/plain,webRequestTest_bad": {
+      type: "sub_frame",
+      events: ["onBeforeRequest", "onErrorOccurred"],
+      cancel: "onBeforeRequest",
+    },
+    "redirection.sjs": {
+      status: 302,
+      type: "sub_frame",
+      events: ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived", "onBeforeRedirect"],
+    },
+    "dummy_page.html": {
+      type: "sub_frame",
+      status: 404,
+    },
+    "badrobot": {
+      type: "sub_frame",
+      status: 404,
+      events: ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders", "onErrorOccurred"],
+    },
+  };
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  yield extension.awaitMessage("continue");
+  addFrame("data:text/plain,webRequestTest");
+  addFrame("data:text/plain,webRequestTest_bad");
+  yield extension.awaitMessage("cancelled");
+  addFrame("redirection.sjs");
+  addFrame("https://invalid.localhost/badrobot");
+  yield extension.awaitMessage("done");
+});
+
+add_task(function* teardown() {
+  yield extension.unload();
+});
+</script>
+</head>
+<body>
+<div id="test">Sample text</div>
+
+</body>
+</html>
