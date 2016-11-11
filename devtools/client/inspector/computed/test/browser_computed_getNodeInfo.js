@@ -5,9 +5,10 @@
 "use strict";
 
 // Tests various output of the computed-view's getNodeInfo method.
-// This method is used by the style-inspector-overlay on mouseover to decide
-// which tooltip or highlighter to show when hovering over a
-// value/name/selector if any.
+// This method is used by the HighlightersOverlay and TooltipsOverlay on mouseover to
+// decide which highlighter or tooltip to show when hovering over a value/name/selector
+// if any.
+//
 // For instance, browser_ruleview_selector-highlighter_01.js and
 // browser_ruleview_selector-highlighter_02.js test that the selector
 // highlighter appear when hovering over a selector in the rule-view.
@@ -20,7 +21,7 @@ const {
   VIEW_NODE_PROPERTY_TYPE,
   VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE
-} = require("devtools/client/inspector/shared/style-inspector-overlays");
+} = require("devtools/client/inspector/shared/node-types");
 
 const TEST_URI = `
   <style type="text/css">
