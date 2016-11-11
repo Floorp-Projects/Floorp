@@ -50,14 +50,14 @@ body {
 
 .landing-page .sidebar {
   display: flex;
-  background-color: var(--theme-content-color1);
+  background-color: var(--theme-tab-toolbar-background);
   width: 200px;
   height: 100%;
   flex-direction: column;
 }
 
 .landing-page .sidebar h1 {
-  color: white;
+  color: var(--theme-body-color);
   font-size: 24px;
   margin: 0;
   line-height: 30px;
@@ -77,16 +77,21 @@ body {
 }
 
 .landing-page .sidebar li.selected {
-  background: #1f2327;
+  background: var(--theme-search-overlays-semitransparent);
+  transition: all 0.25s ease;
 }
 
 .landing-page .sidebar li:hover {
-  background: #1f2327;
+  background: var(--theme-selection-background);
   cursor: pointer;
 }
 
 .landing-page .sidebar li a {
-  color: var(--theme-comment-alt);
+  color: var(--theme-body-color);
+}
+
+.landing-page .sidebar li:hover a {
+  color: var(--theme-selection-color);
 }
 
 .landing-page .panel {
@@ -100,9 +105,8 @@ body {
 .landing-page .panel .title {
   margin: 20px 40px;
   width: calc(100% - 80px);
-  padding: 0 20px;
   font-size: 16px;
-  border-bottom: 1px solid #cccccc;
+  border-bottom: 1px solid var(--theme-splitter-color);
   height: 54px;
 }
 
@@ -177,6 +181,12 @@ body {
 :root.theme-light,
 :root .theme-light {
   --theme-search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
+  --theme-faded-tab-color: #7e7e7e;
+}
+
+:root.theme-dark,
+:root .theme-dark {
+  --theme-faded-tab-color: #6e7d8c;
 }
 
 * {
@@ -255,6 +265,49 @@ body {
   background-color: var(--theme-tab-toolbar-background);
   font-weight: lighter;
   z-index: 100;
+}
+menupopup {
+  position: fixed;
+  z-index: 10000;
+  background: white;
+  border: 1px solid #cccccc;
+  padding: 5px 0;
+  background: #f2f2f2;
+  border-radius: 5px;
+  color: #585858;
+  box-shadow: 0 0 4px 0 rgba(190, 190, 190, 0.8);
+  min-width: 130px;
+}
+
+menuitem {
+  display: block;
+  padding: 0 20px;
+  line-height: 20px;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+menuitem:hover {
+  background: #3780fb;
+  color: white;
+  cursor: pointer;
+}
+
+menuseparator {
+  border-bottom: 1px solid #cacdd3;
+  width: 100%;
+  height: 5px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+#contextmenu-mask.show {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
 }
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -546,6 +599,14 @@ body {
   flex: 1;
 }
 
+.searchinput-container {
+  display: flex;
+}
+
+.searchinput-container .close-btn-big {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
 .autocomplete {
   width: 100%;
 }
@@ -553,6 +614,10 @@ body {
 .autocomplete .results * {
   -moz-user-select: none;
   user-select: none;
+}
+
+.autocomplete .results-summary {
+  margin: 10px;
 }
 
 .autocomplete ul {
@@ -582,11 +647,13 @@ body {
 
 .autocomplete li .title {
   line-height: 1.5em;
+  word-break: break-all;
 }
 
 .autocomplete li .subtitle {
   line-height: 1.5em;
   color: grey;
+  word-break: break-all;
 }
 
 .autocomplete input {
@@ -611,20 +678,6 @@ body {
   position: absolute;
   top: 12px;
   left: 10px;
-}
-
-.autocomplete .close-btn {
-  position: absolute;
-  top: 12px;
-  right: 10px;
-}
-
-.autocomplete .close-btn .close svg {
-  width: 12px;
-}
-
-.autocomplete .close-btn .close path {
-  fill: var(--theme-splitter-color);
 }
 
 .autocomplete.focused .magnifying-glass path,
@@ -661,6 +714,7 @@ body {
 }
 
 .close-btn .close {
+  cursor: pointer;
   width: 12px;
   height: 12px;
   padding: 2px;
@@ -680,6 +734,41 @@ body {
 }
 
 .close-btn .close:hover path {
+  fill: white;
+}
+
+.close-btn-big {
+  padding: 13px;
+  width: 40px;
+  height: 40px;
+}
+
+.close-btn-big path {
+  fill: var(--theme-body-color);
+}
+
+.close-btn-big .close {
+  cursor: pointer;
+  display: inline-block;
+  padding: 2px;
+  text-align: center;
+  transition: all 0.25s easeinout;
+  line-height: 100%;
+  width: 16px;
+  height: 16px;
+}
+
+.close-btn-big .close svg {
+  width: 9px;
+  height: 9px;
+}
+
+.close-btn-big .close:hover {
+  background: var(--theme-selection-background);
+  border-radius: 2px;
+}
+
+.close-btn-big .close:hover path {
   fill: white;
 }
 .tree {
@@ -936,13 +1025,14 @@ html[dir="rtl"] .command-bar > span {
   display: flex;
 }
 
-.search-bar svg {
-  width: 16px;
-}
-
 .search-bar i {
   display: block;
   padding: 13px 0 0 13px;
+  width: 40px;
+}
+
+.search-bar i svg {
+  width: 16px;
 }
 
 .search-bar input {
@@ -952,14 +1042,17 @@ html[dir="rtl"] .command-bar > span {
   background-color: var(--theme-body-background);
   color: var(--theme-comment);
   width: calc(100% - 38px);
-  padding-left: 10px;
-  display: flex;
-  padding-right: 100px;
   flex: 1;
 }
 
 .search-bar .magnifying-glass {
   background-color: var(--theme-body-background);
+  width: 40px;
+}
+
+.search-bar .magnifying-glass path,
+.search-bar .magnifying-glass ellipse {
+  stroke: var(--theme-splitter-color);
 }
 
 .search-bar input::placeholder {
@@ -1200,9 +1293,16 @@ html[dir="rtl"] .editor-mount {
 
 .expression-container {
   border: 1px;
-  padding: 2px;
+  padding: 5px 2px 5px 5px;
   margin: 1px;
   width: 100%;
+  color: var(--theme-body-color) !important;
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.expression-container:hover {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-body-background) !important;
 }
 
 .expression-output-container .close-btn {
@@ -1215,7 +1315,6 @@ html[dir="rtl"] .editor-mount {
 }
 
 .expression-input {
-  color: var(--theme-content-color1);
   cursor: pointer;
   max-width: 50%;
 }
@@ -1224,6 +1323,10 @@ html[dir="rtl"] .editor-mount {
   overflow-x: scroll;
   color: var(--theme-content-color2);
   max-width: 50% !important;
+}
+
+.expression-error {
+  color: var(--theme-highlight-red);
 }
 .arrow svg {
   fill: var(--theme-splitter-color);
@@ -1286,6 +1389,12 @@ html .arrow.expanded svg {
   overflow: hidden;
 }
 
+/* Style the focused call frame like so:
+.frames ul li:focus {
+  border: 3px solid red;
+}
+*/
+
 .frames ul li * {
   -moz-user-select: none;
   user-select: none;
@@ -1311,7 +1420,7 @@ html .arrow.expanded svg {
 .frames ul li.selected,
 .frames ul li.selected .location {
   background-color: var(--theme-selection-background);
-  color: var(--theme-body-background);
+  color: white;
 }
 
 .show-more {
@@ -1323,7 +1432,7 @@ html .arrow.expanded svg {
 }
 
 .show-more:hover {
-  background-color: var(--theme-selection-color);
+  background-color: var(--theme-search-overlays-semitransparent);
 }
 .accordion {
   background-color: var(--theme-body-background);
@@ -1347,7 +1456,7 @@ html .arrow.expanded svg {
 }
 
 .accordion ._header:hover {
-  background-color: var(--theme-selection-color);
+  background-color: var(--theme-search-overlays-semitransparent);
 }
 
 .accordion ._header:hover svg {
@@ -1441,6 +1550,8 @@ html[dir="rtl"] .command-bar .stepOut {
   font-style: italic;
   text-align: center;
   padding: 0.5em;
+  -moz-user-select: none;
+  user-select: none;
 }
 
 .toggleBreakpoints.breakpoints-disabled path {
@@ -1558,15 +1669,6 @@ html[dir="rtl"] .source-tab .close-btn {
 .source-tab:hover .close {
   display: block;
 }
-
-.source-header .subsettings {
-  position: absolute;
-  right: 12px;
-  top: 5px;
-  width: 12px;
-  height: 12px;
-  color: var(--theme-body-color);
-}
 .dropdown {
   background: var(--theme-body-background);
   border: 1px solid var(--theme-splitter-color);
@@ -1577,6 +1679,15 @@ html[dir="rtl"] .source-tab .close-btn {
   top: 35px;
   width: 150px;
   z-index: 1000;
+}
+
+.dropdown-button {
+  position: absolute;
+  right: 12px;
+  top: 5px;
+  font-size: 16px;
+  color: var(--theme-body-color);
+  cursor: pointer;
 }
 
 .dropdown li {

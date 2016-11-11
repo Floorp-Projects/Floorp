@@ -819,6 +819,12 @@ void TlsAgent::ConfigureSessionCache(SessionResumptionMode mode) {
   EXPECT_EQ(SECSuccess, rv);
 }
 
+void TlsAgent::DisableECDHEServerKeyReuse() {
+  ASSERT_EQ(TlsAgent::SERVER, role_);
+  SECStatus rv = SSL_OptionSet(ssl_fd_, SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
+  EXPECT_EQ(SECSuccess, rv);
+}
+
 static const std::string kTlsRolesAllArr[] = {"CLIENT", "SERVER"};
 ::testing::internal::ParamGenerator<std::string>
     TlsAgentTestBase::kTlsRolesAll = ::testing::ValuesIn(kTlsRolesAllArr);

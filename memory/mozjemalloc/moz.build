@@ -12,9 +12,7 @@ if not CONFIG['MOZ_JEMALLOC4']:
     SOURCES += [
         'jemalloc.c',
     ]
-    Library('mozjemalloc')
-    STATIC_LIBRARY_NAME = 'jemalloc'
-    FORCE_STATIC_LIB = True
+    FINAL_LIBRARY = 'memory'
 
     # See bug 422055.
     if CONFIG['OS_ARCH'] == 'SunOS' and not CONFIG['GNU_CC'] \
@@ -28,7 +26,6 @@ if CONFIG['MOZ_UPDATE_CHANNEL'] not in ('release', 'esr'):
 
 DEFINES['abort'] = 'moz_abort'
 
-DEFINES['MOZ_HAS_MOZGLUE'] = True
 DEFINES['MOZ_JEMALLOC_IMPL'] = True
 
 #XXX: PGO on Linux causes problems here

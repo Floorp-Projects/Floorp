@@ -16,9 +16,14 @@ add_task(function* () {
 
     background: function() {
       browser.contextMenus.create({
-        id: "clickme",
+        id: "clickme-image",
         title: "Click me!",
         contexts: ["image"],
+      });
+      browser.contextMenus.create({
+        id: "clickme-page",
+        title: "Click me!",
+        contexts: ["page"],
       });
       browser.test.notifyPass();
     },
@@ -34,7 +39,7 @@ add_task(function* () {
 
   contentAreaContextMenu = yield openContextMenu("body");
   item = contentAreaContextMenu.getElementsByAttribute("label", "Click me!");
-  is(item.length, 0, "no contextMenu item for image was found");
+  is(item.length, 1, "contextMenu item for page was found");
   yield closeContextMenu();
 
   yield extension.unload();

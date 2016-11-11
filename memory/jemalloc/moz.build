@@ -46,9 +46,10 @@ if CONFIG['OS_TARGET'] == 'Darwin' and not CONFIG['MOZ_REPLACE_MALLOC']:
         'src/src/zone.c',
     ]
 
-Library('jemalloc')
-
-FORCE_STATIC_LIB = True
+if CONFIG['MOZ_JEMALLOC4']:
+    FINAL_LIBRARY = 'memory'
+else:
+    FINAL_LIBRARY = 'replace_jemalloc'
 
 if CONFIG['MOZ_GLUE_IN_PROGRAM']:
     SDK_LIBRARY = True
@@ -68,7 +69,6 @@ if CONFIG['GNU_CC']:
     CFLAGS += ['-std=gnu99']
 
 DEFINES['abort'] = 'moz_abort'
-DEFINES['MOZ_HAS_MOZGLUE'] = True
 
 LOCAL_INCLUDES += [
     '!src/include',

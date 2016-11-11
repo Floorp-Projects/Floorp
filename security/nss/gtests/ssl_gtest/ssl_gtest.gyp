@@ -60,7 +60,7 @@
         '<(DEPTH)/lib/pki/pki.gyp:nsspki',
         '<(DEPTH)/lib/dev/dev.gyp:nssdev',
         '<(DEPTH)/lib/base/base.gyp:nssb',
-        '<(DEPTH)/lib/freebl/freebl.gyp:freebl',
+        '<(DEPTH)/lib/freebl/freebl.gyp:<(freebl_name)',
         '<(DEPTH)/lib/nss/nss.gyp:nss_static',
         '<(DEPTH)/lib/pk11wrap/pk11wrap.gyp:pk11wrap',
         '<(DEPTH)/lib/certhigh/certhigh.gyp:certhi',

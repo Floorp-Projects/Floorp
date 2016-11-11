@@ -29,7 +29,6 @@
 #include "nsUnicharUtils.h"
 #include "nsIStringEnumerator.h"
 #include "nsCRT.h"
-#include "nsSupportsArray.h"
 #include "nsContentCID.h"
 #include "nsStreamUtils.h"
 
