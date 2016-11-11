@@ -5,6 +5,6 @@
 == box-sizing-content-box-001.xht box-sizing-content-box-001-ref.xht
 == box-sizing-content-box-002.xht box-sizing-content-box-002-ref.xht
 == box-sizing-content-box-003.xht box-sizing-content-box-003-ref.xht
-random-if(Android) fuzzy-if(skiaContent,15,50) == box-sizing-replaced-001.xht box-sizing-replaced-001-ref.xht #bug 982547
+random-if(Android) fuzzy-if(skiaContent,15,50) fuzzy-if(OSX,255,1575) == box-sizing-replaced-001.xht box-sizing-replaced-001-ref.xht # bug 982547, Bug 1295466
 fuzzy-if(Android,27,874) fuzzy-if(gtkWidget,14,29) == box-sizing-replaced-002.xht box-sizing-replaced-002-ref.xht # Bug 1128229, Bug 1313772
 fuzzy-if(Android,27,925) fuzzy-if(gtkWidget,14,43) == box-sizing-replaced-003.xht box-sizing-replaced-003-ref.xht # Bug 1128229
