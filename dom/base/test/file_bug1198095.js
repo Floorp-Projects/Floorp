@@ -13,7 +13,7 @@ function createFileWithData(message) {
   outStream.write(message, message.length);
   outStream.close();
 
-  var domFile = new File(testFile);
+  var domFile = File.createFromNsIFile(testFile);
   return domFile;
 }
 
