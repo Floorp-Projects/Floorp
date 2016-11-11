@@ -4970,10 +4970,21 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
       boxSizingAdjust.ISize(aWM);
 
   nscoord iSize, minISize, maxISize, bSize, minBSize, maxBSize;
-  // true if we are stretching a Grid item in the inline dimension
-  bool stretchI = false;
-  // true if we are stretching a Grid item in the block dimension
-  bool stretchB = false;
+  enum class Stretch {
+    // stretch to fill the CB (preserving intrinsic ratio) in the relevant axis
+    eStretchPreservingRatio,
+    // stretch to fill the CB in the relevant axis
+    eStretch,
+    // no stretching in the relevant axis
+    eNoStretch,
+  };
+  // just to avoid having to type these out everywhere:
+  const auto eStretchPreservingRatio = Stretch::eStretchPreservingRatio;
+  const auto eStretch = Stretch::eStretch;
+  const auto eNoStretch = Stretch::eNoStretch;
+
+  Stretch stretchI = eNoStretch; // stretch behavior in the inline axis
+  Stretch stretchB = eNoStretch; // stretch behavior in the block axis
 
   if (!isAutoISize) {
     iSize = ComputeISizeValue(aRenderingContext,
@@ -4989,10 +5000,13 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
           aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
             stylePos->UsedAlignSelf(GetParent()->StyleContext()) :
             stylePos->UsedJustifySelf(GetParent()->StyleContext());
-        stretchI = inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-                   inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+        if (inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL) {
+          stretchI = eStretchPreservingRatio;
+        } else if (inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+          stretchI = eStretch;
+        }
       }
-      if (stretchI ||
+      if (stretchI != eNoStretch ||
           (aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize)) {
         iSize = std::max(nscoord(0), cbSize -
                                      aPadding.ISize(aWM) -
@@ -5051,10 +5065,13 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
           !aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
             stylePos->UsedAlignSelf(GetParent()->StyleContext()) :
             stylePos->UsedJustifySelf(GetParent()->StyleContext());
-        stretchB = blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-                   blockAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+        if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL) {
+          stretchB = eStretchPreservingRatio;
+        } else if (blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+          stretchB = eStretch;
+        }
       }
-      if (stretchB ||
+      if (stretchB != eNoStretch ||
           (aFlags & ComputeSizeFlags::eBClampMarginBoxMinSize)) {
         bSize = std::max(nscoord(0), cbSize -
                                      aPadding.BSize(aWM) -
@@ -5154,7 +5171,7 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
 
       if ((aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize) &&
           tentISize > iSize) {
-        stretchI = true;
+        stretchI = eStretch;
       }
 
       if (hasIntrinsicBSize) {
@@ -5167,31 +5184,40 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
 
       if ((aFlags & ComputeSizeFlags::eBClampMarginBoxMinSize) &&
           tentBSize > bSize) {
-        stretchB = true;
+        stretchB = eStretch;
       }
 
       if (aIntrinsicRatio != nsSize(0, 0)) {
-        if (stretchI || stretchB) {
-          // Stretch within the CB size with preserved intrinsic ratio.
-          if (stretchI && tentISize != iSize) {
-            tentISize = iSize;  // fill the CB iSize
-            if (logicalRatio.ISize(aWM) > 0) {
-              tentBSize = NSCoordMulDiv(iSize, logicalRatio.BSize(aWM), logicalRatio.ISize(aWM));
-              if (tentBSize > bSize && stretchB) {
-                // We're stretching in both dimensions and the bSize calculated
-                // from the iSize / ratio would overflow the CB bSize, so stretch
-                // the bSize instead and derive the iSize which will then fit.
-                tentBSize = bSize;  // fill the CB bSize
-                if (logicalRatio.BSize(aWM) > 0) {
-                  tentISize = NSCoordMulDiv(bSize, logicalRatio.ISize(aWM), logicalRatio.BSize(aWM));
-                }
-              }
-            }
-          } else if (stretchB && tentBSize != bSize) {
-            tentBSize = bSize;  // fill the CB bSize
+        if (stretchI == eStretch) {
+          tentISize = iSize;  // * / 'stretch'
+          if (stretchB == eStretch) {
+            tentBSize = bSize;  // 'stretch' / 'stretch'
+          } else if (stretchB == eStretchPreservingRatio && logicalRatio.ISize(aWM) > 0) {
+            // 'normal' / 'stretch'
+            tentBSize = NSCoordMulDiv(iSize, logicalRatio.BSize(aWM), logicalRatio.ISize(aWM));
+          }
+        } else if (stretchB == eStretch) {
+          tentBSize = bSize;  // 'stretch' / * (except 'stretch')
+          if (stretchI == eStretchPreservingRatio && logicalRatio.BSize(aWM) > 0) {
+            // 'stretch' / 'normal'
+            tentISize = NSCoordMulDiv(bSize, logicalRatio.ISize(aWM), logicalRatio.BSize(aWM));
+          }
+        } else if (stretchI == eStretchPreservingRatio) {
+          tentISize = iSize;  // * (except 'stretch') / 'normal'
+          if (logicalRatio.ISize(aWM) > 0) {
+            tentBSize = NSCoordMulDiv(iSize, logicalRatio.BSize(aWM), logicalRatio.ISize(aWM));
+          }
+          if (stretchB == eStretchPreservingRatio && tentBSize > bSize) {
+            // Stretch within the CB size with preserved intrinsic ratio.
+            tentBSize = bSize;  // 'normal' / 'normal'
             if (logicalRatio.BSize(aWM) > 0) {
               tentISize = NSCoordMulDiv(bSize, logicalRatio.ISize(aWM), logicalRatio.BSize(aWM));
             }
+          }
+        } else if (stretchB == eStretchPreservingRatio) {
+          tentBSize = bSize;  // 'normal' / * (except 'normal' and 'stretch')
+          if (logicalRatio.BSize(aWM) > 0) {
+            tentISize = NSCoordMulDiv(bSize, logicalRatio.ISize(aWM), logicalRatio.BSize(aWM));
           }
         }
 
