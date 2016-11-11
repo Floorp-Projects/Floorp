@@ -13,7 +13,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestUnknownIssuer(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestUnknownIssuer, self).setUp()
 
         self.url = 'https://ssl-unknownissuer.mozqa.com'
 

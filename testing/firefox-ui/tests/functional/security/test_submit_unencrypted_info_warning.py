@@ -13,7 +13,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestSubmitUnencryptedInfoWarning(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestSubmitUnencryptedInfoWarning, self).setUp()
 
         self.url = 'https://ssl-dv.mozqa.com/data/firefox/security/unencryptedsearch.html'
         self.test_string = 'mozilla'
@@ -24,7 +24,7 @@ class TestSubmitUnencryptedInfoWarning(FirefoxTestCase):
         try:
             self.marionette.clear_pref('security.warn_submit_insecure')
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestSubmitUnencryptedInfoWarning, self).tearDown()
 
     def test_submit_unencrypted_info_warning(self):
         with self.marionette.using_context('content'):

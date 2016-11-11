@@ -12,11 +12,9 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestL10n(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
-        self.l10n = L10n(self.marionette)
+        super(TestL10n, self).setUp()
 
-    def tearDown(self):
-        FirefoxTestCase.tearDown(self)
+        self.l10n = L10n(self.marionette)
 
     def test_dtd_entity_chrome(self):
         dtds = ['chrome://global/locale/about.dtd',

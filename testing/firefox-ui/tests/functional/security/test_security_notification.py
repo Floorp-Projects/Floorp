@@ -13,7 +13,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestSecurityNotification(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestSecurityNotification, self).setUp()
 
         self.urls = [
             # Invalid cert page

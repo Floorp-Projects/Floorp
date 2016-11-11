@@ -10,7 +10,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestMenuBar(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestMenuBar, self).setUp()
 
     def test_click_item_in_menubar(self):
         def opener(_):

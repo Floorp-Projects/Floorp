@@ -8,7 +8,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestSanitize(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestSanitize, self).setUp()
 
         # Clear all previous history and cookies.
         self.puppeteer.places.remove_all_history()
@@ -28,9 +28,6 @@ class TestSanitize(FirefoxTestCase):
                 for url in self.urls:
                     self.marionette.navigate(url)
         self.puppeteer.places.wait_for_visited(self.urls, load_urls)
-
-    def tearDown(self):
-        FirefoxTestCase.tearDown(self)
 
     def test_sanitize_history(self):
         """ Clears history. """

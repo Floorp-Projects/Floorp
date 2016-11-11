@@ -7,7 +7,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 
 class TestMixedContentPage(FirefoxTestCase):
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestMixedContentPage, self).setUp()
 
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.locationbar.identity_popup
@@ -18,7 +18,7 @@ class TestMixedContentPage(FirefoxTestCase):
         try:
             self.identity_popup.close(force=True)
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestMixedContentPage, self).tearDown()
 
     def test_mixed_content(self):
         with self.marionette.using_context('content'):

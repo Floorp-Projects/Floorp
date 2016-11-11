@@ -9,7 +9,7 @@ from firefox_puppeteer.ui.update_wizard import UpdateWizardDialog
 class TestUpdateWizard(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestUpdateWizard, self).setUp()
 
         def opener(win):
             self.marionette.execute_script("""
@@ -26,7 +26,7 @@ class TestUpdateWizard(FirefoxTestCase):
         try:
             self.puppeteer.windows.close_all([self.browser])
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestUpdateWizard, self).tearDown()
 
     def test_basic(self):
         self.assertEqual(self.dialog.window_type, 'Update:Wizard')

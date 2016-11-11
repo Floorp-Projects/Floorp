@@ -13,7 +13,7 @@ class TestFaviconInAutocomplete(FirefoxTestCase):
     PREF_SUGGEST_BOOKMARK = 'browser.urlbar.suggest.bookmark'
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestFaviconInAutocomplete, self).setUp()
 
         # Disable suggestions for searches and bookmarks to get results only for history
         self.puppeteer.prefs.set_pref(self.PREF_SUGGEST_SEARCHES, False)
@@ -34,7 +34,7 @@ class TestFaviconInAutocomplete(FirefoxTestCase):
             self.marionette.clear_pref(self.PREF_SUGGEST_SEARCHES)
             self.marionette.clear_pref(self.PREF_SUGGEST_BOOKMARK)
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestFaviconInAutocomplete, self).tearDown()
 
     def test_favicon_in_autocomplete(self):
         # Open the test page
