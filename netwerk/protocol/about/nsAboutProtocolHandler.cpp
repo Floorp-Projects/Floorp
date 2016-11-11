@@ -67,7 +67,7 @@ nsAboutProtocolHandler::GetDefaultPort(int32_t *result)
 NS_IMETHODIMP
 nsAboutProtocolHandler::GetProtocolFlags(uint32_t *result)
 {
-    *result = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD;
+    *result = URI_NORELATIVE | URI_NOAUTH | URI_DANGEROUS_TO_LOAD | URI_SCHEME_NOT_SELF_LINKABLE;
     return NS_OK;
 }
 
