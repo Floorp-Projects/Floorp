@@ -37,6 +37,7 @@ static const char kAllowProxies[] = "network.automatic-ntlm-auth.allow-proxies";
 static const char kAllowNonFqdn[] = "network.automatic-ntlm-auth.allow-non-fqdn";
 static const char kTrustedURIs[]  = "network.automatic-ntlm-auth.trusted-uris";
 static const char kForceGeneric[] = "network.auth.force-generic-ntlm";
+static const char kSSOinPBmode[] = "network.auth.private-browsing-sso";
 
 // XXX MatchesBaseURI and TestPref are duplicated in nsHttpNegotiateAuth.cpp,
 // but since that file lives in a separate library we cannot directly share it.
@@ -188,33 +189,39 @@ CanUseDefaultCredentials(nsIHttpAuthenticableChannel *channel,
                          bool isProxyAuth)
 {
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-    // Prevent using default credentials for authentication when we are in the
-    // private browsing mode.  It would cause a privacy data leak.
-    nsCOMPtr<nsIChannel> bareChannel = do_QueryInterface(channel);
-    MOZ_ASSERT(bareChannel);
-
-    if (NS_UsePrivateBrowsing(bareChannel)) {
-        // But allow when in the "Never remember history" mode.
-        bool dontRememberHistory;
-        if (prefs &&
-            NS_SUCCEEDED(prefs->GetBoolPref("browser.privatebrowsing.autostart",
-                                            &dontRememberHistory)) &&
-            !dontRememberHistory) {
-            return false;
-        }
-    }
-
     if (!prefs) {
         return false;
     }
 
+    // Proxy should go all the time, it's not considered a privacy leak
+    // to send default credentials to a proxy.
     if (isProxyAuth) {
         bool val;
         if (NS_FAILED(prefs->GetBoolPref(kAllowProxies, &val)))
             val = false;
         LOG(("Default credentials allowed for proxy: %d\n", val));
         return val;
+    }
+
+    // Prevent using default credentials for authentication when we are in the
+    // private browsing mode (but not in "never remember history" mode) and when
+    // not explicitely allowed.  Otherwise, it would cause a privacy data leak.
+    nsCOMPtr<nsIChannel> bareChannel = do_QueryInterface(channel);
+    MOZ_ASSERT(bareChannel);
+
+    if (NS_UsePrivateBrowsing(bareChannel)) {
+        bool ssoInPb;
+        if (NS_SUCCEEDED(prefs->GetBoolPref(kSSOinPBmode, &ssoInPb)) &&
+            ssoInPb) {
+            return true;
+        }
+
+        bool dontRememberHistory;
+        if (NS_SUCCEEDED(prefs->GetBoolPref("browser.privatebrowsing.autostart",
+                                            &dontRememberHistory)) &&
+            !dontRememberHistory) {
+            return false;
+        }
     }
 
     nsCOMPtr<nsIURI> uri;
