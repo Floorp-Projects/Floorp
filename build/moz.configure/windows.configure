@@ -8,17 +8,7 @@ option('--with-windows-version', nargs=1, default='603',
        help='Windows SDK version to target. Win 8.1 (603) is currently'
             'the minimum supported version.')
 
-@depends(target)
-def is_windows(target):
-    return target.kernel == 'WINNT'
-
-
-@template
-def depends_win(*args):
-    return depends_when(*args, when=is_windows)
-
-
-@depends_win('--with-windows-version')
+@depends('--with-windows-version')
 @imports(_from='__builtin__', _import='ValueError')
 def valid_windows_version(value):
     if not value:
@@ -36,7 +26,7 @@ def valid_windows_version(value):
 option(env='WINDOWSSDKDIR', nargs=1,
        help='Directory containing the Windows SDK')
 
-@depends_win('WINDOWSSDKDIR', host)
+@depends('WINDOWSSDKDIR', host)
 def windows_sdk_dir(value, host):
     if value:
         return value
@@ -99,8 +89,7 @@ def valid_windows_sdk_dir_result(value):
     if value:
         return '0x%04x in %s' % (value.version, quote(value.path))
 
-@depends_win(c_compiler, windows_sdk_dir, valid_windows_version,
-             'WINDOWSSDKDIR')
+@depends(c_compiler, windows_sdk_dir, valid_windows_version, 'WINDOWSSDKDIR')
 @checking('for Windows SDK', valid_windows_sdk_dir_result)
 @imports(_from='__builtin__', _import='sorted')
 @imports(_from='textwrap', _import='dedent')
@@ -176,7 +165,7 @@ def valid_ucrt_sdk_dir_result(value):
     if value:
         return '%s in %s' % (value.version, quote(value.path))
 
-@depends_win(windows_sdk_dir, 'WINDOWSSDKDIR')
+@depends(windows_sdk_dir, 'WINDOWSSDKDIR')
 @checking('for Universal CRT SDK', valid_ucrt_sdk_dir_result)
 @imports('os')
 @imports(_from='__builtin__', _import='sorted')
@@ -242,7 +231,7 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env):
     )
 
 
-@depends_win(c_compiler)
+@depends(c_compiler)
 @imports('os')
 def vc_path(c_compiler):
     if c_compiler.type != 'msvc':
@@ -263,7 +252,7 @@ def vc_path(c_compiler):
     return result
 
 
-@depends_win(vc_path)
+@depends(vc_path)
 @checking('for the Debug Interface Access SDK', lambda x: x or 'not found')
 @imports(_from='os.path', _import='isdir')
 def dia_sdk_dir(vc_path):
@@ -273,7 +262,7 @@ def dia_sdk_dir(vc_path):
             return path
 
 
-@depends_win(vc_path, valid_windows_sdk_dir, valid_ucrt_sdk_dir, dia_sdk_dir)
+@depends(vc_path, valid_windows_sdk_dir, valid_ucrt_sdk_dir, dia_sdk_dir)
 @imports('os')
 def include_path(vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
     if not vc_path:
@@ -310,7 +299,7 @@ def include_path(vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
 set_config('INCLUDE', include_path)
 
 
-@depends_win(target, vc_path, valid_windows_sdk_dir, valid_ucrt_sdk_dir, dia_sdk_dir)
+@depends(target, vc_path, valid_windows_sdk_dir, valid_ucrt_sdk_dir, dia_sdk_dir)
 @imports('os')
 def lib_path(target, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
     if not vc_path:
@@ -364,7 +353,7 @@ set_config('LIB', lib_path)
 
 option(env='MT', nargs=1, help='Path to the Microsoft Manifest Tool')
 
-@depends_win(valid_windows_sdk_dir)
+@depends(valid_windows_sdk_dir)
 @imports(_from='os', _import='environ')
 @imports('platform')
 def sdk_bin_path(valid_windows_sdk_dir):
@@ -386,13 +375,13 @@ def sdk_bin_path(valid_windows_sdk_dir):
     return result
 
 
-mt = check_prog('MT', depends_win()(lambda: ('mt.exe',)), input='MT',
+mt = check_prog('MT', ('mt.exe',), input='MT',
                 paths=sdk_bin_path)
 
 
 # Check that MT is not something unexpected like "magnetic tape manipulation
 # utility".
-@depends_win(mt)
+@depends(mt)
 @checking('whether MT is really Microsoft Manifest Tool', lambda x: bool(x))
 @imports('subprocess')
 def valid_mt(path):
@@ -410,17 +399,16 @@ def valid_mt(path):
 set_config('MSMANIFEST_TOOL', depends(valid_mt)(lambda x: bool(x)))
 
 
-link = check_prog('LINK', depends_win()(lambda: ('link.exe',)),
-                  paths=vc_compiler_path)
+link = check_prog('LINK', ('link.exe',), paths=vc_compiler_path)
 
-add_old_configure_assignment('LINK', depends_win(link)(lambda x: x))
+add_old_configure_assignment('LINK', link)
 
 
 # Normally, we'd just have CC, etc. set to absolute paths, but the build system
 # doesn't currently handle properly the case where the paths contain spaces.
 # Additionally, there's the issue described in toolchain.configure, in
 # valid_compiler().
-@depends_win(sdk_bin_path)
+@depends(sdk_bin_path)
 @imports('os')
 def alter_path(sdk_bin_path):
     path = os.pathsep.join(sdk_bin_path)
