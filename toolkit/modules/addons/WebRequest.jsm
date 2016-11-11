@@ -195,7 +195,9 @@ class RequestHeaderChanger extends HeaderChanger {
   }
 
   visitHeaders(visitor) {
-    this.channel.visitRequestHeaders(visitor);
+    if (this.channel instanceof Ci.nsIHttpChannel) {
+      this.channel.visitRequestHeaders(visitor);
+    }
   }
 }
 
@@ -219,13 +221,15 @@ class ResponseHeaderChanger extends HeaderChanger {
   }
 
   visitHeaders(visitor) {
-    this.channel.visitResponseHeaders((name, value) => {
-      if (name.toLowerCase() === "content-type") {
-        value = getData(this.channel).contentType || value;
-      }
+    if (this.channel instanceof Ci.nsIHttpChannel) {
+      this.channel.visitResponseHeaders((name, value) => {
+        if (name.toLowerCase() === "content-type") {
+          value = getData(this.channel).contentType || value;
+        }
 
-      visitor(name, value);
-    });
+        visitor(name, value);
+      });
+    }
   }
 }
 

@@ -19,6 +19,14 @@ module.exports = { // eslint-disable-line no-undef
     "NetUtil": true,
     "webrequest_test": false,
     "XPCOMUtils": true,
+
+    // head_webrequest.js symbols
+    "addStylesheet": true,
+    "addLink": true,
+    "addImage": true,
+    "addScript": true,
+    "addFrame": true,
+    "makeExtension": false,
   },
 
   "rules": {
