@@ -4,12 +4,12 @@
 
 from urlparse import urlparse
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import expected, Wait
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestNoCertificate(FirefoxTestCase):
+class TestNoCertificate(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
         super(TestNoCertificate, self).setUp()

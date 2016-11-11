@@ -2,13 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import expected, By, Wait
 from marionette_driver.errors import NoSuchElementException
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestNavBar(FirefoxTestCase):
+class TestNavBar(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
         super(TestNavBar, self).setUp()
@@ -77,7 +77,7 @@ class TestNavBar(FirefoxTestCase):
         self.assertEqual(self.marionette.get_url(), self.browser.default_homepage)
 
 
-class TestLocationBar(FirefoxTestCase):
+class TestLocationBar(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
         super(TestLocationBar, self).setUp()
@@ -133,7 +133,7 @@ class TestLocationBar(FirefoxTestCase):
             Wait(self.marionette).until(lambda mn: mn.get_url() == data_uri)
 
 
-class TestAutoCompleteResults(FirefoxTestCase):
+class TestAutoCompleteResults(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
         super(TestAutoCompleteResults, self).setUp()
@@ -203,7 +203,7 @@ class TestAutoCompleteResults(FirefoxTestCase):
             self.autocomplete_results.close()
 
 
-class TestIdentityPopup(FirefoxTestCase):
+class TestIdentityPopup(PuppeteerMixin, MarionetteTestCase):
     def setUp(self):
         super(TestIdentityPopup, self).setUp()
 

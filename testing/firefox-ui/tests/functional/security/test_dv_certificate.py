@@ -2,12 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import Wait
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestDVCertificate(FirefoxTestCase):
+class TestDVCertificate(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
         super(TestDVCertificate, self).setUp()
