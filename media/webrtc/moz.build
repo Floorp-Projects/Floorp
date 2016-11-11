@@ -101,6 +101,7 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         else:
             CXXFLAGS += ['-validate-charset-']
 
+    TEST_DIRS += ['signaling/gtest']
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     GYP_DIRS += ['trunk/testing']
     GYP_DIRS['trunk/testing'].input = 'trunk/testing/gtest.gyp'
