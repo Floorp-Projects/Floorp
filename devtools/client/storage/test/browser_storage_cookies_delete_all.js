@@ -21,8 +21,8 @@ function* performDelete(store, rowName, deleteAll) {
   yield selectTreeItem(store);
 
   let eventWait = gUI.once("store-objects-updated");
+  let cells = getRowCells(rowName, true);
 
-  let cells = getRowCells(rowName);
   yield waitForContextMenu(contextMenu, cells.name, () => {
     info(`Opened context menu in ${storeName}, row '${rowName}'`);
     if (deleteAll) {
@@ -43,24 +43,54 @@ add_task(function* () {
 
   info("test state before delete");
   yield checkState([
-    [["cookies", "test1.example.org"], ["c1", "c3", "cs2", "uc1"]],
-    [["cookies", "sectest1.example.org"], ["cs2", "sc1", "uc1"]],
+    [
+      ["cookies", "test1.example.org"], [
+        getCookieId("c1", "test1.example.org", "/browser"),
+        getCookieId("c3", "test1.example.org", "/"),
+        getCookieId("cs2", ".example.org", "/"),
+        getCookieId("uc1", ".example.org", "/")
+      ]
+    ],
+    [
+      ["cookies", "sectest1.example.org"], [
+        getCookieId("cs2", ".example.org", "/"),
+        getCookieId("sc1", "sectest1.example.org",
+                    "/browser/devtools/client/storage/test/"),
+        getCookieId("uc1", ".example.org", "/")
+      ]
+    ],
   ]);
 
   info("delete all from domain");
   // delete only cookies that match the host exactly
-  yield performDelete(["cookies", "test1.example.org"], "c1", false);
+  let id = getCookieId("c1", "test1.example.org", "/browser");
+  yield performDelete(["cookies", "test1.example.org"], id, false);
 
   info("test state after delete all from domain");
   yield checkState([
     // Domain cookies (.example.org) must not be deleted.
-    [["cookies", "test1.example.org"], ["cs2", "uc1"]],
-    [["cookies", "sectest1.example.org"], ["cs2", "sc1", "uc1"]],
+    [
+      ["cookies", "test1.example.org"],
+      [
+        getCookieId("cs2", ".example.org", "/"),
+        getCookieId("uc1", ".example.org", "/")
+      ]
+    ],
+    [
+      ["cookies", "sectest1.example.org"],
+      [
+        getCookieId("cs2", ".example.org", "/"),
+        getCookieId("uc1", ".example.org", "/"),
+        getCookieId("sc1", "sectest1.example.org",
+                    "/browser/devtools/client/storage/test/"),
+      ]
+    ],
   ]);
 
   info("delete all");
   // delete all cookies for host, including domain cookies
-  yield performDelete(["cookies", "sectest1.example.org"], "uc1", true);
+  id = getCookieId("uc1", ".example.org", "/");
+  yield performDelete(["cookies", "sectest1.example.org"], id, true);
 
   info("test state after delete all");
   yield checkState([
