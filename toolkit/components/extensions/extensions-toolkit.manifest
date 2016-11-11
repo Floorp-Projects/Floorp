@@ -12,7 +12,6 @@ category webextension-scripts webNavigation chrome://extensions/content/ext-webN
 category webextension-scripts runtime chrome://extensions/content/ext-runtime.js
 category webextension-scripts extension chrome://extensions/content/ext-extension.js
 category webextension-scripts storage chrome://extensions/content/ext-storage.js
-category webextension-scripts test chrome://extensions/content/ext-test.js
 category webextension-scripts topSites chrome://extensions/content/ext-topSites.js
 
 # scripts specific for content process.
