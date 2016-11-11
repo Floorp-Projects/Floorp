@@ -660,7 +660,7 @@ class ConfigureSandbox(dict):
             # file. It can however depend on variables from the closure, thus
             # maybe_prepare_function and isfunction are declared above to be
             # available there.
-            @wraps(template)
+            @self.wraps(template)
             def wrapper(*args, **kwargs):
                 args = [maybe_prepare_function(arg) for arg in args]
                 kwargs = {k: maybe_prepare_function(v)
@@ -674,7 +674,7 @@ class ConfigureSandbox(dict):
                     # decorator, so mark the returned function as wrapping the
                     # function passed in.
                     if len(args) == 1 and not kwargs and isfunction(args[0]):
-                        ret = wraps(args[0])(ret)
+                        ret = self.wraps(args[0])(ret)
                     return wrap_template(ret)
                 return ret
             return wrapper
@@ -682,6 +682,9 @@ class ConfigureSandbox(dict):
         wrapper = wrap_template(template)
         self._templates.add(wrapper)
         return wrapper
+
+    def wraps(self, func):
+        return wraps(func)
 
     RE_MODULE = re.compile('^[a-zA-Z0-9_\.]+$')
 
@@ -917,14 +920,14 @@ class ConfigureSandbox(dict):
             closure = tuple(makecell(cell.cell_contents)
                             for cell in func.func_closure)
 
-        new_func = wraps(func)(types.FunctionType(
+        new_func = self.wraps(func)(types.FunctionType(
             func.func_code,
             glob,
             func.__name__,
             func.func_defaults,
             closure
         ))
-        @wraps(new_func)
+        @self.wraps(new_func)
         def wrapped(*args, **kwargs):
             if func in self._imports:
                 self._apply_imports(func, glob)

@@ -4,12 +4,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from functools import wraps
 from StringIO import StringIO
 from . import (
     CombinedDependsFunction,
     ConfigureError,
     ConfigureSandbox,
     DependsFunction,
+    SandboxedGlobal,
 )
 from .lint_util import disassemble_as_iter
 from mozbuild.util import memoize
@@ -37,7 +39,7 @@ class LintSandbox(ConfigureSandbox):
             if (self._help_option in obj.dependencies or
                 obj in (self._always, self._never)):
                 return False
-            func, glob = self._wrapped[obj.func]
+            func, glob = self.unwrap(obj.func)
             # We allow missing --help dependencies for functions that:
             # - don't use @imports
             # - don't have a closure
@@ -71,8 +73,16 @@ class LintSandbox(ConfigureSandbox):
         return super(LintSandbox, self)._value_for_depends(
             obj, need_help_dependency)
 
-    def _prepare_function(self, func):
-        wrapped, glob = super(LintSandbox, self)._prepare_function(func)
-        if wrapped not in self._wrapped:
-            self._wrapped[wrapped] = func, glob
-        return wrapped, glob
+    def unwrap(self, func):
+        glob = func.func_globals
+        while func in self._wrapped:
+            if isinstance(func.func_globals, SandboxedGlobal):
+                glob = func.func_globals
+            func = self._wrapped[func]
+        return func, glob
+
+    def wraps(self, func):
+        def do_wraps(wrapper):
+            self._wrapped[wrapper] = func
+            return wraps(func)(wrapper)
+        return do_wraps
