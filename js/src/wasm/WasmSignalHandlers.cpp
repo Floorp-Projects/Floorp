@@ -1340,8 +1340,7 @@ ProcessHasSignalHandlers()
     // Install a SIGSEGV handler to handle safely-out-of-bounds asm.js heap
     // access and/or unaligned accesses.
 # if defined(XP_WIN)
-    // FirstHandler must be false to avoid a conflict with ASan's fault handler
-    if (!AddVectoredExceptionHandler(/* FirstHandler = */ false, WasmFaultHandler))
+    if (!AddVectoredExceptionHandler(/* FirstHandler = */ true, WasmFaultHandler))
         return false;
 # elif defined(XP_DARWIN)
     // OSX handles seg faults via the Mach exception handler above, so don't
