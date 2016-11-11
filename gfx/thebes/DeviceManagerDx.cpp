@@ -579,6 +579,7 @@ DeviceManagerDx::ResetDevices()
   mCompositorDevice = nullptr;
   mContentDevice = nullptr;
   mDeviceStatus = Nothing();
+  mDeviceResetReason = Nothing();
   Factory::SetDirect3D11Device(nullptr);
 }
 
@@ -656,8 +657,28 @@ static DeviceResetReason HResultToResetReason(HRESULT hr)
   return DeviceResetReason::UNKNOWN;
 }
 
+bool
+DeviceManagerDx::HasDeviceReset(DeviceResetReason* aOutReason)
+{
+  MutexAutoLock lock(mDeviceLock);
+
+  if (mDeviceResetReason) {
+    *aOutReason = mDeviceResetReason.value();
+    return true;
+  }
+
+  DeviceResetReason reason;
+  if (GetAnyDeviceRemovedReason(&reason)) {
+    mDeviceResetReason = Some(reason);
+    *aOutReason = reason;
+    return true;
+  }
+
+  return false;
+}
+
 static inline bool
-DidDeviceReset(RefPtr<ID3D11Device> aDevice, DeviceResetReason* aOutReason)
+DidDeviceReset(const RefPtr<ID3D11Device>& aDevice, DeviceResetReason* aOutReason)
 {
   if (!aDevice) {
     return false;
@@ -674,14 +695,43 @@ DidDeviceReset(RefPtr<ID3D11Device> aDevice, DeviceResetReason* aOutReason)
 bool
 DeviceManagerDx::GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason)
 {
-  // Note: this can be called off the main thread, so we need to use
-  // our threadsafe getters.
-  if (DidDeviceReset(GetCompositorDevice(), aOutReason) ||
-      DidDeviceReset(GetContentDevice(), aOutReason))
+  // Caller must own the lock, since we access devices directly, and can be
+  // called from any thread.
+  mDeviceLock.AssertCurrentThreadOwns();
+
+  if (DidDeviceReset(mCompositorDevice, aOutReason) ||
+      DidDeviceReset(mContentDevice, aOutReason))
   {
     return true;
   }
+
+  if (XRE_IsParentProcess() &&
+      NS_IsMainThread() &&
+      gfxPrefs::DeviceResetForTesting())
+  {
+    gfxPrefs::SetDeviceResetForTesting(0);
+    *aOutReason = DeviceResetReason::FORCED_RESET;
+    return true;
+  }
+
   return false;
+}
+
+void
+DeviceManagerDx::ForceDeviceReset(ForcedDeviceResetReason aReason)
+{
+  Telemetry::Accumulate(Telemetry::FORCED_DEVICE_RESET_REASON, uint32_t(aReason));
+  {
+    MutexAutoLock lock(mDeviceLock);
+    mDeviceResetReason = Some(DeviceResetReason::FORCED_RESET);
+  }
+}
+
+void
+DeviceManagerDx::NotifyD3D9DeviceReset()
+{
+  MutexAutoLock lock(mDeviceLock);
+  mDeviceResetReason = Some(DeviceResetReason::D3D9_RESET);
 }
 
 void
