@@ -564,7 +564,7 @@ Cookies.prototype = {
       }
     };
     fileReader.addEventListener("loadend", onLoadEnd, false);
-    fileReader.readAsText(new File(aFile));
+    fileReader.readAsText(File.createFromNsIFile(aFile));
   },
 
   /**
