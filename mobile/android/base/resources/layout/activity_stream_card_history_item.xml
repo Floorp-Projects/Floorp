@@ -41,7 +41,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
-            android:layout_gravity="right|top"
+            android:layout_gravity="right|end|top"
             android:contentDescription="@string/menu"
             android:src="@drawable/menu"
             android:padding="@dimen/activity_stream_base_margin" />

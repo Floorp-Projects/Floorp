@@ -17,6 +17,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.support.v4.widget.TextViewCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
@@ -163,8 +164,8 @@ public class SearchBar extends FrameLayout {
         editText.setFocusable(active);
         editText.setFocusableInTouchMode(active);
 
-        final int leftDrawable = active ? R.drawable.search_icon_active : R.drawable.search_icon_inactive;
-        editText.setCompoundDrawablesWithIntrinsicBounds(leftDrawable, 0, 0, 0);
+        final int startDrawable = active ? R.drawable.search_icon_active : R.drawable.search_icon_inactive;
+        TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(editText, startDrawable, 0, 0, 0);
 
         // We can't use a selector drawable because we apply a color filter to the focused
         // background at run time.
