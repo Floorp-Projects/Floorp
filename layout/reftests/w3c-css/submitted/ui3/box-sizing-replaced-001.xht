@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>CSS Test: Min/Max Height and Width Constraints on Replaced Elements with Box-Sizing</title>
     <link href="http://fantasai.inkedblade.net/contact" title="Elika J. Etemad" rel="author"></link>
@@ -131,17 +131,6 @@
       }
     </style>
   </head>
-  <script>
-  /* this test shouldn't need reftest-wait, but if the reftest snapshot is triggered before we've painted,
-   * for img5 the right 1/3rd of the element simply isn't painted.
-   * See Bug 1283302
-   */
-  window.addEventListener("MozReftestInvalidate", endTest);
-
-  function endTest() {
-    document.documentElement.removeAttribute("class");
-  }
-  </script>
   <body>
     <div>All rectangles should be the same size.</div>
     <p><img id="img0" class="with-padding" src="support/replaced-min-max.png" alt="FAIL" title="Test 0"></img></p>
