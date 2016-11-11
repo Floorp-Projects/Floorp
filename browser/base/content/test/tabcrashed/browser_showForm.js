@@ -19,7 +19,9 @@ add_task(function* test_show_form() {
     // Flip the pref so that the checkbox should be checked
     // by default.
     let pref = TabCrashHandler.prefs.root + "sendReport";
-    yield pushPrefs([pref, true]);
+    yield SpecialPowers.pushPrefEnv({
+      set: [[pref, true]]
+    });
 
     // Now crash the browser.
     yield BrowserTestUtils.crashBrowser(browser);
