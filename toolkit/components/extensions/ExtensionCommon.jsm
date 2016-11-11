@@ -33,6 +33,7 @@ var {
   SpreadArgs,
   getConsole,
   getInnerWindowID,
+  getUniqueId,
   runSafeSync,
   runSafeSyncWithoutClone,
   instanceOf,
@@ -40,15 +41,13 @@ var {
 
 XPCOMUtils.defineLazyGetter(this, "console", getConsole);
 
-let gContextId = 0;
-
 class BaseContext {
   constructor(envType, extension) {
     this.envType = envType;
     this.onClose = new Set();
     this.checkedLastError = false;
     this._lastError = null;
-    this.contextId = `${++gContextId}-${Services.appinfo.uniqueProcessID}`;
+    this.contextId = getUniqueId();
     this.unloaded = false;
     this.extension = extension;
     this.jsonSandbox = null;
