@@ -182,9 +182,13 @@ var AboutTabCrashed = {
 
       document.getElementById("sendReport").checked = data.sendReport;
       document.getElementById("includeURL").checked = data.includeURL;
-      document.getElementById("emailMe").checked = data.emailMe;
-      if (data.emailMe) {
-        document.getElementById("email").value = data.email;
+
+      if (data.requestEmail) {
+        document.getElementById("requestEmail").hidden = false;
+        document.getElementById("emailMe").checked = data.emailMe;
+        if (data.emailMe) {
+          document.getElementById("email").value = data.email;
+        }
       }
 
       this.showCrashReportUI(data.sendReport);
@@ -271,9 +275,11 @@ var AboutTabCrashed = {
           URL = this.pageData.URL.trim();
         }
 
-        emailMe = document.getElementById("emailMe").checked;
-        if (emailMe) {
-          email = document.getElementById("email").value.trim();
+        if (!document.getElementById("requestEmail").hidden) {
+          emailMe = document.getElementById("emailMe").checked;
+          if (emailMe) {
+            email = document.getElementById("email").value.trim();
+          }
         }
       }
     }
