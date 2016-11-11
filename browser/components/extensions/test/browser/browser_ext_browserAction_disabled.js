@@ -41,6 +41,7 @@ add_task(function* testDisabled() {
   yield extension.awaitMessage("ready");
 
   yield clickBrowserAction(extension);
+  yield new Promise(resolve => setTimeout(resolve, 0));
 
   extension.sendMessage("check-clicked", true);
   yield extension.awaitMessage("next-test");
@@ -49,6 +50,7 @@ add_task(function* testDisabled() {
   yield extension.awaitMessage("next-test");
 
   yield clickBrowserAction(extension);
+  yield new Promise(resolve => setTimeout(resolve, 0));
 
   extension.sendMessage("check-clicked", false);
   yield extension.awaitMessage("next-test");
@@ -57,6 +59,7 @@ add_task(function* testDisabled() {
   yield extension.awaitMessage("next-test");
 
   yield clickBrowserAction(extension);
+  yield new Promise(resolve => setTimeout(resolve, 0));
 
   extension.sendMessage("check-clicked", true);
   yield extension.awaitMessage("next-test");

@@ -69,8 +69,10 @@ add_task(function* test_contentscript_context() {
 
   is(SpecialPowers.unwrap(context.contentWindow), win, "Context's contentWindow property is correct");
 
-
   win.close();
+
+  yield extension.awaitMessage("content-script-hide");
+
   yield extension.unload();
 });
 </script>
