@@ -967,5 +967,9 @@ set_define('HAVE_VISIBILITY_ATTRIBUTE',
 set_config('WRAP_SYSTEM_INCLUDES', wrap_system_includes)
 set_config('VISIBILITY_FLAGS', visibility_flags)
 
-include('windows.configure')
+@depends(target)
+def is_windows(target):
+    return target.kernel == 'WINNT'
+
+include('windows.configure', when=is_windows)
 include('rust.configure')
