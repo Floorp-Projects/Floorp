@@ -807,7 +807,7 @@ interface WEBGL_compressed_texture_atc
 };
 
 [NoInterfaceObject]
-interface WEBGL_compressed_texture_es3
+interface WEBGL_compressed_texture_etc
 {
     const GLenum COMPRESSED_R11_EAC                                 = 0x9270;
     const GLenum COMPRESSED_SIGNED_R11_EAC                          = 0x9271;
