@@ -30,9 +30,10 @@ VideoBridgeChild::Startup()
 /* static */ void
 VideoBridgeChild::Shutdown()
 {
-  sVideoBridgeChildSingleton->Close();
-  sVideoBridgeChildSingleton = nullptr;
-
+  if (sVideoBridgeChildSingleton) {
+    sVideoBridgeChildSingleton->Close();
+    sVideoBridgeChildSingleton = nullptr;
+  }
 }
 
 VideoBridgeChild::VideoBridgeChild()
