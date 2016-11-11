@@ -4,26 +4,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEFINES['CUBEB_GECKO_BUILD'] = True
-
-GeckoCppUnitTests([
-  'test_duplex',
-  'test_record',
-  'test_tone',
-  'test_utils'
-])
+UNIFIED_SOURCES += [
+#  'test_duplex.cpp', # DISABLED: See bug 1314514.
+#  'test_record.cpp', # DISABLED: See bug 1314514.
+  'test_tone.cpp',
+  'test_utils.cpp'
+]
 
 if CONFIG['MOZ_PULSEAUDIO'] or CONFIG['OS_TARGET'] in ('Darwin', 'WINNT', 'Android'):
-  GeckoCppUnitTests([
-    'test_resampler',
-  ])
+  UNIFIED_SOURCES += [
+    'test_resampler.cpp',
+  ]
 
 if CONFIG['OS_TARGET'] != 'Android':
-  GeckoCppUnitTests([
-    'test_audio',
-    'test_latency',
-    'test_sanity'
-  ])
+  UNIFIED_SOURCES += [
+    'test_audio.cpp',
+    'test_latency.cpp',
+    'test_sanity.cpp'
+  ]
 
 LOCAL_INCLUDES += [
     '../include',
@@ -78,3 +76,5 @@ else:
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
+
+FINAL_LIBRARY = 'xul-gtest'
