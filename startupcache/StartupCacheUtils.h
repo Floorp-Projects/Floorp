@@ -5,15 +5,18 @@
 #ifndef nsStartupCacheUtils_h_
 #define nsStartupCacheUtils_h_
 
+#include "nsString.h"
 #include "nsIStorageStream.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "mozilla/UniquePtr.h"
 
+class nsIURI;
+
 namespace mozilla {
 namespace scache {
 
-NS_EXPORT nsresult
+nsresult
 NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len, 
                                nsIObjectInputStream** stream);
 
@@ -23,7 +26,7 @@ NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len,
 // non-singleton objects are written out multiple times during a serialization.
 // This could cause them to be deserialized incorrectly (as multiple copies
 // instead of references).
-NS_EXPORT nsresult
+nsresult
 NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
                                     nsIStorageStream** stream,
                                     bool wantDebugStream);
@@ -31,11 +34,11 @@ NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
 // Creates a buffer for storing the stream into the cache. The buffer is
 // allocated with 'new []'.  After calling this function, the caller would
 // typically call nsIStartupCache::PutBuffer with the returned buffer.
-NS_EXPORT nsresult
+nsresult
 NewBufferFromStorageStream(nsIStorageStream *storageStream, 
                            UniquePtr<char[]>* buffer, uint32_t* len);
 
-NS_EXPORT nsresult
+nsresult
 PathifyURI(nsIURI *in, nsACString &out);
 } // namespace scache
 } // namespace mozilla
