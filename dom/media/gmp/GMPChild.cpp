@@ -277,12 +277,15 @@ GMPChild::RecvSetNodeId(const nsCString& aNodeId)
 }
 
 GMPErr
-GMPChild::GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI)
+GMPChild::GetAPI(const char* aAPIName,
+                 void* aHostAPI,
+                 void** aPluginAPI,
+                 uint32_t aDecryptorId)
 {
   if (!mGMPLoader) {
     return GMPGenericErr;
   }
-  return mGMPLoader->GetAPI(aAPIName, aHostAPI, aPluginAPI);
+  return mGMPLoader->GetAPI(aAPIName, aHostAPI, aPluginAPI, aDecryptorId);
 }
 
 bool
