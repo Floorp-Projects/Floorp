@@ -587,11 +587,13 @@ bool
 DeviceManagerDx::MaybeResetAndReacquireDevices()
 {
   DeviceResetReason resetReason;
-  if (!GetAnyDeviceRemovedReason(&resetReason)) {
+  if (!HasDeviceReset(&resetReason)) {
     return false;
   }
 
-  Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON, uint32_t(resetReason));
+  if (resetReason != DeviceResetReason::FORCED_RESET) {
+    Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON, uint32_t(resetReason));
+  }
 
   bool createCompositorDevice = !!mCompositorDevice;
   bool createContentDevice = !!mContentDevice;
