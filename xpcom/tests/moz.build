@@ -24,26 +24,8 @@ SimplePrograms([
     'TestBlockingProcess',
     'TestPRIntN',
     'TestQuickReturn',
-])
-
-GeckoSimplePrograms([
-    'TestCallTemplates',
-    'TestINIParser',
-    'TestRacingServiceManager',
-    'TestRegistrationOrder',
-    'TestThreadPoolListener',
     'TestUnicodeArguments',
 ])
-
-if CONFIG['OS_TARGET'] == 'WINNT':
-    GeckoSimplePrograms([
-        'TestBase64',
-    ])
-
-if CONFIG['WRAP_STL_INCLUDES'] and not CONFIG['CLANG_CL']:
-    GeckoSimplePrograms([
-        'TestSTLWrappers',
-    ])
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
@@ -51,14 +33,6 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 #CPP_UNIT_TESTS += [
 #    'TestStaticAtoms',
 #]
-
-if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT'):
-    # FIXME bug 523392: TestDeadlockDetector doesn't like Windows
-    # FIXME bug 523378: also fails on OS X
-    GeckoCppUnitTests([
-        'TestDeadlockDetector',
-        'TestDeadlockDetectorScalability',
-    ])
 
 if CONFIG['COMPILE_ENVIRONMENT']:
     TEST_HARNESS_FILES.xpcshell.xpcom.tests.unit += [

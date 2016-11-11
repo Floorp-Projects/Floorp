@@ -1424,6 +1424,7 @@ FindStartPC(JSContext* cx, const FrameIter& iter, int spindex, int skipStackHits
             jsbytecode** valuepc)
 {
     jsbytecode* current = *valuepc;
+    *valuepc = nullptr;
 
     if (spindex == JSDVG_IGNORE_STACK)
         return true;
@@ -1434,8 +1435,6 @@ FindStartPC(JSContext* cx, const FrameIter& iter, int spindex, int skipStackHits
      */
     if (iter.isIon())
         return true;
-
-    *valuepc = nullptr;
 
     BytecodeParser parser(cx, iter.script());
     if (!parser.parse())
@@ -1468,13 +1467,12 @@ FindStartPC(JSContext* cx, const FrameIter& iter, int spindex, int skipStackHits
         // If the current PC has fewer values on the stack than the index we are
         // looking for, the blamed value must be one pushed by the current
         // bytecode, so restore *valuepc.
-        jsbytecode* pc = nullptr;
         if (index < size_t(parser.stackDepthAtPC(current)))
-            pc = parser.pcForStackOperand(current, index);
-        *valuepc = pc ? pc : current;
+            *valuepc = parser.pcForStackOperand(current, index);
+        else
+            *valuepc = current;
     } else {
-        jsbytecode* pc = parser.pcForStackOperand(current, spindex);
-        *valuepc = pc ? pc : current;
+        *valuepc = parser.pcForStackOperand(current, spindex);
     }
     return true;
 }

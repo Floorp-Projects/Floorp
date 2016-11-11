@@ -7228,6 +7228,9 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
                              .setNativeRegExp(enableNativeRegExp)
                              .setUnboxedArrays(enableUnboxedArrays);
 
+    if (op.getBoolOption("wasm-check-bce"))
+        jit::JitOptions.wasmAlwaysCheckBounds = true;
+
     if (op.getBoolOption("no-unboxed-objects"))
         jit::JitOptions.disableUnboxedObjects = true;
 
@@ -7685,7 +7688,8 @@ main(int argc, char** argv, char** envp)
         || !op.addBoolOption('\0', "no-native-regexp", "Disable native regexp compilation")
         || !op.addBoolOption('\0', "no-unboxed-objects", "Disable creating unboxed plain objects")
         || !op.addBoolOption('\0', "unboxed-arrays", "Allow creating unboxed arrays")
-        || !op.addBoolOption('\0', "wasm-always-baseline", "Enable experimental Wasm baseline compiler when possible")
+        || !op.addBoolOption('\0', "wasm-always-baseline", "Enable wasm baseline compiler when possible")
+        || !op.addBoolOption('\0', "wasm-check-bce", "Always generate wasm bounds check, even redundant ones.")
 #ifdef ENABLE_SHARED_ARRAY_BUFFER
         || !op.addStringOption('\0', "shared-memory", "on/off",
                                "SharedArrayBuffer and Atomics "
