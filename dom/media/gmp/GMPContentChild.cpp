@@ -206,7 +206,7 @@ GMPContentChild::RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor)
   GMPDecryptorHost* host = static_cast<GMPDecryptorHost*>(child);
 
   void* ptr = nullptr;
-  GMPErr err = mGMPChild->GetAPI(GMP_API_DECRYPTOR, host, &ptr);
+  GMPErr err = mGMPChild->GetAPI(GMP_API_DECRYPTOR, host, &ptr, aActor->Id());
   GMPDecryptor* decryptor = nullptr;
   if (GMP_SUCCEEDED(err) && ptr) {
     decryptor = static_cast<GMPDecryptor*>(ptr);
@@ -250,7 +250,7 @@ GMPContentChild::RecvPGMPVideoDecoderConstructor(PGMPVideoDecoderChild* aActor,
   auto vdc = static_cast<GMPVideoDecoderChild*>(aActor);
 
   void* vd = nullptr;
-  GMPErr err = mGMPChild->GetAPI(GMP_API_VIDEO_DECODER, &vdc->Host(), &vd);
+  GMPErr err = mGMPChild->GetAPI(GMP_API_VIDEO_DECODER, &vdc->Host(), &vd, aDecryptorId);
   if (err != GMPNoErr || !vd) {
     NS_WARNING("GMPGetAPI call failed trying to construct decoder.");
     return false;
