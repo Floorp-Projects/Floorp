@@ -769,7 +769,7 @@
             }
             OverlayLoadObserver.prototype = {
               _outer: this,
-              observe: function (aSubject, aTopic, aData)
+              observe: function(aSubject, aTopic, aData)
               {
                 this._pane.loaded = true;
                 this._outer._fireEvent("paneload", this._pane);

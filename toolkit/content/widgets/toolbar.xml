@@ -137,7 +137,7 @@
           } else {
             // Need to wait until XUL overlays are loaded. See bug 554279.
             let self = this;
-            document.addEventListener("readystatechange", function (event) {
+            document.addEventListener("readystatechange", function(event) {
               if (document.readyState != "complete")
                 return;
               document.removeEventListener("readystatechange", arguments.callee, false);
@@ -395,7 +395,7 @@
           var defaultOrNoninteractive = (this.getAttribute("defaultset") || "")
                                           .split(",")
                                           .concat(["separator", "spacer", "spring"]);
-          return aCurrentSet.split(",").some(function (item) {
+          return aCurrentSet.split(",").some(function(item) {
             return defaultOrNoninteractive.indexOf(item) == -1;
           });
         ]]></body>
@@ -419,11 +419,11 @@
         toolbar: this,
         contextMenu: null,
 
-        get active () {
+        get active() {
           return !!this.contextMenu;
         },
 
-        init: function (event) {
+        init: function(event) {
           var node = event.target;
           while (node != this.toolbar) {
             if (node.localName == "menupopup")
@@ -443,7 +443,7 @@
           this.contextMenu.addEventListener("popuphiding", this, false);
           this.toolbar.addEventListener("mousemove", this, false);
         },
-        handleEvent: function (event) {
+        handleEvent: function(event) {
           switch (event.type) {
             case "popupshown":
               this.toolbar.removeEventListener("mousemove", this, false);
@@ -468,7 +468,7 @@
 
       <method name="_setInactiveAsync">
         <body><![CDATA[
-          this._inactiveTimeout = setTimeout(function (self) {
+          this._inactiveTimeout = setTimeout(function(self) {
             if (self.getAttribute("autohide") == "true") {
               self._inactiveTimeout = null;
               self._setInactive();

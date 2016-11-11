@@ -178,7 +178,7 @@ AboutReader.prototype = {
     return _viewId;
   },
 
-  receiveMessage: function (message) {
+  receiveMessage: function(message) {
     switch (message.name) {
       // Triggered by Android user pressing BACK while the banner font-dropdown is open.
       case "Reader:CloseDropdown": {

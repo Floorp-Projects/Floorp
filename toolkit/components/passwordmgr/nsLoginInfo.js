@@ -29,9 +29,9 @@ nsLoginInfo.prototype = {
   usernameField : null,
   passwordField : null,
 
-  init : function (aHostname, aFormSubmitURL, aHttpRealm,
-                   aUsername,      aPassword,
-                   aUsernameField, aPasswordField) {
+  init : function(aHostname, aFormSubmitURL, aHttpRealm,
+                  aUsername,      aPassword,
+                  aUsernameField, aPasswordField) {
     this.hostname      = aHostname;
     this.formSubmitURL = aFormSubmitURL;
     this.httpRealm     = aHttpRealm;
@@ -47,7 +47,7 @@ nsLoginInfo.prototype = {
     });
   },
 
-  equals : function (aLogin) {
+  equals : function(aLogin) {
     if (this.hostname      != aLogin.hostname      ||
         this.formSubmitURL != aLogin.formSubmitURL ||
         this.httpRealm     != aLogin.httpRealm     ||

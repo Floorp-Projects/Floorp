@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 var logWarnings = Services.prefs.getBoolPref(PREF_DEPRECATION_WARNINGS);
 
 Services.prefs.addObserver(PREF_DEPRECATION_WARNINGS,
-  function (aSubject, aTopic, aData) {
+  function(aSubject, aTopic, aData) {
     logWarnings = Services.prefs.getBoolPref(PREF_DEPRECATION_WARNINGS);
   }, false);
 
@@ -26,7 +26,7 @@ Services.prefs.addObserver(PREF_DEPRECATION_WARNINGS,
  * @param nsIStackFrame aStack
  *        A callstack to be converted into a string log message.
  */
-function stringifyCallstack (aStack) {
+function stringifyCallstack(aStack) {
   // If aStack is invalid, use Components.stack (ignoring the last frame).
   if (!aStack || !(aStack instanceof Ci.nsIStackFrame)) {
     aStack = Components.stack.caller;
@@ -57,7 +57,7 @@ this.Deprecated = {
    *        snapshot of the current JavaScript callstack will be
    *        logged.
    */
-  warning: function (aText, aUrl, aStack) {
+  warning: function(aText, aUrl, aStack) {
     if (!logWarnings) {
       return;
     }

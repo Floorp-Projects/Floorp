@@ -108,12 +108,12 @@ add_task(function* test_transitions()
   // dump_table("moz_places");
   // dump_table("moz_historyvisits");
 
-  var numSortFunc = function (a, b) { return (a - b); };
+  var numSortFunc = function(a, b) { return (a - b); };
   var arrs = testDataTyped.concat(testDataDownload).concat(testDataBookmark)
               .sort(numSortFunc);
 
   // Four tests which compare the result of a query to an expected set.
-  var data = arrs.filter(function (index) {
+  var data = arrs.filter(function(index) {
       return (testData[index].uri.match(/arewefastyet\.com/) &&
               testData[index].transType ==
                 Ci.nsINavHistoryService.TRANSITION_DOWNLOAD);

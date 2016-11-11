@@ -5,7 +5,7 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 // restartManager() mucks with XPIProvider.jsm importing, so we hack around.
-this.__defineGetter__("XPIProvider", function () {
+this.__defineGetter__("XPIProvider", function() {
   let scope = {};
   return Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", scope)
                    .XPIProvider;

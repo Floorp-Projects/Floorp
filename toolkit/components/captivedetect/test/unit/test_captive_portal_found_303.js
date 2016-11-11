@@ -40,7 +40,7 @@ function fakeUIResponse() {
   Services.obs.addObserver(function observe(subject, topic, data) {
     if (topic === 'captive-portal-login-success') {
       do_check_eq(++step, 4);
-      gServer.stop(function () {
+      gServer.stop(function() {
         gRedirectServer.stop(do_test_finished);
       });
     }

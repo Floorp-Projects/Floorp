@@ -13,7 +13,7 @@ var gBookmarksObserver = {
     this.deferred = PromiseUtils.defer();
     return this.deferred.promise;
   },
-  validate: function (aMethodName, aArguments) {
+  validate: function(aMethodName, aArguments) {
     do_check_eq(this.expected[0].name, aMethodName);
 
     let args = this.expected.shift().args;
@@ -64,7 +64,7 @@ var gBookmarkSkipObserver = {
     this.deferred = PromiseUtils.defer();
     return this.deferred.promise;
   },
-  validate: function (aMethodName) {
+  validate: function(aMethodName) {
     do_check_eq(this.expected.shift(), aMethodName);
     if (this.expected.length === 0) {
       this.deferred.resolve();
@@ -116,7 +116,7 @@ add_task(function* batch() {
       "onBeginUpdateBatch", "onEndUpdateBatch"
   ])]);
   PlacesUtils.bookmarks.runInBatchMode({
-    runBatched: function () {
+    runBatched: function() {
       // Nothing.
     }
   }, null);

@@ -85,7 +85,7 @@ function run_test() {
   do_check_eq(lateWrites.stacks.length, 0);
 
   do_test_pending();
-  Telemetry.asyncFetchTelemetryData(function () {
+  Telemetry.asyncFetchTelemetryData(function() {
     actual_test();
   });
 }

@@ -23,7 +23,7 @@ function* runTests() {
 
   // Wait until the referrer's thumbnail's file has been written.
   yield whenFileExists(URL);
-  yield retrieveImageDataForURL(URL, function ([r, g, b]) {
+  yield retrieveImageDataForURL(URL, function([r, g, b]) {
     is("" + [r, g, b], "255,0,0", "referrer has a red thumbnail");
     next();
   });

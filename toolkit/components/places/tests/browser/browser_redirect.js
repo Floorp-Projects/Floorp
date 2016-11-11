@@ -10,7 +10,7 @@ add_task(function* () {
   let visitedPromise = new Promise(resolve => {
     let historyObserver = {
       _redirectNotified: false,
-      onVisit: function (aURI, aVisitID, aTime, aSessionID, aReferringID,
+      onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID,
                         aTransitionType) {
         info("Received onVisit: " + aURI.spec);
 
@@ -24,16 +24,16 @@ add_task(function* () {
 
         ok(this._redirectNotified, "The redirect should have been notified");
 
-        fieldForUrl(REDIRECT_URI, "frecency", function (aFrecency) {
+        fieldForUrl(REDIRECT_URI, "frecency", function(aFrecency) {
           ok(aFrecency != 0, "Frecency or the redirecting page should not be 0");
 
-          fieldForUrl(REDIRECT_URI, "hidden", function (aHidden) {
+          fieldForUrl(REDIRECT_URI, "hidden", function(aHidden) {
             is(aHidden, 1, "The redirecting page should be hidden");
 
-            fieldForUrl(TARGET_URI, "frecency", function (aFrecency2) {
+            fieldForUrl(TARGET_URI, "frecency", function(aFrecency2) {
               ok(aFrecency2 != 0, "Frecency of the target page should not be 0");
 
-              fieldForUrl(TARGET_URI, "hidden", function (aHidden2) {
+              fieldForUrl(TARGET_URI, "hidden", function(aHidden2) {
                 is(aHidden2, 0, "The target page should not be hidden");
                 resolve();
               });
@@ -41,13 +41,13 @@ add_task(function* () {
           });
         });
       },
-      onBeginUpdateBatch: function () {},
-      onEndUpdateBatch: function () {},
-      onTitleChanged: function () {},
-      onDeleteURI: function () {},
-      onClearHistory: function () {},
-      onPageChanged: function () {},
-      onDeleteVisits: function () {},
+      onBeginUpdateBatch: function() {},
+      onEndUpdateBatch: function() {},
+      onTitleChanged: function() {},
+      onDeleteURI: function() {},
+      onClearHistory: function() {},
+      onPageChanged: function() {},
+      onDeleteVisits: function() {},
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
     };
     PlacesUtils.history.addObserver(historyObserver, false);

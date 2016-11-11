@@ -56,7 +56,7 @@ add_test(function test_corruptFormHistoryDB_emptyInit() {
         }
       });
     },
-    handleError : function (aError) {
+    handleError : function(aError) {
       do_throw("DB initialized after reading a corrupt DB file is not empty.");
     }
   });

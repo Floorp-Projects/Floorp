@@ -32,7 +32,7 @@ add_test(function test_getFile() {
 });
 
 add_test(function test_getFile_nonexistentDir() {
-  do_check_throws(function () {
+  do_check_throws(function() {
     let file = FileUtils.getFile("NonexistentD", ["foobar"]);
   }, Components.results.NS_ERROR_FAILURE);
 
@@ -68,7 +68,7 @@ add_test(function test_getDir() {
 });
 
 add_test(function test_getDir_nonexistentDir() {
-  do_check_throws(function () {
+  do_check_throws(function() {
     let file = FileUtils.getDir("NonexistentD", ["foodir"]);
   }, Components.results.NS_ERROR_FAILURE);
 
@@ -91,7 +91,7 @@ add_test(function test_getDir_shouldCreate() {
   run_next_test();
 });
 
-var openFileOutputStream_defaultFlags = function (aKind, aFileName) {
+var openFileOutputStream_defaultFlags = function(aKind, aFileName) {
   let file = FileUtils.getFile("ProfD", [aFileName]);
   let fos;
   do_check_true(aKind == "atomic" || aKind == "safe" || aKind == "");
@@ -139,7 +139,7 @@ var openFileOutputStream_modeFlags = function(aKind, aFileName) {
     fos = FileUtils.openFileOutputStream(file, FileUtils.MODE_WRONLY);
   }
   let data = "test_modeFlags";
-  do_check_throws(function () {
+  do_check_throws(function() {
     fos.write(data, data.length);
   }, Components.results.NS_ERROR_FILE_NOT_FOUND);
   do_check_false(file.exists());
@@ -167,7 +167,7 @@ var closeFileOutputStream = function(aKind, aFileName) {
   } else if (aKind == "safe") {
     FileUtils.closeSafeFileOutputStream(fos);
   }
-  do_check_throws(function () {
+  do_check_throws(function() {
     fos.write(data, data.length);
   }, Components.results.NS_BASE_STREAM_CLOSED);
   run_next_test();

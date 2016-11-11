@@ -76,7 +76,7 @@ var gUpdateWizard = {
       document.documentElement.currentPage = document.getElementById("versioninfo");
   },
 
-  onWizardFinish: function gUpdateWizard_onWizardFinish ()
+  onWizardFinish: function gUpdateWizard_onWizardFinish()
   {
     if (this.shouldSuggestAutoChecking)
       Services.prefs.setBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED, this.shouldAutoCheck);

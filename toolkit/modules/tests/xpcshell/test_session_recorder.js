@@ -101,7 +101,7 @@ add_task(function* test_current_availability() {
   let recordCount = 0;
 
   Object.defineProperty(recorder, "recordStartupFields", {
-    value: function () {
+    value: function() {
       recordCount++;
       return oldRecord.call(recorder);
     }

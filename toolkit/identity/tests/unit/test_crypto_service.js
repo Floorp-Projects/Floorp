@@ -47,7 +47,7 @@ function test_base64_roundtrip() {
 }
 
 function test_dsa() {
-  idService.generateKeyPair(ALG_DSA, function (rv, keyPair) {
+  idService.generateKeyPair(ALG_DSA, function(rv, keyPair) {
     log("DSA generateKeyPair finished ", rv);
     do_check_true(Components.isSuccessCode(rv));
     do_check_eq(typeof keyPair.sign, "function");
@@ -59,7 +59,7 @@ function test_dsa() {
     // XXX: test that RSA parameters throw the correct error
 
     log("about to sign with DSA key");
-    keyPair.sign("foo", function (rv2, signature) {
+    keyPair.sign("foo", function(rv2, signature) {
       log("DSA sign finished ", rv2, signature);
       do_check_true(Components.isSuccessCode(rv2));
       do_check_true(signature.length > 1);
@@ -70,7 +70,7 @@ function test_dsa() {
 }
 
 function test_rsa() {
-  idService.generateKeyPair(ALG_RSA, function (rv, keyPair) {
+  idService.generateKeyPair(ALG_RSA, function(rv, keyPair) {
     log("RSA generateKeyPair finished ", rv);
     do_check_true(Components.isSuccessCode(rv));
     do_check_eq(typeof keyPair.sign, "function");
@@ -80,7 +80,7 @@ function test_rsa() {
     do_check_true(keyPair.hexRSAPublicKeyExponent.length > 1);
 
     log("about to sign with RSA key");
-    keyPair.sign("foo", function (rv2, signature) {
+    keyPair.sign("foo", function(rv2, signature) {
       log("RSA sign finished ", rv2, signature);
       do_check_true(Components.isSuccessCode(rv2));
       do_check_true(signature.length > 1);

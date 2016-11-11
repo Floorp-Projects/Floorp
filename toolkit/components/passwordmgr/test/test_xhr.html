@@ -174,7 +174,7 @@ function doTest() {
 function makeRequest(uri) {
   var request = new XMLHttpRequest();
   request.open("GET", uri, true);
-  request.onreadystatechange = function () {
+  request.onreadystatechange = function() {
     if (request.readyState == 4)
       xhrLoad(request.responseXML);
   };

@@ -132,7 +132,7 @@ function getSavedPingFile(basename) {
   if (pingFile.exists()) {
     pingFile.remove(true);
   }
-  do_register_cleanup(function () {
+  do_register_cleanup(function() {
     try {
       pingFile.remove(true);
     } catch (e) {

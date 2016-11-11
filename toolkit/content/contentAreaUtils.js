@@ -198,10 +198,10 @@ function saveBrowser(aBrowser, aSkipPrompt, aOuterWindowID = 0)
                     .QueryInterface(Ci.nsIWebBrowserPersistable);
   let stack = Components.stack.caller;
   persistable.startPersistence(aOuterWindowID, {
-    onDocumentReady: function (document) {
+    onDocumentReady: function(document) {
       saveDocument(document, aSkipPrompt);
     },
-    onError: function (status) {
+    onError: function(status) {
       throw new Components.Exception("saveBrowser failed asynchronously in startPersistence",
                                      status, stack);
     }

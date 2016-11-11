@@ -74,7 +74,7 @@ function test_select_identity() {
     IDService.RP.watch(mockedDoc);
 
     // register the request UX observer
-    makeObserver("identity-request", function (aSubject, aTopic, aData) {
+    makeObserver("identity-request", function(aSubject, aTopic, aData) {
       // do the select identity
       // we expect this to succeed right away because of test_identity
       // so we don't mock network requests or otherwise

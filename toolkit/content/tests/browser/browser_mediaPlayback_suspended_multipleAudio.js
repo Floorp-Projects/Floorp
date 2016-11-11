@@ -60,12 +60,12 @@ function check_autoplay_audio_pause_state(expectedPauseState) {
       ok(true, "Audio is resumed correctly.");
     }
   } else if (expectedPauseState) {
-    autoPlay.onpause = function () {
+    autoPlay.onpause = function() {
       autoPlay.onpause = null;
       ok(true, "Audio is paused correctly, checking from onpause.");
     }
   } else {
-    autoPlay.onplay = function () {
+    autoPlay.onplay = function() {
       autoPlay.onplay = null;
       ok(true, "Audio is resumed correctly, checking from onplay.");
     }
@@ -80,7 +80,7 @@ function play_nonautoplay_audio_should_be_paused() {
 
   nonAutoPlay.play();
   return new Promise(resolve => {
-    nonAutoPlay.onpause = function () {
+    nonAutoPlay.onpause = function() {
       nonAutoPlay.onpause = null;
       is(nonAutoPlay.ended, false, "Audio can't be playback.");
       resolve();
@@ -118,7 +118,7 @@ function play_nonautoplay_audio_should_play_until_ended() {
 
   nonAutoPlay.play();
   return new Promise(resolve => {
-    nonAutoPlay.onended = function () {
+    nonAutoPlay.onended = function() {
       nonAutoPlay.onended = null;
       ok(true, "Audio can be playback until ended.");
       resolve();

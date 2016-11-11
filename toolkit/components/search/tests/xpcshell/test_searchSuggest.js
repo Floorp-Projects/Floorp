@@ -559,11 +559,11 @@ function updateSearchHistory(operation, value) {
                        value: value,
                      },
                      {
-                       handleError: function (error) {
+                       handleError: function(error) {
                          do_throw("Error occurred updating form history: " + error);
                          deferred.reject(error);
                        },
-                       handleCompletion: function (reason) {
+                       handleCompletion: function(reason) {
                          if (!reason)
                            deferred.resolve();
                        }

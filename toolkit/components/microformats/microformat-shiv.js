@@ -9,7 +9,7 @@
 
 var Microformats; // jshint ignore:line
 
-(function (root, factory) {
+(function(root, factory) {
     if (typeof define === 'function' && define.amd) {
         define([], factory);
     } else if (typeof exports === 'object') {
@@ -17,7 +17,7 @@ var Microformats; // jshint ignore:line
     } else {
         root.Microformats = factory();
   }
-}(this, function () {
+}(this, function() {
 
     var modules = {};
 
@@ -29,7 +29,7 @@ var Microformats; // jshint ignore:line
      * constructor
      *
      */
-    modules.Parser = function () {
+    modules.Parser = function() {
         this.rootPrefix = 'h-';
         this.propertyPrefixes = ['p-', 'dt-', 'u-', 'e-'];
         this.excludeTags = ['br', 'hr'];
@@ -275,7 +275,7 @@ var Microformats; // jshint ignore:line
          * @param  {Int} recursive
          * @return {Object}
          */
-        getParentTreeWalk: function (node, options, recursive) {
+        getParentTreeWalk: function(node, options, recursive) {
             options = (options) ? options : {};
 
             // recursive calls
@@ -2367,7 +2367,7 @@ var Microformats; // jshint ignore:line
          */
         sortObjects: function(property, reverse) {
             reverse = (reverse) ? -1 : 1;
-            return function (a, b) {
+            return function(a, b) {
                 a = a[property];
                 b = b[property];
                 if (a < b) {
@@ -2395,7 +2395,7 @@ var Microformats; // jshint ignore:line
          *
          * @return {Object || undefined}
          */
-        getDOMParser: function () {
+        getDOMParser: function() {
             if (typeof DOMParser === "undefined") {
                 try {
                     return Components.classes["@mozilla.org/xmlextras/domparser;1"]
@@ -2883,7 +2883,7 @@ var Microformats; // jshint ignore:line
          *   @param  {DOM Node} node
          *   @return {Int}
          */
-        getChildIndex: function (node) {
+        getChildIndex: function(node) {
             var parent = node.parentNode,
                 i = -1,
                 child;
@@ -2902,7 +2902,7 @@ var Microformats; // jshint ignore:line
          *   @param  {DOM Node} node
          *   @return {Array}
          */
-        getNodePath: function  (node) {
+        getNodePath: function(node) {
             var parent = node.parentNode,
                 path = [],
                 index = this.getChildIndex(node);
@@ -2923,7 +2923,7 @@ var Microformats; // jshint ignore:line
          *   @param  {Array} path
          *   @return {DOM Node}
          */
-        getNodeByPath: function (document, path) {
+        getNodeByPath: function(document, path) {
             var node = document.documentElement,
                 i = 0,
                 index;
@@ -3042,7 +3042,7 @@ var Microformats; // jshint ignore:line
      * @param  {String} format
      * @return {String}
      */
-    modules.ISODate = function ( dateString, format ) {
+    modules.ISODate = function( dateString, format ) {
         this.clear();
 
         this.format = (format) ? format : 'auto'; // auto or W3C or RFC3339 or HTML5
@@ -3670,7 +3670,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} format ( Modules.ISODate profile format )
          * @return {Object} Modules.ISODate
          */
-        concatFragments: function (arr, format) {
+        concatFragments: function(arr, format) {
             var out = new modules.ISODate(),
                 i = 0,
                 value = '';
@@ -3721,7 +3721,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {Array} Modules.ISODate
          */
-        splitTimeAndZone: function ( text ) {
+        splitTimeAndZone: function( text ) {
            var out = [text],
                chars = ['-', '+', 'z', 'Z'],
                i = chars.length;

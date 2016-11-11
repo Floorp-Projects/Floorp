@@ -105,7 +105,7 @@ function selectionScrollCheck()
     }
   }
 
-  SimpleTest.executeSoon(function () {
+  SimpleTest.executeSoon(function() {
     disableNonTestMouseEvents(true);
     synthesizeMouse(element, 2, 2, { type: "mousedown" }, otherWindow);
     synthesizeMouse(element, 100, otherWindow.innerHeight + 20, { type: "mousemove" }, otherWindow);

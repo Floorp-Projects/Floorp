@@ -38,7 +38,7 @@ const SearchAutocompleteProviderInternal = {
    **/
   defaultMatch: null,
 
-  initialize: function () {
+  initialize: function() {
     return new Promise((resolve, reject) => {
       Services.search.init(status => {
         if (!Components.isSuccessCode(status)) {
@@ -62,7 +62,7 @@ const SearchAutocompleteProviderInternal = {
 
   initialized: false,
 
-  observe: function (subject, topic, data) {
+  observe: function(subject, topic, data) {
     switch (data) {
       case "engine-added":
       case "engine-changed":
@@ -72,7 +72,7 @@ const SearchAutocompleteProviderInternal = {
     }
   },
 
-  _refresh: function () {
+  _refresh: function() {
     this.priorityMatches = [];
     this.aliasMatches = [];
     this.defaultMatch = null;
@@ -91,7 +91,7 @@ const SearchAutocompleteProviderInternal = {
     Services.search.getVisibleEngines().forEach(e => this._addEngine(e));
   },
 
-  _addEngine: function (engine) {
+  _addEngine: function(engine) {
     if (engine.alias) {
       this.aliasMatches.push({
         alias: engine.alias,
@@ -192,7 +192,7 @@ this.PlacesSearchAutocompleteProvider = Object.freeze({
    * rejected when initialization finished.  The same promise is returned if
    * this function is called multiple times.
    */
-  ensureInitialized: function () {
+  ensureInitialized: function() {
     if (!gInitializationPromise) {
       gInitializationPromise = SearchAutocompleteProviderInternal.initialize();
     }
@@ -273,7 +273,7 @@ this.PlacesSearchAutocompleteProvider = Object.freeze({
    * @note This API function needs to be synchronous because it is called inside
    *       a row processing callback of Sqlite.jsm, in UnifiedComplete.js.
    */
-  parseSubmissionURL: function (url) {
+  parseSubmissionURL: function(url) {
     if (!SearchAutocompleteProviderInternal.initialized) {
       throw new Error("The component has not been initialized.");
     }

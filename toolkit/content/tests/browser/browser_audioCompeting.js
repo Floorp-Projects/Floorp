@@ -14,7 +14,7 @@ function* wait_for_tab_playing_event(tab, expectPlaying) {
   }
 }
 
-function play_audio_from_invisible_tab () {
+function play_audio_from_invisible_tab() {
   return new Promise(resolve => {
     var autoPlay = content.document.getElementById('autoplay');
     if (!autoPlay) {
@@ -31,7 +31,7 @@ function play_audio_from_invisible_tab () {
   });
 }
 
-function audio_should_keep_playing_even_go_to_background () {
+function audio_should_keep_playing_even_go_to_background() {
   var autoPlay = content.document.getElementById('autoplay');
   if (!autoPlay) {
     ok(false, "Can't get the audio element!");
@@ -40,7 +40,7 @@ function audio_should_keep_playing_even_go_to_background () {
   is(autoPlay.paused, false, "Audio in tab 2 is still playing in the background.");
 }
 
-function play_non_autoplay_audio () {
+function play_non_autoplay_audio() {
   return new Promise(resolve => {
     var autoPlay = content.document.getElementById('autoplay');
     var nonAutoPlay = content.document.getElementById('nonautoplay');
@@ -69,7 +69,7 @@ add_task(function* setup_test_preference() {
   });
 });
 
-add_task(function* cross_tabs_audio_competing () {
+add_task(function* cross_tabs_audio_competing() {
   info("- open tab 1 in foreground -");
   let tab1 = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                          "about:blank");
@@ -98,7 +98,7 @@ add_task(function* cross_tabs_audio_competing () {
   yield BrowserTestUtils.removeTab(tab3);
 });
 
-add_task(function* within_one_tab_audio_competing () {
+add_task(function* within_one_tab_audio_competing() {
   info("- open tab and play audio1 -");
   let tab = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");

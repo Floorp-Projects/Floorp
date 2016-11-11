@@ -68,7 +68,7 @@ add_task(function* init() {
   Services.telemetry.canRecordExtended = true;
   AddonWatcher.init();
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     AddonWatcher.paused = true;
     Services.telemetry.canRecordExtended = oldCanRecord;
   });

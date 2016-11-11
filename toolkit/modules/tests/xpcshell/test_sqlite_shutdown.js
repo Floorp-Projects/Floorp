@@ -49,7 +49,7 @@ function sleep(ms) {
                 .createInstance(Ci.nsITimer);
 
   timer.initWithCallback({
-    notify: function () {
+    notify: function() {
       deferred.resolve();
     },
   }, ms, timer.TYPE_ONE_SHOT);

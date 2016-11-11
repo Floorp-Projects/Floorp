@@ -11,7 +11,7 @@ var expectedData;
 var TestObserver = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
-  observe : function (subject, topic, data) {
+  observe : function(subject, topic, data) {
     do_check_eq(topic, "satchel-storage-changed");
     do_check_eq(data, expectedNotification);
 
@@ -60,7 +60,7 @@ testnum = 1;
 testdesc = "Initial connection to storage module"
 
 yield updateEntry("remove", null, null, next_test);
-yield countEntries(null, null, function (num) { do_check_false(num, "Checking initial DB is empty"); next_test(); });
+yield countEntries(null, null, function(num) { do_check_false(num, "Checking initial DB is empty"); next_test(); });
 
 // Add the observer
 var os = Cc["@mozilla.org/observer-service;1"].
@@ -77,7 +77,7 @@ expectedData = entry1;
 yield updateEntry("add", entry1[0], entry1[1], next_test);
 do_check_eq(expectedNotification, null); // check that observer got a notification
 
-yield countEntries(entry1[0], entry1[1], function (num) { do_check_true(num > 0); next_test(); });
+yield countEntries(entry1[0], entry1[1], function(num) { do_check_true(num > 0); next_test(); });
 
 /* ========== 3 ========== */
 testnum++;
@@ -87,7 +87,7 @@ expectedNotification = "formhistory-update";
 expectedData = entry1;
 // will update previous entry
 yield updateEntry("update", entry1[0], entry1[1], next_test);
-yield countEntries(entry1[0], entry1[1], function (num) { do_check_true(num > 0); next_test(); });
+yield countEntries(entry1[0], entry1[1], function(num) { do_check_true(num > 0); next_test(); });
 
 do_check_eq(expectedNotification, null);
 
@@ -141,7 +141,7 @@ expectedData = [10, 99999999999];
 
 yield FormHistory.update({ op: "remove", firstUsedStart: expectedData[0], firstUsedEnd: expectedData[1] },
                          { handleCompletion: function(reason) { if (!reason) next_test() },
-                           handleErrors: function (error) {
+                           handleErrors: function(error) {
                              do_throw("Error occurred updating form history: " + error);
                            }
                          });

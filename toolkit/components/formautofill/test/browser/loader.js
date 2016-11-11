@@ -28,7 +28,7 @@ var Assert = {
 
 // Define task registration functions, see description in "loader_common.js".
 var add_task_in_parent_process = add_task;
-var add_task_in_child_process = function () {};
+var add_task_in_child_process = function() {};
 var add_task_in_both_processes = add_task;
 
 Services.scriptloader.loadSubScript(getRootDirectory(gTestPath) +

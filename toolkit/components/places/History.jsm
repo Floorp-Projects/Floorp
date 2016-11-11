@@ -130,7 +130,7 @@ this.History = Object.freeze({
    *      If `guidOrURI` does not have the expected type or if it is a string
    *      that may be parsed neither as a valid URL nor as a valid GUID.
    */
-  fetch: function (guidOrURI) {
+  fetch: function(guidOrURI) {
     throw new Error("Method not implemented");
   },
 
@@ -175,7 +175,7 @@ this.History = Object.freeze({
    * @throws (Error)
    *      If an element of `visits` has an invalid `transition`.
    */
-  insert: function (pageInfo) {
+  insert: function(pageInfo) {
     if (typeof pageInfo != "object" || !pageInfo) {
       throw new TypeError("pageInfo must be an object");
     }
@@ -231,7 +231,7 @@ this.History = Object.freeze({
    * @throws (Error)
    *      If an element of `visits` has an invalid `transition`.
    */
-  insertMany: function (pageInfos, onResult, onError) {
+  insertMany: function(pageInfos, onResult, onError) {
     let infos = [];
 
     if (!Array.isArray(pageInfos)) {
@@ -281,7 +281,7 @@ this.History = Object.freeze({
    *       is neither a valid GUID nor a valid URI or if `pages`
    *       is an empty array.
    */
-  remove: function (pages, onResult = null) {
+  remove: function(pages, onResult = null) {
     // Normalize and type-check arguments
     if (Array.isArray(pages)) {
       if (pages.length == 0) {

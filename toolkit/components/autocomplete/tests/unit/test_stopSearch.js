@@ -35,8 +35,8 @@ AutoCompleteInput.prototype = {
   getSearchAt: function(aIndex) { return this.searches[aIndex]; },
   onSearchBegin: function() {},
   onSearchComplete: function() {},
-  onTextReverted: function () {},
-  onTextEntered: function () {},
+  onTextReverted: function() {},
+  onTextEntered: function() {},
   popup: {
     selectBy: function() {},
     invalidate: function() {},

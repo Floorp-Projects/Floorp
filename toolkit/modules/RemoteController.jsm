@@ -73,7 +73,7 @@ RemoteController.prototype = {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  onEvent: function () {},
+  onEvent: function() {},
 
   // This is intended to be called from the remote-browser binding to update
   // the enabled and disabled commands.

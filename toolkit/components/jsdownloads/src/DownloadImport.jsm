@@ -51,7 +51,7 @@ const DOWNLOAD_QUEUED = 5;
  *                imported download will be added.
  * @param aPath   The path to the database file.
  */
-this.DownloadImport = function (aList, aPath)
+this.DownloadImport = function(aList, aPath)
 {
   this.list = aList;
   this.path = aPath;
@@ -68,7 +68,7 @@ this.DownloadImport.prototype = {
    *           from the previous database has been read and added to
    *           the DownloadList)
    */
-  import: function () {
+  import: function() {
     return Task.spawn(function* task_DI_import() {
       let connection = yield Sqlite.openConnection({ path: this.path });
 

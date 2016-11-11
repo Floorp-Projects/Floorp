@@ -104,7 +104,7 @@ this.LightweightThemeManager = {
   // will always show up at the top of the list.
   _builtInThemes: new Map(),
 
-  get usedThemes () {
+  get usedThemes() {
     let themes = [];
     try {
       themes = JSON.parse(_prefs.getComplexValue("usedThemes",
@@ -115,7 +115,7 @@ this.LightweightThemeManager = {
     return themes;
   },
 
-  get currentTheme () {
+  get currentTheme() {
     let selectedThemeID = null;
     try {
       selectedThemeID = _prefs.getCharPref("selectedThemeID");
@@ -128,7 +128,7 @@ this.LightweightThemeManager = {
     return data;
   },
 
-  get currentThemeForDisplay () {
+  get currentThemeForDisplay() {
     var data = this.currentTheme;
 
     if (data && PERSIST_ENABLED) {
@@ -144,7 +144,7 @@ this.LightweightThemeManager = {
     return data;
   },
 
-  set currentTheme (aData) {
+  set currentTheme(aData) {
     return _setCurrentTheme(aData, false);
   },
 
@@ -828,7 +828,7 @@ function _prefObserver(aSubject, aTopic, aData) {
 
 function _persistImages(aData, aCallback) {
   function onSuccess(key) {
-    return function () {
+    return function() {
       let current = LightweightThemeManager.currentTheme;
       if (current && current.id == aData.id) {
         _prefs.setBoolPref("persisted." + key, true);

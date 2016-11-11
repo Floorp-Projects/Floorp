@@ -176,7 +176,7 @@ module.exports = {
     "space-before-blocks": "error",
 
     // Never use spaces before function parentheses
-    // "space-before-function-paren": ["error", { "anonymous": "always", "named": "never" }],
+    "space-before-function-paren": ["error", "never"],
 
     // No space padding in parentheses
     // "space-in-parens": ["error", "never"],

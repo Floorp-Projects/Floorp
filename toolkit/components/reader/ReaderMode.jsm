@@ -67,7 +67,7 @@ this.ReaderMode = {
     return this.isOnLowMemoryPlatform = memory.isLowMemoryPlatform();
   },
 
-  _getStateForParseOnLoad: function () {
+  _getStateForParseOnLoad: function() {
     let isEnabled = Services.prefs.getBoolPref("reader.parse-on-load.enabled");
     let isForceEnabled = Services.prefs.getBoolPref("reader.parse-on-load.force-enabled");
     // For low-memory devices, don't allow reader mode since it takes up a lot of memory.
@@ -233,7 +233,7 @@ this.ReaderMode = {
     return yield this._readerParse(uri, doc);
   }),
 
-  _downloadDocument: function (url) {
+  _downloadDocument: function(url) {
     let histogram = Services.telemetry.getHistogramById("READER_MODE_DOWNLOAD_RESULT");
     return new Promise((resolve, reject) => {
       let xhr = new XMLHttpRequest();
@@ -382,7 +382,7 @@ this.ReaderMode = {
     "youtube.com",
   ],
 
-  _shouldCheckUri: function (uri, isBaseUri = false) {
+  _shouldCheckUri: function(uri, isBaseUri = false) {
     if (!(uri.schemeIs("http") || uri.schemeIs("https"))) {
       this.log("Not parsing URI scheme: " + uri.scheme);
       return false;
@@ -485,7 +485,7 @@ this.ReaderMode = {
    * @param url The article URL. This should have referrers removed.
    * @return The file path to the cached article.
    */
-  _toHashedPath: function (url) {
+  _toHashedPath: function(url) {
     let value = this._unicodeConverter.convertToByteArray(url);
     this._cryptoHash.init(this._cryptoHash.MD5);
     this._cryptoHash.update(value, value.length);
@@ -502,7 +502,7 @@ this.ReaderMode = {
    * @resolves When the cache directory exists.
    * @rejects OS.File.Error
    */
-  _ensureCacheDir: function () {
+  _ensureCacheDir: function() {
     let dir = OS.Path.join(OS.Constants.Path.profileDir, "readercache");
     return OS.File.exists(dir).then(exists => {
       if (!exists) {

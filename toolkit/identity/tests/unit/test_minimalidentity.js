@@ -37,7 +37,7 @@ function test_watch() {
   do_test_pending();
 
   let mockedDoc = mock_doc(null, TEST_URL);
-  makeObserver("identity-controller-watch", function (aSubject, aTopic, aData) {
+  makeObserver("identity-controller-watch", function(aSubject, aTopic, aData) {
     do_check_eq(aSubject.wrappedJSObject.id, mockedDoc.id);
     do_check_eq(aSubject.wrappedJSObject.origin, TEST_URL);
     do_test_finished();
@@ -54,7 +54,7 @@ function test_request() {
   do_test_pending();
 
   let mockedDoc = mock_doc(null, TEST_URL);
-  makeObserver("identity-controller-request", function (aSubject, aTopic, aData) {
+  makeObserver("identity-controller-request", function(aSubject, aTopic, aData) {
     do_check_eq(aSubject.wrappedJSObject.id, mockedDoc.id);
     do_check_eq(aSubject.wrappedJSObject.origin, TEST_URL);
     do_test_finished();
@@ -72,7 +72,7 @@ function test_request_forceAuthentication() {
   do_test_pending();
 
   let mockedDoc = mock_doc(null, TEST_URL);
-  makeObserver("identity-controller-request", function (aSubject, aTopic, aData) {
+  makeObserver("identity-controller-request", function(aSubject, aTopic, aData) {
     do_check_eq(aSubject.wrappedJSObject.id, mockedDoc.id);
     do_check_eq(aSubject.wrappedJSObject.origin, TEST_URL);
     do_check_eq(aSubject.wrappedJSObject.forceAuthentication, true);
@@ -91,7 +91,7 @@ function test_request_forceIssuer() {
   do_test_pending();
 
   let mockedDoc = mock_doc(null, TEST_URL);
-  makeObserver("identity-controller-request", function (aSubject, aTopic, aData) {
+  makeObserver("identity-controller-request", function(aSubject, aTopic, aData) {
     do_check_eq(aSubject.wrappedJSObject.id, mockedDoc.id);
     do_check_eq(aSubject.wrappedJSObject.origin, TEST_URL);
     do_check_eq(aSubject.wrappedJSObject.issuer, "https://jed.gov");
@@ -110,7 +110,7 @@ function test_logout() {
   do_test_pending();
 
   let mockedDoc = mock_doc(null, TEST_URL);
-  makeObserver("identity-controller-logout", function (aSubject, aTopic, aData) {
+  makeObserver("identity-controller-logout", function(aSubject, aTopic, aData) {
     do_check_eq(aSubject.wrappedJSObject.id, mockedDoc.id);
     do_test_finished();
     run_next_test();
@@ -186,7 +186,7 @@ function test_childProcessShutdown() {
   });
   mockedDoc._mm = UNIQUE_MESSAGE_MANAGER;
 
-  makeObserver("identity-controller-watch", function (aSubject, aTopic, aData) {
+  makeObserver("identity-controller-watch", function(aSubject, aTopic, aData) {
     DOMIdentity._childProcessShutdown(UNIQUE_MESSAGE_MANAGER);
   });
 

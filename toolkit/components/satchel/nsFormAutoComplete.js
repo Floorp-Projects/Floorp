@@ -210,7 +210,7 @@ FormAutoComplete.prototype = {
         QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
                                                 Ci.nsISupportsWeakReference]),
 
-        observe : function (subject, topic, data) {
+        observe : function(subject, topic, data) {
             let self = this._self;
             if (topic == "nsPref:changed") {
                 let prefName = data;
@@ -260,7 +260,7 @@ FormAutoComplete.prototype = {
      * Internal function for logging debug messages to the Error Console
      * window
      */
-    log : function (message) {
+    log : function(message) {
         if (!this._debug)
             return;
         dump("FormAutoComplete: " + message + "\n");
@@ -278,13 +278,13 @@ FormAutoComplete.prototype = {
      * aListener -- nsIFormAutoCompleteObserver that listens for the nsIAutoCompleteResult
      *              that may be returned asynchronously.
      */
-    autoCompleteSearchAsync : function (aInputName,
+    autoCompleteSearchAsync : function(aInputName,
                                         aUntrimmedSearchString,
                                         aField,
                                         aPreviousResult,
                                         aDatalistResult,
                                         aListener) {
-        function sortBytotalScore (a, b) {
+        function sortBytotalScore(a, b) {
             return b.totalScore - a.totalScore;
         }
 
@@ -421,7 +421,7 @@ FormAutoComplete.prototype = {
             let processEntry = (aEntries) => {
                 if (aField && aField.maxLength > -1) {
                     result.entries =
-                        aEntries.filter(function (el) { return el.text.length <= aField.maxLength; });
+                        aEntries.filter(function(el) { return el.text.length <= aField.maxLength; });
                 } else {
                     result.entries = aEntries;
                 }
@@ -468,7 +468,7 @@ FormAutoComplete.prototype = {
                                           finalComments, historyResult);
     },
 
-    stopAutoCompleteSearch : function () {
+    stopAutoCompleteSearch : function() {
         if (this._pendingClient) {
             this._pendingClient.cancel();
             this._pendingClient = null;
@@ -485,7 +485,7 @@ FormAutoComplete.prototype = {
      *             containing properties for each result. The callback is only called
      *             when successful.
      */
-    getAutoCompleteValues : function (client, fieldName, searchString, callback) {
+    getAutoCompleteValues : function(client, fieldName, searchString, callback) {
         let params = {
             agedWeight:         this._agedWeight,
             bucketSize:         this._bucketSize,
@@ -514,7 +514,7 @@ FormAutoComplete.prototype = {
      *
      * Returns: an int
      */
-    _calculateScore : function (entry, aSearchString, searchTokens) {
+    _calculateScore : function(entry, aSearchString, searchTokens) {
         let boundaryCalc = 0;
         // for each word, calculate word boundary weights
         for (let token of searchTokens) {
@@ -554,7 +554,7 @@ FormAutoCompleteResult.prototype = {
     entries : null,
     fieldName : null,
 
-    _checkIndexBounds : function (index) {
+    _checkIndexBounds : function(index) {
         if (index < 0 || index >= this.entries.length)
             throw Components.Exception("Index out of range.", Cr.NS_ERROR_ILLEGAL_VALUE);
     },
@@ -582,7 +582,7 @@ FormAutoCompleteResult.prototype = {
         return this.entries.length;
     },
 
-    getValueAt : function (index) {
+    getValueAt : function(index) {
         this._checkIndexBounds(index);
         return this.entries[index].text;
     },
@@ -591,26 +591,26 @@ FormAutoCompleteResult.prototype = {
         return this.getValueAt(index);
     },
 
-    getCommentAt : function (index) {
+    getCommentAt : function(index) {
         this._checkIndexBounds(index);
         return "";
     },
 
-    getStyleAt : function (index) {
+    getStyleAt : function(index) {
         this._checkIndexBounds(index);
         return "";
     },
 
-    getImageAt : function (index) {
+    getImageAt : function(index) {
         this._checkIndexBounds(index);
         return "";
     },
 
-    getFinalCompleteValueAt : function (index) {
+    getFinalCompleteValueAt : function(index) {
         return this.getValueAt(index);
     },
 
-    removeValueAt : function (index, removeFromDB) {
+    removeValueAt : function(index, removeFromDB) {
         this._checkIndexBounds(index);
 
         let [removedEntry] = this.entries.splice(index, 1);

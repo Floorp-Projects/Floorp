@@ -157,7 +157,7 @@ function getLastCommitDate( repo, callback ) {
 	  }
 	};
 
-	request(options, function (error, response, body) {
+	request(options, function(error, response, body) {
 	  if (!error && response.statusCode == 200) {
 		var date = null,
 			json = JSON.parse(body);
@@ -189,7 +189,7 @@ function getLastBuildState( repo, callback ) {
 	  }
 	};
 
-	request(options, function (error, response, body) {
+	request(options, function(error, response, body) {
 	  if (!error && response.statusCode == 200) {
 		var buildState = null,
 			json = JSON.parse(body);

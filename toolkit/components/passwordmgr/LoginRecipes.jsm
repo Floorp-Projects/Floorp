@@ -97,7 +97,7 @@ LoginRecipesParent.prototype = {
 
       try {
         this.initializationPromise = new Promise(function(resolve) {
-          NetUtil.asyncFetch(channel, function (stream, result) {
+          NetUtil.asyncFetch(channel, function(stream, result) {
             if (!Components.isSuccessCode(result)) {
               throw new Error("Error fetching recipe file:" + result);
             }
