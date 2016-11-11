@@ -314,7 +314,12 @@ private:
     {
         MOZ_ASSERT(NS_IsMainThread());
         MOZ_ASSERT(mTabChild);
-        mTabChild->SendDeleteIfOpen();
+
+        // Check in case ActorDestroy was called after RecvDestroy message.
+        if (mTabChild->IPCOpen()) {
+            Unused << PBrowserChild::Send__delete__(mTabChild);
+        }
+
         mTabChild = nullptr;
         return NS_OK;
     }
@@ -1170,20 +1175,6 @@ TabChild::DestroyWindow()
       }
       mLayersId = 0;
     }
-}
-
-void
-TabChild::SendDeleteIfOpen()
-{
-  // Check in case ActorDestroy was called after RecvDestroy message.
-  if (mIPCOpen) {
-
-    // We must consider the IPC actor already dismissed in order to return the
-    // corrent value in IPCOpen().
-    mIPCOpen = false;
-
-    Unused << PBrowserChild::Send__delete__(this);
-  }
 }
 
 void
