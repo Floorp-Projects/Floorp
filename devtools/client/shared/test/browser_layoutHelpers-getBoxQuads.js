@@ -6,7 +6,7 @@
 
 "use strict";
 
-var {getAdjustedQuads} = require("devtools/shared/layout/utils");
+const {getAdjustedQuads} = require("devtools/shared/layout/utils");
 
 const TEST_URI = TEST_URI_ROOT + "browser_layoutHelpers-getBoxQuads.html";
 
@@ -59,8 +59,8 @@ function isEmptyForMissingNode(doc) {
   info("Checks that null is returned for invalid nodes");
 
   for (let input of [null, undefined, "", 0]) {
-    is(getAdjustedQuads(doc.defaultView, input).length, 0, "A 0-length array is returned" +
-      "for input " + input);
+    is(getAdjustedQuads(doc.defaultView, input).length, 0,
+      "A 0-length array is returned for input " + input);
   }
 }
 
@@ -206,7 +206,8 @@ function* takesZoomIntoAccount(doc) {
 }
 
 function returnsMultipleItemsForWrappingInlineElements(doc) {
-  info("Checks that several quads are returned for inline elements that span line-breaks");
+  info("Checks that several quads are returned " +
+       "for inline elements that span line-breaks");
 
   let node = doc.querySelector("#inline");
   let quads = getAdjustedQuads(doc.defaultView, node, "content");

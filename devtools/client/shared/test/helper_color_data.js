@@ -1,3 +1,6 @@
+"use strict";
+
+/* eslint-disable max-len */
 function getFixtureColorData() {
   return [
     {authored: "aliceblue", name: "aliceblue", hex: "#f0f8ff", hsl: "hsl(208, 100%, 97.1%)", rgb: "rgb(240, 248, 255)", cycle: 4},
@@ -164,6 +167,7 @@ function getFixtureColorData() {
     {authored: "unset", name: "unset", hex: "unset", hsl: "unset", rgb: "unset", cycle: false},
   ];
 }
+/* eslint-enable max-len */
 
 // Allow this function to be shared on mochitests and xpcshell tests.
 if (typeof module === "object") {

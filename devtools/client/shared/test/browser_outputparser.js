@@ -106,7 +106,9 @@ function testParseCssProperty(doc, parser) {
 
     // Test a very long property.
     makeColorTest("background-image",
+                  /* eslint-disable max-len */
                   "linear-gradient(to left, transparent 0, transparent 5%,#F00 0, #F00 10%,#FF0 0, #FF0 15%,#0F0 0, #0F0 20%,#0FF 0, #0FF 25%,#00F 0, #00F 30%,#800 0, #800 35%,#880 0, #880 40%,#080 0, #080 45%,#088 0, #088 50%,#008 0, #008 55%,#FFF 0, #FFF 60%,#EEE 0, #EEE 65%,#CCC 0, #CCC 70%,#999 0, #999 75%,#666 0, #666 80%,#333 0, #333 85%,#111 0, #111 90%,#000 0, #000 95%,transparent 0, transparent 100%)",
+                  /* eslint-enable max-len */
                   ["linear-gradient(to left, ", {name: "transparent"},
                    " 0, ", {name: "transparent"},
                    " 5%,", {name: "#F00"},

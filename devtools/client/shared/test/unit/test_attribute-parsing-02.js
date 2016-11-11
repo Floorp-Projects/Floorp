@@ -1,10 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test parseAttribute from node-attribute-parser.js
 
-var Cu = Components.utils;
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 const {parseAttribute} = require("devtools/client/shared/node-attribute-parser");
 
 const TEST_DATA = [{
@@ -111,7 +112,10 @@ function run_test() {
             otherAttributes, attributeValue, expected} of TEST_DATA) {
     do_print("Testing <" + tagName + " " + attributeName + "='" + attributeValue + "'>");
 
-    let attributes = [...otherAttributes || [], {name: attributeName, value: attributeValue}];
+    let attributes = [
+      ...otherAttributes || [],
+      { name: attributeName, value: attributeValue }
+    ];
     let tokens = parseAttribute(namespaceURI, tagName, attributes, attributeName);
     if (!expected) {
       do_check_true(!tokens);

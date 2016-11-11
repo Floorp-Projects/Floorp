@@ -513,9 +513,7 @@ function rewriteDeclarations(inputString, instruction, defaultIndentation) {
 }
 
 function run_test() {
-  let i = 0;
   for (let test of TEST_DATA) {
-    ++i;
     let {changed, text} = rewriteDeclarations(test.input, test.instruction,
                                               "\t");
     equal(text, test.expected, "output for " + test.desc);

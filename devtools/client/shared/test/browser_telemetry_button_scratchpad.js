@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf-8," +
   "<p>browser_telemetry_button_scratchpad.js</p>";
 
@@ -48,7 +50,8 @@ function trackScratchpadWindows() {
                 numScratchpads++;
                 win.close();
 
-                info("another scratchpad was opened and closed, count is now " + numScratchpads);
+                info("another scratchpad was opened and closed, " +
+                     `count is now ${numScratchpads}`);
 
                 if (numScratchpads === 4) {
                   Services.ww.unregisterNotification(observer);
