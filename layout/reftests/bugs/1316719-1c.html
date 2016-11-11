@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>mask-image with scale transform</title>
+<style>
+
+body {
+  margin: 0;
+}
+
+#transform {
+  width: 10px;
+  height: 10px;
+  transform: scale(20);
+  transform-origin: top left;
+  padding: 5px 10px;
+}
+
+#mask {
+  width: 10px;
+  height: 10px;
+  background: green;
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="black" fill-opacity="0.8"/></svg>');
+}
+
+</style>
+
+<div id="transform">
+  <div id="mask"></div>
+</div>
