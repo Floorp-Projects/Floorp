@@ -10,7 +10,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestDVCertificate(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestDVCertificate, self).setUp()
 
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.browser.navbar.locationbar.identity_popup
@@ -23,7 +23,7 @@ class TestDVCertificate(FirefoxTestCase):
             self.identity_popup.close(force=True)
             self.puppeteer.windows.close_all([self.browser])
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestDVCertificate, self).tearDown()
 
     def test_dv_cert(self):
         with self.marionette.using_context('content'):

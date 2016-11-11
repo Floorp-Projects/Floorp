@@ -12,7 +12,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestSafeBrowsingNotificationBar(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestSafeBrowsingNotificationBar, self).setUp()
 
         self.test_data = [
             # Unwanted software URL
@@ -56,7 +56,7 @@ class TestSafeBrowsingNotificationBar(FirefoxTestCase):
             self.marionette.clear_pref('browser.safebrowsing.phishing.enabled')
             self.marionette.clear_pref('browser.safebrowsing.malware.enabled')
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestSafeBrowsingNotificationBar, self).tearDown()
 
     def test_notification_bar(self):
         with self.marionette.using_context('content'):

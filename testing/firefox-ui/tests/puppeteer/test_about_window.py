@@ -8,7 +8,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestAboutWindow(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestAboutWindow, self).setUp()
 
         self.about_window = self.browser.open_about_window()
         self.deck = self.about_window.deck
@@ -17,7 +17,7 @@ class TestAboutWindow(FirefoxTestCase):
         try:
             self.puppeteer.windows.close_all([self.browser])
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestAboutWindow, self).tearDown()
 
     def test_basic(self):
         self.assertEqual(self.about_window.window_type, 'Browser:About')

@@ -8,7 +8,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestRestoreWindowsAfterRestart(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestRestoreWindowsAfterRestart, self).setUp()
 
         # Each list element represents a window of tabs loaded at
         # some testing URL
@@ -51,7 +51,7 @@ class TestRestoreWindowsAfterRestart(FirefoxTestCase):
             # Create a fresh profile for subsequent tests.
             self.restart(clean=True)
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestRestoreWindowsAfterRestart, self).tearDown()
 
     def test_with_variety(self):
         """ Opens a set of windows, both standard and private, with

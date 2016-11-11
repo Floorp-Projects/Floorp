@@ -51,7 +51,7 @@ class TestSafeBrowsingInitialDownload(FirefoxTestCase):
         return set(sorted(files))
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestSafeBrowsingInitialDownload, self).setUp()
 
         # Force the preferences for the new profile
         enforce_prefs = self.prefs_safebrowsing
@@ -67,7 +67,7 @@ class TestSafeBrowsingInitialDownload(FirefoxTestCase):
             # Restart with a fresh profile
             self.restart(clean=True)
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestSafeBrowsingInitialDownload, self).tearDown()
 
     def test_safe_browsing_initial_download(self):
         def check_downloaded(_):

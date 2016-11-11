@@ -10,7 +10,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestEscapeAutocomplete(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestEscapeAutocomplete, self).setUp()
 
         # Clear complete history so there's no interference from previous entries.
         self.puppeteer.places.remove_all_history()
@@ -29,7 +29,8 @@ class TestEscapeAutocomplete(FirefoxTestCase):
 
     def tearDown(self):
         self.autocomplete_results.close(force=True)
-        FirefoxTestCase.tearDown(self)
+
+        super(TestEscapeAutocomplete, self).tearDown()
 
     def test_escape_autocomplete(self):
         # Open some local pages

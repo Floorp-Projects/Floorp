@@ -15,7 +15,7 @@ from firefox_puppeteer.ui.browser.notifications import (
 class TestNotifications(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestNotifications, self).setUp()
 
         self.puppeteer.prefs.set_pref('extensions.install.requireSecureOrigin', False)
 
@@ -32,7 +32,7 @@ class TestNotifications(FirefoxTestCase):
             if self.browser.notification:
                 self.browser.notification.close(force=True)
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestNotifications, self).tearDown()
 
     def test_open_close_notification(self):
         """Trigger and dismiss a notification"""
