@@ -113,7 +113,6 @@ AddonInterpositionService.prototype = {
       return Cu.getCrossProcessWrapperTag(target);
     }
 
-    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     if (target instanceof Ci.nsIDOMXULElement) {
       if (target.localName == "browser" && target.isRemoteBrowser) {
         return "RemoteBrowserElement";

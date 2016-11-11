@@ -19,7 +19,6 @@ add_task(function*() {
 
 var checkViewSource = Task.async(function* (aWindow) {
   is(aWindow.gBrowser.contentDocument.body.textContent, content, "Correct content loaded");
-  let selection = aWindow.gBrowser.contentWindow.getSelection();
   let statusPanel = aWindow.document.getElementById("statusbar-line-col");
   is(statusPanel.getAttribute("label"), "", "Correct status bar text");
 

@@ -237,8 +237,8 @@ var ViewSourceContent = {
 
       let utils = requestor.getInterface(Ci.nsIDOMWindowUtils);
       let doc = contentWindow.document;
-      let forcedCharSet = utils.docCharsetIsForced ? doc.characterSet
-                                                   : null;
+      forcedCharSet = utils.docCharsetIsForced ? doc.characterSet
+                                               : null;
     }
 
     this.loadSource(URL, pageDescriptor, lineNumber, forcedCharSet);
@@ -289,7 +289,6 @@ var ViewSourceContent = {
    */
   loadSource(URL, pageDescriptor, lineNumber, forcedCharSet) {
     const viewSrcURL = "view-source:" + URL;
-    let loadFromURL = false;
 
     if (forcedCharSet) {
       docShell.charset = forcedCharSet;

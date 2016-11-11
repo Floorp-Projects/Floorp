@@ -1200,7 +1200,7 @@ nsPipeInputStream::OnInputReadable(uint32_t aBytesWritten,
 
   if (mCallback && !(mCallbackFlags & WAIT_CLOSURE_ONLY)) {
     aEvents.NotifyInputReady(this, mCallback);
-    mCallback = 0;
+    mCallback = nullptr;
     mCallbackFlags = 0;
   } else if (mBlocked) {
     result = NotifyMonitor;
@@ -1229,7 +1229,7 @@ nsPipeInputStream::OnInputException(nsresult aReason, nsPipeEvents& aEvents,
 
   if (mCallback) {
     aEvents.NotifyInputReady(this, mCallback);
-    mCallback = 0;
+    mCallback = nullptr;
     mCallbackFlags = 0;
   } else if (mBlocked) {
     result = NotifyMonitor;
@@ -1370,7 +1370,7 @@ nsPipeInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
     ReentrantMonitorAutoEnter mon(mPipe->mReentrantMonitor);
 
     // replace a pending callback
-    mCallback = 0;
+    mCallback = nullptr;
     mCallbackFlags = 0;
 
     if (!aCallback) {
@@ -1594,7 +1594,7 @@ nsPipeOutputStream::OnOutputWritable(nsPipeEvents& aEvents)
 
   if (mCallback && !(mCallbackFlags & WAIT_CLOSURE_ONLY)) {
     aEvents.NotifyOutputReady(this, mCallback);
-    mCallback = 0;
+    mCallback = nullptr;
     mCallbackFlags = 0;
   } else if (mBlocked) {
     result = NotifyMonitor;
@@ -1616,7 +1616,7 @@ nsPipeOutputStream::OnOutputException(nsresult aReason, nsPipeEvents& aEvents)
 
   if (mCallback) {
     aEvents.NotifyOutputReady(this, mCallback);
-    mCallback = 0;
+    mCallback = nullptr;
     mCallbackFlags = 0;
   } else if (mBlocked) {
     result = NotifyMonitor;
@@ -1802,7 +1802,7 @@ nsPipeOutputStream::AsyncWait(nsIOutputStreamCallback* aCallback,
     ReentrantMonitorAutoEnter mon(mPipe->mReentrantMonitor);
 
     // replace a pending callback
-    mCallback = 0;
+    mCallback = nullptr;
     mCallbackFlags = 0;
 
     if (!aCallback) {

@@ -889,35 +889,6 @@ AudioManager::GetForceForUse(int32_t aUsage, int32_t* aForce) {
 }
 
 NS_IMETHODIMP
-AudioManager::GetFmRadioAudioEnabled(bool *aFmRadioAudioEnabled)
-{
-  *aFmRadioAudioEnabled = IsFmOutConnected();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AudioManager::SetFmRadioAudioEnabled(bool aFmRadioAudioEnabled)
-{
-  UpdateDeviceConnectionState(aFmRadioAudioEnabled,
-                              AUDIO_DEVICE_OUT_FM,
-                              NS_LITERAL_CSTRING(""));
-  // AUDIO_STREAM_FM is not used on recent gonk.
-  // AUDIO_STREAM_MUSIC is used for FM radio volume control.
-#if ANDROID_VERSION < 19
-  // sync volume with music after powering on fm radio
-  if (aFmRadioAudioEnabled) {
-    uint32_t volIndex = mStreamStates[AUDIO_STREAM_MUSIC]->GetVolumeIndex();
-    nsresult rv = mStreamStates[AUDIO_STREAM_FM]->
-      SetVolumeIndex(volIndex, AUDIO_DEVICE_OUT_FM);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 AudioManager::SetAudioChannelVolume(uint32_t aChannel, uint32_t aIndex)
 {
   if (aChannel >= NUMBER_OF_AUDIO_CHANNELS) {

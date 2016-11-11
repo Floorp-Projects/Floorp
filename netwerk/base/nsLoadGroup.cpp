@@ -123,7 +123,7 @@ nsLoadGroup::~nsLoadGroup()
     DebugOnly<nsresult> rv = Cancel(NS_BINDING_ABORTED);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed");
 
-    mDefaultLoadRequest = 0;
+    mDefaultLoadRequest = nullptr;
 
     if (mRequestContext) {
         nsID rcid;

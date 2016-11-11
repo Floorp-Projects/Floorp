@@ -165,8 +165,8 @@ function run_test_5() {
 
     restartManager();
 
-    AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-      do_check_eq(a1, null);
+    AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1_2) {
+      do_check_eq(a1_2, null);
 
       do_execute_soon(run_test_6);
     });

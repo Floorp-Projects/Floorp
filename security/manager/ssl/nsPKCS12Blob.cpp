@@ -42,7 +42,7 @@ extern LazyLogModule gPIPNSSLog;
 #define PIP_PKCS12_NSS_ERROR           7
 
 // constructor
-nsPKCS12Blob::nsPKCS12Blob():mCertArray(0),
+nsPKCS12Blob::nsPKCS12Blob():mCertArray(nullptr),
                              mTmpFile(nullptr),
                              mTokenSet(false)
 {
@@ -77,7 +77,7 @@ nsPKCS12Blob::SetToken(nsIPK11Token *token)
    PK11SlotInfo *slot;
    rv = GetSlotWithMechanism(CKM_RSA_PKCS, mUIContext, &slot, locker);
    if (NS_FAILED(rv)) {
-      mToken = 0;  
+      mToken = nullptr;
    } else {
      mToken = new nsPK11Token(slot);
      PK11_FreeSlot(slot);

@@ -24,8 +24,10 @@ function* changeText(browser, id, value, events) {
     return { id, eventType };
   }));
   // Change text in the subtree.
-  yield ContentTask.spawn(browser, { id, value }, ({ id, value }) =>
-    content.document.getElementById(id).firstChild.textContent = value);
+  yield ContentTask.spawn(browser, [id, value], ([contentId, contentValue]) => {
+    content.document.getElementById(contentId).firstChild.textContent =
+      contentValue;
+  });
   let resolvedEvents = yield onEvents;
 
   events.forEach(({ isInserted, str, offset }, idx) =>
@@ -36,10 +38,10 @@ function* changeText(browser, id, value, events) {
 function* removeTextFromInput(browser, id, value, start, end) {
   let onTextRemoved = waitForEvent(EVENT_TEXT_REMOVED, id);
   // Select text and delete it.
-  yield ContentTask.spawn(browser, { id, start, end }, ({ id, start, end }) => {
-    let el = content.document.getElementById(id);
+  yield ContentTask.spawn(browser, [id, start, end], ([contentId, contentStart, contentEnd]) => {
+    let el = content.document.getElementById(contentId);
     el.focus();
-    el.setSelectionRange(start, end);
+    el.setSelectionRange(contentStart, contentEnd);
   });
   yield BrowserTestUtils.sendChar('VK_DELETE', browser);
 

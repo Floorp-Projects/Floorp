@@ -9,7 +9,7 @@ const PAGE_URI = NetUtil.newURI("http://example.com/test_query_result");
 
 add_task(function* test_query_result_favicon_changed_on_child() {
   // Bookmark our test page, so it will appear in the query resultset.
-  let testBookmark = yield PlacesUtils.bookmarks.insert({
+  yield PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     title: "test_bookmark",
     url: PAGE_URI

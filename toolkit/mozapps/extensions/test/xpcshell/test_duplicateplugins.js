@@ -176,10 +176,10 @@ function run_test_3() {
     [PLUGINS[0], PLUGINS[1]] = [PLUGINS[1], PLUGINS[0]];
     restartManager();
 
-    AddonManager.getAddonByID(gPluginIDs[0], function(p) {
-      do_check_neq(p, null);
-      do_check_eq(p.name, "Duplicate Plugin 1");
-      do_check_eq(p.description, "A duplicate plugin");
+    AddonManager.getAddonByID(gPluginIDs[0], function(p_2) {
+      do_check_neq(p_2, null);
+      do_check_eq(p_2.name, "Duplicate Plugin 1");
+      do_check_eq(p_2.description, "A duplicate plugin");
 
       do_execute_soon(do_test_finished);
     });

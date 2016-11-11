@@ -1178,7 +1178,7 @@ this.PlacesUtils = {
 
       // Fetch keywords for this href.
       let cache = yield gKeywordsCachePromise;
-      for (let [ keyword, entry ] of cache) {
+      for (let [ , entry ] of cache) {
         // Set the POST data on keywords not having it.
         if (entry.url.href == bm.url.href && !entry.postData) {
           entry.postData = aPostData;

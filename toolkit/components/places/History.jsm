@@ -875,13 +875,10 @@ var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
 
   let onResultData = onResult ? [] : null;
   let pages = [];
-  let hasPagesToKeep = false;
   let hasPagesToRemove = false;
   yield db.execute(query, null, Task.async(function*(row) {
     let hasForeign = row.getResultByName("foreign_count") != 0;
-    if (hasForeign) {
-      hasPagesToKeep = true;
-    } else {
+    if (!hasForeign) {
       hasPagesToRemove = true;
     }
     let id = row.getResultByName("id");

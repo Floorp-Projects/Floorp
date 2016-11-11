@@ -56,7 +56,7 @@ var listener = {
       var bis = Components.classes["@mozilla.org/binaryinputstream;1"]
                           .createInstance(Components.interfaces.nsIBinaryInputStream);
       bis.setInputStream(stream);
-      var array = bis.readByteArray(bis.available());
+      bis.readByteArray(bis.available());
     } catch (ex) {
       do_throw("Error in onDataAvailable: " + ex);
     }
@@ -88,7 +88,6 @@ function runNext() {
 }
 
 function getFileContents(aFile) {
-  const PR_RDONLY = 0x01;
   var fileStream = Cc["@mozilla.org/network/file-input-stream;1"]
                       .createInstance(Ci.nsIFileInputStream);
   fileStream.init(aFile, 1, -1, null);

@@ -569,7 +569,7 @@ var View = {
     }
 
     // Grab everything from the DOM before cleaning up
-    let eltContainer = this._setupStructure(id);
+    this._setupStructure(id);
 
     // An array of `cachedElements` that need to be added
     let toAdd = [];
@@ -649,7 +649,6 @@ var View = {
           cachedElements.eltRoot.setAttribute("impact", Math.round(impact));
         }
 
-        let result = delta.diff.jank.totalCPUTime/delta.diff.deltaT;
         cachedElements.eltCPU.textContent = `CPU usage: ${Math.ceil(delta.diff.jank.totalCPUTime/delta.diff.deltaT/10)}% (total ${delta.diff.jank.totalUserTime}ms).`;
         cachedElements.eltSystem.textContent = `System usage: ${Math.ceil(delta.diff.jank.totalSystemTime/delta.diff.deltaT/10)}% (total ${delta.diff.jank.totalSystemTime}ms).`;
         cachedElements.eltCPOW.textContent = `Blocking process calls: ${Math.ceil(delta.diff.cpow.totalCPOWTime/delta.diff.deltaT/10)}% (total ${delta.diff.cpow.totalCPOWTime}ms).`;

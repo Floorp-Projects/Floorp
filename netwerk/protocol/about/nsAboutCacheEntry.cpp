@@ -386,7 +386,7 @@ nsAboutCacheEntry::Channel::WriteCacheEntryDescription(nsICacheEntry *entry)
         buffer.AppendLiteral("\">");
         buffer.Append(escapedStr);
         buffer.AppendLiteral("</a>");
-        uri = 0;
+        uri = nullptr;
     } else {
         buffer.Append(escapedStr);
     }
