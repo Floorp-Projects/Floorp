@@ -79,6 +79,13 @@
   height: 16px;
 }
 
+#urlbar[actiontype="extension"] > #identity-box > #identity-icon {
+  -moz-image-region: inherit;
+  list-style-image: url(chrome://browser/skin/addons/addon-install-anchor.svg);
+  width: 16px;
+  height: 16px;
+}
+
 /* SHARING ICON */
 
 #sharing-icon {
