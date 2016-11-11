@@ -126,7 +126,6 @@ class MuletReftest(RefTest):
         # Make sure we disable system updates
         prefs["app.update.enabled"] = False
         prefs["app.update.url"] = ""
-        prefs["app.update.url.override"] = ""
         # Disable webapp updates
         prefs["webapps.update.enabled"] = False
         # Disable tiles also
