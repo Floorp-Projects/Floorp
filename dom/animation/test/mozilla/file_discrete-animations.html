@@ -1,0 +1,170 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Test Mozilla-specific discrete animatable properties</title>
+<script type="application/javascript" src="../testcommon.js"></script>
+</head>
+<body>
+<script>
+"use strict";
+
+const gMozillaSpecificProperties = {
+  "-moz-appearance": {
+    // https://drafts.csswg.org/css-align/#propdef-align-content
+    from: "button",
+    to: "none"
+  },
+  "-moz-border-bottom-colors": {
+    from: "rgb(255, 0, 0) rgb(255, 0, 0) rgb(255, 0, 0) rgb(255, 0, 0)",
+    to: "rgb(0, 255, 0) rgb(0, 255, 0) rgb(0, 255, 0) rgb(0, 255, 0)"
+  },
+  "-moz-border-left-colors": {
+    from: "rgb(255, 0, 0) rgb(255, 0, 0) rgb(255, 0, 0) rgb(255, 0, 0)",
+    to: "rgb(0, 255, 0) rgb(0, 255, 0) rgb(0, 255, 0) rgb(0, 255, 0)"
+  },
+  "-moz-border-right-colors": {
+    from: "rgb(255, 0, 0) rgb(255, 0, 0) rgb(255, 0, 0) rgb(255, 0, 0)",
+    to: "rgb(0, 255, 0) rgb(0, 255, 0) rgb(0, 255, 0) rgb(0, 255, 0)"
+  },
+  "-moz-border-top-colors": {
+    from: "rgb(255, 0, 0) rgb(255, 0, 0) rgb(255, 0, 0) rgb(255, 0, 0)",
+    to: "rgb(0, 255, 0) rgb(0, 255, 0) rgb(0, 255, 0) rgb(0, 255, 0)"
+  },
+  "-moz-box-align": {
+    // https://developer.mozilla.org/en/docs/Web/CSS/box-align
+    from: "center",
+    to: "stretch"
+  },
+  "-moz-box-direction": {
+    // https://developer.mozilla.org/en/docs/Web/CSS/box-direction
+    from: "reverse",
+    to: "normal"
+  },
+  "-moz-box-ordinal-group": {
+    // https://developer.mozilla.org/en/docs/Web/CSS/box-ordinal-group
+    from: "1",
+    to: "5"
+  },
+  "-moz-box-orient": {
+    // https://www.w3.org/TR/css-flexbox-1/
+    from: "horizontal",
+    to: "vertical"
+  },
+  "-moz-box-pack": {
+    // https://www.w3.org/TR/2009/WD-css3-flexbox-20090723/#propdef-box-pack
+    from: "center",
+    to: "end"
+  },
+  "-moz-float-edge": {
+    // https://developer.mozilla.org/en/docs/Web/CSS/-moz-float-edge
+    from: "margin-box",
+    to: "content-box"
+  },
+  "-moz-force-broken-image-icon": {
+    // https://developer.mozilla.org/en/docs/Web/CSS/-moz-force-broken-image-icon
+    from: "1",
+    to: "5"
+  },
+  "image-rendering": {
+    // https://drafts.csswg.org/css-images-3/#propdef-image-rendering
+    from: "-moz-crisp-edges",
+    to: "auto"
+  },
+  "-moz-stack-sizing": {
+    // https://developer.mozilla.org/en/docs/Web/CSS/-moz-stack-sizing
+    from: "ignore",
+    to: "stretch-to-fit"
+  },
+  "-moz-tab-size": {
+    // https://drafts.csswg.org/css-text-3/#propdef-tab-size
+    from: "1",
+    to: "5"
+  },
+  "-moz-text-size-adjust": {
+    // https://drafts.csswg.org/css-size-adjust/#propdef-text-size-adjust
+    from: "none",
+    to: "auto"
+  },
+  "-webkit-text-stroke-width": {
+    // https://compat.spec.whatwg.org/#propdef--webkit-text-stroke-width
+    from: "10px",
+    to: "50px"
+  }
+}
+
+for (let property in gMozillaSpecificProperties) {
+  const testData = gMozillaSpecificProperties[property];
+  const from = testData.from;
+  const to = testData.to;
+  const idlName = propertyToIDL(property);
+  const keyframes = {};
+  keyframes[idlName] = [from, to];
+
+  test(t => {
+    const div = addDiv(t);
+    const animation = div.animate(keyframes,
+                                  { duration: 1000, fill: "both" });
+    testAnimationSamples(animation, idlName,
+                         [{ time: 0,    expected: from.toLowerCase() },
+                          { time: 499,  expected: from.toLowerCase() },
+                          { time: 500,  expected: to.toLowerCase() },
+                          { time: 1000, expected: to.toLowerCase() }]);
+  }, property + " should animate between '"
+   + from + "' and '" + to + "' with linear easing");
+
+  test(function(t) {
+    // Easing: http://cubic-bezier.com/#.68,0,1,.01
+    // With this curve, we don't reach the 50% point until about 95% of
+    // the time has expired.
+    const div = addDiv(t);
+    const animation = div.animate(keyframes,
+                                  { duration: 1000, fill: "both",
+                                    easing: "cubic-bezier(0.68,0,1,0.01)" });
+    testAnimationSamples(animation, idlName,
+                         [{ time: 0,    expected: from.toLowerCase() },
+                          { time: 940,  expected: from.toLowerCase() },
+                          { time: 960,  expected: to.toLowerCase() }]);
+  }, property + " should animate between '"
+   + from + "' and '" + to + "' with effect easing");
+
+  test(function(t) {
+    // Easing: http://cubic-bezier.com/#.68,0,1,.01
+    // With this curve, we don't reach the 50% point until about 95% of
+    // the time has expired.
+    keyframes.easing = "cubic-bezier(0.68,0,1,0.01)";
+    const div = addDiv(t);
+    const animation = div.animate(keyframes,
+                                  { duration: 1000, fill: "both" });
+    testAnimationSamples(animation, idlName,
+                         [{ time: 0,    expected: from.toLowerCase() },
+                          { time: 940,  expected: from.toLowerCase() },
+                          { time: 960,  expected: to.toLowerCase() }]);
+  }, property + " should animate between '"
+   + from + "' and '" + to + "' with keyframe easing");
+}
+
+function propertyToIDL(property) {
+  var prefixMatch = property.match(/^-(\w+)-/);
+  if (prefixMatch) {
+    var prefix = prefixMatch[1] === "moz" ? "Moz" : prefixMatch[1];
+    property = prefix + property.substring(prefixMatch[0].length - 1);
+  }
+  // https://drafts.csswg.org/cssom/#css-property-to-idl-attribute
+  return property.replace(/-([a-z])/gi, function(str, group) {
+    return group.toUpperCase();
+  });
+}
+
+function testAnimationSamples(animation, idlName, testSamples) {
+  const target = animation.effect.target;
+  testSamples.forEach(testSample => {
+    animation.currentTime = testSample.time;
+    assert_equals(getComputedStyle(target)[idlName], testSample.expected,
+                  "The value should be " + testSample.expected +
+                  " at " + testSample.time + "ms");
+  });
+}
+
+done();
+</script>
+</body>
