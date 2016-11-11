@@ -63,18 +63,14 @@ TreeMutation::AfterInsertion(Accessible* aChild)
     mStartIdx = aChild->mIndexInParent + 1;
   }
 
-  if (!mEventTree) {
-    mEventTree = Controller()->QueueMutation(mParent);
-    if (!mEventTree) {
-      mEventTree = kNoEventTree;
-    }
+  if (!mQueueEvents) {
+    return;
   }
 
-  if (mEventTree != kNoEventTree) {
-    RefPtr<AccShowEvent> ev = new AccShowEvent(aChild);
-    mEventTree->Mutated(ev);
-    Controller()->QueueNameChange(aChild);
-  }
+  RefPtr<AccShowEvent> ev = new AccShowEvent(aChild);
+  DebugOnly<bool> added = Controller()->QueueMutationEvent(ev);
+  MOZ_ASSERT(added);
+  aChild->SetShowEventTarget(true);
 }
 
 void
@@ -86,17 +82,13 @@ TreeMutation::BeforeRemoval(Accessible* aChild, bool aNoShutdown)
     mStartIdx = aChild->mIndexInParent;
   }
 
-  if (!mEventTree) {
-    mEventTree = Controller()->QueueMutation(mParent);
-    if (!mEventTree) {
-      mEventTree = kNoEventTree;
-    }
+  if (!mQueueEvents) {
+    return;
   }
 
-  if (mEventTree != kNoEventTree) {
-    RefPtr<AccHideEvent> ev = new AccHideEvent(aChild, !aNoShutdown);
-    mEventTree->Mutated(ev);
-    Controller()->QueueNameChange(aChild);
+  RefPtr<AccHideEvent> ev = new AccHideEvent(aChild, !aNoShutdown);
+  if (Controller()->QueueMutationEvent(ev)) {
+    aChild->SetHideEventTarget(true);
   }
 }
 

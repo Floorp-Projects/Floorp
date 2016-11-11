@@ -802,9 +802,9 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   // events causes script to run.
   mObservingState = eRefreshProcessing;
 
-  RefPtr<DocAccessible> deathGrip(mDocument);
-  mEventTree.Process(deathGrip);
-  deathGrip = nullptr;
+  CoalesceMutationEvents();
+  ProcessMutationEvents();
+  mEventGeneration = 0;
 
   // Now that we are done with them get rid of the events we fired.
   RefPtr<AccTreeMutationEvent> mutEvent = Move(mFirstMutationEvent);
