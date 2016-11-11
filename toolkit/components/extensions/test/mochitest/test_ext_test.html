@@ -18,6 +18,7 @@ function loadExtensionAndInterceptTest(extensionData) {
   let testDone = new Promise(resolve => { testResolve = resolve; });
   let handler = {
     testResult(...result) {
+      result.pop();
       results.push(result);
       SimpleTest.info(`Received test result: ${JSON.stringify(result)}`);
     },
