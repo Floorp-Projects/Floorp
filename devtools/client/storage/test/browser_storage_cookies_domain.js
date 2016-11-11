@@ -13,8 +13,16 @@ add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
 
   yield checkState([
-    [["cookies", "test1.example.org"],
-      ["test1", "test2", "test3", "test4", "test5"]],
+    [
+      ["cookies", "test1.example.org"],
+      [
+        getCookieId("test1", ".test1.example.org", "/browser"),
+        getCookieId("test2", "test1.example.org", "/browser"),
+        getCookieId("test3", ".test1.example.org", "/browser"),
+        getCookieId("test4", "test1.example.org", "/browser"),
+        getCookieId("test5", ".test1.example.org", "/browser")
+      ]
+    ],
   ]);
 
   yield finishTests();
