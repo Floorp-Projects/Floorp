@@ -31,6 +31,6 @@ add_task(function* () {
   is(gBrowser.tabs.length, initialTabsNo, "No additional tabs were opened");
 });
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   gBrowser.removeTab(gBrowser.selectedTab);
 });

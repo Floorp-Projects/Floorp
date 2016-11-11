@@ -148,7 +148,7 @@ var gWindowCatcher = {
     this.finishFunc();
   },
 
-  closeWindow: function (win) {
+  closeWindow: function(win) {
     info("window catcher closing window: " + win.document.documentURI);
     win.close();
     this.windowsOpen--;
@@ -157,7 +157,7 @@ var gWindowCatcher = {
     }
   },
 
-  windowLoad: function (win) {
+  windowLoad: function(win) {
     executeSoon(this.closeWindow.bind(this, win));
   },
 
@@ -168,7 +168,7 @@ var gWindowCatcher = {
     this.windowsOpen++;
     let win = subject.QueryInterface(Ci.nsIDOMWindow);
     info("window catcher caught window opening: " + win.document.documentURI);
-    win.addEventListener("load", function () {
+    win.addEventListener("load", function() {
       win.removeEventListener("load", arguments.callee, false);
       gWindowCatcher.windowLoad(win);
     }, false);
@@ -360,7 +360,7 @@ function testShowNotification()
         // is correct.
         if (i == (BG_NOTIFY_TESTS.length - 1)) {
           // Wait for any windows caught by the windowcatcher to close
-          gWindowCatcher.finish(function () {
+          gWindowCatcher.finish(function() {
             BrowserTestUtils.waitForNewTab(gBrowser).then(testNotificationURL);
             button.click();
           });

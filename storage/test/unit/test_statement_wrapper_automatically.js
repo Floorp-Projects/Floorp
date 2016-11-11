@@ -154,7 +154,7 @@ function run_test()
     new Date(), // Date object
   ];
 
-  vals.forEach(function (val)
+  vals.forEach(function(val)
   {
     printValDesc(val);
     print("Single parameter");

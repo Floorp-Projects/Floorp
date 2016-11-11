@@ -124,14 +124,14 @@ function checkInfoBoxSelected(PO) {
 }
 
 function checkAddInfoFieldsCollapsed(PO) {
-  PO._additionalInfoFields.forEach(function (id) {
+  PO._additionalInfoFields.forEach(function(id) {
     ok(getAndCheckElmtById(id).collapsed,
        "Additional info field correctly collapsed: #" + id);
   });
 }
 
 function checkAddInfoFieldsNotCollapsed(PO) {
-  ok(PO._additionalInfoFields.some(function (id) {
+  ok(PO._additionalInfoFields.some(function(id) {
       return !getAndCheckElmtById(id).collapsed;
      }), "Some additional info field correctly not collapsed");
 }
@@ -141,19 +141,19 @@ function checkAddInfoFields(PO, nodeName) {
   var expanderButton = getAndCheckElmtById("infoBoxExpander");
 
   // make sure additional fields are hidden by default
-  PO._additionalInfoFields.forEach(function (id) {
+  PO._additionalInfoFields.forEach(function(id) {
     ok(getAndCheckElmtById(id).hidden,
        "Additional info field correctly hidden by default: #" + id);
   });
 
   // toggle fields and make sure they are hidden/unhidden as expected
   expanderButton.click();
-  PO._additionalInfoFields.forEach(function (id) {
+  PO._additionalInfoFields.forEach(function(id) {
     ok(!getAndCheckElmtById(id).hidden,
        "Additional info field correctly unhidden after toggle: #" + id);
   });
   expanderButton.click();
-  PO._additionalInfoFields.forEach(function (id) {
+  PO._additionalInfoFields.forEach(function(id) {
     ok(getAndCheckElmtById(id).hidden,
        "Additional info field correctly hidden after toggle: #" + id);
   });
@@ -189,7 +189,7 @@ function test() {
   ok(PlacesUIUtils, "PlacesUIUtils is running in chrome context");
 
   // Open Library.
-  openLibrary(function (library) {
+  openLibrary(function(library) {
     gLibrary = library;
     gLibrary.PlacesOrganizer._places.focus();
     nextTest(gLibrary);

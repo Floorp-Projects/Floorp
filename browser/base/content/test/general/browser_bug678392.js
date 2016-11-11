@@ -13,7 +13,7 @@ function test() {
 
   BrowserOpenTab();
   let tab = gBrowser.selectedTab;
-  registerCleanupFunction(function () { gBrowser.removeTab(tab); });
+  registerCleanupFunction(function() { gBrowser.removeTab(tab); });
 
   ok(gHistorySwipeAnimation, "gHistorySwipeAnimation exists.");
 

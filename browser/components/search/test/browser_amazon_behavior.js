@@ -32,7 +32,7 @@ function test() {
     {
       name: "context menu search",
       searchURL: base,
-      run: function () {
+      run: function() {
         // Simulate a contextmenu search
         // FIXME: This is a bit "low-level"...
         BrowserSearch.loadSearch("foo", false, "contextmenu");
@@ -41,7 +41,7 @@ function test() {
     {
       name: "keyword search",
       searchURL: base,
-      run: function () {
+      run: function() {
         gURLBar.value = "? foo";
         gURLBar.focus();
         EventUtils.synthesizeKey("VK_RETURN", {});
@@ -50,7 +50,7 @@ function test() {
     {
       name: "keyword search",
       searchURL: base,
-      run: function () {
+      run: function() {
         gURLBar.value = "a foo";
         gURLBar.focus();
         EventUtils.synthesizeKey("VK_RETURN", {});
@@ -59,11 +59,11 @@ function test() {
     {
       name: "search bar search",
       searchURL: base,
-      run: function () {
+      run: function() {
         let sb = BrowserSearch.searchBar;
         sb.focus();
         sb.value = "foo";
-        registerCleanupFunction(function () {
+        registerCleanupFunction(function() {
           sb.value = "";
         });
         EventUtils.synthesizeKey("VK_RETURN", {});
@@ -72,7 +72,7 @@ function test() {
     {
       name: "new tab search",
       searchURL: base,
-      run: function () {
+      run: function() {
         function doSearch(doc) {
           // Re-add the listener, and perform a search
           gBrowser.addProgressListener(listener);
@@ -151,7 +151,7 @@ function test() {
     }
   }
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     engine.alias = undefined;
     gBrowser.removeProgressListener(listener);
     gBrowser.removeTab(tab);

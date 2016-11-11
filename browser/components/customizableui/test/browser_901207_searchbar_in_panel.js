@@ -9,7 +9,7 @@ logActiveElement();
 function* waitForSearchBarFocus()
 {
   let searchbar = document.getElementById("searchbar");
-  yield waitForCondition(function () {
+  yield waitForCondition(function() {
     logActiveElement();
     return document.activeElement === searchbar.textbox.inputField;
   });

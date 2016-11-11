@@ -40,7 +40,7 @@ function test() {
 
       // Observe page setup
       let doc = gBrowser.contentDocument;
-      gMutationObserver = new MutationObserver(function (mutations) {
+      gMutationObserver = new MutationObserver(function(mutations) {
         for (let mutation of mutations) {
           if (mutation.attributeName == "searchEngineName") {
             // Re-add the listener, and perform a search
@@ -64,28 +64,28 @@ function test() {
     {
       name: "Search with Bing from about:home",
       searchURL: replaceUrl("http://www.bing.com/search?q=foo&pc=MOZI&form=MOZSPG"),
-      run: function () {
+      run: function() {
         verify_about_home_search("Bing");
       }
     },
     {
       name: "Search with Yahoo from about:home",
       searchURL: replaceUrl("https://search.yahoo.com/search?p=foo&ei=UTF-8&fr=moz35"),
-      run: function () {
+      run: function() {
         verify_about_home_search("Yahoo");
       }
     },
     {
       name: "Search with Google from about:home",
       searchURL: replaceUrl("https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8"),
-      run: function () {
+      run: function() {
         verify_about_home_search("Google");
       }
     },
     {
       name: "Search with Amazon.com from about:home",
       searchURL: replaceUrl("https://www.amazon.com/exec/obidos/external-search/?field-keywords=foo&mode=blended&tag=mozilla-20&sourceid=Mozilla-search"),
-      run: function () {
+      run: function() {
         verify_about_home_search("Amazon.com");
       }
     }
@@ -128,7 +128,7 @@ function test() {
     }
   }
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.search.currentEngine = previouslySelectedEngine;
     gBrowser.removeProgressListener(listener);
     gBrowser.removeTab(tab);

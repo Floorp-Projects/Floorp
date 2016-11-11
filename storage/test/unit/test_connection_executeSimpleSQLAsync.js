@@ -29,7 +29,7 @@ add_task(function* test_create_and_add() {
 
   completion = yield executeSimpleSQLAsync(adb,
     "SELECT string, number FROM test WHERE id = 1",
-    function (aResultSet) {
+    function(aResultSet) {
       result = aResultSet.getNextRow();
       do_check_eq(2, result.numEntries);
       do_check_eq(TEXT, result.getString(0));
@@ -42,7 +42,7 @@ add_task(function* test_create_and_add() {
   result = null;
 
   yield executeSimpleSQLAsync(adb, "SELECT COUNT(0) FROM test",
-    function (aResultSet) {
+    function(aResultSet) {
       result = aResultSet.getNextRow();
       do_check_eq(1, result.getInt32(0));
     });
@@ -58,7 +58,7 @@ add_task(function* test_asyncClose_does_not_complete_before_statement() {
   let executed = false;
 
   let reason = yield executeSimpleSQLAsync(adb, "SELECT * FROM test",
-    function (aResultSet) {
+    function(aResultSet) {
       let result = aResultSet.getNextRow();
 
       do_check_neq(result, null);

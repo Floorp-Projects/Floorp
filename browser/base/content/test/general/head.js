@@ -32,7 +32,7 @@ function waitForNotificationClose(notification, cb) {
   observer.observe(parent, {childList: true});
 }
 
-function closeAllNotifications () {
+function closeAllNotifications() {
   let notificationBox = document.getElementById("global-notificationbox");
 
   if (!notificationBox || !notificationBox.currentNotification) {
@@ -41,7 +41,7 @@ function closeAllNotifications () {
 
   let deferred = Promise.defer();
   for (let notification of notificationBox.allNotifications) {
-    waitForNotificationClose(notification, function () {
+    waitForNotificationClose(notification, function() {
       if (notificationBox.allNotifications.length === 0) {
         deferred.resolve();
       }
@@ -372,7 +372,7 @@ function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
     if (++callbackCount == aURIs.length)
       deferred.resolve();
   }
-  aURIs.forEach(function (aURI) {
+  aURIs.forEach(function(aURI) {
     PlacesUtils.asyncHistory.isURIVisited(aURI, function(uri, isVisited) {
       is(isVisited, !aShouldBeCleared,
          "history visit " + uri.spec + " should " + niceStr + " exist");
@@ -418,7 +418,7 @@ function waitForDocLoadAndStopIt(aExpectedURL, aBrowser = gBrowser.selectedBrows
     }
 
     let progressListener = {
-      onStateChange: function (webProgress, req, flags, status) {
+      onStateChange: function(webProgress, req, flags, status) {
         dump("waitForDocLoadAndStopIt: onStateChange " + flags.toString(16) + ": " + req.name + "\n");
 
         if (webProgress.isTopLevel &&
@@ -440,7 +440,7 @@ function waitForDocLoadAndStopIt(aExpectedURL, aBrowser = gBrowser.selectedBrows
      * event handler is the easiest way to ensure the weakly referenced
      * progress listener is kept alive as long as necessary.
      */
-    addEventListener("unload", function () {
+    addEventListener("unload", function() {
       try {
         wp.removeProgressListener(progressListener);
       } catch (e) { /* Will most likely fail. */ }
@@ -470,7 +470,7 @@ function waitForDocLoadAndStopIt(aExpectedURL, aBrowser = gBrowser.selectedBrows
 function waitForDocLoadComplete(aBrowser = gBrowser) {
   return new Promise(resolve => {
     let listener = {
-      onStateChange: function (webProgress, req, flags, status) {
+      onStateChange: function(webProgress, req, flags, status) {
         let docStop = Ci.nsIWebProgressListener.STATE_IS_NETWORK |
                       Ci.nsIWebProgressListener.STATE_STOP;
         info("Saw state " + flags.toString(16) + " and status " + status.toString(16));
@@ -541,7 +541,7 @@ var FullZoomHelper = {
           resolve();
       }, true);
 
-      this.waitForLocationChange().then(function () {
+      this.waitForLocationChange().then(function() {
         didZoom = true;
         if (didLoad)
           resolve();
@@ -586,7 +586,7 @@ var FullZoomHelper = {
       else if (direction == this.FORWARD)
         gBrowser.goForward();
 
-      this.waitForLocationChange().then(function () {
+      this.waitForLocationChange().then(function() {
         didZoom = true;
         if (didPs)
           resolve();
@@ -595,7 +595,7 @@ var FullZoomHelper = {
   },
 
   failAndContinue: function failAndContinue(func) {
-    return function (err) {
+    return function(err) {
       ok(false, err);
       func();
     };
@@ -918,12 +918,12 @@ function promiseNewSearchEngine(basename) {
     info("Waiting for engine to be added: " + basename);
     let url = getRootDirectory(gTestPath) + basename;
     Services.search.addEngine(url, null, "", false, {
-      onSuccess: function (engine) {
+      onSuccess: function(engine) {
         info("Search engine added: " + basename);
         registerCleanupFunction(() => Services.search.removeEngine(engine));
         resolve(engine);
       },
-      onError: function (errCode) {
+      onError: function(errCode) {
         Assert.ok(false, "addEngine failed with error code " + errCode);
         reject();
       },
@@ -966,7 +966,7 @@ function isSecurityState(expectedState) {
 function promiseOnBookmarkItemAdded(aExpectedURI) {
   return new Promise((resolve, reject) => {
     let bookmarksObserver = {
-      onItemAdded: function (aItemId, aFolderId, aIndex, aItemType, aURI) {
+      onItemAdded: function(aItemId, aFolderId, aIndex, aItemType, aURI) {
         info("Added a bookmark to " + aURI.spec);
         PlacesUtils.bookmarks.removeObserver(bookmarksObserver);
         if (aURI.equals(aExpectedURI)) {
@@ -976,12 +976,12 @@ function promiseOnBookmarkItemAdded(aExpectedURI) {
           reject(new Error("Added an unexpected bookmark"));
         }
       },
-      onBeginUpdateBatch: function () {},
-      onEndUpdateBatch: function () {},
-      onItemRemoved: function () {},
-      onItemChanged: function () {},
-      onItemVisited: function () {},
-      onItemMoved: function () {},
+      onBeginUpdateBatch: function() {},
+      onEndUpdateBatch: function() {},
+      onItemRemoved: function() {},
+      onItemChanged: function() {},
+      onItemVisited: function() {},
+      onItemMoved: function() {},
       QueryInterface: XPCOMUtils.generateQI([
         Ci.nsINavBookmarkObserver,
       ])

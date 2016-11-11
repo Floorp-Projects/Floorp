@@ -79,7 +79,7 @@ var SocialServiceInternal = {
   },
   orderedProviders: function(aCallback) {
     if (SocialServiceInternal.providerArray.length < 2) {
-      schedule(function () {
+      schedule(function() {
         aCallback(SocialServiceInternal.providerArray);
       });
       return;
@@ -132,7 +132,7 @@ var SocialServiceInternal = {
   }
 };
 
-XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function () {
+XPCOMUtils.defineLazyGetter(SocialServiceInternal, "providers", function() {
   initService();
   let providers = {};
   for (let manifest of this.manifests) {
@@ -177,21 +177,21 @@ var ActiveProviders = {
     return this._providers;
   },
 
-  has: function (origin) {
+  has: function(origin) {
     return (origin in this._providers);
   },
 
-  add: function (origin) {
+  add: function(origin) {
     this._providers[origin] = 1;
     this._deferredTask.arm();
   },
 
-  delete: function (origin) {
+  delete: function(origin) {
     delete this._providers[origin];
     this._deferredTask.arm();
   },
 
-  flush: function () {
+  flush: function() {
     this._deferredTask.disarm();
     this._persist();
   },
@@ -201,7 +201,7 @@ var ActiveProviders = {
     return this._deferredTask = new DeferredTask(this._persist.bind(this), 0);
   },
 
-  _persist: function () {
+  _persist: function() {
     let string = Cc["@mozilla.org/supports-string;1"].
                  createInstance(Ci.nsISupportsString);
     string.data = JSON.stringify(this._providers);
@@ -405,7 +405,7 @@ this.SocialService = {
     SocialServiceInternal.providers[provider.origin] = provider;
     ActiveProviders.add(provider.origin);
 
-    this.getOrderedProviderList(function (providers) {
+    this.getOrderedProviderList(function(providers) {
       this._notifyProviderListeners("provider-enabled", provider.origin, providers);
       if (onDone)
         onDone(provider);
@@ -438,7 +438,7 @@ this.SocialService = {
       AddonManagerPrivate.callAddonListeners("onDisabled", addon);
     }
 
-    this.getOrderedProviderList(function (providers) {
+    this.getOrderedProviderList(function(providers) {
       this._notifyProviderListeners("provider-disabled", origin, providers);
       if (onDone)
         onDone();
@@ -448,14 +448,14 @@ this.SocialService = {
   // Returns a single provider object with the specified origin.  The provider
   // must be "installed" (ie, in ActiveProviders)
   getProvider: function getProvider(origin, onDone) {
-    schedule((function () {
+    schedule((function() {
       onDone(SocialServiceInternal.providers[origin] || null);
     }).bind(this));
   },
 
   // Returns an unordered array of installed providers
   getProviderList: function(onDone) {
-    schedule(function () {
+    schedule(function() {
       onDone(SocialServiceInternal.providerArray);
     });
   },
@@ -474,7 +474,7 @@ this.SocialService = {
     SocialServiceInternal.orderedProviders(onDone);
   },
 
-  getOriginActivationType: function (origin) {
+  getOriginActivationType: function(origin) {
     return getOriginActivationType(origin);
   },
 
@@ -486,7 +486,7 @@ this.SocialService = {
     this._providerListeners.delete(listener);
   },
 
-  _notifyProviderListeners: function (topic, origin, providers) {
+  _notifyProviderListeners: function(topic, origin, providers) {
     for (let [listener, ] of this._providerListeners) {
       try {
         listener(topic, origin, providers);
@@ -596,7 +596,7 @@ this.SocialService = {
         aAddon.cancelUninstall();
         aAddon.userDisabled = false;
       }
-      schedule(function () {
+      schedule(function() {
         try {
           this._installProvider(data, options, aManifest => {
               this._notifyProviderListeners("provider-installed", aManifest.origin);

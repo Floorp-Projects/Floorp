@@ -38,7 +38,7 @@ function test() {
   // non-builtin roots.
   Services.prefs.setIntPref(kpkpEnforcementPref, 2);
   Services.prefs.setBoolPref(khpkpPinninEnablePref, true);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref(kpkpEnforcementPref);
     Services.prefs.clearUserPref(khpkpPinninEnablePref);
     let uri = gIOService.newURI("https://" + kPinningDomain, null, null);

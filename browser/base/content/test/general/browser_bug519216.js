@@ -28,7 +28,7 @@ var progressListener3 = {
     ok(calledListener2, "called progressListener2 before progressListener3");
     gBrowser.removeProgressListener(this);
     gBrowser.addProgressListener(progressListener4);
-    executeSoon(function () {
+    executeSoon(function() {
       expectListener4 = true;
       gBrowser.reload();
     });

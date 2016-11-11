@@ -22,7 +22,7 @@ function tidyUp() {
 
 function testClosePrintPreviewWithAccessKey() {
   EventUtils.synthesizeKey("c", { altKey: true });
-  checkPrintPreviewClosed(function (aSucceeded) {
+  checkPrintPreviewClosed(function(aSucceeded) {
     ok(aSucceeded,
        "print preview mode should be finished by access key");
     openPrintPreview(testClosePrintPreviewWithEscKey);
@@ -31,7 +31,7 @@ function testClosePrintPreviewWithAccessKey() {
 
 function testClosePrintPreviewWithEscKey() {
   EventUtils.synthesizeKey("VK_ESCAPE", {});
-  checkPrintPreviewClosed(function (aSucceeded) {
+  checkPrintPreviewClosed(function(aSucceeded) {
     ok(aSucceeded,
        "print preview mode should be finished by Esc key press");
     openPrintPreview(testClosePrintPreviewWithClosingWindowShortcutKey);
@@ -40,7 +40,7 @@ function testClosePrintPreviewWithEscKey() {
 
 function testClosePrintPreviewWithClosingWindowShortcutKey() {
   EventUtils.synthesizeKey("w", { accelKey: true });
-  checkPrintPreviewClosed(function (aSucceeded) {
+  checkPrintPreviewClosed(function(aSucceeded) {
     ok(aSucceeded,
        "print preview mode should be finished by closing window shortcut key");
     tidyUp();
@@ -49,7 +49,7 @@ function testClosePrintPreviewWithClosingWindowShortcutKey() {
 
 function openPrintPreview(aCallback) {
   document.getElementById("cmd_printPreview").doCommand();
-  executeSoon(function () {
+  executeSoon(function() {
     if (gInPrintPreviewMode) {
       executeSoon(aCallback);
       return;
@@ -60,9 +60,9 @@ function openPrintPreview(aCallback) {
 
 function checkPrintPreviewClosed(aCallback) {
   let count = 0;
-  executeSoon(function () {
+  executeSoon(function() {
     if (!gInPrintPreviewMode) {
-      executeSoon(function () { aCallback(count < 1000); });
+      executeSoon(function() { aCallback(count < 1000); });
       return;
     }
     if (++count == 1000) {

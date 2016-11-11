@@ -17,7 +17,7 @@ var gPluginHandler = {
     "PluginContent:LinkClickCallback",
   ],
 
-  init: function () {
+  init: function() {
     const mm = window.messageManager;
     for (let msg of this.MESSAGES) {
       mm.addMessageListener(msg, this);
@@ -25,7 +25,7 @@ var gPluginHandler = {
     window.addEventListener("unload", this);
   },
 
-  uninit: function () {
+  uninit: function() {
     const mm = window.messageManager;
     for (let msg of this.MESSAGES) {
       mm.removeMessageListener(msg, this);
@@ -33,13 +33,13 @@ var gPluginHandler = {
     window.removeEventListener("unload", this);
   },
 
-  handleEvent: function (event) {
+  handleEvent: function(event) {
     if (event.type == "unload") {
       this.uninit();
     }
   },
 
-  receiveMessage: function (msg) {
+  receiveMessage: function(msg) {
     switch (msg.name) {
       case "PluginContent:ShowClickToPlayNotification":
         this.showClickToPlayNotification(msg.target, msg.data.plugins, msg.data.showNow,
@@ -83,7 +83,7 @@ var gPluginHandler = {
   },
 
   // Callback for user clicking on a disabled plugin
-  managePlugins: function () {
+  managePlugins: function() {
     BrowserOpenAddonsMgr("addons://list/plugin");
   },
 
@@ -106,12 +106,12 @@ var gPluginHandler = {
   },
 
   // Callback for user clicking a "reload page" link
-  reloadPage: function (browser) {
+  reloadPage: function(browser) {
     browser.reload();
   },
 
   // Callback for user clicking the help icon
-  openHelpPage: function () {
+  openHelpPage: function() {
     openHelpLink("plugin-crashed", false);
   },
 
@@ -139,7 +139,7 @@ var gPluginHandler = {
    * and activate plugins if necessary.
    * aNewState should be either "allownow" "allowalways" or "block"
    */
-  _updatePluginPermission: function (aNotification, aPluginInfo, aNewState) {
+  _updatePluginPermission: function(aNotification, aPluginInfo, aNewState) {
     let permission;
     let expireType;
     let expireTime;
@@ -208,8 +208,8 @@ var gPluginHandler = {
     });
   },
 
-  showClickToPlayNotification: function (browser, plugins, showNow,
-                                         principal, location) {
+  showClickToPlayNotification: function(browser, plugins, showNow,
+                                        principal, location) {
     // It is possible that we've received a message from the frame script to show
     // a click to play notification for a principal that no longer matches the one
     // that the browser's content now has assigned (ie, the browser has browsed away
@@ -289,21 +289,21 @@ var gPluginHandler = {
     browser.messageManager.sendAsyncMessage("BrowserPlugins:NotificationShown");
   },
 
-  removeNotification: function (browser, name) {
+  removeNotification: function(browser, name) {
     let notification = PopupNotifications.getNotification(name, browser);
     if (notification)
       PopupNotifications.remove(notification);
   },
 
-  hideNotificationBar: function (browser, name) {
+  hideNotificationBar: function(browser, name) {
     let notificationBox = gBrowser.getNotificationBox(browser);
     let notification = notificationBox.getNotificationWithValue(name);
     if (notification)
       notificationBox.removeNotification(notification, true);
   },
 
-  updateHiddenPluginUI: function (browser, haveInsecure, actions,
-                                  principal, location) {
+  updateHiddenPluginUI: function(browser, haveInsecure, actions,
+                                 principal, location) {
     let origin = principal.originNoSuffix;
 
     // It is possible that we've received a message from the frame script to show
@@ -436,7 +436,7 @@ var gPluginHandler = {
     }
   },
 
-  contextMenuCommand: function (browser, plugin, command) {
+  contextMenuCommand: function(browser, plugin, command) {
     browser.messageManager.sendAsyncMessage("BrowserPlugins:ContextMenuCommand",
       { command: command }, { plugin: plugin });
   },
@@ -492,7 +492,7 @@ var gPluginHandler = {
    *        For a GMP, this is the pluginID. For NPAPI plugins (where "pluginID"
    *        means something different), this is the runID.
    */
-  showPluginCrashedNotification: function (browser, messageString, pluginID) {
+  showPluginCrashedNotification: function(browser, messageString, pluginID) {
     // If there's already an existing notification bar, don't do anything.
     let notificationBox = gBrowser.getNotificationBox(browser);
     let notification = notificationBox.getNotificationWithValue("plugin-crashed");

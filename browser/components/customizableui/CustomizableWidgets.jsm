@@ -204,8 +204,8 @@ const CustomizableWidgets = [
 
       PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                          .asyncExecuteLegacyQueries([query], 1, options, {
-        handleResult: function (aResultSet) {
-          let onItemCommand = function (aEvent) {
+        handleResult: function(aResultSet) {
+          let onItemCommand = function(aEvent) {
             // Only handle the click event for middle clicks, we're using the command
             // event otherwise.
             if (aEvent.type == "click" && aEvent.button != 1) {
@@ -236,10 +236,10 @@ const CustomizableWidgets = [
           }
           items.appendChild(fragment);
         },
-        handleError: function (aError) {
+        handleError: function(aError) {
           log.debug("History view tried to show but had an error: " + aError);
         },
-        handleCompletion: function (aReason) {
+        handleCompletion: function(aReason) {
           log.debug("History view is being shown!");
         },
       });
@@ -441,7 +441,7 @@ const CustomizableWidgets = [
         Services.obs.notifyObservers(null, "synced-tabs-menu:test:tabs-updated", null);
       });
     },
-    _clearTabList () {
+    _clearTabList() {
       let list = this._tabsList;
       while (list.lastChild) {
         list.lastChild.remove();
@@ -461,7 +461,7 @@ const CustomizableWidgets = [
       appendTo.appendChild(messageLabel);
       return messageLabel;
     },
-    _appendClient: function (client, attachFragment) {
+    _appendClient: function(client, attachFragment) {
       let doc = attachFragment.ownerDocument;
       // Create the element for the remote client.
       let clientItem = doc.createElementNS(kNSXUL, "label");
@@ -1104,7 +1104,7 @@ const CustomizableWidgets = [
       let win = doc.defaultView;
       let items = doc.getElementById("PanelUI-containersItems");
 
-      let onItemCommand = function (aEvent) {
+      let onItemCommand = function(aEvent) {
         let item = aEvent.target;
         if (item.hasAttribute("usercontextid")) {
           let userContextId = parseInt(item.getAttribute("usercontextid"));

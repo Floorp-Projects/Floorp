@@ -11,7 +11,7 @@ function* getResultFromSharedworker(aBrowser) {
     let worker = new content.SharedWorker("file_sharedworker.js", "isolationSharedWorkerTest");
 
     let result = yield new Promise(resolve => {
-      worker.port.onmessage = function (e) {
+      worker.port.onmessage = function(e) {
         content.document.getElementById("display").innerHTML = e.data;
         resolve(e.data);
       };

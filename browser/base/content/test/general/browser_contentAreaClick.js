@@ -183,7 +183,7 @@ function test() {
   waitForExplicitFinish();
 
   gTestWin = openDialog(location, "", "chrome,all,dialog=no", "about:blank");
-  whenDelayedStartupFinished(gTestWin, function () {
+  whenDelayedStartupFinished(gTestWin, function() {
     info("Browser window opened");
     waitForFocus(function() {
       info("Browser window focused");
@@ -199,7 +199,7 @@ function test() {
 
 // Click handler used to steal click events.
 var gClickHandler = {
-  handleEvent: function (event) {
+  handleEvent: function(event) {
     let linkId = event.target.id || event.target.localName;
     is(event.type, "click",
        gCurrentTest.desc + ":Handler received a click event on " + linkId);
@@ -230,7 +230,7 @@ var gClickHandler = {
 
 // Wraps around the methods' replacement mock function.
 function wrapperMethod(aInvokedMethods, aMethodName) {
-  return function () {
+  return function() {
     aInvokedMethods.push(aMethodName);
     // At least getShortcutOrURIAndPostData requires to return url
     return (aMethodName == "getShortcutOrURIAndPostData") ? arguments.url : arguments[0];
@@ -242,7 +242,7 @@ function setupTestBrowserWindow() {
   gTestWin.addEventListener("click", gClickHandler, true);
 
   // Replace methods.
-  gReplacedMethods.forEach(function (aMethodName) {
+  gReplacedMethods.forEach(function(aMethodName) {
     gTestWin["old_" + aMethodName] = gTestWin[aMethodName];
     gTestWin[aMethodName] = wrapperMethod(gInvokedMethods, aMethodName);
   });
@@ -297,7 +297,7 @@ function finishTest() {
   gTestWin.removeEventListener("click", gClickHandler, true);
 
   // Restore original methods.
-  gReplacedMethods.forEach(function (aMethodName) {
+  gReplacedMethods.forEach(function(aMethodName) {
     gTestWin[aMethodName] = gTestWin["old_" + aMethodName];
     delete gTestWin["old_" + aMethodName];
   });

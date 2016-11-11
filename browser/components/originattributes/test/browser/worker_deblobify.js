@@ -2,13 +2,13 @@
 // Obtain the blob, and read the string contained in it.
 // Post back the string.
 
-var postStringInBlob = function (blobObject) {
+var postStringInBlob = function(blobObject) {
   var fileReader = new FileReaderSync();
   var result = fileReader.readAsText(blobObject);
   postMessage(result);
 };
 
-self.addEventListener("message", function (e) {
+self.addEventListener("message", function(e) {
   if ("error" in e.data) {
     postMessage(e.data);
     return;
@@ -17,10 +17,10 @@ self.addEventListener("message", function (e) {
       xhr = new XMLHttpRequest();
   try {
     xhr.open("GET", blobURL, true);
-    xhr.onload = function () {
+    xhr.onload = function() {
       postStringInBlob(xhr.response);
     };
-    xhr.onerror = function () {
+    xhr.onerror = function() {
       postMessage({ error: "xhr error" });
     };
     xhr.responseType = "blob";

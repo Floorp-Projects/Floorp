@@ -225,7 +225,7 @@ this.UITour = {
     });
 
     delete this.url;
-    XPCOMUtils.defineLazyGetter(this, "url", function () {
+    XPCOMUtils.defineLazyGetter(this, "url", function() {
       return Services.urlFormatter.formatURLPref("browser.uitour.url");
     });
 
@@ -1301,7 +1301,7 @@ this.UITour = {
       ratingElement.setAttribute("data-score", starIndex);
 
       // Add the click handler.
-      ratingElement.addEventListener("click", function (evt) {
+      ratingElement.addEventListener("click", function(evt) {
         let rating = Number(evt.target.getAttribute("data-score"), 10);
 
         // Let the consumer know user voted.
@@ -1932,7 +1932,7 @@ this.UITour = {
     });
   },
 
-  startSubTour: function (aFeature) {
+  startSubTour: function(aFeature) {
     if (aFeature != "string") {
       log.error("startSubTour: No feature option specified");
       return;
@@ -1946,7 +1946,7 @@ this.UITour = {
     }
   },
 
-  addNavBarWidget: function (aTarget, aMessageManager, aCallbackID) {
+  addNavBarWidget: function(aTarget, aMessageManager, aCallbackID) {
     if (aTarget.node) {
       log.error("addNavBarWidget: can't add a widget already present:", aTarget);
       return;

@@ -29,7 +29,7 @@ function test() {
 
     // Start the sub-document load.
     let deferred = Promise.defer();
-    executeSoon(function () {
+    executeSoon(function() {
       BrowserTestUtils.browserLoaded(testBrowser, true).then(url => {
         is(url, TEST_IFRAME_URL, "got the load event for the iframe");
         is(ZoomManager.zoom, zoomLevel, "zoom is retained after sub-document load");

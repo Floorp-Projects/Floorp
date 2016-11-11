@@ -13,9 +13,9 @@ function getPanelBrowser()
 }
 
 var panelProgressListener = {
-    onProgressChange : function (aWebProgress, aRequest,
-                                 aCurSelfProgress, aMaxSelfProgress,
-                                 aCurTotalProgress, aMaxTotalProgress) {
+    onProgressChange : function(aWebProgress, aRequest,
+                                aCurSelfProgress, aMaxSelfProgress,
+                                aCurTotalProgress, aMaxTotalProgress) {
     },
 
     onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)

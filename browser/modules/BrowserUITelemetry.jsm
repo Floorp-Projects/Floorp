@@ -643,7 +643,7 @@ this.BrowserUITelemetry = {
     this._countEvent(["sidebar", sidebarID, action]);
   },
 
-  _logAwesomeBarSearchResult: function (url) {
+  _logAwesomeBarSearchResult: function(url) {
     let spec = Services.search.parseSubmissionURL(url);
     if (spec.engine) {
       let matchedEngine = "default";

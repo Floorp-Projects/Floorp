@@ -12,7 +12,7 @@ const re = new RegExp(key + "=([0-9\.]+)");
 // Define the testing function
 function* doTest(aBrowser) {
   return yield ContentTask.spawn(aBrowser, {key, re},
-                                 function ({key, re}) {
+                                 function({key, re}) {
     let result = re.exec(content.document.cookie);
     if (result) {
       return result[1];

@@ -7,7 +7,7 @@
 // this one on platforms which don't have CAN_DRAW_IN_TITLEBAR defined.
 
 var TabsInTitlebar = {
-  init: function () {
+  init: function() {
     if (this._initialized) {
       return;
     }
@@ -49,7 +49,7 @@ var TabsInTitlebar = {
     }
   },
 
-  allowedBy: function (condition, allow) {
+  allowedBy: function(condition, allow) {
     if (allow) {
       if (condition in this._disallowed) {
         delete this._disallowed[condition];
@@ -69,18 +69,18 @@ var TabsInTitlebar = {
     return document.documentElement.getAttribute("tabsintitlebar") == "true";
   },
 
-  observe: function (subject, topic, data) {
+  observe: function(subject, topic, data) {
     if (topic == "nsPref:changed")
       this._readPref();
   },
 
-  handleEvent: function (aEvent) {
+  handleEvent: function(aEvent) {
     if (aEvent.type == "resolutionchange" && aEvent.target == window) {
       this._update(true);
     }
   },
 
-  _onMenuMutate: function (aMutations) {
+  _onMenuMutate: function(aMutations) {
     for (let mutation of aMutations) {
       if (mutation.attributeName == "inactive" ||
           mutation.attributeName == "autohide") {
@@ -96,12 +96,12 @@ var TabsInTitlebar = {
   _prefName: "browser.tabs.drawInTitlebar",
   _lastSizeMode: null,
 
-  _readPref: function () {
+  _readPref: function() {
     this.allowedBy("pref",
                    Services.prefs.getBoolPref(this._prefName));
   },
 
-  _update: function (aForce = false) {
+  _update: function(aForce = false) {
     let $ = id => document.getElementById(id);
     let rect = ele => ele.getBoundingClientRect();
     let verticalMargins = cstyle => parseFloat(cstyle.marginBottom) + parseFloat(cstyle.marginTop);
@@ -253,12 +253,12 @@ var TabsInTitlebar = {
     }
   },
 
-  _sizePlaceholder: function (type, width) {
+  _sizePlaceholder: function(type, width) {
     Array.forEach(document.querySelectorAll(".titlebar-placeholder[type='" + type + "']"),
-                  function (node) { node.width = width; });
+                  function(node) { node.width = width; });
   },
 
-  uninit: function () {
+  uninit: function() {
     this._initialized = false;
     removeEventListener("resolutionchange", this);
     Services.prefs.removeObserver(this._prefName, this);

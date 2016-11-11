@@ -9,17 +9,17 @@ function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref(PREF, true);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref(PREF);
   });
 
-  preparePendingTab(function (aTab) {
+  preparePendingTab(function(aTab) {
     let win = gBrowser.replaceTabWithWindow(aTab);
 
-    whenDelayedStartupFinished(win, function () {
+    whenDelayedStartupFinished(win, function() {
       let [tab] = win.gBrowser.tabs;
 
-      whenLoaded(tab.linkedBrowser, function () {
+      whenLoaded(tab.linkedBrowser, function() {
         is(tab.linkedBrowser.currentURI.spec, URL, "correct url should be loaded");
         ok(!tab.hasAttribute("pending"), "tab should not be pending");
 
@@ -33,12 +33,12 @@ function test() {
 function preparePendingTab(aCallback) {
   let tab = gBrowser.addTab(URL);
 
-  whenLoaded(tab.linkedBrowser, function () {
+  whenLoaded(tab.linkedBrowser, function() {
     BrowserTestUtils.removeTab(tab).then(() => {
       let [{state}] = JSON.parse(SessionStore.getClosedTabData(window));
 
       tab = gBrowser.addTab("about:blank");
-      whenLoaded(tab.linkedBrowser, function () {
+      whenLoaded(tab.linkedBrowser, function() {
         SessionStore.setTabState(tab, JSON.stringify(state));
         ok(tab.hasAttribute("pending"), "tab should be pending");
         aCallback(tab);

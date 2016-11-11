@@ -321,11 +321,11 @@ function waitForNewEngine(basename, numImages) {
   let addDeferred = Promise.defer();
   let url = getRootDirectory(gTestPath) + basename;
   Services.search.addEngine(url, null, "", false, {
-    onSuccess: function (engine) {
+    onSuccess: function(engine) {
       info("Search engine added: " + basename);
       addDeferred.resolve(engine);
     },
-    onError: function (errCode) {
+    onError: function(errCode) {
       ok(false, "addEngine failed with error code " + errCode);
       addDeferred.reject();
     },

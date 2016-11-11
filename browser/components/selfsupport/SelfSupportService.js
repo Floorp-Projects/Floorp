@@ -30,7 +30,7 @@ MozSelfSupportInterface.prototype = {
 
   _window: null,
 
-  init: function (window) {
+  init: function(window) {
     this._window = window;
   },
 

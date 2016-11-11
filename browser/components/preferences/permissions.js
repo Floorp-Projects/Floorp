@@ -32,7 +32,7 @@ var gPermissionManager = {
     {
       return this._rowCount;
     },
-    getCellText: function (aRow, aColumn)
+    getCellText: function(aRow, aColumn)
     {
       if (aColumn.id == "siteCol")
         return gPermissionManager._permissions[aRow].origin;
@@ -59,7 +59,7 @@ var gPermissionManager = {
     }
   },
 
-  _getCapabilityString: function (aCapability)
+  _getCapabilityString: function(aCapability)
   {
     var stringKey = null;
     switch (aCapability) {
@@ -79,7 +79,7 @@ var gPermissionManager = {
     return this._bundle.getString(stringKey);
   },
 
-  addPermission: function (aCapability)
+  addPermission: function(aCapability)
   {
     var textbox = document.getElementById("url");
     var input_url = textbox.value.replace(/^\s*/, ""); // trim any leading space
@@ -162,7 +162,7 @@ var gPermissionManager = {
 
   },
 
-  _handleCapabilityChange: function ()
+  _handleCapabilityChange: function()
   {
     // Re-do the sort, if the status changed from Block to Allow
     // or vice versa, since if we're sorted on status, we may no
@@ -191,33 +191,33 @@ var gPermissionManager = {
                     !this._lastPermissionSortAscending); // keep sort direction
   },
 
-  onHostInput: function (aSiteField)
+  onHostInput: function(aSiteField)
   {
     document.getElementById("btnSession").disabled = !aSiteField.value;
     document.getElementById("btnBlock").disabled = !aSiteField.value;
     document.getElementById("btnAllow").disabled = !aSiteField.value;
   },
 
-  onWindowKeyPress: function (aEvent)
+  onWindowKeyPress: function(aEvent)
   {
     if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE)
       window.close();
   },
 
-  onHostKeyPress: function (aEvent)
+  onHostKeyPress: function(aEvent)
   {
     if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
       document.getElementById("btnAllow").click();
   },
 
-  onLoad: function ()
+  onLoad: function()
   {
     this._bundle = document.getElementById("bundlePreferences");
     var params = window.arguments[0];
     this.init(params);
   },
 
-  init: function (aParams)
+  init: function(aParams)
   {
     if (this._type) {
       // reusing an open dialog, clear the old observer
@@ -275,7 +275,7 @@ var gPermissionManager = {
     urlField.focus();
   },
 
-  uninit: function ()
+  uninit: function()
   {
     if (!this._observerRemoved) {
       Services.obs.removeObserver(this, "perm-changed");
@@ -284,7 +284,7 @@ var gPermissionManager = {
     }
   },
 
-  observe: function (aSubject, aTopic, aData)
+  observe: function(aSubject, aTopic, aData)
   {
     if (aTopic == "perm-changed") {
       var permission = aSubject.QueryInterface(Components.interfaces.nsIPermission);
@@ -311,7 +311,7 @@ var gPermissionManager = {
     }
   },
 
-  onPermissionSelected: function ()
+  onPermissionSelected: function()
   {
     var hasSelection = this._tree.view.selection.count > 0;
     var hasRows = this._tree.view.rowCount > 0;
@@ -319,7 +319,7 @@ var gPermissionManager = {
     document.getElementById("removeAllPermissions").disabled = !hasRows;
   },
 
-  onPermissionDeleted: function ()
+  onPermissionDeleted: function()
   {
     if (!this._view.rowCount)
       return;
@@ -333,7 +333,7 @@ var gPermissionManager = {
     document.getElementById("removeAllPermissions").disabled = !this._permissions.length;
   },
 
-  onAllPermissionsDeleted: function ()
+  onAllPermissionsDeleted: function()
   {
     if (!this._view.rowCount)
       return;
@@ -347,7 +347,7 @@ var gPermissionManager = {
     document.getElementById("removeAllPermissions").disabled = true;
   },
 
-  onPermissionKeyPress: function (aEvent)
+  onPermissionKeyPress: function(aEvent)
   {
     if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE) {
       this.onPermissionDeleted();
@@ -359,13 +359,13 @@ var gPermissionManager = {
 
   _lastPermissionSortColumn: "",
   _lastPermissionSortAscending: false,
-  _permissionsComparator : function (a, b)
+  _permissionsComparator : function(a, b)
   {
     return a.toLowerCase().localeCompare(b.toLowerCase());
   },
 
 
-  onPermissionSort: function (aColumn)
+  onPermissionSort: function(aColumn)
   {
     this._lastPermissionSortAscending = gTreeUtils.sort(this._tree,
                                                         this._view,
@@ -395,7 +395,7 @@ var gPermissionManager = {
     window.close();
   },
 
-  _loadPermissions: function ()
+  _loadPermissions: function()
   {
     this._tree = document.getElementById("permissionsTree");
     this._permissions = [];
@@ -417,7 +417,7 @@ var gPermissionManager = {
     document.getElementById("removeAllPermissions").disabled = this._permissions.length == 0;
   },
 
-  _addPermissionToList: function (aPermission)
+  _addPermissionToList: function(aPermission)
   {
     if (aPermission.type == this._type &&
         (!this._manageCapability ||
@@ -432,7 +432,7 @@ var gPermissionManager = {
     }
   },
 
-  _removePermissionFromList: function (aPrincipal)
+  _removePermissionFromList: function(aPrincipal)
   {
     for (let i = 0; i < this._permissions.length; ++i) {
       if (this._permissions[i].principal.equals(aPrincipal)) {
@@ -445,7 +445,7 @@ var gPermissionManager = {
     }
   },
 
-  setOrigin: function (aOrigin)
+  setOrigin: function(aOrigin)
   {
     document.getElementById("url").value = aOrigin;
   }

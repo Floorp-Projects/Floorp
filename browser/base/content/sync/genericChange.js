@@ -147,7 +147,7 @@ var Change = {
     return undefined;
   },
 
-  doGeneratePassphrase: function () {
+  doGeneratePassphrase: function() {
     let passphrase = Weave.Utils.generatePassphrase();
     this._passphraseBox.value = Weave.Utils.hyphenatePassphrase(passphrase);
     this._dialog.getButton("finish").disabled = false;
@@ -201,7 +201,7 @@ var Change = {
     return false;
   },
 
-  validate: function (event) {
+  validate: function(event) {
     let valid = false;
     let errorString = "";
 

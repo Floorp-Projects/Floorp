@@ -21,13 +21,13 @@ function page_deblobify(browser, blobURL) {
     blobURL = blobURL.blobURL;
 
     function blobURLtoBlob(blobURL) {
-      return new content.Promise(function (resolve) {
+      return new content.Promise(function(resolve) {
         let xhr = new content.XMLHttpRequest();
         xhr.open("GET", blobURL, true);
-        xhr.onload = function () {
+        xhr.onload = function() {
           resolve(xhr.response);
         };
-        xhr.onerror = function () {
+        xhr.onerror = function() {
           resolve("xhr error");
         };
         xhr.responseType = "blob";
@@ -36,9 +36,9 @@ function page_deblobify(browser, blobURL) {
     }
 
     function blobToString(blob) {
-      return new content.Promise(function (resolve) {
+      return new content.Promise(function(resolve) {
         let fileReader = new content.FileReader();
-        fileReader.onload = function () {
+        fileReader.onload = function() {
           resolve(fileReader.result);
         };
         fileReader.readAsText(blob);

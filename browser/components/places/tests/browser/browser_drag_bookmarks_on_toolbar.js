@@ -158,19 +158,19 @@ var gTests = [
 
       info("Dragging left");
       synthesizeDragWithDirection(element, expectedData, dragDirections.LEFT,
-        function ()
+        function()
         {
           info("Dragging right");
           synthesizeDragWithDirection(element, expectedData, dragDirections.RIGHT,
-            function ()
+            function()
             {
               info("Dragging up");
               synthesizeDragWithDirection(element, expectedData, dragDirections.UP,
-                function ()
+                function()
                 {
                   info("Dragging down");
                   synthesizeDragWithDirection(element, new Array(), dragDirections.DOWN,
-                    function () {
+                    function() {
                       // Cleanup.
                       PlacesUtils.bookmarks.removeItem(folderId);
                       nextTest();
@@ -200,19 +200,19 @@ var gTests = [
 
       info("Dragging left");
       synthesizeDragWithDirection(element, expectedData, dragDirections.LEFT,
-        function ()
+        function()
         {
           info("Dragging right");
           synthesizeDragWithDirection(element, expectedData, dragDirections.RIGHT,
-            function ()
+            function()
             {
               info("Dragging up");
               synthesizeDragWithDirection(element, expectedData, dragDirections.UP,
-                function ()
+                function()
                 {
                   info("Dragging down");
                   synthesizeDragWithDirection(element, expectedData, dragDirections.DOWN,
-                    function () {
+                    function() {
                       // Cleanup.
                       PlacesUtils.bookmarks.removeItem(itemId);
                       nextTest();

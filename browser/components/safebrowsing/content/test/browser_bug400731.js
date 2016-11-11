@@ -10,7 +10,7 @@ function onDOMContentLoaded(callback) {
   mm.addMessageListener("Test:DOMContentLoaded", complete);
 
   function contentScript() {
-    let listener = function () {
+    let listener = function() {
       removeEventListener("DOMContentLoaded", listener);
 
       let button = content.document.getElementById("ignoreWarningButton");

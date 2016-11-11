@@ -5,7 +5,7 @@ var notificationURL = "http://example.org/browser/browser/base/content/test/aler
 var alertWindowClosed = false;
 var permRemoved = false;
 
-function test () {
+function test() {
   waitForExplicitFinish();
 
   let pm = Services.perms;
