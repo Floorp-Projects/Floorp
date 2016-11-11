@@ -952,9 +952,9 @@ function PlacesToolbar(aPlace) {
     ["_dropIndicator",        "PlacesToolbarDropIndicator"],
     ["_chevron",              "PlacesChevron"],
     ["_chevronPopup",         "PlacesChevronPopup"]
-  ].forEach(function (elementGlobal) {
+  ].forEach(function(elementGlobal) {
     let [name, id] = elementGlobal;
-    thisView.__defineGetter__(name, function () {
+    thisView.__defineGetter__(name, function() {
       let element = document.getElementById(id);
       if (!element)
         return null;

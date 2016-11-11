@@ -24,7 +24,7 @@ var gTests = [
       return new Promise(function(resolve, reject) {
         let tab;
         let channel = new WebChannel("generic", Services.io.newURI(HTTP_PATH, null, null));
-        channel.listen(function (id, message, target) {
+        channel.listen(function(id, message, target) {
           is(id, "generic");
           is(message.something.nested, "hello");
           channel.stopListening();
@@ -43,7 +43,7 @@ var gTests = [
         let tab;
         let channel = new WebChannel("twoway", Services.io.newURI(HTTP_PATH, null, null));
 
-        channel.listen(function (id, message, sender) {
+        channel.listen(function(id, message, sender) {
           is(id, "twoway", "bad id");
           ok(message.command, "command not ok");
 
@@ -68,12 +68,12 @@ var gTests = [
     run: function* () {
       let parentChannel = new WebChannel("echo", Services.io.newURI(HTTP_PATH, null, null));
       let iframeChannel = new WebChannel("twoway", Services.io.newURI(HTTP_IFRAME_PATH, null, null));
-      let promiseTestDone = new Promise(function (resolve, reject) {
-        parentChannel.listen(function (id, message, sender) {
+      let promiseTestDone = new Promise(function(resolve, reject) {
+        parentChannel.listen(function(id, message, sender) {
           reject(new Error("WebChannel message incorrectly sent to parent"));
         });
 
-        iframeChannel.listen(function (id, message, sender) {
+        iframeChannel.listen(function(id, message, sender) {
           is(id, "twoway", "bad id (2)");
           ok(message.command, "command not ok (2)");
 
@@ -126,11 +126,11 @@ var gTests = [
       let preRedirectChannel = new WebChannel("pre_redirect", Services.io.newURI(HTTP_IFRAME_PATH, null, null));
       let postRedirectChannel = new WebChannel("post_redirect", Services.io.newURI(HTTP_REDIRECTED_IFRAME_PATH, null, null));
 
-      let promiseTestDone = new Promise(function (resolve, reject) {
-        preRedirectChannel.listen(function (id, message, preRedirectSender) {
+      let promiseTestDone = new Promise(function(resolve, reject) {
+        preRedirectChannel.listen(function(id, message, preRedirectSender) {
           if (message.command === "redirecting") {
 
-            postRedirectChannel.listen(function (aId, aMessage, aPostRedirectSender) {
+            postRedirectChannel.listen(function(aId, aMessage, aPostRedirectSender) {
               is(aId, "post_redirect");
               isnot(aMessage.command, "no_response_expected");
 
@@ -168,7 +168,7 @@ var gTests = [
         let tab;
         let channel = new WebChannel("multichannel", Services.io.newURI(HTTP_PATH, null, null));
 
-        channel.listen(function (id, message, sender) {
+        channel.listen(function(id, message, sender) {
           is(id, "multichannel");
           gBrowser.removeTab(tab);
           resolve();
@@ -186,8 +186,8 @@ var gTests = [
       // an unsolicted message is sent from Chrome->Content which is then
       // echoed back. If the echo is received here, then the content
       // received the message.
-      let messagePromise = new Promise(function (resolve, reject) {
-        channel.listen(function (id, message, sender) {
+      let messagePromise = new Promise(function(resolve, reject) {
+        channel.listen(function(id, message, sender) {
           is(id, "echo");
           is(message.command, "unsolicited");
 
@@ -217,8 +217,8 @@ var gTests = [
       // an unsolicted message is sent from Chrome->Content which is then
       // echoed back. If the echo is received here, then the content
       // received the message.
-      let messagePromise = new Promise(function (resolve, reject) {
-        channel.listen(function (id, message, sender) {
+      let messagePromise = new Promise(function(resolve, reject) {
+        channel.listen(function(id, message, sender) {
           is(id, "echo");
           is(message.command, "unsolicited");
 
@@ -251,8 +251,8 @@ var gTests = [
       // `unsolicited_no_response_expected` is sent to the wrong principal
       // and should not be echoed back. The second, `done`, is sent to the
       // correct principal and should be echoed back.
-      let messagePromise = new Promise(function (resolve, reject) {
-        channel.listen(function (id, message, sender) {
+      let messagePromise = new Promise(function(resolve, reject) {
+        channel.listen(function(id, message, sender) {
           is(id, "echo");
 
           if (message.command === "done") {
@@ -307,8 +307,8 @@ var gTests = [
        */
       let channel = new WebChannel("not_a_window", Services.io.newURI(HTTP_PATH, null, null));
 
-      let testDonePromise = new Promise(function (resolve, reject) {
-        channel.listen(function (id, message, sender) {
+      let testDonePromise = new Promise(function(resolve, reject) {
+        channel.listen(function(id, message, sender) {
           if (message.command === "start") {
             channel.send({ command: "done" }, sender);
           } else if (message.command === "done") {

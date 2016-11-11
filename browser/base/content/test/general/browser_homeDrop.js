@@ -57,7 +57,7 @@ add_task(function*() {
   function dropInvalidURI() {
     return new Promise(resolve => {
       let consoleListener = {
-        observe: function (m) {
+        observe: function(m) {
           if (m.message.includes("NS_ERROR_DOM_BAD_URI")) {
             ok(true, "drop was blocked");
             resolve();
@@ -65,11 +65,11 @@ add_task(function*() {
         }
       };
       Services.console.registerListener(consoleListener);
-      registerCleanupFunction(function () {
+      registerCleanupFunction(function() {
         Services.console.unregisterListener(consoleListener);
       });
 
-      executeSoon(function () {
+      executeSoon(function() {
         info("Attempting second drop, of a javascript: URI");
         // The drop handler throws an exception when dragging URIs that inherit
         // principal, e.g. javascript:

@@ -8,7 +8,7 @@ function test() {
 
   let tab = gBrowser.selectedTab = gBrowser.addTab();
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     gBrowser.removeTab(tab);
     Services.prefs.clearUserPref(trimPref);
     Services.prefs.clearUserPref(phishyUserPassPref);
@@ -173,7 +173,7 @@ function runTest(test, cb) {
 
 function testCopy(copyVal, targetValue, cb) {
   info("Expecting copy of: " + targetValue);
-  waitForClipboard(targetValue, function () {
+  waitForClipboard(targetValue, function() {
     gURLBar.focus();
     if (copyVal) {
       let startBracket = copyVal.indexOf("<");

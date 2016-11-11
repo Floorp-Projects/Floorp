@@ -47,7 +47,7 @@ function* testOnWindow(options) {
   yield newWindowPromise;
 }
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   gWindow = window;
   windowsToClose.forEach(function(win) {
     win.close();

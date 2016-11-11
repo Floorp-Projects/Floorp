@@ -1,8 +1,8 @@
 function test() {
   waitForExplicitFinish();
 
-  whenNewWindowLoaded(null, function (win) {
-    waitForFocus(function () {
+  whenNewWindowLoaded(null, function(win) {
+    waitForFocus(function() {
       function onTabClose() {
         ok(false, "shouldn't have gotten the TabClose event for the last tab");
       }

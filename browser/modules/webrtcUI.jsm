@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
 this.webrtcUI = {
-  init: function () {
+  init: function() {
     Services.obs.addObserver(maybeAddMenuIndicator, "browser-delayed-startup-finished", false);
 
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
@@ -37,7 +37,7 @@ this.webrtcUI = {
     mm.addMessageListener("webrtc:UpdateBrowserIndicators", this);
   },
 
-  uninit: function () {
+  uninit: function() {
     Services.obs.removeObserver(maybeAddMenuIndicator, "browser-delayed-startup-finished");
 
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
@@ -320,7 +320,7 @@ function prompt(aBrowser, aRequest) {
     {
       label: stringBundle.getString("getUserMedia.denyRequest.label"),
       accessKey: stringBundle.getString("getUserMedia.denyRequest.accesskey"),
-      callback: function () {
+      callback: function() {
         denyRequest(notification.browser, aRequest);
       }
     }
@@ -330,7 +330,7 @@ function prompt(aBrowser, aRequest) {
     secondaryActions.push({
       label: stringBundle.getString("getUserMedia.never.label"),
       accessKey: stringBundle.getString("getUserMedia.never.accesskey"),
-      callback: function () {
+      callback: function() {
         denyRequest(notification.browser, aRequest);
         // Let someone save "Never" for http sites so that they can be stopped from
         // bothering you with doorhangers.
@@ -350,7 +350,7 @@ function prompt(aBrowser, aRequest) {
     secondaryActions.unshift({
       label: stringBundle.getString("getUserMedia.always.label"),
       accessKey: stringBundle.getString("getUserMedia.always.accesskey"),
-      callback: function (aState) {
+      callback: function(aState) {
         mainAction.callback(aState, true);
       }
     });

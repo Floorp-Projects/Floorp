@@ -85,13 +85,13 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
       Task.spawn(finishCleanUp).then(finishcallback || defaultFinishChecks);
   }
   function removeAddedProviders(cleanup) {
-    manifests.forEach(function (m) {
+    manifests.forEach(function(m) {
       // If we're "cleaning up", don't call finish when done.
-      let callback = cleanup ? function () {} : finishIfDone;
+      let callback = cleanup ? function() {} : finishIfDone;
       // Similarly, if we're cleaning up, catch exceptions from removeProvider
       let removeProvider = SocialService.disableProvider.bind(SocialService);
       if (cleanup) {
-        removeProvider = function (origin, cb) {
+        removeProvider = function(origin, cb) {
           try {
             SocialService.disableProvider(origin, cb);
           } catch (ex) {
@@ -111,7 +111,7 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
 
   let providersAdded = 0;
 
-  manifests.forEach(function (m) {
+  manifests.forEach(function(m) {
     SocialService.addProvider(m, function(provider) {
 
       providersAdded++;
@@ -125,7 +125,7 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
       // If we've added all the providers we need, call the callback to start
       // the tests (and give it a callback it can call to finish them)
       if (providersAdded == manifests.length) {
-        registerCleanupFunction(function () {
+        registerCleanupFunction(function() {
           finishSocialTest(true);
         });
         BrowserTestUtils.waitForCondition(() => provider.enabled,

@@ -18,7 +18,7 @@ add_task(function* () {
                                             "Bookmark");
 
   let library = yield promiseLibrary("AllBookmarks");
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     library.close();
     PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
   });

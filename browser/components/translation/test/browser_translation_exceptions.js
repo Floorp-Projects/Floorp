@@ -18,7 +18,7 @@ function test() {
   Services.prefs.setBoolPref(kShowUIPref, true);
   let tab = gBrowser.addTab();
   gBrowser.selectedTab = tab;
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     gBrowser.removeTab(tab);
     Services.prefs.clearUserPref(kShowUIPref);
   });

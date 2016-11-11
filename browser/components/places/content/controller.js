@@ -59,7 +59,7 @@ InsertionPoint.prototype = {
     return this._index = val;
   },
 
-  promiseGuid: function () {
+  promiseGuid: function() {
     return PlacesUtils.promiseItemGuid(this.itemId);
   },
 
@@ -87,7 +87,7 @@ function PlacesController(aView) {
   XPCOMUtils.defineLazyServiceGetter(this, "clipboard",
                                      "@mozilla.org/widget/clipboard;1",
                                      "nsIClipboard");
-  XPCOMUtils.defineLazyGetter(this, "profileName", function () {
+  XPCOMUtils.defineLazyGetter(this, "profileName", function() {
     return Services.dirsvc.get("ProfD", Ci.nsIFile).leafName;
   });
 
@@ -105,7 +105,7 @@ PlacesController.prototype = {
   ]),
 
   // nsIClipboardOwner
-  LosingOwnership: function PC_LosingOwnership (aXferable) {
+  LosingOwnership: function PC_LosingOwnership(aXferable) {
     this.cutNodes = [];
   },
 
@@ -1098,7 +1098,7 @@ PlacesController.prototype = {
     }
   },
 
-  get clipboardAction () {
+  get clipboardAction() {
     let action = {};
     let actionOwner;
     try {
@@ -1155,7 +1155,7 @@ PlacesController.prototype = {
     // Avoid handling descendants of a copied node, the transactions take care
     // of them automatically.
     let copiedFolders = [];
-    aNodes.forEach(function (node) {
+    aNodes.forEach(function(node) {
       if (this._shouldSkipNode(node, copiedFolders))
         return;
       if (PlacesUtils.nodeIsFolder(node))
@@ -1164,7 +1164,7 @@ PlacesController.prototype = {
       let livemarkInfo = this.getCachedLivemarkInfo(node);
       let feedURI = livemarkInfo && livemarkInfo.feedURI.spec;
 
-      contents.forEach(function (content) {
+      contents.forEach(function(content) {
         content.entries.push(
           PlacesUtils.wrapNode(node, content.type, feedURI)
         );
@@ -1183,7 +1183,7 @@ PlacesController.prototype = {
     let hasData = false;
     // This order matters here!  It controls how this and other applications
     // select data to be inserted based on type.
-    contents.forEach(function (content) {
+    contents.forEach(function(content) {
       if (content.entries.length > 0) {
         hasData = true;
         let glue =
@@ -1212,7 +1212,7 @@ PlacesController.prototype = {
   set cutNodes(aNodes) {
     let self = this;
     function updateCutNodes(aValue) {
-      self._cutNodes.forEach(function (aNode) {
+      self._cutNodes.forEach(function(aNode) {
         self._view.toggleCutNode(aNode, aValue);
       });
     }
@@ -1537,7 +1537,7 @@ var PlacesControllerDragHelper = {
    *          A node unwrapped by PlacesUtils.unwrapNodes().
    * @return True if the node can be moved, false otherwise.
    */
-  canMoveUnwrappedNode: function (aUnwrappedNode) {
+  canMoveUnwrappedNode: function(aUnwrappedNode) {
     return aUnwrappedNode.id > 0 &&
            !PlacesUtils.isRootItem(aUnwrappedNode.id) &&
            (!aUnwrappedNode.parent || !PlacesUIUtils.isContentsReadOnly(aUnwrappedNode.parent)) &&

@@ -5,7 +5,7 @@ function remote(task) {
 add_task(function* () {
   gBrowser.selectedTab = gBrowser.addTab();
 
-  let promise = remote(function () {
+  let promise = remote(function() {
     return ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", true, event => {
       return content.document.documentURI != "about:blank";
     }).then(() => 0); // don't want to send the event to the chrome process
@@ -30,7 +30,7 @@ add_task(function* () {
   // Tweak the expert mode pref
   gPrefService.setBoolPref("browser.xul.error_pages.expert_bad_cert", true);
 
-  promise = remote(function () {
+  promise = remote(function() {
     return ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", true);
   });
   gBrowser.reload();

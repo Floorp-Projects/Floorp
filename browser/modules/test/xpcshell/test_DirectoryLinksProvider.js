@@ -247,7 +247,7 @@ function setTimeout(fun, timeout) {
   let timer = Components.classes["@mozilla.org/timer;1"]
                         .createInstance(Components.interfaces.nsITimer);
   var event = {
-    notify: function () {
+    notify: function() {
       fun();
     }
   };
@@ -1438,7 +1438,7 @@ add_task(function* test_DirectoryLinksProvider_getFrequencyCapLogic() {
 
   // now step into the furture
   let _wasTodayOrig = DirectoryLinksProvider._wasToday;
-  DirectoryLinksProvider._wasToday = function () { return false; }
+  DirectoryLinksProvider._wasToday = function() { return false; }
   // exhaust total views
   DirectoryLinksProvider._addFrequencyCapView("1")
   do_check_true(DirectoryLinksProvider._testFrequencyCapLimits("1"));
@@ -1531,9 +1531,9 @@ add_task(function* test_DirectoryLinksProvider_ClickRemoval() {
         }]
       },
       {
-        handleError: function () { do_check_true(false); },
-        handleResult: function () {},
-        handleCompletion: function () { resolve(); }
+        handleError: function() { do_check_true(false); },
+        handleResult: function() {},
+        handleCompletion: function() { resolve(); }
       }
     );
   });

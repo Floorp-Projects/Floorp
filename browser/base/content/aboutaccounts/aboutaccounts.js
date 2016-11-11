@@ -105,7 +105,7 @@ function updateDisplayedEmail(user) {
 var wrapper = {
   iframe: null,
 
-  init: function (url, urlParams) {
+  init: function(url, urlParams) {
     // If a master-password is enabled, we want to encourage the user to
     // unlock it.  Things still work if not, but the user will probably need
     // to re-auth next startup (in which case we will get here again and
@@ -134,7 +134,7 @@ var wrapper = {
     webNav.loadURI(url, Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY, null, null, null);
   },
 
-  retry: function () {
+  retry: function() {
     let webNav = this.iframe.frameLoader.docShell.QueryInterface(Ci.nsIWebNavigation);
     webNav.loadURI(this.url, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY, null, null, null);
   },
@@ -180,7 +180,7 @@ var wrapper = {
     onSecurityChange: function() {},
   },
 
-  handleEvent: function (evt) {
+  handleEvent: function(evt) {
     switch (evt.type) {
       case "load":
         this.iframe.contentWindow.addEventListener("FirefoxAccountsCommand", this);
@@ -198,7 +198,7 @@ var wrapper = {
    *
    * @param accountData the user's account data and credentials
    */
-  onLogin: function (accountData) {
+  onLogin: function(accountData) {
     log("Received: 'login'. Data:" + JSON.stringify(accountData));
 
     if (accountData.customizeSync) {
@@ -264,7 +264,7 @@ var wrapper = {
   /**
    * onSignOut handler erases the current user's session from the fxaccounts service
    */
-  onSignOut: function () {
+  onSignOut: function() {
     log("Received: 'sign_out'.");
 
     fxAccounts.signOut().then(
@@ -273,7 +273,7 @@ var wrapper = {
     );
   },
 
-  handleRemoteCommand: function (evt) {
+  handleRemoteCommand: function(evt) {
     log('command: ' + evt.detail.command);
     let data = evt.detail.data;
 
@@ -293,7 +293,7 @@ var wrapper = {
     }
   },
 
-  injectData: function (type, content) {
+  injectData: function(type, content) {
     return fxAccounts.promiseAccountsSignUpURI().then(authUrl => {
       let data = {
         type: type,

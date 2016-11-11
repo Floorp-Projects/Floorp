@@ -133,11 +133,11 @@ function storeCache(aURL, aContent) {
 
   return new Promise(resolve => {
     let storeCacheListener = {
-      onCacheEntryCheck: function (entry, appcache) {
+      onCacheEntryCheck: function(entry, appcache) {
         return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
       },
 
-      onCacheEntryAvailable: function (entry, isnew, appcache, status) {
+      onCacheEntryAvailable: function(entry, isnew, appcache, status) {
         do_check_eq(status, Cr.NS_OK);
 
         entry.setMetaDataElement("servertype", "0");
@@ -168,7 +168,7 @@ function checkCache(aURL) {
 
   return new Promise(resolve => {
     let checkCacheListener = {
-      onCacheEntryAvailable: function (entry, isnew, appcache, status) {
+      onCacheEntryAvailable: function(entry, isnew, appcache, status) {
         do_check_eq(status, Cr.NS_ERROR_CACHE_KEY_NOT_FOUND);
         resolve();
       }

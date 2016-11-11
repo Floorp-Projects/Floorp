@@ -152,7 +152,7 @@ var tests = [
 
         // Move the highlight outside which shouldn't close the app menu since it was manually opened.
         gContentAPI.showHighlight("appMenu");
-        waitForElementToBeVisible(highlight, function () {
+        waitForElementToBeVisible(highlight, function() {
           isnot(PanelUI.panel.state, "closed",
                 "Panel should remain open since UITour didn't open it in the first place");
           gContentAPI.hideMenu("appMenu");
@@ -357,7 +357,7 @@ var tests = [
         let someOtherEngineID = data.engines.filter(t => t != "searchEngine-" + defaultEngine.identifier)[0];
         someOtherEngineID = someOtherEngineID.replace(/^searchEngine-/, "");
 
-        let observe = function (subject, topic, verb) {
+        let observe = function(subject, topic, verb) {
           info("browser-search-engine-modified: " + verb);
           if (verb == "engine-current") {
             is(Services.search.defaultEngine.identifier, someOtherEngineID, "correct engine was switched to");

@@ -34,7 +34,7 @@ function stored(needles) {
 }
 
 add_task(function* () {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");

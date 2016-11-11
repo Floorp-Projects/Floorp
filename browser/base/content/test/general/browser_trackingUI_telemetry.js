@@ -15,7 +15,7 @@ var oldCanRecord = Services.telemetry.canRecordExtended;
 Services.telemetry.canRecordExtended = true;
 Services.prefs.setBoolPref(PREF, false);
 Services.telemetry.getHistogramById("TRACKING_PROTECTION_ENABLED").clear();
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
   Services.telemetry.canRecordExtended = oldCanRecord;
   Services.prefs.clearUserPref(PREF);

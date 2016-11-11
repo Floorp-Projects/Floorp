@@ -15,7 +15,7 @@ let gContainersPane = {
   init() {
     this._list = document.getElementById("containersView");
 
-    document.getElementById("backContainersLink").addEventListener("click", function () {
+    document.getElementById("backContainersLink").addEventListener("click", function() {
       gotoPref("privacy");
     });
 

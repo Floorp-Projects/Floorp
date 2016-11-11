@@ -11,7 +11,7 @@ const TEST_FILE = "file_fullscreen-window-open.html";
 const gHttpTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/",
                                                           "http://127.0.0.1:8888/");
 
-function test () {
+function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref(PREF_DISABLE_OPEN_NEW_WINDOW, true);
@@ -19,7 +19,7 @@ function test () {
   let newTab = gBrowser.addTab(gHttpTestRoot + TEST_FILE);
   gBrowser.selectedTab = newTab;
 
-  whenTabLoaded(newTab, function () {
+  whenTabLoaded(newTab, function() {
     // Enter browser fullscreen mode.
     BrowserFullScreen();
 
@@ -48,7 +48,7 @@ var gTests = [
   test_open_from_chrome,
 ];
 
-function runNextTest () {
+function runNextTest() {
   let testCase = gTests.shift();
   if (testCase) {
     executeSoon(testCase);
@@ -66,7 +66,7 @@ function test_open() {
       title: "test_open",
       param: "",
     },
-    finalizeFn: function () {},
+    finalizeFn: function() {},
   });
 }
 
@@ -77,7 +77,7 @@ function test_open_with_size() {
       title: "test_open_with_size",
       param: "width=400,height=400",
     },
-    finalizeFn: function () {},
+    finalizeFn: function() {},
   });
 }
 
@@ -88,7 +88,7 @@ function test_open_with_pos() {
       title: "test_open_with_pos",
       param: "top=200,left=200",
     },
-    finalizeFn: function () {},
+    finalizeFn: function() {},
   });
 }
 
@@ -100,11 +100,11 @@ function test_open_with_outerSize() {
       title: "test_open_with_outerSize",
       param: "outerWidth=200,outerHeight=200",
     },
-    successFn: function () {
+    successFn: function() {
       is(window.outerWidth, outerWidth, "Don't change window.outerWidth.");
       is(window.outerHeight, outerHeight, "Don't change window.outerHeight.");
     },
-    finalizeFn: function () {},
+    finalizeFn: function() {},
   });
 }
 
@@ -116,11 +116,11 @@ function test_open_with_innerSize() {
       title: "test_open_with_innerSize",
       param: "innerWidth=200,innerHeight=200",
     },
-    successFn: function () {
+    successFn: function() {
       is(window.innerWidth, innerWidth, "Don't change window.innerWidth.");
       is(window.innerHeight, innerHeight, "Don't change window.innerHeight.");
     },
-    finalizeFn: function () {},
+    finalizeFn: function() {},
   });
 }
 
@@ -131,7 +131,7 @@ function test_open_with_dialog() {
       title: "test_open_with_dialog",
       param: "dialog=yes",
     },
-    finalizeFn: function () {},
+    finalizeFn: function() {},
   });
 }
 
@@ -148,7 +148,7 @@ function test_open_when_open_new_window_by_pref() {
       title: "test_open_when_open_new_window_by_pref",
       param: "width=400,height=400",
     },
-    finalizeFn: function () {
+    finalizeFn: function() {
       Services.prefs.clearUserPref(PREF_NAME);
     },
   });
@@ -163,7 +163,7 @@ function test_open_with_pref_to_disable_in_fullscreen() {
       title: "test_open_with_pref_disabled_in_fullscreen",
       param: "width=400,height=400",
     },
-    finalizeFn: function () {
+    finalizeFn: function() {
       Services.prefs.setBoolPref(PREF_DISABLE_OPEN_NEW_WINDOW, true);
     },
   });
@@ -177,7 +177,7 @@ function test_open_from_chrome() {
       title: "test_open_from_chrome",
       param: "",
     },
-    finalizeFn: function () {}
+    finalizeFn: function() {}
   });
 }
 
@@ -197,7 +197,7 @@ function waitForTabOpen(aOptions) {
     gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, true);
 
     let tab = aEvent.target;
-    whenTabLoaded(tab, function () {
+    whenTabLoaded(tab, function() {
       is(tab.linkedBrowser.contentTitle, message.title,
          "Opened Tab is expected: " + message.title);
 
@@ -211,7 +211,7 @@ function waitForTabOpen(aOptions) {
   }
   gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true);
 
-  let finalize = function () {
+  let finalize = function() {
     aOptions.finalizeFn();
     info("Finished: " + message.title);
     runNextTest();
@@ -242,7 +242,7 @@ function waitForWindowOpen(aOptions) {
 
   info("Running test: " + message.title);
 
-  let onFinalize = function () {
+  let onFinalize = function() {
     aOptions.finalizeFn();
 
     info("Finished: " + message.title);
@@ -283,7 +283,7 @@ function waitForWindowOpenFromChrome(aOptions) {
 
   info("Running test: " + message.title);
 
-  let onFinalize = function () {
+  let onFinalize = function() {
     aOptions.finalizeFn();
 
     info("Finished: " + message.title);

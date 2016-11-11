@@ -36,7 +36,7 @@ var gBrowserThumbnails = {
     this._sslDiskCacheEnabled =
       Services.prefs.getBoolPref(this.PREF_DISK_CACHE_SSL);
 
-    this._tabEvents.forEach(function (aEvent) {
+    this._tabEvents.forEach(function(aEvent) {
       gBrowser.tabContainer.addEventListener(aEvent, this, false);
     }, this);
 
@@ -48,7 +48,7 @@ var gBrowserThumbnails = {
     gBrowser.removeTabsProgressListener(this);
     Services.prefs.removeObserver(this.PREF_DISK_CACHE_SSL, this);
 
-    this._tabEvents.forEach(function (aEvent) {
+    this._tabEvents.forEach(function(aEvent) {
       gBrowser.tabContainer.removeEventListener(aEvent, this, false);
     }, this);
   },
@@ -94,7 +94,7 @@ var gBrowserThumbnails = {
     // Only capture about:newtab top sites.
     if (this._topSiteURLs.indexOf(aBrowser.currentURI.spec) == -1)
       return;
-    this._shouldCapture(aBrowser, function (aResult) {
+    this._shouldCapture(aBrowser, function(aResult) {
       if (aResult) {
         PageThumbs.captureAndStoreIfStale(aBrowser);
       }
@@ -107,7 +107,7 @@ var gBrowserThumbnails = {
     else
       aBrowser.addEventListener("scroll", this, true);
 
-    let timeout = setTimeout(function () {
+    let timeout = setTimeout(function() {
       this._clearTimeout(aBrowser);
       this._capture(aBrowser);
     }.bind(this), this._captureDelayMS);

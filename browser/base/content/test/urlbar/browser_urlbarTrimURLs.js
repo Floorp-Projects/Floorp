@@ -13,7 +13,7 @@ function test() {
 
   gBrowser.selectedTab = gBrowser.addTab();
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     gBrowser.removeCurrentTab();
     Services.prefs.clearUserPref(prefname);
     URLBarSetURI();
@@ -79,12 +79,12 @@ function test() {
 
   waitForExplicitFinish();
 
-  gBrowser.selectedBrowser.addEventListener("load", function () {
+  gBrowser.selectedBrowser.addEventListener("load", function() {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
     is(gBrowser.currentURI.spec, "http://example.com/", "expected page should have loaded");
 
-    testCopy("example.com", "http://example.com/", function () {
+    testCopy("example.com", "http://example.com/", function() {
       SetPageProxyState("invalid");
       gURLBar.valueIsTyped = true;
       testCopy("example.com", "example.com", finish);
@@ -95,7 +95,7 @@ function test() {
 }
 
 function testCopy(originalValue, targetValue, cb) {
-  waitForClipboard(targetValue, function () {
+  waitForClipboard(targetValue, function() {
     is(gURLBar.textValue, originalValue, "url bar copy value set");
 
     gURLBar.focus();

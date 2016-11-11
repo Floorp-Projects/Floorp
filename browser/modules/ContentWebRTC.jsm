@@ -131,7 +131,7 @@ function handleGUMRequest(aSubject, aTopic, aData) {
 
   contentWindow.navigator.mozGetUserMediaDevices(
     constraints,
-    function (devices) {
+    function(devices) {
       // If the window has been closed while we were waiting for the list of
       // devices, there's nothing to do in the callback anymore.
       if (contentWindow.closed)
@@ -140,7 +140,7 @@ function handleGUMRequest(aSubject, aTopic, aData) {
       prompt(contentWindow, aSubject.windowID, aSubject.callID,
              constraints, devices, secure);
     },
-    function (error) {
+    function(error) {
       // bug 827146 -- In the future, the UI should catch NotFoundError
       // and allow the user to plug in a device, instead of immediately failing.
       denyGUMRequest({callID: aSubject.callID}, error);

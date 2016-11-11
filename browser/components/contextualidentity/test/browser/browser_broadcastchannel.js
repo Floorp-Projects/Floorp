@@ -35,10 +35,10 @@ add_task(function* test() {
 
   // reflect the received message on title
   yield ContentTask.spawn(receiver.browser, channelName,
-    function (name) {
+    function(name) {
       content.window.testPromise = new content.window.Promise(resolve => {
         content.window.bc = new content.window.BroadcastChannel(name);
-        content.window.bc.onmessage = function (e) {
+        content.window.bc.onmessage = function(e) {
           content.document.title += e.data;
           resolve();
         }
@@ -57,7 +57,7 @@ add_task(function* test() {
     yield ContentTask.spawn(
         sender.browser,
         { name: channelName, message: sender.message },
-        function (opts) {
+        function(opts) {
           let bc = new content.window.BroadcastChannel(opts.name);
           bc.postMessage(opts.message);
         });

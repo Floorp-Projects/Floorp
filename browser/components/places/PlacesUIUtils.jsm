@@ -295,7 +295,7 @@ this.PlacesUIUtils = {
     let str = PluralForm.get(aNumber, bundle.GetStringFromName(aKey));
 
     // Replace #1 with aParams[0], #2 with aParams[1], and so on.
-    return str.replace(/\#(\d+)/g, function (matchedId, matchedNumber) {
+    return str.replace(/\#(\d+)/g, function(matchedId, matchedNumber) {
       let param = aParams[parseInt(matchedNumber, 10) - 1];
       return param !== undefined ? param : matchedId;
     });
@@ -346,7 +346,7 @@ this.PlacesUIUtils = {
 
     let annos = [];
     if (aData.annos) {
-      annos = aData.annos.filter(function (aAnno) {
+      annos = aData.annos.filter(function(aAnno) {
         return this._copyableAnnotations.includes(aAnno.name);
       }, this);
     }
@@ -458,7 +458,7 @@ this.PlacesUIUtils = {
 
     let annos = [];
     if (aData.annos) {
-      annos = aData.annos.filter(function (aAnno) {
+      annos = aData.annos.filter(function(aAnno) {
         return this._copyableAnnotations.includes(aAnno.name);
       }, this);
     }
@@ -493,7 +493,7 @@ this.PlacesUIUtils = {
     let feedURI, siteURI;
     let annos = [];
     if (aData.annos) {
-      annos = aData.annos.filter(function (aAnno) {
+      annos = aData.annos.filter(function(aAnno) {
         if (aAnno.name == PlacesUtils.LMANNO_FEEDURI) {
           feedURI = PlacesUtils._uri(aAnno.value);
         }
@@ -797,7 +797,7 @@ this.PlacesUIUtils = {
    *        a node, except the root node of a query.
    * @return true if the aNode represents a removable entry, false otherwise.
    */
-  canUserRemove: function (aNode) {
+  canUserRemove: function(aNode) {
     let parentNode = aNode.parent;
     if (!parentNode) {
       // canUserRemove doesn't accept root nodes.
@@ -845,7 +845,7 @@ this.PlacesUIUtils = {
    * @note livemark "folders" are considered read-only (but see bug 1072833).
    * @return true if aItemId points to a read-only folder, false otherwise.
    */
-  isContentsReadOnly: function (aNodeOrItemId) {
+  isContentsReadOnly: function(aNodeOrItemId) {
     let itemId;
     if (typeof(aNodeOrItemId) == "number") {
       itemId = aNodeOrItemId;

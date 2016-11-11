@@ -721,7 +721,7 @@ function getTypedURLs(registryKeyPath) {
 
 
 // Migrator for form passwords on Windows 8 and higher.
-function WindowsVaultFormPasswords () {
+function WindowsVaultFormPasswords() {
 }
 
 WindowsVaultFormPasswords.prototype = {

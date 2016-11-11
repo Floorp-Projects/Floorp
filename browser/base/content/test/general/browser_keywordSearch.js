@@ -58,7 +58,7 @@ function test() {
   };
   gBrowser.addProgressListener(listener);
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.ww.unregisterNotification(windowObserver);
 
     gBrowser.removeProgressListener(listener);

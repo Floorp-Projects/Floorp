@@ -11,7 +11,7 @@ this.EXPORTED_SYMBOLS = [
 ];
 
 // Simple event emitter abstraction for storage objects to use.
-function EventEmitter () {
+function EventEmitter() {
   this._events = new Map();
 }
 

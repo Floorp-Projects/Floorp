@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=676619
         li.appendChild(a);
         document.getElementsByTagName('ul')[0].appendChild(li);
 
-        window.addEventListener("beforeunload", function (evt) {
+        window.addEventListener("beforeunload", function(evt) {
             document.getElementById("unload-flag").textContent = "Fail";
         });
     </script>

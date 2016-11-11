@@ -307,7 +307,7 @@ function activateSecondaryAction(aAction) {
   let notification = PopupNotifications.panel.firstChild;
   notification.button.focus();
   let popup = notification.menupopup;
-  popup.addEventListener("popupshown", function () {
+  popup.addEventListener("popupshown", function() {
     popup.removeEventListener("popupshown", arguments.callee, false);
 
     // Press 'down' as many time as needed to select the requested action.
