@@ -2,16 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import firefox_puppeteer.errors as errors
+
+from firefox_puppeteer import PuppeteerMixin
+from firefox_puppeteer.ui.windows import BaseWindow
+from marionette import MarionetteTestCase
 from marionette_driver import By, Wait
 from marionette_driver.errors import NoSuchWindowException
 
-import firefox_puppeteer.errors as errors
 
-from firefox_puppeteer.ui.windows import BaseWindow
-from firefox_ui_harness.testcases import FirefoxTestCase
-
-
-class BaseWindowTestCase(FirefoxTestCase):
+class BaseWindowTestCase(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
         """
