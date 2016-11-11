@@ -18,7 +18,7 @@ const App = createClass({
   render() {
     return dom.div(
       {
-        id: "layoutview-container",
+        id: "layoutview-container-focusable",
       },
       Accordion({
         items: [
