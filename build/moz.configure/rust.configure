@@ -71,13 +71,13 @@ def rust_compiler(value, rustc, rustc_info):
 
 set_config('MOZ_RUST', rust_compiler)
 
-@depends(rust_compiler, rustc, target, cross_compiling)
+@depends(rust_compiler, rustc, target)
 @imports('os')
 @imports('subprocess')
 @imports(_from='mozbuild.configure.util', _import='LineIO')
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports(_from='tempfile', _import='mkstemp')
-def rust_target(rust_compiler, rustc, target, cross_compiling):
+def rust_target(rust_compiler, rustc, target):
     if rust_compiler:
         # Rust's --target options are similar to, but not exactly the same
         # as, the autoconf-derived targets we use.  An example would be that
