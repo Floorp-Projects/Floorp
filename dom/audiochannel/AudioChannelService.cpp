@@ -1251,6 +1251,7 @@ AudioChannelService::AudioChannelWindow::AppendAgent(AudioChannelAgent* aAgent,
   } else if (IsEnableAudioCompetingForAllAgents() && !aAudible) {
     NotifyAudioCompetingChanged(aAgent, true);
   }
+  MaybeNotifyMediaBlocked(aAgent);
 }
 
 void
@@ -1398,4 +1399,31 @@ AudioChannelService::AudioChannelWindow::NotifyChannelActive(uint64_t aWindowID,
     new NotifyChannelActiveRunnable(aWindowID, aChannel, aActive);
   DebugOnly<nsresult> rv = NS_DispatchToCurrentThread(runnable);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToCurrentThread failed");
+}
+
+void
+AudioChannelService::AudioChannelWindow::MaybeNotifyMediaBlocked(AudioChannelAgent* aAgent)
+{
+  nsCOMPtr<nsPIDOMWindowOuter> window = aAgent->Window();
+  if (!window) {
+    return;
+  }
+
+  MOZ_ASSERT(window->IsOuterWindow());
+  if (window->GetMediaSuspend() != nsISuspendedTypes::SUSPENDED_BLOCK) {
+    return;
+  }
+
+  NS_DispatchToCurrentThread(NS_NewRunnableFunction([window] () -> void {
+      nsCOMPtr<nsIObserverService> observerService =
+        services::GetObserverService();
+      if (NS_WARN_IF(!observerService)) {
+        return;
+      }
+
+      observerService->NotifyObservers(ToSupports(window),
+                                       "audio-playback",
+                                       u"block");
+    })
+  );
 }
