@@ -507,6 +507,41 @@ PrintTeeLocal(WasmPrintContext& c, AstTeeLocal& sl)
 }
 
 static bool
+PrintGetGlobal(WasmPrintContext& c, AstGetGlobal& gg)
+{
+    return PrintRef(c, gg.global());
+}
+
+static bool
+PrintSetGlobal(WasmPrintContext& c, AstSetGlobal& sg)
+{
+    PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
+
+    if (!c.f.reduceParens || lastPrecedence > AssignmentPrecedence) {
+        if (!c.buffer.append("("))
+            return false;
+    }
+
+    if (!PrintRef(c, sg.global()))
+        return false;
+    if (!c.buffer.append(" = "))
+        return false;
+
+    c.currentPrecedence = AssignmentPrecedence;
+
+    if (!PrintExpr(c, sg.value()))
+        return false;
+
+    if (!c.f.reduceParens || lastPrecedence > AssignmentPrecedence) {
+        if (!c.buffer.append(")"))
+            return false;
+    }
+
+    c.currentPrecedence = lastPrecedence;
+    return true;
+}
+
+static bool
 PrintExprList(WasmPrintContext& c, const AstExprVector& exprs, uint32_t startFrom = 0)
 {
     for (uint32_t i = startFrom; i < exprs.length(); i++) {
@@ -1401,6 +1436,10 @@ PrintExpr(WasmPrintContext& c, AstExpr& expr)
         return PrintSetLocal(c, expr.as<AstSetLocal>());
       case AstExprKind::TeeLocal:
         return PrintTeeLocal(c, expr.as<AstTeeLocal>());
+      case AstExprKind::GetGlobal:
+        return PrintGetGlobal(c, expr.as<AstGetGlobal>());
+      case AstExprKind::SetGlobal:
+        return PrintSetGlobal(c, expr.as<AstSetGlobal>());
       case AstExprKind::Block:
         return PrintBlock(c, expr.as<AstBlock>());
       case AstExprKind::If:
@@ -1431,13 +1470,11 @@ PrintExpr(WasmPrintContext& c, AstExpr& expr)
         return PrintCurrentMemory(c, expr.as<AstCurrentMemory>());
       case AstExprKind::GrowMemory:
         return PrintGrowMemory(c, expr.as<AstGrowMemory>());
-      default:
-        // Note: it's important not to remove this default since readExpr()
-        // can return Expr values for which there is no enumerator.
-        break;
+      case AstExprKind::Pop:
+        return true;
     }
 
-    return false;
+    MOZ_CRASH("Bad AstExprKind");
 }
 
 static bool

@@ -3100,9 +3100,9 @@ EmitExpr(FunctionCompiler& f)
     if (!f.mirGen().ensureBallast())
         return false;
 
-    Expr expr;
-    if (!f.iter().readExpr(&expr))
-        return false;
+    uint16_t u16;
+    MOZ_ALWAYS_TRUE(f.iter().readExpr(&u16));
+    Expr expr = Expr(u16);
 
     switch (expr) {
       // Control opcodes
@@ -3711,7 +3711,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
     ValTypeVector locals;
     if (!locals.appendAll(func.sig().args()))
         return false;
-    if (!DecodeLocalEntries(d, &locals))
+    if (!DecodeLocalEntries(d, task->mg().kind, &locals))
         return false;
 
     // Set up for Ion compilation.

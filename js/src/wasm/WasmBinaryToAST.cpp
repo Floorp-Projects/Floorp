@@ -1014,29 +1014,29 @@ static bool
 AstDecodeExpr(AstDecodeContext& c)
 {
     uint32_t exprOffset = c.iter().currentOffset();
-    Expr expr;
+    uint16_t expr;
     if (!c.iter().readExpr(&expr))
         return false;
 
     AstExpr* tmp;
     switch (expr) {
-      case Expr::Nop:
+      case uint16_t(Expr::Nop):
         if (!AstDecodeNop(c))
             return false;
         break;
-      case Expr::Drop:
+      case uint16_t(Expr::Drop):
         if (!AstDecodeDrop(c))
             return false;
         break;
-      case Expr::Call:
+      case uint16_t(Expr::Call):
         if (!AstDecodeCall(c))
             return false;
         break;
-      case Expr::CallIndirect:
+      case uint16_t(Expr::CallIndirect):
         if (!AstDecodeCallIndirect(c))
             return false;
         break;
-      case Expr::I32Const:
+      case uint16_t(Expr::I32Const):
         int32_t i32;
         if (!c.iter().readI32Const(&i32))
             return false;
@@ -1044,7 +1044,7 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!tmp || !c.push(AstDecodeStackItem(tmp)))
             return false;
         break;
-      case Expr::I64Const:
+      case uint16_t(Expr::I64Const):
         int64_t i64;
         if (!c.iter().readI64Const(&i64))
             return false;
@@ -1052,7 +1052,7 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!tmp || !c.push(AstDecodeStackItem(tmp)))
             return false;
         break;
-      case Expr::F32Const: {
+      case uint16_t(Expr::F32Const): {
         RawF32 f32;
         if (!c.iter().readF32Const(&f32))
             return false;
@@ -1061,7 +1061,7 @@ AstDecodeExpr(AstDecodeContext& c)
             return false;
         break;
       }
-      case Expr::F64Const: {
+      case uint16_t(Expr::F64Const): {
         RawF64 f64;
         if (!c.iter().readF64Const(&f64))
             return false;
@@ -1070,344 +1070,344 @@ AstDecodeExpr(AstDecodeContext& c)
             return false;
         break;
       }
-      case Expr::GetLocal:
+      case uint16_t(Expr::GetLocal):
         if (!AstDecodeGetLocal(c))
             return false;
         break;
-      case Expr::SetLocal:
+      case uint16_t(Expr::SetLocal):
         if (!AstDecodeSetLocal(c))
             return false;
         break;
-      case Expr::TeeLocal:
+      case uint16_t(Expr::TeeLocal):
         if (!AstDecodeTeeLocal(c))
             return false;
         break;
-      case Expr::Select:
+      case uint16_t(Expr::Select):
         if (!AstDecodeSelect(c))
             return false;
         break;
-      case Expr::Block:
-      case Expr::Loop:
-        if (!AstDecodeBlock(c, expr))
+      case uint16_t(Expr::Block):
+      case uint16_t(Expr::Loop):
+        if (!AstDecodeBlock(c, Expr(expr)))
             return false;
         break;
-      case Expr::If:
+      case uint16_t(Expr::If):
         if (!AstDecodeIf(c))
             return false;
         break;
-      case Expr::Else:
+      case uint16_t(Expr::Else):
         if (!AstDecodeElse(c))
             return false;
         break;
-      case Expr::End:
+      case uint16_t(Expr::End):
         if (!AstDecodeEnd(c))
             return false;
         break;
-      case Expr::I32Clz:
-      case Expr::I32Ctz:
-      case Expr::I32Popcnt:
-        if (!AstDecodeUnary(c, ValType::I32, expr))
+      case uint16_t(Expr::I32Clz):
+      case uint16_t(Expr::I32Ctz):
+      case uint16_t(Expr::I32Popcnt):
+        if (!AstDecodeUnary(c, ValType::I32, Expr(expr)))
             return false;
         break;
-      case Expr::I64Clz:
-      case Expr::I64Ctz:
-      case Expr::I64Popcnt:
-        if (!AstDecodeUnary(c, ValType::I64, expr))
+      case uint16_t(Expr::I64Clz):
+      case uint16_t(Expr::I64Ctz):
+      case uint16_t(Expr::I64Popcnt):
+        if (!AstDecodeUnary(c, ValType::I64, Expr(expr)))
             return false;
         break;
-      case Expr::F32Abs:
-      case Expr::F32Neg:
-      case Expr::F32Ceil:
-      case Expr::F32Floor:
-      case Expr::F32Sqrt:
-      case Expr::F32Trunc:
-      case Expr::F32Nearest:
-        if (!AstDecodeUnary(c, ValType::F32, expr))
+      case uint16_t(Expr::F32Abs):
+      case uint16_t(Expr::F32Neg):
+      case uint16_t(Expr::F32Ceil):
+      case uint16_t(Expr::F32Floor):
+      case uint16_t(Expr::F32Sqrt):
+      case uint16_t(Expr::F32Trunc):
+      case uint16_t(Expr::F32Nearest):
+        if (!AstDecodeUnary(c, ValType::F32, Expr(expr)))
             return false;
         break;
-      case Expr::F64Abs:
-      case Expr::F64Neg:
-      case Expr::F64Ceil:
-      case Expr::F64Floor:
-      case Expr::F64Sqrt:
-      case Expr::F64Trunc:
-      case Expr::F64Nearest:
-        if (!AstDecodeUnary(c, ValType::F64, expr))
+      case uint16_t(Expr::F64Abs):
+      case uint16_t(Expr::F64Neg):
+      case uint16_t(Expr::F64Ceil):
+      case uint16_t(Expr::F64Floor):
+      case uint16_t(Expr::F64Sqrt):
+      case uint16_t(Expr::F64Trunc):
+      case uint16_t(Expr::F64Nearest):
+        if (!AstDecodeUnary(c, ValType::F64, Expr(expr)))
             return false;
         break;
-      case Expr::I32Add:
-      case Expr::I32Sub:
-      case Expr::I32Mul:
-      case Expr::I32DivS:
-      case Expr::I32DivU:
-      case Expr::I32RemS:
-      case Expr::I32RemU:
-      case Expr::I32And:
-      case Expr::I32Or:
-      case Expr::I32Xor:
-      case Expr::I32Shl:
-      case Expr::I32ShrS:
-      case Expr::I32ShrU:
-      case Expr::I32Rotl:
-      case Expr::I32Rotr:
-        if (!AstDecodeBinary(c, ValType::I32, expr))
+      case uint16_t(Expr::I32Add):
+      case uint16_t(Expr::I32Sub):
+      case uint16_t(Expr::I32Mul):
+      case uint16_t(Expr::I32DivS):
+      case uint16_t(Expr::I32DivU):
+      case uint16_t(Expr::I32RemS):
+      case uint16_t(Expr::I32RemU):
+      case uint16_t(Expr::I32And):
+      case uint16_t(Expr::I32Or):
+      case uint16_t(Expr::I32Xor):
+      case uint16_t(Expr::I32Shl):
+      case uint16_t(Expr::I32ShrS):
+      case uint16_t(Expr::I32ShrU):
+      case uint16_t(Expr::I32Rotl):
+      case uint16_t(Expr::I32Rotr):
+        if (!AstDecodeBinary(c, ValType::I32, Expr(expr)))
             return false;
         break;
-      case Expr::I64Add:
-      case Expr::I64Sub:
-      case Expr::I64Mul:
-      case Expr::I64DivS:
-      case Expr::I64DivU:
-      case Expr::I64RemS:
-      case Expr::I64RemU:
-      case Expr::I64And:
-      case Expr::I64Or:
-      case Expr::I64Xor:
-      case Expr::I64Shl:
-      case Expr::I64ShrS:
-      case Expr::I64ShrU:
-      case Expr::I64Rotl:
-      case Expr::I64Rotr:
-        if (!AstDecodeBinary(c, ValType::I64, expr))
+      case uint16_t(Expr::I64Add):
+      case uint16_t(Expr::I64Sub):
+      case uint16_t(Expr::I64Mul):
+      case uint16_t(Expr::I64DivS):
+      case uint16_t(Expr::I64DivU):
+      case uint16_t(Expr::I64RemS):
+      case uint16_t(Expr::I64RemU):
+      case uint16_t(Expr::I64And):
+      case uint16_t(Expr::I64Or):
+      case uint16_t(Expr::I64Xor):
+      case uint16_t(Expr::I64Shl):
+      case uint16_t(Expr::I64ShrS):
+      case uint16_t(Expr::I64ShrU):
+      case uint16_t(Expr::I64Rotl):
+      case uint16_t(Expr::I64Rotr):
+        if (!AstDecodeBinary(c, ValType::I64, Expr(expr)))
             return false;
         break;
-      case Expr::F32Add:
-      case Expr::F32Sub:
-      case Expr::F32Mul:
-      case Expr::F32Div:
-      case Expr::F32Min:
-      case Expr::F32Max:
-      case Expr::F32CopySign:
-        if (!AstDecodeBinary(c, ValType::F32, expr))
+      case uint16_t(Expr::F32Add):
+      case uint16_t(Expr::F32Sub):
+      case uint16_t(Expr::F32Mul):
+      case uint16_t(Expr::F32Div):
+      case uint16_t(Expr::F32Min):
+      case uint16_t(Expr::F32Max):
+      case uint16_t(Expr::F32CopySign):
+        if (!AstDecodeBinary(c, ValType::F32, Expr(expr)))
             return false;
         break;
-      case Expr::F64Add:
-      case Expr::F64Sub:
-      case Expr::F64Mul:
-      case Expr::F64Div:
-      case Expr::F64Min:
-      case Expr::F64Max:
-      case Expr::F64CopySign:
-        if (!AstDecodeBinary(c, ValType::F64, expr))
+      case uint16_t(Expr::F64Add):
+      case uint16_t(Expr::F64Sub):
+      case uint16_t(Expr::F64Mul):
+      case uint16_t(Expr::F64Div):
+      case uint16_t(Expr::F64Min):
+      case uint16_t(Expr::F64Max):
+      case uint16_t(Expr::F64CopySign):
+        if (!AstDecodeBinary(c, ValType::F64, Expr(expr)))
             return false;
         break;
-      case Expr::I32Eq:
-      case Expr::I32Ne:
-      case Expr::I32LtS:
-      case Expr::I32LtU:
-      case Expr::I32LeS:
-      case Expr::I32LeU:
-      case Expr::I32GtS:
-      case Expr::I32GtU:
-      case Expr::I32GeS:
-      case Expr::I32GeU:
-        if (!AstDecodeComparison(c, ValType::I32, expr))
+      case uint16_t(Expr::I32Eq):
+      case uint16_t(Expr::I32Ne):
+      case uint16_t(Expr::I32LtS):
+      case uint16_t(Expr::I32LtU):
+      case uint16_t(Expr::I32LeS):
+      case uint16_t(Expr::I32LeU):
+      case uint16_t(Expr::I32GtS):
+      case uint16_t(Expr::I32GtU):
+      case uint16_t(Expr::I32GeS):
+      case uint16_t(Expr::I32GeU):
+        if (!AstDecodeComparison(c, ValType::I32, Expr(expr)))
             return false;
         break;
-      case Expr::I64Eq:
-      case Expr::I64Ne:
-      case Expr::I64LtS:
-      case Expr::I64LtU:
-      case Expr::I64LeS:
-      case Expr::I64LeU:
-      case Expr::I64GtS:
-      case Expr::I64GtU:
-      case Expr::I64GeS:
-      case Expr::I64GeU:
-        if (!AstDecodeComparison(c, ValType::I64, expr))
+      case uint16_t(Expr::I64Eq):
+      case uint16_t(Expr::I64Ne):
+      case uint16_t(Expr::I64LtS):
+      case uint16_t(Expr::I64LtU):
+      case uint16_t(Expr::I64LeS):
+      case uint16_t(Expr::I64LeU):
+      case uint16_t(Expr::I64GtS):
+      case uint16_t(Expr::I64GtU):
+      case uint16_t(Expr::I64GeS):
+      case uint16_t(Expr::I64GeU):
+        if (!AstDecodeComparison(c, ValType::I64, Expr(expr)))
             return false;
         break;
-      case Expr::F32Eq:
-      case Expr::F32Ne:
-      case Expr::F32Lt:
-      case Expr::F32Le:
-      case Expr::F32Gt:
-      case Expr::F32Ge:
-        if (!AstDecodeComparison(c, ValType::F32, expr))
+      case uint16_t(Expr::F32Eq):
+      case uint16_t(Expr::F32Ne):
+      case uint16_t(Expr::F32Lt):
+      case uint16_t(Expr::F32Le):
+      case uint16_t(Expr::F32Gt):
+      case uint16_t(Expr::F32Ge):
+        if (!AstDecodeComparison(c, ValType::F32, Expr(expr)))
             return false;
         break;
-      case Expr::F64Eq:
-      case Expr::F64Ne:
-      case Expr::F64Lt:
-      case Expr::F64Le:
-      case Expr::F64Gt:
-      case Expr::F64Ge:
-        if (!AstDecodeComparison(c, ValType::F64, expr))
+      case uint16_t(Expr::F64Eq):
+      case uint16_t(Expr::F64Ne):
+      case uint16_t(Expr::F64Lt):
+      case uint16_t(Expr::F64Le):
+      case uint16_t(Expr::F64Gt):
+      case uint16_t(Expr::F64Ge):
+        if (!AstDecodeComparison(c, ValType::F64, Expr(expr)))
             return false;
         break;
-      case Expr::I32Eqz:
-        if (!AstDecodeConversion(c, ValType::I32, ValType::I32, expr))
+      case uint16_t(Expr::I32Eqz):
+        if (!AstDecodeConversion(c, ValType::I32, ValType::I32, Expr(expr)))
             return false;
         break;
-      case Expr::I64Eqz:
-      case Expr::I32WrapI64:
-        if (!AstDecodeConversion(c, ValType::I64, ValType::I32, expr))
+      case uint16_t(Expr::I64Eqz):
+      case uint16_t(Expr::I32WrapI64):
+        if (!AstDecodeConversion(c, ValType::I64, ValType::I32, Expr(expr)))
             return false;
         break;
-      case Expr::I32TruncSF32:
-      case Expr::I32TruncUF32:
-      case Expr::I32ReinterpretF32:
-        if (!AstDecodeConversion(c, ValType::F32, ValType::I32, expr))
+      case uint16_t(Expr::I32TruncSF32):
+      case uint16_t(Expr::I32TruncUF32):
+      case uint16_t(Expr::I32ReinterpretF32):
+        if (!AstDecodeConversion(c, ValType::F32, ValType::I32, Expr(expr)))
             return false;
         break;
-      case Expr::I32TruncSF64:
-      case Expr::I32TruncUF64:
-        if (!AstDecodeConversion(c, ValType::F64, ValType::I32, expr))
+      case uint16_t(Expr::I32TruncSF64):
+      case uint16_t(Expr::I32TruncUF64):
+        if (!AstDecodeConversion(c, ValType::F64, ValType::I32, Expr(expr)))
             return false;
         break;
-      case Expr::I64ExtendSI32:
-      case Expr::I64ExtendUI32:
-        if (!AstDecodeConversion(c, ValType::I32, ValType::I64, expr))
+      case uint16_t(Expr::I64ExtendSI32):
+      case uint16_t(Expr::I64ExtendUI32):
+        if (!AstDecodeConversion(c, ValType::I32, ValType::I64, Expr(expr)))
             return false;
         break;
-      case Expr::I64TruncSF32:
-      case Expr::I64TruncUF32:
-        if (!AstDecodeConversion(c, ValType::F32, ValType::I64, expr))
+      case uint16_t(Expr::I64TruncSF32):
+      case uint16_t(Expr::I64TruncUF32):
+        if (!AstDecodeConversion(c, ValType::F32, ValType::I64, Expr(expr)))
             return false;
         break;
-      case Expr::I64TruncSF64:
-      case Expr::I64TruncUF64:
-      case Expr::I64ReinterpretF64:
-        if (!AstDecodeConversion(c, ValType::F64, ValType::I64, expr))
+      case uint16_t(Expr::I64TruncSF64):
+      case uint16_t(Expr::I64TruncUF64):
+      case uint16_t(Expr::I64ReinterpretF64):
+        if (!AstDecodeConversion(c, ValType::F64, ValType::I64, Expr(expr)))
             return false;
         break;
-      case Expr::F32ConvertSI32:
-      case Expr::F32ConvertUI32:
-      case Expr::F32ReinterpretI32:
-        if (!AstDecodeConversion(c, ValType::I32, ValType::F32, expr))
+      case uint16_t(Expr::F32ConvertSI32):
+      case uint16_t(Expr::F32ConvertUI32):
+      case uint16_t(Expr::F32ReinterpretI32):
+        if (!AstDecodeConversion(c, ValType::I32, ValType::F32, Expr(expr)))
             return false;
         break;
-      case Expr::F32ConvertSI64:
-      case Expr::F32ConvertUI64:
-        if (!AstDecodeConversion(c, ValType::I64, ValType::F32, expr))
+      case uint16_t(Expr::F32ConvertSI64):
+      case uint16_t(Expr::F32ConvertUI64):
+        if (!AstDecodeConversion(c, ValType::I64, ValType::F32, Expr(expr)))
             return false;
         break;
-      case Expr::F32DemoteF64:
-        if (!AstDecodeConversion(c, ValType::F64, ValType::F32, expr))
+      case uint16_t(Expr::F32DemoteF64):
+        if (!AstDecodeConversion(c, ValType::F64, ValType::F32, Expr(expr)))
             return false;
         break;
-      case Expr::F64ConvertSI32:
-      case Expr::F64ConvertUI32:
-        if (!AstDecodeConversion(c, ValType::I32, ValType::F64, expr))
+      case uint16_t(Expr::F64ConvertSI32):
+      case uint16_t(Expr::F64ConvertUI32):
+        if (!AstDecodeConversion(c, ValType::I32, ValType::F64, Expr(expr)))
             return false;
         break;
-      case Expr::F64ConvertSI64:
-      case Expr::F64ConvertUI64:
-      case Expr::F64ReinterpretI64:
-        if (!AstDecodeConversion(c, ValType::I64, ValType::F64, expr))
+      case uint16_t(Expr::F64ConvertSI64):
+      case uint16_t(Expr::F64ConvertUI64):
+      case uint16_t(Expr::F64ReinterpretI64):
+        if (!AstDecodeConversion(c, ValType::I64, ValType::F64, Expr(expr)))
             return false;
         break;
-      case Expr::F64PromoteF32:
-        if (!AstDecodeConversion(c, ValType::F32, ValType::F64, expr))
+      case uint16_t(Expr::F64PromoteF32):
+        if (!AstDecodeConversion(c, ValType::F32, ValType::F64, Expr(expr)))
             return false;
         break;
-      case Expr::I32Load8S:
-      case Expr::I32Load8U:
-        if (!AstDecodeLoad(c, ValType::I32, 1, expr))
+      case uint16_t(Expr::I32Load8S):
+      case uint16_t(Expr::I32Load8U):
+        if (!AstDecodeLoad(c, ValType::I32, 1, Expr(expr)))
             return false;
         break;
-      case Expr::I32Load16S:
-      case Expr::I32Load16U:
-        if (!AstDecodeLoad(c, ValType::I32, 2, expr))
+      case uint16_t(Expr::I32Load16S):
+      case uint16_t(Expr::I32Load16U):
+        if (!AstDecodeLoad(c, ValType::I32, 2, Expr(expr)))
             return false;
         break;
-      case Expr::I32Load:
-        if (!AstDecodeLoad(c, ValType::I32, 4, expr))
+      case uint16_t(Expr::I32Load):
+        if (!AstDecodeLoad(c, ValType::I32, 4, Expr(expr)))
             return false;
         break;
-      case Expr::I64Load8S:
-      case Expr::I64Load8U:
-        if (!AstDecodeLoad(c, ValType::I64, 1, expr))
+      case uint16_t(Expr::I64Load8S):
+      case uint16_t(Expr::I64Load8U):
+        if (!AstDecodeLoad(c, ValType::I64, 1, Expr(expr)))
             return false;
         break;
-      case Expr::I64Load16S:
-      case Expr::I64Load16U:
-        if (!AstDecodeLoad(c, ValType::I64, 2, expr))
+      case uint16_t(Expr::I64Load16S):
+      case uint16_t(Expr::I64Load16U):
+        if (!AstDecodeLoad(c, ValType::I64, 2, Expr(expr)))
             return false;
         break;
-      case Expr::I64Load32S:
-      case Expr::I64Load32U:
-        if (!AstDecodeLoad(c, ValType::I64, 4, expr))
+      case uint16_t(Expr::I64Load32S):
+      case uint16_t(Expr::I64Load32U):
+        if (!AstDecodeLoad(c, ValType::I64, 4, Expr(expr)))
             return false;
         break;
-      case Expr::I64Load:
-        if (!AstDecodeLoad(c, ValType::I64, 8, expr))
+      case uint16_t(Expr::I64Load):
+        if (!AstDecodeLoad(c, ValType::I64, 8, Expr(expr)))
             return false;
         break;
-      case Expr::F32Load:
-        if (!AstDecodeLoad(c, ValType::F32, 4, expr))
+      case uint16_t(Expr::F32Load):
+        if (!AstDecodeLoad(c, ValType::F32, 4, Expr(expr)))
             return false;
         break;
-      case Expr::F64Load:
-        if (!AstDecodeLoad(c, ValType::F64, 8, expr))
+      case uint16_t(Expr::F64Load):
+        if (!AstDecodeLoad(c, ValType::F64, 8, Expr(expr)))
             return false;
         break;
-      case Expr::I32Store8:
-        if (!AstDecodeStore(c, ValType::I32, 1, expr))
+      case uint16_t(Expr::I32Store8):
+        if (!AstDecodeStore(c, ValType::I32, 1, Expr(expr)))
             return false;
         break;
-      case Expr::I32Store16:
-        if (!AstDecodeStore(c, ValType::I32, 2, expr))
+      case uint16_t(Expr::I32Store16):
+        if (!AstDecodeStore(c, ValType::I32, 2, Expr(expr)))
             return false;
         break;
-      case Expr::I32Store:
-        if (!AstDecodeStore(c, ValType::I32, 4, expr))
+      case uint16_t(Expr::I32Store):
+        if (!AstDecodeStore(c, ValType::I32, 4, Expr(expr)))
             return false;
         break;
-      case Expr::I64Store8:
-        if (!AstDecodeStore(c, ValType::I64, 1, expr))
+      case uint16_t(Expr::I64Store8):
+        if (!AstDecodeStore(c, ValType::I64, 1, Expr(expr)))
             return false;
         break;
-      case Expr::I64Store16:
-        if (!AstDecodeStore(c, ValType::I64, 2, expr))
+      case uint16_t(Expr::I64Store16):
+        if (!AstDecodeStore(c, ValType::I64, 2, Expr(expr)))
             return false;
         break;
-      case Expr::I64Store32:
-        if (!AstDecodeStore(c, ValType::I64, 4, expr))
+      case uint16_t(Expr::I64Store32):
+        if (!AstDecodeStore(c, ValType::I64, 4, Expr(expr)))
             return false;
         break;
-      case Expr::I64Store:
-        if (!AstDecodeStore(c, ValType::I64, 8, expr))
+      case uint16_t(Expr::I64Store):
+        if (!AstDecodeStore(c, ValType::I64, 8, Expr(expr)))
             return false;
         break;
-      case Expr::F32Store:
-        if (!AstDecodeStore(c, ValType::F32, 4, expr))
+      case uint16_t(Expr::F32Store):
+        if (!AstDecodeStore(c, ValType::F32, 4, Expr(expr)))
             return false;
         break;
-      case Expr::F64Store:
-        if (!AstDecodeStore(c, ValType::F64, 8, expr))
+      case uint16_t(Expr::F64Store):
+        if (!AstDecodeStore(c, ValType::F64, 8, Expr(expr)))
             return false;
         break;
-      case Expr::CurrentMemory:
+      case uint16_t(Expr::CurrentMemory):
         if (!AstDecodeCurrentMemory(c))
             return false;
         break;
-      case Expr::GrowMemory:
+      case uint16_t(Expr::GrowMemory):
         if (!AstDecodeGrowMemory(c))
             return false;
         break;
-      case Expr::SetGlobal:
+      case uint16_t(Expr::SetGlobal):
         if (!AstDecodeSetGlobal(c))
             return false;
         break;
-      case Expr::GetGlobal:
+      case uint16_t(Expr::GetGlobal):
         if (!AstDecodeGetGlobal(c))
             return false;
         break;
-      case Expr::Br:
-      case Expr::BrIf:
-        if (!AstDecodeBranch(c, expr))
+      case uint16_t(Expr::Br):
+      case uint16_t(Expr::BrIf):
+        if (!AstDecodeBranch(c, Expr(expr)))
             return false;
         break;
-      case Expr::BrTable:
+      case uint16_t(Expr::BrTable):
         if (!AstDecodeBrTable(c))
             return false;
         break;
-      case Expr::Return:
+      case uint16_t(Expr::Return):
         if (!AstDecodeReturn(c))
             return false;
         break;
-      case Expr::Unreachable:
+      case uint16_t(Expr::Unreachable):
         if (!c.iter().readUnreachable())
             return false;
         tmp = new(c.lifo) AstUnreachable();
@@ -1417,8 +1417,6 @@ AstDecodeExpr(AstDecodeContext& c)
             return false;
         break;
       default:
-        // Note: it's important not to remove this default since readExpr()
-        // can return Expr values for which there is no enumerator.
         return c.iter().unrecognizedOpcode(expr);
     }
 
@@ -1807,7 +1805,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcDefIndex, AstFunc** func
     if (!locals.appendAll(sig->args()))
         return false;
 
-    if (!DecodeLocalEntries(c.d, &locals))
+    if (!DecodeLocalEntries(c.d, ModuleKind::Wasm, &locals))
         return c.d.fail("failed decoding local entries");
 
     c.startFunction(&iter, &locals, sig->ret());

@@ -1127,9 +1127,7 @@ RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine /* = true */)
             return false;
         break;
       default:
-        // Note: it's important not to remove this default since readExpr()
-        // can return Expr values for which there is no enumerator.
-        return Fail(c, "unexpected expression kind");
+        MOZ_CRASH("Bad AstExprKind");
     }
 
     return !newLine || c.buffer.append("\n");
