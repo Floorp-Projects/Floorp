@@ -58,11 +58,11 @@ function countEntries(name, message, check) {
 
   let count;
   FormHistory.count(obj, { handleResult: result => count = result,
-                           handleError: function (error) {
+                           handleError: function(error) {
                              deferred.reject(error)
                              throw new Error("Error occurred searching form history: " + error);
                            },
-                           handleCompletion: function (reason) {
+                           handleCompletion: function(reason) {
                              if (!reason) {
                                check(count, message);
                                deferred.resolve();
@@ -493,11 +493,11 @@ function* setupFormHistory() {
 
     let results = [];
     FormHistory.search(terms, params, { handleResult: result => results.push(result),
-                                        handleError: function (error) {
+                                        handleError: function(error) {
                                           deferred.reject(error);
                                           throw new Error("Error occurred searching form history: " + error);
                                         },
-                                        handleCompletion: function (reason) { deferred.resolve(results); }
+                                        handleCompletion: function(reason) { deferred.resolve(results); }
                                       });
     return deferred.promise;
   }
@@ -505,11 +505,11 @@ function* setupFormHistory() {
   function update(changes)
   {
     let deferred = Promise.defer();
-    FormHistory.update(changes, { handleError: function (error) {
+    FormHistory.update(changes, { handleError: function(error) {
                                     deferred.reject(error);
                                     throw new Error("Error occurred searching form history: " + error);
                                   },
-                                  handleCompletion: function (reason) { deferred.resolve(); }
+                                  handleCompletion: function(reason) { deferred.resolve(); }
                                 });
     return deferred.promise;
   }

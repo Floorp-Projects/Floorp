@@ -15,7 +15,7 @@ var prefVisibility = new Map;
    application. */
 
 this.TransientPrefs = {
-  prefShouldBeVisible: function (prefName) {
+  prefShouldBeVisible: function(prefName) {
     if (Preferences.isSet(prefName))
       prefVisibility.set(prefName, true);
 

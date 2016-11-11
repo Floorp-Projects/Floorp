@@ -816,7 +816,7 @@
           return true;
         },
 
-        doCommand: function (aCommand) {
+        doCommand: function(aCommand) {
           switch (aCommand) {
             case "cmd_clearhistory":
               var param = this._self.getAttribute("autocompletesearchparam");

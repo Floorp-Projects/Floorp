@@ -15,7 +15,7 @@ function EventStore() {
 }
 
 EventStore.prototype = {
-  "push": function (event) {
+  "push": function(event) {
     if (event.indexOf("1") > -1) {
       this["window1"].push(event);
     } else if (event.indexOf("2") > -1) {

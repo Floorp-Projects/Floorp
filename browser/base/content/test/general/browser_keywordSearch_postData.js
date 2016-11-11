@@ -33,7 +33,7 @@ function test() {
 
     Services.search.defaultEngine = engine;
 
-    registerCleanupFunction(function () {
+    registerCleanupFunction(function() {
       Services.search.removeEngine(engine);
     });
 
@@ -43,7 +43,7 @@ function test() {
 
   Services.obs.addObserver(searchObserver, "browser-search-engine-modified", false);
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     gBrowser.removeTab(tab);
 
     Services.obs.removeObserver(searchObserver, "browser-search-engine-modified");
@@ -66,7 +66,7 @@ function nextTest() {
 function doTest() {
   info("Running test: " + gCurrTest.name);
 
-  waitForLoad(function () {
+  waitForLoad(function() {
     let loadedText = gBrowser.contentDocument.body.textContent;
     ok(loadedText, "search page loaded");
     let needle = "searchterms=" + gCurrTest.expectText;

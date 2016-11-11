@@ -116,7 +116,7 @@ add_task(function* testLightweightThemePreview() {
 // event on the DevEdition styleSheet.
 function waitForBrightTitlebarAttribute() {
   return new Promise((resolve, reject) => {
-    let mutationObserver = new MutationObserver(function (mutations) {
+    let mutationObserver = new MutationObserver(function(mutations) {
       for (let mutation of mutations) {
         if (mutation.attributeName == "brighttitlebarforeground") {
           mutationObserver.disconnect();

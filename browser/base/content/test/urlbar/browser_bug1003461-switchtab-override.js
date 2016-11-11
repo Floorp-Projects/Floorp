@@ -23,7 +23,7 @@ add_task(function* test_switchtab_override() {
   registerCleanupFunction(() => {
     gURLBar.onSearchComplete = onSearchComplete;
   });
-  gURLBar.onSearchComplete = function () {
+  gURLBar.onSearchComplete = function() {
     ok(gURLBar.popupOpen, "The autocomplete popup is correctly open");
     onSearchComplete.apply(gURLBar);
     deferred.resolve();

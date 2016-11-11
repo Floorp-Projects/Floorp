@@ -565,18 +565,18 @@
             // count of open requests (should always be 0 or 1)
             mRequestCount: 0,
 
-            destroy: function () {
+            destroy: function() {
               delete this.mTab;
               delete this.mBrowser;
               delete this.mTabBrowser;
             },
 
-            _callProgressListeners: function () {
+            _callProgressListeners: function() {
               Array.unshift(arguments, this.mBrowser);
               return this.mTabBrowser._callProgressListeners.apply(this.mTabBrowser, arguments);
             },
 
-            _shouldShowProgress: function (aRequest) {
+            _shouldShowProgress: function(aRequest) {
               if (this.mBlank)
                 return false;
 
@@ -590,9 +590,9 @@
               return true;
             },
 
-            onProgressChange: function (aWebProgress, aRequest,
-                                        aCurSelfProgress, aMaxSelfProgress,
-                                        aCurTotalProgress, aMaxTotalProgress) {
+            onProgressChange: function(aWebProgress, aRequest,
+                                       aCurSelfProgress, aMaxSelfProgress,
+                                       aCurTotalProgress, aMaxTotalProgress) {
               this.mTotalProgress = aMaxTotalProgress ? aCurTotalProgress / aMaxTotalProgress : 0;
 
               if (!this._shouldShowProgress(aRequest))
@@ -607,15 +607,15 @@
                                            aCurTotalProgress, aMaxTotalProgress]);
             },
 
-            onProgressChange64: function (aWebProgress, aRequest,
-                                          aCurSelfProgress, aMaxSelfProgress,
-                                          aCurTotalProgress, aMaxTotalProgress) {
+            onProgressChange64: function(aWebProgress, aRequest,
+                                         aCurSelfProgress, aMaxSelfProgress,
+                                         aCurTotalProgress, aMaxTotalProgress) {
               return this.onProgressChange(aWebProgress, aRequest,
                 aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress,
                 aMaxTotalProgress);
             },
 
-            onStateChange: function (aWebProgress, aRequest, aStateFlags, aStatus) {
+            onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
               if (!aRequest)
                 return;
 
@@ -756,8 +756,8 @@
               this.mStatus = aStatus;
             },
 
-            onLocationChange: function (aWebProgress, aRequest, aLocation,
-                                        aFlags) {
+            onLocationChange: function(aWebProgress, aRequest, aLocation,
+                                       aFlags) {
               // OnLocationChange is called for both the top-level content
               // and the subframes.
               let topLevel = aWebProgress.isTopLevel;
@@ -837,7 +837,7 @@
               }
             },
 
-            onStatusChange: function (aWebProgress, aRequest, aStatus, aMessage) {
+            onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {
               if (this.mBlank)
                 return;
 
@@ -847,17 +847,17 @@
               this.mMessage = aMessage;
             },
 
-            onSecurityChange: function (aWebProgress, aRequest, aState) {
+            onSecurityChange: function(aWebProgress, aRequest, aState) {
               this._callProgressListeners("onSecurityChange",
                                           [aWebProgress, aRequest, aState]);
             },
 
-            onRefreshAttempted: function (aWebProgress, aURI, aDelay, aSameURI) {
+            onRefreshAttempted: function(aWebProgress, aURI, aDelay, aSameURI) {
               return this._callProgressListeners("onRefreshAttempted",
                                                  [aWebProgress, aURI, aDelay, aSameURI]);
             },
 
-            QueryInterface: function (aIID) {
+            QueryInterface: function(aIID) {
               if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
                   aIID.equals(Components.interfaces.nsIWebProgressListener2) ||
                   aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
@@ -2190,7 +2190,7 @@
                           Services.prefs.getBoolPref("browser.tabs.animate");
             if (!animate) {
               t.setAttribute("fadein", "true");
-              setTimeout(function (tabContainer) {
+              setTimeout(function(tabContainer) {
                 tabContainer._handleNewTab(t);
               }, 0, this.tabContainer);
             }
@@ -2288,7 +2288,7 @@
             }
 
             if (animate) {
-              requestAnimationFrame(function () {
+              requestAnimationFrame(function() {
                 this.tabContainer._handleTabTelemetryStart(t, aURI);
 
                 // kick the animation off
@@ -2480,7 +2480,7 @@
             aTab.style.maxWidth = ""; // ensure that fade-out transition happens
             aTab.removeAttribute("fadein");
 
-            setTimeout(function (tab, tabbrowser) {
+            setTimeout(function(tab, tabbrowser) {
               if (tab.parentNode &&
                   window.getComputedStyle(tab).maxWidth == "0.1px") {
                 NS_ASSERT(false, "Giving up waiting for the tab closing animation to finish (bug 608589)");
@@ -4140,7 +4140,7 @@
              * timing.
              */
 
-            startTabSwitch: function () {
+            startTabSwitch: function() {
               TelemetryStopwatch.cancel("FX_TAB_SWITCH_TOTAL_E10S_MS", window);
               TelemetryStopwatch.start("FX_TAB_SWITCH_TOTAL_E10S_MS", window);
               this.addMarker("AsyncTabSwitch:Start");
@@ -4153,7 +4153,7 @@
              * are hidden). This checks to make sure all conditions are
              * satisfied, and then records the tab switch as finished.
              */
-            maybeFinishTabSwitch: function () {
+            maybeFinishTabSwitch: function() {
               if (this.switchInProgress && this.requestedTab &&
                   this.getTabState(this.requestedTab) == this.STATE_LOADED) {
                 // After this point the tab has switched from the content thread's point of view.
@@ -4168,7 +4168,7 @@
               }
             },
 
-            spinnerDisplayed: function () {
+            spinnerDisplayed: function() {
               this.assert(!this.spinnerTab);
               TelemetryStopwatch.start("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window);
               // We have a second, similar probe for capturing recordings of
@@ -4177,7 +4177,7 @@
               this.addMarker("AsyncTabSwitch:SpinnerShown");
             },
 
-            spinnerHidden: function () {
+            spinnerHidden: function() {
               this.assert(this.spinnerTab);
               this.log("DEBUG: spinner time = " +
                        TelemetryStopwatch.timeElapsed("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window));
@@ -4201,7 +4201,7 @@
             _useDumpForLogging: false,
             _logInit: false,
 
-            logging: function () {
+            logging: function() {
               if (this._useDumpForLogging)
                 return true;
               if (this._logInit)
@@ -4957,14 +4957,14 @@
             self: this,
             childNodes: [null, this.tabContextMenu, this.tabContainer],
             firstChild: { nextSibling: this.tabContextMenu },
-            getElementsByAttribute: function (attr, attrValue) {
+            getElementsByAttribute: function(attr, attrValue) {
               if (attr == "anonid" && attrValue == "tabContextMenu")
                 return [this.self.tabContextMenu];
               return [];
             },
             // Also support adding event listeners (forward to the tab container)
-            addEventListener: function (a, b, c) { this.self.tabContainer.addEventListener(a, b, c); },
-            removeEventListener: function (a, b, c) { this.self.tabContainer.removeEventListener(a, b, c); }
+            addEventListener: function(a, b, c) { this.self.tabContainer.addEventListener(a, b, c); },
+            removeEventListener: function(a, b, c) { this.self.tabContainer.removeEventListener(a, b, c); }
           });
         ]]>
         </getter>
@@ -5890,7 +5890,7 @@
 
           if (!this._animateElement.hasAttribute("notifybgtab")) {
             this._animateElement.setAttribute("notifybgtab", "true");
-            setTimeout(function (ele) {
+            setTimeout(function(ele) {
               ele.removeAttribute("notifybgtab");
             }, 150, this._animateElement);
           }

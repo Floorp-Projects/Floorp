@@ -5,7 +5,7 @@ function test() {
 
   gBrowser.selectedTab = gBrowser.addTab();
 
-  gBrowser.selectedBrowser.addEventListener("load", function () {
+  gBrowser.selectedBrowser.addEventListener("load", function() {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
     var doc = gBrowser.contentDocument;
@@ -13,10 +13,10 @@ function test() {
     var pageInfo = BrowserPageInfo(gBrowser.selectedBrowser.currentURI.spec,
                                    "mediaTab", testImg);
 
-    pageInfo.addEventListener("load", function () {
+    pageInfo.addEventListener("load", function() {
       pageInfo.removeEventListener("load", arguments.callee, true);
-      pageInfo.onFinished.push(function () {
-        executeSoon(function () {
+      pageInfo.onFinished.push(function() {
+        executeSoon(function() {
           var pageInfoImg = pageInfo.document.getElementById("thepreviewimage");
 
           is(pageInfoImg.src, testImg.src, "selected image has the correct source");

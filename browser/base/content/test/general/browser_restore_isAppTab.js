@@ -74,7 +74,7 @@ function isBrowserAppTab(browser) {
     }
     // It looks like same-process messages may be reordered by the message
     // manager, so we need to wait one tick before sending the message.
-    executeSoon(function () {
+    executeSoon(function() {
       browser.messageManager.addMessageListener("Test:IsAppTab", listener);
       browser.messageManager.sendAsyncMessage("Test:GetIsAppTab");
     });

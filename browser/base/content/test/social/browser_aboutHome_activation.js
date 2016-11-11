@@ -74,7 +74,7 @@ function test()
   requestLongerTimeout(2);
   ignoreAllUncaughtExceptions();
   PopupNotifications.panel.setAttribute("animate", "false");
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     PopupNotifications.panel.removeAttribute("animate");
   });
 
@@ -102,7 +102,7 @@ function test()
       yield new Promise(resolve => {
         activateProvider(tab, test.panel).then(() => {
           checkSocialUI();
-          SocialService.uninstallProvider("https://example.com", function () {
+          SocialService.uninstallProvider("https://example.com", function() {
             info("provider uninstalled");
             resolve();
           });
@@ -174,7 +174,7 @@ function promiseSetupSnippetsMap(aTab, aSnippet)
 
         // The snippets should already be ready by this point. Here we're
         // just obtaining a reference to the snippets map.
-        cw.ensureSnippetsMapThen(function (aSnippetsMap) {
+        cw.ensureSnippetsMapThen(function(aSnippetsMap) {
           aSnippetsMap = Cu.waiveXrays(aSnippetsMap);
           console.log("Got snippets map: " +
                "{ last-update: " + aSnippetsMap.get("snippets-last-update") +

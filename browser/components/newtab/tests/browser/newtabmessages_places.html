@@ -33,7 +33,7 @@
         }
       }, true);
 
-      document.onreadystatechange = function () {
+      document.onreadystatechange = function() {
         if (document.readyState === "complete") {
           let msg = new window.CustomEvent("WebChannelMessageToChrome", {
             detail: JSON.stringify({

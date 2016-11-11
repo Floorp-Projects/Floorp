@@ -11,7 +11,7 @@ function makeDetails(object) {
   return JSON.stringify(object)
 }
 // Add a listener for responses to our remote requests.
-window.addEventListener("WebChannelMessageToContent", function (event) {
+window.addEventListener("WebChannelMessageToContent", function(event) {
   if (event.detail.id == "remote-troubleshooting") {
     // Send what we got back to the test.
     var backEvent = new window.CustomEvent("WebChannelMessageToChrome", {

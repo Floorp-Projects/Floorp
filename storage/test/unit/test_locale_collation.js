@@ -117,7 +117,7 @@ function initTableWithStrings(aStrings, aConn)
   aConn.executeSimpleSQL("DROP TABLE IF EXISTS test");
   aConn.createTable("test", "t TEXT");
   let stmt = aConn.createStatement("INSERT INTO test (t) VALUES (:t)");
-  aStrings.forEach(function (str) {
+  aStrings.forEach(function(str) {
     stmt.params.t = str;
     stmt.execute();
     stmt.reset();
@@ -155,7 +155,7 @@ function localeCompare(aCollation)
       do_throw("Error in test: unknown collation '" + aCollation + "'");
       break;
   }
-  return function (aStr1, aStr2) {
+  return function(aStr1, aStr2) {
     return gLocaleCollation.compareString(strength, aStr1, aStr2);
   };
 }
@@ -297,7 +297,7 @@ var gTests = [
 function run_test()
 {
   setup();
-  gTests.forEach(function (test) {
+  gTests.forEach(function(test) {
     print("-- Running test: " + test.desc);
     test.run();
   });

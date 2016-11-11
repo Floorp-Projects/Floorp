@@ -91,16 +91,16 @@ function* runNextTest() {
   let nextTest = tests.shift();
   if (nextTest.onShown) {
     let shownState = false;
-    onPopupEvent("popupshowing", function () {
+    onPopupEvent("popupshowing", function() {
       info("[" + nextTest.id + "] popup showing");
     });
-    onPopupEvent("popupshown", function () {
+    onPopupEvent("popupshown", function() {
       shownState = true;
       info("[" + nextTest.id + "] popup shown");
       Task.spawn(() => nextTest.onShown(this))
           .then(undefined, ex => Assert.ok(false, "onShown failed: " + ex));
     });
-    onPopupEvent("popuphidden", function () {
+    onPopupEvent("popuphidden", function() {
       info("[" + nextTest.id + "] popup hidden");
       nextTest.onHidden(this);
       goNext();
@@ -227,7 +227,7 @@ function checkPopup(popup, notifyObj) {
   }
   is(actualSecondaryActionsCount, secondaryActions.length,
     actualSecondaryActions.length + " secondary actions");
-  secondaryActions.forEach(function (a, i) {
+  secondaryActions.forEach(function(a, i) {
     is(actualSecondaryActions[i].getAttribute("label"), a.label,
        "label for secondary action " + i + " matches");
     is(actualSecondaryActions[i].getAttribute("accesskey"), a.accessKey,

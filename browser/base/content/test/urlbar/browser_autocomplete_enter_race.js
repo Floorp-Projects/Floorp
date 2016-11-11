@@ -1,6 +1,6 @@
 // The order of these tests matters!
 
-add_task(function* setup () {
+add_task(function* setup() {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
   let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 url: "http://example.com/?q=%s",

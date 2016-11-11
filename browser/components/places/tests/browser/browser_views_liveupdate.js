@@ -152,7 +152,7 @@ function startTest() {
   bs.moveItem(id, bs.unfiledBookmarksFolder, 0);
 
   // Remove all added bookmarks.
-  addedBookmarks.forEach(function (aItem) {
+  addedBookmarks.forEach(function(aItem) {
     // If we remove an item after its containing folder has been removed,
     // this will throw, but we can ignore that.
     try {

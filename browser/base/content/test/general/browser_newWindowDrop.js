@@ -24,7 +24,7 @@ add_task(function* test_setup() {
                                    CustomizableUI.AREA_NAVBAR,
                                    0);
     CustomizableUI.ensureWidgetPlacedInWindow("new-window-button", window);
-    registerCleanupFunction(function () {
+    registerCleanupFunction(function() {
       CustomizableUI.reset();
     });
   }

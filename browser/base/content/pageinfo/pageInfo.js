@@ -1004,7 +1004,7 @@ function makeBlockImage(url)
 }
 
 var imagePermissionObserver = {
-  observe: function (aSubject, aTopic, aData)
+  observe: function(aSubject, aTopic, aData)
   {
     if (document.getElementById("mediaPreviewBox").collapsed)
       return;

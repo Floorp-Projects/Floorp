@@ -2,7 +2,7 @@ var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content
 var gTestBrowser = null;
 
 add_task(function* () {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");

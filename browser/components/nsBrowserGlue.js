@@ -713,7 +713,7 @@ BrowserGlue.prototype = {
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
   },
 
-  _checkForOldBuildUpdates: function () {
+  _checkForOldBuildUpdates: function() {
     // check for update if our build is old
     if (AppConstants.MOZ_UPDATER &&
         Services.prefs.getBoolPref("app.update.enabled") &&
@@ -765,7 +765,7 @@ BrowserGlue.prototype = {
     }
   },
 
-  _trackSlowStartup: function () {
+  _trackSlowStartup: function() {
     if (Services.startup.interrupted ||
         Services.prefs.getBoolPref("browser.slowStartup.notificationDisabled"))
       return;
@@ -808,7 +808,7 @@ BrowserGlue.prototype = {
     return (Date.now() - profileDate) / ONE_DAY;
   }),
 
-  _showSlowStartupNotification: function (profileAge) {
+  _showSlowStartupNotification: function(profileAge) {
     if (profileAge < 90) // 3 months
       return;
 
@@ -823,14 +823,14 @@ BrowserGlue.prototype = {
       {
         label:     win.gNavigatorBundle.getString("slowStartup.helpButton.label"),
         accessKey: win.gNavigatorBundle.getString("slowStartup.helpButton.accesskey"),
-        callback: function () {
+        callback: function() {
           win.openUILinkIn("https://support.mozilla.org/kb/reset-firefox-easily-fix-most-problems", "tab");
         }
       },
       {
         label:     win.gNavigatorBundle.getString("slowStartup.disableNotificationButton.label"),
         accessKey: win.gNavigatorBundle.getString("slowStartup.disableNotificationButton.accesskey"),
-        callback: function () {
+        callback: function() {
           Services.prefs.setBoolPref("browser.slowStartup.notificationDisabled", true);
         }
       }
@@ -849,7 +849,7 @@ BrowserGlue.prototype = {
    *        String of either "unused" or "uninstall", specifying the reason
    *        why a profile reset is offered.
    */
-  _resetProfileNotification: function (reason) {
+  _resetProfileNotification: function(reason) {
     let win = RecentWindow.getMostRecentBrowserWindow();
     if (!win)
       return;
@@ -874,7 +874,7 @@ BrowserGlue.prototype = {
       {
         label:     resetBundle.formatStringFromName("refreshProfile.resetButton.label", [productName], 1),
         accessKey: resetBundle.GetStringFromName("refreshProfile.resetButton.accesskey"),
-        callback: function () {
+        callback: function() {
           ResetProfile.openConfirmationDialog(win);
         }
       },
@@ -886,7 +886,7 @@ BrowserGlue.prototype = {
                           nb.PRIORITY_INFO_LOW, buttons);
   },
 
-  _notifyUnsignedAddonsDisabled: function () {
+  _notifyUnsignedAddonsDisabled: function() {
     let win = RecentWindow.getMostRecentBrowserWindow();
     if (!win)
       return;
@@ -896,7 +896,7 @@ BrowserGlue.prototype = {
       {
         label:     win.gNavigatorBundle.getString("unsignedAddonsDisabled.learnMore.label"),
         accessKey: win.gNavigatorBundle.getString("unsignedAddonsDisabled.learnMore.accesskey"),
-        callback: function () {
+        callback: function() {
           win.BrowserOpenAddonsMgr("addons://list/extension?unsigned=true");
         }
       },
@@ -1020,7 +1020,7 @@ BrowserGlue.prototype = {
   /**
    * Application shutdown handler.
    */
-  _onQuitApplicationGranted: function () {
+  _onQuitApplicationGranted: function() {
     // This pref must be set here because SessionStore will use its value
     // on quit-application.
     this._setPrefToSaveSession();
@@ -1049,7 +1049,7 @@ BrowserGlue.prototype = {
     }
   },
 
-  _initServiceDiscovery: function () {
+  _initServiceDiscovery: function() {
     if (!Services.prefs.getBoolPref("browser.casting.enabled")) {
       return;
     }
@@ -1214,7 +1214,7 @@ BrowserGlue.prototype = {
     E10SAccessibilityCheck.onWindowsRestored();
   },
 
-  _createExtraDefaultProfile: function () {
+  _createExtraDefaultProfile: function() {
     if (!AppConstants.MOZ_DEV_EDITION) {
       return;
     }
@@ -1752,7 +1752,7 @@ BrowserGlue.prototype = {
     notification.persistence = -1; // Until user closes it
   },
 
-  _showSyncStartedDoorhanger: function () {
+  _showSyncStartedDoorhanger: function() {
     let bundle = Services.strings.createBundle("chrome://browser/locale/accounts.properties");
     let productName = gBrandBundle.GetStringFromName("brandShortName");
     let title = bundle.GetStringFromName("syncStartNotification.title");
@@ -2837,7 +2837,7 @@ var E10SAccessibilityCheck = {
     let mainAction = {
       label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.acceptButton.label"),
       accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.acceptButton.accesskey"),
-      callback: function () {
+      callback: function() {
         // If the user invoked the button option remove the notification,
         // otherwise keep the alert icon around in the address bar.
         notification.remove();

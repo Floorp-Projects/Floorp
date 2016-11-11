@@ -18,7 +18,7 @@ function test() {
   let testTab2 = gBrowser.addTab("about:mozilla");
   is(gBrowser.visibleTabs.length, 3, "3 tabs should be open");
   // Wait for tab load, the code checks for currentURI.
-  testTab2.linkedBrowser.addEventListener("load", function () {
+  testTab2.linkedBrowser.addEventListener("load", function() {
     testTab2.linkedBrowser.removeEventListener("load", arguments.callee, true);
     is(Disabled(), false, "Bookmark All Tabs should be enabled since there are two tabs with different addresses");
 

@@ -44,7 +44,7 @@ add_task(function* () {
   function urlbarBackspace() {
     return new Promise((resolve, reject) => {
       gBrowser.selectedBrowser.focus();
-      gURLBar.addEventListener("input", function () {
+      gURLBar.addEventListener("input", function() {
         gURLBar.removeEventListener("input", arguments.callee, false);
         resolve();
       }, false);

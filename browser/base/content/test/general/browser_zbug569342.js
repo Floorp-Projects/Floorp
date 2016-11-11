@@ -6,7 +6,7 @@ var gTab = null;
 
 function load(url, cb) {
   gTab = gBrowser.addTab(url);
-  gBrowser.addEventListener("load", function (event) {
+  gBrowser.addEventListener("load", function(event) {
     if (event.target.location != url)
       return;
 
@@ -40,7 +40,7 @@ function nextTest() {
     testFindDisabled(url, nextTest);
   } else {
     // Make sure the find bar is re-enabled after disabled page is closed.
-    testFindEnabled("about:blank", function () {
+    testFindEnabled("about:blank", function() {
       EventUtils.synthesizeKey("VK_ESCAPE", { });
       ok(gFindBar.hidden, "Find bar should now be hidden");
       finish();

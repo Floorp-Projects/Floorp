@@ -72,7 +72,7 @@ FormSubmitObserver.prototype =
    * Events
    */
 
-  handleEvent: function (aEvent) {
+  handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "pageshow":
         if (this._isRootDocumentEvent(aEvent)) {
@@ -95,7 +95,7 @@ FormSubmitObserver.prototype =
    * nsIFormSubmitObserver
    */
 
-  notifyInvalidSubmit : function (aFormElement, aInvalidElements)
+  notifyInvalidSubmit : function(aFormElement, aInvalidElements)
   {
     // We are going to handle invalid form submission attempt by focusing the
     // first invalid element and show the corresponding validation message in a
@@ -149,7 +149,7 @@ FormSubmitObserver.prototype =
    * with. Updates the validation message or closes the popup if form data
    * becomes valid.
    */
-  _onInput: function (aEvent) {
+  _onInput: function(aEvent) {
     let element = aEvent.originalTarget;
 
     // If the form input is now valid, hide the popup.
@@ -170,7 +170,7 @@ FormSubmitObserver.prototype =
    * Blur event handler in which we disconnect from the form element and
    * hide the popup.
    */
-  _onBlur: function (aEvent) {
+  _onBlur: function(aEvent) {
     aEvent.originalTarget.removeEventListener("input", this, false);
     aEvent.originalTarget.removeEventListener("blur", this, false);
     this._element = null;
@@ -182,7 +182,7 @@ FormSubmitObserver.prototype =
    * information. Can be called repetitively to update the currently
    * displayed popup position and text.
    */
-  _showPopup: function (aElement) {
+  _showPopup: function(aElement) {
     // Collect positional information and show the popup
     let panelData = {};
 
@@ -214,15 +214,15 @@ FormSubmitObserver.prototype =
     this._mm.sendAsyncMessage("FormValidation:ShowPopup", panelData);
   },
 
-  _hidePopup: function () {
+  _hidePopup: function() {
     this._mm.sendAsyncMessage("FormValidation:HidePopup", {});
   },
 
-  _getWindowUtils: function () {
+  _getWindowUtils: function() {
     return this._content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
   },
 
-  _isRootDocumentEvent: function (aEvent) {
+  _isRootDocumentEvent: function(aEvent) {
     if (this._content == null) {
       return true;
     }

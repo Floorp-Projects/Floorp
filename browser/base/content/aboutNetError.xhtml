@@ -184,14 +184,14 @@
         document.getElementById("learnMoreContainer").style.display = "block";
 
         var checkbox = document.getElementById("automaticallyReportInFuture");
-        checkbox.addEventListener("change", function ({target: {checked}}) {
+        checkbox.addEventListener("change", function({target: {checked}}) {
           document.dispatchEvent(new CustomEvent("AboutNetErrorSetAutomatic", {
             detail: checked,
             bubbles: true
           }));
         });
 
-        addEventListener("AboutNetErrorOptions", function (event) {
+        addEventListener("AboutNetErrorOptions", function(event) {
           var options = JSON.parse(event.detail);
           if (options && options.enabled) {
             // Display error reporting UI

@@ -7,7 +7,7 @@ function test() {
   let newTab1 = gBrowser.selectedTab = gBrowser.addTab("about:robots", {skipAnimation: true});
   let newTab2 = gBrowser.selectedTab = gBrowser.addTab("about:about", {skipAnimation: true});
   let newTab3 = gBrowser.selectedTab = gBrowser.addTab("about:config", {skipAnimation: true});
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     while (gBrowser.tabs.length > initialTabsLength) {
       gBrowser.removeTab(gBrowser.tabs[initialTabsLength]);
     }

@@ -203,7 +203,7 @@ function openWindow(parent, url, target, features, args, noExternalArgs) {
     // put the URIs into argArray
     var uriArray = Components.classes["@mozilla.org/array;1"]
                        .createInstance(Components.interfaces.nsIMutableArray);
-    stringArgs.forEach(function (uri) {
+    stringArgs.forEach(function(uri) {
       var sstring = Components.classes["@mozilla.org/supports-string;1"]
                               .createInstance(nsISupportsString);
       sstring.data = uri;

@@ -26,7 +26,7 @@ function test() {
   Services.prefs.setCharPref("social.shareDirectory", activationPage);
 
   let frameScript = "data:,(" + function frame_script() {
-    addEventListener("OpenGraphData", function (aEvent) {
+    addEventListener("OpenGraphData", function(aEvent) {
       sendAsyncMessage("sharedata", aEvent.detail);
     }, true, true);
     /* bug 1042991, ensure history is available by calling history.back on close */
@@ -45,7 +45,7 @@ function test() {
 
   // Animation on the panel can cause intermittent failures such as bug 1115131.
   SocialShare.panel.setAttribute("animate", "false");
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     SocialShare.panel.removeAttribute("animate");
     mm.removeDelayedFrameScript(frameScript);
     Services.prefs.clearUserPref("social.directories");

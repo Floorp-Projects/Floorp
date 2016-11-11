@@ -2669,7 +2669,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           if (this.getAttribute("disabled") != "true") {
             let self = this;
-            setTimeout(function () {
+            setTimeout(function() {
               if (self.getAttribute("active") == "true")
                 self.menu.open = true;
             }, this._menuDelay);

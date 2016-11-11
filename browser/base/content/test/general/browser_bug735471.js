@@ -12,7 +12,7 @@ function test() {
 }
 
 function testPreferences() {
-  whenTabLoaded(gBrowser.selectedTab, function () {
+  whenTabLoaded(gBrowser.selectedTab, function() {
     is(content.location.href, "about:preferences", "Checking if the preferences tab was opened");
 
     gBrowser.removeCurrentTab();

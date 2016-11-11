@@ -51,7 +51,7 @@ Tree.prototype = {
   get rowCount() {
     return this._data.length;
   },
-  getCellText: function (aRow, aColumn) {
+  getCellText: function(aRow, aColumn) {
     return this._data[aRow];
   },
   isSeparator: function(aIndex) {

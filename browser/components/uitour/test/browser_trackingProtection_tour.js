@@ -41,7 +41,7 @@ add_UITour_task(function* test_block_target() {
 function* checkToggleTarget(targetID) {
   let popup = document.getElementById("UITourTooltip");
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     let doc = content.document;
     let iframe = doc.createElement("iframe");
     iframe.setAttribute("id", "tracking-element");
@@ -71,7 +71,7 @@ function* checkToggleTarget(targetID) {
   ok(!is_visible(popup), "The tooltip should now be hidden.");
   yield testTargetAvailability(false);
 
-  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     content.document.getElementById("tracking-element").remove();
   });
 }

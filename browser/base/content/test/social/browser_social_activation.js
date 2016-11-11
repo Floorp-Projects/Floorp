@@ -164,7 +164,7 @@ var gProviders = [
 
 function test() {
   PopupNotifications.panel.setAttribute("animate", "false");
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     PopupNotifications.panel.removeAttribute("animate");
   });
   waitForExplicitFinish();

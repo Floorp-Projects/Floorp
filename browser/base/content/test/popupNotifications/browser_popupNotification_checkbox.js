@@ -38,25 +38,25 @@ var gNotification;
 var tests = [
   // Test that passing the checkbox field shows the checkbox.
   { id: "show_checkbox",
-    run: function () {
+    run: function() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.options.checkbox = {
         label: "This is a checkbox",
       };
       gNotification = showNotification(this.notifyObj);
     },
-    onShown: function (popup) {
+    onShown: function(popup) {
       checkPopup(popup, this.notifyObj);
       let notification = popup.childNodes[0];
       checkCheckbox(notification.checkbox, "This is a checkbox");
       triggerMainCommand(popup);
     },
-    onHidden: function () { }
+    onHidden: function() { }
   },
 
   // Test checkbox being checked by default
   { id: "checkbox_checked",
-    run: function () {
+    run: function() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.options.checkbox = {
         label: "Check this",
@@ -64,18 +64,18 @@ var tests = [
       };
       gNotification = showNotification(this.notifyObj);
     },
-    onShown: function (popup) {
+    onShown: function(popup) {
       checkPopup(popup, this.notifyObj);
       let notification = popup.childNodes[0];
       checkCheckbox(notification.checkbox, "Check this", true);
       triggerMainCommand(popup);
     },
-    onHidden: function () { }
+    onHidden: function() { }
   },
 
   // Test checkbox passing the checkbox state on mainAction
   { id: "checkbox_passCheckboxChecked_mainAction",
-    run: function () {
+    run: function() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.mainAction.callback = ({checkboxChecked}) => this.mainActionChecked = checkboxChecked;
       this.notifyObj.options.checkbox = {
@@ -93,14 +93,14 @@ var tests = [
       checkCheckbox(checkbox, "This is a checkbox", true);
       triggerMainCommand(popup);
     },
-    onHidden: function () {
+    onHidden: function() {
       is(this.mainActionChecked, true, "mainAction callback is passed the correct checkbox value");
     }
   },
 
   // Test checkbox passing the checkbox state on secondaryAction
   { id: "checkbox_passCheckboxChecked_secondaryAction",
-    run: function () {
+    run: function() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.secondaryActions = [{
         label: "Test Secondary",
@@ -122,14 +122,14 @@ var tests = [
       checkCheckbox(checkbox, "This is a checkbox", true);
       triggerSecondaryCommand(popup, 0);
     },
-    onHidden: function () {
+    onHidden: function() {
       is(this.secondaryActionChecked, true, "secondaryAction callback is passed the correct checkbox value");
     }
   },
 
   // Test checkbox preserving its state through re-opening the doorhanger
   { id: "checkbox_reopen",
-    run: function () {
+    run: function() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.options.checkbox = {
         label: "This is a checkbox",
@@ -149,7 +149,7 @@ var tests = [
       EventUtils.synthesizeMouseAtCenter(checkbox, {});
       dismissNotification(popup);
     },
-    onHidden: function (popup) {
+    onHidden: function(popup) {
       let icon = document.getElementById("default-notification-icon");
       EventUtils.synthesizeMouseAtCenter(icon, {});
       let notification = popup.childNodes[0];
@@ -162,11 +162,11 @@ var tests = [
 ];
 
 // Test checkbox disabling the main action in different combinations
-["checkedState", "uncheckedState"].forEach(function (state) {
-  [true, false].forEach(function (checked) {
+["checkedState", "uncheckedState"].forEach(function(state) {
+  [true, false].forEach(function(checked) {
     tests.push(
       { id: `checkbox_disableMainAction_${state}_${checked ? 'checked' : 'unchecked'}`,
-        run: function () {
+        run: function() {
           this.notifyObj = new BasicNotification(this.id);
           this.notifyObj.options.checkbox = {
             label: "This is a checkbox",
@@ -201,7 +201,7 @@ var tests = [
           }
           triggerMainCommand(popup);
         },
-        onHidden: function () { }
+        onHidden: function() { }
       }
     );
   });

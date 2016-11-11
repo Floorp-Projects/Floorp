@@ -10,14 +10,14 @@ const QUERY_URL = "place:sort=8&maxResults=10";
 add_task(function* copy_toolbar_shortcut() {
   let library = yield promiseLibrary();
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     library.close();
     PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
   });
 
   library.PlacesOrganizer.selectLeftPaneQuery("BookmarksToolbar");
 
-  yield promiseClipboard(function () { library.PlacesOrganizer._places.controller.copy(); },
+  yield promiseClipboard(function() { library.PlacesOrganizer._places.controller.copy(); },
                          PlacesUtils.TYPE_X_MOZ_PLACE);
 
   library.PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
@@ -40,7 +40,7 @@ add_task(function* copy_history_query() {
 
   library.PlacesOrganizer.selectLeftPaneQuery("History");
 
-  yield promiseClipboard(function () { library.PlacesOrganizer._places.controller.copy(); },
+  yield promiseClipboard(function() { library.PlacesOrganizer._places.controller.copy(); },
                          PlacesUtils.TYPE_X_MOZ_PLACE);
 
   library.PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");

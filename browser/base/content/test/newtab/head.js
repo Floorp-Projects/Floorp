@@ -67,7 +67,7 @@ if (screenWidth < gBrowser.contentWindow.outerWidth) {
        ". That may cause problems.");
 }
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   while (gWindow.gBrowser.tabs.length > 1)
     gWindow.gBrowser.removeTab(gWindow.gBrowser.tabs[1]);
 
@@ -171,7 +171,7 @@ function setLinks(aLinks) {
     let links = aLinks;
 
     if (typeof links == "string") {
-      links = aLinks.split(/\s*,\s*/).map(function (id) {
+      links = aLinks.split(/\s*,\s*/).map(function(id) {
         return {url: "http://example" + (id != "-1" ? id : "") + ".com/",
                 title: "site#" + id};
       });
@@ -181,10 +181,10 @@ function setLinks(aLinks) {
     // currently in progress has ended. We clear the history, fill it with the
     // given entries and call populateCache() now again to make sure the cache
     // has the desired contents.
-    NewTabUtils.links.populateCache(function () {
+    NewTabUtils.links.populateCache(function() {
       PlacesTestUtils.clearHistory().then(() => {
         fillHistory(links).then(() => {
-          NewTabUtils.links.populateCache(function () {
+          NewTabUtils.links.populateCache(function() {
             NewTabUtils.allPages.update();
             resolve();
           }, true);
@@ -221,8 +221,8 @@ function fillHistory(aLinks) {
 
       PlacesUtils.asyncHistory.updatePlaces(place, {
         handleError: () => ok(false, "couldn't add visit to history"),
-        handleResult: function () {},
-        handleCompletion: function () {
+        handleResult: function() {},
+        handleCompletion: function() {
           if (--numLinks == 0) {
             resolve();
           }
@@ -245,7 +245,7 @@ function setPinnedLinks(aLinks) {
   let links = aLinks;
 
   if (typeof links == "string") {
-    links = aLinks.split(/\s*,\s*/).map(function (id) {
+    links = aLinks.split(/\s*,\s*/).map(function(id) {
       if (id)
         return {url: "http://example" + (id != "-1" ? id : "") + ".com/",
                 title: "site#" + id,
@@ -314,7 +314,7 @@ function* addNewTabPageTab() {
   yield new Promise(resolve => {
     if (NewTabUtils.allPages.enabled) {
       // Continue when the link cache has been populated.
-      NewTabUtils.links.populateCache(function () {
+      NewTabUtils.links.populateCache(function() {
         whenSearchInitDone().then(resolve);
       });
     } else {
@@ -342,7 +342,7 @@ function* checkGrid(pattern) {
     let grid = content.wrappedJSObject.gGrid;
 
     let sites = grid.sites.slice(0, args.length);
-    let foundPattern = sites.map(function (aSite) {
+    let foundPattern = sites.map(function(aSite) {
       if (!aSite)
         return "";
 
@@ -464,7 +464,7 @@ function whenPagesUpdated() {
     };
 
     NewTabUtils.allPages.register(page);
-    registerCleanupFunction(function () {
+    registerCleanupFunction(function() {
       NewTabUtils.allPages.unregister(page);
     });
   });

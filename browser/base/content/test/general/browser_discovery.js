@@ -5,7 +5,7 @@ function doc() {
 }
 
 function setHandlerFunc(aResultFunc) {
-  gBrowser.addEventListener("DOMLinkAdded", function (event) {
+  gBrowser.addEventListener("DOMLinkAdded", function(event) {
     gBrowser.removeEventListener("DOMLinkAdded", arguments.callee, false);
     executeSoon(aResultFunc);
   }, false);
@@ -16,7 +16,7 @@ function test() {
 
   gBrowser.selectedTab = gBrowser.addTab();
   browser = gBrowser.selectedBrowser;
-  browser.addEventListener("load", function (event) {
+  browser.addEventListener("load", function(event) {
     event.currentTarget.removeEventListener("load", arguments.callee, true);
     iconDiscovery();
   }, true);

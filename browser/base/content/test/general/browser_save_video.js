@@ -51,7 +51,7 @@ add_task(function* () {
     mockTransferRegisterer.register();
   });
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     mockTransferRegisterer.unregister();
     MockFilePicker.cleanup();
     destDir.remove(true);

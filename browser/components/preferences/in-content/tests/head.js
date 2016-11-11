@@ -32,7 +32,7 @@ function is_element_hidden(aElement, aMsg) {
 function open_preferences(aCallback) {
   gBrowser.selectedTab = gBrowser.addTab("about:preferences");
   let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-  newTabBrowser.addEventListener("Initialized", function () {
+  newTabBrowser.addEventListener("Initialized", function() {
     newTabBrowser.removeEventListener("Initialized", arguments.callee, true);
     aCallback(gBrowser.contentWindow);
   }, true);
@@ -102,7 +102,7 @@ function waitForEvent(aSubject, aEventName, aTimeoutMs, aTarget) {
     eventDeferred.reject(new Error(aEventName + " event timeout at " + stack));
   }, timeoutMs);
 
-  var listener = function (aEvent) {
+  var listener = function(aEvent) {
     if (aTarget && aTarget !== aEvent.target)
         return;
 

@@ -39,11 +39,11 @@ var gDataNotificationInfoBar = {
     }
   },
 
-  _getDataReportingNotification: function (name = this._DATA_REPORTING_NOTIFICATION) {
+  _getDataReportingNotification: function(name = this._DATA_REPORTING_NOTIFICATION) {
     return this._notificationBox.getNotificationWithValue(name);
   },
 
-  _displayDataPolicyInfoBar: function (request) {
+  _displayDataPolicyInfoBar: function(request) {
     if (this._getDataReportingNotification()) {
       return;
     }
@@ -88,7 +88,7 @@ var gDataNotificationInfoBar = {
     request.onUserNotifyComplete();
   },
 
-  _clearPolicyNotification: function () {
+  _clearPolicyNotification: function() {
     let notification = this._getDataReportingNotification();
     if (notification) {
       this._log.debug("Closing notification.");

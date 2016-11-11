@@ -68,7 +68,7 @@ function promiseImageDownloaded() {
     mockTransferCallback = onTransferComplete;
     mockTransferRegisterer.register();
 
-    registerCleanupFunction(function () {
+    registerCleanupFunction(function() {
       mockTransferCallback = null;
       mockTransferRegisterer.unregister();
       MockFilePicker.cleanup();

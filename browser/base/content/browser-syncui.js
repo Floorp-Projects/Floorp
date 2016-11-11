@@ -39,7 +39,7 @@ var gSyncUI = {
   _syncStartTime: 0,
   _syncAnimationTimer: 0,
 
-  init: function () {
+  init: function() {
     Cu.import("resource://services-common/stringbundle.js");
 
     // Proceed to set up the UI if Sync has already started up.
@@ -137,7 +137,7 @@ var gSyncUI = {
   // Note that we don't show login errors in a notification bar here, but do
   // still need to track a login-failed state so the "Tools" menu updates
   // with the correct state.
-  _loginFailed: function () {
+  _loginFailed: function() {
     // If Sync isn't already ready, we don't want to force it to initialize
     // by referencing Weave.Status - and it isn't going to be accurate before
     // Sync is ready anyway.
@@ -242,7 +242,7 @@ var gSyncUI = {
     this.updateUI();
   },
 
-  _getAppName: function () {
+  _getAppName: function() {
     let brand = new StringBundle("chrome://branding/locale/brand.properties");
     return brand.get("brandShortName");
   },
@@ -304,7 +304,7 @@ var gSyncUI = {
   },
 
   // Open the legacy-sync device pairing UI. Note used for FxA Sync.
-  openAddDevice: function () {
+  openAddDevice: function() {
     if (!Weave.Utils.ensureMPUnlocked())
       return;
 
@@ -316,11 +316,11 @@ var gSyncUI = {
                         "syncAddDevice", "centerscreen,chrome,resizable=no");
   },
 
-  openPrefs: function (entryPoint) {
+  openPrefs: function(entryPoint) {
     openPreferences("paneSync", { urlParams: { entrypoint: entryPoint } });
   },
 
-  openSignInAgainPage: function (entryPoint = "syncbutton") {
+  openSignInAgainPage: function(entryPoint = "syncbutton") {
     gFxAccounts.openSignInAgainPage(entryPoint);
   },
 
