@@ -78,8 +78,12 @@ function toSource(value) {
 function makeTestAPI(context) {
   const {extension} = context;
 
+  function getStack() {
+    return new context.cloneScope.Error().stack.replace(/^/gm, "    ");
+  }
+
   function assertTrue(value, msg) {
-    extension.emit("test-result", Boolean(value), String(msg));
+    extension.emit("test-result", Boolean(value), String(msg), getStack());
   }
 
   return {
@@ -89,15 +93,15 @@ function makeTestAPI(context) {
       },
 
       notifyPass(msg) {
-        extension.emit("test-done", true, msg);
+        extension.emit("test-done", true, msg, getStack());
       },
 
       notifyFail(msg) {
-        extension.emit("test-done", false, msg);
+        extension.emit("test-done", false, msg, getStack());
       },
 
       log(msg) {
-        extension.emit("test-log", true, msg);
+        extension.emit("test-log", true, msg, getStack());
       },
 
       fail(msg) {
@@ -125,7 +129,7 @@ function makeTestAPI(context) {
         if (!equal && expected === actual) {
           actual += " (different)";
         }
-        extension.emit("test-eq", equal, String(msg), expected, actual);
+        extension.emit("test-eq", equal, String(msg), expected, actual, getStack());
       },
 
       assertRejects(promise, expectedError, msg) {
