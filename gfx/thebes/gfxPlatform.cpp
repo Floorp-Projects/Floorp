@@ -2200,6 +2200,13 @@ gfxPlatform::InitGPUProcessPrefs()
       NS_LITERAL_CSTRING("FEATURE_FAILURE_SAFE_MODE"));
     return;
   }
+  if (gfxPrefs::LayerScopeEnabled()) {
+    gpuProc.ForceDisable(
+      FeatureStatus::Blocked,
+      "LayerScope does not work in the GPU process",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_LAYERSCOPE"));
+    return;
+  }
 }
 
 void

@@ -17,9 +17,15 @@ const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/u
 const {createChild} = require("devtools/client/inspector/shared/utils");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
-
-const overlays = require("devtools/client/inspector/shared/style-inspector-overlays");
+const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
+const {
+  VIEW_NODE_SELECTOR_TYPE,
+  VIEW_NODE_PROPERTY_TYPE,
+  VIEW_NODE_VALUE_TYPE,
+  VIEW_NODE_IMAGE_URL_TYPE,
+} = require("devtools/client/inspector/shared/node-types");
 const StyleInspectorMenu = require("devtools/client/inspector/shared/style-inspector-menu");
+const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 const {BoxModelView} = require("devtools/client/inspector/components/box-model");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
@@ -207,10 +213,10 @@ function CssComputedView(inspector, document, pageStyle) {
   this._contextmenu = new StyleInspectorMenu(this, { isRuleView: false });
 
   // Add the tooltips and highlightersoverlay
-  this.tooltips = new overlays.TooltipsOverlay(this);
+  this.tooltips = new TooltipsOverlay(this);
   this.tooltips.addToView();
 
-  this.highlighters = new overlays.HighlightersOverlay(this);
+  this.highlighters = new HighlightersOverlay(this);
   this.highlighters.addToView();
 }
 
@@ -301,7 +307,7 @@ CssComputedView.prototype = {
    *        The node which we want information about
    * @return {Object} The type information object contains the following props:
    * - type {String} One of the VIEW_NODE_XXX_TYPE const in
-   *   style-inspector-overlays
+   *   client/inspector/shared/node-types
    * - value {Object} Depends on the type of the node
    * returns null if the node isn't anything we care about
    */
@@ -324,7 +330,7 @@ CssComputedView.prototype = {
         }
       }
       return {
-        type: overlays.VIEW_NODE_SELECTOR_TYPE,
+        type: VIEW_NODE_SELECTOR_TYPE,
         value: selectorText.trim()
       };
     }
@@ -371,12 +377,12 @@ CssComputedView.prototype = {
 
     // Get the type
     if (classes.contains("property-name")) {
-      type = overlays.VIEW_NODE_PROPERTY_TYPE;
+      type = VIEW_NODE_PROPERTY_TYPE;
     } else if (classes.contains("property-value") ||
                classes.contains("other-property-value")) {
-      type = overlays.VIEW_NODE_VALUE_TYPE;
+      type = VIEW_NODE_VALUE_TYPE;
     } else if (isHref) {
-      type = overlays.VIEW_NODE_IMAGE_URL_TYPE;
+      type = VIEW_NODE_IMAGE_URL_TYPE;
       value.url = node.href;
     } else {
       return null;

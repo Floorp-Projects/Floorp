@@ -132,7 +132,9 @@ class DataBuffer {
     data_ = new uint8_t[len_ ? len_ : 1];
 
     // The head of the old.
-    Write(0, old_value, std::min(old_len, index));
+    if (old_value) {
+      Write(0, old_value, std::min(old_len, index));
+    }
     // Maybe a gap.
     if (index > old_len) {
       memset(old_value + index, 0, index - old_len);

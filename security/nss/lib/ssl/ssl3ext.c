@@ -130,17 +130,17 @@ arrayContainsExtension(const PRUint16 *array, PRUint32 len, PRUint16 ex_type)
 }
 
 PRBool
-ssl3_ExtensionNegotiated(sslSocket *ss, PRUint16 ex_type)
+ssl3_ExtensionNegotiated(const sslSocket *ss, PRUint16 ex_type)
 {
-    TLSExtensionData *xtnData = &ss->xtnData;
+    const TLSExtensionData *xtnData = &ss->xtnData;
     return arrayContainsExtension(xtnData->negotiated,
                                   xtnData->numNegotiated, ex_type);
 }
 
 PRBool
-ssl3_ClientExtensionAdvertised(sslSocket *ss, PRUint16 ex_type)
+ssl3_ClientExtensionAdvertised(const sslSocket *ss, PRUint16 ex_type)
 {
-    TLSExtensionData *xtnData = &ss->xtnData;
+    const TLSExtensionData *xtnData = &ss->xtnData;
     return arrayContainsExtension(xtnData->advertised,
                                   xtnData->numAdvertised, ex_type);
 }
@@ -297,7 +297,8 @@ ssl3_HandleParsedExtensions(sslSocket *ss,
             if (handler->ex_type == extension->type) {
                 SECStatus rv;
 
-                rv = (*handler->ex_handler)(ss, (PRUint16)extension->type,
+                rv = (*handler->ex_handler)(ss, &ss->xtnData,
+                                            (PRUint16)extension->type,
                                             &extension->data);
                 if (rv != SECSuccess) {
                     if (!ss->ssl3.fatalAlertSent) {
@@ -336,20 +337,22 @@ ssl3_HandleExtensions(sslSocket *ss,
 /* Add a callback function to the table of senders of server hello extensions.
  */
 SECStatus
-ssl3_RegisterServerHelloExtensionSender(sslSocket *ss, PRUint16 ex_type,
-                                        ssl3HelloExtensionSenderFunc cb)
+ssl3_RegisterExtensionSender(const sslSocket *ss,
+                             TLSExtensionData *xtnData,
+                             PRUint16 ex_type,
+                             ssl3HelloExtensionSenderFunc cb)
 {
     int i;
     ssl3HelloExtensionSender *sender;
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
-        sender = &ss->xtnData.serverHelloSenders[0];
+        sender = &xtnData->serverHelloSenders[0];
     } else {
         if (tls13_ExtensionAllowed(ex_type, server_hello)) {
             PORT_Assert(!tls13_ExtensionAllowed(ex_type, encrypted_extensions));
-            sender = &ss->xtnData.serverHelloSenders[0];
+            sender = &xtnData->serverHelloSenders[0];
         } else {
             PORT_Assert(tls13_ExtensionAllowed(ex_type, encrypted_extensions));
-            sender = &ss->xtnData.encryptedExtensionsSenders[0];
+            sender = &xtnData->encryptedExtensionsSenders[0];
         }
     }
 
@@ -389,7 +392,7 @@ ssl3_CallHelloExtensionSenders(sslSocket *ss, PRBool append, PRUint32 maxBytes,
 
     for (i = 0; i < SSL_MAX_EXTENSIONS; ++i, ++sender) {
         if (sender->ex_sender) {
-            PRInt32 extLen = (*sender->ex_sender)(ss, append, maxBytes);
+            PRInt32 extLen = (*sender->ex_sender)(ss, &ss->xtnData, append, maxBytes);
             if (extLen < 0)
                 return -1;
             maxBytes -= extLen;
@@ -409,4 +412,87 @@ ssl3_DestroyRemoteExtensions(PRCList *list)
         PR_REMOVE_LINK(cur_p);
         PORT_Free(cur_p);
     }
+}
+
+/* Initialize the extension data block. */
+void
+ssl3_InitExtensionData(TLSExtensionData *xtnData)
+{
+    /* Set things up to the right starting state. */
+    PORT_Memset(xtnData, 0, sizeof(*xtnData));
+    xtnData->peerSupportsFfdheGroups = PR_FALSE;
+    PR_INIT_CLIST(&xtnData->remoteKeyShares);
+}
+
+/* Free everything that has been allocated and then reset back to
+ * the starting state. */
+void
+ssl3_ResetExtensionData(TLSExtensionData *xtnData)
+{
+    /* Clean up. */
+    ssl3_FreeSniNameArray(xtnData);
+    PORT_Free(xtnData->clientSigSchemes);
+    SECITEM_FreeItem(&xtnData->nextProto, PR_FALSE);
+    tls13_DestroyKeyShares(&xtnData->remoteKeyShares);
+
+    /* Now reinit. */
+    ssl3_InitExtensionData(xtnData);
+}
+
+/* Thunks to let extension handlers operate on const sslSocket* objects. */
+SECStatus
+ssl3_ExtAppendHandshake(const sslSocket *ss, const void *void_src,
+                        PRInt32 bytes)
+{
+    return ssl3_AppendHandshake((sslSocket *)ss, void_src, bytes);
+}
+
+SECStatus
+ssl3_ExtAppendHandshakeNumber(const sslSocket *ss, PRInt32 num,
+                              PRInt32 lenSize)
+{
+    return ssl3_AppendHandshakeNumber((sslSocket *)ss, num, lenSize);
+}
+
+SECStatus
+ssl3_ExtAppendHandshakeVariable(const sslSocket *ss,
+                                const SSL3Opaque *src, PRInt32 bytes,
+                                PRInt32 lenSize)
+{
+    return ssl3_AppendHandshakeVariable((sslSocket *)ss, src, bytes, lenSize);
+}
+
+void
+ssl3_ExtSendAlert(const sslSocket *ss, SSL3AlertLevel level,
+                  SSL3AlertDescription desc)
+{
+    (void)SSL3_SendAlert((sslSocket *)ss, level, desc);
+}
+
+void
+ssl3_ExtDecodeError(const sslSocket *ss)
+{
+    (void)ssl3_DecodeError((sslSocket *)ss);
+}
+
+SECStatus
+ssl3_ExtConsumeHandshake(const sslSocket *ss, void *v, PRInt32 bytes,
+                         SSL3Opaque **b, PRUint32 *length)
+{
+    return ssl3_ConsumeHandshake((sslSocket *)ss, v, bytes, b, length);
+}
+
+PRInt32
+ssl3_ExtConsumeHandshakeNumber(const sslSocket *ss, PRInt32 bytes,
+                               SSL3Opaque **b, PRUint32 *length)
+{
+    return ssl3_ConsumeHandshakeNumber((sslSocket *)ss, bytes, b, length);
+}
+
+SECStatus
+ssl3_ExtConsumeHandshakeVariable(const sslSocket *ss, SECItem *i,
+                                 PRInt32 bytes, SSL3Opaque **b,
+                                 PRUint32 *length)
+{
+    return ssl3_ConsumeHandshakeVariable((sslSocket *)ss, i, bytes, b, length);
 }

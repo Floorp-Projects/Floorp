@@ -180,6 +180,10 @@ function waitForSources(dbg, ...sources) {
   }));
 }
 
+function waitForElement(dbg, selector) {
+  return waitUntil(() => findElementWithSelector(dbg, selector))
+}
+
 /**
  * Assert that the debugger is paused at the correct location.
  *
@@ -523,7 +527,13 @@ function invokeInTab(fnc) {
 }
 
 const isLinux = Services.appinfo.OS === "Linux";
+const cmdOrCtrl = isLinux ? { ctrlKey: true } : { metaKey: true };
 const keyMappings = {
+  sourceSearch: { code: "p", modifiers: cmdOrCtrl},
+  fileSearch: { code: "f", modifiers: cmdOrCtrl},
+  "Enter": { code: "VK_RETURN" },
+  "Up": { code: "VK_UP" },
+  "Down": { code: "VK_DOWN" },
   pauseKey: { code: "VK_F8" },
   resumeKey: { code: "VK_F8" },
   stepOverKey: { code: "VK_F10" },
@@ -542,12 +552,19 @@ const keyMappings = {
  */
 function pressKey(dbg, keyName) {
   let keyEvent = keyMappings[keyName];
+
   const { code, modifiers } = keyEvent;
   return EventUtils.synthesizeKey(
     code,
     modifiers || {},
     dbg.win
   );
+}
+
+function type(dbg, string) {
+  string.split("").forEach(char => {
+    EventUtils.synthesizeKey(char, {}, dbg.win);
+  });
 }
 
 function isVisibleWithin(outerEl, innerEl) {
@@ -559,11 +576,14 @@ function isVisibleWithin(outerEl, innerEl) {
 
 const selectors = {
   callStackHeader: ".call-stack-pane ._header",
+  callStackBody: ".call-stack-pane .pane",
   scopesHeader: ".scopes-pane ._header",
   breakpointItem: i => `.breakpoints-list .breakpoint:nth-child(${i})`,
   scopeNode: i => `.scopes-list .tree-node:nth-child(${i}) .object-label`,
-  frame: index => `.frames ul li:nth-child(${index})`,
+  frame: i => `.frames ul li:nth-child(${i})`,
+  frames: ".frames ul li",
   gutter: i => `.CodeMirror-code *:nth-child(${i}) .CodeMirror-linenumber`,
+  menuitem: i => `menupopup menuitem:nth-child(${i})`,
   pauseOnExceptions: ".pause-exceptions",
   breakpoint: ".CodeMirror-code > .new-breakpoint",
   highlightLine: ".CodeMirror-code > .highlight-line",
@@ -574,7 +594,10 @@ const selectors = {
   stepIn: ".stepIn.active",
   toggleBreakpoints: ".toggleBreakpoints",
   prettyPrintButton: ".prettyPrint",
-  sourceFooter: ".source-footer"
+  sourceFooter: ".source-footer",
+  sourceNode: i => `.sources-list .tree-node:nth-child(${i})`,
+  sourceNodes: ".sources-list .tree-node",
+  sourceArrow: i => `.sources-list .tree-node:nth-child(${i}) .arrow`,
 };
 
 function getSelector(elementName, ...args) {
@@ -592,6 +615,10 @@ function getSelector(elementName, ...args) {
 
 function findElement(dbg, elementName, ...args) {
   const selector = getSelector(elementName, ...args);
+  return findElementWithSelector(dbg, selector);
+}
+
+function findElementWithSelector(dbg, selector) {
   return dbg.win.document.querySelector(selector);
 }
 
@@ -612,12 +639,32 @@ function findAllElements(dbg, elementName, ...args) {
  */
 function clickElement(dbg, elementName, ...args) {
   const selector = getSelector(elementName, ...args);
-  const doc = dbg.win.document;
   return EventUtils.synthesizeMouseAtCenter(
-    doc.querySelector(selector),
+    findElementWithSelector(dbg, selector),
     {},
     dbg.win
   );
+}
+
+function rightClickElement(dbg, elementName, ...args) {
+  const selector = getSelector(elementName, ...args);
+  const doc = dbg.win.document;
+  return EventUtils.synthesizeMouseAtCenter(
+    doc.querySelector(selector),
+    {type: "contextmenu"},
+    dbg.win
+  );
+}
+
+function selectMenuItem(dbg, index) {
+  // the context menu is in the toolbox window
+  const doc = dbg.toolbox.win.document;
+
+  // there are several context menus, we want the one with the menu-api
+  const popup = doc.querySelector("menupopup[menu-api=\"true\"]");
+
+  const item = popup.querySelector(`menuitem:nth-child(${index})`);
+  return EventUtils.synthesizeMouseAtCenter(item, {}, dbg.toolbox.win );
 }
 
 /**

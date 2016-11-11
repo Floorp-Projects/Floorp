@@ -1,7 +1,7 @@
 Importing revision: d261d6def2373f64d94b113860b29d3e45a02bd1
-from repository: https://hg.csswg.org/test/
+from repository: https://hg.csswg.org/test
 Importing css-conditional-3/at-media-whitespace-optional-001.html to css-conditional-3/at-media-whitespace-optional-001.html
-Importing css-conditional-3/reference/background-lime.html to css-conditional-3/background-lime.html
+Importing css-conditional-3/reference/background-lime.html to css-conditional-3/reference/background-lime.html
 Importing css-conditional-3/at-media-whitespace-optional-002.html to css-conditional-3/at-media-whitespace-optional-002.html
 Importing css-conditional-3/at-supports-001.html to css-conditional-3/at-supports-001.html
 Importing css-conditional-3/at-supports-001-ref.html to css-conditional-3/at-supports-001-ref.html
@@ -85,7 +85,7 @@ Importing css-multicol-1/support/test-br.png to css-multicol-1/support/test-br.p
 Importing css-multicol-1/support/test-outer.png to css-multicol-1/support/test-outer.png
 Importing css-multicol-1/support/test-tl.png to css-multicol-1/support/test-tl.png
 Importing css-multicol-1/support/test-tr.png to css-multicol-1/support/test-tr.png
-Importing css-multicol-1/reference/multicol-basic-ref.html to css-multicol-1/multicol-basic-ref.html
+Importing css-multicol-1/reference/multicol-basic-ref.html to css-multicol-1/reference/multicol-basic-ref.html
 Importing css-multicol-1/multicol-basic-002.html to css-multicol-1/multicol-basic-002.html
 Importing css-multicol-1/multicol-basic-003.html to css-multicol-1/multicol-basic-003.html
 Importing css-multicol-1/multicol-basic-004.html to css-multicol-1/multicol-basic-004.html
@@ -189,7 +189,7 @@ Importing css-multicol-1/multicol-inherit-4-ref.xht to css-multicol-1/multicol-i
 Importing css-multicol-1/multicol-list-item-001.xht to css-multicol-1/multicol-list-item-001.xht
 Importing css-multicol-1/multicol-list-item-001-ref.xht to css-multicol-1/multicol-list-item-001-ref.xht
 Importing css-multicol-1/multicol-margin-001.xht to css-multicol-1/multicol-margin-001.xht
-Importing css-multicol-1/../reference/ref-filled-green-100px-square.xht to css-multicol-1/ref-filled-green-100px-square.xht
+Importing reference/ref-filled-green-100px-square.xht to reference/ref-filled-green-100px-square.xht
 Importing css-multicol-1/multicol-margin-002.xht to css-multicol-1/multicol-margin-002.xht
 Importing css-multicol-1/multicol-margin-child-001.xht to css-multicol-1/multicol-margin-child-001.xht
 Importing css-multicol-1/multicol-margin-child-001-ref.xht to css-multicol-1/multicol-margin-child-001-ref.xht
@@ -258,7 +258,7 @@ Importing css-multicol-1/multicol-rule-ridge-000.xht to css-multicol-1/multicol-
 Importing css-multicol-1/multicol-rule-samelength-001.xht to css-multicol-1/multicol-rule-samelength-001.xht
 Importing css-multicol-1/multicol-rule-samelength-001-ref.xht to css-multicol-1/multicol-rule-samelength-001-ref.xht
 Importing css-multicol-1/multicol-rule-shorthand-001.xht to css-multicol-1/multicol-rule-shorthand-001.xht
-Warning: href attribute found empty in /Users/npancholi/builds/CSSWGTests/test/css-multicol-1/multicol-rule-shorthand-2.xht
+Warning: href attribute found empty in ../../../../csswg-test/css-multicol-1\multicol-rule-shorthand-2.xht
 Importing css-multicol-1/multicol-rule-solid-000.xht to css-multicol-1/multicol-rule-solid-000.xht
 Importing css-multicol-1/multicol-rule-solid-000-ref.xht to css-multicol-1/multicol-rule-solid-000-ref.xht
 Importing css-multicol-1/multicol-rule-stacking-001.xht to css-multicol-1/multicol-rule-stacking-001.xht
@@ -330,22 +330,22 @@ Importing css-namespaces-3/support/fail.css to css-namespaces-3/support/fail.css
 Importing css-namespaces-3/support/scope-002a.css to css-namespaces-3/support/scope-002a.css
 Importing css-namespaces-3/support/scope-002b.css to css-namespaces-3/support/scope-002b.css
 Importing css-namespaces-3/support/syntax-007.css to css-namespaces-3/support/syntax-007.css
-Importing css-namespaces-3/reftest/ref-lime-1.xml to css-namespaces-3/ref-lime-1.xml
+Importing css-namespaces-3/reftest/ref-lime-1.xml to css-namespaces-3/reftest/ref-lime-1.xml
 Importing css-namespaces-3/prefix-002.xml to css-namespaces-3/prefix-002.xml
 Importing css-namespaces-3/prefix-003.xml to css-namespaces-3/prefix-003.xml
-Importing css-namespaces-3/reftest/ref-lime-1-generic.xml to css-namespaces-3/ref-lime-1-generic.xml
+Importing css-namespaces-3/reftest/ref-lime-1-generic.xml to css-namespaces-3/reftest/ref-lime-1-generic.xml
 Importing css-namespaces-3/prefix-004.xml to css-namespaces-3/prefix-004.xml
-Importing css-namespaces-3/reftest/ref-lime-2-generic.xml to css-namespaces-3/ref-lime-2-generic.xml
+Importing css-namespaces-3/reftest/ref-lime-2-generic.xml to css-namespaces-3/reftest/ref-lime-2-generic.xml
 Importing css-namespaces-3/prefix-005.xml to css-namespaces-3/prefix-005.xml
 Importing css-namespaces-3/prefix-006.xml to css-namespaces-3/prefix-006.xml
-Importing css-namespaces-3/reftest/ref-lime-2.xml to css-namespaces-3/ref-lime-2.xml
+Importing css-namespaces-3/reftest/ref-lime-2.xml to css-namespaces-3/reftest/ref-lime-2.xml
 Importing css-namespaces-3/scope-001.xml to css-namespaces-3/scope-001.xml
 Importing css-namespaces-3/scope-002.xml to css-namespaces-3/scope-002.xml
 Importing css-namespaces-3/syntax-001.xml to css-namespaces-3/syntax-001.xml
-Importing css-namespaces-3/reftest/ref-lime-1-block.xml to css-namespaces-3/ref-lime-1-block.xml
+Importing css-namespaces-3/reftest/ref-lime-1-block.xml to css-namespaces-3/reftest/ref-lime-1-block.xml
 Importing css-namespaces-3/syntax-002.xml to css-namespaces-3/syntax-002.xml
 Importing css-namespaces-3/syntax-003.xml to css-namespaces-3/syntax-003.xml
-Importing css-namespaces-3/reftest/ref-lime-5.xml to css-namespaces-3/ref-lime-5.xml
+Importing css-namespaces-3/reftest/ref-lime-5.xml to css-namespaces-3/reftest/ref-lime-5.xml
 Importing css-namespaces-3/syntax-004.xml to css-namespaces-3/syntax-004.xml
 Importing css-namespaces-3/syntax-005.xml to css-namespaces-3/syntax-005.xml
 Importing css-namespaces-3/syntax-006.xml to css-namespaces-3/syntax-006.xml
@@ -353,9 +353,9 @@ Importing css-namespaces-3/syntax-007.xml to css-namespaces-3/syntax-007.xml
 Importing css-namespaces-3/syntax-008.xml to css-namespaces-3/syntax-008.xml
 Importing css-namespaces-3/syntax-009.xml to css-namespaces-3/syntax-009.xml
 Importing css-namespaces-3/syntax-010.xml to css-namespaces-3/syntax-010.xml
-Importing css-namespaces-3/reftest/ref-lime-3.xml to css-namespaces-3/ref-lime-3.xml
+Importing css-namespaces-3/reftest/ref-lime-3.xml to css-namespaces-3/reftest/ref-lime-3.xml
 Importing css-namespaces-3/syntax-011.xml to css-namespaces-3/syntax-011.xml
-Importing css-namespaces-3/reftest/ref-lime-6.xml to css-namespaces-3/ref-lime-6.xml
+Importing css-namespaces-3/reftest/ref-lime-6.xml to css-namespaces-3/reftest/ref-lime-6.xml
 Importing css-namespaces-3/syntax-012.xml to css-namespaces-3/syntax-012.xml
 Importing css-namespaces-3/syntax-013.xml to css-namespaces-3/syntax-013.xml
 Importing css-namespaces-3/syntax-014.xml to css-namespaces-3/syntax-014.xml
@@ -405,7 +405,7 @@ Importing css-values-3/support/test-tr.png to css-values-3/support/test-tr.png
 Importing css-values-3/support/support/README to css-values-3/support/support/README
 Importing css-values-3/support/support/swatch-green.png to css-values-3/support/support/swatch-green.png
 Importing css-values-3/support/support/swatch-red.png to css-values-3/support/support/swatch-red.png
-Importing css-values-3/reference/200-200-green.html to css-values-3/200-200-green.html
+Importing css-values-3/reference/200-200-green.html to css-values-3/reference/200-200-green.html
 Importing css-values-3/attr-color-invalid-fallback.html to css-values-3/attr-color-invalid-fallback.html
 Importing css-values-3/attr-color-valid.html to css-values-3/attr-color-valid.html
 Importing css-values-3/attr-invalid-type-001.html to css-values-3/attr-invalid-type-001.html
@@ -420,13 +420,13 @@ Importing css-values-3/attr-px-invalid-cast.html to css-values-3/attr-px-invalid
 Importing css-values-3/attr-px-invalid-fallback.html to css-values-3/attr-px-invalid-fallback.html
 Importing css-values-3/attr-px-valid.html to css-values-3/attr-px-valid.html
 Importing css-values-3/calc-in-calc.html to css-values-3/calc-in-calc.html
-Importing css-values-3/reference/all-green.html to css-values-3/all-green.html
+Importing css-values-3/reference/all-green.html to css-values-3/reference/all-green.html
 Importing css-values-3/calc-in-media-queries-001.html to css-values-3/calc-in-media-queries-001.html
 Importing css-values-3/calc-in-media-queries-002.html to css-values-3/calc-in-media-queries-002.html
 Importing css-values-3/calc-invalid-range-clamping.html to css-values-3/calc-invalid-range-clamping.html
 Importing css-values-3/calc-parenthesis-stack.html to css-values-3/calc-parenthesis-stack.html
 Importing css-values-3/ch-unit-001.html to css-values-3/ch-unit-001.html
-Importing css-values-3/reference/ch-unit-001-ref.html to css-values-3/ch-unit-001-ref.html
+Importing css-values-3/reference/ch-unit-001-ref.html to css-values-3/reference/ch-unit-001-ref.html
 Importing css-values-3/initial-background-color.html to css-values-3/initial-background-color.html
 Importing css-values-3/vh-calc-support-pct.html to css-values-3/vh-calc-support-pct.html
 Importing css-values-3/vh-calc-support.html to css-values-3/vh-calc-support.html
@@ -442,7 +442,7 @@ Importing css-values-3/vh-support-transform-translate.html to css-values-3/vh-su
 Importing css-values-3/vh-support.html to css-values-3/vh-support.html
 Importing css-values-3/vh-zero-support.html to css-values-3/vh-zero-support.html
 Importing css-values-3/vh_not_refreshing_on_chrome.html to css-values-3/vh_not_refreshing_on_chrome.html
-Importing css-values-3/reference/vh_not_refreshing_on_chrome-ref.html to css-values-3/vh_not_refreshing_on_chrome-ref.html
+Importing css-values-3/reference/vh_not_refreshing_on_chrome-ref.html to css-values-3/reference/vh_not_refreshing_on_chrome-ref.html
 Importing css-values-3/vh_not_refreshing_on_chrome_iframe.html to css-values-3/vh_not_refreshing_on_chrome_iframe.html
 Importing selectors-4/focus-within-001.html to selectors-4/focus-within-001.html
 Importing selectors-4/focus-within-001-ref.html to selectors-4/focus-within-001-ref.html

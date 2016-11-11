@@ -11,17 +11,3 @@ ifneq (,$(SIMPLE_PROGRAMS))
 libs::
 	$(INSTALL) $(SIMPLE_PROGRAMS) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
 endif
-
-ifeq (,$(filter-out WINNT, $(HOST_OS_ARCH)))
-getnativepath = $(call normalizepath,$(1))
-else
-getnativepath = $(1)
-endif
-
-abs_srcdir = $(abspath $(srcdir))
-
-regOrderDir = $(call getnativepath,$(abs_srcdir)/regorder)
-
-check::
-	XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
-	  $(DIST)/bin/TestRegistrationOrder$(BIN_SUFFIX) '$(regOrderDir)'

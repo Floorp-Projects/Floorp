@@ -71,15 +71,15 @@ D3D11SurfaceHolder::CopyToTextureClient(TextureClient* aClient)
     return false;
   }
 
-  hr = mutex->AcquireSync(0, 0);
-  if (hr == WAIT_ABANDONED || hr == WAIT_TIMEOUT || FAILED(hr)) {
-    NS_WARNING("Could not acquire DXGI surface lock - plugin forgot to release?");
-    return false;
+  {
+    AutoTextureLock(mutex, hr);
+    if (hr == WAIT_ABANDONED || hr == WAIT_TIMEOUT || FAILED(hr)) {
+      NS_WARNING("Could not acquire DXGI surface lock - plugin forgot to release?");
+      return false;
+    }
+
+    context->CopyResource(data->GetD3D11Texture(), mBack);
   }
-
-  context->CopyResource(data->GetD3D11Texture(), mBack);
-
-  mutex->ReleaseSync(0);
   return true;
 }
 

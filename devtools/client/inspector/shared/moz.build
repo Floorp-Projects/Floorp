@@ -6,8 +6,10 @@
 
 DevToolsModules(
     'dom-node-preview.js',
+    'highlighters-overlay.js',
+    'node-types.js',
     'style-inspector-menu.js',
-    'style-inspector-overlays.js',
+    'tooltips-overlay.js',
     'utils.js'
 )
 

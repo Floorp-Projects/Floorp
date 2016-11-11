@@ -133,8 +133,10 @@
 //       nsPlacesAutoComplete.js.
 #define CREATE_MOZ_OPENPAGES_TEMP NS_LITERAL_CSTRING( \
   "CREATE TEMP TABLE moz_openpages_temp (" \
-    "  url TEXT PRIMARY KEY" \
+    "  url TEXT" \
+    ", userContextId INTEGER" \
     ", open_count INTEGER" \
+    ", PRIMARY KEY (url, userContextId)" \
   ")" \
 )
 

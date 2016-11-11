@@ -68,11 +68,21 @@ add_task(function* () {
   yield enableBreakpoint(dbg, 2);
   bp2 = findBreakpoint(dbg, "simple2", 5);
   is(bp2.disabled, false, "second breakpoint is enabled");
+});
+
+// toggle all
+add_task(function* () {
+  const dbg = yield initDebugger("doc-scripts.html");
+
+  // Create two breakpoints
+  yield selectSource(dbg, "simple2");
+  yield addBreakpoint(dbg, "simple2", 3);
+  yield addBreakpoint(dbg, "simple2", 5);
 
   // Disable all of the breakpoints
   yield toggleBreakpoints(dbg);
-  bp1 = findBreakpoint(dbg, "simple2", 3);
-  bp2 = findBreakpoint(dbg, "simple2", 5);
+  let bp1 = findBreakpoint(dbg, "simple2", 3);
+  let bp2 = findBreakpoint(dbg, "simple2", 5);
   is(bp1.disabled, true, "first breakpoint is disabled");
   is(bp2.disabled, true, "second breakpoint is disabled");
 
