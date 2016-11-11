@@ -2158,10 +2158,9 @@ Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild)
              "No move, same index");
   MOZ_ASSERT(aNewIndex <= mChildren.Length(), "Wrong new index was given");
 
-  EventTree* eventTree = mDoc->Controller()->QueueMutation(this);
-  if (eventTree) {
-    RefPtr<AccHideEvent> event = new AccHideEvent(aChild, false);
-    eventTree->Mutated(event);
+  RefPtr<AccHideEvent> hideEvent = new AccHideEvent(aChild, false);
+  if (mDoc->Controller()->QueueMutationEvent(hideEvent)) {
+    aChild->SetHideEventTarget(true);
   }
 
   mEmbeddedObjCollector = nullptr;
@@ -2193,11 +2192,10 @@ Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild)
     mChildren[idx]->mInt.mIndexOfEmbeddedChild = -1;
   }
 
-  if (eventTree) {
-    RefPtr<AccShowEvent> event = new AccShowEvent(aChild);
-    eventTree->Mutated(event);
-    mDoc->Controller()->QueueNameChange(aChild);
-  }
+  RefPtr<AccShowEvent> showEvent = new AccShowEvent(aChild);
+  DebugOnly<bool> added = mDoc->Controller()->QueueMutationEvent(showEvent);
+  MOZ_ASSERT(added);
+  aChild->SetShowEventTarget(true);
 }
 
 Accessible*
