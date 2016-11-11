@@ -24,8 +24,6 @@ function query_string(aFolderID)
 
 function run_test()
 {
-  var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsINavHistoryService);
   var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
            getService(Ci.nsINavBookmarksService);
 

@@ -418,9 +418,9 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
 
       onStartRequest: function (aRequest, aContext)
       {
-        let channel = aRequest.QueryInterface(Ci.nsIChannel);
+        let requestChannel = aRequest.QueryInterface(Ci.nsIChannel);
         this.contentListener = gExternalHelperAppService.doContent(
-                                     channel.contentType, aRequest, null, true);
+                                     requestChannel.contentType, aRequest, null, true);
         this.contentListener.onStartRequest(aRequest, aContext);
       },
 
@@ -819,11 +819,6 @@ add_task(function test_common_initialize()
       return super._getDirectory(this._allowDirectories ? name : "TmpD");
     },
   }));
-
-  // Get a reference to nsIComponentRegistrar, and ensure that is is freed
-  // before the XPCOM shutdown.
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  do_register_cleanup(() => registrar = null);
 
   // Make sure that downloads started using nsIExternalHelperAppService are
   // saved to disk without asking for a destination interactively.

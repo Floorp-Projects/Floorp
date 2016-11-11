@@ -55,7 +55,7 @@ add_task(function* test_simple() {
 
   // fetching the engines forces a sync init, and should have caused us to
   // check the timezone.
-  let engines = Services.search.getEngines();
+  Services.search.getEngines();
   ok(Services.search.isInitialized);
 
   // a little wait to check we didn't do the xhr thang.

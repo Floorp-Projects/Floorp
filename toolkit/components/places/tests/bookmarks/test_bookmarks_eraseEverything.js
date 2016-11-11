@@ -29,7 +29,7 @@ add_task(function* test_eraseEverything() {
   let menuBookmark = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.menuGuid,
                                                           type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                           url: "http://example.com/" });
-  checkBookmarkObject(unfiledBookmark);
+  checkBookmarkObject(menuBookmark);
   let menuBookmarkInFolder =
     yield PlacesUtils.bookmarks.insert({ parentGuid: menuFolder.guid,
                                          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,

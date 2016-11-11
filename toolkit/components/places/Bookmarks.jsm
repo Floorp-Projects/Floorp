@@ -269,7 +269,6 @@ var Bookmarks = Object.freeze({
         return Object.assign({}, item);
       }
 
-      let time = (updateInfo && updateInfo.dateAdded) || new Date();
       updateInfo = validateBookmarkObject(updateInfo,
         { url: { validIf: () => item.type == this.TYPE_BOOKMARK }
         , title: { validIf: () => [ this.TYPE_BOOKMARK

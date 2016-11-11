@@ -525,7 +525,6 @@ Spinner.prototype = {
   observe: function() {
     let topic = this._topic;
     debug(`Starting phase ${ topic }`);
-    let barrier = this._barrier;
     Services.obs.removeObserver(this, topic);
 
     let satisfied = false; // |true| once we have satisfied all conditions

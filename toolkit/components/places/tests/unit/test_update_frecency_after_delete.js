@@ -70,7 +70,7 @@ add_task(function* remove_bookmark_still_bookmarked() {
     title: "bookmark 1 title",
     url: TEST_URI
   });
-  let bm2 = yield PlacesUtils.bookmarks.insert({
+  yield PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmark 2 title",
     url: TEST_URI
@@ -94,7 +94,7 @@ add_task(function* cleared_parent_of_visited_bookmark() {
   do_print("After removing all children from bookmark's parent, frecency " +
            "of bookmark's URI should not be zero if URI is visited.");
   const TEST_URI = NetUtil.newURI("http://example.com/1");
-  let bm = yield PlacesUtils.bookmarks.insert({
+  yield PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmark title",
     url: TEST_URI
@@ -120,7 +120,7 @@ add_task(function* cleared_parent_of_bookmark_still_bookmarked() {
            "of bookmark's URI should not be zero if URI is still " +
            "bookmarked.");
   const TEST_URI = NetUtil.newURI("http://example.com/1");
-  let bm1 = yield PlacesUtils.bookmarks.insert({
+  yield PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: "bookmark 1 title",
     url: TEST_URI
@@ -131,7 +131,7 @@ add_task(function* cleared_parent_of_bookmark_still_bookmarked() {
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     title: "bookmark 2 folder"
   });
-  let bm2 = yield PlacesUtils.bookmarks.insert({
+  yield PlacesUtils.bookmarks.insert({
     title: "bookmark 2 title",
     parentGuid: folder.guid,
     url: TEST_URI

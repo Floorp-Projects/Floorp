@@ -27,8 +27,8 @@ typedef void * CalleeToken;
 
 enum FrameType
 {
-    // A JS frame is analagous to a js::InterpreterFrame, representing one scripted
-    // functon activation. IonJS frames are used by the optimizing compiler.
+    // A JS frame is analogous to a js::InterpreterFrame, representing one scripted
+    // function activation. IonJS frames are used by the optimizing compiler.
     JitFrame_IonJS,
 
     // JS frame used by the baseline JIT.

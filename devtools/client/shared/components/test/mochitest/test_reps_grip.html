@@ -28,6 +28,8 @@ window.onload = Task.async(function* () {
     yield testNumberObject();
     yield testStringObject();
     yield testProxy();
+    yield testArrayBuffer();
+    yield testSharedArrayBuffer();
 
     // Test property iterator
     yield testMaxProps();
@@ -203,6 +205,74 @@ window.onload = Task.async(function* () {
       {
         mode: "tiny",
         expectedOutput: `Proxy`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testArrayBuffer() {
+    // Test object: `new ArrayBuffer(10)`
+    const testName = "testArrayBuffer";
+
+    // Test that correct rep is chosen
+    const gripStub = getGripStub(testName);
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, Grip.rep, `Rep correctly selects ${Grip.rep.displayName}`);
+
+    // Test rendering
+    const defaultOutput = `ArrayBuffer { byteLength: 10 }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `ArrayBuffer`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testSharedArrayBuffer() {
+    // Test object: `new SharedArrayBuffer(5)`
+    const testName = "testSharedArrayBuffer";
+
+    // Test that correct rep is chosen
+    const gripStub = getGripStub(testName);
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, Grip.rep, `Rep correctly selects ${Grip.rep.displayName}`);
+
+    // Test rendering
+    const defaultOutput = `SharedArrayBuffer { byteLength: 5 }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `SharedArrayBuffer`,
       },
       {
         mode: "short",
@@ -760,6 +830,52 @@ window.onload = Task.async(function* () {
               }
             },
             "ownPropertiesLength": 2
+          }
+        };
+      case "testArrayBuffer":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj170",
+          "class": "ArrayBuffer",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {},
+            "ownPropertiesLength": 0,
+            "safeGetterValues": {
+              "byteLength": {
+                "getterValue": 10,
+                "getterPrototypeLevel": 1,
+                "enumerable": false,
+                "writable": true
+              }
+            }
+          }
+        };
+      case "testSharedArrayBuffer":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj171",
+          "class": "SharedArrayBuffer",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 0,
+          "preview": {
+            "kind": "Object",
+            "ownProperties": {},
+            "ownPropertiesLength": 0,
+            "safeGetterValues": {
+              "byteLength": {
+                "getterValue": 5,
+                "getterPrototypeLevel": 1,
+                "enumerable": false,
+                "writable": true
+              }
+            }
           }
         };
     }

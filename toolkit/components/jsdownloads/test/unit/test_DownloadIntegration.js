@@ -408,7 +408,7 @@ add_task(function* test_exit_private_browsing()
   let download1 = yield promiseNewDownload(httpUrl("source.txt"));
   let download2 = yield promiseNewDownload(httpUrl("interruptible.txt"));
   let promiseAttempt1 = download1.start();
-  let promiseAttempt2 = download2.start();
+  download2.start();
 
   // Add downloads to list.
   yield privateList.add(download1);

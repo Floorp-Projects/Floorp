@@ -121,8 +121,6 @@
       }
       modules.set(path, module);
 
-      let name = ":" + path;
-      let objectURL;
       try {
         // Load source of module, synchronously
         let xhr = new XMLHttpRequest();

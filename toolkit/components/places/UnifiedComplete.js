@@ -1261,7 +1261,7 @@ Search.prototype = {
 
   *_matchRemoteTabs() {
     let matches = yield PlacesRemoteTabsAutocompleteProvider.getMatches(this._originalSearchString);
-    for (let {url, title, icon, deviceClass, deviceName} of matches) {
+    for (let {url, title, icon, deviceName} of matches) {
       // It's rare that Sync supplies the icon for the page (but if it does, it
       // is a string URL)
       if (!icon) {
@@ -1554,7 +1554,6 @@ Search.prototype = {
   _processRow: function (row) {
     let match = {};
     match.placeId = row.getResultByIndex(QUERYINDEX_PLACEID);
-    let queryType = row.getResultByIndex(QUERYINDEX_QUERYTYPE);
     let escapedURL = row.getResultByIndex(QUERYINDEX_URL);
     let openPageCount = row.getResultByIndex(QUERYINDEX_SWITCHTAB) || 0;
     let historyTitle = row.getResultByIndex(QUERYINDEX_TITLE) || "";

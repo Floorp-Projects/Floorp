@@ -8,13 +8,6 @@
 add_task(function* test_insert_error_cases() {
   const TEST_URL = "http://mozilla.com";
 
-  let validPageInfo = {
-    url: TEST_URL,
-    visits: [
-      {transition: TRANSITION_LINK}
-    ]
-  };
-
   Assert.throws(
     () =>  PlacesUtils.history.insert(),
     /TypeError: pageInfo must be an object/,

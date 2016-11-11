@@ -20,8 +20,8 @@ async function backgroundScript() {
 
   let globalChanges = {};
 
-  browser.storage.onChanged.addListener((changes, storage) => {
-    browser.test.assertEq("local", storage, "storage is local");
+  browser.storage.onChanged.addListener((changes, changedStorage) => {
+    browser.test.assertEq("local", changedStorage, "storage is local");
     Object.assign(globalChanges, changes);
   });
 

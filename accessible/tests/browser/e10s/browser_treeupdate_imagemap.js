@@ -132,7 +132,7 @@ function* testContainer(browser) {
 
   /* ================= Insert map =========================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  yield ContentTask.spawn(browser, id, id => {
+  yield ContentTask.spawn(browser, id, contentId => {
     let map = content.document.createElement('map');
     let area = content.document.createElement('area');
 
@@ -146,7 +146,7 @@ function* testContainer(browser) {
     area.setAttribute('shape', 'rect');
 
     map.appendChild(area);
-    content.document.getElementById(id).appendChild(map);
+    content.document.getElementById(contentId).appendChild(map);
   });
   yield onReorder;
 

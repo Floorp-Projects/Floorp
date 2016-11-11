@@ -59,7 +59,6 @@ function onload()
   if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0]) {
     try {
       params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
-      var objects = params.objects;
       var cookie = params.objects.queryElementAt(0, nsICookie);
       var cookiesFromHost = params.GetInt(nsICookieAcceptDialog.COOKIESFROMHOST);
 
