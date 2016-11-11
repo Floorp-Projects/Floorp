@@ -41,7 +41,7 @@ protected:
 };
 
 class TracedRunnable : public TracedTaskCommon
-                     , public nsRunnable
+                     , public Runnable
 {
 public:
   NS_DECL_NSIRUNNABLE
@@ -52,19 +52,6 @@ private:
   virtual ~TracedRunnable();
 
   nsCOMPtr<nsIRunnable> mOriginalObj;
-};
-
-class TracedTask : public TracedTaskCommon
-                 , public Task
-{
-public:
-  TracedTask(Task* aOriginalObj);
-  ~TracedTask();
-
-  virtual void Run();
-
-private:
-  Task* mOriginalObj;
 };
 
 } // namespace tasktracer
