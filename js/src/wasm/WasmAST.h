@@ -374,43 +374,43 @@ class AstTeeLocal : public AstExpr
 
 class AstBlock : public AstExpr
 {
-    Expr expr_;
+    Op op_;
     AstName name_;
     AstExprVector exprs_;
 
   public:
     static const AstExprKind Kind = AstExprKind::Block;
-    explicit AstBlock(Expr expr, ExprType type, AstName name, AstExprVector&& exprs)
+    explicit AstBlock(Op op, ExprType type, AstName name, AstExprVector&& exprs)
       : AstExpr(Kind, type),
-        expr_(expr),
+        op_(op),
         name_(name),
         exprs_(Move(exprs))
     {}
 
-    Expr expr() const { return expr_; }
+    Op op() const { return op_; }
     AstName name() const { return name_; }
     const AstExprVector& exprs() const { return exprs_; }
 };
 
 class AstBranch : public AstExpr
 {
-    Expr expr_;
+    Op op_;
     AstExpr* cond_;
     AstRef target_;
     AstExpr* value_;
 
   public:
     static const AstExprKind Kind = AstExprKind::Branch;
-    explicit AstBranch(Expr expr, ExprType type,
+    explicit AstBranch(Op op, ExprType type,
                        AstExpr* cond, AstRef target, AstExpr* value)
       : AstExpr(Kind, type),
-        expr_(expr),
+        op_(op),
         cond_(cond),
         target_(target),
         value_(value)
     {}
 
-    Expr expr() const { return expr_; }
+    Op op() const { return op_; }
     AstRef& target() { return target_; }
     AstExpr& cond() const { MOZ_ASSERT(cond_); return *cond_; }
     AstExpr* maybeValue() const { return value_; }
@@ -418,17 +418,17 @@ class AstBranch : public AstExpr
 
 class AstCall : public AstExpr
 {
-    Expr expr_;
+    Op op_;
     AstRef func_;
     AstExprVector args_;
 
   public:
     static const AstExprKind Kind = AstExprKind::Call;
-    AstCall(Expr expr, ExprType type, AstRef func, AstExprVector&& args)
-      : AstExpr(Kind, type), expr_(expr), func_(func), args_(Move(args))
+    AstCall(Op op, ExprType type, AstRef func, AstExprVector&& args)
+      : AstExpr(Kind, type), op_(op), func_(func), args_(Move(args))
     {}
 
-    Expr expr() const { return expr_; }
+    Op op() const { return op_; }
     AstRef& func() { return func_; }
     const AstExprVector& args() const { return args_; }
 };
@@ -507,38 +507,37 @@ class AstLoadStoreAddress
 
 class AstLoad : public AstExpr
 {
-    Expr expr_;
+    Op op_;
     AstLoadStoreAddress address_;
 
   public:
     static const AstExprKind Kind = AstExprKind::Load;
-    explicit AstLoad(Expr expr, const AstLoadStoreAddress &address)
+    explicit AstLoad(Op op, const AstLoadStoreAddress &address)
       : AstExpr(Kind, ExprType::Limit),
-        expr_(expr),
+        op_(op),
         address_(address)
     {}
 
-    Expr expr() const { return expr_; }
+    Op op() const { return op_; }
     const AstLoadStoreAddress& address() const { return address_; }
 };
 
 class AstStore : public AstExpr
 {
-    Expr expr_;
+    Op op_;
     AstLoadStoreAddress address_;
     AstExpr* value_;
 
   public:
     static const AstExprKind Kind = AstExprKind::Store;
-    explicit AstStore(Expr expr, const AstLoadStoreAddress &address,
-                          AstExpr* value)
+    explicit AstStore(Op op, const AstLoadStoreAddress &address, AstExpr* value)
       : AstExpr(Kind, ExprType::Void),
-        expr_(expr),
+        op_(op),
         address_(address),
         value_(value)
     {}
 
-    Expr expr() const { return expr_; }
+    Op op() const { return op_; }
     const AstLoadStoreAddress& address() const { return address_; }
     AstExpr& value() const { return *value_; }
 };
@@ -554,15 +553,15 @@ class AstCurrentMemory final : public AstExpr
 
 class AstGrowMemory final : public AstExpr
 {
-    AstExpr* op_;
+    AstExpr* operand_;
 
   public:
     static const AstExprKind Kind = AstExprKind::GrowMemory;
-    explicit AstGrowMemory(AstExpr* op)
-      : AstExpr(Kind, ExprType::I32), op_(op)
+    explicit AstGrowMemory(AstExpr* operand)
+      : AstExpr(Kind, ExprType::I32), operand_(operand)
     {}
 
-    AstExpr* op() const { return op_; }
+    AstExpr* operand() const { return operand_; }
 };
 
 class AstBranchTable : public AstExpr
@@ -917,53 +916,53 @@ class AstModule : public AstNode
 
 class AstUnaryOperator final : public AstExpr
 {
-    Expr expr_;
-    AstExpr* op_;
+    Op op_;
+    AstExpr* operand_;
 
   public:
     static const AstExprKind Kind = AstExprKind::UnaryOperator;
-    explicit AstUnaryOperator(Expr expr, AstExpr* op)
+    explicit AstUnaryOperator(Op op, AstExpr* operand)
       : AstExpr(Kind, ExprType::Limit),
-        expr_(expr), op_(op)
+        op_(op), operand_(operand)
     {}
 
-    Expr expr() const { return expr_; }
-    AstExpr* op() const { return op_; }
+    Op op() const { return op_; }
+    AstExpr* operand() const { return operand_; }
 };
 
 class AstBinaryOperator final : public AstExpr
 {
-    Expr expr_;
+    Op op_;
     AstExpr* lhs_;
     AstExpr* rhs_;
 
   public:
     static const AstExprKind Kind = AstExprKind::BinaryOperator;
-    explicit AstBinaryOperator(Expr expr, AstExpr* lhs, AstExpr* rhs)
+    explicit AstBinaryOperator(Op op, AstExpr* lhs, AstExpr* rhs)
       : AstExpr(Kind, ExprType::Limit),
-        expr_(expr), lhs_(lhs), rhs_(rhs)
+        op_(op), lhs_(lhs), rhs_(rhs)
     {}
 
-    Expr expr() const { return expr_; }
+    Op op() const { return op_; }
     AstExpr* lhs() const { return lhs_; }
     AstExpr* rhs() const { return rhs_; }
 };
 
 class AstTernaryOperator : public AstExpr
 {
-    Expr expr_;
+    Op op_;
     AstExpr* op0_;
     AstExpr* op1_;
     AstExpr* op2_;
 
   public:
     static const AstExprKind Kind = AstExprKind::TernaryOperator;
-    AstTernaryOperator(Expr expr, AstExpr* op0, AstExpr* op1, AstExpr* op2)
+    AstTernaryOperator(Op op, AstExpr* op0, AstExpr* op1, AstExpr* op2)
       : AstExpr(Kind, ExprType::Limit),
-        expr_(expr), op0_(op0), op1_(op1), op2_(op2)
+        op_(op), op0_(op0), op1_(op1), op2_(op2)
     {}
 
-    Expr expr() const { return expr_; }
+    Op op() const { return op_; }
     AstExpr* op0() const { return op0_; }
     AstExpr* op1() const { return op1_; }
     AstExpr* op2() const { return op2_; }
@@ -971,36 +970,36 @@ class AstTernaryOperator : public AstExpr
 
 class AstComparisonOperator final : public AstExpr
 {
-    Expr expr_;
+    Op op_;
     AstExpr* lhs_;
     AstExpr* rhs_;
 
   public:
     static const AstExprKind Kind = AstExprKind::ComparisonOperator;
-    explicit AstComparisonOperator(Expr expr, AstExpr* lhs, AstExpr* rhs)
+    explicit AstComparisonOperator(Op op, AstExpr* lhs, AstExpr* rhs)
       : AstExpr(Kind, ExprType::Limit),
-        expr_(expr), lhs_(lhs), rhs_(rhs)
+        op_(op), lhs_(lhs), rhs_(rhs)
     {}
 
-    Expr expr() const { return expr_; }
+    Op op() const { return op_; }
     AstExpr* lhs() const { return lhs_; }
     AstExpr* rhs() const { return rhs_; }
 };
 
 class AstConversionOperator final : public AstExpr
 {
-    Expr expr_;
-    AstExpr* op_;
+    Op op_;
+    AstExpr* operand_;
 
   public:
     static const AstExprKind Kind = AstExprKind::ConversionOperator;
-    explicit AstConversionOperator(Expr expr, AstExpr* op)
+    explicit AstConversionOperator(Op op, AstExpr* operand)
       : AstExpr(Kind, ExprType::Limit),
-        expr_(expr), op_(op)
+        op_(op), operand_(operand)
     {}
 
-    Expr expr() const { return expr_; }
-    AstExpr* op() const { return op_; }
+    Op op() const { return op_; }
+    AstExpr* operand() const { return operand_; }
 };
 
 // This is an artificial AST node which can fill operand slots in an AST

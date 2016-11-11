@@ -164,13 +164,13 @@ class Encoder
         MOZ_ASSERT(size_t(type) < size_t(TypeCode::Limit));
         return writeFixedU8(uint8_t(type));
     }
-    MOZ_MUST_USE bool writeExpr(Expr expr) {
-        static_assert(size_t(Expr::Limit) <= 2 * UINT8_MAX, "fits");
-        MOZ_ASSERT(size_t(expr) < size_t(Expr::Limit));
-        if (size_t(expr) < UINT8_MAX)
-            return writeFixedU8(uint8_t(expr));
+    MOZ_MUST_USE bool writeOp(Op op) {
+        static_assert(size_t(Op::Limit) <= 2 * UINT8_MAX, "fits");
+        MOZ_ASSERT(size_t(op) < size_t(Op::Limit));
+        if (size_t(op) < UINT8_MAX)
+            return writeFixedU8(uint8_t(op));
         return writeFixedU8(UINT8_MAX) &&
-               writeFixedU8(size_t(expr) - UINT8_MAX);
+               writeFixedU8(size_t(op) - UINT8_MAX);
     }
 
     // Fixed-length encodings that allow back-patching.
@@ -407,18 +407,18 @@ class Decoder
         static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
         return readFixedU8(type);
     }
-    MOZ_MUST_USE bool readExpr(uint16_t* expr) {
-        static_assert(size_t(Expr::Limit) <= 2 * UINT8_MAX, "fits");
+    MOZ_MUST_USE bool readOp(uint16_t* op) {
+        static_assert(size_t(Op::Limit) <= 2 * UINT8_MAX, "fits");
         uint8_t u8;
         if (!readFixedU8(&u8))
             return false;
         if (MOZ_LIKELY(u8 != UINT8_MAX)) {
-            *expr = u8;
+            *op = u8;
             return true;
         }
         if (!readFixedU8(&u8))
             return false;
-        *expr = uint16_t(u8) + UINT8_MAX;
+        *op = uint16_t(u8) + UINT8_MAX;
         return true;
     }
 
@@ -589,12 +589,12 @@ class Decoder
     ValType uncheckedReadValType() {
         return (ValType)uncheckedReadFixedU8();
     }
-    Expr uncheckedReadExpr() {
-        static_assert(size_t(Expr::Limit) <= 2 * UINT8_MAX, "fits");
+    Op uncheckedReadOp() {
+        static_assert(size_t(Op::Limit) <= 2 * UINT8_MAX, "fits");
         uint8_t u8 = uncheckedReadFixedU8();
         return u8 != UINT8_MAX
-               ? Expr(u8)
-               : Expr(uncheckedReadFixedU8() + UINT8_MAX);
+               ? Op(u8)
+               : Op(uncheckedReadFixedU8() + UINT8_MAX);
     }
     void uncheckedReadFixedI8x16(I8x16* i8x16) {
         struct T { I8x16 v; };
