@@ -30,7 +30,7 @@ class nsISupportsArray;
  
 %}
 
-[scriptable, uuid(241addc8-3608-4e73-8083-2fd6fa09eba2)]
+[deprecated, scriptable, uuid(241addc8-3608-4e73-8083-2fd6fa09eba2)]
 interface nsISupportsArray : nsICollection {
 
   [notxpcom] long IndexOf([const] in nsISupports aPossibleElement);

@@ -19,7 +19,6 @@
 #ifndef asmjs_wasm_baseline_compile_h
 #define asmjs_wasm_baseline_compile_h
 
-#include "wasm/WasmBinary.h"
 #include "wasm/WasmIonCompile.h"
 
 namespace js {

@@ -200,14 +200,14 @@ def main(argv):
     # wasm-baseline run when requesting --jitflags=interp, but the test
     # contains test-also-noasmjs.)
     test_flags = get_jitflags(options.jitflags)
-    options.can_test_also_noasmjs = True
-    options.can_test_also_wasm_baseline = True
+    options.asmjs_enabled = True
+    options.wasm_enabled = True
     if all(['--no-asmjs' in flags for flags in test_flags]):
-        options.can_test_also_noasmjs = False
-        options.can_test_also_wasm_baseline = False
+        options.asmjs_enabled = False
+        options.wasm_enabled = False
     if all(['--no-wasm' in flags for flags in test_flags]):
-        options.can_test_also_noasmjs = False
-        options.can_test_also_wasm_baseline = False
+        options.asmjs_enabled = False
+        options.wasm_enabled = False
 
     if test_args:
         read_all = False

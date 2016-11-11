@@ -5761,8 +5761,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
     nsSize repeatSize;
     nsRect fillRect(aFill);
     nsRect tile = ComputeTile(fillRect, aHFill, aVFill, aUnitSize, repeatSize);
-    CSSIntSize imageSize(nsPresContext::AppUnitsToIntCSSPixels(srcRect.width),
-                         nsPresContext::AppUnitsToIntCSSPixels(srcRect.height));
+    CSSIntSize imageSize(srcRect.width, srcRect.height);
     return nsLayoutUtils::DrawBackgroundImage(*aRenderingContext.ThebesContext(),
                                               aPresContext,
                                               subImage, imageSize, samplingFilter,

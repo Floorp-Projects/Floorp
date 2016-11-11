@@ -63,7 +63,6 @@
 #include "nsIAtomService.h"
 #include "nsICategoryManager.h"
 #include "nsIClassInfo.h"
-#include "nsICollection.h"
 #include "nsIComponentManager.h"
 #include "nsIConsoleListener.h"
 #include "nsIConsoleMessage.h"

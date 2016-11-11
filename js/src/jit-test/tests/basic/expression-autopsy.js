@@ -95,6 +95,7 @@ check("o[- (o)]");
 
 // A few one off tests
 check_one("6", (function () { 6() }), " is not a function");
+check_one("4", (function() { (4||eval)(); }), " is not a function");
 check_one("0", (function () { Array.prototype.reverse.call('123'); }), " is read-only");
 check_one("(intermediate value)[Symbol.iterator](...).next(...).value",
           function () { ieval("{ let x; var [a, b, [c0, c1]] = [x, x, x]; }") }, " is undefined");

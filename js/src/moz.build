@@ -360,7 +360,6 @@ UNIFIED_SOURCES += [
     'vm/Xdr.cpp',
     'wasm/AsmJS.cpp',
     'wasm/WasmBaselineCompile.cpp',
-    'wasm/WasmBinary.cpp',
     'wasm/WasmBinaryFormat.cpp',
     'wasm/WasmBinaryIterator.cpp',
     'wasm/WasmBinaryToAST.cpp',

@@ -67,7 +67,7 @@ window.onload = Task.async(function* () {
     });
 
     // Check when there's no parseable URL source;
-    // should not render line/columns
+    // should not link but should render line/columns
     yield checkFrameComponent({
       frame: {
         source: "self-hosted",
@@ -75,23 +75,50 @@ window.onload = Task.async(function* () {
       }
     }, {
       file: "self-hosted",
+      line: "1",
       shouldLink: false,
-      tooltip: "self-hosted",
+      tooltip: "self-hosted:1",
+    });
+    yield checkFrameComponent({
+      frame: {
+        source: "self-hosted",
+        line: 1,
+        column: 10,
+      }
+    }, {
+      file: "self-hosted",
+      line: "1",
+      column: "10",
+      shouldLink: false,
+      tooltip: "self-hosted:1:10",
     });
 
     // Check when there's no source;
-    // should not render line/columns
+    // should not link but should render line/columns
     yield checkFrameComponent({
       frame: {
         line: 1,
       }
     }, {
       file: "(unknown)",
+      line: "1",
       shouldLink: false,
-      tooltip: "(unknown)",
+      tooltip: "(unknown):1",
+    });
+    yield checkFrameComponent({
+      frame: {
+        line: 1,
+        column: 10,
+      }
+    }, {
+      file: "(unknown)",
+      line: "1",
+      column: "10",
+      shouldLink: false,
+      tooltip: "(unknown):1:10",
     });
 
-    // Check when there's a column, but no number;
+    // Check when there's a column, but no line;
     // no line/column info should render
     yield checkFrameComponent({
       frame: {
