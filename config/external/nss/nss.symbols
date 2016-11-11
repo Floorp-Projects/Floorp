@@ -690,6 +690,7 @@ SSL_SetPKCS11PinArg
 SSL_SetSockPeerID
 SSL_SetSRTPCiphers
 SSL_SetStapledOCSPResponses
+SSL_SetTrustAnchors
 SSL_SetURL
 SSL_ShutdownServerSessionIDCache
 SSL_SignatureSchemePrefSet
