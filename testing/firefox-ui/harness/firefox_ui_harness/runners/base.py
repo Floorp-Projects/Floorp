@@ -8,9 +8,8 @@ import tempfile
 
 import mozfile
 import mozinfo
-from marionette import BaseMarionetteTestRunner
 
-from firefox_ui_harness.testcases import FirefoxTestCase
+from marionette import BaseMarionetteTestRunner, MarionetteTestCase
 
 
 class FirefoxUITestRunner(BaseMarionetteTestRunner):
@@ -21,7 +20,7 @@ class FirefoxUITestRunner(BaseMarionetteTestRunner):
         # select the appropriate GeckoInstance
         self.app = 'fxdesktop'
 
-        self.test_handlers = [FirefoxTestCase]
+        self.test_handlers = [MarionetteTestCase]
 
     def duplicate_application(self, application_folder):
         """Creates a copy of the specified binary."""

@@ -4,12 +4,12 @@
 
 import os
 
-from firefox_ui_harness.testcases import FirefoxTestCase
-
+from firefox_puppeteer import PuppeteerMixin
 from firefox_puppeteer.api.software_update import SoftwareUpdate
+from marionette import MarionetteTestCase
 
 
-class TestSoftwareUpdate(FirefoxTestCase):
+class TestSoftwareUpdate(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
         super(TestSoftwareUpdate, self).setUp()
@@ -69,7 +69,7 @@ class TestSoftwareUpdate(FirefoxTestCase):
         self.assertTrue(self.software_update.staging_directory)
 
 
-class TestUpdateChannel(FirefoxTestCase):
+class TestUpdateChannel(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
         super(TestUpdateChannel, self).setUp()
@@ -96,7 +96,7 @@ class TestUpdateChannel(FirefoxTestCase):
         self.assertEqual(self.software_update.update_channel.default_channel, 'new_channel')
 
 
-class TestMARChannels(FirefoxTestCase):
+class TestMARChannels(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
         super(TestMARChannels, self).setUp()

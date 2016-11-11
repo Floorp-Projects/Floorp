@@ -4,11 +4,12 @@
 
 import os
 
-from firefox_ui_harness.testcases import FirefoxTestCase
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import Wait
 
 
-class TestSafeBrowsingInitialDownload(FirefoxTestCase):
+class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
 
     file_extensions = [
         'pset',

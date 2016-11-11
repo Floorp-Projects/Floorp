@@ -2,15 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import By, expected, Wait
-
 from marionette_driver.errors import NoAlertPresentException
 from marionette_driver.marionette import Alert
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestSubmitUnencryptedInfoWarning(FirefoxTestCase):
+class TestSubmitUnencryptedInfoWarning(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
         super(TestSubmitUnencryptedInfoWarning, self).setUp()
