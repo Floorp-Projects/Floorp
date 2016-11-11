@@ -39,7 +39,8 @@ public:
 
   GMPErr GetAPI(const char* aAPIName,
                 void* aHostAPI,
-                void** aPluginAPI) override;
+                void** aPluginAPI,
+                uint32_t aDecryptorId) override;
 
   void Shutdown() override;
 
@@ -80,7 +81,10 @@ public:
     return initFunc(aPlatformAPI);
   }
 
-  GMPErr GMPGetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI) override
+  GMPErr GMPGetAPI(const char* aAPIName,
+                   void* aHostAPI,
+                   void** aPluginAPI,
+                   uint32_t aDecryptorId) override
   {
     if (!mLib) {
       return GMPGenericErr;
@@ -190,9 +194,10 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
 GMPErr
 GMPLoaderImpl::GetAPI(const char* aAPIName,
                       void* aHostAPI,
-                      void** aPluginAPI)
+                      void** aPluginAPI,
+                      uint32_t aDecryptorId)
 {
-  return mAdapter->GMPGetAPI(aAPIName, aHostAPI, aPluginAPI);
+  return mAdapter->GMPGetAPI(aAPIName, aHostAPI, aPluginAPI, aDecryptorId);
 }
 
 void
