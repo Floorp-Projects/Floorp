@@ -69,7 +69,7 @@ SECStatus tls13_ProtectRecord(sslSocket *ss,
 PRInt32 tls13_Read0RttData(sslSocket *ss, void *buf, PRInt32 len);
 SECStatus tls13_HandleEndOfEarlyData(sslSocket *ss);
 SECStatus tls13_HandleEarlyApplicationData(sslSocket *ss, sslBuffer *origBuf);
-PRBool tls13_ClientAllow0Rtt(sslSocket *ss, const sslSessionID *sid);
+PRBool tls13_ClientAllow0Rtt(const sslSocket *ss, const sslSessionID *sid);
 PRUint16 tls13_EncodeDraftVersion(SSL3ProtocolVersion version);
 PRUint16 tls13_DecodeDraftVersion(PRUint16 version);
 SECStatus tls13_NegotiateVersion(sslSocket *ss,

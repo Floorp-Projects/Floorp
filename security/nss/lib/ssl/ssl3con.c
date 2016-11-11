@@ -19,6 +19,8 @@
 #include "sslimpl.h"
 #include "sslproto.h"
 #include "sslerr.h"
+#include "ssl3ext.h"
+#include "ssl3exthandle.h"
 #include "prtime.h"
 #include "prinrval.h"
 #include "prerror.h"
@@ -759,7 +761,8 @@ ssl_LookupCipherSuiteDef(ssl3CipherSuite suite)
 /* Find the cipher configuration struct associate with suite */
 /* XXX This does a linear search.  A binary search would be better. */
 static ssl3CipherSuiteCfg *
-ssl_LookupCipherSuiteCfg(ssl3CipherSuite suite, ssl3CipherSuiteCfg *suites)
+ssl_LookupCipherSuiteCfgMutable(ssl3CipherSuite suite,
+                                ssl3CipherSuiteCfg *suites)
 {
     int i;
 
@@ -770,6 +773,13 @@ ssl_LookupCipherSuiteCfg(ssl3CipherSuite suite, ssl3CipherSuiteCfg *suites)
     /* return NULL and let the caller handle it.  */
     PORT_SetError(SSL_ERROR_UNKNOWN_CIPHER_SUITE);
     return NULL;
+}
+
+const static ssl3CipherSuiteCfg *
+ssl_LookupCipherSuiteCfg(ssl3CipherSuite suite, const ssl3CipherSuiteCfg *suites)
+{
+    return ssl_LookupCipherSuiteCfgMutable(suite,
+                                           CONST_CAST(ssl3CipherSuiteCfg, suites));
 }
 
 static PRBool
@@ -803,7 +813,7 @@ ssl_KEAEnabled(const sslSocket *ss, SSLKEAType keaType)
                  * must have included an FFDHE group. peerSupportsFfdheGroups
                  * is set to true in ssl_HandleSupportedGroupsXtn(). */
                 if (ss->opt.requireDHENamedGroups &&
-                    !ss->ssl3.hs.peerSupportsFfdheGroups) {
+                    !ss->xtnData.peerSupportsFfdheGroups) {
                     return PR_FALSE;
                 }
 
@@ -813,7 +823,7 @@ ssl_KEAEnabled(const sslSocket *ss, SSLKEAType keaType)
                  * 3. This isn't TLS 1.3.
                  * 4. The weak group is enabled. */
                 if (!ss->opt.requireDHENamedGroups &&
-                    !ss->ssl3.hs.peerSupportsFfdheGroups &&
+                    !ss->xtnData.peerSupportsFfdheGroups &&
                     ss->version < SSL_LIBRARY_VERSION_TLS_1_3 &&
                     ss->ssl3.dheWeakGroupEnabled) {
                     return PR_TRUE;
@@ -4996,7 +5006,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
     PORT_Assert(IS_DTLS(ss) || type != client_hello_retransmit);
     SECITEM_FreeItem(&ss->ssl3.hs.newSessionTicket.ticket, PR_FALSE);
     ss->ssl3.hs.receivedNewSessionTicket = PR_FALSE;
-    PORT_Memset(&ss->xtnData, 0, sizeof(TLSExtensionData));
+    ssl3_ResetExtensionData(&ss->xtnData);
 
     /* How many suites does our PKCS11 support (regardless of policy)? */
     num_suites = ssl3_config_match_init(ss);
@@ -6131,27 +6141,27 @@ loser:
 /* DH shares need to be padded to the size of their prime.  Some implementations
  * require this.  TLS 1.3 also requires this. */
 SECStatus
-ssl_AppendPaddedDHKeyShare(sslSocket *ss, SECKEYPublicKey *pubKey,
+ssl_AppendPaddedDHKeyShare(const sslSocket *ss, const SECKEYPublicKey *pubKey,
                            PRBool appendLength)
 {
     SECStatus rv;
     unsigned int pad = pubKey->u.dh.prime.len - pubKey->u.dh.publicValue.len;
 
     if (appendLength) {
-        rv = ssl3_AppendHandshakeNumber(ss, pubKey->u.dh.prime.len, 2);
+        rv = ssl3_ExtAppendHandshakeNumber(ss, pubKey->u.dh.prime.len, 2);
         if (rv != SECSuccess) {
             return rv;
         }
     }
     while (pad) {
-        rv = ssl3_AppendHandshakeNumber(ss, 0, 1);
+        rv = ssl3_ExtAppendHandshakeNumber(ss, 0, 1);
         if (rv != SECSuccess) {
             return rv;
         }
         --pad;
     }
-    rv = ssl3_AppendHandshake(ss, pubKey->u.dh.publicValue.data,
-                              pubKey->u.dh.publicValue.len);
+    rv = ssl3_ExtAppendHandshake(ss, pubKey->u.dh.publicValue.data,
+                                 pubKey->u.dh.publicValue.len);
     if (rv != SECSuccess) {
         return rv;
     }
@@ -6196,7 +6206,7 @@ ssl3_SendDHClientKeyExchange(sslSocket *ss, SECKEYPublicKey *svrPubKey)
         /* If we require named groups, we will have already validated the group
          * in ssl_HandleDHServerKeyExchange() */
         PORT_Assert(!ss->opt.requireDHENamedGroups &&
-                    !ss->ssl3.hs.peerSupportsFfdheGroups);
+                    !ss->xtnData.peerSupportsFfdheGroups);
 
         customParams.name = ssl_grp_ffdhe_custom;
         customParams.prime.data = svrPubKey->u.dh.prime.data;
@@ -6431,8 +6441,8 @@ ssl3_PickServerSignatureScheme(sslSocket *ss)
 
     /* Sets error code, if needed. */
     return ssl_PickSignatureScheme(ss, keyPair->pubKey, keyPair->privKey,
-                                   ss->ssl3.hs.clientSigSchemes,
-                                   ss->ssl3.hs.numClientSigScheme,
+                                   ss->xtnData.clientSigSchemes,
+                                   ss->xtnData.numClientSigScheme,
                                    PR_FALSE /* requireSha1 */);
 }
 
@@ -7333,7 +7343,7 @@ alert_loser:
 }
 
 SECStatus
-ssl_ParseSignatureSchemes(sslSocket *ss, PLArenaPool *arena,
+ssl_ParseSignatureSchemes(const sslSocket *ss, PLArenaPool *arena,
                           SSLSignatureScheme **schemesOut,
                           unsigned int *numSchemesOut,
                           unsigned char **b, unsigned int *len)
@@ -7344,13 +7354,13 @@ ssl_ParseSignatureSchemes(sslSocket *ss, PLArenaPool *arena,
     unsigned int numSchemes = 0;
     unsigned int max;
 
-    rv = ssl3_ConsumeHandshakeVariable(ss, &buf, 2, b, len);
+    rv = ssl3_ExtConsumeHandshakeVariable(ss, &buf, 2, b, len);
     if (rv != SECSuccess) {
         return SECFailure;
     }
     /* An empty or odd-length value is invalid. */
     if (buf.len == 0 || (buf.len & 1) != 0) {
-        (void)SSL3_SendAlert(ss, alert_fatal, decode_error);
+        ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
         return SECFailure;
     }
 
@@ -7363,13 +7373,13 @@ ssl_ParseSignatureSchemes(sslSocket *ss, PLArenaPool *arena,
         schemes = PORT_ZNewArray(SSLSignatureScheme, max);
     }
     if (!schemes) {
-        (void)SSL3_SendAlert(ss, alert_fatal, internal_error);
+        ssl3_ExtSendAlert(ss, alert_fatal, internal_error);
         return SECFailure;
     }
 
     for (; max; --max) {
         PRInt32 tmp;
-        tmp = ssl3_ConsumeHandshakeNumber(ss, 2, &buf.data, &buf.len);
+        tmp = ssl3_ExtConsumeHandshakeNumber(ss, 2, &buf.data, &buf.len);
         if (tmp < 0) {
             PORT_Assert(0);
             PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
@@ -8157,8 +8167,8 @@ ssl3_ServerCallSNICallback(sslSocket *ss)
                 /* Need to tell the client that application has picked
                  * the name from the offered list and reconfigured the socket.
                  */
-                ssl3_RegisterServerHelloExtensionSender(ss, ssl_server_name_xtn,
-                                                        ssl3_SendServerNameXtn);
+                ssl3_RegisterExtensionSender(ss, &ss->xtnData, ssl_server_name_xtn,
+                                             ssl3_SendServerNameXtn);
             } else {
                 /* Callback returned index outside of the boundary. */
                 PORT_Assert((unsigned int)ret < ss->xtnData.sniNameArrSize);
@@ -8285,7 +8295,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     /* We might be starting session renegotiation in which case we should
      * clear previous state.
      */
-    PORT_Memset(&ss->xtnData, 0, sizeof(TLSExtensionData));
+    ssl3_ResetExtensionData(&ss->xtnData);
     ss->statelessResume = PR_FALSE;
 
     if (IS_DTLS(ss)) {
@@ -8943,9 +8953,9 @@ compression_found:
      */
     if (ssl3_ExtensionNegotiated(ss, ssl_session_ticket_xtn) &&
         ssl3_KEASupportsTickets(ss->ssl3.hs.kea_def)) {
-        ssl3_RegisterServerHelloExtensionSender(ss,
-                                                ssl_session_ticket_xtn,
-                                                ssl3_SendSessionTicketXtn);
+        ssl3_RegisterExtensionSender(ss, &ss->xtnData,
+                                     ssl_session_ticket_xtn,
+                                     ssl3_SendSessionTicketXtn);
     }
 
     rv = ssl3_ServerCallSNICallback(ss);
@@ -9041,7 +9051,7 @@ ssl3_HandleV2ClientHello(sslSocket *ss, unsigned char *buffer, int length,
 
     ssl_GetSSL3HandshakeLock(ss);
 
-    PORT_Memset(&ss->xtnData, 0, sizeof(TLSExtensionData));
+    ssl3_ResetExtensionData(&ss->xtnData);
 
     version = (buffer[1] << 8) | buffer[2];
     if (version < SSL_LIBRARY_VERSION_3_0) {
@@ -9540,7 +9550,7 @@ ssl3_SendServerKeyExchange(sslSocket *ss)
 }
 
 SECStatus
-ssl3_EncodeSigAlgs(sslSocket *ss, PRUint8 *buf, unsigned maxLen, PRUint32 *len)
+ssl3_EncodeSigAlgs(const sslSocket *ss, PRUint8 *buf, unsigned maxLen, PRUint32 *len)
 {
     unsigned int i;
     PRUint8 *p = buf;
@@ -11108,24 +11118,24 @@ ssl3_SendNextProto(sslSocket *ss)
     int padding_len;
     static const unsigned char padding[32] = { 0 };
 
-    if (ss->ssl3.nextProto.len == 0 ||
-        ss->ssl3.nextProtoState == SSL_NEXT_PROTO_SELECTED) {
+    if (ss->xtnData.nextProto.len == 0 ||
+        ss->xtnData.nextProtoState == SSL_NEXT_PROTO_SELECTED) {
         return SECSuccess;
     }
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
 
-    padding_len = 32 - ((ss->ssl3.nextProto.len + 2) % 32);
+    padding_len = 32 - ((ss->xtnData.nextProto.len + 2) % 32);
 
-    rv = ssl3_AppendHandshakeHeader(ss, next_proto, ss->ssl3.nextProto.len +
+    rv = ssl3_AppendHandshakeHeader(ss, next_proto, ss->xtnData.nextProto.len +
                                                         2 +
                                                         padding_len);
     if (rv != SECSuccess) {
         return rv; /* error code set by AppendHandshakeHeader */
     }
-    rv = ssl3_AppendHandshakeVariable(ss, ss->ssl3.nextProto.data,
-                                      ss->ssl3.nextProto.len, 1);
+    rv = ssl3_AppendHandshakeVariable(ss, ss->xtnData.nextProto.data,
+                                      ss->xtnData.nextProto.len, 1);
     if (rv != SECSuccess) {
         return rv; /* error code set by AppendHandshake */
     }
@@ -11535,10 +11545,10 @@ ssl3_FillInCachedSID(sslSocket *ss, sslSessionID *sid)
         sid->certType.authType = ssl_auth_null;
     }
 
-    if (ss->ssl3.nextProtoState != SSL_NEXT_PROTO_NO_SUPPORT &&
-        ss->ssl3.nextProto.data) {
+    if (ss->xtnData.nextProtoState != SSL_NEXT_PROTO_NO_SUPPORT &&
+        ss->xtnData.nextProto.data) {
         if (SECITEM_CopyItem(
-                NULL, &sid->u.ssl3.alpnSelection, &ss->ssl3.nextProto) != SECSuccess) {
+                NULL, &sid->u.ssl3.alpnSelection, &ss->xtnData.nextProto) != SECSuccess) {
             return SECFailure; /* error already set. */
         }
     }
@@ -12841,10 +12851,9 @@ ssl3_InitState(sslSocket *ss)
 
     ss->ssl3.hs.sendingSCSV = PR_FALSE;
     ss->ssl3.hs.preliminaryInfo = 0;
-    ss->ssl3.hs.peerSupportsFfdheGroups = PR_FALSE;
     ss->ssl3.hs.ws = (ss->sec.isServer) ? wait_client_hello : wait_server_hello;
 
-    PORT_Memset(&ss->xtnData, 0, sizeof(TLSExtensionData));
+    ssl3_ResetExtensionData(&ss->xtnData);
     PR_INIT_CLIST(&ss->ssl3.hs.remoteExtensions);
     if (IS_DTLS(ss)) {
         ss->ssl3.hs.sendMessageSeq = 0;
@@ -12857,7 +12866,6 @@ ssl3_InitState(sslSocket *ss)
     }
 
     ss->ssl3.hs.clientHelloHash = NULL;
-    PR_INIT_CLIST(&ss->ssl3.hs.remoteKeyShares);
     ss->ssl3.hs.currentSecret = NULL;
     ss->ssl3.hs.resumptionPsk = NULL;
     ss->ssl3.hs.resumptionContext = nullItem;
@@ -12892,7 +12900,7 @@ ssl3_SetPolicy(ssl3CipherSuite which, int policy)
 {
     ssl3CipherSuiteCfg *suite;
 
-    suite = ssl_LookupCipherSuiteCfg(which, cipherSuites);
+    suite = ssl_LookupCipherSuiteCfgMutable(which, cipherSuites);
     if (suite == NULL) {
         return SECFailure; /* err code was set by ssl_LookupCipherSuiteCfg */
     }
@@ -12904,7 +12912,7 @@ ssl3_SetPolicy(ssl3CipherSuite which, int policy)
 SECStatus
 ssl3_GetPolicy(ssl3CipherSuite which, PRInt32 *oPolicy)
 {
-    ssl3CipherSuiteCfg *suite;
+    const ssl3CipherSuiteCfg *suite;
     PRInt32 policy;
     SECStatus rv;
 
@@ -12926,7 +12934,7 @@ ssl3_CipherPrefSetDefault(ssl3CipherSuite which, PRBool enabled)
 {
     ssl3CipherSuiteCfg *suite;
 
-    suite = ssl_LookupCipherSuiteCfg(which, cipherSuites);
+    suite = ssl_LookupCipherSuiteCfgMutable(which, cipherSuites);
     if (suite == NULL) {
         return SECFailure; /* err code was set by ssl_LookupCipherSuiteCfg */
     }
@@ -12938,7 +12946,7 @@ ssl3_CipherPrefSetDefault(ssl3CipherSuite which, PRBool enabled)
 SECStatus
 ssl3_CipherPrefGetDefault(ssl3CipherSuite which, PRBool *enabled)
 {
-    ssl3CipherSuiteCfg *suite;
+    const ssl3CipherSuiteCfg *suite;
     PRBool pref;
     SECStatus rv;
 
@@ -12959,7 +12967,7 @@ ssl3_CipherPrefSet(sslSocket *ss, ssl3CipherSuite which, PRBool enabled)
 {
     ssl3CipherSuiteCfg *suite;
 
-    suite = ssl_LookupCipherSuiteCfg(which, ss->cipherSuites);
+    suite = ssl_LookupCipherSuiteCfgMutable(which, ss->cipherSuites);
     if (suite == NULL) {
         return SECFailure; /* err code was set by ssl_LookupCipherSuiteCfg */
     }
@@ -12968,9 +12976,9 @@ ssl3_CipherPrefSet(sslSocket *ss, ssl3CipherSuite which, PRBool enabled)
 }
 
 SECStatus
-ssl3_CipherPrefGet(sslSocket *ss, ssl3CipherSuite which, PRBool *enabled)
+ssl3_CipherPrefGet(const sslSocket *ss, ssl3CipherSuite which, PRBool *enabled)
 {
-    ssl3CipherSuiteCfg *suite;
+    const ssl3CipherSuiteCfg *suite;
     PRBool pref;
     SECStatus rv;
 
@@ -13197,9 +13205,6 @@ ssl3_DestroySSL3Info(sslSocket *ss)
     if (ss->ssl3.hs.sha) {
         PK11_DestroyContext(ss->ssl3.hs.sha, PR_TRUE);
     }
-    if (ss->ssl3.hs.clientSigSchemes) {
-        PORT_Free(ss->ssl3.hs.clientSigSchemes);
-    }
     if (ss->ssl3.hs.messages.buf) {
         sslBuffer_Clear(&ss->ssl3.hs.messages);
     }
@@ -13229,9 +13234,7 @@ ssl3_DestroySSL3Info(sslSocket *ss)
 
     /* Destroy remote extensions */
     ssl3_DestroyRemoteExtensions(&ss->ssl3.hs.remoteExtensions);
-
-    /* Destroy TLS 1.3 handshake shares */
-    tls13_DestroyKeyShares(&ss->ssl3.hs.remoteKeyShares);
+    ssl3_ResetExtensionData(&ss->xtnData);
 
     /* Destroy the stored hash. */
     if (ss->ssl3.hs.clientHelloHash) {
@@ -13267,7 +13270,7 @@ ssl3_DestroySSL3Info(sslSocket *ss)
 
     ss->ssl3.initialized = PR_FALSE;
 
-    SECITEM_FreeItem(&ss->ssl3.nextProto, PR_FALSE);
+    SECITEM_FreeItem(&ss->xtnData.nextProto, PR_FALSE);
 }
 
 #define MAP_NULL(x) (((x) != 0) ? (x) : SEC_OID_NULL_CIPHER)
