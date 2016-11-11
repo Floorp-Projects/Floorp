@@ -416,6 +416,15 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
   }
 }
 
+bool
+WidgetEvent::IsAllowedToDispatchInSystemGroup() const
+{
+  // We don't expect to implement default behaviors with pointer events because
+  // if we do, prevent default on mouse events can't prevent default behaviors
+  // anymore.
+  return mClass != ePointerEventClass;
+}
+
 /******************************************************************************
  * mozilla::WidgetInputEvent
  ******************************************************************************/
