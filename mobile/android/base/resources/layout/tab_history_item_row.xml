@@ -14,8 +14,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginLeft="@dimen/tab_history_combo_margin_left"
-                    android:layout_marginRight="@dimen/tab_history_combo_margin_right" >
+                    android:layout_marginLeft="@dimen/tab_history_combo_margin_start"
+                    android:layout_marginStart="@dimen/tab_history_combo_margin_start"
+                    android:layout_marginRight="@dimen/tab_history_combo_margin_end"
+                    android:layout_marginEnd="@dimen/tab_history_combo_margin_end"
+        >
 
         <ImageView android:id="@+id/tab_history_timeline_top"
                    android:layout_width="@dimen/tab_history_timeline_width"
@@ -49,7 +52,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:background="@null"
-            android:paddingRight="@dimen/tab_history_title_margin_right"
+            android:paddingRight="@dimen/tab_history_title_margin_end"
+            android:paddingEnd="@dimen/tab_history_title_margin_end"
             android:text="@+id/tab_history_title"
             android:textSize="@dimen/tab_history_title_text_size"
             android:textColor="@color/text_and_tabs_tray_grey"

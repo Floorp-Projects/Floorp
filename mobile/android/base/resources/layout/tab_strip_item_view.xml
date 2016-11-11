@@ -11,6 +11,7 @@
         android:layout_width="@dimen/browser_toolbar_favicon_size"
         android:layout_height="match_parent"
         android:layout_marginRight="8dp"
+        android:layout_marginEnd="8dp"
         android:scaleType="centerInside"
         android:duplicateParentState="true"/>
 
@@ -20,6 +21,7 @@
         android:layout_height="match_parent"
         android:layout_weight="1.0"
         android:layout_marginRight="-5dp"
+        android:layout_marginEnd="-5dp"
         android:drawablePadding="6dp"
         android:gravity="center_vertical"
         android:textSize="14sp"

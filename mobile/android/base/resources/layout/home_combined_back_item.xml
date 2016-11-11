@@ -8,6 +8,8 @@
           android:layout_width="match_parent"
           android:text="@string/home_history_back_to"
           android:paddingLeft="24dp"
+          android:paddingStart="24dp"
           android:drawablePadding="24dp"
           android:drawableLeft="@drawable/arrow_up"
+          android:drawableStart="@drawable/arrow_up"
           android:gravity="center_vertical"/>

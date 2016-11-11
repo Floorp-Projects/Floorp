@@ -10,10 +10,13 @@
     <ImageView android:id="@+id/url_bar_entry"
                style="@style/UrlBar.Button"
                android:layout_marginLeft="8dp"
+               android:layout_marginStart="8dp"
                android:layout_marginRight="-6dp"
+               android:layout_marginEnd="-6dp"
                android:layout_marginTop="8dp"
                android:layout_marginBottom="8dp"
                android:layout_toLeftOf="@+id/tabs"
+               android:layout_toStartOf="@+id/tabs"
                android:duplicateParentState="true"
                android:clickable="false"
                android:focusable="false"
@@ -26,7 +29,9 @@
     <ImageView android:id="@+id/url_bar_translating_edge"
                style="@style/UrlBar.Button"
                android:layout_alignLeft="@id/url_bar_entry"
+               android:layout_alignStart="@id/url_bar_entry"
                android:layout_alignRight="@+id/url_bar_entry"
+               android:layout_alignEnd="@+id/url_bar_entry"
                android:layout_alignTop="@id/url_bar_entry"
                android:layout_alignBottom="@id/url_bar_entry"
                android:duplicateParentState="true"
@@ -40,6 +45,7 @@
             android:id="@+id/menu"
             style="@style/UrlBar.ImageButton"
             android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             android:contentDescription="@string/menu"
             android:background="@drawable/shaped_button">
 
@@ -59,6 +65,7 @@
                                                style="@style/UrlBar.ImageButton"
                                                android:layout_width="64dip"
                                                android:layout_toLeftOf="@id/menu"
+                                               android:layout_toStartOf="@id/menu"
                                                android:layout_alignWithParentIfMissing="true"
                                                android:background="@drawable/shaped_button"/>
 
@@ -74,7 +81,9 @@
                         android:layout_height="24dip"
                         android:layout_centerVertical="true"
                         android:layout_marginRight="8dip"
+                        android:layout_marginEnd="8dip"
                         android:layout_alignRight="@id/tabs"
+                        android:layout_alignEnd="@id/tabs"
                         android:background="@drawable/tabs_count"
                         android:gravity="center_horizontal"
                         android:clipChildren="false"
@@ -86,6 +95,7 @@
             android:id="@+id/edit_cancel"
             style="@style/UrlBar.ImageButton"
             android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             android:src="@drawable/close_edit_mode_selector"
             android:contentDescription="@string/edit_mode_cancel"
             android:background="@drawable/action_bar_button"
@@ -97,16 +107,24 @@
     <org.mozilla.gecko.toolbar.ToolbarEditLayout android:id="@+id/edit_layout"
                   style="@style/UrlBar.Button"
                   android:layout_alignLeft="@id/url_bar_entry"
+                  android:layout_alignStart="@id/url_bar_entry"
                   android:layout_toLeftOf="@id/edit_cancel"
+                  android:layout_toStartOf="@id/edit_cancel"
                   android:visibility="invisible"
                   android:paddingLeft="8dp"
-                  android:paddingRight="8dp"/>
+                  android:paddingStart="8dp"
+                  android:paddingRight="8dp"
+                  android:paddingEnd="8dp"/>
 
     <org.mozilla.gecko.toolbar.ToolbarDisplayLayout android:id="@+id/display_layout"
                   style="@style/UrlBar.Button"
                   android:layout_alignLeft="@id/url_bar_entry"
+                  android:layout_alignStart="@id/url_bar_entry"
                   android:layout_alignRight="@id/url_bar_entry"
+                  android:layout_alignEnd="@id/url_bar_entry"
                   android:paddingLeft="1dip"
-                  android:paddingRight="4dip"/>
+                  android:paddingStart="1dip"
+                  android:paddingRight="4dip"
+                  android:paddingEnd="4dip" />
 
 </merge>

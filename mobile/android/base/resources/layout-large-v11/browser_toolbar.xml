@@ -10,7 +10,10 @@
                android:layout_width="match_parent"
                android:layout_height="match_parent"
                android:layout_alignLeft="@+id/back"
+               android:layout_alignStart="@+id/back"
                android:layout_toLeftOf="@id/menu_items"
+               android:layout_toStartOf="@id/menu_items"
+               android:layout_marginStart="@dimen/tablet_nav_button_width_half"
                android:layout_marginLeft="@dimen/tablet_nav_button_width_half"
                android:layout_marginTop="10dp"
                android:layout_marginBottom="10dp"
@@ -40,6 +43,7 @@
             style="@style/UrlBar.ImageButton.BrowserToolbarColors"
             android:id="@+id/forward"
             android:layout_alignLeft="@id/back"
+            android:layout_alignStart="@id/back"
             android:contentDescription="@string/forward"
             android:layout_height="match_parent"
             android:paddingTop="0dp"
@@ -53,7 +57,12 @@
             android:alpha="0"
             android:layout_width="@dimen/tablet_nav_button_width_plus_half"
             android:layout_marginLeft="@dimen/tablet_nav_button_width_half"
-            android:paddingLeft="18dp"/>
+            android:layout_marginStart="@dimen/tablet_nav_button_width_half"
+            android:paddingLeft="@dimen/tablet_fwd_button_padding_start"
+            android:paddingStart="@dimen/tablet_fwd_button_padding_start"
+            android:paddingRight="@dimen/tablet_fwd_button_padding_end"
+            android:paddingEnd="@dimen/tablet_fwd_button_padding_end"
+        />
 
     <org.mozilla.gecko.toolbar.BackButton android:id="@id/back"
                                           style="@style/UrlBar.ImageButton.BrowserToolbarColors"
@@ -61,38 +70,50 @@
                                           android:layout_height="@dimen/tablet_nav_button_width"
                                           android:layout_centerVertical="true"
                                           android:layout_marginLeft="12dp"
+                                          android:layout_marginStart="12dp"
                                           android:layout_alignParentLeft="true"
+                                          android:layout_alignParentStart="true"
                                           android:src="@drawable/ic_menu_back"
                                           android:contentDescription="@string/back"
-                                          android:background="@drawable/url_bar_nav_button"/>
+                                          android:background="@drawable/url_bar_nav_button"
+        />
 
     <org.mozilla.gecko.toolbar.ToolbarEditLayout android:id="@+id/edit_layout"
                   style="@style/UrlBar.Button"
                   android:paddingRight="12dp"
+                  android:paddingEnd="12dp"
                   android:visibility="gone"
                   android:orientation="horizontal"
+                  android:layout_toLeftOf="@id/menu_items"
+                  android:layout_toStartOf="@id/menu_items"
                   android:layout_toRightOf="@id/back"
-                  android:layout_toLeftOf="@id/menu_items"/>
+                  android:layout_toEndOf="@id/back"/>
 
     <!-- Note: we set the padding on the site security icon to increase its tappable area. -->
     <org.mozilla.gecko.toolbar.ToolbarDisplayLayout android:id="@+id/display_layout"
                   style="@style/UrlBar.Button.Container"
-                  android:layout_toRightOf="@id/back"
-                  android:layout_toLeftOf="@id/menu_items"
-                  android:paddingRight="4dip"/>
+            android:layout_toRightOf="@id/back"
+            android:layout_toEndOf="@id/back"
+            android:layout_toLeftOf="@id/menu_items"
+            android:layout_toStartOf="@id/menu_items"
+            android:paddingRight="4dip"
+            android:paddingEnd="4dip"/>
 
     <LinearLayout android:id="@+id/menu_items"
                   android:layout_width="wrap_content"
                   android:layout_height="match_parent"
                   android:gravity="center_vertical"
                   android:layout_marginLeft="6dp"
-                  android:orientation="horizontal"
-                  android:layout_toLeftOf="@id/tabs"/>
+                  android:layout_marginStart="6dp"
+                  android:layout_toLeftOf="@id/tabs"
+                  android:layout_toStartOf="@id/tabs"
+                  android:orientation="horizontal"/>
 
     <org.mozilla.gecko.widget.themed.ThemedImageButton
             android:id="@+id/tabs"
             style="@style/UrlBar.ImageButton"
             android:layout_toLeftOf="@id/menu"
+            android:layout_toStartOf="@id/menu"
             android:layout_alignWithParentIfMissing="true"
             android:background="@drawable/browser_toolbar_action_bar_button"/>
 
@@ -100,13 +121,17 @@
     <org.mozilla.gecko.toolbar.TabCounter android:id="@+id/tabs_counter"
                         style="@style/UrlBar.ImageButton"
                         android:layout_alignLeft="@id/tabs"
+                        android:layout_alignStart="@id/tabs"
                         android:layout_alignRight="@id/tabs"
+                        android:layout_alignEnd="@id/tabs"
                         android:layout_alignTop="@id/tabs"
                         android:layout_alignBottom="@id/tabs"
                         android:layout_marginTop="18dp"
                         android:layout_marginBottom="18dp"
                         android:layout_marginLeft="16dp"
+                        android:layout_marginStart="16dp"
                         android:layout_marginRight="16dp"
+                        android:layout_marginEnd="16dp"
                         android:background="@drawable/tabs_count"/>
 
     <!-- Bug 1144707. Use clickable View instead of menu button margin to prevent
@@ -115,6 +140,7 @@
           android:layout_width="6dp"
           android:layout_height="match_parent"
           android:layout_alignParentRight="true"
+          android:layout_alignParentEnd="true"
           android:clickable="true"
           android:visibility="gone"/>
 
@@ -122,6 +148,7 @@
             android:id="@+id/menu"
             style="@style/UrlBar.ImageButton"
             android:layout_toLeftOf="@id/menu_margin"
+            android:layout_toStartOf="@id/menu_margin"
             android:layout_alignWithParentIfMissing="true"
             android:contentDescription="@string/menu"
             android:background="@drawable/browser_toolbar_action_bar_button">
@@ -146,6 +173,7 @@
             android:layout_height="@dimen/browser_toolbar_height"
             android:layout_weight="0.0"
             android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             android:src="@drawable/close_edit_mode_selector"
             android:contentDescription="@string/edit_mode_cancel"
             android:visibility="gone"/>
