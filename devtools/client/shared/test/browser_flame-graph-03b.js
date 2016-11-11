@@ -1,13 +1,29 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that selections in the flame graph widget work properly on HiDPI.
 
-var TEST_DATA = [{ color: "#f00", blocks: [{ x: 0, y: 0, width: 50, height: 20, text: "FOO" }, { x: 50, y: 0, width: 100, height: 20, text: "BAR" }] }, { color: "#00f", blocks: [{ x: 0, y: 30, width: 30, height: 20, text: "BAZ" }] }];
-var TEST_BOUNDS = { startTime: 0, endTime: 150 };
-var TEST_WIDTH = 200;
-var TEST_HEIGHT = 100;
-var TEST_DPI_DENSITIY = 2;
+const TEST_DATA = [
+  {
+    color: "#f00",
+    blocks: [
+      { x: 0, y: 0, width: 50, height: 20, text: "FOO" },
+      { x: 50, y: 0, width: 100, height: 20, text: "BAR" }
+    ]
+  },
+  {
+    color: "#00f",
+    blocks: [
+      { x: 0, y: 30, width: 30, height: 20, text: "BAZ" }
+    ]
+  }
+];
+const TEST_BOUNDS = { startTime: 0, endTime: 150 };
+const TEST_WIDTH = 200;
+const TEST_HEIGHT = 100;
+const TEST_DPI_DENSITIY = 2;
 
 var {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
 
@@ -18,8 +34,9 @@ add_task(function* () {
 });
 
 function* performTest() {
-  let [host, win, doc] = yield createHost();
-  doc.body.setAttribute("style", "position: fixed; width: 100%; height: 100%; margin: 0;");
+  let [host,, doc] = yield createHost();
+  doc.body.setAttribute("style",
+                        "position: fixed; width: 100%; height: 100%; margin: 0;");
 
   let graph = new FlameGraph(doc.body, TEST_DPI_DENSITIY);
   graph.fixedWidth = TEST_WIDTH;
@@ -68,7 +85,7 @@ function scroll(graph, wheel, axis, x, y = 1) {
   x /= window.devicePixelRatio;
   y /= window.devicePixelRatio;
   graph._onMouseMove({ testX: x, testY: y });
-  graph._onMouseWheel({ testX: x, testY: y, axis, detail: wheel, axis,
+  graph._onMouseWheel({ testX: x, testY: y, axis, detail: wheel,
     HORIZONTAL_AXIS,
     VERTICAL_AXIS
   });
