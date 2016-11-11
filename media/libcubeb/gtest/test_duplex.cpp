@@ -7,20 +7,15 @@
 
 /* libcubeb api/function test. Loops input back to output and check audio
  * is flowing. */
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
+#include "gtest/gtest.h"
+#if !defined(_XOPEN_SOURCE)
 #define _XOPEN_SOURCE 600
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <assert.h>
-
 #include "cubeb/cubeb.h"
 #include "common.h"
-#ifdef CUBEB_GECKO_BUILD
-#include "TestHarness.h"
-#endif
 
 #define SAMPLE_FREQUENCY 48000
 #if (defined(_WIN32) || defined(__WIN32__))
@@ -31,16 +26,14 @@
 #define SILENT_SAMPLE 0
 #endif
 
-struct user_state
+struct user_state_duplex
 {
   bool seen_noise;
 };
 
-
-
-long data_cb(cubeb_stream * stream, void * user, const void * inputbuffer, void * outputbuffer, long nframes)
+long data_cb_duplex(cubeb_stream * stream, void * user, const void * inputbuffer, void * outputbuffer, long nframes)
 {
-  user_state * u = reinterpret_cast<user_state*>(user);
+  user_state_duplex * u = reinterpret_cast<user_state_duplex*>(user);
 #if (defined(_WIN32) || defined(__WIN32__))
   float *ib = (float *)inputbuffer;
   float *ob = (float *)outputbuffer;
@@ -70,7 +63,7 @@ long data_cb(cubeb_stream * stream, void * user, const void * inputbuffer, void 
   return nframes;
 }
 
-void state_cb(cubeb_stream * stream, void * /*user*/, cubeb_state state)
+void state_cb_duplex(cubeb_stream * stream, void * /*user*/, cubeb_state state)
 {
   if (stream == NULL)
     return;
@@ -89,30 +82,26 @@ void state_cb(cubeb_stream * stream, void * /*user*/, cubeb_state state)
   return;
 }
 
-int main(int /*argc*/, char * /*argv*/[])
+TEST(cubeb, duplex)
 {
-#ifdef CUBEB_GECKO_BUILD
-  ScopedXPCOM xpcom("test_duplex");
-#endif
-
   cubeb *ctx;
   cubeb_stream *stream;
   cubeb_stream_params input_params;
   cubeb_stream_params output_params;
   int r;
-  user_state stream_state = { false };
+  user_state_duplex stream_state = { false };
   uint32_t latency_frames = 0;
 
   r = cubeb_init(&ctx, "Cubeb duplex example");
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
-    return r;
+    ASSERT_EQ(r, CUBEB_OK);
   }
 
   /* This test needs an available input device, skip it if this host does not
    * have one. */
   if (!has_available_input_device(ctx)) {
-    return 0;
+    return;
   }
 
   /* typical user-case: mono input, stereo output, low latency. */
@@ -127,15 +116,15 @@ int main(int /*argc*/, char * /*argv*/[])
 
   if (r != CUBEB_OK) {
     fprintf(stderr, "Could not get minimal latency\n");
-    return r;
+    ASSERT_EQ(r, CUBEB_OK);
   }
 
   r = cubeb_stream_init(ctx, &stream, "Cubeb duplex",
                         NULL, &input_params, NULL, &output_params,
-                        latency_frames, data_cb, state_cb, &stream_state);
+                        latency_frames, data_cb_duplex, state_cb_duplex, &stream_state);
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb stream\n");
-    return r;
+    ASSERT_EQ(r, CUBEB_OK);
   }
 
   cubeb_stream_start(stream);
@@ -145,7 +134,5 @@ int main(int /*argc*/, char * /*argv*/[])
   cubeb_stream_destroy(stream);
   cubeb_destroy(ctx);
 
-  assert(stream_state.seen_noise);
-
-  return CUBEB_OK;
+  ASSERT_TRUE(stream_state.seen_noise);
 }
