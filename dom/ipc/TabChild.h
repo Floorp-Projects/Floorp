@@ -749,8 +749,6 @@ private:
     mUnscaledInnerSize = aSize;
   }
 
-  void SendDeleteIfOpen();
-
   class DelayedDeleteRunnable;
 
   TextureFactoryIdentifier mTextureFactoryIdentifier;
