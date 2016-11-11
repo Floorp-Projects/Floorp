@@ -10,17 +10,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
-function* promiseAutocompleteResultPopup(inputText) {
-  gURLBar.focus();
-  gURLBar.value = inputText;
-  gURLBar.controller.startSearch(inputText);
-  yield promisePopupShown(gURLBar.popup);
-  yield BrowserTestUtils.waitForCondition(() => {
-    return gURLBar.controller.searchStatus >=
-      Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
-  });
-}
-
 function* addBookmark(bookmark) {
   if (bookmark.keyword) {
     yield PlacesUtils.keywords.insert({
@@ -153,9 +142,17 @@ add_task(function* test_webnavigation_urlbar_bookmark_transitions() {
 
   yield extension.awaitMessage("ready");
 
-  yield promiseAutocompleteResultPopup("Bookmark To Click");
+  gURLBar.focus();
+  gURLBar.value = "Bookmark To Click";
+  gURLBar.controller.startSearch("Bookmark To Click");
 
-  let item = gURLBar.popup.richlistbox.getItemAtIndex(1);
+  let item;
+
+  yield BrowserTestUtils.waitForCondition(() => {
+    item = gURLBar.popup.richlistbox.getItemAtIndex(1);
+    return item;
+  });
+
   item.click();
   yield extension.awaitFinish("webNavigation.from_address_bar.auto_bookmark");
 
@@ -198,7 +195,13 @@ add_task(function* test_webnavigation_urlbar_keyword_transition() {
 
   yield extension.awaitMessage("ready");
 
-  yield promiseAutocompleteResultPopup("testkw search");
+  gURLBar.focus();
+  gURLBar.value = "testkw search";
+  gURLBar.controller.startSearch("testkw search");
+
+  yield BrowserTestUtils.waitForCondition(() => {
+    return gURLBar.popup.input.controller.matchCount;
+  });
 
   let item = gURLBar.popup.richlistbox.getItemAtIndex(0);
   item.click();
@@ -239,7 +242,14 @@ add_task(function* test_webnavigation_urlbar_search_transitions() {
   yield extension.awaitMessage("ready");
 
   yield prepareSearchEngine();
-  yield promiseAutocompleteResultPopup("foo");
+
+  gURLBar.focus();
+  gURLBar.value = "foo";
+  gURLBar.controller.startSearch("foo");
+
+  yield BrowserTestUtils.waitForCondition(() => {
+    return gURLBar.popup.input.controller.matchCount;
+  });
 
   let item = gURLBar.popup.richlistbox.getItemAtIndex(0);
   item.click();
