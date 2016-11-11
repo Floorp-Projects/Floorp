@@ -259,7 +259,7 @@ ToMIRType(ValType vt)
 // generalized to a list of ValType and this enum will go away, replaced,
 // wherever it is used, by a varU32 + list of ValType.
 
-enum class ExprType : uint32_t // fix type so we can cast from any u8 in decoder
+enum class ExprType
 {
     Void  = uint8_t(TypeCode::BlockVoid),
 

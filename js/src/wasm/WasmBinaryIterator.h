@@ -526,7 +526,7 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     MOZ_MUST_USE bool notYetImplemented(const char* what) MOZ_COLD;
 
     // Report an unrecognized opcode.
-    MOZ_MUST_USE bool unrecognizedOpcode(Expr expr) MOZ_COLD;
+    MOZ_MUST_USE bool unrecognizedOpcode(uint32_t expr) MOZ_COLD;
 
     // Test whether the iterator is currently in "reachable" code.
     bool inReachableCode() const { return reachable_; }
@@ -534,7 +534,7 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     // ------------------------------------------------------------------------
     // Decoding and validation interface.
 
-    MOZ_MUST_USE bool readExpr(Expr* expr);
+    MOZ_MUST_USE bool readExpr(uint16_t* expr);
     MOZ_MUST_USE bool readFunctionStart(ExprType ret);
     MOZ_MUST_USE bool readFunctionEnd();
     MOZ_MUST_USE bool readReturn(Value* value);
@@ -713,9 +713,9 @@ ExprIter<Policy>::notYetImplemented(const char* what)
 
 template <typename Policy>
 bool
-ExprIter<Policy>::unrecognizedOpcode(Expr expr)
+ExprIter<Policy>::unrecognizedOpcode(uint32_t expr)
 {
-    UniqueChars error(JS_smprintf("unrecognized opcode: %x", uint32_t(expr)));
+    UniqueChars error(JS_smprintf("unrecognized opcode: %x", expr));
     if (!error)
         return false;
 
@@ -812,35 +812,37 @@ template <typename Policy>
 inline bool
 ExprIter<Policy>::readBlockType(ExprType* type)
 {
-    if (!d_.readBlockType(type))
+    uint8_t unchecked;
+    if (!d_.readBlockType(&unchecked))
         return fail("unable to read block signature");
 
     if (Validate) {
-        switch (*type) {
-          case ExprType::Void:
-          case ExprType::I32:
-          case ExprType::I64:
-          case ExprType::F32:
-          case ExprType::F64:
-          case ExprType::I8x16:
-          case ExprType::I16x8:
-          case ExprType::I32x4:
-          case ExprType::F32x4:
-          case ExprType::B8x16:
-          case ExprType::B16x8:
-          case ExprType::B32x4:
+        switch (unchecked) {
+          case uint8_t(ExprType::Void):
+          case uint8_t(ExprType::I32):
+          case uint8_t(ExprType::I64):
+          case uint8_t(ExprType::F32):
+          case uint8_t(ExprType::F64):
+          case uint8_t(ExprType::I8x16):
+          case uint8_t(ExprType::I16x8):
+          case uint8_t(ExprType::I32x4):
+          case uint8_t(ExprType::F32x4):
+          case uint8_t(ExprType::B8x16):
+          case uint8_t(ExprType::B16x8):
+          case uint8_t(ExprType::B32x4):
             break;
           default:
             return fail("invalid inline block type");
         }
     }
 
+    *type = ExprType(unchecked);
     return true;
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readExpr(Expr* expr)
+ExprIter<Policy>::readExpr(uint16_t* expr)
 {
     offsetOfExpr_ = d_.currentOffset();
 
@@ -848,10 +850,10 @@ ExprIter<Policy>::readExpr(Expr* expr)
         if (MOZ_UNLIKELY(!d_.readExpr(expr)))
             return fail("unable to read opcode");
     } else {
-        *expr = d_.uncheckedReadExpr();
+        *expr = uint16_t(d_.uncheckedReadExpr());
     }
 
-    expr_ = *expr;
+    expr_ = Expr(*expr);  // debug-only
 
     return true;
 }
