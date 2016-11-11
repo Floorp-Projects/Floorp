@@ -6,17 +6,17 @@
 "filename": "mozmake.exe"
 },
 {
-"version": "rustc 1.12.0 (3191fbae9 2016-09-23) repack",
-"size": 89434100,
-"digest": "4da0efd2c36c77f29846f328d9f3c095a7b7e0dfd94f76b3159d441aae02b25007a475a979fb5bf313cf8fecb22fec81684871809effcb6b514419bc3854f398",
+"version": "rustc 1.13.0 (2c6933acc 2016-11-07) repack",
+"size": 58997576,
+"digest": "be97bb7f60fea39b9b0411b7ce247036a9373b01ed8cc60f30ed3c6254473ab7ef1881f222f10845253e0608c6f3d21add0871d0485d9de413297906d5c5409c",
 "algorithm": "sha512",
 "filename": "rustc.tar.bz2",
 "unpack": true
 },
 {
-"version": "cargo 0.13.0-nightly (e713e7f 2016-08-31)",
-"size": 2402000,
-"digest": "56f12f7ac437742ed717ce0ccfb0b4134160948e45d73016e48d9033567e5b01a171ac95dd7965eb007702c31da73274b5913281655f461f611ddeee37181ecc",
+"version": "cargo 0.13.0-nightly (eca9e15 2016-11-01) repack",
+"size": 2214397,
+"digest": "4f378fc4178d72d9e0434fca3df342d9dd7619c7c524ec6aedeee78a19583f2a675dfc54224be87030d72a36cef77f997e5275fe1cebac065c38949fa464d842",
 "algorithm": "sha512",
 "filename": "cargo.tar.bz2",
 "unpack": true
