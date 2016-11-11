@@ -130,6 +130,7 @@ protected:
   friend class EventQueue;
   friend class EventTree;
   friend class ::nsEventShell;
+  friend class NotificationController;
 };
 
 
@@ -201,6 +202,7 @@ private:
   nsString mModifiedText;
 
   friend class EventTree;
+  friend class NotificationController;
 };
 
 /**
@@ -271,6 +273,7 @@ protected:
   RefPtr<AccTextChangeEvent> mTextChangeEvent;
 
   friend class EventTree;
+  friend class NotificationController;
 };
 
 
@@ -301,6 +304,7 @@ protected:
   RefPtr<Accessible> mPrevSibling;
 
   friend class EventTree;
+  friend class NotificationController;
 };
 
 
