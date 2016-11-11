@@ -34,7 +34,12 @@ def replace_end(s, old, new):
     return s[:-len(old)] + new
 
 
-class WorkersHandler(object):
+class BaseWorkerHandler(object):
+    source_suffix = None
+    url_suffix = None
+    path_suffix = None
+    response_template = None
+
     def __init__(self, base_path=None, url_base="/"):
         self.base_path = base_path
         self.url_base = url_base
@@ -44,22 +49,13 @@ class WorkersHandler(object):
         return self.handler(request, response)
 
     def handle_request(self, request, response):
-        worker_path = replace_end(request.url_parts.path, ".worker.html", ".worker.js")
+        url_path = replace_end(request.url_parts.path, self.source_suffix, self.url_suffix)
         meta = self._get_meta(request)
-        return """<!doctype html>
-<meta charset=utf-8>
-%(meta)s
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id=log></div>
-<script>
-fetch_tests_from_worker(new Worker("%(worker_path)s"));
-</script>
-""" % {"meta": meta, "worker_path": worker_path}
+        return self.response_template % {"meta": meta, "url_path": url_path}
 
     def _get_meta(self, request):
         path = filesystem_path(self.base_path, request, self.url_base)
-        path = path.replace(".worker.html", ".worker.js")
+        path = replace_end(path, self.source_suffix, self.path_suffix)
         meta_values = []
         with open(path) as f:
             for line in f:
@@ -72,19 +68,37 @@ fetch_tests_from_worker(new Worker("%(worker_path)s"));
         return "\n".join('<meta name="%s" content="%s">' % item for item in meta_values)
 
 
+class WorkerHandler(BaseWorkerHandler):
+    source_suffix = ".worker.html"
+    url_suffix = ".worker.js"
+    path_suffix = ".worker.js"
 
-class AnyHtmlHandler(object):
-    def __init__(self):
-        self.handler = handlers.handler(self.handle_request)
-
-    def __call__(self, request, response):
-        return self.handler(request, response)
-
-    def handle_request(self, request, response):
-        test_path = replace_end(request.url_parts.path, ".any.html", ".any.js")
-        return """\
-<!doctype html>
+    response_template = """<!doctype html>
 <meta charset=utf-8>
+%(meta)s
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id=log></div>
+<script>
+fetch_tests_from_worker(new Worker("%(url_path)s"));
+</script>
+"""
+
+
+class AnyWorkerHandler(WorkerHandler):
+    source_suffix = ".any.worker.html"
+    url_suffix = ".any.worker.js"
+    path_suffix = ".any.js"
+
+
+class AnyHtmlHandler(BaseWorkerHandler):
+    source_suffix = ".any.html"
+    url_suffix = ".any.js"
+    path_suffix = ".any.js"
+
+    response_template =  """<!doctype html>
+<meta charset=utf-8>
+%(meta)s
 <script>
 self.GLOBAL = {
   isWindow: function() { return true; },
@@ -94,37 +108,38 @@ self.GLOBAL = {
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <div id=log></div>
-<script src="%s"></script>
-""" % (test_path,)
+<script src="%(url_path)s"></script>
+"""
 
 
-class AnyWorkerHandler(object):
-    def __init__(self):
-        self.handler = handlers.handler(self.handle_request)
+class AnyWorkerScriptHandler(BaseWorkerHandler):
+    source_suffix = ".any.worker.js"
+    url_suffix = ".any.js"
+    path_suffix = None
 
-    def __call__(self, request, response):
-        return self.handler(request, response)
-
-    def handle_request(self, request, response):
-        test_path = replace_end(request.url_parts.path, ".any.worker.js", ".any.js")
-        return """\
+    response_template = """\
 self.GLOBAL = {
   isWindow: function() { return false; },
   isWorker: function() { return true; },
 };
 importScripts("/resources/testharness.js");
-importScripts("%s");
+importScripts("%(url_path)s");
 done();
-""" % (test_path,)
+"""
+
+    def _get_meta(self, path):
+        return None
 
 
 rewrites = [("GET", "/resources/WebIDLParser.js", "/resources/webidl2/lib/webidl2.js")]
+
 
 subdomains = [u"www",
               u"www1",
               u"www2",
               u"天気の良い日",
               u"élève"]
+
 
 class RoutesBuilder(object):
     def __init__(self):
@@ -138,9 +153,10 @@ class RoutesBuilder(object):
                           ("*", "/serve.py", handlers.ErrorHandler(404))]
 
         self.static = [
-            ("GET", "*.worker.html", WorkersHandler()),
             ("GET", "*.any.html", AnyHtmlHandler()),
-            ("GET", "*.any.worker.js", AnyWorkerHandler()),
+            ("GET", "*.any.worker.html", AnyWorkerHandler()),
+            ("GET", "*.any.worker.js", AnyWorkerScriptHandler()),
+            ("GET", "*.worker.html", WorkerHandler()),
         ]
 
         self.mountpoint_routes = OrderedDict()
