@@ -5179,15 +5179,17 @@ BaseCompiler::emitBrTable()
 
     // Emit stubs.  rc is dead in all of these but we don't need it.
     //
+    // The labels in the vector are in the TempAllocator and will
+    // be freed by and by.
+    //
     // TODO / OPTIMIZE (Bug 1316804): Branch directly to the case code if we
     // can, don't emit an intermediate stub.
 
     for (uint32_t i = 0; i < tableLength; i++) {
         PooledLabel* stubLabel = newLabel();
-        // The labels in the vector are in the TempAllocator and will
-        // be freed by and by.
         if (!stubLabel)
             return false;
+
         stubs.infallibleAppend(stubLabel);
         masm.bind(stubLabel);
         uint32_t k = depths[i];
@@ -7210,6 +7212,9 @@ BaseCompiler::emitFunction()
     beginFunction();
 
     UniquePooledLabel functionEnd(newLabel());
+    if (!functionEnd)
+        return false;
+
     if (!pushControl(&functionEnd))
         return false;
 
