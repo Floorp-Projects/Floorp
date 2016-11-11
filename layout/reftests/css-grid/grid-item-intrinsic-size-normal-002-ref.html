@@ -1,0 +1,234 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: stretching intrinsic size items with 'normal' and/or 'stretch' and min/max-size, with Automatic Minimum Size clamping</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">
+  <style type="text/css">
+* { vertical-align: top; }
+.grid {
+  display: inline-grid;
+  border: 3px solid grey;
+  grid: 32px / 4px;
+  margin-right:20px;
+  align-items: start;
+  justify-items: start;
+}
+.r { grid: 4px / 32px; }
+
+iframe {
+  border: 1px solid;
+  padding: 0;
+  margin: 0;
+  background: lightgrey;
+}
+
+.w20 { width: 20px min-width: 0px; }
+.mw20 { min-width: 20px }
+.mw0 { min-width: 0px }
+
+.h20 { height: 20px; min-height: 0px; }
+.mh20 { min-height: 20px }
+.mh0 { min-height: 0px }
+
+  </style>
+</head>
+<body>
+
+<div class="grid r"><iframe></iframe></div>
+<div class="grid r"><iframe class="start"></iframe></div>
+<div class="grid r"><iframe class="sa"></iframe></div>
+<div class="grid r"><iframe class="sa mxw10"></iframe></div>
+<div class="grid r"><iframe class="na"></iframe></div>
+<div class="grid r"><iframe class="na mxw2"></iframe></div>
+
+<pre><!--min-height:20px--></pre>
+<div class="grid r" style="margin-right:0"><iframe class="mh20"></iframe></div>
+<div class="grid r"><iframe class="mh20 mxw10"></iframe></div>
+<div class="grid r"><iframe class="start mh20"></iframe></div>
+<div class="grid r"><iframe class="start mh20 mxw10"></iframe></div>
+<div class="grid r"><iframe class="sa mh20"></iframe></div>
+<div class="grid r"><iframe class="sa mh20 mxw10"></iframe></div>
+<div class="grid r"><iframe class="na mh20"></iframe></div>
+<div class="grid r"><iframe class="na mh20 mxw10"></iframe></div>
+
+<pre><!--min-height:0--></pre>
+<div class="grid r"><iframe class="mh0"></iframe></div>
+<div class="grid r"><iframe class="mh0 mxw10"></iframe></div>
+<div class="grid r"><iframe class="start mh0"></iframe></div>
+<div class="grid r"><iframe class="start mh0 mxw10"></iframe></div>
+<div class="grid r"><iframe class="sa mh0"></iframe></div>
+<div class="grid r"><iframe class="sa mh0 mxw10"></iframe></div>
+<div class="grid r"><iframe class="na mh0"></iframe></div>
+<div class="grid r"><iframe class="na mh0 mxw2"></iframe></div>
+
+<pre><!----></pre>
+
+<div class="grid"><iframe></iframe></div>
+<div class="grid"><iframe class="mxw2"></iframe></div>
+<div class="grid"><iframe class="start"></iframe></div>
+<div class="grid"><iframe class="start mxw2"></iframe></div>
+<div class="grid"><iframe class="sa"></iframe></div>
+<div class="grid"><iframe class="sa mxw2"></iframe></div>
+<div class="grid"><iframe class="na"></iframe></div>
+<div class="grid"><iframe class="na mxw2"></iframe></div>
+
+<pre><!--min-width:20px--></pre>
+<div class="grid"><iframe class="mw20"></iframe></div>
+<div class="grid"><iframe class="mw20 mxh10"></iframe></div>
+<div class="grid"><iframe class="start mw20"></iframe></div>
+<div class="grid" style="margin-top:5px"><iframe class="start mw20 mxh10"></iframe></div>
+<div class="grid" style="margin-top:10px"><iframe class="sa mw20"></iframe></div>
+<div class="grid" style="margin-top:25px"><iframe class="sa mw20 mxh10"></iframe></div>
+<div class="grid"><iframe class="na mw20"></iframe></div>
+<div class="grid" style="margin-top:5px"><iframe class="na mw20 mxh10 mxw10"></iframe></div>
+
+<pre><!--min-width:0--></pre>
+<div class="grid"><iframe class="mw0"></iframe></div>
+<div class="grid"><iframe class="mw0 mxh10"></iframe></div>
+<div class="grid"><iframe class="start mw0"></iframe></div>
+<div class="grid" style="margin-top:5px"><iframe class="start mw0 mxh10"></iframe></div>
+<div class="grid" style="margin-top:10px"><iframe class="sa mw0"></iframe></div>
+<div class="grid" style="margin-top:25px"><iframe class="sa mw0 mxh10 mxw10"></iframe></div>
+<div class="grid"><iframe class="na mw0 mxw10"></iframe></div>
+<div class="grid" style="margin-top:5px"><iframe class="na mw0 mxh10"></iframe></div>
+
+<pre><!--width:20px--></pre>
+
+<div class="grid r"><iframe class="w20"></iframe></div>
+<div class="grid r"><iframe class="w20 mxh10"></iframe></div>
+<div class="grid r"><iframe class="start w20"></iframe></div>
+<div class="grid r"><iframe class="start w20 mxh10"></iframe></div>
+<div class="grid r"><iframe class="sa w20"></iframe></div>
+<div class="grid r"><iframe class="sa w20 mxh2"></iframe></div>
+<div class="grid r"><iframe class="na w20"></iframe></div>
+<div class="grid r"><iframe class="na w20 mxh2"></iframe></div>
+
+<pre><!--width:20px--></pre>
+
+<div class="grid"><iframe class="start w20"></iframe></div>
+<div class="grid"><iframe class="start w20 mxh10"></iframe></div>
+<div class="grid"><iframe class="start w20"></iframe></div>
+<div class="grid"><iframe class="start w20 mxh10"></iframe></div>
+<div class="grid"><iframe class="sa w20"></iframe></div>
+<div class="grid"><iframe class="sa w20 mxh10"></iframe></div>
+<div class="grid"><iframe class="na w20"></iframe></div>
+<div class="grid"><iframe class="na w20 mxh10"></iframe></div>
+
+<pre><!--height:20px--></pre>
+
+<div class="grid r"><iframe class="h20"></iframe></div>
+<div class="grid r"><iframe class="h20 mxw10"></iframe></div>
+<div class="grid r"><iframe class="start h20"></iframe></div>
+<div class="grid r"><iframe class="start h20 mxw10"></iframe></div>
+<div class="grid r"><iframe class="as h20"></iframe></div>
+<div class="grid r"><iframe class="as h20 mxw10"></iframe></div>
+<div class="grid r"><iframe class="an h20"></iframe></div>
+<div class="grid r"><iframe class="an h20 mxw10"></iframe></div>
+
+<pre><!--height:20px--></pre>
+
+<div class="grid"><iframe class="h20"></iframe></div>
+<div class="grid"><iframe class="h20 mxw2"></iframe></div>
+<div class="grid"><iframe class="start h20"></iframe></div>
+<div class="grid"><iframe class="start h20 mxw10"></iframe></div>
+<div class="grid"><iframe class="as h20"></iframe></div>
+<div class="grid"><iframe class="as h20 mxw2"></iframe></div>
+<div class="grid"><iframe class="an h20"></iframe></div>
+<div class="grid"><iframe class="an h20 mxw10"></iframe></div>
+
+<script>
+var iframeSizes =
+[
+  ['30px', '2px'],
+  ['30px', '2px'],
+  ['30px', '2px'],
+  ['10px', '2px'],
+  ['30px', '2px'],
+  ['2px', '2px'],
+  ['30px', '20px'],
+  ['10px', '20px'],
+  ['30px', '150px'],
+  ['10px', '150px'],
+  ['30px', '20px'],
+  ['10px', '20px'],
+  ['30px', '20px'],
+  ['10px', '20px'],
+  ['30px', '2px'],
+  ['10px', '2px'],
+  ['30px', '150px'],
+  ['10px', '150px'],
+  ['30px', '2px'],
+  ['10px', '2px'],
+  ['30px', '2px'],
+  ['2px', '2px'],
+  ['2px', '30px'],
+  ['2px', '30px'],
+  ['2px', '30px'],
+  ['2px', '30px'],
+  ['2px', '30px'],
+  ['2px', '30px'],
+  ['2px', '30px'],
+  ['2px', '30px'],
+  ['20px', '30px'],
+  ['20px', '10px'],
+  ['300px', '30px'],
+  ['300px', '10px'],
+  ['300px', '30px'],
+  ['300px', '10px'],
+  ['300px', '30px'],
+  ['20px', '10px'],
+  ['2px', '30px'],
+  ['2px', '10px'],
+  ['300px', '30px'],
+  ['300px', '10px'],
+  ['300px', '30px'],
+  ['10px', '10px'],
+  ['10px', '30px'],
+  ['300px', '10px'],
+  ['20px', '2px'],
+  ['20px', '2px'],
+  ['20px', '2px'],
+  ['20px', '2px'],
+  ['20px', '2px'],
+  ['20px', '2px'],
+  ['20px', '2px'],
+  ['20px', '2px'],
+  ['20px', '30px'],
+  ['20px', '10px'],
+  ['20px', '30px'],
+  ['20px', '10px'],
+  ['20px', '30px'],
+  ['20px', '10px'],
+  ['20px', '30px'],
+  ['20px', '10px'],
+  ['30px', '20px'],
+  ['10px', '20px'],
+  ['30px', '20px'],
+  ['10px', '20px'],
+  ['30px', '20px'],
+  ['10px', '20px'],
+  ['30px', '20px'],
+  ['10px', '20px'],
+  ['2px', '20px'],
+  ['2px', '20px'],
+  ['2px', '20px'],
+  ['2px', '20px'],
+  ['2px', '20px'],
+  ['2px', '20px'],
+  ['2px', '20px'],
+  ['2px', '20px'],
+];
+var iframes = document.querySelectorAll('iframe');
+for (var i = 0; i < iframes.length; ++i) {
+  var iframe = iframes[i];
+  iframe.style.width = iframeSizes[i][0];
+  iframe.style.height = iframeSizes[i][1];
+}
+</script>
+
+</body>
+</html>
