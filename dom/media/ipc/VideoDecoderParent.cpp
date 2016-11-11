@@ -153,7 +153,9 @@ bool
 VideoDecoderParent::RecvShutdown()
 {
   MOZ_ASSERT(!mDestroyed);
-  mDecoder->Shutdown();
+  if (mDecoder) {
+    mDecoder->Shutdown();
+  }
   mDecoder = nullptr;
   return true;
 }
