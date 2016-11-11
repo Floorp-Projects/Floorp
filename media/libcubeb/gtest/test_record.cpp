@@ -6,20 +6,15 @@
  */
 
 /* libcubeb api/function test. Record the mic and check there is sound. */
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
+#include "gtest/gtest.h"
+#if !defined(_XOPEN_SOURCE)
 #define _XOPEN_SOURCE 600
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <assert.h>
-
 #include "cubeb/cubeb.h"
 #include "common.h"
-#ifdef CUBEB_GECKO_BUILD
-#include "TestHarness.h"
-#endif
 
 #define SAMPLE_FREQUENCY 48000
 #if (defined(_WIN32) || defined(__WIN32__))
@@ -28,14 +23,14 @@
 #define STREAM_FORMAT CUBEB_SAMPLE_S16LE
 #endif
 
-struct user_state
+struct user_state_record
 {
   bool seen_noise;
 };
 
-long data_cb(cubeb_stream * stream, void * user, const void * inputbuffer, void * outputbuffer, long nframes)
+long data_cb_record(cubeb_stream * stream, void * user, const void * inputbuffer, void * outputbuffer, long nframes)
 {
-  user_state * u = reinterpret_cast<user_state*>(user);
+  user_state_record * u = reinterpret_cast<user_state_record*>(user);
 #if STREAM_FORMAT != CUBEB_SAMPLE_FLOAT32LE
   short *b = (short *)inputbuffer;
 #else
@@ -58,7 +53,7 @@ long data_cb(cubeb_stream * stream, void * user, const void * inputbuffer, void 
   return nframes;
 }
 
-void state_cb(cubeb_stream * stream, void * /*user*/, cubeb_state state)
+void state_cb_record(cubeb_stream * stream, void * /*user*/, cubeb_state state)
 {
   if (stream == NULL)
     return;
@@ -77,28 +72,24 @@ void state_cb(cubeb_stream * stream, void * /*user*/, cubeb_state state)
   return;
 }
 
-int main(int /*argc*/, char * /*argv*/[])
+TEST(cubeb, record)
 {
-#ifdef CUBEB_GECKO_BUILD
-  ScopedXPCOM xpcom("test_record");
-#endif
-
   cubeb *ctx;
   cubeb_stream *stream;
   cubeb_stream_params params;
   int r;
-  user_state stream_state = { false };
+  user_state_record stream_state = { false };
 
   r = cubeb_init(&ctx, "Cubeb record example");
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
-    return r;
+    ASSERT_EQ(r, CUBEB_OK);
   }
 
   /* This test needs an available input device, skip it if this host does not
    * have one. */
   if (!has_available_input_device(ctx)) {
-    return 0;
+    return;
   }
 
   params.format = STREAM_FORMAT;
@@ -106,10 +97,10 @@ int main(int /*argc*/, char * /*argv*/[])
   params.channels = 1;
 
   r = cubeb_stream_init(ctx, &stream, "Cubeb record (mono)", NULL, &params, NULL, nullptr,
-                        4096, data_cb, state_cb, &stream_state);
+                        4096, data_cb_record, state_cb_record, &stream_state);
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb stream\n");
-    return r;
+    ASSERT_EQ(r, CUBEB_OK);
   }
 
   cubeb_stream_start(stream);
@@ -119,7 +110,5 @@ int main(int /*argc*/, char * /*argv*/[])
   cubeb_stream_destroy(stream);
   cubeb_destroy(ctx);
 
-  assert(stream_state.seen_noise);
-
-  return CUBEB_OK;
+  ASSERT_TRUE(stream_state.seen_noise);
 }
