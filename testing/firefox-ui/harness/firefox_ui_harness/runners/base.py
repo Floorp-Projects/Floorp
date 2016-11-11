@@ -14,8 +14,10 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 
 
 class FirefoxUITestRunner(BaseMarionetteTestRunner):
+
     def __init__(self, **kwargs):
-        BaseMarionetteTestRunner.__init__(self, **kwargs)
+        super(FirefoxUITestRunner, self).__init__(**kwargs)
+
         # select the appropriate GeckoInstance
         self.app = 'fxdesktop'
 
