@@ -14,13 +14,9 @@
 #error "Must #define TEST_NAME before including places_test_harness_tail.h"
 #endif
 
-#ifndef TEST_FILE
-#error "Must #define TEST_FILE before include places_test_harness_tail.h"
-#endif
-
 int gTestsIndex = 0;
 
-#define TEST_INFO_STR "TEST-INFO | (%s) | "
+#define TEST_INFO_STR "TEST-INFO | "
 
 class RunNextTest : public mozilla::Runnable
 {
@@ -31,8 +27,7 @@ public:
     if (gTestsIndex < int(mozilla::ArrayLength(gTests))) {
       do_test_pending();
       Test &test = gTests[gTestsIndex++];
-      (void)fprintf(stderr, TEST_INFO_STR "Running %s.\n", TEST_FILE,
-                    test.name);
+      (void)fprintf(stderr, TEST_INFO_STR "Running %s.\n", test.name);
       test.func();
     }
 
@@ -68,7 +63,7 @@ do_test_finished()
 void
 disable_idle_service()
 {
-  (void)fprintf(stderr, TEST_INFO_STR  "Disabling Idle Service.\n", TEST_FILE);
+  (void)fprintf(stderr, TEST_INFO_STR  "Disabling Idle Service.\n");
   static NS_DEFINE_IID(kIdleCID, NS_IDLE_SERVICE_CID);
   nsresult rv;
   nsCOMPtr<nsIFactory> idleFactory = do_GetClassObject(kIdleCID, &rv);
@@ -80,46 +75,8 @@ disable_idle_service()
   do_check_success(rv);
 }
 
-int
-main(int aArgc,
-     char** aArgv)
+TEST(IHistory, Test)
 {
-  ScopedXPCOM xpcom(TEST_NAME);
-  if (xpcom.failed())
-    return -1;
-  // Initialize a profile folder to ensure a clean shutdown.
-  nsCOMPtr<nsIFile> profile = xpcom.GetProfileDirectory();
-  if (!profile) {
-    fail("Couldn't get the profile directory.");
-    return -1;
-  }
-
-#ifdef MOZ_CRASHREPORTER
-    char* enabled = PR_GetEnv("MOZ_CRASHREPORTER");
-    if (enabled && !strcmp(enabled, "1")) {
-      // bug 787458: move this to an even-more-common location to use in all
-      // C++ unittests
-      nsCOMPtr<nsICrashReporter> crashreporter =
-        do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-      if (crashreporter) {
-        fprintf(stderr, "Setting up crash reporting\n");
-
-        nsCOMPtr<nsIProperties> dirsvc =
-          do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
-        if (!dirsvc)
-          NS_RUNTIMEABORT("Couldn't get directory service");
-        nsCOMPtr<nsIFile> cwd;
-        nsresult rv = dirsvc->Get(NS_OS_CURRENT_WORKING_DIR,
-                                  NS_GET_IID(nsIFile),
-                                  getter_AddRefs(cwd));
-        if (NS_FAILED(rv))
-          NS_RUNTIMEABORT("Couldn't get CWD");
-        crashreporter->SetEnabled(true);
-        crashreporter->SetMinidumpPath(cwd);
-      }
-    }
-#endif
-
   RefPtr<WaitForConnectionClosed> spinClose = new WaitForConnectionClosed();
 
   // Tinderboxes are constantly on idle.  Since idle tasks can interact with
@@ -136,14 +93,4 @@ main(int aArgc,
 
   // And let any other events finish before we quit.
   (void)NS_ProcessPendingEvents(nullptr);
-
-  // Check that we have passed all of our tests, and output accordingly.
-  if (gPassedTests == gTotalTests) {
-    passed(TEST_FILE);
-  }
-
-  (void)fprintf(stderr, TEST_INFO_STR  "%u of %u tests passed\n",
-                TEST_FILE, unsigned(gPassedTests), unsigned(gTotalTests));
-
-  return gPassedTests == gTotalTests ? 0 : -1;
 }

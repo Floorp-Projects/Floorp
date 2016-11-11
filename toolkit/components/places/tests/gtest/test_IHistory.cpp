@@ -7,6 +7,7 @@
 #include "places_test_harness.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsString.h"
 #include "mozilla/Attributes.h"
 #include "nsNetUtil.h"
 
@@ -38,7 +39,7 @@ new_test_uri()
 {
   // Create a unique spec.
   static int32_t specNumber = 0;
-  nsAutoCString spec = NS_LITERAL_CSTRING("http://mozilla.org/");
+  nsCString spec = NS_LITERAL_CSTRING("http://mozilla.org/");
   spec.AppendInt(specNumber++);
 
   // Create the URI for the spec.
@@ -611,29 +612,27 @@ test_two_null_links_same_uri()
  * Note: for tests marked "Order Important!", please see the test for details.
  */
 Test gTests[] = {
-  TEST(test_set_places_enabled), // Must come first!
-  TEST(test_wait_checkpoint), // Must come second!
-  TEST(test_unvisited_does_not_notify_part1), // Order Important!
-  TEST(test_visited_notifies),
-  TEST(test_unvisited_does_not_notify_part2), // Order Important!
-  TEST(test_same_uri_notifies_both),
-  TEST(test_unregistered_visited_does_not_notify), // Order Important!
-  TEST(test_new_visit_notifies_waiting_Link),
-  TEST(test_RegisterVisitedCallback_returns_before_notifying),
-  TEST(test_observer_topic_dispatched),
-  TEST(test_visituri_inserts),
-  TEST(test_visituri_updates),
-  TEST(test_visituri_preserves_shown_and_typed),
-  TEST(test_visituri_creates_visit),
-  TEST(test_visituri_transition_typed),
-  TEST(test_visituri_transition_embed),
-  TEST(test_new_visit_adds_place_guid),
+  PTEST(test_set_places_enabled), // Must come first!
+  PTEST(test_wait_checkpoint), // Must come second!
+  PTEST(test_unvisited_does_not_notify_part1), // Order Important!
+  PTEST(test_visited_notifies),
+  PTEST(test_unvisited_does_not_notify_part2), // Order Important!
+  PTEST(test_same_uri_notifies_both),
+  PTEST(test_unregistered_visited_does_not_notify), // Order Important!
+  PTEST(test_new_visit_notifies_waiting_Link),
+  PTEST(test_RegisterVisitedCallback_returns_before_notifying),
+  PTEST(test_observer_topic_dispatched),
+  PTEST(test_visituri_inserts),
+  PTEST(test_visituri_updates),
+  PTEST(test_visituri_preserves_shown_and_typed),
+  PTEST(test_visituri_creates_visit),
+  PTEST(test_visituri_transition_typed),
+  PTEST(test_visituri_transition_embed),
+  PTEST(test_new_visit_adds_place_guid),
 
   // The rest of these tests are tests that are only run in IPC builds.
-  TEST(test_two_null_links_same_uri),
+  PTEST(test_two_null_links_same_uri),
 };
 
-const char* file = __FILE__;
 #define TEST_NAME "IHistory"
-#define TEST_FILE file
 #include "places_test_harness_tail.h"

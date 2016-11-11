@@ -37,6 +37,15 @@ Link::Link(Element *aElement)
   MOZ_ASSERT(mElement, "Must have an element");
 }
 
+Link::Link()
+  : mElement(nullptr)
+  , mHistory(nullptr)
+  , mLinkState(eLinkState_NotLink)
+  , mNeedsRegistration(false)
+  , mRegistered(false)
+{
+}
+
 Link::~Link()
 {
   UnregisterFromHistory();
