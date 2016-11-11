@@ -341,8 +341,8 @@
       this.containerNode = getNode(aContainerID);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_SHOW, function(aNode) { return aNode.lastChild; }, this.containerNode),
         new invokerChecker(EVENT_SHOW, function(aNode) { return aNode.firstChild; }, this.containerNode),
+        new invokerChecker(EVENT_SHOW, function(aNode) { return aNode.lastChild; }, this.containerNode),
         new invokerChecker(EVENT_REORDER, this.containerNode)
       ];
 
