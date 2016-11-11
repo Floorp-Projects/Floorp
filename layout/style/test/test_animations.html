@@ -50,7 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
     25% { margin-top: 100px }
   }
   @keyframes kf4 {
-    to, from { border-collapse: collapse; margin-top: 37px }
+    to, from { display: none; margin-top: 37px }
   }
   @keyframes kf_cascade1 {
     from { padding-top: 50px }
@@ -566,23 +566,23 @@ done_div();
 // we still override the value when two consecutive keyframes have
 // the same value.
 new_div("animation: kf4 ease 10s");
-is(cs.borderCollapse, "separate",
+is(cs.display, "block",
    "non-animatable properties should be ignored (linear, 0s)");
 is(cs.marginTop, "37px",
    "animatable properties should still apply (linear, 0s)");
 advance_clock(1000);
-is(cs.borderCollapse, "separate",
+is(cs.display, "block",
    "non-animatable properties should be ignored (linear, 1s)");
 is(cs.marginTop, "37px",
    "animatable properties should still apply (linear, 1s)");
 done_div();
 new_div("animation: kf4 step-start 10s");
-is(cs.borderCollapse, "separate",
+is(cs.display, "block",
    "non-animatable properties should be ignored (step-start, 0s)");
 is(cs.marginTop, "37px",
    "animatable properties should still apply (step-start, 0s)");
 advance_clock(1000);
-is(cs.borderCollapse, "separate",
+is(cs.display, "block",
    "non-animatable properties should be ignored (step-start, 1s)");
 is(cs.marginTop, "37px",
    "animatable properties should still apply (step-start, 1s)");
