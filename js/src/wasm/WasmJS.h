@@ -67,6 +67,11 @@ ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64);
 bool
 HasCompilerSupport(ExclusiveContext* cx);
 
+// Return whether WebAssembly is enabled on this platform.
+
+bool
+HasSupport(ExclusiveContext* cx);
+
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 
