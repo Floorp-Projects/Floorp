@@ -140,7 +140,6 @@ ALLOWED_XPCOM_GLUE = {
     ('TestTXMgr', 'editor/txmgr/tests'),
     ('test_IHistory', 'toolkit/components/places/tests/cpp'),
     ('testcrasher', 'toolkit/crashreporter/test'),
-    ('TestStartupCache', 'startupcache/test'),
     ('jsep_session_unittest', 'media/webrtc/signaling/test'),
     ('jsep_track_unittest', 'media/webrtc/signaling/test'),
     ('mediaconduit_unittests', 'media/webrtc/signaling/test'),

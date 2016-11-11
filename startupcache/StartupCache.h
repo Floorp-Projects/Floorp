@@ -138,6 +138,9 @@ public:
 
   size_t SizeOfMapping();
 
+  // FOR TESTING ONLY
+  nsresult ResetStartupWriteTimer();
+  bool StartupWriteComplete();
 private:
   StartupCache();
   virtual ~StartupCache();
@@ -145,7 +148,6 @@ private:
   nsresult LoadArchive();
   nsresult Init();
   void WriteToDisk();
-  nsresult ResetStartupWriteTimer();
   void WaitOnWriteThread();
 
   static nsresult InitSingleton();
