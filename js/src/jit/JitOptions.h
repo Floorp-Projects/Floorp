@@ -71,6 +71,7 @@ struct DefaultJitOptions
     bool osr;
     bool asmJSAtomicsEnable;
     bool wasmTestMode;
+    bool wasmAlwaysCheckBounds;
     bool wasmFoldOffsets;
     bool ionInterruptWithoutSignals;
     uint32_t baselineWarmUpThreshold;

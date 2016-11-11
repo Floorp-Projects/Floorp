@@ -188,9 +188,14 @@ SharedWorker::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   AssertIsOnMainThread();
 
-  nsIDOMEvent*& event = aVisitor.mDOMEvent;
+  if (IsFrozen()) {
+    nsCOMPtr<nsIDOMEvent> event = aVisitor.mDOMEvent;
+    if (!event) {
+      event = EventDispatcher::CreateEvent(aVisitor.mEvent->mOriginalTarget,
+                                           aVisitor.mPresContext,
+                                           aVisitor.mEvent, EmptyString());
+    }
 
-  if (IsFrozen() && event) {
     QueueEvent(event);
 
     aVisitor.mCanHandle = false;

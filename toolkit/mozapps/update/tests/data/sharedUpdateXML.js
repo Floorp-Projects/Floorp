@@ -181,7 +181,7 @@ function getLocalUpdateString(aPatches, aType, aName, aDisplayVersion,
                    "statusText=\"" + statusText + "\" " +
                    "isCompleteUpdate=\"" + isCompleteUpdate + "\" " +
                    "channel=\"" + channel + "\" " +
-                   "foregroundDownload=\"" + foregroundDownload + "\">"  +
+                   "foregroundDownload=\"" + foregroundDownload + "\">" +
               aPatches +
          "  </update>";
 }

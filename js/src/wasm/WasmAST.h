@@ -898,6 +898,9 @@ class AstModule : public AstNode
     const NameVector& funcImportNames() const {
         return funcImportNames_;
     }
+    size_t numFuncImports() const {
+        return funcImportNames_.length();
+    }
     bool append(AstExport* exp) {
         return exports_.append(exp);
     }

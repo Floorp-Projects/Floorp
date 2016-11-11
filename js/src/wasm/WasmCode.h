@@ -373,18 +373,6 @@ struct CallThunk
 
 WASM_DECLARE_POD_VECTOR(CallThunk, CallThunkVector)
 
-// CacheableChars is used to cacheably store UniqueChars.
-
-struct CacheableChars : UniqueChars
-{
-    CacheableChars() = default;
-    explicit CacheableChars(char* ptr) : UniqueChars(ptr) {}
-    MOZ_IMPLICIT CacheableChars(UniqueChars&& rhs) : UniqueChars(Move(rhs)) {}
-    WASM_DECLARE_SERIALIZABLE(CacheableChars)
-};
-
-typedef Vector<CacheableChars, 0, SystemAllocPolicy> CacheableCharsVector;
-
 // A wasm module can either use no memory, a unshared memory (ArrayBuffer) or
 // shared memory (SharedArrayBuffer).
 

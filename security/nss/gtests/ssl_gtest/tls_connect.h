@@ -107,6 +107,7 @@ class TlsConnectTestBase : public ::testing::Test {
   void Receive(size_t amount);
   void ExpectExtendedMasterSecret(bool expected);
   void ExpectEarlyDataAccepted(bool expected);
+  void DisableECDHEServerKeyReuse();
 
  protected:
   Mode mode_;

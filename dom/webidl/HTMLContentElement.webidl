@@ -11,6 +11,7 @@
  * and create derivative works of this document.
  */
 
+[Func="nsDocument::IsWebComponentsEnabled"]
 interface HTMLContentElement : HTMLElement
 {
   attribute DOMString select;

@@ -51,6 +51,13 @@
 <p>&brandShortName; can’t load this page for some reason.</p>
 ">
 
+<!ENTITY captivePortal.title "Login to network">
+<!ENTITY captivePortal.longDesc "
+<p>This network may require you to login to access the internet.</p>
+">
+
+<!ENTITY openPortalLoginPage.label "Open Login Page">
+
 <!ENTITY malformedURI.title "The address isn’t valid">
 <!ENTITY malformedURI.longDesc "
 <ul>

@@ -595,6 +595,10 @@ void TlsConnectTestBase::CheckEarlyDataAccepted() {
   server_->CheckEarlyDataAccepted(expect_early_data_accepted_);
 }
 
+void TlsConnectTestBase::DisableECDHEServerKeyReuse() {
+  server_->DisableECDHEServerKeyReuse();
+}
+
 TlsConnectGeneric::TlsConnectGeneric()
     : TlsConnectTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())) {}
 

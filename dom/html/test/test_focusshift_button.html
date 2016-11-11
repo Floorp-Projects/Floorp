@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for shifting focus while mouse clicking on button</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+
+<script class="testbody" type="application/javascript;version=1.7">
+
+var result = "";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  synthesizeMouseAtCenter(document.getElementById("button"), { });
+  if (/Mac/.test(navigator.platform)) {
+    // Buttons don't focus when clicked on Mac.
+    is(result, "", "Focus button then input");
+  }
+  else {
+    is(result, "(focus button)(blur button)(focus input)", "Focus button then input");
+  }
+  SimpleTest.finish();
+});
+</script>
+
+
+<button id="button" onfocus="result += '(focus button)'; document.getElementById('input').focus()"
+                    onblur="result += '(blur button)'">Focus</button>
+<input id="input" value="Test" onfocus="result += '(focus input)'"
+                               onblur="result += '(blur input)'">
+
+</body>
+</html>

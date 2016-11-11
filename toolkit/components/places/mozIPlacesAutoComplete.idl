@@ -116,8 +116,10 @@ interface mozIPlacesAutoComplete : nsISupports
    *
    * @param aURI
    *        The URI to register as an open page.
+   * @param aUserContextId
+   *        The Container Id of the tab.
    */
-  void registerOpenPage(in nsIURI aURI);
+  void registerOpenPage(in nsIURI aURI, in uint32_t aUserContextId);
 
   /**
    * Mark a page as no longer being open (either by closing the window or tab,
@@ -129,6 +131,8 @@ interface mozIPlacesAutoComplete : nsISupports
    *
    * @param aURI
    *        The URI to unregister as an open page.
+   * @param aUserContextId
+   *        The Container Id of the tab.
    */
-  void unregisterOpenPage(in nsIURI aURI);
+  void unregisterOpenPage(in nsIURI aURI, in uint32_t aUserContextId);
 };

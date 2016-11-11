@@ -243,6 +243,12 @@ PacketFilter::Action TlsInspectorReplaceHandshakeMessage::FilterHandshake(
   return KEEP;
 }
 
+PacketFilter::Action TlsConversationRecorder::FilterRecord(
+    const RecordHeader& header, const DataBuffer& input, DataBuffer* output) {
+  buffer_.Append(input);
+  return KEEP;
+}
+
 PacketFilter::Action TlsAlertRecorder::FilterRecord(const RecordHeader& header,
                                                     const DataBuffer& input,
                                                     DataBuffer* output) {
