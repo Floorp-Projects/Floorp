@@ -99,11 +99,11 @@ function installAddonEngine(name = "engine-addon")
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider,
                                            Ci.nsIDirectoryServiceProvider2]),
 
-    getFile: function (prop, persistant) {
+    getFile: function(prop, persistant) {
       throw Cr.NS_ERROR_FAILURE;
     },
 
-    getFiles: function (prop) {
+    getFiles: function(prop) {
       let result = [];
 
       switch (prop) {

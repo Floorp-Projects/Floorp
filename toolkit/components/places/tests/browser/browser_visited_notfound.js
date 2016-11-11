@@ -31,15 +31,15 @@ function continueTest(aOldFrecency) {
   // Create and add history observer.
   let historyObserver = {
     __proto__: NavHistoryObserver.prototype,
-    onVisit: function (aURI, aVisitID, aTime, aSessionID, aReferringID,
+    onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID,
                       aTransitionType) {
       PlacesUtils.history.removeObserver(historyObserver);
       info("Received onVisit: " + aURI.spec);
-      fieldForUrl(aURI, "frecency", function (aFrecency) {
+      fieldForUrl(aURI, "frecency", function(aFrecency) {
         is(aFrecency, aOldFrecency, "Frecency should be unchanged");
-        fieldForUrl(aURI, "hidden", function (aHidden) {
+        fieldForUrl(aURI, "hidden", function(aHidden) {
           is(aHidden, 0, "Page should not be hidden");
-          fieldForUrl(aURI, "typed", function (aTyped) {
+          fieldForUrl(aURI, "typed", function(aTyped) {
             is(aTyped, 0, "page should not be marked as typed");
             PlacesTestUtils.clearHistory().then(finish);
           });

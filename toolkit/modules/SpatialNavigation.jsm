@@ -23,7 +23,7 @@ this.EXPORTED_SYMBOLS = ["SpatialNavigation"];
 
 var SpatialNavigation = {
   init: function(browser, callback) {
-          browser.addEventListener("keydown", function (event) {
+          browser.addEventListener("keydown", function(event) {
             _onInputKeyPress(event, callback);
           }, true);
   }
@@ -68,7 +68,7 @@ const kShift = "shift";
 const kCtrl  = "ctrl";
 const kNone  = "none";
 
-function _onInputKeyPress (event, callback) {
+function _onInputKeyPress(event, callback) {
   // If Spatial Navigation isn't enabled, return.
   if (!PrefObserver['enabled']) {
     return;

@@ -27,7 +27,7 @@ MockRegistrar.register("@mozilla.org/prompter;1", prompt);
 
 // First test inits the search service
 add_test(function init_search_service() {
-  Services.search.init(function (status) {
+  Services.search.init(function(status) {
     if (!Components.isSuccessCode(status))
       do_throw("Failed to initialize search service");
 
@@ -38,14 +38,14 @@ add_test(function init_search_service() {
 // Simple test of the search callback
 add_test(function simple_callback_test() {
   let searchCallback = {
-    onSuccess: function (engine) {
+    onSuccess: function(engine) {
       do_check_true(!!engine);
       do_check_neq(engine.name, Services.search.defaultEngine.name);
       do_check_eq(engine.wrappedJSObject._loadPath,
                   "[http]localhost/test-search-engine.xml");
       run_next_test();
     },
-    onError: function (errorCode) {
+    onError: function(errorCode) {
       do_throw("search callback returned error: " + errorCode);
     }
   }
@@ -56,10 +56,10 @@ add_test(function simple_callback_test() {
 // Test of the search callback on duplicate engine failures
 add_test(function duplicate_failure_test() {
   let searchCallback = {
-    onSuccess: function (engine) {
+    onSuccess: function(engine) {
       do_throw("this addition should not have succeeded");
     },
-    onError: function (errorCode) {
+    onError: function(errorCode) {
       do_check_true(!!errorCode);
       do_check_eq(errorCode, Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
       run_next_test();
@@ -73,10 +73,10 @@ add_test(function duplicate_failure_test() {
 // Test of the search callback on failure to load the engine failures
 add_test(function load_failure_test() {
   let searchCallback = {
-    onSuccess: function (engine) {
+    onSuccess: function(engine) {
       do_throw("this addition should not have succeeded");
     },
-    onError: function (errorCode) {
+    onError: function(errorCode) {
       do_check_true(!!errorCode);
       do_check_eq(errorCode, Ci.nsISearchInstallCallback.ERROR_UNKNOWN_FAILURE);
       run_next_test();

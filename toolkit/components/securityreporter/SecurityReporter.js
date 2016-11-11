@@ -92,7 +92,7 @@ SecurityReporter.prototype = {
       headers: {
         'Content-Type': 'application/json'
       }
-    }).then(function (aResponse) {
+    }).then(function(aResponse) {
       if (!aResponse.ok) {
         // request returned non-success status
         Services.telemetry.getHistogramById(HISTOGRAM_ID)
@@ -101,7 +101,7 @@ SecurityReporter.prototype = {
         Services.telemetry.getHistogramById(HISTOGRAM_ID)
           .add(TLS_ERROR_REPORT_TELEMETRY_SUCCESS);
       }
-    }).catch(function (e) {
+    }).catch(function(e) {
       // error making request to reportURL
       Services.telemetry.getHistogramById(HISTOGRAM_ID)
           .add(TLS_ERROR_REPORT_TELEMETRY_FAILURE);

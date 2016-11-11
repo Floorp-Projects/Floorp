@@ -58,7 +58,7 @@ function AutoCompleteInput(aSearches) {
 AutoCompleteInput.prototype = {
   popup: {
     selectedIndex: -1,
-    invalidate: function () {},
+    invalidate: function() {},
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup])
   },
   popupOpen: false,
@@ -99,8 +99,8 @@ AutoCompleteInput.prototype = {
     this._selEnd = aEnd;
   },
 
-  onSearchBegin: function () {},
-  onSearchComplete: function () {},
+  onSearchBegin: function() {},
+  onSearchComplete: function() {},
 
   onTextEntered: () => false,
   onTextReverted: () => false,

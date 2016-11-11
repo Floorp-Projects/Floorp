@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 /**
  * Handles the requestAutocomplete user interface.
  */
-this.RequestAutocompleteUI = function (aAutofillData) {
+this.RequestAutocompleteUI = function(aAutofillData) {
   this._autofillData = aAutofillData;
 }
 

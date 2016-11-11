@@ -81,7 +81,7 @@ function changeLocation(aLocation, aNewDir) {
   gDirSvc.undefine(aLocation);
   gDirSvc.set(aLocation, aNewDir);
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     gDirSvc.undefine(aLocation);
     gDirSvc.set(aLocation, oldDir);
   });

@@ -44,7 +44,7 @@ this.UpdateUtils = {
         let partners = Services.prefs.getChildList("app.partner.").sort();
         if (partners.length) {
           channel += "-cck";
-          partners.forEach(function (prefName) {
+          partners.forEach(function(prefName) {
             channel += "-" + Services.prefs.getCharPref(prefName);
           });
         }

@@ -285,7 +285,7 @@ add_task(makeInstallTest(function* (browser) {
 add_task(function* test_permissions() {
   function testBadUrl(url, pattern, successMessage) {
     return BrowserTestUtils.withNewTab(TESTPAGE, function* (browser) {
-      let result = yield ContentTask.spawn(browser, {url, pattern}, function (opts) {
+      let result = yield ContentTask.spawn(browser, {url, pattern}, function(opts) {
         return new Promise(resolve => {
           content.navigator.mozAddonManager.createInstall({url: opts.url})
             .then(() => {

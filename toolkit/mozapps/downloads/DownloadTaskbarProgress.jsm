@@ -196,7 +196,7 @@ var DownloadTaskbarProgressUpdater =
         this._updateTaskbar();
         // _onActiveWindowUnload is idempotent, so we don't need to check whether
         // we've already set this before or not.
-        aWindow.addEventListener("unload", function () {
+        aWindow.addEventListener("unload", function() {
           DownloadTaskbarProgressUpdater._onActiveWindowUnload(taskbarProgress);
         }, false);
       }

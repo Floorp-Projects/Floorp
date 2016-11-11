@@ -213,7 +213,7 @@ TimerManager.prototype = {
         Services.prefs.setIntPref(prefLastUpdate, lastUpdateTime);
       }
 
-      tryFire(function () {
+      tryFire(function() {
         try {
           Components.classes[cid][method](Ci.nsITimerCallback).notify(timer);
           LOG("TimerManager:notify - notified " + cid);
@@ -238,7 +238,7 @@ TimerManager.prototype = {
         timerData.lastUpdateTime = 0;
         Services.prefs.setIntPref(prefLastUpdate, timerData.lastUpdateTime);
       }
-      tryFire(function () {
+      tryFire(function() {
         if (timerData.callback && timerData.callback.notify) {
           try {
             timerData.callback.notify(timer);
@@ -279,7 +279,7 @@ TimerManager.prototype = {
    * Starts the timer, if necessary, and ensures that it will fire soon enough
    * to happen after time |interval| (in milliseconds).
    */
-  _ensureTimer: function (interval) {
+  _ensureTimer: function(interval) {
     if (!this._canEnsureTimer) {
       return;
     }
@@ -296,7 +296,7 @@ TimerManager.prototype = {
   /**
    * Stops the timer, if it is running.
    */
-  _cancelTimer: function () {
+  _cancelTimer: function() {
     if (this._timer) {
       this._timer.cancel();
       this._timer = null;

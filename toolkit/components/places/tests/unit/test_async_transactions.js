@@ -18,7 +18,7 @@ var observer = {
 
   tagRelatedGuids: new Set(),
 
-  reset: function () {
+  reset: function() {
     this.itemsAdded = new Map();
     this.itemsRemoved = new Map();
     this.itemsChanged = new Map();
@@ -27,17 +27,17 @@ var observer = {
     this.endUpdateBatch = false;
   },
 
-  onBeginUpdateBatch: function () {
+  onBeginUpdateBatch: function() {
     this.beginUpdateBatch = true;
   },
 
-  onEndUpdateBatch: function () {
+  onEndUpdateBatch: function() {
     this.endUpdateBatch = true;
   },
 
   onItemAdded:
-  function (aItemId, aParentId, aIndex, aItemType, aURI, aTitle, aDateAdded,
-            aGuid, aParentGuid) {
+  function(aItemId, aParentId, aIndex, aItemType, aURI, aTitle, aDateAdded,
+           aGuid, aParentGuid) {
     // Ignore tag items.
     if (aParentId == PlacesUtils.tagsFolderId ||
         (aParentId != PlacesUtils.placesRootId &&
@@ -55,7 +55,7 @@ var observer = {
   },
 
   onItemRemoved:
-  function (aItemId, aParentId, aIndex, aItemType, aURI, aGuid, aParentGuid) {
+  function(aItemId, aParentId, aIndex, aItemType, aURI, aGuid, aParentGuid) {
     if (this.tagRelatedGuids.has(aGuid))
       return;
 
@@ -65,8 +65,8 @@ var observer = {
   },
 
   onItemChanged:
-  function (aItemId, aProperty, aIsAnnoProperty, aNewValue, aLastModified,
-            aItemType, aParentId, aGuid, aParentGuid) {
+  function(aItemId, aProperty, aIsAnnoProperty, aNewValue, aLastModified,
+           aItemType, aParentId, aGuid, aParentGuid) {
     if (this.tagRelatedGuids.has(aGuid))
       return;
 
@@ -93,8 +93,8 @@ var observer = {
   onItemVisited: () => {},
 
   onItemMoved:
-  function (aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex, aItemType,
-            aGuid, aOldParentGuid, aNewParentGuid) {
+  function(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex, aItemType,
+           aGuid, aOldParentGuid, aNewParentGuid) {
     this.itemsMoved.set(aGuid, { oldParentGuid: aOldParentGuid
                                , oldIndex:      aOldIndex
                                , newParentGuid: aNewParentGuid
@@ -109,7 +109,7 @@ var bmStartIndex = 0;
 
 function run_test() {
   bmsvc.addObserver(observer, false);
-  do_register_cleanup(function () {
+  do_register_cleanup(function() {
     bmsvc.removeObserver(observer);
   });
 

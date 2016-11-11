@@ -124,7 +124,7 @@ var ContentPolicyParent = {
     NotificationTracker.remove(["content-policy", addon]);
   },
 
-  receiveMessage: function (aMessage) {
+  receiveMessage: function(aMessage) {
     switch (aMessage.name) {
       case "Addons:ContentPolicy:Run":
         return this.shouldLoad(aMessage.data, aMessage.objects);
@@ -219,7 +219,7 @@ var AboutProtocolParent = {
     }
   },
 
-  receiveMessage: function (msg) {
+  receiveMessage: function(msg) {
     switch (msg.name) {
       case "Addons:AboutProtocol:GetURIFlags":
         return this.getURIFlags(msg);

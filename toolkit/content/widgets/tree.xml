@@ -1026,7 +1026,7 @@
       <constructor><![CDATA[
         // Set resizeafter="farthest" on the splitters if nothing else has been
         // specified.
-        Array.forEach(this.getElementsByTagName("splitter"), function (splitter) {
+        Array.forEach(this.getElementsByTagName("splitter"), function(splitter) {
           if (!splitter.hasAttribute("resizeafter"))
             splitter.setAttribute("resizeafter", "farthest");
         });

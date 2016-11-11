@@ -174,7 +174,7 @@ this.TelemetryController = Object.freeze({
   /**
    * Send a notification.
    */
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     return Impl.observe(aSubject, aTopic, aData);
   },
 
@@ -430,7 +430,7 @@ var Impl = {
    * Track any pending ping send and save tasks through the promise passed here.
    * This is needed to block shutdown on any outstanding ping activity.
    */
-  _trackPendingPingTask: function (aPromise) {
+  _trackPendingPingTask: function(aPromise) {
     this._connectionsBarrier.client.addBlocker("Waiting for ping task", aPromise);
   },
 
@@ -745,7 +745,7 @@ var Impl = {
    * This triggers basic telemetry initialization for content processes.
    * @param {Boolean} [testing=false] True if we are in test mode, false otherwise.
    */
-  setupContentTelemetry: function (testing = false) {
+  setupContentTelemetry: function(testing = false) {
     this._testMode = testing;
 
     // We call |enableTelemetryRecording| here to make sure that Telemetry.canRecord* flags
@@ -820,7 +820,7 @@ var Impl = {
   /**
    * This observer drives telemetry.
    */
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     // The logger might still be not available at this point.
     if (aTopic == "profile-after-change" || aTopic == "app-startup") {
       // If we don't have a logger, we need to make sure |Log.repository.getLogger()| is

@@ -885,7 +885,7 @@ var getAnno = Task.async(function* (guid, anno) {
   return rows.length ? rows[0].getResultByName("content") : null;
 });
 
-var tagItem = Task.async(function (item, tags) {
+var tagItem = Task.async(function(item, tags) {
   if (!item.url) {
     return [];
   }

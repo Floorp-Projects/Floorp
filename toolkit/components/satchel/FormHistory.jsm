@@ -1045,7 +1045,7 @@ this.FormHistory = {
     }
 
     let pending = stmt.executeAsync({
-      handleResult : function (aResultSet) {
+      handleResult : function(aResultSet) {
         for (let row = aResultSet.getNextRow(); row; row = aResultSet.getNextRow()) {
           let value = row.getResultByName("value");
           let frecency = row.getResultByName("frecency");
@@ -1061,13 +1061,13 @@ this.FormHistory = {
         }
       },
 
-      handleError : function (aError) {
+      handleError : function(aError) {
         if (aCallbacks && aCallbacks.handleError) {
           aCallbacks.handleError(aError);
         }
       },
 
-      handleCompletion : function (aReason) {
+      handleCompletion : function(aReason) {
         if (aCallbacks && aCallbacks.handleCompletion) {
           aCallbacks.handleCompletion(aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED ? 0 : 1);
         }

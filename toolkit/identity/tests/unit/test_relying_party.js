@@ -143,7 +143,7 @@ function test_request() {
   RelyingParty.watch(mockedDoc);
 
   // be ready for the UX identity-request notification
-  makeObserver("identity-request", function (aSubject, aTopic, aData) {
+  makeObserver("identity-request", function(aSubject, aTopic, aData) {
     do_check_neq(aSubject, null);
 
     do_check_eq(aSubject.wrappedJSObject.rpId, mockedDoc.id);

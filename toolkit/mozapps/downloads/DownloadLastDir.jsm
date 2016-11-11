@@ -35,14 +35,14 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 var observer = {
-  QueryInterface: function (aIID) {
+  QueryInterface: function(aIID) {
     if (aIID.equals(Components.interfaces.nsIObserver) ||
         aIID.equals(Components.interfaces.nsISupports) ||
         aIID.equals(Components.interfaces.nsISupportsWeakReference))
       return this;
     throw Components.results.NS_NOINTERFACE;
   },
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "last-pb-context-exited":
         gDownloadLastDirFile = null;
@@ -109,12 +109,12 @@ DownloadLastDir.prototype = {
   // compat shims
   get file() { return this._getLastFile(); },
   set file(val) { this.setFile(null, val); },
-  cleanupPrivateFile: function () {
+  cleanupPrivateFile: function() {
     gDownloadLastDirFile = null;
   },
   // This function is now deprecated as it uses the sync nsIContentPrefService
   // interface. New consumers should use the getFileAsync function.
-  getFile: function (aURI) {
+  getFile: function(aURI) {
     let Deprecated = Components.utils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
     Deprecated.warning("DownloadLastDir.getFile is deprecated. Please use getFileAsync instead.",
                        "https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/DownloadLastDir.jsm",
@@ -132,7 +132,7 @@ DownloadLastDir.prototype = {
     return this._getLastFile();
   },
 
-  _getLastFile: function () {
+  _getLastFile: function() {
     if (gDownloadLastDirFile && !gDownloadLastDirFile.exists())
       gDownloadLastDirFile = null;
 
@@ -171,7 +171,7 @@ DownloadLastDir.prototype = {
     });
   },
 
-  setFile: function (aURI, aFile) {
+  setFile: function(aURI, aFile) {
     if (aURI && isContentPrefEnabled()) {
       let uri = aURI instanceof Components.interfaces.nsIURI ? aURI.spec : aURI;
       let cps2 = Components.classes["@mozilla.org/content-pref/service;1"]

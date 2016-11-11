@@ -104,7 +104,7 @@ ContentProcessSingleton.prototype = {
     }
   },
 
-  receiveMessage: function (message) {
+  receiveMessage: function(message) {
     // load devtools component on-demand
     // Only reply if we are in a real content process
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {

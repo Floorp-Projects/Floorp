@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=619644
 // This is a little yucky, but it works
 // The contents of bug619644_inner.html
 const expectedFinalDoc =
-"<head><\/head><body><p>Original content<\/p>\n<script>\n    window.opener.postMessage(\"\", \"*\");\n    confirm (\"Message\");\n    document.write (\"Extra content\");\n    window.opener.postMessage(document.documentElement.innerHTML, \"*\");\n<\/script>Extra content<\/body>";
+"<head><\/head><body><p>Original content<\/p>\n<script>\n    window.opener.postMessage(\"\", \"*\");\n    confirm(\"Message\");\n    document.write(\"Extra content\");\n    window.opener.postMessage(document.documentElement.innerHTML, \"*\");\n<\/script>Extra content<\/body>";
 
 if (!isTabModal) {
   todo(false, "Test disabled when tab modal prompts are not enabled.");

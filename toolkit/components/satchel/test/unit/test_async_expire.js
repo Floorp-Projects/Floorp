@@ -18,7 +18,7 @@ var checkNotExists = function(num) { do_check_true(!num); next_test(); }
 var TestObserver = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
-  observe : function (subject, topic, data) {
+  observe : function(subject, topic, data) {
     do_check_eq(topic, "satchel-storage-changed");
 
     if (data == "formhistory-expireoldentries") {

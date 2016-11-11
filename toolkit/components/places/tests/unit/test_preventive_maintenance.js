@@ -659,7 +659,7 @@ tests.push({
   setup: function() {
     const NUM_BOOKMARKS = 20;
     bs.runInBatchMode({
-      runBatched: function (aUserData) {
+      runBatched: function(aUserData) {
         // Add bookmarks to two folders to better perturbate the table.
         for (let i = 0; i < NUM_BOOKMARKS; i++) {
           bs.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
@@ -1168,7 +1168,7 @@ tests.push({
     ]);
   },
 
-  check: function () {
+  check: function() {
     return new Promise(resolve => {
       let stmt = mDBConn.createAsyncStatement(
         "SELECT h.url FROM moz_places h WHERE h.hidden = 1"

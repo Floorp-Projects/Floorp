@@ -72,7 +72,7 @@ function waitForFaviconChanged(aExpectedPageURI, aExpectedFaviconURI,
 function checkFaviconDataForPage(aPageURI, aExpectedMimeType, aExpectedData,
                                  aCallback) {
   PlacesUtils.favicons.getFaviconDataForPage(aPageURI,
-    function (aURI, aDataLen, aData, aMimeType) {
+    function(aURI, aDataLen, aData, aMimeType) {
       do_check_eq(aExpectedMimeType, aMimeType);
       do_check_true(compareArrays(aExpectedData, aData));
       do_check_guid_for_uri(aPageURI);
@@ -90,7 +90,7 @@ function checkFaviconDataForPage(aPageURI, aExpectedMimeType, aExpectedData,
  */
 function checkFaviconMissingForPage(aPageURI, aCallback) {
   PlacesUtils.favicons.getFaviconURLForPage(aPageURI,
-    function (aURI, aDataLen, aData, aMimeType) {
+    function(aURI, aDataLen, aData, aMimeType) {
       do_check_true(aURI === null);
       aCallback();
     });

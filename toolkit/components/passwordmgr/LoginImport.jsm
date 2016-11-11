@@ -43,7 +43,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
  * @param aPath
  *        String containing the file path of the SQLite login database.
  */
-this.LoginImport = function (aStore, aPath) {
+this.LoginImport = function(aStore, aPath) {
   this.store = aStore;
   this.path = aPath;
 };

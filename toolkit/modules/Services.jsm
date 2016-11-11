@@ -13,13 +13,13 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.Services = {};
 
-XPCOMUtils.defineLazyGetter(Services, "prefs", function () {
+XPCOMUtils.defineLazyGetter(Services, "prefs", function() {
   return Cc["@mozilla.org/preferences-service;1"]
            .getService(Ci.nsIPrefService)
            .QueryInterface(Ci.nsIPrefBranch);
 });
 
-XPCOMUtils.defineLazyGetter(Services, "appinfo", function () {
+XPCOMUtils.defineLazyGetter(Services, "appinfo", function() {
   let appinfo = Cc["@mozilla.org/xre/app-info;1"]
                   .getService(Ci.nsIXULRuntime);
   try {
@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyGetter(Services, "appinfo", function () {
   return appinfo;
 });
 
-XPCOMUtils.defineLazyGetter(Services, "dirsvc", function () {
+XPCOMUtils.defineLazyGetter(Services, "dirsvc", function() {
   return Cc["@mozilla.org/file/directory_service;1"]
            .getService(Ci.nsIDirectoryService)
            .QueryInterface(Ci.nsIProperties);

@@ -645,7 +645,7 @@ this.TelemetrySession = Object.freeze({
   /**
    * Send a notification.
    */
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     return Impl.observe(aSubject, aTopic, aData);
   },
 });
@@ -981,7 +981,7 @@ var Impl = {
    * @param {keyed} Take a snapshot of keyed or non keyed scalars.
    * @return {Object} The scalar data as a Javascript object.
    */
-  getScalars: function (subsession, clearSubsession, keyed) {
+  getScalars: function(subsession, clearSubsession, keyed) {
     this._log.trace("getScalars - subsession: " + subsession + ", clearSubsession: " +
                     clearSubsession + ", keyed: " + keyed);
 
@@ -1339,7 +1339,7 @@ var Impl = {
   /**
    * Start a new subsession.
    */
-  startNewSubsession: function () {
+  startNewSubsession: function() {
     this._subsessionStartDate = Policy.now();
     this._subsessionStartTimeMonotonic = Policy.monotonicNow();
     this._previousSubsessionId = this._subsessionId;
@@ -1502,7 +1502,7 @@ var Impl = {
           GCTelemetry.init();
         }
 
-        Telemetry.asyncFetchTelemetryData(function () {});
+        Telemetry.asyncFetchTelemetryData(function() {});
 
         if (IS_UNIFIED_TELEMETRY) {
           // Check for a previously written aborted session ping.
@@ -1844,7 +1844,7 @@ var Impl = {
   /**
    * This observer drives telemetry.
    */
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     // Prevent the cycle collector begin topic from cluttering the log.
     if (aTopic != TOPIC_CYCLE_COLLECTOR_BEGIN) {
       this._log.trace("observe - " + aTopic + " notified.");

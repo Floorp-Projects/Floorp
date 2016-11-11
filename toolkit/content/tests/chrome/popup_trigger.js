@@ -51,7 +51,7 @@ var popupTests = [
     gExpectedTriggerNode = gIsMenu ? "notset" : gTrigger;
     synthesizeMouse(gTrigger, 4, 4, { });
   },
-  result: function (testname) {
+  result: function(testname) {
     gExpectedTriggerNode = null;
     // menus are the anchor but non-menus are opened at screen coordinates
     is(gMenuPopup.anchorNode, gIsMenu ? gTrigger : null, testname + " anchorNode");
@@ -305,7 +305,7 @@ var popupTests = [
   test: function() {
     gMenuPopup.openPopup(gTrigger, "other", 0, 0, false, false);
   },
-  result: function (testname) {
+  result: function(testname) {
     var triggerrect = gMenuPopup.getBoundingClientRect();
     var popuprect = gMenuPopup.getBoundingClientRect();
     is(Math.round(popuprect.left), triggerrect.left, testname + " x position ");

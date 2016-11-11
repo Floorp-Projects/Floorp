@@ -140,7 +140,7 @@ this.Integration = new Proxy({}, {
 /**
  * Individual integration point for which overrides can be registered.
  */
-this.IntegrationPoint = function () {
+this.IntegrationPoint = function() {
   this._overrideFns = new Set();
   this._combined = {
     QueryInterface: function() {

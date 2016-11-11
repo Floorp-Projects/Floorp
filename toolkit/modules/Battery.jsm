@@ -40,8 +40,8 @@ this.Debugging = {
   fake: false
 }
 
-this.GetBattery = function () {
-  return new Services.appShell.hiddenDOMWindow.Promise(function (resolve, reject) {
+this.GetBattery = function() {
+  return new Services.appShell.hiddenDOMWindow.Promise(function(resolve, reject) {
     // Return fake values if spoofing is enabled, otherwise fetch the real values from the BatteryManager API
     if (Debugging.fake) {
       resolve(gFakeBattery);

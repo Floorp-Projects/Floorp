@@ -27,7 +27,7 @@ NavHistoryObserver.prototype = {
 function onNotify(callback) {
   return new Promise(resolve => {
     let obs = new NavHistoryObserver();
-    obs[callback.name] = function () {
+    obs[callback.name] = function() {
       PlacesUtils.history.removeObserver(this);
       callback.apply(this, arguments);
       resolve();

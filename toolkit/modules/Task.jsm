@@ -225,7 +225,7 @@ this.Task = {
 };
 
 function createAsyncFunction(aTask) {
-  let asyncFunction = function () {
+  let asyncFunction = function() {
     let result = aTask;
     if (aTask && typeof(aTask) == "function") {
       if (aTask.isAsyncFunction) {

@@ -65,14 +65,14 @@ LightweightThemeConsumer.prototype = {
     return this._enabled ? Cu.cloneInto(this._lastData, this._win) : null;
   },
 
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     if (aTopic != "lightweight-theme-styling-update")
       return;
 
     this._update(JSON.parse(aData));
   },
 
-  handleEvent: function (aEvent) {
+  handleEvent: function(aEvent) {
     let {width, height} = this._win.screen;
 
     if (this._lastScreenWidth != width || this._lastScreenHeight != height) {
@@ -86,7 +86,7 @@ LightweightThemeConsumer.prototype = {
     }
   },
 
-  destroy: function () {
+  destroy: function() {
     if (!PrivateBrowsingUtils.isWindowPrivate(this._win) ||
         PrivateBrowsingUtils.permanentPrivateBrowsing) {
       Services.obs.removeObserver(this, "lightweight-theme-styling-update");
@@ -97,7 +97,7 @@ LightweightThemeConsumer.prototype = {
     this._win = this._doc = null;
   },
 
-  _update: function (aData) {
+  _update: function(aData) {
     if (!aData) {
       aData = { headerURL: "", footerURL: "", textcolor: "", accentcolor: "" };
       this._lastData = aData;

@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
  */
 function promiseNewListAndStore(aStorePath)
 {
-  return promiseNewList().then(function (aList) {
+  return promiseNewList().then(function(aList) {
     let path = aStorePath || getTempFile(TEST_STORE_FILE_NAME).path;
     let store = new DownloadStore(aList, path);
     return [aList, store];
