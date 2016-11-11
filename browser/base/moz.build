@@ -22,6 +22,7 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/popupNotifications/browser.ini',
     'content/test/referrer/browser.ini',
     'content/test/social/browser.ini',
+    'content/test/tabcrashed/browser.ini',
     'content/test/tabPrompts/browser.ini',
     'content/test/tabs/browser.ini',
     'content/test/urlbar/browser.ini',
