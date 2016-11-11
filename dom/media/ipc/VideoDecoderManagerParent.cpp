@@ -101,6 +101,7 @@ VideoDecoderManagerParent::ShutdownThreads()
 {
   sManagerTaskQueue->BeginShutdown();
   sManagerTaskQueue->AwaitShutdownAndIdle();
+  sManagerTaskQueue = nullptr;
 
   sVideoDecoderManagerThread->Dispatch(NS_NewRunnableFunction([]() {
     layers::VideoBridgeChild::Shutdown();

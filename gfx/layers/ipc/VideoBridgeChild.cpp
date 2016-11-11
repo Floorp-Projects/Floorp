@@ -23,20 +23,22 @@ VideoBridgeChild::Startup()
   sVideoBridgeChildSingleton->Open(parent->GetIPCChannel(),
                                    loop,
                                    ipc::ChildSide);
+  sVideoBridgeChildSingleton->mIPDLSelfRef = sVideoBridgeChildSingleton;
   parent->SetOtherProcessId(base::GetCurrentProcId());
 }
 
 /* static */ void
 VideoBridgeChild::Shutdown()
 {
+  sVideoBridgeChildSingleton->Close();
   sVideoBridgeChildSingleton = nullptr;
 
 }
 
 VideoBridgeChild::VideoBridgeChild()
   : mMessageLoop(MessageLoop::current())
+  , mCanSend(true)
 {
-  sVideoBridgeChildSingleton = this;
 }
 
 VideoBridgeChild::~VideoBridgeChild()
@@ -86,6 +88,18 @@ bool
 VideoBridgeChild::DeallocPTextureChild(PTextureChild* actor)
 {
   return TextureClient::DestroyIPDLActor(actor);
+}
+
+void
+VideoBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  mCanSend = false;
+}
+
+void
+VideoBridgeChild::DeallocPVideoBridgeChild()
+{
+  mIPDLSelfRef = nullptr;
 }
 
 PTextureChild*
