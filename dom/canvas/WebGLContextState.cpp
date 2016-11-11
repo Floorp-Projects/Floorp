@@ -281,9 +281,10 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
         case LOCAL_GL_GPU_DISJOINT_EXT:
             {
-                MOZ_ASSERT(gl->IsExtensionSupported(gl::GLContext::EXT_disjoint_timer_query));
-                realGLboolean val = false;
-                gl->fGetBooleanv(pname, &val);
+                realGLboolean val = false; // Not disjoint by default.
+                if (gl->IsExtensionSupported(gl::GLContext::EXT_disjoint_timer_query)) {
+                    gl->fGetBooleanv(pname, &val);
+                }
                 return JS::BooleanValue(val);
             }
 
