@@ -420,40 +420,40 @@ bool
 wasm::DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, ValType expected,
                                   InitExpr* init)
 {
-    uint16_t expr;
-    if (!d.readExpr(&expr))
+    uint16_t op;
+    if (!d.readOp(&op))
         return d.fail("failed to read initializer type");
 
-    switch (expr) {
-      case uint16_t(Expr::I32Const): {
+    switch (op) {
+      case uint16_t(Op::I32Const): {
         int32_t i32;
         if (!d.readVarS32(&i32))
             return d.fail("failed to read initializer i32 expression");
         *init = InitExpr(Val(uint32_t(i32)));
         break;
       }
-      case uint16_t(Expr::I64Const): {
+      case uint16_t(Op::I64Const): {
         int64_t i64;
         if (!d.readVarS64(&i64))
             return d.fail("failed to read initializer i64 expression");
         *init = InitExpr(Val(uint64_t(i64)));
         break;
       }
-      case uint16_t(Expr::F32Const): {
+      case uint16_t(Op::F32Const): {
         RawF32 f32;
         if (!d.readFixedF32(&f32))
             return d.fail("failed to read initializer f32 expression");
         *init = InitExpr(Val(f32));
         break;
       }
-      case uint16_t(Expr::F64Const): {
+      case uint16_t(Op::F64Const): {
         RawF64 f64;
         if (!d.readFixedF64(&f64))
             return d.fail("failed to read initializer f64 expression");
         *init = InitExpr(Val(f64));
         break;
       }
-      case uint16_t(Expr::GetGlobal): {
+      case uint16_t(Op::GetGlobal): {
         uint32_t i;
         if (!d.readVarU32(&i))
             return d.fail("failed to read get_global index in initializer expression");
@@ -473,7 +473,7 @@ wasm::DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, V
         return d.fail("type mismatch: initializer type and expected type don't match");
 
     uint16_t end;
-    if (!d.readExpr(&end) || end != uint16_t(Expr::End))
+    if (!d.readOp(&end) || end != uint16_t(Op::End))
         return d.fail("failed to read end of initializer expression");
 
     return true;

@@ -113,7 +113,7 @@ enum class MemoryTableFlags
     Default                              = 0x0
 };
 
-enum class Expr
+enum class Op
 {
     // Control flow operators
     Unreachable                          = 0x00,

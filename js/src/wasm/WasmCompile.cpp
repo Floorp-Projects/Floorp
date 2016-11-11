@@ -33,26 +33,26 @@ using mozilla::IsNaN;
 
 namespace {
 
-struct ValidatingPolicy : ExprIterPolicy
+struct ValidatingPolicy : OpIterPolicy
 {
     // Validation is what we're all about here.
     static const bool Validate = true;
 };
 
-typedef ExprIter<ValidatingPolicy> ValidatingExprIter;
+typedef OpIter<ValidatingPolicy> ValidatingOpIter;
 
 class FunctionDecoder
 {
     const ModuleGenerator& mg_;
     const ValTypeVector& locals_;
-    ValidatingExprIter iter_;
+    ValidatingOpIter iter_;
 
   public:
     FunctionDecoder(const ModuleGenerator& mg, const ValTypeVector& locals, Decoder& d)
       : mg_(mg), locals_(locals), iter_(d)
     {}
     const ModuleGenerator& mg() const { return mg_; }
-    ValidatingExprIter& iter() { return iter_; }
+    ValidatingOpIter& iter() { return iter_; }
     const ValTypeVector& locals() const { return locals_; }
 
     bool checkHasMemory() {
@@ -150,258 +150,258 @@ DecodeFunctionBodyExprs(FunctionDecoder& f)
 #define CHECK(c) if (!(c)) return false; break
 
     while (true) {
-        uint16_t expr;
-        if (!f.iter().readExpr(&expr))
+        uint16_t op;
+        if (!f.iter().readOp(&op))
             return false;
 
-        switch (expr) {
-          case uint16_t(Expr::End):
+        switch (op) {
+          case uint16_t(Op::End):
             if (!f.iter().readEnd(nullptr, nullptr, nullptr))
                 return false;
             if (f.iter().controlStackEmpty())
                 return true;
             break;
-          case uint16_t(Expr::Nop):
+          case uint16_t(Op::Nop):
             CHECK(f.iter().readNop());
-          case uint16_t(Expr::Drop):
+          case uint16_t(Op::Drop):
             CHECK(f.iter().readDrop());
-          case uint16_t(Expr::Call):
+          case uint16_t(Op::Call):
             CHECK(DecodeCall(f));
-          case uint16_t(Expr::CallIndirect):
+          case uint16_t(Op::CallIndirect):
             CHECK(DecodeCallIndirect(f));
-          case uint16_t(Expr::I32Const):
+          case uint16_t(Op::I32Const):
             CHECK(f.iter().readI32Const(nullptr));
-          case uint16_t(Expr::I64Const):
+          case uint16_t(Op::I64Const):
             CHECK(f.iter().readI64Const(nullptr));
-          case uint16_t(Expr::F32Const):
+          case uint16_t(Op::F32Const):
             CHECK(f.iter().readF32Const(nullptr));
-          case uint16_t(Expr::F64Const):
+          case uint16_t(Op::F64Const):
             CHECK(f.iter().readF64Const(nullptr));
-          case uint16_t(Expr::GetLocal):
+          case uint16_t(Op::GetLocal):
             CHECK(f.iter().readGetLocal(f.locals(), nullptr));
-          case uint16_t(Expr::SetLocal):
+          case uint16_t(Op::SetLocal):
             CHECK(f.iter().readSetLocal(f.locals(), nullptr, nullptr));
-          case uint16_t(Expr::TeeLocal):
+          case uint16_t(Op::TeeLocal):
             CHECK(f.iter().readTeeLocal(f.locals(), nullptr, nullptr));
-          case uint16_t(Expr::GetGlobal):
+          case uint16_t(Op::GetGlobal):
             CHECK(f.iter().readGetGlobal(f.mg().globals(), nullptr));
-          case uint16_t(Expr::SetGlobal):
+          case uint16_t(Op::SetGlobal):
             CHECK(f.iter().readSetGlobal(f.mg().globals(), nullptr, nullptr));
-          case uint16_t(Expr::Select):
+          case uint16_t(Op::Select):
             CHECK(f.iter().readSelect(nullptr, nullptr, nullptr, nullptr));
-          case uint16_t(Expr::Block):
+          case uint16_t(Op::Block):
             CHECK(f.iter().readBlock());
-          case uint16_t(Expr::Loop):
+          case uint16_t(Op::Loop):
             CHECK(f.iter().readLoop());
-          case uint16_t(Expr::If):
+          case uint16_t(Op::If):
             CHECK(f.iter().readIf(nullptr));
-          case uint16_t(Expr::Else):
+          case uint16_t(Op::Else):
             CHECK(f.iter().readElse(nullptr, nullptr));
-          case uint16_t(Expr::I32Clz):
-          case uint16_t(Expr::I32Ctz):
-          case uint16_t(Expr::I32Popcnt):
+          case uint16_t(Op::I32Clz):
+          case uint16_t(Op::I32Ctz):
+          case uint16_t(Op::I32Popcnt):
             CHECK(f.iter().readUnary(ValType::I32, nullptr));
-          case uint16_t(Expr::I64Clz):
-          case uint16_t(Expr::I64Ctz):
-          case uint16_t(Expr::I64Popcnt):
+          case uint16_t(Op::I64Clz):
+          case uint16_t(Op::I64Ctz):
+          case uint16_t(Op::I64Popcnt):
             CHECK(f.iter().readUnary(ValType::I64, nullptr));
-          case uint16_t(Expr::F32Abs):
-          case uint16_t(Expr::F32Neg):
-          case uint16_t(Expr::F32Ceil):
-          case uint16_t(Expr::F32Floor):
-          case uint16_t(Expr::F32Sqrt):
-          case uint16_t(Expr::F32Trunc):
-          case uint16_t(Expr::F32Nearest):
+          case uint16_t(Op::F32Abs):
+          case uint16_t(Op::F32Neg):
+          case uint16_t(Op::F32Ceil):
+          case uint16_t(Op::F32Floor):
+          case uint16_t(Op::F32Sqrt):
+          case uint16_t(Op::F32Trunc):
+          case uint16_t(Op::F32Nearest):
             CHECK(f.iter().readUnary(ValType::F32, nullptr));
-          case uint16_t(Expr::F64Abs):
-          case uint16_t(Expr::F64Neg):
-          case uint16_t(Expr::F64Ceil):
-          case uint16_t(Expr::F64Floor):
-          case uint16_t(Expr::F64Sqrt):
-          case uint16_t(Expr::F64Trunc):
-          case uint16_t(Expr::F64Nearest):
+          case uint16_t(Op::F64Abs):
+          case uint16_t(Op::F64Neg):
+          case uint16_t(Op::F64Ceil):
+          case uint16_t(Op::F64Floor):
+          case uint16_t(Op::F64Sqrt):
+          case uint16_t(Op::F64Trunc):
+          case uint16_t(Op::F64Nearest):
             CHECK(f.iter().readUnary(ValType::F64, nullptr));
-          case uint16_t(Expr::I32Add):
-          case uint16_t(Expr::I32Sub):
-          case uint16_t(Expr::I32Mul):
-          case uint16_t(Expr::I32DivS):
-          case uint16_t(Expr::I32DivU):
-          case uint16_t(Expr::I32RemS):
-          case uint16_t(Expr::I32RemU):
-          case uint16_t(Expr::I32And):
-          case uint16_t(Expr::I32Or):
-          case uint16_t(Expr::I32Xor):
-          case uint16_t(Expr::I32Shl):
-          case uint16_t(Expr::I32ShrS):
-          case uint16_t(Expr::I32ShrU):
-          case uint16_t(Expr::I32Rotl):
-          case uint16_t(Expr::I32Rotr):
+          case uint16_t(Op::I32Add):
+          case uint16_t(Op::I32Sub):
+          case uint16_t(Op::I32Mul):
+          case uint16_t(Op::I32DivS):
+          case uint16_t(Op::I32DivU):
+          case uint16_t(Op::I32RemS):
+          case uint16_t(Op::I32RemU):
+          case uint16_t(Op::I32And):
+          case uint16_t(Op::I32Or):
+          case uint16_t(Op::I32Xor):
+          case uint16_t(Op::I32Shl):
+          case uint16_t(Op::I32ShrS):
+          case uint16_t(Op::I32ShrU):
+          case uint16_t(Op::I32Rotl):
+          case uint16_t(Op::I32Rotr):
             CHECK(f.iter().readBinary(ValType::I32, nullptr, nullptr));
-          case uint16_t(Expr::I64Add):
-          case uint16_t(Expr::I64Sub):
-          case uint16_t(Expr::I64Mul):
-          case uint16_t(Expr::I64DivS):
-          case uint16_t(Expr::I64DivU):
-          case uint16_t(Expr::I64RemS):
-          case uint16_t(Expr::I64RemU):
-          case uint16_t(Expr::I64And):
-          case uint16_t(Expr::I64Or):
-          case uint16_t(Expr::I64Xor):
-          case uint16_t(Expr::I64Shl):
-          case uint16_t(Expr::I64ShrS):
-          case uint16_t(Expr::I64ShrU):
-          case uint16_t(Expr::I64Rotl):
-          case uint16_t(Expr::I64Rotr):
+          case uint16_t(Op::I64Add):
+          case uint16_t(Op::I64Sub):
+          case uint16_t(Op::I64Mul):
+          case uint16_t(Op::I64DivS):
+          case uint16_t(Op::I64DivU):
+          case uint16_t(Op::I64RemS):
+          case uint16_t(Op::I64RemU):
+          case uint16_t(Op::I64And):
+          case uint16_t(Op::I64Or):
+          case uint16_t(Op::I64Xor):
+          case uint16_t(Op::I64Shl):
+          case uint16_t(Op::I64ShrS):
+          case uint16_t(Op::I64ShrU):
+          case uint16_t(Op::I64Rotl):
+          case uint16_t(Op::I64Rotr):
             CHECK(f.iter().readBinary(ValType::I64, nullptr, nullptr));
-          case uint16_t(Expr::F32Add):
-          case uint16_t(Expr::F32Sub):
-          case uint16_t(Expr::F32Mul):
-          case uint16_t(Expr::F32Div):
-          case uint16_t(Expr::F32Min):
-          case uint16_t(Expr::F32Max):
-          case uint16_t(Expr::F32CopySign):
+          case uint16_t(Op::F32Add):
+          case uint16_t(Op::F32Sub):
+          case uint16_t(Op::F32Mul):
+          case uint16_t(Op::F32Div):
+          case uint16_t(Op::F32Min):
+          case uint16_t(Op::F32Max):
+          case uint16_t(Op::F32CopySign):
             CHECK(f.iter().readBinary(ValType::F32, nullptr, nullptr));
-          case uint16_t(Expr::F64Add):
-          case uint16_t(Expr::F64Sub):
-          case uint16_t(Expr::F64Mul):
-          case uint16_t(Expr::F64Div):
-          case uint16_t(Expr::F64Min):
-          case uint16_t(Expr::F64Max):
-          case uint16_t(Expr::F64CopySign):
+          case uint16_t(Op::F64Add):
+          case uint16_t(Op::F64Sub):
+          case uint16_t(Op::F64Mul):
+          case uint16_t(Op::F64Div):
+          case uint16_t(Op::F64Min):
+          case uint16_t(Op::F64Max):
+          case uint16_t(Op::F64CopySign):
             CHECK(f.iter().readBinary(ValType::F64, nullptr, nullptr));
-          case uint16_t(Expr::I32Eq):
-          case uint16_t(Expr::I32Ne):
-          case uint16_t(Expr::I32LtS):
-          case uint16_t(Expr::I32LtU):
-          case uint16_t(Expr::I32LeS):
-          case uint16_t(Expr::I32LeU):
-          case uint16_t(Expr::I32GtS):
-          case uint16_t(Expr::I32GtU):
-          case uint16_t(Expr::I32GeS):
-          case uint16_t(Expr::I32GeU):
+          case uint16_t(Op::I32Eq):
+          case uint16_t(Op::I32Ne):
+          case uint16_t(Op::I32LtS):
+          case uint16_t(Op::I32LtU):
+          case uint16_t(Op::I32LeS):
+          case uint16_t(Op::I32LeU):
+          case uint16_t(Op::I32GtS):
+          case uint16_t(Op::I32GtU):
+          case uint16_t(Op::I32GeS):
+          case uint16_t(Op::I32GeU):
             CHECK(f.iter().readComparison(ValType::I32, nullptr, nullptr));
-          case uint16_t(Expr::I64Eq):
-          case uint16_t(Expr::I64Ne):
-          case uint16_t(Expr::I64LtS):
-          case uint16_t(Expr::I64LtU):
-          case uint16_t(Expr::I64LeS):
-          case uint16_t(Expr::I64LeU):
-          case uint16_t(Expr::I64GtS):
-          case uint16_t(Expr::I64GtU):
-          case uint16_t(Expr::I64GeS):
-          case uint16_t(Expr::I64GeU):
+          case uint16_t(Op::I64Eq):
+          case uint16_t(Op::I64Ne):
+          case uint16_t(Op::I64LtS):
+          case uint16_t(Op::I64LtU):
+          case uint16_t(Op::I64LeS):
+          case uint16_t(Op::I64LeU):
+          case uint16_t(Op::I64GtS):
+          case uint16_t(Op::I64GtU):
+          case uint16_t(Op::I64GeS):
+          case uint16_t(Op::I64GeU):
             CHECK(f.iter().readComparison(ValType::I64, nullptr, nullptr));
-          case uint16_t(Expr::F32Eq):
-          case uint16_t(Expr::F32Ne):
-          case uint16_t(Expr::F32Lt):
-          case uint16_t(Expr::F32Le):
-          case uint16_t(Expr::F32Gt):
-          case uint16_t(Expr::F32Ge):
+          case uint16_t(Op::F32Eq):
+          case uint16_t(Op::F32Ne):
+          case uint16_t(Op::F32Lt):
+          case uint16_t(Op::F32Le):
+          case uint16_t(Op::F32Gt):
+          case uint16_t(Op::F32Ge):
             CHECK(f.iter().readComparison(ValType::F32, nullptr, nullptr));
-          case uint16_t(Expr::F64Eq):
-          case uint16_t(Expr::F64Ne):
-          case uint16_t(Expr::F64Lt):
-          case uint16_t(Expr::F64Le):
-          case uint16_t(Expr::F64Gt):
-          case uint16_t(Expr::F64Ge):
+          case uint16_t(Op::F64Eq):
+          case uint16_t(Op::F64Ne):
+          case uint16_t(Op::F64Lt):
+          case uint16_t(Op::F64Le):
+          case uint16_t(Op::F64Gt):
+          case uint16_t(Op::F64Ge):
             CHECK(f.iter().readComparison(ValType::F64, nullptr, nullptr));
-          case uint16_t(Expr::I32Eqz):
+          case uint16_t(Op::I32Eqz):
             CHECK(f.iter().readConversion(ValType::I32, ValType::I32, nullptr));
-          case uint16_t(Expr::I64Eqz):
-          case uint16_t(Expr::I32WrapI64):
+          case uint16_t(Op::I64Eqz):
+          case uint16_t(Op::I32WrapI64):
             CHECK(f.iter().readConversion(ValType::I64, ValType::I32, nullptr));
-          case uint16_t(Expr::I32TruncSF32):
-          case uint16_t(Expr::I32TruncUF32):
-          case uint16_t(Expr::I32ReinterpretF32):
+          case uint16_t(Op::I32TruncSF32):
+          case uint16_t(Op::I32TruncUF32):
+          case uint16_t(Op::I32ReinterpretF32):
             CHECK(f.iter().readConversion(ValType::F32, ValType::I32, nullptr));
-          case uint16_t(Expr::I32TruncSF64):
-          case uint16_t(Expr::I32TruncUF64):
+          case uint16_t(Op::I32TruncSF64):
+          case uint16_t(Op::I32TruncUF64):
             CHECK(f.iter().readConversion(ValType::F64, ValType::I32, nullptr));
-          case uint16_t(Expr::I64ExtendSI32):
-          case uint16_t(Expr::I64ExtendUI32):
+          case uint16_t(Op::I64ExtendSI32):
+          case uint16_t(Op::I64ExtendUI32):
             CHECK(f.iter().readConversion(ValType::I32, ValType::I64, nullptr));
-          case uint16_t(Expr::I64TruncSF32):
-          case uint16_t(Expr::I64TruncUF32):
+          case uint16_t(Op::I64TruncSF32):
+          case uint16_t(Op::I64TruncUF32):
             CHECK(f.iter().readConversion(ValType::F32, ValType::I64, nullptr));
-          case uint16_t(Expr::I64TruncSF64):
-          case uint16_t(Expr::I64TruncUF64):
-          case uint16_t(Expr::I64ReinterpretF64):
+          case uint16_t(Op::I64TruncSF64):
+          case uint16_t(Op::I64TruncUF64):
+          case uint16_t(Op::I64ReinterpretF64):
             CHECK(f.iter().readConversion(ValType::F64, ValType::I64, nullptr));
-          case uint16_t(Expr::F32ConvertSI32):
-          case uint16_t(Expr::F32ConvertUI32):
-          case uint16_t(Expr::F32ReinterpretI32):
+          case uint16_t(Op::F32ConvertSI32):
+          case uint16_t(Op::F32ConvertUI32):
+          case uint16_t(Op::F32ReinterpretI32):
             CHECK(f.iter().readConversion(ValType::I32, ValType::F32, nullptr));
-          case uint16_t(Expr::F32ConvertSI64):
-          case uint16_t(Expr::F32ConvertUI64):
+          case uint16_t(Op::F32ConvertSI64):
+          case uint16_t(Op::F32ConvertUI64):
             CHECK(f.iter().readConversion(ValType::I64, ValType::F32, nullptr));
-          case uint16_t(Expr::F32DemoteF64):
+          case uint16_t(Op::F32DemoteF64):
             CHECK(f.iter().readConversion(ValType::F64, ValType::F32, nullptr));
-          case uint16_t(Expr::F64ConvertSI32):
-          case uint16_t(Expr::F64ConvertUI32):
+          case uint16_t(Op::F64ConvertSI32):
+          case uint16_t(Op::F64ConvertUI32):
             CHECK(f.iter().readConversion(ValType::I32, ValType::F64, nullptr));
-          case uint16_t(Expr::F64ConvertSI64):
-          case uint16_t(Expr::F64ConvertUI64):
-          case uint16_t(Expr::F64ReinterpretI64):
+          case uint16_t(Op::F64ConvertSI64):
+          case uint16_t(Op::F64ConvertUI64):
+          case uint16_t(Op::F64ReinterpretI64):
             CHECK(f.iter().readConversion(ValType::I64, ValType::F64, nullptr));
-          case uint16_t(Expr::F64PromoteF32):
+          case uint16_t(Op::F64PromoteF32):
             CHECK(f.iter().readConversion(ValType::F32, ValType::F64, nullptr));
-          case uint16_t(Expr::I32Load8S):
-          case uint16_t(Expr::I32Load8U):
+          case uint16_t(Op::I32Load8S):
+          case uint16_t(Op::I32Load8U):
             CHECK(f.checkHasMemory() && f.iter().readLoad(ValType::I32, 1, nullptr));
-          case uint16_t(Expr::I32Load16S):
-          case uint16_t(Expr::I32Load16U):
+          case uint16_t(Op::I32Load16S):
+          case uint16_t(Op::I32Load16U):
             CHECK(f.checkHasMemory() && f.iter().readLoad(ValType::I32, 2, nullptr));
-          case uint16_t(Expr::I32Load):
+          case uint16_t(Op::I32Load):
             CHECK(f.checkHasMemory() && f.iter().readLoad(ValType::I32, 4, nullptr));
-          case uint16_t(Expr::I64Load8S):
-          case uint16_t(Expr::I64Load8U):
+          case uint16_t(Op::I64Load8S):
+          case uint16_t(Op::I64Load8U):
             CHECK(f.checkHasMemory() && f.iter().readLoad(ValType::I64, 1, nullptr));
-          case uint16_t(Expr::I64Load16S):
-          case uint16_t(Expr::I64Load16U):
+          case uint16_t(Op::I64Load16S):
+          case uint16_t(Op::I64Load16U):
             CHECK(f.checkHasMemory() && f.iter().readLoad(ValType::I64, 2, nullptr));
-          case uint16_t(Expr::I64Load32S):
-          case uint16_t(Expr::I64Load32U):
+          case uint16_t(Op::I64Load32S):
+          case uint16_t(Op::I64Load32U):
             CHECK(f.checkHasMemory() && f.iter().readLoad(ValType::I64, 4, nullptr));
-          case uint16_t(Expr::I64Load):
+          case uint16_t(Op::I64Load):
             CHECK(f.checkHasMemory() && f.iter().readLoad(ValType::I64, 8, nullptr));
-          case uint16_t(Expr::F32Load):
+          case uint16_t(Op::F32Load):
             CHECK(f.checkHasMemory() && f.iter().readLoad(ValType::F32, 4, nullptr));
-          case uint16_t(Expr::F64Load):
+          case uint16_t(Op::F64Load):
             CHECK(f.checkHasMemory() && f.iter().readLoad(ValType::F64, 8, nullptr));
-          case uint16_t(Expr::I32Store8):
+          case uint16_t(Op::I32Store8):
             CHECK(f.checkHasMemory() && f.iter().readStore(ValType::I32, 1, nullptr, nullptr));
-          case uint16_t(Expr::I32Store16):
+          case uint16_t(Op::I32Store16):
             CHECK(f.checkHasMemory() && f.iter().readStore(ValType::I32, 2, nullptr, nullptr));
-          case uint16_t(Expr::I32Store):
+          case uint16_t(Op::I32Store):
             CHECK(f.checkHasMemory() && f.iter().readStore(ValType::I32, 4, nullptr, nullptr));
-          case uint16_t(Expr::I64Store8):
+          case uint16_t(Op::I64Store8):
             CHECK(f.checkHasMemory() && f.iter().readStore(ValType::I64, 1, nullptr, nullptr));
-          case uint16_t(Expr::I64Store16):
+          case uint16_t(Op::I64Store16):
             CHECK(f.checkHasMemory() && f.iter().readStore(ValType::I64, 2, nullptr, nullptr));
-          case uint16_t(Expr::I64Store32):
+          case uint16_t(Op::I64Store32):
             CHECK(f.checkHasMemory() && f.iter().readStore(ValType::I64, 4, nullptr, nullptr));
-          case uint16_t(Expr::I64Store):
+          case uint16_t(Op::I64Store):
             CHECK(f.checkHasMemory() && f.iter().readStore(ValType::I64, 8, nullptr, nullptr));
-          case uint16_t(Expr::F32Store):
+          case uint16_t(Op::F32Store):
             CHECK(f.checkHasMemory() && f.iter().readStore(ValType::F32, 4, nullptr, nullptr));
-          case uint16_t(Expr::F64Store):
+          case uint16_t(Op::F64Store):
             CHECK(f.checkHasMemory() && f.iter().readStore(ValType::F64, 8, nullptr, nullptr));
-          case uint16_t(Expr::GrowMemory):
+          case uint16_t(Op::GrowMemory):
             CHECK(f.checkHasMemory() && f.iter().readGrowMemory(nullptr));
-          case uint16_t(Expr::CurrentMemory):
+          case uint16_t(Op::CurrentMemory):
             CHECK(f.checkHasMemory() && f.iter().readCurrentMemory());
-          case uint16_t(Expr::Br):
+          case uint16_t(Op::Br):
             CHECK(f.iter().readBr(nullptr, nullptr, nullptr));
-          case uint16_t(Expr::BrIf):
+          case uint16_t(Op::BrIf):
             CHECK(f.iter().readBrIf(nullptr, nullptr, nullptr, nullptr));
-          case uint16_t(Expr::BrTable):
+          case uint16_t(Op::BrTable):
             CHECK(DecodeBrTable(f));
-          case uint16_t(Expr::Return):
+          case uint16_t(Op::Return):
             CHECK(f.iter().readReturn(nullptr));
-          case uint16_t(Expr::Unreachable):
+          case uint16_t(Op::Unreachable):
             CHECK(f.iter().readUnreachable());
           default:
-            return f.iter().unrecognizedOpcode(expr);
+            return f.iter().unrecognizedOpcode(op);
         }
     }
 

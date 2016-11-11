@@ -855,7 +855,7 @@ enum class Trap
 
 // A wrapper around the bytecode offset of a wasm instruction within a whole
 // module. Trap offsets should refer to the first byte of the instruction that
-// triggered the trap and should ultimately derive from ExprIter::trapOffset.
+// triggered the trap and should ultimately derive from OpIter::trapOffset.
 
 struct TrapOffset
 {
