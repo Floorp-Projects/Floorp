@@ -554,6 +554,10 @@ public:
    */
   bool IsAllowedToDispatchDOMEvent() const;
   /**
+   * Whether the event should be dispatched in system group.
+   */
+  bool IsAllowedToDispatchInSystemGroup() const;
+  /**
    * Initialize mComposed
    */
   void SetDefaultComposed()
