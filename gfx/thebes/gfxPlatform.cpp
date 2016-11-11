@@ -617,8 +617,13 @@ gfxPlatform::Init()
     if (XRE_IsParentProcess()) {
       GPUProcessManager::Initialize();
 
-      gfxVars::SetPDMWMFDisableD3D11Dlls(Preferences::GetCString("media.wmf.disable-d3d11-for-dlls"));
-      gfxVars::SetPDMWMFDisableD3D9Dlls(Preferences::GetCString("media.wmf.disable-d3d9-for-dlls"));
+      if (Preferences::GetBool("media.wmf.skip-blacklist")) {
+        gfxVars::SetPDMWMFDisableD3D11Dlls(nsCString());
+        gfxVars::SetPDMWMFDisableD3D9Dlls(nsCString());
+      } else {
+        gfxVars::SetPDMWMFDisableD3D11Dlls(Preferences::GetCString("media.wmf.disable-d3d11-for-dlls"));
+        gfxVars::SetPDMWMFDisableD3D9Dlls(Preferences::GetCString("media.wmf.disable-d3d9-for-dlls"));
+      }
     }
 
     // Drop a note in the crash report if we end up forcing an option that could
