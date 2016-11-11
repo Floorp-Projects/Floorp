@@ -4469,17 +4469,6 @@ NS_IMETHODIMP nsDocumentViewer::SetPageMode(bool aPageMode, nsIPrintSettings* aP
   mViewManager  = nullptr;
   mWindow       = nullptr;
 
-  // We're creating a new presentation context for an existing document.
-  // Remove and reinsert the root from the DOM, which will cause us to
-  // drop any associated layout data (i.e. ServoElementData).
-  Element* root = mDocument->GetRootElement();
-  if (root) {
-    auto index = mDocument->IndexOf(root);
-    MOZ_ASSERT(index >= 0);
-    mDocument->RemoveChildAt(index, /* aNotify = */ false);
-    mDocument->InsertChildAt(root, index, /* aNotify = */ false);
-  }
-
   NS_ENSURE_STATE(mDocument);
   if (aPageMode)
   {    
