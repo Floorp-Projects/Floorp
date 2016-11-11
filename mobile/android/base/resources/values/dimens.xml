@@ -33,6 +33,9 @@
     <dimen name="tablet_nav_button_width_half">21dp</dimen>
     <dimen name="tablet_nav_button_width_plus_half">63dp</dimen>
 
+    <dimen name="tablet_fwd_button_padding_start">18dp</dimen>
+    <dimen name="tablet_fwd_button_padding_end">0dp</dimen>
+
     <!-- This is the system default for the vertical padding for the divider of the TabWidget.
          Used to mimic the divider padding on the tablet tabs panel back button. -->
     <dimen name="tab_panel_divider_vertical_padding">12dp</dimen>
@@ -70,7 +73,7 @@
     <!-- Site security icon -->
     <dimen name="browser_toolbar_site_security_height">32dp</dimen>
     <dimen name="browser_toolbar_site_security_width">32dp</dimen>
-    <dimen name="browser_toolbar_site_security_margin_right">0dp</dimen>
+    <dimen name="browser_toolbar_site_security_margin_end">0dp</dimen>
     <dimen name="browser_toolbar_site_security_padding_vertical">7dp</dimen>
     <dimen name="browser_toolbar_site_security_padding_horizontal">7dp</dimen>
 
@@ -185,10 +188,10 @@
     <dimen name="tab_history_favicon_padding">5dp</dimen>
     <dimen name="tab_history_favicon_border_enabled">3dp</dimen>
     <dimen name="tab_history_favicon_border_disabled">1dp</dimen>
-    <dimen name="tab_history_combo_margin_left">15dp</dimen>
-    <dimen name="tab_history_combo_margin_right">15dp</dimen>
+    <dimen name="tab_history_combo_margin_start">15dp</dimen>
+    <dimen name="tab_history_combo_margin_end">15dp</dimen>
     <dimen name="tab_history_title_fading_width">50dp</dimen>
-    <dimen name="tab_history_title_margin_right">15dp</dimen>
+    <dimen name="tab_history_title_margin_end">15dp</dimen>
     <dimen name="tab_history_title_text_size">14sp</dimen>
     <dimen name="tab_history_bg_width">2dp</dimen>
     <dimen name="tab_history_border_padding">2dp</dimen>
@@ -198,11 +201,11 @@
     <dimen name="drawable_dropshadow_size">3dp</dimen>
 
     <!-- Find-In-Page dialog dimensions. -->
-    <dimen name="find_in_page_text_margin_left">5dip</dimen>
-    <dimen name="find_in_page_text_margin_right">12dip</dimen>
-    <dimen name="find_in_page_text_padding_left">10dip</dimen>
-    <dimen name="find_in_page_text_padding_right">10dip</dimen>
-    <dimen name="find_in_page_status_margin_right">10dip</dimen>
+    <dimen name="find_in_page_text_margin_start">5dip</dimen>
+    <dimen name="find_in_page_text_margin_end">12dip</dimen>
+    <dimen name="find_in_page_text_padding_start">10dip</dimen>
+    <dimen name="find_in_page_text_padding_end">10dip</dimen>
+    <dimen name="find_in_page_status_margin_end">10dip</dimen>
     <dimen name="find_in_page_control_margin_top">2dip</dimen>
     <dimen name="progress_bar_scroll_offset">1.5dp</dimen>
 
