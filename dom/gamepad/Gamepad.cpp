@@ -21,7 +21,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Gamepad)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Gamepad, mParent, mButtons)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Gamepad, mParent, mButtons, mPose)
 
 void
 Gamepad::UpdateTimestamp()
@@ -52,6 +52,7 @@ Gamepad::Gamepad(nsISupports* aParent,
     mButtons.InsertElementAt(i, new GamepadButton(mParent));
   }
   mAxes.InsertElementsAt(0, aNumAxes, 0.0f);
+  mPose = new GamepadPose(aParent);
   UpdateTimestamp();
 }
 
@@ -88,8 +89,16 @@ Gamepad::SetAxis(uint32_t aAxis, double aValue)
 }
 
 void
+Gamepad::SetPose(const GamepadPoseState& aPose)
+{
+  mPose->SetPoseState(aPose);
+}
+
+void
 Gamepad::SyncState(Gamepad* aOther)
 {
+  const char* kGamepadExtEnabledPref = "dom.gamepad.extensions.enabled";
+
   if (mButtons.Length() != aOther->mButtons.Length() ||
       mAxes.Length() != aOther->mAxes.Length()) {
     return;
@@ -100,6 +109,7 @@ Gamepad::SyncState(Gamepad* aOther)
     mButtons[i]->SetPressed(aOther->mButtons[i]->Pressed());
     mButtons[i]->SetValue(aOther->mButtons[i]->Value());
   }
+
   bool changed = false;
   for (uint32_t i = 0; i < mAxes.Length(); ++i) {
     changed = changed || (mAxes[i] != aOther->mAxes[i]);
@@ -108,6 +118,12 @@ Gamepad::SyncState(Gamepad* aOther)
   if (changed) {
     GamepadBinding::ClearCachedAxesValue(this);
   }
+
+  if (Preferences::GetBool(kGamepadExtEnabledPref)) {
+    MOZ_ASSERT(aOther->GetPose());
+    mPose->SetPoseState(aOther->GetPose()->GetPoseState());
+  }
+
   UpdateTimestamp();
 }
 

@@ -421,6 +421,7 @@ BrowserGlue.prototype = {
       tag: 7,
       visiturl: 8,
       remotetab: 9,
+      extension: 10,
     };
     if (actionType in buckets) {
       Services.telemetry

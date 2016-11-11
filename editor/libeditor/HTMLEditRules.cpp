@@ -1956,6 +1956,19 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
                                    DeprecatedAbs(eo - so));
       NS_ENSURE_SUCCESS(rv, rv);
 
+      // XXX When Backspace key is pressed, Chromium removes following empty
+      //     text nodes when removing the last character of the non-empty text
+      //     node.  However, Edge never removes empty text nodes even if
+      //     selection is in the following empty text node(s).  For now, we
+      //     should keep our traditional behavior same as Edge for backward
+      //     compatibility.
+      // XXX When Delete key is pressed, Edge removes all preceding empty
+      //     text nodes when removing the first character of the non-empty
+      //     text node.  Chromium removes only selected empty text node and
+      //     following empty text nodes and the first character of the
+      //     non-empty text node.  For now, we should keep our traditional
+      //     behavior same as Chromium for backward compatibility.
+
       DeleteNodeIfCollapsedText(nodeAsText);
 
       rv = InsertBRIfNeeded(aSelection);

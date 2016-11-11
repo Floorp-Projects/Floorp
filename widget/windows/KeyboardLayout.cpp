@@ -3497,11 +3497,18 @@ KeyboardLayout::NotifyIdleServiceOfUserActivity()
   sIdleService->ResetIdleTimeOut(0);
 }
 
-KeyboardLayout::KeyboardLayout() :
-  mKeyboardLayout(0), mIsOverridden(false),
-  mIsPendingToRestoreKeyboardLayout(false)
+KeyboardLayout::KeyboardLayout()
+  : mKeyboardLayout(0)
+  , mIsOverridden(false)
+  , mIsPendingToRestoreKeyboardLayout(false)
 {
   mDeadKeyTableListHead = nullptr;
+  // A dead key sequence should be made from up to 5 keys.  Therefore, 4 is
+  // enough and makes sense because the item is uint8_t.
+  // (Although, even if it's possible to be 6 keys or more in a sequence,
+  // this array will be re-allocated).
+  mActiveDeadKeys.SetCapacity(4);
+  mDeadKeyShiftStates.SetCapacity(4);
 
   // NOTE: LoadLayout() should be called via OnLayoutChange().
 }
@@ -3613,12 +3620,17 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     // If it's in dead key sequence and dead char is inputted as is, we need to
     // set the previous modifier state which is stored when preceding dead key
     // is pressed.
-    UniCharsAndModifiers deadChars =
-      GetUniCharsAndModifiers(mActiveDeadKey, mDeadKeyShiftState);
+    UniCharsAndModifiers deadChars = GetDeadUniCharsAndModifiers();
     aNativeKey.mCommittedCharsAndModifiers.
                  OverwriteModifiersIfBeginsWith(deadChars);
     // Finish the dead key sequence.
     DeactivateDeadKeyState();
+    return;
+  }
+
+  // If it's a dead key, aNativeKey will be initialized by
+  // MaybeInitNativeKeyAsDeadKey().
+  if (MaybeInitNativeKeyAsDeadKey(aNativeKey, aModKeyState)) {
     return;
   }
 
@@ -3635,12 +3647,6 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     "At handling VK_PACKET, we shouldn't refer keyboard layout");
   MOZ_ASSERT(aNativeKey.mKeyNameIndex == KEY_NAME_INDEX_USE_STRING,
     "Printable key's key name index must be KEY_NAME_INDEX_USE_STRING");
-
-  // If it's a dead key, aNativeKey will be initialized by
-  // MaybeInitNativeKeyAsDeadKey().
-  if (MaybeInitNativeKeyAsDeadKey(aNativeKey, aModKeyState)) {
-    return;
-  }
 
   // If it's in dead key handling and the pressed key causes a composite
   // character, aNativeKey will be initialized by
@@ -3659,19 +3665,10 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     return;
   }
 
-  // Although, this shouldn't occur, if active dead key isn't a printable
-  // key, we cannot handle it because KeyboardLayout assumes that dead key
-  // is never mapped to non-printable keys (e.g., F4, etc).  Please be aware,
-  // it's possible, but we've not known such special keyboard layout yet.
-  if (NS_WARN_IF(!IsPrintableCharKey(mActiveDeadKey))) {
-    return;
-  }
-
   // If the key doesn't cause a composite character with preceding dead key,
   // initialize aNativeKey with the dead-key character followed by current
   // key's character.
-  UniCharsAndModifiers deadChars =
-    GetUniCharsAndModifiers(mActiveDeadKey, mDeadKeyShiftState);
+  UniCharsAndModifiers deadChars = GetDeadUniCharsAndModifiers();
   aNativeKey.mCommittedCharsAndModifiers = deadChars + baseChars;
   if (aNativeKey.IsKeyDownMessage()) {
     DeactivateDeadKeyState();
@@ -3683,25 +3680,28 @@ KeyboardLayout::MaybeInitNativeKeyAsDeadKey(
                   NativeKey& aNativeKey,
                   const ModifierKeyState& aModKeyState)
 {
-  if (!IsDeadKey(aNativeKey.mOriginalVirtualKeyCode, aModKeyState)) {
+  // Only when it's not in dead key sequence, we can trust IsDeadKey() result.
+  if (!IsInDeadKeySequence() &&
+      !IsDeadKey(aNativeKey.mOriginalVirtualKeyCode, aModKeyState)) {
     return false;
   }
 
-  // If it's a keydown event but not in dead key sequence or it's a keyup
-  // event of a dead key which activated current dead key sequence,
-  // initialize aNativeKey as a dead key event.
-  if ((aNativeKey.IsKeyDownMessage() && !IsInDeadKeySequence()) ||
-      (!aNativeKey.IsKeyDownMessage() &&
-       mActiveDeadKey == aNativeKey.mOriginalVirtualKeyCode)) {
+  // When keydown message is followed by a dead char message, it should be
+  // initialized as dead key.
+  bool isDeadKeyDownEvent =
+    aNativeKey.IsKeyDownMessage() &&
+    aNativeKey.IsFollowedByDeadCharMessage();
+
+  // When keyup message is received, let's check if it's one of preceding
+  // dead keys because keydown message order and keyup message order may be
+  // different.
+  bool isDeadKeyUpEvent =
+    !aNativeKey.IsKeyDownMessage() &&
+    mActiveDeadKeys.Contains(aNativeKey.mOriginalVirtualKeyCode);
+
+  if (isDeadKeyDownEvent || isDeadKeyUpEvent) {
     ActivateDeadKeyState(aNativeKey, aModKeyState);
-#ifdef DEBUG
-    UniCharsAndModifiers deadChars =
-      GetNativeUniCharsAndModifiers(aNativeKey.mOriginalVirtualKeyCode,
-                                    aModKeyState);
-    MOZ_ASSERT(deadChars.Length() == 1,
-               "dead key must generate only one character");
-#endif
-    // First dead key event doesn't generate characters.  Dead key should
+    // Any dead key events don't generate characters.  So, a dead key should
     // cause only keydown event and keyup event whose KeyboardEvent.key
     // values are "Dead".
     aNativeKey.mCommittedCharsAndModifiers.Clear();
@@ -3720,26 +3720,17 @@ KeyboardLayout::MaybeInitNativeKeyAsDeadKey(
     return true;
   }
 
+  // When non-printable key event comes during a dead key sequence, that must
+  // be a modifier key event.  So, such events shouldn't be handled as a part
+  // of the dead key sequence.
+  if (!IsDeadKey(aNativeKey.mOriginalVirtualKeyCode, aModKeyState)) {
+    return false;
+  }
+
   // FYI: Following code may run when the user doesn't input text actually
   //      but the key sequence is a dead key sequence.  For example,
   //      ` -> Ctrl+` with Spanish keyboard layout.  Let's keep using this
   //      complicated code for now because this runs really rarely.
-
-  if (NS_WARN_IF(!IsPrintableCharKey(mActiveDeadKey))) {
-#if defined(DEBUG) || defined(MOZ_CRASHREPORTER)
-    nsPrintfCString warning("The virtual key index (%d) of mActiveDeadKey "
-                            "(0x%02X) is not a printable key "
-                            "(aNativeKey.mOriginalVirtualKeyCode=0x%02X)",
-                            GetKeyIndex(mActiveDeadKey), mActiveDeadKey,
-                            aNativeKey.mOriginalVirtualKeyCode);
-    NS_WARNING(warning.get());
-#ifdef MOZ_CRASHREPORTER
-    CrashReporter::AppendAppNotesToCrashReport(
-                     NS_LITERAL_CSTRING("\n") + warning);
-#endif // #ifdef MOZ_CRASHREPORTER
-#endif // #if defined(DEBUG) || defined(MOZ_CRASHREPORTER)
-    MOZ_CRASH("Trying to reference out of range of mVirtualKeys");
-  }
 
   // Dead key followed by another dead key may cause a composed character
   // (e.g., "Russian - Mnemonic" keyboard layout's 's' -> 'c').
@@ -3749,8 +3740,7 @@ KeyboardLayout::MaybeInitNativeKeyAsDeadKey(
 
   // Otherwise, dead key followed by another dead key causes inputting both
   // character.
-  UniCharsAndModifiers prevDeadChars =
-    GetUniCharsAndModifiers(mActiveDeadKey, mDeadKeyShiftState);
+  UniCharsAndModifiers prevDeadChars = GetDeadUniCharsAndModifiers();
   UniCharsAndModifiers newChars =
     GetUniCharsAndModifiers(aNativeKey.mOriginalVirtualKeyCode, aModKeyState);
   // But keypress events should be fired for each committed character.
@@ -3770,8 +3760,7 @@ KeyboardLayout::MaybeInitNativeKeyWithCompositeChar(
     return false;
   }
 
-  if (NS_WARN_IF(!IsPrintableCharKey(mActiveDeadKey)) ||
-      NS_WARN_IF(!IsPrintableCharKey(aNativeKey.mOriginalVirtualKeyCode))) {
+  if (NS_WARN_IF(!IsPrintableCharKey(aNativeKey.mOriginalVirtualKeyCode))) {
     return false;
   }
 
@@ -3781,8 +3770,7 @@ KeyboardLayout::MaybeInitNativeKeyWithCompositeChar(
     return false;
   }
 
-  char16_t compositeChar =
-    GetCompositeChar(mActiveDeadKey, mDeadKeyShiftState, baseChars.CharAt(0));
+  char16_t compositeChar = GetCompositeChar(baseChars.CharAt(0));
   if (!compositeChar) {
     return false;
   }
@@ -3824,16 +3812,43 @@ KeyboardLayout::GetNativeUniCharsAndModifiers(
   return mVirtualKeys[key].GetNativeUniChars(shiftState);
 }
 
-char16_t
-KeyboardLayout::GetCompositeChar(uint8_t aVirtualKeyOfDeadKey,
-                                 VirtualKey::ShiftState aShiftStateOfDeadKey,
-                                 char16_t aBaseChar) const
+UniCharsAndModifiers
+KeyboardLayout::GetDeadUniCharsAndModifiers() const
 {
-  int32_t key = GetKeyIndex(aVirtualKeyOfDeadKey);
+  MOZ_RELEASE_ASSERT(mActiveDeadKeys.Length() == mDeadKeyShiftStates.Length());
+
+  if (NS_WARN_IF(mActiveDeadKeys.IsEmpty())) {
+    return UniCharsAndModifiers();
+  }
+
+  UniCharsAndModifiers result;
+  for (size_t i = 0; i < mActiveDeadKeys.Length(); ++i) {
+    result +=
+      GetUniCharsAndModifiers(mActiveDeadKeys[i], mDeadKeyShiftStates[i]);
+  }
+  return result;
+}
+
+char16_t
+KeyboardLayout::GetCompositeChar(char16_t aBaseChar) const
+{
+  if (NS_WARN_IF(mActiveDeadKeys.IsEmpty())) {
+    return 0;
+  }
+  // XXX Currently, we don't support computing a composite character with
+  //     two or more dead keys since it needs big table for supporting
+  //     long chained dead keys.  However, this should be a minor bug
+  //     because this runs only when the latest keydown event does not cause
+  //     WM_(SYS)CHAR messages.  So, when user wants to input a character,
+  //     this path never runs.
+  if (mActiveDeadKeys.Length() > 1) {
+    return 0;
+  }
+  int32_t key = GetKeyIndex(mActiveDeadKeys[0]);
   if (key < 0) {
     return 0;
   }
-  return mVirtualKeys[key].GetCompositeChar(aShiftStateOfDeadKey, aBaseChar);
+  return mVirtualKeys[key].GetCompositeChar(mDeadKeyShiftStates[0], aBaseChar);
 }
 
 void
@@ -3860,7 +3875,8 @@ KeyboardLayout::LoadLayout(HKL aLayout)
   // characters.
   uint16_t shiftStatesWithBaseChars = 0;
 
-  mActiveDeadKey = -1;
+  mActiveDeadKeys.Clear();
+  mDeadKeyShiftStates.Clear();
 
   ReleaseDeadKeyTables();
 
@@ -4099,26 +4115,26 @@ KeyboardLayout::ActivateDeadKeyState(const NativeKey& aNativeKey,
     return;
   }
 
-  MOZ_RELEASE_ASSERT(IsPrintableCharKey(aNativeKey.mOriginalVirtualKeyCode));
-
-  mActiveDeadKey = aNativeKey.mOriginalVirtualKeyCode;
-  mDeadKeyShiftState = VirtualKey::ModifierKeyStateToShiftState(aModKeyState);
+  mActiveDeadKeys.AppendElement(aNativeKey.mOriginalVirtualKeyCode);
+  mDeadKeyShiftStates.AppendElement(
+    VirtualKey::ModifierKeyStateToShiftState(aModKeyState));
 }
 
 void
 KeyboardLayout::DeactivateDeadKeyState()
 {
-  if (mActiveDeadKey < 0) {
+  if (mActiveDeadKeys.IsEmpty()) {
     return;
   }
 
   BYTE kbdState[256];
   memset(kbdState, 0, sizeof(kbdState));
 
-  VirtualKey::FillKbdState(kbdState, mDeadKeyShiftState);
-
-  EnsureDeadKeyActive(false, mActiveDeadKey, kbdState);
-  mActiveDeadKey = -1;
+  // Assume that the last dead key can finish dead key sequence.
+  VirtualKey::FillKbdState(kbdState, mDeadKeyShiftStates.LastElement());
+  EnsureDeadKeyActive(false, mActiveDeadKeys.LastElement(), kbdState);
+  mActiveDeadKeys.Clear();
+  mDeadKeyShiftStates.Clear();
 }
 
 bool

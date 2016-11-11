@@ -94,6 +94,10 @@ VRManager::VRManager()
       mManagers.AppendElement(mgr);
   }
 #endif
+  // Enable gamepad extensions while VR is enabled.
+  if (gfxPrefs::VREnabled()) {
+    Preferences::SetBool("dom.gamepad.extensions.enabled", true);
+  }
 }
 
 VRManager::~VRManager()
