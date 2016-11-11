@@ -63,10 +63,10 @@ struct AstDecodeStackItem
     {}
 };
 
-// We don't define a Value type because ExprIter doesn't push void values, which
+// We don't define a Value type because OpIter doesn't push void values, which
 // we actually need here because we're building an AST, so we maintain our own
 // stack.
-struct AstDecodePolicy : ExprIterPolicy
+struct AstDecodePolicy : OpIterPolicy
 {
     // Enable validation because we can be called from wasmBinaryToText on bytes
     // which are not necessarily valid, and we shouldn't run the decoder in
@@ -76,7 +76,7 @@ struct AstDecodePolicy : ExprIterPolicy
     static const bool Output = true;
 };
 
-typedef ExprIter<AstDecodePolicy> AstDecodeExprIter;
+typedef OpIter<AstDecodePolicy> AstDecodeOpIter;
 
 class AstDecodeContext
 {
@@ -93,7 +93,7 @@ class AstDecodeContext
   private:
     AstModule& module_;
     AstIndexVector funcDefSigs_;
-    AstDecodeExprIter *iter_;
+    AstDecodeOpIter *iter_;
     AstDecodeStack exprs_;
     DepthStack depths_;
     const ValTypeVector* locals_;
@@ -122,7 +122,7 @@ class AstDecodeContext
 
     AstModule& module() { return module_; }
     AstIndexVector& funcDefSigs() { return funcDefSigs_; }
-    AstDecodeExprIter& iter() { return *iter_; }
+    AstDecodeOpIter& iter() { return *iter_; }
     AstDecodeStack& exprs() { return exprs_; }
     DepthStack& depths() { return depths_; }
 
@@ -189,7 +189,7 @@ class AstDecodeContext
         return voidNode;
     }
 
-    void startFunction(AstDecodeExprIter *iter, const ValTypeVector* locals, ExprType retType)
+    void startFunction(AstDecodeOpIter* iter, const ValTypeVector* locals, ExprType retType)
     {
         iter_ = iter;
         locals_ = locals;
@@ -355,7 +355,7 @@ AstDecodeCall(AstDecodeContext& c)
     if (!AstDecodeCallReturn(c, *sig))
         return false;
 
-    AstCall* call = new(c.lifo) AstCall(Expr::Call, sig->ret(), funcRef, Move(args));
+    AstCall* call = new(c.lifo) AstCall(Op::Call, sig->ret(), funcRef, Move(args));
     if (!call)
         return false;
 
@@ -475,14 +475,14 @@ AstDecodeBrTable(AstDecodeContext& c)
 }
 
 static bool
-AstDecodeBlock(AstDecodeContext& c, Expr expr)
+AstDecodeBlock(AstDecodeContext& c, Op op)
 {
-    MOZ_ASSERT(expr == Expr::Block || expr == Expr::Loop);
+    MOZ_ASSERT(op == Op::Block || op == Op::Loop);
 
     if (!c.blockLabels().append(AstName()))
         return false;
 
-    if (expr == Expr::Loop) {
+    if (op == Op::Loop) {
       if (!c.iter().readLoop())
           return false;
     } else {
@@ -499,7 +499,7 @@ AstDecodeBlock(AstDecodeContext& c, Expr expr)
             return false;
 
         const AstDecodeStackItem& item = c.top();
-        if (!item.expr) { // Expr::End was found
+        if (!item.expr) { // Op::End was found
             type = item.type;
             c.popBack();
             break;
@@ -515,7 +515,7 @@ AstDecodeBlock(AstDecodeContext& c, Expr expr)
     c.exprs().shrinkTo(c.depths().popCopy());
 
     AstName name = c.blockLabels().popCopy();
-    AstBlock* block = new(c.lifo) AstBlock(expr, type, name, Move(exprs));
+    AstBlock* block = new(c.lifo) AstBlock(op, type, name, Move(exprs));
     if (!block)
         return false;
 
@@ -551,7 +551,7 @@ AstDecodeIf(AstDecodeContext& c)
             return false;
 
         const AstDecodeStackItem& item = c.top();
-        if (!item.expr) { // Expr::End was found
+        if (!item.expr) { // Op::End was found
             hasElse = item.terminationKind == AstDecodeTerminationKind::Else;
             type = item.type;
             c.popBack();
@@ -574,7 +574,7 @@ AstDecodeIf(AstDecodeContext& c)
                 return false;
 
             const AstDecodeStackItem& item = c.top();
-            if (!item.expr) { // Expr::End was found
+            if (!item.expr) { // Op::End was found
                 c.popBack();
                 break;
             }
@@ -655,14 +655,14 @@ AstDecodeNop(AstDecodeContext& c)
 }
 
 static bool
-AstDecodeUnary(AstDecodeContext& c, ValType type, Expr expr)
+AstDecodeUnary(AstDecodeContext& c, ValType type, Op op)
 {
     if (!c.iter().readUnary(type, nullptr))
         return false;
 
-    AstDecodeStackItem op = c.popCopy();
+    AstDecodeStackItem operand = c.popCopy();
 
-    AstUnaryOperator* unary = new(c.lifo) AstUnaryOperator(expr, op.expr);
+    AstUnaryOperator* unary = new(c.lifo) AstUnaryOperator(op, operand.expr);
     if (!unary)
         return false;
 
@@ -673,7 +673,7 @@ AstDecodeUnary(AstDecodeContext& c, ValType type, Expr expr)
 }
 
 static bool
-AstDecodeBinary(AstDecodeContext& c, ValType type, Expr expr)
+AstDecodeBinary(AstDecodeContext& c, ValType type, Op op)
 {
     if (!c.iter().readBinary(type, nullptr, nullptr))
         return false;
@@ -681,7 +681,7 @@ AstDecodeBinary(AstDecodeContext& c, ValType type, Expr expr)
     AstDecodeStackItem rhs = c.popCopy();
     AstDecodeStackItem lhs = c.popCopy();
 
-    AstBinaryOperator* binary = new(c.lifo) AstBinaryOperator(expr, lhs.expr, rhs.expr);
+    AstBinaryOperator* binary = new(c.lifo) AstBinaryOperator(op, lhs.expr, rhs.expr);
     if (!binary)
         return false;
 
@@ -702,7 +702,7 @@ AstDecodeSelect(AstDecodeContext& c)
     AstDecodeStackItem selectTrue = c.popCopy();
     AstDecodeStackItem cond = c.popCopy();
 
-    AstTernaryOperator* ternary = new(c.lifo) AstTernaryOperator(Expr::Select, cond.expr, selectTrue.expr, selectFalse.expr);
+    AstTernaryOperator* ternary = new(c.lifo) AstTernaryOperator(Op::Select, cond.expr, selectTrue.expr, selectFalse.expr);
     if (!ternary)
         return false;
 
@@ -713,7 +713,7 @@ AstDecodeSelect(AstDecodeContext& c)
 }
 
 static bool
-AstDecodeComparison(AstDecodeContext& c, ValType type, Expr expr)
+AstDecodeComparison(AstDecodeContext& c, ValType type, Op op)
 {
     if (!c.iter().readComparison(type, nullptr, nullptr))
         return false;
@@ -721,7 +721,7 @@ AstDecodeComparison(AstDecodeContext& c, ValType type, Expr expr)
     AstDecodeStackItem rhs = c.popCopy();
     AstDecodeStackItem lhs = c.popCopy();
 
-    AstComparisonOperator* comparison = new(c.lifo) AstComparisonOperator(expr, lhs.expr, rhs.expr);
+    AstComparisonOperator* comparison = new(c.lifo) AstComparisonOperator(op, lhs.expr, rhs.expr);
     if (!comparison)
         return false;
 
@@ -732,14 +732,14 @@ AstDecodeComparison(AstDecodeContext& c, ValType type, Expr expr)
 }
 
 static bool
-AstDecodeConversion(AstDecodeContext& c, ValType fromType, ValType toType, Expr expr)
+AstDecodeConversion(AstDecodeContext& c, ValType fromType, ValType toType, Op op)
 {
     if (!c.iter().readConversion(fromType, toType, nullptr))
         return false;
 
-    AstDecodeStackItem op = c.popCopy();
+    AstDecodeStackItem operand = c.popCopy();
 
-    AstConversionOperator* conversion = new(c.lifo) AstConversionOperator(expr, op.expr);
+    AstConversionOperator* conversion = new(c.lifo) AstConversionOperator(op, operand.expr);
     if (!conversion)
         return false;
 
@@ -757,7 +757,7 @@ AstDecodeLoadStoreAddress(const LinearMemoryAddress<Nothing>& addr, const AstDec
 }
 
 static bool
-AstDecodeLoad(AstDecodeContext& c, ValType type, uint32_t byteSize, Expr expr)
+AstDecodeLoad(AstDecodeContext& c, ValType type, uint32_t byteSize, Op op)
 {
     LinearMemoryAddress<Nothing> addr;
     if (!c.iter().readLoad(type, byteSize, &addr))
@@ -765,7 +765,7 @@ AstDecodeLoad(AstDecodeContext& c, ValType type, uint32_t byteSize, Expr expr)
 
     AstDecodeStackItem item = c.popCopy();
 
-    AstLoad* load = new(c.lifo) AstLoad(expr, AstDecodeLoadStoreAddress(addr, item));
+    AstLoad* load = new(c.lifo) AstLoad(op, AstDecodeLoadStoreAddress(addr, item));
     if (!load)
         return false;
 
@@ -776,7 +776,7 @@ AstDecodeLoad(AstDecodeContext& c, ValType type, uint32_t byteSize, Expr expr)
 }
 
 static bool
-AstDecodeStore(AstDecodeContext& c, ValType type, uint32_t byteSize, Expr expr)
+AstDecodeStore(AstDecodeContext& c, ValType type, uint32_t byteSize, Op op)
 {
     LinearMemoryAddress<Nothing> addr;
     if (!c.iter().readStore(type, byteSize, &addr, nullptr))
@@ -785,7 +785,7 @@ AstDecodeStore(AstDecodeContext& c, ValType type, uint32_t byteSize, Expr expr)
     AstDecodeStackItem value = c.popCopy();
     AstDecodeStackItem item = c.popCopy();
 
-    AstStore* store = new(c.lifo) AstStore(expr, AstDecodeLoadStoreAddress(addr, item), value.expr);
+    AstStore* store = new(c.lifo) AstStore(op, AstDecodeLoadStoreAddress(addr, item), value.expr);
     if (!store)
         return false;
 
@@ -821,9 +821,9 @@ AstDecodeGrowMemory(AstDecodeContext& c)
     if (!c.iter().readGrowMemory(nullptr))
         return false;
 
-    AstDecodeStackItem op = c.popCopy();
+    AstDecodeStackItem operand = c.popCopy();
 
-    AstGrowMemory* gm = new(c.lifo) AstGrowMemory(op.expr);
+    AstGrowMemory* gm = new(c.lifo) AstGrowMemory(operand.expr);
     if (!gm)
         return false;
 
@@ -834,15 +834,15 @@ AstDecodeGrowMemory(AstDecodeContext& c)
 }
 
 static bool
-AstDecodeBranch(AstDecodeContext& c, Expr expr)
+AstDecodeBranch(AstDecodeContext& c, Op op)
 {
-    MOZ_ASSERT(expr == Expr::Br || expr == Expr::BrIf);
+    MOZ_ASSERT(op == Op::Br || op == Op::BrIf);
 
     uint32_t depth;
     ExprType type;
     AstDecodeStackItem value;
     AstDecodeStackItem cond;
-    if (expr == Expr::Br) {
+    if (op == Op::Br) {
         if (!c.iter().readBr(&depth, &type, nullptr))
             return false;
         if (!IsVoid(type))
@@ -859,9 +859,9 @@ AstDecodeBranch(AstDecodeContext& c, Expr expr)
     if (!AstDecodeGetBlockRef(c, depth, &depthRef))
         return false;
 
-    if (expr == Expr::Br || !value.expr)
+    if (op == Op::Br || !value.expr)
         type = ExprType::Void;
-    AstBranch* branch = new(c.lifo) AstBranch(expr, type, cond.expr, depthRef, value.expr);
+    AstBranch* branch = new(c.lifo) AstBranch(op, type, cond.expr, depthRef, value.expr);
     if (!branch)
         return false;
 
@@ -1014,29 +1014,29 @@ static bool
 AstDecodeExpr(AstDecodeContext& c)
 {
     uint32_t exprOffset = c.iter().currentOffset();
-    uint16_t expr;
-    if (!c.iter().readExpr(&expr))
+    uint16_t op;
+    if (!c.iter().readOp(&op))
         return false;
 
     AstExpr* tmp;
-    switch (expr) {
-      case uint16_t(Expr::Nop):
+    switch (op) {
+      case uint16_t(Op::Nop):
         if (!AstDecodeNop(c))
             return false;
         break;
-      case uint16_t(Expr::Drop):
+      case uint16_t(Op::Drop):
         if (!AstDecodeDrop(c))
             return false;
         break;
-      case uint16_t(Expr::Call):
+      case uint16_t(Op::Call):
         if (!AstDecodeCall(c))
             return false;
         break;
-      case uint16_t(Expr::CallIndirect):
+      case uint16_t(Op::CallIndirect):
         if (!AstDecodeCallIndirect(c))
             return false;
         break;
-      case uint16_t(Expr::I32Const):
+      case uint16_t(Op::I32Const):
         int32_t i32;
         if (!c.iter().readI32Const(&i32))
             return false;
@@ -1044,7 +1044,7 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!tmp || !c.push(AstDecodeStackItem(tmp)))
             return false;
         break;
-      case uint16_t(Expr::I64Const):
+      case uint16_t(Op::I64Const):
         int64_t i64;
         if (!c.iter().readI64Const(&i64))
             return false;
@@ -1052,7 +1052,7 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!tmp || !c.push(AstDecodeStackItem(tmp)))
             return false;
         break;
-      case uint16_t(Expr::F32Const): {
+      case uint16_t(Op::F32Const): {
         RawF32 f32;
         if (!c.iter().readF32Const(&f32))
             return false;
@@ -1061,7 +1061,7 @@ AstDecodeExpr(AstDecodeContext& c)
             return false;
         break;
       }
-      case uint16_t(Expr::F64Const): {
+      case uint16_t(Op::F64Const): {
         RawF64 f64;
         if (!c.iter().readF64Const(&f64))
             return false;
@@ -1070,344 +1070,344 @@ AstDecodeExpr(AstDecodeContext& c)
             return false;
         break;
       }
-      case uint16_t(Expr::GetLocal):
+      case uint16_t(Op::GetLocal):
         if (!AstDecodeGetLocal(c))
             return false;
         break;
-      case uint16_t(Expr::SetLocal):
+      case uint16_t(Op::SetLocal):
         if (!AstDecodeSetLocal(c))
             return false;
         break;
-      case uint16_t(Expr::TeeLocal):
+      case uint16_t(Op::TeeLocal):
         if (!AstDecodeTeeLocal(c))
             return false;
         break;
-      case uint16_t(Expr::Select):
+      case uint16_t(Op::Select):
         if (!AstDecodeSelect(c))
             return false;
         break;
-      case uint16_t(Expr::Block):
-      case uint16_t(Expr::Loop):
-        if (!AstDecodeBlock(c, Expr(expr)))
+      case uint16_t(Op::Block):
+      case uint16_t(Op::Loop):
+        if (!AstDecodeBlock(c, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::If):
+      case uint16_t(Op::If):
         if (!AstDecodeIf(c))
             return false;
         break;
-      case uint16_t(Expr::Else):
+      case uint16_t(Op::Else):
         if (!AstDecodeElse(c))
             return false;
         break;
-      case uint16_t(Expr::End):
+      case uint16_t(Op::End):
         if (!AstDecodeEnd(c))
             return false;
         break;
-      case uint16_t(Expr::I32Clz):
-      case uint16_t(Expr::I32Ctz):
-      case uint16_t(Expr::I32Popcnt):
-        if (!AstDecodeUnary(c, ValType::I32, Expr(expr)))
+      case uint16_t(Op::I32Clz):
+      case uint16_t(Op::I32Ctz):
+      case uint16_t(Op::I32Popcnt):
+        if (!AstDecodeUnary(c, ValType::I32, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64Clz):
-      case uint16_t(Expr::I64Ctz):
-      case uint16_t(Expr::I64Popcnt):
-        if (!AstDecodeUnary(c, ValType::I64, Expr(expr)))
+      case uint16_t(Op::I64Clz):
+      case uint16_t(Op::I64Ctz):
+      case uint16_t(Op::I64Popcnt):
+        if (!AstDecodeUnary(c, ValType::I64, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F32Abs):
-      case uint16_t(Expr::F32Neg):
-      case uint16_t(Expr::F32Ceil):
-      case uint16_t(Expr::F32Floor):
-      case uint16_t(Expr::F32Sqrt):
-      case uint16_t(Expr::F32Trunc):
-      case uint16_t(Expr::F32Nearest):
-        if (!AstDecodeUnary(c, ValType::F32, Expr(expr)))
+      case uint16_t(Op::F32Abs):
+      case uint16_t(Op::F32Neg):
+      case uint16_t(Op::F32Ceil):
+      case uint16_t(Op::F32Floor):
+      case uint16_t(Op::F32Sqrt):
+      case uint16_t(Op::F32Trunc):
+      case uint16_t(Op::F32Nearest):
+        if (!AstDecodeUnary(c, ValType::F32, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F64Abs):
-      case uint16_t(Expr::F64Neg):
-      case uint16_t(Expr::F64Ceil):
-      case uint16_t(Expr::F64Floor):
-      case uint16_t(Expr::F64Sqrt):
-      case uint16_t(Expr::F64Trunc):
-      case uint16_t(Expr::F64Nearest):
-        if (!AstDecodeUnary(c, ValType::F64, Expr(expr)))
+      case uint16_t(Op::F64Abs):
+      case uint16_t(Op::F64Neg):
+      case uint16_t(Op::F64Ceil):
+      case uint16_t(Op::F64Floor):
+      case uint16_t(Op::F64Sqrt):
+      case uint16_t(Op::F64Trunc):
+      case uint16_t(Op::F64Nearest):
+        if (!AstDecodeUnary(c, ValType::F64, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I32Add):
-      case uint16_t(Expr::I32Sub):
-      case uint16_t(Expr::I32Mul):
-      case uint16_t(Expr::I32DivS):
-      case uint16_t(Expr::I32DivU):
-      case uint16_t(Expr::I32RemS):
-      case uint16_t(Expr::I32RemU):
-      case uint16_t(Expr::I32And):
-      case uint16_t(Expr::I32Or):
-      case uint16_t(Expr::I32Xor):
-      case uint16_t(Expr::I32Shl):
-      case uint16_t(Expr::I32ShrS):
-      case uint16_t(Expr::I32ShrU):
-      case uint16_t(Expr::I32Rotl):
-      case uint16_t(Expr::I32Rotr):
-        if (!AstDecodeBinary(c, ValType::I32, Expr(expr)))
+      case uint16_t(Op::I32Add):
+      case uint16_t(Op::I32Sub):
+      case uint16_t(Op::I32Mul):
+      case uint16_t(Op::I32DivS):
+      case uint16_t(Op::I32DivU):
+      case uint16_t(Op::I32RemS):
+      case uint16_t(Op::I32RemU):
+      case uint16_t(Op::I32And):
+      case uint16_t(Op::I32Or):
+      case uint16_t(Op::I32Xor):
+      case uint16_t(Op::I32Shl):
+      case uint16_t(Op::I32ShrS):
+      case uint16_t(Op::I32ShrU):
+      case uint16_t(Op::I32Rotl):
+      case uint16_t(Op::I32Rotr):
+        if (!AstDecodeBinary(c, ValType::I32, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64Add):
-      case uint16_t(Expr::I64Sub):
-      case uint16_t(Expr::I64Mul):
-      case uint16_t(Expr::I64DivS):
-      case uint16_t(Expr::I64DivU):
-      case uint16_t(Expr::I64RemS):
-      case uint16_t(Expr::I64RemU):
-      case uint16_t(Expr::I64And):
-      case uint16_t(Expr::I64Or):
-      case uint16_t(Expr::I64Xor):
-      case uint16_t(Expr::I64Shl):
-      case uint16_t(Expr::I64ShrS):
-      case uint16_t(Expr::I64ShrU):
-      case uint16_t(Expr::I64Rotl):
-      case uint16_t(Expr::I64Rotr):
-        if (!AstDecodeBinary(c, ValType::I64, Expr(expr)))
+      case uint16_t(Op::I64Add):
+      case uint16_t(Op::I64Sub):
+      case uint16_t(Op::I64Mul):
+      case uint16_t(Op::I64DivS):
+      case uint16_t(Op::I64DivU):
+      case uint16_t(Op::I64RemS):
+      case uint16_t(Op::I64RemU):
+      case uint16_t(Op::I64And):
+      case uint16_t(Op::I64Or):
+      case uint16_t(Op::I64Xor):
+      case uint16_t(Op::I64Shl):
+      case uint16_t(Op::I64ShrS):
+      case uint16_t(Op::I64ShrU):
+      case uint16_t(Op::I64Rotl):
+      case uint16_t(Op::I64Rotr):
+        if (!AstDecodeBinary(c, ValType::I64, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F32Add):
-      case uint16_t(Expr::F32Sub):
-      case uint16_t(Expr::F32Mul):
-      case uint16_t(Expr::F32Div):
-      case uint16_t(Expr::F32Min):
-      case uint16_t(Expr::F32Max):
-      case uint16_t(Expr::F32CopySign):
-        if (!AstDecodeBinary(c, ValType::F32, Expr(expr)))
+      case uint16_t(Op::F32Add):
+      case uint16_t(Op::F32Sub):
+      case uint16_t(Op::F32Mul):
+      case uint16_t(Op::F32Div):
+      case uint16_t(Op::F32Min):
+      case uint16_t(Op::F32Max):
+      case uint16_t(Op::F32CopySign):
+        if (!AstDecodeBinary(c, ValType::F32, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F64Add):
-      case uint16_t(Expr::F64Sub):
-      case uint16_t(Expr::F64Mul):
-      case uint16_t(Expr::F64Div):
-      case uint16_t(Expr::F64Min):
-      case uint16_t(Expr::F64Max):
-      case uint16_t(Expr::F64CopySign):
-        if (!AstDecodeBinary(c, ValType::F64, Expr(expr)))
+      case uint16_t(Op::F64Add):
+      case uint16_t(Op::F64Sub):
+      case uint16_t(Op::F64Mul):
+      case uint16_t(Op::F64Div):
+      case uint16_t(Op::F64Min):
+      case uint16_t(Op::F64Max):
+      case uint16_t(Op::F64CopySign):
+        if (!AstDecodeBinary(c, ValType::F64, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I32Eq):
-      case uint16_t(Expr::I32Ne):
-      case uint16_t(Expr::I32LtS):
-      case uint16_t(Expr::I32LtU):
-      case uint16_t(Expr::I32LeS):
-      case uint16_t(Expr::I32LeU):
-      case uint16_t(Expr::I32GtS):
-      case uint16_t(Expr::I32GtU):
-      case uint16_t(Expr::I32GeS):
-      case uint16_t(Expr::I32GeU):
-        if (!AstDecodeComparison(c, ValType::I32, Expr(expr)))
+      case uint16_t(Op::I32Eq):
+      case uint16_t(Op::I32Ne):
+      case uint16_t(Op::I32LtS):
+      case uint16_t(Op::I32LtU):
+      case uint16_t(Op::I32LeS):
+      case uint16_t(Op::I32LeU):
+      case uint16_t(Op::I32GtS):
+      case uint16_t(Op::I32GtU):
+      case uint16_t(Op::I32GeS):
+      case uint16_t(Op::I32GeU):
+        if (!AstDecodeComparison(c, ValType::I32, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64Eq):
-      case uint16_t(Expr::I64Ne):
-      case uint16_t(Expr::I64LtS):
-      case uint16_t(Expr::I64LtU):
-      case uint16_t(Expr::I64LeS):
-      case uint16_t(Expr::I64LeU):
-      case uint16_t(Expr::I64GtS):
-      case uint16_t(Expr::I64GtU):
-      case uint16_t(Expr::I64GeS):
-      case uint16_t(Expr::I64GeU):
-        if (!AstDecodeComparison(c, ValType::I64, Expr(expr)))
+      case uint16_t(Op::I64Eq):
+      case uint16_t(Op::I64Ne):
+      case uint16_t(Op::I64LtS):
+      case uint16_t(Op::I64LtU):
+      case uint16_t(Op::I64LeS):
+      case uint16_t(Op::I64LeU):
+      case uint16_t(Op::I64GtS):
+      case uint16_t(Op::I64GtU):
+      case uint16_t(Op::I64GeS):
+      case uint16_t(Op::I64GeU):
+        if (!AstDecodeComparison(c, ValType::I64, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F32Eq):
-      case uint16_t(Expr::F32Ne):
-      case uint16_t(Expr::F32Lt):
-      case uint16_t(Expr::F32Le):
-      case uint16_t(Expr::F32Gt):
-      case uint16_t(Expr::F32Ge):
-        if (!AstDecodeComparison(c, ValType::F32, Expr(expr)))
+      case uint16_t(Op::F32Eq):
+      case uint16_t(Op::F32Ne):
+      case uint16_t(Op::F32Lt):
+      case uint16_t(Op::F32Le):
+      case uint16_t(Op::F32Gt):
+      case uint16_t(Op::F32Ge):
+        if (!AstDecodeComparison(c, ValType::F32, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F64Eq):
-      case uint16_t(Expr::F64Ne):
-      case uint16_t(Expr::F64Lt):
-      case uint16_t(Expr::F64Le):
-      case uint16_t(Expr::F64Gt):
-      case uint16_t(Expr::F64Ge):
-        if (!AstDecodeComparison(c, ValType::F64, Expr(expr)))
+      case uint16_t(Op::F64Eq):
+      case uint16_t(Op::F64Ne):
+      case uint16_t(Op::F64Lt):
+      case uint16_t(Op::F64Le):
+      case uint16_t(Op::F64Gt):
+      case uint16_t(Op::F64Ge):
+        if (!AstDecodeComparison(c, ValType::F64, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I32Eqz):
-        if (!AstDecodeConversion(c, ValType::I32, ValType::I32, Expr(expr)))
+      case uint16_t(Op::I32Eqz):
+        if (!AstDecodeConversion(c, ValType::I32, ValType::I32, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64Eqz):
-      case uint16_t(Expr::I32WrapI64):
-        if (!AstDecodeConversion(c, ValType::I64, ValType::I32, Expr(expr)))
+      case uint16_t(Op::I64Eqz):
+      case uint16_t(Op::I32WrapI64):
+        if (!AstDecodeConversion(c, ValType::I64, ValType::I32, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I32TruncSF32):
-      case uint16_t(Expr::I32TruncUF32):
-      case uint16_t(Expr::I32ReinterpretF32):
-        if (!AstDecodeConversion(c, ValType::F32, ValType::I32, Expr(expr)))
+      case uint16_t(Op::I32TruncSF32):
+      case uint16_t(Op::I32TruncUF32):
+      case uint16_t(Op::I32ReinterpretF32):
+        if (!AstDecodeConversion(c, ValType::F32, ValType::I32, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I32TruncSF64):
-      case uint16_t(Expr::I32TruncUF64):
-        if (!AstDecodeConversion(c, ValType::F64, ValType::I32, Expr(expr)))
+      case uint16_t(Op::I32TruncSF64):
+      case uint16_t(Op::I32TruncUF64):
+        if (!AstDecodeConversion(c, ValType::F64, ValType::I32, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64ExtendSI32):
-      case uint16_t(Expr::I64ExtendUI32):
-        if (!AstDecodeConversion(c, ValType::I32, ValType::I64, Expr(expr)))
+      case uint16_t(Op::I64ExtendSI32):
+      case uint16_t(Op::I64ExtendUI32):
+        if (!AstDecodeConversion(c, ValType::I32, ValType::I64, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64TruncSF32):
-      case uint16_t(Expr::I64TruncUF32):
-        if (!AstDecodeConversion(c, ValType::F32, ValType::I64, Expr(expr)))
+      case uint16_t(Op::I64TruncSF32):
+      case uint16_t(Op::I64TruncUF32):
+        if (!AstDecodeConversion(c, ValType::F32, ValType::I64, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64TruncSF64):
-      case uint16_t(Expr::I64TruncUF64):
-      case uint16_t(Expr::I64ReinterpretF64):
-        if (!AstDecodeConversion(c, ValType::F64, ValType::I64, Expr(expr)))
+      case uint16_t(Op::I64TruncSF64):
+      case uint16_t(Op::I64TruncUF64):
+      case uint16_t(Op::I64ReinterpretF64):
+        if (!AstDecodeConversion(c, ValType::F64, ValType::I64, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F32ConvertSI32):
-      case uint16_t(Expr::F32ConvertUI32):
-      case uint16_t(Expr::F32ReinterpretI32):
-        if (!AstDecodeConversion(c, ValType::I32, ValType::F32, Expr(expr)))
+      case uint16_t(Op::F32ConvertSI32):
+      case uint16_t(Op::F32ConvertUI32):
+      case uint16_t(Op::F32ReinterpretI32):
+        if (!AstDecodeConversion(c, ValType::I32, ValType::F32, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F32ConvertSI64):
-      case uint16_t(Expr::F32ConvertUI64):
-        if (!AstDecodeConversion(c, ValType::I64, ValType::F32, Expr(expr)))
+      case uint16_t(Op::F32ConvertSI64):
+      case uint16_t(Op::F32ConvertUI64):
+        if (!AstDecodeConversion(c, ValType::I64, ValType::F32, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F32DemoteF64):
-        if (!AstDecodeConversion(c, ValType::F64, ValType::F32, Expr(expr)))
+      case uint16_t(Op::F32DemoteF64):
+        if (!AstDecodeConversion(c, ValType::F64, ValType::F32, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F64ConvertSI32):
-      case uint16_t(Expr::F64ConvertUI32):
-        if (!AstDecodeConversion(c, ValType::I32, ValType::F64, Expr(expr)))
+      case uint16_t(Op::F64ConvertSI32):
+      case uint16_t(Op::F64ConvertUI32):
+        if (!AstDecodeConversion(c, ValType::I32, ValType::F64, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F64ConvertSI64):
-      case uint16_t(Expr::F64ConvertUI64):
-      case uint16_t(Expr::F64ReinterpretI64):
-        if (!AstDecodeConversion(c, ValType::I64, ValType::F64, Expr(expr)))
+      case uint16_t(Op::F64ConvertSI64):
+      case uint16_t(Op::F64ConvertUI64):
+      case uint16_t(Op::F64ReinterpretI64):
+        if (!AstDecodeConversion(c, ValType::I64, ValType::F64, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F64PromoteF32):
-        if (!AstDecodeConversion(c, ValType::F32, ValType::F64, Expr(expr)))
+      case uint16_t(Op::F64PromoteF32):
+        if (!AstDecodeConversion(c, ValType::F32, ValType::F64, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I32Load8S):
-      case uint16_t(Expr::I32Load8U):
-        if (!AstDecodeLoad(c, ValType::I32, 1, Expr(expr)))
+      case uint16_t(Op::I32Load8S):
+      case uint16_t(Op::I32Load8U):
+        if (!AstDecodeLoad(c, ValType::I32, 1, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I32Load16S):
-      case uint16_t(Expr::I32Load16U):
-        if (!AstDecodeLoad(c, ValType::I32, 2, Expr(expr)))
+      case uint16_t(Op::I32Load16S):
+      case uint16_t(Op::I32Load16U):
+        if (!AstDecodeLoad(c, ValType::I32, 2, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I32Load):
-        if (!AstDecodeLoad(c, ValType::I32, 4, Expr(expr)))
+      case uint16_t(Op::I32Load):
+        if (!AstDecodeLoad(c, ValType::I32, 4, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64Load8S):
-      case uint16_t(Expr::I64Load8U):
-        if (!AstDecodeLoad(c, ValType::I64, 1, Expr(expr)))
+      case uint16_t(Op::I64Load8S):
+      case uint16_t(Op::I64Load8U):
+        if (!AstDecodeLoad(c, ValType::I64, 1, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64Load16S):
-      case uint16_t(Expr::I64Load16U):
-        if (!AstDecodeLoad(c, ValType::I64, 2, Expr(expr)))
+      case uint16_t(Op::I64Load16S):
+      case uint16_t(Op::I64Load16U):
+        if (!AstDecodeLoad(c, ValType::I64, 2, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64Load32S):
-      case uint16_t(Expr::I64Load32U):
-        if (!AstDecodeLoad(c, ValType::I64, 4, Expr(expr)))
+      case uint16_t(Op::I64Load32S):
+      case uint16_t(Op::I64Load32U):
+        if (!AstDecodeLoad(c, ValType::I64, 4, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64Load):
-        if (!AstDecodeLoad(c, ValType::I64, 8, Expr(expr)))
+      case uint16_t(Op::I64Load):
+        if (!AstDecodeLoad(c, ValType::I64, 8, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F32Load):
-        if (!AstDecodeLoad(c, ValType::F32, 4, Expr(expr)))
+      case uint16_t(Op::F32Load):
+        if (!AstDecodeLoad(c, ValType::F32, 4, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F64Load):
-        if (!AstDecodeLoad(c, ValType::F64, 8, Expr(expr)))
+      case uint16_t(Op::F64Load):
+        if (!AstDecodeLoad(c, ValType::F64, 8, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I32Store8):
-        if (!AstDecodeStore(c, ValType::I32, 1, Expr(expr)))
+      case uint16_t(Op::I32Store8):
+        if (!AstDecodeStore(c, ValType::I32, 1, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I32Store16):
-        if (!AstDecodeStore(c, ValType::I32, 2, Expr(expr)))
+      case uint16_t(Op::I32Store16):
+        if (!AstDecodeStore(c, ValType::I32, 2, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I32Store):
-        if (!AstDecodeStore(c, ValType::I32, 4, Expr(expr)))
+      case uint16_t(Op::I32Store):
+        if (!AstDecodeStore(c, ValType::I32, 4, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64Store8):
-        if (!AstDecodeStore(c, ValType::I64, 1, Expr(expr)))
+      case uint16_t(Op::I64Store8):
+        if (!AstDecodeStore(c, ValType::I64, 1, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64Store16):
-        if (!AstDecodeStore(c, ValType::I64, 2, Expr(expr)))
+      case uint16_t(Op::I64Store16):
+        if (!AstDecodeStore(c, ValType::I64, 2, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64Store32):
-        if (!AstDecodeStore(c, ValType::I64, 4, Expr(expr)))
+      case uint16_t(Op::I64Store32):
+        if (!AstDecodeStore(c, ValType::I64, 4, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::I64Store):
-        if (!AstDecodeStore(c, ValType::I64, 8, Expr(expr)))
+      case uint16_t(Op::I64Store):
+        if (!AstDecodeStore(c, ValType::I64, 8, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F32Store):
-        if (!AstDecodeStore(c, ValType::F32, 4, Expr(expr)))
+      case uint16_t(Op::F32Store):
+        if (!AstDecodeStore(c, ValType::F32, 4, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::F64Store):
-        if (!AstDecodeStore(c, ValType::F64, 8, Expr(expr)))
+      case uint16_t(Op::F64Store):
+        if (!AstDecodeStore(c, ValType::F64, 8, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::CurrentMemory):
+      case uint16_t(Op::CurrentMemory):
         if (!AstDecodeCurrentMemory(c))
             return false;
         break;
-      case uint16_t(Expr::GrowMemory):
+      case uint16_t(Op::GrowMemory):
         if (!AstDecodeGrowMemory(c))
             return false;
         break;
-      case uint16_t(Expr::SetGlobal):
+      case uint16_t(Op::SetGlobal):
         if (!AstDecodeSetGlobal(c))
             return false;
         break;
-      case uint16_t(Expr::GetGlobal):
+      case uint16_t(Op::GetGlobal):
         if (!AstDecodeGetGlobal(c))
             return false;
         break;
-      case uint16_t(Expr::Br):
-      case uint16_t(Expr::BrIf):
-        if (!AstDecodeBranch(c, Expr(expr)))
+      case uint16_t(Op::Br):
+      case uint16_t(Op::BrIf):
+        if (!AstDecodeBranch(c, Op(op)))
             return false;
         break;
-      case uint16_t(Expr::BrTable):
+      case uint16_t(Op::BrTable):
         if (!AstDecodeBrTable(c))
             return false;
         break;
-      case uint16_t(Expr::Return):
+      case uint16_t(Op::Return):
         if (!AstDecodeReturn(c))
             return false;
         break;
-      case uint16_t(Expr::Unreachable):
+      case uint16_t(Op::Unreachable):
         if (!c.iter().readUnreachable())
             return false;
         tmp = new(c.lifo) AstUnreachable();
@@ -1417,7 +1417,7 @@ AstDecodeExpr(AstDecodeContext& c)
             return false;
         break;
       default:
-        return c.iter().unrecognizedOpcode(expr);
+        return c.iter().unrecognizedOpcode(op);
     }
 
     AstExpr* lastExpr = c.top().expr;
@@ -1792,7 +1792,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcDefIndex, AstFunc** func
     const uint8_t* bodyBegin = c.d.currentPosition();
     const uint8_t* bodyEnd = bodyBegin + bodySize;
 
-    AstDecodeExprIter iter(c.d);
+    AstDecodeOpIter iter(c.d);
 
     uint32_t sigIndex = c.funcDefSigs()[funcDefIndex];
     const AstSig* sig = c.module().sigs()[sigIndex];
@@ -1839,7 +1839,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcDefIndex, AstFunc** func
             return false;
 
         const AstDecodeStackItem& item = c.top();
-        if (!item.expr) { // Expr::End was found
+        if (!item.expr) { // Op::End was found
             c.popBack();
             break;
         }
