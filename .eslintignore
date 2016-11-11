@@ -119,7 +119,9 @@ devtools/server/actors/**
 !devtools/server/actors/webbrowser.js
 !devtools/server/actors/webextension.js
 devtools/server/performance/**
-devtools/server/tests/**
+devtools/server/tests/browser/**
+devtools/server/tests/mochitest/**
+devtools/server/tests/unit/**
 devtools/shared/*.js
 !devtools/shared/async-storage.js
 !devtools/shared/async-utils.js
