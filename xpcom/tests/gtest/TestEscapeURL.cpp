@@ -38,3 +38,32 @@ TEST(EscapeURL, FallibleEscape)
   const char* const kExpected = "data:,Hello%2C%20World!%C4%9F";
   EXPECT_STREQ(escaped.BeginReading(), kExpected);
 }
+
+TEST(EscapeURL, BadEscapeSequences)
+{
+  {
+    char bad[] = "%s\0fa";
+
+    int32_t count = nsUnescapeCount(bad);
+    EXPECT_EQ(count, 2);
+    EXPECT_STREQ(bad, "%s");
+  }
+  {
+    char bad[] = "%a";
+    int32_t count = nsUnescapeCount(bad);
+    EXPECT_EQ(count, 2);
+    EXPECT_STREQ(bad, "%a");
+  }
+  {
+    char bad[] = "%";
+    int32_t count = nsUnescapeCount(bad);
+    EXPECT_EQ(count, 1);
+    EXPECT_STREQ(bad, "%");
+  }
+  {
+    char bad[] = "%s/%s";
+    int32_t count = nsUnescapeCount(bad);
+    EXPECT_EQ(count, 5);
+    EXPECT_STREQ(bad, "%s/%s");
+  }
+}
