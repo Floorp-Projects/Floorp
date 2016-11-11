@@ -42,8 +42,8 @@ file.append("test");
 file.append("chrome");
 file.append("fileconstructor_file.png");
 
-doTest(new File(file.path));
-doTest(new File(file));
+doTest(File.createFromFileName(file.path));
+doTest(File.createFromNsIFile(file));
 function doTest(domfile) {
   ok(domfile instanceof File, "File() should return a File");
   is(domfile.type, "image/png", "File should be a PNG");
@@ -51,14 +51,7 @@ function doTest(domfile) {
 }
 
 try {
-  var boomfile = new File();
-  ok(false, "This should never be reached!");
-} catch (e) {
-  ok(true, "Botched file constructor attempts throw and do not crash.");
-}
-
-try {
-  var nonexistentfile = new File("i/sure/hope/this/does/not/exist/anywhere.txt");
+  var nonexistentfile = File.createFromFileName("i/sure/hope/this/does/not/exist/anywhere.txt");
   ok(false, "This should never be reached!");
 } catch (e) {
   ok(true, "Attempt to construct a non-existent file should fail.");
@@ -68,7 +61,7 @@ try {
   var dir = Components.classes["@mozilla.org/file/directory_service;1"]
                       .getService(Components.interfaces.nsIProperties)
                       .get("CurWorkD", Components.interfaces.nsIFile);
-  var dirfile = new File(dir);
+  var dirfile = File.createFromNsIFile(dir);
   ok(false, "This should never be reached!");
 } catch (e) {
   ok(true, "Attempt to construct a file from a directory should fail.");
