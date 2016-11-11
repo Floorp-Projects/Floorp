@@ -40,20 +40,12 @@ interface nsIStartupCache : nsISupports
  
   void invalidateCache();
   
-  void ignoreDiskCache();
 
   /** In debug builds, wraps this object output stream with a stream that will 
    *  detect and prevent the write of a multiply-referenced non-singleton object 
    *  during serialization. In non-debug, returns an add-ref'd pointer to
    *  original stream, unwrapped. */
   nsIObjectOutputStream getDebugObjectOutputStream(in nsIObjectOutputStream aStream);
-
-  /* Allows clients to check whether the one-time writeout after startup 
-   * has finished yet, and also to set this variable as needed (so test
-   * code can fire mulitple startup writes if needed).
-   */
-  boolean startupWriteComplete();
-  void resetStartupWriteTimer();
 
   /* Allows clients to simulate the behavior of ObserverService. */
   readonly attribute nsIObserver observer;

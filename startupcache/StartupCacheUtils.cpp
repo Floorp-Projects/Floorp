@@ -18,8 +18,8 @@
 namespace mozilla {
 namespace scache {
 
-NS_EXPORT nsresult
-NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len, 
+nsresult
+NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len,
                                nsIObjectInputStream** stream)
 {
   nsCOMPtr<nsIStringInputStream> stringStream =
@@ -37,7 +37,7 @@ NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len,
   return NS_OK;
 }
 
-NS_EXPORT nsresult
+nsresult
 NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
                                     nsIStorageStream** stream,
                                     bool wantDebugStream)
@@ -74,9 +74,9 @@ NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
   return NS_OK;
 }
 
-NS_EXPORT nsresult
-NewBufferFromStorageStream(nsIStorageStream *storageStream, 
-                           UniquePtr<char[]>* buffer, uint32_t* len) 
+nsresult
+NewBufferFromStorageStream(nsIStorageStream *storageStream,
+                           UniquePtr<char[]>* buffer, uint32_t* len)
 {
   nsresult rv;
   nsCOMPtr<nsIInputStream> inputStream;
@@ -170,7 +170,7 @@ canonicalizeBase(nsAutoCString &spec,
  *  jar:file://$PROFILE_DIR/extensions/some.xpi!/components/component.js becomes
  *     jsloader/$PROFILE_DIR/extensions/some.xpi/components/component.js
  */
-NS_EXPORT nsresult
+nsresult
 PathifyURI(nsIURI *in, nsACString &out)
 {
     bool equals;
