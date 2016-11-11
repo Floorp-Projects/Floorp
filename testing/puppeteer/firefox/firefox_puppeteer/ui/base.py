@@ -12,11 +12,11 @@ class UIBaseLib(BaseLib):
     """A base class for all UI element wrapper classes inside a chrome window."""
 
     def __init__(self, marionette, window, element):
+        super(UIBaseLib, self).__init__(marionette)
 
         assert isinstance(window, BaseWindow)
         assert isinstance(element, HTMLElement)
 
-        BaseLib.__init__(self, marionette)
         self._window = window
         self._element = element
 
@@ -52,6 +52,3 @@ class DOMElement(HTMLElement):
 
     def __init__(self, element):
         pass
-
-    def get_marionette(self):
-        return self.marionette
