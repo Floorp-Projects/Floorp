@@ -333,7 +333,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest *request, nsISupports
 
     // If this is a multipart stream, we could get another
     // OnStartRequest after this... reset state.
-    m_targetStreamListener = 0;
+    m_targetStreamListener = nullptr;
     mContentType.Truncate();
     listener->OnStopRequest(request, aCtxt, aStatus);
   }

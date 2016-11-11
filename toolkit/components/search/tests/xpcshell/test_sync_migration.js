@@ -15,7 +15,7 @@ function run_test() {
 
 add_task(function* test_sync_metadata_migration() {
   do_check_false(Services.search.isInitialized);
-  let engines = Services.search.getEngines();
+  Services.search.getEngines();
   do_check_true(Services.search.isInitialized);
   yield promiseAfterCache();
 

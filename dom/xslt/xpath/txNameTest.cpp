@@ -15,7 +15,7 @@ txNameTest::txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, int32_t aNSID,
      mNodeType(aNodeType)
 {
     if (aPrefix == nsGkAtoms::_empty)
-        mPrefix = 0;
+        mPrefix = nullptr;
     NS_ASSERTION(aLocalName, "txNameTest without a local name?");
     NS_ASSERTION(aNodeType == txXPathNodeType::DOCUMENT_NODE ||
                  aNodeType == txXPathNodeType::ELEMENT_NODE ||

@@ -81,7 +81,7 @@ add_task(test_infoByGUID);
 
 function* test_invalid_guid() {
   try {
-    let placeInfoByGUID = yield PlacesUtils.promisePlaceInfo("###");
+    yield PlacesUtils.promisePlaceInfo("###");
     do_throw("getPlacesInfo should fail for invalid guids")
   }
   catch (ex) { }

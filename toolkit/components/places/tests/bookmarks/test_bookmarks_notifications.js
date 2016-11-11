@@ -161,8 +161,8 @@ add_task(function* update_bookmark_uri() {
 add_task(function* update_move_same_folder() {
   // Ensure there are at least two items in place (others test do so for us,
   // but we don't have to depend on that).
-  let sep = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid });
+  yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+                                       parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   let bm = yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 url: new URL("http://move.example.com/") });
@@ -270,7 +270,7 @@ add_task(function* remove_bookmark_tag_notification() {
   let tagParentId = yield PlacesUtils.promiseItemId(tag.parentGuid);
 
   let observer = expectNotifications();
-  let removed = yield PlacesUtils.bookmarks.remove(tag.guid);
+  yield PlacesUtils.bookmarks.remove(tag.guid);
 
   observer.check([ { name: "onItemRemoved",
                      arguments: [ tagId, tagParentId, tag.index, tag.type,

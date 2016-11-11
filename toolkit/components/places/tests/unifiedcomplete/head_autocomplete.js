@@ -111,7 +111,7 @@ AutoCompleteInput.prototype = {
 // A helper for check_autocomplete to check a specific match against data from
 // the controller.
 function _check_autocomplete_matches(match, result) {
-  let { uri, title, tags, searchEngine, style } = match;
+  let { uri, title, tags, style } = match;
   if (tags)
     title += " \u2013 " + tags.sort().join(", ");
   if (style)
@@ -271,7 +271,7 @@ var addBookmark = Task.async(function* (aBookmarkObj) {
     title: aBookmarkObj.title || "A bookmark",
     url: aBookmarkObj.uri
   });
-  let itemId = yield PlacesUtils.promiseItemId(bm.guid);
+  yield PlacesUtils.promiseItemId(bm.guid);
 
   if (aBookmarkObj.keyword) {
     yield PlacesUtils.keywords.insert({ keyword: aBookmarkObj.keyword,

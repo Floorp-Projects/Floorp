@@ -2380,11 +2380,11 @@ add_task(function* test_platform_integration()
     let download;
     if (gUseLegacySaver) {
       download = yield promiseStartLegacyDownload(httpUrl("source.txt"),
-                                                  { targetFile: targetFile });
+                                                  { isPrivate, targetFile });
     }
     else {
       download = yield Downloads.createDownload({
-        source: httpUrl("source.txt"),
+        source: { url: httpUrl("source.txt"), isPrivate },
         target: targetFile,
       });
       download.start().catch(() => {});
@@ -2469,8 +2469,6 @@ add_task(function* test_history_tryToKeepPartialData()
  * mode after they have been launched.
  */
 add_task(function* test_launchWhenSucceeded_deleteTempFileOnExit() {
-  const kDeleteTempFileOnExit = "browser.helperApps.deleteTempFileOnExit";
-
   let customLauncherPath = getTempFile("app-launcher").path;
   let autoDeleteTargetPathOne = getTempFile(TEST_TARGET_FILE_NAME).path;
   let autoDeleteTargetPathTwo = getTempFile(TEST_TARGET_FILE_NAME).path;

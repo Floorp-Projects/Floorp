@@ -195,7 +195,7 @@ add_task(function* test_subprocess_round_trip_perf() {
 
     let now = Date.now();
     const COUNT = 1000;
-    for (let i = 0; i < COUNT; i++) {
+    for (let j = 0; j < COUNT; j++) {
       let [output] = yield Promise.all([
         read(proc.stdout),
         proc.stdin.write(LINE),
@@ -539,12 +539,12 @@ add_task(function* test_subprocess_workdir() {
       arguments: ["-u", TEST_SCRIPT, "pwd"],
     }, options));
 
-    let pwd = read(proc.stdout);
+    let pwdOutput = read(proc.stdout);
 
     let {exitCode} = yield proc.wait();
     equal(exitCode, 0, "Got expected exit code");
 
-    return pwd;
+    return pwdOutput;
   }
 
   let dir = yield pwd({});

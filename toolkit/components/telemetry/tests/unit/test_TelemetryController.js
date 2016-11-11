@@ -287,9 +287,6 @@ add_task(function* test_pingHasEnvironmentAndClientId() {
 });
 
 add_task(function* test_archivePings() {
-  const ARCHIVE_PATH =
-    OS.Path.join(OS.Constants.Path.profileDir, "datareporting", "archived");
-
   let now = new Date(2009, 10, 18, 12, 0, 0);
   fakeNow(now);
 

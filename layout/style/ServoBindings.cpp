@@ -29,6 +29,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ServoRestyleManager.h"
+#include "mozilla/StyleAnimationValue.h"
 #include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/dom/Element.h"
 
@@ -965,6 +966,75 @@ Gecko_NewStyleQuoteValues(uint32_t aLen)
 }
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsStyleQuoteValues, QuoteValues);
+
+nsCSSValueSharedList*
+Gecko_NewCSSValueSharedList(uint32_t aLen)
+{
+  RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList;
+  if (aLen == 0) {
+    return list.forget().take();
+  }
+
+  list->mHead = new nsCSSValueList;
+  nsCSSValueList* cur = list->mHead;
+  for (uint32_t i = 0; i < aLen - 1; i++) {
+    cur->mNext = new nsCSSValueList;
+    cur = cur->mNext;
+  }
+
+  return list.forget().take();
+}
+
+void
+Gecko_CSSValue_SetAbsoluteLength(nsCSSValueBorrowedMut aCSSValue, nscoord aLen)
+{
+  aCSSValue->SetIntegerCoordValue(aLen);
+}
+
+void
+Gecko_CSSValue_SetNumber(nsCSSValueBorrowedMut aCSSValue, float aNumber)
+{
+  aCSSValue->SetFloatValue(aNumber, eCSSUnit_Number);
+}
+
+void
+Gecko_CSSValue_SetKeyword(nsCSSValueBorrowedMut aCSSValue, nsCSSKeyword aKeyword)
+{
+  aCSSValue->SetIntValue(aKeyword, eCSSUnit_Enumerated);
+}
+
+void
+Gecko_CSSValue_SetPercentage(nsCSSValueBorrowedMut aCSSValue, float aPercent)
+{
+  aCSSValue->SetFloatValue(aPercent, eCSSUnit_Number);
+}
+
+void
+Gecko_CSSValue_SetAngle(nsCSSValueBorrowedMut aCSSValue, float aRadians)
+{
+  aCSSValue->SetFloatValue(aRadians, eCSSUnit_Radian);
+}
+
+void
+Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut aCSSValue, nsStyleCoord::CalcValue aCalc)
+{
+  aCSSValue->SetCalcValue(&aCalc);
+}
+
+void
+Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut aCSSValue, int32_t aLen)
+{
+  nsCSSValue::Array* arr = nsCSSValue::Array::Create(aLen);
+  aCSSValue->SetArrayValue(arr, eCSSUnit_Function);
+}
+
+nsCSSValueBorrowedMut
+Gecko_CSSValue_GetArrayItem(nsCSSValueBorrowedMut aCSSValue, int32_t aIndex)
+{
+  return &aCSSValue->GetArrayValue()->Item(aIndex);
+}
+
+NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 
 #define STYLE_STRUCT(name, checkdata_cb)                                      \
                                                                               \

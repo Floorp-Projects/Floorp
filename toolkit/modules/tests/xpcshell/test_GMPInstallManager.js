@@ -142,10 +142,10 @@ add_test(function test_checkForAddons_404Error() {
  * Tests that a xhr abort() works as expected
  */
 add_test(function test_checkForAddons_abort() {
-  let xhr = overrideXHR(200, "", { dropRequest: true} );
+  let overriddenXhr = overrideXHR(200, "", { dropRequest: true} );
   let installManager = new GMPInstallManager();
   let promise = installManager.checkForAddons();
-  xhr.abort();
+  overriddenXhr.abort();
   promise.then(res => {
     do_check_true(res.usedFallback);
     installManager.uninit();

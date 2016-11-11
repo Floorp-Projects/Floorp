@@ -76,9 +76,9 @@ function run_test() {
         }
 
         AddonManager.getInstallForFile(do_get_addon("test_getresource"),
-            callback_soon(function(aInstall) {
+            callback_soon(function(aInstall_2) {
           do_check_false(a1.hasResource("icon.png"));
-          do_check_true(aInstall.addon.hasResource("icon.png"));
+          do_check_true(aInstall_2.addon.hasResource("icon.png"));
 
           restartManager();
 

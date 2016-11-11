@@ -1227,7 +1227,7 @@ function fillInTree(aRoot)
       } else {
         delete aT._kids;
       }
-      aT._amount = kid._amount;
+      aT._amount = kidBytes;
       aT._description = kid._description;
       if (kid._nMerged !== undefined) {
         aT._nMerged = kid._nMerged

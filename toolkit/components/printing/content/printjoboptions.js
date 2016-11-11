@@ -135,8 +135,6 @@ function createPaperArrayFromDefaults()
   var paperWidths  = [ 8.5,  8.5,  7.25, 148.0, 210.0, 287.0, 420.0, 594.0,  841.0];
   var paperHeights = [11.0, 14.0, 10.50, 210.0, 297.0, 420.0, 594.0, 841.0, 1189.0];
   var paperInches  = [true, true, true,  false, false, false, false, false, false];
-  // this is deprecated
-  var paperEnums  = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
   gPaperArray = new Array();
 

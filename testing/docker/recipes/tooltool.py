@@ -346,7 +346,7 @@ def open_manifest(manifest_file):
     """I know how to take a filename and load it into a Manifest object"""
     if os.path.exists(manifest_file):
         manifest = Manifest()
-        with open(manifest_file) as f:
+        with open(manifest_file, "rb") as f:
             manifest.load(f)
             log.debug("loaded manifest from file '%s'" % manifest_file)
         return manifest
@@ -755,7 +755,7 @@ def _authorize(req, auth_file):
     if auth_file:
         log.debug("using bearer token in %s" % auth_file)
         req.add_unredirected_header('Authorization',
-                                    'Bearer %s' % (open(auth_file).read().strip()))
+                                    'Bearer %s' % (open(auth_file, "rb").read().strip()))
 
 
 def _send_batch(base_url, auth_file, batch, region):
@@ -781,7 +781,7 @@ def _s3_upload(filename, file):
     conn = cls(host, port)
     try:
         req_path = "%s?%s" % (url.path, url.query) if url.query else url.path
-        conn.request('PUT', req_path, open(filename),
+        conn.request('PUT', req_path, open(filename, "rb"),
                      {'Content-type': 'application/octet-stream'})
         resp = conn.getresponse()
         resp_body = resp.read()

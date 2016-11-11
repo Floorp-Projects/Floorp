@@ -23,10 +23,10 @@ function run_test()
       do_check_eq(addon.name, "Test theme");
       restartManager();
 
-      AddonManager.getAddonByID(ID, callback_soon(function(addon) {
-        do_check_neq(addon, null);
-        do_check_eq(addon.optionsURL, null);
-        do_check_eq(addon.aboutURL, null);
+      AddonManager.getAddonByID(ID, callback_soon(function(addon2) {
+        do_check_neq(addon2, null);
+        do_check_eq(addon2.optionsURL, null);
+        do_check_eq(addon2.aboutURL, null);
 
         do_execute_soon(do_test_finished);
       }));

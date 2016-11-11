@@ -64,8 +64,8 @@ add_task(function* test_addVisitCheckFields() {
 
 add_task(function* test_bookmarkFields() {
   let folder = bookmarks.createFolder(bookmarks.placesRoot, "test folder", bookmarks.DEFAULT_INDEX);
-  let bm = bookmarks.insertBookmark(folder, uri("http://test4.com/"),
-                                    bookmarks.DEFAULT_INDEX, "test4 title");
+  bookmarks.insertBookmark(folder, uri("http://test4.com/"),
+                           bookmarks.DEFAULT_INDEX, "test4 title");
 
   let root = PlacesUtils.getFolderContents(folder).root;
   equal(root.childCount, 1);

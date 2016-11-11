@@ -145,10 +145,8 @@ add_task(function* test_boolean_histogram() {
   var r = h.snapshot().ranges;
   // boolean histograms ignore numeric parameters
   do_check_eq(uneval(r), uneval([0, 1, 2]))
-  var sum = 0
   for (var i=0;i<r.length;i++) {
     var v = r[i];
-    sum += v;
     h.add(v);
   }
   h.add(true);

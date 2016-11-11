@@ -69,22 +69,30 @@ define(function (require, exports, module) {
         );
       });
 
-      let ownProperties = object.preview ? object.preview.ownProperties : {};
+      let properties = object.preview
+        ? object.preview.ownProperties
+        : {};
       let propertiesLength = object.preview && object.preview.ownPropertiesLength
         ? object.preview.ownPropertiesLength
         : object.ownPropertyLength;
-      let indexes = this.getPropIndexes(ownProperties, max, isInterestingProp);
+
+      if (object.preview && object.preview.safeGetterValues) {
+        properties = Object.assign({}, properties, object.preview.safeGetterValues);
+        propertiesLength += Object.keys(object.preview.safeGetterValues).length;
+      }
+
+      let indexes = this.getPropIndexes(properties, max, isInterestingProp);
       if (indexes.length < max && indexes.length < propertiesLength) {
         // There are not enough props yet. Then add uninteresting props to display them.
         indexes = indexes.concat(
-          this.getPropIndexes(ownProperties, max - indexes.length, (t, value, name) => {
+          this.getPropIndexes(properties, max - indexes.length, (t, value, name) => {
             return !isInterestingProp(t, value, name);
           })
         );
       }
 
-      const truncate = Object.keys(ownProperties).length > max;
-      let props = this.getProps(ownProperties, indexes, truncate);
+      const truncate = Object.keys(properties).length > max;
+      let props = this.getProps(properties, indexes, truncate);
       if (truncate) {
         // There are some undisplayed props. Then display "more...".
         let objectLink = this.props.objectLink || span;
@@ -102,12 +110,12 @@ define(function (require, exports, module) {
     /**
      * Get props ordered by index.
      *
-     * @param {Object} ownProperties Props object.
+     * @param {Object} properties Props object.
      * @param {Array} indexes Indexes of props.
      * @param {Boolean} truncate true if the grip will be truncated.
      * @return {Array} Props.
      */
-    getProps: function (ownProperties, indexes, truncate) {
+    getProps: function (properties, indexes, truncate) {
       let props = [];
 
       // Make indexes ordered by ascending.
@@ -116,9 +124,9 @@ define(function (require, exports, module) {
       });
 
       indexes.forEach((i) => {
-        let name = Object.keys(ownProperties)[i];
-        let prop = ownProperties[name];
-        let value = prop.value !== undefined ? prop.value : prop;
+        let name = Object.keys(properties)[i];
+        let value = this.getPropValue(properties[name]);
+
         props.push(PropRep(Object.assign({}, this.props, {
           mode: "tiny",
           name: name,
@@ -135,26 +143,24 @@ define(function (require, exports, module) {
     /**
      * Get the indexes of props in the object.
      *
-     * @param {Object} ownProperties Props object.
+     * @param {Object} properties Props object.
      * @param {Number} max The maximum length of indexes array.
      * @param {Function} filter Filter the props you want.
      * @return {Array} Indexes of interesting props in the object.
      */
-    getPropIndexes: function (ownProperties, max, filter) {
+    getPropIndexes: function (properties, max, filter) {
       let indexes = [];
 
       try {
         let i = 0;
-        for (let name in ownProperties) {
+        for (let name in properties) {
           if (indexes.length >= max) {
             return indexes;
           }
 
-          let prop = ownProperties[name];
-          let value = prop.value !== undefined ? prop.value : prop;
-
           // Type is specified in grip's "class" field and for primitive
           // values use typeof.
+          let value = this.getPropValue(properties[name]);
           let type = (value.class || typeof value);
           type = type.toLowerCase();
 
@@ -166,8 +172,26 @@ define(function (require, exports, module) {
       } catch (err) {
         console.error(err);
       }
-
       return indexes;
+    },
+
+    /**
+     * Get the actual value of a property.
+     *
+     * @param {Object} property
+     * @return {Object} Value of the property.
+     */
+    getPropValue: function (property) {
+      let value = property;
+      if (typeof property === "object") {
+        let keys = Object.keys(property);
+        if (keys.includes("value")) {
+          value = property.value;
+        } else if (keys.includes("getterValue")) {
+          value = property.getterValue;
+        }
+      }
+      return value;
     },
 
     render: function () {

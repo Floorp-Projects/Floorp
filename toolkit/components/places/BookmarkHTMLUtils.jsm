@@ -520,8 +520,6 @@ BookmarkImporter.prototype = {
     let keyword = this._safeTrim(aElt.getAttribute("shortcuturl"));
     let postData = this._safeTrim(aElt.getAttribute("post_data"));
     let webPanel = this._safeTrim(aElt.getAttribute("web_panel"));
-    let micsumGenURI = this._safeTrim(aElt.getAttribute("micsum_gen_uri"));
-    let generatedTitle = this._safeTrim(aElt.getAttribute("generated_title"));
     let dateAdded = this._safeTrim(aElt.getAttribute("add_date"));
     let lastModified = this._safeTrim(aElt.getAttribute("last_modified"));
     let tags = this._safeTrim(aElt.getAttribute("tags"));
@@ -1124,9 +1122,8 @@ BookmarkExporter.prototype = {
   },
 
   *_writeItem(aItem, aIndent) {
-    let uri = null;
     try {
-      uri = NetUtil.newURI(aItem.uri);
+      NetUtil.newURI(aItem.uri);
     } catch (ex) {
       // If the item URI is invalid, skip the item instead of failing later.
       return;

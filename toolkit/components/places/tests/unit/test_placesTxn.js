@@ -321,7 +321,6 @@ add_task(function* test_remove_item_with_tag() {
   let testFolder = bmsvc.createFolder(root, "Test removing an item with a tag",
                                       bmsvc.DEFAULT_INDEX);
 
-  const KEYWORD = "test: test removing an item with a tag";
   const TAG_NAME = "tag-test_remove_item_with_tag";
   let testURI = NetUtil.newURI("http://test_remove_item_with_tag.com");
   let testBkmId = bmsvc.insertBookmark(testFolder, testURI, bmsvc.DEFAULT_INDEX, "test-item1");
@@ -364,7 +363,6 @@ add_task(function* test_remove_item_with_keyword() {
                                       bmsvc.DEFAULT_INDEX);
 
   const KEYWORD = "test: test removing an item with a keyword";
-  const TAG_NAME = "tag-test_remove_item_with_keyword";
   let testURI = NetUtil.newURI("http://test_remove_item_with_keyword.com");
   let testBkmId = bmsvc.insertBookmark(testFolder, testURI, bmsvc.DEFAULT_INDEX, "test-item1");
 

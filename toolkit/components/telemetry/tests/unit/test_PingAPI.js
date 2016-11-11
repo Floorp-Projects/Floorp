@@ -106,7 +106,6 @@ add_task(function* test_archivedPings() {
   }
 
   // Check loading the archived pings.
-  let ids = PINGS.map(p => p.id);
   let checkLoadingPings = Task.async(function*() {
     for (let data of PINGS) {
       let ping = yield TelemetryArchive.promiseArchivedPingById(data.id);
@@ -263,7 +262,7 @@ add_task(function* test_archiveCleanup() {
   Telemetry.getHistogramById("TELEMETRY_ARCHIVE_OLDEST_DIRECTORY_AGE").clear();
 
   // Move the current date 60 days ahead of the first ping.
-  let now = fakeNow(futureDate(firstDate, 60 * MILLISECONDS_PER_DAY));
+  fakeNow(futureDate(firstDate, 60 * MILLISECONDS_PER_DAY));
   // Reset TelemetryArchive and TelemetryController to start the startup cleanup.
   yield TelemetryController.testReset();
   // Wait for the cleanup to finish.

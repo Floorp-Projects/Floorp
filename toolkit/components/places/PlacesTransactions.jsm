@@ -313,7 +313,6 @@ var PlacesTransactions = {
    * @see Batches in the module documentation.
    */
   batch(aToBatch) {
-    let batchFunc;
     if (Array.isArray(aToBatch)) {
       if (aToBatch.length == 0)
         throw new Error("aToBatch must not be an empty array");

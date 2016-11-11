@@ -56,7 +56,6 @@ function dialogOnLoad() {
 }
 
 function dialogOK() {
-    let selected = listBox.selectedIndex;
     gArgs.setProperty("selected", listBox.selectedIndex);
     gArgs.setProperty("ok", true);
     return true;
