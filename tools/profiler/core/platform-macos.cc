@@ -358,12 +358,6 @@ Sampler::GetProfiledThread(PlatformData* aData)
   return aData->profiled_pthread();
 }
 
-#include <sys/syscall.h>
-pid_t gettid()
-{
-  return (pid_t) syscall(SYS_thread_selfid);
-}
-
 /* static */ Thread::tid_t
 Thread::GetCurrentId()
 {
