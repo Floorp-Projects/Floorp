@@ -88,7 +88,8 @@ WidevineAdapter::GMPInit(const GMPPlatformAPI* aPlatformAPI)
 GMPErr
 WidevineAdapter::GMPGetAPI(const char* aAPIName,
                            void* aHostAPI,
-                           void** aPluginAPI)
+                           void** aPluginAPI,
+                           uint32_t aDecryptorId)
 {
   Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p",
       aAPIName, aHostAPI, aPluginAPI, this);
