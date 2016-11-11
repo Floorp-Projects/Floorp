@@ -456,6 +456,7 @@ this.TabCrashHandler = {
     }
 
     let requestAutoSubmit = !UnsubmittedCrashHandler.autoSubmit;
+    let requestEmail = this.prefs.getBoolPref("requestEmail");
     let sendReport = this.prefs.getBoolPref("sendReport");
     let includeURL = this.prefs.getBoolPref("includeURL");
     let emailMe = this.prefs.getBoolPref("emailMe");
@@ -466,6 +467,7 @@ this.TabCrashHandler = {
       includeURL,
       emailMe,
       requestAutoSubmit,
+      requestEmail,
     };
 
     if (emailMe) {
