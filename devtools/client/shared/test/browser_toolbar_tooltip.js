@@ -1,13 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that the developer toolbar works properly
 
 //
 // Whitelisting this test.
 // As part of bug 1077403, the leaking uncaught rejection should be fixed.
 //
-thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Protocol error (unknownError): Error: Got an invalid root window in DocumentWalker");
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed(
+  "Protocol error (unknownError): Error: Got an invalid root window in DocumentWalker"
+);
 
 const TEST_URI = "data:text/html;charset=utf-8,<p>Tooltip Tests</p>";
 const PREF_DEVTOOLS_THEME = "devtools.theme";
@@ -75,7 +79,6 @@ add_task(function* testThemes() {
      "light", "Tooltip panel has correct theme");
 });
 
-
 add_task(function* hideToolbar() {
   info("Ending browser_toolbar_tooltip.js");
   yield DeveloperToolbar.inputter.setInput("");
@@ -104,5 +107,5 @@ function observeOnce(topic, ownsWeak = false) {
       resolve(subject);
     };
     Services.obs.addObserver(resolver, topic, ownsWeak);
-  }.bind(this));
+  });
 }

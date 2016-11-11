@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf-8," +
   "<p>browser_telemetry_toolboxtabs_canvasdebugger.js</p>";
 

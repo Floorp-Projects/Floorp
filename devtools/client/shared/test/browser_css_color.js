@@ -1,16 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 const TEST_URI = "data:text/html;charset=utf-8,browser_css_color.js";
 var {colorUtils} = require("devtools/shared/css/color");
 /* global getFixtureColorData */
 loadHelperScript("helper_color_data.js");
 
-var origColorUnit;
-
 add_task(function* () {
   yield addTab("about:blank");
-  let [host, win, doc] = yield createHost("bottom", TEST_URI);
+  let [host,, doc] = yield createHost("bottom", TEST_URI);
 
   info("Creating a test canvas element to test colors");
   let canvas = createTestCanvas(doc);
@@ -69,8 +69,8 @@ function testColorMatch(name, hex, hsl, rgb, rgba, canvas) {
   let clearCanvas = function () {
     canvas.width = 1;
   };
-  let setColor = function (aColor) {
-    ctx.fillStyle = aColor;
+  let setColor = function (color) {
+    ctx.fillStyle = color;
     ctx.fillRect(0, 0, 1, 1);
   };
   let setTargetColor = function () {
@@ -80,12 +80,13 @@ function testColorMatch(name, hex, hsl, rgb, rgba, canvas) {
     let [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
     target = {r: r, g: g, b: b, a: a};
   };
-  let test = function (aColor, type) {
-    let tolerance = 3; // hsla -> rgba -> hsla produces inaccurate results so we
-                       // need some tolerence here.
+  let test = function (color, type) {
+    // hsla -> rgba -> hsla produces inaccurate results so we
+    // need some tolerence here.
+    let tolerance = 3;
     clearCanvas();
 
-    setColor(aColor);
+    setColor(color);
     let [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
 
     let rgbFail = Math.abs(r - target.r) > tolerance ||
@@ -93,7 +94,7 @@ function testColorMatch(name, hex, hsl, rgb, rgba, canvas) {
                   Math.abs(b - target.b) > tolerance;
     ok(!rgbFail, "color " + rgba + " matches target. Type: " + type);
     if (rgbFail) {
-      info("target: " + (target.toSource()) + ", color: [r: " + r + ", g: " + g + ", b: " + b + ", a: " + a + "]");
+      info(`target: ${target.toSource()}, color: [r: ${r}, g: ${g}, b: ${b}, a: ${a}]`);
     }
 
     let alphaFail = a !== target.a;
@@ -120,7 +121,8 @@ function testSetAlpha() {
     ["longalphahex", "#00ff80ff", 0.2, "rgba(0, 255, 128, 0.2)"]
   ];
   values.forEach(([type, value, alpha, expected]) => {
-    is(colorUtils.setAlpha(value, alpha), expected, "correctly sets alpha value for " + type);
+    is(colorUtils.setAlpha(value, alpha), expected,
+       "correctly sets alpha value for " + type);
   });
 
   try {
@@ -130,5 +132,6 @@ function testSetAlpha() {
     ok(true, "Fails when setAlpha receives an invalid color.");
   }
 
-  is(colorUtils.setAlpha("#fff"), "rgba(255, 255, 255, 1)", "sets alpha to 1 if invalid.");
+  is(colorUtils.setAlpha("#fff"), "rgba(255, 255, 255, 1)",
+     "sets alpha to 1 if invalid.");
 }
