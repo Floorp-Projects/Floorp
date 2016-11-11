@@ -492,8 +492,8 @@ def host_for_old_configure(host):
 
 add_old_configure_arg(host_for_old_configure)
 
-@depends(host, target)
-def target_for_old_configure(host, target):
+@depends(target)
+def target_for_old_configure(target):
     target_alias = target.alias
     # old-configure does plenty of tests against $target and $target_os
     # and expects darwin for iOS, so make it happy.
@@ -759,10 +759,10 @@ def enabled_in_nightly(milestone, _):
 
 # Set the MOZ_CONFIGURE_OPTIONS variable with all the options that
 # were passed somehow (environment, command line, mozconfig)
-@depends(mozconfig_options)
+@dependable
 @imports(_from='mozbuild.shellutil', _import='quote')
 @imports('__sandbox__')
-def all_configure_options(_):
+def all_configure_options():
     result = []
     previous = None
     for option in __sandbox__._options.itervalues():
