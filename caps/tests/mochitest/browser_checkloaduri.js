@@ -52,6 +52,18 @@ const URLs = new Map([
     ["view-source:data:text/html,Hi", true, false, true],
     ["javascript:alert('hi')", true, false, true],
   ]],
+  ["about:foo", [
+    ["about:foo?", true, true, true],
+    ["about:foo?bar", true, true, true],
+    ["about:foo#", true, true, true],
+    ["about:foo#bar", true, true, true],
+    ["about:foo?#", true, true, true],
+    ["about:foo?bar#baz", true, true, true],
+    ["about:bar", false, false, true],
+    ["about:bar?foo#baz", false, false, true],
+    ["about:bar?foo", false, false, true],
+    ["http://www.example.com/", true, true, true],
+  ]],
 ]);
 
 function testURL(source, target, canLoad, canLoadWithoutInherit, canCreate, flags) {
