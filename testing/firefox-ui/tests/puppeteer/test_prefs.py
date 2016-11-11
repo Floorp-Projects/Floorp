@@ -8,7 +8,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class testPreferences(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(testPreferences, self).setUp()
 
         self.new_pref = 'marionette.unittest.set_pref'
         self.unknown_pref = 'marionette.unittest.unknown'
@@ -27,7 +27,7 @@ class testPreferences(FirefoxTestCase):
             self.marionette.clear_pref('browser.tabs.maxOpenBeforeWarn')
             self.marionette.clear_pref('browser.startup.homepage')
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(testPreferences, self).tearDown()
 
     def test_get_pref(self):
         # check correct types

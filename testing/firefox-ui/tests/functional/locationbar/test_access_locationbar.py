@@ -10,7 +10,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestAccessLocationBar(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestAccessLocationBar, self).setUp()
 
         # Clear complete history so there's no interference from previous entries.
         self.puppeteer.places.remove_all_history()

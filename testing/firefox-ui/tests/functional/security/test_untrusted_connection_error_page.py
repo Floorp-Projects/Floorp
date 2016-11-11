@@ -11,8 +11,9 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 
 
 class TestUntrustedConnectionErrorPage(FirefoxTestCase):
+
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestUntrustedConnectionErrorPage, self).setUp()
 
         self.url = 'https://ssl-selfsigned.mozqa.com'
 

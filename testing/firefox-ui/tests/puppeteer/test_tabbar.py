@@ -13,7 +13,7 @@ class TestTabBar(FirefoxTestCase):
         try:
             self.browser.tabbar.close_all_tabs([self.browser.tabbar.tabs[0]])
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestTabBar, self).tearDown()
 
     def test_basics(self):
         tabbar = self.browser.tabbar
@@ -120,7 +120,7 @@ class TestTab(FirefoxTestCase):
         try:
             self.browser.tabbar.close_all_tabs([self.browser.tabbar.tabs[0]])
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestTab, self).tearDown()
 
     def test_basic(self):
         tab = self.browser.tabbar.tabs[0]

@@ -11,7 +11,7 @@ class TestPageInfoWindow(FirefoxTestCase):
         try:
             self.puppeteer.windows.close_all([self.browser])
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestPageInfoWindow, self).tearDown()
 
     def test_elements(self):
         """Test correct retrieval of elements."""

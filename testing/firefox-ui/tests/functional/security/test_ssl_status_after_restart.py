@@ -11,7 +11,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestSSLStatusAfterRestart(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestSSLStatusAfterRestart, self).setUp()
 
         self.test_data = (
             {
@@ -45,7 +45,7 @@ class TestSSLStatusAfterRestart(FirefoxTestCase):
             self.identity_popup.close(force=True)
             self.marionette.clear_pref('browser.startup.page')
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestSSLStatusAfterRestart, self).tearDown()
 
     @skip_if_e10s
     def test_ssl_status_after_restart(self):

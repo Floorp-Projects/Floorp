@@ -10,7 +10,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestPlaces(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestPlaces, self).setUp()
 
         self.urls = [self.marionette.absolute_url('layout/mozilla_governance.html'),
                      self.marionette.absolute_url('layout/mozilla_grants.html'),
@@ -21,7 +21,7 @@ class TestPlaces(FirefoxTestCase):
             self.puppeteer.places.restore_default_bookmarks()
             self.puppeteer.places.remove_all_history()
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestPlaces, self).tearDown()
 
     def get_all_urls_in_history(self):
         return self.marionette.execute_script("""

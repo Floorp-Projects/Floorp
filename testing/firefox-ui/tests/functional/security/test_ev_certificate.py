@@ -10,7 +10,7 @@ from firefox_ui_harness.testcases import FirefoxTestCase
 class TestEVCertificate(FirefoxTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestEVCertificate, self).setUp()
 
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.locationbar.identity_popup
@@ -23,7 +23,7 @@ class TestEVCertificate(FirefoxTestCase):
             self.identity_popup.close(force=True)
             self.puppeteer.windows.close_all([self.browser])
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestEVCertificate, self).tearDown()
 
     def test_ev_certificate(self):
         with self.marionette.using_context('content'):
