@@ -1201,7 +1201,7 @@ function whenDataAvailable(dataStore, mandatoryFields) {
   let deferred = promise.defer();
 
   let interval = setInterval(() => {
-    if (dataStore.every(item => {
+    if (dataStore.length > 0 && dataStore.every(item => {
       return mandatoryFields.every(field => field in item);
     })) {
       clearInterval(interval);
