@@ -39,11 +39,6 @@
 namespace mozilla {
 namespace tasktracer {
 
-#define SOURCE_EVENT_NAME(type) \
-  const char* CreateSourceEvent##type () { return "SourceEvent" #type; }
-#include "SourceEventTypeMap.h"
-#undef SOURCE_EVENT_NAME
-
 static MOZ_THREAD_LOCAL(TraceInfo*) sTraceInfoTLS;
 static mozilla::StaticMutex sMutex;
 
@@ -110,11 +105,12 @@ CreateSourceEvent(SourceEventType aType)
   info->mCurTraceSourceType = aType;
   info->mCurTaskId = newId;
 
-  uintptr_t namePtr;
+  uintptr_t* namePtr;
 #define SOURCE_EVENT_NAME(type)         \
   case SourceEventType::type:           \
   {                                     \
-    namePtr = (uintptr_t)&CreateSourceEvent##type; \
+    static int CreateSourceEvent##type; \
+    namePtr = (uintptr_t*)&CreateSourceEvent##type; \
     break;                              \
   }
 
@@ -123,11 +119,11 @@ CreateSourceEvent(SourceEventType aType)
     default:
       MOZ_CRASH("Unknown SourceEvent.");
   }
-#undef SOURCE_EVENT_NAME
+#undef CREATE_SOURCE_EVENT_NAME
 
   // Log a fake dispatch and start for this source event.
   LogDispatch(newId, newId, newId, aType);
-  LogVirtualTablePtr(newId, newId, &namePtr);
+  LogVirtualTablePtr(newId, newId, namePtr);
   LogBegin(newId, newId);
 }
 
@@ -228,9 +224,7 @@ FreeTraceInfo(TraceInfo* aTraceInfo)
   StaticMutexAutoLock lock(sMutex);
   if (aTraceInfo) {
     UniquePtr<TraceInfo> traceinfo(aTraceInfo);
-    mozilla::DebugOnly<bool> removed =
-      sTraceInfos->RemoveElement(traceinfo);
-    MOZ_ASSERT(removed);
+    sTraceInfos->RemoveElement(traceinfo);
     Unused << traceinfo.release(); // A dirty hack to prevent double free.
   }
 }
@@ -374,10 +368,7 @@ LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, uintptr_t* aVptr)
   // [4 taskId address]
   nsCString* log = info->AppendLog();
   if (log) {
-    // Since addr2line used by SPS addon can not solve non-function
-    // addresses, we use the first entry of vtable as the symbol to
-    // solve.  We should find a better solution later.
-    log->AppendPrintf("%d %lld %p", ACTION_GET_VTABLE, aTaskId, *aVptr);
+    log->AppendPrintf("%d %lld %p", ACTION_GET_VTABLE, aTaskId, aVptr);
   }
 }
 
@@ -435,9 +426,7 @@ GetLoggedData(TimeStamp aTimeStamp)
   StaticMutexAutoLock lock(sMutex);
 
   for (uint32_t i = 0; i < sTraceInfos->Length(); ++i) {
-    if (!(*sTraceInfos)[i]->mObsolete) {
-      (*sTraceInfos)[i]->MoveLogsInto(*result);
-    }
+    (*sTraceInfos)[i]->MoveLogsInto(*result);
   }
 
   return result;
