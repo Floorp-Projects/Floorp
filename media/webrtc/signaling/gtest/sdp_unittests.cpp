@@ -6,29 +6,19 @@
 
 #include "timecard.h"
 
-#include "CSFLog.h"
-
 #include <string>
 #include <sstream>
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
-#include "gtest_utils.h"
 
 #include "nspr.h"
 #include "nss.h"
 #include "ssl.h"
 
 #include "nsThreadUtils.h"
-#include "FakeMediaStreams.h"
-#include "FakeMediaStreamsImpl.h"
-#include "FakeLogging.h"
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionCtx.h"
-
-#include "mtransport_test_utils.h"
-MtransportTestUtils *test_utils;
-nsCOMPtr<nsIThread> gThread;
 
 #include "signaling/src/sdp/SipccSdpParser.h"
 #include "signaling/src/sdp/SdpMediaSection.h"
@@ -44,29 +34,9 @@ extern "C" {
 #endif
 #define CRLF "\r\n"
 
-#include "FakeIPC.h"
-#include "FakeIPC.cpp"
-
-#include "TestHarness.h"
-
 using namespace mozilla;
 
 namespace test {
-
-static bool SetupGlobalThread() {
-  if (!gThread) {
-    nsIThread *thread;
-
-    nsresult rv = NS_NewNamedThread("pseudo-main",&thread);
-    if (NS_FAILED(rv))
-      return false;
-
-    gThread = thread;
-    PeerConnectionCtx::InitializeGlobal(gThread,
-                                               test_utils->sts_target());
-  }
-  return true;
-}
 
 class SdpTest : public ::testing::Test {
   public:
@@ -78,7 +48,8 @@ class SdpTest : public ::testing::Test {
     }
 
     static void SetUpTestCase() {
-      ASSERT_TRUE(SetupGlobalThread());
+      NSS_NoDB_Init(nullptr);
+      NSS_SetDomesticPolicy();
     }
 
     void SetUp() {
@@ -87,10 +58,7 @@ class SdpTest : public ::testing::Test {
     }
 
     static void TearDownTestCase() {
-      if (gThread) {
-        gThread->Shutdown();
-      }
-      gThread = nullptr;
+      PeerConnectionCtx::Destroy();
     }
 
     void ResetSdp() {
@@ -1416,7 +1384,7 @@ TEST_F(SdpTest, parseFmtpCbrWith2) {
 TEST_F(SdpTest, parseFmtpMaxPlaybackRate) {
   ParseSdp(kVideoSdp + "a=fmtp:120 maxplaybackrate=47900\r\n");
   sdp_attr_t *attr_p = sdp_find_attr(sdp_ptr_, 1, 0, SDP_ATTR_FMTP, 1);
-  ASSERT_NE(NULL, attr_p);
+  ASSERT_NE(nullptr, attr_p);
   ASSERT_EQ(47900U, attr_p->attr.fmtp.maxplaybackrate);
 }
 
@@ -5359,19 +5327,3 @@ TEST(NewSdpTestNoFixture, CheckRidSerialize)
 }
 
 } // End namespace test.
-
-int main(int argc, char **argv) {
-  ScopedXPCOM xpcom("sdp_unittests");
-
-  test_utils = new MtransportTestUtils();
-  NSS_NoDB_Init(nullptr);
-  NSS_SetDomesticPolicy();
-
-  ::testing::InitGoogleTest(&argc, argv);
-  int result = RUN_ALL_TESTS();
-
-  PeerConnectionCtx::Destroy();
-  delete test_utils;
-
-  return result;
-}

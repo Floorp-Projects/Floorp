@@ -6,22 +6,21 @@
 
 # TODO: bug 1172551 - get these tests working on iOS
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit':
-    GeckoCppUnitTests([
-        'jsep_session_unittest',
-        'jsep_track_unittest',
-        'mediaconduit_unittests',
-        'mediapipeline_unittest',
-        'sdp_file_parser',
-        'signaling_unittests',
-    ])
+    DEFINES['MOZILLA_EXTERNAL_LINKAGE'] = True
 
-include('/ipc/chromium/chromium-config.mozbuild')
-include('common.build')
+    LOCAL_INCLUDES += [
+      '/ipc/chromium/src',
+      '/media/mtransport',
+      '/media/webrtc/',
+      '/media/webrtc/signaling/src/common/time_profiling',
+      '/media/webrtc/signaling/src/peerconnection',
+    ]
 
-USE_LIBS += [
-    '/media/webrtc/signalingtest/signaling_ecc/ecc',
-    'mtransport_s',
-]
+    SOURCES += [
+        'sdp_unittests.cpp',
+    ]
+
+    FINAL_LIBRARY = 'xul-gtest'
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
