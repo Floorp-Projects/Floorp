@@ -178,6 +178,7 @@ marionette:
     suite: marionette
     treeherder-symbol: tc(Mn)
     max-run-time: 5400
+    docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         script: marionette.py
         no-read-buildbot-config: true

@@ -300,7 +300,6 @@
                 event.stopPropagation();
                 if (action == "default") {
                     let bnum = this.args.defaultButtonNum || 0;
-                    let button = this.ui["button" + bnum];
                     this.onButtonClick(bnum);
                 } else { // action == "cancel"
                     this.onButtonClick(1); // Cancel button

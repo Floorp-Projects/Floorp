@@ -18,7 +18,7 @@ from taskgraph.util import docker
 
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
 IMAGE_DIR = os.path.join(GECKO, 'testing', 'docker')
-INDEX_URL = 'https://index.taskcluster.net/v1/task/docker.images.v1.{}.{}.hash.{}'
+INDEX_URL = 'https://index.taskcluster.net/v1/task/' + docker.INDEX_PREFIX + '.{}.{}.hash.{}'
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 
 
@@ -39,9 +39,14 @@ def load_image_by_task_id(task_id):
     # read it back.
     filename = 'temp-docker-image.tar'
 
-    artifact_url = ARTIFACT_URL.format(task_id, 'public/image.tar')
+    artifact_url = ARTIFACT_URL.format(task_id, 'public/image.tar.zst')
     print("Downloading", artifact_url)
-    subprocess.check_call(['curl', '-#', '-L', '-o', filename, artifact_url])
+    tempfilename = 'temp-docker-image.tar.zst'
+    subprocess.check_call(['curl', '-#', '-L', '-o', tempfilename, artifact_url])
+    print("Decompressing")
+    subprocess.check_call(['zstd', '-d', tempfilename, '-o', filename])
+    print("Deleting temporary file")
+    os.unlink(tempfilename)
 
     print("Determining image name")
     tf = tarfile.open(filename)
@@ -64,6 +69,21 @@ def load_image_by_task_id(task_id):
 
     print("The requested docker image is now available as", name)
     print("Try: docker run -ti --rm {} bash".format(name))
+
+
+def build_context(name, outputFile):
+    """Build a context.tar for image with specified name.
+    """
+    if not name:
+        raise ValueError('must provide a Docker image name')
+    if not outputFile:
+        raise ValueError('must provide a outputFile')
+
+    image_dir = os.path.join(IMAGE_DIR, name)
+    if not os.path.isdir(image_dir):
+        raise Exception('image directory does not exist: %s' % image_dir)
+
+    docker.create_context_tar(GECKO, image_dir, outputFile, "")
 
 
 def build_image(name):

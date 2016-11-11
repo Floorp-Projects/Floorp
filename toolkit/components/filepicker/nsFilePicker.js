@@ -270,17 +270,6 @@ nsFilePicker.prototype = {
       }
     }
 
-    var parentWin = null;
-    try {
-      parentWin = parent.QueryInterface(nsIInterfaceRequestor)
-                        .getInterface(nsIWebNavigation)
-                        .QueryInterface(nsIDocShellTreeItem)
-                        .treeOwner
-                        .QueryInterface(nsIInterfaceRequestor)
-                        .getInterface(nsIBaseWindow);
-    } catch (ex) {
-      dump("file picker couldn't get base window\n"+ex+"\n");
-    }
     try {
       parent.openDialog("chrome://global/content/filepicker.xul",
                         "",
@@ -328,4 +317,3 @@ function srGetStrBundle(path)
   }
   return strBundle;
 }
-

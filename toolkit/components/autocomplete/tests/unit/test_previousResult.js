@@ -243,7 +243,6 @@ function run_test() {
   var input = new AutoCompleteInput([search1.name,
                                      search2.name]);
   var numSearchesStarted = 0;
-  var previousResult = null;
 
   input.onSearchBegin = function() {
     numSearchesStarted++;
@@ -279,4 +278,3 @@ function run_test() {
 
   controller.startSearch("test");
 }
-

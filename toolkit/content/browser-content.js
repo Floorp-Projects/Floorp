@@ -1013,7 +1013,11 @@ var AudioPlaybackListener = {
     if (topic === "audio-playback") {
       if (subject && subject.top == global.content) {
         let name = "AudioPlayback:";
-        name += (data === "active") ? "Start" : "Stop";
+        if (data === "block") {
+          name += "Block";
+        } else {
+          name += (data === "active") ? "Start" : "Stop";
+        }
         sendAsyncMessage(name);
       }
     } else if (topic == "AudioFocusChanged" || topic == "MediaControl") {

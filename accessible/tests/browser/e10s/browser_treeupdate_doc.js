@@ -34,12 +34,12 @@ addAccessibleTask(`
 
   /* ================= Write iframe document ================================ */
   let reorderEventPromise = waitForEvent(EVENT_REORDER, id);
-  yield ContentTask.spawn(browser, id, id => {
+  yield ContentTask.spawn(browser, id, contentId => {
     let docNode = content.document.getElementById('iframe').contentDocument;
     let newHTMLNode = docNode.createElement('html');
     let newBodyNode = docNode.createElement('body');
     let newTextNode = docNode.createTextNode('New Wave');
-    newBodyNode.id = id;
+    newBodyNode.id = contentId;
     newBodyNode.appendChild(newTextNode);
     newHTMLNode.appendChild(newBodyNode);
     docNode.replaceChild(newHTMLNode, docNode.documentElement);
@@ -59,14 +59,14 @@ addAccessibleTask(`
 
   /* ================= Replace iframe HTML element ========================== */
   reorderEventPromise = waitForEvent(EVENT_REORDER, id);
-  yield ContentTask.spawn(browser, id, id => {
+  yield ContentTask.spawn(browser, id, contentId => {
     let docNode = content.document.getElementById('iframe').contentDocument;
     // We can't use open/write/close outside of iframe document because of
     // security error.
     let script = docNode.createElement('script');
     script.textContent = `
       document.open();
-      document.write('<body id="${id}">hello</body>');
+      document.write('<body id="${contentId}">hello</body>');
       document.close();`;
     docNode.body.appendChild(script);
   });
@@ -85,11 +85,11 @@ addAccessibleTask(`
 
   /* ================= Replace iframe body ================================== */
   reorderEventPromise = waitForEvent(EVENT_REORDER, id);
-  yield ContentTask.spawn(browser, id, id => {
+  yield ContentTask.spawn(browser, id, contentId => {
     let docNode = content.document.getElementById('iframe').contentDocument;
     let newBodyNode = docNode.createElement('body');
     let newTextNode = docNode.createTextNode('New Hello');
-    newBodyNode.id = id;
+    newBodyNode.id = contentId;
     newBodyNode.appendChild(newTextNode);
     newBodyNode.setAttribute('role', 'button');
     docNode.documentElement.replaceChild(newBodyNode, docNode.body);
@@ -109,7 +109,7 @@ addAccessibleTask(`
 
   /* ================= Open iframe document ================================= */
   reorderEventPromise = waitForEvent(EVENT_REORDER, id);
-  yield ContentTask.spawn(browser, id, id => {
+  yield ContentTask.spawn(browser, id, contentId => {
     // Open document.
     let docNode = content.document.getElementById('iframe').contentDocument;
     let script = docNode.createElement('script');
@@ -120,7 +120,7 @@ addAccessibleTask(`
       }
       window.closeMe = closeMe;
       document.open();
-      document.write('<body id="${id}"></body>');`;
+      document.write('<body id="${contentId}"></body>');`;
     docNode.body.appendChild(script);
   });
   yield reorderEventPromise;
@@ -171,14 +171,14 @@ addAccessibleTask(`
 
   /* ================= Insert HTML to iframe document ======================= */
   reorderEventPromise = waitForEvent(EVENT_REORDER, id);
-  yield ContentTask.spawn(browser, id, id => {
+  yield ContentTask.spawn(browser, id, contentId => {
     // Insert HTML element.
     let docNode = content.document.getElementById('iframe').contentDocument;
     let html = docNode.createElement('html');
     let body = docNode.createElement('body');
     let text = docNode.createTextNode('Haha');
     body.appendChild(text);
-    body.id = id;
+    body.id = contentId;
     html.appendChild(body);
     docNode.appendChild(html);
   });
@@ -247,14 +247,14 @@ addAccessibleTask(`
 
   /* ================= Insert body to iframe document ======================= */
   reorderEventPromise = waitForEvent(EVENT_REORDER, id);
-  yield ContentTask.spawn(browser, id, id => {
+  yield ContentTask.spawn(browser, id, contentId => {
     // Write and close document.
     let docNode = content.document.getElementById('iframe').contentDocument;
     // Insert body element.
     let body = docNode.createElement('body');
     let text = docNode.createTextNode('Yo ho ho i butylka roma!');
     body.appendChild(text);
-    body.id = id;
+    body.id = contentId;
     docNode.documentElement.appendChild(body);
   });
   yield reorderEventPromise;
@@ -288,13 +288,13 @@ addAccessibleTask(`
 
   /* ================= Replace iframe body on ARIA role body ================ */
   reorderEventPromise = waitForEvent(EVENT_REORDER, id);
-  yield ContentTask.spawn(browser, id, id => {
+  yield ContentTask.spawn(browser, id, contentId => {
     let docNode = content.document.getElementById('iframe').contentDocument;
     let newBodyNode = docNode.createElement('body');
     let newTextNode = docNode.createTextNode('New Hello');
     newBodyNode.appendChild(newTextNode);
     newBodyNode.setAttribute('role', 'button');
-    newBodyNode.id = id;
+    newBodyNode.id = contentId;
     docNode.documentElement.replaceChild(newBodyNode, docNode.body);
   });
   yield reorderEventPromise;

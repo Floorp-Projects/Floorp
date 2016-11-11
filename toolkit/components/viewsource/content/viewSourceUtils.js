@@ -127,7 +127,6 @@ var gViewSourceUtils = {
                                                       message.data.baseURI);
       }
       else {
-        let docUrl = null;
         window.openDialog("chrome://global/content/viewPartialSource.xul",
                           "_blank", "all,dialog=no",
                           {

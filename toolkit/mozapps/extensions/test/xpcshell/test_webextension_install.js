@@ -423,7 +423,7 @@ add_task(function* test_strict_min_max() {
   // * in min will throw an error
   for (let version of ["0.*", "0.*.0"]) {
     newId = "strict_min_star@tests.mozilla.org";
-    let apps = {
+    let minStarApps = {
       applications: {
         gecko: {
           id: newId,
@@ -432,20 +432,20 @@ add_task(function* test_strict_min_max() {
       },
     }
 
-    let testManifest = Object.assign(apps, MANIFEST);
+    let minStarTestManifest = Object.assign(minStarApps, MANIFEST);
 
-    let extension = ExtensionTestUtils.loadExtension({
-      manifest: testManifest,
+    let minStarExtension = ExtensionTestUtils.loadExtension({
+      manifest: minStarTestManifest,
       useAddonManager: "temporary",
     });
 
     yield Assert.rejects(
-      extension.startup(),
+      minStarExtension.startup(),
       /The use of '\*' in strict_min_version is invalid/,
       "loading an extension with a * in strict_min_version throws an exception");
 
-    let addon = yield promiseAddonByID(newId);
-    equal(addon, null, "Add-on is not installed");
+    let minStarAddon = yield promiseAddonByID(newId);
+    equal(minStarAddon, null, "Add-on is not installed");
   }
 
   // incompatible extension but with compatibility checking off

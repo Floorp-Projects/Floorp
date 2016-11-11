@@ -7,7 +7,6 @@ function test() {
   // Initialization
   waitForExplicitFinish();
   let windowsToClose = [];
-  let testURI = "https://www.mozilla.org/en-US/";
   let favIconLocation =
     "http://example.org/tests/toolkit/components/places/tests/browser/favicon-normal32.png";
   let favIconURI = NetUtil.newURI(favIconLocation);

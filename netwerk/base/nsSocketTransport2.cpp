@@ -1874,7 +1874,7 @@ nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status, nsISupports *pa
             SendStatus(NS_NET_STATUS_RESOLVED_HOST);
 
         SOCKET_LOG(("  MSG_DNS_LOOKUP_COMPLETE\n"));
-        mDNSRequest = 0;
+        mDNSRequest = nullptr;
         if (param) {
             mDNSRecord = static_cast<nsIDNSRecord *>(param);
             mDNSRecord->GetNextAddr(SocketPort(), &mNetAddr);
@@ -2092,7 +2092,7 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
         // make sure there isn't any pending DNS request
         if (mDNSRequest) {
             mDNSRequest->Cancel(NS_ERROR_ABORT);
-            mDNSRequest = 0;
+            mDNSRequest = nullptr;
         }
 
         //

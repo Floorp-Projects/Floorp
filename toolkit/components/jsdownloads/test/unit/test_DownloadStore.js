@@ -111,7 +111,7 @@ add_task(function* test_save_reload()
  */
 add_task(function* test_save_empty()
 {
-  let [list, store] = yield promiseNewListAndStore();
+  let [, store] = yield promiseNewListAndStore();
 
   let createdFile = yield OS.File.open(store.path, { create: true });
   yield createdFile.close();

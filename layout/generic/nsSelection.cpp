@@ -280,7 +280,7 @@ public:
     if (mTimer)
     {
       mTimer->Cancel();
-      mTimer = 0;
+      mTimer = nullptr;
     }
 
     mContent = nullptr;

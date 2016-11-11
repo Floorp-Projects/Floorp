@@ -661,9 +661,7 @@ function newDir() {
 
     var parent = file.parent;
     if (!(parent.exists() && parent.isDirectory() && parent.isWritable())) {
-      var oldParent = parent;
       while (!parent.exists()) {
-        oldParent = parent;
         parent = parent.parent;
       }
       if (parent.isFile()) {

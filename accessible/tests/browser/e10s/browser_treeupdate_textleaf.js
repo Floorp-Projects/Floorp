@@ -16,8 +16,9 @@ function* removeTextData(browser, accessible, id, role) {
   testAccessibleTree(accessible, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, id);
-  yield ContentTask.spawn(browser, id, id =>
-    content.document.getElementById(id).firstChild.textContent = '');
+  yield ContentTask.spawn(browser, id, contentId => {
+    content.document.getElementById(contentId).firstChild.textContent = '';
+  });
   yield onReorder;
 
   tree = { role: role, children: [] };

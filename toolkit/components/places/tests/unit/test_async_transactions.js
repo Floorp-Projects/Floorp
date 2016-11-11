@@ -1214,7 +1214,7 @@ add_task(function* test_untag_uri() {
   });
 
   function* doTest(aInfo) {
-    let urls, tagsToRemove;
+    let urls, tagsRemoved;
     if (aInfo instanceof Ci.nsIURI) {
       urls = [aInfo];
       tagsRemoved = [];
@@ -1501,9 +1501,9 @@ add_task(function* test_copy() {
   }
 
   // Test duplicating leafs (bookmark, separator, empty folder)
-  let bmTxn = PT.NewBookmark({ url: new URL("http://test.item.duplicate")
-                             , parentGuid: rootGuid
-                             , annos: [{ name: "Anno", value: "AnnoValue"}] });
+  PT.NewBookmark({ url: new URL("http://test.item.duplicate")
+                 , parentGuid: rootGuid
+                 , annos: [{ name: "Anno", value: "AnnoValue"}] });
   let sepTxn = PT.NewSeparator({ parentGuid: rootGuid, index: 1 });
   let livemarkTxn = PT.NewLivemark(
     { feedUrl: new URL("http://test.feed.uri")
@@ -1664,7 +1664,7 @@ add_task(function* test_remove_multiple() {
     let nestedFolderGuid =
       yield PT.NewFolder({ title: "Nested Test Folder"
                          , parentGuid: folderGuid }).transact();
-    let nestedSepGuid = yield PT.NewSeparator(nestedFolderGuid).transact();
+    yield PT.NewSeparator(nestedFolderGuid).transact();
 
     guids.push(folderGuid);
 
