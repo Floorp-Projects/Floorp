@@ -6,21 +6,16 @@
  */
 
 /* libcubeb api/function test. Plays a simple tone. */
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
+#include "gtest/gtest.h"
+#if !defined(_XOPEN_SOURCE)
 #define _XOPEN_SOURCE 600
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <assert.h>
 #include <limits.h>
-
 #include "cubeb/cubeb.h"
 #include "common.h"
-#ifdef CUBEB_GECKO_BUILD
-#include "TestHarness.h"
-#endif
 
 #define SAMPLE_FREQUENCY 48000
 #if (defined(_WIN32) || defined(__WIN32__))
@@ -34,7 +29,7 @@ struct cb_user_data {
   long position;
 };
 
-long data_cb(cubeb_stream *stream, void *user, const void* /*inputbuffer*/, void *outputbuffer, long nframes)
+long data_cb_tone(cubeb_stream *stream, void *user, const void* /*inputbuffer*/, void *outputbuffer, long nframes)
 {
   struct cb_user_data *u = (struct cb_user_data *)user;
 #if (defined(_WIN32) || defined(__WIN32__))
@@ -77,7 +72,7 @@ long data_cb(cubeb_stream *stream, void *user, const void* /*inputbuffer*/, void
   return nframes;
 }
 
-void state_cb(cubeb_stream *stream, void *user, cubeb_state state)
+void state_cb_tone(cubeb_stream *stream, void *user, cubeb_state state)
 {
   struct cb_user_data *u = (struct cb_user_data *)user;
 
@@ -98,12 +93,8 @@ void state_cb(cubeb_stream *stream, void *user, cubeb_state state)
   return;
 }
 
-int main(int /*argc*/, char * /*argv*/[])
+TEST(cubeb, tone)
 {
-#ifdef CUBEB_GECKO_BUILD
-  ScopedXPCOM xpcom("test_tone");
-#endif
-
   cubeb *ctx;
   cubeb_stream *stream;
   cubeb_stream_params params;
@@ -113,7 +104,7 @@ int main(int /*argc*/, char * /*argv*/[])
   r = cubeb_init(&ctx, "Cubeb tone example");
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
-    return r;
+    ASSERT_EQ(r, CUBEB_OK);
   }
 
   params.format = STREAM_FORMAT;
@@ -123,15 +114,15 @@ int main(int /*argc*/, char * /*argv*/[])
   user_data = (struct cb_user_data *) malloc(sizeof(*user_data));
   if (user_data == NULL) {
     fprintf(stderr, "Error allocating user data\n");
-    return CUBEB_ERROR;
+    ASSERT_EQ(r, CUBEB_OK);
   }
   user_data->position = 0;
 
   r = cubeb_stream_init(ctx, &stream, "Cubeb tone (mono)", NULL, NULL, NULL, &params,
-                        4096, data_cb, state_cb, user_data);
+                        4096, data_cb_tone, state_cb_tone, user_data);
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb stream\n");
-    return r;
+    ASSERT_EQ(r, CUBEB_OK);
   }
 
   cubeb_stream_start(stream);
@@ -141,9 +132,7 @@ int main(int /*argc*/, char * /*argv*/[])
   cubeb_stream_destroy(stream);
   cubeb_destroy(ctx);
 
-  assert(user_data->position);
+  ASSERT_TRUE(user_data->position);
 
   free(user_data);
-
-  return CUBEB_OK;
 }

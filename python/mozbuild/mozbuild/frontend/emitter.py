@@ -102,14 +102,6 @@ from mozbuild.base import ExecutionSummary
 
 
 ALLOWED_XPCOM_GLUE = {
-    ('test_duplex', 'media/libcubeb/tests'),
-    ('test_resampler', 'media/libcubeb/tests'),
-    ('test_record', 'media/libcubeb/tests'),
-    ('test_tone', 'media/libcubeb/tests'),
-    ('test_utils', 'media/libcubeb/tests'),
-    ('test_audio', 'media/libcubeb/tests'),
-    ('test_latency', 'media/libcubeb/tests'),
-    ('test_sanity', 'media/libcubeb/tests'),
     ('testcomponent', 'xpcom/tests/component'),
     ('test656331', 'xpcom/tests/bug656331_component'),
     ('testcompnoaslr', 'xpcom/tests/component_no_aslr'),
