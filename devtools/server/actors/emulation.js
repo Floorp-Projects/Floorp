@@ -31,10 +31,6 @@ let EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     this.simulatorCore = new SimulatorCore(tabActor.chromeEventHandler);
   },
 
-  disconnect() {
-    this.destroy();
-  },
-
   destroy() {
     this.clearDPPXOverride();
     this.clearNetworkThrottling();

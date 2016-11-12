@@ -1494,14 +1494,14 @@ DebuggerServerConnection.prototype = {
    * @param ActorPool actorPool
    *        The ActorPool instance you want to remove.
    * @param boolean noCleanup [optional]
-   *        True if you don't want to disconnect each actor from the pool, false
+   *        True if you don't want to destroy each actor from the pool, false
    *        otherwise.
    */
   removeActorPool(actorPool, noCleanup) {
     // When a connection is closed, it removes each of its actor pools. When an
-    // actor pool is removed, it calls the disconnect method on each of its
+    // actor pool is removed, it calls the destroy method on each of its
     // actors. Some actors, such as ThreadActor, manage their own actor pools.
-    // When the disconnect method is called on these actors, they manually
+    // When the destroy method is called on these actors, they manually
     // remove their actor pools. Consequently, this method is reentrant.
     //
     // In addition, some actors, such as ThreadActor, perform asynchronous work
@@ -1510,7 +1510,7 @@ DebuggerServerConnection.prototype = {
     // be completed, we can end up in this function recursively after the
     // connection already set this._extraPools to null.
     //
-    // This is a bug: if the disconnect method can perform asynchronous work,
+    // This is a bug: if the destroy method can perform asynchronous work,
     // then we should wait for that work to be completed before setting this.
     // _extraPools to null. As a temporary solution, it should be acceptable
     // to just return early (if this._extraPools has been set to null, all

@@ -123,10 +123,6 @@ let WorkerActor = protocol.ActorClassWithSpec(workerSpec, {
     }
   },
 
-  disconnect() {
-    this.destroy();
-  },
-
   connect(options) {
     if (!this._attached) {
       return { error: "wrongState" };
@@ -444,10 +440,6 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
     this._installingWorker = null;
     this._waitingWorker = null;
     this._activeWorker = null;
-  },
-
-  disconnect() {
-    this.destroy();
   },
 
   /**
