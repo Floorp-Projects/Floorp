@@ -68,6 +68,7 @@ nsresult nsPrintSettingsX::Init()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   InitUnwriteableMargin();
+  InitAdjustedPaperSize();
 
   return NS_OK;
 
@@ -92,6 +93,23 @@ NS_IMETHODIMP nsPrintSettingsX::InitUnwriteableMargin()
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;  
+}
+
+NS_IMETHODIMP nsPrintSettingsX::InitAdjustedPaperSize()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  PMPageFormat pageFormat = GetPMPageFormat();
+
+  PMRect paperRect;
+  ::PMGetAdjustedPaperRect(pageFormat, &paperRect);
+
+  mAdjustedPaperWidth = paperRect.right - paperRect.left;
+  mAdjustedPaperHeight = paperRect.bottom - paperRect.top;
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 void
@@ -206,8 +224,10 @@ nsPrintSettingsX::SetPMPageFormat(PMPageFormat aPageFormat)
 void
 nsPrintSettingsX::SetInchesScale(float aWidthScale, float aHeightScale)
 {
-  mWidthScale = aWidthScale;
-  mHeightScale = aHeightScale;
+  if (aWidthScale > 0 && aHeightScale > 0) {
+    mWidthScale = aWidthScale;
+    mHeightScale = aHeightScale;
+  }
 }
 
 void
@@ -215,4 +235,25 @@ nsPrintSettingsX::GetInchesScale(float *aWidthScale, float *aHeightScale)
 {
   *aWidthScale = mWidthScale;
   *aHeightScale = mHeightScale;
+}
+
+NS_IMETHODIMP
+nsPrintSettingsX::GetEffectivePageSize(double *aWidth, double *aHeight)
+{
+  *aWidth  = NS_INCHES_TO_TWIPS(mAdjustedPaperWidth / mWidthScale);
+  *aHeight = NS_INCHES_TO_TWIPS(mAdjustedPaperHeight / mHeightScale);
+
+  return NS_OK;
+}
+
+void nsPrintSettingsX::SetAdjustedPaperSize(double aWidth, double aHeight)
+{
+  mAdjustedPaperWidth = aWidth;
+  mAdjustedPaperHeight = aHeight;
+}
+
+void nsPrintSettingsX::GetAdjustedPaperSize(double *aWidth, double *aHeight)
+{
+  *aWidth = mAdjustedPaperWidth;
+  *aHeight = mAdjustedPaperHeight;
 }
