@@ -70,6 +70,7 @@
 #include "js/StructuredClone.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
+#include "vm/AsyncFunction.h"
 #include "vm/DateObject.h"
 #include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
@@ -3523,6 +3524,11 @@ CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject env, Handle
     }
 
     if (IsAsmJSModule(fun)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CLONE_OBJECT);
+        return nullptr;
+    }
+
+    if (IsWrappedAsyncFunction(fun)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CLONE_OBJECT);
         return nullptr;
     }
