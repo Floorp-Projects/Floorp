@@ -8,7 +8,6 @@
 #define vm_DateTime_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
@@ -19,6 +18,7 @@
 #include "js/Date.h"
 #include "js/Initialization.h"
 #include "js/Value.h"
+#include "threading/ExclusiveData.h"
 
 namespace js {
 
@@ -44,6 +44,12 @@ const unsigned SecondsPerDay = SecondsPerHour * 24;
 
 const double StartOfTime = -8.64e15;
 const double EndOfTime = 8.64e15;
+
+extern bool
+InitDateTimeState();
+
+extern void
+FinishDateTimeState();
 
 /*
  * Stores date/time information, particularly concerning the current local
@@ -93,39 +99,19 @@ const double EndOfTime = 8.64e15;
  */
 class DateTimeInfo
 {
-    static DateTimeInfo instance;
+    static ExclusiveData<DateTimeInfo>* instance;
+    friend class ExclusiveData<DateTimeInfo>;
 
-    // Date/time info is shared across all threads in DateTimeInfo::instance,
-    // for consistency with ICU's handling of its default time zone.  Thus we
-    // need something to protect concurrent accesses.
-    //
-    // The spec implicitly assumes DST and time zone adjustment information
-    // never change in the course of a function -- sometimes even across
-    // reentrancy.  So make critical sections as narrow as possible, and use a
-    // bog-standard spinlock with busy-waiting in case of contention for
-    // simplicity.
-    class MOZ_RAII AcquireLock
-    {
-        static mozilla::Atomic<bool, mozilla::ReleaseAcquire> spinLock;
+    friend bool InitDateTimeState();
+    friend void FinishDateTimeState();
 
-      public:
-        AcquireLock() {
-            while (!spinLock.compareExchange(false, true))
-                continue;
-        }
-        ~AcquireLock() {
-            MOZ_ASSERT(spinLock, "spinlock should have been acquired");
-            spinLock = false;
-        }
-    };
-
-    friend const char* JS::detail::InitWithFailureDiagnostic(bool);
-
-    // Initialize global date/time tracking state.  This operation occurs
-    // during, and is restricted to, SpiderMonkey initialization.
-    static void init();
+    DateTimeInfo();
 
   public:
+    // The spec implicitly assumes DST and time zone adjustment information
+    // never change in the course of a function -- sometimes even across
+    // reentrancy.  So make critical sections as narrow as possible.
+
     /*
      * Get the DST offset in milliseconds at a UTC time.  This is usually
      * either 0 or |msPerSecond * SecondsPerHour|, but at least one exotic time
@@ -133,16 +119,14 @@ class DateTimeInfo
      * keep things interesting.
      */
     static int64_t getDSTOffsetMilliseconds(int64_t utcMilliseconds) {
-        AcquireLock lock;
-
-        return DateTimeInfo::instance.internalGetDSTOffsetMilliseconds(utcMilliseconds);
+        auto guard = instance->lock();
+        return guard->internalGetDSTOffsetMilliseconds(utcMilliseconds);
     }
 
     /* ES5 15.9.1.7. */
     static double localTZA() {
-        AcquireLock lock;
-
-        return DateTimeInfo::instance.localTZA_;
+        auto guard = instance->lock();
+        return guard->localTZA_;
     }
 
   private:
@@ -153,9 +137,8 @@ class DateTimeInfo
     friend void JS::ResetTimeZone();
 
     static void updateTimeZoneAdjustment() {
-        AcquireLock lock;
-
-        DateTimeInfo::instance.internalUpdateTimeZoneAdjustment();
+        auto guard = instance->lock();
+        guard->internalUpdateTimeZoneAdjustment();
     }
 
     /*
@@ -199,6 +182,11 @@ class DateTimeInfo
 
     void sanityCheck();
 };
+
+enum class IcuTimeZoneStatus { Valid, NeedsUpdate };
+
+extern ExclusiveData<IcuTimeZoneStatus>*
+IcuTimeZoneState;
 
 /**
  * ICU's default time zone, used for various date/time formatting operations
