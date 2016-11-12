@@ -291,53 +291,6 @@ function checkScalars(processes) {
   }
 }
 
-function checkEvents(processes) {
-  // Check that the events section is available in the ping payload.
-  const parent = processes.parent;
-  Assert.ok("events" in parent, "The events section must be available in the parent process.");
-
-  // Check that the events section has the right format.
-  Assert.ok(Array.isArray(parent.events), "The events entry must be an array.");
-  for (let [ts, category, method, object, value, extra] of parent.events) {
-    Assert.equal(typeof(ts), "number", "Timestamp field should be a number.");
-    Assert.greaterOrEqual(ts, 0, "Timestamp should be >= 0.");
-
-    Assert.equal(typeof(category), "string", "Category should have the right type.");
-    Assert.lessOrEqual(category.length, 100, "Category should have the right string length.");
-
-    Assert.equal(typeof(method), "string", "Method should have the right type.");
-    Assert.lessOrEqual(method.length, 40, "Method should have the right string length.");
-
-    Assert.equal(typeof(object), "string", "Object should have the right type.");
-    Assert.lessOrEqual(object.length, 40, "Object should have the right string length.");
-
-    Assert.ok(value === null || typeof(value) === "string",
-              "Value should be null or a string.");
-    if (value) {
-      Assert.lessOrEqual(value.length, 100, "Value should have the right string length.");
-    }
-
-    Assert.ok(extra === null || typeof(extra) === "object",
-              "Extra should be null or an object.");
-    if (extra) {
-      let keys = Object.keys(extra);
-      let keyTypes = keys.map(k => typeof(k));
-      Assert.lessOrEqual(keys.length, 20, "Should not have too many extra keys.");
-      Assert.ok(keyTypes.every(t => t === "string"),
-                "All extra keys should be strings.");
-      Assert.ok(keys.every(k => k.length <= 20),
-                "All extra keys should have the right string length.");
-
-      let values = Object.values(extra);
-      let valueTypes = values.map(v => typeof(v));
-      Assert.ok(valueTypes.every(t => t === "string"),
-                "All extra values should be strings.");
-      Assert.ok(values.every(v => v.length <= 100),
-                "All extra values should have the right string length.");
-    }
-  }
-}
-
 function checkPayload(payload, reason, successfulPings, savedPings) {
   Assert.ok("info" in payload, "Payload must contain an info section.");
   checkPayloadInfo(payload.info);
@@ -469,7 +422,6 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
   Assert.ok("processes" in payload, "The payload must have a processes section.");
   Assert.ok("parent" in payload.processes, "There must be at least a parent process.");
   checkScalars(payload.processes);
-  checkEvents(payload.processes);
 }
 
 function writeStringToFile(file, contents) {
@@ -704,51 +656,6 @@ add_task(function* test_checkSubsessionScalars() {
                UINT_SCALAR + " must contain the expected value.");
   Assert.equal(subsession.processes.parent.scalars[STRING_SCALAR], expectedString,
                STRING_SCALAR + " must contain the expected value.");
-});
-
-add_task(function* test_checkSubsessionEvents() {
-  if (gIsAndroid) {
-    // We don't support subsessions yet on Android.
-    return;
-  }
-
-  // Clear the events.
-  Telemetry.clearEvents();
-  yield TelemetryController.testReset();
-
-  // Record some events.
-  let expected = [
-    ["telemetry.test", "test1", "object1", "a", null],
-    ["telemetry.test", "test1", "object1", null, {key1: "value"}],
-  ];
-  for (let event of expected) {
-    Telemetry.recordEvent(...event);
-  }
-
-  // Check that events are not available in classic pings but are in subsession
-  // pings. Also clear the subsession.
-  let classic = TelemetrySession.getPayload();
-  let subsession = TelemetrySession.getPayload("environment-change", true);
-
-  Assert.ok("events" in classic.processes.parent, "Should have an events field in classic payload.");
-  Assert.ok("events" in subsession.processes.parent, "Should have an events field in subsession payload.");
-
-  // They should be empty in the classic payload.
-  Assert.deepEqual(classic.processes.parent.events, [], "Events in classic payload should be empty.");
-
-  // In the subsession payload, they should contain the recorded test events.
-  let events = subsession.processes.parent.events.filter(e => e[1] === "telemetry.test");
-  Assert.equal(events.length, expected.length, "Should have the right amount of events in the payload.");
-  for (let i = 0; i < expected.length; ++i) {
-    Assert.deepEqual(events[i].slice(1), expected[i],
-                     "Should have the right event data in the ping.");
-  }
-
-  // As we cleared the subsession above, the events entry should now be empty.
-  subsession = TelemetrySession.getPayload("environment-change", false);
-  Assert.ok("events" in subsession.processes.parent, "Should have an events field in subsession payload.");
-  events = subsession.processes.parent.events.filter(e => e[1] === "telemetry.test");
-  Assert.equal(events.length, 0, "Should have no test events in the subsession payload now.");
 });
 
 add_task(function* test_checkSubsessionHistograms() {
