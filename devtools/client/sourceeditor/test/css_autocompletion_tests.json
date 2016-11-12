@@ -1,39 +1,43 @@
-// Test states to be tested for css state machine in css-autocompelter.js file.
-// Test cases are of the following format:
-// [
-//   [
-//     line, // The line location of the cursor
-//     ch    // The column locaiton of the cursor
-//   ],
-//   suggestions // Array of expected results
-// ]
-[
-  [[0, 10], []],
-  [[4,  7], ['.devtools-menulist', '.devtools-toolbarbutton']],
-  [[5,  8], ['-moz-animation', '-moz-animation-delay', '-moz-animation-direction',
-             '-moz-animation-duration', '-moz-animation-fill-mode',
-             '-moz-animation-iteration-count', '-moz-animation-name',
-             '-moz-animation-play-state', '-moz-animation-timing-function',
-             '-moz-appearance']],
-  [[12, 20], ['none', 'number-input']],
-  [[12, 22], ['none']],
-  [[17, 22], ['hsl', 'hsla']],
-  [[19, 10], ['background', 'background-attachment', 'background-blend-mode',
-              'background-clip', 'background-color', 'background-image',
-              'background-origin', 'background-position', 'background-position-x',
-              'background-position-y', 'background-repeat', 'background-size']],
-  [[21,  9], ["-moz-calc", "auto", "calc", "inherit", "initial","unset"]],
-  [[25, 26], ['.devtools-toolbarbutton > tab',
-              '.devtools-toolbarbutton > hbox',
-              '.devtools-toolbarbutton > .toolbarbutton-menubutton-button']],
-  [[25, 31], ['.devtools-toolbarbutton > hbox.toolbarbutton-menubutton-button']],
-  [[29, 20], ['.devtools-menulist:after', '.devtools-menulist:active']],
-  [[30, 10], ['#devtools-anotherone', '#devtools-itjustgoeson', '#devtools-menu',
-              '#devtools-okstopitnow', '#devtools-toolbarbutton', '#devtools-yetagain']],
-  [[39, 39], ['.devtools-toolbarbutton:not([label]) > tab']],
-  [[43, 51], ['.devtools-toolbarbutton:not([checked=true]):hover:after',
-              '.devtools-toolbarbutton:not([checked=true]):hover:active']],
-  [[58, 36], ['!important;']],
-  [[73, 42], [':lang(', ':last-of-type', ':link', ':last-child']],
-  [[77, 25], ['.visible']],
-]
+{
+  "description": [
+    "Test states to be tested for css state machine in css-autocompelter.js file.",
+    "Test cases are of the following format:",
+    "[",
+    "  [",
+    "    line, # The line location of the cursor",
+    "    ch    # The column locaiton of the cursor",
+    "  ],",
+    "  suggestions # Array of expected results",
+    "]"
+  ],
+  "tests": [
+    [[0, 10], []],
+    [[4,  7], [".devtools-menulist", ".devtools-toolbarbutton"]],
+    [[5,  8], ["-moz-animation", "-moz-animation-delay", "-moz-animation-direction",
+               "-moz-animation-duration", "-moz-animation-fill-mode",
+               "-moz-animation-iteration-count", "-moz-animation-name",
+               "-moz-animation-play-state", "-moz-animation-timing-function",
+               "-moz-appearance"]],
+    [[12, 20], ["none", "number-input"]],
+    [[12, 22], ["none"]],
+    [[17, 22], ["hsl", "hsla"]],
+    [[19, 10], ["background", "background-attachment", "background-blend-mode",
+                "background-clip", "background-color", "background-image",
+                "background-origin", "background-position", "background-position-x",
+                "background-position-y", "background-repeat", "background-size"]],
+    [[21,  9], ["-moz-calc", "auto", "calc", "inherit", "initial","unset"]],
+    [[25, 26], [".devtools-toolbarbutton > tab",
+                ".devtools-toolbarbutton > hbox",
+                ".devtools-toolbarbutton > .toolbarbutton-menubutton-button"]],
+    [[25, 31], [".devtools-toolbarbutton > hbox.toolbarbutton-menubutton-button"]],
+    [[29, 20], [".devtools-menulist:after", ".devtools-menulist:active"]],
+    [[30, 10], ["#devtools-anotherone", "#devtools-itjustgoeson", "#devtools-menu",
+                "#devtools-okstopitnow", "#devtools-toolbarbutton", "#devtools-yetagain"]],
+    [[39, 39], [".devtools-toolbarbutton:not([label]) > tab"]],
+    [[43, 51], [".devtools-toolbarbutton:not([checked=true]):hover:after",
+                ".devtools-toolbarbutton:not([checked=true]):hover:active"]],
+    [[58, 36], ["!important;"]],
+    [[73, 42], [":lang(", ":last-of-type", ":link", ":last-child"]],
+    [[77, 25], [".visible"]]
+  ]
+}

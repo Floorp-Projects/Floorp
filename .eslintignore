@@ -95,7 +95,6 @@ devtools/client/shadereditor/**
 devtools/client/shared/*.jsm
 devtools/client/shared/webgl-utils.js
 devtools/client/shared/widgets/*.jsm
-devtools/client/sourceeditor/test/*.js
 devtools/client/webaudioeditor/**
 devtools/client/webconsole/**
 !devtools/client/webconsole/panel.js
@@ -172,6 +171,7 @@ devtools/client/shared/demangle.js
 devtools/client/shared/vendor/*
 devtools/client/sourceeditor/codemirror/*.js
 devtools/client/sourceeditor/codemirror/**/*.js
+devtools/client/sourceeditor/test/cm_mode_ruby.js
 devtools/client/sourceeditor/test/codemirror/*
 devtools/client/inspector/markup/test/lib_*
 devtools/client/jsonview/lib/require.js
