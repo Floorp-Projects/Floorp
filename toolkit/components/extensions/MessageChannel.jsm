@@ -278,6 +278,8 @@ class FilteringMessageManagerMap extends Map {
 const MESSAGE_MESSAGE = "MessageChannel:Message";
 const MESSAGE_RESPONSE = "MessageChannel:Response";
 
+let gChannelId = 0;
+
 this.MessageChannel = {
   init() {
     Services.obs.addObserver(this, "message-manager-close", false);
@@ -512,7 +514,7 @@ this.MessageChannel = {
     let recipient = options.recipient || {};
     let responseType = options.responseType || this.RESPONSE_SINGLE;
 
-    let channelId = ExtensionUtils.getUniqueId();
+    let channelId = `${gChannelId++}-${Services.appinfo.uniqueProcessID}`;
     let message = {messageName, channelId, sender, recipient, data, responseType};
 
     if (responseType == this.RESPONSE_NONE) {
