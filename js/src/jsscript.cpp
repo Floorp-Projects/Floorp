@@ -316,6 +316,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
         IsGeneratorExp,
         IsLegacyGenerator,
         IsStarGenerator,
+        IsAsync,
         OwnSource,
         ExplicitUseStrict,
         SelfHosted,
@@ -429,6 +430,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
             scriptBits |= (1 << IsLegacyGenerator);
         if (script->isStarGenerator())
             scriptBits |= (1 << IsStarGenerator);
+        if (script->asyncKind() == AsyncFunction)
+            scriptBits |= (1 << IsAsync);
         if (script->hasSingletons())
             scriptBits |= (1 << HasSingleton);
         if (script->treatAsRunOnce())
@@ -577,6 +580,9 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
             script->setGeneratorKind(LegacyGenerator);
         } else if (scriptBits & (1 << IsStarGenerator))
             script->setGeneratorKind(StarGenerator);
+
+        if (scriptBits & (1 << IsAsync))
+            script->setAsyncKind(AsyncFunction);
     }
 
     JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
