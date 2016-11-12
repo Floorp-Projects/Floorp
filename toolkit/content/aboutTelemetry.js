@@ -1503,72 +1503,6 @@ var KeyValueTable = {
   }
 };
 
-var GenericTable = {
-  /**
-   * Returns a n-column table.
-   * @param rows An array of arrays, each containing data to render
-   *             for one row.
-   * @param headings The column header strings.
-   */
-  render: function(rows, headings) {
-    let table = document.createElement("table");
-    this.renderHeader(table, headings);
-    this.renderBody(table, rows);
-    return table;
-  },
-
-  /**
-   * Create the table header.
-   * Tabs & newlines added to cells to make it easier to copy-paste.
-   *
-   * @param table Table element
-   * @param headings Array of column header strings.
-   */
-  renderHeader: function(table, headings) {
-    let headerRow = document.createElement("tr");
-    table.appendChild(headerRow);
-
-    for (let i = 0; i < headings.length; ++i) {
-      let suffix = (i == (headings.length - 1)) ? "\n" : "\t";
-      let column = document.createElement("th");
-      column.appendChild(document.createTextNode(headings[i] + suffix));
-      headerRow.appendChild(column);
-    }
-  },
-
-  /**
-   * Create the table body
-   * Tabs & newlines added to cells to make it easier to copy-paste.
-   *
-   * @param table Table element
-   * @param rows An array of arrays, each containing data to render
-   *             for one row.
-   */
-  renderBody: function(table, rows) {
-    for (let row of rows) {
-      row = row.map(value => {
-        // use .valueOf() to unbox Number, String, etc. objects
-        if (value &&
-           (typeof value == "object") &&
-           (typeof value.valueOf() == "object")) {
-          return RenderObject(value);
-        }
-        return value;
-      });
-
-      let newRow = document.createElement("tr");
-      table.appendChild(newRow);
-
-      for (let i = 0; i < row.length; ++i) {
-        let suffix = (i == (row.length - 1)) ? "\n" : "\t";
-        let field = document.createElement("td");
-        field.appendChild(document.createTextNode(row[i] + suffix));
-        newRow.appendChild(field);
-      }
-    }
-  }
-};
-
 var KeyedHistogram = {
   render: function(parent, id, keyedHistogram) {
     let outerDiv = document.createElement("div");
@@ -1677,40 +1611,6 @@ var KeyedScalars = {
       const table = KeyValueTable.render(keyedScalars[scalar], headingName, headingValue);
       scalarsSection.appendChild(table);
     }
-  }
-};
-
-var Events = {
-  /**
-   * Render the event data - if present - from the payload in a simple table.
-   * @param aPayload A payload object to render the data from.
-   */
-  render: function(aPayload) {
-    let eventsSection = document.getElementById("events");
-    removeAllChildNodes(eventsSection);
-
-    if (!aPayload.processes || !aPayload.processes.parent) {
-      return;
-    }
-
-    const events = aPayload.processes.parent.events;
-    const hasData = events && Object.keys(events).length > 0;
-    setHasData("events-section", hasData);
-    if (!hasData) {
-      return;
-    }
-
-    const headings = [
-      "timestampHeader",
-      "categoryHeader",
-      "methodHeader",
-      "objectHeader",
-      "valuesHeader",
-      "extraHeader",
-    ].map(h => bundle.GetStringFromName(h));
-
-    const table = GenericTable.render(events, headings);
-    eventsSection.appendChild(table);
   }
 };
 
@@ -2150,9 +2050,6 @@ function displayPingData(ping, updatePayloadList = false) {
     }
     setHasData("keyed-histograms-section", hasData || keyedHgramsSelect.options.length);
   }
-
-  // Show event data.
-  Events.render(payload);
 
   // Show addon histogram data
   let addonDiv = document.getElementById("addon-histograms");
