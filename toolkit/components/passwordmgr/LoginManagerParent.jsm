@@ -227,8 +227,7 @@ var LoginManagerParent = {
 
   doAutocompleteSearch: function({ formOrigin, actionOrigin,
                                    searchString, previousResult,
-                                   rect, requestId, isSecure, isPasswordField,
-                                   remote }, target) {
+                                   rect, requestId, isSecure, remote }, target) {
     // Note: previousResult is a regular object, not an
     // nsIAutoCompleteResult.
 
@@ -261,11 +260,7 @@ var LoginManagerParent = {
       let match = fullMatch.username;
 
       // Remove results that are too short, or have different prefix.
-      // Also don't offer empty usernames as possible results except
-      // for password field.
-      if (isPasswordField) {
-        return true;
-      }
+      // Also don't offer empty usernames as possible results.
       return match && match.toLowerCase().startsWith(searchStringLower);
     });
 

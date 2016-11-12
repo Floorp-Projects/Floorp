@@ -36,7 +36,6 @@ this.LoginHelper = {
   formlessCaptureEnabled: Services.prefs.getBoolPref("signon.formlessCapture.enabled"),
   schemeUpgrades: Services.prefs.getBoolPref("signon.schemeUpgrades"),
   insecureAutofill: Services.prefs.getBoolPref("signon.autofillForms.http"),
-  showInsecureFieldWarning: Services.prefs.getBoolPref("security.insecure_field_warning.contextual.enabled"),
 
   createLogger(aLogPrefix) {
     let getMaxLogLevel = () => {
@@ -58,10 +57,6 @@ this.LoginHelper = {
       this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
       this.insecureAutofill = Services.prefs.getBoolPref("signon.autofillForms.http");
       logger.maxLogLevel = getMaxLogLevel();
-    }, false);
-
-    Services.prefs.addObserver("security.insecure_field_warning.", () => {
-      this.showInsecureFieldWarning = Services.prefs.getBoolPref("security.insecure_field_warning.contextual.enabled");
     }, false);
 
     return logger;
