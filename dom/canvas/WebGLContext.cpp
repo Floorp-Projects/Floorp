@@ -2513,6 +2513,16 @@ WebGLContext::StartVRPresentation()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static inline size_t
+SizeOfViewElem(const dom::ArrayBufferView& view)
+{
+    const auto& elemType = view.Type();
+    if (elemType == js::Scalar::MaxTypedArrayViewType) // DataViews.
+        return 1;
+
+    return js::Scalar::byteSize(elemType);
+}
+
 bool
 WebGLContext::ValidateArrayBufferView(const char* funcName,
                                       const dom::ArrayBufferView& view, GLuint elemOffset,
@@ -2523,8 +2533,7 @@ WebGLContext::ValidateArrayBufferView(const char* funcName,
     uint8_t* const bytes = view.DataAllowShared();
     const size_t byteLen = view.LengthAllowShared();
 
-    const auto& elemType = view.Type();
-    const auto& elemSize = js::Scalar::byteSize(elemType);
+    const auto& elemSize = SizeOfViewElem(view);
 
     size_t elemCount = byteLen / elemSize;
     if (elemOffset > elemCount) {
