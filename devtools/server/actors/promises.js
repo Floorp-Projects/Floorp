@@ -18,13 +18,13 @@ loader.lazyRequireGetter(this, "events", "sdk/event/core");
 var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
   /**
    * @param conn DebuggerServerConnection.
-   * @param parent TabActor|RootActor
+   * @param parentActor TabActor|RootActor
    */
-  initialize: function (conn, parent) {
+  initialize: function (conn, parentActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this.conn = conn;
-    this.parent = parent;
+    this.parentActor = parentActor;
     this.state = "detached";
     this._dbg = null;
     this._gripDepth = 0;
@@ -38,16 +38,16 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
   },
 
   destroy: function () {
-    protocol.Actor.prototype.destroy.call(this, this.conn);
-
     if (this.state === "attached") {
       this.detach();
     }
+
+    protocol.Actor.prototype.destroy.call(this, this.conn);
   },
 
   get dbg() {
     if (!this._dbg) {
-      this._dbg = this.parent.makeDebugger();
+      this._dbg = this.parentActor.makeDebugger();
     }
     return this._dbg;
   },
@@ -65,14 +65,14 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
     this._promisesSettled = [];
 
     this.dbg.findScripts().forEach(s => {
-      this.parent.sources.createSourceActors(s.source);
+      this.parentActor.sources.createSourceActors(s.source);
     });
 
     this.dbg.onNewScript = s => {
-      this.parent.sources.createSourceActors(s.source);
+      this.parentActor.sources.createSourceActors(s.source);
     };
 
-    events.on(this.parent, "window-ready", this._onWindowReady);
+    events.on(this.parentActor, "window-ready", this._onWindowReady);
 
     this.state = "attached";
   }, "attaching to the PromisesActor"),
@@ -92,7 +92,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
       this._navigationLifetimePool = null;
     }
 
-    events.off(this.parent, "window-ready", this._onWindowReady);
+    events.off(this.parentActor, "window-ready", this._onWindowReady);
 
     this.state = "detached";
   }),
@@ -122,7 +122,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
       decrementGripDepth: () => this._gripDepth--,
       createValueGrip: v =>
         createValueGrip(v, this._navigationLifetimePool, this.objectGrip),
-      sources: () => this.parent.sources,
+      sources: () => this.parentActor.sources,
       createEnvironmentActor: () => DevToolsUtils.reportException(
         "PromisesActor", Error("createEnvironmentActor not yet implemented")),
       getGlobalDebugObject: () => DevToolsUtils.reportException(
