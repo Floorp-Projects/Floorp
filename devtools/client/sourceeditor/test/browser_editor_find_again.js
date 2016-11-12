@@ -15,7 +15,8 @@ const FIND_KEY = L10N.getStr("find.key");
 const FINDNEXT_KEY = L10N.getStr("findNext.key");
 const FINDPREV_KEY = L10N.getStr("findPrev.key");
 // the replace's key with the appropriate modifiers based on OS
-const REPLACE_KEY = OS == "Darwin" ? L10N.getStr("replaceAllMac.key") : L10N.getStr("replaceAll.key");
+const REPLACE_KEY = OS == "Darwin" ? L10N.getStr("replaceAllMac.key")
+                                   : L10N.getStr("replaceAll.key");
 
 // values like it's not selected – even if the selection is visible.
 // For the record, setting the selection's range immediately doesn't have

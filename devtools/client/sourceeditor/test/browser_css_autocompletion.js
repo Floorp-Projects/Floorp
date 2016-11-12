@@ -13,7 +13,7 @@ const TESTS_URI = "http://mochi.test:8888/browser/devtools/client" +
                   "/sourceeditor/test/css_autocompletion_tests.json";
 
 const source = read(CSS_URI);
-const tests = eval(read(TESTS_URI));
+const {tests} = JSON.parse(read(TESTS_URI));
 
 const TEST_URI = "data:text/html;charset=UTF-8," + encodeURIComponent(
   ["<!DOCTYPE html>",
@@ -60,7 +60,9 @@ const TEST_URI = "data:text/html;charset=UTF-8," + encodeURIComponent(
    "  <div class='hidden-labels-box devtools-toolbarbutton devtools-menulist'></div>",
    "  <div class='devtools-menulist'></div>",
    "  <div class='devtools-menulist'></div>",
+   /* eslint-disable max-len */
    "  <tabs class='devtools-toolbarbutton'><tab></tab><tab></tab><tab></tab></tabs><tabs></tabs>",
+   /* eslint-enable max-len */
    "  <button class='category-name visible'></button>",
    "  <div class='devtools-toolbarbutton' label='true'>",
    "   <hbox class='toolbarbutton-menubutton-button'></hbox></div>",
@@ -78,7 +80,9 @@ let inspector;
 function test() {
   waitForExplicitFinish();
   addTab(TEST_URI).then(function () {
+    /* eslint-disable mozilla/no-cpows-in-tests */
     doc = content.document;
+    /* eslint-enable mozilla/no-cpows-in-tests */
     runTests();
   });
 }
