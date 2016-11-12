@@ -80,6 +80,7 @@ VP9EncoderImpl::VP9EncoderImpl()
       frames_since_kf_(0),
       num_temporal_layers_(0),
       num_spatial_layers_(0),
+      num_cores_(0),
       frames_encoded_(0),
       // Use two spatial when screensharing with flexible mode.
       spatial_layer_(new ScreenshareLayersVP9(2)) {
@@ -252,7 +253,7 @@ int VP9EncoderImpl::InitEncode(const VideoCodec* inst,
   if (inst->width < 1 || inst->height < 1) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
-  if (number_of_cores < 1) {
+  if (number_of_cores < 1 || number_of_cores > UINT8_MAX) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
   if (inst->codecSpecific.VP9.numberOfTemporalLayers > 3) {
@@ -278,6 +279,7 @@ int VP9EncoderImpl::InitEncode(const VideoCodec* inst,
     codec_ = *inst;
   }
 
+  num_cores_ = number_of_cores;
   num_spatial_layers_ = inst->codecSpecific.VP9.numberOfSpatialLayers;
   num_temporal_layers_ = inst->codecSpecific.VP9.numberOfTemporalLayers;
   if (num_temporal_layers_ == 0)
@@ -335,7 +337,7 @@ int VP9EncoderImpl::InitEncode(const VideoCodec* inst,
   // Determine number of threads based on the image size and #cores.
   config_->g_threads = NumberOfThreads(config_->g_w,
                                        config_->g_h,
-                                       number_of_cores);
+                                       num_cores_);
 
   cpu_speed_ = GetCpuSpeed(config_->g_w, config_->g_h);
 
@@ -506,6 +508,13 @@ int VP9EncoderImpl::Encode(const I420VideoFrame& input_image,
   if (frame_types && frame_types->size() > 0) {
     frame_type = (*frame_types)[0];
   }
+  if (input_image.width() != codec_.width ||
+      input_image.height() != codec_.height) {
+    int ret = UpdateCodecFrameSize(input_image);
+    if (ret < 0) {
+      return ret;
+    }
+  }
   DCHECK_EQ(input_image.width(), static_cast<int>(raw_->d_w));
   DCHECK_EQ(input_image.height(), static_cast<int>(raw_->d_h));
 
@@ -564,6 +573,44 @@ int VP9EncoderImpl::Encode(const I420VideoFrame& input_image,
   timestamp_ += duration;
 
   return WEBRTC_VIDEO_CODEC_OK;
+}
+
+int VP9EncoderImpl::UpdateCodecFrameSize(
+    const I420VideoFrame& input_image) {
+  fprintf(stderr, "Reconfiging VP( from %dx%d to %dx%d\n",
+          codec_.width, codec_.height, input_image.width(), input_image.height());
+  // Preserve latest bitrate/framerate setting
+  uint32_t old_bitrate_kbit = config_->rc_target_bitrate;
+  uint32_t old_framerate = codec_.maxFramerate;
+
+  codec_.width = input_image.width();
+  codec_.height = input_image.height();
+
+  vpx_img_free(raw_);
+  raw_ = vpx_img_wrap(NULL, VPX_IMG_FMT_I420, codec_.width, codec_.height,
+                      1, NULL);
+  // Update encoder context for new frame size.
+  config_->g_w = codec_.width;
+  config_->g_h = codec_.height;
+
+  // Determine number of threads based on the image size and #cores.
+  config_->g_threads = NumberOfThreads(codec_.width, codec_.height,
+                                       num_cores_);
+  // Update the cpu_speed setting for resolution change.
+  cpu_speed_ = GetCpuSpeed(codec_.width, codec_.height);
+
+  // NOTE: We would like to do this the same way vp8 does it
+  // (with vpx_codec_enc_config_set()), but that causes asserts
+  // in AQ 3 (cyclic); and in AQ 0 it works, but on a resize to smaller
+  // than 1/2 x 1/2 original it asserts in convolve().  Given these
+  // bugs in trying to do it the "right" way, we basically re-do
+  // the initialization.
+  vpx_codec_destroy(encoder_); // clean up old state
+  int result = InitAndSetControlSettings(&codec_);
+  if (result == WEBRTC_VIDEO_CODEC_OK) {
+    return SetRates(old_bitrate_kbit, old_framerate);
+  }
+  return result;
 }
 
 void VP9EncoderImpl::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
