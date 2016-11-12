@@ -48,7 +48,7 @@ MonitorActor.prototype = {
     return {};
   },
 
-  disconnect: function () {
+  destroy: function () {
     this.stop();
   },
 
