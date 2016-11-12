@@ -22,6 +22,8 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
+                                  "resource://gre/modules/ExtensionParent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
@@ -30,6 +32,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "ParentAPIManager",
+                            () => ExtensionParent.ParentAPIManager);
 
 const CATEGORY_EXTENSION_SCRIPTS_ADDON = "webextension-scripts-addon";
 
@@ -42,6 +47,7 @@ const {
   SingletonEventManager,
   SpreadArgs,
   defineLazyGetter,
+  findPathInObject,
   getInnerWindowID,
   getMessageManager,
   getUniqueId,
@@ -536,11 +542,10 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
 // needs to use remote APIs. It uses the message manager to communicate
 // with the ParentAPIManager singleton in ExtensionParent.jsm. It
 // handles asynchronous function calls as well as event listeners.
-class ChildAPIManager {
+class ChildAPIManagerBase {
   constructor(context, messageManager, localApis, contextData) {
     this.context = context;
     this.messageManager = messageManager;
-    this.url = contextData.url;
 
     // The root namespace of all locally implemented APIs. If an extension calls
     // an API that does not exist in this object, then the implementation is
@@ -561,15 +566,6 @@ class ChildAPIManager {
 
     // Map[callId -> Deferred]
     this.callPromises = new Map();
-
-    let params = {
-      childId: this.id,
-      extensionId: context.extension.id,
-      principal: context.principal,
-    };
-    Object.assign(params, contextData);
-
-    this.messageManager.sendAsyncMessage("API:CreateProxyContext", params);
   }
 
   receiveMessage({name, messageName, data}) {
@@ -711,6 +707,80 @@ class ChildAPIManager {
   }
 }
 
+class ChildAPIManager extends ChildAPIManagerBase {
+  constructor(context, messageManager, localApis, contextData) {
+    super(context, messageManager, localApis, contextData);
+
+    let params = {
+      childId: this.id,
+      extensionId: context.extension.id,
+      principal: context.principal,
+    };
+    Object.assign(params, contextData);
+
+    this.messageManager.sendAsyncMessage("API:CreateProxyContext", params);
+  }
+}
+
+
+// A class that behaves identical to a ChildAPIManager, except
+// 1) creation of the ProxyContext in the parent is synchronous, and
+// 2) APIs without a local implementation and marked as incompatible with the
+//    out-of-process model fall back to directly invoking the parent methods.
+// TODO(robwu): Remove this when all APIs have migrated.
+class PseudoChildAPIManager extends ChildAPIManagerBase {
+  constructor(context, messageManager, localApis, contextData) {
+    super(context, messageManager, localApis, contextData);
+
+    let params = {
+      childId: this.id,
+      extensionId: context.extension.id,
+    };
+    Object.assign(params, contextData);
+
+    // Structured clone the parameters to simulate cross-process messaging.
+    params = Cu.cloneInto(params, {});
+    // Principals can be structured cloned by message managers, but not
+    // by cloneInto.
+    params.principal = context.principal;
+    params.cloneScope = this.cloneScope;
+
+    this.url = params.url;
+
+    let browserElement = this.context.docShell.chromeEventHandler;
+    ParentAPIManager.receiveMessage({
+      name: "API:CreateProxyContext",
+      data: params,
+      target: browserElement,
+    });
+
+    this.parentContext = ParentAPIManager.proxyContexts.get(this.id);
+
+    // Synchronously unload the ProxyContext because we synchronously create it.
+    this.context.callOnClose(this.parentContext);
+  }
+
+  getFallbackImplementation(namespace, name) {
+    let useDirectParentAPI = (
+      // Incompatible APIs are listed here.
+      false
+    );
+
+    if (useDirectParentAPI) {
+      let apiObj = findPathInObject(this.parentContext.apiObj, namespace, false);
+
+      if (apiObj && name in apiObj) {
+        return new LocalAPIImplementation(apiObj, name, this.context);
+      }
+      // If we got here, then it means that the JSON schema claimed that the API
+      // will be available, but no actual implementation is given.
+      // You should either provide an implementation or rewrite the JSON schema.
+    }
+
+    return super.getFallbackImplementation(namespace, name);
+  }
+}
+
 class ExtensionPageContextChild extends BaseContext {
   /**
    * This ExtensionPageContextChild represents a privileged addon
@@ -831,7 +901,7 @@ defineLazyGetter(ExtensionPageContextChild.prototype, "childManager", function()
     apiManager.global.initializeBackgroundPage(this.contentWindow);
   }
 
-  let childManager = new ChildAPIManager(this, this.messageManager, localApis, {
+  let childManager = new PseudoChildAPIManager(this, this.messageManager, localApis, {
     envType: "addon_parent",
     viewType: this.viewType,
     url: this.uri.spec,
