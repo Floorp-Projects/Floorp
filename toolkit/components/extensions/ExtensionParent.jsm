@@ -507,12 +507,21 @@ ParentAPIManager = {
       Cu.reportError("WebExtension warning: Message manager unexpectedly changed");
     }
 
+    let {childId} = data;
+
     function listener(...listenerArgs) {
-      context.parentMessageManager.sendAsyncMessage("API:RunListener", {
-        childId: data.childId,
-        path: data.path,
-        args: listenerArgs,
-      });
+      return context.sendMessage(
+        context.parentMessageManager,
+        "API:RunListener",
+        {
+          childId,
+          listenerId: data.listenerId,
+          path: data.path,
+          args: listenerArgs,
+        },
+        {
+          recipient: {childId},
+        });
     }
 
     context.listenerProxies.set(data.path, listener);
