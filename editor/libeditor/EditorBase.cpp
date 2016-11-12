@@ -2438,7 +2438,8 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
 {
   RefPtr<EditTransactionBase> transaction;
   bool isIMETransaction = false;
-  int32_t replacedOffset = 0;
+  RefPtr<Text> insertedTextNode = &aTextNode;
+  int32_t insertedOffset = aOffset;
   // aSuppressIME is used when editor must insert text, yet this text is not
   // part of the current IME operation. Example: adjusting whitespace around an
   // IME insertion.
@@ -2468,7 +2469,8 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
     // All characters of the composition string will be replaced with
     // aStringToInsert.  So, we need to emulate to remove the composition
     // string.
-    replacedOffset = mIMETextOffset;
+    insertedTextNode = mIMETextNode;
+    insertedOffset = mIMETextOffset;
     mIMETextLength = aStringToInsert.Length();
   } else {
     transaction = CreateTxnForInsertText(aStringToInsert, aTextNode, aOffset);
@@ -2477,8 +2479,8 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   // Let listeners know what's up
   for (auto& listener : mActionListeners) {
     listener->WillInsertText(
-      static_cast<nsIDOMCharacterData*>(aTextNode.AsDOMNode()), aOffset,
-      aStringToInsert);
+      static_cast<nsIDOMCharacterData*>(insertedTextNode->AsDOMNode()),
+      insertedOffset, aStringToInsert);
   }
 
   // XXX We may not need these view batches anymore.  This is handled at a
@@ -2490,8 +2492,8 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   // let listeners know what happened
   for (auto& listener : mActionListeners) {
     listener->DidInsertText(
-      static_cast<nsIDOMCharacterData*>(aTextNode.AsDOMNode()),
-      aOffset, aStringToInsert, rv);
+      static_cast<nsIDOMCharacterData*>(insertedTextNode->AsDOMNode()),
+      insertedOffset, aStringToInsert, rv);
   }
 
   // Added some cruft here for bug 43366.  Layout was crashing because we left
