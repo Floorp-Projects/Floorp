@@ -222,17 +222,13 @@ class ResponseHeaderChanger extends HeaderChanger {
 
   visitHeaders(visitor) {
     if (this.channel instanceof Ci.nsIHttpChannel) {
-      try {
-        this.channel.visitResponseHeaders((name, value) => {
-          if (name.toLowerCase() === "content-type") {
-            value = getData(this.channel).contentType || value;
-          }
+      this.channel.visitResponseHeaders((name, value) => {
+        if (name.toLowerCase() === "content-type") {
+          value = getData(this.channel).contentType || value;
+        }
 
-          visitor(name, value);
-        });
-      } catch (e) {
-        // Throws if response headers aren't available yet.
-      }
+        visitor(name, value);
+      });
     }
   }
 }
@@ -604,56 +600,6 @@ HttpObserverManager = {
     }
   },
 
-  getRequestData(channel, loadContext, policyType, extraData) {
-    let {loadInfo} = channel;
-
-    let data = {
-      requestId: RequestId.get(channel),
-      url: channel.URI.spec,
-      method: channel.requestMethod,
-      browser: loadContext && loadContext.topFrameElement,
-      type: WebRequestCommon.typeForPolicyType(policyType),
-      fromCache: getData(channel).fromCache,
-      windowId: 0,
-      parentWindowId: 0,
-    };
-
-    if (loadInfo) {
-      let originPrincipal = loadInfo.triggeringPrincipal;
-      if (originPrincipal.URI) {
-        data.originUrl = originPrincipal.URI.spec;
-      }
-
-      let {isSystemPrincipal} = Services.scriptSecurityManager;
-
-      data.isSystemPrincipal = (isSystemPrincipal(loadInfo.triggeringPrincipal) ||
-                                isSystemPrincipal(loadInfo.loadingPrincipal));
-
-      if (loadInfo.frameOuterWindowID) {
-        Object.assign(data, {
-          windowId: loadInfo.frameOuterWindowID,
-          parentWindowId: loadInfo.outerWindowID,
-        });
-      } else {
-        Object.assign(data, {
-          windowId: loadInfo.outerWindowID,
-          parentWindowId: loadInfo.parentOuterWindowID,
-        });
-      }
-    }
-
-    if (channel instanceof Ci.nsIHttpChannelInternal) {
-      try {
-        data.ip = channel.remoteAddress;
-      } catch (e) {
-        // The remoteAddress getter throws if the address is unavailable,
-        // but ip is an optional property so just ignore the exception.
-      }
-    }
-
-    return Object.assign(data, extraData);
-  },
-
   runChannelListener(channel, loadContext = null, kind, extraData = null) {
     let handlerResults = [];
     let requestHeaders;
@@ -671,34 +617,90 @@ HttpObserverManager = {
           return;
         }
       }
-
-      let {loadInfo} = channel;
+      let listeners = this.listeners[kind];
+      let browser = loadContext && loadContext.topFrameElement;
+      let loadInfo = channel.loadInfo;
       let policyType = (loadInfo ? loadInfo.externalContentPolicyType
                                  : Ci.nsIContentPolicy.TYPE_OTHER);
 
       let includeStatus = (["headersReceived", "onRedirect", "onStart", "onStop"].includes(kind) &&
                            channel instanceof Ci.nsIHttpChannel);
 
+      let blockable = ["headersReceived", "opening", "modify"].includes(kind);
+
+      if (channel instanceof Ci.nsIHttpChannel) {
+        requestHeaders = new RequestHeaderChanger(channel);
+        try {
+          responseHeaders = new ResponseHeaderChanger(channel);
+        } catch (e) {
+          // Just ignore this for the request phases where response headers
+          // aren't yet available.
+        }
+      }
+
       let commonData = null;
       let uri = channel.URI;
       let requestBody;
-      for (let [callback, opts] of this.listeners[kind].entries()) {
+      for (let [callback, opts] of listeners.entries()) {
         if (!this.shouldRunListener(policyType, uri, opts.filter)) {
           continue;
         }
 
         if (!commonData) {
-          commonData = this.getRequestData(channel, loadContext, policyType, extraData);
+          commonData = {
+            requestId: RequestId.get(channel),
+            url: uri.spec,
+            method: channel.requestMethod,
+            browser: browser,
+            type: WebRequestCommon.typeForPolicyType(policyType),
+            fromCache: getData(channel).fromCache,
+            windowId: 0,
+            parentWindowId: 0,
+          };
+
+          if (loadInfo) {
+            let originPrincipal = loadInfo.triggeringPrincipal;
+            if (originPrincipal.URI) {
+              commonData.originUrl = originPrincipal.URI.spec;
+            }
+
+            let {isSystemPrincipal} = Services.scriptSecurityManager;
+
+            commonData.isSystemPrincipal = (isSystemPrincipal(loadInfo.triggeringPrincipal) ||
+                                            isSystemPrincipal(loadInfo.loadingPrincipal));
+
+            if (loadInfo.frameOuterWindowID) {
+              Object.assign(commonData, {
+                windowId: loadInfo.frameOuterWindowID,
+                parentWindowId: loadInfo.outerWindowID,
+              });
+            } else {
+              Object.assign(commonData, {
+                windowId: loadInfo.outerWindowID,
+                parentWindowId: loadInfo.parentOuterWindowID,
+              });
+            }
+          }
+
+          if (channel instanceof Ci.nsIHttpChannelInternal) {
+            try {
+              commonData.ip = channel.remoteAddress;
+            } catch (e) {
+              // The remoteAddress getter throws if the address is unavailable,
+              // but ip is an optional property so just ignore the exception.
+            }
+          }
+
+          Object.assign(commonData, extraData);
         }
+
         let data = Object.assign({}, commonData);
 
         if (opts.requestHeaders) {
-          requestHeaders = requestHeaders || new RequestHeaderChanger(channel);
           data.requestHeaders = requestHeaders.toArray();
         }
 
-        if (opts.responseHeaders) {
-          responseHeaders = responseHeaders || new ResponseHeaderChanger(channel);
+        if (opts.responseHeaders && responseHeaders) {
           data.responseHeaders = responseHeaders.toArray();
         }
 
@@ -714,7 +716,7 @@ HttpObserverManager = {
         try {
           let result = callback(data);
 
-          if (result && typeof result === "object" && opts.blocking) {
+          if (result && typeof result === "object" && blockable && opts.blocking) {
             handlerResults.push({opts, result});
           }
         } catch (e) {
@@ -725,8 +727,7 @@ HttpObserverManager = {
       Cu.reportError(e);
     }
 
-    return this.applyChanges(kind, channel, loadContext, handlerResults,
-                             requestHeaders, responseHeaders);
+    return this.applyChanges(kind, channel, loadContext, handlerResults, requestHeaders, responseHeaders);
   },
 
   applyChanges: Task.async(function* (kind, channel, loadContext, handlerResults, requestHeaders, responseHeaders) {
