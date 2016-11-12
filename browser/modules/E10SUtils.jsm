@@ -9,6 +9,10 @@ this.EXPORTED_SYMBOLS = ["E10SUtils"];
 const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "useRemoteWebExtensions",
+                                      "extensions.webextensions.remote", false);
 
 function getAboutModule(aURL) {
   // Needs to match NS_GetAboutModuleName
@@ -119,7 +123,7 @@ this.E10SUtils = {
     }
 
     if (aURL.startsWith("moz-extension:")) {
-      return NOT_REMOTE;
+      return useRemoteWebExtensions ? WEB_REMOTE_TYPE : NOT_REMOTE;
     }
 
     if (aURL.startsWith("view-source:")) {
