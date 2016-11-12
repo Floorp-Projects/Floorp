@@ -43,9 +43,9 @@ add_task(function* test_webRequest_links() {
       cancel: "onBeforeRequest",
     },
     "file_style_redirect.css": {
-      status: 302,
       type: "stylesheet",
       events: ["onBeforeRequest", "onBeforeSendHeaders", "onBeforeRedirect"],
+      optional_events: ["onHeadersReceived"],
       redirect: "file_style_good.css",
     },
     "file_style_good.css": {
@@ -72,9 +72,9 @@ add_task(function* test_webRequest_images() {
       cancel: "onBeforeRequest",
     },
     "file_image_redirect.png": {
-      status: 302,
       type: "image",
       events: ["onBeforeRequest", "onBeforeSendHeaders", "onBeforeRedirect"],
+      optional_events: ["onHeadersReceived"],
       redirect: "file_image_good.png",
     },
     "file_image_good.png": {
@@ -98,9 +98,9 @@ add_task(function* test_webRequest_scripts() {
       cancel: "onBeforeRequest",
     },
     "file_script_redirect.js": {
-      status: 302,
       type: "script",
       events: ["onBeforeRequest", "onBeforeSendHeaders", "onBeforeRedirect"],
+      optional_events: ["onHeadersReceived"],
       redirect: "file_script_good.js",
     },
     "file_script_good.js": {
@@ -242,7 +242,7 @@ add_task(function* test_webRequest_frames() {
     },
     "text/plain,webRequestTest_bad": {
       type: "sub_frame",
-      events: ["onBeforeRequest", "onErrorOccurred"],
+      events: ["onBeforeRequest", "onCompleted"],
       cancel: "onBeforeRequest",
     },
     "redirection.sjs": {

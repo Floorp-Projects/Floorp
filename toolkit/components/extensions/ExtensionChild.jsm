@@ -42,6 +42,7 @@ Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
+  DefaultMap,
   EventManager,
   SingletonEventManager,
   SpreadArgs,
@@ -493,43 +494,47 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
   }
 
   addListener(listener, args) {
-    let set = this.childApiManager.listeners.get(this.path);
-    if (!set) {
-      set = new Set();
-      this.childApiManager.listeners.set(this.path, set);
+    let map = this.childApiManager.listeners.get(this.path);
+
+    if (map.listeners.has(listener)) {
+      // TODO: Called with different args?
+      return;
     }
 
-    set.add(listener);
+    let id = getUniqueId();
 
-    if (set.size == 1) {
-      args = args.slice(1);
+    map.ids.set(id, listener);
+    map.listeners.set(listener, id);
 
-      this.childApiManager.messageManager.sendAsyncMessage("API:AddListener", {
-        childId: this.childApiManager.id,
-        path: this.path,
-        args,
-      });
-    }
+    this.childApiManager.messageManager.sendAsyncMessage("API:AddListener", {
+      childId: this.childApiManager.id,
+      listenerId: id,
+      path: this.path,
+      args,
+    });
   }
 
   removeListener(listener) {
-    let set = this.childApiManager.listeners.get(this.path);
-    if (!set) {
+    let map = this.childApiManager.listeners.get(this.path);
+
+    if (!map.listeners.has(listener)) {
       return;
     }
-    set.delete(listener);
 
-    if (set.size == 0) {
-      this.childApiManager.messageManager.sendAsyncMessage("API:RemoveListener", {
-        childId: this.childApiManager.id,
-        path: this.path,
-      });
-    }
+    let id = map.listeners.get(listener);
+    map.listeners.delete(listener);
+    map.ids.delete(id);
+
+    this.childApiManager.messageManager.sendAsyncMessage("API:RemoveListener", {
+      childId: this.childApiManager.id,
+      listenerId: id,
+      path: this.path,
+    });
   }
 
   hasListener(listener) {
-    let set = this.childApiManager.listeners.get(this.path);
-    return set ? set.has(listener) : false;
+    let map = this.childApiManager.listeners.get(this.path);
+    return map.listeners.has(listener);
   }
 }
 
@@ -549,28 +554,35 @@ class ChildAPIManagerBase {
 
     this.id = `${context.extension.id}.${context.contextId}`;
 
-    messageManager.addMessageListener("API:RunListener", this);
+    MessageChannel.addListener(messageManager, "API:RunListener", this);
     messageManager.addMessageListener("API:CallResult", this);
 
-    // Map[path -> Set[listener]]
-    // path is, e.g., "runtime.onMessage".
-    this.listeners = new Map();
+    this.messageFilterStrict = {childId: this.id};
+
+    this.listeners = new DefaultMap(() => ({
+      ids: new Map(),
+      listeners: new Map(),
+    }));
 
     // Map[callId -> Deferred]
     this.callPromises = new Map();
   }
 
-  receiveMessage({name, data}) {
+  receiveMessage({name, messageName, data}) {
     if (data.childId != this.id) {
       return;
     }
 
-    switch (name) {
+    switch (name || messageName) {
       case "API:RunListener":
-        let listeners = this.listeners.get(data.path);
-        for (let callback of listeners) {
-          this.context.runSafe(callback, ...data.args);
+        let map = this.listeners.get(data.path);
+        let listener = map.ids.get(data.listenerId);
+
+        if (listener) {
+          return this.context.runSafe(listener, ...data.args);
         }
+
+        Cu.reportError(`Unknown listener at childId=${data.childId} path=${data.path} listenerId=${data.listenerId}\n`);
         break;
 
       case "API:CallResult":
@@ -752,8 +764,7 @@ class PseudoChildAPIManager extends ChildAPIManagerBase {
     // This is gross and should be removed ASAP.
     let useDirectParentAPI = (
       // Incompatible APIs are listed here.
-      namespace == "webNavigation" || // ChildAPIManager is oblivious to filters.
-      namespace == "webRequest" // Incompatible by design (synchronous).
+      namespace == "webNavigation" // ChildAPIManager is oblivious to filters.
     );
 
     if (useDirectParentAPI) {

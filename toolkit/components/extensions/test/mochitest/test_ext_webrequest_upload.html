@@ -67,10 +67,7 @@ add_task(function* test_setup() {
 });
 
 function background() {
-  let events = {
-    "onBeforeRequest":  [{urls: ["<all_urls>"]}, ["blocking", "requestBody"]],
-    "onCompleted":      [{urls: ["<all_urls>"]}, ["responseHeaders"]],
-  };
+  const FILTERS = {urls: ["<all_urls>"]};
 
   let requestBodySupported = true;
 
@@ -81,7 +78,7 @@ function background() {
       return;
     }
     let requestBody = details.requestBody;
-    browser.test.log(`onUpload ${details.url} ${JSON.stringify(details.requestBody)}`);
+    browser.test.log(`onBeforeRequest upload: ${details.url} ${JSON.stringify(details.requestBody)}`);
     browser.test.assertTrue(!!requestBody, `Intercepted upload ${details.url} #${details.requestId} ${upload} have a requestBody`);
     if (!requestBody) {
       return;
@@ -99,35 +96,34 @@ function background() {
     }
   }
 
-  function listener(name, details) {
+  browser.webRequest.onCompleted.addListener(
+    details => {
+      browser.test.log(`onCompleted ${details.requestId} ${details.url}`);
+
+      browser.test.sendMessage("done");
+    },
+    FILTERS);
+
+  let onBeforeRequest = details => {
     browser.test.log(`${name} ${details.requestId} ${details.url}`);
 
-    if (name == "onBeforeRequest") {
-      onUpload(details);
-    } else if (name == "onCompleted") {
-      browser.test.sendMessage("done");
+    onUpload(details);
+  };
+
+  try {
+    browser.webRequest.onBeforeRequest.addListener(
+      onBeforeRequest, FILTERS, ["requestBody"]);
+  } catch (e) {
+    browser.test.assertTrue(/\brequestBody\b/.test(e.message),
+                            "Request body is unsupported");
+
+    // requestBody is disabled in release builds
+    if (!/\brequestBody\b/.test(e.message)) {
+      throw e;
     }
-  }
 
-  for (let [name, args] of Object.entries(events)) {
-    try {
-      browser.test.log(`adding listener for ${name}`);
-      browser.webRequest[name].addListener(
-        listener.bind(null, name), ...args);
-    } catch (e) {
-      browser.test.assertTrue(/\brequestBody\b/.test(e.message),
-                              "Request body is unsupported");
-
-      // requestBody is disabled in release builds
-      if (!/\brequestBody\b/.test(e.message)) {
-        throw e;
-      }
-
-      requestBodySupported = false;
-      args.pop();
-      browser.webRequest[name].addListener(
-        listener.bind(null, name), ...args);
-    }
+    browser.webRequest.onBeforeRequest.addListener(
+      onBeforeRequest, FILTERS);
   }
 }
 
