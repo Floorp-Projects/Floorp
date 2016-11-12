@@ -161,6 +161,9 @@ StorageActors.defaults = function (typeName, observationTopic) {
       events.off(this.storageActor, "window-destroyed", this.onWindowDestroyed);
 
       this.hostVsStores.clear();
+
+      protocol.Actor.prototype.destroy.call(this);
+
       this.storageActor = null;
     },
 
@@ -415,7 +418,11 @@ StorageActors.createActor({
     events.off(this.storageActor, "window-ready", this.onWindowReady);
     events.off(this.storageActor, "window-destroyed", this.onWindowDestroyed);
 
-    this._pendingResponse = this.storageActor = null;
+    this._pendingResponse = null;
+
+    protocol.Actor.prototype.destroy.call(this);
+
+    this.storageActor = null;
   },
 
   /**
@@ -1444,6 +1451,10 @@ StorageActors.createActor({
 
     events.off(this.storageActor, "window-ready", this.onWindowReady);
     events.off(this.storageActor, "window-destroyed", this.onWindowDestroyed);
+
+    protocol.Actor.prototype.destroy.call(this);
+
+    this.storageActor = null;
   },
 
   /**
@@ -2233,9 +2244,8 @@ let StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
   },
 
   initialize(conn, tabActor) {
-    protocol.Actor.prototype.initialize.call(this, null);
+    protocol.Actor.prototype.initialize.call(this, conn);
 
-    this.conn = conn;
     this.parentActor = tabActor;
 
     this.childActorPool = new Map();
@@ -2271,10 +2281,8 @@ let StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
     Services.obs.removeObserver(this, "inner-window-destroyed", false);
     this.destroyed = true;
     if (this.parentActor.browser) {
-      this.parentActor.browser.removeEventListener(
-        "pageshow", this.onPageChange, true);
-      this.parentActor.browser.removeEventListener(
-        "pagehide", this.onPageChange, true);
+      this.parentActor.browser.removeEventListener("pageshow", this.onPageChange, true);
+      this.parentActor.browser.removeEventListener("pagehide", this.onPageChange, true);
     }
     // Destroy the registered store types
     for (let actor of this.childActorPool.values()) {
@@ -2282,9 +2290,15 @@ let StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
     }
     this.childActorPool.clear();
     this.childWindowPool.clear();
-    this.childWindowPool = this.childActorPool = this.__poolMap = this.conn =
-      this.parentActor = this.boundUpdate = this.registeredPool =
-      this._pendingResponse = null;
+
+    this.childActorPool = null;
+    this.childWindowPool = null;
+    this.parentActor = null;
+    this.boundUpdate = null;
+    this.registeredPool = null;
+    this._pendingResponse = null;
+
+    protocol.Actor.prototype.destroy.call(this);
   },
 
   /**
