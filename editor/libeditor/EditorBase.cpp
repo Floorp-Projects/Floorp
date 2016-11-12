@@ -2439,7 +2439,6 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   RefPtr<EditTransactionBase> transaction;
   bool isIMETransaction = false;
   int32_t replacedOffset = 0;
-  int32_t replacedLength = 0;
   // aSuppressIME is used when editor must insert text, yet this text is not
   // part of the current IME operation. Example: adjusting whitespace around an
   // IME insertion.
@@ -2470,7 +2469,6 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
     // aStringToInsert.  So, we need to emulate to remove the composition
     // string.
     replacedOffset = mIMETextOffset;
-    replacedLength = mIMETextLength;
     mIMETextLength = aStringToInsert.Length();
   } else {
     transaction = CreateTxnForInsertText(aStringToInsert, aTextNode, aOffset);
@@ -2488,13 +2486,6 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   BeginUpdateViewBatch();
   nsresult rv = DoTransaction(transaction);
   EndUpdateViewBatch();
-
-  if (replacedLength) {
-    mRangeUpdater.SelAdjDeleteText(
-      static_cast<nsIDOMCharacterData*>(aTextNode.AsDOMNode()),
-      replacedOffset, replacedLength);
-  }
-  mRangeUpdater.SelAdjInsertText(aTextNode, aOffset, aStringToInsert);
 
   // let listeners know what happened
   for (auto& listener : mActionListeners) {
@@ -2617,7 +2608,8 @@ EditorBase::CreateTxnForInsertText(const nsAString& aStringToInsert,
                                    int32_t aOffset)
 {
   RefPtr<InsertTextTransaction> transaction =
-    new InsertTextTransaction(aTextNode, aOffset, aStringToInsert, *this);
+    new InsertTextTransaction(aTextNode, aOffset, aStringToInsert, *this,
+                              &mRangeUpdater);
   return transaction.forget();
 }
 
@@ -4247,7 +4239,7 @@ EditorBase::CreateTxnForComposition(const nsAString& aStringToInsert)
   RefPtr<CompositionTransaction> transaction =
     new CompositionTransaction(*mIMETextNode, mIMETextOffset, mIMETextLength,
                                mComposition->GetRanges(), aStringToInsert,
-                               *this);
+                               *this, &mRangeUpdater);
   return transaction.forget();
 }
 
