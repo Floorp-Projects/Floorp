@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1314790
+-->
+<html>
+<head>
+  <title>Test for Bug 1314790</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1314790">Mozilla Bug 1314790</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div contenteditable="true" id="contenteditable1"><p>pen pineapple</p></div>
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let elm = document.getElementById("contenteditable1");
+  elm.focus();
+  window.getSelection().collapse(elm.childNodes[0], 0);
+
+  SpecialPowers.doCommand(window, "cmd_wordNext");
+  SpecialPowers.doCommand(window, "cmd_wordNext");
+
+  synthesizeKey("VK_RETURN", {});
+  synthesizeKey("a", {});
+  synthesizeKey("p", {});
+  synthesizeKey("p", {});
+  synthesizeKey("l", {});
+  synthesizeKey("e", {});
+  synthesizeKey(" ", {});
+  synthesizeKey("p", {});
+  synthesizeKey("e", {});
+  synthesizeKey("n", {});
+
+  is(elm.childNodes[0].textContent, "pen pineapple",
+     "'pen pineapple' is first elment");
+  is(elm.childNodes[1].textContent, "apple pen",
+     "'apple pen' is second elment");
+
+  SpecialPowers.doCommand(window, "cmd_deleteWordBackward");
+  SpecialPowers.doCommand(window, "cmd_deleteWordBackward");
+  is(elm.childNodes[0].textContent, "pen pineapple",
+     "'pen pineapple' is first elment");
+
+  SpecialPowers.doCommand(window, "cmd_deleteWordBackward");
+  is(elm.childNodes[0].textContent, "pen pineapple",
+     "'pen pineapple' is first elment");
+
+  SpecialPowers.doCommand(window, "cmd_deleteWordBackward");
+  is(elm.childNodes[0].textContent, "pen ", "'pen ' is first elment");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
