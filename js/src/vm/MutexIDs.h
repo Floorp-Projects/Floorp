@@ -36,6 +36,8 @@
   _(IonSpewer,                   500) \
   _(PerfSpewer,                  500) \
   _(TraceLoggerThreadState,      500) \
+  _(DateTimeInfoMutex,           500) \
+  _(IcuTimeZoneStateMutex,       500) \
                                       \
   _(TraceLoggerGraphState,       600)
 
