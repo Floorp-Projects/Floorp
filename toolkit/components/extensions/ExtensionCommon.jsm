@@ -200,6 +200,8 @@ class BaseContext {
     options.recipient = options.recipient || {};
     options.sender = options.sender || {};
 
+    // TODO(robwu): This should not unconditionally be overwritten once we
+    // support onMessageExternal / onConnectExternal (bugzil.la/1258360).
     options.recipient.extensionId = this.extension.id;
     options.sender.extensionId = this.extension.id;
     options.sender.contextId = this.contextId;
