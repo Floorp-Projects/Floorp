@@ -2081,9 +2081,9 @@ function LongStringActor(string) {
 LongStringActor.prototype = {
   actorPrefix: "longString",
 
-  disconnect: function () {
+  destroy: function () {
     // Because longStringActors is not a weak map, we won't automatically leave
-    // it so we need to manually leave on disconnect so that we don't leak
+    // it so we need to manually leave on destroy so that we don't leak
     // memory.
     this._releaseActor();
   },
