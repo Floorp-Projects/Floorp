@@ -32,6 +32,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'telemetry'
 
 EXPORTS.mozilla += [
+    '!TelemetryEventEnums.h',
     '!TelemetryHistogramEnums.h',
     '!TelemetryScalarEnums.h',
     'ProcessedStack.h',
@@ -43,6 +44,7 @@ EXPORTS.mozilla += [
 SOURCES += [
     'Telemetry.cpp',
     'TelemetryCommon.cpp',
+    'TelemetryEvent.cpp',
     'TelemetryHistogram.cpp',
     'TelemetryScalar.cpp',
     'WebrtcTelemetry.cpp',
