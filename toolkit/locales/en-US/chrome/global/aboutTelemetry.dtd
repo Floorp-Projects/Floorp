@@ -116,10 +116,6 @@ Ping
   Keyed Histograms
 ">
 
-<!ENTITY aboutTelemetry.eventsSection "
-  Events
-">
-
 <!ENTITY aboutTelemetry.simpleMeasurementsSection "
   Simple Measurements
 ">
