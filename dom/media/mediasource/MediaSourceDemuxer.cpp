@@ -35,22 +35,17 @@ const TimeUnit MediaSourceDemuxer::EOS_FUZZ = media::TimeUnit::FromMicroseconds(
 RefPtr<MediaSourceDemuxer::InitPromise>
 MediaSourceDemuxer::Init()
 {
-  return InvokeAsync(GetTaskQueue(), this, __func__,
-                     &MediaSourceDemuxer::AttemptInit);
-}
+  RefPtr<MediaSourceDemuxer> self = this;
+  return InvokeAsync(GetTaskQueue(), __func__,
+    [self](){
+      if (self->ScanSourceBuffersForContent()) {
+        return InitPromise::CreateAndResolve(NS_OK, __func__);
+      }
 
-RefPtr<MediaSourceDemuxer::InitPromise>
-MediaSourceDemuxer::AttemptInit()
-{
-  MOZ_ASSERT(OnTaskQueue());
+      RefPtr<InitPromise> p = self->mInitPromise.Ensure(__func__);
 
-  if (ScanSourceBuffersForContent()) {
-    return InitPromise::CreateAndResolve(NS_OK, __func__);
-  }
-
-  RefPtr<InitPromise> p = mInitPromise.Ensure(__func__);
-
-  return p;
+      return p;
+    });
 }
 
 void
