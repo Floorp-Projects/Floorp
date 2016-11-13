@@ -206,7 +206,7 @@ GMPContentChild::RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor)
   GMPDecryptorHost* host = static_cast<GMPDecryptorHost*>(child);
 
   void* ptr = nullptr;
-  GMPErr err = mGMPChild->GetAPI(GMP_API_DECRYPTOR, host, &ptr, aActor->Id());
+  GMPErr err = mGMPChild->GetAPI(GMP_API_DECRYPTOR, host, &ptr, child->Id());
   GMPDecryptor* decryptor = nullptr;
   if (GMP_SUCCEEDED(err) && ptr) {
     decryptor = static_cast<GMPDecryptor*>(ptr);
