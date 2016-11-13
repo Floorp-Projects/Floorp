@@ -74,13 +74,12 @@ BackgroundPage.prototype = {
     let browser = chromeDoc.createElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
+    browser.setAttribute("webextension-view-type", "background");
     chromeDoc.documentElement.appendChild(browser);
 
     extensions.emit("extension-browser-inserted", browser);
-    browser.messageManager.sendAsyncMessage("Extension:InitExtensionView", {
-      viewType: "background",
-      url,
-    });
+
+    browser.loadURI(url);
 
     yield new Promise(resolve => {
       browser.messageManager.addMessageListener("Extension:ExtensionViewLoaded", function onLoad() {
