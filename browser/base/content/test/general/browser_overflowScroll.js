@@ -75,14 +75,6 @@ function runOverflowTests(aEvent) {
   ok(left(scrollbox) <= firstScrollableLeft, "Scrolled to the start with a triple click " +
      "(" + left(scrollbox) + " <= " + firstScrollableLeft + ")");
 
-  for (var i = 2; i; i--)
-    EventUtils.synthesizeWheel(scrollbox, 1, 1, { deltaX: -1.0, deltaMode: WheelEvent.DOM_DELTA_LINE });
-  is(left(firstScrollable()), firstScrollableLeft, "Remained at the start with the mouse wheel");
-
-  element = nextRightElement();
-  EventUtils.synthesizeWheel(scrollbox, 1, 1, { deltaX: 1.0, deltaMode: WheelEvent.DOM_DELTA_LINE});
-  isRight(element, "Scrolled one tab to the right with the mouse wheel");
-
   while (tabs.length > 1)
     gBrowser.removeTab(tabs[0]);
 
