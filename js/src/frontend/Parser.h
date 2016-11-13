@@ -909,8 +909,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
   public:
     bool reportWithNode(ParseReportKind kind, bool strict, Node pn, unsigned errorNumber, ...);
     bool reportNoOffset(ParseReportKind kind, bool strict, unsigned errorNumber, ...);
-    bool reportWithOffset(ParseReportKind kind, bool strict, uint32_t offset, unsigned errorNumber,
-                          ...);
 
     /* Report the given error at the current offset. */
     void error(unsigned errorNumber, ...);
@@ -934,6 +932,9 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
     /* Report the given warning at the current offset. */
     MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
+
+    /* Report the given warning at the given offset. */
+    MOZ_MUST_USE bool warningAt(uint32_t offset, unsigned errorNumber, ...);
 
     /*
      * If extra warnings are enabled, report the given warning at the current
