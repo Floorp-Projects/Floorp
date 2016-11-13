@@ -919,7 +919,7 @@ WebMTrackDemuxer::GetInfo() const
 }
 
 RefPtr<WebMTrackDemuxer::SeekPromise>
-WebMTrackDemuxer::Seek(media::TimeUnit aTime)
+WebMTrackDemuxer::Seek(const media::TimeUnit& aTime)
 {
   // Seeks to aTime. Upon success, SeekPromise will be resolved with the
   // actual time seeked to. Typically the random access point time
@@ -1083,7 +1083,7 @@ WebMTrackDemuxer::GetNextRandomAccessPoint(media::TimeUnit* aTime)
 }
 
 RefPtr<WebMTrackDemuxer::SkipAccessPointPromise>
-WebMTrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
+WebMTrackDemuxer::SkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreshold)
 {
   uint32_t parsed = 0;
   bool found = false;

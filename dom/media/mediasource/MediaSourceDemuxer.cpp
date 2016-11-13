@@ -304,7 +304,7 @@ MediaSourceTrackDemuxer::GetInfo() const
 }
 
 RefPtr<MediaSourceTrackDemuxer::SeekPromise>
-MediaSourceTrackDemuxer::Seek(media::TimeUnit aTime)
+MediaSourceTrackDemuxer::Seek(const media::TimeUnit& aTime)
 {
   MOZ_ASSERT(mParent, "Called after BreackCycle()");
   return InvokeAsync<media::TimeUnit&&>(
@@ -349,7 +349,7 @@ MediaSourceTrackDemuxer::GetNextRandomAccessPoint(media::TimeUnit* aTime)
 }
 
 RefPtr<MediaSourceTrackDemuxer::SkipAccessPointPromise>
-MediaSourceTrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
+MediaSourceTrackDemuxer::SkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreshold)
 {
   return InvokeAsync<media::TimeUnit&&>(
            mParent->GetTaskQueue(), this, __func__,

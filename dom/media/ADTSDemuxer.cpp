@@ -433,7 +433,7 @@ ADTSTrackDemuxer::GetInfo() const
 }
 
 RefPtr<ADTSTrackDemuxer::SeekPromise>
-ADTSTrackDemuxer::Seek(media::TimeUnit aTime)
+ADTSTrackDemuxer::Seek(const media::TimeUnit& aTime)
 {
   // Efficiently seek to the position.
   FastSeek(aTime);
@@ -555,7 +555,7 @@ ADTSTrackDemuxer::Reset()
 }
 
 RefPtr<ADTSTrackDemuxer::SkipAccessPointPromise>
-ADTSTrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
+ADTSTrackDemuxer::SkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreshold)
 {
   // Will not be called for audio-only resources.
   return SkipAccessPointPromise::CreateAndReject(
