@@ -33,9 +33,11 @@ public:
 private:
   void InitTags(nsTArray<nsCString>& aTags) override;
   nsCString GetNodeId() override;
+  uint32_t DecryptorId() const override { return mDecryptorId; }
   GMPUniquePtr<GMPVideoEncodedFrame> CreateFrame(MediaRawData* aSample) override;
 
   RefPtr<CDMProxy> mProxy;
+  uint32_t mDecryptorId;
 };
 
 } // namespace mozilla
