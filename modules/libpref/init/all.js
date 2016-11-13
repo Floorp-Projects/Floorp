@@ -4548,7 +4548,6 @@ pref("layers.bench.enabled", false);
 
 #if defined(XP_WIN) && defined(NIGHTLY_BUILD)
 pref("layers.gpu-process.dev.enabled", true);
-pref("media.gpu-process-decoder", true);
 #endif
 
 // Whether to force acceleration on, ignoring blacklists.
