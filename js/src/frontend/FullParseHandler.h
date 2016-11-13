@@ -667,9 +667,18 @@ class FullParseHandler
                                                                    ParseNode* pn);
     inline void setLastFunctionFormalParameterDestructuring(ParseNode* funcpn, ParseNode* pn);
 
-    ParseNode* newFunctionDefinition() {
-        return new_<CodeNode>(PNK_FUNCTION, pos());
+    ParseNode* newFunctionStatement() {
+        return new_<CodeNode>(PNK_FUNCTION, JSOP_NOP, pos());
     }
+
+    ParseNode* newFunctionExpression() {
+        return new_<CodeNode>(PNK_FUNCTION, JSOP_LAMBDA, pos());
+    }
+
+    ParseNode* newArrowFunction() {
+        return new_<CodeNode>(PNK_FUNCTION, JSOP_LAMBDA_ARROW, pos());
+    }
+
     bool setComprehensionLambdaBody(ParseNode* pn, ParseNode* body) {
         MOZ_ASSERT(body->isKind(PNK_STATEMENTLIST));
         ParseNode* paramsBody = newList(PNK_PARAMSBODY, body);
@@ -696,7 +705,7 @@ class FullParseHandler
     }
 
     ParseNode* newModule() {
-        return new_<CodeNode>(PNK_MODULE, pos());
+        return new_<CodeNode>(PNK_MODULE, JSOP_NOP, pos());
     }
 
     ParseNode* newLexicalScope(LexicalScope::Data* bindings, ParseNode* body) {
