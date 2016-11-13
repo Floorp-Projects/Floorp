@@ -116,9 +116,9 @@ public:
   }
 
 private:
-  RefPtr<SeekPromise> DoSeek(media::TimeUnit aTime);
+  RefPtr<SeekPromise> DoSeek(const media::TimeUnit& aTime);
   RefPtr<SamplesPromise> DoGetSamples(int32_t aNumSamples);
-  RefPtr<SkipAccessPointPromise> DoSkipToNextRandomAccessPoint(media::TimeUnit aTimeThreadshold);
+  RefPtr<SkipAccessPointPromise> DoSkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreadshold);
   already_AddRefed<MediaRawData> GetSample(MediaResult& aError);
   // Return the timestamp of the next keyframe after mLastSampleIndex.
   media::TimeUnit GetNextRandomAccessPoint();
