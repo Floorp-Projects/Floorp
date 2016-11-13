@@ -121,16 +121,14 @@ TrackBuffersManager::AppendData(MediaByteBuffer* aData,
 
   mEnded = false;
 
-  RefPtr<MediaByteBuffer> buffer = aData;
-
-  return InvokeAsync(GetTaskQueue(), this,
-                     __func__, &TrackBuffersManager::DoAppendData,
-                     buffer, aAttributes);
+  return InvokeAsync<RefPtr<MediaByteBuffer>, SourceBufferAttributes&&>(
+           GetTaskQueue(), this, __func__,
+           &TrackBuffersManager::DoAppendData, aData, aAttributes);
 }
 
 RefPtr<TrackBuffersManager::AppendPromise>
-TrackBuffersManager::DoAppendData(RefPtr<MediaByteBuffer> aData,
-                                  SourceBufferAttributes aAttributes)
+TrackBuffersManager::DoAppendData(MediaByteBuffer* aData,
+                                  const SourceBufferAttributes& aAttributes)
 {
   RefPtr<AppendBufferTask> task = new AppendBufferTask(aData, aAttributes);
   RefPtr<AppendPromise> p = task->mPromise.Ensure(__func__);
