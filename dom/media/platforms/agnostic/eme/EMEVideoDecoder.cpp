@@ -32,6 +32,7 @@ EMEVideoDecoder::EMEVideoDecoder(CDMProxy* aProxy,
                                                 VideoInfo(aParams.mConfig.mDisplay),
                                                 aParams.mImageContainer)))
   , mProxy(aProxy)
+  , mDecryptorId(aProxy->GetDecryptorId())
 {}
 
 void
