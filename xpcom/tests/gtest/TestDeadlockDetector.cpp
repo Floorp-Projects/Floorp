@@ -95,7 +95,7 @@ TEST_F(DeadlockDetectorTest, SanityDeathTest)
         "###!!! Deadlock may happen NOW!.*" // better catch these easy cases...
         "###!!! ASSERTION: Potential deadlock detected.*";
 
-    ASSERT_DEATH(Sanity_Child(), regex);
+    ASSERT_DEATH_IF_SUPPORTED(Sanity_Child(), regex);
 }
 
 // Slightly less stupid deadlock.
@@ -122,7 +122,7 @@ TEST_F(DeadlockDetectorTest, Sanity2DeathTest)
         "###!!! Deadlock may happen NOW!.*" // better catch these easy cases...
         "###!!! ASSERTION: Potential deadlock detected.*";
 
-    ASSERT_DEATH(Sanity2_Child(), regex);
+    ASSERT_DEATH_IF_SUPPORTED(Sanity2_Child(), regex);
 }
 
 int
@@ -160,7 +160,7 @@ TEST_F(DeadlockDetectorTest, Sanity3DeathTest)
         "=== Cycle completed at.*--- Mutex : dd.sanity3.m1.*"
         "###!!! ASSERTION: Potential deadlock detected.*";
 
-    ASSERT_DEATH(Sanity3_Child(), regex);
+    ASSERT_DEATH_IF_SUPPORTED(Sanity3_Child(), regex);
 }
 
 int
@@ -185,7 +185,7 @@ TEST_F(DeadlockDetectorTest, Sanity4DeathTest)
         "--- Next dependency:.*--- Mutex : dd.sanity4.m2.*"
         "=== Cycle completed at.*--- ReentrantMonitor : dd.sanity4.m1.*"
         "###!!! ASSERTION: Potential deadlock detected.*";
-    ASSERT_DEATH(Sanity4_Child(), regex);
+    ASSERT_DEATH_IF_SUPPORTED(Sanity4_Child(), regex);
 }
 
 //-----------------------------------------------------------------------------
@@ -264,7 +264,7 @@ TEST_F(DeadlockDetectorTest, TwoThreadsDeathTest)
         "=== Cycle completed at.*--- Mutex : dd.twothreads.m2.*"
         "###!!! ASSERTION: Potential deadlock detected.*";
 
-    ASSERT_DEATH(TwoThreads_Child(), regex);
+    ASSERT_DEATH_IF_SUPPORTED(TwoThreads_Child(), regex);
 }
 
 static void
