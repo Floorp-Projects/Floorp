@@ -98,18 +98,9 @@ pip install --upgrade pip
 pip install virtualenv
 
 # Install node
-tooltool_fetch <<'EOF'
-[
-{
-    "size": 5676610,
-    "digest": "ce27b788dfd141a5ba7674332825fc136fe2c4f49a319dd19b3a87c8fffa7a97d86cbb8535661c9a68c9122719aa969fc6a8c886458a0df9fc822eec99ed130b",
-    "algorithm": "sha512",
-    "filename": "node-v0.10.36-linux-x64.tar.gz"
-}
-]
-
-EOF
-tar -C /usr/local -xz --strip-components 1 < node-*.tar.gz
+wget https://nodejs.org/dist/v6.9.1/node-v6.9.1-linux-x64.tar.gz
+echo 'a9d9e6308931fa2a2b0cada070516d45b76d752430c31c9198933c78f8d54b17  node-v6.9.1-linux-x64.tar.gz' | sha256sum -c
+tar -C /usr/local -xz --strip-components 1 < node-v6.9.1-linux-x64.tar.gz
 node -v  # verify
 
 # Install custom-built Debian packages.  These come from a set of repositories
