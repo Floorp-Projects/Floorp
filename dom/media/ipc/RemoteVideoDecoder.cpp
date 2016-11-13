@@ -11,6 +11,7 @@
 #include "MediaInfo.h"
 #include "MediaPrefs.h"
 #include "ImageContainer.h"
+#include "mozilla/layers/SynchronousTask.h"
 
 namespace mozilla {
 namespace dom {
@@ -96,11 +97,14 @@ void
 RemoteVideoDecoder::Shutdown()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+  SynchronousTask task("Shutdown");
   RefPtr<RemoteVideoDecoder> self = this;
-  VideoDecoderManagerChild::GetManagerThread()->Dispatch(NS_NewRunnableFunction([self]() {
+  VideoDecoderManagerChild::GetManagerThread()->Dispatch(NS_NewRunnableFunction([&]() {
+    AutoCompleteTask complete(&task);
     MOZ_ASSERT(self->mActor);
     self->mActor->Shutdown();
   }), NS_DISPATCH_NORMAL);
+  task.Wait();
 }
 
 bool
