@@ -22,6 +22,8 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
+                                  "resource://gre/modules/ExtensionManagement.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
@@ -732,12 +734,6 @@ class ExtensionPageContextChild extends BaseContext {
    */
   constructor(extension, params) {
     super("addon_child", extension);
-    if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
-      // This check is temporary. It should be removed once the proxy creation
-      // is asynchronous.
-      throw new Error("ExtensionPageContextChild cannot be created in child processes");
-    }
-
     let {viewType, uri, contentWindow, tabId} = params;
     this.viewType = viewType;
     this.uri = uri || extension.baseURI;
@@ -923,6 +919,10 @@ class ContentGlobal {
 }
 
 ExtensionChild = {
+  ChildAPIManager,
+  Messenger,
+  Port,
+
   // Map<nsIContentFrameMessageManager, ContentGlobal>
   contentGlobals: new Map(),
 
@@ -938,6 +938,10 @@ ExtensionChild = {
   },
 
   init(global) {
+    if (!ExtensionManagement.isExtensionProcess) {
+      throw new Error("Cannot init extension page global in current process");
+    }
+
     this.contentGlobals.set(global, new ContentGlobal(global));
   },
 
@@ -954,24 +958,24 @@ ExtensionChild = {
    * @param {nsIDOMWindow} contentWindow The global of the page.
    */
   createExtensionContext(extension, contentWindow) {
+    if (!ExtensionManagement.isExtensionProcess) {
+      throw new Error("Cannot create an extension page context in current process");
+    }
+
     let windowId = getInnerWindowID(contentWindow);
     let context = this.extensionContexts.get(windowId);
     if (context) {
       if (context.extension !== extension) {
-        // Oops. This should never happen.
-        Cu.reportError("A different extension context already exists in this frame!");
-      } else {
-        // This should not happen either.
-        Cu.reportError("The extension context was already initialized in this frame.");
+        throw new Error("A different extension context already exists for this frame");
       }
-      return;
+      throw new Error("An extension context was already initialized for this frame");
     }
 
-    let mm = contentWindow
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDocShell)
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIContentFrameMessageManager);
+    let mm = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDocShell)
+                          .QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIContentFrameMessageManager);
+
     let {viewType, tabId} = this.contentGlobals.get(mm).ensureInitialized();
 
     let uri = contentWindow.document.documentURIObject;
@@ -1002,20 +1006,3 @@ ExtensionChild = {
     }
   },
 };
-
-// TODO(robwu): Change this condition when addons move to a separate process.
-if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
-  Object.keys(ExtensionChild).forEach(function(key) {
-    if (typeof ExtensionChild[key] == "function") {
-      // :/
-      ExtensionChild[key] = () => {};
-    }
-  });
-}
-
-Object.assign(ExtensionChild, {
-  ChildAPIManager,
-  Messenger,
-  Port,
-});
-
