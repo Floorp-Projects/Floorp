@@ -94,6 +94,19 @@ interface mozIGeckoMediaPluginService : nsISupports
                           in GetGMPVideoDecoderCallback callback);
 
   /**
+   * Gets a video decoder as per getGMPVideoDecoder, except it is linked to
+   * with a corresponding GMPDecryptor via the decryptor's ID.
+   * This is a temporary measure, until we can implement a Chromium CDM
+   * GMP protocol which does both decryption and decoding.
+   */
+  [noscript]
+  void getDecryptingGMPVideoDecoder(in GMPCrashHelperPtr helper,
+                                    in TagArray tags,
+                                    in ACString nodeId,
+                                    in GetGMPVideoDecoderCallback callback,
+                                    in uint32_t decryptorId);
+
+  /**
    * Get a video encoder that supports the specified tags.
    * The array of tags should at least contain a codec tag, and optionally
    * other tags.
