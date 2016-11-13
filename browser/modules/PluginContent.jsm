@@ -132,17 +132,13 @@ PluginContent.prototype = {
     switch (aTopic) {
       case "decoder-doctor-notification":
         let data = JSON.parse(aData);
-        if (this.haveShownNotification &&
+        let type = data.type.toLowerCase();
+        if (type == "cannot-play" &&
+            this.haveShownNotification &&
             aSubject.top.document == this.content.document &&
             data.formats.toLowerCase().includes("application/x-mpegurl", 0)) {
-          let principal = this.content.document.nodePrincipal;
-          let location = this.content.document.location.href;
           this.global.content.pluginRequiresReload = true;
-          this.global.sendAsyncMessage("PluginContent:ShowClickToPlayNotification",
-                                       { plugins: [...this.pluginData.values()],
-                                         showNow: true,
-                                         location: location,
-                                       }, null, principal);
+          this.updateNotificationUI(this.content.document);
         }
     }
   },
@@ -235,6 +231,12 @@ PluginContent.prototype = {
            };
   },
 
+  /**
+   * _getPluginInfoForTag is called when iterating the plugins for a document,
+   * and what we get from nsIDOMWindowUtils is an nsIPluginTag, and not an
+   * nsIObjectLoadingContent. This only should happen if the plugin is
+   * click-to-play (see bug 1186948).
+   */
   _getPluginInfoForTag: function(pluginTag, tagMimetype) {
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 
@@ -269,7 +271,11 @@ PluginContent.prototype = {
              pluginName: pluginName,
              pluginTag: pluginTag,
              permissionString: permissionString,
-             fallbackType: null,
+             // Since we should only have entered _getPluginInfoForTag when
+             // examining a click-to-play plugin, we can safely hard-code
+             // this fallback type, since we don't actually have an
+             // nsIObjectLoadingContent to check.
+             fallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
              blocklistState: blocklistState,
            };
   },
