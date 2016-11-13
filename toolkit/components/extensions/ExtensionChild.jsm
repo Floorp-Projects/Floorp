@@ -46,6 +46,7 @@ const {
   getMessageManager,
   getUniqueId,
   injectAPI,
+  promiseEvent,
 } = ExtensionUtils;
 
 const {
@@ -862,16 +863,14 @@ class ContentGlobal {
     this.tabId = -1;
     this.windowId = -1;
     this.initialized = false;
+
     this.global.addMessageListener("Extension:InitExtensionView", this);
     this.global.addMessageListener("Extension:SetTabAndWindowId", this);
-
-    this.initialDocuments = new WeakSet();
   }
 
   uninit() {
     this.global.removeMessageListener("Extension:InitExtensionView", this);
     this.global.removeMessageListener("Extension:SetTabAndWindowId", this);
-    this.global.removeEventListener("DOMContentLoaded", this);
   }
 
   ensureInitialized() {
@@ -889,18 +888,13 @@ class ContentGlobal {
       case "Extension:InitExtensionView":
         // The view type is initialized once and then fixed.
         this.global.removeMessageListener("Extension:InitExtensionView", this);
-        let {viewType, url} = data;
-        this.viewType = viewType;
-        this.global.addEventListener("DOMContentLoaded", this);
-        if (url) {
-          // TODO(robwu): Remove this check. It is only here because the popup
-          // implementation does not always load a URL at the initialization,
-          // and the logic is too complex to fix at once.
-          let {document} = this.global.content;
-          this.initialDocuments.add(document);
-          document.location.replace(url);
-        }
-        /* Falls through to allow these properties to be initialized at once */
+        this.viewType = data.viewType;
+
+        promiseEvent(this.global, "DOMContentLoaded", true).then(() => {
+          this.global.sendAsyncMessage("Extension:ExtensionViewLoaded");
+        });
+
+        /* FALLTHROUGH */
       case "Extension:SetTabAndWindowId":
         this.handleSetTabAndWindowId(data);
         break;
@@ -909,6 +903,7 @@ class ContentGlobal {
 
   handleSetTabAndWindowId(data) {
     let {tabId, windowId} = data;
+
     if (tabId) {
       // Tab IDs are not expected to change.
       if (this.tabId !== -1 && tabId !== this.tabId) {
@@ -916,6 +911,7 @@ class ContentGlobal {
       }
       this.tabId = tabId;
     }
+
     if (windowId !== undefined) {
       // Window IDs may change if a tab is moved to a different location.
       // Note: This is the ID of the browser window for the extension API.
@@ -923,21 +919,6 @@ class ContentGlobal {
       this.windowId = windowId;
     }
     this.initialized = true;
-  }
-
-  // "DOMContentLoaded" event.
-  handleEvent(event) {
-    let {document} = this.global.content;
-    if (event.target === document) {
-      // If the document was still being loaded at the time of navigation, then
-      // the DOMContentLoaded event is fired for the old document. Ignore it.
-      if (this.initialDocuments.has(document)) {
-        this.initialDocuments.delete(document);
-        return;
-      }
-      this.global.removeEventListener("DOMContentLoaded", this);
-      this.global.sendAsyncMessage("Extension:ExtensionViewLoaded");
-    }
   }
 }
 
