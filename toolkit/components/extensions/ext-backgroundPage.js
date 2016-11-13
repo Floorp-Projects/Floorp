@@ -11,6 +11,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 const {
   promiseDocumentLoaded,
+  promiseEvent,
   promiseObserved,
 } = ExtensionUtils;
 
@@ -22,91 +23,93 @@ const XUL_URL = "data:application/vnd.mozilla.xul+xml;charset=utf-8," + encodeUR
 var backgroundPagesMap = new WeakMap();
 
 // Responsible for the background_page section of the manifest.
-function BackgroundPage(options, extension) {
-  this.extension = extension;
-  this.page = options.page || null;
-  this.isGenerated = !!options.scripts;
-  this.windowlessBrowser = null;
-  this.webNav = null;
-}
+class BackgroundPageBase {
+  constructor(options, extension) {
+    this.extension = extension;
+    this.page = options.page || null;
+    this.isGenerated = !!options.scripts;
+    this.webNav = null;
+  }
 
-BackgroundPage.prototype = {
-  build: Task.async(function* () {
-    let windowlessBrowser = Services.appShell.createWindowlessBrowser(true);
-    this.windowlessBrowser = windowlessBrowser;
+  build() {
+    return Task.spawn(function* () {
+      let url;
+      if (this.page) {
+        url = this.extension.baseURI.resolve(this.page);
+      } else if (this.isGenerated) {
+        url = this.extension.baseURI.resolve("_generated_background_page.html");
+      }
 
-    let url;
-    if (this.page) {
-      url = this.extension.baseURI.resolve(this.page);
-    } else if (this.isGenerated) {
-      url = this.extension.baseURI.resolve("_generated_background_page.html");
-    }
+      if (!this.extension.isExtensionURL(url)) {
+        this.extension.manifestError("Background page must be a file within the extension");
+        url = this.extension.baseURI.resolve("_blank.html");
+      }
 
-    if (!this.extension.isExtensionURL(url)) {
-      this.extension.manifestError("Background page must be a file within the extension");
-      url = this.extension.baseURI.resolve("_blank.html");
-    }
+      let chromeDoc = yield this.getParentDocument();
 
+      let browser = chromeDoc.createElement("browser");
+      browser.setAttribute("type", "content");
+      browser.setAttribute("disableglobalhistory", "true");
+      browser.setAttribute("webextension-view-type", "background");
+
+      let awaitFrameLoader;
+      if (this.extension.remote) {
+        browser.setAttribute("remote", "true");
+        awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
+      }
+
+      chromeDoc.documentElement.appendChild(browser);
+      yield awaitFrameLoader;
+
+      this.browser = browser;
+
+      extensions.emit("extension-browser-inserted", browser);
+
+      browser.loadURI(url);
+
+      yield new Promise(resolve => {
+        browser.messageManager.addMessageListener("Extension:ExtensionViewLoaded", function onLoad() {
+          browser.messageManager.removeMessageListener("Extension:ExtensionViewLoaded", onLoad);
+          resolve();
+        });
+      });
+
+      if (browser.docShell) {
+        this.webNav = browser.docShell.QueryInterface(Ci.nsIWebNavigation);
+        let window = this.webNav.document.defaultView;
+
+
+        // Set the add-on's main debugger global, for use in the debugger
+        // console.
+        if (this.extension.addonData.instanceID) {
+          AddonManager.getAddonByInstanceID(this.extension.addonData.instanceID)
+                      .then(addon => addon.setDebugGlobal(window));
+        }
+      }
+
+      this.extension.emit("startup");
+    }.bind(this));
+  }
+
+  initParentWindow(chromeShell) {
     let system = Services.scriptSecurityManager.getSystemPrincipal();
-
-    // The windowless browser is a thin wrapper around a docShell that keeps
-    // its related resources alive. It implements nsIWebNavigation and
-    // forwards its methods to the underlying docShell, but cannot act as a
-    // docShell itself. Calling `getInterface(nsIDocShell)` gives us the
-    // underlying docShell, and `QueryInterface(nsIWebNavigation)` gives us
-    // access to the webNav methods that are already available on the
-    // windowless browser, but contrary to appearances, they are not the same
-    // object.
-    let chromeShell = windowlessBrowser.QueryInterface(Ci.nsIInterfaceRequestor)
-                                       .getInterface(Ci.nsIDocShell)
-                                       .QueryInterface(Ci.nsIWebNavigation);
-
-    chromeShell.useGlobalHistory = false;
     chromeShell.createAboutBlankContentViewer(system);
+    chromeShell.useGlobalHistory = false;
     chromeShell.loadURI(XUL_URL, 0, null, null, null);
 
-
-    yield promiseObserved("chrome-document-global-created",
-                          win => win.document == chromeShell.document);
-
-    let chromeDoc = yield promiseDocumentLoaded(chromeShell.document);
-
-    let browser = chromeDoc.createElement("browser");
-    browser.setAttribute("type", "content");
-    browser.setAttribute("disableglobalhistory", "true");
-    browser.setAttribute("webextension-view-type", "background");
-    chromeDoc.documentElement.appendChild(browser);
-
-    extensions.emit("extension-browser-inserted", browser);
-
-    browser.loadURI(url);
-
-    yield new Promise(resolve => {
-      browser.messageManager.addMessageListener("Extension:ExtensionViewLoaded", function onLoad() {
-        browser.messageManager.removeMessageListener("Extension:ExtensionViewLoaded", onLoad);
-        resolve();
-      });
-    });
-
-    // TODO(robwu): This is not webext-oop compatible.
-    this.webNav = browser.docShell.QueryInterface(Ci.nsIWebNavigation);
-    let window = this.webNav.document.defaultView;
-
-
-    // Set the add-on's main debugger global, for use in the debugger
-    // console.
-    if (this.extension.addonData.instanceID) {
-      AddonManager.getAddonByInstanceID(this.extension.addonData.instanceID)
-                  .then(addon => addon.setDebugGlobal(window));
-    }
-
-    this.extension.emit("startup");
-  }),
+    return promiseObserved("chrome-document-global-created",
+                           win => win.document == chromeShell.document);
+  }
 
   shutdown() {
     if (this.extension.addonData.instanceID) {
       AddonManager.getAddonByInstanceID(this.extension.addonData.instanceID)
                   .then(addon => addon.setDebugGlobal(null));
+    }
+
+    if (this.browser) {
+      this.browser.remove();
+      this.browser = null;
     }
 
     // Navigate away from the background page to invalidate any
@@ -115,16 +118,103 @@ BackgroundPage.prototype = {
       this.webNav.loadURI("about:blank", 0, null, null, null);
       this.webNav = null;
     }
+  }
+}
+
+/**
+ * A background page loaded into a windowless browser, with no on-screen
+ * representation or graphical display abilities.
+ *
+ * This currently does not support remote browsers, and therefore cannot
+ * be used with out-of-process extensions.
+ */
+class WindowlessBackgroundPage extends BackgroundPageBase {
+  constructor(options, extension) {
+    super(options, extension);
+    this.windowlessBrowser = null;
+  }
+
+  getParentDocument() {
+    return Task.spawn(function* () {
+      let windowlessBrowser = Services.appShell.createWindowlessBrowser(true);
+      this.windowlessBrowser = windowlessBrowser;
+
+      // The windowless browser is a thin wrapper around a docShell that keeps
+      // its related resources alive. It implements nsIWebNavigation and
+      // forwards its methods to the underlying docShell, but cannot act as a
+      // docShell itself. Calling `getInterface(nsIDocShell)` gives us the
+      // underlying docShell, and `QueryInterface(nsIWebNavigation)` gives us
+      // access to the webNav methods that are already available on the
+      // windowless browser, but contrary to appearances, they are not the same
+      // object.
+      let chromeShell = windowlessBrowser.QueryInterface(Ci.nsIInterfaceRequestor)
+                                         .getInterface(Ci.nsIDocShell)
+                                         .QueryInterface(Ci.nsIWebNavigation);
+
+      yield this.initParentWindow(chromeShell);
+
+      return promiseDocumentLoaded(windowlessBrowser.document);
+    }.bind(this));
+  }
+
+  shutdown() {
+    super.shutdown();
 
     this.windowlessBrowser.loadURI("about:blank", 0, null, null, null);
     this.windowlessBrowser.close();
     this.windowlessBrowser = null;
-  },
-};
+  }
+}
+
+/**
+ * A background page loaded into a visible dialog window. Only to be
+ * used for debugging, and in temporary, test-only use for
+ * out-of-process extensions.
+ */
+class WindowedBackgroundPage extends BackgroundPageBase {
+  constructor(options, extension) {
+    super(options, extension);
+    this.parentWindow = null;
+  }
+
+  getParentDocument() {
+    return Task.spawn(function* () {
+      let window = Services.ww.openWindow(null, "about:blank", "_blank",
+                                          "chrome,alwaysLowered,dialog", null);
+
+      this.parentWindow = window;
+
+      let chromeShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIDocShell)
+                              .QueryInterface(Ci.nsIWebNavigation);
+
+      yield this.initParentWindow(chromeShell);
+
+      window.minimize();
+
+      return promiseDocumentLoaded(window.document);
+    }.bind(this));
+  }
+
+  shutdown() {
+    super.shutdown();
+
+    if (this.parentWindow) {
+      this.parentWindow.close();
+      this.parentWindow = null;
+    }
+  }
+}
 
 /* eslint-disable mozilla/balanced-listeners */
 extensions.on("manifest_background", (type, directive, extension, manifest) => {
-  let bgPage = new BackgroundPage(manifest.background, extension);
+  let bgPage;
+  if (extension.remote) {
+    bgPage = new WindowedBackgroundPage(manifest.background, extension);
+  } else {
+    bgPage = new WindowlessBackgroundPage(manifest.background, extension);
+  }
+
   backgroundPagesMap.set(extension, bgPage);
   return bgPage.build();
 });
