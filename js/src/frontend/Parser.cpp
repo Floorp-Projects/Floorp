@@ -6518,24 +6518,6 @@ JSOpFromPropertyType(PropertyType propType)
     }
 }
 
-static GeneratorKind
-GeneratorKindFromPropertyType(PropertyType propType)
-{
-    if (propType == PropertyType::GeneratorMethod)
-        return StarGenerator;
-    if (propType == PropertyType::AsyncMethod)
-        return StarGenerator;
-    return NotGenerator;
-}
-
-static FunctionAsyncKind
-AsyncKindFromPropertyType(PropertyType propType)
-{
-    if (propType == PropertyType::AsyncMethod)
-        return AsyncFunction;
-    return SyncFunction;
-}
-
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::classDefinition(YieldHandling yieldHandling,
@@ -9361,8 +9343,15 @@ Parser<ParseHandler>::methodDefinition(PropertyType propType, HandleAtom funName
         MOZ_CRASH("unexpected property type");
     }
 
-    GeneratorKind generatorKind = GeneratorKindFromPropertyType(propType);
-    FunctionAsyncKind asyncKind = AsyncKindFromPropertyType(propType);
+    GeneratorKind generatorKind = (propType == PropertyType::GeneratorMethod ||
+                                   propType == PropertyType::AsyncMethod)
+                                  ? StarGenerator
+                                  : NotGenerator;
+
+    FunctionAsyncKind asyncKind = (propType == PropertyType::AsyncMethod)
+                                  ? AsyncFunction
+                                  : SyncFunction;
+
     YieldHandling yieldHandling = GetYieldHandling(generatorKind, asyncKind);
 
     Node pn = handler.newFunctionExpression();
