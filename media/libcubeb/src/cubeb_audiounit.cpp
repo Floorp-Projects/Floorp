@@ -226,6 +226,8 @@ audiotimestamp_to_latency(AudioTimeStamp const * tstamp, cubeb_stream * stream)
 static void
 audiounit_make_silent(AudioBuffer * ioData)
 {
+  assert(ioData);
+  assert(ioData->mData);
   memset(ioData->mData, 0, ioData->mDataByteSize);
 }
 
@@ -254,7 +256,6 @@ audiounit_render_input(cubeb_stream * stm,
 
   if (r != noErr) {
     PRINT_ERROR_CODE("AudioUnitRender", r);
-    audiounit_make_silent(&input_buffer_list.mBuffers[0]);
     return r;
   }
 
