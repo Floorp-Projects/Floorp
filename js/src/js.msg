@@ -262,6 +262,8 @@ MSG_DEF(JSMSG_GARBAGE_AFTER_INPUT,     2, JSEXN_SYNTAXERR, "unexpected garbage a
 MSG_DEF(JSMSG_IDSTART_AFTER_NUMBER,    0, JSEXN_SYNTAXERR, "identifier starts immediately after numeric literal")
 MSG_DEF(JSMSG_ILLEGAL_CHARACTER,       0, JSEXN_SYNTAXERR, "illegal character")
 MSG_DEF(JSMSG_IMPORT_DECL_AT_TOP_LEVEL, 0, JSEXN_SYNTAXERR, "import declarations may only appear at top level of a module")
+MSG_DEF(JSMSG_OF_AFTER_FOR_LOOP_DECL,  0, JSEXN_SYNTAXERR, "a declaration in the head of a for-of loop can't have an initializer")
+MSG_DEF(JSMSG_IN_AFTER_LEXICAL_FOR_DECL,0,JSEXN_SYNTAXERR, "a lexical declaration in the head of a for-in loop can't have an initializer")
 MSG_DEF(JSMSG_INVALID_FOR_IN_DECL_WITH_INIT,0,JSEXN_SYNTAXERR,"for-in loop head declarations may not have initializers")
 MSG_DEF(JSMSG_LABEL_NOT_FOUND,         0, JSEXN_SYNTAXERR, "label not found")
 MSG_DEF(JSMSG_LET_COMP_BINDING,        0, JSEXN_SYNTAXERR, "'let' is not a valid name for a comprehension variable")
