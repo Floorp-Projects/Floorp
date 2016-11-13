@@ -899,14 +899,25 @@ private:
   RefPtr<typename PromiseType::Request> mRequest;
 };
 
+template <typename Return>
+struct IsMozPromise
+  : FalseType
+{};
+
+template<typename ResolveValueT, typename RejectValueT, bool IsExclusive>
+struct IsMozPromise<MozPromise<ResolveValueT, RejectValueT, IsExclusive>>
+  : TrueType
+{};
+
 // Asynchronous Potentially-Cross-Thread Method Calls.
 //
-// This machinery allows callers to schedule a promise-returning method to be
-// invoked asynchronously on a given thread, while at the same time receiving
-// a promise upon which to invoke Then() immediately. InvokeAsync dispatches
-// a task to invoke the method on the proper thread and also chain the resulting
-// promise to the one that the caller received, so that resolve/reject values
-// are forwarded through.
+// This machinery allows callers to schedule a promise-returning function
+// (a method and object, or a function object like a lambda) to be invoked
+// asynchronously on a given thread, while at the same time receiving a
+// promise upon which to invoke Then() immediately. InvokeAsync dispatches a
+// task to invoke the function on the proper thread and also chain the
+// resulting promise to the one that the caller received, so that resolve/
+// reject values are forwarded through.
 
 namespace detail {
 
@@ -1046,6 +1057,84 @@ InvokeAsync(AbstractThread* aTarget, ThisType* aThisVal, const char* aCallerName
   return detail::InvokeAsyncImpl<StoreCopyPassByRRef<ArgTypes>...>(
            aTarget, aThisVal, aCallerName, aMethod,
            Forward<ActualArgTypes>(aArgs)...);
+}
+
+namespace detail {
+
+template<typename Function, typename PromiseType>
+class ProxyFunctionRunnable : public Runnable
+{
+  typedef typename Decay<Function>::Type FunctionStorage;
+public:
+  template <typename F>
+  ProxyFunctionRunnable(typename PromiseType::Private* aProxyPromise,
+                        F&& aFunction)
+    : mProxyPromise(aProxyPromise)
+    , mFunction(new FunctionStorage(Forward<F>(aFunction))) {}
+
+  NS_IMETHOD Run() override
+  {
+    RefPtr<PromiseType> p = (*mFunction)();
+    mFunction = nullptr;
+    p->ChainTo(mProxyPromise.forget(), "<Proxy Promise>");
+    return NS_OK;
+  }
+
+private:
+  RefPtr<typename PromiseType::Private> mProxyPromise;
+  UniquePtr<FunctionStorage> mFunction;
+};
+
+// Note: The following struct and function are not for public consumption (yet?)
+// as we would prefer all calls to pass on-the-spot lambdas (or at least moved
+// function objects). They could be moved outside of detail if really needed.
+
+// We prefer getting function objects by non-lvalue-ref (to avoid copying them
+// and their captures). This struct is a tag that allows the use of objects
+// through lvalue-refs where necessary.
+struct AllowInvokeAsyncFunctionLVRef {};
+
+// Invoke a function object (e.g., lambda or std/mozilla::function)
+// asynchronously; note that the object will be copied if provided by lvalue-ref.
+// Return a promise that the function should eventually resolve or reject.
+template<typename Function>
+static auto
+InvokeAsync(AbstractThread* aTarget, const char* aCallerName,
+            AllowInvokeAsyncFunctionLVRef, Function&& aFunction)
+  -> decltype(aFunction())
+{
+  static_assert(IsRefcountedSmartPointer<decltype(aFunction())>::value
+                && IsMozPromise<typename RemoveSmartPointer<
+                                           decltype(aFunction())>::Type>::value,
+                "Function object must return RefPtr<MozPromise>");
+  typedef typename RemoveSmartPointer<decltype(aFunction())>::Type PromiseType;
+  typedef detail::ProxyFunctionRunnable<Function, PromiseType> ProxyRunnableType;
+
+  RefPtr<typename PromiseType::Private> p =
+    new (typename PromiseType::Private)(aCallerName);
+  RefPtr<ProxyRunnableType> r =
+    new ProxyRunnableType(p, Forward<Function>(aFunction));
+  MOZ_ASSERT(aTarget->IsDispatchReliable());
+  aTarget->Dispatch(r.forget());
+  return p.forget();
+}
+
+} // namespace detail
+
+// Invoke a function object (e.g., lambda) asynchronously.
+// Return a promise that the function should eventually resolve or reject.
+template<typename Function>
+static auto
+InvokeAsync(AbstractThread* aTarget, const char* aCallerName,
+            Function&& aFunction)
+  -> decltype(aFunction())
+{
+  static_assert(!IsLvalueReference<Function>::value,
+                "Function object must not be passed by lvalue-ref (to avoid "
+                "unplanned copies); Consider move()ing the object.");
+  return detail::InvokeAsync(aTarget, aCallerName,
+                             detail::AllowInvokeAsyncFunctionLVRef(),
+                             Forward<Function>(aFunction));
 }
 
 #undef PROMISE_LOG
