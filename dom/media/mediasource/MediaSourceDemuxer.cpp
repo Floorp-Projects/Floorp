@@ -307,8 +307,9 @@ RefPtr<MediaSourceTrackDemuxer::SeekPromise>
 MediaSourceTrackDemuxer::Seek(media::TimeUnit aTime)
 {
   MOZ_ASSERT(mParent, "Called after BreackCycle()");
-  return InvokeAsync(mParent->GetTaskQueue(), this, __func__,
-                     &MediaSourceTrackDemuxer::DoSeek, aTime);
+  return InvokeAsync<media::TimeUnit&&>(
+           mParent->GetTaskQueue(), this, __func__,
+           &MediaSourceTrackDemuxer::DoSeek, aTime);
 }
 
 RefPtr<MediaSourceTrackDemuxer::SamplesPromise>
@@ -350,9 +351,10 @@ MediaSourceTrackDemuxer::GetNextRandomAccessPoint(media::TimeUnit* aTime)
 RefPtr<MediaSourceTrackDemuxer::SkipAccessPointPromise>
 MediaSourceTrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
 {
-  return InvokeAsync(mParent->GetTaskQueue(), this, __func__,
-                     &MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint,
-                     aTimeThreshold);
+  return InvokeAsync<media::TimeUnit&&>(
+           mParent->GetTaskQueue(), this, __func__,
+           &MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint,
+           aTimeThreshold);
 }
 
 media::TimeIntervals
@@ -374,7 +376,7 @@ MediaSourceTrackDemuxer::BreakCycles()
 }
 
 RefPtr<MediaSourceTrackDemuxer::SeekPromise>
-MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
+MediaSourceTrackDemuxer::DoSeek(const media::TimeUnit& aTime)
 {
   TimeIntervals buffered = mManager->Buffered(mType);
   // Fuzz factor represents a +/- threshold. So when seeking it allows the gap
@@ -469,7 +471,7 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples)
 }
 
 RefPtr<MediaSourceTrackDemuxer::SkipAccessPointPromise>
-MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(media::TimeUnit aTimeThreadshold)
+MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreadshold)
 {
   uint32_t parsed = 0;
   // Ensure that the data we are about to skip to is still available.
