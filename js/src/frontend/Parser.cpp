@@ -3149,20 +3149,13 @@ Parser<ParseHandler>::templateLiteral(YieldHandling yieldHandling)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::functionDefinition(InHandling inHandling, YieldHandling yieldHandling,
-                                         HandleAtom funName, FunctionSyntaxKind kind,
-                                         GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-                                         InvokedPrediction invoked)
+Parser<ParseHandler>::functionDefinition(Node pn, InHandling inHandling,
+                                         YieldHandling yieldHandling, HandleAtom funName,
+                                         FunctionSyntaxKind kind,
+                                         GeneratorKind generatorKind, FunctionAsyncKind asyncKind)
 {
     MOZ_ASSERT_IF(kind == Statement, funName);
     MOZ_ASSERT_IF(asyncKind == AsyncFunction, generatorKind == StarGenerator);
-
-    Node pn = handler.newFunctionDefinition();
-    if (!pn)
-        return null();
-
-    if (invoked)
-        pn = handler.setLikelyIIFE(pn);
 
     // Note the declared name and check for early errors.
     bool tryAnnexB = false;
@@ -3597,9 +3590,13 @@ Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling, DefaultHandling 
         return null();
     }
 
+    Node pn = handler.newFunctionDefinition();
+    if (!pn)
+        return null();
+
     YieldHandling newYieldHandling = GetYieldHandling(generatorKind, asyncKind);
-    return functionDefinition(InAllowed, newYieldHandling, name, Statement, generatorKind,
-                              asyncKind, PredictUninvoked);
+    return functionDefinition(pn, InAllowed, newYieldHandling, name, Statement, generatorKind,
+                              asyncKind);
 }
 
 template <typename ParseHandler>
@@ -3635,8 +3632,15 @@ Parser<ParseHandler>::functionExpr(InvokedPrediction invoked, FunctionAsyncKind 
         tokenStream.ungetToken();
     }
 
-    return functionDefinition(InAllowed, yieldHandling, name, Expression, generatorKind,
-                              asyncKind, invoked);
+    Node pn = handler.newFunctionDefinition();
+    if (!pn)
+        return null();
+
+    if (invoked)
+        pn = handler.setLikelyIIFE(pn);
+
+    return functionDefinition(pn, InAllowed, yieldHandling, name, Expression, generatorKind,
+                              asyncKind);
 }
 
 /*
@@ -7722,7 +7726,11 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
             }
         }
 
-        Node arrowFunc = functionDefinition(inHandling, yieldHandling, nullptr,
+        Node pn = handler.newFunctionDefinition();
+        if (!pn)
+            return null();
+
+        Node arrowFunc = functionDefinition(pn, inHandling, yieldHandling, nullptr,
                                             Arrow, generatorKind, asyncKind);
         if (!arrowFunc)
             return null();
@@ -9352,7 +9360,12 @@ Parser<ParseHandler>::methodDefinition(PropertyType propType, HandleAtom funName
     GeneratorKind generatorKind = GeneratorKindFromPropertyType(propType);
     FunctionAsyncKind asyncKind = AsyncKindFromPropertyType(propType);
     YieldHandling yieldHandling = GetYieldHandling(generatorKind, asyncKind);
-    return functionDefinition(InAllowed, yieldHandling, funName, kind, generatorKind, asyncKind);
+
+    Node pn = handler.newFunctionDefinition();
+    if (!pn)
+        return null();
+
+    return functionDefinition(pn, InAllowed, yieldHandling, funName, kind, generatorKind, asyncKind);
 }
 
 template <typename ParseHandler>
