@@ -5654,12 +5654,6 @@ Parser<ParseHandler>::forStatement(YieldHandling yieldHandling)
             stmt.refineForKind(StatementKind::ForOfLoop);
         }
 
-        if (!handler.isDeclarationList(target)) {
-            MOZ_ASSERT(!forLoopLexicalScope);
-            if (!checkAndMarkAsAssignmentLhs(target, PlainAssignment))
-                return null();
-        }
-
         // Parser::declaration consumed everything up to the closing ')'.  That
         // token follows an {Assignment,}Expression, so the next token must be
         // consumed as if an operator continued the expression, i.e. as None.
