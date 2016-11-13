@@ -1,0 +1,45 @@
+# HG changeset patch
+# User Alex Chronopoulos <achronop@gmail.com>
+# Parent  38e66a6513746a40d38783481dca39483c908d76
+Bug 1306247 - Remove initialization of a null buffer. r=jesup
+
+diff --git a/media/libcubeb/src/cubeb_audiounit.cpp b/media/libcubeb/src/cubeb_audiounit.cpp
+--- a/media/libcubeb/src/cubeb_audiounit.cpp
++++ b/media/libcubeb/src/cubeb_audiounit.cpp
+@@ -221,16 +221,18 @@ audiotimestamp_to_latency(AudioTimeStamp
+   uint64_t now = AudioConvertHostTimeToNanos(AudioGetCurrentHostTime());
+ 
+   return ((pres - now) * stream->output_desc.mSampleRate) / 1000000000LL;
+ }
+ 
+ static void
+ audiounit_make_silent(AudioBuffer * ioData)
+ {
++  assert(ioData);
++  assert(ioData->mData);
+   memset(ioData->mData, 0, ioData->mDataByteSize);
+ }
+ 
+ static OSStatus
+ audiounit_render_input(cubeb_stream * stm,
+                        AudioUnitRenderActionFlags * flags,
+                        AudioTimeStamp const * tstamp,
+                        UInt32 bus,
+@@ -249,17 +251,16 @@ audiounit_render_input(cubeb_stream * st
+                                flags,
+                                tstamp,
+                                bus,
+                                input_frames,
+                                &input_buffer_list);
+ 
+   if (r != noErr) {
+     PRINT_ERROR_CODE("AudioUnitRender", r);
+-    audiounit_make_silent(&input_buffer_list.mBuffers[0]);
+     return r;
+   }
+ 
+   /* Copy input data in linear buffer. */
+   stm->input_linear_buffer->push(input_buffer_list.mBuffers[0].mData,
+                                  input_frames * stm->input_desc.mChannelsPerFrame);
+ 
+   LOG("- input:  buffers %d, size %d, channels %d, frames %d.",
