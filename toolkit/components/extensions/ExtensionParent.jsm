@@ -229,6 +229,19 @@ GlobalManager = {
         ExtensionContent.uninit(this);
       });
     `, false);
+
+    let viewType = browser.getAttribute("webextension-view-type");
+    if (viewType) {
+      let data = {viewType};
+
+      let {getBrowserInfo} = apiManager.global;
+      if (getBrowserInfo) {
+        Object.assign(data, getBrowserInfo(browser));
+      }
+
+      browser.messageManager.sendAsyncMessage("Extension:InitExtensionView",
+                                              data);
+    }
   },
 
   getExtension(extensionId) {
