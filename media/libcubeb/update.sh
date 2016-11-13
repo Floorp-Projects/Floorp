@@ -70,4 +70,6 @@ patch -p3 < ./bug1314496_allocator.patch
 echo "Applying another patch on top of $version"
 patch -p1 < ./bug1315495_wasapi_leak.patch
 echo "Applying another patch on top of $version"
+patch -p1 < ./bug1311911_logitech_delay.patch
+echo "Applying another patch on top of $version"
 patch -p1 < ./bug1306247_crash_fix.patch
