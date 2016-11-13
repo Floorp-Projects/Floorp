@@ -603,6 +603,20 @@ Parser<ParseHandler>::error(unsigned errorNumber, ...)
 }
 
 template <typename ParseHandler>
+void
+Parser<ParseHandler>::errorAt(uint32_t offset, unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+#ifdef DEBUG
+    bool result =
+#endif
+        reportHelper(ParseError, false, offset, errorNumber, args);
+    MOZ_ASSERT(!result, "reporting an error returned true?");
+    va_end(args);
+}
+
+template <typename ParseHandler>
 bool
 Parser<ParseHandler>::warning(unsigned errorNumber, ...)
 {
@@ -932,8 +946,7 @@ Parser<ParseHandler>::checkStrictBinding(PropertyName* name, TokenPos pos)
         JSAutoByteString bytes;
         if (!AtomToPrintableString(context, name, &bytes))
             return false;
-        return reportWithOffset(ParseStrictError, pc->sc()->strict(), pos.begin,
-                                JSMSG_BAD_BINDING, bytes.ptr());
+        return strictModeErrorAt(pos.begin, JSMSG_BAD_BINDING, bytes.ptr());
     }
 
     return true;
@@ -969,8 +982,7 @@ Parser<ParseHandler>::reportRedeclaration(HandlePropertyName name, DeclarationKi
     JSAutoByteString bytes;
     if (!AtomToPrintableString(context, name, &bytes))
         return;
-    reportWithOffset(ParseError, false, pos.begin, JSMSG_REDECLARED_VAR,
-                     DeclarationKindString(kind), bytes.ptr());
+    errorAt(pos.begin, JSMSG_REDECLARED_VAR, DeclarationKindString(kind), bytes.ptr());
 }
 
 // notePositionalFormalParameter is called for both the arguments of a regular
@@ -1239,11 +1251,11 @@ Parser<ParseHandler>::checkLexicalDeclarationDirectlyWithinBlock(ParseContext::S
     if (!StatementKindIsBraced(stmt.kind()) &&
         stmt.kind() != StatementKind::ForLoopLexicalHead)
     {
-        reportWithOffset(ParseError, false, pos.begin,
-                         stmt.kind() == StatementKind::Label
-                         ? JSMSG_LEXICAL_DECL_LABEL
-                         : JSMSG_LEXICAL_DECL_NOT_IN_BLOCK,
-                         DeclarationKindString(kind));
+        errorAt(pos.begin,
+                stmt.kind() == StatementKind::Label
+                ? JSMSG_LEXICAL_DECL_LABEL
+                : JSMSG_LEXICAL_DECL_NOT_IN_BLOCK,
+                DeclarationKindString(kind));
         return false;
     }
 
@@ -1333,7 +1345,7 @@ Parser<ParseHandler>::noteDeclaredName(HandlePropertyName name, DeclarationKind 
         // contain 'let'. (CatchParameter is the only lexical binding form
         // without this restriction.)
         if (name == context->names().let) {
-            reportWithOffset(ParseError, false, pos.begin, JSMSG_LEXICAL_DECL_DEFINES_LET);
+            errorAt(pos.begin, JSMSG_LEXICAL_DECL_DEFINES_LET);
             return false;
         }
 
@@ -3650,7 +3662,7 @@ Parser<ParseHandler>::checkUnescapedName()
     if (!token.nameContainsEscape())
         return true;
 
-    reportWithOffset(ParseError, false, token.pos.begin, JSMSG_ESCAPED_KEYWORD);
+    errorAt(token.pos.begin, JSMSG_ESCAPED_KEYWORD);
     return false;
 }
 
@@ -3760,8 +3772,7 @@ Parser<ParseHandler>::maybeParseDirective(Node list, Node possibleDirective, boo
                                                 : funbox->hasParameterExprs
                                                 ? "default"
                                                 : "rest";
-                    reportWithOffset(ParseError, false, directivePos.begin,
-                                     JSMSG_STRICT_NON_SIMPLE_PARAMS, parameterKind);
+                    errorAt(directivePos.begin, JSMSG_STRICT_NON_SIMPLE_PARAMS, parameterKind);
                     return false;
                 }
             }
@@ -3958,7 +3969,7 @@ Parser<ParseHandler>::PossibleError::checkForError(ErrorKind kind)
         return true;
 
     Error& err = error(kind);
-    parser_.reportWithOffset(ParseError, false, err.offset_, err.errorNumber_);
+    parser_.errorAt(err.offset_, err.errorNumber_);
     return false;
 }
 
@@ -4247,11 +4258,11 @@ Parser<ParseHandler>::destructuringDeclarationWithoutYieldOrAwait(DeclarationKin
     Node res = destructuringDeclaration(kind, yieldHandling, tt);
     if (res) {
         if (pc->lastYieldOffset != startYieldOffset) {
-            reportWithOffset(ParseError, false, pc->lastYieldOffset, JSMSG_YIELD_IN_DEFAULT);
+            errorAt(pc->lastYieldOffset, JSMSG_YIELD_IN_DEFAULT);
             return null();
         }
         if (pc->lastAwaitOffset != startAwaitOffset) {
-            reportWithOffset(ParseError, false, pc->lastAwaitOffset, JSMSG_AWAIT_IN_DEFAULT);
+            errorAt(pc->lastAwaitOffset, JSMSG_AWAIT_IN_DEFAULT);
             return null();
         }
     }
@@ -4695,7 +4706,7 @@ Parser<FullParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node impor
             return false;
 
         if (tt != TOK_NAME || tokenStream.currentName() != context->names().as) {
-            reportWithOffset(ParseError, false, pos().begin, JSMSG_AS_AFTER_IMPORT_STAR);
+            error(JSMSG_AS_AFTER_IMPORT_STAR);
             return false;
         }
 
@@ -5601,7 +5612,7 @@ Parser<ParseHandler>::forStatement(YieldHandling yieldHandling)
         Node init = startNode;
 
         if (isForEach) {
-            reportWithOffset(ParseError, false, begin, JSMSG_BAD_FOR_EACH_LOOP);
+            errorAt(begin, JSMSG_BAD_FOR_EACH_LOOP);
             return null();
         }
 
@@ -5836,7 +5847,7 @@ Parser<ParseHandler>::continueStatement(YieldHandling yieldHandling)
                 if (foundLoop)
                     error(JSMSG_LABEL_NOT_FOUND);
                 else
-                    reportWithOffset(ParseError, false, begin, JSMSG_BAD_CONTINUE);
+                    errorAt(begin, JSMSG_BAD_CONTINUE);
                 return null();
             }
 
@@ -5895,7 +5906,7 @@ Parser<ParseHandler>::breakStatement(YieldHandling yieldHandling)
         };
 
         if (!pc->findInnermostStatement(isBreakTarget)) {
-            reportWithOffset(ParseError, false, begin, JSMSG_TOUGH_BREAK);
+            errorAt(begin, JSMSG_TOUGH_BREAK);
             return null();
         }
     }
@@ -6050,8 +6061,7 @@ Parser<ParseHandler>::yieldExpression(InHandling inHandling)
         }
 
         if (pc->functionBox()->isArrow()) {
-            reportWithOffset(ParseError, false, begin,
-                             JSMSG_YIELD_IN_ARROW, js_yield_str);
+            errorAt(begin, JSMSG_YIELD_IN_ARROW, js_yield_str);
             return null();
         }
 
@@ -6059,8 +6069,7 @@ Parser<ParseHandler>::yieldExpression(InHandling inHandling)
             pc->functionBox()->function()->isGetter() ||
             pc->functionBox()->function()->isSetter())
         {
-            reportWithOffset(ParseError, false, begin,
-                             JSMSG_YIELD_IN_METHOD, js_yield_str);
+            errorAt(begin, JSMSG_YIELD_IN_METHOD, js_yield_str);
             return null();
         }
 
@@ -6206,7 +6215,7 @@ Parser<ParseHandler>::labeledStatement(YieldHandling yieldHandling)
     uint32_t begin = pos().begin;
 
     if (pc->findInnermostStatement<ParseContext::LabelStatement>(hasSameLabel)) {
-        reportWithOffset(ParseError, false, begin, JSMSG_DUPLICATE_LABEL);
+        errorAt(begin, JSMSG_DUPLICATE_LABEL);
         return null();
     }
 
@@ -8239,8 +8248,7 @@ Parser<ParseHandler>::comprehension(GeneratorKind comprehensionKind)
         return null();
 
     if (comprehensionKind != NotGenerator && pc->lastYieldOffset != startYieldOffset) {
-        reportWithOffset(ParseError, false, pc->lastYieldOffset,
-                         JSMSG_BAD_GENEXP_BODY, js_yield_str);
+        errorAt(pc->lastYieldOffset, JSMSG_BAD_GENEXP_BODY, js_yield_str);
         return null();
     }
 
@@ -8302,11 +8310,11 @@ Parser<ParseHandler>::assignExprWithoutYieldOrAwait(YieldHandling yieldHandling)
     Node res = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
     if (res) {
         if (pc->lastYieldOffset != startYieldOffset) {
-            reportWithOffset(ParseError, false, pc->lastYieldOffset, JSMSG_YIELD_IN_DEFAULT);
+            errorAt(pc->lastYieldOffset, JSMSG_YIELD_IN_DEFAULT);
             return null();
         }
         if (pc->lastAwaitOffset != startAwaitOffset) {
-            reportWithOffset(ParseError, false, pc->lastAwaitOffset, JSMSG_AWAIT_IN_DEFAULT);
+            errorAt(pc->lastAwaitOffset, JSMSG_AWAIT_IN_DEFAULT);
             return null();
         }
     }
@@ -9138,8 +9146,7 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
                     // Directly report the error when we're not in a
                     // destructuring context.
                     if (!possibleError) {
-                        reportWithOffset(ParseError, false, namePos.begin,
-                                         JSMSG_DUPLICATE_PROTO_PROPERTY);
+                        errorAt(namePos.begin, JSMSG_DUPLICATE_PROTO_PROPERTY);
                         return null();
                     }
 
@@ -9382,7 +9389,7 @@ Parser<ParseHandler>::tryNewTarget(Node &newTarget)
         return false;
 
     if (!pc->sc()->allowNewTarget()) {
-        reportWithOffset(ParseError, false, begin, JSMSG_BAD_NEWTARGET);
+        errorAt(begin, JSMSG_BAD_NEWTARGET);
         return false;
     }
 

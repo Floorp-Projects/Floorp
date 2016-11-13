@@ -915,6 +915,9 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     /* Report the given error at the current offset. */
     void error(unsigned errorNumber, ...);
 
+    /* Report the given error at the given offset. */
+    void errorAt(uint32_t offset, unsigned errorNumber, ...);
+
     /*
      * Handle a strict mode error at the current offset.  Report an error if in
      * strict mode code, or warn if not, using the given error number and
