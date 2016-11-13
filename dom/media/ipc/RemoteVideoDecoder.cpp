@@ -160,9 +160,9 @@ RemoteDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 
   VideoInfo info = aParams.VideoConfig();
 
-  RefPtr<layers::KnowsCompositor> knowsCompositor = aParams.mKnowsCompositor;
+  TextureFactoryIdentifier ident = aParams.mKnowsCompositor->GetTextureFactoryIdentifier();
   VideoDecoderManagerChild::GetManagerThread()->Dispatch(NS_NewRunnableFunction([=]() {
-    object->mActor->InitIPDL(callback, info, knowsCompositor);
+    object->mActor->InitIPDL(callback, info, ident);
   }), NS_DISPATCH_NORMAL);
 
   return object.forget();

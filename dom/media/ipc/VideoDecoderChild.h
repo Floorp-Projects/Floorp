@@ -46,7 +46,7 @@ public:
   MOZ_IS_CLASS_INIT
   void InitIPDL(MediaDataDecoderCallback* aCallback,
                 const VideoInfo& aVideoInfo,
-                layers::KnowsCompositor* aKnowsCompositor);
+                const layers::TextureFactoryIdentifier& aIdentifier);
   void DestroyIPDL();
 
   // Called from IPDL when our actor has been destroyed
@@ -67,7 +67,7 @@ private:
   MozPromiseHolder<MediaDataDecoder::InitPromise> mInitPromise;
 
   VideoInfo mVideoInfo;
-  RefPtr<layers::KnowsCompositor> mKnowsCompositor;
+  layers::TextureFactoryIdentifier mIdentifier;
   nsCString mHardwareAcceleratedReason;
   bool mCanSend;
   bool mInitialized;
