@@ -74,5 +74,5 @@ TEST(STLWrapper, DISABLED_ShouldAbortDeathTest)
 TEST(STLWrapper, ShouldAbortDeathTest)
 #endif
 {
-  ASSERT_DEATH(ShouldAbort(), "terminate called after throwing an instance of 'std::out_of_range'|vector::_M_range_check");
+  ASSERT_DEATH_IF_SUPPORTED(ShouldAbort(), "terminate called after throwing an instance of 'std::out_of_range'|vector::_M_range_check");
 }
