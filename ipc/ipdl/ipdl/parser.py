@@ -158,7 +158,7 @@ tokens = [
 
 t_COLONCOLON = '::'
 
-literals = '(){}[]<>;:,~'
+literals = '(){}[]<>;:,'
 t_ignore = ' \f\t\v'
 
 def t_linecomment(t):
@@ -525,12 +525,9 @@ def p_MessageBody(p):
 def p_MessageId(p):
     """MessageId : ID
                  | __DELETE__
-                 | DELETE
-                 | '~' ID"""
+                 | DELETE"""
     loc = locFromTok(p, 1)
-    if 3 == len(p):
-        _error(loc, "sorry, `%s()' destructor syntax is a relic from a bygone era.  Declare `__delete__()' in the `%s' protocol instead", p[1]+p[2], p[2])
-    elif 'delete' == p[1]:
+    if 'delete' == p[1]:
         _error(loc, "`delete' is a reserved identifier")
     p[0] = [ loc, p[1] ]
 
