@@ -137,7 +137,9 @@ bool
 VideoDecoderParent::RecvFlush()
 {
   MOZ_ASSERT(!mDestroyed);
-  mDecoder->Flush();
+  if (mDecoder) {
+    mDecoder->Flush();
+  }
   return true;
 }
 

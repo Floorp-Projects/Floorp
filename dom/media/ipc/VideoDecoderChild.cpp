@@ -52,7 +52,9 @@ VideoDecoderChild::RecvOutput(const VideoDataIPDL& aData)
                                                        aData.base().keyframe(),
                                                        aData.base().timecode(),
                                                        IntRect());
-  mCallback->Output(video);
+  if (mCallback) {
+    mCallback->Output(video);
+  }
   return true;
 }
 
@@ -60,7 +62,9 @@ bool
 VideoDecoderChild::RecvInputExhausted()
 {
   AssertOnManagerThread();
-  mCallback->InputExhausted();
+  if (mCallback) {
+    mCallback->InputExhausted();
+  }
   return true;
 }
 
@@ -68,7 +72,9 @@ bool
 VideoDecoderChild::RecvDrainComplete()
 {
   AssertOnManagerThread();
-  mCallback->DrainComplete();
+  if (mCallback) {
+    mCallback->DrainComplete();
+  }
   return true;
 }
 
@@ -76,7 +82,9 @@ bool
 VideoDecoderChild::RecvError(const nsresult& aError)
 {
   AssertOnManagerThread();
-  mCallback->Error(aError);
+  if (mCallback) {
+    mCallback->Error(aError);
+  }
   return true;
 }
 
@@ -107,7 +115,7 @@ VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy)
     // it'll be safe for MediaFormatReader to recreate decoders
     RefPtr<VideoDecoderChild> ref = this;
     GetManager()->RunWhenRecreated(NS_NewRunnableFunction([=]() {
-      if (ref->mInitialized) {
+      if (ref->mInitialized && ref->mCallback) {
         ref->mCallback->Error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
       } else {
         ref->mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER, __func__);
@@ -225,6 +233,7 @@ void
 VideoDecoderChild::Shutdown()
 {
   AssertOnManagerThread();
+  mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   if (mCanSend) {
     SendShutdown();
   }
