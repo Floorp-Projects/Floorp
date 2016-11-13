@@ -4375,7 +4375,7 @@ Parser<ParseHandler>::initializerInNameDeclaration(Node decl, Node binding,
             //
             //   for (var/let/const x = ... of ...); // BAD
             if (isForOf) {
-                reportWithNode(ParseError, false, binding, JSMSG_BAD_FOR_LEFTSIDE);
+                errorAt(initializerOffset, JSMSG_OF_AFTER_FOR_LOOP_DECL);
                 return false;
             }
 
@@ -4384,7 +4384,7 @@ Parser<ParseHandler>::initializerInNameDeclaration(Node decl, Node binding,
                 //
                 //   for (let/const x = ... in ...); // BAD
                 if (DeclarationKindIsLexical(declKind)) {
-                    reportWithNode(ParseError, false, binding, JSMSG_BAD_FOR_LEFTSIDE);
+                    errorAt(initializerOffset, JSMSG_IN_AFTER_LEXICAL_FOR_DECL);
                     return false;
                 }
 
