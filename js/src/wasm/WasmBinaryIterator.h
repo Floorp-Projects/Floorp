@@ -265,8 +265,8 @@ class MOZ_STACK_CLASS OpIter : private Policy
     Decoder& d_;
     const size_t offsetInModule_;
 
-    Vector<TypeAndValue<Value>, 0, SystemAllocPolicy> valueStack_;
-    Vector<ControlStackEntry<ControlItem>, 0, SystemAllocPolicy> controlStack_;
+    Vector<TypeAndValue<Value>, 8, SystemAllocPolicy> valueStack_;
+    Vector<ControlStackEntry<ControlItem>, 8, SystemAllocPolicy> controlStack_;
     bool reachable_;
 
     DebugOnly<Op> op_;
