@@ -737,20 +737,16 @@ def p_Type(p):
     p[0] = p[2]
 
 def p_BasicType(p):
-    """BasicType : ScalarType
-                 | ScalarType '[' ']'"""
+    """BasicType : CxxID
+                 | CxxID '[' ']'"""
+    # ID == CxxType; we forbid qnames here,
+    # in favor of the |using| declaration
+    if not isinstance(p[1], TypeSpec):
+        loc, id = p[1]
+        p[1] = TypeSpec(loc, QualifiedId(loc, id))
     if 4 == len(p):
         p[1].array = 1
     p[0] = p[1]
-
-def p_ScalarType(p):
-    """ScalarType : CxxID"""    # ID == CxxType; we forbid qnames here,
-                                # in favor of the |using| declaration
-    if isinstance(p[1], TypeSpec):
-        p[0] = p[1]
-    else:
-        loc, id = p[1]
-        p[0] = TypeSpec(loc, QualifiedId(loc, id))
 
 def p_MaybeNullable(p):
     """MaybeNullable : NULLABLE
