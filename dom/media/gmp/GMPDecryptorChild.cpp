@@ -20,6 +20,8 @@
 namespace mozilla {
 namespace gmp {
 
+static uint32_t sDecryptorCount = 0;
+
 GMPDecryptorChild::GMPDecryptorChild(GMPContentChild* aPlugin,
                                      const nsTArray<uint8_t>& aPluginVoucher,
                                      const nsTArray<uint8_t>& aSandboxVoucher)
@@ -27,8 +29,10 @@ GMPDecryptorChild::GMPDecryptorChild(GMPContentChild* aPlugin,
   , mPlugin(aPlugin)
   , mPluginVoucher(aPluginVoucher)
   , mSandboxVoucher(aSandboxVoucher)
+  , mId(++sDecryptorCount)
 {
   MOZ_ASSERT(mPlugin);
+  MOZ_ASSERT(mId > 0);
 }
 
 GMPDecryptorChild::~GMPDecryptorChild()

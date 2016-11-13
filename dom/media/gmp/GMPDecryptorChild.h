@@ -79,6 +79,8 @@ public:
 
   void GetPluginVoucher(const uint8_t** aVoucher,
                         uint32_t* aVoucherLength) override;
+
+  uint32_t Id() const { return mId; }
 private:
   ~GMPDecryptorChild();
 
@@ -129,6 +131,8 @@ private:
   // Reference to the vouchers owned by the GMPChild.
   const nsTArray<uint8_t>& mPluginVoucher;
   const nsTArray<uint8_t>& mSandboxVoucher;
+
+  const uint32_t mId;
 };
 
 } // namespace gmp
