@@ -225,6 +225,7 @@ class BasePopup {
     this.browser.setAttribute("disableglobalhistory", "true");
     this.browser.setAttribute("transparent", "true");
     this.browser.setAttribute("class", "webextension-popup-browser");
+    this.browser.setAttribute("webextension-view-type", "popup");
     this.browser.setAttribute("tooltip", "aHTMLTooltip");
 
     // We only need flex sizing for the sake of the slide-in sub-views of the
@@ -240,14 +241,6 @@ class BasePopup {
     viewNode.appendChild(this.browser);
 
     extensions.emit("extension-browser-inserted", this.browser);
-    let windowId = WindowManager.getId(this.browser.ownerGlobal);
-    this.browser.messageManager.sendAsyncMessage("Extension:InitExtensionView", {
-      viewType: "popup",
-      windowId,
-    });
-    // TODO(robwu): Rework this to use the Extension:ExtensionViewLoaded message
-    // to detect loads and so on. And definitely move this content logic inside
-    // a file in the child process.
 
     let initBrowser = browser => {
       let mm = browser.messageManager;
@@ -279,7 +272,7 @@ class BasePopup {
         stylesheets: this.STYLESHEETS,
       });
 
-      this.browser.setAttribute("src", popupURL);
+      this.browser.loadURI(popupURL);
     });
   }
 
