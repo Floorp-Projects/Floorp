@@ -197,7 +197,7 @@ public:
 
 protected:
     virtual bool
-    RecvStart();
+    RecvStart() override;
 
     virtual PTestShutdownSubChild*
     AllocPTestShutdownSubChild(
