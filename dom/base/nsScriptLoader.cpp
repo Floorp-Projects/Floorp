@@ -2222,8 +2222,13 @@ nsScriptLoader::ProcessPendingRequestsAsync()
       !mNonAsyncExternalScriptInsertedRequests.isEmpty() ||
       !mDeferRequests.isEmpty() ||
       !mPendingChildLoaders.IsEmpty()) {
-    NS_DispatchToCurrentThread(NewRunnableMethod(this,
-                                                 &nsScriptLoader::ProcessPendingRequests));
+    nsCOMPtr<nsIRunnable> task = NewRunnableMethod(this,
+                                                   &nsScriptLoader::ProcessPendingRequests);
+    if (mDocument) {
+      mDocument->Dispatch("ScriptLoader", TaskCategory::Other, task.forget());
+    } else {
+      NS_DispatchToCurrentThread(task.forget());
+    }
   }
 }
 
