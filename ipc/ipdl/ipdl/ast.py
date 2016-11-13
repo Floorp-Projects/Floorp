@@ -150,7 +150,7 @@ class NamespacedNode(Node):
     def __init__(self, loc=Loc.NONE, name=None):
         Node.__init__(self, loc)
         self.name = name
-        self.namespaces = [ ]  
+        self.namespaces = [ ]
 
     def addOuterNamespace(self, namespace):
         self.namespaces.insert(0, namespace)
@@ -214,7 +214,7 @@ class PrettyPrinted:
     def __hash__(cls): return hash(cls.pretty)
     @classmethod
     def __str__(cls):  return cls.pretty
-    
+
 class ASYNC(PrettyPrinted):
     pretty = 'async'
 class INTR(PrettyPrinted):
