@@ -4,13 +4,7 @@
 
 :root {
   --markup-outline: var(--theme-splitter-color);
-
-  /* Pseudo-class lock indicators */
-  --hover-pseudo-background: var(--theme-highlight-red);
-  --active-pseudo-background: var(--theme-highlight-green);
-  --focus-pseudo-background: var(--theme-highlight-blue);
 }
-
 
 .theme-dark:root {
   --markup-outline: var(--theme-highlight-pink);
@@ -280,86 +274,18 @@ ul.children + .tag-line::before {
   border: 1px solid #CCC;
 }
 
-/* Markup view elements with pseudo-class locks */
-
-.child:not([pseudoclass-count]) > .pseudoclass-locked-container {
-  display: none;
-}
-
 /* Draw a circle next to nodes that have a pseudo class lock.
    Center vertically with the 1.4em line height on .tag-line */
-.child[pseudoclass-count] > .pseudoclass-locked-container {
+.child.pseudoclass-locked::before {
+  content: "";
+  background: var(--theme-highlight-lightorange);
   border-radius: 50%;
   width: .8em;
   height: .8em;
-  margin-top: .2em;
+  margin-top: .3em;
   left: 1px;
-  overflow: hidden;
   position: absolute;
   z-index: 1;
-}
-
-/* 1 pseudo-class lock */
-.child[pseudoclass-count="1"].pseudoclass-hover > .pseudoclass-locked-container {
-  background: var(--hover-pseudo-background);
-}
-
-.child[pseudoclass-count="1"].pseudoclass-active > .pseudoclass-locked-container {
-  background: var(--active-pseudo-background);
-}
-
-.child[pseudoclass-count="1"].pseudoclass-focus > .pseudoclass-locked-container {
-  background: var(--focus-pseudo-background);
-}
-
-/* 2 pseudo-class locks */
-.child[pseudoclass-count="2"] > .pseudoclass-locked-container::before,
-.child[pseudoclass-count="2"] > .pseudoclass-locked-container::after {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: var(--active-pseudo-background);
-}
-
-.child[pseudoclass-count="2"] > .pseudoclass-locked-container::after {
-  transform: rotate(45deg) translate(50%);
-}
-
-/* Colors for active lock are already on before/after, now let hover/focus override appropriately */
-.child[pseudoclass-count="2"].pseudoclass-hover > .pseudoclass-locked-container::before {
-  background: var(--hover-pseudo-background);
-}
-
-.child[pseudoclass-count="2"].pseudoclass-focus > .pseudoclass-locked-container::after {
-  background: var(--focus-pseudo-background);
-}
-
-/* 3 pseudo-class locks */
-.child[pseudoclass-count="3"] > .pseudoclass-locked-container {
-  background: var(--hover-pseudo-background);
-}
-
-.child[pseudoclass-count="3"] > .pseudoclass-locked-container::before,
-.child[pseudoclass-count="3"] > .pseudoclass-locked-container::after {
-  content: "";
-  display: block;
-  width: 0.53333em;
-  height: 0.47059em;
-}
-
-.child[pseudoclass-count="3"] > .pseudoclass-locked-container::before {
-  transform: rotate(90deg) skew(30deg);
-  margin-left: -0.10429em;
-  margin-top: 0.05em;
-  background: var(--active-pseudo-background);
-}
-
-.child[pseudoclass-count="3"] > .pseudoclass-locked-container::after {
-  transform: rotate(30deg) skew(30deg);
-  margin-left: 0.35783em;
-  margin-top: -0.47em;
-  background: var(--focus-pseudo-background);
 }
 
 /* Firebug Theme */
