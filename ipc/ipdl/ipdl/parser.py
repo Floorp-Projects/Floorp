@@ -744,19 +744,13 @@ def p_BasicType(p):
     p[0] = p[1]
 
 def p_ScalarType(p):
-    """ScalarType : ActorType
-                  | CxxID"""    # ID == CxxType; we forbid qnames here,
+    """ScalarType : CxxID"""    # ID == CxxType; we forbid qnames here,
                                 # in favor of the |using| declaration
     if isinstance(p[1], TypeSpec):
         p[0] = p[1]
     else:
         loc, id = p[1]
         p[0] = TypeSpec(loc, QualifiedId(loc, id))
-
-def p_ActorType(p):
-    """ActorType : ID ':' State"""
-    loc = locFromTok(p, 1)
-    p[0] = TypeSpec(loc, QualifiedId(loc, p[1]), state=p[3])
 
 def p_MaybeNullable(p):
     """MaybeNullable : NULLABLE
