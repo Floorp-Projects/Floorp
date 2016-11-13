@@ -1256,7 +1256,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
     Node functionDefinition(Node func, InHandling inHandling, YieldHandling yieldHandling,
                             HandleAtom name, FunctionSyntaxKind kind,
-                            GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
+                            GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+                            bool tryAnnexB = false);
 
     // Parse a function body.  Pass StatementListBody if the body is a list of
     // statements; pass ExpressionBody if the body is a single expression.
@@ -1342,8 +1343,8 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     Node newDotGeneratorName();
     bool declareDotGeneratorName();
 
-    bool checkFunctionDefinition(HandleAtom funAtom, Node pn, FunctionSyntaxKind kind,
-                                 GeneratorKind generatorKind, bool* tryAnnexB);
+    bool checkFunctionDefinition(HandlePropertyName funName, Node pn, GeneratorKind generatorKind,
+                                 bool* tryAnnexB);
     bool skipLazyInnerFunction(Node pn, FunctionSyntaxKind kind, bool tryAnnexB);
     bool innerFunction(Node pn, ParseContext* outerpc, HandleFunction fun,
                        InHandling inHandling, YieldHandling yieldHandling,
