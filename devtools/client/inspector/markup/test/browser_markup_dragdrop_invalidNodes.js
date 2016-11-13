@@ -21,7 +21,7 @@ add_task(function* () {
 
   info("Getting the ::before pseudo element and selecting it");
   let parentContainer = yield getContainerForNodeFront(parentFront, inspector);
-  let beforePseudo = parentContainer.elt.children[2].firstChild.container;
+  let beforePseudo = parentContainer.elt.children[1].firstChild.container;
   parentContainer.elt.scrollIntoView(true);
   yield selectNode(beforePseudo.node, inspector);
 
@@ -37,7 +37,7 @@ add_task(function* () {
 
   info("Getting the anonymous node and selecting it");
   let inputContainer = yield getContainerForNodeFront(inputFront, inspector);
-  let anonymousDiv = inputContainer.elt.children[2].firstChild.container;
+  let anonymousDiv = inputContainer.elt.children[1].firstChild.container;
   inputContainer.elt.scrollIntoView(true);
   yield selectNode(anonymousDiv.node, inspector);
 

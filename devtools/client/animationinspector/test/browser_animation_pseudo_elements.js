@@ -28,7 +28,7 @@ add_task(function* () {
   info("Getting the before and after nodeFronts");
   let bodyContainer = yield getContainerForSelector("body", inspector);
   let getBodyChildNodeFront = index => {
-    return bodyContainer.elt.children[2].childNodes[index].container.node;
+    return bodyContainer.elt.children[1].childNodes[index].container.node;
   };
   let beforeNode = getBodyChildNodeFront(0);
   let afterNode = getBodyChildNodeFront(1);

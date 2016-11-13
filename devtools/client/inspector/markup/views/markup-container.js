@@ -650,31 +650,10 @@ MarkupContainer.prototype = {
    * viewed node.
    */
   update: function () {
-    this.elt.classList.remove("pseudoclass-hover");
-    this.elt.classList.remove("pseudoclass-active");
-    this.elt.classList.remove("pseudoclass-focus");
-    this.elt.removeAttribute("pseudoclass-count");
-
-    let {pseudoClassLocks} = this.node;
-
-    if (pseudoClassLocks.length) {
-      for (let state of pseudoClassLocks) {
-        switch (state) {
-          case ":hover":
-            this.elt.classList.add("pseudoclass-hover");
-            break;
-          case ":active":
-            this.elt.classList.add("pseudoclass-active");
-            break;
-          case ":focus":
-            this.elt.classList.add("pseudoclass-focus");
-            break;
-        }
-      }
-      this.elt.setAttribute("pseudoclass-count", pseudoClassLocks.length);
+    if (this.node.pseudoClassLocks.length) {
+      this.elt.classList.add("pseudoclass-locked");
     } else {
       this.elt.classList.remove("pseudoclass-locked");
-      this.elt.removeAttribute("pseudoclass-count");
     }
 
     if (this.editor.update) {
