@@ -1437,8 +1437,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
     static Node null() { return ParseHandler::null(); }
 
-    bool reportBadReturn(Node pn, ParseReportKind kind, unsigned errnum, unsigned anonerrnum);
-
     JSAtom* prefixAccessorName(PropertyType propType, HandleAtom propAtom);
 
     TokenPos pos() const { return tokenStream.currentToken().pos; }
