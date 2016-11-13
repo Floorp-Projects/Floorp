@@ -165,8 +165,9 @@ struct cubeb_stream {
   /* I/O AudioUnits */
   AudioUnit input_unit;
   AudioUnit output_unit;
-  /* Sample rate of input device*/
+  /* I/O device sample rate */
   Float64 input_hw_rate;
+  Float64 output_hw_rate;
   owned_critical_section mutex;
   /* Hold the input samples in every
    * input callback iteration */
@@ -374,9 +375,11 @@ audiounit_output_callback(void * user_ptr,
   if (stm->input_unit != NULL) {
     /* Output callback came first */
     if (stm->frames_read == 0) {
-      LOG("Output callback came first send silent.");
-      stm->input_linear_buffer->push_silence(stm->input_buffer_frames *
-                                            stm->input_desc.mChannelsPerFrame);
+      uint32_t min_input_frames_required = ceilf(stm->input_hw_rate / stm->output_hw_rate *
+                                                                      stm->input_buffer_frames);
+      LOG("Output callback came first pushed %u frames of input silence.", min_input_frames_required);
+      stm->input_linear_buffer->push_silence(min_input_frames_required *
+                                             stm->input_desc.mChannelsPerFrame);
     }
     /* Input samples stored previously in input callback. */
     if (stm->input_linear_buffer->length() == 0) {
@@ -1158,6 +1161,9 @@ audiounit_stream_init(cubeb * context,
 
   /* Setup Input Stream! */
   if (input_stream_params != NULL) {
+    LOG("(%p) Opening input side: rate %u, channels %u, format %d, latency in frames %u.",
+        stm, stm->input_stream_params.rate, stm->input_stream_params.channels,
+        stm->input_stream_params.format, stm->latency_frames);
     /* Get input device sample rate. */
     AudioStreamBasicDescription input_hw_desc;
     size = sizeof(AudioStreamBasicDescription);
@@ -1173,6 +1179,7 @@ audiounit_stream_init(cubeb * context,
       return CUBEB_ERROR;
     }
     stm->input_hw_rate = input_hw_desc.mSampleRate;
+    LOG("(%p) Input device sampling rate: %.2f", stm, stm->input_hw_rate);
 
     /* Set format description according to the input params. */
     r = audio_stream_desc_init(&stm->input_desc, input_stream_params);
@@ -1258,6 +1265,9 @@ audiounit_stream_init(cubeb * context,
 
   /* Setup Output Stream! */
   if (output_stream_params != NULL) {
+    LOG("(%p) Opening output side: rate %u, channels %u, format %d, latency in frames %u.",
+        stm, stm->output_stream_params.rate, stm->output_stream_params.channels,
+        stm->output_stream_params.format, stm->latency_frames);
     r = audio_stream_desc_init(&stm->output_desc, output_stream_params);
     if (r != CUBEB_OK) {
       LOG("Could not initialize the audio stream description.");
@@ -1280,6 +1290,8 @@ audiounit_stream_init(cubeb * context,
       audiounit_stream_destroy(stm);
       return CUBEB_ERROR;
     }
+    stm->output_hw_rate = output_hw_desc.mSampleRate;
+    LOG("(%p) Output device sampling rate: %.2f", stm, output_hw_desc.mSampleRate);
 
     r = AudioUnitSetProperty(stm->output_unit,
                              kAudioUnitProperty_StreamFormat,
