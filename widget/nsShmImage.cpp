@@ -239,19 +239,21 @@ nsShmImage::DestroyImage()
     mShmSeg = XCB_NONE;
   }
   DestroyShmSegment();
+  // Avoid leaking any pending reply.  No real need to wait but CentOS 6 build
+  // machines don't have xcb_discard_reply().
+  WaitIfPendingReply();
 }
 
-already_AddRefed<DrawTarget>
-nsShmImage::CreateDrawTarget(const mozilla::LayoutDeviceIntRegion& aRegion)
+// Wait for any in-flight shm-affected requests to complete.
+// Typically X clients would wait for a XShmCompletionEvent to be received,
+// but this works as it's sent immediately after the request is sent.
+void
+nsShmImage::WaitIfPendingReply()
 {
-  // Wait for any in-flight requests to complete.
-  // Typically X clients would wait for a XShmCompletionEvent to be received,
-  // but this works as it's sent immediately after the request is processed.
   if (mRequestPending) {
-    xcb_get_input_focus_reply_t* reply;
-    if ((reply = xcb_get_input_focus_reply(mConnection, mSyncRequest, nullptr))) {
-      free(reply);
-    }
+    xcb_get_input_focus_reply_t* reply =
+      xcb_get_input_focus_reply(mConnection, mSyncRequest, nullptr);
+    free(reply);
     mRequestPending = false;
 
     xcb_generic_error_t* error;
@@ -261,6 +263,12 @@ nsShmImage::CreateDrawTarget(const mozilla::LayoutDeviceIntRegion& aRegion)
       return nullptr;
     }
   }
+}
+
+already_AddRefed<DrawTarget>
+nsShmImage::CreateDrawTarget(const mozilla::LayoutDeviceIntRegion& aRegion)
+{
+  WaitIfPendingReply();
 
   // Due to bug 1205045, we must avoid making GTK calls off the main thread to query window size.
   // Instead we just track the largest offset within the image we are drawing to and grow the image
