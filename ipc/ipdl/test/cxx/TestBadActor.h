@@ -34,10 +34,10 @@ protected:
   }
 
   virtual PTestBadActorSubParent*
-  AllocPTestBadActorSubParent();
+  AllocPTestBadActorSubParent() override;
 
   virtual bool
-  DeallocPTestBadActorSubParent(PTestBadActorSubParent* actor) {
+  DeallocPTestBadActorSubParent(PTestBadActorSubParent* actor) override {
     delete actor;
     return true;
   }
@@ -52,7 +52,7 @@ public:
 
 protected:
   virtual void ActorDestroy(ActorDestroyReason why) override {}
-  virtual bool RecvPing();
+  virtual bool RecvPing() override;
 };
 
 class TestBadActorChild
