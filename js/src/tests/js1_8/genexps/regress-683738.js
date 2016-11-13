@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = "generator function foo returns a value";
+  expect = "can't use 'yield' in a function that can return a value";
   try
   {
     actual = 'No Error';
@@ -32,7 +32,7 @@ function test()
   }
   reportCompare(expect, actual, summary + ": 1");
 
-  expect = "generator function foo returns a value";
+  expect = "generator function can't return a value";
   try
   {
     actual = 'No Error';
@@ -44,7 +44,7 @@ function test()
   }
   reportCompare(expect, actual, summary + ": 2");
 
-  expect = "generator function foo returns a value";
+  expect = "can't use 'yield' in a function that can return a value";
   try
   {
     actual = 'No Error';
@@ -56,7 +56,7 @@ function test()
   }
   reportCompare(expect, actual, summary + ": 3");
 
-  expect = "generator function foo returns a value";
+  expect = "generator function can't return a value";
   try
   {
     actual = 'No Error';
