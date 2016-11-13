@@ -257,7 +257,7 @@ def p_IncludeStmt(p):
     """IncludeStmt : INCLUDE PROTOCOL ID
                    | INCLUDE ID"""
     loc = locFromTok(p, 1)
- 
+
     Parser.current.loc = loc
     if 4 == len(p):
         id = p[3]
@@ -610,7 +610,7 @@ def p_Transition(p):
                   | Trigger DELETE ';'"""
     if 'delete' == p[2]:
         _error(locFromTok(p, 1), "`delete' is a reserved identifier")
-    
+
     loc, trigger = p[1]
     if 6 == len(p):
         nextstates = p[4]
@@ -760,7 +760,7 @@ def p_ActorType(p):
     """ActorType : ID ':' State"""
     loc = locFromTok(p, 1)
     p[0] = TypeSpec(loc, QualifiedId(loc, p[1]), state=p[3])
- 
+
 def p_MaybeNullable(p):
     """MaybeNullable : NULLABLE
                      | """
