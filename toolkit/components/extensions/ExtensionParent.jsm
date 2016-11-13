@@ -440,12 +440,6 @@ ParentAPIManager = {
 
     let context;
     if (envType == "addon_parent") {
-      // Privileged addon contexts can only be loaded in documents whose main
-      // frame is also the same addon.
-      if (principal.URI.prePath !== extension.baseURI.prePath ||
-          !target.contentPrincipal.subsumes(principal)) {
-        throw new Error(`Refused to create privileged WebExtension context for ${principal.URI.spec}`);
-      }
       context = new ExtensionPageContextParent(envType, extension, data, target);
     } else if (envType == "content_parent") {
       context = new ContentScriptContextParent(envType, extension, data, target, principal);
@@ -545,9 +539,7 @@ ParentAPIManager = {
   getContextById(childId) {
     let context = this.proxyContexts.get(childId);
     if (!context) {
-      let error = new Error("WebExtension context not found!");
-      Cu.reportError(error);
-      throw error;
+      throw new Error("WebExtension context not found!");
     }
     return context;
   },
