@@ -877,7 +877,7 @@ ModuleGenerator::startFuncDefs()
         }
 #endif
         parallel_ = true;
-        numTasks = threads.maxWasmCompilationThreads();
+        numTasks = 2 * threads.maxWasmCompilationThreads();
     } else {
         numTasks = 1;
     }
