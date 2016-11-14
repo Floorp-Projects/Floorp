@@ -34,8 +34,6 @@ public:
             const nsAString& aGMPName,
             bool aInPrivateBrowsing) override;
 
-  void OnSetDecryptorId(uint32_t aId) override;
-
   void CreateSession(uint32_t aCreateSessionToken,
                      dom::MediaKeySessionType aSessionType,
                      PromiseId aPromiseId,
@@ -110,8 +108,6 @@ public:
 #ifdef DEBUG
   bool IsOnOwnerThread() override;
 #endif
-
-  uint32_t GetDecryptorId() override;
 
 private:
   friend class gmp_InitDoneCallback;
@@ -254,10 +250,6 @@ private:
   // True if GMPCDMProxy::gmp_Shutdown was called.
   // GMP thread only.
   bool mShutdownCalled;
-
-  uint32_t mDecryptorId;
-
-  PromiseId mCreatePromiseId;
 };
 
 

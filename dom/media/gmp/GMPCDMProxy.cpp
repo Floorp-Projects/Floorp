@@ -38,8 +38,6 @@ GMPCDMProxy::GMPCDMProxy(dom::MediaKeys* aKeys,
   , mCDM(nullptr)
   , mDecryptionJobCount(0)
   , mShutdownCalled(false)
-  , mDecryptorId(0)
-  , mCreatePromiseId(0)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(GMPCDMProxy);
@@ -133,19 +131,10 @@ GMPCDMProxy::gmp_InitDone(GMPDecryptorProxy* aCDM, nsAutoPtr<InitData>&& aData)
   mCDM->Init(mCallback,
              mDistinctiveIdentifierRequired,
              mPersistentStateRequired);
-
-  // Await the OnSetDecryptorId callback.
-  mCreatePromiseId = aData->mPromiseId;
-}
-
-void GMPCDMProxy::OnSetDecryptorId(uint32_t aId)
-{
-  MOZ_ASSERT(mCreatePromiseId);
-  mDecryptorId = aId;
   nsCOMPtr<nsIRunnable> task(
     NewRunnableMethod<uint32_t>(this,
                                 &GMPCDMProxy::OnCDMCreated,
-                                mCreatePromiseId));
+                                aData->mPromiseId));
   NS_DispatchToMainThread(task);
 }
 
@@ -779,21 +768,9 @@ GMPCDMProxy::Terminated()
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_WARNING("CDM terminated");
-  if (mCreatePromiseId) {
-    RejectPromise(mCreatePromiseId,
-                  NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                  NS_LITERAL_CSTRING("Crashed waiting for CDM to initialize"));
-    mCreatePromiseId = 0;
-  }
   if (!mKeys.IsNull()) {
     mKeys->Terminated();
   }
-}
-
-uint32_t
-GMPCDMProxy::GetDecryptorId()
-{
-  return mDecryptorId;
 }
 
 } // namespace mozilla
