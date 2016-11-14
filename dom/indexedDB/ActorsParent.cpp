@@ -299,8 +299,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FullIndexMetadata)
 
 private:
-  ~FullIndexMetadata()
-  { }
+  ~FullIndexMetadata() = default;
 };
 
 typedef nsRefPtrHashtable<nsUint64HashKey, FullIndexMetadata> IndexTable;
@@ -334,8 +333,7 @@ public:
   HasLiveIndexes() const;
 
 private:
-  ~FullObjectStoreMetadata()
-  { }
+  ~FullObjectStoreMetadata() = default;
 };
 
 typedef nsRefPtrHashtable<nsUint64HashKey, FullObjectStoreMetadata>
@@ -366,8 +364,7 @@ public:
   Duplicate() const;
 
 private:
-  ~FullDatabaseMetadata()
-  { }
+  ~FullDatabaseMetadata() = default;
 };
 
 template <class MetadataType>
@@ -1942,8 +1939,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  ~CompressDataBlobsFunction()
-  { }
+  ~CompressDataBlobsFunction() = default;
 
   NS_IMETHOD
   OnFunctionCall(mozIStorageValueArray* aArguments,
@@ -2276,8 +2272,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  ~EncodeKeysFunction()
-  { }
+  ~EncodeKeysFunction() = default;
 
   NS_IMETHOD
   OnFunctionCall(mozIStorageValueArray* aArguments,
@@ -2733,8 +2728,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  ~InsertIndexDataValuesFunction()
-  { }
+  ~InsertIndexDataValuesFunction() = default;
 
   NS_DECL_MOZISTORAGEFUNCTION
 };
@@ -2855,8 +2849,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  ~UpgradeKeyFunction()
-  { }
+  ~UpgradeKeyFunction() = default;
 
   static nsresult
   CopyAndUpgradeKeyBufferInternal(const uint8_t*& aSource,
@@ -5244,8 +5237,7 @@ public:
   Reset();
 
 private:
-  ~UpdateRefcountFunction()
-  { }
+  ~UpdateRefcountFunction() = default;
 
   nsresult
   ProcessValue(mozIStorageValueArray* aValues,
@@ -5479,8 +5471,7 @@ protected:
   ConnectionRunnable(DatabaseInfo* aDatabaseInfo);
 
   virtual
-  ~ConnectionRunnable()
-  { }
+  ~ConnectionRunnable() = default;
 };
 
 class ConnectionPool::IdleConnectionRunnable final
@@ -5497,8 +5488,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  ~IdleConnectionRunnable()
-  { }
+  ~IdleConnectionRunnable() = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -5515,8 +5505,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  ~CloseConnectionRunnable()
-  { }
+  ~CloseConnectionRunnable() = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -5612,8 +5601,7 @@ protected:
   FinishCallback()
   { }
 
-  virtual ~FinishCallback()
-  { }
+  virtual ~FinishCallback() = default;
 };
 
 class ConnectionPool::FinishCallbackWrapper final
@@ -6627,8 +6615,7 @@ private:
                                        /* aLoggingSerialNumber */ 0)
   { }
 
-  ~StartTransactionOp()
-  { }
+  ~StartTransactionOp() = default;
 
   virtual void
   RunOnConnectionThread() override;
@@ -6707,8 +6694,7 @@ private:
     MOZ_ASSERT(aFileInfo);
   }
 
-  ~DatabaseFile()
-  { }
+  ~DatabaseFile() = default;
 
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override
@@ -6997,8 +6983,7 @@ class TransactionBase::CommitOp final
 private:
   CommitOp(TransactionBase* aTransaction, nsresult aResultCode);
 
-  ~CommitOp()
-  { }
+  ~CommitOp() = default;
 
   // Writes new autoIncrement counts to database.
   nsresult
@@ -7043,8 +7028,7 @@ private:
                     nsTArray<RefPtr<FullObjectStoreMetadata>>& aObjectStores);
 
   // Reference counted.
-  ~NormalTransaction()
-  { }
+  ~NormalTransaction() = default;
 
   bool
   IsSameProcessActor();
@@ -7682,8 +7666,7 @@ public:
   { }
 
 private:
-  ~DeleteDatabaseOp()
-  { }
+  ~DeleteDatabaseOp() = default;
 
   void
   LoadPreviousVersion(nsIFile* aDatabaseFile);
@@ -7728,8 +7711,7 @@ private:
     MOZ_ASSERT(!aDeleteDatabaseOp->mDatabaseDirectoryPath.IsEmpty());
   }
 
-  ~VersionChangeOp()
-  { }
+  ~VersionChangeOp() = default;
 
   nsresult
   RunOnIOThread();
@@ -7822,8 +7804,7 @@ public:
                const DatabaseRequestParams& aParams);
 
 private:
-  ~CreateFileOp()
-  { }
+  ~CreateFileOp() = default;
 
   nsresult
   CreateMutableFile(MutableFile** aMutableFile);
@@ -7848,8 +7829,7 @@ protected:
   { }
 
   virtual
-  ~VersionChangeTransactionOp()
-  { }
+  ~VersionChangeTransactionOp() = default;
 
 private:
   virtual nsresult
@@ -7876,8 +7856,7 @@ private:
     MOZ_ASSERT(aMetadata.id());
   }
 
-  ~CreateObjectStoreOp()
-  { }
+  ~CreateObjectStoreOp() = default;
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -7903,8 +7882,7 @@ private:
     MOZ_ASSERT(aMetadata->mCommonMetadata.id());
   }
 
-  ~DeleteObjectStoreOp()
-  { }
+  ~DeleteObjectStoreOp() = default;
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -7929,8 +7907,7 @@ private:
     MOZ_ASSERT(mId);
   }
 
-  ~RenameObjectStoreOp()
-  { }
+  ~RenameObjectStoreOp() = default;
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -7961,8 +7938,7 @@ private:
                 const int64_t aObjectStoreId,
                 const IndexMetadata& aMetadata);
 
-  ~CreateIndexOp()
-  { }
+  ~CreateIndexOp() = default;
 
   nsresult
   InsertDataFromObjectStore(DatabaseConnection* aConnection);
@@ -8070,8 +8046,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  ~UpdateIndexDataValuesFunction()
-  { }
+  ~UpdateIndexDataValuesFunction() = default;
 
   NS_DECL_MOZISTORAGEFUNCTION
 };
@@ -8094,8 +8069,7 @@ private:
                 const bool aUnique,
                 const bool aIsLastIndex);
 
-  ~DeleteIndexOp()
-  { }
+  ~DeleteIndexOp() = default;
 
   nsresult
   RemoveReferencesToIndex(DatabaseConnection* aConnection,
@@ -8128,8 +8102,7 @@ private:
     MOZ_ASSERT(mIndexId);
   }
 
-  ~RenameIndexOp()
-  { }
+  ~RenameIndexOp() = default;
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -8156,8 +8129,7 @@ protected:
   { }
 
   virtual
-  ~NormalTransactionOp()
-  { }
+  ~NormalTransactionOp() = default;
 
   // An overload of DatabaseOperationBase's function that can avoid doing extra
   // work on non-versionchange transactions.
@@ -8228,8 +8200,7 @@ private:
   ObjectStoreAddOrPutRequestOp(TransactionBase* aTransaction,
                                const RequestParams& aParams);
 
-  ~ObjectStoreAddOrPutRequestOp()
-  { }
+  ~ObjectStoreAddOrPutRequestOp() = default;
 
   nsresult
   RemoveOldIndexDataValues(DatabaseConnection* aConnection);
@@ -8327,8 +8298,7 @@ public:
   { }
 
 private:
-  virtual ~SCInputStream()
-  { }
+  virtual ~SCInputStream() = default;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
@@ -8354,8 +8324,7 @@ private:
                           const RequestParams& aParams,
                           bool aGetAll);
 
-  ~ObjectStoreGetRequestOp()
-  { }
+  ~ObjectStoreGetRequestOp() = default;
 
   template <bool aForPreprocess, typename T>
   nsresult
@@ -8391,8 +8360,7 @@ private:
                              const RequestParams& aParams,
                              bool aGetAll);
 
-  ~ObjectStoreGetKeyRequestOp()
-  { }
+  ~ObjectStoreGetKeyRequestOp() = default;
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -8414,8 +8382,7 @@ private:
   ObjectStoreDeleteRequestOp(TransactionBase* aTransaction,
                              const ObjectStoreDeleteParams& aParams);
 
-  ~ObjectStoreDeleteRequestOp()
-  { }
+  ~ObjectStoreDeleteRequestOp() = default;
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -8440,8 +8407,7 @@ private:
   ObjectStoreClearRequestOp(TransactionBase* aTransaction,
                             const ObjectStoreClearParams& aParams);
 
-  ~ObjectStoreClearRequestOp()
-  { }
+  ~ObjectStoreClearRequestOp() = default;
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -8468,8 +8434,7 @@ private:
     , mParams(aParams)
   { }
 
-  ~ObjectStoreCountRequestOp()
-  { }
+  ~ObjectStoreCountRequestOp() = default;
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -8495,8 +8460,7 @@ protected:
   { }
 
   virtual
-  ~IndexRequestOpBase()
-  { }
+  ~IndexRequestOpBase() = default;
 
 private:
   static already_AddRefed<FullIndexMetadata>
@@ -8522,8 +8486,7 @@ private:
                     const RequestParams& aParams,
                     bool aGetAll);
 
-  ~IndexGetRequestOp()
-  { }
+  ~IndexGetRequestOp() = default;
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -8548,8 +8511,7 @@ private:
                        const RequestParams& aParams,
                        bool aGetAll);
 
-  ~IndexGetKeyRequestOp()
-  { }
+  ~IndexGetKeyRequestOp() = default;
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -8574,8 +8536,7 @@ private:
     , mParams(aParams.get_IndexCountParams())
   { }
 
-  ~IndexCountRequestOp()
-  { }
+  ~IndexCountRequestOp() = default;
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -8708,8 +8669,7 @@ protected:
   }
 
   virtual
-  ~CursorOpBase()
-  { }
+  ~CursorOpBase() = default;
 
   virtual bool
   SendFailureResult(nsresult aResultCode) override;
@@ -8738,8 +8698,7 @@ private:
   { }
 
   // Reference counted.
-  ~OpenOp()
-  { }
+  ~OpenOp() = default;
 
   void
   GetRangeKeyInfo(bool aLowerBound, Key* aKey, bool* aOpen);
@@ -8781,8 +8740,7 @@ private:
   }
 
   // Reference counted.
-  ~ContinueOp()
-  { }
+  ~ContinueOp() = default;
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -8866,7 +8824,7 @@ public:
                                   bool* aResult);
 
 private:
-  ~GetFileReferencesHelper() {}
+  ~GetFileReferencesHelper() = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -8875,8 +8833,7 @@ class FlushPendingFileDeletionsRunnable final
   : public Runnable
 {
 private:
-  ~FlushPendingFileDeletionsRunnable()
-  { }
+  ~FlushPendingFileDeletionsRunnable() = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -8895,8 +8852,7 @@ public:
   { }
 
 protected:
-  ~PermissionRequestHelper()
-  { }
+  ~PermissionRequestHelper() = default;
 
 private:
   virtual void
@@ -9046,8 +9002,7 @@ public:
   }
 
 private:
-  ~BlobImplStoredFile()
-  { }
+  ~BlobImplStoredFile() = default;
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECLARE_STATIC_IID_ACCESSOR(BLOB_IMPL_STORED_FILE_IID)
@@ -9503,8 +9458,7 @@ public:
   }
 
 private:
-  ~DatabaseMaintenance()
-  { }
+  ~DatabaseMaintenance() = default;
 
   // Runs on maintenance thread pool. Does maintenance on the database.
   void
@@ -16809,9 +16763,6 @@ FileManager::FileManager(PersistenceType aPersistenceType,
   , mIsApp(aIsApp)
   , mEnforcingQuota(aEnforcingQuota)
   , mInvalidated(false)
-{ }
-
-FileManager::~FileManager()
 { }
 
 nsresult

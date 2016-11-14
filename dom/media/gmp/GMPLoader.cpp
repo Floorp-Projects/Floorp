@@ -28,7 +28,7 @@ public:
     : mSandboxStarter(aStarter)
     , mAdapter(nullptr)
   {}
-  virtual ~GMPLoaderImpl() {}
+  virtual ~GMPLoaderImpl() = default;
 
   bool Load(const char* aUTF8LibPath,
             uint32_t aUTF8LibPathLen,
