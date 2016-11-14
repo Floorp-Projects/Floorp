@@ -22,6 +22,8 @@ const { stubPackets } = require("devtools/client/webconsole/new-console-output/t
 
 const BASE_PATH = "../../../../devtools/client/webconsole/new-console-output/test/fixtures";
 const TEMP_FILE_PATH = OS.Path.join(`${BASE_PATH}/stub-generators`, "test-tempfile.js");
+const TEMP_CSS_FILE_PATH = OS.Path.join(`${BASE_PATH}/stub-generators`,
+                                        "test-tempfile.css");
 
 let cachedPackets = {};
 

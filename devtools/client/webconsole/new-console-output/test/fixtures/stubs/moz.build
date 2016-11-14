@@ -4,6 +4,7 @@
 
 DevToolsModules(
   'consoleApi.js',
+  'cssMessage.js',
   'evaluationResult.js',
   'index.js',
   'networkEvent.js',

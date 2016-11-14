@@ -157,8 +157,11 @@ function transformPacket(packet) {
         column: pageError.columnNumber
       } : null;
 
+      let matchesCSS = /^(?:CSS|Layout)\b/.test(pageError.category);
+      let messageSource = matchesCSS ? MESSAGE_SOURCE.CSS
+                                     : MESSAGE_SOURCE.JAVASCRIPT;
       return new ConsoleMessage({
-        source: MESSAGE_SOURCE.JAVASCRIPT,
+        source: messageSource,
         type: MESSAGE_TYPE.LOG,
         level,
         messageText: pageError.errorMessage,

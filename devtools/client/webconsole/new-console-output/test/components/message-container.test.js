@@ -39,6 +39,12 @@ describe("MessageContainer component:", () => {
       {
         component: PageError,
         message: stubPreparedMessages.get("ReferenceError: asdf is not defined")
+      },
+      {
+        component: PageError,
+        message: stubPreparedMessages.get(
+          "Unknown property ‘such-unknown-property’.  Declaration dropped."
+        )
       }
     ];
 
