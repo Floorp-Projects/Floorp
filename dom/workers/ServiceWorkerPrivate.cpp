@@ -1341,12 +1341,19 @@ public:
     httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("Referer"), referrer);
     if (!referrer.IsEmpty()) {
       mReferrer = referrer;
+    } else {
+      // If there's no referrer Header, means the header was omitted for
+      // security/privacy reason.
+      mReferrer = EmptyCString();
     }
 
     uint32_t referrerPolicy = 0;
     rv = httpChannel->GetReferrerPolicy(&referrerPolicy);
     NS_ENSURE_SUCCESS(rv, rv);
     switch (referrerPolicy) {
+      case nsIHttpChannel::REFERRER_POLICY_UNSET:
+      mReferrerPolicy = ReferrerPolicy::_empty;
+      break;
     case nsIHttpChannel::REFERRER_POLICY_NO_REFERRER:
       mReferrerPolicy = ReferrerPolicy::No_referrer;
       break;
@@ -1361,6 +1368,15 @@ public:
       break;
     case nsIHttpChannel::REFERRER_POLICY_UNSAFE_URL:
       mReferrerPolicy = ReferrerPolicy::Unsafe_url;
+      break;
+    case nsIHttpChannel::REFERRER_POLICY_SAME_ORIGIN:
+      mReferrerPolicy = ReferrerPolicy::Same_origin;
+      break;
+    case nsIHttpChannel::REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN:
+      mReferrerPolicy = ReferrerPolicy::Strict_origin_when_cross_origin;
+      break;
+    case nsIHttpChannel::REFERRER_POLICY_STRICT_ORIGIN:
+      mReferrerPolicy = ReferrerPolicy::Strict_origin;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid Referrer Policy enum value?");
