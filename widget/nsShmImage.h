@@ -48,7 +48,7 @@ private:
   bool CreateImage(const mozilla::gfx::IntSize& aSize);
   void DestroyImage();
 
-  void WaitIfPendingReply();
+  bool WaitIfPendingReply();
 
   xcb_connection_t*            mConnection;
   Window                       mWindow;

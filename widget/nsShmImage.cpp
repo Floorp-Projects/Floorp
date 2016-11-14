@@ -247,7 +247,7 @@ nsShmImage::DestroyImage()
 // Wait for any in-flight shm-affected requests to complete.
 // Typically X clients would wait for a XShmCompletionEvent to be received,
 // but this works as it's sent immediately after the request is sent.
-void
+bool
 nsShmImage::WaitIfPendingReply()
 {
   if (mRequestPending) {
@@ -260,15 +260,18 @@ nsShmImage::WaitIfPendingReply()
     if ((error = xcb_request_check(mConnection, mPutRequest))) {
       gShmAvailable = false;
       free(error);
-      return nullptr;
+      return false;
     }
   }
+
+  return true;
 }
 
 already_AddRefed<DrawTarget>
 nsShmImage::CreateDrawTarget(const mozilla::LayoutDeviceIntRegion& aRegion)
 {
-  WaitIfPendingReply();
+  if (!WaitIfPendingReply())
+    return nullptr;
 
   // Due to bug 1205045, we must avoid making GTK calls off the main thread to query window size.
   // Instead we just track the largest offset within the image we are drawing to and grow the image
