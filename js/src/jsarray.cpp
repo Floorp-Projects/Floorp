@@ -551,6 +551,8 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     // Step 1.
     uint32_t newLen;
     if (attrs & JSPROP_IGNORE_VALUE) {
+        MOZ_ASSERT(value.isUndefined());
+
         // The spec has us calling OrdinaryDefineOwnProperty if
         // Desc.[[Value]] is absent, but our implementation is so different that
         // this is impossible. Instead, set newLen to the current length and
@@ -560,7 +562,6 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
         // Step 2 is irrelevant in our implementation.
 
         // Steps 3-7.
-        MOZ_ASSERT_IF(attrs & JSPROP_IGNORE_VALUE, value.isUndefined());
         if (!CanonicalizeArrayLengthValue(cx, value, &newLen))
             return false;
 
