@@ -21,7 +21,7 @@ EXTRA_JS_MODULES += [
     'Schemas.jsm',
 ]
 
-EXTRA_COMPONENTS += [
+EXTRA_PP_COMPONENTS += [
     'extensions-toolkit.manifest',
 ]
 
