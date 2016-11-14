@@ -42,7 +42,6 @@
 
     <dimen name="tablet_tab_strip_height">48dp</dimen>
     <dimen name="tablet_tab_strip_item_width">208dp</dimen>
-    <dimen name="tablet_tab_strip_item_margin">-28dp</dimen>
     <dimen name="tablet_tab_strip_fading_edge_size">15dp</dimen>
     <dimen name="tablet_browser_toolbar_menu_item_width">56dp</dimen>
     <!-- Padding combines with an 18dp image to form the menu item width and height. -->

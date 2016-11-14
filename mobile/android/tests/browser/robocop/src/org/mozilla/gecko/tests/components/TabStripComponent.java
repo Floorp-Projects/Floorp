@@ -1,13 +1,13 @@
 package org.mozilla.gecko.tests.components;
 
 import android.view.View;
+import android.support.v7.widget.RecyclerView;
 
 import com.robotium.solo.Condition;
 
 import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.helpers.DeviceHelper;
 import org.mozilla.gecko.tests.helpers.WaitHelper;
-import org.mozilla.gecko.widget.TwoWayView;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
 
@@ -32,8 +32,12 @@ public class TabStripComponent extends BaseComponent {
         mSolo.clickOnView(tabView);
     }
 
+    /**
+     * Note: this currently only supports the case where the tab strip visible tabs start at tab 0
+     * and the tab at {@code index} is visible in the tab strip.
+     */
     private View waitForTabView(final int index) {
-        final TwoWayView tabStrip = getTabStripView();
+        final RecyclerView tabStrip = getTabStripView();
         final View[] tabView = new View[1];
 
         WaitHelper.waitFor(String.format("Tab at index %d to be visible", index), new Condition() {
@@ -46,8 +50,8 @@ public class TabStripComponent extends BaseComponent {
         return tabView[0];
     }
 
-    private TwoWayView getTabStripView() {
-        TwoWayView tabStrip = (TwoWayView) mSolo.getView("tab_strip");
+    private RecyclerView getTabStripView() {
+        RecyclerView tabStrip = (RecyclerView) mSolo.getView("tab_strip");
 
         fAssertNotNull("Tab strip is not null", tabStrip);
 
