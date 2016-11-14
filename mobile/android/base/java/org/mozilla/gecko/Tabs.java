@@ -108,6 +108,7 @@ public class Tabs implements GeckoEventListener {
             "Tab:Added",
             "Tab:Close",
             "Tab:Select",
+            "Tab:SelectAndForeground",
             "Content:LocationChange",
             "Content:SecurityChange",
             "Content:StateChange",
@@ -523,6 +524,9 @@ public class Tabs implements GeckoEventListener {
             if (event.equals("Tab:Close")) {
                 closeTab(tab);
             } else if (event.equals("Tab:Select")) {
+                selectTab(tab.getId());
+            } else if (event.equals("Tab:SelectAndForeground")) {
+                GeckoAppShell.launchOrBringToFront();
                 selectTab(tab.getId());
             } else if (event.equals("Content:LocationChange")) {
                 tab.handleLocationChange(message);
