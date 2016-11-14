@@ -206,7 +206,6 @@ MSG_DEF(JSMSG_BAD_GENEXP_BODY,         1, JSEXN_SYNTAXERR, "illegal use of {0} i
 MSG_DEF(JSMSG_BAD_INCOP_OPERAND,       0, JSEXN_SYNTAXERR, "invalid increment/decrement operand")
 MSG_DEF(JSMSG_BAD_METHOD_DEF,          0, JSEXN_SYNTAXERR, "bad method definition")
 MSG_DEF(JSMSG_BAD_OCTAL,               1, JSEXN_SYNTAXERR, "{0} is not a legal ECMA-262 octal constant")
-MSG_DEF(JSMSG_BAD_OPERAND,             1, JSEXN_SYNTAXERR, "invalid {0} operand")
 MSG_DEF(JSMSG_BAD_POW_LEFTSIDE,        0, JSEXN_SYNTAXERR, "unparenthesized unary expression can't appear on the left-hand side of '**'")
 MSG_DEF(JSMSG_BAD_PROP_ID,             0, JSEXN_SYNTAXERR, "invalid property id")
 MSG_DEF(JSMSG_BAD_RETURN_OR_YIELD,     1, JSEXN_SYNTAXERR, "{0} not in function")
