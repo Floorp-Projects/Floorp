@@ -391,7 +391,7 @@ private:
 void
 FakeDecryptor::TestStorage()
 {
-  TestManager* testManager = new TestManager();
+  auto* testManager = new TestManager();
   GMPThread* thread1 = nullptr;
   GMPThread* thread2 = nullptr;
 
