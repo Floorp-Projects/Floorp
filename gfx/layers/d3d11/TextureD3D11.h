@@ -205,9 +205,16 @@ class DataTextureSourceD3D11 : public DataTextureSource
                              , public BigImageIterator
 {
 public:
+  /// Constructor allowing the texture to perform texture uploads.
+  ///
+  /// The texture can be used as an actual DataTextureSource.
   DataTextureSourceD3D11(gfx::SurfaceFormat aFormat, CompositorD3D11* aCompositor,
                          TextureFlags aFlags);
 
+  /// Constructor for textures created around DXGI shared handles, disallowing
+  /// texture uploads.
+  ///
+  /// The texture CANNOT be used as a DataTextureSource.
   DataTextureSourceD3D11(gfx::SurfaceFormat aFormat, CompositorD3D11* aCompositor,
                          ID3D11Texture2D* aTexture);
 
@@ -229,7 +236,8 @@ public:
 
   virtual ID3D11ShaderResourceView* GetShaderResourceView() override;
 
-  virtual DataTextureSource* AsDataTextureSource() override { return this; }
+  // Returns nullptr if this texture was created by a DXGI TextureHost.
+  virtual DataTextureSource* AsDataTextureSource() override { return mAllowTextureUploads ? this : false; }
 
   virtual void DeallocateDeviceData() override { mTexture = nullptr; }
 
@@ -270,7 +278,13 @@ protected:
   uint32_t mCurrentTile;
   bool mIsTiled;
   bool mIterating;
-
+  // Sadly, the code was originally organized so that this class is used both in
+  // the cases where we want to perform texture uploads through the DataTextureSource
+  // interface, and the cases where we wrap the texture around an existing DXGI
+  // handle in which case we should not use it as a DataTextureSource.
+  // This member differentiates the two scenarios. When it is false the texture
+  // "pretends" to not be a DataTextureSource.
+  bool mAllowTextureUploads;
 };
 
 already_AddRefed<TextureClient>
