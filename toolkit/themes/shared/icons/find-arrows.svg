@@ -2,15 +2,26 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="12" height="12" viewBox="0 0 12 12">
   <style>
-    path:not(:target) {
-      display: none;
-    }
-    path {
+    #previous,
+    #next {
       fill: -moz-dialogtext;
     }
+    #previous-disabled,
+    #next-disabled {
+      fill: GrayText;
+    }
+    use:not(:target) {
+      display: none;
+    }
   </style>
-  <path id="glyph-find-previous" d="M5.407,1.5l-5,4.599L1.65,7.283l3.757-3.387l3.705,3.385l1.296-1.158L5.407,1.5z"/>
-  <path id="glyph-find-next" d="M5.547,8.255L0.538,3.53l1.239-1.265l3.77,3.641l3.719-3.641l1.264,1.188L5.547,8.255z"/>
+  <defs>
+    <path id="path-previous" d="M5.407,1.5l-5,4.599L1.65,7.283l3.757-3.387l3.705,3.385l1.296-1.158L5.407,1.5z"/>
+    <path id="path-next" d="M5.547,8.255L0.538,3.53l1.239-1.265l3.77,3.641l3.719-3.641l1.264,1.188L5.547,8.255z"/>
+  </defs>
+  <use xlink:href="#path-previous" id="previous"/>
+  <use xlink:href="#path-next" id="next"/>
+  <use xlink:href="#path-previous" id="previous-disabled"/>
+  <use xlink:href="#path-next" id="next-disabled"/>
 </svg>
