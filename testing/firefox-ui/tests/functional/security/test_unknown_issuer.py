@@ -4,16 +4,15 @@
 
 import time
 
+from marionette import MarionetteTestCase
 from marionette_driver import By
 from marionette_driver.errors import MarionetteException
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestUnknownIssuer(FirefoxTestCase):
+class TestUnknownIssuer(MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestUnknownIssuer, self).setUp()
 
         self.url = 'https://ssl-unknownissuer.mozqa.com'
 

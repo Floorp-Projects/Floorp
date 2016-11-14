@@ -26,6 +26,7 @@ Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/interaction.js");
+Cu.import("chrome://marionette/content/l10n.js");
 Cu.import("chrome://marionette/content/legacyaction.js");
 Cu.import("chrome://marionette/content/logging.js");
 Cu.import("chrome://marionette/content/modal.js");
@@ -2718,6 +2719,60 @@ GeckoDriver.prototype.responseCompleted = function () {
   }
 };
 
+/**
+ * Retrieve the localized string for the specified entity id.
+ *
+ * Example:
+ *     localizeEntity(["chrome://global/locale/about.dtd"], "about.version")
+ *
+ * @param {Array.<string>} urls
+ *     Array of .dtd URLs.
+ * @param {string} id
+ *     The ID of the entity to retrieve the localized string for.
+ *
+ * @return {string}
+ *     The localized string for the requested entity.
+ */
+GeckoDriver.prototype.localizeEntity = function(cmd, resp) {
+  let {urls, id} = cmd.parameters;
+
+  if (!Array.isArray(urls)) {
+    throw new InvalidArgumentError("Value of `urls` should be of type 'Array'");
+  }
+  if (typeof id != "string") {
+    throw new InvalidArgumentError("Value of `id` should be of type 'string'");
+  }
+
+  resp.body.value = l10n.localizeEntity(urls, id);
+}
+
+/**
+ * Retrieve the localized string for the specified property id.
+ *
+ * Example:
+ *     localizeProperty(["chrome://global/locale/findbar.properties"], "FastFind")
+ *
+ * @param {Array.<string>} urls
+ *     Array of .properties URLs.
+ * @param {string} id
+ *     The ID of the property to retrieve the localized string for.
+ *
+ * @return {string}
+ *     The localized string for the requested property.
+ */
+GeckoDriver.prototype.localizeProperty = function(cmd, resp) {
+  let {urls, id} = cmd.parameters;
+
+  if (!Array.isArray(urls)) {
+    throw new InvalidArgumentError("Value of `urls` should be of type 'Array'");
+  }
+  if (typeof id != "string") {
+    throw new InvalidArgumentError("Value of `id` should be of type 'string'");
+  }
+
+  resp.body.value = l10n.localizeProperty(urls, id);
+}
+
 GeckoDriver.prototype.commands = {
   "getMarionetteID": GeckoDriver.prototype.getMarionetteID,
   "sayHello": GeckoDriver.prototype.sayHello,
@@ -2802,4 +2857,7 @@ GeckoDriver.prototype.commands = {
   "sendKeysToDialog": GeckoDriver.prototype.sendKeysToDialog,
   "acceptConnections": GeckoDriver.prototype.acceptConnections,
   "quitApplication": GeckoDriver.prototype.quitApplication,
+
+  "localization:l10n:localizeEntity": GeckoDriver.prototype.localizeEntity,
+  "localization:l10n:localizeProperty": GeckoDriver.prototype.localizeProperty,
 };

@@ -3,6 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 html:not(.crashDumpSubmitted) #reportSent,
-html:not(.crashDumpAvailable) #report-box {
+html:not(.crashDumpAvailable) #reportBox,
+.container[multiple="true"] > .offers > #offerHelpMessageSingle,
+.container[multiple="false"] > .offers > #offerHelpMessageMultiple,
+.container[multiple="false"] > .button-container > #restoreAll {
   display: none;
 }

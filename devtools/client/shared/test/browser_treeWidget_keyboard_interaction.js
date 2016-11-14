@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that keyboard interaction works fine with the tree widget
 
 const TEST_URI = "data:text/html;charset=utf-8,<head>" +

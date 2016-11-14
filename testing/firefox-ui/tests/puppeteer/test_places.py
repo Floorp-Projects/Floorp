@@ -2,15 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import By, Wait
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestPlaces(FirefoxTestCase):
+class TestPlaces(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestPlaces, self).setUp()
 
         self.urls = [self.marionette.absolute_url('layout/mozilla_governance.html'),
                      self.marionette.absolute_url('layout/mozilla_grants.html'),
@@ -21,7 +21,7 @@ class TestPlaces(FirefoxTestCase):
             self.puppeteer.places.restore_default_bookmarks()
             self.puppeteer.places.remove_all_history()
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestPlaces, self).tearDown()
 
     def get_all_urls_in_history(self):
         return self.marionette.execute_script("""

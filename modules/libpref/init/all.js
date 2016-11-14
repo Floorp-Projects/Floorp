@@ -2171,6 +2171,9 @@ pref("security.xcto_nosniff_block_images", false);
 // OCSP must-staple
 pref("security.ssl.enable_ocsp_must_staple", true);
 
+// Insecure Form Field Warning
+pref("security.insecure_field_warning.contextual.enabled", false);
+
 // Disable pinning checks by default.
 pref("security.cert_pinning.enforcement_level", 0);
 // Do not process hpkp headers rooted by not built in roots by default.
@@ -5463,6 +5466,14 @@ pref("webextensions.tests", false);
 // 16MB default non-parseable upload limit for requestBody.raw.bytes
 pref("webextensions.webRequest.requestBodyMaxRawBytes", 16777216);
 
+// This functionality is still experimental
+pref("webextensions.storage.sync.enabled", false);
+#ifdef RELEASE_OR_BETA
+pref("webextensions.storage.sync.serverURL", "https://webextensions.settings.services.mozilla.com/v1");
+#else
+pref("webextensions.storage.sync.serverURL", "https://webextensions.dev.mozaws.net/v1");
+#endif
+
 // Allow customization of the fallback directory for file uploads
 pref("dom.input.fallbackUploadDir", "");
 
@@ -5530,8 +5541,11 @@ pref("security.mixed_content.use_hsts", false);
 // mixed-content blocking
 pref("security.mixed_content.use_hsts", true);
 #endif
-// Approximately 1 week default cache for HSTS priming failures
+// Approximately 1 week default cache for HSTS priming failures, in seconds
 pref ("security.mixed_content.hsts_priming_cache_timeout", 10080);
+// Force the channel to timeout in 3 seconds if we have not received
+// expects a time in milliseconds
+pref ("security.mixed_content.hsts_priming_request_timeout", 3000);
 
 // Disable Storage api in release builds.
 #ifdef NIGHTLY_BUILD

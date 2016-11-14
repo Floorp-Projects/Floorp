@@ -30,28 +30,54 @@
   </head>
 
   <body dir="&locale.dir;">
-    <div class="container">
+    <div id="main" class="container" multiple="false">
+
       <div class="title">
-        <h1 class="title-text">&tabCrashed.header;</h1>
+        <h1 class="title-text">&tabCrashed.header2;</h1>
       </div>
-      <p>&tabCrashed.message;</p>
 
-      <div id="report-box">
-        <input type="checkbox" id="sendReport"/>
-        <label for="sendReport">&tabCrashed.sendReport;</label>
-        <div id="crash-reporter-container" hidden="true">
-          <p id="crash-reporter-title">&tabCrashed.crashReporter;</p>
-          <textarea id="comments" placeholder="&tabCrashed.commentPlaceholder;" rows="4"></textarea>
+      <div class="offers">
+        <h2>&tabCrashed.offerHelp;</h2>
+        <p id="offerHelpMessageSingle">&tabCrashed.single.offerHelpMessage;</p>
+        <p id="offerHelpMessageMultiple">&tabCrashed.multiple.offerHelpMessage;</p>
+      </div>
 
-          <ul id="options">
-            <li><input type="checkbox" id="includeURL"/>
-            <label for="includeURL">&tabCrashed.includeURL;</label></li>
+      <div id="reportBox">
+        <h2>&tabCrashed.requestHelp;</h2>
+        <p>&tabCrashed.requestHelpMessage;</p>
 
-            <li><input type="checkbox" id="emailMe"/>
-            <label for="emailMe">&tabCrashed.emailMe;</label></li>
-          </ul>
+        <h2>&tabCrashed.requestReport;</h2>
 
-          <input type="text" id="email" placeholder="&tabCrashed.emailPlaceholder;"/>
+        <div class="checkbox-with-label">
+          <input type="checkbox" id="sendReport"/>
+          <label for="sendReport">&tabCrashed.sendReport2;</label>
+        </div>
+
+        <ul id="options">
+          <li>
+            <textarea id="comments" placeholder="&tabCrashed.commentPlaceholder2;" rows="4"></textarea>
+          </li>
+
+          <li class="checkbox-with-label">
+            <input type="checkbox" id="includeURL"/>
+            <label for="includeURL">&tabCrashed.includeURL2;</label>
+          </li>
+
+          <li id="requestEmail" hidden="true">
+            <div class="checkbox-with-label">
+              <input type="checkbox" id="emailMe"/>
+              <label for="emailMe">&tabCrashed.emailMe;</label>
+            </div>
+            <input type="text" id="email" placeholder="&tabCrashed.emailPlaceholder;"/>
+          </li>
+        </ul>
+
+        <div id="requestAutoSubmit" hidden="true">
+          <h2>&tabCrashed.requestAutoSubmit;</h2>
+          <div class="checkbox-with-label">
+            <input type="checkbox" id="autoSubmit"/>
+            <label for="autoSubmit">&tabCrashed.autoSubmit;</label>
+          </div>
         </div>
       </div>
 
@@ -60,7 +86,7 @@
       <div class="button-container">
         <button id="closeTab">
           &tabCrashed.closeTab;</button>
-        <button id="restoreTab">
+        <button id="restoreTab" class="primary">
           &tabCrashed.restoreTab;</button>
         <button id="restoreAll" autofocus="true" class="primary">
           &tabCrashed.restoreAll;</button>

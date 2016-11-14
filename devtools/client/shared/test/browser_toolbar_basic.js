@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that the developer toolbar works properly
 
 const TEST_URI = TEST_URI_ROOT + "browser_toolbar_basic.html";
@@ -24,7 +26,7 @@ add_task(function* () {
   ok(!isChecked(toggleToolbox), "toggle toolbox button is not checked");
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = yield gDevTools.showToolbox(target, "inspector");
+  yield gDevTools.showToolbox(target, "inspector");
   ok(isChecked(toggleToolbox), "toggle toolbox button is checked");
 
   yield addTab("about:blank");

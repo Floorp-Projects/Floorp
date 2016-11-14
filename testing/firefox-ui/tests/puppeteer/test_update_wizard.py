@@ -2,14 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from firefox_ui_harness.testcases import FirefoxTestCase
+from firefox_puppeteer import PuppeteerMixin
 from firefox_puppeteer.ui.update_wizard import UpdateWizardDialog
+from marionette import MarionetteTestCase
 
 
-class TestUpdateWizard(FirefoxTestCase):
+class TestUpdateWizard(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestUpdateWizard, self).setUp()
 
         def opener(win):
             self.marionette.execute_script("""
@@ -26,7 +27,7 @@ class TestUpdateWizard(FirefoxTestCase):
         try:
             self.puppeteer.windows.close_all([self.browser])
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestUpdateWizard, self).tearDown()
 
     def test_basic(self):
         self.assertEqual(self.dialog.window_type, 'Update:Wizard')

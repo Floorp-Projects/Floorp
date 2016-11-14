@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from firefox_ui_harness.testcases import FirefoxTestCase
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 
 
-class TestRestoreWindowsAfterRestart(FirefoxTestCase):
+class TestRestoreWindowsAfterRestart(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestRestoreWindowsAfterRestart, self).setUp()
 
         # Each list element represents a window of tabs loaded at
         # some testing URL
@@ -51,7 +52,7 @@ class TestRestoreWindowsAfterRestart(FirefoxTestCase):
             # Create a fresh profile for subsequent tests.
             self.restart(clean=True)
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestRestoreWindowsAfterRestart, self).tearDown()
 
     def test_with_variety(self):
         """ Opens a set of windows, both standard and private, with
