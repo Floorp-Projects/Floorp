@@ -31,13 +31,6 @@ class ElseBlockRewriter : public TIntermTraverser
     TIntermNode *rewriteSelection(TIntermSelection *selection);
 };
 
-TIntermUnary *MakeNewUnary(TOperator op, TIntermTyped *operand)
-{
-    TIntermUnary *unary = new TIntermUnary(op, operand->getType());
-    unary->setOperand(operand);
-    return unary;
-}
-
 ElseBlockRewriter::ElseBlockRewriter()
     : TIntermTraverser(true, false, true),
       mFunctionType(NULL)
@@ -113,7 +106,7 @@ TIntermNode *ElseBlockRewriter::rewriteSelection(TIntermSelection *selection)
         }
 
         TIntermSymbol *conditionSymbolElse = createTempSymbol(boolType);
-        TIntermUnary *negatedCondition = MakeNewUnary(EOpLogicalNot, conditionSymbolElse);
+        TIntermUnary *negatedCondition     = new TIntermUnary(EOpLogicalNot, conditionSymbolElse);
         falseBlock = new TIntermSelection(negatedCondition,
                                           selection->getFalseBlock(), negatedElse);
     }

@@ -21,7 +21,9 @@ struct WorkaroundsGL
           doWhileGLSLCausesGPUHang(false),
           finishDoesNotCauseQueriesToBeAvailable(false),
           alwaysCallUseProgramAfterLink(false),
-          unpackOverlappingRowsSeparatelyUnpackBuffer(false)
+          unpackOverlappingRowsSeparatelyUnpackBuffer(false),
+          emulateAbsIntFunction(false),
+          addAndTrueToLoopCondition(false)
     {
     }
 
@@ -67,6 +69,17 @@ struct WorkaroundsGL
 
     // In the case of unpacking from a pixel unpack buffer, unpack overlapping rows row by row.
     bool unpackOverlappingRowsSeparatelyUnpackBuffer;
+
+    // During initialization, assign the current vertex attributes to the spec-mandated defaults.
+    bool initializeCurrentVertexAttributes;
+
+    // abs(i) where i is an integer returns unexpected result on Intel Mac.
+    // Emulate abs(i) with i * sign(i).
+    bool emulateAbsIntFunction;
+
+    // On Intel Mac, calculation of loop conditions in for and while loop has bug.
+    // Add "&& true" to the end of the condition expression to work around the bug.
+    bool addAndTrueToLoopCondition;
 };
 }
 
