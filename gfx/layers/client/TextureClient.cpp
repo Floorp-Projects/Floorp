@@ -1249,9 +1249,8 @@ TextureClient::CreateForYCbCr(ClientIPCAllocator* aAllocator,
                               StereoMode aStereoMode,
                               TextureFlags aTextureFlags)
 {
-  // The only reason we allow aAllocator to be null is for gtests
-  MOZ_ASSERT(!aAllocator || aAllocator->IPCOpen());
-  if (aAllocator && !aAllocator->IPCOpen()) {
+  MOZ_ASSERT(aAllocator && aAllocator->IPCOpen());
+  if (!aAllocator || !aAllocator->IPCOpen()) {
     return nullptr;
   }
 
