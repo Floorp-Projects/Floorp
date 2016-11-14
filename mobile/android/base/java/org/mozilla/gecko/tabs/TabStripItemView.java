@@ -194,6 +194,7 @@ public class TabStripItemView extends ThemedLinearLayout
 
         id = tab.getId();
 
+        setChecked(Tabs.getInstance().isSelectedTab(tab));
         updateTitle(tab);
         updateFavicon(tab.getFavicon());
         setPrivateMode(tab.isPrivate());
