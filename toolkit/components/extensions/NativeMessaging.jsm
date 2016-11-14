@@ -231,7 +231,7 @@ this.NativeApp = class extends EventEmitter {
    */
   static onConnectNative(context, messageManager, portId, sender, application) {
     let app = new NativeApp(context, application);
-    let port = new ExtensionChild.Port(context, messageManager, [messageManager], "", portId, sender, sender);
+    let port = new ExtensionChild.Port(context, messageManager, [Services.mm], "", portId, sender, sender);
     app.once("disconnect", (what, err) => port.disconnect(err));
 
     /* eslint-disable mozilla/balanced-listeners */

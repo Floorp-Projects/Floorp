@@ -40,7 +40,7 @@ class BrowserWindow(BaseWindow):
     ]
 
     def __init__(self, *args, **kwargs):
-        BaseWindow.__init__(self, *args, **kwargs)
+        super(BrowserWindow, self).__init__(*args, **kwargs)
 
         self._navbar = None
         self._tabbar = None
@@ -257,5 +257,6 @@ class BrowserWindow(BaseWindow):
                 raise ValueError('Unknown opening method: "%s"' % trigger)
 
         return BaseWindow.open_window(self, callback, PageInfoWindow)
+
 
 Windows.register_window(BrowserWindow.window_type, BrowserWindow)

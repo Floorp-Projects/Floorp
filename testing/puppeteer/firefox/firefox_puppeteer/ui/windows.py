@@ -214,7 +214,8 @@ class BaseWindow(BaseLib):
     properties = []
 
     def __init__(self, marionette, window_handle):
-        BaseLib.__init__(self, marionette)
+        super(BaseWindow, self).__init__(marionette)
+
         self._l10n = L10n(self.marionette)
         self._prefs = Preferences(self.marionette)
         self._windows = Windows(self.marionette)

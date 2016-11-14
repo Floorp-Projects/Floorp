@@ -12,7 +12,7 @@ class NavBar(UIBaseLib):
     navigation bar as well as the location bar."""
 
     def __init__(self, *args, **kwargs):
-        UIBaseLib.__init__(self, *args, **kwargs)
+        super(NavBar, self).__init__(*args, **kwargs)
 
         self._locationbar = None
 
@@ -75,7 +75,7 @@ class LocationBar(UIBaseLib):
     locationbar (the text area of the ui that typically displays the current url)."""
 
     def __init__(self, *args, **kwargs):
-        UIBaseLib.__init__(self, *args, **kwargs)
+        super(LocationBar, self).__init__(*args, **kwargs)
 
         self._autocomplete_results = None
         self._identity_popup = None
@@ -411,7 +411,7 @@ class IdentityPopup(UIBaseLib):
     """Wraps DOM elements and methods for interacting with the identity popup."""
 
     def __init__(self, *args, **kwargs):
-        UIBaseLib.__init__(self, *args, **kwargs)
+        super(IdentityPopup, self).__init__(*args, **kwargs)
 
         self._view = None
 

@@ -68,6 +68,7 @@ pref("services.sync.log.logger.engine.passwords", "Debug");
 pref("services.sync.log.logger.engine.prefs", "Debug");
 pref("services.sync.log.logger.engine.tabs", "Debug");
 pref("services.sync.log.logger.engine.addons", "Debug");
+pref("services.sync.log.logger.engine.extension-storage", "Debug");
 pref("services.sync.log.logger.engine.apps", "Debug");
 pref("services.sync.log.logger.identity", "Debug");
 pref("services.sync.log.logger.userapi", "Debug");

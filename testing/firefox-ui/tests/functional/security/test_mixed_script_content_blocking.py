@@ -2,15 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import By, Wait
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestMixedScriptContentBlocking(FirefoxTestCase):
+class TestMixedScriptContentBlocking(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestMixedScriptContentBlocking, self).setUp()
 
         self.url = 'https://mozqa.com/data/firefox/security/mixed_content_blocked/index.html'
 
@@ -28,7 +28,7 @@ class TestMixedScriptContentBlocking(FirefoxTestCase):
         try:
             self.identity_popup.close(force=True)
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestMixedScriptContentBlocking, self).tearDown()
 
     def _expect_protection_status(self, enabled):
         if enabled:

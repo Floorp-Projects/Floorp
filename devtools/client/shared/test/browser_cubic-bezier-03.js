@@ -13,7 +13,7 @@ const {PREDEFINED} = require("devtools/client/shared/widgets/CubicBezierPresets"
 const TEST_URI = `data:text/html,<div id="cubic-bezier-container" />`;
 
 add_task(function* () {
-  let [host, win, doc] = yield createHost("bottom", TEST_URI);
+  let [host,, doc] = yield createHost("bottom", TEST_URI);
 
   let container = doc.querySelector("#cubic-bezier-container");
   let w = new CubicBezierWidget(container, PREDEFINED.linear);

@@ -2,21 +2,44 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+body {
+  font-size: 1.25rem;
+}
+
 .title {
   background-image: url("chrome://browser/skin/tab-crashed.svg");
+}
+
+.title > h1,
+.offers {
+  margin-left: 14px;
+}
+
+.title > h1 {
+  /**
+   * Add commentary?
+   */
+  padding-right: 14px;
+}
+
+.container {
+  width: 45%;
 }
 
 #reportSent {
   font-weight: bold;
 }
 
-#crash-reporter-container {
-  width: 80%;
+#reportBox {
   background-color: var(--in-content-box-background-hover);
   margin: 24px 0;
   padding: 14px;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
+}
+
+#reportBox > h2:first-child {
+  margin-top: 0;
 }
 
 #crash-reporter-title {
@@ -31,12 +54,26 @@ textarea {
   resize: none;
 }
 
+input[type="text"],
+input[type="checkbox"] {
+  -moz-margin-start: 0px;
+}
+
 #options {
   list-style: none;
   margin-inline-start: 0;
 }
 
-input[type="text"],
-#options > li {
-  margin: 14px 0 0 0;
+#options > li,
+#email {
+  margin-top: 14px;
+}
+
+.checkbox-with-label {
+  display: flex;
+}
+
+.checkbox-with-label > label {
+  margin-top: auto;
+  margin-bottom: auto;
 }

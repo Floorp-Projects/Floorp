@@ -2,20 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from firefox_puppeteer import PuppeteerMixin
+from firefox_puppeteer.ui.browser.notifications import (
+    AddOnInstallFailedNotification,
+    AddOnInstallConfirmationNotification,
+)
+from marionette import MarionetteTestCase
 from marionette_driver import By
 from marionette_driver.errors import TimeoutException
 
-from firefox_ui_harness.testcases import FirefoxTestCase
-from firefox_puppeteer.ui.browser.notifications import (
-    AddOnInstallFailedNotification,
-    AddOnInstallConfirmationNotification
-)
 
-
-class TestNotifications(FirefoxTestCase):
+class TestNotifications(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestNotifications, self).setUp()
 
         self.puppeteer.prefs.set_pref('extensions.install.requireSecureOrigin', False)
 
@@ -32,7 +32,7 @@ class TestNotifications(FirefoxTestCase):
             if self.browser.notification:
                 self.browser.notification.close(force=True)
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestNotifications, self).tearDown()
 
     def test_open_close_notification(self):
         """Trigger and dismiss a notification"""
