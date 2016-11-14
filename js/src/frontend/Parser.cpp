@@ -4027,19 +4027,6 @@ Parser<ParseHandler>::PossibleError::transferErrorsTo(PossibleError* other)
     transferErrorTo(ErrorKind::Expression, other);
 }
 
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::checkAssignmentToCall(Node target, unsigned msg)
-{
-    MOZ_ASSERT(handler.isFunctionCall(target));
-
-    // Assignment to function calls is forbidden in ES6.  We're still somewhat
-    // concerned about sites using this in dead code, so forbid it only in
-    // strict mode code (or if the werror option has been set), and otherwise
-    // warn.
-    return reportWithNode(ParseStrictError, pc->sc()->strict(), target, msg);
-}
-
 template <>
 bool
 Parser<FullParseHandler>::checkDestructuringName(ParseNode* expr, Maybe<DeclarationKind> maybeDecl)
@@ -7867,7 +7854,11 @@ Parser<ParseHandler>::checkAndMarkAsIncOperand(Node target, AssignmentFlavor fla
         if (!reportIfArgumentsEvalTarget(target))
             return false;
     } else if (handler.isFunctionCall(target)) {
-        if (!checkAssignmentToCall(target, JSMSG_BAD_INCOP_OPERAND))
+        // Assignment to function calls is forbidden in ES6.  We're still
+        // somewhat concerned about sites using this in dead code, so forbid it
+        // only in strict mode code (or if the werror option has been set), and
+        // otherwise warn.
+        if (!reportWithNode(ParseStrictError, pc->sc()->strict(), target, JSMSG_BAD_INCOP_OPERAND))
             return false;
     }
     return true;
