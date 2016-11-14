@@ -107,6 +107,20 @@ function setPref(pref, value) {
   }
 }
 
+function setDefaultPref(pref, value) {
+  switch (typeof(value)) {
+    case "string":
+      Services.prefs.getDefaultBranch(null).setCharPref(pref, value);
+      break;
+    case "number":
+      Services.prefs.getDefaultBranch(null).setIntPref(pref, value);
+      break;
+    case "boolean":
+      Services.prefs.getDefaultBranch(null).setBoolPref(pref, value);
+      break;
+  }
+}
+
 function getPrefTypeDefaultValue(prefType) {
   switch (prefType) {
     case "string":

@@ -43,21 +43,34 @@ wasm::DecodePreamble(Decoder& d)
     return true;
 }
 
-bool
-wasm::CheckValType(Decoder& d, ValType type)
+static bool
+DecodeValType(Decoder& d, ModuleKind kind, ValType* type)
 {
-    switch (type) {
-      case ValType::I32:
-      case ValType::F32:
-      case ValType::F64:
-      case ValType::I64:
+    uint8_t unchecked;
+    if (!d.readValType(&unchecked))
+        return false;
+
+    switch (unchecked) {
+      case uint8_t(ValType::I32):
+      case uint8_t(ValType::F32):
+      case uint8_t(ValType::F64):
+      case uint8_t(ValType::I64):
+        *type = ValType(unchecked);
+        return true;
+      case uint8_t(ValType::I8x16):
+      case uint8_t(ValType::I16x8):
+      case uint8_t(ValType::I32x4):
+      case uint8_t(ValType::F32x4):
+      case uint8_t(ValType::B8x16):
+      case uint8_t(ValType::B16x8):
+      case uint8_t(ValType::B32x4):
+        if (kind != ModuleKind::AsmJS)
+            return d.fail("bad type");
+        *type = ValType(unchecked);
         return true;
       default:
-        // Note: it's important not to remove this default since readValType()
-        // can return ValType values for which there is no enumerator.
         break;
     }
-
     return d.fail("bad type");
 }
 
@@ -97,10 +110,7 @@ wasm::DecodeTypeSection(Decoder& d, SigWithIdVector* sigs)
             return false;
 
         for (uint32_t i = 0; i < numArgs; i++) {
-            if (!d.readValType(&args[i]))
-                return d.fail("bad value type");
-
-            if (!CheckValType(d, args[i]))
+            if (!DecodeValType(d, ModuleKind::Wasm, &args[i]))
                 return false;
         }
 
@@ -115,10 +125,7 @@ wasm::DecodeTypeSection(Decoder& d, SigWithIdVector* sigs)
 
         if (numRets == 1) {
             ValType type;
-            if (!d.readValType(&type))
-                return d.fail("bad expression type");
-
-            if (!CheckValType(d, type))
+            if (!DecodeValType(d, ModuleKind::Wasm, &type))
                 return false;
 
             result = ToExprType(type);
@@ -367,22 +374,22 @@ wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals)
 }
 
 bool
-wasm::DecodeLocalEntries(Decoder& d, ValTypeVector* locals)
+wasm::DecodeLocalEntries(Decoder& d, ModuleKind kind, ValTypeVector* locals)
 {
     uint32_t numLocalEntries;
     if (!d.readVarU32(&numLocalEntries))
-        return false;
+        return d.fail("failed to read number of local entries");
 
     for (uint32_t i = 0; i < numLocalEntries; i++) {
         uint32_t count;
         if (!d.readVarU32(&count))
-            return false;
+            return d.fail("failed to read local entry count");
 
         if (MaxLocals - locals->length() < count)
-            return false;
+            return d.fail("too many locals");
 
         ValType type;
-        if (!d.readValType(&type))
+        if (!DecodeValType(d, kind, &type))
             return false;
 
         if (!locals->appendN(type, count))
@@ -395,8 +402,8 @@ wasm::DecodeLocalEntries(Decoder& d, ValTypeVector* locals)
 bool
 wasm::DecodeGlobalType(Decoder& d, ValType* type, bool* isMutable)
 {
-    if (!d.readValType(type))
-        return d.fail("bad global type");
+    if (!DecodeValType(d, ModuleKind::Wasm, type))
+        return false;
 
     uint32_t flags;
     if (!d.readVarU32(&flags))
@@ -413,40 +420,40 @@ bool
 wasm::DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, ValType expected,
                                   InitExpr* init)
 {
-    Expr expr;
-    if (!d.readExpr(&expr))
+    uint16_t op;
+    if (!d.readOp(&op))
         return d.fail("failed to read initializer type");
 
-    switch (expr) {
-      case Expr::I32Const: {
+    switch (op) {
+      case uint16_t(Op::I32Const): {
         int32_t i32;
         if (!d.readVarS32(&i32))
             return d.fail("failed to read initializer i32 expression");
         *init = InitExpr(Val(uint32_t(i32)));
         break;
       }
-      case Expr::I64Const: {
+      case uint16_t(Op::I64Const): {
         int64_t i64;
         if (!d.readVarS64(&i64))
             return d.fail("failed to read initializer i64 expression");
         *init = InitExpr(Val(uint64_t(i64)));
         break;
       }
-      case Expr::F32Const: {
+      case uint16_t(Op::F32Const): {
         RawF32 f32;
         if (!d.readFixedF32(&f32))
             return d.fail("failed to read initializer f32 expression");
         *init = InitExpr(Val(f32));
         break;
       }
-      case Expr::F64Const: {
+      case uint16_t(Op::F64Const): {
         RawF64 f64;
         if (!d.readFixedF64(&f64))
             return d.fail("failed to read initializer f64 expression");
         *init = InitExpr(Val(f64));
         break;
       }
-      case Expr::GetGlobal: {
+      case uint16_t(Op::GetGlobal): {
         uint32_t i;
         if (!d.readVarU32(&i))
             return d.fail("failed to read get_global index in initializer expression");
@@ -465,8 +472,8 @@ wasm::DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, V
     if (expected != init->type())
         return d.fail("type mismatch: initializer type and expected type don't match");
 
-    Expr end;
-    if (!d.readExpr(&end) || end != Expr::End)
+    uint16_t end;
+    if (!d.readOp(&end) || end != uint16_t(Op::End))
         return d.fail("failed to read end of initializer expression");
 
     return true;

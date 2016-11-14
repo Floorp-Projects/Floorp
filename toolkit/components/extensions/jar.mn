@@ -18,7 +18,6 @@ toolkit.jar:
     content/extensions/ext-runtime.js
     content/extensions/ext-extension.js
     content/extensions/ext-storage.js
-    content/extensions/ext-test.js
     content/extensions/ext-topSites.js
     content/extensions/ext-c-backgroundPage.js
     content/extensions/ext-c-extension.js

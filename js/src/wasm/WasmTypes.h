@@ -259,7 +259,7 @@ ToMIRType(ValType vt)
 // generalized to a list of ValType and this enum will go away, replaced,
 // wherever it is used, by a varU32 + list of ValType.
 
-enum class ExprType : uint32_t // fix type so we can cast from any u8 in decoder
+enum class ExprType
 {
     Void  = uint8_t(TypeCode::BlockVoid),
 
@@ -855,7 +855,7 @@ enum class Trap
 
 // A wrapper around the bytecode offset of a wasm instruction within a whole
 // module. Trap offsets should refer to the first byte of the instruction that
-// triggered the trap and should ultimately derive from ExprIter::trapOffset.
+// triggered the trap and should ultimately derive from OpIter::trapOffset.
 
 struct TrapOffset
 {

@@ -35,6 +35,9 @@ function background(events) {
       if (entry.events === undefined) {
         entry.events = Object.keys(events).filter(name => name != "onErrorOccurred" && name != "onBeforeRedirect");
       }
+      if (entry.optional_events === undefined) {
+        entry.optional_events = [];
+      }
     }
     // When every expected entry has finished our test is done.
     Promise.all(promises).then(() => {
@@ -153,10 +156,15 @@ function background(events) {
         return result;
       }
       let expectedEvent = expected.events[0] == name;
-      browser.test.assertTrue(expectedEvent, `recieved ${name}`);
       if (expectedEvent) {
         expected.events.shift();
+      } else {
+        expectedEvent = expected.optional_events[0] == name;
+        if (expectedEvent) {
+          expected.optional_events.shift();
+        }
       }
+      browser.test.assertTrue(expectedEvent, `received ${name}`);
       browser.test.assertEq(expected.type, details.type, "resource type is correct");
       browser.test.assertEq(expected.origin || defaultOrigin, details.originUrl, "origin is correct");
 
@@ -199,7 +207,7 @@ function background(events) {
       }
       if (name == "onHeadersReceived") {
         browser.test.assertEq(expected.status || 200, details.statusCode,
-                              `expected HTTP status recieved for ${details.url}`);
+                              `expected HTTP status received for ${details.url}`);
         if (expected.headers && expected.headers.response) {
           result.responseHeaders = processHeaders("response", expected, details);
         }

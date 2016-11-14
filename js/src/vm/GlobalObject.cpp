@@ -99,7 +99,7 @@ js::GlobalObject::getTypedObjectModule() const {
 GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key)
 {
     if (key == JSProto_WebAssembly)
-        return !wasm::HasCompilerSupport(cx);
+        return !wasm::HasSupport(cx);
 
 #ifdef ENABLE_SHARED_ARRAY_BUFFER
     // Return true if the given constructor has been disabled at run-time.

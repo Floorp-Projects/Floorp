@@ -83,7 +83,8 @@ Mochitests
 
 Working with test interfaces
    ``TestExampleGenBinding.cpp`` calls into methods from the
-   ``TestExampleInterface`` and ``TestExampleProxyInterface`` interfaces.
+   ``TestExampleInterface``, ``TestExampleProxyInterface``,
+   and ``TestExampleWorkerInterface`` interfaces.
    These interfaces need to be generated as part of the build. These
    interfaces should not be exported or packaged.
 

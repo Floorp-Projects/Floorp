@@ -34,7 +34,7 @@ function runTest() {
   Services.prefs.setBoolPref(PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED, true);
 
   let url = URL_HTTP_UPDATE_XML + "?unsupported=1";
-  setUpdateURLOverride(url);
+  setUpdateURL(url);
 
   gUP.checkForUpdates();
 }

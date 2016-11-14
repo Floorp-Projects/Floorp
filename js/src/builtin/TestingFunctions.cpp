@@ -517,7 +517,7 @@ static bool
 WasmIsSupported(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(wasm::HasCompilerSupport(cx));
+    args.rval().setBoolean(wasm::HasSupport(cx));
     return true;
 }
 

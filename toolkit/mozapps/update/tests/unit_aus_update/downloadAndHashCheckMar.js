@@ -18,7 +18,7 @@ function run_test() {
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
   start_httpserver();
-  setUpdateURLOverride(gURLData + gHTTPHandlerPath);
+  setUpdateURL(gURLData + gHTTPHandlerPath);
   standardInit();
   // Only perform the non hash check tests when mar signing is enabled since the
   // update service doesn't perform hash checks when mar signing is enabled.

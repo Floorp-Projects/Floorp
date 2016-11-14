@@ -22,6 +22,8 @@ class nsITransaction;
 namespace mozilla {
 
 class EditorBase;
+class RangeUpdater;
+
 namespace dom {
 class Text;
 } // namespace dom
@@ -39,9 +41,11 @@ public:
    * @param aOffset         The location in aElement to do the insertion.
    * @param aString         The new text to insert.
    * @param aPresShell      Used to get and set the selection.
+   * @param aRangeUpdater   The range updater
    */
   InsertTextTransaction(dom::Text& aTextNode, uint32_t aOffset,
-                        const nsAString& aString, EditorBase& aEditorBase);
+                        const nsAString& aString, EditorBase& aEditorBase,
+                        RangeUpdater* aRangeUpdater);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertTextTransaction,
@@ -73,6 +77,8 @@ private:
 
   // The editor, which we'll need to get the selection.
   EditorBase& mEditorBase;
+
+  RangeUpdater* mRangeUpdater;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(InsertTextTransaction, NS_INSERTTEXTTXN_IID)

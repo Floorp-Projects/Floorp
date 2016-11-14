@@ -17,7 +17,7 @@ function createFileWithData(fileData) {
   }
   outStream.write(fileData, fileData.length);
   outStream.close();
-  var domFile = new File(testFile);
+  var domFile = File.createFromNsIFile(testFile);
   if (willDelete) {
     testFile.remove(/* recursive: */ false);
   }

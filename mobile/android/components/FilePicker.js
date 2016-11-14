@@ -153,7 +153,7 @@ FilePicker.prototype = {
       return utils.wrapDOMFile(f);
     }
 
-    return new File(f);
+    return File.createFromNsIFile(f);
   },
 
   get domFileOrDirectoryEnumerator() {
@@ -164,7 +164,7 @@ FilePicker.prototype = {
         return utils.wrapDOMFile(file);
       }
 
-      return new File(file);
+      return File.createFromNsIFile(file);
     });
   },
 

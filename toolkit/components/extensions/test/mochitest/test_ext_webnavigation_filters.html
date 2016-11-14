@@ -188,13 +188,16 @@ add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
   function* runTestScenario(event, {url, filters}) {
     for (let testFilters of filters) {
       let {okFilter, failFilter} = testFilters;
+
       info(`Prepare the new test scenario: ${event} ${url} ${JSON.stringify(testFilters)}`);
       win.location = "about:blank";
+
       extension.sendMessage("test-filter", event, {url: okFilter}, {url: failFilter});
       yield extension.awaitMessage("test-filter-ready");
 
       info(`Loading the test url: ${url}`);
       win.location = url;
+
       yield extension.awaitMessage("test-filter-next");
 
       info("Test scenario completed. Moving to the next test scenario.");
@@ -227,12 +230,14 @@ add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
 
   info(`Loading the initial test url: ${url}`);
   extension.sendMessage("test-filter", event, {url: okFilter}, {url: failFilter});
+
   yield extension.awaitMessage("test-filter-ready");
   win.location = url;
   yield extension.awaitMessage("test-filter-next");
 
   event = "onReferenceFragmentUpdated";
   extension.sendMessage("test-filter", event, {url: okFilter}, {url: failFilter});
+
   yield extension.awaitMessage("test-filter-ready");
   win.location = url + "#ref1";
   yield extension.awaitMessage("test-filter-next");
