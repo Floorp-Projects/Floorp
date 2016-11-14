@@ -15,6 +15,9 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Shader Editor is " +
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/main");
 
+// Bug 1277805: Too slow for debug runs
+requestLongerTimeout(2);
+
 /**
  * Bug 979536: Ensure fronts are destroyed after toolbox close.
  *
