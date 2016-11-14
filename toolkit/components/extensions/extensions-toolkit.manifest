@@ -26,7 +26,6 @@ category webextension-scripts-content storage chrome://extensions/content/ext-c-
 category webextension-scripts-addon backgroundPage chrome://extensions/content/ext-c-backgroundPage.js
 category webextension-scripts-addon extension chrome://extensions/content/ext-c-extension.js
 category webextension-scripts-addon i18n chrome://extensions/content/ext-i18n.js
-category webextension-scripts-addon identity chrome://extensions/content/ext-c-identity.js
 category webextension-scripts-addon runtime chrome://extensions/content/ext-c-runtime.js
 category webextension-scripts-addon test chrome://extensions/content/ext-c-test.js
 category webextension-scripts-addon storage chrome://extensions/content/ext-c-storage.js
@@ -39,7 +38,6 @@ category webextension-schemas events chrome://extensions/content/schemas/events.
 category webextension-schemas extension chrome://extensions/content/schemas/extension.json
 category webextension-schemas extension_types chrome://extensions/content/schemas/extension_types.json
 category webextension-schemas i18n chrome://extensions/content/schemas/i18n.json
-category webextension-schemas identity chrome://extensions/content/schemas/identity.json
 category webextension-schemas idle chrome://extensions/content/schemas/idle.json
 category webextension-schemas management chrome://extensions/content/schemas/management.json
 category webextension-schemas native_host_manifest chrome://extensions/content/schemas/native_host_manifest.json
