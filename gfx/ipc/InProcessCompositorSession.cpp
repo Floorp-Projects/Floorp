@@ -61,9 +61,11 @@ InProcessCompositorSession::GetAPZCTreeManager() const
 }
 
 bool
-InProcessCompositorSession::Reset(const nsTArray<LayersBackend>& aBackendHints, TextureFactoryIdentifier* aOutIdentifier)
+InProcessCompositorSession::Reset(const nsTArray<LayersBackend>& aBackendHints,
+                                  uint64_t aSeqNo,
+                                  TextureFactoryIdentifier* aOutIdentifier)
 {
-  return mCompositorBridgeParent->ResetCompositor(aBackendHints, aOutIdentifier);
+  return mCompositorBridgeParent->ResetCompositor(aBackendHints, aSeqNo, aOutIdentifier);
 }
 
 void

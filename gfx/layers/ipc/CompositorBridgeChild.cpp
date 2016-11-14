@@ -338,12 +338,21 @@ CompositorBridgeChild::RecvInvalidateLayers(const uint64_t& aLayersId)
 
 bool
 CompositorBridgeChild::RecvCompositorUpdated(const uint64_t& aLayersId,
-                                             const TextureFactoryIdentifier& aNewIdentifier)
+                                             const TextureFactoryIdentifier& aNewIdentifier,
+                                             const uint64_t& aSeqNo)
 {
   if (mLayerManager) {
     // This case is handled directly by nsBaseWidget.
     MOZ_ASSERT(aLayersId == 0);
   } else if (aLayersId != 0) {
+    // Update gfxPlatform if this is the first time we're seeing this compositor
+    // update (we will get an update for each connected tab).
+    static uint64_t sLastSeqNo = 0;
+    if (sLastSeqNo != aSeqNo) {
+      gfxPlatform::GetPlatform()->CompositorUpdated();
+      sLastSeqNo = aSeqNo;
+    }
+
     if (dom::TabChild* child = dom::TabChild::GetFrom(aLayersId)) {
       child->CompositorUpdated(aNewIdentifier);
     }
