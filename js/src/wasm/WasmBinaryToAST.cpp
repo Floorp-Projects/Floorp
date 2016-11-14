@@ -130,23 +130,7 @@ class AstDecodeContext
 
     ExprType retType() const { return retType_; }
     const ValTypeVector& locals() const { return *locals_; }
-
-    bool addGlobalDesc(ValType type, bool isMutable, bool isImport) {
-        if (isImport)
-            return globals_.append(GlobalDesc(type, isMutable, globals_.length()));
-        // No need to have the precise init expr value; we just need the right
-        // type.
-        Val dummy;
-        switch (type) {
-          case ValType::I32: dummy = Val(uint32_t(0)); break;
-          case ValType::I64: dummy = Val(uint64_t(0)); break;
-          case ValType::F32: dummy = Val(RawF32(0.f)); break;
-          case ValType::F64: dummy = Val(RawF64(0.0)); break;
-          default:           return false;
-        }
-        return globals_.append(GlobalDesc(InitExpr(dummy), isMutable));
-    }
-    const GlobalDescVector& globalDescs() const { return globals_; }
+    GlobalDescVector& globalDescs() { return globals_; }
 
     void popBack() { return exprs().popBack(); }
     AstDecodeStackItem popCopy() { return exprs().popCopy(); }
@@ -1473,10 +1457,10 @@ static bool
 AstDecodeImportSection(AstDecodeContext& c, const SigWithIdVector& sigs, TableDescVector* tables)
 {
     Uint32Vector funcSigIndices;
-    GlobalDescVector globals;
     Maybe<Limits> memory;
     ImportVector imports;
-    if (!DecodeImportSection(c.d, sigs, &funcSigIndices, &globals, tables, &memory, &imports))
+    if (!DecodeImportSection(c.d, sigs, &funcSigIndices, &c.globalDescs(), tables, &memory,
+                             &imports))
         return false;
 
     size_t lastFunc = 0;
@@ -1510,12 +1494,9 @@ AstDecodeImportSection(AstDecodeContext& c, const SigWithIdVector& sigs, TableDe
             if (!GenerateName(c, AstName(u"global"), lastGlobal, &importName))
                 return false;
 
-            const GlobalDesc& global = globals[lastGlobal];
+            const GlobalDesc& global = c.globalDescs()[lastGlobal];
             ValType type = global.type();
             bool isMutable = global.isMutable();
-
-            if (!c.addGlobalDesc(type, isMutable, /* import */ true))
-                return false;
 
             ast = new(c.lifo) AstImport(importName, moduleName, fieldName,
                                         AstGlobal(importName, type, isMutable));
@@ -1547,6 +1528,11 @@ AstDecodeImportSection(AstDecodeContext& c, const SigWithIdVector& sigs, TableDe
         if (!ast || !c.module().append(ast))
             return false;
     }
+
+    MOZ_ASSERT(lastFunc == funcSigIndices.length());
+    MOZ_ASSERT(lastGlobal == c.globalDescs().length());
+    MOZ_ASSERT(lastTable == tables->length());
+    MOZ_ASSERT(!!lastMemory == !!memory);
 
     return true;
 }
@@ -1650,53 +1636,29 @@ AstDecodeInitializerExpression(AstDecodeContext& c, ValType type, AstExpr** init
 }
 
 static bool
-AstDecodeGlobal(AstDecodeContext& c, uint32_t i, AstGlobal* global)
-{
-    AstName name;
-    if (!GenerateName(c, AstName(u"global"), i, &name))
-        return false;
-
-    ValType type;
-    bool isMutable;
-    if (!DecodeGlobalType(c.d, &type, &isMutable))
-        return false;
-
-    AstExpr* init;
-    if (!AstDecodeInitializerExpression(c, type, &init))
-        return false;
-
-    if (!c.addGlobalDesc(type, isMutable, /* import */ false))
-        return false;
-
-    *global = AstGlobal(name, type, isMutable, Some(init));
-    return true;
-}
-
-static bool
 AstDecodeGlobalSection(AstDecodeContext& c)
 {
-    uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(SectionId::Global, &sectionStart, &sectionSize, "global"))
+    size_t numImported = c.globalDescs().length();
+    if (!DecodeGlobalSection(c.d, &c.globalDescs()))
         return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
 
-    uint32_t numGlobals;
-    if (!c.d.readVarU32(&numGlobals))
-        return c.d.fail("expected number of globals");
-
-    uint32_t numImported = c.globalDescs().length();
-
-    for (uint32_t i = 0; i < numGlobals; i++) {
-        auto* global = new(c.lifo) AstGlobal;
-        if (!AstDecodeGlobal(c, i + numImported, global))
+    for (uint32_t i = numImported; i < c.globalDescs().length(); i++) {
+        AstName name;
+        if (!GenerateName(c, AstName(u"global"), i, &name))
             return false;
-        if (!c.module().append(global))
+
+        const GlobalDesc& global = c.globalDescs()[i];
+
+        AstExpr* init = global.isConstant()
+                        ? new(c.lifo) AstConst(global.constantValue())
+                        : ToAstExpr(c, global.initExpr());
+        if (!init)
+            return false;
+
+        auto* g = new(c.lifo) AstGlobal(name, global.type(), global.isMutable(), Some(init));
+        if (!g || !c.module().append(g))
             return false;
     }
-
-    if (!c.d.finishSection(sectionStart, sectionSize, "global"))
-        return false;
 
     return true;
 }

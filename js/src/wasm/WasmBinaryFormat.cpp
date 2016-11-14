@@ -249,6 +249,23 @@ wasm::GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable)
 }
 
 static bool
+DecodeGlobalType(Decoder& d, ValType* type, bool* isMutable)
+{
+    if (!DecodeValType(d, ModuleKind::Wasm, type))
+        return false;
+
+    uint32_t flags;
+    if (!d.readVarU32(&flags))
+        return d.fail("expected global flags");
+
+    if (flags & ~uint32_t(GlobalFlags::AllowedMask))
+        return d.fail("unexpected bits set in global flags");
+
+    *isMutable = flags & uint32_t(GlobalFlags::IsMutable);
+    return true;
+}
+
+static bool
 DecodeMemoryLimits(Decoder& d, bool hasMemory, Limits* memory)
 {
     if (hasMemory)
@@ -452,6 +469,42 @@ wasm::DecodeMemorySection(Decoder& d, bool hasMemory, Limits* memory, bool *pres
 }
 
 bool
+wasm::DecodeGlobalSection(Decoder& d, GlobalDescVector* globals)
+{
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(SectionId::Global, &sectionStart, &sectionSize, "global"))
+        return false;
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    uint32_t numGlobals;
+    if (!d.readVarU32(&numGlobals))
+        return d.fail("expected number of globals");
+
+    if (numGlobals > MaxGlobals)
+        return d.fail("too many globals");
+
+    for (uint32_t i = 0; i < numGlobals; i++) {
+        ValType type;
+        bool isMutable;
+        if (!DecodeGlobalType(d, &type, &isMutable))
+            return false;
+
+        InitExpr initializer;
+        if (!DecodeInitializerExpression(d, *globals, type, &initializer))
+            return false;
+
+        if (!globals->append(GlobalDesc(initializer, isMutable)))
+            return false;
+    }
+
+    if (!d.finishSection(sectionStart, sectionSize, "global"))
+        return false;
+
+    return true;
+}
+
+bool
 wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals)
 {
     uint32_t numLocalEntries = 0;
@@ -511,23 +564,6 @@ wasm::DecodeLocalEntries(Decoder& d, ModuleKind kind, ValTypeVector* locals)
             return false;
     }
 
-    return true;
-}
-
-bool
-wasm::DecodeGlobalType(Decoder& d, ValType* type, bool* isMutable)
-{
-    if (!DecodeValType(d, ModuleKind::Wasm, type))
-        return false;
-
-    uint32_t flags;
-    if (!d.readVarU32(&flags))
-        return d.fail("expected global flags");
-
-    if (flags & ~uint32_t(GlobalFlags::AllowedMask))
-        return d.fail("unexpected bits set in global flags");
-
-    *isMutable = flags & uint32_t(GlobalFlags::IsMutable);
     return true;
 }
 
