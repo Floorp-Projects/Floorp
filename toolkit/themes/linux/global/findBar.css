@@ -105,12 +105,20 @@ findbar[noanim] {
 }
 
 .findbar-find-previous {
-  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#glyph-find-previous);
+  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#previous);
   border-inline-end-width: 0;
 }
 
 .findbar-find-next {
-  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#glyph-find-next);
+  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#next);
+}
+
+.findbar-find-previous[disabled] {
+  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#previous-disabled);
+}
+
+.findbar-find-next[disabled] {
+  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#next-disabled);
 }
 
 .findbar-find-previous > .toolbarbutton-icon,

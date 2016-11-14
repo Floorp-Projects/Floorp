@@ -220,13 +220,21 @@ label.findbar-find-fast:-moz-lwtheme,
   border-left: none;
   border-right: none;
   margin-inline-end: 0;
-  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#glyph-find-previous);
+  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#previous);
   border-radius: 0;
 }
 
 .findbar-find-next {
-  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#glyph-find-next);
+  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#next);
   padding-inline-end: 7px;
+}
+
+.findbar-find-previous[disabled] {
+  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#previous-disabled);
+}
+
+.findbar-find-next[disabled] {
+  list-style-image: url(chrome://global/skin/icons/find-arrows.svg#next-disabled);
 }
 
 .findbar-find-next:-moz-locale-dir(ltr) {
