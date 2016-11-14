@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+  "use strict";
+
+  var url = new URL(location);
+  var end = new URL(url.searchParams.get("redirect_uri"));
+  end.searchParams.set("access_token", "here ya go");
+  location.href = end.href;
+  </script>
+</head>
+<body>
+</body>
+</html>
