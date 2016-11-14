@@ -104,6 +104,9 @@ class ProcessLink
     virtual uint32_t Unsound_NumQueuedMessages() const override;
 
   protected:
+    void OnChannelConnectError();
+
+  protected:
     Transport* mTransport;
     MessageLoop* mIOLoop;       // thread where IO happens
     Transport::Listener* mExistingListener; // channel's previous listener
