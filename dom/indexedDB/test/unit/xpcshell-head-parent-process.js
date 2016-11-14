@@ -637,7 +637,7 @@ var SpecialPowers = {
           outStream.write(request.data, request.data.length);
           outStream.close();
         }
-        filePaths.push(new File(testFile.path, request.options));
+        filePaths.push(File.createFromFileName(testFile.path, request.options));
         createdFiles.push(testFile);
     });
 

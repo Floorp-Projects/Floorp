@@ -12,6 +12,7 @@ config = {
         ['gradle',
          'geckoview:assembleWithGeckoBinaries',
          'geckoview_example:assembleWithGeckoBinaries',
+         'uploadArchives',
         ],
     ],
 }

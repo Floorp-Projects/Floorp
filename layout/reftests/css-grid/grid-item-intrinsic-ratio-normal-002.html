@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: stretching intrinsic ratio item with 'normal' and/or 'stretch', with Automatic Minimum Size clamping</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1315383">
+  <link rel="help" href="https://drafts.csswg.org/css-align-3/#valdef-justify-self-stretch">
+  <link rel="match" href="grid-item-intrinsic-ratio-normal-001-ref.html">
+  <style type="text/css">
+.grid {
+  display: inline-grid;
+  border: 1px solid;
+  margin: 5px;
+}
+
+x { width:32px; height:2px; background:cyan; }
+.w24 > x { width:24px; }
+.w8  > x { width:8px; }
+.w4  > x { width:4px; }
+
+  </style>
+</head>
+<body>
+
+<div class="grid" style="grid:24px 10px 24px / repeat(7, 32px); grid-column-gap: 10px;">
+<div style="height:24px; width:2px; background:cyan; grid-row:1"></div>
+<div style="height:10px; grid-row:2; grid-column: span 7"></div>
+<div style="height:24px; grid-row:3"></div>
+<x style="grid-row:4"></x>
+</div>
+
+<br>
+
+<div class="grid w24" style="grid:32px 10px 32px / repeat(7, 24px); grid-column-gap: 10px;">
+<div style="height:32px; width:2px; background:cyan; grid-row:1"></div>
+<div style="height:10px; grid-row:2; grid-column: span 7"></div>
+<div style="height:32px; grid-row:3"></div>
+<x style="grid-row:4"></x>
+</div>
+
+<br>
+
+<div class="grid w4" style="grid:8px 10px 8px / repeat(7, 4px); grid-column-gap:32px; ">
+<div style="height:8px; width:2px; background:cyan; grid-row:1"></div>
+<div style="height:10px; grid-row:2; grid-column: span 7"></div>
+<div style="height:8px; grid-row:3"></div>
+<x style="grid-row:4"></x>
+</div>
+
+<br>
+
+<div class="grid w4" style="grid:32px 10px 32px / repeat(7, 4px); grid-column-gap:32px; ">
+<div style="height:32px; width:2px; background:cyan; grid-row:1"></div>
+<div style="height:10px; grid-row:2; grid-column: span 7"></div>
+<div style="height:32px; grid-row:3"></div>
+<x style="grid-row:4"></x>
+</div>
+
+<br>
+
+<div class="grid w8" style="grid:repeat(3, 4px) / repeat(7, 8px); grid-gap:8px; ">
+<div style="height:4px; width:2px; background:cyan; grid-row:1"></div>
+<div style="height:10px; grid-row:2; grid-column: span 7"></div>
+<div style="height:4px; grid-row:3"></div>
+<x style="grid-row:4"></x>
+</div>
+
+<br>
+
+<div class="grid" style="grid:repeat(3, 8px) / repeat(7, 32px); grid-gap:16px; ">
+<div style="height:4px; width:2px; background:cyan; grid-row:1"></div>
+<div style="height:10px; grid-row:2; grid-column: span 7"></div>
+<div style="height:4px; grid-row:3"></div>
+<x style="grid-row:4"></x>
+</div>
+
+<br>
+
+<script>
+var url = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAEElEQVQoz2NgGAWjYBTAAAADEAABaJFtwwAAAABJRU5ErkJggg%3D%3D";
+var grids = document.querySelectorAll('.grid');
+var js = [ "normal", "start", "center", "stretch" ];
+var as = [ "normal", "start", "center", "stretch" ];
+for (var i = 0; i < grids.length; ++i) {
+  for (var j = 0; j < js.length; j++) {
+    for (var a = 0; a < as.length; a++) {
+      if (as[a] != "normal" && as[a] != "stretch" &&
+          js[j] != "normal" && js[j] != "stretch") {
+        continue;
+      }
+      var img = document.createElement('img');
+      img.style.alignSelf = as[a];
+      img.style.justifySelf = js[j];
+      img.src = url;
+      img.setAttribute('title', as[a] + ' / ' + js[j]);
+      grids[i].appendChild(img);
+    }
+  }
+  for (var j = 0; j < js.length; j++) {
+    for (var a = 0; a < as.length; a++) {
+      if (as[a] != "normal" && as[a] != "stretch" &&
+          js[j] != "normal" && js[j] != "stretch") {
+        continue;
+      }
+      var x = document.createElement('x');
+      grids[i].appendChild(x);
+    }
+  }
+}
+</script>
+
+<!--  For generating image size results in -ref file
+<script>
+document.body.clientHeight;
+var imgs = document.querySelectorAll('img');
+var s = '  [\n';
+for (var i = 0; i < imgs.length; ++i) {
+  s += "  ['"+ imgs[i].width + "px', '" + imgs[i].height + "px'],\n";
+}
+s += ']';
+console.log(s)
+</script>
+-->
+
+</body>
+</html>

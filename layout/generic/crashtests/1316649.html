@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<script>
+addEventListener('DOMContentLoaded', function(){
+  obj1.style.writingMode = "rl";
+  obj2.style.writingMode = "rl";
+  //obj3.style.writingMode = "rl";
+  //obj4.style.writingMode = "rl";
+  obj5.style.writingMode = "rl";
+  sobj1.style.writingMode = "rl";
+  sobj2.style.writingMode = "rl";
+  //sobj3.style.writingMode = "rl";
+  //sobj4.style.writingMode = "rl";
+  sobj5.style.writingMode = "rl";
+});
+</script>
+<body style="writing-mode:tb">
+<button style="display:grid">
+<div id=obj1></div>
+</button>
+<button style="display:inline-grid">
+<div id=obj2></div>
+</button>
+<!--
+<button style="display:flex">
+<div id=obj3></div>
+</button>
+<button style="display:inline-flex">
+<div id=obj4></div>
+</button>
+-->
+<button style="columns:2">
+<div id=obj5></div>
+</button>
+
+<button style="display:grid; overflow:hidden">
+<div id=sobj1></div>
+</button>
+<button style="display:inline-grid; overflow:hidden">
+<div id=sobj2></div>
+</button>
+<!--
+<button style="display:flex; overflow:hidden">
+<div id=sobj3></div>
+</button>
+<button style="display:inline-flex; overflow:hidden">
+<div id=sobj4></div>
+</button>
+-->
+<button style="columns:2; overflow:hidden">
+<div id=sobj5></div>
+</button>
+</body>
+</html>

@@ -6,6 +6,7 @@
 #include "InsertTextTransaction.h"
 
 #include "mozilla/EditorBase.h"         // mEditorBase
+#include "mozilla/SelectionState.h"     // RangeUpdater
 #include "mozilla/dom/Selection.h"      // Selection local var
 #include "mozilla/dom/Text.h"           // mTextNode
 #include "nsAString.h"                  // nsAString parameter
@@ -20,11 +21,13 @@ using namespace dom;
 InsertTextTransaction::InsertTextTransaction(Text& aTextNode,
                                              uint32_t aOffset,
                                              const nsAString& aStringToInsert,
-                                             EditorBase& aEditorBase)
+                                             EditorBase& aEditorBase,
+                                             RangeUpdater* aRangeUpdater)
   : mTextNode(&aTextNode)
   , mOffset(aOffset)
   , mStringToInsert(aStringToInsert)
   , mEditorBase(aEditorBase)
+  , mRangeUpdater(aRangeUpdater)
 {
 }
 
@@ -61,6 +64,7 @@ InsertTextTransaction::DoTransaction()
   } else {
     // Do nothing - DOM Range gravity will adjust selection
   }
+  mRangeUpdater->SelAdjInsertText(*mTextNode, mOffset, mStringToInsert);
 
   return NS_OK;
 }

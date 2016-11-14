@@ -97,6 +97,15 @@ skip-if(Android) == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-p
 == grid-item-intrinsic-ratio-stretch-003.html grid-item-intrinsic-ratio-stretch-003-ref.html
 == grid-item-intrinsic-ratio-stretch-004.html grid-item-intrinsic-ratio-stretch-004-ref.html
 == grid-item-intrinsic-ratio-stretch-005.html grid-item-intrinsic-ratio-stretch-005-ref.html
+== grid-item-intrinsic-ratio-stretch-006.html grid-item-intrinsic-ratio-stretch-006-ref.html
+== grid-item-intrinsic-ratio-stretch-007.html grid-item-intrinsic-ratio-stretch-007-ref.html
+== grid-item-intrinsic-ratio-normal-001.html grid-item-intrinsic-ratio-normal-001-ref.html
+== grid-item-intrinsic-ratio-normal-002.html grid-item-intrinsic-ratio-normal-002-ref.html
+== grid-item-intrinsic-ratio-normal-003.html grid-item-intrinsic-ratio-normal-003-ref.html
+== grid-item-intrinsic-ratio-normal-004.html grid-item-intrinsic-ratio-normal-004-ref.html
+== grid-item-intrinsic-ratio-normal-005.html grid-item-intrinsic-ratio-normal-005-ref.html
+== grid-item-intrinsic-size-normal-001.html grid-item-intrinsic-size-normal-001-ref.html
+== grid-item-intrinsic-size-normal-002.html grid-item-intrinsic-size-normal-002-ref.html
 == grid-item-auto-min-size-clamp-001.html grid-item-auto-min-size-clamp-001-ref.html
 == grid-item-auto-min-size-clamp-002.html grid-item-auto-min-size-clamp-002-ref.html
 == grid-item-auto-min-size-clamp-003.html grid-item-auto-min-size-clamp-003-ref.html

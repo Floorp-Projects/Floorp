@@ -36,7 +36,7 @@ addMessageListener("entries.open", function (e) {
   dir2.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
 
   sendAsyncMessage("entries.opened", {
-    data: [ new Directory(tmpDir.path), new File(tmpFile) ]
+    data: [ new Directory(tmpDir.path), File.createFromNsIFile(tmpFile) ]
   });
 });
 

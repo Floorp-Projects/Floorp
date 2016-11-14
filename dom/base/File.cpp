@@ -564,36 +564,10 @@ File::Constructor(const GlobalObject& aGlobal,
 }
 
 /* static */ already_AddRefed<File>
-File::Constructor(const GlobalObject& aGlobal,
-                  Blob& aData,
-                  const ChromeFilePropertyBag& aBag,
-                  ErrorResult& aRv)
-{
-  if (!nsContentUtils::ThreadsafeIsCallerChrome()) {
-    aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(NS_LITERAL_STRING("Argument 1 of File.constructor"));
-    return nullptr;
-  }
-
-  RefPtr<MultipartBlobImpl> impl = new MultipartBlobImpl(EmptyString());
-  impl->InitializeChromeFile(aData, aBag, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  MOZ_ASSERT(impl->IsFile());
-
-  if (aBag.mLastModified.WasPassed()) {
-    impl->SetLastModified(aBag.mLastModified.Value());
-  }
-
-  RefPtr<File> domFile = new File(aGlobal.GetAsSupports(), impl);
-  return domFile.forget();
-}
-
-/* static */ already_AddRefed<File>
-File::Constructor(const GlobalObject& aGlobal,
-                  nsIFile* aData,
-                  const ChromeFilePropertyBag& aBag,
-                  ErrorResult& aRv)
+File::CreateFromNsIFile(const GlobalObject& aGlobal,
+                        nsIFile* aData,
+                        const ChromeFilePropertyBag& aBag,
+                        ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!nsContentUtils::IsCallerChrome()) {
@@ -619,10 +593,10 @@ File::Constructor(const GlobalObject& aGlobal,
 }
 
 /* static */ already_AddRefed<File>
-File::Constructor(const GlobalObject& aGlobal,
-                  const nsAString& aData,
-                  const ChromeFilePropertyBag& aBag,
-                  ErrorResult& aRv)
+File::CreateFromFileName(const GlobalObject& aGlobal,
+                         const nsAString& aData,
+                         const ChromeFilePropertyBag& aBag,
+                         ErrorResult& aRv)
 {
   if (!nsContentUtils::ThreadsafeIsCallerChrome()) {
     aRv.ThrowTypeError<MSG_MISSING_ARGUMENTS>(NS_LITERAL_STRING("File"));

@@ -138,9 +138,6 @@ pref("app.update.url", "https://aus5.mozilla.org/update/6/%PRODUCT%/%VERSION%/%B
 // app.update.url.manual is in branding section
 // app.update.url.details is in branding section
 
-// User-settable override to app.update.url for testing purposes.
-//pref("app.update.url.override", "");
-
 // app.update.interval is in branding section
 // app.update.promptWaitTime is in branding section
 

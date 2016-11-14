@@ -79,6 +79,7 @@ var {
 const {
   EventEmitter,
   LocaleData,
+  getUniqueId,
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
@@ -564,6 +565,8 @@ this.ExtensionData = class {
 
 let _browserUpdated = false;
 
+const PROXIED_EVENTS = new Set(["test-harness-message"]);
+
 // We create one instance of this class per extension. |addonData|
 // comes directly from bootstrap.js when initializing.
 this.Extension = class extends ExtensionData {
@@ -571,6 +574,10 @@ this.Extension = class extends ExtensionData {
     super(addonData.resourceURI);
 
     this.uuid = UUIDMap.get(addonData.id);
+    this.instanceId = getUniqueId();
+
+    this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
+    Services.ppmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
     if (addonData.cleanupFile) {
       Services.obs.addObserver(this, "xpcom-shutdown", false);
@@ -627,12 +634,22 @@ this.Extension = class extends ExtensionData {
     return this.emitter.off(hook, f);
   }
 
-  emit(...args) {
-    return this.emitter.emit(...args);
+  emit(event, ...args) {
+    if (PROXIED_EVENTS.has(event)) {
+      Services.ppmm.broadcastAsyncMessage(this.MESSAGE_EMIT_EVENT, {event, args});
+    }
+
+    return this.emitter.emit(event, ...args);
+  }
+
+  receiveMessage({name, data}) {
+    if (name === this.MESSAGE_EMIT_EVENT) {
+      this.emitter.emit(data.event, ...data.args);
+    }
   }
 
   testMessage(...args) {
-    Management.emit("test-message", this, ...args);
+    this.emit("test-harness-message", ...args);
   }
 
   createPrincipal(uri = this.baseURI) {
@@ -674,6 +691,7 @@ this.Extension = class extends ExtensionData {
     return {
       id: this.id,
       uuid: this.uuid,
+      instanceId: this.instanceId,
       manifest: this.manifest,
       resourceURL: this.addonData.resourceURI.spec,
       baseURL: this.baseURI.spec,
@@ -830,6 +848,9 @@ this.Extension = class extends ExtensionData {
 
   shutdown() {
     this.hasShutdown = true;
+
+    Services.ppmm.removeMessageListener(this.MESSAGE_EMIT_EVENT, this);
+
     if (!this.manifest) {
       ExtensionManagement.shutdownExtension(this.uuid);
 

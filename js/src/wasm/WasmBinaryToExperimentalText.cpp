@@ -363,7 +363,7 @@ PrintCallArgs(WasmPrintContext& c, const AstExprVector& args)
 static bool
 PrintCall(WasmPrintContext& c, AstCall& call)
 {
-    if (call.expr() == Expr::Call) {
+    if (call.op() == Op::Call) {
         if (!c.buffer.append("call "))
             return false;
     } else {
@@ -507,6 +507,41 @@ PrintTeeLocal(WasmPrintContext& c, AstTeeLocal& sl)
 }
 
 static bool
+PrintGetGlobal(WasmPrintContext& c, AstGetGlobal& gg)
+{
+    return PrintRef(c, gg.global());
+}
+
+static bool
+PrintSetGlobal(WasmPrintContext& c, AstSetGlobal& sg)
+{
+    PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
+
+    if (!c.f.reduceParens || lastPrecedence > AssignmentPrecedence) {
+        if (!c.buffer.append("("))
+            return false;
+    }
+
+    if (!PrintRef(c, sg.global()))
+        return false;
+    if (!c.buffer.append(" = "))
+        return false;
+
+    c.currentPrecedence = AssignmentPrecedence;
+
+    if (!PrintExpr(c, sg.value()))
+        return false;
+
+    if (!c.f.reduceParens || lastPrecedence > AssignmentPrecedence) {
+        if (!c.buffer.append(")"))
+            return false;
+    }
+
+    c.currentPrecedence = lastPrecedence;
+    return true;
+}
+
+static bool
 PrintExprList(WasmPrintContext& c, const AstExprVector& exprs, uint32_t startFrom = 0)
 {
     for (uint32_t i = startFrom; i < exprs.length(); i++) {
@@ -560,10 +595,10 @@ static bool
 PrintBlock(WasmPrintContext& c, AstBlock& block)
 {
     PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
-    if (block.expr() == Expr::Block) {
+    if (block.op() == Op::Block) {
         if (!c.buffer.append("{\n"))
             return false;
-    } else if (block.expr() == Expr::Loop) {
+    } else if (block.op() == Op::Loop) {
         if (!c.buffer.append("loop"))
             return false;
         if (!block.name().empty()) {
@@ -580,10 +615,11 @@ PrintBlock(WasmPrintContext& c, AstBlock& block)
     c.currentPrecedence = ExpressionPrecedence;
 
     bool skip = 0;
-    if (c.f.groupBlocks && block.expr() == Expr::Block &&
-        block.exprs().length() > 0 && block.exprs()[0]->kind() == AstExprKind::Block) {
+    if (c.f.groupBlocks && block.op() == Op::Block &&
+        block.exprs().length() > 0 && block.exprs()[0]->kind() == AstExprKind::Block)
+    {
         AstBlock* innerBlock = static_cast<AstBlock*>(block.exprs()[0]);
-        if (innerBlock->expr() == Expr::Block) {
+        if (innerBlock->op() == Op::Block) {
             if (!PrintGroupedBlock(c, *innerBlock))
                 return false;
             skip = 1;
@@ -603,7 +639,7 @@ PrintBlock(WasmPrintContext& c, AstBlock& block)
     c.indent--;
     c.currentPrecedence = lastPrecedence;
 
-    if (block.expr() != Expr::Loop) {
+    if (block.op() != Op::Loop) {
         if (!PrintBlockName(c, block.name()))
           return false;
     }
@@ -615,32 +651,32 @@ PrintBlock(WasmPrintContext& c, AstBlock& block)
 }
 
 static bool
-PrintUnaryOperator(WasmPrintContext& c, AstUnaryOperator& op)
+PrintUnaryOperator(WasmPrintContext& c, AstUnaryOperator& unary)
 {
     PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
 
     const char* opStr;
     const char* prefixStr = nullptr;
     PrintOperatorPrecedence precedence = OperatorPrecedence;
-    switch (op.expr()) {
-      case Expr::I32Clz:     opStr = "i32.clz"; break;
-      case Expr::I32Ctz:     opStr = "i32.ctz"; break;
-      case Expr::I32Popcnt:  opStr = "i32.popcnt"; break;
-      case Expr::I64Clz:     opStr = "i64.clz"; break;
-      case Expr::I64Ctz:     opStr = "i64.ctz"; break;
-      case Expr::I64Popcnt:  opStr = "i64.popcnt"; break;
-      case Expr::F32Abs:     opStr = "f32.abs"; break;
-      case Expr::F32Neg:     opStr = "f32.neg"; prefixStr = "-"; precedence = NegatePrecedence; break;
-      case Expr::F32Ceil:    opStr = "f32.ceil"; break;
-      case Expr::F32Floor:   opStr = "f32.floor"; break;
-      case Expr::F32Sqrt:    opStr = "f32.sqrt"; break;
-      case Expr::F32Trunc:   opStr = "f32.trunc"; break;
-      case Expr::F32Nearest: opStr = "f32.nearest"; break;
-      case Expr::F64Abs:     opStr = "f64.abs"; break;
-      case Expr::F64Neg:     opStr = "f64.neg"; prefixStr = "-"; precedence = NegatePrecedence; break;
-      case Expr::F64Ceil:    opStr = "f64.ceil"; break;
-      case Expr::F64Floor:   opStr = "f64.floor"; break;
-      case Expr::F64Sqrt:    opStr = "f64.sqrt"; break;
+    switch (unary.op()) {
+      case Op::I32Clz:     opStr = "i32.clz"; break;
+      case Op::I32Ctz:     opStr = "i32.ctz"; break;
+      case Op::I32Popcnt:  opStr = "i32.popcnt"; break;
+      case Op::I64Clz:     opStr = "i64.clz"; break;
+      case Op::I64Ctz:     opStr = "i64.ctz"; break;
+      case Op::I64Popcnt:  opStr = "i64.popcnt"; break;
+      case Op::F32Abs:     opStr = "f32.abs"; break;
+      case Op::F32Neg:     opStr = "f32.neg"; prefixStr = "-"; precedence = NegatePrecedence; break;
+      case Op::F32Ceil:    opStr = "f32.ceil"; break;
+      case Op::F32Floor:   opStr = "f32.floor"; break;
+      case Op::F32Sqrt:    opStr = "f32.sqrt"; break;
+      case Op::F32Trunc:   opStr = "f32.trunc"; break;
+      case Op::F32Nearest: opStr = "f32.nearest"; break;
+      case Op::F64Abs:     opStr = "f64.abs"; break;
+      case Op::F64Neg:     opStr = "f64.neg"; prefixStr = "-"; precedence = NegatePrecedence; break;
+      case Op::F64Ceil:    opStr = "f64.ceil"; break;
+      case Op::F64Floor:   opStr = "f64.floor"; break;
+      case Op::F64Sqrt:    opStr = "f64.sqrt"; break;
       default: return false;
     }
 
@@ -653,7 +689,7 @@ PrintUnaryOperator(WasmPrintContext& c, AstUnaryOperator& op)
         c.currentPrecedence = precedence;
         if (!c.buffer.append(prefixStr, strlen(prefixStr)))
             return false;
-        if (!PrintExpr(c, *op.op()))
+        if (!PrintExpr(c, *unary.operand()))
             return false;
 
         if (!c.f.reduceParens || lastPrecedence > precedence) {
@@ -667,7 +703,7 @@ PrintUnaryOperator(WasmPrintContext& c, AstUnaryOperator& op)
             return false;
 
         c.currentPrecedence = ExpressionPrecedence;
-        if (!PrintExpr(c, *op.op()))
+        if (!PrintExpr(c, *unary.operand()))
             return false;
 
         if (!c.buffer.append(")"))
@@ -679,54 +715,54 @@ PrintUnaryOperator(WasmPrintContext& c, AstUnaryOperator& op)
 }
 
 static bool
-PrintBinaryOperator(WasmPrintContext& c, AstBinaryOperator& op)
+PrintBinaryOperator(WasmPrintContext& c, AstBinaryOperator& binary)
 {
     PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
 
     const char* opStr;
     const char* infixStr = nullptr;
     PrintOperatorPrecedence precedence;
-    switch (op.expr()) {
-      case Expr::I32Add:      opStr = "i32.add"; infixStr = "+"; precedence = AdditionPrecedence; break;
-      case Expr::I32Sub:      opStr = "i32.sub"; infixStr = "-"; precedence = AdditionPrecedence; break;
-      case Expr::I32Mul:      opStr = "i32.mul"; infixStr = "*"; precedence = MultiplicationPrecedence; break;
-      case Expr::I32DivS:     opStr = "i32.div_s"; infixStr = "/s"; precedence = MultiplicationPrecedence; break;
-      case Expr::I32DivU:     opStr = "i32.div_u"; infixStr = "/u"; precedence = MultiplicationPrecedence; break;
-      case Expr::I32RemS:     opStr = "i32.rem_s"; infixStr = "%s"; precedence = MultiplicationPrecedence; break;
-      case Expr::I32RemU:     opStr = "i32.rem_u"; infixStr = "%u"; precedence = MultiplicationPrecedence; break;
-      case Expr::I32And:      opStr = "i32.and"; infixStr = "&"; precedence = BitwiseAndPrecedence; break;
-      case Expr::I32Or:       opStr = "i32.or"; infixStr = "|"; precedence = BitwiseOrPrecedence; break;
-      case Expr::I32Xor:      opStr = "i32.xor"; infixStr = "^"; precedence = BitwiseXorPrecedence; break;
-      case Expr::I32Shl:      opStr = "i32.shl"; infixStr = "<<"; precedence = BitwiseShiftPrecedence; break;
-      case Expr::I32ShrS:     opStr = "i32.shr_s"; infixStr = ">>s"; precedence = BitwiseShiftPrecedence; break;
-      case Expr::I32ShrU:     opStr = "i32.shr_u"; infixStr = ">>u"; precedence = BitwiseShiftPrecedence; break;
-      case Expr::I64Add:      opStr = "i64.add"; infixStr = "+"; precedence = AdditionPrecedence; break;
-      case Expr::I64Sub:      opStr = "i64.sub"; infixStr = "-"; precedence = AdditionPrecedence; break;
-      case Expr::I64Mul:      opStr = "i64.mul"; infixStr = "*"; precedence = MultiplicationPrecedence; break;
-      case Expr::I64DivS:     opStr = "i64.div_s"; infixStr = "/s"; precedence = MultiplicationPrecedence; break;
-      case Expr::I64DivU:     opStr = "i64.div_u"; infixStr = "/u"; precedence = MultiplicationPrecedence; break;
-      case Expr::I64RemS:     opStr = "i64.rem_s"; infixStr = "%s"; precedence = MultiplicationPrecedence; break;
-      case Expr::I64RemU:     opStr = "i64.rem_u"; infixStr = "%u"; precedence = MultiplicationPrecedence; break;
-      case Expr::I64And:      opStr = "i64.and"; infixStr = "&"; precedence = BitwiseAndPrecedence; break;
-      case Expr::I64Or:       opStr = "i64.or"; infixStr = "|"; precedence = BitwiseOrPrecedence; break;
-      case Expr::I64Xor:      opStr = "i64.xor"; infixStr = "^"; precedence = BitwiseXorPrecedence; break;
-      case Expr::I64Shl:      opStr = "i64.shl"; infixStr = "<<"; precedence = BitwiseShiftPrecedence; break;
-      case Expr::I64ShrS:     opStr = "i64.shr_s"; infixStr = ">>s"; precedence = BitwiseShiftPrecedence; break;
-      case Expr::I64ShrU:     opStr = "i64.shr_u"; infixStr = ">>u"; precedence = BitwiseShiftPrecedence; break;
-      case Expr::F32Add:      opStr = "f32.add"; infixStr = "+"; precedence = AdditionPrecedence; break;
-      case Expr::F32Sub:      opStr = "f32.sub"; infixStr = "-"; precedence = AdditionPrecedence; break;
-      case Expr::F32Mul:      opStr = "f32.mul"; infixStr = "*"; precedence = MultiplicationPrecedence; break;
-      case Expr::F32Div:      opStr = "f32.div"; infixStr = "/"; precedence = MultiplicationPrecedence; break;
-      case Expr::F32Min:      opStr = "f32.min"; precedence = OperatorPrecedence; break;
-      case Expr::F32Max:      opStr = "f32.max"; precedence = OperatorPrecedence; break;
-      case Expr::F32CopySign: opStr = "f32.copysign"; precedence = OperatorPrecedence; break;
-      case Expr::F64Add:      opStr = "f64.add"; infixStr = "+"; precedence = AdditionPrecedence; break;
-      case Expr::F64Sub:      opStr = "f64.sub"; infixStr = "-"; precedence = AdditionPrecedence; break;
-      case Expr::F64Mul:      opStr = "f64.mul"; infixStr = "*"; precedence = MultiplicationPrecedence; break;
-      case Expr::F64Div:      opStr = "f64.div"; infixStr = "/"; precedence = MultiplicationPrecedence; break;
-      case Expr::F64Min:      opStr = "f64.min"; precedence = OperatorPrecedence; break;
-      case Expr::F64Max:      opStr = "f64.max"; precedence = OperatorPrecedence; break;
-      case Expr::F64CopySign: opStr = "f64.copysign"; precedence = OperatorPrecedence; break;
+    switch (binary.op()) {
+      case Op::I32Add:      opStr = "i32.add"; infixStr = "+"; precedence = AdditionPrecedence; break;
+      case Op::I32Sub:      opStr = "i32.sub"; infixStr = "-"; precedence = AdditionPrecedence; break;
+      case Op::I32Mul:      opStr = "i32.mul"; infixStr = "*"; precedence = MultiplicationPrecedence; break;
+      case Op::I32DivS:     opStr = "i32.div_s"; infixStr = "/s"; precedence = MultiplicationPrecedence; break;
+      case Op::I32DivU:     opStr = "i32.div_u"; infixStr = "/u"; precedence = MultiplicationPrecedence; break;
+      case Op::I32RemS:     opStr = "i32.rem_s"; infixStr = "%s"; precedence = MultiplicationPrecedence; break;
+      case Op::I32RemU:     opStr = "i32.rem_u"; infixStr = "%u"; precedence = MultiplicationPrecedence; break;
+      case Op::I32And:      opStr = "i32.and"; infixStr = "&"; precedence = BitwiseAndPrecedence; break;
+      case Op::I32Or:       opStr = "i32.or"; infixStr = "|"; precedence = BitwiseOrPrecedence; break;
+      case Op::I32Xor:      opStr = "i32.xor"; infixStr = "^"; precedence = BitwiseXorPrecedence; break;
+      case Op::I32Shl:      opStr = "i32.shl"; infixStr = "<<"; precedence = BitwiseShiftPrecedence; break;
+      case Op::I32ShrS:     opStr = "i32.shr_s"; infixStr = ">>s"; precedence = BitwiseShiftPrecedence; break;
+      case Op::I32ShrU:     opStr = "i32.shr_u"; infixStr = ">>u"; precedence = BitwiseShiftPrecedence; break;
+      case Op::I64Add:      opStr = "i64.add"; infixStr = "+"; precedence = AdditionPrecedence; break;
+      case Op::I64Sub:      opStr = "i64.sub"; infixStr = "-"; precedence = AdditionPrecedence; break;
+      case Op::I64Mul:      opStr = "i64.mul"; infixStr = "*"; precedence = MultiplicationPrecedence; break;
+      case Op::I64DivS:     opStr = "i64.div_s"; infixStr = "/s"; precedence = MultiplicationPrecedence; break;
+      case Op::I64DivU:     opStr = "i64.div_u"; infixStr = "/u"; precedence = MultiplicationPrecedence; break;
+      case Op::I64RemS:     opStr = "i64.rem_s"; infixStr = "%s"; precedence = MultiplicationPrecedence; break;
+      case Op::I64RemU:     opStr = "i64.rem_u"; infixStr = "%u"; precedence = MultiplicationPrecedence; break;
+      case Op::I64And:      opStr = "i64.and"; infixStr = "&"; precedence = BitwiseAndPrecedence; break;
+      case Op::I64Or:       opStr = "i64.or"; infixStr = "|"; precedence = BitwiseOrPrecedence; break;
+      case Op::I64Xor:      opStr = "i64.xor"; infixStr = "^"; precedence = BitwiseXorPrecedence; break;
+      case Op::I64Shl:      opStr = "i64.shl"; infixStr = "<<"; precedence = BitwiseShiftPrecedence; break;
+      case Op::I64ShrS:     opStr = "i64.shr_s"; infixStr = ">>s"; precedence = BitwiseShiftPrecedence; break;
+      case Op::I64ShrU:     opStr = "i64.shr_u"; infixStr = ">>u"; precedence = BitwiseShiftPrecedence; break;
+      case Op::F32Add:      opStr = "f32.add"; infixStr = "+"; precedence = AdditionPrecedence; break;
+      case Op::F32Sub:      opStr = "f32.sub"; infixStr = "-"; precedence = AdditionPrecedence; break;
+      case Op::F32Mul:      opStr = "f32.mul"; infixStr = "*"; precedence = MultiplicationPrecedence; break;
+      case Op::F32Div:      opStr = "f32.div"; infixStr = "/"; precedence = MultiplicationPrecedence; break;
+      case Op::F32Min:      opStr = "f32.min"; precedence = OperatorPrecedence; break;
+      case Op::F32Max:      opStr = "f32.max"; precedence = OperatorPrecedence; break;
+      case Op::F32CopySign: opStr = "f32.copysign"; precedence = OperatorPrecedence; break;
+      case Op::F64Add:      opStr = "f64.add"; infixStr = "+"; precedence = AdditionPrecedence; break;
+      case Op::F64Sub:      opStr = "f64.sub"; infixStr = "-"; precedence = AdditionPrecedence; break;
+      case Op::F64Mul:      opStr = "f64.mul"; infixStr = "*"; precedence = MultiplicationPrecedence; break;
+      case Op::F64Div:      opStr = "f64.div"; infixStr = "/"; precedence = MultiplicationPrecedence; break;
+      case Op::F64Min:      opStr = "f64.min"; precedence = OperatorPrecedence; break;
+      case Op::F64Max:      opStr = "f64.max"; precedence = OperatorPrecedence; break;
+      case Op::F64CopySign: opStr = "f64.copysign"; precedence = OperatorPrecedence; break;
       default: return false;
     }
 
@@ -737,7 +773,7 @@ PrintBinaryOperator(WasmPrintContext& c, AstBinaryOperator& op)
         }
 
         c.currentPrecedence = precedence;
-        if (!PrintExpr(c, *op.lhs()))
+        if (!PrintExpr(c, *binary.lhs()))
             return false;
         if (!c.buffer.append(" "))
             return false;
@@ -748,7 +784,7 @@ PrintBinaryOperator(WasmPrintContext& c, AstBinaryOperator& op)
         // case of  A / (B / C)
         c.currentPrecedence = (PrintOperatorPrecedence)(precedence + 1);
 
-        if (!PrintExpr(c, *op.rhs()))
+        if (!PrintExpr(c, *binary.rhs()))
             return false;
         if (!c.f.reduceParens || lastPrecedence > precedence) {
             if (!c.buffer.append(")"))
@@ -761,11 +797,11 @@ PrintBinaryOperator(WasmPrintContext& c, AstBinaryOperator& op)
             return false;
 
         c.currentPrecedence = ExpressionPrecedence;
-        if (!PrintExpr(c, *op.lhs()))
+        if (!PrintExpr(c, *binary.lhs()))
             return false;
         if (!c.buffer.append(", "))
             return false;
-        if (!PrintExpr(c, *op.rhs()))
+        if (!PrintExpr(c, *binary.rhs()))
             return false;
 
         if (!c.buffer.append(")"))
@@ -777,13 +813,13 @@ PrintBinaryOperator(WasmPrintContext& c, AstBinaryOperator& op)
 }
 
 static bool
-PrintTernaryOperator(WasmPrintContext& c, AstTernaryOperator& op)
+PrintTernaryOperator(WasmPrintContext& c, AstTernaryOperator& ternary)
 {
     PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
 
     const char* opStr;
-    switch (op.expr()) {
-      case Expr::Select: opStr = "select"; break;
+    switch (ternary.op()) {
+      case Op::Select: opStr = "select"; break;
       default: return false;
     }
 
@@ -793,15 +829,15 @@ PrintTernaryOperator(WasmPrintContext& c, AstTernaryOperator& op)
         return false;
 
     c.currentPrecedence = ExpressionPrecedence;
-    if (!PrintExpr(c, *op.op0()))
+    if (!PrintExpr(c, *ternary.op0()))
         return false;
     if (!c.buffer.append(", "))
         return false;
-    if (!PrintExpr(c, *op.op1()))
+    if (!PrintExpr(c, *ternary.op1()))
         return false;
     if (!c.buffer.append(", "))
         return false;
-    if (!PrintExpr(c, *op.op2()))
+    if (!PrintExpr(c, *ternary.op2()))
         return false;
 
     if (!c.buffer.append(")"))
@@ -812,46 +848,46 @@ PrintTernaryOperator(WasmPrintContext& c, AstTernaryOperator& op)
 }
 
 static bool
-PrintComparisonOperator(WasmPrintContext& c, AstComparisonOperator& op)
+PrintComparisonOperator(WasmPrintContext& c, AstComparisonOperator& comp)
 {
     PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
 
     const char* opStr;
     const char* infixStr = nullptr;
     PrintOperatorPrecedence precedence;
-    switch (op.expr()) {
-      case Expr::I32Eq:  opStr = "i32.eq"; infixStr = "=="; precedence = EqualityPrecedence; break;
-      case Expr::I32Ne:  opStr = "i32.ne"; infixStr = "!="; precedence = EqualityPrecedence; break;
-      case Expr::I32LtS: opStr = "i32.lt_s"; infixStr = "<s"; precedence = ComparisonPrecedence; break;
-      case Expr::I32LtU: opStr = "i32.lt_u"; infixStr = "<u"; precedence = ComparisonPrecedence; break;
-      case Expr::I32LeS: opStr = "i32.le_s"; infixStr = "<=s"; precedence = ComparisonPrecedence; break;
-      case Expr::I32LeU: opStr = "i32.le_u"; infixStr = "<=u"; precedence = ComparisonPrecedence; break;
-      case Expr::I32GtS: opStr = "i32.gt_s"; infixStr = ">s"; precedence = ComparisonPrecedence; break;
-      case Expr::I32GtU: opStr = "i32.gt_u"; infixStr = ">u"; precedence = ComparisonPrecedence; break;
-      case Expr::I32GeS: opStr = "i32.ge_s"; infixStr = ">=s"; precedence = ComparisonPrecedence; break;
-      case Expr::I32GeU: opStr = "i32.ge_u"; infixStr = ">=u"; precedence = ComparisonPrecedence; break;
-      case Expr::I64Eq:  opStr = "i64.eq"; infixStr = "=="; precedence = EqualityPrecedence; break;
-      case Expr::I64Ne:  opStr = "i64.ne"; infixStr = "!="; precedence = EqualityPrecedence; break;
-      case Expr::I64LtS: opStr = "i64.lt_s"; infixStr = "<s"; precedence = ComparisonPrecedence; break;
-      case Expr::I64LtU: opStr = "i64.lt_u"; infixStr = "<u"; precedence = ComparisonPrecedence; break;
-      case Expr::I64LeS: opStr = "i64.le_s"; infixStr = "<=s"; precedence = ComparisonPrecedence; break;
-      case Expr::I64LeU: opStr = "i64.le_u"; infixStr = "<=u"; precedence = ComparisonPrecedence; break;
-      case Expr::I64GtS: opStr = "i64.gt_s"; infixStr = ">s"; precedence = ComparisonPrecedence; break;
-      case Expr::I64GtU: opStr = "i64.gt_u"; infixStr = ">u"; precedence = ComparisonPrecedence; break;
-      case Expr::I64GeS: opStr = "i64.ge_s"; infixStr = ">=s"; precedence = ComparisonPrecedence; break;
-      case Expr::I64GeU: opStr = "i64.ge_u"; infixStr = ">=u"; precedence = ComparisonPrecedence; break;
-      case Expr::F32Eq:  opStr = "f32.eq"; infixStr = "=="; precedence = EqualityPrecedence; break;
-      case Expr::F32Ne:  opStr = "f32.ne"; infixStr = "!="; precedence = EqualityPrecedence; break;
-      case Expr::F32Lt:  opStr = "f32.lt"; infixStr = "<"; precedence = ComparisonPrecedence; break;
-      case Expr::F32Le:  opStr = "f32.le"; infixStr = "<="; precedence = ComparisonPrecedence; break;
-      case Expr::F32Gt:  opStr = "f32.gt"; infixStr = ">"; precedence = ComparisonPrecedence; break;
-      case Expr::F32Ge:  opStr = "f32.ge"; infixStr = ">="; precedence = ComparisonPrecedence; break;
-      case Expr::F64Eq:  opStr = "f64.eq"; infixStr = "=="; precedence = ComparisonPrecedence; break;
-      case Expr::F64Ne:  opStr = "f64.ne"; infixStr = "!="; precedence = EqualityPrecedence; break;
-      case Expr::F64Lt:  opStr = "f64.lt"; infixStr = "<"; precedence = EqualityPrecedence; break;
-      case Expr::F64Le:  opStr = "f64.le"; infixStr = "<="; precedence = ComparisonPrecedence; break;
-      case Expr::F64Gt:  opStr = "f64.gt"; infixStr = ">"; precedence = ComparisonPrecedence; break;
-      case Expr::F64Ge:  opStr = "f64.ge"; infixStr = ">="; precedence = ComparisonPrecedence; break;
+    switch (comp.op()) {
+      case Op::I32Eq:  opStr = "i32.eq"; infixStr = "=="; precedence = EqualityPrecedence; break;
+      case Op::I32Ne:  opStr = "i32.ne"; infixStr = "!="; precedence = EqualityPrecedence; break;
+      case Op::I32LtS: opStr = "i32.lt_s"; infixStr = "<s"; precedence = ComparisonPrecedence; break;
+      case Op::I32LtU: opStr = "i32.lt_u"; infixStr = "<u"; precedence = ComparisonPrecedence; break;
+      case Op::I32LeS: opStr = "i32.le_s"; infixStr = "<=s"; precedence = ComparisonPrecedence; break;
+      case Op::I32LeU: opStr = "i32.le_u"; infixStr = "<=u"; precedence = ComparisonPrecedence; break;
+      case Op::I32GtS: opStr = "i32.gt_s"; infixStr = ">s"; precedence = ComparisonPrecedence; break;
+      case Op::I32GtU: opStr = "i32.gt_u"; infixStr = ">u"; precedence = ComparisonPrecedence; break;
+      case Op::I32GeS: opStr = "i32.ge_s"; infixStr = ">=s"; precedence = ComparisonPrecedence; break;
+      case Op::I32GeU: opStr = "i32.ge_u"; infixStr = ">=u"; precedence = ComparisonPrecedence; break;
+      case Op::I64Eq:  opStr = "i64.eq"; infixStr = "=="; precedence = EqualityPrecedence; break;
+      case Op::I64Ne:  opStr = "i64.ne"; infixStr = "!="; precedence = EqualityPrecedence; break;
+      case Op::I64LtS: opStr = "i64.lt_s"; infixStr = "<s"; precedence = ComparisonPrecedence; break;
+      case Op::I64LtU: opStr = "i64.lt_u"; infixStr = "<u"; precedence = ComparisonPrecedence; break;
+      case Op::I64LeS: opStr = "i64.le_s"; infixStr = "<=s"; precedence = ComparisonPrecedence; break;
+      case Op::I64LeU: opStr = "i64.le_u"; infixStr = "<=u"; precedence = ComparisonPrecedence; break;
+      case Op::I64GtS: opStr = "i64.gt_s"; infixStr = ">s"; precedence = ComparisonPrecedence; break;
+      case Op::I64GtU: opStr = "i64.gt_u"; infixStr = ">u"; precedence = ComparisonPrecedence; break;
+      case Op::I64GeS: opStr = "i64.ge_s"; infixStr = ">=s"; precedence = ComparisonPrecedence; break;
+      case Op::I64GeU: opStr = "i64.ge_u"; infixStr = ">=u"; precedence = ComparisonPrecedence; break;
+      case Op::F32Eq:  opStr = "f32.eq"; infixStr = "=="; precedence = EqualityPrecedence; break;
+      case Op::F32Ne:  opStr = "f32.ne"; infixStr = "!="; precedence = EqualityPrecedence; break;
+      case Op::F32Lt:  opStr = "f32.lt"; infixStr = "<"; precedence = ComparisonPrecedence; break;
+      case Op::F32Le:  opStr = "f32.le"; infixStr = "<="; precedence = ComparisonPrecedence; break;
+      case Op::F32Gt:  opStr = "f32.gt"; infixStr = ">"; precedence = ComparisonPrecedence; break;
+      case Op::F32Ge:  opStr = "f32.ge"; infixStr = ">="; precedence = ComparisonPrecedence; break;
+      case Op::F64Eq:  opStr = "f64.eq"; infixStr = "=="; precedence = ComparisonPrecedence; break;
+      case Op::F64Ne:  opStr = "f64.ne"; infixStr = "!="; precedence = EqualityPrecedence; break;
+      case Op::F64Lt:  opStr = "f64.lt"; infixStr = "<"; precedence = EqualityPrecedence; break;
+      case Op::F64Le:  opStr = "f64.le"; infixStr = "<="; precedence = ComparisonPrecedence; break;
+      case Op::F64Gt:  opStr = "f64.gt"; infixStr = ">"; precedence = ComparisonPrecedence; break;
+      case Op::F64Ge:  opStr = "f64.ge"; infixStr = ">="; precedence = ComparisonPrecedence; break;
       default: return false;
     }
 
@@ -861,7 +897,7 @@ PrintComparisonOperator(WasmPrintContext& c, AstComparisonOperator& op)
                 return false;
         }
         c.currentPrecedence = precedence;
-        if (!PrintExpr(c, *op.lhs()))
+        if (!PrintExpr(c, *comp.lhs()))
             return false;
         if (!c.buffer.append(" "))
             return false;
@@ -871,7 +907,7 @@ PrintComparisonOperator(WasmPrintContext& c, AstComparisonOperator& op)
             return false;
         // case of  A == (B == C)
         c.currentPrecedence = (PrintOperatorPrecedence)(precedence + 1);
-        if (!PrintExpr(c, *op.rhs()))
+        if (!PrintExpr(c, *comp.rhs()))
             return false;
         if (!c.f.reduceParens || lastPrecedence > precedence) {
             if (!c.buffer.append(")"))
@@ -883,11 +919,11 @@ PrintComparisonOperator(WasmPrintContext& c, AstComparisonOperator& op)
         c.currentPrecedence = ExpressionPrecedence;
         if (!c.buffer.append("("))
             return false;
-        if (!PrintExpr(c, *op.lhs()))
+        if (!PrintExpr(c, *comp.lhs()))
             return false;
         if (!c.buffer.append(", "))
             return false;
-        if (!PrintExpr(c, *op.rhs()))
+        if (!PrintExpr(c, *comp.rhs()))
             return false;
         if (!c.buffer.append(")"))
             return false;
@@ -898,41 +934,41 @@ PrintComparisonOperator(WasmPrintContext& c, AstComparisonOperator& op)
 }
 
 static bool
-PrintConversionOperator(WasmPrintContext& c, AstConversionOperator& op)
+PrintConversionOperator(WasmPrintContext& c, AstConversionOperator& conv)
 {
     PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
 
     const char* opStr;
     const char* prefixStr = nullptr;
     PrintOperatorPrecedence precedence = ExpressionPrecedence;
-    switch (op.expr()) {
-      case Expr::I32Eqz:            opStr = "i32.eqz"; prefixStr = "!"; precedence = EqzPrecedence; break;
-      case Expr::I32WrapI64:        opStr = "i32.wrap/i64"; break;
-      case Expr::I32TruncSF32:      opStr = "i32.trunc_s/f32"; break;
-      case Expr::I32TruncUF32:      opStr = "i32.trunc_u/f32"; break;
-      case Expr::I32ReinterpretF32: opStr = "i32.reinterpret/f32"; break;
-      case Expr::I32TruncSF64:      opStr = "i32.trunc_s/f64"; break;
-      case Expr::I32TruncUF64:      opStr = "i32.trunc_u/f64"; break;
-      case Expr::I64Eqz:            opStr = "i64.eqz"; prefixStr = "!"; precedence = EqzPrecedence; break;
-      case Expr::I64ExtendSI32:     opStr = "i64.extend_s/i32"; break;
-      case Expr::I64ExtendUI32:     opStr = "i64.extend_u/i32"; break;
-      case Expr::I64TruncSF32:      opStr = "i64.trunc_s/f32"; break;
-      case Expr::I64TruncUF32:      opStr = "i64.trunc_u/f32"; break;
-      case Expr::I64TruncSF64:      opStr = "i64.trunc_s/f64"; break;
-      case Expr::I64TruncUF64:      opStr = "i64.trunc_u/f64"; break;
-      case Expr::I64ReinterpretF64: opStr = "i64.reinterpret/f64"; break;
-      case Expr::F32ConvertSI32:    opStr = "f32.convert_s/i32"; break;
-      case Expr::F32ConvertUI32:    opStr = "f32.convert_u/i32"; break;
-      case Expr::F32ReinterpretI32: opStr = "f32.reinterpret/i32"; break;
-      case Expr::F32ConvertSI64:    opStr = "f32.convert_s/i64"; break;
-      case Expr::F32ConvertUI64:    opStr = "f32.convert_u/i64"; break;
-      case Expr::F32DemoteF64:      opStr = "f32.demote/f64"; break;
-      case Expr::F64ConvertSI32:    opStr = "f64.convert_s/i32"; break;
-      case Expr::F64ConvertUI32:    opStr = "f64.convert_u/i32"; break;
-      case Expr::F64ConvertSI64:    opStr = "f64.convert_s/i64"; break;
-      case Expr::F64ConvertUI64:    opStr = "f64.convert_u/i64"; break;
-      case Expr::F64ReinterpretI64: opStr = "f64.reinterpret/i64"; break;
-      case Expr::F64PromoteF32:     opStr = "f64.promote/f32"; break;
+    switch (conv.op()) {
+      case Op::I32Eqz:            opStr = "i32.eqz"; prefixStr = "!"; precedence = EqzPrecedence; break;
+      case Op::I32WrapI64:        opStr = "i32.wrap/i64"; break;
+      case Op::I32TruncSF32:      opStr = "i32.trunc_s/f32"; break;
+      case Op::I32TruncUF32:      opStr = "i32.trunc_u/f32"; break;
+      case Op::I32ReinterpretF32: opStr = "i32.reinterpret/f32"; break;
+      case Op::I32TruncSF64:      opStr = "i32.trunc_s/f64"; break;
+      case Op::I32TruncUF64:      opStr = "i32.trunc_u/f64"; break;
+      case Op::I64Eqz:            opStr = "i64.eqz"; prefixStr = "!"; precedence = EqzPrecedence; break;
+      case Op::I64ExtendSI32:     opStr = "i64.extend_s/i32"; break;
+      case Op::I64ExtendUI32:     opStr = "i64.extend_u/i32"; break;
+      case Op::I64TruncSF32:      opStr = "i64.trunc_s/f32"; break;
+      case Op::I64TruncUF32:      opStr = "i64.trunc_u/f32"; break;
+      case Op::I64TruncSF64:      opStr = "i64.trunc_s/f64"; break;
+      case Op::I64TruncUF64:      opStr = "i64.trunc_u/f64"; break;
+      case Op::I64ReinterpretF64: opStr = "i64.reinterpret/f64"; break;
+      case Op::F32ConvertSI32:    opStr = "f32.convert_s/i32"; break;
+      case Op::F32ConvertUI32:    opStr = "f32.convert_u/i32"; break;
+      case Op::F32ReinterpretI32: opStr = "f32.reinterpret/i32"; break;
+      case Op::F32ConvertSI64:    opStr = "f32.convert_s/i64"; break;
+      case Op::F32ConvertUI64:    opStr = "f32.convert_u/i64"; break;
+      case Op::F32DemoteF64:      opStr = "f32.demote/f64"; break;
+      case Op::F64ConvertSI32:    opStr = "f64.convert_s/i32"; break;
+      case Op::F64ConvertUI32:    opStr = "f64.convert_u/i32"; break;
+      case Op::F64ConvertSI64:    opStr = "f64.convert_s/i64"; break;
+      case Op::F64ConvertUI64:    opStr = "f64.convert_u/i64"; break;
+      case Op::F64ReinterpretI64: opStr = "f64.reinterpret/i64"; break;
+      case Op::F64PromoteF32:     opStr = "f64.promote/f32"; break;
       default: return false;
     }
 
@@ -945,7 +981,7 @@ PrintConversionOperator(WasmPrintContext& c, AstConversionOperator& op)
         c.currentPrecedence = precedence;
         if (!c.buffer.append(prefixStr, strlen(prefixStr)))
             return false;
-        if (!PrintExpr(c, *op.op()))
+        if (!PrintExpr(c, *conv.operand()))
             return false;
 
         if (!c.f.reduceParens || lastPrecedence > precedence) {
@@ -959,7 +995,7 @@ PrintConversionOperator(WasmPrintContext& c, AstConversionOperator& op)
             return false;
 
         c.currentPrecedence = ExpressionPrecedence;
-        if (!PrintExpr(c, *op.op()))
+        if (!PrintExpr(c, *conv.operand()))
             return false;
 
         if (!c.buffer.append(")"))
@@ -1059,73 +1095,73 @@ PrintLoad(WasmPrintContext& c, AstLoad& load)
     }
 
     uint32_t defaultAlignLog2;
-    switch (load.expr()) {
-      case Expr::I32Load8S:
+    switch (load.op()) {
+      case Op::I32Load8S:
         if (!c.buffer.append("i32:8s"))
             return false;
         defaultAlignLog2 = 0;
         break;
-      case Expr::I64Load8S:
+      case Op::I64Load8S:
         if (!c.buffer.append("i64:8s"))
             return false;
         defaultAlignLog2 = 0;
         break;
-      case Expr::I32Load8U:
+      case Op::I32Load8U:
         if (!c.buffer.append("i32:8u"))
             return false;
         defaultAlignLog2 = 0;
         break;
-      case Expr::I64Load8U:
+      case Op::I64Load8U:
         if (!c.buffer.append("i64:8u"))
             return false;
         defaultAlignLog2 = 0;
         break;
-      case Expr::I32Load16S:
+      case Op::I32Load16S:
         if (!c.buffer.append("i32:16s"))
             return false;
         defaultAlignLog2 = 1;
         break;
-      case Expr::I64Load16S:
+      case Op::I64Load16S:
         if (!c.buffer.append("i64:16s"))
             return false;
         defaultAlignLog2 = 1;
         break;
-      case Expr::I32Load16U:
+      case Op::I32Load16U:
         if (!c.buffer.append("i32:16u"))
             return false;
         defaultAlignLog2 = 1;
         break;
-      case Expr::I64Load16U:
+      case Op::I64Load16U:
         if (!c.buffer.append("i64:16u"))
             return false;
         defaultAlignLog2 = 1;
         break;
-      case Expr::I64Load32S:
+      case Op::I64Load32S:
         if (!c.buffer.append("i64:32s"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::I64Load32U:
+      case Op::I64Load32U:
         if (!c.buffer.append("i64:32u"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::I32Load:
+      case Op::I32Load:
         if (!c.buffer.append("i32"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::I64Load:
+      case Op::I64Load:
         if (!c.buffer.append("i64"))
             return false;
         defaultAlignLog2 = 3;
         break;
-      case Expr::F32Load:
+      case Op::F32Load:
         if (!c.buffer.append("f32"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::F64Load:
+      case Op::F64Load:
         if (!c.buffer.append("f64"))
             return false;
         defaultAlignLog2 = 3;
@@ -1158,48 +1194,48 @@ PrintStore(WasmPrintContext& c, AstStore& store)
     }
 
     uint32_t defaultAlignLog2;
-    switch (store.expr()) {
-      case Expr::I32Store8:
+    switch (store.op()) {
+      case Op::I32Store8:
         if (!c.buffer.append("i32:8"))
             return false;
         defaultAlignLog2 = 0;
         break;
-      case Expr::I64Store8:
+      case Op::I64Store8:
         if (!c.buffer.append("i64:8"))
             return false;
         defaultAlignLog2 = 0;
         break;
-      case Expr::I32Store16:
+      case Op::I32Store16:
         if (!c.buffer.append("i32:16"))
             return false;
         defaultAlignLog2 = 1;
         break;
-      case Expr::I64Store16:
+      case Op::I64Store16:
         if (!c.buffer.append("i64:16"))
             return false;
         defaultAlignLog2 = 1;
         break;
-      case Expr::I64Store32:
+      case Op::I64Store32:
         if (!c.buffer.append("i64:32"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::I32Store:
+      case Op::I32Store:
         if (!c.buffer.append("i32"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::I64Store:
+      case Op::I64Store:
         if (!c.buffer.append("i64"))
             return false;
         defaultAlignLog2 = 3;
         break;
-      case Expr::F32Store:
+      case Op::F32Store:
         if (!c.buffer.append("f32"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::F64Store:
+      case Op::F64Store:
         if (!c.buffer.append("f64"))
             return false;
         defaultAlignLog2 = 3;
@@ -1229,18 +1265,18 @@ PrintStore(WasmPrintContext& c, AstStore& store)
 static bool
 PrintBranch(WasmPrintContext& c, AstBranch& branch)
 {
-    Expr expr = branch.expr();
-    MOZ_ASSERT(expr == Expr::BrIf || expr == Expr::Br);
+    Op op = branch.op();
+    MOZ_ASSERT(op == Op::BrIf || op == Op::Br);
 
-    if (expr == Expr::BrIf ? !c.buffer.append("br_if ") : !c.buffer.append("br "))
+    if (op == Op::BrIf ? !c.buffer.append("br_if ") : !c.buffer.append("br "))
         return false;
 
-    if (expr == Expr::BrIf || branch.maybeValue()) {
+    if (op == Op::BrIf || branch.maybeValue()) {
         if (!c.buffer.append('('))
             return false;
     }
 
-    if (expr == Expr::BrIf) {
+    if (op == Op::BrIf) {
         if (!PrintExpr(c, branch.cond()))
             return false;
     }
@@ -1253,7 +1289,7 @@ PrintBranch(WasmPrintContext& c, AstBranch& branch)
             return false;
     }
 
-    if (expr == Expr::BrIf || branch.maybeValue()) {
+    if (op == Op::BrIf || branch.maybeValue()) {
         if (!c.buffer.append(") "))
             return false;
     }
@@ -1362,7 +1398,7 @@ PrintGrowMemory(WasmPrintContext& c, AstGrowMemory& gm)
     PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
     c.currentPrecedence = ExpressionPrecedence;
 
-    if (!PrintExpr(c, *gm.op()))
+    if (!PrintExpr(c, *gm.operand()))
         return false;
 
     if (!c.buffer.append(")"))
@@ -1401,6 +1437,10 @@ PrintExpr(WasmPrintContext& c, AstExpr& expr)
         return PrintSetLocal(c, expr.as<AstSetLocal>());
       case AstExprKind::TeeLocal:
         return PrintTeeLocal(c, expr.as<AstTeeLocal>());
+      case AstExprKind::GetGlobal:
+        return PrintGetGlobal(c, expr.as<AstGetGlobal>());
+      case AstExprKind::SetGlobal:
+        return PrintSetGlobal(c, expr.as<AstSetGlobal>());
       case AstExprKind::Block:
         return PrintBlock(c, expr.as<AstBlock>());
       case AstExprKind::If:
@@ -1431,13 +1471,11 @@ PrintExpr(WasmPrintContext& c, AstExpr& expr)
         return PrintCurrentMemory(c, expr.as<AstCurrentMemory>());
       case AstExprKind::GrowMemory:
         return PrintGrowMemory(c, expr.as<AstGrowMemory>());
-      default:
-        // Note: it's important not to remove this default since readExpr()
-        // can return Expr values for which there is no enumerator.
-        break;
+      case AstExprKind::Pop:
+        return true;
     }
 
-    return false;
+    MOZ_CRASH("Bad AstExprKind");
 }
 
 static bool

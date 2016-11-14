@@ -5033,6 +5033,9 @@ js::ThrowCheckIsObject(JSContext* cx, CheckIsObjectKind kind)
       case CheckIsObjectKind::IteratorNext:
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NEXT_RETURNED_PRIMITIVE);
         break;
+      case CheckIsObjectKind::GetIterator:
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_GET_ITER_RETURNED_PRIMITIVE);
+        break;
       default:
         MOZ_CRASH("Unknown kind");
     }

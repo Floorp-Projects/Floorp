@@ -4716,19 +4716,25 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
                         *inlineStyleCoord, aFlags);
   } else if (MOZ_UNLIKELY(isGridItem) &&
              !IS_TRUE_OVERFLOW_CONTAINER(this)) {
+    // 'auto' inline-size for grid-level box - fill the CB for 'stretch' /
+    // 'normal' and clamp it to the CB if requested:
+    bool stretch = false;
     if (!(aFlags & nsIFrame::eShrinkWrap) &&
         !StyleMargin()->HasInlineAxisAuto(aWM)) {
-      // 'auto' inline-size for grid-level box - apply 'stretch' as needed:
       auto inlineAxisAlignment =
         aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
           StylePosition()->UsedAlignSelf(GetParent()->StyleContext()) :
           StylePosition()->UsedJustifySelf(GetParent()->StyleContext());
-      if (inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-          inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
-        result.ISize(aWM) = std::max(nscoord(0), aCBSize.ISize(aWM) -
-                                                 aPadding.ISize(aWM) -
-                                                 aBorder.ISize(aWM) -
-                                                 aMargin.ISize(aWM));
+      stretch = inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
+                inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+    }
+    if (stretch || (aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize)) {
+      auto iSizeToFillCB = std::max(nscoord(0), aCBSize.ISize(aWM) -
+                                                aPadding.ISize(aWM) -
+                                                aBorder.ISize(aWM) -
+                                                aMargin.ISize(aWM));
+      if (stretch || result.ISize(aWM) > iSizeToFillCB) {
+        result.ISize(aWM) = iSizeToFillCB;
       }
     }
   }
@@ -4796,20 +4802,28 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
     } else if (MOZ_UNLIKELY(isGridItem) &&
                blockStyleCoord->GetUnit() == eStyleUnit_Auto &&
                !IS_TRUE_OVERFLOW_CONTAINER(this)) {
-      // 'auto' block-size for grid-level box - apply 'stretch' as needed:
       auto cbSize = aCBSize.BSize(aWM);
-      if (cbSize != NS_AUTOHEIGHT &&
-          !StyleMargin()->HasBlockAxisAuto(aWM)) {
-        auto blockAxisAlignment =
-          !aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
-            StylePosition()->UsedAlignSelf(StyleContext()->GetParent()) :
-            StylePosition()->UsedJustifySelf(StyleContext()->GetParent());
-        if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-            blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
-          result.BSize(aWM) = std::max(nscoord(0), cbSize -
-                                                   aPadding.BSize(aWM) -
-                                                   aBorder.BSize(aWM) -
-                                                   aMargin.BSize(aWM));
+      if (cbSize != NS_AUTOHEIGHT) {
+        // 'auto' block-size for grid-level box - fill the CB for 'stretch' /
+        // 'normal' and clamp it to the CB if requested:
+        bool stretch = false;
+        if (!StyleMargin()->HasBlockAxisAuto(aWM)) {
+          auto blockAxisAlignment =
+            !aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
+              StylePosition()->UsedAlignSelf(StyleContext()->GetParent()) :
+              StylePosition()->UsedJustifySelf(StyleContext()->GetParent());
+          stretch = blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
+                    blockAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+        }
+        if (stretch || (aFlags & ComputeSizeFlags::eBClampMarginBoxMinSize)) {
+          auto bSizeToFillCB = std::max(nscoord(0), cbSize -
+                                                    aPadding.BSize(aWM) -
+                                                    aBorder.BSize(aWM) -
+                                                    aMargin.BSize(aWM));
+          if (stretch || (result.BSize(aWM) != NS_AUTOHEIGHT &&
+                          result.BSize(aWM) > bSizeToFillCB)) {
+            result.BSize(aWM) = bSizeToFillCB;
+          }
         }
       }
     }
@@ -4970,10 +4984,21 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
       boxSizingAdjust.ISize(aWM);
 
   nscoord iSize, minISize, maxISize, bSize, minBSize, maxBSize;
-  // true if we are stretching a Grid item in the inline dimension
-  bool stretchI = false;
-  // true if we are stretching a Grid item in the block dimension
-  bool stretchB = false;
+  enum class Stretch {
+    // stretch to fill the CB (preserving intrinsic ratio) in the relevant axis
+    eStretchPreservingRatio,
+    // stretch to fill the CB in the relevant axis
+    eStretch,
+    // no stretching in the relevant axis
+    eNoStretch,
+  };
+  // just to avoid having to type these out everywhere:
+  const auto eStretchPreservingRatio = Stretch::eStretchPreservingRatio;
+  const auto eStretch = Stretch::eStretch;
+  const auto eNoStretch = Stretch::eNoStretch;
+
+  Stretch stretchI = eNoStretch; // stretch behavior in the inline axis
+  Stretch stretchB = eNoStretch; // stretch behavior in the block axis
 
   if (!isAutoISize) {
     iSize = ComputeISizeValue(aRenderingContext,
@@ -4989,10 +5014,13 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
           aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
             stylePos->UsedAlignSelf(GetParent()->StyleContext()) :
             stylePos->UsedJustifySelf(GetParent()->StyleContext());
-        stretchI = inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-                   inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+        if (inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL) {
+          stretchI = eStretchPreservingRatio;
+        } else if (inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+          stretchI = eStretch;
+        }
       }
-      if (stretchI ||
+      if (stretchI != eNoStretch ||
           (aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize)) {
         iSize = std::max(nscoord(0), cbSize -
                                      aPadding.ISize(aWM) -
@@ -5051,10 +5079,13 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
           !aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
             stylePos->UsedAlignSelf(GetParent()->StyleContext()) :
             stylePos->UsedJustifySelf(GetParent()->StyleContext());
-        stretchB = blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
-                   blockAxisAlignment == NS_STYLE_ALIGN_STRETCH;
+        if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL) {
+          stretchB = eStretchPreservingRatio;
+        } else if (blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+          stretchB = eStretch;
+        }
       }
-      if (stretchB ||
+      if (stretchB != eNoStretch ||
           (aFlags & ComputeSizeFlags::eBClampMarginBoxMinSize)) {
         bSize = std::max(nscoord(0), cbSize -
                                      aPadding.BSize(aWM) -
@@ -5152,9 +5183,12 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
         tentISize = nsPresContext::CSSPixelsToAppUnits(300);
       }
 
+      // If we need to clamp the inline size to fit the CB, we use the 'stretch'
+      // or 'normal' codepath.  We use the ratio-preserving 'normal' codepath
+      // unless we have 'stretch' in the other axis.
       if ((aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize) &&
-          tentISize > iSize) {
-        stretchI = true;
+          stretchI != eStretch && tentISize > iSize) {
+        stretchI = (stretchB == eStretch ? eStretch : eStretchPreservingRatio);
       }
 
       if (hasIntrinsicBSize) {
@@ -5165,36 +5199,52 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
         tentBSize = nsPresContext::CSSPixelsToAppUnits(150);
       }
 
+      // (ditto the comment about clamping the inline size above)
       if ((aFlags & ComputeSizeFlags::eBClampMarginBoxMinSize) &&
-          tentBSize > bSize) {
-        stretchB = true;
+          stretchB != eStretch && tentBSize > bSize) {
+        stretchB = (stretchI == eStretch ? eStretch : eStretchPreservingRatio);
       }
 
       if (aIntrinsicRatio != nsSize(0, 0)) {
-        if (stretchI || stretchB) {
-          // Stretch within the CB size with preserved intrinsic ratio.
-          if (stretchI && tentISize != iSize) {
-            tentISize = iSize;  // fill the CB iSize
-            if (logicalRatio.ISize(aWM) > 0) {
-              tentBSize = NSCoordMulDiv(iSize, logicalRatio.BSize(aWM), logicalRatio.ISize(aWM));
-              if (tentBSize > bSize && stretchB) {
-                // We're stretching in both dimensions and the bSize calculated
-                // from the iSize / ratio would overflow the CB bSize, so stretch
-                // the bSize instead and derive the iSize which will then fit.
-                tentBSize = bSize;  // fill the CB bSize
-                if (logicalRatio.BSize(aWM) > 0) {
-                  tentISize = NSCoordMulDiv(bSize, logicalRatio.ISize(aWM), logicalRatio.BSize(aWM));
-                }
-              }
-            }
-          } else if (stretchB && tentBSize != bSize) {
-            tentBSize = bSize;  // fill the CB bSize
+        if (stretchI == eStretch) {
+          tentISize = iSize;  // * / 'stretch'
+          if (stretchB == eStretch) {
+            tentBSize = bSize;  // 'stretch' / 'stretch'
+          } else if (stretchB == eStretchPreservingRatio && logicalRatio.ISize(aWM) > 0) {
+            // 'normal' / 'stretch'
+            tentBSize = NSCoordMulDiv(iSize, logicalRatio.BSize(aWM), logicalRatio.ISize(aWM));
+          }
+        } else if (stretchB == eStretch) {
+          tentBSize = bSize;  // 'stretch' / * (except 'stretch')
+          if (stretchI == eStretchPreservingRatio && logicalRatio.BSize(aWM) > 0) {
+            // 'stretch' / 'normal'
+            tentISize = NSCoordMulDiv(bSize, logicalRatio.ISize(aWM), logicalRatio.BSize(aWM));
+          }
+        } else if (stretchI == eStretchPreservingRatio) {
+          tentISize = iSize;  // * (except 'stretch') / 'normal'
+          if (logicalRatio.ISize(aWM) > 0) {
+            tentBSize = NSCoordMulDiv(iSize, logicalRatio.BSize(aWM), logicalRatio.ISize(aWM));
+          }
+          if (stretchB == eStretchPreservingRatio && tentBSize > bSize) {
+            // Stretch within the CB size with preserved intrinsic ratio.
+            tentBSize = bSize;  // 'normal' / 'normal'
             if (logicalRatio.BSize(aWM) > 0) {
               tentISize = NSCoordMulDiv(bSize, logicalRatio.ISize(aWM), logicalRatio.BSize(aWM));
             }
           }
+        } else if (stretchB == eStretchPreservingRatio) {
+          tentBSize = bSize;  // 'normal' / * (except 'normal' and 'stretch')
+          if (logicalRatio.BSize(aWM) > 0) {
+            tentISize = NSCoordMulDiv(bSize, logicalRatio.ISize(aWM), logicalRatio.BSize(aWM));
+          }
         }
+      }
 
+      // ComputeAutoSizeWithIntrinsicDimensions preserves the ratio when applying
+      // the min/max-size.  We don't want that when we have 'stretch' in either
+      // axis because tentISize/tentBSize is likely not according to ratio now.
+      if (aIntrinsicRatio != nsSize(0, 0) &&
+          stretchI != eStretch && stretchB != eStretch) {
         nsSize autoSize = nsLayoutUtils::
           ComputeAutoSizeWithIntrinsicDimensions(minISize, minBSize,
                                                  maxISize, maxBSize,
@@ -5206,11 +5256,7 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
         iSize = autoSize.width;
         bSize = autoSize.height;
       } else {
-        // No intrinsic ratio, so just clamp the dimensions
-        // independently without calling
-        // ComputeAutoSizeWithIntrinsicDimensions, which deals with
-        // propagating these changes to the other dimension (and would
-        // be incorrect when there is no intrinsic ratio).
+        // Not honoring an intrinsic ratio: clamp the dimensions independently.
         iSize = NS_CSS_MINMAX(tentISize, minISize, maxISize);
         bSize = NS_CSS_MINMAX(tentBSize, minBSize, maxBSize);
       }
@@ -5218,13 +5264,18 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
 
       // 'auto' iSize, non-'auto' bSize
       bSize = NS_CSS_MINMAX(bSize, minBSize, maxBSize);
-      if (logicalRatio.BSize(aWM) > 0) {
-        iSize = NSCoordMulDiv(bSize, logicalRatio.ISize(aWM), logicalRatio.BSize(aWM));
-      } else if (hasIntrinsicISize) {
-        iSize = intrinsicISize;
-      } else {
-        iSize = nsPresContext::CSSPixelsToAppUnits(300);
-      }
+      if (stretchI != eStretch) {
+        if (logicalRatio.BSize(aWM) > 0) {
+          iSize = NSCoordMulDiv(bSize, logicalRatio.ISize(aWM), logicalRatio.BSize(aWM));
+        } else if (hasIntrinsicISize) {
+          if (!((aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize) &&
+                intrinsicISize > iSize)) {
+            iSize = intrinsicISize;
+          } // else - leave iSize as is to fill the CB
+        } else {
+          iSize = nsPresContext::CSSPixelsToAppUnits(300);
+        }
+      } // else - leave iSize as is to fill the CB
       iSize = NS_CSS_MINMAX(iSize, minISize, maxISize);
 
     }
@@ -5233,13 +5284,18 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(nsRenderingContext*  aRenderingConte
 
       // non-'auto' iSize, 'auto' bSize
       iSize = NS_CSS_MINMAX(iSize, minISize, maxISize);
-      if (logicalRatio.ISize(aWM) > 0) {
-        bSize = NSCoordMulDiv(iSize, logicalRatio.BSize(aWM), logicalRatio.ISize(aWM));
-      } else if (hasIntrinsicBSize) {
-        bSize = intrinsicBSize;
-      } else {
-        bSize = nsPresContext::CSSPixelsToAppUnits(150);
-      }
+      if (stretchB != eStretch) {
+        if (logicalRatio.ISize(aWM) > 0) {
+          bSize = NSCoordMulDiv(iSize, logicalRatio.BSize(aWM), logicalRatio.ISize(aWM));
+        } else if (hasIntrinsicBSize) {
+          if (!((aFlags & ComputeSizeFlags::eBClampMarginBoxMinSize) &&
+                intrinsicBSize > bSize)) {
+            bSize = intrinsicBSize;
+          } // else - leave bSize as is to fill the CB
+        } else {
+          bSize = nsPresContext::CSSPixelsToAppUnits(150);
+        }
+      } // else - leave bSize as is to fill the CB
       bSize = NS_CSS_MINMAX(bSize, minBSize, maxBSize);
 
     } else {

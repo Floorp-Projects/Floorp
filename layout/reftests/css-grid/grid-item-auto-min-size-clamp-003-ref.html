@@ -84,35 +84,6 @@ img {
 .span2 {
   grid-area: 1 / 1 / span 2 / span 2;
 }
-.grid .span2 {
-  width: calc((56/30) * 1px);
-  height: 3px;
-}
-.larger .grid img {
-  width: 6.25px;
-  height: 10px;
-}
-.larger .grid .span2 {
-  font-size: 32px;
-  width: 20px;
-  height: 32px;
-}
-.stretch.larger .grid .span2 {
-  width: 24px;
-  height: 39px;
-}
-.stretch.larger .grid.sz .span2 {
-  width: 20px;
-  height: 32px;
-}
-.stretch.larger .grid.definite .span2 {
-  width: 24px;
-  height: 39px;
-}
-.grid.max img {
-  width: 20px;
-  height: 32px;
-}
 
 x {
   grid-area: 1 / 1;
@@ -178,6 +149,82 @@ wrap.className = 'stretch larger';
 wrap.appendChild(n);
 document.body.appendChild(wrap);
 
+</script>
+
+
+<script>
+var imgSizes =
+[
+  ['0px', '0px'],
+  ['0px', '0px'],
+  ['2px', '3px'],
+  ['2px', '3px'],
+  ['0px', '0px'],
+  ['0px', '0px'],
+  ['2px', '3px'],
+  ['2px', '3px'],
+  ['0px', '0px'],
+  ['2px', '3px'],
+  ['0px', '0px'],
+  ['2px', '3px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['6px', '10px'],
+  ['6px', '10px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['6px', '10px'],
+  ['6px', '10px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['6px', '10px'],
+  ['20px', '32px'],
+  ['6px', '10px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['0px', '0px'],
+  ['0px', '0px'],
+  ['13px', '3px'],
+  ['13px', '3px'],
+  ['0px', '0px'],
+  ['0px', '0px'],
+  ['13px', '3px'],
+  ['13px', '3px'],
+  ['0px', '0px'],
+  ['13px', '3px'],
+  ['0px', '0px'],
+  ['13px', '3px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['20px', '32px'],
+  ['7px', '10px'],
+  ['7px', '10px'],
+  ['33px', '39px'],
+  ['33px', '39px'],
+  ['7px', '10px'],
+  ['7px', '10px'],
+  ['22px', '32px'],
+  ['33px', '39px'],
+  ['7px', '10px'],
+  ['33px', '39px'],
+  ['7px', '10px'],
+  ['22px', '32px'],
+  ['20px', '32px'],
+  ['33px', '39px'],
+  ['20px', '32px'],
+  ['22px', '32px'],
+];
+var imgs = document.querySelectorAll('img');
+for (var i = 0; i < imgs.length; ++i) {
+  imgs[i].style.width = imgSizes[i][0];
+  imgs[i].style.height = imgSizes[i][1];
+}
 </script>
 
 </body></html>
