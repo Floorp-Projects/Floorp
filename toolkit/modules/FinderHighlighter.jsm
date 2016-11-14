@@ -411,6 +411,12 @@ FinderHighlighter.prototype = {
     let window = this.finder._getWindow();
     let dict = this.getForWindow(window);
     let foundRange = this.finder._fastFind.getFoundRange();
+
+    if (data.result == Ci.nsITypeAheadFind.FIND_NOTFOUND || !data.searchString || !foundRange) {
+      this.hide();
+      return;
+    }
+
     if (!this._modal) {
       if (this._highlightAll) {
         dict.currentFoundRange = foundRange;
@@ -420,11 +426,6 @@ FinderHighlighter.prototype = {
         if (params)
           this.highlight(true, params.word, params.linksOnly);
       }
-      return;
-    }
-
-    if (data.result == Ci.nsITypeAheadFind.FIND_NOTFOUND || !data.searchString || !foundRange) {
-      this.hide();
       return;
     }
 
