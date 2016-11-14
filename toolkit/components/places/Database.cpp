@@ -23,6 +23,7 @@
 #include "nsVariant.h"
 #include "SQLFunctions.h"
 #include "Helpers.h"
+#include "nsFaviconService.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -43,6 +44,8 @@
 #define DATABASE_FILENAME NS_LITERAL_STRING("places.sqlite")
 // Filename used to backup corrupt databases.
 #define DATABASE_CORRUPT_FILENAME NS_LITERAL_STRING("places.sqlite.corrupt")
+// Filename of the icons database.
+#define DATABASE_FAVICONS_FILENAME NS_LITERAL_STRING("favicons.sqlite")
 
 // Set when the database file was found corrupt by a previous maintenance.
 #define PREF_FORCE_DATABASE_REPLACEMENT "places.database.replaceOnStartup"
@@ -204,7 +207,7 @@ updateSQLiteStatistics(mozIStorageConnection* aDBConn)
  */
 enum JournalMode
 SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
-                             enum JournalMode aJournalMode)
+               enum JournalMode aJournalMode)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsAutoCString journalMode;
@@ -227,8 +230,7 @@ SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
   }
 
   nsCOMPtr<mozIStorageStatement> statement;
-  nsAutoCString query(MOZ_STORAGE_UNIQUIFY_QUERY_STR
-		      "PRAGMA journal_mode = ");
+  nsAutoCString query(MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA journal_mode = ");
   query.Append(journalMode);
   aDBConn->CreateStatement(query, getter_AddRefs(statement));
   NS_ENSURE_TRUE(statement, JOURNAL_DELETE);
@@ -311,6 +313,87 @@ CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
   return NS_OK;
 }
 
+nsresult
+SetupDurability(nsCOMPtr<mozIStorageConnection>& aDBConn, int32_t aDBPageSize) {
+  nsresult rv;
+  if (PR_GetEnv(ENV_ALLOW_CORRUPTION) &&
+      Preferences::GetBool(PREF_DISABLE_DURABILITY, false)) {
+    // Volatile storage was requested. Use the in-memory journal (no
+    // filesystem I/O) and don't sync the filesystem after writing.
+    SetJournalMode(aDBConn, JOURNAL_MEMORY);
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "PRAGMA synchronous = OFF"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // Be sure to set journal mode after page_size.  WAL would prevent the change
+    // otherwise.
+    if (JOURNAL_WAL == SetJournalMode(aDBConn, JOURNAL_WAL)) {
+      // Set the WAL journal size limit.  We want it to be small, since in
+      // synchronous = NORMAL mode a crash could cause loss of all the
+      // transactions in the journal.  For added safety we will also force
+      // checkpointing at strategic moments.
+      int32_t checkpointPages =
+        static_cast<int32_t>(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 1024 / aDBPageSize);
+      nsAutoCString checkpointPragma("PRAGMA wal_autocheckpoint = ");
+      checkpointPragma.AppendInt(checkpointPages);
+      rv = aDBConn->ExecuteSimpleSQL(checkpointPragma);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+      // Ignore errors, if we fail here the database could be considered corrupt
+      // and we won't be able to go on, even if it's just matter of a bogus file
+      // system.  The default mode (DELETE) will be fine in such a case.
+      (void)SetJournalMode(aDBConn, JOURNAL_TRUNCATE);
+
+      // Set synchronous to FULL to ensure maximum data integrity, even in
+      // case of crashes or unclean shutdowns.
+      rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "PRAGMA synchronous = FULL"));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  // The journal is usually free to grow for performance reasons, but it never
+  // shrinks back.  Since the space taken may be problematic, especially on
+  // mobile devices, limit its size.
+  // Since exceeding the limit will cause a truncate, allow a slightly
+  // larger limit than DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES to reduce the number
+  // of times it is needed.
+  nsAutoCString journalSizePragma("PRAGMA journal_size_limit = ");
+  journalSizePragma.AppendInt(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 3);
+  (void)aDBConn->ExecuteSimpleSQL(journalSizePragma);
+
+  // Grow places in |growthIncrementKiB| increments to limit fragmentation on disk.
+  // By default, it's 5 MB.
+  int32_t growthIncrementKiB =
+    Preferences::GetInt(PREF_GROWTH_INCREMENT_KIB, 5 * BYTES_PER_KIBIBYTE);
+  if (growthIncrementKiB > 0) {
+    (void)aDBConn->SetGrowthIncrement(growthIncrementKiB * BYTES_PER_KIBIBYTE, EmptyCString());
+  }
+  return NS_OK;
+}
+
+nsresult
+AttachFaviconsDatabase(nsCOMPtr<mozIStorageConnection>& aDBConn) {
+  // Attach the favicons database to the main connection.
+  nsString path;
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = file->Append(DATABASE_FAVICONS_FILENAME);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = file->GetPath(path);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("ATTACH DATABASE '") +
+    NS_ConvertUTF16toUTF8(path) + NS_LITERAL_CSTRING("' AS favicons"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(CREATE_ICONS_AFTERINSERT_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
 
 } // namespace
 
@@ -469,6 +552,14 @@ Database::Init()
     return rv;
   }
 
+  // Initialize the icons database.
+  rv = InitFaviconsDatabaseFile(storage);
+  if (NS_FAILED(rv)) {
+    RefPtr<PlacesEvent> lockedEvent = new PlacesEvent(TOPIC_DATABASE_LOCKED);
+    (void)NS_DispatchToMainThread(lockedEvent);
+    return rv;
+  }
+
   // Initialize the database schema.  In case of failure the existing schema is
   // is corrupt or incoherent, thus the database should be replaced.
   bool databaseMigrated = false;
@@ -542,6 +633,88 @@ Database::Init()
   if (os) {
     (void)os->AddObserver(this, TOPIC_PROFILE_CHANGE_TEARDOWN, true);
   }
+
+  return NS_OK;
+}
+
+nsresult
+Database::InitFaviconsDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIFile> databaseFile;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(databaseFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = databaseFile->Append(DATABASE_FAVICONS_FILENAME);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool databaseFileExists = false;
+  rv = databaseFile->Exists(&databaseFileExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Open the database file.  If it does not exist a new one will be created.
+  // Use an unshared connection, it will consume more memory but avoid shared
+  // cache contentions across threads.
+  // This also checks the database sanity, so we must do it regardless.
+  nsCOMPtr<mozIStorageConnection> conn;
+  rv = aStorage->OpenUnsharedDatabase(databaseFile, getter_AddRefs(conn));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    rv = databaseFile->Remove(true);
+    NS_ENSURE_SUCCESS(rv, rv);
+    databaseFileExists = false;
+    rv = aStorage->OpenUnsharedDatabase(databaseFile, getter_AddRefs(conn));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+#define CLOSE_AND_BAILOUT_IF_FAILED(_rv)          \
+  PR_BEGIN_MACRO                                  \
+  if (NS_WARN_IF(NS_FAILED(_rv))) {               \
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(conn->Close())); \
+    return _rv;                                   \
+  }                                               \
+  PR_END_MACRO
+
+  if (!databaseFileExists) {
+    int32_t defaultPageSize;
+    rv = conn->GetDefaultPageSize(&defaultPageSize);
+    CLOSE_AND_BAILOUT_IF_FAILED(rv);
+    rv = SetupDurability(conn, defaultPageSize);
+    CLOSE_AND_BAILOUT_IF_FAILED(rv);
+
+    // Enable incremental vacuum for this database. Since it will contain even
+    // large blobs and can be cleared with history, it's worth to have it.
+    // Note that it will be necessary to manually use PRAGMA incremental_vacuum.
+    rv = conn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "PRAGMA auto_vacuum = INCREMENTAL"
+    ));
+    CLOSE_AND_BAILOUT_IF_FAILED(rv);
+
+    // We are going to update the database, so everything from now on should be
+    // in a transaction for performances.
+    mozStorageTransaction transaction(conn, false);
+
+    rv = conn->ExecuteSimpleSQL(CREATE_MOZ_ICONS);
+    CLOSE_AND_BAILOUT_IF_FAILED(rv);
+    rv = conn->ExecuteSimpleSQL(CREATE_IDX_MOZ_ICONS_ICONURLHASH);
+    CLOSE_AND_BAILOUT_IF_FAILED(rv);
+
+    rv = conn->ExecuteSimpleSQL(CREATE_MOZ_PAGES_W_ICONS);
+    CLOSE_AND_BAILOUT_IF_FAILED(rv);
+    rv = conn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PAGES_W_ICONS_ICONURLHASH);
+    CLOSE_AND_BAILOUT_IF_FAILED(rv);
+
+    rv = conn->ExecuteSimpleSQL(CREATE_MOZ_ICONS_TO_PAGES);
+    CLOSE_AND_BAILOUT_IF_FAILED(rv);
+
+    rv = transaction.Commit();
+    CLOSE_AND_BAILOUT_IF_FAILED(rv);
+  }
+
+#undef CLOSE_AND_BAILOUT_IF_FAILED
+
+  rv = conn->Close();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -657,67 +830,41 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
   // Ensure that temp tables are held in memory, not on disk.
   nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA temp_store = MEMORY"));
+    MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA temp_store = MEMORY")
+  );
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (PR_GetEnv(ENV_ALLOW_CORRUPTION) && Preferences::GetBool(PREF_DISABLE_DURABILITY, false)) {
-    // Volatile storage was requested. Use the in-memory journal (no
-    // filesystem I/O) and don't sync the filesystem after writing.
-    SetJournalMode(mMainConn, JOURNAL_MEMORY);
-    rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "PRAGMA synchronous = OFF"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else {
-    // Be sure to set journal mode after page_size.  WAL would prevent the change
-    // otherwise.
-    if (JOURNAL_WAL == SetJournalMode(mMainConn, JOURNAL_WAL)) {
-      // Set the WAL journal size limit.  We want it to be small, since in
-      // synchronous = NORMAL mode a crash could cause loss of all the
-      // transactions in the journal.  For added safety we will also force
-      // checkpointing at strategic moments.
-      int32_t checkpointPages =
-        static_cast<int32_t>(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 1024 / mDBPageSize);
-      nsAutoCString checkpointPragma("PRAGMA wal_autocheckpoint = ");
-      checkpointPragma.AppendInt(checkpointPages);
-      rv = mMainConn->ExecuteSimpleSQL(checkpointPragma);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
-      // Ignore errors, if we fail here the database could be considered corrupt
-      // and we won't be able to go on, even if it's just matter of a bogus file
-      // system.  The default mode (DELETE) will be fine in such a case.
-      (void)SetJournalMode(mMainConn, JOURNAL_TRUNCATE);
-
-      // Set synchronous to FULL to ensure maximum data integrity, even in
-      // case of crashes or unclean shutdowns.
-      rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-          "PRAGMA synchronous = FULL"));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-
-  // The journal is usually free to grow for performance reasons, but it never
-  // shrinks back.  Since the space taken may be problematic, especially on
-  // mobile devices, limit its size.
-  // Since exceeding the limit will cause a truncate, allow a slightly
-  // larger limit than DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES to reduce the number
-  // of times it is needed.
-  nsAutoCString journalSizePragma("PRAGMA journal_size_limit = ");
-  journalSizePragma.AppendInt(DATABASE_MAX_WAL_SIZE_IN_KIBIBYTES * 3);
-  (void)mMainConn->ExecuteSimpleSQL(journalSizePragma);
-
-  // Grow places in |growthIncrementKiB| increments to limit fragmentation on disk.
-  // By default, it's 10 MB.
-  int32_t growthIncrementKiB =
-    Preferences::GetInt(PREF_GROWTH_INCREMENT_KIB, 10 * BYTES_PER_KIBIBYTE);
-  if (growthIncrementKiB > 0) {
-    (void)mMainConn->SetGrowthIncrement(growthIncrementKiB * BYTES_PER_KIBIBYTE, EmptyCString());
-  }
+  rv = SetupDurability(mMainConn, mDBPageSize);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString busyTimeoutPragma("PRAGMA busy_timeout = ");
   busyTimeoutPragma.AppendInt(DATABASE_BUSY_TIMEOUT_MS);
   (void)mMainConn->ExecuteSimpleSQL(busyTimeoutPragma);
+
+  // Enable FOREIGN KEY support.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA foreign_keys = ON")
+  );
+  NS_ENSURE_SUCCESS(rv, rv);
+#ifdef DEBUG
+  {
+    // There are a few cases where setting foreign_keys doesn't work:
+    //  * in the middle of a multi-statement transaction
+    //  * if the SQLite library in use doesn't support them
+    // Since we need foreign_keys, let's at least assert in debug mode.
+    nsCOMPtr<mozIStorageStatement> stmt;
+    mMainConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA foreign_keys"),
+                            getter_AddRefs(stmt));
+    bool hasResult = false;
+    if (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+      int32_t fkState = stmt->AsInt32(0);
+      MOZ_ASSERT(fkState, "Foreign keys should be enabled");
+    }
+  }
+#endif
+
+  rv = AttachFaviconsDatabase(mMainConn);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // We use our functions during migration, so initialize them now.
   rv = InitFunctions();
@@ -898,7 +1045,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 53 uses schema version 36.
+      if (currentSchemaVersion < 37) {
+        rv = MigrateV37Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 55 uses schema version 37.
 
       // Schema Upgrades must add migration code here.
 
@@ -915,8 +1067,6 @@ Database::InitSchema(bool* aDatabaseMigrated)
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_URL_HASH);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_FAVICON);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_REVHOST);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -965,10 +1115,6 @@ Database::InitSchema(bool* aDatabaseMigrated)
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_KEYWORDS);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_KEYWORDS_PLACEPOSTDATA);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // moz_favicons.
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_FAVICONS);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // moz_anno_attributes.
@@ -1516,10 +1662,16 @@ Database::MigrateV22Up()
 
   // Reset all session IDs to 0 since we don't support them anymore.
   // We don't set them to NULL to avoid breaking downgrades.
-  nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "UPDATE moz_historyvisits SET session = 0"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT session FROM moz_historyvisits"
+  ), getter_AddRefs(stmt));
+  if (NS_SUCCEEDED(rv)) {
+    nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "UPDATE moz_historyvisits SET session = 0"
+    ));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
@@ -2004,6 +2156,81 @@ Database::MigrateV36Up() {
 }
 
 nsresult
+Database::MigrateV37Up() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Move favicons to the new database.
+  // For now we retain the old moz_favicons table, but we empty it.
+  // This allows for a "safer" downgrade, even if icons will be lost in the
+  // process. In a couple versions we shall drop moz_favicons completely.
+
+  // First, check if the old favicons table still exists.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT url FROM moz_favicons"
+  ), getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    // The table has already been removed, nothing to do.
+    return NS_OK;
+  }
+
+  // The new table accepts only png or svg payloads, so we set a valid width
+  // only for them, the mime-type for the others.  Later we will asynchronously
+  // try to convert the unsupported payloads, or remove them.
+
+  // Add pages.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO moz_pages_w_icons (page_url, page_url_hash) "
+    "SELECT h.url, hash(h.url) "
+    "FROM moz_places h "
+    "JOIN moz_favicons f ON f.id = h.favicon_id"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Set icons as expired, so we will replace them with proper versions at the
+  // first load.
+  // Note: we use a peculiarity of Sqlite here, where the column affinity
+  // is not enforced, thanks to that we can store a string in an integer column.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO moz_icons (icon_url, fixed_icon_url_hash, width, data) "
+      "SELECT url, hash(fixup_url(url)), "
+             "(CASE WHEN mime_type = 'image/png' THEN 16 "
+                   "WHEN mime_type = 'image/svg+xml' THEN 65535 "
+                   "ELSE mime_type END), "
+             "data FROM moz_favicons "
+             "WHERE LENGTH(data) > 0 "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Create relations.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT OR IGNORE INTO moz_icons_to_pages (page_id, icon_id) "
+      "SELECT (SELECT id FROM moz_pages_w_icons "
+              "WHERE page_url_hash = h.url_hash "
+                "AND page_url = h.url), "
+             "(SELECT id FROM moz_icons "
+              "WHERE fixed_icon_url_hash = hash(fixup_url(f.url)) "
+                "AND icon_url = f.url) "
+      "FROM moz_favicons f "
+      "JOIN moz_places h on f.id = h.favicon_id"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Remove old favicons and relations.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_favicons"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_places SET favicon_id = NULL"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Start the async conversion
+  nsFaviconService::ConvertUnsupportedPayloads(mMainConn);
+
+  return NS_OK;
+}
+
+nsresult
 Database::GetItemsWithAnno(const nsACString& aAnnoName, int32_t aItemType,
                            nsTArray<int64_t>& aItemIds)
 {
@@ -2305,7 +2532,7 @@ Database::Observe(nsISupports *aSubject,
                      getter_AddRefs(e))) && e) {
       bool hasMore = false;
       while (NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore) {
-	nsCOMPtr<nsISupports> supports;
+        nsCOMPtr<nsISupports> supports;
         if (NS_SUCCEEDED(e->GetNext(getter_AddRefs(supports)))) {
           nsCOMPtr<nsIObserver> observer = do_QueryInterface(supports);
           (void)observer->Observe(observer, TOPIC_PLACES_INIT_COMPLETE, nullptr);

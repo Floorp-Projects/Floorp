@@ -33,13 +33,6 @@
 #include "nsContentUtils.h"
 #include "NullPrincipal.h"
 
-// For large favicons optimization.
-#include "imgITools.h"
-#include "imgIContainer.h"
-
-// The target dimension, in pixels, for favicons we optimize.
-#define OPTIMIZED_FAVICON_DIMENSION 32
-
 #define MAX_FAILED_FAVICONS 256
 #define FAVICON_CACHE_REDUCE_COUNT 64
 
@@ -49,10 +42,6 @@
 // instead of in storage. Icons in the cache are expired according to this
 // interval.
 #define UNASSOCIATED_ICON_EXPIRY_INTERVAL 60000
-
-// The MIME type of the default favicon and favicons created by
-// OptimizeFaviconImage.
-#define DEFAULT_MIME_TYPE "image/png"
 
 using namespace mozilla;
 using namespace mozilla::places;
@@ -98,6 +87,14 @@ nsFaviconService::~nsFaviconService()
     gFaviconService = nullptr;
 }
 
+Atomic<int64_t> nsFaviconService::sLastInsertedIconId(0);
+
+void // static
+nsFaviconService::StoreLastInsertedId(const nsACString& aTable,
+                                      const int64_t aLastInsertedId) {
+  MOZ_ASSERT(aTable.EqualsLiteral("moz_icons"));
+  sLastInsertedIconId = aLastInsertedId;
+}
 
 nsresult
 nsFaviconService::Init()
@@ -107,6 +104,13 @@ nsFaviconService::Init()
 
   mExpireUnassociatedIconsTimer = do_CreateInstance("@mozilla.org/timer;1");
   NS_ENSURE_STATE(mExpireUnassociatedIconsTimer);
+
+  // Check if there are still icon payloads to be converted.
+  bool shouldConvertPayloads =
+    Preferences::GetBool(PREF_CONVERT_PAYLOADS, false);
+  if (shouldConvertPayloads) {
+    ConvertUnsupportedPayloads(mDB->MainConn());
+  }
 
   return NS_OK;
 }
@@ -636,8 +640,6 @@ nsFaviconService::OptimizeFaviconImage(const uint8_t* aData, uint32_t aDataLen,
 {
   nsresult rv;
 
-  nsCOMPtr<imgITools> imgtool = do_CreateInstance("@mozilla.org/image/tools;1");
-
   nsCOMPtr<nsIInputStream> stream;
   rv = NS_NewByteInputStream(getter_AddRefs(stream),
                 reinterpret_cast<const char*>(aData), aDataLen,
@@ -646,18 +648,18 @@ nsFaviconService::OptimizeFaviconImage(const uint8_t* aData, uint32_t aDataLen,
 
   // decode image
   nsCOMPtr<imgIContainer> container;
-  rv = imgtool->DecodeImageData(stream, aMimeType, getter_AddRefs(container));
+  rv = GetImgTools()->DecodeImageData(stream, aMimeType, getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aNewMimeType.AssignLiteral(DEFAULT_MIME_TYPE);
+  aNewMimeType.AssignLiteral(PNG_MIME_TYPE);
 
   // scale and recompress
   nsCOMPtr<nsIInputStream> iconStream;
-  rv = imgtool->EncodeScaledImage(container, aNewMimeType,
-                                  OPTIMIZED_FAVICON_DIMENSION,
-                                  OPTIMIZED_FAVICON_DIMENSION,
-                                  EmptyString(),
-                                  getter_AddRefs(iconStream));
+  rv = GetImgTools()->EncodeScaledImage(container, aNewMimeType,
+                                        DEFAULT_FAVICON_SIZE,
+                                        DEFAULT_FAVICON_SIZE,
+                                        EmptyString(),
+                                        getter_AddRefs(iconStream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Read the stream into a new buffer.
@@ -687,6 +689,27 @@ nsFaviconService::GetFaviconDataAsync(nsIURI* aFaviconURI,
 
   nsCOMPtr<mozIStoragePendingStatement> pendingStatement;
   return stmt->ExecuteAsync(aCallback, getter_AddRefs(pendingStatement));
+}
+
+void // static
+nsFaviconService::ConvertUnsupportedPayloads(mozIStorageConnection* aDBConn)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // Ensure imgTools are initialized, so that the image decoders can be used
+  // off the main thread.
+  nsCOMPtr<imgITools> imgTools = do_CreateInstance("@mozilla.org/image/tools;1");
+
+  Preferences::SetBool(PREF_CONVERT_PAYLOADS, true);
+  MOZ_ASSERT(aDBConn);
+  if (aDBConn) {
+    RefPtr<FetchAndConvertUnsupportedPayloads> event =
+      new FetchAndConvertUnsupportedPayloads(aDBConn);
+    nsCOMPtr<nsIEventTarget> target = do_GetInterface(aDBConn);
+    MOZ_ASSERT(target);
+    if (target) {
+      (void)target->Dispatch(event, NS_DISPATCH_NORMAL);
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
