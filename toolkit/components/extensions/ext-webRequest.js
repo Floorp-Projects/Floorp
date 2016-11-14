@@ -13,7 +13,6 @@ Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   SingletonEventManager,
-  runSafeSync,
 } = ExtensionUtils;
 
 // EventManager-like class specifically for WebRequest. Inherits from
@@ -59,7 +58,7 @@ function WebRequestEventManager(context, eventName) {
         }
       }
 
-      return runSafeSync(context, callback, data2);
+      return context.runSafe(callback, data2);
     };
 
     let filter2 = {};

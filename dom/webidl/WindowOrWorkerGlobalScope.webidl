@@ -7,6 +7,7 @@
  * https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope-mixin
  * https://fetch.spec.whatwg.org/#fetch-method
  * https://w3c.github.io/webappsec-secure-contexts/#monkey-patching-global-object
+ * https://w3c.github.io/ServiceWorker/#self-caches
  */
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope-mixin
@@ -58,6 +59,12 @@ partial interface WindowOrWorkerGlobalScope {
    // readonly attribute IDBFactory indexedDB;
    [Throws]
    readonly attribute IDBFactory? indexedDB;
+};
+
+// https://w3c.github.io/ServiceWorker/#self-caches
+partial interface WindowOrWorkerGlobalScope {
+  [Throws, Func="mozilla::dom::cache::CacheStorage::PrefEnabled", SameObject]
+  readonly attribute CacheStorage caches;
 };
 
 // Mozilla extensions

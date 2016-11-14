@@ -42,7 +42,7 @@ namespace {
 
 typedef Vector<MBasicBlock*, 8, SystemAllocPolicy> BlockVector;
 
-struct IonCompilePolicy : ExprIterPolicy
+struct IonCompilePolicy : OpIterPolicy
 {
     // Producing output is what we're all about here.
     static const bool Output = true;
@@ -54,7 +54,7 @@ struct IonCompilePolicy : ExprIterPolicy
     typedef MBasicBlock* ControlItem;
 };
 
-typedef ExprIter<IonCompilePolicy> IonExprIter;
+typedef OpIter<IonCompilePolicy> IonOpIter;
 
 class FunctionCompiler;
 
@@ -148,7 +148,7 @@ class FunctionCompiler
     typedef Vector<CallCompileState*, 0, SystemAllocPolicy> CallCompileStateVector;
 
     const ModuleGeneratorData& mg_;
-    IonExprIter                iter_;
+    IonOpIter                  iter_;
     const FuncBytes&           func_;
     const ValTypeVector&       locals_;
     size_t                     lastReadCallSite_;
@@ -199,7 +199,7 @@ class FunctionCompiler
     {}
 
     const ModuleGeneratorData& mg() const    { return mg_; }
-    IonExprIter&               iter()        { return iter_; }
+    IonOpIter&                 iter()        { return iter_; }
     TempAllocator&             alloc() const { return alloc_; }
     MacroAssembler&            masm() const  { return compileResults_.masm(); }
     const Sig&                 sig() const   { return func_.sig(); }
@@ -1113,12 +1113,12 @@ class FunctionCompiler
         return curBlock_ == nullptr;
     }
 
-    void returnExpr(MDefinition* expr)
+    void returnExpr(MDefinition* operand)
     {
         if (inDeadCode())
             return;
 
-        MWasmReturn* ins = MWasmReturn::New(alloc(), expr, tlsPointer_);
+        MWasmReturn* ins = MWasmReturn::New(alloc(), operand, tlsPointer_);
         curBlock_->end(ins);
         curBlock_ = nullptr;
     }
@@ -1406,7 +1406,7 @@ class FunctionCompiler
             return true;
         }
 
-        // Expr::Loop doesn't have an implicit backedge so temporarily set
+        // Op::Loop doesn't have an implicit backedge so temporarily set
         // aside the end of the loop body to bind backedges.
         MBasicBlock* loopBody = curBlock_;
         curBlock_ = nullptr;
@@ -1497,7 +1497,7 @@ class FunctionCompiler
         return true;
     }
 
-    bool brTable(MDefinition* expr, uint32_t defaultDepth, const Uint32Vector& depths,
+    bool brTable(MDefinition* operand, uint32_t defaultDepth, const Uint32Vector& depths,
                  MDefinition* maybeValue)
     {
         if (inDeadCode())
@@ -1507,7 +1507,7 @@ class FunctionCompiler
         MOZ_ASSERT(numCases <= INT32_MAX);
         MOZ_ASSERT(numCases);
 
-        MTableSwitch* table = MTableSwitch::New(alloc(), expr, 0, int32_t(numCases - 1));
+        MTableSwitch* table = MTableSwitch::New(alloc(), operand, 0, int32_t(numCases - 1));
 
         size_t defaultIndex;
         if (!table->addDefault(nullptr, &defaultIndex))
@@ -3100,68 +3100,68 @@ EmitExpr(FunctionCompiler& f)
     if (!f.mirGen().ensureBallast())
         return false;
 
-    Expr expr;
-    if (!f.iter().readExpr(&expr))
-        return false;
+    uint16_t u16;
+    MOZ_ALWAYS_TRUE(f.iter().readOp(&u16));
+    Op op = Op(u16);
 
-    switch (expr) {
+    switch (op) {
       // Control opcodes
-      case Expr::Nop:
+      case Op::Nop:
         return f.iter().readNop();
-      case Expr::Drop:
+      case Op::Drop:
         return f.iter().readDrop();
-      case Expr::Block:
+      case Op::Block:
         return EmitBlock(f);
-      case Expr::Loop:
+      case Op::Loop:
         return EmitLoop(f);
-      case Expr::If:
+      case Op::If:
         return EmitIf(f);
-      case Expr::Else:
+      case Op::Else:
         return EmitElse(f);
-      case Expr::End:
+      case Op::End:
         return EmitEnd(f);
-      case Expr::Br:
+      case Op::Br:
         return EmitBr(f);
-      case Expr::BrIf:
+      case Op::BrIf:
         return EmitBrIf(f);
-      case Expr::BrTable:
+      case Op::BrTable:
         return EmitBrTable(f);
-      case Expr::Return:
+      case Op::Return:
         return EmitReturn(f);
-      case Expr::Unreachable:
+      case Op::Unreachable:
         if (!f.iter().readUnreachable())
             return false;
         f.unreachableTrap();
         return true;
 
       // Calls
-      case Expr::Call:
+      case Op::Call:
         return EmitCall(f);
-      case Expr::CallIndirect:
+      case Op::CallIndirect:
         return EmitCallIndirect(f, /* oldStyle = */ false);
-      case Expr::OldCallIndirect:
+      case Op::OldCallIndirect:
         return EmitCallIndirect(f, /* oldStyle = */ true);
 
       // Locals and globals
-      case Expr::GetLocal:
+      case Op::GetLocal:
         return EmitGetLocal(f);
-      case Expr::SetLocal:
+      case Op::SetLocal:
         return EmitSetLocal(f);
-      case Expr::TeeLocal:
+      case Op::TeeLocal:
         return EmitTeeLocal(f);
-      case Expr::GetGlobal:
+      case Op::GetGlobal:
         return EmitGetGlobal(f);
-      case Expr::SetGlobal:
+      case Op::SetGlobal:
         return EmitSetGlobal(f);
-      case Expr::TeeGlobal:
+      case Op::TeeGlobal:
         return EmitTeeGlobal(f);
 
       // Select
-      case Expr::Select:
+      case Op::Select:
         return EmitSelect(f);
 
       // I32
-      case Expr::I32Const: {
+      case Op::I32Const: {
         int32_t i32;
         if (!f.iter().readI32Const(&i32))
             return false;
@@ -3169,85 +3169,85 @@ EmitExpr(FunctionCompiler& f)
         f.iter().setResult(f.constant(Int32Value(i32), MIRType::Int32));
         return true;
       }
-      case Expr::I32Add:
+      case Op::I32Add:
         return EmitAdd(f, ValType::I32, MIRType::Int32);
-      case Expr::I32Sub:
+      case Op::I32Sub:
         return EmitSub(f, ValType::I32, MIRType::Int32);
-      case Expr::I32Mul:
+      case Op::I32Mul:
         return EmitMul(f, ValType::I32, MIRType::Int32);
-      case Expr::I32DivS:
-      case Expr::I32DivU:
-        return EmitDiv(f, ValType::I32, MIRType::Int32, expr == Expr::I32DivU);
-      case Expr::I32RemS:
-      case Expr::I32RemU:
-        return EmitRem(f, ValType::I32, MIRType::Int32, expr == Expr::I32RemU);
-      case Expr::I32Min:
-      case Expr::I32Max:
-        return EmitMinMax(f, ValType::I32, MIRType::Int32, expr == Expr::I32Max);
-      case Expr::I32Eqz:
+      case Op::I32DivS:
+      case Op::I32DivU:
+        return EmitDiv(f, ValType::I32, MIRType::Int32, op == Op::I32DivU);
+      case Op::I32RemS:
+      case Op::I32RemU:
+        return EmitRem(f, ValType::I32, MIRType::Int32, op == Op::I32RemU);
+      case Op::I32Min:
+      case Op::I32Max:
+        return EmitMinMax(f, ValType::I32, MIRType::Int32, op == Op::I32Max);
+      case Op::I32Eqz:
         return EmitConversion<MNot>(f, ValType::I32, ValType::I32);
-      case Expr::I32TruncSF32:
-      case Expr::I32TruncUF32:
-        return EmitTruncate(f, ValType::F32, ValType::I32, expr == Expr::I32TruncUF32);
-      case Expr::I32TruncSF64:
-      case Expr::I32TruncUF64:
-        return EmitTruncate(f, ValType::F64, ValType::I32, expr == Expr::I32TruncUF64);
-      case Expr::I32WrapI64:
+      case Op::I32TruncSF32:
+      case Op::I32TruncUF32:
+        return EmitTruncate(f, ValType::F32, ValType::I32, op == Op::I32TruncUF32);
+      case Op::I32TruncSF64:
+      case Op::I32TruncUF64:
+        return EmitTruncate(f, ValType::F64, ValType::I32, op == Op::I32TruncUF64);
+      case Op::I32WrapI64:
         return EmitConversion<MWrapInt64ToInt32>(f, ValType::I64, ValType::I32);
-      case Expr::I32ReinterpretF32:
+      case Op::I32ReinterpretF32:
         return EmitReinterpret(f, ValType::I32, ValType::F32, MIRType::Int32);
-      case Expr::I32Clz:
+      case Op::I32Clz:
         return EmitUnaryWithType<MClz>(f, ValType::I32, MIRType::Int32);
-      case Expr::I32Ctz:
+      case Op::I32Ctz:
         return EmitUnaryWithType<MCtz>(f, ValType::I32, MIRType::Int32);
-      case Expr::I32Popcnt:
+      case Op::I32Popcnt:
         return EmitUnaryWithType<MPopcnt>(f, ValType::I32, MIRType::Int32);
-      case Expr::I32Abs:
+      case Op::I32Abs:
         return EmitUnaryWithType<MAbs>(f, ValType::I32, MIRType::Int32);
-      case Expr::I32Neg:
+      case Op::I32Neg:
         return EmitUnaryWithType<MAsmJSNeg>(f, ValType::I32, MIRType::Int32);
-      case Expr::I32Or:
+      case Op::I32Or:
         return EmitBitwise<MBitOr>(f, ValType::I32, MIRType::Int32);
-      case Expr::I32And:
+      case Op::I32And:
         return EmitBitwise<MBitAnd>(f, ValType::I32, MIRType::Int32);
-      case Expr::I32Xor:
+      case Op::I32Xor:
         return EmitBitwise<MBitXor>(f, ValType::I32, MIRType::Int32);
-      case Expr::I32Shl:
+      case Op::I32Shl:
         return EmitBitwise<MLsh>(f, ValType::I32, MIRType::Int32);
-      case Expr::I32ShrS:
+      case Op::I32ShrS:
         return EmitBitwise<MRsh>(f, ValType::I32, MIRType::Int32);
-      case Expr::I32ShrU:
+      case Op::I32ShrU:
         return EmitBitwise<MUrsh>(f, ValType::I32, MIRType::Int32);
-      case Expr::I32BitNot:
+      case Op::I32BitNot:
         return EmitBitNot(f, ValType::I32);
-      case Expr::I32Load8S:
+      case Op::I32Load8S:
         return EmitLoad(f, ValType::I32, Scalar::Int8);
-      case Expr::I32Load8U:
+      case Op::I32Load8U:
         return EmitLoad(f, ValType::I32, Scalar::Uint8);
-      case Expr::I32Load16S:
+      case Op::I32Load16S:
         return EmitLoad(f, ValType::I32, Scalar::Int16);
-      case Expr::I32Load16U:
+      case Op::I32Load16U:
         return EmitLoad(f, ValType::I32, Scalar::Uint16);
-      case Expr::I32Load:
+      case Op::I32Load:
         return EmitLoad(f, ValType::I32, Scalar::Int32);
-      case Expr::I32Store8:
+      case Op::I32Store8:
         return EmitStore(f, ValType::I32, Scalar::Int8);
-      case Expr::I32TeeStore8:
+      case Op::I32TeeStore8:
         return EmitTeeStore(f, ValType::I32, Scalar::Int8);
-      case Expr::I32Store16:
+      case Op::I32Store16:
         return EmitStore(f, ValType::I32, Scalar::Int16);
-      case Expr::I32TeeStore16:
+      case Op::I32TeeStore16:
         return EmitTeeStore(f, ValType::I32, Scalar::Int16);
-      case Expr::I32Store:
+      case Op::I32Store:
         return EmitStore(f, ValType::I32, Scalar::Int32);
-      case Expr::I32TeeStore:
+      case Op::I32TeeStore:
         return EmitTeeStore(f, ValType::I32, Scalar::Int32);
-      case Expr::I32Rotr:
-      case Expr::I32Rotl:
-        return EmitRotate(f, ValType::I32, expr == Expr::I32Rotl);
+      case Op::I32Rotr:
+      case Op::I32Rotl:
+        return EmitRotate(f, ValType::I32, op == Op::I32Rotl);
 
       // I64
-      case Expr::I64Const: {
+      case Op::I64Const: {
         int64_t i64;
         if (!f.iter().readI64Const(&i64))
             return false;
@@ -3255,85 +3255,85 @@ EmitExpr(FunctionCompiler& f)
         f.iter().setResult(f.constant(i64));
         return true;
       }
-      case Expr::I64Add:
+      case Op::I64Add:
         return EmitAdd(f, ValType::I64, MIRType::Int64);
-      case Expr::I64Sub:
+      case Op::I64Sub:
         return EmitSub(f, ValType::I64, MIRType::Int64);
-      case Expr::I64Mul:
+      case Op::I64Mul:
         return EmitMul(f, ValType::I64, MIRType::Int64);
-      case Expr::I64DivS:
-      case Expr::I64DivU:
-        return EmitDiv(f, ValType::I64, MIRType::Int64, expr == Expr::I64DivU);
-      case Expr::I64RemS:
-      case Expr::I64RemU:
-        return EmitRem(f, ValType::I64, MIRType::Int64, expr == Expr::I64RemU);
-      case Expr::I64TruncSF32:
-      case Expr::I64TruncUF32:
-        return EmitTruncate(f, ValType::F32, ValType::I64, expr == Expr::I64TruncUF32);
-      case Expr::I64TruncSF64:
-      case Expr::I64TruncUF64:
-        return EmitTruncate(f, ValType::F64, ValType::I64, expr == Expr::I64TruncUF64);
-      case Expr::I64ExtendSI32:
-      case Expr::I64ExtendUI32:
-        return EmitExtendI32(f, expr == Expr::I64ExtendUI32);
-      case Expr::I64ReinterpretF64:
+      case Op::I64DivS:
+      case Op::I64DivU:
+        return EmitDiv(f, ValType::I64, MIRType::Int64, op == Op::I64DivU);
+      case Op::I64RemS:
+      case Op::I64RemU:
+        return EmitRem(f, ValType::I64, MIRType::Int64, op == Op::I64RemU);
+      case Op::I64TruncSF32:
+      case Op::I64TruncUF32:
+        return EmitTruncate(f, ValType::F32, ValType::I64, op == Op::I64TruncUF32);
+      case Op::I64TruncSF64:
+      case Op::I64TruncUF64:
+        return EmitTruncate(f, ValType::F64, ValType::I64, op == Op::I64TruncUF64);
+      case Op::I64ExtendSI32:
+      case Op::I64ExtendUI32:
+        return EmitExtendI32(f, op == Op::I64ExtendUI32);
+      case Op::I64ReinterpretF64:
         return EmitReinterpret(f, ValType::I64, ValType::F64, MIRType::Int64);
-      case Expr::I64Or:
+      case Op::I64Or:
         return EmitBitwise<MBitOr>(f, ValType::I64, MIRType::Int64);
-      case Expr::I64And:
+      case Op::I64And:
         return EmitBitwise<MBitAnd>(f, ValType::I64, MIRType::Int64);
-      case Expr::I64Xor:
+      case Op::I64Xor:
         return EmitBitwise<MBitXor>(f, ValType::I64, MIRType::Int64);
-      case Expr::I64Shl:
+      case Op::I64Shl:
         return EmitBitwise<MLsh>(f, ValType::I64, MIRType::Int64);
-      case Expr::I64ShrS:
+      case Op::I64ShrS:
         return EmitBitwise<MRsh>(f, ValType::I64, MIRType::Int64);
-      case Expr::I64ShrU:
+      case Op::I64ShrU:
         return EmitBitwise<MUrsh>(f, ValType::I64, MIRType::Int64);
-      case Expr::I64Rotr:
-      case Expr::I64Rotl:
-        return EmitRotate(f, ValType::I64, expr == Expr::I64Rotl);
-      case Expr::I64Eqz:
+      case Op::I64Rotr:
+      case Op::I64Rotl:
+        return EmitRotate(f, ValType::I64, op == Op::I64Rotl);
+      case Op::I64Eqz:
         return EmitConversion<MNot>(f, ValType::I64, ValType::I32);
-      case Expr::I64Clz:
+      case Op::I64Clz:
         return EmitUnaryWithType<MClz>(f, ValType::I64, MIRType::Int64);
-      case Expr::I64Ctz:
+      case Op::I64Ctz:
         return EmitUnaryWithType<MCtz>(f, ValType::I64, MIRType::Int64);
-      case Expr::I64Popcnt:
+      case Op::I64Popcnt:
         return EmitUnaryWithType<MPopcnt>(f, ValType::I64, MIRType::Int64);
-      case Expr::I64Load8S:
+      case Op::I64Load8S:
         return EmitLoad(f, ValType::I64, Scalar::Int8);
-      case Expr::I64Load8U:
+      case Op::I64Load8U:
         return EmitLoad(f, ValType::I64, Scalar::Uint8);
-      case Expr::I64Load16S:
+      case Op::I64Load16S:
         return EmitLoad(f, ValType::I64, Scalar::Int16);
-      case Expr::I64Load16U:
+      case Op::I64Load16U:
         return EmitLoad(f, ValType::I64, Scalar::Uint16);
-      case Expr::I64Load32S:
+      case Op::I64Load32S:
         return EmitLoad(f, ValType::I64, Scalar::Int32);
-      case Expr::I64Load32U:
+      case Op::I64Load32U:
         return EmitLoad(f, ValType::I64, Scalar::Uint32);
-      case Expr::I64Load:
+      case Op::I64Load:
         return EmitLoad(f, ValType::I64, Scalar::Int64);
-      case Expr::I64Store8:
+      case Op::I64Store8:
         return EmitStore(f, ValType::I64, Scalar::Int8);
-      case Expr::I64TeeStore8:
+      case Op::I64TeeStore8:
         return EmitTeeStore(f, ValType::I64, Scalar::Int8);
-      case Expr::I64Store16:
+      case Op::I64Store16:
         return EmitStore(f, ValType::I64, Scalar::Int16);
-      case Expr::I64TeeStore16:
+      case Op::I64TeeStore16:
         return EmitTeeStore(f, ValType::I64, Scalar::Int16);
-      case Expr::I64Store32:
+      case Op::I64Store32:
         return EmitStore(f, ValType::I64, Scalar::Int32);
-      case Expr::I64TeeStore32:
+      case Op::I64TeeStore32:
         return EmitTeeStore(f, ValType::I64, Scalar::Int32);
-      case Expr::I64Store:
+      case Op::I64Store:
         return EmitStore(f, ValType::I64, Scalar::Int64);
-      case Expr::I64TeeStore:
+      case Op::I64TeeStore:
         return EmitTeeStore(f, ValType::I64, Scalar::Int64);
 
       // F32
-      case Expr::F32Const: {
+      case Op::F32Const: {
         RawF32 f32;
         if (!f.iter().readF32Const(&f32))
             return false;
@@ -3341,57 +3341,57 @@ EmitExpr(FunctionCompiler& f)
         f.iter().setResult(f.constant(f32));
         return true;
       }
-      case Expr::F32Add:
+      case Op::F32Add:
         return EmitAdd(f, ValType::F32, MIRType::Float32);
-      case Expr::F32Sub:
+      case Op::F32Sub:
         return EmitSub(f, ValType::F32, MIRType::Float32);
-      case Expr::F32Mul:
+      case Op::F32Mul:
         return EmitMul(f, ValType::F32, MIRType::Float32);
-      case Expr::F32Div:
+      case Op::F32Div:
         return EmitDiv(f, ValType::F32, MIRType::Float32, /* isUnsigned = */ false);
-      case Expr::F32Min:
-      case Expr::F32Max:
-        return EmitMinMax(f, ValType::F32, MIRType::Float32, expr == Expr::F32Max);
-      case Expr::F32CopySign:
+      case Op::F32Min:
+      case Op::F32Max:
+        return EmitMinMax(f, ValType::F32, MIRType::Float32, op == Op::F32Max);
+      case Op::F32CopySign:
         return EmitCopySign(f, ValType::F32);
-      case Expr::F32Neg:
+      case Op::F32Neg:
         return EmitUnaryWithType<MAsmJSNeg>(f, ValType::F32, MIRType::Float32);
-      case Expr::F32Abs:
+      case Op::F32Abs:
         return EmitUnaryWithType<MAbs>(f, ValType::F32, MIRType::Float32);
-      case Expr::F32Sqrt:
+      case Op::F32Sqrt:
         return EmitUnaryWithType<MSqrt>(f, ValType::F32, MIRType::Float32);
-      case Expr::F32Ceil:
+      case Op::F32Ceil:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::CeilF, ValType::F32);
-      case Expr::F32Floor:
+      case Op::F32Floor:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::FloorF, ValType::F32);
-      case Expr::F32Trunc:
+      case Op::F32Trunc:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::TruncF, ValType::F32);
-      case Expr::F32Nearest:
+      case Op::F32Nearest:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::NearbyIntF, ValType::F32);
-      case Expr::F32DemoteF64:
+      case Op::F32DemoteF64:
         return EmitConversion<MToFloat32>(f, ValType::F64, ValType::F32);
-      case Expr::F32ConvertSI32:
+      case Op::F32ConvertSI32:
         return EmitConversion<MToFloat32>(f, ValType::I32, ValType::F32);
-      case Expr::F32ConvertUI32:
+      case Op::F32ConvertUI32:
         return EmitConversion<MWasmUnsignedToFloat32>(f, ValType::I32, ValType::F32);
-      case Expr::F32ConvertSI64:
-      case Expr::F32ConvertUI64:
+      case Op::F32ConvertSI64:
+      case Op::F32ConvertUI64:
         return EmitConvertI64ToFloatingPoint(f, ValType::F32, MIRType::Float32,
-                                             expr == Expr::F32ConvertUI64);
-      case Expr::F32ReinterpretI32:
+                                             op == Op::F32ConvertUI64);
+      case Op::F32ReinterpretI32:
         return EmitReinterpret(f, ValType::F32, ValType::I32, MIRType::Float32);
 
-      case Expr::F32Load:
+      case Op::F32Load:
         return EmitLoad(f, ValType::F32, Scalar::Float32);
-      case Expr::F32Store:
+      case Op::F32Store:
         return EmitStore(f, ValType::F32, Scalar::Float32);
-      case Expr::F32TeeStore:
+      case Op::F32TeeStore:
         return EmitTeeStore(f, ValType::F32, Scalar::Float32);
-      case Expr::F32TeeStoreF64:
+      case Op::F32TeeStoreF64:
         return EmitTeeStoreWithCoercion(f, ValType::F32, Scalar::Float64);
 
       // F64
-      case Expr::F64Const: {
+      case Op::F64Const: {
         RawF64 f64;
         if (!f.iter().readF64Const(&f64))
             return false;
@@ -3399,145 +3399,145 @@ EmitExpr(FunctionCompiler& f)
         f.iter().setResult(f.constant(f64));
         return true;
       }
-      case Expr::F64Add:
+      case Op::F64Add:
         return EmitAdd(f, ValType::F64, MIRType::Double);
-      case Expr::F64Sub:
+      case Op::F64Sub:
         return EmitSub(f, ValType::F64, MIRType::Double);
-      case Expr::F64Mul:
+      case Op::F64Mul:
         return EmitMul(f, ValType::F64, MIRType::Double);
-      case Expr::F64Div:
+      case Op::F64Div:
         return EmitDiv(f, ValType::F64, MIRType::Double, /* isUnsigned = */ false);
-      case Expr::F64Mod:
+      case Op::F64Mod:
         return EmitRem(f, ValType::F64, MIRType::Double, /* isUnsigned = */ false);
-      case Expr::F64Min:
-      case Expr::F64Max:
-        return EmitMinMax(f, ValType::F64, MIRType::Double, expr == Expr::F64Max);
-      case Expr::F64CopySign:
+      case Op::F64Min:
+      case Op::F64Max:
+        return EmitMinMax(f, ValType::F64, MIRType::Double, op == Op::F64Max);
+      case Op::F64CopySign:
         return EmitCopySign(f, ValType::F64);
-      case Expr::F64Neg:
+      case Op::F64Neg:
         return EmitUnaryWithType<MAsmJSNeg>(f, ValType::F64, MIRType::Double);
-      case Expr::F64Abs:
+      case Op::F64Abs:
         return EmitUnaryWithType<MAbs>(f, ValType::F64, MIRType::Double);
-      case Expr::F64Sqrt:
+      case Op::F64Sqrt:
         return EmitUnaryWithType<MSqrt>(f, ValType::F64, MIRType::Double);
-      case Expr::F64Ceil:
+      case Op::F64Ceil:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::CeilD, ValType::F64);
-      case Expr::F64Floor:
+      case Op::F64Floor:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::FloorD, ValType::F64);
-      case Expr::F64Trunc:
+      case Op::F64Trunc:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::TruncD, ValType::F64);
-      case Expr::F64Nearest:
+      case Op::F64Nearest:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::NearbyIntD, ValType::F64);
-      case Expr::F64Sin:
+      case Op::F64Sin:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::SinD, ValType::F64);
-      case Expr::F64Cos:
+      case Op::F64Cos:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::CosD, ValType::F64);
-      case Expr::F64Tan:
+      case Op::F64Tan:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::TanD, ValType::F64);
-      case Expr::F64Asin:
+      case Op::F64Asin:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::ASinD, ValType::F64);
-      case Expr::F64Acos:
+      case Op::F64Acos:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::ACosD, ValType::F64);
-      case Expr::F64Atan:
+      case Op::F64Atan:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::ATanD, ValType::F64);
-      case Expr::F64Exp:
+      case Op::F64Exp:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::ExpD, ValType::F64);
-      case Expr::F64Log:
+      case Op::F64Log:
         return EmitUnaryMathBuiltinCall(f, SymbolicAddress::LogD, ValType::F64);
-      case Expr::F64Pow:
+      case Op::F64Pow:
         return EmitBinaryMathBuiltinCall(f, SymbolicAddress::PowD, ValType::F64);
-      case Expr::F64Atan2:
+      case Op::F64Atan2:
         return EmitBinaryMathBuiltinCall(f, SymbolicAddress::ATan2D, ValType::F64);
-      case Expr::F64PromoteF32:
+      case Op::F64PromoteF32:
         return EmitConversion<MToDouble>(f, ValType::F32, ValType::F64);
-      case Expr::F64ConvertSI32:
+      case Op::F64ConvertSI32:
         return EmitConversion<MToDouble>(f, ValType::I32, ValType::F64);
-      case Expr::F64ConvertUI32:
+      case Op::F64ConvertUI32:
         return EmitConversion<MWasmUnsignedToDouble>(f, ValType::I32, ValType::F64);
-      case Expr::F64ConvertSI64:
-      case Expr::F64ConvertUI64:
+      case Op::F64ConvertSI64:
+      case Op::F64ConvertUI64:
         return EmitConvertI64ToFloatingPoint(f, ValType::F64, MIRType::Double,
-                                             expr == Expr::F64ConvertUI64);
-      case Expr::F64Load:
+                                             op == Op::F64ConvertUI64);
+      case Op::F64Load:
         return EmitLoad(f, ValType::F64, Scalar::Float64);
-      case Expr::F64Store:
+      case Op::F64Store:
         return EmitStore(f, ValType::F64, Scalar::Float64);
-      case Expr::F64TeeStore:
+      case Op::F64TeeStore:
         return EmitTeeStore(f, ValType::F64, Scalar::Float64);
-      case Expr::F64TeeStoreF32:
+      case Op::F64TeeStoreF32:
         return EmitTeeStoreWithCoercion(f, ValType::F64, Scalar::Float32);
-      case Expr::F64ReinterpretI64:
+      case Op::F64ReinterpretI64:
         return EmitReinterpret(f, ValType::F64, ValType::I64, MIRType::Double);
 
       // Comparisons
-      case Expr::I32Eq:
+      case Op::I32Eq:
         return EmitComparison(f, ValType::I32, JSOP_EQ, MCompare::Compare_Int32);
-      case Expr::I32Ne:
+      case Op::I32Ne:
         return EmitComparison(f, ValType::I32, JSOP_NE, MCompare::Compare_Int32);
-      case Expr::I32LtS:
+      case Op::I32LtS:
         return EmitComparison(f, ValType::I32, JSOP_LT, MCompare::Compare_Int32);
-      case Expr::I32LeS:
+      case Op::I32LeS:
         return EmitComparison(f, ValType::I32, JSOP_LE, MCompare::Compare_Int32);
-      case Expr::I32GtS:
+      case Op::I32GtS:
         return EmitComparison(f, ValType::I32, JSOP_GT, MCompare::Compare_Int32);
-      case Expr::I32GeS:
+      case Op::I32GeS:
         return EmitComparison(f, ValType::I32, JSOP_GE, MCompare::Compare_Int32);
-      case Expr::I32LtU:
+      case Op::I32LtU:
         return EmitComparison(f, ValType::I32, JSOP_LT, MCompare::Compare_UInt32);
-      case Expr::I32LeU:
+      case Op::I32LeU:
         return EmitComparison(f, ValType::I32, JSOP_LE, MCompare::Compare_UInt32);
-      case Expr::I32GtU:
+      case Op::I32GtU:
         return EmitComparison(f, ValType::I32, JSOP_GT, MCompare::Compare_UInt32);
-      case Expr::I32GeU:
+      case Op::I32GeU:
         return EmitComparison(f, ValType::I32, JSOP_GE, MCompare::Compare_UInt32);
-      case Expr::I64Eq:
+      case Op::I64Eq:
         return EmitComparison(f, ValType::I64, JSOP_EQ, MCompare::Compare_Int64);
-      case Expr::I64Ne:
+      case Op::I64Ne:
         return EmitComparison(f, ValType::I64, JSOP_NE, MCompare::Compare_Int64);
-      case Expr::I64LtS:
+      case Op::I64LtS:
         return EmitComparison(f, ValType::I64, JSOP_LT, MCompare::Compare_Int64);
-      case Expr::I64LeS:
+      case Op::I64LeS:
         return EmitComparison(f, ValType::I64, JSOP_LE, MCompare::Compare_Int64);
-      case Expr::I64GtS:
+      case Op::I64GtS:
         return EmitComparison(f, ValType::I64, JSOP_GT, MCompare::Compare_Int64);
-      case Expr::I64GeS:
+      case Op::I64GeS:
         return EmitComparison(f, ValType::I64, JSOP_GE, MCompare::Compare_Int64);
-      case Expr::I64LtU:
+      case Op::I64LtU:
         return EmitComparison(f, ValType::I64, JSOP_LT, MCompare::Compare_UInt64);
-      case Expr::I64LeU:
+      case Op::I64LeU:
         return EmitComparison(f, ValType::I64, JSOP_LE, MCompare::Compare_UInt64);
-      case Expr::I64GtU:
+      case Op::I64GtU:
         return EmitComparison(f, ValType::I64, JSOP_GT, MCompare::Compare_UInt64);
-      case Expr::I64GeU:
+      case Op::I64GeU:
         return EmitComparison(f, ValType::I64, JSOP_GE, MCompare::Compare_UInt64);
-      case Expr::F32Eq:
+      case Op::F32Eq:
         return EmitComparison(f, ValType::F32, JSOP_EQ, MCompare::Compare_Float32);
-      case Expr::F32Ne:
+      case Op::F32Ne:
         return EmitComparison(f, ValType::F32, JSOP_NE, MCompare::Compare_Float32);
-      case Expr::F32Lt:
+      case Op::F32Lt:
         return EmitComparison(f, ValType::F32, JSOP_LT, MCompare::Compare_Float32);
-      case Expr::F32Le:
+      case Op::F32Le:
         return EmitComparison(f, ValType::F32, JSOP_LE, MCompare::Compare_Float32);
-      case Expr::F32Gt:
+      case Op::F32Gt:
         return EmitComparison(f, ValType::F32, JSOP_GT, MCompare::Compare_Float32);
-      case Expr::F32Ge:
+      case Op::F32Ge:
         return EmitComparison(f, ValType::F32, JSOP_GE, MCompare::Compare_Float32);
-      case Expr::F64Eq:
+      case Op::F64Eq:
         return EmitComparison(f, ValType::F64, JSOP_EQ, MCompare::Compare_Double);
-      case Expr::F64Ne:
+      case Op::F64Ne:
         return EmitComparison(f, ValType::F64, JSOP_NE, MCompare::Compare_Double);
-      case Expr::F64Lt:
+      case Op::F64Lt:
         return EmitComparison(f, ValType::F64, JSOP_LT, MCompare::Compare_Double);
-      case Expr::F64Le:
+      case Op::F64Le:
         return EmitComparison(f, ValType::F64, JSOP_LE, MCompare::Compare_Double);
-      case Expr::F64Gt:
+      case Op::F64Gt:
         return EmitComparison(f, ValType::F64, JSOP_GT, MCompare::Compare_Double);
-      case Expr::F64Ge:
+      case Op::F64Ge:
         return EmitComparison(f, ValType::F64, JSOP_GE, MCompare::Compare_Double);
 
       // SIMD
 #define CASE(TYPE, OP, SIGN)                                                    \
-      case Expr::TYPE##OP:                                                      \
+      case Op::TYPE##OP:                                                      \
         return EmitSimdOp(f, ValType::TYPE, SimdOperation::Fn_##OP, SIGN);
 #define I8x16CASE(OP) CASE(I8x16, OP, SimdSign::Signed)
 #define I16x8CASE(OP) CASE(I16x8, OP, SimdSign::Signed)
@@ -3547,7 +3547,7 @@ EmitExpr(FunctionCompiler& f)
 #define B16x8CASE(OP) CASE(B16x8, OP, SimdSign::NotApplicable)
 #define B32x4CASE(OP) CASE(B32x4, OP, SimdSign::NotApplicable)
 #define ENUMERATE(TYPE, FORALL, DO)                                             \
-      case Expr::TYPE##Constructor:                                             \
+      case Op::TYPE##Constructor:                                             \
         return EmitSimdOp(f, ValType::TYPE, SimdOperation::Constructor, SimdSign::NotApplicable); \
       FORALL(DO)
 
@@ -3569,7 +3569,7 @@ EmitExpr(FunctionCompiler& f)
 #undef B32x4CASE
 #undef ENUMERATE
 
-      case Expr::I8x16Const: {
+      case Op::I8x16Const: {
         I8x16 i8x16;
         if (!f.iter().readI8x16Const(&i8x16))
             return false;
@@ -3577,7 +3577,7 @@ EmitExpr(FunctionCompiler& f)
         f.iter().setResult(f.constant(SimdConstant::CreateX16(i8x16), MIRType::Int8x16));
         return true;
       }
-      case Expr::I16x8Const: {
+      case Op::I16x8Const: {
         I16x8 i16x8;
         if (!f.iter().readI16x8Const(&i16x8))
             return false;
@@ -3585,7 +3585,7 @@ EmitExpr(FunctionCompiler& f)
         f.iter().setResult(f.constant(SimdConstant::CreateX8(i16x8), MIRType::Int16x8));
         return true;
       }
-      case Expr::I32x4Const: {
+      case Op::I32x4Const: {
         I32x4 i32x4;
         if (!f.iter().readI32x4Const(&i32x4))
             return false;
@@ -3593,7 +3593,7 @@ EmitExpr(FunctionCompiler& f)
         f.iter().setResult(f.constant(SimdConstant::CreateX4(i32x4), MIRType::Int32x4));
         return true;
       }
-      case Expr::F32x4Const: {
+      case Op::F32x4Const: {
         F32x4 f32x4;
         if (!f.iter().readF32x4Const(&f32x4))
             return false;
@@ -3601,7 +3601,7 @@ EmitExpr(FunctionCompiler& f)
         f.iter().setResult(f.constant(SimdConstant::CreateX4(f32x4), MIRType::Float32x4));
         return true;
       }
-      case Expr::B8x16Const: {
+      case Op::B8x16Const: {
         I8x16 i8x16;
         if (!f.iter().readB8x16Const(&i8x16))
             return false;
@@ -3609,7 +3609,7 @@ EmitExpr(FunctionCompiler& f)
         f.iter().setResult(f.constant(SimdConstant::CreateX16(i8x16), MIRType::Bool8x16));
         return true;
       }
-      case Expr::B16x8Const: {
+      case Op::B16x8Const: {
         I16x8 i16x8;
         if (!f.iter().readB16x8Const(&i16x8))
             return false;
@@ -3617,7 +3617,7 @@ EmitExpr(FunctionCompiler& f)
         f.iter().setResult(f.constant(SimdConstant::CreateX8(i16x8), MIRType::Bool16x8));
         return true;
       }
-      case Expr::B32x4Const: {
+      case Op::B32x4Const: {
         I32x4 i32x4;
         if (!f.iter().readB32x4Const(&i32x4))
             return false;
@@ -3627,70 +3627,70 @@ EmitExpr(FunctionCompiler& f)
       }
 
       // SIMD unsigned integer operations.
-      case Expr::I8x16addSaturateU:
+      case Op::I8x16addSaturateU:
         return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_addSaturate, SimdSign::Unsigned);
-      case Expr::I8x16subSaturateU:
+      case Op::I8x16subSaturateU:
         return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_subSaturate, SimdSign::Unsigned);
-      case Expr::I8x16shiftRightByScalarU:
+      case Op::I8x16shiftRightByScalarU:
         return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned);
-      case Expr::I8x16lessThanU:
+      case Op::I8x16lessThanU:
         return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_lessThan, SimdSign::Unsigned);
-      case Expr::I8x16lessThanOrEqualU:
+      case Op::I8x16lessThanOrEqualU:
         return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned);
-      case Expr::I8x16greaterThanU:
+      case Op::I8x16greaterThanU:
         return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_greaterThan, SimdSign::Unsigned);
-      case Expr::I8x16greaterThanOrEqualU:
+      case Op::I8x16greaterThanOrEqualU:
         return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned);
-      case Expr::I8x16extractLaneU:
+      case Op::I8x16extractLaneU:
         return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_extractLane, SimdSign::Unsigned);
 
-      case Expr::I16x8addSaturateU:
+      case Op::I16x8addSaturateU:
         return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_addSaturate, SimdSign::Unsigned);
-      case Expr::I16x8subSaturateU:
+      case Op::I16x8subSaturateU:
         return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_subSaturate, SimdSign::Unsigned);
-      case Expr::I16x8shiftRightByScalarU:
+      case Op::I16x8shiftRightByScalarU:
         return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned);
-      case Expr::I16x8lessThanU:
+      case Op::I16x8lessThanU:
         return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_lessThan, SimdSign::Unsigned);
-      case Expr::I16x8lessThanOrEqualU:
+      case Op::I16x8lessThanOrEqualU:
         return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned);
-      case Expr::I16x8greaterThanU:
+      case Op::I16x8greaterThanU:
         return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_greaterThan, SimdSign::Unsigned);
-      case Expr::I16x8greaterThanOrEqualU:
+      case Op::I16x8greaterThanOrEqualU:
         return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned);
-      case Expr::I16x8extractLaneU:
+      case Op::I16x8extractLaneU:
         return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_extractLane, SimdSign::Unsigned);
 
-      case Expr::I32x4shiftRightByScalarU:
+      case Op::I32x4shiftRightByScalarU:
         return EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned);
-      case Expr::I32x4lessThanU:
+      case Op::I32x4lessThanU:
         return EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_lessThan, SimdSign::Unsigned);
-      case Expr::I32x4lessThanOrEqualU:
+      case Op::I32x4lessThanOrEqualU:
         return EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned);
-      case Expr::I32x4greaterThanU:
+      case Op::I32x4greaterThanU:
         return EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_greaterThan, SimdSign::Unsigned);
-      case Expr::I32x4greaterThanOrEqualU:
+      case Op::I32x4greaterThanOrEqualU:
         return EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned);
-      case Expr::I32x4fromFloat32x4U:
+      case Op::I32x4fromFloat32x4U:
         return EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_fromFloat32x4, SimdSign::Unsigned);
 
       // Atomics
-      case Expr::I32AtomicsLoad:
+      case Op::I32AtomicsLoad:
         return EmitAtomicsLoad(f);
-      case Expr::I32AtomicsStore:
+      case Op::I32AtomicsStore:
         return EmitAtomicsStore(f);
-      case Expr::I32AtomicsBinOp:
+      case Op::I32AtomicsBinOp:
         return EmitAtomicsBinOp(f);
-      case Expr::I32AtomicsCompareExchange:
+      case Op::I32AtomicsCompareExchange:
         return EmitAtomicsCompareExchange(f);
-      case Expr::I32AtomicsExchange:
+      case Op::I32AtomicsExchange:
         return EmitAtomicsExchange(f);
       // Memory Operators
-      case Expr::GrowMemory:
+      case Op::GrowMemory:
         return EmitGrowMemory(f);
-      case Expr::CurrentMemory:
+      case Op::CurrentMemory:
         return EmitCurrentMemory(f);
-      case Expr::Limit:;
+      case Op::Limit:;
     }
 
     MOZ_CRASH("unexpected wasm opcode");
@@ -3711,7 +3711,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
     ValTypeVector locals;
     if (!locals.appendAll(func.sig().args()))
         return false;
-    if (!DecodeLocalEntries(d, &locals))
+    if (!DecodeLocalEntries(d, task->mg().kind, &locals))
         return false;
 
     // Set up for Ion compilation.

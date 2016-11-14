@@ -1,0 +1,237 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: stretching intrinsic size items with 'normal' and/or 'stretch' and min/max-size, with Automatic Minimum Size clamping</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">
+  <style type="text/css">
+* { vertical-align: bottom; }
+.grid {
+  display: inline-grid;
+  border: 3px solid grey;
+  grid: 32px / 4px;
+  margin-right:20px;
+}
+.r { grid: 4px / 32px; }
+
+button {
+  border: 1px solid;
+  padding: 0;
+  margin: 0;
+  background: lightgrey;
+}
+
+.start {align-self:start; justify-self:start}
+.na {align-self:start; justify-self:start}
+.sa {align-self:start; justify-self:start}
+.an {align-self:start; justify-self:start}
+.as {align-self:start; justify-self:start}
+.w20 { width: 20px min-width: 0px; }
+.mw20 { min-width: 20px }
+.mw0 { min-width: 0px }
+
+.h20 { height: 20px; min-height: 0px; }
+.mh20 { min-height: 20px }
+.mh0 { min-height: 0px }
+
+  </style>
+</head>
+<body>
+
+<div class="grid r"><button></button></div>
+<div class="grid r"><button class="start"></button></div>
+<div class="grid r"><button class="sa"></button></div>
+<div class="grid r"><button class="sa mxw10"></button></div>
+<div class="grid r"><button class="na"></button></div>
+<div class="grid r"><button class="na mxw2"></button></div>
+
+<pre><!--min-height:20px--></pre>
+<div class="grid r"><button class="mh20"></button></div>
+<div class="grid r"><button class="mh20 mxw10"></button></div>
+<div class="grid r"><button class="start mh20"></button></div>
+<div class="grid r"><button class="start mh20 mxw10"></button></div>
+<div class="grid r"><button class="sa mh20"></button></div>
+<div class="grid r"><button class="sa mh20 mxw10"></button></div>
+<div class="grid r"><button class="na mh20"></button></div>
+<div class="grid r"><button class="na mh20 mxw10"></button></div>
+
+<pre><!--min-height:0--></pre>
+<div class="grid r"><button class="mh0"></button></div>
+<div class="grid r"><button class="mh0 mxw10"></button></div>
+<div class="grid r"><button class="start mh0"></button></div>
+<div class="grid r"><button class="start mh0 mxw10"></button></div>
+<div class="grid r"><button class="sa mh0"></button></div>
+<div class="grid r"><button class="sa mh0 mxw10"></button></div>
+<div class="grid r"><button class="na mh0"></button></div>
+<div class="grid r"><button class="na mh0 mxw2"></button></div>
+
+<pre><!----></pre>
+
+<div class="grid"><button></button></div>
+<div class="grid"><button class="mxw2"></button></div>
+<div class="grid"><button class="start"></button></div>
+<div class="grid"><button class="start mxw2"></button></div>
+<div class="grid"><button class="sa"></button></div>
+<div class="grid"><button class="sa mxw2"></button></div>
+<div class="grid"><button class="na"></button></div>
+<div class="grid"><button class="na mxw2"></button></div>
+
+<pre><!--min-width:20px--></pre>
+<div class="grid"><button class="mw20"></button></div>
+<div class="grid"><button class="mw20 mxh10"></button></div>
+<div class="grid"><button class="start mw20"></button></div>
+<div class="grid"><button class="start mw20 mxh10"></button></div>
+<div class="grid"><button class="sa mw20"></button></div>
+<div class="grid"><button class="sa mw20 mxh10"></button></div>
+<div class="grid"><button class="na mw20"></button></div>
+<div class="grid"><button class="na mw20 mxh10"></button></div>
+
+<pre><!--min-width:0--></pre>
+<div class="grid"><button class="mw0"></button></div>
+<div class="grid"><button class="mw0 mxh10"></button></div>
+<div class="grid"><button class="start mw0"></button></div>
+<div class="grid"><button class="start mw0 mxh10"></button></div>
+<div class="grid"><button class="sa mw0"></button></div>
+<div class="grid"><button class="sa mw0 mxh10"></button></div>
+<div class="grid"><button class="na mw0"></button></div>
+<div class="grid"><button class="na mw0 mxh10"></button></div>
+
+<pre><!--width:20px--></pre>
+
+<div class="grid r"><button class="w20"></button></div>
+<div class="grid r"><button class="w20 mxh10"></button></div>
+<div class="grid r"><button class="start w20"></button></div>
+<div class="grid r"><button class="start w20 mxh10"></button></div>
+<div class="grid r"><button class="sa w20"></button></div>
+<div class="grid r"><button class="sa w20 mxh2"></button></div>
+<div class="grid r"><button class="na w20"></button></div>
+<div class="grid r"><button class="na w20 mxh2"></button></div>
+
+<pre><!--width:20px--></pre>
+
+<div class="grid"><button class="start w20"></button></div>
+<div class="grid"><button class="start w20 mxh10"></button></div>
+<div class="grid"><button class="start w20"></button></div>
+<div class="grid"><button class="start w20 mxh10"></button></div>
+<div class="grid"><button class="sa w20"></button></div>
+<div class="grid"><button class="sa w20 mxh10"></button></div>
+<div class="grid"><button class="na w20"></button></div>
+<div class="grid"><button class="na w20 mxh10"></button></div>
+
+<pre><!--height:20px--></pre>
+
+<div class="grid r"><button class="h20"></button></div>
+<div class="grid r"><button class="h20 mxw10"></button></div>
+<div class="grid r"><button class="start h20"></button></div>
+<div class="grid r"><button class="start h20 mxw10"></button></div>
+<div class="grid r"><button class="as h20"></button></div>
+<div class="grid r"><button class="as h20 mxw10"></button></div>
+<div class="grid r"><button class="an h20"></button></div>
+<div class="grid r"><button class="an h20 mxw10"></button></div>
+
+<pre><!--height:20px--></pre>
+
+<div class="grid"><button class="h20"></button></div>
+<div class="grid"><button class="h20 mxw2"></button></div>
+<div class="grid"><button class="start h20"></button></div>
+<div class="grid"><button class="start h20 mxw10"></button></div>
+<div class="grid"><button class="as h20"></button></div>
+<div class="grid"><button class="as h20 mxw2"></button></div>
+<div class="grid"><button class="an h20"></button></div>
+<div class="grid"><button class="an h20 mxw10"></button></div>
+
+<script>
+var buttonSizes =
+[
+  ['32px', '4px'],
+  ['8px', '4px'],
+  ['8px', '4px'],
+  ['8px', '4px'],
+  ['8px', '4px'],
+  ['2px', '4px'],
+  ['32px', '20px'],
+  ['10px', '20px'],
+  ['8px', '20px'],
+  ['8px', '20px'],
+  ['8px', '20px'],
+  ['8px', '20px'],
+  ['8px', '20px'],
+  ['8px', '20px'],
+  ['32px', '4px'],
+  ['10px', '4px'],
+  ['8px', '4px'],
+  ['8px', '4px'],
+  ['8px', '4px'],
+  ['8px', '4px'],
+  ['8px', '4px'],
+  ['2px', '4px'],
+  ['4px', '32px'],
+  ['2px', '32px'],
+  ['4px', '4px'],
+  ['2px', '4px'],
+  ['4px', '32px'],
+  ['2px', '32px'],
+  ['4px', '32px'],
+  ['2px', '32px'],
+  ['20px', '32px'],
+  ['20px', '10px'],
+  ['20px', '4px'],
+  ['20px', '4px'],
+  ['20px', '32px'],
+  ['20px', '10px'],
+  ['20px', '32px'],
+  ['20px', '10px'],
+  ['4px', '32px'],
+  ['4px', '10px'],
+  ['8px', '4px'],
+  ['8px', '4px'],
+  ['8px', '32px'],
+  ['8px', '10px'],
+  ['8px', '32px'],
+  ['8px', '10px'],
+  ['20px', '4px'],
+  ['20px', '4px'],
+  ['20px', '4px'],
+  ['20px', '4px'],
+  ['20px', '4px'],
+  ['20px', '2px'],
+  ['20px', '4px'],
+  ['20px', '2px'],
+  ['20px', '4px'],
+  ['20px', '4px'],
+  ['20px', '4px'],
+  ['20px', '4px'],
+  ['20px', '32px'],
+  ['20px', '10px'],
+  ['20px', '32px'],
+  ['20px', '10px'],
+  ['32px', '20px'],
+  ['10px', '20px'],
+  ['8px', '20px'],
+  ['8px', '20px'],
+  ['32px', '20px'],
+  ['10px', '20px'],
+  ['32px', '20px'],
+  ['10px', '20px'],
+  ['4px', '20px'],
+  ['2px', '20px'],
+  ['4px', '20px'],
+  ['4px', '20px'],
+  ['4px', '20px'],
+  ['2px', '20px'],
+  ['4px', '20px'],
+  ['4px', '20px'],
+];
+var buttons = document.querySelectorAll('button');
+for (var i = 0; i < buttons.length; ++i) {
+  var button = buttons[i];
+  button.style.width = buttonSizes[i][0];
+  button.style.height = buttonSizes[i][1];
+}
+</script>
+
+</body>
+</html>

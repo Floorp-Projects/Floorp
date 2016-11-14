@@ -17,6 +17,7 @@
 #include "gfxPrefs.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxUtils.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/widget/WinCompositorWidget.h"
 #include "D3D9SurfaceImage.h"
@@ -679,7 +680,7 @@ CompositorD3D9::FailedToResetDevice() {
   // depending on how things behave in the wild.
   if (mFailedResetAttempts > 10) {
     mFailedResetAttempts = 0;
-    gfxWindowsPlatform::GetPlatform()->D3D9DeviceReset();
+    DeviceManagerDx::Get()->NotifyD3D9DeviceReset();
     gfxCriticalNote << "[D3D9] Unable to get a working D3D9 Compositor";
   }
 }

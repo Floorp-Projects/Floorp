@@ -234,7 +234,7 @@ interaction.selectOption = function(el) {
 interaction.uploadFile = function(el, path) {
   let file;
   try {
-    file = new File(path);
+    file = File.createFromFileName(path);
   } catch (e) {
     throw new InvalidArgumentError("File not found: " + path);
   }

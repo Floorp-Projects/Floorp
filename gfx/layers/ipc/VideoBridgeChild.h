@@ -31,6 +31,10 @@ public:
                                     const uint64_t& aSerial) override;
   bool DeallocPTextureChild(PTextureChild* actor) override;
 
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+  void DeallocPVideoBridgeChild() override;
+
+
   // ISurfaceAllocator
   bool AllocUnsafeShmem(size_t aSize,
                         mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
@@ -54,13 +58,15 @@ public:
   // ISurfaceAllocator
   bool IsSameProcess() const override;
 
-  bool CanSend() { return true; }
+  bool CanSend() { return mCanSend; }
 
 private:
   VideoBridgeChild();
   ~VideoBridgeChild();
 
+  RefPtr<VideoBridgeChild> mIPDLSelfRef;
   MessageLoop* mMessageLoop;
+  bool mCanSend;
 };
 
 } // namespace layers

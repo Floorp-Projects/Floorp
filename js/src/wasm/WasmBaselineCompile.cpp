@@ -59,7 +59,7 @@
  * - (Bug 1286816) Boolean evaluation for control can be optimized by pushing a
  *   bool-generating operation onto the value stack in the same way that we now
  *   push latent constants and local lookups, or (easier) by remembering the
- *   operation in a side location if the next Expr will consume it.
+ *   operation in a side location if the next Op will consume it.
  *
  * - (Bug 1286816) brIf pessimizes by branching over code that performs stack
  *   cleanup and a branch.  If no cleanup is needed we can just branch
@@ -133,7 +133,7 @@ namespace wasm {
 using namespace js::jit;
 using JS::GenericNaN;
 
-struct BaseCompilePolicy : ExprIterPolicy
+struct BaseCompilePolicy : OpIterPolicy
 {
     static const bool Output = true;
 
@@ -149,7 +149,7 @@ struct BaseCompilePolicy : ExprIterPolicy
     // stack for that.
 };
 
-typedef ExprIter<BaseCompilePolicy> BaseExprIter;
+typedef OpIter<BaseCompilePolicy> BaseOpIter;
 
 typedef bool IsUnsigned;
 typedef bool IsSigned;
@@ -506,7 +506,7 @@ class BaseCompiler
     };
 
     const ModuleGeneratorData&  mg_;
-    BaseExprIter                iter_;
+    BaseOpIter                  iter_;
     const FuncBytes&            func_;
     size_t                      lastReadCallSite_;
     TempAllocator&              alloc_;
@@ -6584,35 +6584,35 @@ BaseCompiler::emitBody()
         if (done())
             return true;
 
-        Expr expr;
-        CHECK(iter_.readExpr(&expr));
+        uint16_t op;
+        CHECK(iter_.readOp(&op));
 
-        switch (expr) {
+        switch (op) {
           // Control opcodes
-          case Expr::Nop:
+          case uint16_t(Op::Nop):
             CHECK(iter_.readNop());
             NEXT();
-          case Expr::Drop:
+          case uint16_t(Op::Drop):
             CHECK_NEXT(emitDrop());
-          case Expr::Block:
+          case uint16_t(Op::Block):
             CHECK_NEXT(emitBlock());
-          case Expr::Loop:
+          case uint16_t(Op::Loop):
             CHECK_NEXT(emitLoop());
-          case Expr::If:
+          case uint16_t(Op::If):
             CHECK_NEXT(emitIf());
-          case Expr::Else:
+          case uint16_t(Op::Else):
             CHECK_NEXT(emitElse());
-          case Expr::End:
+          case uint16_t(Op::End):
             CHECK_NEXT(emitEnd());
-          case Expr::Br:
+          case uint16_t(Op::Br):
             CHECK_NEXT(emitBr());
-          case Expr::BrIf:
+          case uint16_t(Op::BrIf):
             CHECK_NEXT(emitBrIf());
-          case Expr::BrTable:
+          case uint16_t(Op::BrTable):
             CHECK_NEXT(emitBrTable());
-          case Expr::Return:
+          case uint16_t(Op::Return):
             CHECK_NEXT(emitReturn());
-          case Expr::Unreachable:
+          case uint16_t(Op::Unreachable):
             CHECK(iter_.readUnreachable());
             if (!deadCode_) {
                 unreachableTrap();
@@ -6622,161 +6622,161 @@ BaseCompiler::emitBody()
             NEXT();
 
           // Calls
-          case Expr::Call:
+          case uint16_t(Op::Call):
             CHECK_NEXT(emitCall());
-          case Expr::CallIndirect:
+          case uint16_t(Op::CallIndirect):
             CHECK_NEXT(emitCallIndirect(/* oldStyle = */ false));
-          case Expr::OldCallIndirect:
+          case uint16_t(Op::OldCallIndirect):
             CHECK_NEXT(emitCallIndirect(/* oldStyle = */ true));
 
           // Locals and globals
-          case Expr::GetLocal:
+          case uint16_t(Op::GetLocal):
             CHECK_NEXT(emitGetLocal());
-          case Expr::SetLocal:
+          case uint16_t(Op::SetLocal):
             CHECK_NEXT(emitSetLocal());
-          case Expr::TeeLocal:
+          case uint16_t(Op::TeeLocal):
             CHECK_NEXT(emitTeeLocal());
-          case Expr::GetGlobal:
+          case uint16_t(Op::GetGlobal):
             CHECK_NEXT(emitGetGlobal());
-          case Expr::SetGlobal:
+          case uint16_t(Op::SetGlobal):
             CHECK_NEXT(emitSetGlobal());
-          case Expr::TeeGlobal:
+          case uint16_t(Op::TeeGlobal):
             CHECK_NEXT(emitTeeGlobal());
 
           // Select
-          case Expr::Select:
+          case uint16_t(Op::Select):
             CHECK_NEXT(emitSelect());
 
           // I32
-          case Expr::I32Const: {
+          case uint16_t(Op::I32Const): {
             int32_t i32;
             CHECK(iter_.readI32Const(&i32));
             if (!deadCode_)
                 pushI32(i32);
             NEXT();
           }
-          case Expr::I32Add:
+          case uint16_t(Op::I32Add):
             CHECK_NEXT(emitBinary(emitAddI32, ValType::I32));
-          case Expr::I32Sub:
+          case uint16_t(Op::I32Sub):
             CHECK_NEXT(emitBinary(emitSubtractI32, ValType::I32));
-          case Expr::I32Mul:
+          case uint16_t(Op::I32Mul):
             CHECK_NEXT(emitBinary(emitMultiplyI32, ValType::I32));
-          case Expr::I32DivS:
+          case uint16_t(Op::I32DivS):
             CHECK_NEXT(emitBinary(emitQuotientI32, ValType::I32));
-          case Expr::I32DivU:
+          case uint16_t(Op::I32DivU):
             CHECK_NEXT(emitBinary(emitQuotientU32, ValType::I32));
-          case Expr::I32RemS:
+          case uint16_t(Op::I32RemS):
             CHECK_NEXT(emitBinary(emitRemainderI32, ValType::I32));
-          case Expr::I32RemU:
+          case uint16_t(Op::I32RemU):
             CHECK_NEXT(emitBinary(emitRemainderU32, ValType::I32));
-          case Expr::I32Min:
+          case uint16_t(Op::I32Min):
             CHECK_NEXT(emitBinary(emitMinI32, ValType::I32));
-          case Expr::I32Max:
+          case uint16_t(Op::I32Max):
             CHECK_NEXT(emitBinary(emitMaxI32, ValType::I32));
-          case Expr::I32Eqz:
+          case uint16_t(Op::I32Eqz):
             CHECK_NEXT(emitConversion(emitEqzI32, ValType::I32, ValType::I32));
-          case Expr::I32TruncSF32:
+          case uint16_t(Op::I32TruncSF32):
             CHECK_NEXT(emitConversionOOM(emitTruncateF32ToI32<false>, ValType::F32, ValType::I32));
-          case Expr::I32TruncUF32:
+          case uint16_t(Op::I32TruncUF32):
             CHECK_NEXT(emitConversionOOM(emitTruncateF32ToI32<true>, ValType::F32, ValType::I32));
-          case Expr::I32TruncSF64:
+          case uint16_t(Op::I32TruncSF64):
             CHECK_NEXT(emitConversionOOM(emitTruncateF64ToI32<false>, ValType::F64, ValType::I32));
-          case Expr::I32TruncUF64:
+          case uint16_t(Op::I32TruncUF64):
             CHECK_NEXT(emitConversionOOM(emitTruncateF64ToI32<true>, ValType::F64, ValType::I32));
-          case Expr::I32WrapI64:
+          case uint16_t(Op::I32WrapI64):
             CHECK_NEXT(emitConversion(emitWrapI64ToI32, ValType::I64, ValType::I32));
-          case Expr::I32ReinterpretF32:
+          case uint16_t(Op::I32ReinterpretF32):
             CHECK_NEXT(emitConversion(emitReinterpretF32AsI32, ValType::F32, ValType::I32));
-          case Expr::I32Clz:
+          case uint16_t(Op::I32Clz):
             CHECK_NEXT(emitUnary(emitClzI32, ValType::I32));
-          case Expr::I32Ctz:
+          case uint16_t(Op::I32Ctz):
             CHECK_NEXT(emitUnary(emitCtzI32, ValType::I32));
-          case Expr::I32Popcnt:
+          case uint16_t(Op::I32Popcnt):
             CHECK_NEXT(emitUnary(emitPopcntI32, ValType::I32));
-          case Expr::I32Abs:
+          case uint16_t(Op::I32Abs):
             CHECK_NEXT(emitUnary(emitAbsI32, ValType::I32));
-          case Expr::I32Neg:
+          case uint16_t(Op::I32Neg):
             CHECK_NEXT(emitUnary(emitNegateI32, ValType::I32));
-          case Expr::I32Or:
+          case uint16_t(Op::I32Or):
             CHECK_NEXT(emitBinary(emitOrI32, ValType::I32));
-          case Expr::I32And:
+          case uint16_t(Op::I32And):
             CHECK_NEXT(emitBinary(emitAndI32, ValType::I32));
-          case Expr::I32Xor:
+          case uint16_t(Op::I32Xor):
             CHECK_NEXT(emitBinary(emitXorI32, ValType::I32));
-          case Expr::I32Shl:
+          case uint16_t(Op::I32Shl):
             CHECK_NEXT(emitBinary(emitShlI32, ValType::I32));
-          case Expr::I32ShrS:
+          case uint16_t(Op::I32ShrS):
             CHECK_NEXT(emitBinary(emitShrI32, ValType::I32));
-          case Expr::I32ShrU:
+          case uint16_t(Op::I32ShrU):
             CHECK_NEXT(emitBinary(emitShrU32, ValType::I32));
-          case Expr::I32BitNot:
+          case uint16_t(Op::I32BitNot):
             CHECK_NEXT(emitUnary(emitBitNotI32, ValType::I32));
-          case Expr::I32Load8S:
+          case uint16_t(Op::I32Load8S):
             CHECK_NEXT(emitLoad(ValType::I32, Scalar::Int8));
-          case Expr::I32Load8U:
+          case uint16_t(Op::I32Load8U):
             CHECK_NEXT(emitLoad(ValType::I32, Scalar::Uint8));
-          case Expr::I32Load16S:
+          case uint16_t(Op::I32Load16S):
             CHECK_NEXT(emitLoad(ValType::I32, Scalar::Int16));
-          case Expr::I32Load16U:
+          case uint16_t(Op::I32Load16U):
             CHECK_NEXT(emitLoad(ValType::I32, Scalar::Uint16));
-          case Expr::I32Load:
+          case uint16_t(Op::I32Load):
             CHECK_NEXT(emitLoad(ValType::I32, Scalar::Int32));
-          case Expr::I32Store8:
+          case uint16_t(Op::I32Store8):
             CHECK_NEXT(emitStore(ValType::I32, Scalar::Int8));
-          case Expr::I32TeeStore8:
+          case uint16_t(Op::I32TeeStore8):
             CHECK_NEXT(emitTeeStore(ValType::I32, Scalar::Int8));
-          case Expr::I32Store16:
+          case uint16_t(Op::I32Store16):
             CHECK_NEXT(emitStore(ValType::I32, Scalar::Int16));
-          case Expr::I32TeeStore16:
+          case uint16_t(Op::I32TeeStore16):
             CHECK_NEXT(emitTeeStore(ValType::I32, Scalar::Int16));
-          case Expr::I32Store:
+          case uint16_t(Op::I32Store):
             CHECK_NEXT(emitStore(ValType::I32, Scalar::Int32));
-          case Expr::I32TeeStore:
+          case uint16_t(Op::I32TeeStore):
             CHECK_NEXT(emitTeeStore(ValType::I32, Scalar::Int32));
-          case Expr::I32Rotr:
+          case uint16_t(Op::I32Rotr):
             CHECK_NEXT(emitBinary(emitRotrI32, ValType::I32));
-          case Expr::I32Rotl:
+          case uint16_t(Op::I32Rotl):
             CHECK_NEXT(emitBinary(emitRotlI32, ValType::I32));
 
           // I64
-          case Expr::I64Const: {
+          case uint16_t(Op::I64Const): {
             int64_t i64;
             CHECK(iter_.readI64Const(&i64));
             if (!deadCode_)
                 pushI64(i64);
             NEXT();
           }
-          case Expr::I64Add:
+          case uint16_t(Op::I64Add):
             CHECK_NEXT(emitBinary(emitAddI64, ValType::I64));
-          case Expr::I64Sub:
+          case uint16_t(Op::I64Sub):
             CHECK_NEXT(emitBinary(emitSubtractI64, ValType::I64));
-          case Expr::I64Mul:
+          case uint16_t(Op::I64Mul):
             CHECK_NEXT(emitBinary(emitMultiplyI64, ValType::I64));
-          case Expr::I64DivS:
+          case uint16_t(Op::I64DivS):
 #ifdef INT_DIV_I64_CALLOUT
             CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::DivI64, ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitQuotientI64, ValType::I64));
 #endif
-          case Expr::I64DivU:
+          case uint16_t(Op::I64DivU):
 #ifdef INT_DIV_I64_CALLOUT
             CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::UDivI64, ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitQuotientU64, ValType::I64));
 #endif
-          case Expr::I64RemS:
+          case uint16_t(Op::I64RemS):
 #ifdef INT_DIV_I64_CALLOUT
             CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::ModI64, ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitRemainderI64, ValType::I64));
 #endif
-          case Expr::I64RemU:
+          case uint16_t(Op::I64RemU):
 #ifdef INT_DIV_I64_CALLOUT
             CHECK_NEXT(emitDivOrModI64BuiltinCall(SymbolicAddress::UModI64, ValType::I64));
 #else
             CHECK_NEXT(emitBinary(emitRemainderU64, ValType::I64));
 #endif
-          case Expr::I64TruncSF32:
+          case uint16_t(Op::I64TruncSF32):
 #ifdef FLOAT_TO_I64_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertFloatingToInt64Callout,
                                                 SymbolicAddress::TruncateDoubleToInt64,
@@ -6784,7 +6784,7 @@ BaseCompiler::emitBody()
 #else
             CHECK_NEXT(emitConversionOOM(emitTruncateF32ToI64<false>, ValType::F32, ValType::I64));
 #endif
-          case Expr::I64TruncUF32:
+          case uint16_t(Op::I64TruncUF32):
 #ifdef FLOAT_TO_I64_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertFloatingToInt64Callout,
                                                 SymbolicAddress::TruncateDoubleToUint64,
@@ -6792,7 +6792,7 @@ BaseCompiler::emitBody()
 #else
             CHECK_NEXT(emitConversionOOM(emitTruncateF32ToI64<true>, ValType::F32, ValType::I64));
 #endif
-          case Expr::I64TruncSF64:
+          case uint16_t(Op::I64TruncSF64):
 #ifdef FLOAT_TO_I64_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertFloatingToInt64Callout,
                                                 SymbolicAddress::TruncateDoubleToInt64,
@@ -6800,7 +6800,7 @@ BaseCompiler::emitBody()
 #else
             CHECK_NEXT(emitConversionOOM(emitTruncateF64ToI64<false>, ValType::F64, ValType::I64));
 #endif
-          case Expr::I64TruncUF64:
+          case uint16_t(Op::I64TruncUF64):
 #ifdef FLOAT_TO_I64_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertFloatingToInt64Callout,
                                                 SymbolicAddress::TruncateDoubleToUint64,
@@ -6808,104 +6808,104 @@ BaseCompiler::emitBody()
 #else
             CHECK_NEXT(emitConversionOOM(emitTruncateF64ToI64<true>, ValType::F64, ValType::I64));
 #endif
-          case Expr::I64ExtendSI32:
+          case uint16_t(Op::I64ExtendSI32):
             CHECK_NEXT(emitConversion(emitExtendI32ToI64, ValType::I32, ValType::I64));
-          case Expr::I64ExtendUI32:
+          case uint16_t(Op::I64ExtendUI32):
             CHECK_NEXT(emitConversion(emitExtendU32ToI64, ValType::I32, ValType::I64));
-          case Expr::I64ReinterpretF64:
+          case uint16_t(Op::I64ReinterpretF64):
             CHECK_NEXT(emitConversion(emitReinterpretF64AsI64, ValType::F64, ValType::I64));
-          case Expr::I64Or:
+          case uint16_t(Op::I64Or):
             CHECK_NEXT(emitBinary(emitOrI64, ValType::I64));
-          case Expr::I64And:
+          case uint16_t(Op::I64And):
             CHECK_NEXT(emitBinary(emitAndI64, ValType::I64));
-          case Expr::I64Xor:
+          case uint16_t(Op::I64Xor):
             CHECK_NEXT(emitBinary(emitXorI64, ValType::I64));
-          case Expr::I64Shl:
+          case uint16_t(Op::I64Shl):
             CHECK_NEXT(emitBinary(emitShlI64, ValType::I64));
-          case Expr::I64ShrS:
+          case uint16_t(Op::I64ShrS):
             CHECK_NEXT(emitBinary(emitShrI64, ValType::I64));
-          case Expr::I64ShrU:
+          case uint16_t(Op::I64ShrU):
             CHECK_NEXT(emitBinary(emitShrU64, ValType::I64));
-          case Expr::I64Rotr:
+          case uint16_t(Op::I64Rotr):
             CHECK_NEXT(emitBinary(emitRotrI64, ValType::I64));
-          case Expr::I64Rotl:
+          case uint16_t(Op::I64Rotl):
             CHECK_NEXT(emitBinary(emitRotlI64, ValType::I64));
-          case Expr::I64Clz:
+          case uint16_t(Op::I64Clz):
             CHECK_NEXT(emitUnary(emitClzI64, ValType::I64));
-          case Expr::I64Ctz:
+          case uint16_t(Op::I64Ctz):
             CHECK_NEXT(emitUnary(emitCtzI64, ValType::I64));
-          case Expr::I64Popcnt:
+          case uint16_t(Op::I64Popcnt):
             CHECK_NEXT(emitUnary(emitPopcntI64, ValType::I64));
-          case Expr::I64Eqz:
+          case uint16_t(Op::I64Eqz):
             CHECK_NEXT(emitConversion(emitEqzI64, ValType::I64, ValType::I32));
-          case Expr::I64Load8S:
+          case uint16_t(Op::I64Load8S):
             CHECK_NEXT(emitLoad(ValType::I64, Scalar::Int8));
-          case Expr::I64Load16S:
+          case uint16_t(Op::I64Load16S):
             CHECK_NEXT(emitLoad(ValType::I64, Scalar::Int16));
-          case Expr::I64Load32S:
+          case uint16_t(Op::I64Load32S):
             CHECK_NEXT(emitLoad(ValType::I64, Scalar::Int32));
-          case Expr::I64Load8U:
+          case uint16_t(Op::I64Load8U):
             CHECK_NEXT(emitLoad(ValType::I64, Scalar::Uint8));
-          case Expr::I64Load16U:
+          case uint16_t(Op::I64Load16U):
             CHECK_NEXT(emitLoad(ValType::I64, Scalar::Uint16));
-          case Expr::I64Load32U:
+          case uint16_t(Op::I64Load32U):
             CHECK_NEXT(emitLoad(ValType::I64, Scalar::Uint32));
-          case Expr::I64Load:
+          case uint16_t(Op::I64Load):
             CHECK_NEXT(emitLoad(ValType::I64, Scalar::Int64));
-          case Expr::I64Store8:
+          case uint16_t(Op::I64Store8):
             CHECK_NEXT(emitStore(ValType::I64, Scalar::Int8));
-          case Expr::I64TeeStore8:
+          case uint16_t(Op::I64TeeStore8):
             CHECK_NEXT(emitTeeStore(ValType::I64, Scalar::Int8));
-          case Expr::I64Store16:
+          case uint16_t(Op::I64Store16):
             CHECK_NEXT(emitStore(ValType::I64, Scalar::Int16));
-          case Expr::I64TeeStore16:
+          case uint16_t(Op::I64TeeStore16):
             CHECK_NEXT(emitTeeStore(ValType::I64, Scalar::Int16));
-          case Expr::I64Store32:
+          case uint16_t(Op::I64Store32):
             CHECK_NEXT(emitStore(ValType::I64, Scalar::Int32));
-          case Expr::I64TeeStore32:
+          case uint16_t(Op::I64TeeStore32):
             CHECK_NEXT(emitTeeStore(ValType::I64, Scalar::Int32));
-          case Expr::I64Store:
+          case uint16_t(Op::I64Store):
             CHECK_NEXT(emitStore(ValType::I64, Scalar::Int64));
-          case Expr::I64TeeStore:
+          case uint16_t(Op::I64TeeStore):
             CHECK_NEXT(emitTeeStore(ValType::I64, Scalar::Int64));
 
           // F32
-          case Expr::F32Const: {
+          case uint16_t(Op::F32Const): {
             RawF32 f32;
             CHECK(iter_.readF32Const(&f32));
             if (!deadCode_)
                 pushF32(f32);
             NEXT();
           }
-          case Expr::F32Add:
+          case uint16_t(Op::F32Add):
             CHECK_NEXT(emitBinary(emitAddF32, ValType::F32));
-          case Expr::F32Sub:
+          case uint16_t(Op::F32Sub):
             CHECK_NEXT(emitBinary(emitSubtractF32, ValType::F32));
-          case Expr::F32Mul:
+          case uint16_t(Op::F32Mul):
             CHECK_NEXT(emitBinary(emitMultiplyF32, ValType::F32));
-          case Expr::F32Div:
+          case uint16_t(Op::F32Div):
             CHECK_NEXT(emitBinary(emitDivideF32, ValType::F32));
-          case Expr::F32Min:
+          case uint16_t(Op::F32Min):
             CHECK_NEXT(emitBinary(emitMinF32, ValType::F32));
-          case Expr::F32Max:
+          case uint16_t(Op::F32Max):
             CHECK_NEXT(emitBinary(emitMaxF32, ValType::F32));
-          case Expr::F32Neg:
+          case uint16_t(Op::F32Neg):
             CHECK_NEXT(emitUnary(emitNegateF32, ValType::F32));
-          case Expr::F32Abs:
+          case uint16_t(Op::F32Abs):
             CHECK_NEXT(emitUnary(emitAbsF32, ValType::F32));
-          case Expr::F32Sqrt:
+          case uint16_t(Op::F32Sqrt):
             CHECK_NEXT(emitUnary(emitSqrtF32, ValType::F32));
-          case Expr::F32Ceil:
+          case uint16_t(Op::F32Ceil):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::CeilF, ValType::F32));
-          case Expr::F32Floor:
+          case uint16_t(Op::F32Floor):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::FloorF, ValType::F32));
-          case Expr::F32DemoteF64:
+          case uint16_t(Op::F32DemoteF64):
             CHECK_NEXT(emitConversion(emitConvertF64ToF32, ValType::F64, ValType::F32));
-          case Expr::F32ConvertSI32:
+          case uint16_t(Op::F32ConvertSI32):
             CHECK_NEXT(emitConversion(emitConvertI32ToF32, ValType::I32, ValType::F32));
-          case Expr::F32ConvertUI32:
+          case uint16_t(Op::F32ConvertUI32):
             CHECK_NEXT(emitConversion(emitConvertU32ToF32, ValType::I32, ValType::F32));
-          case Expr::F32ConvertSI64:
+          case uint16_t(Op::F32ConvertSI64):
 #ifdef I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
                                                 SymbolicAddress::Int64ToFloatingPoint,
@@ -6913,7 +6913,7 @@ BaseCompiler::emitBody()
 #else
             CHECK_NEXT(emitConversion(emitConvertI64ToF32, ValType::I64, ValType::F32));
 #endif
-          case Expr::F32ConvertUI64:
+          case uint16_t(Op::F32ConvertUI64):
 #ifdef I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
                                                 SymbolicAddress::Uint64ToFloatingPoint,
@@ -6921,82 +6921,82 @@ BaseCompiler::emitBody()
 #else
             CHECK_NEXT(emitConversion(emitConvertU64ToF32, ValType::I64, ValType::F32));
 #endif
-          case Expr::F32ReinterpretI32:
+          case uint16_t(Op::F32ReinterpretI32):
             CHECK_NEXT(emitConversion(emitReinterpretI32AsF32, ValType::I32, ValType::F32));
-          case Expr::F32Load:
+          case uint16_t(Op::F32Load):
             CHECK_NEXT(emitLoad(ValType::F32, Scalar::Float32));
-          case Expr::F32Store:
+          case uint16_t(Op::F32Store):
             CHECK_NEXT(emitStore(ValType::F32, Scalar::Float32));
-          case Expr::F32TeeStore:
+          case uint16_t(Op::F32TeeStore):
             CHECK_NEXT(emitTeeStore(ValType::F32, Scalar::Float32));
-          case Expr::F32TeeStoreF64:
+          case uint16_t(Op::F32TeeStoreF64):
             CHECK_NEXT(emitTeeStoreWithCoercion(ValType::F32, Scalar::Float64));
-          case Expr::F32CopySign:
+          case uint16_t(Op::F32CopySign):
             CHECK_NEXT(emitBinary(emitCopysignF32, ValType::F32));
-          case Expr::F32Nearest:
+          case uint16_t(Op::F32Nearest):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::NearbyIntF, ValType::F32));
-          case Expr::F32Trunc:
+          case uint16_t(Op::F32Trunc):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::TruncF, ValType::F32));
 
           // F64
-          case Expr::F64Const: {
+          case uint16_t(Op::F64Const): {
             RawF64 f64;
             CHECK(iter_.readF64Const(&f64));
             if (!deadCode_)
                 pushF64(f64);
             NEXT();
           }
-          case Expr::F64Add:
+          case uint16_t(Op::F64Add):
             CHECK_NEXT(emitBinary(emitAddF64, ValType::F64));
-          case Expr::F64Sub:
+          case uint16_t(Op::F64Sub):
             CHECK_NEXT(emitBinary(emitSubtractF64, ValType::F64));
-          case Expr::F64Mul:
+          case uint16_t(Op::F64Mul):
             CHECK_NEXT(emitBinary(emitMultiplyF64, ValType::F64));
-          case Expr::F64Div:
+          case uint16_t(Op::F64Div):
             CHECK_NEXT(emitBinary(emitDivideF64, ValType::F64));
-          case Expr::F64Mod:
+          case uint16_t(Op::F64Mod):
             CHECK_NEXT(emitBinaryMathBuiltinCall(SymbolicAddress::ModD, ValType::F64));
-          case Expr::F64Min:
+          case uint16_t(Op::F64Min):
             CHECK_NEXT(emitBinary(emitMinF64, ValType::F64));
-          case Expr::F64Max:
+          case uint16_t(Op::F64Max):
             CHECK_NEXT(emitBinary(emitMaxF64, ValType::F64));
-          case Expr::F64Neg:
+          case uint16_t(Op::F64Neg):
             CHECK_NEXT(emitUnary(emitNegateF64, ValType::F64));
-          case Expr::F64Abs:
+          case uint16_t(Op::F64Abs):
             CHECK_NEXT(emitUnary(emitAbsF64, ValType::F64));
-          case Expr::F64Sqrt:
+          case uint16_t(Op::F64Sqrt):
             CHECK_NEXT(emitUnary(emitSqrtF64, ValType::F64));
-          case Expr::F64Ceil:
+          case uint16_t(Op::F64Ceil):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::CeilD, ValType::F64));
-          case Expr::F64Floor:
+          case uint16_t(Op::F64Floor):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::FloorD, ValType::F64));
-          case Expr::F64Sin:
+          case uint16_t(Op::F64Sin):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::SinD, ValType::F64));
-          case Expr::F64Cos:
+          case uint16_t(Op::F64Cos):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::CosD, ValType::F64));
-          case Expr::F64Tan:
+          case uint16_t(Op::F64Tan):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::TanD, ValType::F64));
-          case Expr::F64Asin:
+          case uint16_t(Op::F64Asin):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::ASinD, ValType::F64));
-          case Expr::F64Acos:
+          case uint16_t(Op::F64Acos):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::ACosD, ValType::F64));
-          case Expr::F64Atan:
+          case uint16_t(Op::F64Atan):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::ATanD, ValType::F64));
-          case Expr::F64Exp:
+          case uint16_t(Op::F64Exp):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::ExpD, ValType::F64));
-          case Expr::F64Log:
+          case uint16_t(Op::F64Log):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::LogD, ValType::F64));
-          case Expr::F64Pow:
+          case uint16_t(Op::F64Pow):
             CHECK_NEXT(emitBinaryMathBuiltinCall(SymbolicAddress::PowD, ValType::F64));
-          case Expr::F64Atan2:
+          case uint16_t(Op::F64Atan2):
             CHECK_NEXT(emitBinaryMathBuiltinCall(SymbolicAddress::ATan2D, ValType::F64));
-          case Expr::F64PromoteF32:
+          case uint16_t(Op::F64PromoteF32):
             CHECK_NEXT(emitConversion(emitConvertF32ToF64, ValType::F32, ValType::F64));
-          case Expr::F64ConvertSI32:
+          case uint16_t(Op::F64ConvertSI32):
             CHECK_NEXT(emitConversion(emitConvertI32ToF64, ValType::I32, ValType::F64));
-          case Expr::F64ConvertUI32:
+          case uint16_t(Op::F64ConvertUI32):
             CHECK_NEXT(emitConversion(emitConvertU32ToF64, ValType::I32, ValType::F64));
-          case Expr::F64ConvertSI64:
+          case uint16_t(Op::F64ConvertSI64):
 #ifdef I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
                                                 SymbolicAddress::Int64ToFloatingPoint,
@@ -7004,7 +7004,7 @@ BaseCompiler::emitBody()
 #else
             CHECK_NEXT(emitConversion(emitConvertI64ToF64, ValType::I64, ValType::F64));
 #endif
-          case Expr::F64ConvertUI64:
+          case uint16_t(Op::F64ConvertUI64):
 #ifdef I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
                                                 SymbolicAddress::Uint64ToFloatingPoint,
@@ -7012,92 +7012,92 @@ BaseCompiler::emitBody()
 #else
             CHECK_NEXT(emitConversion(emitConvertU64ToF64, ValType::I64, ValType::F64));
 #endif
-          case Expr::F64Load:
+          case uint16_t(Op::F64Load):
             CHECK_NEXT(emitLoad(ValType::F64, Scalar::Float64));
-          case Expr::F64Store:
+          case uint16_t(Op::F64Store):
             CHECK_NEXT(emitStore(ValType::F64, Scalar::Float64));
-          case Expr::F64TeeStore:
+          case uint16_t(Op::F64TeeStore):
             CHECK_NEXT(emitTeeStore(ValType::F64, Scalar::Float64));
-          case Expr::F64TeeStoreF32:
+          case uint16_t(Op::F64TeeStoreF32):
             CHECK_NEXT(emitTeeStoreWithCoercion(ValType::F64, Scalar::Float32));
-          case Expr::F64ReinterpretI64:
+          case uint16_t(Op::F64ReinterpretI64):
             CHECK_NEXT(emitConversion(emitReinterpretI64AsF64, ValType::I64, ValType::F64));
-          case Expr::F64CopySign:
+          case uint16_t(Op::F64CopySign):
             CHECK_NEXT(emitBinary(emitCopysignF64, ValType::F64));
-          case Expr::F64Nearest:
+          case uint16_t(Op::F64Nearest):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::NearbyIntD, ValType::F64));
-          case Expr::F64Trunc:
+          case uint16_t(Op::F64Trunc):
             CHECK_NEXT(emitUnaryMathBuiltinCall(SymbolicAddress::TruncD, ValType::F64));
 
           // Comparisons
-          case Expr::I32Eq:
+          case uint16_t(Op::I32Eq):
             CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_EQ, MCompare::Compare_Int32));
-          case Expr::I32Ne:
+          case uint16_t(Op::I32Ne):
             CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_NE, MCompare::Compare_Int32));
-          case Expr::I32LtS:
+          case uint16_t(Op::I32LtS):
             CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_LT, MCompare::Compare_Int32));
-          case Expr::I32LeS:
+          case uint16_t(Op::I32LeS):
             CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_LE, MCompare::Compare_Int32));
-          case Expr::I32GtS:
+          case uint16_t(Op::I32GtS):
             CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_GT, MCompare::Compare_Int32));
-          case Expr::I32GeS:
+          case uint16_t(Op::I32GeS):
             CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_GE, MCompare::Compare_Int32));
-          case Expr::I32LtU:
+          case uint16_t(Op::I32LtU):
             CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_LT, MCompare::Compare_UInt32));
-          case Expr::I32LeU:
+          case uint16_t(Op::I32LeU):
             CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_LE, MCompare::Compare_UInt32));
-          case Expr::I32GtU:
+          case uint16_t(Op::I32GtU):
             CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_GT, MCompare::Compare_UInt32));
-          case Expr::I32GeU:
+          case uint16_t(Op::I32GeU):
             CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_GE, MCompare::Compare_UInt32));
-          case Expr::I64Eq:
+          case uint16_t(Op::I64Eq):
             CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_EQ, MCompare::Compare_Int64));
-          case Expr::I64Ne:
+          case uint16_t(Op::I64Ne):
             CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_NE, MCompare::Compare_Int64));
-          case Expr::I64LtS:
+          case uint16_t(Op::I64LtS):
             CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_LT, MCompare::Compare_Int64));
-          case Expr::I64LeS:
+          case uint16_t(Op::I64LeS):
             CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_LE, MCompare::Compare_Int64));
-          case Expr::I64GtS:
+          case uint16_t(Op::I64GtS):
             CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_GT, MCompare::Compare_Int64));
-          case Expr::I64GeS:
+          case uint16_t(Op::I64GeS):
             CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_GE, MCompare::Compare_Int64));
-          case Expr::I64LtU:
+          case uint16_t(Op::I64LtU):
             CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_LT, MCompare::Compare_UInt64));
-          case Expr::I64LeU:
+          case uint16_t(Op::I64LeU):
             CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_LE, MCompare::Compare_UInt64));
-          case Expr::I64GtU:
+          case uint16_t(Op::I64GtU):
             CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_GT, MCompare::Compare_UInt64));
-          case Expr::I64GeU:
+          case uint16_t(Op::I64GeU):
             CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_GE, MCompare::Compare_UInt64));
-          case Expr::F32Eq:
+          case uint16_t(Op::F32Eq):
             CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, JSOP_EQ, MCompare::Compare_Float32));
-          case Expr::F32Ne:
+          case uint16_t(Op::F32Ne):
             CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, JSOP_NE, MCompare::Compare_Float32));
-          case Expr::F32Lt:
+          case uint16_t(Op::F32Lt):
             CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, JSOP_LT, MCompare::Compare_Float32));
-          case Expr::F32Le:
+          case uint16_t(Op::F32Le):
             CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, JSOP_LE, MCompare::Compare_Float32));
-          case Expr::F32Gt:
+          case uint16_t(Op::F32Gt):
             CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, JSOP_GT, MCompare::Compare_Float32));
-          case Expr::F32Ge:
+          case uint16_t(Op::F32Ge):
             CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, JSOP_GE, MCompare::Compare_Float32));
-          case Expr::F64Eq:
+          case uint16_t(Op::F64Eq):
             CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, JSOP_EQ, MCompare::Compare_Double));
-          case Expr::F64Ne:
+          case uint16_t(Op::F64Ne):
             CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, JSOP_NE, MCompare::Compare_Double));
-          case Expr::F64Lt:
+          case uint16_t(Op::F64Lt):
             CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, JSOP_LT, MCompare::Compare_Double));
-          case Expr::F64Le:
+          case uint16_t(Op::F64Le):
             CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, JSOP_LE, MCompare::Compare_Double));
-          case Expr::F64Gt:
+          case uint16_t(Op::F64Gt):
             CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, JSOP_GT, MCompare::Compare_Double));
-          case Expr::F64Ge:
+          case uint16_t(Op::F64Ge):
             CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, JSOP_GE, MCompare::Compare_Double));
 
           // SIMD
 #define CASE(TYPE, OP, SIGN) \
-          case Expr::TYPE##OP: \
+          case uint16_t(Op::TYPE##OP): \
             MOZ_CRASH("Unimplemented SIMD");
 #define I8x16CASE(OP) CASE(I8x16, OP, SimdSign::Signed)
 #define I16x8CASE(OP) CASE(I16x8, OP, SimdSign::Signed)
@@ -7107,7 +7107,7 @@ BaseCompiler::emitBody()
 #define B16x8CASE(OP) CASE(B16x8, OP, SimdSign::NotApplicable)
 #define B32x4CASE(OP) CASE(B32x4, OP, SimdSign::NotApplicable)
 #define ENUMERATE(TYPE, FORALL, DO) \
-          case Expr::TYPE##Constructor: \
+          case uint16_t(Op::TYPE##Constructor): \
             FORALL(DO)
 
           ENUMERATE(I8x16, FORALL_INT8X16_ASMJS_OP, I8x16CASE)
@@ -7128,52 +7128,50 @@ BaseCompiler::emitBody()
 #undef B32x4CASE
 #undef ENUMERATE
 
-          case Expr::I8x16Const:
-          case Expr::I16x8Const:
-          case Expr::I32x4Const:
-          case Expr::F32x4Const:
-          case Expr::B8x16Const:
-          case Expr::B16x8Const:
-          case Expr::B32x4Const:
-          case Expr::I32x4shiftRightByScalarU:
-          case Expr::I8x16addSaturateU:
-          case Expr::I8x16subSaturateU:
-          case Expr::I8x16shiftRightByScalarU:
-          case Expr::I8x16lessThanU:
-          case Expr::I8x16lessThanOrEqualU:
-          case Expr::I8x16greaterThanU:
-          case Expr::I8x16greaterThanOrEqualU:
-          case Expr::I8x16extractLaneU:
-          case Expr::I16x8addSaturateU:
-          case Expr::I16x8subSaturateU:
-          case Expr::I16x8shiftRightByScalarU:
-          case Expr::I16x8lessThanU:
-          case Expr::I16x8lessThanOrEqualU:
-          case Expr::I16x8greaterThanU:
-          case Expr::I16x8greaterThanOrEqualU:
-          case Expr::I16x8extractLaneU:
-          case Expr::I32x4lessThanU:
-          case Expr::I32x4lessThanOrEqualU:
-          case Expr::I32x4greaterThanU:
-          case Expr::I32x4greaterThanOrEqualU:
-          case Expr::I32x4fromFloat32x4U:
+          case uint16_t(Op::I8x16Const):
+          case uint16_t(Op::I16x8Const):
+          case uint16_t(Op::I32x4Const):
+          case uint16_t(Op::F32x4Const):
+          case uint16_t(Op::B8x16Const):
+          case uint16_t(Op::B16x8Const):
+          case uint16_t(Op::B32x4Const):
+          case uint16_t(Op::I32x4shiftRightByScalarU):
+          case uint16_t(Op::I8x16addSaturateU):
+          case uint16_t(Op::I8x16subSaturateU):
+          case uint16_t(Op::I8x16shiftRightByScalarU):
+          case uint16_t(Op::I8x16lessThanU):
+          case uint16_t(Op::I8x16lessThanOrEqualU):
+          case uint16_t(Op::I8x16greaterThanU):
+          case uint16_t(Op::I8x16greaterThanOrEqualU):
+          case uint16_t(Op::I8x16extractLaneU):
+          case uint16_t(Op::I16x8addSaturateU):
+          case uint16_t(Op::I16x8subSaturateU):
+          case uint16_t(Op::I16x8shiftRightByScalarU):
+          case uint16_t(Op::I16x8lessThanU):
+          case uint16_t(Op::I16x8lessThanOrEqualU):
+          case uint16_t(Op::I16x8greaterThanU):
+          case uint16_t(Op::I16x8greaterThanOrEqualU):
+          case uint16_t(Op::I16x8extractLaneU):
+          case uint16_t(Op::I32x4lessThanU):
+          case uint16_t(Op::I32x4lessThanOrEqualU):
+          case uint16_t(Op::I32x4greaterThanU):
+          case uint16_t(Op::I32x4greaterThanOrEqualU):
+          case uint16_t(Op::I32x4fromFloat32x4U):
             MOZ_CRASH("Unimplemented SIMD");
 
           // Atomics
-          case Expr::I32AtomicsLoad:
-          case Expr::I32AtomicsStore:
-          case Expr::I32AtomicsBinOp:
-          case Expr::I32AtomicsCompareExchange:
-          case Expr::I32AtomicsExchange:
+          case uint16_t(Op::I32AtomicsLoad):
+          case uint16_t(Op::I32AtomicsStore):
+          case uint16_t(Op::I32AtomicsBinOp):
+          case uint16_t(Op::I32AtomicsCompareExchange):
+          case uint16_t(Op::I32AtomicsExchange):
             MOZ_CRASH("Unimplemented Atomics");
 
           // Memory Related
-          case Expr::GrowMemory:
+          case uint16_t(Op::GrowMemory):
             CHECK_NEXT(emitGrowMemory());
-          case Expr::CurrentMemory:
+          case uint16_t(Op::CurrentMemory):
             CHECK_NEXT(emitCurrentMemory());
-
-          case Expr::Limit:;
         }
 
         MOZ_CRASH("unexpected wasm opcode");
@@ -7456,7 +7454,7 @@ js::wasm::BaselineCompileFunction(IonCompileTask* task)
     ValTypeVector locals;
     if (!locals.appendAll(func.sig().args()))
         return false;
-    if (!DecodeLocalEntries(d, &locals))
+    if (!DecodeLocalEntries(d, task->mg().kind, &locals))
         return false;
 
     // The MacroAssembler will sometimes access the jitContext.

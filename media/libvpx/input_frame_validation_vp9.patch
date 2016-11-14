@@ -1,0 +1,65 @@
+# HG changeset patch
+# User Randell Jesup <rjesup@jesup.org>
+# Parent  87841f3bfc9d99a37e31cd43b2e2d03c325af84f
+Bug 1315288: Add input checks for VP9 r=rillian
+
+diff --git a/media/libvpx/vp8/vp8_cx_iface.c b/media/libvpx/vp8/vp8_cx_iface.c
+--- a/media/libvpx/vp8/vp8_cx_iface.c
++++ b/media/libvpx/vp8/vp8_cx_iface.c
+@@ -917,17 +917,17 @@ static vpx_codec_err_t vp8e_encode(vpx_c
+         dst_time_stamp    = pts * 10000000 * ctx->cfg.g_timebase.num / ctx->cfg.g_timebase.den;
+         dst_end_time_stamp = (pts + duration) * 10000000 * ctx->cfg.g_timebase.num / ctx->cfg.g_timebase.den;
+ 
+         if (img != NULL)
+         {
+             res = image2yuvconfig(img, &sd);
+ 
+             if (sd.y_width != ctx->cfg.g_w || sd.y_height != ctx->cfg.g_h) {
+-                /* from vp8_encoder.h for g_w/g_h:
++                /* from vpx_encoder.h for g_w/g_h:
+                    "Note that the frames passed as input to the encoder must have this resolution"
+                 */
+                 ctx->base.err_detail = "Invalid input frame resolution";
+                 res = VPX_CODEC_INVALID_PARAM;
+             } else {
+                 if (vp8_receive_raw_frame(ctx->cpi, ctx->next_frame_flag | lib_flags,
+                                           &sd, dst_time_stamp, dst_end_time_stamp))
+                 {
+diff --git a/media/libvpx/vp9/vp9_cx_iface.c b/media/libvpx/vp9/vp9_cx_iface.c
+--- a/media/libvpx/vp9/vp9_cx_iface.c
++++ b/media/libvpx/vp9/vp9_cx_iface.c
+@@ -989,21 +989,29 @@ static vpx_codec_err_t encoder_encode(vp
+ 
+     // Set up internal flags
+     if (ctx->base.init_flags & VPX_CODEC_USE_PSNR)
+       cpi->b_calculate_psnr = 1;
+ 
+     if (img != NULL) {
+       res = image2yuvconfig(img, &sd);
+ 
+-      // Store the original flags in to the frame buffer. Will extract the
+-      // key frame flag when we actually encode this frame.
+-      if (vp9_receive_raw_frame(cpi, flags | ctx->next_frame_flags,
+-                                &sd, dst_time_stamp, dst_end_time_stamp)) {
+-        res = update_error_state(ctx, &cpi->common.error);
++      if (sd.y_width != ctx->cfg.g_w || sd.y_height != ctx->cfg.g_h) {
++        /* from vpx_encoder.h for g_w/g_h:
++           "Note that the frames passed as input to the encoder must have this resolution"
++        */
++        ctx->base.err_detail = "Invalid input frame resolution";
++        res = VPX_CODEC_INVALID_PARAM;
++      } else {
++        // Store the original flags in to the frame buffer. Will extract the
++        // key frame flag when we actually encode this frame.
++        if (vp9_receive_raw_frame(cpi, flags | ctx->next_frame_flags,
++                                  &sd, dst_time_stamp, dst_end_time_stamp)) {
++          res = update_error_state(ctx, &cpi->common.error);
++        }
+       }
+       ctx->next_frame_flags = 0;
+     }
+ 
+     cx_data = ctx->cx_data;
+     cx_data_sz = ctx->cx_data_sz;
+ 
+     /* Any pending invisible frames? */

@@ -2,22 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#sidebar-panel-layoutview {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-}
-
 #layoutview-container {
   height: 100%;
-  overflow: auto;
-}
-
-#layoutview-container-focusable {
-  height: 100%;
-  outline: none;
+  width: 100%;
 }
 
 .layoutview-no-grids {

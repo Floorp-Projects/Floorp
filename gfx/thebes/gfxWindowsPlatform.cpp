@@ -310,9 +310,6 @@ NS_IMPL_ISUPPORTS(D3DSharedTexturesReporter, nsIMemoryReporter)
 
 gfxWindowsPlatform::gfxWindowsPlatform()
   : mRenderMode(RENDER_GDI)
-  , mHasDeviceReset(false)
-  , mHasFakeDeviceReset(false)
-  , mHasD3D9DeviceReset(false)
 {
   mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
   mUseClearTypeAlways = UNINITIALIZED_VALUE;
@@ -439,19 +436,12 @@ gfxWindowsPlatform::HandleDeviceReset()
     return false;
   }
 
-  if (!mHasFakeDeviceReset) {
+  if (resetReason != DeviceResetReason::FORCED_RESET) {
     Telemetry::Accumulate(Telemetry::DEVICE_RESET_REASON, uint32_t(resetReason));
   }
 
   // Remove devices and adapters.
   DeviceManagerDx::Get()->ResetDevices();
-
-  // Reset local state. Note: we leave feature status variables as-is. They
-  // will be recomputed by InitializeDevices().
-  mHasDeviceReset = false;
-  mHasFakeDeviceReset = false;
-  mHasD3D9DeviceReset = false;
-  mDeviceResetReason = DeviceResetReason::OK;
 
   imgLoader::NormalLoader()->ClearCache(true);
   imgLoader::NormalLoader()->ClearCache(false);
@@ -515,15 +505,6 @@ gfxWindowsPlatform::UpdateRenderMode()
       MOZ_CRASH("GFX: Failed to update reference draw target after device reset");
     }
   }
-}
-
-void
-gfxWindowsPlatform::ForceDeviceReset(ForcedDeviceResetReason aReason)
-{
-  Telemetry::Accumulate(Telemetry::FORCED_DEVICE_RESET_REASON, uint32_t(aReason));
-
-  mDeviceResetReason = DeviceResetReason::FORCED_RESET;
-  mHasDeviceReset = true;
 }
 
 mozilla::gfx::BackendType
@@ -916,57 +897,21 @@ gfxWindowsPlatform::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlag
     return true;
 }
 
-void
-gfxWindowsPlatform::CompositorUpdated()
-{
-  ForceDeviceReset(ForcedDeviceResetReason::COMPOSITOR_UPDATED);
-  UpdateRenderMode();
-}
-
-void
-gfxWindowsPlatform::TestDeviceReset(DeviceResetReason aReason)
-{
-  if (mHasDeviceReset) {
-    return;
-  }
-  mHasDeviceReset = true;
-  mHasFakeDeviceReset = true;
-  mDeviceResetReason = aReason;
-}
-
 bool
 gfxWindowsPlatform::DidRenderingDeviceReset(DeviceResetReason* aResetReason)
 {
-  if (mHasDeviceReset) {
-    if (aResetReason) {
-      *aResetReason = mDeviceResetReason;
-    }
-    return true;
+  DeviceManagerDx* dm = DeviceManagerDx::Get();
+  if (!dm) {
+    return false;
   }
-  if (aResetReason) {
-    *aResetReason = DeviceResetReason::OK;
-  }
+  return dm->HasDeviceReset(aResetReason);
+}
 
-  if (DeviceManagerDx::Get()->GetAnyDeviceRemovedReason(&mDeviceResetReason)) {
-    mHasDeviceReset = true;
-    if (aResetReason) {
-      *aResetReason = mDeviceResetReason;
-    }
-    return true;
-  }
-
-  if (mHasD3D9DeviceReset) {
-    return true;
-  }
-  if (XRE_IsParentProcess() && gfxPrefs::DeviceResetForTesting()) {
-    TestDeviceReset((DeviceResetReason)gfxPrefs::DeviceResetForTesting());
-    if (aResetReason) {
-      *aResetReason = mDeviceResetReason;
-    }
-    gfxPrefs::SetDeviceResetForTesting(0);
-    return true;
-  }
-  return false;
+void
+gfxWindowsPlatform::CompositorUpdated()
+{
+  DeviceManagerDx::Get()->ForceDeviceReset(ForcedDeviceResetReason::COMPOSITOR_UPDATED);
+  UpdateRenderMode();
 }
 
 BOOL CALLBACK
@@ -1330,11 +1275,6 @@ gfxWindowsPlatform::SetupClearTypeParams()
             dwriteGeometry, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
             getter_AddRefs(mRenderingParams[TEXT_RENDERING_GDI_CLASSIC]));
     }
-}
-
-void
-gfxWindowsPlatform::D3D9DeviceReset() {
-  mHasD3D9DeviceReset = true;
 }
 
 ReadbackManagerD3D11*

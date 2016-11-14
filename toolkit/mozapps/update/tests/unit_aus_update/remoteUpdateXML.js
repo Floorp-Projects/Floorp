@@ -12,7 +12,7 @@ function run_test() {
   debugDump("testing remote update xml attributes");
 
   start_httpserver();
-  setUpdateURLOverride(gURLData + gHTTPHandlerPath);
+  setUpdateURL(gURLData + gHTTPHandlerPath);
   setUpdateChannel("test_channel");
 
   // This test expects that the app.update.download.backgroundInterval

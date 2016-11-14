@@ -520,7 +520,7 @@ WebGLProgram::BindAttribLocation(GLuint loc, const nsAString& name)
     }
 
     if (StringBeginsWith(name, NS_LITERAL_STRING("gl_"))) {
-        mContext->ErrorInvalidOperation("bindAttribLocation: Can't set the  location of a"
+        mContext->ErrorInvalidOperation("bindAttribLocation: Can't set the location of a"
                                         " name that starts with 'gl_'.");
         return;
     }

@@ -936,6 +936,9 @@ public:
   void NeedsSubjectPrincipalMethod(nsIPrincipal&);
   bool NeedsSubjectPrincipalAttr(nsIPrincipal&);
   void SetNeedsSubjectPrincipalAttr(bool, nsIPrincipal&);
+  void NeedsCallerTypeMethod(CallerType);
+  bool NeedsCallerTypeAttr(CallerType);
+  void SetNeedsCallerTypeAttr(bool, CallerType);
   int16_t LegacyCall(const JS::Value&, uint32_t, TestInterface&);
   void PassArgsWithDefaults(JSContext*, const Optional<int32_t>&,
                             TestInterface*, const Dict&, double,
@@ -1403,6 +1406,23 @@ class TestRenamedNamespace {
 };
 
 class TestProtoObjectHackedNamespace {
+};
+
+class TestWorkerExposedInterface : public nsISupports,
+                                   public nsWrapperCache
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  // We need a GetParentObject to make binding codegen happy
+  nsISupports* GetParentObject();
+
+  void NeedsSubjectPrincipalMethod(Maybe<nsIPrincipal*>);
+  bool NeedsSubjectPrincipalAttr(Maybe<nsIPrincipal*>);
+  void SetNeedsSubjectPrincipalAttr(bool, Maybe<nsIPrincipal*>);
+  void NeedsCallerTypeMethod(CallerType);
+  bool NeedsCallerTypeAttr(CallerType);
+  void SetNeedsCallerTypeAttr(bool, CallerType);
 };
 
 } // namespace dom

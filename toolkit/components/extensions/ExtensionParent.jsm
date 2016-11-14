@@ -263,14 +263,6 @@ class ProxyContextParent extends BaseContext {
       value: principal, enumerable: true, configurable: true,
     });
 
-    // TODO: Replace this with a Sandbox with our content principal when
-    // we move to separate processes.
-    if (params.cloneScope) {
-      Object.defineProperty(this, "cloneScope", {
-        value: params.cloneScope, enumerable: true, configurable: true,
-      });
-    }
-
     this.listenerProxies = new Map();
 
     apiManager.emit("proxy-context-load", this);
@@ -507,12 +499,21 @@ ParentAPIManager = {
       Cu.reportError("WebExtension warning: Message manager unexpectedly changed");
     }
 
+    let {childId} = data;
+
     function listener(...listenerArgs) {
-      context.parentMessageManager.sendAsyncMessage("API:RunListener", {
-        childId: data.childId,
-        path: data.path,
-        args: listenerArgs,
-      });
+      return context.sendMessage(
+        context.parentMessageManager,
+        "API:RunListener",
+        {
+          childId,
+          listenerId: data.listenerId,
+          path: data.path,
+          args: listenerArgs,
+        },
+        {
+          recipient: {childId},
+        });
     }
 
     context.listenerProxies.set(data.path, listener);

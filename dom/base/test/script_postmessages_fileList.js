@@ -9,7 +9,7 @@ addMessageListener("file.open", function () {
   testFile.append("prefs.js");
 
   sendAsyncMessage("file.opened", {
-    file: new File(testFile)
+    file: File.createFromNsIFile(testFile)
   });
 });
 

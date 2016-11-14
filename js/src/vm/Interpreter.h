@@ -561,7 +561,8 @@ void
 ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name, const char* redeclKind);
 
 enum class CheckIsObjectKind : uint8_t {
-    IteratorNext
+    IteratorNext,
+    GetIterator
 };
 
 bool
