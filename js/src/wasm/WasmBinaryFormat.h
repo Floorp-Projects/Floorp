@@ -637,9 +637,6 @@ MOZ_MUST_USE bool
 DecodeLocalEntries(Decoder& d, ModuleKind kind, ValTypeVector* locals);
 
 MOZ_MUST_USE bool
-DecodeGlobalType(Decoder& d, ValType* type, bool* isMutable);
-
-MOZ_MUST_USE bool
 DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, ValType expected,
                             InitExpr* init);
 
@@ -665,6 +662,9 @@ DecodeTableSection(Decoder& d, TableDescVector* tables);
 
 MOZ_MUST_USE bool
 DecodeMemorySection(Decoder& d, bool hasMemory, Limits* memory, bool* present);
+
+MOZ_MUST_USE bool
+DecodeGlobalSection(Decoder& d, GlobalDescVector* globals);
 
 MOZ_MUST_USE bool
 DecodeUnknownSections(Decoder& d);
