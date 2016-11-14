@@ -7,12 +7,6 @@
 
 interface nsIProxyInfo;
 [ptr] native PRFileDescStar(struct PRFileDesc);
-native NeckoOriginAttributes(mozilla::NeckoOriginAttributes);
-[ref] native const_OriginAttributesRef(const mozilla::NeckoOriginAttributes);
-
-%{ C++
-#include "mozilla/BasePrincipal.h"
-%}
 
 /**
  * nsISocketProvider
@@ -42,14 +36,14 @@ interface nsISocketProvider : nsISupports
      *        object typically implements nsITransportSecurityInfo.
      */
     [noscript]
-    void newSocket(in long                      aFamily,
-                   in string                    aHost, 
-                   in long                      aPort,
-                   in nsIProxyInfo              aProxy,
-                   in const_OriginAttributesRef aOriginAttributes,
-                   in unsigned long             aFlags,
-                   out PRFileDescStar           aFileDesc, 
-                   out nsISupports              aSecurityInfo);
+    void newSocket(in long            aFamily,
+                   in string          aHost, 
+                   in long            aPort,
+                   in nsIProxyInfo    aProxy,
+                   in ACString        aFirstPartyDomain,
+                   in unsigned long   aFlags,
+                   out PRFileDescStar aFileDesc, 
+                   out nsISupports    aSecurityInfo);
 
     /**
      * addToSocket
@@ -62,14 +56,14 @@ interface nsISocketProvider : nsISupports
      * which is an in-param instead.
      */
     [noscript]
-    void addToSocket(in long                      aFamily,
-                     in string                    aHost, 
-                     in long                      aPort,
-                     in nsIProxyInfo              aProxy,
-                     in const_OriginAttributesRef aOriginAttributes,
-                     in unsigned long             aFlags,
-                     in PRFileDescStar            aFileDesc, 
-                     out nsISupports              aSecurityInfo);
+    void addToSocket(in long           aFamily,
+                     in string         aHost, 
+                     in long           aPort,
+                     in nsIProxyInfo   aProxy,
+                     in ACString       aFirstPartyDomain,
+                     in unsigned long  aFlags,
+                     in PRFileDescStar aFileDesc, 
+                     out nsISupports   aSecurityInfo);
 
     /**
      * PROXY_RESOLVES_HOST
