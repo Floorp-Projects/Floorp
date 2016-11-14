@@ -484,6 +484,36 @@ if (typeof reportCompare === "function")
     reportCompare(true, true);
 """)
 
+def make_regexp_space_test(version, test_space_table):
+    file_name = '../tests/ecma_6/RegExp/character-class-escape-s.js'
+    with io.open(file_name, mode='wb') as test_space:
+        test_space.write(warning_message)
+        test_space.write(unicode_version_message.format(version))
+        test_space.write(public_domain)
+        test_space.write('var onlySpace = String.fromCodePoint(' +
+                        ', '.join(map(lambda c: hex(c), test_space_table)) + ');\n')
+        test_space.write("""
+assertEq(/^\s+$/.exec(onlySpace) !== null, true);
+assertEq(/^[\s]+$/.exec(onlySpace) !== null, true);
+assertEq(/^[^\s]+$/.exec(onlySpace) === null, true);
+
+assertEq(/^\S+$/.exec(onlySpace) === null, true);
+assertEq(/^[\S]+$/.exec(onlySpace) === null, true);
+assertEq(/^[^\S]+$/.exec(onlySpace) !== null, true);
+
+// Also test with Unicode RegExps.
+assertEq(/^\s+$/u.exec(onlySpace) !== null, true);
+assertEq(/^[\s]+$/u.exec(onlySpace) !== null, true);
+assertEq(/^[^\s]+$/u.exec(onlySpace) === null, true);
+
+assertEq(/^\S+$/u.exec(onlySpace) === null, true);
+assertEq(/^[\S]+$/u.exec(onlySpace) === null, true);
+assertEq(/^[^\S]+$/u.exec(onlySpace) !== null, true);
+
+if (typeof reportCompare === "function")
+    reportCompare(true, true);
+""")
+
 def make_icase_test(version, folding_tests):
     file_name = '../tests/ecma_6/RegExp/unicode-ignoreCase.js'
     with io.open(file_name, mode='wb') as test_icase:
@@ -811,6 +841,7 @@ def update_unicode(args):
     make_bmp_mapping_test(unicode_version, test_table)
     make_non_bmp_mapping_test(unicode_version, non_bmp_upper_map, non_bmp_lower_map)
     make_space_test(unicode_version, test_space_table)
+    make_regexp_space_test(unicode_version, test_space_table)
     make_icase_test(unicode_version, folding_tests)
 
 if __name__ == '__main__':
