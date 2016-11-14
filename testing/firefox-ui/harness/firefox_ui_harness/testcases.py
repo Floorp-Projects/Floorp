@@ -8,31 +8,17 @@ from datetime import datetime
 
 import mozfile
 
-from marionette import MarionetteTestCase
-from marionette_driver import Wait
-from marionette_driver.errors import NoSuchWindowException
-
 from firefox_puppeteer import PuppeteerMixin
 from firefox_puppeteer.api.prefs import Preferences
 from firefox_puppeteer.api.software_update import SoftwareUpdate
 from firefox_puppeteer.ui.update_wizard import UpdateWizardDialog
 
-
-class FirefoxTestCase(PuppeteerMixin, MarionetteTestCase):
-    """Base TestCase class for Firefox Desktop tests.
-
-    This class enhances the MarionetteTestCase class with PuppeteerMixin on top
-    of MarionetteTestCase by reordering the MRO.
-
-    If you're extending the inheritance tree further to make specialized
-    TestCases, favour the use of super() as opposed to explicit calls to a
-    parent class.
-
-    """
-    pass
+from marionette import MarionetteTestCase
+from marionette_driver import Wait
+from marionette_driver.errors import NoSuchWindowException
 
 
-class UpdateTestCase(FirefoxTestCase):
+class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
 
     TIMEOUT_UPDATE_APPLY = 300
     TIMEOUT_UPDATE_CHECK = 30

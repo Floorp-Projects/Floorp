@@ -55,7 +55,7 @@ function run_test() {
     notEqual(oursOld, platform, "old style parser for color " + test +
              " should not match DOMUtils");
     ok(oursOld === null, "'" + test + "' is not a color with old parser");
-    deepEqual(oursNew, platform, "css-color-4 parser for color " + test + " matches DOMUtils");
+    deepEqual(oursNew, platform, `css-color-4 parser for color ${test} matches DOMUtils`);
     ok(oursNew !== null, "'" + test + "' is a color with css-color-4 parser");
   }
 }

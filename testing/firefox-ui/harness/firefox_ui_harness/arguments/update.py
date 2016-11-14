@@ -58,7 +58,8 @@ class UpdateBaseArguments(object):
 
 
 class UpdateArguments(FirefoxUIArguments):
+
     def __init__(self, **kwargs):
-        FirefoxUIArguments.__init__(self, **kwargs)
+        super(UpdateArguments, self).__init__(**kwargs)
 
         self.register_argument_container(UpdateBaseArguments())

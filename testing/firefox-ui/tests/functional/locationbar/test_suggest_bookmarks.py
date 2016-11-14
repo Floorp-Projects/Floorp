@@ -2,12 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import By, Wait
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestStarInAutocomplete(FirefoxTestCase):
+class TestStarInAutocomplete(PuppeteerMixin, MarionetteTestCase):
     """ This replaces
     http://hg.mozilla.org/qa/mozmill-tests/file/default/firefox/tests/functional/testAwesomeBar/testSuggestBookmarks.js
     Check a star appears in autocomplete list for a bookmarked page.
@@ -16,7 +16,7 @@ class TestStarInAutocomplete(FirefoxTestCase):
     PREF_SUGGEST_SEARCHES = 'browser.urlbar.suggest.searches'
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestStarInAutocomplete, self).setUp()
 
         self.bookmark_panel = None
         self.test_urls = [self.marionette.absolute_url('layout/mozilla_grants.html')]
@@ -41,7 +41,7 @@ class TestStarInAutocomplete(FirefoxTestCase):
             self.puppeteer.places.restore_default_bookmarks()
             self.marionette.clear_pref(self.PREF_SUGGEST_SEARCHES)
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestStarInAutocomplete, self).tearDown()
 
     def test_star_in_autocomplete(self):
         search_string = 'grants'

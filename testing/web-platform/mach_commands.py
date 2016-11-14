@@ -39,16 +39,17 @@ class WebPlatformTestsRunner(MozbuildObject):
             kwargs["config"] = os.path.join(self.topsrcdir, 'testing', 'web-platform', 'wptrunner.ini')
 
         if kwargs["binary"] is None:
-            kwargs["binary"] = self.get_binary_path('app')
+            kwargs["binary"] = self.get_binary_path()
 
         if kwargs["prefs_root"] is None:
             kwargs["prefs_root"] = os.path.join(self.topobjdir, '_tests', 'web-platform', "prefs")
 
-        if kwargs["stackfix_dir"] is None:
-            kwargs["stackfix_dir"] = self.get_binary_path("")
-
         if kwargs["certutil_binary"] is None:
             kwargs["certutil_binary"] = self.get_binary_path('certutil')
+
+        if kwargs["stackfix_dir"] is None:
+            kwargs["stackfix_dir"] = os.path.split(
+                self.get_binary_path(validate_exists=False))[0]
 
         here = os.path.split(__file__)[0]
 

@@ -39,7 +39,6 @@ public:
     nsCOMPtr<nsIRunnable> runnable = aEvent;
     MonitorAutoLock mon(mTaskQueue->mQueueMonitor);
     return mTaskQueue->DispatchLocked(/* passed by ref */runnable,
-                                      AbortIfFlushing,
                                       DontAssertDispatchSuccess,
                                       NormalDispatch);
   }
@@ -70,7 +69,6 @@ TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
   , mTailDispatcher(nullptr)
   , mIsRunning(false)
   , mIsShutdown(false)
-  , mIsFlushing(false)
 {
   MOZ_COUNT_CTOR(TaskQueue);
 }
@@ -94,22 +92,20 @@ TaskQueue::TailDispatcher()
 // See Dispatch() in TaskQueue.h for more details.
 nsresult
 TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
-                          DispatchMode aMode, DispatchFailureHandling aFailureHandling,
+                          DispatchFailureHandling aFailureHandling,
                           DispatchReason aReason)
 {
+  mQueueMonitor.AssertCurrentThreadOwns();
+  if (mIsShutdown) {
+    return NS_ERROR_FAILURE;
+  }
+
   AbstractThread* currentThread;
   if (aReason != TailDispatch && (currentThread = GetCurrent()) && RequiresTailDispatch(currentThread)) {
     currentThread->TailDispatcher().AddTask(this, aRunnable.forget(), aFailureHandling);
     return NS_OK;
   }
 
-  mQueueMonitor.AssertCurrentThreadOwns();
-  if (mIsFlushing && aMode == AbortIfFlushing) {
-    return NS_ERROR_ABORT;
-  }
-  if (mIsShutdown) {
-    return NS_ERROR_FAILURE;
-  }
   mTasks.push(aRunnable.forget());
   if (mIsRunning) {
     return NS_OK;

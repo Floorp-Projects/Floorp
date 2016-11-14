@@ -4,15 +4,15 @@
 
 import time
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import By, expected, Wait
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestSafeBrowsingWarningPages(FirefoxTestCase):
+class TestSafeBrowsingWarningPages(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestSafeBrowsingWarningPages, self).setUp()
 
         self.urls = [
             # Unwanted software URL
@@ -42,7 +42,7 @@ class TestSafeBrowsingWarningPages(FirefoxTestCase):
             self.marionette.clear_pref('browser.safebrowsing.malware.enabled')
             self.marionette.clear_pref('browser.safebrowsing.phishing.enabled')
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestSafeBrowsingWarningPages, self).tearDown()
 
     def test_warning_pages(self):
         with self.marionette.using_context("content"):

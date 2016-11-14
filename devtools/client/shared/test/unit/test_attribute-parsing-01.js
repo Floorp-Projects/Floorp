@@ -1,10 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test splitBy from node-attribute-parser.js
 
-var Cu = Components.utils;
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 const {splitBy} = require("devtools/client/shared/node-attribute-parser");
 
 const TEST_DATA = [{

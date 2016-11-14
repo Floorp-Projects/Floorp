@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from firefox_ui_harness.testcases import FirefoxTestCase
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 
 
-class testPreferences(FirefoxTestCase):
+class testPreferences(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(testPreferences, self).setUp()
 
         self.new_pref = 'marionette.unittest.set_pref'
         self.unknown_pref = 'marionette.unittest.unknown'
@@ -27,7 +28,7 @@ class testPreferences(FirefoxTestCase):
             self.marionette.clear_pref('browser.tabs.maxOpenBeforeWarn')
             self.marionette.clear_pref('browser.startup.homepage')
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(testPreferences, self).tearDown()
 
     def test_get_pref(self):
         # check correct types

@@ -3,10 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mozversion
-from firefox_ui_harness.testcases import FirefoxTestCase
+
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 
 
-class TestAppInfo(FirefoxTestCase):
+class TestAppInfo(PuppeteerMixin, MarionetteTestCase):
 
     def test_valid_properties(self):
         binary = self.marionette.bin
