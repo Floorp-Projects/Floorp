@@ -714,14 +714,16 @@ nsFloatManager::FloatInfo::ComputeEllipseXInterceptDiff(
 
   // If the band intersects both the top and bottom corners, we don't need
   // to enter either branch because the correct xDiff is 0.
-  if (aBandYMost >= aShapeBoxY &&
+  if (aTopCornerRadiusY > 0 &&
+      aBandYMost >= aShapeBoxY &&
       aBandYMost <= aShapeBoxY + aTopCornerRadiusY) {
     // The band intersects only the top corner.
     nscoord y = aTopCornerRadiusY - (aBandYMost - aShapeBoxY);
     nscoord xIntercept =
       XInterceptAtY(y, aTopCornerRadiusX, aTopCornerRadiusY);
     xDiff = aTopCornerRadiusX - xIntercept;
-  } else if (aBandY >= aShapeBoxYMost - aBottomCornerRadiusY &&
+  } else if (aBottomCornerRadiusY > 0 &&
+             aBandY >= aShapeBoxYMost - aBottomCornerRadiusY &&
              aBandY <= aShapeBoxYMost) {
     // The band intersects only the bottom corner.
     nscoord y = aBottomCornerRadiusY - (aShapeBoxYMost - aBandY);
