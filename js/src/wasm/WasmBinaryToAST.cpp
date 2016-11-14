@@ -1470,14 +1470,13 @@ ToAstName(AstDecodeContext& c, const UniqueChars& name)
 }
 
 static bool
-AstDecodeImportSection(AstDecodeContext& c, const SigWithIdVector& sigs)
+AstDecodeImportSection(AstDecodeContext& c, const SigWithIdVector& sigs, TableDescVector* tables)
 {
     Uint32Vector funcSigIndices;
     GlobalDescVector globals;
-    TableDescVector tables;
     Maybe<Limits> memory;
     ImportVector imports;
-    if (!DecodeImportSection(c.d, sigs, &funcSigIndices, &globals, &tables, &memory, &imports))
+    if (!DecodeImportSection(c.d, sigs, &funcSigIndices, &globals, tables, &memory, &imports))
         return false;
 
     size_t lastFunc = 0;
@@ -1529,7 +1528,7 @@ AstDecodeImportSection(AstDecodeContext& c, const SigWithIdVector& sigs)
                 return false;
 
             ast = new(c.lifo) AstImport(importName, moduleName, fieldName, DefinitionKind::Table,
-                                        tables[lastTable].limits);
+                                        (*tables)[lastTable].limits);
             lastTable++;
             break;
           }
@@ -1563,47 +1562,23 @@ AstDecodeFunctionSection(AstDecodeContext& c, const SigWithIdVector& sigs)
 }
 
 static bool
-AstDecodeTableSection(AstDecodeContext& c)
+AstDecodeTableSection(AstDecodeContext& c, TableDescVector* tables)
 {
-    uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(SectionId::Table, &sectionStart, &sectionSize, "table"))
+    size_t numImported = tables->length();
+    if (!DecodeTableSection(c.d, tables))
         return false;
-    if (sectionStart == Decoder::NotStarted)
+
+    if (tables->length() == numImported)
         return true;
 
-    uint32_t numTables;
-    if (!c.d.readVarU32(&numTables))
-        return c.d.fail("failed to read number of tables");
+    for (size_t i = 0; i < tables->length(); i++) {
+        AstName name;
+        if (!GenerateName(c, AstName(u"table"), i, &name))
+            return false;
 
-    if (numTables != 1)
-        return c.d.fail("the number of tables must be exactly one");
-
-    uint32_t typeConstructorValue;
-    if (!c.d.readVarU32(&typeConstructorValue))
-        return c.d.fail("expected type constructor kind");
-
-    if (typeConstructorValue != uint32_t(TypeCode::AnyFunc))
-        return c.d.fail("unknown type constructor kind");
-
-    Limits table;
-    if (!DecodeLimits(c.d, &table))
-        return false;
-
-    if (table.initial > MaxTableElems)
-        return c.d.fail("too many table elements");
-
-    if (c.module().hasTable())
-        return c.d.fail("already have a table");
-
-    AstName name;
-    if (!GenerateName(c, AstName(u"table"), c.module().tables().length(), &name))
-        return false;
-
-    if (!c.module().addTable(name, table))
-        return false;
-
-    if (!c.d.finishSection(sectionStart, sectionSize, "table"))
-        return false;
+        if (!c.module().addTable(name, (*tables)[i].limits))
+            return false;
+    }
 
     return true;
 }
@@ -2037,11 +2012,12 @@ wasm::BinaryToAst(JSContext* cx, const uint8_t* bytes, uint32_t length,
     AstDecodeContext c(cx, lifo, d, *result, true);
 
     SigWithIdVector sigs;
+    TableDescVector tables;
     if (!DecodePreamble(d) ||
         !AstDecodeTypeSection(c, &sigs) ||
-        !AstDecodeImportSection(c, sigs) ||
+        !AstDecodeImportSection(c, sigs, &tables) ||
         !AstDecodeFunctionSection(c, sigs) ||
-        !AstDecodeTableSection(c) ||
+        !AstDecodeTableSection(c, &tables) ||
         !AstDecodeMemorySection(c) ||
         !AstDecodeGlobalSection(c) ||
         !AstDecodeExportSection(c) ||
