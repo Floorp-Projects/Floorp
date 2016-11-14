@@ -175,7 +175,11 @@ Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id, Mode mode,
     CHROMIUM_LOG(WARNING) << "Unable to create pipe named \"" << channel_id <<
                              "\" in " << (mode == MODE_SERVER ? "server" : "client") <<
                              " mode error(" << strerror(errno) << ").";
+    closed_ = true;
+    return;
   }
+
+  EnqueueHelloMessage();
 }
 
 Channel::ChannelImpl::ChannelImpl(int fd, Mode mode, Listener* listener)
@@ -248,8 +252,7 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
     waiting_connect_ = false;
   }
 
-  // Create the Hello message to be sent when Connect is called
-  return EnqueueHelloMessage();
+  return true;
 }
 
 /**

@@ -99,6 +99,12 @@ ProcessLink::Open(mozilla::ipc::Transport* aTransport, MessageLoop *aIOLoop, Sid
     NS_ASSERTION(mIOLoop, "need an IO loop");
     NS_ASSERTION(mChan->mWorkerLoop, "need a worker loop");
 
+    // If we were never able to open the transport, immediately post an error message.
+    if (mTransport->Unsound_IsClosed()) {
+        mIOLoop->PostTask(NewNonOwningRunnableMethod(this, &ProcessLink::OnChannelConnectError));
+        return;
+    }
+
     {
         MonitorAutoLock lock(*mChan->mMonitor);
 
@@ -337,6 +343,16 @@ ProcessLink::OnChannelConnected(int32_t peer_pid)
     if (notifyChannel) {
       mChan->OnChannelConnected(peer_pid);
     }
+}
+
+void
+ProcessLink::OnChannelConnectError()
+{
+    AssertIOThread();
+
+    MonitorAutoLock lock(*mChan->mMonitor);
+
+    mChan->OnChannelErrorFromLink();
 }
 
 void
