@@ -406,11 +406,10 @@ class Param(Node):
         self.typespec = typespec
 
 class TypeSpec(Node):
-    def __init__(self, loc, spec, state=None, array=0, nullable=0,
+    def __init__(self, loc, spec, array=0, nullable=0,
                  myChmod=None, otherChmod=None):
         Node.__init__(self, loc)
         self.spec = spec                # QualifiedId
-        self.state = state              # None or State
         self.array = array              # bool
         self.nullable = nullable        # bool
         self.myChmod = myChmod          # None or string
@@ -418,9 +417,6 @@ class TypeSpec(Node):
 
     def basename(self):
         return self.spec.baseid
-
-    def isActor(self):
-        return self.state is not None
 
     def __str__(self):  return str(self.spec)
 
