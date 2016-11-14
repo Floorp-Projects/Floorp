@@ -31,7 +31,7 @@ function runTest() {
   debugDump("entering");
 
   let url = URL_HTTP_UPDATE_XML + "?showDetails=1" + getVersionParams();
-  setUpdateURLOverride(url);
+  setUpdateURL(url);
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, true);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO, false);

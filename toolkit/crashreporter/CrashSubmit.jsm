@@ -287,16 +287,16 @@ Submitter.prototype = {
       formData.append("Throttleable", "0");
     }
     // add the minidumps
-    formData.append("upload_file_minidump", new File(this.dump.path));
+    formData.append("upload_file_minidump", File.createFromFileName(this.dump.path));
     if (this.memory) {
-      formData.append("memory_report", new File(this.memory.path));
+      formData.append("memory_report", File.createFromFileName(this.memory.path));
     }
     if (this.additionalDumps.length > 0) {
       let names = [];
       for (let i of this.additionalDumps) {
         names.push(i.name);
         formData.append("upload_file_minidump_"+i.name,
-                        new File(i.dump.path));
+                        File.createFromFileName(i.dump.path));
       }
     }
 

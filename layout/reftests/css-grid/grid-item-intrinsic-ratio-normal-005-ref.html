@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: ratio-preserving 'normal' stretch of image with zero ratio</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1315857">
+  <style type="text/css">
+body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  float: left;
+  grid: auto-flow 10px / 10px 30px 10px 30px 10px 30px 10px 30px auto auto auto auto;
+  grid-gap: 5px;
+  border:1px solid;
+}
+img:nth-child(1n) { background: blue; }
+img:nth-child(2n) { background: grey; }
+img:nth-child(3n) { background: tan; }
+img:nth-child(4n) { background: black; }
+img {
+  width: 20px;
+  border: 1px solid;
+}
+.jend { justify-self: end; }
+.aend { align-self: end; }
+.end { justify-self: end; align-self: end; }
+  </style>
+</head>
+<body>
+
+<div class="grid sz">
+<img>
+<img>
+<img class="jend">
+<img class="jend">
+<img class="aend">
+<img class="aend">
+<img class="end">
+<img class="end">
+<img>
+<img class="jend">
+<img class="aend">
+<img class="end">
+</div>
+
+<div class="grid sz t2">
+<img>
+<img>
+<img class="jend">
+<img class="jend">
+<img class="aend">
+<img class="aend">
+<img class="end">
+<img class="end">
+<img>
+<img class="jend">
+<img class="aend">
+<img class="end">
+</div>
+
+<div class="grid">
+<img>
+<img>
+<img class="jend">
+<img class="jend">
+<img class="aend">
+<img class="aend">
+<img class="end">
+<img class="end">
+</div>
+
+<div class="grid" style="grid:auto/auto auto">
+<img>
+<img class="jend">
+<img class="aend">
+<img class="end">
+</div>
+
+<div class="grid" style="grid:minmax(auto,30px) 30px/auto auto">
+<img>
+<img class="jend">
+<img class="aend">
+<img class="end">
+</div>
+
+<script>
+var url = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="0px" height="16px"><circle cx="50%" cy="50%" r="50%" fill="pink"/></svg>'
+var imgSizes =
+[
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '8px'],
+  ['20px', '16px'],
+  ['20px', '16px'],
+  ['20px', '16px'],
+  ['20px', '16px'],
+  ['20px', '16px'],
+  ['20px', '16px'],
+  ['20px', '16px'],
+  ['20px', '16px'],
+];
+var imgs = document.querySelectorAll('img');
+for (var i = 0; i < imgs.length; ++i) {
+  var img = imgs[i];
+  img.style.width = imgSizes[i][0];
+  img.style.height = imgSizes[i][1];
+  img.src = url;
+}
+</script>
+
+
+</body>
+</html>

@@ -30,7 +30,7 @@ function runTest() {
   debugDump("entering");
 
   let url = URL_HTTP_UPDATE_XML + "?noUpdates=1";
-  setUpdateURLOverride(url);
+  setUpdateURL(url);
 
   gUP.checkForUpdates();
 }

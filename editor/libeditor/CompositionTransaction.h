@@ -17,6 +17,7 @@
 namespace mozilla {
 
 class EditorBase;
+class RangeUpdater;
 class TextRangeArray;
 
 namespace dom {
@@ -35,7 +36,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMETEXTTXN_IID)
 
   /**
-   * @param aTextNode           The text content node.
+   * @param aTextNode           The start node of text content.
    * @param aOffset             The location in aTextNode to do the insertion.
    * @param aReplaceLength      The length of text to replace. 0 means not
    *                            replacing existing text.
@@ -43,12 +44,14 @@ public:
    *                            null.
    * @param aString             The new text to insert.
    * @param aEditorBase         Used to get and set the selection.
+   * @param aRangeUpdater       The range updater
    */
   CompositionTransaction(dom::Text& aTextNode,
                          uint32_t aOffset, uint32_t aReplaceLength,
                          TextRangeArray* aTextRangeArray,
                          const nsAString& aString,
-                         EditorBase& aEditorBase);
+                         EditorBase& aEditorBase,
+                         RangeUpdater* aRangeUpdater);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CompositionTransaction,
                                            EditTransactionBase)
@@ -88,6 +91,8 @@ private:
 
   // The editor, which is used to get the selection controller.
   EditorBase& mEditorBase;
+
+  RangeUpdater* mRangeUpdater;
 
   bool mFixed;
 };

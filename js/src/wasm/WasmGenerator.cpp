@@ -250,6 +250,8 @@ typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> 
 bool
 ModuleGenerator::patchCallSites(TrapExitOffsetArray* maybeTrapExits)
 {
+    MacroAssembler::AutoPrepareForPatching patching(masm_);
+
     masm_.haltingAlign(CodeAlignment);
 
     // Create far jumps for calls that have relative offsets that may otherwise
@@ -338,6 +340,24 @@ ModuleGenerator::patchCallSites(TrapExitOffsetArray* maybeTrapExits)
           }
         }
     }
+
+    return true;
+}
+
+bool
+ModuleGenerator::patchFarJumps(const TrapExitOffsetArray& trapExits)
+{
+    MacroAssembler::AutoPrepareForPatching patching(masm_);
+
+    for (CallThunk& callThunk : metadata_->callThunks) {
+        uint32_t funcIndex = callThunk.u.funcIndex;
+        callThunk.u.codeRangeIndex = funcToCodeRange_[funcIndex];
+        CodeOffset farJump(callThunk.offset);
+        masm_.patchFarJump(farJump, funcCodeRange(funcIndex).funcNonProfilingEntry());
+    }
+
+    for (const TrapFarJump& farJump : masm_.trapFarJumps())
+        masm_.patchFarJump(farJump.jump, trapExits[farJump.trap].begin);
 
     return true;
 }
@@ -530,22 +550,15 @@ ModuleGenerator::finishCodegen()
     linkData_.outOfBoundsOffset = outOfBoundsExit.begin;
     linkData_.interruptOffset = interruptExit.begin;
 
-    // Now that all other code has been emitted, patch all remaining callsites.
+    // Now that all other code has been emitted, patch all remaining callsites
+    // then far jumps. Patching callsites can generate far jumps so there is an
+    // ordering dependency.
 
     if (!patchCallSites(&trapExits))
         return false;
 
-    // Now that all code has been generated, patch far jumps to destinations.
-
-    for (CallThunk& callThunk : metadata_->callThunks) {
-        uint32_t funcIndex = callThunk.u.funcIndex;
-        callThunk.u.codeRangeIndex = funcToCodeRange_[funcIndex];
-        CodeOffset farJump(callThunk.offset);
-        masm_.patchFarJump(farJump, funcCodeRange(funcIndex).funcNonProfilingEntry());
-    }
-
-    for (const TrapFarJump& farJump : masm_.trapFarJumps())
-        masm_.patchFarJump(farJump.jump, trapExits[farJump.trap].begin);
+    if (!patchFarJumps(trapExits))
+        return false;
 
     // Code-generation is complete!
 
@@ -877,7 +890,7 @@ ModuleGenerator::startFuncDefs()
         }
 #endif
         parallel_ = true;
-        numTasks = threads.maxWasmCompilationThreads();
+        numTasks = 2 * threads.maxWasmCompilationThreads();
     } else {
         numTasks = 1;
     }

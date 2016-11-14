@@ -11,12 +11,6 @@ interface nsIFile;
 
 [Constructor(sequence<BlobPart> fileBits,
              USVString fileName, optional FilePropertyBag options),
-
- // These constructors are just for chrome callers:
- Constructor(Blob fileBits, optional ChromeFilePropertyBag options),
- Constructor(nsIFile fileBits, optional ChromeFilePropertyBag options),
- Constructor(USVString fileBits, optional ChromeFilePropertyBag options),
-
  Exposed=(Window,Worker)]
 interface File : Blob {
   readonly attribute DOMString name;
@@ -45,4 +39,12 @@ partial interface File {
 
   [GetterThrows, ChromeOnly]
   readonly attribute DOMString mozFullPath;
+
+  [ChromeOnly, Throws]
+  static File createFromNsIFile(nsIFile file,
+                                optional ChromeFilePropertyBag options);
+
+  [ChromeOnly, Throws]
+  static File createFromFileName(USVString fileName,
+                                 optional ChromeFilePropertyBag options);
 };

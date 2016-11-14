@@ -1,5 +1,10 @@
 "use strict";
 
+Components.utils.import("resource://gre/modules/ExtensionUtils.jsm");
+var {
+  SingletonEventManager,
+} = ExtensionUtils;
+
 /**
  * Checks whether the given error matches the given expectations.
  *
@@ -54,10 +59,10 @@ function errorMatches(error, expectedError, context) {
  */
 function toSource(value) {
   if (value === null) {
-    return null;
+    return "null";
   }
   if (value === undefined) {
-    return null;
+    return "undefined";
   }
   if (typeof value === "string") {
     return JSON.stringify(value);
@@ -71,48 +76,60 @@ function toSource(value) {
 }
 
 function makeTestAPI(context) {
-  function assertTrue(...args) {
-    context.childManager.callParentFunctionNoReturn("test.assertTrue", args);
+  const {extension} = context;
+
+  function getStack() {
+    return new context.cloneScope.Error().stack.replace(/^/gm, "    ");
+  }
+
+  function assertTrue(value, msg) {
+    extension.emit("test-result", Boolean(value), String(msg), getStack());
   }
 
   return {
     test: {
-      // These functions accept arbitrary values. Convert the parameters to
-      // make sure that the values can be cloned structurally for IPC.
-
       sendMessage(...args) {
-        args = Cu.cloneInto(args, context.cloneScope);
-        context.childManager.callParentFunctionNoReturn("test.sendMessage", args);
+        extension.emit("test-message", ...args);
+      },
+
+      notifyPass(msg) {
+        extension.emit("test-done", true, msg, getStack());
+      },
+
+      notifyFail(msg) {
+        extension.emit("test-done", false, msg, getStack());
+      },
+
+      log(msg) {
+        extension.emit("test-log", true, msg, getStack());
+      },
+
+      fail(msg) {
+        assertTrue(false, msg);
+      },
+
+      succeed(msg) {
+        assertTrue(true, msg);
       },
 
       assertTrue(value, msg) {
-        context.childManager.callParentFunctionNoReturn("test.assertTrue", [
-          Boolean(value),
-          String(msg),
-        ]);
+        assertTrue(value, msg);
       },
 
       assertFalse(value, msg) {
-        context.childManager.callParentFunctionNoReturn("test.assertFalse", [
-          Boolean(value),
-          String(msg),
-        ]);
+        assertTrue(!value, msg);
       },
 
       assertEq(expected, actual, msg) {
         let equal = expected === actual;
-        expected += "";
-        actual += "";
+
+        expected = String(expected);
+        actual = String(actual);
+
         if (!equal && expected === actual) {
-          // Add an extra tag so that "expected === actual" in the parent is
-          // also false, despite the fact that the serialization is equal.
           actual += " (different)";
         }
-        context.childManager.callParentFunctionNoReturn("test.assertEq", [
-          expected,
-          actual,
-          String(msg),
-        ]);
+        extension.emit("test-eq", equal, String(msg), expected, actual, getStack());
       },
 
       assertRejects(promise, expectedError, msg) {
@@ -147,13 +164,25 @@ function makeTestAPI(context) {
           let errorMessage = toSource(error && error.message);
 
           assertTrue(errorMatches(error, expectedError, context),
-                     `Promise rejected, expecting rejection to match ${toSource(expectedError)}` +
+                     `Function threw, expecting error to match ${toSource(expectedError)}` +
                      `got ${errorMessage}${msg}`);
         }
       },
+
+      onMessage: new SingletonEventManager(context, "test.onMessage", fire => {
+        let handler = (event, ...args) => {
+          context.runSafe(fire, ...args);
+        };
+
+        extension.on("test-harness-message", handler);
+        return () => {
+          extension.off("test-harness-message", handler);
+        };
+      }).api(),
     },
   };
 }
+
 extensions.registerSchemaAPI("test", "addon_child", makeTestAPI);
 extensions.registerSchemaAPI("test", "content_child", makeTestAPI);
 

@@ -96,14 +96,19 @@ add_task(function* testWindowCreate() {
 
 
       browser.test.log("Try to create a window with two URLs");
-      [, , window] = await Promise.all([
+      let readyPromise = Promise.all([
         // tabs.onUpdated can be invoked between the call of windows.create and
         // the invocation of its callback/promise, so set up the listeners
         // before creating the window.
         promiseTabUpdated("http://example.com/"),
         promiseTabUpdated("http://example.org/"),
-        browser.windows.create({url: ["http://example.com/", "http://example.org/"]}),
       ]);
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      window = await browser.windows.create({url: ["http://example.com/", "http://example.org/"]});
+      await readyPromise;
+
       browser.test.assertEq(2, window.tabs.length, "2 tabs were opened in new window");
       browser.test.assertEq("about:blank", window.tabs[0].url, "about:blank, page not loaded yet");
       browser.test.assertEq("about:blank", window.tabs[1].url, "about:blank, page not loaded yet");

@@ -14,7 +14,7 @@ addMessageListener("file.open", function (stem) {
     sendAsyncMessage("file.opened", {
       fullPath: file.path,
       leafName: file.leafName,
-      domFile: new File(file),
+      domFile: File.createFromNsIFile(file),
     });
   } catch(e) {
     sendAsyncMessage("fail", e.toString());
