@@ -1325,12 +1325,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 #endif
     }
 
-    enum AssignmentFlavor {
-        KeyedDestructuringAssignment,
-        IncrementAssignment,
-        DecrementAssignment,
-    };
-
     bool matchInOrOf(bool* isForInp, bool* isForOfp);
 
     bool hasUsedFunctionSpecialName(HandlePropertyName name);
@@ -1370,9 +1364,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                                        FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
 
   private:
-    bool reportIfArgumentsEvalTarget(Node nameNode);
-    bool reportIfNotValidSimpleAssignmentTarget(Node target, AssignmentFlavor flavor);
-
     bool checkAndMarkAsIncOperand(Node kid);
     bool checkStrictAssignment(Node lhs);
     bool checkStrictBinding(PropertyName* name, TokenPos pos);
