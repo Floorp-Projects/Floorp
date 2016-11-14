@@ -17,9 +17,6 @@ namespace mozilla {
 // object on the main thread.
 class GMPCDMCallbackProxy : public GMPDecryptorProxyCallback {
 public:
-
-  void SetDecryptorId(uint32_t aId) override;
-
   void SetSessionId(uint32_t aCreateSessionToken,
                     const nsCString& aSessionId) override;
 
