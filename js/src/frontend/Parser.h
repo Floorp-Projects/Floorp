@@ -1428,8 +1428,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     bool checkDestructuringObject(Node objectPattern, const mozilla::Maybe<DeclarationKind>& maybeDecl);
     bool checkDestructuringName(Node expr, mozilla::Maybe<DeclarationKind> maybeDecl);
 
-    bool checkAssignmentToCall(Node node, unsigned errnum);
-
     Node newNumber(const Token& tok) {
         return handler.newNumber(tok.number(), tok.decimalPoint(), tok.pos);
     }
