@@ -536,7 +536,7 @@ public:
   /**
    * Notify the display list builder that we're leaving a presshell.
    */
-  void LeavePresShell(nsIFrame* aReferenceFrame);
+  void LeavePresShell(nsIFrame* aReferenceFrame, nsDisplayList* aPaintedContents);
 
   /**
    * Returns true if we're currently building a display list that's

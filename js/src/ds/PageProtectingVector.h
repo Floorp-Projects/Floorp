@@ -78,8 +78,7 @@ class PageProtectingVector final
     }
 
     void protect() {
-        MOZ_ASSERT(!regionUnprotected);
-        if (protectionEnabled && unprotectedBytes >= intptr_t(pageSize)) {
+        if (!regionUnprotected && protectionEnabled && unprotectedBytes >= intptr_t(pageSize)) {
             size_t toProtect = size_t(unprotectedBytes) & ~pageMask;
             uintptr_t addr = uintptr_t(vector.begin()) + offsetToPage + protectedBytes;
             gc::MakePagesReadOnly(reinterpret_cast<void*>(addr), toProtect);
@@ -89,9 +88,8 @@ class PageProtectingVector final
     }
 
     void unprotect() {
-        MOZ_ASSERT(!regionUnprotected);
         MOZ_ASSERT_IF(!protectionEnabled, !protectedBytes);
-        if (protectedBytes) {
+        if (!regionUnprotected && protectedBytes) {
             uintptr_t addr = uintptr_t(vector.begin()) + offsetToPage;
             gc::UnprotectPages(reinterpret_cast<void*>(addr), protectedBytes);
             unprotectedBytes += protectedBytes;

@@ -137,7 +137,7 @@ class WasmToken
         int64_t sint_;
         FloatLiteralKind floatLiteralKind_;
         ValType valueType_;
-        Expr expr_;
+        Op op_;
     } u;
   public:
     WasmToken()
@@ -196,7 +196,7 @@ class WasmToken
         MOZ_ASSERT(kind_ == ValueType || kind_ == Const);
         u.valueType_ = valueType;
     }
-    explicit WasmToken(Kind kind, Expr expr, const char16_t* begin, const char16_t* end)
+    explicit WasmToken(Kind kind, Op op, const char16_t* begin, const char16_t* end)
       : kind_(kind),
         begin_(begin),
         end_(end)
@@ -205,7 +205,7 @@ class WasmToken
         MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == TernaryOpcode ||
                    kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
                    kind_ == Load || kind_ == Store);
-        u.expr_ = expr;
+        u.op_ = op;
     }
     explicit WasmToken(const char16_t* begin)
       : kind_(Error),
@@ -252,11 +252,11 @@ class WasmToken
         MOZ_ASSERT(kind_ == ValueType || kind_ == Const);
         return u.valueType_;
     }
-    Expr expr() const {
+    Op op() const {
         MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode || kind_ == TernaryOpcode ||
                    kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
                    kind_ == Load || kind_ == Store);
-        return u.expr_;
+        return u.op_;
     }
     bool isOpcode() const {
         switch (kind_) {
@@ -888,95 +888,95 @@ WasmTokenStream::next()
             switch (*cur_) {
               case 'a':
                 if (consume(u"abs"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F32Abs, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F32Abs, begin, cur_);
                 if (consume(u"add"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F32Add, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F32Add, begin, cur_);
                 break;
               case 'c':
                 if (consume(u"ceil"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F32Ceil, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F32Ceil, begin, cur_);
                 if (consume(u"const"))
                     return WasmToken(WasmToken::Const, ValType::F32, begin, cur_);
                 if (consume(u"convert_s/i32")) {
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertSI32,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::F32ConvertSI32,
                                      begin, cur_);
                 }
                 if (consume(u"convert_u/i32")) {
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertUI32,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::F32ConvertUI32,
                                      begin, cur_);
                 }
                 if (consume(u"convert_s/i64")) {
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertSI64,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::F32ConvertSI64,
                                      begin, cur_);
                 }
                 if (consume(u"convert_u/i64")) {
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::F32ConvertUI64,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::F32ConvertUI64,
                                      begin, cur_);
                 }
                 if (consume(u"copysign"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F32CopySign, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F32CopySign, begin, cur_);
                 break;
               case 'd':
                 if (consume(u"demote/f64"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::F32DemoteF64,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::F32DemoteF64,
                                      begin, cur_);
                 if (consume(u"div"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F32Div, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F32Div, begin, cur_);
                 break;
               case 'e':
                 if (consume(u"eq"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Eq, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::F32Eq, begin, cur_);
                 break;
               case 'f':
                 if (consume(u"floor"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F32Floor, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F32Floor, begin, cur_);
                 break;
               case 'g':
                 if (consume(u"ge"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Ge, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::F32Ge, begin, cur_);
                 if (consume(u"gt"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Gt, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::F32Gt, begin, cur_);
                 break;
               case 'l':
                 if (consume(u"le"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Le, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::F32Le, begin, cur_);
                 if (consume(u"lt"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Lt, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::F32Lt, begin, cur_);
                 if (consume(u"load"))
-                    return WasmToken(WasmToken::Load, Expr::F32Load, begin, cur_);
+                    return WasmToken(WasmToken::Load, Op::F32Load, begin, cur_);
                 break;
               case 'm':
                 if (consume(u"max"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F32Max, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F32Max, begin, cur_);
                 if (consume(u"min"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F32Min, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F32Min, begin, cur_);
                 if (consume(u"mul"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F32Mul, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F32Mul, begin, cur_);
                 break;
               case 'n':
                 if (consume(u"nearest"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F32Nearest, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F32Nearest, begin, cur_);
                 if (consume(u"neg"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F32Neg, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F32Neg, begin, cur_);
                 if (consume(u"ne"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::F32Ne, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::F32Ne, begin, cur_);
                 break;
               case 'r':
                 if (consume(u"reinterpret/i32"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::F32ReinterpretI32,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::F32ReinterpretI32,
                                      begin, cur_);
                 break;
               case 's':
                 if (consume(u"sqrt"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F32Sqrt, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F32Sqrt, begin, cur_);
                 if (consume(u"sub"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F32Sub, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F32Sub, begin, cur_);
                 if (consume(u"store"))
-                    return WasmToken(WasmToken::Store, Expr::F32Store, begin, cur_);
+                    return WasmToken(WasmToken::Store, Op::F32Store, begin, cur_);
                 break;
               case 't':
                 if (consume(u"trunc"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F32Trunc, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F32Trunc, begin, cur_);
                 break;
             }
             break;
@@ -988,97 +988,97 @@ WasmTokenStream::next()
             switch (*cur_) {
               case 'a':
                 if (consume(u"abs"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F64Abs, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F64Abs, begin, cur_);
                 if (consume(u"add"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F64Add, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F64Add, begin, cur_);
                 break;
               case 'c':
                 if (consume(u"ceil"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F64Ceil, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F64Ceil, begin, cur_);
                 if (consume(u"const"))
                     return WasmToken(WasmToken::Const, ValType::F64, begin, cur_);
                 if (consume(u"convert_s/i32")) {
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertSI32,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::F64ConvertSI32,
                                      begin, cur_);
                 }
                 if (consume(u"convert_u/i32")) {
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertUI32,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::F64ConvertUI32,
                                      begin, cur_);
                 }
                 if (consume(u"convert_s/i64")) {
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertSI64,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::F64ConvertSI64,
                                      begin, cur_);
                 }
                 if (consume(u"convert_u/i64")) {
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::F64ConvertUI64,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::F64ConvertUI64,
                                      begin, cur_);
                 }
                 if (consume(u"copysign"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F64CopySign, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F64CopySign, begin, cur_);
                 break;
               case 'd':
                 if (consume(u"div"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F64Div, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F64Div, begin, cur_);
                 break;
               case 'e':
                 if (consume(u"eq"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Eq, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::F64Eq, begin, cur_);
                 break;
               case 'f':
                 if (consume(u"floor"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F64Floor, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F64Floor, begin, cur_);
                 break;
               case 'g':
                 if (consume(u"ge"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Ge, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::F64Ge, begin, cur_);
                 if (consume(u"gt"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Gt, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::F64Gt, begin, cur_);
                 break;
               case 'l':
                 if (consume(u"le"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Le, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::F64Le, begin, cur_);
                 if (consume(u"lt"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Lt, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::F64Lt, begin, cur_);
                 if (consume(u"load"))
-                    return WasmToken(WasmToken::Load, Expr::F64Load, begin, cur_);
+                    return WasmToken(WasmToken::Load, Op::F64Load, begin, cur_);
                 break;
               case 'm':
                 if (consume(u"max"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F64Max, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F64Max, begin, cur_);
                 if (consume(u"min"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F64Min, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F64Min, begin, cur_);
                 if (consume(u"mul"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F64Mul, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F64Mul, begin, cur_);
                 break;
               case 'n':
                 if (consume(u"nearest"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F64Nearest, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F64Nearest, begin, cur_);
                 if (consume(u"neg"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F64Neg, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F64Neg, begin, cur_);
                 if (consume(u"ne"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::F64Ne, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::F64Ne, begin, cur_);
                 break;
               case 'p':
                 if (consume(u"promote/f32"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::F64PromoteF32,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::F64PromoteF32,
                                      begin, cur_);
                 break;
               case 'r':
                 if (consume(u"reinterpret/i64"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F64ReinterpretI64,
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F64ReinterpretI64,
                                      begin, cur_);
                 break;
               case 's':
                 if (consume(u"sqrt"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F64Sqrt, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F64Sqrt, begin, cur_);
                 if (consume(u"sub"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::F64Sub, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::F64Sub, begin, cur_);
                 if (consume(u"store"))
-                    return WasmToken(WasmToken::Store, Expr::F64Store, begin, cur_);
+                    return WasmToken(WasmToken::Store, Op::F64Store, begin, cur_);
                 break;
               case 't':
                 if (consume(u"trunc"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::F64Trunc, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::F64Trunc, begin, cur_);
                 break;
             }
             break;
@@ -1104,133 +1104,133 @@ WasmTokenStream::next()
             switch (*cur_) {
               case 'a':
                 if (consume(u"add"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32Add, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32Add, begin, cur_);
                 if (consume(u"and"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32And, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32And, begin, cur_);
                 break;
               case 'c':
                 if (consume(u"const"))
                     return WasmToken(WasmToken::Const, ValType::I32, begin, cur_);
                 if (consume(u"clz"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::I32Clz, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::I32Clz, begin, cur_);
                 if (consume(u"ctz"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::I32Ctz, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::I32Ctz, begin, cur_);
                 break;
               case 'd':
                 if (consume(u"div_s"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32DivS, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32DivS, begin, cur_);
                 if (consume(u"div_u"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32DivU, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32DivU, begin, cur_);
                 break;
               case 'e':
                 if (consume(u"eqz"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::I32Eqz, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::I32Eqz, begin, cur_);
                 if (consume(u"eq"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I32Eq, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I32Eq, begin, cur_);
                 break;
               case 'g':
                 if (consume(u"ge_s"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I32GeS, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I32GeS, begin, cur_);
                 if (consume(u"ge_u"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I32GeU, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I32GeU, begin, cur_);
                 if (consume(u"gt_s"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I32GtS, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I32GtS, begin, cur_);
                 if (consume(u"gt_u"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I32GtU, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I32GtU, begin, cur_);
                 break;
               case 'l':
                 if (consume(u"le_s"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I32LeS, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I32LeS, begin, cur_);
                 if (consume(u"le_u"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I32LeU, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I32LeU, begin, cur_);
                 if (consume(u"lt_s"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I32LtS, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I32LtS, begin, cur_);
                 if (consume(u"lt_u"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I32LtU, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I32LtU, begin, cur_);
                 if (consume(u"load")) {
                     if (IsWasmSpace(*cur_))
-                        return WasmToken(WasmToken::Load, Expr::I32Load, begin, cur_);
+                        return WasmToken(WasmToken::Load, Op::I32Load, begin, cur_);
                     if (consume(u"8_s"))
-                        return WasmToken(WasmToken::Load, Expr::I32Load8S, begin, cur_);
+                        return WasmToken(WasmToken::Load, Op::I32Load8S, begin, cur_);
                     if (consume(u"8_u"))
-                        return WasmToken(WasmToken::Load, Expr::I32Load8U, begin, cur_);
+                        return WasmToken(WasmToken::Load, Op::I32Load8U, begin, cur_);
                     if (consume(u"16_s"))
-                        return WasmToken(WasmToken::Load, Expr::I32Load16S, begin, cur_);
+                        return WasmToken(WasmToken::Load, Op::I32Load16S, begin, cur_);
                     if (consume(u"16_u"))
-                        return WasmToken(WasmToken::Load, Expr::I32Load16U, begin, cur_);
+                        return WasmToken(WasmToken::Load, Op::I32Load16U, begin, cur_);
                     break;
                 }
                 break;
               case 'm':
                 if (consume(u"mul"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32Mul, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32Mul, begin, cur_);
                 break;
               case 'n':
                 if (consume(u"ne"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I32Ne, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I32Ne, begin, cur_);
                 break;
               case 'o':
                 if (consume(u"or"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32Or, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32Or, begin, cur_);
                 break;
               case 'p':
                 if (consume(u"popcnt"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::I32Popcnt, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::I32Popcnt, begin, cur_);
                 break;
               case 'r':
                 if (consume(u"reinterpret/f32"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::I32ReinterpretF32,
+                    return WasmToken(WasmToken::UnaryOpcode, Op::I32ReinterpretF32,
                                      begin, cur_);
                 if (consume(u"rem_s"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32RemS, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32RemS, begin, cur_);
                 if (consume(u"rem_u"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32RemU, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32RemU, begin, cur_);
                 if (consume(u"rotr"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32Rotr, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32Rotr, begin, cur_);
                 if (consume(u"rotl"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32Rotl, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32Rotl, begin, cur_);
                 break;
               case 's':
                 if (consume(u"sub"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32Sub, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32Sub, begin, cur_);
                 if (consume(u"shl"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32Shl, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32Shl, begin, cur_);
                 if (consume(u"shr_s"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32ShrS, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32ShrS, begin, cur_);
                 if (consume(u"shr_u"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32ShrU, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32ShrU, begin, cur_);
                 if (consume(u"store")) {
                     if (IsWasmSpace(*cur_))
-                        return WasmToken(WasmToken::Store, Expr::I32Store, begin, cur_);
+                        return WasmToken(WasmToken::Store, Op::I32Store, begin, cur_);
                     if (consume(u"8"))
-                        return WasmToken(WasmToken::Store, Expr::I32Store8, begin, cur_);
+                        return WasmToken(WasmToken::Store, Op::I32Store8, begin, cur_);
                     if (consume(u"16"))
-                        return WasmToken(WasmToken::Store, Expr::I32Store16, begin, cur_);
+                        return WasmToken(WasmToken::Store, Op::I32Store16, begin, cur_);
                     break;
                 }
                 break;
               case 't':
                 if (consume(u"trunc_s/f32"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::I32TruncSF32,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::I32TruncSF32,
                                      begin, cur_);
                 if (consume(u"trunc_s/f64"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::I32TruncSF64,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::I32TruncSF64,
                                      begin, cur_);
                 if (consume(u"trunc_u/f32"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::I32TruncUF32,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::I32TruncUF32,
                                      begin, cur_);
                 if (consume(u"trunc_u/f64"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::I32TruncUF64,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::I32TruncUF64,
                                      begin, cur_);
                 break;
               case 'w':
                 if (consume(u"wrap/i64"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::I32WrapI64,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::I32WrapI64,
                                      begin, cur_);
                 break;
               case 'x':
                 if (consume(u"xor"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I32Xor, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I32Xor, begin, cur_);
                 break;
             }
             break;
@@ -1242,140 +1242,140 @@ WasmTokenStream::next()
             switch (*cur_) {
               case 'a':
                 if (consume(u"add"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64Add, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64Add, begin, cur_);
                 if (consume(u"and"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64And, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64And, begin, cur_);
                 break;
               case 'c':
                 if (consume(u"const"))
                     return WasmToken(WasmToken::Const, ValType::I64, begin, cur_);
                 if (consume(u"clz"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::I64Clz, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::I64Clz, begin, cur_);
                 if (consume(u"ctz"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::I64Ctz, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::I64Ctz, begin, cur_);
                 break;
               case 'd':
                 if (consume(u"div_s"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64DivS, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64DivS, begin, cur_);
                 if (consume(u"div_u"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64DivU, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64DivU, begin, cur_);
                 break;
               case 'e':
                 if (consume(u"eqz"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::I64Eqz, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::I64Eqz, begin, cur_);
                 if (consume(u"eq"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I64Eq, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I64Eq, begin, cur_);
                 if (consume(u"extend_s/i32"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::I64ExtendSI32,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::I64ExtendSI32,
                                      begin, cur_);
                 if (consume(u"extend_u/i32"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::I64ExtendUI32,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::I64ExtendUI32,
                                      begin, cur_);
                 break;
               case 'g':
                 if (consume(u"ge_s"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I64GeS, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I64GeS, begin, cur_);
                 if (consume(u"ge_u"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I64GeU, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I64GeU, begin, cur_);
                 if (consume(u"gt_s"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I64GtS, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I64GtS, begin, cur_);
                 if (consume(u"gt_u"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I64GtU, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I64GtU, begin, cur_);
                 break;
               case 'l':
                 if (consume(u"le_s"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I64LeS, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I64LeS, begin, cur_);
                 if (consume(u"le_u"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I64LeU, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I64LeU, begin, cur_);
                 if (consume(u"lt_s"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I64LtS, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I64LtS, begin, cur_);
                 if (consume(u"lt_u"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I64LtU, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I64LtU, begin, cur_);
                 if (consume(u"load")) {
                     if (IsWasmSpace(*cur_))
-                        return WasmToken(WasmToken::Load, Expr::I64Load, begin, cur_);
+                        return WasmToken(WasmToken::Load, Op::I64Load, begin, cur_);
                     if (consume(u"8_s"))
-                        return WasmToken(WasmToken::Load, Expr::I64Load8S, begin, cur_);
+                        return WasmToken(WasmToken::Load, Op::I64Load8S, begin, cur_);
                     if (consume(u"8_u"))
-                        return WasmToken(WasmToken::Load, Expr::I64Load8U, begin, cur_);
+                        return WasmToken(WasmToken::Load, Op::I64Load8U, begin, cur_);
                     if (consume(u"16_s"))
-                        return WasmToken(WasmToken::Load, Expr::I64Load16S, begin, cur_);
+                        return WasmToken(WasmToken::Load, Op::I64Load16S, begin, cur_);
                     if (consume(u"16_u"))
-                        return WasmToken(WasmToken::Load, Expr::I64Load16U, begin, cur_);
+                        return WasmToken(WasmToken::Load, Op::I64Load16U, begin, cur_);
                     if (consume(u"32_s"))
-                        return WasmToken(WasmToken::Load, Expr::I64Load32S, begin, cur_);
+                        return WasmToken(WasmToken::Load, Op::I64Load32S, begin, cur_);
                     if (consume(u"32_u"))
-                        return WasmToken(WasmToken::Load, Expr::I64Load32U, begin, cur_);
+                        return WasmToken(WasmToken::Load, Op::I64Load32U, begin, cur_);
                     break;
                 }
                 break;
               case 'm':
                 if (consume(u"mul"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64Mul, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64Mul, begin, cur_);
                 break;
               case 'n':
                 if (consume(u"ne"))
-                    return WasmToken(WasmToken::ComparisonOpcode, Expr::I64Ne, begin, cur_);
+                    return WasmToken(WasmToken::ComparisonOpcode, Op::I64Ne, begin, cur_);
                 break;
               case 'o':
                 if (consume(u"or"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64Or, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64Or, begin, cur_);
                 break;
               case 'p':
                 if (consume(u"popcnt"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::I64Popcnt, begin, cur_);
+                    return WasmToken(WasmToken::UnaryOpcode, Op::I64Popcnt, begin, cur_);
                 break;
               case 'r':
                 if (consume(u"reinterpret/f64"))
-                    return WasmToken(WasmToken::UnaryOpcode, Expr::I64ReinterpretF64,
+                    return WasmToken(WasmToken::UnaryOpcode, Op::I64ReinterpretF64,
                                      begin, cur_);
                 if (consume(u"rem_s"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64RemS, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64RemS, begin, cur_);
                 if (consume(u"rem_u"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64RemU, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64RemU, begin, cur_);
                 if (consume(u"rotr"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64Rotr, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64Rotr, begin, cur_);
                 if (consume(u"rotl"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64Rotl, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64Rotl, begin, cur_);
                 break;
               case 's':
                 if (consume(u"sub"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64Sub, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64Sub, begin, cur_);
                 if (consume(u"shl"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64Shl, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64Shl, begin, cur_);
                 if (consume(u"shr_s"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64ShrS, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64ShrS, begin, cur_);
                 if (consume(u"shr_u"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64ShrU, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64ShrU, begin, cur_);
                 if (consume(u"store")) {
                     if (IsWasmSpace(*cur_))
-                        return WasmToken(WasmToken::Store, Expr::I64Store, begin, cur_);
+                        return WasmToken(WasmToken::Store, Op::I64Store, begin, cur_);
                     if (consume(u"8"))
-                        return WasmToken(WasmToken::Store, Expr::I64Store8, begin, cur_);
+                        return WasmToken(WasmToken::Store, Op::I64Store8, begin, cur_);
                     if (consume(u"16"))
-                        return WasmToken(WasmToken::Store, Expr::I64Store16, begin, cur_);
+                        return WasmToken(WasmToken::Store, Op::I64Store16, begin, cur_);
                     if (consume(u"32"))
-                        return WasmToken(WasmToken::Store, Expr::I64Store32, begin, cur_);
+                        return WasmToken(WasmToken::Store, Op::I64Store32, begin, cur_);
                     break;
                 }
                 break;
               case 't':
                 if (consume(u"trunc_s/f32"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::I64TruncSF32,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::I64TruncSF32,
                                      begin, cur_);
                 if (consume(u"trunc_s/f64"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::I64TruncSF64,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::I64TruncSF64,
                                      begin, cur_);
                 if (consume(u"trunc_u/f32"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::I64TruncUF32,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::I64TruncUF32,
                                      begin, cur_);
                 if (consume(u"trunc_u/f64"))
-                    return WasmToken(WasmToken::ConversionOpcode, Expr::I64TruncUF64,
+                    return WasmToken(WasmToken::ConversionOpcode, Op::I64TruncUF64,
                                      begin, cur_);
                 break;
               case 'x':
                 if (consume(u"xor"))
-                    return WasmToken(WasmToken::BinaryOpcode, Expr::I64Xor, begin, cur_);
+                    return WasmToken(WasmToken::BinaryOpcode, Op::I64Xor, begin, cur_);
                 break;
             }
             break;
@@ -1430,7 +1430,7 @@ WasmTokenStream::next()
 
       case 's':
         if (consume(u"select"))
-            return WasmToken(WasmToken::TernaryOpcode, Expr::Select, begin, cur_);
+            return WasmToken(WasmToken::TernaryOpcode, Op::Select, begin, cur_);
         if (consume(u"set_global"))
             return WasmToken(WasmToken::SetGlobal, begin, cur_);
         if (consume(u"set_local"))
@@ -1563,7 +1563,7 @@ ParseBlockSignature(WasmParseContext& c, ExprType* type)
 }
 
 static AstBlock*
-ParseBlock(WasmParseContext& c, Expr expr, bool inParens)
+ParseBlock(WasmParseContext& c, Op op, bool inParens)
 {
     AstExprVector exprs(c.lifo);
 
@@ -1572,7 +1572,7 @@ ParseBlock(WasmParseContext& c, Expr expr, bool inParens)
     // Compatibility syntax sugar: If a second label is present, we'll wrap
     // this loop in a block.
     AstName otherName;
-    if (expr == Expr::Loop) {
+    if (op == Op::Loop) {
         AstName maybeName = c.ts.getIfName();
         if (!maybeName.empty()) {
             otherName = name;
@@ -1592,21 +1592,21 @@ ParseBlock(WasmParseContext& c, Expr expr, bool inParens)
             return nullptr;
     }
 
-    AstBlock* result = new(c.lifo) AstBlock(expr, type, name, Move(exprs));
+    AstBlock* result = new(c.lifo) AstBlock(op, type, name, Move(exprs));
 
-    if (expr == Expr::Loop && !otherName.empty()) {
+    if (op == Op::Loop && !otherName.empty()) {
         if (!exprs.append(result))
             return nullptr;
-        result = new(c.lifo) AstBlock(Expr::Block, type, otherName, Move(exprs));
+        result = new(c.lifo) AstBlock(Op::Block, type, otherName, Move(exprs));
     }
 
     return result;
 }
 
 static AstBranch*
-ParseBranch(WasmParseContext& c, Expr expr, bool inParens)
+ParseBranch(WasmParseContext& c, Op op, bool inParens)
 {
-    MOZ_ASSERT(expr == Expr::Br || expr == Expr::BrIf);
+    MOZ_ASSERT(op == Op::Br || op == Op::BrIf);
 
     AstRef target;
     if (!c.ts.matchRef(&target, c.error))
@@ -1624,7 +1624,7 @@ ParseBranch(WasmParseContext& c, Expr expr, bool inParens)
     }
 
     AstExpr* cond = nullptr;
-    if (expr == Expr::BrIf) {
+    if (op == Op::BrIf) {
         if (inParens && c.ts.getIf(WasmToken::OpenParen)) {
             cond = ParseExprInsideParens(c);
             if (!cond)
@@ -1638,7 +1638,7 @@ ParseBranch(WasmParseContext& c, Expr expr, bool inParens)
         }
     }
 
-    return new(c.lifo) AstBranch(expr, ExprType::Void, cond, target, value);
+    return new(c.lifo) AstBranch(op, ExprType::Void, cond, target, value);
 }
 
 static bool
@@ -1668,7 +1668,7 @@ ParseCall(WasmParseContext& c, bool inParens)
             return nullptr;
     }
 
-    return new(c.lifo) AstCall(Expr::Call, ExprType::Void, func, Move(args));
+    return new(c.lifo) AstCall(Op::Call, ExprType::Void, func, Move(args));
 }
 
 static AstCallIndirect*
@@ -2086,17 +2086,17 @@ ParseReturn(WasmParseContext& c, bool inParens)
 }
 
 static AstUnaryOperator*
-ParseUnaryOperator(WasmParseContext& c, Expr expr, bool inParens)
+ParseUnaryOperator(WasmParseContext& c, Op op, bool inParens)
 {
-    AstExpr* op = ParseExpr(c, inParens);
-    if (!op)
+    AstExpr* operand = ParseExpr(c, inParens);
+    if (!operand)
         return nullptr;
 
-    return new(c.lifo) AstUnaryOperator(expr, op);
+    return new(c.lifo) AstUnaryOperator(op, operand);
 }
 
 static AstBinaryOperator*
-ParseBinaryOperator(WasmParseContext& c, Expr expr, bool inParens)
+ParseBinaryOperator(WasmParseContext& c, Op op, bool inParens)
 {
     AstExpr* lhs = ParseExpr(c, inParens);
     if (!lhs)
@@ -2106,11 +2106,11 @@ ParseBinaryOperator(WasmParseContext& c, Expr expr, bool inParens)
     if (!rhs)
         return nullptr;
 
-    return new(c.lifo) AstBinaryOperator(expr, lhs, rhs);
+    return new(c.lifo) AstBinaryOperator(op, lhs, rhs);
 }
 
 static AstComparisonOperator*
-ParseComparisonOperator(WasmParseContext& c, Expr expr, bool inParens)
+ParseComparisonOperator(WasmParseContext& c, Op op, bool inParens)
 {
     AstExpr* lhs = ParseExpr(c, inParens);
     if (!lhs)
@@ -2120,11 +2120,11 @@ ParseComparisonOperator(WasmParseContext& c, Expr expr, bool inParens)
     if (!rhs)
         return nullptr;
 
-    return new(c.lifo) AstComparisonOperator(expr, lhs, rhs);
+    return new(c.lifo) AstComparisonOperator(op, lhs, rhs);
 }
 
 static AstTernaryOperator*
-ParseTernaryOperator(WasmParseContext& c, Expr expr, bool inParens)
+ParseTernaryOperator(WasmParseContext& c, Op op, bool inParens)
 {
     AstExpr* op0 = ParseExpr(c, inParens);
     if (!op0)
@@ -2138,17 +2138,17 @@ ParseTernaryOperator(WasmParseContext& c, Expr expr, bool inParens)
     if (!op2)
         return nullptr;
 
-    return new(c.lifo) AstTernaryOperator(expr, op0, op1, op2);
+    return new(c.lifo) AstTernaryOperator(op, op0, op1, op2);
 }
 
 static AstConversionOperator*
-ParseConversionOperator(WasmParseContext& c, Expr expr, bool inParens)
+ParseConversionOperator(WasmParseContext& c, Op op, bool inParens)
 {
-    AstExpr* op = ParseExpr(c, inParens);
-    if (!op)
+    AstExpr* operand = ParseExpr(c, inParens);
+    if (!operand)
         return nullptr;
 
-    return new(c.lifo) AstConversionOperator(expr, op);
+    return new(c.lifo) AstConversionOperator(op, operand);
 }
 
 static AstDrop*
@@ -2261,7 +2261,7 @@ ParseLoadStoreAddress(WasmParseContext& c, int32_t* offset, uint32_t* alignLog2,
 }
 
 static AstLoad*
-ParseLoad(WasmParseContext& c, Expr expr, bool inParens)
+ParseLoad(WasmParseContext& c, Op op, bool inParens)
 {
     int32_t offset;
     uint32_t alignLog2;
@@ -2270,41 +2270,41 @@ ParseLoad(WasmParseContext& c, Expr expr, bool inParens)
         return nullptr;
 
     if (alignLog2 == UINT32_MAX) {
-        switch (expr) {
-          case Expr::I32Load8S:
-          case Expr::I32Load8U:
-          case Expr::I64Load8S:
-          case Expr::I64Load8U:
+        switch (op) {
+          case Op::I32Load8S:
+          case Op::I32Load8U:
+          case Op::I64Load8S:
+          case Op::I64Load8U:
             alignLog2 = 0;
             break;
-          case Expr::I32Load16S:
-          case Expr::I32Load16U:
-          case Expr::I64Load16S:
-          case Expr::I64Load16U:
+          case Op::I32Load16S:
+          case Op::I32Load16U:
+          case Op::I64Load16S:
+          case Op::I64Load16U:
             alignLog2 = 1;
             break;
-          case Expr::I32Load:
-          case Expr::F32Load:
-          case Expr::I64Load32S:
-          case Expr::I64Load32U:
+          case Op::I32Load:
+          case Op::F32Load:
+          case Op::I64Load32S:
+          case Op::I64Load32U:
             alignLog2 = 2;
             break;
-          case Expr::I64Load:
-          case Expr::F64Load:
+          case Op::I64Load:
+          case Op::F64Load:
             alignLog2 = 3;
             break;
           default:
-            MOZ_CRASH("Bad load expr");
+            MOZ_CRASH("Bad load op");
         }
     }
 
     uint32_t flags = alignLog2;
 
-    return new(c.lifo) AstLoad(expr, AstLoadStoreAddress(base, flags, offset));
+    return new(c.lifo) AstLoad(op, AstLoadStoreAddress(base, flags, offset));
 }
 
 static AstStore*
-ParseStore(WasmParseContext& c, Expr expr, bool inParens)
+ParseStore(WasmParseContext& c, Op op, bool inParens)
 {
     int32_t offset;
     uint32_t alignLog2;
@@ -2313,26 +2313,26 @@ ParseStore(WasmParseContext& c, Expr expr, bool inParens)
         return nullptr;
 
     if (alignLog2 == UINT32_MAX) {
-        switch (expr) {
-          case Expr::I32Store8:
-          case Expr::I64Store8:
+        switch (op) {
+          case Op::I32Store8:
+          case Op::I64Store8:
             alignLog2 = 0;
             break;
-          case Expr::I32Store16:
-          case Expr::I64Store16:
+          case Op::I32Store16:
+          case Op::I64Store16:
             alignLog2 = 1;
             break;
-          case Expr::I32Store:
-          case Expr::F32Store:
-          case Expr::I64Store32:
+          case Op::I32Store:
+          case Op::F32Store:
+          case Op::I64Store32:
             alignLog2 = 2;
             break;
-          case Expr::I64Store:
-          case Expr::F64Store:
+          case Op::I64Store:
+          case Op::F64Store:
             alignLog2 = 3;
             break;
           default:
-            MOZ_CRASH("Bad load expr");
+            MOZ_CRASH("Bad load op");
         }
     }
 
@@ -2342,7 +2342,7 @@ ParseStore(WasmParseContext& c, Expr expr, bool inParens)
 
     uint32_t flags = alignLog2;
 
-    return new(c.lifo) AstStore(expr, AstLoadStoreAddress(base, flags, offset), value);
+    return new(c.lifo) AstStore(op, AstLoadStoreAddress(base, flags, offset), value);
 }
 
 static AstBranchTable*
@@ -2385,11 +2385,11 @@ ParseBranchTable(WasmParseContext& c, WasmToken brTable, bool inParens)
 static AstGrowMemory*
 ParseGrowMemory(WasmParseContext& c, bool inParens)
 {
-    AstExpr* op = ParseExpr(c, inParens);
-    if (!op)
+    AstExpr* operand = ParseExpr(c, inParens);
+    if (!operand)
         return nullptr;
 
-    return new(c.lifo) AstGrowMemory(op);
+    return new(c.lifo) AstGrowMemory(operand);
 }
 
 static AstExpr*
@@ -2399,13 +2399,13 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
       case WasmToken::Unreachable:
         return new(c.lifo) AstUnreachable;
       case WasmToken::BinaryOpcode:
-        return ParseBinaryOperator(c, token.expr(), inParens);
+        return ParseBinaryOperator(c, token.op(), inParens);
       case WasmToken::Block:
-        return ParseBlock(c, Expr::Block, inParens);
+        return ParseBlock(c, Op::Block, inParens);
       case WasmToken::Br:
-        return ParseBranch(c, Expr::Br, inParens);
+        return ParseBranch(c, Op::Br, inParens);
       case WasmToken::BrIf:
-        return ParseBranch(c, Expr::BrIf, inParens);
+        return ParseBranch(c, Op::BrIf, inParens);
       case WasmToken::BrTable:
         return ParseBranchTable(c, token, inParens);
       case WasmToken::Call:
@@ -2413,11 +2413,11 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
       case WasmToken::CallIndirect:
         return ParseCallIndirect(c, inParens);
       case WasmToken::ComparisonOpcode:
-        return ParseComparisonOperator(c, token.expr(), inParens);
+        return ParseComparisonOperator(c, token.op(), inParens);
       case WasmToken::Const:
         return ParseConst(c, token);
       case WasmToken::ConversionOpcode:
-        return ParseConversionOperator(c, token.expr(), inParens);
+        return ParseConversionOperator(c, token.op(), inParens);
       case WasmToken::Drop:
         return ParseDrop(c, inParens);
       case WasmToken::If:
@@ -2427,9 +2427,9 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
       case WasmToken::GetLocal:
         return ParseGetLocal(c);
       case WasmToken::Load:
-        return ParseLoad(c, token.expr(), inParens);
+        return ParseLoad(c, token.op(), inParens);
       case WasmToken::Loop:
-        return ParseBlock(c, Expr::Loop, inParens);
+        return ParseBlock(c, Op::Loop, inParens);
       case WasmToken::Return:
         return ParseReturn(c, inParens);
       case WasmToken::SetGlobal:
@@ -2437,13 +2437,13 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
       case WasmToken::SetLocal:
         return ParseSetLocal(c, inParens);
       case WasmToken::Store:
-        return ParseStore(c, token.expr(), inParens);
+        return ParseStore(c, token.op(), inParens);
       case WasmToken::TeeLocal:
         return ParseTeeLocal(c, inParens);
       case WasmToken::TernaryOpcode:
-        return ParseTernaryOperator(c, token.expr(), inParens);
+        return ParseTernaryOperator(c, token.op(), inParens);
       case WasmToken::UnaryOpcode:
-        return ParseUnaryOperator(c, token.expr(), inParens);
+        return ParseUnaryOperator(c, token.op(), inParens);
       case WasmToken::Nop:
         return new(c.lifo) AstNop();
       case WasmToken::CurrentMemory:
@@ -3507,7 +3507,7 @@ ResolveBranch(Resolver& r, AstBranch& br)
     if (br.maybeValue() && !ResolveExpr(r, *br.maybeValue()))
         return false;
 
-    if (br.expr() == Expr::BrIf) {
+    if (br.op() == Op::BrIf) {
         if (!ResolveExpr(r, br.cond()))
             return false;
     }
@@ -3529,7 +3529,7 @@ ResolveArgs(Resolver& r, const AstExprVector& args)
 static bool
 ResolveCall(Resolver& r, AstCall& c)
 {
-    MOZ_ASSERT(c.expr() == Expr::Call);
+    MOZ_ASSERT(c.op() == Op::Call);
 
     if (!ResolveArgs(r, c.args()))
         return false;
@@ -3612,13 +3612,13 @@ ResolveTeeLocal(Resolver& r, AstTeeLocal& sl)
 static bool
 ResolveUnaryOperator(Resolver& r, AstUnaryOperator& b)
 {
-    return ResolveExpr(r, *b.op());
+    return ResolveExpr(r, *b.operand());
 }
 
 static bool
 ResolveGrowMemory(Resolver& r, AstGrowMemory& gm)
 {
-    return ResolveExpr(r, *gm.op());
+    return ResolveExpr(r, *gm.operand());
 }
 
 static bool
@@ -3646,7 +3646,7 @@ ResolveComparisonOperator(Resolver& r, AstComparisonOperator& b)
 static bool
 ResolveConversionOperator(Resolver& r, AstConversionOperator& b)
 {
-    return ResolveExpr(r, *b.op());
+    return ResolveExpr(r, *b.operand());
 }
 
 static bool
@@ -3921,7 +3921,7 @@ EncodeExprList(Encoder& e, const AstExprVector& v)
 static bool
 EncodeBlock(Encoder& e, AstBlock& b)
 {
-    if (!e.writeExpr(b.expr()))
+    if (!e.writeOp(b.op()))
         return false;
 
     if (!e.writeBlockType(b.type()))
@@ -3930,7 +3930,7 @@ EncodeBlock(Encoder& e, AstBlock& b)
     if (!EncodeExprList(e, b.exprs()))
         return false;
 
-    if (!e.writeExpr(Expr::End))
+    if (!e.writeOp(Op::End))
         return false;
 
     return true;
@@ -3939,19 +3939,19 @@ EncodeBlock(Encoder& e, AstBlock& b)
 static bool
 EncodeBranch(Encoder& e, AstBranch& br)
 {
-    MOZ_ASSERT(br.expr() == Expr::Br || br.expr() == Expr::BrIf);
+    MOZ_ASSERT(br.op() == Op::Br || br.op() == Op::BrIf);
 
     if (br.maybeValue()) {
         if (!EncodeExpr(e, *br.maybeValue()))
             return false;
     }
 
-    if (br.expr() == Expr::BrIf) {
+    if (br.op() == Op::BrIf) {
         if (!EncodeExpr(e, br.cond()))
             return false;
     }
 
-    if (!e.writeExpr(br.expr()))
+    if (!e.writeOp(br.op()))
         return false;
 
     if (!e.writeVarU32(br.target().index()))
@@ -3983,7 +3983,7 @@ EncodeCall(Encoder& e, AstCall& c)
     if (!EncodeArgs(e, c.args()))
         return false;
 
-    if (!e.writeExpr(c.expr()))
+    if (!e.writeOp(c.op()))
         return false;
 
     if (!e.writeVarU32(c.func().index()))
@@ -4001,7 +4001,7 @@ EncodeCallIndirect(Encoder& e, AstCallIndirect& c)
     if (!EncodeExpr(e, *c.index()))
         return false;
 
-    if (!e.writeExpr(Expr::CallIndirect))
+    if (!e.writeOp(Op::CallIndirect))
         return false;
 
     if (!e.writeVarU32(c.sig().index()))
@@ -4018,16 +4018,16 @@ EncodeConst(Encoder& e, AstConst& c)
 {
     switch (c.val().type()) {
       case ValType::I32:
-        return e.writeExpr(Expr::I32Const) &&
+        return e.writeOp(Op::I32Const) &&
                e.writeVarS32(c.val().i32());
       case ValType::I64:
-        return e.writeExpr(Expr::I64Const) &&
+        return e.writeOp(Op::I64Const) &&
                e.writeVarS64(c.val().i64());
       case ValType::F32:
-        return e.writeExpr(Expr::F32Const) &&
+        return e.writeOp(Op::F32Const) &&
                e.writeFixedF32(c.val().f32());
       case ValType::F64:
-        return e.writeExpr(Expr::F64Const) &&
+        return e.writeOp(Op::F64Const) &&
                e.writeFixedF64(c.val().f64());
       default:
         break;
@@ -4039,13 +4039,13 @@ static bool
 EncodeDrop(Encoder& e, AstDrop &drop)
 {
     return EncodeExpr(e, drop.value()) &&
-           e.writeExpr(Expr::Drop);
+           e.writeOp(Op::Drop);
 }
 
 static bool
 EncodeGetLocal(Encoder& e, AstGetLocal& gl)
 {
-    return e.writeExpr(Expr::GetLocal) &&
+    return e.writeOp(Op::GetLocal) &&
            e.writeVarU32(gl.local().index());
 }
 
@@ -4053,7 +4053,7 @@ static bool
 EncodeSetLocal(Encoder& e, AstSetLocal& sl)
 {
     return EncodeExpr(e, sl.value()) &&
-           e.writeExpr(Expr::SetLocal) &&
+           e.writeOp(Op::SetLocal) &&
            e.writeVarU32(sl.local().index());
 }
 
@@ -4061,14 +4061,14 @@ static bool
 EncodeTeeLocal(Encoder& e, AstTeeLocal& sl)
 {
     return EncodeExpr(e, sl.value()) &&
-           e.writeExpr(Expr::TeeLocal) &&
+           e.writeOp(Op::TeeLocal) &&
            e.writeVarU32(sl.local().index());
 }
 
 static bool
 EncodeGetGlobal(Encoder& e, AstGetGlobal& gg)
 {
-    return e.writeExpr(Expr::GetGlobal) &&
+    return e.writeOp(Op::GetGlobal) &&
            e.writeVarU32(gg.global().index());
 }
 
@@ -4076,15 +4076,15 @@ static bool
 EncodeSetGlobal(Encoder& e, AstSetGlobal& sg)
 {
     return EncodeExpr(e, sg.value()) &&
-           e.writeExpr(Expr::SetGlobal) &&
+           e.writeOp(Op::SetGlobal) &&
            e.writeVarU32(sg.global().index());
 }
 
 static bool
 EncodeUnaryOperator(Encoder& e, AstUnaryOperator& b)
 {
-    return EncodeExpr(e, *b.op()) &&
-           e.writeExpr(b.expr());
+    return EncodeExpr(e, *b.operand()) &&
+           e.writeOp(b.op());
 }
 
 static bool
@@ -4092,7 +4092,7 @@ EncodeBinaryOperator(Encoder& e, AstBinaryOperator& b)
 {
     return EncodeExpr(e, *b.lhs()) &&
            EncodeExpr(e, *b.rhs()) &&
-           e.writeExpr(b.expr());
+           e.writeOp(b.op());
 }
 
 static bool
@@ -4101,7 +4101,7 @@ EncodeTernaryOperator(Encoder& e, AstTernaryOperator& b)
     return EncodeExpr(e, *b.op0()) &&
            EncodeExpr(e, *b.op1()) &&
            EncodeExpr(e, *b.op2()) &&
-           e.writeExpr(b.expr());
+           e.writeOp(b.op());
 }
 
 static bool
@@ -4109,20 +4109,20 @@ EncodeComparisonOperator(Encoder& e, AstComparisonOperator& b)
 {
     return EncodeExpr(e, *b.lhs()) &&
            EncodeExpr(e, *b.rhs()) &&
-           e.writeExpr(b.expr());
+           e.writeOp(b.op());
 }
 
 static bool
 EncodeConversionOperator(Encoder& e, AstConversionOperator& b)
 {
-    return EncodeExpr(e, *b.op()) &&
-           e.writeExpr(b.expr());
+    return EncodeExpr(e, *b.operand()) &&
+           e.writeOp(b.op());
 }
 
 static bool
 EncodeIf(Encoder& e, AstIf& i)
 {
-    if (!EncodeExpr(e, i.cond()) || !e.writeExpr(Expr::If))
+    if (!EncodeExpr(e, i.cond()) || !e.writeOp(Op::If))
         return false;
 
     if (!e.writeBlockType(i.type()))
@@ -4132,13 +4132,13 @@ EncodeIf(Encoder& e, AstIf& i)
         return false;
 
     if (i.hasElse()) {
-        if (!e.writeExpr(Expr::Else))
+        if (!e.writeOp(Op::Else))
             return false;
         if (!EncodeExprList(e, i.elseExprs()))
             return false;
     }
 
-    return e.writeExpr(Expr::End);
+    return e.writeOp(Op::End);
 }
 
 static bool
@@ -4158,7 +4158,7 @@ static bool
 EncodeLoad(Encoder& e, AstLoad& l)
 {
     return EncodeLoadStoreAddress(e, l.address()) &&
-           e.writeExpr(l.expr()) &&
+           e.writeOp(l.op()) &&
            EncodeLoadStoreFlags(e, l.address());
 }
 
@@ -4167,7 +4167,7 @@ EncodeStore(Encoder& e, AstStore& s)
 {
     return EncodeLoadStoreAddress(e, s.address()) &&
            EncodeExpr(e, s.value()) &&
-           e.writeExpr(s.expr()) &&
+           e.writeOp(s.op()) &&
            EncodeLoadStoreFlags(e, s.address());
 }
 
@@ -4179,7 +4179,7 @@ EncodeReturn(Encoder& e, AstReturn& r)
            return false;
     }
 
-    if (!e.writeExpr(Expr::Return))
+    if (!e.writeOp(Op::Return))
         return false;
 
     return true;
@@ -4196,7 +4196,7 @@ EncodeBranchTable(Encoder& e, AstBranchTable& bt)
     if (!EncodeExpr(e, bt.index()))
         return false;
 
-    if (!e.writeExpr(Expr::BrTable))
+    if (!e.writeOp(Op::BrTable))
         return false;
 
     if (!e.writeVarU32(bt.table().length()))
@@ -4216,7 +4216,7 @@ EncodeBranchTable(Encoder& e, AstBranchTable& bt)
 static bool
 EncodeCurrentMemory(Encoder& e, AstCurrentMemory& cm)
 {
-    if (!e.writeExpr(Expr::CurrentMemory))
+    if (!e.writeOp(Op::CurrentMemory))
         return false;
 
     if (!e.writeVarU32(uint32_t(MemoryTableFlags::Default)))
@@ -4228,10 +4228,10 @@ EncodeCurrentMemory(Encoder& e, AstCurrentMemory& cm)
 static bool
 EncodeGrowMemory(Encoder& e, AstGrowMemory& gm)
 {
-    if (!EncodeExpr(e, *gm.op()))
+    if (!EncodeExpr(e, *gm.operand()))
         return false;
 
-    if (!e.writeExpr(Expr::GrowMemory))
+    if (!e.writeOp(Op::GrowMemory))
         return false;
 
     if (!e.writeVarU32(uint32_t(MemoryTableFlags::Default)))
@@ -4247,9 +4247,9 @@ EncodeExpr(Encoder& e, AstExpr& expr)
       case AstExprKind::Pop:
         return true;
       case AstExprKind::Nop:
-        return e.writeExpr(Expr::Nop);
+        return e.writeOp(Op::Nop);
       case AstExprKind::Unreachable:
-        return e.writeExpr(Expr::Unreachable);
+        return e.writeOp(Op::Unreachable);
       case AstExprKind::BinaryOperator:
         return EncodeBinaryOperator(e, expr.as<AstBinaryOperator>());
       case AstExprKind::Block:
@@ -4512,7 +4512,7 @@ EncodeGlobalSection(Encoder& e, AstModule& module)
             return false;
         if (!EncodeExpr(e, global->init()))
             return false;
-        if (!e.writeExpr(Expr::End))
+        if (!e.writeOp(Op::End))
             return false;
     }
 
@@ -4608,7 +4608,7 @@ EncodeFunctionBody(Encoder& e, AstFunc& func)
             return false;
     }
 
-    if (!e.writeExpr(Expr::End))
+    if (!e.writeOp(Op::End))
         return false;
 
     e.patchVarU32(bodySizeAt, e.currentOffset() - beforeBody);
@@ -4662,7 +4662,7 @@ EncodeDataSegment(Encoder& e, const AstDataSegment& segment)
 
     if (!EncodeExpr(e, *segment.offset()))
         return false;
-    if (!e.writeExpr(Expr::End))
+    if (!e.writeOp(Op::End))
         return false;
 
     size_t totalLength = 0;
@@ -4716,7 +4716,7 @@ EncodeElemSegment(Encoder& e, AstElemSegment& segment)
 
     if (!EncodeExpr(e, *segment.offset()))
         return false;
-    if (!e.writeExpr(Expr::End))
+    if (!e.writeOp(Op::End))
         return false;
 
     if (!e.writeVarU32(segment.elems().length()))

@@ -143,4 +143,17 @@ document.body.appendChild(wrap);
 
 </script>
 
+<!--  For generating image size results in -ref file
+<script>
+document.body.clientHeight;
+var imgs = document.querySelectorAll('img');
+var s = '  [\n';
+for (var i = 0; i < imgs.length; ++i) {
+  s += "  ['"+ imgs[i].width + "px', '" + imgs[i].height + "px'],\n";
+}
+s += ']';
+console.log(s)
+</script>
+-->
+
 </body></html>

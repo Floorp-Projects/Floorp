@@ -97,7 +97,7 @@ this.PropertyListUtils = Object.freeze({
           if (!file.exists())
             throw new Error("The file pointed by aFile does not exist");
 
-          file = new File(file);
+          file = File.createFromNsIFile(file);
         }
 
         let fileReader = new FileReader();

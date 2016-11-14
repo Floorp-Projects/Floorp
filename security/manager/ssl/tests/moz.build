@@ -11,10 +11,6 @@ TEST_DIRS += [
     'mochitest',
 ]
 
-TEST_DIRS += [
-  'compiled',
-]
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 if not CONFIG['MOZ_NO_SMART_CARDS']:

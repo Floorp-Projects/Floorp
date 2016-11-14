@@ -24,6 +24,8 @@ public:
   static void StartupThreads();
   static void ShutdownThreads();
 
+  static void ShutdownVideoBridge();
+
   bool OnManagerThread();
 
 protected:

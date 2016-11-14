@@ -40,7 +40,7 @@ enum class LabelKind : uint8_t {
 
 #ifdef DEBUG
 // Families of opcodes that share a signature and validation logic.
-enum class ExprKind {
+enum class OpKind {
     Block,
     Loop,
     Unreachable,
@@ -101,10 +101,10 @@ enum class ExprKind {
     SimdComparison,
 };
 
-// Return the ExprKind for a given Expr. This is used for sanity-checking that
-// API users use the correct read function for a given Expr.
-ExprKind
-Classify(Expr expr);
+// Return the OpKind for a given Op. This is used for sanity-checking that
+// API users use the correct read function for a given Op.
+OpKind
+Classify(Op op);
 #endif
 
 // Common fields for linear memory access.
@@ -230,9 +230,9 @@ class TypeAndValue<Nothing>
     void setValue(Nothing value) {}
 };
 
-// A policy class for configuring ExprIter. Clients can use this as a
+// A policy class for configuring OpIter. Clients can use this as a
 // base class, and override the behavior as needed.
-struct ExprIterPolicy
+struct OpIterPolicy
 {
     // Should the iterator perform validation, such as type checking and
     // validity checking?
@@ -255,7 +255,7 @@ struct ExprIterPolicy
 // There's otherwise nothing inherent in this class which would require
 // it to be used on the stack.
 template <typename Policy>
-class MOZ_STACK_CLASS ExprIter : private Policy
+class MOZ_STACK_CLASS OpIter : private Policy
 {
     static const bool Validate = Policy::Validate;
     static const bool Output = Policy::Output;
@@ -265,11 +265,11 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     Decoder& d_;
     const size_t offsetInModule_;
 
-    Vector<TypeAndValue<Value>, 0, SystemAllocPolicy> valueStack_;
-    Vector<ControlStackEntry<ControlItem>, 0, SystemAllocPolicy> controlStack_;
+    Vector<TypeAndValue<Value>, 8, SystemAllocPolicy> valueStack_;
+    Vector<ControlStackEntry<ControlItem>, 8, SystemAllocPolicy> controlStack_;
     bool reachable_;
 
-    DebugOnly<Expr> expr_;
+    DebugOnly<Op> op_;
     size_t offsetOfExpr_;
 
     MOZ_MUST_USE bool readFixedU8(uint8_t* out) {
@@ -503,15 +503,15 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     bool checkBrIfValues(uint32_t relativeDepth, Value* condition, ExprType* type, Value* value);
 
   public:
-    explicit ExprIter(Decoder& decoder, uint32_t offsetInModule = 0)
+    explicit OpIter(Decoder& decoder, uint32_t offsetInModule = 0)
       : d_(decoder), offsetInModule_(offsetInModule), reachable_(true),
-        expr_(Expr::Limit), offsetOfExpr_(0)
+        op_(Op::Limit), offsetOfExpr_(0)
     {}
 
     // Return the decoding byte offset.
     uint32_t currentOffset() const { return d_.currentOffset(); }
 
-    // Returning the offset within the entire module of the last-read Expr.
+    // Returning the offset within the entire module of the last-read Op.
     TrapOffset trapOffset() const {
         return TrapOffset(offsetInModule_ + offsetOfExpr_);
     }
@@ -526,7 +526,7 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     MOZ_MUST_USE bool notYetImplemented(const char* what) MOZ_COLD;
 
     // Report an unrecognized opcode.
-    MOZ_MUST_USE bool unrecognizedOpcode(Expr expr) MOZ_COLD;
+    MOZ_MUST_USE bool unrecognizedOpcode(uint32_t expr) MOZ_COLD;
 
     // Test whether the iterator is currently in "reachable" code.
     bool inReachableCode() const { return reachable_; }
@@ -534,7 +534,7 @@ class MOZ_STACK_CLASS ExprIter : private Policy
     // ------------------------------------------------------------------------
     // Decoding and validation interface.
 
-    MOZ_MUST_USE bool readExpr(Expr* expr);
+    MOZ_MUST_USE bool readOp(uint16_t* op);
     MOZ_MUST_USE bool readFunctionStart(ExprType ret);
     MOZ_MUST_USE bool readFunctionEnd();
     MOZ_MUST_USE bool readReturn(Value* value);
@@ -663,7 +663,7 @@ class MOZ_STACK_CLASS ExprIter : private Policy
 
 template <typename Policy>
 bool
-ExprIter<Policy>::typeMismatch(ExprType actual, ExprType expected)
+OpIter<Policy>::typeMismatch(ExprType actual, ExprType expected)
 {
     MOZ_ASSERT(Validate);
     MOZ_ASSERT(reachable_);
@@ -678,14 +678,14 @@ ExprIter<Policy>::typeMismatch(ExprType actual, ExprType expected)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::checkType(ValType actual, ValType expected)
+OpIter<Policy>::checkType(ValType actual, ValType expected)
 {
     return checkType(ToExprType(actual), ToExprType(expected));
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::checkType(ExprType actual, ExprType expected)
+OpIter<Policy>::checkType(ExprType actual, ExprType expected)
 {
     MOZ_ASSERT(reachable_);
 
@@ -702,7 +702,7 @@ ExprIter<Policy>::checkType(ExprType actual, ExprType expected)
 
 template <typename Policy>
 bool
-ExprIter<Policy>::notYetImplemented(const char* what)
+OpIter<Policy>::notYetImplemented(const char* what)
 {
     UniqueChars error(JS_smprintf("not yet implemented: %s", what));
     if (!error)
@@ -713,9 +713,9 @@ ExprIter<Policy>::notYetImplemented(const char* what)
 
 template <typename Policy>
 bool
-ExprIter<Policy>::unrecognizedOpcode(Expr expr)
+OpIter<Policy>::unrecognizedOpcode(uint32_t expr)
 {
-    UniqueChars error(JS_smprintf("unrecognized opcode: %x", uint32_t(expr)));
+    UniqueChars error(JS_smprintf("unrecognized opcode: %x", expr));
     if (!error)
         return false;
 
@@ -724,21 +724,21 @@ ExprIter<Policy>::unrecognizedOpcode(Expr expr)
 
 template <typename Policy>
 bool
-ExprIter<Policy>::fail(const char* msg)
+OpIter<Policy>::fail(const char* msg)
 {
     return d_.fail("%s", msg);
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::pushControl(LabelKind kind, ExprType type, bool reachable)
+OpIter<Policy>::pushControl(LabelKind kind, ExprType type, bool reachable)
 {
     return controlStack_.emplaceBack(kind, type, reachable, valueStack_.length());
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::mergeControl(LabelKind* kind, ExprType* type, Value* value)
+OpIter<Policy>::mergeControl(LabelKind* kind, ExprType* type, Value* value)
 {
     MOZ_ASSERT(!controlStack_.empty());
 
@@ -786,7 +786,7 @@ ExprIter<Policy>::mergeControl(LabelKind* kind, ExprType* type, Value* value)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::popControl(LabelKind* kind, ExprType* type, Value* value)
+OpIter<Policy>::popControl(LabelKind* kind, ExprType* type, Value* value)
 {
     if (!mergeControl(kind, type, value))
         return false;
@@ -810,59 +810,61 @@ ExprIter<Policy>::popControl(LabelKind* kind, ExprType* type, Value* value)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readBlockType(ExprType* type)
+OpIter<Policy>::readBlockType(ExprType* type)
 {
-    if (!d_.readBlockType(type))
+    uint8_t unchecked;
+    if (!d_.readBlockType(&unchecked))
         return fail("unable to read block signature");
 
     if (Validate) {
-        switch (*type) {
-          case ExprType::Void:
-          case ExprType::I32:
-          case ExprType::I64:
-          case ExprType::F32:
-          case ExprType::F64:
-          case ExprType::I8x16:
-          case ExprType::I16x8:
-          case ExprType::I32x4:
-          case ExprType::F32x4:
-          case ExprType::B8x16:
-          case ExprType::B16x8:
-          case ExprType::B32x4:
+        switch (unchecked) {
+          case uint8_t(ExprType::Void):
+          case uint8_t(ExprType::I32):
+          case uint8_t(ExprType::I64):
+          case uint8_t(ExprType::F32):
+          case uint8_t(ExprType::F64):
+          case uint8_t(ExprType::I8x16):
+          case uint8_t(ExprType::I16x8):
+          case uint8_t(ExprType::I32x4):
+          case uint8_t(ExprType::F32x4):
+          case uint8_t(ExprType::B8x16):
+          case uint8_t(ExprType::B16x8):
+          case uint8_t(ExprType::B32x4):
             break;
           default:
             return fail("invalid inline block type");
         }
     }
 
+    *type = ExprType(unchecked);
     return true;
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readExpr(Expr* expr)
+OpIter<Policy>::readOp(uint16_t* op)
 {
     offsetOfExpr_ = d_.currentOffset();
 
     if (Validate) {
-        if (MOZ_UNLIKELY(!d_.readExpr(expr)))
+        if (MOZ_UNLIKELY(!d_.readOp(op)))
             return fail("unable to read opcode");
     } else {
-        *expr = d_.uncheckedReadExpr();
+        *op = uint16_t(d_.uncheckedReadOp());
     }
 
-    expr_ = *expr;
+    op_ = Op(*op);  // debug-only
 
     return true;
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readFunctionStart(ExprType ret)
+OpIter<Policy>::readFunctionStart(ExprType ret)
 {
     MOZ_ASSERT(valueStack_.empty());
     MOZ_ASSERT(controlStack_.empty());
-    MOZ_ASSERT(Expr(expr_) == Expr::Limit);
+    MOZ_ASSERT(Op(op_) == Op::Limit);
     MOZ_ASSERT(reachable_);
 
     return pushControl(LabelKind::Block, ret, false);
@@ -870,7 +872,7 @@ ExprIter<Policy>::readFunctionStart(ExprType ret)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readFunctionEnd()
+OpIter<Policy>::readFunctionEnd()
 {
     if (Validate) {
         if (!controlStack_.empty())
@@ -879,16 +881,16 @@ ExprIter<Policy>::readFunctionEnd()
         MOZ_ASSERT(controlStack_.empty());
     }
 
-    expr_ = Expr::Limit;
+    op_ = Op::Limit;
     valueStack_.clear();
     return true;
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readReturn(Value* value)
+OpIter<Policy>::readReturn(Value* value)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Return);
+    MOZ_ASSERT(Classify(op_) == OpKind::Return);
 
     if (MOZ_LIKELY(reachable_)) {
         ControlStackEntry<ControlItem>& controlItem = controlStack_[0];
@@ -908,9 +910,9 @@ ExprIter<Policy>::readReturn(Value* value)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readBlock()
+OpIter<Policy>::readBlock()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Block);
+    MOZ_ASSERT(Classify(op_) == OpKind::Block);
 
     ExprType type = ExprType::Limit;
     if (!readBlockType(&type))
@@ -921,9 +923,9 @@ ExprIter<Policy>::readBlock()
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readLoop()
+OpIter<Policy>::readLoop()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Loop);
+    MOZ_ASSERT(Classify(op_) == OpKind::Loop);
 
     ExprType type = ExprType::Limit;
     if (!readBlockType(&type))
@@ -934,9 +936,9 @@ ExprIter<Policy>::readLoop()
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readIf(Value* condition)
+OpIter<Policy>::readIf(Value* condition)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::If);
+    MOZ_ASSERT(Classify(op_) == OpKind::If);
 
     ExprType type = ExprType::Limit;
     if (!readBlockType(&type))
@@ -954,9 +956,9 @@ ExprIter<Policy>::readIf(Value* condition)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readElse(ExprType* thenType, Value* thenValue)
+OpIter<Policy>::readElse(ExprType* thenType, Value* thenValue)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Else);
+    MOZ_ASSERT(Classify(op_) == OpKind::Else);
 
     // Finish up the then arm.
     ExprType type = ExprType::Limit;
@@ -986,9 +988,9 @@ ExprIter<Policy>::readElse(ExprType* thenType, Value* thenValue)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readEnd(LabelKind* kind, ExprType* type, Value* value)
+OpIter<Policy>::readEnd(LabelKind* kind, ExprType* type, Value* value)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::End);
+    MOZ_ASSERT(Classify(op_) == OpKind::End);
 
     LabelKind validateKind = static_cast<LabelKind>(-1);
     ExprType validateType = ExprType::Limit;
@@ -1005,7 +1007,7 @@ ExprIter<Policy>::readEnd(LabelKind* kind, ExprType* type, Value* value)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::checkBrValue(uint32_t relativeDepth, ExprType* type, Value* value)
+OpIter<Policy>::checkBrValue(uint32_t relativeDepth, ExprType* type, Value* value)
 {
     if (MOZ_LIKELY(reachable_)) {
         ControlStackEntry<ControlItem>* controlItem = nullptr;
@@ -1034,9 +1036,9 @@ ExprIter<Policy>::checkBrValue(uint32_t relativeDepth, ExprType* type, Value* va
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readBr(uint32_t* relativeDepth, ExprType* type, Value* value)
+OpIter<Policy>::readBr(uint32_t* relativeDepth, ExprType* type, Value* value)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Br);
+    MOZ_ASSERT(Classify(op_) == OpKind::Br);
 
     uint32_t validateRelativeDepth;
     if (!readVarU32(&validateRelativeDepth))
@@ -1054,7 +1056,7 @@ ExprIter<Policy>::readBr(uint32_t* relativeDepth, ExprType* type, Value* value)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::checkBrIfValues(uint32_t relativeDepth, Value* condition,
+OpIter<Policy>::checkBrIfValues(uint32_t relativeDepth, Value* condition,
                                   ExprType* type, Value* value)
 {
     if (MOZ_LIKELY(reachable_)) {
@@ -1087,9 +1089,9 @@ ExprIter<Policy>::checkBrIfValues(uint32_t relativeDepth, Value* condition,
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readBrIf(uint32_t* relativeDepth, ExprType* type, Value* value, Value* condition)
+OpIter<Policy>::readBrIf(uint32_t* relativeDepth, ExprType* type, Value* value, Value* condition)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::BrIf);
+    MOZ_ASSERT(Classify(op_) == OpKind::BrIf);
 
     uint32_t validateRelativeDepth;
     if (!readVarU32(&validateRelativeDepth))
@@ -1106,10 +1108,10 @@ ExprIter<Policy>::readBrIf(uint32_t* relativeDepth, ExprType* type, Value* value
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readBrTable(uint32_t* tableLength, ExprType* type,
+OpIter<Policy>::readBrTable(uint32_t* tableLength, ExprType* type,
                               Value* value, Value* index)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::BrTable);
+    MOZ_ASSERT(Classify(op_) == OpKind::BrTable);
 
     if (!readVarU32(tableLength))
         return fail("unable to read br_table table length");
@@ -1129,9 +1131,9 @@ ExprIter<Policy>::readBrTable(uint32_t* tableLength, ExprType* type,
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readBrTableEntry(ExprType* type, Value* value, uint32_t* depth)
+OpIter<Policy>::readBrTableEntry(ExprType* type, Value* value, uint32_t* depth)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::BrTable);
+    MOZ_ASSERT(Classify(op_) == OpKind::BrTable);
 
     if (!readVarU32(depth))
         return false;
@@ -1171,7 +1173,7 @@ ExprIter<Policy>::readBrTableEntry(ExprType* type, Value* value, uint32_t* depth
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readBrTableDefault(ExprType* type, Value* value, uint32_t* depth)
+OpIter<Policy>::readBrTableDefault(ExprType* type, Value* value, uint32_t* depth)
 {
     if (!readBrTableEntry(type, value, depth))
         return false;
@@ -1184,9 +1186,9 @@ ExprIter<Policy>::readBrTableDefault(ExprType* type, Value* value, uint32_t* dep
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readUnreachable()
+OpIter<Policy>::readUnreachable()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Unreachable);
+    MOZ_ASSERT(Classify(op_) == OpKind::Unreachable);
 
     enterUnreachableCode();
     return true;
@@ -1194,9 +1196,9 @@ ExprIter<Policy>::readUnreachable()
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readDrop()
+OpIter<Policy>::readDrop()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Drop);
+    MOZ_ASSERT(Classify(op_) == OpKind::Drop);
 
     if (!pop())
         return false;
@@ -1206,9 +1208,9 @@ ExprIter<Policy>::readDrop()
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readUnary(ValType operandType, Value* input)
+OpIter<Policy>::readUnary(ValType operandType, Value* input)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Unary);
+    MOZ_ASSERT(Classify(op_) == OpKind::Unary);
 
     if (!popWithType(operandType, input))
         return false;
@@ -1220,9 +1222,9 @@ ExprIter<Policy>::readUnary(ValType operandType, Value* input)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readConversion(ValType operandType, ValType resultType, Value* input)
+OpIter<Policy>::readConversion(ValType operandType, ValType resultType, Value* input)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Conversion);
+    MOZ_ASSERT(Classify(op_) == OpKind::Conversion);
 
     if (!popWithType(operandType, input))
         return false;
@@ -1234,9 +1236,9 @@ ExprIter<Policy>::readConversion(ValType operandType, ValType resultType, Value*
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readBinary(ValType operandType, Value* lhs, Value* rhs)
+OpIter<Policy>::readBinary(ValType operandType, Value* lhs, Value* rhs)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Binary);
+    MOZ_ASSERT(Classify(op_) == OpKind::Binary);
 
     if (!popWithType(operandType, rhs))
         return false;
@@ -1251,9 +1253,9 @@ ExprIter<Policy>::readBinary(ValType operandType, Value* lhs, Value* rhs)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readComparison(ValType operandType, Value* lhs, Value* rhs)
+OpIter<Policy>::readComparison(ValType operandType, Value* lhs, Value* rhs)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Comparison);
+    MOZ_ASSERT(Classify(op_) == OpKind::Comparison);
 
     if (!popWithType(operandType, rhs))
         return false;
@@ -1268,7 +1270,7 @@ ExprIter<Policy>::readComparison(ValType operandType, Value* lhs, Value* rhs)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress<Value>* addr)
+OpIter<Policy>::readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress<Value>* addr)
 {
     uint8_t alignLog2;
     if (!readFixedU8(&alignLog2))
@@ -1293,10 +1295,9 @@ ExprIter<Policy>::readLinearMemoryAddress(uint32_t byteSize, LinearMemoryAddress
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readLoad(ValType resultType, uint32_t byteSize,
-                           LinearMemoryAddress<Value>* addr)
+OpIter<Policy>::readLoad(ValType resultType, uint32_t byteSize, LinearMemoryAddress<Value>* addr)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Load);
+    MOZ_ASSERT(Classify(op_) == OpKind::Load);
 
     if (!readLinearMemoryAddress(byteSize, addr))
         return false;
@@ -1308,10 +1309,10 @@ ExprIter<Policy>::readLoad(ValType resultType, uint32_t byteSize,
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readStore(ValType resultType, uint32_t byteSize,
-                            LinearMemoryAddress<Value>* addr, Value* value)
+OpIter<Policy>::readStore(ValType resultType, uint32_t byteSize, LinearMemoryAddress<Value>* addr,
+                          Value* value)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Store);
+    MOZ_ASSERT(Classify(op_) == OpKind::Store);
 
     if (!popWithType(resultType, value))
         return false;
@@ -1324,10 +1325,10 @@ ExprIter<Policy>::readStore(ValType resultType, uint32_t byteSize,
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readTeeStore(ValType resultType, uint32_t byteSize,
-                               LinearMemoryAddress<Value>* addr, Value* value)
+OpIter<Policy>::readTeeStore(ValType resultType, uint32_t byteSize, LinearMemoryAddress<Value>* addr,
+                             Value* value)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::TeeStore);
+    MOZ_ASSERT(Classify(op_) == OpKind::TeeStore);
 
     if (!popWithType(resultType, value))
         return false;
@@ -1342,18 +1343,18 @@ ExprIter<Policy>::readTeeStore(ValType resultType, uint32_t byteSize,
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readNop()
+OpIter<Policy>::readNop()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Nop);
+    MOZ_ASSERT(Classify(op_) == OpKind::Nop);
 
     return true;
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readCurrentMemory()
+OpIter<Policy>::readCurrentMemory()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::CurrentMemory);
+    MOZ_ASSERT(Classify(op_) == OpKind::CurrentMemory);
 
     uint32_t flags;
     if (!readVarU32(&flags))
@@ -1370,9 +1371,9 @@ ExprIter<Policy>::readCurrentMemory()
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readGrowMemory(Value* input)
+OpIter<Policy>::readGrowMemory(Value* input)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::GrowMemory);
+    MOZ_ASSERT(Classify(op_) == OpKind::GrowMemory);
 
     uint32_t flags;
     if (!readVarU32(&flags))
@@ -1391,9 +1392,9 @@ ExprIter<Policy>::readGrowMemory(Value* input)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSelect(ValType* type, Value* trueValue, Value* falseValue, Value* condition)
+OpIter<Policy>::readSelect(ValType* type, Value* trueValue, Value* falseValue, Value* condition)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Select);
+    MOZ_ASSERT(Classify(op_) == OpKind::Select);
 
     if (!popWithType(ValType::I32, condition))
         return false;
@@ -1423,9 +1424,9 @@ ExprIter<Policy>::readSelect(ValType* type, Value* trueValue, Value* falseValue,
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readGetLocal(const ValTypeVector& locals, uint32_t* id)
+OpIter<Policy>::readGetLocal(const ValTypeVector& locals, uint32_t* id)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::GetLocal);
+    MOZ_ASSERT(Classify(op_) == OpKind::GetLocal);
 
     uint32_t validateId;
     if (!readVarU32(&validateId))
@@ -1445,9 +1446,9 @@ ExprIter<Policy>::readGetLocal(const ValTypeVector& locals, uint32_t* id)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSetLocal(const ValTypeVector& locals, uint32_t* id, Value* value)
+OpIter<Policy>::readSetLocal(const ValTypeVector& locals, uint32_t* id, Value* value)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SetLocal);
+    MOZ_ASSERT(Classify(op_) == OpKind::SetLocal);
 
     uint32_t validateId;
     if (!readVarU32(&validateId))
@@ -1467,9 +1468,9 @@ ExprIter<Policy>::readSetLocal(const ValTypeVector& locals, uint32_t* id, Value*
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readTeeLocal(const ValTypeVector& locals, uint32_t* id, Value* value)
+OpIter<Policy>::readTeeLocal(const ValTypeVector& locals, uint32_t* id, Value* value)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::TeeLocal);
+    MOZ_ASSERT(Classify(op_) == OpKind::TeeLocal);
 
     uint32_t validateId;
     if (!readVarU32(&validateId))
@@ -1489,9 +1490,9 @@ ExprIter<Policy>::readTeeLocal(const ValTypeVector& locals, uint32_t* id, Value*
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readGetGlobal(const GlobalDescVector& globals, uint32_t* id)
+OpIter<Policy>::readGetGlobal(const GlobalDescVector& globals, uint32_t* id)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::GetGlobal);
+    MOZ_ASSERT(Classify(op_) == OpKind::GetGlobal);
 
     uint32_t validateId;
     if (!readVarU32(&validateId))
@@ -1511,9 +1512,9 @@ ExprIter<Policy>::readGetGlobal(const GlobalDescVector& globals, uint32_t* id)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSetGlobal(const GlobalDescVector& globals, uint32_t* id, Value* value)
+OpIter<Policy>::readSetGlobal(const GlobalDescVector& globals, uint32_t* id, Value* value)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SetGlobal);
+    MOZ_ASSERT(Classify(op_) == OpKind::SetGlobal);
 
     uint32_t validateId;
     if (!readVarU32(&validateId))
@@ -1536,9 +1537,9 @@ ExprIter<Policy>::readSetGlobal(const GlobalDescVector& globals, uint32_t* id, V
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readTeeGlobal(const GlobalDescVector& globals, uint32_t* id, Value* value)
+OpIter<Policy>::readTeeGlobal(const GlobalDescVector& globals, uint32_t* id, Value* value)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::TeeGlobal);
+    MOZ_ASSERT(Classify(op_) == OpKind::TeeGlobal);
 
     uint32_t validateId;
     if (!readVarU32(&validateId))
@@ -1561,9 +1562,9 @@ ExprIter<Policy>::readTeeGlobal(const GlobalDescVector& globals, uint32_t* id, V
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readI32Const(int32_t* i32)
+OpIter<Policy>::readI32Const(int32_t* i32)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::I32);
+    MOZ_ASSERT(Classify(op_) == OpKind::I32);
 
     int32_t unused;
     if (!readVarS32(Output ? i32 : &unused))
@@ -1577,9 +1578,9 @@ ExprIter<Policy>::readI32Const(int32_t* i32)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readI64Const(int64_t* i64)
+OpIter<Policy>::readI64Const(int64_t* i64)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::I64);
+    MOZ_ASSERT(Classify(op_) == OpKind::I64);
 
     int64_t unused;
     if (!readVarS64(Output ? i64 : &unused))
@@ -1593,9 +1594,9 @@ ExprIter<Policy>::readI64Const(int64_t* i64)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readF32Const(RawF32* f32)
+OpIter<Policy>::readF32Const(RawF32* f32)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::F32);
+    MOZ_ASSERT(Classify(op_) == OpKind::F32);
 
     RawF32 unused;
     if (!readFixedF32(Output ? f32 : &unused))
@@ -1609,9 +1610,9 @@ ExprIter<Policy>::readF32Const(RawF32* f32)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readF64Const(RawF64* f64)
+OpIter<Policy>::readF64Const(RawF64* f64)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::F64);
+    MOZ_ASSERT(Classify(op_) == OpKind::F64);
 
     RawF64 unused;
     if (!readFixedF64(Output ? f64 : &unused))
@@ -1625,9 +1626,9 @@ ExprIter<Policy>::readF64Const(RawF64* f64)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readI8x16Const(I8x16* i8x16)
+OpIter<Policy>::readI8x16Const(I8x16* i8x16)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::I8x16);
+    MOZ_ASSERT(Classify(op_) == OpKind::I8x16);
 
     I8x16 unused;
     if (!readFixedI8x16(Output ? i8x16 : &unused))
@@ -1641,9 +1642,9 @@ ExprIter<Policy>::readI8x16Const(I8x16* i8x16)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readI16x8Const(I16x8* i16x8)
+OpIter<Policy>::readI16x8Const(I16x8* i16x8)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::I16x8);
+    MOZ_ASSERT(Classify(op_) == OpKind::I16x8);
 
     I16x8 unused;
     if (!readFixedI16x8(Output ? i16x8 : &unused))
@@ -1657,9 +1658,9 @@ ExprIter<Policy>::readI16x8Const(I16x8* i16x8)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readI32x4Const(I32x4* i32x4)
+OpIter<Policy>::readI32x4Const(I32x4* i32x4)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::I32x4);
+    MOZ_ASSERT(Classify(op_) == OpKind::I32x4);
 
     I32x4 unused;
     if (!readFixedI32x4(Output ? i32x4 : &unused))
@@ -1673,9 +1674,9 @@ ExprIter<Policy>::readI32x4Const(I32x4* i32x4)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readF32x4Const(F32x4* f32x4)
+OpIter<Policy>::readF32x4Const(F32x4* f32x4)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::F32x4);
+    MOZ_ASSERT(Classify(op_) == OpKind::F32x4);
 
     F32x4 unused;
     if (!readFixedF32x4(Output ? f32x4 : &unused))
@@ -1689,9 +1690,9 @@ ExprIter<Policy>::readF32x4Const(F32x4* f32x4)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readB8x16Const(I8x16* i8x16)
+OpIter<Policy>::readB8x16Const(I8x16* i8x16)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::B8x16);
+    MOZ_ASSERT(Classify(op_) == OpKind::B8x16);
 
     I8x16 unused;
     if (!readFixedI8x16(Output ? i8x16 : &unused))
@@ -1705,9 +1706,9 @@ ExprIter<Policy>::readB8x16Const(I8x16* i8x16)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readB16x8Const(I16x8* i16x8)
+OpIter<Policy>::readB16x8Const(I16x8* i16x8)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::B16x8);
+    MOZ_ASSERT(Classify(op_) == OpKind::B16x8);
 
     I16x8 unused;
     if (!readFixedI16x8(Output ? i16x8 : &unused))
@@ -1721,9 +1722,9 @@ ExprIter<Policy>::readB16x8Const(I16x8* i16x8)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readB32x4Const(I32x4* i32x4)
+OpIter<Policy>::readB32x4Const(I32x4* i32x4)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::B32x4);
+    MOZ_ASSERT(Classify(op_) == OpKind::B32x4);
 
     I32x4 unused;
     if (!readFixedI32x4(Output ? i32x4 : &unused))
@@ -1737,9 +1738,9 @@ ExprIter<Policy>::readB32x4Const(I32x4* i32x4)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readCall(uint32_t* calleeIndex)
+OpIter<Policy>::readCall(uint32_t* calleeIndex)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Call);
+    MOZ_ASSERT(Classify(op_) == OpKind::Call);
 
     if (!readVarU32(calleeIndex))
         return fail("unable to read call function index");
@@ -1749,9 +1750,9 @@ ExprIter<Policy>::readCall(uint32_t* calleeIndex)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readCallIndirect(uint32_t* sigIndex, Value* callee)
+OpIter<Policy>::readCallIndirect(uint32_t* sigIndex, Value* callee)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::CallIndirect);
+    MOZ_ASSERT(Classify(op_) == OpKind::CallIndirect);
 
     if (!readVarU32(sigIndex))
         return fail("unable to read call_indirect signature index");
@@ -1773,9 +1774,9 @@ ExprIter<Policy>::readCallIndirect(uint32_t* sigIndex, Value* callee)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readOldCallIndirect(uint32_t* sigIndex)
+OpIter<Policy>::readOldCallIndirect(uint32_t* sigIndex)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::OldCallIndirect);
+    MOZ_ASSERT(Classify(op_) == OpKind::OldCallIndirect);
 
     if (!readVarU32(sigIndex))
         return fail("unable to read call_indirect signature index");
@@ -1785,7 +1786,7 @@ ExprIter<Policy>::readOldCallIndirect(uint32_t* sigIndex)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readCallArg(ValType type, uint32_t numArgs, uint32_t argIndex, Value* arg)
+OpIter<Policy>::readCallArg(ValType type, uint32_t numArgs, uint32_t argIndex, Value* arg)
 {
     MOZ_ASSERT(reachable_);
 
@@ -1804,7 +1805,7 @@ ExprIter<Policy>::readCallArg(ValType type, uint32_t numArgs, uint32_t argIndex,
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readCallArgsEnd(uint32_t numArgs)
+OpIter<Policy>::readCallArgsEnd(uint32_t numArgs)
 {
     MOZ_ASSERT(reachable_);
     MOZ_ASSERT(numArgs <= valueStack_.length());
@@ -1816,9 +1817,9 @@ ExprIter<Policy>::readCallArgsEnd(uint32_t numArgs)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readOldCallIndirectCallee(Value* callee)
+OpIter<Policy>::readOldCallIndirectCallee(Value* callee)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::OldCallIndirect);
+    MOZ_ASSERT(Classify(op_) == OpKind::OldCallIndirect);
     MOZ_ASSERT(reachable_);
 
     if (!popWithType(ValType::I32, callee))
@@ -1829,7 +1830,7 @@ ExprIter<Policy>::readOldCallIndirectCallee(Value* callee)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readCallReturn(ExprType ret)
+OpIter<Policy>::readCallReturn(ExprType ret)
 {
     MOZ_ASSERT(reachable_);
 
@@ -1843,9 +1844,9 @@ ExprIter<Policy>::readCallReturn(ExprType ret)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readAtomicLoad(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType)
+OpIter<Policy>::readAtomicLoad(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::AtomicLoad);
+    MOZ_ASSERT(Classify(op_) == OpKind::AtomicLoad);
 
     Scalar::Type validateViewType;
     if (!readAtomicViewType(&validateViewType))
@@ -1865,10 +1866,10 @@ ExprIter<Policy>::readAtomicLoad(LinearMemoryAddress<Value>* addr, Scalar::Type*
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readAtomicStore(LinearMemoryAddress<Value>* addr,
-                                  Scalar::Type* viewType, Value* value)
+OpIter<Policy>::readAtomicStore(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
+                                Value* value)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::AtomicStore);
+    MOZ_ASSERT(Classify(op_) == OpKind::AtomicStore);
 
     Scalar::Type validateViewType;
     if (!readAtomicViewType(&validateViewType))
@@ -1891,10 +1892,10 @@ ExprIter<Policy>::readAtomicStore(LinearMemoryAddress<Value>* addr,
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readAtomicBinOp(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
-                                  jit::AtomicOp* op, Value* value)
+OpIter<Policy>::readAtomicBinOp(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
+                                jit::AtomicOp* op, Value* value)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::AtomicBinOp);
+    MOZ_ASSERT(Classify(op_) == OpKind::AtomicBinOp);
 
     Scalar::Type validateViewType;
     if (!readAtomicViewType(&validateViewType))
@@ -1920,11 +1921,10 @@ ExprIter<Policy>::readAtomicBinOp(LinearMemoryAddress<Value>* addr, Scalar::Type
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readAtomicCompareExchange(LinearMemoryAddress<Value>* addr,
-                                            Scalar::Type* viewType,
-                                            Value* oldValue, Value* newValue)
+OpIter<Policy>::readAtomicCompareExchange(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
+                                          Value* oldValue, Value* newValue)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::AtomicCompareExchange);
+    MOZ_ASSERT(Classify(op_) == OpKind::AtomicCompareExchange);
 
     Scalar::Type validateViewType;
     if (!readAtomicViewType(&validateViewType))
@@ -1950,11 +1950,10 @@ ExprIter<Policy>::readAtomicCompareExchange(LinearMemoryAddress<Value>* addr,
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readAtomicExchange(LinearMemoryAddress<Value>* addr,
-                                     Scalar::Type* viewType,
-                                     Value* value)
+OpIter<Policy>::readAtomicExchange(LinearMemoryAddress<Value>* addr, Scalar::Type* viewType,
+                                   Value* value)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::AtomicExchange);
+    MOZ_ASSERT(Classify(op_) == OpKind::AtomicExchange);
 
     Scalar::Type validateViewType;
     if (!readAtomicViewType(&validateViewType))
@@ -1977,9 +1976,9 @@ ExprIter<Policy>::readAtomicExchange(LinearMemoryAddress<Value>* addr,
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSimdComparison(ValType simdType, Value* lhs, Value* rhs)
+OpIter<Policy>::readSimdComparison(ValType simdType, Value* lhs, Value* rhs)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdComparison);
+    MOZ_ASSERT(Classify(op_) == OpKind::SimdComparison);
 
     if (!popWithType(simdType, rhs))
         return false;
@@ -1994,9 +1993,9 @@ ExprIter<Policy>::readSimdComparison(ValType simdType, Value* lhs, Value* rhs)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSimdShiftByScalar(ValType simdType, Value* lhs, Value* rhs)
+OpIter<Policy>::readSimdShiftByScalar(ValType simdType, Value* lhs, Value* rhs)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdShiftByScalar);
+    MOZ_ASSERT(Classify(op_) == OpKind::SimdShiftByScalar);
 
     if (!popWithType(ValType::I32, rhs))
         return false;
@@ -2011,9 +2010,9 @@ ExprIter<Policy>::readSimdShiftByScalar(ValType simdType, Value* lhs, Value* rhs
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSimdBooleanReduction(ValType simdType, Value* input)
+OpIter<Policy>::readSimdBooleanReduction(ValType simdType, Value* input)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdBooleanReduction);
+    MOZ_ASSERT(Classify(op_) == OpKind::SimdBooleanReduction);
 
     if (!popWithType(simdType, input))
         return false;
@@ -2025,9 +2024,9 @@ ExprIter<Policy>::readSimdBooleanReduction(ValType simdType, Value* input)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readExtractLane(ValType simdType, uint8_t* lane, Value* vector)
+OpIter<Policy>::readExtractLane(ValType simdType, uint8_t* lane, Value* vector)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::ExtractLane);
+    MOZ_ASSERT(Classify(op_) == OpKind::ExtractLane);
 
     uint32_t laneBits;
     if (!readVarU32(&laneBits))
@@ -2049,9 +2048,9 @@ ExprIter<Policy>::readExtractLane(ValType simdType, uint8_t* lane, Value* vector
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readReplaceLane(ValType simdType, uint8_t* lane, Value* vector, Value* scalar)
+OpIter<Policy>::readReplaceLane(ValType simdType, uint8_t* lane, Value* vector, Value* scalar)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::ReplaceLane);
+    MOZ_ASSERT(Classify(op_) == OpKind::ReplaceLane);
 
     uint32_t laneBits;
     if (!readVarU32(&laneBits))
@@ -2076,9 +2075,9 @@ ExprIter<Policy>::readReplaceLane(ValType simdType, uint8_t* lane, Value* vector
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSplat(ValType simdType, Value* scalar)
+OpIter<Policy>::readSplat(ValType simdType, Value* scalar)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Splat);
+    MOZ_ASSERT(Classify(op_) == OpKind::Splat);
 
     if (!popWithType(SimdElementType(simdType), scalar))
         return false;
@@ -2090,9 +2089,9 @@ ExprIter<Policy>::readSplat(ValType simdType, Value* scalar)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSwizzle(ValType simdType, uint8_t (* lanes)[16], Value* vector)
+OpIter<Policy>::readSwizzle(ValType simdType, uint8_t (* lanes)[16], Value* vector)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Swizzle);
+    MOZ_ASSERT(Classify(op_) == OpKind::Swizzle);
 
     uint32_t numSimdLanes = NumSimdElements(simdType);
     MOZ_ASSERT(numSimdLanes <= mozilla::ArrayLength(*lanes));
@@ -2114,9 +2113,9 @@ ExprIter<Policy>::readSwizzle(ValType simdType, uint8_t (* lanes)[16], Value* ve
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readShuffle(ValType simdType, uint8_t (* lanes)[16], Value* lhs, Value* rhs)
+OpIter<Policy>::readShuffle(ValType simdType, uint8_t (* lanes)[16], Value* lhs, Value* rhs)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::Shuffle);
+    MOZ_ASSERT(Classify(op_) == OpKind::Shuffle);
 
     uint32_t numSimdLanes = NumSimdElements(simdType);
     MOZ_ASSERT(numSimdLanes <= mozilla::ArrayLength(*lanes));
@@ -2141,10 +2140,10 @@ ExprIter<Policy>::readShuffle(ValType simdType, uint8_t (* lanes)[16], Value* lh
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSimdSelect(ValType simdType, Value* trueValue, Value* falseValue,
-                                 Value* condition)
+OpIter<Policy>::readSimdSelect(ValType simdType, Value* trueValue, Value* falseValue,
+                               Value* condition)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdSelect);
+    MOZ_ASSERT(Classify(op_) == OpKind::SimdSelect);
 
     if (!popWithType(simdType, falseValue))
         return false;
@@ -2160,19 +2159,19 @@ ExprIter<Policy>::readSimdSelect(ValType simdType, Value* trueValue, Value* fals
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSimdCtor()
+OpIter<Policy>::readSimdCtor()
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdCtor);
+    MOZ_ASSERT(Classify(op_) == OpKind::SimdCtor);
 
     return true;
 }
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSimdCtorArg(ValType elementType, uint32_t numElements, uint32_t index,
-                                  Value* arg)
+OpIter<Policy>::readSimdCtorArg(ValType elementType, uint32_t numElements, uint32_t index,
+                                Value* arg)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdCtor);
+    MOZ_ASSERT(Classify(op_) == OpKind::SimdCtor);
     MOZ_ASSERT(numElements > 0);
 
     TypeAndValue<Value> tv;
@@ -2188,9 +2187,9 @@ ExprIter<Policy>::readSimdCtorArg(ValType elementType, uint32_t numElements, uin
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSimdCtorArgsEnd(uint32_t numElements)
+OpIter<Policy>::readSimdCtorArgsEnd(uint32_t numElements)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdCtor);
+    MOZ_ASSERT(Classify(op_) == OpKind::SimdCtor);
     MOZ_ASSERT(numElements <= valueStack_.length());
 
     valueStack_.shrinkBy(numElements);
@@ -2200,9 +2199,9 @@ ExprIter<Policy>::readSimdCtorArgsEnd(uint32_t numElements)
 
 template <typename Policy>
 inline bool
-ExprIter<Policy>::readSimdCtorReturn(ValType simdType)
+OpIter<Policy>::readSimdCtorReturn(ValType simdType)
 {
-    MOZ_ASSERT(Classify(expr_) == ExprKind::SimdCtor);
+    MOZ_ASSERT(Classify(op_) == OpKind::SimdCtor);
 
     infalliblePush(simdType);
 

@@ -794,7 +794,7 @@ DXGITextureHostD3D11::LockInternal()
 
   if (!mTextureSource) {
     if (!mTexture && !OpenSharedHandle()) {
-      gfxWindowsPlatform::GetPlatform()->ForceDeviceReset(ForcedDeviceResetReason::OPENSHAREDHANDLE);
+      DeviceManagerDx::Get()->ForceDeviceReset(ForcedDeviceResetReason::OPENSHAREDHANDLE);
       return false;
     }
 
@@ -1212,7 +1212,7 @@ SyncObjectD3D11::FinalizeFrame()
     if (FAILED(hr) || !mD3D11Texture) {
       gfxCriticalError() << "Failed to D3D11 OpenSharedResource for frame finalization: " << hexa(hr);
 
-      if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+      if (DeviceManagerDx::Get()->HasDeviceReset()) {
         return;
       }
 
@@ -1238,7 +1238,7 @@ SyncObjectD3D11::FinalizeFrame()
       AutoTextureLock(mutex, hr, 20000);
 
       if (hr == WAIT_TIMEOUT) {
-        if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+        if (DeviceManagerDx::Get()->HasDeviceReset()) {
           gfxWarning() << "AcquireSync timed out because of device reset.";
           return;
         }
@@ -1251,7 +1251,7 @@ SyncObjectD3D11::FinalizeFrame()
 
       RefPtr<ID3D11Device> dev = DeviceManagerDx::Get()->GetContentDevice();
       if (!dev) {
-        if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+        if (DeviceManagerDx::Get()->HasDeviceReset()) {
           return;
         }
         MOZ_CRASH("GFX: Invalid D3D11 content device");

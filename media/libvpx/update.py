@@ -606,6 +606,8 @@ def apply_patches():
     os.system("patch -p3 < 1237848-check-lookahead-ctx.patch")
     # Bug 1263384 - Check input frame resolution
     os.system("patch -p3 < input_frame_validation.patch")
+    # Bug 1315288 - Check input frame resolution for vp9
+    os.system("patch -p3 < input_frame_validation_vp9.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:

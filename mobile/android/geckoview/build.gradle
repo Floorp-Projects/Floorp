@@ -3,13 +3,21 @@ buildDir "${topobjdir}/gradle/build/mobile/android/geckoview"
 apply plugin: 'android-sdk-manager' // Must come before 'com.android.*'.
 apply plugin: 'com.android.library'
 
+def VERSION_NAME = '0.0.1'
+
 android {
     compileSdkVersion 23
     buildToolsVersion mozconfig.substs.ANDROID_BUILD_TOOLS_VERSION
 
     defaultConfig {
+        // TODO: version GeckoView explicitly.  We'd like to avoid
+        // mozconfig.substs.ANDROID_VERSION_CODE, which won't be intuitive to
+        // consumer (and advances very quickly on pre-release channels).
+        versionCode 1
+        versionName VERSION_NAME
         targetSdkVersion 23
         minSdkVersion 15
+        consumerProguardFiles 'proguard-rules.txt' 
     }
 
     buildTypes {
@@ -82,5 +90,87 @@ android.libraryVariants.all { variant ->
     // :geckoview:release and handles it's own Gecko binary inclusion.
     if (buildType.equals('withGeckoBinaries')) {
         configureVariantWithGeckoBinaries(variant)
+    }
+
+    // Javadoc and Sources JAR configuration cribbed from
+    // https://github.com/mapbox/mapbox-gl-native/blob/d169ea55c1cfa85cd8bf19f94c5f023569f71810/platform/android/MapboxGLAndroidSDK/build.gradle#L85
+    // informed by
+    // https://code.tutsplus.com/tutorials/creating-and-publishing-an-android-library--cms-24582,
+    // and amended from numerous Stackoverflow posts.
+    def name = variant.name
+    def javadoc = task "javadoc${name.capitalize()}"(type: Javadoc) {
+        description = "Generate Javadoc for build variant $name"
+        failOnError = false
+        destinationDir = new File(destinationDir, variant.baseName)
+        source = files(variant.javaCompile.source)
+        classpath = files(variant.javaCompile.classpath.files) + files(android.bootClasspath)
+        options.windowTitle("Mozilla GeckoView Android API $VERSION_NAME Reference")
+        options.docTitle("Mozilla GeckoView Android API $VERSION_NAME")
+        options.header("Mozilla GeckoView Android API $VERSION_NAME Reference")
+        options.bottom("&copy; 2016 Mozilla. All rights reserved.")
+        options.links("http://docs.oracle.com/javase/7/docs/api/")
+        options.linksOffline("http://d.android.com/reference/", "$System.env.ANDROID_HOME/docs/reference")
+        // TODO: options.overview("src/main/java/overview.html")
+        options.group("Mozilla GeckoView", "org.mozilla.gecko*") // TODO: narrow this down.
+        exclude '**/R.java', '**/BuildConfig.java', 'com/googlecode/**'
+    }
+
+    task "javadocJar${name.capitalize()}"(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    task "sourcesJar${name.capitalize()}"(type: Jar) {
+        classifier 'sources'
+        description = "Generate Javadoc for build variant $name"
+        destinationDir = new File(destinationDir, variant.baseName)
+        from files(variant.javaCompile.source)
+    }
+}
+
+apply plugin: 'maven'
+ 
+uploadArchives {
+    repositories.mavenDeployer {
+        pom.groupId = 'org.mozilla'
+        pom.artifactId = 'geckoview'
+        pom.version = VERSION_NAME
+        pom.project {
+            licenses {
+                license {
+                    name 'The Mozilla Public License, v. 2.0'
+                    url 'http://mozilla.org/MPL/2.0/'
+                    distribution 'repo'
+                }
+            }
+        }
+        repository(url: "file://${project.buildDir}/maven")
+    }
+}
+
+// This is all related to the withGeckoBinaries approach; see
+// mobile/android/gradle/with_gecko_binaries.gradle.
+afterEvaluate {
+    // The bundle tasks are only present when the particular configuration is
+    // being built, so this task might not exist.  (This is due to the way the
+    // Android Gradle plugin defines things during configuration.)
+    def bundleWithGeckoBinaries = tasks.findByName('bundleWithGeckoBinaries')
+    if (!bundleWithGeckoBinaries) {
+        return
+    }
+
+    // Remove default configuration, which is the release configuration, when
+    // we're actually building withGeckoBinaries.  This makes `gradle install`
+    // install the withGeckoBinaries artifacts, not the release artifacts (which
+    // are withoutGeckoBinaries and not suitable for distribution.)
+    def Configuration archivesConfig = project.getConfigurations().getByName('archives')
+    archivesConfig.artifacts.removeAll { it.extension.equals('aar') }
+
+    artifacts {
+        // Instead of default (release) configuration, publish one with Gecko binaries.
+        archives bundleWithGeckoBinaries
+        // Javadoc and sources for developer ergononomics.
+        archives javadocJarWithGeckoBinaries
+        archives sourcesJarWithGeckoBinaries
     }
 }

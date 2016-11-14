@@ -4,13 +4,16 @@
 
 "use strict";
 
-const { createFactory, createElement } =
-  require("devtools/client/shared/vendor/react");
-const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+const Services = require("Services");
+const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 const App = createFactory(require("./components/app"));
 const Store = require("./store");
+
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const INSPECTOR_L10N =
+      new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 function LayoutView(inspector, window) {
   this.inspector = inspector;
@@ -24,8 +27,21 @@ LayoutView.prototype = {
 
   init() {
     let store = this.store = Store();
-    let provider = createElement(Provider, { store }, App());
-    ReactDOM.render(provider, this.document.querySelector("#layoutview-container"));
+    let provider = createElement(Provider, {
+      store,
+      id: "layoutview",
+      title: INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle"),
+      key: "layoutview",
+    }, App());
+
+    let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
+
+    this.inspector.addSidebarTab(
+      "layoutview",
+      INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle"),
+      provider,
+      defaultTab == "layoutview"
+    );
   },
 
   destroy() {
