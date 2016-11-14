@@ -5370,6 +5370,8 @@
                     continue;
                   gClickAndHoldListenersOnElement.remove(parent);
                   parent.removeAttribute("type");
+                  if (!parent.firstChild)
+                    continue;
                   parent.firstChild.remove();
                 }
               }

@@ -12,6 +12,7 @@ add_task(function* test() {
   let newTabButton = document.getAnonymousElementByAttribute(newTab, "anonid", "tabs-newtab-button");
   ok(newTabButton, "New tab button exists");
   ok(!newTabButton.hidden, "New tab button is visible");
+  yield BrowserTestUtils.waitForCondition(() => !!document.getAnonymousElementByAttribute(newTab, "anonid", "newtab-popup"), "Wait for popup to exist");
   let popup = document.getAnonymousElementByAttribute(newTab, "anonid", "newtab-popup");
 
   for (let i = 1; i <= 4; i++) {
