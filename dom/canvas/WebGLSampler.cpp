@@ -85,6 +85,14 @@ WebGLSampler::SamplerParameter1i(GLenum pname, GLint param)
         mCompareFunc = param;
         break;
 
+    case LOCAL_GL_TEXTURE_MIN_LOD:
+        mMinLod = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_MAX_LOD:
+        mMaxLod = param;
+        break;
+
     default:
         MOZ_CRASH("GFX: Unhandled pname");
         break;
@@ -106,6 +114,34 @@ WebGLSampler::SamplerParameter1f(GLenum pname, GLfloat param)
 
     case LOCAL_GL_TEXTURE_MAX_LOD:
         mMaxLod = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_WRAP_S:
+        mWrapS = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_WRAP_T:
+        mWrapT = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_WRAP_R:
+        mWrapR = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_MAG_FILTER:
+        mMagFilter = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_MIN_FILTER:
+        mMinFilter = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_COMPARE_MODE:
+        mCompareMode = param;
+        break;
+
+    case LOCAL_GL_TEXTURE_COMPARE_FUNC:
+        mCompareFunc = param;
         break;
 
     default:
