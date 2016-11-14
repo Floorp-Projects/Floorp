@@ -1142,8 +1142,7 @@ class GatherDecls(TcheckVisitor):
                     ptname, msgname)
                 ptype = VOID
             else:
-                ptype = self._canonicalType(ptdecl.type, param.typespec,
-                                            chmodallowed=1)
+                ptype = self._canonicalType(ptdecl.type, param.typespec)
             return self.declare(loc=ploc,
                                 type=ptype,
                                 progname=param.name)
@@ -1217,7 +1216,7 @@ class GatherDecls(TcheckVisitor):
         t.toStates = set(t.toStates)
 
 
-    def _canonicalType(self, itype, typespec, chmodallowed=0):
+    def _canonicalType(self, itype, typespec):
         loc = typespec.loc
         if itype.isIPDL():
             if itype.isProtocol():
