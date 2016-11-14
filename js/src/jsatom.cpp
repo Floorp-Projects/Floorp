@@ -509,6 +509,14 @@ ToAtomSlow(ExclusiveContext* cx, typename MaybeRooted<Value, allowGC>::HandleTyp
         return v.toBoolean() ? cx->names().true_ : cx->names().false_;
     if (v.isNull())
         return cx->names().null;
+    if (v.isSymbol()) {
+        if (cx->shouldBeJSContext() && allowGC) {
+            JS_ReportErrorNumberASCII(cx->asJSContext(), GetErrorMessage, nullptr,
+                                      JSMSG_SYMBOL_TO_STRING);
+        }
+        return nullptr;
+    }
+    MOZ_ASSERT(v.isUndefined());
     return cx->names().undefined;
 }
 
