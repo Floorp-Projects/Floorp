@@ -1841,8 +1841,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     // We don't cache data: scripts!
     if (aShouldCache && !scheme.EqualsLiteral("data")) {
       // Root the object also for caching.
-      nsMessageManagerScriptHolder* holder =
-        new nsMessageManagerScriptHolder(cx, script, aRunInGlobalScope);
+      auto* holder = new nsMessageManagerScriptHolder(cx, script, aRunInGlobalScope);
       sCachedScripts->Put(aURL, holder);
     }
   }
@@ -2204,9 +2203,8 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
     cb = new ChildProcessMessageManagerCallback();
     RegisterStrongMemoryReporter(new MessageManagerReporter());
   }
-  nsFrameMessageManager* mm = new nsFrameMessageManager(cb,
-                                                        nullptr,
-                                                        MM_PROCESSMANAGER | MM_OWNSCALLBACK);
+  auto* mm = new nsFrameMessageManager(cb, nullptr,
+                                       MM_PROCESSMANAGER | MM_OWNSCALLBACK);
   nsFrameMessageManager::SetChildProcessManager(mm);
   RefPtr<ProcessGlobal> global = new ProcessGlobal(mm);
   NS_ENSURE_TRUE(global->Init(), NS_ERROR_UNEXPECTED);

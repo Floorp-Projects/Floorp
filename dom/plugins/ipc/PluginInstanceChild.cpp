@@ -3018,7 +3018,7 @@ PluginInstanceChild::NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
     AssertPluginThread();
     AutoStackHelper guard(this);
 
-    PluginStreamChild* ps = new PluginStreamChild();
+    auto* ps = new PluginStreamChild();
 
     NPError result;
     CallPPluginStreamConstructor(ps, nsDependentCString(aMIMEType),
@@ -4389,7 +4389,7 @@ uint32_t
 PluginInstanceChild::ScheduleTimer(uint32_t interval, bool repeat,
                                    TimerFunc func)
 {
-    ChildTimer* t = new ChildTimer(this, interval, repeat, func);
+    auto* t = new ChildTimer(this, interval, repeat, func);
     if (0 == t->ID()) {
         delete t;
         return 0;

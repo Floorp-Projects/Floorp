@@ -829,7 +829,7 @@ _newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
     nsCOMPtr<nsIOutputStream> stream;
     if (NS_SUCCEEDED(inst->NewStreamFromPlugin((const char*) type, target,
                                                getter_AddRefs(stream)))) {
-      nsNPAPIStreamWrapper* wrapper = new nsNPAPIStreamWrapper(stream, nullptr);
+      auto* wrapper = new nsNPAPIStreamWrapper(stream, nullptr);
       if (wrapper) {
         (*result) = &wrapper->mNPStream;
         err = NPERR_NO_ERROR;

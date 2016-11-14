@@ -980,7 +980,7 @@ ContentChild::AllocPMemoryReportRequestChild(const uint32_t& aGeneration,
                                              const bool &aMinimizeMemoryUsage,
                                              const MaybeFileDesc& aDMDFile)
 {
-  MemoryReportRequestChild *actor =
+  auto *actor =
     new MemoryReportRequestChild(aAnonymize, aDMDFile);
   actor->AddRef();
   return actor;
@@ -1110,7 +1110,7 @@ ContentChild::AllocPCycleCollectWithLogsChild(const bool& aDumpAllTraces,
                                               const FileDescriptor& aGCLog,
                                               const FileDescriptor& aCCLog)
 {
-  CycleCollectWithLogsChild* actor = new CycleCollectWithLogsChild(aGCLog, aCCLog);
+  auto* actor = new CycleCollectWithLogsChild(aGCLog, aCCLog);
   // Return actor with refcount 0, which is safe because it has a non-XPCOM type.
   return actor;
 }
@@ -1901,7 +1901,7 @@ ContentChild::AllocPExternalHelperAppChild(const OptionalURIParams& uri,
                                            const OptionalURIParams& aReferrer,
                                            PBrowserChild* aBrowser)
 {
-  ExternalHelperAppChild *child = new ExternalHelperAppChild();
+  auto *child = new ExternalHelperAppChild();
   child->AddRef();
   return child;
 }
@@ -1917,7 +1917,7 @@ ContentChild::DeallocPExternalHelperAppChild(PExternalHelperAppChild* aService)
 PHandlerServiceChild*
 ContentChild::AllocPHandlerServiceChild()
 {
-  HandlerServiceChild* actor = new HandlerServiceChild();
+  auto* actor = new HandlerServiceChild();
   actor->AddRef();
   return actor;
 }
@@ -1980,7 +1980,7 @@ PWebrtcGlobalChild *
 ContentChild::AllocPWebrtcGlobalChild()
 {
 #ifdef MOZ_WEBRTC
-  WebrtcGlobalChild *child = new WebrtcGlobalChild();
+  auto *child = new WebrtcGlobalChild();
   return child;
 #else
   return nullptr;
