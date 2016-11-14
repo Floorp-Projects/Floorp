@@ -40,20 +40,13 @@ enum PairedBracketType {
   PAIRED_BRACKET_TYPE_CLOSE = 2
 };
 
-enum XidmodType {
-  XIDMOD_RECOMMENDED,
-  XIDMOD_INCLUSION,
-  XIDMOD_UNCOMMON_USE,
-  XIDMOD_TECHNICAL,
-  XIDMOD_OBSOLETE,
-  XIDMOD_ASPIRATIONAL,
-  XIDMOD_LIMITED_USE,
-  XIDMOD_EXCLUSION,
-  XIDMOD_NOT_XID,
-  XIDMOD_NOT_NFKC,
-  XIDMOD_DEFAULT_IGNORABLE,
-  XIDMOD_DEPRECATED,
-  XIDMOD_NOT_CHARS
+/* Flags for Unicode security IdentifierType.txt attributes. Only a subset
+   of these are currently checked by Gecko, so we only define flags for the
+   ones we need. */
+enum IdentifierType {
+  IDTYPE_RESTRICTED = 0,
+  IDTYPE_ALLOWED = 1,
+  IDTYPE_ASPIRATIONAL = 2,
 };
 
 #if ENABLE_INTL_API // ICU is available, so simply forward to its API
@@ -172,6 +165,12 @@ IsEastAsianWidthFWH(uint32_t aCh)
   return false;
 }
 
+inline bool
+IsDefaultIgnorable(uint32_t aCh)
+{
+  return u_hasBinaryProperty(aCh, UCHAR_DEFAULT_IGNORABLE_CODE_POINT);
+}
+
 #else // not ENABLE_INTL_API
 
 // Return whether the char has a mirrored-pair counterpart.
@@ -211,6 +210,12 @@ uint32_t GetTitlecaseForAll(uint32_t aCh); // maps both UC and LC to titlecase
 // Return whether the char has EastAsianWidth class F or W or H.
 bool IsEastAsianWidthFWH(uint32_t aCh);
 
+// Return whether the char is default-ignorable.
+inline bool IsDefaultIgnorable(uint32_t aCh)
+{
+  return GetCharProps2(aCh).mDefaultIgnorable;
+}
+
 #endif // !ENABLE_INTL_API
 
 // returns the simplified Gen Category as defined in nsIUGenCategory
@@ -222,8 +227,8 @@ inline VerticalOrientation GetVerticalOrientation(uint32_t aCh) {
   return VerticalOrientation(GetCharProps2(aCh).mVertOrient);
 }
 
-inline XidmodType GetIdentifierModification(uint32_t aCh) {
-  return XidmodType(GetCharProps2(aCh).mXidmod);
+inline IdentifierType GetIdentifierType(uint32_t aCh) {
+  return IdentifierType(GetCharProps2(aCh).mIdType);
 }
 
 uint32_t GetFullWidth(uint32_t aCh);
