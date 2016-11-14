@@ -1860,7 +1860,7 @@ nsSSLIOLayerNewSocket(int32_t family,
                       const char* host,
                       int32_t port,
                       nsIProxyInfo *proxy,
-                      const nsACString& firstPartyDomain,
+                      const NeckoOriginAttributes& originAttributes,
                       PRFileDesc** fd,
                       nsISupports** info,
                       bool forSTARTTLS,
@@ -1871,7 +1871,7 @@ nsSSLIOLayerNewSocket(int32_t family,
   if (!sock) return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = nsSSLIOLayerAddToSocket(family, host, port, proxy,
-                                        firstPartyDomain, sock, info,
+                                        originAttributes, sock, info,
                                         forSTARTTLS, flags);
   if (NS_FAILED(rv)) {
     PR_Close(sock);
@@ -2578,7 +2578,7 @@ nsSSLIOLayerAddToSocket(int32_t family,
                         const char* host,
                         int32_t port,
                         nsIProxyInfo* proxy,
-                        const nsACString& firstPartyDomain,
+                        const NeckoOriginAttributes& originAttributes,
                         PRFileDesc* fd,
                         nsISupports** info,
                         bool forSTARTTLS,
@@ -2599,7 +2599,7 @@ nsSSLIOLayerAddToSocket(int32_t family,
   infoObject->SetForSTARTTLS(forSTARTTLS);
   infoObject->SetHostName(host);
   infoObject->SetPort(port);
-  infoObject->SetFirstPartyDomain(firstPartyDomain);
+  infoObject->SetOriginAttributes(originAttributes);
 
   bool haveProxy = false;
   if (proxy) {
