@@ -17,10 +17,20 @@ fails == shape-outside-margin-box-border-radius-002.html shape-outside-margin-bo
 fails == shape-outside-margin-box-border-radius-004.html shape-outside-margin-box-border-radius-004-ref.html # Bug 1309830
 == shape-outside-margin-box-border-radius-005.html shape-outside-margin-box-border-radius-005-ref.html
 == shape-outside-margin-box-border-radius-006.html shape-outside-margin-box-border-radius-006-ref.html
+== shape-outside-margin-box-border-radius-007.html shape-outside-margin-box-border-radius-007-ref.html
+== shape-outside-margin-box-border-radius-008.html shape-outside-margin-box-border-radius-008-ref.html
 == shape-outside-border-box-border-radius-001.html shape-outside-border-box-border-radius-001-ref.html
 fails == shape-outside-border-box-border-radius-002.html shape-outside-border-box-border-radius-002-ref.html # Bug 1309830
 == shape-outside-border-box-border-radius-003.html shape-outside-border-box-border-radius-003-ref.html
 fails == shape-outside-border-box-border-radius-004.html shape-outside-border-box-border-radius-004-ref.html # Bug 1309830
+== shape-outside-border-box-border-radius-005.html shape-outside-border-box-border-radius-005-ref.html
+== shape-outside-border-box-border-radius-006.html shape-outside-border-box-border-radius-006-ref.html
+== shape-outside-border-box-border-radius-007.html shape-outside-border-box-border-radius-007-ref.html
+== shape-outside-border-box-border-radius-008.html shape-outside-border-box-border-radius-008-ref.html
+== shape-outside-border-box-border-radius-009.html shape-outside-border-box-border-radius-009-ref.html
+== shape-outside-border-box-border-radius-010.html shape-outside-border-box-border-radius-010-ref.html
+== shape-outside-border-box-border-radius-011.html shape-outside-border-box-border-radius-011-ref.html
+== shape-outside-border-box-border-radius-012.html shape-outside-border-box-border-radius-012-ref.html
 == shape-outside-padding-box-border-radius-001.html shape-outside-padding-box-border-radius-001-ref.html
 == shape-outside-padding-box-border-radius-002.html shape-outside-padding-box-border-radius-002-ref.html
 == shape-outside-content-box-border-radius-001.html shape-outside-content-box-border-radius-001-ref.html

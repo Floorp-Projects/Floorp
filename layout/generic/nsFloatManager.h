@@ -335,10 +335,10 @@ private:
     // aBStart and aBEnd are the starting and ending coordinate of a band.
     // LineLeft() and LineRight() return the innermost line-left extent and
     // line-right extent within the given band, respectively.
-    nscoord LineLeft(ShapeType aShapeType, const nscoord aBStart,
-                     const nscoord aBEnd) const;
-    nscoord LineRight(ShapeType aShapeType, const nscoord aBStart,
-                     const nscoord aBEnd) const;
+    nscoord LineLeft(mozilla::WritingMode aWM, ShapeType aShapeType,
+                     const nscoord aBStart, const nscoord aBEnd) const;
+    nscoord LineRight(mozilla::WritingMode aWM, ShapeType aShapeType,
+                      const nscoord aBStart, const nscoord aBEnd) const;
 
     nscoord BStart(ShapeType aShapeType) const
     {
