@@ -1340,7 +1340,7 @@ AuthCertificate(CertVerifier& certVerifier,
                                                infoObject->GetHostNameRaw(),
                                                certList, saveIntermediates,
                                                flags, infoObject->
-                                                      GetOriginAttributes(),
+                                                      GetFirstPartyDomainRaw(),
                                                &evOidPolicy,
                                                &ocspStaplingStatus,
                                                &keySizeStatus, &sha1ModeResult,

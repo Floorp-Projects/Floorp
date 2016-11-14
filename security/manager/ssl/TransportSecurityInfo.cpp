@@ -99,10 +99,9 @@ TransportSecurityInfo::GetPort(int32_t *aPort)
 }
 
 nsresult
-TransportSecurityInfo::SetOriginAttributes(
-  const NeckoOriginAttributes& aOriginAttributes)
+TransportSecurityInfo::SetFirstPartyDomain(const nsACString& aFirstPartyDomain)
 {
-  mOriginAttributes = aOriginAttributes;
+  mFirstPartyDomain.Assign(aFirstPartyDomain);
   return NS_OK;
 }
 

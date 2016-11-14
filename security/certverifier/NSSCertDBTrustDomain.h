@@ -9,7 +9,6 @@
 
 #include "CertVerifier.h"
 #include "ScopedNSSTypes.h"
-#include "mozilla/BasePrincipal.h"
 #include "nsICertBlocklist.h"
 #include "nsString.h"
 #include "pkix/pkixtypes.h"
@@ -81,7 +80,7 @@ public:
                        ValidityCheckingMode validityCheckingMode,
                        CertVerifier::SHA1Mode sha1Mode,
                        NetscapeStepUpPolicy netscapeStepUpPolicy,
-                       const NeckoOriginAttributes& originAttributes,
+                       const char* firstPartyDomain,
                        UniqueCERTCertList& builtChain,
           /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo = nullptr,
           /*optional*/ const char* hostname = nullptr);
@@ -185,7 +184,7 @@ private:
   ValidityCheckingMode mValidityCheckingMode;
   CertVerifier::SHA1Mode mSHA1Mode;
   NetscapeStepUpPolicy mNetscapeStepUpPolicy;
-  const NeckoOriginAttributes& mOriginAttributes;
+  const char* mFirstPartyDomain;
   UniqueCERTCertList& mBuiltChain; // non-owning
   PinningTelemetryInfo* mPinningTelemetryInfo;
   const char* mHostname; // non-owning - only used for pinning checks
