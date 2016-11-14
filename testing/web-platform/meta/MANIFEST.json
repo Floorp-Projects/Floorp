@@ -38617,6 +38617,18 @@
             "url": "/WebCryptoAPI/generateKey/successes_RSASSA-PKCS1-v1_5.worker"
           }
         ],
+        "fetch/api/redirect/redirect-referrer-worker.html": [
+          {
+            "path": "fetch/api/redirect/redirect-referrer-worker.html",
+            "url": "/fetch/api/redirect/redirect-referrer-worker.html"
+          }
+        ],
+        "fetch/api/redirect/redirect-referrer.html": [
+          {
+            "path": "fetch/api/redirect/redirect-referrer.html",
+            "url": "/fetch/api/redirect/redirect-referrer.html"
+          }
+        ],
         "html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/resume-timer-on-history-back.html": [
           {
             "path": "html/browsers/browsing-the-web/history-traversal/persisted-user-state-restoration/resume-timer-on-history-back.html",
