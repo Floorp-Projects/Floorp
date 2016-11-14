@@ -33,6 +33,10 @@
 #include "prerror.h"
 #include "seccomon.h"
 
+namespace mozilla {
+class NeckoOriginAttributes;
+}
+
 namespace mozilla { namespace pkix {
 struct CertID;
 } } // namespace mozilla::pkix
@@ -56,18 +60,17 @@ public:
 
   // Returns true if the status of the given certificate (issued by the given
   // issuer) is in the cache, and false otherwise.
-  // The first party domain is only non-empty when "privacy.firstParty.isolate"
-  // is enabled, in order to isolate OCSP cache by first party.
   // If it is in the cache, returns by reference the error code of the cached
   // status and the time through which the status is considered trustworthy.
+  // The passed in origin attributes are used to isolate the OCSP cache.
+  // We currently only use the first party domain portion of the attributes, and
+  // it is non-empty only when "privacy.firstParty.isolate" is enabled.
   bool Get(const mozilla::pkix::CertID& aCertID,
-           const char* aFirstPartyDomain,
+           const NeckoOriginAttributes& aOriginAttributes,
            /*out*/ mozilla::pkix::Result& aResult,
            /*out*/ mozilla::pkix::Time& aValidThrough);
 
   // Caches the status of the given certificate (issued by the given issuer).
-  // The first party domain is only non-empty when "privacy.firstParty.isolate"
-  // is enabled, in order to isolate OCSP cache by first party.
   // The status is considered trustworthy through the given time.
   // A status with an error code of SEC_ERROR_REVOKED_CERTIFICATE will not
   // be replaced or evicted.
@@ -76,8 +79,11 @@ public:
   // A status with a more recent thisUpdate will not be replaced with a
   // status with a less recent thisUpdate unless the less recent status
   // indicates the certificate is revoked.
+  // The passed in origin attributes are used to isolate the OCSP cache.
+  // We currently only use the first party domain portion of the attributes, and
+  // it is non-empty only when "privacy.firstParty.isolate" is enabled.
   mozilla::pkix::Result Put(const mozilla::pkix::CertID& aCertID,
-                            const char* aFirstPartyDomain,
+                            const NeckoOriginAttributes& aOriginAttributes,
                             mozilla::pkix::Result aResult,
                             mozilla::pkix::Time aThisUpdate,
                             mozilla::pkix::Time aValidThrough);
@@ -98,7 +104,7 @@ private:
     {
     }
     mozilla::pkix::Result Init(const mozilla::pkix::CertID& aCertID,
-                               const char* aFirstPartyDomain);
+                               const NeckoOriginAttributes& aOriginAttributes);
 
     mozilla::pkix::Result mResult;
     mozilla::pkix::Time mThisUpdate;
@@ -112,7 +118,7 @@ private:
   };
 
   bool FindInternal(const mozilla::pkix::CertID& aCertID,
-                    const char* aFirstPartyDomain,
+                    const NeckoOriginAttributes& aOriginAttributes,
                     /*out*/ size_t& index,
                     const MutexAutoLock& aProofOfLock);
   void MakeMostRecentlyUsed(size_t aIndex, const MutexAutoLock& aProofOfLock);
