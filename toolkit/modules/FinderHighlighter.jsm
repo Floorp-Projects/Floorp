@@ -213,13 +213,14 @@ FinderHighlighter.prototype = {
         listener: this,
         useCache: true
       };
-      if (this.iterator._areParamsEqual(params, dict.lastIteratorParams))
+      if (this._modal && this.iterator._areParamsEqual(params, dict.lastIteratorParams))
         return this._found;
-      if (params) {
-        yield this.iterator.start(params);
-        if (this._found)
-          this.finder._outlineLink(true);
-      }
+
+      if (!this._modal)
+        dict.visible = true;
+      yield this.iterator.start(params);
+      if (this._found)
+        this.finder._outlineLink(true);
     } else {
       this.hide(window);
 
@@ -405,8 +406,10 @@ FinderHighlighter.prototype = {
       if (this._highlightAll) {
         dict.currentFoundRange = foundRange;
         let params = this.iterator.params;
-        if (this.iterator._areParamsEqual(params, dict.lastIteratorParams))
+        if (dict.visible && this.iterator._areParamsEqual(params, dict.lastIteratorParams))
           return;
+        if (!dict.visible && !params)
+          params = {word: data.searchString, linksOnly: data.linksOnly};
         if (params)
           this.highlight(true, params.word, params.linksOnly);
       }
