@@ -23,6 +23,7 @@
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
     Cu.import("resource://gre/modules/AppConstants.jsm");
     Cu.import("resource://gre/modules/Task.jsm");
+    Cu.import("resource://testing-common/BrowserTestUtils.jsm");
     Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
 
@@ -93,14 +94,7 @@
       // Tests delays the loading of a document for one second.
       yield new Promise(resolve => setTimeout(resolve, 1000));
 
-      let promise = ContentTask.spawn(gBrowser, null, function* () {
-        return new Promise(resolve => {
-          addEventListener("DOMContentLoaded", function listener() {
-            removeEventListener("DOMContentLoaded", listener);
-            resolve();
-          });
-        });
-      });
+      let promise = BrowserTestUtils.browserLoaded(gBrowser);
       gBrowser.loadURI("data:text/html,<h2 id='h2'>" + SEARCH_TEXT +
         "</h2><h2><a href='" + SAMPLE_URL + "'>Link Test</a></h2><input id='text' type='text' value='" +
         SAMPLE_TEXT + "'></input><input id='button' type='button'></input><img id='img' width='50' height='50'/>");
@@ -299,6 +293,17 @@
         }
       }
     });
+
+    function promiseExpectRangeCount(rangeCount) {
+      return ContentTask.spawn(gBrowser, { rangeCount }, function* (args) {
+        let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsISelectionDisplay)
+                                 .QueryInterface(Ci.nsISelectionController);
+        let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
+        Assert.equal(sel.rangeCount, args.rangeCount,
+          "Expected the correct amount of ranges inside the Find selection");
+      });
+    }
 
     // also test match-case
     function* testNormalFind() {
@@ -519,38 +524,35 @@
       searchStr = "e";
       gFindBar.clear();
       yield enterStringIntoFindField(searchStr);
-
-      yield ContentTask.spawn(gBrowser, {}, function* () {
-        let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsISelectionDisplay)
-                                 .QueryInterface(Ci.nsISelectionController);
-        let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
-        Assert.equal(sel.rangeCount, 0, "testFindWithHighlight - 1316515: no highlights, please [1]");
-      });
+      yield promiseExpectRangeCount(0);
 
       highlightButton.click();
       ok(highlightButton.checked, "testFindWithHighlight: Highlight All should be checked.");
-
       yield promiseHighlightFinished();
-
-      yield ContentTask.spawn(gBrowser, {}, function* () {
-        let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsISelectionDisplay)
-                                 .QueryInterface(Ci.nsISelectionController);
-        let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
-        // The other 4 ranges are in a different controller.
-        Assert.equal(sel.rangeCount, 3, "testFindWithHighlight - 1316515: more highlights, please");
-      });
+      yield promiseExpectRangeCount(3);
 
       synthesizeKey("VK_BACK_SPACE", {});
+      yield promiseExpectRangeCount(0);
 
-      yield ContentTask.spawn(gBrowser, null, function* () {
-        let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsISelectionDisplay)
-                                 .QueryInterface(Ci.nsISelectionController);
-        let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
-        Assert.equal(sel.rangeCount, 0, "testFindWithHighlight - 1316515: no highlights, please [2]");
-      });
+      // Regression test for bug 1316513.
+      highlightButton.click();
+      ok(!highlightButton.checked, "testFindWithHighlight - 1316513: Highlight All should be unchecked.");
+      yield enterStringIntoFindField(searchStr);
+
+      highlightButton.click();
+      ok(highlightButton.checked, "testFindWithHighlight - 1316513: Highlight All should be checked.");
+      yield promiseHighlightFinished();
+      yield promiseExpectRangeCount(3);
+
+      let promise = BrowserTestUtils.browserLoaded(gBrowser);
+      gBrowser.reload();
+      yield promise;
+
+      ok(highlightButton.checked, "testFindWithHighlight - 1316513: Highlight All " +
+         "should still be checked after a reload.");
+      synthesizeKey("VK_RETURN", {});
+      yield promiseHighlightFinished();
+      yield promiseExpectRangeCount(3);
     }
 
     function* testQuickFindText() {
