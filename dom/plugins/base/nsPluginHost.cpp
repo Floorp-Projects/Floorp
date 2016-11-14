@@ -3797,7 +3797,7 @@ nsPluginHost::CreateTempFileToPost(const char *aPostDataURL, nsIFile **aTmpFile)
     char buf[1024];
     uint32_t br, bw;
     bool firstRead = true;
-    while (1) {
+    while (true) {
       // Read() mallocs if buffer is null
       rv = inStream->Read(buf, 1024, &br);
       if (NS_FAILED(rv) || (int32_t)br <= 0)
