@@ -6,7 +6,7 @@ import sys
 
 from marionette import __version__
 from marionette_driver import __version__ as driver_version
-from marionette.marionette_test import MarionetteTestCase, MarionetteJSTestCase
+from marionette.marionette_test import MarionetteTestCase
 from marionette.runner import (
     BaseMarionetteTestRunner,
     BaseMarionetteArguments,
@@ -18,7 +18,7 @@ import mozlog
 class MarionetteTestRunner(BaseMarionetteTestRunner):
     def __init__(self, **kwargs):
         BaseMarionetteTestRunner.__init__(self, **kwargs)
-        self.test_handlers = [MarionetteTestCase, MarionetteJSTestCase]
+        self.test_handlers = [MarionetteTestCase]
 
 
 class MarionetteArguments(BaseMarionetteArguments):
