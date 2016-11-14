@@ -191,10 +191,13 @@ gfxGDIFont::Initialize()
             // initialize its metrics so we can calculate size adjustment
             Initialize();
 
+            // Unless the font was so small that GDI metrics rounded to zero,
             // calculate the properly adjusted size, and then proceed
             // to recreate mFont and recalculate metrics
-            gfxFloat aspect = mMetrics->xHeight / mMetrics->emHeight;
-            mAdjustedSize = mStyle.GetAdjustedSize(aspect);
+            if (mMetrics->xHeight > 0.0 && mMetrics->emHeight > 0.0) {
+                gfxFloat aspect = mMetrics->xHeight / mMetrics->emHeight;
+                mAdjustedSize = mStyle.GetAdjustedSize(aspect);
+            }
 
             // delete the temporary font and metrics
             ::DeleteObject(mFont);
