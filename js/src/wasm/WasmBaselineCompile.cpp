@@ -1934,8 +1934,7 @@ class BaseCompiler
 
         if (!ctl_.emplaceBack(Control(framePushed, stackSize)))
             return false;
-        if (label)
-            ctl_.back().label = label->release();
+        ctl_.back().label = label->release();
         if (otherLabel)
             ctl_.back().otherLabel = otherLabel->release();
         ctl_.back().deadOnArrival = deadCode_;
