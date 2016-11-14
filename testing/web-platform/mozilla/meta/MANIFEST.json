@@ -11,6 +11,12 @@
     "deleted_reftests": {},
     "items": {
       "testharness": {
+        "fetch/api/redirect/redirect-referrer.https.html": [
+          {
+            "path": "fetch/api/redirect/redirect-referrer.https.html",
+            "url": "/_mozilla/fetch/api/redirect/redirect-referrer.https.html"
+          }
+        ],
         "html/syntax/parsing/math-parse01.html": [
           {
             "path": "html/syntax/parsing/math-parse01.html",
