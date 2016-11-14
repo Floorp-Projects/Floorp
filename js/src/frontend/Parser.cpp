@@ -7839,20 +7839,18 @@ Parser<ParseHandler>::reportIfNotValidSimpleAssignmentTarget(Node target, Assign
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::checkAndMarkAsIncOperand(Node target, AssignmentFlavor flavor)
+Parser<ParseHandler>::checkAndMarkAsIncOperand(Node target)
 {
-    MOZ_ASSERT(flavor == IncrementAssignment || flavor == DecrementAssignment);
-
-    // Check.
-    if (!reportIfNotValidSimpleAssignmentTarget(target, flavor))
-        return false;
-
-    // Mark.
     if (handler.isNameAnyParentheses(target)) {
-        // Assignment to arguments/eval is allowed outside strict mode code,
-        // but it's dodgy.  Report a strict warning (error, if werror was set).
-        if (!reportIfArgumentsEvalTarget(target))
-            return false;
+        if (const char* chars = handler.nameIsArgumentsEvalAnyParentheses(target, context)) {
+            if (!reportWithNode(ParseStrictError, pc->sc()->strict(), target,
+                                JSMSG_BAD_STRICT_ASSIGN, chars))
+            {
+                return false;
+            }
+        }
+    } else if (handler.isPropertyAccess(target)) {
+        // Permitted: no additional testing/fixup needed.
     } else if (handler.isFunctionCall(target)) {
         // Assignment to function calls is forbidden in ES6.  We're still
         // somewhat concerned about sites using this in dead code, so forbid it
@@ -7860,7 +7858,13 @@ Parser<ParseHandler>::checkAndMarkAsIncOperand(Node target, AssignmentFlavor fla
         // otherwise warn.
         if (!reportWithNode(ParseStrictError, pc->sc()->strict(), target, JSMSG_BAD_INCOP_OPERAND))
             return false;
+    } else {
+        reportWithNode(ParseError, pc->sc()->strict(), target, JSMSG_BAD_INCOP_OPERAND);
+        return false;
     }
+
+    MOZ_ASSERT(isValidSimpleAssignmentTarget(target, PermitAssignmentToFunctionCalls),
+               "inconsistent increment/decrement operand validation");
     return true;
 }
 
@@ -7927,8 +7931,7 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
         Node pn2 = memberExpr(yieldHandling, TripledotProhibited, tt2);
         if (!pn2)
             return null();
-        AssignmentFlavor flavor = (tt == TOK_INC) ? IncrementAssignment : DecrementAssignment;
-        if (!checkAndMarkAsIncOperand(pn2, flavor))
+        if (!checkAndMarkAsIncOperand(pn2))
             return null();
         return handler.newUpdate((tt == TOK_INC) ? PNK_PREINCREMENT : PNK_PREDECREMENT,
                                  begin,
@@ -7989,8 +7992,7 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
             return null();
         if (tt == TOK_INC || tt == TOK_DEC) {
             tokenStream.consumeKnownToken(tt);
-            AssignmentFlavor flavor = (tt == TOK_INC) ? IncrementAssignment : DecrementAssignment;
-            if (!checkAndMarkAsIncOperand(pn, flavor))
+            if (!checkAndMarkAsIncOperand(pn))
                 return null();
             return handler.newUpdate((tt == TOK_INC) ? PNK_POSTINCREMENT : PNK_POSTDECREMENT,
                                      begin,
