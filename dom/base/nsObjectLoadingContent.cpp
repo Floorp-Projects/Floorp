@@ -157,7 +157,7 @@ public:
   explicit nsAsyncInstantiateEvent(nsObjectLoadingContent* aContent)
   : mContent(aContent) {}
 
-  ~nsAsyncInstantiateEvent() {}
+  ~nsAsyncInstantiateEvent() = default;
 
   NS_IMETHOD Run();
 
@@ -190,7 +190,7 @@ public:
   explicit CheckPluginStopEvent(nsObjectLoadingContent* aContent)
   : mContent(aContent) {}
 
-  ~CheckPluginStopEvent() {}
+  ~CheckPluginStopEvent() = default;
 
   NS_IMETHOD Run();
 
@@ -288,7 +288,7 @@ public:
     MOZ_ASSERT(aTarget && aDocument);
   }
 
-  ~nsSimplePluginEvent() {}
+  ~nsSimplePluginEvent() = default;
 
   NS_IMETHOD Run();
 
@@ -336,7 +336,7 @@ public:
       mSubmittedCrashReport(submittedCrashReport)
   {}
 
-  ~nsPluginCrashedEvent() {}
+  ~nsPluginCrashedEvent() = default;
 
   NS_IMETHOD Run();
 };
@@ -393,7 +393,7 @@ public:
   NS_IMETHOD Notify(nsITimer* timer) override;
 
 protected:
-  virtual ~nsStopPluginRunnable() {}
+  virtual ~nsStopPluginRunnable() = default;
 
 private:
   nsCOMPtr<nsITimer> mTimer;
@@ -1381,7 +1381,7 @@ public:
   {}
 
 protected:
-  ~ObjectInterfaceRequestorShim() {}
+  ~ObjectInterfaceRequestorShim() = default;
   nsCOMPtr<nsIObjectLoadingContent> mContent;
 };
 
@@ -3888,10 +3888,6 @@ nsObjectLoadingContent::MaybeFireErrorEvent()
 nsObjectLoadingContent::SetupProtoChainRunner::SetupProtoChainRunner(
     nsObjectLoadingContent* aContent)
   : mContent(aContent)
-{
-}
-
-nsObjectLoadingContent::SetupProtoChainRunner::~SetupProtoChainRunner()
 {
 }
 

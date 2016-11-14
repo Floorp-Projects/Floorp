@@ -38,7 +38,7 @@ public:
     return VideoBridgeChild::GetSingleton();
   }
 private:
-  virtual ~KnowsCompositorVideo() {}
+  virtual ~KnowsCompositorVideo() = default;
 };
 
 VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,

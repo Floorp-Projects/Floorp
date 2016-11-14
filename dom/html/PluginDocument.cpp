@@ -108,8 +108,7 @@ PluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 PluginDocument::PluginDocument()
 {}
 
-PluginDocument::~PluginDocument()
-{}
+PluginDocument::~PluginDocument() = default;
 
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(PluginDocument, MediaDocument,

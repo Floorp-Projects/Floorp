@@ -1516,7 +1516,7 @@ namespace dom {
 
 class MessageManagerReporter final : public nsIMemoryReporter
 {
-  ~MessageManagerReporter() {}
+  ~MessageManagerReporter() = default;
 
 public:
   NS_DECL_ISUPPORTS

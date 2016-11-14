@@ -241,8 +241,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  ~CancelableRunnableWrapper()
-  { }
+  ~CancelableRunnableWrapper() = default;
 
   NS_DECL_NSIRUNNABLE
   nsresult Cancel() override;
@@ -467,8 +466,7 @@ public:
   }
 
 private:
-  ~BlobInputStreamTether()
-  { }
+  ~BlobInputStreamTether() = default;
 };
 
 NS_IMPL_ADDREF(BlobInputStreamTether)
@@ -577,8 +575,7 @@ public:
   InputStreamChild()
   { }
 
-  ~InputStreamChild()
-  { }
+  ~InputStreamChild() = default;
 
 private:
   // This method is only called by the IPDL message machinery.
@@ -1619,8 +1616,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  ~OpenStreamRunnable()
-  { }
+  ~OpenStreamRunnable() = default;
 
   bool
   IsOnOwningThread() const
@@ -2045,8 +2041,7 @@ public:
   GetBlobChild() override;
 
 private:
-  ~RemoteBlobSliceImpl()
-  { }
+  ~RemoteBlobSliceImpl() = default;
 
   void
   EnsureActorWasCreatedInternal();

@@ -105,7 +105,7 @@ class nsGeolocationRequest final
     {}
 
   private:
-    ~TimerCallbackHolder() {}
+    ~TimerCallbackHolder() = default;
     WeakPtr<nsGeolocationRequest> mRequest;
   };
 
@@ -223,7 +223,7 @@ PositionError::PositionError(Geolocation* aParent, int16_t aCode)
 {
 }
 
-PositionError::~PositionError(){}
+PositionError::~PositionError() = default;
 
 
 NS_IMETHODIMP
@@ -739,9 +739,7 @@ nsresult nsGeolocationService::Init()
   return NS_OK;
 }
 
-nsGeolocationService::~nsGeolocationService()
-{
-}
+nsGeolocationService::~nsGeolocationService() = default;
 
 NS_IMETHODIMP
 nsGeolocationService::Observe(nsISupports* aSubject,

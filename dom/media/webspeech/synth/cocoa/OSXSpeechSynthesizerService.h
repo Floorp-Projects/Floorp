@@ -30,7 +30,7 @@ public:
 
 private:
   OSXSpeechSynthesizerService();
-  virtual ~OSXSpeechSynthesizerService();
+  virtual ~OSXSpeechSynthesizerService() = default;
 
   bool RegisterVoices();
 
