@@ -7781,31 +7781,28 @@ Parser<ParseHandler>::isValidSimpleAssignmentTarget(Node node,
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::checkAndMarkAsIncOperand(Node target)
+Parser<ParseHandler>::checkIncDecOperand(Node operand, uint32_t operandOffset)
 {
-    if (handler.isNameAnyParentheses(target)) {
-        if (const char* chars = handler.nameIsArgumentsEvalAnyParentheses(target, context)) {
-            if (!reportWithNode(ParseStrictError, pc->sc()->strict(), target,
-                                JSMSG_BAD_STRICT_ASSIGN, chars))
-            {
+    if (handler.isNameAnyParentheses(operand)) {
+        if (const char* chars = handler.nameIsArgumentsEvalAnyParentheses(operand, context)) {
+            if (!strictModeErrorAt(operandOffset, JSMSG_BAD_STRICT_ASSIGN, chars))
                 return false;
-            }
         }
-    } else if (handler.isPropertyAccess(target)) {
+    } else if (handler.isPropertyAccess(operand)) {
         // Permitted: no additional testing/fixup needed.
-    } else if (handler.isFunctionCall(target)) {
+    } else if (handler.isFunctionCall(operand)) {
         // Assignment to function calls is forbidden in ES6.  We're still
         // somewhat concerned about sites using this in dead code, so forbid it
         // only in strict mode code (or if the werror option has been set), and
         // otherwise warn.
-        if (!reportWithNode(ParseStrictError, pc->sc()->strict(), target, JSMSG_BAD_INCOP_OPERAND))
+        if (!strictModeErrorAt(operandOffset, JSMSG_BAD_INCOP_OPERAND))
             return false;
     } else {
-        reportWithNode(ParseError, pc->sc()->strict(), target, JSMSG_BAD_INCOP_OPERAND);
+        errorAt(operandOffset, JSMSG_BAD_INCOP_OPERAND);
         return false;
     }
 
-    MOZ_ASSERT(isValidSimpleAssignmentTarget(target, PermitAssignmentToFunctionCalls),
+    MOZ_ASSERT(isValidSimpleAssignmentTarget(operand, PermitAssignmentToFunctionCalls),
                "inconsistent increment/decrement operand validation");
     return true;
 }
@@ -7870,14 +7867,14 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
         TokenKind tt2;
         if (!tokenStream.getToken(&tt2, TokenStream::Operand))
             return null();
-        Node pn2 = memberExpr(yieldHandling, TripledotProhibited, tt2);
-        if (!pn2)
+
+        uint32_t operandOffset = pos().begin;
+        Node operand = memberExpr(yieldHandling, TripledotProhibited, tt2);
+        if (!operand || !checkIncDecOperand(operand, operandOffset))
             return null();
-        if (!checkAndMarkAsIncOperand(pn2))
-            return null();
+
         return handler.newUpdate((tt == TOK_INC) ? PNK_PREINCREMENT : PNK_PREDECREMENT,
-                                 begin,
-                                 pn2);
+                                 begin, operand);
       }
 
       case TOK_DELETE: {
@@ -7924,23 +7921,23 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
       }
 
       default: {
-        Node pn = memberExpr(yieldHandling, tripledotHandling, tt, /* allowCallSyntax = */ true,
-                             possibleError, invoked);
-        if (!pn)
+        Node expr = memberExpr(yieldHandling, tripledotHandling, tt, /* allowCallSyntax = */ true,
+                               possibleError, invoked);
+        if (!expr)
             return null();
 
         /* Don't look across a newline boundary for a postfix incop. */
         if (!tokenStream.peekTokenSameLine(&tt))
             return null();
-        if (tt == TOK_INC || tt == TOK_DEC) {
-            tokenStream.consumeKnownToken(tt);
-            if (!checkAndMarkAsIncOperand(pn))
-                return null();
-            return handler.newUpdate((tt == TOK_INC) ? PNK_POSTINCREMENT : PNK_POSTDECREMENT,
-                                     begin,
-                                     pn);
-        }
-        return pn;
+
+        if (tt != TOK_INC && tt != TOK_DEC)
+            return expr;
+
+        tokenStream.consumeKnownToken(tt);
+        if (!checkIncDecOperand(expr, begin))
+            return null();
+        return handler.newUpdate((tt == TOK_INC) ? PNK_POSTINCREMENT : PNK_POSTDECREMENT,
+                                 begin, expr);
       }
     }
 }
