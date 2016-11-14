@@ -56,20 +56,21 @@ DigestLength(UniquePK11Context& context, uint32_t length)
   return PK11_DigestOp(context.get(), array, MOZ_ARRAY_LENGTH(array));
 }
 
-// Let derIssuer be the DER encoding of the issuer of aCert.
-// Let derPublicKey be the DER encoding of the public key of aIssuerCert.
-// Let serialNumber be the bytes of the serial number of aCert.
+// Let derIssuer be the DER encoding of the issuer of certID.
+// Let derPublicKey be the DER encoding of the public key of certID.
+// Let serialNumber be the bytes of the serial number of certID.
 // Let serialNumberLen be the number of bytes of serialNumber.
-// The first party domain is only non-empty when "privacy.firstParty.isolate"
-// is enabled, in order to isolate OCSP cache by first party.
+// Let firstPartyDomain be the first party domain of originAttributes.
+// It is only non-empty when "privacy.firstParty.isolate" is enabled, in order
+// to isolate OCSP cache by first party.
 // Let firstPartyDomainLen be the number of bytes of firstPartyDomain.
 // The value calculated is SHA384(derIssuer || derPublicKey || serialNumberLen
 // || serialNumber || firstPartyDomainLen || firstPartyDomain).
 // Because the DER encodings include the length of the data encoded, and we also
-// include the length of serialNumber and firstPartyDomain, there do not exist
+// include the length of serialNumber and originAttributes, there do not exist
 // A(derIssuerA, derPublicKeyA, serialNumberLenA, serialNumberA,
-// firstPartyDomainLenA, firstPartyDomainA) and B(derIssuerB, derPublicKeyB,
-// serialNumberLenB, serialNumberB, firstPartyDomainLenB, firstPartyDomainB)
+// originAttributesLenA, originAttributesA) and B(derIssuerB, derPublicKeyB,
+// serialNumberLenB, serialNumberB, originAttributesLenB, originAttributesB)
 // such that the concatenation of each tuple results in the same string of
 // bytes but where each part in A is not equal to its counterpart in B. This is
 // important because as a result it is computationally infeasible to find
@@ -77,7 +78,7 @@ DigestLength(UniquePK11Context& context, uint32_t length)
 // cryptographically-secure hash function).
 static SECStatus
 CertIDHash(SHA384Buffer& buf, const CertID& certID,
-           const char* firstPartyDomain)
+           const NeckoOriginAttributes& originAttributes)
 {
   UniquePK11Context context(PK11_CreateDigestContext(SEC_OID_SHA384));
   if (!context) {
@@ -110,15 +111,17 @@ CertIDHash(SHA384Buffer& buf, const CertID& certID,
   if (rv != SECSuccess) {
     return rv;
   }
-  if (firstPartyDomain) {
-    uint32_t firstPartyDomainLen = strlen(firstPartyDomain);
-    rv = DigestLength(context, firstPartyDomainLen);
+
+  // OCSP should not be isolated by containers.
+  NS_ConvertUTF16toUTF8 firstPartyDomain(originAttributes.mFirstPartyDomain);
+  if (!firstPartyDomain.IsEmpty()) {
+    rv = DigestLength(context, firstPartyDomain.Length());
     if (rv != SECSuccess) {
       return rv;
     }
     rv = PK11_DigestOp(context.get(),
-                       BitwiseCast<const unsigned char*>(firstPartyDomain),
-                       firstPartyDomainLen);
+                       BitwiseCast<const unsigned char*>(firstPartyDomain.get()),
+                       firstPartyDomain.Length());
     if (rv != SECSuccess) {
       return rv;
     }
@@ -132,9 +135,10 @@ CertIDHash(SHA384Buffer& buf, const CertID& certID,
 }
 
 Result
-OCSPCache::Entry::Init(const CertID& aCertID, const char* aFirstPartyDomain)
+OCSPCache::Entry::Init(const CertID& aCertID,
+                       const NeckoOriginAttributes& aOriginAttributes)
 {
-  SECStatus srv = CertIDHash(mIDHash, aCertID, aFirstPartyDomain);
+  SECStatus srv = CertIDHash(mIDHash, aCertID, aOriginAttributes);
   if (srv != SECSuccess) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
@@ -154,7 +158,8 @@ OCSPCache::~OCSPCache()
 // Returns false with index in an undefined state if no matching entry was
 // found.
 bool
-OCSPCache::FindInternal(const CertID& aCertID, const char* aFirstPartyDomain,
+OCSPCache::FindInternal(const CertID& aCertID,
+                        const NeckoOriginAttributes& aOriginAttributes,
                         /*out*/ size_t& index,
                         const MutexAutoLock& /* aProofOfLock */)
 {
@@ -163,7 +168,7 @@ OCSPCache::FindInternal(const CertID& aCertID, const char* aFirstPartyDomain,
   }
 
   SHA384Buffer idHash;
-  SECStatus rv = CertIDHash(idHash, aCertID, aFirstPartyDomain);
+  SECStatus rv = CertIDHash(idHash, aCertID, aOriginAttributes);
   if (rv != SECSuccess) {
     return false;
   }
@@ -182,10 +187,11 @@ OCSPCache::FindInternal(const CertID& aCertID, const char* aFirstPartyDomain,
 
 static inline void
 LogWithCertID(const char* aMessage, const CertID& aCertID,
-              const char* aFirstPartyDomain)
+              const NeckoOriginAttributes& aOriginAttributes)
 {
+  NS_ConvertUTF16toUTF8 firstPartyDomain(aOriginAttributes.mFirstPartyDomain);
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-          (aMessage, &aCertID, aFirstPartyDomain));
+          (aMessage, &aCertID, firstPartyDomain.get()));
 }
 
 void
@@ -202,19 +208,20 @@ OCSPCache::MakeMostRecentlyUsed(size_t aIndex,
 }
 
 bool
-OCSPCache::Get(const CertID& aCertID, const char* aFirstPartyDomain,
+OCSPCache::Get(const CertID& aCertID,
+               const NeckoOriginAttributes& aOriginAttributes,
                Result& aResult, Time& aValidThrough)
 {
   MutexAutoLock lock(mMutex);
 
   size_t index;
-  if (!FindInternal(aCertID, aFirstPartyDomain, index, lock)) {
+  if (!FindInternal(aCertID, aOriginAttributes, index, lock)) {
     LogWithCertID("OCSPCache::Get(%p,\"%s\") not in cache", aCertID,
-                  aFirstPartyDomain);
+                  aOriginAttributes);
     return false;
   }
   LogWithCertID("OCSPCache::Get(%p,\"%s\") in cache", aCertID,
-                aFirstPartyDomain);
+                aOriginAttributes);
   aResult = mEntries[index]->mResult;
   aValidThrough = mEntries[index]->mValidThrough;
   MakeMostRecentlyUsed(index, lock);
@@ -222,17 +229,18 @@ OCSPCache::Get(const CertID& aCertID, const char* aFirstPartyDomain,
 }
 
 Result
-OCSPCache::Put(const CertID& aCertID, const char* aFirstPartyDomain,
+OCSPCache::Put(const CertID& aCertID,
+               const NeckoOriginAttributes& aOriginAttributes,
                Result aResult, Time aThisUpdate, Time aValidThrough)
 {
   MutexAutoLock lock(mMutex);
 
   size_t index;
-  if (FindInternal(aCertID, aFirstPartyDomain, index, lock)) {
+  if (FindInternal(aCertID, aOriginAttributes, index, lock)) {
     // Never replace an entry indicating a revoked certificate.
     if (mEntries[index]->mResult == Result::ERROR_REVOKED_CERTIFICATE) {
       LogWithCertID("OCSPCache::Put(%p, \"%s\") already in cache as revoked - "
-                    "not replacing", aCertID, aFirstPartyDomain);
+                    "not replacing", aCertID, aOriginAttributes);
       MakeMostRecentlyUsed(index, lock);
       return Success;
     }
@@ -243,7 +251,7 @@ OCSPCache::Put(const CertID& aCertID, const char* aFirstPartyDomain,
         aResult != Result::ERROR_REVOKED_CERTIFICATE) {
       LogWithCertID("OCSPCache::Put(%p, \"%s\") already in cache with more "
                     "recent validity - not replacing", aCertID,
-                    aFirstPartyDomain);
+                    aOriginAttributes);
       MakeMostRecentlyUsed(index, lock);
       return Success;
     }
@@ -255,13 +263,13 @@ OCSPCache::Put(const CertID& aCertID, const char* aFirstPartyDomain,
         aResult != Result::ERROR_REVOKED_CERTIFICATE) {
       LogWithCertID("OCSPCache::Put(%p, \"%s\") already in cache - not "
                     "replacing with less important status", aCertID,
-                    aFirstPartyDomain);
+                    aOriginAttributes);
       MakeMostRecentlyUsed(index, lock);
       return Success;
     }
 
     LogWithCertID("OCSPCache::Put(%p, \"%s\") already in cache - replacing",
-                  aCertID, aFirstPartyDomain);
+                  aCertID, aOriginAttributes);
     mEntries[index]->mResult = aResult;
     mEntries[index]->mThisUpdate = aThisUpdate;
     mEntries[index]->mValidThrough = aValidThrough;
@@ -271,7 +279,7 @@ OCSPCache::Put(const CertID& aCertID, const char* aFirstPartyDomain,
 
   if (mEntries.length() == MaxEntries) {
     LogWithCertID("OCSPCache::Put(%p, \"%s\") too full - evicting an entry",
-                  aCertID, aFirstPartyDomain);
+                  aCertID, aOriginAttributes);
     for (Entry** toEvict = mEntries.begin(); toEvict != mEntries.end();
          toEvict++) {
       // Never evict an entry that indicates a revoked or unknokwn certificate,
@@ -303,7 +311,7 @@ OCSPCache::Put(const CertID& aCertID, const char* aFirstPartyDomain,
   if (!newEntry) {
     return Result::FATAL_ERROR_NO_MEMORY;
   }
-  Result rv = newEntry->Init(aCertID, aFirstPartyDomain);
+  Result rv = newEntry->Init(aCertID, aOriginAttributes);
   if (rv != Success) {
     delete newEntry;
     return rv;
@@ -313,7 +321,7 @@ OCSPCache::Put(const CertID& aCertID, const char* aFirstPartyDomain,
     return Result::FATAL_ERROR_NO_MEMORY;
   }
   LogWithCertID("OCSPCache::Put(%p, \"%s\") added to cache", aCertID,
-                aFirstPartyDomain);
+                aOriginAttributes);
   return Success;
 }
 

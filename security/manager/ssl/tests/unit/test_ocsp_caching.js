@@ -43,7 +43,7 @@ function generateGoodOCSPResponse() {
 }
 
 function add_ocsp_test(aHost, aExpectedResult, aResponses, aMessage,
-                       aFirstPartyDomain) {
+                       aOriginAttributes) {
   add_connection_test(aHost, aExpectedResult,
       function() {
         clearSessionCache();
@@ -56,7 +56,7 @@ function add_ocsp_test(aHost, aExpectedResult, aResponses, aMessage,
         equal(gFetchCount, aResponses.length,
               "should have made " + aResponses.length +
               " OCSP request" + (aResponses.length == 1 ? "" : "s"));
-      }, null, aFirstPartyDomain);
+      }, null, aOriginAttributes);
 }
 
 function run_test() {
@@ -259,12 +259,13 @@ function add_tests() {
   add_ocsp_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess,
                 [respondWithGoodOCSP],
                 "No stapled response (firstPartyDomain = foo.com) -> a fetch " +
-                "should have been attempted", "foo.com");
+                "should have been attempted", { firstPartyDomain: "foo.com" });
 
   // The cache will prevent a fetch from happening.
   add_ocsp_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess, [],
                 "Noted OCSP server failure (firstPartyDomain = foo.com) -> a " +
-                "fetch should not have been attempted", "foo.com");
+                "fetch should not have been attempted",
+                { firstPartyDomain: "foo.com" });
 
   add_test(function() {
     stopObservingChannels();
@@ -282,7 +283,7 @@ function add_tests() {
   add_ocsp_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess,
                 [respondWithGoodOCSP],
                 "No stapled response (firstPartyDomain = bar.com) -> a fetch " +
-                "should have been attempted", "bar.com");
+                "should have been attempted", { firstPartyDomain: "bar.com" });
 
   add_test(function() {
     stopObservingChannels();
