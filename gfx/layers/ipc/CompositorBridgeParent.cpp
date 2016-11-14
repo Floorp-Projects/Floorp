@@ -684,10 +684,13 @@ CompositorBridgeParent::Initialize()
 }
 
 bool
-CompositorBridgeParent::RecvReset(nsTArray<LayersBackend>&& aBackendHints, bool* aResult, TextureFactoryIdentifier* aOutIdentifier)
+CompositorBridgeParent::RecvReset(nsTArray<LayersBackend>&& aBackendHints,
+                                  const uint64_t& aSeqNo,
+                                  bool* aResult,
+                                  TextureFactoryIdentifier* aOutIdentifier)
 {
   Maybe<TextureFactoryIdentifier> newIdentifier;
-  ResetCompositorTask(aBackendHints, &newIdentifier);
+  ResetCompositorTask(aBackendHints, aSeqNo, &newIdentifier);
   
   if (newIdentifier) {
     *aResult = true;
@@ -2054,6 +2057,7 @@ CompositorBridgeParent::InvalidateRemoteLayers()
 
 bool
 CompositorBridgeParent::ResetCompositor(const nsTArray<LayersBackend>& aBackendHints,
+                                        uint64_t aSeqNo,
                                         TextureFactoryIdentifier* aOutIdentifier)
 {
   Maybe<TextureFactoryIdentifier> newIdentifier;
@@ -2062,10 +2066,12 @@ CompositorBridgeParent::ResetCompositor(const nsTArray<LayersBackend>& aBackendH
 
     CompositorLoop()->PostTask(NewRunnableMethod
                                <StoreCopyPassByConstLRef<nsTArray<LayersBackend>>,
-                                Maybe<TextureFactoryIdentifier>*>(this,
-                                                                  &CompositorBridgeParent::ResetCompositorTask,
-                                                                  aBackendHints,
-                                                                  &newIdentifier));
+                               uint64_t,
+                               Maybe<TextureFactoryIdentifier>*>(this,
+                                                                 &CompositorBridgeParent::ResetCompositorTask,
+                                                                 aBackendHints,
+                                                                 aSeqNo,
+                                                                 &newIdentifier));
 
     mResetCompositorMonitor.Wait();
   }
@@ -2082,6 +2088,7 @@ CompositorBridgeParent::ResetCompositor(const nsTArray<LayersBackend>& aBackendH
 // monitor.
 void
 CompositorBridgeParent::ResetCompositorTask(const nsTArray<LayersBackend>& aBackendHints,
+                                            uint64_t aSeqNo,
                                             Maybe<TextureFactoryIdentifier>* aOutNewIdentifier)
 {
   // Perform the reset inside a lock, so the main thread can wake up as soon as
@@ -2108,7 +2115,7 @@ CompositorBridgeParent::ResetCompositorTask(const nsTArray<LayersBackend>& aBack
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   ForEachIndirectLayerTree([&] (LayerTreeState* lts, uint64_t layersId) -> void {
     if (CrossProcessCompositorBridgeParent* cpcp = lts->mCrossProcessParent) {
-      Unused << cpcp->SendCompositorUpdated(layersId, newIdentifier.value());
+      Unused << cpcp->SendCompositorUpdated(layersId, newIdentifier.value(), aSeqNo);
 
       if (LayerTransactionParent* ltp = lts->mLayerTree) {
         ltp->AddPendingCompositorUpdate();

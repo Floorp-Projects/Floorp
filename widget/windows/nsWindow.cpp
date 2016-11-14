@@ -1160,7 +1160,7 @@ nsWindow::EnumAllChildWindProc(HWND aWnd, LPARAM aParam)
 {
   nsWindow *wnd = WinUtils::GetNSWindowPtr(aWnd);
   if (wnd) {
-    ((nsWindow::WindowEnumCallback*)aParam)(wnd);
+    reinterpret_cast<nsTArray<nsWindow*>*>(aParam)->AppendElement(wnd);
   }
   return TRUE;
 }
@@ -1170,18 +1170,20 @@ nsWindow::EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam)
 {
   nsWindow *wnd = WinUtils::GetNSWindowPtr(aWnd);
   if (wnd) {
-    ((nsWindow::WindowEnumCallback*)aParam)(wnd);
+    reinterpret_cast<nsTArray<nsWindow*>*>(aParam)->AppendElement(wnd);
   }
   EnumChildWindows(aWnd, EnumAllChildWindProc, aParam);
   return TRUE;
 }
 
-void
-nsWindow::EnumAllWindows(WindowEnumCallback aCallback)
+/* static*/ nsTArray<nsWindow*>
+nsWindow::EnumAllWindows()
 {
+  nsTArray<nsWindow*> windows;
   EnumThreadWindows(GetCurrentThreadId(),
                     EnumAllThreadWindowProc,
-                    (LPARAM)aCallback);
+                    reinterpret_cast<LPARAM>(&windows));
+  return windows;
 }
 
 static already_AddRefed<SourceSurface>

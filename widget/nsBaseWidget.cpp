@@ -313,7 +313,7 @@ void nsBaseWidget::DestroyLayerManager()
 }
 
 void
-nsBaseWidget::OnRenderingDeviceReset()
+nsBaseWidget::OnRenderingDeviceReset(uint64_t aSeqNo)
 {
   if (!mLayerManager || !mCompositorSession) {
     return;
@@ -337,7 +337,7 @@ nsBaseWidget::OnRenderingDeviceReset()
 
   // Recreate the compositor.
   TextureFactoryIdentifier identifier;
-  if (!mCompositorSession->Reset(backendHints, &identifier)) {
+  if (!mCompositorSession->Reset(backendHints, aSeqNo, &identifier)) {
     // No action was taken, so we don't have to do anything.
     return;
   }
