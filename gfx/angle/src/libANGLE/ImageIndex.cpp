@@ -135,7 +135,12 @@ ImageIndexIterator::ImageIndexIterator(GLenum type, const Range<GLint> &mipRange
 
 GLint ImageIndexIterator::maxLayer() const
 {
-    return (mLayerCounts ? static_cast<GLint>(mLayerCounts[mCurrentMip]) : mLayerRange.end);
+    if (mLayerCounts)
+    {
+        ASSERT(mCurrentMip >= 0);
+        return (mCurrentMip < mMipRange.end) ? mLayerCounts[mCurrentMip] : 0;
+    }
+    return mLayerRange.end;
 }
 
 ImageIndex ImageIndexIterator::next()
@@ -149,20 +154,28 @@ ImageIndex ImageIndexIterator::next()
 
     if (mCurrentLayer != ImageIndex::ENTIRE_LEVEL)
     {
-        if (mCurrentLayer < maxLayer()-1)
+        if (mCurrentLayer < maxLayer() - 1)
         {
             mCurrentLayer++;
         }
-        else if (mCurrentMip < mMipRange.end-1)
+        else if (mCurrentMip < mMipRange.end - 1)
         {
             mCurrentMip++;
             mCurrentLayer = mLayerRange.start;
         }
+        else
+        {
+            done();
+        }
     }
-    else if (mCurrentMip < mMipRange.end-1)
+    else if (mCurrentMip < mMipRange.end - 1)
     {
         mCurrentMip++;
         mCurrentLayer = mLayerRange.start;
+    }
+    else
+    {
+        done();
     }
 
     return value;
@@ -185,4 +198,10 @@ bool ImageIndexIterator::hasNext() const
     return (mCurrentMip < mMipRange.end || mCurrentLayer < maxLayer());
 }
 
+void ImageIndexIterator::done()
+{
+    mCurrentMip   = mMipRange.end;
+    mCurrentLayer = maxLayer();
 }
+
+}  // namespace gl

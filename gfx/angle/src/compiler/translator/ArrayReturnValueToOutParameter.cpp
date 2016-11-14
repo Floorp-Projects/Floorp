@@ -167,12 +167,11 @@ bool ArrayReturnValueToOutParameterTraverser::visitBranch(Visit visit, TIntermBr
         // Instead of returning a value, assign to the out parameter and then return.
         TIntermSequence replacements;
 
-        TIntermBinary *replacementAssignment = new TIntermBinary(EOpAssign);
         TIntermTyped *expression = node->getExpression();
         ASSERT(expression != nullptr);
-        replacementAssignment->setLeft(CreateReturnValueSymbol(expression->getType()));
-        replacementAssignment->setRight(node->getExpression());
-        replacementAssignment->setType(expression->getType());
+        TIntermSymbol *returnValueSymbol = CreateReturnValueSymbol(expression->getType());
+        TIntermBinary *replacementAssignment =
+            new TIntermBinary(EOpAssign, returnValueSymbol, expression);
         replacementAssignment->setLine(expression->getLine());
         replacements.push_back(replacementAssignment);
 

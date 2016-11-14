@@ -54,48 +54,13 @@ class AddDefaultReturnStatementsTraverser : private TIntermTraverser
         return true;
     }
 
-    static TIntermTyped *GenerateTypeConstructor(const TType &returnType)
-    {
-        // Base case, constructing a single element
-        if (!returnType.isArray())
-        {
-            size_t objectSize             = returnType.getObjectSize();
-            TConstantUnion *constantUnion = new TConstantUnion[objectSize];
-            for (size_t constantIdx = 0; constantIdx < objectSize; constantIdx++)
-            {
-                constantUnion[constantIdx].setFConst(0.0f);
-            }
-
-            TIntermConstantUnion *intermConstantUnion =
-                new TIntermConstantUnion(constantUnion, returnType);
-            return intermConstantUnion;
-        }
-
-        // Recursive case, construct an array of single elements
-        TIntermAggregate *constructorAggrigate =
-            new TIntermAggregate(TypeToConstructorOperator(returnType));
-        constructorAggrigate->setType(returnType);
-
-        size_t arraySize = returnType.getArraySize();
-        for (size_t arrayIdx = 0; arrayIdx < arraySize; arrayIdx++)
-        {
-            TType arrayElementType(returnType);
-            arrayElementType.clearArrayness();
-
-            constructorAggrigate->getSequence()->push_back(
-                GenerateTypeConstructor(arrayElementType));
-        }
-
-        return constructorAggrigate;
-    }
-
     bool visitAggregate(Visit, TIntermAggregate *node) override
     {
         TType returnType;
         if (IsFunctionWithoutReturnStatement(node, &returnType))
         {
             TIntermBranch *branch =
-                new TIntermBranch(EOpReturn, GenerateTypeConstructor(returnType));
+                new TIntermBranch(EOpReturn, TIntermTyped::CreateZero(returnType));
 
             TIntermAggregate *lastNode = node->getSequence()->back()->getAsAggregate();
             lastNode->getSequence()->push_back(branch);
