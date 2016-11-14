@@ -84,7 +84,7 @@ VRManager::VRManager()
   }
 
   controllerMgr = VRControllerManagerOpenVR::Create();
-  if (mgr) {
+  if (controllerMgr) {
     mControllerManagers.AppendElement(controllerMgr);
   }
 
