@@ -233,7 +233,7 @@ bool ValidFramebufferTarget(GLenum target)
     }
 }
 
-bool ValidBufferTarget(const Context *context, GLenum target)
+bool ValidBufferTarget(const ValidationContext *context, GLenum target)
 {
     switch (target)
     {

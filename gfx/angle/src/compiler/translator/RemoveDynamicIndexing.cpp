@@ -92,21 +92,15 @@ TIntermBinary *CreateIndexDirectBaseSymbolNode(const TType &indexedType,
                                                const int index,
                                                TQualifier baseQualifier)
 {
-    TIntermBinary *indexNode = new TIntermBinary(EOpIndexDirect);
-    indexNode->setType(fieldType);
     TIntermSymbol *baseSymbol = CreateBaseSymbol(indexedType, baseQualifier);
-    indexNode->setLeft(baseSymbol);
-    indexNode->setRight(CreateIntConstantNode(index));
+    TIntermBinary *indexNode =
+        new TIntermBinary(EOpIndexDirect, baseSymbol, TIntermTyped::CreateIndexNode(index));
     return indexNode;
 }
 
 TIntermBinary *CreateAssignValueSymbolNode(TIntermTyped *targetNode, const TType &assignedValueType)
 {
-    TIntermBinary *assignNode = new TIntermBinary(EOpAssign);
-    assignNode->setType(assignedValueType);
-    assignNode->setLeft(targetNode);
-    assignNode->setRight(CreateValueSymbol(assignedValueType));
-    return assignNode;
+    return new TIntermBinary(EOpAssign, targetNode, CreateValueSymbol(assignedValueType));
 }
 
 TIntermTyped *EnsureSignedInt(TIntermTyped *node)
@@ -256,10 +250,9 @@ TIntermAggregate *GetIndexFunctionDefinition(TType type, bool write)
     TIntermAggregate *bodyNode = new TIntermAggregate(EOpSequence);
     bodyNode->getSequence()->push_back(switchNode);
 
-    TIntermBinary *cond = new TIntermBinary(EOpLessThan);
+    TIntermBinary *cond =
+        new TIntermBinary(EOpLessThan, CreateIndexSymbol(), CreateIntConstantNode(0));
     cond->setType(TType(EbtBool, EbpUndefined));
-    cond->setLeft(CreateIndexSymbol());
-    cond->setRight(CreateIntConstantNode(0));
 
     // Two blocks: one accesses (either reads or writes) the first element and returns,
     // the other accesses the last element.

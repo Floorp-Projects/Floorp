@@ -1,6 +1,6 @@
 diff -rupN gpu_test_expectations_reverted/angle_config.h gpu_test_expectations/angle_config.h
 --- gpu_test_expectations_reverted/angle_config.h	1969-12-31 19:00:00.000000000 -0500
-+++ gpu_test_expectations/angle_config.h	2016-08-22 16:13:08.739352282 -0400
++++ gpu_test_expectations/angle_config.h	2016-08-23 13:50:18.282742505 -0400
 @@ -0,0 +1,66 @@
 +//
 +// Copyright 2015 The ANGLE Project Authors. All rights reserved.
@@ -275,7 +275,7 @@ diff -rupN gpu_test_expectations_reverted/gpu_info.h gpu_test_expectations/gpu_i
      virtual void BeginGPUDevice() = 0;
 diff -rupN gpu_test_expectations_reverted/gpu_test_config.cc gpu_test_expectations/gpu_test_config.cc
 --- gpu_test_expectations_reverted/gpu_test_config.cc	2016-08-12 21:23:54.884132405 -0400
-+++ gpu_test_expectations/gpu_test_config.cc	2016-08-22 16:09:09.972124940 -0400
++++ gpu_test_expectations/gpu_test_config.cc	2016-09-09 16:40:05.597864465 -0400
 @@ -2,20 +2,205 @@
  // Use of this source code is governed by a BSD-style license that can be
  // found in the LICENSE file.
@@ -302,8 +302,8 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_config.cc gpu_test_expectatio
 -#elif defined(OS_WIN)
 -#include "base/win/windows_version.h"
 +#include "gpu_test_config_mac.h"
- #endif
- 
++#endif
++
 +using namespace gpu;
 +
 +#if defined(OS_WIN)
@@ -476,8 +476,8 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_config.cc gpu_test_expectatio
 +  return kCollectInfoNonFatalFailure;
 +}
 +
-+#endif
-+
+ #endif
+ 
 +#if defined(OS_ANDROID)
 +CollectInfoResult CollectGpuID(uint32 *vendor_id, uint32 *device_id)
 +{
@@ -491,7 +491,72 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_config.cc gpu_test_expectatio
  namespace gpu {
  
  namespace {
-@@ -295,21 +480,5 @@ bool GPUTestBotConfig::CurrentConfigMatc
+@@ -245,33 +430,41 @@ bool GPUTestBotConfig::Matches(const std
+   return Matches(config);
+ }
+ 
+-bool GPUTestBotConfig::LoadCurrentConfig(const GPUInfo* gpu_info) {
+-  bool rt;
+-  if (gpu_info == NULL) {
+-    GPUInfo my_gpu_info;
+-    CollectInfoResult result = CollectGpuID(
+-        &my_gpu_info.gpu.vendor_id, &my_gpu_info.gpu.device_id);
+-    if (result != kCollectInfoSuccess) {
+-      LOG(ERROR) << "Fail to identify GPU";
+-      DisableGPUInfoValidation();
+-      rt = true;
+-    } else {
+-      rt = SetGPUInfo(my_gpu_info);
++bool GPUTestBotConfig::LoadCurrentConfig(const GPUInfo *gpu_info)
++{
++    bool rt;
++    if (gpu_info == NULL)
++    {
++        GPUInfo my_gpu_info;
++        CollectInfoResult result =
++            CollectGpuID(&my_gpu_info.gpu.vendor_id, &my_gpu_info.gpu.device_id);
++        if (result != kCollectInfoSuccess)
++        {
++            LOG(ERROR) << "Fail to identify GPU\n";
++            DisableGPUInfoValidation();
++            rt = true;
++        }
++        else
++        {
++            rt = SetGPUInfo(my_gpu_info);
++        }
++    }
++    else
++    {
++        rt = SetGPUInfo(*gpu_info);
++    }
++    set_os(GetCurrentOS());
++    if (os() == kOsUnknown)
++    {
++        LOG(ERROR) << "Unknown OS\n";
++        rt = false;
+     }
+-  } else {
+-    rt = SetGPUInfo(*gpu_info);
+-  }
+-  set_os(GetCurrentOS());
+-  if (os() == kOsUnknown) {
+-    LOG(ERROR) << "Unknown OS";
+-    rt = false;
+-  }
+ #if defined(NDEBUG)
+-  set_build_type(kBuildTypeRelease);
++    set_build_type(kBuildTypeRelease);
+ #else
+-  set_build_type(kBuildTypeDebug);
++    set_build_type(kBuildTypeDebug);
+ #endif
+-  return rt;
++    return rt;
+ }
+ 
+ // static
+@@ -295,21 +488,5 @@ bool GPUTestBotConfig::CurrentConfigMatc
    return false;
  }
  
@@ -777,9 +842,9 @@ diff -rupN gpu_test_expectations_reverted/gpu_test_expectations_parser.h gpu_tes
    const std::vector<std::string>& GetErrorMessages() const;
 diff -rupN gpu_test_expectations_reverted/HowToMakeChanges.md gpu_test_expectations/HowToMakeChanges.md
 --- gpu_test_expectations_reverted/HowToMakeChanges.md	1969-12-31 19:00:00.000000000 -0500
-+++ gpu_test_expectations/HowToMakeChanges.md	2016-08-22 15:52:38.098728514 -0400
++++ gpu_test_expectations/HowToMakeChanges.md	2016-09-09 16:27:56.575809921 -0400
 @@ -0,0 +1,22 @@
-+Because the ```gpu_test_expectations``` directory is based on parts of Chromium's ```gpu/config``
++Because the ```gpu_test_expectations``` directory is based on parts of Chromium's ```gpu/config```
 +directory, we want to keep a patch of the changes added to make it compile with ANGLE. This
 +will allow us to merge Chromium changes easily in our ```gpu_test_expectations```.
 +
