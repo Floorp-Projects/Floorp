@@ -233,6 +233,72 @@ public:
     mReferrerPolicy = aReferrerPolicy;
   }
 
+  void
+  SetReferrerPolicy(net::ReferrerPolicy aReferrerPolicy)
+  {
+    switch (aReferrerPolicy) {
+      case net::RP_Unset:
+        mReferrerPolicy = ReferrerPolicy::_empty;
+        break;
+      case net::RP_No_Referrer:
+        mReferrerPolicy = ReferrerPolicy::No_referrer;
+        break;
+      case net::RP_No_Referrer_When_Downgrade:
+        mReferrerPolicy = ReferrerPolicy::No_referrer_when_downgrade;
+        break;
+      case net::RP_Origin:
+        mReferrerPolicy = ReferrerPolicy::Origin;
+        break;
+      case net::RP_Origin_When_Crossorigin:
+        mReferrerPolicy = ReferrerPolicy::Origin_when_cross_origin;
+        break;
+      case net::RP_Unsafe_URL:
+        mReferrerPolicy = ReferrerPolicy::Unsafe_url;
+        break;
+      case net::RP_Same_Origin:
+        mReferrerPolicy = ReferrerPolicy::Same_origin;
+        break;
+      case net::RP_Strict_Origin:
+        mReferrerPolicy = ReferrerPolicy::Strict_origin;
+        break;
+      case net::RP_Strict_Origin_When_Cross_Origin:
+        mReferrerPolicy = ReferrerPolicy::Strict_origin_when_cross_origin;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid ReferrerPolicy value");
+        break;
+    }
+  }
+
+  net::ReferrerPolicy
+  GetReferrerPolicy()
+  {
+    switch (mReferrerPolicy) {
+      case ReferrerPolicy::_empty:
+        return net::RP_Unset;
+      case ReferrerPolicy::No_referrer:
+        return net::RP_No_Referrer;
+      case ReferrerPolicy::No_referrer_when_downgrade:
+        return net::RP_No_Referrer_When_Downgrade;
+      case ReferrerPolicy::Origin:
+        return net::RP_Origin;
+      case ReferrerPolicy::Origin_when_cross_origin:
+        return net::RP_Origin_When_Crossorigin;
+      case ReferrerPolicy::Unsafe_url:
+        return net::RP_Unsafe_URL;
+      case ReferrerPolicy::Strict_origin:
+        return net::RP_Strict_Origin;
+      case ReferrerPolicy::Same_origin:
+        return net::RP_Same_Origin;
+      case ReferrerPolicy::Strict_origin_when_cross_origin:
+        return net::RP_Strict_Origin_When_Cross_Origin;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid ReferrerPolicy enum value?");
+        break;
+    }
+    return net::RP_Unset;
+  }
+
   net::ReferrerPolicy
   GetEnvironmentReferrerPolicy() const
   {

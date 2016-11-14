@@ -197,7 +197,10 @@ static_assert(int(ReferrerPolicy::_empty) == 0 &&
               int(ReferrerPolicy::Origin) == 3 &&
               int(ReferrerPolicy::Origin_when_cross_origin) == 4 &&
               int(ReferrerPolicy::Unsafe_url) == 5 &&
-              int(ReferrerPolicy::EndGuard_) == 6,
+              int(ReferrerPolicy::Same_origin) == 6 &&
+              int(ReferrerPolicy::Strict_origin) == 7 &&
+              int(ReferrerPolicy::Strict_origin_when_cross_origin) == 8 &&
+              int(ReferrerPolicy::EndGuard_) == 9,
               "ReferrerPolicy values are as expected");
 static_assert(int(RequestMode::Same_origin) == 0 &&
               int(RequestMode::No_cors) == 1 &&

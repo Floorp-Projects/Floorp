@@ -8480,10 +8480,8 @@ nsContentUtils::SetFetchReferrerURIWithPolicy(nsIPrincipal* aPrincipal,
     referrerURI = principalURI;
   }
 
-  net::ReferrerPolicy referrerPolicy = aReferrerPolicy;
-  if (referrerPolicy == net::RP_Default) {
-    referrerPolicy = aDoc->GetReferrerPolicy();
-  }
+  net::ReferrerPolicy referrerPolicy = (aReferrerPolicy != net::RP_Unset) ?
+                                       aReferrerPolicy : net::RP_Default;
   return aChannel->SetReferrerWithPolicy(referrerURI, referrerPolicy);
 }
 

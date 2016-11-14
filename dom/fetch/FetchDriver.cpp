@@ -35,6 +35,7 @@
 #include "mozilla/Unused.h"
 
 #include "Fetch.h"
+#include "FetchUtil.h"
 #include "InternalRequest.h"
 #include "InternalResponse.h"
 
@@ -260,62 +261,30 @@ FetchDriver::HttpFetch()
     // Set the same headers.
     SetRequestHeaders(httpChan);
 
-    // Step 2. Set the referrer.
-    nsAutoString referrer;
-    mRequest->GetReferrer(referrer);
-
-    // The Referrer Policy in Request can be used to override a referrer policy
-    // associated with an environment settings object.
-    // If there's no Referrer Policy in the request, it should be inherited
-    // from environment.
-    ReferrerPolicy referrerPolicy = mRequest->ReferrerPolicy_();
     net::ReferrerPolicy net_referrerPolicy = mRequest->GetEnvironmentReferrerPolicy();
-    switch (referrerPolicy) {
-    case ReferrerPolicy::_empty:
-      break;
-    case ReferrerPolicy::No_referrer:
-      net_referrerPolicy = net::RP_No_Referrer;
-      break;
-    case ReferrerPolicy::No_referrer_when_downgrade:
-      net_referrerPolicy = net::RP_No_Referrer_When_Downgrade;
-      break;
-    case ReferrerPolicy::Origin:
-      net_referrerPolicy = net::RP_Origin;
-      break;
-    case ReferrerPolicy::Origin_when_cross_origin:
-      net_referrerPolicy = net::RP_Origin_When_Crossorigin;
-      break;
-    case ReferrerPolicy::Unsafe_url:
-      net_referrerPolicy = net::RP_Unsafe_URL;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Invalid ReferrerPolicy enum value?");
-      break;
+    // Step 6 of
+    // https://fetch.spec.whatwg.org/#main-fetch
+    // If request's referrer policy is the empty string and request's client is
+    // non-null, then set request's referrer policy to request's client's
+    // associated referrer policy.
+    // Basically, "client" is not in our implementation, we use
+    // EnvironmentReferrerPolicy of the worker or document context
+    if (mRequest->ReferrerPolicy_() == ReferrerPolicy::_empty) {
+      mRequest->SetReferrerPolicy(net_referrerPolicy);
     }
-    if (referrer.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
-      rv = nsContentUtils::SetFetchReferrerURIWithPolicy(mPrincipal,
-                                                         mDocument,
-                                                         httpChan,
-                                                         net_referrerPolicy);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else if (referrer.IsEmpty()) {
-      rv = httpChan->SetReferrerWithPolicy(nullptr, net::RP_No_Referrer);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      // From "Determine request's Referrer" step 3
-      // "If request's referrer is a URL, let referrerSource be request's
-      // referrer."
-      nsCOMPtr<nsIURI> referrerURI;
-      rv = NS_NewURI(getter_AddRefs(referrerURI), referrer, nullptr, nullptr);
-      NS_ENSURE_SUCCESS(rv, rv);
+    // Step 7 of
+    // https://fetch.spec.whatwg.org/#main-fetch
+    // If request’s referrer policy is the empty string,
+    // then set request’s referrer policy to "no-referrer-when-downgrade".
+    if (mRequest->ReferrerPolicy_() == ReferrerPolicy::_empty) {
+      mRequest->SetReferrerPolicy(net::RP_No_Referrer_When_Downgrade);
+    }
 
-      rv =
-        httpChan->SetReferrerWithPolicy(referrerURI,
-                                        referrerPolicy == ReferrerPolicy::_empty ?
-                                          mRequest->GetEnvironmentReferrerPolicy() :
-                                          net_referrerPolicy);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = FetchUtil::SetRequestReferrer(mPrincipal,
+                                       mDocument,
+                                       httpChan,
+                                       mRequest);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Bug 1120722 - Authorization will be handled later.
     // Auth may require prompting, we don't support it yet.
@@ -823,29 +792,15 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     net::ReferrerPolicy net_referrerPolicy =
       nsContentUtils::GetReferrerPolicyFromHeader(tRPHeaderValue);
     if (net_referrerPolicy != net::RP_Unset) {
-      ReferrerPolicy referrerPolicy = mRequest->ReferrerPolicy_();
-      switch (net_referrerPolicy) {
-        case net::RP_No_Referrer:
-          referrerPolicy = ReferrerPolicy::No_referrer;
-          break;
-        case net::RP_No_Referrer_When_Downgrade:
-          referrerPolicy = ReferrerPolicy::No_referrer_when_downgrade;
-          break;
-        case net::RP_Origin:
-          referrerPolicy = ReferrerPolicy::Origin;
-          break;
-        case net::RP_Origin_When_Crossorigin:
-          referrerPolicy = ReferrerPolicy::Origin_when_cross_origin;
-          break;
-        case net::RP_Unsafe_URL:
-          referrerPolicy = ReferrerPolicy::Unsafe_url;
-          break;
-        default:
-          MOZ_ASSERT_UNREACHABLE("Invalid ReferrerPolicy value");
-          break;
+      mRequest->SetReferrerPolicy(net_referrerPolicy);
+      // Should update channel's referrer policy
+      if (httpChannel) {
+        rv = FetchUtil::SetRequestReferrer(mPrincipal,
+                                           mDocument,
+                                           httpChannel,
+                                           mRequest);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
-
-      mRequest->SetReferrerPolicy(referrerPolicy);
     }
   }
 
