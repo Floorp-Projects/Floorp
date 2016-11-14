@@ -1372,8 +1372,7 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
 {
     desc_.assertValid();
 
-    // Section numbers and step numbers below refer to ES6 draft rev 36
-    // (17 March 2015).
+    // Section numbers and step numbers below refer to ES2016.
     //
     // This function aims to implement 9.1.6 [[DefineOwnProperty]] as well as
     // the [[DefineOwnProperty]] methods described in 9.4.2.1 (arrays), 9.4.4.2
@@ -1384,6 +1383,10 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
         // 9.4.2.1 step 2. Redefining an array's length is very special.
         Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
         if (id == NameToId(cx->names().length)) {
+            // 9.1.6.3 ValidateAndApplyPropertyDescriptor, step 7.a.
+            if (desc_.isAccessorDescriptor())
+                return result.fail(JSMSG_CANT_REDEFINE_PROP);
+
             if (!cx->shouldBeJSContext())
                 return false;
             return ArraySetLength(cx->asJSContext(), arr, id, desc_.attributes(), desc_.value(),
@@ -1423,7 +1426,7 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
         }
     }
 
-    // 9.1.6.1 OrdinaryDefineOwnProperty steps 1-2.
+    // 9.1.6.1 OrdinaryDefineOwnProperty step 1.
     RootedShape shape(cx);
     if (desc_.attributes() & JSPROP_RESOLVING) {
         // We are being called from a resolve or enumerate hook to reify a
