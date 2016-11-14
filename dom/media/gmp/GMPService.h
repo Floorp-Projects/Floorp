@@ -69,11 +69,10 @@ public:
 
   // mozIGeckoMediaPluginService
   NS_IMETHOD GetThread(nsIThread** aThread) override;
-  NS_IMETHOD GetDecryptingGMPVideoDecoder(GMPCrashHelper* aHelper,
-                                          nsTArray<nsCString>* aTags,
-                                          const nsACString& aNodeId,
-                                          UniquePtr<GetGMPVideoDecoderCallback>&& aCallback,
-                                          uint32_t aDecryptorId)
+  NS_IMETHOD GetGMPVideoDecoder(GMPCrashHelper* aHelper,
+                                nsTArray<nsCString>* aTags,
+                                const nsACString& aNodeId,
+                                UniquePtr<GetGMPVideoDecoderCallback>&& aCallback)
     override;
   NS_IMETHOD GetGMPVideoEncoder(GMPCrashHelper* aHelper,
                                 nsTArray<nsCString>* aTags,
@@ -90,16 +89,6 @@ public:
                              const nsACString& aNodeId,
                              UniquePtr<GetGMPDecryptorCallback>&& aCallback)
     override;
-
-  // Helper for backwards compatibility with WebRTC/tests.
-  NS_IMETHOD
-  GetGMPVideoDecoder(GMPCrashHelper* aHelper,
-                     nsTArray<nsCString>* aTags,
-                     const nsACString& aNodeId,
-                     UniquePtr<GetGMPVideoDecoderCallback>&& aCallback) override
-  {
-    return GetDecryptingGMPVideoDecoder(aHelper, aTags, aNodeId, Move(aCallback), 0);
-  }
 
   int32_t AsyncShutdownTimeoutMs();
 

@@ -80,7 +80,7 @@ GMPContentChild::DeallocPGMPDecryptorChild(PGMPDecryptorChild* aActor)
 }
 
 PGMPVideoDecoderChild*
-GMPContentChild::AllocPGMPVideoDecoderChild(const uint32_t& aDecryptorId)
+GMPContentChild::AllocPGMPVideoDecoderChild()
 {
   GMPVideoDecoderChild* actor = new GMPVideoDecoderChild(this);
   actor->AddRef();
@@ -244,8 +244,7 @@ GMPContentChild::RecvPGMPAudioDecoderConstructor(PGMPAudioDecoderChild* aActor)
 }
 
 bool
-GMPContentChild::RecvPGMPVideoDecoderConstructor(PGMPVideoDecoderChild* aActor,
-                                                 const uint32_t& aDecryptorId)
+GMPContentChild::RecvPGMPVideoDecoderConstructor(PGMPVideoDecoderChild* aActor)
 {
   auto vdc = static_cast<GMPVideoDecoderChild*>(aActor);
 
