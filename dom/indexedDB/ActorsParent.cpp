@@ -17658,9 +17658,9 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       MOZ_ALWAYS_SUCCEEDS(unknownFile->GetPath(path));
       MOZ_ASSERT(!path.IsEmpty());
 
-      nsPrintfCString warning("Refusing to open databases for \"%s\" because "
-                              "an unexpected file exists in the storage "
-                              "area: \"%s\"",
+      nsPrintfCString warning(R"(Refusing to open databases for "%s" because )"
+                              R"(an unexpected file exists in the storage )"
+                              R"(area: "%s")",
                               PromiseFlatCString(aOrigin).get(),
                               NS_ConvertUTF16toUTF8(path).get());
       NS_WARNING(warning.get());
