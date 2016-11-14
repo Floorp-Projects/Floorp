@@ -16,7 +16,7 @@ class TreeherderFormatter(object):
     """
     fmt = "TEST-UNEXPECTED-{level} | {path}:{lineno}{column} | {message} ({rule})"
 
-    def __call__(self, result):
+    def __call__(self, result, **kwargs):
         message = []
         for path, errors in sorted(result.iteritems()):
             for err in errors:
