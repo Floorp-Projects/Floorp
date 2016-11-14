@@ -13,10 +13,13 @@
 #include "gmp-api/gmp-decryption.h"
 #include "gmp-api/gmp-video-codec.h"
 #include "gmp-api/gmp-platform.h"
+#include "mozilla/StaticPtr.h"
 
 static const GMPPlatformAPI* sPlatform = nullptr;
 
 namespace mozilla {
+
+StaticRefPtr<CDMWrapper> sCDMWrapper;
 
 GMPErr GMPGetCurrentTime(GMPTimestamp* aOutTime) {
   return sPlatform->getcurrenttime(aOutTime);
@@ -88,19 +91,19 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
                            void** aPluginAPI,
                            uint32_t aDecryptorId)
 {
-  Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p",
-      aAPIName, aHostAPI, aPluginAPI, this, aDecryptorId);
+  Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p",
+      aAPIName, aHostAPI, aPluginAPI, this);
   if (!strcmp(aAPIName, GMP_API_DECRYPTOR)) {
-    if (WidevineDecryptor::GetInstance(aDecryptorId)) {
-      // We only support one CDM instance per PGMPDecryptor. Fail!
-      Log("WidevineAdapter::GMPGetAPI() Tried to create more than once CDM per IPDL actor! FAIL!");
+    if (sCDMWrapper) {
+      // We only support one CDM instance per GMP process. Fail!
+      Log("WidevineAdapter::GMPGetAPI() Tried to create more than once CDM per process! FAIL!");
       return GMPQuotaExceededErr;
     }
     auto create = reinterpret_cast<decltype(::CreateCdmInstance)*>(
       PR_FindFunctionSymbol(mLib, "CreateCdmInstance"));
     if (!create) {
-      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p FAILED to find CreateCdmInstance",
-        aAPIName, aHostAPI, aPluginAPI, this, aDecryptorId);
+      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p FAILED to find CreateCdmInstance",
+        aAPIName, aHostAPI, aPluginAPI, this);
       return GMPGenericErr;
     }
 
@@ -113,24 +116,24 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
              &GetCdmHost,
              decryptor));
     if (!cdm) {
-      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p FAILED to create cdm",
-          aAPIName, aHostAPI, aPluginAPI, this, aDecryptorId);
+      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p FAILED to create cdm",
+          aAPIName, aHostAPI, aPluginAPI, this);
       return GMPGenericErr;
     }
     Log("cdm: 0x%x", cdm);
-    RefPtr<CDMWrapper> wrapper(new CDMWrapper(cdm));
-    decryptor->SetCDM(wrapper, aDecryptorId);
+    sCDMWrapper = new CDMWrapper(cdm);
+    decryptor->SetCDM(RefPtr<CDMWrapper>(sCDMWrapper));
     *aPluginAPI = decryptor;
 
   } else if (!strcmp(aAPIName, GMP_API_VIDEO_DECODER)) {
-    RefPtr<CDMWrapper> wrapper = WidevineDecryptor::GetInstance(aDecryptorId);
-    if (!wrapper) {
-      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p No cdm for video decoder",
-          aAPIName, aHostAPI, aPluginAPI, thiss, aDecryptorId);
+    if (!sCDMWrapper) {
+      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p) this=0x%p No cdm for video decoder",
+          aAPIName, aHostAPI, aPluginAPI, this);
       return GMPGenericErr;
     }
     *aPluginAPI = new WidevineVideoDecoder(static_cast<GMPVideoHost*>(aHostAPI),
-                                           wrapper);
+                                           RefPtr<CDMWrapper>(sCDMWrapper));
+
   }
   return *aPluginAPI ? GMPNoErr : GMPNotImplementedErr;
 }

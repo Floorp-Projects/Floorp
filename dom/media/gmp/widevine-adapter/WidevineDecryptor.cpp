@@ -16,19 +16,6 @@ using namespace std;
 
 namespace mozilla {
 
-static map<uint32_t, RefPtr<CDMWrapper>> sDecryptors;
-
-/* static */
-RefPtr<CDMWrapper>
-WidevineDecryptor::GetInstance(uint32_t aInstanceId)
-{
-  auto itr = sDecryptors.find(aInstanceId);
-  if (itr != sDecryptors.end()) {
-    return itr->second;
-  }
-  return nullptr;
-}
-
 
 WidevineDecryptor::WidevineDecryptor()
   : mCallback(nullptr)
@@ -43,11 +30,9 @@ WidevineDecryptor::~WidevineDecryptor()
 }
 
 void
-WidevineDecryptor::SetCDM(RefPtr<CDMWrapper> aCDM, uint32_t aInstanceId)
+WidevineDecryptor::SetCDM(RefPtr<CDMWrapper> aCDM)
 {
   mCDM = aCDM;
-  mInstanceId = aInstanceId;
-  sDecryptors[mInstanceId] = aCDM;
 }
 
 void
@@ -225,12 +210,7 @@ void
 WidevineDecryptor::DecryptingComplete()
 {
   Log("WidevineDecryptor::DecryptingComplete() this=%p", this);
-  // Drop our references to the CDMWrapper. When any other references
-  // held elsewhere are dropped (for example references held by a
-  // WidevineVideoDecoder, or a runnable), the CDMWrapper destroys
-  // the CDM.
   mCDM = nullptr;
-  sDecryptors.erase(mInstanceId);
   mCallback = nullptr;
   Release();
 }
