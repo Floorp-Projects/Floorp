@@ -5303,7 +5303,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
         mMediaKeys->GetKeySystem(keySystem);
         // If we're using Primetime we need to shutdown the key system and
         // decoder to preserve secure stop like behavior, other CDMs don't
-        // implement this so we don't need to worry with them.
+        // implement this so we don't need to worry with them on a suspend.
         if (IsPrimetimeKeySystem(keySystem)) {
           mMediaKeys->Shutdown();
           mMediaKeys = nullptr;
@@ -5360,6 +5360,15 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 
   bool pauseElement = ShouldElementBePaused();
   SuspendOrResumeElement(pauseElement, !IsActive());
+
+  // If the owning document has become inactive we should shutdown the CDM.
+  if (!OwnerDoc()->IsCurrentActiveDocument() && mMediaKeys) {
+      mMediaKeys->Shutdown();
+      mMediaKeys = nullptr;
+      if (mDecoder) {
+        ShutdownDecoder();
+      }
+    }
 
   AddRemoveSelfReference();
 }
