@@ -18,10 +18,18 @@
 #include "nsURIHashKey.h"
 #include "nsITimer.h"
 #include "Database.h"
+#include "imgITools.h"
 #include "mozilla/storage.h"
 #include "mozilla/Attributes.h"
 
 #include "FaviconHelpers.h"
+
+// The target dimension in pixels for favicons we store, in reverse order.
+static uint16_t sFaviconSizes[8] = {
+  256, 192, 144, 96, 64, 48, 32, 16
+};
+// Default size when preferred size is unknown, doubled for hi-dpi.
+#define DEFAULT_FAVICON_SIZE 32
 
 // Favicons bigger than this (in bytes) will not be stored in the database.  We
 // expect that most 32x32 PNG favicons will be no larger due to compression.
@@ -78,6 +86,11 @@ public:
     return gFaviconService;
   }
 
+  /**
+   * Fetch and migrate favicons from an unsupported payload to a supported one.
+   */
+  static void ConvertUnsupportedPayloads(mozIStorageConnection* aDBConn);
+
   // addition to API for strings to prevent excessive parsing of URIs
   nsresult GetFaviconLinkForIconString(const nsCString& aIcon, nsIURI** aOutput);
   void GetFaviconSpecForIconString(const nsCString& aIcon, nsACString& aOutput);
@@ -112,17 +125,29 @@ public:
   void SendFaviconNotifications(nsIURI* aPageURI, nsIURI* aFaviconURI,
                                 const nsACString& aGUID);
 
+  static mozilla::Atomic<int64_t> sLastInsertedIconId;
+  static void StoreLastInsertedId(const nsACString& aTable,
+                                  const int64_t aLastInsertedId);
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFAVICONSERVICE
   NS_DECL_MOZIASYNCFAVICONS
   NS_DECL_NSITIMERCALLBACK
 
 private:
+  imgITools* GetImgTools() {
+    if (!mImgTools) {
+      mImgTools = do_CreateInstance("@mozilla.org/image/tools;1");
+    }
+    return mImgTools;
+  }
+
   ~nsFaviconService();
 
   RefPtr<mozilla::places::Database> mDB;
 
   nsCOMPtr<nsITimer> mExpireUnassociatedIconsTimer;
+  nsCOMPtr<imgITools> mImgTools;
 
   static nsFaviconService* gFaviconService;
 
