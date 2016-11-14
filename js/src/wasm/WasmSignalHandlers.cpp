@@ -1340,7 +1340,18 @@ ProcessHasSignalHandlers()
     // Install a SIGSEGV handler to handle safely-out-of-bounds asm.js heap
     // access and/or unaligned accesses.
 # if defined(XP_WIN)
-    if (!AddVectoredExceptionHandler(/* FirstHandler = */ true, WasmFaultHandler))
+#  if defined(MOZ_ASAN)
+    // Under ASan we need to let the ASan runtime's ShadowExceptionHandler stay
+    // in the first handler position. This requires some coordination with
+    // MemoryProtectionExceptionHandler::isDisabled().
+    const bool firstHandler = false;
+#  else
+    // Otherwise, WasmFaultHandler needs to go first, so that we can recover
+    // from wasm faults and continue execution without triggering handlers
+    // such as MemoryProtectionExceptionHandler that assume we are crashing.
+    const bool firstHandler = true;
+#  endif
+    if (!AddVectoredExceptionHandler(firstHandler, WasmFaultHandler))
         return false;
 # elif defined(XP_DARWIN)
     // OSX handles seg faults via the Mach exception handler above, so don't
