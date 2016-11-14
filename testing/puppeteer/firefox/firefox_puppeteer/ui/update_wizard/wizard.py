@@ -11,7 +11,7 @@ from firefox_puppeteer.ui.deck import Panel
 class Wizard(UIBaseLib):
 
     def __init__(self, *args, **kwargs):
-        UIBaseLib.__init__(self, *args, **kwargs)
+        super(Wizard, self).__init__(*args, **kwargs)
 
         Wait(self.marionette).until(
             lambda _: self.selected_panel,

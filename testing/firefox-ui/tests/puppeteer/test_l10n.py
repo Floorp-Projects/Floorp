@@ -2,21 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from firefox_puppeteer import PuppeteerMixin
+from firefox_puppeteer.api.l10n import L10n
+from marionette import MarionetteTestCase
 from marionette_driver import By
 from marionette_driver.errors import MarionetteException
 
-from firefox_puppeteer.api.l10n import L10n
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestL10n(FirefoxTestCase):
+class TestL10n(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
-        self.l10n = L10n(self.marionette)
+        super(TestL10n, self).setUp()
 
-    def tearDown(self):
-        FirefoxTestCase.tearDown(self)
+        self.l10n = L10n(self.marionette)
 
     def test_dtd_entity_chrome(self):
         dtds = ['chrome://global/locale/about.dtd',

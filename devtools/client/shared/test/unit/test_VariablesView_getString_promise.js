@@ -3,8 +3,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var Cu = Components.utils;
-const { VariablesView } = Cu.import("resource://devtools/client/shared/widgets/VariablesView.jsm", {});
+"use strict";
+
+const { VariablesView } = Components.utils.import("resource://devtools/client/shared/widgets/VariablesView.jsm", {});
 
 const PENDING = {
   "type": "object",
@@ -67,7 +68,8 @@ function run_test() {
   equal(VariablesView.getString(PENDING), 'Promise {<state>: "pending"}');
 
   equal(VariablesView.getString(FULFILLED, { concise: true }), "Promise");
-  equal(VariablesView.getString(FULFILLED), 'Promise {<state>: "fulfilled", <value>: 10}');
+  equal(VariablesView.getString(FULFILLED),
+        'Promise {<state>: "fulfilled", <value>: 10}');
 
   equal(VariablesView.getString(REJECTED, { concise: true }), "Promise");
   equal(VariablesView.getString(REJECTED), 'Promise {<state>: "rejected", <reason>: 10}');

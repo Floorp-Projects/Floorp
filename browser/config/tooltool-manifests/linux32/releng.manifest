@@ -16,17 +16,17 @@
 "unpack": true
 },
 {
-"version": "rustc 1.12.0 (3191fbae9 2016-09-23) repack x86_64+i586",
-"size": 102403884,
-"digest": "a7c1512d955d3030bcc1ebddfbf512f7b11b66e31634726deab78d0403fc0ceadd603d32b08c1a5025d3e9ee4ff48ddcf5eaba33468bb2161cfb9fb1a557affa",
+"version": "rustc 1.13.0 (2c6933acc 2016-11-07) repack x86_64+i586",
+"size": 68921028,
+"digest": "9a9ceccc02d4be445ffa64617683419a4f47990b1f2689980ac8db13d6369435ef4af1a3714d77377fb7b3b0ec213856ab7144ff22cbe0881d49aed44d82c0fc",
 "algorithm": "sha512",
 "filename": "rustc.tar.xz",
 "unpack": true
 },
 {
-"version": "cargo 0.13.0-nightly (e713e7f 2016-08-31)",
-"size": 3245716,
-"digest": "d5bb0d88ce7bb1b5a316d7a8ca6341672f5ee8008fa7754511bf53fabd54c0770e95397232896d6087547891f1143f6968d8b1e106e39800b43defeb0025c7c0",
+"version": "cargo 0.13.0-nightly (eca9e15 2016-11-01) repack",
+"size": 3027932,
+"digest": "a5c99eeb12b3b9b49632c259c762e34ec13cf72dadf90a0608b8ab1dc66b36cb114c5b45f71d326e12d31d9e88a41b029e6a728ca64cef392c0a8d211c2fe191",
 "algorithm": "sha512",
 "filename": "cargo.tar.xz",
 "unpack": true

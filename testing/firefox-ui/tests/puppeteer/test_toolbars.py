@@ -2,16 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import expected, By, Wait
 from marionette_driver.errors import NoSuchElementException
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestNavBar(FirefoxTestCase):
+class TestNavBar(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestNavBar, self).setUp()
 
         self.navbar = self.browser.navbar
         self.url = self.marionette.absolute_url('layout/mozilla.html')
@@ -77,10 +77,10 @@ class TestNavBar(FirefoxTestCase):
         self.assertEqual(self.marionette.get_url(), self.browser.default_homepage)
 
 
-class TestLocationBar(FirefoxTestCase):
+class TestLocationBar(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestLocationBar, self).setUp()
 
         self.locationbar = self.browser.navbar.locationbar
 
@@ -133,10 +133,11 @@ class TestLocationBar(FirefoxTestCase):
             Wait(self.marionette).until(lambda mn: mn.get_url() == data_uri)
 
 
-class TestAutoCompleteResults(FirefoxTestCase):
+class TestAutoCompleteResults(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestAutoCompleteResults, self).setUp()
+
         self.browser.navbar.locationbar.clear()
 
         self.autocomplete_results = self.browser.navbar.locationbar.autocomplete_results
@@ -149,7 +150,7 @@ class TestAutoCompleteResults(FirefoxTestCase):
             # autocomplete_results element are skipped.
             pass
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestAutoCompleteResults, self).tearDown()
 
     def test_popup_elements(self):
         # TODO: This test is not very robust because it relies on the history
@@ -202,9 +203,9 @@ class TestAutoCompleteResults(FirefoxTestCase):
             self.autocomplete_results.close()
 
 
-class TestIdentityPopup(FirefoxTestCase):
+class TestIdentityPopup(PuppeteerMixin, MarionetteTestCase):
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestIdentityPopup, self).setUp()
 
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.locationbar.identity_popup
@@ -218,7 +219,7 @@ class TestIdentityPopup(FirefoxTestCase):
         try:
             self.identity_popup.close(force=True)
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestIdentityPopup, self).tearDown()
 
     def test_elements(self):
         self.locationbar.open_identity_popup()

@@ -2,15 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import Wait
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestAccessLocationBar(FirefoxTestCase):
+class TestAccessLocationBar(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestAccessLocationBar, self).setUp()
 
         # Clear complete history so there's no interference from previous entries.
         self.puppeteer.places.remove_all_history()

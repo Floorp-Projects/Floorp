@@ -15,7 +15,7 @@ const L10N = new LocalizationHelper(STRINGS_URI);
 const TEST_URI = `data:text/html,<div id="filter-container" />`;
 
 add_task(function* () {
-  let [host, win, doc] = yield createHost("bottom", TEST_URI);
+  let [,, doc] = yield createHost("bottom", TEST_URI);
   const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");

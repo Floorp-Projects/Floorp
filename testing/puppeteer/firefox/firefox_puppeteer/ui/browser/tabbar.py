@@ -207,7 +207,7 @@ class Tab(UIBaseLib):
     """Wraps a tab DOM element."""
 
     def __init__(self, marionette, window, element):
-        UIBaseLib.__init__(self, marionette, window, element)
+        super(Tab, self).__init__(marionette, window, element)
 
         self._security = Security(self.marionette)
         self._handle = None

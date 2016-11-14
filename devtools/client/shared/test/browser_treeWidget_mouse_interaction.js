@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that mouse interaction works fine with tree widget
 
 const TEST_URI = "data:text/html;charset=utf-8,<head>" +
@@ -11,7 +13,7 @@ const {TreeWidget} = require("devtools/client/shared/widgets/TreeWidget");
 
 add_task(function* () {
   yield addTab("about:blank");
-  let [host, win, doc] = yield createHost("bottom", TEST_URI);
+  let [host,, doc] = yield createHost("bottom", TEST_URI);
 
   let tree = new TreeWidget(doc.querySelector("div"), {
     defaultType: "store"
@@ -95,7 +97,7 @@ function* testMouseInteraction(tree) {
   ok(!node.classList.contains("theme-selected"),
      "Node should not have selected class before clicking");
   click(node);
-  let [name, data, attachment] = yield event.promise;
+  let [, data, attachment] = yield event.promise;
   ok(node.classList.contains("theme-selected"),
      "Node has selected class after click");
   is(data[0], "level1.2", "Correct tree path is emitted");
@@ -111,7 +113,7 @@ function* testMouseInteraction(tree) {
   ok(!node2.hasAttribute("expanded"), "New node is not expanded before clicking");
   tree.once("select", pass);
   click(node2);
-  [name, data, attachment] = yield event.promise;
+  [, data, attachment] = yield event.promise;
   ok(node2.classList.contains("theme-selected"),
      "New node has selected class after clicking");
   is(data[0], "level1", "Correct tree path is emitted for new node");
@@ -121,14 +123,12 @@ function* testMouseInteraction(tree) {
   ok(!node.classList.contains("theme-selected"),
      "Old node should not have selected class after the click on new node");
 
-
   // clicking again should just collapse
   // this will not emit "select" event
   event = defer();
-  node2.addEventListener("click", function onClick() {
-    node2.removeEventListener("click", onClick);
+  node2.addEventListener("click", () => {
     executeSoon(() => event.resolve(null));
-  });
+  }, { once: true });
   click(node2);
   yield event.promise;
   ok(!node2.hasAttribute("expanded"), "New node collapsed after click again");

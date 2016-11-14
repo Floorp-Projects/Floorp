@@ -209,7 +209,8 @@ function spinEventLoop() {
 }
 
 add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", true]]});
+  yield SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", true],
+                                           ["signon.autofillForms.http", true]]});
   listenForUnexpectedPopupShown();
 });
 
@@ -228,10 +229,17 @@ add_task(function* test_form1_warning_entry() {
   restoreForm();
   let shownPromise = promiseACShown();
   doKey("down"); // open
-  yield shownPromise;
+  let results = yield shownPromise;
 
   let popupState = yield getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
+
+  let expectedMenuItems = ["This connection is not secure. Logins entered here could be compromised.",
+                           "tempuser1",
+                           "testuser2",
+                           "testuser3",
+                           "zzzuser4"];
+  checkArrayValues(results, expectedMenuItems, "Check all menuitems are displayed correctly.");
 
   doKey("down"); // select insecure warning
   checkACForm("", ""); // value shouldn't update just by selecting

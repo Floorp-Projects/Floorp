@@ -111,9 +111,9 @@ function* pointsCanBeMovedWithKeyboard(widget, win, doc, offsets) {
   let shiftStep = 30;
 
   info("Moving P1 to the left");
-  let newOffset = parseInt(widget.p1.style.left) - singleStep;
-  let x = widget.bezierCanvas.
-          offsetsToCoordinates({style: {left: newOffset}})[0];
+  let newOffset = parseInt(widget.p1.style.left, 10) - singleStep;
+  let x = widget.bezierCanvas
+          .offsetsToCoordinates({style: {left: newOffset}})[0];
 
   let onUpdated = widget.once("updated");
   widget._onPointKeyDown(getKeyEvent(widget.p1, 37));
@@ -123,9 +123,9 @@ function* pointsCanBeMovedWithKeyboard(widget, win, doc, offsets) {
   is(bezier.P1[1], 0.75, "The new P1 progress coordinate is correct");
 
   info("Moving P1 to the left, fast");
-  newOffset = parseInt(widget.p1.style.left) - shiftStep;
-  x = widget.bezierCanvas.
-      offsetsToCoordinates({style: {left: newOffset}})[0];
+  newOffset = parseInt(widget.p1.style.left, 10) - shiftStep;
+  x = widget.bezierCanvas
+      .offsetsToCoordinates({style: {left: newOffset}})[0];
 
   onUpdated = widget.once("updated");
   widget._onPointKeyDown(getKeyEvent(widget.p1, 37, true));
@@ -134,9 +134,9 @@ function* pointsCanBeMovedWithKeyboard(widget, win, doc, offsets) {
   is(bezier.P1[1], 0.75, "The new P1 progress coordinate is correct");
 
   info("Moving P1 to the right, fast");
-  newOffset = parseInt(widget.p1.style.left) + shiftStep;
-  x = widget.bezierCanvas.
-    offsetsToCoordinates({style: {left: newOffset}})[0];
+  newOffset = parseInt(widget.p1.style.left, 10) + shiftStep;
+  x = widget.bezierCanvas
+    .offsetsToCoordinates({style: {left: newOffset}})[0];
 
   onUpdated = widget.once("updated");
   widget._onPointKeyDown(getKeyEvent(widget.p1, 39, true));
@@ -145,9 +145,9 @@ function* pointsCanBeMovedWithKeyboard(widget, win, doc, offsets) {
   is(bezier.P1[1], 0.75, "The new P1 progress coordinate is correct");
 
   info("Moving P1 to the bottom");
-  newOffset = parseInt(widget.p1.style.top) + singleStep;
-  let y = widget.bezierCanvas.
-    offsetsToCoordinates({style: {top: newOffset}})[1];
+  newOffset = parseInt(widget.p1.style.top, 10) + singleStep;
+  let y = widget.bezierCanvas
+    .offsetsToCoordinates({style: {top: newOffset}})[1];
 
   onUpdated = widget.once("updated");
   widget._onPointKeyDown(getKeyEvent(widget.p1, 40));
@@ -156,9 +156,9 @@ function* pointsCanBeMovedWithKeyboard(widget, win, doc, offsets) {
   is(bezier.P1[1], y, "The new P1 progress coordinate is correct");
 
   info("Moving P1 to the bottom, fast");
-  newOffset = parseInt(widget.p1.style.top) + shiftStep;
-  y = widget.bezierCanvas.
-    offsetsToCoordinates({style: {top: newOffset}})[1];
+  newOffset = parseInt(widget.p1.style.top, 10) + shiftStep;
+  y = widget.bezierCanvas
+    .offsetsToCoordinates({style: {top: newOffset}})[1];
 
   onUpdated = widget.once("updated");
   widget._onPointKeyDown(getKeyEvent(widget.p1, 40, true));
@@ -167,9 +167,9 @@ function* pointsCanBeMovedWithKeyboard(widget, win, doc, offsets) {
   is(bezier.P1[1], y, "The new P1 progress coordinate is correct");
 
   info("Moving P1 to the top, fast");
-  newOffset = parseInt(widget.p1.style.top) - shiftStep;
-  y = widget.bezierCanvas.
-    offsetsToCoordinates({style: {top: newOffset}})[1];
+  newOffset = parseInt(widget.p1.style.top, 10) - shiftStep;
+  y = widget.bezierCanvas
+    .offsetsToCoordinates({style: {top: newOffset}})[1];
 
   onUpdated = widget.once("updated");
   widget._onPointKeyDown(getKeyEvent(widget.p1, 38, true));
@@ -179,9 +179,9 @@ function* pointsCanBeMovedWithKeyboard(widget, win, doc, offsets) {
 
   info("Checking that keyboard events also work with P2");
   info("Moving P2 to the left");
-  newOffset = parseInt(widget.p2.style.left) - singleStep;
-  x = widget.bezierCanvas.
-    offsetsToCoordinates({style: {left: newOffset}})[0];
+  newOffset = parseInt(widget.p2.style.left, 10) - singleStep;
+  x = widget.bezierCanvas
+    .offsetsToCoordinates({style: {left: newOffset}})[0];
 
   onUpdated = widget.once("updated");
   widget._onPointKeyDown(getKeyEvent(widget.p2, 37));

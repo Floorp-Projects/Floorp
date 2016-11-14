@@ -12,7 +12,7 @@ const LIST_ITEM_HEIGHT = 32;
 const TEST_URI = `data:text/html,<div id="filter-container" />`;
 
 add_task(function* () {
-  let [host, win, doc] = yield createHost("bottom", TEST_URI);
+  let [,, doc] = yield createHost("bottom", TEST_URI);
   const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");
@@ -29,7 +29,6 @@ add_task(function* () {
   function last() {
     return filters.children[2];
   }
-
 
   info("Test re-ordering neighbour filters");
   widget._mouseDown({

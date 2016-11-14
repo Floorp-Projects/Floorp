@@ -209,7 +209,8 @@ function spinEventLoop() {
 }
 
 add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", false]]});
+  yield SpecialPowers.pushPrefEnv({"set": [["security.insecure_field_warning.contextual.enabled", false],
+                                           ["signon.autofillForms.http", true]]});
   listenForUnexpectedPopupShown();
 });
 
@@ -220,6 +221,29 @@ add_task(function* test_form1_initial_empty() {
   checkACForm("", "");
   let popupState = yield getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
+});
+
+add_task(function* test_form1_menuitems() {
+  yield SimpleTest.promiseFocus(window);
+  // Trigger autocomplete popup
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  let results = yield shownPromise;
+
+  let popupState = yield getPopupState();
+  is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
+
+  let expectedMenuItems = ["tempuser1",
+                           "testuser2",
+                           "testuser3",
+                           "zzzuser4"];
+  checkArrayValues(results, expectedMenuItems, "Check all menuitems are displayed correctly.");
+
+  checkACForm("", ""); // value shouldn't update just by selecting
+  doKey("return"); // not "enter"!
+  yield spinEventLoop(); // let focus happen
+  checkACForm("", "");
 });
 
 add_task(function* test_form1_first_entry() {

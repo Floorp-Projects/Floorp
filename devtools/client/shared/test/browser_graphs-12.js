@@ -1,11 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that canvas graphs can have their selection linked.
 
-var LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
-var BarGraphWidget = require("devtools/client/shared/widgets/BarGraphWidget");
-var {CanvasGraphUtils} = require("devtools/client/shared/widgets/Graphs");
+const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
+const BarGraphWidget = require("devtools/client/shared/widgets/BarGraphWidget");
+const {CanvasGraphUtils} = require("devtools/client/shared/widgets/Graphs");
 
 add_task(function* () {
   yield addTab("about:blank");
@@ -14,8 +16,9 @@ add_task(function* () {
 });
 
 function* performTest() {
-  let [host, win, doc] = yield createHost();
-  doc.body.setAttribute("style", "position: fixed; width: 100%; height: 100%; margin: 0;");
+  let [host,, doc] = yield createHost();
+  doc.body.setAttribute("style",
+                        "position: fixed; width: 100%; height: 100%; margin: 0;");
 
   let first = document.createElement("div");
   first.setAttribute("style", "display: inline-block; width: 100%; height: 50%;");

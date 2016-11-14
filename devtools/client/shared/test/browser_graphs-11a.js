@@ -1,9 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that bar graph create a legend as expected.
 
-var BarGraphWidget = require("devtools/client/shared/widgets/BarGraphWidget");
+const BarGraphWidget = require("devtools/client/shared/widgets/BarGraphWidget");
 
 const CATEGORIES = [
   { color: "#46afe3", label: "Foo" },
@@ -18,7 +20,7 @@ add_task(function* () {
 });
 
 function* performTest() {
-  let [host, win, doc] = yield createHost();
+  let [host,, doc] = yield createHost();
   let graph = new BarGraphWidget(doc.body);
   yield graph.once("ready");
 
@@ -42,12 +44,12 @@ function testGraph(graph) {
   is(legendItems.length, 3,
     "Three legend items should exist in the entire graph.");
 
-  is(legendItems[0].querySelector("[view=color]").style.backgroundColor, "rgb(70, 175, 227)",
-    "The first legend item has the correct color.");
-  is(legendItems[1].querySelector("[view=color]").style.backgroundColor, "rgb(235, 83, 104)",
-    "The second legend item has the correct color.");
-  is(legendItems[2].querySelector("[view=color]").style.backgroundColor, "rgb(112, 191, 83)",
-    "The third legend item has the correct color.");
+  is(legendItems[0].querySelector("[view=color]").style.backgroundColor,
+     "rgb(70, 175, 227)", "The first legend item has the correct color.");
+  is(legendItems[1].querySelector("[view=color]").style.backgroundColor,
+     "rgb(235, 83, 104)", "The second legend item has the correct color.");
+  is(legendItems[2].querySelector("[view=color]").style.backgroundColor,
+     "rgb(112, 191, 83)", "The third legend item has the correct color.");
 
   is(legendItems[0].querySelector("[view=label]").textContent, "Foo",
     "The first legend item has the correct label.");
