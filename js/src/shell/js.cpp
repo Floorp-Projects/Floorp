@@ -790,20 +790,25 @@ DrainJobQueue(JSContext* cx)
     // Wait for any outstanding async tasks to finish so that the
     // finishedAsyncTasks list is fixed.
     while (true) {
+        AutoLockHelperThreadState lock;
         if (!sc->asyncTasks.lock()->outstanding)
             break;
-        AutoLockHelperThreadState lock;
         HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
     }
 
-    // Lock the whole time while flushing the asyncTasks finished queue so that
-    // any new tasks created during finish() cannot racily join the job queue.
+    // Lock the whole time while copying back the asyncTasks finished queue so
+    // that any new tasks created during finish() cannot racily join the job
+    // queue.  Call finish() only thereafter, to avoid a circular mutex
+    // dependency (see also bug 1297901).
+    Vector<JS::AsyncTask*> finished(cx);
     {
         ExclusiveData<ShellAsyncTasks>::Guard asyncTasks = sc->asyncTasks.lock();
-        for (JS::AsyncTask* task : asyncTasks->finished)
-            task->finish(cx);
+        finished = Move(asyncTasks->finished);
         asyncTasks->finished.clear();
     }
+
+    for (JS::AsyncTask* task : finished)
+        task->finish(cx);
 
     // It doesn't make sense for job queue draining to be reentrant. At the
     // same time we don't want to assert against it, because that'd make
