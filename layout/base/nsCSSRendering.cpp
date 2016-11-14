@@ -5440,6 +5440,9 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
   if (ctx->CurrentOp() != CompositionOp::OP_OVER || mMaskOp == NS_STYLE_MASK_MODE_LUMINANCE) {
     gfxRect clipRect = ctx->GetClipExtents();
     tmpDTRect = RoundedOut(ToRect(clipRect));
+    if (tmpDTRect.IsEmpty()) {
+      return DrawResult::SUCCESS;
+    }
     RefPtr<DrawTarget> tempDT =
       gfxPlatform::GetPlatform()->CreateSimilarSoftwareDrawTarget(ctx->GetDrawTarget(),
                                                                   tmpDTRect.Size(),
