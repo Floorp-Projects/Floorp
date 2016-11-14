@@ -354,7 +354,7 @@ public:
       ENSURE_DATACONNECTION_RET(false);
 
       if (mStream != INVALID_STREAM)
-        return (mConnection->SendMsg(mStream, aMsg) > 0);
+        return (mConnection->SendMsg(mStream, aMsg) >= 0);
       else
         return false;
     }
@@ -365,7 +365,7 @@ public:
       ENSURE_DATACONNECTION_RET(false);
 
       if (mStream != INVALID_STREAM)
-        return (mConnection->SendBinaryMsg(mStream, aMsg) > 0);
+        return (mConnection->SendBinaryMsg(mStream, aMsg) >= 0);
       else
         return false;
     }
@@ -376,7 +376,7 @@ public:
       ENSURE_DATACONNECTION_RET(false);
 
       if (mStream != INVALID_STREAM)
-        return (mConnection->SendBlob(mStream, aBlob) > 0);
+        return (mConnection->SendBlob(mStream, aBlob) == 0);
       else
         return false;
     }

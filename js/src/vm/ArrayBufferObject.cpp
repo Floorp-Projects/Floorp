@@ -44,6 +44,7 @@
 #include "js/MemoryMetrics.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/SelfHosting.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/WrapperObject.h"
 #include "wasm/WasmSignalHandlers.h"
@@ -85,6 +86,25 @@ js::ToClampedIndex(JSContext* cx, HandleValue v, uint32_t length, uint32_t* out)
     }
     *out = uint32_t(result);
     return true;
+}
+
+static bool
+arraybuffer_static_slice(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1) {
+        ReportMissingArg(cx, args.calleev(), 1);
+        return false;
+    }
+
+    if (!GlobalObject::warnOnceAboutArrayBufferSlice(cx, cx->global()))
+        return false;
+
+    FixedInvokeArgs<2> args2(cx);
+    args2[0].set(args.get(1));
+    args2[1].set(args.get(2));
+    return CallSelfHostedFunction(cx, "ArrayBufferSlice", args[0], args2, args.rval());
 }
 
 /*
@@ -140,7 +160,7 @@ static const ClassOps ArrayBufferObjectClassOps = {
 
 static const JSFunctionSpec static_functions[] = {
     JS_FN("isView", ArrayBufferObject::fun_isView, 1, 0),
-    JS_SELF_HOSTED_FN("slice", "ArrayBufferStaticSlice", 3, 0),
+    JS_FN("slice", arraybuffer_static_slice, 3, 0),
     JS_FS_END
 };
 

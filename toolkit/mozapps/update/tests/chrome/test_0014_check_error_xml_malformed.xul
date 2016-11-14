@@ -30,7 +30,7 @@ function runTest() {
   debugDump("entering");
 
   let url = URL_HTTP_UPDATE_XML + "?xmlMalformed=1";
-  setUpdateURLOverride(url);
+  setUpdateURL(url);
 
   gUP.checkForUpdates();
 }

@@ -100,12 +100,7 @@ pref("devtools.debugger.pretty-print-enabled", true);
 pref("devtools.debugger.auto-pretty-print", false);
 pref("devtools.debugger.auto-black-box", true);
 pref("devtools.debugger.workers", false);
-
-#if defined(NIGHTLY_BUILD)
 pref("devtools.debugger.new-debugger-frontend", true);
-#else
-pref("devtools.debugger.new-debugger-frontend", false);
-#endif
 
 // The default Debugger UI settings
 pref("devtools.debugger.ui.panes-workers-and-sources-width", 200);

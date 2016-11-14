@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1310912
+-->
+<html>
+<head>
+  <title>Test for Bug 1310912</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1310912">Mozilla Bug 1310912</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div id="editable1" contenteditable="true">ABC</div>
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let elm = document.getElementById("editable1");
+
+  elm.focus();
+  let sel = window.getSelection();
+  sel.collapse(elm.childNodes[0], elm.textContent.length);
+
+  synthesizeCompositionChange({
+    composition: {
+      string: "DEF",
+      clauses: [
+        { length: 3, attr: COMPOSITION_ATTR_RAW_CLAUSE }
+      ]
+    },
+    caret: { start: 3, length: 0 }
+  });
+  ok(elm.textContent == "ABCDEF", "composing text should be set");
+
+  window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
+  synthesizeCompositionChange({
+    composition: {
+      string: "GHI",
+      clauses: [
+        { length: 3, attr: COMPOSITION_ATTR_CONVERTED_CLAUSE }
+      ]
+    },
+    caret: { start: 0, length: 0 }
+  });
+  ok(elm.textContent == "ABCGHI", "composing text should be replaced");
+
+  window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
+  synthesizeCompositionChange({
+    composition: {
+      string: "JKL",
+      clauses: [
+        { length: 3, attr: COMPOSITION_ATTR_CONVERTED_CLAUSE }
+      ]
+    },
+    caret: { start: 0, length: 0 }
+  });
+  ok(elm.textContent == "ABCJKL", "composing text should be replaced");
+
+  window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
+  synthesizeCompositionChange({
+    composition: {
+      string: "MNO",
+      clauses: [
+        { length: 3, attr: COMPOSITION_ATTR_CONVERTED_CLAUSE }
+      ]
+    },
+    caret: { start: 1, length: 0 }
+  });
+  ok(elm.textContent == "ABCMNO", "composing text should be replaced");
+
+  window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
+  synthesizeComposition({ type: "compositioncommitasis" });
+  ok(elm.textContent == "ABCMNO", "composing text should be committed");
+
+  synthesizeKey("Z", { accelKey: true });
+  ok(elm.textContent == "ABC", "text should be undoed");
+
+  synthesizeKey("Z", { accelKey: true, shiftKey: true });
+  ok(elm.textContent == "ABCMNO", "text should be redoed");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

@@ -1728,7 +1728,9 @@ nsDocShell::MaybeInitTiming()
     mTiming = new nsDOMNavigationTiming();
   }
 
-  mTiming->NotifyNavigationStart();
+  mTiming->NotifyNavigationStart(
+    mIsActive ? nsDOMNavigationTiming::DocShellState::eActive
+              : nsDOMNavigationTiming::DocShellState::eInactive);
 }
 
 //
@@ -6219,6 +6221,20 @@ nsDocShell::SetIsActive(bool aIsActive)
     }
   }
 
+  // Tell the nsDOMNavigationTiming about it
+  RefPtr<nsDOMNavigationTiming> timing = mTiming;
+  if (!timing && mContentViewer) {
+    nsIDocument* doc = mContentViewer->GetDocument();
+    if (doc) {
+      timing = doc->GetNavigationTiming();
+    }
+  }
+  if (timing) {
+    timing->NotifyDocShellStateChanged(
+      aIsActive ? nsDOMNavigationTiming::DocShellState::eActive
+                : nsDOMNavigationTiming::DocShellState::eInactive);
+  }
+
   // Recursively tell all of our children, but don't tell <iframe mozbrowser>
   // children; they handle their state separately.
   nsTObserverArray<nsDocLoader*>::ForwardIterator iter(mChildList);
@@ -9860,18 +9876,10 @@ nsDocShell::InternalLoad(nsIURI* aURI,
 #endif
     }
 
-    // XXXbz would be nice to know the loading principal here... but we don't
-    nsCOMPtr<nsIPrincipal> requestingPrincipal = aTriggeringPrincipal;
-    if (!requestingPrincipal && aReferrer) {
-      rv =
-        CreatePrincipalFromReferrer(aReferrer, getter_AddRefs(requestingPrincipal));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(contentType,
                                    aURI,
-                                   requestingPrincipal,
+                                   aTriggeringPrincipal,
                                    requestingContext,
                                    EmptyCString(),  // mime guess
                                    nullptr,  // extra

@@ -33,7 +33,7 @@ function runTest() {
 
   let url = URL_HTTP_UPDATE_XML + "?showDetails=1&showPrompt=1" +
             getVersionParams();
-  setUpdateURLOverride(url);
+  setUpdateURL(url);
 
   // add the never preference for this version to verify that checking for
   // updates clears the preference.

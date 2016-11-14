@@ -164,7 +164,10 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             toolbarColor = color;
         }
 
+        final int titleTextColor = ColorUtil.getReadableTextColor(toolbarColor);
+
         toolbar.setBackgroundColor(toolbarColor);
+        toolbar.setTitleTextColor(titleTextColor);
         final Window window = getWindow();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);

@@ -22,8 +22,6 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
-                                  "resource://gre/modules/ExtensionParent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
@@ -33,22 +31,20 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "ParentAPIManager",
-                            () => ExtensionParent.ParentAPIManager);
-
 const CATEGORY_EXTENSION_SCRIPTS_ADDON = "webextension-scripts-addon";
 
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
+  DefaultMap,
   EventManager,
   SingletonEventManager,
   SpreadArgs,
   defineLazyGetter,
-  findPathInObject,
   getInnerWindowID,
   getMessageManager,
+  getUniqueId,
   injectAPI,
 } = ExtensionUtils;
 
@@ -60,8 +56,6 @@ const {
 } = ExtensionCommon;
 
 var ExtensionChild;
-
-let gNextPortId = 1;
 
 /**
  * Abstraction for a Port object in the extension API.
@@ -104,10 +98,6 @@ class Port {
     MessageChannel.addListener(this.receiverMMs, "Extension:Port:Disconnect", this.disconnectHandler);
 
     this.context.callOnClose(this);
-  }
-
-  static getNextID() {
-    return `${gNextPortId++}-${Services.appinfo.uniqueProcessID}`;
   }
 
   api() {
@@ -402,7 +392,7 @@ class Messenger {
   }
 
   connect(messageManager, name, recipient) {
-    let portId = Port.getNextID();
+    let portId = getUniqueId();
 
     let port = new Port(this.context, messageManager, this.messageManagers, name, portId, null, recipient);
 
@@ -410,7 +400,7 @@ class Messenger {
   }
 
   connectNative(messageManager, name, recipient) {
-    let portId = Port.getNextID();
+    let portId = getUniqueId();
 
     let port = new NativePort(this.context, messageManager, this.messageManagers, name, portId, null, recipient);
 
@@ -498,56 +488,59 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
   }
 
   addListener(listener, args) {
-    let set = this.childApiManager.listeners.get(this.path);
-    if (!set) {
-      set = new Set();
-      this.childApiManager.listeners.set(this.path, set);
+    let map = this.childApiManager.listeners.get(this.path);
+
+    if (map.listeners.has(listener)) {
+      // TODO: Called with different args?
+      return;
     }
 
-    set.add(listener);
+    let id = getUniqueId();
 
-    if (set.size == 1) {
-      args = args.slice(1);
+    map.ids.set(id, listener);
+    map.listeners.set(listener, id);
 
-      this.childApiManager.messageManager.sendAsyncMessage("API:AddListener", {
-        childId: this.childApiManager.id,
-        path: this.path,
-        args,
-      });
-    }
+    this.childApiManager.messageManager.sendAsyncMessage("API:AddListener", {
+      childId: this.childApiManager.id,
+      listenerId: id,
+      path: this.path,
+      args,
+    });
   }
 
   removeListener(listener) {
-    let set = this.childApiManager.listeners.get(this.path);
-    if (!set) {
+    let map = this.childApiManager.listeners.get(this.path);
+
+    if (!map.listeners.has(listener)) {
       return;
     }
-    set.delete(listener);
 
-    if (set.size == 0) {
-      this.childApiManager.messageManager.sendAsyncMessage("API:RemoveListener", {
-        childId: this.childApiManager.id,
-        path: this.path,
-      });
-    }
+    let id = map.listeners.get(listener);
+    map.listeners.delete(listener);
+    map.ids.delete(id);
+
+    this.childApiManager.messageManager.sendAsyncMessage("API:RemoveListener", {
+      childId: this.childApiManager.id,
+      listenerId: id,
+      path: this.path,
+    });
   }
 
   hasListener(listener) {
-    let set = this.childApiManager.listeners.get(this.path);
-    return set ? set.has(listener) : false;
+    let map = this.childApiManager.listeners.get(this.path);
+    return map.listeners.has(listener);
   }
 }
-
-let nextId = 1;
 
 // We create one instance of this class for every extension context that
 // needs to use remote APIs. It uses the message manager to communicate
 // with the ParentAPIManager singleton in ExtensionParent.jsm. It
 // handles asynchronous function calls as well as event listeners.
-class ChildAPIManagerBase {
+class ChildAPIManager {
   constructor(context, messageManager, localApis, contextData) {
     this.context = context;
     this.messageManager = messageManager;
+    this.url = contextData.url;
 
     // The root namespace of all locally implemented APIs. If an extension calls
     // an API that does not exist in this object, then the implementation is
@@ -556,28 +549,44 @@ class ChildAPIManagerBase {
 
     this.id = `${context.extension.id}.${context.contextId}`;
 
-    messageManager.addMessageListener("API:RunListener", this);
+    MessageChannel.addListener(messageManager, "API:RunListener", this);
     messageManager.addMessageListener("API:CallResult", this);
 
-    // Map[path -> Set[listener]]
-    // path is, e.g., "runtime.onMessage".
-    this.listeners = new Map();
+    this.messageFilterStrict = {childId: this.id};
+
+    this.listeners = new DefaultMap(() => ({
+      ids: new Map(),
+      listeners: new Map(),
+    }));
 
     // Map[callId -> Deferred]
     this.callPromises = new Map();
+
+    let params = {
+      childId: this.id,
+      extensionId: context.extension.id,
+      principal: context.principal,
+    };
+    Object.assign(params, contextData);
+
+    this.messageManager.sendAsyncMessage("API:CreateProxyContext", params);
   }
 
-  receiveMessage({name, data}) {
+  receiveMessage({name, messageName, data}) {
     if (data.childId != this.id) {
       return;
     }
 
-    switch (name) {
+    switch (name || messageName) {
       case "API:RunListener":
-        let listeners = this.listeners.get(data.path);
-        for (let callback of listeners) {
-          this.context.runSafe(callback, ...data.args);
+        let map = this.listeners.get(data.path);
+        let listener = map.ids.get(data.listenerId);
+
+        if (listener) {
+          return this.context.runSafe(listener, ...data.args);
         }
+
+        Cu.reportError(`Unknown listener at childId=${data.childId} path=${data.path} listenerId=${data.listenerId}\n`);
         break;
 
       case "API:CallResult":
@@ -618,7 +627,7 @@ class ChildAPIManagerBase {
    *     promise otherwise. The promise is resolved when the function completes.
    */
   callParentAsyncFunction(path, args, callback) {
-    let callId = nextId++;
+    let callId = getUniqueId();
     let deferred = PromiseUtils.defer();
     this.callPromises.set(callId, deferred);
 
@@ -699,82 +708,6 @@ class ChildAPIManagerBase {
 
   hasPermission(permission) {
     return this.context.extension.hasPermission(permission);
-  }
-}
-
-class ChildAPIManager extends ChildAPIManagerBase {
-  constructor(context, messageManager, localApis, contextData) {
-    super(context, messageManager, localApis, contextData);
-
-    let params = {
-      childId: this.id,
-      extensionId: context.extension.id,
-      principal: context.principal,
-    };
-    Object.assign(params, contextData);
-
-    this.messageManager.sendAsyncMessage("API:CreateProxyContext", params);
-  }
-}
-
-
-// A class that behaves identical to a ChildAPIManager, except
-// 1) creation of the ProxyContext in the parent is synchronous, and
-// 2) APIs without a local implementation and marked as incompatible with the
-//    out-of-process model fall back to directly invoking the parent methods.
-// TODO(robwu): Remove this when all APIs have migrated.
-class PseudoChildAPIManager extends ChildAPIManagerBase {
-  constructor(context, messageManager, localApis, contextData) {
-    super(context, messageManager, localApis, contextData);
-
-    let params = {
-      childId: this.id,
-      extensionId: context.extension.id,
-    };
-    Object.assign(params, contextData);
-
-    // Structured clone the parameters to simulate cross-process messaging.
-    params = Cu.cloneInto(params, {});
-    // Principals can be structured cloned by message managers, but not
-    // by cloneInto.
-    params.principal = context.principal;
-    params.cloneScope = this.cloneScope;
-
-    this.url = params.url;
-
-    let browserElement = this.context.docShell.chromeEventHandler;
-    ParentAPIManager.receiveMessage({
-      name: "API:CreateProxyContext",
-      data: params,
-      target: browserElement,
-    });
-
-    this.parentContext = ParentAPIManager.proxyContexts.get(this.id);
-
-    // Synchronously unload the ProxyContext because we synchronously create it.
-    this.context.callOnClose(this.parentContext);
-  }
-
-  getFallbackImplementation(namespace, name) {
-    // This is gross and should be removed ASAP.
-    let useDirectParentAPI = (
-      // Incompatible APIs are listed here.
-      namespace == "webNavigation" || // ChildAPIManager is oblivious to filters.
-      namespace == "webRequest" // Incompatible by design (synchronous).
-    );
-
-    if (useDirectParentAPI) {
-      let apiObj = findPathInObject(this.parentContext.apiObj, namespace, false);
-
-      if (apiObj && name in apiObj) {
-        return new LocalAPIImplementation(apiObj, name, this.context);
-      }
-      // If we got here, then it means that the JSON schema claimed that the API
-      // will be available, but no actual implementation is given.
-      // You should either provide an implementation or rewrite the JSON schema.
-    }
-
-    return super.getFallbackImplementation(namespace, name);
   }
 }
 
@@ -898,7 +831,7 @@ defineLazyGetter(ExtensionPageContextChild.prototype, "childManager", function()
     apiManager.global.initializeBackgroundPage(this.contentWindow);
   }
 
-  let childManager = new PseudoChildAPIManager(this, this.messageManager, localApis, {
+  let childManager = new ChildAPIManager(this, this.messageManager, localApis, {
     envType: "addon_parent",
     viewType: this.viewType,
     url: this.uri.spec,

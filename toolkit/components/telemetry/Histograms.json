@@ -4665,20 +4665,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems that cannot stage updates (timer initiated)"
   },
-  "UPDATE_HAS_PREF_URL_OVERRIDE_EXTERNAL": {
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "Update: count of systems that have an app.update.url.override preference (externally initiated)"
-  },
-  "UPDATE_HAS_PREF_URL_OVERRIDE_NOTIFY": {
-    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "releaseChannelCollection": "opt-out",
-    "description": "Update: count of systems that have an app.update.url.override preference (timer initiated)"
-  },
   "UPDATE_PREF_UPDATE_CANCELATIONS_EXTERNAL": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
@@ -10778,5 +10764,14 @@
     "n_buckets": 50,
     "description": "Time spent painting the contents of a remote browser (ms).",
     "releaseChannelCollection": "opt-out"
+  },
+  "TIME_TO_NON_BLANK_PAINT_MS": {
+    "alert_emails": ["hkirschner@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1307242],
+    "description": "The time between navigation start and the first non-blank paint of a foreground root content document, in milliseconds. This only records documents that were in an active docshell throughout the whole time between navigation start and non-blank paint. The non-blank paint timestamp is taken during display list building and does not include rasterization or compositing of that paint."
   }
 }

@@ -11,7 +11,7 @@ function writeFile(text, answer) {
   stream.close();
 
   sendAsyncMessage(answer, {
-    file: new File(tmpFile)
+    file: File.createFromNsIFile(tmpFile)
   });
 }
 

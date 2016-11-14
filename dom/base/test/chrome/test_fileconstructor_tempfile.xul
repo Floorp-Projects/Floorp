@@ -72,7 +72,7 @@ try {
 
   // Create a scoped DOMFile so the gc will happily get rid of it.
   {
-    let dirfile = new File(tmp, { temporary: true });
+    let dirfile = File.createFromNsIFile(tmp, { temporary: true });
     ok(true, "Temporary File() created");
     let reader = new FileReader();
     reader.readAsArrayBuffer(dirfile);

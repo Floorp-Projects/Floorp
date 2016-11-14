@@ -64,10 +64,18 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
         return;
     }
 
-    if (readBuffer == writeBuffer &&
-        !ValidateDataRanges(readOffset, writeOffset, size, funcName))
-    {
-        return;
+    if (readBuffer == writeBuffer) {
+        MOZ_ASSERT((CheckedInt<WebGLsizeiptr>(readOffset) + size).isValid());
+        MOZ_ASSERT((CheckedInt<WebGLsizeiptr>(writeOffset) + size).isValid());
+
+        const bool separate = (readOffset + size <= writeOffset ||
+                               writeOffset + size <= readOffset);
+        if (!separate) {
+            ErrorInvalidValue("%s: ranges [readOffset, readOffset + size) and"
+                              " [writeOffset, writeOffset + size) overlap",
+                              funcName);
+            return;
+        }
     }
 
     const auto& readType = readBuffer->Content();

@@ -945,6 +945,8 @@ interface TestInterface {
   [SetterThrows] attribute boolean throwingSetterAttr;
   [NeedsSubjectPrincipal] void needsSubjectPrincipalMethod();
   [NeedsSubjectPrincipal] attribute boolean needsSubjectPrincipalAttr;
+  [NeedsCallerType] void needsCallerTypeMethod();
+  [NeedsCallerType] attribute boolean needsCallerTypeAttr;
   legacycaller short(unsigned long arg1, TestInterface arg2);
   void passArgsWithDefaults(optional long arg1,
                             optional TestInterface? arg2 = null,
@@ -1251,4 +1253,12 @@ namespace TestProtoObjectHackedNamespace {
 [SecureContext]
 interface TestSecureContextInterface {
   static void alsoSecureContext();
+};
+
+[Exposed=(Window,Worker)]
+interface TestWorkerExposedInterface {
+  [NeedsSubjectPrincipal] void needsSubjectPrincipalMethod();
+  [NeedsSubjectPrincipal] attribute boolean needsSubjectPrincipalAttr;
+  [NeedsCallerType] void needsCallerTypeMethod();
+  [NeedsCallerType] attribute boolean needsCallerTypeAttr;
 };

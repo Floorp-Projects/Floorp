@@ -302,7 +302,7 @@ RenderCall(WasmRenderContext& c, AstCall& call)
         return false;
 
     MAP_AST_EXPR(c, call);
-    if (call.expr() == Expr::Call) {
+    if (call.op() == Op::Call) {
         if (!c.buffer.append("call "))
             return false;
     } else {
@@ -444,10 +444,10 @@ RenderBlock(WasmRenderContext& c, AstBlock& block)
         return false;
 
     MAP_AST_EXPR(c, block);
-    if (block.expr() == Expr::Block) {
+    if (block.op() == Op::Block) {
         if (!c.buffer.append("block"))
             return false;
-    } else if (block.expr() == Expr::Loop) {
+    } else if (block.op() == Op::Loop) {
         if (!c.buffer.append("loop"))
             return false;
     } else {
@@ -489,7 +489,7 @@ RenderCurrentMemory(WasmRenderContext& c, AstCurrentMemory& cm)
 static bool
 RenderGrowMemory(WasmRenderContext& c, AstGrowMemory& gm)
 {
-    if (!RenderExpr(c, *gm.op()))
+    if (!RenderExpr(c, *gm.operand()))
         return false;
 
     if (!RenderIndent(c))
@@ -500,38 +500,38 @@ RenderGrowMemory(WasmRenderContext& c, AstGrowMemory& gm)
 }
 
 static bool
-RenderUnaryOperator(WasmRenderContext& c, AstUnaryOperator& op)
+RenderUnaryOperator(WasmRenderContext& c, AstUnaryOperator& unary)
 {
-    if (!RenderExpr(c, *op.op()))
+    if (!RenderExpr(c, *unary.operand()))
         return false;
 
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, op);
+    MAP_AST_EXPR(c, unary);
     const char* opStr;
-    switch (op.expr()) {
-      case Expr::I32Eqz:     opStr = "i32.eqz"; break;
-      case Expr::I32Clz:     opStr = "i32.clz"; break;
-      case Expr::I32Ctz:     opStr = "i32.ctz"; break;
-      case Expr::I32Popcnt:  opStr = "i32.popcnt"; break;
-      case Expr::I64Clz:     opStr = "i64.clz"; break;
-      case Expr::I64Ctz:     opStr = "i64.ctz"; break;
-      case Expr::I64Popcnt:  opStr = "i64.popcnt"; break;
-      case Expr::F32Abs:     opStr = "f32.abs"; break;
-      case Expr::F32Neg:     opStr = "f32.neg"; break;
-      case Expr::F32Ceil:    opStr = "f32.ceil"; break;
-      case Expr::F32Floor:   opStr = "f32.floor"; break;
-      case Expr::F32Sqrt:    opStr = "f32.sqrt"; break;
-      case Expr::F32Trunc:   opStr = "f32.trunc"; break;
-      case Expr::F32Nearest: opStr = "f32.nearest"; break;
-      case Expr::F64Abs:     opStr = "f64.abs"; break;
-      case Expr::F64Neg:     opStr = "f64.neg"; break;
-      case Expr::F64Ceil:    opStr = "f64.ceil"; break;
-      case Expr::F64Floor:   opStr = "f64.floor"; break;
-      case Expr::F64Nearest: opStr = "f64.nearest"; break;
-      case Expr::F64Sqrt:    opStr = "f64.sqrt"; break;
-      case Expr::F64Trunc:   opStr = "f64.trunc"; break;
+    switch (unary.op()) {
+      case Op::I32Eqz:     opStr = "i32.eqz"; break;
+      case Op::I32Clz:     opStr = "i32.clz"; break;
+      case Op::I32Ctz:     opStr = "i32.ctz"; break;
+      case Op::I32Popcnt:  opStr = "i32.popcnt"; break;
+      case Op::I64Clz:     opStr = "i64.clz"; break;
+      case Op::I64Ctz:     opStr = "i64.ctz"; break;
+      case Op::I64Popcnt:  opStr = "i64.popcnt"; break;
+      case Op::F32Abs:     opStr = "f32.abs"; break;
+      case Op::F32Neg:     opStr = "f32.neg"; break;
+      case Op::F32Ceil:    opStr = "f32.ceil"; break;
+      case Op::F32Floor:   opStr = "f32.floor"; break;
+      case Op::F32Sqrt:    opStr = "f32.sqrt"; break;
+      case Op::F32Trunc:   opStr = "f32.trunc"; break;
+      case Op::F32Nearest: opStr = "f32.nearest"; break;
+      case Op::F64Abs:     opStr = "f64.abs"; break;
+      case Op::F64Neg:     opStr = "f64.neg"; break;
+      case Op::F64Ceil:    opStr = "f64.ceil"; break;
+      case Op::F64Floor:   opStr = "f64.floor"; break;
+      case Op::F64Nearest: opStr = "f64.nearest"; break;
+      case Op::F64Sqrt:    opStr = "f64.sqrt"; break;
+      case Op::F64Trunc:   opStr = "f64.trunc"; break;
       default:               return Fail(c, "unexpected unary operator");
     }
 
@@ -539,63 +539,63 @@ RenderUnaryOperator(WasmRenderContext& c, AstUnaryOperator& op)
 }
 
 static bool
-RenderBinaryOperator(WasmRenderContext& c, AstBinaryOperator& op)
+RenderBinaryOperator(WasmRenderContext& c, AstBinaryOperator& binary)
 {
-    if (!RenderExpr(c, *op.lhs()))
+    if (!RenderExpr(c, *binary.lhs()))
         return false;
-    if (!RenderExpr(c, *op.rhs()))
+    if (!RenderExpr(c, *binary.rhs()))
         return false;
 
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, op);
+    MAP_AST_EXPR(c, binary);
     const char* opStr;
-    switch (op.expr()) {
-      case Expr::I32Add:      opStr = "i32.add"; break;
-      case Expr::I32Sub:      opStr = "i32.sub"; break;
-      case Expr::I32Mul:      opStr = "i32.mul"; break;
-      case Expr::I32DivS:     opStr = "i32.div_s"; break;
-      case Expr::I32DivU:     opStr = "i32.div_u"; break;
-      case Expr::I32RemS:     opStr = "i32.rem_s"; break;
-      case Expr::I32RemU:     opStr = "i32.rem_u"; break;
-      case Expr::I32And:      opStr = "i32.and"; break;
-      case Expr::I32Or:       opStr = "i32.or"; break;
-      case Expr::I32Xor:      opStr = "i32.xor"; break;
-      case Expr::I32Shl:      opStr = "i32.shl"; break;
-      case Expr::I32ShrS:     opStr = "i32.shr_s"; break;
-      case Expr::I32ShrU:     opStr = "i32.shr_u"; break;
-      case Expr::I32Rotl:     opStr = "i32.rotl"; break;
-      case Expr::I32Rotr:     opStr = "i32.rotr"; break;
-      case Expr::I64Add:      opStr = "i64.add"; break;
-      case Expr::I64Sub:      opStr = "i64.sub"; break;
-      case Expr::I64Mul:      opStr = "i64.mul"; break;
-      case Expr::I64DivS:     opStr = "i64.div_s"; break;
-      case Expr::I64DivU:     opStr = "i64.div_u"; break;
-      case Expr::I64RemS:     opStr = "i64.rem_s"; break;
-      case Expr::I64RemU:     opStr = "i64.rem_u"; break;
-      case Expr::I64And:      opStr = "i64.and"; break;
-      case Expr::I64Or:       opStr = "i64.or"; break;
-      case Expr::I64Xor:      opStr = "i64.xor"; break;
-      case Expr::I64Shl:      opStr = "i64.shl"; break;
-      case Expr::I64ShrS:     opStr = "i64.shr_s"; break;
-      case Expr::I64ShrU:     opStr = "i64.shr_u"; break;
-      case Expr::I64Rotl:     opStr = "i64.rotl"; break;
-      case Expr::I64Rotr:     opStr = "i64.rotr"; break;
-      case Expr::F32Add:      opStr = "f32.add"; break;
-      case Expr::F32Sub:      opStr = "f32.sub"; break;
-      case Expr::F32Mul:      opStr = "f32.mul"; break;
-      case Expr::F32Div:      opStr = "f32.div"; break;
-      case Expr::F32Min:      opStr = "f32.min"; break;
-      case Expr::F32Max:      opStr = "f32.max"; break;
-      case Expr::F32CopySign: opStr = "f32.copysign"; break;
-      case Expr::F64Add:      opStr = "f64.add"; break;
-      case Expr::F64Sub:      opStr = "f64.sub"; break;
-      case Expr::F64Mul:      opStr = "f64.mul"; break;
-      case Expr::F64Div:      opStr = "f64.div"; break;
-      case Expr::F64Min:      opStr = "f64.min"; break;
-      case Expr::F64Max:      opStr = "f64.max"; break;
-      case Expr::F64CopySign: opStr = "f64.copysign"; break;
+    switch (binary.op()) {
+      case Op::I32Add:      opStr = "i32.add"; break;
+      case Op::I32Sub:      opStr = "i32.sub"; break;
+      case Op::I32Mul:      opStr = "i32.mul"; break;
+      case Op::I32DivS:     opStr = "i32.div_s"; break;
+      case Op::I32DivU:     opStr = "i32.div_u"; break;
+      case Op::I32RemS:     opStr = "i32.rem_s"; break;
+      case Op::I32RemU:     opStr = "i32.rem_u"; break;
+      case Op::I32And:      opStr = "i32.and"; break;
+      case Op::I32Or:       opStr = "i32.or"; break;
+      case Op::I32Xor:      opStr = "i32.xor"; break;
+      case Op::I32Shl:      opStr = "i32.shl"; break;
+      case Op::I32ShrS:     opStr = "i32.shr_s"; break;
+      case Op::I32ShrU:     opStr = "i32.shr_u"; break;
+      case Op::I32Rotl:     opStr = "i32.rotl"; break;
+      case Op::I32Rotr:     opStr = "i32.rotr"; break;
+      case Op::I64Add:      opStr = "i64.add"; break;
+      case Op::I64Sub:      opStr = "i64.sub"; break;
+      case Op::I64Mul:      opStr = "i64.mul"; break;
+      case Op::I64DivS:     opStr = "i64.div_s"; break;
+      case Op::I64DivU:     opStr = "i64.div_u"; break;
+      case Op::I64RemS:     opStr = "i64.rem_s"; break;
+      case Op::I64RemU:     opStr = "i64.rem_u"; break;
+      case Op::I64And:      opStr = "i64.and"; break;
+      case Op::I64Or:       opStr = "i64.or"; break;
+      case Op::I64Xor:      opStr = "i64.xor"; break;
+      case Op::I64Shl:      opStr = "i64.shl"; break;
+      case Op::I64ShrS:     opStr = "i64.shr_s"; break;
+      case Op::I64ShrU:     opStr = "i64.shr_u"; break;
+      case Op::I64Rotl:     opStr = "i64.rotl"; break;
+      case Op::I64Rotr:     opStr = "i64.rotr"; break;
+      case Op::F32Add:      opStr = "f32.add"; break;
+      case Op::F32Sub:      opStr = "f32.sub"; break;
+      case Op::F32Mul:      opStr = "f32.mul"; break;
+      case Op::F32Div:      opStr = "f32.div"; break;
+      case Op::F32Min:      opStr = "f32.min"; break;
+      case Op::F32Max:      opStr = "f32.max"; break;
+      case Op::F32CopySign: opStr = "f32.copysign"; break;
+      case Op::F64Add:      opStr = "f64.add"; break;
+      case Op::F64Sub:      opStr = "f64.sub"; break;
+      case Op::F64Mul:      opStr = "f64.mul"; break;
+      case Op::F64Div:      opStr = "f64.div"; break;
+      case Op::F64Min:      opStr = "f64.min"; break;
+      case Op::F64Max:      opStr = "f64.max"; break;
+      case Op::F64CopySign: opStr = "f64.copysign"; break;
       default:                return Fail(c, "unexpected binary operator");
     }
 
@@ -603,22 +603,22 @@ RenderBinaryOperator(WasmRenderContext& c, AstBinaryOperator& op)
 }
 
 static bool
-RenderTernaryOperator(WasmRenderContext& c, AstTernaryOperator& op)
+RenderTernaryOperator(WasmRenderContext& c, AstTernaryOperator& ternary)
 {
-    if (!RenderExpr(c, *op.op0()))
+    if (!RenderExpr(c, *ternary.op0()))
         return false;
-    if (!RenderExpr(c, *op.op1()))
+    if (!RenderExpr(c, *ternary.op1()))
         return false;
-    if (!RenderExpr(c, *op.op2()))
+    if (!RenderExpr(c, *ternary.op2()))
         return false;
 
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, op);
+    MAP_AST_EXPR(c, ternary);
     const char* opStr;
-    switch (op.expr()) {
-      case Expr::Select: opStr = "select"; break;
+    switch (ternary.op()) {
+      case Op::Select: opStr = "select"; break;
       default:           return Fail(c, "unexpected ternary operator");
     }
 
@@ -626,51 +626,51 @@ RenderTernaryOperator(WasmRenderContext& c, AstTernaryOperator& op)
 }
 
 static bool
-RenderComparisonOperator(WasmRenderContext& c, AstComparisonOperator& op)
+RenderComparisonOperator(WasmRenderContext& c, AstComparisonOperator& comp)
 {
-    if (!RenderExpr(c, *op.lhs()))
+    if (!RenderExpr(c, *comp.lhs()))
         return false;
-    if (!RenderExpr(c, *op.rhs()))
+    if (!RenderExpr(c, *comp.rhs()))
         return false;
 
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, op);
+    MAP_AST_EXPR(c, comp);
     const char* opStr;
-    switch (op.expr()) {
-      case Expr::I32Eq:  opStr = "i32.eq"; break;
-      case Expr::I32Ne:  opStr = "i32.ne"; break;
-      case Expr::I32LtS: opStr = "i32.lt_s"; break;
-      case Expr::I32LtU: opStr = "i32.lt_u"; break;
-      case Expr::I32LeS: opStr = "i32.le_s"; break;
-      case Expr::I32LeU: opStr = "i32.le_u"; break;
-      case Expr::I32GtS: opStr = "i32.gt_s"; break;
-      case Expr::I32GtU: opStr = "i32.gt_u"; break;
-      case Expr::I32GeS: opStr = "i32.ge_s"; break;
-      case Expr::I32GeU: opStr = "i32.ge_u"; break;
-      case Expr::I64Eq:  opStr = "i64.eq"; break;
-      case Expr::I64Ne:  opStr = "i64.ne"; break;
-      case Expr::I64LtS: opStr = "i64.lt_s"; break;
-      case Expr::I64LtU: opStr = "i64.lt_u"; break;
-      case Expr::I64LeS: opStr = "i64.le_s"; break;
-      case Expr::I64LeU: opStr = "i64.le_u"; break;
-      case Expr::I64GtS: opStr = "i64.gt_s"; break;
-      case Expr::I64GtU: opStr = "i64.gt_u"; break;
-      case Expr::I64GeS: opStr = "i64.ge_s"; break;
-      case Expr::I64GeU: opStr = "i64.ge_u"; break;
-      case Expr::F32Eq:  opStr = "f32.eq"; break;
-      case Expr::F32Ne:  opStr = "f32.ne"; break;
-      case Expr::F32Lt:  opStr = "f32.lt"; break;
-      case Expr::F32Le:  opStr = "f32.le"; break;
-      case Expr::F32Gt:  opStr = "f32.gt"; break;
-      case Expr::F32Ge:  opStr = "f32.ge"; break;
-      case Expr::F64Eq:  opStr = "f64.eq"; break;
-      case Expr::F64Ne:  opStr = "f64.ne"; break;
-      case Expr::F64Lt:  opStr = "f64.lt"; break;
-      case Expr::F64Le:  opStr = "f64.le"; break;
-      case Expr::F64Gt:  opStr = "f64.gt"; break;
-      case Expr::F64Ge:  opStr = "f64.ge"; break;
+    switch (comp.op()) {
+      case Op::I32Eq:  opStr = "i32.eq"; break;
+      case Op::I32Ne:  opStr = "i32.ne"; break;
+      case Op::I32LtS: opStr = "i32.lt_s"; break;
+      case Op::I32LtU: opStr = "i32.lt_u"; break;
+      case Op::I32LeS: opStr = "i32.le_s"; break;
+      case Op::I32LeU: opStr = "i32.le_u"; break;
+      case Op::I32GtS: opStr = "i32.gt_s"; break;
+      case Op::I32GtU: opStr = "i32.gt_u"; break;
+      case Op::I32GeS: opStr = "i32.ge_s"; break;
+      case Op::I32GeU: opStr = "i32.ge_u"; break;
+      case Op::I64Eq:  opStr = "i64.eq"; break;
+      case Op::I64Ne:  opStr = "i64.ne"; break;
+      case Op::I64LtS: opStr = "i64.lt_s"; break;
+      case Op::I64LtU: opStr = "i64.lt_u"; break;
+      case Op::I64LeS: opStr = "i64.le_s"; break;
+      case Op::I64LeU: opStr = "i64.le_u"; break;
+      case Op::I64GtS: opStr = "i64.gt_s"; break;
+      case Op::I64GtU: opStr = "i64.gt_u"; break;
+      case Op::I64GeS: opStr = "i64.ge_s"; break;
+      case Op::I64GeU: opStr = "i64.ge_u"; break;
+      case Op::F32Eq:  opStr = "f32.eq"; break;
+      case Op::F32Ne:  opStr = "f32.ne"; break;
+      case Op::F32Lt:  opStr = "f32.lt"; break;
+      case Op::F32Le:  opStr = "f32.le"; break;
+      case Op::F32Gt:  opStr = "f32.gt"; break;
+      case Op::F32Ge:  opStr = "f32.ge"; break;
+      case Op::F64Eq:  opStr = "f64.eq"; break;
+      case Op::F64Ne:  opStr = "f64.ne"; break;
+      case Op::F64Lt:  opStr = "f64.lt"; break;
+      case Op::F64Le:  opStr = "f64.le"; break;
+      case Op::F64Gt:  opStr = "f64.gt"; break;
+      case Op::F64Ge:  opStr = "f64.ge"; break;
       default:           return Fail(c, "unexpected comparison operator");
     }
 
@@ -678,44 +678,44 @@ RenderComparisonOperator(WasmRenderContext& c, AstComparisonOperator& op)
 }
 
 static bool
-RenderConversionOperator(WasmRenderContext& c, AstConversionOperator& op)
+RenderConversionOperator(WasmRenderContext& c, AstConversionOperator& conv)
 {
-    if (!RenderExpr(c, *op.op()))
+    if (!RenderExpr(c, *conv.operand()))
         return false;
 
     if (!RenderIndent(c))
         return false;
 
-    MAP_AST_EXPR(c, op);
+    MAP_AST_EXPR(c, conv);
     const char* opStr;
-    switch (op.expr()) {
-      case Expr::I32WrapI64:        opStr = "i32.wrap/i64"; break;
-      case Expr::I32TruncSF32:      opStr = "i32.trunc_s/f32"; break;
-      case Expr::I32TruncUF32:      opStr = "i32.trunc_u/f32"; break;
-      case Expr::I32ReinterpretF32: opStr = "i32.reinterpret/f32"; break;
-      case Expr::I32TruncSF64:      opStr = "i32.trunc_s/f64"; break;
-      case Expr::I32TruncUF64:      opStr = "i32.trunc_u/f64"; break;
-      case Expr::I64ExtendSI32:     opStr = "i64.extend_s/i32"; break;
-      case Expr::I64ExtendUI32:     opStr = "i64.extend_u/i32"; break;
-      case Expr::I64TruncSF32:      opStr = "i64.trunc_s/f32"; break;
-      case Expr::I64TruncUF32:      opStr = "i64.trunc_u/f32"; break;
-      case Expr::I64TruncSF64:      opStr = "i64.trunc_s/f64"; break;
-      case Expr::I64TruncUF64:      opStr = "i64.trunc_u/f64"; break;
-      case Expr::I64ReinterpretF64: opStr = "i64.reinterpret/f64"; break;
-      case Expr::F32ConvertSI32:    opStr = "f32.convert_s/i32"; break;
-      case Expr::F32ConvertUI32:    opStr = "f32.convert_u/i32"; break;
-      case Expr::F32ReinterpretI32: opStr = "f32.reinterpret/i32"; break;
-      case Expr::F32ConvertSI64:    opStr = "f32.convert_s/i64"; break;
-      case Expr::F32ConvertUI64:    opStr = "f32.convert_u/i64"; break;
-      case Expr::F32DemoteF64:      opStr = "f32.demote/f64"; break;
-      case Expr::F64ConvertSI32:    opStr = "f64.convert_s/i32"; break;
-      case Expr::F64ConvertUI32:    opStr = "f64.convert_u/i32"; break;
-      case Expr::F64ConvertSI64:    opStr = "f64.convert_s/i64"; break;
-      case Expr::F64ConvertUI64:    opStr = "f64.convert_u/i64"; break;
-      case Expr::F64ReinterpretI64: opStr = "f64.reinterpret/i64"; break;
-      case Expr::F64PromoteF32:     opStr = "f64.promote/f32"; break;
-      case Expr::I32Eqz:            opStr = "i32.eqz"; break;
-      case Expr::I64Eqz:            opStr = "i64.eqz"; break;
+    switch (conv.op()) {
+      case Op::I32WrapI64:        opStr = "i32.wrap/i64"; break;
+      case Op::I32TruncSF32:      opStr = "i32.trunc_s/f32"; break;
+      case Op::I32TruncUF32:      opStr = "i32.trunc_u/f32"; break;
+      case Op::I32ReinterpretF32: opStr = "i32.reinterpret/f32"; break;
+      case Op::I32TruncSF64:      opStr = "i32.trunc_s/f64"; break;
+      case Op::I32TruncUF64:      opStr = "i32.trunc_u/f64"; break;
+      case Op::I64ExtendSI32:     opStr = "i64.extend_s/i32"; break;
+      case Op::I64ExtendUI32:     opStr = "i64.extend_u/i32"; break;
+      case Op::I64TruncSF32:      opStr = "i64.trunc_s/f32"; break;
+      case Op::I64TruncUF32:      opStr = "i64.trunc_u/f32"; break;
+      case Op::I64TruncSF64:      opStr = "i64.trunc_s/f64"; break;
+      case Op::I64TruncUF64:      opStr = "i64.trunc_u/f64"; break;
+      case Op::I64ReinterpretF64: opStr = "i64.reinterpret/f64"; break;
+      case Op::F32ConvertSI32:    opStr = "f32.convert_s/i32"; break;
+      case Op::F32ConvertUI32:    opStr = "f32.convert_u/i32"; break;
+      case Op::F32ReinterpretI32: opStr = "f32.reinterpret/i32"; break;
+      case Op::F32ConvertSI64:    opStr = "f32.convert_s/i64"; break;
+      case Op::F32ConvertUI64:    opStr = "f32.convert_u/i64"; break;
+      case Op::F32DemoteF64:      opStr = "f32.demote/f64"; break;
+      case Op::F64ConvertSI32:    opStr = "f64.convert_s/i32"; break;
+      case Op::F64ConvertUI32:    opStr = "f64.convert_u/i32"; break;
+      case Op::F64ConvertSI64:    opStr = "f64.convert_s/i64"; break;
+      case Op::F64ConvertUI64:    opStr = "f64.convert_u/i64"; break;
+      case Op::F64ReinterpretI64: opStr = "f64.reinterpret/i64"; break;
+      case Op::F64PromoteF32:     opStr = "f64.promote/f32"; break;
+      case Op::I32Eqz:            opStr = "i32.eqz"; break;
+      case Op::I64Eqz:            opStr = "i64.eqz"; break;
       default:                      return Fail(c, "unexpected conversion operator");
     }
     return c.buffer.append(opStr, strlen(opStr));
@@ -800,73 +800,73 @@ RenderLoad(WasmRenderContext& c, AstLoad& load)
 
     MAP_AST_EXPR(c, load);
     uint32_t defaultAlignLog2;
-    switch (load.expr()) {
-      case Expr::I32Load8S:
+    switch (load.op()) {
+      case Op::I32Load8S:
         if (!c.buffer.append("i32.load8_s"))
             return false;
         defaultAlignLog2 = 0;
         break;
-      case Expr::I64Load8S:
+      case Op::I64Load8S:
         if (!c.buffer.append("i64.load8_s"))
             return false;
         defaultAlignLog2 = 0;
         break;
-      case Expr::I32Load8U:
+      case Op::I32Load8U:
         if (!c.buffer.append("i32.load8_u"))
             return false;
         defaultAlignLog2 = 0;
         break;
-      case Expr::I64Load8U:
+      case Op::I64Load8U:
         if (!c.buffer.append("i64.load8_u"))
             return false;
         defaultAlignLog2 = 0;
         break;
-      case Expr::I32Load16S:
+      case Op::I32Load16S:
         if (!c.buffer.append("i32.load16_s"))
             return false;
         defaultAlignLog2 = 1;
         break;
-      case Expr::I64Load16S:
+      case Op::I64Load16S:
         if (!c.buffer.append("i64.load16_s"))
             return false;
         defaultAlignLog2 = 1;
         break;
-      case Expr::I32Load16U:
+      case Op::I32Load16U:
         if (!c.buffer.append("i32.load16_u"))
             return false;
         defaultAlignLog2 = 1;
         break;
-      case Expr::I64Load16U:
+      case Op::I64Load16U:
         if (!c.buffer.append("i64.load16_u"))
             return false;
         defaultAlignLog2 = 1;
         break;
-      case Expr::I64Load32S:
+      case Op::I64Load32S:
         if (!c.buffer.append("i64.load32_s"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::I64Load32U:
+      case Op::I64Load32U:
         if (!c.buffer.append("i64.load32_u"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::I32Load:
+      case Op::I32Load:
         if (!c.buffer.append("i32.load"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::I64Load:
+      case Op::I64Load:
         if (!c.buffer.append("i64.load"))
             return false;
         defaultAlignLog2 = 3;
         break;
-      case Expr::F32Load:
+      case Op::F32Load:
         if (!c.buffer.append("f32.load"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::F64Load:
+      case Op::F64Load:
         if (!c.buffer.append("f64.load"))
             return false;
         defaultAlignLog2 = 3;
@@ -892,48 +892,48 @@ RenderStore(WasmRenderContext& c, AstStore& store)
 
     MAP_AST_EXPR(c, store);
     uint32_t defaultAlignLog2;
-    switch (store.expr()) {
-      case Expr::I32Store8:
+    switch (store.op()) {
+      case Op::I32Store8:
         if (!c.buffer.append("i32.store8"))
             return false;
         defaultAlignLog2 = 0;
         break;
-      case Expr::I64Store8:
+      case Op::I64Store8:
         if (!c.buffer.append("i64.store8"))
             return false;
         defaultAlignLog2 = 0;
         break;
-      case Expr::I32Store16:
+      case Op::I32Store16:
         if (!c.buffer.append("i32.store16"))
             return false;
         defaultAlignLog2 = 1;
         break;
-      case Expr::I64Store16:
+      case Op::I64Store16:
         if (!c.buffer.append("i64.store16"))
             return false;
         defaultAlignLog2 = 1;
         break;
-      case Expr::I64Store32:
+      case Op::I64Store32:
         if (!c.buffer.append("i64.store32"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::I32Store:
+      case Op::I32Store:
         if (!c.buffer.append("i32.store"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::I64Store:
+      case Op::I64Store:
         if (!c.buffer.append("i64.store"))
             return false;
         defaultAlignLog2 = 3;
         break;
-      case Expr::F32Store:
+      case Op::F32Store:
         if (!c.buffer.append("f32.store"))
             return false;
         defaultAlignLog2 = 2;
         break;
-      case Expr::F64Store:
+      case Op::F64Store:
         if (!c.buffer.append("f64.store"))
             return false;
         defaultAlignLog2 = 3;
@@ -948,10 +948,10 @@ RenderStore(WasmRenderContext& c, AstStore& store)
 static bool
 RenderBranch(WasmRenderContext& c, AstBranch& branch)
 {
-    Expr expr = branch.expr();
-    MOZ_ASSERT(expr == Expr::BrIf || expr == Expr::Br);
+    Op op = branch.op();
+    MOZ_ASSERT(op == Op::BrIf || op == Op::Br);
 
-    if (expr == Expr::BrIf) {
+    if (op == Op::BrIf) {
         if (!RenderExpr(c, branch.cond()))
             return false;
     }
@@ -965,7 +965,7 @@ RenderBranch(WasmRenderContext& c, AstBranch& branch)
         return false;
 
     MAP_AST_EXPR(c, branch);
-    if (expr == Expr::BrIf ? !c.buffer.append("br_if ") : !c.buffer.append("br "))
+    if (op == Op::BrIf ? !c.buffer.append("br_if ") : !c.buffer.append("br "))
         return false;
 
     return RenderRef(c, branch.target());
@@ -1127,9 +1127,7 @@ RenderExpr(WasmRenderContext& c, AstExpr& expr, bool newLine /* = true */)
             return false;
         break;
       default:
-        // Note: it's important not to remove this default since readExpr()
-        // can return Expr values for which there is no enumerator.
-        return Fail(c, "unexpected expression kind");
+        MOZ_CRASH("Bad AstExprKind");
     }
 
     return !newLine || c.buffer.append("\n");

@@ -98,8 +98,6 @@ class Encoder
         return offset - start + 1;
     }
 
-    static const size_t ExprLimit = 2 * UINT8_MAX - 1;
-
   public:
     explicit Encoder(Bytes& bytes)
       : bytes_(bytes)
@@ -157,21 +155,22 @@ class Encoder
         return writeVarS<int64_t>(i);
     }
     MOZ_MUST_USE bool writeValType(ValType type) {
-        static_assert(size_t(TypeCode::Max) <= INT8_MAX, "fits");
-        MOZ_ASSERT(size_t(type) <= size_t(TypeCode::Max));
+        static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
+        MOZ_ASSERT(size_t(type) < size_t(TypeCode::Limit));
         return writeFixedU8(uint8_t(type));
     }
     MOZ_MUST_USE bool writeBlockType(ExprType type) {
-        static_assert(size_t(TypeCode::Max) <= INT8_MAX, "fits");
-        MOZ_ASSERT(size_t(type) <= size_t(TypeCode::Max));
+        static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
+        MOZ_ASSERT(size_t(type) < size_t(TypeCode::Limit));
         return writeFixedU8(uint8_t(type));
     }
-    MOZ_MUST_USE bool writeExpr(Expr expr) {
-        static_assert(size_t(Expr::Limit) <= ExprLimit, "fits");
-        if (size_t(expr) < UINT8_MAX)
-            return writeFixedU8(uint8_t(expr));
+    MOZ_MUST_USE bool writeOp(Op op) {
+        static_assert(size_t(Op::Limit) <= 2 * UINT8_MAX, "fits");
+        MOZ_ASSERT(size_t(op) < size_t(Op::Limit));
+        if (size_t(op) < UINT8_MAX)
+            return writeFixedU8(uint8_t(op));
         return writeFixedU8(UINT8_MAX) &&
-               writeFixedU8(size_t(expr) - UINT8_MAX);
+               writeFixedU8(size_t(op) - UINT8_MAX);
     }
 
     // Fixed-length encodings that allow back-patching.
@@ -308,8 +307,6 @@ class Decoder
         return true;
     }
 
-    static const size_t ExprLimit = 2 * UINT8_MAX - 1;
-
   public:
     Decoder(const uint8_t* begin, const uint8_t* end, UniqueChars* error)
       : beg_(begin),
@@ -402,36 +399,26 @@ class Decoder
     MOZ_MUST_USE bool readVarS64(int64_t* out) {
         return readVarS<int64_t>(out);
     }
-    MOZ_MUST_USE bool readValType(ValType* type) {
-        static_assert(uint8_t(TypeCode::Max) <= INT8_MAX, "fits");
-        uint8_t u8;
-        if (!readFixedU8(&u8))
-            return false;
-        *type = (ValType)u8;
-        return true;
+    MOZ_MUST_USE bool readValType(uint8_t* type) {
+        static_assert(uint8_t(TypeCode::Limit) <= UINT8_MAX, "fits");
+        return readFixedU8(type);
     }
-    MOZ_MUST_USE bool readBlockType(ExprType* type) {
-        static_assert(size_t(TypeCode::Max) <= INT8_MAX, "fits");
-        uint8_t u8;
-        if (!readFixedU8(&u8))
-            return false;
-        *type = (ExprType)u8;
-        return true;
+    MOZ_MUST_USE bool readBlockType(uint8_t* type) {
+        static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
+        return readFixedU8(type);
     }
-    MOZ_MUST_USE bool readExpr(Expr* expr) {
-        static_assert(size_t(Expr::Limit) <= ExprLimit, "fits");
+    MOZ_MUST_USE bool readOp(uint16_t* op) {
+        static_assert(size_t(Op::Limit) <= 2 * UINT8_MAX, "fits");
         uint8_t u8;
         if (!readFixedU8(&u8))
             return false;
-        if (u8 != UINT8_MAX) {
-            *expr = Expr(u8);
+        if (MOZ_LIKELY(u8 != UINT8_MAX)) {
+            *op = u8;
             return true;
         }
         if (!readFixedU8(&u8))
             return false;
-        if (u8 == UINT8_MAX)
-            return false;
-        *expr = Expr(uint16_t(u8) + UINT8_MAX);
+        *op = uint16_t(u8) + UINT8_MAX;
         return true;
     }
 
@@ -602,12 +589,12 @@ class Decoder
     ValType uncheckedReadValType() {
         return (ValType)uncheckedReadFixedU8();
     }
-    Expr uncheckedReadExpr() {
-        static_assert(size_t(Expr::Limit) <= ExprLimit, "fits");
+    Op uncheckedReadOp() {
+        static_assert(size_t(Op::Limit) <= 2 * UINT8_MAX, "fits");
         uint8_t u8 = uncheckedReadFixedU8();
         return u8 != UINT8_MAX
-               ? Expr(u8)
-               : Expr(uncheckedReadFixedU8() + UINT8_MAX);
+               ? Op(u8)
+               : Op(uncheckedReadFixedU8() + UINT8_MAX);
     }
     void uncheckedReadFixedI8x16(I8x16* i8x16) {
         struct T { I8x16 v; };
@@ -637,9 +624,6 @@ class Decoder
 
 // Misc helpers.
 
-MOZ_MUST_USE bool
-CheckValType(Decoder& d, ValType type);
-
 UniqueChars
 DecodeName(Decoder& d);
 
@@ -653,7 +637,7 @@ MOZ_MUST_USE bool
 EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
 
 MOZ_MUST_USE bool
-DecodeLocalEntries(Decoder& d, ValTypeVector* locals);
+DecodeLocalEntries(Decoder& d, ModuleKind kind, ValTypeVector* locals);
 
 MOZ_MUST_USE bool
 DecodeGlobalType(Decoder& d, ValType* type, bool* isMutable);

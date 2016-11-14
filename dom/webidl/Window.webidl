@@ -255,12 +255,6 @@ interface WindowModal {
 };
 Window implements WindowModal;
 
-// https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#self-caches
-partial interface Window {
-[Throws, Func="mozilla::dom::cache::CacheStorage::PrefEnabled", SameObject]
-readonly attribute CacheStorage caches;
-};
-
 // Mozilla-specific stuff
 partial interface Window {
   //[NewObject, Throws] CSSStyleDeclaration getDefaultComputedStyle(Element elt, optional DOMString pseudoElt = "");

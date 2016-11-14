@@ -1570,13 +1570,13 @@ struct CSSMaskLayerUserData : public LayerUserData
     : mImageLayers(nsStyleImageLayers::LayerType::Mask)
   { }
 
-  CSSMaskLayerUserData(nsIFrame* aFrame, const nsRect& aBound)
+  CSSMaskLayerUserData(nsIFrame* aFrame, const nsIntRect& aBounds)
     : mImageLayers(aFrame->StyleSVGReset()->mMask),
       mContentRect(aFrame->GetContentRectRelativeToSelf()),
       mPaddingRect(aFrame->GetPaddingRectRelativeToSelf()),
       mBorderRect(aFrame->GetRectRelativeToSelf()),
       mMarginRect(aFrame->GetMarginRectRelativeToSelf()),
-      mBounds(aBound)
+      mBounds(aBounds)
   {
     Hash(aFrame);
   }
@@ -1650,7 +1650,7 @@ private:
   nsRect mBorderRect;
   nsRect mMarginRect;
 
-  nsRect mBounds;
+  nsIntRect mBounds;
 
   uint32_t mHash;
 };
@@ -3914,26 +3914,22 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
 
   bool snap;
   nsRect bounds = aMaskItem->GetBounds(mBuilder, &snap);
-  CSSMaskLayerUserData newUserData(aMaskItem->Frame(), bounds);
+  nsIntRect itemRect = ScaleToOutsidePixels(bounds, snap);
+  CSSMaskLayerUserData newUserData(aMaskItem->Frame(), itemRect);
   if (*oldUserData == newUserData) {
     aLayer->SetMaskLayer(maskLayer);
     return;
   }
 
-  const nsIFrame* frame = aMaskItem->Frame();
-  int32_t A2D = frame->PresContext()->AppUnitsPerDevPixel();
-  Rect devBounds = NSRectToRect(bounds, A2D);
-  uint32_t maxSize = mManager->GetMaxTextureSize();
-  gfx::Size surfaceSize(std::min<gfx::Float>(devBounds.Width(), maxSize),
-                        std::min<gfx::Float>(devBounds.Height(), maxSize));
-  IntSize surfaceSizeInt(NSToIntCeil(surfaceSize.width),
-                         NSToIntCeil(surfaceSize.height));
+  int32_t maxSize = mManager->GetMaxTextureSize();
+  IntSize surfaceSize(std::min(itemRect.width, maxSize),
+                      std::min(itemRect.height, maxSize));
 
-  if (surfaceSizeInt.IsEmpty()) {
+  if (surfaceSize.IsEmpty()) {
     return;
   }
 
-  MaskImageData imageData(surfaceSizeInt, mManager);
+  MaskImageData imageData(surfaceSize, mManager);
   RefPtr<DrawTarget> dt = imageData.CreateDrawTarget();
   if (!dt || !dt->IsValid()) {
     NS_WARNING("Could not create DrawTarget for mask layer.");
@@ -3941,8 +3937,8 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
   }
 
   RefPtr<gfxContext> maskCtx = gfxContext::CreateOrNull(dt);
-  gfxPoint offset = nsLayoutUtils::PointToGfxPoint(bounds.TopLeft(), A2D);
-  maskCtx->SetMatrix(gfxMatrix::Translation(-offset));
+  maskCtx->SetMatrix(gfxMatrix::Translation(-itemRect.TopLeft()));
+  maskCtx->Multiply(gfxMatrix::Scaling(mParameters.mXScale, mParameters.mYScale));
 
   if (!aMaskItem->PaintMask(mBuilder, maskCtx)) {
     // Mostly because of mask resource is not ready.
@@ -3951,9 +3947,8 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
 
   // Setup mask layer offset.
   Matrix4x4 matrix;
-  matrix.PreTranslate(offset.x, offset.y, 0);
+  matrix.PreTranslate(itemRect.x, itemRect.y, 0);
   matrix.PreTranslate(mParameters.mOffset.x, mParameters.mOffset.y, 0);
-  matrix.PreScale(mParameters.mXScale, mParameters.mYScale, 1.0);
 
   maskLayer->SetBaseTransform(matrix);
 

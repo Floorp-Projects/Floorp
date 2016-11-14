@@ -534,6 +534,12 @@ Inspector.prototype = {
 
     let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
 
+    this._setDefaultSidebar = (event, toolId) => {
+      Services.prefs.setCharPref("devtools.inspector.activeSidebar", toolId);
+    };
+
+    this.sidebar.on("select", this._setDefaultSidebar);
+
     if (!Services.prefs.getBoolPref("devtools.fontinspector.enabled") &&
        defaultTab == "fontinspector") {
       defaultTab = "ruleview";
@@ -550,22 +556,10 @@ Inspector.prototype = {
       INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
       defaultTab == "computedview");
 
-    this._setDefaultSidebar = (event, toolId) => {
-      Services.prefs.setCharPref("devtools.inspector.activeSidebar", toolId);
-    };
-
-    this.sidebar.on("select", this._setDefaultSidebar);
-
     this.ruleview = new RuleViewTool(this, this.panelWin);
     this.computedview = new ComputedViewTool(this, this.panelWin);
 
     if (Services.prefs.getBoolPref("devtools.layoutview.enabled")) {
-      this.sidebar.addExistingTab(
-        "layoutview",
-        INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle"),
-        defaultTab == "layoutview"
-      );
-
       const {LayoutView} = require("devtools/client/inspector/layout/layout");
       this.layoutview = new LayoutView(this, this.panelWin);
     }

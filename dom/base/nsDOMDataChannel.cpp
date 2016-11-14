@@ -357,7 +357,7 @@ nsDOMDataChannel::Send(nsIInputStream* aMsgStream,
   MOZ_ASSERT(state == mozilla::DataChannel::OPEN,
              "Unknown state in nsDOMDataChannel::Send");
 
-  int32_t sent;
+  bool sent;
   if (aMsgStream) {
     sent = mDataChannel->SendBinaryStream(aMsgStream, aMsgLength);
   } else {
@@ -367,7 +367,7 @@ nsDOMDataChannel::Send(nsIInputStream* aMsgStream,
       sent = mDataChannel->SendMsg(aMsgString);
     }
   }
-  if (sent < 0) {
+  if (!sent) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
 }
