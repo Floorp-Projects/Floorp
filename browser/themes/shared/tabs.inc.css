@@ -11,10 +11,10 @@
 }
 #TabsToolbar {
   --tab-stroke-background-size: auto 100%;
+  --tab-curve-width: 30px;
+  --tab-curve-half-width: 15px;
 }
 
-%define tabCurveWidth 30px
-%define tabCurveHalfWidth 15px
 
 /* image preloading hack */
 #tabbrowser-tabs::before {
@@ -55,9 +55,9 @@
 .tab-background-middle {
   -moz-box-flex: 1;
   background-clip: padding-box;
-  border-left: @tabCurveHalfWidth@ solid transparent;
-  border-right: @tabCurveHalfWidth@ solid transparent;
-  margin: 0 -@tabCurveHalfWidth@;
+  border-left: var(--tab-curve-half-width) solid transparent;
+  border-right: var(--tab-curve-half-width) solid transparent;
+  margin: 0 calc(-1 * var(--tab-curve-half-width));
 }
 
 .tab-content {
@@ -246,13 +246,13 @@
 .tab-background,
 .tabs-newtab-button {
   /* overlap the tab curves */
-  margin-inline-end: -@tabCurveHalfWidth@;
-  margin-inline-start: -@tabCurveHalfWidth@;
+  margin-inline-end: calc(-1 * var(--tab-curve-half-width));
+  margin-inline-start: calc(-1 * var(--tab-curve-half-width));
 }
 
 .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
-  padding-inline-end: @tabCurveHalfWidth@;
-  padding-inline-start: @tabCurveHalfWidth@;
+  padding-inline-end: var(--tab-curve-half-width);
+  padding-inline-start: var(--tab-curve-half-width);
 }
 
 /* Tab Overflow */
@@ -299,7 +299,7 @@
 .tab-background-end[selected=true]::after,
 .tab-background-end[selected=true]::before {
   min-height: var(--tab-min-height);
-  width: @tabCurveWidth@;
+  width: var(--tab-curve-width);
 }
 
 .tabbrowser-tab:not([visuallyselected=true]),
@@ -321,7 +321,7 @@
 .tab-background-start[selected=true]::after,
 .tab-background-end[selected=true]::after {
   /* position ::after on top of its parent */
-  margin-inline-start: -@tabCurveWidth@;
+  margin-inline-start: calc(-1 * var(--tab-curve-width));
   background-size: 100% 100%;
   content: "";
   display: -moz-box;
@@ -412,9 +412,9 @@
   background-image: url(chrome://browser/skin/tabbrowser/tab-background-start.png),
                     url(chrome://browser/skin/tabbrowser/tab-background-middle.png),
                     url(chrome://browser/skin/tabbrowser/tab-background-end.png);
-  background-position: left bottom, @tabCurveWidth@ bottom, right bottom;
+  background-position: left bottom, var(--tab-curve-width) bottom, right bottom;
   background-repeat: no-repeat;
-  background-size: @tabCurveWidth@ 100%, calc(100% - (2 * @tabCurveWidth@)) 100%, @tabCurveWidth@ 100%;
+  background-size: var(--tab-curve-width) 100%, calc(100% - (2 * var(--tab-curve-width))) 100%, var(--tab-curve-width) 100%;
 }
 
 /* Tab pointer-events */
@@ -494,7 +494,7 @@
 /* New tab button */
 
 .tabs-newtab-button {
-  width: calc(36px + @tabCurveWidth@);
+  width: calc(36px + var(--tab-curve-width));
 }
 
 @media (min-resolution: 1.1dppx) {
