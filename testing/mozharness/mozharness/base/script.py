@@ -490,8 +490,7 @@ class ScriptMixin(PlatformMixin):
             raise
 
     def _retry_download(self, url, error_level, file_name=None, retry_config=None):
-        """ Helper method to retry download methods
-        Split out so we can alter the retry logic in mozharness.mozilla.testing.gaia_test.
+        """ Helper method to retry download methods.
 
         This method calls `self.retry` on `self._download_file` using the passed
         parameters if a file_name is specified. If no file is specified, we will
