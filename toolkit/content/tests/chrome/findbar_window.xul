@@ -273,6 +273,18 @@
       });
     }
 
+    function promiseHighlightFinished() {
+      return new Promise(resolve => {
+        let listener = {
+          onHighlightFinished() {
+            gFindBar.browser.finder.removeResultListener(listener);
+            resolve();
+          }
+        };
+        gFindBar.browser.finder.addResultListener(listener);
+      });
+    }
+
     var enterStringIntoFindField = Task.async(function* (str, waitForResult = true) {
       for (let promise, i = 0; i < str.length; i++) {
         if (waitForResult) {
@@ -449,7 +461,6 @@
 
     // See bug 963925 for more details on this test.
     function* testFindWithHighlight() {
-      //yield clearFocus();
       gFindBar._findField.value = "";
 
       // For this test, we want to closely control the selection. The easiest
@@ -503,6 +514,43 @@
 
       highlightButton.click();
       ok(!highlightButton.checked, "testFindWithHighlight: Highlight All should be unchecked.");
+
+      // Regression test for bug 1316515.
+      searchStr = "e";
+      gFindBar.clear();
+      yield enterStringIntoFindField(searchStr);
+
+      yield ContentTask.spawn(gBrowser, {}, function* () {
+        let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsISelectionDisplay)
+                                 .QueryInterface(Ci.nsISelectionController);
+        let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
+        Assert.equal(sel.rangeCount, 0, "testFindWithHighlight - 1316515: no highlights, please [1]");
+      });
+
+      highlightButton.click();
+      ok(highlightButton.checked, "testFindWithHighlight: Highlight All should be checked.");
+
+      yield promiseHighlightFinished();
+
+      yield ContentTask.spawn(gBrowser, {}, function* () {
+        let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsISelectionDisplay)
+                                 .QueryInterface(Ci.nsISelectionController);
+        let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
+        // The other 4 ranges are in a different controller.
+        Assert.equal(sel.rangeCount, 3, "testFindWithHighlight - 1316515: more highlights, please");
+      });
+
+      synthesizeKey("VK_BACK_SPACE", {});
+
+      yield ContentTask.spawn(gBrowser, null, function* () {
+        let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsISelectionDisplay)
+                                 .QueryInterface(Ci.nsISelectionController);
+        let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
+        Assert.equal(sel.rangeCount, 0, "testFindWithHighlight - 1316515: no highlights, please [2]");
+      });
     }
 
     function* testQuickFindText() {
