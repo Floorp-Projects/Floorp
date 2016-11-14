@@ -774,7 +774,7 @@ element.toJson = function(obj, seenEls) {
  *
  * @param {nsIDOMElement} el
  *     Element to be checked.
- * @param nsIDOMWindow frame
+ * @param {nsIDOMWindow} frame
  *     Window object that contains the element or the current host
  *     of the shadow root.
  * @param {ShadowRoot=} shadowRoot
@@ -910,12 +910,8 @@ element.isVisible = function(el, x = undefined, y = undefined) {
   }
 
   if (!element.inViewport(el, x, y)) {
-    if (el.scrollIntoView) {
-      el.scrollIntoView({block: "start", inline: "nearest"});
-      if (!element.inViewport(el)) {
-        return false;
-      }
-    } else {
+    element.scrollIntoView(el);
+    if (!element.inViewport(el)) {
       return false;
     }
   }
@@ -1001,6 +997,18 @@ element.getInteractableElementTree = function(el) {
 // In fact, it's not defined in the spec.
 element.isKeyboardInteractable = function(el) {
   return true;
+};
+
+/**
+ * Attempts to scroll into view |el|.
+ *
+ * @param {DOMElement} el
+ *     Element to scroll into view.
+ */
+element.scrollIntoView = function(el) {
+  if (el.scrollIntoView) {
+    el.scrollIntoView({block: "end", inline: "nearest", behavior: "instant"});
+  }
 };
 
 element.isXULElement = function(el) {
