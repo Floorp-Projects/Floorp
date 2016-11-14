@@ -1,0 +1,30 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIURI.idl"
+
+/**
+ * nsIURIWithQuery is implemented by URIs which have a query parameter.
+ * This is useful for the URL API.
+ */
+[scriptable, uuid(367510ee-8556-435a-8f99-b5fd357e08cc)]
+interface nsIURIWithQuery : nsIURI
+{
+    /**
+     * Returns a path including the directory and file portions of a
+     * URL.  For example, the filePath of "http://host/foo/bar.html#baz"
+     * is "/foo/bar.html".
+     *
+     * Some characters may be escaped.
+     */
+    attribute AUTF8String filePath;
+
+    /**
+     * Returns the query portion (the part after the "?") of the URL.
+     * If there isn't one, an empty string is returned.
+     *
+     * Some characters may be escaped.
+     */
+    attribute AUTF8String query;
+};

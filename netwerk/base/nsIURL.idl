@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIURI.idl"
+#include "nsIURIWithQuery.idl"
 
 /**
  * The nsIURL interface provides convenience methods that further
@@ -20,29 +20,16 @@
  *                        filePath
  */
 [scriptable, uuid(86adcd89-0b70-47a2-b0fe-5bb2c5f37e31)]
-interface nsIURL : nsIURI
+interface nsIURL : nsIURIWithQuery
 {
     /*************************************************************************
      * The URL path is broken down into the following principal components:
-     */
-
-    /**
-     * Returns a path including the directory and file portions of a
-     * URL.  For example, the filePath of "http://host/foo/bar.html#baz"
-     * is "/foo/bar.html".
      *
-     * Some characters may be escaped.
-     */
-    attribute AUTF8String filePath;
-
-    /**
-     * Returns the query portion (the part after the "?") of the URL.
-     * If there isn't one, an empty string is returned.
+     * attribute AUTF8String filePath;
+     * attribute AUTF8String query;
      *
-     * Some characters may be escaped.
+     * These are inherited from nsIURIWithQuery.
      */
-    attribute AUTF8String query;
-
 
     /*************************************************************************
      * The URL filepath is broken down into the following sub-components:

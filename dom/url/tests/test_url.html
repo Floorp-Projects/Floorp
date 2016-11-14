@@ -217,6 +217,16 @@
       pathname: 'blank',
       skip_setters: false,
     },
+
+    { url: 'foo:bar?what#yeah',
+      base: undefined,
+      error: false,
+      protocol: 'foo:',
+      pathname: 'bar',
+      search: '?what',
+      hash: '#yeah',
+      skip_setters: false,
+    },
   ];
 
   while(tests.length) {
@@ -386,6 +396,41 @@
 
     url = new URL("scheme://tmp\\test", base);
     is(url.href, "scheme://tmp\\test");
+  </script>
+
+  <script>
+    var url = new URL("scheme:path/to/file?query#hash");
+    is(url.href, "scheme:path/to/file?query#hash");
+    is(url.pathname, "path/to/file");
+    is(url.search, "?query");
+    is(url.hash, "#hash");
+
+    // pathname cannot be overwritten.
+    url.pathname = "new/path?newquery#newhash";
+    is(url.href, "scheme:path/to/file?query#hash");
+
+    url.search = "?newquery#newhash";
+    is(url.href, "scheme:path/to/file?newquery%23newhash#hash");
+
+    // nulls get encoded, whitespace gets stripped
+    url = new URL("scheme:pa\0\nth/to/fi\0\nle?qu\0\nery#ha\0\nsh");
+    is(url.href, "scheme:pa%00th/to/fi%00le?qu%00ery#ha%00sh");
+
+    url.search = "new\0\nquery";
+    is(url.href, "scheme:pa%00th/to/fi%00le?new%00%0Aquery#ha%00sh");
+    url.hash = "new\0\nhash";
+    is(url.href, "scheme:pa%00th/to/fi%00le?new%00%0Aquery#new%00%0Ahash");
+
+    url = new URL("scheme:path#hash");
+    is(url.href, "scheme:path#hash");
+    url.search = "query";
+    is(url.href, "scheme:path?query#hash");
+    url.hash = "";
+    is(url.href, "scheme:path?query");
+    url.hash = "newhash";
+    is(url.href, "scheme:path?query#newhash");
+    url.search = "";
+    is(url.href, "scheme:path#newhash");
   </script>
 </body>
 </html>
