@@ -15,6 +15,7 @@ struct SimpleURIParams
   nsCString scheme;
   nsCString path;
   nsCString ref;
+  nsCString query;
   bool isMutable;
 };
 
