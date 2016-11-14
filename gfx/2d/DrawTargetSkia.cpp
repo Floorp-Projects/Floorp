@@ -375,7 +375,7 @@ SkImageIsMask(const sk_sp<SkImage>& aImage)
 }
 
 static bool
-ExtractAlphaBitmap(sk_sp<SkImage> aImage, SkBitmap* aResultBitmap)
+ExtractAlphaBitmap(const sk_sp<SkImage>& aImage, SkBitmap* aResultBitmap)
 {
   SkImageInfo info = SkImageInfo::MakeA8(aImage->width(), aImage->height());
   SkBitmap bitmap;

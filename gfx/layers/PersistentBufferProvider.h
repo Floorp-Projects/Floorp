@@ -145,7 +145,7 @@ protected:
 
   ~PersistentBufferProviderShared();
 
-  TextureClient* GetTexture(Maybe<uint32_t> aIndex);
+  TextureClient* GetTexture(const Maybe<uint32_t>& aIndex);
   bool CheckIndex(uint32_t aIndex) { return aIndex < mTextures.length(); }
 
   void Destroy();
