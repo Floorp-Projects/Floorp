@@ -3123,12 +3123,21 @@ PluginModuleParent::RecvReturnSitesWithData(nsTArray<nsCString>&& aSites,
 }
 
 layers::TextureClientRecycleAllocator*
-PluginModuleParent::EnsureTextureAllocator()
+PluginModuleParent::EnsureTextureAllocatorForDirectBitmap()
 {
-    if (!mTextureAllocator) {
-        mTextureAllocator = new TextureClientRecycleAllocator(ImageBridgeChild::GetSingleton().get());
+    if (!mTextureAllocatorForDirectBitmap) {
+        mTextureAllocatorForDirectBitmap = new TextureClientRecycleAllocator(ImageBridgeChild::GetSingleton().get());
     }
-    return mTextureAllocator;
+    return mTextureAllocatorForDirectBitmap;
+}
+
+layers::TextureClientRecycleAllocator*
+PluginModuleParent::EnsureTextureAllocatorForDXGISurface()
+{
+    if (!mTextureAllocatorForDXGISurface) {
+        mTextureAllocatorForDXGISurface = new TextureClientRecycleAllocator(ImageBridgeChild::GetSingleton().get());
+    }
+    return mTextureAllocatorForDXGISurface;
 }
 
 
