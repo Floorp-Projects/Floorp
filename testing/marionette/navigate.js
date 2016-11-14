@@ -102,11 +102,6 @@ navigate.IdempotentURL = function(o) {
     hash = "#";
   }
 
-  let pathname = url.pathname;
-  if (url.protocol == "data:" && hash != "") {
-    pathname = pathname.substring(0, pathname.length - hash.length);
-  }
-
   return {
     hash: hash,
     host: url.host,
@@ -114,7 +109,7 @@ navigate.IdempotentURL = function(o) {
     href: url.href,
     origin: url.origin,
     password: url.password,
-    pathname: pathname,
+    pathname: url.pathname,
     port: url.port,
     protocol: url.protocol,
     search: url.search,

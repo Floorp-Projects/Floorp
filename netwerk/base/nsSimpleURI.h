@@ -8,6 +8,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "nsIURI.h"
+#include "nsIURIWithQuery.h"
 #include "nsISerializable.h"
 #include "nsString.h"
 #include "nsIClassInfo.h"
@@ -26,12 +27,13 @@ namespace net {
     {0xb9, 0xb9, 0x9f, 0xd9, 0x46, 0x2b, 0x5e, 0x19} \
 }
 
-class nsSimpleURI : public nsIURI,
-                    public nsISerializable,
-                    public nsIClassInfo,
-                    public nsIMutable,
-                    public nsISizeOf,
-                    public nsIIPCSerializableURI
+class nsSimpleURI
+    : public nsIURIWithQuery
+    , public nsISerializable
+    , public nsIClassInfo
+    , public nsIMutable
+    , public nsISizeOf
+    , public nsIIPCSerializableURI
 {
 protected:
     virtual ~nsSimpleURI();
@@ -39,6 +41,7 @@ protected:
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURI
+    NS_DECL_NSIURIWITHQUERY
     NS_DECL_NSISERIALIZABLE
     NS_DECL_NSICLASSINFO
     NS_DECL_NSIMUTABLE
@@ -95,8 +98,10 @@ protected:
     nsCString mScheme;
     nsCString mPath; // NOTE: mPath does not include ref, as an optimization
     nsCString mRef;  // so that URIs with different refs can share string data.
+    nsCString mQuery;  // so that URLs with different querys can share string data.
     bool mMutable;
     bool mIsRefValid; // To distinguish between empty-ref and no-ref.
+    bool mIsQueryValid; // To distinguish between empty-query and no-query.
 };
 
 } // namespace net
