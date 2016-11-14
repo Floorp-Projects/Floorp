@@ -71,7 +71,6 @@ def mach_parsed_kwargs(logger):
         'shuffle': False,
         'shuffle_seed': 2276870381009474531,
         'socket_timeout': 60.0,
-        'sources': None,
         'startup_timeout': 60,
         'symbols_path': None,
         'test_tags': None,

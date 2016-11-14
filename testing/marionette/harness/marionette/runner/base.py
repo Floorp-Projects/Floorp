@@ -332,8 +332,6 @@ class BaseMarionetteArguments(ArgumentParser):
         self.add_argument('--this-chunk',
                           type=int,
                           help='which chunk to run')
-        self.add_argument('--sources',
-                          help='path to sources.xml (Firefox OS only)')
         self.add_argument('--server-root',
                           help='url to a webserver or path to a document root from which content '
                                'resources are served (default: {}).'.format(os.path.join(
@@ -508,7 +506,7 @@ class BaseMarionetteTestRunner(object):
                  repeat=0, testvars=None,
                  symbols_path=None, timeout=None,
                  shuffle=False, shuffle_seed=random.randint(0, sys.maxint), this_chunk=1,
-                 total_chunks=1, sources=None,
+                 total_chunks=1,
                  server_root=None, gecko_log=None, result_callbacks=None,
                  prefs=None, test_tags=None,
                  socket_timeout=BaseMarionetteArguments.socket_timeout_default,
@@ -536,7 +534,6 @@ class BaseMarionetteTestRunner(object):
         self._appName = None
         self.shuffle = shuffle
         self.shuffle_seed = shuffle_seed
-        self.sources = sources
         self.server_root = server_root
         self.this_chunk = this_chunk
         self.total_chunks = total_chunks
@@ -839,8 +836,7 @@ class BaseMarionetteTestRunner(object):
         # TODO: Get version_info in Fennec case
         version_info = None
         if self.bin:
-            version_info = mozversion.get_version(binary=self.bin,
-                                                  sources=self.sources)
+            version_info = mozversion.get_version(binary=self.bin)
 
         self.logger.info("running with e10s: {}".format(self.e10s))
 
