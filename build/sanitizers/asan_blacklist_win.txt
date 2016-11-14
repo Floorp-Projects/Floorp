@@ -4,7 +4,7 @@
 
 # Bug 1200740 - ASan crash due to child process function interceptions
 # Sandbox executes some of its code before the ASan RTL gets initialized and
-# maps shadow memory.  As a result, instrmented code tries to access unavailable
+# maps shadow memory.  As a result, instrumented code tries to access unavailable
 # shadow memory and faults.
 fun:*TargetNtSetInformationThread@20
 fun:*TargetNtOpenThreadToken@20
@@ -24,3 +24,4 @@ src:*process_thread_interception.cc
 src:*registry_interception.cc
 src:*sandbox_nt_util.cc
 src:*sync_interception.cc
+src:*interceptors_64.cc
