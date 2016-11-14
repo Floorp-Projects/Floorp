@@ -45,6 +45,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorSession)
 
   virtual bool Reset(const nsTArray<LayersBackend>& aBackendHints,
+                     uint64_t aSeqNo,
                      TextureFactoryIdentifier* aOutIdentifier) = 0;
 
   virtual void Shutdown() = 0;
