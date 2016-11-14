@@ -324,15 +324,12 @@ function add_tls_server_setup(serverBinName, certsPath) {
  * @param {Function} aAfterStreamOpen
  *   A callback function that is called with the nsISocketTransport once the
  *   output stream is ready.
- * @param {OriginAttributes} aOriginAttributes (optional)
- *   The origin attributes that the socket transport will have. This parameter
- *   affects OCSP because OCSP cache is double-keyed by origin attributes' first
- *   party domain.
+ * @param {String} aFirstPartyDomain
+ *   The first party domain which will be used to double-key the OCSP cache.
  */
 function add_connection_test(aHost, aExpectedResult,
                              aBeforeConnect, aWithSecurityInfo,
-                             aAfterStreamOpen,
-                             /*optional*/ aOriginAttributes) {
+                             aAfterStreamOpen, aFirstPartyDomain) {
   const REMOTE_PORT = 8443;
 
   function Connection(host) {
@@ -348,8 +345,8 @@ function add_connection_test(aHost, aExpectedResult,
     // listening on 127.0.0.1 causes frequent failures on OS X 10.10.
     this.transport.connectionFlags |= Ci.nsISocketTransport.DISABLE_IPV6;
     this.transport.setEventSink(this, this.thread);
-    if (aOriginAttributes) {
-      this.transport.originAttributes = aOriginAttributes;
+    if (aFirstPartyDomain) {
+      this.transport.firstPartyDomain = aFirstPartyDomain;
     }
     this.inputStream = null;
     this.outputStream = null;
