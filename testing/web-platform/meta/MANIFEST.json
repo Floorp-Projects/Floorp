@@ -39505,6 +39505,13 @@
             "url": "/cssom-view/mouseEvent.html"
           }
         ],
+        "fetch/api/redirect/redirect-count-worker.html": [
+          {
+            "path": "fetch/api/redirect/redirect-count-worker.html",
+            "timeout": "long",
+            "url": "/fetch/api/redirect/redirect-count-worker.html"
+          }
+        ],
         "fetch/api/redirect/redirect-referrer-worker.html": [
           {
             "path": "fetch/api/redirect/redirect-referrer-worker.html",
