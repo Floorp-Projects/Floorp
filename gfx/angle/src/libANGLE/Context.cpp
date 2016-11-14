@@ -3430,23 +3430,4 @@ void Context::popDebugGroup()
     mGLState.getDebug().popGroup();
 }
 
-void Context::bufferData(GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage)
-{
-    Buffer *buffer = mGLState.getTargetBuffer(target);
-    ASSERT(buffer);
-    handleError(buffer->bufferData(target, data, size, usage));
-}
-
-void Context::bufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid *data)
-{
-    if (data == nullptr)
-    {
-        return;
-    }
-
-    Buffer *buffer = mGLState.getTargetBuffer(target);
-    ASSERT(buffer);
-    handleError(buffer->bufferSubData(target, data, size, offset));
-}
-
 }  // namespace gl

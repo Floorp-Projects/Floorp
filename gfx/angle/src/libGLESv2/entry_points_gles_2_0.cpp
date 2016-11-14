@@ -427,12 +427,57 @@ void GL_APIENTRY BufferData(GLenum target, GLsizeiptr size, const GLvoid* data, 
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (!context->skipValidation() && !ValidateBufferData(context, target, size, data, usage))
+        if (size < 0)
         {
+            context->handleError(Error(GL_INVALID_VALUE));
             return;
         }
 
-        context->bufferData(target, size, data, usage);
+        switch (usage)
+        {
+          case GL_STREAM_DRAW:
+          case GL_STATIC_DRAW:
+          case GL_DYNAMIC_DRAW:
+            break;
+
+          case GL_STREAM_READ:
+          case GL_STREAM_COPY:
+          case GL_STATIC_READ:
+          case GL_STATIC_COPY:
+          case GL_DYNAMIC_READ:
+          case GL_DYNAMIC_COPY:
+              if (context->getClientMajorVersion() < 3)
+              {
+                  context->handleError(Error(GL_INVALID_ENUM));
+                  return;
+            }
+            break;
+
+          default:
+              context->handleError(Error(GL_INVALID_ENUM));
+              return;
+        }
+
+        if (!ValidBufferTarget(context, target))
+        {
+            context->handleError(Error(GL_INVALID_ENUM));
+            return;
+        }
+
+        Buffer *buffer = context->getGLState().getTargetBuffer(target);
+
+        if (!buffer)
+        {
+            context->handleError(Error(GL_INVALID_OPERATION));
+            return;
+        }
+
+        Error error = buffer->bufferData(data, size, usage);
+        if (error.isError())
+        {
+            context->handleError(error);
+            return;
+        }
     }
 }
 
@@ -444,13 +489,58 @@ void GL_APIENTRY BufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, 
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (!context->skipValidation() &&
-            !ValidateBufferSubData(context, target, offset, size, data))
+        if (size < 0 || offset < 0)
+        {
+            context->handleError(Error(GL_INVALID_VALUE));
+            return;
+        }
+
+        if (!ValidBufferTarget(context, target))
+        {
+            context->handleError(Error(GL_INVALID_ENUM));
+            return;
+        }
+
+        Buffer *buffer = context->getGLState().getTargetBuffer(target);
+
+        if (!buffer)
+        {
+            context->handleError(Error(GL_INVALID_OPERATION));
+            return;
+        }
+
+        if (buffer->isMapped())
+        {
+            context->handleError(Error(GL_INVALID_OPERATION));
+            return;
+        }
+
+        // Check for possible overflow of size + offset
+        angle::CheckedNumeric<size_t> checkedSize(size);
+        checkedSize += offset;
+        if (!checkedSize.IsValid())
+        {
+            context->handleError(Error(GL_OUT_OF_MEMORY));
+            return;
+        }
+
+        if (size + offset > buffer->getSize())
+        {
+            context->handleError(Error(GL_INVALID_VALUE));
+            return;
+        }
+
+        if (data == NULL)
         {
             return;
         }
 
-        context->bufferSubData(target, offset, size, data);
+        Error error = buffer->bufferSubData(data, size, offset);
+        if (error.isError())
+        {
+            context->handleError(error);
+            return;
+        }
     }
 }
 

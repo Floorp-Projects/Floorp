@@ -37,9 +37,8 @@ bool IsVaryingOut(TQualifier qualifier);
 bool IsVarying(TQualifier qualifier);
 InterpolationType GetInterpolationType(TQualifier qualifier);
 TString ArrayString(const TType &type);
-
-TType GetShaderVariableBasicType(const sh::ShaderVariable &var);
-TType GetShaderVariableType(const sh::ShaderVariable &var);
+// Handles only basic output variable types.
+TType ConvertShaderVariableTypeToTType(sh::GLenum type);
 
 TOperator TypeToConstructorOperator(const TType &type);
 
@@ -66,10 +65,6 @@ class GetVariableTraverser : angle::NonCopyable
     const TSymbolTable &mSymbolTable;
 };
 
-bool IsBuiltinOutputVariable(TQualifier qualifier);
-bool IsBuiltinFragmentInputVariable(TQualifier qualifier);
-bool CanBeInvariantESSL1(TQualifier qualifier);
-bool CanBeInvariantESSL3OrGreater(TQualifier qualifier);
 }
 
 #endif // COMPILER_TRANSLATOR_UTIL_H_

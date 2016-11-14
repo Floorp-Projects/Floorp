@@ -37,7 +37,7 @@ bool ValidTextureExternalTarget(const ValidationContext *context, GLenum target)
 bool ValidTexture2DDestinationTarget(const ValidationContext *context, GLenum target);
 bool ValidTexture3DDestinationTarget(const ValidationContext *context, GLenum target);
 bool ValidFramebufferTarget(GLenum target);
-bool ValidBufferTarget(const ValidationContext *context, GLenum target);
+bool ValidBufferTarget(const Context *context, GLenum target);
 bool ValidBufferParameter(const Context *context, GLenum pname);
 bool ValidMipLevel(const ValidationContext *context, GLenum target, GLint level);
 bool ValidImageSizeParameters(const Context *context,

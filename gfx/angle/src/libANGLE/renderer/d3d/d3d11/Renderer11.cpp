@@ -885,18 +885,6 @@ void Renderer11::populateRenderer11DeviceCaps()
 {
     HRESULT hr = S_OK;
 
-    LARGE_INTEGER version;
-    hr = mDxgiAdapter->CheckInterfaceSupport(__uuidof(IDXGIDevice), &version);
-    if (FAILED(hr))
-    {
-        mRenderer11DeviceCaps.driverVersion.reset();
-        ERR("Error querying driver version from DXGI Adapter.");
-    }
-    else
-    {
-        mRenderer11DeviceCaps.driverVersion = version;
-    }
-
     if (mDeviceContext1)
     {
         D3D11_FEATURE_DATA_D3D11_OPTIONS d3d11Options;
@@ -908,18 +896,10 @@ void Renderer11::populateRenderer11DeviceCaps()
         }
     }
 
-    if (getWorkarounds().disableB5G6R5Support)
+    hr = mDevice->CheckFormatSupport(DXGI_FORMAT_B5G6R5_UNORM, &(mRenderer11DeviceCaps.B5G6R5support));
+    if (FAILED(hr))
     {
         mRenderer11DeviceCaps.B5G6R5support = 0;
-    }
-    else
-    {
-        hr = mDevice->CheckFormatSupport(DXGI_FORMAT_B5G6R5_UNORM,
-                                         &(mRenderer11DeviceCaps.B5G6R5support));
-        if (FAILED(hr))
-        {
-            mRenderer11DeviceCaps.B5G6R5support = 0;
-        }
     }
 
     hr = mDevice->CheckFormatSupport(DXGI_FORMAT_B4G4R4A4_UNORM, &(mRenderer11DeviceCaps.B4G4R4A4support));
@@ -937,6 +917,18 @@ void Renderer11::populateRenderer11DeviceCaps()
     IDXGIAdapter2 *dxgiAdapter2 = d3d11::DynamicCastComObject<IDXGIAdapter2>(mDxgiAdapter);
     mRenderer11DeviceCaps.supportsDXGI1_2 = (dxgiAdapter2 != nullptr);
     SafeRelease(dxgiAdapter2);
+
+    LARGE_INTEGER version;
+    hr = mDxgiAdapter->CheckInterfaceSupport(__uuidof(IDXGIDevice), &version);
+    if (FAILED(hr))
+    {
+        mRenderer11DeviceCaps.driverVersion.reset();
+        ERR("Error querying driver version from DXGI Adapter.");
+    }
+    else
+    {
+        mRenderer11DeviceCaps.driverVersion = version;
+    }
 }
 
 egl::ConfigSet Renderer11::generateConfigs()
@@ -2957,7 +2949,7 @@ gl::Error Renderer11::copyImage2D(const gl::Framebuffer *framebuffer,
 
     ANGLE_TRY(copyImageInternal(framebuffer, sourceRect, destFormat, destOffset, destRenderTarget));
 
-    storage11->markLevelDirty(level);
+    storage11->invalidateSwizzleCacheLevel(level);
 
     return gl::NoError();
 }
@@ -2975,7 +2967,7 @@ gl::Error Renderer11::copyImageCube(const gl::Framebuffer *framebuffer, const gl
 
     ANGLE_TRY(copyImageInternal(framebuffer, sourceRect, destFormat, destOffset, destRenderTarget));
 
-    storage11->markLevelDirty(level);
+    storage11->invalidateSwizzleCacheLevel(level);
 
     return gl::NoError();
 }
@@ -2993,7 +2985,7 @@ gl::Error Renderer11::copyImage3D(const gl::Framebuffer *framebuffer, const gl::
 
     ANGLE_TRY(copyImageInternal(framebuffer, sourceRect, destFormat, destOffset, destRenderTarget));
 
-    storage11->markLevelDirty(level);
+    storage11->invalidateSwizzleCacheLevel(level);
 
     return gl::NoError();
 }
@@ -3010,7 +3002,7 @@ gl::Error Renderer11::copyImage2DArray(const gl::Framebuffer *framebuffer, const
     ASSERT(destRenderTarget);
 
     ANGLE_TRY(copyImageInternal(framebuffer, sourceRect, destFormat, destOffset, destRenderTarget));
-    storage11->markLevelDirty(level);
+    storage11->invalidateSwizzleCacheLevel(level);
 
     return gl::NoError();
 }
@@ -3100,9 +3092,9 @@ gl::Error Renderer11::copyTexture(const gl::Texture *source,
                                      unpackUnmultiplyAlpha));
     }
 
-    destStorage11->markLevelDirty(destLevel);
+    destStorage11->invalidateSwizzleCacheLevel(destLevel);
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 UINT64 EstimateSize(D3D11_TEXTURE2D_DESC &desc)
@@ -3546,14 +3538,9 @@ bool Renderer11::supportsFastCopyBufferToTexture(GLenum internalFormat) const
         return false;
     }
 
-    // Buffer SRV creation for this format was not working on Windows 10.
-    if (d3d11FormatInfo.texFormat == DXGI_FORMAT_B5G5R5A1_UNORM)
-    {
-        return false;
-    }
-
-    // This format is not supported as a buffer SRV.
-    if (d3d11FormatInfo.texFormat == DXGI_FORMAT_A8_UNORM)
+    // Buffer SRV creation in this format was not working on Windows 10, repro at least on Intel
+    // and NVIDIA.
+    if (internalFormat == GL_RGB5_A1)
     {
         return false;
     }
@@ -3589,12 +3576,16 @@ gl::Error Renderer11::generateMipmapUsingD3D(TextureStorage *storage,
     ASSERT(storage11->supportsNativeMipmapFunction());
 
     ID3D11ShaderResourceView *srv;
-    ANGLE_TRY(storage11->getSRVLevels(textureState.getEffectiveBaseLevel(),
-                                      textureState.getEffectiveMaxLevel(), &srv));
+    gl::Error error = storage11->getSRVLevels(textureState.getEffectiveBaseLevel(),
+                                              textureState.getEffectiveMaxLevel(), &srv);
+    if (error.isError())
+    {
+        return error;
+    }
 
     mDeviceContext->GenerateMips(srv);
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 TextureStorage *Renderer11::createTextureStorage2D(SwapChainD3D *swapChain)

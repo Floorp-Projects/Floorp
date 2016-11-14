@@ -280,15 +280,4 @@ bool IsWindows();
 // Negative tests may trigger expected errors/warnings in the ANGLE Platform.
 void IgnoreANGLEPlatformMessages();
 
-// Note: git cl format messes up this formatting.
-#define ANGLE_SKIP_TEST_IF(COND)                              \
-    \
-if(COND)                                                      \
-    \
-{                                                      \
-        std::cout << "Test skipped: " #COND "." << std::endl; \
-        return;                                               \
-    \
-}
-
 #endif  // ANGLE_TESTS_ANGLE_TEST_H_

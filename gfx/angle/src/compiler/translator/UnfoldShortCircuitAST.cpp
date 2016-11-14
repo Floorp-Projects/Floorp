@@ -10,30 +10,32 @@ namespace
 {
 
 // "x || y" is equivalent to "x ? true : y".
-TIntermTernary *UnfoldOR(TIntermTyped *x, TIntermTyped *y)
+TIntermSelection *UnfoldOR(TIntermTyped *x, TIntermTyped *y)
 {
+    const TType boolType(EbtBool, EbpUndefined);
     TConstantUnion *u = new TConstantUnion;
     u->setBConst(true);
     TIntermConstantUnion *trueNode = new TIntermConstantUnion(
         u, TType(EbtBool, EbpUndefined, EvqConst, 1));
-    return new TIntermTernary(x, trueNode, y);
+    return new TIntermSelection(x, trueNode, y, boolType);
 }
 
 // "x && y" is equivalent to "x ? y : false".
-TIntermTernary *UnfoldAND(TIntermTyped *x, TIntermTyped *y)
+TIntermSelection *UnfoldAND(TIntermTyped *x, TIntermTyped *y)
 {
+    const TType boolType(EbtBool, EbpUndefined);
     TConstantUnion *u = new TConstantUnion;
     u->setBConst(false);
     TIntermConstantUnion *falseNode = new TIntermConstantUnion(
         u, TType(EbtBool, EbpUndefined, EvqConst, 1));
-    return new TIntermTernary(x, y, falseNode);
+    return new TIntermSelection(x, y, falseNode, boolType);
 }
 
 }  // namespace anonymous
 
 bool UnfoldShortCircuitAST::visitBinary(Visit visit, TIntermBinary *node)
 {
-    TIntermTernary *replacement = nullptr;
+    TIntermSelection *replacement = NULL;
 
     switch (node->getOp())
     {

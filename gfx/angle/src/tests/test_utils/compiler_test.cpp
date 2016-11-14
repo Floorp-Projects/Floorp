@@ -11,45 +11,12 @@
 #include "angle_gl.h"
 #include "compiler/translator/Compiler.h"
 
-namespace
-{
-
-class ShaderVariableFinder : public TIntermTraverser
-{
-  public:
-    ShaderVariableFinder(const TString &variableName, TBasicType basicType)
-        : TIntermTraverser(true, false, false),
-          mVariableName(variableName),
-          mNodeFound(nullptr),
-          mBasicType(basicType)
-    {
-    }
-
-    void visitSymbol(TIntermSymbol *node)
-    {
-        if (node->getBasicType() == mBasicType && node->getSymbol() == mVariableName)
-        {
-            mNodeFound = node;
-        }
-    }
-
-    bool isFound() const { return mNodeFound != nullptr; }
-    const TIntermSymbol *getNode() const { return mNodeFound; }
-
-  private:
-    TString mVariableName;
-    TIntermSymbol *mNodeFound;
-    TBasicType mBasicType;
-};
-
-}  // anonymous namespace
-
 bool compileTestShader(GLenum type,
                        ShShaderSpec spec,
                        ShShaderOutput output,
                        const std::string &shaderString,
                        ShBuiltInResources *resources,
-                       ShCompileOptions compileOptions,
+                       int compileOptions,
                        std::string *translatedCode,
                        std::string *infoLog)
 {
@@ -76,7 +43,7 @@ bool compileTestShader(GLenum type,
                        ShShaderSpec spec,
                        ShShaderOutput output,
                        const std::string &shaderString,
-                       ShCompileOptions compileOptions,
+                       int compileOptions,
                        std::string *translatedCode,
                        std::string *infoLog)
 {
@@ -86,7 +53,7 @@ bool compileTestShader(GLenum type,
 }
 
 MatchOutputCodeTest::MatchOutputCodeTest(GLenum shaderType,
-                                         ShCompileOptions defaultCompileOptions,
+                                         int defaultCompileOptions,
                                          ShShaderOutput outputType)
     : mShaderType(shaderType), mDefaultCompileOptions(defaultCompileOptions)
 {
@@ -109,8 +76,7 @@ void MatchOutputCodeTest::compile(const std::string &shaderString)
     compile(shaderString, mDefaultCompileOptions);
 }
 
-void MatchOutputCodeTest::compile(const std::string &shaderString,
-                                  const ShCompileOptions compileOptions)
+void MatchOutputCodeTest::compile(const std::string &shaderString, const int compileOptions)
 {
     std::string infoLog;
     for (auto &code : mOutputCode)
@@ -126,7 +92,7 @@ void MatchOutputCodeTest::compile(const std::string &shaderString,
 
 bool MatchOutputCodeTest::compileWithSettings(ShShaderOutput output,
                                               const std::string &shaderString,
-                                              const ShCompileOptions compileOptions,
+                                              const int compileOptions,
                                               std::string *translatedCode,
                                               std::string *infoLog)
 {
@@ -205,13 +171,4 @@ bool MatchOutputCodeTest::notFoundInCode(const char *stringToFind) const
         }
     }
     return true;
-}
-
-const TIntermSymbol *FindSymbolNode(TIntermNode *root,
-                                    const TString &symbolName,
-                                    TBasicType basicType)
-{
-    ShaderVariableFinder finder(symbolName, basicType);
-    root->traverse(&finder);
-    return finder.getNode();
 }

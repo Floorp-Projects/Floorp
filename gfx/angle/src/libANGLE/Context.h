@@ -567,9 +567,6 @@ class Context final : public ValidationContext
                                      GLint components,
                                      const GLfloat *coeffs);
 
-    void bufferData(GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
-    void bufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid *data);
-
     void handleError(const Error &error) override;
 
     GLenum getError();

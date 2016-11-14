@@ -44,20 +44,38 @@ TIntermSymbol *TIntermediate::addSymbol(
 // Returns the added node.
 // The caller should set the type of the returned node.
 //
-TIntermTyped *TIntermediate::addIndex(TOperator op,
-                                      TIntermTyped *base,
-                                      TIntermTyped *index,
-                                      const TSourceLoc &line,
-                                      TDiagnostics *diagnostics)
+TIntermTyped *TIntermediate::addIndex(
+    TOperator op, TIntermTyped *base, TIntermTyped *index, const TSourceLoc &line)
 {
-    TIntermBinary *node = new TIntermBinary(op, base, index);
+    TIntermBinary *node = new TIntermBinary(op);
     node->setLine(line);
+    node->setLeft(base);
+    node->setRight(index);
 
-    TIntermTyped *folded = node->fold(diagnostics);
-    if (folded)
-    {
-        return folded;
-    }
+    // caller should set the type
+
+    return node;
+}
+
+//
+// Add one node as the parent of another that it operates on.
+//
+// Returns the added node.
+//
+TIntermTyped *TIntermediate::addUnaryMath(
+    TOperator op, TIntermTyped *child, const TSourceLoc &line, const TType *funcReturnType)
+{
+    //
+    // Make a new node for the operator.
+    //
+    TIntermUnary *node = new TIntermUnary(op);
+    node->setLine(line);
+    node->setOperand(child);
+    node->promote(funcReturnType);
+
+    TIntermTyped *foldedNode = node->fold(mInfoSink);
+    if (foldedNode)
+        return foldedNode;
 
     return node;
 }
@@ -236,37 +254,43 @@ TIntermTyped *TIntermediate::addComma(TIntermTyped *left,
     return commaNode;
 }
 
+//
 // For "?:" test nodes.  There are three children; a condition,
 // a true path, and a false path.  The two paths are specified
 // as separate parameters.
 //
-// Returns the ternary node created, or one of trueExpression and falseExpression if the expression
-// could be folded.
-TIntermTyped *TIntermediate::AddTernarySelection(TIntermTyped *cond,
-                                                 TIntermTyped *trueExpression,
-                                                 TIntermTyped *falseExpression,
-                                                 const TSourceLoc &line)
+// Returns the selection node created, or one of trueBlock and falseBlock if the expression could be folded.
+//
+TIntermTyped *TIntermediate::addSelection(TIntermTyped *cond, TIntermTyped *trueBlock, TIntermTyped *falseBlock,
+                                          const TSourceLoc &line)
 {
+    TQualifier resultQualifier = EvqTemporary;
+    if (cond->getQualifier() == EvqConst && trueBlock->getQualifier() == EvqConst &&
+        falseBlock->getQualifier() == EvqConst)
+    {
+        resultQualifier = EvqConst;
+    }
     // Note that the node resulting from here can be a constant union without being qualified as
     // constant.
     if (cond->getAsConstantUnion())
     {
-        TQualifier resultQualifier =
-            TIntermTernary::DetermineQualifier(cond, trueExpression, falseExpression);
         if (cond->getAsConstantUnion()->getBConst(0))
         {
-            trueExpression->getTypePointer()->setQualifier(resultQualifier);
-            return trueExpression;
+            trueBlock->getTypePointer()->setQualifier(resultQualifier);
+            return trueBlock;
         }
         else
         {
-            falseExpression->getTypePointer()->setQualifier(resultQualifier);
-            return falseExpression;
+            falseBlock->getTypePointer()->setQualifier(resultQualifier);
+            return falseBlock;
         }
     }
 
-    // Make a ternary node.
-    TIntermTernary *node = new TIntermTernary(cond, trueExpression, falseExpression);
+    //
+    // Make a selection node.
+    //
+    TIntermSelection *node = new TIntermSelection(cond, trueBlock, falseBlock, trueBlock->getType());
+    node->getTypePointer()->setQualifier(resultQualifier);
     node->setLine(line);
 
     return node;
@@ -311,7 +335,6 @@ TIntermTyped *TIntermediate::addSwizzle(
 {
 
     TIntermAggregate *node = new TIntermAggregate(EOpSequence);
-    node->getTypePointer()->setQualifier(EvqConst);
 
     node->setLine(line);
     TIntermConstantUnion *constIntNode;
@@ -365,7 +388,7 @@ TIntermBranch* TIntermediate::addBranch(
 // This is to be executed once the final root is put on top by the parsing
 // process.
 //
-TIntermAggregate *TIntermediate::PostProcess(TIntermNode *root)
+TIntermAggregate *TIntermediate::postProcess(TIntermNode *root)
 {
     if (root == nullptr)
         return nullptr;
@@ -388,8 +411,7 @@ TIntermAggregate *TIntermediate::PostProcess(TIntermNode *root)
     return aggRoot;
 }
 
-TIntermTyped *TIntermediate::foldAggregateBuiltIn(TIntermAggregate *aggregate,
-                                                  TDiagnostics *diagnostics)
+TIntermTyped *TIntermediate::foldAggregateBuiltIn(TIntermAggregate *aggregate)
 {
     switch (aggregate->getOp())
     {
@@ -416,12 +438,12 @@ TIntermTyped *TIntermediate::foldAggregateBuiltIn(TIntermAggregate *aggregate,
         case EOpFaceForward:
         case EOpReflect:
         case EOpRefract:
-            return aggregate->fold(diagnostics);
+            return aggregate->fold(mInfoSink);
         default:
             // TODO: Add support for folding array constructors
             if (aggregate->isConstructor() && !aggregate->isArray())
             {
-                return aggregate->fold(diagnostics);
+                return aggregate->fold(mInfoSink);
             }
             // Constant folding not supported for the built-in.
             return nullptr;

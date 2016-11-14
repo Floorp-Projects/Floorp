@@ -82,7 +82,7 @@ class MockBufferD3D : public rx::BufferD3D
     }
 
     // BufferImpl
-    gl::Error setData(GLenum target, const void *data, size_t size, GLenum) override
+    gl::Error setData(const void *data, size_t size, GLenum) override
     {
         mData.resize(size);
         if (data && size > 0)
@@ -92,7 +92,7 @@ class MockBufferD3D : public rx::BufferD3D
         return gl::Error(GL_NO_ERROR);
     }
 
-    MOCK_METHOD4(setSubData, gl::Error(GLenum, const void *, size_t, size_t));
+    MOCK_METHOD3(setSubData, gl::Error(const void*, size_t, size_t));
     MOCK_METHOD4(copySubData, gl::Error(BufferImpl*, GLintptr, GLintptr, GLsizeiptr));
     MOCK_METHOD2(map, gl::Error(GLenum, GLvoid **));
     MOCK_METHOD4(mapRange, gl::Error(size_t, size_t, GLbitfield, GLvoid **));
@@ -152,8 +152,7 @@ IndexDataManagerPerfTest::IndexDataManagerPerfTest()
     {
         indexData[index] = static_cast<GLushort>(index);
     }
-    mIndexBuffer.bufferData(GL_ARRAY_BUFFER, &indexData[0], indexData.size() * sizeof(GLushort),
-                            GL_STATIC_DRAW);
+    mIndexBuffer.bufferData(&indexData[0], indexData.size() * sizeof(GLushort), GL_STATIC_DRAW);
 }
 
 void IndexDataManagerPerfTest::step()

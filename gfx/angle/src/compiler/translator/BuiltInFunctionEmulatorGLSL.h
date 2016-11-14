@@ -12,10 +12,9 @@
 class BuiltInFunctionEmulator;
 
 //
-// This works around bug in Intel Mac drivers.
+// This is only a workaround for OpenGL driver bugs, and isn't needed in general.
 //
-void InitBuiltInAbsFunctionEmulatorForGLSLWorkarounds(BuiltInFunctionEmulator *emu,
-                                                      sh::GLenum shaderType);
+void InitBuiltInFunctionEmulatorForGLSLWorkarounds(BuiltInFunctionEmulator *emu, sh::GLenum shaderType);
 
 //
 // This function is emulating built-in functions missing from GLSL 1.30 and higher.
