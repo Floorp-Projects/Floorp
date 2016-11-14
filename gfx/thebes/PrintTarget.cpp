@@ -97,13 +97,6 @@ PrintTarget::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
 
     cairo_surface_t* similar;
     switch (cairo_surface_get_type(mCairoSurface)) {
-#ifdef CAIRO_HAS_WIN32_SURFACE
-    case CAIRO_SURFACE_TYPE_WIN32:
-      similar = cairo_win32_surface_create_with_dib(
-                  cairo_surface_get_content(mCairoSurface),
-                  size.width, size.height);
-      break;
-#endif
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
     case CAIRO_SURFACE_TYPE_QUARTZ:
       similar = cairo_quartz_surface_create_cg_layer(
