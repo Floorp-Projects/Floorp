@@ -13,7 +13,6 @@ import yaml
 
 from .create import create_tasks
 from .decision import write_artifact
-from .parameters import Parameters
 from .optimize import optimize_task_graph
 from .taskgraph import TaskGraph
 
@@ -30,14 +29,13 @@ def taskgraph_action(options):
      a given gecko decision task and schedule these jobs.
     """
 
-    parameters = get_action_parameters(options)
-    decision_task_id = parameters['decision_id']
+    decision_task_id = options['decision_id']
     # read in the full graph for reference
     full_task_json = get_artifact(decision_task_id, "public/full-task-graph.json")
     decision_params = get_artifact(decision_task_id, "public/parameters.yml")
     all_tasks, full_task_graph = TaskGraph.from_json(full_task_json)
 
-    target_tasks = set(parameters['task_labels'].split(','))
+    target_tasks = set(options['task_labels'].split(','))
     target_graph = full_task_graph.graph.transitive_closure(target_tasks)
     target_task_graph = TaskGraph(
         {l: all_tasks[l] for l in target_graph.nodes},
@@ -58,18 +56,6 @@ def taskgraph_action(options):
     write_artifact('label-to-taskid.json', label_to_taskid)
     # actually create the graph
     create_tasks(optimized_graph, label_to_taskid, decision_params)
-
-
-def get_action_parameters(options):
-    """
-    Load parameters from the command-line options for 'taskgraph action'.
-    """
-    parameters = {n: options[n] for n in [
-        'decision_id',
-        'task_labels',
-    ] if n in options}
-
-    return Parameters(parameters)
 
 
 def get_artifact(task_id, path):
