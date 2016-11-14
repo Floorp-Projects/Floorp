@@ -52,6 +52,52 @@ const JNINativeMethod AndroidGamepadManager::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
+class EventDispatcher::Natives : public mozilla::jni::NativeImpl<EventDispatcher, Impl>
+{
+public:
+    static const JNINativeMethod methods[3];
+};
+
+template<class Impl>
+const JNINativeMethod EventDispatcher::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<EventDispatcher::DispatchToGecko_t>(
+            mozilla::jni::NativeStub<EventDispatcher::DispatchToGecko_t, Impl>
+            ::template Wrap<&Impl::DispatchToGecko>),
+
+    mozilla::jni::MakeNativeMethod<EventDispatcher::DisposeNative_t>(
+            mozilla::jni::NativeStub<EventDispatcher::DisposeNative_t, Impl>
+            ::template Wrap<&Impl::DisposeNative>),
+
+    mozilla::jni::MakeNativeMethod<EventDispatcher::HasGeckoListener_t>(
+            mozilla::jni::NativeStub<EventDispatcher::HasGeckoListener_t, Impl>
+            ::template Wrap<&Impl::HasGeckoListener>)
+};
+
+template<class Impl>
+class EventDispatcher::NativeCallbackDelegate::Natives : public mozilla::jni::NativeImpl<NativeCallbackDelegate, Impl>
+{
+public:
+    static const JNINativeMethod methods[3];
+};
+
+template<class Impl>
+const JNINativeMethod EventDispatcher::NativeCallbackDelegate::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<EventDispatcher::NativeCallbackDelegate::Finalize_t>(
+            mozilla::jni::NativeStub<EventDispatcher::NativeCallbackDelegate::Finalize_t, Impl>
+            ::template Wrap<&Impl::Finalize>),
+
+    mozilla::jni::MakeNativeMethod<EventDispatcher::NativeCallbackDelegate::SendError_t>(
+            mozilla::jni::NativeStub<EventDispatcher::NativeCallbackDelegate::SendError_t, Impl>
+            ::template Wrap<&Impl::SendError>),
+
+    mozilla::jni::MakeNativeMethod<EventDispatcher::NativeCallbackDelegate::SendSuccess_t>(
+            mozilla::jni::NativeStub<EventDispatcher::NativeCallbackDelegate::SendSuccess_t, Impl>
+            ::template Wrap<&Impl::SendSuccess>)
+};
+
+template<class Impl>
 class GeckoAppShell::Natives : public mozilla::jni::NativeImpl<GeckoAppShell, Impl>
 {
 public:

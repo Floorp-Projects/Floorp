@@ -9,7 +9,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -31,6 +30,7 @@ import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -291,11 +291,11 @@ public class GeckoApplication extends Application
         }
 
         @Override // BundleEventListener
-        public void handleMessage(final String event, final Bundle message,
+        public void handleMessage(final String event, final GeckoBundle message,
                                   final EventCallback callback) {
             if ("Profile:Create".equals(event)) {
-                onProfileCreate(message.getCharSequence("name").toString(),
-                                message.getCharSequence("path").toString());
+                onProfileCreate(message.getString("name"),
+                                message.getString("path"));
             }
         }
     }

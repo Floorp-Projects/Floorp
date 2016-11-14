@@ -9,7 +9,6 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.gfx.LayerView.DrawListener;
-import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.AppConstants;
 
@@ -87,7 +86,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     @WrapForJNI(stubName = "ClearColor")
     private volatile int mClearColor = Color.WHITE;
 
-    public GeckoLayerClient(Context context, LayerView view, EventDispatcher eventDispatcher) {
+    public GeckoLayerClient(Context context, LayerView view) {
         // we can fill these in with dummy values because they are always written
         // to before being read
         mContext = context;
@@ -104,7 +103,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
 
         mDrawListeners = new ArrayList<DrawListener>();
         mToolbarAnimator = new DynamicToolbarAnimator(this);
-        mPanZoomController = PanZoomController.Factory.create(this, view, eventDispatcher);
+        mPanZoomController = PanZoomController.Factory.create(this, view);
         mView = view;
         mView.setListener(this);
         mContentDocumentIsDisplayed = true;

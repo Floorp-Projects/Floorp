@@ -27,6 +27,7 @@ import org.mozilla.gecko.gcm.GcmTokenClient;
 import org.mozilla.gecko.push.autopush.AutopushClientException;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.io.File;
@@ -254,7 +255,7 @@ public class PushService implements BundleEventListener {
     }
 
     @Override
-    public void handleMessage(final String event, final Bundle message, final EventCallback callback) {
+    public void handleMessage(final String event, final GeckoBundle message, final EventCallback callback) {
         Log.i(LOG_TAG, "Handling event: " + event);
         ThreadUtils.assertOnBackgroundThread();
 
