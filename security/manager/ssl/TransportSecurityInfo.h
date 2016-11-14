@@ -9,6 +9,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "certt.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "nsDataHashtable.h"
@@ -62,8 +63,10 @@ public:
   nsresult GetPort(int32_t *aPort);
   nsresult SetPort(int32_t aPort);
 
-  const char* GetFirstPartyDomainRaw() const { return mFirstPartyDomain.get(); }
-  nsresult SetFirstPartyDomain(const nsACString& aFirstPartyDomain);
+  const NeckoOriginAttributes& GetOriginAttributes() const {
+    return mOriginAttributes;
+  }
+  nsresult SetOriginAttributes(const NeckoOriginAttributes& aOriginAttributes);
 
   PRErrorCode GetErrorCode() const;
   
@@ -103,7 +106,7 @@ private:
 
   int32_t mPort;
   nsXPIDLCString mHostName;
-  nsCString mFirstPartyDomain;
+  NeckoOriginAttributes mOriginAttributes;
 
   /* SSL Status */
   RefPtr<nsSSLStatus> mSSLStatus;
