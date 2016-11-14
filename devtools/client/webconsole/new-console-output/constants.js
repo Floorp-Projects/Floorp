@@ -26,6 +26,7 @@ const prefs = {
       INFO: "devtools.webconsole.filter.info",
       LOG: "devtools.webconsole.filter.log",
       DEBUG: "devtools.webconsole.filter.debug",
+      CSS: "devtools.webconsole.filter.css",
       NET: "devtools.webconsole.filter.net",
       NETXHR: "devtools.webconsole.filter.netxhr",
     },
@@ -38,6 +39,7 @@ const prefs = {
 const chromeRDPEnums = {
   MESSAGE_SOURCE: {
     XML: "xml",
+    CSS: "css",
     JAVASCRIPT: "javascript",
     NETWORK: "network",
     CONSOLE_API: "console-api",
