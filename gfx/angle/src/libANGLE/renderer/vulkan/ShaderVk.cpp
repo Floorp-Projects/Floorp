@@ -22,8 +22,8 @@ ShaderVk::~ShaderVk()
 {
 }
 
-ShCompileOptions ShaderVk::prepareSourceAndReturnOptions(std::stringstream *sourceStream,
-                                                         std::string *sourcePath)
+int ShaderVk::prepareSourceAndReturnOptions(std::stringstream *sourceStream,
+                                            std::string *sourcePath)
 {
     UNIMPLEMENTED();
     return int();

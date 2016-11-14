@@ -11,10 +11,8 @@
 
 #include <map>
 
-#include "gtest/gtest.h"
-
 #include "angle_gl.h"
-#include "compiler/translator/TranslatorESSL.h"
+#include "gtest/gtest.h"
 #include "GLSLANG/ShaderLang.h"
 
 bool compileTestShader(GLenum type,
@@ -22,7 +20,7 @@ bool compileTestShader(GLenum type,
                        ShShaderOutput output,
                        const std::string &shaderString,
                        ShBuiltInResources *resources,
-                       ShCompileOptions compileOptions,
+                       int compileOptions,
                        std::string *translatedCode,
                        std::string *infoLog);
 
@@ -30,16 +28,14 @@ bool compileTestShader(GLenum type,
                        ShShaderSpec spec,
                        ShShaderOutput output,
                        const std::string &shaderString,
-                       ShCompileOptions compileOptions,
+                       int compileOptions,
                        std::string *translatedCode,
                        std::string *infoLog);
 
 class MatchOutputCodeTest : public testing::Test
 {
   protected:
-    MatchOutputCodeTest(GLenum shaderType,
-                        ShCompileOptions defaultCompileOptions,
-                        ShShaderOutput outputType);
+    MatchOutputCodeTest(GLenum shaderType, int defaultCompileOptions, ShShaderOutput outputType);
 
     void addOutputType(const ShShaderOutput outputType);
 
@@ -47,7 +43,7 @@ class MatchOutputCodeTest : public testing::Test
 
     // Compile functions clear any results from earlier calls to them.
     void compile(const std::string &shaderString);
-    void compile(const std::string &shaderString, const ShCompileOptions compileOptions);
+    void compile(const std::string &shaderString, const int compileOptions);
 
     bool foundInESSLCode(const char *stringToFind) const
     {
@@ -78,19 +74,15 @@ class MatchOutputCodeTest : public testing::Test
   private:
     bool compileWithSettings(ShShaderOutput output,
                              const std::string &shaderString,
-                             ShCompileOptions compileOptions,
+                             int compileOptions,
                              std::string *translatedCode,
                              std::string *infoLog);
 
     GLenum mShaderType;
-    ShCompileOptions mDefaultCompileOptions;
+    int mDefaultCompileOptions;
     ShBuiltInResources mResources;
 
     std::map<ShShaderOutput, std::string> mOutputCode;
 };
-
-const TIntermSymbol *FindSymbolNode(TIntermNode *root,
-                                    const TString &symbolName,
-                                    TBasicType basicType);
 
 #endif // TESTS_TEST_UTILS_COMPILER_TEST_H_

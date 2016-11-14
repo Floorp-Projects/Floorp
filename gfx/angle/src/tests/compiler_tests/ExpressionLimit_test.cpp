@@ -176,7 +176,7 @@ protected:
     // to the issue we are testing.
     bool CheckShaderCompilation(ShHandle compiler,
                                 const char *source,
-                                ShCompileOptions compileOptions,
+                                int compileOptions,
                                 const char *expected_error)
     {
         bool success = ShCompile(compiler, &source, 1, compileOptions) != 0;
@@ -213,7 +213,7 @@ TEST_F(ExpressionLimitTest, ExpressionComplexity)
     ShShaderOutput output = SH_ESSL_OUTPUT;
     ShHandle vertexCompiler = ShConstructCompiler(
         GL_FRAGMENT_SHADER, spec, output, &resources);
-    ShCompileOptions compileOptions = SH_LIMIT_EXPRESSION_COMPLEXITY;
+    int compileOptions = SH_LIMIT_EXPRESSION_COMPLEXITY;
 
     // Test expression under the limit passes.
     EXPECT_TRUE(CheckShaderCompilation(
@@ -242,7 +242,7 @@ TEST_F(ExpressionLimitTest, UnusedExpressionComplexity)
     ShShaderOutput output = SH_ESSL_OUTPUT;
     ShHandle vertexCompiler = ShConstructCompiler(
         GL_FRAGMENT_SHADER, spec, output, &resources);
-    ShCompileOptions compileOptions = SH_LIMIT_EXPRESSION_COMPLEXITY;
+    int compileOptions = SH_LIMIT_EXPRESSION_COMPLEXITY;
 
     // Test expression under the limit passes.
     EXPECT_TRUE(CheckShaderCompilation(
@@ -271,7 +271,7 @@ TEST_F(ExpressionLimitTest, CallStackDepth)
     ShShaderOutput output = SH_ESSL_OUTPUT;
     ShHandle vertexCompiler = ShConstructCompiler(
         GL_FRAGMENT_SHADER, spec, output, &resources);
-    ShCompileOptions compileOptions = SH_LIMIT_CALL_STACK_DEPTH;
+    int compileOptions = SH_LIMIT_CALL_STACK_DEPTH;
 
     // Test call stack under the limit passes.
     EXPECT_TRUE(CheckShaderCompilation(
@@ -300,7 +300,7 @@ TEST_F(ExpressionLimitTest, UnusedCallStackDepth)
     ShShaderOutput output = SH_ESSL_OUTPUT;
     ShHandle vertexCompiler = ShConstructCompiler(
         GL_FRAGMENT_SHADER, spec, output, &resources);
-    ShCompileOptions compileOptions = SH_LIMIT_CALL_STACK_DEPTH;
+    int compileOptions = SH_LIMIT_CALL_STACK_DEPTH;
 
     // Test call stack under the limit passes.
     EXPECT_TRUE(CheckShaderCompilation(
@@ -329,7 +329,7 @@ TEST_F(ExpressionLimitTest, Recursion)
     ShShaderOutput output = SH_ESSL_OUTPUT;
     ShHandle vertexCompiler = ShConstructCompiler(
         GL_FRAGMENT_SHADER, spec, output, &resources);
-    ShCompileOptions compileOptions = 0;
+    int compileOptions = 0;
 
     static const char* shaderWithRecursion0 = SHADER(
         precision mediump float;
@@ -544,7 +544,7 @@ TEST_F(ExpressionLimitTest, FunctionParameterCount)
     ShShaderSpec spec     = SH_WEBGL_SPEC;
     ShShaderOutput output = SH_ESSL_OUTPUT;
     ShHandle compiler     = ShConstructCompiler(GL_FRAGMENT_SHADER, spec, output, &resources);
-    ShCompileOptions compileOptions = SH_LIMIT_EXPRESSION_COMPLEXITY;
+    int compileOptions    = SH_LIMIT_EXPRESSION_COMPLEXITY;
 
     // Test parameters under the limit succeeds.
     EXPECT_TRUE(CheckShaderCompilation(

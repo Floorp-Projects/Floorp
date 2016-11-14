@@ -17,18 +17,44 @@
 namespace
 {
 
+TIntermConstantUnion *constructIndexNode(int index)
+{
+    TConstantUnion *u = new TConstantUnion[1];
+    u[0].setIConst(index);
+
+    TType type(EbtInt, EbpUndefined, EvqConst, 1);
+    TIntermConstantUnion *node = new TIntermConstantUnion(u, type);
+    return node;
+}
+
+TIntermBinary *constructGLFragDataNode(int index)
+{
+    TIntermBinary *indexDirect = new TIntermBinary(EOpIndexDirect);
+    TIntermSymbol *symbol      = new TIntermSymbol(0, "gl_FragData", TType(EbtFloat, 4));
+    indexDirect->setLeft(symbol);
+    TIntermConstantUnion *indexNode = constructIndexNode(index);
+    indexDirect->setRight(indexNode);
+    return indexDirect;
+}
+
+TIntermBinary *constructGLFragDataAssignNode(int index)
+{
+    TIntermBinary *assign = new TIntermBinary(EOpAssign);
+    assign->setLeft(constructGLFragDataNode(index));
+    assign->setRight(constructGLFragDataNode(0));
+    assign->setType(TType(EbtFloat, 4));
+    return assign;
+}
+
 class GLFragColorBroadcastTraverser : public TIntermTraverser
 {
   public:
-    GLFragColorBroadcastTraverser(int maxDrawBuffers)
-        : TIntermTraverser(true, false, false),
-          mMainSequence(nullptr),
-          mGLFragColorUsed(false),
-          mMaxDrawBuffers(maxDrawBuffers)
+    GLFragColorBroadcastTraverser()
+        : TIntermTraverser(true, false, false), mMainSequence(nullptr), mGLFragColorUsed(false)
     {
     }
 
-    void broadcastGLFragColor();
+    void broadcastGLFragColor(int maxDrawBuffers);
 
     bool isGLFragColorUsed() const { return mGLFragColorUsed; }
 
@@ -36,34 +62,10 @@ class GLFragColorBroadcastTraverser : public TIntermTraverser
     void visitSymbol(TIntermSymbol *node) override;
     bool visitAggregate(Visit visit, TIntermAggregate *node) override;
 
-    TIntermBinary *constructGLFragDataNode(int index) const;
-    TIntermBinary *constructGLFragDataAssignNode(int index) const;
-
   private:
     TIntermSequence *mMainSequence;
     bool mGLFragColorUsed;
-    int mMaxDrawBuffers;
 };
-
-TIntermBinary *GLFragColorBroadcastTraverser::constructGLFragDataNode(int index) const
-{
-    TType gl_FragDataType = TType(EbtFloat, EbpMedium, EvqFragData, 4);
-    gl_FragDataType.setArraySize(mMaxDrawBuffers);
-
-    TIntermSymbol *symbol   = new TIntermSymbol(0, "gl_FragData", gl_FragDataType);
-    TIntermTyped *indexNode = TIntermTyped::CreateIndexNode(index);
-
-    TIntermBinary *binary = new TIntermBinary(EOpIndexDirect, symbol, indexNode);
-    return binary;
-}
-
-TIntermBinary *GLFragColorBroadcastTraverser::constructGLFragDataAssignNode(int index) const
-{
-    TIntermTyped *fragDataIndex = constructGLFragDataNode(index);
-    TIntermTyped *fragDataZero  = constructGLFragDataNode(0);
-
-    return new TIntermBinary(EOpAssign, fragDataIndex, fragDataZero);
-}
 
 void GLFragColorBroadcastTraverser::visitSymbol(TIntermSymbol *node)
 {
@@ -99,9 +101,9 @@ bool GLFragColorBroadcastTraverser::visitAggregate(Visit visit, TIntermAggregate
     return true;
 }
 
-void GLFragColorBroadcastTraverser::broadcastGLFragColor()
+void GLFragColorBroadcastTraverser::broadcastGLFragColor(int maxDrawBuffers)
 {
-    ASSERT(mMaxDrawBuffers > 1);
+    ASSERT(maxDrawBuffers > 1);
     if (!mGLFragColorUsed)
     {
         return;
@@ -111,7 +113,7 @@ void GLFragColorBroadcastTraverser::broadcastGLFragColor()
     //   gl_FragData[1] = gl_FragData[0];
     //   ...
     //   gl_FragData[maxDrawBuffers - 1] = gl_FragData[0];
-    for (int colorIndex = 1; colorIndex < mMaxDrawBuffers; ++colorIndex)
+    for (int colorIndex = 1; colorIndex < maxDrawBuffers; ++colorIndex)
     {
         mMainSequence->insert(mMainSequence->end(), constructGLFragDataAssignNode(colorIndex));
     }
@@ -124,12 +126,12 @@ void EmulateGLFragColorBroadcast(TIntermNode *root,
                                  std::vector<sh::OutputVariable> *outputVariables)
 {
     ASSERT(maxDrawBuffers > 1);
-    GLFragColorBroadcastTraverser traverser(maxDrawBuffers);
+    GLFragColorBroadcastTraverser traverser;
     root->traverse(&traverser);
     if (traverser.isGLFragColorUsed())
     {
         traverser.updateTree();
-        traverser.broadcastGLFragColor();
+        traverser.broadcastGLFragColor(maxDrawBuffers);
         for (auto &var : *outputVariables)
         {
             if (var.name == "gl_FragColor")

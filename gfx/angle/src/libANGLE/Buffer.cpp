@@ -44,33 +44,45 @@ const std::string &Buffer::getLabel() const
     return mLabel;
 }
 
-Error Buffer::bufferData(GLenum target, const void *data, GLsizeiptr size, GLenum usage)
+Error Buffer::bufferData(const void *data, GLsizeiptr size, GLenum usage)
 {
-    ANGLE_TRY(mBuffer->setData(target, data, size, usage));
+    gl::Error error = mBuffer->setData(data, size, usage);
+    if (error.isError())
+    {
+        return error;
+    }
 
     mIndexRangeCache.clear();
     mUsage = usage;
     mSize = size;
 
-    return NoError();
+    return error;
 }
 
-Error Buffer::bufferSubData(GLenum target, const void *data, GLsizeiptr size, GLintptr offset)
+Error Buffer::bufferSubData(const void *data, GLsizeiptr size, GLintptr offset)
 {
-    ANGLE_TRY(mBuffer->setSubData(target, data, size, offset));
+    gl::Error error = mBuffer->setSubData(data, size, offset);
+    if (error.isError())
+    {
+        return error;
+    }
 
     mIndexRangeCache.invalidateRange(static_cast<unsigned int>(offset), static_cast<unsigned int>(size));
 
-    return NoError();
+    return error;
 }
 
 Error Buffer::copyBufferSubData(Buffer* source, GLintptr sourceOffset, GLintptr destOffset, GLsizeiptr size)
 {
-    ANGLE_TRY(mBuffer->copySubData(source->getImplementation(), sourceOffset, destOffset, size));
+    gl::Error error = mBuffer->copySubData(source->getImplementation(), sourceOffset, destOffset, size);
+    if (error.isError())
+    {
+        return error;
+    }
 
     mIndexRangeCache.invalidateRange(static_cast<unsigned int>(destOffset), static_cast<unsigned int>(size));
 
-    return NoError();
+    return error;
 }
 
 Error Buffer::map(GLenum access)
@@ -166,14 +178,18 @@ Error Buffer::getIndexRange(GLenum type,
 {
     if (mIndexRangeCache.findRange(type, offset, count, primitiveRestartEnabled, outRange))
     {
-        return NoError();
+        return gl::Error(GL_NO_ERROR);
     }
 
-    ANGLE_TRY(mBuffer->getIndexRange(type, offset, count, primitiveRestartEnabled, outRange));
+    Error error = mBuffer->getIndexRange(type, offset, count, primitiveRestartEnabled, outRange);
+    if (error.isError())
+    {
+        return error;
+    }
 
     mIndexRangeCache.addRange(type, offset, count, primitiveRestartEnabled, *outRange);
 
-    return NoError();
+    return Error(GL_NO_ERROR);
 }
 
 }  // namespace gl

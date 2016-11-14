@@ -33,11 +33,6 @@ void TIntermUnary::traverse(TIntermTraverser *it)
     it->traverseUnary(this);
 }
 
-void TIntermTernary::traverse(TIntermTraverser *it)
-{
-    it->traverseTernary(this);
-}
-
 void TIntermSelection::traverse(TIntermTraverser *it)
 {
     it->traverseSelection(this);
@@ -152,7 +147,10 @@ TIntermAggregate *TIntermTraverser::createTempInitDeclaration(TIntermTyped *init
     ASSERT(initializer != nullptr);
     TIntermSymbol *tempSymbol = createTempSymbol(initializer->getType(), qualifier);
     TIntermAggregate *tempDeclaration = new TIntermAggregate(EOpDeclaration);
-    TIntermBinary *tempInit           = new TIntermBinary(EOpInitialize, tempSymbol, initializer);
+    TIntermBinary *tempInit = new TIntermBinary(EOpInitialize);
+    tempInit->setLeft(tempSymbol);
+    tempInit->setRight(initializer);
+    tempInit->setType(tempSymbol->getType());
     tempDeclaration->getSequence()->push_back(tempInit);
     return tempDeclaration;
 }
@@ -166,7 +164,10 @@ TIntermBinary *TIntermTraverser::createTempAssignment(TIntermTyped *rightNode)
 {
     ASSERT(rightNode != nullptr);
     TIntermSymbol *tempSymbol = createTempSymbol(rightNode->getType());
-    TIntermBinary *assignment = new TIntermBinary(EOpAssign, tempSymbol, rightNode);
+    TIntermBinary *assignment = new TIntermBinary(EOpAssign);
+    assignment->setLeft(tempSymbol);
+    assignment->setRight(rightNode);
+    assignment->setType(tempSymbol->getType());
     return assignment;
 }
 
@@ -569,31 +570,6 @@ void TLValueTrackingTraverser::traverseAggregate(TIntermAggregate *node)
 
     if (visit && postVisit)
         visitAggregate(PostVisit, node);
-}
-
-//
-// Traverse a ternary node.  Same comments in binary node apply here.
-//
-void TIntermTraverser::traverseTernary(TIntermTernary *node)
-{
-    bool visit = true;
-
-    if (preVisit)
-        visit = visitTernary(PreVisit, node);
-
-    if (visit)
-    {
-        incrementDepth(node);
-        node->getCondition()->traverse(this);
-        if (node->getTrueExpression())
-            node->getTrueExpression()->traverse(this);
-        if (node->getFalseExpression())
-            node->getFalseExpression()->traverse(this);
-        decrementDepth();
-    }
-
-    if (visit && postVisit)
-        visitTernary(PostVisit, node);
 }
 
 //

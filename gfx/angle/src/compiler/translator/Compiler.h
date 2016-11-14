@@ -25,12 +25,14 @@
 #include "third_party/compiler/ArrayBoundsClamper.h"
 
 class TCompiler;
+class TDependencyGraph;
 #ifdef ANGLE_ENABLE_HLSL
 class TranslatorHLSL;
 #endif // ANGLE_ENABLE_HLSL
 
 //
-// Helper function to identify specs that are based on the WebGL spec.
+// Helper function to identify specs that are based on the WebGL spec,
+// like the CSS Shaders spec.
 //
 bool IsWebGLBasedSpec(ShShaderSpec spec);
 
@@ -73,13 +75,11 @@ class TCompiler : public TShHandleBase
     // compileTreeForTesting should be used only when tests require access to
     // the AST. Users of this function need to manually manage the global pool
     // allocator. Returns NULL whenever there are compilation errors.
-    TIntermNode *compileTreeForTesting(const char *const shaderStrings[],
-                                       size_t numStrings,
-                                       ShCompileOptions compileOptions);
+    TIntermNode *compileTreeForTesting(const char* const shaderStrings[],
+        size_t numStrings, int compileOptions);
 
-    bool compile(const char *const shaderStrings[],
-                 size_t numStrings,
-                 ShCompileOptions compileOptions);
+    bool compile(const char* const shaderStrings[],
+        size_t numStrings, int compileOptions);
 
     // Get results of the last compilation.
     int getShaderVersion() const { return shaderVersion; }
@@ -104,7 +104,7 @@ class TCompiler : public TShHandleBase
     ShShaderOutput getOutputType() const { return outputType; }
     const std::string &getBuiltInResourcesString() const { return builtInResourcesString; }
 
-    bool shouldRunLoopAndIndexingValidation(ShCompileOptions compileOptions) const;
+    bool shouldRunLoopAndIndexingValidation(int compileOptions) const;
 
     // Get the resources set by InitBuiltInSymbolTable
     const ShBuiltInResources& getResources() const;
@@ -119,16 +119,17 @@ class TCompiler : public TShHandleBase
     bool checkCallDepth();
     // Returns true if a program has no conflicting or missing fragment outputs
     bool validateOutputs(TIntermNode* root);
+    // Rewrites a shader's intermediate tree according to the CSS Shaders spec.
+    void rewriteCSSShader(TIntermNode* root);
     // Returns true if the given shader does not exceed the minimum
     // functionality mandated in GLSL 1.0 spec Appendix A.
     bool validateLimitations(TIntermNode* root);
     // Collect info for all attribs, uniforms, varyings.
     void collectVariables(TIntermNode* root);
     // Add emulated functions to the built-in function emulator.
-    virtual void initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu,
-                                             ShCompileOptions compileOptions){};
+    virtual void initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu, int compileOptions) {};
     // Translate to object code.
-    virtual void translate(TIntermNode *root, ShCompileOptions compileOptions) = 0;
+    virtual void translate(TIntermNode *root, int compileOptions) = 0;
     // Returns true if, after applying the packing rules in the GLSL 1.017 spec
     // Appendix A, section 7, the shader does not use too many uniforms.
     bool enforcePackingRestrictions();
@@ -140,13 +141,20 @@ class TCompiler : public TShHandleBase
     // while spec says it is allowed.
     // This function should only be applied to vertex shaders.
     void initializeGLPosition(TIntermNode* root);
+    // Returns true if the shader passes the restrictions that aim to prevent timing attacks.
+    bool enforceTimingRestrictions(TIntermNode* root, bool outputGraph);
+    // Returns true if the shader does not use samplers.
+    bool enforceVertexShaderTimingRestrictions(TIntermNode* root);
+    // Returns true if the shader does not use sampler dependent values to affect control
+    // flow or in operations whose time can depend on the input values.
+    bool enforceFragmentShaderTimingRestrictions(const TDependencyGraph& graph);
     // Return true if the maximum expression complexity is below the limit.
     bool limitExpressionComplexity(TIntermNode* root);
     // Get built-in extensions with default behavior.
     const TExtensionBehavior& getExtensionBehavior() const;
     const char *getSourcePath() const;
     const TPragma& getPragma() const { return mPragma; }
-    void writePragma(ShCompileOptions compileOptions);
+    void writePragma(int compileOptions);
     unsigned int *getTemporaryIndex() { return &mTemporaryIndex; }
     // Relies on collectVariables having been called.
     bool isVaryingDefined(const char *varyingName);
@@ -155,7 +163,7 @@ class TCompiler : public TShHandleBase
     ShArrayIndexClampingStrategy getArrayIndexClampingStrategy() const;
     const BuiltInFunctionEmulator& getBuiltInFunctionEmulator() const;
 
-    virtual bool shouldCollectVariables(ShCompileOptions compileOptions)
+    virtual bool shouldCollectVariables(int compileOptions)
     {
         return (compileOptions & SH_VARIABLES) != 0;
     }
@@ -185,7 +193,7 @@ class TCompiler : public TShHandleBase
 
     TIntermNode *compileTreeImpl(const char *const shaderStrings[],
                                  size_t numStrings,
-                                 const ShCompileOptions compileOptions);
+                                 const int compileOptions);
 
     sh::GLenum shaderType;
     ShShaderSpec shaderSpec;

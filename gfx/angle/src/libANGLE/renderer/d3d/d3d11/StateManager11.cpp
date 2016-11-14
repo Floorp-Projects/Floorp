@@ -492,11 +492,16 @@ gl::Error StateManager11::setBlendState(const gl::Framebuffer *framebuffer,
 {
     if (!mBlendStateIsDirty && sampleMask == mCurSampleMask)
     {
-        return gl::NoError();
+        return gl::Error(GL_NO_ERROR);
     }
 
     ID3D11BlendState *dxBlendState = nullptr;
-    ANGLE_TRY(mRenderer->getStateCache().getBlendState(framebuffer, blendState, &dxBlendState));
+    gl::Error error =
+        mRenderer->getStateCache().getBlendState(framebuffer, blendState, &dxBlendState);
+    if (error.isError())
+    {
+        return error;
+    }
 
     ASSERT(dxBlendState != nullptr);
 
@@ -527,7 +532,7 @@ gl::Error StateManager11::setBlendState(const gl::Framebuffer *framebuffer,
 
     mBlendStateIsDirty = false;
 
-    return gl::NoError();
+    return error;
 }
 
 gl::Error StateManager11::setDepthStencilState(const gl::State &glState)
@@ -547,7 +552,7 @@ gl::Error StateManager11::setDepthStencilState(const gl::State &glState)
         disableDepth == mCurDisableDepth.value() && mCurDisableStencil.valid() &&
         disableStencil == mCurDisableStencil.value())
     {
-        return gl::NoError();
+        return gl::Error(GL_NO_ERROR);
     }
 
     const auto &depthStencilState = glState.getDepthStencilState();
@@ -567,8 +572,12 @@ gl::Error StateManager11::setDepthStencilState(const gl::State &glState)
            (depthStencilState.stencilBackMask & maxStencil));
 
     ID3D11DepthStencilState *dxDepthStencilState = NULL;
-    ANGLE_TRY(mRenderer->getStateCache().getDepthStencilState(
-        depthStencilState, disableDepth, disableStencil, &dxDepthStencilState));
+    gl::Error error = mRenderer->getStateCache().getDepthStencilState(
+        depthStencilState, disableDepth, disableStencil, &dxDepthStencilState);
+    if (error.isError())
+    {
+        return error;
+    }
 
     ASSERT(dxDepthStencilState);
 
@@ -592,7 +601,7 @@ gl::Error StateManager11::setDepthStencilState(const gl::State &glState)
 
     mDepthStencilStateIsDirty = false;
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 gl::Error StateManager11::setRasterizerState(const gl::RasterizerState &rasterState)
@@ -601,10 +610,11 @@ gl::Error StateManager11::setRasterizerState(const gl::RasterizerState &rasterSt
     if (!mRasterizerStateIsDirty && rasterState.pointDrawMode == mCurRasterState.pointDrawMode &&
         rasterState.multiSample == mCurRasterState.multiSample)
     {
-        return gl::NoError();
+        return gl::Error(GL_NO_ERROR);
     }
 
     ID3D11RasterizerState *dxRasterState = nullptr;
+    gl::Error error(GL_NO_ERROR);
 
     if (mCurPresentPathFastEnabled)
     {
@@ -623,13 +633,18 @@ gl::Error StateManager11::setRasterizerState(const gl::RasterizerState &rasterSt
             modifiedRasterState.frontFace = GL_CCW;
         }
 
-        ANGLE_TRY(mRenderer->getStateCache().getRasterizerState(
-            modifiedRasterState, mCurScissorEnabled, &dxRasterState));
+        error = mRenderer->getStateCache().getRasterizerState(modifiedRasterState,
+                                                              mCurScissorEnabled, &dxRasterState);
     }
     else
     {
-        ANGLE_TRY(mRenderer->getStateCache().getRasterizerState(rasterState, mCurScissorEnabled,
-                                                                &dxRasterState));
+        error = mRenderer->getStateCache().getRasterizerState(rasterState, mCurScissorEnabled,
+                                                              &dxRasterState);
+    }
+
+    if (error.isError())
+    {
+        return error;
     }
 
     mRenderer->getDeviceContext()->RSSetState(dxRasterState);
@@ -637,7 +652,7 @@ gl::Error StateManager11::setRasterizerState(const gl::RasterizerState &rasterSt
     mCurRasterState         = rasterState;
     mRasterizerStateIsDirty = false;
 
-    return gl::NoError();
+    return error;
 }
 
 void StateManager11::setScissorRectangle(const gl::Rectangle &scissor, bool enabled)
@@ -852,7 +867,7 @@ gl::Error StateManager11::onMakeCurrent(const gl::ContextState &data)
         }
     }
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 void StateManager11::setShaderResource(gl::SamplerType shaderType,
@@ -886,7 +901,7 @@ gl::Error StateManager11::clearTextures(gl::SamplerType samplerType,
 {
     if (rangeStart == rangeEnd)
     {
-        return gl::NoError();
+        return gl::Error(GL_NO_ERROR);
     }
 
     auto &currentSRVs = (samplerType == gl::SAMPLER_VERTEX ? mCurVertexSRVs : mCurPixelSRVs);
@@ -896,7 +911,7 @@ gl::Error StateManager11::clearTextures(gl::SamplerType samplerType,
 
     if (clearRange.empty())
     {
-        return gl::NoError();
+        return gl::Error(GL_NO_ERROR);
     }
 
     auto deviceContext = mRenderer->getDeviceContext();
@@ -918,7 +933,7 @@ gl::Error StateManager11::clearTextures(gl::SamplerType samplerType,
         currentSRVs.update(samplerIndex, nullptr);
     }
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 void StateManager11::unsetConflictingSRVs(gl::SamplerType samplerType,
@@ -974,7 +989,11 @@ void StateManager11::deinitialize()
 gl::Error StateManager11::syncFramebuffer(gl::Framebuffer *framebuffer)
 {
     Framebuffer11 *framebuffer11 = GetImplAs<Framebuffer11>(framebuffer);
-    ANGLE_TRY(framebuffer11->markAttachmentsDirty());
+    gl::Error error = framebuffer11->invalidateSwizzles();
+    if (error.isError())
+    {
+        return error;
+    }
 
     if (framebuffer11->hasAnyInternalDirtyBit())
     {
@@ -984,7 +1003,7 @@ gl::Error StateManager11::syncFramebuffer(gl::Framebuffer *framebuffer)
 
     if (!mRenderTargetIsDirty)
     {
-        return gl::NoError();
+        return gl::Error(GL_NO_ERROR);
     }
 
     mRenderTargetIsDirty = false;
@@ -998,7 +1017,7 @@ gl::Error StateManager11::syncFramebuffer(gl::Framebuffer *framebuffer)
         const gl::Extents &size = framebuffer->getFirstColorbuffer()->getSize();
         if (size.width == 0 || size.height == 0)
         {
-            return gl::NoError();
+            return gl::Error(GL_NO_ERROR);
         }
     }
 
@@ -1082,7 +1101,7 @@ gl::Error StateManager11::syncFramebuffer(gl::Framebuffer *framebuffer)
 
     setViewportBounds(renderTargetWidth, renderTargetHeight);
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 gl::Error StateManager11::updateCurrentValueAttribs(const gl::State &state,
@@ -1105,11 +1124,15 @@ gl::Error StateManager11::updateCurrentValueAttribs(const gl::State &state,
         currentValueAttrib->currentValueType = currentValue.Type;
         currentValueAttrib->attribute        = &vertexAttributes[attribIndex];
 
-        ANGLE_TRY(vertexDataManager->storeCurrentValue(currentValue, currentValueAttrib,
-                                                       static_cast<size_t>(attribIndex)));
+        gl::Error error = vertexDataManager->storeCurrentValue(currentValue, currentValueAttrib,
+                                                               static_cast<size_t>(attribIndex));
+        if (error.isError())
+        {
+            return error;
+        }
     }
 
-    return gl::NoError();
+    return gl::Error(GL_NO_ERROR);
 }
 
 const std::vector<TranslatedAttribute> &StateManager11::getCurrentValueAttribs() const
