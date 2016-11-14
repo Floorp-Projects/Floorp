@@ -160,6 +160,7 @@ DataTextureSourceD3D11::DataTextureSourceD3D11(SurfaceFormat aFormat,
   , mCurrentTile(0)
   , mIsTiled(false)
   , mIterating(false)
+  , mAllowTextureUploads(true)
 {
   MOZ_COUNT_CTOR(DataTextureSourceD3D11);
 }
@@ -173,6 +174,7 @@ DataTextureSourceD3D11::DataTextureSourceD3D11(SurfaceFormat aFormat,
 , mCurrentTile(0)
 , mIsTiled(false)
 , mIterating(false)
+, mAllowTextureUploads(false)
 {
   MOZ_COUNT_CTOR(DataTextureSourceD3D11);
 
@@ -968,6 +970,11 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
   // clear that we ever will need to support it for D3D.
   MOZ_ASSERT(!aSrcOffset);
   MOZ_ASSERT(aSurface);
+
+  MOZ_ASSERT(mAllowTextureUploads);
+  if (!mAllowTextureUploads) {
+    return false;
+  }
 
   HRESULT hr;
 
