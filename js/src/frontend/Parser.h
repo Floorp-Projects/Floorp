@@ -1373,7 +1373,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     bool reportIfArgumentsEvalTarget(Node nameNode);
     bool reportIfNotValidSimpleAssignmentTarget(Node target, AssignmentFlavor flavor);
 
-    bool checkAndMarkAsIncOperand(Node kid, AssignmentFlavor flavor);
+    bool checkAndMarkAsIncOperand(Node kid);
     bool checkStrictAssignment(Node lhs);
     bool checkStrictBinding(PropertyName* name, TokenPos pos);
 
