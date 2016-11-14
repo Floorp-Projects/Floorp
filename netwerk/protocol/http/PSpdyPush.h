@@ -43,9 +43,9 @@ public:
   // The cache holds only weak pointers - no references
   SpdyPushCache();
   virtual ~SpdyPushCache();
-  bool               RegisterPushedStreamHttp2(nsCString key,
+  bool               RegisterPushedStreamHttp2(const nsCString& key,
                                                Http2PushedStream *stream);
-  Http2PushedStream *RemovePushedStreamHttp2(nsCString key);
+  Http2PushedStream *RemovePushedStreamHttp2(const nsCString& key);
 private:
   nsDataHashtable<nsCStringHashKey, Http2PushedStream *> mHashHttp2;
 };
