@@ -13,7 +13,6 @@
 
 #define FOR_EACH_MUTEX(_)             \
   _(TestMutex,                   100) \
-  _(ShellAsyncTasks,             100) \
   _(ShellContextWatchdog,        100) \
   _(ShellWorkerThreads,          100) \
   _(ShellArrayBufferMailbox,     100) \
@@ -21,6 +20,8 @@
   _(RuntimeExclusiveAccess,      200) \
                                       \
   _(GlobalHelperThreadState,     300) \
+                                      \
+  _(ShellAsyncTasks,             350) \
                                       \
   _(GCLock,                      400) \
                                       \
