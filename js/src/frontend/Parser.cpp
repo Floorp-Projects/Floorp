@@ -7410,45 +7410,6 @@ Parser<ParseHandler>::condExpr1(InHandling inHandling, YieldHandling yieldHandli
     return handler.newConditional(condition, thenExpr, elseExpr);
 }
 
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::checkAndMarkAsAssignmentLhs(Node target, AssignmentFlavor flavor,
-                                                  PossibleError* possibleError)
-{
-    MOZ_ASSERT(flavor != KeyedDestructuringAssignment,
-               "destructuring must use special checking/marking code, not "
-               "this method");
-
-    if (handler.isUnparenthesizedDestructuringPattern(target)) {
-        if (flavor == CompoundAssignment) {
-            error(JSMSG_BAD_DESTRUCT_ASS);
-            return false;
-        }
-
-        return checkDestructuringPattern(target, Nothing(), possibleError);
-    }
-
-    // All other permitted targets are simple.
-    if (!reportIfNotValidSimpleAssignmentTarget(target, flavor))
-        return false;
-
-    if (handler.isPropertyAccess(target))
-        return true;
-
-    if (handler.isNameAnyParentheses(target)) {
-        // The arguments/eval identifiers are simple in non-strict mode code,
-        // but warn to discourage use nonetheless.
-        if (!reportIfArgumentsEvalTarget(target))
-            return false;
-
-        handler.adjustGetToSet(target);
-        return true;
-    }
-
-    MOZ_ASSERT(handler.isFunctionCall(target));
-    return checkAssignmentToCall(target, JSMSG_BAD_LEFTSIDE_OF_ASS);
-}
-
 class AutoClearInDestructuringDecl
 {
     ParseContext* pc_;
@@ -7492,6 +7453,8 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
     TokenKind tt;
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return null();
+
+    uint32_t exprOffset = pos().begin;
 
     bool endsExpr;
 
@@ -7696,9 +7659,33 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
         return lhs;
     }
 
-    AssignmentFlavor flavor = kind == PNK_ASSIGN ? PlainAssignment : CompoundAssignment;
-    if (!checkAndMarkAsAssignmentLhs(lhs, flavor, &possibleErrorInner))
+    // Verify the left-hand side expression doesn't have a forbidden form.
+    if (handler.isUnparenthesizedDestructuringPattern(lhs)) {
+        if (kind != PNK_ASSIGN) {
+            error(JSMSG_BAD_DESTRUCT_ASS);
+            return null();
+        }
+
+        if (!checkDestructuringPattern(lhs, Nothing(), &possibleErrorInner))
+            return null();
+    } else if (handler.isNameAnyParentheses(lhs)) {
+        if (const char* chars = handler.nameIsArgumentsEvalAnyParentheses(lhs, context)) {
+            // |chars| is "arguments" or "eval" here.
+            if (!strictModeErrorAt(exprOffset, JSMSG_BAD_STRICT_ASSIGN, chars))
+                return null();
+        }
+
+        handler.adjustGetToSet(lhs);
+    } else if (handler.isPropertyAccess(lhs)) {
+        // Permitted: no additional testing/fixup needed.
+    } else if (handler.isFunctionCall(lhs)) {
+        if (!strictModeErrorAt(exprOffset, JSMSG_BAD_LEFTSIDE_OF_ASS))
+            return null();
+    } else {
+        errorAt(exprOffset, JSMSG_BAD_LEFTSIDE_OF_ASS);
         return null();
+    }
+
     if (!possibleErrorInner.checkForExpressionError())
         return null();
 
@@ -7792,11 +7779,6 @@ Parser<ParseHandler>::reportIfNotValidSimpleAssignmentTarget(Node target, Assign
 
       case KeyedDestructuringAssignment:
         errnum = JSMSG_BAD_DESTRUCT_TARGET;
-        break;
-
-      case PlainAssignment:
-      case CompoundAssignment:
-        errnum = JSMSG_BAD_LEFTSIDE_OF_ASS;
         break;
     }
 
