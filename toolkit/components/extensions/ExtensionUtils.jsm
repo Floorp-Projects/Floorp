@@ -355,7 +355,7 @@ class BaseContext {
     if (error instanceof this.cloneScope.Error) {
       return error;
     }
-    if (!instanceOf(error, "Object" || error instanceof ExtensionError)) {
+    if (!(instanceOf(error, "Object") || error instanceof ExtensionError)) {
       Cu.reportError(error);
       error = {message: "An unexpected error occurred"};
     }
