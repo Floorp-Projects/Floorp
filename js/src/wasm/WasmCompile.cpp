@@ -470,42 +470,6 @@ DecodeMemorySection(Decoder& d, ModuleGeneratorData* init)
     return true;
 }
 
-static bool
-DecodeGlobalSection(Decoder& d, ModuleGeneratorData* init)
-{
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Global, &sectionStart, &sectionSize, "global"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t numGlobals;
-    if (!d.readVarU32(&numGlobals))
-        return d.fail("expected number of globals");
-
-    if (numGlobals > MaxGlobals)
-        return d.fail("too many globals");
-
-    for (uint32_t i = 0; i < numGlobals; i++) {
-        ValType type;
-        bool isMutable;
-        if (!DecodeGlobalType(d, &type, &isMutable))
-            return false;
-
-        InitExpr initializer;
-        if (!DecodeInitializerExpression(d, init->globals, type, &initializer))
-            return false;
-
-        if (!init->globals.append(GlobalDesc(initializer, isMutable)))
-            return false;
-    }
-
-    if (!d.finishSection(sectionStart, sectionSize, "global"))
-        return false;
-
-    return true;
-}
-
 typedef HashSet<const char*, CStringHasher, SystemAllocPolicy> CStringSet;
 
 static UniqueChars
@@ -903,7 +867,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!::DecodeMemorySection(d, init.get()))
         return nullptr;
 
-    if (!DecodeGlobalSection(d, init.get()))
+    if (!DecodeGlobalSection(d, &init->globals))
         return nullptr;
 
     ModuleGenerator mg(Move(imports));
