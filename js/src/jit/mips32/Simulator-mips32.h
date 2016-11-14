@@ -35,6 +35,8 @@
 #include "threading/Thread.h"
 #include "vm/MutexIDs.h"
 
+#include "mozilla/Atomics.h"
+
 namespace js {
 namespace jit {
 
@@ -387,6 +389,15 @@ class Simulator {
 
     Redirection* redirection_;
     ICacheMap icache_;
+
+  private:
+    // Jitcode may be rewritten from a signal handler, but is prevented from
+    // calling FlushICache() because the signal may arrive within the critical
+    // area of an AutoLockSimulatorCache. This flag instructs the Simulator
+    // to remove all cache entries the next time it checks, avoiding false negatives.
+    mozilla::Atomic<bool, mozilla::ReleaseAcquire> cacheInvalidatedBySignalHandler_;
+
+    void checkICacheLocked(ICacheMap& i_cache, SimInstruction* instr);
 
   public:
     ICacheMap& icache() {
