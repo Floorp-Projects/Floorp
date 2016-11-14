@@ -13,7 +13,7 @@ const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const {OutputParser} = require("devtools/client/shared/output-parser");
-const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
+const {PrefObserver} = require("devtools/client/shared/prefs");
 const {createChild} = require("devtools/client/inspector/shared/utils");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
@@ -32,6 +32,8 @@ const clipboardHelper = require("devtools/shared/platform/clipboard");
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
+
+const PREF_ORIG_SOURCES = "devtools.styleeditor.source-maps-enabled";
 
 const FILTER_CHANGED_TIMEOUT = 150;
 const HTML_NS = "http://www.w3.org/1999/xhtml";
