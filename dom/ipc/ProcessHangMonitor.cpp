@@ -1185,9 +1185,9 @@ mozilla::CreateHangMonitorParent(ContentParent* aContentParent,
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   ProcessHangMonitor* monitor = ProcessHangMonitor::GetOrCreate();
-  HangMonitorParent* parent = new HangMonitorParent(monitor);
+  auto* parent = new HangMonitorParent(monitor);
 
-  HangMonitoredProcess* process = new HangMonitoredProcess(parent, aContentParent);
+  auto* process = new HangMonitoredProcess(parent, aContentParent);
   parent->SetProcess(process);
 
   monitor->MonitorLoop()->PostTask(NewNonOwningRunnableMethod
@@ -1212,7 +1212,7 @@ mozilla::CreateHangMonitorChild(mozilla::ipc::Transport* aTransport,
   JS::AddGCInterruptCallback(cx, InterruptCallback);
 
   ProcessHangMonitor* monitor = ProcessHangMonitor::GetOrCreate();
-  HangMonitorChild* child = new HangMonitorChild(monitor);
+  auto* child = new HangMonitorChild(monitor);
 
   monitor->MonitorLoop()->PostTask(NewNonOwningRunnableMethod
                                    <mozilla::ipc::Transport*,

@@ -101,7 +101,7 @@ PluginModuleChild*
 PluginModuleChild::CreateForContentProcess(mozilla::ipc::Transport* aTransport,
                                            base::ProcessId aOtherPid)
 {
-    PluginModuleChild* child = new PluginModuleChild(false);
+    auto* child = new PluginModuleChild(false);
 
     if (!child->InitForContent(aOtherPid, XRE_GetIOMessageLoop(), aTransport)) {
         return nullptr;
@@ -1076,7 +1076,7 @@ _geturlnotify(NPP aNPP,
         return NPERR_INVALID_INSTANCE_ERROR;
 
     nsCString url = NullableString(aRelativeURL);
-    StreamNotifyChild* sn = new StreamNotifyChild(url);
+    auto* sn = new StreamNotifyChild(url);
 
     NPError err;
     InstCast(aNPP)->CallPStreamNotifyConstructor(
@@ -1190,7 +1190,7 @@ _posturlnotify(NPP aNPP,
         return NPERR_INVALID_PARAM;
 
     nsCString url = NullableString(aRelativeURL);
-    StreamNotifyChild* sn = new StreamNotifyChild(url);
+    auto* sn = new StreamNotifyChild(url);
 
     NPError err;
     InstCast(aNPP)->CallPStreamNotifyConstructor(

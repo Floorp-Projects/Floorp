@@ -287,7 +287,7 @@ PluginDocument::Print()
 nsresult
 NS_NewPluginDocument(nsIDocument** aResult)
 {
-  mozilla::dom::PluginDocument* doc = new mozilla::dom::PluginDocument();
+  auto* doc = new mozilla::dom::PluginDocument();
 
   NS_ADDREF(doc);
   nsresult rv = doc->Init();

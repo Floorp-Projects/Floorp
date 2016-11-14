@@ -93,7 +93,7 @@ VideoDecoderManagerParent::StartupThreads()
 
   sManagerTaskQueue = new TaskQueue(managerThread.forget());
 
-  ManagerThreadShutdownObserver* obs = new ManagerThreadShutdownObserver();
+  auto* obs = new ManagerThreadShutdownObserver();
   observerService->AddObserver(obs, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 }
 
