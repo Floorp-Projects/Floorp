@@ -11,6 +11,7 @@
 #include "DocAccessible-inl.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "EnumVariant.h"
+#include "GeckoCustom.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsIAccessibleEvent.h"
@@ -155,6 +156,12 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
     HRESULT hr = ia2AccessibleValue::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr))
       return hr;
+  }
+
+  if (!*ppv && iid == IID_IGeckoCustom) {
+    RefPtr<GeckoCustom> gkCrap = new GeckoCustom(this);
+    gkCrap.forget(ppv);
+    return S_OK;
   }
 
   if (nullptr == *ppv)

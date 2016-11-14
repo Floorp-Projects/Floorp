@@ -3,3 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "widget.rc"
+#ifdef ACCESSIBILITY
+1 typelib IGeckoCustom.tlb
+#endif
