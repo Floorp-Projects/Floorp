@@ -100,7 +100,7 @@ class Preferences(BaseLib):
               }
             """, script_args=[pref_name])
 
-    def set_pref(self, pref_name, value):
+    def set_pref(self, pref_name, value, default_branch=False):
         """Sets a preference to a specified value.
 
         To set the value of a preference its name has to be specified.
@@ -111,6 +111,9 @@ class Preferences(BaseLib):
 
         :param pref_name: The preference to set
         :param value: The value to set the preference to
+        :param default_branch: Optional, flag to use the default branch,
+         default to `False`
+
         """
         assert pref_name is not None
         assert value is not None
@@ -122,10 +125,16 @@ class Preferences(BaseLib):
 
             retval = self.marionette.execute_script("""
               Components.utils.import("resource://gre/modules/Services.jsm");
-              let prefBranch = Services.prefs;
 
-              let pref_name = arguments[0];
-              let value = arguments[1];
+              let [pref_name, value, default_branch] = arguments;
+
+              let prefBranch;
+              if (default_branch) {
+                prefBranch = Services.prefs.getDefaultBranch("");
+              }
+              else {
+                prefBranch = Services.prefs;
+              }
 
               let type = prefBranch.getPrefType(pref_name);
 
@@ -161,6 +170,6 @@ class Preferences(BaseLib):
               }
 
               return true;
-            """, script_args=[pref_name, value])
+            """, script_args=[pref_name, value, default_branch])
 
         assert retval

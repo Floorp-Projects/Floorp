@@ -145,3 +145,21 @@ class testPreferences(PuppeteerMixin, MarionetteTestCase):
         # Remove when all self.marionette methods are implemented
         # Please see Bug 1293588
         self.marionette.clear_pref(self.string_pref)
+
+    def test_set_pref_default_branch(self):
+        orig_value = self.puppeteer.prefs.get_pref(self.string_pref, default_branch=True)
+
+        try:
+            self.puppeteer.prefs.set_pref(self.string_pref, 'default', default_branch=True)
+            self.assertEqual(self.puppeteer.prefs.get_pref(self.string_pref), 'default')
+
+            self.puppeteer.prefs.set_pref(self.string_pref, 'user')
+            self.assertEqual(self.puppeteer.prefs.get_pref(self.string_pref), 'user')
+            self.assertEqual(self.puppeteer.prefs.get_pref(self.string_pref, default_branch=True),
+                             'default')
+
+            self.marionette.clear_pref(self.string_pref)
+            self.assertEqual(self.puppeteer.prefs.get_pref(self.string_pref), 'default')
+
+        finally:
+            self.puppeteer.prefs.set_pref(self.string_pref, orig_value, default_branch=True)
