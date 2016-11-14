@@ -287,8 +287,7 @@ class FakeVideoDecoder : public GMPVideoDecoder {
     host_ (hostAPI),
     callback_ (NULL) {}
 
-  virtual ~FakeVideoDecoder() {
-  }
+  virtual ~FakeVideoDecoder() = default;
 
   virtual void InitDecode (const GMPVideoCodec& codecSettings,
                              const uint8_t* aCodecSpecific,

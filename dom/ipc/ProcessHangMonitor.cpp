@@ -195,7 +195,7 @@ public:
   }
 
 private:
-  ~HangMonitoredProcess() {}
+  ~HangMonitoredProcess() = default;
 
   // Everything here is main thread-only.
   HangMonitorParent* mActor;
