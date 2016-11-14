@@ -16,14 +16,6 @@
 "unpack": true
 },
 {
-"version": "cargo 0.13.0-nightly (eca9e15 2016-11-01) repack",
-"size": 2351877,
-"digest": "76283ceda49015f66b03d18b3c28f70ed4baa09accdfc17b2ec935c7af3e9471d140256a33737563baa2545c34e556a125ade6d4858b9226b8c770dbd7c0756f",
-"algorithm": "sha512",
-"filename": "cargo.tar.bz2",
-"unpack": true
-},
-{
 "version": "cctools port from commit hash db1f8d906cb28, ld only",
 "size": 634496,
 "digest": "037f31fcf29e7bb7fada0d2bdd5e95c7d4cb2692f2a5c98ed6f6a7561b9d81622d015f0d12b291d3667719655f1369e8ce8a0a4a4773aa0ee4753e04a8821173",
