@@ -4,9 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/BasePrincipal.h"
 #include "nsSSLSocketProvider.h"
 #include "nsNSSIOLayer.h"
 #include "nsError.h"
+
+using mozilla::NeckoOriginAttributes;
 
 nsSSLSocketProvider::nsSSLSocketProvider()
 {
@@ -23,7 +26,7 @@ nsSSLSocketProvider::NewSocket(int32_t family,
                                const char *host,
                                int32_t port,
                                nsIProxyInfo *proxy,
-                               const nsACString &firstPartyDomain,
+                               const NeckoOriginAttributes &originAttributes,
                                uint32_t flags,
                                PRFileDesc **_result,
                                nsISupports **securityInfo)
@@ -32,7 +35,7 @@ nsSSLSocketProvider::NewSocket(int32_t family,
                                       host,
                                       port,
                                       proxy,
-                                      firstPartyDomain,
+                                      originAttributes,
                                       _result,
                                       securityInfo,
                                       false,
@@ -46,7 +49,7 @@ nsSSLSocketProvider::AddToSocket(int32_t family,
                                  const char *host,
                                  int32_t port,
                                  nsIProxyInfo *proxy,
-                                 const nsACString &firstPartyDomain,
+                                 const NeckoOriginAttributes &originAttributes,
                                  uint32_t flags,
                                  PRFileDesc *aSocket,
                                  nsISupports **securityInfo)
@@ -55,7 +58,7 @@ nsSSLSocketProvider::AddToSocket(int32_t family,
                                         host,
                                         port,
                                         proxy,
-                                        firstPartyDomain,
+                                        originAttributes,
                                         aSocket,
                                         securityInfo,
                                         false,
