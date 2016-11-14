@@ -26156,9 +26156,9 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
        iter.AdvanceAcrossSegments(cloneData, cloneInfo.offsetToKeyProp());
       MOZ_ASSERT(result);
 
-      for (uint32_t index = 0; index < keyPropSize; index++) {
+      for (char index : keyPropBuffer) {
         char* keyPropPointer = iter.Data();
-        *keyPropPointer = keyPropBuffer[index];
+        *keyPropPointer = index;
 
         result = iter.AdvanceAcrossSegments(cloneData, 1);
         MOZ_ASSERT(result);

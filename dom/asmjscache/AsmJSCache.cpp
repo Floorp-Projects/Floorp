@@ -1104,10 +1104,9 @@ FindHashMatch(const Metadata& aMetadata, const ReadParams& aReadParams,
   MOZ_ASSERT(numChars > sNumFastHashChars);
   uint32_t fastHash = HashString(aReadParams.mBegin, sNumFastHashChars);
 
-  for (unsigned i = 0; i < Metadata::kNumEntries ; i++) {
+  for (auto entry : aMetadata.mEntries) {
     // Compare the "fast hash" first to see whether it is worthwhile to
     // hash all the chars.
-    Metadata::Entry entry = aMetadata.mEntries[i];
     if (entry.mFastHash != fastHash) {
       continue;
     }
@@ -1847,8 +1846,7 @@ using mozilla::dom::asmjscache::WriteParams;
 void
 ParamTraits<Metadata>::Write(Message* aMsg, const paramType& aParam)
 {
-  for (unsigned i = 0; i < Metadata::kNumEntries; i++) {
-    const Metadata::Entry& entry = aParam.mEntries[i];
+  for (auto entry : aParam.mEntries) {
     WriteParam(aMsg, entry.mFastHash);
     WriteParam(aMsg, entry.mNumChars);
     WriteParam(aMsg, entry.mFullHash);
@@ -1860,8 +1858,7 @@ bool
 ParamTraits<Metadata>::Read(const Message* aMsg, PickleIterator* aIter,
                             paramType* aResult)
 {
-  for (unsigned i = 0; i < Metadata::kNumEntries; i++) {
-    Metadata::Entry& entry = aResult->mEntries[i];
+  for (auto& entry : aResult->mEntries) {
     if (!ReadParam(aMsg, aIter, &entry.mFastHash) ||
         !ReadParam(aMsg, aIter, &entry.mNumChars) ||
         !ReadParam(aMsg, aIter, &entry.mFullHash) ||
@@ -1876,8 +1873,7 @@ ParamTraits<Metadata>::Read(const Message* aMsg, PickleIterator* aIter,
 void
 ParamTraits<Metadata>::Log(const paramType& aParam, std::wstring* aLog)
 {
-  for (unsigned i = 0; i < Metadata::kNumEntries; i++) {
-    const Metadata::Entry& entry = aParam.mEntries[i];
+  for (auto entry : aParam.mEntries) {
     LogParam(entry.mFastHash, aLog);
     LogParam(entry.mNumChars, aLog);
     LogParam(entry.mFullHash, aLog);
