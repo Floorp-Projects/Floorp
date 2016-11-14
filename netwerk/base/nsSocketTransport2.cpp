@@ -22,7 +22,6 @@
 #include "prerr.h"
 #include "NetworkActivityMonitor.h"
 #include "NSSErrorsService.h"
-#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/net/NeckoChild.h"
 #include "nsThreadUtils.h"
 #include "nsISocketProviderService.h"
@@ -1170,7 +1169,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                 rv = provider->NewSocket(mNetAddr.raw.family,
                                          mHttpsProxy ? mProxyHost.get() : host,
                                          mHttpsProxy ? mProxyPort : port,
-                                         proxyInfo, mOriginAttributes,
+                                         proxyInfo, mFirstPartyDomain,
                                          controlFlags, &fd,
                                          getter_AddRefs(secinfo));
 
@@ -1185,7 +1184,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                 // to the stack (such as pushing an io layer)
                 rv = provider->AddToSocket(mNetAddr.raw.family,
                                            host, port, proxyInfo,
-                                           mOriginAttributes, controlFlags, fd,
+                                           mFirstPartyDomain, controlFlags, fd,
                                            getter_AddRefs(secinfo));
             }
 
@@ -2392,46 +2391,19 @@ nsSocketTransport::SetNetworkInterfaceId(const nsACString_internal &aNetworkInte
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetScriptableOriginAttributes(JSContext* aCx,
-    JS::MutableHandle<JS::Value> aOriginAttributes)
+nsSocketTransport::GetFirstPartyDomain(nsACString &value)
 {
-    if (NS_WARN_IF(!ToJSValue(aCx, mOriginAttributes, aOriginAttributes))) {
-        return NS_ERROR_FAILURE;
-    }
+    value = mFirstPartyDomain;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSocketTransport::SetScriptableOriginAttributes(JSContext* aCx,
-    JS::Handle<JS::Value> aOriginAttributes)
+nsSocketTransport::SetFirstPartyDomain(const nsACString &value)
 {
     MutexAutoLock lock(mLock);
     NS_ENSURE_FALSE(mFD.IsInitialized(), NS_ERROR_FAILURE);
 
-    NeckoOriginAttributes attrs;
-    if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
-        return NS_ERROR_INVALID_ARG;
-    }
-
-    mOriginAttributes = attrs;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSocketTransport::GetOriginAttributes(mozilla::NeckoOriginAttributes* aOriginAttributes)
-{
-    NS_ENSURE_ARG(aOriginAttributes);
-    *aOriginAttributes = mOriginAttributes;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSocketTransport::SetOriginAttributes(const mozilla::NeckoOriginAttributes& aOriginAttributes)
-{
-    MutexAutoLock lock(mLock);
-    NS_ENSURE_FALSE(mFD.IsInitialized(), NS_ERROR_FAILURE);
-
-    mOriginAttributes = aOriginAttributes;
+    mFirstPartyDomain = value;
     return NS_OK;
 }
 

@@ -6,8 +6,6 @@
 
 #include "nspr.h"
 
-using mozilla::NeckoOriginAttributes;
-
 NS_IMPL_ISUPPORTS(nsUDPSocketProvider, nsISocketProvider)
 
 nsUDPSocketProvider::~nsUDPSocketProvider()
@@ -19,7 +17,7 @@ nsUDPSocketProvider::NewSocket(int32_t aFamily,
                                const char *aHost, 
                                int32_t aPort, 
                                nsIProxyInfo *aProxy,
-                               const NeckoOriginAttributes &originAttributes,
+                               const nsACString &firstPartyDomain,
                                uint32_t aFlags,
                                PRFileDesc * *aFileDesc, 
                                nsISupports **aSecurityInfo)
@@ -39,7 +37,7 @@ nsUDPSocketProvider::AddToSocket(int32_t aFamily,
                                  const char *aHost,
                                  int32_t aPort,
                                  nsIProxyInfo *aProxy,
-                                 const NeckoOriginAttributes &originAttributes,
+                                 const nsACString &firstPartyDomain,
                                  uint32_t aFlags,
                                  struct PRFileDesc * aFileDesc,
                                  nsISupports **aSecurityInfo)

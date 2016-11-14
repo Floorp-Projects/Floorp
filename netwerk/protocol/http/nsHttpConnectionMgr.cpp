@@ -3081,10 +3081,10 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
 
     socketTransport->SetConnectionFlags(tmpFlags);
 
-    NeckoOriginAttributes originAttributes =
-        mEnt->mConnInfo->GetOriginAttributes();
-    if (originAttributes != NeckoOriginAttributes()) {
-        socketTransport->SetOriginAttributes(originAttributes);
+    nsAutoCString firstPartyDomain =
+      NS_ConvertUTF16toUTF8(mEnt->mConnInfo->GetOriginAttributes().mFirstPartyDomain);
+    if (!firstPartyDomain.IsEmpty()) {
+        socketTransport->SetFirstPartyDomain(firstPartyDomain);
     }
 
     socketTransport->SetQoSBits(gHttpHandler->GetQoSBits());
