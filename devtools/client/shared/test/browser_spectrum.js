@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that the spectrum color picker works correctly
 
 const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
@@ -11,7 +13,7 @@ const TEST_URI = `data:text/html,
   <div id="spectrum-container" />`;
 
 add_task(function* () {
-  let [host, win, doc] = yield createHost("bottom", TEST_URI);
+  let [host,, doc] = yield createHost("bottom", TEST_URI);
 
   let container = doc.getElementById("spectrum-container");
 
@@ -79,7 +81,7 @@ function testChangingColorShouldEmitEvents(container) {
       is(rgba[1], 64, "New color is correct");
       is(rgba[2], 64, "New color is correct");
       is(rgba[3], 1, "New color is correct");
-      is("rgba(" + rgba[0] + ", " + rgba[1] + ", " + rgba[2] + ", " + rgba[3] + ")", color, "RGBA and css color correspond");
+      is(`rgba(${rgba.join(", ")})`, color, "RGBA and css color correspond");
 
       s.destroy();
       resolve();

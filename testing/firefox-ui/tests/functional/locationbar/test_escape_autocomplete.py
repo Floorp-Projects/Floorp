@@ -2,15 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import Wait
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestEscapeAutocomplete(FirefoxTestCase):
+class TestEscapeAutocomplete(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestEscapeAutocomplete, self).setUp()
 
         # Clear complete history so there's no interference from previous entries.
         self.puppeteer.places.remove_all_history()
@@ -29,7 +29,8 @@ class TestEscapeAutocomplete(FirefoxTestCase):
 
     def tearDown(self):
         self.autocomplete_results.close(force=True)
-        FirefoxTestCase.tearDown(self)
+
+        super(TestEscapeAutocomplete, self).tearDown()
 
     def test_escape_autocomplete(self):
         # Open some local pages

@@ -2,15 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import Wait
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestDVCertificate(FirefoxTestCase):
+class TestDVCertificate(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestDVCertificate, self).setUp()
 
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.browser.navbar.locationbar.identity_popup
@@ -23,7 +23,7 @@ class TestDVCertificate(FirefoxTestCase):
             self.identity_popup.close(force=True)
             self.puppeteer.windows.close_all([self.browser])
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestDVCertificate, self).tearDown()
 
     def test_dv_cert(self):
         with self.marionette.using_context('content'):

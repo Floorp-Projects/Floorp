@@ -13,6 +13,6 @@ class FirefoxUIBaseArguments(object):
 class FirefoxUIArguments(BaseMarionetteArguments):
 
     def __init__(self, **kwargs):
-        BaseMarionetteArguments.__init__(self, **kwargs)
+        super(FirefoxUIArguments, self).__init__(**kwargs)
 
         self.register_argument_container(FirefoxUIBaseArguments())

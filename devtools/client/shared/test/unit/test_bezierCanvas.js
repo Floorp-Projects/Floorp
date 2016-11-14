@@ -79,7 +79,9 @@ function plotsCanvas() {
 
   let hasDrawnCurve = false;
   let b = new BezierCanvas(getCanvasMock(), getCubicBezier(), [.25, 0]);
-  b.ctx.bezierCurveTo = () => hasDrawnCurve = true;
+  b.ctx.bezierCurveTo = () => {
+    hasDrawnCurve = true;
+  };
   b.plot();
 
   do_check_true(hasDrawnCurve);

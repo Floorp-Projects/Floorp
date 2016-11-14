@@ -354,11 +354,6 @@ partial interface Navigator {
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.inputport.enabled", ChromeOnly]
-  readonly attribute InputPortManager inputPortManager;
-};
-
-partial interface Navigator {
   [Throws, Pref="dom.presentation.enabled", SameObject]
   readonly attribute Presentation? presentation;
 };

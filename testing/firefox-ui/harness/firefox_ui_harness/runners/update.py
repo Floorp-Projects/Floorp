@@ -20,7 +20,7 @@ DEFAULT_PREFS = {
 class UpdateTestRunner(FirefoxUITestRunner):
 
     def __init__(self, **kwargs):
-        FirefoxUITestRunner.__init__(self, **kwargs)
+        super(UpdateTestRunner, self).__init__(**kwargs)
 
         self.original_bin = self.bin
 
@@ -57,7 +57,7 @@ class UpdateTestRunner(FirefoxUITestRunner):
                 self.bin = mozinstall.get_binary(application_folder, 'Firefox')
 
                 self.test_tags = tags
-                FirefoxUITestRunner.run_tests(self, tests)
+                super(UpdateTestRunner, self).run_tests(tests)
 
             except Exception:
                 self.exc_info = sys.exc_info()

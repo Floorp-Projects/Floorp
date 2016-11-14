@@ -106,29 +106,29 @@ class PluginBackgroundSink : public ReadbackSink {
 public:
   PluginBackgroundSink(nsPluginFrame* aFrame, uint64_t aStartSequenceNumber)
     : mLastSequenceNumber(aStartSequenceNumber), mFrame(aFrame) {}
-  ~PluginBackgroundSink()
+  ~PluginBackgroundSink() override
   {
     if (mFrame) {
       mFrame->mBackgroundSink = nullptr;
     }
   }
 
-  virtual void SetUnknown(uint64_t aSequenceNumber)
+  void SetUnknown(uint64_t aSequenceNumber) override
   {
     if (!AcceptUpdate(aSequenceNumber))
       return;
     mFrame->mInstanceOwner->SetBackgroundUnknown();
   }
 
-  virtual already_AddRefed<DrawTarget>
-      BeginUpdate(const nsIntRect& aRect, uint64_t aSequenceNumber)
+  already_AddRefed<DrawTarget>
+      BeginUpdate(const nsIntRect& aRect, uint64_t aSequenceNumber) override
   {
     if (!AcceptUpdate(aSequenceNumber))
       return nullptr;
     return mFrame->mInstanceOwner->BeginUpdateBackground(aRect);
   }
 
-  virtual void EndUpdate(const nsIntRect& aRect)
+  void EndUpdate(const nsIntRect& aRect) override
   {
     return mFrame->mInstanceOwner->EndUpdateBackground(aRect);
   }
@@ -899,24 +899,24 @@ public:
     MOZ_COUNT_CTOR(nsDisplayPluginReadback);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayPluginReadback() {
+  ~nsDisplayPluginReadback() override {
     MOZ_COUNT_DTOR(nsDisplayPluginReadback);
   }
 #endif
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
+  nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) override;
 
   NS_DISPLAY_DECL_NAME("PluginReadback", TYPE_PLUGIN_READBACK)
 
-  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+  already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override
   {
     return static_cast<nsPluginFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this, aContainerParameters);
   }
 
-  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+  LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override
   {

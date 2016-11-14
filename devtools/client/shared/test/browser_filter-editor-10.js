@@ -9,14 +9,12 @@
 const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
 const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
 
-const FAST_VALUE_MULTIPLIER = 10;
-const SLOW_VALUE_MULTIPLIER = 0.1;
 const DEFAULT_VALUE_MULTIPLIER = 1;
 
 const TEST_URI = `data:text/html,<div id="filter-container" />`;
 
 add_task(function* () {
-  let [host, win, doc] = yield createHost("bottom", TEST_URI);
+  let [,, doc] = yield createHost("bottom", TEST_URI);
   const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");

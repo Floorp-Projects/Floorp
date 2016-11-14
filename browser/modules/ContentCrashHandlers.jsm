@@ -335,6 +335,12 @@ this.TabCrashHandler = {
 
     let browser = message.target.browser;
 
+    if (message.data.autoSubmit) {
+      // The user has opted in to autosubmitted backlogged
+      // crash reports in the future.
+      UnsubmittedCrashHandler.autoSubmit = true;
+    }
+
     let childID = this.browserMap.get(browser.permanentKey);
     let dumpID = this.childMap.get(childID);
     if (!dumpID)
@@ -449,11 +455,21 @@ this.TabCrashHandler = {
       return;
     }
 
+    let requestAutoSubmit = !UnsubmittedCrashHandler.autoSubmit;
+    let requestEmail = this.prefs.getBoolPref("requestEmail");
     let sendReport = this.prefs.getBoolPref("sendReport");
     let includeURL = this.prefs.getBoolPref("includeURL");
     let emailMe = this.prefs.getBoolPref("emailMe");
 
-    let data = { hasReport: true, sendReport, includeURL, emailMe };
+    let data = {
+      hasReport: true,
+      sendReport,
+      includeURL,
+      emailMe,
+      requestAutoSubmit,
+      requestEmail,
+    };
+
     if (emailMe) {
       data.email = this.prefs.getCharPref("email", "");
     }

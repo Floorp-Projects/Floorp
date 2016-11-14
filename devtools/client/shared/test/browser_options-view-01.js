@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that options-view OptionsView responds to events correctly.
 
 const {OptionsView} = require("devtools/client/shared/options-view");
@@ -9,8 +11,8 @@ const BRANCH = "devtools.debugger.";
 const BLACK_BOX_PREF = "auto-black-box";
 const PRETTY_PRINT_PREF = "auto-pretty-print";
 
-var originalBlackBox = Services.prefs.getBoolPref(BRANCH + BLACK_BOX_PREF);
-var originalPrettyPrint = Services.prefs.getBoolPref(BRANCH + PRETTY_PRINT_PREF);
+const originalBlackBox = Services.prefs.getBoolPref(BRANCH + BLACK_BOX_PREF);
+const originalPrettyPrint = Services.prefs.getBoolPref(BRANCH + PRETTY_PRINT_PREF);
 
 add_task(function* () {
   info("Setting a couple of preferences");
@@ -19,7 +21,7 @@ add_task(function* () {
 
   info("Opening a test tab and a toolbox host to create the options view in");
   yield addTab("about:blank");
-  let [host, win, doc] = yield createHost("bottom", OPTIONS_VIEW_URL);
+  let [host, win] = yield createHost("bottom", OPTIONS_VIEW_URL);
 
   yield testOptionsView(win);
 
@@ -60,22 +62,28 @@ function* testOptionsView(win) {
 
   // Tests events are fired when preferences update outside of the menu
   is(events.length, 2, "two 'pref-changed' events fired");
-  is(events[0], "auto-pretty-print", "correct pref passed in 'pref-changed' event (auto-pretty-print)");
-  is(events[1], "auto-black-box", "correct pref passed in 'pref-changed' event (auto-black-box)");
+  is(events[0], "auto-pretty-print",
+     "correct pref passed in 'pref-changed' event (auto-pretty-print)");
+  is(events[1], "auto-black-box",
+     "correct pref passed in 'pref-changed' event (auto-black-box)");
 
   // Test buttons update when clicked and preferences are updated
   yield click(options, win, ppEl);
   is(ppEl.getAttribute("checked"), "true", "menuitems update when clicked");
-  is(Services.prefs.getBoolPref(BRANCH + PRETTY_PRINT_PREF), true, "preference updated via click");
+  is(Services.prefs.getBoolPref(BRANCH + PRETTY_PRINT_PREF),
+     true, "preference updated via click");
 
   yield click(options, win, bbEl);
   is(bbEl.getAttribute("checked"), "", "menuitems update when clicked");
-  is(Services.prefs.getBoolPref(BRANCH + BLACK_BOX_PREF), false, "preference updated via click");
+  is(Services.prefs.getBoolPref(BRANCH + BLACK_BOX_PREF),
+     false, "preference updated via click");
 
   // Tests events are fired when preferences updated via click
   is(events.length, 4, "two 'pref-changed' events fired");
-  is(events[2], "auto-pretty-print", "correct pref passed in 'pref-changed' event (auto-pretty-print)");
-  is(events[3], "auto-black-box", "correct pref passed in 'pref-changed' event (auto-black-box)");
+  is(events[2], "auto-pretty-print",
+     "correct pref passed in 'pref-changed' event (auto-pretty-print)");
+  is(events[3], "auto-black-box",
+     "correct pref passed in 'pref-changed' event (auto-black-box)");
 
   yield options.destroy();
 }

@@ -40,7 +40,6 @@
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/FlyWebPublishedServer.h"
 #include "mozilla/dom/FlyWebService.h"
-#include "mozilla/dom/InputPortManager.h"
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/Presentation.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
@@ -207,7 +206,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryPromise)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPowerManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInputPortManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStorageManager)
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
@@ -268,10 +266,6 @@ Navigator::Invalidate()
   if (mPowerManager) {
     mPowerManager->Shutdown();
     mPowerManager = nullptr;
-  }
-
-  if (mInputPortManager) {
-    mInputPortManager = nullptr;
   }
 
   if (mConnection) {
@@ -1581,23 +1575,6 @@ Navigator::RequestWakeLock(const nsAString &aTopic, ErrorResult& aRv)
   }
 
   return pmService->NewWakeLock(aTopic, mWindow, aRv);
-}
-
-InputPortManager*
-Navigator::GetInputPortManager(ErrorResult& aRv)
-{
-  if (!mInputPortManager) {
-    if (!mWindow) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-    mInputPortManager = InputPortManager::Create(mWindow, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-  }
-
-  return mInputPortManager;
 }
 
 already_AddRefed<LegacyMozTCPSocket>

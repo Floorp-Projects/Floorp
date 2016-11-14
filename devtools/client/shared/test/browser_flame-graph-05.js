@@ -1,14 +1,29 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that flame graph widget has proper keyboard support.
 
-var TEST_DATA = [{ color: "#f00", blocks: [{ x: 0, y: 0, width: 50, height: 20, text: "FOO" }, { x: 50, y: 0, width: 100, height: 20, text: "BAR" }] }, { color: "#00f", blocks: [{ x: 0, y: 30, width: 30, height: 20, text: "BAZ" }] }];
-var TEST_BOUNDS = { startTime: 0, endTime: 150 };
-var TEST_DPI_DENSITIY = 2;
+const TEST_DATA = [
+  {
+    color: "#f00",
+    blocks: [
+      { x: 0, y: 0, width: 50, height: 20, text: "FOO" },
+      { x: 50, y: 0, width: 100, height: 20, text: "BAR" }
+    ]
+  },
+  {
+    color: "#00f",
+    blocks: [
+      { x: 0, y: 30, width: 30, height: 20, text: "BAZ" }
+    ]
+  }
+];
+const TEST_BOUNDS = { startTime: 0, endTime: 150 };
+const TEST_DPI_DENSITIY = 2;
 
 const KEY_CODE_UP = 38;
-const KEY_CODE_DOWN = 40;
 const KEY_CODE_LEFT = 37;
 const KEY_CODE_RIGHT = 39;
 
@@ -21,8 +36,9 @@ add_task(function* () {
 });
 
 function* performTest() {
-  let [host, win, doc] = yield createHost();
-  doc.body.setAttribute("style", "position: fixed; width: 100%; height: 100%; margin: 0;");
+  let [host,, doc] = yield createHost();
+  doc.body.setAttribute("style",
+                        "position: fixed; width: 100%; height: 100%; margin: 0;");
 
   let graph = new FlameGraph(doc.body, TEST_DPI_DENSITIY);
   yield graph.ready();
@@ -78,22 +94,20 @@ function* testGraph(host, graph) {
 }
 
 function pressKeyForTime(graph, keyCode, ms) {
-  let deferred = defer();
-
   graph._onKeyDown({
     keyCode,
-    preventDefault: () => { },
-    stopPropagation: () => { },
+    preventDefault: () => {},
+    stopPropagation: () => {},
   });
 
-  setTimeout(() => {
-    graph._onKeyUp({
-      keyCode,
-      preventDefault: () => { },
-      stopPropagation: () => { },
-    });
-    deferred.resolve();
-  }, ms);
-
-  return deferred.promise;
+  return new Promise(resolve => {
+    setTimeout(() => {
+      graph._onKeyUp({
+        keyCode,
+        preventDefault: () => {},
+        stopPropagation: () => {},
+      });
+      resolve();
+    }, ms);
+  });
 }

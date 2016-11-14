@@ -23,9 +23,6 @@ class PageInfoWindow(BaseWindow):
         'chrome://pippki/locale/pippki.properties',
     ]
 
-    def __init__(self, *args, **kwargs):
-        BaseWindow.__init__(self, *args, **kwargs)
-
     @property
     def deck(self):
         """The :class:`Deck` instance which represents the deck.
@@ -58,6 +55,7 @@ class PageInfoWindow(BaseWindow):
             else:
                 raise ValueError('Unknown closing method: "%s"' % trigger)
 
-        BaseWindow.close(self, callback, force)
+        super(PageInfoWindow, self).close(callback, force)
+
 
 Windows.register_window(PageInfoWindow.window_type, PageInfoWindow)

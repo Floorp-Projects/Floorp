@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Cc, Ci, Cu } = require("chrome");
+const { Ci } = require("chrome");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const Services = require("Services");
@@ -13,9 +13,9 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+const {Task} = require("devtools/shared/task");
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const { PluralForm } = require("devtools/shared/plural-form");
 
@@ -44,7 +44,7 @@ var CommandUtils = {
       return promise.reject("Unable to load gcli");
     }
     return gcliInit.getSystem(target).then(system => {
-      var Requisition = require("gcli/cli").Requisition;
+      let Requisition = require("gcli/cli").Requisition;
       return new Requisition(system, options);
     });
   },
@@ -90,8 +90,7 @@ var CommandUtils = {
           if (command.buttonClass != null) {
             button.className = command.buttonClass;
           }
-        }
-        else {
+        } else {
           button.setAttribute("text-as-image", "true");
           button.setAttribute("label", command.name);
         }
@@ -100,8 +99,7 @@ var CommandUtils = {
 
         if (command.tooltipText != null) {
           button.setAttribute("title", command.tooltipText);
-        }
-        else if (command.description != null) {
+        } else if (command.description != null) {
           button.setAttribute("title", command.description);
         }
 
@@ -128,12 +126,10 @@ var CommandUtils = {
            */
           onChange = (eventName, ev) => {
             if (ev.target == target || ev.tab == target.tab) {
-
               let updateChecked = (checked) => {
                 if (checked) {
                   button.setAttribute("checked", true);
-                }
-                else if (button.hasAttribute("checked")) {
+                } else if (button.hasAttribute("checked")) {
                   button.removeAttribute("checked");
                 }
               };
@@ -146,8 +142,7 @@ var CommandUtils = {
               let reply = command.state.isChecked(target);
               if (typeof reply.then == "function") {
                 reply.then(updateChecked, console.error);
-              }
-              else {
+              } else {
                 updateChecked(reply);
               }
             }
@@ -155,7 +150,7 @@ var CommandUtils = {
 
           command.state.onChange(target, onChange);
           onChange("", { target: target });
-        };
+        }
         document.defaultView.addEventListener("unload", function (event) {
           if (onChange && command.state.offChange) {
             command.state.offChange(target, onChange);
@@ -202,12 +197,14 @@ var CommandUtils = {
       },
 
       get window() {
-        // throw new Error("environment.window is not available in runAt:client commands");
+        // throw new
+        //    Error("environment.window is not available in runAt:client commands");
         return this.chromeWindow.gBrowser.contentWindowAsCPOW;
       },
 
       get document() {
-        // throw new Error("environment.document is not available in runAt:client commands");
+        // throw new
+        //    Error("environment.document is not available in runAt:client commands");
         return this.chromeWindow.gBrowser.contentDocumentAsCPOW;
       }
     };
@@ -233,15 +230,15 @@ loader.lazyGetter(this, "isMac", function () {
 /**
  * A component to manage the global developer toolbar, which contains a GCLI
  * and buttons for various developer tools.
- * @param aChromeWindow The browser window to which this toolbar is attached
+ * @param chromeWindow The browser window to which this toolbar is attached
  */
-function DeveloperToolbar(aChromeWindow)
-{
-  this._chromeWindow = aChromeWindow;
+function DeveloperToolbar(chromeWindow) {
+  this._chromeWindow = chromeWindow;
 
-  this.target = null; // Will be setup when show() is called
+  // Will be setup when show() is called
+  this.target = null;
 
-  this._doc = aChromeWindow.document;
+  this._doc = chromeWindow.document;
 
   this._telemetry = new Telemetry();
   this._errorsCount = {};
@@ -357,10 +354,12 @@ DeveloperToolbar.prototype.createToolbar = function () {
   let bottomBox = this._doc.getElementById("browser-bottombox");
   if (bottomBox) {
     bottomBox.appendChild(this._element);
-  } else { // SeaMonkey does not have a "browser-bottombox".
+  } else {
+    // SeaMonkey does not have a "browser-bottombox".
     let statusBar = this._doc.getElementById("status-bar");
-    if (statusBar)
+    if (statusBar) {
       statusBar.parentNode.insertBefore(this._element, statusBar);
+    }
   }
 };
 
@@ -371,9 +370,8 @@ DeveloperToolbar.prototype.createToolbar = function () {
 DeveloperToolbar.prototype.toggle = function () {
   if (this.visible) {
     return this.hide().catch(console.error);
-  } else {
-    return this.show(true).catch(console.error);
   }
+  return this.show(true).catch(console.error);
 };
 
 /**
@@ -384,9 +382,8 @@ DeveloperToolbar.prototype.focus = function () {
   if (this.visible) {
     this._input.focus();
     return promise.resolve();
-  } else {
-    return this.show(true);
   }
+  return this.show(true);
 };
 
 /**
@@ -401,8 +398,7 @@ DeveloperToolbar.prototype.focusToggle = function () {
     let position = this._input.compareDocumentPosition(active);
     if (position & nodeConstants.DOCUMENT_POSITION_CONTAINED_BY) {
       this.hide();
-    }
-    else {
+    } else {
       this._input.focus();
     }
   } else {
@@ -426,10 +422,13 @@ DeveloperToolbar.prototype.show = function (focus) {
     return this._showPromise;
   }
 
-  // hide() is async, so ensure we don't need to wait for hide() to finish
-  var waitPromise = this._hidePromise || promise.resolve();
+  this._showPromise = Task.spawn((function* () {
+    // hide() is async, so ensure we don't need to wait for hide() to
+    // finish.  We unconditionally yield here, even if _hidePromise is
+    // null, so that the spawn call returns a promise before starting
+    // to do any real work.
+    yield this._hidePromise;
 
-  this._showPromise = waitPromise.then(() => {
     this.createToolbar();
 
     Services.prefs.setBoolPref("devtools.toolbar.visible", true);
@@ -446,110 +445,109 @@ DeveloperToolbar.prototype.show = function (focus) {
       TooltipPanel.create(this),
       OutputPanel.create(this)
     ];
-    return promise.all(panelPromises).then(panels => {
-      [ this.tooltipPanel, this.outputPanel ] = panels;
+    let panels = yield promise.all(panelPromises);
 
-      this._doc.getElementById("menu_devToolbar").setAttribute("checked", "true");
+    [ this.tooltipPanel, this.outputPanel ] = panels;
 
-      this.target = TargetFactory.forTab(this._chromeWindow.gBrowser.selectedTab);
-      const options = {
-        environment: CommandUtils.createEnvironment(this, "target"),
-        document: this.outputPanel.document,
-      };
-      return CommandUtils.createRequisition(this.target, options).then(requisition => {
-        this.requisition = requisition;
+    this._doc.getElementById("menu_devToolbar").setAttribute("checked", "true");
 
-        // The <textbox> `value` may still be undefined on the XUL binding if
-        // we fetch it early
-        let value = this._input.value || "";
-        return this.requisition.update(value).then(() => {
-          const Inputter = require("gcli/mozui/inputter").Inputter;
-          const Completer = require("gcli/mozui/completer").Completer;
-          const Tooltip = require("gcli/mozui/tooltip").Tooltip;
-          const FocusManager = require("gcli/ui/focus").FocusManager;
+    this.target = TargetFactory.forTab(this._chromeWindow.gBrowser.selectedTab);
+    const options = {
+      environment: CommandUtils.createEnvironment(this, "target"),
+      document: this.outputPanel.document,
+    };
+    let requisition = yield CommandUtils.createRequisition(this.target, options);
+    this.requisition = requisition;
 
-          this.onOutput = this.requisition.commandOutputManager.onOutput;
+    // The <textbox> `value` may still be undefined on the XUL binding if
+    // we fetch it early
+    let value = this._input.value || "";
+    yield this.requisition.update(value);
 
-          this.focusManager = new FocusManager(this._doc, requisition.system.settings);
+    const Inputter = require("gcli/mozui/inputter").Inputter;
+    const Completer = require("gcli/mozui/completer").Completer;
+    const Tooltip = require("gcli/mozui/tooltip").Tooltip;
+    const FocusManager = require("gcli/ui/focus").FocusManager;
 
-          this.inputter = new Inputter({
-            requisition: this.requisition,
-            focusManager: this.focusManager,
-            element: this._input,
-          });
+    this.onOutput = this.requisition.commandOutputManager.onOutput;
 
-          this.completer = new Completer({
-            requisition: this.requisition,
-            inputter: this.inputter,
-            backgroundElement: this._doc.querySelector(".gclitoolbar-stack-node"),
-            element: this._doc.querySelector(".gclitoolbar-complete-node"),
-          });
+    this.focusManager = new FocusManager(this._doc, requisition.system.settings);
 
-          this.tooltip = new Tooltip({
-            requisition: this.requisition,
-            focusManager: this.focusManager,
-            inputter: this.inputter,
-            element: this.tooltipPanel.hintElement,
-          });
-
-          this.inputter.tooltip = this.tooltip;
-
-          this.focusManager.addMonitoredElement(this.outputPanel._frame);
-          this.focusManager.addMonitoredElement(this._element);
-
-          this.focusManager.onVisibilityChange.add(this.outputPanel._visibilityChanged,
-                                                   this.outputPanel);
-          this.focusManager.onVisibilityChange.add(this.tooltipPanel._visibilityChanged,
-                                                   this.tooltipPanel);
-          this.onOutput.add(this.outputPanel._outputChanged, this.outputPanel);
-
-          let tabbrowser = this._chromeWindow.gBrowser;
-          tabbrowser.tabContainer.addEventListener("TabSelect", this, false);
-          tabbrowser.tabContainer.addEventListener("TabClose", this, false);
-          tabbrowser.addEventListener("load", this, true);
-          tabbrowser.addEventListener("beforeunload", this, true);
-
-          gDevTools.on("toolbox-ready", this._onToolboxReady);
-          gDevTools.on("toolbox-destroyed", this._onToolboxDestroyed);
-
-          this._initErrorsCount(tabbrowser.selectedTab);
-
-          this._element.hidden = false;
-
-          if (focus) {
-            // If the toolbar was just inserted, the <textbox> may still have
-            // its binding in process of being applied and not be focusable yet
-            let waitForBinding = () => {
-              // Bail out if the toolbar has been destroyed in the meantime
-              if (!this._input) {
-                return;
-              }
-              // mInputField is a xbl field of <xul:textbox>
-              if (typeof this._input.mInputField != "undefined") {
-                this._input.focus();
-                this._notify(NOTIFICATIONS.SHOW);
-              } else {
-                this._input.ownerDocument.defaultView.setTimeout(waitForBinding, 50);
-              }
-            };
-            waitForBinding();
-          } else {
-            this._notify(NOTIFICATIONS.SHOW);
-          }
-
-          if (!DeveloperToolbar.introShownThisSession) {
-            let intro = require("gcli/ui/intro");
-            intro.maybeShowIntro(this.requisition.commandOutputManager,
-                                 this.requisition.conversionContext,
-                                 this.outputPanel);
-            DeveloperToolbar.introShownThisSession = true;
-          }
-
-          this._showPromise = null;
-        });
-      });
+    this.inputter = new Inputter({
+      requisition: this.requisition,
+      focusManager: this.focusManager,
+      element: this._input,
     });
-  });
+
+    this.completer = new Completer({
+      requisition: this.requisition,
+      inputter: this.inputter,
+      backgroundElement: this._doc.querySelector(".gclitoolbar-stack-node"),
+      element: this._doc.querySelector(".gclitoolbar-complete-node"),
+    });
+
+    this.tooltip = new Tooltip({
+      requisition: this.requisition,
+      focusManager: this.focusManager,
+      inputter: this.inputter,
+      element: this.tooltipPanel.hintElement,
+    });
+
+    this.inputter.tooltip = this.tooltip;
+
+    this.focusManager.addMonitoredElement(this.outputPanel._frame);
+    this.focusManager.addMonitoredElement(this._element);
+
+    this.focusManager.onVisibilityChange.add(this.outputPanel._visibilityChanged,
+                                             this.outputPanel);
+    this.focusManager.onVisibilityChange.add(this.tooltipPanel._visibilityChanged,
+                                             this.tooltipPanel);
+    this.onOutput.add(this.outputPanel._outputChanged, this.outputPanel);
+
+    let tabbrowser = this._chromeWindow.gBrowser;
+    tabbrowser.tabContainer.addEventListener("TabSelect", this, false);
+    tabbrowser.tabContainer.addEventListener("TabClose", this, false);
+    tabbrowser.addEventListener("load", this, true);
+    tabbrowser.addEventListener("beforeunload", this, true);
+
+    gDevTools.on("toolbox-ready", this._onToolboxReady);
+    gDevTools.on("toolbox-destroyed", this._onToolboxDestroyed);
+
+    this._initErrorsCount(tabbrowser.selectedTab);
+
+    this._element.hidden = false;
+
+    if (focus) {
+      // If the toolbar was just inserted, the <textbox> may still have
+      // its binding in process of being applied and not be focusable yet
+      let waitForBinding = () => {
+        // Bail out if the toolbar has been destroyed in the meantime
+        if (!this._input) {
+          return;
+        }
+        // mInputField is a xbl field of <xul:textbox>
+        if (typeof this._input.mInputField != "undefined") {
+          this._input.focus();
+          this._notify(NOTIFICATIONS.SHOW);
+        } else {
+          this._input.ownerDocument.defaultView.setTimeout(waitForBinding, 50);
+        }
+      };
+      waitForBinding();
+    } else {
+      this._notify(NOTIFICATIONS.SHOW);
+    }
+
+    if (!DeveloperToolbar.introShownThisSession) {
+      let intro = require("gcli/ui/intro");
+      intro.maybeShowIntro(this.requisition.commandOutputManager,
+                           this.requisition.conversionContext,
+                           this.outputPanel);
+      DeveloperToolbar.introShownThisSession = true;
+    }
+
+    this._showPromise = null;
+  }).bind(this));
 
   return this._showPromise;
 };
@@ -564,7 +562,7 @@ DeveloperToolbar.prototype.hide = function () {
   }
 
   // show() is async, so ensure we don't need to wait for show() to finish
-  var waitPromise = this._showPromise || promise.resolve();
+  let waitPromise = this._showPromise || promise.resolve();
 
   this._hidePromise = waitPromise.then(() => {
     this._element.hidden = true;
@@ -642,7 +640,8 @@ DeveloperToolbar.prototype._stopErrorsCount = function (tab) {
  */
 DeveloperToolbar.prototype.destroy = function () {
   if (this._input == null) {
-    return; // Already destroyed
+    // Already destroyed
+    return;
   }
 
   let tabbrowser = this._chromeWindow.gBrowser;
@@ -721,11 +720,9 @@ DeveloperToolbar.prototype.handleEvent = function (ev) {
         this._initErrorsCount(ev.target);
       }
     }
-  }
-  else if (ev.type == "TabClose") {
+  } else if (ev.type == "TabClose") {
     this._stopErrorsCount(ev.target);
-  }
-  else if (ev.type == "beforeunload") {
+  } else if (ev.type == "beforeunload") {
     this._onPageBeforeUnload(ev);
   }
 };
@@ -868,7 +865,7 @@ function OutputPanel() {
  * @param devtoolbar The parent DeveloperToolbar object
  */
 OutputPanel.create = function (devtoolbar) {
-  var outputPanel = Object.create(OutputPanel.prototype);
+  let outputPanel = Object.create(OutputPanel.prototype);
   return outputPanel._init(devtoolbar);
 };
 
@@ -1066,8 +1063,7 @@ OutputPanel.prototype._outputChanged = function (ev) {
 
   if (this.displayedOutput.completed) {
     this._update();
-  }
-  else {
+  } else {
     this.displayedOutput.promise.then(this._update, this._update)
                                 .then(null, console.error);
   }
@@ -1099,8 +1095,8 @@ OutputPanel.prototype._update = function () {
         this._div.removeChild(this._div.firstChild);
       }
 
-      var links = node.querySelectorAll("*[href]");
-      for (var i = 0; i < links.length; i++) {
+      let links = node.querySelectorAll("*[href]");
+      for (let i = 0; i < links.length; i++) {
         links[i].setAttribute("target", "_blank");
       }
 
@@ -1188,7 +1184,7 @@ function TooltipPanel() {
  * @param devtoolbar The parent DeveloperToolbar object
  */
 TooltipPanel.create = function (devtoolbar) {
-  var tooltipPanel = Object.create(TooltipPanel.prototype);
+  let tooltipPanel = Object.create(TooltipPanel.prototype);
   return tooltipPanel._init(devtoolbar);
 };
 
@@ -1198,7 +1194,6 @@ TooltipPanel.create = function (devtoolbar) {
 TooltipPanel.prototype._init = function (devtoolbar) {
   let deferred = defer();
 
-  let chromeDocument = devtoolbar._doc;
   this._devtoolbar = devtoolbar;
   this._input = devtoolbar._doc.querySelector(".gclitoolbar-input-node");
   this._toolbar = devtoolbar._doc.querySelector("#developer-toolbar");

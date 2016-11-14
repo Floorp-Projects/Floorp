@@ -1,9 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that bar graph's legend items handle mouseover/mouseout.
 
-var BarGraphWidget = require("devtools/client/shared/widgets/BarGraphWidget");
+const BarGraphWidget = require("devtools/client/shared/widgets/BarGraphWidget");
 
 const CATEGORIES = [
   { color: "#46afe3", label: "Foo" },
@@ -18,8 +20,9 @@ add_task(function* () {
 });
 
 function* performTest() {
-  let [host, win, doc] = yield createHost();
-  doc.body.setAttribute("style", "position: fixed; width: 100%; height: 100%; margin: 0;");
+  let [host,, doc] = yield createHost();
+  doc.body.setAttribute("style",
+                        "position: fixed; width: 100%; height: 100%; margin: 0;");
 
   let graph = new BarGraphWidget(doc.body, 1);
   graph.fixedWidth = 200;
@@ -49,6 +52,7 @@ function* testGraph(graph) {
     delta: 1600, values: [3, 2, 0]
   }]);
 
+  /* eslint-disable max-len */
   is(graph._blocksBoundingRects.toSource(), "[{type:1, start:0, end:33.33333333333333, top:70, bottom:100}, {type:2, start:0, end:33.33333333333333, top:24, bottom:69}, {type:0, start:34.33333333333333, end:66.66666666666666, top:85, bottom:100}, {type:2, start:34.33333333333333, end:66.66666666666666, top:54, bottom:84}, {type:0, start:67.66666666666666, end:100, top:70, bottom:100}, {type:1, start:67.66666666666666, end:100, top:54, bottom:69}, {type:1, start:101, end:133.33333333333331, top:55, bottom:100}, {type:2, start:101, end:133.33333333333331, top:39, bottom:54}, {type:0, start:134.33333333333331, end:166.66666666666666, top:55, bottom:100}, {type:2, start:134.33333333333331, end:166.66666666666666, top:24, bottom:54}, {type:0, start:167.66666666666666, end:200, top:55, bottom:100}, {type:1, start:167.66666666666666, end:200, top:24, bottom:54}]",
     "The correct blocks bounding rects were calculated for the bar graph.");
 
@@ -74,6 +78,7 @@ function* testGraph(graph) {
     leftmost: "({type:2, start:0, end:33.33333333333333, top:24, bottom:69})",
     rightmost: "({type:2, start:134.33333333333331, end:166.66666666666666, top:24, bottom:54})"
   });
+  /* eslint-enable max-len */
 }
 
 function* testLegend(graph, index, { highlights, selection, leftmost, rightmost }) {

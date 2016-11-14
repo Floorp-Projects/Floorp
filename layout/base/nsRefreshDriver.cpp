@@ -363,7 +363,7 @@ public:
     mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   }
 
-  virtual ~SimpleTimerBasedRefreshDriverTimer()
+  ~SimpleTimerBasedRefreshDriverTimer() override
   {
     StopTimer();
   }
@@ -380,14 +380,14 @@ public:
     return mRateMilliseconds;
   }
 
-  virtual TimeDuration GetTimerRate() override
+  TimeDuration GetTimerRate() override
   {
     return mRateDuration;
   }
 
 protected:
 
-  virtual void StartTimer() override
+  void StartTimer() override
   {
     // pretend we just fired, and we schedule the next tick normally
     mLastFireEpoch = JS_Now();
@@ -399,7 +399,7 @@ protected:
     mTimer->InitWithFuncCallback(TimerTick, this, delay, nsITimer::TYPE_ONE_SHOT);
   }
 
-  virtual void StopTimer() override
+  void StopTimer() override
   {
     mTimer->Cancel();
   }
@@ -440,7 +440,7 @@ public:
     mVsyncRate = mVsyncChild->GetVsyncRate();
   }
 
-  virtual TimeDuration GetTimerRate() override
+  TimeDuration GetTimerRate() override
   {
     if (mVsyncRate != TimeDuration::Forever()) {
       return mVsyncRate;
@@ -476,7 +476,7 @@ private:
       MOZ_ASSERT(NS_IsMainThread());
     }
 
-    virtual bool NotifyVsync(TimeStamp aVsyncTimestamp) override
+    bool NotifyVsync(TimeStamp aVsyncTimestamp) override
     {
       if (!NS_IsMainThread()) {
         MOZ_ASSERT(XRE_IsParentProcess());
@@ -517,7 +517,7 @@ private:
       }
     }
   private:
-    virtual ~RefreshDriverVsyncObserver() {}
+    ~RefreshDriverVsyncObserver() = default;
 
     void RecordTelemetryProbes(TimeStamp aVsyncTimestamp)
     {
@@ -595,7 +595,7 @@ private:
     bool mProcessedVsync;
   }; // RefreshDriverVsyncObserver
 
-  virtual ~VsyncRefreshDriverTimer()
+  ~VsyncRefreshDriverTimer() override
   {
     if (XRE_IsParentProcess()) {
       mVsyncDispatcher->SetParentRefreshTimer(nullptr);
@@ -616,7 +616,7 @@ private:
     mVsyncObserver = nullptr;
   }
 
-  virtual void StartTimer() override
+  void StartTimer() override
   {
     // Protect updates to `sActiveVsyncTimers`.
     MOZ_ASSERT(NS_IsMainThread());
@@ -634,7 +634,7 @@ private:
     ++sActiveVsyncTimers;
   }
 
-  virtual void StopTimer() override
+  void StopTimer() override
   {
     // Protect updates to `sActiveVsyncTimers`.
     MOZ_ASSERT(NS_IsMainThread());
@@ -649,7 +649,7 @@ private:
     --sActiveVsyncTimers;
   }
 
-  virtual void ScheduleNextTick(TimeStamp aNowTime) override
+  void ScheduleNextTick(TimeStamp aNowTime) override
   {
     // Do nothing since we just wait for the next vsync from
     // RefreshDriverVsyncObserver.
@@ -691,7 +691,7 @@ public:
   }
 
 protected:
-  virtual void ScheduleNextTick(TimeStamp aNowTime)
+  void ScheduleNextTick(TimeStamp aNowTime) override
   {
     // Since this is only used for startup, it isn't super critical
     // that we tick at consistent intervals.
@@ -735,7 +735,7 @@ public:
   {
   }
 
-  virtual void AddRefreshDriver(nsRefreshDriver* aDriver) override
+  void AddRefreshDriver(nsRefreshDriver* aDriver) override
   {
     RefreshDriverTimer::AddRefreshDriver(aDriver);
 
@@ -753,7 +753,7 @@ public:
     StartTimer();
   }
 
-  virtual TimeDuration GetTimerRate() override
+  TimeDuration GetTimerRate() override
   {
     return TimeDuration::FromMilliseconds(mNextTickDuration);
   }
@@ -764,7 +764,7 @@ protected:
     return mContentRefreshDrivers.Length() + mRootRefreshDrivers.Length();
   }
 
-  virtual void StartTimer() override
+  void StartTimer() override
   {
     mLastFireEpoch = JS_Now();
     mLastFireTime = TimeStamp::Now();
@@ -775,12 +775,12 @@ protected:
     mTimer->InitWithFuncCallback(TimerTickOne, this, delay, nsITimer::TYPE_ONE_SHOT);
   }
 
-  virtual void StopTimer() override
+  void StopTimer() override
   {
     mTimer->Cancel();
   }
 
-  virtual void ScheduleNextTick(TimeStamp aNowTime) override
+  void ScheduleNextTick(TimeStamp aNowTime) override
   {
     if (mDisableAfterMilliseconds > 0.0 &&
         mNextTickDuration > mDisableAfterMilliseconds)
@@ -866,16 +866,16 @@ public:
   }
 
 private:
-  virtual ~VsyncChildCreateCallback() {}
+  virtual ~VsyncChildCreateCallback() = default;
 
-  virtual void ActorCreated(PBackgroundChild* aPBackgroundChild) override
+  void ActorCreated(PBackgroundChild* aPBackgroundChild) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aPBackgroundChild);
     CreateVsyncActor(aPBackgroundChild);
   }
 
-  virtual void ActorFailed() override
+  void ActorFailed() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_CRASH("Failed To Create VsyncChild Actor");
@@ -2237,8 +2237,8 @@ nsRefreshDriver::PVsyncActorCreated(VsyncChild* aVsyncChild)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!XRE_IsParentProcess());
-  VsyncRefreshDriverTimer* vsyncRefreshDriverTimer =
-                           new VsyncRefreshDriverTimer(aVsyncChild);
+  auto* vsyncRefreshDriverTimer =
+      new VsyncRefreshDriverTimer(aVsyncChild);
 
   // If we are using software timer, swap current timer to
   // VsyncRefreshDriverTimer.

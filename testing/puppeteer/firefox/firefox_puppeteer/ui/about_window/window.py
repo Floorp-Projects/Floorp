@@ -17,9 +17,6 @@ class AboutWindow(BaseWindow):
         'chrome://browser/locale/aboutDialog.dtd',
     ]
 
-    def __init__(self, *args, **kwargs):
-        BaseWindow.__init__(self, *args, **kwargs)
-
     @property
     def deck(self):
         """The :class:`Deck` instance which represents the deck.

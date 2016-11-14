@@ -394,6 +394,16 @@ class MachCommands(MachCommandBase):
 
             suites[key].append(test)
 
+        if ('mochitest', 'media') in suites:
+            req = os.path.join('testing', 'tools', 'websocketprocessbridge',
+                               'websocketprocessbridge_requirements.txt')
+            self.virtualenv_manager.activate()
+            self.virtualenv_manager.install_pip_requirements(req, require_hashes=False)
+
+            # sys.executable is used to start the websocketprocessbridge, though for some
+            # reason it doesn't get set when calling `activate_this.py` in the virtualenv.
+            sys.executable = self.virtualenv_manager.python_path
+
         # This is a hack to introduce an option in mach to not send
         # filtered tests to the mochitest harness. Mochitest harness will read
         # the master manifest in that case.

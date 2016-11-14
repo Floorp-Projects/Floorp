@@ -476,3 +476,39 @@ add_task(function* test_stderr() {
   notEqual(lines[1], -1, "Saw second line of stderr output on the console");
   notEqual(lines[0], lines[1], "Stderr output lines are separated in the console");
 });
+
+// Test that calling connectNative() multiple times works
+// (bug 1313980 was a previous regression in this area)
+add_task(function* test_multiple_connects() {
+  async function background() {
+    function once() {
+      return new Promise(resolve => {
+        let MSG = "hello";
+        let port = browser.runtime.connectNative("echo");
+
+        port.onMessage.addListener(msg => {
+          browser.test.assertEq(MSG, msg, "Got expected message back");
+          port.disconnect();
+          resolve();
+        });
+        port.postMessage(MSG);
+      });
+    }
+
+    await once();
+    await once();
+    browser.test.notifyPass("multiple-connect");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      applications: {gecko: {id: ID}},
+      permissions: ["nativeMessaging"],
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish("multiple-connect");
+  yield extension.unload();
+});

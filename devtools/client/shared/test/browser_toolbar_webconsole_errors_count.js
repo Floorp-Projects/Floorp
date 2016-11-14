@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-disable mozilla/no-cpows-in-tests */
+
+"use strict";
+
 // Tests that the developer toolbar errors count works properly.
 
 // Use the old webconsole since this is directly accessing old DOM, and
@@ -13,7 +17,6 @@ registerCleanupFunction(function* () {
 
 function test() {
   const TEST_URI = TEST_URI_ROOT + "browser_toolbar_webconsole_errors_count.html";
-
 
   let tab1, tab2, webconsole;
 
@@ -34,8 +37,7 @@ function test() {
 
     if (!DeveloperToolbar.visible) {
       DeveloperToolbar.show(true).then(onOpenToolbar);
-    }
-    else {
+    } else {
       onOpenToolbar();
     }
   }
@@ -102,7 +104,8 @@ function test() {
     waitForValue({
       name: "web console shows the page errors",
       validator: function () {
-        return hud.outputNode.querySelectorAll(".message[category=exception][severity=error]").length;
+        let selector = ".message[category=exception][severity=error]";
+        return hud.outputNode.querySelectorAll(selector).length;
       },
       value: 4,
       success: checkConsoleOutput.bind(null, hud),
@@ -133,7 +136,8 @@ function test() {
     waitForButtonUpdate({
       name: "button shows one more error after another click in page",
       errors: 5,
-      warnings: 1, // warnings are not repeated by the js engine
+      // warnings are not repeated by the js engine
+      warnings: 1,
       callback: () => waitForValue(waitForNewError),
     });
 
@@ -183,7 +187,8 @@ function test() {
     let waitForConsoleOutputAfterReload = {
       name: "the Web Console displays the correct number of errors after reload",
       validator: function () {
-        return hud.outputNode.querySelectorAll(".message[category=exception][severity=error]").length;
+        let selector = ".message[category=exception][severity=error]";
+        return hud.outputNode.querySelectorAll(selector).length;
       },
       value: 3,
       success: function () {
@@ -243,8 +248,7 @@ function test() {
     }
   }
 
-  function openWebConsole(tab, callback)
-  {
+  function openWebConsole(tab, callback) {
     let target = TargetFactory.forTab(tab);
     gDevTools.showToolbox(target, "webconsole").then((toolbox) =>
       callback(toolbox.getCurrentPanel().hud));

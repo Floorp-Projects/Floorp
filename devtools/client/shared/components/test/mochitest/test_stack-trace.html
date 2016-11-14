@@ -16,10 +16,15 @@ Test the rendering of a stack trace
 <body>
 <script src="head.js"></script>
 <script>
-window.onload = function() {
+/* import-globals-from head.js */
+"use strict";
+
+window.onload = function () {
   let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
   let React = browserRequire("devtools/client/shared/vendor/react");
-  let StackTrace = React.createFactory(browserRequire("devtools/client/shared/components/stack-trace"));
+  let StackTrace = React.createFactory(
+    browserRequire("devtools/client/shared/components/stack-trace")
+  );
   ok(StackTrace, "Got the StackTrace factory");
 
   add_task(function* () {
@@ -67,7 +72,8 @@ window.onload = function() {
     });
 
     // Check the async cause node
-    is(frameEls[1].className, "frame-link-async-cause", "Async cause has the right class");
+    is(frameEls[1].className, "frame-link-async-cause",
+       "Async cause has the right class");
     is(frameEls[1].textContent, "(Async: because)", "Async cause has the right label");
 
     // Check the third frame, the source should be parsed into a valid source URL
@@ -90,7 +96,7 @@ window.onload = function() {
     is(traceLines.length, 3, "The stack trace text has 3 lines");
     ok(traceLines.every(l => l[0] == "\t"), "Every stack trace line starts with tab");
   });
-}
+};
 </script>
 </body>
 </html>

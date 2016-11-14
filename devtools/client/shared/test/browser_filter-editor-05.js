@@ -20,11 +20,13 @@ const GRAYSCALE_MAX = 100,
 const TEST_URI = `data:text/html,<div id="filter-container" />`;
 
 add_task(function* () {
-  let [host, win, doc] = yield createHost("bottom", TEST_URI);
+  let [,, doc] = yield createHost("bottom", TEST_URI);
   const cssIsValid = getClientCssProperties().getValidityChecker(doc);
 
   const container = doc.querySelector("#filter-container");
-  let widget = new CSSFilterEditorWidget(container, "grayscale(0%) url(test.svg)", cssIsValid);
+  let widget = new CSSFilterEditorWidget(
+    container, "grayscale(0%) url(test.svg)", cssIsValid
+  );
 
   const filters = widget.el.querySelector("#filters");
   const grayscale = filters.children[0];
@@ -50,7 +52,8 @@ add_task(function* () {
 
   info("Test label-dragging on number-type filters with alt");
   widget._mouseMove({
-    pageX: 20, // 20 - 12 = 8
+    // 20 - 12 = 8
+    pageX: 20,
     altKey: true,
     shiftKey: false
   });
@@ -62,7 +65,8 @@ add_task(function* () {
 
   info("Test label-dragging on number-type filters with shift");
   widget._mouseMove({
-    pageX: 25, // 25 - 20 = 5
+    // 25 - 20 = 5
+    pageX: 25,
     altKey: false,
     shiftKey: true
   });
@@ -97,7 +101,8 @@ add_task(function* () {
   info("Test value ranges");
 
   widget._mouseMove({
-    pageX: 30, // 30 - 25 = 5
+    // 30 - 25 = 5
+    pageX: 30,
     altKey: false,
     shiftKey: true
   });

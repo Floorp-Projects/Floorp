@@ -14,6 +14,7 @@ from marionette_driver import (
     geckoinstance,
     gestures,
     keys,
+    localization,
     marionette,
     selection,
     wait,
