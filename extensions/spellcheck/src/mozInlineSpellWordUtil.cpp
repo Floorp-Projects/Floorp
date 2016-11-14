@@ -51,7 +51,7 @@ inline bool IsConditionalPunctuation(char16_t ch)
 // mozInlineSpellWordUtil::Init
 
 nsresult
-mozInlineSpellWordUtil::Init(nsWeakPtr aWeakEditor)
+mozInlineSpellWordUtil::Init(const nsWeakPtr& aWeakEditor)
 {
   nsresult rv;
 
