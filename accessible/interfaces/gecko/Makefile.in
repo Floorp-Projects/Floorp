@@ -1,0 +1,31 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+GARBAGE += $(MIDL_GENERATED_FILES) done_gen dlldata.c
+
+MIDL_GENERATED_FILES = \
+	IGeckoCustom.h \
+	IGeckoCustom_p.c \
+	IGeckoCustom_i.c \
+	$(NULL)
+
+$(MIDL_GENERATED_FILES): done_gen
+
+done_gen: IGeckoCustom.idl
+	$(MIDL) $(MIDL_FLAGS) -I $(srcdir) -Oicf $(srcdir)/IGeckoCustom.idl
+	touch $@
+
+export:: done_gen
+
+midl_exports := \
+    IGeckoCustom.h \
+    IGeckoCustom_i.c \
+    $(NULL)
+
+INSTALL_TARGETS += midl_exports
+midl_exports_FILES := $(midl_exports)
+midl_exports_DEST = $(DIST)/include
+midl_exports_TARGET := midl
+
+export:: midl
