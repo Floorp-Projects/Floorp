@@ -5,8 +5,7 @@
 
 "use strict";
 
-var Cu = Components.utils;
-const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 const {parseDeclarations, _parseCommentDeclarations} = require("devtools/shared/css/parsing-utils");
 const {isCssPropertyKnown} = require("devtools/server/actors/css-properties");
 
@@ -239,12 +238,13 @@ const TEST_DATA = [
     }]
   },
   {
-    input: "content: \"a not s\\\
-          o very long title\"",
-    expected: [
-      {name: "content", value: '"a not s\\\
-          o very long title"', priority: "", offsets: [0, 46]}
-    ]
+    input: "content: \"a not s\\          o very long title\"",
+    expected: [{
+      name: "content",
+      value: '"a not s\\          o very long title"',
+      priority: "",
+      offsets: [0, 46]
+    }]
   },
   // Test calc with nested parentheses
   {

@@ -86,6 +86,11 @@ H264Converter::Input(MediaRawData* aSample)
     }
   } else {
     rv = CheckForSPSChange(aSample);
+    if (rv == NS_ERROR_NOT_INITIALIZED) {
+      // The decoder is pending initialization.
+      mCallback->InputExhausted();
+      return;
+    }
   }
   if (NS_FAILED(rv)) {
     mCallback->Error(
@@ -228,6 +233,7 @@ H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
       ->Then(AbstractThread::GetCurrent()->AsTaskQueue(), __func__, this,
              &H264Converter::OnDecoderInitDone,
              &H264Converter::OnDecoderInitFailed));
+    return NS_ERROR_NOT_INITIALIZED;
   }
   return rv;
 }
@@ -244,6 +250,13 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
         continue;
       }
       mNeedKeyframe = false;
+    }
+    if (!mNeedAVCC &&
+        !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(sample, mNeedKeyframe)) {
+      mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                                   RESULT_DETAIL("ConvertSampleToAnnexB")));
+      mMediaRawSamples.Clear();
+      return;
     }
     mDecoder->Input(sample);
   }

@@ -1,13 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that text metrics in the flame graph widget work properly.
 
-var HTML_NS = "http://www.w3.org/1999/xhtml";
-var {ELLIPSIS} = require("devtools/shared/l10n");
-var {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
-var {FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE} = require("devtools/client/shared/widgets/FlameGraph");
-var {FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY} = require("devtools/client/shared/widgets/FlameGraph");
+const HTML_NS = "http://www.w3.org/1999/xhtml";
+const {ELLIPSIS} = require("devtools/shared/l10n");
+const {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
+const {FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE} = require("devtools/client/shared/widgets/FlameGraph");
+const {FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY} = require("devtools/client/shared/widgets/FlameGraph");
 
 add_task(function* () {
   yield addTab("about:blank");
@@ -16,7 +18,7 @@ add_task(function* () {
 });
 
 function* performTest() {
-  let [host, win, doc] = yield createHost();
+  let [host,, doc] = yield createHost();
   let graph = new FlameGraph(doc.body, 1);
   yield graph.ready();
 
@@ -64,8 +66,9 @@ function testGraph(graph) {
 
 function getAverageCharWidth() {
   let letterWidthsSum = 0;
-  let start = 32; // space
-  let end = 123; // "z"
+
+  let start = " ".charCodeAt(0);
+  let end = "z".charCodeAt(0) + 1;
 
   for (let i = start; i < end; i++) {
     let char = String.fromCharCode(i);

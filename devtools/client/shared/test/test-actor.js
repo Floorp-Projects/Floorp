@@ -2,18 +2,20 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* exported TestActor, TestActorFront */
+
 "use strict";
 
 // A helper actor for inspector and markupview tests.
 
-var { Cc, Ci, Cu, Cr } = require("chrome");
+const { Cc, Ci, Cu } = require("chrome");
 const {getRect, getElementFromPoint, getAdjustedQuads} = require("devtools/shared/layout/utils");
 const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
 const {isContentStylesheet} = require("devtools/shared/inspector/css-logic");
-var DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-            .getService(Ci.mozIJSSubScriptLoader);
+const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+                 .getService(Ci.mozIJSSubScriptLoader);
 
 // Set up a dummy environment so that EventUtils works. We need to be careful to
 // pass a window object into each EventUtils method we call rather than having
@@ -21,14 +23,16 @@ var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
 let EventUtils = {};
 EventUtils.window = {};
 EventUtils.parent = {};
+/* eslint-disable camelcase */
 EventUtils._EU_Ci = Components.interfaces;
 EventUtils._EU_Cc = Components.classes;
+/* eslint-disable camelcase */
 loader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
 const protocol = require("devtools/shared/protocol");
-const {Arg, Option, method, RetVal, types} = protocol;
+const {Arg, RetVal} = protocol;
 
-var dumpn = msg => {
+const dumpn = msg => {
   dump(msg + "\n");
 };
 
@@ -45,6 +49,7 @@ function getHighlighterCanvasFrameHelper(conn, actorID) {
   if (actor && actor._highlighter) {
     return actor._highlighter.markup;
   }
+  return null;
 }
 
 var testSpec = protocol.generateActorSpec({
@@ -352,6 +357,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
     if (helper) {
       return helper.getAttributeForElement(nodeID, name);
     }
+    return null;
   },
 
   /**
@@ -381,9 +387,8 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
     let {_highlighter: h} = highlighter;
     if (!h || !h._highlighters) {
       return null;
-    } else {
-      return h._highlighters.length;
     }
+    return h._highlighters.length;
   },
 
   /**
@@ -395,18 +400,14 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} actorID The highlighter actor ID
    */
   changeHighlightedNodeWaitForUpdate: function (name, value, actorID) {
-    let deferred = defer();
+    return new Promise(resolve => {
+      let highlighter = this.conn.getActor(actorID);
+      let {_highlighter: h} = highlighter;
 
-    let highlighter = this.conn.getActor(actorID);
-    let {_highlighter: h} = highlighter;
+      h.once("updated", resolve);
 
-    h.once("updated", () => {
-      deferred.resolve();
+      h.currentNode.setAttribute(name, value);
     });
-
-    h.currentNode.setAttribute(name, value);
-
-    return deferred.promise;
   },
 
   /**
@@ -446,24 +447,20 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    */
   changeZoomLevel: function (level, actorID) {
     dumpn("Zooming page to " + level);
-    let deferred = defer();
+    return new Promise(resolve => {
+      if (actorID) {
+        let actor = this.conn.getActor(actorID);
+        let {_highlighter: h} = actor;
+        h.once("updated", resolve);
+      } else {
+        resolve();
+      }
 
-    if (actorID) {
-      let actor = this.conn.getActor(actorID);
-      let {_highlighter: h} = actor;
-      h.once("updated", () => {
-        deferred.resolve();
-      });
-    } else {
-      deferred.resolve();
-    }
-
-    let docShell = this.content.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIWebNavigation)
-                               .QueryInterface(Ci.nsIDocShell);
-    docShell.contentViewer.fullZoom = level;
-
-    return deferred.promise;
+      let docShell = this.content.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIWebNavigation)
+                                 .QueryInterface(Ci.nsIDocShell);
+      docShell.contentViewer.fullZoom = level;
+    });
   },
 
   assertElementAtPoint: function (x, y, selector) {
@@ -543,20 +540,17 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
   },
 
   loadAndWaitForCustomEvent: function (url) {
-    let deferred = defer();
-    let self = this;
-    // Wait for DOMWindowCreated first, as listening on the current outerwindow
-    // doesn't allow receiving test-page-processing-done.
-    this.tabActor.chromeEventHandler.addEventListener("DOMWindowCreated", function onWindowCreated() {
-      self.tabActor.chromeEventHandler.removeEventListener("DOMWindowCreated", onWindowCreated);
-      self.content.addEventListener("test-page-processing-done", function onEvent() {
-        self.content.removeEventListener("test-page-processing-done", onEvent);
-        deferred.resolve();
-      });
-    });
+    return new Promise(resolve => {
+      // Wait for DOMWindowCreated first, as listening on the current outerwindow
+      // doesn't allow receiving test-page-processing-done.
+      this.tabActor.chromeEventHandler.addEventListener("DOMWindowCreated", () => {
+        this.content.addEventListener(
+          "test-page-processing-done", resolve, { once: true }
+        );
+      }, { once: true });
 
-    this.content.location = url;
-    return deferred.promise;
+      this.content.location = url;
+    });
   },
 
   hasNode: function (selector) {
@@ -811,8 +805,12 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
     return this.changeZoomLevel(level, this.toolbox.highlighter.actorID);
   },
 
+  /* eslint-disable max-len */
   changeHighlightedNodeWaitForUpdate: protocol.custom(function (name, value, highlighter) {
-    return this._changeHighlightedNodeWaitForUpdate(name, value, (highlighter || this.toolbox.highlighter).actorID);
+    /* eslint-enable max-len */
+    return this._changeHighlightedNodeWaitForUpdate(
+      name, value, (highlighter || this.toolbox.highlighter).actorID
+    );
   }, {
     impl: "_changeHighlightedNodeWaitForUpdate"
   }),
@@ -825,11 +823,15 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
    * @return {String} value
    */
   getHighlighterNodeAttribute: function (nodeID, name, highlighter) {
-    return this.getHighlighterAttribute(nodeID, name, (highlighter || this.toolbox.highlighter).actorID);
+    return this.getHighlighterAttribute(
+      nodeID, name, (highlighter || this.toolbox.highlighter).actorID
+    );
   },
 
   getHighlighterNodeTextContent: protocol.custom(function (nodeID, highlighter) {
-    return this._getHighlighterNodeTextContent(nodeID, (highlighter || this.toolbox.highlighter).actorID);
+    return this._getHighlighterNodeTextContent(
+      nodeID, (highlighter || this.toolbox.highlighter).actorID
+    );
   }, {
     impl: "_getHighlighterNodeTextContent"
   }),
@@ -872,7 +874,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
    */
   getSimpleBorderRect: Task.async(function* (toolbox) {
     let {border} = yield this._getBoxModelStatus(toolbox);
-    let {p1, p2, p3, p4} = border.points;
+    let {p1, p2, p4} = border.points;
 
     return {
       top: p1.y,
@@ -1066,7 +1068,9 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
    *   is itself an Array of points, themselves being [x,y] coordinates arrays.
    */
   getHighlighterRegionPath: Task.async(function* (region, highlighter) {
-    let d = yield this.getHighlighterNodeAttribute("box-model-" + region, "d", highlighter);
+    let d = yield this.getHighlighterNodeAttribute(
+      `box-model-${region}`, "d", highlighter
+    );
     if (!d) {
       return {d: null};
     }

@@ -41,8 +41,10 @@ function testAngleValidity() {
 
   for (let {angle, result} of data) {
     let testAngle = new angleUtils.CssAngle(angle);
+    let validString = testAngle.valid ? " a valid" : "an invalid";
 
-    is(testAngle.valid, result, `Testing that "${angle}" is ${testAngle.valid ? " a valid" : "an invalid" } angle`);
+    is(testAngle.valid, result,
+       `Testing that "${angle}" is ${validString} angle`);
   }
 }
 

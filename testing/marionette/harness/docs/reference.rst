@@ -44,3 +44,8 @@ Addons
 ------
 .. autoclass:: marionette_driver.addons.Addons
    :members:
+
+Localization
+------------
+.. autoclass:: marionette_driver.localization.L10n
+   :members:

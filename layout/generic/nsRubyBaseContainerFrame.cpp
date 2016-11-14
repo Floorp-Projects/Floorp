@@ -315,6 +315,8 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     return;
   }
 
+  mDescendantLeadings.Reset();
+
   MoveOverflowToChildList();
   // Ask text containers to drain overflows
   AutoRubyTextContainerArray textContainers(this);

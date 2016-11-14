@@ -565,7 +565,7 @@ TabTarget.prototype = {
     // Responsive design do a crazy dance around tabs and triggers
     // remotenesschange events. But we should ignore them as at the end
     // the content doesn't change its remoteness.
-    if (this._tab.isReponsiveDesignMode) {
+    if (this._tab.isResponsiveDesignMode) {
       return;
     }
 

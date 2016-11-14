@@ -255,7 +255,7 @@ function setupPanelFrame(frame) {
   frame.setAttribute("autocompleteenabled", true);
   frame.setAttribute("tooltip", "aHTMLTooltip");
   if (platform === "darwin") {
-    frame.style.borderRadius = "6px";
+    frame.style.borderRadius = "var(--arrowpanel-border-radius, 3.5px)";
     frame.style.padding = "1px";
   }
 }

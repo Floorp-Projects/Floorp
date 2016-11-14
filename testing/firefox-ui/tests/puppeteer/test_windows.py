@@ -2,16 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import firefox_puppeteer.errors as errors
+
+from firefox_puppeteer import PuppeteerMixin
+from firefox_puppeteer.ui.windows import BaseWindow
+from marionette import MarionetteTestCase
 from marionette_driver import By, Wait
 from marionette_driver.errors import NoSuchWindowException
 
-import firefox_puppeteer.errors as errors
 
-from firefox_puppeteer.ui.windows import BaseWindow
-from firefox_ui_harness.testcases import FirefoxTestCase
+class BaseWindowTestCase(PuppeteerMixin, MarionetteTestCase):
 
-
-class BaseWindowTestCase(FirefoxTestCase):
     def setUp(self):
         """
         These tests open and close windows pretty rapidly, which
@@ -26,14 +27,15 @@ class BaseWindowTestCase(FirefoxTestCase):
         setting dom.ipc.tabs.shutdownTimeoutSecs to 0, which disables
         the shutdown timer.
         """
-        FirefoxTestCase.setUp(self)
+        super(BaseWindowTestCase, self).setUp()
+
         self.puppeteer.prefs.set_pref('dom.ipc.tabs.shutdownTimeoutSecs', 0)
 
     def tearDown(self):
         try:
             self.marionette.clear_pref('dom.ipc.tabs.shutdownTimeoutSecs')
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(BaseWindowTestCase, self).tearDown()
 
 
 class TestWindows(BaseWindowTestCase):
@@ -42,7 +44,7 @@ class TestWindows(BaseWindowTestCase):
         try:
             self.puppeteer.windows.close_all([self.browser])
         finally:
-            BaseWindowTestCase.tearDown(self)
+            super(TestWindows, self).tearDown()
 
     def test_switch_to(self):
         url = self.marionette.absolute_url('layout/mozilla.html')

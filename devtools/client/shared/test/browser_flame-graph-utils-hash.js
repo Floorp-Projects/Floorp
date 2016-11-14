@@ -1,11 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests if (idle) nodes are added when necessary in the flame graph data.
 
-var {FlameGraphUtils} = require("devtools/client/shared/widgets/FlameGraph");
+const {FlameGraphUtils} = require("devtools/client/shared/widgets/FlameGraph");
 
-var test = Task.async(function* () {
+add_task(function* () {
   let hash1 = FlameGraphUtils._getStringHash("abc");
   let hash2 = FlameGraphUtils._getStringHash("acb");
   let hash3 = FlameGraphUtils._getStringHash(Array.from(Array(100000)).join("a"));
@@ -19,6 +21,4 @@ var test = Task.async(function* () {
   ok(Number.isInteger(hash2), "The hashes should be integers, not Infinity or NaN (2).");
   ok(Number.isInteger(hash3), "The hashes should be integers, not Infinity or NaN (3).");
   ok(Number.isInteger(hash4), "The hashes should be integers, not Infinity or NaN (4).");
-
-  finish();
 });

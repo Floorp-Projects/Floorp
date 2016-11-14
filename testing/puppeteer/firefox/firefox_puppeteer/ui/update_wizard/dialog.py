@@ -23,9 +23,6 @@ class UpdateWizardDialog(BaseWindow):
         'chrome://mozapps/locale/update/updates.properties',
     ]
 
-    def __init__(self, *args, **kwargs):
-        BaseWindow.__init__(self, *args, **kwargs)
-
     @property
     def wizard(self):
         """The :class:`Wizard` instance which represents the wizard.

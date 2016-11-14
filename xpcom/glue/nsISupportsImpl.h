@@ -130,9 +130,11 @@ do {                                     \
 
 /* nsCOMPtr.h allows these macros to be defined by clients
  * These logging functions require dynamic_cast<void*>, so they don't
- * do anything useful if we don't have dynamic_cast<void*>. */
+ * do anything useful if we don't have dynamic_cast<void*>.
+ * Note: The explicit comparison to nullptr is needed to avoid warnings
+ *       when _p is a nullptr itself. */
 #define NSCAP_LOG_ASSIGNMENT(_c, _p)                                \
-  if (_p)                                                           \
+  if (_p != nullptr)                                                \
     NS_LogCOMPtrAddRef((_c),static_cast<nsISupports*>(_p))
 
 #define NSCAP_LOG_RELEASE(_c, _p)                                   \

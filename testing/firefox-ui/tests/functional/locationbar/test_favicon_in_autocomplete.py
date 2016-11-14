@@ -2,18 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import Wait
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestFaviconInAutocomplete(FirefoxTestCase):
+class TestFaviconInAutocomplete(PuppeteerMixin, MarionetteTestCase):
 
     PREF_SUGGEST_SEARCHES = 'browser.urlbar.suggest.searches'
     PREF_SUGGEST_BOOKMARK = 'browser.urlbar.suggest.bookmark'
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestFaviconInAutocomplete, self).setUp()
 
         # Disable suggestions for searches and bookmarks to get results only for history
         self.puppeteer.prefs.set_pref(self.PREF_SUGGEST_SEARCHES, False)
@@ -34,7 +34,7 @@ class TestFaviconInAutocomplete(FirefoxTestCase):
             self.marionette.clear_pref(self.PREF_SUGGEST_SEARCHES)
             self.marionette.clear_pref(self.PREF_SUGGEST_BOOKMARK)
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestFaviconInAutocomplete, self).tearDown()
 
     def test_favicon_in_autocomplete(self):
         # Open the test page

@@ -191,7 +191,7 @@ static const char wb4[] = "zation work.";
 static const char* wb[] = { wb0, wb1, wb2, wb3, wb4 };
 
 void
-SamplePrintWordWithBreak()
+TestPrintWordWithBreak()
 {
   uint32_t numOfFragment = sizeof(wb) / sizeof(char*);
   nsIWordBreaker* wbk = nullptr;
@@ -229,14 +229,15 @@ SamplePrintWordWithBreak()
       fragText.Assign(nextFragText);
     }
   }
-  printf("Output From SamplePrintWordWithBreak() \n\n");
-  printf("[%s]\n", NS_ConvertUTF16toUTF8(result).get());
+  ASSERT_STREQ("is^   ^is^ ^a^ ^  is a intzation^ ^work^ation work.",
+               NS_ConvertUTF16toUTF8(result).get());
 
   NS_IF_RELEASE(wbk);
 }
 
 void
-SampleFindWordBreakFromPosition(uint32_t fragN, uint32_t offset)
+TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
+                              const char* expected)
 {
   uint32_t numOfFragment = sizeof(wb) / sizeof(char*);
   nsIWordBreaker* wbk = nullptr;
@@ -299,26 +300,24 @@ SampleFindWordBreakFromPosition(uint32_t fragN, uint32_t offset)
     }
   }
 
-  printf("Output From SamplePrintWordWithBreak() \n\n");
-  printf("[%s]\n", NS_ConvertUTF16toUTF8(result).get());
+  ASSERT_STREQ(expected, NS_ConvertUTF16toUTF8(result).get())
+    << "FindWordBreakFromPosition(" << fragN << ", " << offset << ")";
 
   NS_IF_RELEASE(wbk);
 }
 
-// XXX: this prints output but doesn't actually test anything and so cannot
-// fail. Bug 1314497 is open to convert it to a real test.
-TEST(LineBreak, SampleWordBreakUsage)
+TEST(LineBreak, WordBreakUsage)
 {
-  SamplePrintWordWithBreak();
-  SampleFindWordBreakFromPosition(0,0);  // This
-  SampleFindWordBreakFromPosition(1,0);  // This
-  SampleFindWordBreakFromPosition(2,0);  // This
-  SampleFindWordBreakFromPosition(2,1);  // This
-  SampleFindWordBreakFromPosition(2,9);  // [space]
-  SampleFindWordBreakFromPosition(2,10); // internationalization
-  SampleFindWordBreakFromPosition(3,4);  // internationalization
-  SampleFindWordBreakFromPosition(3,8);  // internationalization
-  SampleFindWordBreakFromPosition(4,6);  // [space]
-  SampleFindWordBreakFromPosition(4,7);  // work
+  TestPrintWordWithBreak();
+  TestFindWordBreakFromPosition(0, 0, "This");
+  TestFindWordBreakFromPosition(1, 0, "his");
+  TestFindWordBreakFromPosition(2, 0, "is");
+  TestFindWordBreakFromPosition(2, 1, "is");
+  TestFindWordBreakFromPosition(2, 9, " ");
+  TestFindWordBreakFromPosition(2, 10, "internationalization");
+  TestFindWordBreakFromPosition(3, 4, "ernationalization");
+  TestFindWordBreakFromPosition(3, 8, "ernationalization");
+  TestFindWordBreakFromPosition(4, 6, " ");
+  TestFindWordBreakFromPosition(4, 7, "work");
 }
 

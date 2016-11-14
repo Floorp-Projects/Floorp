@@ -4,16 +4,16 @@
 
 import time
 
+from firefox_puppeteer import PuppeteerMixin
+from marionette import MarionetteTestCase
 from marionette_driver import By, expected, Wait
 from marionette_driver.errors import MarionetteException
 
-from firefox_ui_harness.testcases import FirefoxTestCase
 
-
-class TestSSLDisabledErrorPage(FirefoxTestCase):
+class TestSSLDisabledErrorPage(PuppeteerMixin, MarionetteTestCase):
 
     def setUp(self):
-        FirefoxTestCase.setUp(self)
+        super(TestSSLDisabledErrorPage, self).setUp()
 
         self.url = 'https://tlsv1-0.mozqa.com'
 
@@ -30,7 +30,7 @@ class TestSSLDisabledErrorPage(FirefoxTestCase):
             self.marionette.clear_pref('security.tls.version.min')
             self.marionette.clear_pref('security.tls.version.max')
         finally:
-            FirefoxTestCase.tearDown(self)
+            super(TestSSLDisabledErrorPage, self).tearDown()
 
     def test_ssl_disabled_error_page(self):
         with self.marionette.using_context('content'):

@@ -1,11 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests the constructor options for `min`, `max` and `avg` on displaying the
 // gutter/tooltips and lines.
 
 const TEST_DATA = [{ delta: 100, value: 60 }, { delta: 200, value: 1 }];
-var LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
+const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
 add_task(function* () {
   yield addTab("about:blank");
@@ -14,7 +16,7 @@ add_task(function* () {
 });
 
 function* performTest() {
-  let [host, win, doc] = yield createHost();
+  let [host,, doc] = yield createHost();
 
   yield testGraph(doc.body, { avg: false });
   yield testGraph(doc.body, { min: false });

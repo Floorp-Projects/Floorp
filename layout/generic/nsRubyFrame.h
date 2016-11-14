@@ -10,8 +10,7 @@
 #define nsRubyFrame_h___
 
 #include "nsInlineFrame.h"
-
-class nsRubyBaseContainerFrame;
+#include "RubyUtils.h"
 
 /**
  * Factory function.
@@ -43,10 +42,8 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  void GetBlockLeadings(nscoord& aStartLeading, nscoord& aEndLeading)
-  {
-    aStartLeading = mBStartLeading;
-    aEndLeading = mBEndLeading;
+  mozilla::RubyBlockLeadings GetBlockLeadings() const {
+    return mLeadings;
   }
 
 protected:
@@ -63,10 +60,9 @@ protected:
   nsRubyBaseContainerFrame* PullOneSegment(const nsLineLayout* aLineLayout,
                                            ContinuationTraversingState& aState);
 
-  // The leading required to put the annotations.
-  // They are not initialized until the first reflow.
-  nscoord mBStartLeading;
-  nscoord mBEndLeading;
+  // The leadings required to put the annotations. They are dummy-
+  // initialized to 0, and get meaningful values at first reflow.
+  mozilla::RubyBlockLeadings mLeadings;
 };
 
 #endif /* nsRubyFrame_h___ */
