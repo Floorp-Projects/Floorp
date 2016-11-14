@@ -38,11 +38,13 @@ Gamepad::UpdateTimestamp()
 Gamepad::Gamepad(nsISupports* aParent,
                  const nsAString& aID, uint32_t aIndex,
                  GamepadMappingType aMapping,
+                 GamepadHand aHand,
                  uint32_t aNumButtons, uint32_t aNumAxes)
   : mParent(aParent),
     mID(aID),
     mIndex(aIndex),
     mMapping(aMapping),
+    mHand(aHand),
     mConnected(true),
     mButtons(aNumButtons),
     mAxes(aNumAxes),
@@ -122,6 +124,7 @@ Gamepad::SyncState(Gamepad* aOther)
   if (Preferences::GetBool(kGamepadExtEnabledPref)) {
     MOZ_ASSERT(aOther->GetPose());
     mPose->SetPoseState(aOther->GetPose()->GetPoseState());
+    mHand = aOther->Hand();
   }
 
   UpdateTimestamp();
@@ -132,7 +135,7 @@ Gamepad::Clone(nsISupports* aParent)
 {
   RefPtr<Gamepad> out =
     new Gamepad(aParent, mID, mIndex, mMapping,
-                mButtons.Length(), mAxes.Length());
+                mHand, mButtons.Length(), mAxes.Length());
   out->SyncState(this);
   return out.forget();
 }
