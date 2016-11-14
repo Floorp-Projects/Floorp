@@ -194,11 +194,10 @@ GMPContentParent::GetGMPAudioDecoder(GMPAudioDecoderParent** aGMPAD)
 }
 
 nsresult
-GMPContentParent::GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD,
-                                     uint32_t aDecryptorId)
+GMPContentParent::GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD)
 {
   // returned with one anonymous AddRef that locks it until Destroy
-  PGMPVideoDecoderParent* pvdp = SendPGMPVideoDecoderConstructor(aDecryptorId);
+  PGMPVideoDecoderParent* pvdp = SendPGMPVideoDecoderConstructor();
   if (!pvdp) {
     return NS_ERROR_FAILURE;
   }
@@ -231,7 +230,7 @@ GMPContentParent::GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE)
 }
 
 PGMPVideoDecoderParent*
-GMPContentParent::AllocPGMPVideoDecoderParent(const uint32_t& aDecryptorId)
+GMPContentParent::AllocPGMPVideoDecoderParent()
 {
   GMPVideoDecoderParent* vdp = new GMPVideoDecoderParent(this);
   NS_ADDREF(vdp);

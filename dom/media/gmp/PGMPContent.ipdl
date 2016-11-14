@@ -25,7 +25,7 @@ intr protocol PGMPContent
 child:
   async PGMPAudioDecoder();
   async PGMPDecryptor();
-  async PGMPVideoDecoder(uint32_t aDecryptorId);
+  async PGMPVideoDecoder();
   async PGMPVideoEncoder();
 };
 
