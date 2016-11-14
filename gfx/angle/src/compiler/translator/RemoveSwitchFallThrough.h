@@ -23,7 +23,6 @@ class RemoveSwitchFallThrough : public TIntermTraverser
     void visitConstantUnion(TIntermConstantUnion *node) override;
     bool visitBinary(Visit, TIntermBinary *node) override;
     bool visitUnary(Visit, TIntermUnary *node) override;
-    bool visitTernary(Visit visit, TIntermTernary *node) override;
     bool visitSelection(Visit visit, TIntermSelection *node) override;
     bool visitSwitch(Visit, TIntermSwitch *node) override;
     bool visitCase(Visit, TIntermCase *node) override;

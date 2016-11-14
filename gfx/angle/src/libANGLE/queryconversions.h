@@ -23,33 +23,7 @@ class Context;
 template <typename GLType>
 struct GLTypeToGLenum
 {
-    // static constexpr GLenum value;
-};
-
-template <>
-struct GLTypeToGLenum<GLint>
-{
-    static constexpr GLenum value = GL_INT;
-};
-template <>
-struct GLTypeToGLenum<GLuint>
-{
-    static constexpr GLenum value = GL_UNSIGNED_INT;
-};
-template <>
-struct GLTypeToGLenum<GLboolean>
-{
-    static constexpr GLenum value = GL_BOOL;
-};
-template <>
-struct GLTypeToGLenum<GLint64>
-{
-    static constexpr GLenum value = GL_INT_64_ANGLEX;
-};
-template <>
-struct GLTypeToGLenum<GLfloat>
-{
-    static constexpr GLenum value = GL_FLOAT;
+    static GLenum value;
 };
 
 // The GL state query API types are: bool, int, uint, float, int64

@@ -1433,12 +1433,7 @@ LinkResult ProgramD3D::link(const gl::ContextState &data, gl::InfoLog &infoLog)
     gatherTransformFeedbackVaryings(varyingPacking);
 
     LinkResult result = compileProgramExecutables(data, infoLog);
-    if (result.error.isError())
-    {
-        infoLog << result.error.getMessage();
-        return result;
-    }
-    else if (!result.linkSuccess)
+    if (result.error.isError() || !result.linkSuccess)
     {
         infoLog << "Failed to create D3D shaders.";
         return result;

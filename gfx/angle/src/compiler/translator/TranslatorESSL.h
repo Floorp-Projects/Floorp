@@ -15,7 +15,9 @@ class TranslatorESSL : public TCompiler
     TranslatorESSL(sh::GLenum type, ShShaderSpec spec);
 
   protected:
-    void translate(TIntermNode *root, ShCompileOptions compileOptions) override;
+    void initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu, int compileOptions) override;
+
+    void translate(TIntermNode *root, int compileOptions) override;
     bool shouldFlattenPragmaStdglInvariantAll() override;
 
   private:

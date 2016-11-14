@@ -41,8 +41,6 @@ TEST(ImageIndexTest, Iterator2D)
         EXPECT_EQ(current.mipIndex, nextIndex.mipIndex);
         EXPECT_EQ(current.layerIndex, nextIndex.layerIndex);
     }
-
-    EXPECT_FALSE(iter.hasNext());
 }
 
 TEST(ImageIndexTest, IteratorCube)
@@ -66,8 +64,6 @@ TEST(ImageIndexTest, IteratorCube)
             EXPECT_TRUE(nextIndex.hasLayer());
         }
     }
-
-    EXPECT_FALSE(iter.hasNext());
 }
 
 TEST(ImageIndexTest, Iterator3D)
@@ -89,8 +85,6 @@ TEST(ImageIndexTest, Iterator3D)
             EXPECT_TRUE(nextIndex.hasLayer());
         }
     }
-
-    EXPECT_FALSE(iter.hasNext());
 }
 
 TEST(ImageIndexTest, Iterator2DArray)
@@ -115,8 +109,6 @@ TEST(ImageIndexTest, Iterator2DArray)
             EXPECT_TRUE(nextIndex.hasLayer());
         }
     }
-
-    EXPECT_FALSE(iter.hasNext());
 }
 
 } // namespace

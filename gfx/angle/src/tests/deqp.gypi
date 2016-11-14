@@ -1547,7 +1547,6 @@
                             'AdditionalOptions':
                             [
                                 '/bigobj', # needed for glsBuiltinPrecisionTests.cpp
-                                '/wd4251', # needed for angle_util STL objects not having DLL interface
                             ],
                         },
                     },
@@ -1763,7 +1762,6 @@
                     [
                         'angle_test_support',
                         '<(angle_path)/util/util.gyp:angle_util',
-                        '<(angle_path)/src/angle.gyp:angle_common',
                     ],
                     'export_dependent_settings':
                     [

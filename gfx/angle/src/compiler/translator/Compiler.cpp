@@ -4,7 +4,6 @@
 // found in the LICENSE file.
 //
 
-#include "compiler/translator/AddAndTrueToLoopCondition.h"
 #include "compiler/translator/Cache.h"
 #include "compiler/translator/Compiler.h"
 #include "compiler/translator/CallDAG.h"
@@ -18,6 +17,7 @@
 #include "compiler/translator/PruneEmptyDeclarations.h"
 #include "compiler/translator/RegenerateStructNames.h"
 #include "compiler/translator/RemovePow.h"
+#include "compiler/translator/RenameFunction.h"
 #include "compiler/translator/RewriteDoWhile.h"
 #include "compiler/translator/ScalarizeVecAndMatConstructorArgs.h"
 #include "compiler/translator/UnfoldShortCircuitAST.h"
@@ -25,13 +25,18 @@
 #include "compiler/translator/ValidateMaxParameters.h"
 #include "compiler/translator/ValidateOutputs.h"
 #include "compiler/translator/VariablePacker.h"
+#include "compiler/translator/depgraph/DependencyGraph.h"
+#include "compiler/translator/depgraph/DependencyGraphOutput.h"
+#include "compiler/translator/timing/RestrictFragmentShaderTiming.h"
+#include "compiler/translator/timing/RestrictVertexShaderTiming.h"
 #include "third_party/compiler/ArrayBoundsClamper.h"
 #include "angle_gl.h"
 #include "common/utilities.h"
 
 bool IsWebGLBasedSpec(ShShaderSpec spec)
 {
-    return (spec == SH_WEBGL_SPEC || spec == SH_WEBGL2_SPEC || spec == SH_WEBGL3_SPEC);
+    return (spec == SH_WEBGL_SPEC || spec == SH_CSS_SHADERS_SPEC || spec == SH_WEBGL2_SPEC ||
+            spec == SH_WEBGL3_SPEC);
 }
 
 bool IsGLSL130OrNewer(ShShaderOutput output)
@@ -55,6 +60,7 @@ size_t GetGlobalMaxTokenSize(ShShaderSpec spec)
     switch (spec)
     {
       case SH_WEBGL_SPEC:
+      case SH_CSS_SHADERS_SPEC:
         return 256;
       default:
         return 1024;
@@ -105,6 +111,7 @@ int MapSpecToShaderVersion(ShShaderSpec spec)
     {
       case SH_GLES2_SPEC:
       case SH_WEBGL_SPEC:
+      case SH_CSS_SHADERS_SPEC:
         return 100;
       case SH_GLES3_SPEC:
       case SH_WEBGL2_SPEC:
@@ -155,7 +162,7 @@ TCompiler::~TCompiler()
 {
 }
 
-bool TCompiler::shouldRunLoopAndIndexingValidation(ShCompileOptions compileOptions) const
+bool TCompiler::shouldRunLoopAndIndexingValidation(int compileOptions) const
 {
     // If compiling an ESSL 1.00 shader for WebGL, or if its been requested through the API,
     // validate loop and indexing as well (to verify that the shader only uses minimal functionality
@@ -190,16 +197,15 @@ bool TCompiler::Init(const ShBuiltInResources& resources)
     return true;
 }
 
-TIntermNode *TCompiler::compileTreeForTesting(const char *const shaderStrings[],
-                                              size_t numStrings,
-                                              ShCompileOptions compileOptions)
+TIntermNode *TCompiler::compileTreeForTesting(const char* const shaderStrings[],
+    size_t numStrings, int compileOptions)
 {
     return compileTreeImpl(shaderStrings, numStrings, compileOptions);
 }
 
 TIntermNode *TCompiler::compileTreeImpl(const char *const shaderStrings[],
                                         size_t numStrings,
-                                        const ShCompileOptions compileOptions)
+                                        const int compileOptions)
 {
     clearResults();
 
@@ -217,7 +223,8 @@ TIntermNode *TCompiler::compileTreeImpl(const char *const shaderStrings[],
         ++firstSource;
     }
 
-    TParseContext parseContext(symbolTable, extensionBehavior, shaderType, shaderSpec,
+    TIntermediate intermediate(infoSink);
+    TParseContext parseContext(symbolTable, extensionBehavior, intermediate, shaderType, shaderSpec,
                                compileOptions, true, infoSink, getResources());
 
     parseContext.setFragmentPrecisionHighOnESSL1(fragmentPrecisionHigh);
@@ -251,7 +258,7 @@ TIntermNode *TCompiler::compileTreeImpl(const char *const shaderStrings[],
         mComputeShaderLocalSize         = parseContext.getComputeShaderLocalSize();
 
         root = parseContext.getTreeRoot();
-        root = TIntermediate::PostProcess(root);
+        root = intermediate.postProcess(root);
 
         // Highp might have been auto-enabled based on shader version
         fragmentPrecisionHigh = parseContext.getFragmentPrecisionHigh();
@@ -287,6 +294,12 @@ TIntermNode *TCompiler::compileTreeImpl(const char *const shaderStrings[],
 
         if (success && shouldRunLoopAndIndexingValidation(compileOptions))
             success = validateLimitations(root);
+
+        if (success && (compileOptions & SH_TIMING_RESTRICTIONS))
+            success = enforceTimingRestrictions(root, (compileOptions & SH_DEPENDENCY_GRAPH) != 0);
+
+        if (success && shaderSpec == SH_CSS_SHADERS_SPEC)
+            rewriteCSSShader(root);
 
         // Unroll for-loop markup needs to happen after validateLimitations pass.
         if (success && (compileOptions & SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX))
@@ -331,9 +344,6 @@ TIntermNode *TCompiler::compileTreeImpl(const char *const shaderStrings[],
         // This pass might emit short circuits so keep it before the short circuit unfolding
         if (success && (compileOptions & SH_REWRITE_DO_WHILE_LOOPS))
             RewriteDoWhile(root, getTemporaryIndex());
-
-        if (success && (compileOptions & SH_ADD_AND_TRUE_TO_LOOP_CONDITION))
-            sh::AddAndTrueToLoopCondition(root);
 
         if (success && (compileOptions & SH_UNFOLD_SHORT_CIRCUIT))
         {
@@ -398,14 +408,12 @@ TIntermNode *TCompiler::compileTreeImpl(const char *const shaderStrings[],
     return NULL;
 }
 
-bool TCompiler::compile(const char *const shaderStrings[],
-                        size_t numStrings,
-                        ShCompileOptions compileOptionsIn)
+bool TCompiler::compile(const char *const shaderStrings[], size_t numStrings, int compileOptionsIn)
 {
     if (numStrings == 0)
         return true;
 
-    ShCompileOptions compileOptions = compileOptionsIn;
+    int compileOptions = compileOptionsIn;
 
     // Apply key workarounds.
     if (shouldFlattenPragmaStdglInvariantAll())
@@ -444,13 +452,15 @@ bool TCompiler::InitBuiltInSymbolTable(const ShBuiltInResources &resources)
     symbolTable.push();   // ESSL3_1_BUILTINS
 
     TPublicType integer;
-    integer.setBasicType(EbtInt);
-    integer.initializeSizeForScalarTypes();
+    integer.type = EbtInt;
+    integer.primarySize = 1;
+    integer.secondarySize = 1;
     integer.array = false;
 
     TPublicType floatingPoint;
-    floatingPoint.setBasicType(EbtFloat);
-    floatingPoint.initializeSizeForScalarTypes();
+    floatingPoint.type = EbtFloat;
+    floatingPoint.primarySize = 1;
+    floatingPoint.secondarySize = 1;
     floatingPoint.array = false;
 
     switch(shaderType)
@@ -490,9 +500,10 @@ void TCompiler::initSamplerDefaultPrecision(TBasicType samplerType)
 {
     ASSERT(samplerType > EbtGuardSamplerBegin && samplerType < EbtGuardSamplerEnd);
     TPublicType sampler;
-    sampler.initializeSizeForScalarTypes();
-    sampler.setBasicType(samplerType);
+    sampler.primarySize   = 1;
+    sampler.secondarySize = 1;
     sampler.array         = false;
+    sampler.type          = samplerType;
     symbolTable.setDefaultPrecision(sampler, EbpLow);
 }
 
@@ -752,11 +763,47 @@ bool TCompiler::validateOutputs(TIntermNode* root)
     return (validateOutputs.validateAndCountErrors(infoSink.info) == 0);
 }
 
+void TCompiler::rewriteCSSShader(TIntermNode* root)
+{
+    RenameFunction renamer("main(", "css_main(");
+    root->traverse(&renamer);
+}
+
 bool TCompiler::validateLimitations(TIntermNode* root)
 {
     ValidateLimitations validate(shaderType, &infoSink.info);
     root->traverse(&validate);
     return validate.numErrors() == 0;
+}
+
+bool TCompiler::enforceTimingRestrictions(TIntermNode* root, bool outputGraph)
+{
+    if (shaderSpec != SH_WEBGL_SPEC)
+    {
+        infoSink.info << "Timing restrictions must be enforced under the WebGL spec.";
+        return false;
+    }
+
+    if (shaderType == GL_FRAGMENT_SHADER)
+    {
+        TDependencyGraph graph(root);
+
+        // Output any errors first.
+        bool success = enforceFragmentShaderTimingRestrictions(graph);
+
+        // Then, output the dependency graph.
+        if (outputGraph)
+        {
+            TDependencyGraphOutput output(infoSink.info);
+            output.outputAllSpanningTrees(graph);
+        }
+
+        return success;
+    }
+    else
+    {
+        return enforceVertexShaderTimingRestrictions(root);
+    }
 }
 
 bool TCompiler::limitExpressionComplexity(TIntermNode* root)
@@ -777,6 +824,20 @@ bool TCompiler::limitExpressionComplexity(TIntermNode* root)
     }
 
     return true;
+}
+
+bool TCompiler::enforceFragmentShaderTimingRestrictions(const TDependencyGraph& graph)
+{
+    RestrictFragmentShaderTiming restrictor(infoSink.info);
+    restrictor.enforceRestrictions(graph);
+    return restrictor.numErrors() == 0;
+}
+
+bool TCompiler::enforceVertexShaderTimingRestrictions(TIntermNode* root)
+{
+    RestrictVertexShaderTiming restrictor(infoSink.info);
+    restrictor.enforceRestrictions(root);
+    return restrictor.numErrors() == 0;
 }
 
 void TCompiler::collectVariables(TIntermNode* root)
@@ -859,7 +920,7 @@ const BuiltInFunctionEmulator& TCompiler::getBuiltInFunctionEmulator() const
     return builtInFunctionEmulator;
 }
 
-void TCompiler::writePragma(ShCompileOptions compileOptions)
+void TCompiler::writePragma(int compileOptions)
 {
     if (!(compileOptions & SH_FLATTEN_PRAGMA_STDGL_INVARIANT_ALL))
     {

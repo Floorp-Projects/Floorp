@@ -119,7 +119,6 @@ StateManagerGL::StateManagerGL(const FunctionsGL *functions, const gl::Caps &ren
       mClearDepth(1.0f),
       mClearStencil(0),
       mFramebufferSRGBEnabled(false),
-      mDitherEnabled(true),
       mTextureCubemapSeamlessEnabled(false),
       mMultisamplingEnabled(true),
       mSampleAlphaToOneEnabled(false),
@@ -1514,7 +1513,7 @@ void StateManagerGL::syncState(const gl::State &state, const gl::State::DirtyBit
                 setPixelPackState(state.getPackState());
                 break;
             case gl::State::DIRTY_BIT_DITHER_ENABLED:
-                setDitherEnabled(state.isDitherEnabled());
+                // TODO(jmadill): implement this
                 break;
             case gl::State::DIRTY_BIT_GENERATE_MIPMAP_HINT:
                 // TODO(jmadill): implement this
@@ -1585,22 +1584,6 @@ void StateManagerGL::setFramebufferSRGBEnabled(bool enabled)
         else
         {
             mFunctions->disable(GL_FRAMEBUFFER_SRGB);
-        }
-    }
-}
-
-void StateManagerGL::setDitherEnabled(bool enabled)
-{
-    if (mDitherEnabled != enabled)
-    {
-        mDitherEnabled = enabled;
-        if (mDitherEnabled)
-        {
-            mFunctions->enable(GL_DITHER);
-        }
-        else
-        {
-            mFunctions->disable(GL_DITHER);
         }
     }
 }

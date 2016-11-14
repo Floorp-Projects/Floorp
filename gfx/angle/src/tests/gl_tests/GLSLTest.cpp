@@ -1063,37 +1063,6 @@ TEST_P(GLSLTest_ES3, MissingReturnArrayOfStructs)
     EXPECT_NE(0u, program);
 }
 
-// Verify that functions without return statements still compile
-TEST_P(GLSLTest_ES3, MissingReturnStructOfArrays)
-{
-    // TODO(cwallez) remove the suppression once NVIDIA removes the restriction for
-    // GLSL >= 300. It was defined only in GLSL 2.0, section 6.1.
-    if (IsNVIDIA() && IsOpenGLES())
-    {
-        std::cout << "Test skipped on NVIDIA OpenGL ES because it disallows returning "
-                     "structure of arrays"
-                  << std::endl;
-        return;
-    }
-
-    const std::string vertexShaderSource =
-        "#version 300 es\n"
-        "in float v_varying;\n"
-        "struct s { float a[2]; int b[2]; vec2 c[2]; };\n"
-        "s f() { if (v_varying > 0.0) { return s(float[2](1.0, 1.0), int[2](1, 1),"
-        "vec2[2](vec2(1.0, 1.0), vec2(1.0, 1.0))); } }\n"
-        "void main() { gl_Position = vec4(f().a[0], 0, 0, 1); }\n";
-
-    const std::string fragmentShaderSource =
-        "#version 300 es\n"
-        "precision mediump float;\n"
-        "out vec4 my_FragColor;\n"
-        "void main() { my_FragColor = vec4(0, 0, 0, 1); }\n";
-
-    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
-    EXPECT_NE(0u, program);
-}
-
 // Verify that using invariant(all) in both shaders fails in ESSL 3.00.
 TEST_P(GLSLTest_ES3, InvariantAllBoth)
 {

@@ -13,7 +13,6 @@ class TIntermNode;
 
 typedef std::vector<sh::ShaderVariable> InitVariableList;
 
-// This function cannot currently initialize structures containing arrays for an ESSL 1.00 backend.
 void InitializeVariables(TIntermNode *root, const InitVariableList &vars);
 
 #endif  // COMPILER_TRANSLATOR_INITIALIZEVARIABLES_H_
