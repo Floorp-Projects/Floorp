@@ -454,31 +454,6 @@ DecodeFunctionSection(Decoder& d, ModuleGeneratorData* init)
 }
 
 static bool
-DecodeTableSection(Decoder& d, ModuleGeneratorData* init)
-{
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Table, &sectionStart, &sectionSize, "table"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t numTables;
-    if (!d.readVarU32(&numTables))
-        return d.fail("failed to read number of tables");
-
-    if (numTables != 1)
-        return d.fail("the number of tables must be exactly one");
-
-    if (!DecodeTableLimits(d, &init->tables))
-        return false;
-
-    if (!d.finishSection(sectionStart, sectionSize, "table"))
-        return false;
-
-    return true;
-}
-
-static bool
 DecodeMemorySection(Decoder& d, ModuleGeneratorData* init)
 {
     bool present;
@@ -922,7 +897,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!::DecodeFunctionSection(d, init.get()))
         return nullptr;
 
-    if (!DecodeTableSection(d, init.get()))
+    if (!DecodeTableSection(d, &init->tables))
         return nullptr;
 
     if (!::DecodeMemorySection(d, init.get()))

@@ -173,8 +173,38 @@ DecodeSignatureIndex(Decoder& d, const SigWithIdVector& sigs, uint32_t* sigIndex
     return true;
 }
 
-bool
-wasm::DecodeTableLimits(Decoder& d, TableDescVector* tables)
+static bool
+DecodeLimits(Decoder& d, Limits* limits)
+{
+    uint32_t flags;
+    if (!d.readVarU32(&flags))
+        return d.fail("expected flags");
+
+    if (flags & ~uint32_t(0x1))
+        return d.fail("unexpected bits set in flags: %" PRIu32, (flags & ~uint32_t(0x1)));
+
+    if (!d.readVarU32(&limits->initial))
+        return d.fail("expected initial length");
+
+    if (flags & 0x1) {
+        uint32_t maximum;
+        if (!d.readVarU32(&maximum))
+            return d.fail("expected maximum length");
+
+        if (limits->initial > maximum) {
+            return d.fail("memory size minimum must not be greater than maximum; "
+                          "maximum length %" PRIu32 " is less than initial length %" PRIu32,
+                          maximum, limits->initial);
+        }
+
+        limits->maximum.emplace(maximum);
+    }
+
+    return true;
+}
+
+static bool
+DecodeTableLimits(Decoder& d, TableDescVector* tables)
 {
     uint32_t elementType;
     if (!d.readVarU32(&elementType))
@@ -186,6 +216,9 @@ wasm::DecodeTableLimits(Decoder& d, TableDescVector* tables)
     Limits limits;
     if (!DecodeLimits(d, &limits))
         return false;
+
+    if (limits.initial > MaxTableElems)
+        return d.fail("too many table elements");
 
     if (tables->length())
         return d.fail("already have default table");
@@ -211,6 +244,34 @@ wasm::GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable)
 
     if (isMutable)
         return d.fail("can't import/export mutable globals in the MVP");
+
+    return true;
+}
+
+static bool
+DecodeMemoryLimits(Decoder& d, bool hasMemory, Limits* memory)
+{
+    if (hasMemory)
+        return d.fail("already have default memory");
+
+    if (!DecodeLimits(d, memory))
+        return false;
+
+    CheckedInt<uint32_t> initialBytes = memory->initial;
+    initialBytes *= PageSize;
+    if (!initialBytes.isValid() || initialBytes.value() > uint32_t(INT32_MAX))
+        return d.fail("initial memory size too big");
+
+    memory->initial = initialBytes.value();
+
+    if (memory->maximum) {
+        CheckedInt<uint32_t> maximumBytes = *memory->maximum;
+        maximumBytes *= PageSize;
+        if (!maximumBytes.isValid())
+            return d.fail("maximum memory size too big");
+
+        memory->maximum = Some(maximumBytes.value());
+    }
 
     return true;
 }
@@ -331,6 +392,60 @@ wasm::DecodeFunctionSection(Decoder& d, const SigWithIdVector& sigs, size_t numI
     }
 
     if (!d.finishSection(sectionStart, sectionSize, "function"))
+        return false;
+
+    return true;
+}
+
+bool
+wasm::DecodeTableSection(Decoder& d, TableDescVector* tables)
+{
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(SectionId::Table, &sectionStart, &sectionSize, "table"))
+        return false;
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    uint32_t numTables;
+    if (!d.readVarU32(&numTables))
+        return d.fail("failed to read number of tables");
+
+    if (numTables != 1)
+        return d.fail("the number of tables must be exactly one");
+
+    if (!DecodeTableLimits(d, tables))
+        return false;
+
+    if (!d.finishSection(sectionStart, sectionSize, "table"))
+        return false;
+
+    return true;
+}
+
+bool
+wasm::DecodeMemorySection(Decoder& d, bool hasMemory, Limits* memory, bool *present)
+{
+    *present = false;
+
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(SectionId::Memory, &sectionStart, &sectionSize, "memory"))
+        return false;
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    *present = true;
+
+    uint32_t numMemories;
+    if (!d.readVarU32(&numMemories))
+        return d.fail("failed to read number of memories");
+
+    if (numMemories != 1)
+        return d.fail("the number of memories must be exactly one");
+
+    if (!DecodeMemoryLimits(d, hasMemory, memory))
+        return false;
+
+    if (!d.finishSection(sectionStart, sectionSize, "memory"))
         return false;
 
     return true;
@@ -480,36 +595,6 @@ wasm::DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, V
 }
 
 bool
-wasm::DecodeLimits(Decoder& d, Limits* limits)
-{
-    uint32_t flags;
-    if (!d.readVarU32(&flags))
-        return d.fail("expected flags");
-
-    if (flags & ~uint32_t(0x1))
-        return d.fail("unexpected bits set in flags: %" PRIu32, (flags & ~uint32_t(0x1)));
-
-    if (!d.readVarU32(&limits->initial))
-        return d.fail("expected initial length");
-
-    if (flags & 0x1) {
-        uint32_t maximum;
-        if (!d.readVarU32(&maximum))
-            return d.fail("expected maximum length");
-
-        if (limits->initial > maximum) {
-            return d.fail("memory size minimum must not be greater than maximum; "
-                          "maximum length %" PRIu32 " is less than initial length %" PRIu32,
-                          maximum, limits->initial);
-        }
-
-        limits->maximum.emplace(maximum);
-    }
-
-    return true;
-}
-
-bool
 wasm::DecodeDataSection(Decoder& d, bool usesMemory, uint32_t minMemoryByteLength,
                         const GlobalDescVector& globals, DataSegmentVector* segments)
 {
@@ -554,63 +639,6 @@ wasm::DecodeDataSection(Decoder& d, bool usesMemory, uint32_t minMemoryByteLengt
     }
 
     if (!d.finishSection(sectionStart, sectionSize, "data"))
-        return false;
-
-    return true;
-}
-
-bool
-wasm::DecodeMemoryLimits(Decoder& d, bool hasMemory, Limits* memory)
-{
-    if (hasMemory)
-        return d.fail("already have default memory");
-
-    if (!DecodeLimits(d, memory))
-        return false;
-
-    CheckedInt<uint32_t> initialBytes = memory->initial;
-    initialBytes *= PageSize;
-    if (!initialBytes.isValid() || initialBytes.value() > uint32_t(INT32_MAX))
-        return d.fail("initial memory size too big");
-
-    memory->initial = initialBytes.value();
-
-    if (memory->maximum) {
-        CheckedInt<uint32_t> maximumBytes = *memory->maximum;
-        maximumBytes *= PageSize;
-        if (!maximumBytes.isValid())
-            return d.fail("maximum memory size too big");
-
-        memory->maximum = Some(maximumBytes.value());
-    }
-
-    return true;
-}
-
-bool
-wasm::DecodeMemorySection(Decoder& d, bool hasMemory, Limits* memory, bool *present)
-{
-    *present = false;
-
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Memory, &sectionStart, &sectionSize, "memory"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    *present = true;
-
-    uint32_t numMemories;
-    if (!d.readVarU32(&numMemories))
-        return d.fail("failed to read number of memories");
-
-    if (numMemories != 1)
-        return d.fail("the number of memories must be exactly one");
-
-    if (!DecodeMemoryLimits(d, hasMemory, memory))
-        return false;
-
-    if (!d.finishSection(sectionStart, sectionSize, "memory"))
         return false;
 
     return true;
