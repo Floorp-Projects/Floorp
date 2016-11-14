@@ -32,23 +32,22 @@ class TestMixedScriptContentBlocking(PuppeteerMixin, MarionetteTestCase):
 
     def _expect_protection_status(self, enabled):
         if enabled:
-            color, icon_filename, state = (
+            color, identity, state = (
                 'rgb(0, 136, 0)',
-                'identity-secure',
+                'verifiedDomain mixedActiveBlocked',
                 'blocked'
             )
         else:
-            color, icon_filename, state = (
+            color, identity, state = (
                 'rgb(255, 0, 0)',
-                'identity-mixed-active-loaded',
+                'unknownIdentity mixedActiveContent',
                 'unblocked'
             )
 
         # First call to Wait() needs a longer timeout due to the reload of the web page.
-        connection_icon = self.locationbar.connection_icon
         Wait(self.marionette, timeout=self.browser.timeout_page_load).until(
-            lambda _: icon_filename in connection_icon.value_of_css_property('list-style-image'),
-            message="The correct icon is displayed"
+            lambda _: self.locationbar.identity_box.get_attribute('className') == identity,
+            message='Expected identity "{}" not found'.format(identity)
         )
 
         with self.marionette.using_context('content'):
