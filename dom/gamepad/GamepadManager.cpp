@@ -228,6 +228,7 @@ void
 GamepadManager::AddGamepad(uint32_t aIndex,
                            const nsAString& aId,
                            GamepadMappingType aMapping,
+                           GamepadHand aHand,
                            GamepadServiceType aServiceType,
                            uint32_t aNumButtons,
                            uint32_t aNumAxes)
@@ -238,6 +239,7 @@ GamepadManager::AddGamepad(uint32_t aIndex,
                 aId,
                 0, // index is set by global window
                 aMapping,
+                aHand,
                 aNumButtons,
                 aNumAxes);
 
@@ -634,6 +636,7 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
     const GamepadAdded& a = aEvent.get_GamepadAdded();
     AddGamepad(a.index(), a.id(),
                static_cast<GamepadMappingType>(a.mapping()),
+               static_cast<GamepadHand>(a.hand()),
                a.service_type(),
                a.num_buttons(), a.num_axes());
     return;
