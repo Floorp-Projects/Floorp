@@ -10,7 +10,7 @@ from .treeherder import TreeherderFormatter
 
 
 class JSONFormatter(object):
-    def __call__(self, results):
+    def __call__(self, results, **kwargs):
         return json.dumps(results, cls=ResultEncoder)
 
 
