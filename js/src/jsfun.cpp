@@ -2239,9 +2239,10 @@ js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun, HandleObject enclo
  *
  * Function names are always strings. If id is the well-known @@iterator
  * symbol, this returns "[Symbol.iterator]".  If a prefix is supplied the final
- * name is |prefix + " " + name|.
+ * name is |prefix + " " + name|. A prefix cannot be supplied if id is a
+ * symbol value.
  *
- * Implements step 4 and 5 of SetFunctionName in ES 2016 draft Dec 20, 2015.
+ * Implements steps 3-5 of 9.2.11 SetFunctionName in ES2016.
  */
 JSAtom*
 js::IdToFunctionName(JSContext* cx, HandleId id, const char* prefix /* = nullptr */)
@@ -2249,7 +2250,11 @@ js::IdToFunctionName(JSContext* cx, HandleId id, const char* prefix /* = nullptr
     if (JSID_IS_ATOM(id) && !prefix)
         return JSID_TO_ATOM(id);
 
-    if (JSID_IS_SYMBOL(id) && !prefix) {
+    // Step 3.
+    MOZ_ASSERT_IF(prefix, !JSID_IS_SYMBOL(id));
+
+    // Step 4.
+    if (JSID_IS_SYMBOL(id)) {
         RootedAtom desc(cx, JSID_TO_SYMBOL(id)->description());
         StringBuffer sb(cx);
         if (!sb.append('[') || !sb.append(desc) || !sb.append(']'))
@@ -2257,6 +2262,7 @@ js::IdToFunctionName(JSContext* cx, HandleId id, const char* prefix /* = nullptr
         return sb.finishAtom();
     }
 
+    // Step 5.
     RootedValue idv(cx, IdToValue(id));
     if (!prefix)
         return ToAtom<CanGC>(cx, idv);
