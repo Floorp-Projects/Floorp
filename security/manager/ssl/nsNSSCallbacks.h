@@ -8,7 +8,6 @@
 #define nsNSSCallbacks_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
 #include "nsAutoPtr.h"
@@ -20,8 +19,6 @@
 #include "pkix/pkixtypes.h"
 
 #include "ocspt.h" // Must be included after pk11func.h.
-
-using mozilla::NeckoOriginAttributes;
 
 class nsILoadGroup;
 
@@ -102,7 +99,7 @@ public:
                           const char* httpProtocolVariant,
                           const char* pathAndQueryString,
                           const char* httpRequestMethod,
-                          const NeckoOriginAttributes& originAttributes,
+                          const char* firstPartyDomain,
                           const PRIntervalTime timeout,
                   /*out*/ nsNSSHttpRequestSession** pRequest);
 
@@ -127,7 +124,7 @@ public:
   nsCString mPostData;
   nsCString mPostContentType;
 
-  NeckoOriginAttributes mOriginAttributes;
+  nsCString mFirstPartyDomain;
 
   PRIntervalTime mTimeoutInterval;
 
@@ -162,13 +159,13 @@ public:
                           const char* httpProtocolVariant,
                           const char* pathAndQueryString,
                           const char* httpRequestMethod,
-                          const NeckoOriginAttributes& originAttributes,
+                          const char* firstPartyDomain,
                           const PRIntervalTime timeout,
                   /*out*/ nsNSSHttpRequestSession** pRequest)
   {
     return nsNSSHttpRequestSession::createFcn(session, httpProtocolVariant,
                                               pathAndQueryString,
-                                              httpRequestMethod, originAttributes,
+                                              httpRequestMethod, firstPartyDomain,
                                               timeout, pRequest);
   }
 
