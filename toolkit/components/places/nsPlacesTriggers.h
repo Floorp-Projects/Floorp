@@ -145,6 +145,9 @@
     "UPDATE moz_hosts " \
     "SET prefix = (" HOSTS_PREFIX_PRIORITY_FRAGMENT ") " \
     "WHERE host = OLD.host; " \
+    "DELETE FROM moz_icons " \
+    "WHERE fixed_icon_url_hash = hash(OLD.host || '/favicon.ico') " \
+      "AND fixup_url(icon_url) = OLD.host || '/favicon.ico';" \
   "END" \
 )
 
@@ -261,6 +264,14 @@
     "UPDATE moz_places " \
     "SET foreign_count = foreign_count - 1 " \
     "WHERE id = OLD.place_id; " \
+  "END" \
+)
+
+#define CREATE_ICONS_AFTERINSERT_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMP TRIGGER moz_icons_afterinsert_v1_trigger " \
+  "AFTER INSERT ON moz_icons FOR EACH ROW " \
+  "BEGIN " \
+    "SELECT store_last_inserted_id('moz_icons', NEW.id); " \
   "END" \
 )
 

@@ -18,10 +18,16 @@
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsStreamUtils.h"
+#include "nsStringStream.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsISupportsPriority.h"
 #include "nsContentUtils.h"
 #include <algorithm>
+#include "mozilla/gfx/2D.h"
+#include "imgIContainer.h"
+#include "ImageOps.h"
+#include "imgLoader.h"
+#include "imgIEncoder.h"
 
 using namespace mozilla::places;
 using namespace mozilla::storage;
@@ -928,6 +934,241 @@ NotifyIconObservers::SendGlobalNotifications(nsIURI* aIconURI)
         new AsyncAssociateIconToPage(mIcon, bookmarkedPage, nullCallback);
     DB->DispatchToAsyncThread(event);
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// FetchAndConvertUnsupportedPayloads
+
+FetchAndConvertUnsupportedPayloads::FetchAndConvertUnsupportedPayloads (
+  mozIStorageConnection* aDBConn
+) : mDB(aDBConn)
+{
+
+}
+
+NS_IMETHODIMP
+FetchAndConvertUnsupportedPayloads::Run()
+{
+  if (NS_IsMainThread()) {
+    Preferences::ClearUser(PREF_CONVERT_PAYLOADS);
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(!NS_IsMainThread());
+  NS_ENSURE_STATE(mDB);
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mDB->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id, width, data FROM moz_icons WHERE typeof(width) = 'text' "
+    "ORDER BY id ASC "
+    "LIMIT 200 "
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mozStorageTransaction transaction(mDB, false,
+                                    mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+  // We should do the work in chunks, or the wal journal may grow too much.
+  uint8_t count = 0;
+  bool hasResult;
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+    ++count;
+    int64_t id = stmt->AsInt64(0);
+    MOZ_ASSERT(id > 0);
+    nsAutoCString mimeType;
+    rv = stmt->GetUTF8String(1, mimeType);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+    uint8_t* data;
+    uint32_t dataLen = 0;
+    rv = stmt->GetBlob(2, &dataLen, &data);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+    nsCString buf;
+    buf.Adopt(TO_CHARBUFFER(data), dataLen);
+
+    int32_t width = 0;
+    rv = ConvertPayload(id, mimeType, buf, &width);
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+    if (NS_SUCCEEDED(rv)) {
+      rv = StorePayload(id, width, buf);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+    }
+  }
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (count == 200) {
+    // There are more results to handle. Re-dispatch to the same thread for the
+    // next chunk.
+    return NS_DispatchToCurrentThread(this);
+  }
+
+  // We're done. Remove any leftovers and force a checkpoint for safety.
+  rv = mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_icons WHERE typeof(width) = 'text'"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA wal_checkpoint"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Run a one-time VACUUM of places.sqlite, since we removed a lot from it.
+  // It may cause jank, but not doing it could cause dataloss due to expiration.
+  rv = mDB->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "VACUUM"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Re-dispatch to the main-thread to flip the conversion pref.
+  return NS_DispatchToMainThread(this);
+}
+
+nsresult
+FetchAndConvertUnsupportedPayloads::ConvertPayload(int64_t aId,
+                                                   const nsACString& aMimeType,
+                                                   nsCString& aPayload,
+                                                   int32_t* aWidth)
+{
+  // TODO (bug 1346139): this should probably be unified with the function that
+  // will handle additions optimization off the main thread.
+  MOZ_ASSERT(!NS_IsMainThread());
+  *aWidth = 0;
+
+  // Exclude invalid mime types.
+  if (aPayload.Length() == 0 ||
+      !imgLoader::SupportImageWithMimeType(PromiseFlatCString(aMimeType).get(),
+                                           AcceptedMimeTypes::IMAGES)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If it's an SVG, there's nothing to optimize or convert.
+  if (aMimeType.EqualsLiteral(SVG_MIME_TYPE)) {
+    *aWidth = UINT16_MAX;
+    return NS_OK;
+  }
+
+  // Convert the payload to an input stream.
+  nsCOMPtr<nsIInputStream> stream;
+  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
+                aPayload.get(), aPayload.Length(),
+                NS_ASSIGNMENT_DEPEND);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Decode the input stream to a surface.
+  RefPtr<gfx::SourceSurface> surface =
+      image::ImageOps::DecodeToSurface(stream,
+                                       aMimeType,
+                                       imgIContainer::DECODE_FLAGS_DEFAULT);
+  NS_ENSURE_STATE(surface);
+  RefPtr<gfx::DataSourceSurface> dataSurface = surface->GetDataSurface();
+  NS_ENSURE_STATE(dataSurface);
+
+  // Read the current size and set an appropriate final width.
+  int32_t width = dataSurface->GetSize().width;
+  int32_t height = dataSurface->GetSize().height;
+  // For non-square images, pick the largest side.
+  int32_t originalSize = std::max(width, height);
+  int32_t size = originalSize;
+  for (uint16_t supportedSize : sFaviconSizes) {
+    if (supportedSize <= originalSize) {
+      size = supportedSize;
+      break;
+    }
+  }
+  *aWidth = size;
+
+  // If the original payload is png and the size is the same, no reason to
+  // rescale the image.
+  if (aMimeType.EqualsLiteral(PNG_MIME_TYPE) && size == originalSize) {
+    return NS_OK;
+  }
+
+  // Rescale when needed.
+  RefPtr<gfx::DataSourceSurface> targetDataSurface =
+    gfx::Factory::CreateDataSourceSurface(gfx::IntSize(size, size),
+                                          gfx::SurfaceFormat::B8G8R8A8,
+                                          true);
+  NS_ENSURE_STATE(targetDataSurface);
+
+  { // Block scope for map.
+    gfx::DataSourceSurface::MappedSurface map;
+    if (!targetDataSurface->Map(gfx::DataSourceSurface::MapType::WRITE, &map)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    RefPtr<gfx::DrawTarget> dt =
+      gfx::Factory::CreateDrawTargetForData(gfx::BackendType::CAIRO,
+                                            map.mData,
+                                            targetDataSurface->GetSize(),
+                                            map.mStride,
+                                            gfx::SurfaceFormat::B8G8R8A8);
+    NS_ENSURE_STATE(dt);
+
+    gfx::IntSize frameSize = dataSurface->GetSize();
+    dt->DrawSurface(dataSurface,
+                    gfx::Rect(0, 0, size, size),
+                    gfx::Rect(0, 0, frameSize.width, frameSize.height),
+                    gfx::DrawSurfaceOptions(),
+                    gfx::DrawOptions(1.0f, gfx::CompositionOp::OP_SOURCE));
+    targetDataSurface->Unmap();
+  }
+
+  // Finally Encode.
+  nsCOMPtr<imgIEncoder> encoder =
+    do_CreateInstance("@mozilla.org/image/encoder;2?type=image/png");
+  NS_ENSURE_STATE(encoder);
+
+  gfx::DataSourceSurface::MappedSurface map;
+  if (!targetDataSurface->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
+    return NS_ERROR_FAILURE;
+  }
+  rv = encoder->InitFromData(map.mData, map.mStride * size, size, size,
+                             map.mStride, imgIEncoder::INPUT_FORMAT_HOSTARGB,
+                             EmptyString());
+  targetDataSurface->Unmap();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Read the stream into a new buffer.
+  nsCOMPtr<nsIInputStream> iconStream = do_QueryInterface(encoder);
+  NS_ENSURE_STATE(iconStream);
+  rv = NS_ConsumeStream(iconStream, UINT32_MAX, aPayload);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+FetchAndConvertUnsupportedPayloads::StorePayload(int64_t aId,
+                                                 int32_t aWidth,
+                                                 const nsCString& aPayload)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  NS_ENSURE_STATE(mDB);
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mDB->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_icons SET data = :data, width = :width WHERE id = :id"
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), aId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("width"), aWidth);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindBlobByName(NS_LITERAL_CSTRING("data"),
+                            TO_INTBUFFER(aPayload), aPayload.Length());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 } // namespace places
