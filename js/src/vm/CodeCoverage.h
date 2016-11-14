@@ -162,7 +162,7 @@ class LCovRuntime
 
     // The process' PID is used to watch for fork. When the process fork,
     // we want to close the current file and open a new one.
-    size_t pid_;
+    uint32_t pid_;
 
     // Flag used to report if the generated file is empty or not. If it is empty
     // when the runtime is destroyed, then the file would be removed as an empty
