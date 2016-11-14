@@ -1326,15 +1326,11 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     }
 
     enum AssignmentFlavor {
-        PlainAssignment,
-        CompoundAssignment,
         KeyedDestructuringAssignment,
         IncrementAssignment,
         DecrementAssignment,
     };
 
-    bool checkAndMarkAsAssignmentLhs(Node pn, AssignmentFlavor flavor,
-                                     PossibleError* possibleError=nullptr);
     bool matchInOrOf(bool* isForInp, bool* isForOfp);
 
     bool hasUsedFunctionSpecialName(HandlePropertyName name);
