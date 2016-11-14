@@ -129,6 +129,7 @@ gujar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in 
     'util/FloatUtils.java',
     'util/GamepadUtils.java',
     'util/GeckoBackgroundThread.java',
+    'util/GeckoBundle.java',
     'util/GeckoEventListener.java',
     'util/GeckoJarReader.java',
     'util/GeckoRequest.java',

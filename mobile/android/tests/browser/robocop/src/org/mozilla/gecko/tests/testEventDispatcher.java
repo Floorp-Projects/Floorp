@@ -7,8 +7,10 @@ package org.mozilla.gecko.tests;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
 
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
@@ -37,6 +39,8 @@ public class testEventDispatcher extends JavascriptBridgeTest
     private static final String UI_RESPONSE_EVENT = "Robocop:TestUIResponse";
     private static final String BACKGROUND_EVENT = "Robocop:TestBackgroundEvent";
     private static final String BACKGROUND_RESPONSE_EVENT = "Robocop:TestBackgrondResponse";
+    private static final String JS_EVENT = "Robocop:TestJSEvent";
+    private static final String JS_RESPONSE_EVENT = "Robocop:TestJSResponse";
 
     private static final long WAIT_FOR_BUNDLE_EVENT_TIMEOUT_MILLIS = 20000; // 20 seconds
 
@@ -55,10 +59,6 @@ public class testEventDispatcher extends JavascriptBridgeTest
         EventDispatcher.getInstance().registerGeckoThreadListener(
                 (NativeEventListener) this,
                 NATIVE_EVENT, NATIVE_RESPONSE_EVENT, NATIVE_EXCEPTION_EVENT);
-        EventDispatcher.getInstance().registerUiThreadListener(
-                this, UI_EVENT, UI_RESPONSE_EVENT);
-        EventDispatcher.getInstance().registerBackgroundThreadListener(
-                this, BACKGROUND_EVENT, BACKGROUND_RESPONSE_EVENT);
     }
 
     @Override
@@ -68,10 +68,6 @@ public class testEventDispatcher extends JavascriptBridgeTest
         EventDispatcher.getInstance().unregisterGeckoThreadListener(
                 (NativeEventListener) this,
                 NATIVE_EVENT, NATIVE_RESPONSE_EVENT, NATIVE_EXCEPTION_EVENT);
-        EventDispatcher.getInstance().unregisterUiThreadListener(
-                this, UI_EVENT, UI_RESPONSE_EVENT);
-        EventDispatcher.getInstance().unregisterBackgroundThreadListener(
-                this, BACKGROUND_EVENT, BACKGROUND_RESPONSE_EVENT);
 
         super.tearDown();
     }
@@ -114,29 +110,90 @@ public class testEventDispatcher extends JavascriptBridgeTest
 
         getJS().syncCall("send_test_message", NATIVE_EXCEPTION_EVENT);
 
-        getJS().syncCall("send_test_message", UI_EVENT);
-        waitForAsyncEvent();
+        // Test global EventDispatcher.
+        testScope("global");
 
-        getJS().syncCall("send_message_for_response", UI_RESPONSE_EVENT, "success");
-        waitForAsyncEvent();
-
-        getJS().syncCall("send_message_for_response", UI_RESPONSE_EVENT, "error");
-        waitForAsyncEvent();
-
-        getJS().syncCall("send_test_message", BACKGROUND_EVENT);
-        waitForAsyncEvent();
-
-        getJS().syncCall("send_message_for_response", BACKGROUND_RESPONSE_EVENT, "success");
-        waitForAsyncEvent();
-
-        getJS().syncCall("send_message_for_response", BACKGROUND_RESPONSE_EVENT, "error");
-        waitForAsyncEvent();
+        // Test GeckoView-specific EventDispatcher.
+        testScope("window");
 
         getJS().syncCall("finish_test");
     }
 
+    private static EventDispatcher getDispatcher(final String scope) {
+        if ("global".equals(scope)) {
+            return EventDispatcher.getInstance();
+        }
+        if ("window".equals(scope)) {
+            return GeckoApp.getEventDispatcher();
+        }
+        fFail("scope argument should be valid string");
+        return null;
+    }
+
+    private void testScope(final String scope) {
+        // Test UI thread events.
+        getDispatcher(scope).registerUiThreadListener(
+                this, UI_EVENT, UI_RESPONSE_EVENT);
+
+        testThreadEvents(scope, UI_EVENT, UI_RESPONSE_EVENT);
+
+        getDispatcher(scope).unregisterUiThreadListener(
+                this, UI_EVENT, UI_RESPONSE_EVENT);
+
+        // Test background thread events.
+        getDispatcher(scope).registerBackgroundThreadListener(
+                this, BACKGROUND_EVENT, BACKGROUND_RESPONSE_EVENT);
+
+        testThreadEvents(scope, BACKGROUND_EVENT, BACKGROUND_RESPONSE_EVENT);
+
+        getDispatcher(scope).unregisterBackgroundThreadListener(
+                this, BACKGROUND_EVENT, BACKGROUND_RESPONSE_EVENT);
+
+        // Test Gecko thread events in JS.
+        getJS().syncCall("register_js_events", scope, JS_EVENT, JS_RESPONSE_EVENT);
+
+        getJS().syncCall("dispatch_test_message", scope, JS_EVENT);
+        getJS().syncCall("dispatch_message_for_response", scope, JS_RESPONSE_EVENT, "success");
+        getJS().syncCall("dispatch_message_for_response", scope, JS_RESPONSE_EVENT, "error");
+
+        dispatchMessage(scope, JS_EVENT);
+        dispatchMessageForResponse(scope, JS_RESPONSE_EVENT, "success");
+        dispatchMessageForResponse(scope, JS_RESPONSE_EVENT, "error");
+
+        getJS().syncCall("unregister_js_events", scope, JS_EVENT, JS_RESPONSE_EVENT);
+    }
+
+    private void testThreadEvents(final String scope, final String event, final String responseEvent) {
+        getJS().syncCall("send_test_message", event);
+        waitForAsyncEvent();
+
+        getJS().syncCall("send_message_for_response", responseEvent, "success");
+        waitForAsyncEvent();
+
+        getJS().syncCall("send_message_for_response", responseEvent, "error");
+        waitForAsyncEvent();
+
+        getJS().syncCall("dispatch_test_message", scope, event);
+        waitForAsyncEvent();
+
+        getJS().syncCall("dispatch_message_for_response", scope, responseEvent, "success");
+        waitForAsyncEvent();
+
+        getJS().syncCall("dispatch_message_for_response", scope, responseEvent, "error");
+        waitForAsyncEvent();
+
+        dispatchMessage(scope, event);
+        waitForAsyncEvent();
+
+        dispatchMessageForResponse(scope, responseEvent, "success");
+        waitForAsyncEvent();
+
+        dispatchMessageForResponse(scope, responseEvent, "error");
+        waitForAsyncEvent();
+    }
+
     @Override
-    public void handleMessage(final String event, final Bundle message,
+    public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback) {
 
         if (UI_EVENT.equals(event) || UI_RESPONSE_EVENT.equals(event)) {
@@ -153,6 +210,9 @@ public class testEventDispatcher extends JavascriptBridgeTest
         if (UI_EVENT.equals(event) || BACKGROUND_EVENT.equals(event)) {
             checkBundle(message);
             checkBundle(message.getBundle("object"));
+            fAssertSame("Bundle null object has correct value", null, message.getBundle("nullObject"));
+
+            // XXX add objectArray check when we remove NativeJSObject
 
         } else if (UI_RESPONSE_EVENT.equals(event) || BACKGROUND_RESPONSE_EVENT.equals(event)) {
             final String response = message.getString("response");
@@ -324,6 +384,62 @@ public class testEventDispatcher extends JavascriptBridgeTest
         fAssertEquals("Bundle string array index 1 has correct value", "baz", stringArray[1]);
     }
 
+    private void checkBundle(final GeckoBundle bundle) {
+        fAssertEquals("Bundle boolean has correct value", true, bundle.getBoolean("boolean"));
+        fAssertEquals("Bundle int has correct value", 1, bundle.getInt("int"));
+        fAssertEquals("Bundle double has correct value", 0.5, bundle.getDouble("double"));
+        fAssertEquals("Bundle string has correct value", "foo", bundle.getString("string"));
+
+        fAssertSame("Bundle null string has correct value", null, bundle.getString("nullString"));
+        fAssertEquals("Bundle empty string has correct value", "", bundle.getString("emptyString"));
+        fAssertEquals("Bundle default null string is correct", "foo",
+                      bundle.getString("nullString", "foo"));
+        fAssertEquals("Bundle default empty string is correct", "",
+                      bundle.getString("emptyString", "foo"));
+
+        final boolean[] booleanArray = bundle.getBooleanArray("booleanArray");
+        fAssertNotNull("Bundle boolean array should exist", booleanArray);
+        fAssertEquals("Bundle boolean array has correct length", 2, booleanArray.length);
+        fAssertEquals("Bundle boolean array index 0 has correct value", false, booleanArray[0]);
+        fAssertEquals("Bundle boolean array index 1 has correct value", true, booleanArray[1]);
+
+        final int[] intArray = bundle.getIntArray("intArray");
+        fAssertNotNull("Bundle int array should exist", intArray);
+        fAssertEquals("Bundle int array has correct length", 2, intArray.length);
+        fAssertEquals("Bundle int array index 0 has correct value", 2, intArray[0]);
+        fAssertEquals("Bundle int array index 1 has correct value", 3, intArray[1]);
+
+        final double[] doubleArray = bundle.getDoubleArray("doubleArray");
+        fAssertNotNull("Bundle double array should exist", doubleArray);
+        fAssertEquals("Bundle double array has correct length", 2, doubleArray.length);
+        fAssertEquals("Bundle double array index 0 has correct value", 1.5, doubleArray[0]);
+        fAssertEquals("Bundle double array index 1 has correct value", 2.5, doubleArray[1]);
+
+        final String[] stringArray = bundle.getStringArray("stringArray");
+        fAssertNotNull("Bundle string array should exist", stringArray);
+        fAssertEquals("Bundle string array has correct length", 2, stringArray.length);
+        fAssertEquals("Bundle string array index 0 has correct value", "bar", stringArray[0]);
+        fAssertEquals("Bundle string array index 1 has correct value", "baz", stringArray[1]);
+
+        final boolean[] emptyBooleanArray = bundle.getBooleanArray("emptyBooleanArray");
+        fAssertNotNull("Bundle empty boolean array should exist", emptyBooleanArray);
+        fAssertEquals("Bundle empty boolean array has correct length", 0, emptyBooleanArray.length);
+
+        final int[] emptyIntArray = bundle.getIntArray("emptyIntArray");
+        fAssertNotNull("Bundle empty int array should exist", emptyIntArray);
+        fAssertEquals("Bundle empty int array has correct length", 0, emptyIntArray.length);
+
+        final double[] emptyDoubleArray = bundle.getDoubleArray("emptyDoubleArray");
+        fAssertNotNull("Bundle empty double array should exist", emptyDoubleArray);
+        fAssertEquals("Bundle empty double array has correct length", 0, emptyDoubleArray.length);
+
+        final String[] emptyStringArray = bundle.getStringArray("emptyStringArray");
+        fAssertNotNull("Bundle empty String array should exist", emptyStringArray);
+        fAssertEquals("Bundle empty String array has correct length", 0, emptyStringArray.length);
+
+        // XXX add mixedArray check when we remove NativeJSObject
+    }
+
     private void checkJSONObject(final JSONObject object) throws JSONException {
         fAssertEquals("JSON boolean has correct value", true, object.getBoolean("boolean"));
         fAssertEquals("JSON int has correct value", 1, object.getInt("int"));
@@ -446,5 +562,72 @@ public class testEventDispatcher extends JavascriptBridgeTest
 
         fAssertNotEquals("Native optString does not return fallback value if emptyString",
             "baz", object.optString("emptyString", "baz"));
+    }
+
+    private static GeckoBundle createInnerBundle() {
+        final GeckoBundle bundle = new GeckoBundle();
+
+        bundle.putBoolean("boolean", true);
+        bundle.putBooleanArray("booleanArray", new boolean[] {false, true});
+
+        bundle.putInt("int", 1);
+        bundle.putIntArray("intArray", new int[] {2, 3});
+
+        bundle.putDouble("double", 0.5);
+        bundle.putDoubleArray("doubleArray", new double[] {1.5, 2.5});
+
+        bundle.putString("string", "foo");
+        bundle.putString("nullString", null);
+        bundle.putString("emptyString", "");
+        bundle.putStringArray("stringArray", new String[] {"bar", "baz"});
+
+        bundle.putBooleanArray("emptyBooleanArray", new boolean[0]);
+        bundle.putIntArray("emptyIntArray", new int[0]);
+        bundle.putDoubleArray("emptyDoubleArray", new double[0]);
+        bundle.putStringArray("emptyStringArray", new String[0]);
+
+        return bundle;
+    }
+
+    private static GeckoBundle createBundle() {
+        final GeckoBundle outer = createInnerBundle();
+        final GeckoBundle inner = createInnerBundle();
+
+        outer.putBundle("object", inner);
+        outer.putBundle("nullObject", null);
+        outer.putBundleArray("objectArray", new GeckoBundle[] {null, inner});
+        outer.putBundleArray("emptyObjectArray", new GeckoBundle[0]);
+
+        return outer;
+    }
+
+    public void dispatchMessage(final String scope, final String type) {
+        getDispatcher(scope).dispatch(type, createBundle());
+    }
+
+    public void dispatchMessageForResponse(final String scope, final String type,
+                                           final String response) {
+        final GeckoBundle bundle = new GeckoBundle(1);
+        bundle.putString("response", response);
+
+        getDispatcher(scope).dispatch(type, bundle, new EventCallback() {
+            @Override
+            public void sendSuccess(final Object result) {
+                // If the original request was on the UI thread, the response would happen
+                // on the UI thread as well. Otherwise, the response happens on the
+                // background thread. In this case, because the request was on the testing
+                // thread, the response thread defaults to the background thread.
+                fAssertTrue("JS success response should be on background thread",
+                            ThreadUtils.isOnBackgroundThread());
+                fAssertEquals("JS success response is correct", response, result);
+            }
+
+            @Override
+            public void sendError(final Object error) {
+                fAssertTrue("JS error response should be on background thread",
+                            ThreadUtils.isOnBackgroundThread());
+                fAssertEquals("JS error response is correct", response, error);
+            }
+        });
     }
 }

@@ -1,6 +1,7 @@
 package org.mozilla.gecko.util;
 
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.annotation.WrapForJNI;
 
 /**
  * Callback interface for Gecko requests.
@@ -10,6 +11,7 @@ import org.mozilla.gecko.annotation.RobocopTarget;
  * single send method is called multiple times, an {@link IllegalStateException} will be thrown.
  */
 @RobocopTarget
+@WrapForJNI(calledFrom = "gecko")
 public interface EventCallback {
     /**
      * Sends a success response with the given data.
