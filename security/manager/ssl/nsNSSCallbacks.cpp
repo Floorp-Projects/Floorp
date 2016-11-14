@@ -114,10 +114,13 @@ nsHTTPDownloadEvent::Run()
   chan->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS |
                      nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
 
-  if (!mRequestSession->mFirstPartyDomain.IsEmpty()) {
+  // For OCSP requests, only the first party domain aspect of origin attributes
+  // is used. This means that OCSP requests are shared across different
+  // containers.
+  if (mRequestSession->mOriginAttributes != NeckoOriginAttributes()) {
     NeckoOriginAttributes attrs;
     attrs.mFirstPartyDomain =
-      NS_ConvertUTF8toUTF16(mRequestSession->mFirstPartyDomain);
+      mRequestSession->mOriginAttributes.mFirstPartyDomain;
 
     nsCOMPtr<nsILoadInfo> loadInfo = chan->GetLoadInfo();
     if (loadInfo) {
@@ -230,7 +233,7 @@ nsNSSHttpRequestSession::createFcn(const nsNSSHttpServerSession* session,
                                    const char* http_protocol_variant,
                                    const char* path_and_query_string,
                                    const char* http_request_method,
-                                   const char* first_party_domain,
+                                   const NeckoOriginAttributes& origin_attributes,
                                    const PRIntervalTime timeout,
                            /*out*/ nsNSSHttpRequestSession** pRequest)
 {
@@ -260,7 +263,7 @@ nsNSSHttpRequestSession::createFcn(const nsNSSHttpServerSession* session,
   rs->mURL.AppendInt(session->mPort);
   rs->mURL.Append(path_and_query_string);
 
-  rs->mFirstPartyDomain.Assign(first_party_domain);
+  rs->mOriginAttributes = origin_attributes;
 
   rs->mRequestMethod = http_request_method;
 
@@ -1169,7 +1172,7 @@ DetermineEVStatusAndSetNewCert(RefPtr<nsSSLStatus> sslStatus, PRFileDesc* fd,
     unusedBuiltChain,
     saveIntermediates,
     flags,
-    infoObject->GetFirstPartyDomainRaw(),
+    infoObject->GetOriginAttributes(),
     &evOidPolicy);
 
   RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(cert.get()));
