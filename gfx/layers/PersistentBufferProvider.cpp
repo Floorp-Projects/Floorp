@@ -214,7 +214,7 @@ PersistentBufferProviderShared::SetForwarder(ShadowLayerForwarder* aFwd)
 }
 
 TextureClient*
-PersistentBufferProviderShared::GetTexture(Maybe<uint32_t> aIndex)
+PersistentBufferProviderShared::GetTexture(const Maybe<uint32_t>& aIndex)
 {
   if (aIndex.isNothing() || !CheckIndex(aIndex.value())) {
     return nullptr;
