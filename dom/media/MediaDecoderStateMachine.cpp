@@ -1511,7 +1511,7 @@ SeekingState::SeekCompleted()
 
   // We want to resolve the seek request prior finishing the first frame
   // to ensure that the seeked event is fired prior loadeded.
-  mSeekJob.Resolve(false, __func__);
+  mSeekJob.Resolve(__func__);
 
   // Notify FirstFrameLoaded now if we haven't since we've decoded some data
   // for readyState to transition to HAVE_CURRENT_DATA and fire 'loadeddata'.
