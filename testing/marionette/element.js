@@ -936,8 +936,39 @@ element.isInteractable = function(el) {
  *     True if interactable, false otherwise.
  */
 element.isPointerInteractable = function(el) {
-  let tree = element.getInteractableElementTree(el);
+  let tree = element.getInteractableElementTree(el, el.ownerDocument);
   return tree.length > 0;
+};
+
+/**
+ * Calculate the in-view centre point of the area of the given DOM client
+ * rectangle that is inside the viewport.
+ *
+ * @param {DOMRect} rect
+ *     Element off a DOMRect sequence produced by calling |getClientRects|
+ *     on a |DOMElement|.
+ * @param {nsIDOMWindow} win
+ *     Current browsing context.
+ *
+ * @return {Map.<string, number>}
+ *     X and Y coordinates that denotes the in-view centre point of |rect|.
+ */
+element.getInViewCentrePoint = function(rect, win) {
+  const {max, min} = Math;
+
+  let x = {
+    left: max(0, min(rect.x, rect.x + rect.width)),
+    right: min(win.innerWidth, max(rect.x, rect.x + rect.width)),
+  };
+  let y = {
+    top: max(0, min(rect.y, rect.y + rect.height)),
+    bottom: min(win.innerHeight, max(rect.y, rect.y + rect.height)),
+  };
+
+  return {
+    x: (x.left + x.right) / 2,
+    y: (y.top + y.bottom) / 2,
+  };
 };
 
 /**
@@ -949,48 +980,34 @@ element.isPointerInteractable = function(el) {
  *
  * @param {DOMElement} el
  *     Element to determine if is pointer-interactable.
+ * @param {DOMDocument} doc
+ *     Current browsing context's active document.
  *
  * @return {Array.<DOMElement>}
  *     Sequence of non-opaque elements in paint order.
  */
-element.getInteractableElementTree = function(el) {
-  let doc = el.ownerDocument;
+element.getInteractableElementTree = function(el, doc) {
   let win = doc.defaultView;
 
-  // step 1
-  // TODO
-
-  // steps 2-3
-  let box = el.getBoundingClientRect();
-  let visible = {
-    width: Math.max(box.x, box.x + box.width) - win.innerWidth,
-    height: Math.max(box.y, box.y + box.height) - win.innerHeight,
-  };
-
-  // steps 4-5
-  let offset = {
-    vertical: visible.width / 2.0,
-    horizontal: visible.height / 2.0,
-  };
-
-  // step 6
-  let centre = {
-    x: box.x + offset.horizontal,
-    y: box.y + offset.vertical,
-  };
-
-  // step 7
-  let tree = doc.elementsFromPoint(centre.x, centre.y);
-
-  // filter out non-interactable elements
-  let rv = [];
-  for (let el of tree) {
-    if (win.getComputedStyle(el).opacity === "1") {
-      rv.push(el);
-    }
+  // pointer-interactable elements tree, step 1
+  if (element.isDisconnected(el, win)) {
+    return [];
   }
 
-  return rv;
+  // steps 2-3
+  let rects = el.getClientRects();
+  if (rects.length == 0) {
+    return [];
+  }
+
+  // step 4
+  let centre = element.getInViewCentrePoint(rects[0], win);
+
+  // step 5
+  let tree = doc.elementsFromPoint(centre.x, centre.y);
+
+  // only visible elements are considered interactable
+  return tree.filter(el => win.getComputedStyle(el).opacity === "1");
 };
 
 // TODO(ato): Not implemented.
