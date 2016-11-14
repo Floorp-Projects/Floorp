@@ -8556,9 +8556,9 @@ nsGlobalWindow::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessa
 
         nsContentUtils::LogSimpleConsoleError(
           NS_ConvertUTF8toUTF16(nsPrintfCString(
-            "Attempting to post a message to window with url \"%s\" and "
-            "origin \"%s\" from a system principal scope with mismatched "
-            "origin \"%s\".",
+            R"(Attempting to post a message to window with url "%s" and )"
+            R"(origin "%s" from a system principal scope with mismatched )"
+            R"(origin "%s".)",
             targetURL.get(), targetOrigin.get(), sourceOrigin.get())),
           "DOM");
 
