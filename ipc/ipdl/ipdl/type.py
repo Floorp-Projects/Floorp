@@ -205,7 +205,6 @@ class IPDLType(Type):
     def isAtom(self):  return True
     def isCompound(self): return False
     def isShmem(self): return False
-    def isChmod(self): return False
     def isFD(self): return False
     def isEndpoint(self): return False
 
@@ -1224,22 +1223,6 @@ class GatherDecls(TcheckVisitor):
             if itype.isProtocol():
                 itype = ActorType(itype,
                                   nullable=typespec.nullable)
-            # FIXME/cjones: ShmemChmod is disabled until bug 524193
-            if 0 and chmodallowed and itype.isShmem():
-                itype = ShmemChmodType(
-                    itype,
-                    myChmod=typespec.myChmod,
-                    otherChmod=typespec.otherChmod)
-
-        if ((typespec.myChmod or typespec.otherChmod)
-            and not (itype.isIPDL() and (itype.isShmem() or itype.isChmod()))):
-            self.error(
-                loc,
-                "fine-grained access controls make no sense for type `%s'",
-                itype.name())
-
-        if not chmodallowed and (typespec.myChmod or typespec.otherChmod):
-            self.error(loc, "fine-grained access controls not allowed here")
 
         if typespec.nullable and not (itype.isIPDL() and itype.isActor()):
             self.error(

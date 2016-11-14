@@ -411,9 +411,6 @@ class TypeSpec(Node):
         self.spec = spec                # QualifiedId
         self.array = 0                  # bool
         self.nullable = 0               # bool
-        self.myChmod = None             # None or string
-        self.otherChmod = None          # None or string
-
     def basename(self):
         return self.spec.baseid
 
