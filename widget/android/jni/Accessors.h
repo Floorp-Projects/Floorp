@@ -113,7 +113,7 @@ public:
         auto result = TypeAdapter<ReturnType>::ToNative(env,
                 Traits::isStatic ?
                 (env->*TypeAdapter<ReturnType>::StaticCall)(
-                        ctx.RawClassRef(), sID, jargs) :
+                        ctx.ClassRef(), sID, jargs) :
                 (env->*TypeAdapter<ReturnType>::Call)(
                         ctx.Get(), sID, jargs));
 
@@ -147,7 +147,7 @@ public:
         };
 
         if (Traits::isStatic) {
-            env->CallStaticVoidMethodA(ctx.RawClassRef(), Base::sID, jargs);
+            env->CallStaticVoidMethodA(ctx.ClassRef(), Base::sID, jargs);
         } else {
             env->CallVoidMethodA(ctx.Get(), Base::sID, jargs);
         }
@@ -177,7 +177,7 @@ public:
         };
 
         auto result = TypeAdapter<ReturnType>::ToNative(
-                env, env->NewObjectA(ctx.RawClassRef(), Base::sID, jargs));
+                env, env->NewObjectA(ctx.ClassRef(), Base::sID, jargs));
 
         Base::EndAccess(ctx, rv);
         return result;
@@ -232,7 +232,7 @@ public:
                 env, Traits::isStatic ?
 
                 (env->*TypeAdapter<GetterType>::StaticGet)
-                        (ctx.RawClassRef(), sID) :
+                        (ctx.ClassRef(), sID) :
 
                 (env->*TypeAdapter<GetterType>::Get)
                         (ctx.Get(), sID));
@@ -248,7 +248,7 @@ public:
 
         if (Traits::isStatic) {
             (env->*TypeAdapter<SetterType>::StaticSet)(
-                    ctx.RawClassRef(), sID,
+                    ctx.ClassRef(), sID,
                     TypeAdapter<SetterType>::FromNative(env, val));
         } else {
             (env->*TypeAdapter<SetterType>::Set)(

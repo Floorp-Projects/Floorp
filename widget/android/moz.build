@@ -37,6 +37,7 @@ UNIFIED_SOURCES += [
     'AndroidJNI.cpp',
     'AndroidJNIWrapper.cpp',
     'ANRReporter.cpp',
+    'EventDispatcher.cpp',
     'GeneratedJNIWrappers.cpp',
     'GfxInfo.cpp',
     'NativeJSContainer.cpp',

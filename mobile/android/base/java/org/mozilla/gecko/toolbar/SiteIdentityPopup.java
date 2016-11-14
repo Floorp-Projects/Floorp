@@ -97,7 +97,9 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         mResources = mContext.getResources();
 
         mContentButtonClickListener = new ContentNotificationButtonListener();
+    }
 
+    void registerListeners() {
         GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
                                                                   "Doorhanger:Logins",
                                                                   "Permissions:CheckResult");
@@ -547,6 +549,9 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     }
 
     void destroy() {
+    }
+
+    void unregisterListeners() {
         GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
                                                                     "Doorhanger:Logins",
                                                                     "Permissions:CheckResult");
