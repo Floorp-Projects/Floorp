@@ -3292,9 +3292,9 @@ ContentChild::FatalErrorIfNotUsingGPUProcess(const char* const aProtocolName,
   } else {
     nsAutoCString formattedMessage("IPDL error [");
     formattedMessage.AppendASCII(aProtocolName);
-    formattedMessage.AppendLiteral("]: \"");
+    formattedMessage.AppendLiteral(R"(]: ")");
     formattedMessage.AppendASCII(aErrorMsg);
-    formattedMessage.AppendLiteral("\".");
+    formattedMessage.AppendLiteral(R"(".)");
     NS_WARNING(formattedMessage.get());
   }
 }
