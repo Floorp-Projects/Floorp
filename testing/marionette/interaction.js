@@ -122,10 +122,10 @@ interaction.clickElement = function*(el, strict = false, specCompat = false) {
 
   let interactable = false;
   if (specCompat) {
-    if (!element.isInteractable(visibilityCheckEl)) {
-      el.scrollIntoView(false);
+    if (!element.isPointerInteractable(visibilityCheckEl)) {
+      element.scrollIntoView(el);
     }
-    interactable = element.isInteractable(visibilityCheckEl);
+    interactable = element.isPointerInteractable(visibilityCheckEl);
   } else {
     interactable = element.isVisible(visibilityCheckEl);
   }
