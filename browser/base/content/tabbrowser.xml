@@ -799,9 +799,6 @@
                   if (findBar.findMode != findBar.FIND_NORMAL) {
                     findBar.close();
                   }
-
-                  // fix bug 253793 - turn off highlight when page changes
-                  findBar.getElement("highlight").checked = false;
                 }
 
                 // Don't clear the favicon if this onLocationChange was
