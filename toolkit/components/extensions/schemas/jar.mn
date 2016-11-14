@@ -12,7 +12,6 @@ toolkit.jar:
     content/extensions/schemas/extension.json
     content/extensions/schemas/extension_types.json
     content/extensions/schemas/i18n.json
-    content/extensions/schemas/identity.json
     content/extensions/schemas/idle.json
     content/extensions/schemas/management.json
     content/extensions/schemas/manifest.json

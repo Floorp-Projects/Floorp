@@ -22,7 +22,6 @@ toolkit.jar:
     content/extensions/ext-topSites.js
     content/extensions/ext-c-backgroundPage.js
     content/extensions/ext-c-extension.js
-    content/extensions/ext-c-identity.js
     content/extensions/ext-c-runtime.js
     content/extensions/ext-c-storage.js
     content/extensions/ext-c-test.js
