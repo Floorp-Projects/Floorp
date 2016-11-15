@@ -22,7 +22,7 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
 
     TIMEOUT_UPDATE_APPLY = 300
     TIMEOUT_UPDATE_CHECK = 30
-    TIMEOUT_UPDATE_DOWNLOAD = 360
+    TIMEOUT_UPDATE_DOWNLOAD = 720
 
     # For the old update wizard, the errors are displayed inside the dialog. For the
     # handling of updates in the about window the errors are displayed in new dialogs.

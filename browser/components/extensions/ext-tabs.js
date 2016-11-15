@@ -548,6 +548,10 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             }
           }
 
+          // Make sure things like about:blank and data: URIs never inherit,
+          // and instead always get a NullPrincipal.
+          options.disallowInheritPrincipal = true;
+
           tabListener.initTabReady();
           let tab = window.gBrowser.addTab(url || window.BROWSER_NEW_TAB_URL, options);
 

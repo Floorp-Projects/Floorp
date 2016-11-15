@@ -24,9 +24,9 @@ public:
     void SecondStage();
     void ThirdStage();
 
-    bool RecvTest1_2();
-    bool RecvTestInner();
-    bool RecvTestInnerUrgent();
+    bool RecvTest1_2() override;
+    bool RecvTestInner() override;
+    bool RecvTestInnerUrgent() override;
 
     bool ShouldContinueFromReplyTimeout() override
     {
@@ -56,14 +56,14 @@ public:
     TestUrgentHangsChild();
     virtual ~TestUrgentHangsChild();
 
-    bool RecvTest1_1();
-    bool RecvTest1_3();
-    bool RecvTest2();
-    bool RecvTest3();
-    bool RecvTest4();
-    bool RecvTest4_1();
-    bool RecvTest5();
-    bool RecvTest5_1();
+    bool RecvTest1_1() override;
+    bool RecvTest1_3() override;
+    bool RecvTest2() override;
+    bool RecvTest3() override;
+    bool RecvTest4() override;
+    bool RecvTest4_1() override;
+    bool RecvTest5() override;
+    bool RecvTest5_1() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

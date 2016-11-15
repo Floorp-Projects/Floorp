@@ -295,6 +295,21 @@ void TestBinOp(const T1& aT1, const T2& aT2, const T3& aT3)
   MOZ_RELEASE_ASSERT((result || true) == true);
   MOZ_RELEASE_ASSERT((false || result) == bool(result));
   MOZ_RELEASE_ASSERT((true || result) == true);
+
+  // Part 4:
+  // Test short-circuit evaluation.
+  auto Explode = [] {
+    // This function should never be called. Return an arbitrary value.
+    MOZ_RELEASE_ASSERT(false);
+    return false;
+  };
+  if (result) {
+    MOZ_RELEASE_ASSERT(result || Explode());
+    MOZ_RELEASE_ASSERT(!(!result && Explode()));
+  } else {
+    MOZ_RELEASE_ASSERT(!(result && Explode()));
+    MOZ_RELEASE_ASSERT(!result || Explode());
+  }
 }
 
 // Similar to TestBinOp but testing the unary ~ operator.

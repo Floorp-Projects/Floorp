@@ -8,8 +8,14 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormData.h"
 
+class nsIPrincipal;
+class nsIDocument;
+class nsIHttpChannel;
+
 namespace mozilla {
 namespace dom {
+
+class InternalRequest;
 
 class FetchUtil final
 {
@@ -35,6 +41,13 @@ public:
                 nsCString& aHeaderName,
                 nsCString& aHeaderValue,
                 bool* aWasEmptyHeader);
+
+  static nsresult
+  SetRequestReferrer(nsIPrincipal* aPrincipal,
+                     nsIDocument* aDoc,
+                     nsIHttpChannel* aChannel,
+                     InternalRequest* aRequest);
+
 };
 
 } // namespace dom

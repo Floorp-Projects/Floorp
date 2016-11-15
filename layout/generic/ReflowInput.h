@@ -177,49 +177,49 @@ public:
 
   struct ReflowInputFlags {
     ReflowInputFlags() { memset(this, 0, sizeof(*this)); }
-    uint32_t mSpecialBSizeReflow:1;  // used by tables to communicate special reflow (in process) to handle
+    bool mSpecialBSizeReflow : 1;    // used by tables to communicate special reflow (in process) to handle
                                      // percent bsize frames inside cells which may not have computed bsizes
-    uint32_t mNextInFlowUntouched:1; // nothing in the frame's next-in-flow (or its descendants)
+    bool mNextInFlowUntouched : 1;   // nothing in the frame's next-in-flow (or its descendants)
                                      // is changing
-    uint32_t mIsTopOfPage:1;         // Is the current context at the top of a
+    bool mIsTopOfPage : 1;           // Is the current context at the top of a
                                      // page?  When true, we force something
                                      // that's too tall for a page/column to
                                      // fit anyway to avoid infinite loops.
-    uint32_t mAssumingHScrollbar:1;  // parent frame is an nsIScrollableFrame and it
+    bool mAssumingHScrollbar : 1;    // parent frame is an nsIScrollableFrame and it
                                      // is assuming a horizontal scrollbar
-    uint32_t mAssumingVScrollbar:1;  // parent frame is an nsIScrollableFrame and it
+    bool mAssumingVScrollbar : 1;    // parent frame is an nsIScrollableFrame and it
                                      // is assuming a vertical scrollbar
 
-    uint32_t mIsIResize:1;           // Is frame (a) not dirty and (b) a
+    bool mIsIResize : 1;             // Is frame (a) not dirty and (b) a
                                      // different inline-size than before?
 
-    uint32_t mIsBResize:1;           // Is frame (a) not dirty and (b) a
+    bool mIsBResize : 1;             // Is frame (a) not dirty and (b) a
                                      // different block-size than before or
                                      // (potentially) in a context where
                                      // percent block-sizes have a different
                                      // basis?
-    uint32_t mTableIsSplittable:1;   // tables are splittable, this should happen only inside a page
+    bool mTableIsSplittable : 1;     // tables are splittable, this should happen only inside a page
                                      // and never insider a column frame
-    uint32_t mHeightDependsOnAncestorCell:1;   // Does frame height depend on
+    bool mHeightDependsOnAncestorCell : 1;     // Does frame height depend on
                                                // an ancestor table-cell?
-    uint32_t mIsColumnBalancing:1;   // nsColumnSetFrame is balancing columns
-    uint32_t mIsFlexContainerMeasuringHeight:1; // nsFlexContainerFrame is
+    bool mIsColumnBalancing : 1;     // nsColumnSetFrame is balancing columns
+    bool mIsFlexContainerMeasuringHeight : 1;   // nsFlexContainerFrame is
                                                 // reflowing this child to
                                                 // measure its intrinsic height.
-    uint32_t mDummyParentReflowInput:1; // a "fake" reflow state made
+    bool mDummyParentReflowInput : 1;   // a "fake" reflow state made
                                         // in order to be the parent
                                         // of a real one
-    uint32_t mMustReflowPlaceholders:1; // Should this frame reflow its place-
+    bool mMustReflowPlaceholders : 1;   // Should this frame reflow its place-
                                         // holder children? If the available
                                         // height of this frame didn't change,
                                         // but its in a paginated environment
                                         // (e.g. columns), it should always
                                         // reflow its placeholder children.
-    uint32_t mShrinkWrap:1; // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
-    uint32_t mUseAutoBSize:1; // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
-    uint32_t mStaticPosIsCBOrigin:1; // the STATIC_POS_IS_CB_ORIGIN ctor flag
-    uint32_t mIClampMarginBoxMinSize:1; // the I_CLAMP_MARGIN_BOX_MIN_SIZE ctor flag
-    uint32_t mBClampMarginBoxMinSize:1; // the B_CLAMP_MARGIN_BOX_MIN_SIZE ctor flag
+    bool mShrinkWrap : 1; // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
+    bool mUseAutoBSize : 1; // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
+    bool mStaticPosIsCBOrigin : 1; // the STATIC_POS_IS_CB_ORIGIN ctor flag
+    bool mIClampMarginBoxMinSize : 1; // the I_CLAMP_MARGIN_BOX_MIN_SIZE ctor flag
+    bool mBClampMarginBoxMinSize : 1; // the B_CLAMP_MARGIN_BOX_MIN_SIZE ctor flag
 
     // If set, the following two flags indicate that:
     // (1) this frame is absolutely-positioned (or fixed-positioned).
@@ -234,8 +234,8 @@ public:
     // *containing block's writing-mode*, NOT mFrame's own writing-mode. This
     // is purely for convenience, since that's the writing-mode we're dealing
     // with when we set & react to these bits.
-    uint32_t mIOffsetsNeedCSSAlign:1;
-    uint32_t mBOffsetsNeedCSSAlign:1;
+    bool mIOffsetsNeedCSSAlign : 1;
+    bool mBOffsetsNeedCSSAlign : 1;
   };
 
 #ifdef DEBUG

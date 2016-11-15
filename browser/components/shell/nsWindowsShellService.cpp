@@ -646,8 +646,8 @@ nsWindowsShellService::LaunchControlPanelDefaultsSelectionUI()
 nsresult
 nsWindowsShellService::LaunchControlPanelDefaultPrograms()
 {
-  // Default Programs is a Vista+ feature
-  if (!IsVistaOrLater()) {
+  // This Default Programs feature is Win7+ only.
+  if (!IsWin7OrLater()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -664,7 +664,8 @@ nsWindowsShellService::LaunchControlPanelDefaultPrograms()
     return NS_ERROR_FAILURE;
   }
 
-  WCHAR params[] = L"control.exe /name Microsoft.DefaultPrograms /page pageDefaultProgram";
+  WCHAR params[] = L"control.exe /name Microsoft.DefaultPrograms /page "
+    "pageDefaultProgram\\pageAdvancedSettings?pszAppName=" APP_REG_NAME;
   STARTUPINFOW si = {sizeof(si), 0};
   si.dwFlags = STARTF_USESHOWWINDOW;
   si.wShowWindow = SW_SHOWDEFAULT;
@@ -728,8 +729,10 @@ SettingsAppBelievesConnected()
 nsresult
 nsWindowsShellService::LaunchModernSettingsDialogDefaultApps()
 {
-  if (!IsWindowsLogonConnected() && SettingsAppBelievesConnected()) {
-    // Use the classic Control Panel to work around a bug of Windows 10.
+  if (!IsWindowsBuildOrLater(14965) &&
+      !IsWindowsLogonConnected() && SettingsAppBelievesConnected()) {
+    // Use the classic Control Panel to work around a bug of older
+    // builds of Windows 10.
     return LaunchControlPanelDefaultPrograms();
   }
 

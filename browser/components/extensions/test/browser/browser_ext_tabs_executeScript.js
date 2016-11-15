@@ -88,6 +88,20 @@ add_task(function* testExecuteScript() {
 
         browser.tabs.executeScript({
           code: "location.href;",
+          allFrames: true,
+          matchAboutBlank: true,
+        }).then(result => {
+          browser.test.assertTrue(Array.isArray(result), "Result is an array");
+
+          browser.test.assertEq(3, result.length, "Result has correct length");
+
+          browser.test.assertTrue(/\/file_iframe_document\.html$/.test(result[0]), "First result is correct");
+          browser.test.assertEq("http://mochi.test:8888/", result[1], "Second result is correct");
+          browser.test.assertEq("about:blank", result[2], "Thirds result is correct");
+        }),
+
+        browser.tabs.executeScript({
+          code: "location.href;",
           runAt: "document_end",
         }).then(result => {
           browser.test.assertEq(1, result.length, "Expected callback result");
@@ -184,6 +198,12 @@ add_task(function* testExecuteScript() {
 
           browser.test.assertEq("http://example.com/", result[0], "Script executed correctly in new tab");
 
+          await browser.tabs.remove(tab.id);
+        }),
+
+        browser.tabs.create({url: "about:blank"}).then(async tab => {
+          const result = await browser.tabs.executeScript(tab.id, {code: "location.href", matchAboutBlank: true});
+          browser.test.assertEq("about:blank", result[0], "Script executed correctly in new tab");
           await browser.tabs.remove(tab.id);
         }),
 

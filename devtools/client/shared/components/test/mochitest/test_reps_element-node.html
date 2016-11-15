@@ -31,6 +31,9 @@ window.onload = Task.async(function* () {
     yield testLotsOfAttributes();
     yield testSvgNode();
     yield testSvgNodeInXHTML();
+
+    yield testOnMouseOver();
+    yield testOnMouseOut();
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -169,6 +172,39 @@ window.onload = Task.async(function* () {
       ElementNode.rep, { object: stub, mode: "tiny" });
     is(tinyRenderedComponent.textContent, `svg:circle.svg-element`,
       "Element node rep has expected text content for XHTML SVG element in tiny mode");
+  }
+
+  function testOnMouseOver() {
+    const stub = getGripStub("testNode");
+
+    let mouseOverValue;
+    let onDOMNodeMouseOver = (object) => {
+      mouseOverValue = object;
+    };
+    const renderedComponent = renderComponent(
+      ElementNode.rep, {object: stub, onDOMNodeMouseOver});
+
+    const node = renderedComponent.querySelector(".objectBox-node");
+    TestUtils.Simulate.mouseOver(node);
+
+    is(mouseOverValue, stub, "onDOMNodeMouseOver is called with the expected argument " +
+      "when mouseover is fired on the Rep");
+  }
+
+  function testOnMouseOut() {
+    const stub = getGripStub("testNode");
+
+    let called = false;
+    let onDOMNodeMouseOut = (object) => {
+      called = true;
+    };
+    const renderedComponent = renderComponent(
+      ElementNode.rep, {object: stub, onDOMNodeMouseOut});
+
+    const node = renderedComponent.querySelector(".objectBox-node");
+    TestUtils.Simulate.mouseOut(node);
+
+    is(called, true, "onDOMNodeMouseOut is called when mouseout is fired on the Rep");
   }
 
   function getGripStub(name) {

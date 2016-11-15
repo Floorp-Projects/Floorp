@@ -23,6 +23,7 @@
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
     Cu.import("resource://gre/modules/AppConstants.jsm");
     Cu.import("resource://gre/modules/Task.jsm");
+    Cu.import("resource://testing-common/BrowserTestUtils.jsm");
     Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
 
@@ -93,14 +94,7 @@
       // Tests delays the loading of a document for one second.
       yield new Promise(resolve => setTimeout(resolve, 1000));
 
-      let promise = ContentTask.spawn(gBrowser, null, function* () {
-        return new Promise(resolve => {
-          addEventListener("DOMContentLoaded", function listener() {
-            removeEventListener("DOMContentLoaded", listener);
-            resolve();
-          });
-        });
-      });
+      let promise = BrowserTestUtils.browserLoaded(gBrowser);
       gBrowser.loadURI("data:text/html,<h2 id='h2'>" + SEARCH_TEXT +
         "</h2><h2><a href='" + SAMPLE_URL + "'>Link Test</a></h2><input id='text' type='text' value='" +
         SAMPLE_TEXT + "'></input><input id='button' type='button'></input><img id='img' width='50' height='50'/>");
@@ -161,6 +155,13 @@
       yield testToggleEntireWord();
     }
 
+    function testFindButtonsState(enabled = true) {
+      is(gFindBar.getElement("find-next").disabled, !enabled,
+        `Expected the 'next' button to be ${enabled ? 'enabled' : 'disabled'}`);
+      is(gFindBar.getElement("find-previous").disabled, !enabled,
+        `Expected the 'previous' button to be ${enabled ? 'enabled' : 'disabled'}`);
+    }
+
     function* testFindbarSelection() {
       function checkFindbarState(aTestName, aExpSelection) {
         ok(!gFindBar.hidden, "testFindbarSelection: failed to open findbar: " + aTestName);
@@ -171,6 +172,7 @@
              "Incorrect selection in testFindbarSelection: "  + aTestName +
              ". Selection: " + gFindBar._findField.value);
         }
+        testFindButtonsState();
 
         // Clear the value, close the findbar.
         gFindBar._findField.value = "";
@@ -265,6 +267,18 @@
       });
     }
 
+    function promiseHighlightFinished() {
+      return new Promise(resolve => {
+        let listener = {
+          onHighlightFinished() {
+            gFindBar.browser.finder.removeResultListener(listener);
+            resolve();
+          }
+        };
+        gFindBar.browser.finder.addResultListener(listener);
+      });
+    }
+
     var enterStringIntoFindField = Task.async(function* (str, waitForResult = true) {
       for (let promise, i = 0; i < str.length; i++) {
         if (waitForResult) {
@@ -279,6 +293,17 @@
         }
       }
     });
+
+    function promiseExpectRangeCount(rangeCount) {
+      return ContentTask.spawn(gBrowser, { rangeCount }, function* (args) {
+        let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsISelectionDisplay)
+                                 .QueryInterface(Ci.nsISelectionController);
+        let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
+        Assert.equal(sel.rangeCount, args.rangeCount,
+          "Expected the correct amount of ranges inside the Find selection");
+      });
+    }
 
     // also test match-case
     function* testNormalFind() {
@@ -305,6 +330,7 @@
           "testNormalFind: failed to find '" + args.searchStr + "'");
         return sel;
       });
+      testFindButtonsState();
       testClipboardSearchString(sel);
 
       if (!matchCaseCheckbox.hidden) {
@@ -319,6 +345,7 @@
         promise = promiseFindResult();
         matchCaseCheckbox.click();
         yield promise;
+        testFindButtonsState();
       }
     }
 
@@ -358,6 +385,7 @@
         Assert.notEqual(content.getSelection().toString().toLowerCase(), args.searchStr,
           "testNormalFindWithComposition: text shouldn't be found during composition");
       });
+      testFindButtonsState();
 
       synthesizeComposition({ type: "compositioncommitasis" });
 
@@ -368,6 +396,7 @@
         return sel;
       });
       testClipboardSearchString(sel);
+      testFindButtonsState();
 
       if (clicked) {
         matchCaseCheckbox.click();
@@ -431,12 +460,12 @@
         Assert.equal(content.getSelection().toString(), args.searchStr,
           "testQuickFindLink: failed to find sample link");
       });
+      testFindButtonsState();
       testClipboardSearchString(searchStr);
     }
 
     // See bug 963925 for more details on this test.
     function* testFindWithHighlight() {
-      //yield clearFocus();
       gFindBar._findField.value = "";
 
       // For this test, we want to closely control the selection. The easiest
@@ -490,6 +519,40 @@
 
       highlightButton.click();
       ok(!highlightButton.checked, "testFindWithHighlight: Highlight All should be unchecked.");
+
+      // Regression test for bug 1316515.
+      searchStr = "e";
+      gFindBar.clear();
+      yield enterStringIntoFindField(searchStr);
+      yield promiseExpectRangeCount(0);
+
+      highlightButton.click();
+      ok(highlightButton.checked, "testFindWithHighlight: Highlight All should be checked.");
+      yield promiseHighlightFinished();
+      yield promiseExpectRangeCount(3);
+
+      synthesizeKey("VK_BACK_SPACE", {});
+      yield promiseExpectRangeCount(0);
+
+      // Regression test for bug 1316513.
+      highlightButton.click();
+      ok(!highlightButton.checked, "testFindWithHighlight - 1316513: Highlight All should be unchecked.");
+      yield enterStringIntoFindField(searchStr);
+
+      highlightButton.click();
+      ok(highlightButton.checked, "testFindWithHighlight - 1316513: Highlight All should be checked.");
+      yield promiseHighlightFinished();
+      yield promiseExpectRangeCount(3);
+
+      let promise = BrowserTestUtils.browserLoaded(gBrowser);
+      gBrowser.reload();
+      yield promise;
+
+      ok(highlightButton.checked, "testFindWithHighlight - 1316513: Highlight All " +
+         "should still be checked after a reload.");
+      synthesizeKey("VK_RETURN", {});
+      yield promiseHighlightFinished();
+      yield promiseExpectRangeCount(3);
     }
 
     function* testQuickFindText() {
@@ -512,6 +575,7 @@
         Assert.equal(content.getSelection().toString(), args.SEARCH_TEXT,
           "testQuickFindText: failed to find '" + args.SEARCH_TEXT + "'");
       });
+      testFindButtonsState();
       testClipboardSearchString(SEARCH_TEXT);
     }
 
@@ -568,6 +632,7 @@
           `${linksOnly ? "[Links-only] " : ""}Currently highlighted match should be at ${aTest.current} for '${aTest.text}'`);
         is(aMatches[2], String(aTest.total),
           `${linksOnly ? "[Links-only] " : ""}Total amount of matches should be ${aTest.total} for '${aTest.text}'`);
+        testFindButtonsState(aMatches.total !== 0);
       }
 
       for (let test of tests) {
@@ -617,11 +682,13 @@
       yield ContentTask.spawn(gBrowser, null, function* () {
         Assert.equal(content.getSelection().toString(), "T", "First T should be selected.");
       });
+      testFindButtonsState();
 
       gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
       yield ContentTask.spawn(gBrowser, null, function* () {
         Assert.equal(content.getSelection().toString(), "t", "First t should be selected.");
       });
+      testFindButtonsState();
     }
 
     // Make sure that _findFailedString is cleared:
@@ -634,12 +701,14 @@
       yield ContentTask.spawn(gBrowser, null, function* () {
         Assert.equal(content.getSelection().toString(), "", "Not found.");
       });
+      testFindButtonsState(false);
 
       gPrefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
       yield ContentTask.spawn(gBrowser, { SEARCH_TEXT }, function* (args) {
         Assert.equal(content.getSelection().toString(), args.SEARCH_TEXT,
           "Search text should be selected.");
       });
+      testFindButtonsState();
     }
 
     function testClipboardSearchString(aExpected) {
@@ -658,14 +727,17 @@
     function* testFindAgainNotFound() {
       yield openFindbar();
       yield enterStringIntoFindField(NOT_FOUND_TEXT, false);
+      testFindButtonsState(false);
       gFindBar.close();
       ok(gFindBar.hidden, "The findbar is closed.");
       let promise = promiseFindResult();
       gFindBar.onFindAgainCommand();
       yield promise;
       ok(!gFindBar.hidden, "Unsuccessful Find Again opens the find bar.");
+      testFindButtonsState(false);
 
       yield enterStringIntoFindField(SEARCH_TEXT);
+      testFindButtonsState();
       gFindBar.close();
       ok(gFindBar.hidden, "The findbar is closed.");
       promise = promiseFindResult();
@@ -680,6 +752,7 @@
       yield enterStringIntoFindField("Tex", false);
       let result = yield promise;
       is(result.result, Ci.nsITypeAheadFind.FIND_FOUND, "Text should be found");
+      testFindButtonsState();
 
       yield new Promise(resolve => setTimeout(resolve, ITERATOR_TIMEOUT + 20));
       promise = promiseFindResult();
@@ -687,6 +760,7 @@
       check.click();
       result = yield promise;
       is(result.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "Text should NOT be found");
+      testFindButtonsState(false);
 
       check.click();
       gFindBar.close(true);

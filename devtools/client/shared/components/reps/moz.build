@@ -12,6 +12,7 @@ DevToolsModules(
     'date-time.js',
     'document.js',
     'element-node.js',
+    'error.js',
     'event.js',
     'function.js',
     'grip-array.js',

@@ -793,8 +793,8 @@ set_define('USE_SKIA_GPU', skia_gpu)
 
 option('--enable-skia-pdf', help='Enable Skia PDF')
 
-@depends('--enable-skia-pdf', skia, target)
-def skia_pdf(value, skia, target):
+@depends('--enable-skia-pdf', skia)
+def skia_pdf(value, skia):
     if value.origin == 'default':
         if not skia:
             return None

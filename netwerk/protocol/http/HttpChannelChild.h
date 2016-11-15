@@ -78,6 +78,7 @@ public:
   NS_IMETHOD AsyncOpen2(nsIStreamListener *aListener) override;
 
   // HttpBaseChannel::nsIHttpChannel
+  NS_IMETHOD SetReferrerWithPolicy(nsIURI *referrer, uint32_t referrerPolicy) override;
   NS_IMETHOD SetRequestHeader(const nsACString& aHeader,
                               const nsACString& aValue,
                               bool aMerge) override;

@@ -35,9 +35,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 extern crate mp4parse;
+extern crate byteorder;
 
 use std::io::Read;
 use std::collections::HashMap;
+use byteorder::WriteBytesExt;
 
 // Symbols we need from our rust api.
 use mp4parse::MediaContext;
@@ -103,18 +105,31 @@ pub struct mp4parse_track_info {
 }
 
 #[repr(C)]
-pub struct mp4parse_codec_specific_config {
+pub struct mp4parse_byte_data {
     pub length: u32,
     pub data: *const u8,
 }
 
-impl Default for mp4parse_codec_specific_config {
+impl Default for mp4parse_byte_data {
     fn default() -> Self {
-        mp4parse_codec_specific_config {
+        mp4parse_byte_data {
             length: 0,
             data: std::ptr::null_mut(),
         }
     }
+}
+
+impl mp4parse_byte_data {
+    fn set_data(&mut self, data: &Vec<u8>) {
+        self.length = data.len() as u32;
+        self.data = data.as_ptr();
+    }
+}
+
+#[repr(C)]
+#[derive(Default)]
+pub struct mp4parse_pssh_info {
+    pub data: mp4parse_byte_data,
 }
 
 #[derive(Default)]
@@ -126,7 +141,7 @@ pub struct mp4parse_track_audio_info {
     // TODO(kinetik):
     // int32_t profile;
     // int32_t extended_profile; // check types
-    codec_specific_config: mp4parse_codec_specific_config,
+    codec_specific_config: mp4parse_byte_data,
 }
 
 #[repr(C)]
@@ -154,6 +169,7 @@ struct Wrap {
     io: mp4parse_io,
     poisoned: bool,
     opus_header: HashMap<u32, Vec<u8>>,
+    pssh_data: Vec<u8>,
 }
 
 #[repr(C)]
@@ -183,6 +199,10 @@ impl mp4parse_parser {
 
     fn opus_header_mut(&mut self) -> &mut HashMap<u32, Vec<u8>> {
         &mut self.0.opus_header
+    }
+
+    fn pssh_data_mut(&mut self) -> &mut Vec<u8> {
+        &mut self.0.pssh_data
     }
 }
 
@@ -228,6 +248,7 @@ pub unsafe extern fn mp4parse_new(io: *const mp4parse_io) -> *mut mp4parse_parse
         io: (*io).clone(),
         poisoned: false,
         opus_header: HashMap::new(),
+        pssh_data: Vec::new(),
     }));
     Box::into_raw(parser)
 }
@@ -529,6 +550,7 @@ pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut mp4parse_parser,
     MP4PARSE_OK
 }
 
+/// Fill the supplied `mp4parse_fragment_info` with metadata from fragmented file.
 #[no_mangle]
 pub unsafe extern fn mp4parse_get_fragment_info(parser: *mut mp4parse_parser, info: *mut mp4parse_fragment_info) -> mp4parse_error {
     if parser.is_null() || info.is_null() || (*parser).poisoned() {
@@ -555,7 +577,7 @@ pub unsafe extern fn mp4parse_get_fragment_info(parser: *mut mp4parse_parser, in
     MP4PARSE_OK
 }
 
-// A fragmented file needs mvex table and contains no data in stts, stsc, and stco boxes.
+/// A fragmented file needs mvex table and contains no data in stts, stsc, and stco boxes.
 #[no_mangle]
 pub unsafe extern fn mp4parse_is_fragmented(parser: *mut mp4parse_parser, track_id: u32, fragmented: *mut u8) -> mp4parse_error {
     if parser.is_null() || (*parser).poisoned() {
@@ -577,6 +599,41 @@ pub unsafe extern fn mp4parse_is_fragmented(parser: *mut mp4parse_parser, track_
         Some(_) => {},
         None => return MP4PARSE_ERROR_BADARG,
     }
+
+    MP4PARSE_OK
+}
+
+/// Get 'pssh' system id and 'pssh' box content for eme playback.
+///
+/// The data format in 'info' passing to gecko is:
+///   system_id
+///   pssh box size (in native endian)
+///   pssh box content (including header)
+#[no_mangle]
+pub unsafe extern fn mp4parse_get_pssh_info(parser: *mut mp4parse_parser, info: *mut mp4parse_pssh_info) -> mp4parse_error {
+    if parser.is_null() || info.is_null() || (*parser).poisoned() {
+        return MP4PARSE_ERROR_BADARG;
+    }
+
+    let context = (*parser).context_mut();
+    let pssh_data = (*parser).pssh_data_mut();
+    let info: &mut mp4parse_pssh_info = &mut *info;
+
+    pssh_data.clear();
+    for pssh in &context.psshs {
+        let mut data_len = Vec::new();
+        match data_len.write_u32::<byteorder::NativeEndian>(pssh.box_content.len() as u32) {
+            Err(_) => {
+                return MP4PARSE_ERROR_IO;
+            },
+            _ => (),
+        }
+        pssh_data.extend_from_slice(pssh.system_id.as_slice());
+        pssh_data.extend_from_slice(data_len.as_slice());
+        pssh_data.extend_from_slice(pssh.box_content.as_slice());
+    }
+
+    info.data.set_data(&pssh_data);
 
     MP4PARSE_OK
 }

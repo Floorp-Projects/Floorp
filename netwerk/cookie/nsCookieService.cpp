@@ -4513,7 +4513,7 @@ int64_t
 nsCookieService::FindStaleCookie(nsCookieEntry *aEntry,
                                  int64_t aCurrentTime,
                                  nsIURI* aSource,
-                                 mozilla::Maybe<bool> aIsSecure,
+                                 const mozilla::Maybe<bool> &aIsSecure,
                                  nsListIter &aIter)
 {
   aIter.entry = nullptr;

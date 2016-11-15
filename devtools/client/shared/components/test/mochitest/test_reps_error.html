@@ -1,0 +1,421 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test Error rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - Error</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+"use strict";
+
+window.onload = Task.async(function* () {
+  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+  let { ErrorRep } = browserRequire("devtools/client/shared/components/reps/error");
+
+  try {
+    // Test errors with different properties
+    yield testSimpleError();
+    yield testMultilineStackError();
+    yield testErrorWithoutStacktrace();
+
+    // Test different kind of errors
+    yield testEvalError();
+    yield testInternalError();
+    yield testRangeError();
+    yield testReferenceError();
+    yield testSyntaxError();
+    yield testTypeError();
+    yield testURIError();
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function testSimpleError() {
+    // Test object = `new Error("Error message")`
+    const stub = getGripStub("testSimpleError");
+    const renderedRep = shallowRenderComponent(Rep, {object: stub});
+    is(renderedRep.type, ErrorRep.rep,
+      `Rep correctly selects ${ErrorRep.rep.displayName} for Error object`);
+
+    const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
+    is(renderedComponent.textContent,
+      "Error: Error message\n" +
+      "Stack trace:\n" +
+      "@debugger eval code:1:13\n",
+      "Error Rep has expected text content for a simple error");
+
+    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    is(tinyRenderedComponent.textContent,
+      "Error",
+      "Error Rep has expected text content for a simple error in tiny mode");
+  }
+
+  function testMultilineStackError() {
+    /*
+     * Test object = `
+     *   function errorFoo() {
+     *     errorBar();
+     *   }
+     *   function errorBar() {
+     *     console.log(new Error("bar"));
+     *   }
+     *   errorFoo();`
+     */
+    const stub = getGripStub("testMultilineStackError");
+    const renderedRep = shallowRenderComponent(Rep, {object: stub});
+    is(renderedRep.type, ErrorRep.rep,
+      `Rep correctly selects ${ErrorRep.rep.displayName} for Error object`);
+
+    const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
+    is(renderedComponent.textContent,
+      "Error: bar\n" +
+      "Stack trace:\n" +
+      "errorBar@debugger eval code:6:15\n" +
+      "errorFoo@debugger eval code:3:3\n" +
+      "@debugger eval code:8:1\n",
+      "Error Rep has expected text content for an error with a multiple line");
+
+    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    is(tinyRenderedComponent.textContent,
+      "Error",
+      "Error Rep has expected text content for an error with a multiple line in tiny mode");
+  }
+
+  function testErrorWithoutStacktrace() {
+    const stub = getGripStub("testErrorWithoutStacktrace");
+    const renderedRep = shallowRenderComponent(Rep, {object: stub});
+    is(renderedRep.type, ErrorRep.rep,
+      `Rep correctly selects ${ErrorRep.rep.displayName} for Error object`);
+
+    const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
+    is(renderedComponent.textContent,
+      "Error: Error message",
+      "Error Rep has expected text content for an error without stacktrace");
+
+    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    is(tinyRenderedComponent.textContent,
+      "Error",
+      "Error Rep has expected text content for an error without stacktrace in tiny mode");
+  }
+
+  function testEvalError() {
+    // Test object = `new EvalError("EvalError message")`
+    const stub = getGripStub("testEvalError");
+    const renderedRep = shallowRenderComponent(Rep, {object: stub});
+    is(renderedRep.type, ErrorRep.rep,
+      `Rep correctly selects ${ErrorRep.rep.displayName} for EvalError object`);
+
+    const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
+    is(renderedComponent.textContent,
+      "EvalError: EvalError message\n" +
+      "Stack trace:\n" +
+      "@debugger eval code:10:13\n",
+      "Error Rep has expected text content for an EvalError");
+
+    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    is(tinyRenderedComponent.textContent,
+      "EvalError",
+      "Error Rep has expected text content for an EvalError in tiny mode");
+  }
+
+  function testInternalError() {
+    // Test object = `new InternalError("InternalError message")`
+    const stub = getGripStub("testInternalError");
+    const renderedRep = shallowRenderComponent(Rep, {object: stub});
+    is(renderedRep.type, ErrorRep.rep,
+      `Rep correctly selects ${ErrorRep.rep.displayName} for InternalError object`);
+
+    const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
+    is(renderedComponent.textContent,
+      "InternalError: InternalError message\n" +
+      "Stack trace:\n" +
+      "@debugger eval code:11:13\n",
+      "Error Rep has expected text content for an InternalError");
+
+    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    is(tinyRenderedComponent.textContent,
+      "InternalError",
+      "Error Rep has expected text content for an InternalError in tiny mode");
+  }
+
+  function testRangeError() {
+    // Test object = `new RangeError("RangeError message")`
+    const stub = getGripStub("testRangeError");
+    const renderedRep = shallowRenderComponent(Rep, {object: stub});
+    is(renderedRep.type, ErrorRep.rep,
+      `Rep correctly selects ${ErrorRep.rep.displayName} for RangeError object`);
+
+    const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
+    is(renderedComponent.textContent,
+      "RangeError: RangeError message\n" +
+      "Stack trace:\n" +
+      "@debugger eval code:12:13\n",
+      "Error Rep has expected text content for RangeError");
+
+    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    is(tinyRenderedComponent.textContent,
+      "RangeError",
+      "Error Rep has expected text content for RangeError in tiny mode");
+  }
+
+  function testReferenceError() {
+    // Test object = `new ReferenceError("ReferenceError message"`
+    const stub = getGripStub("testReferenceError");
+    const renderedRep = shallowRenderComponent(Rep, {object: stub});
+    is(renderedRep.type, ErrorRep.rep,
+      `Rep correctly selects ${ErrorRep.rep.displayName} for ReferenceError object`);
+
+    const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
+    is(renderedComponent.textContent,
+      "ReferenceError: ReferenceError message\n" +
+      "Stack trace:\n" +
+      "@debugger eval code:13:13\n",
+      "Error Rep has expected text content for ReferenceError");
+
+    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    is(tinyRenderedComponent.textContent,
+      "ReferenceError",
+      "Error Rep has expected text content for ReferenceError in tiny mode");
+  }
+
+  function testSyntaxError() {
+    // Test object = `new SyntaxError("SyntaxError message"`
+    const stub = getGripStub("testSyntaxError");
+    const renderedRep = shallowRenderComponent(Rep, {object: stub});
+    is(renderedRep.type, ErrorRep.rep,
+      `Rep correctly selects ${ErrorRep.rep.displayName} for SyntaxError object`);
+
+    const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
+    is(renderedComponent.textContent,
+      "SyntaxError: SyntaxError message\n" +
+      "Stack trace:\n" +
+      "@debugger eval code:14:13\n",
+      "Error Rep has expected text content for SyntaxError");
+
+    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    is(tinyRenderedComponent.textContent,
+      "SyntaxError",
+      "SyntaxError Rep has expected text content for SyntaxError in tiny mode");
+  }
+
+  function testTypeError() {
+    // Test object = `new TypeError("TypeError message"`
+    const stub = getGripStub("testTypeError");
+    const renderedRep = shallowRenderComponent(Rep, {object: stub});
+    is(renderedRep.type, ErrorRep.rep,
+      `Rep correctly selects ${ErrorRep.rep.displayName} for TypeError`);
+
+    const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
+    is(renderedComponent.textContent,
+      "TypeError: TypeError message\n" +
+      "Stack trace:\n" +
+      "@debugger eval code:15:13\n",
+      "Error Rep has expected text content for TypeError");
+
+    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    is(tinyRenderedComponent.textContent,
+      "TypeError",
+      "Error Rep has expected text content for a TypeError in tiny mode");
+  }
+
+  function testURIError() {
+    // Test object = `new URIError("URIError message")`
+    const stub = getGripStub("testURIError");
+    const renderedRep = shallowRenderComponent(Rep, {object: stub});
+    is(renderedRep.type, ErrorRep.rep,
+      `Rep correctly selects ${ErrorRep.rep.displayName} for URIError object`);
+
+    const renderedComponent = renderComponent(ErrorRep.rep, {object: stub});
+    is(renderedComponent.textContent,
+      "URIError: URIError message\n" +
+      "Stack trace:\n" +
+      "@debugger eval code:16:13\n",
+      "Error Rep has expected text content for URIError");
+
+    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    is(tinyRenderedComponent.textContent,
+      "URIError",
+      "Error Rep has expected text content for URIError in tiny mode");
+  }
+
+  function getGripStub(name) {
+    switch (name) {
+      case "testSimpleError":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj1020",
+          "class": "Error",
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "Error",
+            "name": "Error",
+            "message": "Error message",
+            "stack": "@debugger eval code:1:13\n",
+            "fileName": "debugger eval code",
+            "lineNumber": 1,
+            "columnNumber": 13
+          }
+        };
+      case "testMultilineStackError":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj1021",
+          "class": "Error",
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "Error",
+            "name": "Error",
+            "message": "bar",
+            "stack": "errorBar@debugger eval code:6:15\n" +
+                     "errorFoo@debugger eval code:3:3\n" +
+                     "@debugger eval code:8:1\n",
+            "fileName": "debugger eval code",
+            "lineNumber": 6,
+            "columnNumber": 15
+          }
+        };
+      case "testErrorWithoutStacktrace":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj1020",
+          "class": "Error",
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "Error",
+            "name": "Error",
+            "message": "Error message",
+          }
+        };
+      case "testEvalError":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj1022",
+          "class": "Error",
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "Error",
+            "name": "EvalError",
+            "message": "EvalError message",
+            "stack": "@debugger eval code:10:13\n",
+            "fileName": "debugger eval code",
+            "lineNumber": 10,
+            "columnNumber": 13
+          }
+        };
+      case "testInternalError":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj1023",
+          "class": "Error",
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "Error",
+            "name": "InternalError",
+            "message": "InternalError message",
+            "stack": "@debugger eval code:11:13\n",
+            "fileName": "debugger eval code",
+            "lineNumber": 11,
+            "columnNumber": 13
+          }
+        };
+      case "testRangeError":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj1024",
+          "class": "Error",
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "Error",
+            "name": "RangeError",
+            "message": "RangeError message",
+            "stack": "@debugger eval code:12:13\n",
+            "fileName": "debugger eval code",
+            "lineNumber": 12,
+            "columnNumber": 13
+          }
+        };
+      case "testReferenceError":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj1025",
+          "class": "Error",
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "Error",
+            "name": "ReferenceError",
+            "message": "ReferenceError message",
+            "stack": "@debugger eval code:13:13\n",
+            "fileName": "debugger eval code",
+            "lineNumber": 13,
+            "columnNumber": 13
+          }
+        };
+      case "testSyntaxError":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj1026",
+          "class": "Error",
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "Error",
+            "name": "SyntaxError",
+            "message": "SyntaxError message",
+            "stack": "@debugger eval code:14:13\n",
+            "fileName": "debugger eval code",
+            "lineNumber": 14,
+            "columnNumber": 13
+          }
+        };
+      case "testTypeError":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj1027",
+          "class": "Error",
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "Error",
+            "name": "TypeError",
+            "message": "TypeError message",
+            "stack": "@debugger eval code:15:13\n",
+            "fileName": "debugger eval code",
+            "lineNumber": 15,
+            "columnNumber": 13
+          }
+        };
+      case "testURIError":
+        return {
+          "type": "object",
+          "actor": "server1.conn1.child1/obj1028",
+          "class": "Error",
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "Error",
+            "name": "URIError",
+            "message": "URIError message",
+            "stack": "@debugger eval code:16:13\n",
+            "fileName": "debugger eval code",
+            "lineNumber": 16,
+            "columnNumber": 13
+          }
+        };
+    }
+
+    return null;
+  }
+});
+</script>
+</pre>
+</body>
+</html>

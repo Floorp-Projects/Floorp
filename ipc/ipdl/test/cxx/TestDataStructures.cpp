@@ -27,12 +27,6 @@ Cast(PTestDataStructuresSubParent* a)
     return *static_cast<TestDataStructuresSub*>(a);
 }
 
-inline static TestDataStructuresSub&
-Cast(PTestDataStructuresSubChild* a)
-{
-    return *static_cast<TestDataStructuresSub*>(a);
-}
-
 //-----------------------------------------------------------------------------
 // parent
 

@@ -25,13 +25,14 @@ diff --git a/media/libstagefright/binding/mp4parse_capi/Cargo.toml b/media/libst
 index aeeebc65..5c0836a 100644
 --- a/media/libstagefright/binding/mp4parse_capi/Cargo.toml
 +++ b/media/libstagefright/binding/mp4parse_capi/Cargo.toml
-@@ -18,17 +18,9 @@ exclude = [
+@@ -18,18 +18,10 @@ exclude = [
    "*.mp4",
  ]
  
 -build = "build.rs"
 -
  [dependencies]
+ byteorder = "0.5.0"
  "mp4parse" = {version = "0.6.0", path = "../mp4parse"}
  
 -[build-dependencies]
