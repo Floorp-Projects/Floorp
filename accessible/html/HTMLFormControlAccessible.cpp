@@ -463,11 +463,6 @@ HTMLTextFieldAccessible::GetEditor() const
   if (!editableElt)
     return nullptr;
 
-  // nsGenericHTMLElement::GetEditor has a security check.
-  // Make sure we're not restricted by the permissions of
-  // whatever script is currently running.
-  mozilla::dom::AutoNoJSAPI nojsapi;
-
   nsCOMPtr<nsIEditor> editor;
   editableElt->GetEditor(getter_AddRefs(editor));
 
