@@ -5223,33 +5223,74 @@ Parser<ParseHandler>::consequentOrAlternative(YieldHandling yieldHandling)
     if (!tokenStream.peekToken(&next, TokenStream::Operand))
         return null();
 
-    if (next == TOK_FUNCTION) {
-        // Annex B.3.4 says that unbraced function declarations under if/else
-        // in non-strict code act as if they were braced. That is,
-        // |if (x) function f() {}| is parsed as |if (x) { function f() {} }|.
-        if (!pc->sc()->strict()) {
-            tokenStream.consumeKnownToken(next, TokenStream::Operand);
+    // Annex B.3.4 says that unbraced FunctionDeclarations under if/else in
+    // non-strict code act as if they were braced: |if (x) function f() {}|
+    // parses as |if (x) { function f() {} }|.
+    //
+    // Careful!  FunctionDeclaration doesn't include generators or async
+    // functions.
+    if (next == TOK_NAME &&
+        !tokenStream.nextNameContainsEscape() &&
+        tokenStream.nextName() == context->names().async)
+    {
+        tokenStream.consumeKnownToken(next, TokenStream::Operand);
 
-            ParseContext::Statement stmt(pc, StatementKind::Block);
-            ParseContext::Scope scope(this);
-            if (!scope.init(pc))
-                return null();
+        // Peek only on the same line: ExpressionStatement's lookahead
+        // restriction is phrased as
+        //
+        //   [lookahead ∉ { {, function, async [no LineTerminator here] function, class, let [ }]
+        //
+        // meaning that code like this is valid:
+        //
+        //   if (true)
+        //     async       // ASI opportunity
+        //   function clownshoes() {}
+        TokenKind maybeFunction;
+        if (!tokenStream.peekTokenSameLine(&maybeFunction))
+            return null();
 
-            TokenPos funcPos = pos();
-            Node fun = functionStmt(yieldHandling, NameRequired);
-            if (!fun)
-                return null();
-
-            Node block = handler.newStatementList(funcPos);
-            if (!block)
-                return null();
-
-            handler.addStatementToList(block, fun);
-            return finishLexicalScope(scope, block);
+        if (maybeFunction == TOK_FUNCTION) {
+            error(JSMSG_FORBIDDEN_AS_STATEMENT, "async function declarations");
+            return null();
         }
 
-        // Function declarations are a syntax error in strict mode code.
-        // Parser::statement reports that error.
+        // Otherwise this |async| begins an ExpressionStatement.
+        tokenStream.ungetToken();
+    } else if (next == TOK_FUNCTION) {
+        tokenStream.consumeKnownToken(next, TokenStream::Operand);
+
+        // Parser::statement would handle this, but as this function handles
+        // every other error case, it seems best to handle this.
+        if (pc->sc()->strict()) {
+            error(JSMSG_FORBIDDEN_AS_STATEMENT, "function declarations");
+            return null();
+        }
+
+        TokenKind maybeStar;
+        if (!tokenStream.peekToken(&maybeStar))
+            return null();
+
+        if (maybeStar == TOK_MUL) {
+            error(JSMSG_FORBIDDEN_AS_STATEMENT, "generator declarations");
+            return null();
+        }
+
+        ParseContext::Statement stmt(pc, StatementKind::Block);
+        ParseContext::Scope scope(this);
+        if (!scope.init(pc))
+            return null();
+
+        TokenPos funcPos = pos();
+        Node fun = functionStmt(yieldHandling, NameRequired);
+        if (!fun)
+            return null();
+
+        Node block = handler.newStatementList(funcPos);
+        if (!block)
+            return null();
+
+        handler.addStatementToList(block, fun);
+        return finishLexicalScope(scope, block);
     }
 
     return statement(yieldHandling);
