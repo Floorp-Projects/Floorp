@@ -597,7 +597,7 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
             // collect all glyphs in a list to be assigned to the first char;
             // there must be at least one in the clump, and we already measured its advance,
             // hence the placement of the loop-exit test and the measurement of the next glyph
-            while (1) {
+            while (true) {
                 gfxTextRun::DetailedGlyph *details = detailedGlyphs.AppendElement();
                 details->mGlyphID = glyphs[glyphStart];
                 details->mXOffset = 0;
