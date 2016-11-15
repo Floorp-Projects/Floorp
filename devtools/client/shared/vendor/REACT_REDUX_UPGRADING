@@ -1,3 +1,8 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
 "react-redux" uses UMD style loading to work in many different environments.
 It assumes that "react" and "redux" are both included via `require("react")`
 as in node or browserify, but the paths to our react and redux installation are different.
