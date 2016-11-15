@@ -1175,7 +1175,7 @@ MarkJitStubFrame(JSTracer* trc, const JitFrameIterator& frame)
     JitStubFrameLayout* layout = (JitStubFrameLayout*)frame.fp();
 
     if (ICStub* stub = layout->maybeStubPtr()) {
-        MOZ_ASSERT(ICStub::CanMakeCalls(stub->kind()));
+        MOZ_ASSERT(stub->makesGCCalls());
         stub->trace(trc);
     }
 }

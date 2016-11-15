@@ -91,6 +91,8 @@ class ObjOperandId : public OperandId
     _(GuardAndLoadUnboxedExpando)         \
     _(LoadObject)                         \
     _(LoadProto)                          \
+                                          \
+    /* The *Result ops load a value into the cache's result register. */ \
     _(LoadFixedSlotResult)                \
     _(LoadDynamicSlotResult)              \
     _(LoadUnboxedPropertyResult)          \
@@ -98,6 +100,7 @@ class ObjOperandId : public OperandId
     _(LoadInt32ArrayLengthResult)         \
     _(LoadUnboxedArrayLengthResult)       \
     _(LoadArgumentsObjectLengthResult)    \
+    _(CallScriptedGetterResult)           \
     _(LoadUndefinedResult)
 
 enum class CacheOp {
@@ -333,6 +336,10 @@ class MOZ_RAII CacheIRWriter
     void loadArgumentsObjectLengthResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadArgumentsObjectLengthResult, obj);
     }
+    void callScriptedGetterResult(ObjOperandId obj, JSFunction* getter) {
+        writeOpWithOperandId(CacheOp::CallScriptedGetterResult, obj);
+        addStubWord(uintptr_t(getter), StubField::GCType::JSObject);
+    }
 };
 
 class CacheIRStubInfo;
@@ -405,6 +412,8 @@ class MOZ_RAII GetPropIRGenerator
     HandleValue val_;
     HandlePropertyName name_;
     MutableHandleValue res_;
+    ICStubEngine engine_;
+    bool* isTemporarilyUnoptimizable_;
     bool emitted_;
 
     enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
@@ -427,8 +436,9 @@ class MOZ_RAII GetPropIRGenerator
     GetPropIRGenerator& operator=(const GetPropIRGenerator&) = delete;
 
   public:
-    GetPropIRGenerator(JSContext* cx, jsbytecode* pc, HandleValue val, HandlePropertyName name,
-                       MutableHandleValue res);
+    GetPropIRGenerator(JSContext* cx, jsbytecode* pc, ICStubEngine engine,
+                       bool* isTemporarilyUnoptimizable,
+                       HandleValue val, HandlePropertyName name, MutableHandleValue res);
 
     bool emitted() const { return emitted_; }
 
@@ -442,7 +452,7 @@ class MOZ_RAII GetPropIRGenerator
     }
 };
 
-enum class CacheKind
+enum class CacheKind : uint8_t
 {
     GetProp
 };
