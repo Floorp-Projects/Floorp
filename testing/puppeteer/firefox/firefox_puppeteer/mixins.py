@@ -65,7 +65,10 @@ class PuppeteerMixin(object):
 
         :param flags: Specific restart flags for Firefox
         """
-        self.marionette.restart(in_app=not kwargs.get('clean'), **kwargs)
+        if kwargs.get('clean'):
+            self.marionette.restart(clean=True)
+        else:
+            self.marionette.restart(in_app=True)
 
         # Ensure that we always have a valid browser instance available
         self.browser = self.puppeteer.windows.switch_to(lambda win: type(win) is BrowserWindow)
