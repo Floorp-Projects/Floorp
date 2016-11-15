@@ -323,8 +323,9 @@ Navigator::Invalidate()
 //    Navigator::nsIDOMNavigator
 //*****************************************************************************
 
-NS_IMETHODIMP
-Navigator::GetUserAgent(nsAString& aUserAgent)
+void
+Navigator::GetUserAgent(nsAString& aUserAgent, CallerType aCallerType,
+                        ErrorResult& aRv) const
 {
   nsCOMPtr<nsIURI> codebaseURI;
   nsCOMPtr<nsPIDOMWindowInner> window;
@@ -338,7 +339,7 @@ Navigator::GetUserAgent(nsAString& aUserAgent)
 
       if (!customUserAgent.IsEmpty()) {
         aUserAgent = customUserAgent;
-        return NS_OK;
+        return;
       }
 
       nsIDocument* doc = mWindow->GetExtantDoc();
@@ -348,8 +349,12 @@ Navigator::GetUserAgent(nsAString& aUserAgent)
     }
   }
 
-  return GetUserAgent(window, codebaseURI, nsContentUtils::IsCallerChrome(),
-                      aUserAgent);
+  nsresult rv = GetUserAgent(window, codebaseURI,
+                             aCallerType == CallerType::System,
+                             aUserAgent);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+  }
 }
 
 NS_IMETHODIMP
@@ -368,17 +373,22 @@ Navigator::GetAppCodeName(nsAString& aAppCodeName)
   return rv;
 }
 
-NS_IMETHODIMP
-Navigator::GetAppVersion(nsAString& aAppVersion)
+void
+Navigator::GetAppVersion(nsAString& aAppVersion, CallerType aCallerType,
+                         ErrorResult& aRv) const
 {
-  return GetAppVersion(aAppVersion, /* aUsePrefOverriddenValue */ true);
+  nsresult rv = GetAppVersion(aAppVersion,
+    /* aUsePrefOverriddenValue = */ aCallerType != CallerType::System);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+  }
 }
 
-NS_IMETHODIMP
-Navigator::GetAppName(nsAString& aAppName)
+void
+Navigator::GetAppName(nsAString& aAppName, CallerType aCallerType) const
 {
-  AppName(aAppName, /* aUsePrefOverriddenValue */ true);
-  return NS_OK;
+  AppName(aAppName,
+          /* aUsePrefOverriddenValue = */ aCallerType != CallerType::System);
 }
 
 /**
@@ -469,36 +479,47 @@ Navigator::GetLanguages(nsTArray<nsString>& aLanguages)
   // event has to be timed correctly.
 }
 
-NS_IMETHODIMP
-Navigator::GetPlatform(nsAString& aPlatform)
+void
+Navigator::GetPlatform(nsAString& aPlatform, CallerType aCallerType,
+                       ErrorResult& aRv) const
 {
-  return GetPlatform(aPlatform, /* aUsePrefOverriddenValue */ true);
+  nsresult rv = GetPlatform(aPlatform,
+    /* aUsePrefOverriddenValue = */ aCallerType != CallerType::System);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+  }
 }
 
-NS_IMETHODIMP
-Navigator::GetOscpu(nsAString& aOSCPU)
+void
+Navigator::GetOscpu(nsAString& aOSCPU, CallerType aCallerType,
+                    ErrorResult& aRv) const
 {
-  if (!nsContentUtils::IsCallerChrome()) {
+  if (aCallerType != CallerType::System) {
     const nsAdoptingString& override =
       Preferences::GetString("general.oscpu.override");
 
     if (override) {
       aOSCPU = override;
-      return NS_OK;
+      return;
     }
   }
 
   nsresult rv;
-
   nsCOMPtr<nsIHttpProtocolHandler>
     service(do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   nsAutoCString oscpu;
   rv = service->GetOscpu(oscpu);
-  CopyASCIItoUTF16(oscpu, aOSCPU);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
-  return rv;
+  CopyASCIItoUTF16(oscpu, aOSCPU);
 }
 
 NS_IMETHODIMP
@@ -643,34 +664,36 @@ Navigator::OnLine()
   return !NS_IsOffline();
 }
 
-NS_IMETHODIMP
-Navigator::GetBuildID(nsAString& aBuildID)
+void
+Navigator::GetBuildID(nsAString& aBuildID, CallerType aCallerType,
+                      ErrorResult& aRv) const
 {
-  if (!nsContentUtils::IsCallerChrome()) {
+  if (aCallerType != CallerType::System) {
     const nsAdoptingString& override =
       Preferences::GetString("general.buildID.override");
 
     if (override) {
       aBuildID = override;
-      return NS_OK;
+      return;
     }
   }
 
   nsCOMPtr<nsIXULAppInfo> appInfo =
     do_GetService("@mozilla.org/xre/app-info;1");
   if (!appInfo) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return;
   }
 
   nsAutoCString buildID;
   nsresult rv = appInfo->GetAppBuildID(buildID);
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
   }
 
   aBuildID.Truncate();
   AppendASCIItoUTF16(buildID, aBuildID);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1882,7 +1905,7 @@ Navigator::GetPlatform(nsAString& aPlatform, bool aUsePrefOverriddenValue)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (aUsePrefOverriddenValue && !nsContentUtils::IsCallerChrome()) {
+  if (aUsePrefOverriddenValue) {
     const nsAdoptingString& override =
       mozilla::Preferences::GetString("general.platform.override");
 
@@ -1927,7 +1950,7 @@ Navigator::GetAppVersion(nsAString& aAppVersion, bool aUsePrefOverriddenValue)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (aUsePrefOverriddenValue && !nsContentUtils::IsCallerChrome()) {
+  if (aUsePrefOverriddenValue) {
     const nsAdoptingString& override =
       mozilla::Preferences::GetString("general.appversion.override");
 
@@ -1964,7 +1987,7 @@ Navigator::AppName(nsAString& aAppName, bool aUsePrefOverriddenValue)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (aUsePrefOverriddenValue && !nsContentUtils::IsCallerChrome()) {
+  if (aUsePrefOverriddenValue) {
     const nsAdoptingString& override =
       mozilla::Preferences::GetString("general.appname.override");
 

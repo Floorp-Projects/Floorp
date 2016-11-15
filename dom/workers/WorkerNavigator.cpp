@@ -60,7 +60,7 @@ WorkerNavigator::SetLanguages(const nsTArray<nsString>& aLanguages)
 }
 
 void
-WorkerNavigator::GetAppName(nsString& aAppName) const
+WorkerNavigator::GetAppName(nsString& aAppName, CallerType aCallerType) const
 {
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
@@ -74,7 +74,8 @@ WorkerNavigator::GetAppName(nsString& aAppName) const
 }
 
 void
-WorkerNavigator::GetAppVersion(nsString& aAppVersion) const
+WorkerNavigator::GetAppVersion(nsString& aAppVersion, CallerType aCallerType,
+                               ErrorResult& aRv) const
 {
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
@@ -88,7 +89,8 @@ WorkerNavigator::GetAppVersion(nsString& aAppVersion) const
 }
 
 void
-WorkerNavigator::GetPlatform(nsString& aPlatform) const
+WorkerNavigator::GetPlatform(nsString& aPlatform, CallerType aCallerType,
+                             ErrorResult& aRv) const
 {
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
@@ -144,7 +146,8 @@ public:
 } // namespace
 
 void
-WorkerNavigator::GetUserAgent(nsString& aUserAgent, ErrorResult& aRv) const
+WorkerNavigator::GetUserAgent(nsString& aUserAgent, CallerType aCallerType,
+                              ErrorResult& aRv) const
 {
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);

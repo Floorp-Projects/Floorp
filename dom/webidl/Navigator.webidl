@@ -37,13 +37,13 @@ interface NavigatorID {
   // WebKit/Blink/Trident/Presto support this (hardcoded "Mozilla").
   [Constant, Cached]
   readonly attribute DOMString appCodeName; // constant "Mozilla"
-  [Constant, Cached]
+  [Constant, Cached, NeedsCallerType]
   readonly attribute DOMString appName;
-  [Constant, Cached]
+  [Constant, Cached, Throws, NeedsCallerType]
   readonly attribute DOMString appVersion;
-  [Constant, Cached]
+  [Constant, Cached, Throws, NeedsCallerType]
   readonly attribute DOMString platform;
-  [Pure, Cached, Throws]
+  [Pure, Cached, Throws, NeedsCallerType]
   readonly attribute DOMString userAgent;
   [Constant, Cached]
   readonly attribute DOMString product; // constant "Gecko"
@@ -175,7 +175,7 @@ callback interface MozIdleObserver {
 
 // nsIDOMNavigator
 partial interface Navigator {
-  [Throws, Constant, Cached]
+  [Throws, Constant, Cached, NeedsCallerType]
   readonly attribute DOMString oscpu;
   // WebKit/Blink support this; Trident/Presto do not.
   readonly attribute DOMString vendor;
@@ -185,7 +185,7 @@ partial interface Navigator {
   readonly attribute DOMString productSub;
   // WebKit/Blink/Trident/Presto support this.
   readonly attribute boolean cookieEnabled;
-  [Throws, Constant, Cached]
+  [Throws, Constant, Cached, NeedsCallerType]
   readonly attribute DOMString buildID;
   [Throws, ChromeOnly, UnsafeInPrerendering]
   readonly attribute MozPowerManager mozPower;
