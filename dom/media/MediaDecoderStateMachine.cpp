@@ -1499,23 +1499,19 @@ SeekingState::SeekCompleted()
     newCurrentTime = video ? video->mTime : seekTime;
   }
 
-  // Change state to DECODING or COMPLETED now.
   bool isLiveStream = Resource()->IsLiveStream();
-  State nextState;
   if (newCurrentTime == mMaster->Duration().ToMicroseconds() && !isLiveStream) {
-    // Seeked to end of media, move to COMPLETED state. Note we don't do
+    // Seeked to end of media. Explicitly finish the queues so DECODING
+    // will transition to COMPLETED immediately. Note we don't do
     // this when playing a live stream, since the end of media will advance
     // once we download more data!
-    // Explicitly set our state so we don't decode further, and so
-    // we report playback ended to the media element.
-    nextState = DECODER_STATE_COMPLETED;
-  } else {
-    nextState = DECODER_STATE_DECODING;
+    AudioQueue().Finish();
+    VideoQueue().Finish();
   }
 
   // We want to resolve the seek request prior finishing the first frame
   // to ensure that the seeked event is fired prior loadeded.
-  mSeekJob.Resolve(nextState == DECODER_STATE_COMPLETED, __func__);
+  mSeekJob.Resolve(false, __func__);
 
   // Notify FirstFrameLoaded now if we haven't since we've decoded some data
   // for readyState to transition to HAVE_CURRENT_DATA and fire 'loadeddata'.
@@ -1545,11 +1541,7 @@ SeekingState::SeekCompleted()
     mMaster->UpdateNextFrameStatus();
   }
 
-  if (nextState == DECODER_STATE_COMPLETED) {
-    SetState<CompletedState>();
-  } else {
-    SetState<DecodingState>();
-  }
+  SetState<DecodingState>();
 }
 
 void
