@@ -42,10 +42,6 @@ class TestCapabilities(MarionetteTestCase):
         self.assertTrue(self.caps["takesElementScreenshot"])
         self.assertTrue(self.caps["takesScreenshot"])
 
-    def test_selenium2_compat(self):
-        self.assertIn("platform", self.caps)
-        self.assertEqual(self.caps["platform"], self.caps["platformName"].upper())
-
     def test_we_can_pass_in_capabilities_on_session_start(self):
         self.marionette.delete_session()
         capabilities = {"desiredCapabilities": {"somethingAwesome": "cake"}}
