@@ -4,7 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-gyp_vars = {
+include('gyp_base.mozbuild')
+
+gyp_vars.update({
     'lsan': 0,
     'asan': 0,
     'build_with_mozilla': 1,
@@ -69,16 +71,9 @@ gyp_vars = {
     # linker to throw away uneeded bits.
     'include_isac': 1,
     'include_pcm16b': 1,
-}
+})
 
-os = CONFIG['OS_TARGET']
-
-if os == 'WINNT':
-    gyp_vars.update(
-        MSVS_VERSION=CONFIG['_MSVS_VERSION'],
-        MSVS_OS_BITS=64 if CONFIG['HAVE_64BIT_BUILD'] else 32,
-    )
-elif os == 'Android':
+if os == 'Android':
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         gyp_vars['build_with_gonk'] = 1
         gyp_vars['moz_widget_toolkit_gonk'] = 1
@@ -91,28 +86,6 @@ elif os == 'Android':
             moz_webrtc_mediacodec=1,
             android_toolchain=CONFIG.get('ANDROID_TOOLCHAIN', ''),
         )
-
-flavors = {
-    'WINNT': 'win',
-    'Android': 'linux' if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' else 'android',
-    'Linux': 'linux',
-    'Darwin': 'mac' if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa' else 'ios',
-    'SunOS': 'solaris',
-    'GNU/kFreeBSD': 'freebsd',
-    'DragonFly': 'dragonfly',
-    'FreeBSD': 'freebsd',
-    'NetBSD': 'netbsd',
-    'OpenBSD': 'openbsd',
-}
-gyp_vars['OS'] = flavors.get(os)
-
-arches = {
-    'x86_64': 'x64',
-    'x86': 'ia32',
-    'aarch64': 'arm64',
-}
-
-gyp_vars['target_arch'] = arches.get(CONFIG['CPU_ARCH'], CONFIG['CPU_ARCH'])
 
 if CONFIG['ARM_ARCH']:
     if int(CONFIG['ARM_ARCH']) < 7:
