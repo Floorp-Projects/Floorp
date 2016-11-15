@@ -980,7 +980,7 @@ private:
   virtual PQuotaUsageRequestParent*
   AllocPQuotaUsageRequestParent(const UsageRequestParams& aParams) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvPQuotaUsageRequestConstructor(PQuotaUsageRequestParent* aActor,
                                     const UsageRequestParams& aParams) override;
 
@@ -990,17 +990,17 @@ private:
   virtual PQuotaRequestParent*
   AllocPQuotaRequestParent(const RequestParams& aParams) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvPQuotaRequestConstructor(PQuotaRequestParent* aActor,
                                const RequestParams& aParams) override;
 
   virtual bool
   DeallocPQuotaRequestParent(PQuotaRequestParent* aActor) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvStartIdleMaintenance() override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvStopIdleMaintenance() override;
 };
 
@@ -1046,7 +1046,7 @@ private:
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvCancel() override;
 };
 
@@ -5652,7 +5652,7 @@ Quota::AllocPQuotaUsageRequestParent(const UsageRequestParams& aParams)
   return actor.forget().take();
 }
 
-bool
+mozilla::ipc::IPCResult
 Quota::RecvPQuotaUsageRequestConstructor(PQuotaUsageRequestParent* aActor,
                                          const UsageRequestParams& aParams)
 {
@@ -5663,11 +5663,11 @@ Quota::RecvPQuotaUsageRequestConstructor(PQuotaUsageRequestParent* aActor,
   auto* op = static_cast<GetUsageOp*>(aActor);
 
   if (NS_WARN_IF(!op->Init(this))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   op->RunImmediately();
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -5724,7 +5724,7 @@ Quota::AllocPQuotaRequestParent(const RequestParams& aParams)
   return actor.forget().take();
 }
 
-bool
+mozilla::ipc::IPCResult
 Quota::RecvPQuotaRequestConstructor(PQuotaRequestParent* aActor,
                                     const RequestParams& aParams)
 {
@@ -5734,11 +5734,11 @@ Quota::RecvPQuotaRequestConstructor(PQuotaRequestParent* aActor,
 
   auto* op = static_cast<QuotaRequestBase*>(aActor);
   if (NS_WARN_IF(!op->Init(this))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   op->RunImmediately();
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -5753,7 +5753,7 @@ Quota::DeallocPQuotaRequestParent(PQuotaRequestParent* aActor)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 Quota::RecvStartIdleMaintenance()
 {
   AssertIsOnBackgroundThread();
@@ -5763,11 +5763,11 @@ Quota::RecvStartIdleMaintenance()
 
   if (BackgroundParent::IsOtherProcessActor(actor)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (QuotaManager::IsShuttingDown()) {
-    return true;
+    return IPC_OK();
   }
 
   QuotaManager* quotaManager = QuotaManager::Get();
@@ -5776,15 +5776,15 @@ Quota::RecvStartIdleMaintenance()
       NewRunnableMethod(this, &Quota::StartIdleMaintenance);
 
     QuotaManager::GetOrCreate(callback);
-    return true;
+    return IPC_OK();
   }
 
   quotaManager->StartIdleMaintenance();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 Quota::RecvStopIdleMaintenance()
 {
   AssertIsOnBackgroundThread();
@@ -5794,21 +5794,21 @@ Quota::RecvStopIdleMaintenance()
 
   if (BackgroundParent::IsOtherProcessActor(actor)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (QuotaManager::IsShuttingDown()) {
-    return true;
+    return IPC_OK();
   }
 
   QuotaManager* quotaManager = QuotaManager::Get();
   if (!quotaManager) {
-    return true;
+    return IPC_OK();
   }
 
   quotaManager->StopIdleMaintenance();
 
-  return true;
+  return IPC_OK();
 }
 
 GetUsageOp::GetUsageOp(const UsageRequestParams& aParams)
@@ -6051,17 +6051,17 @@ GetUsageOp::ActorDestroy(ActorDestroyReason aWhy)
   NoteActorDestroyed();
 }
 
-bool
+mozilla::ipc::IPCResult
 GetUsageOp::RecvCancel()
 {
   AssertIsOnOwningThread();
 
   nsresult rv = mUsageInfo.Cancel();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  return true;
+  return IPC_OK();
 }
 
 bool

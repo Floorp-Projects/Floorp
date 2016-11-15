@@ -97,7 +97,7 @@ public:
     void Main();
 
 protected:
-    virtual bool RecvOK() override;
+    virtual mozilla::ipc::IPCResult RecvOK() override;
 
     virtual PTestMultiMgrsLeftParent* AllocPTestMultiMgrsLeftParent() override
     {
@@ -155,7 +155,7 @@ public:
     }
 
 protected:
-    virtual bool RecvPTestMultiMgrsBottomConstructor(PTestMultiMgrsBottomChild* actor) override;
+    virtual mozilla::ipc::IPCResult RecvPTestMultiMgrsBottomConstructor(PTestMultiMgrsBottomChild* actor) override;
 
     virtual PTestMultiMgrsBottomChild* AllocPTestMultiMgrsBottomChild() override
     {
@@ -182,7 +182,7 @@ public:
     }
 
 protected:
-    virtual bool RecvPTestMultiMgrsBottomConstructor(PTestMultiMgrsBottomChild* actor) override;
+    virtual mozilla::ipc::IPCResult RecvPTestMultiMgrsBottomConstructor(PTestMultiMgrsBottomChild* actor) override;
 
     virtual PTestMultiMgrsBottomChild* AllocPTestMultiMgrsBottomChild() override
     {
@@ -209,7 +209,7 @@ public:
     PTestMultiMgrsBottomChild* mBottomR;
 
 protected:
-    virtual bool RecvCheck() override;
+    virtual mozilla::ipc::IPCResult RecvCheck() override;
 
     virtual PTestMultiMgrsLeftChild* AllocPTestMultiMgrsLeftChild() override
     {

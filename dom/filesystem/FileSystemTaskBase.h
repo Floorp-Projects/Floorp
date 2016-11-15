@@ -187,7 +187,7 @@ protected:
                           ErrorResult& aRv) = 0;
 
   // Overrides PFileSystemRequestChild
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   Recv__delete__(const FileSystemResponseValue& value) override;
 
   nsresult mErrorValue;

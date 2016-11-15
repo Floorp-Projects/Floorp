@@ -64,18 +64,18 @@ ColorPickerParent::CreateColorPicker()
   return NS_SUCCEEDED(mPicker->Init(window, mTitle, mInitialColor));
 }
 
-bool
+mozilla::ipc::IPCResult
 ColorPickerParent::RecvOpen()
 {
   if (!CreateColorPicker()) {
     Unused << Send__delete__(this, mInitialColor);
-    return true;
+    return IPC_OK();
   }
 
   mCallback = new ColorPickerShownCallback(this);
 
   mPicker->Open(mCallback);
-  return true;
+  return IPC_OK();
 };
 
 void

@@ -34,11 +34,11 @@ public:
 
 private:
   // PGMPAudioDecoderChild
-  bool RecvInitDecode(const GMPAudioCodecData& codecSettings) override;
-  bool RecvDecode(const GMPAudioEncodedSampleData& input) override;
-  bool RecvReset() override;
-  bool RecvDrain() override;
-  bool RecvDecodingComplete() override;
+  mozilla::ipc::IPCResult RecvInitDecode(const GMPAudioCodecData& codecSettings) override;
+  mozilla::ipc::IPCResult RecvDecode(const GMPAudioEncodedSampleData& input) override;
+  mozilla::ipc::IPCResult RecvReset() override;
+  mozilla::ipc::IPCResult RecvDrain() override;
+  mozilla::ipc::IPCResult RecvDecodingComplete() override;
 
   GMPContentChild* mPlugin;
   GMPAudioDecoder* mAudioDecoder;

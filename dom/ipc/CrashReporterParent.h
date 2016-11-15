@@ -151,14 +151,14 @@ public:
  protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool RecvAnnotateCrashReport(const nsCString& aKey,
-                                       const nsCString& aData) override
+  virtual mozilla::ipc::IPCResult RecvAnnotateCrashReport(const nsCString& aKey,
+                                                          const nsCString& aData) override
   {
     AnnotateCrashReport(aKey, aData);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool RecvAppendAppNotes(const nsCString& aData) override;
+  virtual mozilla::ipc::IPCResult RecvAppendAppNotes(const nsCString& aData) override;
 
 #ifdef MOZ_CRASHREPORTER
   void

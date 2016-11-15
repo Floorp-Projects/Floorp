@@ -244,7 +244,7 @@ FilePickerParent::CreateFilePicker()
   return NS_SUCCEEDED(mFilePicker->Init(window, mTitle, mMode));
 }
 
-bool
+mozilla::ipc::IPCResult
 FilePickerParent::RecvOpen(const int16_t& aSelectedType,
                            const bool& aAddToRecentDocs,
                            const nsString& aDefaultFile,
@@ -256,7 +256,7 @@ FilePickerParent::RecvOpen(const int16_t& aSelectedType,
 {
   if (!CreateFilePicker()) {
     Unused << Send__delete__(this, void_t(), nsIFilePicker::returnCancel);
-    return true;
+    return IPC_OK();
   }
 
   mFilePicker->SetAddToRecentDocs(aAddToRecentDocs);
@@ -281,7 +281,7 @@ FilePickerParent::RecvOpen(const int16_t& aSelectedType,
   mCallback = new FilePickerShownCallback(this);
 
   mFilePicker->Open(mCallback);
-  return true;
+  return IPC_OK();
 }
 
 void

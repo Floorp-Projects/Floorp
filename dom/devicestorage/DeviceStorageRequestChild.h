@@ -31,7 +31,7 @@ public:
   explicit DeviceStorageRequestChild(DeviceStorageRequest* aRequest);
   ~DeviceStorageRequestChild();
 
-  virtual bool Recv__delete__(const DeviceStorageResponseValue& value);
+  virtual mozilla::ipc::IPCResult Recv__delete__(const DeviceStorageResponseValue& value);
 
 private:
   RefPtr<DeviceStorageRequest> mRequest;

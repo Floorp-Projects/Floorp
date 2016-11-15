@@ -107,7 +107,7 @@ private:
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvComplete(const bool& aAborted) override;
 
   virtual PBackgroundFileRequestChild*
@@ -160,10 +160,10 @@ private:
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   Recv__delete__(const FileRequestResponse& aResponse) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvProgress(const uint64_t& aProgress,
                const uint64_t& aProgressMax) override;
 };

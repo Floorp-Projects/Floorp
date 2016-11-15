@@ -42,29 +42,29 @@ WebBrowserPersistResourcesParent::ActorDestroy(ActorDestroyReason aWhy)
     mVisitor = nullptr;
 }
 
-bool
+mozilla::ipc::IPCResult
 WebBrowserPersistResourcesParent::Recv__delete__(const nsresult& aStatus)
 {
     mVisitor->EndVisit(mDocument, aStatus);
     mVisitor = nullptr;
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 WebBrowserPersistResourcesParent::RecvVisitResource(const nsCString& aURI)
 {
     mVisitor->VisitResource(mDocument, aURI);
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 WebBrowserPersistResourcesParent::RecvVisitDocument(PWebBrowserPersistDocumentParent* aSubDocument)
 {
     // Don't expose the subdocument to the visitor until it's ready
     // (until the actor isn't in START state).
     static_cast<WebBrowserPersistDocumentParent*>(aSubDocument)
         ->SetOnReady(this);
-    return true;
+    return IPC_OK();
 }
 
 NS_IMETHODIMP

@@ -23,7 +23,7 @@ public:
     void Main();
 
 protected:    
-    virtual bool RecvError() override;
+    virtual mozilla::ipc::IPCResult RecvError() override;
 
     virtual void ProcessingError(Result aCode, const char* aReason) override
     {
@@ -48,7 +48,7 @@ public:
     virtual ~TestSyncErrorChild();
 
 protected:
-    virtual bool RecvStart() override;
+    virtual mozilla::ipc::IPCResult RecvStart() override;
 
     virtual void ProcessingError(Result aCode, const char* aReason) override
     {

@@ -244,18 +244,18 @@ GMPDecryptorChild::GetPluginVoucher(const uint8_t** aVoucher,
   *aVoucherLength = mPluginVoucher.Length();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPDecryptorChild::RecvInit(const bool& aDistinctiveIdentifierRequired,
                             const bool& aPersistentStateRequired)
 {
   if (!mSession) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   mSession->Init(this, aDistinctiveIdentifierRequired, aPersistentStateRequired);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPDecryptorChild::RecvCreateSession(const uint32_t& aCreateSessionToken,
                                      const uint32_t& aPromiseId,
                                      const nsCString& aInitDataType,
@@ -263,7 +263,7 @@ GMPDecryptorChild::RecvCreateSession(const uint32_t& aCreateSessionToken,
                                      const GMPSessionType& aSessionType)
 {
   if (!mSession) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mSession->CreateSession(aCreateSessionToken,
@@ -274,31 +274,31 @@ GMPDecryptorChild::RecvCreateSession(const uint32_t& aCreateSessionToken,
                           aInitData.Length(),
                           aSessionType);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPDecryptorChild::RecvLoadSession(const uint32_t& aPromiseId,
                                    const nsCString& aSessionId)
 {
   if (!mSession) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mSession->LoadSession(aPromiseId,
                         aSessionId.get(),
                         aSessionId.Length());
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPDecryptorChild::RecvUpdateSession(const uint32_t& aPromiseId,
                                      const nsCString& aSessionId,
                                      InfallibleTArray<uint8_t>&& aResponse)
 {
   if (!mSession) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mSession->UpdateSession(aPromiseId,
@@ -307,61 +307,61 @@ GMPDecryptorChild::RecvUpdateSession(const uint32_t& aPromiseId,
                           aResponse.Elements(),
                           aResponse.Length());
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPDecryptorChild::RecvCloseSession(const uint32_t& aPromiseId,
                                     const nsCString& aSessionId)
 {
   if (!mSession) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mSession->CloseSession(aPromiseId,
                          aSessionId.get(),
                          aSessionId.Length());
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPDecryptorChild::RecvRemoveSession(const uint32_t& aPromiseId,
                                      const nsCString& aSessionId)
 {
   if (!mSession) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mSession->RemoveSession(aPromiseId,
                           aSessionId.get(),
                           aSessionId.Length());
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPDecryptorChild::RecvSetServerCertificate(const uint32_t& aPromiseId,
                                             InfallibleTArray<uint8_t>&& aServerCert)
 {
   if (!mSession) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mSession->SetServerCertificate(aPromiseId,
                                  aServerCert.Elements(),
                                  aServerCert.Length());
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPDecryptorChild::RecvDecrypt(const uint32_t& aId,
                                InfallibleTArray<uint8_t>&& aBuffer,
                                const GMPDecryptionData& aMetadata)
 {
   if (!mSession) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Note: the GMPBufferImpl created here is deleted when the GMP passes
@@ -373,10 +373,10 @@ GMPDecryptorChild::RecvDecrypt(const uint32_t& aId,
   buffer->SetMetadata(metadata);
 
   mSession->Decrypt(buffer, metadata);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPDecryptorChild::RecvDecryptingComplete()
 {
   // Reset |mSession| before calling DecryptingComplete(). We should not send
@@ -385,14 +385,14 @@ GMPDecryptorChild::RecvDecryptingComplete()
   mSession = nullptr;
 
   if (!session) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   session->DecryptingComplete();
 
   Unused << Send__delete__(this);
 
-  return true;
+  return IPC_OK();
 }
 
 } // namespace gmp

@@ -203,7 +203,7 @@ public:
 
   virtual ShmemAllocator* AsShmemAllocator() override { return this; }
 
-  virtual bool RecvSyncWithCompositor() override { return true; }
+  virtual mozilla::ipc::IPCResult RecvSyncWithCompositor() override { return IPC_OK(); }
 
   // HostIPCAllocator
   virtual base::ProcessId GetChildProcessId() override;
@@ -261,45 +261,45 @@ public:
   // compositor.
   bool Bind(Endpoint<PCompositorBridgeParent>&& aEndpoint);
 
-  virtual bool RecvInitialize(const uint64_t& aRootLayerTreeId) override;
-  virtual bool RecvReset(nsTArray<LayersBackend>&& aBackendHints,
+  virtual mozilla::ipc::IPCResult RecvInitialize(const uint64_t& aRootLayerTreeId) override;
+  virtual mozilla::ipc::IPCResult RecvReset(nsTArray<LayersBackend>&& aBackendHints,
                          const uint64_t& aSeqNo,
                          bool* aResult,
                          TextureFactoryIdentifier* aOutIdentifier) override;
-  virtual bool RecvGetFrameUniformity(FrameUniformityData* aOutData) override;
-  virtual bool RecvRequestOverfill() override;
-  virtual bool RecvWillClose() override;
-  virtual bool RecvPause() override;
-  virtual bool RecvResume() override;
-  virtual bool RecvNotifyChildCreated(const uint64_t& child) override;
-  virtual bool RecvNotifyChildRecreated(const uint64_t& child) override;
-  virtual bool RecvAdoptChild(const uint64_t& child) override;
-  virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
+  virtual mozilla::ipc::IPCResult RecvGetFrameUniformity(FrameUniformityData* aOutData) override;
+  virtual mozilla::ipc::IPCResult RecvRequestOverfill() override;
+  virtual mozilla::ipc::IPCResult RecvWillClose() override;
+  virtual mozilla::ipc::IPCResult RecvPause() override;
+  virtual mozilla::ipc::IPCResult RecvResume() override;
+  virtual mozilla::ipc::IPCResult RecvNotifyChildCreated(const uint64_t& child) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyChildRecreated(const uint64_t& child) override;
+  virtual mozilla::ipc::IPCResult RecvAdoptChild(const uint64_t& child) override;
+  virtual mozilla::ipc::IPCResult RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
                                 const gfx::IntRect& aRect) override;
-  virtual bool RecvFlushRendering() override;
-  virtual bool RecvForcePresent() override;
+  virtual mozilla::ipc::IPCResult RecvFlushRendering() override;
+  virtual mozilla::ipc::IPCResult RecvForcePresent() override;
 
-  virtual bool RecvAcknowledgeCompositorUpdate(const uint64_t& aLayersId) override {
+  virtual mozilla::ipc::IPCResult RecvAcknowledgeCompositorUpdate(const uint64_t& aLayersId) override {
     MOZ_ASSERT_UNREACHABLE("This message is only sent cross-process");
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) override;
-  virtual bool RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) override;
-  virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) override;
+  virtual mozilla::ipc::IPCResult RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) override;
+  virtual mozilla::ipc::IPCResult RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) override;
 
   // Unused for chrome <-> compositor communication (which this class does).
   // @see CrossProcessCompositorBridgeParent::RecvRequestNotifyAfterRemotePaint
-  virtual bool RecvRequestNotifyAfterRemotePaint() override { return true; };
+  virtual mozilla::ipc::IPCResult RecvRequestNotifyAfterRemotePaint() override { return IPC_OK(); };
 
-  virtual bool RecvClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
-                                                    const uint32_t& aPresShellId) override;
+  virtual mozilla::ipc::IPCResult RecvClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
+                                                                       const uint32_t& aPresShellId) override;
   void ClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
                                         const Maybe<uint32_t>& aPresShellId);
-  virtual bool RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
-                                                    const CSSIntRegion& aRegion) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
+                                                                       const CSSIntRegion& aRegion) override;
 
-  virtual bool RecvAllPluginsCaptured() override;
+  virtual mozilla::ipc::IPCResult RecvAllPluginsCaptured() override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
@@ -512,7 +512,7 @@ public:
    * Main thread response for a plugin visibility request made by the
    * compositor thread.
    */
-  virtual bool RecvRemotePluginsReady() override;
+  virtual mozilla::ipc::IPCResult RecvRemotePluginsReady() override;
 
   /**
    * Used by the profiler to denote when a vsync occured
@@ -529,7 +529,7 @@ public:
   PAPZParent* AllocPAPZParent(const uint64_t& aLayersId) override;
   bool DeallocPAPZParent(PAPZParent* aActor) override;
 
-  bool RecvAsyncPanZoomEnabled(const uint64_t& aLayersId, bool* aHasAPZ) override;
+  mozilla::ipc::IPCResult RecvAsyncPanZoomEnabled(const uint64_t& aLayersId, bool* aHasAPZ) override;
 
   RefPtr<APZCTreeManager> GetAPZCTreeManager();
 

@@ -22,13 +22,13 @@ public:
 
     void Main();
 
-    virtual bool RecvDone1() override;
-    virtual bool RecvTest2_1() override;
-    virtual bool RecvStart3() override;
-    virtual bool RecvTest3_2() override;
-    virtual bool RecvDone() override;
+    virtual mozilla::ipc::IPCResult RecvDone1() override;
+    virtual mozilla::ipc::IPCResult RecvTest2_1() override;
+    virtual mozilla::ipc::IPCResult RecvStart3() override;
+    virtual mozilla::ipc::IPCResult RecvTest3_2() override;
+    virtual mozilla::ipc::IPCResult RecvDone() override;
 
-    virtual bool RecvCheckParent(uint32_t *reply) override;
+    virtual mozilla::ipc::IPCResult RecvCheckParent(uint32_t *reply) override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
@@ -45,12 +45,12 @@ public:
     TestCancelChild();
     virtual ~TestCancelChild();
 
-    virtual bool RecvTest1_1() override;
-    virtual bool RecvStart2() override;
-    virtual bool RecvTest2_2() override;
-    virtual bool RecvTest3_1() override;
+    virtual mozilla::ipc::IPCResult RecvTest1_1() override;
+    virtual mozilla::ipc::IPCResult RecvStart2() override;
+    virtual mozilla::ipc::IPCResult RecvTest2_2() override;
+    virtual mozilla::ipc::IPCResult RecvTest3_1() override;
 
-    virtual bool RecvCheckChild(uint32_t *reply) override;
+    virtual mozilla::ipc::IPCResult RecvCheckChild(uint32_t *reply) override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

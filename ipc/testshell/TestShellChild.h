@@ -22,13 +22,13 @@ class TestShellChild : public PTestShellChild
 public:
   TestShellChild();
 
-  bool
+  mozilla::ipc::IPCResult
   RecvExecuteCommand(const nsString& aCommand);
 
   PTestShellCommandChild*
   AllocPTestShellCommandChild(const nsString& aCommand);
 
-  bool
+  mozilla::ipc::IPCResult
   RecvPTestShellCommandConstructor(PTestShellCommandChild* aActor,
                                    const nsString& aCommand);
 

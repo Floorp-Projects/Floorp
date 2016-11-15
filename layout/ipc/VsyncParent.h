@@ -36,10 +36,10 @@ private:
   virtual ~VsyncParent();
 
   virtual bool NotifyVsync(TimeStamp aTimeStamp) override;
-  virtual bool RecvRequestVsyncRate() override;
+  virtual mozilla::ipc::IPCResult RecvRequestVsyncRate() override;
 
-  virtual bool RecvObserve() override;
-  virtual bool RecvUnobserve() override;
+  virtual mozilla::ipc::IPCResult RecvObserve() override;
+  virtual mozilla::ipc::IPCResult RecvUnobserve() override;
   virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
 
   void DispatchVsyncEvent(TimeStamp aTimeStamp);

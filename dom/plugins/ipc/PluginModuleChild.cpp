@@ -210,7 +210,7 @@ PluginModuleChild::InitForContent(base::ProcessId aParentPid,
     return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvDisableFlashProtectedMode()
 {
     MOZ_ASSERT(mIsChrome);
@@ -219,7 +219,7 @@ PluginModuleChild::RecvDisableFlashProtectedMode()
 #else
     MOZ_ASSERT(false, "Should not be called");
 #endif
-    return true;
+    return IPC_OK();
 }
 
 bool
@@ -546,13 +546,13 @@ PluginModuleChild::ExitedCxxStack()
 
 #endif
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvSetParentHangTimeout(const uint32_t& aSeconds)
 {
 #ifdef XP_WIN
     SetReplyTimeoutMs(((aSeconds > 0) ? (1000 * aSeconds) : 0));
 #endif
-    return true;
+    return IPC_OK();
 }
 
 bool
@@ -657,14 +657,14 @@ PluginModuleChild::NP_Shutdown()
     return rv;
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
 {
     *rv = NP_Shutdown();
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::AnswerOptionalFunctionsSupported(bool *aURLRedirectNotify,
                                                     bool *aClearSiteData,
                                                     bool *aGetSitesWithData)
@@ -672,10 +672,10 @@ PluginModuleChild::AnswerOptionalFunctionsSupported(bool *aURLRedirectNotify,
     *aURLRedirectNotify = !!mFunctions.urlredirectnotify;
     *aClearSiteData = !!mFunctions.clearsitedata;
     *aGetSitesWithData = !!mFunctions.getsiteswithdata;
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvNPP_ClearSiteData(const nsCString& aSite,
                                            const uint64_t& aFlags,
                                            const uint64_t& aMaxAge,
@@ -684,17 +684,17 @@ PluginModuleChild::RecvNPP_ClearSiteData(const nsCString& aSite,
     NPError result =
         mFunctions.clearsitedata(NullableStringGet(aSite), aFlags, aMaxAge);
     SendReturnClearSiteData(result, aCallbackId);
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvNPP_GetSitesWithData(const uint64_t& aCallbackId)
 {
     char** result = mFunctions.getsiteswithdata();
     InfallibleTArray<nsCString> array;
     if (!result) {
         SendReturnSitesWithData(array, aCallbackId);
-        return true;
+        return IPC_OK();
     }
     char** iterator = result;
     while (*iterator) {
@@ -704,24 +704,24 @@ PluginModuleChild::RecvNPP_GetSitesWithData(const uint64_t& aCallbackId)
     }
     SendReturnSitesWithData(array, aCallbackId);
     free(result);
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvSetAudioSessionData(const nsID& aId,
                                            const nsString& aDisplayName,
                                            const nsString& aIconPath)
 {
 #if !defined XP_WIN
     NS_RUNTIMEABORT("Not Reached!");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
 #else
     nsresult rv = mozilla::widget::RecvAudioSessionData(aId, aDisplayName, aIconPath);
-    NS_ENSURE_SUCCESS(rv, true); // Bail early if this fails
+    NS_ENSURE_SUCCESS(rv, IPC_OK()); // Bail early if this fails
 
     // Ignore failures here; we can't really do anything about them
     mozilla::widget::StartAudioSession();
-    return true;
+    return IPC_OK();
 #endif
 }
 
@@ -746,7 +746,7 @@ PluginModuleChild::DeallocPCrashReporterChild(PCrashReporterChild* actor)
     return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::AnswerPCrashReporterConstructor(
         PCrashReporterChild* actor,
         mozilla::dom::NativeThreadId* id,
@@ -756,7 +756,7 @@ PluginModuleChild::AnswerPCrashReporterConstructor(
     *id = CrashReporter::CurrentThreadId();
     *processType = XRE_GetProcessType();
 #endif
-    return true;
+    return IPC_OK();
 }
 
 void
@@ -1836,14 +1836,14 @@ _setcurrentasyncsurface(NPP instance, NPAsyncSurface *surface, NPRect *changed)
 
 //-----------------------------------------------------------------------------
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvSettingChanged(const PluginSettings& aSettings)
 {
     mCachedSettings = aSettings;
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::AnswerNP_GetEntryPoints(NPError* _retval)
 {
     PLUGIN_LOG_DEBUG_METHOD;
@@ -1851,27 +1851,30 @@ PluginModuleChild::AnswerNP_GetEntryPoints(NPError* _retval)
     MOZ_ASSERT(mIsChrome);
 
 #if defined(OS_LINUX) || defined(OS_BSD)
-    return true;
+    return IPC_OK();
 #elif defined(OS_WIN) || defined(OS_MACOSX)
     *_retval = mGetEntryPointsFunc(&mFunctions);
-    return true;
+    return IPC_OK();
 #else
 #  error Please implement me for your platform
 #endif
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::AnswerNP_Initialize(const PluginSettings& aSettings, NPError* rv)
 {
     *rv = DoNP_Initialize(aSettings);
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvAsyncNP_Initialize(const PluginSettings& aSettings)
 {
     NPError error = DoNP_Initialize(aSettings);
-    return SendNP_InitializeResult(error);
+    if (!SendNP_InitializeResult(error)) {
+        return IPC_FAIL_NO_REASON(this);
+    }
+    return IPC_OK();
 }
 
 NPError
@@ -2185,19 +2188,19 @@ PluginModuleChild::InitQuirksModes(const nsCString& aMimeType)
     mQuirks = GetQuirksFromMimeTypeAndFilename(aMimeType, mPluginFilename);
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::AnswerModuleSupportsAsyncRender(bool* aResult)
 {
 #if defined(XP_WIN)
     *aResult = gChromeInstance->mAsyncRenderSupport;
-    return true;
+    return IPC_OK();
 #else
     NS_NOTREACHED("Shouldn't get here!");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
 #endif
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvPPluginInstanceConstructor(PPluginInstanceChild* aActor,
                                                   const nsCString& aMimeType,
                                                   const uint16_t& aMode,
@@ -2208,10 +2211,10 @@ PluginModuleChild::RecvPPluginInstanceConstructor(PPluginInstanceChild* aActor,
     AssertPluginThread();
 
     NS_ASSERTION(aActor, "Null actor!");
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::AnswerSyncNPP_New(PPluginInstanceChild* aActor, NPError* rv)
 {
     PLUGIN_LOG_DEBUG_METHOD;
@@ -2219,7 +2222,7 @@ PluginModuleChild::AnswerSyncNPP_New(PPluginInstanceChild* aActor, NPError* rv)
         reinterpret_cast<PluginInstanceChild*>(aActor);
     AssertPluginThread();
     *rv = childInstance->DoNPP_New();
-    return true;
+    return IPC_OK();
 }
 
 class AsyncNewResultSender : public ChildAsyncCall
@@ -2255,7 +2258,7 @@ RunAsyncNPP_New(void* aChildInstance)
     childInstance->PostChildAsyncCall(task.forget());
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvAsyncNPP_New(PPluginInstanceChild* aActor)
 {
     PLUGIN_LOG_DEBUG_METHOD;
@@ -2264,7 +2267,7 @@ PluginModuleChild::RecvAsyncNPP_New(PPluginInstanceChild* aActor)
     AssertPluginThread();
     // We don't want to run NPP_New async from within nested calls
     childInstance->AsyncCall(&RunAsyncNPP_New, childInstance);
-    return true;
+    return IPC_OK();
 }
 
 bool
@@ -2557,17 +2560,17 @@ PluginModuleChild::ResetEventHooks()
 }
 #endif
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvProcessNativeEventsInInterruptCall()
 {
     PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
 #if defined(OS_WIN)
     ProcessNativeEventsInInterruptCall();
-    return true;
+    return IPC_OK();
 #else
     NS_RUNTIMEABORT(
         "PluginModuleChild::RecvProcessNativeEventsInInterruptCall not implemented!");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
 #endif
 }
 
@@ -2578,7 +2581,7 @@ PluginModuleChild::ProcessNativeEvents() {
 }
 #endif
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvStartProfiler(const ProfilerInitParams& params)
 {
     nsTArray<const char*> featureArray;
@@ -2595,17 +2598,17 @@ PluginModuleChild::RecvStartProfiler(const ProfilerInitParams& params)
                    featureArray.Elements(), featureArray.Length(),
                    threadNameFilterArray.Elements(), threadNameFilterArray.Length());
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvStopProfiler()
 {
     profiler_stop();
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvGatherProfile()
 {
     nsCString profileCString;
@@ -2617,7 +2620,7 @@ PluginModuleChild::RecvGatherProfile()
     }
 
     Unused << SendProfile(profileCString);
-    return true;
+    return IPC_OK();
 }
 
 NPError
@@ -2659,7 +2662,7 @@ PluginModuleChild::PluginRequiresAudioDeviceChanges(
 #endif // XP_WIN
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginModuleChild::RecvNPP_SetValue_NPNVaudioDeviceChangeDetails(
                               const NPAudioDeviceChangeDetailsIPC& detailsIPC)
 {
@@ -2672,9 +2675,9 @@ PluginModuleChild::RecvNPP_SetValue_NPNVaudioDeviceChangeDetails(
       PluginInstanceChild* pluginInst = iter.Get()->GetKey();
       pluginInst->DefaultAudioDeviceChanged(details);
     }
-    return true;
+    return IPC_OK();
 #else
     NS_RUNTIMEABORT("NPP_SetValue_NPNVaudioDeviceChangeDetails is a Windows-only message");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
 #endif
 }

@@ -28,14 +28,14 @@ class GamepadUpdateRunnable final : public Runnable
 
 } // namespace
 
-bool
+mozilla::ipc::IPCResult
 GamepadEventChannelChild::RecvGamepadUpdate(
                                        const GamepadChangeEvent& aGamepadEvent)
 {
   DebugOnly<nsresult> rv =
     NS_DispatchToMainThread(new GamepadUpdateRunnable(aGamepadEvent));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_DispatchToMainThread failed");
-  return true;
+  return IPC_OK();
 }
 
 } // namespace dom

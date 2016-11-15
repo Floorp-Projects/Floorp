@@ -34,13 +34,13 @@ public:
                            const int32_t& aStartPage,
                            const int32_t& aEndPage);
 
-  bool RecvPrintInitializationResult(const nsresult& aRv) final;
+  mozilla::ipc::IPCResult RecvPrintInitializationResult(const nsresult& aRv) final;
 
   void ProcessPage(Shmem& aStoredPage);
 
-  bool RecvPageProcessed() final;
+  mozilla::ipc::IPCResult RecvPageProcessed() final;
 
-  bool RecvAbortPrint(const nsresult& aRv) final;
+  mozilla::ipc::IPCResult RecvAbortPrint(const nsresult& aRv) final;
 
   void SetPagePrintTimer(nsPagePrintTimer* aPagePrintTimer);
 

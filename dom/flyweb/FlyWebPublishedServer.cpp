@@ -288,17 +288,17 @@ FlyWebPublishedServerChild::PermissionGranted(bool aGranted)
     SendPFlyWebPublishedServerConstructor(this, mName, options);
 }
 
-bool
+mozilla::ipc::IPCResult
 FlyWebPublishedServerChild::RecvServerReady(const nsresult& aStatus)
 {
   LOG_I("FlyWebPublishedServerChild::RecvServerReady(%p)", this);
   MOZ_ASSERT(mActorExists);
 
   PublishedServerStarted(aStatus);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 FlyWebPublishedServerChild::RecvServerClose()
 {
   LOG_I("FlyWebPublishedServerChild::RecvServerClose(%p)", this);
@@ -306,10 +306,10 @@ FlyWebPublishedServerChild::RecvServerClose()
 
   Close();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 FlyWebPublishedServerChild::RecvFetchRequest(const IPCInternalRequest& aRequest,
                                              const uint64_t& aRequestId)
 {
@@ -320,10 +320,10 @@ FlyWebPublishedServerChild::RecvFetchRequest(const IPCInternalRequest& aRequest,
   mPendingRequests.Put(request, aRequestId);
   FireFetchEvent(request);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 FlyWebPublishedServerChild::RecvWebSocketRequest(const IPCInternalRequest& aRequest,
                                                  const uint64_t& aRequestId,
                                                  PTransportProviderChild* aProvider)
@@ -341,7 +341,7 @@ FlyWebPublishedServerChild::RecvWebSocketRequest(const IPCInternalRequest& aRequ
 
   FireWebsocketEvent(request);
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -566,7 +566,7 @@ FlyWebPublishedServerParent::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-bool
+mozilla::ipc::IPCResult
 FlyWebPublishedServerParent::RecvFetchResponse(const IPCInternalResponse& aResponse,
                                                const uint64_t& aRequestId)
 {
@@ -576,17 +576,17 @@ FlyWebPublishedServerParent::RecvFetchResponse(const IPCInternalResponse& aRespo
   mPendingRequests.Remove(aRequestId, getter_AddRefs(request));
   if (!request) {
      static_cast<ContentParent*>(Manager())->KillHard("unknown request id");
-     return false;
+     return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<InternalResponse> response = InternalResponse::FromIPC(aResponse);
 
   mPublishedServer->OnFetchResponse(request, response);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 FlyWebPublishedServerParent::RecvWebSocketResponse(const IPCInternalResponse& aResponse,
                                                    const uint64_t& aRequestId)
 {
@@ -598,17 +598,17 @@ FlyWebPublishedServerParent::RecvWebSocketResponse(const IPCInternalResponse& aR
   mPendingRequests.Remove(aRequestId, getter_AddRefs(request));
   if (!request) {
      static_cast<ContentParent*>(Manager())->KillHard("unknown websocket request id");
-     return false;
+     return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<InternalResponse> response = InternalResponse::FromIPC(aResponse);
 
   mPublishedServer->OnWebSocketResponse(request, response);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 FlyWebPublishedServerParent::RecvWebSocketAccept(const nsString& aProtocol,
                                                  const uint64_t& aRequestId)
 {
@@ -622,7 +622,7 @@ FlyWebPublishedServerParent::RecvWebSocketAccept(const nsString& aProtocol,
 
   if (!request || !providerIPC) {
      static_cast<ContentParent*>(Manager())->KillHard("unknown websocket request id");
-     return false;
+     return IPC_FAIL_NO_REASON(this);
   }
 
   Optional<nsAString> protocol;
@@ -634,12 +634,12 @@ FlyWebPublishedServerParent::RecvWebSocketAccept(const nsString& aProtocol,
   nsCOMPtr<nsITransportProvider> providerServer =
     mPublishedServer->OnWebSocketAcceptInternal(request, protocol, result);
   if (result.Failed()) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   providerServer->SetListener(providerIPC);
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -650,7 +650,7 @@ FlyWebPublishedServerParent::ActorDestroy(ActorDestroyReason aWhy)
   mActorDestroyed = true;
 }
 
-bool
+mozilla::ipc::IPCResult
 FlyWebPublishedServerParent::Recv__delete__()
 {
   LOG_I("FlyWebPublishedServerParent::Recv__delete__(%p)", this);
@@ -666,7 +666,7 @@ FlyWebPublishedServerParent::Recv__delete__()
     mPublishedServer->Close();
     mPublishedServer = nullptr;
   }
-  return true;
+  return IPC_OK();
 }
 
 } // namespace dom

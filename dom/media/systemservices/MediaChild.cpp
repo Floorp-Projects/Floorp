@@ -84,18 +84,18 @@ void Child::ActorDestroy(ActorDestroyReason aWhy)
   mActorDestroyed = true;
 }
 
-bool
+mozilla::ipc::IPCResult
 Child::RecvGetOriginKeyResponse(const uint32_t& aRequestId, const nsCString& aKey)
 {
   RefPtr<MediaManager> mgr = MediaManager::GetInstance();
   if (!mgr) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   RefPtr<Pledge<nsCString>> pledge = mgr->mGetOriginKeyPledges.Remove(aRequestId);
   if (pledge) {
     pledge->Resolve(aKey);
   }
-  return true;
+  return IPC_OK();
 }
 
 PMediaChild*

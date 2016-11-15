@@ -27,14 +27,14 @@ TestManyChildAllocsParent::Main()
         fail("can't send Go()");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestManyChildAllocsParent::RecvDone()
 {
     // explicitly *not* cleaning up, so we can sanity-check IPDL's
     // auto-shutdown/cleanup handling
     Close();
 
-    return true;
+    return IPC_OK();
 }
 
 bool
@@ -63,7 +63,7 @@ TestManyChildAllocsChild::~TestManyChildAllocsChild()
     MOZ_COUNT_DTOR(TestManyChildAllocsChild);
 }
 
-bool TestManyChildAllocsChild::RecvGo()
+mozilla::ipc::IPCResult TestManyChildAllocsChild::RecvGo()
 {
     for (int i = 0; i < NALLOCS; ++i) {
         PTestManyChildAllocsSubChild* child =
@@ -83,7 +83,7 @@ bool TestManyChildAllocsChild::RecvGo()
     if (!SendDone())
         fail("can't send Done()");
 
-    return true;
+    return IPC_OK();
 }
 
 bool

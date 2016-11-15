@@ -16,13 +16,13 @@ TestActorPunningParent::Main()
         fail("sending Start");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestActorPunningParent::RecvPun(PTestActorPunningSubParent* a, const Bad& bad)
 {
     if (a->SendBad())
         fail("bad!");
     fail("shouldn't have received this message in the first place");
-    return true;
+    return IPC_OK();
 }
 
 PTestActorPunningPunnedParent*
@@ -80,7 +80,7 @@ TestActorPunningChild::DeallocPTestActorPunningSubChild(PTestActorPunningSubChil
     return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 TestActorPunningChild::RecvStart()
 {
     SendPTestActorPunningSubConstructor();
@@ -89,14 +89,14 @@ TestActorPunningChild::RecvStart()
     // We can't assert whether this succeeds or fails, due to race
     // conditions.
     SendPun(a, Bad());
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestActorPunningSubChild::RecvBad()
 {
     fail("things are going really badly right now");
-    return true;
+    return IPC_OK();
 }
 
 

@@ -22,8 +22,8 @@ public:
                         RefPtr<CompositorWidgetVsyncObserver> aVsyncObserver);
   ~CompositorWidgetChild() override;
 
-  bool RecvObserveVsync() override;
-  bool RecvUnobserveVsync() override;
+  mozilla::ipc::IPCResult RecvObserveVsync() override;
+  mozilla::ipc::IPCResult RecvUnobserveVsync() override;
 
   void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) override;
 
