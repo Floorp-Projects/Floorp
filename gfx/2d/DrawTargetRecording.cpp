@@ -245,7 +245,8 @@ struct AdjustedPattern
         mPattern =
           new (mSurfPat) SurfacePattern(GetSourceSurface(surfPat->mSurface),
                                         surfPat->mExtendMode, surfPat->mMatrix,
-                                        surfPat->mSamplingFilter);
+                                        surfPat->mSamplingFilter,
+                                        surfPat->mSamplingRect);
         return mPattern;
       }
     case PatternType::LINEAR_GRADIENT:
