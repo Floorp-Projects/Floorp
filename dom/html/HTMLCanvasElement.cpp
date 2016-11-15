@@ -624,18 +624,21 @@ HTMLCanvasElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 
-// HTMLCanvasElement::toDataURL
 
-NS_IMETHODIMP
-HTMLCanvasElement::ToDataURL(const nsAString& aType, JS::Handle<JS::Value> aParams,
-                             JSContext* aCx, nsAString& aDataURL)
+void
+HTMLCanvasElement::ToDataURL(JSContext* aCx, const nsAString& aType,
+                             JS::Handle<JS::Value> aParams,
+                             nsAString& aDataURL,
+                             CallerType aCallerType,
+                             ErrorResult& aRv)
 {
   // do a trust check if this is a write-only canvas
-  if (mWriteOnly && !nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+  if (mWriteOnly && aCallerType != CallerType::System) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
   }
 
-  return ToDataURLImpl(aCx, aType, aParams, aDataURL);
+  aRv = ToDataURLImpl(aCx, aType, aParams, aDataURL);
 }
 
 void
@@ -809,10 +812,11 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
                           BlobCallback& aCallback,
                           const nsAString& aType,
                           JS::Handle<JS::Value> aParams,
+                          CallerType aCallerType,
                           ErrorResult& aRv)
 {
   // do a trust check if this is a write-only canvas
-  if (mWriteOnly && !nsContentUtils::IsCallerChrome()) {
+  if (mWriteOnly && aCallerType != CallerType::System) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -863,40 +867,30 @@ HTMLCanvasElement::TransferControlToOffscreen(ErrorResult& aRv)
 already_AddRefed<File>
 HTMLCanvasElement::MozGetAsFile(const nsAString& aName,
                                 const nsAString& aType,
+                                CallerType aCallerType,
                                 ErrorResult& aRv)
-{
-  nsCOMPtr<nsISupports> file;
-  aRv = MozGetAsFile(aName, aType, getter_AddRefs(file));
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(file);
-  RefPtr<Blob> domBlob = static_cast<Blob*>(blob.get());
-  MOZ_ASSERT(domBlob->IsFile());
-  return domBlob->ToFile();
-}
-
-NS_IMETHODIMP
-HTMLCanvasElement::MozGetAsFile(const nsAString& aName,
-                                const nsAString& aType,
-                                nsISupports** aResult)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eMozGetAsFile);
 
   // do a trust check if this is a write-only canvas
-  if ((mWriteOnly) &&
-      !nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+  if (mWriteOnly && aCallerType != CallerType::System) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
   }
 
-  return MozGetAsBlobImpl(aName, aType, aResult);
+
+  RefPtr<File> file;
+  aRv = MozGetAsFileImpl(aName, aType, getter_AddRefs(file));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  return file.forget();
 }
 
 nsresult
-HTMLCanvasElement::MozGetAsBlobImpl(const nsAString& aName,
+HTMLCanvasElement::MozGetAsFileImpl(const nsAString& aName,
                                     const nsAString& aType,
-                                    nsISupports** aResult)
+                                    File** aResult)
 {
   nsCOMPtr<nsIInputStream> stream;
   nsAutoString type(aType);
@@ -920,7 +914,7 @@ HTMLCanvasElement::MozGetAsBlobImpl(const nsAString& aName,
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(OwnerDoc()->GetScopeObject());
 
   // The File takes ownership of the buffer
-  nsCOMPtr<nsIDOMBlob> file =
+  RefPtr<File> file =
     File::CreateMemoryFile(win, imgData, (uint32_t)imgSize, aName, type,
                            PR_Now());
 
@@ -952,18 +946,18 @@ HTMLCanvasElement::GetContext(JSContext* aCx,
     aRv);
 }
 
-NS_IMETHODIMP
+already_AddRefed<nsISupports>
 HTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
-                                    nsISupports **aContext)
+                                    ErrorResult& aRv)
 {
-  if(!nsContentUtils::IsCallerChrome()) {
-    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  // Note that we're a [ChromeOnly] method, so from JS we can only be called by
+  // system code.
 
   // We only support 2d shmem contexts for now.
-  if (!aContextId.EqualsLiteral("2d"))
-    return NS_ERROR_INVALID_ARG;
+  if (!aContextId.EqualsLiteral("2d")) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return nullptr;
+  }
 
   CanvasContextType contextType = CanvasContextType::Canvas2D;
 
@@ -973,8 +967,7 @@ HTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
     RefPtr<nsICanvasRenderingContextInternal> context;
     context = CreateContext(contextType);
     if (!context) {
-      *aContext = nullptr;
-      return NS_OK;
+      return nullptr;
     }
 
     mCurrentContext = context;
@@ -983,15 +976,20 @@ HTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
 
     ErrorResult dummy;
     nsresult rv = UpdateContext(nullptr, JS::NullHandleValue, dummy);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return nullptr;
+    }
   } else {
     // We already have a context of some type.
-    if (contextType != mCurrentContextType)
-      return NS_ERROR_INVALID_ARG;
+    if (contextType != mCurrentContextType) {
+      aRv.Throw(NS_ERROR_INVALID_ARG);
+      return nullptr;
+    }
   }
 
-  NS_ADDREF (*aContext = mCurrentContext);
-  return NS_OK;
+  nsCOMPtr<nsISupports> context(mCurrentContext);
+  return context.forget();
 }
 
 
