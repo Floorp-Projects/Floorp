@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <meta charset="utf-8">
+    <title>CSS Masking: mask invalidation.</title>
+    <style type="text/css">
+      div.outer {
+        position: absolute;
+        background-color: purple;
+        border: solid purple;
+        width: 10px;
+        height: 10px;
+        transform: scale(20);
+        transform-origin: top left;
+      }
+
+      div.mask {
+        mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 10 10"><rect x="10" y="10" width="5" height="5" fill="black"/></svg>');
+      }
+
+      div.inner {
+        width: 5px;
+        height: 5px;
+        border: 1px solid transparent;
+        will-change: transform;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="d1" class="outer mask"><div class="inner"></div></div>
+    <script type="text/javascript">
+      function changeTransform()
+      {
+        document.getElementById("d1").style.transform = "scale(10)";
+        document.documentElement.removeAttribute("class");
+      }
+
+      document.addEventListener("MozReftestInvalidate",
+                                changeTransform, false);
+    </script>
+  </body>
+</html>
