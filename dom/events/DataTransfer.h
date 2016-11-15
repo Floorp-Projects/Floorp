@@ -18,6 +18,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/File.h"
 
 class nsINode;
@@ -178,6 +179,7 @@ public:
   }
 
   already_AddRefed<DOMStringList> MozTypesAt(uint32_t aIndex,
+                                             CallerType aCallerType,
                                              mozilla::ErrorResult& aRv) const;
 
   void MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
