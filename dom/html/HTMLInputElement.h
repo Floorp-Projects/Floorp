@@ -660,7 +660,6 @@ public:
     SetHTMLAttr(nsGkAtoms::value, aValue, aRv);
   }
 
-  void GetValue(nsAString& aValue, ErrorResult& aRv);
   void SetValue(const nsAString& aValue, ErrorResult& aRv);
 
   Nullable<Date> GetValueAsDate(ErrorResult& aRv);
@@ -925,7 +924,7 @@ protected:
    */
   nsresult SetValueInternal(const nsAString& aValue, uint32_t aFlags);
 
-  nsresult GetValueInternal(nsAString& aValue) const;
+  void GetValueInternal(nsAString& aValue) const;
 
   /**
    * Returns whether the current value is the empty string.
