@@ -37,15 +37,3 @@ marionette.jar:
   content/test_nested_iframe.xul  (harness/marionette/chrome/test_nested_iframe.xul)
   content/test_anonymous_content.xul  (harness/marionette/chrome/test_anonymous_content.xul)
 #endif
-
-% content specialpowers %content/
-  content/specialpowers.js (../specialpowers/content/specialpowers.js)
-  content/SpecialPowersObserver.jsm (../specialpowers/content/SpecialPowersObserver.jsm)
-* content/specialpowersAPI.js (../specialpowers/content/specialpowersAPI.js)
-  content/SpecialPowersObserverAPI.js (../specialpowers/content/SpecialPowersObserverAPI.js)
-  content/ChromePowers.js (../mochitest/tests/SimpleTest/ChromePowers.js)
-  content/MozillaLogger.js (../specialpowers/content/MozillaLogger.js)
-  content/MockFilePicker.jsm (../specialpowers/content/MockFilePicker.jsm)
-  content/MockColorPicker.jsm (../specialpowers/content/MockColorPicker.jsm)
-  content/MockPermissionPrompt.jsm (../specialpowers/content/MockPermissionPrompt.jsm)
-  content/Assert.jsm (../modules/Assert.jsm)
