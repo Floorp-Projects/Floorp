@@ -6,7 +6,6 @@
 package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.EventDispatcher;
 
 import android.graphics.PointF;
 import android.view.KeyEvent;
@@ -18,7 +17,7 @@ public interface PanZoomController {
     public static final float CLICK_THRESHOLD = 1 / 50f * GeckoAppShell.getDpi();
 
     static class Factory {
-        static PanZoomController create(PanZoomTarget target, View view, EventDispatcher dispatcher) {
+        static PanZoomController create(PanZoomTarget target, View view) {
             return new NativePanZoomController(target, view);
         }
     }

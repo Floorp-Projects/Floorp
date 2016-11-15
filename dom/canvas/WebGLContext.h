@@ -103,7 +103,6 @@ class WebGLShader;
 class WebGLShaderPrecisionFormat;
 class WebGLSync;
 class WebGLTexture;
-class WebGLTimerQuery;
 class WebGLTransformFeedback;
 class WebGLUniformLocation;
 class WebGLVertexArray;
@@ -446,7 +445,7 @@ public:
 
     // a number that increments every time we have an event that causes
     // all context resources to be lost.
-    uint32_t Generation() { return mGeneration.value(); }
+    uint32_t Generation() const { return mGeneration.value(); }
 
     // This is similar to GLContext::ClearSafely, but tries to minimize the
     // amount of work it does.
@@ -934,10 +933,24 @@ protected:
 // -----------------------------------------------------------------------------
 // Queries (WebGL2ContextQueries.cpp)
 protected:
-    WebGLRefPtr<WebGLQuery>& GetQuerySlotByTarget(GLenum target);
+    WebGLRefPtr<WebGLQuery> mQuerySlot_SamplesPassed;
+    WebGLRefPtr<WebGLQuery> mQuerySlot_TFPrimsWritten;
+    WebGLRefPtr<WebGLQuery> mQuerySlot_TimeElapsed;
 
-    WebGLRefPtr<WebGLQuery> mActiveOcclusionQuery;
-    WebGLRefPtr<WebGLQuery> mActiveTransformFeedbackQuery;
+    WebGLRefPtr<WebGLQuery>*
+    ValidateQuerySlotByTarget(const char* funcName, GLenum target);
+
+public:
+    already_AddRefed<WebGLQuery> CreateQuery(const char* funcName = nullptr);
+    void DeleteQuery(WebGLQuery* query, const char* funcName = nullptr);
+    bool IsQuery(const WebGLQuery* query, const char* funcName = nullptr);
+    void BeginQuery(GLenum target, WebGLQuery* query, const char* funcName = nullptr);
+    void EndQuery(GLenum target, const char* funcName = nullptr);
+    void GetQuery(JSContext* cx, GLenum target, GLenum pname,
+                  JS::MutableHandleValue retval, const char* funcName = nullptr);
+    void GetQueryParameter(JSContext* cx, const WebGLQuery* query, GLenum pname,
+                           JS::MutableHandleValue retval, const char* funcName = nullptr);
+
 
 // -----------------------------------------------------------------------------
 // State and State Requests (WebGLContextState.cpp)
@@ -1610,27 +1623,27 @@ protected:
 
     // Returns false if `object` is null or not valid.
     template<class ObjectType>
-    bool ValidateObject(const char* info, ObjectType* object);
+    bool ValidateObject(const char* info, const ObjectType* object);
 
     // Returns false if `object` is not valid.  Considers null to be valid.
     template<class ObjectType>
-    bool ValidateObjectAllowNull(const char* info, ObjectType* object);
+    bool ValidateObjectAllowNull(const char* info, const ObjectType* object);
 
     // Returns false if `object` is not valid, but considers deleted objects and
     // null objects valid.
     template<class ObjectType>
-    bool ValidateObjectAllowDeletedOrNull(const char* info, ObjectType* object);
+    bool ValidateObjectAllowDeletedOrNull(const char* info, const ObjectType* object);
 
     // Returns false if `object` is null or not valid, but considers deleted
     // objects valid.
     template<class ObjectType>
-    bool ValidateObjectAllowDeleted(const char* info, ObjectType* object);
+    bool ValidateObjectAllowDeleted(const char* info, const ObjectType* object);
 
 private:
     // Like ValidateObject, but only for cases when `object` is known to not be
     // null already.
     template<class ObjectType>
-    bool ValidateObjectAssumeNonNull(const char* info, ObjectType* object);
+    bool ValidateObjectAssumeNonNull(const char* info, const ObjectType* object);
 
 private:
     // -------------------------------------------------------------------------
@@ -1638,7 +1651,6 @@ private:
     virtual WebGLVertexArray* CreateVertexArrayImpl();
 
     virtual bool ValidateAttribPointerType(bool integerMode, GLenum type, uint32_t* alignment, const char* info) = 0;
-    virtual bool ValidateQueryTarget(GLenum usage, const char* info) = 0;
     virtual bool ValidateUniformMatrixTranspose(bool transpose, const char* info) = 0;
 
 public:
@@ -1675,7 +1687,6 @@ protected:
     LinkedList<WebGLShader> mShaders;
     LinkedList<WebGLSync> mSyncs;
     LinkedList<WebGLTexture> mTextures;
-    LinkedList<WebGLTimerQuery> mTimerQueries;
     LinkedList<WebGLTransformFeedback> mTransformFeedbacks;
     LinkedList<WebGLVertexArray> mVertexArrays;
 
@@ -1790,7 +1801,7 @@ protected:
     bool mNeedsFakeNoStencil;
     bool mNeedsEmulatedLoneDepthStencil;
 
-    bool HasTimestampBits() const;
+    bool Has64BitTimestamps() const;
 
     struct ScopedMaskWorkaround {
         WebGLContext& mWebGL;
@@ -1898,7 +1909,6 @@ public:
     friend class WebGLSampler;
     friend class WebGLShader;
     friend class WebGLSync;
-    friend class WebGLTimerQuery;
     friend class WebGLTransformFeedback;
     friend class WebGLUniformLocation;
     friend class WebGLVertexArray;
@@ -1920,7 +1930,7 @@ ToSupports(WebGLContext* webgl)
 template<class ObjectType>
 inline bool
 WebGLContext::ValidateObjectAllowDeletedOrNull(const char* info,
-                                               ObjectType* object)
+                                               const ObjectType* object)
 {
     if (object && !object->IsCompatibleWithContext(this)) {
         ErrorInvalidOperation("%s: object from different WebGL context "
@@ -1934,7 +1944,7 @@ WebGLContext::ValidateObjectAllowDeletedOrNull(const char* info,
 
 template<class ObjectType>
 inline bool
-WebGLContext::ValidateObjectAssumeNonNull(const char* info, ObjectType* object)
+WebGLContext::ValidateObjectAssumeNonNull(const char* info, const ObjectType* object)
 {
     MOZ_ASSERT(object);
 
@@ -1951,7 +1961,7 @@ WebGLContext::ValidateObjectAssumeNonNull(const char* info, ObjectType* object)
 
 template<class ObjectType>
 inline bool
-WebGLContext::ValidateObjectAllowNull(const char* info, ObjectType* object)
+WebGLContext::ValidateObjectAllowNull(const char* info, const ObjectType* object)
 {
     if (!object)
         return true;
@@ -1961,7 +1971,7 @@ WebGLContext::ValidateObjectAllowNull(const char* info, ObjectType* object)
 
 template<class ObjectType>
 inline bool
-WebGLContext::ValidateObjectAllowDeleted(const char* info, ObjectType* object)
+WebGLContext::ValidateObjectAllowDeleted(const char* info, const ObjectType* object)
 {
     if (!object) {
         ErrorInvalidValue("%s: null object passed as argument", info);
@@ -1973,7 +1983,7 @@ WebGLContext::ValidateObjectAllowDeleted(const char* info, ObjectType* object)
 
 template<class ObjectType>
 inline bool
-WebGLContext::ValidateObject(const char* info, ObjectType* object)
+WebGLContext::ValidateObject(const char* info, const ObjectType* object)
 {
     if (!object) {
         ErrorInvalidValue("%s: null object passed as argument", info);

@@ -52,6 +52,62 @@ auto AndroidGamepadManager::Stop() -> void
     return mozilla::jni::Method<Stop_t>::Call(AndroidGamepadManager::Context(), nullptr);
 }
 
+const char EventDispatcher::name[] =
+        "org/mozilla/gecko/EventDispatcher";
+
+constexpr char EventDispatcher::DispatchToGecko_t::name[];
+constexpr char EventDispatcher::DispatchToGecko_t::signature[];
+
+constexpr char EventDispatcher::DispatchToThreads_t::name[];
+constexpr char EventDispatcher::DispatchToThreads_t::signature[];
+
+auto EventDispatcher::DispatchToThreads(mozilla::jni::String::Param a0, mozilla::jni::Object::Param a1, mozilla::jni::Object::Param a2, mozilla::jni::Object::Param a3) const -> bool
+{
+    return mozilla::jni::Method<DispatchToThreads_t>::Call(EventDispatcher::mCtx, nullptr, a0, a1, a2, a3);
+}
+
+constexpr char EventDispatcher::DisposeNative_t::name[];
+constexpr char EventDispatcher::DisposeNative_t::signature[];
+
+constexpr char EventDispatcher::GetInstance_t::name[];
+constexpr char EventDispatcher::GetInstance_t::signature[];
+
+auto EventDispatcher::GetInstance() -> EventDispatcher::LocalRef
+{
+    return mozilla::jni::Method<GetInstance_t>::Call(EventDispatcher::Context(), nullptr);
+}
+
+constexpr char EventDispatcher::HasGeckoListener_t::name[];
+constexpr char EventDispatcher::HasGeckoListener_t::signature[];
+
+constexpr char EventDispatcher::SetAttachedToGecko_t::name[];
+constexpr char EventDispatcher::SetAttachedToGecko_t::signature[];
+
+auto EventDispatcher::SetAttachedToGecko(int32_t a0) const -> void
+{
+    return mozilla::jni::Method<SetAttachedToGecko_t>::Call(EventDispatcher::mCtx, nullptr, a0);
+}
+
+const char EventDispatcher::NativeCallbackDelegate::name[] =
+        "org/mozilla/gecko/EventDispatcher$NativeCallbackDelegate";
+
+constexpr char EventDispatcher::NativeCallbackDelegate::New_t::name[];
+constexpr char EventDispatcher::NativeCallbackDelegate::New_t::signature[];
+
+auto EventDispatcher::NativeCallbackDelegate::New() -> NativeCallbackDelegate::LocalRef
+{
+    return mozilla::jni::Constructor<New_t>::Call(NativeCallbackDelegate::Context(), nullptr);
+}
+
+constexpr char EventDispatcher::NativeCallbackDelegate::Finalize_t::name[];
+constexpr char EventDispatcher::NativeCallbackDelegate::Finalize_t::signature[];
+
+constexpr char EventDispatcher::NativeCallbackDelegate::SendError_t::name[];
+constexpr char EventDispatcher::NativeCallbackDelegate::SendError_t::signature[];
+
+constexpr char EventDispatcher::NativeCallbackDelegate::SendSuccess_t::name[];
+constexpr char EventDispatcher::NativeCallbackDelegate::SendSuccess_t::signature[];
+
 const char GeckoAppShell::name[] =
         "org/mozilla/gecko/GeckoAppShell";
 
@@ -620,6 +676,14 @@ auto GeckoAppShell::ShowNotification(mozilla::jni::String::Param a0, mozilla::jn
     return mozilla::jni::Method<ShowNotification_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1, a2, a3, a4, a5, a6);
 }
 
+constexpr char GeckoAppShell::StartGeckoServiceChildProcess_t::name[];
+constexpr char GeckoAppShell::StartGeckoServiceChildProcess_t::signature[];
+
+auto GeckoAppShell::StartGeckoServiceChildProcess(mozilla::jni::String::Param a0, mozilla::jni::ObjectArray::Param a1, int32_t a2, int32_t a3) -> int32_t
+{
+    return mozilla::jni::Method<StartGeckoServiceChildProcess_t>::Call(GeckoAppShell::Context(), nullptr, a0, a1, a2, a3);
+}
+
 constexpr char GeckoAppShell::SyncNotifyObservers_t::name[];
 constexpr char GeckoAppShell::SyncNotifyObservers_t::signature[];
 
@@ -973,6 +1037,15 @@ auto PrefsHelper::OnPrefChange(mozilla::jni::String::Param a0, int32_t a1, bool 
 {
     return mozilla::jni::Method<OnPrefChange_t>::Call(PrefsHelper::Context(), nullptr, a0, a1, a2, a3, a4);
 }
+
+const char ScreenManagerHelper::name[] =
+        "org/mozilla/gecko/ScreenManagerHelper";
+
+constexpr char ScreenManagerHelper::AddDisplay_t::name[];
+constexpr char ScreenManagerHelper::AddDisplay_t::signature[];
+
+constexpr char ScreenManagerHelper::RemoveDisplay_t::name[];
+constexpr char ScreenManagerHelper::RemoveDisplay_t::signature[];
 
 const char SurfaceTextureListener::name[] =
         "org/mozilla/gecko/SurfaceTextureListener";
@@ -1740,6 +1813,108 @@ constexpr char Clipboard::SetText_t::signature[];
 auto Clipboard::SetText(mozilla::jni::String::Param a0) -> void
 {
     return mozilla::jni::Method<SetText_t>::Call(Clipboard::Context(), nullptr, a0);
+}
+
+const char EventCallback::name[] =
+        "org/mozilla/gecko/util/EventCallback";
+
+constexpr char EventCallback::SendError_t::name[];
+constexpr char EventCallback::SendError_t::signature[];
+
+auto EventCallback::SendError(mozilla::jni::Object::Param a0) const -> void
+{
+    return mozilla::jni::Method<SendError_t>::Call(EventCallback::mCtx, nullptr, a0);
+}
+
+constexpr char EventCallback::SendSuccess_t::name[];
+constexpr char EventCallback::SendSuccess_t::signature[];
+
+auto EventCallback::SendSuccess(mozilla::jni::Object::Param a0) const -> void
+{
+    return mozilla::jni::Method<SendSuccess_t>::Call(EventCallback::mCtx, nullptr, a0);
+}
+
+const char GeckoBundle::name[] =
+        "org/mozilla/gecko/util/GeckoBundle";
+
+constexpr char GeckoBundle::New_t::name[];
+constexpr char GeckoBundle::New_t::signature[];
+
+auto GeckoBundle::New(mozilla::jni::ObjectArray::Param a0, mozilla::jni::ObjectArray::Param a1) -> GeckoBundle::LocalRef
+{
+    return mozilla::jni::Constructor<New_t>::Call(GeckoBundle::Context(), nullptr, a0, a1);
+}
+
+constexpr char GeckoBundle::Box_t::name[];
+constexpr char GeckoBundle::Box_t::signature[];
+
+auto GeckoBundle::Box(double a0) -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Method<Box_t>::Call(GeckoBundle::Context(), nullptr, a0);
+}
+
+constexpr char GeckoBundle::Box2_t::name[];
+constexpr char GeckoBundle::Box2_t::signature[];
+
+auto GeckoBundle::Box(int32_t a0) -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Method<Box2_t>::Call(GeckoBundle::Context(), nullptr, a0);
+}
+
+constexpr char GeckoBundle::Box3_t::name[];
+constexpr char GeckoBundle::Box3_t::signature[];
+
+auto GeckoBundle::Box(bool a0) -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Method<Box3_t>::Call(GeckoBundle::Context(), nullptr, a0);
+}
+
+constexpr char GeckoBundle::Keys_t::name[];
+constexpr char GeckoBundle::Keys_t::signature[];
+
+auto GeckoBundle::Keys() const -> mozilla::jni::ObjectArray::LocalRef
+{
+    return mozilla::jni::Method<Keys_t>::Call(GeckoBundle::mCtx, nullptr);
+}
+
+constexpr char GeckoBundle::UnboxBoolean_t::name[];
+constexpr char GeckoBundle::UnboxBoolean_t::signature[];
+
+auto GeckoBundle::UnboxBoolean(mozilla::jni::Object::Param a0) -> bool
+{
+    return mozilla::jni::Method<UnboxBoolean_t>::Call(GeckoBundle::Context(), nullptr, a0);
+}
+
+constexpr char GeckoBundle::UnboxDouble_t::name[];
+constexpr char GeckoBundle::UnboxDouble_t::signature[];
+
+auto GeckoBundle::UnboxDouble(mozilla::jni::Object::Param a0) -> double
+{
+    return mozilla::jni::Method<UnboxDouble_t>::Call(GeckoBundle::Context(), nullptr, a0);
+}
+
+constexpr char GeckoBundle::UnboxInteger_t::name[];
+constexpr char GeckoBundle::UnboxInteger_t::signature[];
+
+auto GeckoBundle::UnboxInteger(mozilla::jni::Object::Param a0) -> int32_t
+{
+    return mozilla::jni::Method<UnboxInteger_t>::Call(GeckoBundle::Context(), nullptr, a0);
+}
+
+constexpr char GeckoBundle::Values_t::name[];
+constexpr char GeckoBundle::Values_t::signature[];
+
+auto GeckoBundle::Values() const -> mozilla::jni::ObjectArray::LocalRef
+{
+    return mozilla::jni::Method<Values_t>::Call(GeckoBundle::mCtx, nullptr);
+}
+
+constexpr char GeckoBundle::EMPTY_BOOLEAN_ARRAY_t::name[];
+constexpr char GeckoBundle::EMPTY_BOOLEAN_ARRAY_t::signature[];
+
+auto GeckoBundle::EMPTY_BOOLEAN_ARRAY() -> mozilla::jni::BooleanArray::LocalRef
+{
+    return mozilla::jni::Field<EMPTY_BOOLEAN_ARRAY_t>::Get(GeckoBundle::Context(), nullptr);
 }
 
 const char HardwareCodecCapabilityUtils::name[] =

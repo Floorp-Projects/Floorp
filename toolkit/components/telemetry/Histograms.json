@@ -8143,7 +8143,7 @@
     "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 16,
-    "description": "How often do we get back an HSTS priming result which upgrades the connection to HTTPS? 0=cached (no upgrade), 1=cached (do upgrade), 2=cached (blocked), 3=already upgraded, 4=priming succeeded, 5=priming succeeded (block due to pref), 6=priming succeeded (no upgrade due to pref), 7=priming failed (block), 8=priming failed (accept)"
+    "description": "How often do we get back an HSTS priming result which upgrades the connection to HTTPS? 0=cached (no upgrade), 1=cached (do upgrade), 2=cached (blocked), 3=already upgraded, 4=priming succeeded, 5=priming succeeded (block due to pref), 6=priming succeeded (no upgrade due to pref), 7=priming failed (block), 8=priming failed (accept), 9=timeout (block), 10=timeout (accept)"
   },
   "HSTS_PRIMING_REQUEST_DURATION": {
     "alert_emails": ["seceng-telemetry@mozilla.org"],

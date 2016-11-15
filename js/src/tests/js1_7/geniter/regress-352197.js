@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = /TypeError: anonymous generator function returns a value/;
+  expect = /TypeError: can't use 'yield' in a function that can return a value/;
   try
   {
     var gen = eval('(function() { { return 5; } yield 3; })');

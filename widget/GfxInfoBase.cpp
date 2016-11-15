@@ -30,6 +30,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/Logging.h"
 #include "MediaPrefs.h"
 #include "gfxPrefs.h"
@@ -1424,6 +1425,19 @@ GfxInfoBase::GetContentBackend(nsAString & aContentBackend)
   }
 
   aContentBackend.Assign(outStr);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfoBase::GetUsingGPUProcess(bool *aOutValue)
+{
+  GPUProcessManager* gpu = GPUProcessManager::Get();
+  if (!gpu) {
+    // Not supported in content processes.
+    return NS_ERROR_FAILURE;
+  }
+
+  *aOutValue = !!gpu->GetGPUChild();
   return NS_OK;
 }
 

@@ -49,7 +49,13 @@ enum HSTSPrimingResult {
   // HSTS priming failed, and the load is blocked by mixed-content
   eHSTS_PRIMING_FAILED_BLOCK      = 7,
   // HSTS priming failed, and the load is allowed by mixed-content
-  eHSTS_PRIMING_FAILED_ACCEPT     = 8
+  eHSTS_PRIMING_FAILED_ACCEPT     = 8,
+  // The HSTS Priming request timed out, and the load is blocked by
+  // mixed-content
+  eHSTS_PRIMING_TIMEOUT_BLOCK     = 9,
+  // The HSTS Priming request timed out, and the load is allowed by
+  // mixed-content
+  eHSTS_PRIMING_TIMEOUT_ACCEPT    = 10
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -57,18 +63,17 @@ enum HSTSPrimingResult {
 // doing the HEAD request for an HSTS Priming check. Needs to be an
 // nsIStreamListener in order to receive events from AsyncOpen2
 class HSTSPrimingListener final : public nsIStreamListener,
-                                  public nsIInterfaceRequestor
+                                  public nsIInterfaceRequestor,
+                                  public nsITimerCallback
 {
 public:
-  explicit HSTSPrimingListener(nsIHstsPrimingCallback* aCallback)
-   : mCallback(aCallback)
-  {
-  }
+  explicit HSTSPrimingListener(nsIHstsPrimingCallback* aCallback);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSITIMERCALLBACK
 
 private:
   ~HSTSPrimingListener() {}
@@ -96,10 +101,30 @@ private:
    */
   nsresult CheckHSTSPrimingRequestStatus(nsIRequest* aRequest);
 
+  // send telemetry about how long HSTS priming requests take
+  void ReportTiming(nsresult aResult);
+
   /**
    * the nsIHttpChannel to notify with the result of HSTS priming.
    */
   nsCOMPtr<nsIHstsPrimingCallback> mCallback;
+
+  /**
+   * Keep a handle to the priming channel so we can cancel it on timeout
+   */
+  nsCOMPtr<nsIChannel> mPrimingChannel;
+
+  /**
+   * Keep a handle to the timer around so it can be canceled if we don't time
+   * out.
+   */
+  nsCOMPtr<nsITimer> mHSTSPrimingTimer;
+
+  /**
+   * How long (in ms) before an HSTS Priming channel times out.
+   * Preference: security.mixed_content.hsts_priming_request_timeout
+   */
+  static uint32_t sHSTSPrimingTimeout;
 };
 
 

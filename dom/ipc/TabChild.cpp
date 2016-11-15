@@ -1346,13 +1346,7 @@ TabChild::RecvShow(const ScreenIntSize& aSize,
         return false;
     }
 
-    if (!InitRenderingState(aTextureFactoryIdentifier, aLayersId, aRenderFrame)) {
-        // We can fail to initialize our widget if the <browser
-        // remote> has already been destroyed, and we couldn't hook
-        // into the parent-process's layer system.  That's not a fatal
-        // error.
-        return true;
-    }
+    InitRenderingState(aTextureFactoryIdentifier, aLayersId, aRenderFrame);
 
     baseWindow->SetVisibility(true);
 
@@ -2565,17 +2559,16 @@ TabChild::InitTabChildGlobal(FrameScriptLoading aScriptLoading)
   return true;
 }
 
-bool
+void
 TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                              const uint64_t& aLayersId,
                              PRenderFrameChild* aRenderFrame)
 {
     mPuppetWidget->InitIMEState();
 
-    RenderFrameChild* remoteFrame = static_cast<RenderFrameChild*>(aRenderFrame);
-    if (!remoteFrame) {
-        NS_WARNING("failed to construct RenderFrame");
-        return false;
+    if (!aRenderFrame) {
+      NS_WARNING("failed to construct RenderFrame");
+      return;
     }
 
     MOZ_ASSERT(aLayersId != 0);
@@ -2586,8 +2579,7 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
     PCompositorBridgeChild* compositorChild = CompositorBridgeChild::Get();
     if (!compositorChild) {
       NS_WARNING("failed to get CompositorBridgeChild instance");
-      PRenderFrameChild::Send__delete__(remoteFrame);
-      return false;
+      return;
     }
 
     ShadowLayerForwarder* lf =
@@ -2605,26 +2597,15 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       PLayerTransactionChild* shadowManager =
           compositorChild->SendPLayerTransactionConstructor(backends,
                                                             aLayersId, &mTextureFactoryIdentifier, &success);
-      if (!success) {
-        NS_WARNING("failed to properly allocate layer transaction");
-        PRenderFrameChild::Send__delete__(remoteFrame);
-        return false;
+      if (shadowManager && success) {
+        lf->SetShadowManager(shadowManager);
+        lf->IdentifyTextureHost(mTextureFactoryIdentifier);
+        ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
+        gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
       }
-
-      if (!shadowManager) {
-        NS_WARNING("failed to construct LayersChild");
-        // This results in |remoteFrame| being deleted.
-        PRenderFrameChild::Send__delete__(remoteFrame);
-        return false;
-      }
-
-      lf->SetShadowManager(shadowManager);
-      lf->IdentifyTextureHost(mTextureFactoryIdentifier);
-      ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
-      gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
     }
 
-    mRemoteFrame = remoteFrame;
+    mRemoteFrame = static_cast<RenderFrameChild*>(aRenderFrame);
     if (aLayersId != 0) {
       if (!sTabChildren) {
         sTabChildren = new TabChildMap;
@@ -2644,7 +2625,6 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
                                      BEFORE_FIRST_PAINT,
                                      false);
     }
-    return true;
 }
 
 void
@@ -3003,8 +2983,6 @@ TabChild::ReinitRendering()
 void
 TabChild::CompositorUpdated(const TextureFactoryIdentifier& aNewIdentifier)
 {
-  gfxPlatform::GetPlatform()->CompositorUpdated();
-
   RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
   ClientLayerManager* clm = lm->AsClientLayerManager();
   MOZ_ASSERT(clm);

@@ -1182,7 +1182,6 @@ TextureClient::CreateForRawBufferAccess(LayersIPCChannel* aAllocator,
                                         TextureAllocationFlags aAllocFlags)
 {
   // also test the validity of aAllocator
-  MOZ_ASSERT(aAllocator && aAllocator->IPCOpen());
   if (!aAllocator || !aAllocator->IPCOpen()) {
     return nullptr;
   }
@@ -1220,7 +1219,6 @@ TextureClient::CreateForYCbCr(KnowsCompositor* aAllocator,
                               YUVColorSpace aYUVColorSpace,
                               TextureFlags aTextureFlags)
 {
-  MOZ_ASSERT(!aAllocator || aAllocator->GetLayersIPCActor()->IPCOpen());
   if (!aAllocator || !aAllocator->GetLayersIPCActor()->IPCOpen()) {
     return nullptr;
   }
@@ -1247,8 +1245,6 @@ TextureClient::CreateForYCbCrWithBufferSize(KnowsCompositor* aAllocator,
                                             YUVColorSpace aYUVColorSpace,
                                             TextureFlags aTextureFlags)
 {
-  // also test the validity of aAllocator
-  MOZ_ASSERT(!aAllocator || aAllocator->GetLayersIPCActor()->IPCOpen());
   if (!aAllocator || !aAllocator->GetLayersIPCActor()->IPCOpen()) {
     return nullptr;
   }

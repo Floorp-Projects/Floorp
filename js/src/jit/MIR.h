@@ -6801,6 +6801,17 @@ class MAdd : public MBinaryArithInstruction
         }
     }
 
+    MAdd(MDefinition* left, MDefinition* right, MIRType type, TruncateKind truncateKind)
+      : MAdd(left, right)
+    {
+        specialization_ = type;
+        setResultType(type);
+        if (type == MIRType::Int32) {
+            setTruncateKind(truncateKind);
+            setCommutative();
+        }
+    }
+
   public:
     INSTRUCTION_HEADER(Add)
     TRIVIAL_NEW_WRAPPERS

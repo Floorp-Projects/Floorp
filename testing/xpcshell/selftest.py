@@ -1162,7 +1162,7 @@ add_test({
 
         self.assertTestResult(False)
         self.assertInLog(TEST_FAIL_STRING)
-        self.assertInLog("TypeError: generator function run_test returns a value at")
+        self.assertInLog("TypeError: generator function can't return a value at")
         self.assertInLog("test_error.js:4")
         self.assertNotInLog(TEST_PASS_STRING)
 
