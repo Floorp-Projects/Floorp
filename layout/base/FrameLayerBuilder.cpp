@@ -1567,32 +1567,18 @@ struct MaskLayerUserData : public LayerUserData
 struct CSSMaskLayerUserData : public LayerUserData
 {
   CSSMaskLayerUserData()
-    : mImageLayers(nsStyleImageLayers::LayerType::Mask)
+    : mFrame(nullptr)
   { }
 
-  CSSMaskLayerUserData(nsIFrame* aFrame, const nsIntRect& aBounds)
-    : mImageLayers(aFrame->StyleSVGReset()->mMask),
-      mContentRect(aFrame->GetContentRectRelativeToSelf()),
-      mPaddingRect(aFrame->GetPaddingRectRelativeToSelf()),
-      mBorderRect(aFrame->GetRectRelativeToSelf()),
-      mMarginRect(aFrame->GetMarginRectRelativeToSelf()),
-      mBounds(aBounds)
-  {
-    Hash(aFrame);
-  }
+  CSSMaskLayerUserData(nsIFrame* aFrame, const nsIntSize& aMaskSize)
+    : mFrame(aFrame),
+      mMaskSize(aMaskSize)
+  { }
 
   CSSMaskLayerUserData& operator=(const CSSMaskLayerUserData& aOther)
   {
-    mImageLayers = aOther.mImageLayers;
-
-    mContentRect = aOther.mContentRect;
-    mPaddingRect = aOther.mPaddingRect;
-    mBorderRect = aOther.mBorderRect;
-    mMarginRect = aOther.mMarginRect;
-
-    mBounds = aOther.mBounds;
-
-    mHash = aOther.mHash;
+    mFrame = aOther.mFrame;
+    mMaskSize = aOther.mMaskSize;
 
     return *this;
   }
@@ -1600,22 +1586,16 @@ struct CSSMaskLayerUserData : public LayerUserData
   bool
   operator==(const CSSMaskLayerUserData& aOther) const
   {
-    if (mHash != aOther.mHash) {
+    if (mFrame != aOther.mFrame) {
       return false;
     }
 
-    if (mImageLayers.mLayers != aOther.mImageLayers.mLayers) {
-      return false;
-    }
-
-    if (!mContentRect.IsEqualEdges(aOther.mContentRect) ||
-        !mPaddingRect.IsEqualEdges(aOther.mPaddingRect) ||
-        !mBorderRect.IsEqualEdges(aOther.mBorderRect) ||
-        !mMarginRect.IsEqualEdges(aOther.mMarginRect)) {
-      return false;
-    }
-
-    if (!mBounds.IsEqualEdges(aOther.mBounds)) {
+    // Even if the frame is valid, check the size of the display item's
+    // boundary is still necessary. For example, if we scale the masked frame
+    // by adding a transform property on it, the masked frame is valid itself
+    // but we have to regenerate mask according to the new size in device
+    // space.
+    if (mMaskSize != aOther.mMaskSize) {
       return false;
     }
 
@@ -1623,36 +1603,8 @@ struct CSSMaskLayerUserData : public LayerUserData
   }
 
 private:
-  void Hash(nsIFrame* aFrame)
-  {
-    uint32_t hash = 0;
-
-    const nsStyleImageLayers& imageLayers = aFrame->StyleSVGReset()->mMask;
-    for (uint32_t i = 0; i < imageLayers.mLayers.Length(); i++) {
-      const nsStyleImageLayers::Layer& newLayer = imageLayers.mLayers[i];
-      hash = AddToHash(hash, HashBytes(&newLayer, sizeof(newLayer)));
-    }
-
-    hash = AddToHash(hash, HashBytes(&mContentRect, sizeof(mContentRect)));
-    hash = AddToHash(hash, HashBytes(&mPaddingRect, sizeof(mPaddingRect)));
-    hash = AddToHash(hash, HashBytes(&mBorderRect, sizeof(mBorderRect)));
-    hash = AddToHash(hash, HashBytes(&mMarginRect, sizeof(mMarginRect)));
-
-    hash = AddToHash(hash, HashBytes(&mBounds, sizeof(mBounds)));
-
-    mHash = hash;
-  }
-
-  nsStyleImageLayers mImageLayers;
-
-  nsRect mContentRect;
-  nsRect mPaddingRect;
-  nsRect mBorderRect;
-  nsRect mMarginRect;
-
-  nsIntRect mBounds;
-
-  uint32_t mHash;
+  nsIFrame* mFrame;
+  nsIntSize mMaskSize;
 };
 
 /*
@@ -3915,8 +3867,9 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
   bool snap;
   nsRect bounds = aMaskItem->GetBounds(mBuilder, &snap);
   nsIntRect itemRect = ScaleToOutsidePixels(bounds, snap);
-  CSSMaskLayerUserData newUserData(aMaskItem->Frame(), itemRect);
-  if (*oldUserData == newUserData) {
+  CSSMaskLayerUserData newUserData(aMaskItem->Frame(), itemRect.Size());
+  nsRect dirtyRect;
+  if (!aMaskItem->IsInvalid(dirtyRect) && *oldUserData == newUserData) {
     aLayer->SetMaskLayer(maskLayer);
     return;
   }
