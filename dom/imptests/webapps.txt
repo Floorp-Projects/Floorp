@@ -1,3 +1,2 @@
 hg|https://dvcs.w3.org/hg/webapps|webapps
-WebStorage/tests/submissions
 XMLHttpRequest/tests/submissions/Ms2ger
