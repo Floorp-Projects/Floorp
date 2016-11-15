@@ -26,6 +26,16 @@ namespace mscom {
 class MOZ_STACK_CLASS EnsureMTA
 {
 public:
+  /**
+   * This constructor just ensures that the MTA thread is up and running.
+   */
+  EnsureMTA()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIThread> thread = GetMTAThread();
+    MOZ_ASSERT(thread);
+  }
+
   template <typename FuncT>
   EnsureMTA(const FuncT& aClosure)
   {
