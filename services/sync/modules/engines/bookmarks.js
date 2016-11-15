@@ -300,6 +300,7 @@ BookmarksEngine.prototype = {
 
   _guidMapFailed: false,
   _buildGUIDMap: function _buildGUIDMap() {
+    let store = this._store;
     let guidMap = {};
     let tree = Async.promiseSpinningly(PlacesUtils.promiseBookmarksTree("", {
       includeItemIds: true
@@ -312,6 +313,7 @@ BookmarksEngine.prototype = {
         }
         if (tree.children) {
           for (let child of tree.children) {
+            store._sleep(0); // avoid jank while looping.
             yield* walkBookmarksTree(child, tree);
           }
         }
