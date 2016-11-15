@@ -3868,6 +3868,8 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
         {
             gcstats::AutoPhase ap(stats, gcstats::PHASE_RELAZIFY_FUNCTIONS);
             for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+                if (zone->isSelfHostingZone())
+                    continue;
                 RelazifyFunctions(zone, AllocKind::FUNCTION);
                 RelazifyFunctions(zone, AllocKind::FUNCTION_EXTENDED);
             }
@@ -3876,7 +3878,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
         /* Purge ShapeTables. */
         gcstats::AutoPhase ap(stats, gcstats::PHASE_PURGE_SHAPE_TABLES);
         for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-            if (zone->keepShapeTables())
+            if (zone->keepShapeTables() || zone->isSelfHostingZone())
                 continue;
             for (auto baseShape = zone->cellIter<BaseShape>(); !baseShape.done(); baseShape.next())
                 baseShape->maybePurgeTable();
