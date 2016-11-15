@@ -61,6 +61,10 @@ ToolSidebar.prototype = {
     return this._toolPanel.ReactDOM;
   },
 
+  get browserRequire() {
+    return this._toolPanel.browserRequire;
+  },
+
   get InspectorTabPanel() {
     return this._toolPanel.InspectorTabPanel;
   },
@@ -68,7 +72,8 @@ ToolSidebar.prototype = {
   // Rendering
 
   render: function () {
-    let Tabbar = this.React.createFactory(require("devtools/client/shared/components/tabs/tabbar"));
+    let Tabbar = this.React.createFactory(this.browserRequire(
+      "devtools/client/shared/components/tabs/tabbar"));
 
     let sidebar = Tabbar({
       toolbox: this._toolPanel._toolbox,
