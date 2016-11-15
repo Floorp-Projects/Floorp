@@ -122,4 +122,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         GYP_DIRS['signalingtest'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
         GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources
 
-DIRS += ['signaling/fuzztest']
+if CONFIG['ENABLE_TESTS']:
+    DIRS += ['signaling/fuzztest']
