@@ -16,11 +16,6 @@
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
-#include "gtest_utils.h"
-
-#include "FakeMediaStreams.h"
-#include "FakeMediaStreamsImpl.h"
-#include "FakeLogging.h"
 
 #include "signaling/src/sdp/SdpMediaSection.h"
 #include "signaling/src/sdp/SipccSdpParser.h"
@@ -30,19 +25,17 @@
 #include "signaling/src/jsep/JsepSessionImpl.h"
 #include "signaling/src/jsep/JsepTrack.h"
 
-#include "mtransport_test_utils.h"
-
-#include "FakeIPC.h"
-#include "FakeIPC.cpp"
-
-#include "TestHarness.h"
-
 namespace mozilla {
 static std::string kAEqualsCandidate("a=candidate:");
 const static size_t kNumCandidatesPerComponent = 3;
 
 class JsepSessionTestBase : public ::testing::Test
 {
+public:
+  static void SetUpTestCase() {
+    NSS_NoDB_Init(nullptr);
+    NSS_SetDomesticPolicy();
+  }
 };
 
 class FakeUuidGenerator : public mozilla::JsepUuidGenerator
@@ -4220,16 +4213,3 @@ TEST_F(JsepSessionTest, TestNonDefaultProtocol)
 }
 
 } // namespace mozilla
-
-int
-main(int argc, char** argv)
-{
-  // Prevents some log spew
-  ScopedXPCOM xpcom("jsep_session_unittest");
-
-  NSS_NoDB_Init(nullptr);
-  NSS_SetDomesticPolicy();
-
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
