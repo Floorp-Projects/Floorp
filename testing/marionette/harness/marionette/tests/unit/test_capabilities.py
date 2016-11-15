@@ -46,11 +46,6 @@ class TestCapabilities(MarionetteTestCase):
         self.assertIn("platform", self.caps)
         self.assertEqual(self.caps["platform"], self.caps["platformName"].upper())
 
-    def test_extensions(self):
-        self.assertIn("appBuildId", self.caps)
-
-        self.assertEqual(self.caps["appBuildId"], self.appinfo["appBuildID"])
-
     def test_we_can_pass_in_capabilities_on_session_start(self):
         self.marionette.delete_session()
         capabilities = {"desiredCapabilities": {"somethingAwesome": "cake"}}
