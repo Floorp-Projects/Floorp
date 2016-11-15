@@ -1831,28 +1831,6 @@ MediaDecoderStateMachine::CreateMediaSink(bool aAudioCaptured)
   return mediaSink.forget();
 }
 
-bool MediaDecoderStateMachine::HasFutureAudio()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  NS_ASSERTION(HasAudio(), "Should only call HasFutureAudio() when we have audio");
-  // We've got audio ready to play if:
-  // 1. We've not completed playback of audio, and
-  // 2. we either have more than the threshold of decoded audio available, or
-  //    we've completely decoded all audio (but not finished playing it yet
-  //    as per 1).
-  return !mAudioCompleted &&
-         (GetDecodedAudioDuration() >
-            mLowAudioThresholdUsecs * mPlaybackRate ||
-          AudioQueue().IsFinished());
-}
-
-bool MediaDecoderStateMachine::HaveNextFrameData()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  return (!HasAudio() || HasFutureAudio()) &&
-         (!HasVideo() || VideoQueue().GetSize() > 1);
-}
-
 int64_t
 MediaDecoderStateMachine::GetDecodedAudioDuration()
 {
@@ -2961,15 +2939,6 @@ MediaDecoderStateMachine::UpdateNextFrameStatus(NextFrameStatus aStatus)
     DECODER_LOG("Changed mNextFrameStatus to %s", ToStr(aStatus));
     mNextFrameStatus = aStatus;
   }
-}
-
-void
-MediaDecoderStateMachine::UpdateNextFrameStatus()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  UpdateNextFrameStatus(HaveNextFrameData()
-    ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
-    : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
 }
 
 bool
