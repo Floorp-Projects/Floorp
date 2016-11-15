@@ -1671,11 +1671,11 @@ void WriteSnapshotToDumpFile_internal(T* aObj, DataSourceSurface* aSurf)
   string.Append('-');
   string.AppendInt((uint64_t)aObj);
   if (gfxUtils::sDumpPaintFile != stderr) {
-    fprintf_stderr(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());
+    fprintf_stderr(gfxUtils::sDumpPaintFile, R"(array["%s"]=")", string.BeginReading());
   }
   gfxUtils::DumpAsDataURI(aSurf, gfxUtils::sDumpPaintFile);
   if (gfxUtils::sDumpPaintFile != stderr) {
-    fprintf_stderr(gfxUtils::sDumpPaintFile, "\";");
+    fprintf_stderr(gfxUtils::sDumpPaintFile, R"(";)");
   }
 }
 
@@ -1711,10 +1711,10 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix,
   layerId.AppendInt((uint64_t)this);
 #endif
   if (aDumpHtml) {
-    aStream << nsPrintfCString("<li><a id=\"%p\" ", this).get();
+    aStream << nsPrintfCString(R"(<li><a id="%p" )", this).get();
 #ifdef MOZ_DUMP_PAINTING
     if (dumpCompositorTexture || dumpClientTexture) {
-      aStream << nsPrintfCString("href=\"javascript:ViewImage('%s')\"", layerId.BeginReading()).get();
+      aStream << nsPrintfCString(R"lit(href="javascript:ViewImage('%s')")lit", layerId.BeginReading()).get();
     }
 #endif
     aStream << ">";
@@ -1726,12 +1726,12 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix,
     AsLayerComposite()->GetCompositableHost()->Dump(aStream, aPrefix, aDumpHtml);
   } else if (dumpClientTexture) {
     if (aDumpHtml) {
-      aStream << nsPrintfCString("<script>array[\"%s\"]=\"", layerId.BeginReading()).get();
+      aStream << nsPrintfCString(R"(<script>array["%s"]=")", layerId.BeginReading()).get();
     }
     AsShadowableLayer()->GetCompositableClient()->Dump(aStream, aPrefix,
         aDumpHtml, TextureDumpMode::DoNotCompress);
     if (aDumpHtml) {
-      aStream << "\";</script>";
+      aStream << R"(";</script>)";
     }
   }
 #endif
@@ -1875,7 +1875,7 @@ Layer::LogSelf(const char* aPrefix)
 
   if (mMaskLayer) {
     nsAutoCString pfx(aPrefix);
-    pfx += "   \\ MaskLayer ";
+    pfx += R"(   \ MaskLayer )";
     mMaskLayer->LogSelf(pfx.get());
   }
 }
