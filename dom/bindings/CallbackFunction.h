@@ -40,9 +40,9 @@ public:
   {
   }
 
-  JS::Handle<JSObject*> Callable() const
+  JS::Handle<JSObject*> CallableOrNull() const
   {
-    return Callback();
+    return CallbackOrNull();
   }
 
   JS::Handle<JSObject*> CallablePreserveColor() const

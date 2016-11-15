@@ -958,7 +958,8 @@ protected:
   NS_IMETHOD
   Run() override
   {
-    nsIGlobalObject* global = xpc::NativeGlobal(mCallback->CallbackPreserveColor());
+    JSObject* callback = mCallback->CallbackPreserveColor();
+    nsIGlobalObject* global = callback ? xpc::NativeGlobal(callback) : nullptr;
     if (global && !global->IsDying()) {
       mCallback->Call("promise callback");
     }

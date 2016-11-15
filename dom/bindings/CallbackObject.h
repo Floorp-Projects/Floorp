@@ -79,7 +79,15 @@ public:
     Init(aCallback, aAsyncStack, aIncumbentGlobal);
   }
 
-  JS::Handle<JSObject*> Callback() const
+  // This is guaranteed to be non-null from the time the CallbackObject is
+  // created until JavaScript has had a chance to run. It will only return null
+  // after a JavaScript caller has called nukeSandbox on a Sandbox object, and
+  // the cycle collector has had a chance to run.
+  //
+  // This means that any native callee which receives a CallbackObject as an
+  // argument can safely rely on the callback being non-null so long as it
+  // doesn't trigger any scripts before it accesses it.
+  JS::Handle<JSObject*> CallbackOrNull() const
   {
     mCallback.exposeToActiveJS();
     return CallbackPreserveColor();
@@ -113,7 +121,7 @@ public:
 
   /*
    * If the callback is known to be non-gray, then this method can be
-   * used instead of Callback() to avoid the overhead of
+   * used instead of CallbackOrNull() to avoid the overhead of
    * ExposeObjectToActiveJS().
    */
   JS::Handle<JSObject*> CallbackKnownNotGray() const
@@ -160,10 +168,14 @@ protected:
 
   bool operator==(const CallbackObject& aOther) const
   {
-    JSObject* thisObj =
-      js::UncheckedUnwrap(CallbackPreserveColor());
-    JSObject* otherObj =
-      js::UncheckedUnwrap(aOther.CallbackPreserveColor());
+    JSObject* wrappedThis = CallbackPreserveColor();
+    JSObject* wrappedOther = aOther.CallbackPreserveColor();
+    if (!wrappedThis || !wrappedOther) {
+      return this == &aOther;
+    }
+
+    JSObject* thisObj = js::UncheckedUnwrap(wrappedThis);
+    JSObject* otherObj = js::UncheckedUnwrap(wrappedOther);
     return thisObj == otherObj;
   }
 
@@ -562,10 +574,10 @@ public:
     this->get().operator=(arg);
   }
 
-  // Codegen relies on being able to do Callback() on us.
-  JS::Handle<JSObject*> Callback() const
+  // Codegen relies on being able to do CallbackOrNull() on us.
+  JS::Handle<JSObject*> CallbackOrNull() const
   {
-    return this->get()->Callback();
+    return this->get()->CallbackOrNull();
   }
 
   ~RootedCallback()
