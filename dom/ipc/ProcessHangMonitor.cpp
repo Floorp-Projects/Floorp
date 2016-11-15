@@ -76,7 +76,7 @@ class HangMonitorChild
 {
  public:
   explicit HangMonitorChild(ProcessHangMonitor* aMonitor);
-  virtual ~HangMonitorChild();
+  ~HangMonitorChild() override;
 
   void Open(Transport* aTransport, ProcessId aOtherPid,
             MessageLoop* aIOLoop);
@@ -98,13 +98,13 @@ class HangMonitorChild
   void ClearHangAsync();
   void ClearForcePaint();
 
-  virtual bool RecvTerminateScript() override;
-  virtual bool RecvBeginStartingDebugger() override;
-  virtual bool RecvEndStartingDebugger() override;
+  bool RecvTerminateScript() override;
+  bool RecvBeginStartingDebugger() override;
+  bool RecvEndStartingDebugger() override;
 
-  virtual bool RecvForcePaint(const TabId& aTabId, const uint64_t& aLayerObserverEpoch) override;
+  bool RecvForcePaint(const TabId& aTabId, const uint64_t& aLayerObserverEpoch) override;
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void InterruptCallback();
   void Shutdown();
@@ -209,14 +209,14 @@ class HangMonitorParent
 {
 public:
   explicit HangMonitorParent(ProcessHangMonitor* aMonitor);
-  virtual ~HangMonitorParent();
+  ~HangMonitorParent() override;
 
   void Open(Transport* aTransport, ProcessId aPid, MessageLoop* aIOLoop);
 
-  virtual bool RecvHangEvidence(const HangData& aHangData) override;
-  virtual bool RecvClearHang() override;
+  bool RecvHangEvidence(const HangData& aHangData) override;
+  bool RecvClearHang() override;
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void SetProcess(HangMonitoredProcess* aProcess) { mProcess = aProcess; }
 

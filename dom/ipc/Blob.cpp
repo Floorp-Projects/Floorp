@@ -241,7 +241,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  ~CancelableRunnableWrapper() = default;
+  ~CancelableRunnableWrapper() override = default;
 
   NS_DECL_NSIRUNNABLE
   nsresult Cancel() override;
@@ -554,7 +554,7 @@ private:
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
   NS_DECL_NSIFILEMETADATA
 
-  virtual nsIInputStream*
+  nsIInputStream*
   BlockAndGetInternalStream() override;
 };
 
@@ -575,11 +575,11 @@ public:
   InputStreamChild()
   { }
 
-  ~InputStreamChild() = default;
+  ~InputStreamChild() override = default;
 
 private:
   // This method is only called by the IPDL message machinery.
-  virtual bool
+  bool
   Recv__delete__(const InputStreamParams& aParams,
                  const OptionalFileDescriptorSet& aFDs) override;
 };
@@ -633,7 +633,7 @@ public:
     MOZ_COUNT_CTOR(InputStreamParent);
   }
 
-  ~InputStreamParent()
+  ~InputStreamParent() override
   {
     AssertIsOnOwningThread();
 
@@ -672,7 +672,7 @@ public:
 
 private:
   // This method is only called by the IPDL message machinery.
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override
   {
     // Nothing needs to be done here.
@@ -1616,7 +1616,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  ~OpenStreamRunnable() = default;
+  ~OpenStreamRunnable() override = default;
 
   bool
   IsOnOwningThread() const
@@ -1881,37 +1881,37 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual void
+  void
   GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv) const override;
 
-  virtual bool
+  bool
   IsDirectory() const override;
 
-  virtual already_AddRefed<BlobImpl>
+  already_AddRefed<BlobImpl>
   CreateSlice(uint64_t aStart,
               uint64_t aLength,
               const nsAString& aContentType,
               ErrorResult& aRv) override;
 
-  virtual void
+  void
   GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv) override;
 
-  virtual int64_t
+  int64_t
   GetFileId() override;
 
-  virtual int64_t
+  int64_t
   GetLastModified(ErrorResult& aRv) override;
 
-  virtual void
+  void
   SetLastModified(int64_t aLastModified) override;
 
-  virtual nsresult
+  nsresult
   SetMutable(bool aMutable) override;
 
-  virtual BlobChild*
+  BlobChild*
   GetBlobChild() override;
 
-  virtual BlobParent*
+  BlobParent*
   GetBlobParent() override;
 
   void
@@ -1935,7 +1935,7 @@ protected:
   // For SliceImpl.
   RemoteBlobImpl(const nsAString& aContentType, uint64_t aLength);
 
-  ~RemoteBlobImpl()
+  ~RemoteBlobImpl() override
   {
     MOZ_ASSERT_IF(mActorTarget,
                   EventTargetIsOnCurrentThread(mActorTarget));
@@ -1987,7 +1987,7 @@ public:
   NS_IMETHOD Run() override;
 
 private:
-  ~CreateStreamHelper()
+  ~CreateStreamHelper() override
   {
     MOZ_ASSERT(!mRemoteBlobImpl);
     MOZ_ASSERT(!mInputStream);
@@ -2037,11 +2037,11 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual BlobChild*
+  BlobChild*
   GetBlobChild() override;
 
 private:
-  ~RemoteBlobSliceImpl() = default;
+  ~RemoteBlobSliceImpl() override = default;
 
   void
   EnsureActorWasCreatedInternal();
@@ -2067,95 +2067,95 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual void
+  void
   GetName(nsAString& aName) const override;
 
-  virtual void
+  void
   GetPath(nsAString& aPath) const override;
 
-  virtual void
+  void
   SetPath(const nsAString& aPath) override;
 
-  virtual int64_t
+  int64_t
   GetLastModified(ErrorResult& aRv) override;
 
-  virtual void
+  void
   SetLastModified(int64_t aLastModified) override;
 
-  virtual void
+  void
   GetMozFullPath(nsAString& aName, ErrorResult& aRv) const override;
 
-  virtual void
+  void
   GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv) const override;
 
-  virtual bool
+  bool
   IsDirectory() const override;
 
-  virtual uint64_t
+  uint64_t
   GetSize(ErrorResult& aRv) override;
 
-  virtual void
+  void
   GetType(nsAString& aType) override;
 
-  virtual uint64_t
+  uint64_t
   GetSerialNumber() const override;
 
-  virtual already_AddRefed<BlobImpl>
+  already_AddRefed<BlobImpl>
   CreateSlice(uint64_t aStart,
               uint64_t aLength,
               const nsAString& aContentType,
               ErrorResult& aRv) override;
 
-  virtual const nsTArray<RefPtr<BlobImpl>>*
+  const nsTArray<RefPtr<BlobImpl>>*
   GetSubBlobImpls() const override;
 
-  virtual void
+  void
   GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv) override;
 
-  virtual int64_t
+  int64_t
   GetFileId() override;
 
-  virtual nsresult
+  nsresult
   GetSendInfo(nsIInputStream** aBody,
               uint64_t* aContentLength,
               nsACString& aContentType,
               nsACString& aCharset) override;
 
-  virtual nsresult
+  nsresult
   GetMutable(bool* aMutable) const override;
 
-  virtual nsresult
+  nsresult
   SetMutable(bool aMutable) override;
 
-  virtual void
+  void
   SetLazyData(const nsAString& aName,
               const nsAString& aContentType,
               uint64_t aLength,
               int64_t aLastModifiedDate) override;
 
-  virtual bool
+  bool
   IsMemoryFile() const override;
 
-  virtual bool
+  bool
   IsSizeUnknown() const override;
 
-  virtual bool
+  bool
   IsDateUnknown() const override;
 
-  virtual bool
+  bool
   IsFile() const override;
 
-  virtual bool
+  bool
   MayBeClonedToOtherThreads() const override;
 
-  virtual BlobChild*
+  BlobChild*
   GetBlobChild() override;
 
-  virtual BlobParent*
+  BlobParent*
   GetBlobParent() override;
 
 private:
-  ~RemoteBlobImpl()
+  ~RemoteBlobImpl() override
   {
     MOZ_ASSERT_IF(mActorTarget,
                   EventTargetIsOnCurrentThread(mActorTarget));

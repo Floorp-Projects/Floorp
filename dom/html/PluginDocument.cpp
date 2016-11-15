@@ -32,16 +32,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPLUGINDOCUMENT
 
-  virtual nsresult StartDocumentLoad(const char*         aCommand,
-                                     nsIChannel*         aChannel,
-                                     nsILoadGroup*       aLoadGroup,
-                                     nsISupports*        aContainer,
-                                     nsIStreamListener** aDocListener,
-                                     bool                aReset = true,
-                                     nsIContentSink*     aSink = nullptr) override;
+  nsresult StartDocumentLoad(const char*         aCommand,
+                             nsIChannel*         aChannel,
+                             nsILoadGroup*       aLoadGroup,
+                             nsISupports*        aContainer,
+                             nsIStreamListener** aDocListener,
+                             bool                aReset = true,
+                             nsIContentSink*     aSink = nullptr) override;
 
-  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject) override;
-  virtual bool CanSavePresentation(nsIRequest *aNewRequest) override;
+  void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject) override;
+  bool CanSavePresentation(nsIRequest *aNewRequest) override;
 
   const nsCString& GetType() const { return mMimeType; }
   Element*         GetPluginContent() { return mPluginContent; }
@@ -50,7 +50,7 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PluginDocument, MediaDocument)
 protected:
-  virtual ~PluginDocument();
+  ~PluginDocument() override;
 
   nsresult CreateSyntheticPluginDocument();
 
@@ -66,7 +66,7 @@ public:
     : MediaDocumentStreamListener(aDoc)
     , mPluginDoc(aDoc)
   {}
-  NS_IMETHOD OnStartRequest(nsIRequest* request, nsISupports *ctxt);
+  NS_IMETHOD OnStartRequest(nsIRequest* request, nsISupports *ctxt) override;
 private:
   RefPtr<PluginDocument> mPluginDoc;
 };

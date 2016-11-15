@@ -232,7 +232,7 @@ public:
   NS_IMETHOD Run() override;
 
 private:
-  virtual ~MemoryReportRequestChild();
+  ~MemoryReportRequestChild() override;
 
   bool     mAnonymize;
   FileDescriptor mDMDFile;
@@ -329,7 +329,7 @@ public:
   }
 
 private:
-  ~CycleCollectWithLogsChild()
+  ~CycleCollectWithLogsChild() override
   {
     if (mGCLog) {
       fclose(mGCLog);
@@ -478,13 +478,13 @@ public:
 private:
   ~BackgroundChildPrimer() = default;
 
-  virtual void
+  void
   ActorCreated(PBackgroundChild* aActor) override
   {
     MOZ_ASSERT(aActor, "Failed to create a PBackgroundChild actor!");
   }
 
-  virtual void
+  void
   ActorFailed() override
   {
     MOZ_CRASH("Failed to create a PBackgroundChild actor!");
