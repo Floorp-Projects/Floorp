@@ -397,10 +397,6 @@ body {
   max-width: 50%;
 }
 
-.animation-timeline .fast-track .name div {
-  width: calc(100% - var(--fast-track-icon-width));
-}
-
 .animation-timeline .fast-track .name::after {
   /* Animations running on the compositor have the fast-track background image*/
   content: "";
