@@ -56,7 +56,7 @@ ContentBridgeChild::DeferredDestroy()
   // |this| was just destroyed, hands off
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentBridgeChild::RecvAsyncMessage(const nsString& aMsg,
                                      InfallibleTArray<jsipc::CpowEntry>&& aCpows,
                                      const IPC::Principal& aPrincipal,
@@ -148,7 +148,7 @@ ContentBridgeChild::DeallocPBrowserChild(PBrowserChild* aChild)
   return nsIContentChild::DeallocPBrowserChild(aChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentBridgeChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                             const TabId& aTabId,
                                             const IPCTabContext& aContext,
@@ -157,13 +157,16 @@ ContentBridgeChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                             const bool& aIsForApp,
                                             const bool& aIsForBrowser)
 {
-  return ContentChild::GetSingleton()->RecvPBrowserConstructor(aActor,
-                                                               aTabId,
-                                                               aContext,
-                                                               aChromeFlags,
-                                                               aCpID,
-                                                               aIsForApp,
-                                                               aIsForBrowser);
+  if (!ContentChild::GetSingleton()->RecvPBrowserConstructor(aActor,
+                                                             aTabId,
+                                                             aContext,
+                                                             aChromeFlags,
+                                                             aCpID,
+                                                             aIsForApp,
+                                                             aIsForBrowser)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 PBlobChild*

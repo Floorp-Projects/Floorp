@@ -220,7 +220,7 @@ void APZCTreeManagerChild::TransformEventRefPoint(
   SendTransformEventRefPoint(*aRefPoint, aRefPoint, aOutTargetGuid);
 }
 
-bool
+mozilla::ipc::IPCResult
 APZCTreeManagerChild::RecvHandleTap(const TapType& aType,
                                     const LayoutDevicePoint& aPoint,
                                     const Modifiers& aModifiers,
@@ -233,16 +233,16 @@ APZCTreeManagerChild::RecvHandleTap(const TapType& aType,
       mCompositorSession->GetContentController()) {
     mCompositorSession->GetContentController()->HandleTap(aType, aPoint,
         aModifiers, aGuid, aInputBlockId);
-    return true;
+    return IPC_OK();
   }
   dom::TabParent* tab = dom::TabParent::GetTabParentFromLayersId(aGuid.mLayersId);
   if (tab) {
     tab->SendHandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 APZCTreeManagerChild::RecvNotifyPinchGesture(const PinchGestureType& aType,
                                              const ScrollableLayerGuid& aGuid,
                                              const LayoutDeviceCoord& aSpanChange,
@@ -259,7 +259,7 @@ APZCTreeManagerChild::RecvNotifyPinchGesture(const PinchGestureType& aType,
       mCompositorSession->GetWidget()) {
     APZCCallbackHelper::NotifyPinchGesture(aType, aSpanChange, aModifiers, mCompositorSession->GetWidget());
   }
-  return true;
+  return IPC_OK();
 }
 
 } // namespace layers

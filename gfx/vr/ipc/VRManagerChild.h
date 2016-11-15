@@ -112,13 +112,13 @@ protected:
                                             const float& aRightEyeHeight) override;
   virtual bool DeallocPVRLayerChild(PVRLayerChild* actor) override;
 
-  virtual bool RecvUpdateDisplayInfo(nsTArray<VRDisplayInfo>&& aDisplayUpdates) override;
+  virtual mozilla::ipc::IPCResult RecvUpdateDisplayInfo(nsTArray<VRDisplayInfo>&& aDisplayUpdates) override;
 
-  virtual bool RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
+  virtual mozilla::ipc::IPCResult RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
 
-  virtual bool RecvNotifyVSync() override;
-  virtual bool RecvNotifyVRVSync(const uint32_t& aDisplayID) override;
-  virtual bool RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent) override;
+  virtual mozilla::ipc::IPCResult RecvNotifyVSync() override;
+  virtual mozilla::ipc::IPCResult RecvNotifyVRVSync(const uint32_t& aDisplayID) override;
+  virtual mozilla::ipc::IPCResult RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent) override;
 
   // ShmemAllocator
 

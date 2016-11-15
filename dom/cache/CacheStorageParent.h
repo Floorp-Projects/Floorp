@@ -36,11 +36,11 @@ private:
   virtual bool
   DeallocPCacheOpParent(PCacheOpParent* aActor) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvPCacheOpConstructor(PCacheOpParent* actor,
                           const CacheOpArgs& aOpArgs) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvTeardown() override;
 
   // PrincipalVerifier::Listener methods

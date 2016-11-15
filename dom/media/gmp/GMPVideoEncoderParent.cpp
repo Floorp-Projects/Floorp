@@ -287,12 +287,12 @@ EncodedCallback(GMPVideoEncoderCallbackProxy* aCallback,
                    NS_DISPATCH_NORMAL);
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPVideoEncoderParent::RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame,
                                    InfallibleTArray<uint8_t>&& aCodecSpecificInfo)
 {
   if (!mCallback) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   auto f = new GMPVideoEncodedFrameImpl(aEncodedFrame, &mVideoHost);
@@ -304,30 +304,30 @@ GMPVideoEncoderParent::RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame
                                           mCallback, f, codecSpecificInfo, thread),
                            NS_DISPATCH_NORMAL);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPVideoEncoderParent::RecvError(const GMPErr& aError)
 {
   if (!mCallback) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Ignore any return code. It is OK for this to fail without killing the process.
   mCallback->Error(aError);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPVideoEncoderParent::RecvShutdown()
 {
   Shutdown();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPVideoEncoderParent::RecvParentShmemForPool(Shmem&& aFrameBuffer)
 {
   if (aFrameBuffer.IsWritable()) {
@@ -341,10 +341,10 @@ GMPVideoEncoderParent::RecvParentShmemForPool(Shmem&& aFrameBuffer)
       DeallocShmem(aFrameBuffer);
     }
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPVideoEncoderParent::AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
                                        Shmem* aMem)
 {
@@ -359,14 +359,14 @@ GMPVideoEncoderParent::AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
   {
     LOG(LogLevel::Error, ("%s::%s: Failed to get a shared mem buffer for Child! size %u",
                        __CLASS__, __FUNCTION__, aEncodedBufferSize));
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   *aMem = mem;
   mem = ipc::Shmem();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPVideoEncoderParent::Recv__delete__()
 {
   if (mPlugin) {
@@ -375,7 +375,7 @@ GMPVideoEncoderParent::Recv__delete__()
     mPlugin = nullptr;
   }
 
-  return true;
+  return IPC_OK();
 }
 
 } // namespace gmp

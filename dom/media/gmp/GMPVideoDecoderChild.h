@@ -47,17 +47,17 @@ private:
   virtual ~GMPVideoDecoderChild();
 
   // PGMPVideoDecoderChild
-  bool RecvInitDecode(const GMPVideoCodec& aCodecSettings,
-                      InfallibleTArray<uint8_t>&& aCodecSpecific,
-                      const int32_t& aCoreCount) override;
-  bool RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
-                  const bool& aMissingFrames,
-                  InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
-                  const int64_t& aRenderTimeMs) override;
-  bool RecvChildShmemForPool(Shmem&& aFrameBuffer) override;
-  bool RecvReset() override;
-  bool RecvDrain() override;
-  bool RecvDecodingComplete() override;
+  mozilla::ipc::IPCResult RecvInitDecode(const GMPVideoCodec& aCodecSettings,
+                                         InfallibleTArray<uint8_t>&& aCodecSpecific,
+                                         const int32_t& aCoreCount) override;
+  mozilla::ipc::IPCResult RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
+                                     const bool& aMissingFrames,
+                                     InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
+                                     const int64_t& aRenderTimeMs) override;
+  mozilla::ipc::IPCResult RecvChildShmemForPool(Shmem&& aFrameBuffer) override;
+  mozilla::ipc::IPCResult RecvReset() override;
+  mozilla::ipc::IPCResult RecvDrain() override;
+  mozilla::ipc::IPCResult RecvDecodingComplete() override;
 
   GMPContentChild* mPlugin;
   GMPVideoDecoder* mVideoDecoder;

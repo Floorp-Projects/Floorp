@@ -71,7 +71,7 @@ VideoDecoderParent::Destroy()
   mIPDLSelfRef = nullptr;
 }
 
-bool
+mozilla::ipc::IPCResult
 VideoDecoderParent::RecvInit(const VideoInfo& aInfo, const layers::TextureFactoryIdentifier& aIdentifier)
 {
   mKnowsCompositor->IdentifyTextureHost(aIdentifier);
@@ -92,7 +92,7 @@ VideoDecoderParent::RecvInit(const VideoInfo& aInfo, const layers::TextureFactor
   mDecoder = pdm->CreateVideoDecoder(params);
   if (!mDecoder) {
     Unused << SendInitFailed(NS_ERROR_DOM_MEDIA_FATAL_ERR);
-    return true;
+    return IPC_OK();
   }
 #else
   MOZ_ASSERT(false, "Can't use RemoteVideoDecoder on non-Windows platforms yet");
@@ -112,10 +112,10 @@ VideoDecoderParent::RecvInit(const VideoInfo& aInfo, const layers::TextureFactor
         Unused << self->SendInitFailed(aReason);
       }
     });
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
 {
   // XXX: This copies the data into a buffer owned by the MediaRawData. Ideally we'd just take ownership
@@ -130,28 +130,28 @@ VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
   DeallocShmem(aData.buffer());
 
   mDecoder->Input(data);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VideoDecoderParent::RecvFlush()
 {
   MOZ_ASSERT(!mDestroyed);
   if (mDecoder) {
     mDecoder->Flush();
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VideoDecoderParent::RecvDrain()
 {
   MOZ_ASSERT(!mDestroyed);
   mDecoder->Drain();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VideoDecoderParent::RecvShutdown()
 {
   MOZ_ASSERT(!mDestroyed);
@@ -159,15 +159,15 @@ VideoDecoderParent::RecvShutdown()
     mDecoder->Shutdown();
   }
   mDecoder = nullptr;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VideoDecoderParent::RecvSetSeekThreshold(const int64_t& aTime)
 {
   MOZ_ASSERT(!mDestroyed);
   mDecoder->SetSeekThreshold(media::TimeUnit::FromMicroseconds(aTime));
-  return true;
+  return IPC_OK();
 }
 
 void

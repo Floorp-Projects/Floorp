@@ -23,18 +23,18 @@ public:
 protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool RecvGetCookieString(const URIParams& aHost,
-                                   const bool& aIsForeign,
-                                   const bool& aFromHttp,
-                                   const NeckoOriginAttributes& aAttrs,
-                                   nsCString* aResult) override;
+  virtual mozilla::ipc::IPCResult RecvGetCookieString(const URIParams& aHost,
+                                                      const bool& aIsForeign,
+                                                      const bool& aFromHttp,
+                                                      const NeckoOriginAttributes& aAttrs,
+                                                      nsCString* aResult) override;
 
-  virtual bool RecvSetCookieString(const URIParams& aHost,
-                                   const bool& aIsForeign,
-                                   const nsCString& aCookieString,
-                                   const nsCString& aServerTime,
-                                   const bool& aFromHttp,
-                                   const NeckoOriginAttributes& aAttrs) override;
+  virtual mozilla::ipc::IPCResult RecvSetCookieString(const URIParams& aHost,
+                                                      const bool& aIsForeign,
+                                                      const nsCString& aCookieString,
+                                                      const nsCString& aServerTime,
+                                                      const bool& aFromHttp,
+                                                      const NeckoOriginAttributes& aAttrs) override;
 
   RefPtr<nsCookieService> mCookieService;
 };

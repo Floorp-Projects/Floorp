@@ -22,7 +22,7 @@ class ColorPickerParent : public PColorPickerParent
   , mInitialColor(aInitialColor)
   {}
 
-  virtual bool RecvOpen() override;
+  virtual mozilla::ipc::IPCResult RecvOpen() override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   class ColorPickerShownCallback final

@@ -28,8 +28,8 @@ public:
 
     virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-    virtual bool Recv__delete__(const nsIntSize& renderedSize,
-                                const nsCString& data) override;
+    virtual mozilla::ipc::IPCResult Recv__delete__(const nsIntSize& renderedSize,
+                                                   const nsCString& data) override;
 
 private:
     nsCOMPtr<nsICanvasRenderingContextInternal> mCanvas;

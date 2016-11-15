@@ -101,7 +101,7 @@ TestDemonParent::ArtificialSleep()
 }
 #endif
 
-bool
+mozilla::ipc::IPCResult
 TestDemonParent::RecvAsyncMessage(const int& n)
 {
   DEMON_LOG("Start RecvAsync [%d]", n);
@@ -112,19 +112,19 @@ TestDemonParent::RecvAsyncMessage(const int& n)
   RunLimitedSequence();
 
   DEMON_LOG("End RecvAsync [%d]", n);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestDemonParent::RecvHiPrioSyncMessage()
 {
   DEMON_LOG("Start RecvHiPrioSyncMessage");
   RunLimitedSequence();
   DEMON_LOG("End RecvHiPrioSyncMessage");
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestDemonParent::RecvSyncMessage(const int& n)
 {
   DEMON_LOG("Start RecvSync [%d]", n);
@@ -135,10 +135,10 @@ TestDemonParent::RecvSyncMessage(const int& n)
   RunLimitedSequence(ASYNC_ONLY);
 
   DEMON_LOG("End RecvSync [%d]", n);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestDemonParent::RecvUrgentAsyncMessage(const int& n)
 {
   DEMON_LOG("Start RecvUrgentAsyncMessage [%d]", n);
@@ -149,10 +149,10 @@ TestDemonParent::RecvUrgentAsyncMessage(const int& n)
   RunLimitedSequence(ASYNC_ONLY);
 
   DEMON_LOG("End RecvUrgentAsyncMessage [%d]", n);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestDemonParent::RecvUrgentSyncMessage(const int& n)
 {
   DEMON_LOG("Start RecvUrgentSyncMessage [%d]", n);
@@ -163,7 +163,7 @@ TestDemonParent::RecvUrgentSyncMessage(const int& n)
   RunLimitedSequence(ASYNC_ONLY);
 
   DEMON_LOG("End RecvUrgentSyncMessage [%d]", n);
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -260,7 +260,7 @@ TestDemonChild::~TestDemonChild()
   MOZ_COUNT_DTOR(TestDemonChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestDemonChild::RecvStart()
 {
 #ifdef OS_POSIX
@@ -272,7 +272,7 @@ TestDemonChild::RecvStart()
   DEMON_LOG("RecvStart");
 
   RunUnlimitedSequence();
-  return true;
+  return IPC_OK();
 }
 
 #ifdef DEBUG
@@ -291,7 +291,7 @@ TestDemonChild::ArtificialSleep()
 }
 #endif
 
-bool
+mozilla::ipc::IPCResult
 TestDemonChild::RecvAsyncMessage(const int& n)
 {
   DEMON_LOG("Start RecvAsyncMessage [%d]", n);
@@ -302,16 +302,16 @@ TestDemonChild::RecvAsyncMessage(const int& n)
   RunLimitedSequence();
 
   DEMON_LOG("End RecvAsyncMessage [%d]", n);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestDemonChild::RecvHiPrioSyncMessage()
 {
   DEMON_LOG("Start RecvHiPrioSyncMessage");
   RunLimitedSequence();
   DEMON_LOG("End RecvHiPrioSyncMessage");
-  return true;
+  return IPC_OK();
 }
 
 void

@@ -32,10 +32,10 @@ private:
   already_AddRefed<nsIInputStream>
   TakeReader() override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvBuffer(const nsCString& aBuffer) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvClose(const nsresult& aRv) override;
 
   nsCOMPtr<nsIAsyncInputStream> mReader;
@@ -65,7 +65,7 @@ SendStreamParentImpl::ActorDestroy(ActorDestroyReason aReason)
   mWriter->CloseWithStatus(NS_ERROR_ABORT);
 }
 
-bool
+mozilla::ipc::IPCResult
 SendStreamParentImpl::RecvBuffer(const nsCString& aBuffer)
 {
   uint32_t numWritten = 0;
@@ -76,15 +76,15 @@ SendStreamParentImpl::RecvBuffer(const nsCString& aBuffer)
     Unused << SendRequestClose(rv);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SendStreamParentImpl::RecvClose(const nsresult& aRv)
 {
   mWriter->CloseWithStatus(aRv);
   Unused << Send__delete__(this);
-  return true;
+  return IPC_OK();
 }
 
 SendStreamParentImpl::SendStreamParentImpl(nsIAsyncInputStream* aReader,

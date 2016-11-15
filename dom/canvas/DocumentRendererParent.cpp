@@ -54,10 +54,10 @@ DocumentRendererParent::ActorDestroy(ActorDestroyReason aWhy)
   // Implement me! Bug 1005139
 }
 
-bool
+mozilla::ipc::IPCResult
 DocumentRendererParent::Recv__delete__(const nsIntSize& renderedSize,
                                        const nsCString& data)
 {
     DrawToCanvas(renderedSize, data);
-    return true;
+    return IPC_OK();
 }

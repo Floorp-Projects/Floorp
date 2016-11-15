@@ -264,7 +264,7 @@ GMPChild::Init(const nsAString& aPluginPath,
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPChild::RecvSetNodeId(const nsCString& aNodeId)
 {
   LOGD("%s nodeId=%s", __FUNCTION__, aNodeId.Data());
@@ -273,7 +273,7 @@ GMPChild::RecvSetNodeId(const nsCString& aNodeId)
   // separate message than RecvStartPlugin() so that the string is not
   // sitting in a string on the IPC code's call stack.
   mNodeId = aNodeId;
-  return true;
+  return IPC_OK();
 }
 
 GMPErr
@@ -288,7 +288,7 @@ GMPChild::GetAPI(const char* aAPIName,
   return mGMPLoader->GetAPI(aAPIName, aHostAPI, aPluginAPI, aDecryptorId);
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPChild::RecvPreloadLibs(const nsCString& aLibs)
 {
 #ifdef XP_WIN
@@ -319,7 +319,7 @@ GMPChild::RecvPreloadLibs(const nsCString& aLibs)
     }
   }
 #endif
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -351,20 +351,20 @@ GMPChild::GetUTF8LibPath(nsACString& aOutLibPath)
 #endif
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPChild::AnswerStartPlugin(const nsString& aAdapter)
 {
   LOGD("%s", __FUNCTION__);
 
   if (!PreLoadPluginVoucher()) {
     NS_WARNING("Plugin voucher failed to load!");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   PreLoadSandboxVoucher();
 
   nsCString libPath;
   if (!GetUTF8LibPath(libPath)) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   auto platformAPI = new GMPPlatformAPI();
@@ -374,7 +374,7 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
   if (!mGMPLoader) {
     NS_WARNING("Failed to get GMPLoader");
     delete platformAPI;
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   bool isWidevine = aAdapter.EqualsLiteral("widevine");
@@ -386,7 +386,7 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
   if (!SetMacSandboxInfo(pluginType)) {
     NS_WARNING("Failed to set Mac GMP sandbox info");
     delete platformAPI;
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 #endif
 
@@ -399,7 +399,7 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
                         adapter)) {
     NS_WARNING("Failed to load GMP");
     delete platformAPI;
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   void* sh = nullptr;
@@ -410,7 +410,7 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
     SendAsyncShutdownRequired();
   }
 
-  return true;
+  return IPC_OK();
 }
 
 MessageLoop*
@@ -529,14 +529,14 @@ GMPChild::GetGMPStorage()
   return mStorage;
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPChild::RecvCrashPluginNow()
 {
   MOZ_CRASH();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPChild::RecvBeginAsyncShutdown()
 {
   LOGD("%s AsyncShutdown=%d", __FUNCTION__, mAsyncShutdown!=nullptr);
@@ -547,16 +547,16 @@ GMPChild::RecvBeginAsyncShutdown()
   } else {
     ShutdownComplete();
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPChild::RecvCloseActive()
 {
   for (uint32_t i = mGMPContentChildren.Length(); i > 0; i--) {
     mGMPContentChildren[i - 1]->CloseActive();
   }
-  return true;
+  return IPC_OK();
 }
 
 void

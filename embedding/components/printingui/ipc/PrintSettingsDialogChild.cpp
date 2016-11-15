@@ -20,7 +20,7 @@ PrintSettingsDialogChild::~PrintSettingsDialogChild()
   MOZ_COUNT_DTOR(PrintSettingsDialogChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 PrintSettingsDialogChild::Recv__delete__(const PrintDataOrNSResult& aData)
 {
   if (aData.type() == PrintDataOrNSResult::Tnsresult) {
@@ -31,7 +31,7 @@ PrintSettingsDialogChild::Recv__delete__(const PrintDataOrNSResult& aData)
     mData = aData.get_PrintData();
   }
   mReturned = true;
-  return true;
+  return IPC_OK();
 }
 
 } // namespace embedding

@@ -87,16 +87,16 @@ public:
           EventMessage aEventMessage) override;
 
 protected:
-  bool RecvHandleTap(const TapType& aType,
-                     const LayoutDevicePoint& aPoint,
-                     const Modifiers& aModifiers,
-                     const ScrollableLayerGuid& aGuid,
-                     const uint64_t& aInputBlockId) override;
+  mozilla::ipc::IPCResult RecvHandleTap(const TapType& aType,
+                                        const LayoutDevicePoint& aPoint,
+                                        const Modifiers& aModifiers,
+                                        const ScrollableLayerGuid& aGuid,
+                                        const uint64_t& aInputBlockId) override;
 
-  bool RecvNotifyPinchGesture(const PinchGestureType& aType,
-                              const ScrollableLayerGuid& aGuid,
-                              const LayoutDeviceCoord& aSpanChange,
-                              const Modifiers& aModifiers) override;
+  mozilla::ipc::IPCResult RecvNotifyPinchGesture(const PinchGestureType& aType,
+                                                 const ScrollableLayerGuid& aGuid,
+                                                 const LayoutDeviceCoord& aSpanChange,
+                                                 const Modifiers& aModifiers) override;
 
   virtual
   ~APZCTreeManagerChild() { }

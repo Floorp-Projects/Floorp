@@ -37,24 +37,24 @@ class WebSocketChannelParent : public PWebSocketParent,
                          uint32_t aSerial);
 
  private:
-  bool RecvAsyncOpen(const OptionalURIParams& aURI,
-                     const nsCString& aOrigin,
-                     const uint64_t& aInnerWindowID,
-                     const nsCString& aProtocol,
-                     const bool& aSecure,
-                     const uint32_t& aPingInterval,
-                     const bool& aClientSetPingInterval,
-                     const uint32_t& aPingTimeout,
-                     const bool& aClientSetPingTimeout,
-                     const OptionalLoadInfoArgs& aLoadInfoArgs,
-                     const OptionalTransportProvider& aTransportProvider,
-                     const nsCString& aNegotiatedExtensions) override;
-  bool RecvClose(const uint16_t & code, const nsCString & reason) override;
-  bool RecvSendMsg(const nsCString& aMsg) override;
-  bool RecvSendBinaryMsg(const nsCString& aMsg) override;
-  bool RecvSendBinaryStream(const InputStreamParams& aStream,
-                            const uint32_t& aLength) override;
-  bool RecvDeleteSelf() override;
+  mozilla::ipc::IPCResult RecvAsyncOpen(const OptionalURIParams& aURI,
+                                        const nsCString& aOrigin,
+                                        const uint64_t& aInnerWindowID,
+                                        const nsCString& aProtocol,
+                                        const bool& aSecure,
+                                        const uint32_t& aPingInterval,
+                                        const bool& aClientSetPingInterval,
+                                        const uint32_t& aPingTimeout,
+                                        const bool& aClientSetPingTimeout,
+                                        const OptionalLoadInfoArgs& aLoadInfoArgs,
+                                        const OptionalTransportProvider& aTransportProvider,
+                                        const nsCString& aNegotiatedExtensions) override;
+  mozilla::ipc::IPCResult RecvClose(const uint16_t & code, const nsCString & reason) override;
+  mozilla::ipc::IPCResult RecvSendMsg(const nsCString& aMsg) override;
+  mozilla::ipc::IPCResult RecvSendBinaryMsg(const nsCString& aMsg) override;
+  mozilla::ipc::IPCResult RecvSendBinaryStream(const InputStreamParams& aStream,
+                                               const uint32_t& aLength) override;
+  mozilla::ipc::IPCResult RecvDeleteSelf() override;
 
   void ActorDestroy(ActorDestroyReason why) override;
 

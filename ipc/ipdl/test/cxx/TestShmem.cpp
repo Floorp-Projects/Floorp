@@ -50,7 +50,7 @@ TestShmemParent::Main()
 }
 
 
-bool
+mozilla::ipc::IPCResult
 TestShmemParent::RecvTake(Shmem&& mem, Shmem&& unsafe,
                           const size_t& expectedSize)
 {
@@ -73,13 +73,13 @@ TestShmemParent::RecvTake(Shmem&& mem, Shmem&& unsafe,
 
     Close();
 
-    return true;
+    return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------
 // Child
 
-bool
+mozilla::ipc::IPCResult
 TestShmemChild::RecvGive(Shmem&& mem, Shmem&& unsafe, const size_t& expectedSize)
 {
     if (mem.Size<char>() != expectedSize)
@@ -107,7 +107,7 @@ TestShmemChild::RecvGive(Shmem&& mem, Shmem&& unsafe, const size_t& expectedSize
     char uc1 = *unsafeptr;  (void)uc1;
     char uc2 = *unsafecopy.get<char>(); (void)uc2;
 
-    return true;
+    return IPC_OK();
 }
 
 

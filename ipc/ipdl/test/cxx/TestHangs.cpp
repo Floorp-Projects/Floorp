@@ -82,7 +82,7 @@ TestHangsParent::ShouldContinueFromReplyTimeout()
     return false;
 }
 
-bool
+mozilla::ipc::IPCResult
 TestHangsParent::AnswerStackFrame()
 {
     if (PTestHangs::HANG != state()) {
@@ -98,7 +98,7 @@ TestHangsParent::AnswerStackFrame()
             fail("should have timed out!");
     }
 
-    return true;
+    return IPC_OK();
 }
 
 void
@@ -129,7 +129,7 @@ TestHangsChild::~TestHangsChild()
     MOZ_COUNT_DTOR(TestHangsChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestHangsChild::AnswerHang()
 {
     puts(" (child process is 'hanging' now)");
@@ -139,7 +139,7 @@ TestHangsChild::AnswerHang()
     // ShouldContinueFromReplyTimeout()
     PR_Sleep(1000);
 
-    return true;
+    return IPC_OK();
 }
 
 } // namespace _ipdltest

@@ -67,46 +67,46 @@ class PluginInstanceChild : public PPluginInstanceChild
 #endif
 
 protected:
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerCreateChildPluginWindow(NativeWindowHandle* aChildPluginWindow) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvCreateChildPopupSurrogate(const NativeWindowHandle& aNetscapeWindow) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerNPP_SetWindow(const NPRemoteWindow& window) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerNPP_GetValue_NPPVpluginWantsAllNetworkStreams(bool* wantsAllStreams, NPError* rv) override;
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(bool* needs, NPError* rv) override;
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerNPP_GetValue_NPPVpluginScriptableNPObject(PPluginScriptableObjectChild** value,
                                                     NPError* result) override;
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerNPP_GetValue_NPPVpluginNativeAccessibleAtkPlugId(nsCString* aPlugId,
                                                            NPError* aResult) override;
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value, NPError* result) override;
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerNPP_SetValue_NPNVmuteAudioBool(const bool& value, NPError* result) override;
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerNPP_SetValue_NPNVCSSZoomFactor(const double& value, NPError* result) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled) override;
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
                                 Shmem&& mem,
                                 int16_t* handled,
                                 Shmem* rtnmem) override;
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
                                     const uint32_t& surface,
                                     int16_t* handled) override;
 
     // Async rendering
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
                        const NPRemoteWindow& aWindow) override;
 
@@ -126,20 +126,23 @@ protected:
         return true;
     }
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerPaint(const NPRemoteEvent& event, int16_t* handled) override
     {
         PaintTracker pt;
-        return AnswerNPP_HandleEvent(event, handled);
+        if (!AnswerNPP_HandleEvent(event, handled)) {
+          return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvWindowPosChanged(const NPRemoteEvent& event) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvContentsScaleFactorChanged(const double& aContentsScaleFactor) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerNPP_Destroy(NPError* result) override;
 
     virtual PPluginScriptableObjectChild*
@@ -148,15 +151,15 @@ protected:
     virtual bool
     DeallocPPluginScriptableObjectChild(PPluginScriptableObjectChild* aObject) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvPPluginScriptableObjectConstructor(PPluginScriptableObjectChild* aActor) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvPBrowserStreamConstructor(PBrowserStreamChild* aActor, const nsCString& aURL,
                                   const uint32_t& aLength, const uint32_t& aLastmodified,
                                   PStreamNotifyChild* aNotifyData, const nsCString& aHeaders) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerNPP_NewStream(
             PBrowserStreamChild* actor,
             const nsCString& mimeType,
@@ -164,11 +167,11 @@ protected:
             NPError* rv,
             uint16_t* stype) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvAsyncNPP_NewStream(
-            PBrowserStreamChild* actor,
-            const nsCString& mimeType,
-            const bool& seekable) override;
+        PBrowserStreamChild* actor,
+        const nsCString& mimeType,
+        const bool& seekable) override;
 
     virtual PBrowserStreamChild*
     AllocPBrowserStreamChild(const nsCString& url,
@@ -197,13 +200,13 @@ protected:
     virtual bool
     DeallocPStreamNotifyChild(PStreamNotifyChild* notifyData) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerSetPluginFocus() override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerUpdateWindow() override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvNPP_DidComposite() override;
 
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
@@ -274,9 +277,9 @@ public:
 
     void DoAsyncRedraw();
 
-    virtual bool RecvHandledWindowedPluginKeyEvent(
-                   const NativeEventData& aKeyEventData,
-                   const bool& aIsConsumed) override;
+    virtual mozilla::ipc::IPCResult RecvHandledWindowedPluginKeyEvent(
+        const NativeEventData& aKeyEventData,
+        const bool& aIsConsumed) override;
 
 #if defined(XP_WIN)
     NPError DefaultAudioDeviceChanged(NPAudioDeviceChangeDetails& details);
@@ -291,13 +294,13 @@ private:
 
     bool IsUsingDirectDrawing();
 
-    virtual bool RecvUpdateBackground(const SurfaceDescriptor& aBackground,
-                                      const nsIntRect& aRect) override;
+    virtual mozilla::ipc::IPCResult RecvUpdateBackground(const SurfaceDescriptor& aBackground,
+                                                         const nsIntRect& aRect) override;
 
     virtual PPluginBackgroundDestroyerChild*
     AllocPPluginBackgroundDestroyerChild() override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvPPluginBackgroundDestroyerConstructor(PPluginBackgroundDestroyerChild* aActor) override;
 
     virtual bool
