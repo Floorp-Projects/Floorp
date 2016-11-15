@@ -100,8 +100,15 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     webIDLCallerPrincipal = nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
   }
 
+  JSObject* wrappedCallback = aCallback->CallbackPreserveColor();
+  if (!wrappedCallback) {
+    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+      NS_LITERAL_CSTRING("Cannot execute callback from a nuked compartment."));
+    return;
+  }
+
   // First, find the real underlying callback.
-  JSObject* realCallback = js::UncheckedUnwrap(aCallback->CallbackPreserveColor());
+  JSObject* realCallback = js::UncheckedUnwrap(wrappedCallback);
   nsIGlobalObject* globalObject = nullptr;
 
   JSContext* cx;
@@ -164,13 +171,14 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
 
     cx = mAutoEntryScript->cx();
 
-    // Unmark the callable (by invoking Callback() and not the CallbackPreserveColor()
-    // variant), and stick it in a Rooted before it can go gray again.
+    // Unmark the callable (by invoking CallbackOrNull() and not the
+    // CallbackPreserveColor() variant), and stick it in a Rooted before it can
+    // go gray again.
     // Nothing before us in this function can trigger a CC, so it's safe to wait
     // until here it do the unmark. This allows us to construct mRootedCallable
     // with the cx from mAutoEntryScript, avoiding the cost of finding another
     // JSContext. (Rooted<> does not care about requests or compartments.)
-    mRootedCallable.emplace(cx, aCallback->Callback());
+    mRootedCallable.emplace(cx, aCallback->CallbackOrNull());
   }
 
   // JS-implemented WebIDL is always OK to run, since it runs with Chrome
@@ -318,7 +326,7 @@ CallbackObjectHolderBase::ToXPCOMCallback(CallbackObject* aCallback,
   jsapi.Init();
   JSContext* cx = jsapi.cx();
 
-  JS::Rooted<JSObject*> callback(cx, aCallback->Callback());
+  JS::Rooted<JSObject*> callback(cx, aCallback->CallbackOrNull());
 
   JSAutoCompartment ac(cx, callback);
   RefPtr<nsXPCWrappedJS> wrappedJS;
