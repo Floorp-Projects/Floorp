@@ -167,63 +167,6 @@ Import::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            field.sizeOfExcludingThis(mallocSizeOf);
 }
 
-Export::Export(UniqueChars fieldName, uint32_t index, DefinitionKind kind)
-  : fieldName_(Move(fieldName))
-{
-    pod.kind_ = kind;
-    pod.index_ = index;
-}
-
-Export::Export(UniqueChars fieldName, DefinitionKind kind)
-  : fieldName_(Move(fieldName))
-{
-    pod.kind_ = kind;
-    pod.index_ = 0;
-}
-
-uint32_t
-Export::funcIndex() const
-{
-    MOZ_ASSERT(pod.kind_ == DefinitionKind::Function);
-    return pod.index_;
-}
-
-uint32_t
-Export::globalIndex() const
-{
-    MOZ_ASSERT(pod.kind_ == DefinitionKind::Global);
-    return pod.index_;
-}
-
-size_t
-Export::serializedSize() const
-{
-    return fieldName_.serializedSize() +
-           sizeof(pod);
-}
-
-uint8_t*
-Export::serialize(uint8_t* cursor) const
-{
-    cursor = fieldName_.serialize(cursor);
-    cursor = WriteBytes(cursor, &pod, sizeof(pod));
-    return cursor;
-}
-
-const uint8_t*
-Export::deserialize(const uint8_t* cursor)
-{
-    (cursor = fieldName_.deserialize(cursor)) &&
-    (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
-    return cursor;
-}
-
-size_t
-Export::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
-{
-    return fieldName_.sizeOfExcludingThis(mallocSizeOf);
-}
-
 size_t
 ElemSegment::serializedSize() const
 {

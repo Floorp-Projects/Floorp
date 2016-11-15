@@ -470,121 +470,15 @@ DecodeMemorySection(Decoder& d, ModuleGeneratorData* init)
     return true;
 }
 
-typedef HashSet<const char*, CStringHasher, SystemAllocPolicy> CStringSet;
-
-static UniqueChars
-DecodeExportName(Decoder& d, CStringSet* dupSet)
-{
-    UniqueChars exportName = DecodeName(d);
-    if (!exportName) {
-        d.fail("expected valid export name");
-        return nullptr;
-    }
-
-    CStringSet::AddPtr p = dupSet->lookupForAdd(exportName.get());
-    if (p) {
-        d.fail("duplicate export");
-        return nullptr;
-    }
-
-    if (!dupSet->add(p, exportName.get()))
-        return nullptr;
-
-    return Move(exportName);
-}
-
-static bool
-DecodeExport(Decoder& d, ModuleGenerator& mg, CStringSet* dupSet)
-{
-    UniqueChars fieldName = DecodeExportName(d, dupSet);
-    if (!fieldName)
-        return false;
-
-    uint32_t exportKind;
-    if (!d.readVarU32(&exportKind))
-        return d.fail("failed to read export kind");
-
-    switch (DefinitionKind(exportKind)) {
-      case DefinitionKind::Function: {
-        uint32_t funcIndex;
-        if (!d.readVarU32(&funcIndex))
-            return d.fail("expected export internal index");
-
-        if (funcIndex >= mg.numFuncs())
-            return d.fail("exported function index out of bounds");
-
-        return mg.addFuncExport(Move(fieldName), funcIndex);
-      }
-      case DefinitionKind::Table: {
-        uint32_t tableIndex;
-        if (!d.readVarU32(&tableIndex))
-            return d.fail("expected table index");
-
-        if (tableIndex >= mg.tables().length())
-            return d.fail("exported table index out of bounds");
-
-        return mg.addTableExport(Move(fieldName));
-      }
-      case DefinitionKind::Memory: {
-        uint32_t memoryIndex;
-        if (!d.readVarU32(&memoryIndex))
-            return d.fail("expected memory index");
-
-        if (memoryIndex > 0 || !mg.usesMemory())
-            return d.fail("exported memory index out of bounds");
-
-        return mg.addMemoryExport(Move(fieldName));
-      }
-      case DefinitionKind::Global: {
-        uint32_t globalIndex;
-        if (!d.readVarU32(&globalIndex))
-            return d.fail("expected global index");
-
-        if (globalIndex >= mg.globals().length())
-            return d.fail("exported global index out of bounds");
-
-        const GlobalDesc& global = mg.globals()[globalIndex];
-        if (!GlobalIsJSCompatible(d, global.type(), global.isMutable()))
-            return false;
-
-        return mg.addGlobalExport(Move(fieldName), globalIndex);
-      }
-      default:
-        return d.fail("unexpected export kind");
-    }
-
-    MOZ_CRASH("unreachable");
-}
-
 static bool
 DecodeExportSection(Decoder& d, ModuleGenerator& mg)
 {
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Export, &sectionStart, &sectionSize, "export"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    CStringSet dupSet;
-    if (!dupSet.init())
+    ExportVector exports;
+    if (!DecodeExportSection(d, mg.numFuncs(), mg.numTables(), mg.usesMemory(), mg.globals(),
+                             &exports))
         return false;
 
-    uint32_t numExports;
-    if (!d.readVarU32(&numExports))
-        return d.fail("failed to read number of exports");
-
-    if (numExports > MaxExports)
-        return d.fail("too many exports");
-
-    for (uint32_t i = 0; i < numExports; i++) {
-        if (!DecodeExport(d, mg, &dupSet))
-            return false;
-    }
-
-    if (!d.finishSection(sectionStart, sectionSize, "export"))
-        return false;
-
-    return true;
+    return mg.setExports(Move(exports));
 }
 
 static bool
@@ -874,7 +768,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!mg.init(Move(init), args))
         return nullptr;
 
-    if (!DecodeExportSection(d, mg))
+    if (!::DecodeExportSection(d, mg))
         return nullptr;
 
     if (!DecodeStartSection(d, mg))

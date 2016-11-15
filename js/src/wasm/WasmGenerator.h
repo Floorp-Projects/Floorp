@@ -160,10 +160,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t numFuncs() const;
 
     // Exports:
-    MOZ_MUST_USE bool addFuncExport(UniqueChars fieldName, uint32_t funcIndex);
-    MOZ_MUST_USE bool addTableExport(UniqueChars fieldName);
-    MOZ_MUST_USE bool addMemoryExport(UniqueChars fieldName);
-    MOZ_MUST_USE bool addGlobalExport(UniqueChars fieldName, uint32_t globalIndex);
+    MOZ_MUST_USE bool setExports(ExportVector&& exports);
 
     // Function definitions:
     MOZ_MUST_USE bool startFuncDefs();
