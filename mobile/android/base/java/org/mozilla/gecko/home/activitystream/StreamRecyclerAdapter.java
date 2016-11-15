@@ -94,8 +94,8 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
 
     @Override
     public void onItemClicked(RecyclerView recyclerView, int position, View v) {
-        if (position < 1) {
-            // The header contains top sites and has its own click handling.
+        if (getItemViewType(position) != HighlightItem.LAYOUT_ID) {
+            // Headers (containing topsites and/or the highlights title) do their own click handling as needed
             return;
         }
 
