@@ -5,7 +5,6 @@
 package org.mozilla.gecko;
 
 import android.content.ContentProviderClient;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
@@ -17,6 +16,7 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.util.Collections;
@@ -44,7 +44,8 @@ import java.util.Map;
 
     private static final int MAX_METADATA_QUEUE_SIZE = 15;
 
-    private final Map<String, Bundle> queuedMetadata = Collections.synchronizedMap(new LimitedLinkedHashMap<String, Bundle>());
+    private final Map<String, GeckoBundle> queuedMetadata =
+            Collections.synchronizedMap(new LimitedLinkedHashMap<String, GeckoBundle>());
 
     public static GlobalPageMetadata getInstance() {
         return instance;
@@ -107,7 +108,7 @@ import java.util.Map;
         }
 
         // Otherwise, we need to queue it for future insertion when history record is available.
-        Bundle bundledMetadata = new Bundle();
+        GeckoBundle bundledMetadata = new GeckoBundle();
         bundledMetadata.putBoolean(KEY_HAS_IMAGE, hasImage);
         bundledMetadata.putString(KEY_METADATA_JSON, preparedMetadataJSON);
         queuedMetadata.put(uri, bundledMetadata);
@@ -119,7 +120,7 @@ import java.util.Map;
     }
 
     @Override
-    public void handleMessage(String event, Bundle message, EventCallback callback) {
+    public void handleMessage(String event, GeckoBundle message, EventCallback callback) {
         ThreadUtils.assertOnBackgroundThread();
 
         if (!GlobalHistory.EVENT_URI_AVAILABLE_IN_HISTORY.equals(event)) {
@@ -131,7 +132,7 @@ import java.util.Map;
             return;
         }
 
-        final Bundle bundledMetadata;
+        final GeckoBundle bundledMetadata;
         synchronized (queuedMetadata) {
             if (!queuedMetadata.containsKey(uri)) {
                 return;
@@ -144,7 +145,7 @@ import java.util.Map;
         insertMetadataBundleForUri(uri, bundledMetadata);
     }
 
-    private void insertMetadataBundleForUri(String uri, Bundle bundledMetadata) {
+    private void insertMetadataBundleForUri(String uri, GeckoBundle bundledMetadata) {
         final boolean hasImage = bundledMetadata.getBoolean(KEY_HAS_IMAGE);
         final String metadataJSON = bundledMetadata.getString(KEY_METADATA_JSON);
 

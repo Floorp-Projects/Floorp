@@ -2413,7 +2413,7 @@ nsGenericHTMLFormElement::IsLabelable() const
 //----------------------------------------------------------------------
 
 void
-nsGenericHTMLElement::Click()
+nsGenericHTMLElement::Click(CallerType aCallerType)
 {
   if (HandlingClick())
     return;
@@ -2432,10 +2432,8 @@ nsGenericHTMLElement::Click()
 
   SetHandlingClick();
 
-  // Click() is never called from native code, but it may be
-  // called from chrome JS. Mark this event trusted if Click()
-  // is called from chrome code.
-  WidgetMouseEvent event(nsContentUtils::IsCallerChrome(),
+  // Mark this event trusted if Click() is called from system code.
+  WidgetMouseEvent event(aCallerType == CallerType::System,
                          eMouseClick, nullptr, WidgetMouseEvent::eReal);
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
 
@@ -2567,13 +2565,6 @@ nsGenericHTMLElement::DispatchSimulatedClick(nsGenericHTMLElement* aElement,
 nsresult
 nsGenericHTMLElement::GetEditor(nsIEditor** aEditor)
 {
-  *aEditor = nullptr;
-
-  // See also HTMLTextFieldAccessible::GetEditor.
-  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   NS_IF_ADDREF(*aEditor = GetEditorInternal());
   return NS_OK;
 }

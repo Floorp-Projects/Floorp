@@ -22,10 +22,10 @@ interface HTMLCanvasElement : HTMLElement {
   [Throws]
   nsISupports? getContext(DOMString contextId, optional any contextOptions = null);
 
-  [Throws]
+  [Throws, NeedsCallerType]
   DOMString toDataURL(optional DOMString type = "",
                       optional any encoderOptions);
-  [Throws]
+  [Throws, NeedsCallerType]
   void toBlob(BlobCallback _callback,
               optional DOMString type = "",
               optional any encoderOptions);
@@ -35,10 +35,13 @@ interface HTMLCanvasElement : HTMLElement {
 partial interface HTMLCanvasElement {
   [Pure, SetterThrows]
            attribute boolean mozOpaque;
-  [Throws]
+  [Throws, NeedsCallerType]
   File mozGetAsFile(DOMString name, optional DOMString? type = null);
+  // A Mozilla-only extension to get a canvas context backed by double-buffered
+  // shared memory. Only privileged callers can call this.
   [ChromeOnly, Throws]
   nsISupports? MozGetIPCContext(DOMString contextId);
+
            attribute PrintCallback? mozPrintCallback;
 
   [Throws, UnsafeInPrerendering, Pref="canvas.capturestream.enabled"]

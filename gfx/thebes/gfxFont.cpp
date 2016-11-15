@@ -724,10 +724,9 @@ gfxShapedText::SetGlyphs(uint32_t aIndex, CompressedGlyph aGlyph,
 #define ZWNJ 0x200C
 #define ZWJ  0x200D
 static inline bool
-IsDefaultIgnorable(uint32_t aChar)
+IsIgnorable(uint32_t aChar)
 {
-    return GetIdentifierModification(aChar) == XIDMOD_DEFAULT_IGNORABLE ||
-           aChar == ZWNJ || aChar == ZWJ;
+    return (IsDefaultIgnorable(aChar)) || aChar == ZWNJ || aChar == ZWJ;
 }
 
 void
@@ -743,7 +742,7 @@ gfxShapedText::SetMissingGlyph(uint32_t aIndex, uint32_t aChar, gfxFont *aFont)
     DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
 
     details->mGlyphID = aChar;
-    if (IsDefaultIgnorable(aChar)) {
+    if (IsIgnorable(aChar)) {
         // Setting advance width to zero will prevent drawing the hexbox
         details->mAdvance = 0;
     } else {
@@ -761,7 +760,7 @@ gfxShapedText::SetMissingGlyph(uint32_t aIndex, uint32_t aChar, gfxFont *aFont)
 bool
 gfxShapedText::FilterIfIgnorable(uint32_t aIndex, uint32_t aCh)
 {
-    if (IsDefaultIgnorable(aCh)) {
+    if (IsIgnorable(aCh)) {
         // There are a few default-ignorables of Letter category (currently,
         // just the Hangul filler characters) that we'd better not discard
         // if they're followed by additional characters in the same cluster.

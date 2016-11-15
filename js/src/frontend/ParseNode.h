@@ -916,10 +916,14 @@ struct ListNode : public ParseNode
 
 struct CodeNode : public ParseNode
 {
-    CodeNode(ParseNodeKind kind, const TokenPos& pos)
-      : ParseNode(kind, JSOP_NOP, PN_CODE, pos)
+    CodeNode(ParseNodeKind kind, JSOp op, const TokenPos& pos)
+      : ParseNode(kind, op, PN_CODE, pos)
     {
         MOZ_ASSERT(kind == PNK_FUNCTION || kind == PNK_MODULE);
+        MOZ_ASSERT_IF(kind == PNK_MODULE, op == JSOP_NOP);
+        MOZ_ASSERT(op == JSOP_NOP || // statement, module
+                   op == JSOP_LAMBDA_ARROW || // arrow function
+                   op == JSOP_LAMBDA); // expression, method, comprehension, accessor, &c.
         MOZ_ASSERT(!pn_body);
         MOZ_ASSERT(!pn_objbox);
     }

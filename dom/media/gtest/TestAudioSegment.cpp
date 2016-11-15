@@ -202,7 +202,7 @@ void TestUpmixStereo()
       ASSERT_TRUE(channelsptr[channel][i] == GetHighValue<T>());
     }
   }
-  delete channels[0];
+  delete [] channels[0];
 }
 
 template<typename T>
@@ -234,8 +234,8 @@ void TestDownmixStereo()
     ASSERT_TRUE(output[0][i] == GetSilentValue<T>());
   }
 
-  delete output[0];
-  delete output;
+  delete [] output[0];
+  delete [] output;
 }
 
 TEST(AudioSegment, Test)

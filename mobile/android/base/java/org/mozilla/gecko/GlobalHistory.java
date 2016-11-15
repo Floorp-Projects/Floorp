@@ -13,12 +13,12 @@ import java.util.Set;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.reader.ReaderModeUtils;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
@@ -171,7 +171,7 @@ class GlobalHistory {
     }
 
     private void dispatchUriAvailableMessage(String uri) {
-        final Bundle message = new Bundle();
+        final GeckoBundle message = new GeckoBundle();
         message.putString(EVENT_PARAM_URI, uri);
         EventDispatcher.getInstance().dispatch(EVENT_URI_AVAILABLE_IN_HISTORY, message);
     }

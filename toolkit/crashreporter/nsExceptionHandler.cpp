@@ -292,8 +292,14 @@ static char* childCrashNotifyPipe;
 #  elif defined(XP_LINUX)
 static int serverSocketFd = -1;
 static int clientSocketFd = -1;
-static const int kMagicChildCrashReportFd = 4;
-
+static int gMagicChildCrashReportFd =
+#    if defined(MOZ_WIDGET_ANDROID)
+// On android the fd is set at the time of child creation.
+-1
+#    else
+4
+#    endif // defined(MOZ_WIDGET_ANDROID)
+;
 #  endif
 
 // |dumpMapLock| must protect all access to |pidToMinidump|.
@@ -3722,7 +3728,7 @@ CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd)
   MOZ_ASSERT(OOPInitialized());
 
   *childCrashFd = clientSocketFd;
-  *childCrashRemapFd = kMagicChildCrashReportFd;
+  *childCrashRemapFd = gMagicChildCrashReportFd;
 
   return true;
 }
@@ -3742,7 +3748,7 @@ SetRemoteExceptionHandler()
                      nullptr,    // no minidump callback
                      nullptr,    // no callback context
                      true,       // install signal handlers
-                     kMagicChildCrashReportFd);
+                     gMagicChildCrashReportFd);
 
   if (gDelayedAnnotations) {
     for (uint32_t i = 0; i < gDelayedAnnotations->Length(); i++) {
@@ -4096,6 +4102,11 @@ UnsetRemoteExceptionHandler()
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
+void SetNotificationPipeForChild(int childCrashFd)
+{
+  gMagicChildCrashReportFd = childCrashFd;
+}
+
 void AddLibraryMapping(const char* library_name,
                        uintptr_t   start_address,
                        size_t      mapping_length,

@@ -8,7 +8,6 @@ package org.mozilla.gecko;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Bundle;
 import android.support.annotation.WorkerThread;
 import android.text.TextUtils;
 import android.util.Log;
@@ -20,6 +19,7 @@ import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.util.FileUtils;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
 import org.mozilla.gecko.util.IntentUtils;
@@ -994,9 +994,9 @@ public final class GeckoProfile {
     public void enqueueInitialization(final File profileDir) {
         Log.i(LOGTAG, "Enqueuing profile init.");
 
-        final Bundle message = new Bundle(2);
-        message.putCharSequence("name", getName());
-        message.putCharSequence("path", profileDir.getAbsolutePath());
+        final GeckoBundle message = new GeckoBundle(2);
+        message.putString("name", getName());
+        message.putString("path", profileDir.getAbsolutePath());
         EventDispatcher.getInstance().dispatch("Profile:Create", message);
     }
 }

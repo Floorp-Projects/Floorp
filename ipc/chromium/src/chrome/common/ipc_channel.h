@@ -147,6 +147,12 @@ class Channel {
   // For portability the prefix should not include the \ character.
   static std::wstring GenerateVerifiedChannelID(const std::wstring& prefix);
 
+#if defined(MOZ_WIDGET_ANDROID)
+  // Used to set the first IPC file descriptor in the child process on Android. See
+  // ipc_channel_posix.cc for further details on how this is used.
+  static void SetClientChannelFd(int fd);
+#endif // defined(MOZ_WIDGET_ANDROID)
+
  private:
   // PIMPL to which all channel calls are delegated.
   class ChannelImpl;
