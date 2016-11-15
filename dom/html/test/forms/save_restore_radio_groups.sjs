@@ -39,6 +39,12 @@ function handleRequest(request, response)
       response.write(pages[1]);
       break;
   }
-  setState("counter", "" + ++counter);
+
+  // When we finish the test case we need to reset the counter
+  if (counter == 3) {
+    setState("counter", "0");
+  } else {
+    setState("counter", "" + ++counter);
+  }
 }
 
