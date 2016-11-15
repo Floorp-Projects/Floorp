@@ -3558,6 +3558,34 @@ class BaseCompiler
         *r0 = popF64();
     }
 
+    template<bool freeIt> void freeOrPushI32(RegI32 r) {
+        if (freeIt)
+            freeI32(r);
+        else
+            pushI32(r);
+    }
+
+    template<bool freeIt> void freeOrPushI64(RegI64 r) {
+        if (freeIt)
+            freeI64(r);
+        else
+            pushI64(r);
+    }
+
+    template<bool freeIt> void freeOrPushF32(RegF32 r) {
+        if (freeIt)
+            freeF32(r);
+        else
+            pushF32(r);
+    }
+
+    template<bool freeIt> void freeOrPushF64(RegF64 r) {
+        if (freeIt)
+            freeF64(r);
+        else
+            pushF64(r);
+    }
+
     ////////////////////////////////////////////////////////////
     //
     // Sundry helpers.
@@ -3620,6 +3648,16 @@ class BaseCompiler
     MOZ_MUST_USE bool emitTeeStore(ValType resultType, Scalar::Type viewType);
     MOZ_MUST_USE bool emitTeeStoreWithCoercion(ValType resultType, Scalar::Type viewType);
     MOZ_MUST_USE bool emitSelect();
+
+    // Mark these templates as inline to work around a compiler crash in
+    // gcc 4.8.5 when compiling for linux64-opt.
+
+    template<bool isSetLocal> MOZ_MUST_USE inline bool emitSetOrTeeLocal(uint32_t slot);
+    template<bool isSetGlobal> MOZ_MUST_USE inline bool emitSetOrTeeGlobal(uint32_t id);
+    template<bool isStore>
+    MOZ_MUST_USE inline bool emitStoreOrTeeStore(ValType resultType,
+                                                 Scalar::Type viewType,
+                                                 LinearMemoryAddress<Nothing> addr);
 
     void endBlock(ExprType type, bool isFunctionBody);
     void endLoop(ExprType type);
@@ -5723,14 +5761,10 @@ BaseCompiler::emitGetLocal()
     return true;
 }
 
+template<bool isSetLocal>
 bool
-BaseCompiler::emitSetLocal()
+BaseCompiler::emitSetOrTeeLocal(uint32_t slot)
 {
-    uint32_t slot;
-    Nothing unused_value;
-    if (!iter_.readSetLocal(locals_, &slot, &unused_value))
-        return false;
-
     if (deadCode_)
         return true;
 
@@ -5739,28 +5773,28 @@ BaseCompiler::emitSetLocal()
         RegI32 rv = popI32();
         syncLocal(slot);
         storeToFrameI32(rv.reg, frameOffsetFromSlot(slot, MIRType::Int32));
-        freeI32(rv);
+        freeOrPushI32<isSetLocal>(rv);
         break;
       }
       case ValType::I64: {
         RegI64 rv = popI64();
         syncLocal(slot);
         storeToFrameI64(rv.reg, frameOffsetFromSlot(slot, MIRType::Int64));
-        freeI64(rv);
+        freeOrPushI64<isSetLocal>(rv);
         break;
       }
       case ValType::F64: {
         RegF64 rv = popF64();
         syncLocal(slot);
         storeToFrameF64(rv.reg, frameOffsetFromSlot(slot, MIRType::Double));
-        freeF64(rv);
+        freeOrPushF64<isSetLocal>(rv);
         break;
       }
       case ValType::F32: {
         RegF32 rv = popF32();
         syncLocal(slot);
         storeToFrameF32(rv.reg, frameOffsetFromSlot(slot, MIRType::Float32));
-        freeF32(rv);
+        freeOrPushF32<isSetLocal>(rv);
         break;
       }
       default:
@@ -5771,50 +5805,23 @@ BaseCompiler::emitSetLocal()
 }
 
 bool
+BaseCompiler::emitSetLocal()
+{
+    uint32_t slot;
+    Nothing unused_value;
+    if (!iter_.readSetLocal(locals_, &slot, &unused_value))
+        return false;
+    return emitSetOrTeeLocal<true>(slot);
+}
+
+bool
 BaseCompiler::emitTeeLocal()
 {
     uint32_t slot;
     Nothing unused_value;
     if (!iter_.readTeeLocal(locals_, &slot, &unused_value))
         return false;
-
-    if (deadCode_)
-        return true;
-
-    switch (locals_[slot]) {
-      case ValType::I32: {
-        RegI32 rv = popI32();
-        syncLocal(slot);
-        storeToFrameI32(rv.reg, frameOffsetFromSlot(slot, MIRType::Int32));
-        pushI32(rv);
-        break;
-      }
-      case ValType::I64: {
-        RegI64 rv = popI64();
-        syncLocal(slot);
-        storeToFrameI64(rv.reg, frameOffsetFromSlot(slot, MIRType::Int64));
-        pushI64(rv);
-        break;
-      }
-      case ValType::F64: {
-        RegF64 rv = popF64();
-        syncLocal(slot);
-        storeToFrameF64(rv.reg, frameOffsetFromSlot(slot, MIRType::Double));
-        pushF64(rv);
-        break;
-      }
-      case ValType::F32: {
-        RegF32 rv = popF32();
-        syncLocal(slot);
-        storeToFrameF32(rv.reg, frameOffsetFromSlot(slot, MIRType::Float32));
-        pushF32(rv);
-        break;
-      }
-      default:
-        MOZ_CRASH("Local variable type");
-    }
-
-    return true;
+    return emitSetOrTeeLocal<false>(slot);
 }
 
 bool
@@ -5882,14 +5889,10 @@ BaseCompiler::emitGetGlobal()
     return true;
 }
 
+template<bool isSetGlobal>
 bool
-BaseCompiler::emitSetGlobal()
+BaseCompiler::emitSetOrTeeGlobal(uint32_t id)
 {
-    uint32_t id;
-    Nothing unused_value;
-    if (!iter_.readSetGlobal(mg_.globals, &id, &unused_value))
-        return false;
-
     if (deadCode_)
         return true;
 
@@ -5899,25 +5902,25 @@ BaseCompiler::emitSetGlobal()
       case ValType::I32: {
         RegI32 rv = popI32();
         storeGlobalVarI32(global.offset(), rv);
-        freeI32(rv);
+        freeOrPushI32<isSetGlobal>(rv);
         break;
       }
       case ValType::I64: {
         RegI64 rv = popI64();
         storeGlobalVarI64(global.offset(), rv);
-        freeI64(rv);
+        freeOrPushI64<isSetGlobal>(rv);
         break;
       }
       case ValType::F32: {
         RegF32 rv = popF32();
         storeGlobalVarF32(global.offset(), rv);
-        freeF32(rv);
+        freeOrPushF32<isSetGlobal>(rv);
         break;
       }
       case ValType::F64: {
         RegF64 rv = popF64();
         storeGlobalVarF64(global.offset(), rv);
-        freeF64(rv);
+        freeOrPushF64<isSetGlobal>(rv);
         break;
       }
       default:
@@ -5928,6 +5931,17 @@ BaseCompiler::emitSetGlobal()
 }
 
 bool
+BaseCompiler::emitSetGlobal()
+{
+    uint32_t id;
+    Nothing unused_value;
+    if (!iter_.readSetGlobal(mg_.globals, &id, &unused_value))
+        return false;
+
+    return emitSetOrTeeGlobal<true>(id);
+}
+
+bool
 BaseCompiler::emitTeeGlobal()
 {
     uint32_t id;
@@ -5935,41 +5949,7 @@ BaseCompiler::emitTeeGlobal()
     if (!iter_.readTeeGlobal(mg_.globals, &id, &unused_value))
         return false;
 
-    if (deadCode_)
-        return true;
-
-    const GlobalDesc& global = mg_.globals[id];
-
-    switch (global.type()) {
-      case ValType::I32: {
-        RegI32 rv = popI32();
-        storeGlobalVarI32(global.offset(), rv);
-        pushI32(rv);
-        break;
-      }
-      case ValType::I64: {
-        RegI64 rv = popI64();
-        storeGlobalVarI64(global.offset(), rv);
-        pushI64(rv);
-        break;
-      }
-      case ValType::F32: {
-        RegF32 rv = popF32();
-        storeGlobalVarF32(global.offset(), rv);
-        pushF32(rv);
-        break;
-      }
-      case ValType::F64: {
-        RegF64 rv = popF64();
-        storeGlobalVarF64(global.offset(), rv);
-        pushF64(rv);
-        break;
-      }
-      default:
-        MOZ_CRASH("Global variable type");
-        break;
-    }
-    return true;
+    return emitSetOrTeeGlobal<false>(id);
 }
 
 bool
@@ -6054,14 +6034,11 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
     return true;
 }
 
+template<bool isStore>
 bool
-BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
+BaseCompiler::emitStoreOrTeeStore(ValType resultType, Scalar::Type viewType,
+                                  LinearMemoryAddress<Nothing> addr)
 {
-    LinearMemoryAddress<Nothing> addr;
-    Nothing unused_value;
-    if (!iter_.readStore(resultType, Scalar::byteSize(viewType), &addr, &unused_value))
-        return false;
-
     if (deadCode_)
         return true;
 
@@ -6081,7 +6058,7 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
         if (!store(access, rp, AnyReg(rv), tmp1, tmp2))
             return false;
         freeI32(rp);
-        freeI32(rv);
+        freeOrPushI32<isStore>(rv);
         break;
       }
       case ValType::I64: {
@@ -6090,7 +6067,7 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
         if (!store(access, rp, AnyReg(rv), tmp1, tmp2))
             return false;
         freeI32(rp);
-        freeI64(rv);
+        freeOrPushI64<isStore>(rv);
         break;
       }
       case ValType::F32: {
@@ -6099,7 +6076,7 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
         if (!store(access, rp, AnyReg(rv), tmp1, tmp2))
             return false;
         freeI32(rp);
-        freeF32(rv);
+        freeOrPushF32<isStore>(rv);
         break;
       }
       case ValType::F64: {
@@ -6108,7 +6085,7 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
         if (!store(access, rp, AnyReg(rv), tmp1, tmp2))
             return false;
         freeI32(rp);
-        freeF64(rv);
+        freeOrPushF64<isStore>(rv);
         break;
       }
       default:
@@ -6125,6 +6102,17 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
 }
 
 bool
+BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
+{
+    LinearMemoryAddress<Nothing> addr;
+    Nothing unused_value;
+    if (!iter_.readStore(resultType, Scalar::byteSize(viewType), &addr, &unused_value))
+        return false;
+
+    return emitStoreOrTeeStore<true>(resultType, viewType, addr);
+}
+
+bool
 BaseCompiler::emitTeeStore(ValType resultType, Scalar::Type viewType)
 {
     LinearMemoryAddress<Nothing> addr;
@@ -6132,66 +6120,7 @@ BaseCompiler::emitTeeStore(ValType resultType, Scalar::Type viewType)
     if (!iter_.readTeeStore(resultType, Scalar::byteSize(viewType), &addr, &unused_value))
         return false;
 
-    if (deadCode_)
-        return true;
-
-    // TODO / OPTIMIZE (bug 1316831): Disable bounds checking on constant
-    // accesses below the minimum heap length.
-
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, trapIfNotAsmJS());
-
-    size_t temps = loadStoreTemps(access);
-    RegI32 tmp1 = temps >= 1 ? needI32() : invalidI32();
-    RegI32 tmp2 = temps >= 2 ? needI32() : invalidI32();
-
-    switch (resultType) {
-      case ValType::I32: {
-        RegI32 rp, rv;
-        pop2xI32(&rp, &rv);
-        if (!store(access, rp, AnyReg(rv), tmp1, tmp2))
-            return false;
-        freeI32(rp);
-        pushI32(rv);
-        break;
-      }
-      case ValType::I64: {
-        RegI64 rv = popI64();
-        RegI32 rp = popI32();
-        if (!store(access, rp, AnyReg(rv), tmp1, tmp2))
-            return false;
-        freeI32(rp);
-        pushI64(rv);
-        break;
-      }
-      case ValType::F32: {
-        RegF32 rv = popF32();
-        RegI32 rp = popI32();
-        if (!store(access, rp, AnyReg(rv), tmp1, tmp2))
-            return false;
-        freeI32(rp);
-        pushF32(rv);
-        break;
-      }
-      case ValType::F64: {
-        RegF64 rv = popF64();
-        RegI32 rp = popI32();
-        if (!store(access, rp, AnyReg(rv), tmp1, tmp2))
-            return false;
-        freeI32(rp);
-        pushF64(rv);
-        break;
-      }
-      default:
-        MOZ_CRASH("store type");
-        break;
-    }
-
-    if (temps >= 1)
-        freeI32(tmp1);
-    if (temps >= 2)
-        freeI32(tmp2);
-
-    return true;
+    return emitStoreOrTeeStore<false>(resultType, viewType, addr);
 }
 
 bool
