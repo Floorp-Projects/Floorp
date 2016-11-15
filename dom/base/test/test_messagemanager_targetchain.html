@@ -115,6 +115,7 @@
         SpecialPowers.pushPrefEnv({
           set: [
             ["dom.mozBrowserFramesEnabled", true],
+            ["network.disable.ipc.security", true],
             ["dom.ipc.browser_frames.oop_by_default", false],
           ]
         }, runTests);
