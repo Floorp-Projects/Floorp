@@ -46,7 +46,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(DOM_CALLBACKOBJECT_IID)
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CallbackObject)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(CallbackObject)
 
   // The caller may pass a global object which will act as an override for the
   // incumbent script settings object when the callback is invoked (overriding
@@ -178,6 +178,22 @@ protected:
     JSObject* otherObj = js::UncheckedUnwrap(wrappedOther);
     return thisObj == otherObj;
   }
+
+  class JSObjectsDropper final
+  {
+  public:
+    explicit JSObjectsDropper(CallbackObject* aHolder)
+      : mHolder(aHolder)
+    {}
+
+    ~JSObjectsDropper()
+    {
+      mHolder->DropJSObjects();
+    }
+
+  private:
+    RefPtr<CallbackObject> mHolder;
+  };
 
 private:
   inline void InitNoHold(JSObject* aCallback, JSObject* aCreationStack,
@@ -536,7 +552,9 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
-  CycleCollectionNoteChild(aCallback, aField.GetISupports(), aName, aFlags);
+  if (aField) {
+    CycleCollectionNoteChild(aCallback, aField.GetISupports(), aName, aFlags);
+  }
 }
 
 template<class T, class U>
