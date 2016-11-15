@@ -277,7 +277,7 @@ public:
     MOZ_ASSERT(aRecord);
   }
 
-  virtual void OpenComplete(GMPErr aStatus, GMPRecord* aRecord) override {
+  void OpenComplete(GMPErr aStatus, GMPRecord* aRecord) override {
     if (GMP_SUCCEEDED(aStatus)) {
       FakeDecryptor::Message("FAIL OpenSecondTimeContinuation should not be able to re-open record.");
     }
@@ -302,7 +302,7 @@ public:
                               const string& aTestID)
     : mID(aID), mTestmanager(aTestManager), mTestID(aTestID) {}
 
-  virtual void OpenComplete(GMPErr aStatus, GMPRecord* aRecord) override {
+  void OpenComplete(GMPErr aStatus, GMPRecord* aRecord) override {
     if (GMP_FAILED(aStatus)) {
       FakeDecryptor::Message("FAIL OpenAgainContinuation to open record initially.");
       mTestmanager->EndTest(mTestID);
@@ -379,8 +379,8 @@ class TestStorageTask : public GMPTask {
 public:
   TestStorageTask(const string& aPrefix, TestManager* aTestManager)
     : mPrefix(aPrefix), mTestManager(aTestManager) {}
-  virtual void Destroy() { delete this; }
-  virtual void Run() {
+  void Destroy() override { delete this; }
+  void Run() override {
     DoTestStorage(mPrefix, mTestManager);
   }
 private:
@@ -580,10 +580,10 @@ public:
     : mHost(aHost)
   {
   }
-  virtual void Run() {
+  void Run() override {
     mHost->ShutdownComplete();
   }
-  virtual void Destroy() { delete this; }
+  void Destroy() override { delete this; }
   GMPAsyncShutdownHost* mHost;
 };
 
