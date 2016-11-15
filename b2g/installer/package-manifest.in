@@ -774,8 +774,8 @@ bin/libfreebl_32int64_3.so
 #if defined(ENABLE_MARIONETTE) || !defined(MOZ_WIDGET_GONK)
 @RESPATH@/chrome/marionette@JAREXT@
 @RESPATH@/chrome/marionette.manifest
-@RESPATH@/components/MarionetteComponents.manifest
-@RESPATH@/components/marionettecomponent.js
+@RESPATH@/components/marionette.manifest
+@RESPATH@/components/marionette.js
 #endif
 @RESPATH@/components/AlertsService.js
 @RESPATH@/components/ContentPermissionPrompt.js
