@@ -160,8 +160,7 @@ EventObject::EventObject()
 : mIsSet(false)
 {}
 
-EventObject::~EventObject()
-{}
+EventObject::~EventObject() = default;
 
 bool
 EventObject::Peak()

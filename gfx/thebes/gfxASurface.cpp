@@ -466,7 +466,7 @@ static_assert(uint32_t(CAIRO_SURFACE_TYPE_SKIA) ==
 
 class SurfaceMemoryReporter final : public nsIMemoryReporter
 {
-    ~SurfaceMemoryReporter() {}
+    ~SurfaceMemoryReporter() = default;
 
     // We can touch this array on several different threads, and we don't
     // want to introduce memory barriers when recording the memory used.  To

@@ -181,9 +181,7 @@ gfxPatternDrawable::gfxPatternDrawable(gfxPattern* aPattern,
 {
 }
 
-gfxPatternDrawable::~gfxPatternDrawable()
-{
-}
+gfxPatternDrawable::~gfxPatternDrawable() = default;
 
 class DrawingCallbackFromDrawable : public gfxDrawingCallback {
 public:
@@ -192,7 +190,7 @@ public:
         NS_ASSERTION(aDrawable, "aDrawable is null!");
     }
 
-    virtual ~DrawingCallbackFromDrawable() {}
+    virtual ~DrawingCallbackFromDrawable() = default;
 
     virtual bool operator()(gfxContext* aContext,
                               const gfxRect& aFillRect,
