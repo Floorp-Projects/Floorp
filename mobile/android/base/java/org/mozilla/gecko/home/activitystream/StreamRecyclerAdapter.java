@@ -49,8 +49,10 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
             return TopPanel.LAYOUT_ID;
         } else if (position == 1) {
             return StreamItem.HighlightsTitle.LAYOUT_ID;
-        } else {
+        } else if (position < getItemCount()) {
             return HighlightItem.LAYOUT_ID;
+        } else {
+            throw new IllegalArgumentException("Requested position does not exist");
         }
     }
 
@@ -70,7 +72,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
     }
 
     private int translatePositionToCursor(int position) {
-        if (position == 0) {
+        if (getItemViewType(position) != HighlightItem.LAYOUT_ID) {
             throw new IllegalArgumentException("Requested cursor position for invalid item");
         }
 
