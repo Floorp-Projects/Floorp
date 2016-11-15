@@ -17,8 +17,6 @@
 #include "nsDataHashtable.h"
 #include "nsThreadUtils.h"
 
-class GMPCrashHelper;
-
 namespace mozilla
 {
 
@@ -32,6 +30,7 @@ class ReentrantMonitor;
 class VideoFrameContainer;
 class MediaDecoderOwner;
 class CDMProxy;
+class GMPCrashHelper;
 
 typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
 

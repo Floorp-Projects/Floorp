@@ -14,7 +14,7 @@
 #include "mozilla/layers/KnowsCompositor.h"
 #include "nsTArray.h"
 #include "mozilla/RefPtr.h"
-#include "GMPService.h"
+#include "GMPCrashHelper.h"
 #include <queue>
 #include "MediaResult.h"
 
