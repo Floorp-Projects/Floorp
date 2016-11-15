@@ -169,6 +169,7 @@ SpecialPowers.pushPermissions([
                                       ["dom.presentation.test.enabled", true],
                                       ["dom.mozBrowserFramesEnabled", true],
                                       ["dom.ipc.tabs.disabled", false],
+                                      ["network.disable.ipc.security", true],
                                       ["dom.presentation.test.stage", 0]]},
                             runTests);
 });

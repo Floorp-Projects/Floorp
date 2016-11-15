@@ -69,6 +69,7 @@ function* mozBrowserTests(browser) {
   info("Granting special powers for mozbrowser");
   SpecialPowers.addPermission("browser", true, TEST_URI);
   SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
+  SpecialPowers.setBoolPref('network.disable.ipc.security', true);
 
   yield ContentTask.spawn(browser, null, function() {
     info("Checking mozbrowser iframe");
@@ -82,6 +83,7 @@ function* mozBrowserTests(browser) {
   });
 
   info("Revoking special powers for mozbrowser");
-  SpecialPowers.clearUserPref('dom.mozBrowserFramesEnabled')
+  SpecialPowers.clearUserPref('dom.mozBrowserFramesEnabled');
+  SpecialPowers.clearUserPref('network.disable.ipc.security');
   SpecialPowers.removePermission("browser", TEST_URI);
 }

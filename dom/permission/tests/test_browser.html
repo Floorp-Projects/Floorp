@@ -37,7 +37,8 @@ var gData = [
   {
     perm: ["browser"],
     needParentPerm: true,
-    settings: [["dom.mozBrowserFramesEnabled", true]],
+    settings: [["dom.mozBrowserFramesEnabled", true],
+               ["network.disable.ipc.security", true]],
     verifier: verifier.toSource(),
   }
 ]

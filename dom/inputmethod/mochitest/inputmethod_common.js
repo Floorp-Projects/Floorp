@@ -9,6 +9,7 @@ function inputmethod_setup(callback) {
 
   let prefs = [
     ['dom.mozBrowserFramesEnabled', true],
+    ['network.disable.ipc.security', true],
     // Enable navigator.mozInputMethod.
     ['dom.mozInputMethod.enabled', true]
   ];
