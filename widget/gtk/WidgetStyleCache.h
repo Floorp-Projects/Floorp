@@ -28,7 +28,6 @@ GetWidget(WidgetNodeType aNodeType);
 GtkStyleContext*
 CreateStyleForWidget(GtkWidget* aWidget, GtkStyleContext* aParentStyle);
 
-// CreateCSSNode is implemented for gtk >= 3.20 only.
 GtkStyleContext*
 CreateCSSNode(const char*      aName,
               GtkStyleContext* aParentStyle,
