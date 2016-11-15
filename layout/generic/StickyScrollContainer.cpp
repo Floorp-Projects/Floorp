@@ -283,16 +283,7 @@ StickyScrollContainer::GetScrollRanges(nsIFrame* aFrame, nsRect* aOuter,
   aOuter->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
   aInner->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
 
-  // Due to margin collapsing, |firstCont->GetNormalPosition()| can sometimes
-  // fall outside of |contain|. (This is because GetNormalPosition() returns
-  // the actual position after margin collapsing, while|contain| is
-  // calculated based on the frame's GetUsedMargin() which is pre-collapsing.)
-  // This can cause |aInner|, as computed below, to not be contained inside
-  // |aOuter|, which confuses the code that consumes these values.
-  // This is hard to fix properly (TODO), but clamping |normalPosition| to
-  // |contain| works around it.
-  const nsPoint normalPosition =
-      contain.ClampPoint(firstCont->GetNormalPosition());
+  const nsPoint normalPosition = firstCont->GetNormalPosition();
 
   // Bottom and top
   if (stick.YMost() != nscoord_MAX/2) {
@@ -315,6 +306,17 @@ StickyScrollContainer::GetScrollRanges(nsIFrame* aFrame, nsRect* aOuter,
     aInner->SetRightEdge(normalPosition.x - stick.x);
     aOuter->SetRightEdge(contain.XMost() - stick.x);
   }
+
+  // Make sure |inner| does not extend outside of |outer|. (The consumers of
+  // the Layers API, to which this information is propagated, expect this
+  // invariant to hold.) The calculated value of |inner| can sometimes extend
+  // outside of |outer|, for example due to margin collapsing, since
+  // GetNormalPosition() returns the actual position after margin collapsing,
+  // while |contain| is calculated based on the frame's GetUsedMargin() which
+  // is pre-collapsing.
+  // Note that this doesn't necessarily solve all problems stemming from
+  // comparing pre- and post-collapsing margins (TODO: find a proper solution).
+  *aInner = aInner->Intersect(*aOuter);
 }
 
 void
