@@ -9,6 +9,7 @@ from marionette import MarionetteTestCase, skip
 
 class TestClickScrolling(MarionetteTestCase):
 
+
     def test_clicking_on_anchor_scrolls_page(self):
         scrollScript = """
             var pageY;
@@ -64,9 +65,13 @@ class TestClickScrolling(MarionetteTestCase):
         test_html = self.marionette.absolute_url("scroll3.html")
         self.marionette.navigate(test_html)
 
-        self.marionette.find_element(By.ID, "button1").click()
+        button1 = self.marionette.find_element(By.ID, "button1")
+        button2 = self.marionette.find_element(By.ID, "button2")
+
+        button2.click()
         scroll_top = self.marionette.execute_script("return document.body.scrollTop;")
-        self.marionette.find_element(By.ID, "button2").click()
+        button1.click()
+
         self.assertEqual(scroll_top, self.marionette.execute_script("return document.body.scrollTop;"))
 
     def test_should_be_able_to_click_radio_button_scrolled_into_view(self):
