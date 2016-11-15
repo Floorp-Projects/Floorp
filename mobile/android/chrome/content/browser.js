@@ -5918,9 +5918,10 @@ var IdentityHandler = {
     if (this._lastLocation.hostname &&
         this._overrideService.hasMatchingOverride(this._lastLocation.hostname,
                                                   (this._lastLocation.port || 443),
-                                                  iData.cert, {}, {}))
+                                                  iData.cert, {}, {})) {
       result.verifier = Strings.browser.GetStringFromName("identity.identified.verified_by_you");
-
+      result.securityException = true;
+    }
     return result;
   },
 
