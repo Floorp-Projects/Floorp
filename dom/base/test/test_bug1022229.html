@@ -24,6 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022229
        chunk in iframe_main as well. */
     /*
     SpecialPowers.Services.prefs.setBoolPref("dom.mozBrowserFramesEnabled", true);
+    SpecialPowers.Services.prefs.setBoolPref("network.disable.ipc.security", true);
     SpecialPowers.Services.prefs.setBoolPref("dom.ipc.browser_frames.oop_by_default", false);
     SpecialPowers.addPermission("browser", true, document);
     SpecialPowers.wrap(ifr).mozbrowser = true;

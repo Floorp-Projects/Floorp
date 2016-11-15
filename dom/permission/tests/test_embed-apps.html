@@ -50,7 +50,8 @@ var gData = [
      * which returns APP_STATUS_NOT_INSTALLED
      */
     skip: ["Android", "Mobile"],
-    settings: [["dom.mozBrowserFramesEnabled", true]],
+    settings: [["dom.mozBrowserFramesEnabled", true],
+               ["network.disable.ipc.security", true]],
     verifier: verifier.toSource(),
   }
 ]
