@@ -38,7 +38,7 @@ friend class FrameChildListIterator;
   bool operator==(FrameChildListIDs aOther) const {
     return mIDs == aOther.mIDs;
   }
-  bool operator!=(FrameChildListIDs aOther) const {
+  bool operator!=(const FrameChildListIDs& aOther) const {
     return !(*this == aOther);
   }
   bool Contains(FrameChildListIDs aOther) const {
@@ -106,7 +106,7 @@ operator|(mozilla::layout::FrameChildListID aLeftOp,
 
 inline mozilla::layout::FrameChildListIDs
 operator|(mozilla::layout::FrameChildListID aLeftOp,
-          mozilla::layout::FrameChildListIDs aRightOp)
+          const mozilla::layout::FrameChildListIDs& aRightOp)
 {
   return mozilla::layout::FrameChildListIDs(aLeftOp) | aRightOp;
 }
