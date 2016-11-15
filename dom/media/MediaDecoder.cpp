@@ -31,7 +31,7 @@
 #include "mozilla/dom/VideoTrackList.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Telemetry.h"
-#include "GMPService.h"
+#include "GMPCrashHelper.h"
 #include "Layers.h"
 #include "mozilla/layers/ShadowLayers.h"
 
