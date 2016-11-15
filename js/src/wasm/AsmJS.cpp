@@ -1658,6 +1658,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
     // State used to build the AsmJSModule in finish():
     ModuleGenerator       mg_;
+    ExportVector          exports_;
     MutableAsmJSMetadata  asmJSMetadata_;
 
     // Error reporting:
@@ -2140,8 +2141,8 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
 
         // Declare which function is exported which gives us an index into the
-        // module FuncExportVector.
-        if (!mg_.addFuncExport(Move(fieldChars), func.index()))
+        // module ExportVector.
+        if (!exports_.emplaceBack(Move(fieldChars), func.index(), DefinitionKind::Function))
             return false;
 
         // The exported function might have already been exported in which case
@@ -2355,6 +2356,9 @@ class MOZ_STACK_CLASS ModuleValidator
     SharedModule finish() {
         if (!arrayViews_.empty())
             mg_.initMemoryUsage(atomicsPresent_ ? MemoryUsage::Shared : MemoryUsage::Unshared);
+
+        if (!mg_.setExports(Move(exports_)))
+            return nullptr;
 
         asmJSMetadata_->usesSimd = simdPresent_;
 

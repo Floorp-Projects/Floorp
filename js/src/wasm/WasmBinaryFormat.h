@@ -624,12 +624,6 @@ class Decoder
 
 // Misc helpers.
 
-UniqueChars
-DecodeName(Decoder& d);
-
-MOZ_MUST_USE bool
-GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable);
-
 MOZ_MUST_USE bool
 EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
 
@@ -665,6 +659,10 @@ DecodeMemorySection(Decoder& d, bool hasMemory, Limits* memory, bool* present);
 
 MOZ_MUST_USE bool
 DecodeGlobalSection(Decoder& d, GlobalDescVector* globals);
+
+MOZ_MUST_USE bool
+DecodeExportSection(Decoder& d, size_t numFuncs, size_t numTables, bool usesMemory,
+                    const GlobalDescVector& globals, ExportVector* exports);
 
 MOZ_MUST_USE bool
 DecodeUnknownSections(Decoder& d);

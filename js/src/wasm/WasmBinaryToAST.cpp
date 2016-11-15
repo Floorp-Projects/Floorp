@@ -1439,18 +1439,19 @@ AstDecodeTypeSection(AstDecodeContext& c, SigWithIdVector* sigs)
     return true;
 }
 
-static AstName
-ToAstName(AstDecodeContext& c, const UniqueChars& name)
+static bool
+ToAstName(AstDecodeContext& c, const char* name, AstName* out)
 {
-    size_t len = strlen(name.get());
+    size_t len = strlen(name);
     char16_t* buffer = static_cast<char16_t *>(c.lifo.alloc(len * sizeof(char16_t)));
     if (!buffer)
-        return AstName();
+        return false;
 
     for (size_t i = 0; i < len; i++)
-        buffer[i] = name.get()[i];
+        buffer[i] = name[i];
 
-    return AstName(buffer, len);
+    *out = AstName(buffer, len);
+    return true;
 }
 
 static bool
@@ -1471,8 +1472,12 @@ AstDecodeImportSection(AstDecodeContext& c, const SigWithIdVector& sigs, TableDe
     for (size_t importIndex = 0; importIndex < imports.length(); importIndex++) {
         const Import& import = imports[importIndex];
 
-        AstName moduleName = ToAstName(c, import.module);
-        AstName fieldName = ToAstName(c, import.field);
+        AstName moduleName;
+        if (!ToAstName(c, import.module.get(), &moduleName))
+            return false;
+        AstName fieldName;
+        if (!ToAstName(c, import.field.get(), &fieldName))
+            return false;
 
         AstImport* ast = nullptr;
         switch (import.kind) {
@@ -1570,25 +1575,6 @@ AstDecodeTableSection(AstDecodeContext& c, TableDescVector* tables)
 }
 
 static bool
-AstDecodeName(AstDecodeContext& c, AstName* name)
-{
-    uint32_t length;
-    if (!c.d.readVarU32(&length))
-        return false;
-
-    const uint8_t* bytes;
-    if (!c.d.readBytes(length, &bytes))
-        return false;
-
-    char16_t* buffer = static_cast<char16_t *>(c.lifo.alloc(length * sizeof(char16_t)));
-    for (size_t i = 0; i < length; i++)
-        buffer[i] = bytes[i];
-
-    *name = AstName(buffer, length);
-    return true;
-}
-
-static bool
 AstDecodeMemorySection(AstDecodeContext& c)
 {
     bool present;
@@ -1664,53 +1650,33 @@ AstDecodeGlobalSection(AstDecodeContext& c)
 }
 
 static bool
-AstDecodeExport(AstDecodeContext& c, AstExport** export_)
-{
-    AstName fieldName;
-    if (!AstDecodeName(c, &fieldName))
-        return c.d.fail("expected export name");
-
-    uint32_t kindValue;
-    if (!c.d.readVarU32(&kindValue))
-        return c.d.fail("expected export kind");
-
-    uint32_t index;
-    if (!c.d.readVarU32(&index))
-        return c.d.fail("expected export internal index");
-
-    *export_ = new(c.lifo) AstExport(fieldName, DefinitionKind(kindValue), AstRef(index));
-    if (!*export_)
-        return false;
-
-    return true;
-}
-
-static bool
 AstDecodeExportSection(AstDecodeContext& c)
 {
-    uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(SectionId::Export, &sectionStart, &sectionSize, "export"))
+    const AstModule& m = c.module();
+    size_t numFuncs = m.numFuncImports() + c.funcDefSigs().length();
+
+    ExportVector exports;
+    if (!DecodeExportSection(c.d, numFuncs, m.tables().length(), m.hasMemory(), c.globalDescs(),
+                             &exports))
         return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
 
-    uint32_t numExports;
-    if (!c.d.readVarU32(&numExports))
-        return c.d.fail("failed to read number of exports");
+    for (const Export& exp : exports) {
+        size_t index;
+        switch (exp.kind()) {
+          case DefinitionKind::Function: index = exp.funcIndex(); break;
+          case DefinitionKind::Global: index = exp.globalIndex(); break;
+          case DefinitionKind::Memory: index = 0; break;
+          case DefinitionKind::Table: index = 0; break;
+        }
 
-    if (numExports > MaxExports)
-        return c.d.fail("too many exports");
-
-    for (uint32_t i = 0; i < numExports; i++) {
-        AstExport* export_ = nullptr;
-        if (!AstDecodeExport(c, &export_))
+        AstName name;
+        if (!ToAstName(c, exp.fieldName(), &name))
             return false;
-        if (!c.module().append(export_))
+
+        AstExport* e = new(c.lifo) AstExport(name, exp.kind(), AstRef(index));
+        if (!e || !c.module().append(e))
             return false;
     }
-
-    if (!c.d.finishSection(sectionStart, sectionSize, "export"))
-        return false;
 
     return true;
 }

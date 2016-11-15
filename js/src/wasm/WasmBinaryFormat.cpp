@@ -140,8 +140,8 @@ wasm::DecodeTypeSection(Decoder& d, SigWithIdVector* sigs)
     return true;
 }
 
-UniqueChars
-wasm::DecodeName(Decoder& d)
+static UniqueChars
+DecodeName(Decoder& d)
 {
     uint32_t numBytes;
     if (!d.readVarU32(&numBytes))
@@ -226,8 +226,8 @@ DecodeTableLimits(Decoder& d, TableDescVector* tables)
     return tables->emplaceBack(TableKind::AnyFunction, limits);
 }
 
-bool
-wasm::GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable)
+static bool
+GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable)
 {
     switch (type) {
       case ValType::I32:
@@ -499,6 +499,125 @@ wasm::DecodeGlobalSection(Decoder& d, GlobalDescVector* globals)
     }
 
     if (!d.finishSection(sectionStart, sectionSize, "global"))
+        return false;
+
+    return true;
+}
+
+typedef HashSet<const char*, CStringHasher, SystemAllocPolicy> CStringSet;
+
+static UniqueChars
+DecodeExportName(Decoder& d, CStringSet* dupSet)
+{
+    UniqueChars exportName = DecodeName(d);
+    if (!exportName) {
+        d.fail("expected valid export name");
+        return nullptr;
+    }
+
+    CStringSet::AddPtr p = dupSet->lookupForAdd(exportName.get());
+    if (p) {
+        d.fail("duplicate export");
+        return nullptr;
+    }
+
+    if (!dupSet->add(p, exportName.get()))
+        return nullptr;
+
+    return Move(exportName);
+}
+
+static bool
+DecodeExport(Decoder& d, size_t numFuncs, size_t numTables, bool usesMemory,
+             const GlobalDescVector& globals, ExportVector* exports, CStringSet* dupSet)
+{
+    UniqueChars fieldName = DecodeExportName(d, dupSet);
+    if (!fieldName)
+        return false;
+
+    uint32_t exportKind;
+    if (!d.readVarU32(&exportKind))
+        return d.fail("failed to read export kind");
+
+    switch (DefinitionKind(exportKind)) {
+      case DefinitionKind::Function: {
+        uint32_t funcIndex;
+        if (!d.readVarU32(&funcIndex))
+            return d.fail("expected function index");
+
+        if (funcIndex >= numFuncs)
+            return d.fail("exported function index out of bounds");
+
+        return exports->emplaceBack(Move(fieldName), funcIndex, DefinitionKind::Function);
+      }
+      case DefinitionKind::Table: {
+        uint32_t tableIndex;
+        if (!d.readVarU32(&tableIndex))
+            return d.fail("expected table index");
+
+        if (tableIndex >= numTables)
+            return d.fail("exported table index out of bounds");
+
+        return exports->emplaceBack(Move(fieldName), DefinitionKind::Table);
+      }
+      case DefinitionKind::Memory: {
+        uint32_t memoryIndex;
+        if (!d.readVarU32(&memoryIndex))
+            return d.fail("expected memory index");
+
+        if (memoryIndex > 0 || !usesMemory)
+            return d.fail("exported memory index out of bounds");
+
+        return exports->emplaceBack(Move(fieldName), DefinitionKind::Memory);
+      }
+      case DefinitionKind::Global: {
+        uint32_t globalIndex;
+        if (!d.readVarU32(&globalIndex))
+            return d.fail("expected global index");
+
+        if (globalIndex >= globals.length())
+            return d.fail("exported global index out of bounds");
+
+        const GlobalDesc& global = globals[globalIndex];
+        if (!GlobalIsJSCompatible(d, global.type(), global.isMutable()))
+            return false;
+
+        return exports->emplaceBack(Move(fieldName), globalIndex, DefinitionKind::Global);
+      }
+      default:
+        return d.fail("unexpected export kind");
+    }
+
+    MOZ_CRASH("unreachable");
+}
+
+bool
+wasm::DecodeExportSection(Decoder& d, size_t numFuncs, size_t numTables, bool usesMemory,
+                          const GlobalDescVector& globals, ExportVector* exports)
+{
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(SectionId::Export, &sectionStart, &sectionSize, "export"))
+        return false;
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    CStringSet dupSet;
+    if (!dupSet.init())
+        return false;
+
+    uint32_t numExports;
+    if (!d.readVarU32(&numExports))
+        return d.fail("failed to read number of exports");
+
+    if (numExports > MaxExports)
+        return d.fail("too many exports");
+
+    for (uint32_t i = 0; i < numExports; i++) {
+        if (!DecodeExport(d, numFuncs, numTables, usesMemory, globals, exports, &dupSet))
+            return false;
+    }
+
+    if (!d.finishSection(sectionStart, sectionSize, "export"))
         return false;
 
     return true;
