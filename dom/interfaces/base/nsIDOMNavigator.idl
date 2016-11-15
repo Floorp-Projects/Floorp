@@ -11,16 +11,10 @@ interface nsIIdleObserver;
 interface nsIDOMNavigator : nsISupports
 {
   readonly attribute DOMString             appCodeName;
-  readonly attribute DOMString             appName;
-  readonly attribute DOMString             appVersion;
   readonly attribute DOMString             language;
-  readonly attribute DOMString             platform;
-  readonly attribute DOMString             oscpu;
   readonly attribute DOMString             vendor;
   readonly attribute DOMString             vendorSub;
   readonly attribute DOMString             product;
   readonly attribute DOMString             productSub;
-  readonly attribute DOMString             userAgent;
-  readonly attribute DOMString             buildID;
   readonly attribute DOMString             doNotTrack;
 };
