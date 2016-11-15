@@ -10,6 +10,7 @@
 #include "nsContentList.h"
 #include "nsCOMPtr.h"
 #include "HTMLFormElement.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 #define MOZILLA_DOM_RADIONODELIST_IMPLEMENTATION_IID \
   { 0xbba7f3e8, 0xf3b5, 0x42e5, \
@@ -24,8 +25,8 @@ public:
   explicit RadioNodeList(HTMLFormElement* aForm) : nsSimpleContentList(aForm) { }
 
   virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
-  void GetValue(nsString& retval);
-  void SetValue(const nsAString& value);
+  void GetValue(nsString& retval, CallerType aCallerType);
+  void SetValue(const nsAString& value, CallerType aCallerType);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_RADIONODELIST_IMPLEMENTATION_IID)
