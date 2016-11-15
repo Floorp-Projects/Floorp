@@ -81,3 +81,13 @@ pref(layers.single-tile.enabled,false) != fast-scrolling.html about:blank
 
 == mask-invalidation-1a.html mask-invalidation-1-ref.html
 == mask-invalidation-1b.html mask-invalidation-1-ref.html
+
+== mask-invalidation-2a.html mask-invalidation-2-ref.html
+== mask-invalidation-2b.html mask-invalidation-2-ref.html
+== mask-invalidation-2c.html mask-invalidation-2-ref.html
+== mask-invalidation-2d.html mask-invalidation-2-ref.html
+
+== clip-path-invalidation-1a.html mask-invalidation-2-ref.html
+== clip-path-invalidation-1b.html mask-invalidation-2-ref.html
+== clip-path-invalidation-1c.html mask-invalidation-2-ref.html
+== clip-path-invalidation-1d.html mask-invalidation-2-ref.html
