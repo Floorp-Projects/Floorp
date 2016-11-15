@@ -117,13 +117,6 @@ interface nsIDOMDataTransfer : nsISupports
   attribute DOMString mozCursor;
 
   /**
-   * Holds a list of the format types of the data that is stored for an item
-   * at the specified index. If the index is not in the range from 0 to
-   * itemCount - 1, an empty string list is returned.
-   */
-  nsISupports mozTypesAt(in unsigned long index);
-
-  /**
    * Will be true when the user has cancelled the drag (typically by pressing
    * Escape) and when the drag has been cancelled unexpectedly.  This will be
    * false otherwise, including when the drop has been rejected by its target.
