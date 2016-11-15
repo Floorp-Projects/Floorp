@@ -35,12 +35,8 @@ class TestCapabilities(MarionetteTestCase):
     def test_supported_features(self):
         self.assertIn("rotatable", self.caps)
         self.assertIn("acceptSslCerts", self.caps)
-        self.assertIn("takesElementScreenshot", self.caps)
-        self.assertIn("takesScreenshot", self.caps)
 
         self.assertFalse(self.caps["acceptSslCerts"])
-        self.assertTrue(self.caps["takesElementScreenshot"])
-        self.assertTrue(self.caps["takesScreenshot"])
 
     def test_we_can_pass_in_capabilities_on_session_start(self):
         self.marionette.delete_session()
