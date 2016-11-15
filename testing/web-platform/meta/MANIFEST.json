@@ -38751,6 +38751,12 @@
             "url": "/web-animations/animation-model/animation-types/spacing-keyframes-shapes.html"
           }
         ],
+        "web-animations/animation-model/animation-types/spacing-keyframes-transform.html": [
+          {
+            "path": "web-animations/animation-model/animation-types/spacing-keyframes-transform.html",
+            "url": "/web-animations/animation-model/animation-types/spacing-keyframes-transform.html"
+          }
+        ],
         "web-animations/interfaces/KeyframeEffect/copy-contructor.html": [
           {
             "path": "web-animations/interfaces/KeyframeEffect/copy-contructor.html",
