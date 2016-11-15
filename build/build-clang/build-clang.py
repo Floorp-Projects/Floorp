@@ -82,7 +82,7 @@ def build_tar_package(tar, name, base, directory):
         name = name.replace('\\', '/')
         def f(match):
             return '/' + match.group(1).lower()
-        name = re.sub(r'^([A-Z]):', f, name)
+        name = re.sub(r'^([A-Za-z]):', f, name)
     run_in(base, [tar,
                   "-c",
                   "-%s" % ("J" if ".xz" in name else "j"),
