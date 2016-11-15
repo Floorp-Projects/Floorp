@@ -96,12 +96,7 @@ interface nsIDOMHTMLInputElement : nsISupports
   readonly attribute nsIControllers        controllers;	
 	readonly attribute long                  textLength;
 
-  void mozGetFileNameArray([optional] out unsigned long aLength,
-                           [array,size_is(aLength), retval] out wstring aFileNames);
-  void mozSetFileNameArray([array,size_is(aLength)] in wstring aFileNames,
-                           in unsigned long aLength);
-
-    /**
+  /**
    * This non-standard method prevents to check types manually to know if the
    * element is a text field.
    */
