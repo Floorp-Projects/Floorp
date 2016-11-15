@@ -115,7 +115,10 @@ SimpleTest.waitForExplicitFinish();
 // have to disable mixed content blocking to test https->http referrers.
 SpecialPowers.pushPrefEnv({
     'set': [['security.mixed_content.block_active_content',   false],
-            ['security.mixed_content.block_display_content',  false]]
+            ['security.mixed_content.block_display_content',  false],
+            ['security.mixed_content.send_hsts_priming',  false],
+            ['security.mixed_content.use_hsts',  false],
+    ]
     },
     function() {
       // each of the iframes we create will call us back when its contents are loaded.
