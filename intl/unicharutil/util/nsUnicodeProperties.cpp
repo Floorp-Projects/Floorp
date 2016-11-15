@@ -56,16 +56,18 @@ GetCharProps2(uint32_t aCh)
     static const nsCharProps2 undefined = {
 #if ENABLE_INTL_API
         VERTICAL_ORIENTATION_R,
-        XIDMOD_NOT_CHARS
+        0 // IdentifierType
 #else
         uint8_t(Script::UNKNOWN),
         PAIRED_BRACKET_TYPE_NONE,
         0, // EastAsianWidthFWH
         HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED,
+        0, // IdentifierType
+        0, // DefaultIgnorable
         eCharType_LeftToRight,
-        XIDMOD_NOT_CHARS,
-        -1, // Numeric Value
-        VERTICAL_ORIENTATION_R
+        VERTICAL_ORIENTATION_R,
+        0, // LineBreak
+        -1 // Numeric Value
 #endif
     };
     return undefined;
@@ -300,6 +302,7 @@ bool IsEastAsianWidthFWH(uint32_t aCh)
 {
     return GetCharProps2(aCh).mEastAsianWidthFWH;
 }
+
 #endif
 
 #define DEFINE_BMP_1PLANE_MAPPING_GET_FUNC(prefix_) \

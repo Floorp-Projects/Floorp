@@ -168,6 +168,8 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
 
         mIsAttached = true;
 
+        mSiteIdentityPopup.registerListeners();
+
         mSiteSecurity.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -194,6 +196,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         mIsAttached = false;
+        mSiteIdentityPopup.unregisterListeners();
     }
 
     @Override

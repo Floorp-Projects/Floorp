@@ -289,6 +289,7 @@ class nsWindow::GeckoViewSupport final
 public:
     typedef GeckoView::Window::Natives<GeckoViewSupport> Base;
     typedef GeckoEditable::Natives<GeckoViewSupport> EditableBase;
+    typedef SupportsWeakPtr<GeckoViewSupport> SupportsWeakPtr;
 
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GeckoViewSupport);
 
@@ -325,8 +326,9 @@ public:
         , mIMETextChangedDuringFlush(false)
         , mIMEMonitorCursor(false)
     {
-        Base::AttachNative(aInstance, this);
-        EditableBase::AttachNative(mEditable, this);
+        Base::AttachNative(aInstance, static_cast<SupportsWeakPtr*>(this));
+        EditableBase::AttachNative(
+                mEditable, static_cast<SupportsWeakPtr*>(this));
     }
 
     ~GeckoViewSupport();
@@ -345,6 +347,7 @@ public:
     static void Open(const jni::Class::LocalRef& aCls,
                      GeckoView::Window::Param aWindow,
                      GeckoView::Param aView, jni::Object::Param aCompositor,
+                     jni::Object::Param aDispatcher,
                      jni::String::Param aChromeURI,
                      int32_t screenId);
 
@@ -353,7 +356,8 @@ public:
 
     // Reattach this nsWindow to a new GeckoView.
     void Reattach(const GeckoView::Window::LocalRef& inst,
-                  GeckoView::Param aView, jni::Object::Param aCompositor);
+                  GeckoView::Param aView, jni::Object::Param aCompositor,
+                  jni::Object::Param aDispatcher);
 
     void LoadUri(jni::String::Param aUri, int32_t aFlags);
 
@@ -930,6 +934,10 @@ public:
 template<> const char
 nsWindow::NativePtr<nsWindow::NPZCSupport>::sName[] = "NPZCSupport";
 
+NS_IMPL_ISUPPORTS(nsWindow::AndroidView,
+                  nsIAndroidEventDispatcher,
+                  nsIAndroidView)
+
 /**
  * Compositor has some unique requirements for its native calls, so make it
  * separate from GeckoViewSupport.
@@ -1318,6 +1326,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
                                  GeckoView::Window::Param aWindow,
                                  GeckoView::Param aView,
                                  jni::Object::Param aCompositor,
+                                 jni::Object::Param aDispatcher,
                                  jni::String::Param aChromeURI,
                                  int32_t aScreenId)
 {
@@ -1339,9 +1348,13 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
         }
     }
 
+    RefPtr<AndroidView> androidView = new AndroidView();
+    androidView->mEventDispatcher->Attach(
+            java::EventDispatcher::Ref::From(aDispatcher), nullptr);
+
     nsCOMPtr<mozIDOMWindowProxy> domWindow;
     ww->OpenWindow(nullptr, url, nullptr, "chrome,dialog=0,resizable,scrollbars=yes",
-                   nullptr, getter_AddRefs(domWindow));
+                   androidView, getter_AddRefs(domWindow));
     MOZ_RELEASE_ASSERT(domWindow);
 
     nsCOMPtr<nsPIDOMWindowOuter> pdomWindow =
@@ -1363,6 +1376,11 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
             aCls.Env(), LayerView::Compositor::Ref::From(aCompositor));
     window->mLayerViewSupport.Attach(compositor, window, compositor);
 
+    // Attach again using the new window.
+    androidView->mEventDispatcher->Attach(
+            java::EventDispatcher::Ref::From(aDispatcher), pdomWindow);
+    window->mAndroidView = androidView;
+
     if (window->mWidgetListener) {
         nsCOMPtr<nsIXULWindow> xulWindow(
                 window->mWidgetListener->GetXULWindow());
@@ -1377,6 +1395,10 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
 void
 nsWindow::GeckoViewSupport::Close()
 {
+    if (window.mAndroidView) {
+        window.mAndroidView->mEventDispatcher->Detach();
+    }
+
     if (!mDOMWindow) {
         return;
     }
@@ -1388,7 +1410,8 @@ nsWindow::GeckoViewSupport::Close()
 void
 nsWindow::GeckoViewSupport::Reattach(const GeckoView::Window::LocalRef& inst,
                                      GeckoView::Param aView,
-                                     jni::Object::Param aCompositor)
+                                     jni::Object::Param aCompositor,
+                                     jni::Object::Param aDispatcher)
 {
     // Associate our previous GeckoEditable with the new GeckoView.
     mEditable->OnViewChange(aView);
@@ -1406,6 +1429,10 @@ nsWindow::GeckoViewSupport::Reattach(const GeckoView::Window::LocalRef& inst,
             inst.Env(), LayerView::Compositor::Ref::From(aCompositor));
     window.mLayerViewSupport.Attach(compositor, &window, compositor);
     compositor->Reattach();
+
+    MOZ_ASSERT(window.mAndroidView);
+    window.mAndroidView->mEventDispatcher->Attach(
+            java::EventDispatcher::Ref::From(aDispatcher), mDOMWindow);
 }
 
 void

@@ -42,7 +42,6 @@ PageMenu.prototype = {
       return null;
     }
 
-    pageMenu.QueryInterface(Components.interfaces.nsIHTMLMenu);
     pageMenu.sendShowEvent();
     // the show event is not cancelable, so no need to check a result here
 

@@ -9,15 +9,15 @@
 
 #include "mozilla/Attributes.h"
 #include "nsIDOMHTMLMenuElement.h"
-#include "nsIHTMLMenu.h"
 #include "nsGenericHTMLElement.h"
+
+class nsIMenuBuilder;
 
 namespace mozilla {
 namespace dom {
 
 class HTMLMenuElement final : public nsGenericHTMLElement,
-                              public nsIDOMHTMLMenuElement,
-                              public nsIHTMLMenu
+                              public nsIDOMHTMLMenuElement
 {
 public:
   explicit HTMLMenuElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
@@ -29,9 +29,6 @@ public:
 
   // nsIDOMHTMLMenuElement
   NS_DECL_NSIDOMHTMLMENUELEMENT
-
-  // nsIHTMLMenu
-  NS_DECL_NSIHTMLMENU
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -65,11 +62,11 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::compact, aCompact, aError);
   }
 
-  // The XPCOM SendShowEvent is OK for us
+  void SendShowEvent();
 
   already_AddRefed<nsIMenuBuilder> CreateBuilder();
 
-  // The XPCOM Build is OK for us
+  void Build(nsIMenuBuilder* aBuilder);
 
 protected:
   virtual ~HTMLMenuElement();

@@ -3,7 +3,13 @@ const DIRECTORY_PATH = "/browser/toolkit/components/passwordmgr/test/browser/";
 Cu.import("resource://testing-common/LoginTestUtils.jsm", this);
 Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
+add_task(function* common_initialize() {
+  yield SpecialPowers.pushPrefEnv({"set": [["signon.rememberSignons", true]]});
+});
+
 registerCleanupFunction(function* cleanup_removeAllLoginsAndResetRecipes() {
+  yield SpecialPowers.popPrefEnv();
+
   Services.logins.removeAllLogins();
 
   let recipeParent = LoginTestUtils.recipes.getRecipeParent();

@@ -12,6 +12,7 @@
 #include "nsIIdleServiceInternal.h"
 #include "nsTArray.h"
 #include "AndroidJavaWrappers.h"
+#include "EventDispatcher.h"
 #include "GeneratedJNIWrappers.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Mutex.h"
@@ -95,6 +96,24 @@ private:
         void Attach(Instance aInstance, nsWindow* aWindow, Args&&... aArgs);
         void Detach();
     };
+
+    class AndroidView final : public nsIAndroidView
+    {
+        virtual ~AndroidView() {}
+
+    public:
+        const RefPtr<mozilla::widget::EventDispatcher> mEventDispatcher{
+            new mozilla::widget::EventDispatcher()};
+
+        AndroidView() {}
+
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIANDROIDVIEW
+
+        NS_FORWARD_NSIANDROIDEVENTDISPATCHER(mEventDispatcher->)
+    };
+
+    RefPtr<AndroidView> mAndroidView;
 
     class LayerViewSupport;
     // Object that implements native LayerView calls.

@@ -219,6 +219,7 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
   if (pipe_ == INVALID_HANDLE_VALUE) {
     // If this process is being closed, the pipe may be gone already.
     CHROMIUM_LOG(WARNING) << "failed to create pipe: " << GetLastError();
+    closed_ = true;
     return false;
   }
 

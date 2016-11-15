@@ -25,23 +25,5 @@ interface nsIDOMHTMLCanvasElement : nsISupports
   attribute unsigned long width;
   attribute unsigned long height;
   attribute boolean mozOpaque;
-
-  // Valid calls are:
-  //  toDataURL();              -- defaults to image/png
-  //  toDataURL(type);          -- uses given type
-  //  toDataURL(type, params);  -- uses given type, and any valid parameters
-  [implicit_jscontext]
-  DOMString toDataURL([optional] in DOMString type,
-                      [optional] in jsval params);
-
-  // Valid calls are
-  // mozGetAsFile(name);              -- defaults to image/png
-  // mozGetAsFile(name, type);        -- uses given type
-  // The return value is a File object.
-  nsISupports mozGetAsFile(in DOMString name, [optional] in DOMString type);
-
-  // A Mozilla-only extension to get a canvas context backed by double-buffered
-  // shared memory. Only privileged callers can call this.
-  nsISupports MozGetIPCContext(in DOMString contextId);
 };
 

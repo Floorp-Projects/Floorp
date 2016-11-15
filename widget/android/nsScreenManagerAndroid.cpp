@@ -10,7 +10,7 @@
 #include "nsScreenManagerAndroid.h"
 #include "nsServiceManagerUtils.h"
 #include "AndroidRect.h"
-#include "FennecJNINatives.h"
+#include "GeneratedJNINatives.h"
 #include "nsAppShell.h"
 #include "nsThreadUtils.h"
 

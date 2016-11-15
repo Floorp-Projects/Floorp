@@ -103,7 +103,8 @@ public:
 
   virtual bool
   RecvCompositorUpdated(const uint64_t& aLayersId,
-                        const TextureFactoryIdentifier& aNewIdentifier) override;
+                        const TextureFactoryIdentifier& aNewIdentifier,
+                        const uint64_t& aSeqNo) override;
 
   virtual bool
   RecvOverfill(const uint32_t &aOverfill) override;

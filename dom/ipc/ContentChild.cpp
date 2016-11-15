@@ -1456,8 +1456,11 @@ ContentChild::RecvNotifyLayerAllocated(const dom::TabId& aTabId, const uint64_t&
     return true;
   }
 
+  // Note: sending the constructor could fail, but we do not propagate the
+  // error back since the GPU process is fallible.
   APZChild* apz = ContentProcessController::Create(aTabId);
-  return CompositorBridgeChild::Get()->SendPAPZConstructor(apz, aLayersId);
+  CompositorBridgeChild::Get()->SendPAPZConstructor(apz, aLayersId);
+  return true;
 }
 
 bool

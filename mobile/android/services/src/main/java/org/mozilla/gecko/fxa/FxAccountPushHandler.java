@@ -3,7 +3,6 @@ package org.mozilla.gecko.fxa;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Context;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -11,6 +10,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.util.GeckoBundle;
 
 public class FxAccountPushHandler {
     private static final String LOG_TAG = "FxAccountPush";
@@ -23,7 +23,7 @@ public class FxAccountPushHandler {
     // Forbid instantiation
     private FxAccountPushHandler() {}
 
-    public static void handleFxAPushMessage(Context context, Bundle bundle) {
+    public static void handleFxAPushMessage(Context context, GeckoBundle bundle) {
         Log.i(LOG_TAG, "Handling FxA Push Message");
         String rawMessage = bundle.getString("message");
         JSONObject message = null;

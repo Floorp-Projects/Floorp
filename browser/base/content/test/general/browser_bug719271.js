@@ -24,6 +24,12 @@ function test() {
 function zoomTab1() {
   Task.spawn(function* () {
     is(gBrowser.selectedTab, gTab1, "Tab 1 is selected");
+
+    // Reset zoom level if we run this test > 1 time in same browser session.
+    var level1 = ZoomManager.getZoomForBrowser(gBrowser.getBrowserForTab(gTab1));
+    if (level1 > 1)
+      FullZoom.reduce();
+
     FullZoomHelper.zoomTest(gTab1, 1, "Initial zoom of tab 1 should be 1");
     FullZoomHelper.zoomTest(gTab2, 1, "Initial zoom of tab 2 should be 1");
 

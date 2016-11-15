@@ -6,7 +6,6 @@ package org.mozilla.gecko.fxa;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
@@ -24,6 +23,7 @@ import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
@@ -85,7 +85,7 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
   }
 
   @Override
-  public void handleMessage(String event, Bundle message, EventCallback callback) {
+  public void handleMessage(String event, GeckoBundle message, EventCallback callback) {
     if ("FxAccountsPush:Subscribe:Response".equals(event)) {
       try {
         doFxaRegistration(message.getBundle("subscription"));
@@ -97,7 +97,7 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
     }
   }
 
-  private void doFxaRegistration(Bundle subscription) throws InvalidFxAState {
+  private void doFxaRegistration(GeckoBundle subscription) throws InvalidFxAState {
     final Context context = this.context.get();
     if (this.context == null) {
       throw new IllegalStateException("Application context has been gc'ed");
@@ -105,7 +105,7 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
     doFxaRegistration(context, subscription, true);
   }
 
-  private static void doFxaRegistration(final Context context, final Bundle subscription, final boolean allowRecursion) throws InvalidFxAState {
+  private static void doFxaRegistration(final Context context, final GeckoBundle subscription, final boolean allowRecursion) throws InvalidFxAState {
     String pushCallback = subscription.getString("pushCallback");
     String pushPublicKey = subscription.getString("pushPublicKey");
     String pushAuthKey = subscription.getString("pushAuthKey");
@@ -227,7 +227,7 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
                                                        final byte[] sessionToken,
                                                        final AndroidFxAccount fxAccount,
                                                        final Context context,
-                                                       final Bundle subscription,
+                                                       final GeckoBundle subscription,
                                                        final boolean allowRecursion) {
     Log.w(LOG_TAG, "device session conflict, attempting to ascertain the correct device id");
     fxAccountClient.deviceList(sessionToken, new RequestDelegate<FxAccountDevice[]>() {

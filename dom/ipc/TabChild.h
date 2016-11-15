@@ -728,7 +728,7 @@ private:
 
   bool InitTabChildGlobal(FrameScriptLoading aScriptLoading = DEFAULT_LOAD_SCRIPTS);
 
-  bool InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
+  void InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                           const uint64_t& aLayersId,
                           PRenderFrameChild* aRenderFrame);
 
