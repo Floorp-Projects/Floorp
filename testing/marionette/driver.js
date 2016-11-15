@@ -151,7 +151,6 @@ this.GeckoDriver = function(appName, server) {
     "platform": Services.sysinfo.getProperty("name").toUpperCase(),
 
     // proprietary extensions
-    "XULappId" : Services.appinfo.ID,
     "appBuildId" : Services.appinfo.appBuildID,
     "processId" : Services.appinfo.processID,
   };
