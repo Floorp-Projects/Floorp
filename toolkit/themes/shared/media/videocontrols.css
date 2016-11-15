@@ -2,376 +2,283 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace url("http://www.w3.org/1999/xhtml");
-
-
-video > xul|videocontrols,
-audio > xul|videocontrols {
-  writing-mode: horizontal-tb;
-  width: 100%;
-  height: 100%;
-  display: inline-block;
-}
-
-.controlsContainer [hidden="true"],
-.controlBar[hidden] {
-  display: none;
-}
-
-.controlBar[size="hidden"] {
-  display: none;
-}
-
-.controlsContainer,
-.progressContainer {
-  position: relative;
-  height: 100%;
-}
-
-.stackItem {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.statusOverlay {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background-color: rgb(80,80,80);
-}
-
-.controlsOverlay {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  position: relative;
-}
-
-.controlsSpacerStack {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  justify-content: center;
-  align-items: center;
-}
-
-.controlsSpacer {
-  background-color: rgba(255,255,255,.4);
-}
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 .controlBar {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  height: 40px;
-  padding: 0 9px;
-  background-color: rgba(26,26,26,.8);
+  height: 28px;
+  background-color: rgba(35,31,32,.74);
 }
 
 .playButton,
 .muteButton,
 .closedCaptionButton,
 .fullscreenButton {
-  height: 100%;
-  min-height: 30px;
-  min-width: 30px;
-  padding: 6px;
-  border: 0;
-  margin: 0;
   background-color: transparent;
   background-repeat: no-repeat;
   background-position: center;
-  background-origin: content-box;
-  background-clip: content-box;
+  -moz-appearance: none;   /* Remove the native button appearance and styling */
+  margin: 0;
+  padding: 0;
+  min-height: 28px;
+  min-width: 28px;
+  border: none;
+  opacity: 0.7;
+}
+
+.playButton:hover,
+.muteButton:hover,
+.closedCaptionButton:hover,
+.fullscreenButton:hover {
+  opacity: 1;
+}
+
+.playButton:hover:active,
+.muteButton:hover:active,
+.closedCaptionButton:hover:active,
+.fullscreenButton:hover:active {
+  opacity: 0.4;
 }
 
 .playButton {
-  background-image: url(chrome://global/skin/media/pauseButton.svg#pause);
+  background-image: url(chrome://global/skin/media/pauseButton.png);
+  margin-right: -22px; /* 1/2 of scrubber thumb width, for overhang. */
+  position: relative; /* Trick to work around negative margin interfering with clicking on the button. */
 }
-.playButton:hover {
-  background-image: url(chrome://global/skin/media/pauseButton.svg#pause-hover);
-}
-.playButton:hover:active {
-  background-image: url(chrome://global/skin/media/pauseButton.svg#pause-active);
-}
+
 .playButton[paused] {
-  background-image: url(chrome://global/skin/media/playButton.svg#play);
-}
-.playButton[paused]:hover {
-  background-image: url(chrome://global/skin/media/playButton.svg#play-hover);
-}
-.playButton[paused]:hover:active {
-  background-image: url(chrome://global/skin/media/playButton.svg#play-active);
+  background-image: url(chrome://global/skin/media/playButton.png);
 }
 
 .muteButton {
-  background-image: url(chrome://global/skin/media/muteButton.svg#unmute);
-}
-.muteButton:hover {
-  background-image: url(chrome://global/skin/media/muteButton.svg#unmute-hover);
-}
-.muteButton:hover:active {
-  background-image: url(chrome://global/skin/media/muteButton.svg#unmute-active);
+  background-image: url(chrome://global/skin/media/muteButton.png);
+  min-width: 33px;
 }
 .muteButton[muted] {
-  background-image: url(chrome://global/skin/media/muteButton.svg#mute);
+  background-image: url(chrome://global/skin/media/unmuteButton.png);
 }
-.muteButton[muted]:hover {
-  background-image: url(chrome://global/skin/media/muteButton.svg#mute-hover);
+
+.muteButton[noAudio] {
+  background-image: url(chrome://global/skin/media/noAudio.png);
 }
-.muteButton[muted]:hover:active {
-  background-image: url(chrome://global/skin/media/muteButton.svg#mute-active);
-}
-.muteButton[noAudio],
-.muteButton[noAudio]:hover,
-.muteButton[noAudio]:hover:active {
-  background-image: url(chrome://global/skin/media/muteButton.svg#noaudio);
-}
+
 .muteButton[noAudio] + .volumeStack {
   display: none;
 }
 
 .closedCaptionButton {
-  background-image: url(chrome://global/skin/media/closedCaptionButton.svg#cc-off);
+  background-image: url(chrome://global/skin/media/closeCaptionButton.png);
+  background-position: 4px;
 }
-.closedCaptionButton:hover {
-  background-image: url(chrome://global/skin/media/closedCaptionButton.svg#cc-off-hover);
-}
-.closedCaptionButton:hover:active {
-  background-image: url(chrome://global/skin/media/closedCaptionButton.svg#cc-off-active);
-}
+
 .closedCaptionButton[enabled] {
-  background-image: url(chrome://global/skin/media/closedCaptionButton.svg#cc);
-}
-.closedCaptionButton[enabled]:hover {
-  background-image: url(chrome://global/skin/media/closedCaptionButton.svg#cc-hover);
-}
-.closedCaptionButton[enabled]:hover:active {
-  background-image: url(chrome://global/skin/media/closedCaptionButton.svg#cc-active);
+  opacity: 1;
 }
 
-.fullscreenButton {
-  background-image: url(chrome://global/skin/media/fullscreenButton.svg#fullscreen);
-}
-.fullscreenButton:hover {
-  background-image: url(chrome://global/skin/media/fullscreenButton.svg#fullscreen-hover);
-}
-.fullscreenButton:hover:active {
-  background-image: url(chrome://global/skin/media/fullscreenButton.svg#fullscreen-active);
-}
-.fullscreenButton[fullscreened] {
-  background-image: url(chrome://global/skin/media/fullscreenButton.svg#unfullscreen);
-}
-.fullscreenButton[fullscreened]:hover {
-  background-image: url(chrome://global/skin/media/fullscreenButton.svg#unfullscreen-hover);
-}
-.fullscreenButton[fullscreened]:hover:active {
-  background-image: url(chrome://global/skin/media/fullscreenButton.svg#unfullscreen-active);
-}
-
-.controlBarSpacer {
-  flex-grow: 1;
-}
-
-.volumeControl::-moz-range-thumb,
-.scrubber::-moz-range-thumb {
-  height: 13px;
-  width: 13px;
-  border: none;
-  border-radius: 50%;
-  background-color: #ffffff;
-  filter: drop-shadow(0px 0px 5px rgba(0,0,0,0.65));
-}
-
-.volumeControl::-moz-focus-outer,
-.scrubber::-moz-focus-outer {
-  border: 0;
-}
-
-.progressBackgroundBar {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.progressStack {
-  position: relative;
-  width: 100%;
-  height: 5px;
-}
-
-.scrubberStack {
-  min-width: 48px;
-  flex-basis: 48px;
-  flex-grow: 2;
-  flex-shrink: 0;
-  margin: 0 9px;
-}
-
-.volumeStack {
-  max-width: 60px;
-  min-width: 48px;
-  flex-grow: 1;
-  flex-shrink: 0;
-  margin-right: 6px;
-  margin-left: 4px;
-}
-
-.bufferBar,
-.progressBar,
-.scrubber,
-.volumeBackground,
-.volumeControl {
-  bottom: 0;
-  left: 0;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  border-radius: 2.5px;
-  margin: 0;
-  background: none;
-  background-color: transparent;
-}
-
-.bufferBar,
-.volumeBackground {
-  background-color: rgba(0,0,0,0.7);
-}
-
-.bufferBar::-moz-progress-bar,
-.progressBar::-moz-progress-bar,
-.volumeBackground::-moz-meter-bar {
-  height: 100%;
-  padding: 0;
-  margin: 0;
-  border: 0;
-  border-radius: 2.5px;
-  background: none;
-}
-
-.scrubber:hover::-moz-range-thumb,
-.volumeControl:hover::-moz-range-thumb {
-  background-color: #48a0f7;
-}
-
-.scrubber:active::-moz-range-thumb,
-.volumeControl:active::-moz-range-thumb {
-  background-color: #2d89e6;
-}
-
-.scrubber::-moz-range-track,
-.scrubber::-moz-range-progress {
-  background-color: transparent;
-}
-
-.volumeControl::-moz-range-progress,
-.volumeControl::-moz-range-track {
-  height: 5px;
-  border-radius: 2.5px;
-}
-
-.volumeControl::-moz-range-progress {
-  background-color: #ffffff;
-}
-
-.volumeControl::-moz-range-track {
-  background-color: rgba(0,0,0,0.7);
-}
-
-
-.bufferBar::-moz-progress-bar {
-  background-color: rgba(255,255,255,0.3);
-  border-radius: 2.5px;
-}
-
-.progressBar::-moz-progress-bar {
-  background-color: #00b6f0;
-}
-
-.textTrackList {
-  position: absolute;
-  right: 5px;
-  bottom: 45px;
-  max-width: 80%;
-  border: 1px solid #000000;
-  border-radius: 2.5px;
-  padding: 5px 0;
-  vertical-align: middle;
-  font-size: 12px;
-  background-color: #000000;
-  opacity: 0.7;
-}
-
-.textTrackList > .textTrackItem {
-  display: block;
-  width: 100%;
-  height: 30px;
-  padding: 2px 10px;
-  border: none;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-align: left;
-  text-overflow: ellipsis;
-  color: #ffffff;
-  background-color: transparent;
-}
-
-.textTrackList > .textTrackItem:hover {
-  background-color: #444444;
-}
-
-.textTrackList > .textTrackItem[on] {
-  color: #00b6f0;
-}
-
-.positionLabel,
-.durationLabel {
+.closedCaptionButton[hidden] {
   display: none;
 }
 
-.positionDurationBox {
-  min-width: 9ch;
-  text-align: center;
-  padding-inline-start: 1px;
-  padding-inline-end: 9px;
-  white-space: nowrap;
-  font: message-box;
-  font-size: 13px;
-  font-size-adjust: 0.6;
-  color: #ffffff;
+.fullscreenButton {
+  background-image: -moz-image-rect(url("chrome://global/skin/media/fullscreenButton.png"), 0, 16, 16, 0);
 }
 
-.positionDurationBox[positionOnly] {
-  min-width: 4ch;
+.fullscreenButton[fullscreened] {
+  background-image: -moz-image-rect(url("chrome://global/skin/media/fullscreenButton.png"), 0, 32, 16, 16);
+}
+
+.volumeControl {
+  width: 32px;
+  opacity: 0;
+}
+
+.volumeBackground,
+.volumeForeground {
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 32px;
+}
+
+.volumeBackground {
+  background-image: url(chrome://global/skin/media/volume-empty.png);
+}
+
+.volumeForeground {
+  background-image: url(chrome://global/skin/media/volume-full.png);
+  background-clip: content-box;
+}
+
+.textTrackList {
+  display: -moz-box;
+  -moz-appearance: none;
+  -moz-box-pack: end;
+  -moz-box-align: end;
+  padding: 0;
+}
+
+.textTrackList[hidden] {
+  display: none;
+}
+
+.textTrackList > html|*.textTrackItem {
+  -moz-appearance: none;
+  -moz-box-align: start;
+  text-align: start;
+  overflow: hidden;
+  margin: 0;
+  padding: 2px 10px;
+  -moz-margin-end: 10px;
+  border: none;
+  color: rgba(255,255,255,.5);
+  background-color: rgba(35,31,32,.74);
+  white-space: nowrap;
+}
+
+.textTrackList > html|*.textTrackItem[on] {
+  color: white;
+  background-color: black;
+}
+
+.textTrackList > html|*.textTrackItem:hover {
+  background-color: rgba(0,0,0,.55);
+}
+
+.controlBar[fullscreen-unavailable] {
+  /* This value is duplicated in the videocontrols.xml adjustControlSize function. */
+  padding-inline-end: 8px;
+}
+
+.volumeControl .scale-thumb {
+  min-width: 0;
+  opacity: 0;
+}
+
+.durationBox {
+  -moz-box-pack: center;
+}
+
+.durationLabel {
+  margin-left: -22px; /* 1/2 of scrubber thumb width, for overhang. */
+  padding-left: 8px; /* don't bump into the scrubber bar */
+  color: rgba(255,255,255,.75);
+  font: message-box;
+  font-size: 11px;
 }
 
 %ifdef XP_MACOSX
-.positionDurationBox {
-  font-size-adjust: unset;
+.durationLabel {
+  padding-top: 2px; /* center vertically with scrubber bar */
+}
+%else
+.durationLabel {
+  padding-top: 0; /* center vertically with scrubber bar */
 }
 %endif
 
-.duration {
-  display: inline-block;
-  white-space: pre;
-  color: #929292;
+.positionLabel {
+  display: none;
+}
+
+.backgroundBar {
+  /* margin top/bottom: make bar 8px tall (control height = 28, minus 2 * 10 margin) */
+  /* margin left/right: 1/2 of scrubber thumb width, for overhang. */
+  margin: 10px 22px;
+  background-color: rgba(255,255,255,.5);
+  border-radius: 2.5px;
+}
+
+.bufferBar,
+.progressBar {
+  /* margin top/bottom: make bar 8px tall (control height = 28, minus 2 * 10 margin) */
+  /* margin left/right: 1/2 of scrubber thumb width, for overhang. */
+  margin: 10px 22px;
+  -moz-appearance: none;
+  border: none;
+  background-color: transparent;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* .progress-bar is an element inside the <progressmeter> implementation. */
+.bufferBar .progress-bar {
+  /*
+   * Note that this is drawn on top of the .backgroundBar. So although this
+   * has the same background-color specified, the semitransparent
+   * compositing gives it a different visual appearance.
+   */
+  background-color: rgba(255,255,255,.5);
+  border-radius: 2.5px;
+  -moz-appearance: none;
+}
+
+.progressBar .progress-bar {
+  background-color: white;
+  border-radius: 2.5px;
+  -moz-appearance: none;
+}
+
+/* .scale-slider is an element inside the <scale> implementation. */
+.scrubber .scale-slider,
+.volumeControl .scale-slider {
+  /* Hide the default horizontal bar. */
+  -moz-appearance: none;
+  background: none;
+  margin: 0;
+}
+
+.scrubber .scale-slider {
+  /* abs(margin-top) + margin-bottom + bar height == timeThumb height */
+  margin-top: -10px;
+  margin-bottom: 10px;
+}
+/* .scale-thumb is an element inside the <scale> implementation. */
+.scrubber .scale-thumb,
+.volumeControl .scale-thumb {
+  /* Override the default thumb appearance with a custom image. */
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+}
+
+.timeThumb {
+  background: url(chrome://global/skin/media/scrubberThumb.png) no-repeat center;
+  min-width: 45px;
+  min-height: 28px;
+  -moz-box-pack: center;
+}
+
+.timeThumb[showhours="true"] {
+  background-image: url(chrome://global/skin/media/scrubberThumbWide.png);
+}
+
+.timeLabel {
+  color: rgba(255,255,255,.75);
+  font: message-box;
+  font-size: 10px;
+  text-shadow: rgba(0,0,0,.3) 0 1px;
+  padding-top: 7px;
+}
+
+%ifdef XP_MACOSX
+.timeLabel {
+  padding-top: 7px; /* center vertically with scrubber bar */
+}
+%else
+.timeLabel {
+  padding-top: 5px; /* center vertically with scrubber bar */
+}
+%endif
+
+.statusOverlay {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  background-color: rgba(0,0,0,.55);
 }
 
 .statusIcon {
+  margin-bottom: 28px; /* same height as .controlBar, to keep icon centered above it */
   width: 36px;
   height: 36px;
-  margin-bottom: 20px;
 }
 
 .statusIcon[type="throbber"] {
@@ -383,55 +290,61 @@ audio > xul|videocontrols {
 }
 
 .statusIcon[type="error"] {
-  min-width: 70px;
-  min-height: 60px;
   background: url(chrome://global/skin/media/error.png) no-repeat center;
-  background-size: contain;
 }
 
 /* Overlay Play button */
 .clickToPlay {
-  min-width: 48px;
-  min-height: 48px;
-  border-radius: 50%;
-  background-image: url(chrome://global/skin/media/playButton.svg#play);
-  background-repeat: no-repeat;
-  background-position: 54% 50%;
-  background-size: 40% 40%;
-  background-color: #1a1a1a;
-  opacity: 0.8;
-  position: relative;
-  top: 20px;
+  width: 64px;
+  height: 64px;
+  -moz-box-pack: center;
+  -moz-box-align: center;
+  opacity: 0.7;
+  background-image: url(chrome://global/skin/media/clicktoplay-bgtexture.png),
+                    url(chrome://global/skin/media/videoClickToPlayButton.svg);
+  background-repeat: repeat, no-repeat;
+  background-position: center, center;
+  background-size: auto, 64px 64px;
+  background-color: hsla(0,0%,10%,.5);
 }
-
-.controlsSpacerStack:hover > .clickToPlay,
 .clickToPlay:hover {
-  opacity: 0.55;
+  opacity: 1;
 }
 
-.controlsSpacerStack:hover > .clickToPlay[fadeout] {
-  opacity: 0;
+/* Statistics formatting */
+html|*.statsDiv {
+  position: relative;
 }
-
-.controlBar[fullscreen-unavailable] .fullscreenButton {
-  display: none;
+html|td {
+  height: 1em;
+  max-height: 1em;
+  padding: 0 2px;
+}
+html|table {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  color: white;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+  min-width: 100%;
+  background: rgba(68,68,68,.7);
+  table-layout: fixed;
+  border-collapse: collapse;
+  position: absolute;
 }
 
 /* CSS Transitions */
 .clickToPlay {
-  transition-property: transform, opacity;
+  transition-property: opacity, background-size;
   transition-duration: 400ms, 400ms;
 }
-
-.controlsSpacer[fadeout] {
-  opacity: 0;
-}
-
 .clickToPlay[fadeout] {
-  transform: scale(3);
+  background-size: auto, 192px 192px;
   opacity: 0;
 }
-
 .clickToPlay[fadeout][immediate] {
   transition-property: opacity, background-size;
   transition-duration: 0s, 0s;
@@ -447,6 +360,10 @@ audio > xul|videocontrols {
   transition-property: opacity, margin-top;
   transition-duration: 200ms, 200ms;
 }
+.volumeStack[fadeout] {
+  opacity: 0;
+  margin-top: 0;
+}
 .statusOverlay:not([immediate]) {
   transition-property: opacity;
   transition-duration: 300ms;
@@ -458,22 +375,66 @@ audio > xul|videocontrols {
 
 /* Error description formatting */
 .errorLabel {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  color: #bbb;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
   padding: 0 10px;
   text-align: center;
-  font: message-box;
-  font-size: 14px;
-  color: #ffffff;
 }
 
-.errorLabel {
-  display: none;
-}
-
-[error="errorAborted"]         > [anonid="errorAborted"],
-[error="errorNetwork"]         > [anonid="errorNetwork"],
-[error="errorDecode"]          > [anonid="errorDecode"],
-[error="errorSrcNotSupported"] > [anonid="errorSrcNotSupported"],
-[error="errorNoSource"]        > [anonid="errorNoSource"],
-[error="errorGeneric"]         > [anonid="errorGeneric"] {
-  display: inline;
+@media (min-resolution: 2dppx) {
+  .playButton {
+    background-image: url(chrome://global/skin/media/pauseButton@2x.png);
+    background-size: 28px 28px;
+  }
+  .playButton[paused] {
+    background-image: url(chrome://global/skin/media/playButton@2x.png);
+    background-size: 28px 28px;
+  }
+  .volumeBackground {
+    background-image: url(chrome://global/skin/media/volume-empty@2x.png);
+    background-size: 32px 16px;
+  }
+  .volumeForeground {
+    background-image: url(chrome://global/skin/media/volume-full@2x.png);
+    background-size: 32px 16px;
+  }
+  .muteButton {
+    background-image: url(chrome://global/skin/media/muteButton@2x.png);
+    background-size: 33px 28px;
+  }
+  .muteButton[muted] {
+    background-image: url(chrome://global/skin/media/unmuteButton@2x.png);
+    background-size: 33px 28px;
+  }
+  .muteButton[noAudio] {
+    background-image: url(chrome://global/skin/media/noAudio@2x.png);
+    background-size: 33px 28px;
+  }
+  .closedCaptionButton {
+    background-image: url(chrome://global/skin/media/closeCaptionButton@2x.png);
+    background-position: 4px;
+    background-size: 28px 28px;
+  }
+  .fullscreenButton {
+    background-image: -moz-image-rect(url("chrome://global/skin/media/fullscreenButton@2x.png"), 0, 32, 32, 0);
+    background-size: 16px 16px;
+  }
+  .fullscreenButton[fullscreened] {
+    background-image: -moz-image-rect(url("chrome://global/skin/media/fullscreenButton@2x.png"), 0, 64, 32, 32);
+    background-size: 16px 16px;
+  }
+  .timeThumb {
+    background-image: url(chrome://global/skin/media/scrubberThumb@2x.png);
+    background-size: 33px 28px;
+  }
+  .timeThumb[showhours="true"] {
+    background-image: url(chrome://global/skin/media/scrubberThumbWide@2x.png);
+    background-size: 45px 28px;
+  }
 }
