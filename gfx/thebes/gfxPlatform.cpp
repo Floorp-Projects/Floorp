@@ -289,8 +289,8 @@ void CrashStatsLogForwarder::UpdateCrashReport()
     break;
   }
 
-  for (LoggingRecord::iterator it = mBuffer.begin(); it != mBuffer.end(); ++it) {
-    message << logAnnotation << Get<0>(*it) << "]" << Get<1>(*it) << " (t=" << Get<2>(*it) << ") ";
+  for (auto& it : mBuffer) {
+    message << logAnnotation << Get<0>(it) << "]" << Get<1>(it) << " (t=" << Get<2>(it) << ") ";
   }
 
 #ifdef MOZ_CRASHREPORTER
