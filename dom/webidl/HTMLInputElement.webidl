@@ -88,7 +88,7 @@ interface HTMLInputElement : HTMLElement {
            attribute DOMString type;
   [Pure, SetterThrows]
            attribute DOMString defaultValue;
-  [Pure, TreatNullAs=EmptyString, SetterThrows]
+  [Pure, TreatNullAs=EmptyString, SetterThrows, NeedsCallerType]
            attribute DOMString value;
   [Throws, Func="HTMLInputElement::ValueAsDateEnabled"]
            attribute Date? valueAsDate;
