@@ -382,7 +382,7 @@
 @BINPATH@/components/dom_webspeechsynth.xpt
 #endif
 
-#ifdef MOZ_DEBUG
+#if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
 @BINPATH@/components/TestInterfaceJS.js
 @BINPATH@/components/TestInterfaceJS.manifest
 @BINPATH@/components/TestInterfaceJSMaplike.js
