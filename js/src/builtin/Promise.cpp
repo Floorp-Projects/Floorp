@@ -2133,6 +2133,10 @@ js::CreatePromiseObjectForAsync(JSContext* cx, HandleValue generatorVal)
 MOZ_MUST_USE bool
 js::AsyncFunctionThrown(JSContext* cx, Handle<PromiseObject*> resultPromise)
 {
+    // Not much we can do about uncatchable exceptions, so just bail.
+    if (!cx->isExceptionPending())
+        return false;
+
     // Step 3.f.
     RootedValue exc(cx);
     if (!GetAndClearException(cx, &exc))
