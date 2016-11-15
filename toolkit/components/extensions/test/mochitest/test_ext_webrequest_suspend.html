@@ -13,7 +13,7 @@
 <script type="text/javascript">
 "use strict";
 
-add_task(function* () {
+add_task(function* test_suspend() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: [
@@ -23,17 +23,33 @@ add_task(function* () {
     },
 
     background() {
-      browser.webRequest.onBeforeSendHeaders.addListener(details => {
-        let requestHeaders = details.requestHeaders.concat({name: "Foo", value: "Bar"});
+      browser.webRequest.onBeforeSendHeaders.addListener(
+        details => {
+          // Make sure that returning undefined or a promise that resolves to
+          // undefined does not break later handlers.
+        },
+        {urls: ["<all_urls>"]},
+        ["blocking", "requestHeaders"]);
 
-        return new Promise(resolve => {
-          setTimeout(resolve, 500);
-        }).then(() => {
-          return {requestHeaders};
-        });
-      },
-      {urls: ["<all_urls>"]},
-      ["blocking", "requestHeaders"]);
+      browser.webRequest.onBeforeSendHeaders.addListener(
+        details => {
+          return Promise.resolve();
+        },
+        {urls: ["<all_urls>"]},
+        ["blocking", "requestHeaders"]);
+
+      browser.webRequest.onBeforeSendHeaders.addListener(
+        details => {
+          let requestHeaders = details.requestHeaders.concat({name: "Foo", value: "Bar"});
+
+          return new Promise(resolve => {
+            setTimeout(resolve, 500);
+          }).then(() => {
+            return {requestHeaders};
+          });
+        },
+        {urls: ["<all_urls>"]},
+        ["blocking", "requestHeaders"]);
     },
   });
 

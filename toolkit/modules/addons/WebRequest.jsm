@@ -749,6 +749,10 @@ HttpObserverManager = {
       }
 
       for (let {opts, result} of handlerResults) {
+        if (!result || typeof result !== "object") {
+          continue;
+        }
+
         if (result.cancel) {
           this.maybeResume(channel);
           channel.cancel(Cr.NS_ERROR_ABORT);
