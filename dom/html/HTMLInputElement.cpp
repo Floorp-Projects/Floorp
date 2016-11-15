@@ -2573,39 +2573,6 @@ HTMLInputElement::MozGetFileNameArray(nsTArray<nsString>& aArray,
   }
 }
 
-
-NS_IMETHODIMP
-HTMLInputElement::MozGetFileNameArray(uint32_t* aLength, char16_t*** aFileNames)
-{
-  if (!nsContentUtils::IsCallerChrome()) {
-    // Since this function returns full paths it's important that normal pages
-    // can't call it.
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  ErrorResult rv;
-  nsTArray<nsString> array;
-  MozGetFileNameArray(array, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  *aLength = array.Length();
-  char16_t** ret =
-    static_cast<char16_t**>(moz_xmalloc(*aLength * sizeof(char16_t*)));
-  if (!ret) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  for (uint32_t i = 0; i < *aLength; ++i) {
-    ret[i] = NS_strdup(array[i].get());
-  }
-
-  *aFileNames = ret;
-
-  return NS_OK;
-}
-
 void
 HTMLInputElement::MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles)
 {
@@ -2670,30 +2637,6 @@ HTMLInputElement::MozSetFileNameArray(const Sequence<nsString>& aFileNames,
   }
 
   SetFilesOrDirectories(files, true);
-}
-
-NS_IMETHODIMP
-HTMLInputElement::MozSetFileNameArray(const char16_t** aFileNames,
-                                      uint32_t aLength)
-{
-  if (!nsContentUtils::IsCallerChrome()) {
-    // setting the value of a "FILE" input widget requires chrome privilege
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  Sequence<nsString> list;
-  nsString* names = list.AppendElements(aLength, fallible);
-  if (!names) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  for (uint32_t i = 0; i < aLength; ++i) {
-    const char16_t* filename = aFileNames[i];
-    names[i].Rebind(filename, nsCharTraits<char16_t>::length(filename));
-  }
-
-  ErrorResult rv;
-  MozSetFileNameArray(list, rv);
-  return rv.StealNSResult();
 }
 
 void
