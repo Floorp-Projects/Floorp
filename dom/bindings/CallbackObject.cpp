@@ -36,6 +36,44 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CallbackObject)
   tmp->DropJSObjects();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIncumbentGlobal)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(CallbackObject)
+  JSObject* callback = tmp->CallbackPreserveColor();
+
+  if (!aRemovingAllowed) {
+    // If our callback has been cleared, we can't be part of a garbage cycle.
+    return !callback;
+  }
+
+  // mCallback is always wrapped for the CallbackObject's incumbent global. In
+  // the case where the real callback is in a different compartment, we have a
+  // cross-compartment wrapper, and it will automatically be cut when its
+  // compartment is nuked. In the case where it is in the same compartment, we
+  // have a reference to the real function. Since that means there are no
+  // wrappers to cut, we need to check whether the compartment is still alive,
+  // and drop the references if it is not.
+
+  if (MOZ_UNLIKELY(!callback)) {
+    return true;
+  }
+  auto pvt = xpc::CompartmentPrivate::Get(callback);
+  if (MOZ_LIKELY(tmp->mIncumbentGlobal && pvt) && MOZ_UNLIKELY(pvt->wasNuked)) {
+    // It's not safe to release our global reference or drop our JS objects at
+    // this point, so defer their finalization until CC is finished.
+    AddForDeferredFinalization(new JSObjectsDropper(tmp));
+    DeferredFinalize(tmp->mIncumbentGlobal.forget().take());
+    return true;
+  }
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(CallbackObject)
+  return !tmp->mCallback;
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(CallbackObject)
+  return !tmp->mCallback;
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CallbackObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIncumbentGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
