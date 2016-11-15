@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug </title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script>
+function runTest() {
+  let w = window.open('file_sync_xhr_document_write_with_iframe.html');
+  addEventListener('message', evt => {
+    is(evt.data, 'DONE');
+    w.close();
+    SimpleTest.finish();
+  }, { once: true });
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+</script>
+</pre>
+</body>
+</html>
