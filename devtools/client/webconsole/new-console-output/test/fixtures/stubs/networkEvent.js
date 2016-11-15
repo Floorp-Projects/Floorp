@@ -25,6 +25,7 @@ stubPreparedMessages.set("GET request", new NetworkEventMessage({
 	"response": {},
 	"source": "network",
 	"type": "log",
+	"timeStamp": 1479159937660,
 	"groupId": null
 }));
 
@@ -40,6 +41,7 @@ stubPreparedMessages.set("XHR GET request", new NetworkEventMessage({
 	"response": {},
 	"source": "network",
 	"type": "log",
+	"timeStamp": 1479159938522,
 	"groupId": null
 }));
 
@@ -55,6 +57,7 @@ stubPreparedMessages.set("XHR POST request", new NetworkEventMessage({
 	"response": {},
 	"source": "network",
 	"type": "log",
+	"timeStamp": 1479159939328,
 	"groupId": null
 }));
 
@@ -65,7 +68,7 @@ stubPackets.set("GET request", {
 	"eventActor": {
 		"actor": "server1.conn0.child1/netEvent29",
 		"startedDateTime": "2016-10-15T23:12:04.196Z",
-		"timeStamp": 1476573124196,
+		"timeStamp": 1479159937660,
 		"url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
 		"method": "GET",
 		"isXHR": false,
@@ -106,7 +109,7 @@ stubPackets.set("XHR GET request", {
 	"eventActor": {
 		"actor": "server1.conn1.child1/netEvent29",
 		"startedDateTime": "2016-10-15T23:12:05.690Z",
-		"timeStamp": 1476573125690,
+		"timeStamp": 1479159938522,
 		"url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
 		"method": "GET",
 		"isXHR": true,
@@ -147,7 +150,7 @@ stubPackets.set("XHR POST request", {
 	"eventActor": {
 		"actor": "server1.conn2.child1/netEvent29",
 		"startedDateTime": "2016-10-15T23:12:07.158Z",
-		"timeStamp": 1476573127158,
+		"timeStamp": 1479159939328,
 		"url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
 		"method": "POST",
 		"isXHR": true,

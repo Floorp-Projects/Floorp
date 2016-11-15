@@ -49,6 +49,7 @@ function ConsoleApiCall(props) {
     repeat,
     stacktrace,
     frame,
+    timeStamp,
     parameters,
     messageText,
     userProvidedStyles,
@@ -106,6 +107,7 @@ function ConsoleApiCall(props) {
     serviceContainer,
     dispatch,
     indent,
+    timeStamp,
   });
 }
 
