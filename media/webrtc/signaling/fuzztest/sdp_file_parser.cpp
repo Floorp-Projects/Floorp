@@ -26,6 +26,16 @@ void CSFLog(CSFLogLevel priority, const char* sourceFile, int sourceLine, const 
   va_end(ap);
 }
 
+extern "C" {
+void NS_DebugBreak(uint32_t aSeverity,
+                   const char* aStr, const char* aExpr,
+                   const char* aFile, int32_t aLine)
+{
+  fprintf(stderr, "NS_DebugBreak: %u %s %s %s %u", aSeverity, aStr, aExpr,
+          aFile, aLine);
+}
+} // end extern "C".
+
 namespace mozilla {
 
 enum class LogLevel {
