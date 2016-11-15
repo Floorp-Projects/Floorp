@@ -17,6 +17,8 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and
     ]
 
     SOURCES += [
+        'jsep_session_unittest.cpp',
+        'jsep_track_unittest.cpp',
         'sdp_unittests.cpp',
     ]
 
