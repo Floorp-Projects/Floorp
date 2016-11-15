@@ -216,6 +216,7 @@ add_task(function* testTabEventsSize() {
 
     checkDimensions(yield extension.awaitMessage("create-dims"), "create");
     checkDimensions(yield extension.awaitMessage("on-created-dims"), "onCreated");
+    checkDimensions(yield extension.awaitMessage("on-updated-dims"), "onUpdated");
 
     extension.sendMessage("update-tab", tabId);
 
