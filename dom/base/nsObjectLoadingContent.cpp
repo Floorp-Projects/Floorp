@@ -3348,14 +3348,6 @@ nsObjectLoadingContent::DefaultFallbackType()
 }
 
 NS_IMETHODIMP
-nsObjectLoadingContent::GetHasRunningPlugin(bool *aHasPlugin)
-{
-  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-  *aHasPlugin = HasRunningPlugin();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsObjectLoadingContent::GetRunID(uint32_t* aRunID)
 {
   if (NS_WARN_IF(!nsContentUtils::IsCallerChrome())) {
