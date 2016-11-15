@@ -118,12 +118,28 @@ GMPContentParent::DecryptorDestroyed(GMPDecryptorParent* aSession)
 }
 
 void
+GMPContentParent::AddCloseBlocker()
+{
+  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+  ++mCloseBlockerCount;
+}
+
+void
+GMPContentParent::RemoveCloseBlocker()
+{
+  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
+  --mCloseBlockerCount;
+  CloseIfUnused();
+}
+
+void
 GMPContentParent::CloseIfUnused()
 {
   if (mAudioDecoders.IsEmpty() &&
       mDecryptors.IsEmpty() &&
       mVideoDecoders.IsEmpty() &&
-      mVideoEncoders.IsEmpty()) {
+      mVideoEncoders.IsEmpty() &&
+      mCloseBlockerCount == 0) {
     RefPtr<GMPContentParent> toClose;
     if (mParent) {
       toClose = mParent->ForgetGMPContentParent();

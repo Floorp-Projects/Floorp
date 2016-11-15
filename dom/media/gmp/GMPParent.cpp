@@ -1059,8 +1059,9 @@ GMPParent::ResolveGetContentParentPromises()
   nsTArray<UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>> promises;
   promises.SwapElements(mGetContentParentPromises);
   MOZ_ASSERT(mGetContentParentPromises.IsEmpty());
+  RefPtr<GMPContentParent::CloseBlocker> blocker(new GMPContentParent::CloseBlocker(mGMPContentParent));
   for (auto& holder : promises) {
-    holder->Resolve(mGMPContentParent, __func__);
+    holder->Resolve(blocker, __func__);
   }
 }
 
@@ -1097,7 +1098,8 @@ GMPParent::GetGMPContentParent(UniquePtr<MozPromiseHolder<GetGMPContentParentPro
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
 
   if (mGMPContentParent) {
-    aPromiseHolder->Resolve(mGMPContentParent, __func__);
+    RefPtr<GMPContentParent::CloseBlocker> blocker(new GMPContentParent::CloseBlocker(mGMPContentParent));
+    aPromiseHolder->Resolve(blocker, __func__);
   } else {
     mGetContentParentPromises.AppendElement(Move(aPromiseHolder));
     // If we don't have a GMPContentParent and we try to get one for the first
