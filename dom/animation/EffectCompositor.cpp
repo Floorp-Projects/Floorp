@@ -17,6 +17,7 @@
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/RestyleManagerHandle.h"
 #include "mozilla/RestyleManagerHandleInlines.h"
+#include "mozilla/StyleAnimationValue.h"
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
@@ -814,6 +815,30 @@ EffectCompositor::SetPerformanceWarning(
   for (KeyframeEffectReadOnly* effect : *effects) {
     effect->SetPerformanceWarning(aProperty, aWarning);
   }
+}
+
+/* static */ StyleAnimationValue
+EffectCompositor::GetBaseStyle(nsCSSPropertyID aProperty,
+                               nsStyleContext* aStyleContext,
+                               dom::Element& aElement)
+{
+  MOZ_ASSERT(aStyleContext, "Need style context to resolve the base value");
+  MOZ_ASSERT(!aStyleContext->StyleSource().IsServoComputedValues(),
+             "Bug 1311257: Servo backend does not support the base value yet");
+
+  RefPtr<nsStyleContext> styleContextWithoutAnimation =
+    aStyleContext->PresContext()->StyleSet()->AsGecko()->
+      ResolveStyleWithoutAnimation(&aElement, aStyleContext,
+                                   eRestyle_AllHintsWithAnimations);
+
+  StyleAnimationValue baseStyle;
+  DebugOnly<bool> result =
+    StyleAnimationValue::ExtractComputedValue(aProperty,
+                                              styleContextWithoutAnimation,
+                                              baseStyle);
+  MOZ_ASSERT(result, "could not extract computed value");
+
+  return baseStyle;
 }
 
 // ---------------------------------------------------------
