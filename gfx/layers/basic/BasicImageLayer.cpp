@@ -31,24 +31,24 @@ public:
     MOZ_COUNT_CTOR(BasicImageLayer);
   }
 protected:
-  virtual ~BasicImageLayer()
+  ~BasicImageLayer() override
   {
     MOZ_COUNT_DTOR(BasicImageLayer);
   }
 
 public:
-  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override
+  void SetVisibleRegion(const LayerIntRegion& aRegion) override
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     ImageLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Paint(DrawTarget* aDT,
-                     const gfx::Point& aDeviceOffset,
-                     Layer* aMaskLayer) override;
+  void Paint(DrawTarget* aDT,
+             const gfx::Point& aDeviceOffset,
+             Layer* aMaskLayer) override;
 
-  virtual already_AddRefed<SourceSurface> GetAsSourceSurface() override;
+  already_AddRefed<SourceSurface> GetAsSourceSurface() override;
 
 protected:
   BasicLayerManager* BasicManager()

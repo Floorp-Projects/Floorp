@@ -1948,9 +1948,9 @@ public:
     : SkImageFilter(nullptr, 0, nullptr)
   {}
 
-  virtual sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source,
-                                              const Context& ctx,
-                                              SkIPoint* offset) const override {
+  sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source,
+                                      const Context& ctx,
+                                      SkIPoint* offset) const override {
     offset->set(0, 0);
     return sk_ref_sp(source);
   }
