@@ -6,6 +6,6 @@
 
 interface BarProp
 {
-  [Throws]
+  [Throws, NeedsCallerType]
            attribute boolean visible;
 };
