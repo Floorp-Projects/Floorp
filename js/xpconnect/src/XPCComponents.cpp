@@ -2627,10 +2627,6 @@ class PreciseGCRunnable : public Runnable
 
     NS_IMETHOD Run() override
     {
-        JSContext* cx = dom::danger::GetJSContext();
-        if (JS_IsRunning(cx))
-            return NS_DispatchToMainThread(this);
-
         nsJSContext::GarbageCollectNow(gcreason::COMPONENT_UTILS,
                                        nsJSContext::NonIncrementalGC,
                                        mShrinking ?
