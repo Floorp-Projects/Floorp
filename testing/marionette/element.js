@@ -937,7 +937,7 @@ element.isInteractable = function(el) {
  */
 element.isPointerInteractable = function(el) {
   let tree = element.getInteractableElementTree(el, el.ownerDocument);
-  return tree.length > 0;
+  return tree[0] === el;
 };
 
 /**
