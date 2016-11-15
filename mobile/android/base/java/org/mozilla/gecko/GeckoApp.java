@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
 import org.mozilla.gecko.gfx.BitmapUtils;
@@ -203,8 +204,6 @@ public abstract class GeckoApp
     protected boolean mLastSessionCrashed;
     protected boolean mShouldRestore;
     private boolean mSessionRestoreParsingFinished = false;
-
-    private EventDispatcher eventDispatcher;
 
     private int lastSelectedTabId = -1;
 
@@ -1099,8 +1098,6 @@ public abstract class GeckoApp
     public void onCreate(Bundle savedInstanceState) {
         GeckoAppShell.ensureCrashHandling();
 
-        eventDispatcher = new EventDispatcher();
-
         // Enable Android Strict Mode for developers' local builds (the "default" channel).
         if ("default".equals(AppConstants.MOZ_UPDATE_CHANNEL)) {
             enableStrictMode();
@@ -1197,33 +1194,12 @@ public abstract class GeckoApp
         // GeckoThread has to register for "Gecko:Ready" first, so GeckoApp registers
         // for events after initializing GeckoThread but before launching it.
 
-        getAppEventDispatcher().registerGeckoThreadListener((GeckoEventListener)this,
+        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
             "Gecko:Ready",
-            "Gecko:Exited",
-            "Accessibility:Event");
+            "Gecko:Exited");
 
-        getAppEventDispatcher().registerGeckoThreadListener((NativeEventListener)this,
-            "Accessibility:Ready",
-            "Bookmark:Insert",
-            "Contact:Add",
-            "DevToolsAuth:Scan",
-            "DOMFullScreen:Start",
-            "DOMFullScreen:Stop",
-            "Image:SetAs",
-            "Locale:Set",
-            "Permissions:Data",
-            "PrivateBrowsing:Data",
-            "RuntimePermissions:Prompt",
-            "Session:StatePurged",
-            "Share:Text",
-            "Snackbar:Show",
-            "SystemUI:Visibility",
-            "ToggleChrome:Focus",
-            "ToggleChrome:Hide",
-            "ToggleChrome:Show",
-            "Update:Check",
-            "Update:Download",
-            "Update:Install");
+        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
+            "Accessibility:Ready");
 
         GeckoThread.launch();
 
@@ -1254,6 +1230,31 @@ public abstract class GeckoApp
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         mLayerView = (GeckoView) findViewById(R.id.layer_view);
+
+        getAppEventDispatcher().registerGeckoThreadListener((GeckoEventListener)this,
+            "Accessibility:Event");
+
+        getAppEventDispatcher().registerGeckoThreadListener((NativeEventListener)this,
+            "Bookmark:Insert",
+            "Contact:Add",
+            "DevToolsAuth:Scan",
+            "DOMFullScreen:Start",
+            "DOMFullScreen:Stop",
+            "Image:SetAs",
+            "Locale:Set",
+            "Permissions:Data",
+            "PrivateBrowsing:Data",
+            "RuntimePermissions:Prompt",
+            "Session:StatePurged",
+            "Share:Text",
+            "Snackbar:Show",
+            "SystemUI:Visibility",
+            "ToggleChrome:Focus",
+            "ToggleChrome:Hide",
+            "ToggleChrome:Show",
+            "Update:Check",
+            "Update:Download",
+            "Update:Install");
 
         Tabs.getInstance().attachToContext(this, mLayerView);
 
@@ -1742,6 +1743,7 @@ public abstract class GeckoApp
         }
     }
 
+    @RobocopTarget
     public static EventDispatcher getEventDispatcher() {
         final GeckoApp geckoApp = (GeckoApp) GeckoAppShell.getGeckoInterface();
         return geckoApp.getAppEventDispatcher();
@@ -1749,7 +1751,7 @@ public abstract class GeckoApp
 
     @Override
     public EventDispatcher getAppEventDispatcher() {
-        return eventDispatcher;
+        return mLayerView != null ? mLayerView.getEventDispatcher() : null;
     }
 
     @Override
@@ -2227,13 +2229,17 @@ public abstract class GeckoApp
             return;
         }
 
-        getAppEventDispatcher().unregisterGeckoThreadListener((GeckoEventListener)this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener)this,
             "Gecko:Ready",
-            "Gecko:Exited",
+            "Gecko:Exited");
+
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener)this,
+            "Accessibility:Ready");
+
+        getAppEventDispatcher().unregisterGeckoThreadListener((GeckoEventListener)this,
             "Accessibility:Event");
 
         getAppEventDispatcher().unregisterGeckoThreadListener((NativeEventListener)this,
-            "Accessibility:Ready",
             "Bookmark:Insert",
             "Contact:Add",
             "DevToolsAuth:Scan",

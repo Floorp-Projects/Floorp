@@ -90,6 +90,11 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         mAnimation.setDuration(75);
 
         setFocusable(false);
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
 
         GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
             "FormAssist:AutoComplete",
@@ -98,10 +103,16 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
     }
 
     void destroy() {
+    }
+
+    @Override
+    public void onDetachedFromWindow() {
         GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
             "FormAssist:AutoComplete",
             "FormAssist:ValidationMessage",
             "FormAssist:Hide");
+
+        super.onDetachedFromWindow();
     }
 
     @Override

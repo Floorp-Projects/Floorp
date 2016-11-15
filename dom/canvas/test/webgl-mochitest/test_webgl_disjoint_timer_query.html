@@ -31,10 +31,11 @@ function doTest() {
 
   var elapsedQuery = ext.createQueryEXT();
   ok(elapsedQuery, "Query creation works.");
-  ok(ext.isQueryEXT(elapsedQuery), "New query is valid after creation.");
+  ok(!ext.isQueryEXT(elapsedQuery), "isQuery fails after creation but before bind.");
 
   ext.beginQueryEXT(ext.TIME_ELAPSED_EXT, elapsedQuery);
-  is(ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT), elapsedQuery,
+  ok(ext.isQueryEXT(elapsedQuery), "isQuery fails after bind.");
+  ok(ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT) == elapsedQuery,
      "Query is active after beginQueryEXT.");
   ext.endQueryEXT(ext.TIME_ELAPSED_EXT);
   gl.flush();
@@ -65,8 +66,7 @@ function doTest() {
           "Time elapsed must be at least 30 bits to hold at least 1 second of timing.");
 
           SimpleTest.finish();
-
-          });
+        });
     } else {
       SimpleTest.finish();
     }
@@ -75,7 +75,7 @@ function doTest() {
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv({"set": [['webgl.enable-draft-extensions', true]]}, doTest);
+doTest();
 
 </script>
 </body>

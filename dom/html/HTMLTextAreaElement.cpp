@@ -363,9 +363,6 @@ HTMLTextAreaElement::SetValue(const nsAString& aValue)
 NS_IMETHODIMP 
 HTMLTextAreaElement::SetUserInput(const nsAString& aValue)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
   return SetValueInternal(aValue, nsTextEditorState::eSetValue_BySetUserInput);
 }
 

@@ -637,7 +637,6 @@ TabParent::Show(const ScreenIntSize& size, bool aParentIsActive)
         RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
         if (frameLoader) {
           renderFrame = new RenderFrameParent(frameLoader, &success);
-          MOZ_ASSERT(success);
           layersId = renderFrame->GetLayersId();
           renderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
           AddTabParentToTable(layersId, this);

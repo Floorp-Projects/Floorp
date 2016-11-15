@@ -45,15 +45,16 @@ interface HTMLDocument : Document {
 
   [SetterThrows, NeedsSubjectPrincipal]
            attribute DOMString designMode;
-  [Throws]
+  [Throws, NeedsCallerType]
   boolean execCommand(DOMString commandId, optional boolean showUI = false,
                       optional DOMString value = "");
-  [Throws]
+  [Throws, NeedsCallerType]
   boolean queryCommandEnabled(DOMString commandId);
   [Throws]
   boolean queryCommandIndeterm(DOMString commandId);
   [Throws]
   boolean queryCommandState(DOMString commandId);
+  [NeedsCallerType]
   boolean queryCommandSupported(DOMString commandId);
   [Throws]
   DOMString queryCommandValue(DOMString commandId);

@@ -2,10 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* openPanel(extension, win = window) {
+function* openPanel(extension, win = window, awaitLoad = false) {
   clickBrowserAction(extension, win);
 
-  return yield awaitExtensionPanel(extension, win, false);
+  return yield awaitExtensionPanel(extension, win, awaitLoad);
 }
 
 add_task(function* testBrowserActionPopupResize() {
@@ -113,7 +113,7 @@ function* testPopupSize(standardsMode, browserWin = window, arrowSide = "top") {
 
   if (arrowSide == "top") {
     // Test the standalone panel for a toolbar button.
-    let browser = yield openPanel(extension, browserWin);
+    let browser = yield openPanel(extension, browserWin, true);
 
     let dims = yield promiseContentDimensions(browser);
 

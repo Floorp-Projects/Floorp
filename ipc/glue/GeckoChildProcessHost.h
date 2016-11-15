@@ -215,6 +215,14 @@ private:
   static uint32_t sNextUniqueID;
 
   static bool sRunSelfAsContentProc;
+
+#if defined(MOZ_WIDGET_ANDROID)
+  void LaunchAndroidService(const char* type,
+                            const std::vector<std::string>& argv,
+                            const base::file_handle_mapping_vector& fds_to_remap,
+                            ProcessHandle* process_handle);
+#endif // defined(MOZ_WIDGET_ANDROID)
+
 };
 
 } /* namespace ipc */

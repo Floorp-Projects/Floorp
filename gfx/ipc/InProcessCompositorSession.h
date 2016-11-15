@@ -30,7 +30,9 @@ public:
   CompositorBridgeParent* GetInProcessBridge() const override;
   void SetContentController(GeckoContentController* aController) override;
   RefPtr<IAPZCTreeManager> GetAPZCTreeManager() const override;
-  bool Reset(const nsTArray<LayersBackend>& aBackendHints, TextureFactoryIdentifier* aOutIdentifier) override;
+  bool Reset(const nsTArray<LayersBackend>& aBackendHints,
+             uint64_t aSeqNo,
+             TextureFactoryIdentifier* aOutIdentifier) override;
   void Shutdown() override;
 
 private:

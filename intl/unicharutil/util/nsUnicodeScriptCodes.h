@@ -11,13 +11,13 @@
  */
 
 /*
- * Created on Wed Oct 26 09:12:45 2016 from UCD data files with version info:
+ * Created on Fri Nov 11 17:42:07 2016 from UCD data files with version info:
  *
 
-# Date: 2015-06-16, 20:24:00 GMT [KW]
-#
 # Unicode Character Database
-# Copyright (c) 1991-2015 Unicode, Inc.
+# Date: 2016-06-20, 14:59:00 GMT [KW]
+# © 2016 Unicode®, Inc.
+# Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
 # For documentation, see the following:
@@ -25,41 +25,44 @@
 # UAX #38, "Unicode Han Database (Unihan)"
 # UAX #44, "Unicode Character Database."
 #
-# The UAXes can be accessed at http://www.unicode.org/versions/Unicode8.0.0/
+# The UAXes can be accessed at http://www.unicode.org/versions/Unicode9.0.0/
 
 This directory contains the final data files
-for the Unicode Character Database, for Version 8.0.0 of the Unicode
-Standard.
+for the Unicode Character Database, for Version 9.0.0 of the Unicode Standard.
 
+# Scripts-9.0.0.txt
+# Date: 2016-06-01, 10:34:37 GMT
 
-# Scripts-8.0.0.txt
-# Date: 2015-03-11, 22:29:42 GMT [MD]
+# BidiMirroring-9.0.0.txt
+# Date: 2016-01-21, 22:00:00 GMT [KW, LI]
 
-# BidiMirroring-8.0.0.txt
-# Date: 2015-01-20, 18:30:00 GMT [KW, LI]
+# BidiBrackets-9.0.0.txt
+# Date: 2016-06-07, 22:30:00 GMT [AG, LI, KW]
 
-# BidiBrackets-8.0.0.txt
-# Date: 2015-01-20, 19:00:00 GMT [AG, LI, KW]
+# HangulSyllableType-9.0.0.txt
+# Date: 2016-03-02, 18:55:01 GMT
 
-# HangulSyllableType-8.0.0.txt
-# Date: 2014-12-16, 23:07:45 GMT [MD]
+# LineBreak-9.0.0.txt
+# Date: 2016-05-26, 01:00:00 GMT [KW, LI]
 
-# LineBreak-8.0.0.txt
-# Date: 2015-02-13, 09:15:00 GMT [KW, LI]
+# EastAsianWidth-9.0.0.txt
+# Date: 2016-05-27, 17:00:00 GMT [KW, LI]
 
-# EastAsianWidth-8.0.0.txt
-# Date: 2015-02-10, 21:00:00 GMT [KW, LI]
+# DerivedCoreProperties-9.0.0.txt
+# Date: 2016-06-01, 10:34:24 GMT
 
-# File: xidmodifications.txt
-# Version: 8.0.0
-# Generated: 2015-05-17, 03:09:04 GMT
+# IdentifierStatus.txt
+# Date: 2016-06-16, 13:41:30 GMT
+
+# IdentifierType.txt
+# Date: 2016-06-16, 13:41:30 GMT
 
 #
 # Unihan_Variants.txt
-# Date: 2015-04-30 18:38:20 GMT [JHJ]
+# Date: 2016-06-01 07:01:48 GMT [JHJ]
 
-# VerticalOrientation-13.txt
-# Date: 2014-09-03, 17:30:00 GMT [EM, KI, LI]
+# VerticalOrientation-15.txt
+# Date: 2015-11-16, 20:00:00 GMT [EM, KI, LI]
 
  *
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
@@ -83,26 +86,34 @@ struct nsCharProps1 {
 #if ENABLE_INTL_API
 
 struct nsCharProps2 {
-  // Currently only 6 bits are defined here, so 2 more could be added without
-  // affecting the storage requirements for this struct.
+  // Currently only 4 bits are defined here, so 4 more could be added without
+  // affecting the storage requirements for this struct. Or we could pack two
+  // records per byte, at the cost of a slightly more complex accessor.
   unsigned char mVertOrient:2;
-  unsigned char mXidmod:4;
+  unsigned char mIdType:2;
 };
 
 #endif
 
 #if !ENABLE_INTL_API
 
+// This struct currently requires 5 bytes. We try to ensure that whole-byte
+// fields will not straddle byte boundaries, to optimize access to them.
 struct nsCharProps2 {
   unsigned char mScriptCode:8;
+  // -- byte boundary --
   unsigned char mPairedBracketType:2;
   unsigned char mEastAsianWidthFWH:1;
   unsigned char mCategory:5;
+  // -- byte boundary --
+  unsigned char mIdType:2;
+  unsigned char mDefaultIgnorable:1;
   unsigned char mBidiCategory:5;
-  unsigned char mXidmod:4;
-  signed char   mNumericValue:5;
+  // -- byte boundary --
   unsigned char mVertOrient:2;
-  unsigned char mLineBreak; // only 6 bits actually needed
+  unsigned char mLineBreak:6;
+  // -- byte boundary --
+  signed char   mNumericValue; // only 5 bits are actually needed here
 };
 
 #endif
@@ -279,8 +290,16 @@ enum class Script {
   MULTANI = 164,
   PAU_CIN_HAU = 165,
   SIDDHAM = 166,
+  ADLAM = 167,
+  BHAIKSUKI = 168,
+  MARCHEN = 169,
+  NEWA = 170,
+  OSAGE = 171,
+  HAN_WITH_BOPOMOFO = 172,
+  JAMO = 173,
+  SYMBOLS_EMOJI = 174,
 
-  NUM_SCRIPT_CODES = 167,
+  NUM_SCRIPT_CODES = 175,
 
   INVALID = -1
 };

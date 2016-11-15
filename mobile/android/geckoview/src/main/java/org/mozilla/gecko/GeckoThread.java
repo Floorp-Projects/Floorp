@@ -21,6 +21,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
 import android.os.SystemClock;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.File;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.StringTokenizer;
 
 public class GeckoThread extends Thread {
     private static final String LOGTAG = "GeckoThread";
@@ -134,11 +136,18 @@ public class GeckoThread extends Thread {
     private final String mAction;
     private final boolean mDebugging;
 
+    private String[] mChildProcessArgs;
+    private int mCrashFileDescriptor;
+    private int mIPCFileDescriptor;
+
     GeckoThread(GeckoProfile profile, String args, String action, boolean debugging) {
         mProfile = profile;
         mArgs = args;
         mAction = action;
         mDebugging = debugging;
+        mChildProcessArgs = null;
+        mCrashFileDescriptor = -1;
+        mIPCFileDescriptor = -1;
 
         setName("Gecko");
     }
@@ -147,6 +156,16 @@ public class GeckoThread extends Thread {
         ThreadUtils.assertOnUiThread();
         if (isState(State.INITIAL) && sGeckoThread == null) {
             sGeckoThread = new GeckoThread(profile, args, action, debugging);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean initChildProcess(GeckoProfile profile, String[] args, int crashFd, int ipcFd, boolean debugging) {
+        if (init(profile, null, null, debugging)) {
+            sGeckoThread.mChildProcessArgs = args;
+            sGeckoThread.mCrashFileDescriptor = crashFd;
+            sGeckoThread.mIPCFileDescriptor = ipcFd;
             return true;
         }
         return false;
@@ -403,35 +422,45 @@ public class GeckoThread extends Thread {
         return resourcePath;
     }
 
-    private String addCustomProfileArg(String args) {
-        String profileArg = "";
-
+    private void addCustomProfileArg(String args, ArrayList<String> list) {
         // Make sure a profile exists.
         final GeckoProfile profile = getProfile();
         profile.getDir(); // call the lazy initializer
 
-        // If args don't include the profile, make sure it's included.
-        if (args == null || !args.matches(".*\\B-(P|profile)\\s+\\S+.*")) {
-            if (profile.isCustomProfile()) {
-                profileArg = " -profile " + profile.getDir().getAbsolutePath();
-            } else {
-                profileArg = " -P " + profile.getName();
+        boolean needsProfile = true;
+
+        if (args != null) {
+            StringTokenizer st = new StringTokenizer(args);
+            while (st.hasMoreTokens()) {
+                String token = st.nextToken();
+                if ("-P".equals(token) || "-profile".equals(token)) {
+                    needsProfile = false;
+                }
+                list.add(token);
             }
         }
 
-        return (args != null ? args : "") + profileArg;
+        // If args don't include the profile, make sure it's included.
+        if (args == null || needsProfile) {
+            if (profile.isCustomProfile()) {
+                list.add("-profile");
+                list.add(profile.getDir().getAbsolutePath());
+            } else {
+                list.add("-P");
+                list.add(profile.getName());
+            }
+        }
     }
 
-    private String getGeckoArgs(final String apkPath) {
+    private String[] getGeckoArgs(final String apkPath) {
         // argv[0] is the program name, which for us is the package name.
         final Context context = GeckoAppShell.getApplicationContext();
-        final StringBuilder args = new StringBuilder(context.getPackageName());
-        args.append(" -greomni ").append(apkPath);
+        final ArrayList<String> args = new ArrayList<String>();
+        args.add(context.getPackageName());
+        args.add("-greomni");
+        args.add(apkPath);
 
-        final String userArgs = addCustomProfileArg(mArgs);
-        if (userArgs != null) {
-            args.append(' ').append(userArgs);
-        }
+        addCustomProfileArg(mArgs, args);
 
         // In un-official builds, we want to load Javascript resources fresh
         // with each build.  In official builds, the startup cache is purged by
@@ -440,10 +469,10 @@ public class GeckoThread extends Thread {
         if (!AppConstants.MOZILLA_OFFICIAL) {
             Log.w(LOGTAG, "STARTUP PERFORMANCE WARNING: un-official build: purging the " +
                           "startup (JavaScript) caches.");
-            args.append(" -purgecaches");
+            args.add("-purgecaches");
         }
 
-        return args.toString();
+        return args.toArray(new String[args.size()]);
     }
 
     public static GeckoProfile getActiveProfile() {
@@ -493,7 +522,13 @@ public class GeckoThread extends Thread {
             }
         }
 
-        final String args = getGeckoArgs(initGeckoEnvironment());
+        final String[] args;
+        if (mChildProcessArgs != null) {
+            initGeckoEnvironment();
+            args = mChildProcessArgs;
+        } else {
+            args = getGeckoArgs(initGeckoEnvironment());
+        }
 
         // This can only happen after the call to initGeckoEnvironment
         // above, because otherwise the JNI code hasn't been loaded yet.
@@ -506,11 +541,12 @@ public class GeckoThread extends Thread {
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");
 
         if (!AppConstants.MOZILLA_OFFICIAL) {
-            Log.i(LOGTAG, "RunGecko - args = " + args);
+            String msg = new String("RunGecko - args =" + TextUtils.join(" ", args));
+            Log.i(LOGTAG, msg);
         }
 
         // And go.
-        GeckoLoader.nativeRun(args);
+        GeckoLoader.nativeRun(args, mCrashFileDescriptor, mIPCFileDescriptor);
 
         // And... we're done.
         setState(State.EXITED);
@@ -518,7 +554,6 @@ public class GeckoThread extends Thread {
         try {
             final JSONObject msg = new JSONObject();
             msg.put("type", "Gecko:Exited");
-            GeckoAppShell.getGeckoInterface().getAppEventDispatcher().dispatchEvent(msg, null);
             EventDispatcher.getInstance().dispatchEvent(msg, null);
         } catch (final JSONException e) {
             Log.e(LOGTAG, "unable to dispatch event", e);
