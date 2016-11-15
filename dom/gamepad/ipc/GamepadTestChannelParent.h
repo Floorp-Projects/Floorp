@@ -17,10 +17,10 @@ class GamepadTestChannelParent final : public PGamepadTestChannelParent
   GamepadTestChannelParent()
     : mShuttingdown(false) {}
   virtual void ActorDestroy(ActorDestroyReason aWhy) override {}
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGamepadTestEvent(const uint32_t& aID,
                        const GamepadChangeEvent& aGamepadEvent) override;
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvShutdownChannel() override;
  private:
   ~GamepadTestChannelParent() {}

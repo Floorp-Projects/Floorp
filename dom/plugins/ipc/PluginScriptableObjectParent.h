@@ -52,57 +52,57 @@ public:
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerHasMethod(const PluginIdentifier& aId,
                   bool* aHasMethod) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerInvoke(const PluginIdentifier& aId,
                InfallibleTArray<Variant>&& aArgs,
                Variant* aResult,
                bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerInvokeDefault(InfallibleTArray<Variant>&& aArgs,
                       Variant* aResult,
                       bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerHasProperty(const PluginIdentifier& aId,
                     bool* aHasProperty) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerGetParentProperty(const PluginIdentifier& aId,
                           Variant* aResult,
                           bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerSetProperty(const PluginIdentifier& aId,
                     const Variant& aValue,
                     bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerRemoveProperty(const PluginIdentifier& aId,
                        bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerEnumerate(InfallibleTArray<PluginIdentifier>* aProperties,
                   bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerConstruct(InfallibleTArray<Variant>&& aArgs,
                   Variant* aResult,
                   bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerNPN_Evaluate(const nsCString& aScript,
                      Variant* aResult,
                      bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvProtect() override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvUnprotect() override;
 
   static const NPClass*

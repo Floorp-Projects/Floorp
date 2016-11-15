@@ -1045,7 +1045,7 @@ NS_IMPL_ISUPPORTS(
 , nsIFinishReportingCallback
 )
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvPMemoryReportRequestConstructor(
   PMemoryReportRequestChild* aChild,
   const uint32_t& aGeneration,
@@ -1068,7 +1068,7 @@ ContentChild::RecvPMemoryReportRequestConstructor(
 
   // Bug 1295622: don't kill the process just because this failed.
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "actor operation failed");
-  return true;
+  return IPC_OK();
 }
 
 NS_IMETHODIMP MemoryReportRequestChild::Run()
@@ -1114,7 +1114,7 @@ ContentChild::AllocPCycleCollectWithLogsChild(const bool& aDumpAllTraces,
   return actor;
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvPCycleCollectWithLogsConstructor(PCycleCollectWithLogsChild* aActor,
                                                    const bool& aDumpAllTraces,
                                                    const FileDescriptor& aGCLog,
@@ -1127,7 +1127,7 @@ ContentChild::RecvPCycleCollectWithLogsConstructor(PCycleCollectWithLogsChild* a
   dumper->DumpGCAndCCLogsToSink(aDumpAllTraces, sink);
 
   // The actor's destructor is called when the last reference goes away...
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -1171,33 +1171,33 @@ ContentChild::AllocPGMPServiceChild(mozilla::ipc::Transport* aTransport,
   return GMPServiceChild::Create(aTransport, aOtherProcess);
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvGMPsChanged(nsTArray<GMPCapabilityData>&& capabilities)
 {
   GeckoMediaPluginServiceChild::UpdateGMPCapabilities(Move(capabilities));
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvInitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
                                 Endpoint<PImageBridgeChild>&& aImageBridge,
                                 Endpoint<PVRManagerChild>&& aVRBridge,
                                 Endpoint<PVideoDecoderManagerChild>&& aVideoManager)
 {
   if (!CompositorBridgeChild::InitForContent(Move(aCompositor))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   if (!ImageBridgeChild::InitForContent(Move(aImageBridge))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   if (!gfx::VRManagerChild::InitForContent(Move(aVRBridge))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   VideoDecoderManagerChild::InitForContent(Move(aVideoManager));
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvReinitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
                                   Endpoint<PImageBridgeChild>&& aImageBridge,
                                   Endpoint<PVRManagerChild>&& aVRBridge,
@@ -1214,13 +1214,13 @@ ContentChild::RecvReinitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor
 
   // Re-establish singleton bridges to the compositor.
   if (!CompositorBridgeChild::ReinitForContent(Move(aCompositor))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   if (!ImageBridgeChild::ReinitForContent(Move(aImageBridge))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   if (!gfx::VRManagerChild::ReinitForContent(Move(aVRBridge))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Establish new PLayerTransactions.
@@ -1231,7 +1231,7 @@ ContentChild::RecvReinitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor
   }
 
   VideoDecoderManagerChild::InitForContent(Move(aVideoManager));
-  return true;
+  return IPC_OK();
 }
 
 PBackgroundChild*
@@ -1387,7 +1387,7 @@ StartMacOSContentSandbox()
 }
 #endif
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
 {
   // We may want to move the sandbox initialization somewhere else
@@ -1445,24 +1445,24 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
 #endif /* MOZ_CRASHREPORTER */
 #endif /* MOZ_CONTENT_SANDBOX */
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvNotifyLayerAllocated(const dom::TabId& aTabId, const uint64_t& aLayersId)
 {
   if (!CompositorBridgeChild::Get()->IPCOpen()) {
-    return true;
+    return IPC_OK();
   }
 
   // Note: sending the constructor could fail, but we do not propagate the
   // error back since the GPU process is fallible.
   APZChild* apz = ContentProcessController::Create(aTabId);
   CompositorBridgeChild::Get()->SendPAPZConstructor(apz, aLayersId);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvSpeakerManagerNotify()
 {
 #ifdef MOZ_WIDGET_GONK
@@ -1474,10 +1474,10 @@ ContentChild::RecvSpeakerManagerNotify()
   }
   return true;
 #endif
-  return false;
+  return IPC_FAIL_NO_REASON(this);
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvBidiKeyboardNotify(const bool& aIsLangRTL,
                                      const bool& aHaveBidiKeyboards)
 {
@@ -1487,7 +1487,7 @@ ContentChild::RecvBidiKeyboardNotify(const bool& aIsLangRTL,
   if (bidi) {
     bidi->SetBidiKeyboardInfo(aIsLangRTL, aHaveBidiKeyboards);
   }
-  return true;
+  return IPC_OK();
 }
 
 static CancelableRunnable* sFirstIdleTask;
@@ -1547,7 +1547,7 @@ ContentChild::SendPBrowserConstructor(PBrowserChild* aActor,
                                                 aIsForBrowser);
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                       const TabId& aTabId,
                                       const IPCTabContext& aContext,
@@ -1583,7 +1583,7 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
     InitProcessAttributes();
   }
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -1679,7 +1679,7 @@ ContentChild::DeallocPFlyWebPublishedServerChild(PFlyWebPublishedServerChild* aA
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvNotifyPresentationReceiverLaunched(PBrowserChild* aIframe,
                                                      const nsString& aSessionId)
 {
@@ -1693,10 +1693,10 @@ ContentChild::RecvNotifyPresentationReceiverLaunched(PBrowserChild* aIframe,
 
   Unused << NS_WARN_IF(NS_FAILED(static_cast<PresentationIPCService*>(service.get())->MonitorResponderLoading(aSessionId, docShell)));
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvNotifyPresentationReceiverCleanUp(const nsString& aSessionId)
 {
   nsCOMPtr<nsIPresentationService> service =
@@ -1705,16 +1705,16 @@ ContentChild::RecvNotifyPresentationReceiverCleanUp(const nsString& aSessionId)
 
   Unused << NS_WARN_IF(NS_FAILED(service->UntrackSessionInfo(aSessionId, nsIPresentationService::ROLE_RECEIVER)));
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvNotifyEmptyHTTPCache()
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   obs->NotifyObservers(nullptr, "cacheservice:empty-cache", nullptr);
-  return true;
+  return IPC_OK();
 }
 
 PCrashReporterChild*
@@ -1784,10 +1784,10 @@ ContentChild::GetCPOWManager()
   return CPOWManagerFor(SendPJavaScriptConstructor());
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvPTestShellConstructor(PTestShellChild* actor)
 {
-  return true;
+  return IPC_OK();
 }
 
 PDeviceStorageRequestChild*
@@ -1998,7 +1998,7 @@ ContentChild::DeallocPWebrtcGlobalChild(PWebrtcGlobalChild *aActor)
 }
 
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvRegisterChrome(InfallibleTArray<ChromePackage>&& packages,
                                  InfallibleTArray<SubstitutionMapping>&& resources,
                                  InfallibleTArray<OverrideMapping>&& overrides,
@@ -2010,10 +2010,10 @@ ContentChild::RecvRegisterChrome(InfallibleTArray<ChromePackage>&& packages,
     static_cast<nsChromeRegistryContent*>(registrySvc.get());
   chromeRegistry->RegisterRemoteChrome(packages, resources, overrides,
                                        locale, reset);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvRegisterChromeItem(const ChromeRegistryItem& item)
 {
   nsCOMPtr<nsIChromeRegistry> registrySvc = nsChromeRegistry::GetService();
@@ -2034,23 +2034,23 @@ ContentChild::RecvRegisterChromeItem(const ChromeRegistryItem& item)
 
     default:
       MOZ_ASSERT(false, "bad chrome item");
-      return false;
+      return IPC_FAIL_NO_REASON(this);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvClearImageCache(const bool& privateLoader, const bool& chrome)
 {
   imgLoader* loader = privateLoader ? imgLoader::PrivateBrowsingLoader() :
                                       imgLoader::NormalLoader();
 
   loader->ClearCache(chrome);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvSetOffline(const bool& offline)
 {
   nsCOMPtr<nsIIOService> io (do_GetIOService());
@@ -2058,10 +2058,10 @@ ContentChild::RecvSetOffline(const bool& offline)
 
   io->SetOffline(offline);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvSetConnectivity(const bool& connectivity)
 {
   nsCOMPtr<nsIIOService> io(do_GetIOService());
@@ -2070,7 +2070,7 @@ ContentChild::RecvSetConnectivity(const bool& connectivity)
 
   ioInternal->SetConnectivity(connectivity);
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -2155,21 +2155,21 @@ ContentChild::AddRemoteAlertObserver(const nsString& aData,
   return NS_OK;
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvPreferenceUpdate(const PrefSetting& aPref)
 {
   Preferences::SetPreference(aPref);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvVarUpdate(const GfxVarUpdate& aVar)
 {
   gfx::gfxVars::ApplyUpdate(aVar);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvDataStoragePut(const nsString& aFilename,
                                  const DataStorageItem& aItem)
 {
@@ -2177,10 +2177,10 @@ ContentChild::RecvDataStoragePut(const nsString& aFilename,
   if (storage) {
     storage->Put(aItem.key(), aItem.value(), aItem.type());
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvDataStorageRemove(const nsString& aFilename,
                                     const nsCString& aKey,
                                     const DataStorageType& aType)
@@ -2189,20 +2189,20 @@ ContentChild::RecvDataStorageRemove(const nsString& aFilename,
   if (storage) {
     storage->Remove(aKey, aType);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvDataStorageClear(const nsString& aFilename)
 {
   RefPtr<DataStorage> storage = DataStorage::GetIfExists(aFilename);
   if (storage) {
     storage->Clear();
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvNotifyAlertsObserver(const nsCString& aType, const nsString& aData)
 {
   for (uint32_t i = 0; i < mAlertObservers.Length();
@@ -2218,32 +2218,32 @@ ContentChild::RecvNotifyAlertsObserver(const nsCString& aType, const nsString& a
     }
     ++i;
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvNotifyVisited(const URIParams& aURI)
 {
   nsCOMPtr<nsIURI> newURI = DeserializeURI(aURI);
   if (!newURI) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   nsCOMPtr<IHistory> history = services::GetHistoryService();
   if (history) {
     history->NotifyVisited(newURI);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvLoadProcessScript(const nsString& aURL)
 {
   ProcessGlobal* global = ProcessGlobal::Get();
   global->LoadScript(aURL);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvAsyncMessage(const nsString& aMsg,
                                InfallibleTArray<CpowEntry>&& aCpows,
                                const IPC::Principal& aPrincipal,
@@ -2259,43 +2259,43 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg,
                         nullptr, aMsg, false, &data, &cpows, aPrincipal,
                         nullptr);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvGeolocationUpdate(const GeoPosition& somewhere)
 {
   nsCOMPtr<nsIGeolocationUpdate> gs =
     do_GetService("@mozilla.org/geolocation/service;1");
   if (!gs) {
-    return true;
+    return IPC_OK();
   }
   nsCOMPtr<nsIDOMGeoPosition> position = somewhere;
   gs->Update(position);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvGeolocationError(const uint16_t& errorCode)
 {
   nsCOMPtr<nsIGeolocationUpdate> gs =
     do_GetService("@mozilla.org/geolocation/service;1");
   if (!gs) {
-    return true;
+    return IPC_OK();
   }
   gs->NotifyError(errorCode);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvUpdateDictionaryList(InfallibleTArray<nsString>&& aDictionaries)
 {
   mAvailableDictionaries = aDictionaries;
   mozInlineSpellChecker::UpdateCanEnableInlineSpellChecking();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvAddPermission(const IPC::Permission& permission)
 {
 #if MOZ_PERMISSIONS
@@ -2311,11 +2311,11 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
   nsAutoCString originNoSuffix;
   PrincipalOriginAttributes attrs;
   bool success = attrs.PopulateFromOrigin(permission.origin, originNoSuffix);
-  NS_ENSURE_TRUE(success, false);
+  NS_ENSURE_TRUE(success, IPC_FAIL_NO_REASON(this));
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
-  NS_ENSURE_SUCCESS(rv, true);
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   nsCOMPtr<nsIPrincipal> principal = mozilla::BasePrincipal::CreateCodebasePrincipal(uri, attrs);
 
@@ -2333,10 +2333,10 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
                                  nsPermissionManager::eNoDBOperation);
 #endif
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvFlushMemory(const nsString& reason)
 {
   nsCOMPtr<nsIObserverService> os =
@@ -2344,10 +2344,10 @@ ContentChild::RecvFlushMemory(const nsString& reason)
   if (os) {
     os->NotifyObservers(nullptr, "memory-pressure", reason.get());
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvActivateA11y(const uint32_t& aMsaaID)
 {
 #ifdef ACCESSIBILITY
@@ -2360,10 +2360,10 @@ ContentChild::RecvActivateA11y(const uint32_t& aMsaaID)
   // process.
   GetOrCreateAccService(nsAccessibilityService::eMainProcess);
 #endif // ACCESSIBILITY
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvShutdownA11y()
 {
 #ifdef ACCESSIBILITY
@@ -2371,10 +2371,10 @@ ContentChild::RecvShutdownA11y()
   // chrome process.
   MaybeShutdownAccService(nsAccessibilityService::eMainProcess);
 #endif
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvGarbageCollect()
 {
   // Rebroadcast the "child-gc-request" so that workers will GC.
@@ -2383,10 +2383,10 @@ ContentChild::RecvGarbageCollect()
     obs->NotifyObservers(nullptr, "child-gc-request", nullptr);
   }
   nsJSContext::GarbageCollectNow(JS::gcreason::DOM_IPC);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvCycleCollect()
 {
   // Rebroadcast the "child-cc-request" so that workers will CC.
@@ -2395,7 +2395,7 @@ ContentChild::RecvCycleCollect()
     obs->NotifyObservers(nullptr, "child-cc-request", nullptr);
   }
   nsJSContext::CycleCollectNow();
-  return true;
+  return IPC_OK();
 }
 
 static void
@@ -2411,7 +2411,7 @@ PreloadSlowThings()
 
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID,
                           const nsCString& name, const nsCString& UAName,
                           const nsCString& ID, const nsCString& vendor)
@@ -2423,14 +2423,14 @@ ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID,
   mAppInfo.ID.Assign(ID);
   mAppInfo.vendor.Assign(vendor);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvAppInit()
 {
   if (!Preferences::GetBool("dom.ipc.processPrelaunch.enabled", false)) {
-    return true;
+    return IPC_OK();
   }
 
   // If we're part of the mozbrowser machinery, go ahead and start
@@ -2442,19 +2442,19 @@ ContentChild::RecvAppInit()
     PreloadSlowThings();
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvInitServiceWorkers(const ServiceWorkerConfiguration& aConfig)
 {
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   MOZ_ASSERT(swm);
   swm->LoadRegistrations(aConfig.serviceWorkerRegistrations());
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvInitBlobURLs(nsTArray<BlobURLRegistrationData>&& aRegistrations)
 {
   for (uint32_t i = 0; i < aRegistrations.Length(); ++i) {
@@ -2468,18 +2468,18 @@ ContentChild::RecvInitBlobURLs(nsTArray<BlobURLRegistrationData>&& aRegistration
                                               blobImpl);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvLastPrivateDocShellDestroyed()
 {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   obs->NotifyObservers(nullptr, "last-pb-context-exited", nullptr);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvVolumes(nsTArray<VolumeInfo>&& aVolumes)
 {
 #ifdef MOZ_WIDGET_GONK
@@ -2488,10 +2488,10 @@ ContentChild::RecvVolumes(nsTArray<VolumeInfo>&& aVolumes)
     vs->RecvVolumesFromParent(aVolumes);
   }
 #endif
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvFilePathUpdate(const nsString& aStorageType,
                                  const nsString& aStorageName,
                                  const nsString& aPath,
@@ -2501,7 +2501,7 @@ ContentChild::RecvFilePathUpdate(const nsString& aStorageType,
     // No device storage instances in this process. Don't try and
     // and create a DeviceStorageFile since it will fail.
 
-    return true;
+    return IPC_OK();
   }
 
   RefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(aStorageType, aStorageName, aPath);
@@ -2510,10 +2510,10 @@ ContentChild::RecvFilePathUpdate(const nsString& aStorageType,
   CopyASCIItoUTF16(aReason, reason);
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   obs->NotifyObservers(dsf, "file-watcher-update", reason.get());
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvFileSystemUpdate(const nsString& aFsName,
                                    const nsString& aVolumeName,
                                    const int32_t& aState,
@@ -2550,10 +2550,10 @@ ContentChild::RecvFileSystemUpdate(const nsString& aFsName,
   Unused << aIsRemovable;
   Unused << aIsHotSwappable;
 #endif
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvVolumeRemoved(const nsString& aFsName)
 {
 #ifdef MOZ_WIDGET_GONK
@@ -2565,15 +2565,15 @@ ContentChild::RecvVolumeRemoved(const nsString& aFsName)
   // Remove warnings about unused arguments
   Unused << aFsName;
 #endif
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvNotifyProcessPriorityChanged(
   const hal::ProcessPriority& aPriority)
 {
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  NS_ENSURE_TRUE(os, true);
+  NS_ENSURE_TRUE(os, IPC_OK());
 
   RefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
   props->SetPropertyAsInt32(NS_LITERAL_STRING("priority"),
@@ -2581,28 +2581,28 @@ ContentChild::RecvNotifyProcessPriorityChanged(
 
   os->NotifyObservers(static_cast<nsIPropertyBag2*>(props),
                       "ipc:process-priority-changed",  nullptr);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvMinimizeMemoryUsage()
 {
   nsCOMPtr<nsIMemoryReporterManager> mgr =
     do_GetService("@mozilla.org/memory-reporter-manager;1");
-  NS_ENSURE_TRUE(mgr, true);
+  NS_ENSURE_TRUE(mgr, IPC_OK());
 
   Unused << mgr->MinimizeMemoryUsage(/* callback = */ nullptr);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvNotifyPhoneStateChange(const nsString& aState)
 {
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
     os->NotifyObservers(nullptr, "phone-state-changed", aState.get());
   }
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -2624,7 +2624,7 @@ ContentChild::RemoveIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS)
   mIdleObservers.RemoveEntry(aObserver);
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvNotifyIdleObserver(const uint64_t& aObserver,
                                      const nsCString& aTopic,
                                      const nsString& aTimeStr)
@@ -2635,15 +2635,15 @@ ContentChild::RecvNotifyIdleObserver(const uint64_t& aObserver,
   } else {
     NS_WARNING("Received notification for an idle observer that was removed.");
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvLoadAndRegisterSheet(const URIParams& aURI, const uint32_t& aType)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri) {
-    return true;
+    return IPC_OK();
   }
 
   nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
@@ -2651,15 +2651,15 @@ ContentChild::RecvLoadAndRegisterSheet(const URIParams& aURI, const uint32_t& aT
     sheetService->LoadAndRegisterSheet(uri, aType);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvUnregisterSheet(const URIParams& aURI, const uint32_t& aType)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri) {
-    return true;
+    return IPC_OK();
   }
 
   nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
@@ -2667,7 +2667,7 @@ ContentChild::RecvUnregisterSheet(const URIParams& aURI, const uint32_t& aType)
     sheetService->UnregisterSheet(uri, aType);
   }
 
-  return true;
+  return IPC_OK();
 }
 
 POfflineCacheUpdateChild*
@@ -2689,7 +2689,7 @@ ContentChild::DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* actor)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvStartProfiler(const ProfilerInitParams& params)
 {
   nsTArray<const char*> featureArray;
@@ -2707,17 +2707,17 @@ ContentChild::RecvStartProfiler(const ProfilerInitParams& params)
                  threadNameFilterArray.Elements(),
                  threadNameFilterArray.Length());
 
- return true;
+ return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvStopProfiler()
 {
   profiler_stop();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvPauseProfiler(const bool& aPause)
 {
   if (aPause) {
@@ -2726,10 +2726,10 @@ ContentChild::RecvPauseProfiler(const bool& aPause)
     profiler_resume();
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvGatherProfile()
 {
   nsCString profileCString;
@@ -2741,10 +2741,10 @@ ContentChild::RecvGatherProfile()
   }
 
   Unused << SendProfile(profileCString);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvLoadPluginResult(const uint32_t& aPluginId,
                                    const bool& aResult)
 {
@@ -2753,42 +2753,45 @@ ContentChild::RecvLoadPluginResult(const uint32_t& aPluginId,
                      NS_SUCCEEDED(rv);
   plugins::PluginModuleContentParent::OnLoadPluginResult(aPluginId,
                                                          finalResult);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvAssociatePluginId(const uint32_t& aPluginId,
                                     const base::ProcessId& aProcessId)
 {
   plugins::PluginModuleContentParent::AssociatePluginId(aPluginId, aProcessId);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvDomainSetChanged(const uint32_t& aSetType,
                                    const uint32_t& aChangeType,
                                    const OptionalURIParams& aDomain)
 {
   if (aChangeType == ACTIVATE_POLICY) {
     if (mPolicy) {
-      return true;
+      return IPC_OK();
     }
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
     MOZ_ASSERT(ssm);
     ssm->ActivateDomainPolicyInternal(getter_AddRefs(mPolicy));
-    return !!mPolicy;
+    if (!mPolicy) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+    return IPC_OK();
   } else if (!mPolicy) {
     MOZ_ASSERT_UNREACHABLE("If the domain policy is not active yet,"
                            " the first message should be ACTIVATE_POLICY");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  NS_ENSURE_TRUE(mPolicy, false);
+  NS_ENSURE_TRUE(mPolicy, IPC_FAIL_NO_REASON(this));
 
   if (aChangeType == DEACTIVATE_POLICY) {
     mPolicy->Deactivate();
     mPolicy = nullptr;
-    return true;
+    return IPC_OK();
   }
 
   nsCOMPtr<nsIDomainSet> set;
@@ -2807,7 +2810,7 @@ ContentChild::RecvDomainSetChanged(const uint32_t& aSetType,
       break;
     default:
       NS_NOTREACHED("Unexpected setType");
-      return false;
+      return IPC_FAIL_NO_REASON(this);
   }
 
   MOZ_ASSERT(set);
@@ -2816,11 +2819,11 @@ ContentChild::RecvDomainSetChanged(const uint32_t& aSetType,
 
   switch(aChangeType) {
     case ADD_DOMAIN:
-      NS_ENSURE_TRUE(uri, false);
+      NS_ENSURE_TRUE(uri, IPC_FAIL_NO_REASON(this));
       set->Add(uri);
       break;
     case REMOVE_DOMAIN:
-      NS_ENSURE_TRUE(uri, false);
+      NS_ENSURE_TRUE(uri, IPC_FAIL_NO_REASON(this));
       set->Remove(uri);
       break;
     case CLEAR_DOMAINS:
@@ -2828,10 +2831,10 @@ ContentChild::RecvDomainSetChanged(const uint32_t& aSetType,
       break;
     default:
       NS_NOTREACHED("Unexpected changeType");
-      return false;
+      return IPC_FAIL_NO_REASON(this);
   }
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -2858,7 +2861,7 @@ ContentChild::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure)
   ProcessChild::QuickExit();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvShutdown()
 {
   // If we receive the shutdown message from within a nested event loop, we want
@@ -2879,7 +2882,7 @@ ContentChild::RecvShutdown()
       // then.
       MessageLoop::current()->PostDelayedTask(
         NewRunnableMethod(this, &ContentChild::RecvShutdown), 100);
-      return true;
+      return IPC_OK();
     }
   }
 
@@ -2923,7 +2926,7 @@ ContentChild::RecvShutdown()
   // Ignore errors here. If this fails, the parent will kill us after a
   // timeout.
   Unused << SendFinishShutdown();
-  return true;
+  return IPC_OK();
 }
 
 PBrowserOrId
@@ -2938,7 +2941,7 @@ ContentChild::GetBrowserOrId(TabChild* aTabChild)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvUpdateWindow(const uintptr_t& aChildId)
 {
 #if defined(XP_WIN)
@@ -2950,10 +2953,10 @@ ContentChild::RecvUpdateWindow(const uintptr_t& aChildId)
   // plugin to paint its child window.
   parentInstance->CallUpdateWindow();
   }
-  return true;
+  return IPC_OK();
 #else
   MOZ_ASSERT(false, "ContentChild::RecvUpdateWindow calls unexpected on this platform.");
-  return false;
+  return IPC_FAIL_NO_REASON(this);
 #endif
 }
 
@@ -2982,13 +2985,13 @@ ContentChild::AllocPWebBrowserPersistDocumentChild(PBrowserChild* aBrowser,
   return new WebBrowserPersistDocumentChild();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvPWebBrowserPersistDocumentConstructor(PWebBrowserPersistDocumentChild *aActor,
                                                         PBrowserChild* aBrowser,
                                                         const uint64_t& aOuterWindowID)
 {
   if (NS_WARN_IF(!aBrowser)) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   nsCOMPtr<nsIDocument> rootDoc =
     static_cast<TabChild*>(aBrowser)->GetDocument();
@@ -3004,7 +3007,7 @@ ContentChild::RecvPWebBrowserPersistDocumentConstructor(PWebBrowserPersistDocume
   } else {
     static_cast<WebBrowserPersistDocumentChild*>(aActor)->Start(foundDoc);
   }
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -3014,7 +3017,7 @@ ContentChild::DeallocPWebBrowserPersistDocumentChild(PWebBrowserPersistDocumentC
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvSetAudioSessionData(const nsID& aId,
                                       const nsString& aDisplayName,
                                       const nsString& aIconPath)
@@ -3022,15 +3025,15 @@ ContentChild::RecvSetAudioSessionData(const nsID& aId,
 #if defined(XP_WIN)
     if (NS_FAILED(mozilla::widget::RecvAudioSessionData(aId, aDisplayName,
                                                         aIconPath))) {
-      return true;
+      return IPC_OK();
     }
 
     // Ignore failures here; we can't really do anything about them
     mozilla::widget::StartAudioSession();
-    return true;
+    return IPC_OK();
 #else
     NS_RUNTIMEABORT("Not Reached!");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
 #endif
 }
 
@@ -3069,7 +3072,7 @@ NextWindowID()
   return (processBits << kWindowIDWindowBits) | windowBits;
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
                                     const uint32_t& aAction)
 {
@@ -3125,10 +3128,10 @@ ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
       session->SetDataTransfer(dataTransfer);
     }
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvEndDragSession(const bool& aDoneDrag,
                                  const bool& aUserCancelled,
                                  const LayoutDeviceIntPoint& aDragEndPoint)
@@ -3145,20 +3148,20 @@ ContentChild::RecvEndDragSession(const bool& aDoneDrag,
     static_cast<nsBaseDragService*>(dragService.get())->SetDragEndPoint(aDragEndPoint);
     dragService->EndDragSession(aDoneDrag);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvPush(const nsCString& aScope,
                        const IPC::Principal& aPrincipal,
                        const nsString& aMessageId)
 {
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Nothing());
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvPushWithData(const nsCString& aScope,
                                const IPC::Principal& aPrincipal,
                                const nsString& aMessageId,
@@ -3166,37 +3169,37 @@ ContentChild::RecvPushWithData(const nsCString& aScope,
 {
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Some(aData));
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvPushSubscriptionChange(const nsCString& aScope,
                                          const IPC::Principal& aPrincipal)
 {
   PushSubscriptionChangeDispatcher dispatcher(aScope, aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvPushError(const nsCString& aScope, const IPC::Principal& aPrincipal,
                             const nsString& aMessage, const uint32_t& aFlags)
 {
   PushErrorDispatcher dispatcher(aScope, aPrincipal, aMessage, aFlags);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObserversAndWorkers()));
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScope,
                                                           const IPC::Principal& aPrincipal)
 {
   PushSubscriptionModifiedDispatcher dispatcher(aScope, aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvBlobURLRegistration(const nsCString& aURI, PBlobChild* aBlobChild,
                                       const IPC::Principal& aPrincipal)
 {
@@ -3204,14 +3207,14 @@ ContentChild::RecvBlobURLRegistration(const nsCString& aURI, PBlobChild* aBlobCh
   MOZ_ASSERT(blobImpl);
 
   nsHostObjectProtocolHandler::AddDataEntry(aURI, aPrincipal, blobImpl);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvBlobURLUnregistration(const nsCString& aURI)
 {
   nsHostObjectProtocolHandler::RemoveDataEntry(aURI);
-  return true;
+  return IPC_OK();
 }
 
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
@@ -3246,7 +3249,7 @@ ContentChild::DeleteGetFilesRequest(nsID& aUUID, GetFilesHelperChild* aChild)
   mGetFilesPendingRequests.Remove(aUUID);
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentChild::RecvGetFilesResponse(const nsID& aUUID,
                                    const GetFilesResponseResult& aResult)
 {
@@ -3254,7 +3257,7 @@ ContentChild::RecvGetFilesResponse(const nsID& aUUID,
   // This object can already been deleted in case DeleteGetFilesRequest has
   // been called when the response was sending by the parent.
   if (!child) {
-    return true;
+    return IPC_OK();
   }
 
   if (aResult.type() == GetFilesResponseResult::TGetFilesResponseFailure) {
@@ -3275,7 +3278,7 @@ ContentChild::RecvGetFilesResponse(const nsID& aUUID,
   }
 
   mGetFilesPendingRequests.Remove(aUUID);
-  return true;
+  return IPC_OK();
 }
 
 /* static */ void

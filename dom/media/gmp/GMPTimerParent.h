@@ -25,8 +25,8 @@ public:
   void Shutdown();
 
 protected:
-  bool RecvSetTimer(const uint32_t& aTimerId,
-                    const uint32_t& aTimeoutMs) override;
+  mozilla::ipc::IPCResult RecvSetTimer(const uint32_t& aTimerId,
+                                       const uint32_t& aTimeoutMs) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:

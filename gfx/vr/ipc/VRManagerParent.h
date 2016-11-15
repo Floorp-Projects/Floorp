@@ -78,15 +78,15 @@ protected:
   virtual void ActorDestroy(ActorDestroyReason why) override;
   void OnChannelConnected(int32_t pid) override;
 
-  virtual bool RecvRefreshDisplays() override;
-  virtual bool RecvGetDisplays(nsTArray<VRDisplayInfo> *aDisplays) override;
-  virtual bool RecvResetSensor(const uint32_t& aDisplayID) override;
-  virtual bool RecvGetSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState) override;
-  virtual bool RecvGetImmediateSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState) override;
-  virtual bool RecvSetHaveEventListener(const bool& aHaveEventListener) override;
-  virtual bool RecvControllerListenerAdded() override;
-  virtual bool RecvControllerListenerRemoved() override;
-  virtual bool RecvGetControllers(nsTArray<VRControllerInfo> *aControllers) override;
+  virtual mozilla::ipc::IPCResult RecvRefreshDisplays() override;
+  virtual mozilla::ipc::IPCResult RecvGetDisplays(nsTArray<VRDisplayInfo> *aDisplays) override;
+  virtual mozilla::ipc::IPCResult RecvResetSensor(const uint32_t& aDisplayID) override;
+  virtual mozilla::ipc::IPCResult RecvGetSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState) override;
+  virtual mozilla::ipc::IPCResult RecvGetImmediateSensorState(const uint32_t& aDisplayID, VRHMDSensorState* aState) override;
+  virtual mozilla::ipc::IPCResult RecvSetHaveEventListener(const bool& aHaveEventListener) override;
+  virtual mozilla::ipc::IPCResult RecvControllerListenerAdded() override;
+  virtual mozilla::ipc::IPCResult RecvControllerListenerRemoved() override;
+  virtual mozilla::ipc::IPCResult RecvGetControllers(nsTArray<VRControllerInfo> *aControllers) override;
 
 private:
   void RegisterWithManager();

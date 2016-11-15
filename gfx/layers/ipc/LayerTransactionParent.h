@@ -108,59 +108,59 @@ public:
   }
 
 protected:
-  virtual bool RecvShutdown() override;
+  virtual mozilla::ipc::IPCResult RecvShutdown() override;
 
-  virtual bool RecvPaintTime(const uint64_t& aTransactionId,
-                             const TimeDuration& aPaintTime) override;
+  virtual mozilla::ipc::IPCResult RecvPaintTime(const uint64_t& aTransactionId,
+                                                const TimeDuration& aPaintTime) override;
 
-  virtual bool RecvUpdate(EditArray&& cset,
-                          OpDestroyArray&& aToDestroy,
-                          const uint64_t& aFwdTransactionId,
-                          const uint64_t& aTransactionId,
-                          const TargetConfig& targetConfig,
-                          PluginsArray&& aPlugins,
-                          const bool& isFirstPaint,
-                          const bool& scheduleComposite,
-                          const uint32_t& paintSequenceNumber,
-                          const bool& isRepeatTransaction,
-                          const mozilla::TimeStamp& aTransactionStart,
-                          const int32_t& aPaintSyncId,
-                          EditReplyArray* reply) override;
+  virtual mozilla::ipc::IPCResult RecvUpdate(EditArray&& cset,
+                                             OpDestroyArray&& aToDestroy,
+                                             const uint64_t& aFwdTransactionId,
+                                             const uint64_t& aTransactionId,
+                                             const TargetConfig& targetConfig,
+                                             PluginsArray&& aPlugins,
+                                             const bool& isFirstPaint,
+                                             const bool& scheduleComposite,
+                                             const uint32_t& paintSequenceNumber,
+                                             const bool& isRepeatTransaction,
+                                             const mozilla::TimeStamp& aTransactionStart,
+                                             const int32_t& aPaintSyncId,
+                                             EditReplyArray* reply) override;
 
-  virtual bool RecvUpdateNoSwap(EditArray&& cset,
-                                OpDestroyArray&& aToDestroy,
-                                const uint64_t& aFwdTransactionId,
-                                const uint64_t& aTransactionId,
-                                const TargetConfig& targetConfig,
-                                PluginsArray&& aPlugins,
-                                const bool& isFirstPaint,
-                                const bool& scheduleComposite,
-                                const uint32_t& paintSequenceNumber,
-                                const bool& isRepeatTransaction,
-                                const mozilla::TimeStamp& aTransactionStart,
-                                const int32_t& aPaintSyncId) override;
+  virtual mozilla::ipc::IPCResult RecvUpdateNoSwap(EditArray&& cset,
+                                                   OpDestroyArray&& aToDestroy,
+                                                   const uint64_t& aFwdTransactionId,
+                                                   const uint64_t& aTransactionId,
+                                                   const TargetConfig& targetConfig,
+                                                   PluginsArray&& aPlugins,
+                                                   const bool& isFirstPaint,
+                                                   const bool& scheduleComposite,
+                                                   const uint32_t& paintSequenceNumber,
+                                                   const bool& isRepeatTransaction,
+                                                   const mozilla::TimeStamp& aTransactionStart,
+                                                   const int32_t& aPaintSyncId) override;
 
-  virtual bool RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
+  virtual mozilla::ipc::IPCResult RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
 
-  virtual bool RecvClearCachedResources() override;
-  virtual bool RecvForceComposite() override;
-  virtual bool RecvSetTestSampleTime(const TimeStamp& aTime) override;
-  virtual bool RecvLeaveTestMode() override;
-  virtual bool RecvGetAnimationOpacity(PLayerParent* aParent,
-                                       float* aOpacity,
-                                       bool* aHasAnimationOpacity) override;
-  virtual bool RecvGetAnimationTransform(PLayerParent* aParent,
-                                         MaybeTransform* aTransform)
+  virtual mozilla::ipc::IPCResult RecvClearCachedResources() override;
+  virtual mozilla::ipc::IPCResult RecvForceComposite() override;
+  virtual mozilla::ipc::IPCResult RecvSetTestSampleTime(const TimeStamp& aTime) override;
+  virtual mozilla::ipc::IPCResult RecvLeaveTestMode() override;
+  virtual mozilla::ipc::IPCResult RecvGetAnimationOpacity(PLayerParent* aParent,
+                                                          float* aOpacity,
+                                                          bool* aHasAnimationOpacity) override;
+  virtual mozilla::ipc::IPCResult RecvGetAnimationTransform(PLayerParent* aParent,
+                                                            MaybeTransform* aTransform)
                                          override;
-  virtual bool RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aId,
-                                        const float& aX, const float& aY) override;
-  virtual bool RecvSetAsyncZoom(const FrameMetrics::ViewID& aId,
-                                const float& aValue) override;
-  virtual bool RecvFlushApzRepaints() override;
-  virtual bool RecvGetAPZTestData(APZTestData* aOutData) override;
-  virtual bool RecvRequestProperty(const nsString& aProperty, float* aValue) override;
-  virtual bool RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
-                                          nsTArray<ScrollableLayerGuid>&& aTargets) override;
+  virtual mozilla::ipc::IPCResult RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aId,
+                                                           const float& aX, const float& aY) override;
+  virtual mozilla::ipc::IPCResult RecvSetAsyncZoom(const FrameMetrics::ViewID& aId,
+                                                   const float& aValue) override;
+  virtual mozilla::ipc::IPCResult RecvFlushApzRepaints() override;
+  virtual mozilla::ipc::IPCResult RecvGetAPZTestData(APZTestData* aOutData) override;
+  virtual mozilla::ipc::IPCResult RecvRequestProperty(const nsString& aProperty, float* aValue) override;
+  virtual mozilla::ipc::IPCResult RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
+                                                             nsTArray<ScrollableLayerGuid>&& aTargets) override;
 
   virtual PLayerParent* AllocPLayerParent() override;
   virtual bool DeallocPLayerParent(PLayerParent* actor) override;

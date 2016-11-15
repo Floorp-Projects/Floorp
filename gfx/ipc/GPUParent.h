@@ -27,28 +27,28 @@ public:
             IPC::Channel* aChannel);
   void NotifyDeviceReset();
 
-  bool RecvInit(nsTArray<GfxPrefSetting>&& prefs,
-                nsTArray<GfxVarUpdate>&& vars,
-                const DevicePrefs& devicePrefs) override;
-  bool RecvInitVsyncBridge(Endpoint<PVsyncBridgeParent>&& aVsyncEndpoint) override;
-  bool RecvInitImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint) override;
-  bool RecvInitVRManager(Endpoint<PVRManagerParent>&& aEndpoint) override;
-  bool RecvUpdatePref(const GfxPrefSetting& pref) override;
-  bool RecvUpdateVar(const GfxVarUpdate& pref) override;
-  bool RecvNewWidgetCompositor(
-    Endpoint<PCompositorBridgeParent>&& aEndpoint,
-    const CSSToLayoutDeviceScale& aScale,
-    const TimeDuration& aVsyncRate,
-    const bool& aUseExternalSurface,
-    const IntSize& aSurfaceSize) override;
-  bool RecvNewContentCompositorBridge(Endpoint<PCompositorBridgeParent>&& aEndpoint) override;
-  bool RecvNewContentImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint) override;
-  bool RecvNewContentVRManager(Endpoint<PVRManagerParent>&& aEndpoint) override;
-  bool RecvNewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent>&& aEndpoint) override;
-  bool RecvGetDeviceStatus(GPUDeviceData* aOutStatus) override;
-  bool RecvAddLayerTreeIdMapping(nsTArray<LayerTreeIdMapping>&& aMappings) override;
-  bool RecvRemoveLayerTreeIdMapping(const LayerTreeIdMapping& aMapping) override;
-  bool RecvNotifyGpuObservers(const nsCString& aTopic) override;
+  mozilla::ipc::IPCResult RecvInit(nsTArray<GfxPrefSetting>&& prefs,
+                                   nsTArray<GfxVarUpdate>&& vars,
+                                   const DevicePrefs& devicePrefs) override;
+  mozilla::ipc::IPCResult RecvInitVsyncBridge(Endpoint<PVsyncBridgeParent>&& aVsyncEndpoint) override;
+  mozilla::ipc::IPCResult RecvInitImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint) override;
+  mozilla::ipc::IPCResult RecvInitVRManager(Endpoint<PVRManagerParent>&& aEndpoint) override;
+  mozilla::ipc::IPCResult RecvUpdatePref(const GfxPrefSetting& pref) override;
+  mozilla::ipc::IPCResult RecvUpdateVar(const GfxVarUpdate& pref) override;
+  mozilla::ipc::IPCResult RecvNewWidgetCompositor(
+      Endpoint<PCompositorBridgeParent>&& aEndpoint,
+      const CSSToLayoutDeviceScale& aScale,
+      const TimeDuration& aVsyncRate,
+      const bool& aUseExternalSurface,
+      const IntSize& aSurfaceSize) override;
+  mozilla::ipc::IPCResult RecvNewContentCompositorBridge(Endpoint<PCompositorBridgeParent>&& aEndpoint) override;
+  mozilla::ipc::IPCResult RecvNewContentImageBridge(Endpoint<PImageBridgeParent>&& aEndpoint) override;
+  mozilla::ipc::IPCResult RecvNewContentVRManager(Endpoint<PVRManagerParent>&& aEndpoint) override;
+  mozilla::ipc::IPCResult RecvNewContentVideoDecoderManager(Endpoint<PVideoDecoderManagerParent>&& aEndpoint) override;
+  mozilla::ipc::IPCResult RecvGetDeviceStatus(GPUDeviceData* aOutStatus) override;
+  mozilla::ipc::IPCResult RecvAddLayerTreeIdMapping(nsTArray<LayerTreeIdMapping>&& aMappings) override;
+  mozilla::ipc::IPCResult RecvRemoveLayerTreeIdMapping(const LayerTreeIdMapping& aMapping) override;
+  mozilla::ipc::IPCResult RecvNotifyGpuObservers(const nsCString& aTopic) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

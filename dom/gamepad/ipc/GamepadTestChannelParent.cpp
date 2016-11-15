@@ -10,7 +10,7 @@
 namespace mozilla {
 namespace dom {
 
-bool
+mozilla::ipc::IPCResult
 GamepadTestChannelParent::RecvGamepadTestEvent(const uint32_t& aID,
                                                const GamepadChangeEvent& aEvent)
 {
@@ -29,34 +29,34 @@ GamepadTestChannelParent::RecvGamepadTestEvent(const uint32_t& aID,
     if (!mShuttingdown) {
       Unused << SendReplyGamepadIndex(aID, index);
     }
-    return true;
+    return IPC_OK();
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadRemoved) {
     const GamepadRemoved& a = aEvent.get_GamepadRemoved();
     service->RemoveGamepad(a.index());
-    return true;
+    return IPC_OK();
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadButtonInformation) {
     const GamepadButtonInformation& a = aEvent.get_GamepadButtonInformation();
     service->NewButtonEvent(a.index(), a.button(), a.pressed(), a.value());
-    return true;
+    return IPC_OK();
   }
   if (aEvent.type() == GamepadChangeEvent::TGamepadAxisInformation) {
     const GamepadAxisInformation& a = aEvent.get_GamepadAxisInformation();
     service->NewAxisMoveEvent(a.index(), a.axis(), a.value());
-    return true;
+    return IPC_OK();
   }
 
   NS_WARNING("Unknown event type.");
-  return false;
+  return IPC_FAIL_NO_REASON(this);
 }
 
-bool
+mozilla::ipc::IPCResult
 GamepadTestChannelParent::RecvShutdownChannel()
 {
   mShuttingdown = true;
   Unused << Send__delete__(this);
-  return true;
+  return IPC_OK();
 }
 
 } // namespace dom

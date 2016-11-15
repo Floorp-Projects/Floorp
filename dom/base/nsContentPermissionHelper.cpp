@@ -144,9 +144,9 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent
   nsTArray<PermissionRequest> mRequests;
 
  private:
-  virtual bool Recvprompt();
-  virtual bool RecvNotifyVisibility(const bool& aIsVisible);
-  virtual bool RecvDestroy();
+  virtual mozilla::ipc::IPCResult Recvprompt();
+  virtual mozilla::ipc::IPCResult RecvNotifyVisibility(const bool& aIsVisible);
+  virtual mozilla::ipc::IPCResult RecvDestroy();
   virtual void ActorDestroy(ActorDestroyReason why);
 };
 
@@ -166,31 +166,31 @@ ContentPermissionRequestParent::~ContentPermissionRequestParent()
   MOZ_COUNT_DTOR(ContentPermissionRequestParent);
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentPermissionRequestParent::Recvprompt()
 {
   mProxy = new nsContentPermissionRequestProxy();
   if (NS_FAILED(mProxy->Init(mRequests, this))) {
     mProxy->Cancel();
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentPermissionRequestParent::RecvNotifyVisibility(const bool& aIsVisible)
 {
   if (!mProxy) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   mProxy->NotifyVisibility(aIsVisible);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ContentPermissionRequestParent::RecvDestroy()
 {
   Unused << PContentPermissionRequestParent::Send__delete__(this);
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -780,7 +780,7 @@ RemotePermissionRequest::DoAllow(JS::HandleValue aChoices)
 }
 
 // PContentPermissionRequestChild
-bool
+mozilla::ipc::IPCResult
 RemotePermissionRequest::RecvNotifyResult(const bool& aAllow,
                                           InfallibleTArray<PermissionChoice>&& aChoices)
 {
@@ -790,14 +790,14 @@ RemotePermissionRequest::RecvNotifyResult(const bool& aAllow,
     // Use 'undefined' if no choice is provided.
     if (aChoices.IsEmpty()) {
       DoAllow(JS::UndefinedHandleValue);
-      return true;
+      return IPC_OK();
     }
 
     // Convert choices to a JS val if any.
     // {"type1": "choice1", "type2": "choiceA"}
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(mWindow))) {
-      return true; // This is not an IPC error.
+      return IPC_OK(); // This is not an IPC error.
     }
 
     JSContext* cx = jsapi.cx();
@@ -809,7 +809,7 @@ RemotePermissionRequest::RecvNotifyResult(const bool& aAllow,
       JS::Rooted<JSString*> jChoice(cx, JS_NewUCStringCopyN(cx, choice.get(), choice.Length()));
       JS::Rooted<JS::Value> vChoice(cx, StringValue(jChoice));
       if (!JS_SetProperty(cx, obj, type.get(), vChoice)) {
-        return false;
+        return IPC_FAIL_NO_REASON(this);
       }
     }
     JS::RootedValue val(cx, JS::ObjectValue(*obj));
@@ -817,21 +817,21 @@ RemotePermissionRequest::RecvNotifyResult(const bool& aAllow,
   } else {
     DoCancel();
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 RemotePermissionRequest::RecvGetVisibility()
 {
   nsCOMPtr<nsIDocShell> docshell = mWindow->GetDocShell();
   if (!docshell) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   bool isActive = false;
   docshell->GetIsActive(&isActive);
   Unused << SendNotifyVisibility(isActive);
-  return true;
+  return IPC_OK();
 }
 
 void

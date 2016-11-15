@@ -29,68 +29,68 @@ APZChild::~APZChild()
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 APZChild::RecvRequestContentRepaint(const FrameMetrics& aFrameMetrics)
 {
   MOZ_ASSERT(mController->IsRepaintThread());
 
   mController->RequestContentRepaint(aFrameMetrics);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 APZChild::RecvUpdateOverscrollVelocity(const float& aX, const float& aY, const bool& aIsRootContent)
 {
   mController->UpdateOverscrollVelocity(aX, aY, aIsRootContent);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 APZChild::RecvUpdateOverscrollOffset(const float& aX, const float& aY, const bool& aIsRootContent)
 {
   mController->UpdateOverscrollOffset(aX, aY, aIsRootContent);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 APZChild::RecvSetScrollingRootContent(const bool& aIsRootContent)
 {
   mController->SetScrollingRootContent(aIsRootContent);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 APZChild::RecvNotifyMozMouseScrollEvent(const ViewID& aScrollId,
                                         const nsString& aEvent)
 {
   mController->NotifyMozMouseScrollEvent(aScrollId, aEvent);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 APZChild::RecvNotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                                    const APZStateChange& aChange,
                                    const int& aArg)
 {
   mController->NotifyAPZStateChange(aGuid, aChange, aArg);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 APZChild::RecvNotifyFlushComplete()
 {
   MOZ_ASSERT(mController->IsRepaintThread());
 
   mController->NotifyFlushComplete();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 APZChild::RecvDestroy()
 {
   // mController->Destroy will be called in the destructor
   PAPZChild::Send__delete__(this);
-  return true;
+  return IPC_OK();
 }
 
 

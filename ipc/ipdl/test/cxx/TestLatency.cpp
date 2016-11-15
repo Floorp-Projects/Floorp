@@ -69,7 +69,7 @@ TestLatencyParent::Ping5Pong5Trial()
         fail("sending Ping5()");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestLatencyParent::RecvPong()
 {
     TimeDuration thisTrial = (TimeStamp::Now() - mStart);
@@ -83,14 +83,14 @@ TestLatencyParent::RecvPong()
         PingPongTrial();
     else
         Ping5Pong5Trial();
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestLatencyParent::RecvPong5()
 {
     if (PTestLatency::PING5 != state())
-        return true;
+        return IPC_OK();
 
     TimeDuration thisTrial = (TimeStamp::Now() - mStart);
     mPP5TimeTotal += thisTrial;
@@ -104,7 +104,7 @@ TestLatencyParent::RecvPong5()
     else
         RpcTrials();
 
-    return true;
+    return IPC_OK();
 }
 
 void
@@ -192,18 +192,18 @@ TestLatencyChild::~TestLatencyChild()
     MOZ_COUNT_DTOR(TestLatencyChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestLatencyChild::RecvPing()
 {
     SendPong();
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestLatencyChild::RecvPing5()
 {
     if (PTestLatency::PONG1 != state())
-        return true;
+        return IPC_OK();
 
     if (!SendPong5() ||
         !SendPong5() ||
@@ -212,29 +212,29 @@ TestLatencyChild::RecvPing5()
         !SendPong5())
         fail("sending Pong5()");
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestLatencyChild::AnswerRpc()
 {
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestLatencyChild::RecvSpam()
 {
     // no-op
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestLatencyChild::AnswerSynchro()
 {
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestLatencyChild::RecvCompressedSpam(const uint32_t& seqno)
 {
     if (seqno <= mLastSeqno)
@@ -242,16 +242,16 @@ TestLatencyChild::RecvCompressedSpam(const uint32_t& seqno)
 
     mLastSeqno = seqno;
     ++mNumProcessedCompressedSpams;
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestLatencyChild::AnswerSynchro2(uint32_t* lastSeqno,
                                  uint32_t* numMessagesDispatched)
 {
     *lastSeqno = mLastSeqno;
     *numMessagesDispatched = mNumProcessedCompressedSpams;
-    return true;
+    return IPC_OK();
 }
 
 } // namespace _ipdltest

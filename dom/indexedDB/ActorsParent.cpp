@@ -6191,17 +6191,17 @@ private:
   void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvIncrementLoggingRequestSerialNumber() override;
 
   PBackgroundIDBFactoryRequestParent*
   AllocPBackgroundIDBFactoryRequestParent(const FactoryRequestParams& aParams)
                                           override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBFactoryRequestConstructor(
                                      PBackgroundIDBFactoryRequestParent* aActor,
                                      const FactoryRequestParams& aParams)
@@ -6540,7 +6540,7 @@ private:
   AllocPBackgroundIDBDatabaseRequestParent(const DatabaseRequestParams& aParams)
                                            override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBDatabaseRequestConstructor(
                                     PBackgroundIDBDatabaseRequestParent* aActor,
                                     const DatabaseRequestParams& aParams)
@@ -6557,7 +6557,7 @@ private:
                                     const Mode& aMode)
                                     override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBTransactionConstructor(
                                     PBackgroundIDBTransactionParent* aActor,
                                     InfallibleTArray<nsString>&& aObjectStoreNames,
@@ -6590,13 +6590,13 @@ private:
   DeallocPBackgroundMutableFileParent(PBackgroundMutableFileParent* aActor)
                                       override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvBlocked() override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvClose() override;
 };
 
@@ -7038,19 +7038,19 @@ private:
   void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvCommit() override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvAbort(const nsresult& aResultCode) override;
 
   PBackgroundIDBRequestParent*
   AllocPBackgroundIDBRequestParent(const RequestParams& aParams) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBRequestConstructor(PBackgroundIDBRequestParent* aActor,
                                        const RequestParams& aParams)
                                        override;
@@ -7062,7 +7062,7 @@ private:
   PBackgroundIDBCursorParent*
   AllocPBackgroundIDBCursorParent(const OpenCursorParams& aParams) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBCursorConstructor(PBackgroundIDBCursorParent* aActor,
                                       const OpenCursorParams& aParams)
                                       override;
@@ -7112,34 +7112,34 @@ private:
   void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvCommit() override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvAbort(const nsresult& aResultCode) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvCreateObjectStore(const ObjectStoreMetadata& aMetadata) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvDeleteObjectStore(const int64_t& aObjectStoreId) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvRenameObjectStore(const int64_t& aObjectStoreId,
                         const nsString& aName) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvCreateIndex(const int64_t& aObjectStoreId,
                   const IndexMetadata& aMetadata) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvDeleteIndex(const int64_t& aObjectStoreId,
                   const int64_t& aIndexId) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvRenameIndex(const int64_t& aObjectStoreId,
                   const int64_t& aIndexId,
                   const nsString& aName) override;
@@ -7147,7 +7147,7 @@ private:
   PBackgroundIDBRequestParent*
   AllocPBackgroundIDBRequestParent(const RequestParams& aParams) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBRequestConstructor(PBackgroundIDBRequestParent* aActor,
                                        const RequestParams& aParams)
                                        override;
@@ -7159,7 +7159,7 @@ private:
   PBackgroundIDBCursorParent*
   AllocPBackgroundIDBCursorParent(const OpenCursorParams& aParams) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBCursorConstructor(PBackgroundIDBCursorParent* aActor,
                                       const OpenCursorParams& aParams)
                                       override;
@@ -7224,11 +7224,11 @@ private:
   PBackgroundFileHandleParent*
   AllocPBackgroundFileHandleParent(const FileMode& aMode) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundFileHandleConstructor(PBackgroundFileHandleParent* aActor,
                                        const FileMode& aMode) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvGetFileId(int64_t* aFileId) override;
 };
 
@@ -7436,7 +7436,7 @@ protected:
   void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvPermissionRetry() override;
 
   virtual void
@@ -8155,7 +8155,7 @@ private:
   void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvContinue(const PreprocessResponse& aResponse) override;
 };
 
@@ -8624,10 +8624,10 @@ private:
   void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvContinue(const CursorRequestParams& aParams) override;
 
   bool
@@ -8762,10 +8762,10 @@ private:
   void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  bool
+  mozilla::ipc::IPCResult
   RecvGetFileReferences(const PersistenceType& aPersistenceType,
                         const nsCString& aOrigin,
                         const nsString& aDatabaseName,
@@ -13553,23 +13553,26 @@ Factory::ActorDestroy(ActorDestroyReason aWhy)
   DecreaseBusyCount();
 }
 
-bool
+mozilla::ipc::IPCResult
 Factory::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  return PBackgroundIDBFactoryParent::Send__delete__(this);
+  if (!PBackgroundIDBFactoryParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 Factory::RecvIncrementLoggingRequestSerialNumber()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mLoggingInfo);
 
   mLoggingInfo->NextRequestSN();
-  return true;
+  return IPC_OK();
 }
 
 PBackgroundIDBFactoryRequestParent*
@@ -13642,7 +13645,7 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
   return actor.forget().take();
 }
 
-bool
+mozilla::ipc::IPCResult
 Factory::RecvPBackgroundIDBFactoryRequestConstructor(
                                      PBackgroundIDBFactoryRequestParent* aActor,
                                      const FactoryRequestParams& aParams)
@@ -13655,7 +13658,7 @@ Factory::RecvPBackgroundIDBFactoryRequestConstructor(
   auto* op = static_cast<FactoryOp*>(aActor);
 
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(op));
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -14272,7 +14275,7 @@ Database::AllocPBackgroundIDBDatabaseRequestParent(
   return actor.forget().take();
 }
 
-bool
+mozilla::ipc::IPCResult
 Database::RecvPBackgroundIDBDatabaseRequestConstructor(
                                     PBackgroundIDBDatabaseRequestParent* aActor,
                                     const DatabaseRequestParams& aParams)
@@ -14285,7 +14288,7 @@ Database::RecvPBackgroundIDBDatabaseRequestConstructor(
 
   op->RunImmediately();
 
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -14386,7 +14389,7 @@ Database::AllocPBackgroundIDBTransactionParent(
   return transaction.forget().take();
 }
 
-bool
+mozilla::ipc::IPCResult
 Database::RecvPBackgroundIDBTransactionConstructor(
                                     PBackgroundIDBTransactionParent* aActor,
                                     InfallibleTArray<nsString>&& aObjectStoreNames,
@@ -14404,7 +14407,7 @@ Database::RecvPBackgroundIDBTransactionConstructor(
   if (IsInvalidated()) {
     // This is an expected race. We don't want the child to die here, just don't
     // actually do any work.
-    return true;
+    return IPC_OK();
   }
 
   if (!gConnectionPool) {
@@ -14427,10 +14430,10 @@ Database::RecvPBackgroundIDBTransactionConstructor(
   if (NS_WARN_IF(!RegisterTransaction(transaction))) {
     IDB_REPORT_INTERNAL_ERR();
     transaction->Abort(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, /* aForce */ false);
-    return true;
+    return IPC_OK();
   }
 
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -14489,22 +14492,25 @@ Database::DeallocPBackgroundMutableFileParent(
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 Database::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  return PBackgroundIDBDatabaseParent::Send__delete__(this);
+  if (!PBackgroundIDBDatabaseParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 Database::RecvBlocked()
 {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mClosed)) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   DatabaseActorInfo* info;
@@ -14515,20 +14521,20 @@ Database::RecvBlocked()
 
   info->mWaitingFactoryOp->NoteDatabaseBlocked(this);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 Database::RecvClose()
 {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!CloseInternal())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -15611,29 +15617,38 @@ NormalTransaction::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 NormalTransaction::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
-  return PBackgroundIDBTransactionParent::Send__delete__(this);
+  if (!PBackgroundIDBTransactionParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 NormalTransaction::RecvCommit()
 {
   AssertIsOnBackgroundThread();
 
-  return TransactionBase::RecvCommit();
+  if (!TransactionBase::RecvCommit()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 NormalTransaction::RecvAbort(const nsresult& aResultCode)
 {
   AssertIsOnBackgroundThread();
 
-  return TransactionBase::RecvAbort(aResultCode);
+  if (!TransactionBase::RecvAbort(aResultCode)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 PBackgroundIDBRequestParent*
@@ -15646,7 +15661,7 @@ NormalTransaction::AllocPBackgroundIDBRequestParent(
   return AllocRequest(aParams, IsSameProcessActor());
 }
 
-bool
+mozilla::ipc::IPCResult
 NormalTransaction::RecvPBackgroundIDBRequestConstructor(
                                             PBackgroundIDBRequestParent* aActor,
                                             const RequestParams& aParams)
@@ -15655,7 +15670,10 @@ NormalTransaction::RecvPBackgroundIDBRequestConstructor(
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
-  return StartRequest(aActor);
+  if (!StartRequest(aActor)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 bool
@@ -15677,7 +15695,7 @@ NormalTransaction::AllocPBackgroundIDBCursorParent(
   return AllocCursor(aParams, IsSameProcessActor());
 }
 
-bool
+mozilla::ipc::IPCResult
 NormalTransaction::RecvPBackgroundIDBCursorConstructor(
                                              PBackgroundIDBCursorParent* aActor,
                                              const OpenCursorParams& aParams)
@@ -15686,7 +15704,10 @@ NormalTransaction::RecvPBackgroundIDBCursorConstructor(
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
-  return StartCursor(aActor, aParams);
+  if (!StartCursor(aActor, aParams)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 bool
@@ -15902,32 +15923,41 @@ VersionChangeTransaction::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
-  return PBackgroundIDBVersionChangeTransactionParent::Send__delete__(this);
+  if (!PBackgroundIDBVersionChangeTransactionParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvCommit()
 {
   AssertIsOnBackgroundThread();
 
-  return TransactionBase::RecvCommit();
+  if (!TransactionBase::RecvCommit()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvAbort(const nsresult& aResultCode)
 {
   AssertIsOnBackgroundThread();
 
-  return TransactionBase::RecvAbort(aResultCode);
+  if (!TransactionBase::RecvAbort(aResultCode)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvCreateObjectStore(
                                            const ObjectStoreMetadata& aMetadata)
 {
@@ -15935,7 +15965,7 @@ VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(!aMetadata.id())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
@@ -15943,7 +15973,7 @@ VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(aMetadata.id() != dbMetadata->mNextObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   auto* foundMetadata =
@@ -15952,12 +15982,12 @@ VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(foundMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullObjectStoreMetadata> newMetadata = new FullObjectStoreMetadata();
@@ -15967,7 +15997,7 @@ VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(!dbMetadata->mObjectStores.Put(aMetadata.id(), newMetadata,
                                                 fallible))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   dbMetadata->mNextObjectStoreId++;
@@ -15976,22 +16006,22 @@ VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   op->DispatchToConnectionPool();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
 {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
@@ -16000,7 +16030,7 @@ VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
 
   if (NS_WARN_IF(aObjectStoreId >= dbMetadata->mNextObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullObjectStoreMetadata> foundMetadata =
@@ -16008,12 +16038,12 @@ VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
 
   if (NS_WARN_IF(!foundMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   foundMetadata->mDeleted = true;
@@ -16037,15 +16067,15 @@ VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   op->DispatchToConnectionPool();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvRenameObjectStore(const int64_t& aObjectStoreId,
                                                 const nsString& aName)
 {
@@ -16053,7 +16083,7 @@ VersionChangeTransaction::RecvRenameObjectStore(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
@@ -16062,7 +16092,7 @@ VersionChangeTransaction::RecvRenameObjectStore(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(aObjectStoreId >= dbMetadata->mNextObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullObjectStoreMetadata> foundMetadata =
@@ -16070,12 +16100,12 @@ VersionChangeTransaction::RecvRenameObjectStore(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!foundMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   foundMetadata->mCommonMetadata.name() = aName;
@@ -16085,15 +16115,15 @@ VersionChangeTransaction::RecvRenameObjectStore(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!renameOp->Init(this))) {
     renameOp->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   renameOp->DispatchToConnectionPool();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
                                           const IndexMetadata& aMetadata)
 {
@@ -16101,12 +16131,12 @@ VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(!aMetadata.id())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
@@ -16114,7 +16144,7 @@ VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(aMetadata.id() != dbMetadata->mNextIndexId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
@@ -16122,7 +16152,7 @@ VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullIndexMetadata> foundIndexMetadata =
@@ -16131,12 +16161,12 @@ VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(foundIndexMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullIndexMetadata> newMetadata = new FullIndexMetadata();
@@ -16145,7 +16175,7 @@ VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
   if (NS_WARN_IF(!foundObjectStoreMetadata->mIndexes.Put(aMetadata.id(),
                                                          newMetadata,
                                                          fallible))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   dbMetadata->mNextIndexId++;
@@ -16155,15 +16185,15 @@ VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   op->DispatchToConnectionPool();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
                                           const int64_t& aIndexId)
 {
@@ -16171,12 +16201,12 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(!aIndexId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
@@ -16186,12 +16216,12 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(aObjectStoreId >= dbMetadata->mNextObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(aIndexId >= dbMetadata->mNextIndexId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
@@ -16199,7 +16229,7 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullIndexMetadata> foundIndexMetadata =
@@ -16207,12 +16237,12 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!foundIndexMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   foundIndexMetadata->mDeleted = true;
@@ -16240,15 +16270,15 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   op->DispatchToConnectionPool();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvRenameIndex(const int64_t& aObjectStoreId,
                                           const int64_t& aIndexId,
                                           const nsString& aName)
@@ -16257,12 +16287,12 @@ VersionChangeTransaction::RecvRenameIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(!aIndexId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
@@ -16272,12 +16302,12 @@ VersionChangeTransaction::RecvRenameIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(aObjectStoreId >= dbMetadata->mNextObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(aIndexId >= dbMetadata->mNextIndexId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
@@ -16285,7 +16315,7 @@ VersionChangeTransaction::RecvRenameIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullIndexMetadata> foundIndexMetadata =
@@ -16293,12 +16323,12 @@ VersionChangeTransaction::RecvRenameIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!foundIndexMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   foundIndexMetadata->mCommonMetadata.name() = aName;
@@ -16308,12 +16338,12 @@ VersionChangeTransaction::RecvRenameIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!renameOp->Init(this))) {
     renameOp->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   renameOp->DispatchToConnectionPool();
 
-  return true;
+  return IPC_OK();
 }
 
 PBackgroundIDBRequestParent*
@@ -16326,7 +16356,7 @@ VersionChangeTransaction::AllocPBackgroundIDBRequestParent(
   return AllocRequest(aParams, IsSameProcessActor());
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvPBackgroundIDBRequestConstructor(
                                             PBackgroundIDBRequestParent* aActor,
                                             const RequestParams& aParams)
@@ -16335,7 +16365,10 @@ VersionChangeTransaction::RecvPBackgroundIDBRequestConstructor(
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
-  return StartRequest(aActor);
+  if (!StartRequest(aActor)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 bool
@@ -16357,7 +16390,7 @@ VersionChangeTransaction::AllocPBackgroundIDBCursorParent(
   return AllocCursor(aParams, IsSameProcessActor());
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvPBackgroundIDBCursorConstructor(
                                              PBackgroundIDBCursorParent* aActor,
                                              const OpenCursorParams& aParams)
@@ -16366,7 +16399,10 @@ VersionChangeTransaction::RecvPBackgroundIDBCursorConstructor(
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
-  return StartCursor(aActor, aParams);
+  if (!StartCursor(aActor, aParams)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 bool
@@ -16677,7 +16713,7 @@ Cursor::ActorDestroy(ActorDestroyReason aWhy)
   mIndexMetadata = nullptr;
 }
 
-bool
+mozilla::ipc::IPCResult
 Cursor::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
@@ -16685,13 +16721,16 @@ Cursor::RecvDeleteMe()
 
   if (NS_WARN_IF(mCurrentlyRunningOp)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  return PBackgroundIDBCursorParent::Send__delete__(this);
+  if (!PBackgroundIDBCursorParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 Cursor::RecvContinue(const CursorRequestParams& aParams)
 {
   AssertIsOnBackgroundThread();
@@ -16713,29 +16752,29 @@ Cursor::RecvContinue(const CursorRequestParams& aParams)
 
   if (!trustParams && !VerifyRequestParams(aParams)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCurrentlyRunningOp)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mTransaction->mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<ContinueOp> continueOp = new ContinueOp(this, aParams);
   if (NS_WARN_IF(!continueOp->Init(mTransaction))) {
     continueOp->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   continueOp->DispatchToConnectionPool();
   mCurrentlyRunningOp = continueOp;
 
-  return true;
+  return IPC_OK();
 }
 
 /*******************************************************************************
@@ -20350,7 +20389,7 @@ MutableFile::AllocPBackgroundFileHandleParent(const FileMode& aMode)
                                                                          aMode);
 }
 
-bool
+mozilla::ipc::IPCResult
 MutableFile::RecvPBackgroundFileHandleConstructor(
                                             PBackgroundFileHandleParent* aActor,
                                             const FileMode& aMode)
@@ -20361,14 +20400,14 @@ MutableFile::RecvPBackgroundFileHandleConstructor(
   if (NS_WARN_IF(mDatabase->IsInvalidated())) {
     // This is an expected race. We don't want the child to die here, just don't
     // actually do any work.
-    return true;
+    return IPC_OK();
   }
 
   return BackgroundMutableFileParentBase::RecvPBackgroundFileHandleConstructor(
                                                                  aActor, aMode);
 }
 
-bool
+mozilla::ipc::IPCResult
 MutableFile::RecvGetFileId(int64_t* aFileId)
 {
   AssertIsOnBackgroundThread();
@@ -20376,11 +20415,11 @@ MutableFile::RecvGetFileId(int64_t* aFileId)
 
   if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   *aFileId = mFileInfo->Id();
-  return true;
+  return IPC_OK();
 }
 
 FactoryOp::FactoryOp(Factory* aFactory,
@@ -21130,7 +21169,7 @@ FactoryOp::ActorDestroy(ActorDestroyReason aWhy)
   NoteActorDestroyed();
 }
 
-bool
+mozilla::ipc::IPCResult
 FactoryOp::RecvPermissionRetry()
 {
   AssertIsOnOwningThread();
@@ -21142,7 +21181,7 @@ FactoryOp::RecvPermissionRetry()
   mState = State::PermissionRetry;
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
 
-  return true;
+  return IPC_OK();
 }
 
 OpenDatabaseOp::OpenDatabaseOp(Factory* aFactory,
@@ -25644,7 +25683,7 @@ NormalTransactionOp::ActorDestroy(ActorDestroyReason aWhy)
   NoteActorDestroyed();
 }
 
-bool
+mozilla::ipc::IPCResult
 NormalTransactionOp::RecvContinue(const PreprocessResponse& aResponse)
 {
   AssertIsOnOwningThread();
@@ -25666,7 +25705,7 @@ NormalTransactionOp::RecvContinue(const PreprocessResponse& aResponse)
 
   NoteContinueReceived();
 
-  return true;
+  return IPC_OK();
 }
 
 ObjectStoreAddOrPutRequestOp::ObjectStoreAddOrPutRequestOp(
@@ -28894,16 +28933,19 @@ Utils::ActorDestroy(ActorDestroyReason aWhy)
 #endif
 }
 
-bool
+mozilla::ipc::IPCResult
 Utils::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  return PBackgroundIndexedDBUtilsParent::Send__delete__(this);
+  if (!PBackgroundIndexedDBUtilsParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 Utils::RecvGetFileReferences(const PersistenceType& aPersistenceType,
                              const nsCString& aOrigin,
                              const nsString& aDatabaseName,
@@ -28923,34 +28965,34 @@ Utils::RecvGetFileReferences(const PersistenceType& aPersistenceType,
   if (NS_WARN_IF(!IndexedDatabaseManager::Get() ||
                  !QuotaManager::Get())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(aPersistenceType != quota::PERSISTENCE_TYPE_PERSISTENT &&
                  aPersistenceType != quota::PERSISTENCE_TYPE_TEMPORARY &&
                  aPersistenceType != quota::PERSISTENCE_TYPE_DEFAULT)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(aOrigin.IsEmpty())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(aDatabaseName.IsEmpty())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(aFileId == 0)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<GetFileReferencesHelper> helper =
@@ -28961,10 +29003,10 @@ Utils::RecvGetFileReferences(const PersistenceType& aPersistenceType,
     helper->DispatchAndReturnFileReferences(aRefCnt, aDBRefCnt,
                                             aSliceRefCnt, aResult);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  return true;
+  return IPC_OK();
 }
 
 nsresult

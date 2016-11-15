@@ -24,13 +24,13 @@ public:
   virtual ~MediaSystemResourceManagerParent();
 
 protected:
-  bool RecvAcquire(const uint32_t& aId,
-                   const MediaSystemResourceType& aResourceType,
-                   const bool& aWillWait) override;
+  mozilla::ipc::IPCResult RecvAcquire(const uint32_t& aId,
+                                      const MediaSystemResourceType& aResourceType,
+                                      const bool& aWillWait) override;
 
-  bool RecvRelease(const uint32_t& aId) override;
+  mozilla::ipc::IPCResult RecvRelease(const uint32_t& aId) override;
 
-  bool RecvRemoveResourceManager() override;
+  mozilla::ipc::IPCResult RecvRemoveResourceManager() override;
 
 private:
   void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;

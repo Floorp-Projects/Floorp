@@ -45,7 +45,7 @@ BrowserStreamParent::ActorDestroy(ActorDestroyReason aWhy)
   // Implement me! Bug 1005159
 }
 
-bool
+mozilla::ipc::IPCResult
 BrowserStreamParent::RecvAsyncNPP_NewStreamResult(const NPError& rv,
                                                   const uint16_t& stype)
 {
@@ -57,13 +57,13 @@ BrowserStreamParent::RecvAsyncNPP_NewStreamResult(const NPError& rv,
     // We've been asked to destroy ourselves before init was complete.
     mState = DYING;
     Unused << SendNPP_DestroyStream(mDeferredDestroyReason);
-    return true;
+    return IPC_OK();
   }
 
   NPError error = rv;
   if (error == NPERR_NO_ERROR) {
     if (!mStreamListener) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
     if (mStreamListener->SetStreamType(stype)) {
       mState = ALIVE;
@@ -77,10 +77,10 @@ BrowserStreamParent::RecvAsyncNPP_NewStreamResult(const NPError& rv,
     Unused << PBrowserStreamParent::Send__delete__(this);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                            NPError* result)
 {
@@ -90,25 +90,25 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
   case INITIALIZING:
     NS_ERROR("Requesting a read before initialization has completed");
     *result = NPERR_GENERIC_ERROR;
-    return false;
+    return IPC_FAIL_NO_REASON(this);
 
   case ALIVE:
     break;
 
   case DYING:
     *result = NPERR_GENERIC_ERROR;
-    return true;
+    return IPC_OK();
 
   default:
     NS_ERROR("Unexpected state");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (!mStream)
-    return false;
+    return IPC_FAIL_NO_REASON(this);
 
   if (ranges.Length() > INT32_MAX)
-    return false;
+    return IPC_FAIL_NO_REASON(this);
 
   UniquePtr<NPByteRange[]> rp(new NPByteRange[ranges.Length()]);
   for (uint32_t i = 0; i < ranges.Length(); ++i) {
@@ -119,10 +119,10 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
   rp[ranges.Length() - 1].next = nullptr;
 
   *result = mNPP->mNPNIface->requestread(mStream, rp.get());
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BrowserStreamParent::RecvNPN_DestroyStream(const NPReason& reason)
 {
   switch (mState) {
@@ -130,15 +130,15 @@ BrowserStreamParent::RecvNPN_DestroyStream(const NPReason& reason)
     break;
 
   case DYING:
-    return true;
+    return IPC_OK();
 
   default:
     NS_ERROR("Unexpected state");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, reason);
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -156,18 +156,21 @@ BrowserStreamParent::NPP_DestroyStream(NPReason reason)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 BrowserStreamParent::RecvStreamDestroyed()
 {
   if (DYING != mState) {
     NS_ERROR("Unexpected state");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mStreamPeer = nullptr;
 
   mState = DELETING;
-  return Send__delete__(this);
+  if (!Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 int32_t

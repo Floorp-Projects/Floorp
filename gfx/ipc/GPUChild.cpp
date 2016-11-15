@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=99: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -85,28 +86,28 @@ GPUChild::EnsureGPUReady()
   mGPUReady = true;
 }
 
-bool
+mozilla::ipc::IPCResult
 GPUChild::RecvInitComplete(const GPUDeviceData& aData)
 {
   // We synchronously requested GPU parameters before this arrived.
   if (mGPUReady) {
-    return true;
+    return IPC_OK();
   }
 
   gfxPlatform::GetPlatform()->ImportGPUDeviceData(aData);
   Telemetry::AccumulateTimeDelta(Telemetry::GPU_PROCESS_LAUNCH_TIME_MS, mHost->GetLaunchTime());
   mGPUReady = true;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GPUChild::RecvReportCheckerboard(const uint32_t& aSeverity, const nsCString& aLog)
 {
   layers::CheckerboardEventStorage::Report(aSeverity, std::string(aLog.get()));
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GPUChild::RecvGraphicsError(const nsCString& aError)
 {
   gfx::LogForwarder* lf = gfx::Factory::GetLogForwarder();
@@ -115,19 +116,19 @@ GPUChild::RecvGraphicsError(const nsCString& aError)
     message << "GP+" << aError.get();
     lf->UpdateStringsVector(message.str());
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GPUChild::RecvInitCrashReporter(Shmem&& aShmem)
 {
 #ifdef MOZ_CRASHREPORTER
   mCrashReporter = MakeUnique<ipc::CrashReporterHost>(GeckoProcessType_GPU, aShmem);
 #endif
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GPUChild::RecvNotifyUiObservers(const nsCString& aTopic)
 {
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
@@ -135,28 +136,28 @@ GPUChild::RecvNotifyUiObservers(const nsCString& aTopic)
   if (obsSvc) {
     obsSvc->NotifyObservers(nullptr, aTopic.get(), nullptr);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GPUChild::RecvAccumulateChildHistogram(InfallibleTArray<Accumulation>&& aAccumulations)
 {
   Telemetry::AccumulateChild(GeckoProcessType_GPU, aAccumulations);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GPUChild::RecvAccumulateChildKeyedHistogram(InfallibleTArray<KeyedAccumulation>&& aAccumulations)
 {
   Telemetry::AccumulateChildKeyed(GeckoProcessType_GPU, aAccumulations);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GPUChild::RecvNotifyDeviceReset()
 {
   mHost->mListener->OnProcessDeviceReset(mHost);
-  return true;
+  return IPC_OK();
 }
 
 void

@@ -30,16 +30,16 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOFFLINECACHEUPDATE
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvNotifyStateEvent(const uint32_t& stateEvent,
                          const uint64_t& byteProgress) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvAssociateDocuments(
             const nsCString& cacheGroupId,
             const nsCString& cacheClientId) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvFinish(const bool& succeeded,
                const bool& isUpgrade) override;
 

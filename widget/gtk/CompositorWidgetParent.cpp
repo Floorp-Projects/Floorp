@@ -37,11 +37,11 @@ CompositorWidgetParent::GetVsyncObserver() const
   return mVsyncObserver;
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorWidgetParent::RecvNotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize)
 {
   NotifyClientSizeChanged(aClientSize);
-  return true;
+  return IPC_OK();
 }
 
 } // namespace widget

@@ -579,7 +579,7 @@ public:
 
 private:
   // This method is only called by the IPDL message machinery.
-  bool
+  mozilla::ipc::IPCResult
   Recv__delete__(const InputStreamParams& aParams,
                  const OptionalFileDescriptorSet& aFDs) override;
 };
@@ -3782,7 +3782,7 @@ BlobChild::DeallocPBlobStreamChild(PBlobStreamChild* aActor)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 BlobChild::RecvCreatedFromKnownBlob()
 {
   MOZ_ASSERT(mRemoteBlobImpl);
@@ -3793,7 +3793,7 @@ BlobChild::RecvCreatedFromKnownBlob()
   // Release the additional reference to ourself that was added in order to
   // receive this RecvCreatedFromKnownBlob.
   mRemoteBlobImpl->Release();
-  return true;
+  return IPC_OK();
 }
 
 /*******************************************************************************
@@ -4382,7 +4382,7 @@ BlobParent::AllocPBlobStreamParent(const uint64_t& aStart,
   return new InputStreamParent();
 }
 
-bool
+mozilla::ipc::IPCResult
 BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
                                        const uint64_t& aStart,
                                        const uint64_t& aLength)
@@ -4398,7 +4398,7 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
   // Make sure we can't overflow.
   if (NS_WARN_IF(UINT64_MAX - aLength < aStart)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   ErrorResult errorResult;
@@ -4407,7 +4407,7 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
 
   if (NS_WARN_IF(aStart + aLength > blobLength)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<BlobImpl> blobImpl;
@@ -4420,14 +4420,14 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
 
     blobImpl = mBlobImpl->CreateSlice(aStart, aLength, type, errorResult);
     if (NS_WARN_IF(errorResult.Failed())) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
   }
 
   nsCOMPtr<nsIInputStream> stream;
   blobImpl->GetInternalStream(getter_AddRefs(stream), errorResult);
   if (NS_WARN_IF(errorResult.Failed())) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // If the stream is entirely backed by memory then we can serialize and send
@@ -4440,7 +4440,10 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
     MOZ_ASSERT(params.type() != InputStreamParams::T__None);
     MOZ_ASSERT(fds.IsEmpty());
 
-    return actor->Destroy(params, void_t());
+    if (!actor->Destroy(params, void_t())) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+    return IPC_OK();
   }
 
   nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(mBlobImpl);
@@ -4466,14 +4469,14 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
     serializableStream = do_QueryInterface(stream);
     if (!serializableStream) {
       MOZ_ASSERT(false, "Must be serializable!");
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
   }
 
   nsCOMPtr<nsIThread> target;
   errorResult = NS_NewNamedThread("Blob Opener", getter_AddRefs(target));
   if (NS_WARN_IF(errorResult.Failed())) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<OpenStreamRunnable> runnable =
@@ -4481,12 +4484,12 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
 
   errorResult = runnable->Dispatch();
   if (NS_WARN_IF(errorResult.Failed())) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // nsRevocableEventPtr lacks some of the operators needed for anything nicer.
   *mOpenStreamRunnables.AppendElement() = runnable;
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -4498,7 +4501,7 @@ BlobParent::DeallocPBlobStreamParent(PBlobStreamParent* aActor)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 BlobParent::RecvResolveMystery(const ResolveMysteryParams& aParams)
 {
   AssertIsOnOwningThread();
@@ -4514,14 +4517,14 @@ BlobParent::RecvResolveMystery(const ResolveMysteryParams& aParams)
 
       if (NS_WARN_IF(params.length() == UINT64_MAX)) {
         ASSERT_UNLESS_FUZZING();
-        return false;
+        return IPC_FAIL_NO_REASON(this);
       }
 
       mBlobImpl->SetLazyData(NullString(),
                              params.contentType(),
                              params.length(),
                              INT64_MAX);
-      return true;
+      return IPC_OK();
     }
 
     case ResolveMysteryParams::TFileBlobConstructorParams: {
@@ -4529,24 +4532,24 @@ BlobParent::RecvResolveMystery(const ResolveMysteryParams& aParams)
         aParams.get_FileBlobConstructorParams();
       if (NS_WARN_IF(params.name().IsVoid())) {
         ASSERT_UNLESS_FUZZING();
-        return false;
+        return IPC_FAIL_NO_REASON(this);
       }
 
       if (NS_WARN_IF(params.length() == UINT64_MAX)) {
         ASSERT_UNLESS_FUZZING();
-        return false;
+        return IPC_FAIL_NO_REASON(this);
       }
 
       if (NS_WARN_IF(params.modDate() == INT64_MAX)) {
         ASSERT_UNLESS_FUZZING();
-        return false;
+        return IPC_FAIL_NO_REASON(this);
       }
 
       mBlobImpl->SetLazyData(params.name(),
                              params.contentType(),
                              params.length(),
                              params.modDate());
-      return true;
+      return IPC_OK();
     }
 
     default:
@@ -4556,7 +4559,7 @@ BlobParent::RecvResolveMystery(const ResolveMysteryParams& aParams)
   MOZ_CRASH("Should never get here!");
 }
 
-bool
+mozilla::ipc::IPCResult
 BlobParent::RecvBlobStreamSync(const uint64_t& aStart,
                                const uint64_t& aLength,
                                InputStreamParams* aParams,
@@ -4578,13 +4581,13 @@ BlobParent::RecvBlobStreamSync(const uint64_t& aStart,
       // If RecvPBlobStreamConstructor() returns false then it is our
       // responsibility to destroy the actor.
       delete streamActor;
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
   }
 
   if (finished) {
     // The actor is already dead and we have already set our out params.
-    return true;
+    return IPC_OK();
   }
 
   // The actor is alive and will be doing asynchronous work to load the stream.
@@ -4596,10 +4599,10 @@ BlobParent::RecvBlobStreamSync(const uint64_t& aStart,
     MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(currentThread));
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BlobParent::RecvWaitForSliceCreation()
 {
   AssertIsOnOwningThread();
@@ -4620,10 +4623,10 @@ BlobParent::RecvWaitForSliceCreation()
   }
 #endif
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BlobParent::RecvGetFileId(int64_t* aFileId)
 {
   AssertIsOnOwningThread();
@@ -4633,14 +4636,14 @@ BlobParent::RecvGetFileId(int64_t* aFileId)
 
   if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   *aFileId = mBlobImpl->GetFileId();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BlobParent::RecvGetFilePath(nsString* aFilePath)
 {
   AssertIsOnOwningThread();
@@ -4655,11 +4658,11 @@ BlobParent::RecvGetFilePath(nsString* aFilePath)
   mBlobImpl->GetMozFullPathInternal(filePath, rv);
   if (NS_WARN_IF(rv.Failed())) {
     rv.SuppressException();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   *aFilePath = filePath;
-  return true;
+  return IPC_OK();
 }
 
 /*******************************************************************************
@@ -4757,7 +4760,7 @@ IDTableEntry::GetOrCreateInternal(const nsID& aID,
  * Other stuff
  ******************************************************************************/
 
-bool
+mozilla::ipc::IPCResult
 InputStreamChild::Recv__delete__(const InputStreamParams& aParams,
                                  const OptionalFileDescriptorSet& aOptionalSet)
 {
@@ -4774,7 +4777,7 @@ InputStreamChild::Recv__delete__(const InputStreamParams& aParams,
   MOZ_ASSERT(stream);
 
   mRemoteStream->SetStream(stream);
-  return true;
+  return IPC_OK();
 }
 
 } // namespace dom

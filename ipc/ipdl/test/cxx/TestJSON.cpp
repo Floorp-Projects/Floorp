@@ -85,7 +85,7 @@ TestJSONParent::Main()
 }
 
 
-bool
+mozilla::ipc::IPCResult
 TestJSONParent::RecvTest(const JSONVariant& i,
                          JSONVariant* o)
 {
@@ -96,14 +96,14 @@ TestJSONParent::RecvTest(const JSONVariant& i,
 
     test_assert(i == *o, "operator= is broken");
 
-    return true;
+    return IPC_OK();
 }
 
 
 //-----------------------------------------------------------------------------
 // child
 
-bool
+mozilla::ipc::IPCResult
 TestJSONChild::RecvStart()
 {
     if (!SendPTestHandleConstructor())
@@ -121,7 +121,7 @@ TestJSONChild::RecvStart()
     test_assert(o == MakeTestVariant(mKid), "outparam mangled en route");
 
     Close();
-    return true;
+    return IPC_OK();
 }
 
 

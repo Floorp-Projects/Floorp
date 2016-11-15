@@ -64,7 +64,7 @@ TestDataStructuresParent::DeallocPTestDataStructuresSubParent(PTestDataStructure
     return true;
 }
 
-bool TestDataStructuresParent::RecvTest1(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest1(
         InfallibleTArray<int>&& ia,
         InfallibleTArray<int>* oa)
 {
@@ -74,10 +74,10 @@ bool TestDataStructuresParent::RecvTest1(
 
     *oa = ia;
 
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest2(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest2(
         InfallibleTArray<PTestDataStructuresSubParent*>&& i1,
         InfallibleTArray<PTestDataStructuresSubParent*>* o1)
 {
@@ -85,10 +85,10 @@ bool TestDataStructuresParent::RecvTest2(
     for (uint32_t i = 0; i < i1.Length(); ++i)
         test_assert(i == Cast(i1[i]).mI, "wrong mI value");
     *o1 = i1;
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest3(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest3(
         const IntDouble& i1,
         const IntDouble& i2,
         IntDouble* o1,
@@ -100,10 +100,10 @@ bool TestDataStructuresParent::RecvTest3(
     *o1 = i1;
     *o2 = i2;
 
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest4(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest4(
         InfallibleTArray<IntDouble>&& i1,
         InfallibleTArray<IntDouble>* o1)
 {
@@ -115,10 +115,10 @@ bool TestDataStructuresParent::RecvTest4(
 
     *o1 = i1;
 
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest5(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest5(
         const IntDoubleArrays& i1,
         const IntDoubleArrays& i2,
         const IntDoubleArrays& i3,
@@ -144,10 +144,10 @@ bool TestDataStructuresParent::RecvTest5(
     *o2 = i2a;
     *o3 = i3a;
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestDataStructuresParent::RecvTest7_0(const ActorWrapper& i1,
                                       ActorWrapper* o1)
 {
@@ -161,10 +161,10 @@ TestDataStructuresParent::RecvTest7_0(const ActorWrapper& i1,
     // malicious behavior
     o1->actorChild() =
         reinterpret_cast<PTestDataStructuresSubChild*>(uintptr_t(0xdeadbeef));
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest6(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest6(
         InfallibleTArray<IntDoubleArrays>&& i1,
         InfallibleTArray<IntDoubleArrays>* o1)
 {
@@ -189,10 +189,10 @@ bool TestDataStructuresParent::RecvTest6(
     o1->AppendElement(IntDoubleArrays(i2a));
     o1->AppendElement(IntDoubleArrays(i3a));
 
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest7(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest7(
         const Actors& i1,
         const Actors& i2,
         const Actors& i3,
@@ -214,10 +214,10 @@ bool TestDataStructuresParent::RecvTest7(
     *o2 = i2a;
     *o3 = mKids;
 
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest8(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest8(
         InfallibleTArray<Actors>&& i1,
         InfallibleTArray<Actors>* o1)
 {
@@ -234,10 +234,10 @@ bool TestDataStructuresParent::RecvTest8(
 
     *o1 = i1;
 
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest9(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest9(
         const Unions& i1,
         const Unions& i2,
         const Unions& i3,
@@ -266,10 +266,10 @@ bool TestDataStructuresParent::RecvTest9(
     *o3 = i3;
     *o4 = i4;
 
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest10(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest10(
         InfallibleTArray<Unions>&& i1,
         InfallibleTArray<Unions>* o1)
 {
@@ -289,20 +289,20 @@ bool TestDataStructuresParent::RecvTest10(
 
     *o1 = i1;
 
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest11(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest11(
             const SIntDouble& i,
             SIntDouble* o)
 {
     test_assert(1 == i.i(), "wrong value");
     test_assert(2.0 == i.d(), "wrong value");
     *o = i;
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest12(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest12(
             const SIntDoubleArrays& i,
             SIntDoubleArrays* o)
 {
@@ -322,10 +322,10 @@ bool TestDataStructuresParent::RecvTest12(
 
     *o = i;
 
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest13(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest13(
             const SActors& i,
             SActors* o)
 {
@@ -338,10 +338,10 @@ bool TestDataStructuresParent::RecvTest13(
 
     *o = i;
 
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest14(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest14(
             const Structs& i,
             Structs* o)
 {
@@ -359,10 +359,10 @@ bool TestDataStructuresParent::RecvTest14(
 
     *o = i;
 
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest15(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest15(
             const WithStructs& i1,
             const WithStructs& i2,
             const WithStructs& i3,
@@ -402,10 +402,10 @@ bool TestDataStructuresParent::RecvTest15(
     *o4 = i4;
     *o5 = i5;
 
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest16(
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest16(
             const WithUnions& i,
             WithUnions* o)
 {
@@ -429,17 +429,17 @@ bool TestDataStructuresParent::RecvTest16(
 
     *o = i;
 
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest17(InfallibleTArray<Op>&& sa)
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest17(InfallibleTArray<Op>&& sa)
 {
     test_assert(sa.Length() == 1 && Op::TSetAttrs == sa[0].type(),
                 "wrong value");
-    return true;
+    return IPC_OK();
 }
 
-bool TestDataStructuresParent::RecvTest18(RegionArray&& ra)
+mozilla::ipc::IPCResult TestDataStructuresParent::RecvTest18(RegionArray&& ra)
 {
     for (RegionArray::index_type i = 0; i < ra.Length(); ++i) {
         // if |ra| has been realloc()d and given a different allocator
@@ -448,7 +448,7 @@ bool TestDataStructuresParent::RecvTest18(RegionArray&& ra)
             Unused << iter.Get();
         }
     }
-    return true;
+    return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------
@@ -464,7 +464,7 @@ TestDataStructuresChild::~TestDataStructuresChild()
     MOZ_COUNT_DTOR(TestDataStructuresChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestDataStructuresChild::RecvStart()
 {
     puts("[TestDataStructuresChild] starting");
@@ -499,7 +499,7 @@ TestDataStructuresChild::RecvStart()
 
     Close();
 
-    return true;
+    return IPC_OK();
 }
 
 void

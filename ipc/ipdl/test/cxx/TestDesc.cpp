@@ -22,7 +22,7 @@ TestDescParent::Main()
         fail("can't send Subsub");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestDescParent::RecvOk(PTestDescSubsubParent* a)
 {
     if (!a)
@@ -33,7 +33,7 @@ TestDescParent::RecvOk(PTestDescSubsubParent* a)
 
     Close();
 
-    return true;
+    return IPC_OK();
 }
 
 
@@ -66,14 +66,14 @@ TestDescSubParent::DeallocPTestDescSubsubParent(PTestDescSubsubParent* actor)
 //-----------------------------------------------------------------------------
 // child
 
-bool
+mozilla::ipc::IPCResult
 TestDescChild::RecvTest(PTestDescSubsubChild* a)
 {
     if (!a)
         fail("didn't receive Subsub");
     if (!SendOk(a))
         fail("couldn't send Ok()");
-    return true;
+    return IPC_OK();
 }
 
 PTestDescSubChild*

@@ -38,12 +38,12 @@ RemotePrintJobChild::InitializePrint(const nsString& aDocumentTitle,
   return mInitializationResult;
 }
 
-bool
+mozilla::ipc::IPCResult
 RemotePrintJobChild::RecvPrintInitializationResult(const nsresult& aRv)
 {
   mPrintInitialized = true;
   mInitializationResult = aRv;
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -55,22 +55,22 @@ RemotePrintJobChild::ProcessPage(Shmem& aStoredPage)
   Unused << SendProcessPage(aStoredPage);
 }
 
-bool
+mozilla::ipc::IPCResult
 RemotePrintJobChild::RecvPageProcessed()
 {
   MOZ_ASSERT(mPagePrintTimer);
 
   mPagePrintTimer->RemotePrintFinished();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 RemotePrintJobChild::RecvAbortPrint(const nsresult& aRv)
 {
   MOZ_ASSERT(mPrintEngine);
 
   mPrintEngine->CleanupOnFailure(aRv, true);
-  return true;
+  return IPC_OK();
 }
 
 void

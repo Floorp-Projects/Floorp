@@ -25,10 +25,10 @@ TestSyncErrorParent::Main()
         fail("sending Start");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestSyncErrorParent::RecvError()
 {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
 }
 
 
@@ -45,7 +45,7 @@ TestSyncErrorChild::~TestSyncErrorChild()
     MOZ_COUNT_DTOR(TestSyncErrorChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestSyncErrorChild::RecvStart()
 {
     if (SendError())
@@ -53,7 +53,7 @@ TestSyncErrorChild::RecvStart()
 
     Close();
 
-    return true;
+    return IPC_OK();
 }
 
 

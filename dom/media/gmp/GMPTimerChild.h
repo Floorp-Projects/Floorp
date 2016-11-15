@@ -29,7 +29,7 @@ public:
 
 protected:
   // GMPTimerChild
-  bool RecvTimerExpired(const uint32_t& aTimerId) override;
+  mozilla::ipc::IPCResult RecvTimerExpired(const uint32_t& aTimerId) override;
 
 private:
   ~GMPTimerChild();

@@ -31,8 +31,8 @@ public:
   void ClearTransparentWindow() override;
   HDC GetTransparentDC() const override;
 
-  bool RecvObserveVsync() override;
-  bool RecvUnobserveVsync() override;
+  mozilla::ipc::IPCResult RecvObserveVsync() override;
+  mozilla::ipc::IPCResult RecvUnobserveVsync() override;
 
 private:
   RefPtr<CompositorVsyncDispatcher> mVsyncDispatcher;

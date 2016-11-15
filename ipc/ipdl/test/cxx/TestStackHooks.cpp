@@ -30,7 +30,7 @@ TestStackHooksParent::Main()
 }
 
 
-bool
+mozilla::ipc::IPCResult
 TestStackHooksParent::AnswerStackFrame()
 {
     if (!mOnStack)
@@ -45,7 +45,7 @@ TestStackHooksParent::AnswerStackFrame()
     if (1 != mIncallDepth)
         fail("missed EnteredCall or ExitedCall hook");
 
-    return true;
+    return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------
@@ -71,7 +71,7 @@ void RunTestsFn() {
 }
 }
 
-bool
+mozilla::ipc::IPCResult
 TestStackHooksChild::RecvStart()
 {
     if (!mOnStack)
@@ -84,10 +84,10 @@ TestStackHooksChild::RecvStart()
     // MessageChannel code on the C++ stack
     MessageLoop::current()->PostTask(NewRunnableFunction(RunTestsFn));
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestStackHooksChild::AnswerStackFrame()
 {
     if (!mOnStack)
@@ -111,7 +111,7 @@ TestStackHooksChild::AnswerStackFrame()
     if (!mOnStack)
         fail("bad stack exit notification");
 
-    return true;
+    return IPC_OK();
 }
 
 void

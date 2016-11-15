@@ -19,14 +19,14 @@ MediaSystemResourceManagerChild::~MediaSystemResourceManagerChild()
 {
 }
 
-bool
+mozilla::ipc::IPCResult
 MediaSystemResourceManagerChild::RecvResponse(const uint32_t& aId,
                                               const bool& aSuccess)
 {
   if (mManager) {
     mManager->RecvResponse(aId, aSuccess);
   }
-  return true;
+  return IPC_OK();
 }
 
 void

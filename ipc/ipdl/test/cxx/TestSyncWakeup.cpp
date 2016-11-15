@@ -29,15 +29,15 @@ TestSyncWakeupParent::Main()
         fail("sending Start()");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestSyncWakeupParent::AnswerStackFrame()
 {
     if (!CallStackFrame())
         fail("calling StackFrame()");
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestSyncWakeupParent::RecvSync1()
 {
     if (!SendNote1())
@@ -54,10 +54,10 @@ TestSyncWakeupParent::RecvSync1()
     sleep(5);
 #endif
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestSyncWakeupParent::RecvSync2()
 {
     if (!SendNote2())
@@ -69,7 +69,7 @@ TestSyncWakeupParent::RecvSync2()
     puts(" (sleeping for 5 seconds. sorry!)");
 #endif
 
-    return true;
+    return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------
@@ -85,7 +85,7 @@ TestSyncWakeupChild::~TestSyncWakeupChild()
     MOZ_COUNT_DTOR(TestSyncWakeupChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestSyncWakeupChild::RecvStart()
 {
     // First test: the parent fires back an async message while
@@ -95,10 +95,10 @@ TestSyncWakeupChild::RecvStart()
 
     // drop back into the event loop to get Note1(), then kick off the
     // second test
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestSyncWakeupChild::RecvNote1()
 {
     // Second test: the parent fires back an async message while
@@ -111,23 +111,23 @@ TestSyncWakeupChild::RecvNote1()
 
     Close();
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestSyncWakeupChild::AnswerStackFrame()
 {
     if (!SendSync2())
         fail("sending Sync()");
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestSyncWakeupChild::RecvNote2()
 {
     mDone = true;
-    return true;
+    return IPC_OK();
 }
 
 } // namespace _ipdltest
