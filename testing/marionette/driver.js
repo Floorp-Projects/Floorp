@@ -153,7 +153,6 @@ this.GeckoDriver = function(appName, server) {
     "XULappId" : Services.appinfo.ID,
     "appBuildId" : Services.appinfo.appBuildID,
     "processId" : Services.appinfo.processID,
-    "version": Services.appinfo.version,
   };
 
   this.mm = globalMessageManager;
