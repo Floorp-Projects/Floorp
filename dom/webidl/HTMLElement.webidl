@@ -28,6 +28,7 @@ interface HTMLElement : Element {
   // user interaction
   [SetterThrows, Pure]
            attribute boolean hidden;
+  [NeedsCallerType]
   void click();
   [SetterThrows, Pure]
            attribute long tabIndex;
