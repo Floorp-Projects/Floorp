@@ -58,7 +58,9 @@
 <!ENTITY offlineStorage2.label           "Offline Web Content and User Data">
 
 <!--  Site Data section manages sites using Storage API and is under Network -->
-<!ENTITY siteData.label           "Site Data">
+<!ENTITY siteData.label                  "Site Data">
+<!ENTITY clearSiteData.label             "Clear All Data">
+<!ENTITY clearSiteData.accesskey         "l">
 
 <!-- LOCALIZATION NOTE:
   The entities limitCacheSizeBefore.label and limitCacheSizeAfter.label appear on a single
