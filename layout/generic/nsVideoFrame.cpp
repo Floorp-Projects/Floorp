@@ -298,27 +298,18 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
 
-  const WritingMode myWM = aReflowInput.GetWritingMode();
-  nscoord contentBoxBSize = aReflowInput.ComputedBSize();
+  aMetrics.Width() = aReflowInput.ComputedWidth();
+  aMetrics.Height() = aReflowInput.ComputedHeight();
 
-  const nscoord borderBoxISize = aReflowInput.ComputedISize() +
-    aReflowInput.ComputedLogicalBorderPadding().IStartEnd(myWM);
-  const bool isBSizeShrinkWrapping = (contentBoxBSize == NS_INTRINSICSIZE);
-
-  nscoord borderBoxBSize;
-  if (!isBSizeShrinkWrapping) {
-    borderBoxBSize = contentBoxBSize +
-      aReflowInput.ComputedLogicalBorderPadding().BStartEnd(myWM);
-  }
-
+  // stash this away so we can compute our inner area later
   mBorderPadding   = aReflowInput.ComputedPhysicalBorderPadding();
 
-  // Reflow the child frames. We may have up to three: an image
-  // frame (for the poster image), a container frame for the controls,
-  // and a container frame for the caption.
-  for (nsIFrame* child : mFrames) {
-    nsSize oldChildSize = child->GetSize();
+  aMetrics.Width() += mBorderPadding.left + mBorderPadding.right;
+  aMetrics.Height() += mBorderPadding.top + mBorderPadding.bottom;
 
+  // Reflow the child frames. We may have up to two, an image frame
+  // which is the poster, and a box frame, which is the video controls.
+  for (nsIFrame* child : mFrames) {
     if (child->GetContent() == mPosterImage) {
       // Reflow the poster frame.
       nsImageFrame* imageFrame = static_cast<nsImageFrame*>(child);
@@ -347,67 +338,46 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
       FinishReflowChild(imageFrame, aPresContext,
                         kidDesiredSize, &kidReflowInput,
                         posterRenderRect.x, posterRenderRect.y, 0);
-
-// Android still uses XUL media controls & hence needs this XUL-friendly
-// custom reflow code. This will go away in bug 1310907.
-#ifdef ANDROID
     } else if (child->GetContent() == mVideoControls) {
       // Reflow the video controls frame.
       nsBoxLayoutState boxState(PresContext(), aReflowInput.mRenderingContext);
+      nsSize size = child->GetSize();
       nsBoxFrame::LayoutChildAt(boxState,
                                 child,
                                 nsRect(mBorderPadding.left,
                                        mBorderPadding.top,
                                        aReflowInput.ComputedWidth(),
                                        aReflowInput.ComputedHeight()));
-
-#endif // ANDROID
-    } else if (child->GetContent() == mCaptionDiv ||
-               child->GetContent() == mVideoControls) {
-      // Reflow the caption and control bar frames.
+      if (child->GetSize() != size) {
+        RefPtr<Runnable> event = new DispatchResizeToControls(child->GetContent());
+        nsContentUtils::AddScriptRunner(event);
+      }
+    } else if (child->GetContent() == mCaptionDiv) {
+      // Reflow to caption div
+      ReflowOutput kidDesiredSize(aReflowInput);
       WritingMode wm = child->GetWritingMode();
-      LogicalSize availableSize = aReflowInput.ComputedSize(wm);
-      availableSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-
+      LogicalSize availableSize = aReflowInput.AvailableSize(wm);
+      LogicalSize cbSize = aMetrics.Size(aMetrics.GetWritingMode()).
+                             ConvertTo(wm, aMetrics.GetWritingMode());
       ReflowInput kidReflowInput(aPresContext,
                                        aReflowInput,
                                        child,
-                                       availableSize);
-      ReflowOutput kidDesiredSize(kidReflowInput);
+                                       availableSize,
+                                       &cbSize);
+      nsSize size(aReflowInput.ComputedWidth(), aReflowInput.ComputedHeight());
+      size.width -= kidReflowInput.ComputedPhysicalBorderPadding().LeftRight();
+      size.height -= kidReflowInput.ComputedPhysicalBorderPadding().TopBottom();
+
+      kidReflowInput.SetComputedWidth(std::max(size.width, 0));
+      kidReflowInput.SetComputedHeight(std::max(size.height, 0));
+
       ReflowChild(child, aPresContext, kidDesiredSize, kidReflowInput,
                   mBorderPadding.left, mBorderPadding.top, 0, aStatus);
-
-      if (child->GetContent() == mVideoControls && isBSizeShrinkWrapping) {
-        contentBoxBSize = kidDesiredSize.BSize(myWM);
-      }
-
       FinishReflowChild(child, aPresContext,
                         kidDesiredSize, &kidReflowInput,
                         mBorderPadding.left, mBorderPadding.top, 0);
     }
-
-    if (child->GetContent() == mVideoControls && child->GetSize() != oldChildSize) {
-      RefPtr<Runnable> event = new DispatchResizeToControls(child->GetContent());
-      nsContentUtils::AddScriptRunner(event);
-    }
   }
-
-  if (isBSizeShrinkWrapping) {
-    if (contentBoxBSize == NS_INTRINSICSIZE) {
-      // We didn't get a BSize from our intrinsic size/ratio, nor did we
-      // get one from our controls. Just use BSize of 0.
-      contentBoxBSize = 0;
-    }
-    contentBoxBSize = NS_CSS_MINMAX(contentBoxBSize,
-                                    aReflowInput.ComputedMinBSize(),
-                                    aReflowInput.ComputedMaxBSize());
-    borderBoxBSize = contentBoxBSize +
-      aReflowInput.ComputedLogicalBorderPadding().BStartEnd(myWM);
-  }
-
-  LogicalSize logicalDesiredSize(myWM, borderBoxISize, borderBoxBSize);
-  aMetrics.SetSize(myWM, logicalDesiredSize);
-
   aMetrics.SetOverflowAreasToDesiredBounds();
 
   FinishAndStoreOverflow(&aMetrics);
@@ -556,22 +526,6 @@ nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                           const LogicalSize& aPadding,
                           ComputeSizeFlags aFlags)
 {
-// When in no video scenario, it should fall back to inherited method.
-// We keep old codepath here since Android still uses XUL media controls.
-// This will go away in bug 1310907.
-#ifndef ANDROID
-  if (!HasVideoElement()) {
-    return nsContainerFrame::ComputeSize(aRenderingContext,
-                                         aWM,
-                                         aCBSize,
-                                         aAvailableISize,
-                                         aMargin,
-                                         aBorder,
-                                         aPadding,
-                                         aFlags);
-  }
-#endif // ANDROID
-
   nsSize size = GetVideoIntrinsicSize(aRenderingContext);
 
   IntrinsicSize intrinsicSize;
@@ -589,49 +543,17 @@ nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
 nscoord nsVideoFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
-  nscoord result;
+  nsSize size = GetVideoIntrinsicSize(aRenderingContext);
+  nscoord result = GetWritingMode().IsVertical() ? size.height : size.width;
   DISPLAY_MIN_WIDTH(this, result);
-
-  if (HasVideoElement()) {
-    nsSize size = GetVideoIntrinsicSize(aRenderingContext);
-    result = GetWritingMode().IsVertical() ? size.height : size.width;
-  } else {
-    // We expect last and only child of audio elements to be control if
-    // "controls" attribute is present.
-    nsIFrame* kid = mFrames.LastChild();
-    if (kid) {
-      result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                                                    kid,
-                                                    nsLayoutUtils::MIN_ISIZE);
-    } else {
-      result = 0;
-    }
-  }
-
   return result;
 }
 
 nscoord nsVideoFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
-  nscoord result;
+  nsSize size = GetVideoIntrinsicSize(aRenderingContext);
+  nscoord result = GetWritingMode().IsVertical() ? size.height : size.width;
   DISPLAY_PREF_WIDTH(this, result);
-
-  if (HasVideoElement()) {
-    nsSize size = GetVideoIntrinsicSize(aRenderingContext);
-    result = GetWritingMode().IsVertical() ? size.height : size.width;
-  } else {
-    // We expect last and only child of audio elements to be control if
-    // "controls" attribute is present.
-    nsIFrame* kid = mFrames.LastChild();
-    if (kid) {
-      result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                                                    kid,
-                                                    nsLayoutUtils::PREF_ISIZE);
-    } else {
-      result = 0;
-    }
-  }
-
   return result;
 }
 
@@ -678,9 +600,6 @@ nsVideoFrame::GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext)
   // Defaulting size to 300x150 if no size given.
   nsIntSize size(300, 150);
 
-// All media controls have been converted to HTML except Android. Hence
-// we keep this codepath for Android until removal in bug 1310907.
-#ifdef ANDROID
   if (!HasVideoElement()) {
     if (!mFrames.FirstChild()) {
       return nsSize(0, 0);
@@ -691,7 +610,6 @@ nsVideoFrame::GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext)
     nscoord prefHeight = mFrames.LastChild()->GetXULPrefSize(boxState).height;
     return nsSize(nsPresContext::CSSPixelsToAppUnits(size.width), prefHeight);
   }
-#endif // ANDROID
 
   HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
   if (NS_FAILED(element->GetVideoSize(&size)) && ShouldDisplayPoster()) {

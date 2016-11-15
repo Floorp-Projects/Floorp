@@ -642,4 +642,3 @@ load 1278461-1.html
 load 1278461-2.html
 load 1304441.html
 load 1316649.html
-skip-if(Android) load 1271765.html
