@@ -689,21 +689,46 @@ ExtensionTabManager.prototype = {
   },
 };
 
+function getBrowserInfo(browser) {
+  if (!browser.ownerGlobal.gBrowser) {
+    // When we're loaded into a <browser> inside about:addons, we need to go up
+    // one more level.
+    browser = browser.ownerGlobal.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDocShell)
+                     .chromeEventHandler;
+
+    if (!browser) {
+      return {};
+    }
+  }
+
+  let result = {};
+
+  let window = browser.ownerGlobal;
+  if (window.gBrowser) {
+    let tab = window.gBrowser.getTabForBrowser(browser);
+    if (tab) {
+      result.tabId = TabManager.getId(tab);
+    }
+
+    result.windowId = WindowManager.getId(window);
+  }
+
+  return result;
+}
+global.getBrowserInfo = getBrowserInfo;
+
 // Sends the tab and windowId upon request. This is primarily used to support
 // the synchronous `browser.extension.getViews` API.
 let onGetTabAndWindowId = {
   receiveMessage({name, target, sync}) {
-    let {gBrowser} = target.ownerGlobal;
-    let tab = gBrowser && gBrowser.getTabForBrowser(target);
-    if (tab) {
-      let reply = {
-        tabId: TabManager.getId(tab),
-        windowId: WindowManager.getId(tab.ownerGlobal),
-      };
+    let result = getBrowserInfo(target);
+
+    if (result.tabId) {
       if (sync) {
-        return reply;
+        return result;
       }
-      target.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", reply);
+      target.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", result);
     }
   },
 };
