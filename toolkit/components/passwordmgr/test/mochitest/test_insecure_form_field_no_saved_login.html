@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test basic login, contextual inscure password warning without saved logins</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: contextual inscure password warning without saved logins
+
+<script>
+let chromeScript = runChecksAfterCommonInit();
+</script>
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+
+  <form id="form1" action="http://autocomplete:8888/formtest.js" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: contextual inscure password warning without saved logins. **/
+
+// Set to pref before the document loads.
+SpecialPowers.setBoolPref(
+  "security.insecure_field_warning.contextual.enabled", true);
+
+SimpleTest.registerCleanupFunction(() => {
+  SpecialPowers.clearUserPref(
+    "security.insecure_field_warning.contextual.enabled");
+});
+
+let uname = $_(1, "uname");
+let pword = $_(1, "pword");
+const shiftModifier = SpecialPowers.Ci.nsIDOMEvent.SHIFT_MASK;
+
+// Restore the form to the default state.
+function restoreForm() {
+  uname.value = "";
+  pword.value = "";
+  uname.focus();
+}
+
+// Check for expected username/password in form.
+function checkACForm(expectedUsername, expectedPassword) {
+  let formID = uname.parentNode.id;
+  is(uname.value, expectedUsername, "Checking " + formID + " username is: " + expectedUsername);
+  is(pword.value, expectedPassword, "Checking " + formID + " password is: " + expectedPassword);
+}
+
+function spinEventLoop() {
+  return Promise.resolve();
+}
+
+add_task(function* setup() {
+  listenForUnexpectedPopupShown();
+});
+
+add_task(function* test_form1_initial_empty() {
+  yield SimpleTest.promiseFocus(window);
+
+  // Make sure initial form is empty.
+  checkACForm("", "");
+  let popupState = yield getPopupState();
+  is(popupState.open, false, "Check popup is initially closed");
+});
+
+add_task(function* test_form1_warning_entry() {
+  yield SimpleTest.promiseFocus(window);
+  // Trigger autocomplete popup
+  restoreForm();
+  let shownPromise = promiseACShown();
+  doKey("down"); // open
+  yield shownPromise;
+
+  let popupState = yield getPopupState();
+  is(popupState.open, true, "Check popup is opened");
+  is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
+
+  doKey("down"); // select insecure warning
+  checkACForm("", ""); // value shouldn't update just by selecting
+  doKey("return"); // not "enter"!
+  yield spinEventLoop(); // let focus happen
+  checkACForm("", "");
+});
+
+</script>
+</pre>
+</body>
+</html>

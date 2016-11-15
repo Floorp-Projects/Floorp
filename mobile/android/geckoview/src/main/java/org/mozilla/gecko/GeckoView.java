@@ -43,13 +43,15 @@ public class GeckoView extends LayerView
     private static final String DEFAULT_SHARED_PREFERENCES_FILE = "GeckoView";
     private static final String LOGTAG = "GeckoView";
 
+    private final EventDispatcher eventDispatcher = new EventDispatcher();
+
     private ChromeDelegate mChromeDelegate;
     private ContentDelegate mContentDelegate;
 
     private InputConnectionListener mInputConnectionListener;
 
     protected boolean onAttachedToWindowCalled;
-    protected String chromeURI = getGeckoInterface().getDefaultChromeURI();
+    protected String chromeURI;
     protected int screenId = 0; // default to the primary screen
 
     @Override
@@ -117,11 +119,11 @@ public class GeckoView extends LayerView
         /* package */ Window() {}
 
         static native void open(Window instance, GeckoView view, Object compositor,
-                                String chromeURI, int screenId);
+                                EventDispatcher dispatcher, String chromeURI, int screenId);
 
         @Override protected native void disposeNative();
         native void close();
-        native void reattach(GeckoView view, Object compositor);
+        native void reattach(GeckoView view, Object compositor, EventDispatcher dispatcher);
         native void loadUri(String uri, int flags);
     }
 
@@ -197,7 +199,7 @@ public class GeckoView extends LayerView
         // Perform common initialization for Fennec/GeckoView.
         GeckoAppShell.setLayerView(this);
 
-        initializeView(EventDispatcher.getInstance());
+        initializeView();
     }
 
     @Override
@@ -228,23 +230,28 @@ public class GeckoView extends LayerView
     }
 
     protected void openWindow() {
+        if (chromeURI == null) {
+            chromeURI = getGeckoInterface().getDefaultChromeURI();
+        }
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            Window.open(window, this, getCompositor(),
+            Window.open(window, this, getCompositor(), eventDispatcher,
                         chromeURI, screenId);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, Window.class,
                     "open", window, GeckoView.class, this, Object.class, getCompositor(),
+                    EventDispatcher.class, eventDispatcher,
                     String.class, chromeURI, screenId);
         }
     }
 
     protected void reattachWindow() {
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            window.reattach(this, getCompositor());
+            window.reattach(this, getCompositor(), eventDispatcher);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                    window, "reattach", GeckoView.class, this, Object.class, getCompositor());
+                    window, "reattach", GeckoView.class, this,
+                    Object.class, getCompositor(), EventDispatcher.class, eventDispatcher);
         }
     }
 
@@ -499,6 +506,10 @@ public class GeckoView extends LayerView
     @Override
     public SharedPreferences getSharedPreferences() {
         return getContext().getSharedPreferences(getSharedPreferencesFile(), 0);
+    }
+
+    public EventDispatcher getEventDispatcher() {
+        return eventDispatcher;
     }
 
     /**

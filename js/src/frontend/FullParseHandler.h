@@ -10,6 +10,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/PodOperations.h"
 
+#include <string.h>
+
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
 
@@ -665,9 +667,18 @@ class FullParseHandler
                                                                    ParseNode* pn);
     inline void setLastFunctionFormalParameterDestructuring(ParseNode* funcpn, ParseNode* pn);
 
-    ParseNode* newFunctionDefinition() {
-        return new_<CodeNode>(PNK_FUNCTION, pos());
+    ParseNode* newFunctionStatement() {
+        return new_<CodeNode>(PNK_FUNCTION, JSOP_NOP, pos());
     }
+
+    ParseNode* newFunctionExpression() {
+        return new_<CodeNode>(PNK_FUNCTION, JSOP_LAMBDA, pos());
+    }
+
+    ParseNode* newArrowFunction() {
+        return new_<CodeNode>(PNK_FUNCTION, JSOP_LAMBDA_ARROW, pos());
+    }
+
     bool setComprehensionLambdaBody(ParseNode* pn, ParseNode* body) {
         MOZ_ASSERT(body->isKind(PNK_STATEMENTLIST));
         ParseNode* paramsBody = newList(PNK_PARAMSBODY, body);
@@ -694,7 +705,7 @@ class FullParseHandler
     }
 
     ParseNode* newModule() {
-        return new_<CodeNode>(PNK_MODULE, pos());
+        return new_<CodeNode>(PNK_MODULE, JSOP_NOP, pos());
     }
 
     ParseNode* newLexicalScope(LexicalScope::Data* bindings, ParseNode* body) {
@@ -840,7 +851,7 @@ class FullParseHandler
     MOZ_MUST_USE ParseNode* setLikelyIIFE(ParseNode* pn) {
         return parenthesize(pn);
     }
-    void setPrologue(ParseNode* pn) {
+    void setInDirectivePrologue(ParseNode* pn) {
         pn->pn_prologue = true;
     }
 
@@ -856,29 +867,25 @@ class FullParseHandler
         return node->isKind(PNK_NAME);
     }
 
-    bool nameIsEvalAnyParentheses(ParseNode* node, ExclusiveContext* cx) {
-        MOZ_ASSERT(isNameAnyParentheses(node),
-                   "must only call this function on known names");
-
-        return node->pn_atom == cx->names().eval;
+    bool isEvalAnyParentheses(ParseNode* node, ExclusiveContext* cx) {
+        return node->isKind(PNK_NAME) && node->pn_atom == cx->names().eval;
     }
 
     const char* nameIsArgumentsEvalAnyParentheses(ParseNode* node, ExclusiveContext* cx) {
         MOZ_ASSERT(isNameAnyParentheses(node),
                    "must only call this function on known names");
 
-        if (nameIsEvalAnyParentheses(node, cx))
+        if (isEvalAnyParentheses(node, cx))
             return js_eval_str;
         if (node->pn_atom == cx->names().arguments)
             return js_arguments_str;
         return nullptr;
     }
 
-    bool nameIsUnparenthesizedAsync(ParseNode* node, ExclusiveContext* cx) {
-        MOZ_ASSERT(isNameAnyParentheses(node),
-                   "must only call this function on known names");
-
-        return node->pn_atom == cx->names().async;
+    bool isAsyncKeyword(ParseNode* node, ExclusiveContext* cx) {
+        return node->isKind(PNK_NAME) &&
+               node->pn_pos.begin + strlen("async") == node->pn_pos.end &&
+               node->pn_atom == cx->names().async;
     }
 
     bool isCall(ParseNode* pn) {

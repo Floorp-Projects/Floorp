@@ -36,4 +36,21 @@
     <!-- App requires OpenGL ES 2.0 -->
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />
 
+    <!-- New child services must also be added to the Fennec AndroidManifest.xml.in -->
+    <service
+        android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$geckomediaplugin"
+        android:enabled="true"
+        android:exported="false"
+        android:process=":geckomediaplugin"
+        android:isolatedProcess="false">
+    </service>
+
+    <service
+        android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$tab"
+        android:enabled="true"
+        android:exported="false"
+        android:process=":tab"
+        android:isolatedProcess="false">
+    </service>
+
 </manifest>

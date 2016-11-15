@@ -20,7 +20,6 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 XPIDL_SOURCES += [
     'nsIDateTimeInputArea.idl',
     'nsIFormSubmitObserver.idl',
-    'nsIHTMLMenu.idl',
     'nsIImageDocument.idl',
     'nsIMenuBuilder.idl',
     'nsIPhonetic.idl',
