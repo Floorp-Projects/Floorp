@@ -7,8 +7,8 @@ const TEST_URL = "http://mochi.test:8888/browser/browser/base/content/test/gener
 
 add_task(function*() {
   let extraTab = gBrowser.selectedTab = gBrowser.addTab();
-  let tabLoaded = promiseTabLoaded(extraTab);
   extraTab.linkedBrowser.loadURI(TEST_URL);
+  let tabLoaded = BrowserTestUtils.browserLoaded(extraTab.linkedBrowser);
   let expectedFavicon = "http://example.org/one-icon";
   let haveChanged = new Promise.defer();
   let observer = new MutationObserver(function(mutations) {
@@ -30,9 +30,10 @@ add_task(function*() {
   yield haveChanged.promise;
   haveChanged = new Promise.defer();
   expectedFavicon = "http://example.org/other-icon";
-  let contentWin = extraTab.linkedBrowser.contentWindow;
-  let ev = new contentWin.CustomEvent("PleaseChangeFavicon", {});
-  contentWin.dispatchEvent(ev);
+  ContentTask.spawn(extraTab.linkedBrowser, null, function() {
+    let ev = new content.CustomEvent("PleaseChangeFavicon", {});
+    content.dispatchEvent(ev);
+  });
   yield haveChanged.promise;
   observer.disconnect();
   gBrowser.removeTab(extraTab);
