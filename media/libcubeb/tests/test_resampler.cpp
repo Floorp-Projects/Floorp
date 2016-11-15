@@ -7,8 +7,12 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif // NOMINMAX
-#include "gtest/gtest.h"
+
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include "cubeb_resampler_internal.h"
+#include <assert.h>
 #include <stdio.h>
 #include <algorithm>
 #include <iostream>
@@ -150,7 +154,7 @@ void test_delay_lines(uint32_t delay_frames, uint32_t channels, uint32_t chunk_m
 
   // Check the diracs have been shifted by `delay_frames` frames.
   for (uint32_t i = 0; i < output.length() - delay_frames * channels + 1; i+=100) {
-    ASSERT_EQ(output.data()[i + channel + delay_frames * channels], 0.5);
+    assert(output.data()[i + channel + delay_frames * channels] == 0.5);
     channel = (channel + 1) % channels;
   }
 
@@ -228,7 +232,7 @@ void test_resampler_one_way(uint32_t channels, uint32_t source_rate, uint32_t ta
       fuzzy_equal = false;
     }
   }
-  ASSERT_TRUE(fuzzy_equal);
+  assert(fuzzy_equal);
 }
 
 template<typename T>
@@ -279,7 +283,7 @@ uint32_t fill_with_sine(float * buf, uint32_t rate, uint32_t channels,
   return initial_phase;
 }
 
-long data_cb_resampler(cubeb_stream * /*stm*/, void * user_ptr,
+long data_cb(cubeb_stream * /*stm*/, void * user_ptr,
              const void * input_buffer, void * output_buffer, long frame_count)
 {
   osc_state * state = reinterpret_cast<osc_state*>(user_ptr);
@@ -337,7 +341,7 @@ void test_resampler_duplex(uint32_t input_channels, uint32_t output_channels,
 
   cubeb_resampler * resampler =
     cubeb_resampler_create((cubeb_stream*)nullptr, &input_params, &output_params, target_rate,
-                           data_cb_resampler, (void*)&state, CUBEB_RESAMPLER_QUALITY_VOIP);
+                           data_cb, (void*)&state, CUBEB_RESAMPLER_QUALITY_VOIP);
 
   long latency = cubeb_resampler_latency(resampler);
 
@@ -393,15 +397,15 @@ void test_resampler_duplex(uint32_t input_channels, uint32_t output_channels,
   dump("input.raw", state.input.data(), state.input.length());
   dump("output.raw", state.output.data(), state.output.length());
 
-  ASSERT_TRUE(array_fuzzy_equal(state.input, expected_resampled_input, epsilon<T>(input_rate/target_rate)));
-  ASSERT_TRUE(array_fuzzy_equal(state.output, expected_resampled_output, epsilon<T>(output_rate/target_rate)));
+  assert(array_fuzzy_equal(state.input, expected_resampled_input, epsilon<T>(input_rate/target_rate)));
+  assert(array_fuzzy_equal(state.output, expected_resampled_output, epsilon<T>(output_rate/target_rate)));
 
   cubeb_resampler_destroy(resampler);
 }
 
 #define array_size(x) (sizeof(x) / sizeof(x[0]))
 
-TEST(cubeb, resampler_one_way)
+void test_resamplers_one_way()
 {
   /* Test one way resamplers */
   for (uint32_t channels = 1; channels <= max_channels; channels++) {
@@ -418,11 +422,9 @@ TEST(cubeb, resampler_one_way)
   }
 }
 
-// This is disabled because the latency estimation in the resampler code is
-// slightly off so we can generate expected vectors.
-// See https://github.com/kinetiknz/cubeb/issues/93
-TEST(cubeb, DISABLED_resampler_duplex)
+void test_resamplers_duplex()
 {
+  /* Test duplex resamplers */
   for (uint32_t input_channels = 1; input_channels <= max_channels; input_channels++) {
     for (uint32_t output_channels = 1; output_channels <= max_channels; output_channels++) {
       for (uint32_t source_rate_input = 0; source_rate_input < array_size(sample_rates); source_rate_input++) {
@@ -449,7 +451,7 @@ TEST(cubeb, DISABLED_resampler_duplex)
   }
 }
 
-TEST(cubeb, resampler_delay_line)
+void test_delay_line()
 {
   for (uint32_t channel = 1; channel <= 2; channel++) {
     for (uint32_t delay_frames = 4; delay_frames <= 40; delay_frames+=chunk_increment) {
@@ -466,12 +468,12 @@ long test_output_only_noop_data_cb(cubeb_stream * /*stm*/, void * /*user_ptr*/,
                                    const void * input_buffer,
                                    void * output_buffer, long frame_count)
 {
-  EXPECT_TRUE(output_buffer);
-  EXPECT_TRUE(!input_buffer);
+  assert(output_buffer);
+  assert(!input_buffer);
   return frame_count;
 }
 
-TEST(cubeb, resampler_output_only_noop)
+void test_output_only_noop()
 {
   cubeb_stream_params output_params;
   int target_rate;
@@ -493,7 +495,7 @@ TEST(cubeb, resampler_output_only_noop)
   got = cubeb_resampler_fill(resampler, nullptr, nullptr,
                              out_buffer, out_frames);
 
-  ASSERT_EQ(got, out_frames);
+  assert(got == out_frames);
 
   cubeb_resampler_destroy(resampler);
 }
@@ -502,12 +504,12 @@ long test_drain_data_cb(cubeb_stream * /*stm*/, void * /*user_ptr*/,
                         const void * input_buffer,
                         void * output_buffer, long frame_count)
 {
-  EXPECT_TRUE(output_buffer);
-  EXPECT_TRUE(!input_buffer);
+  assert(output_buffer);
+  assert(!input_buffer);
   return frame_count - 10;
 }
 
-TEST(cubeb, resampler_drain)
+void test_resampler_drain()
 {
   cubeb_stream_params output_params;
   int target_rate;
@@ -533,8 +535,20 @@ TEST(cubeb, resampler_drain)
 
   /* If the above is not an infinite loop, the drain was a success, just mark
    * this test as such. */
-  ASSERT_TRUE(true);
+  assert(true);
 
   cubeb_resampler_destroy(resampler);
 }
 
+int main()
+{
+  test_resamplers_one_way();
+  test_delay_line();
+  // This is disabled because the latency estimation in the resampler code is
+  // slightly off so we can generate expected vectors.
+  // test_resamplers_duplex();
+  test_output_only_noop();
+  test_resampler_drain();
+
+  return 0;
+}

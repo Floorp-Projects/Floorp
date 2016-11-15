@@ -514,10 +514,10 @@ int cubeb_device_info_destroy(cubeb_device_info * info)
     return CUBEB_ERROR_INVALID_PARAMETER;
   }
 
-  free((void *) info->device_id);
-  free((void *) info->friendly_name);
-  free((void *) info->group_id);
-  free((void *) info->vendor_name);
+  free(info->device_id);
+  free(info->friendly_name);
+  free(info->group_id);
+  free(info->vendor_name);
 
   free(info);
   return CUBEB_OK;
