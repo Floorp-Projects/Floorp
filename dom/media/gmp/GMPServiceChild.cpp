@@ -105,7 +105,8 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
         parent->SetDisplayName(displayName);
         parent->SetPluginId(pluginId);
       }
-      holder->Resolve(parent, __func__);
+      RefPtr<GMPContentParent::CloseBlocker> blocker(new GMPContentParent::CloseBlocker(parent));
+      holder->Resolve(blocker, __func__);
     },
     [rawHolder](nsresult rv) {
       UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>> holder(rawHolder);
