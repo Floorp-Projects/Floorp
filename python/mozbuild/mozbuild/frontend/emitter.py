@@ -154,7 +154,6 @@ ALLOWED_XPCOM_GLUE = {
     ('mediaconduit_unittests', 'media/webrtc/signaling/test'),
     ('mediapipeline_unittest', 'media/webrtc/signaling/test'),
     ('sdp_file_parser', 'media/webrtc/signaling/fuzztest'),
-    ('sdp_unittests', 'media/webrtc/signaling/test'),
     ('signaling_unittests', 'media/webrtc/signaling/test'),
     ('TestMailCookie', 'mailnews/base/test'),
 }
