@@ -2555,8 +2555,7 @@ nsresult nsPluginHost::FindPlugins(bool aCreatePluginList, bool * aPluginsChange
   // Scan the installation paths of our popular plugins if the prefs are enabled
 
   // This table controls the order of scanning
-  const char* const prefs[] = {NS_WIN_QUICKTIME_SCAN_KEY,
-                               NS_WIN_WMP_SCAN_KEY};
+  const char* const prefs[] = {NS_WIN_WMP_SCAN_KEY};
 
   uint32_t size = sizeof(prefs) / sizeof(prefs[0]);
 

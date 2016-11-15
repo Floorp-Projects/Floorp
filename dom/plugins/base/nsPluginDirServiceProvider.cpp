@@ -211,47 +211,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, bool *persistant,
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
   NS_ENSURE_TRUE(regKey, NS_ERROR_FAILURE);
 
-  if (nsCRT::strcmp(charProp, NS_WIN_QUICKTIME_SCAN_KEY) == 0) {
-    nsAdoptingCString strVer = Preferences::GetCString(charProp);
-    if (!strVer) {
-      return NS_ERROR_FAILURE;
-    }
-    verBlock minVer;
-    TranslateVersionStr(NS_ConvertASCIItoUTF16(strVer).get(), &minVer);
-
-    // Look for the Quicktime system installation plugins directory
-    verBlock qtVer;
-    ClearVersion(&qtVer);
-
-    // First we need to check the version of Quicktime via checking
-    // the EXE's version table
-    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
-                      NS_LITERAL_STRING("software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\QuickTimePlayer.exe"),
-                      nsIWindowsRegKey::ACCESS_READ);
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString path;
-      rv = regKey->ReadStringValue(NS_LITERAL_STRING(""), path);
-      if (NS_SUCCEEDED(rv)) {
-        GetFileVersion(path.get(), &qtVer);
-      }
-      regKey->Close();
-    }
-    if (CompareVersion(qtVer, minVer) < 0)
-      return rv;
-
-    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
-                      NS_LITERAL_STRING("software\\Apple Computer, Inc.\\QuickTime"),
-                      nsIWindowsRegKey::ACCESS_READ);
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString path;
-      rv = regKey->ReadStringValue(NS_LITERAL_STRING("InstallDir"), path);
-      if (NS_SUCCEEDED(rv)) {
-        path += NS_LITERAL_STRING("\\Plugins");
-        rv = NS_NewLocalFile(path, true,
-                             getter_AddRefs(localFile));
-      }
-    }
-  } else if (nsCRT::strcmp(charProp, NS_WIN_WMP_SCAN_KEY) == 0) {
+  if (nsCRT::strcmp(charProp, NS_WIN_WMP_SCAN_KEY) == 0) {
     nsAdoptingCString strVer = Preferences::GetCString(charProp);
     if (!strVer) {
       return NS_ERROR_FAILURE;

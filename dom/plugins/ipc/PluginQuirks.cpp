@@ -41,20 +41,9 @@ int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,
 #endif
     }
 
-#ifdef OS_WIN
-    // QuickTime plugin usually loaded with audio/mpeg mimetype
-    NS_NAMED_LITERAL_CSTRING(quicktime, "npqtplugin");
-    if (FindInReadable(quicktime, aPluginFilename)) {
-        quirks |= QUIRK_QUICKTIME_AVOID_SETWINDOW;
-    }
-#endif
-
 #ifdef XP_MACOSX
-    // Whitelist Flash and Quicktime to support offline renderer
-    NS_NAMED_LITERAL_CSTRING(quicktime, "QuickTime Plugin.plugin");
+    // Whitelist Flash to support offline renderer.
     if (specialType == nsPluginHost::eSpecialType_Flash) {
-        quirks |= QUIRK_ALLOW_OFFLINE_RENDERER;
-    } else if (FindInReadable(quicktime, aPluginFilename)) {
         quirks |= QUIRK_ALLOW_OFFLINE_RENDERER;
     }
 #endif

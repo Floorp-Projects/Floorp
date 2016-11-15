@@ -3435,9 +3435,6 @@ pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 // Whether to extend the native dialog with information on printing frames.
 pref("print.extend_native_print_dialog", true);
 
-// Locate plugins by scanning the Quicktime installation directory with a minimum version
-pref("plugin.scan.Quicktime", "5.0");
-
 // Locate and scan the Window Media Player installation directory for plugins with a minimum version
 pref("plugin.scan.WindowsMediaPlayer", "7.0");
 
