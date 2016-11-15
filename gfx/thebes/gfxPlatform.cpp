@@ -195,11 +195,11 @@ class CrashStatsLogForwarder: public mozilla::gfx::LogForwarder
 {
 public:
   explicit CrashStatsLogForwarder(const char* aKey);
-  virtual void Log(const std::string& aString) override;
-  virtual void CrashAction(LogReason aReason) override;
-  virtual bool UpdateStringsVector(const std::string& aString) override;
+  void Log(const std::string& aString) override;
+  void CrashAction(LogReason aReason) override;
+  bool UpdateStringsVector(const std::string& aString) override;
 
-  virtual LoggingRecord LoggingRecordCopy() override;
+  LoggingRecord LoggingRecordCopy() override;
 
   void SetCircularBufferSize(uint32_t aCapacity);
 
@@ -307,7 +307,7 @@ void CrashStatsLogForwarder::UpdateCrashReport()
 
 class LogForwarderEvent : public Runnable
 {
-  virtual ~LogForwarderEvent() = default;
+  ~LogForwarderEvent() override = default;
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -361,7 +361,7 @@ void CrashStatsLogForwarder::Log(const std::string& aString)
 
 class CrashTelemetryEvent : public Runnable
 {
-  virtual ~CrashTelemetryEvent() = default;
+  ~CrashTelemetryEvent() override = default;
 
   NS_DECL_ISUPPORTS_INHERITED
 
