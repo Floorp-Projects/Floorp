@@ -2887,7 +2887,8 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
                                              InfallibleTArray<nsString>* dictionaries,
                                              ClipboardCapabilities* clipboardCaps,
                                              DomainPolicyClone* domainPolicy,
-                                             StructuredCloneData* aInitialData)
+                                             StructuredCloneData* aInitialData,
+                                             InfallibleTArray<FontFamilyListEntry>* fontFamilies)
 {
   nsCOMPtr<nsIIOService> io(do_GetIOService());
   MOZ_ASSERT(io, "No IO service?");
@@ -2943,6 +2944,9 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
       return false;
     }
   }
+
+  // This is only implemented (returns a non-empty list) by MacOSX at present.
+  gfxPlatform::GetPlatform()->GetSystemFontFamilyList(fontFamilies);
 
   return true;
 }

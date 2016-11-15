@@ -30,6 +30,8 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
+using mozilla::dom::FontFamilyListEntry;
+
 // cribbed from CTFontManager.h
 enum {
    kAutoActivationDisabled = 1
@@ -108,6 +110,14 @@ gfxPlatformMac::CreatePlatformFontList()
     }
     gfxPlatformFontList::Shutdown();
     return nullptr;
+}
+
+void
+gfxPlatformMac::GetSystemFontFamilyList(
+    InfallibleTArray<FontFamilyListEntry>* aFontFamilies)
+{
+    gfxMacPlatformFontList::PlatformFontList()->
+        GetSystemFontFamilyList(aFontFamilies);
 }
 
 already_AddRefed<gfxASurface>

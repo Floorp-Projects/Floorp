@@ -633,6 +633,13 @@ public:
   SendGetA11yContentId();
 #endif // defined(XP_WIN) && defined(ACCESSIBILITY)
 
+  // Get a reference to the font family list passed from the chrome process,
+  // for use during gfx initialization.
+  InfallibleTArray<mozilla::dom::FontFamilyListEntry>&
+  SystemFontFamilyList() {
+    return mFontFamilies;
+  }
+
   /**
    * Helper function for protocols that use the GPU process when available.
    * Overrides FatalError to just be a warning when communicating with the
@@ -657,6 +664,11 @@ private:
   nsTHashtable<nsPtrHashKey<nsIObserver>> mIdleObservers;
 
   InfallibleTArray<nsString> mAvailableDictionaries;
+
+  // Temporary storage for a list of available font families, passed from the
+  // parent process and used to initialize gfx in the child. Currently used
+  // only on MacOSX.
+  InfallibleTArray<mozilla::dom::FontFamilyListEntry> mFontFamilies;
 
   /**
    * An ID unique to the process containing our corresponding
