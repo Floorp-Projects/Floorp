@@ -934,26 +934,9 @@ fi
 
 dnl Configure JIT support
 
-case "$target" in
-i?86-*)
+case "$CPU_ARCH" in
+x86|x86_64|arm|mips*)
     ENABLE_ION=1
-    AC_DEFINE(JS_CPU_X86)
-    ;;
-x86_64*-*)
-    ENABLE_ION=1
-    AC_DEFINE(JS_CPU_X64)
-    ;;
-arm*-*)
-    ENABLE_ION=1
-    AC_DEFINE(JS_CPU_ARM)
-    ;;
-sparc-*)
-dnl ENABLE_ION=0
-    AC_DEFINE(JS_CPU_SPARC)
-    ;;
-mips*-*)
-    ENABLE_ION=1
-    AC_DEFINE(JS_CPU_MIPS)
     ;;
 esac
 
