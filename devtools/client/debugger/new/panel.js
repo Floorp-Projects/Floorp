@@ -49,8 +49,8 @@ DebuggerPanel.prototype = {
   getFrames: function() {
     let frames = this._selectors().getFrames(this._getState());
 
-    // frames is an empty array when the debugger is not paused
-    if (!frames.toJS) {
+    // frames is null when the debugger is not paused
+    if (!frames) {
       return {
         frames: [],
         selected: -1
