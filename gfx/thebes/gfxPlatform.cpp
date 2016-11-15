@@ -1162,7 +1162,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget,
   }
 
   // Add user data to aSurface so we can cache lookups in the future.
-  SourceSurfaceUserData *srcSurfUD = new SourceSurfaceUserData;
+  auto *srcSurfUD = new SourceSurfaceUserData;
   srcSurfUD->mBackendType = aTarget->GetBackendType();
   srcSurfUD->mSrcSurface = srcBuffer;
   aSurface->SetData(&kSourceSurface, srcSurfUD, SourceBufferDestroy);
@@ -1189,7 +1189,7 @@ gfxPlatform::GetWrappedDataSourceSurface(gfxASurface* aSurface)
 
   // If we wrapped the underlying data of aSurface, then we need to add user data
   // to make sure aSurface stays alive until we are done with the data.
-  DependentSourceSurfaceUserData *srcSurfUD = new DependentSourceSurfaceUserData;
+  auto *srcSurfUD = new DependentSourceSurfaceUserData;
   srcSurfUD->mSurface = aSurface;
   result->AddUserData(&kThebesSurface, srcSurfUD, SourceSurfaceDestroyed);
 
