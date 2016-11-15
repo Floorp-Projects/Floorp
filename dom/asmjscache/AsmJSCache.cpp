@@ -250,7 +250,7 @@ public:
     mMappedMemory(nullptr)
   { }
 
-  ~FileDescriptorHolder()
+  ~FileDescriptorHolder() override
   {
     // These resources should have already been released by Finish().
     MOZ_ASSERT(!mQuotaObject);
@@ -364,7 +364,7 @@ public:
   }
 
 private:
-  ~ParentRunnable()
+  ~ParentRunnable() override
   {
     MOZ_ASSERT(mState == eFinished);
     MOZ_ASSERT(!mDirectoryLock);
@@ -509,10 +509,10 @@ private:
   }
 
   // OpenDirectoryListener overrides.
-  virtual void
+  void
   DirectoryLockAcquired(DirectoryLock* aLock) override;
 
-  virtual void
+  void
   DirectoryLockFailed() override;
 
   // IPDL methods.
@@ -1276,7 +1276,7 @@ public:
   }
 
 private:
-  ~ChildRunnable()
+  ~ChildRunnable() override
   {
     MOZ_ASSERT(!mWaiting, "Shouldn't be destroyed while thread is waiting");
     MOZ_ASSERT(!mOpened);
@@ -1713,7 +1713,7 @@ CloseEntryForWrite(size_t aSize,
 
 class Client : public quota::Client
 {
-  ~Client() = default;
+  ~Client() override = default;
 
 public:
   NS_IMETHOD_(MozExternalRefCountType)
@@ -1722,13 +1722,13 @@ public:
   NS_IMETHOD_(MozExternalRefCountType)
   Release() override;
 
-  virtual Type
+  Type
   GetType() override
   {
     return ASMJS;
   }
 
-  virtual nsresult
+  nsresult
   InitOrigin(PersistenceType aPersistenceType,
              const nsACString& aGroup,
              const nsACString& aOrigin,
@@ -1740,7 +1740,7 @@ public:
     return GetUsageForOrigin(aPersistenceType, aGroup, aOrigin, aUsageInfo);
   }
 
-  virtual nsresult
+  nsresult
   GetUsageForOrigin(PersistenceType aPersistenceType,
                     const nsACString& aGroup,
                     const nsACString& aOrigin,
@@ -1790,33 +1790,33 @@ public:
     return NS_OK;
   }
 
-  virtual void
+  void
   OnOriginClearCompleted(PersistenceType aPersistenceType,
                          const nsACString& aOrigin)
                          override
   { }
 
-  virtual void
+  void
   ReleaseIOThreadObjects() override
   { }
 
-  virtual void
+  void
   AbortOperations(const nsACString& aOrigin) override
   { }
 
-  virtual void
+  void
   AbortOperationsForProcess(ContentParentId aContentParentId) override
   { }
 
-  virtual void
+  void
   StartIdleMaintenance() override
   { }
 
-  virtual void
+  void
   StopIdleMaintenance() override
   { }
 
-  virtual void
+  void
   ShutdownWorkThreads() override
   { }
 
