@@ -1609,10 +1609,22 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
     bool colorFormatsMatch = true;
     bool colorTypesMatch = true;
 
+    const auto fnNarrowComponentType = [&](const webgl::FormatInfo* format) {
+        switch (format->componentType) {
+        case webgl::ComponentType::NormInt:
+        case webgl::ComponentType::NormUInt:
+            return webgl::ComponentType::Float;
+
+        default:
+            return format->componentType;
+        }
+    };
+
     const auto fnCheckColorFormat = [&](const webgl::FormatInfo* dstFormat) {
         dstHasColor = true;
         colorFormatsMatch &= (dstFormat == srcColorFormat);
-        colorTypesMatch &= (dstFormat->componentType == srcColorFormat->componentType);
+        colorTypesMatch &= ( fnNarrowComponentType(dstFormat) ==
+                             fnNarrowComponentType(srcColorFormat) );
     };
 
     if (dstFB) {
