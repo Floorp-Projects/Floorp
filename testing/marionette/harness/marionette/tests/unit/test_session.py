@@ -26,7 +26,6 @@ class TestSession(MarionetteTestCase):
 
         # Optional capabilities we want Marionette to support
         self.assertIn("rotatable", caps)
-        self.assertIn("takesScreenshot", caps)
 
     def test_we_can_get_the_session_id(self):
         # Sends newSession
