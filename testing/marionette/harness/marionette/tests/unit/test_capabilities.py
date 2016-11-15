@@ -38,6 +38,10 @@ class TestCapabilities(MarionetteTestCase):
 
         self.assertFalse(self.caps["acceptSslCerts"])
 
+    def test_additional_capabilities(self):
+        self.assertIn("processId", self.caps)
+        self.assertEqual(self.caps["processId"], self.appinfo["processID"])
+
     def test_we_can_pass_in_capabilities_on_session_start(self):
         self.marionette.delete_session()
         capabilities = {"desiredCapabilities": {"somethingAwesome": "cake"}}
