@@ -282,6 +282,7 @@ RecordedEvent::StorePattern(PatternStorage &aDestination, const Pattern &aSource
       store->mSamplingFilter = pat->mSamplingFilter;
       store->mMatrix = pat->mMatrix;
       store->mSurface = pat->mSurface;
+      store->mSamplingRect = pat->mSamplingRect;
       return;
     }
   }
@@ -551,7 +552,8 @@ struct GenericPattern
         mPattern =
           new (mSurfPat) SurfacePattern(mTranslator->LookupSourceSurface(storage->mSurface),
                                         storage->mExtend, storage->mMatrix,
-                                        storage->mSamplingFilter);
+                                        storage->mSamplingFilter,
+                                        storage->mSamplingRect);
         return mPattern;
       }
     case PatternType::LINEAR_GRADIENT:
