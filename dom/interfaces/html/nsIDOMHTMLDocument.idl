@@ -52,21 +52,11 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
    */
   attribute DOMString       designMode;
 
-  boolean                   execCommand(in DOMString commandID,
-                                        [optional] in boolean doShowUI,
-                                        [optional] in DOMString value);
-
-  // returns true if the command is enabled (false otherwise)
-  boolean                   queryCommandEnabled(in DOMString commandID);
-  
   // returns true if the command is in a indeterminate state (false otherwise)
   boolean                   queryCommandIndeterm(in DOMString commandID);
 
   // returns true if the command has been executed (false otherwise)
   boolean                   queryCommandState(in DOMString commandID);
-
-  // returns true if the command is supported on the current range
-  boolean                   queryCommandSupported(in DOMString commandID);
 
   // returns the current value of the document or current selection for command
   DOMString                 queryCommandValue(in DOMString commandID);
