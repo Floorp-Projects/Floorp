@@ -123,44 +123,6 @@ def mozconfig(current_project, mozconfig, old_configure, build_env, help):
 set_config('MOZCONFIG', depends(mozconfig)(lambda m: m['path']))
 
 
-# Hacks related to old-configure
-# ==============================
-
-@dependable
-def old_configure_assignments():
-    return []
-
-@dependable
-def extra_old_configure_args():
-    return []
-
-@template
-def add_old_configure_assignment(var, value):
-    var = dependable(var)
-    value = dependable(value)
-
-    @depends(old_configure_assignments, var, value)
-    @imports(_from='mozbuild.shellutil', _import='quote')
-    def add_assignment(assignments, var, value):
-        if var is None or value is None:
-            return
-        if value is True:
-            assignments.append('%s=1' % var)
-        elif value is False:
-            assignments.append('%s=' % var)
-        else:
-            if isinstance(value, (list, tuple)):
-                value = quote(*value)
-            assignments.append('%s=%s' % (var, quote(str(value))))
-
-@template
-def add_old_configure_arg(arg):
-    @depends(extra_old_configure_args, arg)
-    def add_arg(args, arg):
-        if arg:
-            args.append(arg)
-
-
 option(env='PYTHON', nargs=1, help='Python interpreter')
 
 # Setup python virtualenv
