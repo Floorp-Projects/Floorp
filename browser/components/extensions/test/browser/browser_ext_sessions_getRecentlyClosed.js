@@ -4,7 +4,7 @@
 
 /* globals recordInitialTimestamps, onlyNewItemsFilter, checkRecentlyClosed */
 
-SimpleTest.requestCompleteLog();
+requestLongerTimeout(2);
 
 Services.scriptloader.loadSubScript(new URL("head_sessions.js", gTestPath).href,
                                     this);
