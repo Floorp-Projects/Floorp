@@ -40,7 +40,7 @@ function EvaluationResult(props) {
   if (message.messageText) {
     messageBody = message.messageText;
   } else {
-    messageBody = GripMessageBody({grip: message.parameters});
+    messageBody = GripMessageBody({grip: message.parameters, serviceContainer});
   }
 
   const topLevelClasses = ["cm-s-mozilla"];

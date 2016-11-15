@@ -80,7 +80,7 @@ GMPContentChild::DeallocPGMPDecryptorChild(PGMPDecryptorChild* aActor)
 }
 
 PGMPVideoDecoderChild*
-GMPContentChild::AllocPGMPVideoDecoderChild()
+GMPContentChild::AllocPGMPVideoDecoderChild(const uint32_t& aDecryptorId)
 {
   GMPVideoDecoderChild* actor = new GMPVideoDecoderChild(this);
   actor->AddRef();
@@ -206,7 +206,7 @@ GMPContentChild::RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor)
   GMPDecryptorHost* host = static_cast<GMPDecryptorHost*>(child);
 
   void* ptr = nullptr;
-  GMPErr err = mGMPChild->GetAPI(GMP_API_DECRYPTOR, host, &ptr);
+  GMPErr err = mGMPChild->GetAPI(GMP_API_DECRYPTOR, host, &ptr, aActor->Id());
   GMPDecryptor* decryptor = nullptr;
   if (GMP_SUCCEEDED(err) && ptr) {
     decryptor = static_cast<GMPDecryptor*>(ptr);
@@ -244,12 +244,13 @@ GMPContentChild::RecvPGMPAudioDecoderConstructor(PGMPAudioDecoderChild* aActor)
 }
 
 bool
-GMPContentChild::RecvPGMPVideoDecoderConstructor(PGMPVideoDecoderChild* aActor)
+GMPContentChild::RecvPGMPVideoDecoderConstructor(PGMPVideoDecoderChild* aActor,
+                                                 const uint32_t& aDecryptorId)
 {
   auto vdc = static_cast<GMPVideoDecoderChild*>(aActor);
 
   void* vd = nullptr;
-  GMPErr err = mGMPChild->GetAPI(GMP_API_VIDEO_DECODER, &vdc->Host(), &vd);
+  GMPErr err = mGMPChild->GetAPI(GMP_API_VIDEO_DECODER, &vdc->Host(), &vd, aDecryptorId);
   if (err != GMPNoErr || !vd) {
     NS_WARNING("GMPGetAPI call failed trying to construct decoder.");
     return false;

@@ -4,12 +4,15 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import inspect
+from functools import wraps
 from StringIO import StringIO
 from . import (
     CombinedDependsFunction,
     ConfigureError,
     ConfigureSandbox,
     DependsFunction,
+    SandboxedGlobal,
 )
 from .lint_util import disassemble_as_iter
 from mozbuild.util import memoize
@@ -30,6 +33,46 @@ class LintSandbox(ConfigureSandbox):
         if path:
             self.include_file(path)
 
+        for dep in self._depends.itervalues():
+            self._check_dependencies(dep)
+
+    def _check_dependencies(self, obj):
+        if isinstance(obj, CombinedDependsFunction) or obj in (self._always,
+                                                               self._never):
+            return
+        func, glob = self.unwrap(obj.func)
+        loc = '%s:%d' % (func.func_code.co_filename,
+                         func.func_code.co_firstlineno)
+        func_args = inspect.getargspec(func)
+        if func_args.keywords:
+            raise ConfigureError(
+                '%s: Keyword arguments are not allowed in @depends functions'
+                % loc
+            )
+
+        all_args = list(func_args.args)
+        if func_args.varargs:
+            all_args.append(func_args.varargs)
+        used_args = set()
+
+        for op, arg in disassemble_as_iter(func):
+            if op in ('LOAD_FAST', 'LOAD_CLOSURE'):
+                if arg in all_args:
+                    used_args.add(arg)
+
+        for num, arg in enumerate(all_args):
+            if arg not in used_args:
+                dep = obj.dependencies[num]
+                if dep != self._help_option:
+                    if isinstance(dep, DependsFunction):
+                        dep = dep.name
+                    else:
+                        dep = dep.option
+                    raise ConfigureError(
+                        '%s: The dependency on `%s` is unused.'
+                        % (loc, dep)
+                    )
+
     def _missing_help_dependency(self, obj):
         if isinstance(obj, CombinedDependsFunction):
             return False
@@ -37,7 +80,7 @@ class LintSandbox(ConfigureSandbox):
             if (self._help_option in obj.dependencies or
                 obj in (self._always, self._never)):
                 return False
-            func, glob = self._wrapped[obj.func]
+            func, glob = self.unwrap(obj.func)
             # We allow missing --help dependencies for functions that:
             # - don't use @imports
             # - don't have a closure
@@ -71,8 +114,16 @@ class LintSandbox(ConfigureSandbox):
         return super(LintSandbox, self)._value_for_depends(
             obj, need_help_dependency)
 
-    def _prepare_function(self, func):
-        wrapped, glob = super(LintSandbox, self)._prepare_function(func)
-        if wrapped not in self._wrapped:
-            self._wrapped[wrapped] = func, glob
-        return wrapped, glob
+    def unwrap(self, func):
+        glob = func.func_globals
+        while func in self._wrapped:
+            if isinstance(func.func_globals, SandboxedGlobal):
+                glob = func.func_globals
+            func = self._wrapped[func]
+        return func, glob
+
+    def wraps(self, func):
+        def do_wraps(wrapper):
+            self._wrapped[wrapper] = func
+            return wraps(func)(wrapper)
+        return do_wraps

@@ -29,6 +29,7 @@ function getAllMessages(state) {
           isUnfilterable(message)
           || (
             matchLevelFilters(message, filters)
+            && matchCssFilters(message, filters)
             && matchNetworkFilters(message, filters)
             && matchSearchFilters(message, filters)
           )
@@ -93,6 +94,13 @@ function matchNetworkFilters(message, filters) {
     message.source !== MESSAGE_SOURCE.NETWORK
     || (filters.get("net") === true && message.isXHR === false)
     || (filters.get("netxhr") === true && message.isXHR === true)
+  );
+}
+
+function matchCssFilters(message, filters) {
+  return (
+    message.source != MESSAGE_SOURCE.CSS
+    || filters.get("css") === true
   );
 }
 

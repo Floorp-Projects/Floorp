@@ -5,7 +5,6 @@
 "use strict";
 
 const {InspectorFront} = require("devtools/shared/fronts/inspector");
-const AUTOCOMPLETION_PREF = "devtools.editor.autocomplete";
 const TEST_URI = "data:text/html;charset=UTF-8,<html><body><bar></bar>" +
                  "<div id='baz'></div><body></html>";
 
@@ -99,7 +98,9 @@ function* testKeyboardCSSComma(ed, win) {
 
   let isPopupOpened = false;
   let popupOpened = ed.getAutocompletionPopup().once("popup-opened");
-  popupOpened.then(() => isPopupOpened = true);
+  popupOpened.then(() => {
+    isPopupOpened = true;
+  });
 
   EventUtils.synthesizeKey(",", { }, win);
 

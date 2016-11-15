@@ -75,12 +75,12 @@ def check_headers(*headers, **kwargs):
     return checks
 
 
-@depends(c_compiler)
-def warnings_cflags(c_compiler):
+@dependable
+def warnings_cflags():
     return []
 
-@depends(cxx_compiler)
-def warnings_cxxflags(cxx_compiler):
+@dependable
+def warnings_cxxflags():
     return []
 
 

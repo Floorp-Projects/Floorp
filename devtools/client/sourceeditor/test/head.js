@@ -2,6 +2,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from ../../framework/test/shared-head.js */
+/* exported promiseWaitForFocus, setup, ch, teardown, loadHelperScript,
+            limit, ch, read, codemirrorSetStatus */
+
 "use strict";
 
 // shared-head.js handles imports, constants, and utility functions
@@ -104,16 +107,16 @@ function loadHelperScript(filePath) {
  * This method returns the portion of the input string `source` up to the
  * [line, ch] location.
  */
-function limit(source, [line, ch]) {
+function limit(source, [line, char]) {
   line++;
   let list = source.split("\n");
   if (list.length < line) {
     return source;
   }
   if (line == 1) {
-    return list[0].slice(0, ch);
+    return list[0].slice(0, char);
   }
-  return [...list.slice(0, line - 1), list[line - 1].slice(0, ch)].join("\n");
+  return [...list.slice(0, line - 1), list[line - 1].slice(0, char)].join("\n");
 }
 
 function read(url) {

@@ -87,14 +87,31 @@ define(function (require, exports, module) {
     },
 
     render: function () {
-      let {object, mode} = this.props;
+      let {
+        object,
+        mode,
+        onDOMNodeMouseOver,
+        onDOMNodeMouseOut
+      } = this.props;
       let elements = this.getElements(object, mode);
-      const baseElement = span({className: "objectBox"}, ...elements);
+      let objectLink = this.props.objectLink || span;
 
-      if (this.props.objectLink) {
-        return this.props.objectLink({object}, baseElement);
+      let baseConfig = {className: "objectBox objectBox-node"};
+      if (onDOMNodeMouseOver) {
+        Object.assign(baseConfig, {
+          onMouseOver: _ => onDOMNodeMouseOver(object)
+        });
       }
-      return baseElement;
+
+      if (onDOMNodeMouseOut) {
+        Object.assign(baseConfig, {
+          onMouseOut: onDOMNodeMouseOut
+        });
+      }
+
+      return objectLink({object},
+        span(baseConfig, ...elements)
+      );
     },
   });
 

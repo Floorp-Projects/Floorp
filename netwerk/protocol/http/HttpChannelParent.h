@@ -152,6 +152,8 @@ protected:
   virtual bool RecvRedirect2Verify(const nsresult& result,
                                    const RequestHeaderTuples& changedHeaders,
                                    const uint32_t& loadFlags,
+                                   const uint32_t& referrerPolicy,
+                                   const OptionalURIParams& aReferrerURI,
                                    const OptionalURIParams& apiRedirectUri,
                                    const OptionalCorsPreflightArgs& aCorsPreflightArgs,
                                    const bool& aForceHSTSPriming,

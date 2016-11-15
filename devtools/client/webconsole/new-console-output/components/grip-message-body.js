@@ -45,6 +45,13 @@ function GripMessageBody(props) {
     styleObject = cleanupStyle(userProvidedStyle, serviceContainer.createElement);
   }
 
+  let onDOMNodeMouseOver;
+  let onDOMNodeMouseOut;
+  if (serviceContainer) {
+    onDOMNodeMouseOver = (object) => serviceContainer.highlightDomElement(object);
+    onDOMNodeMouseOut = serviceContainer.unHighlightDomElement;
+  }
+
   return (
     // @TODO once there is a longString rep, also turn off quotes for those.
     typeof grip === "string"
@@ -57,6 +64,8 @@ function GripMessageBody(props) {
       : Rep({
         object: grip,
         objectLink: VariablesViewLink,
+        onDOMNodeMouseOver,
+        onDOMNodeMouseOut,
         defaultRep: Grip,
         mode: props.mode,
       })

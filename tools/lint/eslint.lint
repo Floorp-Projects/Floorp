@@ -213,9 +213,11 @@ def get_node_or_npm_path(filename, minversion=None):
             if is_valid(node_or_npm_path, minversion):
                 return node_or_npm_path
         except which.WhichError:
-            pass
+            if filename == "node":
+                # Retry it with "nodejs" as Linux tends to prefer nodejs rather than node.
+                return get_node_or_npm_path("nodejs", minversion)
 
-    if filename == "node":
+    if filename in ('node', 'nodejs'):
         print(NODE_NOT_FOUND_MESSAGE)
     elif filename == "npm":
         print(NPM_NOT_FOUND_MESSAGE)
@@ -226,9 +228,9 @@ def get_node_or_npm_path(filename, minversion=None):
         for p in app_paths:
             print("  - %s" % p)
     elif platform.system() == "Darwin":
-        print("  - /usr/local/bin/node")
+        print("  - /usr/local/bin/{}".format(filename))
     elif platform.system() == "Linux":
-        print("  - /usr/bin/nodejs")
+        print("  - /usr/bin/{}".format(filename))
 
     return None
 

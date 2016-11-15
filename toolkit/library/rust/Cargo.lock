@@ -50,6 +50,7 @@ dependencies = [
 name = "mp4parse_capi"
 version = "0.6.0"
 dependencies = [
+ "byteorder 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "mp4parse 0.6.0",
 ]
 

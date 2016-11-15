@@ -6018,10 +6018,10 @@ class AddonInstall {
   /**
     * Postone a pending update, until restart or until the add-on resumes.
     *
-    * @param {Function} resumeFunction - a function for the add-on to run
+    * @param {Function} resumeFn - a function for the add-on to run
     *                                    when resuming.
     */
-  postpone(resumeFunction) {
+  postpone(resumeFn) {
     return Task.spawn((function*() {
       this.state = AddonManager.STATE_POSTPONED;
 
@@ -6041,24 +6041,27 @@ class AddonInstall {
 
       // upgrade has been staged for restart, provide a way for it to call the
       // resume function.
-      if (resumeFunction) {
-        let callback = AddonManagerPrivate.getUpgradeListener(this.addon.id);
-        if (callback) {
-          callback({
-            version: this.version,
-            install: () => {
-              switch (this.state) {
-              case AddonManager.STATE_POSTPONED:
-                resumeFunction();
-                break;
-              default:
-                logger.warn(`${this.addon.id} cannot resume postponed upgrade from state (${this.state})`);
-                break;
+      let callback = AddonManagerPrivate.getUpgradeListener(this.addon.id);
+      if (callback) {
+        callback({
+          version: this.version,
+          install: () => {
+            switch (this.state) {
+            case AddonManager.STATE_POSTPONED:
+              if (resumeFn) {
+                resumeFn();
               }
-            },
-          });
-        }
+              break;
+            default:
+              logger.warn(`${this.addon.id} cannot resume postponed upgrade from state (${this.state})`);
+              break;
+            }
+          },
+        });
       }
+      // Release the staging directory lock, but since the staging dir is populated
+      // it will not be removed until resumed or installed by restart.
+      // See also cleanStagingDir()
       this.installLocation.releaseStagingDir();
     }).bind(this));
   }
@@ -6613,57 +6616,6 @@ class DownloadAddonInstall extends AddonInstall {
     }
 
     return this.badCertHandler.getInterface(iid);
-  }
-
-  /**
-    * Postone a pending update, until restart or until the add-on resumes.
-    *
-    * @param {Function} resumeFn - a function for the add-on to run
-    *                                    when resuming.
-    */
-  postpone(resumeFn) {
-    return Task.spawn((function*() {
-      this.state = AddonManager.STATE_POSTPONED;
-
-      let stagingDir = this.installLocation.getStagingDir();
-      let stagedAddon = stagingDir.clone();
-
-      yield this.installLocation.requestStagingDir();
-      yield this.unstageInstall(stagedAddon);
-
-      stagedAddon.append(this.addon.id);
-      stagedAddon.leafName = this.addon.id + ".xpi";
-
-      yield this.stageInstall(true, stagedAddon, true);
-
-      AddonManagerPrivate.callInstallListeners("onInstallPostponed",
-                                               this.listeners, this.wrapper)
-
-      // upgrade has been staged for restart, provide a way for it to call the
-      // resume function.
-      let callback = AddonManagerPrivate.getUpgradeListener(this.addon.id);
-      if (callback) {
-        callback({
-          version: this.version,
-          install: () => {
-            switch (this.state) {
-            case AddonManager.STATE_POSTPONED:
-              if (resumeFn) {
-                resumeFn();
-              }
-              break;
-            default:
-              logger.warn(`${this.addon.id} cannot resume postponed upgrade from state (${this.state})`);
-              break;
-            }
-          },
-        });
-      }
-      // Release the staging directory lock, but since the staging dir is populated
-      // it will not be removed until resumed or installed by restart.
-      // See also cleanStagingDir()
-      this.installLocation.releaseStagingDir();
-    }).bind(this));
   }
 }
 

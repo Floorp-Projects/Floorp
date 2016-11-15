@@ -38,6 +38,10 @@ struct PsshInfo
   PsshInfo(const PsshInfo& aOther) : uuid(aOther.uuid), data(aOther.data) {}
   nsTArray<uint8_t> uuid;
   nsTArray<uint8_t> data;
+
+  bool operator==(const PsshInfo& aOther) const {
+    return uuid == aOther.uuid && data == aOther.data;
+  }
 };
 
 class CryptoFile

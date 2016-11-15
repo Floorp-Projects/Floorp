@@ -224,14 +224,15 @@ FinderHighlighter.prototype = {
         useCache: true,
         window
       };
-      if (this.iterator._areParamsEqual(params, dict.lastIteratorParams))
+      if (this._modal && this.iterator._areParamsEqual(params, dict.lastIteratorParams))
         return this._found;
-      if (params) {
-        yield this.iterator.start(params);
-        if (this._found) {
-          this.finder._outlineLink(true);
-          dict.updateAllRanges = true;
-        }
+
+      if (!this._modal)
+        dict.visible = true;
+      yield this.iterator.start(params);
+      if (this._found) {
+        this.finder._outlineLink(true);
+        dict.updateAllRanges = true;
       }
     } else {
       this.hide(window);
@@ -411,20 +412,23 @@ FinderHighlighter.prototype = {
     let window = this.finder._getWindow();
     let dict = this.getForWindow(window);
     let foundRange = this.finder._fastFind.getFoundRange();
+
+    if (data.result == Ci.nsITypeAheadFind.FIND_NOTFOUND || !data.searchString || !foundRange) {
+      this.hide();
+      return;
+    }
+
     if (!this._modal) {
       if (this._highlightAll) {
         dict.currentFoundRange = foundRange;
         let params = this.iterator.params;
-        if (this.iterator._areParamsEqual(params, dict.lastIteratorParams))
+        if (dict.visible && this.iterator._areParamsEqual(params, dict.lastIteratorParams))
           return;
+        if (!dict.visible && !params)
+          params = {word: data.searchString, linksOnly: data.linksOnly};
         if (params)
           this.highlight(true, params.word, params.linksOnly);
       }
-      return;
-    }
-
-    if (data.result == Ci.nsITypeAheadFind.FIND_NOTFOUND || !data.searchString || !foundRange) {
-      this.hide();
       return;
     }
 

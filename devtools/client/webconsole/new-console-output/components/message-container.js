@@ -66,6 +66,7 @@ function getMessageComponent(message) {
       return componentMap.get("ConsoleApiCall");
     case MESSAGE_SOURCE.NETWORK:
       return componentMap.get("NetworkEventMessage");
+    case MESSAGE_SOURCE.CSS:
     case MESSAGE_SOURCE.JAVASCRIPT:
       switch (message.type) {
         case MESSAGE_TYPE.COMMAND:
