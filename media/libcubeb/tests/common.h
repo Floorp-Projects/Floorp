@@ -4,8 +4,6 @@
  * This program is made available under an ISC-style license.  See the
  * accompanying file LICENSE for details.
  */
-#if !defined(TEST_COMMON)
-#define TEST_COMMON
 
 #if defined( _WIN32)
 #ifndef WIN32_LEAN_AND_MEAN
@@ -61,4 +59,3 @@ int has_available_input_device(cubeb * ctx)
   return 1;
 }
 
-#endif /* TEST_COMMON */

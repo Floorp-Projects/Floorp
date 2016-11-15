@@ -7,11 +7,16 @@
 
 /* libcubeb enumerate device test/example.
  * Prints out a list of devices enumerated. */
-#include "gtest/gtest.h"
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "cubeb/cubeb.h"
+
 
 static void
 print_device_info(cubeb_device_info * info, FILE * f)
@@ -84,14 +89,14 @@ print_device_info(cubeb_device_info * info, FILE * f)
       "\tCh:      %u\n"
       "\tFormat:  %s (0x%x) (default: %s)\n"
       "\tRate:    %u - %u (default: %u)\n"
-      "\tLatency: lo %u frames, hi %u frames\n",
+      "\tLatency: lo %ums, hi %ums\n",
       info->device_id, info->preferred ? " (PREFERRED)" : "",
       info->friendly_name, info->group_id, info->vendor_name,
       devtype, devstate, info->max_channels,
-      (devfmts[0] == '\0') ? devfmts : devfmts + 1,
+      (devfmts[0] == ' ') ? &devfmts[1] : devfmts,
       (unsigned int)info->format, devdeffmt,
       info->min_rate, info->max_rate, info->default_rate,
-      info->latency_lo, info->latency_hi);
+      info->latency_lo_ms, info->latency_hi_ms);
 }
 
 static void
@@ -103,28 +108,23 @@ print_device_collection(cubeb_device_collection * collection, FILE * f)
     print_device_info(collection->device[i], f);
 }
 
-TEST(cubeb, enumerate_devices)
+static int
+run_enumerate_devices(void)
 {
-  int r;
+  int r = CUBEB_OK;
   cubeb * ctx = NULL;
   cubeb_device_collection * collection = NULL;
 
   r = cubeb_init(&ctx, "Cubeb audio test");
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
-    ASSERT_EQ(r, CUBEB_OK);
+    return r;
   }
 
   fprintf(stdout, "Enumerating input devices for backend %s\n",
       cubeb_get_backend_id(ctx));
 
   r = cubeb_enumerate_devices(ctx, CUBEB_DEVICE_TYPE_INPUT, &collection);
-  if (r == CUBEB_ERROR_NOT_SUPPORTED) {
-    fprintf(stderr, "Device enumeration not supported"
-                    " for this backend, skipping this test.\n");
-    r = CUBEB_OK;
-    goto cleanup;
-  }
   if (r != CUBEB_OK) {
     fprintf(stderr, "Error enumerating devices %d\n", r);
     goto cleanup;
@@ -149,6 +149,14 @@ TEST(cubeb, enumerate_devices)
 
 cleanup:
   cubeb_destroy(ctx);
-  ASSERT_EQ(r, CUBEB_OK);
+  return r;
 }
 
+int main(int argc, char *argv[])
+{
+  int ret;
+
+  ret = run_enumerate_devices();
+
+  return ret;
+}
