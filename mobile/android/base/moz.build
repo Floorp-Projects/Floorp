@@ -6,7 +6,16 @@
 
 DIRS += ['locales']
 
-CONFIGURE_SUBST_FILES += ['adjust_sdk_app_token']
+GENERATED_FILES += [
+    'generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
+    'generated/preprocessed/org/mozilla/gecko/AppConstants.java',
+]
+x = GENERATED_FILES['generated/preprocessed/org/mozilla/gecko/AdjustConstants.java']
+x.script = 'generate_build_config.py'
+x.inputs += ['AdjustConstants.java.in']
+y = GENERATED_FILES['generated/preprocessed/org/mozilla/gecko/AppConstants.java']
+y.script = 'generate_build_config.py'
+y.inputs += ['AppConstants.java.in']
 
 include('android-services.mozbuild')
 
