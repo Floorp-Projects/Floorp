@@ -146,7 +146,8 @@ public:
                                       EventTarget* aTarget,
                                       EventTargetChainItem* aChild = nullptr)
   {
-    MOZ_ASSERT(!aChild || &aChain.ElementAt(aChain.Length() - 1) == aChild);
+    // The last item which can handle the event must be aChild.
+    MOZ_ASSERT(GetLastCanHandleEventTarget(aChain) == aChild);
     return new (aChain.AppendElement()) EventTargetChainItem(aTarget);
   }
 
@@ -176,6 +177,18 @@ public:
     }
     MOZ_ASSERT(false);
     return 0;
+  }
+
+  static EventTargetChainItem* GetLastCanHandleEventTarget(
+                                 nsTArray<EventTargetChainItem>& aChain)
+  {
+    // Fine the last item which can handle the event.
+    for (int32_t i = aChain.Length() - 1; i >= 0; --i) {
+      if (!aChain[i].PreHandleEventOnly()) {
+        return &aChain[i];
+      }
+    }
+    return nullptr;
   }
 
   bool IsValid()
