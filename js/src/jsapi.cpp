@@ -4881,12 +4881,6 @@ JS_RequestInterruptCallback(JSContext* cx)
     cx->requestInterrupt(JSRuntime::RequestInterruptUrgent);
 }
 
-JS_PUBLIC_API(bool)
-JS_IsRunning(JSContext* cx)
-{
-    return cx->currentlyRunning();
-}
-
 JS::AutoSetAsyncStackForNewCalls::AutoSetAsyncStackForNewCalls(
   JSContext* cx, HandleObject stack, const char* asyncCause,
   JS::AutoSetAsyncStackForNewCalls::AsyncCallKind kind)
