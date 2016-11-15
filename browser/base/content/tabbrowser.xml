@@ -4849,6 +4849,8 @@
               "-moz-default-background-color" :
               Services.prefs.getCharPref("browser.display.background_color");
 
+          let messageManager = window.getGroupMessageManager("browsers");
+
           let remote = window.QueryInterface(Ci.nsIInterfaceRequestor)
             .getInterface(Ci.nsIWebNavigation)
             .QueryInterface(Ci.nsILoadContext)
@@ -4856,7 +4858,7 @@
           if (remote) {
             messageManager.addMessageListener("DOMTitleChanged", this);
             messageManager.addMessageListener("DOMWindowClose", this);
-            messageManager.addMessageListener("contextmenu", this);
+            window.messageManager.addMessageListener("contextmenu", this);
             messageManager.addMessageListener("Browser:Init", this);
 
             // If this window has remote tabs, switch to our tabpanels fork
@@ -4929,8 +4931,9 @@
           window.removeEventListener("sizemodechange", this, false);
 
           if (gMultiProcessBrowser) {
+            let messageManager = window.getGroupMessageManager("browsers");
             messageManager.removeMessageListener("DOMTitleChanged", this);
-            messageManager.removeMessageListener("contextmenu", this);
+            window.messageManager.removeMessageListener("contextmenu", this);
 
             if (this._switcher) {
               this._switcher.destroy();
