@@ -49,11 +49,9 @@ class TestCapabilities(MarionetteTestCase):
     def test_extensions(self):
         self.assertIn("XULappId", self.caps)
         self.assertIn("appBuildId", self.caps)
-        self.assertIn("version", self.caps)
 
         self.assertEqual(self.caps["XULappId"], self.appinfo["ID"])
         self.assertEqual(self.caps["appBuildId"], self.appinfo["appBuildID"])
-        self.assertEqual(self.caps["version"], self.appinfo["version"])
 
     def test_we_can_pass_in_capabilities_on_session_start(self):
         self.marionette.delete_session()
