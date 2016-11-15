@@ -145,10 +145,11 @@ moz_gtk_get_focus_outline_size(gint* focus_h_width, gint* focus_v_width)
 gint
 moz_gtk_menuitem_get_horizontal_padding(gint* horizontal_padding)
 {
-    gtk_widget_style_get(GetWidget(MOZ_GTK_MENUITEM),
-                         "horizontal-padding", horizontal_padding,
-                         nullptr);
-
+    GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_MENUITEM);
+    gtk_style_context_get_style(style,
+                                "horizontal-padding", horizontal_padding,
+                                nullptr);
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -158,7 +159,7 @@ moz_gtk_checkmenuitem_get_horizontal_padding(gint* horizontal_padding)
     GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_CHECKMENUITEM_CONTAINER);
     gtk_style_context_get_style(style,
                                 "horizontal-padding", horizontal_padding,
-                                NULL);
+                                nullptr);
     ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
@@ -2151,15 +2152,15 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_CHECKMENUITEM:
     case MOZ_GTK_RADIOMENUITEM:
         {
-            if (widget == MOZ_GTK_MENUBARITEM || widget == MOZ_GTK_MENUITEM) {
-                // Bug 1274143 for MOZ_GTK_MENUBARITEM
-                w = GetWidget(MOZ_GTK_MENUITEM);
-            } else {
-                w = GetWidget(MOZ_GTK_CHECKMENUITEM_CONTAINER);
-            }
+            // Bug 1274143 for MOZ_GTK_MENUBARITEM
+            WidgetNodeType type =
+                widget == MOZ_GTK_MENUBARITEM || widget == MOZ_GTK_MENUITEM ?
+                MOZ_GTK_MENUITEM : MOZ_GTK_CHECKMENUITEM_CONTAINER;
+            style = ClaimStyleContext(type);
 
-            moz_gtk_add_style_padding(gtk_widget_get_style_context(w),
-                                      left, top, right, bottom);
+            moz_gtk_add_style_padding(style, left, top, right, bottom);
+
+            ReleaseStyleContext(style);
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_INFO_BAR:
