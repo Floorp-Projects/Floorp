@@ -20,7 +20,7 @@
   const domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
     getService(SpecialPowers.Ci.inIDOMUtils);
   const video = document.getElementById("video");
-  const ccBtn = getElementByAttribute("anonid", "closedCaptionButton");
+  const ccBtn = getElementByAttribute("class", "closedCaptionButton");
   const testCases = [];
 
   testCases.push(() => new Promise(resolve => {
@@ -46,8 +46,8 @@
     sub.mode = "disabled";
 
     SimpleTest.executeSoon(() => {
-      is(ccBtn.hasAttribute("hidden"), false, "CC button should show");
-      is(ccBtn.hasAttribute("enabled"), false, "CC button should be disabled");
+      is(ccBtn.getAttribute("hidden"), "", "CC button should show");
+      is(ccBtn.getAttribute("enabled"), "", "CC button should be disabled");
 
       resolve();
     });
