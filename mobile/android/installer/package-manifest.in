@@ -533,8 +533,8 @@
 #ifdef ENABLE_MARIONETTE
 @BINPATH@/chrome/marionette@JAREXT@
 @BINPATH@/chrome/marionette.manifest
-@BINPATH@/components/MarionetteComponents.manifest
-@BINPATH@/components/marionettecomponent.js
+@BINPATH@/components/marionette.manifest
+@BINPATH@/components/marionette.js
 #endif
 
 #ifdef PKG_LOCALE_MANIFEST
