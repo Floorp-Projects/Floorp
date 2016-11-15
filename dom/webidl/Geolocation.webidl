@@ -18,12 +18,12 @@ dictionary PositionOptions {
 
 [NoInterfaceObject]
 interface Geolocation {
-  [Throws]
+  [Throws, NeedsCallerType]
   void getCurrentPosition(PositionCallback successCallback,
                           optional PositionErrorCallback? errorCallback = null,
                           optional PositionOptions options);
 
-  [Throws]
+  [Throws, NeedsCallerType]
   long watchPosition(PositionCallback successCallback,
                      optional PositionErrorCallback? errorCallback = null,
                      optional PositionOptions options);

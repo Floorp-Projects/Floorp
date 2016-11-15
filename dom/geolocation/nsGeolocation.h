@@ -26,6 +26,7 @@
 #include "nsIDOMGeoPositionError.h"
 #include "nsIDOMGeoPositionCallback.h"
 #include "nsIDOMGeoPositionErrorCallback.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/GeolocationBinding.h"
 #include "mozilla/dom/PositionErrorBinding.h"
 #include "mozilla/dom/CallbackObject.h"
@@ -140,8 +141,16 @@ public:
   nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext *aCtx, JS::Handle<JSObject*> aGivenProto) override;
 
-  int32_t WatchPosition(PositionCallback& aCallback, PositionErrorCallback* aErrorCallback, const PositionOptions& aOptions, ErrorResult& aRv);
-  void GetCurrentPosition(PositionCallback& aCallback, PositionErrorCallback* aErrorCallback, const PositionOptions& aOptions, ErrorResult& aRv);
+  int32_t WatchPosition(PositionCallback& aCallback,
+                        PositionErrorCallback* aErrorCallback,
+                        const PositionOptions& aOptions,
+                        CallerType aCallerType,
+                        ErrorResult& aRv);
+  void GetCurrentPosition(PositionCallback& aCallback,
+                          PositionErrorCallback* aErrorCallback,
+                          const PositionOptions& aOptions,
+                          CallerType aCallerType,
+                          ErrorResult& aRv);
 
   // Returns true if any of the callbacks are repeating
   bool HasActiveCallbacks();
@@ -177,10 +186,13 @@ private:
 
   nsresult GetCurrentPosition(GeoPositionCallback aCallback,
                               GeoPositionErrorCallback aErrorCallback,
-                              UniquePtr<PositionOptions>&& aOptions);
+                              UniquePtr<PositionOptions>&& aOptions,
+                              CallerType aCallerType);
   nsresult WatchPosition(GeoPositionCallback aCallback,
                          GeoPositionErrorCallback aErrorCallback,
-                         UniquePtr<PositionOptions>&& aOptions, int32_t* aRv);
+                         UniquePtr<PositionOptions>&& aOptions,
+                         CallerType aCallerType,
+                         int32_t* aRv);
 
   bool RegisterRequestWithPrompt(nsGeolocationRequest* request);
 
