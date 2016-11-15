@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <memory>
 #include <limits>
-#include <atomic>
 
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
@@ -106,8 +105,8 @@ int wasapi_stream_stop(cubeb_stream * stm);
 int wasapi_stream_start(cubeb_stream * stm);
 void close_wasapi_stream(cubeb_stream * stm);
 int setup_wasapi_stream(cubeb_stream * stm);
-static char const * wstr_to_utf8(wchar_t const * str);
-static std::unique_ptr<wchar_t const []> utf8_to_wstr(char const * str);
+static char * wstr_to_utf8(const wchar_t * str);
+static std::unique_ptr<const wchar_t[]> utf8_to_wstr(char* str);
 
 }
 
@@ -145,8 +144,8 @@ struct cubeb_stream
   cubeb_stream_params input_stream_params;
   cubeb_stream_params output_stream_params;
   /* The input and output device, or NULL for default. */
-  std::unique_ptr<const wchar_t[]> input_device;
-  std::unique_ptr<const wchar_t[]> output_device;
+  cubeb_devid input_device;
+  cubeb_devid output_device;
   /* The latency initially requested for this stream, in frames. */
   unsigned latency;
   cubeb_state_callback state_callback;
@@ -221,10 +220,8 @@ struct cubeb_stream
   float volume;
   /* True if the stream is draining. */
   bool draining;
-  /* True when we've destroyed the stream. This pointer is leaked on stream
-   * destruction if we could not join the thread. */
-  std::atomic<std::atomic<bool>*> emergency_bailout;
 };
+
 
 class wasapi_endpoint_notification_client : public IMMNotificationClient
 {
@@ -784,7 +781,6 @@ static unsigned int __stdcall
 wasapi_stream_render_loop(LPVOID stream)
 {
   cubeb_stream * stm = static_cast<cubeb_stream *>(stream);
-  std::atomic<bool> * emergency_bailout = stm->emergency_bailout;
 
   bool is_playing = true;
   HANDLE wait_array[4] = {
@@ -824,10 +820,6 @@ wasapi_stream_render_loop(LPVOID stream)
                                               wait_array,
                                               FALSE,
                                               1000);
-    if (*emergency_bailout) {
-      delete emergency_bailout;
-      return 0;
-    }
     if (waitResult != WAIT_TIMEOUT) {
       timeout_count = 0;
     }
@@ -1142,13 +1134,12 @@ int wasapi_init(cubeb ** context, char const * context_name)
 }
 
 namespace {
-bool stop_and_join_render_thread(cubeb_stream * stm)
+void stop_and_join_render_thread(cubeb_stream * stm)
 {
-  bool rv = true;
   LOG("Stop and join render thread.");
   if (!stm->thread) {
     LOG("No thread present.");
-    return true;
+    return;
   }
 
   BOOL ok = SetEvent(stm->shutdown_event);
@@ -1162,15 +1153,11 @@ bool stop_and_join_render_thread(cubeb_stream * stm)
   if (r == WAIT_TIMEOUT) {
     /* Something weird happened, leak the thread and continue the shutdown
      * process. */
-    *(stm->emergency_bailout) = true;
     LOG("Destroy WaitForSingleObject on thread timed out,"
         " leaking the thread: %d", GetLastError());
-    rv = false;
   }
   if (r == WAIT_FAILED) {
-    *(stm->emergency_bailout) = true;
     LOG("Destroy WaitForSingleObject on thread failed: %d", GetLastError());
-    rv = false;
   }
 
   LOG("Closing thread.");
@@ -1180,8 +1167,6 @@ bool stop_and_join_render_thread(cubeb_stream * stm)
 
   CloseHandle(stm->shutdown_event);
   stm->shutdown_event = 0;
-
-  return rv;
 }
 
 void wasapi_destroy(cubeb * context)
@@ -1410,7 +1395,7 @@ handle_channel_layout(cubeb_stream * stm,  WAVEFORMATEX ** mix_format, const cub
 template<typename T>
 int setup_wasapi_stream_one_side(cubeb_stream * stm,
                                  cubeb_stream_params * stream_params,
-                                 wchar_t const * devid,
+                                 cubeb_devid devid,
                                  EDataFlow direction,
                                  REFIID riid,
                                  IAudioClient ** audio_client,
@@ -1429,12 +1414,14 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
   // possibilities.
   do {
     if (devid) {
-      hr = get_endpoint(&device, devid);
+      std::unique_ptr<const wchar_t[]> id(utf8_to_wstr(reinterpret_cast<char*>(devid)));
+      hr = get_endpoint(&device, id.get());
       if (FAILED(hr)) {
         LOG("Could not get %s endpoint, error: %x\n", DIRECTION_NAME, hr);
         return CUBEB_ERROR;
       }
-    } else {
+    }
+    else {
       hr = get_default_endpoint(&device, direction);
       if (FAILED(hr)) {
         LOG("Could not get default %s endpoint, error: %x\n", DIRECTION_NAME, hr);
@@ -1547,10 +1534,10 @@ int setup_wasapi_stream(cubeb_stream * stm)
   XASSERT((!stm->output_client || !stm->input_client) && "WASAPI stream already setup, close it first.");
 
   if (has_input(stm)) {
-    LOG("(%p) Setup capture: device=%p", stm, stm->input_device.get());
+    LOG("Setup capture: device=%x", (int)stm->input_device);
     rv = setup_wasapi_stream_one_side(stm,
                                       &stm->input_stream_params,
-                                      stm->input_device.get(),
+                                      stm->input_device,
                                       eCapture,
                                       __uuidof(IAudioCaptureClient),
                                       &stm->input_client,
@@ -1565,10 +1552,10 @@ int setup_wasapi_stream(cubeb_stream * stm)
   }
 
   if (has_output(stm)) {
-    LOG("(%p) Setup render: device=%p", stm, stm->output_device.get());
+    LOG("Setup render: device=%x", (int)stm->output_device);
     rv = setup_wasapi_stream_one_side(stm,
                                       &stm->output_stream_params,
-                                      stm->output_device.get(),
+                                      stm->output_device,
                                       eRender,
                                       __uuidof(IAudioRenderClient),
                                       &stm->output_client,
@@ -1692,11 +1679,11 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   stm->draining = false;
   if (input_stream_params) {
     stm->input_stream_params = *input_stream_params;
-    stm->input_device = utf8_to_wstr(reinterpret_cast<char const *>(input_device));
+    stm->input_device = input_device;
   }
   if (output_stream_params) {
     stm->output_stream_params = *output_stream_params;
-    stm->output_device = utf8_to_wstr(reinterpret_cast<char const *>(output_device));
+    stm->output_device = output_device;
   }
 
   stm->latency = latency_frames;
@@ -1790,16 +1777,7 @@ void wasapi_stream_destroy(cubeb_stream * stm)
 {
   XASSERT(stm);
 
-  // Only free stm->emergency_bailout if we could not join the thread.
-  // If we could not join the thread, stm->emergency_bailout is true 
-  // and is still alive until the thread wakes up and exits cleanly.
-  if (stop_and_join_render_thread(stm)) {
-    delete stm->emergency_bailout.load();
-    stm->emergency_bailout = nullptr;
-  } else {
-    // If we're leaking, it must be that this is true.
-    assert(*(stm->emergency_bailout));
-  }
+  stop_and_join_render_thread(stm);
 
   unregister_notification_client(stm);
 
@@ -1868,8 +1846,6 @@ int wasapi_stream_start(cubeb_stream * stm)
 
   auto_lock lock(stm->stream_reset_lock);
 
-  stm->emergency_bailout = new std::atomic<bool>(false);
-
   if (stm->output_client) {
     int rv = stream_start_one_side(stm, OUTPUT);
     if (rv != CUBEB_OK) {
@@ -1929,12 +1905,7 @@ int wasapi_stream_stop(cubeb_stream * stm)
     stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STOPPED);
   }
 
-  if (stop_and_join_render_thread(stm)) {
-    if (stm->emergency_bailout.load()) {
-      delete stm->emergency_bailout.load();
-      stm->emergency_bailout = nullptr;
-    }
-  }
+  stop_and_join_render_thread(stm);
 
   return CUBEB_OK;
 }
@@ -2011,29 +1982,33 @@ int wasapi_stream_set_volume(cubeb_stream * stm, float volume)
   return CUBEB_OK;
 }
 
-static char const *
+static char *
 wstr_to_utf8(LPCWSTR str)
 {
-  int size = ::WideCharToMultiByte(CP_UTF8, 0, str, -1, nullptr, 0, NULL, NULL);
-  if (size <= 0) {
-    return nullptr;
+  char * ret = NULL;
+  int size;
+
+  size = ::WideCharToMultiByte(CP_UTF8, 0, str, -1, ret, 0, NULL, NULL);
+  if (size > 0) {
+    ret = static_cast<char *>(malloc(size));
+    ::WideCharToMultiByte(CP_UTF8, 0, str, -1, ret, size, NULL, NULL);
   }
 
-  char * ret = static_cast<char *>(malloc(size));
-  ::WideCharToMultiByte(CP_UTF8, 0, str, -1, ret, size, NULL, NULL);
   return ret;
 }
 
-static std::unique_ptr<wchar_t const []>
-utf8_to_wstr(char const * str)
+static std::unique_ptr<const wchar_t[]>
+utf8_to_wstr(char* str)
 {
-  int size = ::MultiByteToWideChar(CP_UTF8, 0, str, -1, nullptr, 0);
-  if (size <= 0) {
-    return nullptr;
+  std::unique_ptr<wchar_t[]> ret;
+  int size;
+
+  size = ::MultiByteToWideChar(CP_UTF8, 0, str, -1, nullptr, 0);
+  if (size > 0) {
+    ret.reset(new wchar_t[size]);
+    ::MultiByteToWideChar(CP_UTF8, 0, str, -1, ret.get(), size);
   }
 
-  std::unique_ptr<wchar_t []> ret(new wchar_t[size]);
-  ::MultiByteToWideChar(CP_UTF8, 0, str, -1, ret.get(), size);
   return std::move(ret);
 }
 
@@ -2114,8 +2089,7 @@ wasapi_create_device(IMMDeviceEnumerator * enumerator, IMMDevice * dev)
 
   ret = (cubeb_device_info *)calloc(1, sizeof(cubeb_device_info));
 
-  ret->device_id = wstr_to_utf8(device_id);
-  ret->devid = reinterpret_cast<cubeb_devid>(ret->device_id);
+  ret->devid = ret->device_id = wstr_to_utf8(device_id);
   hr = propstore->GetValue(PKEY_Device_FriendlyName, &propvar);
   if (SUCCEEDED(hr))
     ret->friendly_name = wstr_to_utf8(propvar.pwszVal);
