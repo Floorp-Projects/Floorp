@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1315862
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1315862</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="content">
+  This is a test to check if pointer events are dispatched in the system group
+</p>
+<script type="text/javascript">
+
+/** Test for Bug 1315862 **/
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  let allPointerEvents = ["pointerdown", "pointerup", "pointercancel",
+                          "pointermove", "pointerover", "pointerout",
+                          "pointerenter", "pointerleave", "gotpointercapture",
+                          "lostpointercapture"
+                         ];
+  let content = document.getElementById('content');
+  let iframe = document.createElement('iframe');
+  let receivePointerEvents = false;
+  iframe.width = 50;
+  iframe.height = 50;
+  content.appendChild(iframe);
+  iframe.contentDocument.body.innerHTML =
+    "<div style='width: 100%; height: 100%; border: 1px solid black;'></div>";
+
+  let target = iframe.contentDocument.body.firstChild;
+  allPointerEvents.forEach((event, idx, arr) => {
+    SpecialPowers.addSystemEventListener(target, event, () => {
+      ok(false, "Shouldn't dispatch " + event + " in the system group");
+      receivePointerEvents = true;
+    });
+  });
+  target.addEventListener("pointerdown", (e) => {
+    target.setPointerCapture(e.pointerId);
+  }, false);
+  target.addEventListener("pointerup", () => {
+    is(receivePointerEvents, false, "Shouldn't dispatch pointer events in the system group");
+    SimpleTest.finish();
+  }, false);
+  let source = SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE;
+  synthesizeMouse(target, 5, 5, { type: "mousemove", inputSource: source },
+                  iframe.contentWindow);
+  synthesizeMouse(target, 5, 5, { type: "mousedown", inputSource: source },
+                  iframe.contentWindow);
+  synthesizeMouse(target, 5, 5, { type: "mousemove", inputSource: source },
+                  iframe.contentWindow);
+  synthesizeMouse(target, 5, 5, { type: "mouseup", inputSource: source },
+                  iframe.contentWindow);
+}
+
+SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true]]}, runTests);
+
+</script>
+</body>
+</html>
