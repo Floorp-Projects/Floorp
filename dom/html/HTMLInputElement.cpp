@@ -694,7 +694,8 @@ nsColorPickerShownCallback::UpdateInternal(const nsAString& aColor,
     mInput->GetValue(oldValue);
   }
 
-  mInput->SetValue(aColor);
+  IgnoredErrorResult rv;
+  mInput->SetValue(aColor, CallerType::System, rv);
 
   if (!aTrustedUpdate) {
     nsAutoString newValue;
@@ -787,7 +788,8 @@ DatePickerShownCallback::Done(const nsAString& aDate)
   mInput->GetValue(oldValue);
 
   if(!oldValue.Equals(aDate)){
-    mInput->SetValue(aDate);
+    IgnoredErrorResult rv;
+    mInput->SetValue(aDate, CallerType::System, rv);
     nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
                             static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
                             NS_LITERAL_STRING("input"), true,
@@ -1938,13 +1940,14 @@ HTMLInputElement::GetValueAsDecimal() const
 }
 
 void
-HTMLInputElement::SetValue(const nsAString& aValue, ErrorResult& aRv)
+HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
+                           ErrorResult& aRv)
 {
   // check security.  Note that setting the value to the empty string is always
   // OK and gives pages a way to clear a file input if necessary.
   if (mType == NS_FORM_INPUT_FILE) {
     if (!aValue.IsEmpty()) {
-      if (!nsContentUtils::IsCallerChrome()) {
+      if (aCallerType != CallerType::System) {
         // setting the value of a "FILE" input widget requires
         // chrome privilege
         aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
@@ -2001,9 +2004,8 @@ HTMLInputElement::SetValue(const nsAString& aValue, ErrorResult& aRv)
 NS_IMETHODIMP
 HTMLInputElement::SetValue(const nsAString& aValue)
 {
-  ErrorResult rv;
-  SetValue(aValue, rv);
-  return rv.StealNSResult();
+  NS_NOTREACHED("No one should be calling this method");
+  return NS_ERROR_FAILURE;
 }
 
 nsGenericHTMLElement*
@@ -2044,18 +2046,20 @@ HTMLInputElement::GetList(nsIDOMHTMLElement** aValue)
 }
 
 void
-HTMLInputElement::SetValue(Decimal aValue)
+HTMLInputElement::SetValue(Decimal aValue, CallerType aCallerType)
 {
   MOZ_ASSERT(!aValue.isInfinity(), "aValue must not be Infinity!");
 
   if (aValue.isNaN()) {
-    SetValue(EmptyString());
+    IgnoredErrorResult rv;
+    SetValue(EmptyString(), aCallerType, rv);
     return;
   }
 
   nsAutoString value;
   ConvertNumberToString(aValue, value);
-  SetValue(value);
+  IgnoredErrorResult rv;
+  SetValue(value, aCallerType, rv);
 }
 
 bool
@@ -2268,15 +2272,18 @@ HTMLInputElement::SetValueAsDate(Nullable<Date> aDate, ErrorResult& aRv)
     return;
   }
 
+  // At this point we know we're not a file input, so we can just pass "not
+  // system" as the caller type, since the caller type only matters in the file
+  // input case.
   if (aDate.IsNull() || aDate.Value().IsUndefined()) {
-    aRv = SetValue(EmptyString());
+    SetValue(EmptyString(), CallerType::NonSystem, aRv);
     return;
   }
 
   double milliseconds = aDate.Value().TimeStamp().toDouble();
 
   if (mType != NS_FORM_INPUT_MONTH) {
-    SetValue(Decimal::fromDouble(milliseconds));
+    SetValue(Decimal::fromDouble(milliseconds), CallerType::NonSystem);
     return;
   }
 
@@ -2285,19 +2292,12 @@ HTMLInputElement::SetValueAsDate(Nullable<Date> aDate, ErrorResult& aRv)
   double month = JS::MonthFromTime(milliseconds);
 
   if (IsNaN(year) || IsNaN(month)) {
-    SetValue(EmptyString());
+    SetValue(EmptyString(), CallerType::NonSystem, aRv);
     return;
   }
 
   int32_t months = MonthsSinceJan1970(year, month + 1);
-  SetValue(Decimal(int32_t(months)));
-}
-
-NS_IMETHODIMP
-HTMLInputElement::GetValueAsNumber(double* aValueAsNumber)
-{
-  *aValueAsNumber = ValueAsNumber();
-  return NS_OK;
+  SetValue(Decimal(int32_t(months)), CallerType::NonSystem);
 }
 
 void
@@ -2315,15 +2315,10 @@ HTMLInputElement::SetValueAsNumber(double aValueAsNumber, ErrorResult& aRv)
     return;
   }
 
-  SetValue(Decimal::fromDouble(aValueAsNumber));
-}
-
-NS_IMETHODIMP
-HTMLInputElement::SetValueAsNumber(double aValueAsNumber)
-{
-  ErrorResult rv;
-  SetValueAsNumber(aValueAsNumber, rv);
-  return rv.StealNSResult();
+  // At this point we know we're not a file input, so we can just pass "not
+  // system" as the caller type, since the caller type only matters in the file
+  // input case.
+  SetValue(Decimal::fromDouble(aValueAsNumber), CallerType::NonSystem);
 }
 
 Decimal
@@ -2496,7 +2491,9 @@ HTMLInputElement::ApplyStep(int32_t aStep)
   nsresult rv = GetValueIfStepped(aStep, CALLED_FOR_SCRIPT, &nextStep);
 
   if (NS_SUCCEEDED(rv) && nextStep.isFinite()) {
-    SetValue(nextStep);
+    // We know we're not a file input, so the caller type does not matter; just
+    // pass "not system" to be safe.
+    SetValue(nextStep, CallerType::NonSystem);
   }
 
   return rv;

@@ -691,7 +691,14 @@ nsNumberControlFrame::SetValueOfAnonTextControl(const nsAString& aValue)
   // this must be its value, and not its 'value' attribute (the default value),
   // since the default value is ignored once a user types into the text
   // control.
-  HTMLInputElement::FromContent(mTextField)->SetValue(localizedValue);
+  //
+  // Pass NonSystem as the caller type; this should work fine for actual number
+  // inputs, and be safe in case our input has a type we don't expect for some
+  // reason.
+  IgnoredErrorResult rv;
+  HTMLInputElement::FromContent(mTextField)->SetValue(localizedValue,
+                                                      CallerType::NonSystem,
+                                                      rv);
 }
 
 void

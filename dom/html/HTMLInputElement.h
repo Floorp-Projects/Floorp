@@ -17,6 +17,7 @@
 #include "nsIDOMNSEditableElement.h"
 #include "nsCOMPtr.h"
 #include "nsIConstraintValidation.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLFormElement.h" // for HasEverTriedInvalidSubmit()
 #include "mozilla/dom/HTMLInputElementBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -660,7 +661,13 @@ public:
     SetHTMLAttr(nsGkAtoms::value, aValue, aRv);
   }
 
-  void SetValue(const nsAString& aValue, ErrorResult& aRv);
+  void SetValue(const nsAString& aValue, CallerType aCallerType,
+                ErrorResult& aRv);
+  void GetValue(nsAString& aValue, CallerType aCallerType)
+  {
+    // For now just ignore the caller type.
+    GetValue(aValue);
+  }
 
   Nullable<Date> GetValueAsDate(ErrorResult& aRv);
 
@@ -1346,7 +1353,7 @@ protected:
    *
    * @param aValue The Decimal that will be used to set the value.
    */
-  void SetValue(Decimal aValue);
+  void SetValue(Decimal aValue, CallerType aCallerType);
 
   /**
    * Update the HAS_RANGE bit field value.
