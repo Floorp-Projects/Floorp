@@ -7,6 +7,7 @@
 #include "Accessible2.h"
 #include "ProxyAccessible.h"
 #include "ia2AccessibleValue.h"
+#include "IGeckoCustom.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "DocAccessible.h"
 #include "mozilla/a11y/DocManager.h"
@@ -71,6 +72,12 @@ template<>
 struct InterfaceIID<IAccessibleHyperlink>
 {
   static REFIID Value() { return IID_IAccessibleHyperlink; }
+};
+
+template<>
+struct InterfaceIID<IGeckoCustom>
+{
+  static REFIID Value() { return IID_IGeckoCustom; }
 };
 
 /**
@@ -643,6 +650,24 @@ ProxyAccessible::IsLinkValid()
   }
 
   return valid;
+}
+
+uint32_t
+ProxyAccessible::AnchorCount(bool* aOk)
+{
+  *aOk = false;
+  RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
+  if (!custom) {
+    return 0;
+  }
+
+  long count;
+  if (FAILED(custom->get_anchorCount(&count))) {
+    return 0;
+  }
+
+  *aOk = true;
+  return count;
 }
 
 } // namespace a11y

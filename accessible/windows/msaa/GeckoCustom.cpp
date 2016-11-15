@@ -12,3 +12,10 @@ using namespace mozilla::a11y;
 IMPL_IUNKNOWN_QUERY_HEAD(GeckoCustom)
 IMPL_IUNKNOWN_QUERY_IFACE(IGeckoCustom)
 IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mAcc)
+
+HRESULT
+GeckoCustom::get_anchorCount(long* aCount)
+{
+  *aCount = mAcc->AnchorCount();
+  return S_OK;
+}

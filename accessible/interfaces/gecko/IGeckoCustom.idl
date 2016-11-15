@@ -10,6 +10,7 @@ import "oaidl.idl";
 [object, uuid(7510360f-cdae-4de9-88c8-d167eda62afc)]
 interface IGeckoCustom : IUnknown
 {
+  [propget] HRESULT anchorCount([out, retval] long* aCount);
 }
 
 
