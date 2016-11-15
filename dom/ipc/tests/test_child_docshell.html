@@ -15,6 +15,7 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.addPermission("browser", true, document);
 SpecialPowers.pushPrefEnv({'set':[
   ["dom.mozBrowserFramesEnabled", true],
+  ["network.disable.ipc.security", true],
   ["dom.ipc.tabs.disabled", false]
 ]}, function () {
 
