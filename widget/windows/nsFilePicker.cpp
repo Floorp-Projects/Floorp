@@ -10,6 +10,7 @@
 #include <shlwapi.h>
 #include <cderr.h>
 
+#include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsReadableUtils.h"
@@ -28,7 +29,9 @@
 #include "GeckoProfiler.h"
 
 using mozilla::IsVistaOrLater;
+using mozilla::IsWin8OrLater;
 using mozilla::MakeUnique;
+using mozilla::mscom::EnsureMTA;
 using mozilla::UniquePtr;
 using namespace mozilla::widget;
 
@@ -577,6 +580,15 @@ nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
 bool
 nsFilePicker::ShowFolderPicker(const nsString& aInitialDir, bool &aWasInitError)
 {
+  if (!IsWin8OrLater()) {
+    // Some Windows 7 users are experiencing a race condition when some dlls
+    // that are loaded by the file picker cause a crash while attempting to shut
+    // down the COM multithreaded apartment. By instantiating EnsureMTA, we hold
+    // an additional reference to the MTA that should prevent this race, since
+    // the MTA will remain alive until shutdown.
+    EnsureMTA ensureMTA;
+  }
+
   RefPtr<IFileOpenDialog> dialog;
   if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC,
                               IID_IFileOpenDialog,
@@ -875,6 +887,16 @@ bool
 nsFilePicker::ShowFilePicker(const nsString& aInitialDir, bool &aWasInitError)
 {
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+
+  if (!IsWin8OrLater()) {
+    // Some Windows 7 users are experiencing a race condition when some dlls
+    // that are loaded by the file picker cause a crash while attempting to shut
+    // down the COM multithreaded apartment. By instantiating EnsureMTA, we hold
+    // an additional reference to the MTA that should prevent this race, since
+    // the MTA will remain alive until shutdown.
+    EnsureMTA ensureMTA;
+  }
+
   RefPtr<IFileDialog> dialog;
   if (mMode != modeSave) {
     if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC,
