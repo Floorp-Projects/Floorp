@@ -112,7 +112,8 @@ this.Async = {
   },
 
   /**
-   * Check if the app is still ready (not quitting).
+   * Check if the app is still ready (not quitting). Returns true, or throws an
+   * exception if not ready.
    */
   checkAppReady: function checkAppReady() {
     // Watch for app-quit notification to stop any sync calls
@@ -126,6 +127,21 @@ this.Async = {
     }, "quit-application", false);
     // In the common case, checkAppReady just returns true
     return (Async.checkAppReady = function() { return true; })();
+  },
+
+  /**
+   * Check if the app is still ready (not quitting). Returns true if the app
+   * is ready, or false if it is being shut down.
+   */
+  isAppReady() {
+    try {
+      return Async.checkAppReady()
+    } catch (ex) {
+      if (!Async.isShutdownException(ex)) {
+        throw ex;
+      }
+    }
+    return false;
   },
 
   /**
