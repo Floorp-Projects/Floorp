@@ -321,6 +321,29 @@ class BaseBootstrapper(object):
         This should be defined in child classes.
         """
 
+    def _parse_version(self, path, name=None):
+        '''Execute the given path, returning the version.
+
+        Invokes the path argument with the --version switch
+        and returns a LooseVersion representing the output
+        if successful. If not, returns None.
+
+        An optional name argument gives the expected program
+        name returned as part of the version string, if it's
+        different from the basename of the executable.
+        '''
+        if not name:
+            name = os.path.basename(path)
+
+        info = self.check_output([path, '--version'],
+                                 stderr=subprocess.STDOUT)
+        match = re.search(name + ' ([a-z0-9\.]+)', info)
+        if not match:
+            print('ERROR! Unable to identify %s version.' % name)
+            return None
+
+        return LooseVersion(match.group(1))
+
     def _hgplain_env(self):
         """ Returns a copy of the current environment updated with the HGPLAIN
         environment variable.
@@ -399,14 +422,9 @@ class BaseBootstrapper(object):
 
         assert python
 
-        info = self.check_output([python, '--version'],
-                                 stderr=subprocess.STDOUT)
-        match = re.search('Python ([a-z0-9\.]+)', info)
-        if not match:
-            print('ERROR Unable to identify Python version.')
+        our = self._parse_version(python, 'Python')
+        if not our:
             return False, None
-
-        our = LooseVersion(match.group(1))
 
         return our >= MODERN_PYTHON_VERSION, our
 
