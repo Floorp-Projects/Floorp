@@ -665,14 +665,18 @@ DeviceManagerDx::HasDeviceReset(DeviceResetReason* aOutReason)
   MutexAutoLock lock(mDeviceLock);
 
   if (mDeviceResetReason) {
-    *aOutReason = mDeviceResetReason.value();
+    if (aOutReason) {
+      *aOutReason = mDeviceResetReason.value();
+    }
     return true;
   }
 
   DeviceResetReason reason;
   if (GetAnyDeviceRemovedReason(&reason)) {
     mDeviceResetReason = Some(reason);
-    *aOutReason = reason;
+    if (aOutReason) {
+      *aOutReason = reason;
+    }
     return true;
   }
 
