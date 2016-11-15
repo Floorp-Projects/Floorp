@@ -975,30 +975,59 @@ class Marionette(object):
             for perm in original_perms:
                 self.push_permission(perm, original_perms[perm])
 
-    def get_pref(self, pref):
-        """Gets the preference value.
+    def clear_pref(self, pref):
+        """Clear the user-defined value from the specified preference.
 
         :param pref: Name of the preference.
-
-        Usage example::
-
-            marionette.get_pref("browser.tabs.warnOnClose")
         """
-        with self.using_context(self.CONTEXT_CONTENT):
-            pref_value = self.execute_script("""
-                Components.utils.import("resource://gre/modules/Preferences.jsm");
-                return Preferences.get(arguments[0], null);
-                """, script_args=(pref,), sandbox="system")
-            return pref_value
-
-    def clear_pref(self, pref):
         with self.using_context(self.CONTEXT_CHROME):
             self.execute_script("""
                Components.utils.import("resource://gre/modules/Preferences.jsm");
                Preferences.reset(arguments[0]);
                """, script_args=(pref,))
 
-    def set_pref(self, pref, value):
+    def get_pref(self, pref, default_branch=False, value_type="nsISupportsString"):
+        """Get the value of the specified preference.
+
+        :param pref: Name of the preference.
+        :param default_branch: Optional, if `True` the preference value will be read
+                               from the default branch. Otherwise the user-defined
+                               value if set is returned. Defaults to `False`.
+        :param value_type: Optional, XPCOM interface of the pref's complex value.
+                           Defaults to `nsISupportsString`. Other possible values are:
+                           `nsILocalFile`, and `nsIPrefLocalizedString`.
+
+        Usage example::
+            marionette.get_pref("browser.tabs.warnOnClose")
+
+        """
+        with self.using_context(self.CONTEXT_CHROME):
+            pref_value = self.execute_script("""
+                Components.utils.import("resource://gre/modules/Preferences.jsm");
+
+                let [pref, defaultBranch, valueType] = arguments;
+
+                prefs = new Preferences({defaultBranch: defaultBranch});
+                return prefs.get(pref, null, valueType=Ci[valueType]);
+                """, script_args=(pref, default_branch, value_type))
+            return pref_value
+
+    def set_pref(self, pref, value, default_branch=False):
+        """Set the value of the specified preference.
+
+        :param pref: Name of the preference.
+        :param value: The value to set the preference to. If the value is None,
+                      reset the preference to its default value. If no default
+                      value exists, the preference will cease to exist.
+        :param default_branch: Optional, if `True` the preference value will
+                       be written to the default branch, and will remain until
+                       the application gets restarted. Otherwise a user-defined
+                       value is set. Defaults to `False`.
+
+        Usage example::
+            marionette.set_pref("browser.tabs.warnOnClose", True)
+
+        """
         with self.using_context(self.CONTEXT_CHROME):
             if value is None:
                 self.clear_pref(pref)
@@ -1006,18 +1035,22 @@ class Marionette(object):
 
             self.execute_script("""
                 Components.utils.import("resource://gre/modules/Preferences.jsm");
-                Preferences.set(arguments[0], arguments[1]);
-                """, script_args=(pref, value,))
 
-    def set_prefs(self, prefs):
-        """Sets preferences.
+                let [pref, value, defaultBranch] = arguments;
 
-        If the value of the preference to be set is None, reset the preference
-        to its default value. If no default value exists, the preference will
-        cease to exist.
+                prefs = new Preferences({defaultBranch: defaultBranch});
+                prefs.set(pref, value);
+                """, script_args=(pref, value, default_branch))
 
-        :param prefs: A dict containing one or more preferences and
-            their values to be set.
+    def set_prefs(self, prefs, default_branch=False):
+        """Set the value of a list of preferences.
+
+        :param prefs: A dict containing one or more preferences and their values
+                      to be set. See `set_pref` for further details.
+        :param default_branch: Optional, if `True` the preference value will
+                       be written to the default branch, and will remain until
+                       the application gets restarted. Otherwise a user-defined
+                       value is set. Defaults to `False`.
 
         Usage example::
 
@@ -1025,15 +1058,18 @@ class Marionette(object):
 
         """
         for pref, value in prefs.items():
-            self.set_pref(pref, value)
+            self.set_pref(pref, value, default_branch=default_branch)
 
     @contextmanager
-    def using_prefs(self, prefs):
-        """Sets preferences for code being executed in a `with` block,
-        and restores them on exit.
+    def using_prefs(self, prefs, default_branch=False):
+        """Set preferences for code executed in a `with` block, and restores them on exit.
 
         :param prefs: A dict containing one or more preferences and their values
-        to be set.
+                      to be set. See `set_prefs` for further details.
+        :param default_branch: Optional, if `True` the preference value will
+                       be written to the default branch, and will remain until
+                       the application gets restarted. Otherwise a user-defined
+                       value is set. Defaults to `False`.
 
         Usage example::
 
@@ -1042,12 +1078,12 @@ class Marionette(object):
 
         """
         original_prefs = {p: self.get_pref(p) for p in prefs}
-        self.set_prefs(prefs)
+        self.set_prefs(prefs, default_branch=default_branch)
 
         try:
             yield
         finally:
-            self.set_prefs(original_prefs)
+            self.set_prefs(original_prefs, default_branch=default_branch)
 
     @do_process_check
     def enforce_gecko_prefs(self, prefs):
