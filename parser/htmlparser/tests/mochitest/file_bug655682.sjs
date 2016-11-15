@@ -9,6 +9,9 @@ function handleRequest(request, response)
     response.setHeader("Content-Type", "text/javascript; charset=utf-8", false);
     response.write(";");
   } else {
+    // Reset the state when running more than once in same browser session.
+    setState("triggered", "");
+
     response.processAsync();
     response.setHeader("Cache-Control", "no-cache", false);
     response.setHeader("Content-Type", "text/html; charset=utf-8", false);
