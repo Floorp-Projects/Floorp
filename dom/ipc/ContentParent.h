@@ -672,7 +672,9 @@ private:
                                 InfallibleTArray<nsString>* dictionaries,
                                 ClipboardCapabilities* clipboardCaps,
                                 DomainPolicyClone* domainPolicy,
-                                StructuredCloneData* initialData) override;
+                                StructuredCloneData* initialData,
+                                InfallibleTArray<FontFamilyListEntry>* fontFamilies)
+                                override;
 
   virtual bool
   DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) override;
