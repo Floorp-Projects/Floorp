@@ -150,6 +150,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t numSigs() const { return numSigs_; }
     const SigWithId& sig(uint32_t sigIndex) const;
     const SigWithId& funcSig(uint32_t funcIndex) const;
+    const SigWithIdPtrVector& funcSigs() const { return shared_->funcSigs; }
 
     // Globals:
     const GlobalDescVector& globals() const { return shared_->globals; }

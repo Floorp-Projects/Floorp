@@ -414,15 +414,9 @@ static bool
 DecodeImportSection(Decoder& d, ModuleGeneratorData* init, ImportVector* imports)
 {
     Maybe<Limits> memory;
-    Uint32Vector funcSigIndices;
-    if (!DecodeImportSection(d, init->sigs, &funcSigIndices, &init->globals, &init->tables, &memory,
+    if (!DecodeImportSection(d, init->sigs, &init->funcSigs, &init->globals, &init->tables, &memory,
                              imports))
         return false;
-
-    for (uint32_t sigIndex : funcSigIndices) {
-        if (!init->funcSigs.append(&init->sigs[sigIndex]))
-            return false;
-    }
 
     // The global data offsets will be filled in by ModuleGenerator::init.
     if (!init->funcImportGlobalDataOffsets.resize(init->funcSigs.length()))
@@ -433,22 +427,6 @@ DecodeImportSection(Decoder& d, ModuleGeneratorData* init, ImportVector* imports
         init->minMemoryLength = memory->initial;
         init->maxMemoryLength = memory->maximum;
     }
-
-    return true;
-}
-
-static bool
-DecodeFunctionSection(Decoder& d, ModuleGeneratorData* init)
-{
-    Uint32Vector funcSigIndexes;
-    if (!DecodeFunctionSection(d, init->sigs, init->funcSigs.length(), &funcSigIndexes))
-        return false;
-
-    if (!init->funcSigs.reserve(init->funcSigs.length() + funcSigIndexes.length()))
-        return false;
-
-    for (uint32_t sigIndex : funcSigIndexes)
-        init->funcSigs.infallibleAppend(&init->sigs[sigIndex]);
 
     return true;
 }
@@ -479,6 +457,16 @@ DecodeExportSection(Decoder& d, ModuleGenerator& mg)
         return false;
 
     return mg.setExports(Move(exports));
+}
+
+static bool
+DecodeStartSection(Decoder& d, ModuleGenerator& mg)
+{
+    Maybe<uint32_t> startFuncIndex;
+    if (!DecodeStartSection(d, mg.funcSigs(), &startFuncIndex))
+        return false;
+
+    return !startFuncIndex || mg.setStartFunction(*startFuncIndex);
 }
 
 static bool
@@ -526,38 +514,6 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
     memcpy(fg.bytes().begin(), bodyBegin, bodySize);
 
     return mg.finishFuncDef(funcIndex, &fg);
-}
-
-static bool
-DecodeStartSection(Decoder& d, ModuleGenerator& mg)
-{
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Start, &sectionStart, &sectionSize, "start"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t funcIndex;
-    if (!d.readVarU32(&funcIndex))
-        return d.fail("failed to read start func index");
-
-    if (funcIndex >= mg.numFuncs())
-        return d.fail("unknown start function");
-
-    const Sig& sig = mg.funcSig(funcIndex);
-    if (!IsVoid(sig.ret()))
-        return d.fail("start function must not return anything");
-
-    if (sig.args().length())
-        return d.fail("start function must be nullary");
-
-    if (!mg.setStartFunction(funcIndex))
-        return false;
-
-    if (!d.finishSection(sectionStart, sectionSize, "start"))
-        return false;
-
-    return true;
 }
 
 static bool
@@ -752,7 +708,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!::DecodeImportSection(d, init.get(), &imports))
         return nullptr;
 
-    if (!::DecodeFunctionSection(d, init.get()))
+    if (!DecodeFunctionSection(d, init->sigs, &init->funcSigs))
         return nullptr;
 
     if (!DecodeTableSection(d, &init->tables))
@@ -771,7 +727,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!::DecodeExportSection(d, mg))
         return nullptr;
 
-    if (!DecodeStartSection(d, mg))
+    if (!::DecodeStartSection(d, mg))
         return nullptr;
 
     if (!DecodeElemSection(d, mg))
