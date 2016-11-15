@@ -60,6 +60,20 @@ describe("Filtering", () => {
       expect(messages.size).toEqual(numMessages - 1);
     });
 
+    it("filters css messages", () => {
+      let message = stubPreparedMessages.get(
+        "Unknown property ‘such-unknown-property’.  Declaration dropped."
+      );
+      store.dispatch(messageAdd(message));
+
+      let messages = getAllMessages(store.getState());
+      expect(messages.size).toEqual(numMessages);
+
+      store.dispatch(actions.filterToggle("css"));
+      messages = getAllMessages(store.getState());
+      expect(messages.size).toEqual(numMessages + 1);
+    });
+
     it("filters xhr messages", () => {
       let message = stubPreparedMessages.get("XHR GET request");
       store.dispatch(messageAdd(message));
@@ -167,6 +181,7 @@ describe("Clear filters", () => {
 
     let filters = getAllFilters(store.getState());
     expect(filters.toJS()).toEqual({
+      "css": true,
       "debug": true,
       "error": false,
       "info": true,
@@ -181,6 +196,7 @@ describe("Clear filters", () => {
 
     filters = getAllFilters(store.getState());
     expect(filters.toJS()).toEqual({
+      "css": false,
       "debug": true,
       "error": true,
       "info": true,

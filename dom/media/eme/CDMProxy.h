@@ -98,6 +98,8 @@ public:
                     const nsAString& aName,
                     bool aInPrivateBrowsing) = 0;
 
+  virtual void OnSetDecryptorId(uint32_t aId) {}
+
   // Main thread only.
   // Uses the CDM to create a key session.
   // Calls MediaKeys::OnSessionActivated() when session is created.
@@ -218,6 +220,8 @@ public:
 #ifdef DEBUG
   virtual bool IsOnOwnerThread() = 0;
 #endif
+
+  virtual uint32_t GetDecryptorId() { return 0; }
 
 protected:
   virtual ~CDMProxy() {}

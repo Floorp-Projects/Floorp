@@ -116,6 +116,12 @@ const FilterBar = createClass({
             className: "devtools-separator",
           }),
           FilterButton({
+            active: filter.css,
+            label: "CSS",
+            filterKey: "css",
+            dispatch
+          }),
+          FilterButton({
             active: filter.netxhr,
             label: "XHR",
             filterKey: "netxhr",

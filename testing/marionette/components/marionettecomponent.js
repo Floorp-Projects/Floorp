@@ -67,9 +67,6 @@ MarionetteComponent.prototype.setupLogger_ = function(level) {
 
 MarionetteComponent.prototype.determineLoggingLevel_ = function() {
   let level = Log.Level.Info;
-#ifdef DEBUG
-  level = Log.Level.Trace;
-#endif
 
   // marionette.logging pref can override default
   // with an entry from the Log.Level enum

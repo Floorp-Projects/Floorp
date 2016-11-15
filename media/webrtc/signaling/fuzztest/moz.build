@@ -1,0 +1,48 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit':
+    DISABLE_STL_WRAPPING = True
+    DEFINES['MOZ_NO_MOZALLOC'] = True
+
+    if CONFIG['OS_TARGET'] == 'Darwin':
+        DEFINES['SIP_OS_OSX'] = True
+    else:
+        DEFINES['SIP_OS_LINUX'] = True
+
+    LOCAL_INCLUDES += [
+        '../..',
+        '/media/mtransport',
+        '/media/webrtc/signaling/src/common/browser_logging',
+    ]
+
+    USE_LIBS += [
+        '/media/webrtc/trunk/testing/gtest_gtest/gtest',
+        'nspr'
+    ]
+
+    SOURCES = [
+      '/media/webrtc/signaling/src/sdp/SdpAttribute.cpp',
+      '/media/webrtc/signaling/src/sdp/SdpHelper.cpp',
+      '/media/webrtc/signaling/src/sdp/SdpMediaSection.cpp',
+      '/media/webrtc/signaling/src/sdp/sipcc/cpr_string.c',
+      '/media/webrtc/signaling/src/sdp/sipcc/sdp_access.c',
+      '/media/webrtc/signaling/src/sdp/sipcc/sdp_attr.c',
+      '/media/webrtc/signaling/src/sdp/sipcc/sdp_attr_access.c',
+      '/media/webrtc/signaling/src/sdp/sipcc/sdp_base64.c',
+      '/media/webrtc/signaling/src/sdp/sipcc/sdp_config.c',
+      '/media/webrtc/signaling/src/sdp/sipcc/sdp_main.c',
+      '/media/webrtc/signaling/src/sdp/sipcc/sdp_services_unix.c',
+      '/media/webrtc/signaling/src/sdp/sipcc/sdp_token.c',
+      '/media/webrtc/signaling/src/sdp/sipcc/sdp_utils.c',
+      '/media/webrtc/signaling/src/sdp/SipccSdp.cpp',
+      '/media/webrtc/signaling/src/sdp/SipccSdpAttributeList.cpp',
+      '/media/webrtc/signaling/src/sdp/SipccSdpMediaSection.cpp',
+      '/media/webrtc/signaling/src/sdp/SipccSdpParser.cpp',
+      'sdp_file_parser.cpp',
+    ]
+
+    GeckoProgram('sdp_file_parser')

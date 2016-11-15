@@ -525,6 +525,13 @@ bool TransportLayerDtls::Setup() {
       return false;
     }
 
+    UniqueCERTCertList zero_certs(CERT_NewCertList());
+    rv = SSL_SetTrustAnchors(ssl_fd.get(), zero_certs.get());
+    if (rv != SECSuccess) {
+      MOZ_MTLOG(ML_ERROR, "Couldn't set trust anchors");
+      return false;
+    }
+
     // Insist on a certificate from the client
     rv = SSL_OptionSet(ssl_fd.get(), SSL_REQUEST_CERTIFICATE, PR_TRUE);
     if (rv != SECSuccess) {

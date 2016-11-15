@@ -28,7 +28,7 @@ public:
 protected:
     virtual bool ShouldContinueFromReplyTimeout() override;
 
-    virtual bool RecvNonce() {
+    virtual bool RecvNonce() override {
         return true;
     }
 

@@ -30,7 +30,7 @@ public:
   void Main();
 
 protected:
-  virtual bool RecvStartSubprotocol(mozilla::ipc::Endpoint<PTestEndpointOpensOpenedParent>&& endpoint);
+  virtual bool RecvStartSubprotocol(mozilla::ipc::Endpoint<PTestEndpointOpensOpenedParent>&& endpoint) override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };

@@ -408,7 +408,7 @@ AndroidCastDeviceProvider.prototype = {
     }
 
     // Sync all device already found by Android.
-    Services.obs.notifyObservers(null, TOPIC_ANDROID_CAST_DEVICE_SYNCDEVICE, "");
+    Messaging.sendRequest({ type: TOPIC_ANDROID_CAST_DEVICE_SYNCDEVICE });
     // Observer registration
     Services.obs.addObserver(this, TOPIC_ANDROID_CAST_DEVICE_ADDED, false);
     Services.obs.addObserver(this, TOPIC_ANDROID_CAST_DEVICE_REMOVED, false);

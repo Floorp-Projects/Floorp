@@ -56,6 +56,8 @@ const source = [
 //  expectedProperty, - The expected property name for states value and property
 //  expectedValue, - If state is value, then the expected value
 // ]
+
+/* eslint-disable max-len */
 const tests = [
   [{line: 0, ch: 13}, "selector", ".devtools-toolbar"],
   [{line: 8, ch: 13}, "property", ["#devtools-menu.devtools-menulist",
@@ -79,6 +81,7 @@ const tests = [
                                  ".devtools-toolbarbutton#devtools-menu "], "background",
    "linear-gradient(hsla(212,7%,57%,.35),\n              hsla(212,7%,57%,.1)) padding-box"],
 ];
+/* eslint-enable max-len */
 
 const TEST_URI = "data:text/html;charset=UTF-8," + encodeURIComponent(
   ["<!DOCTYPE html>",
@@ -125,14 +128,18 @@ function test() {
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
+    /* eslint-disable mozilla/no-cpows-in-tests */
     doc = content.document;
+    /* eslint-enable mozilla/no-cpows-in-tests */
     runTests();
   });
   gBrowser.loadURI(TEST_URI);
 }
 
 function runTests() {
-  let completer = new CSSCompleter({cssProperties: getClientCssProperties()});
+  let completer = new CSSCompleter({
+    cssProperties: getClientCssProperties()
+  });
   let matches = (arr, toCheck) => !arr.some((x, i) => x != toCheck[i]);
   let checkState = (expected, actual) => {
     if (expected[0] == "null" && actual == null) {
