@@ -176,12 +176,6 @@ interface nsIObjectLoadingContent : nsISupports
   readonly attribute unsigned long pluginFallbackType;
 
   /**
-   * If this object currently owns a running plugin, regardless of whether or
-   * not one is pending spawn/despawn.
-   */
-  readonly attribute bool hasRunningPlugin;
-
-  /**
    * If this plugin runs out-of-process, it has a runID to differentiate
    * between different times the plugin process has been instantiated.
    *
