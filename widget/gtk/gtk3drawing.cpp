@@ -1896,12 +1896,12 @@ moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
                                 "indicator-size", &indicator_size,
                                 "horizontal-padding", &horizontal_padding,
                                 NULL);
+    gtk_style_context_get_padding(style, state_flags, &padding);
     ReleaseStyleContext(style);
 
     style = ClaimStyleContext(isradio ? MOZ_GTK_RADIOMENUITEM :
                                         MOZ_GTK_CHECKMENUITEM,
                               direction, state_flags);
-    gtk_style_context_get_padding(style, state_flags, &padding);
     gint offset = padding.left + 2;
 
     if (direction == GTK_TEXT_DIR_RTL) {
