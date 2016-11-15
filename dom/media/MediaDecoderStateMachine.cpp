@@ -1020,7 +1020,7 @@ public:
     // We've decoded all samples. We don't need decoders anymore.
     Reader()->ReleaseResources();
 
-    mMaster->ScheduleStateMachine();
+    Step();
   }
 
   void Exit() override
