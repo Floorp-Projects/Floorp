@@ -68,7 +68,6 @@ interface nsIDOMHTMLInputElement : nsISupports
 
            attribute DOMString             type;
            attribute DOMString             defaultValue;
-           attribute DOMString             value;
           // valustAsDate is only supported via WebIDL, because it's intimately
           // tied to JS Date objects and xpidl support for that sort of thing is
           // terrible.
@@ -93,7 +92,6 @@ interface nsIDOMHTMLInputElement : nsISupports
 
            attribute DOMString             useMap;
   readonly attribute nsIControllers        controllers;	
-	readonly attribute long                  textLength;
 
   /**
    * This non-standard method prevents to check types manually to know if the
