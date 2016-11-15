@@ -10,6 +10,7 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
   this);
 
+var {CssRuleView} = require("devtools/client/inspector/rules/rules");
 var {getInplaceEditorForSpan: inplaceEditor} =
   require("devtools/client/shared/inplace-editor");
 const {getColor: getThemeColor} = require("devtools/client/shared/theme");
