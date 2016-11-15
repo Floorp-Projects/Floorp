@@ -26,6 +26,8 @@ public:
   // IUnknown
   DECL_IUNKNOWN
 
+  virtual STDMETHODIMP get_anchorCount(long* aCount);
+
 private:
   GeckoCustom() = delete;
   GeckoCustom& operator =(const GeckoCustom&) = delete;
