@@ -16,7 +16,7 @@ function DebuggerPanel(iframeWindow, toolbox) {
 }
 
 DebuggerPanel.prototype = {
-  open: Task.async(function*() {
+  open: Task.async(function* () {
     if (!this.toolbox.target.isRemote) {
       yield this.toolbox.target.makeRemote();
     }
@@ -30,31 +30,31 @@ DebuggerPanel.prototype = {
     return this;
   }),
 
-  _store: function() {
+  _store: function () {
     return this.panelWin.Debugger.store;
   },
 
-  _getState: function() {
+  _getState: function () {
     return this._store().getState();
   },
 
-  _actions: function() {
+  _actions: function () {
     return this.panelWin.Debugger.actions;
   },
 
-  _selectors: function() {
+  _selectors: function () {
     return this.panelWin.Debugger.selectors;
   },
 
-  getFrames: function() {
+  getFrames: function () {
     let frames = this._selectors().getFrames(this._getState());
 
-    // frames is null when the debugger is not paused
+    // Frames is null when the debugger is not paused.
     if (!frames) {
       return {
         frames: [],
         selected: -1
-      }
+      };
     }
 
     frames = frames.toJS();
@@ -68,7 +68,7 @@ DebuggerPanel.prototype = {
     return { frames, selected };
   },
 
-  destroy: function() {
+  destroy: function () {
     this.panelWin.Debugger.destroy();
     this.emit("destroyed");
   }
