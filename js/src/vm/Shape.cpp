@@ -89,6 +89,8 @@ Shape::removeFromDictionary(NativeObject* obj)
         parent->listp = listp;
     *listp = parent;
     listp = nullptr;
+
+    obj->shape_->clearCachedBigEnoughForShapeTable();
 }
 
 void

@@ -983,6 +983,9 @@ class Shape : public gc::TenuredCell
         }
         return false;
     }
+    void clearCachedBigEnoughForShapeTable() {
+        flags &= ~(HAS_CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE | CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE);
+    }
 
   public:
     bool isBigEnoughForAShapeTable() {
