@@ -38,10 +38,6 @@ def keyfile(desc, help=None, callback=lambda x: x):
 def simple_keyfile(desc):
     set_config('MOZ_%s_KEY' % desc.upper().replace(' ', '_'),
                keyfile(desc))
-    # Only really required for MOZ_ADJUST_SDK_KEY currently still used in
-    # old-configure.
-    add_old_configure_assignment('MOZ_%s_KEY' % desc.upper().replace(' ', '_'),
-                                 keyfile(desc))
 
 
 @template
