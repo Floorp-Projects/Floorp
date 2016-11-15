@@ -643,13 +643,12 @@ MOZ_MUST_USE bool
 DecodeTypeSection(Decoder& d, SigWithIdVector* sigs);
 
 MOZ_MUST_USE bool
-DecodeImportSection(Decoder& d, const SigWithIdVector& sigs, Uint32Vector* funcSigIndices,
+DecodeImportSection(Decoder& d, const SigWithIdVector& sigs, SigWithIdPtrVector* funcSigs,
                     GlobalDescVector* globals, TableDescVector* tables, Maybe<Limits>* memory,
                     ImportVector* imports);
 
 MOZ_MUST_USE bool
-DecodeFunctionSection(Decoder& d, const SigWithIdVector& sigs, size_t numImportedFunc,
-                      Uint32Vector* funcSigIndexes);
+DecodeFunctionSection(Decoder& d, const SigWithIdVector& sigs, SigWithIdPtrVector* funcSigs);
 
 MOZ_MUST_USE bool
 DecodeTableSection(Decoder& d, TableDescVector* tables);
@@ -663,6 +662,10 @@ DecodeGlobalSection(Decoder& d, GlobalDescVector* globals);
 MOZ_MUST_USE bool
 DecodeExportSection(Decoder& d, size_t numFuncs, size_t numTables, bool usesMemory,
                     const GlobalDescVector& globals, ExportVector* exports);
+
+MOZ_MUST_USE bool
+DecodeStartSection(Decoder& d, const SigWithIdPtrVector& funcSigs,
+                   Maybe<uint32_t>* startFunctionIndex);
 
 MOZ_MUST_USE bool
 DecodeUnknownSections(Decoder& d);
