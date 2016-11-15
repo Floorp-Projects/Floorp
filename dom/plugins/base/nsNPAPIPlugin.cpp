@@ -724,23 +724,6 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
 
   PluginDestructionGuard guard(npp);
 
-  // Block Adobe Acrobat from loading URLs that are not http:, https:,
-  // or ftp: URLs if the given target is null.
-  if (!target && relativeURL &&
-      (strncmp(relativeURL, "http:", 5) != 0) &&
-      (strncmp(relativeURL, "https:", 6) != 0) &&
-      (strncmp(relativeURL, "ftp:", 4) != 0)) {
-    nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
-
-    const char *name = nullptr;
-    RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
-    host->GetPluginName(inst, &name);
-
-    if (name && strstr(name, "Adobe") && strstr(name, "Acrobat")) {
-      return NPERR_NO_ERROR;
-    }
-  }
-
   return MakeNewNPAPIStreamInternal(npp, relativeURL, target,
                                     eNPPStreamTypeInternal_Get);
 }
