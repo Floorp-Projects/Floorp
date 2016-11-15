@@ -190,12 +190,12 @@ public:
         NS_ASSERTION(aDrawable, "aDrawable is null!");
     }
 
-    virtual ~DrawingCallbackFromDrawable() = default;
+    ~DrawingCallbackFromDrawable() override = default;
 
-    virtual bool operator()(gfxContext* aContext,
-                              const gfxRect& aFillRect,
-                              const SamplingFilter aSamplingFilter,
-                              const gfxMatrix& aTransform = gfxMatrix())
+    bool operator()(gfxContext* aContext,
+                    const gfxRect& aFillRect,
+                    const SamplingFilter aSamplingFilter,
+                    const gfxMatrix& aTransform = gfxMatrix()) override
     {
         return mDrawable->Draw(aContext, aFillRect, ExtendMode::CLAMP,
                                aSamplingFilter, 1.0,
