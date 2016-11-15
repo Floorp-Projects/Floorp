@@ -648,6 +648,7 @@ const DEFAULT_CSP_PRIV = "default-src *; script-src 'self'; style-src 'self' 'un
 const DEFAULT_CSP_CERT = "default-src *; script-src 'self'; style-src 'self'; object-src 'none'";
 
 SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true],
+                                   ["network.disable.ipc.security", true],
                                    ["device.storage.enabled", true],
                                    ["device.storage.testing", true],
                                    ["device.storage.prompt.testing", false],
