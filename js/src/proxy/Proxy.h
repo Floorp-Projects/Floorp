@@ -27,9 +27,9 @@ class Proxy
   public:
     /* Standard internal methods. */
     static bool getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                         MutableHandle<PropertyDescriptor> desc);
+                                         MutableHandle<JS::PropertyDescriptor> desc);
     static bool defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
-                               Handle<PropertyDescriptor> desc, ObjectOpResult& result);
+                               Handle<JS::PropertyDescriptor> desc, ObjectOpResult& result);
     static bool ownPropertyKeys(JSContext* cx, HandleObject proxy, AutoIdVector& props);
     static bool delete_(JSContext* cx, HandleObject proxy, HandleId id, ObjectOpResult& result);
     static bool enumerate(JSContext* cx, HandleObject proxy, MutableHandleObject objp);
@@ -51,7 +51,7 @@ class Proxy
 
     /* SpiderMonkey extensions. */
     static bool getPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                      MutableHandle<PropertyDescriptor> desc);
+                                      MutableHandle<JS::PropertyDescriptor> desc);
     static bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp);
     static bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
                                              AutoIdVector& props);
