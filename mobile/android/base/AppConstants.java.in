@@ -93,8 +93,7 @@ public class AppConstants {
     public static final String MOZ_APP_VENDOR = "@MOZ_APP_VENDOR@";
     public static final String MOZ_APP_VERSION = "@MOZ_APP_VERSION@";
     public static final String MOZ_APP_DISPLAYNAME = "@MOZ_APP_DISPLAYNAME@";
-    // MOZ_APP_UA_NAME is already quoted when it gets substituted, like MOZILLA_VERSION.
-    public static final String MOZ_APP_UA_NAME = @MOZ_APP_UA_NAME@;
+    public static final String MOZ_APP_UA_NAME = "@MOZ_APP_UA_NAME@";
 
     // MOZILLA_VERSION is already quoted when it gets substituted in. If we
     // add additional quotes we end up with ""x.y"", which is a syntax error.
@@ -126,7 +125,7 @@ public class AppConstants {
     public static final String MOZ_UPDATE_CHANNEL = "@MOZ_UPDATE_CHANNEL@";
     public static final String OMNIJAR_NAME = "@OMNIJAR_NAME@";
     public static final String OS_TARGET = "@OS_TARGET@";
-    public static final String TARGET_XPCOM_ABI = @TARGET_XPCOM_ABI@;
+    public static final String TARGET_XPCOM_ABI = "@TARGET_XPCOM_ABI@";
 
     public static final String USER_AGENT_BOT_LIKE = "Redirector/" + AppConstants.MOZ_APP_VERSION +
         " (Android; rv:" + AppConstants.MOZ_APP_VERSION + ")";
