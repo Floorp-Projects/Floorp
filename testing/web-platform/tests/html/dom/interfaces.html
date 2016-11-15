@@ -882,7 +882,7 @@ interface HTMLAllCollection {
 
 interface HTMLFormControlsCollection : HTMLCollection {
   // inherits length and item()
-  legacycaller getter (RadioNodeList or Element)? namedItem(DOMString name); // shadows inherited namedItem()
+  getter (RadioNodeList or Element)? namedItem(DOMString name); // shadows inherited namedItem()
 };
 
 interface RadioNodeList : NodeList {
@@ -892,7 +892,6 @@ interface RadioNodeList : NodeList {
 interface HTMLOptionsCollection : HTMLCollection {
   // inherits item()
            attribute unsigned long length; // shadows inherited length
-  legacycaller HTMLOptionElement? (DOMString name);
   setter creator void (unsigned long index, HTMLOptionElement? option);
   void add((HTMLOptionElement or HTMLOptGroupElement) element, optional (HTMLElement or long)? before = null);
   void remove(long index);
