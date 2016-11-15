@@ -193,8 +193,7 @@ VerifyRGBXCorners(uint8_t* aData, const IntSize &aSize, const int32_t aStride, S
   const int middle = aStride * middleRowHeight + middleRowWidth;
 
   const int offsets[] = { topLeft, topRight, bottomRight, bottomLeft, middle };
-  for (size_t i = 0; i < MOZ_ARRAY_LENGTH(offsets); i++) {
-    int offset = offsets[i];
+  for (int offset : offsets) {
     if (aData[offset + kARGBAlphaOffset] != 0xFF) {
         int row = offset / aStride;
         int column = (offset % aStride) / pixelSize;
