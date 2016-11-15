@@ -443,5 +443,22 @@
             android:isolatedProcess="false">
         </service>
 
+        <!-- New child services must also be added to the GeckoView AndroidManifest.xml -->
+        <service
+            android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$geckomediaplugin"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":geckomediaplugin"
+            android:isolatedProcess="false">
+        </service>
+
+        <service
+            android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$tab"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":tab"
+            android:isolatedProcess="false">
+        </service>
+
     </application>
 </manifest>

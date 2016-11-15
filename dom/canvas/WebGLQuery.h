@@ -20,54 +20,49 @@ class WebGLQuery final
     , public LinkedListElement<WebGLQuery>
     , public WebGLContextBoundObject
 {
+    friend class AvailableRunnable;
+    friend class WebGLRefCountedObject<WebGLQuery>;
+
 public:
-    explicit WebGLQuery(WebGLContext* webgl);
+    const GLuint mGLName;
+private:
+    GLenum mTarget;
+    WebGLRefPtr<WebGLQuery>* mActiveSlot;
 
-    class AvailableRunnable final : public Runnable
-    {
-    public:
-        explicit AvailableRunnable(WebGLQuery* query) : mQuery(query) { }
+    bool mCanBeAvailable; // Track whether the event loop has spun
 
-        NS_IMETHOD Run() override {
-            mQuery->mCanBeAvailable = true;
-            return NS_OK;
-        }
-    private:
-        const RefPtr<WebGLQuery> mQuery;
-    };
+    ////
+public:
+    GLenum Target() const { return mTarget; }
+    bool IsActive() const { return bool(mActiveSlot); }
 
-    bool IsActive() const;
-
-    bool HasEverBeenActive() const {
-        return mType != 0;
-    }
-
-    // WebGLRefCountedObject
-    void Delete();
-
-    // nsWrapperCache
-    WebGLContext* GetParentObject() const {
-        return mContext;
-    }
-
-    // NS
-    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
+    ////
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLQuery)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLQuery)
 
-    // Track whether the event loop has spun
-    bool mCanBeAvailable;
+    explicit WebGLQuery(WebGLContext* webgl);
 
 private:
     ~WebGLQuery() {
         DeleteOnce();
     };
 
-    GLuint mGLName;
-    GLenum mType;
+    // WebGLRefCountedObject
+    void Delete();
 
-    friend class WebGL2Context;
+public:
+    WebGLContext* GetParentObject() const { return mContext; }
+    virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
+
+    ////
+
+    void BeginQuery(GLenum target, WebGLRefPtr<WebGLQuery>& slot);
+    void DeleteQuery();
+    void EndQuery();
+    void GetQueryParameter(GLenum pname, JS::MutableHandleValue retval) const;
+    bool IsQuery() const;
+    void QueryCounter(const char* funcName, GLenum target);
 };
 
 } // namespace mozilla

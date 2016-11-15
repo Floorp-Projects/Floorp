@@ -7,6 +7,9 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
 var Sanitizer = tempScope.Sanitizer;
 
 add_task(function*() {
+  // getLoginSavingEnabled always returns false if password capture is disabled.
+  yield SpecialPowers.pushPrefEnv({"set": [["signon.rememberSignons", true]]});
+
   var pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
   // Add a disabled host
@@ -36,4 +39,6 @@ add_task(function*() {
   // Make sure it's gone
   is(pwmgr.getLoginSavingEnabled("http://example.com"), true,
      "example.com should be enabled for password saving again now that we've cleared.");
+
+  yield SpecialPowers.popPrefEnv();
 });

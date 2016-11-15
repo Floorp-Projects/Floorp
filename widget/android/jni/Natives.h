@@ -5,6 +5,7 @@
 
 #include "mozilla/IndexSequence.h"
 #include "mozilla/Move.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
@@ -26,8 +27,9 @@ namespace jni {
  * * If the C++ class inherits from mozilla::SupportsWeakPtr, weak pointers
  *   will be used. The Java instance will store and own the pointer to a
  *   WeakPtr object. The C++ class itself is otherwise not owned or directly
- *   referenced. To attach a Java instance to a C++ instance, pass in a pointer
- *   to the C++ class (i.e. MyClass*).
+ *   referenced. Note that mozilla::SupportsWeakPtr only supports being used on
+ *   a single thread. To attach a Java instance to a C++ instance, pass in a
+ *   mozilla::SupportsWeakPtr pointer to the C++ class (i.e. MyClass*).
  *
  *   class MyClass : public SupportsWeakPtr<MyClass>
  *                 , public MyJavaClass::Natives<MyClass>
@@ -36,29 +38,54 @@ namespace jni {
  *
  *   public:
  *       MOZ_DECLARE_WEAKREFERENCE_TYPENAME(MyClass)
- *       using MyJavaClass::Natives<MyClass>::Dispose;
+ *       using MyJavaClass::Natives<MyClass>::DisposeNative;
  *
  *       void AttachTo(const MyJavaClass::LocalRef& instance)
  *       {
- *           MyJavaClass::Natives<MyClass>::AttachInstance(instance, this);
+ *           MyJavaClass::Natives<MyClass>::AttachInstance(
+ *                   instance, static_cast<SupportsWeakPtr<MyClass>*>(this));
  *
  *           // "instance" does NOT own "this", so the C++ object
  *           // lifetime is separate from the Java object lifetime.
  *       }
  *   };
  *
- * * If the C++ class doesn't inherit from mozilla::SupportsWeakPtr, the Java
- *   instance will store and own a pointer to the C++ object itself. This
- *   pointer must not be stored or deleted elsewhere. To attach a Java instance
- *   to a C++ instance, pass in a reference to a UniquePtr of the C++ class
- *   (i.e. UniquePtr<MyClass>).
+ * * If the C++ class contains public members AddRef() and Release(), the Java
+ *   instance will store and own the pointer to a RefPtr object, which holds a
+ *   strong reference on the C++ instance. Normal ref-counting considerations
+ *   apply in this case; for example, disposing may cause the C++ instance to
+ *   be deleted and the destructor to be run on the current thread, which may
+ *   not be desirable. To attach a Java instance to a C++ instance, pass in a
+ *   pointer to the C++ class (i.e. MyClass*).
+ *
+ *   class MyClass : public RefCounted<MyClass>
+ *                 , public MyJavaClass::Natives<MyClass>
+ *   {
+ *       // ...
+ *
+ *   public:
+ *       using MyJavaClass::Natives<MyClass>::DisposeNative;
+ *
+ *       void AttachTo(const MyJavaClass::LocalRef& instance)
+ *       {
+ *           MyJavaClass::Natives<MyClass>::AttachInstance(instance, this);
+ *
+ *           // "instance" owns "this" through the RefPtr, so the C++ object
+ *           // may be destroyed as soon as instance.disposeNative() is called.
+ *       }
+ *   };
+ *
+ * * In other cases, the Java instance will store and own a pointer to the C++
+ *   object itself. This pointer must not be stored or deleted elsewhere. To
+ *   attach a Java instance to a C++ instance, pass in a reference to a
+ *   UniquePtr of the C++ class (i.e. UniquePtr<MyClass>).
  *
  *   class MyClass : public MyJavaClass::Natives<MyClass>
  *   {
  *       // ...
  *
  *   public:
- *       using MyJavaClass::Natives<MyClass>::Dispose;
+ *       using MyJavaClass::Natives<MyClass>::DisposeNative;
  *
  *       static void AttachTo(const MyJavaClass::LocalRef& instance)
  *       {
@@ -66,12 +93,36 @@ namespace jni {
  *                   instance, mozilla::MakeUnique<MyClass>());
  *
  *           // "instance" owns the newly created C++ object, so the C++
- *           // object is destroyed as soon as instance.dispose() is called.
+ *           // object is destroyed as soon as instance.disposeNative() is
+ *           // called.
  *       }
  *   };
  */
 
 namespace detail {
+
+enum NativePtrType
+{
+    OWNING,
+    WEAK,
+    REFPTR
+};
+
+template<class Impl>
+class NativePtrPicker
+{
+    template<class I> static typename EnableIf<
+            IsBaseOf<SupportsWeakPtr<I>, I>::value,
+            char(&)[NativePtrType::WEAK]>::Type Test(char);
+
+    template<class I, typename = decltype(&I::AddRef, &I::Release)>
+            static char (&Test(int))[NativePtrType::REFPTR];
+
+    template<class> static char (&Test(...))[NativePtrType::OWNING];
+
+public:
+    static const int value = sizeof(Test<Impl>('\0')) / sizeof(char);
+};
 
 inline uintptr_t CheckNativeHandle(JNIEnv* env, uintptr_t handle)
 {
@@ -85,9 +136,10 @@ inline uintptr_t CheckNativeHandle(JNIEnv* env, uintptr_t handle)
     return handle;
 }
 
-template<class Impl, bool UseWeakPtr = mozilla::IsBaseOf<
-                         SupportsWeakPtr<Impl>, Impl>::value /* = false */>
-struct NativePtr
+template<class Impl, int Type = NativePtrPicker<Impl>::value> struct NativePtr;
+
+template<class Impl>
+struct NativePtr<Impl, /* Type = */ NativePtrType::OWNING>
 {
     static Impl* Get(JNIEnv* env, jobject instance)
     {
@@ -125,7 +177,7 @@ struct NativePtr
 };
 
 template<class Impl>
-struct NativePtr<Impl, /* UseWeakPtr = */ true>
+struct NativePtr<Impl, /* Type = */ NativePtrType::WEAK>
 {
     static Impl* Get(JNIEnv* env, jobject instance)
     {
@@ -138,7 +190,7 @@ struct NativePtr<Impl, /* UseWeakPtr = */ true>
         Impl* const impl = *ptr;
         if (!impl) {
             ThrowException(env, "java/lang/NullPointerException",
-                           "Native object already released");
+                           "Native weak object already released");
         }
         return impl;
     }
@@ -162,6 +214,51 @@ struct NativePtr<Impl, /* UseWeakPtr = */ true>
     static void Clear(const LocalRef& instance)
     {
         const auto ptr = reinterpret_cast<WeakPtr<Impl>*>(
+                GetNativeHandle(instance.Env(), instance.Get()));
+        MOZ_CATCH_JNI_EXCEPTION(instance.Env());
+
+        if (ptr) {
+            SetNativeHandle(instance.Env(), instance.Get(), 0);
+            MOZ_CATCH_JNI_EXCEPTION(instance.Env());
+            delete ptr;
+        }
+    }
+};
+
+template<class Impl>
+struct NativePtr<Impl, /* Type = */ NativePtrType::REFPTR>
+{
+    static Impl* Get(JNIEnv* env, jobject instance)
+    {
+        const auto ptr = reinterpret_cast<RefPtr<Impl>*>(
+                CheckNativeHandle(env, GetNativeHandle(env, instance)));
+        if (!ptr) {
+            return nullptr;
+        }
+
+        MOZ_ASSERT(*ptr);
+        return *ptr;
+    }
+
+    template<class LocalRef>
+    static Impl* Get(const LocalRef& instance)
+    {
+        return Get(instance.Env(), instance.Get());
+    }
+
+    template<class LocalRef>
+    static void Set(const LocalRef& instance, Impl* ptr)
+    {
+        Clear(instance);
+        SetNativeHandle(instance.Env(), instance.Get(),
+                        reinterpret_cast<uintptr_t>(new RefPtr<Impl>(ptr)));
+        MOZ_CATCH_JNI_EXCEPTION(instance.Env());
+    }
+
+    template<class LocalRef>
+    static void Clear(const LocalRef& instance)
+    {
+        const auto ptr = reinterpret_cast<RefPtr<Impl>*>(
                 GetNativeHandle(instance.Env(), instance.Get()));
         MOZ_CATCH_JNI_EXCEPTION(instance.Env());
 
@@ -563,7 +660,7 @@ public:
         }
 
         auto self = Owner::LocalRef::Adopt(env, instance);
-        (Impl::DisposeNative)(self);
+        DisposeNative(self);
         self.Forget();
     }
 
@@ -668,17 +765,24 @@ protected:
     static void AttachNative(const typename Cls::LocalRef& instance,
                              SupportsWeakPtr<Impl>* ptr)
     {
-        static_assert(mozilla::IsBaseOf<SupportsWeakPtr<Impl>, Impl>::value,
-                      "Attach with UniquePtr&& when not using WeakPtr");
+        static_assert(NativePtrPicker<Impl>::value == NativePtrType::WEAK,
+                      "Use another AttachNative for non-WeakPtr usage");
         return NativePtr<Impl>::Set(instance, static_cast<Impl*>(ptr));
     }
 
     static void AttachNative(const typename Cls::LocalRef& instance,
                              UniquePtr<Impl>&& ptr)
     {
-        static_assert(!mozilla::IsBaseOf<SupportsWeakPtr<Impl>, Impl>::value,
-                      "Attach with SupportsWeakPtr* when using WeakPtr");
+        static_assert(NativePtrPicker<Impl>::value == NativePtrType::OWNING,
+                      "Use another AttachNative for WeakPtr or RefPtr usage");
         return NativePtr<Impl>::Set(instance, mozilla::Move(ptr));
+    }
+
+    static void AttachNative(const typename Cls::LocalRef& instance, Impl* ptr)
+    {
+        static_assert(NativePtrPicker<Impl>::value == NativePtrType::REFPTR,
+                      "Use another AttachNative for non-RefPtr usage");
+        return NativePtr<Impl>::Set(instance, ptr);
     }
 
     // Get the C++ instance associated with a Java instance.

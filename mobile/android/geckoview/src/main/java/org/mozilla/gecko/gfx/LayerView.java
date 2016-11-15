@@ -13,7 +13,6 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
@@ -167,8 +166,8 @@ public class LayerView extends FrameLayout {
         this(context, null);
     }
 
-    public void initializeView(EventDispatcher eventDispatcher) {
-        mLayerClient = new GeckoLayerClient(getContext(), this, eventDispatcher);
+    public void initializeView() {
+        mLayerClient = new GeckoLayerClient(getContext(), this);
         if (mOverscroll != null) {
             mLayerClient.setOverscrollHandler(mOverscroll);
         }

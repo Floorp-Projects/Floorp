@@ -56,9 +56,17 @@ namespace IPC {
 //
 // When creating a child subprocess, the parent side of the fork
 // arranges it such that the initial control channel ends up on the
-// magic file descriptor kClientChannelFd in the child.  Future
+// magic file descriptor gClientChannelFd in the child.  Future
 // connections (file descriptors) can then be passed via that
 // connection via sendmsg().
+//
+// On Android, child processes are created as a service instead of
+// forking the parent process. The Android Binder service is used to
+// transport the IPC channel file descriptor to the child process.
+// So rather than re-mapping the file descriptor to a known value,
+// the received channel file descriptor is set by calling
+// SetClientChannelFd before gecko has been initialized and started
+// in the child process.
 
 //------------------------------------------------------------------------------
 namespace {
@@ -66,7 +74,7 @@ namespace {
 // The PipeMap class works around this quirk related to unit tests:
 //
 // When running as a server, we install the client socket in a
-// specific file descriptor number (@kClientChannelFd). However, we
+// specific file descriptor number (@gClientChannelFd). However, we
 // also have to support the case where we are running unittests in the
 // same process.  (We do not support forking without execing.)
 //
@@ -74,7 +82,7 @@ namespace {
 //   The IPC server object will install a mapping in PipeMap from the
 //   name which it was given to the client pipe. When forking the client, the
 //   GetClientFileDescriptorMapping will ensure that the socket is installed in
-//   the magic slot (@kClientChannelFd). The client will search for the
+//   the magic slot (@gClientChannelFd). The client will search for the
 //   mapping, but it won't find any since we are in a new process. Thus the
 //   magic fd number is returned. Once the client connects, the server will
 //   close its copy of the client socket and remove the mapping.
@@ -133,7 +141,14 @@ class PipeMap {
 
 // This is the file descriptor number that a client process expects to find its
 // IPC socket.
-static const int kClientChannelFd = 3;
+static int gClientChannelFd =
+#if defined(MOZ_WIDGET_ANDROID)
+// On android the fd is set at the time of child creation.
+-1
+#else
+3
+#endif // defined(MOZ_WIDGET_ANDROID)
+;
 
 // Used to map a channel name to the equivalent FD # in the client process.
 int ChannelNameToClientFD(const std::string& channel_id) {
@@ -144,7 +159,7 @@ int ChannelNameToClientFD(const std::string& channel_id) {
 
   // If we don't find an entry, we assume that the correct value has been
   // inserted in the magic slot.
-  return kClientChannelFd;
+  return gClientChannelFd;
 }
 
 //------------------------------------------------------------------------------
@@ -165,6 +180,12 @@ bool SetCloseOnExec(int fd) {
 }  // namespace
 //------------------------------------------------------------------------------
 
+#if defined(MOZ_WIDGET_ANDROID)
+void Channel::SetClientChannelFd(int fd) {
+  gClientChannelFd = fd;
+}
+#endif // defined(MOZ_WIDGET_ANDROID)
+
 Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id, Mode mode,
                                   Listener* listener)
     : factory_(this) {
@@ -175,7 +196,11 @@ Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id, Mode mode,
     CHROMIUM_LOG(WARNING) << "Unable to create pipe named \"" << channel_id <<
                              "\" in " << (mode == MODE_SERVER ? "server" : "client") <<
                              " mode error(" << strerror(errno) << ").";
+    closed_ = true;
+    return;
   }
+
+  EnqueueHelloMessage();
 }
 
 Channel::ChannelImpl::ChannelImpl(int fd, Mode mode, Listener* listener)
@@ -248,8 +273,7 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
     waiting_connect_ = false;
   }
 
-  // Create the Hello message to be sent when Connect is called
-  return EnqueueHelloMessage();
+  return true;
 }
 
 /**
@@ -759,7 +783,7 @@ void Channel::ChannelImpl::GetClientFileDescriptorMapping(int *src_fd,
                                                           int *dest_fd) const {
   DCHECK(mode_ == MODE_SERVER);
   *src_fd = client_pipe_;
-  *dest_fd = kClientChannelFd;
+  *dest_fd = gClientChannelFd;
 }
 
 void Channel::ChannelImpl::CloseClientFileDescriptor() {

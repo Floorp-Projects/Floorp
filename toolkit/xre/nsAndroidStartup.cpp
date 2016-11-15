@@ -22,7 +22,7 @@
 #define LOG(args...) __android_log_print(ANDROID_LOG_INFO, MOZ_APP_NAME, args)
 
 extern "C" NS_EXPORT void
-GeckoStart(JNIEnv* env, char* data, const nsXREAppData* appData)
+GeckoStart(JNIEnv* env, char** argv, int argc, const nsXREAppData* appData)
 {
     mozilla::jni::SetGeckoThreadEnv(env);
 
@@ -35,20 +35,12 @@ GeckoStart(JNIEnv* env, char* data, const nsXREAppData* appData)
     }
 #endif
 
-    if (!data) {
+    if (!argv) {
         LOG("Failed to get arguments for GeckoStart\n");
         return;
     }
 
-    nsTArray<char *> targs;
-    char *arg = strtok(data, " ");
-    while (arg) {
-        targs.AppendElement(arg);
-        arg = strtok(nullptr, " ");
-    }
-    targs.AppendElement(static_cast<char *>(nullptr));
-
-    int result = XRE_main(targs.Length() - 1, targs.Elements(), appData, 0);
+    int result = XRE_main(argc, argv, appData, 0);
 
     if (result)
         LOG("XRE_main returned %d", result);

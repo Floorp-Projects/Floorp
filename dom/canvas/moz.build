@@ -148,7 +148,6 @@ UNIFIED_SOURCES += [
     'WebGLTexelConversions.cpp',
     'WebGLTexture.cpp',
     'WebGLTextureUpload.cpp',
-    'WebGLTimerQuery.cpp',
     'WebGLTransformFeedback.cpp',
     'WebGLUniformLocation.cpp',
     'WebGLValidateStrings.cpp',

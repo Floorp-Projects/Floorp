@@ -129,6 +129,7 @@ gujar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in 
     'util/FloatUtils.java',
     'util/GamepadUtils.java',
     'util/GeckoBackgroundThread.java',
+    'util/GeckoBundle.java',
     'util/GeckoEventListener.java',
     'util/GeckoJarReader.java',
     'util/GeckoRequest.java',
@@ -276,6 +277,9 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'permissions/Permissions.java',
     'permissions/PermissionsHelper.java',
     'PrefsHelper.java',
+    'process/GeckoProcessManager.java',
+    'process/GeckoServiceChildProcess.java',
+    'ScreenManagerHelper.java',
     'sqlite/ByteBufferInputStream.java',
     'sqlite/MatrixBlobCursor.java',
     'sqlite/SQLiteBridge.java',
@@ -659,7 +663,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'restrictions/RestrictionConfiguration.java',
     'restrictions/RestrictionProvider.java',
     'restrictions/Restrictions.java',
-    'ScreenManagerHelper.java',
     'ScreenshotObserver.java',
     'search/SearchEngine.java',
     'search/SearchEngineManager.java',
@@ -1144,4 +1147,8 @@ gbjar.sources += ['generated/org/mozilla/gecko/' + x for x in [
     'media/IMediaDrmBridge.java',
     'media/IMediaDrmBridgeCallbacks.java',
     'media/IMediaManager.java',
+]]
+
+gvjar.sources += ['generated/org/mozilla/gecko/' + x for x in [
+    'process/IChildProcess.java',
 ]]

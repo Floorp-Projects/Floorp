@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function test() {
-    waitForExplicitFinish();
+add_task(function* test() {
+  yield new Promise(resolve => {
 
     let pwmgr = Cc["@mozilla.org/login-manager;1"].
                 getService(Ci.nsILoginManager);
@@ -196,7 +196,7 @@ function test() {
                     Services.ww.unregisterNotification(arguments.callee);
 
                     pwmgr.removeAllLogins();
-                    finish();
+                    resolve();
                 });
                 pwmgrdlg.close();
             }
@@ -205,4 +205,5 @@ function test() {
         // Toggle Show Passwords to display Password column, then start tests
         toggleShowPasswords(runNextTest);
     }
-}
+  });
+});

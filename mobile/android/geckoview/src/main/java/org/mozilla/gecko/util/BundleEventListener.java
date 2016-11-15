@@ -7,8 +7,6 @@ package org.mozilla.gecko.util;
 
 import org.mozilla.gecko.annotation.RobocopTarget;
 
-import android.os.Bundle;
-
 @RobocopTarget
 public interface BundleEventListener {
     /**
@@ -21,5 +19,5 @@ public interface BundleEventListener {
      *                 otherwise, callback will be null. All listeners for a given event are given
      *                 the same callback object, and exactly one listener must handle the callback.
      */
-    void handleMessage(String event, Bundle message, EventCallback callback);
+    void handleMessage(String event, GeckoBundle message, EventCallback callback);
 }

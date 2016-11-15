@@ -39,10 +39,10 @@ RemoteCompositorSession::~RemoteCompositorSession()
 }
 
 void
-RemoteCompositorSession::NotifyDeviceReset()
+RemoteCompositorSession::NotifyDeviceReset(uint64_t aSeqNo)
 {
   MOZ_ASSERT(mWidget);
-  mWidget->OnRenderingDeviceReset();
+  mWidget->OnRenderingDeviceReset(aSeqNo);
 }
 
 void
@@ -87,10 +87,12 @@ RemoteCompositorSession::GetAPZCTreeManager() const
 }
 
 bool
-RemoteCompositorSession::Reset(const nsTArray<LayersBackend>& aBackendHints, TextureFactoryIdentifier* aOutIdentifier)
+RemoteCompositorSession::Reset(const nsTArray<LayersBackend>& aBackendHints,
+                               uint64_t aSeqNo,
+                               TextureFactoryIdentifier* aOutIdentifier)
 {
   bool didReset;
-  Unused << mCompositorBridgeChild->SendReset(aBackendHints, &didReset, aOutIdentifier);
+  Unused << mCompositorBridgeChild->SendReset(aBackendHints, aSeqNo, &didReset, aOutIdentifier);
   return didReset;
 }
 

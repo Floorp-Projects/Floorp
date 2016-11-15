@@ -383,6 +383,16 @@ description#identity-popup-content-verifier,
   50% { opacity: 0; }
 }
 
+.identity-popup-permission-label,
+.identity-popup-permission-state-label {
+  /* We need to align the action buttons and permission icons with the text.
+     This is tricky because the icon height is defined in pixels, while the
+     font height can vary with platform and system settings, and at least on
+     Windows the default font metrics reserve more extra space for accents.
+     This value is a good compromise for different platforms and font sizes. */
+  margin-top: -0.1em;
+}
+
 .identity-popup-permission-label {
   margin-inline-start: 1em;
 }
