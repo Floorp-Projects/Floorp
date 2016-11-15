@@ -1274,7 +1274,8 @@ HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
                                    bool aDoDeleteSelection)
 {
   ErrorResult rv;
-  RefPtr<DOMStringList> types = aDataTransfer->MozTypesAt(aIndex, rv);
+  RefPtr<DOMStringList> types =
+    aDataTransfer->MozTypesAt(aIndex, CallerType::System, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }

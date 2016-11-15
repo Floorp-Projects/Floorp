@@ -498,7 +498,8 @@ DataTransfer::GetMozSourceNode(nsIDOMNode** aSourceNode)
 }
 
 already_AddRefed<DOMStringList>
-DataTransfer::MozTypesAt(uint32_t aIndex, ErrorResult& aRv) const
+DataTransfer::MozTypesAt(uint32_t aIndex, CallerType aCallerType,
+                         ErrorResult& aRv) const
 {
   // Only the first item is valid for clipboard events
   if (aIndex > 0 &&
@@ -515,7 +516,7 @@ DataTransfer::MozTypesAt(uint32_t aIndex, ErrorResult& aRv) const
 
     bool addFile = false;
     for (uint32_t i = 0; i < items.Length(); i++) {
-      if (items[i]->ChromeOnly() && !nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
+      if (items[i]->ChromeOnly() && aCallerType != CallerType::System) {
         continue;
       }
 
@@ -537,15 +538,6 @@ DataTransfer::MozTypesAt(uint32_t aIndex, ErrorResult& aRv) const
   }
 
   return types.forget();
-}
-
-NS_IMETHODIMP
-DataTransfer::MozTypesAt(uint32_t aIndex, nsISupports** aTypes)
-{
-  ErrorResult rv;
-  RefPtr<DOMStringList> types = MozTypesAt(aIndex, rv);
-  types.forget(aTypes);
-  return rv.StealNSResult();
 }
 
 nsresult
