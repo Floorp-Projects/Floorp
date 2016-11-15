@@ -19,7 +19,7 @@ interface DataTransfer {
 
   // ReturnValueNeedsContainsHack on .types because lots of extension
   // code was expecting .contains() back when it was a DOMStringList.
-  [Pure, Cached, Frozen, NeedsSubjectPrincipal, ReturnValueNeedsContainsHack]
+  [Pure, Cached, Frozen, NeedsCallerType, ReturnValueNeedsContainsHack]
   readonly attribute sequence<DOMString> types;
   [Throws, NeedsSubjectPrincipal]
   DOMString getData(DOMString format);
