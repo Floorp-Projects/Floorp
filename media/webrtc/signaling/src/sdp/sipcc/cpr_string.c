@@ -10,13 +10,19 @@
 #include "cpr_strings.h"
 
 /* From cpr_stdlib.h */
+#ifdef CPR_STRING_USE_FALLIBLE_MALLOC
+#define cpr_malloc(a) malloc(a)
+#define cpr_calloc(a, b) calloc(a, b)
+#define cpr_realloc(a, b) realloc(a, b)
+#define cpr_free(a) free(a)
+#else
 #include "mozilla/mozalloc.h"
 
 #define cpr_malloc(a) moz_xmalloc(a)
 #define cpr_calloc(a, b) moz_xcalloc(a, b)
 #define cpr_realloc(a, b) moz_xrealloc(a, b)
 #define cpr_free(a) free(a)
-
+#endif
 
 /**
  * sstrncpy
