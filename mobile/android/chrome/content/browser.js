@@ -892,10 +892,15 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(
       function(aTarget) {
         if (aTarget instanceof HTMLVideoElement) {
-          // If a video element is zero width or height, its essentially
-          // an HTMLAudioElement.
-          if (aTarget.videoWidth == 0 || aTarget.videoHeight == 0 )
+          if (aTarget.readyState == aTarget.HAVE_NOTHING) {
+            // We don't know if the height/width of the video,
+            // show a generic string.
+            return Strings.browser.GetStringFromName("contextmenu.saveMedia");
+          } else if (aTarget.videoWidth == 0 || aTarget.videoHeight == 0) {
+            // If a video element is zero width or height, its essentially
+            // an HTMLAudioElement.
             return Strings.browser.GetStringFromName("contextmenu.saveAudio");
+          }
           return Strings.browser.GetStringFromName("contextmenu.saveVideo");
         } else if (aTarget instanceof HTMLAudioElement) {
           return Strings.browser.GetStringFromName("contextmenu.saveAudio");
@@ -907,9 +912,19 @@ var BrowserApp = {
         UITelemetry.addEvent("save.1", "contextmenu", null, "media");
 
         let url = aTarget.currentSrc || aTarget.src;
-        let filePickerTitleKey = (aTarget instanceof HTMLVideoElement &&
-                                  (aTarget.videoWidth != 0 && aTarget.videoHeight != 0))
-                                  ? "SaveVideoTitle" : "SaveAudioTitle";
+
+        let filePickerTitleKey;
+        if (aTarget instanceof HTMLVideoElement) {
+          if (aTarget.readyState == aTarget.HAVE_NOTHING) {
+            filePickerTitleKey = "SaveMediaTitle";
+          } else if (aTarget.videoWidth == 0 || aTarget.videoHeight == 0) {
+            filePickerTitleKey = "SaveAudioTitle";
+          }
+          filePickerTitleKey = "SaveVideoTitle";
+        } else {
+          filePickerTitleKey = "SaveAudioTitle";
+        }
+
         // Skipped trying to pull MIME type out of cache for now
         ContentAreaUtils.internalSave(url, null, null, null, null, false,
                                       filePickerTitleKey, null, aTarget.ownerDocument.documentURIObject,
