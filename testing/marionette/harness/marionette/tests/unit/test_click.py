@@ -101,6 +101,100 @@ class TestClick(TestLegacyClick):
         self.marionette.delete_session()
         self.marionette.start_session({"specificationLevel": 1})
 
-    @skip("fails with spec compatible interactability checks")
-    def test_clicking_an_element_that_is_not_displayed_raises(self):
-        pass
+    def test_click_element_obscured_by_absolute_positioned_element(self):
+        self.marionette.navigate(inline("""
+            <style>
+            * { margin: 0; padding: 0; }
+            div { display: block; width: 100%; height: 100%; }
+            #obscured { background-color: blue }
+            #overlay { background-color: red; position: absolute; top: 0; }
+            </style>
+
+            <div id=obscured></div>
+            <div id=overlay></div>"""))
+
+        overlay = self.marionette.find_element(By.ID, "overlay")
+        obscured = self.marionette.find_element(By.ID, "obscured")
+
+        overlay.click()
+        with self.assertRaises(ElementNotVisibleException):
+            obscured.click()
+
+    def test_centre_outside_viewport_vertically(self):
+        self.marionette.navigate(inline("""
+            <style>
+            * { margin: 0; padding: 0; }
+            div {
+             display: block;
+             position: absolute;
+             background-color: blue;
+             width: 200px;
+             height: 200px;
+
+             /* move centre point off viewport vertically */
+             top: -105px;
+            }
+            </style>
+
+            <div></div>"""))
+
+        self.marionette.find_element(By.TAG_NAME, "div").click()
+
+    def test_centre_outside_viewport_horizontally(self):
+        self.marionette.navigate(inline("""
+            <style>
+            * { margin: 0; padding: 0; }
+            div {
+             display: block;
+             position: absolute;
+             background-color: blue;
+             width: 200px;
+             height: 200px;
+
+             /* move centre point off viewport horizontally */
+             left: -105px;
+            }
+            </style>
+
+            <div></div>"""))
+
+        self.marionette.find_element(By.TAG_NAME, "div").click()
+
+    def test_centre_outside_viewport(self):
+        self.marionette.navigate(inline("""
+            <style>
+            * { margin: 0; padding: 0; }
+            div {
+             display: block;
+             position: absolute;
+             background-color: blue;
+             width: 200px;
+             height: 200px;
+
+             /* move centre point off viewport */
+             left: -105px;
+             top: -105px;
+            }
+            </style>
+
+            <div></div>"""))
+
+        self.marionette.find_element(By.TAG_NAME, "div").click()
+
+    def test_css_transforms(self):
+        self.marionette.navigate(inline("""
+            <style>
+            * { margin: 0; padding: 0; }
+            div {
+             display: block;
+             background-color: blue;
+             width: 200px;
+             height: 200px;
+
+             transform: translateX(-105px);
+            }
+            </style>
+
+            <div></div>"""))
+
+        self.marionette.find_element(By.TAG_NAME, "div").click()
