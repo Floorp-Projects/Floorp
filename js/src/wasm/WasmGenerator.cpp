@@ -801,31 +801,29 @@ ModuleGenerator::funcSig(uint32_t funcIndex) const
 }
 
 bool
-ModuleGenerator::addFuncExport(UniqueChars fieldName, uint32_t funcIndex)
+ModuleGenerator::setExports(ExportVector&& exports)
 {
-    return exportedFuncs_.put(funcIndex) &&
-           exports_.emplaceBack(Move(fieldName), funcIndex, DefinitionKind::Function);
-}
+    MOZ_ASSERT_IF(!isAsmJS(), !startedFuncDefs_);
 
-bool
-ModuleGenerator::addTableExport(UniqueChars fieldName)
-{
-    MOZ_ASSERT(!startedFuncDefs_);
-    MOZ_ASSERT(shared_->tables.length() == 1);
-    shared_->tables[0].external = true;
-    return exports_.emplaceBack(Move(fieldName), DefinitionKind::Table);
-}
+    exports_ = Move(exports);
 
-bool
-ModuleGenerator::addMemoryExport(UniqueChars fieldName)
-{
-    return exports_.emplaceBack(Move(fieldName), DefinitionKind::Memory);
-}
+    for (const Export& exp : exports_) {
+        switch (exp.kind()) {
+          case DefinitionKind::Function:
+            if (!exportedFuncs_.put(exp.funcIndex()))
+                return false;
+            break;
+          case DefinitionKind::Table:
+            MOZ_ASSERT(shared_->tables.length() == 1);
+            shared_->tables[0].external = true;
+            break;
+          case DefinitionKind::Memory:
+          case DefinitionKind::Global:
+            break;
+        }
+    }
 
-bool
-ModuleGenerator::addGlobalExport(UniqueChars fieldName, uint32_t globalIndex)
-{
-    return exports_.emplaceBack(Move(fieldName), globalIndex, DefinitionKind::Global);
+    return true;
 }
 
 bool
