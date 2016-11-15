@@ -690,6 +690,7 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
 }
 
 #define PATCHABLE_ICSTUB_KIND_LIST(_)           \
+    _(CacheIR_Monitored)                        \
     _(Call_Scripted)                            \
     _(Call_AnyScripted)                         \
     _(Call_Native)                              \
@@ -701,7 +702,6 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
     _(GetElem_NativePrototypeCallNativeSymbol)  \
     _(GetElem_NativePrototypeCallScriptedName)  \
     _(GetElem_NativePrototypeCallScriptedSymbol) \
-    _(GetProp_CallScripted)                     \
     _(GetProp_CallNative)                       \
     _(GetProp_CallNativeGlobal)                 \
     _(GetProp_CallDOMProxyNative)               \
@@ -719,7 +719,7 @@ CloneOldBaselineStub(JSContext* cx, DebugModeOSREntryVector& entries, size_t ent
         return true;
 
     ICStub* oldStub = entry.oldStub;
-    MOZ_ASSERT(ICStub::CanMakeCalls(oldStub->kind()));
+    MOZ_ASSERT(oldStub->makesGCCalls());
 
     if (entry.frameKind == ICEntry::Kind_Invalid) {
         // The exception handler can modify the frame's override pc while
@@ -763,7 +763,7 @@ CloneOldBaselineStub(JSContext* cx, DebugModeOSREntryVector& entries, size_t ent
     } else {
         firstMonitorStub = nullptr;
     }
-    ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForKind(oldStub->kind(), entry.script,
+    ICStubSpace* stubSpace = ICStubCompiler::StubSpaceForStub(oldStub->makesGCCalls(), entry.script,
                                                               ICStubCompiler::Engine::Baseline);
 
     // Clone the existing stub into the recompiled IC.
