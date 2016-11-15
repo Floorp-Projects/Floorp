@@ -14,7 +14,6 @@ const TEST_URI = "https://example.com/browser/browser/base/content/test/general/
 const PREF_DISPLAY = "security.mixed_content.block_display_content";
 const PREF_ACTIVE = "security.mixed_content.block_active_content";
 var gTestBrowser = null;
-waitForExplicitFinish();
 
 registerCleanupFunction(function() {
   // Set preferences back to their original values
@@ -31,10 +30,12 @@ add_task(function* blockMixedActiveContentTest() {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
   gTestBrowser = gBrowser.getBrowserForTab(tab);
 
-  is(gTestBrowser.docShell.hasMixedDisplayContentBlocked, false, "hasMixedDisplayContentBlocked flag has been set");
-  is(gTestBrowser.docShell.hasMixedActiveContentBlocked, true, "hasMixedActiveContentBlocked flag has been set");
-  is(gTestBrowser.docShell.hasMixedDisplayContentLoaded, true, "hasMixedDisplayContentLoaded flag has been set");
-  is(gTestBrowser.docShell.hasMixedActiveContentLoaded, false, "hasMixedActiveContentLoaded flag has been set");
+  yield ContentTask.spawn(gTestBrowser, null, function() {
+    is(docShell.hasMixedDisplayContentBlocked, false, "hasMixedDisplayContentBlocked flag has been set");
+    is(docShell.hasMixedActiveContentBlocked, true, "hasMixedActiveContentBlocked flag has been set");
+    is(docShell.hasMixedDisplayContentLoaded, true, "hasMixedDisplayContentLoaded flag has been set");
+    is(docShell.hasMixedActiveContentLoaded, false, "hasMixedActiveContentLoaded flag has been set");
+  });
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: true});
 
   // Turn on mixed active and mixed display blocking and reload the page.
@@ -44,10 +45,12 @@ add_task(function* blockMixedActiveContentTest() {
   gBrowser.reload();
   yield BrowserTestUtils.browserLoaded(gTestBrowser);
 
-  is(gTestBrowser.docShell.hasMixedDisplayContentBlocked, true, "hasMixedDisplayContentBlocked flag has been set");
-  is(gTestBrowser.docShell.hasMixedActiveContentBlocked, true, "hasMixedActiveContentBlocked flag has been set");
-  is(gTestBrowser.docShell.hasMixedDisplayContentLoaded, false, "hasMixedDisplayContentLoaded flag has been set");
-  is(gTestBrowser.docShell.hasMixedActiveContentLoaded, false, "hasMixedActiveContentLoaded flag has been set");
+  yield ContentTask.spawn(gTestBrowser, null, function() {
+    is(docShell.hasMixedDisplayContentBlocked, true, "hasMixedDisplayContentBlocked flag has been set");
+    is(docShell.hasMixedActiveContentBlocked, true, "hasMixedActiveContentBlocked flag has been set");
+    is(docShell.hasMixedDisplayContentLoaded, false, "hasMixedDisplayContentLoaded flag has been set");
+    is(docShell.hasMixedActiveContentLoaded, false, "hasMixedActiveContentLoaded flag has been set");
+  });
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 });
 
@@ -57,9 +60,11 @@ add_task(function* overrideMCB() {
   gIdentityHandler.disableMixedContentProtection();
   yield BrowserTestUtils.browserLoaded(gTestBrowser);
 
-  is(gTestBrowser.docShell.hasMixedDisplayContentLoaded, true, "hasMixedDisplayContentLoaded flag has not been set");
-  is(gTestBrowser.docShell.hasMixedActiveContentLoaded, true, "hasMixedActiveContentLoaded flag has not been set");
-  is(gTestBrowser.docShell.hasMixedDisplayContentBlocked, false, "second hasMixedDisplayContentBlocked flag has been set");
-  is(gTestBrowser.docShell.hasMixedActiveContentBlocked, false, "second hasMixedActiveContentBlocked flag has been set");
+  yield ContentTask.spawn(gTestBrowser, null, function() {
+    is(docShell.hasMixedDisplayContentLoaded, true, "hasMixedDisplayContentLoaded flag has not been set");
+    is(docShell.hasMixedActiveContentLoaded, true, "hasMixedActiveContentLoaded flag has not been set");
+    is(docShell.hasMixedDisplayContentBlocked, false, "second hasMixedDisplayContentBlocked flag has been set");
+    is(docShell.hasMixedActiveContentBlocked, false, "second hasMixedActiveContentBlocked flag has been set");
+  });
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: true});
 });
