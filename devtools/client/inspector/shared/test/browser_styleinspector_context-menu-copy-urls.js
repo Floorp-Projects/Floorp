@@ -68,7 +68,7 @@ function* testCopyUrlToClipboard({view, inspector}, type, selector, expected) {
 
   info("Retrieve background-image link for selected node in current " +
        "styleinspector view");
-  let property = getBackgroundImageProperty(inspector, view, selector);
+  let property = getBackgroundImageProperty(view, selector);
   let imageLink = property.valueSpan.querySelector(".theme-link");
   ok(imageLink, "Background-image link element found");
 
@@ -100,8 +100,8 @@ function* testCopyUrlToClipboard({view, inspector}, type, selector, expected) {
   info("Hide context menu");
 }
 
-function getBackgroundImageProperty(inspector, view, selector) {
-  let isRuleView = view === inspector.ruleview.view;
+function getBackgroundImageProperty(view, selector) {
+  let isRuleView = view instanceof CssRuleView;
   if (isRuleView) {
     return getRuleViewProperty(view, selector, "background-image");
   }
