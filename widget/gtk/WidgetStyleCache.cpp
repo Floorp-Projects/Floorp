@@ -697,23 +697,43 @@ GetWidget(WidgetNodeType aWidgetType)
 GtkStyleContext*
 CreateStyleForWidget(GtkWidget* aWidget, GtkStyleContext* aParentStyle)
 {
-  GtkWidgetPath* path = aParentStyle ?
-    gtk_widget_path_copy(gtk_style_context_get_path(aParentStyle)) :
-    gtk_widget_path_new();
+  static auto sGtkWidgetClassGetCSSName =
+    reinterpret_cast<const char* (*)(GtkWidgetClass*)>
+    (dlsym(RTLD_DEFAULT, "gtk_widget_class_get_css_name"));
 
-  // Work around https://bugzilla.gnome.org/show_bug.cgi?id=767312
-  // which exists in GTK+ 3.20.
-  gtk_widget_get_style_context(aWidget);
+  GtkWidgetClass *widgetClass = GTK_WIDGET_GET_CLASS(aWidget);
+  const gchar* name = sGtkWidgetClassGetCSSName ?
+    sGtkWidgetClassGetCSSName(widgetClass) : nullptr;
 
-  gtk_widget_path_append_for_widget(path, aWidget);
+  GtkStyleContext *context =
+    CreateCSSNode(name, aParentStyle, G_TYPE_FROM_CLASS(widgetClass));
+
+  // Classes are stored on the style context instead of the path so that any
+  // future gtk_style_context_save() will inherit classes on the head CSS
+  // node, in the same way as happens when called on a style context owned by
+  // a widget.
+  //
+  // Classes can be stored on a GtkCssNodeDeclaration and/or the path.
+  // gtk_style_context_save() reuses the GtkCssNodeDeclaration, and appends a
+  // new object to the path, without copying the classes from the old path
+  // head.  The new head picks up classes from the GtkCssNodeDeclaration, but
+  // not the path.  GtkWidgets store their classes on the
+  // GtkCssNodeDeclaration, so make sure to add classes there.
+  //
+  // Picking up classes from the style context also means that
+  // https://bugzilla.gnome.org/show_bug.cgi?id=767312, which can stop
+  // gtk_widget_path_append_for_widget() from finding classes in GTK 3.20,
+  // is not a problem.
+  GtkStyleContext* widgetStyle = gtk_widget_get_style_context(aWidget);
+  GList* classes = gtk_style_context_list_classes(widgetStyle);
+  for (GList* link = classes; link; link = link->next) {
+    gtk_style_context_add_class(context, static_cast<gchar*>(link->data));
+  }
+  g_list_free(classes);
+
   // Release any floating reference on aWidget.
   g_object_ref_sink(aWidget);
   g_object_unref(aWidget);
-
-  GtkStyleContext *context = gtk_style_context_new();
-  gtk_style_context_set_path(context, path);
-  gtk_style_context_set_parent(context, aParentStyle);
-  gtk_widget_path_unref(path);
 
   return context;
 }
@@ -731,7 +751,9 @@ CreateCSSNode(const char* aName, GtkStyleContext* aParentStyle, GType aType)
 
   gtk_widget_path_append_type(path, aType);
 
-  (*sGtkWidgetPathIterSetObjectName)(path, -1, aName);
+  if (sGtkWidgetPathIterSetObjectName) {
+    (*sGtkWidgetPathIterSetObjectName)(path, -1, aName);
+  }
 
   GtkStyleContext *context = gtk_style_context_new();
   gtk_style_context_set_path(context, path);
