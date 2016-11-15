@@ -16,6 +16,7 @@
 #include "nsSize.h"
 #include "nsError.h"
 
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CanvasRenderingContextHelper.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/layers/LayersTypes.h"
@@ -176,15 +177,14 @@ public:
 
   void ToDataURL(JSContext* aCx, const nsAString& aType,
                  JS::Handle<JS::Value> aParams,
-                 nsAString& aDataURL, ErrorResult& aRv)
-  {
-    aRv = ToDataURL(aType, aParams, aCx, aDataURL);
-  }
+                 nsAString& aDataURL, CallerType aCallerType,
+                 ErrorResult& aRv);
 
   void ToBlob(JSContext* aCx,
               BlobCallback& aCallback,
               const nsAString& aType,
               JS::Handle<JS::Value> aParams,
+              CallerType aCallerType,
               ErrorResult& aRv);
 
   OffscreenCanvas* TransferControlToOffscreen(ErrorResult& aRv);
@@ -204,14 +204,10 @@ public:
   }
   already_AddRefed<File> MozGetAsFile(const nsAString& aName,
                                       const nsAString& aType,
+                                      CallerType aCallerType,
                                       ErrorResult& aRv);
   already_AddRefed<nsISupports> MozGetIPCContext(const nsAString& aContextId,
-                                                 ErrorResult& aRv)
-  {
-    nsCOMPtr<nsISupports> context;
-    aRv = MozGetIPCContext(aContextId, getter_AddRefs(context));
-    return context.forget();
-  }
+                                                 ErrorResult& aRv);
   PrintCallback* GetMozPrintCallback() const;
   void SetMozPrintCallback(PrintCallback* aCallback);
 
@@ -371,9 +367,9 @@ protected:
                          const nsAString& aMimeType,
                          const JS::Value& aEncoderOptions,
                          nsAString& aDataURL);
-  nsresult MozGetAsBlobImpl(const nsAString& aName,
+  nsresult MozGetAsFileImpl(const nsAString& aName,
                             const nsAString& aType,
-                            nsISupports** aResult);
+                            File** aResult);
   void CallPrintCallback();
 
   AsyncCanvasRenderer* GetAsyncCanvasRenderer();
