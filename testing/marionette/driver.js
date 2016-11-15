@@ -147,9 +147,6 @@ this.GeckoDriver = function(appName, server) {
     "takesScreenshot": true,
     "proxy": {},
 
-    // Selenium 2 compat
-    "platform": Services.sysinfo.getProperty("name").toUpperCase(),
-
     // proprietary extensions
     "processId" : Services.appinfo.processID,
   };
