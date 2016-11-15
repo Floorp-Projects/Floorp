@@ -663,11 +663,7 @@ public:
 
   void SetValue(const nsAString& aValue, CallerType aCallerType,
                 ErrorResult& aRv);
-  void GetValue(nsAString& aValue, CallerType aCallerType)
-  {
-    // For now just ignore the caller type.
-    GetValue(aValue);
-  }
+  void GetValue(nsAString& aValue, CallerType aCallerType);
 
   Nullable<Date> GetValueAsDate(ErrorResult& aRv);
 
@@ -776,7 +772,7 @@ public:
 
   nsIControllers* GetControllers(ErrorResult& aRv);
 
-  int32_t GetTextLength(ErrorResult& aRv);
+  int32_t InputTextLength(CallerType aCallerType);
 
   void MozGetFileNameArray(nsTArray<nsString>& aFileNames, ErrorResult& aRv);
 
@@ -931,10 +927,17 @@ protected:
    */
   nsresult SetValueInternal(const nsAString& aValue, uint32_t aFlags);
 
-  void GetValueInternal(nsAString& aValue) const;
+  // Generic getter for the value that doesn't do experimental control type
+  // sanitization.
+  void GetValueInternal(nsAString& aValue, CallerType aCallerType) const;
+
+  // A getter for callers that know we're not dealing with a file input, so they
+  // don't have to think about the caller type.
+  void GetNonFileValueInternal(nsAString& aValue) const;
 
   /**
-   * Returns whether the current value is the empty string.
+   * Returns whether the current value is the empty string.  This only makes
+   * sense for some input types; does NOT make sense for file inputs.
    *
    * @return whether the current value is the empty string.
    */

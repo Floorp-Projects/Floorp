@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/HTMLInputElement.h"
 #include "nsIFormAutoComplete.h"
 #include "nsIInputListAutoComplete.h"
 #include "nsIAutoCompleteSimpleResult.h"
@@ -502,7 +503,9 @@ NS_IMETHODIMP
 nsFormFillController::GetTextValue(nsAString & aTextValue)
 {
   if (mFocusedInput) {
-    mFocusedInput->GetValue(aTextValue);
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mFocusedInput);
+    HTMLInputElement::FromContent(content)->GetValue(aTextValue,
+                                                     CallerType::System);
   } else {
     aTextValue.Truncate();
   }
