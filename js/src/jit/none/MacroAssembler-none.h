@@ -425,6 +425,12 @@ class MacroAssemblerNone : public Assembler
     Address ToPayload(Address) { MOZ_CRASH(); }
     Address ToType(Address) { MOZ_CRASH(); }
 #endif
+
+    struct AutoPrepareForPatching {
+        explicit AutoPrepareForPatching(MacroAssemblerNone&) {
+            MOZ_CRASH();
+        }
+    };
 };
 
 typedef MacroAssemblerNone MacroAssemblerSpecific;
