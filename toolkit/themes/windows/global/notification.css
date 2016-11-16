@@ -84,3 +84,9 @@ notification[type="critical"] {
     color: #aa1b08;
   }
 }
+
+/* Swap the default and secondary action, because Windows
+ * platform conventions put the default action on the left. */
+.popup-notification-button[default] {
+  order: -1;
+}
