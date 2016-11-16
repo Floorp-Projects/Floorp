@@ -596,18 +596,16 @@ SampleValue(float aPortion, Animation& aAnimation,
       aCurrentIteration > 0) {
     // FIXME: Bug 1293492: Add a utility function to calculate both of
     // below StyleAnimationValues.
-    DebugOnly<bool> accumulateResult =
+    startValue =
       StyleAnimationValue::Accumulate(aAnimation.property(),
-                                      startValue,
                                       aLastValue,
+                                      Move(startValue),
                                       aCurrentIteration);
-    MOZ_ASSERT(accumulateResult, "could not accumulate value");
-    accumulateResult =
+    endValue =
       StyleAnimationValue::Accumulate(aAnimation.property(),
-                                      endValue,
                                       aLastValue,
+                                      Move(endValue),
                                       aCurrentIteration);
-    MOZ_ASSERT(accumulateResult, "could not accumulate value");
   }
 
   StyleAnimationValue interpolatedValue;
