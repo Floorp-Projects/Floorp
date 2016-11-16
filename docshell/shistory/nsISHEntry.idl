@@ -193,7 +193,7 @@ interface nsISHEntry : nsISupports
                            in nsISupports cacheKey, in ACString contentType,
                            in nsIPrincipal triggeringPrincipal,
                            in nsIPrincipal principalToInherit,
-                           in unsigned long long docshellID,
+                           in nsIDRef docshellID,
                            in boolean dynamicCreation);
 
     nsISHEntry clone();
@@ -257,7 +257,12 @@ interface nsISHEntry : nsISupports
     /**
      * The history ID of the docshell.
      */
-    attribute unsigned long long docshellID;
+    attribute nsIDPtr docshellID;
+
+    /**
+     * Helper method for accessing this value from C++
+     */
+    [noscript, notxpcom] nsID DocshellID();
 
     readonly attribute nsIBFCacheEntry BFCacheEntry;
 
