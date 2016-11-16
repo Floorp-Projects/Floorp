@@ -36,6 +36,10 @@ static gboolean is_initialized;
 static gint
 moz_gtk_get_tab_thickness(GtkStyleContext *style);
 
+static gint
+moz_gtk_menu_item_paint(WidgetNodeType widget, cairo_t *cr, GdkRectangle* rect,
+                        GtkWidgetState* state, GtkTextDirection direction);
+
 static GtkStateFlags
 GetStateFlagsFromGtkWidgetState(GtkWidgetState* state)
 {
@@ -1766,6 +1770,10 @@ static gint
 moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
                              GtkTextDirection direction)
 {
+    GtkWidgetState defaultState = { 0 };
+    moz_gtk_menu_item_paint(MOZ_GTK_MENUSEPARATOR, cr, rect,
+                            &defaultState, direction);
+
     GtkStyleContext* style;
     gboolean wide_separators;
     gint separator_height;
