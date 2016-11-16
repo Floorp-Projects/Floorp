@@ -21,13 +21,9 @@ add_task(function* testOpenCloseWindow() {
     }
   }
   CustomizableUI.addListener(openListener);
-
-  {
-    let win = yield openAndLoadWindow(null, true);
-    is(newWindow, win, "onWindowOpen event should have received expected window");
-    isnot(newWindow, null, "Should have gotten onWindowOpen event");
-  }
-
+  let win = yield openAndLoadWindow(null, true);
+  isnot(newWindow, null, "Should have gotten onWindowOpen event");
+  is(newWindow, win, "onWindowOpen event should have received expected window");
   CustomizableUI.removeListener(openListener);
 
   let windows = [];

@@ -2,13 +2,13 @@
 // Selects "open link in new container tab" from the context menu.
 
 function getReferrerTest(aTestNumber) {
-  let testCase = _referrerTests[aTestNumber];
-  if (testCase) {
+  let test = _referrerTests[aTestNumber];
+  if (test) {
     // We want all the referrer tests to fail!
-    testCase.result = "";
+    test.result = "";
   }
 
-  return testCase;
+  return test;
 }
 
 function startNewTabTestCase(aTestNumber) {

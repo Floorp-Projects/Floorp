@@ -8,12 +8,12 @@ var postStringInBlob = function (blobObject) {
   postMessage(result);
 };
 
-self.addEventListener("message", function (message) {
-  if ("error" in message.data) {
-    postMessage(message.data);
+self.addEventListener("message", function (e) {
+  if ("error" in e.data) {
+    postMessage(e.data);
     return;
   }
-  var blobURL = message.data.blobURL,
+  var blobURL = e.data.blobURL,
       xhr = new XMLHttpRequest();
   try {
     xhr.open("GET", blobURL, true);

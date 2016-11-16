@@ -152,8 +152,8 @@ var gSyncPane = {
     document.getElementById("tosPP-small-PP").setAttribute("href", gSyncUtils.privacyPolicyURL);
     document.getElementById("tosPP-normal-PP").setAttribute("href", gSyncUtils.privacyPolicyURL);
 
-    fxAccounts.promiseAccountsManageURI(this._getEntryPoint()).then(accountsManageURI => {
-      document.getElementById("verifiedManage").setAttribute("href", accountsManageURI);
+    fxAccounts.promiseAccountsManageURI(this._getEntryPoint()).then(url => {
+      document.getElementById("verifiedManage").setAttribute("href", url);
     });
 
     this.updateWeavePrefs();

@@ -962,12 +962,12 @@ BrowserGlue.prototype = {
     channel.listen((id, data, target) => {
       if (data.command == "request") {
         let {Troubleshoot} = Cu.import("resource://gre/modules/Troubleshoot.jsm", {});
-        Troubleshoot.snapshot(snapshotData => {
+        Troubleshoot.snapshot(data => {
           // for privacy we remove crash IDs and all preferences (but bug 1091944
           // exists to expose prefs once we are confident of privacy implications)
-          delete snapshotData.crashes;
-          delete snapshotData.modifiedPreferences;
-          channel.send(snapshotData, target);
+          delete data.crashes;
+          delete data.modifiedPreferences;
+          channel.send(data, target);
         });
       }
     });
@@ -2369,8 +2369,8 @@ BrowserGlue.prototype = {
         body = body.replace("#2", deviceName);
       }
 
-      const clickCallback = (obsSubject, obsTopic, obsData) => {
-        if (obsTopic == "alertclickcallback") {
+      const clickCallback = (subject, topic, data) => {
+        if (topic == "alertclickcallback") {
           win.gBrowser.selectedTab = firstTab;
         }
       }

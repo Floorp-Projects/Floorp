@@ -1778,12 +1778,12 @@ Experiments.ExperimentEntry.prototype = {
     let install = yield addonInstallForURL(this._manifestData.xpiURL, hash);
     gActiveInstallURLs.add(install.sourceURI.spec);
 
-    let failureHandler = (failureInstall, handler) => {
+    let failureHandler = (install, handler) => {
       let message = "AddonInstall " + handler + " for " + this.id + ", state=" +
-                   (failureInstall.state || "?") + ", error=" + failureInstall.error;
+                   (install.state || "?") + ", error=" + install.error;
       this._log.error("_installAddon() - " + message);
       this._failedStart = true;
-      gActiveInstallURLs.delete(failureInstall.sourceURI.spec);
+      gActiveInstallURLs.delete(install.sourceURI.spec);
 
       TelemetryLog.log(TELEMETRY_LOG.ACTIVATION_KEY,
                       [TELEMETRY_LOG.ACTIVATION.INSTALL_FAILURE, this.id]);
@@ -1794,36 +1794,36 @@ Experiments.ExperimentEntry.prototype = {
     let listener = {
       _expectedID: null,
 
-      onDownloadEnded: downloadEndedInstall => {
+      onDownloadEnded: install => {
         this._log.trace("_installAddon() - onDownloadEnded for " + this.id);
 
-        if (downloadEndedInstall.existingAddon) {
+        if (install.existingAddon) {
           this._log.warn("_installAddon() - onDownloadEnded, addon already installed");
         }
 
-        if (downloadEndedInstall.addon.type !== "experiment") {
+        if (install.addon.type !== "experiment") {
           this._log.error("_installAddon() - onDownloadEnded, wrong addon type");
-          downloadEndedInstall.cancel();
+          install.cancel();
         }
       },
 
-      onInstallStarted: installStartedInstall => {
+      onInstallStarted: install => {
         this._log.trace("_installAddon() - onInstallStarted for " + this.id);
 
-        if (installStartedInstall.existingAddon) {
+        if (install.existingAddon) {
           this._log.warn("_installAddon() - onInstallStarted, addon already installed");
         }
 
-        if (installStartedInstall.addon.type !== "experiment") {
+        if (install.addon.type !== "experiment") {
           this._log.error("_installAddon() - onInstallStarted, wrong addon type");
           return false;
         }
         return undefined;
       },
 
-      onInstallEnded: installEndedInstall => {
+      onInstallEnded: install => {
         this._log.trace("_installAddon() - install ended for " + this.id);
-        gActiveInstallURLs.delete(installEndedInstall.sourceURI.spec);
+        gActiveInstallURLs.delete(install.sourceURI.spec);
 
         this._lastChangedDate = this._policy.now();
         this._startDate = this._policy.now();
@@ -1832,7 +1832,7 @@ Experiments.ExperimentEntry.prototype = {
         TelemetryLog.log(TELEMETRY_LOG.ACTIVATION_KEY,
                        [TELEMETRY_LOG.ACTIVATION.ACTIVATED, this.id]);
 
-        let addon = installEndedInstall.addon;
+        let addon = install.addon;
         this._name = addon.name;
         this._addonId = addon.id;
         this._description = addon.description || "";
@@ -1864,7 +1864,7 @@ Experiments.ExperimentEntry.prototype = {
 
     ["onDownloadCancelled", "onDownloadFailed", "onInstallCancelled", "onInstallFailed"]
       .forEach(what => {
-        listener[what] = eventInstall => failureHandler(eventInstall, what)
+        listener[what] = install => failureHandler(install, what)
       });
 
     install.addListener(listener);

@@ -44,14 +44,14 @@ var tests = [
       gContentAPI.showInfo("customize", "Customization", "Customize me please!");
 
       UITour.getTarget(window, "customize").then((customizeTarget) => {
-        waitForPopupAtAnchor(popup, customizeTarget.node, function() {
+        waitForPopupAtAnchor(popup, customizeTarget.node, function checkMenuIsStillOpen() {
           isnot(PanelUI.panel.state, "closed", "Panel should still be open");
           ok(PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should still be set");
 
           // Move the info outside which shouldn't close the app menu since it was manually opened.
           gContentAPI.showInfo("appMenu", "Open Me", "You know you want to");
           UITour.getTarget(window, "appMenu").then((target) => {
-            waitForPopupAtAnchor(popup, target.node, function() {
+            waitForPopupAtAnchor(popup, target.node, function checkMenuIsStillOpen() {
               isnot(PanelUI.panel.state, "closed",
                     "Menu should remain open since UITour didn't open it in the first place");
               waitForElementToBeHidden(window.PanelUI.panel, () => {

@@ -8,22 +8,22 @@ const SCRIPT_WORKER_BLOBIFY = "worker_blobify.js";
 const SCRIPT_WORKER_DEBLOBIFY = "worker_deblobify.js";
 
 function page_blobify(browser, input) {
-  return ContentTask.spawn(browser, input, function(contentInput) {
-    return { blobURL: content.URL.createObjectURL(new content.Blob([contentInput])) };
+  return ContentTask.spawn(browser, input, function(input) {
+    return { blobURL: content.URL.createObjectURL(new content.Blob([input])) };
   });
 }
 
 function page_deblobify(browser, blobURL) {
-  return ContentTask.spawn(browser, blobURL, function* (contentBlobURL) {
-    if ("error" in contentBlobURL) {
-      return contentBlobURL;
+  return ContentTask.spawn(browser, blobURL, function* (blobURL) {
+    if ("error" in blobURL) {
+      return blobURL;
     }
-    contentBlobURL = contentBlobURL.blobURL;
+    blobURL = blobURL.blobURL;
 
-    function blobURLtoBlob(aBlobURL) {
+    function blobURLtoBlob(blobURL) {
       return new content.Promise(function (resolve) {
         let xhr = new content.XMLHttpRequest();
-        xhr.open("GET", aBlobURL, true);
+        xhr.open("GET", blobURL, true);
         xhr.onload = function () {
           resolve(xhr.response);
         };
@@ -45,7 +45,7 @@ function page_deblobify(browser, blobURL) {
       });
     }
 
-    let blob = yield blobURLtoBlob(contentBlobURL);
+    let blob = yield blobURLtoBlob(blobURL);
     if (blob == "xhr error") {
       return "xhr error";
     }

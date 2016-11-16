@@ -9,7 +9,7 @@ add_task(function*() {
   let url = "http://www.example.com/foo.html";
   yield BrowserTestUtils.withNewTab({gBrowser, url}, function*(browser) {
     let wpl = {
-      onLocationChange(unused, unused2, location) {
+      onLocationChange(wpl, request, location, flags) {
         if (location.schemeIs("about")) {
           is(location.spec, "about:config", "Only about: location change should be for about:preferences");
         } else {

@@ -65,9 +65,9 @@ addMessageListener("Test:GetMediaCaptureState", data => {
 
 addMessageListener("Test:WaitForObserverCall", ({data}) => {
   let topic = data;
-  Services.obs.addObserver(function obs() {
+  Services.obs.addObserver(function observer() {
     sendAsyncMessage("Test:ObserverCalled", topic);
-    Services.obs.removeObserver(obs, topic);
+    Services.obs.removeObserver(observer, topic);
 
     if (kObservedTopics.indexOf(topic) != -1) {
       if (!(topic in gObservedTopics))

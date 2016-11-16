@@ -132,12 +132,10 @@ const gXPInstallObserver = {
             container.appendChild(name);
 
             if (someUnsigned && install.addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
-              let unsignedLabel = document.createElement("label");
-              unsignedLabel.setAttribute("value",
-                gNavigatorBundle.getString("addonInstall.unsigned"));
-              unsignedLabel.setAttribute("class",
-                "addon-install-confirmation-unsigned");
-              container.appendChild(unsignedLabel);
+              let unsigned = document.createElement("label");
+              unsigned.setAttribute("value", gNavigatorBundle.getString("addonInstall.unsigned"));
+              unsigned.setAttribute("class", "addon-install-confirmation-unsigned");
+              container.appendChild(unsigned);
             }
 
             addonList.appendChild(container);
@@ -196,6 +194,7 @@ const gXPInstallObserver = {
     acceptButton.accessKey = gNavigatorBundle.getString("addonInstall.acceptButton.accesskey");
 
     if (height) {
+      let notification = document.getElementById("addon-install-confirmation-notification");
       notification.style.minHeight = height + "px";
     }
 

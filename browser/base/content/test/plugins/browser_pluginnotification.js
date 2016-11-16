@@ -480,8 +480,9 @@ add_task(function* () {
         "Test 21c, plugin " + args.id + " should have click-to-play overlay with zero dims");
     });
 
-    let pluginInfoTmp = yield promiseForPluginInfo(id);
-    ok(!pluginInfoTmp.activated, "Test 21c, Plugin with id=" + id + " should not be activated");
+
+    let pluginInfo = yield promiseForPluginInfo(id);
+    ok(!pluginInfo.activated, "Test 21c, Plugin with id=" + id + " should not be activated");
   }
 
   centerAction = null;
@@ -525,8 +526,8 @@ add_task(function* () {
         "Test 21d, plugin " + args.id + " should have click-to-play overlay with zero dims");
     });
 
-    let pluginInfoTmp = yield promiseForPluginInfo(id);
-    ok(pluginInfoTmp.activated, "Test 21d, Plugin with id=" + id + " should not be activated");
+    let pluginInfo = yield promiseForPluginInfo(id);
+    ok(pluginInfo.activated, "Test 21d, Plugin with id=" + id + " should not be activated");
   }
 });
 

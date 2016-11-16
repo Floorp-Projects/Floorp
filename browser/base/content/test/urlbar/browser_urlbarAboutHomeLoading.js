@@ -88,7 +88,7 @@ add_task(function* dontTemporarilyShowAboutHome() {
   win = SessionStore.undoCloseWindow(0);
   yield windowOpenedPromise;
   let wpl = {
-    onLocationChange() {
+    onLocationChange(wpl, request, location, flags) {
       is(win.gURLBar.value, "", "URL bar value should stay empty.");
     },
   };

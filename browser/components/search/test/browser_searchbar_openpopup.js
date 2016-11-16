@@ -56,20 +56,20 @@ add_task(function* init() {
 
   yield new Promise((resolve, reject) => {
     info("adding search history values: " + kValues);
-    let addOps = kValues.map(value => { return {op: "add",
+    let ops = kValues.map(value => { return {op: "add",
                                              fieldname: "searchbar-history",
                                              value: value}
                                    });
-    searchbar.FormHistory.update(addOps, {
+    searchbar.FormHistory.update(ops, {
       handleCompletion: function() {
         registerCleanupFunction(() => {
           info("removing search history values: " + kValues);
-          let removeOps =
+          let ops =
             kValues.map(value => { return {op: "remove",
                                            fieldname: "searchbar-history",
                                            value: value}
                                  });
-          searchbar.FormHistory.update(removeOps);
+          searchbar.FormHistory.update(ops);
         });
         resolve();
       },

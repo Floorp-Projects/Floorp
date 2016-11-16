@@ -757,11 +757,11 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
     return;
 
   let onLookupComplete = (request, record, status) => {
-    let browserRef = weakBrowser.get();
-    if (!Components.isSuccessCode(status) || !browserRef)
+    let browser = weakBrowser.get();
+    if (!Components.isSuccessCode(status) || !browser)
       return;
 
-    let currentURI = browserRef.currentURI;
+    let currentURI = browser.currentURI;
     // If we're in case (3) (see above), don't show an info bar.
     if (!currentURI.equals(previousURI) &&
         !currentURI.equals(preferredURI)) {
@@ -769,7 +769,7 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
     }
 
     // show infobar offering to visit the host
-    let notificationBox = gBrowser.getNotificationBox(browserRef);
+    let notificationBox = gBrowser.getNotificationBox(browser);
     if (notificationBox.getNotificationWithValue("keyword-uri-fixup"))
       return;
 
@@ -1238,6 +1238,7 @@ var gBrowserInit = {
         // If the initial browser is remote, in order to optimize for first paint,
         // we'll defer switching focus to that browser until it has painted.
         let focusedElement = document.commandDispatcher.focusedElement;
+        let mm = window.messageManager;
         mm.addMessageListener("Browser:FirstPaint", function onFirstPaint() {
           mm.removeMessageListener("Browser:FirstPaint", onFirstPaint);
           // If focus didn't move while we were waiting for first paint, we're okay
@@ -3592,7 +3593,7 @@ const BrowserSearch = {
         win.BrowserSearch.webSearch();
       } else {
         // If there are no open browser windows, open a new one
-        var observer = function(subject, topic, data) {
+        var observer = function observer(subject, topic, data) {
           if (subject == win) {
             BrowserSearch.webSearch();
             Services.obs.removeObserver(observer, "browser-delayed-startup-finished");
@@ -4493,12 +4494,12 @@ var XULBrowserWindow = {
       gTabletModePageCounter.inc();
 
       // Utility functions for disabling find
-      var shouldDisableFind = function(aDocument) {
+      var shouldDisableFind = function shouldDisableFind(aDocument) {
         let docElt = aDocument.documentElement;
         return docElt && docElt.getAttribute("disablefastfind") == "true";
       }
 
-      var disableFindCommands = function(aDisable) {
+      var disableFindCommands = function disableFindCommands(aDisable) {
         let findCommands = [document.getElementById("cmd_find"),
                             document.getElementById("cmd_findAgain"),
                             document.getElementById("cmd_findPrevious")];
@@ -4510,7 +4511,7 @@ var XULBrowserWindow = {
         }
       }
 
-      var onContentRSChange = function(e) {
+      var onContentRSChange = function onContentRSChange(e) {
         if (e.target.readyState != "interactive" && e.target.readyState != "complete")
           return;
 
@@ -6033,8 +6034,8 @@ var OfflineApps = {
         label: gNavigatorBundle.getString("offlineApps.allow"),
         accessKey: gNavigatorBundle.getString("offlineApps.allowAccessKey"),
         callback: function() {
-          for (let [ciBrowser, ciDocId, ciUri] of notification.options.controlledItems) {
-            OfflineApps.allowSite(ciBrowser, ciDocId, ciUri);
+          for (let [browser, docId, uri] of notification.options.controlledItems) {
+            OfflineApps.allowSite(browser, docId, uri);
           }
         }
       };
@@ -6042,8 +6043,8 @@ var OfflineApps = {
         label: gNavigatorBundle.getString("offlineApps.never"),
         accessKey: gNavigatorBundle.getString("offlineApps.neverAccessKey"),
         callback: function() {
-          for (let [, , ciUri] of notification.options.controlledItems) {
-            OfflineApps.disallowSite(ciUri);
+          for (let [, , uri] of notification.options.controlledItems) {
+            OfflineApps.disallowSite(uri);
           }
         }
       }];
@@ -6363,7 +6364,7 @@ function BrowserOpenAddonsMgr(aView) {
       let emWindow;
       let browserWindow;
 
-      var receivePong = function(aSubject, aTopic, aData) {
+      var receivePong = function receivePong(aSubject, aTopic, aData) {
         let browserWin = aSubject.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIWebNavigation)
                                  .QueryInterface(Ci.nsIDocShellTreeItem)

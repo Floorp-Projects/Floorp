@@ -92,9 +92,9 @@ function test() {
     Task.spawn(function* () {
       yield SpecialPowers.pushPrefEnv({"set": [[PREF_PERMISSION_FAKE, true]]});
 
-      for (let testCase of gTests) {
-        info(testCase.desc);
-        yield testCase.run();
+      for (let test of gTests) {
+        info(test.desc);
+        yield test.run();
       }
     }).then(finish, ex => {
      Cu.reportError(ex);

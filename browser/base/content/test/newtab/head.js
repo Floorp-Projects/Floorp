@@ -509,7 +509,7 @@ function whenSearchInitDone() {
  *        Can be any of("blank"|"classic"|"enhanced")
  */
 function customizeNewTabPage(aTheme) {
-  return ContentTask.spawn(gWindow.gBrowser.selectedBrowser, aTheme, function*(contentTheme) {
+  return ContentTask.spawn(gWindow.gBrowser.selectedBrowser, aTheme, function*(aTheme) {
 
     let document = content.document;
     let panel = document.getElementById("newtab-customize-panel");
@@ -520,7 +520,7 @@ function customizeNewTabPage(aTheme) {
         let options = {attributes: true, oldValue: true};
         let observer = new content.MutationObserver(function(mutations) {
           mutations.forEach(function(mutation) {
-            document.getElementById("newtab-customize-" + contentTheme).click();
+            document.getElementById("newtab-customize-" + aTheme).click();
             observer.disconnect();
             if (opened == panel.hasAttribute("open")) {
               resolve();

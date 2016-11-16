@@ -726,7 +726,7 @@ var gEditItemOverlay = {
   _getFolderMenuItem(aFolderId) {
     let menupopup = this._folderMenuList.menupopup;
     let menuItem = Array.prototype.find.call(
-      menupopup.childNodes, item => item.folderId === aFolderId);
+      menupopup.childNodes, menuItem => menuItem.folderId === aFolderId);
     if (menuItem !== undefined)
       return menuItem;
 

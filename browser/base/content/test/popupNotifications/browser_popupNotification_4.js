@@ -133,9 +133,9 @@ var tests = [
       yield whenDelayedStartupFinished(win);
 
       yield new Promise(resolve => {
-        let callback = notification.options.eventCallback;
+        let originalCallback = notification.options.eventCallback;
         notification.options.eventCallback = function (eventName) {
-          callback(eventName);
+          originalCallback(eventName);
           if (eventName == "shown") {
             resolve();
           }
