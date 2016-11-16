@@ -77,26 +77,6 @@ struct LinkData : LinkDataCacheablePod
 typedef UniquePtr<LinkData> UniqueLinkData;
 typedef UniquePtr<const LinkData> UniqueConstLinkData;
 
-// ElemSegment represents an element segment in the module where each element
-// describes both its function index and its code range.
-
-struct ElemSegment
-{
-    uint32_t tableIndex;
-    InitExpr offset;
-    Uint32Vector elemFuncIndices;
-    Uint32Vector elemCodeRangeIndices;
-
-    ElemSegment() = default;
-    ElemSegment(uint32_t tableIndex, InitExpr offset, Uint32Vector&& elemFuncIndices)
-      : tableIndex(tableIndex), offset(offset), elemFuncIndices(Move(elemFuncIndices))
-    {}
-
-    WASM_DECLARE_SERIALIZABLE(ElemSegment)
-};
-
-typedef Vector<ElemSegment, 0, SystemAllocPolicy> ElemSegmentVector;
-
 // Module represents a compiled wasm module and primarily provides two
 // operations: instantiation and serialization. A Module can be instantiated any
 // number of times to produce new Instance objects. A Module can be serialized
