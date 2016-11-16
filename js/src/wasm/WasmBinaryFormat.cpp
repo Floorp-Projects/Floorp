@@ -467,6 +467,69 @@ wasm::DecodeMemorySection(Decoder& d, bool hasMemory, Limits* memory, bool *pres
     return true;
 }
 
+static bool
+DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, ValType expected,
+                            InitExpr* init)
+{
+    uint16_t op;
+    if (!d.readOp(&op))
+        return d.fail("failed to read initializer type");
+
+    switch (op) {
+      case uint16_t(Op::I32Const): {
+        int32_t i32;
+        if (!d.readVarS32(&i32))
+            return d.fail("failed to read initializer i32 expression");
+        *init = InitExpr(Val(uint32_t(i32)));
+        break;
+      }
+      case uint16_t(Op::I64Const): {
+        int64_t i64;
+        if (!d.readVarS64(&i64))
+            return d.fail("failed to read initializer i64 expression");
+        *init = InitExpr(Val(uint64_t(i64)));
+        break;
+      }
+      case uint16_t(Op::F32Const): {
+        RawF32 f32;
+        if (!d.readFixedF32(&f32))
+            return d.fail("failed to read initializer f32 expression");
+        *init = InitExpr(Val(f32));
+        break;
+      }
+      case uint16_t(Op::F64Const): {
+        RawF64 f64;
+        if (!d.readFixedF64(&f64))
+            return d.fail("failed to read initializer f64 expression");
+        *init = InitExpr(Val(f64));
+        break;
+      }
+      case uint16_t(Op::GetGlobal): {
+        uint32_t i;
+        if (!d.readVarU32(&i))
+            return d.fail("failed to read get_global index in initializer expression");
+        if (i >= globals.length())
+            return d.fail("global index out of range in initializer expression");
+        if (!globals[i].isImport() || globals[i].isMutable())
+            return d.fail("initializer expression must reference a global immutable import");
+        *init = InitExpr(i, globals[i].type());
+        break;
+      }
+      default: {
+        return d.fail("unexpected initializer expression");
+      }
+    }
+
+    if (expected != init->type())
+        return d.fail("type mismatch: initializer type and expected type don't match");
+
+    uint16_t end;
+    if (!d.readOp(&end) || end != uint16_t(Op::End))
+        return d.fail("failed to read end of initializer expression");
+
+    return true;
+}
+
 bool
 wasm::DecodeGlobalSection(Decoder& d, GlobalDescVector* globals)
 {
@@ -655,6 +718,61 @@ wasm::DecodeStartSection(Decoder& d, const SigWithIdPtrVector& funcSigs,
 }
 
 bool
+wasm::DecodeElemSection(Decoder& d, const TableDescVector& tables, const GlobalDescVector& globals,
+                        size_t numFuncs, ElemSegmentVector* elemSegments)
+{
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(SectionId::Elem, &sectionStart, &sectionSize, "elem"))
+        return false;
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    uint32_t numSegments;
+    if (!d.readVarU32(&numSegments))
+        return d.fail("failed to read number of elem segments");
+
+    if (numSegments > MaxElemSegments)
+        return d.fail("too many elem segments");
+
+    for (uint32_t i = 0; i < numSegments; i++) {
+        uint32_t tableIndex;
+        if (!d.readVarU32(&tableIndex))
+            return d.fail("expected table index");
+
+        MOZ_ASSERT(tables.length() <= 1);
+        if (tableIndex >= tables.length())
+            return d.fail("table index out of range");
+
+        InitExpr offset;
+        if (!DecodeInitializerExpression(d, globals, ValType::I32, &offset))
+            return false;
+
+        uint32_t numElems;
+        if (!d.readVarU32(&numElems))
+            return d.fail("expected segment size");
+
+        Uint32Vector elemFuncIndices;
+        if (!elemFuncIndices.resize(numElems))
+            return false;
+
+        for (uint32_t i = 0; i < numElems; i++) {
+            if (!d.readVarU32(&elemFuncIndices[i]))
+                return d.fail("failed to read element function index");
+            if (elemFuncIndices[i] >= numFuncs)
+                return d.fail("table element out of range");
+        }
+
+        if (!elemSegments->emplaceBack(0, offset, Move(elemFuncIndices)))
+            return false;
+    }
+
+    if (!d.finishSection(sectionStart, sectionSize, "elem"))
+        return false;
+
+    return true;
+}
+
+bool
 wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals)
 {
     uint32_t numLocalEntries = 0;
@@ -713,69 +831,6 @@ wasm::DecodeLocalEntries(Decoder& d, ModuleKind kind, ValTypeVector* locals)
         if (!locals->appendN(type, count))
             return false;
     }
-
-    return true;
-}
-
-bool
-wasm::DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, ValType expected,
-                                  InitExpr* init)
-{
-    uint16_t op;
-    if (!d.readOp(&op))
-        return d.fail("failed to read initializer type");
-
-    switch (op) {
-      case uint16_t(Op::I32Const): {
-        int32_t i32;
-        if (!d.readVarS32(&i32))
-            return d.fail("failed to read initializer i32 expression");
-        *init = InitExpr(Val(uint32_t(i32)));
-        break;
-      }
-      case uint16_t(Op::I64Const): {
-        int64_t i64;
-        if (!d.readVarS64(&i64))
-            return d.fail("failed to read initializer i64 expression");
-        *init = InitExpr(Val(uint64_t(i64)));
-        break;
-      }
-      case uint16_t(Op::F32Const): {
-        RawF32 f32;
-        if (!d.readFixedF32(&f32))
-            return d.fail("failed to read initializer f32 expression");
-        *init = InitExpr(Val(f32));
-        break;
-      }
-      case uint16_t(Op::F64Const): {
-        RawF64 f64;
-        if (!d.readFixedF64(&f64))
-            return d.fail("failed to read initializer f64 expression");
-        *init = InitExpr(Val(f64));
-        break;
-      }
-      case uint16_t(Op::GetGlobal): {
-        uint32_t i;
-        if (!d.readVarU32(&i))
-            return d.fail("failed to read get_global index in initializer expression");
-        if (i >= globals.length())
-            return d.fail("global index out of range in initializer expression");
-        if (!globals[i].isImport() || globals[i].isMutable())
-            return d.fail("initializer expression must reference a global immutable import");
-        *init = InitExpr(i, globals[i].type());
-        break;
-      }
-      default: {
-        return d.fail("unexpected initializer expression");
-      }
-    }
-
-    if (expected != init->type())
-        return d.fail("type mismatch: initializer type and expected type don't match");
-
-    uint16_t end;
-    if (!d.readOp(&end) || end != uint16_t(Op::End))
-        return d.fail("failed to read end of initializer expression");
 
     return true;
 }

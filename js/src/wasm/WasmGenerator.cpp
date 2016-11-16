@@ -833,21 +833,24 @@ ModuleGenerator::setStartFunction(uint32_t funcIndex)
     return exportedFuncs_.put(funcIndex);
 }
 
-bool
-ModuleGenerator::addElemSegment(InitExpr offset, Uint32Vector&& elemFuncIndices)
+void
+ModuleGenerator::setElemSegments(ElemSegmentVector&& segments)
 {
     MOZ_ASSERT(!isAsmJS());
     MOZ_ASSERT(!startedFuncDefs_);
-    MOZ_ASSERT(shared_->tables.length() == 1);
 
-    for (uint32_t funcIndex : elemFuncIndices) {
-        if (funcIndex < numFuncImports()) {
-            shared_->tables[0].external = true;
-            break;
+    elemSegments_ = Move(segments);
+
+    for (const ElemSegment& seg : elemSegments_) {
+        if (shared_->tables[seg.tableIndex].external)
+            continue;
+        for (uint32_t funcIndex : seg.elemFuncIndices) {
+            if (funcIndex < numFuncImports()) {
+                shared_->tables[seg.tableIndex].external = true;
+                break;
+            }
         }
     }
-
-    return elemSegments_.emplaceBack(0, offset, Move(elemFuncIndices));
 }
 
 void

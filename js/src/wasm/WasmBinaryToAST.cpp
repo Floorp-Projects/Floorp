@@ -1606,17 +1606,6 @@ ToAstExpr(AstDecodeContext& c, const InitExpr& initExpr)
 }
 
 static bool
-AstDecodeInitializerExpression(AstDecodeContext& c, ValType type, AstExpr** init)
-{
-    InitExpr initExpr;
-    if (!DecodeInitializerExpression(c.d, c.globalDescs(), type, &initExpr))
-        return false;
-
-    *init = ToAstExpr(c, initExpr);
-    return !!*init;
-}
-
-static bool
 AstDecodeGlobalSection(AstDecodeContext& c)
 {
     size_t numImported = c.globalDescs().length();
@@ -1771,6 +1760,33 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcDefIndex, AstFunc** func
 }
 
 static bool
+AstDecodeElemSection(AstDecodeContext &c)
+{
+    ElemSegmentVector elems;
+    if (!DecodeElemSection(c.d, c.tables(), c.globalDescs(), c.numFuncs(), &elems))
+        return false;
+
+    for (const ElemSegment& seg : elems) {
+        AstRefVector elems(c.lifo);
+        if (!elems.reserve(seg.elemFuncIndices.length()))
+            return false;
+
+        for (uint32_t i : seg.elemFuncIndices)
+            elems.infallibleAppend(AstRef(i));
+
+        AstExpr* offset = ToAstExpr(c, seg.offset);
+        if (!offset)
+            return false;
+
+        AstElemSegment* segment = new(c.lifo) AstElemSegment(offset, Move(elems));
+        if (!segment || !c.module().append(segment))
+            return false;
+    }
+
+    return true;
+}
+
+static bool
 AstDecodeCodeSection(AstDecodeContext &c)
 {
     uint32_t sectionStart, sectionSize;
@@ -1841,58 +1857,6 @@ AstDecodeDataSection(AstDecodeContext &c)
         if (!segment || !c.module().append(segment))
             return false;
     }
-
-    return true;
-}
-
-static bool
-AstDecodeElemSection(AstDecodeContext &c)
-{
-    uint32_t sectionStart, sectionSize;
-    if (!c.d.startSection(SectionId::Elem, &sectionStart, &sectionSize, "elem"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t numElems;
-    if (!c.d.readVarU32(&numElems))
-        return c.d.fail("failed to read number of table elements");
-
-    for (uint32_t i = 0; i < numElems; i++) {
-        uint32_t tableIndex;
-        if (!c.d.readVarU32(&tableIndex))
-            return c.d.fail("expected table index for element");
-
-        if (tableIndex != 0)
-            return c.d.fail("non-zero table index for element");
-
-        AstExpr* offset;
-        if (!AstDecodeInitializerExpression(c, ValType::I32, &offset))
-            return false;
-
-        uint32_t count;
-        if (!c.d.readVarU32(&count))
-            return c.d.fail("expected element count");
-
-        AstRefVector elems(c.lifo);
-        if (!elems.resize(count))
-            return false;
-
-        for (uint32_t i = 0; i < count; i++) {
-            uint32_t index;
-            if (!c.d.readVarU32(&index))
-                return c.d.fail("expected element index");
-
-            elems[i] = AstRef(index);
-        }
-
-        AstElemSegment* segment = new(c.lifo) AstElemSegment(offset, Move(elems));
-        if (!segment || !c.module().append(segment))
-            return false;
-    }
-
-    if (!c.d.finishSection(sectionStart, sectionSize, "elem"))
-        return false;
 
     return true;
 }

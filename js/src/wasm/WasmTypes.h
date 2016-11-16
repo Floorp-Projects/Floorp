@@ -706,6 +706,26 @@ class GlobalDesc
 
 typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
 
+// ElemSegment represents an element segment in the module where each element
+// describes both its function index and its code range.
+
+struct ElemSegment
+{
+    uint32_t tableIndex;
+    InitExpr offset;
+    Uint32Vector elemFuncIndices;
+    Uint32Vector elemCodeRangeIndices;
+
+    ElemSegment() = default;
+    ElemSegment(uint32_t tableIndex, InitExpr offset, Uint32Vector&& elemFuncIndices)
+      : tableIndex(tableIndex), offset(offset), elemFuncIndices(Move(elemFuncIndices))
+    {}
+
+    WASM_DECLARE_SERIALIZABLE(ElemSegment)
+};
+
+typedef Vector<ElemSegment, 0, SystemAllocPolicy> ElemSegmentVector;
+
 // DataSegment describes the offset of a data segment in the bytecode that is
 // to be copied at a given offset into linear memory upon instantiation.
 

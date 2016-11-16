@@ -630,10 +630,6 @@ EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
 MOZ_MUST_USE bool
 DecodeLocalEntries(Decoder& d, ModuleKind kind, ValTypeVector* locals);
 
-MOZ_MUST_USE bool
-DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, ValType expected,
-                            InitExpr* init);
-
 // Section macros.
 
 MOZ_MUST_USE bool
@@ -666,6 +662,10 @@ DecodeExportSection(Decoder& d, size_t numFuncs, size_t numTables, bool usesMemo
 MOZ_MUST_USE bool
 DecodeStartSection(Decoder& d, const SigWithIdPtrVector& funcSigs,
                    Maybe<uint32_t>* startFunctionIndex);
+
+MOZ_MUST_USE bool
+DecodeElemSection(Decoder& d, const TableDescVector& tables, const GlobalDescVector& globals,
+                  size_t numFuncs, ElemSegmentVector* elemSegments);
 
 MOZ_MUST_USE bool
 DecodeUnknownSections(Decoder& d);
