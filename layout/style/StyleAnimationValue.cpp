@@ -135,6 +135,29 @@ TransformFunctionsMatch(nsCSSKeyword func1, nsCSSKeyword func2)
   return ToPrimitive(func1) == ToPrimitive(func2);
 }
 
+static bool
+TransformFunctionListsMatch(const nsCSSValueList *list1,
+                            const nsCSSValueList *list2)
+{
+  const nsCSSValueList *item1 = list1, *item2 = list2;
+  do {
+    nsCSSKeyword func1 = nsStyleTransformMatrix::TransformFunctionOf(
+        item1->mValue.GetArrayValue());
+    nsCSSKeyword func2 = nsStyleTransformMatrix::TransformFunctionOf(
+        item2->mValue.GetArrayValue());
+
+    if (!TransformFunctionsMatch(func1, func2)) {
+      return false;
+    }
+
+    item1 = item1->mNext;
+    item2 = item2->mNext;
+  } while (item1 && item2);
+
+  // Length match?
+  return !item1 && !item2;
+}
+
 static already_AddRefed<nsCSSValue::Array>
 AppendFunction(nsCSSKeyword aTransformFunction)
 {
@@ -1519,29 +1542,11 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
       } else if (list2->mValue.GetUnit() == eCSSUnit_None) {
         nsAutoPtr<nsCSSValueList> none(AddTransformLists(0, list1, 0, list1));
         aDistance = ComputeTransformListDistance(list1, none);
+      } else if (TransformFunctionListsMatch(list1, list2)) {
+        aDistance = ComputeTransformListDistance(list1, list2);
       } else {
-        const nsCSSValueList *item1 = list1, *item2 = list2;
-        do {
-          nsCSSKeyword func1 = nsStyleTransformMatrix::TransformFunctionOf(
-            item1->mValue.GetArrayValue());
-          nsCSSKeyword func2 = nsStyleTransformMatrix::TransformFunctionOf(
-            item2->mValue.GetArrayValue());
-          if (!TransformFunctionsMatch(func1, func2)) {
-            break;
-          }
-
-          item1 = item1->mNext;
-          item2 = item2->mNext;
-        } while (item1 && item2);
-
-        if (item1 || item2) {
-          // Either the transform function types don't match or
-          // the lengths don't match.
-          aDistance =
-            ComputeMismatchedTransfromListDistance(list1, list2, aStyleContext);
-        } else {
-          aDistance = ComputeTransformListDistance(list1, list2);
-        }
+        aDistance =
+          ComputeMismatchedTransfromListDistance(list1, list2, aStyleContext);
       }
       return true;
     }
@@ -3022,35 +3027,10 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
       } else {
         if (list2->mValue.GetUnit() == eCSSUnit_None) {
           result = AddTransformLists(0, list1, aCoeff1, list1);
+        } else if (TransformFunctionListsMatch(list1, list2)) {
+          result = AddTransformLists(aCoeff1, list1, aCoeff2, list2);
         } else {
-          bool match = true;
-
-          {
-            const nsCSSValueList *item1 = list1, *item2 = list2;
-            do {
-              nsCSSKeyword func1 = nsStyleTransformMatrix::TransformFunctionOf(
-                                     item1->mValue.GetArrayValue());
-              nsCSSKeyword func2 = nsStyleTransformMatrix::TransformFunctionOf(
-                                     item2->mValue.GetArrayValue());
-
-              if (!TransformFunctionsMatch(func1, func2)) {
-                break;
-              }
-
-              item1 = item1->mNext;
-              item2 = item2->mNext;
-            } while (item1 && item2);
-            if (item1 || item2) {
-              // Either |break| above or length mismatch.
-              match = false;
-            }
-          }
-
-          if (match) {
-            result = AddTransformLists(aCoeff1, list1, aCoeff2, list2);
-          } else {
-            result = AddDifferentTransformLists(aCoeff1, list1, aCoeff2, list2);
-          }
+          result = AddDifferentTransformLists(aCoeff1, list1, aCoeff2, list2);
         }
       }
 
