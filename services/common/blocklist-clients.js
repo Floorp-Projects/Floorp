@@ -19,8 +19,9 @@ const { Task } = Cu.import("resource://gre/modules/Task.jsm");
 const { OS } = Cu.import("resource://gre/modules/osfile.jsm");
 Cu.importGlobalProperties(["fetch"]);
 
-const { loadKinto } = Cu.import("resource://services-common/kinto-offline-client.js");
+const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js");
 const { KintoHttpClient } = Cu.import("resource://services-common/kinto-http-client.js");
+const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js");
 const { CanonicalJSON } = Components.utils.import("resource://gre/modules/CanonicalJSON.jsm");
 
 const PREF_SETTINGS_SERVER                   = "services.settings.server";
@@ -90,10 +91,6 @@ function fetchRemoteCollection(collection) {
 function kintoClient() {
   let base = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
   let bucket = Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET);
-
-  let Kinto = loadKinto();
-
-  let FirefoxAdapter = Kinto.adapters.FirefoxAdapter;
 
   let config = {
     remote: base,

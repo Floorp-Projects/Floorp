@@ -3,7 +3,8 @@
 Cu.import("resource://services-common/blocklist-updater.js");
 Cu.import("resource://testing-common/httpd.js");
 
-const { loadKinto } = Cu.import("resource://services-common/kinto-offline-client.js");
+const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js");
+const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js");
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const { OneCRLBlocklistClient } = Cu.import("resource://services-common/blocklist-clients.js");
 
@@ -59,10 +60,6 @@ function* checkRecordCount(count) {
   const bucket = Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET);
   const collectionName =
       Services.prefs.getCharPref(PREF_BLOCKLIST_ONECRL_COLLECTION);
-
-  const Kinto = loadKinto();
-
-  const FirefoxAdapter = Kinto.adapters.FirefoxAdapter;
 
   const config = {
     remote: base,
