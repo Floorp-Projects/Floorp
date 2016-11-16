@@ -157,6 +157,7 @@
 #include "nsThreadUtils.h"
 #include "nsToolkitCompsCID.h"
 #include "nsWidgetsCID.h"
+#include "PreallocatedProcessManager.h"
 #include "ProcessPriorityManager.h"
 #include "SandboxHal.h"
 #include "ScreenManagerParent.h"
@@ -552,6 +553,25 @@ static const char* sObserverTopics[] = {
   "cacheservice:empty-cache",
 };
 
+// PreallocateAppProcess is called by the PreallocatedProcessManager.
+// ContentParent then takes this process back within
+// GetNewOrPreallocatedAppProcess.
+/*static*/ already_AddRefed<ContentParent>
+ContentParent::PreallocateAppProcess()
+{
+  RefPtr<ContentParent> process =
+    new ContentParent(/* aOpener = */ nullptr,
+                      /* isForBrowserElement = */ false,
+                      /* isForPreallocated = */ true);
+
+  if (!process->LaunchSubprocess(PROCESS_PRIORITY_PREALLOC)) {
+    return nullptr;
+  }
+
+  process->Init();
+  return process.forget();
+}
+
 /*static*/ void
 ContentParent::StartUp()
 {
@@ -584,6 +604,9 @@ ContentParent::StartUp()
   BlobParent::Startup(BlobParent::FriendKey());
 
   BackgroundChild::Startup();
+
+  // Try to preallocate a process that we can transform into an app later.
+  PreallocatedProcessManager::AllocateAfterDelay();
 
   sDisableUnsafeCPOWWarnings = PR_GetEnv("DISABLE_UNSAFE_CPOW_WARNINGS");
 
@@ -697,14 +720,22 @@ ContentParent::GetNewOrUsedBrowserProcess(bool aForBrowserElement,
     } while (currIdx != startIdx);
   }
 
-  RefPtr<ContentParent> p = new ContentParent(aOpener,
-                                              aForBrowserElement);
+  // Try to take and transform the preallocated process into browser.
+  RefPtr<ContentParent> p = PreallocatedProcessManager::Take();
+  if (p) {
+    p->TransformPreallocatedIntoBrowser(aOpener);
+  } else {
+    // Failed in using the preallocated process: fork from the chrome process.
+    p = new ContentParent(aOpener,
+                          aForBrowserElement,
+                          /* isForPreallocated = */ false);
 
-  if (!p->LaunchSubprocess(aPriority)) {
-    return nullptr;
+    if (!p->LaunchSubprocess(aPriority)) {
+      return nullptr;
+    }
+
+    p->Init();
   }
-
-  p->Init();
 
   p->mLargeAllocationProcess = aLargeAllocationProcess;
 
@@ -759,6 +790,12 @@ ContentParent::SendAsyncUpdate(nsIWidget* aWidget)
   }
 }
 #endif // defined(XP_WIN)
+
+bool
+ContentParent::PreallocatedProcessReady()
+{
+  return true;
+}
 
 bool
 ContentParent::RecvCreateChildProcess(const IPCTabContext& aContext,
@@ -1206,6 +1243,15 @@ ContentParent::SetPriorityAndCheckIsAlive(ProcessPriority aPriority)
 #endif
 
   return true;
+}
+
+void
+ContentParent::TransformPreallocatedIntoBrowser(ContentParent* aOpener)
+{
+  // Reset mIsForBrowser and mOSPrivileges for browser.
+  mMetamorphosed = true;
+  mOpener = aOpener;
+  mIsForBrowser = true;
 }
 
 void
@@ -1776,13 +1822,19 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
 }
 
 ContentParent::ContentParent(ContentParent* aOpener,
-                             bool aIsForBrowser)
+                             bool aIsForBrowser,
+                             bool aIsForPreallocated)
   : nsIContentParent()
   , mOpener(aOpener)
   , mIsForBrowser(aIsForBrowser)
+  , mIsPreallocated(aIsForPreallocated)
   , mLargeAllocationProcess(false)
 {
   InitializeMembers();  // Perform common initialization.
+
+  // No more than one of aIsForBrowser and aIsForPreallocated should be
+  // true.
+  MOZ_ASSERT(aIsForBrowser + aIsForPreallocated <= 1);
 
   mMetamorphosed = true;
 
@@ -1894,6 +1946,11 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
 
       gpm->AddListener(this);
     }
+  }
+
+  if (gAppData) {
+    // Sending all information to content process.
+    Unused << SendAppInit();
   }
 
   nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
@@ -2252,6 +2309,17 @@ ContentParent::RecvGetShowPasswordSetting(bool* showPassword)
 
   *showPassword = java::GeckoAppShell::GetShowPasswordSetting();
 #endif
+  return true;
+}
+
+bool
+ContentParent::RecvFirstIdle()
+{
+  // When the ContentChild goes idle, it sends us a FirstIdle message
+  // which we use as a good time to prelaunch another process. If we
+  // prelaunch any sooner than this, then we'll be competing with the
+  // child process and slowing it down.
+  PreallocatedProcessManager::AllocateAfterDelay();
   return true;
 }
 
@@ -2751,11 +2819,19 @@ ContentParent::KillHard(const char* aReason)
                         otherProcessHandle, /*force=*/true));
 }
 
+bool
+ContentParent::IsPreallocated() const
+{
+  return mIsPreallocated;
+}
+
 void
 ContentParent::FriendlyName(nsAString& aName, bool aAnonymize)
 {
   aName.Truncate();
-  if (mIsForBrowser) {
+  if (IsPreallocated()) {
+    aName.AssignLiteral("(Preallocated)");
+  } else if (mIsForBrowser) {
     aName.AssignLiteral("Browser");
   } else if (aAnonymize) {
     aName.AssignLiteral("<anonymized-name>");

@@ -301,6 +301,7 @@ public:
 
   int32_t Pid() const;
   uint64_t ChildID() const;
+  bool IsPreallocated() const;
 
   /**
    * Used in logging, this method returns the ContentParent's name followed by
@@ -617,12 +618,15 @@ ProcessPriorityManagerImpl::NotifyProcessPriorityChanged(
   ProcessPriority aOldPriority)
 {
   ProcessPriority newPriority = aParticularManager->CurrentPriority();
+  bool isPreallocated = aParticularManager->IsPreallocated();
 
   if (newPriority == PROCESS_PRIORITY_BACKGROUND &&
-      aOldPriority != PROCESS_PRIORITY_BACKGROUND) {
+      aOldPriority != PROCESS_PRIORITY_BACKGROUND &&
+      !isPreallocated) {
     mBackgroundLRUPool.Add(aParticularManager);
   } else if (newPriority != PROCESS_PRIORITY_BACKGROUND &&
-      aOldPriority == PROCESS_PRIORITY_BACKGROUND) {
+      aOldPriority == PROCESS_PRIORITY_BACKGROUND &&
+      !isPreallocated) {
     mBackgroundLRUPool.Remove(aParticularManager);
   }
 
@@ -803,6 +807,12 @@ int32_t
 ParticularProcessPriorityManager::Pid() const
 {
   return mContentParent ? mContentParent->Pid() : -1;
+}
+
+bool
+ParticularProcessPriorityManager::IsPreallocated() const
+{
+  return mContentParent ? mContentParent->IsPreallocated() : false;
 }
 
 const nsAutoCString&
