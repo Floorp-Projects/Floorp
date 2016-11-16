@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that the preallocated process starts up with priority BACKGROUND.
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../browserElementTestHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
+browserElementTestHelpers.enableProcessPriorityManager();
+
+var preallocationEnabledPref = null;
+try {
+  preallocationEnabledPref = SpecialPowers.getBoolPref('dom.ipc.processPrelaunch.enabled');
+}
+catch(e) {
+  preallocationEnabledPref = null;
+}
+
+var childID = null;
+
+var cleanedUp = false;
+function cleanUp()
+{
+  if (cleanedUp) {
+    return;
+  }
+
+  cleanedUp = true;
+}
+
+// Even if this test times out, we still want to run cleanUp so as to set the
+// pref back.
+addEventListener('unload', cleanUp);
+
+function runTest()
+{
+  if (preallocationEnabledPref) {
+    ok(false, "dom.ipc.processPrelaunch.enabled must be " +
+              "false for this test to work.");
+    SimpleTest.finish();
+    return;
+  }
+
+  // Ensure that the preallocated process initially gets BACKGROUND priority.
+  // That's it.
+  expectProcessCreated('PREALLOC').then(function() {
+    // We need to set the pref asynchoronously or the preallocated process won't
+    // be shut down.
+    SimpleTest.executeSoon(function(){
+      cleanUp();
+      SimpleTest.finish();
+    });
+  });
+}
+// Setting this pref to true should cause us to prelaunch a process.
+addEventListener('testready', function() {
+  SpecialPowers.pushPrefEnv({'set':[["dom.ipc.processPrelaunch.enabled",true]]},runTest);
+});
+</script>
+</body>
+</html>

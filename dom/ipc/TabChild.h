@@ -280,6 +280,13 @@ public:
 
   nsresult Init();
 
+  /**
+   * This is expected to be called off the critical path to content
+   * startup.  This is an opportunity to load things that are slow
+   * on the critical path.
+   */
+  static void PreloadSlowThings();
+
   /** Return a TabChild with the given attributes. */
   static already_AddRefed<TabChild>
   Create(nsIContentChild* aManager, const TabId& aTabId,
@@ -717,7 +724,9 @@ private:
 
   void ActorDestroy(ActorDestroyReason why) override;
 
-  bool InitTabChildGlobal();
+  enum FrameScriptLoading { DONT_LOAD_SCRIPTS, DEFAULT_LOAD_SCRIPTS };
+
+  bool InitTabChildGlobal(FrameScriptLoading aScriptLoading = DEFAULT_LOAD_SCRIPTS);
 
   void InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                           const uint64_t& aLayersId,
