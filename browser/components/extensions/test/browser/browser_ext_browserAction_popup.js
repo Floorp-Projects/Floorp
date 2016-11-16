@@ -82,7 +82,7 @@ function* testInArea(area) {
           () => {
             browser.test.log(`Set popup to "c" and click browser action. Expect popup "c".`);
             browser.browserAction.setPopup({popup: "popup-c.html"});
-            sendClick({expectEvent: false, expectPopup: "c", closePopup: false});
+            sendClick({expectEvent: false, expectPopup: "c", waitUntilClosed: true});
           },
           () => {
             browser.test.log(`Set popup to "b" and click browser action. Expect popup "b".`);
@@ -190,6 +190,8 @@ function* testInArea(area) {
       CustomizableUI.addWidgetToArea(widget.id, area);
     }
     if (expecting.waitUntilClosed) {
+      yield new Promise(resolve => setTimeout(resolve, 0));
+
       let panel = getBrowserActionPopup(extension);
       if (panel && panel.state != "closed") {
         yield promisePopupHidden(panel);
