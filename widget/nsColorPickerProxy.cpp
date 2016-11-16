@@ -38,21 +38,21 @@ nsColorPickerProxy::Open(nsIColorPickerShownCallback* aColorPickerShownCallback)
   return NS_OK;
 }
 
-bool
+mozilla::ipc::IPCResult
 nsColorPickerProxy::RecvUpdate(const nsString& aColor)
 {
   if (mCallback) {
     mCallback->Update(aColor);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 nsColorPickerProxy::Recv__delete__(const nsString& aColor)
 {
   if (mCallback) {
     mCallback->Done(aColor);
     mCallback = nullptr;
   }
-  return true;
+  return IPC_OK();
 }

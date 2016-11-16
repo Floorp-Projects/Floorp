@@ -210,27 +210,27 @@ DOMStorageDBChild::ShouldPreloadOrigin(const nsACString& aOrigin)
   return !mOriginsHavingData || mOriginsHavingData->Contains(aOrigin);
 }
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBChild::RecvObserve(const nsCString& aTopic,
                                const nsString& aOriginAttributesPattern,
                                const nsCString& aOriginScope)
 {
   DOMStorageObserver::Self()->Notify(
     aTopic.get(), aOriginAttributesPattern, aOriginScope);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBChild::RecvOriginsHavingData(nsTArray<nsCString>&& aOrigins)
 {
   for (uint32_t i = 0; i < aOrigins.Length(); ++i) {
     OriginsHavingData().PutEntry(aOrigins[i]);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBChild::RecvLoadItem(const nsCString& aOriginSuffix,
                                 const nsCString& aOriginNoSuffix,
                                 const nsString& aKey,
@@ -241,10 +241,10 @@ DOMStorageDBChild::RecvLoadItem(const nsCString& aOriginSuffix,
     aCache->LoadItem(aKey, aValue);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBChild::RecvLoadDone(const nsCString& aOriginSuffix,
                                 const nsCString& aOriginNoSuffix,
                                 const nsresult& aRv)
@@ -257,22 +257,22 @@ DOMStorageDBChild::RecvLoadDone(const nsCString& aOriginSuffix,
     mLoadingCaches.RemoveEntry(static_cast<DOMStorageCacheBridge*>(aCache));
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBChild::RecvLoadUsage(const nsCString& aOriginNoSuffix, const int64_t& aUsage)
 {
   RefPtr<DOMStorageUsageBridge> scopeUsage = mManager->GetOriginUsage(aOriginNoSuffix);
   scopeUsage->LoadUsage(aUsage);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBChild::RecvError(const nsresult& aRv)
 {
   mStatus = aRv;
-  return true;
+  return IPC_OK();
 }
 
 // ----------------------------------------------------------------------------
@@ -383,32 +383,32 @@ DOMStorageDBParent::ActorDestroy(ActorDestroyReason aWhy)
   // Implement me! Bug 1005169
 }
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBParent::RecvAsyncPreload(const nsCString& aOriginSuffix,
                                      const nsCString& aOriginNoSuffix,
                                      const bool& aPriority)
 {
   DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
   if (!db) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   db->AsyncPreload(NewCache(aOriginSuffix, aOriginNoSuffix), aPriority);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBParent::RecvAsyncGetUsage(const nsCString& aOriginNoSuffix)
 {
   DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
   if (!db) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // The object releases it self in LoadUsage method
   RefPtr<UsageParentBridge> usage = new UsageParentBridge(this, aOriginNoSuffix);
   db->AsyncGetUsage(usage);
-  return true;
+  return IPC_OK();
 }
 
 namespace {
@@ -490,7 +490,7 @@ private:
 
 } // namespace
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBParent::RecvPreload(const nsCString& aOriginSuffix,
                                 const nsCString& aOriginNoSuffix,
                                 const uint32_t& aAlreadyLoadedCount,
@@ -500,17 +500,17 @@ DOMStorageDBParent::RecvPreload(const nsCString& aOriginSuffix,
 {
   DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
   if (!db) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<SyncLoadCacheHelper> cache(
     new SyncLoadCacheHelper(aOriginSuffix, aOriginNoSuffix, aAlreadyLoadedCount, aKeys, aValues, aRv));
 
   db->SyncPreload(cache, true);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBParent::RecvAsyncAddItem(const nsCString& aOriginSuffix,
                                      const nsCString& aOriginNoSuffix,
                                      const nsString& aKey,
@@ -518,7 +518,7 @@ DOMStorageDBParent::RecvAsyncAddItem(const nsCString& aOriginSuffix,
 {
   DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
   if (!db) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   nsresult rv = db->AsyncAddItem(NewCache(aOriginSuffix, aOriginNoSuffix), aKey, aValue);
@@ -526,10 +526,10 @@ DOMStorageDBParent::RecvAsyncAddItem(const nsCString& aOriginSuffix,
     mozilla::Unused << SendError(rv);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBParent::RecvAsyncUpdateItem(const nsCString& aOriginSuffix,
                                         const nsCString& aOriginNoSuffix,
                                         const nsString& aKey,
@@ -537,7 +537,7 @@ DOMStorageDBParent::RecvAsyncUpdateItem(const nsCString& aOriginSuffix,
 {
   DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
   if (!db) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   nsresult rv = db->AsyncUpdateItem(NewCache(aOriginSuffix, aOriginNoSuffix), aKey, aValue);
@@ -545,17 +545,17 @@ DOMStorageDBParent::RecvAsyncUpdateItem(const nsCString& aOriginSuffix,
     mozilla::Unused << SendError(rv);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBParent::RecvAsyncRemoveItem(const nsCString& aOriginSuffix,
                                         const nsCString& aOriginNoSuffix,
                                         const nsString& aKey)
 {
   DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
   if (!db) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   nsresult rv = db->AsyncRemoveItem(NewCache(aOriginSuffix, aOriginNoSuffix), aKey);
@@ -563,16 +563,16 @@ DOMStorageDBParent::RecvAsyncRemoveItem(const nsCString& aOriginSuffix,
     mozilla::Unused << SendError(rv);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBParent::RecvAsyncClear(const nsCString& aOriginSuffix,
                                    const nsCString& aOriginNoSuffix)
 {
   DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
   if (!db) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   nsresult rv = db->AsyncClear(NewCache(aOriginSuffix, aOriginNoSuffix));
@@ -580,19 +580,19 @@ DOMStorageDBParent::RecvAsyncClear(const nsCString& aOriginSuffix,
     mozilla::Unused << SendError(rv);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 DOMStorageDBParent::RecvAsyncFlush()
 {
   DOMStorageDBBridge* db = DOMStorageCache::GetDatabase();
   if (!db) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   db->AsyncFlush();
-  return true;
+  return IPC_OK();
 }
 
 // DOMStorageObserverSink

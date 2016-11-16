@@ -104,10 +104,10 @@ protected:
   virtual bool
   DeallocPFileDescriptorSetChild(mozilla::ipc::PFileDescriptorSetChild* aActor);
 
-  virtual bool RecvAsyncMessage(const nsString& aMsg,
-                                InfallibleTArray<jsipc::CpowEntry>&& aCpows,
-                                const IPC::Principal& aPrincipal,
-                                const ClonedMessageData& aData);
+  virtual mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMsg,
+                                                   InfallibleTArray<jsipc::CpowEntry>&& aCpows,
+                                                   const IPC::Principal& aPrincipal,
+                                                   const ClonedMessageData& aData);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentChild, NS_ICONTENTCHILD_IID)

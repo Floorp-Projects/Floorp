@@ -265,7 +265,7 @@ GMPParent::EnsureAsyncShutdownTimeoutSet()
   return rv;
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPParent::RecvPGMPContentChildDestroyed()
 {
   --mGMPContentChildCount;
@@ -286,7 +286,7 @@ GMPParent::RecvPGMPContentChildDestroyed()
     }
   }
 #endif
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -764,20 +764,20 @@ GMPParent::DeallocPGMPStorageParent(PGMPStorageParent* aActor)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPParent::RecvPGMPStorageConstructor(PGMPStorageParent* aActor)
 {
   GMPStorageParent* p  = (GMPStorageParent*)aActor;
   if (NS_WARN_IF(NS_FAILED(p->Init()))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPParent::RecvPGMPTimerConstructor(PGMPTimerParent* actor)
 {
-  return true;
+  return IPC_OK();
 }
 
 PGMPTimerParent*
@@ -1024,20 +1024,20 @@ GMPParent::GetPluginId() const
   return mPluginId;
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPParent::RecvAsyncShutdownRequired()
 {
   LOGD("%s", __FUNCTION__);
   if (mAsyncShutdownRequired) {
     NS_WARNING("Received AsyncShutdownRequired message more than once!");
-    return true;
+    return IPC_OK();
   }
   mAsyncShutdownRequired = true;
   mService->AsyncShutdownNeeded(this);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPParent::RecvAsyncShutdownComplete()
 {
   LOGD("%s", __FUNCTION__);
@@ -1050,7 +1050,7 @@ GMPParent::RecvAsyncShutdownComplete()
   }
 #endif
   AbortAsyncShutdown();
-  return true;
+  return IPC_OK();
 }
 
 class RunCreateContentParentCallbacks : public Runnable

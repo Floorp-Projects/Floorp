@@ -23,7 +23,7 @@ public:
     void Main();
 
 protected:
-    virtual bool AnswerE() override;
+    virtual mozilla::ipc::IPCResult AnswerE() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
@@ -45,11 +45,11 @@ public:
     virtual ~TestRacyReentryChild();
 
 protected:
-    virtual bool RecvStart() override;
+    virtual mozilla::ipc::IPCResult RecvStart() override;
 
-    virtual bool RecvN() override;
+    virtual mozilla::ipc::IPCResult RecvN() override;
 
-    virtual bool AnswerH() override;
+    virtual mozilla::ipc::IPCResult AnswerH() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

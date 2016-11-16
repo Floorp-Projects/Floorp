@@ -6,5 +6,6 @@
 DevToolsModules(
     'filter-buttons.js',
     'search-box.js',
+    'summary-button.js',
     'toggle-button.js',
 )

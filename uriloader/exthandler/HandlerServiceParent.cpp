@@ -237,32 +237,35 @@ HandlerServiceParent::~HandlerServiceParent()
 {
 }
 
-bool HandlerServiceParent::RecvFillHandlerInfo(const HandlerInfo& aHandlerInfoData,
-                                               const nsCString& aOverrideType,
-                                               HandlerInfo* handlerInfoData)
+mozilla::ipc::IPCResult
+HandlerServiceParent::RecvFillHandlerInfo(const HandlerInfo& aHandlerInfoData,
+                                          const nsCString& aOverrideType,
+                                          HandlerInfo* handlerInfoData)
 {
   nsCOMPtr<nsIHandlerInfo> info(WrapHandlerInfo(aHandlerInfoData));
   nsCOMPtr<nsIHandlerService> handlerSvc = do_GetService(NS_HANDLERSERVICE_CONTRACTID);
   handlerSvc->FillHandlerInfo(info, aOverrideType);
   ContentHandlerService::nsIHandlerInfoToHandlerInfo(info, handlerInfoData);
-  return true;
+  return IPC_OK();
 }
 
-bool HandlerServiceParent::RecvExists(const HandlerInfo& aHandlerInfo,
-                                      bool* exists)
+mozilla::ipc::IPCResult
+HandlerServiceParent::RecvExists(const HandlerInfo& aHandlerInfo,
+                                 bool* exists)
 {
   nsCOMPtr<nsIHandlerInfo> info(WrapHandlerInfo(aHandlerInfo));
   nsCOMPtr<nsIHandlerService> handlerSvc = do_GetService(NS_HANDLERSERVICE_CONTRACTID);
   handlerSvc->Exists(info, exists);
-  return true;
+  return IPC_OK();
 }
 
-bool HandlerServiceParent::RecvGetTypeFromExtension(const nsCString& aFileExtension,
-                                                    nsCString* type)
+mozilla::ipc::IPCResult
+HandlerServiceParent::RecvGetTypeFromExtension(const nsCString& aFileExtension,
+                                               nsCString* type)
 {
   nsCOMPtr<nsIHandlerService> handlerSvc = do_GetService(NS_HANDLERSERVICE_CONTRACTID);
   handlerSvc->GetTypeFromExtension(aFileExtension, *type);
-  return true;
+  return IPC_OK();
 }
 
 void HandlerServiceParent::ActorDestroy(ActorDestroyReason aWhy)

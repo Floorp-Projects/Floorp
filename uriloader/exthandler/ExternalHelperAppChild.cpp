@@ -116,11 +116,11 @@ ExternalHelperAppChild::DivertToParent(nsIDivertableChannel *divertable,
   return NS_ERROR_FAILURE;
 }
 
-bool
+mozilla::ipc::IPCResult
 ExternalHelperAppChild::RecvCancel(const nsresult& aStatus)
 {
   mStatus = aStatus;
-  return true;
+  return IPC_OK();
 }
 
 } // namespace dom

@@ -89,13 +89,13 @@ CacheStreamControlParent::ActorDestroy(ActorDestroyReason aReason)
   mStreamList = nullptr;
 }
 
-bool
+mozilla::ipc::IPCResult
 CacheStreamControlParent::RecvNoteClosed(const nsID& aId)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
   MOZ_ASSERT(mStreamList);
   mStreamList->NoteClosed(aId);
-  return true;
+  return IPC_OK();
 }
 
 void

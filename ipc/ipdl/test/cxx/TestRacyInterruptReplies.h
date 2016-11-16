@@ -23,9 +23,9 @@ public:
     void Main();
 
 protected:    
-    virtual bool RecvA_() override;
+    virtual mozilla::ipc::IPCResult RecvA_() override;
 
-    virtual bool Answer_R(int* replyNum) override;
+    virtual mozilla::ipc::IPCResult Answer_R(int* replyNum) override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
@@ -48,11 +48,11 @@ public:
     virtual ~TestRacyInterruptRepliesChild();
 
 protected:
-    virtual bool AnswerR_(int* replyNum) override;
+    virtual mozilla::ipc::IPCResult AnswerR_(int* replyNum) override;
 
-    virtual bool RecvChildTest() override;
+    virtual mozilla::ipc::IPCResult RecvChildTest() override;
 
-    virtual bool Recv_A() override;
+    virtual mozilla::ipc::IPCResult Recv_A() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

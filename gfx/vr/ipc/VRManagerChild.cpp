@@ -265,7 +265,7 @@ VRManagerChild::UpdateDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayUpdates)
   mDisplaysInitialized = true;
 }
 
-bool
+mozilla::ipc::IPCResult
 VRManagerChild::RecvUpdateDisplayInfo(nsTArray<VRDisplayInfo>&& aDisplayUpdates)
 {
   UpdateDisplayInfo(aDisplayUpdates);
@@ -279,7 +279,7 @@ VRManagerChild::RecvUpdateDisplayInfo(nsTArray<VRDisplayInfo>&& aDisplayUpdates)
     nav->NotifyVRDisplaysUpdated();
   }
   mNavigatorCallbacks.Clear();
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -315,7 +315,7 @@ VRManagerChild::GetInputFrameID()
   return mInputFrameID;
 }
 
-bool
+mozilla::ipc::IPCResult
 VRManagerChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages)
 {
   for (InfallibleTArray<AsyncParentMessageData>::index_type i = 0; i < aMessages.Length(); ++i) {
@@ -329,10 +329,10 @@ VRManagerChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>
       }
       default:
         NS_ERROR("unknown AsyncParentMessageData type");
-        return false;
+        return IPC_FAIL_NO_REASON(this);
     }
   }
-  return true;
+  return IPC_OK();
 }
 
 PTextureChild*
@@ -448,17 +448,17 @@ VRManagerChild::CancelFrameRequestCallback(int32_t aHandle)
   mFrameRequestCallbacks.RemoveElementSorted(aHandle);
 }
 
-bool
+mozilla::ipc::IPCResult
 VRManagerChild::RecvNotifyVSync()
 {
   for (auto& display : mDisplays) {
     display->NotifyVsync();
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VRManagerChild::RecvNotifyVRVSync(const uint32_t& aDisplayID)
 {
   for (auto& display : mDisplays) {
@@ -467,10 +467,10 @@ VRManagerChild::RecvNotifyVRVSync(const uint32_t& aDisplayID)
     }
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VRManagerChild::RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
 {
 #ifdef MOZ_GAMEPAD
@@ -482,7 +482,7 @@ VRManagerChild::RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
   }
 #endif
 
-  return true;
+  return IPC_OK();
 }
 
 void

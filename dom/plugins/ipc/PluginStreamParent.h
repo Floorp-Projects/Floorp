@@ -28,9 +28,9 @@ public:
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool AnswerNPN_Write(const Buffer& data, int32_t* written) override;
+  virtual mozilla::ipc::IPCResult AnswerNPN_Write(const Buffer& data, int32_t* written) override;
 
-  virtual bool Answer__delete__(const NPError& reason, const bool& artificial) override;
+  virtual mozilla::ipc::IPCResult Answer__delete__(const NPError& reason, const bool& artificial) override;
 
 private:
   void NPN_DestroyStream(NPReason reason);

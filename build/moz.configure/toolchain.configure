@@ -839,6 +839,27 @@ def debug_flags(env_debug_flags, enable_debug_flags, default_debug_flags):
 set_config('MOZ_DEBUG_FLAGS', debug_flags)
 add_old_configure_assignment('MOZ_DEBUG_FLAGS', debug_flags)
 
+@depends(c_compiler)
+def color_cflags(info):
+    # We could test compiling with flags. By why incur the overhead when
+    # color support should always be present in a specific toolchain
+    # version?
+
+    # Code for auto-adding this flag to compiler invocations needs to
+    # determine if an existing flag isn't already present. That is likely
+    # using exact string matching on the returned value. So if the return
+    # value changes to e.g. "<x>=always", exact string match may fail and
+    # multiple color flags could be added. So examine downstream consumers
+    # before adding flags to return values.
+    if info.type == 'gcc' and info.version >= '4.9.0':
+        return '-fdiagnostics-color'
+    elif info.type == 'clang':
+        return '-fcolor-diagnostics'
+    else:
+        return ''
+
+set_config('COLOR_CFLAGS', color_cflags)
+
 # Some standard library headers (notably bionic on Android) declare standard
 # functions (e.g. getchar()) and also #define macros for those standard
 # functions.  libc++ deals with this by doing something like the following

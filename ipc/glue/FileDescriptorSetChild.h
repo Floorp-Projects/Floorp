@@ -41,7 +41,7 @@ private:
   explicit FileDescriptorSetChild(const FileDescriptor& aFileDescriptor);
   ~FileDescriptorSetChild();
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvAddFileDescriptor(const FileDescriptor& aFileDescriptor) override;
 };
 

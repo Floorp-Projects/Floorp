@@ -118,20 +118,20 @@ protected: // IPDL methods
 
   virtual bool DeallocPSendStreamParent(mozilla::ipc::PSendStreamParent* aActor);
 
-  virtual bool RecvSyncMessage(const nsString& aMsg,
-                               const ClonedMessageData& aData,
-                               InfallibleTArray<jsipc::CpowEntry>&& aCpows,
-                               const IPC::Principal& aPrincipal,
-                               nsTArray<ipc::StructuredCloneData>* aRetvals);
-  virtual bool RecvRpcMessage(const nsString& aMsg,
-                              const ClonedMessageData& aData,
-                              InfallibleTArray<jsipc::CpowEntry>&& aCpows,
-                              const IPC::Principal& aPrincipal,
-                              nsTArray<ipc::StructuredCloneData>* aRetvals);
-  virtual bool RecvAsyncMessage(const nsString& aMsg,
-                                InfallibleTArray<jsipc::CpowEntry>&& aCpows,
-                                const IPC::Principal& aPrincipal,
-                                const ClonedMessageData& aData);
+  virtual mozilla::ipc::IPCResult RecvSyncMessage(const nsString& aMsg,
+                                                  const ClonedMessageData& aData,
+                                                  InfallibleTArray<jsipc::CpowEntry>&& aCpows,
+                                                  const IPC::Principal& aPrincipal,
+                                                  nsTArray<ipc::StructuredCloneData>* aRetvals);
+  virtual mozilla::ipc::IPCResult RecvRpcMessage(const nsString& aMsg,
+                                                 const ClonedMessageData& aData,
+                                                 InfallibleTArray<jsipc::CpowEntry>&& aCpows,
+                                                 const IPC::Principal& aPrincipal,
+                                                 nsTArray<ipc::StructuredCloneData>* aRetvals);
+  virtual mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMsg,
+                                                   InfallibleTArray<jsipc::CpowEntry>&& aCpows,
+                                                   const IPC::Principal& aPrincipal,
+                                                   const ClonedMessageData& aData);
 
 protected: // members
   RefPtr<nsFrameMessageManager> mMessageManager;

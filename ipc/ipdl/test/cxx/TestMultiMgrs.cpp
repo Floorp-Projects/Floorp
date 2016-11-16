@@ -42,33 +42,33 @@ TestMultiMgrsParent::Main()
         fail("couldn't kick off the child-side check");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestMultiMgrsParent::RecvOK()
 {
     Close();
-    return true;
+    return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------
 // child
 
-bool
+mozilla::ipc::IPCResult
 TestMultiMgrsLeftChild::RecvPTestMultiMgrsBottomConstructor(
     PTestMultiMgrsBottomChild* actor)
 {
     static_cast<TestMultiMgrsChild*>(Manager())->mBottomL = actor;
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestMultiMgrsRightChild::RecvPTestMultiMgrsBottomConstructor(
     PTestMultiMgrsBottomChild* actor)
 {
     static_cast<TestMultiMgrsChild*>(Manager())->mBottomR = actor;
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestMultiMgrsChild::RecvCheck()
 {
     if (1 != ManagedPTestMultiMgrsLeftChild().Count())
@@ -96,7 +96,7 @@ TestMultiMgrsChild::RecvCheck()
     if (!SendOK())
         fail("couldn't send OK()");
 
-    return true;
+    return IPC_OK();
 }
 
 

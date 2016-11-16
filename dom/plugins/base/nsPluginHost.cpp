@@ -206,8 +206,7 @@ nsInvalidPluginTag::nsInvalidPluginTag(const char* aFullPath, int64_t aLastModif
   mSeen(false)
 {}
 
-nsInvalidPluginTag::~nsInvalidPluginTag()
-{}
+nsInvalidPluginTag::~nsInvalidPluginTag() = default;
 
 // Helper to check for a MIME in a comma-delimited preference
 static bool
@@ -1677,7 +1676,7 @@ public:
   nsPluginHost* host;
   NS_DECLARE_STATIC_IID_ACCESSOR(ClearDataFromSitesClosure_CID)
   private:
-  virtual ~ClearDataFromSitesClosure() {}
+  virtual ~ClearDataFromSitesClosure() = default;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ClearDataFromSitesClosure, ClearDataFromSitesClosure_CID)
@@ -1783,8 +1782,7 @@ public:
   nsresult retVal;
   NS_DECLARE_STATIC_IID_ACCESSOR(GetSitesClosure_CID)
   private:
-  virtual ~GetSitesClosure() {
-  }
+  virtual ~GetSitesClosure() = default;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(GetSitesClosure, GetSitesClosure_CID)
@@ -3799,7 +3797,7 @@ nsPluginHost::CreateTempFileToPost(const char *aPostDataURL, nsIFile **aTmpFile)
     char buf[1024];
     uint32_t br, bw;
     bool firstRead = true;
-    while (1) {
+    while (true) {
       // Read() mallocs if buffer is null
       rv = inStream->Read(buf, 1024, &br);
       if (NS_FAILED(rv) || (int32_t)br <= 0)
@@ -4113,7 +4111,7 @@ public:
     PR_APPEND_LINK(this, &sRunnableListHead);
   }
 
-  virtual ~nsPluginDestroyRunnable()
+  ~nsPluginDestroyRunnable() override
   {
     PR_REMOVE_LINK(this);
   }

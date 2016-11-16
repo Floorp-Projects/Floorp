@@ -38,15 +38,15 @@ TestHighestPrioParent::Main()
         fail("sending Start");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestHighestPrioParent::RecvMsg1()
 {
     MOZ_ASSERT(msg_num_ == 0);
     msg_num_ = 1;
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestHighestPrioParent::RecvMsg2()
 {
 
@@ -56,23 +56,23 @@ TestHighestPrioParent::RecvMsg2()
     if (!SendStartInner())
         fail("sending StartInner");
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestHighestPrioParent::RecvMsg3()
 {
     MOZ_ASSERT(msg_num_ == 2);
     msg_num_ = 3;
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestHighestPrioParent::RecvMsg4()
 {
     MOZ_ASSERT(msg_num_ == 3);
     msg_num_ = 4;
-    return true;
+    return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------
@@ -89,7 +89,7 @@ TestHighestPrioChild::~TestHighestPrioChild()
     MOZ_COUNT_DTOR(TestHighestPrioChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestHighestPrioChild::RecvStart()
 {
     if (!SendMsg1())
@@ -99,10 +99,10 @@ TestHighestPrioChild::RecvStart()
         fail("sending Msg2");
 
     Close();
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestHighestPrioChild::RecvStartInner()
 {
     if (!SendMsg3())
@@ -111,7 +111,7 @@ TestHighestPrioChild::RecvStartInner()
     if (!SendMsg4())
         fail("sending Msg4");
 
-    return true;
+    return IPC_OK();
 }
 
 } // namespace _ipdltest

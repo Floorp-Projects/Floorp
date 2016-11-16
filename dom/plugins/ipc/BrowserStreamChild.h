@@ -35,12 +35,12 @@ public:
             const bool& seekable,
             uint16_t* stype);
 
-  virtual bool RecvWrite(const int32_t& offset,
-                         const uint32_t& newsize,
-                         const Buffer& data) override;
-  virtual bool RecvNPP_StreamAsFile(const nsCString& fname) override;
-  virtual bool RecvNPP_DestroyStream(const NPReason& reason) override;
-  virtual bool Recv__delete__() override;
+  virtual mozilla::ipc::IPCResult RecvWrite(const int32_t& offset,
+                                            const uint32_t& newsize,
+                                            const Buffer& data) override;
+  virtual mozilla::ipc::IPCResult RecvNPP_StreamAsFile(const nsCString& fname) override;
+  virtual mozilla::ipc::IPCResult RecvNPP_DestroyStream(const NPReason& reason) override;
+  virtual mozilla::ipc::IPCResult Recv__delete__() override;
 
   void EnsureCorrectInstance(PluginInstanceChild* i)
   {

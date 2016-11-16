@@ -277,11 +277,6 @@ public:
                                                nsACString& failureId,
                                                int32_t* status);
 
-    // Can pass `nullptr` for gfxInfo.
-    // If FAILED(ThreadSafeGetFeatureStatus), out_blacklistId will be empty.
-    static bool IsFeatureBlacklisted(nsCOMPtr<nsIGfxInfo> gfxInfo, int32_t feature,
-                                     nsACString* const out_blacklistId);
-
     /**
      * Copy to the clipboard as a PNG encoded Data URL.
      */

@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
 @import url("resource://devtools/client/themes/splitters.css");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
   font: message-box;
@@ -33,6 +35,10 @@
   font-size: 80%;
 }
 
+/* Override wrong system font from forms.css */
+html|button, html|select {
+  font: message-box;
+}
 
 /* Autocomplete Popup */
 

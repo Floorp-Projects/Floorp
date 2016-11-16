@@ -35,15 +35,15 @@ public:
   void OnVarChanged(const GfxVarUpdate& aVar) override;
 
   // PGPUChild overrides.
-  bool RecvInitComplete(const GPUDeviceData& aData) override;
-  bool RecvReportCheckerboard(const uint32_t& aSeverity, const nsCString& aLog) override;
-  bool RecvInitCrashReporter(Shmem&& shmem) override;
-  bool RecvAccumulateChildHistogram(InfallibleTArray<Accumulation>&& aAccumulations) override;
-  bool RecvAccumulateChildKeyedHistogram(InfallibleTArray<KeyedAccumulation>&& aAccumulations) override;
+  mozilla::ipc::IPCResult RecvInitComplete(const GPUDeviceData& aData) override;
+  mozilla::ipc::IPCResult RecvReportCheckerboard(const uint32_t& aSeverity, const nsCString& aLog) override;
+  mozilla::ipc::IPCResult RecvInitCrashReporter(Shmem&& shmem) override;
+  mozilla::ipc::IPCResult RecvAccumulateChildHistogram(InfallibleTArray<Accumulation>&& aAccumulations) override;
+  mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistogram(InfallibleTArray<KeyedAccumulation>&& aAccumulations) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  bool RecvGraphicsError(const nsCString& aError) override;
-  bool RecvNotifyUiObservers(const nsCString& aTopic) override;
-  bool RecvNotifyDeviceReset() override;
+  mozilla::ipc::IPCResult RecvGraphicsError(const nsCString& aError) override;
+  mozilla::ipc::IPCResult RecvNotifyUiObservers(const nsCString& aTopic) override;
+  mozilla::ipc::IPCResult RecvNotifyDeviceReset() override;
 
   static void Destroy(UniquePtr<GPUChild>&& aChild);
 

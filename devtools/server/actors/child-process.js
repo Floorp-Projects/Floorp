@@ -121,7 +121,7 @@ ChildProcessActor.prototype = {
     this._workerList.onListChanged = null;
   },
 
-  disconnect: function () {
+  destroy: function () {
     this.conn.removeActorPool(this._contextPool);
     this._contextPool = null;
 

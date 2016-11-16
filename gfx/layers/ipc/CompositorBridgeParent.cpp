@@ -647,13 +647,13 @@ CompositorBridgeParent::Bind(Endpoint<PCompositorBridgeParent>&& aEndpoint)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvInitialize(const uint64_t& aRootLayerTreeId)
 {
   mRootLayerTreeID = aRootLayerTreeId;
 
   Initialize();
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -683,7 +683,7 @@ CompositorBridgeParent::Initialize()
   mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvReset(nsTArray<LayersBackend>&& aBackendHints,
                                   const uint64_t& aSeqNo,
                                   bool* aResult,
@@ -699,7 +699,7 @@ CompositorBridgeParent::RecvReset(nsTArray<LayersBackend>&& aBackendHints,
     *aResult = false;
   }
 
-  return true;
+  return IPC_OK();
 }
 
 uint64_t
@@ -766,11 +766,11 @@ CompositorBridgeParent::StopAndClearResources()
   mWidget = nullptr;
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvWillClose()
 {
   StopAndClearResources();
-  return true;
+  return IPC_OK();
 }
 
 void CompositorBridgeParent::DeferredDestroy()
@@ -781,21 +781,21 @@ void CompositorBridgeParent::DeferredDestroy()
   mSelfRef = nullptr;
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvPause()
 {
   PauseComposition();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvResume()
 {
   ResumeComposition();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
                                          const gfx::IntRect& aRect)
 {
@@ -805,13 +805,13 @@ CompositorBridgeParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
     // We kill the content process rather than have it continue with an invalid
     // snapshot, that may be too harsh and we could decide to return some sort
     // of error to the child process and let it deal with it...
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   ForceComposeToTarget(target, &aRect);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvFlushRendering()
 {
   if (mCompositorScheduler->NeedsComposite())
@@ -819,26 +819,26 @@ CompositorBridgeParent::RecvFlushRendering()
     CancelCurrentCompositeTask();
     ForceComposeToTarget(nullptr);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvForcePresent()
 {
   // During the shutdown sequence mLayerManager may be null
   if (mLayerManager) {
     mLayerManager->ForcePresent();
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvNotifyRegionInvalidated(const nsIntRegion& aRegion)
 {
   if (mLayerManager) {
     mLayerManager->AddInvalidRegion(aRegion);
   }
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -850,7 +850,7 @@ CompositorBridgeParent::Invalidate()
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex)
 {
   if (mLayerManager) {
@@ -858,25 +858,25 @@ CompositorBridgeParent::RecvStartFrameTimeRecording(const int32_t& aBufferSize, 
   } else {
     *aOutStartIndex = 0;
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvStopFrameTimeRecording(const uint32_t& aStartIndex,
                                                    InfallibleTArray<float>* intervals)
 {
   if (mLayerManager) {
     mLayerManager->StopFrameTimeRecording(aStartIndex, *intervals);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvClearApproximatelyVisibleRegions(const uint64_t& aLayersId,
-                                                            const uint32_t& aPresShellId)
+                                                             const uint32_t& aPresShellId)
 {
   ClearApproximatelyVisibleRegions(aLayersId, Some(aPresShellId));
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -891,7 +891,7 @@ CompositorBridgeParent::ClearApproximatelyVisibleRegions(const uint64_t& aLayers
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvNotifyApproximatelyVisibleRegion(const ScrollableLayerGuid& aGuid,
                                                              const CSSIntRegion& aRegion)
 {
@@ -901,7 +901,7 @@ CompositorBridgeParent::RecvNotifyApproximatelyVisibleRegion(const ScrollableLay
     // We need to recomposite to update the minimap.
     ScheduleComposition();
   }
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -1315,7 +1315,7 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
   profiler_tracing("Paint", "Composite", TRACING_INTERVAL_END);
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvRemotePluginsReady()
 {
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
@@ -1326,11 +1326,11 @@ CompositorBridgeParent::RecvRemotePluginsReady()
   } else {
     ScheduleComposition();
   }
-  return true;
+  return IPC_OK();
 #else
   NS_NOTREACHED("CompositorBridgeParent::RecvRemotePluginsReady calls "
                 "unexpected on this platform.");
-  return false;
+  return IPC_FAIL_NO_REASON(this);
 #endif
 }
 
@@ -1399,13 +1399,13 @@ CompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvAsyncPanZoomEnabled(const uint64_t& aLayersId, bool* aHasAPZ)
 {
   // The main process should pass in 0 because we assume mRootLayerTreeID
   MOZ_ASSERT(aLayersId == 0);
   *aHasAPZ = AsyncPanZoomEnabled();
-  return true;
+  return IPC_OK();
 }
 
 RefPtr<APZCTreeManager>
@@ -1558,19 +1558,19 @@ CompositorBridgeParent::ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvGetFrameUniformity(FrameUniformityData* aOutData)
 {
   mCompositionManager->GetFrameUniformity(aOutData);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvRequestOverfill()
 {
   uint32_t overfillRatio = mCompositor->GetFillRatio();
   Unused << SendOverfill(overfillRatio);
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -1787,26 +1787,26 @@ CompositorBridgeParent::NotifyVsync(const TimeStamp& aTimeStamp, const uint64_t&
   obs->NotifyVsync(aTimeStamp);
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child)
 {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   NotifyChildCreated(child);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvNotifyChildRecreated(const uint64_t& aChild)
 {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
 
   if (sIndirectLayerTrees.find(aChild) != sIndirectLayerTrees.end()) {
     // Invalid to register the same layer tree twice.
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   NotifyChildCreated(aChild);
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -1817,7 +1817,7 @@ CompositorBridgeParent::NotifyChildCreated(uint64_t aChild)
   sIndirectLayerTrees[aChild].mLayerManager = mLayerManager;
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
 {
   APZCTreeManagerParent* parent;
@@ -1836,7 +1836,7 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
   if (mApzcTreeManager && parent) {
     parent->ChildAdopted(mApzcTreeManager);
   }
-  return true;
+  return IPC_OK();
 }
 
 static void
@@ -2430,7 +2430,7 @@ CompositorBridgeParent::HideAllPluginWindows()
 }
 #endif // #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 
-bool
+mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvAllPluginsCaptured()
 {
 #if defined(XP_WIN)
@@ -2438,11 +2438,11 @@ CompositorBridgeParent::RecvAllPluginsCaptured()
   mHaveBlockedForPlugins = false;
   ForceComposeToTarget(nullptr);
   Unused << SendHideAllPlugins(GetWidget()->GetWidgetKey());
-  return true;
+  return IPC_OK();
 #else
   MOZ_ASSERT_UNREACHABLE(
     "CompositorBridgeParent::RecvAllPluginsCaptured calls unexpected.");
-  return false;
+  return IPC_FAIL_NO_REASON(this);
 #endif
 }
 

@@ -23,7 +23,7 @@ public:
     void Main();
 
 protected:    
-    virtual bool RecvNonce() override;
+    virtual mozilla::ipc::IPCResult RecvNonce() override;
 
     void BreakNestedLoop();
 
@@ -47,9 +47,9 @@ public:
     virtual ~TestNestedLoopsChild();
 
 protected:
-    virtual bool RecvStart() override;
+    virtual mozilla::ipc::IPCResult RecvStart() override;
 
-    virtual bool AnswerR() override;
+    virtual mozilla::ipc::IPCResult AnswerR() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

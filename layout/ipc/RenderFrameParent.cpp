@@ -234,11 +234,11 @@ RenderFrameParent::ActorDestroy(ActorDestroyReason why)
   mFrameLoader = nullptr;
 }
 
-bool
+mozilla::ipc::IPCResult
 RenderFrameParent::RecvNotifyCompositorTransaction()
 {
   TriggerRepaint();
-  return true;
+  return IPC_OK();
 }
 
 void

@@ -20,6 +20,7 @@ let Ci = Components.interfaces;
 let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 let {DebuggerClient} = require("devtools/shared/client/main");
 let {DebuggerServer} = require("devtools/server/main");
+let Services = require("Services");
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
@@ -97,18 +98,56 @@ function runTests() {
           text: "var a = 42; a"
         }, function (response) {
           ok(response.result, 42, "console.eval worked");
-          cleanup();
+
+          getProcessAgain(actor, content.id);
         });
       });
     });
   }
 
-  function cleanup() {
-    client.close().then(function () {
-      DebuggerServer.destroy();
-      iframe.remove();
-      SimpleTest.finish()
+  // Assert that calling client.getProcess against the same process id is
+  // returning the same actor.
+  function getProcessAgain(firstActor, id) {
+    client.getProcess(id).then(response => {
+      let actor = response.form;
+      is(actor, firstActor,
+         "Second call to getProcess with the same id returns the same form");
+      closeClient();
     });
+  }
+
+  function processScript() {
+    let listener = function () {
+      Services.obs.removeObserver(listener, "sdk:loader:destroy", false);
+      sendAsyncMessage("test:getProcess-destroy", null);
+    };
+    Services.obs.addObserver(listener, "sdk:loader:destroy", false);
+  }
+
+  function closeClient() {
+    let onLoaderDestroyed = new Promise(done => {
+      let processListener = function () {
+        Services.ppmm.removeMessageListener("test:getProcess-destroy", processListener)
+        done();
+      };
+      Services.ppmm.addMessageListener("test:getProcess-destroy", processListener)
+    });
+    let script = "data:,(" + processScript + ")()";
+    Services.ppmm.loadProcessScript(script, true);
+    client.close();
+
+    onLoaderDestroyed.then(function () {
+      Services.ppmm.removeDelayedProcessScript(script);
+      info("Loader destroyed in the content process");
+
+      cleanup();
+    });
+  }
+
+  function cleanup() {
+    DebuggerServer.destroy();
+    iframe.remove();
+    SimpleTest.finish()
   }
 
   connect();

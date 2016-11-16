@@ -2769,11 +2769,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     md.recvMethod().name,
                     params=md.makeCxxParams(paramsems='move', returnsems='out',
                                             side=self.side, implicit=implicit),
-                    ret=Type.BOOL, virtual=1)
+                    ret=Type('mozilla::ipc::IPCResult'), virtual=1)
 
                 if isctor or isdtor:
                     defaultRecv = MethodDefn(recvDecl)
-                    defaultRecv.addstmt(StmtReturn.TRUE)
+                    defaultRecv.addstmt(StmtReturn(ExprCall(ExprVar('IPC_OK'))))
                     self.cls.addstmt(defaultRecv)
                 else:
                     recvDecl.pure = 1
@@ -4590,6 +4590,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                          implicit=implicit))))
         failif.addifstmts([
             _protocolErrorBreakpoint('Handler returned error code!'),
+            Whitespace('// Error handled in mozilla::ipc::IPCResult\n', indent=1),
             StmtReturn(_Result.ProcessingError)
         ])
         return [ failif ]

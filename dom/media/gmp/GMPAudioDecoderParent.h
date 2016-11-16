@@ -47,13 +47,13 @@ private:
 
   // PGMPAudioDecoderParent
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  bool RecvDecoded(const GMPAudioDecodedSampleData& aDecoded) override;
-  bool RecvInputDataExhausted() override;
-  bool RecvDrainComplete() override;
-  bool RecvResetComplete() override;
-  bool RecvError(const GMPErr& aError) override;
-  bool RecvShutdown() override;
-  bool Recv__delete__() override;
+  mozilla::ipc::IPCResult RecvDecoded(const GMPAudioDecodedSampleData& aDecoded) override;
+  mozilla::ipc::IPCResult RecvInputDataExhausted() override;
+  mozilla::ipc::IPCResult RecvDrainComplete() override;
+  mozilla::ipc::IPCResult RecvResetComplete() override;
+  mozilla::ipc::IPCResult RecvError(const GMPErr& aError) override;
+  mozilla::ipc::IPCResult RecvShutdown() override;
+  mozilla::ipc::IPCResult Recv__delete__() override;
 
   void UnblockResetAndDrain();
 

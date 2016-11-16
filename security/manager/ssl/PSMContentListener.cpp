@@ -218,23 +218,23 @@ PSMContentDownloaderParent::~PSMContentDownloaderParent()
 {
 }
 
-bool
+mozilla::ipc::IPCResult
 PSMContentDownloaderParent::RecvOnStartRequest(const uint32_t& contentLength)
 {
   mByteData.SetCapacity(contentLength);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PSMContentDownloaderParent::RecvOnDataAvailable(const nsCString& data,
                                                 const uint64_t& offset,
                                                 const uint32_t& count)
 {
   mByteData.Append(data);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PSMContentDownloaderParent::RecvOnStopRequest(const nsresult& code)
 {
   if (NS_SUCCEEDED(code)) {
@@ -248,7 +248,7 @@ PSMContentDownloaderParent::RecvOnStopRequest(const nsresult& code)
   if (mIPCOpen) {
     mozilla::Unused << Send__delete__(this);
   }
-  return true;
+  return IPC_OK();
 }
 
 NS_IMETHODIMP
@@ -262,14 +262,14 @@ PSMContentDownloaderParent::OnStopRequest(nsIRequest* request, nsISupports* cont
   return rv;
 }
 
-bool
+mozilla::ipc::IPCResult
 PSMContentDownloaderParent::RecvDivertToParentUsing(mozilla::net::PChannelDiverterParent* diverter)
 {
   MOZ_ASSERT(diverter);
   auto p = static_cast<mozilla::net::ChannelDiverterParent*>(diverter);
   p->DivertTo(this);
   mozilla::Unused << p->Send__delete__(p);
-  return true;
+  return IPC_OK();
 }
 
 void

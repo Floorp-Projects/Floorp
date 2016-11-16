@@ -15,8 +15,8 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GamepadEventChannelParent)
   GamepadEventChannelParent();
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-  virtual bool RecvGamepadListenerAdded() override;
-  virtual bool RecvGamepadListenerRemoved() override;
+  virtual mozilla::ipc::IPCResult RecvGamepadListenerAdded() override;
+  virtual mozilla::ipc::IPCResult RecvGamepadListenerRemoved() override;
   void DispatchUpdateEvent(const GamepadChangeEvent& aEvent);
   bool HasGamepadListener() const { return mHasGamepadListener; }
  private:

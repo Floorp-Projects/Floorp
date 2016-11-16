@@ -99,7 +99,7 @@ CacheOpChild::ActorDestroy(ActorDestroyReason aReason)
   RemoveWorkerHolder();
 }
 
-bool
+mozilla::ipc::IPCResult
 CacheOpChild::Recv__delete__(const ErrorResult& aRv,
                              const CacheOpResult& aResult)
 {
@@ -112,7 +112,7 @@ CacheOpChild::Recv__delete__(const ErrorResult& aRv,
     // and is thrown into the trash afterwards.
     mPromise->MaybeReject(const_cast<ErrorResult&>(aRv));
     mPromise = nullptr;
-    return true;
+    return IPC_OK();
   }
 
   switch (aResult.type()) {
@@ -176,7 +176,7 @@ CacheOpChild::Recv__delete__(const ErrorResult& aRv,
 
   mPromise = nullptr;
 
-  return true;
+  return IPC_OK();
 }
 
 void

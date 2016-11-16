@@ -11,31 +11,31 @@
 namespace mozilla {
 namespace dom {
 
-bool
+mozilla::ipc::IPCResult
 MessagePortChild::RecvStopSendingDataConfirmed()
 {
   MOZ_ASSERT(mPort);
   mPort->StopSendingDataConfirmed();
   MOZ_ASSERT(!mPort);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 MessagePortChild::RecvEntangled(nsTArray<MessagePortMessage>&& aMessages)
 {
   if (mPort) {
     mPort->Entangled(aMessages);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 MessagePortChild::RecvReceiveData(nsTArray<MessagePortMessage>&& aMessages)
 {
   if (mPort) {
     mPort->MessagesReceived(aMessages);
   }
-  return true;
+  return IPC_OK();
 }
 
 void
