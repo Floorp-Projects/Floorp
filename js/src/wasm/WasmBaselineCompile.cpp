@@ -2051,6 +2051,9 @@ class BaseCompiler
     }
 
     bool endFunction() {
+        // Always branch to outOfLinePrologue_ or returnLabel_.
+        masm.breakpoint();
+
         // Out-of-line prologue.  Assumes that the in-line prologue has
         // been executed and that a frame of size = localSize_ + sizeof(Frame)
         // has been allocated.
