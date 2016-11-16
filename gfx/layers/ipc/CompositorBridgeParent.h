@@ -539,7 +539,8 @@ public:
     return !!mApzcTreeManager;
   }
 
-  PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const uint64_t& aPipelineId) override;
+  PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const uint64_t& aPipelineId,
+                                                      const nsString& aResourcePath) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
 
 private:
