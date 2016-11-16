@@ -16,9 +16,6 @@
 #include "xpctest_params.h"
 #include "xpctest_returncode.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ModuleUtils.h"
-
-extern const mozilla::Module kXPCTestModule;
 
 class xpcTestObjectReadOnly final : public nsIXPCTestObjectReadOnly {
  public:

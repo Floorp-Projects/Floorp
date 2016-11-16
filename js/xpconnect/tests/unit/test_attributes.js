@@ -8,7 +8,7 @@ const Ci = Components.interfaces;
 function run_test() {
 
   // Load the component manifests.
-  registerXPCTestComponents();
+  registerAppManifest(do_get_file('../components/native/chrome.manifest'));
   registerAppManifest(do_get_file('../components/js/xpctest.manifest'));
 
   // Test for each component.

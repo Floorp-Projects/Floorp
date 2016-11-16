@@ -4,10 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS += [
-    'xpctest_private.h',
-]
-
+FINAL_TARGET = '_tests/xpcshell/js/xpconnect/tests/components/native/'
 EXTRA_COMPONENTS += [
     'xpctest.manifest',
 ]
@@ -19,4 +16,4 @@ UNIFIED_SOURCES += [
     'xpctest_returncode.cpp',
 ]
 
-FINAL_LIBRARY = 'xul'
+XPCOMBinaryComponent('xpctest')

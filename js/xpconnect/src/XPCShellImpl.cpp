@@ -28,7 +28,6 @@
 #include "nsJSPrincipals.h"
 #include "xpcpublic.h"
 #include "xpcprivate.h"
-#include "xpctest_private.h"
 #include "BackstagePass.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
@@ -644,22 +643,6 @@ RegisterAppManifest(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-RegisterXPCTestComponents(JSContext* cx, unsigned argc, Value* vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-    if (args.length() != 0) {
-        JS_ReportErrorASCII(cx, "Wrong number of arguments");
-        return false;
-    }
-    nsresult rv = XRE_AddStaticComponent(&kXPCTestModule);
-    if (NS_FAILED(rv)) {
-        XPCThrower::Throw(rv, cx);
-        return false;
-    }
-    return true;
-}
-
 static const JSFunctionSpec glob_functions[] = {
     JS_FS("print",           Print,          0,0),
     JS_FS("readline",        ReadLine,       1,0),
@@ -679,7 +662,6 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FS("setInterruptCallback", SetInterruptCallback, 1,0),
     JS_FS("simulateActivityCallback", SimulateActivityCallback, 1,0),
     JS_FS("registerAppManifest", RegisterAppManifest, 1, 0),
-    JS_FS("registerXPCTestComponents", RegisterXPCTestComponents, 0, 0),
     JS_FS_END
 };
 
