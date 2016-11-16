@@ -1179,7 +1179,7 @@ class TestEmitterBasic(unittest.TestCase):
             allowed[path].append(name)
 
         for path, names in allowed.iteritems():
-            if path.startswith('mailnews/'):
+            if path.startswith(('mailnews/', 'calendar/', 'extensions/purple/purplexpcom')):
                 continue
             try:
                 content = open(os.path.join(topsrcdir, path, 'moz.build')).read()
