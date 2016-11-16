@@ -465,13 +465,7 @@ SecureElementManager.prototype = {
       return null;
     }
 
-    if (SE_IPC_SECUREELEMENT_MSG_NAMES.indexOf(msg.name) !== -1) {
-      if (!msg.target.assertPermission("secureelement-manage")) {
-        debug("SecureElement message " + msg.name + " from a content process " +
-              "with no 'secureelement-manage' privileges.");
-        return null;
-      }
-    } else {
+    if (SE_IPC_SECUREELEMENT_MSG_NAMES.indexOf(msg.name) === -1) {
       debug("Ignoring unknown message type: " + msg.name);
       return null;
     }
