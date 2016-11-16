@@ -375,8 +375,6 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvNotifyLayerAllocated(const dom::TabId& aTabId, const uint64_t& aLayersId) override;
 
-  virtual mozilla::ipc::IPCResult RecvSpeakerManagerNotify() override;
-
   virtual mozilla::ipc::IPCResult RecvBidiKeyboardNotify(const bool& isLangRTL,
                                                          const bool& haveBidiKeyboards) override;
 

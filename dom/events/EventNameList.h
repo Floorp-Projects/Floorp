@@ -751,11 +751,6 @@ NON_IDL_EVENT(warning,
               EventNameType_None,
               eBasicEventClass)
 
-NON_IDL_EVENT(speakerforcedchange,
-              eSpeakerForcedChange,
-              EventNameType_None,
-              eBasicEventClass)
-
 // Events that only have on* attributes on XUL elements
 
  // "text" event is legacy event for modifying composition string in EditorBase.
