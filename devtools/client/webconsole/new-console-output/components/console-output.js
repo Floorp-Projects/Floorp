@@ -68,6 +68,7 @@ const ConsoleOutput = createClass({
       messagesTableData,
       serviceContainer,
       groups,
+      timestampsVisible,
     } = this.props;
 
     let messageNodes = messages.map((message) => {
@@ -89,9 +90,16 @@ const ConsoleOutput = createClass({
         })
       );
     });
+
+    let classList = ["webconsole-output"];
+
+    if (!timestampsVisible) {
+      classList.push("hideTimestamps");
+    }
+
     return (
       dom.div({
-        className: "webconsole-output",
+        className: classList.join(" "),
         ref: node => {
           this.outputNode = node;
         },
@@ -119,6 +127,7 @@ function mapStateToProps(state, props) {
     messagesTableData: getAllMessagesTableDataById(state),
     autoscroll: getScrollSetting(state),
     groups: getAllGroupsById(state),
+    timestampsVisible: state.ui.timestampsVisible,
   };
 }
 

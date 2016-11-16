@@ -37,7 +37,7 @@ public:
 
   Child();
 
-  bool RecvGetOriginKeyResponse(const uint32_t& aRequestId, const nsCString& aKey) override;
+  mozilla::ipc::IPCResult RecvGetOriginKeyResponse(const uint32_t& aRequestId, const nsCString& aKey) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   virtual ~Child();

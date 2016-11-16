@@ -258,14 +258,6 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     }
   },
 
-  /**
-   * Since StyleSheetActor doesn't have a protocol.js parent actor that take
-   * care of its lifetime, implementing disconnect is required to cleanup.
-   */
-  disconnect: function () {
-    this.destroy();
-  },
-
   initialize: function (aStyleSheet, aParentActor, aWindow) {
     protocol.Actor.prototype.initialize.call(this, null);
 

@@ -44,14 +44,14 @@ public:
 
   nsresult CreatePBackgroundSpinUntilDone();
 
-  virtual bool RecvCallbackOpened(const UDPAddressInfo& aAddressInfo) override;
-  virtual bool RecvCallbackConnected(const UDPAddressInfo& aAddressInfo) override;
-  virtual bool RecvCallbackClosed() override;
-  virtual bool RecvCallbackReceivedData(const UDPAddressInfo& aAddressInfo,
-                                        InfallibleTArray<uint8_t>&& aData) override;
-  virtual bool RecvCallbackError(const nsCString& aMessage,
-                                 const nsCString& aFilename,
-                                 const uint32_t& aLineNumber) override;
+  virtual mozilla::ipc::IPCResult RecvCallbackOpened(const UDPAddressInfo& aAddressInfo) override;
+  virtual mozilla::ipc::IPCResult RecvCallbackConnected(const UDPAddressInfo& aAddressInfo) override;
+  virtual mozilla::ipc::IPCResult RecvCallbackClosed() override;
+  virtual mozilla::ipc::IPCResult RecvCallbackReceivedData(const UDPAddressInfo& aAddressInfo,
+                                                           InfallibleTArray<uint8_t>&& aData) override;
+  virtual mozilla::ipc::IPCResult RecvCallbackError(const nsCString& aMessage,
+                                                    const nsCString& aFilename,
+                                                    const uint32_t& aLineNumber) override;
 
 private:
   nsresult SendDataInternal(const UDPSocketAddr& aAddr,

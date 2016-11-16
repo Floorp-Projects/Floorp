@@ -237,6 +237,8 @@ protected:
            (Reader()->IsWaitForDataSupported() &&
             (Reader()->IsWaitingAudioData() || Reader()->IsWaitingVideoData()));
   }
+  MediaQueue<MediaData>& AudioQueue() { return mMaster->mAudioQueue; }
+  MediaQueue<MediaData>& VideoQueue() { return mMaster->mVideoQueue; }
 
   // Note this function will delete the current state object.
   // Don't access members to avoid UAF after this call.
@@ -793,7 +795,7 @@ public:
       mSeekTask = new NextFrameSeekTask(
         mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
         Info(), mMaster->Duration(),mMaster->GetMediaTime(),
-        mMaster->AudioQueue(), mMaster->VideoQueue());
+        AudioQueue(), VideoQueue());
     } else {
       MOZ_DIAGNOSTIC_ASSERT(false, "Cannot handle this seek task.");
     }
@@ -893,11 +895,11 @@ private:
     }
 
     if (aValue.mIsAudioQueueFinished) {
-      mMaster->AudioQueue().Finish();
+      AudioQueue().Finish();
     }
 
     if (aValue.mIsVideoQueueFinished) {
-      mMaster->VideoQueue().Finish();
+      VideoQueue().Finish();
     }
 
     SeekCompleted();
@@ -908,11 +910,11 @@ private:
     mSeekTaskRequest.Complete();
 
     if (aValue.mIsAudioQueueFinished) {
-      mMaster->AudioQueue().Finish();
+      AudioQueue().Finish();
     }
 
     if (aValue.mIsVideoQueueFinished) {
-      mMaster->VideoQueue().Finish();
+      VideoQueue().Finish();
     }
 
     mMaster->DecodeError(aValue.mError);
@@ -1018,7 +1020,7 @@ public:
     // We've decoded all samples. We don't need decoders anymore.
     Reader()->ReleaseResources();
 
-    mMaster->ScheduleStateMachine();
+    Step();
   }
 
   void Exit() override
@@ -1051,8 +1053,7 @@ public:
     // is restarted correctly.
     mMaster->StopPlayback();
 
-    if (mMaster->mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
-        !mSentPlaybackEndedEvent) {
+    if (!mSentPlaybackEndedEvent) {
       int64_t clockTime = std::max(mMaster->AudioEndTime(), mMaster->VideoEndTime());
       clockTime = std::max(int64_t(0), std::max(clockTime, mMaster->Duration().ToMicroseconds()));
       mMaster->UpdatePlaybackPosition(clockTime);
@@ -1373,8 +1374,8 @@ DecodingFirstFrameState::MaybeFinishDecodeFirstFrame()
 {
   MOZ_ASSERT(!mMaster->mSentFirstFrameLoadedEvent);
 
-  if ((mMaster->IsAudioDecoding() && mMaster->AudioQueue().GetSize() == 0) ||
-      (mMaster->IsVideoDecoding() && mMaster->VideoQueue().GetSize() == 0)) {
+  if ((mMaster->IsAudioDecoding() && AudioQueue().GetSize() == 0) ||
+      (mMaster->IsVideoDecoding() && VideoQueue().GetSize() == 0)) {
     return;
   }
 
@@ -1478,7 +1479,7 @@ SeekingState::SeekCompleted()
   if (seekTime == mMaster->Duration().ToMicroseconds()) {
     newCurrentTime = seekTime;
   } else if (mMaster->HasAudio()) {
-    RefPtr<MediaData> audio = mMaster->AudioQueue().PeekFront();
+    RefPtr<MediaData> audio = AudioQueue().PeekFront();
     // Though we adjust the newCurrentTime in audio-based, and supplemented
     // by video. For better UX, should NOT bind the slide position to
     // the first audio data timestamp directly.
@@ -1497,23 +1498,25 @@ SeekingState::SeekCompleted()
     newCurrentTime = video ? video->mTime : seekTime;
   }
 
-  // Change state to DECODING or COMPLETED now.
   bool isLiveStream = Resource()->IsLiveStream();
-  State nextState;
   if (newCurrentTime == mMaster->Duration().ToMicroseconds() && !isLiveStream) {
-    // Seeked to end of media, move to COMPLETED state. Note we don't do
+    // Seeked to end of media. Explicitly finish the queues so DECODING
+    // will transition to COMPLETED immediately. Note we don't do
     // this when playing a live stream, since the end of media will advance
     // once we download more data!
-    // Explicitly set our state so we don't decode further, and so
-    // we report playback ended to the media element.
-    nextState = DECODER_STATE_COMPLETED;
-  } else {
-    nextState = DECODER_STATE_DECODING;
+    AudioQueue().Finish();
+    VideoQueue().Finish();
+
+    // We won't start MediaSink when paused. m{Audio,Video}Completed will
+    // remain false and 'playbackEnded' won't be notified. Therefore we
+    // need to set these flags explicitly when seeking to the end.
+    mMaster->mAudioCompleted = true;
+    mMaster->mVideoCompleted = true;
   }
 
   // We want to resolve the seek request prior finishing the first frame
   // to ensure that the seeked event is fired prior loadeded.
-  mSeekJob.Resolve(nextState == DECODER_STATE_COMPLETED, __func__);
+  mSeekJob.Resolve(__func__);
 
   // Notify FirstFrameLoaded now if we haven't since we've decoded some data
   // for readyState to transition to HAVE_CURRENT_DATA and fire 'loadeddata'.
@@ -1543,11 +1546,7 @@ SeekingState::SeekCompleted()
     mMaster->UpdateNextFrameStatus();
   }
 
-  if (nextState == DECODER_STATE_COMPLETED) {
-    SetState<CompletedState>();
-  } else {
-    SetState<DecodingState>();
-  }
+  SetState<DecodingState>();
 }
 
 void
@@ -3077,7 +3076,6 @@ MediaDecoderStateMachine::AudioEndTime() const
   if (mMediaSink->IsStarted()) {
     return mMediaSink->GetEndTime(TrackInfo::kAudioTrack);
   }
-  MOZ_ASSERT(!HasAudio());
   return -1;
 }
 

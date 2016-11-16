@@ -299,8 +299,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FullIndexMetadata)
 
 private:
-  ~FullIndexMetadata()
-  { }
+  ~FullIndexMetadata() = default;
 };
 
 typedef nsRefPtrHashtable<nsUint64HashKey, FullIndexMetadata> IndexTable;
@@ -334,8 +333,7 @@ public:
   HasLiveIndexes() const;
 
 private:
-  ~FullObjectStoreMetadata()
-  { }
+  ~FullObjectStoreMetadata() = default;
 };
 
 typedef nsRefPtrHashtable<nsUint64HashKey, FullObjectStoreMetadata>
@@ -366,8 +364,7 @@ public:
   Duplicate() const;
 
 private:
-  ~FullDatabaseMetadata()
-  { }
+  ~FullDatabaseMetadata() = default;
 };
 
 template <class MetadataType>
@@ -1942,8 +1939,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  ~CompressDataBlobsFunction()
-  { }
+  ~CompressDataBlobsFunction() = default;
 
   NS_IMETHOD
   OnFunctionCall(mozIStorageValueArray* aArguments,
@@ -2276,8 +2272,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  ~EncodeKeysFunction()
-  { }
+  ~EncodeKeysFunction() = default;
 
   NS_IMETHOD
   OnFunctionCall(mozIStorageValueArray* aArguments,
@@ -2733,8 +2728,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  ~InsertIndexDataValuesFunction()
-  { }
+  ~InsertIndexDataValuesFunction() = default;
 
   NS_DECL_MOZISTORAGEFUNCTION
 };
@@ -2855,8 +2849,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  ~UpgradeKeyFunction()
-  { }
+  ~UpgradeKeyFunction() = default;
 
   static nsresult
   CopyAndUpgradeKeyBufferInternal(const uint8_t*& aSource,
@@ -5244,8 +5237,7 @@ public:
   Reset();
 
 private:
-  ~UpdateRefcountFunction()
-  { }
+  ~UpdateRefcountFunction() = default;
 
   nsresult
   ProcessValue(mozIStorageValueArray* aValues,
@@ -5478,9 +5470,7 @@ protected:
   explicit
   ConnectionRunnable(DatabaseInfo* aDatabaseInfo);
 
-  virtual
-  ~ConnectionRunnable()
-  { }
+  ~ConnectionRunnable() override = default;
 };
 
 class ConnectionPool::IdleConnectionRunnable final
@@ -5497,8 +5487,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  ~IdleConnectionRunnable()
-  { }
+  ~IdleConnectionRunnable() override = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -5515,8 +5504,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  ~CloseConnectionRunnable()
-  { }
+  ~CloseConnectionRunnable() override = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -5612,8 +5600,7 @@ protected:
   FinishCallback()
   { }
 
-  virtual ~FinishCallback()
-  { }
+  virtual ~FinishCallback() = default;
 };
 
 class ConnectionPool::FinishCallbackWrapper final
@@ -5633,7 +5620,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  ~FinishCallbackWrapper();
+  ~FinishCallbackWrapper() override;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -5734,7 +5721,7 @@ public:
   }
 
 private:
-  ~ThreadRunnable();
+  ~ThreadRunnable() override;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -5907,8 +5894,7 @@ protected:
     AssertIsOnOwningThread();
   }
 
-  virtual
-  ~DatabaseOperationBase()
+  ~DatabaseOperationBase() override
   {
     MOZ_ASSERT(mActorDestroyed);
   }
@@ -6113,8 +6099,7 @@ protected:
   TransactionDatabaseOperationBase(TransactionBase* aTransaction,
                                    uint64_t aLoggingSerialNumber);
 
-  virtual
-  ~TransactionDatabaseOperationBase();
+  ~TransactionDatabaseOperationBase() override;
 
   virtual void
   RunOnConnectionThread();
@@ -6200,40 +6185,40 @@ private:
   Factory(already_AddRefed<DatabaseLoggingInfo> aLoggingInfo);
 
   // Reference counted.
-  ~Factory();
+  ~Factory() override;
 
   // IPDL methods are only called by IPDL.
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvIncrementLoggingRequestSerialNumber() override;
 
-  virtual PBackgroundIDBFactoryRequestParent*
+  PBackgroundIDBFactoryRequestParent*
   AllocPBackgroundIDBFactoryRequestParent(const FactoryRequestParams& aParams)
                                           override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBFactoryRequestConstructor(
                                      PBackgroundIDBFactoryRequestParent* aActor,
                                      const FactoryRequestParams& aParams)
                                      override;
 
-  virtual bool
+  bool
   DeallocPBackgroundIDBFactoryRequestParent(
                                      PBackgroundIDBFactoryRequestParent* aActor)
                                      override;
 
-  virtual PBackgroundIDBDatabaseParent*
+  PBackgroundIDBDatabaseParent*
   AllocPBackgroundIDBDatabaseParent(
                                    const DatabaseSpec& aSpec,
                                    PBackgroundIDBFactoryRequestParent* aRequest)
                                    override;
 
-  virtual bool
+  bool
   DeallocPBackgroundIDBDatabaseParent(PBackgroundIDBDatabaseParent* aActor)
                                       override;
 };
@@ -6270,7 +6255,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  ~WaitForTransactionsHelper()
+  ~WaitForTransactionsHelper() override
   {
     MOZ_ASSERT(!mCallback);
     MOZ_ASSERT(mState == State::Complete);
@@ -6517,7 +6502,7 @@ public:
 
 private:
   // Reference counted.
-  ~Database()
+  ~Database() override
   {
     MOZ_ASSERT(mClosed);
     MOZ_ASSERT_IF(mActorWasAlive, mActorDestroyed);
@@ -6539,52 +6524,52 @@ private:
   VerifyRequestParams(const DatabaseRequestParams& aParams) const;
 
   // IPDL methods are only called by IPDL.
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual PBackgroundIDBDatabaseFileParent*
+  PBackgroundIDBDatabaseFileParent*
   AllocPBackgroundIDBDatabaseFileParent(PBlobParent* aBlobParent)
                                         override;
 
-  virtual bool
+  bool
   DeallocPBackgroundIDBDatabaseFileParent(
                                        PBackgroundIDBDatabaseFileParent* aActor)
                                        override;
 
-  virtual PBackgroundIDBDatabaseRequestParent*
+  PBackgroundIDBDatabaseRequestParent*
   AllocPBackgroundIDBDatabaseRequestParent(const DatabaseRequestParams& aParams)
                                            override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBDatabaseRequestConstructor(
                                     PBackgroundIDBDatabaseRequestParent* aActor,
                                     const DatabaseRequestParams& aParams)
                                     override;
 
-  virtual bool
+  bool
   DeallocPBackgroundIDBDatabaseRequestParent(
                                     PBackgroundIDBDatabaseRequestParent* aActor)
                                     override;
 
-  virtual PBackgroundIDBTransactionParent*
+  PBackgroundIDBTransactionParent*
   AllocPBackgroundIDBTransactionParent(
                                     const nsTArray<nsString>& aObjectStoreNames,
                                     const Mode& aMode)
                                     override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBTransactionConstructor(
                                     PBackgroundIDBTransactionParent* aActor,
                                     InfallibleTArray<nsString>&& aObjectStoreNames,
                                     const Mode& aMode)
                                     override;
 
-  virtual bool
+  bool
   DeallocPBackgroundIDBTransactionParent(
                                         PBackgroundIDBTransactionParent* aActor)
                                         override;
 
-  virtual PBackgroundIDBVersionChangeTransactionParent*
+  PBackgroundIDBVersionChangeTransactionParent*
   AllocPBackgroundIDBVersionChangeTransactionParent(
                                               const uint64_t& aCurrentVersion,
                                               const uint64_t& aRequestedVersion,
@@ -6592,26 +6577,26 @@ private:
                                               const int64_t& aNextIndexId)
                                               override;
 
-  virtual bool
+  bool
   DeallocPBackgroundIDBVersionChangeTransactionParent(
                            PBackgroundIDBVersionChangeTransactionParent* aActor)
                            override;
 
-  virtual PBackgroundMutableFileParent*
+  PBackgroundMutableFileParent*
   AllocPBackgroundMutableFileParent(const nsString& aName,
                                     const nsString& aType) override;
 
-  virtual bool
+  bool
   DeallocPBackgroundMutableFileParent(PBackgroundMutableFileParent* aActor)
                                       override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvBlocked() override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvClose() override;
 };
 
@@ -6627,22 +6612,21 @@ private:
                                        /* aLoggingSerialNumber */ 0)
   { }
 
-  ~StartTransactionOp()
-  { }
+  ~StartTransactionOp() override = default;
 
-  virtual void
+  void
   RunOnConnectionThread() override;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
-  virtual nsresult
+  nsresult
   SendSuccessResult() override;
 
-  virtual bool
+  bool
   SendFailureResult(nsresult aResultCode) override;
 
-  virtual void
+  void
   Cleanup() override;
 };
 
@@ -6707,10 +6691,9 @@ private:
     MOZ_ASSERT(aFileInfo);
   }
 
-  ~DatabaseFile()
-  { }
+  ~DatabaseFile() override = default;
 
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override
   {
     AssertIsOnBackgroundThread();
@@ -6997,8 +6980,7 @@ class TransactionBase::CommitOp final
 private:
   CommitOp(TransactionBase* aTransaction, nsresult aResultCode);
 
-  ~CommitOp()
-  { }
+  ~CommitOp() override = default;
 
   // Writes new autoIncrement counts to database.
   nsresult
@@ -7018,10 +7000,10 @@ private:
 
   NS_DECL_NSIRUNNABLE
 
-  virtual void
+  void
   TransactionFinishedBeforeUnblock() override;
 
-  virtual void
+  void
   TransactionFinishedAfterUnblock() override;
 
 public:
@@ -7043,50 +7025,49 @@ private:
                     nsTArray<RefPtr<FullObjectStoreMetadata>>& aObjectStores);
 
   // Reference counted.
-  ~NormalTransaction()
-  { }
+  ~NormalTransaction() override = default;
 
   bool
   IsSameProcessActor();
 
   // Only called by TransactionBase.
-  virtual void
+  void
   SendCompleteNotification(nsresult aResult) override;
 
   // IPDL methods are only called by IPDL.
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvCommit() override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvAbort(const nsresult& aResultCode) override;
 
-  virtual PBackgroundIDBRequestParent*
+  PBackgroundIDBRequestParent*
   AllocPBackgroundIDBRequestParent(const RequestParams& aParams) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBRequestConstructor(PBackgroundIDBRequestParent* aActor,
                                        const RequestParams& aParams)
                                        override;
 
-  virtual bool
+  bool
   DeallocPBackgroundIDBRequestParent(PBackgroundIDBRequestParent* aActor)
                                      override;
 
-  virtual PBackgroundIDBCursorParent*
+  PBackgroundIDBCursorParent*
   AllocPBackgroundIDBCursorParent(const OpenCursorParams& aParams) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBCursorConstructor(PBackgroundIDBCursorParent* aActor,
                                       const OpenCursorParams& aParams)
                                       override;
 
-  virtual bool
+  bool
   DeallocPBackgroundIDBCursorParent(PBackgroundIDBCursorParent* aActor)
                                     override;
 };
@@ -7107,7 +7088,7 @@ private:
   explicit VersionChangeTransaction(OpenDatabaseOp* aOpenDatabaseOp);
 
   // Reference counted.
-  ~VersionChangeTransaction();
+  ~VersionChangeTransaction() override;
 
   bool
   IsSameProcessActor();
@@ -7120,70 +7101,70 @@ private:
   SetActorAlive();
 
   // Only called by TransactionBase.
-  virtual void
+  void
   UpdateMetadata(nsresult aResult) override;
 
   // Only called by TransactionBase.
-  virtual void
+  void
   SendCompleteNotification(nsresult aResult) override;
 
   // IPDL methods are only called by IPDL.
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvCommit() override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvAbort(const nsresult& aResultCode) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvCreateObjectStore(const ObjectStoreMetadata& aMetadata) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvDeleteObjectStore(const int64_t& aObjectStoreId) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvRenameObjectStore(const int64_t& aObjectStoreId,
                         const nsString& aName) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvCreateIndex(const int64_t& aObjectStoreId,
                   const IndexMetadata& aMetadata) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvDeleteIndex(const int64_t& aObjectStoreId,
                   const int64_t& aIndexId) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvRenameIndex(const int64_t& aObjectStoreId,
                   const int64_t& aIndexId,
                   const nsString& aName) override;
 
-  virtual PBackgroundIDBRequestParent*
+  PBackgroundIDBRequestParent*
   AllocPBackgroundIDBRequestParent(const RequestParams& aParams) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBRequestConstructor(PBackgroundIDBRequestParent* aActor,
                                        const RequestParams& aParams)
                                        override;
 
-  virtual bool
+  bool
   DeallocPBackgroundIDBRequestParent(PBackgroundIDBRequestParent* aActor)
                                      override;
 
-  virtual PBackgroundIDBCursorParent*
+  PBackgroundIDBCursorParent*
   AllocPBackgroundIDBCursorParent(const OpenCursorParams& aParams) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundIDBCursorConstructor(PBackgroundIDBCursorParent* aActor,
                                       const OpenCursorParams& aParams)
                                       override;
 
-  virtual bool
+  bool
   DeallocPBackgroundIDBCursorParent(PBackgroundIDBCursorParent* aActor)
                                     override;
 };
@@ -7218,19 +7199,19 @@ public:
     return mFileInfo;
   }
 
-  virtual void
+  void
   NoteActiveState() override;
 
-  virtual void
+  void
   NoteInactiveState() override;
 
-  virtual PBackgroundParent*
+  PBackgroundParent*
   GetBackgroundParent() const override;
 
-  virtual already_AddRefed<nsISupports>
+  already_AddRefed<nsISupports>
   CreateStream(bool aReadOnly) override;
 
-  virtual already_AddRefed<BlobImpl>
+  already_AddRefed<BlobImpl>
   CreateBlobImpl() override;
 
 private:
@@ -7238,16 +7219,16 @@ private:
               Database* aDatabase,
               FileInfo* aFileInfo);
 
-  ~MutableFile();
+  ~MutableFile() override;
 
-  virtual PBackgroundFileHandleParent*
+  PBackgroundFileHandleParent*
   AllocPBackgroundFileHandleParent(const FileMode& aMode) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvPBackgroundFileHandleConstructor(PBackgroundFileHandleParent* aActor,
                                        const FileMode& aMode) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvGetFileId(int64_t* aFileId) override;
 };
 
@@ -7387,8 +7368,7 @@ protected:
             const CommonFactoryRequestParams& aCommonParams,
             bool aDeleting);
 
-  virtual
-  ~FactoryOp()
+  ~FactoryOp() override
   {
     // Normally this would be out-of-line since it is a virtual function but
     // MSVC 2010 fails to link for some reason if it is not inlined here...
@@ -7446,17 +7426,17 @@ protected:
   Run() final;
 
   // OpenDirectoryListener overrides.
-  virtual void
+  void
   DirectoryLockAcquired(DirectoryLock* aLock) override;
 
-  virtual void
+  void
   DirectoryLockFailed() override;
 
   // IPDL methods.
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvPermissionRetry() override;
 
   virtual void
@@ -7560,7 +7540,7 @@ public:
   }
 
 private:
-  ~OpenDatabaseOp()
+  ~OpenDatabaseOp() override
   {
     MOZ_ASSERT(!mVersionChangeOp);
   }
@@ -7591,28 +7571,28 @@ private:
   void
   ConnectionClosedCallback();
 
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual nsresult
+  nsresult
   DatabaseOpen() override;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork() override;
 
-  virtual nsresult
+  nsresult
   BeginVersionChange() override;
 
-  virtual void
+  void
   NoteDatabaseClosed(Database* aDatabase) override;
 
-  virtual void
+  void
   SendBlockedNotification() override;
 
-  virtual nsresult
+  nsresult
   DispatchToWorkThread() override;
 
-  virtual void
+  void
   SendResults() override;
 
 #ifdef ENABLE_INTL_API
@@ -7646,21 +7626,21 @@ private:
     MOZ_ASSERT(mRequestedVersion);
   }
 
-  ~VersionChangeOp()
+  ~VersionChangeOp() override
   {
     MOZ_ASSERT(!mOpenDatabaseOp);
   }
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
-  virtual nsresult
+  nsresult
   SendSuccessResult() override;
 
-  virtual bool
+  bool
   SendFailureResult(nsresult aResultCode) override;
 
-  virtual void
+  void
   Cleanup() override;
 };
 
@@ -7682,31 +7662,30 @@ public:
   { }
 
 private:
-  ~DeleteDatabaseOp()
-  { }
+  ~DeleteDatabaseOp() override = default;
 
   void
   LoadPreviousVersion(nsIFile* aDatabaseFile);
 
-  virtual nsresult
+  nsresult
   DatabaseOpen() override;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork() override;
 
-  virtual nsresult
+  nsresult
   BeginVersionChange() override;
 
-  virtual void
+  void
   NoteDatabaseClosed(Database* aDatabase) override;
 
-  virtual void
+  void
   SendBlockedNotification() override;
 
-  virtual nsresult
+  nsresult
   DispatchToWorkThread() override;
 
-  virtual void
+  void
   SendResults() override;
 };
 
@@ -7728,8 +7707,7 @@ private:
     MOZ_ASSERT(!aDeleteDatabaseOp->mDatabaseDirectoryPath.IsEmpty());
   }
 
-  ~VersionChangeOp()
-  { }
+  ~VersionChangeOp() override = default;
 
   nsresult
   RunOnIOThread();
@@ -7784,8 +7762,7 @@ public:
 protected:
   DatabaseOp(Database* aDatabase);
 
-  virtual
-  ~DatabaseOp()
+  ~DatabaseOp() override
   {
     MOZ_ASSERT_IF(OperationMayProceed(),
                   mState == State::Initial || mState == State::Completed);
@@ -7806,7 +7783,7 @@ protected:
   Run() final;
 
   // IPDL methods.
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
@@ -7822,16 +7799,15 @@ public:
                const DatabaseRequestParams& aParams);
 
 private:
-  ~CreateFileOp()
-  { }
+  ~CreateFileOp() override = default;
 
   nsresult
   CreateMutableFile(MutableFile** aMutableFile);
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork() override;
 
-  virtual void
+  void
   SendResults() override;
 };
 
@@ -7839,7 +7815,7 @@ class VersionChangeTransactionOp
   : public TransactionDatabaseOperationBase
 {
 public:
-  virtual void
+  void
   Cleanup() override;
 
 protected:
@@ -7847,15 +7823,13 @@ protected:
     : TransactionDatabaseOperationBase(aTransaction)
   { }
 
-  virtual
-  ~VersionChangeTransactionOp()
-  { }
+  ~VersionChangeTransactionOp() override = default;
 
 private:
-  virtual nsresult
+  nsresult
   SendSuccessResult() override;
 
-  virtual bool
+  bool
   SendFailureResult(nsresult aResultCode) override;
 };
 
@@ -7876,10 +7850,9 @@ private:
     MOZ_ASSERT(aMetadata.id());
   }
 
-  ~CreateObjectStoreOp()
-  { }
+  ~CreateObjectStoreOp() override = default;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 };
 
@@ -7903,10 +7876,9 @@ private:
     MOZ_ASSERT(aMetadata->mCommonMetadata.id());
   }
 
-  ~DeleteObjectStoreOp()
-  { }
+  ~DeleteObjectStoreOp() override = default;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 };
 
@@ -7929,10 +7901,9 @@ private:
     MOZ_ASSERT(mId);
   }
 
-  ~RenameObjectStoreOp()
-  { }
+  ~RenameObjectStoreOp() override = default;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 };
 
@@ -7961,8 +7932,7 @@ private:
                 const int64_t aObjectStoreId,
                 const IndexMetadata& aMetadata);
 
-  ~CreateIndexOp()
-  { }
+  ~CreateIndexOp() override = default;
 
   nsresult
   InsertDataFromObjectStore(DatabaseConnection* aConnection);
@@ -7970,10 +7940,10 @@ private:
   nsresult
   InsertDataFromObjectStoreInternal(DatabaseConnection* aConnection);
 
-  virtual bool
+  bool
   Init(TransactionBase* aTransaction) override;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 };
 
@@ -8070,8 +8040,7 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
-  ~UpdateIndexDataValuesFunction()
-  { }
+  ~UpdateIndexDataValuesFunction() = default;
 
   NS_DECL_MOZISTORAGEFUNCTION
 };
@@ -8094,15 +8063,14 @@ private:
                 const bool aUnique,
                 const bool aIsLastIndex);
 
-  ~DeleteIndexOp()
-  { }
+  ~DeleteIndexOp() override = default;
 
   nsresult
   RemoveReferencesToIndex(DatabaseConnection* aConnection,
                           const Key& aObjectDataKey,
                           nsTArray<IndexDataValue>& aIndexValues);
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 };
 
@@ -8128,10 +8096,9 @@ private:
     MOZ_ASSERT(mIndexId);
   }
 
-  ~RenameIndexOp()
-  { }
+  ~RenameIndexOp() override = default;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 };
 
@@ -8144,7 +8111,7 @@ class NormalTransactionOp
 #endif
 
 public:
-  virtual void
+  void
   Cleanup() override;
 
 protected:
@@ -8155,9 +8122,7 @@ protected:
 #endif
   { }
 
-  virtual
-  ~NormalTransactionOp()
-  { }
+  ~NormalTransactionOp() override = default;
 
   // An overload of DatabaseOperationBase's function that can avoid doing extra
   // work on non-versionchange transactions.
@@ -8177,20 +8142,20 @@ protected:
   GetResponse(RequestResponse& aResponse) = 0;
 
 private:
-  virtual nsresult
+  nsresult
   SendPreprocessInfo() override;
 
-  virtual nsresult
+  nsresult
   SendSuccessResult() override;
 
-  virtual bool
+  bool
   SendFailureResult(nsresult aResultCode) override;
 
   // IPDL methods.
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvContinue(const PreprocessResponse& aResponse) override;
 };
 
@@ -8228,8 +8193,7 @@ private:
   ObjectStoreAddOrPutRequestOp(TransactionBase* aTransaction,
                                const RequestParams& aParams);
 
-  ~ObjectStoreAddOrPutRequestOp()
-  { }
+  ~ObjectStoreAddOrPutRequestOp() override = default;
 
   nsresult
   RemoveOldIndexDataValues(DatabaseConnection* aConnection);
@@ -8240,16 +8204,16 @@ private:
                char* aBuffer,
                uint32_t aBufferSize);
 
-  virtual bool
+  bool
   Init(TransactionBase* aTransaction) override;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
-  virtual void
+  void
   GetResponse(RequestResponse& aResponse) override;
 
-  virtual void
+  void
   Cleanup() override;
 };
 
@@ -8327,8 +8291,7 @@ public:
   { }
 
 private:
-  virtual ~SCInputStream()
-  { }
+  virtual ~SCInputStream() = default;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
@@ -8354,23 +8317,22 @@ private:
                           const RequestParams& aParams,
                           bool aGetAll);
 
-  ~ObjectStoreGetRequestOp()
-  { }
+  ~ObjectStoreGetRequestOp() override = default;
 
   template <bool aForPreprocess, typename T>
   nsresult
   ConvertResponse(StructuredCloneReadInfo& aInfo, T& aResult);
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
-  virtual bool
+  bool
   HasPreprocessInfo() override;
 
-  virtual nsresult
+  nsresult
   GetPreprocessParams(PreprocessParams& aParams) override;
 
-  virtual void
+  void
   GetResponse(RequestResponse& aResponse) override;
 };
 
@@ -8391,13 +8353,12 @@ private:
                              const RequestParams& aParams,
                              bool aGetAll);
 
-  ~ObjectStoreGetKeyRequestOp()
-  { }
+  ~ObjectStoreGetKeyRequestOp() override = default;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
-  virtual void
+  void
   GetResponse(RequestResponse& aResponse) override;
 };
 
@@ -8414,13 +8375,12 @@ private:
   ObjectStoreDeleteRequestOp(TransactionBase* aTransaction,
                              const ObjectStoreDeleteParams& aParams);
 
-  ~ObjectStoreDeleteRequestOp()
-  { }
+  ~ObjectStoreDeleteRequestOp() override = default;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
-  virtual void
+  void
   GetResponse(RequestResponse& aResponse) override
   {
     aResponse = Move(mResponse);
@@ -8440,13 +8400,12 @@ private:
   ObjectStoreClearRequestOp(TransactionBase* aTransaction,
                             const ObjectStoreClearParams& aParams);
 
-  ~ObjectStoreClearRequestOp()
-  { }
+  ~ObjectStoreClearRequestOp() override = default;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
-  virtual void
+  void
   GetResponse(RequestResponse& aResponse) override
   {
     aResponse = Move(mResponse);
@@ -8468,13 +8427,12 @@ private:
     , mParams(aParams)
   { }
 
-  ~ObjectStoreCountRequestOp()
-  { }
+  ~ObjectStoreCountRequestOp() override = default;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
-  virtual void
+  void
   GetResponse(RequestResponse& aResponse) override
   {
     aResponse = Move(mResponse);
@@ -8494,9 +8452,8 @@ protected:
     , mMetadata(IndexMetadataForParams(aTransaction, aParams))
   { }
 
-  virtual
-  ~IndexRequestOpBase()
-  { }
+  
+  ~IndexRequestOpBase() override = default;
 
 private:
   static already_AddRefed<FullIndexMetadata>
@@ -8522,13 +8479,12 @@ private:
                     const RequestParams& aParams,
                     bool aGetAll);
 
-  ~IndexGetRequestOp()
-  { }
+  ~IndexGetRequestOp() override = default;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
-  virtual void
+  void
   GetResponse(RequestResponse& aResponse) override;
 };
 
@@ -8548,13 +8504,12 @@ private:
                        const RequestParams& aParams,
                        bool aGetAll);
 
-  ~IndexGetKeyRequestOp()
-  { }
+  ~IndexGetKeyRequestOp() override = default;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
-  virtual void
+  void
   GetResponse(RequestResponse& aResponse) override;
 };
 
@@ -8574,13 +8529,12 @@ private:
     , mParams(aParams.get_IndexCountParams())
   { }
 
-  ~IndexCountRequestOp()
-  { }
+  ~IndexCountRequestOp() override = default;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
-  virtual void
+  void
   GetResponse(RequestResponse& aResponse) override
   {
     aResponse = Move(mResponse);
@@ -8645,7 +8599,7 @@ private:
          Direction aDirection);
 
   // Reference counted.
-  ~Cursor()
+  ~Cursor() override
   {
     MOZ_ASSERT(mActorDestroyed);
   }
@@ -8667,13 +8621,13 @@ private:
   SendResponse(const CursorResponse& aResponse) = delete;
 
   // IPDL methods.
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvContinue(const CursorRequestParams& aParams) override;
 
   bool
@@ -8707,14 +8661,13 @@ protected:
     MOZ_ASSERT(aCursor);
   }
 
-  virtual
-  ~CursorOpBase()
-  { }
+  
+  ~CursorOpBase() override = default;
 
-  virtual bool
+  bool
   SendFailureResult(nsresult aResultCode) override;
 
-  virtual void
+  void
   Cleanup() override;
 
   nsresult
@@ -8738,8 +8691,7 @@ private:
   { }
 
   // Reference counted.
-  ~OpenOp()
-  { }
+  ~OpenOp() override = default;
 
   void
   GetRangeKeyInfo(bool aLowerBound, Key* aKey, bool* aOpen);
@@ -8756,10 +8708,10 @@ private:
   nsresult
   DoIndexKeyDatabaseWork(DatabaseConnection* aConnection);
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
-  virtual nsresult
+  nsresult
   SendSuccessResult() override;
 };
 
@@ -8781,13 +8733,12 @@ private:
   }
 
   // Reference counted.
-  ~ContinueOp()
-  { }
+  ~ContinueOp() override = default;
 
-  virtual nsresult
+  nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
-  virtual nsresult
+  nsresult
   SendSuccessResult() override;
 };
 
@@ -8805,16 +8756,16 @@ public:
 
 private:
   // Reference counted.
-  ~Utils();
+  ~Utils() override;
 
   // IPDL methods are only called by IPDL.
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  virtual bool
+  mozilla::ipc::IPCResult
   RecvGetFileReferences(const PersistenceType& aPersistenceType,
                         const nsCString& aOrigin,
                         const nsString& aDatabaseName,
@@ -8866,7 +8817,7 @@ public:
                                   bool* aResult);
 
 private:
-  ~GetFileReferencesHelper() {}
+  ~GetFileReferencesHelper() override = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -8875,8 +8826,7 @@ class FlushPendingFileDeletionsRunnable final
   : public Runnable
 {
 private:
-  ~FlushPendingFileDeletionsRunnable()
-  { }
+  ~FlushPendingFileDeletionsRunnable() override = default;
 
   NS_DECL_NSIRUNNABLE
 };
@@ -8895,14 +8845,13 @@ public:
   { }
 
 protected:
-  ~PermissionRequestHelper()
-  { }
+  ~PermissionRequestHelper() override = default;
 
 private:
-  virtual void
+  void
   OnPromptComplete(PermissionValue aPermissionValue) override;
 
-  virtual void
+  void
   ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
@@ -9046,13 +8995,12 @@ public:
   }
 
 private:
-  ~BlobImplStoredFile()
-  { }
+  ~BlobImplStoredFile() override = default;
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECLARE_STATIC_IID_ACCESSOR(BLOB_IMPL_STORED_FILE_IID)
 
-  virtual int64_t
+  int64_t
   GetFileId() override
   {
     MOZ_ASSERT(mFileInfo);
@@ -9143,52 +9091,52 @@ public:
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(QuotaClient, override)
 
-  virtual mozilla::dom::quota::Client::Type
+  mozilla::dom::quota::Client::Type
   GetType() override;
 
-  virtual nsresult
+  nsresult
   InitOrigin(PersistenceType aPersistenceType,
              const nsACString& aGroup,
              const nsACString& aOrigin,
              UsageInfo* aUsageInfo) override;
 
-  virtual nsresult
+  nsresult
   GetUsageForOrigin(PersistenceType aPersistenceType,
                     const nsACString& aGroup,
                     const nsACString& aOrigin,
                     UsageInfo* aUsageInfo) override;
 
-  virtual void
+  void
   OnOriginClearCompleted(PersistenceType aPersistenceType,
                          const nsACString& aOrigin)
                          override;
 
-  virtual void
+  void
   ReleaseIOThreadObjects() override;
 
-  virtual void
+  void
   AbortOperations(const nsACString& aOrigin) override;
 
-  virtual void
+  void
   AbortOperationsForProcess(ContentParentId aContentParentId) override;
 
-  virtual void
+  void
   StartIdleMaintenance() override;
 
-  virtual void
+  void
   StopIdleMaintenance() override;
 
-  virtual void
+  void
   ShutdownWorkThreads() override;
 
-  virtual void
+  void
   DidInitialize(QuotaManager* aQuotaManager) override;
 
-  virtual void
+  void
   WillShutdown() override;
 
 private:
-  ~QuotaClient();
+  ~QuotaClient() override;
 
   nsresult
   GetDirectory(PersistenceType aPersistenceType,
@@ -9328,7 +9276,7 @@ public:
   }
 
 private:
-  ~Maintenance()
+  ~Maintenance() override
   {
     MOZ_ASSERT(mState == State::Complete);
     MOZ_ASSERT(!mDatabaseMaintenances.Count());
@@ -9374,10 +9322,10 @@ private:
   NS_DECL_NSIRUNNABLE
 
   // OpenDirectoryListener overrides.
-  virtual void
+  void
   DirectoryLockAcquired(DirectoryLock* aLock) override;
 
-  virtual void
+  void
   DirectoryLockFailed() override;
 };
 
@@ -9503,8 +9451,7 @@ public:
   }
 
 private:
-  ~DatabaseMaintenance()
-  { }
+  ~DatabaseMaintenance() override = default;
 
   // Runs on maintenance thread pool. Does maintenance on the database.
   void
@@ -11420,8 +11367,8 @@ UpdateRefcountFunction::Reset()
     nsCOMPtr<nsIFile> mJournalDirectory;
 
   public:
-    virtual nsresult
-    Cleanup(FileManager* aFileManager, int64_t aId)
+    nsresult
+    Cleanup(FileManager* aFileManager, int64_t aId) override
     {
       if (!mDirectory) {
         MOZ_ASSERT(!mJournalDirectory);
@@ -12030,7 +11977,7 @@ ConnectionPool::Start(const nsID& aBackgroundChildLoggingId,
     mDatabases.Put(aDatabaseId, dbInfo);
   }
 
-  TransactionInfo* transactionInfo =
+  auto* transactionInfo =
     new TransactionInfo(dbInfo,
                         aBackgroundChildLoggingId,
                         aDatabaseId,
@@ -13606,23 +13553,26 @@ Factory::ActorDestroy(ActorDestroyReason aWhy)
   DecreaseBusyCount();
 }
 
-bool
+mozilla::ipc::IPCResult
 Factory::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  return PBackgroundIDBFactoryParent::Send__delete__(this);
+  if (!PBackgroundIDBFactoryParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 Factory::RecvIncrementLoggingRequestSerialNumber()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mLoggingInfo);
 
   mLoggingInfo->NextRequestSN();
-  return true;
+  return IPC_OK();
 }
 
 PBackgroundIDBFactoryRequestParent*
@@ -13695,7 +13645,7 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
   return actor.forget().take();
 }
 
-bool
+mozilla::ipc::IPCResult
 Factory::RecvPBackgroundIDBFactoryRequestConstructor(
                                      PBackgroundIDBFactoryRequestParent* aActor,
                                      const FactoryRequestParams& aParams)
@@ -13708,7 +13658,7 @@ Factory::RecvPBackgroundIDBFactoryRequestConstructor(
   auto* op = static_cast<FactoryOp*>(aActor);
 
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(op));
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -14325,7 +14275,7 @@ Database::AllocPBackgroundIDBDatabaseRequestParent(
   return actor.forget().take();
 }
 
-bool
+mozilla::ipc::IPCResult
 Database::RecvPBackgroundIDBDatabaseRequestConstructor(
                                     PBackgroundIDBDatabaseRequestParent* aActor,
                                     const DatabaseRequestParams& aParams)
@@ -14338,7 +14288,7 @@ Database::RecvPBackgroundIDBDatabaseRequestConstructor(
 
   op->RunImmediately();
 
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -14439,7 +14389,7 @@ Database::AllocPBackgroundIDBTransactionParent(
   return transaction.forget().take();
 }
 
-bool
+mozilla::ipc::IPCResult
 Database::RecvPBackgroundIDBTransactionConstructor(
                                     PBackgroundIDBTransactionParent* aActor,
                                     InfallibleTArray<nsString>&& aObjectStoreNames,
@@ -14457,7 +14407,7 @@ Database::RecvPBackgroundIDBTransactionConstructor(
   if (IsInvalidated()) {
     // This is an expected race. We don't want the child to die here, just don't
     // actually do any work.
-    return true;
+    return IPC_OK();
   }
 
   if (!gConnectionPool) {
@@ -14480,10 +14430,10 @@ Database::RecvPBackgroundIDBTransactionConstructor(
   if (NS_WARN_IF(!RegisterTransaction(transaction))) {
     IDB_REPORT_INTERNAL_ERR();
     transaction->Abort(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, /* aForce */ false);
-    return true;
+    return IPC_OK();
   }
 
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -14542,22 +14492,25 @@ Database::DeallocPBackgroundMutableFileParent(
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 Database::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  return PBackgroundIDBDatabaseParent::Send__delete__(this);
+  if (!PBackgroundIDBDatabaseParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 Database::RecvBlocked()
 {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mClosed)) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   DatabaseActorInfo* info;
@@ -14568,20 +14521,20 @@ Database::RecvBlocked()
 
   info->mWaitingFactoryOp->NoteDatabaseBlocked(this);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 Database::RecvClose()
 {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!CloseInternal())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -15664,29 +15617,38 @@ NormalTransaction::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 NormalTransaction::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
-  return PBackgroundIDBTransactionParent::Send__delete__(this);
+  if (!PBackgroundIDBTransactionParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 NormalTransaction::RecvCommit()
 {
   AssertIsOnBackgroundThread();
 
-  return TransactionBase::RecvCommit();
+  if (!TransactionBase::RecvCommit()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 NormalTransaction::RecvAbort(const nsresult& aResultCode)
 {
   AssertIsOnBackgroundThread();
 
-  return TransactionBase::RecvAbort(aResultCode);
+  if (!TransactionBase::RecvAbort(aResultCode)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 PBackgroundIDBRequestParent*
@@ -15699,7 +15661,7 @@ NormalTransaction::AllocPBackgroundIDBRequestParent(
   return AllocRequest(aParams, IsSameProcessActor());
 }
 
-bool
+mozilla::ipc::IPCResult
 NormalTransaction::RecvPBackgroundIDBRequestConstructor(
                                             PBackgroundIDBRequestParent* aActor,
                                             const RequestParams& aParams)
@@ -15708,7 +15670,10 @@ NormalTransaction::RecvPBackgroundIDBRequestConstructor(
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
-  return StartRequest(aActor);
+  if (!StartRequest(aActor)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 bool
@@ -15730,7 +15695,7 @@ NormalTransaction::AllocPBackgroundIDBCursorParent(
   return AllocCursor(aParams, IsSameProcessActor());
 }
 
-bool
+mozilla::ipc::IPCResult
 NormalTransaction::RecvPBackgroundIDBCursorConstructor(
                                              PBackgroundIDBCursorParent* aActor,
                                              const OpenCursorParams& aParams)
@@ -15739,7 +15704,10 @@ NormalTransaction::RecvPBackgroundIDBCursorConstructor(
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
-  return StartCursor(aActor, aParams);
+  if (!StartCursor(aActor, aParams)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 bool
@@ -15955,32 +15923,41 @@ VersionChangeTransaction::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
-  return PBackgroundIDBVersionChangeTransactionParent::Send__delete__(this);
+  if (!PBackgroundIDBVersionChangeTransactionParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvCommit()
 {
   AssertIsOnBackgroundThread();
 
-  return TransactionBase::RecvCommit();
+  if (!TransactionBase::RecvCommit()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvAbort(const nsresult& aResultCode)
 {
   AssertIsOnBackgroundThread();
 
-  return TransactionBase::RecvAbort(aResultCode);
+  if (!TransactionBase::RecvAbort(aResultCode)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvCreateObjectStore(
                                            const ObjectStoreMetadata& aMetadata)
 {
@@ -15988,7 +15965,7 @@ VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(!aMetadata.id())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
@@ -15996,7 +15973,7 @@ VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(aMetadata.id() != dbMetadata->mNextObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   auto* foundMetadata =
@@ -16005,12 +15982,12 @@ VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(foundMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullObjectStoreMetadata> newMetadata = new FullObjectStoreMetadata();
@@ -16020,7 +15997,7 @@ VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(!dbMetadata->mObjectStores.Put(aMetadata.id(), newMetadata,
                                                 fallible))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   dbMetadata->mNextObjectStoreId++;
@@ -16029,22 +16006,22 @@ VersionChangeTransaction::RecvCreateObjectStore(
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   op->DispatchToConnectionPool();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
 {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
@@ -16053,7 +16030,7 @@ VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
 
   if (NS_WARN_IF(aObjectStoreId >= dbMetadata->mNextObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullObjectStoreMetadata> foundMetadata =
@@ -16061,12 +16038,12 @@ VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
 
   if (NS_WARN_IF(!foundMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   foundMetadata->mDeleted = true;
@@ -16090,15 +16067,15 @@ VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   op->DispatchToConnectionPool();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvRenameObjectStore(const int64_t& aObjectStoreId,
                                                 const nsString& aName)
 {
@@ -16106,7 +16083,7 @@ VersionChangeTransaction::RecvRenameObjectStore(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
@@ -16115,7 +16092,7 @@ VersionChangeTransaction::RecvRenameObjectStore(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(aObjectStoreId >= dbMetadata->mNextObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullObjectStoreMetadata> foundMetadata =
@@ -16123,12 +16100,12 @@ VersionChangeTransaction::RecvRenameObjectStore(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!foundMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   foundMetadata->mCommonMetadata.name() = aName;
@@ -16138,15 +16115,15 @@ VersionChangeTransaction::RecvRenameObjectStore(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!renameOp->Init(this))) {
     renameOp->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   renameOp->DispatchToConnectionPool();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
                                           const IndexMetadata& aMetadata)
 {
@@ -16154,12 +16131,12 @@ VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(!aMetadata.id())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
@@ -16167,7 +16144,7 @@ VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(aMetadata.id() != dbMetadata->mNextIndexId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
@@ -16175,7 +16152,7 @@ VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullIndexMetadata> foundIndexMetadata =
@@ -16184,12 +16161,12 @@ VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(foundIndexMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullIndexMetadata> newMetadata = new FullIndexMetadata();
@@ -16198,7 +16175,7 @@ VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
   if (NS_WARN_IF(!foundObjectStoreMetadata->mIndexes.Put(aMetadata.id(),
                                                          newMetadata,
                                                          fallible))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   dbMetadata->mNextIndexId++;
@@ -16208,15 +16185,15 @@ VersionChangeTransaction::RecvCreateIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   op->DispatchToConnectionPool();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
                                           const int64_t& aIndexId)
 {
@@ -16224,12 +16201,12 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(!aIndexId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
@@ -16239,12 +16216,12 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(aObjectStoreId >= dbMetadata->mNextObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(aIndexId >= dbMetadata->mNextIndexId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
@@ -16252,7 +16229,7 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullIndexMetadata> foundIndexMetadata =
@@ -16260,12 +16237,12 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!foundIndexMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   foundIndexMetadata->mDeleted = true;
@@ -16293,15 +16270,15 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   op->DispatchToConnectionPool();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvRenameIndex(const int64_t& aObjectStoreId,
                                           const int64_t& aIndexId,
                                           const nsString& aName)
@@ -16310,12 +16287,12 @@ VersionChangeTransaction::RecvRenameIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(!aIndexId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   const RefPtr<FullDatabaseMetadata> dbMetadata = GetDatabase()->Metadata();
@@ -16325,12 +16302,12 @@ VersionChangeTransaction::RecvRenameIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(aObjectStoreId >= dbMetadata->mNextObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(aIndexId >= dbMetadata->mNextIndexId)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
@@ -16338,7 +16315,7 @@ VersionChangeTransaction::RecvRenameIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<FullIndexMetadata> foundIndexMetadata =
@@ -16346,12 +16323,12 @@ VersionChangeTransaction::RecvRenameIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!foundIndexMetadata)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   foundIndexMetadata->mCommonMetadata.name() = aName;
@@ -16361,12 +16338,12 @@ VersionChangeTransaction::RecvRenameIndex(const int64_t& aObjectStoreId,
 
   if (NS_WARN_IF(!renameOp->Init(this))) {
     renameOp->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   renameOp->DispatchToConnectionPool();
 
-  return true;
+  return IPC_OK();
 }
 
 PBackgroundIDBRequestParent*
@@ -16379,7 +16356,7 @@ VersionChangeTransaction::AllocPBackgroundIDBRequestParent(
   return AllocRequest(aParams, IsSameProcessActor());
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvPBackgroundIDBRequestConstructor(
                                             PBackgroundIDBRequestParent* aActor,
                                             const RequestParams& aParams)
@@ -16388,7 +16365,10 @@ VersionChangeTransaction::RecvPBackgroundIDBRequestConstructor(
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
-  return StartRequest(aActor);
+  if (!StartRequest(aActor)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 bool
@@ -16410,7 +16390,7 @@ VersionChangeTransaction::AllocPBackgroundIDBCursorParent(
   return AllocCursor(aParams, IsSameProcessActor());
 }
 
-bool
+mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvPBackgroundIDBCursorConstructor(
                                              PBackgroundIDBCursorParent* aActor,
                                              const OpenCursorParams& aParams)
@@ -16419,7 +16399,10 @@ VersionChangeTransaction::RecvPBackgroundIDBCursorConstructor(
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
-  return StartCursor(aActor, aParams);
+  if (!StartCursor(aActor, aParams)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 bool
@@ -16730,7 +16713,7 @@ Cursor::ActorDestroy(ActorDestroyReason aWhy)
   mIndexMetadata = nullptr;
 }
 
-bool
+mozilla::ipc::IPCResult
 Cursor::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
@@ -16738,13 +16721,16 @@ Cursor::RecvDeleteMe()
 
   if (NS_WARN_IF(mCurrentlyRunningOp)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  return PBackgroundIDBCursorParent::Send__delete__(this);
+  if (!PBackgroundIDBCursorParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 Cursor::RecvContinue(const CursorRequestParams& aParams)
 {
   AssertIsOnBackgroundThread();
@@ -16766,29 +16752,29 @@ Cursor::RecvContinue(const CursorRequestParams& aParams)
 
   if (!trustParams && !VerifyRequestParams(aParams)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mCurrentlyRunningOp)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(mTransaction->mCommitOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<ContinueOp> continueOp = new ContinueOp(this, aParams);
   if (NS_WARN_IF(!continueOp->Init(mTransaction))) {
     continueOp->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   continueOp->DispatchToConnectionPool();
   mCurrentlyRunningOp = continueOp;
 
-  return true;
+  return IPC_OK();
 }
 
 /*******************************************************************************
@@ -16809,9 +16795,6 @@ FileManager::FileManager(PersistenceType aPersistenceType,
   , mIsApp(aIsApp)
   , mEnforcingQuota(aEnforcingQuota)
   , mInvalidated(false)
-{ }
-
-FileManager::~FileManager()
 { }
 
 nsresult
@@ -17707,9 +17690,9 @@ QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       MOZ_ALWAYS_SUCCEEDS(unknownFile->GetPath(path));
       MOZ_ASSERT(!path.IsEmpty());
 
-      nsPrintfCString warning("Refusing to open databases for \"%s\" because "
-                              "an unexpected file exists in the storage "
-                              "area: \"%s\"",
+      nsPrintfCString warning(R"(Refusing to open databases for "%s" because )"
+                              R"(an unexpected file exists in the storage )"
+                              R"(area: "%s")",
                               PromiseFlatCString(aOrigin).get(),
                               NS_ConvertUTF16toUTF8(path).get());
       NS_WARNING(warning.get());
@@ -20406,7 +20389,7 @@ MutableFile::AllocPBackgroundFileHandleParent(const FileMode& aMode)
                                                                          aMode);
 }
 
-bool
+mozilla::ipc::IPCResult
 MutableFile::RecvPBackgroundFileHandleConstructor(
                                             PBackgroundFileHandleParent* aActor,
                                             const FileMode& aMode)
@@ -20417,14 +20400,14 @@ MutableFile::RecvPBackgroundFileHandleConstructor(
   if (NS_WARN_IF(mDatabase->IsInvalidated())) {
     // This is an expected race. We don't want the child to die here, just don't
     // actually do any work.
-    return true;
+    return IPC_OK();
   }
 
   return BackgroundMutableFileParentBase::RecvPBackgroundFileHandleConstructor(
                                                                  aActor, aMode);
 }
 
-bool
+mozilla::ipc::IPCResult
 MutableFile::RecvGetFileId(int64_t* aFileId)
 {
   AssertIsOnBackgroundThread();
@@ -20432,11 +20415,11 @@ MutableFile::RecvGetFileId(int64_t* aFileId)
 
   if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   *aFileId = mFileInfo->Id();
-  return true;
+  return IPC_OK();
 }
 
 FactoryOp::FactoryOp(Factory* aFactory,
@@ -21186,7 +21169,7 @@ FactoryOp::ActorDestroy(ActorDestroyReason aWhy)
   NoteActorDestroyed();
 }
 
-bool
+mozilla::ipc::IPCResult
 FactoryOp::RecvPermissionRetry()
 {
   AssertIsOnOwningThread();
@@ -21198,7 +21181,7 @@ FactoryOp::RecvPermissionRetry()
   mState = State::PermissionRetry;
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
 
-  return true;
+  return IPC_OK();
 }
 
 OpenDatabaseOp::OpenDatabaseOp(Factory* aFactory,
@@ -25700,7 +25683,7 @@ NormalTransactionOp::ActorDestroy(ActorDestroyReason aWhy)
   NoteActorDestroyed();
 }
 
-bool
+mozilla::ipc::IPCResult
 NormalTransactionOp::RecvContinue(const PreprocessResponse& aResponse)
 {
   AssertIsOnOwningThread();
@@ -25722,7 +25705,7 @@ NormalTransactionOp::RecvContinue(const PreprocessResponse& aResponse)
 
   NoteContinueReceived();
 
-  return true;
+  return IPC_OK();
 }
 
 ObjectStoreAddOrPutRequestOp::ObjectStoreAddOrPutRequestOp(
@@ -26156,9 +26139,9 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
        iter.AdvanceAcrossSegments(cloneData, cloneInfo.offsetToKeyProp());
       MOZ_ASSERT(result);
 
-      for (uint32_t index = 0; index < keyPropSize; index++) {
+      for (char index : keyPropBuffer) {
         char* keyPropPointer = iter.Data();
-        *keyPropPointer = keyPropBuffer[index];
+        *keyPropPointer = index;
 
         result = iter.AdvanceAcrossSegments(cloneData, 1);
         MOZ_ASSERT(result);
@@ -28950,16 +28933,19 @@ Utils::ActorDestroy(ActorDestroyReason aWhy)
 #endif
 }
 
-bool
+mozilla::ipc::IPCResult
 Utils::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  return PBackgroundIndexedDBUtilsParent::Send__delete__(this);
+  if (!PBackgroundIndexedDBUtilsParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 Utils::RecvGetFileReferences(const PersistenceType& aPersistenceType,
                              const nsCString& aOrigin,
                              const nsString& aDatabaseName,
@@ -28979,34 +28965,34 @@ Utils::RecvGetFileReferences(const PersistenceType& aPersistenceType,
   if (NS_WARN_IF(!IndexedDatabaseManager::Get() ||
                  !QuotaManager::Get())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(aPersistenceType != quota::PERSISTENCE_TYPE_PERSISTENT &&
                  aPersistenceType != quota::PERSISTENCE_TYPE_TEMPORARY &&
                  aPersistenceType != quota::PERSISTENCE_TYPE_DEFAULT)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(aOrigin.IsEmpty())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(aDatabaseName.IsEmpty())) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (NS_WARN_IF(aFileId == 0)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<GetFileReferencesHelper> helper =
@@ -29017,10 +29003,10 @@ Utils::RecvGetFileReferences(const PersistenceType& aPersistenceType,
     helper->DispatchAndReturnFileReferences(aRefCnt, aDBRefCnt,
                                             aSliceRefCnt, aResult);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  return true;
+  return IPC_OK();
 }
 
 nsresult

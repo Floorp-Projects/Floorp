@@ -94,14 +94,14 @@ protected:
   friend class FTPDivertStopRequestEvent;
   friend class FTPDivertCompleteEvent;
 
-  virtual bool RecvCancel(const nsresult& status) override;
-  virtual bool RecvSuspend() override;
-  virtual bool RecvResume() override;
-  virtual bool RecvDivertOnDataAvailable(const nsCString& data,
-                                         const uint64_t& offset,
-                                         const uint32_t& count) override;
-  virtual bool RecvDivertOnStopRequest(const nsresult& statusCode) override;
-  virtual bool RecvDivertComplete() override;
+  virtual mozilla::ipc::IPCResult RecvCancel(const nsresult& status) override;
+  virtual mozilla::ipc::IPCResult RecvSuspend() override;
+  virtual mozilla::ipc::IPCResult RecvResume() override;
+  virtual mozilla::ipc::IPCResult RecvDivertOnDataAvailable(const nsCString& data,
+                                                            const uint64_t& offset,
+                                                            const uint32_t& count) override;
+  virtual mozilla::ipc::IPCResult RecvDivertOnStopRequest(const nsresult& statusCode) override;
+  virtual mozilla::ipc::IPCResult RecvDivertComplete() override;
 
   nsresult SuspendChannel();
   nsresult ResumeChannel();

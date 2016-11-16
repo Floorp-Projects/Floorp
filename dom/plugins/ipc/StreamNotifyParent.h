@@ -37,7 +37,7 @@ public:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:
-  bool RecvRedirectNotifyResponse(const bool& allow) override;
+  mozilla::ipc::IPCResult RecvRedirectNotifyResponse(const bool& allow) override;
 
   bool* mDestructionFlag;
 };

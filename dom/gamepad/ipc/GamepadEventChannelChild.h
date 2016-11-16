@@ -14,7 +14,7 @@ class GamepadEventChannelChild final : public PGamepadEventChannelChild
  public:
   GamepadEventChannelChild() {}
   ~GamepadEventChannelChild() {}
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent) override;
 };
 

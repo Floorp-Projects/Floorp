@@ -25,14 +25,6 @@ var ProfilerActor = exports.ProfilerActor = ActorClassWithSpec(profilerSpec, {
     events.on(this.bridge, "*", this._onProfilerEvent);
   },
 
-  /**
-   * `disconnect` method required to call destroy, since this
-   * actor is not managed by a parent actor.
-   */
-  disconnect: function () {
-    this.destroy();
-  },
-
   destroy: function () {
     events.off(this.bridge, "*", this._onProfilerEvent);
     this.bridge.destroy();

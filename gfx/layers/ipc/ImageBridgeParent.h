@@ -71,12 +71,12 @@ public:
   }
 
   // PImageBridge
-  virtual bool RecvImageBridgeThreadId(const PlatformThreadId& aThreadId) override;
-  virtual bool RecvUpdate(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
-                          const uint64_t& aFwdTransactionId,
-                          EditReplyArray* aReply) override;
-  virtual bool RecvUpdateNoSwap(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
-                                const uint64_t& aFwdTransactionId) override;
+  virtual mozilla::ipc::IPCResult RecvImageBridgeThreadId(const PlatformThreadId& aThreadId) override;
+  virtual mozilla::ipc::IPCResult RecvUpdate(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
+                                          const uint64_t& aFwdTransactionId,
+                                          EditReplyArray* aReply) override;
+  virtual mozilla::ipc::IPCResult RecvUpdateNoSwap(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
+                                                const uint64_t& aFwdTransactionId) override;
 
   PCompositableParent* AllocPCompositableParent(const TextureInfo& aInfo,
                                                 PImageContainerParent* aImageContainer,
@@ -95,7 +95,7 @@ public:
   virtual bool DeallocPImageContainerParent(PImageContainerParent* actor) override;
 
   // Shutdown step 1
-  virtual bool RecvWillClose() override;
+  virtual mozilla::ipc::IPCResult RecvWillClose() override;
 
   MessageLoop* GetMessageLoop() const { return mMessageLoop; }
 

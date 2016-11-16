@@ -23,7 +23,7 @@ MediaSystemResourceManagerParent::~MediaSystemResourceManagerParent()
   MOZ_ASSERT(mDestroyed);
 }
 
-bool
+mozilla::ipc::IPCResult
 MediaSystemResourceManagerParent::RecvAcquire(const uint32_t& aId,
                                               const MediaSystemResourceType& aResourceType,
                                               const bool& aWillWait)
@@ -33,32 +33,35 @@ MediaSystemResourceManagerParent::RecvAcquire(const uint32_t& aId,
   if (request) {
     // Send fail response
     mozilla::Unused << SendResponse(aId, false /* fail */);
-    return true;
+    return IPC_OK();
   }
 
   request = new MediaSystemResourceRequest(aId, aResourceType);
   mResourceRequests.Put(aId, request);
   mMediaSystemResourceService->Acquire(this, aId, aResourceType, aWillWait);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 MediaSystemResourceManagerParent::RecvRelease(const uint32_t& aId)
 {
   MediaSystemResourceRequest* request = mResourceRequests.Get(aId);
   if (!request) {
-    return true;
+    return IPC_OK();
   }
 
   mMediaSystemResourceService->ReleaseResource(this, aId, request->mResourceType);
   mResourceRequests.Remove(aId);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 MediaSystemResourceManagerParent::RecvRemoveResourceManager()
 {
-  return PMediaSystemResourceManagerParent::Send__delete__(this);
+  if (!PMediaSystemResourceManagerParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 void

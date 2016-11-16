@@ -17,14 +17,14 @@ class HandlerServiceParent final : public mozilla::dom::PHandlerServiceParent
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
 
-  virtual bool RecvFillHandlerInfo(const HandlerInfo& aHandlerInfoData,
-                                   const nsCString& aOverrideType,
-                                   HandlerInfo* handlerInfoData) override;
-  virtual bool RecvExists(const HandlerInfo& aHandlerInfo,
-                          bool* exits) override;
+  virtual mozilla::ipc::IPCResult RecvFillHandlerInfo(const HandlerInfo& aHandlerInfoData,
+                                                      const nsCString& aOverrideType,
+                                                      HandlerInfo* handlerInfoData) override;
+  virtual mozilla::ipc::IPCResult RecvExists(const HandlerInfo& aHandlerInfo,
+                                             bool* exits) override;
 
-  virtual bool RecvGetTypeFromExtension(const nsCString& aFileExtension,
-                                        nsCString* type) override;
+  virtual mozilla::ipc::IPCResult RecvGetTypeFromExtension(const nsCString& aFileExtension,
+                                                           nsCString* type) override;
 
 };
 

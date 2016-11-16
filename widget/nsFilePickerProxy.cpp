@@ -142,7 +142,7 @@ nsFilePickerProxy::Open(nsIFilePickerShownCallback* aCallback)
   return NS_OK;
 }
 
-bool
+mozilla::ipc::IPCResult
 nsFilePickerProxy::Recv__delete__(const MaybeInputData& aData,
                                   const int16_t& aResult)
 {
@@ -151,10 +151,10 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputData& aData,
     for (uint32_t i = 0; i < blobs.Length(); ++i) {
       BlobChild* actor = static_cast<BlobChild*>(blobs[i]);
       RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
-      NS_ENSURE_TRUE(blobImpl, true);
+      NS_ENSURE_TRUE(blobImpl, IPC_OK());
 
       if (!blobImpl->IsFile()) {
-        return true;
+        return IPC_OK();
       }
 
       nsPIDOMWindowInner* inner =
@@ -170,7 +170,7 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputData& aData,
     NS_ConvertUTF16toUTF8 path(aData.get_InputDirectory().directoryPath());
     nsresult rv = NS_NewNativeLocalFile(path, true, getter_AddRefs(file));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return true;
+      return IPC_OK();
     }
 
     RefPtr<Directory> directory =
@@ -186,7 +186,7 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputData& aData,
     mCallback = nullptr;
   }
 
-  return true;
+  return IPC_OK();
 }
 
 NS_IMETHODIMP

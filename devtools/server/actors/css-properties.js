@@ -19,9 +19,8 @@ const { cssColors } = require("devtools/shared/css/color-db");
 exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
   typeName: "cssProperties",
 
-  initialize(conn, parent) {
+  initialize(conn) {
     Actor.prototype.initialize.call(this, conn);
-    this.parent = parent;
   },
 
   destroy() {

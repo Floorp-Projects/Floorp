@@ -101,9 +101,7 @@ public:
   {
   }
 
-  virtual ~Impl()
-  {
-  }
+  virtual ~Impl() = default;
 
   virtual ImageBitmapFormat
   GetFormat() const

@@ -32,7 +32,7 @@ TestRPCParent::Main()
     fail("sending Start");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRPCParent::RecvTest1_Start(uint32_t* aResult)
 {
   uint32_t result;
@@ -42,10 +42,10 @@ TestRPCParent::RecvTest1_Start(uint32_t* aResult)
     fail("Wrong result (expected 300)");
 
   *aResult = 100;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRPCParent::RecvTest1_InnerEvent(uint32_t* aResult)
 {
   uint32_t result;
@@ -55,10 +55,10 @@ TestRPCParent::RecvTest1_InnerEvent(uint32_t* aResult)
     fail("Wrong result (expected 400)");
 
   *aResult = 200;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRPCParent::RecvTest2_Start()
 {
   // Send a CPOW. During this time, we must NOT process the RPC message, as
@@ -68,10 +68,10 @@ TestRPCParent::RecvTest2_Start()
 
   MOZ_ASSERT(!reentered_);
   resolved_first_cpow_ = true;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRPCParent::RecvTest2_OutOfOrder()
 {
   // Send a CPOW. If this RPC call was initiated while waiting for the first
@@ -80,7 +80,7 @@ TestRPCParent::RecvTest2_OutOfOrder()
     fail("SendTest2_SecondUrgent");
 
   reentered_ = true;
-  return true;
+  return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------
@@ -97,7 +97,7 @@ TestRPCChild::~TestRPCChild()
     MOZ_COUNT_DTOR(TestRPCChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRPCChild::RecvStart()
 {
   uint32_t result;
@@ -113,10 +113,10 @@ TestRPCChild::RecvStart()
     fail("SendTest2_OutOfOrder");
 
   Close();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRPCChild::RecvTest1_InnerQuery(uint32_t* aResult)
 {
   uint32_t result;
@@ -126,26 +126,26 @@ TestRPCChild::RecvTest1_InnerQuery(uint32_t* aResult)
     fail("Wrong result (expected 200)");
 
   *aResult = 300;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRPCChild::RecvTest1_NoReenter(uint32_t* aResult)
 {
   *aResult = 400;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRPCChild::RecvTest2_FirstUrgent()
 {
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRPCChild::RecvTest2_SecondUrgent()
 {
-  return true;
+  return IPC_OK();
 }
 
 } // namespace _ipdltest

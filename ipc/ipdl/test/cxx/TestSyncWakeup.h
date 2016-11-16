@@ -23,11 +23,11 @@ public:
     void Main();
 
 protected:
-    virtual bool AnswerStackFrame() override;
+    virtual mozilla::ipc::IPCResult AnswerStackFrame() override;
 
-    virtual bool RecvSync1() override;
+    virtual mozilla::ipc::IPCResult RecvSync1() override;
 
-    virtual bool RecvSync2() override;
+    virtual mozilla::ipc::IPCResult RecvSync2() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
@@ -47,13 +47,13 @@ public:
     virtual ~TestSyncWakeupChild();
 
 protected:
-    virtual bool RecvStart() override;
+    virtual mozilla::ipc::IPCResult RecvStart() override;
 
-    virtual bool RecvNote1() override;
+    virtual mozilla::ipc::IPCResult RecvNote1() override;
 
-    virtual bool AnswerStackFrame() override;
+    virtual mozilla::ipc::IPCResult AnswerStackFrame() override;
 
-    virtual bool RecvNote2() override;
+    virtual mozilla::ipc::IPCResult RecvNote2() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

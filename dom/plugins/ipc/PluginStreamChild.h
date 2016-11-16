@@ -24,8 +24,8 @@ public:
 
   virtual bool IsBrowserStream() override { return false; }
 
-  virtual bool Answer__delete__(const NPReason& reason,
-                                const bool& artificial) override;
+  virtual mozilla::ipc::IPCResult Answer__delete__(const NPReason& reason,
+                                                   const bool& artificial) override;
 
   int32_t NPN_Write(int32_t length, void* buffer);
   void NPP_DestroyStream(NPError reason);

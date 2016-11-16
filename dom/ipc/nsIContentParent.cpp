@@ -212,7 +212,7 @@ nsIContentParent::GetOrCreateActorForBlobImpl(BlobImpl* aImpl)
   return actor;
 }
 
-bool
+mozilla::ipc::IPCResult
 nsIContentParent::RecvSyncMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData,
                                   InfallibleTArray<CpowEntry>&& aCpows,
@@ -225,7 +225,7 @@ nsIContentParent::RecvSyncMessage(const nsString& aMsg,
     ContentParent* parent = AsContentParent();
     if (!ContentParent::IgnoreIPCPrincipal() &&
         parent && principal && !AssertAppPrincipal(parent, principal)) {
-      return false;
+      return IPC_FAIL_NO_REASON(parent);
     }
   }
 
@@ -238,10 +238,10 @@ nsIContentParent::RecvSyncMessage(const nsString& aMsg,
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr,
                         aMsg, true, &data, &cpows, aPrincipal, aRetvals);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 nsIContentParent::RecvRpcMessage(const nsString& aMsg,
                                  const ClonedMessageData& aData,
                                  InfallibleTArray<CpowEntry>&& aCpows,
@@ -254,7 +254,7 @@ nsIContentParent::RecvRpcMessage(const nsString& aMsg,
     ContentParent* parent = AsContentParent();
     if (!ContentParent::IgnoreIPCPrincipal() &&
         parent && principal && !AssertAppPrincipal(parent, principal)) {
-      return false;
+      return IPC_FAIL_NO_REASON(parent);
     }
   }
 
@@ -267,7 +267,7 @@ nsIContentParent::RecvRpcMessage(const nsString& aMsg,
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr,
                         aMsg, true, &data, &cpows, aPrincipal, aRetvals);
   }
-  return true;
+  return IPC_OK();
 }
 
 PFileDescriptorSetParent*
@@ -296,7 +296,7 @@ nsIContentParent::DeallocPSendStreamParent(PSendStreamParent* aActor)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 nsIContentParent::RecvAsyncMessage(const nsString& aMsg,
                                    InfallibleTArray<CpowEntry>&& aCpows,
                                    const IPC::Principal& aPrincipal,
@@ -308,7 +308,7 @@ nsIContentParent::RecvAsyncMessage(const nsString& aMsg,
     ContentParent* parent = AsContentParent();
     if (!ContentParent::IgnoreIPCPrincipal() &&
         parent && principal && !AssertAppPrincipal(parent, principal)) {
-      return false;
+      return IPC_FAIL_NO_REASON(parent);
     }
   }
 
@@ -321,7 +321,7 @@ nsIContentParent::RecvAsyncMessage(const nsString& aMsg,
     ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr,
                         aMsg, false, &data, &cpows, aPrincipal, nullptr);
   }
-  return true;
+  return IPC_OK();
 }
 
 } // namespace dom

@@ -72,45 +72,45 @@ private:
 
   // PGMPDecryptorParent
 
-  bool RecvSetDecryptorId(const uint32_t& aId) override;
+  mozilla::ipc::IPCResult RecvSetDecryptorId(const uint32_t& aId) override;
 
-  bool RecvSetSessionId(const uint32_t& aCreateSessionToken,
-                        const nsCString& aSessionId) override;
+  mozilla::ipc::IPCResult RecvSetSessionId(const uint32_t& aCreateSessionToken,
+                                           const nsCString& aSessionId) override;
 
-  bool RecvResolveLoadSessionPromise(const uint32_t& aPromiseId,
-                                     const bool& aSuccess) override;
+  mozilla::ipc::IPCResult RecvResolveLoadSessionPromise(const uint32_t& aPromiseId,
+                                                        const bool& aSuccess) override;
 
-  bool RecvResolvePromise(const uint32_t& aPromiseId) override;
+  mozilla::ipc::IPCResult RecvResolvePromise(const uint32_t& aPromiseId) override;
 
-  bool RecvRejectPromise(const uint32_t& aPromiseId,
-                         const GMPDOMException& aException,
-                         const nsCString& aMessage) override;
+  mozilla::ipc::IPCResult RecvRejectPromise(const uint32_t& aPromiseId,
+                                            const GMPDOMException& aException,
+                                            const nsCString& aMessage) override;
 
-  bool RecvSessionMessage(const nsCString& aSessionId,
-                          const GMPSessionMessageType& aMessageType,
-                          nsTArray<uint8_t>&& aMessage) override;
+  mozilla::ipc::IPCResult RecvSessionMessage(const nsCString& aSessionId,
+                                             const GMPSessionMessageType& aMessageType,
+                                             nsTArray<uint8_t>&& aMessage) override;
 
-  bool RecvExpirationChange(const nsCString& aSessionId,
-                            const double& aExpiryTime) override;
+  mozilla::ipc::IPCResult RecvExpirationChange(const nsCString& aSessionId,
+                                               const double& aExpiryTime) override;
 
-  bool RecvSessionClosed(const nsCString& aSessionId) override;
+  mozilla::ipc::IPCResult RecvSessionClosed(const nsCString& aSessionId) override;
 
-  bool RecvSessionError(const nsCString& aSessionId,
-                        const GMPDOMException& aException,
-                        const uint32_t& aSystemCode,
-                        const nsCString& aMessage) override;
+  mozilla::ipc::IPCResult RecvSessionError(const nsCString& aSessionId,
+                                           const GMPDOMException& aException,
+                                           const uint32_t& aSystemCode,
+                                           const nsCString& aMessage) override;
 
-  bool RecvDecrypted(const uint32_t& aId,
-                     const GMPErr& aErr,
-                     InfallibleTArray<uint8_t>&& aBuffer) override;
+  mozilla::ipc::IPCResult RecvDecrypted(const uint32_t& aId,
+                                        const GMPErr& aErr,
+                                        InfallibleTArray<uint8_t>&& aBuffer) override;
 
-  bool RecvBatchedKeyStatusChanged(const nsCString& aSessionId,
-                                   InfallibleTArray<GMPKeyInformation>&& aKeyInfos) override;
+  mozilla::ipc::IPCResult RecvBatchedKeyStatusChanged(const nsCString& aSessionId,
+                                                      InfallibleTArray<GMPKeyInformation>&& aKeyInfos) override;
 
-  bool RecvShutdown() override;
+  mozilla::ipc::IPCResult RecvShutdown() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  bool Recv__delete__() override;
+  mozilla::ipc::IPCResult Recv__delete__() override;
 
   bool mIsOpen;
   bool mShuttingDown;

@@ -44,7 +44,7 @@ let FrameActor = ActorClassWithSpec(frameSpec, {
    * Finalization handler that is called when the actor is being evicted from
    * the pool.
    */
-  disconnect: function () {
+  destroy: function () {
     this.conn.removeActorPool(this._frameLifetimePool);
     this._frameLifetimePool = null;
   },

@@ -16,7 +16,7 @@ class PrintSettingsDialogChild final : public PPrintSettingsDialogChild
 public:
   MOZ_IMPLICIT PrintSettingsDialogChild();
 
-  virtual bool Recv__delete__(const PrintDataOrNSResult& aData) override;
+  virtual mozilla::ipc::IPCResult Recv__delete__(const PrintDataOrNSResult& aData) override;
 
   bool returned() { return mReturned; };
   nsresult result() { return mResult; };

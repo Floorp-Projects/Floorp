@@ -24,9 +24,9 @@ public:
     void SecondStage();
     void ThirdStage();
 
-    bool RecvTest1_2() override;
-    bool RecvTestInner() override;
-    bool RecvTestInnerUrgent() override;
+    mozilla::ipc::IPCResult RecvTest1_2() override;
+    mozilla::ipc::IPCResult RecvTestInner() override;
+    mozilla::ipc::IPCResult RecvTestInnerUrgent() override;
 
     bool ShouldContinueFromReplyTimeout() override
     {
@@ -56,14 +56,14 @@ public:
     TestUrgentHangsChild();
     virtual ~TestUrgentHangsChild();
 
-    bool RecvTest1_1() override;
-    bool RecvTest1_3() override;
-    bool RecvTest2() override;
-    bool RecvTest3() override;
-    bool RecvTest4() override;
-    bool RecvTest4_1() override;
-    bool RecvTest5() override;
-    bool RecvTest5_1() override;
+    mozilla::ipc::IPCResult RecvTest1_1() override;
+    mozilla::ipc::IPCResult RecvTest1_3() override;
+    mozilla::ipc::IPCResult RecvTest2() override;
+    mozilla::ipc::IPCResult RecvTest3() override;
+    mozilla::ipc::IPCResult RecvTest4() override;
+    mozilla::ipc::IPCResult RecvTest4_1() override;
+    mozilla::ipc::IPCResult RecvTest5() override;
+    mozilla::ipc::IPCResult RecvTest5_1() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

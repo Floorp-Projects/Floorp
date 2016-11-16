@@ -401,6 +401,10 @@ SyncScheduler.prototype = {
       return;
     }
 
+    if (!Async.isAppReady()) {
+      this._log.debug("Not initiating sync: app is shutting down");
+      return;
+    }
     Utils.nextTick(this.service.sync, this.service);
   },
 

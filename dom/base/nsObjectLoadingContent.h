@@ -565,7 +565,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // Helper class for SetupProtoChain
     class SetupProtoChainRunner final : public nsIRunnable
     {
-      ~SetupProtoChainRunner();
+      ~SetupProtoChainRunner() = default;
     public:
       NS_DECL_ISUPPORTS
 

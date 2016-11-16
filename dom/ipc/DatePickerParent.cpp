@@ -64,18 +64,18 @@ DatePickerParent::CreateDatePicker()
   return NS_SUCCEEDED(mPicker->Init(window, mTitle, mInitialDate));
 }
 
-bool
+mozilla::ipc::IPCResult
 DatePickerParent::RecvOpen()
 {
   if (!CreateDatePicker()) {
     Unused << Send__delete__(this, mInitialDate);
-    return true;
+    return IPC_OK();
   }
 
   mCallback = new DatePickerShownCallback(this);
 
   mPicker->Open(mCallback);
-  return true;
+  return IPC_OK();
 };
 
 void

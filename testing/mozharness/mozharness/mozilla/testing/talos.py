@@ -25,6 +25,7 @@ from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
 from mozharness.mozilla.buildbot import TBPL_SUCCESS, TBPL_WORST_LEVEL_TUPLE
 from mozharness.mozilla.buildbot import TBPL_RETRY, TBPL_FAILURE, TBPL_WARNING
+from mozharness.mozilla.tooltool import TooltoolMixin
 
 external_tools_path = os.path.join(
     os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))),
@@ -86,7 +87,7 @@ class TalosOutputParser(OutputParser):
         super(TalosOutputParser, self).parse_single_line(line)
 
 
-class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
+class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
     """
     install and run Talos tests:
     https://wiki.mozilla.org/Buildbot/Talos
@@ -164,9 +165,9 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         self.talos_json = self.config.get("talos_json")
         self.talos_json_config = self.config.get("talos_json_config")
         self.tests = None
-        self.pagesets_url = None
         self.sps_profile = self.config.get('sps_profile')
         self.sps_profile_interval = self.config.get('sps_profile_interval')
+        self.pagesets_name = None
 
     # We accept some configuration options from the try commit message in the format mozharness: <options>
     # Example try commit message:
@@ -223,15 +224,42 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         self.info(pprint.pformat(self.talos_json_config))
         return self.talos_json_config
 
-    def query_pagesets_url(self):
+    def query_pagesets_name(self):
         """Certain suites require external pagesets to be downloaded and
         extracted.
         """
-        if self.pagesets_url:
-            return self.pagesets_url
-        if self.query_talos_json_config() and 'suite' in self.config:
-            self.pagesets_url = self.talos_json_config['suites'][self.config['suite']].get('pagesets_url')
-            return self.pagesets_url
+        if self.pagesets_name:
+            return self.pagesets_name
+        if self.query_talos_json_config() and self.suite is not None:
+            self.pagesets_name = self.talos_json_config['suites'][self.suite].get('pagesets_name')
+            return self.pagesets_name
+
+    def get_suite_from_test(self):
+        """ Retrieve the talos suite name from a given talos test name."""
+        # running locally, single test name provided instead of suite; go through tests and find suite name
+        suite_name = None
+        if self.query_talos_json_config():
+            if '-a' in self.config['talos_extra_options']:
+                test_name_index = self.config['talos_extra_options'].index('-a') + 1
+            if '--activeTests' in self.config['talos_extra_options']:
+                test_name_index = self.config['talos_extra_options'].index('--activeTests') + 1
+            if test_name_index < len(self.config['talos_extra_options']):
+                test_name = self.config['talos_extra_options'][test_name_index]
+                for talos_suite in self.talos_json_config['suites']:
+                    if test_name in self.talos_json_config['suites'][talos_suite].get('tests'):
+                        suite_name = talos_suite
+            if not suite_name:
+                # no suite found to contain the specified test, error out
+                self.fatal("Test name is missing or invalid")
+        else:
+            self.fatal("Talos json config not found, cannot verify suite")
+        return suite_name
+
+    def validate_suite(self):
+        """ Ensure suite name is a valid talos suite. """
+        if self.query_talos_json_config() and self.suite is not None:
+            if not self.suite in self.talos_json_config.get('suites'):
+                self.fatal("Suite '%s' is not valid (not found in talos json config)" % self.suite)
 
     def talos_options(self, args=None, **kw):
         """return options to talos"""
@@ -274,21 +302,41 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
 
     def populate_webroot(self):
         """Populate the production test slaves' webroots"""
-        c = self.config
-
         self.talos_path = os.path.join(
             self.query_abs_dirs()['abs_work_dir'], 'tests', 'talos'
         )
-        if c.get('run_local'):
+
+        # need to determine if talos pageset is required to be downloaded
+        if self.config.get('run_local'):
+            # talos initiated locally, get and verify test/suite from cmd line
             self.talos_path = os.path.dirname(self.talos_json)
+            if '-a' in self.config['talos_extra_options'] or '--activeTests' in self.config['talos_extra_options']:
+                # test name (-a or --activeTests) specified, find out what suite it is a part of
+                self.suite = self.get_suite_from_test()
+            elif '--suite' in self.config['talos_extra_options']:
+                # --suite specified, get suite from cmd line and ensure is valid
+                suite_name_index = self.config['talos_extra_options'].index('--suite') + 1
+                if suite_name_index < len(self.config['talos_extra_options']):
+                    self.suite = self.config['talos_extra_options'][suite_name_index]
+                    self.validate_suite()
+                else:
+                    self.fatal("Suite name not provided")
+        else:
+            # talos initiated in production via mozharness
+            self.suite = self.config['suite']
 
-        src_talos_webdir = os.path.join(self.talos_path, 'talos')
-
-        if self.query_pagesets_url():
-            self.info('Downloading pageset...')
-            dirs = self.query_abs_dirs()
-            src_talos_pageset = os.path.join(src_talos_webdir, 'tests')
-            archive = self.download_file(self.pagesets_url, parent_dir=dirs['abs_work_dir'])
+        # now that have the suite name, check if pageset is required, if so download it
+        if self.query_pagesets_name():
+            self.info("Downloading pageset with tooltool...")
+            self.src_talos_webdir = os.path.join(self.talos_path, 'talos')
+            src_talos_pageset = os.path.join(self.src_talos_webdir, 'tests')
+            manifest_file = os.path.join(self.talos_path, 'tp5n-pageset.manifest')
+            self.tooltool_fetch(
+                manifest_file,
+                output_dir=src_talos_pageset,
+                cache=self.config.get('tooltool_cache')
+            )
+            archive = os.path.join(src_talos_pageset, self.pagesets_name)
             unzip = self.query_exe('unzip')
             unzip_cmd = [unzip, '-q', '-o', archive, '-d', src_talos_pageset]
             self.run_command(unzip_cmd, halt_on_failure=True)

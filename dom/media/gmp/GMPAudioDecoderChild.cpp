@@ -89,12 +89,12 @@ GMPAudioDecoderChild::Error(GMPErr aError)
   Unused << SendError(aError);
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPAudioDecoderChild::RecvInitDecode(const GMPAudioCodecData& a)
 {
   MOZ_ASSERT(mAudioDecoder);
   if (!mAudioDecoder) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   GMPAudioCodec codec;
@@ -108,14 +108,14 @@ GMPAudioDecoderChild::RecvInitDecode(const GMPAudioCodecData& a)
   // Ignore any return code. It is OK for this to fail without killing the process.
   mAudioDecoder->InitDecode(codec, this);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPAudioDecoderChild::RecvDecode(const GMPAudioEncodedSampleData& aEncodedSamples)
 {
   if (!mAudioDecoder) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   GMPAudioSamples* samples = new GMPAudioSamplesImpl(aEncodedSamples);
@@ -123,36 +123,36 @@ GMPAudioDecoderChild::RecvDecode(const GMPAudioEncodedSampleData& aEncodedSample
   // Ignore any return code. It is OK for this to fail without killing the process.
   mAudioDecoder->Decode(samples);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPAudioDecoderChild::RecvReset()
 {
   if (!mAudioDecoder) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Ignore any return code. It is OK for this to fail without killing the process.
   mAudioDecoder->Reset();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPAudioDecoderChild::RecvDrain()
 {
   if (!mAudioDecoder) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Ignore any return code. It is OK for this to fail without killing the process.
   mAudioDecoder->Drain();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPAudioDecoderChild::RecvDecodingComplete()
 {
   if (mAudioDecoder) {
@@ -165,7 +165,7 @@ GMPAudioDecoderChild::RecvDecodingComplete()
 
   Unused << Send__delete__(this);
 
-  return true;
+  return IPC_OK();
 }
 
 } // namespace gmp

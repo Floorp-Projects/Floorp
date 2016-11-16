@@ -45,20 +45,20 @@
         "g1": {
             "tests": ["tp5o_scroll", "glterrain"],
             "talos_options": ["--disable-e10s"],
-            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip"
+            "pagesets_name": "tp5n.zip"
         },
         "g1-e10s": {
             "tests": ["tp5o_scroll", "glterrain"],
-            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip"
+            "pagesets_name": "tp5n.zip"
         },
         "g2": {
             "tests": ["damp", "tps"],
             "talos_options": ["--disable-e10s"],
-            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip"
+            "pagesets_name": "tp5n.zip"
         },
         "g2-e10s": {
             "tests": ["damp", "tps"],
-            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip"
+            "pagesets_name": "tp5n.zip"
         },
         "g3": {
             "tests": ["dromaeo_dom"],
@@ -83,16 +83,16 @@
         },
         "tp5o": {
             "tests": ["tp5o"],
-            "talos_options": ["--disable-e10s"],
-            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip"
+            "pagesets_name": "tp5n.zip",
+            "talos_options": ["--disable-e10s"]
         },
         "tp5o-e10s": {
             "tests": ["tp5o"],
-            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip"
+            "pagesets_name": "tp5n.zip"
         },
         "xperf": {
             "tests": ["tp5n"],
-            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
+            "pagesets_name": "tp5n.zip",
             "talos_options": [
                 "--disable-e10s",
                 "--xperf_path",
@@ -101,7 +101,7 @@
         },
         "xperf-e10s": {
             "tests": ["tp5n"],
-            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
+            "pagesets_name": "tp5n.zip",
             "talos_options": [
                 "--xperf_path",
                 "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\""

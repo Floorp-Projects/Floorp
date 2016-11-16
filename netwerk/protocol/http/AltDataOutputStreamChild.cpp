@@ -139,11 +139,11 @@ AltDataOutputStreamChild::IsNonBlocking(bool *_retval)
   return NS_OK;
 }
 
-bool
+mozilla::ipc::IPCResult
 AltDataOutputStreamChild::RecvError(const nsresult& err)
 {
   mError = err;
-  return true;
+  return IPC_OK();
 }
 
 

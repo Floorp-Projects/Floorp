@@ -53,7 +53,7 @@ public:
     NS_IMETHOD Open(nsIFilePickerShownCallback* aCallback) override;
 
     // PFilePickerChild
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     Recv__delete__(const MaybeInputData& aData, const int16_t& aResult) override;
 
 private:

@@ -31,7 +31,7 @@
 #include "mozilla/dom/VideoTrackList.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Telemetry.h"
-#include "GMPService.h"
+#include "GMPCrashHelper.h"
 #include "Layers.h"
 #include "mozilla/layers/ShadowLayers.h"
 
@@ -1125,21 +1125,16 @@ MediaDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
 }
 
 void
-MediaDecoder::OnSeekResolved(SeekResolveValue aVal)
+MediaDecoder::OnSeekResolved()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsShutdown());
   mSeekRequest.Complete();
 
-  bool fireEnded = false;
   {
     // An additional seek was requested while the current seek was
     // in operation.
     UnpinForSeek();
-    fireEnded = aVal.mAtEnd;
-    if (aVal.mAtEnd) {
-      ChangeState(PLAY_STATE_ENDED);
-    }
     mLogicallySeeking = false;
   }
 
@@ -1148,9 +1143,6 @@ MediaDecoder::OnSeekResolved(SeekResolveValue aVal)
 
   mOwner->SeekCompleted();
   AsyncResolveSeekDOMPromiseIfExists();
-  if (fireEnded) {
-    mOwner->PlaybackEnded();
-  }
 }
 
 void

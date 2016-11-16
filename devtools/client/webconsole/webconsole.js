@@ -2709,7 +2709,9 @@ WebConsoleFrame.prototype = {
   */
   _onToolboxPrefChanged: function (event, data) {
     if (data.pref == PREF_MESSAGE_TIMESTAMP) {
-      if (data.newValue) {
+      if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
+        this.newConsoleOutput.dispatchTimestampsToggle(data.newValue);
+      } else if (data.newValue) {
         this.outputNode.classList.remove("hideTimestamps");
       } else {
         this.outputNode.classList.add("hideTimestamps");

@@ -61,10 +61,10 @@ TestRaceDeadlockParent::Test1()
     }
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRaceDeadlockParent::AnswerLose()
 {
-    return true;
+    return IPC_OK();
 }
 
 RacyInterruptPolicy
@@ -87,16 +87,16 @@ TestRaceDeadlockChild::~TestRaceDeadlockChild()
     MOZ_COUNT_DTOR(TestRaceDeadlockChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRaceDeadlockParent::RecvStartRace()
 {
     if (!CallWin()) {
         fail("calling Win");
     }
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRaceDeadlockChild::RecvStartRace()
 {
     if (!SendStartRace()) {
@@ -105,19 +105,19 @@ TestRaceDeadlockChild::RecvStartRace()
     if (!CallLose()) {
         fail("calling Lose");
     }
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRaceDeadlockChild::AnswerWin()
 {
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRaceDeadlockChild::AnswerRpc()
 {
-    return true;
+    return IPC_OK();
 }
 
 RacyInterruptPolicy

@@ -586,7 +586,7 @@ protected:
   ~PermissionRequestChildProcessActor()
   { }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   Recv__delete__(const uint32_t& aPermission) override;
 };
 
@@ -1030,7 +1030,7 @@ protected:
   ~WorkerPermissionRequestChildProcessActor()
   {}
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   Recv__delete__(const uint32_t& aPermission) override;
 };
 
@@ -1184,13 +1184,13 @@ WorkerPermissionOperationCompleted::WorkerRun(JSContext* aCx,
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 WorkerPermissionRequestChildProcessActor::Recv__delete__(
                                               const uint32_t& /* aPermission */)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mChallenge->OperationCompleted();
-  return true;
+  return IPC_OK();
 }
 
 } // namespace
@@ -1289,7 +1289,7 @@ PermissionRequestMainProcessHelper::OnPromptComplete(
   mFactory = nullptr;
 }
 
-bool
+mozilla::ipc::IPCResult
 PermissionRequestChildProcessActor::Recv__delete__(
                                               const uint32_t& /* aPermission */)
 {
@@ -1305,7 +1305,7 @@ PermissionRequestChildProcessActor::Recv__delete__(
   mActor->SendPermissionRetry();
   mActor = nullptr;
 
-  return true;
+  return IPC_OK();
 }
 
 /*******************************************************************************
@@ -1572,7 +1572,7 @@ BackgroundFactoryRequestChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundFactoryRequestChild::Recv__delete__(
                                         const FactoryRequestResponse& aResponse)
 {
@@ -1606,13 +1606,13 @@ BackgroundFactoryRequestChild::Recv__delete__(
   request->NoteComplete();
 
   if (NS_WARN_IF(!result)) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundFactoryRequestChild::RecvPermissionChallenge(
                                             const PrincipalInfo& aPrincipalInfo)
 {
@@ -1628,14 +1628,17 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
     RefPtr<WorkerPermissionChallenge> challenge =
       new WorkerPermissionChallenge(workerPrivate, this, mFactory,
                                     aPrincipalInfo);
-    return challenge->Dispatch();
+    if (!challenge->Dispatch()) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+    return IPC_OK();
   }
 
   nsresult rv;
   nsCOMPtr<nsIPrincipal> principal =
     mozilla::ipc::PrincipalInfoToPrincipal(aPrincipalInfo, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (XRE_IsParentProcess()) {
@@ -1647,7 +1650,10 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
     if (NS_WARN_IF(!ownerElement)) {
       // If this fails, the page was navigated. Fail the permission check by
       // forcing an immediate retry.
-      return SendPermissionRetry();
+      if (!SendPermissionRetry()) {
+        return IPC_FAIL_NO_REASON(this);
+      }
+      return IPC_OK();
     }
 
     RefPtr<PermissionRequestMainProcessHelper> helper =
@@ -1655,7 +1661,7 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
 
     PermissionRequestBase::PermissionValue permission;
     if (NS_WARN_IF(NS_FAILED(helper->PromptIfNeeded(&permission)))) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
 
     MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed ||
@@ -1665,7 +1671,7 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
     if (permission != PermissionRequestBase::kPermissionPrompt) {
       SendPermissionRetry();
     }
-    return true;
+    return IPC_OK();
   }
 
   RefPtr<TabChild> tabChild = mFactory->GetTabChild();
@@ -1677,10 +1683,10 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
 
   tabChild->SendPIndexedDBPermissionRequestConstructor(actor, ipcPrincipal);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundFactoryRequestChild::RecvBlocked(const uint64_t& aCurrentVersion)
 {
   AssertIsOnOwningThread();
@@ -1716,7 +1722,7 @@ BackgroundFactoryRequestChild::RecvBlocked(const uint64_t& aCurrentVersion)
     NS_WARNING("Failed to dispatch event!");
   }
 
-  return true;
+  return IPC_OK();
 }
 
 /*******************************************************************************
@@ -1888,7 +1894,7 @@ BackgroundDatabaseChild::AllocPBackgroundIDBVersionChangeTransactionChild(
   return new BackgroundVersionChangeTransactionChild(request);
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
                             PBackgroundIDBVersionChangeTransactionChild* aActor,
                             const uint64_t& aCurrentVersion,
@@ -1924,7 +1930,7 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
     IDB_REPORT_INTERNAL_ERR();
 
     MOZ_ALWAYS_TRUE(aActor->SendDeleteMe());
-    return true;
+    return IPC_OK();
   }
 
   transaction->AssertIsOnOwningThread();
@@ -1946,7 +1952,7 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
 
   DispatchSuccessEvent(&helper, upgradeNeededEvent);
 
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -1987,7 +1993,7 @@ BackgroundDatabaseChild::DeallocPBackgroundMutableFileChild(
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundDatabaseChild::RecvVersionChange(const uint64_t& aOldVersion,
                                            const NullableVersion& aNewVersion)
 {
@@ -1996,7 +2002,7 @@ BackgroundDatabaseChild::RecvVersionChange(const uint64_t& aOldVersion,
   MaybeCollectGarbageOnIPCMessage();
 
   if (!mDatabase || mDatabase->IsClosed()) {
-    return true;
+    return IPC_OK();
   }
 
   RefPtr<IDBDatabase> kungFuDeathGrip = mDatabase;
@@ -2020,7 +2026,7 @@ BackgroundDatabaseChild::RecvVersionChange(const uint64_t& aOldVersion,
       // to call Close() and AbortTransactions() manually.
       kungFuDeathGrip->AbortTransactions(/* aShouldWarn */ false);
       kungFuDeathGrip->Close();
-      return true;
+      return IPC_OK();
     }
   }
 
@@ -2062,10 +2068,10 @@ BackgroundDatabaseChild::RecvVersionChange(const uint64_t& aOldVersion,
     SendBlocked();
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundDatabaseChild::RecvInvalidate()
 {
   AssertIsOnOwningThread();
@@ -2076,10 +2082,10 @@ BackgroundDatabaseChild::RecvInvalidate()
     mDatabase->Invalidate();
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundDatabaseChild::RecvCloseAfterInvalidationComplete()
 {
   AssertIsOnOwningThread();
@@ -2090,7 +2096,7 @@ BackgroundDatabaseChild::RecvCloseAfterInvalidationComplete()
     mDatabase->DispatchTrustedEvent(nsDependentString(kCloseEventType));
   }
 
-  return true;
+  return IPC_OK();
 }
 
 /*******************************************************************************
@@ -2157,7 +2163,7 @@ BackgroundDatabaseRequestChild::HandleResponse(
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundDatabaseRequestChild::Recv__delete__(
                                        const DatabaseRequestResponse& aResponse)
 {
@@ -2166,10 +2172,16 @@ BackgroundDatabaseRequestChild::Recv__delete__(
 
   switch (aResponse.type()) {
     case DatabaseRequestResponse::Tnsresult:
-      return HandleResponse(aResponse.get_nsresult());
+      if (!HandleResponse(aResponse.get_nsresult())) {
+        return IPC_FAIL_NO_REASON(this);
+      }
+      return IPC_OK();
 
     case DatabaseRequestResponse::TCreateFileRequestResponse:
-      return HandleResponse(aResponse.get_CreateFileRequestResponse());
+      if (!HandleResponse(aResponse.get_CreateFileRequestResponse())) {
+        return IPC_FAIL_NO_REASON(this);
+      }
+      return IPC_OK();
 
     default:
       MOZ_CRASH("Unknown response type!");
@@ -2305,7 +2317,7 @@ BackgroundTransactionChild::ActorDestroy(ActorDestroyReason aWhy)
   NoteActorDestroyed();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundTransactionChild::RecvComplete(const nsresult& aResult)
 {
   AssertIsOnOwningThread();
@@ -2316,7 +2328,7 @@ BackgroundTransactionChild::RecvComplete(const nsresult& aResult)
   mTransaction->FireCompleteOrAbortEvents(aResult);
 
   NoteComplete();
-  return true;
+  return IPC_OK();
 }
 
 PBackgroundIDBRequestChild*
@@ -2414,7 +2426,7 @@ BackgroundVersionChangeTransactionChild::ActorDestroy(ActorDestroyReason aWhy)
   NoteActorDestroyed();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundVersionChangeTransactionChild::RecvComplete(const nsresult& aResult)
 {
   AssertIsOnOwningThread();
@@ -2422,7 +2434,7 @@ BackgroundVersionChangeTransactionChild::RecvComplete(const nsresult& aResult)
   MaybeCollectGarbageOnIPCMessage();
 
   if (!mTransaction) {
-    return true;
+    return IPC_OK();
   }
 
   MOZ_ASSERT(mOpenDBRequest);
@@ -2442,7 +2454,7 @@ BackgroundVersionChangeTransactionChild::RecvComplete(const nsresult& aResult)
   mOpenDBRequest = nullptr;
 
   NoteComplete();
-  return true;
+  return IPC_OK();
 }
 
 PBackgroundIDBRequestChild*
@@ -2845,7 +2857,7 @@ BackgroundRequestChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundRequestChild::Recv__delete__(const RequestResponse& aResponse)
 {
   AssertIsOnOwningThread();
@@ -2931,10 +2943,10 @@ BackgroundRequestChild::Recv__delete__(const RequestResponse& aResponse)
   // ActorDestroy.
   mTransaction = nullptr;
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundRequestChild::RecvPreprocess(const PreprocessParams& aParams)
 {
   AssertIsOnOwningThread();
@@ -2968,10 +2980,13 @@ BackgroundRequestChild::RecvPreprocess(const PreprocessParams& aParams)
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return SendContinue(rv);
+    if (!SendContinue(rv)) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+    return IPC_OK();
   }
 
-  return true;
+  return IPC_OK();
 }
 
 nsresult
@@ -3494,7 +3509,7 @@ BackgroundCursorChild::ActorDestroy(ActorDestroyReason aWhy)
 #endif
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundCursorChild::RecvResponse(const CursorResponse& aResponse)
 {
   AssertIsOnOwningThread();
@@ -3543,7 +3558,7 @@ BackgroundCursorChild::RecvResponse(const CursorResponse& aResponse)
 
   mTransaction->OnRequestFinished(/* aActorDestroyedNormally */ true);
 
-  return true;
+  return IPC_OK();
 }
 
 NS_IMETHODIMP

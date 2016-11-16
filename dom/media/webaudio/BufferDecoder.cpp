@@ -8,7 +8,7 @@
 
 #include "nsISupports.h"
 #include "MediaResource.h"
-#include "GMPService.h"
+#include "GMPCrashHelper.h"
 
 namespace mozilla {
 

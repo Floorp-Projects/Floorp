@@ -49,7 +49,7 @@ public:
 
   void Close();
 
-  virtual bool RecvCallbackAccept(PTCPSocketChild *socket)  override;
+  virtual mozilla::ipc::IPCResult RecvCallbackAccept(PTCPSocketChild *socket)  override;
 };
 
 } // namespace dom

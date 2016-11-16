@@ -104,7 +104,7 @@ private:
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   Recv__delete__(const UsageRequestResponse& aResponse) override;
 };
 
@@ -142,7 +142,7 @@ private:
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   Recv__delete__(const RequestResponse& aResponse) override;
 };
 

@@ -82,25 +82,31 @@ TestOpensParent::ActorDestroy(ActorDestroyReason why)
     QuitParent();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestOpensOpenedParent::RecvHello()
 {
     AssertNotMainThread();
-    return SendHi();
+    if (!SendHi()) {
+        return IPC_FAIL_NO_REASON(this);
+    }
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestOpensOpenedParent::RecvHelloSync()
 {
     AssertNotMainThread();
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestOpensOpenedParent::AnswerHelloRpc()
 {
     AssertNotMainThread();
-    return CallHiRpc();
+    if (!CallHiRpc()) {
+        return IPC_FAIL_NO_REASON(this);
+    }
+    return IPC_OK();
 }
 
 static void
@@ -138,12 +144,12 @@ TestOpensChild::TestOpensChild()
     gOpensChild = this;
 }
 
-bool
+mozilla::ipc::IPCResult
 TestOpensChild::RecvStart()
 {
     if (!PTestOpensOpened::Open(this))
         fail("opening PTestOpensOpened");
-    return true;
+    return IPC_OK();
 }
 
 static void
@@ -192,7 +198,7 @@ TestOpensChild::ActorDestroy(ActorDestroyReason why)
     QuitChild();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestOpensOpenedChild::RecvHi()
 {
     AssertNotMainThread();
@@ -208,16 +214,16 @@ TestOpensOpenedChild::RecvHi()
     // the C++ stack
     MessageLoop::current()->PostTask(
         NewNonOwningRunnableMethod(this, &TestOpensOpenedChild::Close));
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestOpensOpenedChild::AnswerHiRpc()
 {
     AssertNotMainThread();
 
     mGotHi = true;              // d00d
-    return true;
+    return IPC_OK();
 }
 
 static void

@@ -446,7 +446,7 @@ public:
     }
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvVibrate(InfallibleTArray<unsigned int>&& pattern,
               InfallibleTArray<uint64_t>&& id,
               PBrowserParent *browserParent) override
@@ -459,10 +459,10 @@ public:
     */
     WindowIdentifier newID(id, nullptr);
     hal::Vibrate(pattern, newID);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvCancelVibrate(InfallibleTArray<uint64_t> &&id,
                     PBrowserParent *browserParent) override
   {
@@ -473,77 +473,77 @@ public:
     */
     WindowIdentifier newID(id, nullptr);
     hal::CancelVibrate(newID);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvEnableBatteryNotifications() override {
     // We give all content battery-status permission.
     hal::RegisterBatteryObserver(this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvDisableBatteryNotifications() override {
     hal::UnregisterBatteryObserver(this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetCurrentBatteryInformation(BatteryInformation* aBatteryInfo) override {
     // We give all content battery-status permission.
     hal::GetCurrentBatteryInformation(aBatteryInfo);
-    return true;
+    return IPC_OK();
   }
 
   void Notify(const BatteryInformation& aBatteryInfo) override {
     Unused << SendNotifyBatteryChange(aBatteryInfo);
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvEnableNetworkNotifications() override {
     // We give all content access to this network-status information.
     hal::RegisterNetworkObserver(this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvDisableNetworkNotifications() override {
     hal::UnregisterNetworkObserver(this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetCurrentNetworkInformation(NetworkInformation* aNetworkInfo) override {
     hal::GetCurrentNetworkInformation(aNetworkInfo);
-    return true;
+    return IPC_OK();
   }
 
   void Notify(const NetworkInformation& aNetworkInfo) override {
     Unused << SendNotifyNetworkChange(aNetworkInfo);
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvEnableScreenConfigurationNotifications() override {
     // Screen configuration is used to implement CSS and DOM
     // properties, so all content already has access to this.
     hal::RegisterScreenConfigurationObserver(this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvDisableScreenConfigurationNotifications() override {
     hal::UnregisterScreenConfigurationObserver(this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) override {
     hal::GetCurrentScreenConfiguration(aScreenConfiguration);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvLockScreenOrientation(const dom::ScreenOrientationInternal& aOrientation, bool* aAllowed) override
   {
     // FIXME/bug 777980: unprivileged content may only lock
@@ -551,187 +551,187 @@ public:
     // request comes from an actor in a process that might be
     // fullscreen.  We don't have that information currently.
     *aAllowed = hal::LockScreenOrientation(aOrientation);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvUnlockScreenOrientation() override
   {
     hal::UnlockScreenOrientation();
-    return true;
+    return IPC_OK();
   }
 
   void Notify(const ScreenConfiguration& aScreenConfiguration) override {
     Unused << SendNotifyScreenConfigurationChange(aScreenConfiguration);
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetScreenEnabled(bool* aEnabled) override
   {
     if (!AssertAppProcessPermission(this, "power")) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
     *aEnabled = hal::GetScreenEnabled();
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvSetScreenEnabled(const bool& aEnabled) override
   {
     if (!AssertAppProcessPermission(this, "power")) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
     hal::SetScreenEnabled(aEnabled);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetKeyLightEnabled(bool* aEnabled) override
   {
     if (!AssertAppProcessPermission(this, "power")) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
     *aEnabled = hal::GetKeyLightEnabled();
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvSetKeyLightEnabled(const bool& aEnabled) override
   {
     if (!AssertAppProcessPermission(this, "power")) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
     hal::SetKeyLightEnabled(aEnabled);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetCpuSleepAllowed(bool* aAllowed) override
   {
     if (!AssertAppProcessPermission(this, "power")) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
     *aAllowed = hal::GetCpuSleepAllowed();
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvSetCpuSleepAllowed(const bool& aAllowed) override
   {
     if (!AssertAppProcessPermission(this, "power")) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
     hal::SetCpuSleepAllowed(aAllowed);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetScreenBrightness(double* aBrightness) override
   {
     if (!AssertAppProcessPermission(this, "power")) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
     *aBrightness = hal::GetScreenBrightness();
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvSetScreenBrightness(const double& aBrightness) override
   {
     if (!AssertAppProcessPermission(this, "power")) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
     hal::SetScreenBrightness(aBrightness);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvAdjustSystemClock(const int64_t &aDeltaMilliseconds) override
   {
     if (!AssertAppProcessPermission(this, "time")) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
     hal::AdjustSystemClock(aDeltaMilliseconds);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvSetTimezone(const nsCString& aTimezoneSpec) override
   {
     if (!AssertAppProcessPermission(this, "time")) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
     hal::SetTimezone(aTimezoneSpec);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetTimezone(nsCString *aTimezoneSpec) override
   {
     if (!AssertAppProcessPermission(this, "time")) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
     *aTimezoneSpec = hal::GetTimezone();
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetTimezoneOffset(int32_t *aTimezoneOffset) override
   {
     if (!AssertAppProcessPermission(this, "time")) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
     *aTimezoneOffset = hal::GetTimezoneOffset();
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvEnableSystemClockChangeNotifications() override
   {
     hal::RegisterSystemClockChangeObserver(this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvDisableSystemClockChangeNotifications() override
   {
     hal::UnregisterSystemClockChangeObserver(this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvEnableSystemTimezoneChangeNotifications() override
   {
     hal::RegisterSystemTimezoneChangeObserver(this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvDisableSystemTimezoneChangeNotifications() override
   {
     hal::UnregisterSystemTimezoneChangeObserver(this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvEnableSensorNotifications(const SensorType &aSensor) override {
     // We currently allow any content to register device-sensor
     // listeners.
     hal::RegisterSensorObserver(aSensor, this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvDisableSensorNotifications(const SensorType &aSensor) override {
     hal::UnregisterSensorObserver(aSensor, this);
-    return true;
+    return IPC_OK();
   }
 
   void Notify(const SensorData& aSensorData) override {
     Unused << SendNotifySensorChange(aSensorData);
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvModifyWakeLock(const nsString& aTopic,
                      const WakeLockControl& aLockAdjust,
                      const WakeLockControl& aHiddenAdjust,
@@ -741,29 +741,29 @@ public:
 
     // We allow arbitrary content to use wake locks.
     hal::ModifyWakeLock(aTopic, aLockAdjust, aHiddenAdjust, aProcessID);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvEnableWakeLockNotifications() override
   {
     // We allow arbitrary content to use wake locks.
     hal::RegisterWakeLockObserver(this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvDisableWakeLockNotifications() override
   {
     hal::UnregisterWakeLockObserver(this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetWakeLockInfo(const nsString &aTopic, WakeLockInformation *aWakeLockInfo) override
   {
     hal::GetWakeLockInfo(aTopic, aWakeLockInfo);
-    return true;
+    return IPC_OK();
   }
 
   void Notify(const WakeLockInformation& aWakeLockInfo) override
@@ -771,19 +771,19 @@ public:
     Unused << SendNotifyWakeLockChange(aWakeLockInfo);
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvEnableSwitchNotifications(const SwitchDevice& aDevice) override
   {
     // Content has no reason to listen to switch events currently.
     hal::RegisterSwitchObserver(aDevice, this);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvDisableSwitchNotifications(const SwitchDevice& aDevice) override
   {
     hal::UnregisterSwitchObserver(aDevice, this);
-    return true;
+    return IPC_OK();
   }
 
   void Notify(const SwitchEvent& aSwitchEvent) override
@@ -791,12 +791,12 @@ public:
     Unused << SendNotifySwitchChange(aSwitchEvent);
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetCurrentSwitchState(const SwitchDevice& aDevice, hal::SwitchState *aState) override
   {
     // Content has no reason to listen to switch events currently.
     *aState = hal::GetCurrentSwitchState(aDevice);
-    return true;
+    return IPC_OK();
   }
 
   void Notify(const int64_t& aClockDeltaMS) override
@@ -809,11 +809,11 @@ public:
     Unused << SendNotifySystemTimezoneChange(aSystemTimezoneChangeInfo);
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvFactoryReset(const nsString& aReason) override
   {
     if (!AssertAppProcessPermission(this, "power")) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
 
     FactoryResetReason reason = FactoryResetReason::Normal;
@@ -825,11 +825,11 @@ public:
       reason = FactoryResetReason::Root;
     } else {
       // Invalid factory reset reason. That should never happen.
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
 
     hal::FactoryReset(reason);
-    return true;
+    return IPC_OK();
   }
 };
 
@@ -841,58 +841,58 @@ public:
     sHalChildDestroyed = true;
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifyBatteryChange(const BatteryInformation& aBatteryInfo) override {
     hal::NotifyBatteryChange(aBatteryInfo);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifySensorChange(const hal::SensorData &aSensorData) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifyNetworkChange(const NetworkInformation& aNetworkInfo) override {
     hal::NotifyNetworkChange(aNetworkInfo);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifyWakeLockChange(const WakeLockInformation& aWakeLockInfo) override {
     hal::NotifyWakeLockChange(aWakeLockInfo);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifyScreenConfigurationChange(const ScreenConfiguration& aScreenConfiguration) override {
     hal::NotifyScreenConfigurationChange(aScreenConfiguration);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifySwitchChange(const mozilla::hal::SwitchEvent& aEvent) override {
     hal::NotifySwitchChange(aEvent);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifySystemClockChange(const int64_t& aClockDeltaMS) override {
     hal::NotifySystemClockChange(aClockDeltaMS);
-    return true;
+    return IPC_OK();
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifySystemTimezoneChange(
     const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo) override {
     hal::NotifySystemTimezoneChange(aSystemTimezoneChangeInfo);
-    return true;
+    return IPC_OK();
   }
 };
 
-bool
+mozilla::ipc::IPCResult
 HalChild::RecvNotifySensorChange(const hal::SensorData &aSensorData) {
   hal::NotifySensorChange(aSensorData);
 
-  return true;
+  return IPC_OK();
 }
 
 PHalChild* CreateHalChild() {

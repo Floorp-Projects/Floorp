@@ -24,14 +24,14 @@ SpeechSynthesisParent::ActorDestroy(ActorDestroyReason aWhy)
   // Implement me! Bug 1005141
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisParent::RecvReadVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
                                               InfallibleTArray<nsString>* aDefaults,
                                               bool* aIsSpeaking)
 {
   nsSynthVoiceRegistry::GetInstance()->SendVoicesAndState(aVoices, aDefaults,
                                                           aIsSpeaking);
-  return true;
+  return IPC_OK();
 }
 
 PSpeechSynthesisRequestParent*
@@ -54,7 +54,7 @@ SpeechSynthesisParent::DeallocPSpeechSynthesisRequestParent(PSpeechSynthesisRequ
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisParent::RecvPSpeechSynthesisRequestConstructor(PSpeechSynthesisRequestParent* aActor,
                                                               const nsString& aText,
                                                               const nsString& aLang,
@@ -68,7 +68,7 @@ SpeechSynthesisParent::RecvPSpeechSynthesisRequestConstructor(PSpeechSynthesisRe
     static_cast<SpeechSynthesisRequestParent*>(aActor);
   nsSynthVoiceRegistry::GetInstance()->Speak(aText, aLang, aUri, aVolume, aRate,
                                              aPitch, actor->mTask);
-  return true;
+  return IPC_OK();
 }
 
 // SpeechSynthesisRequestParent
@@ -96,53 +96,53 @@ SpeechSynthesisRequestParent::ActorDestroy(ActorDestroyReason aWhy)
   // Implement me! Bug 1005141
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisRequestParent::RecvPause()
 {
   MOZ_ASSERT(mTask);
   mTask->Pause();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisRequestParent::Recv__delete__()
 {
   MOZ_ASSERT(mTask);
   mTask->mActor = nullptr;
   mTask = nullptr;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisRequestParent::RecvResume()
 {
   MOZ_ASSERT(mTask);
   mTask->Resume();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisRequestParent::RecvCancel()
 {
   MOZ_ASSERT(mTask);
   mTask->Cancel();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisRequestParent::RecvForceEnd()
 {
   MOZ_ASSERT(mTask);
   mTask->ForceEnd();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisRequestParent::RecvSetAudioOutputVolume(const float& aVolume)
 {
   MOZ_ASSERT(mTask);
   mTask->SetAudioOutputVolume(aVolume);
-  return true;
+  return IPC_OK();
 }
 
 // SpeechTaskParent

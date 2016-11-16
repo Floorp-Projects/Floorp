@@ -24,7 +24,7 @@ openFileFailure(ErrorResult& rv,
     return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 HeapSnapshotTempFileHelperParent::RecvOpenHeapSnapshotTempFile(
     OpenHeapSnapshotTempFileResponse* outResponse)
 {
@@ -34,19 +34,27 @@ HeapSnapshotTempFileHelperParent::RecvOpenHeapSnapshotTempFile(
     nsCOMPtr<nsIFile> file = HeapSnapshot::CreateUniqueCoreDumpFile(rv,
                                                                     start,
                                                                     filePath);
-    if (NS_WARN_IF(rv.Failed()))
-        return openFileFailure(rv, outResponse);
+    if (NS_WARN_IF(rv.Failed())) {
+        if (!openFileFailure(rv, outResponse)) {
+          return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
+    }
 
     PRFileDesc* prfd;
     rv = file->OpenNSPRFileDesc(PR_WRONLY, 0, &prfd);
-    if (NS_WARN_IF(rv.Failed()))
-        return openFileFailure(rv, outResponse);
+    if (NS_WARN_IF(rv.Failed())) {
+        if (!openFileFailure(rv, outResponse)) {
+          return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
+    }
 
     FileDescriptor::PlatformHandleType handle =
         FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(prfd));
     FileDescriptor fd(handle);
     *outResponse = OpenedFile(filePath, fd);
-    return true;
+    return IPC_OK();
 }
 
 } // namespace devtools

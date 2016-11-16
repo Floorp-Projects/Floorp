@@ -47,32 +47,32 @@ public:
    * Called when a message from a document in a child process notifies the main
    * process it is firing an event.
    */
-  virtual bool RecvEvent(const uint64_t& aID, const uint32_t& aType)
+  virtual mozilla::ipc::IPCResult RecvEvent(const uint64_t& aID, const uint32_t& aType)
     override;
 
-  virtual bool RecvShowEvent(const ShowEventData& aData, const bool& aFromUser)
+  virtual mozilla::ipc::IPCResult RecvShowEvent(const ShowEventData& aData, const bool& aFromUser)
     override;
-  virtual bool RecvHideEvent(const uint64_t& aRootID, const bool& aFromUser)
+  virtual mozilla::ipc::IPCResult RecvHideEvent(const uint64_t& aRootID, const bool& aFromUser)
     override;
-  virtual bool RecvStateChangeEvent(const uint64_t& aID,
-                                    const uint64_t& aState,
-                                    const bool& aEnabled) override final;
+  virtual mozilla::ipc::IPCResult RecvStateChangeEvent(const uint64_t& aID,
+                                                       const uint64_t& aState,
+                                                       const bool& aEnabled) override final;
 
-  virtual bool RecvCaretMoveEvent(const uint64_t& aID, const int32_t& aOffset)
+  virtual mozilla::ipc::IPCResult RecvCaretMoveEvent(const uint64_t& aID, const int32_t& aOffset)
     override final;
 
-  virtual bool RecvTextChangeEvent(const uint64_t& aID, const nsString& aStr,
-                                   const int32_t& aStart, const uint32_t& aLen,
-                                   const bool& aIsInsert,
-                                   const bool& aFromUser) override;
+  virtual mozilla::ipc::IPCResult RecvTextChangeEvent(const uint64_t& aID, const nsString& aStr,
+                                                      const int32_t& aStart, const uint32_t& aLen,
+                                                      const bool& aIsInsert,
+                                                      const bool& aFromUser) override;
 
-  virtual bool RecvSelectionEvent(const uint64_t& aID,
-                                  const uint64_t& aWidgetID,
-                                  const uint32_t& aType) override;
+  virtual mozilla::ipc::IPCResult RecvSelectionEvent(const uint64_t& aID,
+                                                     const uint64_t& aWidgetID,
+                                                     const uint32_t& aType) override;
 
-  virtual bool RecvRoleChangedEvent(const uint32_t& aRole) override final;
+  virtual mozilla::ipc::IPCResult RecvRoleChangedEvent(const uint32_t& aRole) override final;
 
-  virtual bool RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uint64_t& aID) override;
+  virtual mozilla::ipc::IPCResult RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uint64_t& aID) override;
 
   void Unbind()
   {
@@ -84,7 +84,7 @@ public:
     mParentDoc = nullptr;
   }
 
-  virtual bool RecvShutdown() override;
+  virtual mozilla::ipc::IPCResult RecvShutdown() override;
   void Destroy();
   virtual void ActorDestroy(ActorDestroyReason aWhy) override
   {
@@ -144,8 +144,8 @@ public:
     { return mChildDocs[aIdx]; }
 
 #if defined(XP_WIN)
-  virtual bool RecvCOMProxy(const IAccessibleHolder& aCOMProxy,
-                            IAccessibleHolder* aParentCOMProxy) override;
+  virtual mozilla::ipc::IPCResult RecvCOMProxy(const IAccessibleHolder& aCOMProxy,
+                                               IAccessibleHolder* aParentCOMProxy) override;
 #endif
 
 private:

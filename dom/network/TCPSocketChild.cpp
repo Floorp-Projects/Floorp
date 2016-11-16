@@ -143,15 +143,15 @@ TCPSocketChild::~TCPSocketChild()
 {
 }
 
-bool
+mozilla::ipc::IPCResult
 TCPSocketChild::RecvUpdateBufferedAmount(const uint32_t& aBuffered,
                                          const uint32_t& aTrackingNumber)
 {
   mSocket->UpdateBufferedAmount(aBuffered, aTrackingNumber);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TCPSocketChild::RecvCallback(const nsString& aType,
                              const CallbackData& aData,
                              const uint32_t& aReadyState)
@@ -178,7 +178,7 @@ TCPSocketChild::RecvCallback(const nsString& aType,
   } else {
     MOZ_CRASH("Invalid callback type!");
   }
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -243,11 +243,11 @@ TCPSocketChild::SetFilterName(const nsACString& aFilterName)
   return NS_OK;
 }
 
-bool
+mozilla::ipc::IPCResult
 TCPSocketChild::RecvRequestDelete()
 {
   mozilla::Unused << Send__delete__(this);
-  return true;
+  return IPC_OK();
 }
 
 } // namespace dom

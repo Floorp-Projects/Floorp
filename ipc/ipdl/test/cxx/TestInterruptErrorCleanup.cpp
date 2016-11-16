@@ -142,12 +142,12 @@ TestInterruptErrorCleanupChild::~TestInterruptErrorCleanupChild()
     MOZ_COUNT_DTOR(TestInterruptErrorCleanupChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestInterruptErrorCleanupChild::AnswerError()
 {
     _exit(0);
     NS_RUNTIMEABORT("unreached");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
 }
 
 

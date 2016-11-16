@@ -213,31 +213,31 @@ FTPChannelParent::ConnectChannel(const uint32_t& channelId)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 FTPChannelParent::RecvCancel(const nsresult& status)
 {
   if (mChannel)
     mChannel->Cancel(status);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 FTPChannelParent::RecvSuspend()
 {
   if (mChannel) {
     SuspendChannel();
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 FTPChannelParent::RecvResume()
 {
   if (mChannel) {
     ResumeChannel();
   }
-  return true;
+  return IPC_OK();
 }
 
 class FTPDivertDataAvailableEvent : public ChannelEvent
@@ -266,7 +266,7 @@ private:
   uint32_t mCount;
 };
 
-bool
+mozilla::ipc::IPCResult
 FTPChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
                                             const uint64_t& offset,
                                             const uint32_t& count)
@@ -275,17 +275,17 @@ FTPChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
     MOZ_ASSERT(mDivertingFromChild,
                "Cannot RecvDivertOnDataAvailable if diverting is not set!");
     FailDiversion(NS_ERROR_UNEXPECTED);
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Drop OnDataAvailables if the parent was canceled already.
   if (NS_FAILED(mStatus)) {
-    return true;
+    return IPC_OK();
   }
 
   mEventQ->RunOrEnqueue(new FTPDivertDataAvailableEvent(this, data, offset,
                                                         count));
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -350,18 +350,18 @@ private:
   nsresult mStatusCode;
 };
 
-bool
+mozilla::ipc::IPCResult
 FTPChannelParent::RecvDivertOnStopRequest(const nsresult& statusCode)
 {
   if (NS_WARN_IF(!mDivertingFromChild)) {
     MOZ_ASSERT(mDivertingFromChild,
                "Cannot RecvDivertOnStopRequest if diverting is not set!");
     FailDiversion(NS_ERROR_UNEXPECTED);
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mEventQ->RunOrEnqueue(new FTPDivertStopRequestEvent(this, statusCode));
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -407,18 +407,18 @@ private:
   FTPChannelParent* mParent;
 };
 
-bool
+mozilla::ipc::IPCResult
 FTPChannelParent::RecvDivertComplete()
 {
   if (NS_WARN_IF(!mDivertingFromChild)) {
     MOZ_ASSERT(mDivertingFromChild,
                "Cannot RecvDivertComplete if diverting is not set!");
     FailDiversion(NS_ERROR_UNEXPECTED);
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mEventQ->RunOrEnqueue(new FTPDivertCompleteEvent(this));
-  return true;
+  return IPC_OK();
 }
 
 void

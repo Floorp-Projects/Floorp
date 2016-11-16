@@ -498,14 +498,6 @@ var AnimationsActor = exports.AnimationsActor = protocol.ActorClassWithSpec(anim
   },
 
   /**
-   * Since AnimationsActor doesn't have a protocol.js parent actor that takes
-   * care of its lifetime, implementing disconnect is required to cleanup.
-   */
-  disconnect: function () {
-    this.destroy();
-  },
-
-  /**
    * Clients can optionally call this with a reference to their WalkerActor.
    * If they do, then AnimationPlayerActor's forms are going to also include
    * NodeActor IDs when the corresponding NodeActors do exist.

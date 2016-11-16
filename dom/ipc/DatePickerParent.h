@@ -22,7 +22,7 @@ class DatePickerParent : public PDatePickerParent
   , mInitialDate(aInitialDate)
   {}
 
-  virtual bool RecvOpen() override;
+  virtual mozilla::ipc::IPCResult RecvOpen() override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   class DatePickerShownCallback final

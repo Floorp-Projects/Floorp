@@ -23,7 +23,7 @@ public:
     void Main();
 
 protected:
-    virtual bool RecvTake(
+    virtual mozilla::ipc::IPCResult RecvTake(
             Shmem&& mem,
             Shmem&& unsafe,
             const size_t& expectedSize) override;
@@ -46,7 +46,7 @@ public:
     virtual ~TestShmemChild() { }
 
 protected:
-    virtual bool RecvGive(
+    virtual mozilla::ipc::IPCResult RecvGive(
             Shmem&& mem,
             Shmem&& unsafe,
             const size_t& expectedSize) override;

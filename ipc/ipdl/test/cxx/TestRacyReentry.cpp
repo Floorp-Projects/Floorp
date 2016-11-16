@@ -28,18 +28,18 @@ TestRacyReentryParent::Main()
         fail("sending N");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyReentryParent::AnswerE()
 {
     if (!mRecvdE) {
         mRecvdE = true;
-        return true;
+        return IPC_OK();
     }
 
     if (!CallH())
         fail("calling H");
 
-    return true;
+    return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ TestRacyReentryChild::~TestRacyReentryChild()
     MOZ_COUNT_DTOR(TestRacyReentryChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyReentryChild::RecvStart()
 {
     if (!CallE())
@@ -63,21 +63,21 @@ TestRacyReentryChild::RecvStart()
 
     Close();
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyReentryChild::RecvN()
 {
     if (!CallE())
         fail("calling E");
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyReentryChild::AnswerH()
 {
-    return true;
+    return IPC_OK();
 }
 
 } // namespace _ipdltest

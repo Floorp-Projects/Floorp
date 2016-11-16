@@ -73,7 +73,7 @@ public:
 
   void NotifyNotUsed(uint64_t aTransactionId);
 
-  virtual bool RecvRecycleTexture(const TextureFlags& aTextureFlags) override;
+  virtual mozilla::ipc::IPCResult RecvRecycleTexture(const TextureFlags& aTextureFlags) override;
 
   TextureHost* GetTextureHost() { return mTextureHost; }
 
@@ -81,9 +81,9 @@ public:
 
   uint64_t GetSerial() const { return mSerial; }
 
-  virtual bool RecvDestroySync() override {
+  virtual mozilla::ipc::IPCResult RecvDestroySync() override {
     DestroyIfNeeded();
-    return true;
+    return IPC_OK();
   }
 
   HostIPCAllocator* mSurfaceAllocator;
@@ -1121,14 +1121,14 @@ TextureHost::ReceivedDestroy(PTextureParent* aActor)
   static_cast<TextureParent*>(aActor)->RecvDestroy();
 }
 
-bool
+mozilla::ipc::IPCResult
 TextureParent::RecvRecycleTexture(const TextureFlags& aTextureFlags)
 {
   if (!mTextureHost) {
-    return true;
+    return IPC_OK();
   }
   mTextureHost->RecycleTexture(aTextureFlags);
-  return true;
+  return IPC_OK();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

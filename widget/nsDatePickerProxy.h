@@ -19,8 +19,8 @@ public:
 
   nsDatePickerProxy() {}
 
-  virtual bool RecvCancel() override;
-  virtual bool Recv__delete__(const nsString& aDate) override;
+  virtual mozilla::ipc::IPCResult RecvCancel() override;
+  virtual mozilla::ipc::IPCResult Recv__delete__(const nsString& aDate) override;
 
 private:
   ~nsDatePickerProxy() {}

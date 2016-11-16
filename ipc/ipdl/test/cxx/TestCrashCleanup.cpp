@@ -103,12 +103,12 @@ TestCrashCleanupChild::~TestCrashCleanupChild()
     MOZ_COUNT_DTOR(TestCrashCleanupChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestCrashCleanupChild::AnswerDIEDIEDIE()
 {
     _exit(0);
     NS_RUNTIMEABORT("unreached");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
 }
 
 

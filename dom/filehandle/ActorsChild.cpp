@@ -539,7 +539,7 @@ BackgroundFileHandleChild::ActorDestroy(ActorDestroyReason aWhy)
   NoteActorDestroyed();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundFileHandleChild::RecvComplete(const bool& aAborted)
 {
   AssertIsOnOwningThread();
@@ -548,7 +548,7 @@ BackgroundFileHandleChild::RecvComplete(const bool& aAborted)
   mFileHandle->HandleCompleteOrAbort(aAborted);
 
   NoteComplete();
-  return true;
+  return IPC_OK();
 }
 
 PBackgroundFileRequestChild*
@@ -671,7 +671,7 @@ BackgroundFileRequestChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundFileRequestChild::Recv__delete__(const FileRequestResponse& aResponse)
 {
   AssertIsOnOwningThread();
@@ -724,10 +724,10 @@ BackgroundFileRequestChild::Recv__delete__(const FileRequestResponse& aResponse)
   // ActorDestroy.
   mFileHandle = nullptr;
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundFileRequestChild::RecvProgress(const uint64_t& aProgress,
                                          const uint64_t& aProgressMax)
 {
@@ -736,7 +736,7 @@ BackgroundFileRequestChild::RecvProgress(const uint64_t& aProgress,
 
   mFileRequest->OnProgress(aProgress, aProgressMax);
 
-  return true;
+  return IPC_OK();
 }
 
 } // namespace dom

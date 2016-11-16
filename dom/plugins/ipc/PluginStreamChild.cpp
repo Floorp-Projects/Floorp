@@ -16,14 +16,14 @@ PluginStreamChild::PluginStreamChild()
   mStream.ndata = static_cast<AStream*>(this);
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginStreamChild::Answer__delete__(const NPReason& reason,
                                     const bool& artificial)
 {
   AssertPluginThread();
   if (!artificial)
     NPP_DestroyStream(reason);
-  return true;
+  return IPC_OK();
 }
 
 int32_t

@@ -23,13 +23,13 @@ public:
     WebBrowserPersistResourcesParent(nsIWebBrowserPersistDocument* aDocument,
                                      nsIWebBrowserPersistResourceVisitor* aVisitor);
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvVisitResource(const nsCString& aURI) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvVisitDocument(PWebBrowserPersistDocumentParent* aSubDocument) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     Recv__delete__(const nsresult& aStatus) override;
 
     virtual void

@@ -466,9 +466,9 @@ class nsPluginThreadRunnable : public Runnable,
 public:
   nsPluginThreadRunnable(NPP instance, PluginThreadCallback func,
                          void *userData);
-  virtual ~nsPluginThreadRunnable();
+  ~nsPluginThreadRunnable() override;
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() override;
 
   bool IsForInstance(NPP instance)
   {
@@ -812,7 +812,7 @@ _newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
     nsCOMPtr<nsIOutputStream> stream;
     if (NS_SUCCEEDED(inst->NewStreamFromPlugin((const char*) type, target,
                                                getter_AddRefs(stream)))) {
-      nsNPAPIStreamWrapper* wrapper = new nsNPAPIStreamWrapper(stream, nullptr);
+      auto* wrapper = new nsNPAPIStreamWrapper(stream, nullptr);
       if (wrapper) {
         (*result) = &wrapper->mNPStream;
         err = NPERR_NO_ERROR;

@@ -15,9 +15,29 @@ win32-clang-cl/opt:
         max-run-time: 36000
     run:
         using: toolchain-script
-        script: build-clang-windows.sh
+        script: build-clang32-windows.sh
     when:
         files-changed:
             - 'build/build-clang/**'
-            - 'taskcluster/scripts/misc/build-clang-windows.sh'
+            - 'taskcluster/scripts/misc/build-clang32-windows.sh'
+            - 'taskcluster/taskgraph/transforms/job/toolchain.py'
+
+win64-clang-cl/opt:
+    description: "Clang-cl toolchain build"
+    treeherder:
+        kind: build
+        platform: windows-2012-64/opt
+        symbol: Cc(ClangCL)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        implementation: generic-worker
+        max-run-time: 36000
+    run:
+        using: toolchain-script
+        script: build-clang64-windows.sh
+    when:
+        files-changed:
+            - 'build/build-clang/**'
+            - 'taskcluster/scripts/misc/build-clang64-windows.sh'
             - 'taskcluster/taskgraph/transforms/job/toolchain.py'

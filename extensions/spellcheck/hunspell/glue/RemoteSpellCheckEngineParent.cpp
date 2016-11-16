@@ -18,17 +18,17 @@ RemoteSpellcheckEngineParent::~RemoteSpellcheckEngineParent()
 {
 }
 
-bool
+mozilla::ipc::IPCResult
 RemoteSpellcheckEngineParent::RecvSetDictionary(
   const nsString& aDictionary,
   bool* success)
 {
   nsresult rv = mSpellChecker->SetCurrentDictionary(aDictionary);
   *success = NS_SUCCEEDED(rv);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 RemoteSpellcheckEngineParent::RecvCheck(
   const nsString& aWord,
   bool* aIsMisspelled)
@@ -38,10 +38,10 @@ RemoteSpellcheckEngineParent::RecvCheck(
   // If CheckWord failed, we can't tell whether the word is correctly spelled.
   if (NS_FAILED(rv))
     *aIsMisspelled = false;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 RemoteSpellcheckEngineParent::RecvCheckAndSuggest(
   const nsString& aWord,
   bool* aIsMisspelled,
@@ -52,7 +52,7 @@ RemoteSpellcheckEngineParent::RecvCheckAndSuggest(
     aSuggestions->Clear();
     *aIsMisspelled = false;
   }
-  return true;
+  return IPC_OK();
 }
 
 void

@@ -28,7 +28,7 @@ public:
     : mSandboxStarter(aStarter)
     , mAdapter(nullptr)
   {}
-  virtual ~GMPLoaderImpl() {}
+  ~GMPLoaderImpl() override = default;
 
   bool Load(const char* aUTF8LibPath,
             uint32_t aUTF8LibPathLen,
@@ -59,7 +59,7 @@ UniquePtr<GMPLoader> CreateGMPLoader(SandboxStarter* aStarter) {
 
 class PassThroughGMPAdapter : public GMPAdapter {
 public:
-  ~PassThroughGMPAdapter() {
+  ~PassThroughGMPAdapter() override {
     // Ensure we're always shutdown, even if caller forgets to call GMPShutdown().
     GMPShutdown();
   }

@@ -29,11 +29,11 @@ WebBrowserPersistSerializeParent::~WebBrowserPersistSerializeParent()
 {
 }
 
-bool
+mozilla::ipc::IPCResult
 WebBrowserPersistSerializeParent::RecvWriteData(nsTArray<uint8_t>&& aData)
 {
     if (NS_FAILED(mOutputError)) {
-        return true;
+        return IPC_OK();
     }
 
     uint32_t written = 0;
@@ -48,14 +48,14 @@ WebBrowserPersistSerializeParent::RecvWriteData(nsTArray<uint8_t>&& aData)
                                      &writeReturn);
         if (NS_FAILED(rv)) {
             mOutputError = rv;
-            return true;
+            return IPC_OK();
         }
         written += writeReturn;
     }
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 WebBrowserPersistSerializeParent::Recv__delete__(const nsCString& aContentType,
                                                  const nsresult& aStatus)
 {
@@ -67,7 +67,7 @@ WebBrowserPersistSerializeParent::Recv__delete__(const nsCString& aContentType,
                       aContentType,
                       mOutputError);
     mFinish = nullptr;
-    return true;
+    return IPC_OK();
 }
 
 void
