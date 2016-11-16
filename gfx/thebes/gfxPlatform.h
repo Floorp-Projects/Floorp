@@ -62,9 +62,6 @@ BackendTypeBit(BackendType b)
 }
 
 } // namespace gfx
-namespace dom {
-class FontFamilyListEntry;
-}
 } // namespace mozilla
 
 #define MOZ_PERFORMANCE_WARNING(module, ...) \
@@ -320,15 +317,6 @@ public:
     virtual nsresult GetFontList(nsIAtom *aLangGroup,
                                  const nsACString& aGenericFamily,
                                  nsTArray<nsString>& aListOfFonts);
-
-    /**
-     * Fill aFontFamilies with a list of FontFamilyListEntry records for the
-     * available fonts on the platform; used to pass the list from chrome to
-     * content process. Currently implemented only on MacOSX.
-     */
-    virtual void GetSystemFontFamilyList(
-      InfallibleTArray<mozilla::dom::FontFamilyListEntry>* aFontFamilies)
-    { }
 
     /**
      * Rebuilds the any cached system font lists
