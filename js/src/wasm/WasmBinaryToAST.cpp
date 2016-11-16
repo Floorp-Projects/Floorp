@@ -1415,7 +1415,7 @@ AstDecodeExpr(AstDecodeContext& c)
 }
 
 static bool
-AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcDefIndex, AstFunc** func)
+AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
 {
     uint32_t offset = c.d.currentOffset();
     uint32_t bodySize;
@@ -1428,7 +1428,6 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcDefIndex, AstFunc** func
     const uint8_t* bodyBegin = c.d.currentPosition();
     const uint8_t* bodyEnd = bodyBegin + bodySize;
 
-    size_t funcIndex = c.module().numFuncImports() + funcDefIndex;
     const SigWithId* sig = c.funcSigs()[funcIndex];
 
     ValTypeVector locals;
@@ -1436,7 +1435,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcDefIndex, AstFunc** func
         return false;
 
     if (!DecodeLocalEntries(c.d, ModuleKind::Wasm, &locals))
-        return c.d.fail("failed decoding local entries");
+        return false;
 
     AstDecodeOpIter iter(c.d);
     c.startFunction(&iter, &locals, sig->ret());
@@ -1815,7 +1814,7 @@ AstDecodeCodeSection(AstDecodeContext &c)
         if (c.numFuncDefs() != 0)
             return c.d.fail("expected function bodies");
 
-        return false;
+        return true;
     }
 
     uint32_t numFuncBodies;
@@ -1827,7 +1826,7 @@ AstDecodeCodeSection(AstDecodeContext &c)
 
     for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncBodies; funcDefIndex++) {
         AstFunc* func;
-        if (!AstDecodeFunctionBody(c, funcDefIndex, &func))
+        if (!AstDecodeFunctionBody(c, c.module().numFuncImports() + funcDefIndex, &func))
             return false;
         if (!c.module().append(func))
             return false;
