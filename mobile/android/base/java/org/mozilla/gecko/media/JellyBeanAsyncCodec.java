@@ -5,6 +5,7 @@
 package org.mozilla.gecko.media;
 
 import android.media.MediaCodec;
+import android.media.MediaCrypto;
 import android.media.MediaFormat;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -294,10 +295,10 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
     }
 
     @Override
-    public void configure(MediaFormat format, Surface surface, int flags) {
+    public void configure(MediaFormat format, Surface surface, MediaCrypto crypto, int flags) {
         assertCallbacks();
 
-        mCodec.configure(format, surface, null, flags);
+        mCodec.configure(format, surface, crypto, flags);
     }
 
     private void assertCallbacks() {
@@ -326,6 +327,28 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
 
         try {
             mCodec.queueInputBuffer(index, offset, size, presentationTimeUs, flags);
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+            mCallbackSender.notifyError(ERROR_CODEC);
+            return;
+        }
+
+        mBufferPoller.schedulePolling(BufferPoller.MSG_POLL_INPUT_BUFFERS);
+        mBufferPoller.schedulePolling(BufferPoller.MSG_POLL_OUTPUT_BUFFERS);
+    }
+
+    @Override
+    public final void queueSecureInputBuffer(int index,
+                                             int offset,
+                                             MediaCodec.CryptoInfo cryptoInfo,
+                                             long presentationTimeUs,
+                                             int flags) {
+        assertCallbacks();
+
+        mInputEnded = (flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
+
+        try {
+            mCodec.queueSecureInputBuffer(index, offset, cryptoInfo, presentationTimeUs, flags);
         } catch (IllegalStateException e) {
             e.printStackTrace();
             mCallbackSender.notifyError(ERROR_CODEC);

@@ -184,9 +184,9 @@ const char CodecProxy::name[] =
 constexpr char CodecProxy::Create_t::name[];
 constexpr char CodecProxy::Create_t::signature[];
 
-auto CodecProxy::Create(mozilla::jni::Object::Param a0, mozilla::jni::Object::Param a1, mozilla::jni::Object::Param a2) -> CodecProxy::LocalRef
+auto CodecProxy::Create(mozilla::jni::Object::Param a0, mozilla::jni::Object::Param a1, mozilla::jni::Object::Param a2, mozilla::jni::String::Param a3) -> CodecProxy::LocalRef
 {
-    return mozilla::jni::Method<Create_t>::Call(CodecProxy::Context(), nullptr, a0, a1, a2);
+    return mozilla::jni::Method<Create_t>::Call(CodecProxy::Context(), nullptr, a0, a1, a2, a3);
 }
 
 constexpr char CodecProxy::Flush_t::name[];
