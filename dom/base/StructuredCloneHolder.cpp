@@ -863,11 +863,19 @@ ReadFormData(JSContext* aCx,
         RefPtr<BlobImpl> blobImpl =
           aHolder->BlobImpls()[indexOrLengthOfString];
 
+        ErrorResult rv;
+        blobImpl = EnsureBlobForBackgroundManager(blobImpl, nullptr, rv);
+        if (NS_WARN_IF(rv.Failed())) {
+          rv.SuppressException();
+          return nullptr;
+        }
+
+        MOZ_ASSERT(blobImpl);
+
         RefPtr<Blob> blob =
           Blob::Create(aHolder->ParentDuringRead(), blobImpl);
         MOZ_ASSERT(blob);
 
-        ErrorResult rv;
         formData->Append(name, *blob, thirdArg, rv);
         if (NS_WARN_IF(rv.Failed())) {
           rv.SuppressException();
@@ -960,7 +968,15 @@ WriteFormData(JSStructuredCloneWriter* aWriter,
       }
 
       if (aValue.IsBlob()) {
-        BlobImpl* blobImpl = aValue.GetAsBlob()->Impl();
+        ErrorResult rv;
+        RefPtr<BlobImpl> blobImpl =
+          EnsureBlobForBackgroundManager(aValue.GetAsBlob()->Impl(), nullptr,
+                                         rv);
+        if (NS_WARN_IF(rv.Failed())) {
+          rv.SuppressException();
+          return false;
+        }
+
         if (!JS_WriteUint32Pair(closure->mWriter, SCTAG_DOM_BLOB,
                                 closure->mHolder->BlobImpls().Length())) {
           return false;
