@@ -376,32 +376,6 @@ private:
 
   friend class MoveGuard;
   friend class EventTree;
-
-  /**
-   * A class to map an accessible and event type to an event.
-   */
-  class EventMap
-  {
-  public:
-    enum EventType
-    {
-      ShowEvent = 0x0,
-      HideEvent = 0x1,
-      ReorderEvent = 0x2,
-    };
-
-    void PutEvent(AccTreeMutationEvent* aEvent);
-    AccTreeMutationEvent* GetEvent(Accessible* aTarget, EventType aType);
-    void RemoveEvent(AccTreeMutationEvent* aEvent);
-    void Clear() { mTable.Clear(); }
-
-  private:
-    EventType GetEventType(AccTreeMutationEvent* aEvent);
-
-    nsRefPtrHashtable<nsUint64HashKey, AccTreeMutationEvent> mTable;
-  };
-
-  EventMap mMutationMap;
 };
 
 } // namespace a11y
