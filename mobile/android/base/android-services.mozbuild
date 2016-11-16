@@ -1041,6 +1041,7 @@ sync_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozil
     'sync/stage/AbstractSessionManagingSyncStage.java',
     'sync/stage/AndroidBrowserBookmarksServerSyncStage.java',
     'sync/stage/AndroidBrowserHistoryServerSyncStage.java',
+    'sync/stage/AndroidBrowserRecentHistoryServerSyncStage.java',
     'sync/stage/CheckPreconditionsStage.java',
     'sync/stage/CompletedStage.java',
     'sync/stage/EnsureCrypto5KeysStage.java',

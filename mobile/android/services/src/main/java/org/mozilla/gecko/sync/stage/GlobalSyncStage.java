@@ -33,8 +33,9 @@ public interface GlobalSyncStage {
     */
     syncTabs("tabs"),
     syncPasswords("passwords"),
+    syncRecentHistory("recentHistory"),
     syncBookmarks("bookmarks"),
-    syncHistory("history"),
+    syncFullHistory("history"),
     syncFormHistory("forms"),
 
     uploadMetaGlobal,
