@@ -2141,7 +2141,6 @@ RemoteBlobImpl::CommonInit(BlobChild* aActor)
 {
   MOZ_ASSERT(aActor);
   aActor->AssertIsOnOwningThread();
-  MOZ_ASSERT(!mIsSlice);
 
   mActor = aActor;
   mActorTarget = aActor->EventTarget();
@@ -2641,12 +2640,16 @@ RemoteBlobSliceImpl::EnsureActorWasCreatedInternal()
                                 mStart + mLength /* end */,
                                 mContentType /* contentType */));
 
+  BlobChild* actor;
+
   if (nsIContentChild* contentManager = baseActor->GetContentManager()) {
-    mActor = SendSliceConstructor(contentManager, this, params);
+    actor = SendSliceConstructor(contentManager, this, params);
   } else {
-    mActor =
+    actor =
       SendSliceConstructor(baseActor->GetBackgroundManager(), this, params);
   }
+
+  CommonInit(actor);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(BlobChild::RemoteBlobSliceImpl,
