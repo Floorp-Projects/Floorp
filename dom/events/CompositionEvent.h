@@ -28,6 +28,11 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_TO_UIEVENT
 
+  static already_AddRefed<CompositionEvent> Constructor(const GlobalObject& aGlobal,
+                                                        const nsAString& aType,
+                                                        const CompositionEventInit& aParam,
+                                                        ErrorResult& aRv);
+
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return CompositionEventBinding::Wrap(aCx, this, aGivenProto);
