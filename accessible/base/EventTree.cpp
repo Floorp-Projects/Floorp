@@ -25,8 +25,7 @@ EventTree* const TreeMutation::kNoEventTree = reinterpret_cast<EventTree*>(-1);
 TreeMutation::TreeMutation(Accessible* aParent, bool aNoEvents) :
   mParent(aParent), mStartIdx(UINT32_MAX),
   mStateFlagsCopy(mParent->mStateFlags),
-  mEventTree(aNoEvents ? kNoEventTree : nullptr),
-  mQueueEvents(!aNoEvents)
+  mEventTree(aNoEvents ? kNoEventTree : nullptr)
 {
 #ifdef DEBUG
   mIsDone = false;
