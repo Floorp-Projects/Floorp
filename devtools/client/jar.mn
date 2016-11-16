@@ -141,6 +141,7 @@ devtools.jar:
     skin/images/add.svg (themes/images/add.svg)
     skin/images/filters.svg (themes/images/filters.svg)
     skin/images/filter-swatch.svg (themes/images/filter-swatch.svg)
+    skin/images/grid.svg (themes/images/grid.svg)
     skin/images/angle-swatch.svg (themes/images/angle-swatch.svg)
     skin/images/pseudo-class.svg (themes/images/pseudo-class.svg)
     skin/images/controls.png (themes/images/controls.png)

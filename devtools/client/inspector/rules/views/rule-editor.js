@@ -154,7 +154,7 @@ RuleEditor.prototype = {
 
       let selectorHighlighter = createChild(header, "span", {
         class: "ruleview-selectorhighlighter" +
-               (this.ruleView.highlightedSelector === selector ?
+               (this.ruleView.highlighters.selectorHighlighterShown === selector ?
                 " highlighted" : ""),
         title: l10n("rule.selectorHighlighter.tooltip")
       });
@@ -585,9 +585,9 @@ RuleEditor.prototype = {
       this.element.parentNode.replaceChild(editor.element, this.element);
 
       // Remove highlight for modified selector
-      if (ruleView.highlightedSelector) {
+      if (ruleView.highlighters.selectorHighlighterShown) {
         ruleView.toggleSelectorHighlighter(ruleView.lastSelectorIcon,
-          ruleView.highlightedSelector);
+          ruleView.highlighters.selectorHighlighterShown);
       }
 
       editor._moveSelectorFocus(direction);
