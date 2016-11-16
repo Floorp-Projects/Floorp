@@ -381,15 +381,15 @@ OperateTransformMatrix(const Matrix4x4 &aMatrix1,
   return result;
 }
 
-/* Helper function to process two matrices that we need to interpolate between */
-void
-ProcessInterpolateMatrix(Matrix4x4& aMatrix,
-                         const nsCSSValue::Array* aData,
-                         nsStyleContext* aContext,
-                         nsPresContext* aPresContext,
-                         RuleNodeCacheConditions& aConditions,
-                         TransformReferenceBox& aRefBox,
-                         bool* aContains3dTransform)
+template <typename Operator>
+static void
+ProcessMatrixOperator(Matrix4x4& aMatrix,
+                      const nsCSSValue::Array* aData,
+                      nsStyleContext* aContext,
+                      nsPresContext* aPresContext,
+                      RuleNodeCacheConditions& aConditions,
+                      TransformReferenceBox& aRefBox,
+                      bool* aContains3dTransform)
 {
   NS_PRECONDITION(aData->Count() == 4, "Invalid array!");
 
@@ -411,7 +411,22 @@ ProcessInterpolateMatrix(Matrix4x4& aMatrix,
   double progress = aData->Item(3).GetPercentValue();
 
   aMatrix =
-    OperateTransformMatrix<Interpolate>(matrix1, matrix2, progress) * aMatrix;
+    OperateTransformMatrix<Operator>(matrix1, matrix2, progress) * aMatrix;
+}
+
+/* Helper function to process two matrices that we need to interpolate between */
+void
+ProcessInterpolateMatrix(Matrix4x4& aMatrix,
+                         const nsCSSValue::Array* aData,
+                         nsStyleContext* aContext,
+                         nsPresContext* aPresContext,
+                         RuleNodeCacheConditions& aConditions,
+                         TransformReferenceBox& aRefBox,
+                         bool* aContains3dTransform)
+{
+  ProcessMatrixOperator<Interpolate>(aMatrix, aData, aContext, aPresContext,
+                                     aConditions, aRefBox,
+                                     aContains3dTransform);
 }
 
 /* Helper function to process a translatex function. */
@@ -777,9 +792,9 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
                     aConditions, aRefBox);
     break;
   case eCSSKeyword_interpolatematrix:
-    ProcessInterpolateMatrix(aMatrix, aData, aContext, aPresContext,
-                             aConditions, aRefBox,
-                             aContains3dTransform);
+    ProcessMatrixOperator<Interpolate>(aMatrix, aData, aContext, aPresContext,
+                                       aConditions, aRefBox,
+                                       aContains3dTransform);
     break;
   case eCSSKeyword_perspective:
     *aContains3dTransform = true;
