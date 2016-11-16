@@ -13,7 +13,7 @@ const oneOffsContainer =
 add_task(function* test() {
   let rootDir = getRootDirectory(gTestPath);
   let url = rootDir + "tooManyEnginesOffered.html";
-  yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   // Open the search popup.
   let promise = promiseEvent(searchPopup, "popupshown");
