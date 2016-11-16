@@ -39,8 +39,17 @@ add_task(function* testPageActionPopupResize() {
 
   browser = yield awaitExtensionPanel(extension);
 
-  function* checkSize(expected) {
+  function* waitForSize(size) {
     let dims = yield promiseContentDimensions(browser);
+    for (let i = 0; i < 100 && dims.window.innerWidth < size; i++) {
+      yield delay(50);
+      dims = yield promiseContentDimensions(browser);
+    }
+    return dims;
+  }
+
+  function* checkSize(expected) {
+    let dims = yield waitForSize(expected);
     let {body, root} = dims;
 
     is(dims.window.innerHeight, expected, `Panel window should be ${expected}px tall`);
@@ -76,15 +85,8 @@ add_task(function* testPageActionPopupResize() {
 
   yield alterContent(browser, setSize, 1400);
 
-  let dims = yield promiseContentDimensions(browser);
+  let dims = yield waitForSize(800);
   let {body, root} = dims;
-
-  if (AppConstants.platform == "win") {
-    while (dims.window.innerWidth < 800) {
-      yield delay(50);
-      dims = yield promiseContentDimensions(browser);
-    }
-  }
 
   is(dims.window.innerWidth, 800, "Panel window width");
   ok(body.clientWidth <= 800, `Panel body width ${body.clientWidth} is less than 800`);

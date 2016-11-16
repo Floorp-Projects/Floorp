@@ -3,6 +3,7 @@
 "use strict";
 
 add_task(function* testExecuteScript() {
+  let {ExtensionManagement} = Cu.import("resource://gre/modules/ExtensionManagement.jsm", {});
   let {MessageChannel} = Cu.import("resource://gre/modules/MessageChannel.jsm", {});
 
   function countMM(messageManagerMap) {
@@ -249,6 +250,8 @@ add_task(function* testExecuteScript() {
   // Make sure that we're not holding on to references to closed message
   // managers.
   is(countMM(MessageChannel.messageManagers), messageManagersSize, "Message manager count");
-  is(countMM(MessageChannel.responseManagers), responseManagersSize, "Response manager count");
+  if (!ExtensionManagement.useRemoteWebExtensions) {
+    is(countMM(MessageChannel.responseManagers), responseManagersSize, "Response manager count");
+  }
   is(MessageChannel.pendingResponses.size, 0, "Pending response count");
 });
