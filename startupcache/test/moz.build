@@ -7,3 +7,8 @@
 GeckoCppUnitTests([
     'TestStartupCache',
 ])
+
+EXTRA_COMPONENTS += [
+    'TestStartupCacheTelemetry.js',
+    'TestStartupCacheTelemetry.manifest',
+]
