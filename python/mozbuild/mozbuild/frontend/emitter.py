@@ -102,6 +102,9 @@ from mozbuild.base import ExecutionSummary
 
 
 ALLOWED_XPCOM_GLUE = {
+    ('testcomponent', 'xpcom/tests/component'),
+    ('test656331', 'xpcom/tests/bug656331_component'),
+    ('testcompnoaslr', 'xpcom/tests/component_no_aslr'),
     ('TestStreamConv', 'netwerk/streamconv/test'),
     ('PropertiesTest', 'netwerk/test'),
     ('ReadNTLM', 'netwerk/test'),
@@ -120,6 +123,7 @@ ALLOWED_XPCOM_GLUE = {
     ('TestCookie', 'netwerk/test'),
     ('TestUDPSocket', 'netwerk/test'),
     ('xpcshell', 'js/xpconnect/shell'),
+    ('xpctest', 'js/xpconnect/tests/components/native'),
     ('test_AsXXX_helpers', 'storage/test'),
     ('test_async_callbacks_with_spun_event_loops', 'storage/test'),
     ('test_asyncStatementExecution_transaction', 'storage/test'),
@@ -136,6 +140,7 @@ ALLOWED_XPCOM_GLUE = {
     ('TestTXMgr', 'editor/txmgr/tests'),
     ('test_IHistory', 'toolkit/components/places/tests/cpp'),
     ('testcrasher', 'toolkit/crashreporter/test'),
+    ('TestStartupCache', 'startupcache/test'),
     ('jsep_session_unittest', 'media/webrtc/signaling/test'),
     ('jsep_track_unittest', 'media/webrtc/signaling/test'),
     ('mediaconduit_unittests', 'media/webrtc/signaling/test'),
