@@ -37,12 +37,12 @@ function getTopWindow(win) {
                     .getInterface(Ci.nsIWebNavigation)
                     .QueryInterface(Ci.nsIDocShell);
 
-  if (!docShell.isMozBrowser) {
+  if (!docShell.isMozBrowserOrApp) {
     return win.top;
   }
 
   let topDocShell =
-    docShell.getSameTypeRootTreeItemIgnoreBrowserBoundaries();
+    docShell.getSameTypeRootTreeItemIgnoreBrowserAndAppBoundaries();
 
   return topDocShell
           ? topDocShell.contentViewer.DOMDocument.defaultView
@@ -98,12 +98,12 @@ function getParentWindow(win) {
                  .getInterface(Ci.nsIWebNavigation)
                  .QueryInterface(Ci.nsIDocShell);
 
-  if (!docShell.isMozBrowser) {
+  if (!docShell.isMozBrowserOrApp) {
     return win.parent;
   }
 
   let parentDocShell =
-    docShell.getSameTypeParentIgnoreBrowserBoundaries();
+    docShell.getSameTypeParentIgnoreBrowserAndAppBoundaries();
 
   return parentDocShell
           ? parentDocShell.contentViewer.DOMDocument.defaultView

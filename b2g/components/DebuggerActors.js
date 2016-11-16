@@ -30,7 +30,10 @@ function B2GTabList(connection) {
 B2GTabList.prototype = Object.create(BrowserTabList.prototype);
 
 B2GTabList.prototype._getBrowsers = function() {
-  return Frames.list();
+  return Frames.list().filter(frame => {
+    // Ignore app frames
+    return !frame.getAttribute("mozapp");
+  });
 };
 
 B2GTabList.prototype._getSelectedBrowser = function() {
@@ -56,11 +59,21 @@ B2GTabList.prototype._listenForEventsIf = function(shouldListen) {
 };
 
 B2GTabList.prototype.onFrameCreated = function(frame) {
+  let mozapp = frame.getAttribute("mozapp");
+  if (mozapp) {
+    // Ignore app frames
+    return;
+  }
   this._notifyListChanged();
   this._checkListening();
 };
 
 B2GTabList.prototype.onFrameDestroyed = function(frame) {
+  let mozapp = frame.getAttribute("mozapp");
+  if (mozapp) {
+    // Ignore app frames
+    return;
+  }
   let actor = this._actorByBrowser.get(frame);
   if (actor) {
     this._handleActorClose(actor, frame);

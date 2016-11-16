@@ -1906,15 +1906,29 @@ MediaManager::NotifyRecordingStatusChange(nsPIDOMWindowInner* aWindow,
   props->SetPropertyAsBool(NS_LITERAL_STRING("isAudio"), aIsAudio);
   props->SetPropertyAsBool(NS_LITERAL_STRING("isVideo"), aIsVideo);
 
-  nsCString pageURL;
-  nsCOMPtr<nsIURI> docURI = aWindow->GetDocumentURI();
-  NS_ENSURE_TRUE(docURI, NS_ERROR_FAILURE);
+  bool isApp = false;
+  nsString requestURL;
 
-  nsresult rv = docURI->GetSpec(pageURL);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell()) {
+    isApp = docShell->GetIsApp();
+    if (isApp) {
+      nsresult rv = docShell->GetAppManifestURL(requestURL);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
 
-  NS_ConvertUTF8toUTF16 requestURL(pageURL);
+  if (!isApp) {
+    nsCString pageURL;
+    nsCOMPtr<nsIURI> docURI = aWindow->GetDocumentURI();
+    NS_ENSURE_TRUE(docURI, NS_ERROR_FAILURE);
 
+    nsresult rv = docURI->GetSpec(pageURL);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    requestURL = NS_ConvertUTF8toUTF16(pageURL);
+  }
+
+  props->SetPropertyAsBool(NS_LITERAL_STRING("isApp"), isApp);
   props->SetPropertyAsAString(NS_LITERAL_STRING("requestURL"), requestURL);
 
   obs->NotifyObservers(static_cast<nsIPropertyBag2*>(props),

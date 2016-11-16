@@ -793,27 +793,33 @@ interface nsIDocShell : nsIDocShellTreeItem
   [noscript] void notifyScrollObservers();
 
   /**
+   * Returns true iff the docshell corresponds to an <iframe mozapp>.
+   */
+  [infallible] readonly attribute boolean isApp;
+
+  /**
    * The type of iframe that this docshell lives.
    */
   const unsigned long FRAME_TYPE_REGULAR = 0;
   const unsigned long FRAME_TYPE_BROWSER = 1;
+  const unsigned long FRAME_TYPE_APP     = 2;
 
   [infallible] attribute unsigned long frameType;
 
   /**
-   * Returns true if this docshell corresponds to an <iframe mozbrowser>.
-   * <xul:browser> returns false here.
+   * Returns true if this docshell corresponds to an <iframe mozbrowser> or
+   * <iframe mozapp>.  <xul:browser> returns false here.
    */
-  [infallible] readonly attribute boolean isMozBrowser;
+  [infallible] readonly attribute boolean isMozBrowserOrApp;
 
   /**
    * Returns true if this docshell corresponds to an isolated <iframe
    * mozbrowser>.
    *
-   * <xul:browser> is not considered to be a mozbrowser element.
-   * <iframe mozbrowser noisolation> does not count as isolated since
-   * isolation is disabled.  Isolation can only be disabled if the
-   * containing document is chrome.
+   * <iframe mozbrowser mozapp> and <xul:browser> are not considered to be
+   * mozbrowser elements.  <iframe mozbrowser noisolation> does not count as
+   * isolated since isolation is disabled.  Isolation can only be disabled if
+   * the containing document is chrome.
    */
   [infallible] readonly attribute boolean isIsolatedMozBrowserElement;
 
@@ -822,28 +828,28 @@ interface nsIDocShell : nsIDocShellTreeItem
    * mozbrowser> or if the docshell is contained in an isolated <iframe
    * mozbrowser>.
    *
-   * <xul:browser> is not considered to be a mozbrowser element. <iframe
-   * mozbrowser noisolation> does not count as isolated since isolation is
-   * disabled.  Isolation can only be disabled if the containing document is
-   * chrome.
+   * <iframe mozbrowser mozapp> and <xul:browser> are not considered to be
+   * mozbrowser elements.  <iframe mozbrowser noisolation> does not count as
+   * isolated since isolation is disabled.  Isolation can only be disabled if
+   * the containing document is chrome.
    *
    * Our notion here of "contained in" means: Walk up the docshell hierarchy in
-   * this process until we hit an <iframe mozbrowser> (or until the hierarchy
-   * ends).  Return true iff the docshell we stopped on has
+   * this process until we hit an <iframe mozapp> or <iframe mozbrowser> (or
+   * until the hierarchy ends).  Return true iff the docshell we stopped on has
    * isIsolatedMozBrowserElement == true.
    */
   [infallible] readonly attribute boolean isInIsolatedMozBrowserElement;
 
   /**
-   * Returns true if this docshell corresponds to an <iframe mozbrowser>, or
-   * if this docshell is contained in an <iframe mozbrowser>. <xul:browser>
-   * returns false here.
+   * Returns true if this docshell corresponds to an <iframe mozbrowser> or
+   * <iframe mozapp>, or if this docshell is contained in an <iframe mozbrowser>
+   * or <iframe mozapp>.  <xul:browser> returns false here.
    *
    * To compute this value, we walk up the docshell hierarchy.  If we encounter
-   * a docshell with isMozBrowser before we hit the end of the hierarchy,
+   * a docshell with isMozBrowserOrApp before we hit the end of the hierarchy,
    * we return true.  Otherwise, we return false.
    */
-  [infallible] readonly attribute boolean isInMozBrowser;
+  [infallible] readonly attribute boolean isInMozBrowserOrApp;
 
   /**
    * Returns true if this docshell is the top level content docshell.
@@ -851,16 +857,40 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] readonly attribute boolean isTopLevelContentDocShell;
 
   /**
-   * Like nsIDocShellTreeItem::GetSameTypeParent, except this ignores <iframe
-   * mozbrowser> boundaries.
+   * Returns the id of the app associated with this docshell.  If this docshell
+   * is an <iframe mozbrowser> inside an <iframe mozapp>, we return the app's
+   * appId.
+   *
+   * We compute this value by walking up the docshell hierarchy until we find a
+   * docshell on which origin attributes was set. (ignoring those docshells
+   * where x == UNKNOWN_APP_ID).  We return the app id x.
+   *
+   * If we don't find a docshell with an associated app id in our hierarchy, we
+   * return NO_APP_ID.  We never return UNKNOWN_APP_ID.
+   *
+   * Notice that a docshell may have an associated app even if it returns true
+   * for isBrowserElement!
    */
-  nsIDocShell getSameTypeParentIgnoreBrowserBoundaries();
+  [infallible] readonly attribute unsigned long appId;
+
+  /**
+   * Return the manifest URL of the app associated with this docshell.
+   *
+   * If there is no associated app in our hierarchy, we return empty string.
+   */
+  readonly attribute DOMString appManifestURL;
+
+  /**
+   * Like nsIDocShellTreeItem::GetSameTypeParent, except this ignores <iframe
+   * mozbrowser> and <iframe mozapp> boundaries.
+   */
+  nsIDocShell getSameTypeParentIgnoreBrowserAndAppBoundaries();
 
   /**
    * Like nsIDocShellTreeItem::GetSameTypeRootTreeItem, except this ignores
-   * <iframe mozbrowser> boundaries.
+   * <iframe mozbrowser> and <iframe mozapp> boundaries.
    */
-  nsIDocShell getSameTypeRootTreeItemIgnoreBrowserBoundaries();
+  nsIDocShell getSameTypeRootTreeItemIgnoreBrowserAndAppBoundaries();
 
   /**
    * True iff asynchronous panning and zooming is enabled for this

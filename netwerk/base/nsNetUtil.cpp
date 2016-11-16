@@ -568,12 +568,15 @@ NS_LoadGroupMatchesPrincipal(nsILoadGroup *aLoadGroup,
                                   getter_AddRefs(loadContext));
     NS_ENSURE_TRUE(loadContext, false);
 
-    // Verify load context browser flag match the principal
+    // Verify load context appId and browser flag match the principal
+    uint32_t contextAppId;
     bool contextInIsolatedBrowser;
-    nsresult rv = loadContext->GetIsInIsolatedMozBrowserElement(&contextInIsolatedBrowser);
+    nsresult rv = loadContext->GetAppId(&contextAppId);
+    NS_ENSURE_SUCCESS(rv, false);
+    rv = loadContext->GetIsInIsolatedMozBrowserElement(&contextInIsolatedBrowser);
     NS_ENSURE_SUCCESS(rv, false);
 
-    return nsIScriptSecurityManager::NO_APP_ID == aPrincipal->GetAppId() &&
+    return contextAppId == aPrincipal->GetAppId() &&
            contextInIsolatedBrowser == aPrincipal->GetIsInIsolatedMozBrowserElement();
 }
 
@@ -2391,8 +2394,14 @@ NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel)
     return NS_OK;
   }
 
+  uint32_t loadContextAppId = 0;
+  nsresult rv = loadContext->GetAppId(&loadContextAppId);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   bool loadContextIsInBE = false;
-  nsresult rv = loadContext->GetIsInIsolatedMozBrowserElement(&loadContextIsInBE);
+  rv = loadContext->GetIsInIsolatedMozBrowserElement(&loadContextIsInBE);
   if (NS_FAILED(rv)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -2402,12 +2411,16 @@ NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel)
   loadContext->GetOriginAttributes(originAttrsLoadContext);
 
   LOG(("NS_CompareLoadInfoAndLoadContext - loadInfo: %d, %d, %d, %d; "
-       "loadContext: %d %d, %d. [channel=%p]",
+       "loadContext: %d %d, %d, %d. [channel=%p]",
        originAttrsLoadInfo.mAppId, originAttrsLoadInfo.mInIsolatedMozBrowser,
        originAttrsLoadInfo.mUserContextId, originAttrsLoadInfo.mPrivateBrowsingId,
-       loadContextIsInBE,
+       loadContextAppId, loadContextIsInBE,
        originAttrsLoadContext.mUserContextId, originAttrsLoadContext.mPrivateBrowsingId,
        aChannel));
+
+  MOZ_ASSERT(originAttrsLoadInfo.mAppId == loadContextAppId,
+             "AppId in the loadContext and in the loadInfo are not the "
+             "same!");
 
   MOZ_ASSERT(originAttrsLoadInfo.mInIsolatedMozBrowser ==
              loadContextIsInBE,

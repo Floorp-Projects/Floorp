@@ -331,7 +331,7 @@ nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
            curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem))) &&
          parentDocShellItem) {
     nsCOMPtr<nsIDocShell> curDocShell = do_QueryInterface(curDocShellItem);
-    if (curDocShell && curDocShell->GetIsMozBrowser()) {
+    if (curDocShell && curDocShell->GetIsMozBrowserOrApp()) {
       break;
     }
 

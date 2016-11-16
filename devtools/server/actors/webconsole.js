@@ -570,9 +570,11 @@ WebConsoleActor.prototype =
 
     let startedListeners = [];
     let window = !this.parentActor.isRootActor ? this.window : null;
+    let appId = null;
     let messageManager = null;
 
     if (this._parentIsContentActor) {
+      appId = this.parentActor.docShell.appId;
       messageManager = this.parentActor.messageManager;
     }
 
@@ -603,16 +605,16 @@ WebConsoleActor.prototype =
             // Create a StackTraceCollector that's going to be shared both by the
             // NetworkMonitorChild (getting messages about requests from parent) and
             // by the NetworkMonitor that directly watches service workers requests.
-            this.stackTraceCollector = new StackTraceCollector({ window });
+            this.stackTraceCollector = new StackTraceCollector({ window, appId });
             this.stackTraceCollector.init();
 
             let processBoundary = Services.appinfo.processType !=
                                   Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-            if (messageManager && processBoundary) {
+            if ((appId || messageManager) && processBoundary) {
               // Start a network monitor in the parent process to listen to
               // most requests than happen in parent
               this.networkMonitor =
-                new NetworkMonitorChild(this.parentActor.outerWindowID,
+                new NetworkMonitorChild(appId, this.parentActor.outerWindowID,
                                         messageManager, this.conn, this);
               this.networkMonitor.init();
               // Spawn also one in the child to listen to service workers

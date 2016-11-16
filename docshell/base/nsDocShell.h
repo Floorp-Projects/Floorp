@@ -779,6 +779,8 @@ protected:
   static const nsCString FrameTypeToString(uint32_t aFrameType)
   {
     switch (aFrameType) {
+      case FRAME_TYPE_APP:
+        return NS_LITERAL_CSTRING("app");
       case FRAME_TYPE_BROWSER:
         return NS_LITERAL_CSTRING("browser");
       case FRAME_TYPE_REGULAR:

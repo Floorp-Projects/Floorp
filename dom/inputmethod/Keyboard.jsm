@@ -190,8 +190,8 @@ this.Keyboard = {
         this.formMM = null;
       }
     } else {
-      // Ignore notifications that aren't from a Browser
-      if (!frameLoader.ownerIsMozBrowserFrame) {
+      // Ignore notifications that aren't from a BrowserOrApp
+      if (!frameLoader.ownerIsMozBrowserOrAppFrame) {
         return;
       }
       this.initFormsFrameScript(mm);

@@ -17,7 +17,6 @@
 #include "nsIURI.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
-#include "nsPIDOMWindow.h"
 
 NS_IMPL_ISUPPORTS(ThirdPartyUtil, mozIThirdPartyUtil)
 
@@ -146,7 +145,7 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow,
   nsCOMPtr<nsIURI> parentURI;
   do {
     // We use GetScriptableParent rather than GetParent because we consider
-    // <iframe mozbrowser> to be a top-level frame.
+    // <iframe mozbrowser/mozapp> to be a top-level frame.
     parent = current->GetScriptableParent();
     if (SameCOMIdentity(parent, current)) {
       // We're at the topmost content window. We already know the answer.

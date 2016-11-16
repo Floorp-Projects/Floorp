@@ -43,6 +43,7 @@ public:
                                        const IPCTabContext& aContext,
                                        const uint32_t& aChromeFlags,
                                        const ContentParentId& aCpID,
+                                       const bool& aIsForApp,
                                        const bool& aIsForBrowser) override;
 
   virtual mozilla::ipc::PFileDescriptorSetChild*
@@ -60,6 +61,7 @@ protected:
                                             const IPCTabContext& aContext,
                                             const uint32_t& aChromeFlags,
                                             const ContentParentId& aCpID,
+                                            const bool& aIsForApp,
                                             const bool& aIsForBrowser) override;
   virtual bool DeallocPBrowserChild(PBrowserChild*) override;
   virtual bool RecvPBrowserConstructor(PBrowserChild* aCctor,
@@ -67,6 +69,7 @@ protected:
                                        const IPCTabContext& aContext,
                                        const uint32_t& aChromeFlags,
                                        const ContentParentId& aCpID,
+                                       const bool& aIsForApp,
                                        const bool& aIsForBrowser) override;
 
   virtual mozilla::jsipc::PJavaScriptChild* AllocPJavaScriptChild() override;

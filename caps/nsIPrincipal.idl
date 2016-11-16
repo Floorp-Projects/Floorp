@@ -298,10 +298,10 @@ interface nsIPrincipal : nsISerializable
 
     /**
      * Returns true iff the principal is inside an isolated mozbrowser element.
-     * <xul:browser> is not considered to be a mozbrowser element.
-     * <iframe mozbrowser noisolation> does not count as isolated since
-     * isolation is disabled.  Isolation can only be disabled if the
-     * containing document is chrome.
+     * <iframe mozbrowser mozapp> and <xul:browser> are not considered to be
+     * mozbrowser elements.  <iframe mozbrowser noisolation> does not count as
+     * isolated since isolation is disabled.  Isolation can only be disabled if
+     * the containing document is chrome.
      */
     [infallible] readonly attribute boolean isInIsolatedMozBrowserElement;
 
