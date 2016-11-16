@@ -53,7 +53,7 @@ struct gfxQuaternion : public mozilla::gfx::BasePoint4D<gfxFloat, gfxQuaternion>
         w = cos(aAngle/2.0);
     }
 
-    gfxQuaternion Slerp(const gfxQuaternion &aOther, gfxFloat aCoeff) {
+    gfxQuaternion Slerp(const gfxQuaternion &aOther, gfxFloat aCoeff) const {
         gfxFloat dot = mozilla::clamped(DotProduct(aOther), -1.0, 1.0);
         if (dot == 1.0) {
             return *this;
@@ -72,7 +72,7 @@ struct gfxQuaternion : public mozilla::gfx::BasePoint4D<gfxFloat, gfxQuaternion>
         return left + right;
     }
 
-    mozilla::gfx::Matrix4x4 ToMatrix() {
+    mozilla::gfx::Matrix4x4 ToMatrix() const {
       mozilla::gfx::Matrix4x4 temp;
 
         temp[0][0] = 1 - 2 * (y * y + z * z);
