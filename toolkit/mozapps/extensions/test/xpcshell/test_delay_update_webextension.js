@@ -11,7 +11,6 @@ Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
-const tempdir = gTmpD.clone();
 const stageDir = profileDir.clone();
 stageDir.append("staged");
 

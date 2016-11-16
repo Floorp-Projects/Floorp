@@ -9,6 +9,7 @@
 <title>InstallTrigger tests</title>
 <script type="text/javascript">
 /* globals InstallTrigger */
+/* exported init */
 function init() {
   document.getElementById("enabled").textContent = InstallTrigger.enabled() ? "true" : "false";
   dump("Sending PageLoaded\n");

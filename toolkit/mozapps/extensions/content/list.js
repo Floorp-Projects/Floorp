@@ -3,6 +3,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+/* exported init, shutdown */
 
 const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kDialog = "dialog";
@@ -41,8 +44,6 @@ const kDialog = "dialog";
  *
  * result:  The dlgtype of button that was used to dismiss the dialog.
  */
-
-"use strict";
 
 var gButtons = { };
 

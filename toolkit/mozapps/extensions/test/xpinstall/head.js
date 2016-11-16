@@ -1,3 +1,5 @@
+/* eslint no-unused-vars: ["error", {vars: "local", args: "none"}] */
+
 const RELATIVE_DIR = "toolkit/mozapps/extensions/test/xpinstall/";
 
 const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
@@ -309,7 +311,6 @@ var Harness = {
       info("Waiting for " + this.finalContentEvent);
       let mm = gBrowser.selectedBrowser.messageManager;
       mm.loadFrameScript(`data:,content.addEventListener("${this.finalContentEvent}", () => { sendAsyncMessage("Test:GotNewInstallEvent"); });`, false);
-      let win = gBrowser.contentWindow;
       let listener = () => {
         info("Saw " + this.finalContentEvent);
         mm.removeMessageListener("Test:GotNewInstallEvent", listener);

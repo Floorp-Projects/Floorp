@@ -14,7 +14,6 @@ gPort = gServer.identity.primaryPort;
 
 const PORT            = gPort;
 const BASE_URL        = "http://localhost:" + PORT;
-const DEFAULT_URL     = "about:blank";
 const REQ_URL         = "/data.xml";
 
 // register static file and mark it for interpolation

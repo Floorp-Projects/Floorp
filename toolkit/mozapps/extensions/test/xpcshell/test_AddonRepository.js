@@ -22,8 +22,6 @@ const DEFAULT_URL   = "about:blank";
 
 gPort = PORT;
 
-// Path to source URI of installed add-on
-const INSTALL_URL1  = "/addons/test_AddonRepository_1.xpi";
 // Path to source URI of installing add-on
 const INSTALL_URL2  = "/addons/test_AddonRepository_2.xpi";
 // Path to source URI of non-active add-on (state = STATE_AVAILABLE)
