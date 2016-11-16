@@ -1066,7 +1066,7 @@ public:
   imgCacheExpirationTracker();
 
 protected:
-  void NotifyExpired(imgCacheEntry* entry);
+  void NotifyExpired(imgCacheEntry* entry) override;
 };
 
 imgCacheExpirationTracker::imgCacheExpirationTracker()
