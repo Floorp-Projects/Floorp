@@ -63,6 +63,7 @@ function* testEditSelector(view, name) {
 
   let isVisible = yield onToggled;
 
-  ok(!view.highlightedSelector, "The selectorhighlighter instance was removed");
+  ok(!view.highlighters.selectorHighlighterShown,
+    "The selectorHighlighterShown instance was removed");
   ok(!isVisible, "The toggle event says the highlighter is not visible");
 }
