@@ -173,9 +173,7 @@ Compositor::DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                     const gfx::Matrix4x4& aTransform,
                                     uint32_t aFlashCounter)
 {
-#ifdef MOZ_B2G
-  int lWidth = 4;
-#elif defined(ANDROID)
+#ifdef ANDROID
   int lWidth = 10;
 #else
   int lWidth = 2;

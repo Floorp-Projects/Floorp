@@ -57,7 +57,7 @@ mozilla::ipc::SharedMemory::SharedMemoryType OptimalShmemType();
 
 /**
  * An interface used to create and destroy surfaces that are shared with the
- * Compositor process (using shmem, or gralloc, or other platform specific memory)
+ * Compositor process (using shmem, or other platform specific memory)
  *
  * Most of the methods here correspond to methods that are implemented by IPDL
  * actors without a common polymorphic interface.
