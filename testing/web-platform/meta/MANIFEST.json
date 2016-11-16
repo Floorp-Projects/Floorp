@@ -20724,6 +20724,10 @@
         "url": "/html/semantics/embedded-content/the-img-element/update-media.html"
       },
       {
+        "path": "html/semantics/embedded-content/the-img-element/update-src-complete.html",
+        "url": "/html/semantics/embedded-content/the-img-element/update-src-complete.html"
+      },
+      {
         "path": "html/semantics/embedded-content/the-img-element/update-the-image-data/fail-to-resolve.html",
         "url": "/html/semantics/embedded-content/the-img-element/update-the-image-data/fail-to-resolve.html"
       },
