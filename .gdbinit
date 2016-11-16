@@ -16,6 +16,7 @@ handle SIGPIPE noprint nostop pass
 # sandboxing code on older kernels.
 handle SIG38 noprint nostop pass
 handle SIG64 noprint nostop pass
+handle SIGSYS noprint nostop pass
 
 # Show the concrete types behind nsIFoo
 set print object on
