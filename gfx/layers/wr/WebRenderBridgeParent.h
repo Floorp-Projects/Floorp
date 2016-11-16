@@ -29,6 +29,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent
 
 public:
   WebRenderBridgeParent(const uint64_t& aPipelineId,
+                        const nsString* aResourcePath,
                         widget::CompositorWidget* aWidget,
                         gl::GLContext* aGlContext,
                         wrwindowstate* aWrWindowState);
