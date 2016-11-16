@@ -932,8 +932,7 @@ ContentChild::InitXPCOM()
   SendGetXPCOMProcessAttributes(&isOffline, &isConnected,
                                 &isLangRTL, &haveBidiKeyboards,
                                 &mAvailableDictionaries,
-                                &clipboardCaps, &domainPolicy, &initialData,
-                                &mFontFamilies);
+                                &clipboardCaps, &domainPolicy, &initialData);
   RecvSetOffline(isOffline);
   RecvSetConnectivity(isConnected);
   RecvBidiKeyboardNotify(isLangRTL, haveBidiKeyboards);
