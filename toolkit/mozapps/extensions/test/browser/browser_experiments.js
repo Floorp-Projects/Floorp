@@ -26,22 +26,6 @@ function getExperimentAddons() {
   return deferred.promise;
 }
 
-function getInstallItem() {
-  let doc = gManagerWindow.document;
-  let view = get_current_view(gManagerWindow);
-  let list = doc.getElementById("addon-list");
-
-  let node = list.firstChild;
-  while (node) {
-    if (node.getAttribute("status") == "installing") {
-      return node;
-    }
-    node = node.nextSibling;
-  }
-
-  return null;
-}
-
 function patchPolicy(policy, data) {
   for (let key of Object.keys(data)) {
     Object.defineProperty(policy, key, {

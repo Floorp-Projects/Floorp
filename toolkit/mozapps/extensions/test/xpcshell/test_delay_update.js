@@ -10,7 +10,6 @@ Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 Components.utils.import("resource://testing-common/httpd.js");
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
-const tempdir = gTmpD.clone();
 
 const IGNORE_ID = "test_delay_update_ignore@tests.mozilla.org";
 const COMPLETE_ID = "test_delay_update_complete@tests.mozilla.org";

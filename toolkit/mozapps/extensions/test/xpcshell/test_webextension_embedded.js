@@ -18,7 +18,6 @@ const { Management } = Components.utils.import("resource://gre/modules/Extension
 
 const {
   EmbeddedExtensionManager,
-  LegacyExtensionsUtils,
 } = Components.utils.import("resource://gre/modules/LegacyExtensionsUtils.jsm");
 
 // Wait the startup of the embedded webextension.

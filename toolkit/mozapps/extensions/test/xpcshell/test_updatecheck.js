@@ -95,8 +95,8 @@ add_task(function* () {
   // because of the update key, without requiring one for the JSON variant.
 
   try {
-    let updates = yield checkUpdates("test_bug378216_8@tests.mozilla.org",
-                                     updateKey, "test_updatecheck.json");
+    yield checkUpdates("test_bug378216_8@tests.mozilla.org",
+                       updateKey, "test_updatecheck.json");
 
     throw "Expected the update check to fail";
   } catch (e) {}

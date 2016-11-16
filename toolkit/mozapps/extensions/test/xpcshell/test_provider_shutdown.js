@@ -56,7 +56,6 @@ function findInStatus(aStatus, aName) {
  */
 add_task(function* blockRepoShutdown() {
   // Reach into the AddonManager scope and inject our mock AddonRepository
-  let realAddonRepo = AMscope.AddonRepository;
   // the mock provider behaves enough like AddonRepository for the purpose of this test
   let mockRepo = mockAddonProvider("Mock repo");
   AMscope.AddonRepository = mockRepo;
