@@ -104,7 +104,7 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
       return GMPGenericErr;
     }
 
-    WidevineDecryptor* decryptor = new WidevineDecryptor();
+    auto* decryptor = new WidevineDecryptor();
 
     auto cdm = reinterpret_cast<cdm::ContentDecryptionModule*>(
       create(cdm::ContentDecryptionModule::kVersion,

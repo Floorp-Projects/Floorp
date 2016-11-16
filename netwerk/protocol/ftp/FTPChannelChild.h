@@ -76,23 +76,23 @@ public:
 protected:
   virtual ~FTPChannelChild();
 
-  bool RecvOnStartRequest(const nsresult& aChannelStatus,
-                          const int64_t& aContentLength,
-                          const nsCString& aContentType,
-                          const PRTime& aLastModified,
-                          const nsCString& aEntityID,
-                          const URIParams& aURI) override;
-  bool RecvOnDataAvailable(const nsresult& channelStatus,
-                           const nsCString& data,
-                           const uint64_t& offset,
-                           const uint32_t& count) override;
-  bool RecvOnStopRequest(const nsresult& channelStatus,
-                         const nsCString &aErrorMsg,
-                         const bool &aUseUTF8) override;
-  bool RecvFailedAsyncOpen(const nsresult& statusCode) override;
-  bool RecvFlushedForDiversion() override;
-  bool RecvDivertMessages() override;
-  bool RecvDeleteSelf() override;
+  mozilla::ipc::IPCResult RecvOnStartRequest(const nsresult& aChannelStatus,
+                                             const int64_t& aContentLength,
+                                             const nsCString& aContentType,
+                                             const PRTime& aLastModified,
+                                             const nsCString& aEntityID,
+                                             const URIParams& aURI) override;
+  mozilla::ipc::IPCResult RecvOnDataAvailable(const nsresult& channelStatus,
+                                              const nsCString& data,
+                                              const uint64_t& offset,
+                                              const uint32_t& count) override;
+  mozilla::ipc::IPCResult RecvOnStopRequest(const nsresult& channelStatus,
+                                            const nsCString &aErrorMsg,
+                                            const bool &aUseUTF8) override;
+  mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& statusCode) override;
+  mozilla::ipc::IPCResult RecvFlushedForDiversion() override;
+  mozilla::ipc::IPCResult RecvDivertMessages() override;
+  mozilla::ipc::IPCResult RecvDeleteSelf() override;
 
   void DoOnStartRequest(const nsresult& aChannelStatus,
                         const int64_t& aContentLength,

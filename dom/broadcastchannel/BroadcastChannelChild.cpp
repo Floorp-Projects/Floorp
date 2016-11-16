@@ -38,7 +38,7 @@ BroadcastChannelChild::~BroadcastChannelChild()
   MOZ_ASSERT(!mBC);
 }
 
-bool
+mozilla::ipc::IPCResult
 BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
 {
   // Make sure to retrieve all blobs from the message before returning to avoid
@@ -60,13 +60,13 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
 
   // The object is going to be deleted soon. No notify is required.
   if (!eventTarget) {
-    return true;
+    return IPC_OK();
   }
 
   // CheckInnerWindowCorrectness can be used also without a window when
   // BroadcastChannel is running in a worker. In this case, it's a NOP.
   if (NS_FAILED(mBC->CheckInnerWindowCorrectness())) {
-    return true;
+    return IPC_OK();
   }
 
   mBC->RemoveDocFromBFCache();
@@ -84,7 +84,7 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
 
   if (!globalObject || !jsapi.Init(globalObject)) {
     NS_WARNING("Failed to initialize AutoJSAPI object.");
-    return true;
+    return IPC_OK();
   }
 
   ipc::StructuredCloneData cloneData;
@@ -99,7 +99,7 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
     cloneData.Read(cx, &value, rv);
     if (NS_WARN_IF(rv.Failed())) {
       rv.SuppressException();
-      return true;
+      return IPC_OK();
     }
   }
 
@@ -114,7 +114,7 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
     MessageEvent::Constructor(mBC, NS_LITERAL_STRING("message"), init, rv);
   if (NS_WARN_IF(rv.Failed())) {
     rv.SuppressException();
-    return true;
+    return IPC_OK();
   }
 
   event->SetTrusted(true);
@@ -122,7 +122,7 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   bool status;
   mBC->DispatchEvent(static_cast<Event*>(event.get()), &status);
 
-  return true;
+  return IPC_OK();
 }
 
 void

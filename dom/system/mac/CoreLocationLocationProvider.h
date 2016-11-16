@@ -39,7 +39,7 @@ public:
   void CancelMLSFallbackProvider();
 
 private:
-  virtual ~CoreLocationLocationProvider();
+  virtual ~CoreLocationLocationProvider() = default;
 
   CoreLocationObjects* mCLObjects;
   nsCOMPtr<nsIGeolocationUpdate> mCallback;
@@ -55,6 +55,6 @@ private:
 
   private:
     CoreLocationLocationProvider& mParentLocationProvider;
-    virtual ~MLSUpdate();
+    virtual ~MLSUpdate() = default;
   };
 };

@@ -29,7 +29,7 @@ ScreenManagerParent::ScreenManagerParent(uint32_t* aNumberOfScreens,
   Unused << RecvRefresh(aNumberOfScreens, aSystemDefaultScale, aSuccess);
 }
 
-bool
+mozilla::ipc::IPCResult
 ScreenManagerParent::RecvRefresh(uint32_t* aNumberOfScreens,
                                  float* aSystemDefaultScale,
                                  bool* aSuccess)
@@ -38,19 +38,19 @@ ScreenManagerParent::RecvRefresh(uint32_t* aNumberOfScreens,
 
   nsresult rv = mScreenMgr->GetNumberOfScreens(aNumberOfScreens);
   if (NS_FAILED(rv)) {
-    return true;
+    return IPC_OK();
   }
 
   rv = mScreenMgr->GetSystemDefaultScale(aSystemDefaultScale);
   if (NS_FAILED(rv)) {
-    return true;
+    return IPC_OK();
   }
 
   *aSuccess = true;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ScreenManagerParent::RecvScreenRefresh(const uint32_t& aId,
                                        ScreenDetails* aRetVal,
                                        bool* aSuccess)
@@ -60,7 +60,7 @@ ScreenManagerParent::RecvScreenRefresh(const uint32_t& aId,
   nsCOMPtr<nsIScreen> screen;
   nsresult rv = mScreenMgr->ScreenForId(aId, getter_AddRefs(screen));
   if (NS_FAILED(rv)) {
-    return true;
+    return IPC_OK();
   }
 
   ScreenDetails details;
@@ -68,10 +68,10 @@ ScreenManagerParent::RecvScreenRefresh(const uint32_t& aId,
 
   *aRetVal = details;
   *aSuccess = true;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ScreenManagerParent::RecvGetPrimaryScreen(ScreenDetails* aRetVal,
                                           bool* aSuccess)
 {
@@ -80,19 +80,19 @@ ScreenManagerParent::RecvGetPrimaryScreen(ScreenDetails* aRetVal,
   nsCOMPtr<nsIScreen> screen;
   nsresult rv = mScreenMgr->GetPrimaryScreen(getter_AddRefs(screen));
 
-  NS_ENSURE_SUCCESS(rv, true);
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   ScreenDetails details;
   if (!ExtractScreenDetails(screen, details)) {
-    return true;
+    return IPC_OK();
   }
 
   *aRetVal = details;
   *aSuccess = true;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ScreenManagerParent::RecvScreenForRect(const int32_t& aLeft,
                                        const int32_t& aTop,
                                        const int32_t& aWidth,
@@ -105,19 +105,19 @@ ScreenManagerParent::RecvScreenForRect(const int32_t& aLeft,
   nsCOMPtr<nsIScreen> screen;
   nsresult rv = mScreenMgr->ScreenForRect(aLeft, aTop, aWidth, aHeight, getter_AddRefs(screen));
 
-  NS_ENSURE_SUCCESS(rv, true);
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   ScreenDetails details;
   if (!ExtractScreenDetails(screen, details)) {
-    return true;
+    return IPC_OK();
   }
 
   *aRetVal = details;
   *aSuccess = true;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ScreenManagerParent::RecvScreenForBrowser(const TabId& aTabId,
                                           ScreenDetails* aRetVal,
                                           bool* aSuccess)
@@ -136,7 +136,7 @@ ScreenManagerParent::RecvScreenForBrowser(const TabId& aTabId,
   RefPtr<TabParent> tabParent =
     cpm->GetTopLevelTabParentByProcessAndTabId(cp->ChildID(), aTabId);
   if(!tabParent){
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   nsCOMPtr<nsIWidget> widget = tabParent->GetWidget();
@@ -148,20 +148,20 @@ ScreenManagerParent::RecvScreenForBrowser(const TabId& aTabId,
   } else {
     nsresult rv = mScreenMgr->GetPrimaryScreen(getter_AddRefs(screen));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return true;
+      return IPC_OK();
     }
   }
 
-  NS_ENSURE_TRUE(screen, true);
+  NS_ENSURE_TRUE(screen, IPC_OK());
 
   ScreenDetails details;
   if (!ExtractScreenDetails(screen, details)) {
-    return true;
+    return IPC_OK();
   }
 
   *aRetVal = details;
   *aSuccess = true;
-  return true;
+  return IPC_OK();
 }
 
 bool

@@ -93,17 +93,17 @@ protected:
   }
 
 protected:
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvSyncMessage(const nsString& aMsg,
                   const ClonedMessageData& aData,
                   InfallibleTArray<jsipc::CpowEntry>&& aCpows,
                   const IPC::Principal& aPrincipal,
                   nsTArray<StructuredCloneData>* aRetvals) override;
 
-  virtual bool RecvAsyncMessage(const nsString& aMsg,
-                                InfallibleTArray<jsipc::CpowEntry>&& aCpows,
-                                const IPC::Principal& aPrincipal,
-                                const ClonedMessageData& aData) override;
+  virtual mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aMsg,
+                                                   InfallibleTArray<jsipc::CpowEntry>&& aCpows,
+                                                   const IPC::Principal& aPrincipal,
+                                                   const ClonedMessageData& aData) override;
 
   virtual jsipc::PJavaScriptParent* AllocPJavaScriptParent() override;
 

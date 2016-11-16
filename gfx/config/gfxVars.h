@@ -32,6 +32,7 @@ class gfxVarReceiver;
   _(CanUseHardwareVideoDecoding, bool,            false)                \
   _(PDMWMFDisableD3D11Dlls,     nsCString,        nsCString())          \
   _(PDMWMFDisableD3D9Dlls,      nsCString,        nsCString())          \
+  _(DXInterop2Blocked,          bool,             false)                \
 
   /* Add new entries above this line. */
 

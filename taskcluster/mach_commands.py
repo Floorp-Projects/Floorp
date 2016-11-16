@@ -248,22 +248,26 @@ class TaskClusterImagesProvider(object):
     @Command('taskcluster-load-image', category="ci",
              description="Load a pre-built Docker image")
     @CommandArgument('--task-id',
-                     help="Load the image at public/image.tar in this task,"
+                     help="Load the image at public/image.tar.zst in this task,"
                           "rather than searching the index")
+    @CommandArgument('-t', '--tag',
+                     help="tag that the image should be loaded as. If not "
+                          "image will be loaded with tag from the tarball",
+                     metavar="name:tag")
     @CommandArgument('image_name', nargs='?',
                      help="Load the image of this name based on the current"
                           "contents of the tree (as built for mozilla-central"
                           "or mozilla-inbound)")
-    def load_image(self, image_name, task_id):
+    def load_image(self, image_name, task_id, tag):
         from taskgraph.docker import load_image_by_name, load_image_by_task_id
         if not image_name and not task_id:
             print("Specify either IMAGE-NAME or TASK-ID")
             sys.exit(1)
         try:
             if task_id:
-                ok = load_image_by_task_id(task_id)
+                ok = load_image_by_task_id(task_id, tag)
             else:
-                ok = load_image_by_name(image_name)
+                ok = load_image_by_name(image_name, tag)
             if not ok:
                 sys.exit(1)
         except Exception:

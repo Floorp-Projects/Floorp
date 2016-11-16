@@ -115,8 +115,8 @@ class FakeEncoderTask : public GMPTask {
                   GMPVideoFrameType type)
       : encoder_(encoder), frame_(frame), type_(type) {}
 
-  virtual void Run();
-  virtual void Destroy() { delete this; }
+  void Run() override;
+  void Destroy() override { delete this; }
 
   FakeVideoEncoder* encoder_;
   GMPVideoi420Frame* frame_;
@@ -129,22 +129,22 @@ class FakeVideoEncoder : public GMPVideoEncoder {
     host_ (hostAPI),
     callback_ (NULL) {}
 
-  virtual void InitEncode (const GMPVideoCodec& codecSettings,
-                             const uint8_t* aCodecSpecific,
-                             uint32_t aCodecSpecificSize,
-                             GMPVideoEncoderCallback* callback,
-                             int32_t numberOfCores,
-                             uint32_t maxPayloadSize) {
+  void InitEncode (const GMPVideoCodec& codecSettings,
+                   const uint8_t* aCodecSpecific,
+                   uint32_t aCodecSpecificSize,
+                   GMPVideoEncoderCallback* callback,
+                   int32_t numberOfCores,
+                   uint32_t maxPayloadSize) override {
     callback_ = callback;
 
     GMPLOG (GL_INFO, "Initialized encoder");
   }
 
-  virtual void Encode (GMPVideoi420Frame* inputImage,
-                         const uint8_t* aCodecSpecificInfo,
-                         uint32_t aCodecSpecificInfoLength,
-                         const GMPVideoFrameType* aFrameTypes,
-                         uint32_t aFrameTypesLength) {
+  void Encode (GMPVideoi420Frame* inputImage,
+               const uint8_t* aCodecSpecificInfo,
+               uint32_t aCodecSpecificInfoLength,
+               const GMPVideoFrameType* aFrameTypes,
+               uint32_t aFrameTypesLength) override {
     GMPLOG (GL_DEBUG,
             __FUNCTION__
             << " size="
@@ -233,16 +233,16 @@ class FakeVideoEncoder : public GMPVideoEncoder {
     GMPLOG (GL_DEBUG, "Callback called");
   }
 
-  virtual void SetChannelParameters (uint32_t aPacketLoss, uint32_t aRTT) {
+  void SetChannelParameters (uint32_t aPacketLoss, uint32_t aRTT) override {
   }
 
-  virtual void SetRates (uint32_t aNewBitRate, uint32_t aFrameRate) {
+  void SetRates (uint32_t aNewBitRate, uint32_t aFrameRate) override {
   }
 
-  virtual void SetPeriodicKeyFrames (bool aEnable) {
+  void SetPeriodicKeyFrames (bool aEnable) override {
   }
 
-  virtual void EncodingComplete() {
+  void EncodingComplete() override {
     delete this;
   }
 
@@ -273,8 +273,8 @@ class FakeDecoderTask : public GMPTask {
                   int64_t time)
       : decoder_(decoder), frame_(frame), time_(time) {}
 
-  virtual void Run();
-  virtual void Destroy() { delete this; }
+  void Run() override;
+  void Destroy() override { delete this; }
 
   FakeVideoDecoder* decoder_;
   GMPVideoEncodedFrame* frame_;
@@ -287,37 +287,36 @@ class FakeVideoDecoder : public GMPVideoDecoder {
     host_ (hostAPI),
     callback_ (NULL) {}
 
-  virtual ~FakeVideoDecoder() {
-  }
+  ~FakeVideoDecoder() override = default;
 
-  virtual void InitDecode (const GMPVideoCodec& codecSettings,
-                             const uint8_t* aCodecSpecific,
-                             uint32_t aCodecSpecificSize,
-                             GMPVideoDecoderCallback* callback,
-                             int32_t coreCount) {
+  void InitDecode (const GMPVideoCodec& codecSettings,
+                   const uint8_t* aCodecSpecific,
+                   uint32_t aCodecSpecificSize,
+                   GMPVideoDecoderCallback* callback,
+                   int32_t coreCount) override {
     GMPLOG (GL_INFO, "InitDecode");
 
     callback_ = callback;
   }
 
-  virtual void Decode (GMPVideoEncodedFrame* inputFrame,
-                         bool missingFrames,
-                         const uint8_t* aCodecSpecificInfo,
-                         uint32_t aCodecSpecificInfoLength,
-                         int64_t renderTimeMs = -1) {
+  void Decode (GMPVideoEncodedFrame* inputFrame,
+               bool missingFrames,
+               const uint8_t* aCodecSpecificInfo,
+               uint32_t aCodecSpecificInfoLength,
+               int64_t renderTimeMs = -1) override {
     GMPLOG (GL_DEBUG, __FUNCTION__
             << "Decoding frame size=" << inputFrame->Size()
             << " timestamp=" << inputFrame->TimeStamp());
     g_platform_api->runonmainthread(new FakeDecoderTask(this, inputFrame, renderTimeMs));
   }
 
-  virtual void Reset() {
+  void Reset() override {
   }
 
-  virtual void Drain() {
+  void Drain() override {
   }
 
-  virtual void DecodingComplete() {
+  void DecodingComplete() override {
     delete this;
   }
 

@@ -31,7 +31,7 @@ DeviceStorageRequestChild::~DeviceStorageRequestChild() {
   MOZ_COUNT_DTOR(DeviceStorageRequestChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 DeviceStorageRequestChild::
   Recv__delete__(const DeviceStorageResponseValue& aValue)
 {
@@ -143,7 +143,7 @@ DeviceStorageRequestChild::
       break;
     }
   }
-  return true;
+  return IPC_OK();
 }
 
 } // namespace devicestorage

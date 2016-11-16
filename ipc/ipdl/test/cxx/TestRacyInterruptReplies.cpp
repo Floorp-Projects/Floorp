@@ -32,7 +32,7 @@ TestRacyInterruptRepliesParent::Main()
         fail("sending ChildStart");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyInterruptRepliesParent::RecvA_()
 {
     int replyNum = -1;
@@ -47,10 +47,10 @@ TestRacyInterruptRepliesParent::RecvA_()
     if (2 != replyNum)
         fail("this should have been the second reply to R()");
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyInterruptRepliesParent::Answer_R(int* replyNum)
 {
     *replyNum = ++mReplyNum;
@@ -59,7 +59,7 @@ TestRacyInterruptRepliesParent::Answer_R(int* replyNum)
         if (!Send_A())
             fail("sending _A()");
 
-    return true;
+    return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------
@@ -75,7 +75,7 @@ TestRacyInterruptRepliesChild::~TestRacyInterruptRepliesChild()
     MOZ_COUNT_DTOR(TestRacyInterruptRepliesChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyInterruptRepliesChild::AnswerR_(int* replyNum)
 {
     *replyNum = ++mReplyNum;
@@ -83,10 +83,10 @@ TestRacyInterruptRepliesChild::AnswerR_(int* replyNum)
     if (1 == *replyNum)
         SendA_();
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyInterruptRepliesChild::RecvChildTest()
 {
     int replyNum = -1;
@@ -98,10 +98,10 @@ TestRacyInterruptRepliesChild::RecvChildTest()
 
     Close();
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyInterruptRepliesChild::Recv_A()
 {
     int replyNum = -1;
@@ -112,7 +112,7 @@ TestRacyInterruptRepliesChild::Recv_A()
     if (2 != replyNum)
         fail("this should have been the second reply to R()");
 
-    return true;
+    return IPC_OK();
 }
 
 } // namespace _ipdltest

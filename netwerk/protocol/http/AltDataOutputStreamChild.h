@@ -26,7 +26,7 @@ public:
   void AddIPDLReference();
   void ReleaseIPDLReference();
   // Saves an error code which will be reported to the writer on the next call.
-  virtual bool RecvError(const nsresult& err) override;
+  virtual mozilla::ipc::IPCResult RecvError(const nsresult& err) override;
 
 private:
   virtual ~AltDataOutputStreamChild();

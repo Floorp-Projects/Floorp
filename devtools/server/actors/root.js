@@ -47,7 +47,7 @@ loader.lazyGetter(this, "ppmm", () => {
  *       reply whose value is the name of an actor constructed by
  *       |A[P]|.
  *
- *     - onShutdown: a function to call when the root actor is disconnected.
+ *     - onShutdown: a function to call when the root actor is destroyed.
  *
  * Instance properties:
  *
@@ -80,7 +80,7 @@ loader.lazyGetter(this, "ppmm", () => {
  * The root actor registers an 'onListChanged' handler on the appropriate
  * list when it may need to send the client 'tabListChanged' notifications,
  * and is careful to remove the handler whenever it does not need to send
- * such notifications (including when it is disconnected). This means that
+ * such notifications (including when it is destroyed). This means that
  * live list implementations can use the state of the handler property (set
  * or null) to install and remove observers and event listeners.
  *
@@ -103,6 +103,7 @@ function RootActor(aConnection, aParameters) {
   this.conn.addActorPool(this._globalActorPool);
 
   this._chromeActor = null;
+  this._processActors = new Map();
 }
 
 RootActor.prototype = {
@@ -205,9 +206,9 @@ RootActor.prototype = {
   },
 
   /**
-   * Disconnects the actor from the browser window.
+   * Destroys the actor from the browser window.
    */
-  disconnect: function () {
+  destroy: function () {
     /* Tell the live lists we aren't watching any more. */
     if (this._parameters.tabList) {
       this._parameters.tabList.onListChanged = null;
@@ -230,6 +231,7 @@ RootActor.prototype = {
     this._globalActorPool = null;
     this._parameters = null;
     this._chromeActor = null;
+    this._processActors.clear();
   },
 
   /* The 'listTabs' request and the 'tabListChanged' notification. */
@@ -471,13 +473,24 @@ RootActor.prototype = {
 
       return { form: this._chromeActor.form() };
     } else {
-      let mm = ppmm.getChildAt(aRequest.id);
+      let { id } = aRequest;
+      let mm = ppmm.getChildAt(id);
       if (!mm) {
         return { error: "noProcess",
-                 message: "There is no process with id '" + aRequest.id + "'." };
+                 message: "There is no process with id '" + id + "'." };
       }
-      return DebuggerServer.connectToContent(this.conn, mm)
-                           .then(form => ({ form }));
+      let form = this._processActors.get(id);
+      if (form) {
+        return { form };
+      }
+      let onDestroy = () => {
+        this._processActors.delete(id);
+      };
+      return DebuggerServer.connectToContent(this.conn, mm, onDestroy)
+        .then(form => {
+          this._processActors.set(id, form);
+          return { form };
+        });
     }
   },
 

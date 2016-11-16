@@ -1100,6 +1100,14 @@ GeckoMediaPluginServiceParent::ClonePlugin(const GMPParent* aOriginal)
 RefPtr<GenericPromise>
 GeckoMediaPluginServiceParent::AddOnGMPThread(nsString aDirectory)
 {
+#ifdef XP_WIN
+  // On Windows our various test harnesses often pass paths with UNIX dir
+  // separators, or a mix of dir separators. NS_NewLocalFile() can't handle
+  // that, so fixup to match the platform's expected format. This makes us
+  // more robust in the face of bad input and test harnesses changing...
+  std::replace(aDirectory.BeginWriting(), aDirectory.EndWriting(), '/', '\\');
+#endif
+
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   nsCString dir = NS_ConvertUTF16toUTF8(aDirectory);
   RefPtr<AbstractThread> thread(GetAbstractGMPThread());
@@ -1112,6 +1120,7 @@ GeckoMediaPluginServiceParent::AddOnGMPThread(nsString aDirectory)
   nsCOMPtr<nsIFile> directory;
   nsresult rv = NS_NewLocalFile(aDirectory, false, getter_AddRefs(directory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOGD(("%s::%s: failed to create nsIFile for dir=%s rv=%x", __CLASS__, __FUNCTION__, dir.get(), rv));
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
@@ -1955,7 +1964,7 @@ GMPServiceParent::~GMPServiceParent()
                       &GeckoMediaPluginServiceParent::ServiceUserDestroyed));
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPServiceParent::RecvSelectGMP(const nsCString& aNodeId,
                                 const nsCString& aAPI,
                                 nsTArray<nsCString>&& aTags,
@@ -1964,7 +1973,7 @@ GMPServiceParent::RecvSelectGMP(const nsCString& aNodeId,
 {
   if (mService->IsShuttingDown()) {
     *aOutRv = NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-    return true;
+    return IPC_OK();
   }
 
   RefPtr<GMPParent> gmp = mService->SelectPluginForAPI(aNodeId, aAPI, aTags);
@@ -1978,10 +1987,10 @@ GMPServiceParent::RecvSelectGMP(const nsCString& aNodeId,
   nsCString api = aTags[0];
   LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)this, (void *)gmp, api.get()));
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPServiceParent::RecvLaunchGMP(const uint32_t& aPluginId,
                                 nsTArray<ProcessId>&& aAlreadyBridgedTo,
                                 ProcessId* aOutProcessId,
@@ -1991,25 +2000,28 @@ GMPServiceParent::RecvLaunchGMP(const uint32_t& aPluginId,
   *aOutRv = NS_OK;
   if (mService->IsShuttingDown()) {
     *aOutRv = NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-    return true;
+    return IPC_OK();
   }
 
   RefPtr<GMPParent> gmp(mService->GetById(aPluginId));
   if (!gmp) {
     *aOutRv = NS_ERROR_FAILURE;
-    return true;
+    return IPC_OK();
   }
 
   if (!gmp->EnsureProcessLoaded(aOutProcessId)) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   *aOutDisplayName = gmp->GetDisplayName();
 
-  return aAlreadyBridgedTo.Contains(*aOutProcessId) || gmp->Bridge(this);
+  if (!(aAlreadyBridgedTo.Contains(*aOutProcessId) || gmp->Bridge(this))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPServiceParent::RecvGetGMPNodeId(const nsString& aOrigin,
                                    const nsString& aTopLevelOrigin,
                                    const nsString& aGMPName,
@@ -2018,7 +2030,10 @@ GMPServiceParent::RecvGetGMPNodeId(const nsString& aOrigin,
 {
   nsresult rv = mService->GetNodeId(aOrigin, aTopLevelOrigin, aGMPName,
                                     aInPrivateBrowsing, *aID);
-  return NS_SUCCEEDED(rv);
+  if (!NS_SUCCEEDED(rv)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 class DeleteGMPServiceParent : public mozilla::Runnable

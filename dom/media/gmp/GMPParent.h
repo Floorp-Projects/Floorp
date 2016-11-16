@@ -186,21 +186,21 @@ private:
   PCrashReporterParent* AllocPCrashReporterParent(const NativeThreadId& aThread) override;
   bool DeallocPCrashReporterParent(PCrashReporterParent* aCrashReporter) override;
 
-  bool RecvPGMPStorageConstructor(PGMPStorageParent* actor) override;
+  mozilla::ipc::IPCResult RecvPGMPStorageConstructor(PGMPStorageParent* actor) override;
   PGMPStorageParent* AllocPGMPStorageParent() override;
   bool DeallocPGMPStorageParent(PGMPStorageParent* aActor) override;
 
   PGMPContentParent* AllocPGMPContentParent(Transport* aTransport,
                                             ProcessId aOtherPid) override;
 
-  bool RecvPGMPTimerConstructor(PGMPTimerParent* actor) override;
+  mozilla::ipc::IPCResult RecvPGMPTimerConstructor(PGMPTimerParent* actor) override;
   PGMPTimerParent* AllocPGMPTimerParent() override;
   bool DeallocPGMPTimerParent(PGMPTimerParent* aActor) override;
 
-  bool RecvAsyncShutdownComplete() override;
-  bool RecvAsyncShutdownRequired() override;
+  mozilla::ipc::IPCResult RecvAsyncShutdownComplete() override;
+  mozilla::ipc::IPCResult RecvAsyncShutdownRequired() override;
 
-  bool RecvPGMPContentChildDestroyed() override;
+  mozilla::ipc::IPCResult RecvPGMPContentChildDestroyed() override;
   bool IsUsed()
   {
     return mGMPContentChildCount > 0;

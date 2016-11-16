@@ -46,15 +46,6 @@ var ReflowActor = exports.ReflowActor = protocol.ActorClassWithSpec(reflowSpec, 
     this._isStarted = false;
   },
 
-  /**
-   * The reflow actor is the first (and last) in its hierarchy to use
-   * protocol.js so it doesn't have a parent protocol actor that takes care of
-   * its lifetime. So it needs a disconnect method to cleanup.
-   */
-  disconnect: function () {
-    this.destroy();
-  },
-
   destroy: function () {
     this.stop();
     releaseLayoutChangesObserver(this.tabActor);

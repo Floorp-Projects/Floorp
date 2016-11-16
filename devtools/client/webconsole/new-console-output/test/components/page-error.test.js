@@ -28,6 +28,10 @@ describe("PageError component:", () => {
   it("renders", () => {
     const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
     const wrapper = render(PageError({ message, serviceContainer }));
+    const L10n = require("devtools/client/webconsole/new-console-output/test/fixtures/L10n");
+    const { timestampString } = new L10n();
+
+    expect(wrapper.find(".timestamp").text()).toBe(timestampString(message.timeStamp));
 
     expect(wrapper.find(".message-body").text())
       .toBe("ReferenceError: asdf is not defined[Learn More]");
@@ -39,7 +43,7 @@ describe("PageError component:", () => {
     // There should be the location.
     const locationLink = wrapper.find(`.message-location`);
     expect(locationLink.length).toBe(1);
-    // @TODO Will likely change. See https://github.com/devtools-html/gecko-dev/issues/285
+    // @TODO Will likely change. See bug 1307952
     expect(locationLink.text()).toBe("test-tempfile.js:3:5");
   });
 

@@ -21,10 +21,10 @@ ImageContainerParent::~ImageContainerParent()
   }
 }
 
-bool ImageContainerParent::RecvAsyncDelete()
+mozilla::ipc::IPCResult ImageContainerParent::RecvAsyncDelete()
 {
   Unused << PImageContainerParent::Send__delete__(this);
-  return true;
+  return IPC_OK();
 }
 
 } // namespace layers

@@ -25,7 +25,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
-#include "GMPService.h"
+#include "GMPCrashHelper.h"
 
 namespace mozilla {
 

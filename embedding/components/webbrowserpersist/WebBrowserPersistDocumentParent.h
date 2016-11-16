@@ -45,11 +45,11 @@ public:
     using Attrs = WebBrowserPersistDocumentAttrs;
 
     // IPDL methods:
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvAttributes(const Attrs& aAttrs,
                    const OptionalInputStreamParams& aPostData,
                    nsTArray<FileDescriptor>&& aPostFiles) override;
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvInitFailure(const nsresult& aFailure) override;
 
     virtual PWebBrowserPersistResourcesParent*

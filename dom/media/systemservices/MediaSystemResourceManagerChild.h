@@ -48,8 +48,8 @@ public:
   }
 
 protected:
-  bool RecvResponse(const uint32_t& aId,
-                    const bool& aSuccess) override;
+  mozilla::ipc::IPCResult RecvResponse(const uint32_t& aId,
+                                       const bool& aSuccess) override;
 
 private:
   void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;

@@ -1,5 +1,5 @@
 {
-    "llvm_revision": "262971",
+    "llvm_revision": "283955",
     "stages": "3",
     "build_libcxx": false,
     "build_type": "Release",
@@ -9,8 +9,8 @@
     "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
     "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
     "python_path": "c:/mozilla-build/python/python.exe",
-    "cc": "c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/BIN/amd64/cl.exe",
-    "cxx": "c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/BIN/amd64/cl.exe",
+    "cc": "cl.exe",
+    "cxx": "cl.exe",
     "patches": {
     }
 }

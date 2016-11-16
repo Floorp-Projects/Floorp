@@ -88,7 +88,7 @@ CacheStorageParent::DeallocPCacheOpParent(PCacheOpParent* aActor)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 CacheStorageParent::RecvPCacheOpConstructor(PCacheOpParent* aActor,
                                             const CacheOpArgs& aOpArgs)
 {
@@ -97,29 +97,29 @@ CacheStorageParent::RecvPCacheOpConstructor(PCacheOpParent* aActor,
   if (mVerifier) {
     MOZ_ASSERT(!mManagerId);
     actor->WaitForVerification(mVerifier);
-    return true;
+    return IPC_OK();
   }
 
   if (NS_WARN_IF(NS_FAILED(mVerifiedStatus))) {
     ErrorResult result(mVerifiedStatus);
     Unused << CacheOpParent::Send__delete__(actor, result, void_t());
     result.SuppressException();
-    return true;
+    return IPC_OK();
   }
 
   MOZ_ASSERT(mManagerId);
   actor->Execute(mManagerId);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 CacheStorageParent::RecvTeardown()
 {
   if (!Send__delete__(this)) {
     // child process is gone, warn and allow actor to clean up normally
     NS_WARNING("CacheStorage failed to delete actor.");
   }
-  return true;
+  return IPC_OK();
 }
 
 void

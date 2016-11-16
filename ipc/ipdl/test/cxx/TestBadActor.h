@@ -52,7 +52,7 @@ public:
 
 protected:
   virtual void ActorDestroy(ActorDestroyReason why) override {}
-  virtual bool RecvPing() override;
+  virtual mozilla::ipc::IPCResult RecvPing() override;
 };
 
 class TestBadActorChild
@@ -73,7 +73,7 @@ protected:
     return true;
   }
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvPTestBadActorSubConstructor(PTestBadActorSubChild* actor);
 };
 

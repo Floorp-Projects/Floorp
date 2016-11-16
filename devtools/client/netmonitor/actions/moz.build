@@ -6,5 +6,6 @@
 DevToolsModules(
     'filters.js',
     'index.js',
-    'sidebar.js',
+    'requests.js',
+    'ui.js',
 )

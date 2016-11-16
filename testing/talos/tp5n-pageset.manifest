@@ -1,0 +1,9 @@
+[
+    {
+        "filename": "tp5n.zip",
+        "size": 81753769,
+        "digest": "7e74bc532d220fa2484f84bd7c2659da7d2ae3aa0bc225ba63e3db70dc0c0697503427209098afa85e235397c4ec58cd488cab7b3435e8079583d3994fff8326",
+        "algorithm": "sha512",
+        "unpack": false
+    }
+]

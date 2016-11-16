@@ -92,7 +92,7 @@ CookieServiceParent::ActorDestroy(ActorDestroyReason aWhy)
   // non-refcounted class.
 }
 
-bool
+mozilla::ipc::IPCResult
 CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
                                          const bool& aIsForeign,
                                          const bool& aFromHttp,
@@ -100,21 +100,21 @@ CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
                                          nsCString* aResult)
 {
   if (!mCookieService)
-    return true;
+    return IPC_OK();
 
   // Deserialize URI. Having a host URI is mandatory and should always be
   // provided by the child; thus we consider failure fatal.
   nsCOMPtr<nsIURI> hostURI = DeserializeURI(aHost);
   if (!hostURI)
-    return false;
+    return IPC_FAIL_NO_REASON(this);
 
   bool isPrivate = aAttrs.mPrivateBrowsingId > 0;
   mCookieService->GetCookieStringInternal(hostURI, aIsForeign, aFromHttp, aAttrs,
                                           isPrivate, *aResult);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
                                          const bool& aIsForeign,
                                          const nsCString& aCookieString,
@@ -123,13 +123,13 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
                                          const NeckoOriginAttributes& aAttrs)
 {
   if (!mCookieService)
-    return true;
+    return IPC_OK();
 
   // Deserialize URI. Having a host URI is mandatory and should always be
   // provided by the child; thus we consider failure fatal.
   nsCOMPtr<nsIURI> hostURI = DeserializeURI(aHost);
   if (!hostURI)
-    return false;
+    return IPC_FAIL_NO_REASON(this);
 
   bool isPrivate = aAttrs.mPrivateBrowsingId > 0;
 
@@ -149,7 +149,7 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
   mCookieService->SetCookieStringInternal(hostURI, aIsForeign, cookieString,
                                           aServerTime, aFromHttp, aAttrs,
                                           isPrivate, dummyChannel);
-  return true;
+  return IPC_OK();
 }
 
 } // namespace net

@@ -68,7 +68,7 @@ WriteRecord(const std::string& aRecordName,
             GMPTask* aOnFailure)
 {
   GMPRecord* record;
-  WriteRecordClient* client = new WriteRecordClient();
+  auto* client = new WriteRecordClient();
   auto err = GMPOpenRecord(aRecordName.c_str(),
                            aRecordName.size(),
                            &record,
@@ -139,7 +139,7 @@ ReadRecord(const std::string& aRecordName,
 {
   MOZ_ASSERT(aContinuation);
   GMPRecord* record;
-  ReadRecordClient* client = new ReadRecordClient();
+  auto* client = new ReadRecordClient();
   auto err = GMPOpenRecord(aRecordName.c_str(),
                            aRecordName.size(),
                            &record,

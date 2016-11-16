@@ -35,9 +35,9 @@ public:
   void NPP_URLNotify(NPReason reason);
 
 private:
-  virtual bool Recv__delete__(const NPReason& reason) override;
+  virtual mozilla::ipc::IPCResult Recv__delete__(const NPReason& reason) override;
 
-  bool RecvRedirectNotify(const nsCString& url, const int32_t& status) override;
+  mozilla::ipc::IPCResult RecvRedirectNotify(const nsCString& url, const int32_t& status) override;
 
   /**
    * If a stream is created for this this URLNotify, we associate the objects

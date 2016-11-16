@@ -42,10 +42,6 @@ var PerformanceEntriesActor = ActorClassWithSpec(performanceSpec, {
     }
   },
 
-  disconnect: function () {
-    this.destroy();
-  },
-
   destroy: function () {
     this.stop();
     Actor.prototype.destroy.call(this);

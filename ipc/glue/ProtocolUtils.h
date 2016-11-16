@@ -24,6 +24,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/UniquePtr.h"
 #include "MainThreadUtils.h"
 
@@ -208,6 +209,26 @@ private:
 };
 
 typedef IPCMessageStart ProtocolId;
+
+#define IPC_OK() mozilla::ipc::IPCResult::Ok()
+#define IPC_FAIL(actor, why) mozilla::ipc::IPCResult::Fail(WrapNotNull(actor), __func__, (why))
+#define IPC_FAIL_NO_REASON(actor) mozilla::ipc::IPCResult::Fail(WrapNotNull(actor), __func__)
+
+/**
+ * All message deserializer and message handler should return this
+ * type via above macros. We use a less generic name here to avoid
+ * conflict with mozilla::Result because we have quite a few using
+ * namespace mozilla::ipc; in the code base.
+ */
+class IPCResult {
+public:
+    static IPCResult Ok() { return IPCResult(true); }
+    static IPCResult Fail(NotNull<IProtocol*> aActor, const char* aWhere, const char* aWhy = "");
+    MOZ_IMPLICIT operator bool() const { return mSuccess; }
+private:
+    explicit IPCResult(bool aResult) : mSuccess(aResult) {}
+    bool mSuccess;
+};
 
 template<class PFooSide>
 class Endpoint;

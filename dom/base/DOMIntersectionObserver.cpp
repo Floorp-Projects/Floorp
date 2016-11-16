@@ -123,8 +123,8 @@ DOMIntersectionObserver::SetRootMargin(const nsAString& aString)
 
   mRootMargin = value.GetRectValue();
 
-  for (uint32_t i = 0; i < ArrayLength(nsCSSRect::sides); ++i) {
-    nsCSSValue value = mRootMargin.*nsCSSRect::sides[i];
+  for (auto side : nsCSSRect::sides) {
+    nsCSSValue& value = mRootMargin.*side;
     if (!(value.IsPixelLengthUnit() || value.IsPercentLengthUnit())) {
       return false;
     }

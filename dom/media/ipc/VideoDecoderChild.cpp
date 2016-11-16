@@ -33,7 +33,7 @@ VideoDecoderChild::~VideoDecoderChild()
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 }
 
-bool
+mozilla::ipc::IPCResult
 VideoDecoderChild::RecvOutput(const VideoDataIPDL& aData)
 {
   AssertOnManagerThread();
@@ -55,40 +55,40 @@ VideoDecoderChild::RecvOutput(const VideoDataIPDL& aData)
   if (mCallback) {
     mCallback->Output(video);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VideoDecoderChild::RecvInputExhausted()
 {
   AssertOnManagerThread();
   if (mCallback) {
     mCallback->InputExhausted();
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VideoDecoderChild::RecvDrainComplete()
 {
   AssertOnManagerThread();
   if (mCallback) {
     mCallback->DrainComplete();
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VideoDecoderChild::RecvError(const nsresult& aError)
 {
   AssertOnManagerThread();
   if (mCallback) {
     mCallback->Error(aError);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VideoDecoderChild::RecvInitComplete(const bool& aHardware, const nsCString& aHardwareReason)
 {
   AssertOnManagerThread();
@@ -96,15 +96,15 @@ VideoDecoderChild::RecvInitComplete(const bool& aHardware, const nsCString& aHar
   mInitialized = true;
   mIsHardwareAccelerated = aHardware;
   mHardwareAcceleratedReason = aHardwareReason;
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VideoDecoderChild::RecvInitFailed(const nsresult& aReason)
 {
   AssertOnManagerThread();
   mInitPromise.Reject(aReason, __func__);
-  return true;
+  return IPC_OK();
 }
 
 void
