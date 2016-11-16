@@ -2175,12 +2175,24 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         bool handled = false, canceled = false;
         rv = TryToJoinBlocks(*leftNode->AsContent(), *rightNode->AsContent(),
                              &canceled, &handled);
-        // TODO: If it does nothing and previous or next node is a text node,
-        //       we should modify it.
-        *aHandled = true;
+        *aHandled |= handled;
         *aCancel |= canceled;
         NS_ENSURE_SUCCESS(rv, rv);
       }
+
+      // If TryToJoinBlocks() didn't handle it  and it's not canceled,
+      // user may want to modify the start leaf node or the last leaf node
+      // of the block.
+      if (!*aHandled && !*aCancel && leafNode != startNode) {
+        int32_t offset =
+          aAction == nsIEditor::ePrevious ?
+            static_cast<int32_t>(leafNode->Length()) : 0;
+        aSelection->Collapse(leafNode, offset);
+        return WillDeleteSelection(aSelection, aAction, aStripWrappers,
+                                   aCancel, aHandled);
+      }
+
+      // Otherwise, we must have deleted the selection as user expected.
       aSelection->Collapse(selPointNode, selPointOffset);
       return NS_OK;
     }
