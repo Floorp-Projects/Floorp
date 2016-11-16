@@ -1668,6 +1668,9 @@ ssl_IsValidDHEShare(const SECItem *dh_p, const SECItem *dh_Ys)
     unsigned int commonPart;
     int cmp;
 
+    if (dh_p->len == 0 || dh_Ys->len == 0) {
+        return PR_FALSE;
+    }
     /* Check that the prime is at least odd. */
     if ((dh_p->data[dh_p->len - 1] & 0x01) == 0) {
         return PR_FALSE;

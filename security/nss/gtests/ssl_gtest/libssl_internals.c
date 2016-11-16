@@ -94,6 +94,22 @@ PRInt32 SSLInt_CountTls13CipherSpecs(PRFileDesc *fd) {
   return ct;
 }
 
+void SSLInt_PrintTls13CipherSpecs(PRFileDesc *fd) {
+  PRCList *cur_p;
+
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return;
+  }
+
+  fprintf(stderr, "Cipher specs\n");
+  for (cur_p = PR_NEXT_LINK(&ss->ssl3.hs.cipherSpecs);
+       cur_p != &ss->ssl3.hs.cipherSpecs; cur_p = PR_NEXT_LINK(cur_p)) {
+    ssl3CipherSpec *spec = (ssl3CipherSpec *)cur_p;
+    fprintf(stderr, "  %s\n", spec->phase);
+  }
+}
+
 /* Force a timer expiry by backdating when the timer was started.
  * We could set the remaining time to 0 but then backoff would not
  * work properly if we decide to test it. */
@@ -122,7 +138,7 @@ PRBool SSLInt_CheckSecretsDestroyed(PRFileDesc *fd) {
   }
 
   CHECK_SECRET(currentSecret);
-  CHECK_SECRET(resumptionPsk);
+  CHECK_SECRET(resumptionMasterSecret);
   CHECK_SECRET(dheSecret);
   CHECK_SECRET(clientEarlyTrafficSecret);
   CHECK_SECRET(clientHsTrafficSecret);
