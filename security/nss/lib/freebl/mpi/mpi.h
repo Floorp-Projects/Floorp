@@ -12,6 +12,9 @@
 
 #include "mpi-config.h"
 
+#include "seccomon.h"
+SEC_BEGIN_PROTOS
+
 #if MP_DEBUG
 #undef MP_IOFUNC
 #define MP_IOFUNC 1
@@ -273,7 +276,6 @@ void freebl_cpuid(unsigned long op, unsigned long *eax,
     if (MP_OKAY > (res = (x))) \
     goto CLEANUP
 
-#if defined(MP_API_COMPATIBLE)
 #define NEG MP_NEG
 #define ZPOS MP_ZPOS
 #define DIGIT_MAX MP_DIGIT_MAX
@@ -300,6 +302,12 @@ void freebl_cpuid(unsigned long op, unsigned long *eax,
 #else
 #define ARGCHK(X, Y) /*  */
 #endif
-#endif /* defined MP_API_COMPATIBLE */
+
+#ifdef CT_VERIF
+void mp_taint(mp_int *mp);
+void mp_untaint(mp_int *mp);
+#endif
+
+SEC_END_PROTOS
 
 #endif /* end _H_MPI_ */

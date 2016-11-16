@@ -33,7 +33,6 @@ divide:test_div:test full division
 expt-digit:test_expt_d:test digit exponentiation
 expt:test_expt:test full exponentiation
 expt-2:test_2expt:test power-of-two exponentiation
-square-root:test_sqrt:test integer square root function
 modulo-digit:test_mod_d:test digit modular reduction
 modulo:test_mod:test full modular reduction
 mod-add:test_addmod:test modular addition

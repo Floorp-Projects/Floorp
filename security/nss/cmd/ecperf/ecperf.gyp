@@ -22,7 +22,7 @@
   ],
   'target_defaults': {
     'include_dirs': [
-      '../../nss/lib/softoken'
+      '<(DEPTH)/lib/softoken',
     ],
     'defines': [
       'NSS_USE_STATIC_LIBS'

@@ -14,6 +14,8 @@ typedef enum {
     EphemeralSharedSecret
 } SharedSecretType;
 
+#define TLS13_MAX_FINISHED_SIZE 64
+
 SECStatus tls13_UnprotectRecord(
     sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *plaintext,
     SSL3AlertDescription *alert);
@@ -34,7 +36,10 @@ PRBool tls13_InHsState(sslSocket *ss, ...);
 #define TLS13_IN_HS_STATE(ss, ...) \
     tls13_InHsState(ss, __VA_ARGS__, wait_invalid)
 
-SSLHashType tls13_GetHash(sslSocket *ss);
+SSLHashType tls13_GetHashForCipherSuite(ssl3CipherSuite suite);
+SSLHashType tls13_GetHash(const sslSocket *ss);
+unsigned int tls13_GetHashSizeForHash(SSLHashType hash);
+unsigned int tls13_GetHashSize(const sslSocket *ss);
 CK_MECHANISM_TYPE tls13_GetHkdfMechanism(sslSocket *ss);
 void tls13_FatalError(sslSocket *ss, PRErrorCode prError,
                       SSL3AlertDescription desc);
@@ -43,6 +48,10 @@ SECStatus tls13_MaybeDo0RTTHandshake(sslSocket *ss);
 PRBool tls13_AllowPskCipher(const sslSocket *ss,
                             const ssl3CipherSuiteDef *cipher_def);
 PRBool tls13_PskSuiteEnabled(sslSocket *ss);
+SECStatus tls13_ComputePskBinder(sslSocket *ss, PRBool sending,
+                                 unsigned int prefixLength,
+                                 PRUint8 *output, unsigned int *outputLen,
+                                 unsigned int maxOutputLen);
 SECStatus tls13_HandleClientHelloPart2(sslSocket *ss,
                                        const SECItem *suites,
                                        sslSessionID *sid);
