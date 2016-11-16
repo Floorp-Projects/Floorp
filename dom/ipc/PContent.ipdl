@@ -105,8 +105,6 @@ union ChromeRegistryItem
 namespace mozilla {
 namespace dom {
 
-// Used on Android/B2G to pass the list of fonts on the device
-// to the child process
 struct FontListEntry {
     nsString  familyName;
     nsString  faceName;
@@ -116,15 +114,6 @@ struct FontListEntry {
     uint8_t   italic;
     uint8_t   index;
     bool      isHidden;
-};
-
-// Used on Mac OS X to pass the list of font families (not faces)
-// from chrome to content processes.
-// The entryType field distinguishes several types of font family
-// record; see gfxMacPlatformFontList.h for values and meaning.
-struct FontFamilyListEntry {
-    nsString familyName;
-    uint8_t  entryType;
 };
 
 struct DeviceStorageFreeSpaceParams
@@ -703,8 +692,7 @@ parent:
                  bool haveBidiKeyboards, nsString[] dictionaries,
                  ClipboardCapabilities clipboardCaps,
                  DomainPolicyClone domainPolicy,
-                 StructuredCloneData initialData,
-                 FontFamilyListEntry[] fontFamilies /* used on MacOSX only */);
+                 StructuredCloneData initialData);
 
     sync CreateChildProcess(IPCTabContext context,
                             ProcessPriority priority,

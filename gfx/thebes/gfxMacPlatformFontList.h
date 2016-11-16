@@ -108,17 +108,6 @@ public:
                           gfxFontStyle &aFontStyle,
                           float aDevPixPerCSSPixel);
 
-    // Values for the entryType field in FontFamilyListEntry records passed
-    // from chrome to content process.
-    enum FontFamilyEntryType {
-        kStandardFontFamily = 0, // a standard installed font family
-        kHiddenSystemFontFamily = 1, // hidden system family, not exposed to UI
-        kTextSizeSystemFontFamily = 2, // name of 'system' font at text sizes
-        kDisplaySizeSystemFontFamily = 3 // 'system' font at display sizes
-    };
-    void GetSystemFontFamilyList(
-        InfallibleTArray<mozilla::dom::FontFamilyListEntry>* aList);
-
 protected:
     virtual gfxFontFamily*
     GetDefaultFontForPlatform(const gfxFontStyle* aStyle) override;
@@ -164,8 +153,6 @@ private:
     // But CFStringRef and NSString* are the same thing anyway (they're
     // toll-free bridged).
     void AddFamily(CFStringRef aFamily);
-
-    void AddFamily(const nsAString& aFamilyName, bool aSystemFont);
 
 #ifdef MOZ_BUNDLED_FONTS
     void ActivateBundledFonts();
