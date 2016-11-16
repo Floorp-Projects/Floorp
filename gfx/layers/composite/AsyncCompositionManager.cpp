@@ -478,6 +478,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
     AccumulateLayerTransforms(layer->GetParent(), aTransformedSubtreeRoot,
                               ancestorTransform);
   }
+  ancestorTransform.NudgeToIntegersFixedEpsilon();
   MOZ_ASSERT(ancestorTransform.IsIdentity());
 #endif
 
@@ -488,6 +489,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
 #ifdef DEBUG
   Matrix4x4 localTransform;
   GetBaseTransform(layer, &localTransform);
+  localTransform.NudgeToIntegersFixedEpsilon();
   MOZ_ASSERT(localTransform.IsIdentity());
 #endif
 
