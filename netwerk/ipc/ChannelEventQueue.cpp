@@ -94,5 +94,20 @@ ChannelEventQueue::RetargetDeliveryTo(nsIEventTarget* aTargetThread)
   return NS_OK;
 }
 
+nsresult
+ChannelEventQueue::ResetDeliveryTarget()
+{
+  MutexAutoLock lock(mMutex);
+
+  MOZ_RELEASE_ASSERT(mEventQueue.IsEmpty());
+  MOZ_RELEASE_ASSERT(mSuspendCount == 0);
+  MOZ_RELEASE_ASSERT(!mSuspended);
+  MOZ_RELEASE_ASSERT(!mForced);
+  MOZ_RELEASE_ASSERT(!mFlushing);
+  mTargetThread = nullptr;
+
+  return NS_OK;
+}
+
 } // namespace net
 } // namespace mozilla
