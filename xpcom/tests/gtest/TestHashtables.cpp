@@ -144,9 +144,9 @@ class IFoo final : public nsISupports
 
       IFoo();
 
-      NS_IMETHOD_(MozExternalRefCountType) AddRef();
-      NS_IMETHOD_(MozExternalRefCountType) Release();
-      NS_IMETHOD QueryInterface( const nsIID&, void** );
+      NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
+      NS_IMETHOD_(MozExternalRefCountType) Release() override;
+      NS_IMETHOD QueryInterface( const nsIID&, void** ) override;
 
       NS_IMETHOD SetString(const nsACString& /*in*/ aString);
       NS_IMETHOD GetString(nsACString& /*out*/ aString);

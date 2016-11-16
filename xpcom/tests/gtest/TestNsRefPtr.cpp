@@ -28,9 +28,9 @@ public:
   // virtual dtor because Bar uses our Release()
   virtual ~Foo();
 
-  NS_IMETHOD_(MozExternalRefCountType) AddRef();
-  NS_IMETHOD_(MozExternalRefCountType) Release();
-  NS_IMETHOD QueryInterface( const nsIID&, void** );
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
+  NS_IMETHOD_(MozExternalRefCountType) Release() override;
+  NS_IMETHOD QueryInterface( const nsIID&, void** ) override;
   void MemberFunction( int, int*, int& );
   virtual void VirtualMemberFunction( int, int*, int& );
   virtual void VirtualConstMemberFunction( int, int*, int& ) const;
@@ -163,12 +163,12 @@ public:
 
 public:
   Bar();
-  virtual ~Bar();
+  ~Bar() override;
 
   NS_IMETHOD QueryInterface( const nsIID&, void** ) override;
 
-  virtual void VirtualMemberFunction( int, int*, int& ) override;
-  virtual void VirtualConstMemberFunction( int, int*, int& ) const override;
+  void VirtualMemberFunction( int, int*, int& ) override;
+  void VirtualConstMemberFunction( int, int*, int& ) const override;
 
   static int total_constructions_;
   static int total_destructions_;
