@@ -102,7 +102,7 @@ nsresult
 CreateIFoo( void** result )
 // a typical factory function (that calls AddRef)
 {
-  IFoo* foop = new IFoo;
+  auto* foop = new IFoo;
 
   foop->AddRef();
   *result = foop;
@@ -190,7 +190,7 @@ nsresult
 CreateIBar( void** result )
   // a typical factory function (that calls AddRef)
 {
-  IBar* barp = new IBar;
+  auto* barp = new IBar;
 
   barp->AddRef();
   *result = barp;
@@ -332,10 +332,10 @@ void Comparison()
 void DontAddRef()
 {
   {
-    IFoo* raw_foo1p = new IFoo;
+    auto* raw_foo1p = new IFoo;
     raw_foo1p->AddRef();
 
-    IFoo* raw_foo2p = new IFoo;
+    auto* raw_foo2p = new IFoo;
     raw_foo2p->AddRef();
 
     nsCOMPtr<IFoo> foo1p( dont_AddRef(raw_foo1p) );
