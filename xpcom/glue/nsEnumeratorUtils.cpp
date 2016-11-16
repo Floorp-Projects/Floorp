@@ -122,9 +122,7 @@ nsSingletonEnumerator::nsSingletonEnumerator(nsISupports* aValue)
   mConsumed = (mValue ? false : true);
 }
 
-nsSingletonEnumerator::~nsSingletonEnumerator()
-{
-}
+nsSingletonEnumerator::~nsSingletonEnumerator() = default;
 
 NS_IMPL_ISUPPORTS(nsSingletonEnumerator, nsISimpleEnumerator)
 
@@ -201,9 +199,7 @@ nsUnionEnumerator::nsUnionEnumerator(nsISimpleEnumerator* aFirstEnumerator,
 {
 }
 
-nsUnionEnumerator::~nsUnionEnumerator()
-{
-}
+nsUnionEnumerator::~nsUnionEnumerator() = default;
 
 NS_IMPL_ISUPPORTS(nsUnionEnumerator, nsISimpleEnumerator)
 

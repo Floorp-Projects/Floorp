@@ -27,9 +27,7 @@ public:
     mWord = aWord;
   }
 
-  ~TestUniChar()
-  {
-  }
+  ~TestUniChar() = default;
 
   uint32_t GetChar() const { return mWord; }
 
@@ -71,7 +69,7 @@ public:
 
   explicit EntityToUnicodeEntry(const char* aKey) { mNode = nullptr; }
   EntityToUnicodeEntry(const EntityToUnicodeEntry& aEntry) { mNode = aEntry.mNode; }
-  ~EntityToUnicodeEntry() { }
+  ~EntityToUnicodeEntry() = default;
 
   bool KeyEquals(const char* aEntity) const { return !strcmp(mNode->mStr, aEntity); }
   static const char* KeyToPointer(const char* aEntity) { return aEntity; }

@@ -419,9 +419,7 @@ class ObjectForConstPtr
 {
   private:
     // Reference-counted classes cannot have public destructors.
-    ~ObjectForConstPtr()
-    {
-    }
+    ~ObjectForConstPtr() = default;
   public:
     NS_INLINE_DECL_THREADSAFE_MUTABLE_REFCOUNTING(ObjectForConstPtr)
       void ConstMemberFunction( int aArg1, int* aArgPtr, int& aArgRef ) const
