@@ -1383,6 +1383,29 @@ BacktrackingAllocator::computeRequirement(LiveBundle* bundle,
     return true;
 }
 
+// Return whether |conflicting| has any fixed uses of registers which overlap
+// with |bundle|.
+bool
+BacktrackingAllocator::hasFixedUseOverlap(LiveBundle* bundle, const LiveBundleVector& conflicting)
+{
+    for (size_t i = 0; i < conflicting.length(); i++) {
+        LiveBundle* existing = conflicting[i];
+        for (LiveRange::BundleLinkIterator iter = existing->rangesBegin(); iter; iter++) {
+            LiveRange* range = LiveRange::get(*iter);
+            if (range->hasDefinition()) {
+                LDefinition* def = vregs[range->vreg()].def();
+                if (def->policy() == LDefinition::FIXED && bundle->rangeFor(range->from()))
+                    return true;
+            }
+            for (UsePositionIterator iter(range->usesBegin()); iter; iter++) {
+                if (iter->usePolicy() == LUse::FIXED && bundle->rangeFor(iter->pos))
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool
 BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r, LiveBundle* bundle,
                                            bool* success, bool* pfixed, LiveBundleVector& conflicting)
@@ -1450,7 +1473,12 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r, LiveBundle* bund
         }
 #endif
 
-        if (conflicting.empty()) {
+        if (hasFixedUseOverlap(bundle, aliasedConflicting)) {
+            // Ignore conflicting bundles whose eviction will not allow the
+            // bundle to be allocated.
+            JitSpew(JitSpew_RegAlloc,
+                    "  Ignoring conflict due to fixed use/def overlap with bundle");
+        } else if (conflicting.empty()) {
             if (!conflicting.appendAll(aliasedConflicting))
                 return false;
         } else {
