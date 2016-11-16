@@ -294,17 +294,6 @@ public:
     nsStyleContext* aStyleContext,
     StyleAnimationValue& aComputedValue);
 
-  /**
-   * Interpolates between 2 matrices by decomposing them.
-   *
-   * @param aMatrix1   First matrix, using CSS pixel units.
-   * @param aMatrix2   Second matrix, using CSS pixel units.
-   * @param aProgress  Interpolation value in the range [0.0, 1.0]
-   */
-  static gfx::Matrix4x4 InterpolateTransformMatrix(const gfx::Matrix4x4 &aMatrix1,
-                                                   const gfx::Matrix4x4 &aMatrix2,
-                                                   double aProgress);
-
   static already_AddRefed<nsCSSValue::Array>
     AppendTransformFunction(nsCSSKeyword aTransformFunction,
                             nsCSSValueList**& aListTail);
