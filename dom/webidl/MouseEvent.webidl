@@ -12,7 +12,9 @@
 
 [Constructor(DOMString typeArg, optional MouseEventInit mouseEventInitDict)]
 interface MouseEvent : UIEvent {
+  [NeedsCallerType]
   readonly attribute long           screenX;
+  [NeedsCallerType]
   readonly attribute long           screenY;
   readonly attribute long           clientX;
   readonly attribute long           clientY;

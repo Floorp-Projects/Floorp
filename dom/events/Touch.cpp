@@ -140,6 +140,28 @@ Touch::GetTarget() const
   return mTarget;
 }
 
+int32_t
+Touch::ScreenX(CallerType aCallerType) const
+{
+  if (aCallerType != CallerType::System &&
+      nsContentUtils::ResistFingerprinting()) {
+    return ClientX();
+  }
+
+  return mScreenPoint.x;
+}
+
+int32_t
+Touch::ScreenY(CallerType aCallerType) const
+{
+  if (aCallerType != CallerType::System &&
+      nsContentUtils::ResistFingerprinting()) {
+    return ClientY();
+  }
+
+  return mScreenPoint.y;
+}
+
 void
 Touch::InitializePoints(nsPresContext* aPresContext, WidgetEvent* aEvent)
 {

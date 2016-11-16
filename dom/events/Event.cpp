@@ -893,12 +893,6 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
                        WidgetEvent* aEvent,
                        LayoutDeviceIntPoint aPoint)
 {
-  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode() &&
-      nsContentUtils::ResistFingerprinting()) {
-    // When resisting fingerprinting, return client coordinates instead.
-    return GetClientCoords(aPresContext, aEvent, aPoint, CSSIntPoint(0, 0));
-  }
-
   if (EventStateManager::sIsPointerLocked) {
     return EventStateManager::sLastScreenPoint;
   }
