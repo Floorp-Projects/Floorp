@@ -1,0 +1,62 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 1317725</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<input type="file" id="file" />
+
+<script type="text/js-worker" id="worker-src">
+onmessage = function(e) {
+  var data = new FormData();
+  data.append('Filedata', e.data.slice(0, 127), encodeURI(e.data.name));
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', location.href, false);
+  xhr.send(data);
+  postMessage("No crash \\o/");
+}
+</script>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var url = SimpleTest.getTestFileURL("script_createFile.js");
+script = SpecialPowers.loadChromeScript(url);
+
+function onOpened(message) {
+  var input = document.getElementById('file');
+  SpecialPowers.wrap(input).mozSetFileArray([message.data]);
+
+  var blob = new Blob([ document.getElementById("worker-src").textContent ],
+                      { type: "text/javascript" });
+  var worker = new Worker(URL.createObjectURL(blob));
+  worker.onerror = function(e) {
+    ok(false, "We should not see any error.");
+    SimpleTest.finish();
+  }
+
+  worker.onmessage = function(e) {
+    ok(e.data, "Everything seems OK on the worker-side.");
+    SimpleTest.finish();
+  }
+
+  is(input.files.length, 1, "We have something");
+  ok(input.files[0] instanceof Blob, "We have one Blob");
+  worker.postMessage(input.files[0]);
+}
+
+script.addMessageListener("file.opened", onOpened);
+script.sendAsyncMessage("file.open");
+
+</script>
+</pre>
+</body>
+</html>
