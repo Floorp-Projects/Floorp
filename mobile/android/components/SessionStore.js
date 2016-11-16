@@ -23,6 +23,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Utils", "resource://gre/modules/session
 XPCOMUtils.defineLazyServiceGetter(this, "serializationHelper",
                                    "@mozilla.org/network/serialization-helper;1",
                                    "nsISerializationHelper");
+XPCOMUtils.defineLazyServiceGetter(this, "uuidGenerator",
+                                   "@mozilla.org/uuid-generator;1",
+                                   "nsIUUIDGenerator");
 
 function dump(a) {
   Services.console.logStringMessage(a);
@@ -94,6 +97,9 @@ SessionStore.prototype = {
   // to bother reloading the newly selected tab if it is zombified.
   // The Java UI will tell us which tab to watch out for.
   _keepAsZombieTabId: -1,
+
+  // Mapping from legacy docshellIDs to docshellUUIDs.
+  _docshellUUIDMap: new Map(),
 
   init: function ss_init() {
     loggingEnabled = Services.prefs.getBoolPref("browser.sessionstore.debug_logging");
@@ -1163,7 +1169,7 @@ SessionStore.prototype = {
     }
 
     entry.ID = aEntry.ID;
-    entry.docshellID = aEntry.docshellID;
+    entry.docshellUUID = aEntry.docshellID.number;
 
     if (aEntry.referrerURI) {
       entry.referrer = aEntry.referrerURI.spec;
@@ -1298,8 +1304,21 @@ SessionStore.prototype = {
       shEntry.ID = id;
     }
 
+    // If we have the legacy docshellID on our aEntry, upgrade it to a
+    // docshellUUID by going through the mapping.
     if (aEntry.docshellID) {
-      shEntry.docshellID = aEntry.docshellID;
+      if (!this._docshellUUIDMap.has(aEntry.docshellID)) {
+        // Get the `.number` property out of the nsID such that the docshellUUID
+        // property is correctly stored as a string.
+        this._docshellUUIDMap.set(aEntry.docshellID,
+                                  uuidGenerator.generateUUID().number);
+      }
+      aEntry.docshellUUID = this._docshellUUIDMap.get(aEntry.docshellID);
+      delete aEntry.docshellID;
+    }
+
+    if (aEntry.docshellUUID) {
+      shEntry.docshellID = Components.ID(aEntry.docshellUUID);
     }
 
     if (aEntry.structuredCloneState && aEntry.structuredCloneVersion) {
