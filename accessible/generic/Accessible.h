@@ -956,36 +956,6 @@ public:
    */
   bool IsInsideAlert() const { return mContextFlags & eInsideAlert; }
 
-  /**
-   * Return true if there is a pending reorder event for this accessible.
-   */
-  bool ReorderEventTarget() const { return mReorderEventTarget; }
-
-  /**
-   * Return true if there is a pending show event for this accessible.
-   */
-  bool ShowEventTarget() const { return mShowEventTarget; }
-
-  /**
-   * Return true if there is a pending hide event for this accessible.
-   */
-  bool HideEventTarget() const { return mHideEventTarget; }
-
-  /**
-   * Set if there is a pending reorder event for this accessible.
-   */
-  void SetReorderEventTarget(bool aTarget) { mReorderEventTarget = aTarget; }
-
-  /**
-   * Set if this accessible is a show event target.
-   */
-  void SetShowEventTarget(bool aTarget) { mShowEventTarget = aTarget; }
-
-  /**
-   * Set if this accessible is a hide event target.
-   */
-  void SetHideEventTarget(bool aTarget) { mHideEventTarget = aTarget; }
-
 protected:
   virtual ~Accessible();
 
@@ -1162,9 +1132,6 @@ protected:
   uint32_t mContextFlags : kContextFlagsBits;
   uint32_t mType : kTypeBits;
   uint32_t mGenericTypes : kGenericTypesBits;
-  uint32_t mReorderEventTarget : 1;
-  uint32_t mShowEventTarget : 1;
-  uint32_t mHideEventTarget : 1;
 
   void StaticAsserts() const;
 
