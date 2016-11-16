@@ -182,6 +182,12 @@ private:
     nsAutoPtr<nsHttpResponseHead> mHead;
   };
 
+  // Sets the event target for future IPC messages. Messages will either be
+  // directed to the TabGroup or DocGroup, depending on the LoadInfo associated
+  // with the channel. Should be called when a new channel is being set up,
+  // before the constructor message is sent to the parent.
+  void SetEventTarget();
+
   nsresult ContinueAsyncOpen();
 
   void DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
