@@ -123,7 +123,7 @@ class BasePopup {
     this.destroyed = true;
     this.browserLoadedDeferred.reject(new Error("Popup destroyed"));
     return this.browserReady.then(() => {
-      this.destroyBrowser(this.browser);
+      this.destroyBrowser(this.browser, true);
       this.browser.remove();
 
       this.viewNode.removeEventListener(this.DESTROY_EVENT, this);
@@ -141,16 +141,19 @@ class BasePopup {
     });
   }
 
-  destroyBrowser(browser) {
+  destroyBrowser(browser, finalize = false) {
     let mm = browser.messageManager;
     // If the browser has already been removed from the document, because the
-    // popup was closed externally, there will be no message manager here.
+    // popup was closed externally, there will be no message manager here, so
+    // just replace our receiveMessage method with a stub.
     if (mm) {
       mm.removeMessageListener("DOMTitleChanged", this);
       mm.removeMessageListener("Extension:BrowserBackgroundChanged", this);
       mm.removeMessageListener("Extension:BrowserContentLoaded", this);
       mm.removeMessageListener("Extension:BrowserResized", this);
       mm.removeMessageListener("Extension:DOMWindowClose", this);
+    } else if (finalize) {
+      this.receiveMessage = () => {};
     }
   }
 
@@ -228,6 +231,10 @@ class BasePopup {
     this.browser.setAttribute("webextension-view-type", "popup");
     this.browser.setAttribute("tooltip", "aHTMLTooltip");
 
+    if (this.extension.remote) {
+      this.browser.setAttribute("remote", "true");
+    }
+
     // We only need flex sizing for the sake of the slide-in sub-views of the
     // main menu panel, so that the browser occupies the full width of the view,
     // and also takes up any extra height that's available to it.
@@ -238,27 +245,33 @@ class BasePopup {
     // starts out smaller than 30px by 10px. This isn't an issue now, but it
     // will be if and when we popup debugging.
 
+
+    let readyPromise;
+    if (this.extension.remote) {
+      readyPromise = promiseEvent(this.browser, "XULFrameLoaderCreated");
+    } else {
+      readyPromise = promiseEvent(this.browser, "load");
+    }
+
     viewNode.appendChild(this.browser);
 
     extensions.emit("extension-browser-inserted", this.browser);
 
-    let initBrowser = browser => {
-      let mm = browser.messageManager;
+    readyPromise = readyPromise.then(() => {
+      let mm = this.browser.messageManager;
       mm.addMessageListener("DOMTitleChanged", this);
       mm.addMessageListener("Extension:BrowserBackgroundChanged", this);
       mm.addMessageListener("Extension:BrowserContentLoaded", this);
       mm.addMessageListener("Extension:BrowserResized", this);
       mm.addMessageListener("Extension:DOMWindowClose", this, true);
-    };
+      return this.browser;
+    });
 
     if (!popupURL) {
-      initBrowser(this.browser);
-      return this.browser;
+      return readyPromise;
     }
 
-    return promiseEvent(this.browser, "load").then(() => {
-      initBrowser(this.browser);
-
+    return readyPromise.then(() => {
       let mm = this.browser.messageManager;
 
       mm.loadFrameScript(
@@ -367,8 +380,8 @@ class PanelPopup extends BasePopup {
 
   closePopup() {
     promisePopupShown(this.viewNode).then(() => {
-      // Make sure we're not already destroyed.
-      if (this.viewNode) {
+      // Make sure we're not already destroyed, or removed from the DOM.
+      if (this.viewNode && this.viewNode.hidePopup) {
         this.viewNode.hidePopup();
       }
     });
@@ -457,7 +470,7 @@ class ViewPopup extends BasePopup {
 
       // Create a new browser in the real popup.
       let browser = this.browser;
-      this.createBrowser(this.viewNode);
+      yield this.createBrowser(this.viewNode);
 
       this.browser.swapDocShells(browser);
       this.destroyBrowser(browser);
