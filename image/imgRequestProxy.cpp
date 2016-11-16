@@ -23,7 +23,7 @@ using namespace mozilla::image;
 class ProxyBehaviour
 {
  public:
-  virtual ~ProxyBehaviour() {}
+  virtual ~ProxyBehaviour() = default;
 
   virtual already_AddRefed<mozilla::image::Image> GetImage() const = 0;
   virtual bool HasImage() const = 0;
