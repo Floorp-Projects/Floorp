@@ -271,7 +271,7 @@ stage-extensions: make-stage-dir
 check::
 	$(eval cores=$(shell $(PYTHON) -c 'import multiprocessing; print(multiprocessing.cpu_count())'))
 	@echo "Starting 'mach python-test' with -j$(cores)"
-	@$(topsrcdir)/mach --log-no-times python-test -j$(cores)
+	@$(topsrcdir)/mach --log-no-times python-test -j$(cores) --subsuite default
 	@echo "Finished 'mach python-test' successfully"
 
 
