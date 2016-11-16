@@ -1557,8 +1557,8 @@ nsLocalFile::IsExecutable(bool* aResult)
       "jar"   // java application bundle
     };
     nsDependentSubstring ext = Substring(path, dotIdx + 1);
-    for (size_t i = 0; i < ArrayLength(executableExts); i++) {
-      if (ext.EqualsASCII(executableExts[i])) {
+    for (auto executableExt : executableExts) {
+      if (ext.EqualsASCII(executableExt)) {
         // Found a match.  Set result and quit.
         *aResult = true;
         return NS_OK;
