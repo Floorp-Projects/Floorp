@@ -1297,10 +1297,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             // Handle search bar popup clicks
             var search = controller.getValueAt(this.selectedIndex);
 
-            // close the autocomplete popup and revert the entered search term
-            this.closePopup();
-            controller.handleEscape();
-
             // open the search results according to the clicking subtlety
             var where = whereToOpenLink(aEvent, false, true);
             let params = {};
@@ -1312,6 +1308,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             if (where == "tab" && (aEvent instanceof MouseEvent) &&
                 (aEvent.button == 1 || modifier))
               params.inBackground = true;
+
+            // leave the popup open for background tab loads
+            if (!(where == "tab" && params.inBackground)) {
+              // close the autocomplete popup and revert the entered search term
+              this.closePopup();
+              controller.handleEscape();
+            }
 
             searchBar.doSearch(search, where, null, params);
             if (where == "tab" && params.inBackground)
