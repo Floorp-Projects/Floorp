@@ -261,7 +261,7 @@ pub extern fn wr_init_window(root_pipeline_id: u64, path_utf8: *const c_char) ->
         enable_aa: false,
         enable_subpixel_aa: false,
         enable_msaa: false,
-        enable_profiler: true,
+        enable_profiler: false,
         enable_recording: false,
         enable_scrollbars: false,
         precache_shaders: false,
