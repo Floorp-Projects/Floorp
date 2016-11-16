@@ -25,9 +25,9 @@ public:
   // virtual dtor because IBar uses our Release()
   virtual ~IFoo();
 
-  NS_IMETHOD_(MozExternalRefCountType) AddRef();
-  NS_IMETHOD_(MozExternalRefCountType) Release();
-  NS_IMETHOD QueryInterface( const nsIID&, void** );
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
+  NS_IMETHOD_(MozExternalRefCountType) Release() override;
+  NS_IMETHOD QueryInterface( const nsIID&, void** ) override;
 
   unsigned int refcount_;
 
@@ -135,9 +135,9 @@ public:
 
 public:
   IBar();
-  virtual ~IBar();
+  ~IBar() override;
 
-  NS_IMETHOD QueryInterface( const nsIID&, void** );
+  NS_IMETHOD QueryInterface( const nsIID&, void** ) override;
 
   static int total_destructions_;
   static int total_queries_;
