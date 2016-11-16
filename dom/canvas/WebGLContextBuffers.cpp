@@ -119,9 +119,8 @@ WebGLContext::BindBuffer(GLenum target, WebGLBuffer* buffer)
     if (!ValidateObjectAllowDeletedOrNull(funcName, buffer))
         return;
 
-    // silently ignore a deleted buffer
     if (buffer && buffer->IsDeleted())
-        return;
+        return ErrorInvalidOperation("%s: Cannot bind a deleted object.", funcName);
 
     const auto& slot = ValidateBufferSlot(funcName, target);
     if (!slot)
@@ -184,9 +183,8 @@ WebGLContext::BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer)
     if (!ValidateObjectAllowDeletedOrNull(funcName, buffer))
         return;
 
-    // silently ignore a deleted buffer
     if (buffer && buffer->IsDeleted())
-        return;
+        return ErrorInvalidOperation("%s: Cannot bind a deleted object.", funcName);
 
     WebGLRefPtr<WebGLBuffer>* genericBinding;
     IndexedBufferBinding* indexedBinding;
@@ -227,9 +225,8 @@ WebGLContext::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
     if (!ValidateObjectAllowDeletedOrNull(funcName, buffer))
         return;
 
-    // silently ignore a deleted buffer
     if (buffer && buffer->IsDeleted())
-        return;
+        return ErrorInvalidOperation("%s: Cannot bind a deleted object.", funcName);
 
     if (!ValidateNonNegative(funcName, "offset", offset) ||
         !ValidateNonNegative(funcName, "size", size))
