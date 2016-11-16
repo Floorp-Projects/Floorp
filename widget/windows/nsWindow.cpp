@@ -3312,8 +3312,13 @@ void* nsWindow::GetNativeData(uint32_t aDataType)
     case NS_NATIVE_SHAREABLE_WINDOW:
       return (void*) WinUtils::GetTopLevelHWND(mWnd);
     case NS_NATIVE_GRAPHIC:
+#ifdef MOZ_ENABLE_WEBRENDER
+      // This might be a bad idea?
+      return ::GetDC(mWnd);
+#else
       MOZ_ASSERT_UNREACHABLE("Not supported on Windows:");
       return nullptr;
+#endif
     case NS_RAW_NATIVE_IME_CONTEXT: {
       void* pseudoIMEContext = GetPseudoIMEContext();
       if (pseudoIMEContext) {

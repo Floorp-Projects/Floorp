@@ -34,6 +34,7 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 #include "ClientLayerManager.h"
 #include "FrameLayerBuilder.h"
 
@@ -121,6 +122,10 @@ RenderFrameParent::Init(nsFrameLoader* aFrameLoader)
     browser->Manager()->AsContentParent()->AllocateLayerTreeId(browser, &mLayersId);
     if (lm && lm->AsClientLayerManager()) {
       if (!lm->AsClientLayerManager()->GetRemoteRenderer()->SendNotifyChildCreated(mLayersId)) {
+        return false;
+      }
+    } else if (lm && lm->AsWebRenderLayerManager()) {
+      if (!lm->AsWebRenderLayerManager()->GetCompositorBridgeChild()->SendNotifyChildCreated(mLayersId)) {
         return false;
       }
     }
