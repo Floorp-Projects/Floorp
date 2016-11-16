@@ -160,6 +160,9 @@ private:
   already_AddRefed<DrawTarget>
   CreateClipMask(gfxContext& aReferenceContext, IntPoint& aOffset);
 
+  DrawResult PaintFrameIntoMask(nsIFrame *aFrame, nsIFrame* aClippedFrame,
+                                gfxContext& aTarget, const gfxMatrix& aMatrix);
+
   // Set, during a GetClipMask() call, to the transform that still needs to be
   // concatenated to the transform of the DrawTarget that was passed to
   // GetClipMask in order to establish the coordinate space that the clipPath
