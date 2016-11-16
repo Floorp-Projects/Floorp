@@ -1,0 +1,28 @@
+language: rust
+rust: nightly
+sudo: false
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-4.8
+      - g++-4.8
+      - libxxf86vm-dev
+      - libosmesa6-dev
+      - libgles2-mesa-dev
+
+before_install:
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then export CXX=g++-4.8; fi
+
+os:
+  - linux
+  - osx
+
+script:
+  - cargo build --verbose
+  # We cannot test egl nor glx in Travis' linux
+  # - cargo test --verbose
+  # - cargo test --verbose --features test_egl_in_linux
+  - if [ "$TRAVIS_OS_NAME" != "linux" ]; then cargo test --verbose; fi

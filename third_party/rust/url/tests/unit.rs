@@ -70,6 +70,10 @@ fn new_path_windows_fun() {
         // test windows canonicalized path
         let path = PathBuf::from(r"\\?\C:\foo\bar");
         assert!(Url::from_file_path(path).is_ok());
+
+        // Percent-encoded drive letter
+        let url = Url::parse("file:///C%3A/foo/bar").unwrap();
+        assert_eq!(url.to_file_path(), Ok(PathBuf::from(r"C:\foo\bar")));
     }
 }
 

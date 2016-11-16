@@ -1,0 +1,32 @@
+[package]
+name = "x11"
+version = "2.11.0"
+authors = ["Daggerbot <daggerbot@gmail.com>"]
+description = "X11 library bindings for Rust"
+license = "CC0-1.0"
+repository = "https://github.com/Daggerbot/x11-rs.git"
+build = "build.rs"
+
+[features]
+dpms = []
+glx = []
+xcursor = []
+xf86vmode = []
+xft = []
+xinerama = []
+xinput = []
+xlib = []
+xlib_xcb = []
+xmu = []
+xrandr = []
+xrecord = []
+xrender = []
+xss = []
+xt = []
+xtest = []
+
+[dependencies]
+libc = "0.2"
+
+[build-dependencies]
+pkg-config = "0.3.5"

@@ -1,0 +1,13 @@
+[package]
+name = "post-expansion"
+version = "0.1.0"
+authors = ["David Tolnay <dtolnay@gmail.com>"]
+license = "MIT/Apache-2.0"
+description = "Strip attributes after #[derive(...)] expansion"
+repository = "https://github.com/dtolnay/post-expansion"
+documentation = "https://docs.rs/post-expansion/"
+include = ["Cargo.toml", "src/**/*.rs"]
+
+[dependencies]
+syn = "0.9"
+quote = "0.3"

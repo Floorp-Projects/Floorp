@@ -16,20 +16,28 @@ TARGET=$1
 if [ "$QEMU" != "" ]; then
   tmpdir=/tmp/qemu-img-creation
   mkdir -p $tmpdir
-  if [ ! -f $tmpdir/$QEMU ]; then
-    curl https://people.mozilla.org/~acrichton/libc-test/qemu/$QEMU.gz | \
-      gunzip -d > $tmpdir/$QEMU
+
+  if [ -z "${QEMU#*.gz}" ]; then
+    # image is .gz : download and uncompress it
+    qemufile=$(echo ${QEMU%.gz} | sed 's/\//__/g')
+    if [ ! -f $tmpdir/$qemufile ]; then
+      curl https://people.mozilla.org/~acrichton/libc-test/qemu/$QEMU | \
+        gunzip -d > $tmpdir/$qemufile
+    fi
+  else
+    # plain qcow2 image: just download it
+    qemufile=$(echo ${QEMU} | sed 's/\//__/g')
+    if [ ! -f $tmpdir/$qemufile ]; then
+      curl https://people.mozilla.org/~acrichton/libc-test/qemu/$QEMU \
+        > $tmpdir/$qemufile
+    fi
   fi
 
   # Create a mount a fresh new filesystem image that we'll later pass to QEMU.
   # This will have a `run.sh` script will which use the artifacts inside to run
   # on the host.
   rm -f $tmpdir/libc-test.img
-  dd if=/dev/null of=$tmpdir/libc-test.img bs=1M seek=50
-  mkfs.ext2 -F $tmpdir/libc-test.img
-  rm -rf $tmpdir/mount
   mkdir $tmpdir/mount
-  mount -t ext2 -o loop $tmpdir/libc-test.img $tmpdir/mount
 
   # If we have a cross compiler, then we just do the standard rigamarole of
   # cross-compiling an executable and then the script to run just executes the
@@ -62,25 +70,21 @@ if [ "$QEMU" != "" ]; then
     cp libc-test/run-generated-Cargo.toml $tmpdir/mount/libc/libc-test/Cargo.toml
   fi
 
-  umount $tmpdir/mount
-
-  # If we can use kvm, prefer that, otherwise just fall back to user-space
-  # emulation.
-  if kvm-ok; then
-    program=kvm
-  else
-    program=qemu-system-x86_64
-  fi
+  du -sh $tmpdir/mount
+  genext2fs \
+      --root $tmpdir/mount \
+      --size-in-blocks 100000 \
+      $tmpdir/libc-test.img
 
   # Pass -snapshot to prevent tampering with the disk images, this helps when
   # running this script in development. The two drives are then passed next,
   # first is the OS and second is the one we just made. Next the network is
   # configured to work (I'm not entirely sure how), and then finally we turn off
   # graphics and redirect the serial console output to out.log.
-  $program \
+  qemu-system-x86_64 \
     -m 1024 \
     -snapshot \
-    -drive if=virtio,file=$tmpdir/$QEMU \
+    -drive if=virtio,file=$tmpdir/$qemufile \
     -drive if=virtio,file=$tmpdir/libc-test.img \
     -net nic,model=virtio \
     -net user \
@@ -117,9 +121,18 @@ case "$TARGET" in
     qemu-mips -L /usr/mips-linux-gnu $CARGO_TARGET_DIR/$TARGET/debug/libc-test
     ;;
 
-  mipsel-unknown-linux-musl)
-    qemu-mipsel -L /toolchain $CARGO_TARGET_DIR/$TARGET/debug/libc-test
+  mips64-unknown-linux-gnuabi64)
+    qemu-mips64 -L /usr/mips64-linux-gnuabi64 $CARGO_TARGET_DIR/$TARGET/debug/libc-test
     ;;
+
+  mips-unknown-linux-musl)
+    qemu-mips -L /toolchain/staging_dir/toolchain-mips_34kc_gcc-5.3.0_musl-1.1.15 \
+              $CARGO_TARGET_DIR/$TARGET/debug/libc-test
+    ;;
+
+  mipsel-unknown-linux-musl)
+      qemu-mipsel -L /toolchain $CARGO_TARGET_DIR/$TARGET/debug/libc-test
+      ;;
 
   powerpc-unknown-linux-gnu)
     qemu-ppc -L /usr/powerpc-linux-gnu $CARGO_TARGET_DIR/$TARGET/debug/libc-test

@@ -1,0 +1,8 @@
+*.swp
+*.swo
+/doc
+*~
+/target/
+/Cargo.lock
+.idea/
+*.iml

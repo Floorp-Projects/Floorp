@@ -1,0 +1,28 @@
+[package]
+name = "syn"
+version = "0.9.2" # don't forget to update version in readme
+authors = ["David Tolnay <dtolnay@gmail.com>"]
+license = "MIT/Apache-2.0"
+description = "Nom parser for Rust items"
+repository = "https://github.com/dtolnay/syn"
+documentation = "https://dtolnay.github.io/syn/syn/"
+include = ["Cargo.toml", "src/**/*.rs"]
+
+[features]
+default = ["parsing", "printing"]
+aster = []
+full = []
+parsing = ["unicode-xid"]
+printing = ["quote"]
+visit = []
+
+[dependencies]
+clippy = { version = "0.*", optional = true }
+quote = { version = "0.3.0", optional = true }
+unicode-xid = { version = "0.0.3", optional = true }
+
+[dev-dependencies]
+syntex_pos = "0.44.0"
+syntex_syntax = "0.44.0"
+time = "0.1.35"
+walkdir = "0.1.8"

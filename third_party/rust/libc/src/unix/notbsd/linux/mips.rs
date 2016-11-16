@@ -129,6 +129,32 @@ s! {
         __unused5: ::c_ulong
     }
 
+    pub struct msqid_ds {
+        pub msg_perm: ::ipc_perm,
+        #[cfg(target_endian = "big")]
+        __glibc_reserved1: ::c_ulong,
+        pub msg_stime: ::time_t,
+        #[cfg(target_endian = "little")]
+        __glibc_reserved1: ::c_ulong,
+        #[cfg(target_endian = "big")]
+        __glibc_reserved2: ::c_ulong,
+        pub msg_rtime: ::time_t,
+        #[cfg(target_endian = "little")]
+        __glibc_reserved2: ::c_ulong,
+        #[cfg(target_endian = "big")]
+        __glibc_reserved3: ::c_ulong,
+        pub msg_ctime: ::time_t,
+        #[cfg(target_endian = "little")]
+        __glibc_reserved3: ::c_ulong,
+        __msg_cbytes: ::c_ulong,
+        pub msg_qnum: ::msgqnum_t,
+        pub msg_qbytes: ::msglen_t,
+        pub msg_lspid: ::pid_t,
+        pub msg_lrpid: ::pid_t,
+        __glibc_reserved4: ::c_ulong,
+        __glibc_reserved5: ::c_ulong,
+    }
+
     pub struct statfs {
         pub f_type: ::c_long,
         pub f_bsize: ::c_long,
@@ -207,12 +233,10 @@ pub const POSIX_FADV_DONTNEED: ::c_int = 4;
 pub const POSIX_FADV_NOREUSE: ::c_int = 5;
 pub const POSIX_MADV_DONTNEED: ::c_int = 4;
 pub const _SC_2_C_VERSION: ::c_int = 96;
-pub const RUSAGE_THREAD: ::c_int = 1;
 pub const O_ACCMODE: ::c_int = 3;
 pub const O_DIRECT: ::c_int = 0x8000;
 pub const O_DIRECTORY: ::c_int = 0x10000;
 pub const O_NOFOLLOW: ::c_int = 0x20000;
-pub const RUSAGE_CHILDREN: ::c_int = -1;
 pub const ST_RELATIME: ::c_ulong = 4096;
 pub const NI_MAXHOST: ::socklen_t = 1025;
 

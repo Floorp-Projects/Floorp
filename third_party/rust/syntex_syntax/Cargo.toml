@@ -1,0 +1,18 @@
+[package]
+name = "syntex_syntax"
+version = "0.48.0"
+authors = [ "erick.tryzelaar@gmail.com" ]
+license = "MIT/Apache-2.0"
+description = "Export of libsyntax for code generation"
+repository = "https://github.com/serde-rs/syntex"
+include = ["Cargo.toml", "src/**/*.rs"]
+
+[dependencies]
+bitflags = "^0.7.0"
+libc = "^0.2.13"
+log = "^0.3.6"
+rustc-serialize = "^0.3.16"
+syntex_errors = { version = "^0.48.0", path = "../syntex_errors" }
+syntex_pos = { version = "^0.48.0", path = "../syntex_pos" }
+term = "^0.4.4"
+unicode-xid = "^0.0.3"

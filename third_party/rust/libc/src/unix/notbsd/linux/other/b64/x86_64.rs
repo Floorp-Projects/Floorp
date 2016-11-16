@@ -149,6 +149,17 @@ pub const PTRACE_GETFPXREGS: ::c_uint = 18;
 pub const PTRACE_SETFPXREGS: ::c_uint = 19;
 pub const PTRACE_GETREGS: ::c_uint = 12;
 pub const PTRACE_SETREGS: ::c_uint = 13;
+pub const PTRACE_O_EXITKILL: ::c_uint = 1048576;
+pub const PTRACE_O_TRACECLONE: ::c_uint = 8;
+pub const PTRACE_O_TRACEEXEC: ::c_uint = 16;
+pub const PTRACE_O_TRACEEXIT: ::c_uint = 64;
+pub const PTRACE_O_TRACEFORK: ::c_uint = 2;
+pub const PTRACE_O_TRACESYSGOOD: ::c_uint = 1;
+pub const PTRACE_O_TRACEVFORK: ::c_uint = 4;
+pub const PTRACE_O_TRACEVFORKDONE: ::c_uint = 32;
+pub const PTRACE_O_TRACESECCOMP: ::c_uint = 128;
+pub const PTRACE_O_SUSPEND_SECCOMP: ::c_uint = 2097152;
+pub const PTRACE_PEEKSIGINFO_SHARED: ::c_uint = 1;
 
 pub const SYS_gettid: ::c_long = 186;
 pub const SYS_perf_event_open: ::c_long = 298;

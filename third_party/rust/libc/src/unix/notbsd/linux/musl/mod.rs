@@ -77,6 +77,8 @@ pub const PTHREAD_STACK_MIN: ::size_t = 2048;
 pub const POSIX_FADV_DONTNEED: ::c_int = 4;
 pub const POSIX_FADV_NOREUSE: ::c_int = 5;
 
+pub const POSIX_MADV_DONTNEED: ::c_int = 4;
+
 pub const RLIM_INFINITY: ::rlim_t = !0;
 pub const RLIMIT_RTTIME: ::c_int = 15;
 pub const RLIMIT_NLIMITS: ::c_int = 16;

@@ -1,0 +1,19 @@
+language: rust
+sudo: false
+rust:
+  - nightly
+
+os:
+  - linux
+  - osx
+
+env:
+  - FEATURES="unstable"
+  - FEATURES="unstable force-inprocess"
+
+notifications:
+  webhooks: http://build.servo.org:54856/travis
+
+script:
+  - cargo build --features "$FEATURES"
+  - cargo test --features "$FEATURES"
