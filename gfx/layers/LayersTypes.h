@@ -66,8 +66,6 @@ enum class SurfaceMode : int8_t {
 };
 
 // LayerRenderState for Composer2D
-// We currently only support Composer2D using gralloc. If we want to be backed
-// by other surfaces we will need a more generic LayerRenderState.
 enum class LayerRenderStateFlags : int8_t {
   LAYER_RENDER_STATE_DEFAULT = 0,
   ORIGIN_BOTTOM_LEFT = 1 << 0,

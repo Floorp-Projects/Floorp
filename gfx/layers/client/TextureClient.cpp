@@ -392,7 +392,7 @@ DeallocateTextureClient(TextureDeallocParams params)
     // ..except if the lovely mWorkaroundAnnoyingSharedSurfaceOwnershipIssues member
     // is set to true. In this case we are in a special situation where this
     // TextureClient is in wrapped into another TextureClient which assumes it owns
-    // our data. This is specific to the gralloc SharedSurface.
+    // our data.
     bool shouldDeallocate = !params.workAroundSharedSurfaceOwnershipIssue;
     DestroyTextureData(params.data, params.allocator,
                        shouldDeallocate,

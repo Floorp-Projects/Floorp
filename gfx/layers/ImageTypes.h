@@ -23,23 +23,6 @@ enum class ImageFormat {
   NV_IMAGE,
 
   /**
-   * The GRALLOC_PLANAR_YCBCR format creates a GrallocImage, a subtype of
-   * PlanarYCbCrImage. It takes a PlanarYCbCrImage data or the raw gralloc
-   * data and can be used as a texture by Gonk backend directly.
-   */
-  GRALLOC_PLANAR_YCBCR,
-
-  /**
-   * The GONK_CAMERA_IMAGE format creates a GonkCameraImage, which contains two
-   * parts. One is GrallocImage image for preview image. Another one is
-   * MediaBuffer from Gonk recording image. The preview image can be rendered in
-   * a layer for display. And the MediaBuffer will be used in component like OMX
-   * encoder. It is for GUM to support preview and recording image on Gonk
-   * camera.
-   */
-  GONK_CAMERA_IMAGE,
-
-  /**
    * The SHARED_RGB format creates a SharedRGBImage, which stores RGB data in
    * shared memory. Some Android hardware video decoders require this format.
    * Currently only used on Android.

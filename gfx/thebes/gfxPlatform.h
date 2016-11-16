@@ -405,9 +405,7 @@ public:
      * True when zooming should not require reflow, so glyph metrics and
      * positioning should not be adjusted for device pixels.
      * If this is TRUE, then FontHintingEnabled() should be FALSE,
-     * but the converse is not necessarily required; in particular,
-     * B2G always has FontHintingEnabled FALSE, but RequiresLinearZoom
-     * is only true for the browser process, not Gaia or other apps.
+     * but the converse is not necessarily required;
      *
      * Like FontHintingEnabled (above), this setting shouldn't
      * change per gecko process, while the process is live.  If so the
