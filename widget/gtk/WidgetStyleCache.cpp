@@ -708,9 +708,20 @@ CreateCSSNode(const char* aName, GtkStyleContext* aParentStyle, GType aType)
     reinterpret_cast<void (*)(GtkWidgetPath *, gint, const char *)>
     (dlsym(RTLD_DEFAULT, "gtk_widget_path_iter_set_object_name"));
 
-  GtkWidgetPath* path = aParentStyle ?
-    gtk_widget_path_copy(gtk_style_context_get_path(aParentStyle)) :
-    gtk_widget_path_new();
+  GtkWidgetPath* path;
+  if (aParentStyle) {
+    path = gtk_widget_path_copy(gtk_style_context_get_path(aParentStyle));
+    // Copy classes from the parent style context to its corresponding node in
+    // the path, because GTK will only match against ancestor classes if they
+    // are on the path.
+    GList* classes = gtk_style_context_list_classes(aParentStyle);
+    for (GList* link = classes; link; link = link->next) {
+      gtk_widget_path_iter_add_class(path, -1, static_cast<gchar*>(link->data));
+    }
+    g_list_free(classes);
+  } else {
+    path = gtk_widget_path_new();
+  }
 
   gtk_widget_path_append_type(path, aType);
 
