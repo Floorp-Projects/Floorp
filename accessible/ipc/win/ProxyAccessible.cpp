@@ -687,5 +687,24 @@ ProxyAccessible::AnchorCount(bool* aOk)
   return count;
 }
 
+ProxyAccessible*
+ProxyAccessible::AnchorAt(uint32_t aIdx)
+{
+  RefPtr<IAccessibleHyperlink> link = QueryInterface<IAccessibleHyperlink>(this);
+  if (!link) {
+    return nullptr;
+  }
+
+  VARIANT anchor;
+  if (FAILED(link->get_anchor(aIdx, &anchor))) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(anchor.vt == VT_UNKNOWN);
+  ProxyAccessible* proxyAnchor = GetProxyFor(Document(), anchor.punkVal);
+  anchor.punkVal->Release();
+  return proxyAnchor;
+}
+
 } // namespace a11y
 } // namespace mozilla
