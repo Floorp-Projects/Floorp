@@ -205,7 +205,6 @@ class IPDLType(Type):
     def isAtom(self):  return True
     def isCompound(self): return False
     def isShmem(self): return False
-    def isChmod(self): return False
     def isFD(self): return False
     def isEndpoint(self): return False
 
@@ -1143,8 +1142,7 @@ class GatherDecls(TcheckVisitor):
                     ptname, msgname)
                 ptype = VOID
             else:
-                ptype = self._canonicalType(ptdecl.type, param.typespec,
-                                            chmodallowed=1)
+                ptype = self._canonicalType(ptdecl.type, param.typespec)
             return self.declare(loc=ploc,
                                 type=ptype,
                                 progname=param.name)
@@ -1218,30 +1216,12 @@ class GatherDecls(TcheckVisitor):
         t.toStates = set(t.toStates)
 
 
-    def _canonicalType(self, itype, typespec, chmodallowed=0):
+    def _canonicalType(self, itype, typespec):
         loc = typespec.loc
-        
         if itype.isIPDL():
             if itype.isProtocol():
                 itype = ActorType(itype,
-                                  state=typespec.state,
                                   nullable=typespec.nullable)
-            # FIXME/cjones: ShmemChmod is disabled until bug 524193
-            if 0 and chmodallowed and itype.isShmem():
-                itype = ShmemChmodType(
-                    itype,
-                    myChmod=typespec.myChmod,
-                    otherChmod=typespec.otherChmod)
-
-        if ((typespec.myChmod or typespec.otherChmod)
-            and not (itype.isIPDL() and (itype.isShmem() or itype.isChmod()))):
-            self.error(
-                loc,
-                "fine-grained access controls make no sense for type `%s'",
-                itype.name())
-
-        if not chmodallowed and (typespec.myChmod or typespec.otherChmod):
-            self.error(loc, "fine-grained access controls not allowed here")
 
         if typespec.nullable and not (itype.isIPDL() and itype.isActor()):
             self.error(

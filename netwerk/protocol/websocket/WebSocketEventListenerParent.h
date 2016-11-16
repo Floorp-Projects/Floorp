@@ -27,7 +27,7 @@ public:
 private:
   ~WebSocketEventListenerParent();
 
-  virtual bool RecvClose() override;
+  virtual mozilla::ipc::IPCResult RecvClose() override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

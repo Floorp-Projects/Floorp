@@ -92,6 +92,10 @@ class MessageChannel : HasResultCodes
     explicit MessageChannel(IToplevelProtocol *aListener);
     ~MessageChannel();
 
+    IToplevelProtocol *Listener() const {
+        return mListener;
+    }
+
     // "Open" from the perspective of the transport layer; the underlying
     // socketpair/pipe should already be created.
     //
@@ -346,10 +350,6 @@ class MessageChannel : HasResultCodes
 
     void EnteredSyncSend();
     void ExitedSyncSend();
-
-    IToplevelProtocol *Listener() const {
-        return mListener;
-    }
 
     void DebugAbort(const char* file, int line, const char* cond,
                     const char* why,

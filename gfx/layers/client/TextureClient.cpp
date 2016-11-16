@@ -111,7 +111,7 @@ public:
   , mOwnerCalledDestroy(false)
   {}
 
-  bool Recv__delete__() override { return true; }
+  mozilla::ipc::IPCResult Recv__delete__() override { return IPC_OK(); }
 
   LayersIPCChannel* GetAllocator() { return mTextureForwarder; }
 

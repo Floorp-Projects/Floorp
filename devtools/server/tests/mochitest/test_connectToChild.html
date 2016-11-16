@@ -42,7 +42,7 @@ function runTests() {
   let mm = iframe.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
 
   // Register a test actor in the child process so that we can know if and when
-  // this fake actor is disconnected.
+  // this fake actor is destroyed.
   mm.loadFrameScript("data:text/javascript,new " + function FrameScriptScope() {
     const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     const { DebuggerServer } = require("devtools/server/main");
@@ -55,8 +55,8 @@ function runTests() {
     TestActor.prototype = {
       actorPrefix: "test",
 
-      disconnect: function () {
-        sendAsyncMessage("test-actor-disconnected", null);
+      destroy: function () {
+        sendAsyncMessage("test-actor-destroyed", null);
       },
       hello: function () {
         return {msg:"world"};
@@ -85,7 +85,7 @@ function runTests() {
       ok(actor.testActor, "Got the test actor");
 
       // Ensure sending at least one request to our actor,
-      // otherwise it won't be instanciated, nor be disconnected...
+      // otherwise it won't be instanciated, nor be destroyed...
       client.request({
         to: actor.testActor,
         type: "hello",
@@ -95,10 +95,10 @@ function runTests() {
         client.close();
 
         // Ensure that our test actor got cleaned up;
-        // its disconnect method should be called
-        mm.addMessageListener("test-actor-disconnected", function listener() {
-          mm.removeMessageListener("test-actor-disconnected", listener);
-          ok(true, "Actor is cleaned  up");
+        // its destroy method should be called
+        mm.addMessageListener("test-actor-destroyed", function listener() {
+          mm.removeMessageListener("test-actor-destroyed", listener);
+          ok(true, "Actor is cleaned up");
 
           secondClient(actor.testActor);
         });

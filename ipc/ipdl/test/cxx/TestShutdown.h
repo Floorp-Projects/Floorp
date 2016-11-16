@@ -57,10 +57,13 @@ public:
     }
 
 protected:
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerStackFrame() override
     {
-        return CallStackFrame();
+        if (!CallStackFrame()) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
 
     virtual PTestShutdownSubsubParent*
@@ -104,7 +107,7 @@ public:
     void Main();
 
 protected:
-    virtual bool RecvSync() override { return true; }
+    virtual mozilla::ipc::IPCResult RecvSync() override { return IPC_OK(); }
 
     virtual PTestShutdownSubParent*
     AllocPTestShutdownSubParent(const bool& expectCrash) override
@@ -161,7 +164,7 @@ public:
     }
 
 protected:
-    virtual bool AnswerStackFrame() override;
+    virtual mozilla::ipc::IPCResult AnswerStackFrame() override;
 
     virtual PTestShutdownSubsubChild*
     AllocPTestShutdownSubsubChild(const bool& expectParentDelete) override
@@ -196,7 +199,7 @@ public:
     }
 
 protected:
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvStart() override;
 
     virtual PTestShutdownSubChild*

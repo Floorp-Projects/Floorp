@@ -28,9 +28,8 @@
                   id="react-filter-buttons-hook"/>
         <spacer id="requests-menu-spacer"
                 flex="1"/>
-        <toolbarbutton id="requests-menu-network-summary-button"
-                       class="devtools-toolbarbutton icon-and-text"
-                       data-localization="tooltiptext=netmonitor.toolbar.perf"/>
+        <html:div xmlns="http://www.w3.org/1999/xhtml"
+                  id="react-summary-button-hook"/>
         <html:div xmlns="http://www.w3.org/1999/xhtml"
                   id="react-search-box-hook"/>
         <html:div xmlns="http://www.w3.org/1999/xhtml"

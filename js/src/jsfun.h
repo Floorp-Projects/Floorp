@@ -761,10 +761,6 @@ CloneFunctionAndScript(JSContext* cx, HandleFunction fun, HandleObject parent,
                        gc::AllocKind kind = gc::AllocKind::FUNCTION,
                        HandleObject proto = nullptr);
 
-extern bool
-FindBody(JSContext* cx, HandleFunction fun, HandleLinearString src, size_t* bodyStart,
-         size_t* bodyEnd);
-
 } // namespace js
 
 inline js::FunctionExtended*

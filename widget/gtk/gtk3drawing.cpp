@@ -145,10 +145,11 @@ moz_gtk_get_focus_outline_size(gint* focus_h_width, gint* focus_v_width)
 gint
 moz_gtk_menuitem_get_horizontal_padding(gint* horizontal_padding)
 {
-    gtk_widget_style_get(GetWidget(MOZ_GTK_MENUITEM),
-                         "horizontal-padding", horizontal_padding,
-                         nullptr);
-
+    GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_MENUITEM);
+    gtk_style_context_get_style(style,
+                                "horizontal-padding", horizontal_padding,
+                                nullptr);
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
@@ -158,7 +159,7 @@ moz_gtk_checkmenuitem_get_horizontal_padding(gint* horizontal_padding)
     GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_CHECKMENUITEM_CONTAINER);
     gtk_style_context_get_style(style,
                                 "horizontal-padding", horizontal_padding,
-                                NULL);
+                                nullptr);
     ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
@@ -1768,19 +1769,15 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
     GtkStyleContext* style;
     gboolean wide_separators;
     gint separator_height;
-    guint border_width;
     gint x, y, w;
     GtkBorder padding;
 
-    border_width =
-        gtk_container_get_border_width(GTK_CONTAINER(
-                                       GetWidget(MOZ_GTK_MENUSEPARATOR)));
     style = ClaimStyleContext(MOZ_GTK_MENUSEPARATOR, direction);
     gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
 
-    x = rect->x + border_width;
-    y = rect->y + border_width;
-    w = rect->width - border_width * 2;
+    x = rect->x;
+    y = rect->y;
+    w = rect->width;
 
     gtk_style_context_save(style);
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_SEPARATOR);
@@ -1818,8 +1815,6 @@ moz_gtk_menu_item_paint(WidgetNodeType widget, cairo_t *cr, GdkRectangle* rect,
     gint x, y, w, h;
 
     if (state->inHover && !state->disabled) {   
-        guint border_width =
-            gtk_container_get_border_width(GTK_CONTAINER(GetWidget(widget)));
         GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
         GtkStyleContext* style =
             ClaimStyleContext(widget, direction, state_flags);
@@ -1835,10 +1830,10 @@ moz_gtk_menu_item_paint(WidgetNodeType widget, cairo_t *cr, GdkRectangle* rect,
             }
         }
 
-        x = rect->x + border_width;
-        y = rect->y + border_width;
-        w = rect->width - border_width * 2;
-        h = rect->height - border_width * 2;
+        x = rect->x;
+        y = rect->y;
+        w = rect->width;
+        h = rect->height;
 
         gtk_render_background(style, cr, x, y, w, h);
         gtk_render_frame(style, cr, x, y, w, h);
@@ -1877,7 +1872,6 @@ moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
     GtkStyleContext* style;
     GtkBorder padding;
-    gint offset;
     gint indicator_size, horizontal_padding;
     gint x, y;
 
@@ -1900,9 +1894,7 @@ moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
                                         MOZ_GTK_CHECKMENUITEM,
                               direction, state_flags);
     gtk_style_context_get_padding(style, state_flags, &padding);
-    offset = gtk_container_get_border_width(GTK_CONTAINER(
-                                            GetWidget(MOZ_GTK_CHECKMENUITEM_CONTAINER)));
-    offset += padding.left + 2;
+    gint offset = padding.left + 2;
 
     if (direction == GTK_TEXT_DIR_RTL) {
         x = rect->width - indicator_size - offset - horizontal_padding;
@@ -2160,16 +2152,15 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_CHECKMENUITEM:
     case MOZ_GTK_RADIOMENUITEM:
         {
-            if (widget == MOZ_GTK_MENUBARITEM || widget == MOZ_GTK_MENUITEM) {
-                // Bug 1274143 for MOZ_GTK_MENUBARITEM
-                w = GetWidget(MOZ_GTK_MENUITEM);
-            } else {
-                w = GetWidget(MOZ_GTK_CHECKMENUITEM_CONTAINER);
-            }
+            // Bug 1274143 for MOZ_GTK_MENUBARITEM
+            WidgetNodeType type =
+                widget == MOZ_GTK_MENUBARITEM || widget == MOZ_GTK_MENUITEM ?
+                MOZ_GTK_MENUITEM : MOZ_GTK_CHECKMENUITEM_CONTAINER;
+            style = ClaimStyleContext(type);
 
-            *left = *top = *right = *bottom = gtk_container_get_border_width(GTK_CONTAINER(w));
-            moz_gtk_add_style_padding(gtk_widget_get_style_context(w),
-                                      left, top, right, bottom);
+            moz_gtk_add_style_padding(style, left, top, right, bottom);
+
+            ReleaseStyleContext(style);
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_INFO_BAR:
@@ -2444,14 +2435,7 @@ moz_gtk_get_menu_separator_height(gint *size)
     gboolean  wide_separators;
     gint      separator_height;
     GtkBorder padding;
-    GtkStyleContext* style;
-    guint border_width;
-
-    border_width =
-        gtk_container_get_border_width(GTK_CONTAINER(
-                                       GetWidget(MOZ_GTK_MENUSEPARATOR)));
-
-    style = ClaimStyleContext(MOZ_GTK_MENUSEPARATOR);
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_MENUSEPARATOR);
     gtk_style_context_get_padding(style, GTK_STATE_FLAG_NORMAL, &padding);
 
     gtk_style_context_save(style);
@@ -2465,7 +2449,7 @@ moz_gtk_get_menu_separator_height(gint *size)
     gtk_style_context_restore(style);
     ReleaseStyleContext(style);
 
-    *size = padding.top + padding.bottom + border_width*2;
+    *size = padding.top + padding.bottom;
     *size += (wide_separators) ? separator_height : 1;
 
     return MOZ_GTK_SUCCESS;

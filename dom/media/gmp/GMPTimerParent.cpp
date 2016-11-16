@@ -32,7 +32,7 @@ GMPTimerParent::GMPTimerParent(nsIThread* aGMPThread)
 {
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPTimerParent::RecvSetTimer(const uint32_t& aTimerId,
                              const uint32_t& aTimeoutMs)
 {
@@ -41,28 +41,28 @@ GMPTimerParent::RecvSetTimer(const uint32_t& aTimerId,
   MOZ_ASSERT(mGMPThread == NS_GetCurrentThread());
 
   if (!mIsOpen) {
-    return true;
+    return IPC_OK();
   }
 
   nsresult rv;
   nsAutoPtr<Context> ctx(new Context());
   ctx->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  NS_ENSURE_SUCCESS(rv, true);
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   ctx->mId = aTimerId;
   rv = ctx->mTimer->SetTarget(mGMPThread);
-  NS_ENSURE_SUCCESS(rv, true);
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
   ctx->mParent = this;
 
   rv = ctx->mTimer->InitWithFuncCallback(&GMPTimerParent::GMPTimerExpired,
                                           ctx,
                                           aTimeoutMs,
                                           nsITimer::TYPE_ONE_SHOT);
-  NS_ENSURE_SUCCESS(rv, true);
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   mTimers.PutEntry(ctx.forget());
 
-  return true;
+  return IPC_OK();
 }
 
 void

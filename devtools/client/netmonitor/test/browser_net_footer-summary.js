@@ -10,13 +10,14 @@
 
 add_task(function* () {
   requestLongerTimeout(2);
+  let { getSummary } = require("devtools/client/netmonitor/selectors/index");
   let { L10N } = require("devtools/client/netmonitor/l10n");
   let { PluralForm } = require("devtools/shared/plural-form");
 
   let { tab, monitor } = yield initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
-  let { $, NetMonitorView } = monitor.panelWin;
+  let { $, NetMonitorView, gStore } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;
@@ -43,31 +44,24 @@ add_task(function* () {
   yield teardown(monitor);
 
   function testStatus() {
-    let summary = $("#requests-menu-network-summary-button");
-    let value = summary.getAttribute("label");
+    const { count, totalBytes, totalMillis } = getSummary(gStore.getState());
+    let value = $("#requests-menu-network-summary-button").textContent;
     info("Current summary: " + value);
 
-    let visibleItems = RequestsMenu.visibleItems;
-    let visibleRequestsCount = visibleItems.length;
     let totalRequestsCount = RequestsMenu.itemCount;
-    info("Current requests: " + visibleRequestsCount + " of " + totalRequestsCount + ".");
+    info("Current requests: " + count + " of " + totalRequestsCount + ".");
 
-    if (!totalRequestsCount || !visibleRequestsCount) {
+    if (!totalRequestsCount || !count) {
       is(value, L10N.getStr("networkMenu.empty"),
         "The current summary text is incorrect, expected an 'empty' label.");
       return;
     }
 
-    let totalBytes = RequestsMenu._getTotalBytesOfRequests(visibleItems);
-    let totalMillis =
-      RequestsMenu._getNewestRequest(visibleItems).attachment.endedMillis -
-      RequestsMenu._getOldestRequest(visibleItems).attachment.startedMillis;
-
     info("Computed total bytes: " + totalBytes);
     info("Computed total millis: " + totalMillis);
 
-    is(value, PluralForm.get(visibleRequestsCount, L10N.getStr("networkMenu.summary"))
-      .replace("#1", visibleRequestsCount)
+    is(value, PluralForm.get(count, L10N.getStr("networkMenu.summary"))
+      .replace("#1", count)
       .replace("#2", L10N.numberWithDecimals((totalBytes || 0) / 1024, 2))
       .replace("#3", L10N.numberWithDecimals((totalMillis || 0) / 1000, 2))
     , "The current summary text is incorrect.");

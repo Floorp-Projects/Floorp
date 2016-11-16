@@ -43,9 +43,7 @@ nsPluginArray::Init()
   }
 }
 
-nsPluginArray::~nsPluginArray()
-{
-}
+nsPluginArray::~nsPluginArray() = default;
 
 static bool
 ResistFingerprinting() {
@@ -415,9 +413,7 @@ nsPluginElement::nsPluginElement(nsPIDOMWindowInner* aWindow,
 {
 }
 
-nsPluginElement::~nsPluginElement()
-{
-}
+nsPluginElement::~nsPluginElement() = default;
 
 nsPIDOMWindowInner*
 nsPluginElement::GetParentObject() const

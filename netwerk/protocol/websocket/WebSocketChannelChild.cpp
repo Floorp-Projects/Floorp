@@ -208,7 +208,7 @@ class StartEvent : public ChannelEvent
   bool mEncrypted;
 };
 
-bool
+mozilla::ipc::IPCResult
 WebSocketChannelChild::RecvOnStart(const nsCString& aProtocol,
                                    const nsCString& aExtensions,
                                    const nsString& aEffectiveURL,
@@ -219,7 +219,7 @@ WebSocketChannelChild::RecvOnStart(const nsCString& aProtocol,
                                              aEffectiveURL, aEncrypted),
                               mTargetThread));
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -258,14 +258,14 @@ class StopEvent : public ChannelEvent
   nsresult mStatusCode;
 };
 
-bool
+mozilla::ipc::IPCResult
 WebSocketChannelChild::RecvOnStop(const nsresult& aStatusCode)
 {
   mEventQ->RunOrEnqueue(
     new EventTargetDispatcher(new StopEvent(this, aStatusCode),
                               mTargetThread));
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -303,14 +303,14 @@ class MessageEvent : public ChannelEvent
   bool mBinary;
 };
 
-bool
+mozilla::ipc::IPCResult
 WebSocketChannelChild::RecvOnMessageAvailable(const nsCString& aMsg)
 {
   mEventQ->RunOrEnqueue(
     new EventTargetDispatcher(new MessageEvent(this, aMsg, false),
                               mTargetThread));
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -323,14 +323,14 @@ WebSocketChannelChild::OnMessageAvailable(const nsCString& aMsg)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 WebSocketChannelChild::RecvOnBinaryMessageAvailable(const nsCString& aMsg)
 {
   mEventQ->RunOrEnqueue(
     new EventTargetDispatcher(new MessageEvent(this, aMsg, true),
                               mTargetThread));
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -362,14 +362,14 @@ class AcknowledgeEvent : public ChannelEvent
   uint32_t mSize;
 };
 
-bool
+mozilla::ipc::IPCResult
 WebSocketChannelChild::RecvOnAcknowledge(const uint32_t& aSize)
 {
   mEventQ->RunOrEnqueue(
     new EventTargetDispatcher(new AcknowledgeEvent(this, aSize),
                               mTargetThread));
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -403,7 +403,7 @@ class ServerCloseEvent : public ChannelEvent
   nsCString mReason;
 };
 
-bool
+mozilla::ipc::IPCResult
 WebSocketChannelChild::RecvOnServerClose(const uint16_t& aCode,
                                          const nsCString& aReason)
 {
@@ -411,7 +411,7 @@ WebSocketChannelChild::RecvOnServerClose(const uint16_t& aCode,
     new EventTargetDispatcher(new ServerCloseEvent(this, aCode, aReason),
                               mTargetThread));
 
-  return true;
+  return IPC_OK();
 }
 
 void

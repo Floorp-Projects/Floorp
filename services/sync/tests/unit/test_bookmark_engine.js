@@ -23,6 +23,63 @@ function* assertChildGuids(folderGuid, expectedChildGuids, message) {
   deepEqual(childGuids, expectedChildGuids, message);
 }
 
+add_task(function* test_delete_invalid_roots_from_server() {
+  _("Ensure that we delete the Places and Reading List roots from the server.");
+
+  let engine  = new BookmarksEngine(Service);
+  let store   = engine._store;
+  let tracker = engine._tracker;
+  let server = serverForFoo(engine);
+  new SyncTestingInfrastructure(server.server);
+
+  let collection = server.user("foo").collection("bookmarks");
+
+  Svc.Obs.notify("weave:engine:start-tracking");
+
+  try {
+    collection.insert("places", encryptPayload(store.createRecord("places").cleartext));
+
+    let listBmk = new Bookmark("bookmarks", Utils.makeGUID());
+    listBmk.bmkUri = "https://example.com";
+    listBmk.title = "Example reading list entry";
+    listBmk.parentName = "Reading List";
+    listBmk.parentid = "readinglist";
+    collection.insert(listBmk.id, encryptPayload(listBmk.cleartext));
+
+    let readingList = new BookmarkFolder("bookmarks", "readinglist");
+    readingList.title = "Reading List";
+    readingList.children = [listBmk.id];
+    readingList.parentName = "";
+    readingList.parentid = "places";
+    collection.insert("readinglist", encryptPayload(readingList.cleartext));
+
+    let newBmk = new Bookmark("bookmarks", Utils.makeGUID());
+    newBmk.bmkUri = "http://getfirefox.com";
+    newBmk.title = "Get Firefox!";
+    newBmk.parentName = "Bookmarks Toolbar";
+    newBmk.parentid = "toolbar";
+    collection.insert(newBmk.id, encryptPayload(newBmk.cleartext));
+
+    deepEqual(collection.keys().sort(), ["places", "readinglist", listBmk.id, newBmk.id].sort(),
+      "Should store Places root, reading list items, and new bookmark on server");
+
+    yield sync_engine_and_validate_telem(engine, false);
+
+    ok(!store.itemExists("readinglist"), "Should not apply Reading List root");
+    ok(!store.itemExists(listBmk.id), "Should not apply items in Reading List");
+    ok(store.itemExists(newBmk.id), "Should apply new bookmark");
+
+    deepEqual(collection.keys().sort(), ["menu", "mobile", "toolbar", "unfiled", newBmk.id].sort(),
+      "Should remove Places root and reading list items from server; upload local roots");
+  } finally {
+    store.wipe();
+    Svc.Prefs.resetBranch("");
+    Service.recordManager.clearCache();
+    yield new Promise(resolve => server.stop(resolve));
+    Svc.Obs.notify("weave:engine:stop-tracking");
+  }
+});
+
 add_task(function* test_change_during_sync() {
   _("Ensure that we track changes made during a sync.");
 

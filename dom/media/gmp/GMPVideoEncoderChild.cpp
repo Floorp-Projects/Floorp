@@ -70,14 +70,14 @@ GMPVideoEncoderChild::Error(GMPErr aError)
   SendError(aError);
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPVideoEncoderChild::RecvInitEncode(const GMPVideoCodec& aCodecSettings,
                                      InfallibleTArray<uint8_t>&& aCodecSpecific,
                                      const int32_t& aNumberOfCores,
                                      const uint32_t& aMaxPayloadSize)
 {
   if (!mVideoEncoder) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Ignore any return code. It is OK for this to fail without killing the process.
@@ -88,16 +88,16 @@ GMPVideoEncoderChild::RecvInitEncode(const GMPVideoCodec& aCodecSettings,
                             aNumberOfCores,
                             aMaxPayloadSize);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPVideoEncoderChild::RecvEncode(const GMPVideoi420FrameData& aInputFrame,
                                  InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
                                  InfallibleTArray<GMPVideoFrameType>&& aFrameTypes)
 {
   if (!mVideoEncoder) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   auto f = new GMPVideoi420FrameImpl(aInputFrame, &mVideoHost);
@@ -109,61 +109,61 @@ GMPVideoEncoderChild::RecvEncode(const GMPVideoi420FrameData& aInputFrame,
                         aFrameTypes.Elements(),
                         aFrameTypes.Length());
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPVideoEncoderChild::RecvChildShmemForPool(Shmem&& aEncodedBuffer)
 {
   if (aEncodedBuffer.IsWritable()) {
     mVideoHost.SharedMemMgr()->MgrDeallocShmem(GMPSharedMem::kGMPEncodedData,
                                                aEncodedBuffer);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPVideoEncoderChild::RecvSetChannelParameters(const uint32_t& aPacketLoss,
                                                const uint32_t& aRTT)
 {
   if (!mVideoEncoder) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Ignore any return code. It is OK for this to fail without killing the process.
   mVideoEncoder->SetChannelParameters(aPacketLoss, aRTT);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPVideoEncoderChild::RecvSetRates(const uint32_t& aNewBitRate,
                                    const uint32_t& aFrameRate)
 {
   if (!mVideoEncoder) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Ignore any return code. It is OK for this to fail without killing the process.
   mVideoEncoder->SetRates(aNewBitRate, aFrameRate);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPVideoEncoderChild::RecvSetPeriodicKeyFrames(const bool& aEnable)
 {
   if (!mVideoEncoder) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Ignore any return code. It is OK for this to fail without killing the process.
   mVideoEncoder->SetPeriodicKeyFrames(aEnable);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPVideoEncoderChild::RecvEncodingComplete()
 {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
@@ -174,12 +174,12 @@ GMPVideoEncoderChild::RecvEncodingComplete()
     // now and don't delete the GMPVideoEncoderChild, defer processing the
     // EncodingComplete() until once the Alloc() finishes.
     mPendingEncodeComplete = true;
-    return true;
+    return IPC_OK();
   }
 
   if (!mVideoEncoder) {
     Unused << Send__delete__(this);
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Ignore any return code. It is OK for this to fail without killing the process.
@@ -191,7 +191,7 @@ GMPVideoEncoderChild::RecvEncodingComplete()
 
   Unused << Send__delete__(this);
 
-  return true;
+  return IPC_OK();
 }
 
 bool

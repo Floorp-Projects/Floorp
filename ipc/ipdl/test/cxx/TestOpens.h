@@ -46,9 +46,9 @@ public:
     virtual ~TestOpensOpenedParent() {}
 
 protected:
-    virtual bool RecvHello() override;
-    virtual bool RecvHelloSync() override;
-    virtual bool AnswerHelloRpc() override;
+    virtual mozilla::ipc::IPCResult RecvHello() override;
+    virtual mozilla::ipc::IPCResult RecvHelloSync() override;
+    virtual mozilla::ipc::IPCResult AnswerHelloRpc() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override;
 
@@ -68,7 +68,7 @@ public:
     virtual ~TestOpensChild() {}
 
 protected:
-    virtual bool RecvStart() override;
+    virtual mozilla::ipc::IPCResult RecvStart() override;
 
     virtual PTestOpensOpenedChild*
     AllocPTestOpensOpenedChild(Transport* transport, ProcessId otherProcess) override;
@@ -90,8 +90,8 @@ public:
     virtual ~TestOpensOpenedChild() {}
 
 protected:
-    virtual bool RecvHi() override;
-    virtual bool AnswerHiRpc() override;
+    virtual mozilla::ipc::IPCResult RecvHi() override;
+    virtual mozilla::ipc::IPCResult AnswerHiRpc() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override;
 

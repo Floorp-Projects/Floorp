@@ -209,7 +209,7 @@ private:
   AllocPBlobStreamParent(const uint64_t& aStart,
                          const uint64_t& aLength) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
                              const uint64_t& aStart,
                              const uint64_t& aLength) override;
@@ -217,22 +217,22 @@ private:
   virtual bool
   DeallocPBlobStreamParent(PBlobStreamParent* aActor) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvResolveMystery(const ResolveMysteryParams& aParams) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvBlobStreamSync(const uint64_t& aStart,
                      const uint64_t& aLength,
                      InputStreamParams* aParams,
                      OptionalFileDescriptorSet* aFDs) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvWaitForSliceCreation() override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetFileId(int64_t* aFileId) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetFilePath(nsString* aFilePath) override;
 };
 

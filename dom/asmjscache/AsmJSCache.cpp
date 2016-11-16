@@ -250,7 +250,7 @@ public:
     mMappedMemory(nullptr)
   { }
 
-  ~FileDescriptorHolder()
+  ~FileDescriptorHolder() override
   {
     // These resources should have already been released by Finish().
     MOZ_ASSERT(!mQuotaObject);
@@ -364,7 +364,7 @@ public:
   }
 
 private:
-  ~ParentRunnable()
+  ~ParentRunnable() override
   {
     MOZ_ASSERT(mState == eFinished);
     MOZ_ASSERT(!mDirectoryLock);
@@ -509,14 +509,14 @@ private:
   }
 
   // OpenDirectoryListener overrides.
-  virtual void
+  void
   DirectoryLockAcquired(DirectoryLock* aLock) override;
 
-  virtual void
+  void
   DirectoryLockFailed() override;
 
   // IPDL methods.
-  bool
+  mozilla::ipc::IPCResult
   Recv__delete__(const JS::AsmJSCacheResult& aResult) override
   {
     AssertIsOnOwningThread();
@@ -530,7 +530,7 @@ private:
 
     MOZ_ASSERT(mState == eFinished);
 
-    return true;
+    return IPC_OK();
   }
 
   void
@@ -557,7 +557,7 @@ private:
     MOZ_ASSERT(mState == eFinished);
   }
 
-  bool
+  mozilla::ipc::IPCResult
   RecvSelectCacheFileToRead(const uint32_t& aModuleIndex) override
   {
     AssertIsOnOwningThread();
@@ -570,17 +570,17 @@ private:
     mState = eReadyToOpenCacheFileForRead;
     DispatchToIOThread();
 
-    return true;
+    return IPC_OK();
   }
 
-  bool
+  mozilla::ipc::IPCResult
   RecvCacheMiss() override
   {
     AssertIsOnOwningThread();
 
     CacheMiss();
 
-    return true;
+    return IPC_OK();
   }
 
   nsCOMPtr<nsIEventTarget> mOwningThread;
@@ -1104,10 +1104,9 @@ FindHashMatch(const Metadata& aMetadata, const ReadParams& aReadParams,
   MOZ_ASSERT(numChars > sNumFastHashChars);
   uint32_t fastHash = HashString(aReadParams.mBegin, sNumFastHashChars);
 
-  for (unsigned i = 0; i < Metadata::kNumEntries ; i++) {
+  for (auto entry : aMetadata.mEntries) {
     // Compare the "fast hash" first to see whether it is worthwhile to
     // hash all the chars.
-    Metadata::Entry entry = aMetadata.mEntries[i];
     if (entry.mFastHash != fastHash) {
       continue;
     }
@@ -1277,7 +1276,7 @@ public:
   }
 
 private:
-  ~ChildRunnable()
+  ~ChildRunnable() override
   {
     MOZ_ASSERT(!mWaiting, "Shouldn't be destroyed while thread is waiting");
     MOZ_ASSERT(!mOpened);
@@ -1287,7 +1286,7 @@ private:
   }
 
   // IPDL methods.
-  bool
+  mozilla::ipc::IPCResult
   RecvOnOpenMetadataForRead(const Metadata& aMetadata) override
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -1295,13 +1294,19 @@ private:
 
     uint32_t moduleIndex;
     if (FindHashMatch(aMetadata, mReadParams, &moduleIndex)) {
-      return SendSelectCacheFileToRead(moduleIndex);
+      if (!SendSelectCacheFileToRead(moduleIndex)) {
+        return IPC_FAIL_NO_REASON(this);
+      }
+      return IPC_OK();
     }
 
-    return SendCacheMiss();
+    if (!SendCacheMiss()) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+    return IPC_OK();
   }
 
-  bool
+  mozilla::ipc::IPCResult
   RecvOnOpenCacheFile(const int64_t& aFileSize,
                       const FileDescriptor& aFileDesc) override
   {
@@ -1313,22 +1318,22 @@ private:
     auto rawFD = aFileDesc.ClonePlatformHandle();
     mFileDesc = PR_ImportFile(PROsfd(rawFD.release()));
     if (!mFileDesc) {
-      return false;
+      return IPC_FAIL_NO_REASON(this);
     }
 
     mState = eOpened;
     Notify(JS::AsmJSCache_Success);
-    return true;
+    return IPC_OK();
   }
 
-  bool
+  mozilla::ipc::IPCResult
   Recv__delete__(const JS::AsmJSCacheResult& aResult) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mState == eOpening);
 
     Fail(aResult);
-    return true;
+    return IPC_OK();
   }
 
   void
@@ -1714,7 +1719,7 @@ CloseEntryForWrite(size_t aSize,
 
 class Client : public quota::Client
 {
-  ~Client() {}
+  ~Client() override = default;
 
 public:
   NS_IMETHOD_(MozExternalRefCountType)
@@ -1723,13 +1728,13 @@ public:
   NS_IMETHOD_(MozExternalRefCountType)
   Release() override;
 
-  virtual Type
+  Type
   GetType() override
   {
     return ASMJS;
   }
 
-  virtual nsresult
+  nsresult
   InitOrigin(PersistenceType aPersistenceType,
              const nsACString& aGroup,
              const nsACString& aOrigin,
@@ -1741,7 +1746,7 @@ public:
     return GetUsageForOrigin(aPersistenceType, aGroup, aOrigin, aUsageInfo);
   }
 
-  virtual nsresult
+  nsresult
   GetUsageForOrigin(PersistenceType aPersistenceType,
                     const nsACString& aGroup,
                     const nsACString& aOrigin,
@@ -1791,33 +1796,33 @@ public:
     return NS_OK;
   }
 
-  virtual void
+  void
   OnOriginClearCompleted(PersistenceType aPersistenceType,
                          const nsACString& aOrigin)
                          override
   { }
 
-  virtual void
+  void
   ReleaseIOThreadObjects() override
   { }
 
-  virtual void
+  void
   AbortOperations(const nsACString& aOrigin) override
   { }
 
-  virtual void
+  void
   AbortOperationsForProcess(ContentParentId aContentParentId) override
   { }
 
-  virtual void
+  void
   StartIdleMaintenance() override
   { }
 
-  virtual void
+  void
   StopIdleMaintenance() override
   { }
 
-  virtual void
+  void
   ShutdownWorkThreads() override
   { }
 
@@ -1847,8 +1852,7 @@ using mozilla::dom::asmjscache::WriteParams;
 void
 ParamTraits<Metadata>::Write(Message* aMsg, const paramType& aParam)
 {
-  for (unsigned i = 0; i < Metadata::kNumEntries; i++) {
-    const Metadata::Entry& entry = aParam.mEntries[i];
+  for (auto entry : aParam.mEntries) {
     WriteParam(aMsg, entry.mFastHash);
     WriteParam(aMsg, entry.mNumChars);
     WriteParam(aMsg, entry.mFullHash);
@@ -1860,8 +1864,7 @@ bool
 ParamTraits<Metadata>::Read(const Message* aMsg, PickleIterator* aIter,
                             paramType* aResult)
 {
-  for (unsigned i = 0; i < Metadata::kNumEntries; i++) {
-    Metadata::Entry& entry = aResult->mEntries[i];
+  for (auto& entry : aResult->mEntries) {
     if (!ReadParam(aMsg, aIter, &entry.mFastHash) ||
         !ReadParam(aMsg, aIter, &entry.mNumChars) ||
         !ReadParam(aMsg, aIter, &entry.mFullHash) ||
@@ -1876,8 +1879,7 @@ ParamTraits<Metadata>::Read(const Message* aMsg, PickleIterator* aIter,
 void
 ParamTraits<Metadata>::Log(const paramType& aParam, std::wstring* aLog)
 {
-  for (unsigned i = 0; i < Metadata::kNumEntries; i++) {
-    const Metadata::Entry& entry = aParam.mEntries[i];
+  for (auto entry : aParam.mEntries) {
     LogParam(entry.mFastHash, aLog);
     LogParam(entry.mNumChars, aLog);
     LogParam(entry.mFullHash, aLog);

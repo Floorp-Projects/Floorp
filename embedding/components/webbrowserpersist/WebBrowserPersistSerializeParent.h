@@ -25,10 +25,10 @@ public:
         nsIWebBrowserPersistWriteCompletion* aFinish);
     virtual ~WebBrowserPersistSerializeParent();
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvWriteData(nsTArray<uint8_t>&& aData) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     Recv__delete__(const nsCString& aContentType,
                    const nsresult& aStatus) override;
 

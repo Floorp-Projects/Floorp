@@ -29,7 +29,7 @@ using namespace mozilla::layout;
 
 namespace mozilla {
 namespace embedding {
-bool
+mozilla::ipc::IPCResult
 PrintingParent::RecvShowProgress(PBrowserParent* parent,
                                  PPrintProgressDialogParent* printProgressDialog,
                                  PRemotePrintJobParent* remotePrintJob,
@@ -42,13 +42,13 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
 
   nsCOMPtr<nsPIDOMWindowOuter> parentWin = DOMWindowFromBrowserParent(parent);
   if (!parentWin) {
-    return true;
+    return IPC_OK();
   }
 
   nsCOMPtr<nsIPrintingPromptService> pps(do_GetService("@mozilla.org/embedcomp/printingprompt-service;1"));
 
   if (!pps) {
-    return true;
+    return IPC_OK();
   }
 
   PrintProgressDialogParent* dialogParent =
@@ -63,7 +63,7 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
                               getter_AddRefs(printProgressListener),
                               getter_AddRefs(printProgressParams),
                               notifyOnOpen);
-  NS_ENSURE_SUCCESS(*result, true);
+  NS_ENSURE_SUCCESS(*result, IPC_OK());
 
   if (remotePrintJob) {
     // If we have a RemotePrintJob use that as a more general forwarder for
@@ -76,7 +76,7 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
 
   dialogParent->SetPrintProgressParams(printProgressParams);
 
-  return true;
+  return IPC_OK();
 }
 
 nsresult
@@ -144,7 +144,7 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   return rv;
 }
 
-bool
+mozilla::ipc::IPCResult
 PrintingParent::RecvShowPrintDialog(PPrintSettingsDialogParent* aDialog,
                                     PBrowserParent* aParent,
                                     const PrintData& aData)
@@ -161,10 +161,10 @@ PrintingParent::RecvShowPrintDialog(PPrintSettingsDialogParent* aDialog,
   } else {
     mozilla::Unused << aDialog->Send__delete__(aDialog, resultData);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PrintingParent::RecvSavePrintSettings(const PrintData& aData,
                                       const bool& aUsePrinterNamePrefix,
                                       const uint32_t& aFlags,
@@ -172,16 +172,16 @@ PrintingParent::RecvSavePrintSettings(const PrintData& aData,
 {
   nsCOMPtr<nsIPrintSettings> settings;
   *aResult = mPrintSettingsSvc->GetNewPrintSettings(getter_AddRefs(settings));
-  NS_ENSURE_SUCCESS(*aResult, true);
+  NS_ENSURE_SUCCESS(*aResult, IPC_OK());
 
   *aResult = mPrintSettingsSvc->DeserializeToPrintSettings(aData, settings);
-  NS_ENSURE_SUCCESS(*aResult, true);
+  NS_ENSURE_SUCCESS(*aResult, IPC_OK());
 
   *aResult = mPrintSettingsSvc->SavePrintSettingsToPrefs(settings,
                                                         aUsePrinterNamePrefix,
                                                         aFlags);
 
-  return true;
+  return IPC_OK();
 }
 
 PPrintProgressDialogParent*

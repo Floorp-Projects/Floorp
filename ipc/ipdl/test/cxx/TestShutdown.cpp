@@ -53,7 +53,7 @@ TestShutdownSubsubParent::ActorDestroy(ActorDestroyReason why)
 //-----------------------------------------------------------------------------
 // Child side
 
-bool
+mozilla::ipc::IPCResult
 TestShutdownChild::RecvStart()
 {
     // test 1: alloc some actors and subactors, delete in
@@ -192,7 +192,7 @@ TestShutdownChild::ActorDestroy(ActorDestroyReason why)
     fail("hey wait ... we should have crashed!");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestShutdownSubChild::AnswerStackFrame()
 {
     if (!PTestShutdownSubChild::Send__delete__(this))
@@ -200,7 +200,7 @@ TestShutdownSubChild::AnswerStackFrame()
 
     // WATCH OUT!  |this| has just deleted
 
-    return true;
+    return IPC_OK();
 }
 
 void

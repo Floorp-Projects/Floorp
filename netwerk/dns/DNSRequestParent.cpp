@@ -51,7 +51,7 @@ DNSRequestParent::DoAsyncResolve(const nsACString &hostname, uint32_t flags,
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 DNSRequestParent::RecvCancelDNSRequest(const nsCString& hostName,
                                        const uint32_t& flags,
                                        const nsCString& networkInterface,
@@ -63,14 +63,14 @@ DNSRequestParent::RecvCancelDNSRequest(const nsCString& hostName,
     rv = dns->CancelAsyncResolveExtended(hostName, flags, networkInterface,
                                          this, reason);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 DNSRequestParent::Recv__delete__()
 {
   mIPCClosed = true;
-  return true;
+  return IPC_OK();
 }
 
 void

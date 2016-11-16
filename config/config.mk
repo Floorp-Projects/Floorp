@@ -340,6 +340,31 @@ endif
 HOST_CFLAGS += $(HOST_DEFINES) $(MOZBUILD_HOST_CFLAGS)
 HOST_CXXFLAGS += $(HOST_DEFINES) $(MOZBUILD_HOST_CXXFLAGS)
 
+# We only add color flags if neither the flag to disable color
+# (e.g. "-fno-color-diagnostics" nor a flag to control color
+# (e.g. "-fcolor-diagnostics=never") is present.
+define colorize_flags
+ifeq (,$(filter $(COLOR_CFLAGS:-f%=-fno-%),$$(1))$(findstring $(COLOR_CFLAGS),$$(1)))
+$(1) += $(COLOR_CFLAGS)
+endif
+endef
+
+color_flags_vars := \
+  COMPILE_CFLAGS \
+  COMPILE_CXXFLAGS \
+  COMPILE_CMFLAGS \
+  COMPILE_CMMFLAGS \
+  HOST_CFLAGS \
+  HOST_CXXFLAGS \
+  LDFLAGS \
+  $(NULL)
+
+ifdef MACH_STDOUT_ISATTY
+ifdef COLOR_CFLAGS
+$(foreach var,$(color_flags_vars),$(eval $(call colorize_flags,$(var))))
+endif
+endif
+
 #
 # Name of the binary code directories
 #

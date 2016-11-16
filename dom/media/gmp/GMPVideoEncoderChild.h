@@ -44,20 +44,20 @@ private:
   virtual ~GMPVideoEncoderChild();
 
   // PGMPVideoEncoderChild
-  bool RecvInitEncode(const GMPVideoCodec& aCodecSettings,
-                      InfallibleTArray<uint8_t>&& aCodecSpecific,
-                      const int32_t& aNumberOfCores,
-                      const uint32_t& aMaxPayloadSize) override;
-  bool RecvEncode(const GMPVideoi420FrameData& aInputFrame,
-                  InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
-                  InfallibleTArray<GMPVideoFrameType>&& aFrameTypes) override;
-  bool RecvChildShmemForPool(Shmem&& aEncodedBuffer) override;
-  bool RecvSetChannelParameters(const uint32_t& aPacketLoss,
-                                const uint32_t& aRTT) override;
-  bool RecvSetRates(const uint32_t& aNewBitRate,
-                    const uint32_t& aFrameRate) override;
-  bool RecvSetPeriodicKeyFrames(const bool& aEnable) override;
-  bool RecvEncodingComplete() override;
+  mozilla::ipc::IPCResult RecvInitEncode(const GMPVideoCodec& aCodecSettings,
+                                         InfallibleTArray<uint8_t>&& aCodecSpecific,
+                                         const int32_t& aNumberOfCores,
+                                         const uint32_t& aMaxPayloadSize) override;
+  mozilla::ipc::IPCResult RecvEncode(const GMPVideoi420FrameData& aInputFrame,
+                                     InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
+                                     InfallibleTArray<GMPVideoFrameType>&& aFrameTypes) override;
+  mozilla::ipc::IPCResult RecvChildShmemForPool(Shmem&& aEncodedBuffer) override;
+  mozilla::ipc::IPCResult RecvSetChannelParameters(const uint32_t& aPacketLoss,
+                                                   const uint32_t& aRTT) override;
+  mozilla::ipc::IPCResult RecvSetRates(const uint32_t& aNewBitRate,
+                                       const uint32_t& aFrameRate) override;
+  mozilla::ipc::IPCResult RecvSetPeriodicKeyFrames(const bool& aEnable) override;
+  mozilla::ipc::IPCResult RecvEncodingComplete() override;
 
   GMPContentChild* mPlugin;
   GMPVideoEncoder* mVideoEncoder;

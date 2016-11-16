@@ -115,7 +115,7 @@ GPATH
 
 # Ignore talos virtualenv and tp5n files.
 # The tp5n set is supposed to be decompressed at
-# testing/talos/talos/page_load_test/tp5n in order to run tests like tps
+# testing/talos/talos/tests/tp5n in order to run tests like tps
 # locally. Similarly, running talos requires a Python package virtual
 # environment. Both the virtual environment and tp5n files end up littering
 # the status command, so we ignore them.
@@ -124,8 +124,10 @@ GPATH
 ^testing/talos/include/
 ^testing/talos/lib/
 ^testing/talos/talos/tests/tp5n.zip
+^testing/talos/talos/tests/tp5n.tar.gz
 ^testing/talos/talos/tests/tp5n
 ^testing/talos/talos/tests/devtools/damp.manifest.develop
+^talos-venv
 
 # Ignore files created when running a reftest.
 ^lextab.py$

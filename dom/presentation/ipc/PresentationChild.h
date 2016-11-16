@@ -32,9 +32,9 @@ public:
   virtual bool
   DeallocPPresentationRequestChild(PPresentationRequestChild* aActor) override;
 
-  bool RecvPPresentationBuilderConstructor(PPresentationBuilderChild* aActor,
-                                           const nsString& aSessionId,
-                                           const uint8_t& aRole) override;
+  mozilla::ipc::IPCResult RecvPPresentationBuilderConstructor(PPresentationBuilderChild* aActor,
+                                                              const nsString& aSessionId,
+                                                              const uint8_t& aRole) override;
 
   virtual PPresentationBuilderChild*
   AllocPPresentationBuilderChild(const nsString& aSessionId, const uint8_t& aRole) override;
@@ -42,25 +42,25 @@ public:
   virtual bool
   DeallocPPresentationBuilderChild(PPresentationBuilderChild* aActor) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifyAvailableChange(nsTArray<nsString>&& aAvailabilityUrls,
                             const bool& aAvailable) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifySessionStateChange(const nsString& aSessionId,
                                const uint16_t& aState,
                                const nsresult& aReason) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifyMessage(const nsString& aSessionId,
                     const nsCString& aData,
                     const bool& aIsBinary) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifySessionConnect(const uint64_t& aWindowId,
                            const nsString& aSessionId) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifyCloseSessionTransport(const nsString& aSessionId,
                                   const uint8_t& aRole,
                                   const nsresult& aReason) override;
@@ -82,10 +82,10 @@ public:
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   Recv__delete__(const nsresult& aResult) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvNotifyRequestUrlSelected(const nsString& aUrl) override;
 
 private:

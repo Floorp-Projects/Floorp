@@ -7,6 +7,7 @@ const Provider = createFactory(require("devtools/client/shared/vendor/react-redu
 const FilterButtons = createFactory(require("./components/filter-buttons"));
 const ToggleButton = createFactory(require("./components/toggle-button"));
 const SearchBox = createFactory(require("./components/search-box"));
+const SummaryButton = createFactory(require("./components/summary-button"));
 const { L10N } = require("./l10n");
 
 // Shortcuts
@@ -28,8 +29,9 @@ ToolbarView.prototype = {
 
     this._clearContainerNode = $("#react-clear-button-hook");
     this._filterContainerNode = $("#react-filter-buttons-hook");
-    this._toggleContainerNode = $("#react-details-pane-toggle-hook");
+    this._summaryContainerNode = $("#react-summary-button-hook");
     this._searchContainerNode = $("#react-search-box-hook");
+    this._toggleContainerNode = $("#react-details-pane-toggle-hook");
 
     // clear button
     ReactDOM.render(button({
@@ -46,6 +48,12 @@ ToolbarView.prototype = {
       { store },
       FilterButtons()
     ), this._filterContainerNode);
+
+    // summary button
+    ReactDOM.render(Provider(
+      { store },
+      SummaryButton()
+    ), this._summaryContainerNode);
 
     // search box
     ReactDOM.render(Provider(
@@ -68,8 +76,9 @@ ToolbarView.prototype = {
 
     ReactDOM.unmountComponentAtNode(this._clearContainerNode);
     ReactDOM.unmountComponentAtNode(this._filterContainerNode);
-    ReactDOM.unmountComponentAtNode(this._toggleContainerNode);
+    ReactDOM.unmountComponentAtNode(this._summaryContainerNode);
     ReactDOM.unmountComponentAtNode(this._searchContainerNode);
+    ReactDOM.unmountComponentAtNode(this._toggleContainerNode);
   }
 
 };

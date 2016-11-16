@@ -50,7 +50,7 @@ GMPTimerChild::SetTimer(GMPTask* aTask, int64_t aTimeoutMS)
   return GMPNoErr;
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPTimerChild::RecvTimerExpired(const uint32_t& aTimerId)
 {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
@@ -60,7 +60,7 @@ GMPTimerChild::RecvTimerExpired(const uint32_t& aTimerId)
   if (task) {
     RunOnMainThread(task);
   }
-  return true;
+  return IPC_OK();
 }
 
 } // namespace gmp

@@ -339,7 +339,7 @@ UDPSocketChild::GetFilterName(nsACString& aFilterName)
 }
 
 // PUDPSocketChild Methods
-bool
+mozilla::ipc::IPCResult
 UDPSocketChild::RecvCallbackOpened(const UDPAddressInfo& aAddressInfo)
 {
   mLocalAddress = aAddressInfo.addr();
@@ -349,11 +349,11 @@ UDPSocketChild::RecvCallbackOpened(const UDPAddressInfo& aAddressInfo)
   nsresult rv = mSocket->CallListenerOpened();
   mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
-  return true;
+  return IPC_OK();
 }
 
 // PUDPSocketChild Methods
-bool
+mozilla::ipc::IPCResult
 UDPSocketChild::RecvCallbackConnected(const UDPAddressInfo& aAddressInfo)
 {
   mLocalAddress = aAddressInfo.addr();
@@ -363,19 +363,19 @@ UDPSocketChild::RecvCallbackConnected(const UDPAddressInfo& aAddressInfo)
   nsresult rv = mSocket->CallListenerConnected();
   mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 UDPSocketChild::RecvCallbackClosed()
 {
   nsresult rv = mSocket->CallListenerClosed();
   mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 UDPSocketChild::RecvCallbackReceivedData(const UDPAddressInfo& aAddressInfo,
                                          InfallibleTArray<uint8_t>&& aData)
 {
@@ -385,10 +385,10 @@ UDPSocketChild::RecvCallbackReceivedData(const UDPAddressInfo& aAddressInfo,
                                                   aData.Elements(), aData.Length());
   mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 UDPSocketChild::RecvCallbackError(const nsCString& aMessage,
                                   const nsCString& aFilename,
                                   const uint32_t& aLineNumber)
@@ -397,7 +397,7 @@ UDPSocketChild::RecvCallbackError(const nsCString& aMessage,
   nsresult rv = mSocket->CallListenerError(aMessage, aFilename, aLineNumber);
   mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
 
-  return true;
+  return IPC_OK();
 }
 
 } // namespace dom

@@ -795,9 +795,26 @@ gfxPlatform::Init()
     InitNullMetadata();
     InitOpenGLConfig();
 
+    if (XRE_IsParentProcess()) {
+      gfxVars::SetDXInterop2Blocked(IsDXInterop2Blocked());
+    }
+
     if (obs) {
       obs->NotifyObservers(nullptr, "gfx-features-ready", nullptr);
     }
+}
+
+/* static*/ bool
+gfxPlatform::IsDXInterop2Blocked()
+{
+  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  nsCString blockId;
+  int32_t status;
+  if (!NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DX_INTEROP2,
+                                              blockId, &status))) {
+    return true;
+  }
+  return status != nsIGfxInfo::FEATURE_STATUS_OK;
 }
 
 /* static */ void

@@ -40,15 +40,6 @@ var TimelineActor = exports.TimelineActor = protocol.ActorClassWithSpec(timeline
   },
 
   /**
-   * The timeline actor is the first (and last) in its hierarchy to use
-   * protocol.js so it doesn't have a parent protocol actor that takes care of
-   * its lifetime. So it needs a disconnect method to cleanup.
-   */
-  disconnect: function () {
-    this.destroy();
-  },
-
-  /**
    * Destroys this actor, stopping recording first.
    */
   destroy: function () {
