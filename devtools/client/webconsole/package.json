@@ -15,6 +15,6 @@
   },
   "scripts": {
     "postinstall": "cd ../ && npm install && cd webconsole",
-    "test": "NODE_PATH=`pwd`/../../../:`pwd`/../../../devtools/client/shared/vendor/ mocha new-console-output/test/**/*.test.js --compilers js:babel-register -r jsdom-global/register -r ./new-console-output/test/requireHelper.js"
+    "test": "NODE_PATH=`pwd`/../../../:`pwd`/../../../devtools/client/shared/vendor/ mocha new-console-output/test/**/*.test.js --compilers js:babel-register -r jsdom-global/register -r ./new-console-output/test/require-helper.js"
   }
 }
