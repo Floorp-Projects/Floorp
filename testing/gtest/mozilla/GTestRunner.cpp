@@ -76,10 +76,9 @@ static void ReplaceGTestLogger()
   listeners.Append(new MozillaPrinter);
 }
 
-int RunGTestFunc()
+int RunGTestFunc(int* argc, char** argv)
 {
-  int c = 0;
-  InitGoogleTest(&c, static_cast<char**>(nullptr));
+  InitGoogleTest(argc, argv);
 
   if (getenv("MOZ_TBPL_PARSER")) {
     ReplaceGTestLogger();
