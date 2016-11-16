@@ -5017,12 +5017,10 @@
           if (tabForEvent.selected)
             return;
 
-          // If this is a tabprompt, we won't switch tabs, unless:
-          // - this is a beforeunload prompt
-          // - this behaviour has been disabled entirely using the pref
-          if (event.detail && event.detail.tabPrompt &&
-              !event.detail.inPermitUnload &&
-              Services.prefs.getBoolPref("browser.tabs.dontfocusfordialogs")) {
+          // We always switch tabs for beforeunload tab-modal prompts.
+          if (event.detail &&
+              event.detail.tabPrompt &&
+              !event.detail.inPermitUnload) {
             let docPrincipal = targetIsWindow ? event.target.document.nodePrincipal : null;
             // At least one of these should/will be non-null:
             let promptPrincipal = event.detail.promptPrincipal || docPrincipal ||
@@ -5050,7 +5048,7 @@
             // URI-based principals, always get to steal focus for the tab when prompting.
           }
 
-          // if prefs/permissions/origins so dictate, bring tab to the front:
+          // If permissions/origins dictate so, bring tab to the front.
           this.selectedTab = tabForEvent;
         ]]>
       </handler>
