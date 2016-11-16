@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CaptivePortalService.h"
+#include "mozilla/net/CaptivePortalService.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "nsIObserverService.h"
@@ -56,7 +56,7 @@ CaptivePortalService::PerformCheck()
   if (mRequestInProgress || !mInitialized || !mStarted) {
     return NS_OK;
   }
-
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   nsresult rv;
   if (!mCaptivePortalDetector) {
     mCaptivePortalDetector =
@@ -77,6 +77,7 @@ nsresult
 CaptivePortalService::RearmTimer()
 {
   // Start a timer to recheck
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   if (mTimer) {
     mTimer->Cancel();
   }
@@ -96,10 +97,16 @@ CaptivePortalService::RearmTimer()
 nsresult
 CaptivePortalService::Initialize()
 {
-  if (mInitialized || XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (mInitialized) {
     return NS_OK;
   }
   mInitialized = true;
+
+  // Only the main process service should actually do anything. The service in
+  // the content process only mirrors the CP state in the main process.
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
@@ -118,6 +125,11 @@ CaptivePortalService::Start()
 {
   if (!mInitialized) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    // Doesn't do anything if called in the content process.
+    return NS_OK;
   }
 
   if (mStarted) {
@@ -149,6 +161,11 @@ CaptivePortalService::Stop()
 {
   LOG(("CaptivePortalService::Stop\n"));
 
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    // Doesn't do anything when called in the content process.
+    return NS_OK;
+  }
+
   if (!mStarted) {
     return NS_OK;
   }
@@ -164,6 +181,17 @@ CaptivePortalService::Stop()
   }
   mCaptivePortalDetector = nullptr;
   return NS_OK;
+}
+
+void
+CaptivePortalService::SetStateInChild(int32_t aState)
+{
+  // This should only be called in the content process, from ContentChild.cpp
+  // in order to mirror the captive portal state set in the chrome process.
+  MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Default);
+
+  mState = aState;
+  mLastChecked = TimeStamp::Now();
 }
 
 //-----------------------------------------------------------------------------
@@ -186,6 +214,11 @@ NS_IMETHODIMP
 CaptivePortalService::RecheckCaptivePortal()
 {
   LOG(("CaptivePortalService::RecheckCaptivePortal\n"));
+
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    // Doesn't do anything if called in the content process.
+    return NS_OK;
+  }
 
   // This is called for user activity. We need to reset the slack count,
   // so the checks continue to be quite frequent.
@@ -215,6 +248,7 @@ CaptivePortalService::Notify(nsITimer *aTimer)
 {
   LOG(("CaptivePortalService::Notify\n"));
   MOZ_ASSERT(aTimer == mTimer);
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
 
   PerformCheck();
 
@@ -243,6 +277,11 @@ CaptivePortalService::Observe(nsISupports *aSubject,
                               const char * aTopic,
                               const char16_t * aData)
 {
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    // Doesn't do anything if called in the content process.
+    return NS_OK;
+  }
+
   LOG(("CaptivePortalService::Observe() topic=%s\n", aTopic));
   if (!strcmp(aTopic, kOpenCaptivePortalLoginEvent)) {
     // A redirect or altered content has been detected.
@@ -265,6 +304,15 @@ CaptivePortalService::Observe(nsISupports *aSubject,
     mLastChecked = TimeStamp::Now();
     mSlackCount = 0;
   }
+
+  // Send notification so that the captive portal state is mirrored in the
+  // content process.
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+  if (observerService) {
+    nsCOMPtr<nsICaptivePortalService> cps(this);
+    observerService->NotifyObservers(cps, NS_IPC_CAPTIVE_PORTAL_SET_STATE, nullptr);
+  }
+
   return NS_OK;
 }
 
@@ -275,6 +323,7 @@ NS_IMETHODIMP
 CaptivePortalService::Prepare()
 {
   LOG(("CaptivePortalService::Prepare\n"));
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   // XXX: Finish preparation shouldn't be called until dns and routing is available.
   if (mCaptivePortalDetector) {
     mCaptivePortalDetector->FinishPreparation(kInterfaceName);
@@ -286,6 +335,7 @@ NS_IMETHODIMP
 CaptivePortalService::Complete(bool success)
 {
   LOG(("CaptivePortalService::Complete(success=%d) mState=%d\n", success, mState));
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   mLastChecked = TimeStamp::Now();
   if ((mState == UNKNOWN || mState == NOT_CAPTIVE) && success) {
     mState = NOT_CAPTIVE;
