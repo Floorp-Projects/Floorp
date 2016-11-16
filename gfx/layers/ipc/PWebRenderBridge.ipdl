@@ -1,0 +1,49 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/GfxMessageUtils.h";
+
+include protocol PCompositorBridge;
+
+using WRImageFormat from "webrender.h";
+using WRImageKey from "webrender.h";
+using WRRect from "webrender.h";
+using MaybeImageMask from "mozilla/layers/WebRenderTypes.h";
+using mozilla::gfx::ByteBuffer from "mozilla/layers/WebRenderTypes.h";
+using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
+
+namespace mozilla {
+namespace layers {
+
+sync protocol PWebRenderBridge
+{
+  manager PCompositorBridge;
+
+parent:
+  sync Create(uint32_t aWidth, uint32_t aHeight);
+  sync Destroy();
+  sync AddImage(uint32_t aWidth, uint32_t aHeight, uint32_t aStride,
+                WRImageFormat aFormat, ByteBuffer aBytes)
+    returns (WRImageKey aOutImageKey);
+  sync UpdateImage(WRImageKey aImageKey, uint32_t aWidth, uint32_t aHeight,
+                   WRImageFormat aFormat, ByteBuffer aBytes);
+  sync DeleteImage(WRImageKey aImageKey);
+  sync PushDLBuilder();
+  sync PopDLBuilder(WRRect aBounds, WRRect aOverflow, Matrix4x4 aMatrix,
+                    uint64_t aScrollId);
+  sync DPBegin(uint32_t aWidth, uint32_t aHeight)
+    returns (bool aOutSuccess);
+  sync DPEnd();
+  sync DPPushRect(WRRect aBounds, WRRect aClip, float r, float g, float b, float a);
+  sync DPPushImage(WRRect aBounds, WRRect aClip, MaybeImageMask aMask, WRImageKey aKey);
+  sync DPPushIframe(WRRect aBounds, WRRect aClip, uint64_t aLayersId);
+
+  async __delete__();
+};
+
+} // layers
+} // mozilla

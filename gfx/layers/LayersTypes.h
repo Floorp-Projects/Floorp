@@ -45,6 +45,7 @@ enum class LayersBackend : int8_t {
   LAYERS_D3D9,
   LAYERS_D3D11,
   LAYERS_CLIENT,
+  LAYERS_WR,
   LAYERS_LAST
 };
 

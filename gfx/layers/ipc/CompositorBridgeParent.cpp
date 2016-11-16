@@ -49,6 +49,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/PLayerTransactionParent.h"
 #include "mozilla/layers/RemoteContentController.h"
+#include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/media/MediaSystemResourceService.h" // for MediaSystemResourceService
 #include "mozilla/mozalloc.h"           // for operator new, etc
@@ -1837,6 +1838,45 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
     parent->ChildAdopted(mApzcTreeManager);
   }
   return IPC_OK();
+}
+
+PWebRenderBridgeParent*
+CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId)
+{
+#ifndef MOZ_ENABLE_WEBRENDER
+  // Extra guard since this in the parent process and we don't want a malicious
+  // child process invoking this codepath before it's ready
+  MOZ_RELEASE_ASSERT(false);
+#endif
+  MOZ_ASSERT(aPipelineId == mRootLayerTreeID);
+
+  RefPtr<gl::GLContext> glc(gl::GLContextProvider::CreateForCompositorWidget(mWidget, true));
+  WebRenderBridgeParent* parent = new WebRenderBridgeParent(aPipelineId, mWidget, glc.get(), nullptr);
+  parent->AddRef(); // IPDL reference
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  MOZ_ASSERT(sIndirectLayerTrees[aPipelineId].mWRBridge == nullptr);
+  sIndirectLayerTrees[aPipelineId].mWRBridge = parent;
+  return parent;
+}
+
+bool
+CompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor)
+{
+#ifndef MOZ_ENABLE_WEBRENDER
+  // Extra guard since this in the parent process and we don't want a malicious
+  // child process invoking this codepath before it's ready
+  MOZ_RELEASE_ASSERT(false);
+#endif
+  WebRenderBridgeParent* parent = static_cast<WebRenderBridgeParent*>(aActor);
+  {
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    auto it = sIndirectLayerTrees.find(parent->PipelineId());
+    if (it != sIndirectLayerTrees.end()) {
+      it->second.mWRBridge = nullptr;
+    }
+  }
+  parent->Release(); // IPDL reference
+  return true;
 }
 
 static void
