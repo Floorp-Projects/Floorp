@@ -47,6 +47,12 @@
   pointer-events: none;
 }
 
+:-moz-native-anonymous .highlighter-container.box-model {
+  /* Make the box-model container have a z-index other than auto so it always sits above
+     other highlighters. */
+  z-index: 1;
+}
+
 :-moz-native-anonymous .highlighter-container [hidden] {
   display: none;
 }

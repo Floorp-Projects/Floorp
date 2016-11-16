@@ -14,8 +14,10 @@ const {
   COLOR_TAKING_FUNCTIONS,
   CSS_TYPES
 } = require("devtools/shared/css/properties-db");
+const Services = require("Services");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
+const CSS_GRID_ENABLED_PREF = "layout.css.grid.enabled";
 
 /**
  * This module is used to process text for output by developer tools. This means
@@ -70,6 +72,7 @@ OutputParser.prototype = {
     options = this._mergeOptions(options);
 
     options.expectCubicBezier = this.supportsType(name, CSS_TYPES.TIMING_FUNCTION);
+    options.expectDisplay = name === "display";
     options.expectFilter = name === "filter";
     options.supportsColor = this.supportsType(name, CSS_TYPES.COLOR) ||
                             this.supportsType(name, CSS_TYPES.GRADIENT);
@@ -198,6 +201,10 @@ OutputParser.prototype = {
           if (options.expectCubicBezier &&
               BEZIER_KEYWORDS.indexOf(token.text) >= 0) {
             this._appendCubicBezier(token.text, options);
+          } else if (Services.prefs.getBoolPref(CSS_GRID_ENABLED_PREF) &&
+                     options.expectDisplay && token.text === "grid" &&
+                     text === token.text) {
+            this._appendGrid(token.text, options);
           } else if (colorOK() && colorUtils.isValidCSSColor(token.text)) {
             this._appendColor(token.text, options);
           } else if (angleOK(token.text)) {
@@ -283,6 +290,31 @@ OutputParser.prototype = {
       class: options.bezierClass
     }, bezier);
 
+    container.appendChild(value);
+    this.parsed.push(container);
+  },
+
+  /**
+   * Append a CSS Grid highlighter toggle icon next to the value in a
+   * 'display: grid' declaration
+   *
+   * @param {String} grid
+   *        The grid text value to append
+   * @param {Object} options
+   *        Options object. For valid options and default values see
+   *        _mergeOptions()
+   */
+  _appendGrid: function (grid, options) {
+    let container = this._createNode("span", {});
+
+    let toggle = this._createNode("span", {
+      class: options.gridClass
+    });
+
+    let value = this._createNode("span", {});
+    value.textContent = grid;
+
+    container.appendChild(toggle);
     container.appendChild(value);
     this.parsed.push(container);
   },
@@ -617,40 +649,42 @@ OutputParser.prototype = {
    *         Valid options are:
    *           - defaultColorType: true // Convert colors to the default type
    *                                    // selected in the options panel.
-   *           - colorSwatchClass: ""   // The class to use for color swatches.
-   *           - colorClass: ""         // The class to use for the color value
-   *                                    // that follows the swatch.
-   *           - bezierSwatchClass: ""  // The class to use for bezier swatches.
-   *           - bezierClass: ""        // The class to use for the bezier value
-   *                                    // that follows the swatch.
-   *           - angleSwatchClass: ""   // The class to use for angle swatches.
    *           - angleClass: ""         // The class to use for the angle value
    *                                    // that follows the swatch.
-   *           - supportsColor: false   // Does the CSS property support colors?
-   *           - urlClass: ""           // The class to be used for url() links.
-   *           - baseURI: undefined     // A string used to resolve
-   *                                    // relative links.
+   *           - angleSwatchClass: ""   // The class to use for angle swatches.
+   *           - bezierClass: ""        // The class to use for the bezier value
+   *                                    // that follows the swatch.
+   *           - bezierSwatchClass: ""  // The class to use for bezier swatches.
+   *           - colorClass: ""         // The class to use for the color value
+   *                                    // that follows the swatch.
+   *           - colorSwatchClass: ""   // The class to use for color swatches.
    *           - filterSwatch: false    // A special case for parsing a
    *                                    // "filter" property, causing the
    *                                    // parser to skip the call to
    *                                    // _wrapFilter.  Used only for
    *                                    // previewing with the filter swatch.
+   *           - gridClass: ""          // The class to use for the grid icon.
+   *           - supportsColor: false   // Does the CSS property support colors?
+   *           - urlClass: ""           // The class to be used for url() links.
+   *           - baseURI: undefined     // A string used to resolve
+   *                                    // relative links.
    * @return {Object}
    *         Overridden options object
    */
   _mergeOptions: function (overrides) {
     let defaults = {
       defaultColorType: true,
-      colorSwatchClass: "",
-      colorClass: "",
-      bezierSwatchClass: "",
-      bezierClass: "",
-      angleSwatchClass: "",
       angleClass: "",
+      angleSwatchClass: "",
+      bezierClass: "",
+      bezierSwatchClass: "",
+      colorClass: "",
+      colorSwatchClass: "",
+      filterSwatch: false,
+      gridClass: "",
       supportsColor: false,
       urlClass: "",
       baseURI: undefined,
-      filterSwatch: false
     };
 
     for (let item in overrides) {
