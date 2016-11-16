@@ -1238,6 +1238,19 @@
     "n_buckets": 20,
     "description": "Maximum retention time for the gradient cache. (ms)"
   },
+  "STARTUP_CACHE_AGE_HOURS": {
+    "expires_in_version": "default",
+    "kind": "exponential",
+    "high": 3000,
+    "n_buckets": 20,
+    "description": "Startup cache age (hours)"
+  },
+  "STARTUP_CACHE_INVALID": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "Was the disk startup cache file detected as invalid"
+  },
   "WORD_CACHE_HITS_CONTENT": {
     "expires_in_version": "never",
     "kind": "exponential",
