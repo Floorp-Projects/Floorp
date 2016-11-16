@@ -167,42 +167,6 @@ Import::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            field.sizeOfExcludingThis(mallocSizeOf);
 }
 
-size_t
-ElemSegment::serializedSize() const
-{
-    return sizeof(tableIndex) +
-           sizeof(offset) +
-           SerializedPodVectorSize(elemFuncIndices) +
-           SerializedPodVectorSize(elemCodeRangeIndices);
-}
-
-uint8_t*
-ElemSegment::serialize(uint8_t* cursor) const
-{
-    cursor = WriteBytes(cursor, &tableIndex, sizeof(tableIndex));
-    cursor = WriteBytes(cursor, &offset, sizeof(offset));
-    cursor = SerializePodVector(cursor, elemFuncIndices);
-    cursor = SerializePodVector(cursor, elemCodeRangeIndices);
-    return cursor;
-}
-
-const uint8_t*
-ElemSegment::deserialize(const uint8_t* cursor)
-{
-    (cursor = ReadBytes(cursor, &tableIndex, sizeof(tableIndex))) &&
-    (cursor = ReadBytes(cursor, &offset, sizeof(offset))) &&
-    (cursor = DeserializePodVector(cursor, &elemFuncIndices)) &&
-    (cursor = DeserializePodVector(cursor, &elemCodeRangeIndices));
-    return cursor;
-}
-
-size_t
-ElemSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
-{
-    return elemFuncIndices.sizeOfExcludingThis(mallocSizeOf) +
-           elemCodeRangeIndices.sizeOfExcludingThis(mallocSizeOf);
-}
-
 /* virtual */ void
 Module::serializedSize(size_t* bytecodeSize, size_t* compiledSize) const
 {

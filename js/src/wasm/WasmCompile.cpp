@@ -470,6 +470,17 @@ DecodeStartSection(Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
+DecodeElemSection(Decoder& d, ModuleGenerator& mg)
+{
+    ElemSegmentVector elems;
+    if (!DecodeElemSection(d, mg.tables(), mg.globals(), mg.numFuncs(), &elems))
+        return false;
+
+    mg.setElemSegments(Move(elems));
+    return true;
+}
+
+static bool
 DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 {
     uint32_t bodySize;
@@ -549,60 +560,6 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
         return false;
 
     return mg.finishFuncDefs();
-}
-
-static bool
-DecodeElemSection(Decoder& d, ModuleGenerator& mg)
-{
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Elem, &sectionStart, &sectionSize, "elem"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t numSegments;
-    if (!d.readVarU32(&numSegments))
-        return d.fail("failed to read number of elem segments");
-
-    if (numSegments > MaxElemSegments)
-        return d.fail("too many elem segments");
-
-    for (uint32_t i = 0; i < numSegments; i++) {
-        uint32_t tableIndex;
-        if (!d.readVarU32(&tableIndex))
-            return d.fail("expected table index");
-
-        MOZ_ASSERT(mg.tables().length() <= 1);
-        if (tableIndex >= mg.tables().length())
-            return d.fail("table index out of range");
-
-        InitExpr offset;
-        if (!DecodeInitializerExpression(d, mg.globals(), ValType::I32, &offset))
-            return false;
-
-        uint32_t numElems;
-        if (!d.readVarU32(&numElems))
-            return d.fail("expected segment size");
-
-        Uint32Vector elemFuncIndices;
-        if (!elemFuncIndices.resize(numElems))
-            return false;
-
-        for (uint32_t i = 0; i < numElems; i++) {
-            if (!d.readVarU32(&elemFuncIndices[i]))
-                return d.fail("failed to read element function index");
-            if (elemFuncIndices[i] >= mg.numFuncs())
-                return d.fail("table element out of range");
-        }
-
-        if (!mg.addElemSegment(offset, Move(elemFuncIndices)))
-            return false;
-    }
-
-    if (!d.finishSection(sectionStart, sectionSize, "elem"))
-        return false;
-
-    return true;
 }
 
 static void
@@ -730,7 +687,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!::DecodeStartSection(d, mg))
         return nullptr;
 
-    if (!DecodeElemSection(d, mg))
+    if (!::DecodeElemSection(d, mg))
         return nullptr;
 
     if (!DecodeCodeSection(d, mg))
