@@ -126,9 +126,8 @@ WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer* wfb)
     if (!ValidateObjectAllowDeletedOrNull("bindFramebuffer", wfb))
         return;
 
-    // silently ignore a deleted frame buffer
     if (wfb && wfb->IsDeleted())
-        return;
+        return ErrorInvalidOperation("bindFramebuffer: Cannot bind a deleted object.");
 
     MakeContextCurrent();
 
@@ -170,9 +169,8 @@ WebGLContext::BindRenderbuffer(GLenum target, WebGLRenderbuffer* wrb)
     if (!ValidateObjectAllowDeletedOrNull("bindRenderbuffer", wrb))
         return;
 
-    // silently ignore a deleted buffer
     if (wrb && wrb->IsDeleted())
-        return;
+        return ErrorInvalidOperation("bindRenderbuffer: Cannot bind a deleted object.");
 
     // Usually, we would now call into glBindRenderbuffer. However, since we have to
     // potentially emulate packed-depth-stencil, there's not a specific renderbuffer that
