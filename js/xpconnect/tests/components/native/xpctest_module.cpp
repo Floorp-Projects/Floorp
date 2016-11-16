@@ -6,6 +6,7 @@
 
 /* module registration and factory code. */
 
+#include "mozilla/ModuleUtils.h"
 #include "xpctest_private.h"
 
 #define NS_XPCTESTOBJECTREADONLY_CID                                          \
@@ -49,8 +50,10 @@ static const mozilla::Module::ContractIDEntry kXPCTestContracts[] = {
     { nullptr }
 };
 
-const mozilla::Module kXPCTestModule = {
+static const mozilla::Module kXPCTestModule = {
     mozilla::Module::kVersion,
     kXPCTestCIDs,
     kXPCTestContracts
 };
+
+NSMODULE_DEFN(xpconnect_test) = &kXPCTestModule;
