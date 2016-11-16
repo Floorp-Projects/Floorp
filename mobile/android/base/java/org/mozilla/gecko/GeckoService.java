@@ -150,8 +150,7 @@ public class GeckoService extends Service {
             throw new IllegalArgumentException("Intent must specify profile.");
         }
 
-        if (!GeckoThread.initWithProfile(profileName != null ? profileName : "",
-                                         profileDir != null ? new File(profileDir) : null)) {
+        if (!GeckoThread.initWithProfile(profileName, profileDir != null ? new File(profileDir) : null)) {
             Log.w(LOGTAG, "Ignoring due to profile mismatch: " +
                           profileName + " [" + profileDir + ']');
 
