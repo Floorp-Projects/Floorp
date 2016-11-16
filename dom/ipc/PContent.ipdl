@@ -456,8 +456,6 @@ child:
      */
     async NotifyLayerAllocated(TabId aTabId, uint64_t aLayersId);
 
-    async SpeakerManagerNotify();
-
     /**
      * Communication between the PuppetBidiKeyboard and the actual
      * BidiKeyboard hosted by the parent
@@ -943,11 +941,6 @@ parent:
     sync AllocateLayerTreeId(ContentParentId cpId, TabId tabId)
         returns (uint64_t id);
     async DeallocateLayerTreeId(uint64_t id);
-
-    sync SpeakerManagerForceSpeaker(bool aEnable);
-
-    sync SpeakerManagerGetSpeakerStatus()
-        returns (bool value);
 
     /**
      * Notifies the parent about a recording device is starting or shutdown.
