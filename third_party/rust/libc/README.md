@@ -132,4 +132,6 @@ The following may be supported, but are not guaranteed to always work:
   * `i686-unknown-freebsd`
   * [`x86_64-unknown-bitrig`](https://doc.rust-lang.org/libc/x86_64-unknown-bitrig/libc/)
   * [`x86_64-unknown-dragonfly`](https://doc.rust-lang.org/libc/x86_64-unknown-dragonfly/libc/)
+  * `i686-unknown-haiku`
+  * `x86_64-unknown-haiku`
   * [`x86_64-unknown-netbsd`](https://doc.rust-lang.org/libc/x86_64-unknown-netbsd/libc/)

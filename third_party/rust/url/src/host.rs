@@ -371,23 +371,33 @@ fn parse_ipv6addr(input: &str) -> ParseResult<Ipv6Addr> {
         }
         let mut dots_seen = 0;
         while i < len {
-            // FIXME: https://github.com/whatwg/url/commit/1c22aa119c354e0020117e02571cec53f7c01064
-            let mut value = 0u16;
+            let mut value = None;
             while i < len {
                 let digit = match input[i] {
                     c @ b'0' ... b'9' => c - b'0',
                     _ => break
                 };
-                value = value * 10 + digit as u16;
-                if value == 0 || value > 255 {
-                    return Err(ParseError::InvalidIpv6Address)
+                match value {
+                    None => value = Some(digit as u16),
+                    Some(0) => return Err(ParseError::InvalidIpv6Address),  // No leading zero
+                    Some(ref mut v) => {
+                        *v = *v * 10 + digit as u16;
+                        if *v > 255 {
+                            return Err(ParseError::InvalidIpv6Address)
+                        }
+                    }
                 }
+                i += 1;
             }
             if dots_seen < 3 && !(i < len && input[i] == b'.') {
                 return Err(ParseError::InvalidIpv6Address)
             }
-            pieces[piece_pointer] = pieces[piece_pointer] * 0x100 + value;
-            if dots_seen == 0 || dots_seen == 2 {
+            pieces[piece_pointer] = if let Some(v) = value {
+                pieces[piece_pointer] * 0x100 + v
+            } else {
+                return Err(ParseError::InvalidIpv6Address)
+            };
+            if dots_seen == 1 || dots_seen == 3 {
                 piece_pointer += 1;
             }
             i += 1;

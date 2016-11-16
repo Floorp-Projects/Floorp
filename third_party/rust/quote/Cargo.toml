@@ -1,0 +1,10 @@
+[package]
+name = "quote"
+version = "0.3.5" # don't forget to update version in readme
+authors = ["David Tolnay <dtolnay@gmail.com>"]
+license = "MIT/Apache-2.0"
+description = "Dead simple quasi-quoting"
+repository = "https://github.com/dtolnay/quote"
+documentation = "https://dtolnay.github.io/quote/quote/"
+keywords = ["syn"]
+include = ["Cargo.toml", "src/**/*.rs"]

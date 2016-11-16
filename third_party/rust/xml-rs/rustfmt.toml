@@ -1,0 +1,14 @@
+max_width = 100
+ideal_width = 80
+fn_call_width = 60
+struct_lit_width = 24
+
+fn_args_density = "Compressed"
+#fn_args_layout = "Block"
+where_layout = "Mixed"
+report_todo = "Always"
+report_fixme = "Always"
+chain_base_indent = "Tabbed"
+reorder_imports = true
+single_line_if_else = true
+

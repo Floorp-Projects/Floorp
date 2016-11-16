@@ -1,0 +1,26 @@
+[package]
+name = "rayon"
+version = "0.5.0"
+authors = ["Niko Matsakis <niko@alum.mit.edu>"]
+description = "Simple work-stealing parallelism for Rust"
+license = "Apache-2.0/MIT"
+repository = "https://github.com/nikomatsakis/rayon"
+documentation = "https://docs.rs/rayon/"
+
+[workspace]
+members = [ "rayon-demo" ]
+
+[dependencies]
+rand = "0.3"
+num_cpus = "1.0"
+deque = "0.3.1"
+libc = "0.2.16"
+
+[dev-dependencies]
+compiletest_rs = "0.2.1"
+num = "0.1.30"
+
+[features]
+# Unstable APIs that have not yet
+# proven their utility.
+unstable = []

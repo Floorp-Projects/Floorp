@@ -80,8 +80,14 @@ matrix:
       env: TARGET=powerpc64-unknown-linux-gnu
       rust: stable
     - os: linux
+      env: TARGET=mips-unknown-linux-musl
+      rust: stable
+    - os: linux
       env: TARGET=mipsel-unknown-linux-musl
       rust: stable
+    - os: linux
+      env: TARGET=mips64-unknown-linux-gnuabi64
+      rust: nightly
 
     # beta
     - os: linux

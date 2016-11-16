@@ -314,7 +314,10 @@ impl Url {
             match self.host {
                 HostInternal::None => assert_eq!(host_str, ""),
                 HostInternal::Ipv4(address) => assert_eq!(host_str, address.to_string()),
-                HostInternal::Ipv6(address) => assert_eq!(host_str, format!("[{}]", address)),
+                HostInternal::Ipv6(address) => {
+                    let h: Host<String> = Host::Ipv6(address);
+                    assert_eq!(host_str, h.to_string())
+                }
                 HostInternal::Domain => {
                     if SchemeType::from(self.scheme()).is_special() {
                         assert!(!host_str.is_empty())
@@ -762,7 +765,7 @@ impl Url {
     /// url.query_pairs_mut()
     ///     .clear()
     ///     .append_pair("foo", "bar & baz")
-    ///     .append_pair("saisons", "Été+hiver");
+    ///     .append_pair("saisons", "\u{00C9}t\u{00E9}+hiver");
     /// assert_eq!(url.query(), Some("foo=bar+%26+baz&saisons=%C3%89t%C3%A9%2Bhiver"));
     /// assert_eq!(url.as_str(),
     ///            "https://example.net/?foo=bar+%26+baz&saisons=%C3%89t%C3%A9%2Bhiver#nav");
@@ -824,7 +827,7 @@ impl Url {
 
     /// Return an object with methods to manipulate this URL’s path segments.
     ///
-    /// Return `Err(())` if this URl is cannot-be-a-base.
+    /// Return `Err(())` if this URL is cannot-be-a-base.
     pub fn path_segments_mut(&mut self) -> Result<PathSegmentsMut, ()> {
         if self.cannot_be_a_base() {
             Err(())
@@ -1419,11 +1422,31 @@ fn file_url_segments_to_pathbuf(segments: str::Split<char>) -> Result<PathBuf, (
 #[cfg_attr(not(windows), allow(dead_code))]
 fn file_url_segments_to_pathbuf_windows(mut segments: str::Split<char>) -> Result<PathBuf, ()> {
     let first = try!(segments.next().ok_or(()));
-    if first.len() != 2 || !first.starts_with(parser::ascii_alpha)
-            || first.as_bytes()[1] != b':' {
-        return Err(())
-    }
-    let mut string = first.to_owned();
+
+    let mut string = match first.len() {
+        2 => {
+            if !first.starts_with(parser::ascii_alpha) || first.as_bytes()[1] != b':' {
+                return Err(())
+            }
+
+            first.to_owned()
+        },
+
+        4 => {
+            if !first.starts_with(parser::ascii_alpha) {
+                return Err(())
+            }
+            let bytes = first.as_bytes();
+            if bytes[1] != b'%' || bytes[2] != b'3' || (bytes[3] != b'a' && bytes[3] != b'A') {
+                return Err(())
+            }
+
+            first[0..1].to_owned() + ":"
+        },
+
+        _ => return Err(()),
+    };
+
     for segment in segments {
         string.push('\\');
 

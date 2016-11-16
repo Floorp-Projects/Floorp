@@ -67,6 +67,32 @@ s! {
         __pad2: ::c_ulong,
     }
 
+    pub struct msqid_ds {
+        pub msg_perm: ::ipc_perm,
+        #[cfg(target_endian = "big")]
+        __unused1: ::c_int,
+        pub msg_stime: ::time_t,
+        #[cfg(target_endian = "little")]
+        __unused1: ::c_int,
+        #[cfg(target_endian = "big")]
+        __unused2: ::c_int,
+        pub msg_rtime: ::time_t,
+        #[cfg(target_endian = "little")]
+        __unused2: ::c_int,
+        #[cfg(target_endian = "big")]
+        __unused3: ::c_int,
+        pub msg_ctime: ::time_t,
+        #[cfg(target_endian = "little")]
+        __unused3: ::c_int,
+        __msg_cbytes: ::c_ulong,
+        pub msg_qnum: ::msgqnum_t,
+        pub msg_qbytes: ::msglen_t,
+        pub msg_lspid: ::pid_t,
+        pub msg_lrpid: ::pid_t,
+        __pad1: ::c_ulong,
+        __pad2: ::c_ulong,
+    }
+
     pub struct statfs {
         pub f_type: ::c_ulong,
         pub f_bsize: ::c_ulong,
@@ -314,7 +340,5 @@ pub const TIOCCONS: ::c_int = 0x80047478;
 pub const SYS_gettid: ::c_long = 4222;   // Valid for O32
 pub const SYS_perf_event_open: ::c_long = 4333;  // Valid for O32
 
-pub const POSIX_MADV_DONTNEED: ::c_int = 4;
-pub const RUSAGE_CHILDREN: ::c_int = !0;
 pub const POLLWRNORM: ::c_short = 0x4;
 pub const POLLWRBAND: ::c_short = 0x100;

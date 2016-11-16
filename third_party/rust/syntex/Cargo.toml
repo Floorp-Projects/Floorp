@@ -1,0 +1,13 @@
+[package]
+name = "syntex"
+version = "0.48.0"
+authors = [ "erick.tryzelaar@gmail.com" ]
+license = "MIT/Apache-2.0"
+description = "A library that enables compile time syntax extension expansion"
+repository = "https://github.com/erickt/rust-syntex"
+readme = "../README.md"
+include = ["Cargo.toml", "src/**/*.rs"]
+
+[dependencies]
+syntex_errors = { version = "^0.48.0", path = "../syntex_errors" }
+syntex_syntax = { version = "^0.48.0", path = "../syntex_syntax" }

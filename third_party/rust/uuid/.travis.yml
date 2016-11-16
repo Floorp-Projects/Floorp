@@ -1,0 +1,32 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+sudo: false
+before_script:
+  - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
+script:
+  - cargo build --verbose --features "$FEATURES"
+  - cargo test --verbose --features "$FEATURES"
+  - |
+    [ $TRAVIS_RUST_VERSION != nightly ] || (
+      cargo bench --features "$FEATURES"
+    )
+  - cargo doc --no-deps --features "$FEATURES"
+after_success:
+  - travis-cargo --only nightly doc-upload
+env:
+  global:
+    secure: NwoTYjI/NeMVJvNOxKRFbqaCOmFLyzgosK9ZmR+ydTc+3Ft1hU6ykHvRiop2gQdL0ZRtxLNvsjrYv8Y2J1SttxEkVQc6HsCl5ny6sHig4V5sS8ZTmLoCKSUJXsfN0lYD8wMKwNN9+G1ddnFbmIbRaZyXFdn7bCKjJoXfwszDz4M=
+  matrix:
+    - FEATURES=""
+    - FEATURES="rustc-serialize"
+    - FEATURES="serde"
+    - FEATURES="use_std"
+    - FEATURES="v4"
+    - FEATURES="v5"
+    - FEATURES="rustc-serialize serde v4 v5 use_std"
+notifications:
+  email:
+    on_success: never

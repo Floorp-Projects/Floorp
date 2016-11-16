@@ -1,0 +1,45 @@
+[package]
+name = "webrender"
+version = "0.8.0"
+authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
+license = "MPL-2.0"
+repository = "https://github.com/servo/webrender"
+workspace = ".."
+
+[features]
+default = ["webrender_traits/codegen"]
+serde_derive = ["webrender_traits/serde_derive"]
+
+[dependencies]
+app_units = "0.3"
+bincode = "0.6"
+bit-set = "0.4"
+byteorder = "0.5"
+euclid = "0.10"
+fnv="1.0"
+gleam = "0.2"
+ipc-channel = "0.6"
+lazy_static = "0.2"
+log = "0.3"
+num-traits = "0.1.32"
+offscreen_gl_context = {version = "0.4", features = ["serde_serialization", "osmesa"]}
+rayon = "0.5"
+time = "0.1"
+webrender_traits = {path = "../webrender_traits", default-features = false}
+bitflags = "0.7"
+
+[target.'cfg(any(target_os = "android", target_os = "windows", all(unix, not(target_os = "macos"))))'.dependencies]
+freetype = "0.1.1"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-graphics = "0.4.1"
+core-text = "2.0"
+core-foundation = "0.2.2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+kernel32-sys = "0.2"
+winapi = "0.2.8"
+
+[profile.release]
+panic = "abort"
+debug = true
