@@ -102,6 +102,23 @@ QueryInterface(const ProxyAccessible* aProxy)
   return acc2.forget();
 }
 
+static ProxyAccessible*
+GetProxyFor(DocAccessibleParent* aDoc, IUnknown* aCOMProxy)
+{
+  RefPtr<IGeckoCustom> custom;
+  if (FAILED(aCOMProxy->QueryInterface(IID_IGeckoCustom,
+                                       (void**) getter_AddRefs(custom)))) {
+    return nullptr;
+  }
+
+  uint64_t id;
+  if (FAILED(custom->get_ID(&id))) {
+    return nullptr;
+  }
+
+  return aDoc->GetAccessible(id);
+}
+
 void
 ProxyAccessible::Name(nsString& aName) const
 {
