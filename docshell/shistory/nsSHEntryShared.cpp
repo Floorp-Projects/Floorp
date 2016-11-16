@@ -72,7 +72,7 @@ nsSHEntryShared::Shutdown()
 }
 
 nsSHEntryShared::nsSHEntryShared()
-  : mDocShellID(0)
+  : mDocShellID({0})
   , mIsFrameNavigation(false)
   , mSaveLayoutState(true)
   , mSticky(true)
