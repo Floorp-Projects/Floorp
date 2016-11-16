@@ -411,6 +411,55 @@ DecodeFunctionBodyExprs(FunctionDecoder& f)
 }
 
 static bool
+DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
+{
+    uint32_t bodySize;
+    if (!d.readVarU32(&bodySize))
+        return d.fail("expected number of function body bytes");
+
+    if (d.bytesRemain() < bodySize)
+        return d.fail("function body length too big");
+
+    const uint8_t* bodyBegin = d.currentPosition();
+    const size_t offsetInModule = d.currentOffset();
+
+    FunctionGenerator fg;
+    if (!mg.startFuncDef(offsetInModule, &fg))
+        return false;
+
+    ValTypeVector locals;
+    const Sig& sig = mg.funcSig(funcIndex);
+    if (!locals.appendAll(sig.args()))
+        return false;
+
+    if (!DecodeLocalEntries(d, ModuleKind::Wasm, &locals))
+        return false;
+
+    FunctionDecoder f(mg, locals, d);
+
+    if (!f.iter().readFunctionStart(sig.ret()))
+        return false;
+
+    if (!DecodeFunctionBodyExprs(f))
+        return false;
+
+    if (!f.iter().readFunctionEnd())
+        return false;
+
+    if (d.currentPosition() != bodyBegin + bodySize)
+        return d.fail("function body length mismatch");
+
+    if (!fg.bytes().resize(bodySize))
+        return false;
+
+    memcpy(fg.bytes().begin(), bodyBegin, bodySize);
+
+    return mg.finishFuncDef(funcIndex, &fg);
+}
+
+// Section decoding.
+
+static bool
 DecodeImportSection(Decoder& d, ModuleGeneratorData* init, ImportVector* imports)
 {
     Maybe<Limits> memory;
@@ -481,53 +530,6 @@ DecodeElemSection(Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
-DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
-{
-    uint32_t bodySize;
-    if (!d.readVarU32(&bodySize))
-        return d.fail("expected number of function body bytes");
-
-    if (d.bytesRemain() < bodySize)
-        return d.fail("function body length too big");
-
-    const uint8_t* bodyBegin = d.currentPosition();
-    const size_t offsetInModule = d.currentOffset();
-
-    FunctionGenerator fg;
-    if (!mg.startFuncDef(offsetInModule, &fg))
-        return false;
-
-    ValTypeVector locals;
-    const Sig& sig = mg.funcSig(funcIndex);
-    if (!locals.appendAll(sig.args()))
-        return false;
-
-    if (!DecodeLocalEntries(d, ModuleKind::Wasm, &locals))
-        return false;
-
-    FunctionDecoder f(mg, locals, d);
-
-    if (!f.iter().readFunctionStart(sig.ret()))
-        return false;
-
-    if (!DecodeFunctionBodyExprs(f))
-        return false;
-
-    if (!f.iter().readFunctionEnd())
-        return false;
-
-    if (d.currentPosition() != bodyBegin + bodySize)
-        return d.fail("function body length mismatch");
-
-    if (!fg.bytes().resize(bodySize))
-        return false;
-
-    memcpy(fg.bytes().begin(), bodyBegin, bodySize);
-
-    return mg.finishFuncDef(funcIndex, &fg);
-}
-
-static bool
 DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
 {
     if (!mg.startFuncDefs())
@@ -560,6 +562,17 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
         return false;
 
     return mg.finishFuncDefs();
+}
+
+static bool
+DecodeDataSection(Decoder& d, ModuleGenerator& mg)
+{
+    DataSegmentVector dataSegments;
+    if (!DecodeDataSection(d, mg.usesMemory(), mg.minMemoryLength(), mg.globals(), &dataSegments))
+        return false;
+
+    mg.setDataSegments(Move(dataSegments));
+    return true;
 }
 
 static void
@@ -606,17 +619,6 @@ MaybeDecodeNameSectionBody(Decoder& d, ModuleGenerator& mg)
     }
 
     mg.setFuncNames(Move(funcNames));
-}
-
-static bool
-DecodeDataSection(Decoder& d, ModuleGenerator& mg)
-{
-    DataSegmentVector dataSegments;
-    if (!DecodeDataSection(d, mg.usesMemory(), mg.minMemoryLength(), mg.globals(), &dataSegments))
-        return false;
-
-    mg.setDataSegments(Move(dataSegments));
-    return true;
 }
 
 static bool
