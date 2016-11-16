@@ -94,7 +94,6 @@ public:
     eGenericEvent,
     eStateChangeEvent,
     eTextChangeEvent,
-    eTreeMutationEvent,
     eMutationEvent,
     eReorderEvent,
     eHideEvent,
@@ -212,13 +211,6 @@ class AccTreeMutationEvent : public AccEvent
 public:
   AccTreeMutationEvent(uint32_t aEventType, Accessible* aTarget) :
     AccEvent(aEventType, aTarget, eAutoDetect, eCoalesceReorder) {}
-
-  // Event
-  static const EventGroup kEventGroup = eTreeMutationEvent;
-  virtual unsigned int GetEventGroups() const override
-  {
-    return AccEvent::GetEventGroups() | (1U << eTreeMutationEvent);
-  }
 };
 
 /**
@@ -240,7 +232,7 @@ public:
   static const EventGroup kEventGroup = eMutationEvent;
   virtual unsigned int GetEventGroups() const override
   {
-    return AccTreeMutationEvent::GetEventGroups() | (1U << eMutationEvent);
+    return AccEvent::GetEventGroups() | (1U << eMutationEvent);
   }
 
   // MutationEvent
@@ -327,7 +319,7 @@ public:
   static const EventGroup kEventGroup = eReorderEvent;
   virtual unsigned int GetEventGroups() const override
   {
-    return AccTreeMutationEvent::GetEventGroups() | (1U << eReorderEvent);
+    return AccEvent::GetEventGroups() | (1U << eReorderEvent);
   }
 };
 
