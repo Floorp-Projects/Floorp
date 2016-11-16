@@ -29,16 +29,68 @@ using namespace js::wasm;
 
 using mozilla::CheckedInt;
 
-bool
-wasm::DecodePreamble(Decoder& d)
-{
-    uint32_t u32;
-    if (!d.readFixedU32(&u32) || u32 != MagicNumber)
-        return d.fail("failed to match magic number");
+// Decoder implementation.
 
-    if (!d.readFixedU32(&u32) || u32 != EncodingVersion)
-        return d.fail("binary version 0x%" PRIx32 " does not match expected version 0x%" PRIx32,
-                      u32, EncodingVersion);
+bool
+Decoder::fail(const char* msg, ...)
+{
+    va_list ap;
+    va_start(ap, msg);
+    UniqueChars str(JS_vsmprintf(msg, ap));
+    va_end(ap);
+    if (!str)
+        return false;
+
+    return fail(Move(str));
+}
+
+bool
+Decoder::fail(UniqueChars msg)
+{
+    MOZ_ASSERT(error_);
+    UniqueChars strWithOffset(JS_smprintf("at offset %" PRIuSIZE ": %s", currentOffset(), msg.get()));
+    if (!strWithOffset)
+        return false;
+
+    *error_ = Move(strWithOffset);
+    return false;
+}
+
+// Misc helpers.
+
+bool
+wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals)
+{
+    uint32_t numLocalEntries = 0;
+    ValType prev = ValType(TypeCode::Limit);
+    for (ValType t : locals) {
+        if (t != prev) {
+            numLocalEntries++;
+            prev = t;
+        }
+    }
+
+    if (!e.writeVarU32(numLocalEntries))
+        return false;
+
+    if (numLocalEntries) {
+        prev = locals[0];
+        uint32_t count = 1;
+        for (uint32_t i = 1; i < locals.length(); i++, count++) {
+            if (prev != locals[i]) {
+                if (!e.writeVarU32(count))
+                    return false;
+                if (!e.writeValType(prev))
+                    return false;
+                prev = locals[i];
+                count = 0;
+            }
+        }
+        if (!e.writeVarU32(count))
+            return false;
+        if (!e.writeValType(prev))
+            return false;
+    }
 
     return true;
 }
@@ -72,6 +124,48 @@ DecodeValType(Decoder& d, ModuleKind kind, ValType* type)
         break;
     }
     return d.fail("bad type");
+}
+
+bool
+wasm::DecodeLocalEntries(Decoder& d, ModuleKind kind, ValTypeVector* locals)
+{
+    uint32_t numLocalEntries;
+    if (!d.readVarU32(&numLocalEntries))
+        return d.fail("failed to read number of local entries");
+
+    for (uint32_t i = 0; i < numLocalEntries; i++) {
+        uint32_t count;
+        if (!d.readVarU32(&count))
+            return d.fail("failed to read local entry count");
+
+        if (MaxLocals - locals->length() < count)
+            return d.fail("too many locals");
+
+        ValType type;
+        if (!DecodeValType(d, kind, &type))
+            return false;
+
+        if (!locals->appendN(type, count))
+            return false;
+    }
+
+    return true;
+}
+
+// Section macros.
+
+bool
+wasm::DecodePreamble(Decoder& d)
+{
+    uint32_t u32;
+    if (!d.readFixedU32(&u32) || u32 != MagicNumber)
+        return d.fail("failed to match magic number");
+
+    if (!d.readFixedU32(&u32) || u32 != EncodingVersion)
+        return d.fail("binary version 0x%" PRIx32 " does not match expected version 0x%" PRIx32,
+                      u32, EncodingVersion);
+
+    return true;
 }
 
 bool
@@ -773,69 +867,6 @@ wasm::DecodeElemSection(Decoder& d, const TableDescVector& tables, const GlobalD
 }
 
 bool
-wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals)
-{
-    uint32_t numLocalEntries = 0;
-    ValType prev = ValType(TypeCode::Limit);
-    for (ValType t : locals) {
-        if (t != prev) {
-            numLocalEntries++;
-            prev = t;
-        }
-    }
-
-    if (!e.writeVarU32(numLocalEntries))
-        return false;
-
-    if (numLocalEntries) {
-        prev = locals[0];
-        uint32_t count = 1;
-        for (uint32_t i = 1; i < locals.length(); i++, count++) {
-            if (prev != locals[i]) {
-                if (!e.writeVarU32(count))
-                    return false;
-                if (!e.writeValType(prev))
-                    return false;
-                prev = locals[i];
-                count = 0;
-            }
-        }
-        if (!e.writeVarU32(count))
-            return false;
-        if (!e.writeValType(prev))
-            return false;
-    }
-
-    return true;
-}
-
-bool
-wasm::DecodeLocalEntries(Decoder& d, ModuleKind kind, ValTypeVector* locals)
-{
-    uint32_t numLocalEntries;
-    if (!d.readVarU32(&numLocalEntries))
-        return d.fail("failed to read number of local entries");
-
-    for (uint32_t i = 0; i < numLocalEntries; i++) {
-        uint32_t count;
-        if (!d.readVarU32(&count))
-            return d.fail("failed to read local entry count");
-
-        if (MaxLocals - locals->length() < count)
-            return d.fail("too many locals");
-
-        ValType type;
-        if (!DecodeValType(d, kind, &type))
-            return false;
-
-        if (!locals->appendN(type, count))
-            return false;
-    }
-
-    return true;
-}
-
-bool
 wasm::DecodeDataSection(Decoder& d, bool usesMemory, uint32_t minMemoryByteLength,
                         const GlobalDescVector& globals, DataSegmentVector* segments)
 {
@@ -894,29 +925,4 @@ wasm::DecodeUnknownSections(Decoder& d)
     }
 
     return true;
-}
-
-bool
-Decoder::fail(const char* msg, ...)
-{
-    va_list ap;
-    va_start(ap, msg);
-    UniqueChars str(JS_vsmprintf(msg, ap));
-    va_end(ap);
-    if (!str)
-        return false;
-
-    return fail(Move(str));
-}
-
-bool
-Decoder::fail(UniqueChars msg)
-{
-    MOZ_ASSERT(error_);
-    UniqueChars strWithOffset(JS_smprintf("at offset %" PRIuSIZE ": %s", currentOffset(), msg.get()));
-    if (!strWithOffset)
-        return false;
-
-    *error_ = Move(strWithOffset);
-    return false;
 }
