@@ -20,7 +20,7 @@ InvokeCopyToStack(uint64_t * gpregs, double * fpregs,
                      uint32_t paramCount, nsXPTCVariant * s,
                      uint64_t* d)
 {
-    uint32_t nr_gpr = 0u; // skip one GP register for 'that'
+    uint32_t nr_gpr = 0u;
     uint32_t nr_fpr = 0u;
     uint64_t value = 0u;
 
