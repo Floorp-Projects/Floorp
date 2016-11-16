@@ -144,8 +144,8 @@ if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
     DEFINES['HAVE_SIDEBAR'] = True
 
 
-PYTHON_UNIT_TESTS += [
-    'mozwebidlcodegen/test/test_mozwebidlcodegen.py',
+PYTHON_UNITTEST_MANIFESTS += [
+    'mozwebidlcodegen/test/python.ini',
 ]
 
 if CONFIG['GNU_CXX']:
