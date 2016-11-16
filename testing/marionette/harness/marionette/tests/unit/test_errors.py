@@ -53,9 +53,6 @@ class TestErrors(marionette_test.MarionetteTestCase):
 
 
 class TestLookup(marionette_test.MarionetteTestCase):
-    def test_by_known_number(self):
-        self.assertEqual(errors.NoSuchElementException, errors.lookup(7))
-
     def test_by_unknown_number(self):
         self.assertEqual(errors.MarionetteException, errors.lookup(123456))
 
@@ -74,8 +71,5 @@ class TestLookup(marionette_test.MarionetteTestCase):
 class TestAllErrors(marionette_test.MarionetteTestCase):
     def test_properties(self):
         for exc in errors.es_:
-            self.assertTrue(hasattr(exc, "code"),
-                "expected exception to have attribute `code'")
             self.assertTrue(hasattr(exc, "status"),
                 "expected exception to have attribute `status'")
-            self.assertIsInstance(exc.code, tuple)
