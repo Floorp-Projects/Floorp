@@ -5,10 +5,6 @@
 import traceback
 
 
-class InstallGeckoError(Exception):
-    pass
-
-
 class MarionetteException(Exception):
 
     """Raised when a generic non-recoverable exception has occured."""
