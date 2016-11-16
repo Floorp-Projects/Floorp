@@ -11,7 +11,7 @@ use webrender_traits::{Epoch, ColorF};
 use webrender_traits::{ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
 use std::mem;
 use std::slice;
-use std::os::raw::c_uchar;
+use std::os::raw::{c_char, c_uchar};
 
 #[cfg(target_os = "linux")]
 mod linux {
@@ -238,9 +238,10 @@ pub struct WrState {
 }
 
 #[no_mangle]
-pub extern fn wr_init_window(root_pipeline_id: u64) -> *mut WrWindowState {
-    // hack to find the directory for the shaders
-    let res_path = concat!(env!("CARGO_MANIFEST_DIR"),"/res");
+pub extern fn wr_init_window(root_pipeline_id: u64, path_utf8: *const c_char) -> *mut WrWindowState {
+    let res_path = unsafe {
+        CStr::from_ptr(path_utf8).to_string_lossy().into_owned()
+    };
 
     let library = GlLibrary::new();
     gl::load_with(|symbol| library.query(symbol));
