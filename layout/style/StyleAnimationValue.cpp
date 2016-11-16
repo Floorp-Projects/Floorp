@@ -3100,52 +3100,58 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
   return false;
 }
 
-bool
+StyleAnimationValue
 StyleAnimationValue::Accumulate(nsCSSPropertyID aProperty,
-                                StyleAnimationValue& aDest,
-                                const StyleAnimationValue& aValueToAccumulate,
+                                const StyleAnimationValue& aA,
+                                StyleAnimationValue&& aB,
                                 uint64_t aCount)
 {
+  StyleAnimationValue result(Move(aB));
+
+  if (aCount == 0) {
+    return result;
+  }
+
   Unit commonUnit =
-    GetCommonUnit(aProperty, aDest.GetUnit(), aValueToAccumulate.GetUnit());
+    GetCommonUnit(aProperty, result.GetUnit(), aA.GetUnit());
   switch (commonUnit) {
     case eUnit_Filter: {
-      UniquePtr<nsCSSValueList> result =
-        AddWeightedFilterList(1.0, aDest.GetCSSValueListValue(),
-                              aCount, aValueToAccumulate.GetCSSValueListValue(),
+      UniquePtr<nsCSSValueList> resultList =
+        AddWeightedFilterList(1.0, result.GetCSSValueListValue(),
+                              aCount, aA.GetCSSValueListValue(),
                               ColorAdditionType::Unclamped);
-      if (!result) {
-        return false;
+      if (resultList) {
+        result.SetAndAdoptCSSValueListValue(resultList.release(), eUnit_Filter);
       }
-
-      aDest.SetAndAdoptCSSValueListValue(result.release(), eUnit_Filter);
-      return true;
+      break;
     }
     case eUnit_Shadow: {
-      UniquePtr<nsCSSValueList> result =
-        AddWeightedShadowList(1.0, aDest.GetCSSValueListValue(),
-                              aCount, aValueToAccumulate.GetCSSValueListValue(),
+      UniquePtr<nsCSSValueList> resultList =
+        AddWeightedShadowList(1.0, result.GetCSSValueListValue(),
+                              aCount, aA.GetCSSValueListValue(),
                               ColorAdditionType::Unclamped);
-      if (!result) {
-        return false;
+      if (resultList) {
+        result.SetAndAdoptCSSValueListValue(resultList.release(), eUnit_Shadow);
       }
-      aDest.SetAndAdoptCSSValueListValue(result.release(), eUnit_Shadow);
-      return true;
+      break;
     }
     case eUnit_Color: {
-      RGBAColorData color1 = ExtractColor(aDest);
-      RGBAColorData color2 = ExtractColor(aValueToAccumulate);
+      RGBAColorData color1 = ExtractColor(result);
+      RGBAColorData color2 = ExtractColor(aA);
       auto resultColor = MakeUnique<nsCSSValue>();
       resultColor->SetRGBAColorValue(
         AddWeightedColors(1.0, color1, aCount, color2));
-      aDest.SetAndAdoptCSSValueValue(resultColor.release(), eUnit_Color);
-      return true;
+      result.SetAndAdoptCSSValueValue(resultColor.release(), eUnit_Color);
+      break;
     }
     default:
-      return Add(aProperty, aDest, aValueToAccumulate, aCount);
+      Unused << AddWeighted(aProperty,
+                            1.0, result,
+                            aCount, aA,
+                            result);
+      break;
   }
-  MOZ_ASSERT_UNREACHABLE("Can't accumulate using the given common unit");
-  return false;
+  return result;
 }
 
 already_AddRefed<css::StyleRule>

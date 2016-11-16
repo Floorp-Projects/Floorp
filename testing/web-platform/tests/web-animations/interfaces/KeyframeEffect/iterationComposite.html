@@ -12,6 +12,26 @@
 test(function(t) {
   var div = createDiv(t);
   var anim =
+    div.animate({ alignContent: ['flex-start', 'flex-end'] },
+                { duration: 100 * MS_PER_SEC,
+                  easing: 'linear',
+                  iterations: 10,
+                  iterationComposite: 'accumulate' });
+
+  anim.currentTime = anim.effect.timing.duration / 2;
+  assert_equals(getComputedStyle(div).alignContent, 'flex-end',
+    'Animated align-content style at 50s of the first iteration');
+  anim.currentTime = anim.effect.timing.duration * 2;
+  assert_equals(getComputedStyle(div).alignContent, 'flex-start',
+    'Animated align-content style at 0s of the third iteration');
+  anim.currentTime += anim.effect.timing.duration / 2;
+  assert_equals(getComputedStyle(div).alignContent, 'flex-end',
+    'Animated align-content style at 50s of the third iteration');
+}, 'iterationComposite of discrete type animation (align-content)');
+
+test(function(t) {
+  var div = createDiv(t);
+  var anim =
     div.animate({ marginLeft: ['0px', '10px'] },
                 { duration: 100 * MS_PER_SEC,
                   easing: 'linear',
