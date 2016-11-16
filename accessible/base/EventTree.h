@@ -49,11 +49,6 @@ private:
   uint32_t mStateFlagsCopy;
   EventTree* mEventTree;
 
-  /*
-   * True if we should queue mutation events.
-   */
-  bool mQueueEvents;
-
 #ifdef DEBUG
   bool mIsDone;
 #endif
