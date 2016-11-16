@@ -8,7 +8,6 @@
 #include <stdint.h>                     // for uint16_t, uint32_t
 #include "CanvasLayerComposite.h"       // for CanvasLayerComposite
 #include "ColorLayerComposite.h"        // for ColorLayerComposite
-#include "Composer2D.h"                 // for Composer2D
 #include "CompositableHost.h"           // for CompositableHost
 #include "ContainerLayerComposite.h"    // for ContainerLayerComposite, etc
 #include "FPSCounter.h"                 // for FPSState, FPSCounter
@@ -123,7 +122,6 @@ LayerManagerComposite::LayerManagerComposite(Compositor* aCompositor)
 , mIsCompositorReady(false)
 , mDebugOverlayWantsNextFrame(false)
 , mGeometryChanged(true)
-, mLastFrameMissedHWC(false)
 , mWindowOverlayChanged(false)
 , mLastPaintTime(TimeDuration::Forever())
 , mRenderStartTime(TimeStamp::Now())
@@ -886,32 +884,6 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
     LayerScope::SendLayerDump(Move(packet));
   }
 
-  /** Our more efficient but less powerful alter ego, if one is available. */
-  RefPtr<Composer2D> composer2D;
-  composer2D = mCompositor->GetWidget()->GetComposer2D();
-
-  // We can't use composert2D if we have layer effects
-  if (!mTarget && !haveLayerEffects &&
-      gfxPrefs::Composer2DCompositionEnabled() &&
-      composer2D && composer2D->HasHwc() && composer2D->TryRenderWithHwc(mRoot,
-          mCompositor->GetWidget()->RealWidget(),
-          mGeometryChanged,
-          mCompositor->HasImageHostOverlays()))
-  {
-    LayerScope::SetHWComposed();
-    if (mFPS) {
-      double fps = mFPS->mCompositionFps.AddFrameAndGetFps(TimeStamp::Now());
-      if (gfxPrefs::LayersDrawFPS()) {
-        printf_stderr("HWComposer: FPS is %g\n", fps);
-      }
-    }
-    mCompositor->EndFrameForExternalComposition(Matrix());
-    mLastFrameMissedHWC = false;
-    return;
-  } else if (!mTarget && !haveLayerEffects) {
-    mLastFrameMissedHWC = !!composer2D;
-  }
-
   mozilla::widget::WidgetRenderingContext widgetContext;
 #if defined(XP_MACOSX)
   widgetContext.mLayerManager = this;
@@ -1001,10 +973,6 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
 
     // Call after EndFrame()
     mCompositor->SetDispAcquireFence(mRoot);
-  }
-
-  if (composer2D) {
-    composer2D->Render(mCompositor->GetWidget()->RealWidget());
   }
 
   mCompositor->GetWidget()->PostRender(&widgetContext);

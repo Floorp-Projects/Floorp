@@ -30,7 +30,6 @@ namespace layers {
 class Compositor;
 struct EffectChain;
 class ImageContainerParent;
-class ImageHostOverlay;
 
 /**
  * ImageHost. Works with ImageClientSingle and ImageClientBuffered
@@ -156,43 +155,6 @@ protected:
   Bias mBias;
 
   bool mLocked;
-
-  RefPtr<ImageHostOverlay> mImageHostOverlay;
-};
-
-/**
- * ImageHostOverlay handles OverlaySource compositing
- */
-class ImageHostOverlay {
-protected:
-  virtual ~ImageHostOverlay();
-
-public:
-  NS_INLINE_DECL_REFCOUNTING(ImageHostOverlay)
-  ImageHostOverlay();
-
-  static bool IsValid(OverlaySource aOverlay);
-
-  void SetCompositor(Compositor* aCompositor);
-
-  virtual void Composite(Compositor* aCompositor,
-                         uint32_t aFlashCounter,
-                         LayerComposite* aLayer,
-                         EffectChain& aEffectChain,
-                         float aOpacity,
-                         const gfx::Matrix4x4& aTransform,
-                         const gfx::SamplingFilter aSamplingFilter,
-                         const gfx::IntRect& aClipRect,
-                         const nsIntRegion* aVisibleRegion);
-  virtual LayerRenderState GetRenderState();
-  virtual void UseOverlaySource(OverlaySource aOverlay,
-                                const gfx::IntRect& aPictureRect);
-  virtual gfx::IntSize GetImageSize() const;
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
-protected:
-  RefPtr<Compositor> mCompositor;
-  gfx::IntRect mPictureRect;
-  OverlaySource mOverlay;
 };
 
 } // namespace layers

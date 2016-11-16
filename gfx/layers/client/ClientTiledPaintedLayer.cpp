@@ -151,7 +151,7 @@ ClientTiledPaintedLayer::BeginPaint()
   if (!displayPortAncestor || !scrollAncestor) {
     // No displayport or scroll ancestor, so we can't do progressive rendering.
 #if defined(MOZ_WIDGET_ANDROID)
-    // Both Android and b2g on phones are guaranteed to have a displayport set, so this
+    // Android are guaranteed to have a displayport set, so this
     // should never happen.
     NS_WARNING("Tiled PaintedLayer with no scrollable container ancestor");
 #endif
@@ -591,7 +591,7 @@ bool
 ClientTiledPaintedLayer::IsOptimizedFor(LayerManager::PaintedLayerCreationHint aHint)
 {
   // The only creation hint is whether the layer is scrollable or not, and this
-  // is only respected on B2G and OSX, where it's used to determine whether to
+  // is only respected on OSX, where it's used to determine whether to
   // use a tiled content client or not.
   // There are pretty nasty performance consequences for not using tiles on
   // large, scrollable layers, so we want the layer to be recreated in this

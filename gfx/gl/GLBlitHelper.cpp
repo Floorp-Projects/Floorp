@@ -260,7 +260,6 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
         break;
 #ifdef ANDROID
     case ConvertSurfaceTexture:
-    case ConvertGralloc:
         programPtr = &mTexExternalBlit_Program;
         fragShaderPtr = &mTexExternalBlit_FragShader;
         fragShaderSource = kTexExternalBlit_FragShaderSource;
@@ -401,7 +400,6 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
         switch (target) {
 #ifdef ANDROID
             case ConvertSurfaceTexture:
-            case ConvertGralloc:
 #endif
             case BlitTex2D:
             case BlitTexRect:

@@ -116,12 +116,6 @@ public:
   virtual void EndFrame() override;
 
   /**
-   * Post rendering stuff if the rendering is outside of this Compositor
-   * e.g., by Composer2D
-   */
-  virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) override {}
-
-  /**
    * Setup the viewport and projection matrix for rendering
    * to a window of the given dimensions.
    */
