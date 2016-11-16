@@ -1849,11 +1849,6 @@ nsPluginHost::GetSpecialType(const nsACString & aMIMEType)
     return eSpecialType_Silverlight;
   }
 
-  if (aMIMEType.LowerCaseEqualsASCII("audio/x-pn-realaudio-plugin")) {
-    NS_WARNING("You are loading RealPlayer");
-    return eSpecialType_RealPlayer;
-  }
-
   if (aMIMEType.LowerCaseEqualsASCII("application/vnd.unity")) {
     return eSpecialType_Unity;
   }
