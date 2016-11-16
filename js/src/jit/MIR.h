@@ -6565,9 +6565,14 @@ class MPow
     MPow(MDefinition* input, MDefinition* power, MIRType powerType)
       : MBinaryInstruction(input, power)
     {
-        MOZ_ASSERT(powerType == MIRType::Double || powerType == MIRType::Int32);
+        MOZ_ASSERT(powerType == MIRType::Double ||
+                   powerType == MIRType::Int32 ||
+                   powerType == MIRType::None);
         specialization_ = powerType;
-        setResultType(MIRType::Double);
+        if (powerType == MIRType::None)
+            setResultType(MIRType::Value);
+        else
+            setResultType(MIRType::Double);
         setMovable();
     }
 
@@ -6589,6 +6594,8 @@ class MPow
         return congruentIfOperandsEqual(ins);
     }
     AliasSet getAliasSet() const override {
+        if (specialization_ == MIRType::None)
+            return AliasSet::Store(AliasSet::Any);
         return AliasSet::None();
     }
     bool possiblyCalls() const override {
@@ -6596,8 +6603,7 @@ class MPow
     }
     MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
-        // Temporarily disable recovery to relieve fuzzer pressure. See bug 1188586.
-        return false;
+        return specialization_ != MIRType::None;
     }
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
