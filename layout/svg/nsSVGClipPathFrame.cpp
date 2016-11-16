@@ -165,60 +165,7 @@ nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
     // Paint our children into the mask:
     for (nsIFrame* kid = mFrames.FirstChild(); kid;
          kid = kid->GetNextSibling()) {
-      nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
-      if (SVGFrame) {
-        // The CTM of each frame referencing us can be different.
-        SVGFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
-
-        bool isOK = true;
-        // Children of this clipPath may themselves be clipped.
-        nsSVGClipPathFrame *clipPathThatClipsChild =
-          nsSVGEffects::GetEffectProperties(kid).GetClipPathFrame(&isOK);
-        if (!isOK) {
-          continue;
-        }
-
-        bool childsClipPathRequiresMasking;
-
-        if (clipPathThatClipsChild) {
-          childsClipPathRequiresMasking = !clipPathThatClipsChild->IsTrivial();
-          aMaskContext.Save();
-          if (!childsClipPathRequiresMasking) {
-            clipPathThatClipsChild->ApplyClipPath(aMaskContext, aClippedFrame,
-                                                  aMatrix);
-          } else {
-            Matrix maskTransform;
-            RefPtr<SourceSurface> mask =
-              clipPathThatClipsChild->GetClipMask(aMaskContext, aClippedFrame,
-                                                  aMatrix, &maskTransform);
-            aMaskContext.PushGroupForBlendBack(gfxContentType::ALPHA, 1.0,
-                                       mask, maskTransform);
-            // The corresponding PopGroupAndBlend call below will mask the
-            // blend using |mask|.
-          }
-        }
-
-        gfxMatrix toChildsUserSpace = mMatrixForChildren;
-        nsIFrame* child = do_QueryFrame(SVGFrame);
-        nsIContent* childContent = child->GetContent();
-        if (childContent->IsSVGElement()) {
-          toChildsUserSpace =
-            static_cast<const nsSVGElement*>(childContent)->
-              PrependLocalTransformsTo(mMatrixForChildren, eUserSpaceToParent);
-        }
-
-        // Our children have NS_STATE_SVG_CLIPPATH_CHILD set on them, and
-        // nsSVGPathGeometryFrame::Render checks for that state bit and paints
-        // only the geometry (opaque black) if set.
-        result &= SVGFrame->PaintSVG(aMaskContext, toChildsUserSpace);
-
-        if (clipPathThatClipsChild) {
-          if (childsClipPathRequiresMasking) {
-            aMaskContext.PopGroupAndBlend();
-          }
-          aMaskContext.Restore();
-        }
-      }
+      result &= PaintFrameIntoMask(kid, aClippedFrame, aMaskContext, aMatrix);
     }
 
 
@@ -251,6 +198,71 @@ nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
   }
 
   *aMaskTransform = ToMatrix(maskTransfrom);
+  return result;
+}
+
+DrawResult
+nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame *aFrame,
+                                       nsIFrame* aClippedFrame,
+                                       gfxContext& aTarget,
+                                       const gfxMatrix& aMatrix)
+{
+  nsISVGChildFrame* frame = do_QueryFrame(aFrame);
+  if (!frame) {
+    return DrawResult::SUCCESS;
+  }
+
+  // The CTM of each frame referencing us can be different.
+  frame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
+
+  bool isOK = true;
+  // Children of this clipPath may themselves be clipped.
+  nsSVGClipPathFrame *clipPathThatClipsChild =
+    nsSVGEffects::GetEffectProperties(aFrame).GetClipPathFrame(&isOK);
+  if (!isOK) {
+    return DrawResult::SUCCESS;
+  }
+
+  bool childsClipPathRequiresMasking;
+
+  if (clipPathThatClipsChild) {
+    childsClipPathRequiresMasking = !clipPathThatClipsChild->IsTrivial();
+    aTarget.Save();
+    if (!childsClipPathRequiresMasking) {
+      clipPathThatClipsChild->ApplyClipPath(aTarget, aClippedFrame, aMatrix);
+    } else {
+      Matrix maskTransform;
+      RefPtr<SourceSurface> mask =
+        clipPathThatClipsChild->GetClipMask(aTarget, aClippedFrame,
+                                            aMatrix, &maskTransform);
+      aTarget.PushGroupForBlendBack(gfxContentType::ALPHA, 1.0,
+                                 mask, maskTransform);
+      // The corresponding PopGroupAndBlend call below will mask the
+      // blend using |mask|.
+    }
+  }
+
+  gfxMatrix toChildsUserSpace = mMatrixForChildren;
+  nsIFrame* child = do_QueryFrame(frame);
+  nsIContent* childContent = child->GetContent();
+  if (childContent->IsSVGElement()) {
+    toChildsUserSpace =
+      static_cast<const nsSVGElement*>(childContent)->
+        PrependLocalTransformsTo(mMatrixForChildren, eUserSpaceToParent);
+  }
+
+  // Our children have NS_STATE_SVG_CLIPPATH_CHILD set on them, and
+  // nsSVGPathGeometryFrame::Render checks for that state bit and paints
+  // only the geometry (opaque black) if set.
+  DrawResult result = frame->PaintSVG(aTarget, toChildsUserSpace);
+
+  if (clipPathThatClipsChild) {
+    if (childsClipPathRequiresMasking) {
+      aTarget.PopGroupAndBlend();
+    }
+    aTarget.Restore();
+  }
+
   return result;
 }
 
