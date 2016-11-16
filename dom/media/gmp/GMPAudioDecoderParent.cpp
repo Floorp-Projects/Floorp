@@ -229,14 +229,14 @@ GMPAudioDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
   MaybeDisconnect(aWhy == AbnormalShutdown);
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPAudioDecoderParent::RecvDecoded(const GMPAudioDecodedSampleData& aDecoded)
 {
   LOGV(("GMPAudioDecoderParent[%p]::RecvDecoded() timestamp=%lld",
         this, aDecoded.mTimeStamp()));
 
   if (!mCallback) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mCallback->Decoded(aDecoded.mData(),
@@ -244,71 +244,71 @@ GMPAudioDecoderParent::RecvDecoded(const GMPAudioDecodedSampleData& aDecoded)
                      aDecoded.mChannelCount(),
                      aDecoded.mSamplesPerSecond());
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPAudioDecoderParent::RecvInputDataExhausted()
 {
   LOGV(("GMPAudioDecoderParent[%p]::RecvInputDataExhausted()", this));
 
   if (!mCallback) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Ignore any return code. It is OK for this to fail without killing the process.
   mCallback->InputDataExhausted();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPAudioDecoderParent::RecvDrainComplete()
 {
   LOGD(("GMPAudioDecoderParent[%p]::RecvDrainComplete()", this));
 
   if (!mCallback) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (!mIsAwaitingDrainComplete) {
-    return true;
+    return IPC_OK();
   }
   mIsAwaitingDrainComplete = false;
 
   // Ignore any return code. It is OK for this to fail without killing the process.
   mCallback->DrainComplete();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPAudioDecoderParent::RecvResetComplete()
 {
   LOGD(("GMPAudioDecoderParent[%p]::RecvResetComplete()", this));
 
   if (!mCallback) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   if (!mIsAwaitingResetComplete) {
-    return true;
+    return IPC_OK();
   }
   mIsAwaitingResetComplete = false;
 
   // Ignore any return code. It is OK for this to fail without killing the process.
   mCallback->ResetComplete();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPAudioDecoderParent::RecvError(const GMPErr& aError)
 {
   LOGD(("GMPAudioDecoderParent[%p]::RecvError(error=%d)", this, aError));
 
   if (!mCallback) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Ensure if we've received an error while waiting for a ResetComplete
@@ -319,19 +319,19 @@ GMPAudioDecoderParent::RecvError(const GMPErr& aError)
   // Ignore any return code. It is OK for this to fail without killing the process.
   mCallback->Error(aError);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPAudioDecoderParent::RecvShutdown()
 {
   LOGD(("GMPAudioDecoderParent[%p]::RecvShutdown()", this));
 
   Shutdown();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GMPAudioDecoderParent::Recv__delete__()
 {
   LOGD(("GMPAudioDecoderParent[%p]::Recv__delete__()", this));
@@ -342,7 +342,7 @@ GMPAudioDecoderParent::Recv__delete__()
     mPlugin = nullptr;
   }
 
-  return true;
+  return IPC_OK();
 }
 
 void

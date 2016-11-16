@@ -30,7 +30,7 @@ public:
 
     void Main();
 
-    virtual bool RecvOk(PTestDescSubsubParent* a) override;
+    virtual mozilla::ipc::IPCResult RecvOk(PTestDescSubsubParent* a) override;
 
 protected:
     virtual PTestDescSubParent* AllocPTestDescSubParent(PTestDescSubsubParent*) override;
@@ -58,7 +58,7 @@ protected:
 
     virtual bool DeallocPTestDescSubChild(PTestDescSubChild* actor) override;
 
-    virtual bool RecvTest(PTestDescSubsubChild* a) override;
+    virtual mozilla::ipc::IPCResult RecvTest(PTestDescSubsubChild* a) override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

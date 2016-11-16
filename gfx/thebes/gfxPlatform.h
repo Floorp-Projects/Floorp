@@ -805,6 +805,8 @@ private:
     void InitCompositorAccelerationPrefs();
     void InitGPUProcessPrefs();
 
+    static bool IsDXInterop2Blocked();
+
     RefPtr<gfxASurface> mScreenReferenceSurface;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
     nsCOMPtr<nsIObserver> mFontPrefsObserver;

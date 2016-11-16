@@ -265,7 +265,7 @@ public class Tabs implements GeckoEventListener {
         // This avoids a NPE below, but callers need to be careful to
         // handle this case.
         if (tab == null || oldTab == tab) {
-            return null;
+            return tab;
         }
 
         mSelectedTab = tab;

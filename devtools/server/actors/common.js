@@ -254,13 +254,17 @@ ActorPool.prototype = {
   },
 
   /**
-   * Remove an actor from the pool. If the actor has a disconnect method, call
-   * it.
+   * Remove an actor from the pool. If the actor has a destroy method, call it.
    */
-  removeActor: function AP_remove(aActor) {
-    delete this._actors[aActor.actorID];
-    if (aActor.disconnect) {
-      aActor.disconnect();
+  removeActor(actor) {
+    delete this._actors[actor.actorID];
+    if (actor.destroy) {
+      actor.destroy();
+      return;
+    }
+    // Obsolete destruction method name (might still be used by custom actors)
+    if (actor.disconnect) {
+      actor.disconnect();
     }
   },
 

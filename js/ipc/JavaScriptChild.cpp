@@ -75,11 +75,11 @@ JavaScriptChild::scopeForTargetObjects()
     return xpc::PrivilegedJunkScope();
 }
 
-bool
+mozilla::ipc::IPCResult
 JavaScriptChild::RecvDropTemporaryStrongReferences(const uint64_t& upToObjId)
 {
     strongReferenceObjIdMinimum_ = upToObjId + 1;
-    return true;
+    return IPC_OK();
 }
 
 PJavaScriptChild*

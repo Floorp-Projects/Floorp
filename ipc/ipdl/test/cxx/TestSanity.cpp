@@ -26,7 +26,7 @@ TestSanityParent::Main()
 }
 
 
-bool
+mozilla::ipc::IPCResult
 TestSanityParent::RecvPong(const int& one, const float& zeroPtTwoFive,
                            const uint8_t&/*unused*/)
 {
@@ -38,7 +38,7 @@ TestSanityParent::RecvPong(const int& one, const float& zeroPtTwoFive,
 
     Close();
 
-    return true;
+    return IPC_OK();
 }
 
 
@@ -55,7 +55,7 @@ TestSanityChild::~TestSanityChild()
     MOZ_COUNT_DTOR(TestSanityChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestSanityChild::RecvPing(const int& zero, const float& zeroPtFive,
                           const int8_t&/*unused*/)
 {
@@ -67,7 +67,7 @@ TestSanityChild::RecvPing(const int& zero, const float& zeroPtFive,
 
     if (!SendPong(1, 0.25f, 0))
         fail("sending Pong");
-    return true;
+    return IPC_OK();
 }
 
 

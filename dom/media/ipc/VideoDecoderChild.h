@@ -26,12 +26,12 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoDecoderChild)
 
   // PVideoDecoderChild
-  bool RecvOutput(const VideoDataIPDL& aData) override;
-  bool RecvInputExhausted() override;
-  bool RecvDrainComplete() override;
-  bool RecvError(const nsresult& aError) override;
-  bool RecvInitComplete(const bool& aHardware, const nsCString& aHardwareReason) override;
-  bool RecvInitFailed(const nsresult& aReason) override;
+  mozilla::ipc::IPCResult RecvOutput(const VideoDataIPDL& aData) override;
+  mozilla::ipc::IPCResult RecvInputExhausted() override;
+  mozilla::ipc::IPCResult RecvDrainComplete() override;
+  mozilla::ipc::IPCResult RecvError(const nsresult& aError) override;
+  mozilla::ipc::IPCResult RecvInitComplete(const bool& aHardware, const nsCString& aHardwareReason) override;
+  mozilla::ipc::IPCResult RecvInitFailed(const nsresult& aReason) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

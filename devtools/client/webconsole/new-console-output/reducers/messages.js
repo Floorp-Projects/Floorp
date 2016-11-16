@@ -30,7 +30,7 @@ function messages(state = new MessageState(), action) {
     messagesUiById,
     messagesTableDataById,
     groupsById,
-    currentGroup
+    currentGroup,
   } = state;
 
   switch (action.type) {

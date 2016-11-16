@@ -12,6 +12,12 @@ tree[type="places"] > treechildren::-moz-tree-cell {
   unicode-bidi: plaintext;
 }
 
+#bhtTitleText {
+  /* ensure we use the direction of the website title instead of the
+   * browser locale */
+  unicode-bidi: plaintext;
+}
+
 .toolbar-drop-indicator {
   position: relative;
   z-index: 1;

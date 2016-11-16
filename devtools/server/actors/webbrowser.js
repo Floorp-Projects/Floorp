@@ -484,8 +484,7 @@ BrowserTabList.prototype._handleActorClose = function (actor, browser) {
 /**
  * Make sure we are listening or not listening for activity elsewhere in
  * the browser, as appropriate. Other than setting up newly created XUL
- * windows, all listener / observer connection and disconnection should
- * happen here.
+ * windows, all listener / observer management should happen here.
  */
 BrowserTabList.prototype._checkListening = function () {
   /*
@@ -887,7 +886,7 @@ function TabActor(connection) {
   this._onWorkerActorListChanged = this._onWorkerActorListChanged.bind(this);
 }
 
-// XXX (bug 710213): TabActor attach/detach/exit/disconnect is a
+// XXX (bug 710213): TabActor attach/detach/exit/destroy is a
 // *complete* mess, needs to be rethought asap.
 
 TabActor.prototype = {
@@ -1137,7 +1136,7 @@ TabActor.prototype = {
   /**
    * Called when the actor is removed from the connection.
    */
-  disconnect() {
+  destroy() {
     this.exit();
   },
 

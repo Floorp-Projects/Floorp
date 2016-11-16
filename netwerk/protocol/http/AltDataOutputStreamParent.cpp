@@ -25,12 +25,12 @@ AltDataOutputStreamParent::~AltDataOutputStreamParent()
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 }
 
-bool
+mozilla::ipc::IPCResult
 AltDataOutputStreamParent::RecvWriteData(const nsCString& data)
 {
   if (NS_FAILED(mStatus)) {
     Unused << SendError(mStatus);
-    return true;
+    return IPC_OK();
   }
   nsresult rv;
   uint32_t n;
@@ -41,15 +41,15 @@ AltDataOutputStreamParent::RecvWriteData(const nsCString& data)
       Unused << SendError(rv);
     }
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 AltDataOutputStreamParent::RecvClose()
 {
   if (NS_FAILED(mStatus)) {
     Unused << SendError(mStatus);
-    return true;
+    return IPC_OK();
   }
   nsresult rv;
   if (mOutputStream) {
@@ -59,7 +59,7 @@ AltDataOutputStreamParent::RecvClose()
     }
     mOutputStream = nullptr;
   }
-  return true;
+  return IPC_OK();
 }
 
 void

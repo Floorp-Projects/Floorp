@@ -43,11 +43,11 @@ VsyncBridgeParent::Open(Endpoint<PVsyncBridgeParent>&& aEndpoint)
   mOpen = true;
 }
 
-bool
+mozilla::ipc::IPCResult
 VsyncBridgeParent::RecvNotifyVsync(const TimeStamp& aTimeStamp, const uint64_t& aLayersId)
 {
   CompositorBridgeParent::NotifyVsync(aTimeStamp, aLayersId);
-  return true;
+  return IPC_OK();
 }
 
 void

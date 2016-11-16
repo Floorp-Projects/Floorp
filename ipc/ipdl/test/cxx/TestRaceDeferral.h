@@ -24,7 +24,7 @@ public:
 protected:
     void Test1();
 
-    virtual bool AnswerLose() override;
+    virtual mozilla::ipc::IPCResult AnswerLose() override;
 
     virtual mozilla::ipc::RacyInterruptPolicy
     MediateInterruptRace(const MessageInfo& parent,
@@ -50,11 +50,11 @@ public:
     virtual ~TestRaceDeferralChild();
 
 protected:
-    virtual bool RecvStartRace() override;
+    virtual mozilla::ipc::IPCResult RecvStartRace() override;
 
-    virtual bool AnswerWin() override;
+    virtual mozilla::ipc::IPCResult AnswerWin() override;
 
-    virtual bool AnswerRpc() override;
+    virtual mozilla::ipc::IPCResult AnswerRpc() override;
 
     virtual mozilla::ipc::RacyInterruptPolicy
     MediateInterruptRace(const MessageInfo& parent,

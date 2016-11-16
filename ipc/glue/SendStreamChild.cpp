@@ -49,7 +49,7 @@ private:
   virtual void
   ActorDestroy(ActorDestroyReason aReason) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvRequestClose(const nsresult& aRv) override;
 
   // WorkerHolder methods
@@ -213,12 +213,12 @@ SendStreamChildImpl::ActorDestroy(ActorDestroyReason aReason)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 SendStreamChildImpl::RecvRequestClose(const nsresult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(SendStreamChild);
   OnEnd(aRv);
-  return true;
+  return IPC_OK();
 }
 
 bool

@@ -506,7 +506,7 @@ public:
   }
 
 private:
-  ~nsGlobalWindowObserver() {}
+  ~nsGlobalWindowObserver() = default;
 
   // This reference is non-owning and safe because it's cleared by
   // nsGlobalWindow::CleanUp().
@@ -719,77 +719,77 @@ class nsOuterWindowProxy : public js::Wrapper
 public:
   constexpr nsOuterWindowProxy() : js::Wrapper(0) { }
 
-  virtual bool finalizeInBackground(const JS::Value& priv) const override {
+  bool finalizeInBackground(const JS::Value& priv) const override {
     return false;
   }
 
   // Standard internal methods
-  virtual bool getOwnPropertyDescriptor(JSContext* cx,
-                                        JS::Handle<JSObject*> proxy,
-                                        JS::Handle<jsid> id,
-                                        JS::MutableHandle<JS::PropertyDescriptor> desc)
-                                        const override;
-  virtual bool defineProperty(JSContext* cx,
-                              JS::Handle<JSObject*> proxy,
-                              JS::Handle<jsid> id,
-                              JS::Handle<JS::PropertyDescriptor> desc,
-                              JS::ObjectOpResult &result) const override;
-  virtual bool ownPropertyKeys(JSContext *cx,
-                               JS::Handle<JSObject*> proxy,
-                               JS::AutoIdVector &props) const override;
-  virtual bool delete_(JSContext *cx, JS::Handle<JSObject*> proxy,
+  bool getOwnPropertyDescriptor(JSContext* cx,
+                                JS::Handle<JSObject*> proxy,
+                                JS::Handle<jsid> id,
+                                JS::MutableHandle<JS::PropertyDescriptor> desc)
+                                const override;
+  bool defineProperty(JSContext* cx,
+                      JS::Handle<JSObject*> proxy,
+                      JS::Handle<jsid> id,
+                      JS::Handle<JS::PropertyDescriptor> desc,
+                      JS::ObjectOpResult &result) const override;
+  bool ownPropertyKeys(JSContext *cx,
+                       JS::Handle<JSObject*> proxy,
+                       JS::AutoIdVector &props) const override;
+  bool delete_(JSContext *cx, JS::Handle<JSObject*> proxy,
                        JS::Handle<jsid> id,
                        JS::ObjectOpResult &result) const override;
 
-  virtual bool getPrototypeIfOrdinary(JSContext* cx,
-                                      JS::Handle<JSObject*> proxy,
-                                      bool* isOrdinary,
-                                      JS::MutableHandle<JSObject*> protop) const override;
+  bool getPrototypeIfOrdinary(JSContext* cx,
+                              JS::Handle<JSObject*> proxy,
+                              bool* isOrdinary,
+                              JS::MutableHandle<JSObject*> protop) const override;
 
-  virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
-                         JS::MutableHandle<JSObject*> vp) const override;
-  virtual bool preventExtensions(JSContext* cx,
-                                 JS::Handle<JSObject*> proxy,
-                                 JS::ObjectOpResult& result) const override;
-  virtual bool isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible)
-                            const override;
-  virtual bool has(JSContext *cx, JS::Handle<JSObject*> proxy,
-                   JS::Handle<jsid> id, bool *bp) const override;
-  virtual bool get(JSContext *cx, JS::Handle<JSObject*> proxy,
-                   JS::Handle<JS::Value> receiver,
-                   JS::Handle<jsid> id,
-                   JS::MutableHandle<JS::Value> vp) const override;
-  virtual bool set(JSContext *cx, JS::Handle<JSObject*> proxy,
-                   JS::Handle<jsid> id, JS::Handle<JS::Value> v,
-                   JS::Handle<JS::Value> receiver,
-                   JS::ObjectOpResult &result) const override;
+  bool enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
+                 JS::MutableHandle<JSObject*> vp) const override;
+  bool preventExtensions(JSContext* cx,
+                         JS::Handle<JSObject*> proxy,
+                         JS::ObjectOpResult& result) const override;
+  bool isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible)
+                    const override;
+  bool has(JSContext *cx, JS::Handle<JSObject*> proxy,
+           JS::Handle<jsid> id, bool *bp) const override;
+  bool get(JSContext *cx, JS::Handle<JSObject*> proxy,
+           JS::Handle<JS::Value> receiver,
+           JS::Handle<jsid> id,
+           JS::MutableHandle<JS::Value> vp) const override;
+  bool set(JSContext *cx, JS::Handle<JSObject*> proxy,
+           JS::Handle<jsid> id, JS::Handle<JS::Value> v,
+           JS::Handle<JS::Value> receiver,
+           JS::ObjectOpResult &result) const override;
 
   // SpiderMonkey extensions
-  virtual bool getPropertyDescriptor(JSContext* cx,
-                                     JS::Handle<JSObject*> proxy,
-                                     JS::Handle<jsid> id,
-                                     JS::MutableHandle<JS::PropertyDescriptor> desc)
-                                     const override;
-  virtual bool hasOwn(JSContext *cx, JS::Handle<JSObject*> proxy,
-                      JS::Handle<jsid> id, bool *bp) const override;
-  virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> proxy,
-                                            JS::AutoIdVector &props) const override;
-  virtual const char *className(JSContext *cx,
-                                JS::Handle<JSObject*> wrapper) const override;
+  bool getPropertyDescriptor(JSContext* cx,
+                             JS::Handle<JSObject*> proxy,
+                             JS::Handle<jsid> id,
+                             JS::MutableHandle<JS::PropertyDescriptor> desc)
+                             const override;
+  bool hasOwn(JSContext *cx, JS::Handle<JSObject*> proxy,
+              JS::Handle<jsid> id, bool *bp) const override;
+  bool getOwnEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> proxy,
+                                    JS::AutoIdVector &props) const override;
+  const char *className(JSContext *cx,
+                        JS::Handle<JSObject*> wrapper) const override;
 
-  virtual void finalize(JSFreeOp *fop, JSObject *proxy) const override;
+  void finalize(JSFreeOp *fop, JSObject *proxy) const override;
 
-  virtual bool isCallable(JSObject *obj) const override {
+  bool isCallable(JSObject *obj) const override {
     return false;
   }
-  virtual bool isConstructor(JSObject *obj) const override {
+  bool isConstructor(JSObject *obj) const override {
     return false;
   }
 
-  virtual bool watch(JSContext *cx, JS::Handle<JSObject*> proxy,
-                     JS::Handle<jsid> id, JS::Handle<JSObject*> callable) const override;
-  virtual bool unwatch(JSContext *cx, JS::Handle<JSObject*> proxy,
-                       JS::Handle<jsid> id) const override;
+  bool watch(JSContext *cx, JS::Handle<JSObject*> proxy,
+             JS::Handle<jsid> id, JS::Handle<JSObject*> callable) const override;
+  bool unwatch(JSContext *cx, JS::Handle<JSObject*> proxy,
+               JS::Handle<jsid> id) const override;
 
   static void ObjectMoved(JSObject *obj, const JSObject *old);
 
@@ -1189,7 +1189,7 @@ class nsChromeOuterWindowProxy : public nsOuterWindowProxy
 public:
   constexpr nsChromeOuterWindowProxy() : nsOuterWindowProxy() { }
 
-  virtual const char *className(JSContext *cx, JS::Handle<JSObject*> wrapper) const override;
+  const char *className(JSContext *cx, JS::Handle<JSObject*> wrapper) const override;
 
   static const nsChromeOuterWindowProxy singleton;
 };
@@ -6338,7 +6338,7 @@ public:
   NS_IMETHOD Run() override;
 
 private:
-  virtual ~FullscreenTransitionTask()
+  ~FullscreenTransitionTask() override
   {
     MOZ_COUNT_DTOR(FullscreenTransitionTask);
   }
@@ -6390,7 +6390,7 @@ private:
       : mTask(aTask) { }
 
   private:
-    ~Observer() {}
+    ~Observer() = default;
 
     RefPtr<FullscreenTransitionTask> mTask;
   };
@@ -8556,9 +8556,9 @@ nsGlobalWindow::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessa
 
         nsContentUtils::LogSimpleConsoleError(
           NS_ConvertUTF8toUTF16(nsPrintfCString(
-            "Attempting to post a message to window with url \"%s\" and "
-            "origin \"%s\" from a system principal scope with mismatched "
-            "origin \"%s\".",
+            R"(Attempting to post a message to window with url "%s" and )"
+            R"(origin "%s" from a system principal scope with mismatched )"
+            R"(origin "%s".)",
             targetURL.get(), targetOrigin.get(), sourceOrigin.get())),
           "DOM");
 
@@ -9062,9 +9062,9 @@ nsGlobalWindow::NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow) {
 // with principals that are either the system principal or an expanded principal.
 // This may not return true for all non-web-content compartments.
 struct BrowserCompartmentMatcher : public js::CompartmentFilter {
-  virtual bool match(JSCompartment* c) const override
+  bool match(JSCompartment* aC) const override
   {
-    nsCOMPtr<nsIPrincipal> pc = nsJSPrincipals::get(JS_GetCompartmentPrincipals(c));
+    nsCOMPtr<nsIPrincipal> pc = nsJSPrincipals::get(JS_GetCompartmentPrincipals(aC));
     return nsContentUtils::IsSystemOrExpandedPrincipal(pc);
   }
 };

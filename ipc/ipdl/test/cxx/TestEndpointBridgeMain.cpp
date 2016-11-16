@@ -23,14 +23,14 @@ TestEndpointBridgeMainParent::Main()
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointBridgeMainParent::RecvBridged(Endpoint<PTestEndpointBridgeMainSubParent>&& endpoint)
 {
   TestEndpointBridgeMainSubParent* a = new TestEndpointBridgeMainSubParent();
   if (!endpoint.Bind(a)) {
     fail("Bind failed");
   }
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -43,22 +43,28 @@ TestEndpointBridgeMainParent::ActorDestroy(ActorDestroyReason why)
   QuitParent();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointBridgeMainSubParent::RecvHello()
 {
-  return SendHi();
+  if (!SendHi()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointBridgeMainSubParent::RecvHelloSync()
 {
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointBridgeMainSubParent::AnswerHelloRpc()
 {
-  return CallHiRpc();
+  if (!CallHiRpc()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 void
@@ -85,7 +91,7 @@ TestEndpointBridgeMainChild::TestEndpointBridgeMainChild()
   gEndpointBridgeMainChild = this;
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointBridgeMainChild::RecvStart()
 {
   vector<string> subsubArgs;
@@ -105,7 +111,7 @@ TestEndpointBridgeMainChild::RecvStart()
   bsp->Open(transport, base::GetProcId(mSubprocess->GetChildProcessHandle()));
 
   bsp->Main();
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -128,7 +134,7 @@ TestEndpointBridgeSubParent::Main()
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointBridgeSubParent::RecvBridgeEm()
 {
   Endpoint<PTestEndpointBridgeMainSubParent> parent;
@@ -148,7 +154,7 @@ TestEndpointBridgeSubParent::RecvBridgeEm()
     fail("SendBridge failed for child");
   }
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -176,16 +182,16 @@ TestEndpointBridgeSubChild::TestEndpointBridgeSubChild()
     gBridgeSubChild = this;
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointBridgeSubChild::RecvPing()
 {
   if (!SendBridgeEm()) {
     fail("sending BridgeEm");
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointBridgeSubChild::RecvBridged(Endpoint<PTestEndpointBridgeMainSubChild>&& endpoint)
 {
   TestEndpointBridgeMainSubChild* a = new TestEndpointBridgeMainSubChild();
@@ -198,7 +204,7 @@ TestEndpointBridgeSubChild::RecvBridged(Endpoint<PTestEndpointBridgeMainSubChild
     fail("sending Hello");
   }
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -210,7 +216,7 @@ TestEndpointBridgeSubChild::ActorDestroy(ActorDestroyReason why)
   QuitChild();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointBridgeMainSubChild::RecvHi()
 {
   if (!SendHelloSync()) {
@@ -227,14 +233,14 @@ TestEndpointBridgeMainSubChild::RecvHi()
   // the C++ stack
   MessageLoop::current()->PostTask(
     NewNonOwningRunnableMethod(this, &TestEndpointBridgeMainSubChild::Close));
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointBridgeMainSubChild::AnswerHiRpc()
 {
   mGotHi = true;              // d00d
-  return true;
+  return IPC_OK();
 }
 
 void

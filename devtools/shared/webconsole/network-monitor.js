@@ -84,9 +84,16 @@ function matchRequest(channel, filters) {
 
   if (filters.outerWindowID) {
     let topFrame = NetworkHelper.getTopFrameForRequest(channel);
-    if (topFrame && topFrame.outerWindowID &&
-        topFrame.outerWindowID == filters.outerWindowID) {
-      return true;
+    // topFrame is typically null for some chrome requests like favicons
+    if (topFrame) {
+      try {
+        if (topFrame.outerWindowID == filters.outerWindowID) {
+          return true;
+        }
+      } catch (e) {
+        // outerWindowID getter from browser.xml (non-remote <xul:browser>) may
+        // throw when closing a tab while resources are still loading.
+      }
     }
   }
 

@@ -31,7 +31,7 @@ WebSocketEventListenerParent::~WebSocketEventListenerParent()
   MOZ_ASSERT(!mService);
 }
 
-bool
+mozilla::ipc::IPCResult
 WebSocketEventListenerParent::RecvClose()
 {
   if (mService) {
@@ -39,7 +39,7 @@ WebSocketEventListenerParent::RecvClose()
     Unused << Send__delete__(this);
   }
 
-  return true;
+  return IPC_OK();
 }
 
 void

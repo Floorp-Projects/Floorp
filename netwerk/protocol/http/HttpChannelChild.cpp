@@ -276,14 +276,14 @@ class AssociateApplicationCacheEvent : public ChannelEvent
     nsCString clientID;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvAssociateApplicationCache(const nsCString &groupID,
                                                 const nsCString &clientID)
 {
   LOG(("HttpChannelChild::RecvAssociateApplicationCache [this=%p]\n", this));
   mEventQ->RunOrEnqueue(new AssociateApplicationCacheEvent(this, groupID,
                                                            clientID));
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -359,7 +359,7 @@ class StartRequestEvent : public ChannelEvent
   nsCString mAltDataType;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                      const nsHttpResponseHead& responseHead,
                                      const bool& useResponseHead,
@@ -394,7 +394,7 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                               securityInfoSerialization,
                                               selfAddr, peerAddr, cacheKey,
                                               altDataType));
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -612,7 +612,7 @@ class TransportAndDataEvent : public ChannelEvent
   uint32_t mCount;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvOnTransportAndData(const nsresult& channelStatus,
                                          const nsresult& transportStatus,
                                          const uint64_t& progress,
@@ -630,7 +630,7 @@ HttpChannelChild::RecvOnTransportAndData(const nsresult& channelStatus,
                                                   progressMax, data, offset,
                                                   count),
                         mDivertingToParent);
-  return true;
+  return IPC_OK();
 }
 
 class MaybeDivertOnDataHttpEvent : public ChannelEvent
@@ -818,7 +818,7 @@ class StopRequestEvent : public ChannelEvent
   ResourceTimingStruct mTiming;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvOnStopRequest(const nsresult& channelStatus,
                                     const ResourceTimingStruct& timing)
 {
@@ -828,7 +828,7 @@ HttpChannelChild::RecvOnStopRequest(const nsresult& channelStatus,
 
   mEventQ->RunOrEnqueue(new StopRequestEvent(this, channelStatus, timing),
                         mDivertingToParent);
-  return true;
+  return IPC_OK();
 }
 
 class MaybeDivertOnStopHttpEvent : public ChannelEvent
@@ -1000,12 +1000,12 @@ class ProgressEvent : public ChannelEvent
   int64_t mProgress, mProgressMax;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvOnProgress(const int64_t& progress,
                                  const int64_t& progressMax)
 {
   mEventQ->RunOrEnqueue(new ProgressEvent(this, progress, progressMax));
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -1048,11 +1048,11 @@ class StatusEvent : public ChannelEvent
   nsresult mStatus;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvOnStatus(const nsresult& status)
 {
   mEventQ->RunOrEnqueue(new StatusEvent(this, status));
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -1094,12 +1094,12 @@ class FailedAsyncOpenEvent : public ChannelEvent
   nsresult mStatus;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvFailedAsyncOpen(const nsresult& status)
 {
   LOG(("HttpChannelChild::RecvFailedAsyncOpen [this=%p]\n", this));
   mEventQ->RunOrEnqueue(new FailedAsyncOpenEvent(this, status));
-  return true;
+  return IPC_OK();
 }
 
 // We need to have an implementation of this function just so that we can keep
@@ -1146,12 +1146,12 @@ class DeleteSelfEvent : public ChannelEvent
   HttpChannelChild* mChild;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvDeleteSelf()
 {
   LOG(("HttpChannelChild::RecvDeleteSelf [this=%p]\n", this));
   mEventQ->RunOrEnqueue(new DeleteSelfEvent(this));
-  return true;
+  return IPC_OK();
 }
 
 HttpChannelChild::OverrideRunnable::OverrideRunnable(HttpChannelChild* aChannel,
@@ -1192,7 +1192,7 @@ HttpChannelChild::OverrideRunnable::Run()
   return NS_OK;
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvFinishInterceptedRedirect()
 {
   // Hold a ref to this to keep it from being deleted by Send__delete__()
@@ -1203,7 +1203,7 @@ HttpChannelChild::RecvFinishInterceptedRedirect()
   // CompleteRedirectSetup, and we need to call FinishInterceptedRedirect.
   NS_DispatchToMainThread(NewRunnableMethod(this, &HttpChannelChild::FinishInterceptedRedirect));
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -1235,12 +1235,12 @@ void HttpChannelChild::FinishInterceptedRedirect()
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvReportSecurityMessage(const nsString& messageTag,
                                             const nsString& messageCategory)
 {
   AddSecurityMessage(messageTag, messageCategory);
-  return true;
+  return IPC_OK();
 }
 
 class Redirect1Event : public ChannelEvent
@@ -1277,7 +1277,7 @@ class Redirect1Event : public ChannelEvent
   nsCString           mChannelId;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvRedirect1Begin(const uint32_t& registrarId,
                                      const URIParams& newUri,
                                      const uint32_t& redirectFlags,
@@ -1291,7 +1291,7 @@ HttpChannelChild::RecvRedirect1Begin(const uint32_t& registrarId,
                                            redirectFlags, responseHead,
                                            securityInfoSerialization,
                                            channelId));
-  return true;
+  return IPC_OK();
 }
 
 nsresult
@@ -1441,12 +1441,12 @@ class Redirect3Event : public ChannelEvent
   HttpChannelChild* mChild;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvRedirect3Complete()
 {
   LOG(("HttpChannelChild::RecvRedirect3Complete [this=%p]\n", this));
   mEventQ->RunOrEnqueue(new Redirect3Event(this));
-  return true;
+  return IPC_OK();
 }
 
 class HttpFlushedForDiversionEvent : public ChannelEvent
@@ -1466,7 +1466,7 @@ class HttpFlushedForDiversionEvent : public ChannelEvent
   HttpChannelChild* mChild;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvFlushedForDiversion()
 {
   LOG(("HttpChannelChild::RecvFlushedForDiversion [this=%p]\n", this));
@@ -1474,14 +1474,14 @@ HttpChannelChild::RecvFlushedForDiversion()
 
   mEventQ->RunOrEnqueue(new HttpFlushedForDiversionEvent(this), true);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvNotifyTrackingProtectionDisabled()
 {
   nsChannelClassifier::NotifyTrackingProtectionDisabled(this);
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -1498,7 +1498,7 @@ HttpChannelChild::FlushedForDiversion()
   SendDivertComplete();
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvDivertMessages()
 {
   LOG(("HttpChannelChild::RecvDivertMessages [this=%p]\n", this));
@@ -1509,7 +1509,7 @@ HttpChannelChild::RecvDivertMessages()
   // IPDL messages back to parent listener.
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(Resume()));
 
-  return true;
+  return IPC_OK();
 }
 
 // Returns true if has actually completed the redirect and cleaned up the
@@ -2819,7 +2819,7 @@ HttpChannelChild::ForceIntercepted(nsIInputStream* aSynthesizedInput)
   mRedirectingForSubsequentSynthesizedResponse = true;
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelChild::RecvIssueDeprecationWarning(const uint32_t& warning,
                                               const bool& asError)
 {
@@ -2828,7 +2828,7 @@ HttpChannelChild::RecvIssueDeprecationWarning(const uint32_t& warning,
   if (warner) {
     warner->IssueWarning(warning, asError);
   }
-  return true;
+  return IPC_OK();
 }
 
 bool

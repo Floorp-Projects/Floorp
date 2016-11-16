@@ -609,7 +609,7 @@ HttpChannelParent::ConnectChannel(const uint32_t& registrarId, const bool& shoul
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvSetPriority(const uint16_t& priority)
 {
   LOG(("HttpChannelParent::RecvSetPriority [this=%p, priority=%u]\n",
@@ -624,19 +624,19 @@ HttpChannelParent::RecvSetPriority(const uint16_t& priority)
   if (priorityRedirectChannel)
     priorityRedirectChannel->SetPriority(priority);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvSetClassOfService(const uint32_t& cos)
 {
   if (mChannel) {
     mChannel->SetClassFlags(cos);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvSuspend()
 {
   LOG(("HttpChannelParent::RecvSuspend [this=%p]\n", this));
@@ -644,10 +644,10 @@ HttpChannelParent::RecvSuspend()
   if (mChannel) {
     mChannel->Suspend();
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvResume()
 {
   LOG(("HttpChannelParent::RecvResume [this=%p]\n", this));
@@ -655,10 +655,10 @@ HttpChannelParent::RecvResume()
   if (mChannel) {
     mChannel->Resume();
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvCancel(const nsresult& status)
 {
   LOG(("HttpChannelParent::RecvCancel [this=%p]\n", this));
@@ -667,19 +667,19 @@ HttpChannelParent::RecvCancel(const nsresult& status)
   if (mChannel) {
     mChannel->Cancel(status);
   }
-  return true;
+  return IPC_OK();
 }
 
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvSetCacheTokenCachedCharset(const nsCString& charset)
 {
   if (mCacheEntry)
     mCacheEntry->SetMetaDataElement("charset", charset.get());
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvUpdateAssociatedContentSecurity(const int32_t& broken,
                                                        const int32_t& no)
 {
@@ -687,10 +687,10 @@ HttpChannelParent::RecvUpdateAssociatedContentSecurity(const int32_t& broken,
     mAssociatedContentSecurity->SetCountSubRequestsBrokenSecurity(broken);
     mAssociatedContentSecurity->SetCountSubRequestsNoSecurity(no);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
                                        const RequestHeaderTuples& changedHeaders,
                                        const uint32_t& loadFlags,
@@ -785,19 +785,19 @@ HttpChannelParent::RecvRedirect2Verify(const nsresult& result,
     mRedirectCallback = nullptr;
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvDocumentChannelCleanup()
 {
   // From now on only using mAssociatedContentSecurity.  Free everything else.
   mChannel = nullptr;          // Reclaim some memory sooner.
   mCacheEntry = nullptr;  // Else we'll block other channels reading same URI
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvMarkOfflineCacheEntryAsForeign()
 {
   if (mOfflineForeignMarker) {
@@ -805,7 +805,7 @@ HttpChannelParent::RecvMarkOfflineCacheEntryAsForeign()
     mOfflineForeignMarker = 0;
   }
 
-  return true;
+  return IPC_OK();
 }
 
 class DivertDataAvailableEvent : public ChannelEvent
@@ -834,7 +834,7 @@ private:
   uint32_t mCount;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
                                              const uint64_t& offset,
                                              const uint32_t& count)
@@ -846,17 +846,17 @@ HttpChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
     MOZ_ASSERT(mDivertingFromChild,
                "Cannot RecvDivertOnDataAvailable if diverting is not set!");
     FailDiversion(NS_ERROR_UNEXPECTED);
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   // Drop OnDataAvailables if the parent was canceled already.
   if (NS_FAILED(mStatus)) {
-    return true;
+    return IPC_OK();
   }
 
   mEventQ->RunOrEnqueue(new DivertDataAvailableEvent(this, data, offset,
                                                      count));
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -922,7 +922,7 @@ private:
   nsresult mStatusCode;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvDivertOnStopRequest(const nsresult& statusCode)
 {
   LOG(("HttpChannelParent::RecvDivertOnStopRequest [this=%p]\n", this));
@@ -932,11 +932,11 @@ HttpChannelParent::RecvDivertOnStopRequest(const nsresult& statusCode)
     MOZ_ASSERT(mDivertingFromChild,
                "Cannot RecvDivertOnStopRequest if diverting is not set!");
     FailDiversion(NS_ERROR_UNEXPECTED);
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mEventQ->RunOrEnqueue(new DivertStopRequestEvent(this, statusCode));
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -980,7 +980,7 @@ private:
   HttpChannelParent* mParent;
 };
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvDivertComplete()
 {
   LOG(("HttpChannelParent::RecvDivertComplete [this=%p]\n", this));
@@ -990,11 +990,11 @@ HttpChannelParent::RecvDivertComplete()
     MOZ_ASSERT(mDivertingFromChild,
                "Cannot RecvDivertComplete if diverting is not set!");
     FailDiversion(NS_ERROR_UNEXPECTED);
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mEventQ->RunOrEnqueue(new DivertCompleteEvent(this));
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -1056,22 +1056,22 @@ HttpChannelParent::ResponseSynthesized()
   MaybeFlushPendingDiversion();
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(const URIParams& uri,
   const mozilla::ipc::PrincipalInfo& requestingPrincipal)
 {
   nsCOMPtr<nsIURI> deserializedURI = DeserializeURI(uri);
   if (!deserializedURI) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   nsCOMPtr<nsIPrincipal> principal =
     PrincipalInfoToPrincipal(requestingPrincipal);
   if (!principal) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   nsCORSListenerProxy::RemoveFromCorsPreflightCache(deserializedURI,
                                                     principal);
-  return true;
+  return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------
@@ -1747,22 +1747,28 @@ HttpChannelParent::DoSendDeleteSelf()
   return rv;
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvDeletingChannel()
 {
   // We need to ensure that the parent channel will not be sending any more IPC
   // messages after this, as the child is going away. DoSendDeleteSelf will
   // set mIPCClosed = true;
-  return DoSendDeleteSelf();
+  if (!DoSendDeleteSelf()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 HttpChannelParent::RecvFinishInterceptedRedirect()
 {
   // We make sure not to send any more messages until the IPC channel is torn
   // down by the child.
   mIPCClosed = true;
-  return SendFinishInterceptedRedirect();
+  if (!SendFinishInterceptedRedirect()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------

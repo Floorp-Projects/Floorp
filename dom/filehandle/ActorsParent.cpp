@@ -343,19 +343,19 @@ private:
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvFinish() override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvAbort() override;
 
   virtual PBackgroundFileRequestParent*
   AllocPBackgroundFileRequestParent(const FileRequestParams& aParams) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvPBackgroundFileRequestConstructor(PBackgroundFileRequestParent* aActor,
                                         const FileRequestParams& aParams)
                                         override;
@@ -1472,7 +1472,7 @@ BackgroundMutableFileParentBase::AllocPBackgroundFileHandleParent(
   return fileHandle.forget().take();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundMutableFileParentBase::RecvPBackgroundFileHandleConstructor(
                                             PBackgroundFileHandleParent* aActor,
                                             const FileMode& aMode)
@@ -1494,10 +1494,10 @@ BackgroundMutableFileParentBase::RecvPBackgroundFileHandleConstructor(
 
   if (NS_WARN_IF(!RegisterFileHandle(fileHandle))) {
     fileHandle->Abort(/* aForce */ false);
-    return true;
+    return IPC_OK();
   }
 
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -1512,22 +1512,25 @@ BackgroundMutableFileParentBase::DeallocPBackgroundFileHandleParent(
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundMutableFileParentBase::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mActorDestroyed);
 
-  return PBackgroundMutableFileParent::Send__delete__(this);
+  if (!PBackgroundMutableFileParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundMutableFileParentBase::RecvGetFileId(int64_t* aFileId)
 {
   AssertIsOnBackgroundThread();
 
   *aFileId = -1;
-  return true;
+  return IPC_OK();
 }
 
 /*******************************************************************************
@@ -1834,45 +1837,48 @@ FileHandle::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 FileHandle::RecvDeleteMe()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
-  return PBackgroundFileHandleParent::Send__delete__(this);
+  if (!PBackgroundFileHandleParent::Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 FileHandle::RecvFinish()
 {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mFinishOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mFinishOrAbortReceived = true;
 
   MaybeFinishOrAbort();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 FileHandle::RecvAbort()
 {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mFinishOrAbortReceived)) {
     ASSERT_UNLESS_FUZZING();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   mFinishOrAbortReceived = true;
 
   Abort(/* aForce */ false);
-  return true;
+  return IPC_OK();
 }
 
 PBackgroundFileRequestParent*
@@ -1938,7 +1944,7 @@ FileHandle::AllocPBackgroundFileRequestParent(const FileRequestParams& aParams)
   return actor.forget().take();
 }
 
-bool
+mozilla::ipc::IPCResult
 FileHandle::RecvPBackgroundFileRequestConstructor(
                                            PBackgroundFileRequestParent* aActor,
                                            const FileRequestParams& aParams)
@@ -1951,11 +1957,11 @@ FileHandle::RecvPBackgroundFileRequestConstructor(
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   op->Enqueue();
-  return true;
+  return IPC_OK();
 }
 
 bool

@@ -34,7 +34,7 @@ public:
   void Main();
 
 protected:
-  bool RecvBridged(mozilla::ipc::Endpoint<PTestEndpointBridgeMainSubParent>&& endpoint) override;
+  mozilla::ipc::IPCResult RecvBridged(mozilla::ipc::Endpoint<PTestEndpointBridgeMainSubParent>&& endpoint) override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
@@ -48,9 +48,9 @@ public:
   virtual ~TestEndpointBridgeMainSubParent() {}
 
 protected:
-  virtual bool RecvHello() override;
-  virtual bool RecvHelloSync() override;
-  virtual bool AnswerHelloRpc() override;
+  virtual mozilla::ipc::IPCResult RecvHello() override;
+  virtual mozilla::ipc::IPCResult RecvHelloSync() override;
+  virtual mozilla::ipc::IPCResult AnswerHelloRpc() override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
@@ -68,7 +68,7 @@ public:
   virtual ~TestEndpointBridgeMainChild() {}
 
 protected:
-  virtual bool RecvStart() override;
+  virtual mozilla::ipc::IPCResult RecvStart() override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
@@ -85,7 +85,7 @@ public:
   void Main();
 
 protected:
-  virtual bool RecvBridgeEm() override;
+  virtual mozilla::ipc::IPCResult RecvBridgeEm() override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
@@ -101,9 +101,9 @@ public:
   virtual ~TestEndpointBridgeSubChild() {}
 
 protected:
-  virtual bool RecvPing() override;
+  virtual mozilla::ipc::IPCResult RecvPing() override;
 
-  bool RecvBridged(Endpoint<PTestEndpointBridgeMainSubChild>&& endpoint) override;
+  mozilla::ipc::IPCResult RecvBridged(Endpoint<PTestEndpointBridgeMainSubChild>&& endpoint) override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 };
@@ -118,8 +118,8 @@ public:
   virtual ~TestEndpointBridgeMainSubChild() {}
 
 protected:
-  virtual bool RecvHi() override;
-  virtual bool AnswerHiRpc() override;
+  virtual mozilla::ipc::IPCResult RecvHi() override;
+  virtual mozilla::ipc::IPCResult AnswerHiRpc() override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 

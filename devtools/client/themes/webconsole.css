@@ -713,6 +713,10 @@ a.learn-more-link.webconsole-learn-more-link {
   flex: 1 1 100%;
 }
 
+.webconsole-output.hideTimestamps > .message > .timestamp {
+  display: none;
+}
+
 .message.startGroup .message-body,
 .message.startGroupCollapsed .message-body {
   color: var(--theme-body-color);

@@ -58,13 +58,13 @@ TestRaceDeferralParent::Test1()
         fail("didn't resolve Rpc vs. Lose 'race' correctly");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRaceDeferralParent::AnswerLose()
 {
     if (mProcessedLose)
         fail("processed Lose twice");
     mProcessedLose = true;
-    return true;
+    return IPC_OK();
 }
 
 RacyInterruptPolicy
@@ -87,24 +87,24 @@ TestRaceDeferralChild::~TestRaceDeferralChild()
     MOZ_COUNT_DTOR(TestRaceDeferralChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRaceDeferralChild::RecvStartRace()
 {
     if (!CallLose())
         fail("calling Lose");
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRaceDeferralChild::AnswerWin()
 {
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRaceDeferralChild::AnswerRpc()
 {
-    return true;
+    return IPC_OK();
 }
 
 RacyInterruptPolicy

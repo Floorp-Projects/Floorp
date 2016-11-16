@@ -81,4 +81,13 @@ describe("EvaluationResult component:", () => {
     expect(locationLink.length).toBe(1);
     expect(locationLink.text()).toBe("debugger eval code:1:4");
   });
+
+  it("has a timestamp", () => {
+    const message = stubPreparedMessages.get("new Date(0)");
+    const wrapper = render(EvaluationResult({ message }));
+    const L10n = require("devtools/client/webconsole/new-console-output/test/fixtures/L10n");
+    const { timestampString } = new L10n();
+
+    expect(wrapper.find(".timestamp").text()).toBe(timestampString(message.timeStamp));
+  });
 });

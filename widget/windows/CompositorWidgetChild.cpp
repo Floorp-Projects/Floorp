@@ -60,18 +60,18 @@ CompositorWidgetChild::GetTransparentDC() const
   return nullptr;
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorWidgetChild::RecvObserveVsync()
 {
   mVsyncDispatcher->SetCompositorVsyncObserver(mVsyncObserver);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 CompositorWidgetChild::RecvUnobserveVsync()
 {
   mVsyncDispatcher->SetCompositorVsyncObserver(nullptr);
-  return true;
+  return IPC_OK();
 }
 
 } // namespace widget

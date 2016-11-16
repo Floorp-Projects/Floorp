@@ -100,13 +100,13 @@ public:
                              const FlyWebPublishOptions& aOptions);
 
   virtual void PermissionGranted(bool aGranted) override;
-  virtual bool RecvServerReady(const nsresult& aStatus) override;
-  virtual bool RecvServerClose() override;
-  virtual bool RecvFetchRequest(const IPCInternalRequest& aRequest,
-                                const uint64_t& aRequestId) override;
-  virtual bool RecvWebSocketRequest(const IPCInternalRequest& aRequest,
-                                    const uint64_t& aRequestId,
-                                    PTransportProviderChild* aProvider) override;
+  virtual mozilla::ipc::IPCResult RecvServerReady(const nsresult& aStatus) override;
+  virtual mozilla::ipc::IPCResult RecvServerClose() override;
+  virtual mozilla::ipc::IPCResult RecvFetchRequest(const IPCInternalRequest& aRequest,
+                                                   const uint64_t& aRequestId) override;
+  virtual mozilla::ipc::IPCResult RecvWebSocketRequest(const IPCInternalRequest& aRequest,
+                                                       const uint64_t& aRequestId,
+                                                       PTransportProviderChild* aProvider) override;
 
   virtual void OnFetchResponse(InternalRequest* aRequest,
                                InternalResponse* aResponse) override;
@@ -144,15 +144,15 @@ private:
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   Recv__delete__() override;
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvFetchResponse(const IPCInternalResponse& aResponse,
                     const uint64_t& aRequestId) override;
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvWebSocketResponse(const IPCInternalResponse& aResponse,
                         const uint64_t& aRequestId) override;
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvWebSocketAccept(const nsString& aProtocol,
                       const uint64_t& aRequestId) override;
 

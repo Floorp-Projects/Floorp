@@ -336,8 +336,7 @@ WebConsoleActor.prototype =
   /**
    * Destroy the current WebConsoleActor instance.
    */
-  disconnect: function WCA_disconnect()
-  {
+  destroy() {
     if (this.consoleServiceListener) {
       this.consoleServiceListener.destroy();
       this.consoleServiceListener = null;

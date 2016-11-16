@@ -89,7 +89,7 @@ public:
 protected:
   void ActorDestroy(ActorDestroyReason why) override;
 
-  virtual bool RecvNotifyCompositorTransaction() override;
+  virtual mozilla::ipc::IPCResult RecvNotifyCompositorTransaction() override;
 
 private:
   void TriggerRepaint();

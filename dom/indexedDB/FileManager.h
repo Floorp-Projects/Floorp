@@ -140,7 +140,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileManager)
 
 private:
-  ~FileManager();
+  ~FileManager() = default;
 };
 
 } // namespace indexedDB

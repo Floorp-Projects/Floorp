@@ -227,7 +227,7 @@ DNSRequestChild::CallOnLookupComplete()
   mListener->OnLookupComplete(this, mResultRecord, mResultStatus);
 }
 
-bool
+mozilla::ipc::IPCResult
 DNSRequestChild::RecvLookupCompleted(const DNSRequestResponse& reply)
 {
   mIPCOpen = false;
@@ -244,7 +244,7 @@ DNSRequestChild::RecvLookupCompleted(const DNSRequestResponse& reply)
   }
   default:
     NS_NOTREACHED("unknown type");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   MOZ_ASSERT(NS_IsMainThread());
@@ -266,7 +266,7 @@ DNSRequestChild::RecvLookupCompleted(const DNSRequestResponse& reply)
 
   Unused << Send__delete__(this);
 
-  return true;
+  return IPC_OK();
 }
 
 void

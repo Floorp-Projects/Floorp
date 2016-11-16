@@ -32,7 +32,7 @@ class JavaScriptChild : public JavaScriptBase<PJavaScriptChild>
     virtual bool isParent() override { return false; }
     virtual JSObject* scopeForTargetObjects() override;
 
-    bool RecvDropTemporaryStrongReferences(const uint64_t& upToObjId) override;
+    mozilla::ipc::IPCResult RecvDropTemporaryStrongReferences(const uint64_t& upToObjId) override;
 
   private:
     bool fail(JSContext* cx, ReturnStatus* rs);

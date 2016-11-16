@@ -76,7 +76,10 @@ extensions.on("page-shutdown", (type, context) => {
 });
 
 extensions.on("fill-browser-data", (type, browser, data) => {
-  data.tabId = browser ? TabManager.getBrowserId(browser) : -1;
+  let gBrowser = browser && browser.ownerGlobal.gBrowser;
+  let tab = gBrowser && gBrowser.getTabForBrowser(browser);
+  data.tabId = tab ? TabManager.getId(tab) : -1;
+  data.windowId = tab ? WindowManager.getId(tab.ownerGlobal) : -1;
 });
 /* eslint-enable mozilla/balanced-listeners */
 
@@ -140,7 +143,7 @@ let tabListener = {
   },
 
   handleWindowOpen(window) {
-    if (window.arguments[0] instanceof window.XULElement) {
+    if (window.arguments && window.arguments[0] instanceof window.XULElement) {
       // If the first window argument is a XUL element, it means the
       // window is about to adopt a tab from another window to replace its
       // initial tab.

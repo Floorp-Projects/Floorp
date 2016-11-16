@@ -53,14 +53,6 @@ var PerformanceActor = ActorClassWithSpec(performanceSpec, {
     events.on(this.bridge, "*", this._onRecorderEvent);
   },
 
-  /**
-   * `disconnect` method required to call destroy, since this
-   * actor is not managed by a parent actor.
-   */
-  disconnect: function () {
-    this.destroy();
-  },
-
   destroy: function () {
     events.off(this.bridge, "*", this._onRecorderEvent);
     this.bridge.destroy();

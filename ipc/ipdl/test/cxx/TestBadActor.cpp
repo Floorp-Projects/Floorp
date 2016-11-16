@@ -25,11 +25,11 @@ TestBadActorParent::AllocPTestBadActorSubParent()
   return new TestBadActorSubParent();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestBadActorSubParent::RecvPing()
 {
   fail("Shouldn't have received ping.");
-  return false;
+  return IPC_FAIL_NO_REASON(this);
 }
 
 PTestBadActorSubChild*
@@ -38,13 +38,13 @@ TestBadActorChild::AllocPTestBadActorSubChild()
   return new TestBadActorSubChild();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestBadActorChild::RecvPTestBadActorSubConstructor(PTestBadActorSubChild* actor)
 {
   if (!actor->SendPing()) {
     fail("Couldn't send ping to an actor which supposedly isn't dead yet.");
   }
-  return true;
+  return IPC_OK();
 }
 
 } // namespace _ipdltest

@@ -54,7 +54,7 @@ let BreakpointActor = ActorClassWithSpec(breakpointSpec, {
     this.isPending = true;
   },
 
-  disconnect: function () {
+  destroy: function () {
     this.removeScripts();
   },
 

@@ -29,22 +29,22 @@ public:
     void Main();
 
 protected:
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvStartRace() override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerRace(bool* hasRace) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerStackFrame() override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerStackFrame3() override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerParent() override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvGetAnsweredParent(bool* answeredParent) override;
 
     virtual mozilla::ipc::RacyInterruptPolicy
@@ -84,25 +84,25 @@ public:
     virtual ~TestInterruptRacesChild() { }
 
 protected:
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvStart() override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerRace(bool* hasRace) override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerStackFrame() override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerStackFrame3() override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvWakeup() override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvWakeup3() override;
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     AnswerChild() override;
 
     virtual mozilla::ipc::RacyInterruptPolicy

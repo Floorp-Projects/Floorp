@@ -11,9 +11,9 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 
-class GMPCrashHelper;
-
 namespace mozilla {
+
+class GMPCrashHelper;
 
 // Disconnecting the GMPCrashHelpers at the right time is hard. We need to
 // ensure that in the crashing case that we stay connected until the

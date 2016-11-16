@@ -45,14 +45,14 @@ class FilePickerParent : public PFilePickerParent
 
   void SendFilesOrDirectories(const nsTArray<BlobImplOrString>& aData);
 
-  virtual bool RecvOpen(const int16_t& aSelectedType,
-                        const bool& aAddToRecentDocs,
-                        const nsString& aDefaultFile,
-                        const nsString& aDefaultExtension,
-                        InfallibleTArray<nsString>&& aFilters,
-                        InfallibleTArray<nsString>&& aFilterNames,
-                        const nsString& aDisplayDirectory,
-                        const nsString& aOkButtonLabel) override;
+  virtual mozilla::ipc::IPCResult RecvOpen(const int16_t& aSelectedType,
+                                           const bool& aAddToRecentDocs,
+                                           const nsString& aDefaultFile,
+                                           const nsString& aDefaultExtension,
+                                           InfallibleTArray<nsString>&& aFilters,
+                                           InfallibleTArray<nsString>&& aFilterNames,
+                                           const nsString& aDisplayDirectory,
+                                           const nsString& aOkButtonLabel) override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

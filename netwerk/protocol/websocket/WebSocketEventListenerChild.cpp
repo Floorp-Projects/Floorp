@@ -22,7 +22,7 @@ WebSocketEventListenerChild::~WebSocketEventListenerChild()
   MOZ_ASSERT(!mService);
 }
 
-bool
+mozilla::ipc::IPCResult
 WebSocketEventListenerChild::RecvWebSocketCreated(const uint32_t& aWebSocketSerialID,
                                                   const nsString& aURI,
                                                   const nsCString& aProtocols)
@@ -32,10 +32,10 @@ WebSocketEventListenerChild::RecvWebSocketCreated(const uint32_t& aWebSocketSeri
                                aProtocols);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 WebSocketEventListenerChild::RecvWebSocketOpened(const uint32_t& aWebSocketSerialID,
                                                  const nsString& aEffectiveURI,
                                                  const nsCString& aProtocols,
@@ -46,10 +46,10 @@ WebSocketEventListenerChild::RecvWebSocketOpened(const uint32_t& aWebSocketSeria
                               aEffectiveURI, aProtocols, aExtensions);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 WebSocketEventListenerChild::RecvWebSocketMessageAvailable(const uint32_t& aWebSocketSerialID,
                                                            const nsCString& aData,
                                                            const uint16_t& aMessageType)
@@ -59,10 +59,10 @@ WebSocketEventListenerChild::RecvWebSocketMessageAvailable(const uint32_t& aWebS
                                         aData, aMessageType);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 WebSocketEventListenerChild::RecvWebSocketClosed(const uint32_t& aWebSocketSerialID,
                                                  const bool& aWasClean,
                                                  const uint16_t& aCode,
@@ -73,10 +73,10 @@ WebSocketEventListenerChild::RecvWebSocketClosed(const uint32_t& aWebSocketSeria
                               aWasClean, aCode, aReason);
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 WebSocketEventListenerChild::RecvFrameReceived(const uint32_t& aWebSocketSerialID,
                                                const WebSocketFrameData& aFrameData)
 {
@@ -85,10 +85,10 @@ WebSocketEventListenerChild::RecvFrameReceived(const uint32_t& aWebSocketSerialI
     mService->FrameReceived(aWebSocketSerialID, mInnerWindowID, frame.forget());
   }
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 WebSocketEventListenerChild::RecvFrameSent(const uint32_t& aWebSocketSerialID,
                                            const WebSocketFrameData& aFrameData)
 {
@@ -97,7 +97,7 @@ WebSocketEventListenerChild::RecvFrameSent(const uint32_t& aWebSocketSerialID,
     mService->FrameSent(aWebSocketSerialID, mInnerWindowID, frame.forget());
   }
 
-  return true;
+  return IPC_OK();
 }
 
 void

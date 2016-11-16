@@ -200,7 +200,7 @@ protected:
   virtual PBackgroundFileHandleParent*
   AllocPBackgroundFileHandleParent(const FileMode& aMode) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvPBackgroundFileHandleConstructor(PBackgroundFileHandleParent* aActor,
                                        const FileMode& aMode) override;
 
@@ -208,10 +208,10 @@ protected:
   DeallocPBackgroundFileHandleParent(PBackgroundFileHandleParent* aActor)
                                      override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvDeleteMe() override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvGetFileId(int64_t* aFileId) override;
 };
 

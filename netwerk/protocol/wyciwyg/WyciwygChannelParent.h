@@ -35,24 +35,24 @@ public:
 protected:
   virtual ~WyciwygChannelParent();
 
-  virtual bool RecvInit(const URIParams&          uri,
-                        const ipc::PrincipalInfo& aRequestingPrincipalInfo,
-                        const ipc::PrincipalInfo& aTriggeringPrincipalInfo,
-                        const ipc::PrincipalInfo& aPrincipalToInheritInfo,
-                        const uint32_t&           aSecurityFlags,
-                        const uint32_t&           aContentPolicyType) override;
-  virtual bool RecvAsyncOpen(const URIParams& original,
-                             const uint32_t& loadFlags,
-                             const IPC::SerializedLoadContext& loadContext,
-                             const PBrowserOrId &parent) override;
-  virtual bool RecvWriteToCacheEntry(const nsString& data) override;
-  virtual bool RecvCloseCacheEntry(const nsresult& reason) override;
-  virtual bool RecvSetCharsetAndSource(const int32_t& source,
-                                       const nsCString& charset) override;
-  virtual bool RecvSetSecurityInfo(const nsCString& securityInfo) override;
-  virtual bool RecvCancel(const nsresult& statusCode) override;
-  virtual bool RecvAppData(const IPC::SerializedLoadContext& loadContext,
-                           const PBrowserOrId &parent) override;
+  virtual mozilla::ipc::IPCResult RecvInit(const URIParams&          uri,
+                                           const ipc::PrincipalInfo& aRequestingPrincipalInfo,
+                                           const ipc::PrincipalInfo& aTriggeringPrincipalInfo,
+                                           const ipc::PrincipalInfo& aPrincipalToInheritInfo,
+                                           const uint32_t&           aSecurityFlags,
+                                           const uint32_t&           aContentPolicyType) override;
+  virtual mozilla::ipc::IPCResult RecvAsyncOpen(const URIParams& original,
+                                                const uint32_t& loadFlags,
+                                                const IPC::SerializedLoadContext& loadContext,
+                                                const PBrowserOrId &parent) override;
+  virtual mozilla::ipc::IPCResult RecvWriteToCacheEntry(const nsString& data) override;
+  virtual mozilla::ipc::IPCResult RecvCloseCacheEntry(const nsresult& reason) override;
+  virtual mozilla::ipc::IPCResult RecvSetCharsetAndSource(const int32_t& source,
+                                                          const nsCString& charset) override;
+  virtual mozilla::ipc::IPCResult RecvSetSecurityInfo(const nsCString& securityInfo) override;
+  virtual mozilla::ipc::IPCResult RecvCancel(const nsresult& statusCode) override;
+  virtual mozilla::ipc::IPCResult RecvAppData(const IPC::SerializedLoadContext& loadContext,
+                                              const PBrowserOrId &parent) override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 

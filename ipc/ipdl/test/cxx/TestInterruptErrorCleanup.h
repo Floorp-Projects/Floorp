@@ -44,7 +44,7 @@ public:
     virtual ~TestInterruptErrorCleanupChild();
 
 protected:
-    virtual bool AnswerError() override;
+    virtual mozilla::ipc::IPCResult AnswerError() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

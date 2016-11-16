@@ -49,17 +49,17 @@ GamepadEventChannelParent::GamepadEventChannelParent()
   mBackgroundThread = NS_GetCurrentThread();
 }
 
-bool
+mozilla::ipc::IPCResult
 GamepadEventChannelParent::RecvGamepadListenerAdded()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mHasGamepadListener);
   mHasGamepadListener = true;
   StartGamepadMonitoring();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 GamepadEventChannelParent::RecvGamepadListenerRemoved()
 {
   AssertIsOnBackgroundThread();
@@ -70,7 +70,7 @@ GamepadEventChannelParent::RecvGamepadListenerRemoved()
   MOZ_ASSERT(service);
   service->RemoveChannelParent(this);
   Unused << Send__delete__(this);
-  return true;
+  return IPC_OK();
 }
 
 void

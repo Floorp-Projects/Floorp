@@ -27,7 +27,7 @@ public:
     void Main();
 
 protected:
-    virtual bool RecvDone() override;
+    virtual mozilla::ipc::IPCResult RecvDone() override;
     virtual bool DeallocPTestManyChildAllocsSubParent(PTestManyChildAllocsSubParent* __a) override;
     virtual PTestManyChildAllocsSubParent* AllocPTestManyChildAllocsSubParent() override;
 
@@ -49,7 +49,7 @@ public:
     virtual ~TestManyChildAllocsChild();
 
 protected:
-    virtual bool RecvGo() override;
+    virtual mozilla::ipc::IPCResult RecvGo() override;
     virtual bool DeallocPTestManyChildAllocsSubChild(PTestManyChildAllocsSubChild* __a) override;
     virtual PTestManyChildAllocsSubChild* AllocPTestManyChildAllocsSubChild() override;
 
@@ -73,7 +73,7 @@ public:
 
 protected:
     virtual void ActorDestroy(ActorDestroyReason why) override {}
-    virtual bool RecvHello() override { return true; }
+    virtual mozilla::ipc::IPCResult RecvHello() override { return IPC_OK(); }
 };
 
 

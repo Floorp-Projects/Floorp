@@ -72,37 +72,37 @@ VsyncParent::DispatchVsyncEvent(TimeStamp aTimeStamp)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 VsyncParent::RecvRequestVsyncRate()
 {
   AssertIsOnBackgroundThread();
   TimeDuration vsyncRate = gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay().GetVsyncRate();
   Unused << SendVsyncRate(vsyncRate.ToMilliseconds());
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 VsyncParent::RecvObserve()
 {
   AssertIsOnBackgroundThread();
   if (!mObservingVsync) {
     mVsyncDispatcher->AddChildRefreshTimer(this);
     mObservingVsync = true;
-    return true;
+    return IPC_OK();
   }
-  return false;
+  return IPC_FAIL_NO_REASON(this);
 }
 
-bool
+mozilla::ipc::IPCResult
 VsyncParent::RecvUnobserve()
 {
   AssertIsOnBackgroundThread();
   if (mObservingVsync) {
     mVsyncDispatcher->RemoveChildRefreshTimer(this);
     mObservingVsync = false;
-    return true;
+    return IPC_OK();
   }
-  return false;
+  return IPC_FAIL_NO_REASON(this);
 }
 
 void

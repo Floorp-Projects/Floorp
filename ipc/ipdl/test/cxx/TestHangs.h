@@ -28,11 +28,11 @@ public:
 protected:
     virtual bool ShouldContinueFromReplyTimeout() override;
 
-    virtual bool RecvNonce() override {
-        return true;
+    virtual mozilla::ipc::IPCResult RecvNonce() override {
+        return IPC_OK();
     }
 
-    virtual bool AnswerStackFrame() override;
+    virtual mozilla::ipc::IPCResult AnswerStackFrame() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
@@ -56,20 +56,20 @@ public:
     virtual ~TestHangsChild();
 
 protected:
-    virtual bool RecvStart() override {
+    virtual mozilla::ipc::IPCResult RecvStart() override {
         if (!SendNonce())
             fail("sending Nonce");
-        return true;
+        return IPC_OK();
     }
 
-    virtual bool AnswerStackFrame() override
+    virtual mozilla::ipc::IPCResult AnswerStackFrame() override
     {
         if (CallStackFrame())
             fail("should have failed");
-        return true;
+        return IPC_OK();
     }
 
-    virtual bool AnswerHang() override;
+    virtual mozilla::ipc::IPCResult AnswerHang() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

@@ -152,7 +152,7 @@ private:
   nsCString mSecurityInfo;
 };
 
-bool
+mozilla::ipc::IPCResult
 WyciwygChannelChild::RecvOnStartRequest(const nsresult& statusCode,
                                         const int64_t& contentLength,
                                         const int32_t& source,
@@ -162,7 +162,7 @@ WyciwygChannelChild::RecvOnStartRequest(const nsresult& statusCode,
   mEventQ->RunOrEnqueue(new WyciwygStartRequestEvent(this, statusCode,
                                                      contentLength, source,
                                                      charset, securityInfo));
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -206,12 +206,12 @@ private:
   uint64_t mOffset;
 };
 
-bool
+mozilla::ipc::IPCResult
 WyciwygChannelChild::RecvOnDataAvailable(const nsCString& data,
                                          const uint64_t& offset)
 {
   mEventQ->RunOrEnqueue(new WyciwygDataAvailableEvent(this, data, offset));
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -265,11 +265,11 @@ private:
   nsresult mStatusCode;
 };
 
-bool
+mozilla::ipc::IPCResult
 WyciwygChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 {
   mEventQ->RunOrEnqueue(new WyciwygStopRequestEvent(this, statusCode));
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -318,11 +318,11 @@ class WyciwygCancelEvent : public ChannelEvent
   nsresult mStatus;
 };
 
-bool
+mozilla::ipc::IPCResult
 WyciwygChannelChild::RecvCancelEarly(const nsresult& statusCode)
 {
   mEventQ->RunOrEnqueue(new WyciwygCancelEvent(this, statusCode));
-  return true;
+  return IPC_OK();
 }
 
 void WyciwygChannelChild::CancelEarly(const nsresult& statusCode)

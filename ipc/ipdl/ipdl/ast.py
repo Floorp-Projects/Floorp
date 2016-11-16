@@ -150,7 +150,7 @@ class NamespacedNode(Node):
     def __init__(self, loc=Loc.NONE, name=None):
         Node.__init__(self, loc)
         self.name = name
-        self.namespaces = [ ]  
+        self.namespaces = [ ]
 
     def addOuterNamespace(self, namespace):
         self.namespaces.insert(0, namespace)
@@ -214,7 +214,7 @@ class PrettyPrinted:
     def __hash__(cls): return hash(cls.pretty)
     @classmethod
     def __str__(cls):  return cls.pretty
-    
+
 class ASYNC(PrettyPrinted):
     pretty = 'async'
 class INTR(PrettyPrinted):
@@ -406,21 +406,13 @@ class Param(Node):
         self.typespec = typespec
 
 class TypeSpec(Node):
-    def __init__(self, loc, spec, state=None, array=0, nullable=0,
-                 myChmod=None, otherChmod=None):
+    def __init__(self, loc, spec):
         Node.__init__(self, loc)
         self.spec = spec                # QualifiedId
-        self.state = state              # None or State
-        self.array = array              # bool
-        self.nullable = nullable        # bool
-        self.myChmod = myChmod          # None or string
-        self.otherChmod = otherChmod    # None or string
-
+        self.array = 0                  # bool
+        self.nullable = 0               # bool
     def basename(self):
         return self.spec.baseid
-
-    def isActor(self):
-        return self.state is not None
 
     def __str__(self):  return str(self.spec)
 

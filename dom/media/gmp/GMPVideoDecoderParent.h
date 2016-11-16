@@ -69,18 +69,18 @@ private:
 
   // PGMPVideoDecoderParent
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  bool RecvDecoded(const GMPVideoi420FrameData& aDecodedFrame) override;
-  bool RecvReceivedDecodedReferenceFrame(const uint64_t& aPictureId) override;
-  bool RecvReceivedDecodedFrame(const uint64_t& aPictureId) override;
-  bool RecvInputDataExhausted() override;
-  bool RecvDrainComplete() override;
-  bool RecvResetComplete() override;
-  bool RecvError(const GMPErr& aError) override;
-  bool RecvShutdown() override;
-  bool RecvParentShmemForPool(Shmem&& aEncodedBuffer) override;
-  bool AnswerNeedShmem(const uint32_t& aFrameBufferSize,
-                       Shmem* aMem) override;
-  bool Recv__delete__() override;
+  mozilla::ipc::IPCResult RecvDecoded(const GMPVideoi420FrameData& aDecodedFrame) override;
+  mozilla::ipc::IPCResult RecvReceivedDecodedReferenceFrame(const uint64_t& aPictureId) override;
+  mozilla::ipc::IPCResult RecvReceivedDecodedFrame(const uint64_t& aPictureId) override;
+  mozilla::ipc::IPCResult RecvInputDataExhausted() override;
+  mozilla::ipc::IPCResult RecvDrainComplete() override;
+  mozilla::ipc::IPCResult RecvResetComplete() override;
+  mozilla::ipc::IPCResult RecvError(const GMPErr& aError) override;
+  mozilla::ipc::IPCResult RecvShutdown() override;
+  mozilla::ipc::IPCResult RecvParentShmemForPool(Shmem&& aEncodedBuffer) override;
+  mozilla::ipc::IPCResult AnswerNeedShmem(const uint32_t& aFrameBufferSize,
+                                          Shmem* aMem) override;
+  mozilla::ipc::IPCResult Recv__delete__() override;
 
   void UnblockResetAndDrain();
   void CancelResetCompleteTimeout();

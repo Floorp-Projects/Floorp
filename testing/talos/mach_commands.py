@@ -66,6 +66,7 @@ class TalosRunner(MozbuildObject):
                 'create-virtualenv',
                 'run-tests',
             ],
+            'download_tooltool': True,
             'talos_extra_options': ['--develop'] + self.talos_args,
         }
 
