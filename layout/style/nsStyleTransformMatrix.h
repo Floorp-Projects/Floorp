@@ -151,6 +151,15 @@ namespace nsStyleTransformMatrix {
                            TransformReferenceBox& aBounds,
                            bool* aContains3dTransform);
 
+  void
+  ProcessAccumulateMatrix(mozilla::gfx::Matrix4x4& aMatrix,
+                          const nsCSSValue::Array* aData,
+                          nsStyleContext* aContext,
+                          nsPresContext* aPresContext,
+                          mozilla::RuleNodeCacheConditions& aConditions,
+                          TransformReferenceBox& aBounds,
+                          bool* aContains3dTransform);
+
   /**
    * Given an nsCSSValueList containing -moz-transform functions,
    * returns a matrix containing the value of those functions.
