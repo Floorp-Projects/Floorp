@@ -519,6 +519,10 @@ nsTerminator::UpdateTelemetry()
     telemetryData->Append(sShutdownSteps[i].mTopic);
     telemetryData->AppendLiteral("\": ");
     telemetryData->AppendInt(sShutdownSteps[i].mTicks);
+    telemetryData->AppendLiteral(R"(")");
+    telemetryData->Append(sShutdownStep.mTopic);
+    telemetryData->AppendLiteral(R"(": )");
+    telemetryData->AppendInt(sShutdownStep.mTicks);
   }
   telemetryData->AppendLiteral("}");
 
