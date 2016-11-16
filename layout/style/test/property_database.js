@@ -6671,9 +6671,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.display-contents.enabled")) {
-  gCSSProperties["display"].other_values.push("contents");
-}
+gCSSProperties["display"].other_values.push("contents");
 
 if (IsCSSPropertyPrefEnabled("layout.css.contain.enabled")) {
   gCSSProperties["contain"] = {
