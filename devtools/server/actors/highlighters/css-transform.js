@@ -219,7 +219,7 @@ CssTransformHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
     this._showShapes();
 
-    setIgnoreLayoutChanges(false, this.currentNode.ownerDocument.documentElement);
+    setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
     return true;
   },
 
@@ -229,7 +229,7 @@ CssTransformHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   _hide: function () {
     setIgnoreLayoutChanges(true);
     this._hideShapes();
-    setIgnoreLayoutChanges(false, this.currentNode.ownerDocument.documentElement);
+    setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
   },
 
   _hideShapes: function () {
