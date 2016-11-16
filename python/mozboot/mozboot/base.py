@@ -73,6 +73,30 @@ We recommend the following tools for installing Python:
     official installers -- http://www.python.org/
 '''
 
+RUST_NOT_IN_PATH = '''
+You have some rust files in %(cargo_bin)s, but they're not part of the
+standard PATH.
+
+To make these available, please add this directory to the PATH variable
+in your shell initialization script, which may be called ~/.bashrc or
+~/.bash_profile or ~/.profile. Edit this and add the following line:
+
+    source %(cargo_home)s/env
+
+Then restart your shell and run the bootstrap script again.
+'''
+
+RUSTUP_OLD = '''
+We found an executable called `rustup` which we normally use to install
+and upgrade Rust programming language support, but we didn't understand
+its output. It may be an old version, or not be the installer from
+https://rustup.rs/
+
+Please move it out of the way and run the bootstrap script again.
+Or if you prefer and know how, use the current rustup to install
+a compatible version of the Rust programming language yourself.
+'''
+
 BROWSER_ARTIFACT_MODE_MOZCONFIG = '''
 Paste the lines between the chevrons (>>> and <<<) into your mozconfig file:
 
@@ -90,6 +114,8 @@ MODERN_MERCURIAL_VERSION = LooseVersion('3.7.3')
 # Upgrade Python older than this.
 MODERN_PYTHON_VERSION = LooseVersion('2.7.3')
 
+# Upgrade rust older than this.
+MODERN_RUST_VERSION = LooseVersion('1.13.0')
 
 class BaseBootstrapper(object):
     """Base class for system bootstrappers."""
@@ -453,6 +479,58 @@ class BaseBootstrapper(object):
         Child classes should reimplement this.
         """
         print(PYTHON_UNABLE_UPGRADE % (current, MODERN_PYTHON_VERSION))
+
+    def is_rust_modern(self):
+        rust = self.which('rustc')
+        if not rust:
+            print('Could not find rust compiler.')
+            return False, None
+
+        cargo = self.which('cargo')
+
+        our = self._parse_version(rust)
+        if not our:
+            return False, None
+
+        return our >= MODERN_RUST_VERSION, our
+
+    def ensure_rust_modern(self):
+        modern, version = self.is_rust_modern()
+
+        if modern:
+            print('Your version of Rust (%s) is new enough.' % version)
+            return
+
+        if not version:
+            '''Rust wasn't in PATH. Try a few things.'''
+            cargo_home = os.environ.get('CARGO_HOME',
+                    os.path.expanduser(os.path.join('~', '.cargo')))
+            cargo_bin = os.path.join(cargo_home, 'bin')
+            have_rustc = os.path.exists(os.path.join(cargo_bin, 'rustc'))
+            have_cargo = os.path.exists(os.path.join(cargo_bin, 'cargo'))
+            if have_rustc or have_cargo:
+                print(RUST_NOT_IN_PATH % { 'cargo_bin': cargo_bin,
+                                           'cargo_home': cargo_home })
+                sys.exit(1)
+
+            rustup = self.which('rustup')
+            if rustup:
+                print('Found rustup.')
+                version = self._parse_version(rustup)
+                if not version:
+                    print(RUSTUP_OLD)
+                    sys.exit(1)
+
+            print('Please download and run the installer from https://rustup.rs/')
+            sys.exit(1)
+
+        # TODO: Upgrade rust.
+
+        modern, after = self.is_rust_modern()
+
+        if not modern:
+            print(RUST_UPGRADE_FAILED % (MODERN_RUST_VERSION, after))
+            sys.exit(1)
 
     def http_download_and_save(self, url, dest, sha256hexhash):
         f = urllib2.urlopen(url)
