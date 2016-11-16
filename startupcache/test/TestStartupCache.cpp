@@ -3,139 +3,164 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gtest/gtest.h"
+#include "TestHarness.h"
 
-#include "mozilla/scache/StartupCache.h"
-#include "mozilla/scache/StartupCacheUtils.h"
-
-#include "nsDirectoryServiceDefs.h"
+#include "nsThreadUtils.h"
 #include "nsIClassInfo.h"
 #include "nsIOutputStream.h"
 #include "nsIObserver.h"
 #include "nsISerializable.h"
 #include "nsISupports.h"
+#include "nsIStartupCache.h"
 #include "nsIStringStream.h"
 #include "nsIStorageStream.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIURI.h"
+#include "nsStringAPI.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIXPConnect.h"
-#include "nsThreadUtils.h"
-#include "prenv.h"
 #include "prio.h"
-#include "prprf.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 
 using namespace JS;
 
+namespace mozilla {
+namespace scache {
+
+NS_IMPORT nsresult
+NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len, 
+                               nsIObjectInputStream** stream);
+
+// We can't retrieve the wrapped stream from the objectOutputStream later,
+// so we return it here.
+NS_IMPORT nsresult
+NewObjectOutputWrappedStorageStream(nsIObjectOutputStream **wrapperStream,
+                                    nsIStorageStream** stream);
+
+NS_IMPORT nsresult
+NewBufferFromStorageStream(nsIStorageStream *storageStream, 
+                           UniquePtr<char[]>* buffer, uint32_t* len);
+} // namespace scache
+} // namespace mozilla
+
 using namespace mozilla::scache;
 using mozilla::UniquePtr;
 
-void
-WaitForStartupTimer()
-{
-  StartupCache* sc = StartupCache::GetSingleton();
-  PR_Sleep(10 * PR_TicksPerSecond());
+#define NS_ENSURE_STR_MATCH(str1, str2, testname)  \
+PR_BEGIN_MACRO                                     \
+if (0 != strcmp(str1, str2)) {                     \
+  fail("failed " testname);                        \
+  return NS_ERROR_FAILURE;                         \
+}                                                  \
+passed("passed " testname);                        \
+PR_END_MACRO
 
+nsresult
+WaitForStartupTimer() {
+  nsresult rv;
+  nsCOMPtr<nsIStartupCache> sc
+    = do_GetService("@mozilla.org/startupcache/cache;1");
+  PR_Sleep(10 * PR_TicksPerSecond());
+  
+  bool complete;
   while (true) {
+    
     NS_ProcessPendingEvents(nullptr);
-    if (sc->StartupWriteComplete()) {
-      return;
-    }
+    rv = sc->StartupWriteComplete(&complete);
+    if (NS_FAILED(rv) || complete)
+      break;
     PR_Sleep(1 * PR_TicksPerSecond());
   }
+  return rv;
 }
 
-class TestStartupCache : public ::testing::Test
-{
-protected:
-  TestStartupCache();
-  ~TestStartupCache();
-
-  nsCOMPtr<nsIFile> mSCFile;
-};
-
-TestStartupCache::TestStartupCache()
-{
-  NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mSCFile));
-  mSCFile->AppendNative(NS_LITERAL_CSTRING("test-startupcache.tmp"));
-  nsAutoCString path;
-  mSCFile->GetNativePath(path);
-  char* env = PR_smprintf("MOZ_STARTUP_CACHE=%s", path.get());
-  PR_SetEnv(env);
-  // We intentionally leak `env` here because it is required by PR_SetEnv
-  MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(env);
-  StartupCache::GetSingleton()->InvalidateCache();
-}
-TestStartupCache::~TestStartupCache()
-{
-  PR_SetEnv("MOZ_STARTUP_CACHE=");
-  StartupCache::GetSingleton()->InvalidateCache();
-}
-
-
-TEST_F(TestStartupCache, StartupWriteRead)
-{
+nsresult
+TestStartupWriteRead() {
   nsresult rv;
-  StartupCache* sc = StartupCache::GetSingleton();
-
+  nsCOMPtr<nsIStartupCache> sc
+    = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
+  if (!sc) {
+    fail("didn't get a pointer...");
+    return NS_ERROR_FAILURE;
+  } else {
+    passed("got a pointer?");
+  }
+  sc->InvalidateCache();
+  
   const char* buf = "Market opportunities for BeardBook";
   const char* id = "id";
-  UniquePtr<char[]> outbuf;
+  UniquePtr<char[]> outbuf;  
   uint32_t len;
-
+  
   rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   rv = sc->GetBuffer(id, &outbuf, &len);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-  EXPECT_STREQ(buf, outbuf.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_STR_MATCH(buf, outbuf.get(), "pre-write read");
 
   rv = sc->ResetStartupWriteTimer();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-  WaitForStartupTimer();
-
+  rv = WaitForStartupTimer();
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   rv = sc->GetBuffer(id, &outbuf, &len);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-  EXPECT_STREQ(buf, outbuf.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_STR_MATCH(buf, outbuf.get(), "simple write/read");
+
+  return NS_OK;
 }
 
-TEST_F(TestStartupCache, WriteInvalidateRead)
-{
+nsresult
+TestWriteInvalidateRead() {
   nsresult rv;
   const char* buf = "BeardBook competitive analysis";
   const char* id = "id";
   UniquePtr<char[]> outbuf;
   uint32_t len;
-  StartupCache* sc = StartupCache::GetSingleton();
-  ASSERT_TRUE(sc);
+  nsCOMPtr<nsIStartupCache> sc
+    = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
+  sc->InvalidateCache();
 
   rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   sc->InvalidateCache();
 
   rv = sc->GetBuffer(id, &outbuf, &len);
-  EXPECT_EQ(rv, NS_ERROR_NOT_AVAILABLE);
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    passed("buffer not available after invalidate");
+  } else if (NS_SUCCEEDED(rv)) {
+    fail("GetBuffer succeeded unexpectedly after invalidate");
+    return NS_ERROR_UNEXPECTED;
+  } else {
+    fail("GetBuffer gave an unexpected failure, expected NOT_AVAILABLE");
+    return rv;
+  }
+
+  sc->InvalidateCache();
+  return NS_OK;
 }
 
-TEST_F(TestStartupCache, WriteObject)
-{
+nsresult
+TestWriteObject() {
   nsresult rv;
 
   nsCOMPtr<nsIURI> obj
     = do_CreateInstance("@mozilla.org/network/simple-uri;1");
-  ASSERT_TRUE(obj);
-
+  if (!obj) {
+    fail("did not create object in test write object");
+    return NS_ERROR_UNEXPECTED;
+  }
   NS_NAMED_LITERAL_CSTRING(spec, "http://www.mozilla.org");
   rv = obj->SetSpec(spec);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStartupCache> sc = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
 
-  StartupCache* sc = StartupCache::GetSingleton();
-
+  sc->InvalidateCache();
+  
   // Create an object stream. Usually this is done with
   // NewObjectOutputWrappedStorageStream, but that uses
   // StartupCache::GetSingleton in debug builds, and we
@@ -143,24 +168,31 @@ TEST_F(TestStartupCache, WriteObject)
   const char* id = "id";
   nsCOMPtr<nsIStorageStream> storageStream
     = do_CreateInstance("@mozilla.org/storagestream;1");
-  ASSERT_TRUE(storageStream);
-
+  NS_ENSURE_ARG_POINTER(storageStream);
+  
   rv = storageStream->Init(256, (uint32_t) -1);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   nsCOMPtr<nsIObjectOutputStream> objectOutput
     = do_CreateInstance("@mozilla.org/binaryoutputstream;1");
-  ASSERT_TRUE(objectOutput);
-
+  if (!objectOutput)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
   nsCOMPtr<nsIOutputStream> outputStream
     = do_QueryInterface(storageStream);
-
+  
   rv = objectOutput->SetOutputStream(outputStream);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
 
+  if (NS_FAILED(rv)) {
+    fail("failed to create output stream");
+    return rv;
+  }
   nsCOMPtr<nsISupports> objQI(do_QueryInterface(obj));
   rv = objectOutput->WriteObject(objQI, true);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  if (NS_FAILED(rv)) {
+    fail("failed to write object");
+    return rv;
+  }
 
   UniquePtr<char[]> buf;
   uint32_t len;
@@ -169,27 +201,232 @@ TEST_F(TestStartupCache, WriteObject)
   // Since this is a post-startup write, it should be written and
   // available.
   rv = sc->PutBuffer(id, buf.get(), len);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-
+  if (NS_FAILED(rv)) {
+    fail("failed to insert input stream");
+    return rv;
+  }
+    
   UniquePtr<char[]> buf2;
   uint32_t len2;
   nsCOMPtr<nsIObjectInputStream> objectInput;
   rv = sc->GetBuffer(id, &buf2, &len2);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  if (NS_FAILED(rv)) {
+    fail("failed to retrieve buffer");
+    return rv;
+  }
 
   rv = NewObjectInputStreamFromBuffer(Move(buf2), len2,
                                       getter_AddRefs(objectInput));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  if (NS_FAILED(rv)) {
+    fail("failed to created input stream");
+    return rv;
+  }  
 
   nsCOMPtr<nsISupports> deserialized;
   rv = objectInput->ReadObject(true, getter_AddRefs(deserialized));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-
+  if (NS_FAILED(rv)) {
+    fail("failed to read object");
+    return rv;
+  }
+  
+  bool match = false;
   nsCOMPtr<nsIURI> uri(do_QueryInterface(deserialized));
-  ASSERT_TRUE(uri);
+  if (uri) {
+    nsCString outSpec;
+    rv = uri->GetSpec(outSpec);
+    if (NS_FAILED(rv)) {
+      fail("failed to get spec");
+      return rv;
+    }
+    match = outSpec.Equals(spec);
+  }
+  if (!match) {
+    fail("deserialized object has incorrect information");
+    return rv;
+  }
+  
+  passed("write object");
+  return NS_OK;
+}
 
-  nsCString outSpec;
-  rv = uri->GetSpec(outSpec);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
-  ASSERT_TRUE(outSpec.Equals(spec));
+nsresult
+LockCacheFile(bool protect, nsIFile* profileDir) {
+  NS_ENSURE_ARG(profileDir);
+
+  nsCOMPtr<nsIFile> startupCache;
+  profileDir->Clone(getter_AddRefs(startupCache));
+  NS_ENSURE_STATE(startupCache);
+  startupCache->AppendNative(NS_LITERAL_CSTRING("startupCache"));
+
+  nsresult rv;
+#ifndef XP_WIN
+  static uint32_t oldPermissions;
+#else
+  static PRFileDesc* fd = nullptr;
+#endif
+
+  // To prevent deletion of the startupcache file, we change the containing
+  // directory's permissions on Linux/Mac, and hold the file open on Windows
+  if (protect) {
+#ifndef XP_WIN
+    rv = startupCache->GetPermissions(&oldPermissions);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = startupCache->SetPermissions(0555);
+    NS_ENSURE_SUCCESS(rv, rv);
+#else
+    // Filename logic from StartupCache.cpp
+    #ifdef IS_BIG_ENDIAN
+    #define SC_ENDIAN "big"
+    #else
+    #define SC_ENDIAN "little"
+    #endif
+
+    #if PR_BYTES_PER_WORD == 4
+    #define SC_WORDSIZE "4"
+    #else
+    #define SC_WORDSIZE "8"
+    #endif
+    char sStartupCacheName[] = "startupCache." SC_WORDSIZE "." SC_ENDIAN;
+    startupCache->AppendNative(NS_LITERAL_CSTRING(sStartupCacheName));
+
+    rv = startupCache->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
+    NS_ENSURE_SUCCESS(rv, rv);
+#endif
+  } else {
+#ifndef XP_WIN
+    rv = startupCache->SetPermissions(oldPermissions);
+    NS_ENSURE_SUCCESS(rv, rv);
+#else
+   PR_Close(fd);
+#endif
+  }
+
+  return NS_OK;
+}
+
+nsresult
+TestIgnoreDiskCache(nsIFile* profileDir) {
+  nsresult rv;
+  nsCOMPtr<nsIStartupCache> sc
+    = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
+  sc->InvalidateCache();
+  
+  const char* buf = "Get a Beardbook app for your smartphone";
+  const char* id = "id";
+  UniquePtr<char[]> outbuf;
+  uint32_t len;
+  
+  rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = sc->ResetStartupWriteTimer();
+  rv = WaitForStartupTimer();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Prevent StartupCache::InvalidateCache from deleting the disk file
+  rv = LockCacheFile(true, profileDir);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  sc->IgnoreDiskCache();
+
+  rv = sc->GetBuffer(id, &outbuf, &len);
+
+  nsresult r = LockCacheFile(false, profileDir);
+  NS_ENSURE_SUCCESS(r, r);
+
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    passed("buffer not available after ignoring disk cache");
+  } else if (NS_SUCCEEDED(rv)) {
+    fail("GetBuffer succeeded unexpectedly after ignoring disk cache");
+    return NS_ERROR_UNEXPECTED;
+  } else {
+    fail("GetBuffer gave an unexpected failure, expected NOT_AVAILABLE");
+    return rv;
+  }
+
+  sc->InvalidateCache();
+  return NS_OK;
+}
+
+nsresult
+TestEarlyShutdown() {
+  nsresult rv;
+  nsCOMPtr<nsIStartupCache> sc
+    = do_GetService("@mozilla.org/startupcache/cache;1", &rv);
+  sc->InvalidateCache();
+
+  const char* buf = "Find your soul beardmate on BeardBook";
+  const char* id = "id";
+  uint32_t len;
+  UniquePtr<char[]> outbuf;
+  
+  sc->ResetStartupWriteTimer();
+  rv = sc->PutBuffer(id, buf, strlen(buf) + 1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIObserver> obs;
+  sc->GetObserver(getter_AddRefs(obs));
+  obs->Observe(nullptr, "xpcom-shutdown", nullptr);
+  rv = WaitForStartupTimer();
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = sc->GetBuffer(id, &outbuf, &len);
+
+  if (NS_SUCCEEDED(rv)) {
+    passed("GetBuffer succeeded after early shutdown");
+  } else {
+    fail("GetBuffer failed after early shutdown");
+    return rv;
+  }
+
+  const char* other_id = "other_id";
+  rv = sc->PutBuffer(other_id, buf, strlen(buf) + 1);
+
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    passed("PutBuffer not available after early shutdown");
+  } else if (NS_SUCCEEDED(rv)) {
+    fail("PutBuffer succeeded unexpectedly after early shutdown");
+    return NS_ERROR_UNEXPECTED;
+  } else {
+    fail("PutBuffer gave an unexpected failure, expected NOT_AVAILABLE");
+    return rv;
+  }
+ 
+  return NS_OK;
+}
+
+int main(int argc, char** argv)
+{
+  ScopedXPCOM xpcom("Startup Cache");
+  if (xpcom.failed())
+    return 1;
+
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefs) {
+    fail("prefs");
+    return 1;
+  }
+  prefs->SetIntPref("hangmonitor.timeout", 0);
+
+  int rv = 0;
+  nsresult scrv;
+
+  nsCOMPtr<nsIStartupCache> sc 
+    = do_GetService("@mozilla.org/startupcache/cache;1", &scrv);
+  if (NS_FAILED(scrv))
+    rv = 1;
+  else
+    sc->RecordAgesAlways();
+  if (NS_FAILED(TestStartupWriteRead()))
+    rv = 1;
+  if (NS_FAILED(TestWriteInvalidateRead()))
+    rv = 1;
+  if (NS_FAILED(TestWriteObject()))
+    rv = 1;
+  nsCOMPtr<nsIFile> profileDir = xpcom.GetProfileDirectory();
+  if (NS_FAILED(TestIgnoreDiskCache(profileDir)))
+    rv = 1;
+  if (NS_FAILED(TestEarlyShutdown()))
+    rv = 1;
+
+  return rv;
 }
