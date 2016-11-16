@@ -1864,6 +1864,10 @@ AddDifferentTransformLists(double aCoeff1, const nsCSSValueList* aList1,
   // sum to 1 doesn't make sense for these.
   if (aList1 == aList2) {
     arr->Item(1).Reset();
+    // For accumulation, we need to increase accumulation count for |aList1|.
+    if (aOperatorType == eCSSKeyword_accumulatematrix) {
+      aCoeff2 += 1.0;
+    }
   } else {
     aList1->CloneInto(arr->Item(1).SetListValue());
   }
@@ -2957,7 +2961,8 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
         if (list2->mValue.GetUnit() == eCSSUnit_None) {
           result = AddTransformLists(0, list1, aCoeff1, list1);
         } else if (TransformFunctionListsMatch(list1, list2)) {
-          result = AddTransformLists(aCoeff1, list1, aCoeff2, list2);
+          result = AddTransformLists(aCoeff1, list1, aCoeff2, list2,
+                                     eCSSKeyword_interpolatematrix);
         } else {
           result = AddDifferentTransformLists(aCoeff1, list1,
                                               aCoeff2, list2,
@@ -3053,6 +3058,30 @@ StyleAnimationValue::Accumulate(nsCSSPropertyID aProperty,
       resultColor->SetRGBAColorValue(
         AddWeightedColors(1.0, color1, aCount, color2));
       result.SetAndAdoptCSSValueValue(resultColor.release(), eUnit_Color);
+      break;
+    }
+    case eUnit_Transform: {
+      const nsCSSValueList* listA =
+        aA.GetCSSValueSharedListValue()->mHead;
+      const nsCSSValueList* listB =
+        result.GetCSSValueSharedListValue()->mHead;
+
+      MOZ_ASSERT(listA);
+      MOZ_ASSERT(listB);
+
+      nsAutoPtr<nsCSSValueList> resultList;
+      if (listA->mValue.GetUnit() == eCSSUnit_None ||
+          listB->mValue.GetUnit() == eCSSUnit_None) {
+        break;
+      } else if (TransformFunctionListsMatch(listA, listB)) {
+        resultList = AddTransformLists(1.0, listB, aCount, listA,
+                                       eCSSKeyword_accumulatematrix);
+      } else {
+        resultList = AddDifferentTransformLists(1.0, listB,
+                                                aCount, listA,
+                                                eCSSKeyword_accumulatematrix);
+      }
+      result.SetTransformValue(new nsCSSValueSharedList(resultList.forget()));
       break;
     }
     default:
