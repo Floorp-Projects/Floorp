@@ -123,7 +123,6 @@ ALLOWED_XPCOM_GLUE = {
     ('TestCookie', 'netwerk/test'),
     ('TestUDPSocket', 'netwerk/test'),
     ('xpcshell', 'js/xpconnect/shell'),
-    ('xpctest', 'js/xpconnect/tests/components/native'),
     ('test_AsXXX_helpers', 'storage/test'),
     ('test_async_callbacks_with_spun_event_loops', 'storage/test'),
     ('test_asyncStatementExecution_transaction', 'storage/test'),
