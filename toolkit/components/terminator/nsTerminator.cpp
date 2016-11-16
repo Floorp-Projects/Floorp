@@ -173,10 +173,10 @@ RunWatchdog(void* arg)
 class PR_CloseDelete
 {
 public:
-  constexpr PR_CloseDelete() {}
+  constexpr PR_CloseDelete() = default;
 
   PR_CloseDelete(const PR_CloseDelete& aOther)
-  {}
+  = default;
 
   void operator()(PRFileDesc* aPtr) const
   {
