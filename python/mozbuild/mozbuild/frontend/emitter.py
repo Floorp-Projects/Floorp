@@ -934,7 +934,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'ANDROID_GENERATED_RESFILES',
             'DISABLE_STL_WRAPPING',
             'EXTRA_DSO_LDOPTS',
-            'PYTHON_UNIT_TESTS',
             'RCFILE',
             'RESFILE',
             'RCINCLUDE',
@@ -1260,11 +1259,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 for obj in self._process_web_platform_tests_manifest(context, path, manifest):
                     yield obj
 
-        python_tests = context.get('PYTHON_UNIT_TESTS')
-        if python_tests:
-            for obj in self._process_python_tests(context, python_tests):
-                yield obj
-
     def _process_test_manifest(self, context, info, manifest_path, mpmanifest):
         flavor, install_root, install_subdir, package_tests = info
 
@@ -1427,36 +1421,6 @@ class TreeMetadataEmitter(LoggingMixin):
                     'support-files': '',
                     'subsuite': '',
                 })
-
-        yield obj
-
-    def _process_python_tests(self, context, python_tests):
-        manifest_full_path = context.main_path
-        manifest_reldir = mozpath.dirname(mozpath.relpath(manifest_full_path,
-            context.config.topsrcdir))
-
-        obj = TestManifest(context, manifest_full_path,
-                mozpath.basename(manifest_full_path),
-                flavor='python', install_prefix='python/',
-                relpath=mozpath.join(manifest_reldir,
-                    mozpath.basename(manifest_full_path)))
-
-        for test in python_tests:
-            test = mozpath.normpath(mozpath.join(context.srcdir, test))
-            if not os.path.isfile(test):
-                raise SandboxValidationError('Path specified in '
-                   'PYTHON_UNIT_TESTS does not exist: %s' % test,
-                   context)
-            obj.tests.append({
-                'path': test,
-                'here': mozpath.dirname(test),
-                'manifest': manifest_full_path,
-                'name': mozpath.basename(test),
-                'head': '',
-                'tail': '',
-                'support-files': '',
-                'subsuite': '',
-            })
 
         yield obj
 
