@@ -51,7 +51,7 @@ new_test_uri()
 
 class VisitURIObserver final : public nsIObserver
 {
-  ~VisitURIObserver() {}
+  ~VisitURIObserver() = default;
 
 public:
   NS_DECL_ISUPPORTS
@@ -310,7 +310,7 @@ namespace test_observer_topic_dispatched_helpers {
   #define URI_VISITED_RESOLUTION_TOPIC "visited-status-resolution"
   class statusObserver final : public nsIObserver
   {
-    ~statusObserver() {}
+    ~statusObserver() = default;
 
   public:
     NS_DECL_ISUPPORTS
