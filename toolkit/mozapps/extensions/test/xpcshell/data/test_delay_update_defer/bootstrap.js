@@ -1,3 +1,4 @@
+/* exported startup, shutdown, install, uninstall, ADDON_ID, INSTALL_COMPLETE_PREF */
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 

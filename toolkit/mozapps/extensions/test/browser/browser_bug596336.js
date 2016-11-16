@@ -6,13 +6,11 @@
 // manager is open
 
 var gManagerWindow;
-var gCategoryUtilities;
 
 add_task(function* test() {
   waitForExplicitFinish();
 
   gManagerWindow = yield open_manager("addons://list/extension");
-  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 });
 
 function get_list_item_count() {

@@ -39,7 +39,6 @@ add_test(function test_getter_and_setter() {
         do_check_neq(addon.syncGUID, null);
         do_check_true(UUID_PATTERN.test(addon.syncGUID));
 
-        let oldGUID = addon.SyncGUID;
         let newGUID = "foo";
 
         addon.syncGUID = newGUID;

@@ -201,14 +201,6 @@ function promise_page(aWindow, aPageId) {
   return deferred.promise;
 }
 
-function get_list_names(aList) {
-  var items = [];
-  for (let listItem of aList.childNodes)
-    items.push(listItem.label);
-  items.sort();
-  return items;
-}
-
 // These add-ons became inactive during the upgrade
 var inactiveAddonIds = [
   ao5.id,
