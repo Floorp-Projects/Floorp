@@ -264,23 +264,47 @@ ProcessMatrix3D(Matrix4x4& aMatrix,
   aMatrix = temp * aMatrix;
 }
 
-template<typename T>
-T InterpolateNumerically(const T& aOne, const T& aTwo, double aCoeff)
-{
-  return aOne + (aTwo - aOne) * aCoeff;
-}
+class Interpolate {
+public:
+  template<typename T>
+  static T operate(const T& aOne, const T& aTwo, double aCoeff)
+  {
+    MOZ_ASSERT(aCoeff >= 0.0 && aCoeff <= 1.0,
+               "Coefficient should be in the range [0.0, 1.0]");
+    return aOne + (aTwo - aOne) * aCoeff;
+  }
+
+  static Point3D operateForScale(const Point3D& aOne,
+                                 const Point3D& aTwo,
+                                 double aCoeff)
+  {
+    MOZ_ASSERT(aCoeff >= 0.0 && aCoeff <= 1.0,
+               "Coefficient should be in the range [0.0, 1.0]");
+    return aOne + (aTwo - aOne) * aCoeff;
+  }
+
+  static Matrix4x4 operateForRotate(const gfxQuaternion& aOne,
+                                    const gfxQuaternion& aTwo,
+                                    double aCoeff)
+  {
+    MOZ_ASSERT(aCoeff >= 0.0 && aCoeff <= 1.0,
+               "Coefficient should be in the range [0.0, 1.0]");
+    return aOne.Slerp(aTwo, aCoeff).ToMatrix();
+  }
+};
 
 /**
- * Interpolates between 2 matrices by decomposing them.
+ * Calculate 2 matrices by decomposing them with Operator.
  *
  * @param aMatrix1   First matrix, using CSS pixel units.
  * @param aMatrix2   Second matrix, using CSS pixel units.
- * @param aProgress  Interpolation value in the range [0.0, 1.0]
+ * @param aProgress  Coefficient for the Operator.
  */
+template <typename Operator>
 static Matrix4x4
-InterpolateTransformMatrix(const Matrix4x4 &aMatrix1,
-                           const Matrix4x4 &aMatrix2,
-                           double aProgress)
+OperateTransformMatrix(const Matrix4x4 &aMatrix1,
+                       const Matrix4x4 &aMatrix2,
+                       double aProgress)
 {
   // Decompose both matrices
 
@@ -310,15 +334,14 @@ InterpolateTransformMatrix(const Matrix4x4 &aMatrix1,
   Matrix4x4 result;
 
   Point4D perspective =
-    InterpolateNumerically(perspective1, perspective2, aProgress);
+    Operator::operate(perspective1, perspective2, aProgress);
   result.SetTransposedVector(3, perspective);
 
   Point3D translate =
-    InterpolateNumerically(translate1, translate2, aProgress);
+    Operator::operate(translate1, translate2, aProgress);
   result.PreTranslate(translate.x, translate.y, translate.z);
 
-  gfxQuaternion q3 = rotate1.Slerp(rotate2, aProgress);
-  Matrix4x4 rotate = q3.ToMatrix();
+  Matrix4x4 rotate = Operator::operateForRotate(rotate1, rotate2, aProgress);
   if (!rotate.IsIdentity()) {
     result = rotate * result;
   }
@@ -326,31 +349,31 @@ InterpolateTransformMatrix(const Matrix4x4 &aMatrix1,
   // TODO: Would it be better to interpolate these as angles?
   //       How do we convert back to angles?
   float yzshear =
-    InterpolateNumerically(shear1[ShearType::YZSHEAR],
-                           shear2[ShearType::YZSHEAR],
-                           aProgress);
+    Operator::operate(shear1[ShearType::YZSHEAR],
+                      shear2[ShearType::YZSHEAR],
+                      aProgress);
   if (yzshear != 0.0) {
     result.SkewYZ(yzshear);
   }
 
   float xzshear =
-    InterpolateNumerically(shear1[ShearType::XZSHEAR],
-                           shear2[ShearType::XZSHEAR],
-                           aProgress);
+    Operator::operate(shear1[ShearType::XZSHEAR],
+                      shear2[ShearType::XZSHEAR],
+                      aProgress);
   if (xzshear != 0.0) {
     result.SkewXZ(xzshear);
   }
 
   float xyshear =
-    InterpolateNumerically(shear1[ShearType::XYSHEAR],
-                           shear2[ShearType::XYSHEAR],
-                           aProgress);
+    Operator::operate(shear1[ShearType::XYSHEAR],
+                      shear2[ShearType::XYSHEAR],
+                      aProgress);
   if (xyshear != 0.0) {
     result.SkewXY(xyshear);
   }
 
   Point3D scale =
-    InterpolateNumerically(scale1, scale2, aProgress);
+    Operator::operateForScale(scale1, scale2, aProgress);
   if (scale != Point3D(1.0, 1.0, 1.0)) {
     result.PreScale(scale.x, scale.y, scale.z);
   }
@@ -387,7 +410,8 @@ ProcessInterpolateMatrix(Matrix4x4& aMatrix,
   }
   double progress = aData->Item(3).GetPercentValue();
 
-  aMatrix = InterpolateTransformMatrix(matrix1, matrix2, progress) * aMatrix;
+  aMatrix =
+    OperateTransformMatrix<Interpolate>(matrix1, matrix2, progress) * aMatrix;
 }
 
 /* Helper function to process a translatex function. */
