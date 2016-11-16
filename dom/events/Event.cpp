@@ -246,14 +246,6 @@ Event::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return EventBinding::Wrap(aCx, this, aGivenProto);
 }
 
-bool
-Event::IsChrome(JSContext* aCx) const
-{
-  return mIsMainThreadEvent ?
-    xpc::AccessCheck::isChrome(js::GetContextCompartment(aCx)) :
-    mozilla::dom::workers::IsCurrentThreadRunningChromeWorker();
-}
-
 // nsIDOMEventInterface
 NS_IMETHODIMP
 Event::GetType(nsAString& aType)
@@ -504,15 +496,13 @@ Event::PreventDefault()
 }
 
 void
-Event::PreventDefault(JSContext* aCx)
+Event::PreventDefault(JSContext* aCx, CallerType aCallerType)
 {
-  MOZ_ASSERT(aCx, "JS context must be specified");
-
   // Note that at handling default action, another event may be dispatched.
   // Then, JS in content mey be call preventDefault()
   // even in the event is in system event group.  Therefore, don't refer
   // mInSystemGroup here.
-  PreventDefaultInternal(IsChrome(aCx));
+  PreventDefaultInternal(aCallerType == CallerType::System);
 }
 
 void
@@ -1065,10 +1055,8 @@ Event::GetEventName(EventMessage aEventType)
 }
 
 bool
-Event::DefaultPrevented(JSContext* aCx) const
+Event::DefaultPrevented(CallerType aCallerType) const
 {
-  MOZ_ASSERT(aCx, "JS context must be specified");
-
   NS_ENSURE_TRUE(mEvent, false);
 
   // If preventDefault() has never been called, just return false.
@@ -1079,7 +1067,8 @@ Event::DefaultPrevented(JSContext* aCx) const
   // If preventDefault() has been called by content, return true.  Otherwise,
   // i.e., preventDefault() has been called by chrome, return true only when
   // this is called by chrome.
-  return mEvent->DefaultPreventedByContent() || IsChrome(aCx);
+  return mEvent->DefaultPreventedByContent() ||
+         aCallerType == CallerType::System;
 }
 
 double
