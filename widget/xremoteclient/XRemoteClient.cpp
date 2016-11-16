@@ -357,7 +357,7 @@ XRemoteClient::GetLock(Window aWindow, bool *aDestroyed)
 	     ("window 0x%x is locked by %s; waiting...\n",
 	      (unsigned int) aWindow, data));
       waited = True;
-      while (1) {
+      while (true) {
 	XEvent event;
 	int select_retval;
 	fd_set select_set;
