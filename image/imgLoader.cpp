@@ -938,7 +938,7 @@ using namespace std;
 void
 imgCacheQueue::Remove(imgCacheEntry* entry)
 {
-  queueContainer::iterator it = find(mQueue.begin(), mQueue.end(), entry);
+  auto it = find(mQueue.begin(), mQueue.end(), entry);
   if (it != mQueue.end()) {
     mSize -= (*it)->GetDataSize();
     mQueue.erase(it);
