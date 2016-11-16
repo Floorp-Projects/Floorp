@@ -574,8 +574,6 @@ HashNumber(const void* aKey)
   return PLHashNumber(NS_PTR_TO_INT32(aKey));
 }
 
-// This method uses MOZ_RELEASE_ASSERT in the unlikely event that
-// somebody uses this in a non-debug build.
 static intptr_t
 GetSerialNumber(void* aPtr, bool aCreate)
 {
@@ -587,7 +585,9 @@ GetSerialNumber(void* aPtr, bool aCreate)
     return static_cast<SerialNumberRecord*>((*hep)->value)->serialNumber;
   }
 
-  MOZ_RELEASE_ASSERT(aCreate, "If an object does not have a serial number, we should be creating it.");
+  if (!aCreate) {
+    return 0;
+  }
 
   SerialNumberRecord* record = new SerialNumberRecord();
   WalkTheStackSavingLocations(record->allocationStack);
@@ -1053,9 +1053,9 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
     intptr_t serialno = 0;
     if (gSerialNumbers && loggingThisType) {
       serialno = GetSerialNumber(aPtr, aRefcnt == 1);
-      NS_ASSERTION(serialno != 0,
-                   "Serial number requested for unrecognized pointer!  "
-                   "Are you memmoving a refcounted object?");
+      MOZ_ASSERT(serialno != 0,
+                 "Serial number requested for unrecognized pointer!  "
+                 "Are you memmoving a refcounted object?");
       int32_t* count = GetRefCount(aPtr);
       if (count) {
         (*count)++;
@@ -1103,9 +1103,9 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
     intptr_t serialno = 0;
     if (gSerialNumbers && loggingThisType) {
       serialno = GetSerialNumber(aPtr, false);
-      NS_ASSERTION(serialno != 0,
-                   "Serial number requested for unrecognized pointer!  "
-                   "Are you memmoving a refcounted object?");
+      MOZ_ASSERT(serialno != 0,
+                 "Serial number requested for unrecognized pointer!  "
+                 "Are you memmoving a refcounted object?");
       int32_t* count = GetRefCount(aPtr);
       if (count) {
         (*count)--;
@@ -1162,6 +1162,7 @@ NS_LogCtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
   intptr_t serialno = 0;
   if (gSerialNumbers && loggingThisType) {
     serialno = GetSerialNumber(aPtr, true);
+    MOZ_ASSERT(serialno != 0, "GetSerialNumber should never return 0 when passed true");
   }
 
   bool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
@@ -1198,6 +1199,9 @@ NS_LogDtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
   intptr_t serialno = 0;
   if (gSerialNumbers && loggingThisType) {
     serialno = GetSerialNumber(aPtr, false);
+    MOZ_ASSERT(serialno != 0,
+               "Serial number requested for unrecognized pointer!  "
+               "Are you memmoving a MOZ_COUNT_CTOR-tracked object?");
     RecycleSerialNumberPtr(aPtr);
   }
 
