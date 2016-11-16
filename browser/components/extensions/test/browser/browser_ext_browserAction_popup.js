@@ -120,7 +120,7 @@ function* testInArea(area) {
         let expect = {};
         sendClick = ({expectEvent, expectPopup, runNextTest, waitUntilClosed, closePopup}, message = "send-click") => {
           if (closePopup == undefined) {
-            closePopup = true;
+            closePopup = !expectEvent;
           }
 
           expect = {event: expectEvent, popup: expectPopup, runNextTest, waitUntilClosed, closePopup};
@@ -204,6 +204,10 @@ function* testInArea(area) {
       yield promisePopupHidden(panel);
       ok(true, "Panel is closed");
     } else if (expecting.closePopup) {
+      if (!getBrowserActionPopup(extension)) {
+        yield awaitExtensionPanel(extension);
+      }
+
       yield closeBrowserAction(extension);
     }
 
