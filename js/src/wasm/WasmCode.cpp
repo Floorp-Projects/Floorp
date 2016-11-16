@@ -387,11 +387,11 @@ CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffset
 {
     MOZ_ASSERT(begin_ < profilingReturn_);
     MOZ_ASSERT(profilingReturn_ < end_);
-    MOZ_ASSERT(funcBeginToTableEntry_ == offsets.tableEntry - begin_);
-    MOZ_ASSERT(funcBeginToTableProfilingJump_ == offsets.tableProfilingJump - begin_);
-    MOZ_ASSERT(funcBeginToNonProfilingEntry_ == offsets.nonProfilingEntry - begin_);
-    MOZ_ASSERT(funcProfilingJumpToProfilingReturn_ == profilingReturn_ - offsets.profilingJump);
-    MOZ_ASSERT(funcProfilingEpilogueToProfilingReturn_ == profilingReturn_ - offsets.profilingEpilogue);
+    MOZ_ASSERT(offsets.tableEntry - begin_ <= UINT8_MAX);
+    MOZ_ASSERT(offsets.tableProfilingJump - begin_ <= UINT8_MAX);
+    MOZ_ASSERT(offsets.nonProfilingEntry - begin_ <= UINT8_MAX);
+    MOZ_ASSERT(profilingReturn_ - offsets.profilingJump <= UINT8_MAX);
+    MOZ_ASSERT(profilingReturn_ - offsets.profilingEpilogue <= UINT8_MAX);
 }
 
 static size_t
