@@ -176,9 +176,10 @@ PlacesController.prototype = {
     case "placesCmd_open":
     case "placesCmd_open:window":
     case "placesCmd_open:privatewindow":
-    case "placesCmd_open:tab":
-      var selectedNode = this._view.selectedNode;
+    case "placesCmd_open:tab": {
+      let selectedNode = this._view.selectedNode;
       return selectedNode && PlacesUtils.nodeIsURI(selectedNode);
+    }
     case "placesCmd_new:folder":
       return this._canInsert();
     case "placesCmd_new:bookmark":
@@ -810,7 +811,7 @@ PlacesController.prototype = {
      *          The parent container to check for containment in
      * @return true if node is a member of parent's children, false otherwise.
      */
-    function isContainedBy(node, parent) {
+    function isNodeContainedBy(parent) {
       var cursor = node.parent;
       while (cursor) {
         if (cursor == parent)
@@ -820,11 +821,11 @@ PlacesController.prototype = {
       return false;
     }
 
-      for (var j = 0; j < pastFolders.length; ++j) {
-        if (isContainedBy(node, pastFolders[j]))
-          return true;
-      }
-      return false;
+    for (var j = 0; j < pastFolders.length; ++j) {
+      if (isNodeContainedBy(pastFolders[j]))
+        return true;
+    }
+    return false;
   },
 
   /**

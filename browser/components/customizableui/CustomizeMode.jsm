@@ -1344,9 +1344,10 @@ CustomizeMode.prototype = {
 
     this._clearLWThemesMenu(aEvent.target);
 
-    function previewTheme(aEvent) {
-      LightweightThemeManager.previewTheme(aEvent.target.theme.id != DEFAULT_THEME_ID ?
-                                           aEvent.target.theme : null);
+    function previewTheme(aPreviewThemeEvent) {
+      LightweightThemeManager.previewTheme(
+        aPreviewThemeEvent.target.theme.id != DEFAULT_THEME_ID ?
+        aPreviewThemeEvent.target.theme : null);
     }
 
     function resetPreview() {

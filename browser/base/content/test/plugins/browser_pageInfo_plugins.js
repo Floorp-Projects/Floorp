@@ -66,8 +66,8 @@ function test() {
 
 // The first test plugin is CtP and the second test plugin is enabled.
 function testPart1a() {
-  let test = gTestBrowser.contentDocument.getElementById("test");
-  let objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
+  let testElement = gTestBrowser.contentDocument.getElementById("test");
+  let objLoadingContent = testElement.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "part 1a: Test plugin should not be activated");
   let secondtest = gTestBrowser.contentDocument.getElementById("secondtestA");
   objLoadingContent = secondtest.QueryInterface(Ci.nsIObjectLoadingContent);
@@ -97,9 +97,9 @@ function testPart1b() {
 
 // Now, the Test plugin should be allowed, and the Test2 plugin should be CtP
 function testPart2() {
-  let test = gTestBrowser.contentDocument.getElementById("test").
+  let testElement = gTestBrowser.contentDocument.getElementById("test").
     QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(test.activated, "part 2: Test plugin should be activated");
+  ok(testElement.activated, "part 2: Test plugin should be activated");
 
   let secondtest = gTestBrowser.contentDocument.getElementById("secondtestA").
     QueryInterface(Ci.nsIObjectLoadingContent);
@@ -126,10 +126,10 @@ function testPart2() {
 
 // Now, all the things should be blocked
 function testPart3() {
-  let test = gTestBrowser.contentDocument.getElementById("test").
+  let testElement = gTestBrowser.contentDocument.getElementById("test").
     QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!test.activated, "part 3: Test plugin should not be activated");
-  is(test.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED,
+  ok(!testElement.activated, "part 3: Test plugin should not be activated");
+  is(testElement.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_DISABLED,
     "part 3: Test plugin should be marked as PLUGIN_DISABLED");
 
   let secondtest = gTestBrowser.contentDocument.getElementById("secondtestA").

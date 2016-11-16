@@ -54,8 +54,8 @@ add_task(function*() {
   if (singleWrapper) {
     ok(singleWrapper.node, "Widget node should exist in other window.");
     if (singleWrapper.node) {
-      let expectedParent = CustomizableUI.getCustomizeTargetForArea(kNavBar, otherWin);
-      is(singleWrapper.node.parentNode, expectedParent,
+      let expectedParentInOtherWin = CustomizableUI.getCustomizeTargetForArea(kNavBar, otherWin);
+      is(singleWrapper.node.parentNode, expectedParentInOtherWin,
          "Widget should be in navbar in other window.");
     }
   }

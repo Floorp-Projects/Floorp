@@ -4745,7 +4745,7 @@
         <body><![CDATA[
           let browser;
           switch (aTopic) {
-            case "live-resize-start":
+            case "live-resize-start": {
               browser = this.mCurrentTab.linkedBrowser;
               let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
               if (fl && fl.tabParent && !this.mActiveResizeDisplayportSuppression) {
@@ -4753,7 +4753,8 @@
                 this.mActiveResizeDisplayportSuppression = browser;
               }
               break;
-            case "live-resize-end":
+            }
+            case "live-resize-end": {
               browser = this.mActiveResizeDisplayportSuppression;
               if (browser) {
                 let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
@@ -4763,10 +4764,12 @@
                 }
               }
               break;
-            case "nsPref:changed":
+            }
+            case "nsPref:changed": {
               // This is the only pref observed.
               this._findAsYouType = Services.prefs.getBoolPref("accessibility.typeaheadfind");
               break;
+            }
           }
         ]]></body>
       </method>
@@ -5753,7 +5756,7 @@
                 ++mid > high)
               break;
             let boxObject = tabs[mid].boxObject;
-            let screenX = boxObject.screenX + getTabShift(tabs[mid], oldIndex);
+            screenX = boxObject.screenX + getTabShift(tabs[mid], oldIndex);
             if (screenX > tabCenter) {
               high = mid - 1;
             } else if (screenX + boxObject.width < tabCenter) {

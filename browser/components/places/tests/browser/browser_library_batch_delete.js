@@ -102,9 +102,9 @@ function test() {
 
 function nextTest() {
   if (gTests.length) {
-    var test = gTests.shift();
-    info("Start of test: " + test.desc);
-    test.run();
+    var testCase = gTests.shift();
+    info("Start of test: " + testCase.desc);
+    testCase.run();
   }
   else {
     // Close Library window.

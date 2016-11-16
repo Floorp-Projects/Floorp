@@ -83,7 +83,7 @@ function checkSpecialContextMenus() {
       let menuItem = document.getElementById(menuID);
       let menuPopup = document.getElementById(kSpecialItemIDs[menuID]);
       info("Waiting to open menu for " + menuID);
-      let shownPromise = popupShown(menuPopup);
+      shownPromise = popupShown(menuPopup);
       menuPopup.openPopup(menuItem, null, 0, 0, false, false, null);
       yield shownPromise;
 
