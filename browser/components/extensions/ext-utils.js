@@ -507,9 +507,8 @@ class ViewPopup extends BasePopup {
   }
 
   closePopup() {
-    if (this.attached) {
-      CustomizableUI.hidePanelForNode(this.viewNode);
-    } else {
+    CustomizableUI.hidePanelForNode(this.viewNode);
+    if (!this.attached) {
       this.destroy();
     }
   }
