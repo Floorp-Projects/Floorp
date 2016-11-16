@@ -13,6 +13,7 @@ from marionette import MarionetteTestCase
 
 
 class TickingClock(object):
+
     def __init__(self, incr=1):
         self.ticks = 0
         self.increment = incr
@@ -25,7 +26,9 @@ class TickingClock(object):
     def now(self):
         return self.ticks
 
+
 class SequenceClock(object):
+
     def __init__(self, times):
         self.times = times
         self.i = 0
@@ -39,10 +42,11 @@ class SequenceClock(object):
     def sleep(self, dur):
         pass
 
+
 class MockMarionette(object):
+
     def __init__(self):
         self.waited = 0
-        self.timeout = None
 
     def exception(self, e=None, wait=1):
         self.wait()
@@ -74,13 +78,17 @@ class MockMarionette(object):
     def wait(self):
         self.waited += 1
 
+
 def at_third_attempt(clock, end):
     return clock.now == 2
+
 
 def now(clock, end):
     return True
 
+
 class SystemClockTest(MarionetteTestCase):
+
     def setUp(self):
         super(SystemClockTest, self).setUp()
         self.clock = wait.SystemClock()
@@ -97,7 +105,9 @@ class SystemClockTest(MarionetteTestCase):
     def test_time_now(self):
         self.assertIsNotNone(self.clock.now)
 
+
 class FormalWaitTest(MarionetteTestCase):
+
     def setUp(self):
         super(FormalWaitTest, self).setUp()
         self.m = MockMarionette()
@@ -158,22 +168,22 @@ class FormalWaitTest(MarionetteTestCase):
         wt = Wait(self.m)
         self.assertIsInstance(wt.clock, wait.SystemClock)
 
-    def test_timeout_inherited_from_marionette(self):
-        wt = Wait(self.m)
-        self.assertEqual(wt.timeout * 1000.0, self.m.timeout)
-
     def test_timeout_uses_default_if_marionette_timeout_is_none(self):
         self.m.timeout = None
         wt = Wait(self.m)
         self.assertEqual(wt.timeout, wait.DEFAULT_TIMEOUT)
 
+
 class PredicatesTest(MarionetteTestCase):
+
     def test_until(self):
         c = wait.SystemClock()
         self.assertFalse(wait.until_pred(c, sys.maxint))
         self.assertTrue(wait.until_pred(c, 0))
 
+
 class WaitUntilTest(MarionetteTestCase):
+
     def setUp(self):
         super(WaitUntilTest, self).setUp()
 
@@ -275,7 +285,8 @@ class WaitUntilTest(MarionetteTestCase):
         with self.assertRaisesRegexp(errors.TimeoutException,
                                      "Timed out after 11.0 seconds"):
             self.wt.until(callback)
-        # With a delayed conditional return > timeout, only 1 iteration is possible
+        # With a delayed conditional return > timeout, only 1 iteration is
+        # possible
         self.assertEqual(self.m.waited, 1)
 
     def test_timeout_with_delayed_condition_return(self):
@@ -286,7 +297,8 @@ class WaitUntilTest(MarionetteTestCase):
         with self.assertRaisesRegexp(errors.TimeoutException,
                                      "Timed out after 10.0 seconds"):
             self.wt.until(callback)
-        # With a delayed conditional return < interval, 10 iterations should be possible
+        # With a delayed conditional return < interval, 10 iterations should be
+        # possible
         self.assertEqual(self.m.waited, 10)
 
     def test_timeout_interval_shorter_than_delayed_condition_return(self):
