@@ -15,14 +15,14 @@
             'ocsp.h',
             'ocspt.h'
           ],
-          'destination': '<(nss_dist_dir)/public/<(module)'
+          'destination': '<(nss_public_dist_dir)/<(module)'
         },
         {
           'files': [
             'ocspi.h',
             'ocspti.h'
           ],
-          'destination': '<(nss_dist_dir)/private/<(module)'
+          'destination': '<(nss_private_dist_dir)/<(module)'
         }
       ]
     }

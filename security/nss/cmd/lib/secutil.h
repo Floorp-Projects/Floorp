@@ -322,12 +322,12 @@ extern SECStatus SECU_StoreCRL(PK11SlotInfo *slot, SECItem *derCrl,
 ** MD5 hashing algorithm. This routine first computes a digital signature
 ** using SEC_SignData, then wraps it with an CERTSignedData and then der
 ** encodes the result.
-**	"arena" is the memory arena to use to allocate data from
-**      "sd" returned CERTSignedData
-** 	"result" the final der encoded data (memory is allocated)
-** 	"buf" the input data to sign
-** 	"len" the amount of data to sign
-** 	"pk" the private key to encrypt with
+**     "arena" is the memory arena to use to allocate data from
+**     "sd" returned CERTSignedData
+**     "result" the final der encoded data (memory is allocated)
+**     "buf" the input data to sign
+**     "len" the amount of data to sign
+**     "pk" the private key to encrypt with
 */
 extern SECStatus SECU_DerSignDataCRL(PLArenaPool *arena, CERTSignedData *sd,
                                      unsigned char *buf, int len,
@@ -402,6 +402,11 @@ SECStatus
 SECU_ParseSSLVersionRangeString(const char *input,
                                 const SSLVersionRange defaultVersionRange,
                                 SSLVersionRange *vrange);
+/*
+** Read a hex string into a SecItem.
+*/
+extern SECItem *SECU_HexString2SECItem(PLArenaPool *arena, SECItem *item,
+                                       const char *str);
 
 /*
  *

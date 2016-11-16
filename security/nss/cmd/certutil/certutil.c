@@ -204,6 +204,7 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
     /* Create info about public key */
     spki = SECKEY_CreateSubjectPublicKeyInfo(pubk);
     if (!spki) {
+        PORT_FreeArena(arena, PR_FALSE);
         SECU_PrintError(progName, "unable to create subject public key");
         return SECFailure;
     }
