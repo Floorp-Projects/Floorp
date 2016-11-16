@@ -1,0 +1,14 @@
+language: rust
+sudo: false
+
+rust:
+ - stable
+ - beta
+ - nightly
+
+script:
+ - cargo build
+ - cargo test
+
+notifications:
+  webhooks: http://build.servo.org:54856/travis

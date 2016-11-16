@@ -1,0 +1,29 @@
+[package]
+name = "bincode"
+version = "0.6.0"
+authors = ["Ty Overby <ty@pre-alpha.com>", "Francesco Mazzoli <f@mazzo.li>"]
+
+repository = "https://github.com/TyOverby/bincode"
+documentation = "http://tyoverby.github.io/bincode/bincode/"
+keywords = ["binary", "encode", "decode", "serialize", "deserialize"]
+
+license = "MIT"
+description = "A binary serialization / deserialization strategy and implementation with serde and rustc-serialize backends."
+
+[dependencies]
+byteorder = "0.5.*"
+num-traits = "0.1.32"
+
+[dependencies.rustc-serialize]
+version = "0.3.*"
+optional = true
+
+[dependencies.serde]
+version = "0.8.*"
+optional = true
+
+[dev-dependencies]
+serde_macros = "0.8.*"
+
+[features]
+default = ["rustc-serialize", "serde"]

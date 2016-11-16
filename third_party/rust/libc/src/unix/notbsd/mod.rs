@@ -6,6 +6,7 @@ pub type speed_t = ::c_uint;
 pub type tcflag_t = ::c_uint;
 pub type loff_t = ::c_longlong;
 pub type clockid_t = ::c_int;
+pub type key_t = ::c_int;
 pub type id_t = ::c_uint;
 
 pub enum timezone {}
@@ -434,6 +435,7 @@ pub const IFF_DYNAMIC: ::c_int = 0x8000;
 pub const AF_UNIX: ::c_int = 1;
 pub const AF_INET: ::c_int = 2;
 pub const AF_INET6: ::c_int = 10;
+pub const AF_NETLINK: ::c_int = 16;
 pub const SOCK_RAW: ::c_int = 3;
 pub const IPPROTO_TCP: ::c_int = 6;
 pub const IPPROTO_IP: ::c_int = 0;
@@ -466,6 +468,8 @@ pub const IPV6_MULTICAST_LOOP: ::c_int = 19;
 pub const IPV6_V6ONLY: ::c_int = 26;
 
 pub const SO_DEBUG: ::c_int = 1;
+
+pub const MSG_NOSIGNAL: ::c_int = 0x4000;
 
 pub const SHUT_RD: ::c_int = 0;
 pub const SHUT_WR: ::c_int = 1;
@@ -843,6 +847,10 @@ extern {
     pub fn setns(fd: ::c_int, nstype: ::c_int) -> ::c_int;
     pub fn sem_timedwait(sem: *mut sem_t,
                          abstime: *const ::timespec) -> ::c_int;
+    pub fn accept4(fd: ::c_int, addr: *mut ::sockaddr, len: *mut ::socklen_t,
+                   flg: ::c_int) -> ::c_int;
+    pub fn pthread_mutex_timedlock(lock: *mut pthread_mutex_t,
+                                   abstime: *const ::timespec) -> ::c_int;
 }
 
 cfg_if! {

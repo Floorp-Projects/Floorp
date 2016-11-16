@@ -1,0 +1,22 @@
+language: rust
+rust:
+ # Jemalloc prefixing change between these two versions
+ - nightly-2016-02-14
+ - nightly-2016-02-17
+
+ - nightly
+ - beta
+ - stable
+
+os:
+  - linux
+  - osx
+
+notifications:
+  webhooks: http://build.servo.org:54856/travis
+
+script:
+ - cargo test
+ - "[ $TRAVIS_RUST_VERSION != nightly ] || cargo test --features unstable"
+ - "[ $TRAVIS_RUST_VERSION != nightly ] || cargo test --manifest-path plugin/Cargo.toml"
+

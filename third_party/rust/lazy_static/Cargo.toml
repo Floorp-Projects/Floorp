@@ -1,0 +1,20 @@
+[package]
+name = "lazy_static"
+version = "0.2.2"
+authors = ["Marvin Löbel <loebel.marvin@gmail.com>"]
+license = "MIT"
+
+description = "A macro for declaring lazily evaluated statics in Rust."
+readme = "README.md"
+documentation = "http://rust-lang-nursery.github.io/lazy-static.rs/lazy_static/index.html"
+
+repository = "https://github.com/rust-lang-nursery/lazy-static.rs"
+keywords = ["macro", "lazy", "static"]
+
+[dependencies.spin]
+version = "0.4"
+optional = true
+
+[features]
+nightly = []
+spin_no_std = ["nightly", "spin"]

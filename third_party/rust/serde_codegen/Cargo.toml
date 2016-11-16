@@ -1,0 +1,30 @@
+[package]
+name = "serde_codegen"
+version = "0.8.17"
+authors = ["Erick Tryzelaar <erick.tryzelaar@gmail.com>"]
+license = "MIT/Apache-2.0"
+description = "Macros to auto-generate implementations for the serde framework"
+homepage = "https://serde.rs"
+repository = "https://github.com/serde-rs/serde"
+documentation = "https://serde.rs/codegen.html"
+keywords = ["serde", "serialization"]
+include = ["Cargo.toml", "src/**/*.rs"]
+
+[features]
+default = ["with-syntex"]
+unstable = []
+unstable-testing = ["clippy"]
+with-syntex = [
+    "syntex",
+    "syntex_syntax",
+]
+with-syn = []
+
+[dependencies]
+clippy = { version = "^0.*", optional = true }
+post-expansion = "0.1.0"
+quote = "0.3"
+serde_codegen_internals = { version = "=0.10.0", default-features = false, path = "../serde_codegen_internals" }
+syn = { version = "0.9", features = ["aster", "visit"] }
+syntex = { version = "^0.48.0", optional = true }
+syntex_syntax = { version = "^0.48.0", optional = true }

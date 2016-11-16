@@ -272,6 +272,8 @@ pub const CTL_P1003_1B_SIGQUEUE_MAX: ::c_int = 24;
 pub const CTL_P1003_1B_TIMER_MAX: ::c_int = 25;
 pub const CTL_P1003_1B_MAXID: ::c_int = 26;
 
+pub const MSG_NOSIGNAL: ::c_int = 0x20000;
+
 extern {
     pub fn __error() -> *mut ::c_int;
 

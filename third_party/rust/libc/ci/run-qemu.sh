@@ -19,10 +19,7 @@ export CARGO_TARGET_DIR=/tmp
 
 case $TARGET in
   *-openbsd)
-    pkg_add rust curl gcc-4.8.4p4
-    curl https://static.rust-lang.org/cargo-dist/2015-04-02/cargo-nightly-x86_64-unknown-openbsd.tar.gz | \
-      tar xzf - -C /tmp
-    export PATH=$PATH:/tmp/cargo-nightly-x86_64-unknown-openbsd/cargo/bin
+    pkg_add cargo gcc%4.9 rust
     export CC=egcc
     ;;
 

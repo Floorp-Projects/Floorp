@@ -1,0 +1,22 @@
+[package]
+name = "ipc-channel"
+version = "0.6.0"
+description = "A multiprocess drop-in replacement for Rust channels"
+authors = ["The Servo Project Developers"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/servo/ipc-channel"
+
+[features]
+force-inprocess = []
+unstable = []
+
+[dependencies]
+bincode = "0.6"
+lazy_static = "0.2"
+libc = "0.2.12"
+rand = "0.3"
+serde = "0.8"
+uuid = {version = "0.3", features = ["v4"]}
+
+[dev-dependencies]
+crossbeam = "0.2"

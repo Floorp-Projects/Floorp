@@ -29,14 +29,12 @@ s! {
     }
 
     pub struct glob_t {
-        pub gl_pathc: ::size_t,
-        __unused1: ::size_t,
-        pub gl_offs: ::size_t,
-        __unused2: ::c_int,
+        pub gl_pathc:  ::size_t,
+        pub gl_matchc: ::size_t,
+        pub gl_offs:   ::size_t,
+        pub gl_flags:  ::c_int,
         pub gl_pathv:  *mut *mut ::c_char,
-
         __unused3: *mut ::c_void,
-
         __unused4: *mut ::c_void,
         __unused5: *mut ::c_void,
         __unused6: *mut ::c_void,
@@ -469,6 +467,8 @@ pub const EMULTIHOP: ::c_int = 90;
 pub const ENOLINK: ::c_int = 91;
 pub const EPROTO: ::c_int = 92;
 
+pub const EAI_SYSTEM: ::c_int = 11;
+
 pub const F_DUPFD: ::c_int = 0;
 pub const F_GETFD: ::c_int = 1;
 pub const F_SETFD: ::c_int = 2;
@@ -862,6 +862,8 @@ extern {
     pub fn sethostname(name: *const ::c_char, len: ::c_int) -> ::c_int;
     pub fn sem_timedwait(sem: *mut sem_t,
                          abstime: *const ::timespec) -> ::c_int;
+    pub fn pthread_mutex_timedlock(lock: *mut pthread_mutex_t,
+                                   abstime: *const ::timespec) -> ::c_int;
 }
 
 cfg_if! {

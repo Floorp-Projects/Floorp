@@ -621,6 +621,8 @@ pub const EOWNERDEAD: ::c_int = 105;
 pub const EQFULL: ::c_int = 106;
 pub const ELAST: ::c_int = 106;
 
+pub const EAI_SYSTEM: ::c_int = 11;
+
 pub const F_DUPFD: ::c_int = 0;
 pub const F_DUPFD_CLOEXEC: ::c_int = 67;
 pub const F_GETFD: ::c_int = 1;

@@ -11,9 +11,10 @@ pub type ino64_t = u64;
 pub type off64_t = i64;
 pub type blkcnt64_t = i64;
 pub type rlim64_t = u64;
-pub type key_t = ::c_int;
 pub type shmatt_t = ::c_ulong;
 pub type mqd_t = ::c_int;
+pub type msgqnum_t = ::c_ulong;
+pub type msglen_t = ::c_ulong;
 pub type nfds_t = ::c_ulong;
 pub type nl_item = ::c_int;
 
@@ -117,6 +118,18 @@ s! {
         pub pw_shell: *mut ::c_char,
     }
 
+    pub struct spwd {
+        pub sp_namp: *mut ::c_char,
+        pub sp_pwdp: *mut ::c_char,
+        pub sp_lstchg: ::c_long,
+        pub sp_min: ::c_long,
+        pub sp_max: ::c_long,
+        pub sp_warn: ::c_long,
+        pub sp_inact: ::c_long,
+        pub sp_expire: ::c_long,
+        pub sp_flag: ::c_ulong,
+    }
+
     pub struct statvfs {
         pub f_bsize: ::c_ulong,
         pub f_frsize: ::c_ulong,
@@ -126,9 +139,12 @@ s! {
         pub f_files: ::fsfilcnt_t,
         pub f_ffree: ::fsfilcnt_t,
         pub f_favail: ::fsfilcnt_t,
+        #[cfg(target_endian = "little")]
         pub f_fsid: ::c_ulong,
         #[cfg(target_pointer_width = "32")]
-        pub __f_unused: ::c_int,
+        __f_unused: ::c_int,
+        #[cfg(target_endian = "big")]
+        pub f_fsid: ::c_ulong,
         pub f_flag: ::c_ulong,
         pub f_namemax: ::c_ulong,
         __f_spare: [::c_int; 6],
@@ -190,6 +206,17 @@ s! {
         pub if_name: *mut ::c_char,
     }
 
+    // System V IPC
+    pub struct msginfo {
+        pub msgpool: ::c_int,
+        pub msgmap: ::c_int,
+        pub msgmax: ::c_int,
+        pub msgmnb: ::c_int,
+        pub msgmni: ::c_int,
+        pub msgssz: ::c_int,
+        pub msgtql: ::c_int,
+        pub msgseg: ::c_ushort,
+    }
 }
 
 pub const ABDAY_1: ::nl_item = 0x20000;
@@ -221,6 +248,8 @@ pub const ABMON_10: ::nl_item = 0x20017;
 pub const ABMON_11: ::nl_item = 0x20018;
 pub const ABMON_12: ::nl_item = 0x20019;
 
+pub const CLONE_NEWCGROUP: ::c_int = 0x02000000;
+
 pub const MON_1: ::nl_item = 0x2001A;
 pub const MON_2: ::nl_item = 0x2001B;
 pub const MON_3: ::nl_item = 0x2001C;
@@ -251,6 +280,9 @@ pub const ERA_T_FMT: ::nl_item = 0x20031;
 pub const CODESET: ::nl_item = 14;
 
 pub const CRNCYSTR: ::nl_item = 0x4000F;
+
+pub const RUSAGE_THREAD: ::c_int = 1;
+pub const RUSAGE_CHILDREN: ::c_int = -1;
 
 pub const RADIXCHAR: ::nl_item = 0x10000;
 pub const THOUSEP: ::nl_item = 0x10001;
@@ -430,6 +462,9 @@ pub const SCHED_RR: ::c_int = 2;
 pub const SCHED_BATCH: ::c_int = 3;
 pub const SCHED_IDLE: ::c_int = 5;
 
+// System V IPC
+pub const IPC_PRIVATE: ::key_t = 0;
+
 pub const IPC_CREAT: ::c_int = 0o1000;
 pub const IPC_EXCL: ::c_int = 0o2000;
 pub const IPC_NOWAIT: ::c_int = 0o4000;
@@ -438,6 +473,12 @@ pub const IPC_RMID: ::c_int = 0;
 pub const IPC_SET: ::c_int = 1;
 pub const IPC_STAT: ::c_int = 2;
 pub const IPC_INFO: ::c_int = 3;
+pub const MSG_STAT: ::c_int = 11;
+pub const MSG_INFO: ::c_int = 12;
+
+pub const MSG_NOERROR: ::c_int = 0o10000;
+pub const MSG_EXCEPT: ::c_int = 0o20000;
+pub const MSG_COPY: ::c_int = 0o40000;
 
 pub const SHM_R: ::c_int = 0o400;
 pub const SHM_W: ::c_int = 0o200;
@@ -465,8 +506,6 @@ pub const EFD_SEMAPHORE: ::c_int = 0x1;
 
 pub const NCCS: usize = 32;
 
-pub const AF_NETLINK: ::c_int = 16;
-
 pub const LOG_NFACILITIES: ::c_int = 24;
 
 pub const SEM_FAILED: *mut ::sem_t = 0 as *mut sem_t;
@@ -482,6 +521,8 @@ pub const RB_KEXEC: ::c_int = 0x45584543u32 as i32;
 pub const SYNC_FILE_RANGE_WAIT_BEFORE: ::c_uint = 1;
 pub const SYNC_FILE_RANGE_WRITE: ::c_uint = 2;
 pub const SYNC_FILE_RANGE_WAIT_AFTER: ::c_uint = 4;
+
+pub const EAI_SYSTEM: ::c_int = -11;
 
 f! {
     pub fn CPU_ZERO(cpuset: &mut cpu_set_t) -> () {
@@ -520,8 +561,15 @@ extern {
 
     pub fn setpwent();
     pub fn getpwent() -> *mut passwd;
+    pub fn setspent();
+    pub fn endspent();
+    pub fn getspent() -> *mut spwd;
+    pub fn getspnam(__name: *const ::c_char) -> *mut spwd;
+
     pub fn shm_open(name: *const c_char, oflag: ::c_int,
                     mode: mode_t) -> ::c_int;
+
+    // System V IPC
     pub fn shmget(key: ::key_t, size: ::size_t, shmflg: ::c_int) -> ::c_int;
     pub fn shmat(shmid: ::c_int,
                  shmaddr: *const ::c_void,
@@ -530,6 +578,14 @@ extern {
     pub fn shmctl(shmid: ::c_int,
                   cmd: ::c_int,
                   buf: *mut ::shmid_ds) -> ::c_int;
+    pub fn ftok(pathname: *const ::c_char, proj_id: ::c_int) -> ::key_t;
+    pub fn msgctl(msqid: ::c_int, cmd: ::c_int, buf: *mut msqid_ds) -> ::c_int;
+    pub fn msgget(key: ::key_t, msgflg: ::c_int) -> ::c_int;
+    pub fn msgrcv(msqid: ::c_int, msgp: *mut ::c_void, msgsz: ::size_t,
+                  msgtyp: ::c_long, msgflg: ::c_int) -> ::ssize_t;
+    pub fn msgsnd(msqid: ::c_int, msgp: *const ::c_void, msgsz: ::size_t,
+                  msgflg: ::c_int) -> ::c_int;
+
     pub fn mprotect(addr: *mut ::c_void, len: ::size_t, prot: ::c_int)
                     -> ::c_int;
     pub fn __errno_location() -> *mut ::c_int;
@@ -666,6 +722,8 @@ extern {
     pub fn if_freenameindex(ptr: *mut if_nameindex);
     pub fn sync_file_range(fd: ::c_int, offset: ::off64_t,
                            nbytes: ::off64_t, flags: ::c_uint) -> ::c_int;
+    pub fn getifaddrs(ifap: *mut *mut ::ifaddrs) -> ::c_int;
+    pub fn freeifaddrs(ifa: *mut ::ifaddrs);
 }
 
 cfg_if! {
