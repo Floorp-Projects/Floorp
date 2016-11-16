@@ -156,6 +156,7 @@ typedef bool IsSigned;
 typedef bool ZeroOnOverflow;
 typedef bool IsKnownNotZero;
 typedef bool HandleNaNSpecially;
+typedef bool PopStack;
 typedef unsigned ByteSize;
 typedef unsigned BitSize;
 
@@ -1934,9 +1935,6 @@ class BaseCompiler
             freeLabel(last.label);
         if (last.otherLabel)
             freeLabel(last.otherLabel);
-
-        if (deadCode_ && !ctl_.empty())
-            popValueStackTo(ctl_.back().stackSize);
     }
 
     Control& controlItem(uint32_t relativeDepth) {
@@ -2477,8 +2475,9 @@ class BaseCompiler
         return rv;
     }
 
-    void returnCleanup() {
-        popStackBeforeBranch(ctl_[0].framePushed);
+    void returnCleanup(bool popStack) {
+        if (popStack)
+            popStackBeforeBranch(ctl_[0].framePushed);
         masm.jump(&returnLabel_);
     }
 
@@ -3646,12 +3645,12 @@ class BaseCompiler
                                                  Scalar::Type viewType,
                                                  LinearMemoryAddress<Nothing> addr);
 
-    void endBlock(ExprType type, bool isFunctionBody);
+    void endBlock(ExprType type);
     void endLoop(ExprType type);
     void endIfThen();
     void endIfThenElse(ExprType type);
 
-    void doReturn(ExprType returnType);
+    void doReturn(ExprType returnType, bool popStack);
     void pushReturned(const FunctionCall& call, ExprType type);
 
     void emitCompareI32(JSOp compareOp, MCompare::CompareType compareType);
@@ -4829,7 +4828,7 @@ BaseCompiler::emitBlock()
 }
 
 void
-BaseCompiler::endBlock(ExprType type, bool isFunctionBody)
+BaseCompiler::endBlock(ExprType type)
 {
     Control& block = controlItem(0);
 
@@ -4851,17 +4850,12 @@ BaseCompiler::endBlock(ExprType type, bool isFunctionBody)
         deadCode_ = false;
     }
 
-    MOZ_ASSERT(stk_.length() == block.stackSize);
+    popValueStackTo(block.stackSize);
+    popControl();
 
     // Retain the value stored in joinReg by all paths, if there are any.
-    if (!deadCode_) {
+    if (!deadCode_)
         pushJoinRegUnlessVoid(r);
-
-        if (isFunctionBody)
-            doReturn(func_.sig().ret());
-    }
-
-    popControl();
 }
 
 bool
@@ -4899,8 +4893,7 @@ BaseCompiler::endLoop(ExprType type)
 
     popStackOnBlockExit(block.framePushed);
 
-    MOZ_ASSERT(stk_.length() == block.stackSize);
-
+    popValueStackTo(block.stackSize);
     popControl();
 
     // Retain the value stored in joinReg by all paths.
@@ -4969,8 +4962,7 @@ BaseCompiler::endIfThen()
 
     deadCode_ = ifThen.deadOnArrival;
 
-    MOZ_ASSERT(stk_.length() == ifThen.stackSize);
-
+    popValueStackTo(ifThen.stackSize);
     popControl();
 }
 
@@ -5004,7 +4996,7 @@ BaseCompiler::emitElse()
 
     // Reset to the "else" branch.
 
-    MOZ_ASSERT(stk_.length() == ifThenElse.stackSize);
+    popValueStackTo(ifThenElse.stackSize);
 
     if (!deadCode_)
         freeJoinRegUnlessVoid(r);
@@ -5046,8 +5038,7 @@ BaseCompiler::endIfThenElse(ExprType type)
         deadCode_ = false;
     }
 
-    MOZ_ASSERT(stk_.length() == ifThenElse.stackSize);
-
+    popValueStackTo(ifThenElse.stackSize);
     popControl();
 
     if (!deadCode_)
@@ -5064,7 +5055,7 @@ BaseCompiler::emitEnd()
         return false;
 
     switch (kind) {
-      case LabelKind::Block: endBlock(type, iter_.controlStackEmpty()); break;
+      case LabelKind::Block: endBlock(type); break;
       case LabelKind::Loop:  endLoop(type); break;
       case LabelKind::UnreachableThen:
       case LabelKind::Then:  endIfThen(); break;
@@ -5102,8 +5093,6 @@ BaseCompiler::emitBr()
     freeJoinRegUnlessVoid(r);
 
     deadCode_ = true;
-
-    popValueStackTo(ctl_.back().stackSize);
 
     return true;
 }
@@ -5243,8 +5232,6 @@ BaseCompiler::emitBrTable()
     for (uint32_t i = 0; i < tableLength; i++)
         freeLabel(stubs[i]);
 
-    popValueStackTo(ctl_.back().stackSize);
-
     return true;
 }
 
@@ -5263,34 +5250,34 @@ BaseCompiler::emitDrop()
 }
 
 void
-BaseCompiler::doReturn(ExprType type)
+BaseCompiler::doReturn(ExprType type, bool popStack)
 {
     switch (type) {
       case ExprType::Void: {
-        returnCleanup();
+        returnCleanup(popStack);
         break;
       }
       case ExprType::I32: {
         RegI32 rv = popI32(RegI32(ReturnReg));
-        returnCleanup();
+        returnCleanup(popStack);
         freeI32(rv);
         break;
       }
       case ExprType::I64: {
         RegI64 rv = popI64(RegI64(ReturnReg64));
-        returnCleanup();
+        returnCleanup(popStack);
         freeI64(rv);
         break;
       }
       case ExprType::F64: {
         RegF64 rv = popF64(RegF64(ReturnDoubleReg));
-        returnCleanup();
+        returnCleanup(popStack);
         freeF64(rv);
         break;
       }
       case ExprType::F32: {
         RegF32 rv = popF32(RegF32(ReturnFloat32Reg));
-        returnCleanup();
+        returnCleanup(popStack);
         freeF32(rv);
         break;
       }
@@ -5310,10 +5297,8 @@ BaseCompiler::emitReturn()
     if (deadCode_)
         return true;
 
-    doReturn(func_.sig().ret());
+    doReturn(func_.sig().ret(), PopStack(true));
     deadCode_ = true;
-
-    popValueStackTo(ctl_.back().stackSize);
 
     return true;
 }
@@ -6534,7 +6519,6 @@ BaseCompiler::emitBody()
             if (!deadCode_) {
                 unreachableTrap();
                 deadCode_ = true;
-                popValueStackTo(ctl_.back().stackSize);
             }
             NEXT();
 
@@ -7130,11 +7114,15 @@ BaseCompiler::emitFunction()
     if (!functionEnd)
         return false;
 
+    // For the function's block; it will be popped by endBlock().
     if (!pushControl(&functionEnd))
         return false;
 
     if (!emitBody())
         return false;
+
+    if (!deadCode_)
+        doReturn(sig.ret(), PopStack(false));
 
     if (!iter_.readFunctionEnd())
         return false;
