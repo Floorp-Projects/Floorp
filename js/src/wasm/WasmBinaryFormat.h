@@ -668,11 +668,11 @@ DecodeElemSection(Decoder& d, const TableDescVector& tables, const GlobalDescVec
                   size_t numFuncs, ElemSegmentVector* elemSegments);
 
 MOZ_MUST_USE bool
-DecodeUnknownSections(Decoder& d);
-
-MOZ_MUST_USE bool
 DecodeDataSection(Decoder& d, bool usesMemory, uint32_t minMemoryByteLength,
                   const GlobalDescVector& globals, DataSegmentVector* segments);
+
+MOZ_MUST_USE bool
+DecodeUnknownSections(Decoder& d);
 
 } // namespace wasm
 } // namespace js

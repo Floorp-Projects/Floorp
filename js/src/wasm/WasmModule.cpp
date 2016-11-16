@@ -137,36 +137,6 @@ LinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            symbolicLinks.sizeOfExcludingThis(mallocSizeOf);
 }
 
-size_t
-Import::serializedSize() const
-{
-    return module.serializedSize() +
-           field.serializedSize();
-}
-
-uint8_t*
-Import::serialize(uint8_t* cursor) const
-{
-    cursor = module.serialize(cursor);
-    cursor = field.serialize(cursor);
-    return cursor;
-}
-
-const uint8_t*
-Import::deserialize(const uint8_t* cursor)
-{
-    (cursor = module.deserialize(cursor)) &&
-    (cursor = field.deserialize(cursor));
-    return cursor;
-}
-
-size_t
-Import::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
-{
-    return module.sizeOfExcludingThis(mallocSizeOf) +
-           field.sizeOfExcludingThis(mallocSizeOf);
-}
-
 /* virtual */ void
 Module::serializedSize(size_t* bytecodeSize, size_t* compiledSize) const
 {
