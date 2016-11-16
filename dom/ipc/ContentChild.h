@@ -372,6 +372,7 @@ public:
   virtual bool RecvSetOffline(const bool& offline) override;
 
   virtual bool RecvSetConnectivity(const bool& connectivity) override;
+  virtual bool RecvSetCaptivePortalState(const int32_t& state) override;
 
   virtual bool RecvNotifyLayerAllocated(const dom::TabId& aTabId, const uint64_t& aLayersId) override;
 
