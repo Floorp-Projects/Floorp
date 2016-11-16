@@ -133,8 +133,8 @@ function test()
     Services.telemetry.canRecordExtended = true;
     checkTelemetryRecords();
 
-    for (let test of gTests) {
-      info(test.desc);
+    for (let testCase of gTests) {
+      info(testCase.desc);
 
       // Create a tab to run the test.
       let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
@@ -145,7 +145,7 @@ function test()
       yield promiseTabLoadEvent(tab, url);
 
       info("Running test");
-      yield test.run();
+      yield testCase.run();
 
       info("Cleanup");
       gBrowser.removeCurrentTab();

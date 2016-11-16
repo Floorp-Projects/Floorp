@@ -435,13 +435,12 @@ WebContentConverterRegistrar.prototype = {
 
       callback(aNotification, aButtonInfo) {
           let protocol = aButtonInfo.protocolInfo.protocol;
-          let uri      = aButtonInfo.protocolInfo.uri;
           let name     = aButtonInfo.protocolInfo.name;
 
           let handler = Cc["@mozilla.org/uriloader/web-handler-app;1"].
                         createInstance(Ci.nsIWebHandlerApp);
           handler.name = name;
-          handler.uriTemplate = uri;
+          handler.uriTemplate = aButtonInfo.protocolInfo.uri;
 
           let eps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].
                     getService(Ci.nsIExternalProtocolService);

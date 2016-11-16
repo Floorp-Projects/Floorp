@@ -1815,7 +1815,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
 
             let types = item.getAttribute("type").split(/\s+/);
-            let type = types.find(type => type != "action" && type != "heuristic");
+            let type = types.find(t => t != "action" && t != "heuristic");
             try {
               // Some types intentionally do not map to strings, which is not
               // an error.
@@ -2663,9 +2663,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         if (this.getAttribute("active") != "true") {
           this.setAttribute("active", "true");
 
-          let event = document.createEvent("Events");
-          event.initEvent("DOMMenuItemActive", true, false);
-          this.dispatchEvent(event);
+          let menuItemActiveEvent = document.createEvent("Events");
+          menuItemActiveEvent.initEvent("DOMMenuItemActive", true, false);
+          this.dispatchEvent(menuItemActiveEvent);
 
           if (this.getAttribute("disabled") != "true") {
             let self = this;

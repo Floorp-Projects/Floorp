@@ -243,17 +243,14 @@ var tests = [
       is(icon.src, "", "Popup should have no icon");
       is(buttons.hasChildNodes(), false, "Popup should have no buttons");
 
-      popup.addEventListener("popuphidden", function onPopupHidden() {
-        popup.removeEventListener("popuphidden", onPopupHidden);
-
-        popup.addEventListener("popupshown", function onPopupShown() {
-          popup.removeEventListener("popupshown", onPopupShown);
+      popup.addEventListener("popuphidden", function() {
+        popup.addEventListener("popupshown", function() {
           done();
-        });
+        }, {once: true});
 
         gContentAPI.showInfo("urlbar", "test title", "test text");
 
-      });
+      }, {once: true});
       gContentAPI.hideInfo();
     });
 
@@ -300,9 +297,9 @@ var tests = [
       let defaults = Services.prefs.getDefaultBranch("distribution.");
       let testDistributionID = "TestDistribution";
       defaults.setCharPref("id", testDistributionID);
-      gContentAPI.getConfiguration("appinfo", (result) => {
-        ok(typeof(result.distribution) !== "undefined", "Check distribution isn't undefined.");
-        is(result.distribution, testDistributionID, "Should have the distribution as set in preference.");
+      gContentAPI.getConfiguration("appinfo", (result2) => {
+        ok(typeof(result2.distribution) !== "undefined", "Check distribution isn't undefined.");
+        is(result2.distribution, testDistributionID, "Should have the distribution as set in preference.");
 
         done();
       });
@@ -319,12 +316,12 @@ var tests = [
       gContentAPI.addNavBarWidget("forget", () => {
         info("addNavBarWidget callback successfully called");
 
-        let placement = CustomizableUI.getPlacementOfWidget("panic-button");
-        is(placement.area, CustomizableUI.AREA_NAVBAR);
+        let updatedPlacement = CustomizableUI.getPlacementOfWidget("panic-button");
+        is(updatedPlacement.area, CustomizableUI.AREA_NAVBAR);
 
-        gContentAPI.getConfiguration("availableTargets", (data) => {
-          let available = (data.targets.indexOf("forget") != -1);
-          ok(available, "Forget button should now be available");
+        gContentAPI.getConfiguration("availableTargets", (data2) => {
+          let updatedAvailable = data2.targets.indexOf("forget") != -1;
+          ok(updatedAvailable, "Forget button should now be available");
 
           // Cleanup
           CustomizableUI.removeWidgetFromArea("panic-button");
