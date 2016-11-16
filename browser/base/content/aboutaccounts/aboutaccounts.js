@@ -29,6 +29,10 @@ function log(msg) {
   // dump("FXA: " + msg + "\n");
 }
 
+function error(msg) {
+  console.log("Firefox Account Error: " + msg + "\n");
+}
+
 function getPreviousAccountNameHash() {
   try {
     return Services.prefs.getComplexValue(PREF_LAST_FXA_USER, Ci.nsISupportsString).data;

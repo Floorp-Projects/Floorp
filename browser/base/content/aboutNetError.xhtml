@@ -259,7 +259,7 @@
 
         if (err == "sslv3Used") {
           document.getElementById("learnMoreContainer").style.display = "block";
-          let learnMoreLink = document.getElementById("learnMoreLink");
+          var learnMoreLink = document.getElementById("learnMoreLink");
           learnMoreLink.href = "https://support.mozilla.org/kb/how-resolve-sslv3-error-messages-firefox";
           document.body.className = "certerror";
         }
@@ -305,7 +305,7 @@
         // Pinning errors are of type nssFailure2
           if (getErrorCode() == "nssFailure2" || getErrorCode() == "weakCryptoUsed") {
             document.getElementById("learnMoreContainer").style.display = "block";
-            let learnMoreLink = document.getElementById("learnMoreLink");
+            var learnMoreLink = document.getElementById("learnMoreLink");
             // nssFailure2 also gets us other non-overrideable errors. Choose
             // a "learn more" link based on description:
             if (getDescription().includes("mozilla_pkix_error_key_pinning_failure")) {
@@ -324,10 +324,9 @@
                 checkbox.checked = true;
               }
 
-              checkbox.addEventListener("change", function(changeEvt) {
+              checkbox.addEventListener("change", function(evt) {
                   var event = new CustomEvent("AboutNetErrorSetAutomatic",
-                    {bubbles: true,
-                     detail: changeEvt.target.checked});
+                    {bubbles:true, detail:evt.target.checked});
                   document.dispatchEvent(event);
                 }, false);
             }

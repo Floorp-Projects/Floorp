@@ -1147,8 +1147,8 @@ var PageInfoListener = {
     // multiple background images.
     let mediaItems = [];
 
-    let addImage = (url, type, alt, el, isBg) => {
-      let element = this.serializeElementInfo(document, url, type, alt, el, isBg);
+    let addImage = (url, type, alt, elem, isBg) => {
+      let element = this.serializeElementInfo(document, url, type, alt, elem, isBg);
       mediaItems.push([url, type, alt, element, isBg]);
     };
 

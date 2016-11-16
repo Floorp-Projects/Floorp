@@ -7,13 +7,8 @@ registerCleanupFunction(function() {
 });
 
 function promiseReloadFrame(aFrameId) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, function*(contentFrameId) {
-    content.wrappedJSObject
-           .document
-           .getElementById(contentFrameId)
-           .contentWindow
-           .location
-           .reload();
+  return ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, function*(aFrameId) {
+    content.wrappedJSObject.document.getElementById(aFrameId).contentWindow.location.reload();
   });
 }
 
@@ -250,9 +245,9 @@ function test() {
     Task.spawn(function* () {
       yield SpecialPowers.pushPrefEnv({"set": [[PREF_PERMISSION_FAKE, true]]});
 
-      for (let testCase of gTests) {
-        info(testCase.desc);
-        yield testCase.run();
+      for (let test of gTests) {
+        info(test.desc);
+        yield test.run();
 
         // Cleanup before the next test
         yield expectNoObserverCalled();

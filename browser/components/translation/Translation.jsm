@@ -188,9 +188,9 @@ TranslationUI.prototype = {
 
       if (aTopic != "showing")
         return false;
-      let translationNotification = this.notificationBox.getNotificationWithValue("translation");
-      if (translationNotification)
-        translationNotification.close();
+      let notification = this.notificationBox.getNotificationWithValue("translation");
+      if (notification)
+        notification.close();
       else
         this.showTranslationInfoBar();
       return true;

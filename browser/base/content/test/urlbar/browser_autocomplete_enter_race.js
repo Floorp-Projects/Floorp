@@ -75,9 +75,9 @@ add_task(function* test_disabled_ac() {
     Preferences.set("browser.urlbar.suggest.openpage", suggestOpenPages);
 
     Services.search.currentEngine = originalEngine;
-    let mozSearchEngine = Services.search.getEngineByName("MozSearch");
-    if (mozSearchEngine) {
-      Services.search.removeEngine(mozSearchEngine);
+    let engine = Services.search.getEngineByName("MozSearch");
+    if (engine) {
+      Services.search.removeEngine(engine);
     }
   }
   registerCleanupFunction(cleanup);

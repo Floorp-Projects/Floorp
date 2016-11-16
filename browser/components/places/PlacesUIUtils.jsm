@@ -1210,12 +1210,12 @@ this.PlacesUIUtils = {
       delete this.leftPaneQueries;
       this.leftPaneQueries = {};
 
-      let queryItems = as.getItemsWithAnnotation(this.ORGANIZER_QUERY_ANNO);
+      let items = as.getItemsWithAnnotation(this.ORGANIZER_QUERY_ANNO);
       // While looping through queries we will also check for their validity.
       let queriesCount = 0;
       let corrupt = false;
-      for (let i = 0; i < queryItems.length; i++) {
-        let queryName = as.getItemAnnotation(queryItems[i], this.ORGANIZER_QUERY_ANNO);
+      for (let i = 0; i < items.length; i++) {
+        let queryName = as.getItemAnnotation(items[i], this.ORGANIZER_QUERY_ANNO);
 
         // Some extension did use our annotation to decorate their items
         // with icons, so we should check only our elements, to avoid dataloss.
@@ -1223,7 +1223,7 @@ this.PlacesUIUtils = {
           continue;
 
         let query = queries[queryName];
-        query.itemId = queryItems[i];
+        query.itemId = items[i];
 
         if (!itemExists(query.itemId)) {
           // Orphan annotation, bail out and create a new left pane root.
@@ -1233,7 +1233,7 @@ this.PlacesUIUtils = {
 
         // Check that all queries have valid parents.
         let parentId = bs.getFolderIdForItem(query.itemId);
-        if (!queryItems.includes(parentId) && parentId != leftPaneRoot) {
+        if (!items.includes(parentId) && parentId != leftPaneRoot) {
           // The parent is not part of the left pane, bail out and create a new
           // left pane root.
           corrupt = true;
@@ -1262,7 +1262,7 @@ this.PlacesUIUtils = {
         // Queries number is wrong, so the left pane must be corrupt.
         // Note: we can't just remove the leftPaneRoot, because some query could
         // have a bad parent, so we have to remove all items one by one.
-        queryItems.forEach(safeRemoveItem);
+        items.forEach(safeRemoveItem);
         safeRemoveItem(leftPaneRoot);
       }
       else {

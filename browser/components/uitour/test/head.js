@@ -33,8 +33,8 @@ function waitForConditionPromise(condition, timeoutMsg, tryCount=NUMBER_OF_TRIES
   return defer.promise;
 }
 
-function waitForCondition(condition, nextTestFn, errorMsg) {
-  waitForConditionPromise(condition, errorMsg).then(nextTestFn, (reason) => {
+function waitForCondition(condition, nextTest, errorMsg) {
+  waitForConditionPromise(condition, errorMsg).then(nextTest, (reason) => {
     ok(false, reason + (reason.stack ? "\n" + reason.stack : ""));
   });
 }
@@ -43,12 +43,12 @@ function waitForCondition(condition, nextTestFn, errorMsg) {
  * Wrapper to partially transition tests to Task. Use `add_UITour_task` instead for new tests.
  */
 function taskify(fun) {
-  return (doneFn) => {
+  return (done) => {
     // Output the inner function name otherwise no name will be output.
     info("\t" + fun.name);
-    return Task.spawn(fun).then(doneFn, (reason) => {
+    return Task.spawn(fun).then(done, (reason) => {
       ok(false, reason);
-      doneFn();
+      done();
     });
   };
 }
@@ -90,20 +90,20 @@ function is_element_visible(element, msg) {
   ok(is_visible(element), msg);
 }
 
-function waitForElementToBeVisible(element, nextTestFn, msg) {
+function waitForElementToBeVisible(element, nextTest, msg) {
   waitForCondition(() => is_visible(element),
                    () => {
                      ok(true, msg);
-                     nextTestFn();
+                     nextTest();
                    },
                    "Timeout waiting for visibility: " + msg);
 }
 
-function waitForElementToBeHidden(element, nextTestFn, msg) {
+function waitForElementToBeHidden(element, nextTest, msg) {
   waitForCondition(() => is_hidden(element),
                    () => {
                      ok(true, msg);
-                     nextTestFn();
+                     nextTest();
                    },
                    "Timeout waiting for invisibility: " + msg);
 }
@@ -116,21 +116,21 @@ function elementHiddenPromise(element, msg) {
   return waitForConditionPromise(() => is_hidden(element), "Timeout waiting for invisibility: " + msg);
 }
 
-function waitForPopupAtAnchor(popup, anchorNode, nextTestFn, msg) {
+function waitForPopupAtAnchor(popup, anchorNode, nextTest, msg) {
   waitForCondition(() => is_visible(popup) && popup.popupBoxObject.anchorNode == anchorNode,
                    () => {
                      ok(true, msg);
                      is_element_visible(popup, "Popup should be visible");
-                     nextTestFn();
+                     nextTest();
                    },
                    "Timeout waiting for popup at anchor: " + msg);
 }
 
 function getConfigurationPromise(configName) {
-  return ContentTask.spawn(gTestTab.linkedBrowser, configName, contentConfigName => {
+  return ContentTask.spawn(gTestTab.linkedBrowser, configName, configName => {
     return new Promise((resolve) => {
       let contentWin = Components.utils.waiveXrays(content);
-      contentWin.Mozilla.UITour.getConfiguration(contentConfigName, resolve);
+      contentWin.Mozilla.UITour.getConfiguration(configName, resolve);
     });
   });
 }
@@ -151,15 +151,10 @@ function showInfoPromise(target, title, text, icon, buttonsFunctionName, options
   let shownPromise = promisePanelElementShown(window, popup);
   return ContentTask.spawn(gTestTab.linkedBrowser, [...arguments], args => {
     let contentWin = Components.utils.waiveXrays(content);
-    let [contentTarget,
-         contentTitle,
-         contentText,
-         contentIcon,
-         contentButtonsFunctionName,
-         contentOptionsFunctionName] = args;
-    let buttons = contentButtonsFunctionName ? contentWin[contentButtonsFunctionName]() : null;
-    let options = contentOptionsFunctionName ? contentWin[contentOptionsFunctionName]() : null;
-    contentWin.Mozilla.UITour.showInfo(contentTarget, contentTitle, contentText, contentIcon, buttons, options);
+    let [target, title, text, icon, buttonsFunctionName, optionsFunctionName] = args;
+    let buttons = buttonsFunctionName ? contentWin[buttonsFunctionName]() : null;
+    let options = optionsFunctionName ? contentWin[optionsFunctionName]() : null;
+    contentWin.Mozilla.UITour.showInfo(target, title, text, icon, buttons, options);
   }).then(() => shownPromise);
 }
 
@@ -170,10 +165,10 @@ function showHighlightPromise(...args) {
 }
 
 function showMenuPromise(name) {
-  return ContentTask.spawn(gTestTab.linkedBrowser, name, contentName => {
+  return ContentTask.spawn(gTestTab.linkedBrowser, name, name => {
     return new Promise((resolve) => {
       let contentWin = Components.utils.waiveXrays(content);
-      contentWin.Mozilla.UITour.showMenu(contentName, resolve);
+      contentWin.Mozilla.UITour.showMenu(name, resolve);
     });
   });
 }
@@ -266,9 +261,9 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
               methodName: prop,
               args,
             };
-            return ContentTask.spawn(gTestTab.linkedBrowser, taskArgs, contentArgs => {
+            return ContentTask.spawn(gTestTab.linkedBrowser, taskArgs, args => {
               let contentWin = Components.utils.waiveXrays(content);
-              return contentWin[contentArgs.methodName].apply(contentWin, contentArgs.args);
+              return contentWin[args.methodName].apply(contentWin, args.args);
             });
           };
         },
@@ -309,26 +304,26 @@ function loadUITourTestPage(callback, host = "https://example.org/") {
               args,
               fnIndices,
             };
-            return ContentTask.spawn(browser, taskArgs, function*(contentArgs) {
+            return ContentTask.spawn(browser, taskArgs, function*(args) {
               let contentWin = Components.utils.waiveXrays(content);
               let callbacksCalled = 0;
               let resolveCallbackPromise;
               let allCallbacksCalledPromise = new Promise(resolve => resolveCallbackPromise = resolve);
-              let argumentsWithFunctions = contentArgs.args.map((arg, index) => {
-                if (arg === "" && contentArgs.fnIndices.includes(index)) {
+              let argumentsWithFunctions = args.args.map((arg, index) => {
+                if (arg === "" && args.fnIndices.includes(index)) {
                   return function() {
                     callbacksCalled++;
                     sendAsyncMessage("UITourHandler:proxiedfunction-" + index, Array.from(arguments));
-                    if (callbacksCalled >= contentArgs.fnIndices.length) {
+                    if (callbacksCalled >= args.fnIndices.length) {
                       resolveCallbackPromise();
                     }
                   };
                 }
                 return arg;
               });
-              let rv = contentWin.Mozilla.UITour[contentArgs.methodName].apply(contentWin.Mozilla.UITour,
+              let rv = contentWin.Mozilla.UITour[args.methodName].apply(contentWin.Mozilla.UITour,
                                                                         argumentsWithFunctions);
-              if (contentArgs.fnIndices.length) {
+              if (args.fnIndices.length) {
                 yield allCallbacksCalledPromise;
               }
               return rv;

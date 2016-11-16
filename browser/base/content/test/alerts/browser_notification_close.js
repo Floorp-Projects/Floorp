@@ -16,11 +16,10 @@ add_task(function* test_notificationClose() {
 
   yield PlacesTestUtils.addVisits(notificationURI);
   let faviconURI = yield new Promise(resolve => {
-    let uri =
-      makeURI("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC");
-    PlacesUtils.favicons.setAndFetchFaviconForPage(notificationURI, uri,
+    let faviconURI = makeURI("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC");
+    PlacesUtils.favicons.setAndFetchFaviconForPage(notificationURI, faviconURI,
       true, PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-      (uriResult) => resolve(uriResult),
+      (faviconURI, iconSize, iconData, mimeType) => resolve(faviconURI),
       Services.scriptSecurityManager.getSystemPrincipal());
   });
 

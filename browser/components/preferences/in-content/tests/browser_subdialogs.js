@@ -15,16 +15,17 @@ function* open_subdialog_and_test_generic_start_state(browser, domcontentloadedF
     "(" + domcontentloadedFn.toString() + ")()" :
     "";
   return ContentTask.spawn(browser, {url, domcontentloadedFnStr}, function*(args) {
+    let {url, domcontentloadedFnStr} = args;
     let rv = { acceptCount: 0 };
     let win = content.window;
     let subdialog = win.gSubDialog;
-    subdialog.open(args.url, null, rv);
+    subdialog.open(url, null, rv);
 
     info("waiting for subdialog DOMFrameContentLoaded");
     yield ContentTaskUtils.waitForEvent(win, "DOMFrameContentLoaded", true);
     let result;
-    if (args.domcontentloadedFnStr) {
-      result = eval(args.domcontentloadedFnStr);
+    if (domcontentloadedFnStr) {
+      result = eval(domcontentloadedFnStr);
     }
 
     info("waiting for subdialog load");
@@ -58,7 +59,7 @@ function* close_subdialog_and_test_generic_end_state(browser, closingFn, closing
     info("waiting for dialogclosing");
     let closingEvent =
       yield ContentTaskUtils.waitForEvent(frame.contentWindow, "dialogclosing");
-    let contentClosingButton = closingEvent.detail.button;
+    let closingButton = closingEvent.detail.button;
     let actualAcceptCount = frame.contentWindow.arguments &&
                             frame.contentWindow.arguments[0].acceptCount;
 
@@ -70,7 +71,7 @@ function* close_subdialog_and_test_generic_end_state(browser, closingFn, closing
     Assert.equal(frame.getAttribute("style"), "", "inline styles should be cleared");
     Assert.equal(frame.contentWindow.location.href.toString(), "about:blank",
       "sub-dialog should be unloaded");
-    Assert.equal(contentClosingButton, expectations.closingButton,
+    Assert.equal(closingButton, expectations.closingButton,
       "closing event should indicate button was '" + expectations.closingButton + "'");
     Assert.equal(actualAcceptCount, expectations.acceptCount,
       "should be 1 if accepted, 0 if canceled, undefined if closed w/out button");
@@ -216,7 +217,7 @@ add_task(function* wrapped_text_in_dialog_should_have_expected_scrollHeight() {
   let oldHeight = yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser, function domcontentloadedFn() {
     let frame = content.window.gSubDialog._frame;
     let doc = frame.contentDocument;
-    let scrollHeight = doc.documentElement.scrollHeight;
+    let oldHeight = doc.documentElement.scrollHeight;
     doc.documentElement.style.removeProperty("height");
     doc.getElementById("desc").textContent = `
       Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque
@@ -230,16 +231,16 @@ add_task(function* wrapped_text_in_dialog_should_have_expected_scrollHeight() {
       architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas
       sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione
       voluptatem sequi nesciunt.`
-    return scrollHeight;
+    return oldHeight;
   });
 
-  yield ContentTask.spawn(tab.linkedBrowser, oldHeight, function*(contentOldHeight) {
+  yield ContentTask.spawn(tab.linkedBrowser, oldHeight, function*(oldHeight) {
     let frame = content.window.gSubDialog._frame;
     let docEl = frame.contentDocument.documentElement;
     Assert.equal(frame.style.width, "32em",
       "Width should be set on the frame from the dialog");
-    Assert.ok(docEl.scrollHeight > contentOldHeight,
-      "Content height increased (from " + contentOldHeight + " to " + docEl.scrollHeight + ").");
+    Assert.ok(docEl.scrollHeight > oldHeight,
+      "Content height increased (from " + oldHeight + " to " + docEl.scrollHeight + ").");
     Assert.equal(frame.style.height, docEl.scrollHeight + "px",
       "Height on the frame should be higher now");
   });

@@ -292,10 +292,10 @@ var testRunner = {
 
               os.removeObserver(permObserver, "perm-changed");
 
-              let testCase = testRunner.tests[testRunner._currentTest];
-              if (!testCase.expectPermObservancesDuringTestFunction) {
-                if (testCase.cleanUp) {
-                  testCase.cleanUp(params);
+              let test = testRunner.tests[testRunner._currentTest];
+              if (!test.expectPermObservancesDuringTestFunction) {
+                if (test.cleanUp) {
+                  test.cleanUp(params);
                 }
 
                 gBrowser.removeCurrentTab();
@@ -314,11 +314,11 @@ var testRunner = {
           }
 
           try {
-            let testCase = testRunner.tests[testRunner._currentTest];
-            testCase.test(params);
-            if (testCase.expectPermObservancesDuringTestFunction) {
-              if (testCase.cleanUp) {
-                testCase.cleanUp(params);
+            let test = testRunner.tests[testRunner._currentTest];
+            test.test(params);
+            if (test.expectPermObservancesDuringTestFunction) {
+              if (test.cleanUp) {
+                test.cleanUp(params);
               }
 
               gBrowser.removeCurrentTab();

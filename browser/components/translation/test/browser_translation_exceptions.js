@@ -25,9 +25,9 @@ function test() {
   tab.linkedBrowser.addEventListener("load", function onload() {
     tab.linkedBrowser.removeEventListener("load", onload, true);
     Task.spawn(function* () {
-      for (let testCase of gTests) {
-        info(testCase.desc);
-        yield testCase.run();
+      for (let test of gTests) {
+        info(test.desc);
+        yield test.run();
       }
     }).then(finish, ex => {
      ok(false, "Unexpected Exception: " + ex);

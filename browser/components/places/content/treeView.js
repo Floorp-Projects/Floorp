@@ -713,7 +713,7 @@ PlacesTreeView.prototype = {
 
     // Redraw the parent if its twisty state has changed.
     if (aParentNode != this._rootNode && !aParentNode.hasChildren) {
-      parentRow = oldRow - 1;
+      let parentRow = oldRow - 1;
       this._tree.invalidateRow(parentRow);
     }
 
@@ -1184,8 +1184,8 @@ PlacesTreeView.prototype = {
             PlacesUtils.livemarks.getLivemark({ id: node.itemId })
               .then(aLivemark => {
                 this._controller.cacheLivemarkInfo(node, aLivemark);
-                let livemarkProps = this._cellProperties.get(node);
-                this._cellProperties.set(node, livemarkProps += " livemark");
+                let props = this._cellProperties.get(node);
+                this._cellProperties.set(node, props += " livemark");
                 // The livemark attribute is set as a cell property on the title cell.
                 this._invalidateCellValue(node, this.COLUMN_TYPE_TITLE);
               }, () => undefined);

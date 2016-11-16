@@ -725,9 +725,9 @@ function saveMedia()
   var tree = document.getElementById("imagetree");
   var rowArray = getSelectedRows(tree);
   if (rowArray.length == 1) {
-    let row = rowArray[0];
-    let item = gImageView.data[row][COL_IMAGE_NODE];
-    let url = gImageView.data[row][COL_IMAGE_ADDRESS];
+    var row = rowArray[0];
+    var item = gImageView.data[row][COL_IMAGE_NODE];
+    var url = gImageView.data[row][COL_IMAGE_ADDRESS];
 
     if (url) {
       var titleKey = "SaveImageTitle";
@@ -750,11 +750,11 @@ function saveMedia()
         };
 
         for (var i = 0; i < rowArray.length; i++) {
-          let v = rowArray[i];
-          let dir = aDirectory.clone();
-          let item = gImageView.data[v][COL_IMAGE_NODE];
-          let uriString = gImageView.data[v][COL_IMAGE_ADDRESS];
-          let uri = makeURI(uriString);
+          var v = rowArray[i];
+          var dir = aDirectory.clone();
+          var item = gImageView.data[v][COL_IMAGE_NODE];
+          var uriString = gImageView.data[v][COL_IMAGE_ADDRESS];
+          var uri = makeURI(uriString);
 
           try {
             uri.QueryInterface(Components.interfaces.nsIURL);
