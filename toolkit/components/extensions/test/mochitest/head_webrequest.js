@@ -159,10 +159,8 @@ function background(events) {
       if (expectedEvent) {
         expected.events.shift();
       } else {
-        expectedEvent = expected.optional_events[0] == name;
-        if (expectedEvent) {
-          expected.optional_events.shift();
-        }
+        // e10s vs. non-e10s errors can end with either onCompleted or onErrorOccurred
+        expectedEvent = expected.optional_events.includes(name);
       }
       browser.test.assertTrue(expectedEvent, `received ${name}`);
       browser.test.assertEq(expected.type, details.type, "resource type is correct");
@@ -177,8 +175,7 @@ function background(events) {
           browser.test.assertEq("string", typeof expected.test.requestId, `requestid ${expected.test.requestId} is string`);
           browser.test.assertEq("string", typeof details.requestId, `requestid ${details.requestId} is string`);
           browser.test.assertEq("number", typeof parseInt(details.requestId, 10), "parsed requestid is number");
-          browser.test.assertNotEq(expected.test.requestId, details.requestId,
-                                  `last requestId ${expected.test.requestId} different from this one ${details.requestId}`);
+          browser.test.assertEq(expected.test.requestId, details.requestId, "redirects will keep the same requestId");
         } else {
           // Save any values we want to validate in later events.
           expected.test.requestId = details.requestId;

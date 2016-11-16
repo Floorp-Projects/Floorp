@@ -1,0 +1,181 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <script type="text/javascript" src="head_webrequest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+let windowData, testWindow;
+
+add_task(function* setup() {
+  testWindow = window.open("about:blank", "_blank", "width=100,height=100");
+  yield waitForLoad(testWindow);
+
+  // Fetch the windowId and tabId we need to filter with WebRequest.
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "tabs",
+      ],
+    },
+    background() {
+      browser.windows.getCurrent({populate: true}).then(window => {
+        browser.test.log(`current window ${window.id} tabs: ${JSON.stringify(window.tabs.map(tab => [tab.id, tab.url]))}`);
+        browser.test.sendMessage("windowData", {windowId: window.id, tabId: window.tabs[0].id});
+      });
+    },
+  });
+  yield extension.startup();
+  windowData = yield extension.awaitMessage("windowData");
+  info(`window is ${JSON.stringify(windowData)}`);
+  yield extension.unload();
+});
+
+add_task(function* test_webRequest_filter_window() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.serviceWorkers.testing.enabled", true]],
+  });
+
+  let events = {
+    "onBeforeRequest":     [{urls: ["<all_urls>"], windowId: windowData.windowId}],
+    "onBeforeSendHeaders": [{urls: ["<all_urls>"], windowId: windowData.windowId}, ["requestHeaders"]],
+    "onSendHeaders":       [{urls: ["<all_urls>"], windowId: windowData.windowId}, ["requestHeaders"]],
+    "onBeforeRedirect":    [{urls: ["<all_urls>"], windowId: windowData.windowId}],
+    "onHeadersReceived":   [{urls: ["<all_urls>"], windowId: windowData.windowId}, ["responseHeaders"]],
+    "onResponseStarted":   [{urls: ["<all_urls>"], windowId: windowData.windowId}],
+    "onCompleted":         [{urls: ["<all_urls>"], windowId: windowData.windowId}, ["responseHeaders"]],
+    "onErrorOccurred":     [{urls: ["<all_urls>"], windowId: windowData.windowId}],
+  };
+  let expect = {
+    "file_image_bad.png": {
+      optional_events: ["onBeforeRedirect", "onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders"],
+      type: "main_frame",
+    },
+  };
+
+  let extension = makeExtension(events);
+  yield extension.startup();
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  yield extension.awaitMessage("continue");
+
+  // We should not get events for a new window load.
+  let newWindow = window.open("file_image_good.png", "_blank", "width=100,height=100");
+  yield waitForLoad(newWindow);
+  newWindow.close();
+
+  // We should not get background events.
+  let registration = yield navigator.serviceWorker.register("webrequest_worker.js?test0", {scope: "."});
+
+  // We should get events for the reload.
+  testWindow.location = "file_image_bad.png";
+  yield extension.awaitMessage("done");
+
+  yield registration.unregister();
+  yield extension.unload();
+});
+
+add_task(function* test_webRequest_filter_tab() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.serviceWorkers.testing.enabled", true]],
+  });
+
+  let events = {
+    "onBeforeRequest":     [{urls: ["<all_urls>"], tabId: windowData.tabId}],
+    "onBeforeSendHeaders": [{urls: ["<all_urls>"], tabId: windowData.tabId}, ["requestHeaders"]],
+    "onSendHeaders":       [{urls: ["<all_urls>"], tabId: windowData.tabId}, ["requestHeaders"]],
+    "onBeforeRedirect":    [{urls: ["<all_urls>"], tabId: windowData.tabId}],
+    "onHeadersReceived":   [{urls: ["<all_urls>"], tabId: windowData.tabId}, ["responseHeaders"]],
+    "onResponseStarted":   [{urls: ["<all_urls>"], tabId: windowData.tabId}],
+    "onCompleted":         [{urls: ["<all_urls>"], tabId: windowData.tabId}, ["responseHeaders"]],
+    "onErrorOccurred":     [{urls: ["<all_urls>"], tabId: windowData.tabId}],
+  };
+  let expect = {
+    "file_image_good.png": {
+      optional_events: ["onBeforeRedirect", "onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders"],
+      type: "main_frame",
+      cached: true,
+    },
+  };
+
+  let extension = makeExtension(events);
+  yield extension.startup();
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  yield extension.awaitMessage("continue");
+
+  // We should not get events for a new window load.
+  let newWindow = window.open("file_image_good.png", "_blank", "width=100,height=100");
+  yield waitForLoad(newWindow);
+  newWindow.close();
+
+  // We should not get background events.
+  let registration = yield navigator.serviceWorker.register("webrequest_worker.js?test1", {scope: "."});
+
+  // We should get events for the reload.
+  testWindow.location = "file_image_good.png";
+  yield extension.awaitMessage("done");
+
+  yield registration.unregister();
+  yield extension.unload();
+});
+
+
+add_task(function* test_webRequest_filter_background() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.serviceWorkers.testing.enabled", true]],
+  });
+
+  let events = {
+    "onBeforeRequest":     [{urls: ["<all_urls>"], tabId: -1}],
+    "onBeforeSendHeaders": [{urls: ["<all_urls>"], tabId: -1}, ["requestHeaders"]],
+    "onSendHeaders":       [{urls: ["<all_urls>"], tabId: -1}, ["requestHeaders"]],
+    "onBeforeRedirect":    [{urls: ["<all_urls>"], tabId: -1}],
+    "onHeadersReceived":   [{urls: ["<all_urls>"], tabId: -1}, ["responseHeaders"]],
+    "onResponseStarted":   [{urls: ["<all_urls>"], tabId: -1}],
+    "onCompleted":         [{urls: ["<all_urls>"], tabId: -1}, ["responseHeaders"]],
+    "onErrorOccurred":     [{urls: ["<all_urls>"], tabId: -1}],
+  };
+  let expect = {
+    "webrequest_worker.js": {
+      type: "script",
+    },
+    "example.txt": {
+      status: 404,
+      events: ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived", "onResponseStarted"],
+      optional_events: ["onCompleted", "onErrorOccurred"],
+      type: "other",
+      origin: SimpleTest.getTestFileURL("webrequest_worker.js?test2"),
+    },
+  };
+
+  let extension = makeExtension(events);
+  yield extension.startup();
+  extension.sendMessage("set-expected", {expect, origin: location.href});
+  yield extension.awaitMessage("continue");
+
+  // We should not get events for a window.
+  testWindow.location = "file_image_bad.png";
+
+  // We should get events for the background page.
+  let registration = yield navigator.serviceWorker.register(SimpleTest.getTestFileURL("webrequest_worker.js?test2"), {scope: "."});
+  yield extension.awaitMessage("done");
+  yield registration.unregister();
+
+  yield extension.unload();
+});
+
+add_task(function* teardown() {
+  testWindow.close();
+});
+</script>
+</head>
+<body>
+
+</body>
+</html>
