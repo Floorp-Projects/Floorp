@@ -22,12 +22,14 @@ class RemoteDataDecoder : public MediaDataDecoder {
 public:
   static MediaDataDecoder* CreateAudioDecoder(const AudioInfo& aConfig,
                                               java::sdk::MediaFormat::Param aFormat,
-                                              MediaDataDecoderCallback* aCallback);
+                                              MediaDataDecoderCallback* aCallback,
+                                              const nsString& aDrmStubId);
 
   static MediaDataDecoder* CreateVideoDecoder(const VideoInfo& aConfig,
                                               java::sdk::MediaFormat::Param aFormat,
                                               MediaDataDecoderCallback* aCallback,
-                                              layers::ImageContainer* aImageContainer);
+                                              layers::ImageContainer* aImageContainer,
+                                              const nsString& aDrmStubId);
 
   virtual ~RemoteDataDecoder() {}
 
@@ -44,7 +46,8 @@ protected:
   RemoteDataDecoder(MediaData::Type aType,
                     const nsACString& aMimeType,
                     java::sdk::MediaFormat::Param aFormat,
-                    MediaDataDecoderCallback* aCallback);
+                    MediaDataDecoderCallback* aCallback,
+                    const nsString& aDrmStubId);
 
   MediaData::Type mType;
 
@@ -55,6 +58,7 @@ protected:
 
   java::CodecProxy::GlobalRef mJavaDecoder;
   java::CodecProxy::NativeCallbacks::GlobalRef mJavaCallbacks;
+  nsString mDrmStubId;
 };
 
 } // namespace mozilla
