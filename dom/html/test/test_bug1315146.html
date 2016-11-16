@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1315146
+-->
+<head>
+  <title>Test for Bug 1315146</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1315146">Mozilla Bug 1315146</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1315146 **/
+
+SimpleTest.waitForExplicitFinish();
+onmessage = function(e) {
+  win.close();
+  is(e.data.start, 2, "Correct start offset expected");
+  is(e.data.end, 2, "Correct end offset expected");
+  SimpleTest.finish();
+};
+let win = window.open("http://test1.example.org/tests/dom/html/test/bug1315146-main.html", "_blank");
+
+</script>
+</pre>
+</body>
+</html>
