@@ -2432,6 +2432,12 @@ gfxPlatform::AsyncPanZoomEnabled()
   if (!BrowserTabsRemoteAutostart()) {
     return false;
   }
+#ifdef MOZ_ENABLE_WEBRENDER
+  // For webrender hacking we have a special pref to disable APZ even with e10s
+  if (!gfxPrefs::APZAllowWithWebRender()) {
+    return false;
+  }
+#endif // MOZ_ENABLE_WEBRENDER
 #endif
 #ifdef MOZ_WIDGET_ANDROID
   return true;

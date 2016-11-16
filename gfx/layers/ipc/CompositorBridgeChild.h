@@ -228,6 +228,9 @@ public:
 
   void WillEndTransaction();
 
+  PWebRenderBridgeChild* AllocPWebRenderBridgeChild(const uint64_t& aPipelineId) override;
+  bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor) override;
+
 private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CompositorBridgeChild();

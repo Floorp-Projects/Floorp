@@ -24,6 +24,8 @@ DIRS += [
     'config',
 ]
 
+EXPORTS += ['webrender/webrender.h']
+
 if CONFIG['MOZ_ENABLE_SKIA']:
     DIRS += ['skia']
 

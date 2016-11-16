@@ -153,6 +153,9 @@ public:
 
   virtual void UpdatePaintTime(LayerTransactionParent* aLayerTree, const TimeDuration& aPaintTime) override;
 
+  PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const uint64_t& aPipelineId) override;
+  bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
+
 protected:
   void OnChannelConnected(int32_t pid) override {
     mCompositorThreadHolder = CompositorThreadHolder::GetSingleton();
