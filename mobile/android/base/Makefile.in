@@ -155,7 +155,12 @@ GECKOVIEW_JARS = \
   gecko-mozglue.jar \
   gecko-util.jar \
   gecko-view.jar \
+  sync-thirdparty.jar \
   $(NULL)
+
+ifdef MOZ_INSTALL_TRACKING
+GECKOVIEW_JARS += gecko-thirdparty-adjust_sdk.jar
+endif
 
 geckoview_jars_classpath := $(subst $(NULL) ,:,$(strip $(GECKOVIEW_JARS)))
 
@@ -163,7 +168,6 @@ FENNEC_JARS = \
   gecko-browser.jar \
   gecko-thirdparty.jar \
   services.jar \
-  sync-thirdparty.jar \
   ../javaaddons/javaaddons-1.0.jar \
   $(NULL)
 
@@ -177,10 +181,6 @@ endif
 
 ifdef MOZ_ANDROID_MLS_STUMBLER
 FENNEC_JARS += ../stumbler/stumbler.jar
-endif
-
-ifdef MOZ_INSTALL_TRACKING
-FENNEC_JARS += gecko-thirdparty-adjust_sdk.jar
 endif
 
 # All the jars we're compiling from source. (not to be confused with
