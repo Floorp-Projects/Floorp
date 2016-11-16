@@ -411,6 +411,7 @@ public:
     virtual mozilla::EventStates IntrinsicState() const override;
 
     nsresult GetFrameLoaderXPCOM(nsIFrameLoader** aFrameLoader);
+    nsresult GetParentApplication(mozIApplication** aApplication);
     void PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv);
     nsresult SetIsPrerendered();
 

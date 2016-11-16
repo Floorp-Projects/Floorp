@@ -354,5 +354,19 @@ ContentProcessManager::GetTabParentsByProcessId(const ContentParentId& aChildCpI
   return Move(tabIdList);
 }
 
+uint32_t
+ContentProcessManager::GetAppIdByProcessAndTabId(const ContentParentId& aChildCpId,
+                                                 const TabId& aChildTabId)
+{
+  uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
+  if (aChildCpId && aChildTabId) {
+    TabContext tabContext;
+    if (GetTabContextByProcessAndTabId(aChildCpId, aChildTabId, &tabContext)) {
+      appId = tabContext.OwnOrContainingAppId();
+    }
+  }
+  return appId;
+}
+
 } // namespace dom
 } // namespace mozilla

@@ -61,6 +61,7 @@ public:
   BlobParent* GetOrCreateActorForBlobImpl(BlobImpl* aImpl);
 
   virtual ContentParentId ChildID() const = 0;
+  virtual bool IsForApp() const = 0;
   virtual bool IsForBrowser() const = 0;
 
   MOZ_MUST_USE virtual PBlobParent*
@@ -73,6 +74,7 @@ public:
                           const IPCTabContext& context,
                           const uint32_t& chromeFlags,
                           const ContentParentId& aCpId,
+                          const bool& aIsForApp,
                           const bool& aIsForBrowser) = 0;
 
   virtual bool IsContentParent() const { return false; }
@@ -98,6 +100,7 @@ protected: // IPDL methods
                                               const IPCTabContext& aContext,
                                               const uint32_t& aChromeFlags,
                                               const ContentParentId& aCpId,
+                                              const bool& aIsForApp,
                                               const bool& aIsForBrowser);
   virtual bool DeallocPBrowserParent(PBrowserParent* frame);
 

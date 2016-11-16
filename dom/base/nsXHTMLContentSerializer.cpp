@@ -306,7 +306,7 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
         continue;
     }
 
-    mozilla::dom::BorrowedAttrInfo info = aContent->GetAttrInfoAt(index);
+    BorrowedAttrInfo info = aContent->GetAttrInfoAt(index);
     const nsAttrName* name = info.mName;
 
     int32_t namespaceID = name->NamespaceID();

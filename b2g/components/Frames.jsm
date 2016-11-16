@@ -19,6 +19,9 @@ const Observer = {
   // the FrameDestroyed event with a frame reference.
   _frames: new Map(),
 
+  // Also save current number of iframes opened by app
+  _apps: new Map(),
+
   start: function () {
     Services.obs.addObserver(this, 'remote-browser-shown', false);
     Services.obs.addObserver(this, 'inprocess-browser-shown', false);
@@ -27,6 +30,10 @@ const Observer = {
     SystemAppProxy.getFrames().forEach(frame => {
       let mm = frame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
       this._frames.set(mm, frame);
+      let mozapp = frame.getAttribute('mozapp');
+      if (mozapp) {
+        this._apps.set(mozapp, (this._apps.get(mozapp) || 0) + 1);
+      }
     });
   },
 
@@ -35,6 +42,7 @@ const Observer = {
     Services.obs.removeObserver(this, 'inprocess-browser-shown');
     Services.obs.removeObserver(this, 'message-manager-close');
     this._frames.clear();
+    this._apps.clear();
   },
 
   observe: function (subject, topic, data) {
@@ -62,9 +70,17 @@ const Observer = {
   onMessageManagerCreated: function (mm, frame) {
     this._frames.set(mm, frame);
 
+    let isFirstAppFrame = null;
+    let mozapp = frame.getAttribute('mozapp');
+    if (mozapp) {
+      let count = (this._apps.get(mozapp) || 0) + 1;
+      this._apps.set(mozapp, count);
+      isFirstAppFrame = (count === 1);
+    }
+
     listeners.forEach(function (listener) {
       try {
-        listener.onFrameCreated(frame);
+        listener.onFrameCreated(frame, isFirstAppFrame);
       } catch(e) {
         dump('Exception while calling Frames.jsm listener:' + e + '\n' +
              e.stack + '\n');
@@ -81,9 +97,17 @@ const Observer = {
 
     this._frames.delete(mm);
 
+    let isLastAppFrame = null;
+    let mozapp = frame.getAttribute('mozapp');
+    if (mozapp) {
+      let count = (this._apps.get(mozapp) || 0) - 1;
+      this._apps.set(mozapp, count);
+      isLastAppFrame = (count === 0);
+    }
+
     listeners.forEach(function (listener) {
       try {
-        listener.onFrameDestroyed(frame);
+        listener.onFrameDestroyed(frame, isLastAppFrame);
       } catch(e) {
         dump('Exception while calling Frames.jsm listener:' + e + '\n' +
              e.stack + '\n');

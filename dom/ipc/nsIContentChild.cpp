@@ -44,6 +44,7 @@ nsIContentChild::AllocPBrowserChild(const TabId& aTabId,
                                     const IPCTabContext& aContext,
                                     const uint32_t& aChromeFlags,
                                     const ContentParentId& aCpID,
+                                    const bool& aIsForApp,
                                     const bool& aIsForBrowser)
 {
   // We'll happily accept any kind of IPCTabContext here; we don't need to

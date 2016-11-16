@@ -734,6 +734,8 @@ private:
 
   void DestroyWindow();
 
+  void SetProcessNameToAppName();
+
   void ApplyShowInfo(const ShowInfo& aInfo);
 
   bool HasValidInnerSize();

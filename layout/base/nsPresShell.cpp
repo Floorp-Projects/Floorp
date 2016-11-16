@@ -6996,6 +6996,20 @@ CheckPermissionForBeforeAfterKeyboardEvent(Element* aElement)
     if (permission == nsIPermissionManager::ALLOW_ACTION) {
       return true;
     }
+
+    // Check "embed-apps" permission for later use.
+    permission = nsIPermissionManager::DENY_ACTION;
+    permMgr->TestPermissionFromPrincipal(principal, "embed-apps", &permission);
+  }
+
+  // An element can handle before events and after events if the following
+  // conditions are met:
+  // 1) <iframe mozbrowser mozapp>
+  // 2) it has "embed-apps" permission.
+  nsCOMPtr<nsIMozBrowserFrame> browserFrame(do_QueryInterface(aElement));
+  if ((permission == nsIPermissionManager::ALLOW_ACTION) &&
+      browserFrame && browserFrame->GetReallyIsApp()) {
+    return true;
   }
 
   return false;

@@ -86,7 +86,7 @@ ShouldInTopLayerForFullscreen(Element* aElement)
     return false;
   }
   nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(aElement);
-  if (browserFrame && browserFrame->GetReallyIsBrowser()) {
+  if (browserFrame && browserFrame->GetReallyIsBrowserOrApp()) {
     return false;
   }
   return true;

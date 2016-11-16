@@ -124,6 +124,7 @@ public:
 
 protected:
   NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() = 0;
+  NS_IMETHOD GetParentApplication(mozIApplication** aApplication) = 0;
 
   void InitBrowserElementAPI();
   void DestroyBrowserElementFrameScripts();

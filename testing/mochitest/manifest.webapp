@@ -24,6 +24,7 @@
     "desktop-notification":{},
     "idle":{},
     "network-events":{},
+    "embed-apps":{},
     "audio-channel-content":{},
     "audio-channel-alarm":{},
     "before-after-keyboard-event":{}

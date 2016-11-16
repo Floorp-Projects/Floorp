@@ -73,7 +73,13 @@ TCPSocketParentBase::~TCPSocketParentBase()
 uint32_t
 TCPSocketParent::GetAppId()
 {
-  return nsIScriptSecurityManager::UNKNOWN_APP_ID;
+  const PContentParent *content = Manager()->Manager();
+  if (PBrowserParent* browser = SingleManagedOrNull(content->ManagedPBrowserParent())) {
+    TabParent *tab = TabParent::GetFrom(browser);
+    return tab->OwnAppId();
+  } else {
+    return nsIScriptSecurityManager::UNKNOWN_APP_ID;
+  }
 };
 
 bool
@@ -205,15 +211,20 @@ TCPSocketParent::RecvOpenBind(const nsCString& aRemoteHost,
     }
   }
 
+  // Obtain App ID
+  uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
   bool     inIsolatedMozBrowser = false;
   const PContentParent *content = Manager()->Manager();
   if (PBrowserParent* browser = SingleManagedOrNull(content->ManagedPBrowserParent())) {
+    // appId's are for B2G only currently, where managees.Count() == 1
+    // This is not guaranteed currently in Desktop, so skip this there.
     TabParent *tab = TabParent::GetFrom(browser);
+    appId = tab->OwnAppId();
     inIsolatedMozBrowser = tab->IsIsolatedMozBrowserElement();
   }
 
   mSocket = new TCPSocket(nullptr, NS_ConvertUTF8toUTF16(aRemoteHost), aRemotePort, aUseSSL, aUseArrayBuffers);
-  mSocket->SetAppIdAndBrowser(nsIScriptSecurityManager::NO_APP_ID, inIsolatedMozBrowser);
+  mSocket->SetAppIdAndBrowser(appId, inIsolatedMozBrowser);
   mSocket->SetSocketBridgeParent(this);
   rv = mSocket->InitWithUnconnectedTransport(socketTransport);
   NS_ENSURE_SUCCESS(rv, true);

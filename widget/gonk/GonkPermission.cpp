@@ -28,6 +28,8 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/SyncRunnable.h"
+#include "nsIAppsService.h"
+#include "mozIApplication.h"
 #include "nsThreadUtils.h"
 
 #undef LOG
@@ -37,6 +39,81 @@
 
 using namespace android;
 using namespace mozilla;
+
+// Checking permissions needs to happen on the main thread, but the
+// binder callback is called on a special binder thread, so we use
+// this runnable for that.
+class GonkPermissionChecker : public Runnable {
+  int32_t mPid;
+  bool mCanUseCamera;
+
+  explicit GonkPermissionChecker(int32_t pid)
+    : mPid(pid)
+    , mCanUseCamera(false)
+  {
+  }
+
+public:
+  static already_AddRefed<GonkPermissionChecker> Inspect(int32_t pid)
+  {
+    RefPtr<GonkPermissionChecker> that = new GonkPermissionChecker(pid);
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    MOZ_ASSERT(mainThread);
+    SyncRunnable::DispatchToThread(mainThread, that);
+    return that.forget();
+  }
+
+  bool CanUseCamera()
+  {
+    return mCanUseCamera;
+  }
+
+  NS_IMETHOD Run();
+};
+
+NS_IMETHODIMP
+GonkPermissionChecker::Run()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Find our ContentParent.
+  dom::ContentParent *contentParent = nullptr;
+  {
+    nsTArray<dom::ContentParent*> parents;
+    dom::ContentParent::GetAll(parents);
+    for (uint32_t i = 0; i < parents.Length(); ++i) {
+      if (parents[i]->Pid() == mPid) {
+	contentParent = parents[i];
+	break;
+      }
+    }
+  }
+  if (!contentParent) {
+    ALOGE("pid=%d denied: can't find ContentParent", mPid);
+    return NS_OK;
+  }
+
+  // Now iterate its apps...
+  const ManagedContainer<dom::PBrowserParent>& browsers =
+    contentParent->ManagedPBrowserParent();
+  for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
+    dom::TabParent *tabParent =
+      static_cast<dom::TabParent*>(iter.Get()->GetKey());
+    nsCOMPtr<mozIApplication> mozApp = tabParent->GetOwnOrContainingApp();
+    if (!mozApp) {
+      continue;
+    }
+
+    // ...and check if any of them has camera access.
+    bool appCanUseCamera;
+    nsresult rv = mozApp->HasPermission("camera", &appCanUseCamera);
+    if (NS_SUCCEEDED(rv) && appCanUseCamera) {
+      mCanUseCamera = true;
+      return NS_OK;
+    }
+  }
+  return NS_OK;
+}
 
 bool
 GonkPermissionService::checkPermission(const String16& permission, int32_t pid,
@@ -76,9 +153,19 @@ GonkPermissionService::checkPermission(const String16& permission, int32_t pid,
   PermissionGrant permGrant(perm8.string(), pid);
   if (nsTArray<PermissionGrant>::NoIndex != mGrantArray.IndexOf(permGrant)) {
     mGrantArray.RemoveElement(permGrant);
+    return true;
   }
 
-  return true;
+  // Camera/audio record permissions are allowed for apps with the
+  // "camera" permission.
+  RefPtr<GonkPermissionChecker> checker =
+    GonkPermissionChecker::Inspect(pid);
+  bool canUseCamera = checker->CanUseCamera();
+  if (!canUseCamera) {
+    ALOGE("%s for pid=%d,uid=%d denied: not granted by user or app manifest",
+      String8(permission).string(), pid, uid);
+  }
+  return canUseCamera;
 }
 
 static GonkPermissionService* gGonkPermissionService = NULL;

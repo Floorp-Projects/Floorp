@@ -264,6 +264,13 @@ OfflineCacheUpdateParent::GetIsInIsolatedMozBrowserElement(bool *aIsInIsolatedMo
 }
 
 NS_IMETHODIMP
+OfflineCacheUpdateParent::GetAppId(uint32_t *aAppId)
+{
+    NS_ENSURE_TRUE(mLoadingPrincipal, NS_ERROR_UNEXPECTED);
+    return mLoadingPrincipal->GetAppId(aAppId);
+}
+
+NS_IMETHODIMP
 OfflineCacheUpdateParent::GetOriginAttributes(JS::MutableHandleValue aAttrs)
 {
     NS_ENSURE_TRUE(mLoadingPrincipal, NS_ERROR_UNEXPECTED);
