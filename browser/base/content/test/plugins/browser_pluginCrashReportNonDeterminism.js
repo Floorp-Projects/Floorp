@@ -49,7 +49,7 @@ const CRASHED_MESSAGE = "BrowserPlugins:NPAPIPluginProcessCrashed";
  *        the crash reporter state.
  */
 function preparePlugin(browser, pluginFallbackState) {
-  return ContentTask.spawn(browser, pluginFallbackState, function* (pluginFallbackState) {
+  return ContentTask.spawn(browser, pluginFallbackState, function* (contentPluginFallbackState) {
     let plugin = content.document.getElementById("plugin");
     plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     // CRASH_URL will load a plugin that crashes immediately. We
@@ -69,7 +69,7 @@ function preparePlugin(browser, pluginFallbackState) {
     // this XPCOM object. Probably because I've got chrome privledges.
     Object.defineProperty(plugin, "pluginFallbackType", {
       get: function() {
-        return pluginFallbackState;
+        return contentPluginFallbackState;
       }
     });
     return plugin.runID;

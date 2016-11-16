@@ -1,9 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const url = "data:text/html,<body>hi";
-
 add_task(function*() {
+  const url = "data:text/html,<body>hi";
   yield* testURL(url, urlEnter);
   yield* testURL(url, urlClick);
 });

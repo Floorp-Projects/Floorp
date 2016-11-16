@@ -426,10 +426,10 @@ var gSyncUI = {
   formatLastSyncDate: function(date) {
     let dateFormat;
     let sixDaysAgo = (() => {
-      let date = new Date();
-      date.setDate(date.getDate() - 6);
-      date.setHours(0, 0, 0, 0);
-      return date;
+      let tempDate = new Date();
+      tempDate.setDate(tempDate.getDate() - 6);
+      tempDate.setHours(0, 0, 0, 0);
+      return tempDate;
     })();
     // It may be confusing for the user to see "Last Sync: Monday" when the last sync was a indeed a Monday but 3 weeks ago
     if (date < sixDaysAgo) {

@@ -377,10 +377,9 @@ var gFxAccounts = {
     const fragment = document.createDocumentFragment();
 
     const onTargetDeviceCommand = (event) => {
-      const clientId = event.target.getAttribute("clientId");
-      const clients = clientId
-                      ? [clientId]
-                      : this.remoteClients.map(client => client.id);
+      let clients = event.target.getAttribute("clientId") ?
+        [event.target.getAttribute("clientId")] :
+        this.remoteClients.map(client => client.id);
 
       clients.forEach(clientId => this.sendTabToDevice(url, clientId, title));
     }
