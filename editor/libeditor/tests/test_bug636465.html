@@ -6,7 +6,7 @@
 <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
 <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=636465"
    target="_blank">Mozilla Bug 636465</a>
-<input id="x" value="foobarbaz" spellcheck="true">
+<input id="x" value="foobarbaz" spellcheck="true" style="background-color: transparent; border: transparent;">
 <script>
 SimpleTest.waitForExplicitFinish();
 
@@ -28,12 +28,24 @@ function runTest() {
       x.removeAttribute("spellcheck");
       var spellCheckNone = snapshotWindow(window);
       var after = snapshotWindow(window);
-      ok(compareSnapshots(spellCheckTrue, spellCheckFalse, false)[0],
+      var ret = compareSnapshots(spellCheckTrue, spellCheckFalse, false)[0];
+      ok(ret,
          "Setting the spellcheck attribute to false should work");
-      ok(compareSnapshots(spellCheckTrue, spellCheckTrueAgain, true)[0],
+      if (!ret) {
+        ok(false, "\nspellCheckTrue: " + spellCheckTrue.toDataURL() + "\nspellCheckFalse: " + spellCheckFalse.toDataURL());
+      }
+      ret = compareSnapshots(spellCheckTrue, spellCheckTrueAgain, true)[0];
+      ok(ret,
          "Setting the spellcheck attribute back to true should work");
-      ok(compareSnapshots(spellCheckNone, spellCheckFalse, true)[0],
+      if (!ret) {
+        ok(false, "\nspellCheckTrue: " + spellCheckTrue.toDataURL() + "\nspellCheckTrueAgain: " + spellCheckTrueAgain.toDataURL());
+      }
+      ret = compareSnapshots(spellCheckNone, spellCheckFalse, true)[0];
+      ok(ret,
          "Unsetting the spellcheck attribute should work");
+      if (!ret) {
+        ok(false, "\spellCheckNone: " + spellCheckNone.toDataURL() + "\nspellCheckFalse: " + spellCheckFalse.toDataURL());
+      }
       SimpleTest.finish();
     });
   });
