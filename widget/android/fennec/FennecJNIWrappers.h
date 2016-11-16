@@ -670,10 +670,11 @@ public:
         typedef mozilla::jni::Args<
                 mozilla::jni::Object::Param,
                 mozilla::jni::Object::Param,
-                mozilla::jni::Object::Param> Args;
+                mozilla::jni::Object::Param,
+                mozilla::jni::String::Param> Args;
         static constexpr char name[] = "create";
         static constexpr char signature[] =
-                "(Landroid/media/MediaFormat;Landroid/view/Surface;Lorg/mozilla/gecko/media/CodecProxy$Callbacks;)Lorg/mozilla/gecko/media/CodecProxy;";
+                "(Landroid/media/MediaFormat;Landroid/view/Surface;Lorg/mozilla/gecko/media/CodecProxy$Callbacks;Ljava/lang/String;)Lorg/mozilla/gecko/media/CodecProxy;";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -683,7 +684,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    static auto Create(mozilla::jni::Object::Param, mozilla::jni::Object::Param, mozilla::jni::Object::Param) -> CodecProxy::LocalRef;
+    static auto Create(mozilla::jni::Object::Param, mozilla::jni::Object::Param, mozilla::jni::Object::Param, mozilla::jni::String::Param) -> CodecProxy::LocalRef;
 
     struct Flush_t {
         typedef CodecProxy Owner;
