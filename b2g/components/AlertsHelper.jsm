@@ -40,8 +40,6 @@ function debug(str) {
 
 const kNotificationIconSize = 128;
 
-const kDesktopNotificationPerm = "desktop-notification";
-
 const kNotificationSystemMessageName = "notification";
 
 const kDesktopNotification      = "desktop-notification";
@@ -256,13 +254,6 @@ var AlertsHelper = {
   },
 
   receiveMessage: function(aMessage) {
-    if (!aMessage.target.assertAppHasPermission(kDesktopNotificationPerm)) {
-      Cu.reportError("Desktop-notification message " + aMessage.name +
-                     " from a content process with no " + kDesktopNotificationPerm +
-                     " privileges.");
-      return;
-    }
-
     switch(aMessage.name) {
       case kMessageAlertNotificationSend:
         this.showAlertNotification(aMessage);

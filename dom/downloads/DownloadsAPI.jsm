@@ -153,11 +153,6 @@ var DownloadsAPI = {
   },
 
   receiveMessage: function(aMessage) {
-    if (!aMessage.target.assertPermission("downloads")) {
-      debug("No 'downloads' permission!");
-      return;
-    }
-
     debug("message: " + aMessage.name);
 
     switch (aMessage.name) {

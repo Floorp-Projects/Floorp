@@ -176,22 +176,7 @@ this.PermissionSettingsModule = {
     let result;
     switch (aMessage.name) {
       case "PermissionSettings:AddPermission":
-        let success = false;
-        let errorMsg =
-              " from a content process with no 'permissions' privileges.";
-        if (mm.assertPermission("permissions")) {
-          success = this._internalAddPermission(msg, false);
-          if (!success) {
-            // Just kill the calling process
-            mm.assertPermission("permissions-modify-implicit");
-            errorMsg = " had an implicit permission change. Child process killed.";
-          }
-        }
-
-        if (!success) {
-          Cu.reportError("PermissionSettings message " + msg.type + errorMsg);
-          return null;
-        }
+        this._internalAddPermission(msg, false);
         break;
     }
   }
