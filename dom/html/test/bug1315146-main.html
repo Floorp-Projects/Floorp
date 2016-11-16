@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<iframe src="http://example.org/tests/dom/html/test/bug1315146-iframe.html"></iframe>
+<input value="test">
+<script>
+document.domain = "example.org";
+onload = function() {
+  let iframe = document.querySelector("iframe");
+  let input = document.querySelector("input");
+  input.selectionStart = input.selectionEnd = 2;
+  document.body.style.overflow = "scroll";
+  iframe.contentDocument.body.offsetWidth;
+  opener.postMessage({start: input.selectionStart,
+                      end: input.selectionEnd}, "*");
+}
+</script>
