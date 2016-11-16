@@ -388,6 +388,18 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     ]
     FINAL_TARGET_FILES += ['!dependentlibs.list']
 
+# WebRender dependencies
+if CONFIG['MOZ_ENABLE_WEBRENDER']:
+    if CONFIG['OS_ARCH'] == 'Linux':
+        OS_LIBS += [
+            'GL',
+            'EGL',
+        ]
+    elif CONFIG['OS_ARCH'] == 'WINNT':
+        OS_LIBS += [
+            'opengl32',
+        ]
+
 # This library needs to be last to make XPCOM module registration work.
 USE_LIBS += ['StaticXULComponentsEnd']
 
