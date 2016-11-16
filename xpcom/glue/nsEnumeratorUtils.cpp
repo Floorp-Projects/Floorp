@@ -279,8 +279,8 @@ NS_NewUnionEnumerator(nsISimpleEnumerator** aResult,
   } else if (!aSecondEnumerator) {
     *aResult = aFirstEnumerator;
   } else {
-    nsUnionEnumerator* enumer = new nsUnionEnumerator(aFirstEnumerator,
-                                                      aSecondEnumerator);
+    auto* enumer = new nsUnionEnumerator(aFirstEnumerator,
+                                         aSecondEnumerator);
     if (!enumer) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
