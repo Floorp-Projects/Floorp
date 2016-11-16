@@ -128,7 +128,7 @@ nsresult
 CreateFoo( void** result )
   // a typical factory function (that calls AddRef)
 {
-  Foo* foop = new Foo;
+  auto* foop = new Foo;
 
   foop->AddRef();
   *result = foop;
@@ -331,10 +331,10 @@ TEST(nsRefPtr, AddRefHelpers)
   Foo::total_addrefs_ = 0;
 
   {
-    Foo* raw_foo1p = new Foo;
+    auto* raw_foo1p = new Foo;
     raw_foo1p->AddRef();
 
-    Foo* raw_foo2p = new Foo;
+    auto* raw_foo2p = new Foo;
     raw_foo2p->AddRef();
 
     ASSERT_EQ(Foo::total_addrefs_, 2);

@@ -246,7 +246,7 @@ nsresult
 CreateIFoo( IFoo** result )
     // a typical factory function (that calls AddRef)
   {
-    IFoo* foop = new IFoo();
+    auto* foop = new IFoo();
 
     foop->AddRef();
     *result = foop;
@@ -318,7 +318,7 @@ TEST(Hashtables, ClassHashtable)
   nsClassHashtable<nsCStringHashKey,TestUniChar> EntToUniClass(ENTITY_COUNT);
 
   for (auto& entity : gEntities) {
-    TestUniChar* temp = new TestUniChar(entity.mUnicode);
+    auto* temp = new TestUniChar(entity.mUnicode);
     EntToUniClass.Put(nsDependentCString(entity.mStr), temp);
   }
 
