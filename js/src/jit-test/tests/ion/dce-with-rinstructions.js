@@ -555,8 +555,7 @@ function rpow_number(i) {
     var x = Math.pow(i, 3.14159);
     if (uceFault_pow_number(i) || uceFault_pow_number(i))
         assertEq(x, Math.pow(99, 3.14159));
-    // POW recovery temporarily disabled. See bug 1188586.
-    assertRecoveredOnBailout(x, false);
+    assertRecoveredOnBailout(x, true);
     return i;
 }
 
