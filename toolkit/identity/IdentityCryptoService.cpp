@@ -56,7 +56,7 @@ public:
   KeyPair(SECKEYPrivateKey* aPrivateKey, SECKEYPublicKey* aPublicKey);
 
 private:
-  ~KeyPair()
+  ~KeyPair() override
   {
     nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown()) {
@@ -96,7 +96,7 @@ public:
   KeyGenRunnable(KeyType keyType, nsIIdentityKeyGenCallback * aCallback);
 
 private:
-  ~KeyGenRunnable()
+  ~KeyGenRunnable() override
   {
     nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown()) {
@@ -106,7 +106,7 @@ private:
     shutdown(ShutdownCalledFrom::Object);
   }
 
-  virtual void virtualDestroyNSSReference() override
+  void virtualDestroyNSSReference() override
   {
     destructorSafeDestroyNSSReference();
   }
@@ -133,7 +133,7 @@ public:
                nsIIdentitySignCallback * aCallback);
 
 private:
-  ~SignRunnable()
+  ~SignRunnable() override
   {
     nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown()) {
