@@ -403,6 +403,11 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
           }
         }
         break;
+      case LayersBackend::LAYERS_WR:
+      {
+        GetLayerManager()->Composite();
+        break;
+      }
       default:
         NS_ERROR("Unknown layers backend used!");
         break;
