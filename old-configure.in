@@ -3965,7 +3965,7 @@ case "$OS_TARGET:$NIGHTLY_BUILD" in
 WINNT:*)
     MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
     ;;
-Darwin:1)
+Darwin:*)
     MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
     ;;
 Linux:1)
