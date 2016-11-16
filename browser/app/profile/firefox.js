@@ -436,8 +436,6 @@ pref("browser.tabs.showAudioPlayingIcon", true);
 // This should match Chromium's audio indicator delay.
 pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
 
-pref("browser.tabs.dontfocusfordialogs", true);
-
 pref("browser.ctrlTab.previews", false);
 
 // By default, do not export HTML at shutdown.
