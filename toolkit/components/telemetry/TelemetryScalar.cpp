@@ -154,7 +154,7 @@ ScalarInfo::expiration() const
 class ScalarBase
 {
 public:
-  virtual ~ScalarBase() = default;;
+  virtual ~ScalarBase() = default;
 
   // Set, Add and SetMaximum functions as described in the Telemetry IDL.
   virtual ScalarResult SetValue(nsIVariant* aValue) = 0;
@@ -194,7 +194,7 @@ public:
   using ScalarBase::SetValue;
 
   ScalarUnsigned() : mStorage(0) {};
-  ~ScalarUnsigned() = default;;
+  ~ScalarUnsigned() override = default;
 
   ScalarResult SetValue(nsIVariant* aValue) final;
   void SetValue(uint32_t aValue) final;
@@ -334,7 +334,7 @@ public:
   using ScalarBase::SetValue;
 
   ScalarString() : mStorage(EmptyString()) {};
-  ~ScalarString() = default;;
+  ~ScalarString() override = default;
 
   ScalarResult SetValue(nsIVariant* aValue) final;
   ScalarResult SetValue(const nsAString& aValue) final;
@@ -415,7 +415,7 @@ public:
   using ScalarBase::SetValue;
 
   ScalarBoolean() : mStorage(false) {};
-  ~ScalarBoolean() = default;;
+  ~ScalarBoolean() override = default;
 
   ScalarResult SetValue(nsIVariant* aValue) final;
   void SetValue(bool aValue) final;
@@ -514,7 +514,7 @@ public:
   typedef mozilla::Pair<nsCString, nsCOMPtr<nsIVariant>> KeyValuePair;
 
   explicit KeyedScalar(uint32_t aScalarKind) : mScalarKind(aScalarKind) {};
-  ~KeyedScalar() = default;;
+  ~KeyedScalar() = default;
 
   // Set, Add and SetMaximum functions as described in the Telemetry IDL.
   // These methods implicitly instantiate a Scalar[*] for each key.
