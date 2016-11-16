@@ -916,6 +916,9 @@ endif
 ifdef MOZ_CARGO_SUPPORTS_FROZEN
 cargo_build_flags += --frozen
 endif
+ifdef MOZ_ENABLE_WEBRENDER
+cargo_build_flags += --features "quantum_render"
+endif
 
 cargo_build_flags += --manifest-path $(CARGO_FILE)
 cargo_build_flags += --target=$(RUST_TARGET)
