@@ -94,8 +94,8 @@ let EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
    */
   setNetworkThrottling({ downloadThroughput, uploadThroughput, latency }) {
     let throttleData = {
-      roundTripTimeMean: latency,
-      roundTripTimeMax: latency,
+      latencyMean: latency,
+      latencyMax: latency,
       downloadBPSMean: downloadThroughput,
       downloadBPSMax: downloadThroughput,
       uploadBPSMean: uploadThroughput,
@@ -145,11 +145,11 @@ let EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     if (!throttleData) {
       return null;
     }
-    let { downloadBPSMax, uploadBPSMax, roundTripTimeMax } = throttleData;
+    let { downloadBPSMax, uploadBPSMax, latencyMax } = throttleData;
     return {
       downloadThroughput: downloadBPSMax,
       uploadThroughput: uploadBPSMax,
-      latency: roundTripTimeMax,
+      latency: latencyMax,
     };
   },
 
