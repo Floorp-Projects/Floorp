@@ -100,7 +100,10 @@ function CssGridHighlighter(highlighterEnv) {
     this._buildMarkup.bind(this));
 
   this.onNavigate = this.onNavigate.bind(this);
+  this.onWillNavigate = this.onWillNavigate.bind(this);
+
   this.highlighterEnv.on("navigate", this.onNavigate);
+  this.highlighterEnv.on("will-navigate", this.onWillNavigate);
 }
 
 CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
@@ -212,6 +215,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
   destroy() {
     this.highlighterEnv.off("navigate", this.onNavigate);
+    this.highlighterEnv.off("will-navigate", this.onWillNavigate);
     this.markup.destroy();
     AutoRefreshHighlighter.prototype.destroy.call(this);
   },
@@ -274,6 +278,12 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   onNavigate() {
     gCachedGridPattern.delete(ROW_KEY);
     gCachedGridPattern.delete(COLUMN_KEY);
+  },
+
+  onWillNavigate({ isTopLevel }) {
+    if (isTopLevel) {
+      this.hide();
+    }
   },
 
   _show() {
@@ -365,7 +375,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
     this._showGrid();
 
-    setIgnoreLayoutChanges(false, this.currentNode.ownerDocument.documentElement);
+    setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
     return true;
   },
 
@@ -690,7 +700,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this._hideGrid();
     this._hideGridArea();
     this._hideInfoBar();
-    setIgnoreLayoutChanges(false, this.currentNode.ownerDocument.documentElement);
+    setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
   },
 
   _hideGrid() {
