@@ -593,6 +593,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
 #endif
 
   SendGetProcessAttributes(&mID, &mIsForBrowser);
+  InitProcessAttributes();
 
 #ifdef NS_PRINTING
   // Force the creation of the nsPrintingProxy so that it's IPC counterpart,
@@ -600,9 +601,21 @@ ContentChild::Init(MessageLoop* aIOLoop,
   RefPtr<nsPrintingProxy> printingProxy = nsPrintingProxy::GetInstance();
 #endif
 
-  SetProcessName(NS_LITERAL_STRING("Web Content"), true);
-
   return true;
+}
+
+void
+ContentChild::InitProcessAttributes()
+{
+#ifdef MOZ_WIDGET_GONK
+  if (mIsForBrowser) {
+    SetProcessName(NS_LITERAL_STRING("Browser"), false);
+  } else {
+    SetProcessName(NS_LITERAL_STRING("(Preallocated app)"), false);
+  }
+#else
+  SetProcessName(NS_LITERAL_STRING("Web Content"), true);
+#endif
 }
 
 void
@@ -1479,6 +1492,14 @@ ContentChild::RecvBidiKeyboardNotify(const bool& aIsLangRTL,
   return true;
 }
 
+static CancelableRunnable* sFirstIdleTask;
+
+static void FirstIdle(void)
+{
+  MOZ_ASSERT(sFirstIdleTask);
+  sFirstIdleTask = nullptr;
+  ContentChild::GetSingleton()->SendFirstIdle();
+}
 
 mozilla::jsipc::PJavaScriptChild *
 ContentChild::AllocPJavaScriptChild()
@@ -1540,6 +1561,22 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
     nsITabChild* tc =
       static_cast<nsITabChild*>(static_cast<TabChild*>(aActor));
     os->NotifyObservers(tc, "tab-child-created", nullptr);
+  }
+
+  static bool hasRunOnce = false;
+  if (!hasRunOnce) {
+      hasRunOnce = true;
+
+    MOZ_ASSERT(!sFirstIdleTask);
+    RefPtr<CancelableRunnable> firstIdleTask = NewCancelableRunnableFunction(FirstIdle);
+    sFirstIdleTask = firstIdleTask;
+    MessageLoop::current()->PostIdleTask(firstIdleTask.forget());
+
+    // Redo InitProcessAttributes() when the app or browser is really
+    // launching so the attributes will be correct.
+    mID = aCpID;
+    mIsForBrowser = aIsForBrowser;
+    InitProcessAttributes();
   }
 
   return true;
@@ -2051,6 +2088,9 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
   // keep persistent state.
   ProcessChild::QuickExit();
 #else
+  if (sFirstIdleTask) {
+    sFirstIdleTask->Cancel();
+  }
 
   nsHostObjectProtocolHandler::RemoveDataEntries();
 
@@ -2354,6 +2394,19 @@ ContentChild::RecvCycleCollect()
   return true;
 }
 
+static void
+PreloadSlowThings()
+{
+  // This fetches and creates all the built-in stylesheets.
+  //
+  // XXXheycam In the future we might want to preload the Servo-flavoured
+  // UA sheets too, but for now that will be a waste of time.
+  nsLayoutStylesheetCache::For(StyleBackendType::Gecko)->UserContentSheet();
+
+  TabChild::PreloadSlowThings();
+
+}
+
 bool
 ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID,
                           const nsCString& name, const nsCString& UAName,
@@ -2365,6 +2418,25 @@ ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID,
   mAppInfo.UAName.Assign(UAName);
   mAppInfo.ID.Assign(ID);
   mAppInfo.vendor.Assign(vendor);
+
+  return true;
+}
+
+bool
+ContentChild::RecvAppInit()
+{
+  if (!Preferences::GetBool("dom.ipc.processPrelaunch.enabled", false)) {
+    return true;
+  }
+
+  // If we're part of the mozbrowser machinery, go ahead and start
+  // preloading things.  We can only do this for mozbrowser because
+  // PreloadSlowThings() may set the docshell of the first TabChild
+  // inactive, and we can only safely restore it to active from
+  // BrowserElementChild.js.
+  if (mIsForBrowser) {
+    PreloadSlowThings();
+  }
 
   return true;
 }
