@@ -1128,9 +1128,8 @@ class BaseCompiler
             loadRegisterI32(r, src);
             break;
           case Stk::None:
-            break;
           default:
-            MOZ_CRASH("Compiler bug: Expected int on stack");
+            MOZ_CRASH("Compiler bug: Expected I32 on stack");
         }
     }
 
@@ -1155,9 +1154,8 @@ class BaseCompiler
                 masm.move64(src.i64reg().reg, r);
             break;
           case Stk::None:
-            break;
           default:
-            MOZ_CRASH("Compiler bug: Expected int on stack");
+            MOZ_CRASH("Compiler bug: Expected I64 on stack");
         }
     }
 
@@ -1178,9 +1176,8 @@ class BaseCompiler
                 masm.move32(src.i64reg().reg.low, r);
             break;
           case Stk::None:
-            break;
           default:
-            MOZ_CRASH("Compiler bug: Expected int on stack");
+            MOZ_CRASH("Compiler bug: Expected I64 on stack");
         }
     }
 
@@ -1200,9 +1197,8 @@ class BaseCompiler
                 masm.move32(src.i64reg().reg.high, r);
             break;
           case Stk::None:
-            break;
           default:
-            MOZ_CRASH("Compiler bug: Expected int on stack");
+            MOZ_CRASH("Compiler bug: Expected I64 on stack");
         }
     }
 #endif
@@ -1223,9 +1219,8 @@ class BaseCompiler
                 masm.moveDouble(src.f64reg().reg, r);
             break;
           case Stk::None:
-            break;
           default:
-            MOZ_CRASH("Compiler bug: expected double on stack");
+            MOZ_CRASH("Compiler bug: expected F64 on stack");
         }
     }
 
@@ -1245,9 +1240,8 @@ class BaseCompiler
                 masm.moveFloat32(src.f32reg().reg, r);
             break;
           case Stk::None:
-            break;
           default:
-            MOZ_CRASH("Compiler bug: expected float on stack");
+            MOZ_CRASH("Compiler bug: expected F32 on stack");
         }
     }
 
@@ -1477,16 +1471,6 @@ class BaseCompiler
             moveI32(v.i32reg(), r);
             break;
           case Stk::None:
-            // This case crops up in situations where there's unreachable code that
-            // the type system interprets as "generating" a value of the correct type:
-            //
-            //   (if (return) E1 E2)                    type is type(E1) meet type(E2)
-            //   (if E (unreachable) (i32.const 1))     type is int
-            //   (if E (i32.const 1) (unreachable))     type is int
-            //
-            // It becomes silly to handle this throughout the code, so just handle it
-            // here even if that means weaker run-time checking.
-            break;
           default:
             MOZ_CRASH("Compiler bug: expected int on stack");
         }
@@ -1539,8 +1523,6 @@ class BaseCompiler
             moveI64(v.i64reg(), r);
             break;
           case Stk::None:
-            // See popI32()
-            break;
           default:
             MOZ_CRASH("Compiler bug: expected long on stack");
         }
@@ -1593,8 +1575,6 @@ class BaseCompiler
             moveF64(v.f64reg(), r);
             break;
           case Stk::None:
-            // See popI32()
-            break;
           default:
             MOZ_CRASH("Compiler bug: expected double on stack");
         }
@@ -1642,8 +1622,6 @@ class BaseCompiler
             moveF32(v.f32reg(), r);
             break;
           case Stk::None:
-            // See popI32()
-            break;
           default:
             MOZ_CRASH("Compiler bug: expected float on stack");
         }
@@ -1702,37 +1680,48 @@ class BaseCompiler
     // popping of the stack we can just use the JoinReg as it will
     // become available in that process.
 
-    MOZ_MUST_USE AnyReg popJoinReg() {
-        switch (stk_.back().kind()) {
-          case Stk::RegisterI32:
-          case Stk::ConstI32:
-          case Stk::MemI32:
-          case Stk::LocalI32:
-            return AnyReg(popI32(joinRegI32));
-          case Stk::RegisterI64:
-          case Stk::ConstI64:
-          case Stk::MemI64:
-          case Stk::LocalI64:
-            return AnyReg(popI64(joinRegI64));
-          case Stk::RegisterF64:
-          case Stk::ConstF64:
-          case Stk::MemF64:
-          case Stk::LocalF64:
-            return AnyReg(popF64(joinRegF64));
-          case Stk::RegisterF32:
-          case Stk::ConstF32:
-          case Stk::MemF32:
-          case Stk::LocalF32:
-            return AnyReg(popF32(joinRegF32));
-          case Stk::None:
-            stk_.popBack();
+    MOZ_MUST_USE AnyReg popJoinRegUnlessVoid(ExprType type) {
+        switch (type) {
+          case ExprType::Void: {
             return AnyReg();
-          default:
-            MOZ_CRASH("Compiler bug: unexpected value on stack");
+          }
+          case ExprType::I32: {
+            DebugOnly<Stk::Kind> k(stk_.back().kind());
+            MOZ_ASSERT(k == Stk::RegisterI32 || k == Stk::ConstI32 || k == Stk::MemI32 ||
+                       k == Stk::LocalI32);
+            return AnyReg(popI32(joinRegI32));
+          }
+          case ExprType::I64: {
+            DebugOnly<Stk::Kind> k(stk_.back().kind());
+            MOZ_ASSERT(k == Stk::RegisterI64 || k == Stk::ConstI64 || k == Stk::MemI64 ||
+                       k == Stk::LocalI64);
+            return AnyReg(popI64(joinRegI64));
+          }
+          case ExprType::F64: {
+            DebugOnly<Stk::Kind> k(stk_.back().kind());
+            MOZ_ASSERT(k == Stk::RegisterF64 || k == Stk::ConstF64 || k == Stk::MemF64 ||
+                       k == Stk::LocalF64);
+            return AnyReg(popF64(joinRegF64));
+          }
+          case ExprType::F32: {
+            DebugOnly<Stk::Kind> k(stk_.back().kind());
+            MOZ_ASSERT(k == Stk::RegisterF32 || k == Stk::ConstF32 || k == Stk::MemF32 ||
+                       k == Stk::LocalF32);
+            return AnyReg(popF32(joinRegF32));
+          }
+          default: {
+            MOZ_CRASH("Compiler bug: unexpected expression type");
+          }
         }
     }
 
-    MOZ_MUST_USE AnyReg allocJoinReg(ExprType type) {
+    // If we ever start not sync-ing on entry to Block (but instead try to sync
+    // lazily) then this may start asserting because it does not spill the
+    // joinreg if the joinreg is already allocated.  Note, it *can't* spill the
+    // joinreg in the contexts it's being used, so some other solution will need
+    // to be found.
+
+    MOZ_MUST_USE AnyReg captureJoinRegUnlessVoid(ExprType type) {
         switch (type) {
           case ExprType::I32:
             allocGPR(joinRegI32.reg);
@@ -1747,16 +1736,15 @@ class BaseCompiler
             allocFPU(joinRegF64.reg);
             return AnyReg(joinRegF64);
           case ExprType::Void:
-            MOZ_CRASH("Compiler bug: allocating void join reg");
+            return AnyReg();
           default:
             MOZ_CRASH("Compiler bug: unexpected type");
         }
     }
 
-    void pushJoinReg(AnyReg r) {
+    void pushJoinRegUnlessVoid(AnyReg r) {
         switch (r.tag) {
           case AnyReg::NONE:
-            MOZ_CRASH("Compile bug: attempting to push void");
             break;
           case AnyReg::I32:
             pushI32(r.i32());
@@ -1773,10 +1761,9 @@ class BaseCompiler
         }
     }
 
-    void freeJoinReg(AnyReg r) {
+    void freeJoinRegUnlessVoid(AnyReg r) {
         switch (r.tag) {
           case AnyReg::NONE:
-            MOZ_CRASH("Compile bug: attempting to free void reg");
             break;
           case AnyReg::I32:
             freeI32(r.i32());
@@ -4848,8 +4835,8 @@ BaseCompiler::endBlock(ExprType type, bool isFunctionBody)
 
     // Save the value.
     AnyReg r;
-    if (!deadCode_ && !IsVoid(type))
-        r = popJoinReg();
+    if (!deadCode_)
+        r = popJoinRegUnlessVoid(type);
 
     // Leave the block.
     popStackOnBlockExit(block.framePushed);
@@ -4857,17 +4844,18 @@ BaseCompiler::endBlock(ExprType type, bool isFunctionBody)
     // Bind after cleanup: branches out will have popped the stack.
     if (block.label->used()) {
         masm.bind(block.label);
-        if (deadCode_ && !IsVoid(type))
-            r = allocJoinReg(type);
+        // No value was provided by the fallthrough but the branch out will
+        // have stored one in joinReg, so capture that.
+        if (deadCode_)
+            r = captureJoinRegUnlessVoid(type);
         deadCode_ = false;
     }
 
     MOZ_ASSERT(stk_.length() == block.stackSize);
 
-    // Retain the value stored in joinReg by all paths.
+    // Retain the value stored in joinReg by all paths, if there are any.
     if (!deadCode_) {
-        if (!IsVoid(type))
-            pushJoinReg(r);
+        pushJoinRegUnlessVoid(r);
 
         if (isFunctionBody)
             doReturn(func_.sig().ret());
@@ -4906,8 +4894,8 @@ BaseCompiler::endLoop(ExprType type)
     Control& block = controlItem(0);
 
     AnyReg r;
-    if (!deadCode_ && !IsVoid(type))
-        r = popJoinReg();
+    if (!deadCode_)
+        r = popJoinRegUnlessVoid(type);
 
     popStackOnBlockExit(block.framePushed);
 
@@ -4916,8 +4904,8 @@ BaseCompiler::endLoop(ExprType type)
     popControl();
 
     // Retain the value stored in joinReg by all paths.
-    if (!deadCode_ && !IsVoid(type))
-        pushJoinReg(r);
+    if (!deadCode_)
+        pushJoinRegUnlessVoid(r);
 }
 
 // The bodies of the "then" and "else" arms can be arbitrary sequences
@@ -5003,8 +4991,8 @@ BaseCompiler::emitElse()
     ifThenElse.deadThenBranch = deadCode_;
 
     AnyReg r;
-    if (!deadCode_ && !IsVoid(thenType))
-        r = popJoinReg();
+    if (!deadCode_)
+        r = popJoinRegUnlessVoid(thenType);
 
     popStackOnBlockExit(ifThenElse.framePushed);
 
@@ -5018,8 +5006,8 @@ BaseCompiler::emitElse()
 
     MOZ_ASSERT(stk_.length() == ifThenElse.stackSize);
 
-    if (!deadCode_ && !IsVoid(thenType))
-        freeJoinReg(r);
+    if (!deadCode_)
+        freeJoinRegUnlessVoid(r);
 
     deadCode_ = ifThenElse.deadOnArrival;
 
@@ -5038,18 +5026,23 @@ BaseCompiler::endIfThenElse(ExprType type)
     // we want to find there.  The "then" arm has the same constraint.
 
     AnyReg r;
-    if (!deadCode_ && !IsVoid(type))
-        r = popJoinReg();
+
+    if (!deadCode_)
+        r = popJoinRegUnlessVoid(type);
 
     popStackOnBlockExit(ifThenElse.framePushed);
 
     if (ifThenElse.label->used())
         masm.bind(ifThenElse.label);
 
-    if (!ifThenElse.deadOnArrival &&
-        (!ifThenElse.deadThenBranch || !deadCode_ || ifThenElse.label->bound())) {
-        if (deadCode_ && !IsVoid(type))
-            r = allocJoinReg(type);
+    bool joinLive = !ifThenElse.deadOnArrival &&
+                    (!ifThenElse.deadThenBranch || !deadCode_ || ifThenElse.label->bound());
+
+    if (joinLive) {
+        // No value was provided by the "then" path but capture the one
+        // provided by the "else" path.
+        if (deadCode_)
+            r = captureJoinRegUnlessVoid(type);
         deadCode_ = false;
     }
 
@@ -5057,8 +5050,8 @@ BaseCompiler::endIfThenElse(ExprType type)
 
     popControl();
 
-    if (!deadCode_ && !IsVoid(type))
-        pushJoinReg(r);
+    if (!deadCode_)
+        pushJoinRegUnlessVoid(r);
 }
 
 bool
@@ -5098,9 +5091,7 @@ BaseCompiler::emitBr()
     // Save any value in the designated join register, where the
     // normal block exit code will also leave it.
 
-    AnyReg r;
-    if (!IsVoid(type))
-        r = popJoinReg();
+    AnyReg r = popJoinRegUnlessVoid(type);
 
     popStackBeforeBranch(target.framePushed);
     masm.jump(target.label);
@@ -5108,8 +5099,7 @@ BaseCompiler::emitBr()
     // The register holding the join value is free for the remainder
     // of this block.
 
-    if (!IsVoid(type))
-        freeJoinReg(r);
+    freeJoinRegUnlessVoid(r);
 
     deadCode_ = true;
 
@@ -5146,9 +5136,7 @@ BaseCompiler::emitBrIf()
 
     // Save any value in the designated join register, where the
     // normal block exit code will also leave it.
-    AnyReg r;
-    if (!IsVoid(type))
-        r = popJoinReg();
+    AnyReg r = popJoinRegUnlessVoid(type);
 
     Label notTaken;
     masm.branch32(Assembler::Equal, rc.reg, Imm32(0), &notTaken);
@@ -5160,8 +5148,7 @@ BaseCompiler::emitBrIf()
     freeI32(rc);
 
     // br_if returns its value(s).
-    if (!IsVoid(type))
-        pushJoinReg(r);
+    pushJoinRegUnlessVoid(r);
 
     return true;
 }
@@ -5205,9 +5192,7 @@ BaseCompiler::emitBrTable()
 
     maybeUnreserveJoinRegI(type);
 
-    AnyReg r;
-    if (!IsVoid(type))
-        r = popJoinReg();
+    AnyReg r = popJoinRegUnlessVoid(type);
 
     Label dispatchCode;
     masm.branch32(Assembler::Below, rc.reg, Imm32(tableLength), &dispatchCode);
@@ -5253,8 +5238,7 @@ BaseCompiler::emitBrTable()
     // Clean up.
 
     freeI32(rc);
-    if (!IsVoid(type))
-        freeJoinReg(r);
+    freeJoinRegUnlessVoid(r);
 
     for (uint32_t i = 0; i < tableLength; i++)
         freeLabel(stubs[i]);
