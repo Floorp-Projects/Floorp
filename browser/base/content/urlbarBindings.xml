@@ -701,38 +701,51 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <method name="onDragOver">
-        <parameter name="aEvent"/>
-        <body>
-          var types = aEvent.dataTransfer.types;
-          if (types.includes("application/x-moz-file") ||
-              types.includes("text/x-moz-url") ||
-              types.includes("text/uri-list") ||
-              types.includes("text/unicode"))
-            aEvent.preventDefault();
-        </body>
-      </method>
-
-      <method name="onDrop">
+      <method name="_getDroppableLink">
         <parameter name="aEvent"/>
         <body><![CDATA[
           let links = browserDragAndDrop.dropLinks(aEvent);
-
           // The URL bar automatically handles inputs with newline characters,
           // so we can get away with treating text/x-moz-url flavours as text/plain.
           if (links.length > 0 && links[0].url) {
-            let url = links[0].url;
             aEvent.preventDefault();
-            this.value = url;
-            SetPageProxyState("invalid");
-            this.focus();
+            let url = links[0].url;
+            let strippedURL = stripUnsafeProtocolOnPaste(url);
+            if (strippedURL != url) {
+              aEvent.stopImmediatePropagation();
+              return null;
+            }
             try {
               urlSecurityCheck(url,
                                gBrowser.contentPrincipal,
                                Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
             } catch (ex) {
-              return;
+              return null;
             }
+            return url;
+          }
+          return null;
+        ]]></body>
+      </method>
+
+      <method name="onDragOver">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          // We don't need the link here, so we ignore the return value.
+          if (!this._getDroppableLink(aEvent)) {
+            aEvent.dataTransfer.dropEffect = "none";
+          }
+        ]]></body>
+      </method>
+
+      <method name="onDrop">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          let url = this._getDroppableLink(aEvent);
+          if (url) {
+            this.value = url;
+            SetPageProxyState("invalid");
+            this.focus();
             this.handleCommand();
           }
         ]]></body>
@@ -924,7 +937,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 // Unfortunately we're not allowed to set the bits being pasted
                 // so cancel this event:
                 aEvent.preventDefault();
-                aEvent.stopPropagation();
+                aEvent.stopImmediatePropagation();
 
                 this.inputField.value = oldStart + pasteData + oldEnd;
                 // Fix up cursor/selection:
