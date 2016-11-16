@@ -64,6 +64,9 @@ class WidgetRenderingContext;
 // has been present in the same form since at least OS X 10.2.8.
 - (EventRef)_eventRef;
 
+// stage From 10.10.3 for force touch event
+@property (readonly) NSInteger stage;
+
 @end
 
 @interface NSView (Undocumented)
@@ -204,6 +207,9 @@ class WidgetRenderingContext;
   // The mask image that's used when painting into the titlebar using basic
   // CGContext painting (i.e. non-accelerated).
   CGImageRef mTopLeftCornerMask;
+
+  // Last pressure stage by trackpad's force click
+  NSInteger mLastPressureStage;
 }
 
 // class initialization
