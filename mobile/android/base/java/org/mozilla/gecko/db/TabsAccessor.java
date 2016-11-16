@@ -17,10 +17,10 @@ public interface TabsAccessor {
         public void onQueryTabsComplete(List<RemoteClient> clients);
     }
 
-    public Cursor getRemoteClientsByRecencyCursor(Context context);
+    public Cursor getRemoteClientsNoStaleSorted(Context context);
     public Cursor getRemoteTabsCursor(Context context);
     public Cursor getRemoteTabsCursor(Context context, int limit);
-    public List<RemoteClient> getClientsWithoutTabsByRecencyFromCursor(final Cursor cursor);
+    public List<RemoteClient> getClientsWithoutTabsNoStaleSortedFromCursor(final Cursor cursor);
     public List<RemoteClient> getClientsFromCursor(final Cursor cursor);
     public void getTabs(final Context context, final OnQueryTabsCompleteListener listener);
     public void getTabs(final Context context, final int limit, final OnQueryTabsCompleteListener listener);
