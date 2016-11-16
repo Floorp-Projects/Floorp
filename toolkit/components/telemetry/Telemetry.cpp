@@ -429,7 +429,7 @@ public:
    * An implementation of Observe that records statistics of all
    * file IO operations.
    */
-  void Observe(Observation& aOb);
+  void Observe(Observation& aOb) override;
 
   /**
    * Reflect recorded file IO statistics into Javascript
