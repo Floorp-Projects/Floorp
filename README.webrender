@@ -1,0 +1,35 @@
+Step 1: Install/switch to Rust Nightly
+    If you don't have it installed, you can install it from https://www.rust-lang.org/en-US/downloads.html
+    For Linux/Mac you can do this using rustup, see the curl command at the bottom of the page
+    For Windows you can use the MSVC ABI Nightly installer linked to from that download page
+    Note: do NOT install rust using ./mach bootstrap, as that will install the stable version and we need Nightly.
+          If you have already installed stable rust, make sure it is not in your $PATH
+
+Step 2: Install cmake (required to build servo-freetype-sys)
+    For Linux/Mac use your package manager of choice (apt-get/brew/whatever)
+    For Windows download the installer from https://cmake.org/download/ (3.6.3 stable confirmed working)
+
+Step 3: Set up environment
+    Add the following two lines to your mozconfig:
+        ac_add_options --enable-rust
+        ac_add_options --enable-webrender
+    Ensure rustc, cargo, and cmake are in your $PATH.
+        On Windows in the MozillaBuild shell you can run:
+            export PATH="$PATH:/c/Program Files/Rust nightly MSVC 1.14/bin:/c/Program Files/CMake/bin"
+        to add them to your path assuming you used the default installation options when installing.
+        You can also add the export statement to your mozconfig
+    The first time you do a build with these changes, you should also run |mach clobber|
+
+Step 4:
+    Build using |mach build|
+
+
+When making changes:
+    - Make the changes you want.
+    - Run |mach build| or |mach build binaries| as desired.
+
+
+For a debug webrender build:
+    Use a debug mozconfig (ac_add_options --enable-debug)
+    You can also use an opt build but make webrender less optimized by putting opt-level=0 in the [profile.release] section of your gfx/webrender/Cargo.toml file
+    See also https://groups.google.com/forum/#!topic/mozilla.dev.servo/MbeMcqqO1fs
