@@ -120,8 +120,6 @@ interface RTCPeerConnection : EventTarget  {
   sequence<MediaStream> getLocalStreams ();
   [UnsafeInPrerendering, Deprecated="RTCPeerConnectionGetStreams"]
   sequence<MediaStream> getRemoteStreams ();
-  [UnsafeInPrerendering]
-  MediaStream? getStreamById (DOMString streamId);
   void addStream (MediaStream stream);
 
   // replaces addStream; fails if already added
