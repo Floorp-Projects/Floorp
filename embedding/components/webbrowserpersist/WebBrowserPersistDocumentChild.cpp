@@ -72,11 +72,11 @@ WebBrowserPersistDocumentChild::Start(nsIWebBrowserPersistDocument* aDocument)
     SendAttributes(attrs, postData, postFiles);
 }
 
-bool
+mozilla::ipc::IPCResult
 WebBrowserPersistDocumentChild::RecvSetPersistFlags(const uint32_t& aNewFlags)
 {
     mDocument->SetPersistFlags(aNewFlags);
-    return true;
+    return IPC_OK();
 }
 
 PWebBrowserPersistResourcesChild*
@@ -87,7 +87,7 @@ WebBrowserPersistDocumentChild::AllocPWebBrowserPersistResourcesChild()
     return actor;
 }
 
-bool
+mozilla::ipc::IPCResult
 WebBrowserPersistDocumentChild::RecvPWebBrowserPersistResourcesConstructor(PWebBrowserPersistResourcesChild* aActor)
 {
     RefPtr<WebBrowserPersistResourcesChild> visitor =
@@ -100,7 +100,7 @@ WebBrowserPersistDocumentChild::RecvPWebBrowserPersistResourcesConstructor(PWebB
         // visitor instead.
         visitor->EndVisit(mDocument, rv);
     }
-    return true;
+    return IPC_OK();
 }
 
 bool
@@ -124,7 +124,7 @@ WebBrowserPersistDocumentChild::AllocPWebBrowserPersistSerializeChild(
     return actor;
 }
 
-bool
+mozilla::ipc::IPCResult
 WebBrowserPersistDocumentChild::RecvPWebBrowserPersistSerializeConstructor(
             PWebBrowserPersistSerializeChild* aActor,
             const WebBrowserPersistURIMap& aMap,
@@ -144,7 +144,7 @@ WebBrowserPersistDocumentChild::RecvPWebBrowserPersistSerializeConstructor(
     if (NS_FAILED(rv)) {
         castActor->OnFinish(mDocument, castActor, aRequestedContentType, rv);
     }
-    return true;
+    return IPC_OK();
 }
 
 bool

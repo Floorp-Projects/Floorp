@@ -23,7 +23,7 @@ struct SeekJob {
 
   bool Exists() const;
 
-  void Resolve(bool aAtEnd, const char* aCallSite);
+  void Resolve(const char* aCallSite);
 
   void RejectIfExists(const char* aCallSite);
 

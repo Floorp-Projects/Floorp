@@ -23,7 +23,7 @@ public:
   ImageContainerParent() {}
   ~ImageContainerParent();
 
-  virtual bool RecvAsyncDelete() override;
+  virtual mozilla::ipc::IPCResult RecvAsyncDelete() override;
 
   AutoTArray<ImageHost*,1> mImageHosts;
 

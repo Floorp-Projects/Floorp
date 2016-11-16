@@ -7,7 +7,7 @@
 const { LongStringActor } = require("devtools/server/actors/object");
 
 function run_test() {
-  test_LSA_disconnect();
+  test_LSA_destroy();
   test_LSA_grip();
   test_LSA_onSubstring();
 }
@@ -27,12 +27,12 @@ function makeMockLongStringActor()
   return actor;
 }
 
-function test_LSA_disconnect()
+function test_LSA_destroy()
 {
   let actor = makeMockLongStringActor();
   do_check_eq(actor.registeredPool.longStringActors[TEST_STRING], actor);
 
-  actor.disconnect();
+  actor.destroy();
   do_check_eq(actor.registeredPool.longStringActors[TEST_STRING], void 0);
 }
 

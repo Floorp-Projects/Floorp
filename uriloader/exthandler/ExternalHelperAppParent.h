@@ -50,13 +50,13 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
 
-    bool RecvOnStartRequest(const nsCString& entityID) override;
-    bool RecvOnDataAvailable(const nsCString& data,
-                             const uint64_t& offset,
-                             const uint32_t& count) override;
-    bool RecvOnStopRequest(const nsresult& code) override;
+    mozilla::ipc::IPCResult RecvOnStartRequest(const nsCString& entityID) override;
+    mozilla::ipc::IPCResult RecvOnDataAvailable(const nsCString& data,
+                                                const uint64_t& offset,
+                                                const uint32_t& count) override;
+    mozilla::ipc::IPCResult RecvOnStopRequest(const nsresult& code) override;
 
-    bool RecvDivertToParentUsing(PChannelDiverterParent* diverter) override;
+    mozilla::ipc::IPCResult RecvDivertToParentUsing(PChannelDiverterParent* diverter) override;
 
     ExternalHelperAppParent(const OptionalURIParams& uri, const int64_t& contentLength);
     void Init(ContentParent *parent,

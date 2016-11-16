@@ -22,10 +22,10 @@ public:
 
     void Main();
 
-    bool RecvMsg1() override;
-    bool RecvMsg2() override;
-    bool RecvMsg3() override;
-    bool RecvMsg4() override;
+    mozilla::ipc::IPCResult RecvMsg1() override;
+    mozilla::ipc::IPCResult RecvMsg2() override;
+    mozilla::ipc::IPCResult RecvMsg3() override;
+    mozilla::ipc::IPCResult RecvMsg4() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
@@ -49,8 +49,8 @@ public:
     TestHighestPrioChild();
     virtual ~TestHighestPrioChild();
 
-    bool RecvStart() override;
-    bool RecvStartInner() override;
+    mozilla::ipc::IPCResult RecvStart() override;
+    mozilla::ipc::IPCResult RecvStartInner() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

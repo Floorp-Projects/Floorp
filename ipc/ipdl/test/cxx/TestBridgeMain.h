@@ -48,9 +48,9 @@ public:
     virtual ~TestBridgeMainSubParent() {}
 
 protected:
-    virtual bool RecvHello() override;
-    virtual bool RecvHelloSync() override;
-    virtual bool AnswerHelloRpc() override;
+    virtual mozilla::ipc::IPCResult RecvHello() override;
+    virtual mozilla::ipc::IPCResult RecvHelloSync() override;
+    virtual mozilla::ipc::IPCResult AnswerHelloRpc() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override;
 
@@ -70,7 +70,7 @@ public:
     virtual ~TestBridgeMainChild() {}
 
 protected:
-    virtual bool RecvStart() override;
+    virtual mozilla::ipc::IPCResult RecvStart() override;
 
     virtual PTestBridgeMainSubChild*
     AllocPTestBridgeMainSubChild(Transport* transport,
@@ -97,7 +97,7 @@ public:
     void Main();
 
 protected:
-    virtual bool RecvBridgeEm() override;
+    virtual mozilla::ipc::IPCResult RecvBridgeEm() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override;
 };
@@ -113,7 +113,7 @@ public:
     virtual ~TestBridgeSubChild() {}
 
 protected:
-    virtual bool RecvPing() override;
+    virtual mozilla::ipc::IPCResult RecvPing() override;
 
     virtual PTestBridgeMainSubChild*
     AllocPTestBridgeMainSubChild(Transport* transport,
@@ -133,8 +133,8 @@ public:
     virtual ~TestBridgeMainSubChild() {}
 
 protected:
-    virtual bool RecvHi() override;
-    virtual bool AnswerHiRpc() override;
+    virtual mozilla::ipc::IPCResult RecvHi() override;
+    virtual mozilla::ipc::IPCResult AnswerHiRpc() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override;
 

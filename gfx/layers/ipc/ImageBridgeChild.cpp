@@ -1108,7 +1108,7 @@ ImageBridgeChild::DeallocPImageContainerChild(PImageContainerChild* actor)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 ImageBridgeChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages)
 {
   for (AsyncParentMessageArray::index_type i = 0; i < aMessages.Length(); ++i) {
@@ -1122,13 +1122,13 @@ ImageBridgeChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageDat
       }
       default:
         NS_ERROR("unknown AsyncParentMessageData type");
-        return false;
+        return IPC_FAIL_NO_REASON(this);
     }
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 ImageBridgeChild::RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&& aNotifications)
 {
   for (auto& n : aNotifications) {
@@ -1138,7 +1138,7 @@ ImageBridgeChild::RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&
       child->NotifyComposite(n);
     }
   }
-  return true;
+  return IPC_OK();
 }
 
 PTextureChild*

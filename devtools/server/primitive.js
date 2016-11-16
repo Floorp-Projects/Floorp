@@ -28,9 +28,7 @@ var WebGLPrimitiveCounter = exports.WebGLPrimitiveCounter = Class({
     this.tabActor = tabActor;
   },
 
-  destroy: function () {
-    this.stopRecording();
-  },
+  destroy: function () {},
 
   /**
    * Starts monitoring primitive draws, storing the primitives count per tick.

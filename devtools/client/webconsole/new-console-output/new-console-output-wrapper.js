@@ -123,6 +123,11 @@ NewConsoleOutputWrapper.prototype = {
   dispatchMessagesClear: function () {
     store.dispatch(actions.messagesClear());
   },
+
+  dispatchTimestampsToggle: function (enabled) {
+    store.dispatch(actions.timestampsToggle(enabled));
+  },
+
   // Should be used for test purpose only.
   getStore: function () {
     return store;

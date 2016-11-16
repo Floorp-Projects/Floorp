@@ -1123,6 +1123,12 @@ SyncEngine.prototype = {
         return;
       }
 
+      if (self._shouldDeleteRemotely(item)) {
+        self._log.trace("Deleting item from server without applying", item);
+        self._deleteId(item.id);
+        return;
+      }
+
       let shouldApply;
       try {
         shouldApply = self._reconcile(item);
@@ -1258,6 +1264,13 @@ SyncEngine.prototype = {
                     count.newFailed, "newly failed to apply,",
                     count.reconciled, "reconciled."].join(" "));
     Observers.notify("weave:engine:sync:applied", count, this.name);
+  },
+
+  // Indicates whether an incoming item should be deleted from the server at
+  // the end of the sync. Engines can override this method to clean up records
+  // that shouldn't be on the server.
+  _shouldDeleteRemotely(remoteItem) {
+    return false;
   },
 
   _noteApplyFailure: function () {

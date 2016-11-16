@@ -29,19 +29,19 @@ class PrintingParent final : public PPrintingParent
 public:
     NS_INLINE_DECL_REFCOUNTING(PrintingParent)
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvShowProgress(PBrowserParent* parent,
                      PPrintProgressDialogParent* printProgressDialog,
                      PRemotePrintJobParent* remotePrintJob,
                      const bool& isForPrinting,
                      bool* notifyOnOpen,
                      nsresult* result);
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvShowPrintDialog(PPrintSettingsDialogParent* aDialog,
                         PBrowserParent* aParent,
                         const PrintData& aData);
 
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvSavePrintSettings(const PrintData& data,
                           const bool& usePrinterNamePrefix,
                           const uint32_t& flags,

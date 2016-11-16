@@ -24,7 +24,10 @@ describe("NetworkEventMessage component:", () => {
     it("renders as expected", () => {
       const message = stubPreparedMessages.get("GET request");
       const wrapper = render(NetworkEventMessage({ message, serviceContainer }));
+      const L10n = require("devtools/client/webconsole/new-console-output/test/fixtures/L10n");
+      const { timestampString } = new L10n();
 
+      expect(wrapper.find(".timestamp").text()).toBe(timestampString(message.timeStamp));
       expect(wrapper.find(".message-body .method").text()).toBe("GET");
       expect(wrapper.find(".message-body .xhr").length).toBe(0);
       expect(wrapper.find(".message-body .url").length).toBe(1);

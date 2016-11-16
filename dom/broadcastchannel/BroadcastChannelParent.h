@@ -33,10 +33,10 @@ private:
   explicit BroadcastChannelParent(const nsAString& aOriginChannelKey);
   ~BroadcastChannelParent();
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvPostMessage(const ClonedMessageData& aData) override;
 
-  virtual bool RecvClose() override;
+  virtual mozilla::ipc::IPCResult RecvClose() override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

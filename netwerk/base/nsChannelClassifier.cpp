@@ -78,7 +78,10 @@ nsChannelClassifier::ShouldEnableTrackingProtection(nsIChannel *aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv) || !chan) {
+      LOG(("nsChannelClassifier[%p]: Not an HTTP channel", this));
+      return NS_OK;
+    }
 
     nsCOMPtr<nsIURI> topWinURI;
     rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));

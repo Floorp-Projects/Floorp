@@ -31,8 +31,8 @@ public:
     void Main();
 
 protected:
-    virtual bool RecvPong() override;
-    virtual bool RecvPong5() override;
+    virtual mozilla::ipc::IPCResult RecvPong() override;
+    virtual mozilla::ipc::IPCResult RecvPong5() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
@@ -83,13 +83,13 @@ public:
     virtual ~TestLatencyChild();
 
 protected:
-    virtual bool RecvPing() override;
-    virtual bool RecvPing5() override;
-    virtual bool AnswerRpc() override;
-    virtual bool RecvSpam() override;
-    virtual bool AnswerSynchro() override;
-    virtual bool RecvCompressedSpam(const uint32_t& seqno) override;
-    virtual bool AnswerSynchro2(uint32_t* lastSeqno,
+    virtual mozilla::ipc::IPCResult RecvPing() override;
+    virtual mozilla::ipc::IPCResult RecvPing5() override;
+    virtual mozilla::ipc::IPCResult AnswerRpc() override;
+    virtual mozilla::ipc::IPCResult RecvSpam() override;
+    virtual mozilla::ipc::IPCResult AnswerSynchro() override;
+    virtual mozilla::ipc::IPCResult RecvCompressedSpam(const uint32_t& seqno) override;
+    virtual mozilla::ipc::IPCResult AnswerSynchro2(uint32_t* lastSeqno,
                                 uint32_t* numMessagesDispatched) override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override

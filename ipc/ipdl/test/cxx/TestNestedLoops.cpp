@@ -39,7 +39,7 @@ TestNestedLoopsParent::Main()
     Close();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestNestedLoopsParent::RecvNonce()
 {
     // if we have an OnMaybeDequeueOne waiting for us (we may not, due
@@ -58,7 +58,7 @@ TestNestedLoopsParent::RecvNonce()
             fail("expected at least one pending event");
     } while (!mBreakNestedLoop);
 
-    return true;
+    return IPC_OK();
 }
 
 void
@@ -80,18 +80,18 @@ TestNestedLoopsChild::~TestNestedLoopsChild()
     MOZ_COUNT_DTOR(TestNestedLoopsChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestNestedLoopsChild::RecvStart()
 {
     if (!SendNonce())
         fail("sending Nonce");
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestNestedLoopsChild::AnswerR()
 {
-    return true;
+    return IPC_OK();
 }
 
 } // namespace _ipdltest

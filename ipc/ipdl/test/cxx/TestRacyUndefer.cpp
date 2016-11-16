@@ -27,7 +27,7 @@ TestRacyUndeferParent::Main()
         fail("sending Start");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyUndeferParent::AnswerSpam()
 {
     static bool spammed = false;
@@ -47,20 +47,20 @@ TestRacyUndeferParent::AnswerSpam()
         if (!CallRace())
             fail("calling Race1");
     }
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyUndeferParent::AnswerRaceWinTwice()
 {
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyUndeferParent::RecvDone()
 {
     Close();
-    return true;
+    return IPC_OK();
 }
 
 
@@ -77,7 +77,7 @@ TestRacyUndeferChild::~TestRacyUndeferChild()
     MOZ_COUNT_DTOR(TestRacyUndeferChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyUndeferChild::RecvStart()
 {
     if (!CallSpam())
@@ -86,29 +86,29 @@ TestRacyUndeferChild::RecvStart()
     if (!SendDone())
         fail("sending Done");
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyUndeferChild::RecvAwakenSpam()
 {
     if (!CallSpam())
         fail("calling Spam");
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyUndeferChild::RecvAwakenRaceWinTwice()
 {
     if (!CallRaceWinTwice())
         fail("calling RaceWinTwice");
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestRacyUndeferChild::AnswerRace()
 {
-    return true;
+    return IPC_OK();
 }
 
 } // namespace _ipdltest

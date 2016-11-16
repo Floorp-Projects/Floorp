@@ -79,7 +79,7 @@ BrowserStreamChild::~BrowserStreamChild()
   NS_ASSERTION(!mStreamNotify, "Should have nulled it by now!");
 }
 
-bool
+mozilla::ipc::IPCResult
 BrowserStreamChild::RecvWrite(const int32_t& offset,
                               const uint32_t& newlength,
                               const Buffer& data)
@@ -92,7 +92,7 @@ BrowserStreamChild::RecvWrite(const int32_t& offset,
     NS_RUNTIMEABORT("Unexpected state: received data after NPP_DestroyStream?");
 
   if (kStreamOpen != mStreamStatus)
-    return true;
+    return IPC_OK();
 
   mStream.end = newlength;
 
@@ -105,10 +105,10 @@ BrowserStreamChild::RecvWrite(const int32_t& offset,
 
   EnsureDeliveryPending();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BrowserStreamChild::RecvNPP_StreamAsFile(const nsCString& fname)
 {
   PLUGIN_LOG_DEBUG(("%s (fname=%s)", FULLFUNCTION, fname.get()));
@@ -119,16 +119,16 @@ BrowserStreamChild::RecvNPP_StreamAsFile(const nsCString& fname)
     NS_RUNTIMEABORT("Unexpected state: received file after NPP_DestroyStream?");
 
   if (kStreamOpen != mStreamStatus)
-    return true;
+    return IPC_OK();
 
   mStreamAsFilePending = true;
   mStreamAsFileName = fname;
   EnsureDeliveryPending();
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BrowserStreamChild::RecvNPP_DestroyStream(const NPReason& reason)
 {
   PLUGIN_LOG_DEBUG_METHOD;
@@ -142,10 +142,10 @@ BrowserStreamChild::RecvNPP_DestroyStream(const NPReason& reason)
     mStreamStatus = reason;
 
   EnsureDeliveryPending();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 BrowserStreamChild::Recv__delete__()
 {
   AssertPluginThread();
@@ -153,7 +153,7 @@ BrowserStreamChild::Recv__delete__()
   if (DELETING != mState)
     NS_RUNTIMEABORT("Bad state, not DELETING");
 
-  return true;
+  return IPC_OK();
 }
 
 NPError

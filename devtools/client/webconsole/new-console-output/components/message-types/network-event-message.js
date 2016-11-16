@@ -31,7 +31,7 @@ NetworkEventMessage.defaultProps = {
 
 function NetworkEventMessage(props) {
   const { message, serviceContainer, indent } = props;
-  const { actor, source, type, level, request, isXHR } = message;
+  const { actor, source, type, level, request, isXHR, timeStamp } = message;
 
   const topLevelClasses = [ "cm-s-mozilla" ];
 
@@ -54,6 +54,7 @@ function NetworkEventMessage(props) {
     level,
     indent,
     topLevelClasses,
+    timeStamp,
     messageBody,
     serviceContainer,
   };

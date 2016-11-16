@@ -13,15 +13,18 @@ TestShellChild::TestShellChild()
 {
 }
 
-bool
+mozilla::ipc::IPCResult
 TestShellChild::RecvExecuteCommand(const nsString& aCommand)
 {
   if (mXPCShell->IsQuitting()) {
     NS_WARNING("Commands sent after quit command issued!");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  return mXPCShell->EvaluateString(aCommand);
+  if (!mXPCShell->EvaluateString(aCommand)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 PTestShellCommandChild*
@@ -37,20 +40,23 @@ TestShellChild::DeallocPTestShellCommandChild(PTestShellCommandChild* aCommand)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 TestShellChild::RecvPTestShellCommandConstructor(PTestShellCommandChild* aActor,
                                                  const nsString& aCommand)
 {
   if (mXPCShell->IsQuitting()) {
     NS_WARNING("Commands sent after quit command issued!");
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   nsString response;
   if (!mXPCShell->EvaluateString(aCommand, &response)) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  return PTestShellCommandChild::Send__delete__(aActor, response);
+  if (!PTestShellCommandChild::Send__delete__(aActor, response)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 

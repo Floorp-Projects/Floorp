@@ -90,12 +90,17 @@ const Message = createClass({
       serviceContainer,
       dispatch,
       exceptionDocURL,
+      timeStamp = Date.now(),
     } = this.props;
 
     topLevelClasses.push("message", source, type, level);
     if (open) {
       topLevelClasses.push("open");
     }
+
+    const timestampEl = dom.span({
+      className: "timestamp devtools-monospace"
+    }, l10n.timestampString(timeStamp));
 
     const icon = MessageIcon({level});
 
@@ -154,7 +159,7 @@ const Message = createClass({
         this.messageNode = node;
       }
     },
-      // @TODO add timestamp
+      timestampEl,
       MessageIndent({indent}),
       icon,
       collapse,

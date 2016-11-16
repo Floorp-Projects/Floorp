@@ -52,9 +52,9 @@ private:
 
   bool GetUTF8LibPath(nsACString& aOutLibPath);
 
-  bool RecvSetNodeId(const nsCString& aNodeId) override;
-  bool AnswerStartPlugin(const nsString& aAdapter) override;
-  bool RecvPreloadLibs(const nsCString& aLibs) override;
+  mozilla::ipc::IPCResult RecvSetNodeId(const nsCString& aNodeId) override;
+  mozilla::ipc::IPCResult AnswerStartPlugin(const nsString& aAdapter) override;
+  mozilla::ipc::IPCResult RecvPreloadLibs(const nsCString& aLibs) override;
 
   PCrashReporterChild* AllocPCrashReporterChild(const NativeThreadId& aThread) override;
   bool DeallocPCrashReporterChild(PCrashReporterChild*) override;
@@ -69,9 +69,9 @@ private:
                                           ProcessId aOtherPid) override;
   void GMPContentChildActorDestroy(GMPContentChild* aGMPContentChild);
 
-  bool RecvCrashPluginNow() override;
-  bool RecvBeginAsyncShutdown() override;
-  bool RecvCloseActive() override;
+  mozilla::ipc::IPCResult RecvCrashPluginNow() override;
+  mozilla::ipc::IPCResult RecvBeginAsyncShutdown() override;
+  mozilla::ipc::IPCResult RecvCloseActive() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ProcessingError(Result aCode, const char* aReason) override;

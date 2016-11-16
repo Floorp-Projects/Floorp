@@ -218,7 +218,7 @@ private:
   virtual bool
   DeallocPBlobStreamChild(PBlobStreamChild* aActor) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvCreatedFromKnownBlob() override;
 };
 

@@ -58,7 +58,7 @@ public:
 protected:
     virtual PTestFailedCtorSubChild* AllocPTestFailedCtorSubChild() override;
 
-    virtual bool AnswerPTestFailedCtorSubConstructor(PTestFailedCtorSubChild* actor) override;
+    virtual mozilla::ipc::IPCResult AnswerPTestFailedCtorSubConstructor(PTestFailedCtorSubChild* actor) override;
 
     virtual bool DeallocPTestFailedCtorSubChild(PTestFailedCtorSubChild* actor) override;
 
@@ -87,7 +87,7 @@ protected:
     virtual PTestFailedCtorSubsubParent* AllocPTestFailedCtorSubsubParent() override;
 
     virtual bool DeallocPTestFailedCtorSubsubParent(PTestFailedCtorSubsubParent* actor) override;
-    virtual bool RecvSync() override { return true; }
+    virtual mozilla::ipc::IPCResult RecvSync() override { return IPC_OK(); }
 
     virtual void ActorDestroy(ActorDestroyReason why) override;
 

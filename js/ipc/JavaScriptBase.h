@@ -30,94 +30,160 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
 
     /*** IPC handlers ***/
 
-    bool RecvPreventExtensions(const uint64_t& objId, ReturnStatus* rs) {
-        return Answer::RecvPreventExtensions(ObjectId::deserialize(objId), rs);
+    mozilla::ipc::IPCResult RecvPreventExtensions(const uint64_t& objId, ReturnStatus* rs) {
+        if (!Answer::RecvPreventExtensions(ObjectId::deserialize(objId), rs)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
-    bool RecvGetPropertyDescriptor(const uint64_t& objId, const JSIDVariant& id,
-                                     ReturnStatus* rs,
-                                     PPropertyDescriptor* out) {
-        return Answer::RecvGetPropertyDescriptor(ObjectId::deserialize(objId), id, rs, out);
+    mozilla::ipc::IPCResult RecvGetPropertyDescriptor(const uint64_t& objId, const JSIDVariant& id,
+                                                      ReturnStatus* rs,
+                                                      PPropertyDescriptor* out) {
+        if (!Answer::RecvGetPropertyDescriptor(ObjectId::deserialize(objId), id, rs, out)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
-    bool RecvGetOwnPropertyDescriptor(const uint64_t& objId,
-                                        const JSIDVariant& id,
-                                        ReturnStatus* rs,
-                                        PPropertyDescriptor* out) {
-        return Answer::RecvGetOwnPropertyDescriptor(ObjectId::deserialize(objId), id, rs, out);
+    mozilla::ipc::IPCResult RecvGetOwnPropertyDescriptor(const uint64_t& objId,
+                                                         const JSIDVariant& id,
+                                                         ReturnStatus* rs,
+                                                         PPropertyDescriptor* out) {
+        if (!Answer::RecvGetOwnPropertyDescriptor(ObjectId::deserialize(objId), id, rs, out)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
-    bool RecvDefineProperty(const uint64_t& objId, const JSIDVariant& id,
-                            const PPropertyDescriptor& flags, ReturnStatus* rs) {
-        return Answer::RecvDefineProperty(ObjectId::deserialize(objId), id, flags, rs);
+    mozilla::ipc::IPCResult RecvDefineProperty(const uint64_t& objId, const JSIDVariant& id,
+                                               const PPropertyDescriptor& flags, ReturnStatus* rs) {
+        if (!Answer::RecvDefineProperty(ObjectId::deserialize(objId), id, flags, rs)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
-    bool RecvDelete(const uint64_t& objId, const JSIDVariant& id,
-                      ReturnStatus* rs) {
-        return Answer::RecvDelete(ObjectId::deserialize(objId), id, rs);
-    }
-
-    bool RecvHas(const uint64_t& objId, const JSIDVariant& id,
-                   ReturnStatus* rs, bool* bp) {
-        return Answer::RecvHas(ObjectId::deserialize(objId), id, rs, bp);
-    }
-    bool RecvHasOwn(const uint64_t& objId, const JSIDVariant& id,
-                      ReturnStatus* rs, bool* bp) {
-        return Answer::RecvHasOwn(ObjectId::deserialize(objId), id, rs, bp);
-    }
-    bool RecvGet(const uint64_t& objId, const JSVariant& receiverVar, const JSIDVariant& id,
-                 ReturnStatus* rs, JSVariant* result) {
-        return Answer::RecvGet(ObjectId::deserialize(objId), receiverVar, id, rs, result);
-    }
-    bool RecvSet(const uint64_t& objId, const JSIDVariant& id, const JSVariant& value,
-                 const JSVariant& receiverVar, ReturnStatus* rs) {
-        return Answer::RecvSet(ObjectId::deserialize(objId), id, value, receiverVar, rs);
+    mozilla::ipc::IPCResult RecvDelete(const uint64_t& objId, const JSIDVariant& id,
+                                       ReturnStatus* rs) {
+        if (!Answer::RecvDelete(ObjectId::deserialize(objId), id, rs)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
 
-    bool RecvIsExtensible(const uint64_t& objId, ReturnStatus* rs,
-                            bool* result) {
-        return Answer::RecvIsExtensible(ObjectId::deserialize(objId), rs, result);
+    mozilla::ipc::IPCResult RecvHas(const uint64_t& objId, const JSIDVariant& id,
+                                    ReturnStatus* rs, bool* bp) {
+        if (!Answer::RecvHas(ObjectId::deserialize(objId), id, rs, bp)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
-    bool RecvCallOrConstruct(const uint64_t& objId, InfallibleTArray<JSParam>&& argv,
-                             const bool& construct, ReturnStatus* rs, JSVariant* result,
-                             nsTArray<JSParam>* outparams) {
-        return Answer::RecvCallOrConstruct(ObjectId::deserialize(objId), Move(argv), construct, rs, result, outparams);
+    mozilla::ipc::IPCResult RecvHasOwn(const uint64_t& objId, const JSIDVariant& id,
+                                       ReturnStatus* rs, bool* bp) {
+        if (!Answer::RecvHasOwn(ObjectId::deserialize(objId), id, rs, bp)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
-    bool RecvHasInstance(const uint64_t& objId, const JSVariant& v, ReturnStatus* rs, bool* bp) {
-        return Answer::RecvHasInstance(ObjectId::deserialize(objId), v, rs, bp);
+    mozilla::ipc::IPCResult RecvGet(const uint64_t& objId, const JSVariant& receiverVar, const JSIDVariant& id,
+                                    ReturnStatus* rs, JSVariant* result) {
+        if (!Answer::RecvGet(ObjectId::deserialize(objId), receiverVar, id, rs, result)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
-    bool RecvGetBuiltinClass(const uint64_t& objId, ReturnStatus* rs, uint32_t* classValue) {
-        return Answer::RecvGetBuiltinClass(ObjectId::deserialize(objId), rs, classValue);
+    mozilla::ipc::IPCResult RecvSet(const uint64_t& objId, const JSIDVariant& id, const JSVariant& value,
+                                    const JSVariant& receiverVar, ReturnStatus* rs) {
+        if (!Answer::RecvSet(ObjectId::deserialize(objId), id, value, receiverVar, rs)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
-    bool RecvIsArray(const uint64_t& objId, ReturnStatus* rs, uint32_t* answer) {
-        return Answer::RecvIsArray(ObjectId::deserialize(objId), rs, answer);
+
+    mozilla::ipc::IPCResult RecvIsExtensible(const uint64_t& objId, ReturnStatus* rs,
+                                             bool* result) {
+        if (!Answer::RecvIsExtensible(ObjectId::deserialize(objId), rs, result)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
-    bool RecvClassName(const uint64_t& objId, nsCString* result) {
-        return Answer::RecvClassName(ObjectId::deserialize(objId), result);
+    mozilla::ipc::IPCResult RecvCallOrConstruct(const uint64_t& objId, InfallibleTArray<JSParam>&& argv,
+                                                const bool& construct, ReturnStatus* rs, JSVariant* result,
+                                                nsTArray<JSParam>* outparams) {
+        if (!Answer::RecvCallOrConstruct(ObjectId::deserialize(objId), Move(argv), construct, rs, result, outparams)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
-    bool RecvGetPrototype(const uint64_t& objId, ReturnStatus* rs, ObjectOrNullVariant* result) {
-        return Answer::RecvGetPrototype(ObjectId::deserialize(objId), rs, result);
+    mozilla::ipc::IPCResult RecvHasInstance(const uint64_t& objId, const JSVariant& v, ReturnStatus* rs, bool* bp) {
+        if (!Answer::RecvHasInstance(ObjectId::deserialize(objId), v, rs, bp)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
-    bool RecvGetPrototypeIfOrdinary(const uint64_t& objId, ReturnStatus* rs, bool* isOrdinary,
-                                    ObjectOrNullVariant* result)
+    mozilla::ipc::IPCResult RecvGetBuiltinClass(const uint64_t& objId, ReturnStatus* rs, uint32_t* classValue) {
+        if (!Answer::RecvGetBuiltinClass(ObjectId::deserialize(objId), rs, classValue)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
+    }
+    mozilla::ipc::IPCResult RecvIsArray(const uint64_t& objId, ReturnStatus* rs, uint32_t* answer) {
+        if (!Answer::RecvIsArray(ObjectId::deserialize(objId), rs, answer)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
+    }
+    mozilla::ipc::IPCResult RecvClassName(const uint64_t& objId, nsCString* result) {
+        if (!Answer::RecvClassName(ObjectId::deserialize(objId), result)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
+    }
+    mozilla::ipc::IPCResult RecvGetPrototype(const uint64_t& objId, ReturnStatus* rs, ObjectOrNullVariant* result) {
+        if (!Answer::RecvGetPrototype(ObjectId::deserialize(objId), rs, result)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
+    }
+    mozilla::ipc::IPCResult RecvGetPrototypeIfOrdinary(const uint64_t& objId, ReturnStatus* rs, bool* isOrdinary,
+                                                       ObjectOrNullVariant* result)
     {
-        return Answer::RecvGetPrototypeIfOrdinary(ObjectId::deserialize(objId), rs, isOrdinary, result);
+        if (!Answer::RecvGetPrototypeIfOrdinary(ObjectId::deserialize(objId), rs, isOrdinary, result)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
-    bool RecvRegExpToShared(const uint64_t& objId, ReturnStatus* rs, nsString* source, uint32_t* flags) {
-        return Answer::RecvRegExpToShared(ObjectId::deserialize(objId), rs, source, flags);
-    }
-
-    bool RecvGetPropertyKeys(const uint64_t& objId, const uint32_t& flags,
-                             ReturnStatus* rs, nsTArray<JSIDVariant>* ids) {
-        return Answer::RecvGetPropertyKeys(ObjectId::deserialize(objId), flags, rs, ids);
-    }
-    bool RecvInstanceOf(const uint64_t& objId, const JSIID& iid,
-                          ReturnStatus* rs, bool* instanceof) {
-        return Answer::RecvInstanceOf(ObjectId::deserialize(objId), iid, rs, instanceof);
-    }
-    bool RecvDOMInstanceOf(const uint64_t& objId, const int& prototypeID, const int& depth,
-                             ReturnStatus* rs, bool* instanceof) {
-        return Answer::RecvDOMInstanceOf(ObjectId::deserialize(objId), prototypeID, depth, rs, instanceof);
+    mozilla::ipc::IPCResult RecvRegExpToShared(const uint64_t& objId, ReturnStatus* rs, nsString* source, uint32_t* flags) {
+        if (!Answer::RecvRegExpToShared(ObjectId::deserialize(objId), rs, source, flags)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
 
-    bool RecvDropObject(const uint64_t& objId) {
-        return Answer::RecvDropObject(ObjectId::deserialize(objId));
+    mozilla::ipc::IPCResult RecvGetPropertyKeys(const uint64_t& objId, const uint32_t& flags,
+                                                ReturnStatus* rs, nsTArray<JSIDVariant>* ids) {
+        if (!Answer::RecvGetPropertyKeys(ObjectId::deserialize(objId), flags, rs, ids)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
+    }
+    mozilla::ipc::IPCResult RecvInstanceOf(const uint64_t& objId, const JSIID& iid,
+                                           ReturnStatus* rs, bool* instanceof) {
+        if (!Answer::RecvInstanceOf(ObjectId::deserialize(objId), iid, rs, instanceof)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
+    }
+    mozilla::ipc::IPCResult RecvDOMInstanceOf(const uint64_t& objId, const int& prototypeID, const int& depth,
+                                              ReturnStatus* rs, bool* instanceof) {
+        if (!Answer::RecvDOMInstanceOf(ObjectId::deserialize(objId), prototypeID, depth, rs, instanceof)) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
+    }
+
+    mozilla::ipc::IPCResult RecvDropObject(const uint64_t& objId) {
+        if (!Answer::RecvDropObject(ObjectId::deserialize(objId))) {
+            return IPC_FAIL_NO_REASON(this);
+        }
+        return IPC_OK();
     }
 
     /*** Dummy call handlers ***/
@@ -129,8 +195,8 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
         return Base::SendPreventExtensions(objId.serialize(), rs);
     }
     bool SendGetPropertyDescriptor(const ObjectId& objId, const JSIDVariant& id,
-                                     ReturnStatus* rs,
-                                     PPropertyDescriptor* out) {
+                                   ReturnStatus* rs,
+                                   PPropertyDescriptor* out) {
         return Base::SendGetPropertyDescriptor(objId.serialize(), id, rs, out);
     }
     bool SendGetOwnPropertyDescriptor(const ObjectId& objId,
@@ -149,7 +215,7 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     }
 
     bool SendHas(const ObjectId& objId, const JSIDVariant& id,
-                   ReturnStatus* rs, bool* bp) {
+                 ReturnStatus* rs, bool* bp) {
         return Base::SendHas(objId.serialize(), id, rs, bp);
     }
     bool SendHasOwn(const ObjectId& objId, const JSIDVariant& id,

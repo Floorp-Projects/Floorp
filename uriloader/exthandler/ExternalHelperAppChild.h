@@ -30,7 +30,7 @@ public:
     // the child.
     void SetHandler(nsExternalAppHandler *handler) { mHandler = handler; }
 
-    virtual bool RecvCancel(const nsresult& aStatus) override;
+    virtual mozilla::ipc::IPCResult RecvCancel(const nsresult& aStatus) override;
 private:
     virtual ~ExternalHelperAppChild();
     MOZ_MUST_USE nsresult DivertToParent(nsIDivertableChannel *divertable, nsIRequest *request);

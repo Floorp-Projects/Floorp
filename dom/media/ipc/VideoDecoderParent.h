@@ -33,12 +33,12 @@ public:
   void Destroy();
 
   // PVideoDecoderParent
-  bool RecvInit(const VideoInfo& aVideoInfo, const layers::TextureFactoryIdentifier& aIdentifier) override;
-  bool RecvInput(const MediaRawDataIPDL& aData) override;
-  bool RecvFlush() override;
-  bool RecvDrain() override;
-  bool RecvShutdown() override;
-  bool RecvSetSeekThreshold(const int64_t& aTime) override;
+  mozilla::ipc::IPCResult RecvInit(const VideoInfo& aVideoInfo, const layers::TextureFactoryIdentifier& aIdentifier) override;
+  mozilla::ipc::IPCResult RecvInput(const MediaRawDataIPDL& aData) override;
+  mozilla::ipc::IPCResult RecvFlush() override;
+  mozilla::ipc::IPCResult RecvDrain() override;
+  mozilla::ipc::IPCResult RecvShutdown() override;
+  mozilla::ipc::IPCResult RecvSetSeekThreshold(const int64_t& aTime) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

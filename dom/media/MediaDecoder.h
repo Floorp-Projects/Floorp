@@ -58,10 +58,6 @@ enum class MediaEventType : int8_t;
 class MediaDecoder : public AbstractMediaDecoder
 {
 public:
-  struct SeekResolveValue {
-    bool mAtEnd;
-  };
-
   // Used to register with MediaResource to receive notifications which will
   // be forwarded to MediaDecoder.
   class ResourceCallback : public MediaResourceCallback {
@@ -96,7 +92,7 @@ public:
     bool mTimerArmed = false;
   };
 
-  typedef MozPromise<SeekResolveValue, bool /* aIgnored */, /* IsExclusive = */ true> SeekPromise;
+  typedef MozPromise<bool /* aIgnored */, bool /* aIgnored */, /* IsExclusive = */ true> SeekPromise;
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -386,7 +382,7 @@ private:
   void PlaybackEnded();
 
   void OnSeekRejected();
-  void OnSeekResolved(SeekResolveValue aVal);
+  void OnSeekResolved();
 
   void SeekingChanged()
   {

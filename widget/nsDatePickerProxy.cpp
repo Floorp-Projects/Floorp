@@ -40,22 +40,22 @@ nsDatePickerProxy::Open(nsIDatePickerShownCallback* aDatePickerShownCallback)
   return NS_OK;
 }
 
-bool
+mozilla::ipc::IPCResult
 nsDatePickerProxy::RecvCancel()
 {
   if (mCallback) {
     mCallback->Cancel();
     mCallback = nullptr;
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 nsDatePickerProxy::Recv__delete__(const nsString& aDate)
 {
   if (mCallback) {
     mCallback->Done(aDate);
     mCallback = nullptr;
   }
-  return true;
+  return IPC_OK();
 }

@@ -163,7 +163,7 @@ QuotaUsageRequestChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 QuotaUsageRequestChild::Recv__delete__(const UsageRequestResponse& aResponse)
 {
   AssertIsOnOwningThread();
@@ -182,7 +182,7 @@ QuotaUsageRequestChild::Recv__delete__(const UsageRequestResponse& aResponse)
       MOZ_CRASH("Unknown response type!");
   }
 
-  return true;
+  return IPC_OK();
 }
 
 /*******************************************************************************
@@ -240,7 +240,7 @@ QuotaRequestChild::ActorDestroy(ActorDestroyReason aWhy)
   AssertIsOnOwningThread();
 }
 
-bool
+mozilla::ipc::IPCResult
 QuotaRequestChild::Recv__delete__(const RequestResponse& aResponse)
 {
   AssertIsOnOwningThread();
@@ -262,7 +262,7 @@ QuotaRequestChild::Recv__delete__(const RequestResponse& aResponse)
       MOZ_CRASH("Unknown response type!");
   }
 
-  return true;
+  return IPC_OK();
 }
 
 } // namespace quota

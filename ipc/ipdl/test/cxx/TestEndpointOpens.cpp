@@ -59,7 +59,7 @@ OpenParent(TestEndpointOpensOpenedParent* aParent,
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointOpensParent::RecvStartSubprotocol(
   mozilla::ipc::Endpoint<PTestEndpointOpensOpenedParent>&& endpoint)
 {
@@ -74,7 +74,7 @@ TestEndpointOpensParent::RecvStartSubprotocol(
   gParentThread->message_loop()->PostTask(
     NewRunnableFunction(OpenParent, a, mozilla::Move(endpoint)));
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -90,25 +90,31 @@ TestEndpointOpensParent::ActorDestroy(ActorDestroyReason why)
   QuitParent();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointOpensOpenedParent::RecvHello()
 {
   AssertNotMainThread();
-  return SendHi();
+  if (!SendHi()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointOpensOpenedParent::RecvHelloSync()
 {
   AssertNotMainThread();
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointOpensOpenedParent::AnswerHelloRpc()
 {
   AssertNotMainThread();
-  return CallHiRpc();
+  if (!CallHiRpc()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 static void
@@ -166,7 +172,7 @@ OpenChild(TestEndpointOpensOpenedChild* aChild,
   }
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointOpensChild::RecvStart()
 {
   Endpoint<PTestEndpointOpensOpenedParent> parent;
@@ -193,7 +199,7 @@ TestEndpointOpensChild::RecvStart()
     fail("send StartSubprotocol");
   }
 
-  return true;
+  return IPC_OK();
 }
 
 void
@@ -208,7 +214,7 @@ TestEndpointOpensChild::ActorDestroy(ActorDestroyReason why)
   QuitChild();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointOpensOpenedChild::RecvHi()
 {
   AssertNotMainThread();
@@ -227,16 +233,16 @@ TestEndpointOpensOpenedChild::RecvHi()
   // the C++ stack
   MessageLoop::current()->PostTask(
     NewNonOwningRunnableMethod(this, &TestEndpointOpensOpenedChild::Close));
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestEndpointOpensOpenedChild::AnswerHiRpc()
 {
   AssertNotMainThread();
 
   mGotHi = true;              // d00d
-  return true;
+  return IPC_OK();
 }
 
 static void

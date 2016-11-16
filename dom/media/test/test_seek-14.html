@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="seek_support.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const SEEK_TEST_NUMBER = 14;
+
+function test_seek14(v, seekTime, is, ok, finish) {
+  var completed = false;
+
+  function startTest() {
+    v.play();
+    v.currentTime = v.duration;
+  }
+
+  function playbackEnded() {
+    if (completed) {
+      ok(false, "'ended' should only fire once.");
+      return;
+    }
+    completed = true;
+    // Finish the test after 700ms. We should receive only one 'ended' event.
+    setTimeout(finish, 700);
+  }
+
+  v.addEventListener("loadedmetadata", startTest, false);
+  v.addEventListener("ended", playbackEnded, false);
+}
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>

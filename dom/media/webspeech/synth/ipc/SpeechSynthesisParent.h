@@ -24,9 +24,9 @@ class SpeechSynthesisParent : public PSpeechSynthesisParent
 public:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool RecvReadVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
-                              InfallibleTArray<nsString>* aDefaults,
-                              bool* aIsSpeaking) override;
+  mozilla::ipc::IPCResult RecvReadVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
+                                                 InfallibleTArray<nsString>* aDefaults,
+                                                 bool* aIsSpeaking) override;
 
 protected:
   SpeechSynthesisParent();
@@ -41,13 +41,13 @@ protected:
 
   bool DeallocPSpeechSynthesisRequestParent(PSpeechSynthesisRequestParent* aActor) override;
 
-  bool RecvPSpeechSynthesisRequestConstructor(PSpeechSynthesisRequestParent* aActor,
-                                              const nsString& aText,
-                                              const nsString& aLang,
-                                              const nsString& aUri,
-                                              const float& aVolume,
-                                              const float& aRate,
-                                              const float& aPitch) override;
+  mozilla::ipc::IPCResult RecvPSpeechSynthesisRequestConstructor(PSpeechSynthesisRequestParent* aActor,
+                                                                 const nsString& aText,
+                                                                 const nsString& aLang,
+                                                                 const nsString& aUri,
+                                                                 const float& aVolume,
+                                                                 const float& aRate,
+                                                                 const float& aPitch) override;
 };
 
 class SpeechSynthesisRequestParent : public PSpeechSynthesisRequestParent
@@ -62,17 +62,17 @@ protected:
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool RecvPause() override;
+  mozilla::ipc::IPCResult RecvPause() override;
 
-  bool RecvResume() override;
+  mozilla::ipc::IPCResult RecvResume() override;
 
-  bool RecvCancel() override;
+  mozilla::ipc::IPCResult RecvCancel() override;
 
-  bool RecvForceEnd() override;
+  mozilla::ipc::IPCResult RecvForceEnd() override;
 
-  bool RecvSetAudioOutputVolume(const float& aVolume) override;
+  mozilla::ipc::IPCResult RecvSetAudioOutputVolume(const float& aVolume) override;
 
-  bool Recv__delete__() override;
+  mozilla::ipc::IPCResult Recv__delete__() override;
 };
 
 class SpeechTaskParent : public nsSpeechTask

@@ -25,7 +25,7 @@ class PrintProgressDialogChild final : public PPrintProgressDialogChild,
 public:
   MOZ_IMPLICIT PrintProgressDialogChild(nsIObserver* aOpenObserver);
 
-  virtual bool RecvDialogOpened() override;
+  virtual mozilla::ipc::IPCResult RecvDialogOpened() override;
 
 private:
   virtual ~PrintProgressDialogChild();

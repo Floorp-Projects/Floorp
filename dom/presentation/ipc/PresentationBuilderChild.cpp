@@ -62,43 +62,43 @@ PresentationBuilderChild::ActorDestroy(ActorDestroyReason aWhy)
   mActorDestroyed = true;
 }
 
-bool
+mozilla::ipc::IPCResult
 PresentationBuilderChild::RecvOnOffer(const nsString& aSDP)
 {
   if (NS_WARN_IF(!mBuilder)) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   RefPtr<DCPresentationChannelDescription> description =
     new DCPresentationChannelDescription(aSDP);
 
   if (NS_WARN_IF(NS_FAILED(mBuilder->OnOffer(description)))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PresentationBuilderChild::RecvOnAnswer(const nsString& aSDP)
 {
   if (NS_WARN_IF(!mBuilder)) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   RefPtr<DCPresentationChannelDescription> description =
     new DCPresentationChannelDescription(aSDP);
 
   if (NS_WARN_IF(NS_FAILED(mBuilder->OnAnswer(description)))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PresentationBuilderChild::RecvOnIceCandidate(const nsString& aCandidate)
 {
   if (NS_WARN_IF(mBuilder && NS_FAILED(mBuilder->OnIceCandidate(aCandidate)))) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
-  return true;
+  return IPC_OK();
 }
 
 // nsPresentationSessionTransportBuilderListener

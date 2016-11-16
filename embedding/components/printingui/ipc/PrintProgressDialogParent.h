@@ -26,28 +26,28 @@ public:
 
   void SetPrintProgressParams(nsIPrintProgressParams* aParams);
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvStateChange(
           const long& stateFlags,
           const nsresult& status) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvProgressChange(
           const long& curSelfProgress,
           const long& maxSelfProgress,
           const long& curTotalProgress,
           const long& maxTotalProgress) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvDocTitleChange(const nsString& newTitle) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvDocURLChange(const nsString& newURL) override;
 
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   Recv__delete__() override;
 
 private:

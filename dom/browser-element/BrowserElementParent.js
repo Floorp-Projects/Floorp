@@ -319,7 +319,6 @@ BrowserElementParent.prototype = {
   _setupMessageListener: function() {
     this._mm = this._frameLoader.messageManager;
     this._mm.addMessageListener('browser-element-api:call', this);
-    this._mm.loadFrameScript("chrome://global/content/extensions.js", true);
   },
 
   receiveMessage: function(aMsg) {

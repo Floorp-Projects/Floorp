@@ -20,14 +20,14 @@ class WebrtcGlobalChild :
   MOZ_IMPLICIT WebrtcGlobalChild();
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool RecvGetStatsRequest(const int& aRequestId,
-                                   const nsString& aPcIdFilter) override;
-  virtual bool RecvClearStatsRequest() override;
-  virtual bool RecvGetLogRequest(const int& aReqestId,
-                                 const nsCString& aPattern) override;
-  virtual bool RecvClearLogRequest() override;
-  virtual bool RecvSetAecLogging(const bool& aEnable) override;
-  virtual bool RecvSetDebugMode(const int& aLevel) override;
+  virtual mozilla::ipc::IPCResult RecvGetStatsRequest(const int& aRequestId,
+                                                      const nsString& aPcIdFilter) override;
+  virtual mozilla::ipc::IPCResult RecvClearStatsRequest() override;
+  virtual mozilla::ipc::IPCResult RecvGetLogRequest(const int& aReqestId,
+                                                    const nsCString& aPattern) override;
+  virtual mozilla::ipc::IPCResult RecvClearLogRequest() override;
+  virtual mozilla::ipc::IPCResult RecvSetAecLogging(const bool& aEnable) override;
+  virtual mozilla::ipc::IPCResult RecvSetDebugMode(const int& aLevel) override;
 
 public:
   virtual ~WebrtcGlobalChild();

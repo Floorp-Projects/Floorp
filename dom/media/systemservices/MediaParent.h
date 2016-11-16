@@ -27,12 +27,12 @@ class NonE10s
 public:
   virtual ~NonE10s() {}
 protected:
-  virtual bool RecvGetOriginKey(const uint32_t& aRequestId,
-                                const nsCString& aOrigin,
-                                const bool& aPrivateBrowsing,
-                                const bool& aPersist) = 0;
-  virtual bool RecvSanitizeOriginKeys(const uint64_t& aSinceWhen,
-                                      const bool& aOnlyPrivateBrowsing) = 0;
+  virtual mozilla::ipc::IPCResult RecvGetOriginKey(const uint32_t& aRequestId,
+                                                   const nsCString& aOrigin,
+                                                   const bool& aPrivateBrowsing,
+                                                   const bool& aPersist) = 0;
+  virtual mozilla::ipc::IPCResult RecvSanitizeOriginKeys(const uint64_t& aSinceWhen,
+                                                         const bool& aOnlyPrivateBrowsing) = 0;
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) = 0;
 
@@ -50,12 +50,12 @@ class Parent : public Super
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Parent<Super>)
 
-  virtual bool RecvGetOriginKey(const uint32_t& aRequestId,
-                                const nsCString& aOrigin,
-                                const bool& aPrivateBrowsing,
-                                const bool& aPersist) override;
-  virtual bool RecvSanitizeOriginKeys(const uint64_t& aSinceWhen,
-                                      const bool& aOnlyPrivateBrowsing) override;
+  virtual mozilla::ipc::IPCResult RecvGetOriginKey(const uint32_t& aRequestId,
+                                                   const nsCString& aOrigin,
+                                                   const bool& aPrivateBrowsing,
+                                                   const bool& aPersist) override;
+  virtual mozilla::ipc::IPCResult RecvSanitizeOriginKeys(const uint64_t& aSinceWhen,
+                                                         const bool& aOnlyPrivateBrowsing) override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   Parent();
@@ -67,6 +67,21 @@ private:
 
   CoatCheck<Pledge<nsCString>> mOutstandingPledges;
 };
+
+template<class Parent>
+mozilla::ipc::IPCResult IPCResult(Parent* aSelf, bool aSuccess);
+
+template<>
+inline mozilla::ipc::IPCResult IPCResult(Parent<PMediaParent>* aSelf, bool aSuccess)
+{
+  return aSuccess ? IPC_OK() : IPC_FAIL_NO_REASON(aSelf);
+}
+
+template<>
+inline mozilla::ipc::IPCResult IPCResult(Parent<NonE10s>* aSelf, bool aSuccess)
+{
+  return IPC_OK();
+}
 
 PMediaParent* AllocPMediaParent();
 bool DeallocPMediaParent(PMediaParent *aActor);

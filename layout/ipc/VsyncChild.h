@@ -44,8 +44,8 @@ private:
   VsyncChild();
   virtual ~VsyncChild();
 
-  virtual bool RecvNotify(const TimeStamp& aVsyncTimestamp) override;
-  virtual bool RecvVsyncRate(const float& aVsyncRate) override;
+  virtual mozilla::ipc::IPCResult RecvNotify(const TimeStamp& aVsyncTimestamp) override;
+  virtual mozilla::ipc::IPCResult RecvVsyncRate(const float& aVsyncRate) override;
   virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
 
   bool mObservingVsync;

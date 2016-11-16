@@ -353,7 +353,7 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
             self.warning('did not specify revision or branch; assuming "default"')
             branch = 'default'
 
-        share_base = c.get('vcs_share_base', os.environ.get('HG_SHARE_BASE_DIR', None))
+        share_base = c.get('vcs_share_base') or os.environ.get('HG_SHARE_BASE_DIR')
         if share_base and c.get('use_vcs_unique_share'):
             # Bug 1277041 - update migration scripts to support robustcheckout
             # fake a share but don't really share

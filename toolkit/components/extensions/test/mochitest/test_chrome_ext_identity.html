@@ -1,0 +1,200 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for WebExtension Identity</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="chrome_head.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["extensions.webextensions.identity.redirectDomain", "example.com"]],
+  });
+});
+
+add_task(function* test_noPermission() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.test.assertEq(undefined, browser.identity, "No identity api without permission");
+      browser.test.sendMessage("done");
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("done");
+  yield extension.unload();
+});
+
+add_task(function* test_badAuthURI() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": [
+        "identity",
+        "https://example.com/",
+      ],
+    },
+    async background() {
+      await browser.test.assertRejects(browser.identity.launchWebAuthFlow({interactive: true, url: "foobar"}),
+                                       "details.url is invalid", "invalid param url");
+      browser.test.sendMessage("done");
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("done");
+  yield extension.unload();
+});
+
+
+add_task(function* test_badRequestURI() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": [
+        "identity",
+        "https://example.com/",
+      ],
+    },
+    async background() {
+      let base_uri = "https://example.com/chrome/toolkit/components/extensions/test/mochitest/";
+      let url = `${base_uri}?redirect_uri=badrobot}`;
+      await browser.test.assertRejects(browser.identity.launchWebAuthFlow({interactive: true, url}),
+                                       "redirect_uri is invalid", "invalid redirect url");
+      browser.test.sendMessage("done");
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("done");
+  yield extension.unload();
+});
+
+add_task(function* test_otherRedirectURL() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": [
+        "identity",
+        "https://example.com/",
+      ],
+    },
+    async background() {
+      let base_uri = "https://example.com/chrome/toolkit/components/extensions/test/mochitest/";
+      let url = `${base_uri}?redirect_uri=https://somesite.com/redirect`;
+      await browser.test.assertRejects(browser.identity.launchWebAuthFlow({interactive: false, url}),
+                                       "Requires user interaction", "alternate redirect_uri ok");
+      browser.test.sendMessage("done");
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("done");
+  yield extension.unload();
+});
+
+function background_launchWebAuthFlow(interactive, path, redirect = true) {
+  let expected_redirect = "https://35b64b676900f491c00e7f618d43f7040e88422e.example.com/identity_cb";
+  let base_uri = "https://example.com/chrome/toolkit/components/extensions/test/mochitest/";
+  let redirect_uri = browser.identity.getRedirectURL("/identity_cb");
+  browser.test.assertEq(expected_redirect, redirect_uri, "expected redirect uri matches hash");
+  let url = `${base_uri}${path}?redirect_uri=${encodeURIComponent(redirect_uri)}`;
+  if (!redirect) {
+    url = `${url}&no_redirect=1`;
+  }
+
+  browser.identity.launchWebAuthFlow({interactive, url}).then((redirectURL) => {
+    browser.test.assertTrue(redirectURL.startsWith(redirect_uri), `correct redirect url ${redirectURL}`);
+    if (redirect) {
+      let url = new URL(redirectURL);
+      browser.test.assertEq("here ya go", url.searchParams.get("access_token"), "Handled auto redirection");
+    }
+    browser.test.sendMessage("done");
+  }).catch((error) => {
+    if (redirect) {
+      browser.test.fail(error.message);
+    } else {
+      browser.test.assertEq("Requires user interaction", error.message, "Auth page loaded, interaction required.");
+    }
+    browser.test.sendMessage("done");
+  });
+}
+
+// Tests the situation where the oauth provider has already granted access and
+// simply redirects the oauth client to provide the access key or code.
+add_task(function* test_autoRedirect() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "applications": {
+        "gecko": {
+          "id": "identity@mozilla.org",
+        },
+      },
+      "permissions": [
+        "identity",
+        "https://example.com/",
+      ],
+    },
+    background: `(${background_launchWebAuthFlow})(false, "redirect_auto.sjs")`,
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("done");
+  yield extension.unload();
+});
+
+// Tests the situation where the oauth provider has not granted access and interactive=false
+add_task(function* test_noRedirect() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "applications": {
+        "gecko": {
+          "id": "identity@mozilla.org",
+        },
+      },
+      "permissions": [
+        "identity",
+        "https://example.com/",
+      ],
+    },
+    background: `(${background_launchWebAuthFlow})(false, "redirect_auto.sjs", false)`,
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("done");
+  yield extension.unload();
+});
+
+// Tests the situation where the oauth provider must show a window where
+// presumably the user interacts, then the redirect occurs and access key or
+// code is provided.  We bypass any real interaction, but want the window to
+// open and result in a redirect.
+add_task(function* test_interaction() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "applications": {
+        "gecko": {
+          "id": "identity@mozilla.org",
+        },
+      },
+      "permissions": [
+        "identity",
+        "https://example.com/",
+      ],
+    },
+    background: `(${background_launchWebAuthFlow})(true, "oauth.html")`,
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("done");
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

@@ -32,12 +32,12 @@ PluginStreamParent::ActorDestroy(ActorDestroyReason aWhy)
   // Implement me! Bug 1005166
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginStreamParent::AnswerNPN_Write(const Buffer& data, int32_t* written)
 {
   if (mClosed) {
     *written = -1;
-    return true;
+    return IPC_OK();
   }
 
   *written = mInstance->mNPNIface->write(mInstance->mNPP, mStream,
@@ -46,16 +46,16 @@ PluginStreamParent::AnswerNPN_Write(const Buffer& data, int32_t* written)
   if (*written < 0)
     mClosed = true;
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 PluginStreamParent::Answer__delete__(const NPError& reason,
                                      const bool& artificial)
 {
   if (!artificial)
     this->NPN_DestroyStream(reason);
-  return true;
+  return IPC_OK();
 }
 
 void

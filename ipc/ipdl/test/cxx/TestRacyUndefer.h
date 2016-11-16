@@ -23,11 +23,11 @@ public:
     void Main();
 
 protected:    
-    virtual bool AnswerSpam() override;
+    virtual mozilla::ipc::IPCResult AnswerSpam() override;
 
-    virtual bool AnswerRaceWinTwice() override;
+    virtual mozilla::ipc::IPCResult AnswerRaceWinTwice() override;
 
-    virtual bool RecvDone() override;
+    virtual mozilla::ipc::IPCResult RecvDone() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
@@ -47,12 +47,12 @@ public:
     virtual ~TestRacyUndeferChild();
 
 protected:
-    virtual bool RecvStart() override;
+    virtual mozilla::ipc::IPCResult RecvStart() override;
 
-    virtual bool RecvAwakenSpam() override;
-    virtual bool RecvAwakenRaceWinTwice() override;
+    virtual mozilla::ipc::IPCResult RecvAwakenSpam() override;
+    virtual mozilla::ipc::IPCResult RecvAwakenRaceWinTwice() override;
 
-    virtual bool AnswerRace() override;
+    virtual mozilla::ipc::IPCResult AnswerRace() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

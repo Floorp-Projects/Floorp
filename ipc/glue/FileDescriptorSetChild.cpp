@@ -28,12 +28,12 @@ FileDescriptorSetChild::ForgetFileDescriptors(
   mFileDescriptors.SwapElements(aFileDescriptors);
 }
 
-bool
+mozilla::ipc::IPCResult
 FileDescriptorSetChild::RecvAddFileDescriptor(
                                          const FileDescriptor& aFileDescriptor)
 {
   mFileDescriptors.AppendElement(aFileDescriptor);
-  return true;
+  return IPC_OK();
 }
 
 } // namespace ipc

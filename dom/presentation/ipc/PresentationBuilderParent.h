@@ -24,19 +24,19 @@ public:
 
   explicit PresentationBuilderParent(PresentationParent* aParent);
 
-  virtual bool RecvSendOffer(const nsString& aSDP) override;
+  virtual mozilla::ipc::IPCResult RecvSendOffer(const nsString& aSDP) override;
 
-  virtual bool RecvSendAnswer(const nsString& aSDP) override;
+  virtual mozilla::ipc::IPCResult RecvSendAnswer(const nsString& aSDP) override;
 
-  virtual bool RecvSendIceCandidate(const nsString& aCandidate) override;
+  virtual mozilla::ipc::IPCResult RecvSendIceCandidate(const nsString& aCandidate) override;
 
-  virtual bool RecvClose(const nsresult& aReason) override;
+  virtual mozilla::ipc::IPCResult RecvClose(const nsresult& aReason) override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool RecvOnSessionTransport() override;
+  virtual mozilla::ipc::IPCResult RecvOnSessionTransport() override;
 
-  virtual bool RecvOnSessionTransportError(const nsresult& aReason) override;
+  virtual mozilla::ipc::IPCResult RecvOnSessionTransportError(const nsresult& aReason) override;
 
 private:
   virtual ~PresentationBuilderParent();

@@ -73,13 +73,13 @@ TCPServerSocketChild::~TCPServerSocketChild()
 {
 }
 
-bool
+mozilla::ipc::IPCResult
 TCPServerSocketChild::RecvCallbackAccept(PTCPSocketChild *psocket)
 {
   RefPtr<TCPSocketChild> socket = static_cast<TCPSocketChild*>(psocket);
   nsresult rv = mServerSocket->AcceptChildSocket(socket);
-  NS_ENSURE_SUCCESS(rv, true);
-  return true;
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
+  return IPC_OK();
 }
 
 void

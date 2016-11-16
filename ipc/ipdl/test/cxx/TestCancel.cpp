@@ -32,25 +32,25 @@ TestCancelParent::Main()
 	fail("Test1 CheckChild reply");
 }
 
-bool
+mozilla::ipc::IPCResult
 TestCancelParent::RecvDone1()
 {
     if (!SendStart2())
 	fail("sending Start2");
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestCancelParent::RecvTest2_1()
 {
     if (SendTest2_2())
 	fail("sending Test2_2");
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestCancelParent::RecvStart3()
 {
     if (SendTest3_1())
@@ -63,35 +63,35 @@ TestCancelParent::RecvStart3()
     if (value != 12)
 	fail("Test1 CheckChild reply");
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestCancelParent::RecvTest3_2()
 {
     GetIPCChannel()->CancelCurrentTransaction();
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestCancelParent::RecvDone()
 {
     MessageLoop::current()->PostTask(
 	NewNonOwningRunnableMethod(this, &TestCancelParent::Close));
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestCancelParent::RecvCheckParent(uint32_t *reply)
 {
     *reply = 12;
-    return true;
+    return IPC_OK();
 }
 
 //-----------------------------------------------------------------------------
 // child
 
-bool
+mozilla::ipc::IPCResult
 TestCancelChild::RecvTest1_1()
 {
     GetIPCChannel()->CancelCurrentTransaction();
@@ -106,10 +106,10 @@ TestCancelChild::RecvTest1_1()
     if (!SendDone1())
 	fail("Test1 CheckParent");
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestCancelChild::RecvStart2()
 {
     if (!SendTest2_1())
@@ -118,17 +118,17 @@ TestCancelChild::RecvStart2()
     if (!SendStart3())
 	fail("sending Start3");
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestCancelChild::RecvTest2_2()
 {
     GetIPCChannel()->CancelCurrentTransaction();
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestCancelChild::RecvTest3_1()
 {
     if (SendTest3_2())
@@ -144,14 +144,14 @@ TestCancelChild::RecvTest3_1()
     if (!SendDone())
 	fail("sending Done");
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 TestCancelChild::RecvCheckChild(uint32_t *reply)
 {
     *reply = 12;
-    return true;
+    return IPC_OK();
 }
 
 TestCancelChild::TestCancelChild()

@@ -104,7 +104,7 @@ function NarrateControls(mm, win) {
       </div>
       <div id="narrate-rate" class="narrate-row">
         <input id="narrate-rate-input" value="0" title="${"speed"}"
-               step="25" max="100" min="-100" type="range">
+               step="5" max="100" min="-100" type="range">
       </div>
       <div id="narrate-voices" class="narrate-row"></div>
       <div class="dropdown-arrow"></div>

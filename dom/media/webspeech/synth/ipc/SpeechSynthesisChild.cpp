@@ -18,40 +18,40 @@ SpeechSynthesisChild::~SpeechSynthesisChild()
   MOZ_COUNT_DTOR(SpeechSynthesisChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisChild::RecvVoiceAdded(const RemoteVoice& aVoice)
 {
   nsSynthVoiceRegistry::RecvAddVoice(aVoice);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisChild::RecvVoiceRemoved(const nsString& aUri)
 {
   nsSynthVoiceRegistry::RecvRemoveVoice(aUri);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisChild::RecvSetDefaultVoice(const nsString& aUri,
                                           const bool& aIsDefault)
 {
   nsSynthVoiceRegistry::RecvSetDefaultVoice(aUri, aIsDefault);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisChild::RecvIsSpeakingChanged(const bool& aIsSpeaking)
 {
   nsSynthVoiceRegistry::RecvIsSpeakingChanged(aIsSpeaking);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisChild::RecvNotifyVoicesChanged()
 {
   nsSynthVoiceRegistry::RecvNotifyVoicesChanged();
-  return true;
+  return IPC_OK();
 }
 
 PSpeechSynthesisRequestChild*
@@ -86,14 +86,14 @@ SpeechSynthesisRequestChild::~SpeechSynthesisRequestChild()
   MOZ_COUNT_DTOR(SpeechSynthesisRequestChild);
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisRequestChild::RecvOnStart(const nsString& aUri)
 {
   mTask->DispatchStartImpl(aUri);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisRequestChild::RecvOnEnd(const bool& aIsError,
                                        const float& aElapsedTime,
                                        const uint32_t& aCharIndex)
@@ -109,41 +109,41 @@ SpeechSynthesisRequestChild::RecvOnEnd(const bool& aIsError,
 
   actor->Send__delete__(actor);
 
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisRequestChild::RecvOnPause(const float& aElapsedTime,
                                          const uint32_t& aCharIndex)
 {
   mTask->DispatchPauseImpl(aElapsedTime, aCharIndex);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisRequestChild::RecvOnResume(const float& aElapsedTime,
                                           const uint32_t& aCharIndex)
 {
   mTask->DispatchResumeImpl(aElapsedTime, aCharIndex);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisRequestChild::RecvOnBoundary(const nsString& aName,
                                             const float& aElapsedTime,
                                             const uint32_t& aCharIndex)
 {
   mTask->DispatchBoundaryImpl(aName, aElapsedTime, aCharIndex);
-  return true;
+  return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 SpeechSynthesisRequestChild::RecvOnMark(const nsString& aName,
                                         const float& aElapsedTime,
                                         const uint32_t& aCharIndex)
 {
   mTask->DispatchMarkImpl(aName, aElapsedTime, aCharIndex);
-  return true;
+  return IPC_OK();
 }
 
 // SpeechTaskChild

@@ -226,7 +226,7 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
     };
   },
 
-  disconnect: function () {
+  destroy: function () {
     if (this.registeredPool && this.registeredPool.sourceActors) {
       delete this.registeredPool.sourceActors[this.actorID];
     }

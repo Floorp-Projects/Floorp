@@ -138,7 +138,7 @@ BackgroundParentImpl::AllocPBackgroundTestParent(const nsCString& aTestArg)
   return new TestParent();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPBackgroundTestConstructor(
                                                   PBackgroundTestParent* aActor,
                                                   const nsCString& aTestArg)
@@ -147,7 +147,10 @@ BackgroundParentImpl::RecvPBackgroundTestConstructor(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  return PBackgroundTestParent::Send__delete__(aActor, aTestArg);
+  if (!PBackgroundTestParent::Send__delete__(aActor, aTestArg)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 bool
@@ -175,7 +178,7 @@ BackgroundParentImpl::AllocPBackgroundIDBFactoryParent(
   return AllocPBackgroundIDBFactoryParent(aLoggingInfo);
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPBackgroundIDBFactoryConstructor(
                                             PBackgroundIDBFactoryParent* aActor,
                                             const LoggingInfo& aLoggingInfo)
@@ -186,7 +189,10 @@ BackgroundParentImpl::RecvPBackgroundIDBFactoryConstructor(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  return RecvPBackgroundIDBFactoryConstructor(aActor, aLoggingInfo);
+  if (!RecvPBackgroundIDBFactoryConstructor(aActor, aLoggingInfo)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 bool
@@ -224,13 +230,16 @@ BackgroundParentImpl::DeallocPBackgroundIndexedDBUtilsParent(
     mozilla::dom::indexedDB::DeallocPBackgroundIndexedDBUtilsParent(aActor);
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvFlushPendingFileDeletions()
 {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  return mozilla::dom::indexedDB::RecvFlushPendingFileDeletions();
+  if (!mozilla::dom::indexedDB::RecvFlushPendingFileDeletions()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 auto
@@ -260,16 +269,19 @@ BackgroundParentImpl::DeallocPBlobParent(PBlobParent* aActor)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPBlobConstructor(PBlobParent* aActor,
                                            const BlobConstructorParams& aParams)
 {
   const ParentBlobConstructorParams& params = aParams;
   if (params.blobParams().type() == AnyBlobConstructorParams::TKnownBlobConstructorParams) {
-    return aActor->SendCreatedFromKnownBlob();
+    if (!aActor->SendCreatedFromKnownBlob()) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+    return IPC_OK();
   }
 
-  return true;
+  return IPC_OK();
 }
 
 PFileDescriptorSetParent*
@@ -407,7 +419,7 @@ BackgroundParentImpl::AllocPUDPSocketParent(const OptionalPrincipalInfo& /* unus
   return p.forget().take();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPUDPSocketConstructor(PUDPSocketParent* aActor,
                                                 const OptionalPrincipalInfo& aOptionalPrincipal,
                                                 const nsCString& aFilter)
@@ -418,7 +430,7 @@ BackgroundParentImpl::RecvPUDPSocketConstructor(PUDPSocketParent* aActor,
   if (aOptionalPrincipal.type() == OptionalPrincipalInfo::TPrincipalInfo) {
     // Support for checking principals (for non-mtransport use) will be handled in
     // bug 1167039
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
   // No principal - This must be from mtransport (WebRTC/ICE) - We'd want
   // to DispatchToMainThread() here, but if we do we must block RecvBind()
@@ -429,7 +441,7 @@ BackgroundParentImpl::RecvPUDPSocketConstructor(PUDPSocketParent* aActor,
   // For mtransport, this will always be "stun", which doesn't allow outbound
   // packets if they aren't STUN packets until a STUN response is seen.
   if (!aFilter.EqualsASCII(NS_NETWORK_SOCKET_FILTER_HANDLER_STUN_SUFFIX)) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   IPC::Principal principal;
@@ -437,7 +449,7 @@ BackgroundParentImpl::RecvPUDPSocketConstructor(PUDPSocketParent* aActor,
     MOZ_CRASH("UDPSocketCallback - failed init");
   }
 
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -621,7 +633,7 @@ private:
 
 } // namespace
 
-bool
+mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPBroadcastChannelConstructor(
                                             PBroadcastChannelParent* actor,
                                             const PrincipalInfo& aPrincipalInfo,
@@ -636,14 +648,14 @@ BackgroundParentImpl::RecvPBroadcastChannelConstructor(
   // If the ContentParent is null we are dealing with a same-process actor.
   if (!parent) {
     MOZ_ASSERT(aPrincipalInfo.type() != PrincipalInfo::TNullPrincipalInfo);
-    return true;
+    return IPC_OK();
   }
 
   RefPtr<CheckPrincipalRunnable> runnable =
     new CheckPrincipalRunnable(parent.forget(), aPrincipalInfo, aOrigin);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
 
-  return true;
+  return IPC_OK();
 }
 
 bool
@@ -683,14 +695,14 @@ BackgroundParentImpl::DeallocPServiceWorkerManagerParent(
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvShutdownServiceWorkerRegistrar()
 {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
   if (BackgroundParent::IsOtherProcessActor(this)) {
-    return false;
+    return IPC_FAIL_NO_REASON(this);
   }
 
   RefPtr<dom::ServiceWorkerRegistrar> service =
@@ -698,7 +710,7 @@ BackgroundParentImpl::RecvShutdownServiceWorkerRegistrar()
   MOZ_ASSERT(service);
 
   service->Shutdown();
-  return true;
+  return IPC_OK();
 }
 
 PCacheStorageParent*
@@ -754,7 +766,7 @@ BackgroundParentImpl::AllocPMessagePortParent(const nsID& aUUID,
   return new MessagePortParent(aUUID);
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPMessagePortConstructor(PMessagePortParent* aActor,
                                                   const nsID& aUUID,
                                                   const nsID& aDestinationUUID,
@@ -764,7 +776,10 @@ BackgroundParentImpl::RecvPMessagePortConstructor(PMessagePortParent* aActor,
   AssertIsOnBackgroundThread();
 
   MessagePortParent* mp = static_cast<MessagePortParent*>(aActor);
-  return mp->Entangle(aDestinationUUID, aSequenceID);
+  if (!mp->Entangle(aDestinationUUID, aSequenceID)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 bool
@@ -778,7 +793,7 @@ BackgroundParentImpl::DeallocPMessagePortParent(PMessagePortParent* aActor)
   return true;
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvMessagePortForceClose(const nsID& aUUID,
                                                 const nsID& aDestinationUUID,
                                                 const uint32_t& aSequenceID)
@@ -786,7 +801,10 @@ BackgroundParentImpl::RecvMessagePortForceClose(const nsID& aUUID,
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  return MessagePortParent::ForceClose(aUUID, aDestinationUUID, aSequenceID);
+  if (!MessagePortParent::ForceClose(aUUID, aDestinationUUID, aSequenceID)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 PAsmJSCacheEntryParent*
@@ -848,7 +866,7 @@ BackgroundParentImpl::AllocPFileSystemRequestParent(
   return result.forget().take();
 }
 
-bool
+mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPFileSystemRequestConstructor(
                                                PFileSystemRequestParent* aActor,
                                                const FileSystemParams& aParams)
@@ -860,7 +878,7 @@ BackgroundParentImpl::RecvPFileSystemRequestConstructor(
 
   if (actor->PermissionCheckType() == FileSystemBase::ePermissionCheckNotRequired) {
     actor->Start();
-    return true;
+    return IPC_OK();
   }
 
   RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
@@ -868,7 +886,7 @@ BackgroundParentImpl::RecvPFileSystemRequestConstructor(
   // If the ContentParent is null we are dealing with a same-process actor.
   if (!parent) {
     actor->Start();
-    return true;
+    return IPC_OK();
   }
 
   const nsCString& permissionName = actor->PermissionName();
@@ -884,7 +902,7 @@ BackgroundParentImpl::RecvPFileSystemRequestConstructor(
   nsresult rv = NS_DispatchToMainThread(runnable);
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
 
-  return true;
+  return IPC_OK();
 }
 
 bool

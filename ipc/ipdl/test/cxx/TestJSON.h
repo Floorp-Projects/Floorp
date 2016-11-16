@@ -36,7 +36,7 @@ public:
     void Main();
 
 protected:
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvTest(const JSONVariant& i,
              JSONVariant* o) override;
 
@@ -79,7 +79,7 @@ public:
     virtual ~TestJSONChild() { }
 
 protected:
-    virtual bool
+    virtual mozilla::ipc::IPCResult
     RecvStart() override;
 
     virtual PTestHandleChild* AllocPTestHandleChild() override

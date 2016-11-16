@@ -54,57 +54,57 @@ public:
   InitializeLocal(NPObject* aObject);
 
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerInvalidate() override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerHasMethod(const PluginIdentifier& aId,
                   bool* aHasMethod) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerInvoke(const PluginIdentifier& aId,
                InfallibleTArray<Variant>&& aArgs,
                Variant* aResult,
                bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerInvokeDefault(InfallibleTArray<Variant>&& aArgs,
                       Variant* aResult,
                       bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerHasProperty(const PluginIdentifier& aId,
                     bool* aHasProperty) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerGetChildProperty(const PluginIdentifier& aId,
                          bool* aHasProperty,
                          bool* aHasMethod,
                          Variant* aResult,
                          bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerSetProperty(const PluginIdentifier& aId,
                     const Variant& aValue,
                     bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerRemoveProperty(const PluginIdentifier& aId,
                        bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerEnumerate(InfallibleTArray<PluginIdentifier>* aProperties,
                   bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   AnswerConstruct(InfallibleTArray<Variant>&& aArgs,
                   Variant* aResult,
                   bool* aSuccess) override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvProtect() override;
 
-  virtual bool
+  virtual mozilla::ipc::IPCResult
   RecvUnprotect() override;
 
   NPObject*

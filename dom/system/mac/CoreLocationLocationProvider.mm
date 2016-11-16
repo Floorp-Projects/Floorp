@@ -114,10 +114,6 @@ CoreLocationLocationProvider::MLSUpdate::MLSUpdate(CoreLocationLocationProvider&
 {
 }
 
-CoreLocationLocationProvider::MLSUpdate::~MLSUpdate()
-{
-}
-
 NS_IMETHODIMP
 CoreLocationLocationProvider::MLSUpdate::Update(nsIDOMGeoPosition *position)
 {
@@ -169,10 +165,6 @@ NS_IMPL_ISUPPORTS(CoreLocationLocationProvider, nsIGeolocationProvider)
 
 CoreLocationLocationProvider::CoreLocationLocationProvider()
   : mCLObjects(nullptr), mMLSFallbackProvider(nullptr)
-{
-}
-
-CoreLocationLocationProvider::~CoreLocationLocationProvider()
 {
 }
 

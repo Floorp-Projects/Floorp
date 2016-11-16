@@ -57,25 +57,25 @@ protected:
 
     virtual bool DeallocPTestDataStructuresSubParent(PTestDataStructuresSubParent* actor) override;
 
-    virtual bool RecvTest1(
+    virtual mozilla::ipc::IPCResult RecvTest1(
 	    InfallibleTArray<int>&& i1,
             InfallibleTArray<int>* o1) override;
 
-    virtual bool RecvTest2(
+    virtual mozilla::ipc::IPCResult RecvTest2(
             InfallibleTArray<PTestDataStructuresSubParent*>&& i1,
             InfallibleTArray<PTestDataStructuresSubParent*>* o1) override;
 
-    virtual bool RecvTest3(
+    virtual mozilla::ipc::IPCResult RecvTest3(
             const IntDouble& i1,
             const IntDouble& i2,
             IntDouble* o1,
             IntDouble* o2) override;
 
-    virtual bool RecvTest4(
+    virtual mozilla::ipc::IPCResult RecvTest4(
             InfallibleTArray<IntDouble>&& i1,
             InfallibleTArray<IntDouble>* o1) override;
 
-    virtual bool RecvTest5(
+    virtual mozilla::ipc::IPCResult RecvTest5(
             const IntDoubleArrays& i1,
             const IntDoubleArrays& i2,
             const IntDoubleArrays& i3,
@@ -83,15 +83,15 @@ protected:
             IntDoubleArrays* o2,
             IntDoubleArrays* o3) override;
 
-    virtual bool RecvTest6(
+    virtual mozilla::ipc::IPCResult RecvTest6(
             InfallibleTArray<IntDoubleArrays>&& i1,
             InfallibleTArray<IntDoubleArrays>* o1) override;
 
 
-    virtual bool RecvTest7_0(const ActorWrapper& i1,
+    virtual mozilla::ipc::IPCResult RecvTest7_0(const ActorWrapper& i1,
                              ActorWrapper* o1) override;
 
-    virtual bool RecvTest7(
+    virtual mozilla::ipc::IPCResult RecvTest7(
             const Actors& i1,
             const Actors& i2,
             const Actors& i3,
@@ -99,11 +99,11 @@ protected:
             Actors* o2,
             Actors* o3) override;
 
-    virtual bool RecvTest8(
+    virtual mozilla::ipc::IPCResult RecvTest8(
             InfallibleTArray<Actors>&& i1,
             InfallibleTArray<Actors>* o1) override;
 
-    virtual bool RecvTest9(
+    virtual mozilla::ipc::IPCResult RecvTest9(
             const Unions& i1,
             const Unions& i2,
             const Unions& i3,
@@ -113,27 +113,27 @@ protected:
             Unions* o3,
             Unions* o4) override;
 
-    virtual bool RecvTest10(
+    virtual mozilla::ipc::IPCResult RecvTest10(
             InfallibleTArray<Unions>&& i1,
             InfallibleTArray<Unions>* o1) override;
 
-    virtual bool RecvTest11(
+    virtual mozilla::ipc::IPCResult RecvTest11(
             const SIntDouble& i,
             SIntDouble* o) override;
 
-    virtual bool RecvTest12(
+    virtual mozilla::ipc::IPCResult RecvTest12(
             const SIntDoubleArrays& i,
             SIntDoubleArrays* o) override;
 
-    virtual bool RecvTest13(
+    virtual mozilla::ipc::IPCResult RecvTest13(
             const SActors& i,
             SActors* o) override;
 
-    virtual bool RecvTest14(
+    virtual mozilla::ipc::IPCResult RecvTest14(
             const Structs& i,
             Structs* o) override;
 
-    virtual bool RecvTest15(
+    virtual mozilla::ipc::IPCResult RecvTest15(
             const WithStructs& i1,
             const WithStructs& i2,
             const WithStructs& i3,
@@ -145,18 +145,18 @@ protected:
             WithStructs* o4,
             WithStructs* o5) override;
 
-    virtual bool RecvTest16(
+    virtual mozilla::ipc::IPCResult RecvTest16(
             const WithUnions& i,
             WithUnions* o) override;
 
-    virtual bool RecvTest17(InfallibleTArray<Op>&& sa) override;
+    virtual mozilla::ipc::IPCResult RecvTest17(InfallibleTArray<Op>&& sa) override;
 
-    virtual bool RecvTest18(InfallibleTArray<nsIntRegion>&& ra) override;
+    virtual mozilla::ipc::IPCResult RecvTest18(InfallibleTArray<nsIntRegion>&& ra) override;
 
-    virtual bool RecvDummy(const ShmemUnion& su, ShmemUnion* rsu) override
+    virtual mozilla::ipc::IPCResult RecvDummy(const ShmemUnion& su, ShmemUnion* rsu) override
     {
         *rsu = su;
-        return true;
+        return IPC_OK();
     }
 
     virtual void ActorDestroy(ActorDestroyReason why) override
@@ -193,7 +193,7 @@ protected:
         return true;
     }
 
-    virtual bool RecvStart() override;
+    virtual mozilla::ipc::IPCResult RecvStart() override;
 
     virtual void ActorDestroy(ActorDestroyReason why) override
     {

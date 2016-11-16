@@ -435,7 +435,7 @@ OfflineCacheUpdateChild::Schedule()
     return NS_OK;
 }
 
-bool
+mozilla::ipc::IPCResult
 OfflineCacheUpdateChild::RecvAssociateDocuments(const nsCString &cacheGroupId,
                                                   const nsCString &cacheClientId)
 {
@@ -446,7 +446,7 @@ OfflineCacheUpdateChild::RecvAssociateDocuments(const nsCString &cacheGroupId,
     nsCOMPtr<nsIApplicationCache> cache =
         do_CreateInstance(NS_APPLICATIONCACHE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
-      return true;
+      return IPC_OK();
 
     cache->InitAsHandle(cacheGroupId, cacheClientId);
 
@@ -460,10 +460,10 @@ OfflineCacheUpdateChild::RecvAssociateDocuments(const nsCString &cacheGroupId,
     for (int32_t i = 0; i < observers.Count(); i++)
         observers[i]->ApplicationCacheAvailable(cache);
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 OfflineCacheUpdateChild::RecvNotifyStateEvent(const uint32_t &event,
                                               const uint64_t &byteProgress)
 {
@@ -491,10 +491,10 @@ OfflineCacheUpdateChild::RecvNotifyStateEvent(const uint32_t &event,
     for (int32_t i = 0; i < observers.Count(); i++)
         observers[i]->UpdateStateChanged(this, event);
 
-    return true;
+    return IPC_OK();
 }
 
-bool
+mozilla::ipc::IPCResult
 OfflineCacheUpdateChild::RecvFinish(const bool &succeeded,
                                     const bool &isUpgrade)
 {
@@ -521,7 +521,7 @@ OfflineCacheUpdateChild::RecvFinish(const bool &succeeded,
     // TabChild::DeallocPOfflineCacheUpdate will call Release.
     OfflineCacheUpdateChild::Send__delete__(this);
 
-    return true;
+    return IPC_OK();
 }
 
 } // namespace docshell
