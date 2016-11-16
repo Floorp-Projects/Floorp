@@ -704,7 +704,7 @@ class BaseCompiler
 
     bool isAvailable(Register64 r) {
 #ifdef JS_PUNBOX64
-        return isAvailable(r);
+        return isAvailable(r.reg);
 #else
         return isAvailable(r.low) && isAvailable(r.high);
 #endif
