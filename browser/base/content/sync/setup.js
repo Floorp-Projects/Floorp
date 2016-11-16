@@ -825,8 +825,8 @@ var gSyncSetup = {
       uri = Weave.Utils.makeURI("https://" + val);
 
     if (uri && this._settingUpNew) {
-      function isValid(uri) {
-        Weave.Service.serverURL = uri.spec;
+      function isValid(validUri) {
+        Weave.Service.serverURL = validUri.spec;
         let check = Weave.Service.checkAccount("a");
         return (check == "available" || check == "notAvailable");
       }

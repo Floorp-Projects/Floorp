@@ -80,7 +80,7 @@ add_task(function* test_cookie_getCookiesWithOriginAttributes() {
 
   // Check that whether cookies has been cleared.
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
-    let enumerator = getCookiesForOA(TEST_HOST, userContextId);
-    ok(!enumerator.hasMoreElements(), "No Cookie should be here");
+    let e = getCookiesForOA(TEST_HOST, userContextId);
+    ok(!e.hasMoreElements(), "No Cookie should be here");
   }
 });

@@ -209,9 +209,9 @@ function startCustomizing(aWindow=window) {
 
 function promiseObserverNotified(aTopic) {
   let deferred = Promise.defer();
-  Services.obs.addObserver(function onNotification(aSubject, aTopic, aData) {
-    Services.obs.removeObserver(onNotification, aTopic);
-      deferred.resolve({subject: aSubject, data: aData});
+  Services.obs.addObserver(function onNotification(subject, topic, data) {
+    Services.obs.removeObserver(onNotification, topic);
+      deferred.resolve({subject, data});
     }, aTopic, false);
   return deferred.promise;
 }

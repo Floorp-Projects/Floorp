@@ -798,11 +798,11 @@ var PlacesSearchBox = {
       case "bookmarks":
         currentView.applyFilter(filterString, this.folders);
         break;
-      case "history":
+      case "history": {
         if (currentOptions.queryType != Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
-          var query = PlacesUtils.history.getNewQuery();
+          let query = PlacesUtils.history.getNewQuery();
           query.searchTerms = filterString;
-          var options = currentOptions.clone();
+          let options = currentOptions.clone();
           // Make sure we're getting uri results.
           options.resultType = currentOptions.RESULTS_AS_URI;
           options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
@@ -815,7 +815,8 @@ var PlacesSearchBox = {
           TelemetryStopwatch.finish(HISTORY_LIBRARY_SEARCH_TELEMETRY);
         }
         break;
-      case "downloads":
+      }
+      case "downloads": {
         if (currentView == ContentTree.view) {
           let query = PlacesUtils.history.getNewQuery();
           query.searchTerms = filterString;
@@ -832,6 +833,7 @@ var PlacesSearchBox = {
           currentView.searchTerm = filterString;
         }
         break;
+      }
       default:
         throw "Invalid filterCollection on search";
     }

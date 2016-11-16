@@ -17,9 +17,9 @@ function test() {
 const phishyUserPassPref = "network.http.phishy-userpass-length";
 
 function nextTest() {
-  let test = tests.shift();
-  if (test) {
-    test(function () {
+  let testCase = tests.shift();
+  if (testCase) {
+    testCase(function () {
       executeSoon(nextTest);
     });
   } else {

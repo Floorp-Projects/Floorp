@@ -145,28 +145,28 @@ var tests = [
 ];
 
 function nextTest() {
-  let test = tests.shift();
+  let testCase = tests.shift();
   if (tests.length == 0)
-    runTest(test, finish);
+    runTest(testCase, finish);
   else
-    runTest(test, nextTest);
+    runTest(testCase, nextTest);
 }
 
-function runTest(test, cb) {
+function runTest(testCase, cb) {
   function doCheck() {
-    if (test.setURL || test.loadURL) {
-      gURLBar.valueIsTyped = !!test.setURL;
-      is(gURLBar.textValue, test.expectedURL, "url bar value set");
+    if (testCase.setURL || testCase.loadURL) {
+      gURLBar.valueIsTyped = !!testCase.setURL;
+      is(gURLBar.textValue, testCase.expectedURL, "url bar value set");
     }
 
-    testCopy(test.copyVal, test.copyExpected, cb);
+    testCopy(testCase.copyVal, testCase.copyExpected, cb);
   }
 
-  if (test.loadURL) {
-    loadURL(test.loadURL, doCheck);
+  if (testCase.loadURL) {
+    loadURL(testCase.loadURL, doCheck);
   } else {
-    if (test.setURL)
-      gURLBar.value = test.setURL;
+    if (testCase.setURL)
+      gURLBar.value = testCase.setURL;
     doCheck();
   }
 }

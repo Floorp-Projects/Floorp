@@ -134,9 +134,9 @@ var gGestureSupport = {
     let isLatched = false;
 
     // Create the update function here to capture closure state
-    this._doUpdate = function GS__doUpdate(aEvent) {
+    this._doUpdate = function GS__doUpdate(updateEvent) {
       // Update the offset with new event data
-      offset += aEvent.delta;
+      offset += updateEvent.delta;
 
       // Check if the cumulative deltas exceed the threshold
       if (Math.abs(offset) > aPref["threshold"]) {
@@ -145,7 +145,7 @@ var gGestureSupport = {
         // initial motion; or we're latched and going the opposite way
         let sameDir = (latchDir ^ offset) >= 0;
         if (!aPref["latched"] || (isLatched ^ sameDir)) {
-          this._doAction(aEvent, [aGesture, offset > 0 ? aInc : aDec]);
+          this._doAction(updateEvent, [aGesture, offset > 0 ? aInc : aDec]);
 
           // We must be getting latched or leaving it, so just toggle
           isLatched = !isLatched;
@@ -242,8 +242,8 @@ var gGestureSupport = {
     this._doEnd = function GS__doEnd(aEvent) {
       gHistorySwipeAnimation.swipeEndEventReceived();
 
-      this._doUpdate = function (aEvent) {};
-      this._doEnd = function (aEvent) {};
+      this._doUpdate = function () {};
+      this._doEnd = function () {};
     }
   },
 

@@ -1411,8 +1411,8 @@ var gApplicationsPane = {
 
     // Add a separator to distinguish these items from the helper app items
     // that follow them.
-    let menuItem = document.createElement("menuseparator");
-    menuPopup.appendChild(menuItem);
+    let menuseparator = document.createElement("menuseparator");
+    menuPopup.appendChild(menuseparator);
 
     // Create a menu item for the OS default application, if any.
     if (handlerInfo.hasDefaultHandler) {
@@ -1760,8 +1760,8 @@ var gApplicationsPane = {
           handlerApp.executable = fp.file;
 
           // Add the app to the type's list of possible handlers.
-          let handlerInfo = this._handledTypes[this._list.selectedItem.type];
-          handlerInfo.addPossibleApplicationHandler(handlerApp);
+          let handler = this._handledTypes[this._list.selectedItem.type];
+          handler.addPossibleApplicationHandler(handlerApp);
 
           chooseAppCallback(handlerApp);
         }
