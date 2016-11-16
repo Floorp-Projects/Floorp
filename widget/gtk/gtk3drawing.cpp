@@ -1774,6 +1774,9 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
     moz_gtk_menu_item_paint(MOZ_GTK_MENUSEPARATOR, cr, rect,
                             &defaultState, direction);
 
+    if (gtk_get_minor_version() >= 20)
+        return MOZ_GTK_SUCCESS;
+
     GtkStyleContext* style;
     gboolean wide_separators;
     gint separator_height;
