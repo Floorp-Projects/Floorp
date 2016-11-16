@@ -68,7 +68,7 @@ var RefreshBlocker = {
       let buttons = [{
         label: refreshButtonText,
         accessKey: refreshButtonAccesskey,
-        callback: function () {
+        callback: function (notification, button) {
           if (browser.messageManager) {
             browser.messageManager.sendAsyncMessage("RefreshBlocker:Refresh", data);
           }

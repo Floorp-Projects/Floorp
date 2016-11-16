@@ -1305,17 +1305,17 @@ var CustomizableUIInternal = {
     let toolboxes = gBuildWindows.get(aWindow);
     for (let toolbox of toolboxes) {
       if (toolbox.palette) {
-        // Attempt to locate an element with a matching ID within
+        // Attempt to locate a node with a matching ID within
         // the palette.
-        let element = toolbox.palette.getElementsByAttribute("id", aId)[0];
-        if (element) {
+        let node = toolbox.palette.getElementsByAttribute("id", aId)[0];
+        if (node) {
           // Normalize the removable attribute. For backwards compat, this
           // is optional if the widget is located in the toolbox palette,
           // and defaults to *true*, unlike if it was located elsewhere.
-          if (!element.hasAttribute("removable")) {
-            element.setAttribute("removable", true);
+          if (!node.hasAttribute("removable")) {
+            node.setAttribute("removable", true);
           }
-          return element;
+          return node;
         }
       }
     }

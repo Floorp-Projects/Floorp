@@ -160,7 +160,7 @@ let LaterRun = {
       return null;
     }
     let pages = this.readPages();
-    let page = pages.find(p => p.applies(this));
+    let page = pages.find(page => page.applies(this));
     if (page) {
       Services.prefs.setBoolPref(page.pref + "hasRun", true);
       return page.url;

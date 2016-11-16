@@ -36,9 +36,9 @@ function promiseTopicObserved(topic)
 {
   let deferred = Promise.defer();
   info("Waiting for observer topic " + topic);
-  Services.obs.addObserver(function PTO_observe(obsSubject, obsTopic, obsData) {
-    Services.obs.removeObserver(PTO_observe, obsTopic);
-    deferred.resolve([obsSubject, obsData]);
+  Services.obs.addObserver(function PTO_observe(subject, topic, data) {
+    Services.obs.removeObserver(PTO_observe, topic);
+    deferred.resolve([subject, data]);
   }, topic, false);
   return deferred.promise;
 }

@@ -89,7 +89,7 @@ add_task(function* history() {
 
 // Keys up and down through the non-history panel, i.e., the panel that's shown
 // when you type something in the textbox.
-add_task(function*() {
+add_task(function* typedValue() {
   // Use a typed value that returns the visits added above but that doesn't
   // trigger autofill since that would complicate the test.
   let typedValue = "browser_urlbarOneOffs";

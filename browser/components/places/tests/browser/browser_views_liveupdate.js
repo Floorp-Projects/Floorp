@@ -312,7 +312,7 @@ function searchItemInView(aItemId, aView, aValidator) {
  * @returns [node, index] or [null, null] if not found.
  */
 function getNodeForToolbarItem(aItemId, aValidator) {
-  var placesToolbarItems = document.getElementById("PlacesToolbarItems");
+  var toolbar = document.getElementById("PlacesToolbarItems");
 
   function findNode(aContainer) {
     var children = aContainer.childNodes;
@@ -344,7 +344,7 @@ function getNodeForToolbarItem(aItemId, aValidator) {
     return [null, null];
   }
 
-  return findNode(placesToolbarItems);
+  return findNode(toolbar);
 }
 
 /**

@@ -215,13 +215,13 @@ function testDefaultArgs()
   reloadUpdateManagerData();
 
   for (let i = 0; i < BCH_TESTS.length; i++) {
-    let testCase = BCH_TESTS[i];
-    ok(true, "Test nsBrowserContentHandler " + (i + 1) + ": " + testCase.description);
+    let test = BCH_TESTS[i];
+    ok(true, "Test nsBrowserContentHandler " + (i + 1) + ": " + test.description);
 
-    if (testCase.actions) {
-      let actionsXML = " actions=\"" + testCase.actions + "\"";
-      if (testCase.openURL) {
-        actionsXML += " openURL=\"" + testCase.openURL + "\"";
+    if (test.actions) {
+      let actionsXML = " actions=\"" + test.actions + "\"";
+      if (test.openURL) {
+        actionsXML += " openURL=\"" + test.openURL + "\"";
       }
       writeUpdatesToXMLFile(XML_PREFIX + actionsXML + XML_SUFFIX);
     } else {
@@ -234,10 +234,10 @@ function testDefaultArgs()
                          getService(Ci.nsIBrowserHandler).defaultArgs;
 
     let overrideArgs = "";
-    if (testCase.prefURL) {
-      overrideArgs = testCase.prefURL;
-    } else if (testCase.openURL) {
-      overrideArgs = testCase.openURL;
+    if (test.prefURL) {
+      overrideArgs = test.prefURL;
+    } else if (test.openURL) {
+      overrideArgs = test.openURL;
     }
 
     if (overrideArgs == "" && noOverrideArgs) {
@@ -246,11 +246,11 @@ function testDefaultArgs()
       overrideArgs += "|" + noOverrideArgs;
     }
 
-    if (testCase.noMstoneChange === undefined) {
+    if (test.noMstoneChange === undefined) {
       gPrefService.setCharPref(PREF_MSTONE, "PreviousMilestone");
     }
 
-    if (testCase.noPostUpdatePref == undefined) {
+    if (test.noPostUpdatePref == undefined) {
       gPrefService.setBoolPref(PREF_POSTUPDATE, true);
     }
 
@@ -258,7 +258,7 @@ function testDefaultArgs()
                       getService(Ci.nsIBrowserHandler).defaultArgs;
     is(defaultArgs, overrideArgs, "correct value returned by defaultArgs");
 
-    if (testCase.noMstoneChange === undefined || testCase.noMstoneChange != true) {
+    if (test.noMstoneChange === undefined || test.noMstoneChange != true) {
       let newMstone = gPrefService.getCharPref(PREF_MSTONE);
       is(originalMstone, newMstone, "preference " + PREF_MSTONE +
          " should have been updated");
@@ -309,22 +309,22 @@ function testShowNotification()
   gWindowCatcher.start();
 
   for (let i = 0; i < BG_NOTIFY_TESTS.length; i++) {
-    let testCase = BG_NOTIFY_TESTS[i];
-    ok(true, "Test showNotification " + (i + 1) + ": " + testCase.description);
+    let test = BG_NOTIFY_TESTS[i];
+    ok(true, "Test showNotification " + (i + 1) + ": " + test.description);
 
-    if (testCase.actions) {
-      let actionsXML = " actions=\"" + testCase.actions + "\"";
-      if (testCase.notificationText) {
-        actionsXML += " notificationText=\"" + testCase.notificationText + "\"";
+    if (test.actions) {
+      let actionsXML = " actions=\"" + test.actions + "\"";
+      if (test.notificationText) {
+        actionsXML += " notificationText=\"" + test.notificationText + "\"";
       }
-      if (testCase.notificationURL) {
-        actionsXML += " notificationURL=\"" + testCase.notificationURL + "\"";
+      if (test.notificationURL) {
+        actionsXML += " notificationURL=\"" + test.notificationURL + "\"";
       }
-      if (testCase.notificationButtonLabel) {
-        actionsXML += " notificationButtonLabel=\"" + testCase.notificationButtonLabel + "\"";
+      if (test.notificationButtonLabel) {
+        actionsXML += " notificationButtonLabel=\"" + test.notificationButtonLabel + "\"";
       }
-      if (testCase.notificationButtonAccessKey) {
-        actionsXML += " notificationButtonAccessKey=\"" + testCase.notificationButtonAccessKey + "\"";
+      if (test.notificationButtonAccessKey) {
+        actionsXML += " notificationButtonAccessKey=\"" + test.notificationButtonAccessKey + "\"";
       }
       writeUpdatesToXMLFile(XML_PREFIX + actionsXML + XML_SUFFIX);
     } else {
@@ -337,21 +337,21 @@ function testShowNotification()
     gBG.observe(null, "browser-glue-test", "post-update-notification");
 
     let updateBox = notifyBox.getNotificationWithValue("post-update-notification");
-    if (testCase.actions && testCase.actions.indexOf("showNotification") != -1 &&
-        testCase.actions.indexOf("silent") == -1) {
+    if (test.actions && test.actions.indexOf("showNotification") != -1 &&
+        test.actions.indexOf("silent") == -1) {
       ok(updateBox, "Update notification box should have been displayed");
       if (updateBox) {
-        if (testCase.notificationText) {
-          is(updateBox.label, testCase.notificationText, "Update notification box " +
+        if (test.notificationText) {
+          is(updateBox.label, test.notificationText, "Update notification box " +
              "should have the label provided by the update");
         }
-        if (testCase.notificationButtonLabel) {
+        if (test.notificationButtonLabel) {
           var button = updateBox.getElementsByTagName("button").item(0);
-          is(button.label, testCase.notificationButtonLabel, "Update notification " +
+          is(button.label, test.notificationButtonLabel, "Update notification " +
              "box button should have the label provided by the update");
-          if (testCase.notificationButtonAccessKey) {
+          if (test.notificationButtonAccessKey) {
             let accessKey = button.getAttribute("accesskey");
-            is(accessKey, testCase.notificationButtonAccessKey, "Update " +
+            is(accessKey, test.notificationButtonAccessKey, "Update " +
                "notification box button should have the accesskey " +
                "provided by the update");
           }

@@ -404,20 +404,20 @@ function open_properties_dialog() {
       if (aTopic != "domwindowopened")
         return;
       ww.unregisterNotification(windowObserver);
-      let observerWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
       waitForFocus(() => {
         // Windows has been loaded, execute our test now.
         executeSoon(function () {
           // Ensure overlay is loaded
-          ok(observerWindow.gEditItemOverlay.initialized, "EditItemOverlay is initialized");
-          gCurrentTest.window = observerWindow;
+          ok(win.gEditItemOverlay.initialized, "EditItemOverlay is initialized");
+          gCurrentTest.window = win;
           try {
             gCurrentTest.run();
           } catch (ex) {
             ok(false, "An error occured during test run: " + ex.message);
           }
         });
-      }, observerWindow);
+      }, win);
     }
     ww.registerNotification(windowObserver);
 

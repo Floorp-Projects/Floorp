@@ -38,10 +38,10 @@ var healthReportWrapper = {
 
   updatePrefState: function () {
     try {
-      let prefsObj = {
+      let prefs = {
         enabled: MozSelfSupport.healthReportDataSubmissionEnabled,
       };
-      healthReportWrapper.injectData("prefs", prefsObj);
+      healthReportWrapper.injectData("prefs", prefs);
     }
     catch (ex) {
       healthReportWrapper.reportFailure(healthReportWrapper.ERROR_PREFS_FAILED);

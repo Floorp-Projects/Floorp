@@ -371,10 +371,10 @@ function* closeStream(aAlreadyClosed, aFrameId) {
   }
 
   info("closing the stream");
-  yield ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, function*(contentFrameId) {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, function*(aFrameId) {
     let global = content.wrappedJSObject;
-    if (contentFrameId)
-      global = global.document.getElementById(contentFrameId).contentWindow;
+    if (aFrameId)
+      global = global.document.getElementById(aFrameId).contentWindow;
     global.closeStream();
   });
 
@@ -413,12 +413,12 @@ function* checkSharingUI(aExpected, aWin = window) {
   identityBox.click();
   let permissions = doc.getElementById("identity-popup-permission-list");
   for (let id of ["microphone", "camera", "screen"]) {
-    let convertId = idToConvert => {
-      if (idToConvert == "camera")
+    let convertId = id => {
+      if (id == "camera")
         return "video";
-      if (idToConvert == "microphone")
+      if (id == "microphone")
         return "audio";
-      return idToConvert;
+      return id;
     };
     let expected = aExpected[convertId(id)];
     is(!!aWin.gIdentityHandler._sharingState[id], !!expected,
