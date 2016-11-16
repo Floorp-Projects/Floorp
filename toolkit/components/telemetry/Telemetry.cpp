@@ -225,7 +225,7 @@ public:
       : mHangIndices(aOther.mHangIndices)
       , mAnnotations(Move(aOther.mAnnotations))
     {}
-    ~AnnotationInfo() {}
+    ~AnnotationInfo() = default;
     AnnotationInfo& operator=(AnnotationInfo&& aOther)
     {
       mHangIndices = aOther.mHangIndices;
@@ -2571,9 +2571,7 @@ RecordShutdownEndTimeStamp() {
 namespace mozilla {
 namespace Telemetry {
 
-ProcessedStack::ProcessedStack()
-{
-}
+ProcessedStack::ProcessedStack() = default;
 
 size_t ProcessedStack::GetStackSize() const
 {
