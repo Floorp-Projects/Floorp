@@ -97,6 +97,7 @@ class SpecificLayerAttributes;
 class Compositor;
 class FrameUniformityData;
 class PersistentBufferProvider;
+class WebRenderLayerManager;
 
 namespace layerscope {
 class LayersPacket;
@@ -198,6 +199,9 @@ public:
   { return nullptr; }
 
   virtual BasicLayerManager* AsBasicLayerManager()
+  { return nullptr; }
+
+  virtual WebRenderLayerManager* AsWebRenderLayerManager()
   { return nullptr; }
 
   /**

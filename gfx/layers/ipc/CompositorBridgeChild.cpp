@@ -20,6 +20,7 @@
 #include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layers/TextureClient.h"// for TextureClient
 #include "mozilla/layers/TextureClientPool.h"// for TextureClientPool
+#include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/Logging.h"
@@ -1142,6 +1143,22 @@ void
 CompositorBridgeChild::HandleFatalError(const char* aName, const char* aMsg) const
 {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aName, aMsg, OtherPid());
+}
+
+PWebRenderBridgeChild*
+CompositorBridgeChild::AllocPWebRenderBridgeChild(const uint64_t& aPipelineId)
+{
+  WebRenderBridgeChild* child = new WebRenderBridgeChild(aPipelineId);
+  child->AddRef();
+  return child;
+}
+
+bool
+CompositorBridgeChild::DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor)
+{
+  WebRenderBridgeChild* child = static_cast<WebRenderBridgeChild*>(aActor);
+  child->Release();
+  return true;
 }
 
 } // namespace layers

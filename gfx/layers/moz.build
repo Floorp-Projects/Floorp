@@ -202,6 +202,10 @@ EXPORTS.mozilla.layers += [
     'RenderTrace.h',
     'TextureWrapperImage.h',
     'TransactionIdAllocator.h',
+    'wr/WebRenderBridgeChild.h',
+    'wr/WebRenderBridgeParent.h',
+    'wr/WebRenderLayerManager.h',
+    'wr/WebRenderTypes.h',
 ]
 
 if CONFIG['MOZ_X11']:
@@ -372,6 +376,14 @@ UNIFIED_SOURCES += [
     'RenderTrace.cpp',
     'RotatedBuffer.cpp',
     'TextureWrapperImage.cpp',
+    'wr/WebRenderBridgeChild.cpp',
+    'wr/WebRenderBridgeParent.cpp',
+    'wr/WebRenderCanvasLayer.cpp',
+    'wr/WebRenderColorLayer.cpp',
+    'wr/WebRenderContainerLayer.cpp',
+    'wr/WebRenderImageLayer.cpp',
+    'wr/WebRenderLayerManager.cpp',
+    'wr/WebRenderPaintedLayer.cpp',
 ]
 
 SOURCES += [
@@ -413,6 +425,7 @@ IPDL_SOURCES = [
     'ipc/PLayerTransaction.ipdl',
     'ipc/PTexture.ipdl',
     'ipc/PVideoBridge.ipdl',
+    'ipc/PWebRenderBridge.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
