@@ -264,6 +264,100 @@ ProcessMatrix3D(Matrix4x4& aMatrix,
   aMatrix = temp * aMatrix;
 }
 
+template<typename T>
+T InterpolateNumerically(const T& aOne, const T& aTwo, double aCoeff)
+{
+  return aOne + (aTwo - aOne) * aCoeff;
+}
+
+/**
+ * Interpolates between 2 matrices by decomposing them.
+ *
+ * @param aMatrix1   First matrix, using CSS pixel units.
+ * @param aMatrix2   Second matrix, using CSS pixel units.
+ * @param aProgress  Interpolation value in the range [0.0, 1.0]
+ */
+static Matrix4x4
+InterpolateTransformMatrix(const Matrix4x4 &aMatrix1,
+                           const Matrix4x4 &aMatrix2,
+                           double aProgress)
+{
+  // Decompose both matrices
+
+  // TODO: What do we do if one of these returns false (singular matrix)
+  Point3D scale1(1, 1, 1), translate1;
+  Point4D perspective1(0, 0, 0, 1);
+  gfxQuaternion rotate1;
+  nsStyleTransformMatrix::ShearArray shear1{0.0f, 0.0f, 0.0f};
+
+  Point3D scale2(1, 1, 1), translate2;
+  Point4D perspective2(0, 0, 0, 1);
+  gfxQuaternion rotate2;
+  nsStyleTransformMatrix::ShearArray shear2{0.0f, 0.0f, 0.0f};
+
+  Matrix matrix2d1, matrix2d2;
+  if (aMatrix1.Is2D(&matrix2d1) && aMatrix2.Is2D(&matrix2d2)) {
+    Decompose2DMatrix(matrix2d1, scale1, shear1, rotate1, translate1);
+    Decompose2DMatrix(matrix2d2, scale2, shear2, rotate2, translate2);
+  } else {
+    Decompose3DMatrix(aMatrix1, scale1, shear1,
+                      rotate1, translate1, perspective1);
+    Decompose3DMatrix(aMatrix2, scale2, shear2,
+                      rotate2, translate2, perspective2);
+  }
+
+  // Interpolate each of the pieces
+  Matrix4x4 result;
+
+  Point4D perspective =
+    InterpolateNumerically(perspective1, perspective2, aProgress);
+  result.SetTransposedVector(3, perspective);
+
+  Point3D translate =
+    InterpolateNumerically(translate1, translate2, aProgress);
+  result.PreTranslate(translate.x, translate.y, translate.z);
+
+  gfxQuaternion q3 = rotate1.Slerp(rotate2, aProgress);
+  Matrix4x4 rotate = q3.ToMatrix();
+  if (!rotate.IsIdentity()) {
+    result = rotate * result;
+  }
+
+  // TODO: Would it be better to interpolate these as angles?
+  //       How do we convert back to angles?
+  float yzshear =
+    InterpolateNumerically(shear1[ShearType::YZSHEAR],
+                           shear2[ShearType::YZSHEAR],
+                           aProgress);
+  if (yzshear != 0.0) {
+    result.SkewYZ(yzshear);
+  }
+
+  float xzshear =
+    InterpolateNumerically(shear1[ShearType::XZSHEAR],
+                           shear2[ShearType::XZSHEAR],
+                           aProgress);
+  if (xzshear != 0.0) {
+    result.SkewXZ(xzshear);
+  }
+
+  float xyshear =
+    InterpolateNumerically(shear1[ShearType::XYSHEAR],
+                           shear2[ShearType::XYSHEAR],
+                           aProgress);
+  if (xyshear != 0.0) {
+    result.SkewXY(xyshear);
+  }
+
+  Point3D scale =
+    InterpolateNumerically(scale1, scale2, aProgress);
+  if (scale != Point3D(1.0, 1.0, 1.0)) {
+    result.PreScale(scale.x, scale.y, scale.z);
+  }
+
+  return result;
+}
+
 /* Helper function to process two matrices that we need to interpolate between */
 void
 ProcessInterpolateMatrix(Matrix4x4& aMatrix,
@@ -293,9 +387,7 @@ ProcessInterpolateMatrix(Matrix4x4& aMatrix,
   }
   double progress = aData->Item(3).GetPercentValue();
 
-  aMatrix =
-    StyleAnimationValue::InterpolateTransformMatrix(matrix1, matrix2, progress)
-    * aMatrix;
+  aMatrix = InterpolateTransformMatrix(matrix1, matrix2, progress) * aMatrix;
 }
 
 /* Helper function to process a translatex function. */
