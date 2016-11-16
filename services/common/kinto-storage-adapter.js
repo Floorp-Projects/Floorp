@@ -172,10 +172,14 @@ const statements = {
 
   "scanAllRecords": `SELECT * FROM collection_data;`,
 
-  "clearCollectionMetadata": `DELETE FROM collection_metadata;`
+  "clearCollectionMetadata": `DELETE FROM collection_metadata;`,
 };
 
-const createStatements = ["createCollectionData", "createCollectionMetadata", "createCollectionDataRecordIdIndex"];
+const createStatements = [
+  "createCollectionData",
+  "createCollectionMetadata",
+  "createCollectionDataRecordIdIndex",
+];
 
 const currentSchemaVersion = 1;
 
@@ -262,7 +266,10 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
 
     return conn.executeTransaction(function* doExecuteTransaction() {
       // Preload specified records from DB, within transaction.
-      const parameters = [collection, ...options.preload];
+      const parameters = [
+        collection,
+        ...options.preload,
+      ];
       const placeholders = options.preload.map(_ => "?");
       const stmt = statements.listRecordsById + "(" + placeholders.join(",") + ");";
       const rows = yield conn.execute(stmt, parameters);
@@ -285,7 +292,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
   get(id) {
     const params = {
       collection_name: this.collection,
-      record_id: id
+      record_id: id,
     };
     return this._executeStatement(statements.getRecord, params).then(result => {
       if (result.length == 0) {
@@ -297,7 +304,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
 
   list(params = { filters: {}, order: "" }) {
     const parameters = {
-      collection_name: this.collection
+      collection_name: this.collection,
     };
     return this._executeStatement(statements.listRecords, parameters).then(result => {
       const records = [];
@@ -332,21 +339,24 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
           const params = {
             collection_name: collection_name,
             record_id: record.id,
-            record: JSON.stringify(record)
+            record: JSON.stringify(record),
           };
           yield connection.execute(statements.importData, params);
         }
         const lastModified = Math.max(...records.map(record => record.last_modified));
         const params = {
-          collection_name: collection_name
+          collection_name: collection_name,
         };
-        const previousLastModified = yield connection.execute(statements.getLastModified, params).then(result => {
-          return result.length > 0 ? result[0].getResultByName("last_modified") : -1;
-        });
+        const previousLastModified = yield connection.execute(
+          statements.getLastModified, params).then(result => {
+            return result.length > 0
+              ? result[0].getResultByName("last_modified")
+              : -1;
+          });
         if (lastModified > previousLastModified) {
           const params = {
             collection_name: collection_name,
-            last_modified: lastModified
+            last_modified: lastModified,
           };
           yield connection.execute(statements.saveLastModified, params);
         }
@@ -359,21 +369,23 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
     const parsedLastModified = parseInt(lastModified, 10) || null;
     const params = {
       collection_name: this.collection,
-      last_modified: parsedLastModified
+      last_modified: parsedLastModified,
     };
-    return this._executeStatement(statements.saveLastModified, params).then(() => parsedLastModified);
+    return this._executeStatement(statements.saveLastModified, params)
+      .then(() => parsedLastModified);
   }
 
   getLastModified() {
     const params = {
-      collection_name: this.collection
+      collection_name: this.collection,
     };
-    return this._executeStatement(statements.getLastModified, params).then(result => {
-      if (result.length == 0) {
-        return 0;
-      }
-      return result[0].getResultByName("last_modified");
-    });
+    return this._executeStatement(statements.getLastModified, params)
+      .then(result => {
+        if (result.length == 0) {
+          return 0;
+        }
+        return result[0].getResultByName("last_modified");
+      });
   }
 
   /**
@@ -400,9 +412,13 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
         else {
           const newRecord = Object.assign({}, record, {
             _status: "created",
-            last_modified: undefined
+            last_modified: undefined,
           });
-          promises.push(conn.execute(statements.updateData, { record: JSON.stringify(newRecord), record_id, collection_name }));
+          promises.push(conn.execute(statements.updateData, {
+            record: JSON.stringify(newRecord),
+            record_id,
+            collection_name,
+          }));
         }
       });
       yield Promise.all(promises);
