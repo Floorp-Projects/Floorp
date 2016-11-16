@@ -106,16 +106,13 @@ let apiManager = new class extends SchemaAPIManager {
 // `onConnect` events are updated if needed.
 ProxyMessenger = {
   _initialized: false,
+
   init() {
     if (this._initialized) {
       return;
     }
     this._initialized = true;
 
-    // TODO(robwu): When addons move to a separate process, we should use the
-    // parent process manager(s) of the addon process(es) instead of the
-    // in-process one.
-    let pipmm = Services.ppmm.getChildAt(0);
     // Listen on the global frame message manager because content scripts send
     // and receive extension messages via their frame.
     // Listen on the parent process message manager because `runtime.connect`
@@ -123,7 +120,7 @@ ProxyMessenger = {
     // addon process (by the API contract).
     // And legacy addons are not associated with a frame, so that is another
     // reason for having a parent process manager here.
-    let messageManagers = [Services.mm, pipmm];
+    let messageManagers = [Services.mm, Services.ppmm];
 
     MessageChannel.addListener(messageManagers, "Extension:Connect", this);
     MessageChannel.addListener(messageManagers, "Extension:Message", this);
@@ -147,8 +144,9 @@ ProxyMessenger = {
       // native messages are handled by NativeApp.
       return;
     }
+
     let extension = GlobalManager.extensionMap.get(sender.extensionId);
-    let receiverMM = this._getMessageManagerForRecipient(recipient);
+    let receiverMM = this.getMessageManagerForRecipient(recipient);
     if (!extension || !receiverMM) {
       return Promise.reject({
         result: MessageChannel.RESULT_NO_HANDLER,
@@ -172,10 +170,11 @@ ProxyMessenger = {
   /**
    * @param {object} recipient An object that was passed to
    *     `MessageChannel.sendMessage`.
+   * @param {Extension} extension
    * @returns {object|null} The message manager matching the recipient if found.
    */
-  _getMessageManagerForRecipient(recipient) {
-    let {extensionId, tabId} = recipient;
+  getMessageManagerForRecipient(recipient) {
+    let {tabId} = recipient;
     // tabs.sendMessage / tabs.connect
     if (tabId) {
       // `tabId` being set implies that the tabs API is supported, so we don't
@@ -185,10 +184,9 @@ ProxyMessenger = {
     }
 
     // runtime.sendMessage / runtime.connect
-    if (extensionId) {
-      // TODO(robwu): map the extensionId to the addon parent process's message
-      // manager when they run in a separate process.
-      return Services.ppmm.getChildAt(0);
+    let extension = GlobalManager.extensionMap.get(recipient.extensionId);
+    if (extension) {
+      return extension.parentMessageManager;
     }
 
     return null;
