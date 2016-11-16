@@ -13,10 +13,15 @@ var Cu = Components.utils;
 var Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/addons/AddonRepository.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils", "resource:///modules/E10SUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
+                                  "resource://gre/modules/ExtensionParent.jsm");
 
 const CONSTANTS = {};
 Cu.import("resource://gre/modules/addons/AddonConstants.jsm", CONSTANTS);
@@ -129,9 +134,11 @@ class FakeFrameMessageManager {
     let dispatcher = new MessageDispatcher(browser);
     let frameDispatcher = new MessageDispatcher(null);
 
-    this.sendAsyncMessage = frameDispatcher.sendAsyncMessage.bind(frameDispatcher);
-    this.addMessageListener = dispatcher.addMessageListener.bind(dispatcher);
-    this.removeMessageListener = dispatcher.removeMessageListener.bind(dispatcher);
+    let bind = (object, method) => object[method].bind(object);
+
+    this.sendAsyncMessage = bind(frameDispatcher, "sendAsyncMessage");
+    this.addMessageListener = bind(dispatcher, "addMessageListener");
+    this.removeMessageListener = bind(dispatcher, "removeMessageListener");
 
     this.frame = {
       get content() {
@@ -142,18 +149,24 @@ class FakeFrameMessageManager {
         return browser.docShell;
       },
 
-      addEventListener: browser.addEventListener.bind(browser),
-      removeEventListener: browser.removeEventListener.bind(browser),
+      addEventListener: bind(browser, "addEventListener"),
+      removeEventListener: bind(browser, "removeEventListener"),
 
-      sendAsyncMessage: dispatcher.sendAsyncMessage.bind(dispatcher),
-      addMessageListener: frameDispatcher.addMessageListener.bind(frameDispatcher),
-      removeMessageListener: frameDispatcher.removeMessageListener.bind(frameDispatcher),
+      sendAsyncMessage: bind(dispatcher, "sendAsyncMessage"),
+      addMessageListener: bind(frameDispatcher, "addMessageListener"),
+      removeMessageListener: bind(frameDispatcher, "removeMessageListener"),
     }
   }
 
   loadFrameScript(url) {
     Services.scriptloader.loadSubScript(url, Object.create(this.frame));
   }
+}
+
+function promiseEvent(event, target, capture = false) {
+  return new Promise(resolve => {
+    target.addEventListener(event, resolve, {capture, once: true});
+  });
 }
 
 var gPendingInitializations = 1;
@@ -3517,13 +3530,34 @@ var gDetailView = {
     }
   },
 
-  createOptionsBrowser: function(parentNode) {
+  createOptionsBrowser: Task.async(function*(parentNode) {
     let browser = document.createElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
     browser.setAttribute("class", "inline-options-browser");
 
-    return new Promise((resolve, reject) => {
+    let {optionsURL} = this._addon;
+    let remote = !E10SUtils.canLoadURIInProcess(optionsURL, Services.appinfo.PROCESS_TYPE_DEFAULT);
+
+    let readyPromise;
+    if (remote) {
+      browser.setAttribute("remote", "true");
+      readyPromise = promiseEvent("XULFrameLoaderCreated", browser);
+    } else {
+      readyPromise = promiseEvent("load", browser, true);
+    }
+
+    parentNode.appendChild(browser);
+
+    // Force bindings to apply synchronously.
+    browser.clientTop;
+
+    yield readyPromise;
+    if (remote) {
+      ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
+    }
+
+    return new Promise(resolve => {
       let messageListener = {
         receiveMessage({name, data}) {
           if (name === "Extension:BrowserResized")
@@ -3533,24 +3567,16 @@ var gDetailView = {
         },
       };
 
-      let onload = () => {
-        browser.removeEventListener("load", onload, true);
+      let mm = browser.messageManager || new FakeFrameMessageManager(browser);
+      mm.loadFrameScript("chrome://extensions/content/ext-browser-content.js",
+                         false);
+      mm.addMessageListener("Extension:BrowserContentLoaded", messageListener);
+      mm.addMessageListener("Extension:BrowserResized", messageListener);
+      mm.sendAsyncMessage("Extension:InitBrowser", {fixedWidth: true});
 
-        let mm = new FakeFrameMessageManager(browser);
-        mm.loadFrameScript("chrome://extensions/content/ext-browser-content.js",
-                           false);
-        mm.addMessageListener("Extension:BrowserContentLoaded", messageListener);
-        mm.addMessageListener("Extension:BrowserResized", messageListener);
-        mm.sendAsyncMessage("Extension:InitBrowser", {fixedWidth: true});
-
-        browser.setAttribute("src", this._addon.optionsURL);
-      };
-      browser.addEventListener("load", onload, true);
-      browser.addEventListener("error", reject);
-
-      parentNode.appendChild(browser);
+      browser.loadURI(optionsURL);
     });
-  },
+  }),
 
   getSelectedAddon: function() {
     return this._addon;
