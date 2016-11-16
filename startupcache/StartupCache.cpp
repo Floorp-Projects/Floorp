@@ -153,7 +153,7 @@ StartupCache::Init()
   // This allows to override the startup cache filename
   // which is useful from xpcshell, when there is no ProfLDS directory to keep cache in.
   char *env = PR_GetEnv("MOZ_STARTUP_CACHE");
-  if (env && *env) {
+  if (env) {
     rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(env), false, getter_AddRefs(mFile));
   } else {
     nsCOMPtr<nsIFile> file;
@@ -595,13 +595,6 @@ StartupCache::ResetStartupWriteTimer()
   return NS_OK;
 }
 
-bool
-StartupCache::StartupWriteComplete()
-{
-  WaitOnWriteThread();
-  return mStartupWriteInitiated && mTable.Count() == 0;
-}
-
 // StartupCacheDebugOutputStream implementation
 #ifdef DEBUG
 NS_IMPL_ISUPPORTS(StartupCacheDebugOutputStream, nsIObjectOutputStream, 
@@ -744,6 +737,13 @@ StartupCacheWrapper::InvalidateCache()
   return NS_OK;
 }
 
+nsresult
+StartupCacheWrapper::IgnoreDiskCache()
+{
+  StartupCache::IgnoreDiskCache();
+  return NS_OK;
+}
+
 nsresult 
 StartupCacheWrapper::GetDebugObjectOutputStream(nsIObjectOutputStream* stream,
                                                 nsIObjectOutputStream** outStream) 
@@ -753,6 +753,25 @@ StartupCacheWrapper::GetDebugObjectOutputStream(nsIObjectOutputStream* stream,
     return NS_ERROR_NOT_INITIALIZED;
   }
   return sc->GetDebugObjectOutputStream(stream, outStream);
+}
+
+nsresult
+StartupCacheWrapper::StartupWriteComplete(bool *complete)
+{
+  StartupCache* sc = StartupCache::GetSingleton();
+  if (!sc) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  sc->WaitOnWriteThread();
+  *complete = sc->mStartupWriteInitiated && sc->mTable.Count() == 0;
+  return NS_OK;
+}
+
+nsresult
+StartupCacheWrapper::ResetStartupWriteTimer()
+{
+  StartupCache* sc = StartupCache::GetSingleton();
+  return sc ? sc->ResetStartupWriteTimer() : NS_ERROR_NOT_INITIALIZED;
 }
 
 nsresult
