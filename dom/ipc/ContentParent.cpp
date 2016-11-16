@@ -182,6 +182,7 @@
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "nsHostObjectProtocolHandler.h"
+#include "nsICaptivePortalService.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -537,6 +538,7 @@ static const char* sObserverTopics[] = {
   "profile-before-change",
   NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC,
   NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC,
+  NS_IPC_CAPTIVE_PORTAL_SET_STATE,
   "memory-pressure",
   "child-gc-request",
   "child-cc-request",
@@ -2739,6 +2741,17 @@ ContentParent::Observe(nsISupports* aSubject,
     if (!SendSetConnectivity(NS_LITERAL_STRING("true").Equals(aData))) {
       return NS_ERROR_NOT_AVAILABLE;
     }
+  } else if (!strcmp(aTopic, NS_IPC_CAPTIVE_PORTAL_SET_STATE)) {
+    nsCOMPtr<nsICaptivePortalService> cps = do_QueryInterface(aSubject);
+    MOZ_ASSERT(cps, "Should QI to a captive portal service");
+    if (!cps) {
+      return NS_ERROR_FAILURE;
+    }
+    int32_t state;
+    cps->GetState(&state);
+    if (!SendSetCaptivePortalState(state)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
   // listening for alert notifications
   else if (!strcmp(aTopic, "alertfinished") ||
@@ -2890,6 +2903,7 @@ ContentParent::RecvGetProcessAttributes(ContentParentId* aCpId,
 bool
 ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
                                              bool* aIsConnected,
+                                             int32_t* aCaptivePortalState,
                                              bool* aIsLangRTL,
                                              bool* aHaveBidiKeyboards,
                                              InfallibleTArray<nsString>* dictionaries,
@@ -2905,6 +2919,12 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
 
   rv = io->GetConnectivity(aIsConnected);
   MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed getting connectivity?");
+
+  *aCaptivePortalState = nsICaptivePortalService::UNKNOWN;
+  nsCOMPtr<nsICaptivePortalService> cps = do_GetService(NS_CAPTIVEPORTAL_CONTRACTID);
+  if (cps) {
+    cps->GetState(aCaptivePortalState);
+  }
 
   nsIBidiKeyboard* bidi = nsContentUtils::GetBidiKeyboard();
 
