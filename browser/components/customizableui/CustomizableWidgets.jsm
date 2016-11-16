@@ -205,14 +205,15 @@ const CustomizableWidgets = [
       PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                          .asyncExecuteLegacyQueries([query], 1, options, {
         handleResult: function(aResultSet) {
-          let onItemCommand = function(aEvent) {
+          let onItemCommand = function(aItemCommandEvent) {
             // Only handle the click event for middle clicks, we're using the command
             // event otherwise.
-            if (aEvent.type == "click" && aEvent.button != 1) {
+            if (aItemCommandEvent.type == "click" &&
+                aItemCommandEvent.button != 1) {
               return;
             }
-            let item = aEvent.target;
-            win.openUILink(item.getAttribute("targetURI"), aEvent);
+            let item = aItemCommandEvent.target;
+            win.openUILink(item.getAttribute("targetURI"), aItemCommandEvent);
             CustomizableUI.hidePanelForNode(item);
           };
           let fragment = doc.createDocumentFragment();
@@ -699,11 +700,11 @@ const CustomizableWidgets = [
           updateCombinedWidgetStyle(node, aArea, true);
           updateZoomResetButton();
 
-          let areaType = CustomizableUI.getAreaType(aArea);
-          if (areaType == CustomizableUI.TYPE_MENU_PANEL) {
+          let newAreaType = CustomizableUI.getAreaType(aArea);
+          if (newAreaType == CustomizableUI.TYPE_MENU_PANEL) {
             let panel = aDocument.getElementById(kPanelId);
             panel.addEventListener("popupshowing", updateZoomResetButton);
-          } else if (areaType == CustomizableUI.TYPE_TOOLBAR) {
+          } else if (newAreaType == CustomizableUI.TYPE_TOOLBAR) {
             let container = window.gBrowser.tabContainer;
             container.addEventListener("TabSelect", updateZoomResetButton);
           }
@@ -713,11 +714,11 @@ const CustomizableWidgets = [
           if (aWidgetId != this.id)
             return;
 
-          let areaType = CustomizableUI.getAreaType(aPrevArea);
-          if (areaType == CustomizableUI.TYPE_MENU_PANEL) {
+          let formerAreaType = CustomizableUI.getAreaType(aPrevArea);
+          if (formerAreaType == CustomizableUI.TYPE_MENU_PANEL) {
             let panel = aDocument.getElementById(kPanelId);
             panel.removeEventListener("popupshowing", updateZoomResetButton);
-          } else if (areaType == CustomizableUI.TYPE_TOOLBAR) {
+          } else if (formerAreaType == CustomizableUI.TYPE_TOOLBAR) {
             let container = window.gBrowser.tabContainer;
             container.removeEventListener("TabSelect", updateZoomResetButton);
           }

@@ -168,7 +168,7 @@
           if (this.hasSelection && this.selectedNode.uri == placeURI)
             return;
 
-          function findNode(container, placeURI, nodesURIChecked) {
+          function findNode(container, nodesURIChecked) {
             var containerURI = container.uri;
             if (containerURI == placeURI)
               return container;
@@ -187,7 +187,7 @@
               if (childURI == placeURI)
                 return child;
               else if (PlacesUtils.nodeIsContainer(child)) {
-                var nested = findNode(PlacesUtils.asContainer(child), placeURI, nodesURIChecked);
+                var nested = findNode(PlacesUtils.asContainer(child), nodesURIChecked);
                 if (nested)
                   return nested;
               }
@@ -204,7 +204,7 @@
           if (!container)
             return;
 
-          var child = findNode(container, placeURI, []);
+          var child = findNode(container, []);
           if (child)
             this.selectNode(child);
           else {

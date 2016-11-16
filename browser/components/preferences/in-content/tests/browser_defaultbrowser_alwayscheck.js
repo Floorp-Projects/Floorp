@@ -77,7 +77,7 @@ registerCleanupFunction(function() {
 });
 
 function* test_with_mock_shellservice(options, testFn) {
-  yield ContentTask.spawn(gBrowser.selectedBrowser, options, function*(options) {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, options, function*(contentOptions) {
     let doc = content.document;
     let win = doc.defaultView;
     win.oldShellService = win.getShellService();
@@ -93,7 +93,7 @@ function* test_with_mock_shellservice(options, testFn) {
     win.getShellService = function() {
       return mockShellService;
     }
-    mockShellService._isDefault = options.isDefault;
+    mockShellService._isDefault = contentOptions.isDefault;
     win.gMainPane.updateSetDefaultBrowser();
   });
 

@@ -41,8 +41,8 @@ function test() {
         Assert.equal(hs[histogramKey].sum, numSearchesBefore + 1,
                      "Performing a search increments the related SEARCH_COUNTS key by 1.");
 
-        let engine = Services.search.getEngineByName("Foo");
-        Services.search.removeEngine(engine);
+        let fooEngine = Services.search.getEngineByName("Foo");
+        Services.search.removeEngine(fooEngine);
       }
 
       EventUtils.synthesizeKey("VK_RETURN", {});
