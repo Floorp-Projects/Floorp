@@ -1262,9 +1262,9 @@ EventStateManager::IsRemoteTarget(nsIContent* target) {
     return true;
   }
 
-  // <frame/iframe mozbrowser>
+  // <frame/iframe mozbrowser/mozapp>
   nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(target);
-  if (browserFrame && browserFrame->GetReallyIsBrowser()) {
+  if (browserFrame && browserFrame->GetReallyIsBrowserOrApp()) {
     return !!TabParent::GetFrom(target);
   }
 

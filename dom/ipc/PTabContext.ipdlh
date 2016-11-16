@@ -39,6 +39,9 @@ struct FrameIPCTabContext
   // The originAttributes dictionary.
   DocShellOriginAttributes originAttributes;
 
+  // The ID of the app containing this app/browser frame, if applicable.
+  uint32_t frameOwnerAppId;
+
   // Whether this is a mozbrowser frame.  <iframe mozbrowser mozapp> and
   // <xul:browser> are not considered to be mozbrowser frames.
   bool isMozBrowserElement;

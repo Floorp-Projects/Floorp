@@ -36,6 +36,8 @@ XPCOMUtils.defineLazyGetter(this, 'MemoryFront', function() {
   return devtools.require('devtools/server/actors/memory').MemoryFront;
 });
 
+Cu.import('resource://gre/modules/Frames.jsm');
+
 var _telemetryDebug = false;
 
 function telemetryDebug(...args) {
@@ -52,6 +54,7 @@ function telemetryDebug(...args) {
  */
 var developerHUD = {
 
+  _targets: new Map(),
   _histograms: new Set(),
   _customHistograms: new Set(),
   _client: null,
@@ -96,6 +99,13 @@ var developerHUD = {
       }
     }
 
+    Frames.addObserver(this);
+
+    let appFrames = Frames.list().filter(frame => frame.getAttribute('mozapp'));
+    for (let frame of appFrames) {
+      this.trackFrame(frame);
+    }
+
     SettingsListener.observe('hud.logging', this._logging, enabled => {
       this._logging = enabled;
     });
@@ -114,8 +124,61 @@ var developerHUD = {
       return;
     }
 
+    for (let frame of this._targets.keys()) {
+      this.untrackFrame(frame);
+    }
+
+    Frames.removeObserver(this);
+
     this._client.close();
     delete this._client;
+  },
+
+  /**
+   * This method will ask all registered watchers to track and update metrics
+   * on an app frame.
+   */
+  trackFrame(frame) {
+    if (this._targets.has(frame)) {
+      return;
+    }
+
+    DebuggerServer.connectToChild(this._conn, frame).then(actor => {
+      let target = new Target(frame, actor);
+      this._targets.set(frame, target);
+
+      for (let w of this._watchers) {
+        w.trackTarget(target);
+      }
+    });
+  },
+
+  untrackFrame(frame) {
+    let target = this._targets.get(frame);
+    if (target) {
+      for (let w of this._watchers) {
+        w.untrackTarget(target);
+      }
+
+      target.destroy();
+      this._targets.delete(frame);
+    }
+  },
+
+  onFrameCreated(frame, isFirstAppFrame) {
+    let mozapp = frame.getAttribute('mozapp');
+    if (!mozapp) {
+      return;
+    }
+    this.trackFrame(frame);
+  },
+
+  onFrameDestroyed(frame, isLastAppFrame) {
+    let mozapp = frame.getAttribute('mozapp');
+    if (!mozapp) {
+      return;
+    }
+    this.untrackFrame(frame);
   },
 
   log(message) {

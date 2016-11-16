@@ -20,7 +20,7 @@ dictionary NetworkStatsGetOptions
    * If it is set as true, only the browsing traffic, which is generated from
    * the mozbrowser iframe element within an app, is returned in result.
    * If it is set as false or not set, the total traffic, which is generated
-   * from mozbrowser iframe elements, is returned.
+   * from both the mozapp and mozbrowser iframe elements, is returned.
    */
   boolean browsingTrafficOnly = false;
 };

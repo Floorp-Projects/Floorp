@@ -132,7 +132,7 @@ Presentation::HasReceiverSupport() const
   }
 
   if (!Preferences::GetBool("dom.presentation.testing.simulate-receiver") &&
-      !docShell->GetIsInMozBrowser() &&
+      !docShell->GetIsInMozBrowserOrApp() &&
       !docShell->GetIsTopLevelContentDocShell()) {
     return false;
   }
