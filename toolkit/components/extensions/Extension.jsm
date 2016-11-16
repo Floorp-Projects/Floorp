@@ -26,6 +26,10 @@ Cu.importGlobalProperties(["TextEncoder"]);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+/* globals processCount */
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "processCount", "dom.ipc.processCount");
+
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
@@ -604,6 +608,12 @@ this.Extension = class extends ExtensionData {
     this.addonData = addonData;
     this.startupReason = startupReason;
 
+    this.remote = ExtensionManagement.useRemoteWebExtensions;
+
+    if (this.remote && processCount !== 1) {
+      throw new Error("Out-of-process WebExtensions are not supported with multiple child processes");
+    }
+
     this.id = addonData.id;
     this.baseURI = NetUtil.newURI(this.getURL("")).QueryInterface(Ci.nsIURL);
     this.principal = this.createPrincipal();
@@ -620,6 +630,17 @@ this.Extension = class extends ExtensionData {
     this.webAccessibleResources = null;
 
     this.emitter = new EventEmitter();
+  }
+
+  get parentMessageManager() {
+    if (this.remote) {
+      // We currently run extensions in the normal web content process. Since
+      // we currently only support remote extensions in single-child e10s,
+      // child 0 is always the current process, and child 1 is always the
+      // remote extension process.
+      return Services.ppmm.getChildAt(1);
+    }
+    return Services.ppmm.getChildAt(0);
   }
 
   static set browserUpdated(updated) {
@@ -722,15 +743,35 @@ this.Extension = class extends ExtensionData {
 
   broadcast(msg, data) {
     return new Promise(resolve => {
-      let count = Services.ppmm.childCount;
-      Services.ppmm.addMessageListener(msg + "Complete", function listener() {
-        count--;
-        if (count == 0) {
-          Services.ppmm.removeMessageListener(msg + "Complete", listener);
+      let {ppmm} = Services;
+      let children = new Set();
+      for (let i = 0; i < ppmm.childCount; i++) {
+        children.add(ppmm.getChildAt(i));
+      }
+
+      let maybeResolve;
+      function listener(data) {
+        children.delete(data.target);
+        maybeResolve();
+      }
+      function observer(subject, topic, data) {
+        children.delete(subject);
+        maybeResolve();
+      }
+
+      maybeResolve = () => {
+        if (children.size === 0) {
+          ppmm.removeMessageListener(msg + "Complete", listener);
+          Services.obs.removeObserver(observer, "message-manager-close");
+          Services.obs.removeObserver(observer, "message-manager-disconnect");
           resolve();
         }
-      });
-      Services.ppmm.broadcastAsyncMessage(msg, data);
+      };
+      ppmm.addMessageListener(msg + "Complete", listener);
+      Services.obs.addObserver(observer, "message-manager-close", false);
+      Services.obs.addObserver(observer, "message-manager-disconnect", false);
+
+      ppmm.broadcastAsyncMessage(msg, data);
     });
   }
 
