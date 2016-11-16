@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Fri Nov 11 17:42:07 2016 from UCD data files with version info:
+ * Created on Tue Nov 15 16:39:42 2016 from UCD data files with version info:
  *
 
 # Unicode Character Database
@@ -61,8 +61,8 @@ for the Unicode Character Database, for Version 9.0.0 of the Unicode Standard.
 # Unihan_Variants.txt
 # Date: 2016-06-01 07:01:48 GMT [JHJ]
 
-# VerticalOrientation-15.txt
-# Date: 2015-11-16, 20:00:00 GMT [EM, KI, LI]
+# VerticalOrientation-16.txt
+# Date: 2016-07-23, 01:00:00 GMT [EM, KI, LI]
 
  *
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
