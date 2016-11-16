@@ -333,13 +333,39 @@ MacroAssembler::subFromStackPtr(Imm32 imm32)
         // Ion frame data for a piece of code is very large.  To handle this special case,
         // for frames over 1k in size we allocate memory on the stack incrementally, touching
         // it as we go.
+        //
+        // When the amount is quite large, which it can be, we emit an actual loop, in order
+        // to keep the function prologue compact.  Compactness is a requirement for eg
+        // Wasm's CodeRange data structure, which can encode only 8-bit offsets.
         uint32_t amountLeft = imm32.value;
-        while (amountLeft > 4096) {
+        uint32_t fullPages = amountLeft / 4096;
+        if (fullPages <= 8) {
+            while (amountLeft > 4096) {
+                subl(Imm32(4096), StackPointer);
+                store32(Imm32(0), Address(StackPointer, 0));
+                amountLeft -= 4096;
+            }
+            subl(Imm32(amountLeft), StackPointer);
+        } else {
+            // Save scratch register.
+            push(eax);
+            amountLeft -= 4;
+            fullPages = amountLeft / 4096;
+
+            Label top;
+            move32(Imm32(fullPages), eax);
+            bind(&top);
             subl(Imm32(4096), StackPointer);
             store32(Imm32(0), Address(StackPointer, 0));
-            amountLeft -= 4096;
+            subl(Imm32(1), eax);
+            j(Assembler::NonZero, &top);
+            amountLeft -= fullPages * 4096;
+            if (amountLeft)
+                subl(Imm32(amountLeft), StackPointer);
+
+            // Restore scratch register.
+            movl(Operand(StackPointer, uint32_t(imm32.value) - 4), eax);
         }
-        subl(Imm32(amountLeft), StackPointer);
     }
 }
 
