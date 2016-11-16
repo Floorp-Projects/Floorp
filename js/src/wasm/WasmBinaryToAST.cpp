@@ -147,6 +147,12 @@ class AstDecodeContext
     AstDecodeStackItem& top() { return exprs().back(); }
     MOZ_MUST_USE bool push(AstDecodeStackItem item) { return exprs().append(item); }
 
+    bool checkHasMemory() {
+        if (!module().hasMemory())
+            return iter().fail("can't touch memory without memory");
+        return true;
+    }
+
     bool needFirst() {
         for (size_t i = depths().back(); i < exprs().length(); ++i) {
             if (!exprs()[i].expr->isVoid())
@@ -361,6 +367,9 @@ AstDecodeCall(AstDecodeContext& c)
 static bool
 AstDecodeCallIndirect(AstDecodeContext& c)
 {
+    if (!c.tables().length())
+        return c.iter().fail("can't call_indirect without a table");
+
     uint32_t sigIndex;
     if (!c.iter().readCallIndirect(&sigIndex, nullptr))
         return false;
@@ -747,6 +756,9 @@ AstDecodeLoadStoreAddress(const LinearMemoryAddress<Nothing>& addr, const AstDec
 static bool
 AstDecodeLoad(AstDecodeContext& c, ValType type, uint32_t byteSize, Op op)
 {
+    if (!c.checkHasMemory())
+        return false;
+
     LinearMemoryAddress<Nothing> addr;
     if (!c.iter().readLoad(type, byteSize, &addr))
         return false;
@@ -766,6 +778,9 @@ AstDecodeLoad(AstDecodeContext& c, ValType type, uint32_t byteSize, Op op)
 static bool
 AstDecodeStore(AstDecodeContext& c, ValType type, uint32_t byteSize, Op op)
 {
+    if (!c.checkHasMemory())
+        return false;
+
     LinearMemoryAddress<Nothing> addr;
     if (!c.iter().readStore(type, byteSize, &addr, nullptr))
         return false;
