@@ -321,7 +321,7 @@ class BaseBootstrapper(object):
         This should be defined in child classes.
         """
 
-    def _parse_version(self, path, name=None):
+    def _parse_version(self, path, name=None, env=None):
         '''Execute the given path, returning the version.
 
         Invokes the path argument with the --version switch
@@ -331,11 +331,16 @@ class BaseBootstrapper(object):
         An optional name argument gives the expected program
         name returned as part of the version string, if it's
         different from the basename of the executable.
+
+        An optional env argument allows modifying environment
+        variable during the invocation to set options, PATH,
+        etc.
         '''
         if not name:
             name = os.path.basename(path)
 
         info = self.check_output([path, '--version'],
+                                 env=env,
                                  stderr=subprocess.STDOUT)
         match = re.search(name + ' ([a-z0-9\.]+)', info)
         if not match:
@@ -362,14 +367,9 @@ class BaseBootstrapper(object):
             print(NO_MERCURIAL)
             return False, False, None
 
-        info = self.check_output([hg, '--version'], env=self._hgplain_env()).splitlines()[0]
-
-        match = re.search('version ([^\+\)]+)', info)
-        if not match:
-            print('ERROR: Unable to identify Mercurial version.')
+        our = self._parse_version(hg, 'version', self._hgplain_env())
+        if not our:
             return True, False, None
-
-        our = LooseVersion(match.group(1))
 
         return True, our >= MODERN_MERCURIAL_VERSION, our
 
