@@ -16,15 +16,12 @@ Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderMo
 
 const promise = require("promise");
 const Services = require("Services");
-const ErrorDocs = require("devtools/server/actors/errordocs");
 const Telemetry = require("devtools/client/shared/telemetry");
 
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
                          "nsIClipboardHelper");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/autocomplete-popup", true);
-loader.lazyRequireGetter(this, "ToolSidebar", "devtools/client/framework/sidebar", true);
 loader.lazyRequireGetter(this, "ConsoleOutput", "devtools/client/webconsole/console-output", true);
 loader.lazyRequireGetter(this, "Messages", "devtools/client/webconsole/console-output", true);
 loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/shared/client/main", true);
@@ -184,10 +181,6 @@ const THROTTLE_UPDATES = 1000;
 // The preference prefix for all of the Web Console filters.
 const FILTER_PREFS_PREFIX = "devtools.webconsole.filter.";
 
-// The minimum font size.
-const MIN_FONT_SIZE = 10;
-
-const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
 const PREF_PERSISTLOG = "devtools.webconsole.persistlog";
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 const PREF_NEW_FRONTEND_ENABLED = "devtools.webconsole.new-frontend-enabled";
