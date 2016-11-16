@@ -224,8 +224,7 @@ HashStore::HashStore(const nsACString& aTableName,
 }
 
 HashStore::~HashStore()
-{
-}
+= default;
 
 nsresult
 HashStore::Reset()

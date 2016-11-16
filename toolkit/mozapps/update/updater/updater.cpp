@@ -1086,7 +1086,7 @@ class Action
 {
 public:
   Action() : mProgressCost(1), mNext(nullptr) { }
-  virtual ~Action() { }
+  virtual ~Action() = default;
 
   virtual int Parse(NS_tchar *line) = 0;
 
