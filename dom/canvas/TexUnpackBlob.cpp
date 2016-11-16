@@ -490,7 +490,7 @@ TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
         *out_error = DoTexOrSubImage(false, gl, target, level, dui, xOffset, yOffset,
                                      zOffset, mWidth, mHeight, mDepth, nullptr);
         if (*out_error)
-            return false;
+            return true;
     }
 
     const ScopedLazyBind bindPBO(gl, LOCAL_GL_PIXEL_UNPACK_BUFFER,
@@ -587,7 +587,7 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
                                      yOffset, zOffset, mWidth, mHeight, mDepth,
                                      nullptr);
         if (*out_error)
-            return false;
+            return true;
     }
 
     do {
@@ -650,7 +650,7 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
         webgl->ErrorOutOfMemory("%s: GetAsSourceSurface or GetDataSurface failed after"
                                 " blit failed for TexUnpackImage.",
                                 funcName);
-        return false;
+        return true;
     }
 
     const TexUnpackSurface surfBlob(webgl, target, mWidth, mHeight, mDepth, dataSurf,
@@ -751,8 +751,10 @@ TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec, const char* f
     }
 
     gfx::DataSourceSurface::ScopedMap map(mSurf, gfx::DataSourceSurface::MapType::READ);
-    if (!map.IsMapped())
+    if (!map.IsMapped()) {
+        webgl->ErrorOutOfMemory("%s: Failed to map source surface for upload.", funcName);
         return false;
+    }
 
     const auto srcBytes = map.GetData();
     const auto srcStride = map.GetStride();
