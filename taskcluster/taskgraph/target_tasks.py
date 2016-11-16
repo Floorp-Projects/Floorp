@@ -120,6 +120,20 @@ def target_tasks_cedar(full_task_graph, parameters):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
+@_target_task('graphics_tasks')
+def target_tasks_graphics(full_task_graph, parameters):
+    """In addition to doing the filtering by project that the 'default'
+       filter does, also remove artifact builds because we have csets on
+       the graphics branch that aren't on the candidate branches of artifact
+       builds"""
+    filtered_for_project = target_tasks_default(full_task_graph, parameters)
+    def filter(task):
+        if task.attributes['kind'] == 'artifact-build':
+            return False
+        return True
+    return [l for l in filtered_for_project if filter(full_task_graph[l])]
+
+
 @_target_task('nightly_fennec')
 def target_tasks_nightly(full_task_graph, parameters):
     """Select the set of tasks required for a nightly build of fennec. The
