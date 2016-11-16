@@ -169,10 +169,10 @@ function getAndCheckElmtById(id) {
 
 function nextTest() {
   if (gTests.length) {
-    var test = gTests.shift();
-    ok(true, "TEST: " + test.desc);
-    dump("TEST: " + test.desc + "\n");
-    test.run();
+    var testCase = gTests.shift();
+    ok(true, "TEST: " + testCase.desc);
+    dump("TEST: " + testCase.desc + "\n");
+    testCase.run();
   }
   else {
     // Close Library window.

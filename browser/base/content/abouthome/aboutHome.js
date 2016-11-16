@@ -149,12 +149,12 @@ function ensureSnippetsMapThen(aCallback)
   openRequest.onsuccess = function (event) {
     let db = event.target.result;
 
-    db.onerror = function (event) {
+    db.onerror = function () {
       invokeCallbacks();
     }
 
-    db.onversionchange = function (event) {
-      event.target.close();
+    db.onversionchange = function (versionChangeEvent) {
+      versionChangeEvent.target.close();
       invokeCallbacks();
     }
 
@@ -169,12 +169,12 @@ function ensureSnippetsMapThen(aCallback)
       return;
     }
 
-    cursorRequest.onerror = function (event) {
+    cursorRequest.onerror = function () {
       invokeCallbacks();
     }
 
-    cursorRequest.onsuccess = function(event) {
-      let cursor = event.target.result;
+    cursorRequest.onsuccess = function(cursorRequestEvent) {
+      let cursor = cursorRequestEvent.target.result;
 
       // Populate the cache from the persistent storage.
       if (cursor) {
@@ -283,7 +283,7 @@ function loadSnippets()
     // Even if fetching should fail we don't want to spam the server, thus
     // set the last update time regardless its results.  Will retry tomorrow.
     gSnippetsMap.set("snippets-last-update", Date.now());
-    xhr.onloadend = function (event) {
+    xhr.onloadend = function () {
       if (xhr.status == 200) {
         gSnippetsMap.set("snippets", xhr.responseText);
         gSnippetsMap.set("snippets-cached-version", currentVersion);

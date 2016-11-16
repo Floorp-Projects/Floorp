@@ -23,7 +23,7 @@ add_task(function* () {
   yield PlacesTestUtils.addVisits(visits);
 
   // create an initial tag to work with
-  let bm = yield PlacesUtils.bookmarks.insert({
+  let newBookmark = yield PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -31,7 +31,7 @@ add_task(function* () {
     url: TEST_URL
   });
 
-  ok(bm, "A bookmark was added");
+  ok(newBookmark, "A bookmark was added");
   PlacesUtils.tagging.tagURI(TEST_URL, ["foo"]);
   let tags = PlacesUtils.tagging.getTagsForURI(TEST_URL);
   is(tags[0], "foo", "tag is foo");

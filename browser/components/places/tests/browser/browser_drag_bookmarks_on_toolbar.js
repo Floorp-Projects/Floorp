@@ -226,10 +226,10 @@ var gTests = [
 
 function nextTest() {
   if (gTests.length) {
-    var test = gTests.shift();
+    var testCase = gTests.shift();
     waitForFocus(function() {
-      info("Start of test: " + test.desc);
-      test.run();
+      info("Start of test: " + testCase.desc);
+      testCase.run();
     });
   }
   else if (wasCollapsed) {

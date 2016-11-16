@@ -85,11 +85,11 @@ function* createPendingCrashReports(howMany, accessDate) {
    *        Set this to whatever the file needs to contain, if anything.
    * @returns Promise
    */
-  let createFile = (fileName, extension, accessDate, contents) => {
+  let createFile = (fileName, extension, lastAccessedDate, contents) => {
     let file = dir.clone();
     file.append(fileName + "." + extension);
     file.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-    let promises = [OS.File.setDates(file.path, accessDate)];
+    let promises = [OS.File.setDates(file.path, lastAccessedDate)];
 
     if (contents) {
       let encoder = new TextEncoder();
