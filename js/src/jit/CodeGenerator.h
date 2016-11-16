@@ -263,6 +263,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitHypot(LHypot* lir);
     void visitPowI(LPowI* lir);
     void visitPowD(LPowD* lir);
+    void visitPowV(LPowV* lir);
     void visitMathFunctionD(LMathFunctionD* ins);
     void visitMathFunctionF(LMathFunctionF* ins);
     void visitModD(LModD* ins);
