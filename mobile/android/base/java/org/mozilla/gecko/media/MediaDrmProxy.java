@@ -39,10 +39,12 @@ public final class MediaDrmProxy {
     @WrapForJNI
     private static final String OPUS = "audio/opus";
 
+    public static ArrayList<MediaDrmProxy> sProxyList = new ArrayList<MediaDrmProxy>();
+
     // A flag to avoid using the native object that has been destroyed.
     private boolean mDestroyed;
     private GeckoMediaDrm mImpl;
-    public static ArrayList<MediaDrmProxy> mProxyList = new ArrayList<MediaDrmProxy>();
+    private String mDrmStubId;
 
     private static boolean isSystemSupported() {
         // Support versions >= LOLLIPOP
@@ -250,19 +252,26 @@ public final class MediaDrmProxy {
     public static MediaDrmProxy create(String keySystem,
                                        Callbacks nativeCallbacks,
                                        boolean isRemote) {
-        // TODO: Will implement {Local,Remote}MediaDrmBridge instantiation by
-        // '''isRemote''' flag in Bug 1307818.
-        MediaDrmProxy proxy = new MediaDrmProxy(keySystem, nativeCallbacks);
+        MediaDrmProxy proxy = new MediaDrmProxy(keySystem, nativeCallbacks, isRemote);
         return proxy;
     }
 
-    MediaDrmProxy(String keySystem, Callbacks nativeCallbacks) {
+    MediaDrmProxy(String keySystem, Callbacks nativeCallbacks, boolean isRemote) {
         if (DEBUG) Log.d(LOGTAG, "Constructing MediaDrmProxy");
-        // TODO: Bug 1306185 will implement the LocalMediaDrmBridge as an impl
-        // of GeckoMediaDrm for in-process decoding mode.
-        //mImpl = new LocalMediaDrmBridge(keySystem);
-        mImpl.setCallbacks(new MediaDrmProxyCallbacks(this, nativeCallbacks));
-        mProxyList.add(this);
+        try {
+            mDrmStubId = UUID.randomUUID().toString();
+            if (isRemote) {
+                IMediaDrmBridge remoteBridge =
+                    RemoteManager.getInstance().createRemoteMediaDrmBridge(keySystem, mDrmStubId);
+                mImpl = new RemoteMediaDrmBridge(remoteBridge);
+            } else {
+                mImpl = new LocalMediaDrmBridge(keySystem);
+            }
+            mImpl.setCallbacks(new MediaDrmProxyCallbacks(this, nativeCallbacks));
+            sProxyList.add(this);
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Constructing MediaDrmProxy ... error", e);
+        }
     }
 
     @WrapForJNI
@@ -289,6 +298,24 @@ public final class MediaDrmProxy {
         mImpl.closeSession(promiseId, sessionId);
     }
 
+    @WrapForJNI(calledFrom = "gecko")
+    private String getStubId() {
+        return mDrmStubId;
+    }
+
+    // Get corresponding MediaCrypto object by a generated UUID for MediaCodec.
+    // Will be called on MediaFormatReader's TaskQueue.
+    @WrapForJNI
+    public static MediaCrypto getMediaCrypto(String stubId) {
+        for (MediaDrmProxy proxy : sProxyList) {
+            if (proxy.getStubId().equals(stubId)) {
+                return proxy.getMediaCryptoFromBridge();
+            }
+        }
+        if (DEBUG) Log.d(LOGTAG, " NULL crytpo ");
+        return null;
+    }
+
     @WrapForJNI // Called when natvie object is destroyed.
     private void destroy() {
         if (DEBUG) Log.d(LOGTAG, "destroy!! Native object is destroyed.");
@@ -301,7 +328,11 @@ public final class MediaDrmProxy {
 
     private void release() {
         if (DEBUG) Log.d(LOGTAG, "release");
-        mProxyList.remove(this);
+        sProxyList.remove(this);
         mImpl.release();
+    }
+
+    private MediaCrypto getMediaCryptoFromBridge() {
+        return mImpl != null ? mImpl.getMediaCrypto() : null;
     }
 }
