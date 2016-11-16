@@ -4889,7 +4889,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                  webkitTextStrokeWidthValue->GetIntValue() == NS_STYLE_BORDER_WIDTH_THICK,
                  "Unexpected enum value");
     text->mWebkitTextStrokeWidth.SetCoordValue(
-      mPresContext->GetBorderWidthTable()[webkitTextStrokeWidthValue->GetIntValue()]);
+      nsPresContext::GetBorderWidthForKeyword(webkitTextStrokeWidthValue->GetIntValue()));
   } else {
     SetCoord(*webkitTextStrokeWidthValue, text->mWebkitTextStrokeWidth,
              parentText->mWebkitTextStrokeWidth,
@@ -7495,7 +7495,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
                      value.GetIntValue() == NS_STYLE_BORDER_WIDTH_THICK,
                      "Unexpected enum value");
         border->SetBorderWidth(side,
-                               (mPresContext->GetBorderWidthTable())[value.GetIntValue()]);
+          nsPresContext::GetBorderWidthForKeyword(value.GetIntValue()));
       }
       // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
       else if (SetCoord(value, coord, nsStyleCoord(),
@@ -7513,7 +7513,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
       else if (eCSSUnit_Initial == value.GetUnit() ||
                eCSSUnit_Unset == value.GetUnit()) {
         border->SetBorderWidth(side,
-          (mPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM]);
+          nsPresContext::GetBorderWidthForKeyword(NS_STYLE_BORDER_WIDTH_MEDIUM));
       }
       else {
         NS_ASSERTION(eCSSUnit_Null == value.GetUnit(),
@@ -9119,7 +9119,7 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   if (eCSSUnit_Initial == widthValue.GetUnit() ||
       eCSSUnit_Unset == widthValue.GetUnit()) {
     column->SetColumnRuleWidth(
-        (mPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM]);
+        nsPresContext::GetBorderWidthForKeyword(NS_STYLE_BORDER_WIDTH_MEDIUM));
   }
   else if (eCSSUnit_Enumerated == widthValue.GetUnit()) {
     NS_ASSERTION(widthValue.GetIntValue() == NS_STYLE_BORDER_WIDTH_THIN ||
@@ -9127,7 +9127,7 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
                  widthValue.GetIntValue() == NS_STYLE_BORDER_WIDTH_THICK,
                  "Unexpected enum value");
     column->SetColumnRuleWidth(
-        (mPresContext->GetBorderWidthTable())[widthValue.GetIntValue()]);
+        nsPresContext::GetBorderWidthForKeyword(widthValue.GetIntValue()));
   }
   else if (eCSSUnit_Inherit == widthValue.GetUnit()) {
     column->SetColumnRuleWidth(parent->GetComputedColumnRuleWidth());
