@@ -349,7 +349,7 @@ public class TestGlobalSession {
     List<String> namesList = new ArrayList<String>(mg.getEnabledEngineNames());
     Collections.sort(namesList);
     String[] names = namesList.toArray(new String[namesList.size()]);
-    String[] expected = new String[] { "bookmarks", "clients", "forms", "history", "passwords", "tabs" };
+    String[] expected = new String[] { "bookmarks", "clients", "forms", "history", "passwords", "recentHistory", "tabs" };
     assertArrayEquals(expected, names);
   }
 
