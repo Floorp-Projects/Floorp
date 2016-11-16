@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1479204436252" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1479243909840" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i988" id="{b12785f5-d8d0-4530-a3ea-5c4263b85bef}">
       <prefs/>
@@ -598,16 +598,16 @@
       </prefs>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
-    <emItem blockID="i400" id="{dd6b651f-dfb9-4142-b0bd-09912ad22674}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
     <emItem blockID="i1227" id="{A34CAF42-A3E3-11E5-945F-18C31D5D46B0}">
       <prefs>
         <pref>security.csp.enable</pref>
         <pref>security.fileuri.strict_origin_policy</pref>
         <pref>security.mixed_content.block_active_content</pref>
       </prefs>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i400" id="{dd6b651f-dfb9-4142-b0bd-09912ad22674}">
+      <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
     <emItem blockID="i11" id="yslow@yahoo-inc.com">
