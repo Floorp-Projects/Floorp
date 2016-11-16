@@ -582,6 +582,14 @@ def servo_target_dir(value):
 
 set_config('SERVO_TARGET_DIR', servo_target_dir)
 
+# WebRender integration
+option('--enable-webrender', help='Include WebRender')
+
+set_config('MOZ_ENABLE_WEBRENDER',
+           depends_if('--enable-webrender')(lambda _: True))
+set_define('MOZ_ENABLE_WEBRENDER',
+           depends_if('--enable-webrender')(lambda _: True))
+
 # Gecko integrated IPC fuzzer
 # ==============================================================
 option('--enable-ipc-fuzzer', env='MOZ_FAULTY',
