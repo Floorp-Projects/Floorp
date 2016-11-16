@@ -3,15 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * http://dev.w3.org/2006/webapi/DOM-Level-3-Events/html/DOM3-Events.html#events-CompositionEvent
+ * https://w3c.github.io/uievents/#interface-compositionevent
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
+[Constructor(DOMString type, optional CompositionEventInit eventInitDict)]
 interface CompositionEvent : UIEvent
 {
   readonly attribute DOMString? data;
+  // locale is currently non-standard
   readonly attribute DOMString  locale;
 
  /**
@@ -20,6 +22,10 @@ interface CompositionEvent : UIEvent
   */
   [ChromeOnly,Cached,Pure]
   readonly attribute sequence<TextClause> ranges;
+};
+
+dictionary CompositionEventInit : UIEventInit {
+  DOMString data = "";
 };
 
 partial interface CompositionEvent
