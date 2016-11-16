@@ -270,9 +270,8 @@ ifdef MT
 endif	# MSVC with manifest tool
 ifdef MOZ_PROFILE_GENERATE
 # touch it a few seconds into the future to work around FAT's
-# 2-second granularity. We can't touch `touch -t` here because it isn't timezone
-# aware.
-	$(PYTHON) -c 'import os, time; now = int(time.time()); os.utime("pgo.relink", (now + 5, now + 5));'
+# 2-second granularity
+	touch -t `date +%Y%m%d%H%M.%S -d "now+5seconds"` pgo.relink
 endif	# MOZ_PROFILE_GENERATE
 else	# WINNT && !GCC
 	$(CC) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS) $(WRAP_LDFLAGS)
