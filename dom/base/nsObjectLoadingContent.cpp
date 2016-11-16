@@ -372,6 +372,78 @@ nsPluginCrashedEvent::Run()
   return NS_OK;
 }
 
+class nsStopPluginRunnable : public Runnable, public nsITimerCallback
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  nsStopPluginRunnable(nsPluginInstanceOwner* aInstanceOwner,
+                       nsObjectLoadingContent* aContent)
+    : mInstanceOwner(aInstanceOwner)
+    , mContent(aContent)
+  {
+    NS_ASSERTION(aInstanceOwner, "need an owner");
+    NS_ASSERTION(aContent, "need a nsObjectLoadingContent");
+  }
+
+  // Runnable
+  NS_IMETHOD Run() override;
+
+  // nsITimerCallback
+  NS_IMETHOD Notify(nsITimer* timer) override;
+
+protected:
+  virtual ~nsStopPluginRunnable() {}
+
+private:
+  nsCOMPtr<nsITimer> mTimer;
+  RefPtr<nsPluginInstanceOwner> mInstanceOwner;
+  nsCOMPtr<nsIObjectLoadingContent> mContent;
+};
+
+NS_IMPL_ISUPPORTS_INHERITED(nsStopPluginRunnable, Runnable, nsITimerCallback)
+
+NS_IMETHODIMP
+nsStopPluginRunnable::Notify(nsITimer *aTimer)
+{
+  return Run();
+}
+
+NS_IMETHODIMP
+nsStopPluginRunnable::Run()
+{
+  // InitWithCallback calls Release before AddRef so we need to hold a
+  // strong ref on 'this' since we fall through to this scope if it fails.
+  nsCOMPtr<nsITimerCallback> kungFuDeathGrip = this;
+  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
+  if (appShell) {
+    uint32_t currentLevel = 0;
+    appShell->GetEventloopNestingLevel(&currentLevel);
+    if (currentLevel > mInstanceOwner->GetLastEventloopNestingLevel()) {
+      if (!mTimer)
+        mTimer = do_CreateInstance("@mozilla.org/timer;1");
+      if (mTimer) {
+        // Fire 100ms timer to try to tear down this plugin as quickly as
+        // possible once the nesting level comes back down.
+        nsresult rv = mTimer->InitWithCallback(this, 100,
+                                               nsITimer::TYPE_ONE_SHOT);
+        if (NS_SUCCEEDED(rv)) {
+          return rv;
+        }
+      }
+      NS_ERROR("Failed to setup a timer to stop the plugin later (at a safe "
+               "time). Stopping the plugin now, this might crash.");
+    }
+  }
+
+  mTimer = nullptr;
+
+  static_cast<nsObjectLoadingContent*>(mContent.get())->
+    DoStopPlugin(mInstanceOwner, false, true);
+
+  return NS_OK;
+}
+
 // You can't take the address of bitfield members, so we have two separate
 // classes for these :-/
 
@@ -2998,6 +3070,29 @@ nsObjectLoadingContent::GetSrcURI(nsIURI** aURI)
   return NS_OK;
 }
 
+static bool
+DoDelayedStop(nsPluginInstanceOwner* aInstanceOwner,
+              nsObjectLoadingContent* aContent,
+              bool aDelayedStop)
+{
+  // Don't delay stopping QuickTime (bug 425157), Flip4Mac (bug 426524),
+  // XStandard (bug 430219), CMISS Zinc (bug 429604).
+  if (aDelayedStop
+#if !(defined XP_WIN || defined MOZ_X11)
+      && !aInstanceOwner->MatchPluginName("QuickTime")
+      && !aInstanceOwner->MatchPluginName("Flip4Mac")
+      && !aInstanceOwner->MatchPluginName("XStandard plugin")
+      && !aInstanceOwner->MatchPluginName("CMISS Zinc Plugin")
+#endif
+      ) {
+    nsCOMPtr<nsIRunnable> evt =
+      new nsStopPluginRunnable(aInstanceOwner, aContent);
+    NS_DispatchToCurrentThread(evt);
+    return true;
+  }
+  return false;
+}
+
 void
 nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
   EventStates oldState = ObjectState();
@@ -3061,13 +3156,16 @@ nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
 }
 
 void
-nsObjectLoadingContent::DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner)
+nsObjectLoadingContent::DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner,
+                                     bool aDelayedStop,
+                                     bool aForcedReentry)
 {
   // DoStopPlugin can process events -- There may be pending
   // CheckPluginStopEvent events which can drop in underneath us and destroy the
-  // instance we are about to destroy. We prevent that with the mIsStopping
-  // flag.
-  if (mIsStopping) {
+  // instance we are about to destroy. We prevent that with the mPluginStopping
+  // flag.  (aForcedReentry is only true from the callback of an earlier delayed
+  // stop)
+  if (mIsStopping && !aForcedReentry) {
     return;
   }
   mIsStopping = true;
@@ -3076,6 +3174,10 @@ nsObjectLoadingContent::DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner)
   RefPtr<nsNPAPIPluginInstance> inst;
   aInstanceOwner->GetInstance(getter_AddRefs(inst));
   if (inst) {
+    if (DoDelayedStop(aInstanceOwner, this, aDelayedStop)) {
+      return;
+    }
+
 #if defined(XP_MACOSX)
     aInstanceOwner->HidePluginWindow();
 #endif
@@ -3128,11 +3230,27 @@ nsObjectLoadingContent::StopPluginInstance()
   // the instance owner until the plugin is stopped.
   mInstanceOwner->SetFrame(nullptr);
 
+  bool delayedStop = false;
+#ifdef XP_WIN
+  // Force delayed stop for Real plugin only; see bug 420886, 426852.
+  RefPtr<nsNPAPIPluginInstance> inst;
+  mInstanceOwner->GetInstance(getter_AddRefs(inst));
+  if (inst) {
+    const char* mime = nullptr;
+    if (NS_SUCCEEDED(inst->GetMIMEType(&mime)) && mime) {
+      if (nsPluginHost::GetSpecialType(nsDependentCString(mime)) ==
+          nsPluginHost::eSpecialType_RealPlayer) {
+        delayedStop = true;
+      }
+    }
+  }
+#endif
+
   RefPtr<nsPluginInstanceOwner> ownerGrip(mInstanceOwner);
   mInstanceOwner = nullptr;
 
   // This can/will re-enter
-  DoStopPlugin(ownerGrip);
+  DoStopPlugin(ownerGrip, delayedStop);
 
   return NS_OK;
 }

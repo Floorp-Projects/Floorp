@@ -331,7 +331,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 
     void CreateStaticClone(nsObjectLoadingContent* aDest) const;
 
-    void DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner);
+    void DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner, bool aDelayedStop,
+                      bool aForcedReentry = false);
 
     nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                         nsIContent* aBindingParent,
