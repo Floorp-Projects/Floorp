@@ -44,6 +44,8 @@ JOB_NAME_WHITELIST = set([
     'linux-pgo',
     'macosx64-debug',
     'macosx64-opt',
+    'macosx64-qr-debug',
+    'macosx64-qr-opt',
     'macosx64-st-an-opt',
     'nexus-5-l-eng-debug',
     'nexus-5-l-eng-opt',
