@@ -32,7 +32,7 @@ public:
   }
 
 private:
-  ~nsSimpleArrayEnumerator() {}
+  ~nsSimpleArrayEnumerator() = default;
 
 protected:
   nsCOMPtr<nsIArray> mValueArray;

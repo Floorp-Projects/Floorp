@@ -206,9 +206,7 @@ CategoryNode::Create(PLArenaPool* aArena)
   return new (aArena) CategoryNode();
 }
 
-CategoryNode::~CategoryNode()
-{
-}
+CategoryNode::~CategoryNode() = default;
 
 void*
 CategoryNode::operator new(size_t aSize, PLArenaPool* aArena)
