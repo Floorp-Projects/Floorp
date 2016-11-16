@@ -100,6 +100,10 @@ function BoxModelHighlighter(highlighterEnv) {
    * regionFill property: `highlighter.regionFill.margin = "red";
    */
   this.regionFill = {};
+
+  this.onWillNavigate = this.onWillNavigate.bind(this);
+
+  this.highlighterEnv.on("will-navigate", this.onWillNavigate);
 }
 
 BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
@@ -111,7 +115,7 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let doc = this.win.document;
 
     let highlighterContainer = doc.createElement("div");
-    highlighterContainer.className = "highlighter-container";
+    highlighterContainer.className = "highlighter-container box-model";
 
     // Build the root wrapper, used to adapt to the page zoom.
     let rootWrapper = createNode(this.win, {
@@ -252,8 +256,9 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    * Destroy the nodes. Remove listeners.
    */
   destroy: function () {
-    AutoRefreshHighlighter.prototype.destroy.call(this);
+    this.highlighterEnv.off("will-navigate", this.onWillNavigate);
     this.markup.destroy();
+    AutoRefreshHighlighter.prototype.destroy.call(this);
   },
 
   getElement: function (id) {
@@ -329,7 +334,7 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       this._hide();
     }
 
-    setIgnoreLayoutChanges(false, this.currentNode.ownerDocument.documentElement);
+    setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
 
     return shown;
   },
@@ -344,7 +349,7 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this._hideBoxModel();
     this._hideInfobar();
 
-    setIgnoreLayoutChanges(false, this.currentNode.ownerDocument.documentElement);
+    setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
   },
 
   /**
@@ -696,6 +701,12 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let container = this.getElement("infobar-container");
 
     moveInfobar(container, bounds, this.win);
+  },
+
+  onWillNavigate: function ({ isTopLevel }) {
+    if (isTopLevel) {
+      this.hide();
+    }
   }
 });
 exports.BoxModelHighlighter = BoxModelHighlighter;

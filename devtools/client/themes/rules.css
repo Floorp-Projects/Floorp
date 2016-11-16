@@ -367,6 +367,7 @@
   margin-inline-start: 35px;
 }
 
+.ruleview-grid,
 .ruleview-swatch {
   cursor: pointer;
   border-radius: 50%;
@@ -378,6 +379,12 @@
   margin-inline-end: 5px;
   display: inline-block;
   position: relative;
+}
+
+.ruleview-grid {
+  background: url("chrome://devtools/skin/images/grid.svg");
+  background-size: 1em;
+  border-radius: 0;
 }
 
 .ruleview-colorswatch::before {
@@ -504,6 +511,7 @@
   filter: url(images/filters.svg#checked-icon-state);
 }
 
+.ruleview-grid.active,
 .ruleview-selectorhighlighter:active,
 .ruleview-selectorhighlighter.highlighted {
   filter: url(images/filters.svg#checked-icon-state) brightness(0.9);
