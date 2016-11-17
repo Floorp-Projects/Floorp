@@ -13,7 +13,7 @@ from marionette_driver.by import By
 
 class TestTimeouts(MarionetteTestCase):
     def tearDown(self):
-        self.marionette.reset_timeouts()
+        self.marionette.timeout.reset()
         MarionetteTestCase.tearDown(self)
 
     def test_page_timeout_notdefinetimeout_pass(self):
