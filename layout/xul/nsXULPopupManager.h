@@ -368,12 +368,16 @@ public:
   //          returns the item before it, while GetNextMenuItem returns the
   //          item after it.
   // aIsPopup - true for menupopups, false for menubars
+  // aWrap - true to wrap around to the beginning and continue searching if not
+  //         found. False to end at the beginning or end of the menu.
   static nsMenuFrame* GetPreviousMenuItem(nsContainerFrame* aParent,
                                           nsMenuFrame* aStart,
-                                          bool aIsPopup);
+                                          bool aIsPopup,
+                                          bool aWrap);
   static nsMenuFrame* GetNextMenuItem(nsContainerFrame* aParent,
                                       nsMenuFrame* aStart,
-                                      bool aIsPopup);
+                                      bool aIsPopup,
+                                      bool aWrap);
 
   // returns true if the menu item aContent is a valid menuitem which may
   // be navigated to. aIsPopup should be true for items on a popup, or false
