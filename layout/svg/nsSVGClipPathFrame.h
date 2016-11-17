@@ -87,6 +87,26 @@ public:
                 DrawResult* aResult = nullptr);
 
   /**
+   * Paint mask directly onto a given context(aMaskContext).
+   *
+   * @param aMaskContext The target of mask been painting on.
+   * @param aClippedFrame The/an nsIFrame of the element that references this
+   *   clipPath that is currently being processed.
+   * @param aMatrix The transform from aClippedFrame's user space to
+   *   current transform.
+   * @param [out] aMaskTransform The transform to use with the returned
+   *   surface.
+   * @param [in, optional] aExtraMask An extra surface that the returned
+   *   surface should be masked with.
+   * @param [in, optional] aExtraMasksTransform The transform to use with
+   *   aExtraMask. Should be passed when aExtraMask is passed.
+   */
+  DrawResult
+  PaintClipMask(gfxContext& aMaskContext, nsIFrame* aClippedFrame,
+                const gfxMatrix& aMatrix, Matrix* aMaskTransform,
+                SourceSurface* aExtraMask, const Matrix& aExtraMasksTransform);
+
+  /**
    * aPoint is expected to be in aClippedFrame's SVG user space.
    */
   bool PointIsInsideClipPath(nsIFrame* aClippedFrame, const gfxPoint &aPoint);
@@ -136,6 +156,9 @@ private:
 
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override;
+
+  already_AddRefed<DrawTarget>
+  CreateClipMask(gfxContext& aReferenceContext, IntPoint& aOffset);
 
   // Set, during a GetClipMask() call, to the transform that still needs to be
   // concatenated to the transform of the DrawTarget that was passed to
