@@ -21,20 +21,8 @@
         data-localization-bundle="devtools/client/locales/netmonitor.properties">
 
     <vbox id="network-inspector-view" flex="1">
-      <hbox id="netmonitor-toolbar" class="devtools-toolbar">
-        <html:div xmlns="http://www.w3.org/1999/xhtml"
-                  id="react-clear-button-hook"/>
-        <html:div xmlns="http://www.w3.org/1999/xhtml"
-                  id="react-filter-buttons-hook"/>
-        <spacer id="requests-menu-spacer"
-                flex="1"/>
-        <html:div xmlns="http://www.w3.org/1999/xhtml"
-                  id="react-summary-button-hook"/>
-        <html:div xmlns="http://www.w3.org/1999/xhtml"
-                  id="react-search-box-hook"/>
-        <html:div xmlns="http://www.w3.org/1999/xhtml"
-                  id="react-details-pane-toggle-hook"/>
-      </hbox>
+      <html:div xmlns="http://www.w3.org/1999/xhtml"
+                id="react-toolbar-hook"/>
       <hbox id="network-table-and-sidebar"
             class="devtools-responsive-container"
             flex="1">
