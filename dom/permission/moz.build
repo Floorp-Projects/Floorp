@@ -16,12 +16,7 @@ UNIFIED_SOURCES += [
     'PermissionUtils.cpp',
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
-
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
-
-if CONFIG['MOZ_TIME_MANAGER']:
-    MOCHITEST_MANIFESTS += ['tests/mochitest-time.ini']
 
 FINAL_LIBRARY = 'xul'
 
