@@ -67,7 +67,6 @@
 #include "TimeManager.h"
 #include "DeviceStorage.h"
 #include "nsStreamUtils.h"
-#include "nsIAppsService.h"
 #include "WidgetUtils.h"
 #include "nsIPresentationService.h"
 

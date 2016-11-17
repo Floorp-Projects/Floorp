@@ -18,10 +18,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
                                    "@mozilla.org/system-message-internal;1",
                                    "nsISystemMessagesInternal");
 
-XPCOMUtils.defineLazyServiceGetter(this, "appsService",
-                                   "@mozilla.org/AppsService;1",
-                                   "nsIAppsService");
-
 XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
                                   "resource://gre/modules/SystemAppProxy.jsm");
 

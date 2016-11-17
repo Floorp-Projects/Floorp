@@ -10,7 +10,6 @@
 
 #include "xpcpublic.h"
 #include "XPCWrapper.h"
-#include "nsIAppsService.h"
 #include "nsIInputStreamChannel.h"
 #include "nsILoadContext.h"
 #include "nsIServiceManager.h"
