@@ -109,8 +109,7 @@ Accessible::Accessible(nsIContent* aContent, DocAccessible* aDoc) :
   mContent(aContent), mDoc(aDoc),
   mParent(nullptr), mIndexInParent(-1),
   mRoleMapEntryIndex(aria::NO_ROLE_MAP_ENTRY_INDEX),
-  mStateFlags(0), mContextFlags(0), mType(0), mGenericTypes(0),
-  mReorderEventTarget(false), mShowEventTarget(false), mHideEventTarget(false)
+  mStateFlags(0), mContextFlags(0), mType(0), mGenericTypes(0)
 {
   mBits.groupInfo = nullptr;
   mInt.mIndexOfEmbeddedChild = -1;
@@ -2158,9 +2157,9 @@ Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild)
              "No move, same index");
   MOZ_ASSERT(aNewIndex <= mChildren.Length(), "Wrong new index was given");
 
-  RefPtr<AccHideEvent> hideEvent = new AccHideEvent(aChild, false);
-  if (mDoc->Controller()->QueueMutationEvent(hideEvent)) {
-    aChild->SetHideEventTarget(true);
+  EventTree* eventTree = mDoc->Controller()->QueueMutation(this);
+  if (eventTree) {
+    eventTree->Hidden(aChild, false);
   }
 
   mEmbeddedObjCollector = nullptr;
@@ -2192,10 +2191,10 @@ Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild)
     mChildren[idx]->mInt.mIndexOfEmbeddedChild = -1;
   }
 
-  RefPtr<AccShowEvent> showEvent = new AccShowEvent(aChild);
-  DebugOnly<bool> added = mDoc->Controller()->QueueMutationEvent(showEvent);
-  MOZ_ASSERT(added);
-  aChild->SetShowEventTarget(true);
+  if (eventTree) {
+    eventTree->Shown(aChild);
+    mDoc->Controller()->QueueNameChange(aChild);
+  }
 }
 
 Accessible*

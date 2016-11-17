@@ -27,11 +27,11 @@
     {
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getNode("t1_button")),
+        new invokerChecker(EVENT_SHOW, getNode("t1_button")),
+        new invokerChecker(EVENT_SHOW, getNode("t1_subdiv")),
         // no hide for t1_subdiv because it is contained by hidden t1_checkbox
         new invokerChecker(EVENT_HIDE, getNode("t1_checkbox")),
         new invokerChecker(EVENT_SHOW, getNode("t1_checkbox")),
-        new invokerChecker(EVENT_SHOW, getNode("t1_button")),
-        new invokerChecker(EVENT_SHOW, getNode("t1_subdiv")),
         new invokerChecker(EVENT_REORDER, getNode("t1_container"))
       ];
 
@@ -73,12 +73,10 @@
     function removeARIAOwns()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getNode("t1_button")),
         new invokerChecker(EVENT_HIDE, getNode("t1_subdiv")),
-        new orderChecker(),
-        new asyncInvokerChecker(EVENT_SHOW, getNode("t1_button")),
-        new asyncInvokerChecker(EVENT_SHOW, getNode("t1_subdiv")),
-        new orderChecker(),
+        new invokerChecker(EVENT_SHOW, getNode("t1_subdiv")),
+        new invokerChecker(EVENT_HIDE, getNode("t1_button")),
+        new invokerChecker(EVENT_SHOW, getNode("t1_button")),
         new invokerChecker(EVENT_REORDER, getNode("t1_container")),
         new unexpectedInvokerChecker(EVENT_REORDER, getNode("t1_checkbox"))
       ];
@@ -110,8 +108,8 @@
     function setARIAOwns()
     {
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getNode("t1_button")),
         new invokerChecker(EVENT_HIDE, getNode("t1_subdiv")),
+        new invokerChecker(EVENT_HIDE, getNode("t1_button")),
         new invokerChecker(EVENT_SHOW, getNode("t1_button")),
         new invokerChecker(EVENT_SHOW, getNode("t1_subdiv")),
         new invokerChecker(EVENT_REORDER, getNode("t1_container"))
@@ -449,9 +447,6 @@
       this.eventSeq = [];
       for (var id of aIdList) {
         this.eventSeq.push(new invokerChecker(EVENT_HIDE, getNode(id)));
-      }
-
-      for (var id of aIdList) {
         this.eventSeq.push(new invokerChecker(EVENT_SHOW, getNode(id)));
       }
       this.eventSeq.push(new invokerChecker(EVENT_REORDER, getNode(aContainer)));

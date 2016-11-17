@@ -49,11 +49,6 @@ private:
   uint32_t mStateFlagsCopy;
   EventTree* mEventTree;
 
-  /*
-   * True if mutation events should be queued.
-   */
-  bool mQueueEvents;
-
 #ifdef DEBUG
   bool mIsDone;
 #endif
@@ -72,18 +67,14 @@ public:
     mFireReorder(aFireReorder) { }
   ~EventTree() { Clear(); }
 
-  void Shown(Accessible* aTarget);
-  void Hidden(Accessible*, bool);
+  void Shown(Accessible* aChild);
+
+  void Hidden(Accessible* aChild, bool aNeedsShutdown = true);
 
   /**
    * Return an event tree node for the given accessible.
    */
   const EventTree* Find(const Accessible* aContainer) const;
-
-  /**
-   * Add a mutation event to this event tree.
-   */
-  void Mutated(AccMutationEvent* aEv);
 
 #ifdef A11Y_LOG
   void Log(uint32_t aLevel = UINT32_MAX) const;
@@ -100,6 +91,7 @@ private:
    */
   EventTree* FindOrInsert(Accessible* aContainer);
 
+  void Mutated(AccMutationEvent* aEv);
   void Clear();
 
   UniquePtr<EventTree> mFirst;

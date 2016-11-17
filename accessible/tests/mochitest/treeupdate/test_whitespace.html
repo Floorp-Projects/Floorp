@@ -101,9 +101,8 @@
       this.imgNode.setAttribute("src", "../moz.png");
 
       this.eventSeq = [
-        new asyncInvokerChecker(EVENT_SHOW, getAccessible, this.textNode),
-        new asyncInvokerChecker(EVENT_SHOW, getAccessible, this.imgNode),
-        new orderChecker(),
+        new invokerChecker(EVENT_SHOW, getAccessible, this.imgNode),
+        new invokerChecker(EVENT_SHOW, getAccessible, this.textNode),
         new invokerChecker(EVENT_REORDER, this.topNode)
       ];
 
