@@ -98,7 +98,7 @@ const BrowserListener = {
 
       case "load":
         if (event.target.contentWindow === content) {
-          // For about:addons inline <browser>s, we currently receive a load
+          // For about:addons inline <browsers>, we currently receive a load
           // event on the <browser> element, but no load or DOMContentLoaded
           // events from the content window.
           sendAsyncMessage("Extension:BrowserContentLoaded", {url: content.location.href});

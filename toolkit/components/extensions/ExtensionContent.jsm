@@ -1025,15 +1025,11 @@ this.ExtensionContent = {
 
   init(global) {
     this.globals.set(global, new ExtensionGlobal(global));
-    if (ExtensionManagement.isExtensionProcess) {
-      ExtensionChild.init(global);
-    }
+    ExtensionChild.init(global);
   },
 
   uninit(global) {
-    if (ExtensionManagement.isExtensionProcess) {
-      ExtensionChild.uninit(global);
-    }
+    ExtensionChild.uninit(global);
     this.globals.get(global).uninit();
     this.globals.delete(global);
   },
