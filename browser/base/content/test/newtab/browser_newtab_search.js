@@ -63,13 +63,13 @@ add_task(function* () {
   info("Adding search event listener");
   yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     const SERVICE_EVENT_NAME = "ContentSearchService";
-    content.addEventListener(SERVICE_EVENT_NAME, function (event) {
+    content.addEventListener(SERVICE_EVENT_NAME, function(event) {
       sendAsyncMessage("test:search-event", { eventType: event.detail.type });
     });
   });
 
   let mm = gBrowser.selectedBrowser.messageManager;
-  mm.addMessageListener("test:search-event", function (message) {
+  mm.addMessageListener("test:search-event", function(message) {
     let eventType = message.data.eventType;
     if (!gExpectedSearchEventResolver) {
       ok(false, "Got search event " + eventType + " with no promise assigned");
@@ -216,12 +216,12 @@ function promiseNewSearchEngine({name: basename, numLogos}) {
   let addEnginePromise = new Promise((resolve, reject) => {
     let url = getRootDirectory(gTestPath) + basename;
     Services.search.addEngine(url, null, "", false, {
-      onSuccess: function (engine) {
+      onSuccess: function(engine) {
         info("Search engine added: " + basename);
         gNewEngines.push(engine);
         resolve(engine);
       },
-      onError: function (errCode) {
+      onError: function(errCode) {
         ok(false, "addEngine failed with error code " + errCode);
         reject();
       },

@@ -28,7 +28,7 @@ var satchelFormListener = {
         addEventListener("unload", this, false);
     },
 
-    updatePrefs : function () {
+    updatePrefs : function() {
         this.debug          = Services.prefs.getBoolPref("browser.formfill.debug");
         this.enabled        = Services.prefs.getBoolPref("browser.formfill.enable");
         this.saveHttpsForms = Services.prefs.getBoolPref("browser.formfill.saveHttpsForms");
@@ -36,7 +36,7 @@ var satchelFormListener = {
 
     // Implements the Luhn checksum algorithm as described at
     // http://wikipedia.org/wiki/Luhn_algorithm
-    isValidCCNumber : function (ccNumber) {
+    isValidCCNumber : function(ccNumber) {
         // Remove dashes and whitespace
         ccNumber = ccNumber.replace(/[\-\s]/g, '');
 
@@ -61,7 +61,7 @@ var satchelFormListener = {
         return total % 10 == 0;
     },
 
-    log : function (message) {
+    log : function(message) {
         if (!this.debug)
             return;
         dump("satchelFormListener: " + message + "\n");
@@ -85,7 +85,7 @@ var satchelFormListener = {
 
     /* ---- nsIObserver interface ---- */
 
-    observe : function (subject, topic, data) {
+    observe : function(subject, topic, data) {
         if (topic == "nsPref:changed")
             this.updatePrefs();
         else

@@ -369,7 +369,7 @@ var BookmarkPropertiesPanel = {
       case "resize":
         for (let [id, oldHeight] of elementsHeight) {
           let newHeight = document.getElementById(id).boxObject.height;
-          this._height += - oldHeight + newHeight;
+          this._height += -oldHeight + newHeight;
           elementsHeight.set(id, newHeight);
         }
         break;

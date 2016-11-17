@@ -1,4 +1,4 @@
-add_task(function* test () {
+add_task(function* test() {
   let sidebar = document.getElementById("sidebar");
 
   // Visited pages listed by descending visit date.

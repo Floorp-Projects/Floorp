@@ -52,7 +52,7 @@ add_task(function*() {
 
   let validLinks = yield ContentTask.spawn(gBrowser.selectedBrowser, items, function(contentItems) {
     let contentValidLinks = 0;
-    Array.forEach(content.document.querySelectorAll("link, style"), function (el) {
+    Array.forEach(content.document.querySelectorAll("link, style"), function(el) {
       var title = el.getAttribute("title");
       var rel = el.getAttribute("rel");
       var media = el.getAttribute("media");

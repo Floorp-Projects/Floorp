@@ -206,46 +206,46 @@ function run_test() {
   do_check_eq(typeof roundtrip(data).unknownURL, "undefined");
 
   function roundtripSet(props, modify, test, secure) {
-    props.forEach(function (prop) {
+    props.forEach(function(prop) {
       var theme = dummy();
       modify(theme, prop);
       test(roundtrip(theme, secure), prop, theme);
     });
   }
 
-  roundtripSet(MANDATORY, function (theme, prop) {
+  roundtripSet(MANDATORY, function(theme, prop) {
     delete theme[prop];
-  }, function (after) {
+  }, function(after) {
     do_check_eq(after, null);
   });
 
-  roundtripSet(OPTIONAL, function (theme, prop) {
+  roundtripSet(OPTIONAL, function(theme, prop) {
     delete theme[prop];
-  }, function (after) {
+  }, function(after) {
     do_check_neq(after, null);
   });
 
-  roundtripSet(MANDATORY, function (theme, prop) {
+  roundtripSet(MANDATORY, function(theme, prop) {
     theme[prop] = "";
-  }, function (after) {
+  }, function(after) {
     do_check_eq(after, null);
   });
 
-  roundtripSet(OPTIONAL, function (theme, prop) {
+  roundtripSet(OPTIONAL, function(theme, prop) {
     theme[prop] = "";
-  }, function (after, prop) {
+  }, function(after, prop) {
     do_check_eq(typeof after[prop], "undefined");
   });
 
-  roundtripSet(MANDATORY, function (theme, prop) {
+  roundtripSet(MANDATORY, function(theme, prop) {
     theme[prop] = " ";
-  }, function (after) {
+  }, function(after) {
     do_check_eq(after, null);
   });
 
-  roundtripSet(OPTIONAL, function (theme, prop) {
+  roundtripSet(OPTIONAL, function(theme, prop) {
     theme[prop] = " ";
-  }, function (after, prop) {
+  }, function(after, prop) {
     do_check_neq(after, null);
     do_check_eq(typeof after[prop], "undefined");
   });
@@ -258,48 +258,48 @@ function run_test() {
     return props.filter(prop => /URL$/.test(prop));
   }
 
-  roundtripSet(non_urls(MANDATORY.concat(OPTIONAL)), function (theme, prop) {
+  roundtripSet(non_urls(MANDATORY.concat(OPTIONAL)), function(theme, prop) {
     theme[prop] = prop;
-  }, function (after, prop, before) {
+  }, function(after, prop, before) {
     do_check_eq(after[prop], before[prop]);
   });
 
-  roundtripSet(non_urls(MANDATORY.concat(OPTIONAL)), function (theme, prop) {
+  roundtripSet(non_urls(MANDATORY.concat(OPTIONAL)), function(theme, prop) {
     theme[prop] = " " + prop + "  ";
-  }, function (after, prop, before) {
+  }, function(after, prop, before) {
     do_check_eq(after[prop], before[prop].trim());
   });
 
-  roundtripSet(urls(MANDATORY.concat(OPTIONAL)), function (theme, prop) {
+  roundtripSet(urls(MANDATORY.concat(OPTIONAL)), function(theme, prop) {
     theme[prop] = Math.random().toString();
-  }, function (after, prop, before) {
+  }, function(after, prop, before) {
     if (prop == "updateURL")
       do_check_eq(typeof after[prop], "undefined");
     else
       do_check_eq(after[prop], "http://lwttest.invalid/" + before[prop]);
   });
 
-  roundtripSet(urls(MANDATORY.concat(OPTIONAL)), function (theme, prop) {
+  roundtripSet(urls(MANDATORY.concat(OPTIONAL)), function(theme, prop) {
     theme[prop] = Math.random().toString();
-  }, function (after, prop, before) {
+  }, function(after, prop, before) {
     do_check_eq(after[prop], "https://lwttest.invalid/" + before[prop]);
   }, true);
 
-  roundtripSet(urls(MANDATORY.concat(OPTIONAL)), function (theme, prop) {
+  roundtripSet(urls(MANDATORY.concat(OPTIONAL)), function(theme, prop) {
     theme[prop] = "https://sub.lwttest.invalid/" + Math.random().toString();
-  }, function (after, prop, before) {
+  }, function(after, prop, before) {
     do_check_eq(after[prop], before[prop]);
   });
 
-  roundtripSet(urls(MANDATORY), function (theme, prop) {
+  roundtripSet(urls(MANDATORY), function(theme, prop) {
     theme[prop] = "ftp://lwttest.invalid/" + Math.random().toString();
-  }, function (after) {
+  }, function(after) {
     do_check_eq(after, null);
   });
 
-  roundtripSet(urls(OPTIONAL), function (theme, prop) {
+  roundtripSet(urls(OPTIONAL), function(theme, prop) {
     theme[prop] = "ftp://lwttest.invalid/" + Math.random().toString();
-  }, function (after, prop) {
+  }, function(after, prop) {
     do_check_eq(typeof after[prop], "undefined");
   });
 

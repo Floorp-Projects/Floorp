@@ -57,7 +57,7 @@ var LoginManagerParent = {
     });
   },
 
-  receiveMessage: function (msg) {
+  receiveMessage: function(msg) {
     let data = msg.data;
     switch (msg.name) {
       case "RemoteLogins:findLogins": {
@@ -175,7 +175,7 @@ var LoginManagerParent = {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                                Ci.nsISupportsWeakReference]),
 
-        observe: function (subject, topic, data) {
+        observe: function(subject, topic, data) {
           log("Got deferred sendLoginDataToChild notification:", topic);
           // Only run observer once.
           Services.obs.removeObserver(this, "passwordmgr-crypto-login");

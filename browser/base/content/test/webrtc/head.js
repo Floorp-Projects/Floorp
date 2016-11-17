@@ -307,7 +307,7 @@ function activateSecondaryAction(aAction) {
   let notification = PopupNotifications.panel.firstChild;
   notification.button.focus();
   let popup = notification.menupopup;
-  popup.addEventListener("popupshown", function () {
+  popup.addEventListener("popupshown", function() {
     popup.removeEventListener("popupshown", arguments.callee, false);
 
     // Press 'down' as many time as needed to select the requested action.
@@ -371,10 +371,10 @@ function* closeStream(aAlreadyClosed, aFrameId) {
   }
 
   info("closing the stream");
-  yield ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, function*(aFrameId) {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, function*(contentFrameId) {
     let global = content.wrappedJSObject;
-    if (aFrameId)
-      global = global.document.getElementById(aFrameId).contentWindow;
+    if (contentFrameId)
+      global = global.document.getElementById(contentFrameId).contentWindow;
     global.closeStream();
   });
 
@@ -413,12 +413,12 @@ function* checkSharingUI(aExpected, aWin = window) {
   identityBox.click();
   let permissions = doc.getElementById("identity-popup-permission-list");
   for (let id of ["microphone", "camera", "screen"]) {
-    let convertId = id => {
-      if (id == "camera")
+    let convertId = idToConvert => {
+      if (idToConvert == "camera")
         return "video";
-      if (id == "microphone")
+      if (idToConvert == "microphone")
         return "audio";
-      return id;
+      return idToConvert;
     };
     let expected = aExpected[convertId(id)];
     is(!!aWin.gIdentityHandler._sharingState[id], !!expected,

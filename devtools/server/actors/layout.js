@@ -4,9 +4,11 @@
 
 "use strict";
 
+const events = require("sdk/event/core");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
+const { getStringifiableFragments } =
+  require("devtools/server/actors/utils/css-grid-utils");
 const { gridSpec, layoutSpec } = require("devtools/shared/specs/layout");
-const { getStringifiableFragments } = require("devtools/server/actors/utils/css-grid-utils");
 
 /**
  * Set of actors the expose the CSS layout information to the devtools protocol clients.
@@ -70,10 +72,16 @@ var LayoutActor = ActorClassWithSpec(layoutSpec, {
 
     this.tabActor = tabActor;
     this.walker = walker;
+
+    this.onNavigate = this.onNavigate.bind(this);
+
+    events.on(this.tabActor, "navigate", this.onNavigate);
   },
 
   destroy: function () {
     Actor.prototype.destroy.call(this);
+
+    events.off(this.tabActor, "navigate", this.onNavigate);
 
     this.tabActor = null;
     this.walker = null;
@@ -114,7 +122,7 @@ var LayoutActor = ActorClassWithSpec(layoutSpec, {
    */
   getAllGrids: function (rootNode, traverseFrames) {
     if (!traverseFrames) {
-      return this.getGridActors(rootNode);
+      return this.getGrids(rootNode.rawNode);
     }
 
     let grids = [];
@@ -123,6 +131,11 @@ var LayoutActor = ActorClassWithSpec(layoutSpec, {
     }
 
     return grids;
+  },
+
+  onNavigate: function () {
+    let grids = this.getAllGrids(this.walker.rootNode);
+    events.emit(this, "grid-layout-changed", grids);
   },
 
 });

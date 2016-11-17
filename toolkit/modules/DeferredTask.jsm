@@ -112,7 +112,7 @@ const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer",
  *        task, except on finalization, when the task may restart immediately
  *        after the previous execution finished.
  */
-this.DeferredTask = function (aTaskFn, aDelayMs) {
+this.DeferredTask = function(aTaskFn, aDelayMs) {
   this._taskFn = aTaskFn;
   this._delayMs = aDelayMs;
 }
@@ -161,7 +161,7 @@ this.DeferredTask.prototype = {
   /**
    * Actually starts the timer with the delay specified on construction.
    */
-  _startTimer: function ()
+  _startTimer: function()
   {
     this._timer = new Timer(this._timerCallback.bind(this), this._delayMs,
                             Ci.nsITimer.TYPE_ONE_SHOT);
@@ -185,7 +185,7 @@ this.DeferredTask.prototype = {
    *       try/catch/finally clause in the task.  The "finalize" method can be
    *       used in the common case of waiting for completion on shutdown.
    */
-  arm: function ()
+  arm: function()
   {
     if (this._finalized) {
       throw new Error("Unable to arm timer, the object has been finalized.");
@@ -208,7 +208,7 @@ this.DeferredTask.prototype = {
    * This method stops any currently running timer, thus the delay will restart
    * from its original value in case the "arm" method is called again.
    */
-  disarm: function () {
+  disarm: function() {
     this._armed = false;
     if (this._timer) {
       // Calling the "cancel" method and discarding the timer reference makes
@@ -238,7 +238,7 @@ this.DeferredTask.prototype = {
    * @resolves After the last execution of the task is finished.
    * @rejects Never.
    */
-  finalize: function () {
+  finalize: function() {
     if (this._finalized) {
       throw new Error("The object has been already finalized.");
     }
@@ -262,7 +262,7 @@ this.DeferredTask.prototype = {
   /**
    * Timer callback used to run the delayed task.
    */
-  _timerCallback: function ()
+  _timerCallback: function()
   {
     let runningDeferred = Promise.defer();
 

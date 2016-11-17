@@ -49,17 +49,17 @@ function* step()
         do_check_false(aIsVisited);
 
         let callback = {
-          handleError:  function () {},
-          handleResult: function () {},
-          handleCompletion: function () {
+          handleError:  function() {},
+          handleResult: function() {},
+          handleCompletion: function() {
             do_print("Added visit to " + uri.spec);
 
-            history.isURIVisited(uri, function (aURI2, aIsVisited2) {
+            history.isURIVisited(uri, function(aURI2, aIsVisited2) {
               do_check_true(uri.equals(aURI2));
               let checker = SCHEMES[scheme] ? do_check_true : do_check_false;
               checker(aIsVisited2);
 
-              PlacesTestUtils.clearHistory().then(function () {
+              PlacesTestUtils.clearHistory().then(function() {
                 history.isURIVisited(uri, function(aURI3, aIsVisited3) {
                   do_check_true(uri.equals(aURI3));
                   do_check_false(aIsVisited3);

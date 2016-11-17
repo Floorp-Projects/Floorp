@@ -174,7 +174,7 @@ function monotinicity_tester(source, testName) {
       let key = item.groupId;
       if (map.has(key)) {
         let old = map.get(key);
-        Assert.ok(false, `Component ${key} has already been seen. Latest: ${item.addonId||item.name}, previous: ${old.addonId||old.name}`);
+        Assert.ok(false, `Component ${key} has already been seen. Latest: ${item.addonId || item.name}, previous: ${old.addonId || old.name}`);
       }
       map.set(key, item);
     }

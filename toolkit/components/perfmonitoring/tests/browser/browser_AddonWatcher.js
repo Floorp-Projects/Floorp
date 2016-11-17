@@ -68,7 +68,7 @@ add_task(function* init() {
   Services.telemetry.canRecordExtended = true;
   AddonWatcher.init();
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     AddonWatcher.paused = true;
     Services.telemetry.canRecordExtended = oldCanRecord;
   });
@@ -103,7 +103,7 @@ let burn_rubber = Task.async(function*({histogramName, topic, expectedMinSum}) {
       let snap2 = histogram.snapshot(ADDON_ID);
       histogramUpdated = snap2.sum > 0;
       info(`For the moment, histogram ${histogramName} shows ${snap2.sum} => ${histogramUpdated}`);
-      info(`For the moment, we have ${detected?"":"NOT "}detected the slow add-on`);
+      info(`For the moment, we have ${detected ? "" : "NOT "}detected the slow add-on`);
     } while (!histogramUpdated || !detected);
 
     let snap3 = histogram.snapshot(ADDON_ID);

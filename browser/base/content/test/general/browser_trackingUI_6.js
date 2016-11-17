@@ -6,7 +6,7 @@ function waitForSecurityChange(numChanges = 1) {
     let listener = {
       onSecurityChange: function() {
         n = n + 1;
-        info ("Received onSecurityChange event " + n + " of " + numChanges);
+        info("Received onSecurityChange event " + n + " of " + numChanges);
         if (n >= numChanges) {
           gBrowser.removeProgressListener(listener);
           resolve();

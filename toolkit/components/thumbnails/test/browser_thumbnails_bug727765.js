@@ -19,7 +19,7 @@ function* runTests() {
 
   // Check the thumbnail color of the bottom right pixel.
   yield whenFileExists(URL);
-  yield retrieveImageDataForURL(URL, function (aData) {
+  yield retrieveImageDataForURL(URL, function(aData) {
     let [r, g, b] = [].slice.call(aData, -4);
     let fuzz = 2; // Windows 8 x64 blends with the scrollbar a bit.
     var message = "Expected red thumbnail rgb(255, 0, 0), got " + r + "," + g + "," + b;

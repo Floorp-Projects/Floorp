@@ -8,7 +8,7 @@ const PREF_TEST_WHITELIST = "browser.uitour.testingOrigins";
 const UITOUR_PERMISSION   = "uitour";
 
 var UITourListener = {
-  handleEvent: function (event) {
+  handleEvent: function(event) {
     if (!Services.prefs.getBoolPref("browser.uitour.enabled")) {
       return;
     }
@@ -85,7 +85,7 @@ var UITourListener = {
       }
   },
 
-  sendPageEvent: function (type, detail) {
+  sendPageEvent: function(type, detail) {
     if (!this.ensureTrustedOrigin()) {
       return;
     }

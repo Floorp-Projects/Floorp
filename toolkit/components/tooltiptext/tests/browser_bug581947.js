@@ -19,16 +19,16 @@ function check(aBrowser, aElementName, aBarred, aType) {
          "No tooltip should be shown when the element is barred from constraint validation");
     } else {
       ok(tttp.getNodeText(e, {}, {}),
-         e.tagName + " " +"A tooltip should be shown when the element isn't valid");
+         e.tagName + " " + "A tooltip should be shown when the element isn't valid");
     }
 
     e.setAttribute('title', '');
-    ok (!tttp.getNodeText(e, {}, {}),
+    ok(!tttp.getNodeText(e, {}, {}),
         "No tooltip should be shown if the title attribute is set");
 
     e.removeAttribute('title');
     contentElement.setAttribute('novalidate', '');
-    ok (!tttp.getNodeText(e, {}, {}),
+    ok(!tttp.getNodeText(e, {}, {}),
         "No tooltip should be shown if the novalidate attribute is set on the form owner");
     contentElement.removeAttribute('novalidate');
 

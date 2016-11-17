@@ -1954,7 +1954,7 @@ function removeAsync(aFile) {
         yield OS.File.remove(aFile.path);
     }
     catch (e) {
-      if (!(e instanceof OS.File.Error) || ! e.becauseNoSuchFile)
+      if (!(e instanceof OS.File.Error) || !e.becauseNoSuchFile)
         throw e;
       // The file has already gone away
       return;
@@ -4208,7 +4208,7 @@ this.XPIProvider = {
    *         A callback to pass the Addon to
    */
   getAddonByID: function(aId, aCallback) {
-    XPIDatabase.getVisibleAddonForID (aId, function(aAddon) {
+    XPIDatabase.getVisibleAddonForID(aId, function(aAddon) {
       aCallback(aAddon ? aAddon.wrapper : null);
     });
   },

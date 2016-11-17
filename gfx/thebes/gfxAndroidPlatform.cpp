@@ -322,8 +322,7 @@ gfxAndroidPlatform::RequiresLinearZoom()
     // content that can always be be non-reflow-zoomed.
     //
     // XXX when gecko-android-java is used as an "app runtime", we may
-    // want to treat it like B2G and use linear zoom only for the web
-    // browser process, not other apps.
+    // want to use linear zoom only for the web browser process, not other apps.
     return true;
 #endif
 

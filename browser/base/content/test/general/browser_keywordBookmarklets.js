@@ -5,7 +5,7 @@ add_task(function* test_keyword_bookmarklet() {
                                                 title: "bookmarklet",
                                                 url: "javascript:'1';" });
   let tab = gBrowser.selectedTab = gBrowser.addTab();
-  registerCleanupFunction (function* () {
+  registerCleanupFunction(function* () {
     gBrowser.removeTab(tab);
     yield PlacesUtils.bookmarks.remove(bm);
   });

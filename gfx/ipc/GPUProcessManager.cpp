@@ -270,8 +270,8 @@ ShouldLimitDeviceResets(uint32_t count, int32_t deltaMilliseconds)
   int32_t timeLimit = gfxPrefs::DeviceResetThresholdMilliseconds();
   int32_t countLimit = gfxPrefs::DeviceResetLimitCount();
 
-  bool hasTimeLimit = timeLimit != -1;
-  bool hasCountLimit = countLimit != -1;
+  bool hasTimeLimit = timeLimit >= 0;
+  bool hasCountLimit = countLimit >= 0;
 
   bool triggeredTime = deltaMilliseconds < timeLimit;
   bool triggeredCount = count > (uint32_t)countLimit;

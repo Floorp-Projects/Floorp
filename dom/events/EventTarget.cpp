@@ -65,13 +65,13 @@ EventTarget::IsApzAware() const
 }
 
 bool
-EventTarget::DispatchEvent(JSContext* aCx,
-                           Event& aEvent,
+EventTarget::DispatchEvent(Event& aEvent,
+                           CallerType aCallerType,
                            ErrorResult& aRv)
 {
   bool result = false;
   aRv = DispatchEvent(&aEvent, &result);
-  return !aEvent.DefaultPrevented(aCx);
+  return !aEvent.DefaultPrevented(aCallerType);
 }
 
 } // namespace dom

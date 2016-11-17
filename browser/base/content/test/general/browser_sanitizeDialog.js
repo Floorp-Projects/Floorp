@@ -50,7 +50,7 @@ add_task(function* init() {
  */
 add_task(function* default_state() {
   let wh = new WindowHelper();
-  wh.onload = function () {
+  wh.onload = function() {
     // Select "Last Hour"
     this.selectDuration(Sanitizer.TIMESPAN_HOUR);
     // Hide details
@@ -78,7 +78,7 @@ add_task(function* test_cancel() {
   yield PlacesTestUtils.addVisits(places);
 
   let wh = new WindowHelper();
-  wh.onload = function () {
+  wh.onload = function() {
     this.selectDuration(Sanitizer.TIMESPAN_HOUR);
     this.checkPrefCheckbox("history", false);
     this.checkDetails(false);
@@ -138,7 +138,7 @@ add_task(function* test_history_downloads_checked() {
   yield PlacesTestUtils.addVisits(places);
 
   let wh = new WindowHelper();
-  wh.onload = function () {
+  wh.onload = function() {
     this.selectDuration(Sanitizer.TIMESPAN_HOUR);
     this.checkPrefCheckbox("history", true);
     this.acceptDialog();
@@ -204,7 +204,7 @@ add_task(function* test_history_downloads_unchecked() {
 
   yield PlacesTestUtils.addVisits(places);
   let wh = new WindowHelper();
-  wh.onload = function () {
+  wh.onload = function() {
     is(this.isWarningPanelVisible(), false,
        "Warning panel should be hidden after previously accepting dialog " +
        "with a predefined timespan");
@@ -264,7 +264,7 @@ add_task(function* test_everything() {
 
   yield PlacesTestUtils.addVisits(places);
   let wh = new WindowHelper();
-  wh.onload = function () {
+  wh.onload = function() {
     is(this.isWarningPanelVisible(), false,
        "Warning panel should be hidden after previously accepting dialog " +
        "with a predefined timespan");
@@ -315,7 +315,7 @@ add_task(function* test_everything_warning() {
 
   yield PlacesTestUtils.addVisits(places);
   let wh = new WindowHelper();
-  wh.onload = function () {
+  wh.onload = function() {
     is(this.isWarningPanelVisible(), true,
        "Warning panel should be visible after previously accepting dialog " +
        "with clearing everything");
@@ -442,7 +442,7 @@ add_task(function* test_form_entries() {
 add_task(function* test_toggling_details_persists() {
   {
     let wh = new WindowHelper();
-    wh.onload = function () {
+    wh.onload = function() {
       // Check all items and select "Everything"
       this.checkAllCheckboxes();
       this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
@@ -457,7 +457,7 @@ add_task(function* test_toggling_details_persists() {
   }
   {
     let wh = new WindowHelper();
-    wh.onload = function () {
+    wh.onload = function() {
       // Details should remain closed because all items are checked.
       this.checkDetails(false);
 
@@ -470,7 +470,7 @@ add_task(function* test_toggling_details_persists() {
   }
   {
     let wh = new WindowHelper();
-    wh.onload = function () {
+    wh.onload = function() {
       // Details should be open because not all items are checked.
       this.checkDetails(true);
 
@@ -484,7 +484,7 @@ add_task(function* test_toggling_details_persists() {
   }
   {
     let wh = new WindowHelper();
-    wh.onload = function () {
+    wh.onload = function() {
       // Details should be open because not all items are checked.
       this.checkDetails(true);
 
@@ -498,7 +498,7 @@ add_task(function* test_toggling_details_persists() {
   }
   {
     let wh = new WindowHelper();
-    wh.onload = function () {
+    wh.onload = function() {
       // Details should be open because not all items are checked.
       this.checkDetails(true);
 
@@ -514,7 +514,7 @@ add_task(function* test_toggling_details_persists() {
   }
   {
     let wh = new WindowHelper();
-    wh.onload = function () {
+    wh.onload = function() {
       // Details should not be open because "Last Hour" is selected
       this.checkDetails(false);
 
@@ -525,7 +525,7 @@ add_task(function* test_toggling_details_persists() {
   }
   {
     let wh = new WindowHelper();
-    wh.onload = function () {
+    wh.onload = function() {
       // Details should have remained closed
       this.checkDetails(false);
 
@@ -559,7 +559,7 @@ add_task(function* test_offline_cache() {
 
   // Open the dialog
   let wh = new WindowHelper();
-  wh.onload = function () {
+  wh.onload = function() {
     this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
     // Show details
     this.toggleDetails();
@@ -568,11 +568,11 @@ add_task(function* test_offline_cache() {
     this.checkPrefCheckbox("offlineApps", true);
     this.acceptDialog();
   };
-  wh.onunload = function () {
+  wh.onunload = function() {
     // Check if the cache has been deleted
     var size = -1;
     var visitor = {
-      onCacheStorageInfo: function (aEntryCount, aConsumption, aCapacity, aDiskDirectory)
+      onCacheStorageInfo: function(aEntryCount, aConsumption, aCapacity, aDiskDirectory)
       {
         size = aConsumption;
       }
@@ -584,7 +584,7 @@ add_task(function* test_offline_cache() {
 
   var cacheListener = {
     onCacheEntryCheck: function() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
-    onCacheEntryAvailable: function (entry, isnew, unused, status) {
+    onCacheEntryAvailable: function(entry, isnew, unused, status) {
       is(status, Cr.NS_OK);
       var stream = entry.openOutputStream(0);
       var content = "content";
@@ -610,7 +610,7 @@ add_task(function* test_offline_apps_permissions() {
 
   // Open the dialog
   let wh = new WindowHelper();
-  wh.onload = function () {
+  wh.onload = function() {
     this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
     // Show details
     this.toggleDetails();
@@ -648,7 +648,7 @@ WindowHelper.prototype = {
   /**
    * "Presses" the dialog's OK button.
    */
-  acceptDialog: function () {
+  acceptDialog: function() {
     is(this.win.document.documentElement.getButton("accept").disabled, false,
        "Dialog's OK button should not be disabled");
     this.win.document.documentElement.acceptDialog();
@@ -657,7 +657,7 @@ WindowHelper.prototype = {
   /**
    * "Presses" the dialog's Cancel button.
    */
-  cancelDialog: function () {
+  cancelDialog: function() {
     this.win.document.documentElement.cancelDialog();
   },
 
@@ -669,7 +669,7 @@ WindowHelper.prototype = {
    * @param aShouldBeShown
    *        True if you expect the details to be shown and false if hidden
    */
-  checkDetails: function (aShouldBeShown) {
+  checkDetails: function(aShouldBeShown) {
     let button = this.getDetailsButton();
     let list = this.getItemList();
     let hidden = list.hidden || list.collapsed;
@@ -700,7 +700,7 @@ WindowHelper.prototype = {
    * @param aCheckState
    *        True if the checkbox should be checked, false otherwise
    */
-  checkPrefCheckbox: function (aPrefName, aCheckState) {
+  checkPrefCheckbox: function(aPrefName, aCheckState) {
     var pref = "privacy.cpd." + aPrefName;
     var cb = this.win.document.querySelectorAll(
                "#itemList > [preference='" + pref + "']");
@@ -712,7 +712,7 @@ WindowHelper.prototype = {
   /**
    * Makes sure all the checkboxes are checked.
    */
-  _checkAllCheckboxesCustom: function (check) {
+  _checkAllCheckboxesCustom: function(check) {
     var cb = this.win.document.querySelectorAll("#itemList > [preference]");
     ok(cb.length > 1, "found checkboxes for preferences");
     for (var i = 0; i < cb.length; ++i) {
@@ -722,39 +722,39 @@ WindowHelper.prototype = {
     }
   },
 
-  checkAllCheckboxes: function () {
+  checkAllCheckboxes: function() {
     this._checkAllCheckboxesCustom(true);
   },
 
-  uncheckAllCheckboxes: function () {
+  uncheckAllCheckboxes: function() {
     this._checkAllCheckboxesCustom(false);
   },
 
   /**
    * @return The details progressive disclosure button
    */
-  getDetailsButton: function () {
+  getDetailsButton: function() {
     return this.win.document.getElementById("detailsExpander");
   },
 
   /**
    * @return The dialog's duration dropdown
    */
-  getDurationDropdown: function () {
+  getDurationDropdown: function() {
     return this.win.document.getElementById("sanitizeDurationChoice");
   },
 
   /**
    * @return The item list hidden by the details progressive disclosure button
    */
-  getItemList: function () {
+  getItemList: function() {
     return this.win.document.getElementById("itemList");
   },
 
   /**
    * @return The clear-everything warning box
    */
-  getWarningPanel: function () {
+  getWarningPanel: function() {
     return this.win.document.getElementById("sanitizeEverythingWarningBox");
   },
 
@@ -762,7 +762,7 @@ WindowHelper.prototype = {
    * @return True if the "Everything" warning panel is visible (as opposed to
    *         the tree)
    */
-  isWarningPanelVisible: function () {
+  isWarningPanelVisible: function() {
     return !this.getWarningPanel().hidden;
   },
 
@@ -774,7 +774,7 @@ WindowHelper.prototype = {
    * caller is expected to call waitForAsyncUpdates at some point; if false is
    * returned, waitForAsyncUpdates is called automatically.
    */
-  open: function () {
+  open: function() {
     let wh = this;
 
     function windowObserver(aSubject, aTopic, aData) {
@@ -835,7 +835,7 @@ WindowHelper.prototype = {
    * @param aDurVal
    *        One of the Sanitizer.TIMESPAN_* values
    */
-  selectDuration: function (aDurVal) {
+  selectDuration: function(aDurVal) {
     this.getDurationDropdown().value = aDurVal;
     if (aDurVal === Sanitizer.TIMESPAN_EVERYTHING) {
       is(this.isWarningPanelVisible(), true,
@@ -850,7 +850,7 @@ WindowHelper.prototype = {
   /**
    * Toggles the details progressive disclosure button.
    */
-  toggleDetails: function () {
+  toggleDetails: function() {
     this.getDetailsButton().click();
   }
 };
@@ -898,11 +898,11 @@ function promiseAddFormEntryWithMinutesAgo(aMinutesAgo) {
 
   return new Promise((resolve, reject) =>
     FormHistory.update({ op: "add", fieldname: name, value: "dummy", firstUsed: timestamp },
-                       { handleError: function (error) {
+                       { handleError: function(error) {
                            reject();
                            throw new Error("Error occurred updating form history: " + error);
                          },
-                         handleCompletion: function (reason) {
+                         handleCompletion: function(reason) {
                            resolve(name);
                          }
                        })
@@ -918,11 +918,11 @@ function formNameExists(name)
     let count = 0;
     FormHistory.count({ fieldname: name },
                       { handleResult: result => count = result,
-                        handleError: function (error) {
+                        handleError: function(error) {
                           reject(error);
                           throw new Error("Error occurred searching form history: " + error);
                         },
-                        handleCompletion: function (reason) {
+                        handleCompletion: function(reason) {
                           if (!reason) {
                             resolve(count);
                           }

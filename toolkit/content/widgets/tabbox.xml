@@ -393,7 +393,7 @@
           if (tab) {
             var alreadySelected = tab.selected;
 
-            Array.forEach(this.childNodes, function (aTab) {
+            Array.forEach(this.childNodes, function(aTab) {
               if (aTab.selected && aTab != tab)
                 aTab._selected = false;
             });

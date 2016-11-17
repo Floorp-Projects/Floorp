@@ -208,7 +208,7 @@ add_task(function* test3d() {
       ok(!allownow.hidden, "Test 3d, Plugin set to 'block' should have a visible 'allow now' action.");
       ok(!block.hidden, "Test 3d, Plugin set to 'block' should have a visible 'block' action.");
     } else {
-      ok(false, "Test 3d, Unexpected plugin '"+item.action.pluginName+"'");
+      ok(false, "Test 3d, Unexpected plugin '" + item.action.pluginName + "'");
     }
   }
 

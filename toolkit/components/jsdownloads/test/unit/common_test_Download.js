@@ -305,7 +305,7 @@ add_task(function* test_referrer()
   }
   do_register_cleanup(cleanup);
 
-  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
 
     do_check_true(aRequest.hasHeader("Referer"));
@@ -440,7 +440,7 @@ add_task(function* test_final_state_notified()
   let onchangeNotified = false;
   let lastNotifiedStopped;
   let lastNotifiedProgress;
-  download.onchange = function () {
+  download.onchange = function() {
     onchangeNotified = true;
     lastNotifiedStopped = download.stopped;
     lastNotifiedProgress = download.progress;
@@ -572,7 +572,7 @@ add_task(function* test_empty_noprogress()
     // download starts.
     download = yield promiseNewDownload(sourceUrl);
 
-    download.onchange = function () {
+    download.onchange = function() {
       if (!download.stopped) {
         do_check_false(download.hasProgress);
         do_check_eq(download.currentBytes, 0);
@@ -676,7 +676,7 @@ add_task(function* test_cancel_midway()
 
   // Cancel the download after receiving the first part of the response.
   let deferCancel = Promise.defer();
-  let onchange = function () {
+  let onchange = function() {
     if (!download.stopped && !download.canceled && download.progress == 50) {
       // Cancel the download immediately during the notification.
       deferCancel.resolve(download.cancel());
@@ -861,7 +861,7 @@ add_task(function* test_cancel_midway_restart_tryToKeepPartialData()
   // The second time, we'll request and obtain the second part of the response,
   // but we still stop when half of the remaining progress is reached.
   let deferMidway = Promise.defer();
-  download.onchange = function () {
+  download.onchange = function() {
     if (!download.stopped && !download.canceled &&
         download.currentBytes == Math.floor(TEST_DATA_SHORT.length * 3 / 2)) {
       download.onchange = null;
@@ -1488,7 +1488,7 @@ add_task(function* test_public_and_private()
   }
   do_register_cleanup(cleanup);
 
-  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
 
     if (testCount == 0) {
@@ -1559,7 +1559,7 @@ add_task(function* test_with_content_encoding()
   }
   do_register_cleanup(cleanup);
 
-  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.setHeader("Content-Encoding", "gzip", false);
     aResponse.setHeader("Content-Length",
@@ -1595,7 +1595,7 @@ add_task(function* test_with_content_encoding_ignore_extension()
   }
   do_register_cleanup(cleanup);
 
-  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.setHeader("Content-Encoding", "gzip", false);
     aResponse.setHeader("Content-Length",
@@ -1632,7 +1632,7 @@ add_task(function* test_cancel_midway_restart_with_content_encoding()
 
   // The first time, cancel the download midway.
   let deferCancel = Promise.defer();
-  let onchange = function () {
+  let onchange = function() {
     if (!download.stopped && !download.canceled &&
         download.currentBytes == TEST_DATA_SHORT_GZIP_ENCODED_FIRST.length) {
       deferCancel.resolve(download.cancel());
@@ -2392,7 +2392,7 @@ add_task(function* test_platform_integration()
 
     // Wait for the whenSucceeded promise to be resolved first.
     // downloadDone should be called before the whenSucceeded promise is resolved.
-    yield download.whenSucceeded().then(function () {
+    yield download.whenSucceeded().then(function() {
       do_check_true(downloadDoneCalled);
       do_check_true(downloadWatcherNotified);
     });

@@ -41,7 +41,7 @@ public:
   MakeDrawTarget(const IntSize& aSize,
                  DrawEventRecorder* aRecorder = nullptr) override;
 
-  virtual already_AddRefed<DrawTarget> GetReferenceDrawTarget() final;
+  virtual already_AddRefed<DrawTarget> GetReferenceDrawTarget(DrawEventRecorder* aRecorder) final;
 
 private:
 

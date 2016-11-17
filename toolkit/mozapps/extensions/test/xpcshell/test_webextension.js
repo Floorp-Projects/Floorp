@@ -251,7 +251,7 @@ add_task(function*() {
   do_check_true(first_addon.isActive);
   do_check_false(first_addon.isSystem);
 
-  let manifestjson_id= "last-webextension2@tests.mozilla.org";
+  let manifestjson_id = "last-webextension2@tests.mozilla.org";
   let last_addon = yield promiseAddonByID(manifestjson_id);
   do_check_eq(last_addon, null);
 

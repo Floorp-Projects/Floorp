@@ -96,7 +96,7 @@ const PingServer = {
 
   promiseNextRequests: Task.async(function*(count) {
     let results = [];
-    for (let i=0; i<count; ++i) {
+    for (let i = 0; i < count; ++i) {
       results.push(yield this.promiseNextRequest());
     }
 
@@ -181,8 +181,8 @@ function loadAddonManager(...args) {
 
 var gAppInfo = null;
 
-function createAppInfo(ID="xpcshell@tests.mozilla.org", name="XPCShell",
-                       version="1.0", platformVersion="1.0") {
+function createAppInfo(ID = "xpcshell@tests.mozilla.org", name = "XPCShell",
+                       version = "1.0", platformVersion = "1.0") {
   AddonTestUtils.createAppInfo(ID, name, version, platformVersion);
   gAppInfo = AddonTestUtils.appInfo;
 }

@@ -22,7 +22,7 @@ this.BrowserUtils = {
   /**
    * Prints arguments separated by a space and appends a new line.
    */
-  dumpLn: function (...args) {
+  dumpLn: function(...args) {
     for (let a of args)
       dump(a + " ");
     dump("\n");
@@ -231,7 +231,7 @@ this.BrowserUtils = {
    * @param aName The full-length name string of the plugin.
    * @return the simplified name string.
    */
-  makeNicePluginName: function (aName) {
+  makeNicePluginName: function(aName) {
     if (aName == "Shockwave Flash")
       return "Adobe Flash";
     // Regex checks if aName begins with "Java" + non-letter char
@@ -256,7 +256,7 @@ this.BrowserUtils = {
    * @param linkNode The <a> element, or null.
    * @return a boolean indicating if linkNode has a rel="noreferrer" attribute.
    */
-  linkHasNoReferrer: function (linkNode) {
+  linkHasNoReferrer: function(linkNode) {
     // A null linkNode typically means that we're checking a link that wasn't
     // provided via an <a> link, like a text-selected URL.  Don't leak
     // referrer information in this case.

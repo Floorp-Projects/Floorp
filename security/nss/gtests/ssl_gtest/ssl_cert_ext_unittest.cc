@@ -23,8 +23,8 @@ namespace nss_test {
 // by the relevant callbacks on the client.
 class SignedCertificateTimestampsExtractor {
  public:
-  SignedCertificateTimestampsExtractor(TlsAgent* client) {
-    client->SetAuthCertificateCallback(
+  SignedCertificateTimestampsExtractor(TlsAgent* client) : client_(client) {
+    client_->SetAuthCertificateCallback(
         [&](TlsAgent* agent, bool checksig, bool isServer) -> SECStatus {
           const SECItem* scts = SSL_PeerSignedCertTimestamps(agent->ssl_fd());
           EXPECT_TRUE(scts);
@@ -34,7 +34,7 @@ class SignedCertificateTimestampsExtractor {
           auth_timestamps_.reset(new DataBuffer(scts->data, scts->len));
           return SECSuccess;
         });
-    client->SetHandshakeCallback([&](TlsAgent* agent) {
+    client_->SetHandshakeCallback([&](TlsAgent* agent) {
       const SECItem* scts = SSL_PeerSignedCertTimestamps(agent->ssl_fd());
       ASSERT_TRUE(scts);
       handshake_timestamps_.reset(new DataBuffer(scts->data, scts->len));
@@ -47,9 +47,13 @@ class SignedCertificateTimestampsExtractor {
 
     EXPECT_TRUE(handshake_timestamps_);
     EXPECT_EQ(timestamps, *handshake_timestamps_);
+
+    const SECItem* current = SSL_PeerSignedCertTimestamps(client_->ssl_fd());
+    EXPECT_EQ(timestamps, DataBuffer(current->data, current->len));
   }
 
  private:
+  TlsAgent* client_;
   std::unique_ptr<DataBuffer> auth_timestamps_;
   std::unique_ptr<DataBuffer> handshake_timestamps_;
 };
@@ -60,7 +64,7 @@ static const SECItem kSctItem = {siBuffer, const_cast<uint8_t*>(kSctValue),
 static const DataBuffer kSctBuffer(kSctValue, sizeof(kSctValue));
 
 // Test timestamps extraction during a successful handshake.
-TEST_P(TlsConnectGenericPre13, SignedCertificateTimestampsHandshake) {
+TEST_P(TlsConnectGeneric, SignedCertificateTimestampsHandshake) {
   EnsureTlsSetup();
   EXPECT_EQ(SECSuccess, SSL_SetSignedCertTimestamps(server_->ssl_fd(),
                                                     &kSctItem, ssl_kea_rsa));
@@ -72,11 +76,9 @@ TEST_P(TlsConnectGenericPre13, SignedCertificateTimestampsHandshake) {
   Connect();
 
   timestamps_extractor.assertTimestamps(kSctBuffer);
-  const SECItem* c_timestamps = SSL_PeerSignedCertTimestamps(client_->ssl_fd());
-  EXPECT_EQ(SECEqual, SECITEM_CompareItem(&kSctItem, c_timestamps));
 }
 
-TEST_P(TlsConnectGenericPre13, SignedCertificateTimestampsConfig) {
+TEST_P(TlsConnectGeneric, SignedCertificateTimestampsConfig) {
   static const SSLExtraServerCertData kExtraData = {ssl_auth_rsa_sign, nullptr,
                                                     nullptr, &kSctItem};
 
@@ -91,13 +93,11 @@ TEST_P(TlsConnectGenericPre13, SignedCertificateTimestampsConfig) {
   Connect();
 
   timestamps_extractor.assertTimestamps(kSctBuffer);
-  const SECItem* c_timestamps = SSL_PeerSignedCertTimestamps(client_->ssl_fd());
-  EXPECT_EQ(SECEqual, SECITEM_CompareItem(&kSctItem, c_timestamps));
 }
 
 // Test SSL_PeerSignedCertTimestamps returning zero-length SECItem
 // when the client / the server / both have not enabled the feature.
-TEST_P(TlsConnectGenericPre13, SignedCertificateTimestampsInactiveClient) {
+TEST_P(TlsConnectGeneric, SignedCertificateTimestampsInactiveClient) {
   EnsureTlsSetup();
   EXPECT_EQ(SECSuccess, SSL_SetSignedCertTimestamps(server_->ssl_fd(),
                                                     &kSctItem, ssl_kea_rsa));
@@ -107,7 +107,7 @@ TEST_P(TlsConnectGenericPre13, SignedCertificateTimestampsInactiveClient) {
   timestamps_extractor.assertTimestamps(DataBuffer());
 }
 
-TEST_P(TlsConnectGenericPre13, SignedCertificateTimestampsInactiveServer) {
+TEST_P(TlsConnectGeneric, SignedCertificateTimestampsInactiveServer) {
   EnsureTlsSetup();
   EXPECT_EQ(SECSuccess,
             SSL_OptionSet(client_->ssl_fd(), SSL_ENABLE_SIGNED_CERT_TIMESTAMPS,
@@ -118,7 +118,7 @@ TEST_P(TlsConnectGenericPre13, SignedCertificateTimestampsInactiveServer) {
   timestamps_extractor.assertTimestamps(DataBuffer());
 }
 
-TEST_P(TlsConnectGenericPre13, SignedCertificateTimestampsInactiveBoth) {
+TEST_P(TlsConnectGeneric, SignedCertificateTimestampsInactiveBoth) {
   EnsureTlsSetup();
   SignedCertificateTimestampsExtractor timestamps_extractor(client_);
 

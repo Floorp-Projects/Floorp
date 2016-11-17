@@ -53,7 +53,7 @@ add_task(function* test_notifications_onDeleteURI() {
   setMaxPages(0);
 
   for (let testIndex = 1; testIndex <= tests.length; testIndex++) {
-    let currentTest = tests[testIndex -1];
+    let currentTest = tests[testIndex - 1];
     print("\nTEST " + testIndex + ": " + currentTest.desc);
     currentTest.receivedNotifications = 0;
 

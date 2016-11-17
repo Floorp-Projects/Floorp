@@ -53,7 +53,7 @@ this.checkRenamed = function checkRenamed(aOptions, aOldName, aNewName) {
 
   if (checkDeprecated(aOptions, aOldName)) {
     aOptions[aNewName] = aOptions[aOldName];
-    delete(aOptions[aOldName]);
+    delete aOptions[aOldName];
   }
 };
 
