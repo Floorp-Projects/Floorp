@@ -399,7 +399,7 @@ public:
   }
 
 private:
-  ~InitUDPSocketParentCallback() {};
+  ~InitUDPSocketParentCallback() = default;
 
   RefPtr<UDPSocketParent> mActor;
   nsCString mFilter;

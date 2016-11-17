@@ -87,7 +87,7 @@ struct MemoryPorts {
   MachPortSender* mSender;
   ReceivePort* mReceiver;
 
-  MemoryPorts() {}
+  MemoryPorts() = default;
   MemoryPorts(MachPortSender* sender, ReceivePort* receiver)
    : mSender(sender), mReceiver(receiver) {}
 };
@@ -123,7 +123,7 @@ struct ListeningThread {
   pthread_t mThread;
   MemoryPorts* mPorts;
 
-  ListeningThread() {}
+  ListeningThread() = default;
   ListeningThread(pthread_t thread, MemoryPorts* ports)
    : mThread(thread), mPorts(ports) {}
 };
