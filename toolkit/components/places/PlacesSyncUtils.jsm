@@ -290,28 +290,35 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   }),
 
   /**
-   * Changes the GUID of an existing item. This method only allows Places GUIDs
-   * because root sync IDs cannot be changed.
+   * De-dupes an item by changing its sync ID to match the ID on the server.
+   * Sync calls this method when it detects an incoming item is a duplicate of
+   * an existing local item.
    *
-   * @return {Promise} resolved once the GUID has been changed.
-   * @resolves to the new GUID.
-   * @rejects if the old GUID does not exist.
+   * Note that this method doesn't move the item if the local and remote sync
+   * IDs are different. That happens after de-duping, when the bookmarks engine
+   * calls `update` to update the item.
+   *
+   * @param localSyncId
+   *        The local ID to change.
+   * @param remoteSyncId
+   *        The remote ID that should replace the local ID.
+   * @param remoteParentSyncId
+   *        The remote record's parent ID.
+   * @return {Promise} resolved once the ID has been changed.
+   * @resolves to an object containing new change records for the old item,
+   *           the local parent, and the remote parent if different from the
+   *           local parent. The bookmarks engine merges these records into the
+   *           changeset for the current sync.
    */
-  changeGuid: Task.async(function* (oldGuid, newGuid) {
-    PlacesUtils.BOOKMARK_VALIDATORS.guid(oldGuid);
-    PlacesUtils.BOOKMARK_VALIDATORS.guid(newGuid);
+  dedupe: Task.async(function* (localSyncId, remoteSyncId, remoteParentSyncId) {
+    PlacesUtils.SYNC_BOOKMARK_VALIDATORS.syncId(localSyncId);
+    PlacesUtils.SYNC_BOOKMARK_VALIDATORS.syncId(remoteSyncId);
+    PlacesUtils.SYNC_BOOKMARK_VALIDATORS.syncId(remoteParentSyncId);
 
-    let itemId = yield PlacesUtils.promiseItemId(oldGuid);
-    if (PlacesUtils.isRootItem(itemId)) {
-      throw new Error(`Cannot change GUID of Places root ${oldGuid}`);
-    }
-    return PlacesUtils.withConnectionWrapper("BookmarkSyncUtils: changeGuid",
-      Task.async(function* (db) {
-        yield db.executeCached(`UPDATE moz_bookmarks SET guid = :newGuid
-          WHERE id = :itemId`, { newGuid, itemId });
-        PlacesUtils.invalidateCachedGuidFor(itemId);
-        return newGuid;
-      })
+    return PlacesUtils.withConnectionWrapper("BookmarkSyncUtils: dedupe", db =>
+      dedupeSyncBookmark(db, BookmarkSyncUtils.syncIdToGuid(localSyncId),
+                         BookmarkSyncUtils.syncIdToGuid(remoteSyncId),
+                         BookmarkSyncUtils.syncIdToGuid(remoteParentSyncId))
     );
   }),
 
@@ -1381,6 +1388,93 @@ var pullSyncChanges = Task.async(function* (db) {
     row => addRowToChangeRecords(row, changeRecords));
 
   yield markChangesAsSyncing(db, changeRecords);
+
+  return changeRecords;
+});
+
+var dedupeSyncBookmark = Task.async(function* (db, localGuid, remoteGuid,
+                                               remoteParentGuid) {
+  let rows = yield db.executeCached(`
+    SELECT b.id, p.guid AS parentGuid, b.syncStatus
+    FROM moz_bookmarks b
+    JOIN moz_bookmarks p ON p.id = b.parent
+    WHERE b.guid = :localGuid`,
+    { localGuid });
+  if (!rows.length) {
+    throw new Error(`Local item ${localGuid} does not exist`);
+  }
+
+  let localId = rows[0].getResultByName("id");
+  if (PlacesUtils.isRootItem(localId)) {
+    throw new Error(`Cannot de-dupe local root ${localGuid}`);
+  }
+
+  let localParentGuid = rows[0].getResultByName("parentGuid");
+  let sameParent = localParentGuid == remoteParentGuid;
+  let modified = PlacesUtils.toPRTime(Date.now());
+
+  yield db.executeTransaction(function* () {
+    // Change the item's old GUID to the new remote GUID. This will throw a
+    // constraint error if the remote GUID already exists locally.
+    BookmarkSyncLog.debug("dedupeSyncBookmark: Switching local GUID " +
+                          localGuid + " to incoming GUID " + remoteGuid);
+    yield db.executeCached(`UPDATE moz_bookmarks
+      SET guid = :remoteGuid
+      WHERE id = :localId`,
+      { remoteGuid, localId });
+    PlacesUtils.invalidateCachedGuidFor(localId);
+
+    // And mark the parent as being modified. Given we de-dupe based on the
+    // parent *name* it's possible the item having its GUID changed has a
+    // different parent from the incoming record.
+    // So we need to return a change record for the parent, and bump its
+    // counter to ensure we don't lose the change if the current sync is
+    // interrupted.
+    yield db.executeCached(`UPDATE moz_bookmarks
+      SET syncChangeCounter = syncChangeCounter + 1
+      WHERE guid = :localParentGuid`,
+      { localParentGuid });
+
+    // And we also add the parent as reflected in the incoming record as the
+    // de-dupe process might have used an existing item in a different folder.
+    // This statement is a no-op if we don't have the new parent yet, but that's
+    // fine: applying the record will add our special SYNC_PARENT_ANNO
+    // annotation and move it to unfiled. If the parent arrives in the future
+    // (either this Sync or a later one), the item will be reparented. Note that
+    // this scenario will still leave us with inconsistent client and server
+    // states; the incoming record on the server references a parent that isn't
+    // the actual parent locally - see bug 1297955.
+    if (!sameParent) {
+      yield db.executeCached(`UPDATE moz_bookmarks
+        SET syncChangeCounter = syncChangeCounter + 1
+        WHERE guid = :remoteParentGuid`,
+        { remoteParentGuid });
+    }
+
+    // The local, duplicate ID is always deleted on the server - but for
+    // bookmarks it is a logical delete.
+    let localSyncStatus = rows[0].getResultByName("syncStatus");
+    if (localSyncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL) {
+      yield db.executeCached(`
+        INSERT INTO moz_bookmarks_deleted (guid, dateRemoved)
+        VALUES (:localGuid, :modified)`,
+        { localGuid, modified });
+    }
+  });
+
+  // TODO (Bug 1313890): Refactor the bookmarks engine to pull change records
+  // before uploading, instead of returning records to merge into the engine's
+  // initial changeset.
+  let changeRecords = yield pullSyncChanges(db);
+
+  if (BookmarkSyncLog.level <= Log.Level.Debug && !sameParent) {
+    let remoteParentSyncId = BookmarkSyncUtils.guidToSyncId(remoteParentGuid);
+    if (!changeRecords.hasOwnProperty(remoteParentSyncId)) {
+      BookmarkSyncLog.debug("dedupeSyncBookmark: Incoming duplicate item " +
+                            remoteGuid + " specifies non-existing parent " +
+                            remoteParentGuid);
+    }
+  }
 
   return changeRecords;
 });
