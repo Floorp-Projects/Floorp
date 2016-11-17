@@ -22,16 +22,6 @@ var gUrl = SimpleTest.getTestFileURL("permission_handler_chrome.js");
 var gScript = SpecialPowers.loadChromeScript(gUrl);
 var gResult = [
   {
-    "video-capture": ["back"],
-  },
-  {
-    "audio-capture": [""],
-    "video-capture": ["back"],
-  },
-  {
-    "audio-capture": [""],
-  },
-  {
     "geolocation": [],
   },
   {
@@ -86,10 +76,6 @@ gScript.addMessageListener("permission-request", function (detail) {
 // should prompt for permission, not allow it without prompt.
 SpecialPowers.pushPrefEnv({"set": [["media.navigator.permission.disabled", false]]},
   function() {
-    SpecialPowers.addPermission('video-capture',
-      SpecialPowers.Ci.nsIPermissionManager.ALLOW_ACTION, document);
-    SpecialPowers.addPermission('audio-capture',
-      SpecialPowers.Ci.nsIPermissionManager.ALLOW_ACTION, document);
     SpecialPowers.addPermission('geolocation',
       SpecialPowers.Ci.nsIPermissionManager.ALLOW_ACTION, document);
     SpecialPowers.addPermission('desktop-notification',
