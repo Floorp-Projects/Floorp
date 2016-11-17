@@ -45,16 +45,6 @@ function shuffle(array) {
   return results;
 }
 
-function compareAscending(a, b) {
-  if (a > b) {
-    return 1;
-  }
-  if (a < b) {
-    return -1;
-  }
-  return 0;
-}
-
 function assertTagForURLs(tag, urls, message) {
   let taggedURLs = PlacesUtils.tagging.getURIsForTag(tag).map(uri => uri.spec);
   deepEqual(taggedURLs.sort(compareAscending), urls.sort(compareAscending), message);
@@ -1162,16 +1152,6 @@ add_task(function* test_unsynced_orphans() {
     syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN,
   });
 
-  do_print("Reorder unsynced orphans");
-  {
-    yield PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
-      [unknownBmk.syncId, newBmk.syncId]);
-    let orphanGuids = yield fetchGuidsWithAnno(SYNC_PARENT_ANNO,
-      nonexistentSyncId);
-    deepEqual(orphanGuids.sort(), [newBmk.syncId, unknownBmk.syncId].sort(),
-      "Should not remove orphan annos from reordered unsynced bookmarks");
-  }
-
   do_print("Move unsynced orphan");
   {
     let unknownId = yield syncIdToId(unknownBmk.syncId);
@@ -1179,8 +1159,18 @@ add_task(function* test_unsynced_orphans() {
       PlacesUtils.bookmarks.DEFAULT_INDEX);
     let orphanGuids = yield fetchGuidsWithAnno(SYNC_PARENT_ANNO,
       nonexistentSyncId);
-    deepEqual(orphanGuids.sort(), [newBmk.syncId, unknownBmk.syncId].sort(),
-      "Should not remove orphan annos from moved unsynced bookmarks");
+    deepEqual(orphanGuids.sort(), [newBmk.syncId].sort(),
+      "Should remove orphan annos from moved unsynced bookmark");
+  }
+
+  do_print("Reorder unsynced orphans");
+  {
+    yield PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
+      [newBmk.syncId]);
+    let orphanGuids = yield fetchGuidsWithAnno(SYNC_PARENT_ANNO,
+      nonexistentSyncId);
+    deepEqual(orphanGuids, [],
+      "Should remove orphan annos from reordered unsynced bookmarks");
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();

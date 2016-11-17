@@ -867,3 +867,17 @@ function* foreign_count(url) {
     `, { url });
   return rows.length == 0 ? 0 : rows[0].getResultByName("foreign_count");
 }
+
+function compareAscending(a, b) {
+  if (a > b) {
+    return 1;
+  }
+  if (a < b) {
+    return -1;
+  }
+  return 0;
+}
+
+function sortBy(array, prop) {
+  return array.sort((a, b) => compareAscending(a[prop], b[prop]));
+}
