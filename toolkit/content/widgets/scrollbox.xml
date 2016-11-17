@@ -21,6 +21,15 @@
         <children/>
       </xul:box>
     </content>
+
+    <implementation>
+      <method name="scrollByIndex">
+        <parameter name="index"/>
+        <body>
+          this.boxObject.scrollByIndex(index);
+        </body>
+      </method>
+    </implementation>
   </binding>
 
   <binding id="arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
