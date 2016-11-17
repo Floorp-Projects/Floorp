@@ -126,7 +126,7 @@ test_UTFStrings()
 
   // Roundtrip a UTF8 string through the table, using UTF8 input and output.
   static const char sCharArray[] =
-    "I'm a \xc3\xbb\xc3\xbc\xc3\xa2\xc3\xa4\xc3\xa7 UTF8 string!";
+    R"(I'm a ûüâäç UTF8 string!)";
   nsAutoCString insertedUTF8(sCharArray, ArrayLength(sCharArray) - 1);
   do_check_true(insertedUTF8.Length() == ArrayLength(sCharArray) - 1);
   NS_ConvertUTF8toUTF16 insertedUTF16(insertedUTF8);
