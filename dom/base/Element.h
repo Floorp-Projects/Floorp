@@ -1870,12 +1870,5 @@ NS_IMETHOD GetScrollTopMax(int32_t* aScrollTopMax) final override             \
 {                                                                             \
   *aScrollTopMax = Element::ScrollTopMax();                                   \
   return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD MozMatchesSelector(const nsAString& selector,                      \
-                              bool* _retval) final override                   \
-{                                                                             \
-  mozilla::ErrorResult rv;                                                    \
-  *_retval = Element::Matches(selector, rv);                                  \
-  return rv.StealNSResult();                                                  \
 }
 #endif // mozilla_dom_Element_h__
