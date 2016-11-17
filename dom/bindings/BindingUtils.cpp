@@ -19,10 +19,12 @@
 
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
+#include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
+#include "nsIParserService.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIXPConnect.h"
@@ -37,6 +39,7 @@
 #include "nsGlobalWindow.h"
 
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/DOMErrorBinding.h"
 #include "mozilla/dom/DOMException.h"
@@ -44,6 +47,7 @@
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/HTMLSharedObjectElement.h"
+#include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/HTMLEmbedElementBinding.h"
 #include "mozilla/dom/HTMLAppletElementBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -61,6 +65,30 @@ namespace mozilla {
 namespace dom {
 
 using namespace workers;
+
+// Forward declare GetConstructorObject methods.
+#define HTML_TAG(_tag, _classname, _interfacename)                             \
+namespace HTML##_interfacename##ElementBinding {                               \
+  JSObject* GetConstructorObject(JSContext*);                                  \
+}
+#define HTML_OTHER(_tag)
+#include "nsHTMLTagList.h"
+#undef HTML_TAG
+#undef HTML_OTHER
+
+typedef JSObject* (*constructorGetterCallback)(JSContext*);
+
+// Mapping of html tag and GetConstructorObject methods.
+#define HTML_TAG(_tag, _classname, _interfacename) HTML##_interfacename##ElementBinding::GetConstructorObject,
+#define HTML_OTHER(_tag) nullptr,
+// We use eHTMLTag_foo (where foo is the tag) which is defined in nsHTMLTags.h
+// to index into this array.
+static const constructorGetterCallback sConstructorGetterCallback[] = {
+  HTMLUnknownElementBinding::GetConstructorObject,
+#include "nsHTMLTagList.h"
+#undef HTML_TAG
+#undef HTML_OTHER
+};
 
 const JSErrorFormatString ErrorFormatString[] = {
 #define MSG_DEF(_name, _argc, _exn, _str) \
@@ -3363,6 +3391,131 @@ GetDesiredProto(JSContext* aCx, const JS::CallArgs& aCallArgs,
 
   aDesiredProto.set(&protoVal.toObject());
   return true;
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#htmlconstructor
+already_AddRefed<nsGenericHTMLElement>
+CreateHTMLElement(const GlobalObject& aGlobal, const JS::CallArgs& aCallArgs,
+                  ErrorResult& aRv)
+{
+  // Step 1.
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!window) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsIDocument* doc = window->GetExtantDoc();
+  if (!doc) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  RefPtr<mozilla::dom::CustomElementRegistry> registry(window->CustomElements());
+  if (!registry) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  // Step 2 is in the code output by CGClassConstructor.
+  // Step 3.
+  JSContext* cx = aGlobal.Context();
+  JS::Rooted<JSObject*> newTarget(cx, &aCallArgs.newTarget().toObject());
+  CustomElementDefinition* definition =
+    registry->LookupCustomElementDefinition(cx, newTarget);
+  if (!definition) {
+    aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
+    return nullptr;
+  }
+
+  // The callee might be an Xray. Unwrap it to get actual callee.
+  JS::Rooted<JSObject*> callee(cx, js::CheckedUnwrap(&aCallArgs.callee()));
+  if (!callee) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  // And the actual callee might be in different compartment, so enter its
+  // compartment before getting the standard constructor object to compare to,
+  // so we get it from the same global as callee itself.
+  JSAutoCompartment ac(cx, callee);
+  int32_t tag = eHTMLTag_userdefined;
+  if (!definition->IsCustomBuiltIn()) {
+    // Step 4.
+    // If the definition is for an autonomous custom element, the active
+    // function should be HTMLElement.
+    JS::Rooted<JSObject*> constructor(cx, HTMLElementBinding::GetConstructorObject(cx));
+    if (!constructor) {
+      aRv.NoteJSContextException(cx);
+      return nullptr;
+    }
+
+    if (callee != constructor) {
+      aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
+      return nullptr;
+    }
+  } else {
+    // Step 5.
+    // If the definition is for a customized built-in element, the localName
+    // should be defined in the specification.
+    nsIParserService* parserService = nsContentUtils::GetParserService();
+    if (!parserService) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    tag = parserService->HTMLCaseSensitiveAtomTagToId(definition->mLocalName);
+    if (tag == eHTMLTag_userdefined) {
+      aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
+      return nullptr;
+    }
+
+    MOZ_ASSERT(tag <= NS_HTML_TAG_MAX, "tag is out of bounds");
+
+    // If the definition is for a customized built-in element, the active
+    // function should be the localname's element interface.
+    constructorGetterCallback cb = sConstructorGetterCallback[tag];
+    if (!cb) {
+      aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
+      return nullptr;
+    }
+
+    JS::Rooted<JSObject*> constructor(cx, cb(cx));
+    if (!constructor) {
+      aRv.NoteJSContextException(cx);
+      return nullptr;
+    }
+
+    if (callee != constructor) {
+      aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
+      return nullptr;
+    }
+  }
+
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo =
+    doc->NodeInfoManager()->GetNodeInfo(definition->mLocalName,
+                                        nullptr,
+                                        kNameSpaceID_XHTML,
+                                        nsIDOMNode::ELEMENT_NODE);
+  if (!nodeInfo) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  // Step 6 and Step 7 are in the code output by CGClassConstructor.
+  // Step 8.
+  // Construction stack will be implemented in bug 1287348. So we always run
+  // "construction stack is empty" case for now.
+  RefPtr<nsGenericHTMLElement> element;
+  if (tag == eHTMLTag_userdefined) {
+    // Autonomous custom element.
+    element = NS_NewHTMLElement(nodeInfo.forget());
+  } else {
+    // Customized built-in element.
+    element = CreateHTMLElement(tag, nodeInfo.forget(), NOT_FROM_PARSER);
+  }
+
+  return element.forget();
 }
 
 #ifdef DEBUG

@@ -42,6 +42,7 @@
 
 #include "nsWrapperCacheInlines.h"
 
+class nsGenericHTMLElement;
 class nsIJSID;
 
 namespace mozilla {
@@ -3179,6 +3180,13 @@ bool GetSetlikeBackingObject(JSContext* aCx, JS::Handle<JSObject*> aObj,
 bool
 GetDesiredProto(JSContext* aCx, const JS::CallArgs& aCallArgs,
                 JS::MutableHandle<JSObject*> aDesiredProto);
+
+// This function is expected to be called from the constructor function for an
+// HTML element interface; the global/callargs need to be whatever was passed to
+// that constructor function.
+already_AddRefed<nsGenericHTMLElement>
+CreateHTMLElement(const GlobalObject& aGlobal, const JS::CallArgs& aCallArgs,
+                  ErrorResult& aRv);
 
 void
 SetDocumentAndPageUseCounter(JSContext* aCx, JSObject* aObject,
