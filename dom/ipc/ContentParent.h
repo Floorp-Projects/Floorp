@@ -87,6 +87,9 @@ class GetFilesHelper;
 
 // This must match the one in E10SUtils.jsm.
 static NS_NAMED_LITERAL_STRING(DEFAULT_REMOTE_TYPE, "web");
+// This must start with the DEFAULT_REMOTE_TYPE above.
+static NS_NAMED_LITERAL_STRING(LARGE_ALLOCATION_REMOTE_TYPE,
+                               "webLargeAllocation");
 static NS_NAMED_LITERAL_STRING(NO_REMOTE_TYPE, "");
 
 class ContentParent final : public PContentParent
@@ -554,8 +557,7 @@ protected:
   void OnCompositorUnexpectedShutdown() override;
 
 private:
-  static nsTArray<ContentParent*>* sBrowserContentParents;
-  static nsTArray<ContentParent*>* sLargeAllocationContentParents;
+  static nsClassHashtable<nsStringHashKey, nsTArray<ContentParent*>>* sBrowserContentParents;
   static nsTArray<ContentParent*>* sPrivateContent;
   static StaticAutoPtr<LinkedList<ContentParent> > sContentParents;
 
@@ -1152,7 +1154,6 @@ private:
   nsRefPtrHashtable<nsIDHashKey, GetFilesHelper> mGetFilesPendingRequests;
 
   nsTArray<nsCString> mBlobURLs;
-  bool mLargeAllocationProcess;
 };
 
 } // namespace dom
