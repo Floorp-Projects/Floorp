@@ -953,17 +953,18 @@ AddShapeFunction(nsCSSPropertyID aProperty,
                  double aCoeff2, const nsCSSValue::Array* aArray2,
                  Restrictions aRestriction = Restrictions::Enable);
 
-static double
+static bool
 ComputeShapeDistance(nsCSSPropertyID aProperty,
                      const nsCSSValue::Array* aArray1,
-                     const nsCSSValue::Array* aArray2)
+                     const nsCSSValue::Array* aArray2,
+                     double& aDistance)
 {
   // Use AddShapeFunction to get the difference between two shape functions.
   RefPtr<nsCSSValue::Array> diffShape =
     AddShapeFunction(aProperty, 1.0, aArray2, -1.0, aArray1,
                      Restrictions::Disable);
   if (!diffShape) {
-    return 0.0;
+    return false;
   }
 
   // A helper function to convert a calc() diff value into a double distance.
@@ -1025,7 +1026,8 @@ ComputeShapeDistance(nsCSSPropertyID aProperty,
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown shape type");
   }
-  return sqrt(squareDistance);
+  aDistance = sqrt(squareDistance);
+  return true;
 }
 
 static nsCSSValueList*
@@ -1685,10 +1687,10 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
       return true;
     }
     case eUnit_Shape:
-      aDistance = ComputeShapeDistance(aProperty,
-                                       aStartValue.GetCSSValueArrayValue(),
-                                       aEndValue.GetCSSValueArrayValue());
-      return true;
+      return ComputeShapeDistance(aProperty,
+                                  aStartValue.GetCSSValueArrayValue(),
+                                  aEndValue.GetCSSValueArrayValue(),
+                                  aDistance);
 
     case eUnit_Filter:
       return ComputeFilterListDistance(aStartValue.GetCSSValueListValue(),
