@@ -7,8 +7,8 @@ import logging
 import os
 import yaml
 
+from . import filter_tasks
 from .graph import Graph
-from .target_tasks import get_method
 from .taskgraph import TaskGraph
 from .optimize import optimize_task_graph
 from .util.python_path import find_object
@@ -61,8 +61,13 @@ class TaskGraphGenerator(object):
         self.root_dir = root_dir
         self.parameters = parameters
 
-        target_tasks_method = parameters.get('target_tasks_method', 'all_tasks')
-        self.target_tasks_method = get_method(target_tasks_method)
+        filters = parameters.get('filters', [])
+
+        # Always add legacy target tasks method until we deprecate that API.
+        if 'target_tasks_method' not in filters:
+            filters.insert(0, 'target_tasks_method')
+
+        self.filters = [filter_tasks.filter_task_functions[f] for f in filters]
 
         # this can be set up until the time the target task set is generated;
         # it defaults to parameters['target_tasks']
@@ -180,13 +185,24 @@ class TaskGraphGenerator(object):
 
         full_task_graph = TaskGraph(all_tasks,
                                     Graph(full_task_set.graph.nodes, edges))
+        logger.info("Full task graph contains %d tasks and %d dependencies" % (
+            len(full_task_set.graph.nodes), len(edges)))
         yield 'full_task_graph', full_task_graph
 
         logger.info("Generating target task set")
-        target_tasks = set(self.target_tasks_method(full_task_graph, self.parameters))
-        target_task_set = TaskGraph(
-            {l: all_tasks[l] for l in target_tasks},
-            Graph(target_tasks, set()))
+        target_task_set = TaskGraph(dict(all_tasks),
+                                    Graph(set(all_tasks.keys()), set()))
+        for fltr in self.filters:
+            old_len = len(target_task_set.graph.nodes)
+            target_tasks = set(fltr(target_task_set, self.parameters))
+            target_task_set = TaskGraph(
+                {l: all_tasks[l] for l in target_tasks},
+                Graph(target_tasks, set()))
+            logger.info('Filter %s pruned %d tasks (%d remain)' % (
+                fltr.__name__,
+                old_len - len(target_tasks),
+                len(target_tasks)))
+
         yield 'target_task_set', target_task_set
 
         logger.info("Generating target task graph")
