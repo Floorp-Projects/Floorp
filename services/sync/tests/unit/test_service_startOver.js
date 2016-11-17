@@ -28,8 +28,8 @@ function run_test() {
   run_next_test();
 }
 
-add_identity_test(this, async function test_resetLocalData() {
-  await configureIdentity();
+add_identity_test(this, function* test_resetLocalData() {
+  yield configureIdentity();
   Service.status.enforceBackoff = true;
   Service.status.backoffInterval = 42;
   Service.status.minimumNextSync = 23;

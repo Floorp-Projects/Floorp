@@ -11,7 +11,6 @@ Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
 var fakeServer = new SyncServer();
 fakeServer.start();
@@ -65,16 +64,16 @@ function clean() {
   errorHandler.didReportProlongedError = false;
 }
 
-add_identity_test(this, async function test_401_logout() {
+add_identity_test(this, function* test_401_logout() {
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
 
   // By calling sync, we ensure we're logged in.
-  await sync_and_validate_telem();
+  yield sync_and_validate_telem();
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
   do_check_true(Service.isLoggedIn);
 
-  let deferred = PromiseUtils.defer();
+  let deferred = Promise.defer();
   Svc.Obs.add("weave:service:sync:error", onSyncError);
   function onSyncError() {
     _("Got weave:service:sync:error in first sync.");
@@ -101,28 +100,28 @@ add_identity_test(this, async function test_401_logout() {
   }
 
   // Make sync fail due to login rejected.
-  await configureIdentity({username: "janedoe"});
+  yield configureIdentity({username: "janedoe"});
   Service._updateCachedURLs();
 
   _("Starting first sync.");
-  let ping = await sync_and_validate_telem(true);
+  let ping = yield sync_and_validate_telem(true);
   deepEqual(ping.failureReason, { name: "httperror", code: 401 });
   _("First sync done.");
-  await deferred.promise;
+  yield deferred.promise;
 });
 
-add_identity_test(this, async function test_credentials_changed_logout() {
+add_identity_test(this, function* test_credentials_changed_logout() {
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
 
   // By calling sync, we ensure we're logged in.
-  await sync_and_validate_telem();
+  yield sync_and_validate_telem();
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
   do_check_true(Service.isLoggedIn);
 
   EHTestsCommon.generateCredentialsChangedFailure();
 
-  let ping = await sync_and_validate_telem(true);
+  let ping = yield sync_and_validate_telem(true);
   equal(ping.status.sync, CREDENTIALS_CHANGED);
   deepEqual(ping.failureReason, {
     name: "unexpectederror",
@@ -134,7 +133,9 @@ add_identity_test(this, async function test_credentials_changed_logout() {
 
   // Clean up.
   Service.startOver();
-  await promiseStopServer(server);
+  let deferred = Promise.defer();
+  server.stop(deferred.resolve);
+  yield deferred.promise;
 });
 
 add_identity_test(this, function test_no_lastSync_pref() {
@@ -365,10 +366,10 @@ add_identity_test(this, function test_shouldReportError() {
   do_check_false(errorHandler.didReportProlongedError);
 });
 
-add_identity_test(this, async function test_shouldReportError_master_password() {
+add_identity_test(this, function* test_shouldReportError_master_password() {
   _("Test error ignored due to locked master password");
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
 
   // Monkey patch Service.verifyLogin to imitate
   // master password being locked.
@@ -385,7 +386,9 @@ add_identity_test(this, async function test_shouldReportError_master_password() 
   // Clean up.
   Service.verifyLogin = Service._verifyLogin;
   clean();
-  await promiseStopServer(server);
+  let deferred = Promise.defer();
+  server.stop(deferred.resolve);
+  yield deferred.promise;
 });
 
 // Test that even if we don't have a cluster URL, a login failure due to
@@ -408,29 +411,32 @@ add_identity_test(this, function test_shouldReportLoginFailureWithNoCluster() {
 
 // XXX - how to arrange for 'Service.identity.basicPassword = null;' in
 // an fxaccounts environment?
-add_task(async function test_login_syncAndReportErrors_non_network_error() {
+add_task(function* test_login_syncAndReportErrors_non_network_error() {
   // Test non-network errors are reported
   // when calling syncAndReportErrors
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
   Service.identity.basicPassword = null;
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
+
+    clean();
+    server.stop(deferred.resolve);
+  });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   errorHandler.syncAndReportErrors();
-  await promiseObserved;
-  do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
-
-  clean();
-  await promiseStopServer(server);
+  yield deferred.promise;
 });
 
-add_identity_test(this, async function test_sync_syncAndReportErrors_non_network_error() {
+add_identity_test(this, function* test_sync_syncAndReportErrors_non_network_error() {
   // Test non-network errors are reported
   // when calling syncAndReportErrors
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
 
   // By calling sync, we ensure we're logged in.
   Service.sync();
@@ -439,48 +445,55 @@ add_identity_test(this, async function test_sync_syncAndReportErrors_non_network
 
   EHTestsCommon.generateCredentialsChangedFailure();
 
-  let promiseObserved = promiseOneObserver("weave:ui:sync:error");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:sync:error", onSyncError);
+    do_check_eq(Status.sync, CREDENTIALS_CHANGED);
+    // If we clean this tick, telemetry won't get the right error
+    server.stop(() => {
+      clean();
+      deferred.resolve();
+    });
+  });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  let ping = await wait_for_ping(() => errorHandler.syncAndReportErrors(), true);
+  let ping = yield wait_for_ping(() => errorHandler.syncAndReportErrors(), true);
   equal(ping.status.sync, CREDENTIALS_CHANGED);
   deepEqual(ping.failureReason, {
     name: "unexpectederror",
     error: "Error: Aborting sync, remote setup failed"
   });
-  await promiseObserved;
-
-  do_check_eq(Status.sync, CREDENTIALS_CHANGED);
-  // If we clean this tick, telemetry won't get the right error
-  await promiseStopServer(server);
-  clean();
+  yield deferred.promise;
 });
 
 // XXX - how to arrange for 'Service.identity.basicPassword = null;' in
 // an fxaccounts environment?
-add_task(async function test_login_syncAndReportErrors_prolonged_non_network_error() {
+add_task(function* test_login_syncAndReportErrors_prolonged_non_network_error() {
   // Test prolonged, non-network errors are
   // reported when calling syncAndReportErrors.
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
   Service.identity.basicPassword = null;
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
+
+    clean();
+    server.stop(deferred.resolve);
+  });
 
   setLastSync(PROLONGED_ERROR_DURATION);
   errorHandler.syncAndReportErrors();
-  await promiseObserved;
-  do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
-
-  clean();
-  await promiseStopServer(server);
+  yield deferred.promise;
 });
 
-add_identity_test(this, async function test_sync_syncAndReportErrors_prolonged_non_network_error() {
+add_identity_test(this, function* test_sync_syncAndReportErrors_prolonged_non_network_error() {
   // Test prolonged, non-network errors are
   // reported when calling syncAndReportErrors.
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
 
   // By calling sync, we ensure we're logged in.
   Service.sync();
@@ -489,38 +502,45 @@ add_identity_test(this, async function test_sync_syncAndReportErrors_prolonged_n
 
   EHTestsCommon.generateCredentialsChangedFailure();
 
-  let promiseObserved = promiseOneObserver("weave:ui:sync:error");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:sync:error", onSyncError);
+    do_check_eq(Status.sync, CREDENTIALS_CHANGED);
+    // If we clean this tick, telemetry won't get the right error
+    server.stop(() => {
+      clean();
+      deferred.resolve();
+    });
+  });
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  let ping = await wait_for_ping(() => errorHandler.syncAndReportErrors(), true);
+  let ping = yield wait_for_ping(() => errorHandler.syncAndReportErrors(), true);
   equal(ping.status.sync, CREDENTIALS_CHANGED);
   deepEqual(ping.failureReason, {
     name: "unexpectederror",
     error: "Error: Aborting sync, remote setup failed"
   });
-  await promiseObserved;
-
-  do_check_eq(Status.sync, CREDENTIALS_CHANGED);
-  // If we clean this tick, telemetry won't get the right error
-  await promiseStopServer(server);
-  clean();
+  yield deferred.promise;
 });
 
-add_identity_test(this, async function test_login_syncAndReportErrors_network_error() {
+add_identity_test(this, function* test_login_syncAndReportErrors_network_error() {
   // Test network errors are reported when calling syncAndReportErrors.
-  await configureIdentity({username: "broken.wipe"});
+  yield configureIdentity({username: "broken.wipe"});
   Service.serverURL  = fakeServerUrl;
   Service.clusterURL = fakeServerUrl;
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+
+    clean();
+    deferred.resolve();
+  });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   errorHandler.syncAndReportErrors();
-  await promiseObserved;
-
-  do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
-
-  clean();
+  yield deferred.promise;
 });
 
 
@@ -541,22 +561,26 @@ add_test(function test_sync_syncAndReportErrors_network_error() {
   errorHandler.syncAndReportErrors();
 });
 
-add_identity_test(this, async function test_login_syncAndReportErrors_prolonged_network_error() {
+add_identity_test(this, function* test_login_syncAndReportErrors_prolonged_network_error() {
   // Test prolonged, network errors are reported
   // when calling syncAndReportErrors.
-  await configureIdentity({username: "johndoe"});
+  yield configureIdentity({username: "johndoe"});
 
   Service.serverURL  = fakeServerUrl;
   Service.clusterURL = fakeServerUrl;
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+
+    clean();
+    deferred.resolve();
+  });
 
   setLastSync(PROLONGED_ERROR_DURATION);
   errorHandler.syncAndReportErrors();
-  await promiseObserved;
-  do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
-
-  clean();
+  yield deferred.promise;
 });
 
 add_test(function test_sync_syncAndReportErrors_prolonged_network_error() {
@@ -577,28 +601,31 @@ add_test(function test_sync_syncAndReportErrors_prolonged_network_error() {
   errorHandler.syncAndReportErrors();
 });
 
-add_task(async function test_login_prolonged_non_network_error() {
+add_task(function* test_login_prolonged_non_network_error() {
   // Test prolonged, non-network errors are reported
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
   Service.identity.basicPassword = null;
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_true(errorHandler.didReportProlongedError);
+
+    clean();
+    server.stop(deferred.resolve);
+  });
 
   setLastSync(PROLONGED_ERROR_DURATION);
   Service.sync();
-  await promiseObserved;
-  do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
-  do_check_true(errorHandler.didReportProlongedError);
-
-  clean();
-  await promiseStopServer(server);
+  yield deferred.promise;
 });
 
-add_task(async function test_sync_prolonged_non_network_error() {
+add_task(function* test_sync_prolonged_non_network_error() {
   // Test prolonged, non-network errors are reported
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
 
   // By calling sync, we ensure we're logged in.
   Service.sync();
@@ -607,38 +634,47 @@ add_task(async function test_sync_prolonged_non_network_error() {
 
   EHTestsCommon.generateCredentialsChangedFailure();
 
-  let promiseObserved = promiseOneObserver("weave:ui:sync:error");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:sync:error", onSyncError);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_true(errorHandler.didReportProlongedError);
+    server.stop(() => {
+      clean();
+      deferred.resolve();
+    });
+  });
 
   setLastSync(PROLONGED_ERROR_DURATION);
 
-  let ping = await sync_and_validate_telem(true);
+  let ping = yield sync_and_validate_telem(true);
   equal(ping.status.sync, PROLONGED_SYNC_FAILURE);
   deepEqual(ping.failureReason, {
     name: "unexpectederror",
     error: "Error: Aborting sync, remote setup failed"
   });
-  await promiseObserved;
-  do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
-  do_check_true(errorHandler.didReportProlongedError);
-  await promiseStopServer(server);
-  clean();
+  yield deferred.promise;
 });
 
-add_identity_test(this, async function test_login_prolonged_network_error() {
+add_identity_test(this, function* test_login_prolonged_network_error() {
   // Test prolonged, network errors are reported
-  await configureIdentity({username: "johndoe"});
+  yield configureIdentity({username: "johndoe"});
   Service.serverURL  = fakeServerUrl;
   Service.clusterURL = fakeServerUrl;
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
+    do_check_true(errorHandler.didReportProlongedError);
+
+    clean();
+    deferred.resolve();
+  });
 
   setLastSync(PROLONGED_ERROR_DURATION);
   Service.sync();
-  await promiseObserved;
-  do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
-  do_check_true(errorHandler.didReportProlongedError);
-
-  clean();
+  yield deferred.promise;
 });
 
 add_test(function test_sync_prolonged_network_error() {
@@ -659,28 +695,31 @@ add_test(function test_sync_prolonged_network_error() {
   Service.sync();
 });
 
-add_task(async function test_login_non_network_error() {
+add_task(function* test_login_non_network_error() {
   // Test non-network errors are reported
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
   Service.identity.basicPassword = null;
 
-  let promiseObserved = promiseOneObserver("weave:ui:login:error");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:login:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:login:error", onSyncError);
+    do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
+    do_check_false(errorHandler.didReportProlongedError);
+
+    clean();
+    server.stop(deferred.resolve);
+  });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   Service.sync();
-  await promiseObserved;
-  do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
-  do_check_false(errorHandler.didReportProlongedError);
-
-  clean();
-  await promiseStopServer(server);
+  yield deferred.promise;
 });
 
-add_task(async function test_sync_non_network_error() {
+add_task(function* test_sync_non_network_error() {
   // Test non-network errors are reported
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
 
   // By calling sync, we ensure we're logged in.
   Service.sync();
@@ -689,34 +728,42 @@ add_task(async function test_sync_non_network_error() {
 
   EHTestsCommon.generateCredentialsChangedFailure();
 
-  let promiseObserved = promiseOneObserver("weave:ui:sync:error");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:sync:error", function onSyncError() {
+    Svc.Obs.remove("weave:ui:sync:error", onSyncError);
+    do_check_eq(Status.sync, CREDENTIALS_CHANGED);
+    do_check_false(errorHandler.didReportProlongedError);
+
+    clean();
+    server.stop(deferred.resolve);
+  });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   Service.sync();
-  await promiseObserved;
-  do_check_eq(Status.sync, CREDENTIALS_CHANGED);
-  do_check_false(errorHandler.didReportProlongedError);
-
-  clean();
-  await promiseStopServer(server);
+  yield deferred.promise;
 });
 
-add_identity_test(this, async function test_login_network_error() {
-  await configureIdentity({username: "johndoe"});
+add_identity_test(this, function* test_login_network_error() {
+  yield configureIdentity({username: "johndoe"});
   Service.serverURL  = fakeServerUrl;
   Service.clusterURL = fakeServerUrl;
 
-  let promiseObserved = promiseOneObserver("weave:ui:clear-error");
+  let deferred = Promise.defer();
   // Test network errors are not reported.
+  Svc.Obs.add("weave:ui:clear-error", function onClearError() {
+    Svc.Obs.remove("weave:ui:clear-error", onClearError);
+
+    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+    do_check_false(errorHandler.didReportProlongedError);
+
+    Services.io.offline = false;
+    clean();
+    deferred.resolve()
+  });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   Service.sync();
-  await promiseObserved;
-  do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
-  do_check_false(errorHandler.didReportProlongedError);
-
-  Services.io.offline = false;
-  clean();
+  yield deferred.promise;
 });
 
 add_test(function test_sync_network_error() {
@@ -737,10 +784,10 @@ add_test(function test_sync_network_error() {
   Service.sync();
 });
 
-add_identity_test(this, async function test_sync_server_maintenance_error() {
+add_identity_test(this, function* test_sync_server_maintenance_error() {
   // Test server maintenance errors are not reported.
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
 
   const BACKOFF = 42;
   let engine = engineManager.get("catapult");
@@ -755,29 +802,36 @@ add_identity_test(this, async function test_sync_server_maintenance_error() {
 
   do_check_eq(Status.service, STATUS_OK);
 
-  let promiseObserved = promiseOneObserver("weave:ui:sync:finish");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:sync:finish", function onSyncFinish() {
+    Svc.Obs.remove("weave:ui:sync:finish", onSyncFinish);
+
+    do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
+    do_check_eq(Status.sync, SERVER_MAINTENANCE);
+    do_check_false(errorHandler.didReportProlongedError);
+
+    Svc.Obs.remove("weave:ui:sync:error", onSyncError);
+    server.stop(() => {
+      clean();
+      deferred.resolve();
+    })
+  });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  let ping = await sync_and_validate_telem(true);
+  let ping = yield sync_and_validate_telem(true);
   equal(ping.status.sync, SERVER_MAINTENANCE);
   deepEqual(ping.engines.find(e => e.failureReason).failureReason, { name: "httperror", code: 503 })
 
-  await promiseObserved;
-  do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
-  do_check_eq(Status.sync, SERVER_MAINTENANCE);
-  do_check_false(errorHandler.didReportProlongedError);
-
-  await promiseStopServer(server);
-  clean();
+  yield deferred.promise;
 });
 
-add_identity_test(this, async function test_info_collections_login_server_maintenance_error() {
+add_identity_test(this, function* test_info_collections_login_server_maintenance_error() {
   // Test info/collections server maintenance errors are not reported.
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
 
   Service.username = "broken.info";
-  await configureIdentity({username: "broken.info"});
+  yield configureIdentity({username: "broken.info"});
   Service.serverURL = server.baseURI + "/maintenance/";
   Service.clusterURL = server.baseURI + "/maintenance/";
 
@@ -795,29 +849,32 @@ add_identity_test(this, async function test_info_collections_login_server_mainte
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
-  let promiseObserved = promiseOneObserver("weave:ui:clear-error")
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:clear-error", function onLoginFinish() {
+    Svc.Obs.remove("weave:ui:clear-error", onLoginFinish);
+
+    do_check_true(Status.enforceBackoff);
+    do_check_eq(backoffInterval, 42);
+    do_check_eq(Status.service, LOGIN_FAILED);
+    do_check_eq(Status.login, SERVER_MAINTENANCE);
+    do_check_false(errorHandler.didReportProlongedError);
+
+    Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
+    clean();
+    server.stop(deferred.resolve);
+  });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   Service.sync();
-  await promiseObserved;
-
-  do_check_true(Status.enforceBackoff);
-  do_check_eq(backoffInterval, 42);
-  do_check_eq(Status.service, LOGIN_FAILED);
-  do_check_eq(Status.login, SERVER_MAINTENANCE);
-  do_check_false(errorHandler.didReportProlongedError);
-
-  Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
-  clean();
-  await promiseStopServer(server);
+  yield deferred.promise;
 });
 
-add_identity_test(this, async function test_meta_global_login_server_maintenance_error() {
+add_identity_test(this, function* test_meta_global_login_server_maintenance_error() {
   // Test meta/global server maintenance errors are not reported.
   let server = EHTestsCommon.sync_httpd_setup();
-  await EHTestsCommon.setUp(server);
+  yield EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.meta"});
+  yield configureIdentity({username: "broken.meta"});
   Service.serverURL = server.baseURI + "/maintenance/";
   Service.clusterURL = server.baseURI + "/maintenance/";
 
@@ -835,19 +892,22 @@ add_identity_test(this, async function test_meta_global_login_server_maintenance
   do_check_false(Status.enforceBackoff);
   do_check_eq(Status.service, STATUS_OK);
 
-  let promiseObserved = promiseOneObserver("weave:ui:clear-error");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:ui:clear-error", function onLoginFinish() {
+    Svc.Obs.remove("weave:ui:clear-error", onLoginFinish);
+
+    do_check_true(Status.enforceBackoff);
+    do_check_eq(backoffInterval, 42);
+    do_check_eq(Status.service, LOGIN_FAILED);
+    do_check_eq(Status.login, SERVER_MAINTENANCE);
+    do_check_false(errorHandler.didReportProlongedError);
+
+    Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
+    clean();
+    server.stop(deferred.resolve);
+  });
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   Service.sync();
-  await promiseObserved;
-
-  do_check_true(Status.enforceBackoff);
-  do_check_eq(backoffInterval, 42);
-  do_check_eq(Status.service, LOGIN_FAILED);
-  do_check_eq(Status.login, SERVER_MAINTENANCE);
-  do_check_false(errorHandler.didReportProlongedError);
-
-  Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
-  clean();
-  await promiseStopServer(server);
+  yield deferred.promise;
 });

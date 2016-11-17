@@ -3,12 +3,13 @@
 
 _("Making sure after processing incoming bookmarks, they show up in the right order");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-var check = async function(expected, message) {
-  let root = await PlacesUtils.promiseBookmarksTree();
+var check = Task.async(function* (expected, message) {
+  let root = yield PlacesUtils.promiseBookmarksTree();
 
   let bookmarks = (function mapTree(children) {
     return children.map(child => {
@@ -33,15 +34,15 @@ var check = async function(expected, message) {
   _("Checking if the bookmark structure is", JSON.stringify(expected));
   _("Got bookmarks:", JSON.stringify(bookmarks));
   deepEqual(bookmarks, expected);
-};
+});
 
-add_task(async function test_bookmark_order() {
+add_task(function* test_bookmark_order() {
   let store = new BookmarksEngine(Service)._store;
   initTestLogging("Trace");
 
   _("Starting with a clean slate of no bookmarks");
   store.wipe();
-  await check([{
+  yield check([{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -85,7 +86,7 @@ add_task(async function test_bookmark_order() {
   let id10 = "10_aaaaaaaaa";
   _("basic add first bookmark");
   apply(bookmark(id10, ""));
-  await check([{
+  yield check([{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -105,7 +106,7 @@ add_task(async function test_bookmark_order() {
   let id20 = "20_aaaaaaaaa";
   _("basic append behind 10");
   apply(bookmark(id20, ""));
-  await check([{
+  yield check([{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -132,7 +133,7 @@ add_task(async function test_bookmark_order() {
   apply(bookmark(id31, id30));
   let f30 = folder(id30, "", [id31]);
   apply(f30);
-  await check([{
+  yield check([{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -164,7 +165,7 @@ add_task(async function test_bookmark_order() {
   let id40 = "f40_aaaaaaaa";
   _("insert missing parent -> append to unfiled");
   apply(bookmark(id41, id40));
-  await check([{
+  yield check([{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -200,7 +201,7 @@ add_task(async function test_bookmark_order() {
 
   _("insert another missing parent -> append");
   apply(bookmark(id42, id40));
-  await check([{
+  yield check([{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -239,7 +240,7 @@ add_task(async function test_bookmark_order() {
   _("insert folder -> move children and followers");
   let f40 = folder(id40, "", [id41, id42]);
   apply(f40);
-  await check([{
+  yield check([{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -280,7 +281,7 @@ add_task(async function test_bookmark_order() {
   _("Moving 41 behind 42 -> update f40");
   f40.children = [id42, id41];
   apply(f40);
-  await check([{
+  yield check([{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -321,7 +322,7 @@ add_task(async function test_bookmark_order() {
   _("Moving 10 back to front -> update 10, 20");
   f40.children = [id41, id42];
   apply(f40);
-  await check([{
+  yield check([{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -361,7 +362,7 @@ add_task(async function test_bookmark_order() {
 
   _("Moving 20 behind 42 in f40 -> update 50");
   apply(bookmark(id20, id40));
-  await check([{
+  yield check([{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -403,7 +404,7 @@ add_task(async function test_bookmark_order() {
   apply(bookmark(id10, id30));
   f30.children = [id10, id31];
   apply(f30);
-  await check([{
+  yield check([{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -445,7 +446,7 @@ add_task(async function test_bookmark_order() {
   apply(bookmark(id20, id30));
   f30.children = [id10, id20, id31];
   apply(f30);
-  await check([{
+  yield check([{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {
@@ -487,7 +488,7 @@ add_task(async function test_bookmark_order() {
   apply(bookmark(id20, ""));
   f30.children = [id10, id31];
   apply(f30);
-  await check([{
+  yield check([{
     guid: PlacesUtils.bookmarks.menuGuid,
     index: 0,
   }, {

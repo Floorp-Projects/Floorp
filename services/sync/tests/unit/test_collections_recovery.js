@@ -6,7 +6,7 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-add_identity_test(this, async function test_missing_crypto_collection() {
+add_identity_test(this, function* test_missing_crypto_collection() {
   let johnHelper = track_collections_helper();
   let johnU      = johnHelper.with_updated_collection;
   let johnColls  = johnHelper.collections;
@@ -24,7 +24,7 @@ add_identity_test(this, async function test_missing_crypto_collection() {
     };
   }
 
-  await configureIdentity({username: "johndoe"});
+  yield configureIdentity({username: "johndoe"});
 
   let handlers = {
     "/1.1/johndoe/info/collections": maybe_empty(johnHelper.handler),
@@ -53,7 +53,7 @@ add_identity_test(this, async function test_missing_crypto_collection() {
     };
 
     _("Startup, no meta/global: freshStart called once.");
-    await sync_and_validate_telem();
+    yield sync_and_validate_telem();
     do_check_eq(fresh, 1);
     fresh = 0;
 
@@ -63,17 +63,19 @@ add_identity_test(this, async function test_missing_crypto_collection() {
 
     _("Simulate a bad info/collections.");
     delete johnColls.crypto;
-    await sync_and_validate_telem();
+    yield sync_and_validate_telem();
     do_check_eq(fresh, 1);
     fresh = 0;
 
     _("Regular sync: no need to freshStart.");
-    await sync_and_validate_telem();
+    yield sync_and_validate_telem();
     do_check_eq(fresh, 0);
 
   } finally {
     Svc.Prefs.resetBranch("");
-    await promiseStopServer(server);
+    let deferred = Promise.defer();
+    server.stop(deferred.resolve);
+    yield deferred.promise;
   }
 });
 
