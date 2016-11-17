@@ -55,8 +55,8 @@
       // related show event.
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, this.menuNode),
-        new asyncInvokerChecker(EVENT_MENUPOPUP_START, this.menuNode),
-        new invokerChecker(EVENT_REORDER, getNode(aParentMenuID))
+        new invokerChecker(EVENT_REORDER, getNode(aParentMenuID)),
+        new invokerChecker(EVENT_MENUPOPUP_START, this.menuNode)
       ];
 
       this.invoke = function showMenu_invoke()

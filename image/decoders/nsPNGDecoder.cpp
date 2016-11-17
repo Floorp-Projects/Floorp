@@ -340,10 +340,18 @@ nsPNGDecoder::InitInternal()
   png_set_check_for_invalid_index(mPNG, 0);
 #endif
 
-#if defined(PNG_SET_OPTION_SUPPORTED) && defined(PNG_sRGB_PROFILE_CHECKS) && \
-            PNG_sRGB_PROFILE_CHECKS >= 0
+#ifdef PNG_SET_OPTION_SUPPORTED
+#if defined(PNG_sRGB_PROFILE_CHECKS) && PNG_sRGB_PROFILE_CHECKS >= 0
   // Skip checking of sRGB ICC profiles
   png_set_option(mPNG, PNG_SKIP_sRGB_CHECK_PROFILE, PNG_OPTION_ON);
+#endif
+
+#ifdef PNG_MAXIMUM_INFLATE_WINDOW
+  // Force a larger zlib inflate window as some images in the wild have
+  // incorrectly set metadata (specifically CMF bits) which prevent us from
+  // decoding them otherwise.
+  png_set_option(mPNG, PNG_MAXIMUM_INFLATE_WINDOW, PNG_OPTION_ON);
+#endif
 #endif
 
   // use this as libpng "progressive pointer" (retrieve in callbacks)
