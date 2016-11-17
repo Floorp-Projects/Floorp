@@ -1898,18 +1898,5 @@ NS_IMETHOD MozRequestPointerLock(void) final override                         \
 {                                                                             \
   Element::RequestPointerLock();                                              \
   return NS_OK;                                                               \
-}                                                                             \
-using nsINode::QuerySelector;                                                 \
-NS_IMETHOD QuerySelector(const nsAString& aSelector,                          \
-                         nsIDOMElement **aReturn) final override              \
-{                                                                             \
-  return nsINode::QuerySelector(aSelector, aReturn);                          \
-}                                                                             \
-using nsINode::QuerySelectorAll;                                              \
-NS_IMETHOD QuerySelectorAll(const nsAString& aSelector,                       \
-                            nsIDOMNodeList **aReturn) final override          \
-{                                                                             \
-  return nsINode::QuerySelectorAll(aSelector, aReturn);                       \
 }
-
 #endif // mozilla_dom_Element_h__
