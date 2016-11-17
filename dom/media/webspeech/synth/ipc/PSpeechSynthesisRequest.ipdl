@@ -37,7 +37,8 @@ async protocol PSpeechSynthesisRequest
 
   async OnResume(float aElapsedTime, uint32_t aCharIndex);
 
-  async OnBoundary(nsString aName, float aElapsedTime, uint32_t aCharIndex);
+  async OnBoundary(nsString aName, float aElapsedTime, uint32_t aCharIndex,
+                   uint32_t aCharLength, uint8_t argc);
 
   async OnMark(nsString aName, float aElapsedTime, uint32_t aCharIndex);
 };
