@@ -300,14 +300,14 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     // WebGL1:
     void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
     void bufferData(GLenum target, ArrayBuffer? srcData, GLenum usage);
-    void bufferData(GLenum target, ArrayBufferView srcData, GLenum usage);
+    //void bufferData(GLenum target, ArrayBufferView srcData, GLenum usage);
     void bufferSubData(GLenum target, GLintptr offset, ArrayBuffer srcData);
-    void bufferSubData(GLenum target, GLintptr offset, ArrayBufferView srcData);
+    //void bufferSubData(GLenum target, GLintptr offset, ArrayBufferView srcData);
     // WebGL2:
-    void bufferData(GLenum target, ArrayBufferView srcData, GLenum usage, GLuint srcOffset,
-                    optional GLuint length = 0);
+    void bufferData(GLenum target, ArrayBufferView srcData, GLenum usage,
+                    optional GLuint srcOffset = 0, optional GLuint length = 0);
     void bufferSubData(GLenum target, GLintptr dstByteOffset, ArrayBufferView srcData,
-                       GLuint srcOffset, optional GLuint length = 0);
+                       optional GLuint srcOffset = 0, optional GLuint length = 0);
 
     void copyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset,
                            GLintptr writeOffset, GLsizeiptr size);
@@ -613,7 +613,7 @@ interface WebGL2RenderingContext : WebGLRenderingContext
     [WebGLHandlesContextLoss] GLboolean isQuery(WebGLQuery? query);
     void beginQuery(GLenum target, WebGLQuery query);
     void endQuery(GLenum target);
-    WebGLQuery? getQuery(GLenum target, GLenum pname);
+    any getQuery(GLenum target, GLenum pname);
     any getQueryParameter(WebGLQuery query, GLenum pname);
 
     /* Sampler Objects */
