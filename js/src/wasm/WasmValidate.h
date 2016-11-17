@@ -684,6 +684,10 @@ struct ModuleEnvironment
         MOZ_ASSERT(!isAsmJS());
         return funcSigs.length() - funcImportGlobalDataOffsets.length();
     }
+    size_t numFuncImports() const {
+        MOZ_ASSERT(!isAsmJS());
+        return funcImportGlobalDataOffsets.length();
+    }
     bool usesMemory() const {
         return UsesMemory(memoryUsage);
     }
@@ -713,6 +717,9 @@ DecodeUnknownSections(Decoder& d);
 
 MOZ_MUST_USE bool
 ValidateFunctionBody(const ModuleEnvironment& env, uint32_t funcIndex, Decoder& d);
+
+MOZ_MUST_USE bool
+Validate(const ShareableBytes& bytecode, UniqueChars* error);
 
 }  // namespace wasm
 }  // namespace js

@@ -1307,6 +1307,58 @@ wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env)
     return true;
 }
 
+static bool
+DecodeFunctionBody(Decoder& d, const ModuleEnvironment& env, uint32_t funcIndex)
+{
+    uint32_t bodySize;
+    if (!d.readVarU32(&bodySize))
+        return d.fail("expected number of function body bytes");
+
+    if (d.bytesRemain() < bodySize)
+        return d.fail("function body length too big");
+
+    const uint8_t* bodyBegin = d.currentPosition();
+
+    if (!ValidateFunctionBody(env, funcIndex, d))
+        return false;
+
+    if (d.currentPosition() != bodyBegin + bodySize)
+        return d.fail("function body length mismatch");
+
+    return true;
+}
+
+static bool
+DecodeCodeSection(Decoder& d, const ModuleEnvironment& env)
+{
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(SectionId::Code, &sectionStart, &sectionSize, "code"))
+        return false;
+
+    if (sectionStart == Decoder::NotStarted) {
+        if (env.numFuncDefs() != 0)
+            return d.fail("expected function bodies");
+        return true;
+    }
+
+    uint32_t numFuncDefs;
+    if (!d.readVarU32(&numFuncDefs))
+        return d.fail("expected function body count");
+
+    if (numFuncDefs != env.numFuncDefs())
+        return d.fail("function body count does not match function signature count");
+
+    for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
+        if (!DecodeFunctionBody(d, env, env.numFuncImports() + funcDefIndex))
+            return false;
+    }
+
+    if (!d.finishSection(sectionStart, sectionSize, "code"))
+        return false;
+
+    return true;
+}
+
 bool
 wasm::DecodeDataSection(Decoder& d, const ModuleEnvironment& env, DataSegmentVector* segments)
 {
@@ -1363,6 +1415,30 @@ wasm::DecodeUnknownSections(Decoder& d)
         if (!d.skipUserDefinedSection())
             return false;
     }
+
+    return true;
+}
+
+// Validate algorithm.
+
+bool
+wasm::Validate(const ShareableBytes& bytecode, UniqueChars* error)
+{
+    Decoder d(bytecode.begin(), bytecode.end(), error);
+
+    ModuleEnvironment env;
+    if (!DecodeModuleEnvironment(d, &env))
+        return false;
+
+    if (!DecodeCodeSection(d, env))
+        return false;
+
+    DataSegmentVector dataSegments;
+    if (!DecodeDataSection(d, env, &dataSegments))
+        return false;
+
+    if (!DecodeUnknownSections(d))
+        return false;
 
     return true;
 }
