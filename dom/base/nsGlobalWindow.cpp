@@ -14832,7 +14832,6 @@ nsGlobalWindow::TabGroupOuter()
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
-  // This method is valid both on inner and outer windows, which is a
   // Outer windows lazily join TabGroups when requested. This is usually done
   // because a document is getting its NodePrincipal, and asking for the
   // TabGroup to determine its DocGroup.
