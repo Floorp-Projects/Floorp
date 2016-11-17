@@ -835,8 +835,8 @@ VectorImage::Draw(gfxContext* aContext,
     return DrawResult::TEMPORARY_ERROR;
   }
 
-  if (mAnimationConsumers == 0 && mProgressTracker) {
-    mProgressTracker->OnUnlockedDraw();
+  if (mAnimationConsumers == 0) {
+    SendOnUnlockedDraw(aFlags);
   }
 
   AutoRestore<bool> autoRestoreIsDrawing(mIsDrawing);

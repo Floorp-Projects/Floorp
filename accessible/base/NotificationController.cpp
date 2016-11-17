@@ -24,7 +24,7 @@ using namespace mozilla::a11y;
 NotificationController::NotificationController(DocAccessible* aDocument,
                                                nsIPresShell* aPresShell) :
   EventQueue(aDocument), mObservingState(eNotObservingRefresh),
-  mPresShell(aPresShell)
+  mPresShell(aPresShell), mEventGeneration(0)
 {
 #ifdef DEBUG
   mMoveGuardOnStack = false;
@@ -114,6 +114,289 @@ NotificationController::QueueMutation(Accessible* aContainer)
   return tree;
 }
 
+bool
+NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent)
+{
+  // We have to allow there to be a hide and then a show event for a target
+  // because of targets getting moved.  However we need to coalesce a show and
+  // then a hide for a target which means we need to check for that here.
+  if (aEvent->GetEventType() == nsIAccessibleEvent::EVENT_HIDE  &&
+      aEvent->GetAccessible()->ShowEventTarget()) {
+    AccTreeMutationEvent* showEvent = mMutationMap.GetEvent(aEvent->GetAccessible(), EventMap::ShowEvent);
+    DropMutationEvent(showEvent);
+    return false;
+  }
+
+  AccMutationEvent* mutEvent = downcast_accEvent(aEvent);
+  mEventGeneration++;
+  mutEvent->SetEventGeneration(mEventGeneration);
+
+  if (!mFirstMutationEvent) {
+    mFirstMutationEvent = aEvent;
+    ScheduleProcessing();
+  }
+
+  if (mLastMutationEvent) {
+    NS_ASSERTION(!mLastMutationEvent->NextEvent(), "why isn't the last event the end?");
+    mLastMutationEvent->SetNextEvent(aEvent);
+  }
+
+  aEvent->SetPrevEvent(mLastMutationEvent);
+  mLastMutationEvent = aEvent;
+  mMutationMap.PutEvent(aEvent);
+
+  // Because we could be hiding the target of a show event we need to get rid
+  // of any such events.  It may be possible to do less than coallesce all
+  // events, however that is easiest.
+  if (aEvent->GetEventType() == nsIAccessibleEvent::EVENT_HIDE) {
+    CoalesceMutationEvents();
+
+    // mLastMutationEvent will point to something other than aEvent if and only
+    // if aEvent was just coalesced away.  In that case a parent accessible
+    // must already have the required reorder and text change events so we are
+    // done here.
+    if (mLastMutationEvent != aEvent) {
+      return false;
+    }
+  }
+
+  // We need to fire a reorder event after all of the events targeted at shown or
+  // hidden children of a container.  So either queue a new one, or move an
+  // existing one to the end of the queue if the container already has a
+  // reorder event.
+  Accessible* target = aEvent->GetAccessible();
+  Accessible* container = aEvent->GetAccessible()->Parent();
+  RefPtr<AccReorderEvent> reorder;
+  if (!container->ReorderEventTarget()) {
+    reorder = new AccReorderEvent(container);
+    container->SetReorderEventTarget(true);
+    mMutationMap.PutEvent(reorder);
+
+    // Since this is the first child of container that is changing, the name of
+    // container may be changing.
+    QueueNameChange(target);
+  } else {
+    AccReorderEvent* event = downcast_accEvent(mMutationMap.GetEvent(container, EventMap::ReorderEvent));
+    reorder = event;
+    if (mFirstMutationEvent == event) {
+      mFirstMutationEvent = event->NextEvent();
+    } else {
+      event->PrevEvent()->SetNextEvent(event->NextEvent());
+    }
+
+      event->NextEvent()->SetPrevEvent(event->PrevEvent());
+      event->SetNextEvent(nullptr);
+  }
+
+  reorder->SetEventGeneration(mEventGeneration);
+  reorder->SetPrevEvent(mLastMutationEvent);
+  mLastMutationEvent->SetNextEvent(reorder);
+  mLastMutationEvent = reorder;
+
+  // It is not possible to have a text change event for something other than a
+  // hyper text accessible.
+  if (!container->IsHyperText()) {
+    return true;
+  }
+
+  MOZ_ASSERT(mutEvent);
+
+  nsString text;
+  aEvent->GetAccessible()->AppendTextTo(text);
+  if (text.IsEmpty()) {
+    return true;
+  }
+
+  int32_t offset = container->AsHyperText()->GetChildOffset(target);
+  AccTreeMutationEvent* prevEvent = aEvent->PrevEvent();
+  while (prevEvent && prevEvent->GetEventType() == nsIAccessibleEvent::EVENT_REORDER) {
+    prevEvent = prevEvent->PrevEvent();
+  }
+
+  if (prevEvent && prevEvent->GetEventType() == nsIAccessibleEvent::EVENT_HIDE &&
+      mutEvent->IsHide()) {
+    AccHideEvent* prevHide = downcast_accEvent(prevEvent);
+    AccTextChangeEvent* prevTextChange = prevHide->mTextChangeEvent;
+    if (prevTextChange) {
+      if (prevHide->mNextSibling == target) {
+        target->AppendTextTo(prevTextChange->mModifiedText);
+      } else if (prevHide->mPrevSibling == target) {
+        nsString temp;
+        target->AppendTextTo(temp);
+
+        uint32_t extraLen = temp.Length();
+        temp += prevTextChange->mModifiedText;;
+        prevTextChange->mModifiedText = temp;
+        prevTextChange->mStart -= extraLen;
+      }
+
+      prevHide->mTextChangeEvent.swap(mutEvent->mTextChangeEvent);
+    }
+  } else if (prevEvent && mutEvent->IsShow() &&
+             prevEvent->GetEventType() == nsIAccessibleEvent::EVENT_SHOW) {
+    AccShowEvent* prevShow = downcast_accEvent(prevEvent);
+    AccTextChangeEvent* prevTextChange = prevShow->mTextChangeEvent;
+    if (prevTextChange) {
+      int32_t index = target->IndexInParent();
+      int32_t prevIndex = prevShow->GetAccessible()->IndexInParent();
+      if (prevIndex + 1 == index) {
+        target->AppendTextTo(prevTextChange->mModifiedText);
+      } else if (index + 1 == prevIndex) {
+        nsString temp;
+        target->AppendTextTo(temp);
+        prevTextChange->mStart -= temp.Length();
+        temp += prevTextChange->mModifiedText;
+        prevTextChange->mModifiedText = temp;
+      }
+
+      prevShow->mTextChangeEvent.swap(mutEvent->mTextChangeEvent);
+    }
+  }
+
+  if (!mutEvent->mTextChangeEvent) {
+    mutEvent->mTextChangeEvent =
+      new AccTextChangeEvent(container, offset, text, mutEvent->IsShow(),
+                             aEvent->mIsFromUserInput ? eFromUserInput : eNoUserInput);
+  }
+
+  return true;
+}
+
+void
+NotificationController::DropMutationEvent(AccTreeMutationEvent* aEvent)
+{
+  // unset the event bits since the event isn't being fired any more.
+  if (aEvent->GetEventType() == nsIAccessibleEvent::EVENT_REORDER) {
+    aEvent->GetAccessible()->SetReorderEventTarget(false);
+  } else if (aEvent->GetEventType() == nsIAccessibleEvent::EVENT_SHOW) {
+    aEvent->GetAccessible()->SetShowEventTarget(false);
+  } else {
+    AccHideEvent* hideEvent = downcast_accEvent(aEvent);
+    MOZ_ASSERT(hideEvent);
+
+    if (hideEvent->NeedsShutdown()) {
+      mDocument->ShutdownChildrenInSubtree(aEvent->GetAccessible());
+    }
+  }
+
+  // Do the work to splice the event out of the list.
+  if (mFirstMutationEvent == aEvent) {
+    mFirstMutationEvent = aEvent->NextEvent();
+  } else {
+    aEvent->PrevEvent()->SetNextEvent(aEvent->NextEvent());
+  }
+
+  if (mLastMutationEvent == aEvent) {
+    mLastMutationEvent = aEvent->PrevEvent();
+  } else {
+    aEvent->NextEvent()->SetPrevEvent(aEvent->PrevEvent());
+  }
+
+  aEvent->SetPrevEvent(nullptr);
+  aEvent->SetNextEvent(nullptr);
+  mMutationMap.RemoveEvent(aEvent);
+}
+
+void
+NotificationController::CoalesceMutationEvents()
+{
+  AccTreeMutationEvent* event = mFirstMutationEvent;
+  while (event) {
+    AccTreeMutationEvent* nextEvent = event->NextEvent();
+    uint32_t eventType = event->GetEventType();
+    if (event->GetEventType() == nsIAccessibleEvent::EVENT_REORDER) {
+      Accessible* acc = event->GetAccessible();
+      while (acc) {
+        if (acc->IsDoc()) {
+          break;
+        }
+
+        // if a parent of the reorder event's target is being hidden that
+        // hide event's target must have a parent that is also a reorder event
+        // target.  That means we don't need this reorder event.
+        if (acc->HideEventTarget()) {
+          DropMutationEvent(event);
+          break;
+        }
+
+        Accessible* parent = acc->Parent();
+        if (parent->ReorderEventTarget()) {
+          AccReorderEvent* reorder = downcast_accEvent(mMutationMap.GetEvent(parent, EventMap::ReorderEvent));
+
+          // We want to make sure that a reorder event comes after any show or
+          // hide events targeted at the children of its target.  We keep the
+          // invariant that event generation goes up as you are farther in the
+          // queue, so we want to use the spot of the event with the higher
+          // generation number, and keep that generation number.
+          if (reorder && reorder->EventGeneration() < event->EventGeneration()) {
+            // There really should be a show or hide event before the first
+            // reorder event.
+            if (reorder->PrevEvent()) {
+              reorder->PrevEvent()->SetNextEvent(reorder->NextEvent());
+            } else {
+              mFirstMutationEvent = reorder->NextEvent();
+            }
+
+            reorder->NextEvent()->SetPrevEvent(reorder->PrevEvent());
+            event->PrevEvent()->SetNextEvent(reorder);
+            reorder->SetPrevEvent(event->PrevEvent());
+            event->SetPrevEvent(reorder);
+            reorder->SetNextEvent(event);
+            reorder->SetEventGeneration(event->EventGeneration());
+          }
+          DropMutationEvent(event);
+          break;
+        }
+
+        acc = parent;
+      }
+    } else if (eventType == nsIAccessibleEvent::EVENT_SHOW) {
+      Accessible* parent = event->GetAccessible()->Parent();
+      while (parent) {
+        if (parent->IsDoc()) {
+          break;
+        }
+
+        // if the parent of a show event is being either shown or hidden then
+        // we don't need to fire a show event for a subtree of that change.
+        if (parent->ShowEventTarget() || parent->HideEventTarget()) {
+          DropMutationEvent(event);
+          break;
+        }
+
+        parent = parent->Parent();
+      }
+    } else {
+      MOZ_ASSERT(eventType == nsIAccessibleEvent::EVENT_HIDE, "mutation event list has an invalid event");
+
+      AccHideEvent* hideEvent = downcast_accEvent(event);
+      Accessible* parent = hideEvent->Parent();
+      while (parent) {
+        if (parent->IsDoc()) {
+          break;
+        }
+
+        if (parent->HideEventTarget()) {
+          DropMutationEvent(event);
+          break;
+        }
+
+        if (parent->ShowEventTarget()) {
+          AccShowEvent* showEvent = downcast_accEvent(mMutationMap.GetEvent(parent, EventMap::ShowEvent));
+          if (showEvent->EventGeneration() < hideEvent->EventGeneration()) {
+            DropMutationEvent(hideEvent);
+            break;
+          }
+        }
+
+        parent = parent->Parent();
+      }
+    }
+
+    event = nextEvent;
+  }
+}
+
 void
 NotificationController::ScheduleChildDocBinding(DocAccessible* aDocument)
 {
@@ -170,6 +453,128 @@ NotificationController::IsUpdatePending()
     mContentInsertions.Count() != 0 || mNotifications.Length() != 0 ||
     mTextHash.Count() != 0 ||
     !mDocument->HasLoadState(DocAccessible::eTreeConstructed);
+}
+
+void
+NotificationController::ProcessMutationEvents()
+{
+  // there is no reason to fire a hide event for a child of a show event
+  // target.  That can happen if something is inserted into the tree and
+  // removed before the next refresh driver tick, but it should not be
+  // observable outside gecko so it should be safe to coalesce away any such
+  // events.  This means that it should be fine to fire all of the hide events
+  // first, and then deal with any shown subtrees.
+  for (AccTreeMutationEvent* event = mFirstMutationEvent;
+       event; event = event->NextEvent()) {
+    if (event->GetEventType() != nsIAccessibleEvent::EVENT_HIDE) {
+      continue;
+    }
+
+    nsEventShell::FireEvent(event);
+    if (!mDocument) {
+      return;
+    }
+
+    AccMutationEvent* mutEvent = downcast_accEvent(event);
+    if (mutEvent->mTextChangeEvent) {
+      nsEventShell::FireEvent(mutEvent->mTextChangeEvent);
+      if (!mDocument) {
+        return;
+      }
+    }
+
+    // Fire menupopup end event before a hide event if a menu goes away.
+
+    // XXX: We don't look into children of hidden subtree to find hiding
+    // menupopup (as we did prior bug 570275) because we don't do that when
+    // menu is showing (and that's impossible until bug 606924 is fixed).
+    // Nevertheless we should do this at least because layout coalesces
+    // the changes before our processing and we may miss some menupopup
+    // events. Now we just want to be consistent in content insertion/removal
+    // handling.
+    if (event->mAccessible->ARIARole() == roles::MENUPOPUP) {
+      nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END,
+                              event->mAccessible);
+      if (!mDocument) {
+        return;
+      }
+    }
+
+    AccHideEvent* hideEvent = downcast_accEvent(event);
+    if (hideEvent->NeedsShutdown()) {
+      mDocument->ShutdownChildrenInSubtree(event->mAccessible);
+    }
+  }
+
+  // Group the show events by the parent of their target.
+  nsDataHashtable<nsPtrHashKey<Accessible>, nsTArray<AccTreeMutationEvent*>> showEvents;
+  for (AccTreeMutationEvent* event = mFirstMutationEvent;
+       event; event = event->NextEvent()) {
+    if (event->GetEventType() != nsIAccessibleEvent::EVENT_SHOW) {
+      continue;
+    }
+
+    Accessible* parent = event->GetAccessible()->Parent();
+    showEvents.GetOrInsert(parent).AppendElement(event);
+  }
+
+  // We need to fire show events for the children of an accessible in the order
+  // of their indices at this point.  So sort each set of events for the same
+  // container by the index of their target.
+  for (auto iter = showEvents.Iter(); !iter.Done(); iter.Next()) {
+    struct AccIdxComparator {
+      bool LessThan(const AccTreeMutationEvent* a, const AccTreeMutationEvent* b) const
+      {
+        int32_t aIdx = a->GetAccessible()->IndexInParent();
+        int32_t bIdx = b->GetAccessible()->IndexInParent();
+        MOZ_ASSERT(aIdx >= 0 && bIdx >= 0 && aIdx != bIdx);
+        return aIdx < bIdx;
+      }
+      bool Equals(const AccTreeMutationEvent* a, const AccTreeMutationEvent* b) const
+      {
+        DebugOnly<int32_t> aIdx = a->GetAccessible()->IndexInParent();
+        DebugOnly<int32_t> bIdx = b->GetAccessible()->IndexInParent();
+        MOZ_ASSERT(aIdx >= 0 && bIdx >= 0 && aIdx != bIdx);
+        return false;
+      }
+    };
+
+    nsTArray<AccTreeMutationEvent*>& events = iter.Data();
+    events.Sort(AccIdxComparator());
+    for (AccTreeMutationEvent* event: events) {
+      nsEventShell::FireEvent(event);
+      if (!mDocument) {
+        return;
+      }
+
+      AccMutationEvent* mutEvent = downcast_accEvent(event);
+      if (mutEvent->mTextChangeEvent) {
+        nsEventShell::FireEvent(mutEvent->mTextChangeEvent);
+        if (!mDocument) {
+          return;
+        }
+      }
+    }
+  }
+
+  // Now we can fire the reorder events after all the show and hide events.
+  for (AccTreeMutationEvent* event = mFirstMutationEvent;
+       event; event = event->NextEvent()) {
+    if (event->GetEventType() != nsIAccessibleEvent::EVENT_REORDER) {
+      continue;
+    }
+
+    nsEventShell::FireEvent(event);
+    if (!mDocument) {
+      return;
+    }
+
+    Accessible* target = event->GetAccessible();
+    target->Document()->MaybeNotifyOfValueChange(target);
+    if (!mDocument) {
+      return;
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -397,9 +802,39 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   // events causes script to run.
   mObservingState = eRefreshProcessing;
 
-  RefPtr<DocAccessible> deathGrip(mDocument);
-  mEventTree.Process(deathGrip);
-  deathGrip = nullptr;
+  CoalesceMutationEvents();
+  ProcessMutationEvents();
+  mEventGeneration = 0;
+
+  // Now that we are done with them get rid of the events we fired.
+  RefPtr<AccTreeMutationEvent> mutEvent = Move(mFirstMutationEvent);
+  mLastMutationEvent = nullptr;
+  mFirstMutationEvent = nullptr;
+  while (mutEvent) {
+    RefPtr<AccTreeMutationEvent> nextEvent = mutEvent->NextEvent();
+    Accessible* target = mutEvent->GetAccessible();
+
+    // We need to be careful here, while it may seem that we can simply 0 all
+    // the pending event bits that is not true.  Because accessibles may be
+    // reparented they may be the target of both a hide event and a show event
+    // at the same time.
+    if (mutEvent->GetEventType() == nsIAccessibleEvent::EVENT_SHOW) {
+      target->SetShowEventTarget(false);
+    }
+
+    if (mutEvent->GetEventType() == nsIAccessibleEvent::EVENT_HIDE) {
+      target->SetHideEventTarget(false);
+    }
+
+    // However it is not possible for a reorder event target to also be the
+    // target of a show or hide, so we can just zero that.
+    target->SetReorderEventTarget(false);
+
+    mutEvent->SetPrevEvent(nullptr);
+    mutEvent->SetNextEvent(nullptr);
+    mMutationMap.RemoveEvent(mutEvent);
+    mutEvent = nextEvent;
+  }
 
   ProcessEventQueue();
 
@@ -447,5 +882,54 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
       mDocument->HasLoadState(DocAccessible::eCompletelyLoaded) &&
       mPresShell->RemoveRefreshObserver(this, Flush_Display)) {
     mObservingState = eNotObservingRefresh;
+  }
+}
+
+void
+NotificationController::EventMap::PutEvent(AccTreeMutationEvent* aEvent)
+{
+  EventType type = GetEventType(aEvent);
+  uint64_t addr = reinterpret_cast<uintptr_t>(aEvent->GetAccessible());
+  MOZ_ASSERT((addr & 0x3) == 0, "accessible is not 4 byte aligned");
+  addr |= type;
+  mTable.Put(addr, aEvent);
+}
+
+AccTreeMutationEvent*
+NotificationController::EventMap::GetEvent(Accessible* aTarget, EventType aType)
+{
+  uint64_t addr = reinterpret_cast<uintptr_t>(aTarget);
+  MOZ_ASSERT((addr & 0x3) == 0, "target is not 4 byte aligned");
+
+  addr |= aType;
+  return mTable.GetWeak(addr);
+}
+
+void
+NotificationController::EventMap::RemoveEvent(AccTreeMutationEvent* aEvent)
+{
+  EventType type = GetEventType(aEvent);
+  uint64_t addr = reinterpret_cast<uintptr_t>(aEvent->GetAccessible());
+  MOZ_ASSERT((addr & 0x3) == 0, "accessible is not 4 byte aligned");
+  addr |= type;
+
+  MOZ_ASSERT(mTable.GetWeak(addr) == aEvent, "mTable has the wrong event");
+  mTable.Remove(addr);
+}
+
+  NotificationController::EventMap::EventType
+NotificationController::EventMap::GetEventType(AccTreeMutationEvent* aEvent)
+{
+  switch(aEvent->GetEventType())
+  {
+    case nsIAccessibleEvent::EVENT_SHOW:
+      return ShowEvent;
+    case nsIAccessibleEvent::EVENT_HIDE:
+      return HideEvent;
+    case nsIAccessibleEvent::EVENT_REORDER:
+      return ReorderEvent;
+    default:
+      MOZ_ASSERT_UNREACHABLE("event has invalid type");
+      return ShowEvent;
   }
 }
