@@ -1,7 +1,3 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 use url::ParseError;
 
 pub trait ErrorCode {
@@ -17,29 +13,40 @@ impl<T: ErrorCode> ErrorCode for Result<(), T> {
   }
 }
 
-impl ErrorCode for Result<(), ()> {
-  fn error_code(&self) -> i32 {
-    match *self {
-      Ok(_)  =>    0,
-      Err(_) => -255,
+impl ErrorCode for () {
+    fn error_code(&self) -> i32 {
+        return -1;
     }
-  }
 }
-
 impl ErrorCode for ParseError {
   fn error_code(&self) -> i32 {
-    match *self {
-      ParseError::EmptyHost                              =>  -1,
-      ParseError::InvalidPort                            =>  -2,
-      ParseError::InvalidIpv6Address                     =>  -3,
-      ParseError::InvalidDomainCharacter                 =>  -4,
-      ParseError::IdnaError                              =>  -5,
-      ParseError::InvalidIpv4Address                     =>  -6,
-      ParseError::RelativeUrlWithoutBase                 =>  -7,
-      ParseError::RelativeUrlWithCannotBeABaseBase       =>  -8,
-      ParseError::SetHostOnCannotBeABaseUrl              =>  -9,
-      ParseError::Overflow                               => -10,
-    }
+      return -1;
+//    match *self {
+//      ParseError::EmptyHost                              =>  -1,
+//      ParseError::InvalidScheme                          =>  -2,
+//      ParseError::InvalidPort                            =>  -3,
+//      ParseError::InvalidIpv6Address                     =>  -4,
+//      ParseError::InvalidDomainCharacter                 =>  -5,
+//      ParseError::InvalidCharacter                       =>  -6,
+//      ParseError::InvalidBackslash                       =>  -7,
+//      ParseError::InvalidPercentEncoded                  =>  -8,
+//      ParseError::InvalidAtSymbolInUser                  =>  -9,
+//      ParseError::ExpectedTwoSlashes                     => -10,
+//      ParseError::ExpectedInitialSlash                   => -11,
+//      ParseError::NonUrlCodePoint                        => -12,
+//      ParseError::RelativeUrlWithScheme                  => -13,
+//      ParseError::RelativeUrlWithoutBase                 => -14,
+//      ParseError::RelativeUrlWithNonRelativeBase         => -15,
+//      ParseError::NonAsciiDomainsNotSupportedYet         => -16,
+//      ParseError::CannotSetJavascriptFragment            => -17,
+//      ParseError::CannotSetPortWithFileLikeScheme        => -18,
+//      ParseError::CannotSetUsernameWithNonRelativeScheme => -19,
+//      ParseError::CannotSetPasswordWithNonRelativeScheme => -20,
+//      ParseError::CannotSetHostPortWithNonRelativeScheme => -21,
+//      ParseError::CannotSetHostWithNonRelativeScheme     => -22,
+//      ParseError::CannotSetPortWithNonRelativeScheme     => -23,
+//      ParseError::CannotSetPathWithNonRelativeScheme     => -24,
+//    }
   }
 }
 
