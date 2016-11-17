@@ -1330,8 +1330,6 @@ KTableEntry nsCSSProps::kDisplayKTable[] = {
   { eCSSKeyword__webkit_inline_box,  StyleDisplay::WebkitInlineBox },
   { eCSSKeyword__webkit_flex,        StyleDisplay::Flex },
   { eCSSKeyword__webkit_inline_flex, StyleDisplay::InlineFlex },
-  // The next entry is controlled by the layout.css.display-contents.enabled
-  // pref.
   { eCSSKeyword_contents,            StyleDisplay::Contents },
   { eCSSKeyword_UNKNOWN,             -1 }
 };

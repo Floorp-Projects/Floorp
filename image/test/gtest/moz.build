@@ -35,6 +35,7 @@ TEST_HARNESS_FILES.gtest += [
     'animated-with-extra-image-sub-blocks.gif',
     'corrupt-with-bad-bmp-height.ico',
     'corrupt-with-bad-bmp-width.ico',
+    'corrupt-with-bad-ico-bpp.ico',
     'corrupt.jpg',
     'downscaled.bmp',
     'downscaled.gif',

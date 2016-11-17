@@ -74,6 +74,10 @@ public:
 
     virtual bool Validate(WebGLContext* webgl, const char* funcName,
                           const webgl::PackingInfo& pi) = 0;
+
+    // Returns false when we've generated a WebGL error.
+    // Returns true but with a non-zero *out_error if we still need to generate a WebGL
+    // error.
     virtual bool TexOrSubImage(bool isSubImage, bool needsRespec, const char* funcName,
                                WebGLTexture* tex, TexImageTarget target, GLint level,
                                const webgl::DriverUnpackInfo* dui, GLint xOffset,

@@ -305,6 +305,8 @@ protected:
   virtual nsresult StartAnimation() = 0;
   virtual nsresult StopAnimation() = 0;
 
+  void SendOnUnlockedDraw(uint32_t aFlags);
+
   // Member data shared by all implementations of this abstract class
   RefPtr<ProgressTracker>     mProgressTracker;
   RefPtr<ImageURL>            mURI;
