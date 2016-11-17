@@ -45,6 +45,7 @@ DevToolsModules(
     'stylesheets.js',
     'timeline.js',
     'webaudio.js',
+    'webextension-inspected-window.js',
     'webgl.js',
     'worker.js'
 )
