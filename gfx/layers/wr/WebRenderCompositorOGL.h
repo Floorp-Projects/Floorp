@@ -59,16 +59,16 @@ public:
                         const EffectChain &aEffectChain,
                         gfx::Float aOpacity,
                         const gfx::Matrix4x4& aTransform,
-                        const gfx::Rect& aVisibleRect) { }
+                        const gfx::Rect& aVisibleRect) override { }
 
   virtual void DrawTriangle(const gfx::TexturedTriangle& aTriangle,
                             const gfx::IntRect& aClipRect,
                             const EffectChain& aEffectChain,
                             gfx::Float aOpacity,
                             const gfx::Matrix4x4& aTransform,
-                            const gfx::Rect& aVisibleRect) { }
+                            const gfx::Rect& aVisibleRect) override { }
 
-  virtual void ClearRect(const gfx::Rect& aRect) { }
+  virtual void ClearRect(const gfx::Rect& aRect) override { }
 
   virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
                           const gfx::IntRect *aClipRectIn,
