@@ -544,7 +544,7 @@ class Marionette(object):
     DEFAULT_SHUTDOWN_TIMEOUT = 65  # Firefox will kill hanging threads after 60s
 
     def __init__(self, host="localhost", port=2828, app=None, bin=None,
-                 baseurl=None, timeout=None, socket_timeout=DEFAULT_SOCKET_TIMEOUT,
+                 baseurl=None, socket_timeout=DEFAULT_SOCKET_TIMEOUT,
                  startup_timeout=None, **instance_args):
         """Construct a holder for the Marionette connection.
 
@@ -557,9 +557,6 @@ class Marionette(object):
             Defaults to port 2828.
         :param baseurl: Where to look for files served from Marionette's
             www directory.
-        :param timeout: Dictionary of default page load, script, and
-            implicit wait timeouts.  Timeouts in the session are reset
-            to these values whenever ``reset_timeouts`` is called.
         :param socket_timeout: Timeout for Marionette socket operations.
         :param startup_timeout: Seconds to wait for a connection with
             binary.
@@ -574,7 +571,6 @@ class Marionette(object):
         self.host = host
         self.port = self.local_port = int(port)
         self.bin = bin
-        self.default_timeouts = timeout
         self.instance = None
         self.session = None
         self.session_id = None
@@ -763,22 +759,6 @@ class Marionette(object):
             stacktrace = obj["stacktrace"]
 
         raise errors.lookup(error)(message, stacktrace=stacktrace)
-
-    def reset_timeouts(self):
-        """Resets timeouts to their defaults to the
-        `self.default_timeouts` attribute. If unset, only the page load
-        timeout is reset to 30 seconds.
-
-        """
-        setters = {"search": "implicit",
-                   "script": "script",
-                   "page load": "page_load"}
-
-        if self.default_timeouts is not None:
-            for typ, ms in self.default_timeouts:
-                setattr(self.timeout, setters[typ], ms)
-        else:
-            self.timeout.page_load = 30
 
     def check_for_crash(self):
         """Check if the process crashed.
@@ -1128,7 +1108,7 @@ class Marionette(object):
             self.instance.restart(prefs)
             self.raise_for_port()
             self.start_session()
-            self.reset_timeouts()
+            self.timeout.reset()
 
             # Restore the context as used before the restart
             self.set_context(context)
@@ -1177,7 +1157,7 @@ class Marionette(object):
             raise errors.MarionetteException("quit() can only be called "
                                              "on Gecko instances launched by Marionette")
 
-        self.reset_timeouts()
+        self.timeout.reset()
 
         if in_app:
             if callable(callback):
@@ -1244,7 +1224,7 @@ class Marionette(object):
             self.raise_for_port()
 
         self.start_session(session_id=session_id)
-        self.reset_timeouts()
+        self.timeout.reset()
 
         # Restore the context as used before the restart
         self.set_context(context)
