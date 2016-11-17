@@ -7,16 +7,10 @@
  * Tests if different response content types are handled correctly.
  */
 
-function* content_type_test(isHTTPS) {
+add_task(function* () {
   let { L10N } = require("devtools/client/netmonitor/l10n");
 
-  let pageURL = isHTTPS ? HTTPS_CONTENT_TYPE_WITHOUT_CACHE_URL
-                        : CONTENT_TYPE_WITHOUT_CACHE_URL;
-  let imageURL = isHTTPS ? HTTPS_TEST_IMAGE
-                         : TEST_IMAGE;
-  let sjsURL = isHTTPS ? HTTPS_CONTENT_TYPE_SJS
-                       : CONTENT_TYPE_SJS;
-  let { tab, monitor } = yield initNetMonitor(pageURL);
+  let { tab, monitor } = yield initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
   info("Starting test... ");
 
   let { document, Editor, NetMonitorView } = monitor.panelWin;
@@ -30,89 +24,71 @@ function* content_type_test(isHTTPS) {
   });
   yield wait;
 
-  let okStatus = isHTTPS ? "Connected" : "OK";
-
   verifyRequestItemTarget(RequestsMenu.getItemAtIndex(0),
-    "GET", sjsURL + "?fmt=xml", {
+    "GET", CONTENT_TYPE_SJS + "?fmt=xml", {
       status: 200,
-      statusText: okStatus,
+      statusText: "OK",
       type: "xml",
       fullMimeType: "text/xml; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 42),
       time: true
     });
   verifyRequestItemTarget(RequestsMenu.getItemAtIndex(1),
-    "GET", sjsURL + "?fmt=css", {
+    "GET", CONTENT_TYPE_SJS + "?fmt=css", {
       status: 200,
-      statusText: okStatus,
+      statusText: "OK",
       type: "css",
       fullMimeType: "text/css; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 34),
       time: true
     });
   verifyRequestItemTarget(RequestsMenu.getItemAtIndex(2),
-    "GET", sjsURL + "?fmt=js", {
+    "GET", CONTENT_TYPE_SJS + "?fmt=js", {
       status: 200,
-      statusText: okStatus,
+      statusText: "OK",
       type: "js",
       fullMimeType: "application/javascript; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 34),
       time: true
     });
   verifyRequestItemTarget(RequestsMenu.getItemAtIndex(3),
-    "GET", sjsURL + "?fmt=json", {
+    "GET", CONTENT_TYPE_SJS + "?fmt=json", {
       status: 200,
-      statusText: okStatus,
+      statusText: "OK",
       type: "json",
       fullMimeType: "application/json; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 29),
       time: true
     });
-  if (!isHTTPS) {
-    // 404 doesn't work on HTTPS test harness.
-    verifyRequestItemTarget(RequestsMenu.getItemAtIndex(4),
-      "GET", sjsURL + "?fmt=bogus", {
-        status: 404,
-        statusText: "Not Found",
-        type: "html",
-        fullMimeType: "text/html; charset=utf-8",
-        size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 24),
-        time: true
-      });
-  }
+  verifyRequestItemTarget(RequestsMenu.getItemAtIndex(4),
+    "GET", CONTENT_TYPE_SJS + "?fmt=bogus", {
+      status: 404,
+      statusText: "Not Found",
+      type: "html",
+      fullMimeType: "text/html; charset=utf-8",
+      size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 24),
+      time: true
+    });
   verifyRequestItemTarget(RequestsMenu.getItemAtIndex(5),
-    "GET", imageURL, {
+    "GET", TEST_IMAGE, {
       fuzzyUrl: true,
       status: 200,
-      statusText: okStatus,
+      statusText: "OK",
       type: "png",
       fullMimeType: "image/png",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 580),
       time: true
     });
   verifyRequestItemTarget(RequestsMenu.getItemAtIndex(6),
-    "GET", sjsURL + "?fmt=gzip", {
+    "GET", CONTENT_TYPE_SJS + "?fmt=gzip", {
       status: 200,
-      statusText: okStatus,
+      statusText: "OK",
       type: "plain",
       fullMimeType: "text/plain",
       transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 73),
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 10.73),
       time: true
     });
-  if (isHTTPS) {
-    // Brotli is enabled only on HTTPS.
-    verifyRequestItemTarget(RequestsMenu.getItemAtIndex(6),
-      "GET", sjsURL + "?fmt=gzip", {
-        status: 200,
-        statusText: okStatus,
-        type: "plain",
-        fullMimeType: "text/plain",
-        transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 73),
-        size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 10.73),
-        time: true
-      });
-  }
 
   let onEvent = waitForResponseBodyDisplayed();
   EventUtils.sendMouseEvent({ type: "mousedown" },
@@ -139,11 +115,6 @@ function* content_type_test(isHTTPS) {
 
   yield selectIndexAndWaitForTabUpdated(6);
   yield testResponseTab("gzip");
-
-  if (isHTTPS) {
-    yield selectIndexAndWaitForTabUpdated(7);
-    yield testResponseTab("br");
-  }
 
   yield teardown(monitor);
 
@@ -269,17 +240,6 @@ function* content_type_test(isHTTPS) {
           "The mode active in the source editor is incorrect for the gzip request.");
         break;
       }
-      case "br": {
-        checkVisibility("textarea");
-
-        let expected = "X".repeat(64);
-        let editor = yield NetMonitorView.editor("#response-content-textarea");
-        is(editor.getText(), expected,
-          "The text shown in the source editor is incorrect for the brotli request.");
-        is(editor.getMode(), Editor.modes.text,
-          "The mode active in the source editor is incorrect for the brotli request.");
-        break;
-      }
     }
   }
 
@@ -292,12 +252,4 @@ function* content_type_test(isHTTPS) {
   function waitForResponseBodyDisplayed() {
     return monitor.panelWin.once(monitor.panelWin.EVENTS.RESPONSE_BODY_DISPLAYED);
   }
-}
-
-add_task(function* () {
-    yield* content_type_test(false);
-});
-
-add_task(function* () {
-    yield* content_type_test(true);
 });

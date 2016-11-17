@@ -110,6 +110,10 @@ resumption value has one of the following forms:
     the `new` expression returns the frame's `this` value. Similarly, if
     the function is the constructor for a subclass, then a non-object
     value may result in a TypeError.
+    If the frame is a generator or async function, then <i>value</i> must
+    conform to the iterator protocol: it must be a non-proxy object of the form
+    <code>{ done: <i>boolean</i>, value: <i>v</i> }</code>, where
+    both `done` and `value` are ordinary properties.
 
 <code>{ throw: <i>value</i> }</code>
 :   Throw <i>value</i> as an exception from the current bytecode
