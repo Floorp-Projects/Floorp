@@ -22,11 +22,10 @@ use std::usize;
 
 use uuid::Uuid;
 
-#[derive(Clone)]
 struct ServerRecord {
     sender: OsIpcSender,
     conn_sender: mpsc::Sender<bool>,
-    conn_receiver: Arc<Mutex<mpsc::Receiver<bool>>>,
+    conn_receiver: Mutex<mpsc::Receiver<bool>>,
 }
 
 impl ServerRecord {
@@ -35,7 +34,7 @@ impl ServerRecord {
         ServerRecord {
             sender: sender,
             conn_sender: tx,
-            conn_receiver: Arc::new(Mutex::new(rx)),
+            conn_receiver: Mutex::new(rx),
         }
     }
 
@@ -59,32 +58,39 @@ pub fn channel() -> Result<(OsIpcSender, OsIpcReceiver),MpscError> {
     Ok((OsIpcSender::new(base_sender), OsIpcReceiver::new(base_receiver)))
 }
 
-#[derive(Debug)]
 pub struct OsIpcReceiver {
-    receiver: RefCell<Option<mpsc::Receiver<MpscChannelMessage>>>,
+    receiver: Arc<Mutex<Option<mpsc::Receiver<MpscChannelMessage>>>>,
 }
 
 impl PartialEq for OsIpcReceiver {
     fn eq(&self, other: &OsIpcReceiver) -> bool {
-        self.receiver.borrow().as_ref().map(|rx| rx as *const _) ==
-            other.receiver.borrow().as_ref().map(|rx| rx as *const _)
+        self.receiver.lock().unwrap().as_ref().map(|rx| rx as *const _) ==
+            other.receiver.lock().unwrap().as_ref().map(|rx| rx as *const _)
+    }
+}
+
+// Can't derive, as mpsc::Receiver doesn't implement Debug.
+impl fmt::Debug for OsIpcReceiver {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Not sure there is anything useful we could print here.
+        write!(f, "OsIpcReceiver {{ .. }}")
     }
 }
 
 impl OsIpcReceiver {
     fn new(receiver: mpsc::Receiver<MpscChannelMessage>) -> OsIpcReceiver {
         OsIpcReceiver {
-            receiver: RefCell::new(Some(receiver)),
+            receiver: Arc::new(Mutex::new(Some(receiver))),
         }
     }
 
     pub fn consume(&self) -> OsIpcReceiver {
-        let receiver = self.receiver.borrow_mut().take();
+        let receiver = self.receiver.lock().unwrap().take();
         OsIpcReceiver::new(receiver.unwrap())
     }
 
     pub fn recv(&self) -> Result<(Vec<u8>, Vec<OsOpaqueIpcChannel>, Vec<OsIpcSharedMemory>),MpscError> {
-        let r = self.receiver.borrow();
+        let r = self.receiver.lock().unwrap();
         match r.as_ref().unwrap().recv() {
             Ok(MpscChannelMessage(d,c,s)) => Ok((d,
                                                  c.into_iter().map(OsOpaqueIpcChannel::new).collect(),
@@ -94,7 +100,7 @@ impl OsIpcReceiver {
     }
 
     pub fn try_recv(&self) -> Result<(Vec<u8>, Vec<OsOpaqueIpcChannel>, Vec<OsIpcSharedMemory>),MpscError> {
-        let r = self.receiver.borrow();
+        let r = self.receiver.lock().unwrap();
         match r.as_ref().unwrap().try_recv() {
             Ok(MpscChannelMessage(d,c,s)) => Ok((d,
                                                  c.into_iter().map(OsOpaqueIpcChannel::new).collect(),
@@ -104,27 +110,35 @@ impl OsIpcReceiver {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct OsIpcSender {
-    sender: RefCell<mpsc::Sender<MpscChannelMessage>>,
+    sender: Arc<Mutex<mpsc::Sender<MpscChannelMessage>>>,
 }
 
 impl PartialEq for OsIpcSender {
     fn eq(&self, other: &OsIpcSender) -> bool {
-        &*self.sender.borrow() as *const _ ==
-            &*other.sender.borrow() as *const _
+        &*self.sender.lock().unwrap() as *const _ ==
+            &*other.sender.lock().unwrap() as *const _
+    }
+}
+
+// Can't derive, as mpsc::Sender doesn't implement Debug.
+impl fmt::Debug for OsIpcSender {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Not sure there is anything useful we could print here.
+        write!(f, "OsIpcSender {{ .. }}")
     }
 }
 
 impl OsIpcSender {
     fn new(sender: mpsc::Sender<MpscChannelMessage>) -> OsIpcSender {
         OsIpcSender {
-            sender: RefCell::new(sender),
+            sender: Arc::new(Mutex::new(sender)),
         }
     }
 
     pub fn connect(name: String) -> Result<OsIpcSender,MpscError> {
-        let record = ONE_SHOT_SERVERS.lock().unwrap().get(&name).unwrap().clone();
+        let record = ONE_SHOT_SERVERS.lock().unwrap().remove(&name).unwrap();
         record.connect();
         Ok(record.sender)
     }
@@ -139,7 +153,7 @@ impl OsIpcSender {
                 shared_memory_regions: Vec<OsIpcSharedMemory>)
                 -> Result<(),MpscError>
     {
-        match self.sender.borrow().send(MpscChannelMessage(data.to_vec(), ports, shared_memory_regions)) {
+        match self.sender.lock().unwrap().send(MpscChannelMessage(data.to_vec(), ports, shared_memory_regions)) {
             Err(_) => Err(MpscError::ChannelClosedError),
             Ok(_) => Ok(()),
         }
@@ -179,7 +193,7 @@ impl OsIpcReceiverSet {
             let mut handles: Vec<mpsc::Handle<MpscChannelMessage>> = Vec::with_capacity(self.receivers.len());
 
             for r in &self.receivers {
-                let inner_r = mem::replace(&mut *r.receiver.borrow_mut(), None);
+                let inner_r = mem::replace(&mut *r.receiver.lock().unwrap(), None);
                 receivers.push(inner_r);
             }
             
@@ -203,7 +217,7 @@ impl OsIpcReceiverSet {
 
         // put the receivers back
         for (index,r) in self.receivers.iter().enumerate() {
-            mem::replace(&mut *r.receiver.borrow_mut(), mem::replace(&mut receivers[index], None));
+            mem::replace(&mut *r.receiver.lock().unwrap(), mem::replace(&mut receivers[index], None));
         }
 
         if r_id == -1 {
@@ -243,33 +257,35 @@ impl OsIpcSelectionResult {
 }
 
 pub struct OsIpcOneShotServer {
-    receiver: OsIpcReceiver,
+    receiver: RefCell<Option<OsIpcReceiver>>,
     name: String,
 }
 
 impl OsIpcOneShotServer {
     pub fn new() -> Result<(OsIpcOneShotServer, String),MpscError> {
-        let (sender, receiver) = try!(channel());
+        let (sender, receiver) = match channel() {
+            Ok((s,r)) => (s,r),
+            Err(err) => return Err(err),
+        };
 
         let name = Uuid::new_v4().to_string();
         let record = ServerRecord::new(sender);
         ONE_SHOT_SERVERS.lock().unwrap().insert(name.clone(), record);
         Ok((OsIpcOneShotServer {
-            receiver: receiver,
+            receiver: RefCell::new(Some(receiver)),
             name: name.clone(),
         },name.clone()))
     }
 
-    pub fn accept(self) -> Result<(OsIpcReceiver,
+    pub fn accept(&self) -> Result<(OsIpcReceiver,
                                     Vec<u8>,
                                     Vec<OsOpaqueIpcChannel>,
                                     Vec<OsIpcSharedMemory>),MpscError>
     {
-        let record = ONE_SHOT_SERVERS.lock().unwrap().get(&self.name).unwrap().clone();
-        record.accept();
-        ONE_SHOT_SERVERS.lock().unwrap().remove(&self.name).unwrap();
-        let (data, channels, shmems) = try!(self.receiver.recv());
-        Ok((self.receiver, data, channels, shmems))
+        ONE_SHOT_SERVERS.lock().unwrap().get(&self.name).unwrap().accept();
+        let receiver = self.receiver.borrow_mut().take().unwrap();
+        let (data, channels, shmems) = receiver.recv().unwrap();
+        Ok((receiver, data, channels, shmems))
     }
 }
 
@@ -298,7 +314,7 @@ impl OsOpaqueIpcChannel {
         }
     }
     
-    pub fn to_sender(&mut self) -> OsIpcSender {
+    pub fn to_sender(&self) -> OsIpcSender {
         match self.channel.borrow_mut().take().unwrap() {
             OsIpcChannel::Sender(s) => s,
             OsIpcChannel::Receiver(_) => panic!("Opaque channel is not a sender!"),

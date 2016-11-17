@@ -9,12 +9,11 @@ use std::slice;
 use {AuxiliaryLists, AuxiliaryListsDescriptor, BorderDisplayItem, BorderRadius};
 use {BorderSide, BoxShadowClipMode, BoxShadowDisplayItem, BuiltDisplayList};
 use {BuiltDisplayListDescriptor, ClipRegion, ComplexClipRegion, ColorF};
-use {DisplayItem, DisplayListItem, DisplayListMode, DrawListInfo, FilterOp};
-use {FontKey, GlyphInstance, GradientDisplayItem, GradientStop, IframeInfo};
-use {ImageDisplayItem, ImageKey, ImageRendering, ItemRange, PipelineId};
-use {RectangleDisplayItem, SpecificDisplayItem, SpecificDisplayListItem};
-use {StackingContextId, StackingContextInfo, TextDisplayItem};
-use {WebGLContextId, WebGLDisplayItem};
+use {DisplayItem, DisplayListMode, FilterOp};
+use {FontKey, GlyphInstance, GradientDisplayItem, GradientStop, IframeDisplayItem};
+use {ImageDisplayItem, ImageKey, ImageRendering, ItemRange, PipelineId,};
+use {PushStackingContextDisplayItem, RectangleDisplayItem, SpecificDisplayItem};
+use {StackingContext, TextDisplayItem, WebGLContextId, WebGLDisplayItem};
 
 impl BuiltDisplayListDescriptor {
     pub fn size(&self) -> usize {
@@ -38,35 +37,23 @@ impl BuiltDisplayList {
         &self.descriptor
     }
 
-    pub fn display_list_items<'a>(&'a self) -> &'a [DisplayListItem] {
+    pub fn all_display_items<'a>(&'a self) -> &'a [DisplayItem] {
         unsafe {
             convert_blob_to_pod(&self.data[0..self.descriptor.display_list_items_size])
-        }
-    }
-
-    pub fn display_items<'a>(&'a self, range: &ItemRange) -> &'a [DisplayItem] {
-        unsafe {
-            range.get(convert_blob_to_pod(&self.data[self.descriptor.display_list_items_size..]))
         }
     }
 }
 
 pub struct DisplayListBuilder {
     pub mode: DisplayListMode,
-
-    pub work_list: Vec<DisplayItem>,
-
-    pub display_list_items: Vec<DisplayListItem>,
-    pub display_items: Vec<DisplayItem>,
+    pub list: Vec<DisplayItem>,
 }
 
 impl DisplayListBuilder {
     pub fn new() -> DisplayListBuilder {
         DisplayListBuilder {
             mode: DisplayListMode::Default,
-            work_list: Vec::new(),
-            display_list_items: Vec::new(),
-            display_items: Vec::new(),
+            list: Vec::new(),
         }
     }
 
@@ -84,7 +71,7 @@ impl DisplayListBuilder {
             clip: clip,
         };
 
-        self.push_item(display_item);
+        self.list.push(display_item);
     }
 
     pub fn push_image(&mut self,
@@ -107,7 +94,7 @@ impl DisplayListBuilder {
             clip: clip,
         };
 
-        self.push_item(display_item);
+        self.list.push(display_item);
     }
 
     pub fn push_webgl_canvas(&mut self,
@@ -124,7 +111,7 @@ impl DisplayListBuilder {
             clip: clip,
         };
 
-        self.push_item(display_item);
+        self.list.push(display_item);
     }
 
     pub fn push_text(&mut self,
@@ -157,7 +144,7 @@ impl DisplayListBuilder {
                 clip: clip,
             };
 
-            self.push_item(display_item);
+            self.list.push(display_item);
         }
     }
 
@@ -183,7 +170,7 @@ impl DisplayListBuilder {
             clip: clip,
         };
 
-        self.push_item(display_item);
+        self.list.push(display_item);
     }
 
     pub fn push_box_shadow(&mut self,
@@ -212,18 +199,7 @@ impl DisplayListBuilder {
             clip: clip,
         };
 
-        self.push_item(display_item);
-    }
-
-    pub fn push_stacking_context(&mut self, stacking_context_id: StackingContextId) {
-        self.flush();
-        let info = StackingContextInfo {
-            id: stacking_context_id,
-        };
-        let item = DisplayListItem {
-            specific: SpecificDisplayListItem::StackingContext(info),
-        };
-        self.display_list_items.push(item);
+        self.list.push(display_item);
     }
 
     pub fn push_gradient(&mut self,
@@ -245,68 +221,52 @@ impl DisplayListBuilder {
             clip: clip,
         };
 
-        self.push_item(display_item);
+        self.list.push(display_item);
     }
 
-    pub fn push_iframe(&mut self,
-                       rect: Rect<f32>,
-                       clip: ClipRegion,
-                       iframe: PipelineId) {
-        self.flush();
-        let info = IframeInfo {
-            id: iframe,
-            bounds: rect,
+    pub fn push_stacking_context(&mut self, stacking_context: StackingContext) {
+        let item = DisplayItem {
+            item: SpecificDisplayItem::PushStackingContext(PushStackingContextDisplayItem {
+                stacking_context: stacking_context
+            }),
+            rect: Rect::zero(),
+            clip: ClipRegion::simple(&Rect::zero()),
+        };
+        self.list.push(item);
+    }
+
+    pub fn pop_stacking_context(&mut self) {
+        let item = DisplayItem {
+            item: SpecificDisplayItem::PopStackingContext,
+            rect: Rect::zero(),
+            clip: ClipRegion::simple(&Rect::zero()),
+        };
+        self.list.push(item);
+    }
+
+    pub fn push_iframe(&mut self, rect: Rect<f32>, clip: ClipRegion, pipeline_id: PipelineId) {
+        let item = DisplayItem {
+            item: SpecificDisplayItem::Iframe(IframeDisplayItem { pipeline_id: pipeline_id }),
+            rect: rect,
             clip: clip,
         };
-        let item = DisplayListItem {
-            specific: SpecificDisplayListItem::Iframe(info),
-        };
-        self.display_list_items.push(item);
+        self.list.push(item);
     }
 
-    fn push_item(&mut self, item: DisplayItem) {
-        self.work_list.push(item);
-    }
-
-    fn flush(&mut self) {
-        let items = mem::replace(&mut self.work_list, Vec::new());
-        if items.is_empty() {
-            return
-        }
-
-        let draw_list = DrawListInfo {
-            items: ItemRange::new(&mut self.display_items, &items),
-        };
-        self.display_list_items.push(DisplayListItem {
-            specific: SpecificDisplayListItem::DrawList(draw_list),
-        });
-    }
-
-    pub fn finalize(mut self) -> BuiltDisplayList {
-        self.flush();
-
+    pub fn finalize(self) -> BuiltDisplayList {
         unsafe {
-            let mut blob = convert_pod_to_blob(&self.display_list_items).to_vec();
+            let blob = convert_pod_to_blob(&self.list).to_vec();
             let display_list_items_size = blob.len();
-            blob.extend_from_slice(convert_pod_to_blob(&self.display_items));
-            let display_items_size = blob.len() - display_list_items_size;
+
             BuiltDisplayList {
                 descriptor: BuiltDisplayListDescriptor {
                     mode: self.mode,
                     display_list_items_size: display_list_items_size,
-                    display_items_size: display_items_size,
+                    display_items_size: 0,
                 },
                 data: blob,
             }
         }
-    }
-
-    pub fn display_items<'a>(&'a self, range: &ItemRange) -> &'a [DisplayItem] {
-        range.get(&self.display_items)
-    }
-
-    pub fn display_items_mut<'a>(&'a mut self, range: &ItemRange) -> &'a mut [DisplayItem] {
-        range.get_mut(&mut self.display_items)
     }
 }
 

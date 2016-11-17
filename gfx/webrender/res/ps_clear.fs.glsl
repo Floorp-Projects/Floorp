@@ -3,5 +3,5 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 void main(void) {
-    oFragColor = vec4(1, 1, 1, 1);
+    oFragColor = vec4(1.0, 1.0, 1.0, 1.0);
 }

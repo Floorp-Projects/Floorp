@@ -20,7 +20,11 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 
-#[cfg(target_os = "macos")] extern crate core_graphics;
+#[cfg(target_os = "macos")]
+extern crate core_graphics;
+
+#[cfg(target_os = "windows")]
+extern crate dwrote;
 
 #[cfg(feature = "serde_codegen")]
 include!(concat!(env!("OUT_DIR"), "/types.rs"));

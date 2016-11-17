@@ -7,10 +7,9 @@ use euclid::{Point2D, Size2D};
 use ipc_channel::ipc::{self, IpcBytesSender, IpcSender};
 use offscreen_gl_context::{GLContextAttributes, GLLimits};
 use std::cell::Cell;
-use {ApiMsg, AuxiliaryLists, BuiltDisplayList, ColorF, DisplayListId, Epoch};
+use {ApiMsg, AuxiliaryLists, BuiltDisplayList, ColorF, Epoch};
 use {FontKey, IdNamespace, ImageFormat, ImageKey, NativeFontHandle, PipelineId};
-use {RenderApiSender, ResourceId, ScrollEventPhase, ScrollLayerState};
-use {StackingContext, StackingContextId, WebGLContextId, WebGLCommand};
+use {RenderApiSender, ResourceId, ScrollEventPhase, ScrollLayerState, WebGLContextId, WebGLCommand};
 use {GlyphKey, GlyphDimensions};
 
 impl RenderApiSender {
@@ -101,6 +100,15 @@ impl RenderApi {
         key
     }
 
+    /// Flushes all messages and will send a notification when the render
+    /// backend thread has finished processing all previous messages.
+    /// This is a temporary API And users should not expect this to be API
+    /// to exist in the future.
+    pub fn flush(&self) {
+        let msg = ApiMsg::Flush;
+        self.api_sender.send(msg).unwrap();
+    }
+
     /// Updates a specific image.
     ///
     /// Currently doesn't support changing dimensions or format by updating.
@@ -157,38 +165,25 @@ impl RenderApi {
     /// * `auxiliary_lists`: Various items that the display lists and stacking contexts reference.
     ///
     /// [notifier]: trait.RenderNotifier.html#tymethod.new_frame_ready
-    pub fn set_root_stacking_context(&self,
-                                     stacking_context_id: StackingContextId,
-                                     background_color: ColorF,
-                                     epoch: Epoch,
-                                     pipeline_id: PipelineId,
-                                     viewport_size: Size2D<f32>,
-                                     stacking_contexts: Vec<(StackingContextId, StackingContext)>,
-                                     display_lists: Vec<(DisplayListId, BuiltDisplayList)>,
-                                     auxiliary_lists: AuxiliaryLists) {
-        let display_list_descriptors = display_lists.iter().map(|&(display_list_id,
-                                                                   ref built_display_list)| {
-            (display_list_id, (*built_display_list.descriptor()).clone())
-        }).collect();
-        let msg = ApiMsg::SetRootStackingContext(stacking_context_id,
-                                                 background_color,
-                                                 epoch,
-                                                 pipeline_id,
-                                                 viewport_size,
-                                                 stacking_contexts,
-                                                 display_list_descriptors,
-                                                 *auxiliary_lists.descriptor());
+    pub fn set_root_display_list(&self,
+                                 background_color: ColorF,
+                                 epoch: Epoch,
+                                 pipeline_id: PipelineId,
+                                 viewport_size: Size2D<f32>,
+                                 display_list: BuiltDisplayList,
+                                 auxiliary_lists: AuxiliaryLists) {
+        let msg = ApiMsg::SetRootDisplayList(background_color,
+                                             epoch,
+                                             pipeline_id,
+                                             viewport_size,
+                                             display_list.descriptor().clone(),
+                                             *auxiliary_lists.descriptor());
         self.api_sender.send(msg).unwrap();
 
         let mut payload = vec![];
-        payload.write_u32::<LittleEndian>(stacking_context_id.0).unwrap();
         payload.write_u32::<LittleEndian>(epoch.0).unwrap();
-
-        for &(_, ref built_display_list) in &display_lists {
-            payload.extend_from_slice(built_display_list.data());
-        }
+        payload.extend_from_slice(display_list.data());
         payload.extend_from_slice(auxiliary_lists.data());
-
         self.payload_sender.send(&payload[..]).unwrap();
     }
 
@@ -243,18 +238,6 @@ impl RenderApi {
     pub fn send_webgl_command(&self, context_id: WebGLContextId, command: WebGLCommand) {
         let msg = ApiMsg::WebGLCommand(context_id, command);
         self.api_sender.send(msg).unwrap();
-    }
-
-    #[inline]
-    pub fn next_stacking_context_id(&self) -> StackingContextId {
-        let new_id = self.next_unique_id();
-        StackingContextId(new_id.0, new_id.1)
-    }
-
-    #[inline]
-    pub fn next_display_list_id(&self) -> DisplayListId {
-        let new_id = self.next_unique_id();
-        DisplayListId(new_id.0, new_id.1)
     }
 
     #[inline]

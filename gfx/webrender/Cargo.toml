@@ -1,6 +1,6 @@
 [package]
 name = "webrender"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -18,7 +18,7 @@ byteorder = "0.5"
 euclid = "0.10"
 fnv="1.0"
 gleam = "0.2"
-ipc-channel = "0.6"
+ipc-channel = "0.5"
 lazy_static = "0.2"
 log = "0.3"
 num-traits = "0.1.32"
@@ -28,20 +28,21 @@ time = "0.1"
 webrender_traits = {path = "../webrender_traits", default-features = false}
 bitflags = "0.7"
 
-[target.'cfg(any(target_os = "android", target_os = "windows"))'.dependencies]
+[target.'cfg(target_os = "android")'.dependencies]
 freetype = "0.1.2"
 
 [target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
 freetype = {version = "0.1.2", default-features = false}
 
+[target.'cfg(target_os = "windows")'.dependencies]
+dwrote = {git = "https://github.com/vvuk/dwrote-rs"}
+kernel32-sys = "0.2"
+winapi = "0.2.8"
+
 [target.'cfg(target_os = "macos")'.dependencies]
 core-graphics = "0.4.1"
 core-text = "2.0"
 core-foundation = "0.2.2"
-
-[target.'cfg(target_os = "windows")'.dependencies]
-kernel32-sys = "0.2"
-winapi = "0.2.8"
 
 [profile.release]
 panic = "abort"

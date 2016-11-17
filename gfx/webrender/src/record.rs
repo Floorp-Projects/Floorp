@@ -19,9 +19,9 @@ pub fn write_msg(frame: u32, msg: &ApiMsg) {
         &ApiMsg::AddImage(..) |
         &ApiMsg::UpdateImage(..) |
         &ApiMsg::DeleteImage(..)|
-        &ApiMsg::SetRootStackingContext(..) |
+        &ApiMsg::SetRootDisplayList(..) |
         &ApiMsg::SetRootPipeline(..) |
-        &ApiMsg::Scroll(..)|
+        &ApiMsg::Scroll(..) |
         &ApiMsg::TickScrollingBounce |
         &ApiMsg::WebGLCommand(..) => {
             let buff = serialize(msg, bincode::SizeLimit::Infinite).unwrap();

@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use device::{MAX_TEXTURE_SIZE, TextureId, TextureFilter};
+use device::{MAX_TEXTURE_SIZE, TextureFilter};
 use euclid::{Point2D, Rect, Size2D};
 use fnv::FnvHasher;
 use freelist::{FreeList, FreeListItem, FreeListItemId};
-use internal_types::{TextureUpdate, TextureUpdateOp, TextureUpdateDetails};
-use internal_types::{RenderTargetMode, TextureUpdateList};
+use internal_types::{TextureUpdate, TextureUpdateOp};
+use internal_types::{CacheTextureId, RenderTargetMode, TextureUpdateList};
 use internal_types::{RectUv, DevicePixel, DevicePoint};
 use std::cmp::{self, Ordering};
 use std::collections::HashMap;
@@ -81,7 +81,7 @@ fn copy_pixels(src: &[u8],
 /// This approach was chosen because of its simplicity, good performance, and easy support for
 /// dynamic texture deallocation.
 pub struct TexturePage {
-    texture_id: TextureId,
+    texture_id: CacheTextureId,
     texture_size: u32,
     free_list: FreeRectList,
     allocations: u32,
@@ -89,7 +89,7 @@ pub struct TexturePage {
 }
 
 impl TexturePage {
-    pub fn new(texture_id: TextureId, texture_size: u32) -> TexturePage {
+    pub fn new(texture_id: CacheTextureId, texture_size: u32) -> TexturePage {
         let mut page = TexturePage {
             texture_id: texture_id,
             texture_size: texture_size,
@@ -424,7 +424,7 @@ impl FreeListBin {
 #[derive(Debug, Clone)]
 pub struct TextureCacheItem {
     // Identifies the texture and array slice
-    pub texture_id: TextureId,
+    pub texture_id: CacheTextureId,
 
     // The texture coordinates for this item
     pub pixel_rect: RectUv<i32, DevicePixel>,
@@ -468,7 +468,7 @@ impl FreeListItem for TextureCacheItem {
 }
 
 impl TextureCacheItem {
-    fn new(texture_id: TextureId,
+    fn new(texture_id: CacheTextureId,
            allocated_rect: Rect<u32>,
            requested_rect: Rect<u32>,
            texture_size: &Size2D<u32>)
@@ -496,8 +496,6 @@ struct TextureCacheArena {
     pages_a8: Vec<TexturePage>,
     pages_rgb8: Vec<TexturePage>,
     pages_rgba8: Vec<TexturePage>,
-    alternate_pages_a8: Vec<TexturePage>,
-    alternate_pages_rgba8: Vec<TexturePage>,
 }
 
 impl TextureCacheArena {
@@ -506,17 +504,12 @@ impl TextureCacheArena {
             pages_a8: Vec::new(),
             pages_rgb8: Vec::new(),
             pages_rgba8: Vec::new(),
-            alternate_pages_a8: Vec::new(),
-            alternate_pages_rgba8: Vec::new(),
-            //render_target_pages: Vec::new(),
         }
     }
 
-    fn texture_page_for_id(&mut self, id: TextureId) -> Option<&mut TexturePage> {
+    fn texture_page_for_id(&mut self, id: CacheTextureId) -> Option<&mut TexturePage> {
         for page in self.pages_a8.iter_mut().chain(self.pages_rgb8.iter_mut())
-                                            .chain(self.pages_rgba8.iter_mut())
-                                            .chain(self.alternate_pages_a8.iter_mut())
-                                            .chain(self.alternate_pages_rgba8.iter_mut()) {
+                                            .chain(self.pages_rgba8.iter_mut()) {
             if page.texture_id == id {
                 return Some(page)
             }
@@ -525,8 +518,38 @@ impl TextureCacheArena {
     }
 }
 
+pub struct CacheTextureIdList {
+    next_id: usize,
+    free_list: Vec<usize>,
+}
+
+impl CacheTextureIdList {
+    fn new() -> CacheTextureIdList {
+        CacheTextureIdList {
+            next_id: 0,
+            free_list: Vec::new(),
+        }
+    }
+
+    fn allocate(&mut self) -> CacheTextureId {
+        // If nothing on the free list of texture IDs,
+        // allocate a new one.
+        if self.free_list.is_empty() {
+            self.free_list.push(self.next_id);
+            self.next_id += 1;
+        }
+
+        let id = self.free_list.pop().unwrap();
+        CacheTextureId(id)
+    }
+
+    fn free(&mut self, id: CacheTextureId) {
+        self.free_list.push(id.0);
+    }
+}
+
 pub struct TextureCache {
-    free_texture_ids: Vec<TextureId>,
+    cache_id_list: CacheTextureIdList,
     free_texture_levels: HashMap<ImageFormat, Vec<FreeTextureLevel>, BuildHasherDefault<FnvHasher>>,
     items: FreeList<TextureCacheItem>,
     arena: TextureCacheArena,
@@ -546,9 +569,9 @@ pub struct AllocationResult {
 }
 
 impl TextureCache {
-    pub fn new(free_texture_ids: Vec<TextureId>) -> TextureCache {
+    pub fn new() -> TextureCache {
         TextureCache {
-            free_texture_ids: free_texture_ids,
+            cache_id_list: CacheTextureIdList::new(),
             free_texture_levels: HashMap::with_hasher(Default::default()),
             items: FreeList::new(),
             pending_updates: TextureUpdateList::new(),
@@ -574,7 +597,7 @@ impl TextureCache {
             allocated_rect: Rect::zero(),
             requested_rect: Rect::zero(),
             texture_size: Size2D::zero(),
-            texture_id: TextureId::invalid(),
+            texture_id: CacheTextureId(0),
         };
         self.items.insert(new_item)
     }
@@ -595,9 +618,7 @@ impl TextureCache {
         //           fairly trivial to implement, just tedious).
         if filter == TextureFilter::Nearest {
             // Fall back to standalone texture allocation.
-            let texture_id = self.free_texture_ids
-                                 .pop()
-                                 .expect("TODO: Handle running out of texture ids!");
+            let texture_id = self.cache_id_list.allocate();
             let cache_item = TextureCacheItem::new(
                 texture_id,
                 Rect::new(Point2D::zero(), requested_size),
@@ -682,12 +703,17 @@ impl TextureCache {
                 Entry::Occupied(entry) => entry.into_mut(),
             };
             if free_texture_levels.is_empty() {
-                create_new_texture_page(&mut self.pending_updates,
-                                        &mut self.free_texture_ids,
-                                        &mut free_texture_levels,
-                                        texture_size,
-                                        format,
-                                        mode);
+                let texture_id = self.cache_id_list.allocate();
+
+                let update_op = TextureUpdate {
+                    id: texture_id,
+                    op: texture_create_op(texture_size, format, mode),
+                };
+                self.pending_updates.push(update_op);
+
+                free_texture_levels.push(FreeTextureLevel {
+                    texture_id: texture_id,
+                });
             }
             let free_texture_level = free_texture_levels.pop().unwrap();
             let texture_id = free_texture_level.texture_id;
@@ -695,23 +721,6 @@ impl TextureCache {
             let page = TexturePage::new(texture_id, texture_size);
             page_list.push(page);
         }
-    }
-
-    pub fn add_raw_update(&mut self, id: TextureId, size: Size2D<i32>) {
-        self.pending_updates.push(TextureUpdate {
-            id: id,
-            op: TextureUpdateOp::Update(
-                0, 0,
-                size.width as u32, size.height as u32,
-                TextureUpdateDetails::Raw),
-        })
-    }
-
-    pub fn add_raw_remove(&mut self, id: TextureId) {
-        self.pending_updates.push(TextureUpdate {
-            id: id,
-            op: TextureUpdateOp::Remove
-        });
     }
 
     pub fn update(&mut self,
@@ -731,7 +740,8 @@ impl TextureCache {
                                          existing_item.requested_rect.origin.y,
                                          width,
                                          height,
-                                         TextureUpdateDetails::Blit(bytes, stride));
+                                         bytes,
+                                         stride);
 
         let update_op = TextureUpdate {
             id: existing_item.texture_id,
@@ -788,7 +798,8 @@ impl TextureCache {
                                                 result.item.allocated_rect.origin.y,
                                                 result.item.allocated_rect.size.width,
                                                 1,
-                                                TextureUpdateDetails::Blit(top_row_bytes, None))
+                                                top_row_bytes,
+                                                None)
                 };
 
                 let border_update_op_bottom = TextureUpdate {
@@ -799,7 +810,8 @@ impl TextureCache {
                             result.item.requested_rect.size.height + 1,
                         result.item.allocated_rect.size.width,
                         1,
-                        TextureUpdateDetails::Blit(bottom_row_bytes, None))
+                        bottom_row_bytes,
+                        None)
                 };
 
                 let border_update_op_left = TextureUpdate {
@@ -809,7 +821,8 @@ impl TextureCache {
                         result.item.requested_rect.origin.y,
                         1,
                         result.item.requested_rect.size.height,
-                        TextureUpdateDetails::Blit(left_column_bytes, None))
+                        left_column_bytes,
+                        None)
                 };
 
                 let border_update_op_right = TextureUpdate {
@@ -818,7 +831,8 @@ impl TextureCache {
                                                 result.item.requested_rect.origin.y,
                                                 1,
                                                 result.item.requested_rect.size.height,
-                                                TextureUpdateDetails::Blit(right_column_bytes, None))
+                                                right_column_bytes,
+                                                None)
                 };
 
                 self.pending_updates.push(border_update_op_top);
@@ -830,7 +844,8 @@ impl TextureCache {
                                         result.item.requested_rect.origin.y,
                                         width,
                                         height,
-                                        TextureUpdateDetails::Blit(bytes,stride))
+                                        bytes,
+                                        stride)
             }
             AllocationKind::Standalone => {
                 TextureUpdateOp::Create(width,
@@ -862,7 +877,7 @@ impl TextureCache {
                 None => {
                     // This is a standalone texture allocation. Just push it back onto the free
                     // list.
-                    self.free_texture_ids.push(item.texture_id);
+                    self.cache_id_list.free(item.texture_id);
                 }
             }
         }
@@ -900,25 +915,7 @@ impl FitsInside for Size2D<u32> {
 /// FIXME(pcwalton): Would probably be more efficient as a bit vector.
 #[derive(Clone, Copy)]
 pub struct FreeTextureLevel {
-    texture_id: TextureId,
-}
-
-fn create_new_texture_page(pending_updates: &mut TextureUpdateList,
-                           free_texture_ids: &mut Vec<TextureId>,
-                           free_texture_levels: &mut Vec<FreeTextureLevel>,
-                           texture_size: u32,
-                           format: ImageFormat,
-                           mode: RenderTargetMode) {
-    let texture_id = free_texture_ids.pop().expect("TODO: Handle running out of texture IDs!");
-    let update_op = TextureUpdate {
-        id: texture_id,
-        op: texture_create_op(texture_size, format, mode),
-    };
-    pending_updates.push(update_op);
-
-    free_texture_levels.push(FreeTextureLevel {
-        texture_id: texture_id,
-    })
+    texture_id: CacheTextureId,
 }
 
 /// Returns the number of pixels on a side we start out with for our texture atlases.

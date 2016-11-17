@@ -4,10 +4,11 @@
 
 use byteorder::{LittleEndian, ReadBytesExt};
 use frame::Frame;
-use internal_types::{FontTemplate, GLContextHandleWrapper, GLContextWrapper, ResultMsg, RendererFrame};
+use internal_types::{FontTemplate, GLContextHandleWrapper, GLContextWrapper};
+use internal_types::{SourceTexture, ResultMsg, RendererFrame};
 use ipc_channel::ipc::{IpcBytesReceiver, IpcBytesSender, IpcReceiver};
 use profiler::BackendProfileCounters;
-use resource_cache::{DummyResources, ResourceCache};
+use resource_cache::ResourceCache;
 use scene::Scene;
 use std::collections::HashMap;
 use std::fs;
@@ -16,8 +17,7 @@ use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Sender;
 use texture_cache::TextureCache;
 use webrender_traits::{ApiMsg, AuxiliaryLists, BuiltDisplayList, IdNamespace};
-use webrender_traits::{RenderNotifier, RenderDispatcher, WebGLCommand, WebGLContextId};
-use device::TextureId;
+use webrender_traits::{FlushNotifier, RenderNotifier, RenderDispatcher, WebGLCommand, WebGLContextId};
 use record;
 use tiling::FrameBuilderConfig;
 use offscreen_gl_context::GLContextDispatcher;
@@ -36,12 +36,12 @@ pub struct RenderBackend {
     next_namespace_id: IdNamespace,
 
     resource_cache: ResourceCache,
-    dummy_resources: DummyResources,
 
     scene: Scene,
     frame: Frame,
 
     notifier: Arc<Mutex<Option<Box<RenderNotifier>>>>,
+    flush_notifier: Arc<Mutex<Option<Box<FlushNotifier>>>>,
     webrender_context_handle: Option<GLContextHandleWrapper>,
     webgl_contexts: HashMap<WebGLContextId, GLContextWrapper>,
     current_bound_webgl_context_id: Option<WebGLContextId>,
@@ -58,9 +58,9 @@ impl RenderBackend {
                result_tx: Sender<ResultMsg>,
                device_pixel_ratio: f32,
                texture_cache: TextureCache,
-               dummy_resources: DummyResources,
                enable_aa: bool,
                notifier: Arc<Mutex<Option<Box<RenderNotifier>>>>,
+               flush_notifier: Arc<Mutex<Option<Box<FlushNotifier>>>>,
                webrender_context_handle: Option<GLContextHandleWrapper>,
                config: FrameBuilderConfig,
                debug: bool,
@@ -78,11 +78,11 @@ impl RenderBackend {
             result_tx: result_tx,
             device_pixel_ratio: device_pixel_ratio,
             resource_cache: resource_cache,
-            dummy_resources: dummy_resources,
             scene: Scene::new(),
             frame: Frame::new(debug, config),
             next_namespace_id: IdNamespace(1),
             notifier: notifier,
+            flush_notifier: flush_notifier,
             webrender_context_handle: webrender_context_handle,
             webgl_contexts: HashMap::new(),
             current_bound_webgl_context_id: None,
@@ -98,6 +98,7 @@ impl RenderBackend {
         if self.enable_recording {
             fs::create_dir("record").ok();
         }
+
         loop {
             let msg = self.api_rx.recv();
             match msg {
@@ -132,6 +133,10 @@ impl RenderBackend {
                                                                    format,
                                                                    bytes);
                         }
+                        ApiMsg::Flush => {
+                            let mut flush_notifier = self.flush_notifier.lock();
+                            flush_notifier.as_mut().unwrap().as_mut().unwrap().all_messages_flushed();
+                        }
                         ApiMsg::UpdateImage(id, width, height, format, bytes) => {
                             self.resource_cache.update_image_template(id,
                                                                       width,
@@ -150,33 +155,21 @@ impl RenderBackend {
 
                             sender.send(result).unwrap();
                         }
-                        ApiMsg::SetRootStackingContext(stacking_context_id,
-                                                       background_color,
-                                                       epoch,
-                                                       pipeline_id,
-                                                       viewport_size,
-                                                       stacking_contexts,
-                                                       display_lists,
-                                                       auxiliary_lists_descriptor) => {
-                            for (id, stacking_context) in stacking_contexts.into_iter() {
-                                self.scene.add_stacking_context(id,
-                                                                pipeline_id,
-                                                                epoch,
-                                                                stacking_context);
-                            }
-
+                        ApiMsg::SetRootDisplayList(background_color,
+                                                   epoch,
+                                                   pipeline_id,
+                                                   viewport_size,
+                                                   display_list_descriptor,
+                                                   auxiliary_lists_descriptor) => {
                             let mut leftover_auxiliary_data = vec![];
                             let mut auxiliary_data;
                             loop {
                                 auxiliary_data = self.payload_rx.recv().unwrap();
                                 {
                                     let mut payload_reader = Cursor::new(&auxiliary_data[..]);
-                                    let payload_stacking_context_id =
-                                        payload_reader.read_u32::<LittleEndian>().unwrap();
                                     let payload_epoch =
                                         payload_reader.read_u32::<LittleEndian>().unwrap();
-                                    if payload_epoch == epoch.0 &&
-                                            payload_stacking_context_id == stacking_context_id.0 {
+                                    if payload_epoch == epoch.0 {
                                         break
                                     }
                                 }
@@ -188,22 +181,14 @@ impl RenderBackend {
                             if self.enable_recording {
                                 record::write_payload(frame_counter, &auxiliary_data);
                             }
-                            let mut auxiliary_data = Cursor::new(&mut auxiliary_data[8..]);
-                            for (display_list_id,
-                                 display_list_descriptor) in display_lists.into_iter() {
-                                let mut built_display_list_data =
-                                    vec![0; display_list_descriptor.size()];
-                                auxiliary_data.read_exact(&mut built_display_list_data[..])
-                                              .unwrap();
-                                let built_display_list =
-                                    BuiltDisplayList::from_data(built_display_list_data,
-                                                                display_list_descriptor);
-                                self.scene.add_display_list(display_list_id,
-                                                            pipeline_id,
-                                                            epoch,
-                                                            built_display_list,
-                                                            &mut self.resource_cache);
-                            }
+
+                            let mut auxiliary_data = Cursor::new(&mut auxiliary_data[4..]);
+                            let mut built_display_list_data =
+                                vec![0; display_list_descriptor.size()];
+                            auxiliary_data.read_exact(&mut built_display_list_data[..]).unwrap();
+                            let built_display_list =
+                                BuiltDisplayList::from_data(built_display_list_data,
+                                                            display_list_descriptor);
 
                             let mut auxiliary_lists_data =
                                 vec![0; auxiliary_lists_descriptor.size()];
@@ -211,14 +196,14 @@ impl RenderBackend {
                             let auxiliary_lists =
                                 AuxiliaryLists::from_data(auxiliary_lists_data,
                                                           auxiliary_lists_descriptor);
+
                             let frame = profile_counters.total_time.profile(|| {
-                                self.scene.set_root_stacking_context(pipeline_id,
-                                                                     epoch,
-                                                                     stacking_context_id,
-                                                                     background_color,
-                                                                     viewport_size,
-                                                                     &mut self.resource_cache,
-                                                                     auxiliary_lists);
+                                self.scene.set_root_display_list(pipeline_id,
+                                                                 epoch,
+                                                                 built_display_list,
+                                                                 background_color,
+                                                                 viewport_size,
+                                                                 auxiliary_lists);
 
                                 self.build_scene();
                                 self.render()
@@ -301,7 +286,7 @@ impl RenderBackend {
                                         self.webgl_contexts.insert(id, ctx);
 
                                         self.resource_cache
-                                            .add_webgl_texture(id, TextureId::new(texture_id), real_size);
+                                            .add_webgl_texture(id, SourceTexture::WebGL(texture_id), real_size);
 
                                         tx.send(Ok((id, limits))).unwrap();
                                     },
@@ -321,7 +306,7 @@ impl RenderBackend {
                                     // Update webgl texture size. Texture id may change too.
                                     let (real_size, texture_id, _) = ctx.get_info();
                                     self.resource_cache
-                                        .update_webgl_texture(context_id, TextureId::new(texture_id), real_size);
+                                        .update_webgl_texture(context_id, SourceTexture::WebGL(texture_id), real_size);
                                 },
                                 Err(msg) => {
                                     error!("Error resizing WebGLContext: {}", msg);
@@ -368,8 +353,6 @@ impl RenderBackend {
         }
 
         self.frame.create(&self.scene,
-                          &mut self.resource_cache,
-                          &self.dummy_resources,
                           &mut new_pipeline_sizes,
                           self.device_pixel_ratio);
 

@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use webrender_traits::{PipelineId, AuxiliaryListsBuilder, StackingContextId, DisplayListId};
+use webrender_traits::{PipelineId, AuxiliaryListsBuilder};
 use renderer::{Renderer, RendererOptions};
 extern crate webrender_traits;
 
@@ -167,42 +167,20 @@ use self::macos::Library as GlLibrary;
 use self::win::Library as GlLibrary;
 
 pub struct WebRenderFrameBuilder {
-    pub stacking_contexts: Vec<(StackingContextId, webrender_traits::StackingContext)>,
-    pub display_lists: Vec<(DisplayListId, webrender_traits::BuiltDisplayList)>,
     pub auxiliary_lists_builder: AuxiliaryListsBuilder,
     pub root_pipeline_id: PipelineId,
+    pub root_dl_builder: webrender_traits::DisplayListBuilder,
+    pub temp_dl_builder: webrender_traits::DisplayListBuilder,
 }
 
 impl WebRenderFrameBuilder {
     pub fn new(root_pipeline_id: PipelineId) -> WebRenderFrameBuilder {
         WebRenderFrameBuilder {
-            stacking_contexts: vec![],
-            display_lists: vec![],
             auxiliary_lists_builder: AuxiliaryListsBuilder::new(),
             root_pipeline_id: root_pipeline_id,
+            root_dl_builder: webrender_traits::DisplayListBuilder::new(),
+            temp_dl_builder: webrender_traits::DisplayListBuilder::new(),
         }
-    }
-
-    pub fn add_stacking_context(&mut self,
-                                api: &mut webrender_traits::RenderApi,
-                                pipeline_id: PipelineId,
-                                stacking_context: webrender_traits::StackingContext)
-                                -> StackingContextId {
-        assert!(pipeline_id == self.root_pipeline_id);
-        let id = api.next_stacking_context_id();
-        self.stacking_contexts.push((id, stacking_context));
-        id
-    }
-
-    pub fn add_display_list(&mut self,
-                            api: &mut webrender_traits::RenderApi,
-                            display_list: webrender_traits::BuiltDisplayList,
-                            stacking_context: &mut webrender_traits::StackingContext)
-                            -> DisplayListId {
-        let id = api.next_display_list_id();
-        stacking_context.display_lists.push(id);
-        self.display_lists.push((id, display_list));
-        id
     }
 }
 
@@ -234,7 +212,6 @@ pub struct WrState {
     pipeline_id: PipelineId,
     z_index: i32,
     frame_builder: WebRenderFrameBuilder,
-    dl_builder: Vec<webrender_traits::DisplayListBuilder>,
 }
 
 #[no_mangle]
@@ -299,7 +276,6 @@ pub extern fn wr_create(window: &mut WrWindowState, width: u32, height: u32, lay
         pipeline_id: pipeline_id,
         z_index: 0,
         frame_builder: builder,
-        dl_builder: Vec::new(),
     });
 
     if pipeline_id == window.root_pipeline_id {
@@ -312,19 +288,36 @@ pub extern fn wr_create(window: &mut WrWindowState, width: u32, height: u32, lay
 #[no_mangle]
 pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width: u32, height: u32) {
     state.size = (width, height);
-    state.dl_builder.clear();
+    state.frame_builder.root_dl_builder.list.clear();
+    state.frame_builder.temp_dl_builder.list.clear();
     state.z_index = 0;
-    state.dl_builder.push(webrender_traits::DisplayListBuilder::new());
 
     if state.pipeline_id == window.root_pipeline_id {
         window.size = Size2D::new(width, height);
     }
+
+    let bounds = Rect::new(Point2D::new(0.0, 0.0), Size2D::new(width as f32, height as f32));
+
+    let root_stacking_context =
+        webrender_traits::StackingContext::new(Some(webrender_traits::ScrollLayerId::new(
+                                                    state.pipeline_id, 0, ServoScrollRootId(0))),
+                                               webrender_traits::ScrollPolicy::Scrollable,
+                                               bounds,
+                                               bounds,
+                                               0,
+                                               &Matrix4D::identity(),
+                                               &Matrix4D::identity(),
+                                               webrender_traits::MixBlendMode::Normal,
+                                               Vec::new(),
+                                               &mut state.frame_builder.auxiliary_lists_builder);
+
+    state.frame_builder.root_dl_builder.push_stacking_context(root_stacking_context);
 }
 
 #[no_mangle]
 pub extern fn wr_push_dl_builder(state:&mut WrState)
 {
-    state.dl_builder.push(webrender_traits::DisplayListBuilder::new());
+    state.frame_builder.temp_dl_builder.list.clear();
 }
 
 #[no_mangle]
@@ -342,7 +335,7 @@ pub extern fn wr_pop_dl_builder(window: &mut WrWindowState, state: &mut WrState,
                                                   ServoScrollRootId(0)))
     };
 
-    let mut sc =
+    let sc =
         webrender_traits::StackingContext::new(scroll_layer_id,
                                                webrender_traits::ScrollPolicy::Scrollable,
                                                bounds.to_rect(),
@@ -350,16 +343,19 @@ pub extern fn wr_pop_dl_builder(window: &mut WrWindowState, state: &mut WrState,
                                                state.z_index,
                                                transform,
                                                &Matrix4D::identity(),
-                                               false,
                                                webrender_traits::MixBlendMode::Normal,
                                                Vec::new(),
                                                &mut state.frame_builder.auxiliary_lists_builder);
-    let dl = state.dl_builder.pop().unwrap();
-    state.frame_builder.add_display_list(&mut window.api, dl.finalize(), &mut sc);
-    let stacking_context_id = state.frame_builder.add_stacking_context(&mut window.api, pipeline_id, sc);
 
-    state.dl_builder.last_mut().unwrap().push_stacking_context(stacking_context_id);
+    state.frame_builder.root_dl_builder.push_stacking_context(sc);
+    assert!(state.frame_builder.root_dl_builder.list.len() != 0);
 
+    state.frame_builder.root_dl_builder.list.append(&mut state.frame_builder.temp_dl_builder.list);
+
+    assert!(state.frame_builder.temp_dl_builder.list.len() == 0);
+    // Not sure we have to pop? Before we just had a stack of both display items
+    // and stacking contexts
+    state.frame_builder.root_dl_builder.pop_stacking_context();
 }
 
 #[no_mangle]
@@ -368,38 +364,19 @@ pub extern fn wr_dp_end(window: &mut WrWindowState, state: &mut WrState) {
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
     let pipeline_id = state.pipeline_id;
     let (width, height) = state.size;
-    let bounds = Rect::new(Point2D::new(0.0, 0.0), Size2D::new(width as f32, height as f32));
 
-    let mut sc =
-        webrender_traits::StackingContext::new(Some(webrender_traits::ScrollLayerId::new(
-                                                        pipeline_id, 0, ServoScrollRootId(0))),
-                                               webrender_traits::ScrollPolicy::Scrollable,
-                                               bounds,
-                                               bounds,
-                                               0,
-                                               &Matrix4D::identity(),
-                                               &Matrix4D::identity(),
-                                               true,
-                                               webrender_traits::MixBlendMode::Normal,
-                                               Vec::new(),
-                                               &mut state.frame_builder.auxiliary_lists_builder);
-
-    assert!(state.dl_builder.len() == 1);
-    let dl = state.dl_builder.pop().unwrap();
-    state.frame_builder.add_display_list(&mut window.api, dl.finalize(), &mut sc);
-    let sc_id = state.frame_builder.add_stacking_context(&mut window.api, pipeline_id, sc);
+    // Should be the root one
+    state.frame_builder.root_dl_builder.pop_stacking_context();
 
     let fb = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(pipeline_id));
 
-    window.api.set_root_stacking_context(sc_id,
-                                  root_background_color,
-                                  epoch,
-                                  pipeline_id,
-                                  Size2D::new(width as f32, height as f32),
-                                  fb.stacking_contexts,
-                                  fb.display_lists,
-                                  fb.auxiliary_lists_builder
-                                               .finalize());
+    window.api.set_root_display_list(root_background_color,
+                                     epoch,
+                                     pipeline_id,
+                                     Size2D::new(width as f32, height as f32),
+                                     fb.root_dl_builder.finalize(),
+                                     fb.auxiliary_lists_builder.finalize()
+                                     );
 
     gl::clear(gl::COLOR_BUFFER_BIT);
     window.renderer.update();
@@ -438,32 +415,27 @@ pub extern fn wr_delete_image(window: &mut WrWindowState, key: ImageKey) {
 
 #[no_mangle]
 pub extern fn wr_dp_push_rect(state:&mut WrState, rect: WrRect, clip: WrRect, r: f32, g: f32, b: f32, a: f32) {
-    if state.dl_builder.len() == 0 {
-      return;
-    }
     //let (width, height) = state.size;
     let clip_region = webrender_traits::ClipRegion::new(&clip.to_rect(),
                                                         Vec::new(),
                                                         None,
                                                         &mut state.frame_builder.auxiliary_lists_builder);
-    state.dl_builder.last_mut().unwrap().push_rect(rect.to_rect(),
-                               clip_region,
-                               ColorF::new(r, g, b, a));
+
+    state.frame_builder.temp_dl_builder.push_rect(rect.to_rect(),
+                                    clip_region,
+                                    ColorF::new(r, g, b, a));
 }
 
 #[no_mangle]
 pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
-    if state.dl_builder.len() == 0 {
-        return;
-    }
-
     let clip_region = webrender_traits::ClipRegion::new(&clip.to_rect(),
                                                         Vec::new(),
                                                         None,
                                                         &mut state.frame_builder.auxiliary_lists_builder);
     let pipeline_id = PipelineId((layers_id >> 32) as u32, layers_id as u32);
-    state.dl_builder.last_mut().unwrap().push_iframe(rect.to_rect(),
-                                clip_region, pipeline_id);
+    state.frame_builder.temp_dl_builder.push_iframe(rect.to_rect(),
+                                      clip_region,
+                                      pipeline_id);
 }
 
 #[repr(C)]
@@ -493,9 +465,6 @@ impl WrRect
 
 #[no_mangle]
 pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect, mask: *const WrImageMask, key: ImageKey) {
-    if state.dl_builder.len() == 0 {
-      return;
-    }
     //let (width, height) = state.size;
     let bounds = bounds.to_rect();
     let clip = clip.to_rect();
@@ -508,12 +477,12 @@ pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect
                                                         mask,
                                                         &mut state.frame_builder.auxiliary_lists_builder);
     let rect = bounds;
-    state.dl_builder.last_mut().unwrap().push_image(rect,
-                               clip_region,
-                               rect.size,
-                               rect.size,
-                               ImageRendering::Auto,
-                               key);
+    state.frame_builder.temp_dl_builder.push_image(rect,
+                                                   clip_region,
+                                                   rect.size,
+                                                   rect.size,
+                                                   ImageRendering::Auto,
+                                                   key);
 }
 
 #[no_mangle]

@@ -13,4 +13,4 @@ install:
 build: false
 
 test_script:
-  - 'cargo test --verbose --features "unstable"'
+  - cargo test --verbose

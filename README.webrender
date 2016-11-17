@@ -41,7 +41,7 @@ What if you have to make changes to webrender itself?
 graphics branch
 2) Separately, check out the webrender repo to the last version we
 used in-tree (right now it's
-git:b91db5452e57a9fe5c444d57b0021cd2507723f5)
+git:3f6da4476ecfa5f8130fa3d4d5e4450958d4ccf7)
 3) Do a diff between the webrender repo and the stuff we have in-tree
 to see what the differences are and make a note
 4) Update the webrender repo to the version you want
@@ -56,9 +56,10 @@ the C++ side depending on what changed in webrender. This can
 potentially be quite tricky if you don't fully understand the API
 changes on the webrender side. In this step, try to not use your new
 features yet, just get the build working with the minimal changes.
-10) Commit the changes locally from step 9, and push everything to the
+10) Update the git revision in (2)
+11) Commit the changes locally from step 9, and push everything to the
 graphics branch.
-11) Now you have an update webrender with the new features you wanted,
+12) Now you have an update webrender with the new features you wanted,
 so you can write gecko code against them.
 
 Yes, this is very painful. Once we split the bindings into a separate
