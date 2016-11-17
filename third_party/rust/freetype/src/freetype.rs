@@ -20,7 +20,10 @@ pub type FT_UFast = c_uint;
 pub type FT_Memory = *mut struct_FT_MemoryRec_;
 pub type FT_Alloc_Func = extern fn(mem: FT_Memory, size: c_long) -> *mut c_void;
 pub type FT_Free_Func = extern fn(mem: FT_Memory, block: *mut c_void);
-pub type FT_Realloc_Func = extern fn(mem: FT_Memory, cur_size: c_long, new_size: c_long, block: *mut c_void) -> *mut c_void;
+pub type FT_Realloc_Func = extern fn(mem: FT_Memory,
+                                     cur_size: c_long,
+                                     new_size: c_long,
+                                     block: *mut c_void) -> *mut c_void;
 
 #[repr(C)]
 pub struct struct_FT_MemoryRec_ {
@@ -667,11 +670,20 @@ pub fn FT_Add_Default_Modules(library: FT_Library);
 
 pub fn FT_Done_FreeType(library: FT_Library) -> FT_Error;
 
-pub fn FT_New_Face(library: FT_Library, filepathname: *mut c_char, face_index: FT_Long, aface: *mut FT_Face) -> FT_Error;
+pub fn FT_New_Face(library: FT_Library,
+                   filepathname: *mut c_char,
+                   face_index: FT_Long, aface: *mut FT_Face) -> FT_Error;
 
-pub fn FT_New_Memory_Face(library: FT_Library, file_base: *const FT_Byte, file_size: FT_Long, face_index: FT_Long, aface: *mut FT_Face) -> FT_Error;
+pub fn FT_New_Memory_Face(library: FT_Library,
+                          file_base: *const FT_Byte,
+                          file_size: FT_Long,
+                          face_index: FT_Long,
+                          aface: *mut FT_Face) -> FT_Error;
 
-pub fn FT_Open_Face(library: FT_Library, args: *mut FT_Open_Args, face_index: FT_Long, aface: *mut FT_Face) -> FT_Error;
+pub fn FT_Open_Face(library: FT_Library,
+                    args: *mut FT_Open_Args,
+                    face_index: FT_Long,
+                    aface: *mut FT_Face) -> FT_Error;
 
 pub fn FT_Library_SetLcdFilter(library: FT_Library, filter: FT_LcdFilter) -> FT_Error;
 
@@ -687,7 +699,11 @@ pub fn FT_Select_Size(face: FT_Face, strike_index: FT_Int) -> FT_Error;
 
 pub fn FT_Request_Size(face: FT_Face, req: FT_Size_Request) -> FT_Error;
 
-pub fn FT_Set_Char_Size(face: FT_Face, char_width: FT_F26Dot6, char_height: FT_F26Dot6, horz_resolution: FT_UInt, vert_resolution: FT_UInt) -> FT_Error;
+pub fn FT_Set_Char_Size(face: FT_Face,
+                        char_width: FT_F26Dot6,
+                        char_height: FT_F26Dot6,
+                        horz_resolution: FT_UInt,
+                        vert_resolution: FT_UInt) -> FT_Error;
 
 pub fn FT_Set_Pixel_Sizes(face: FT_Face, pixel_width: FT_UInt, pixel_height: FT_UInt) -> FT_Error;
 
@@ -699,7 +715,11 @@ pub fn FT_Set_Transform(face: FT_Face, matrix: *mut FT_Matrix, delta: *mut FT_Ve
 
 pub fn FT_Render_Glyph(slot: FT_GlyphSlot, render_mode: FT_Render_Mode) -> FT_Error;
 
-pub fn FT_Get_Kerning(face: FT_Face, left_glyph: FT_UInt, right_glyph: FT_UInt, kern_mode: FT_UInt, akerning: *mut FT_Vector) -> FT_Error;
+pub fn FT_Get_Kerning(face: FT_Face,
+                      left_glyph: FT_UInt,
+                      right_glyph: FT_UInt,
+                      kern_mode: FT_UInt,
+                      akerning: *mut FT_Vector) -> FT_Error;
 
 pub fn FT_Get_Track_Kerning(face: FT_Face, point_size: FT_Fixed, degree: FT_Int, akerning: *mut FT_Fixed) -> FT_Error;
 
@@ -721,7 +741,13 @@ pub fn FT_Get_Next_Char(face: FT_Face, char_code: FT_ULong, agindex: *mut FT_UIn
 
 pub fn FT_Get_Name_Index(face: FT_Face, glyph_name: *mut FT_String) -> FT_UInt;
 
-pub fn FT_Get_SubGlyph_Info(glyph: FT_GlyphSlot, sub_index: FT_UInt, p_index: *mut FT_Int, p_flags: *mut FT_UInt, p_arg1: *mut FT_Int, p_arg2: *mut FT_Int, p_transform: *mut FT_Matrix) -> FT_Error;
+pub fn FT_Get_SubGlyph_Info(glyph: FT_GlyphSlot,
+                            sub_index: FT_UInt,
+                            p_index: *mut FT_Int,
+                            p_flags: *mut FT_UInt,
+                            p_arg1: *mut FT_Int,
+                            p_arg2: *mut FT_Int,
+                            p_transform: *mut FT_Matrix) -> FT_Error;
 
 pub fn FT_Get_FSType_Flags(face: FT_Face) -> FT_UShort;
 
@@ -757,5 +783,9 @@ pub fn FT_Face_SetUnpatentedHinting(face: FT_Face, value: FT_Bool) -> FT_Bool;
 
 pub fn FT_Get_Sfnt_Table(face: FT_Face, tag: FT_Sfnt_Tag) -> *mut c_void;
 
-pub fn FT_Load_Sfnt_Table(face: FT_Face, tag: FT_ULong, offset: FT_Long, buffer: *mut FT_Byte, length: *mut FT_ULong) -> FT_Error;
+pub fn FT_Load_Sfnt_Table(face: FT_Face,
+                          tag: FT_ULong,
+                          offset: FT_Long,
+                          buffer: *mut FT_Byte,
+                          length: *mut FT_ULong) -> FT_Error;
 }
