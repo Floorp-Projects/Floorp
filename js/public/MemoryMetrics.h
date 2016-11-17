@@ -512,6 +512,7 @@ struct RuntimeSizes
     macro(_, MallocHeap, interpreterStack) \
     macro(_, MallocHeap, mathCache) \
     macro(_, MallocHeap, sharedImmutableStringsCache) \
+    macro(_, MallocHeap, sharedIntlData) \
     macro(_, MallocHeap, uncompressedSourceCache) \
     macro(_, MallocHeap, scriptData)
 

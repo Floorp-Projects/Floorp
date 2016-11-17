@@ -628,31 +628,7 @@ function IsWellFormedCurrencyCode(currency) {
 var timeZoneCache = {
     icuDefaultTimeZone: undefined,
     defaultTimeZone: undefined,
-    timeZones: undefined,
 };
-
-
-/**
- * 6.4.1 IsValidTimeZoneName ( timeZone )
- *
- * Verifies that the given string is a valid time zone name. If it is a valid
- * time zone name, its IANA time zone name is returned. Otherwise returns null.
- *
- * ES2017 Intl draft rev 4a23f407336d382ed5e3471200c690c9b020b5f3
- */
-function IsValidTimeZoneName(timeZone) {
-    assert(typeof timeZone === "string", "IsValidTimeZoneName");
-
-    var timeZones = timeZoneCache.timeZones;
-    if (timeZones === undefined) {
-        timeZones = intl_availableTimeZones();
-        timeZoneCache.timeZones = timeZones;
-    }
-
-    // Return |null| if time zone not found or non-IANA time zone.
-    var tz = timeZones[toASCIIUpperCase(timeZone)];
-    return (tz === undefined || tz in legacyICUTimeZones) ? null : tz;
-}
 
 
 /**
@@ -667,12 +643,12 @@ function CanonicalizeTimeZoneName(timeZone) {
 
     // Step 1. (Not applicable, the input is already a valid IANA time zone.)
     assert(timeZone !== "Etc/Unknown", "Invalid time zone");
-    assert(timeZone === IsValidTimeZoneName(timeZone), "Time zone name not normalized");
+    assert(timeZone === intl_IsValidTimeZoneName(timeZone), "Time zone name not normalized");
 
     // Step 2.
     var ianaTimeZone = intl_canonicalizeTimeZone(timeZone);
     assert(ianaTimeZone !== "Etc/Unknown", "Invalid canonical time zone");
-    assert(ianaTimeZone === IsValidTimeZoneName(ianaTimeZone), "Unsupported canonical time zone");
+    assert(ianaTimeZone === intl_IsValidTimeZoneName(ianaTimeZone), "Unsupported canonical time zone");
 
     // Step 3.
     if (ianaTimeZone === "Etc/UTC" || ianaTimeZone === "Etc/GMT") {
@@ -682,22 +658,6 @@ function CanonicalizeTimeZoneName(timeZone) {
             ianaTimeZone = "Etc/UCT";
         else
             ianaTimeZone = "UTC";
-    } else {
-        // ICU/CLDR doesn't map all names to their new IANA time zone names.
-        // http://bugs.icu-project.org/trac/ticket/12044
-        if (timeZone in tzLinkNamesNonICU) {
-            // Case 1: ICU/CLDR maps the time zone to another time zone, e.g.
-            // America/Virgin is mapped to America/St_Thomas, whereas IANA maps
-            // America/Virgin to America/Port_of_Spain.
-            // Only perform the update when ICU supports the new time zone.
-            if (IsValidTimeZoneName(tzLinkNamesNonICU[timeZone]) !== null) {
-                ianaTimeZone = tzLinkNamesNonICU[timeZone];
-            }
-        } else if (timeZone in tzZoneNamesNonICU) {
-            // Case 2: ICU/CLDR maps the time zone to its old name, e.g.
-            // Asia/Kathmandu is mapped to Asia/Katmandu.
-            ianaTimeZone = timeZone;
-        }
     }
 
     // Step 4.
@@ -718,7 +678,7 @@ function DefaultTimeZone() {
         return timeZoneCache.defaultTimeZone;
 
     // Verify that the current ICU time zone is a valid ECMA-402 time zone.
-    var timeZone = IsValidTimeZoneName(icuDefaultTimeZone);
+    var timeZone = intl_IsValidTimeZoneName(icuDefaultTimeZone);
     if (timeZone === null) {
         // Before defaulting to "UTC", try to represent the default time zone
         // using the Etc/GMT + offset format. This format only accepts full
@@ -734,7 +694,7 @@ function DefaultTimeZone() {
             timeZone = "Etc/GMT" + (offsetHours < 0 ? "+" : "-") + std_Math_abs(offsetHours);
 
             // Check if the fallback is valid.
-            timeZone = IsValidTimeZoneName(timeZone);
+            timeZone = intl_IsValidTimeZoneName(timeZone);
         }
 
         // Fallback to "UTC" if everything else fails.
@@ -2398,7 +2358,7 @@ function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
         tz = ToString(tz);
 
         // Step 15.b.
-        var timeZone = IsValidTimeZoneName(tz);
+        var timeZone = intl_IsValidTimeZoneName(tz);
         if (timeZone === null)
             ThrowRangeError(JSMSG_INVALID_TIME_ZONE, tz);
 
