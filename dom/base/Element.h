@@ -65,6 +65,7 @@ namespace dom {
   class DOMIntersectionObserver;
   class ElementOrCSSPseudoElement;
   class UnrestrictedDoubleOrKeyframeAnimationOptions;
+  enum class CallerType : uint32_t;
 } // namespace dom
 } // namespace mozilla
 
@@ -788,8 +789,8 @@ public:
     }
   }
 
-  void RequestFullscreen(ErrorResult& aError);
-  void RequestPointerLock();
+  void RequestFullscreen(CallerType aCallerType, ErrorResult& aError);
+  void RequestPointerLock(CallerType aCallerType);
   Attr* GetAttributeNode(const nsAString& aName);
   already_AddRefed<Attr> SetAttributeNode(Attr& aNewAttr,
                                           ErrorResult& aError);
