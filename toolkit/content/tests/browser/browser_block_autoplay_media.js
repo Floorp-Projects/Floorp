@@ -32,12 +32,10 @@ function check_audio_suspended(suspendedType) {
 }
 
 add_task(function* setup_test_preference() {
-  yield new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["media.useAudioChannelService.testing", true],
-      ["media.block-autoplay-until-in-foreground", true]
-    ]}, resolve);
-  });
+  yield SpecialPowers.pushPrefEnv({"set": [
+    ["media.useAudioChannelService.testing", true],
+    ["media.block-autoplay-until-in-foreground", true]
+  ]});
 });
 
 add_task(function* block_autoplay_media() {

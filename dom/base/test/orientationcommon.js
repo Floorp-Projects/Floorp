@@ -1,21 +1,16 @@
 function specialPowersLock(orientation) {
-  return new Promise(function(resolve, reject) {
-    SpecialPowers.pushPrefEnv({
-      'set': [ ["dom.screenorientation.testing.non_fullscreen_lock_allow", true] ]
-    }, function() {
-      var p = screen.orientation.lock(orientation);
-      resolve(p);
-    });
+  return SpecialPowers.pushPrefEnv({
+    'set': [ ["dom.screenorientation.testing.non_fullscreen_lock_allow", true] ]
+  }).then(function() => {
+    var p = screen.orientation.lock(orientation);
   });
 }
 
 function specialPowersUnlock() {
-  return new Promise(function(resolve, reject) {
-    SpecialPowers.pushPrefEnv({
-      'set': [ ["dom.screenorientation.testing.non_fullscreen_lock_allow", true] ]
-    }, function() {
-      screen.orientation.unlock();
-      resolve();
-    });
+  return SpecialPowers.pushPrefEnv({
+    'set': [ ["dom.screenorientation.testing.non_fullscreen_lock_allow", true] ]
+  }).then(function() {
+    screen.orientation.unlock();
+    resolve();
   });
 }

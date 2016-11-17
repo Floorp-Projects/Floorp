@@ -1,8 +1,8 @@
 add_task(function*() {
   // Make the min_background_timeout_value very high to avoid problems on slow machines
-  yield new Promise(resolve => SpecialPowers.pushPrefEnv({
+  yield SpecialPowers.pushPrefEnv({
     'set': [['dom.min_background_timeout_value', 3000]]
-  }, resolve));
+  });
 
   // Make a new tab, and put it in the background
   yield BrowserTestUtils.withNewTab("about:blank", function*(browser) {

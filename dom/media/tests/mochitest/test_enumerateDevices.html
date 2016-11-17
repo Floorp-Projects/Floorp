@@ -25,7 +25,7 @@ function mustFailWith(msg, reason, constraint, f) {
     });
 }
 
-var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
+var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
 
 runTest(() =>
   pushPrefs(["media.navigator.streams.fake", true])
