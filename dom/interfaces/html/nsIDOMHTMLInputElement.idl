@@ -68,8 +68,6 @@ interface nsIDOMHTMLInputElement : nsISupports
 
            attribute DOMString             type;
            attribute DOMString             defaultValue;
-           attribute DOMString             value;
-           attribute double                valueAsNumber;
           // valustAsDate is only supported via WebIDL, because it's intimately
           // tied to JS Date objects and xpidl support for that sort of thing is
           // terrible.
@@ -94,14 +92,8 @@ interface nsIDOMHTMLInputElement : nsISupports
 
            attribute DOMString             useMap;
   readonly attribute nsIControllers        controllers;	
-	readonly attribute long                  textLength;
 
-  void mozGetFileNameArray([optional] out unsigned long aLength,
-                           [array,size_is(aLength), retval] out wstring aFileNames);
-  void mozSetFileNameArray([array,size_is(aLength)] in wstring aFileNames,
-                           in unsigned long aLength);
-
-    /**
+  /**
    * This non-standard method prevents to check types manually to know if the
    * element is a text field.
    */

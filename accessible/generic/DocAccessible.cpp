@@ -1860,8 +1860,8 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
                         "container", aContainer, "child", iter.Child(), nullptr);
 #endif
 
-      mt.AfterInsertion(iter.Child());
       CreateSubtree(iter.Child());
+      mt.AfterInsertion(iter.Child());
       continue;
     }
 
@@ -1907,10 +1907,10 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer, nsIContent* aNode)
       if (!aContainer->InsertAfter(child, walker.Prev())) {
         return;
       }
+      CreateSubtree(child);
       mt.AfterInsertion(child);
       mt.Done();
 
-      CreateSubtree(child);
       FireEventsOnInsertion(aContainer);
     }
   }
@@ -2273,8 +2273,15 @@ DocAccessible::UncacheChildrenInSubtree(Accessible* aRoot)
   RemoveDependentIDsFor(aRoot);
 
   uint32_t count = aRoot->ContentChildCount();
-  for (uint32_t idx = 0; idx < count; idx++)
-    UncacheChildrenInSubtree(aRoot->ContentChildAt(idx));
+  for (uint32_t idx = 0; idx < count; idx++) {
+    Accessible* child = aRoot->ContentChildAt(idx);
+
+    // Removing this accessible from the document doesn't mean anything about
+    // accessibles for subdocuments, so skip removing those from the tree.
+    if (!child->IsDoc()) {
+      UncacheChildrenInSubtree(child);
+    }
+  }
 
   if (aRoot->IsNodeMapEntry() &&
       mNodeToAccessibleMap.Get(aRoot->GetNode()) == aRoot)

@@ -148,7 +148,7 @@ var gWindowCatcher = {
     this.finishFunc();
   },
 
-  closeWindow: function (win) {
+  closeWindow: function(win) {
     info("window catcher closing window: " + win.document.documentURI);
     win.close();
     this.windowsOpen--;
@@ -157,7 +157,7 @@ var gWindowCatcher = {
     }
   },
 
-  windowLoad: function (win) {
+  windowLoad: function(win) {
     executeSoon(this.closeWindow.bind(this, win));
   },
 
@@ -168,7 +168,7 @@ var gWindowCatcher = {
     this.windowsOpen++;
     let win = subject.QueryInterface(Ci.nsIDOMWindow);
     info("window catcher caught window opening: " + win.document.documentURI);
-    win.addEventListener("load", function () {
+    win.addEventListener("load", function() {
       win.removeEventListener("load", arguments.callee, false);
       gWindowCatcher.windowLoad(win);
     }, false);
@@ -215,13 +215,13 @@ function testDefaultArgs()
   reloadUpdateManagerData();
 
   for (let i = 0; i < BCH_TESTS.length; i++) {
-    let test = BCH_TESTS[i];
-    ok(true, "Test nsBrowserContentHandler " + (i + 1) + ": " + test.description);
+    let testCase = BCH_TESTS[i];
+    ok(true, "Test nsBrowserContentHandler " + (i + 1) + ": " + testCase.description);
 
-    if (test.actions) {
-      let actionsXML = " actions=\"" + test.actions + "\"";
-      if (test.openURL) {
-        actionsXML += " openURL=\"" + test.openURL + "\"";
+    if (testCase.actions) {
+      let actionsXML = " actions=\"" + testCase.actions + "\"";
+      if (testCase.openURL) {
+        actionsXML += " openURL=\"" + testCase.openURL + "\"";
       }
       writeUpdatesToXMLFile(XML_PREFIX + actionsXML + XML_SUFFIX);
     } else {
@@ -234,10 +234,10 @@ function testDefaultArgs()
                          getService(Ci.nsIBrowserHandler).defaultArgs;
 
     let overrideArgs = "";
-    if (test.prefURL) {
-      overrideArgs = test.prefURL;
-    } else if (test.openURL) {
-      overrideArgs = test.openURL;
+    if (testCase.prefURL) {
+      overrideArgs = testCase.prefURL;
+    } else if (testCase.openURL) {
+      overrideArgs = testCase.openURL;
     }
 
     if (overrideArgs == "" && noOverrideArgs) {
@@ -246,11 +246,11 @@ function testDefaultArgs()
       overrideArgs += "|" + noOverrideArgs;
     }
 
-    if (test.noMstoneChange === undefined) {
+    if (testCase.noMstoneChange === undefined) {
       gPrefService.setCharPref(PREF_MSTONE, "PreviousMilestone");
     }
 
-    if (test.noPostUpdatePref == undefined) {
+    if (testCase.noPostUpdatePref == undefined) {
       gPrefService.setBoolPref(PREF_POSTUPDATE, true);
     }
 
@@ -258,7 +258,7 @@ function testDefaultArgs()
                       getService(Ci.nsIBrowserHandler).defaultArgs;
     is(defaultArgs, overrideArgs, "correct value returned by defaultArgs");
 
-    if (test.noMstoneChange === undefined || test.noMstoneChange != true) {
+    if (testCase.noMstoneChange === undefined || testCase.noMstoneChange != true) {
       let newMstone = gPrefService.getCharPref(PREF_MSTONE);
       is(originalMstone, newMstone, "preference " + PREF_MSTONE +
          " should have been updated");
@@ -309,22 +309,22 @@ function testShowNotification()
   gWindowCatcher.start();
 
   for (let i = 0; i < BG_NOTIFY_TESTS.length; i++) {
-    let test = BG_NOTIFY_TESTS[i];
-    ok(true, "Test showNotification " + (i + 1) + ": " + test.description);
+    let testCase = BG_NOTIFY_TESTS[i];
+    ok(true, "Test showNotification " + (i + 1) + ": " + testCase.description);
 
-    if (test.actions) {
-      let actionsXML = " actions=\"" + test.actions + "\"";
-      if (test.notificationText) {
-        actionsXML += " notificationText=\"" + test.notificationText + "\"";
+    if (testCase.actions) {
+      let actionsXML = " actions=\"" + testCase.actions + "\"";
+      if (testCase.notificationText) {
+        actionsXML += " notificationText=\"" + testCase.notificationText + "\"";
       }
-      if (test.notificationURL) {
-        actionsXML += " notificationURL=\"" + test.notificationURL + "\"";
+      if (testCase.notificationURL) {
+        actionsXML += " notificationURL=\"" + testCase.notificationURL + "\"";
       }
-      if (test.notificationButtonLabel) {
-        actionsXML += " notificationButtonLabel=\"" + test.notificationButtonLabel + "\"";
+      if (testCase.notificationButtonLabel) {
+        actionsXML += " notificationButtonLabel=\"" + testCase.notificationButtonLabel + "\"";
       }
-      if (test.notificationButtonAccessKey) {
-        actionsXML += " notificationButtonAccessKey=\"" + test.notificationButtonAccessKey + "\"";
+      if (testCase.notificationButtonAccessKey) {
+        actionsXML += " notificationButtonAccessKey=\"" + testCase.notificationButtonAccessKey + "\"";
       }
       writeUpdatesToXMLFile(XML_PREFIX + actionsXML + XML_SUFFIX);
     } else {
@@ -337,21 +337,21 @@ function testShowNotification()
     gBG.observe(null, "browser-glue-test", "post-update-notification");
 
     let updateBox = notifyBox.getNotificationWithValue("post-update-notification");
-    if (test.actions && test.actions.indexOf("showNotification") != -1 &&
-        test.actions.indexOf("silent") == -1) {
+    if (testCase.actions && testCase.actions.indexOf("showNotification") != -1 &&
+        testCase.actions.indexOf("silent") == -1) {
       ok(updateBox, "Update notification box should have been displayed");
       if (updateBox) {
-        if (test.notificationText) {
-          is(updateBox.label, test.notificationText, "Update notification box " +
+        if (testCase.notificationText) {
+          is(updateBox.label, testCase.notificationText, "Update notification box " +
              "should have the label provided by the update");
         }
-        if (test.notificationButtonLabel) {
+        if (testCase.notificationButtonLabel) {
           var button = updateBox.getElementsByTagName("button").item(0);
-          is(button.label, test.notificationButtonLabel, "Update notification " +
+          is(button.label, testCase.notificationButtonLabel, "Update notification " +
              "box button should have the label provided by the update");
-          if (test.notificationButtonAccessKey) {
+          if (testCase.notificationButtonAccessKey) {
             let accessKey = button.getAttribute("accesskey");
-            is(accessKey, test.notificationButtonAccessKey, "Update " +
+            is(accessKey, testCase.notificationButtonAccessKey, "Update " +
                "notification box button should have the accesskey " +
                "provided by the update");
           }
@@ -360,7 +360,7 @@ function testShowNotification()
         // is correct.
         if (i == (BG_NOTIFY_TESTS.length - 1)) {
           // Wait for any windows caught by the windowcatcher to close
-          gWindowCatcher.finish(function () {
+          gWindowCatcher.finish(function() {
             BrowserTestUtils.waitForNewTab(gBrowser).then(testNotificationURL);
             button.click();
           });

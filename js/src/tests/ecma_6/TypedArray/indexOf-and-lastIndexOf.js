@@ -101,6 +101,12 @@ for (var constructor of anyTypedArrayConstructors) {
             throw new Error("length accessor called");
         }
     }).lastIndexOf(1), 1);
+
+    // Starts search at last index when fromIndex parameter is absent.
+    assertEq(new constructor([10, 20, 10]).lastIndexOf(10), 2);
+
+    // Starts search at first index when fromIndex parameter is undefined.
+    assertEq(new constructor([10, 20, 10]).lastIndexOf(10, undefined), 0);
 }
 
 for (let constructor of anyTypedArrayConstructors.filter(isFloatConstructor)) {

@@ -478,6 +478,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
     AccumulateLayerTransforms(layer->GetParent(), aTransformedSubtreeRoot,
                               ancestorTransform);
   }
+  ancestorTransform.NudgeToIntegersFixedEpsilon();
   MOZ_ASSERT(ancestorTransform.IsIdentity());
 #endif
 
@@ -488,6 +489,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
 #ifdef DEBUG
   Matrix4x4 localTransform;
   GetBaseTransform(layer, &localTransform);
+  localTransform.NudgeToIntegersFixedEpsilon();
   MOZ_ASSERT(localTransform.IsIdentity());
 #endif
 
@@ -594,18 +596,16 @@ SampleValue(float aPortion, Animation& aAnimation,
       aCurrentIteration > 0) {
     // FIXME: Bug 1293492: Add a utility function to calculate both of
     // below StyleAnimationValues.
-    DebugOnly<bool> accumulateResult =
+    startValue =
       StyleAnimationValue::Accumulate(aAnimation.property(),
-                                      startValue,
                                       aLastValue,
+                                      Move(startValue),
                                       aCurrentIteration);
-    MOZ_ASSERT(accumulateResult, "could not accumulate value");
-    accumulateResult =
+    endValue =
       StyleAnimationValue::Accumulate(aAnimation.property(),
-                                      endValue,
                                       aLastValue,
+                                      Move(endValue),
                                       aCurrentIteration);
-    MOZ_ASSERT(accumulateResult, "could not accumulate value");
   }
 
   StyleAnimationValue interpolatedValue;

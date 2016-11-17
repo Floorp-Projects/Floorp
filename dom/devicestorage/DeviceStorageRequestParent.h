@@ -28,7 +28,6 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef();
   NS_IMETHOD_(MozExternalRefCountType) Release();
 
-  bool EnsureRequiredPermissions(mozilla::dom::ContentParent* aParent);
   void Dispatch();
 
   virtual void ActorDestroy(ActorDestroyReason);

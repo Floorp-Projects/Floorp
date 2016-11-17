@@ -94,7 +94,7 @@ function test() {
 
           aSubject.Dialog.ui.button0.click();
 
-          executeSoon(function () {
+          executeSoon(function() {
               SidebarUI.hide();
               currentTest.cleanup(postFunc);
             });

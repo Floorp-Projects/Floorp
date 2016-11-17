@@ -11,21 +11,21 @@ Cu.import("resource://gre/modules/Deprecated.jsm", this);
 
 // Using this named functions to test deprecation and the properly logged
 // callstacks.
-function basicDeprecatedFunction () {
+function basicDeprecatedFunction() {
   Deprecated.warning("this method is deprecated.", "http://example.com");
   return true;
 }
 
-function deprecationFunctionBogusCallstack () {
+function deprecationFunctionBogusCallstack() {
   Deprecated.warning("this method is deprecated.", "http://example.com", {
     caller: {}
   });
   return true;
 }
 
-function deprecationFunctionCustomCallstack () {
+function deprecationFunctionCustomCallstack() {
   // Get the nsIStackFrame that will contain the name of this function.
-  function getStack () {
+  function getStack() {
     return Components.stack;
   }
   Deprecated.warning("this method is deprecated.", "http://example.com",
@@ -37,7 +37,7 @@ var tests = [
 // Test deprecation warning without passing the callstack.
 {
   deprecatedFunction: basicDeprecatedFunction,
-  expectedObservation: function (aMessage) {
+  expectedObservation: function(aMessage) {
     testAMessage(aMessage);
     ok(aMessage.errorMessage.indexOf("basicDeprecatedFunction") > 0,
       "Callstack is correctly logged.");
@@ -45,11 +45,11 @@ var tests = [
 },
 // Test a reported error when URL to documentation is not passed.
 {
-  deprecatedFunction: function () {
+  deprecatedFunction: function() {
     Deprecated.warning("this method is deprecated.");
     return true;
   },
-  expectedObservation: function (aMessage) {
+  expectedObservation: function(aMessage) {
     ok(aMessage.errorMessage.indexOf("must provide a URL") > 0,
       "Deprecation warning logged an empty URL argument.");
   }
@@ -58,7 +58,7 @@ var tests = [
 // replaced with the current call stack).
 {
   deprecatedFunction: deprecationFunctionBogusCallstack,
-  expectedObservation: function (aMessage) {
+  expectedObservation: function(aMessage) {
     testAMessage(aMessage);
     ok(aMessage.errorMessage.indexOf("deprecationFunctionBogusCallstack") > 0,
       "Callstack is correctly logged.");
@@ -74,7 +74,7 @@ var tests = [
 // Test deprecation with a valid custom callstack passed as an argument.
 {
   deprecatedFunction: deprecationFunctionCustomCallstack,
-  expectedObservation: function (aMessage) {
+  expectedObservation: function(aMessage) {
     testAMessage(aMessage);
     ok(aMessage.errorMessage.indexOf("deprecationFunctionCustomCallstack") > 0,
       "Callstack is correctly logged.");
@@ -96,7 +96,7 @@ function test() {
 }
 
 // Test Consle Message attributes.
-function testAMessage (aMessage) {
+function testAMessage(aMessage) {
   ok(aMessage.errorMessage.indexOf("DEPRECATION WARNING: " +
     "this method is deprecated.") === 0,
     "Deprecation is correctly logged.");
@@ -122,7 +122,7 @@ function nextTest() {
 
   // Create a console listener.
   let consoleListener = {
-    observe: function (aMessage) {
+    observe: function(aMessage) {
       // Ignore unexpected messages.
       if (!(aMessage instanceof Ci.nsIScriptError)) {
         return;

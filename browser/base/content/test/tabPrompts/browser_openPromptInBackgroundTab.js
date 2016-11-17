@@ -15,7 +15,6 @@ registerCleanupFunction(function() {
  * checking the checkbox does actually enable that behaviour.
  */
 add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({"set": [["browser.tabs.dontfocusfordialogs", true]]});
   let firstTab = gBrowser.selectedTab;
   // load page that opens prompt when page is hidden
   let openedTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageWithAlert, true);

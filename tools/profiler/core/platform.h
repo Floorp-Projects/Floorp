@@ -59,17 +59,22 @@
 #include <vector>
 #include "StackTop.h"
 
-// We need a definition of gettid(), but Linux libc implementations don't
-// provide a wrapper for it (except for Bionic)
-#if defined(__linux__)
+// We need a definition of gettid(), but glibc doesn't provide a
+// wrapper for it.
+#if defined(__GLIBC__)
 #include <unistd.h>
-#if !defined(__BIONIC__)
 #include <sys/syscall.h>
 static inline pid_t gettid()
 {
   return (pid_t) syscall(SYS_gettid);
 }
-#endif
+#elif defined(XP_MACOSX)
+#include <unistd.h>
+#include <sys/syscall.h>
+static inline pid_t gettid()
+{
+  return (pid_t) syscall(SYS_thread_selfid);
+}
 #endif
 
 #ifdef XP_WIN

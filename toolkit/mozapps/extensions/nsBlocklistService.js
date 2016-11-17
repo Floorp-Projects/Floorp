@@ -1109,7 +1109,7 @@ Blocklist.prototype = {
   //   <manufacturer>foo</manufacturer>
   //   <hardware>foo</hardware>
   // </gfxBlacklistEntry>
-  _handleGfxBlacklistNode: function (blocklistElement, result) {
+  _handleGfxBlacklistNode: function(blocklistElement, result) {
     const blockEntry = {};
 
     // The blockID attribute is always present in the actual data produced on server
@@ -1300,7 +1300,7 @@ Blocklist.prototype = {
     return blockEntry.infoURL;
   },
 
-  _notifyObserversBlocklistGFX: function () {
+  _notifyObserversBlocklistGFX: function() {
     // Notify `GfxInfoBase`, by passing a string serialization.
     // This way we avoid spreading XML structure logics there.
     const payload = this._gfxEntries.map((r) => {

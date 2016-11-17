@@ -169,8 +169,6 @@ EXPORTS.mozilla.layers += [
     'ipc/CompositorBridgeParent.h',
     'ipc/CompositorThread.h',
     'ipc/CrossProcessCompositorBridgeParent.h',
-    'ipc/GonkNativeHandle.h',
-    'ipc/GonkNativeHandleUtils.h',
     'ipc/ImageBridgeChild.h',
     'ipc/ImageBridgeParent.h',
     'ipc/ImageContainerChild.h',

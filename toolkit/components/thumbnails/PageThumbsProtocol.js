@@ -145,7 +145,7 @@ function parseURI(aURI) {
   let {query} = aURI.QueryInterface(Ci.nsIURL);
   let params = {};
 
-  query.split("&").forEach(function (aParam) {
+  query.split("&").forEach(function(aParam) {
     let [key, value] = aParam.split("=").map(decodeURIComponent);
     params[key.toLowerCase()] = value;
   });

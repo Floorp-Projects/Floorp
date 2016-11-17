@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
  *
  * It is a service because some background activity will eventually occur.
  */
-this.CrashService = function () {};
+this.CrashService = function() {};
 
 CrashService.prototype = Object.freeze({
   classID: Components.ID("{92668367-1b17-4190-86b2-1061b2179744}"),
@@ -23,7 +23,7 @@ CrashService.prototype = Object.freeze({
     Ci.nsIObserver,
   ]),
 
-  addCrash: function (processType, crashType, id) {
+  addCrash: function(processType, crashType, id) {
     switch (processType) {
     case Ci.nsICrashService.PROCESS_TYPE_MAIN:
       processType = Services.crashmanager.PROCESS_TYPE_MAIN;
@@ -58,7 +58,7 @@ CrashService.prototype = Object.freeze({
     Services.crashmanager.addCrash(processType, crashType, id, new Date());
   },
 
-  observe: function (subject, topic, data) {
+  observe: function(subject, topic, data) {
     switch (topic) {
       case "profile-after-change":
         // Side-effect is the singleton is instantiated.

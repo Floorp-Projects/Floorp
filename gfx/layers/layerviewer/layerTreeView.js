@@ -304,7 +304,6 @@ function parseLayers(layersDumpLines) {
     }
 
     if (matches[2].indexOf("TiledContentHost") != -1 ||
-        matches[2].indexOf("GrallocTextureHostOGL") != -1 ||
         matches[2].indexOf("ContentHost") != -1 ||
         matches[2].indexOf("ContentClient") != -1 ||
         matches[2].indexOf("MemoryTextureHost") != -1 ||

@@ -9,9 +9,9 @@ add_task(function* test() {
   let appDtest = dirSvc.get("UAppData", Components.interfaces.nsILocalFile);
   ok(appD.equals(appDtest), "directory service provider registered ok");
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:crashes" }, function (browser) {
+  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:crashes" }, function(browser) {
     info("about:crashes loaded");
-    return ContentTask.spawn(browser, crashes, function (crashes) {
+    return ContentTask.spawn(browser, crashes, function(crashes) {
       let doc = content.document;
       let crashlinks = doc.getElementById("submitted").querySelectorAll(".crashReport");
       Assert.equal(crashlinks.length, crashes.length,

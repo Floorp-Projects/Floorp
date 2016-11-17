@@ -23,7 +23,7 @@ if (AppConstants.MOZ_SERVICES_CLOUDSYNC) {
 var RemoteTabViewer = {
   _tabsList: null,
 
-  init: function () {
+  init: function() {
     Services.obs.addObserver(this, "weave:service:login:finish", false);
     Services.obs.addObserver(this, "weave:engine:sync:finish", false);
 
@@ -34,14 +34,14 @@ var RemoteTabViewer = {
     this.buildList(true);
   },
 
-  uninit: function () {
+  uninit: function() {
     Services.obs.removeObserver(this, "weave:service:login:finish");
     Services.obs.removeObserver(this, "weave:engine:sync:finish");
 
     Services.obs.removeObserver(this, "cloudsync:tabs:update");
   },
 
-  createItem: function (attrs) {
+  createItem: function(attrs) {
     let item = document.createElement("richlistitem");
 
     // Copy the attributes from the argument into the item.
@@ -56,7 +56,7 @@ var RemoteTabViewer = {
     return item;
   },
 
-  filterTabs: function (event) {
+  filterTabs: function(event) {
     let val = event.target.value.toLowerCase();
     let numTabs = this._tabsList.getRowCount();
     let clientTabs = 0;
@@ -89,7 +89,7 @@ var RemoteTabViewer = {
     }
   },
 
-  openSelected: function () {
+  openSelected: function() {
     let items = this._tabsList.selectedItems;
     let urls = [];
     for (let i = 0; i < items.length; i++) {
@@ -105,7 +105,7 @@ var RemoteTabViewer = {
     }
   },
 
-  bookmarkSingleTab: function () {
+  bookmarkSingleTab: function() {
     let item = this._tabsList.selectedItems[0];
     let uri = Weave.Utils.makeURI(item.getAttribute("url"));
     let title = item.getAttribute("title");
@@ -120,7 +120,7 @@ var RemoteTabViewer = {
                                      }, window.top);
   },
 
-  bookmarkSelectedTabs: function () {
+  bookmarkSelectedTabs: function() {
     let items = this._tabsList.selectedItems;
     let URIs = [];
     for (let i = 0; i < items.length; i++) {
@@ -142,7 +142,7 @@ var RemoteTabViewer = {
     }
   },
 
-  getIcon: function (iconUri, defaultIcon) {
+  getIcon: function(iconUri, defaultIcon) {
     try {
       let iconURI = Weave.Utils.makeURI(iconUri);
       return PlacesUtils.favicons.getFaviconLinkForIcon(iconURI).spec;
@@ -158,7 +158,7 @@ var RemoteTabViewer = {
 
   _buildListRequested: false,
 
-  buildList: function (forceSync) {
+  buildList: function(forceSync) {
     if (this._waitingForBuildList) {
       this._buildListRequested = true;
       return;
@@ -192,7 +192,7 @@ var RemoteTabViewer = {
     }
   },
 
-  _clearTabList: function () {
+  _clearTabList: function() {
     let list = this._tabsList;
 
     // Clear out existing richlistitems.
@@ -204,7 +204,7 @@ var RemoteTabViewer = {
     }
   },
 
-  _generateWeaveTabList: function () {
+  _generateWeaveTabList: function() {
     let engine = Weave.Service.engineManager.get("tabs");
     let list = this._tabsList;
 
@@ -245,8 +245,8 @@ var RemoteTabViewer = {
     }
   },
 
-  _generateCloudSyncTabList: function () {
-    let updateTabList = function (remoteTabs) {
+  _generateCloudSyncTabList: function() {
+    let updateTabList = function(remoteTabs) {
       let list = this._tabsList;
 
       for (let client of remoteTabs) {
@@ -275,7 +275,7 @@ var RemoteTabViewer = {
                            .then(updateTabList, Promise.reject.bind(Promise));
   },
 
-  adjustContextMenu: function (event) {
+  adjustContextMenu: function(event) {
     let mode = "all";
     switch (this._tabsList.selectedItems.length) {
       case 0:
@@ -300,7 +300,7 @@ var RemoteTabViewer = {
     }
   },
 
-  _refetchTabs: function (force) {
+  _refetchTabs: function(force) {
     if (!force) {
       // Don't bother refetching tabs if we already did so recently
       let lastFetch = 0;
@@ -325,7 +325,7 @@ var RemoteTabViewer = {
     return true;
   },
 
-  observe: function (subject, topic, data) {
+  observe: function(subject, topic, data) {
     switch (topic) {
       case "weave:service:login:finish":
         // A login has finished, which means that a Sync is about to start and
@@ -346,7 +346,7 @@ var RemoteTabViewer = {
     }
   },
 
-  handleClick: function (event) {
+  handleClick: function(event) {
     if (event.target.getAttribute("type") != "tab") {
       return;
     }

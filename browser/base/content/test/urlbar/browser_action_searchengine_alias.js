@@ -10,7 +10,6 @@ add_task(function* () {
 
   registerCleanupFunction(() => {
     Services.search.currentEngine = originalEngine;
-    let engine = Services.search.getEngineByName("MozSearch");
     Services.search.removeEngine(engine);
 
     try {

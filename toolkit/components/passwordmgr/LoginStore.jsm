@@ -122,7 +122,7 @@ LoginStore.prototype._dataPostProcessor = function(data) {
 /**
  * Migrates disabled hosts to the permission manager.
  */
-LoginStore.prototype._migrateDisabledHosts = function (data) {
+LoginStore.prototype._migrateDisabledHosts = function(data) {
   for (let host of data.disabledHosts) {
     try {
       let uri = Services.io.newURI(host, null, null);

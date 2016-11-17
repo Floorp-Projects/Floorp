@@ -38,7 +38,15 @@ public:
 
   // Bind a VsyncObserver into VsyncChild after ipc channel connected.
   void SetVsyncObserver(VsyncObserver* aVsyncObserver);
+  // GetVsyncRate is a getter for mVsyncRate which sends a requests to
+  // VsyncParent to retreive the hardware vsync rate if mVsyncRate
+  // hasn't already been set.
   TimeDuration GetVsyncRate();
+  // VsyncRate is a getter for mVsyncRate which always returns
+  // mVsyncRate directly, potentially returning
+  // TimeDuration::Forever() if mVsyncRate hasn't been set by calling
+  // GetVsyncRate.
+  TimeDuration VsyncRate();
 
 private:
   VsyncChild();

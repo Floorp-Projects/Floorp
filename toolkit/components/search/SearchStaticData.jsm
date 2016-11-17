@@ -37,7 +37,7 @@ this.SearchStaticData = {
    * @return Array containing one entry for each alternate host name, or empty
    *         array if none is known.  The returned array should not be modified.
    */
-  getAlternateDomains: function (aDomain) {
+  getAlternateDomains: function(aDomain) {
     return gGoogleDomains.indexOf(aDomain) == -1 ? [] : gGoogleDomains;
   },
 };

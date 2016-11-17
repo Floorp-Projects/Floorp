@@ -220,7 +220,7 @@ this.PromiseTestUtils = {
       // the configuration of the test suite that handles the assertion.
       Assert.ok(false,
                 `A promise chain failed to handle a rejection:` +
-                ` ${rejection.message} - rejection date: ${rejection.date}`+
+                ` ${rejection.message} - rejection date: ${rejection.date}` +
                 ` - stack: ${rejection.stack}`);
     }
   },

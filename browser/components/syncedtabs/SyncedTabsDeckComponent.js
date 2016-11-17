@@ -16,7 +16,7 @@ Cu.import("resource:///modules/syncedtabs/TabListComponent.js");
 Cu.import("resource:///modules/syncedtabs/TabListView.js");
 let { getChromeWindow } = Cu.import("resource:///modules/syncedtabs/util.js", {});
 
-XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function () {
+XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
   return Components.utils.import("resource://gre/modules/FxAccountsCommon.js", {});
 });
 

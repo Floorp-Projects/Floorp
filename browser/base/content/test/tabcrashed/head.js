@@ -20,7 +20,7 @@
  *        compared against.
  * @returns Promise
  */
-function promiseCrashReport(expectedExtra={}) {
+function promiseCrashReport(expectedExtra = {}) {
   return Task.spawn(function*() {
     info("Starting wait on crash-report-status");
     let [subject, ] =

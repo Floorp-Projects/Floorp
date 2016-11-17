@@ -53,11 +53,11 @@ add_task(function*() {
                 data: "mochi.test/11\nTITLE11"}]], 1);
 });
 
-function dropText(text, expectedTabOpenCount=0) {
+function dropText(text, expectedTabOpenCount = 0) {
   return drop([[{type: "text/plain", data: text}]], expectedTabOpenCount);
 }
 
-function* drop(dragData, expectedTabOpenCount=0) {
+function* drop(dragData, expectedTabOpenCount = 0) {
   let dragDataString = JSON.stringify(dragData);
   info(`Starting test for datagData:${dragDataString}; expectedTabOpenCount:${expectedTabOpenCount}`);
   let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].

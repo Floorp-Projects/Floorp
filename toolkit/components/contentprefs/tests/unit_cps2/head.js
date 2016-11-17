@@ -25,7 +25,7 @@ function runAsyncTests(tests, dontResetBefore = false) {
   Cu.import("resource://test/AsyncRunner.jsm", s);
   asyncRunner = new s.AsyncRunner({
     done: do_test_finished,
-    error: function (err) {
+    error: function(err) {
       // xpcshell test functions like equal throw NS_ERROR_ABORT on
       // failure.  Ignore those and catch only uncaught exceptions.
       if (err !== Cr.NS_ERROR_ABORT) {
@@ -36,7 +36,7 @@ function runAsyncTests(tests, dontResetBefore = false) {
         do_throw(err);
       }
     },
-    consoleError: function (scriptErr) {
+    consoleError: function(scriptErr) {
       // Previously, this code checked for console errors related to the test,
       // and treated them as failures. This was problematic, because our current
       // very-broken exception reporting machinery in XPCWrappedJSClass reports
@@ -56,12 +56,12 @@ function runAsyncTests(tests, dontResetBefore = false) {
 
   next = asyncRunner.next.bind(asyncRunner);
 
-  do_register_cleanup(function () {
+  do_register_cleanup(function() {
     asyncRunner.destroy();
     asyncRunner = null;
   });
 
-  tests.forEach(function (test) {
+  tests.forEach(function(test) {
     function* gen() {
       do_print("Running " + test.name);
       yield test();
@@ -81,7 +81,7 @@ function runAsyncTests(tests, dontResetBefore = false) {
 function makeCallback(callbacks, success = null) {
   callbacks = callbacks || {};
   if (!callbacks.handleError) {
-    callbacks.handleError = function (error) {
+    callbacks.handleError = function(error) {
       do_throw("handleError call was not expected, error: " + error);
     };
   }
@@ -91,7 +91,7 @@ function makeCallback(callbacks, success = null) {
     };
   }
   if (!callbacks.handleCompletion)
-    callbacks.handleCompletion = function (reason) {
+    callbacks.handleCompletion = function(reason) {
       equal(reason, Ci.nsIContentPrefCallback2.COMPLETE_OK);
       if (success) {
         success();
@@ -138,10 +138,10 @@ function setWithDate(group, name, val, timestamp, context) {
     stmt.params.group = group;
 
     stmt.executeAsync({
-      handleCompletion: function (reason) {
+      handleCompletion: function(reason) {
         next();
       },
-      handleError: function (err) {
+      handleError: function(err) {
         do_throw(err);
       }
     });
@@ -164,14 +164,14 @@ function getDate(group, name, context) {
 
   let res;
   stmt.executeAsync({
-    handleResult: function (results) {
+    handleResult: function(results) {
       let row = results.getNextRow();
       res = row.getResultByName("timestamp");
     },
-    handleCompletion: function (reason) {
+    handleCompletion: function(reason) {
       next(res * 1000);
     },
-    handleError: function (err) {
+    handleError: function(err) {
       do_throw(err);
     }
   });
@@ -209,7 +209,7 @@ function* getOK(args, expectedVal, expectedGroup, strict) {
 function* getSubdomainsOK(args, expectedGroupValPairs) {
   if (args.length == 2)
     args.push(undefined);
-  let expectedPrefs = expectedGroupValPairs.map(function ([group, val]) {
+  let expectedPrefs = expectedGroupValPairs.map(function([group, val]) {
     return { domain: group, name: args[1], value: val };
   });
   yield getOKEx("getBySubdomainAndName", args, expectedPrefs);
@@ -229,7 +229,7 @@ function* getOKEx(methodName, args, expectedPrefs, strict, context) {
     handleResult: pref => actualPrefs.push(pref)
   }));
   yield cps[methodName].apply(cps, args);
-  arraysOfArraysOK([actualPrefs], [expectedPrefs], function (actual, expected) {
+  arraysOfArraysOK([actualPrefs], [expectedPrefs], function(actual, expected) {
     prefOK(actual, expected, strict);
   });
 }
@@ -252,11 +252,11 @@ function getCachedSubdomainsOK(args, expectedGroupValPairs) {
   let len = {};
   args.push(len);
   let actualPrefs = cps.getCachedBySubdomainAndName.apply(cps, args);
-  actualPrefs = actualPrefs.sort(function (a, b) {
+  actualPrefs = actualPrefs.sort(function(a, b) {
     return a.domain.localeCompare(b.domain);
   });
   equal(actualPrefs.length, len.value);
-  let expectedPrefs = expectedGroupValPairs.map(function ([group, val]) {
+  let expectedPrefs = expectedGroupValPairs.map(function([group, val]) {
     return { domain: group, name: args[1], value: val };
   });
   arraysOfArraysOK([actualPrefs], [expectedPrefs], prefOK);
@@ -285,7 +285,7 @@ function arraysOK(actual, expected, cmp) {
   if (actual.length != expected.length) {
     do_throw("Length is not equal: " + JSON.stringify(actual) + "==" + JSON.stringify(expected));
   } else {
-    actual.forEach(function (actualElt, j) {
+    actual.forEach(function(actualElt, j) {
       let expectedElt = expected[j];
       cmp(actualElt, expectedElt);
     });
@@ -294,7 +294,7 @@ function arraysOK(actual, expected, cmp) {
 
 function arraysOfArraysOK(actual, expected, cmp) {
   cmp = cmp || equal;
-  arraysOK(actual, expected, function (act, exp) {
+  arraysOK(actual, expected, function(act, exp) {
     arraysOK(act, exp, cmp)
   });
 }
@@ -336,17 +336,17 @@ function dbOK(expectedRows) {
   let cols = ["grp", "name", "value"];
 
   db.executeAsync([stmt], 1, {
-    handleCompletion: function (reason) {
+    handleCompletion: function(reason) {
       arraysOfArraysOK(actualRows, expectedRows);
       next();
     },
-    handleResult: function (results) {
+    handleResult: function(results) {
       let row = null;
       while (row = results.getNextRow()) {
         actualRows.push(cols.map(c => row.getResultByName(c)));
       }
     },
-    handleError: function (err) {
+    handleError: function(err) {
       do_throw(err);
     }
   });
@@ -355,7 +355,7 @@ function dbOK(expectedRows) {
 
 function on(event, names, dontRemove) {
   let args = {
-    reset: function () {
+    reset: function() {
       for (let prop in this) {
         if (Array.isArray(this[prop]))
           this[prop].splice(0, this[prop].length);
@@ -365,12 +365,12 @@ function on(event, names, dontRemove) {
 
   let observers = {};
 
-  names.forEach(function (name) {
+  names.forEach(function(name) {
     let obs = {};
-    ["onContentPrefSet", "onContentPrefRemoved"].forEach(function (meth) {
+    ["onContentPrefSet", "onContentPrefRemoved"].forEach(function(meth) {
       obs[meth] = () => do_throw(meth + " should not be called");
     });
-    obs["onContentPref" + event] = function () {
+    obs["onContentPref" + event] = function() {
       args[name].push(Array.slice(arguments));
     };
     observers[name] = obs;
@@ -379,7 +379,7 @@ function on(event, names, dontRemove) {
     cps.addObserverForName(name, obs);
   });
 
-  do_execute_soon(function () {
+  do_execute_soon(function() {
     if (!dontRemove)
       names.forEach(n => cps.removeObserverForName(n, observers[n]));
     next(args);

@@ -230,7 +230,7 @@
             event.initEvent(aEventName, true, true);
             var cancel = !aTarget.dispatchEvent(event);
             if (aTarget.hasAttribute("on" + aEventName)) {
-              var fn = new Function ("event", aTarget.getAttribute("on" + aEventName));
+              var fn = new Function("event", aTarget.getAttribute("on" + aEventName));
               var rv = fn.call(aTarget, event);
               if (rv == false)
                 cancel = true;
@@ -486,7 +486,7 @@
             event.initEvent(aEventName, true, true);
             var cancel = !aTarget.dispatchEvent(event);
             if (aTarget.hasAttribute("on" + aEventName)) {
-              var fn = new Function ("event", aTarget.getAttribute("on" + aEventName));
+              var fn = new Function("event", aTarget.getAttribute("on" + aEventName));
               var rv = fn.call(aTarget, event);
               if (rv == false)
                 cancel = true;

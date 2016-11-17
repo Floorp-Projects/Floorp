@@ -147,25 +147,16 @@ public:
               StyleAnimationValue& aResultValue);
 
   /**
-   * Accumulates |aValueToAccumulate| onto |aDest| |aCount| times.
-   * The result is stored in |aDest| on success.
-   *
-   * @param aDest              The base value to be accumulated.
-   * @param aValueToAccumulate The value to accumulate.
-   * @param aCount             The number of times to accumulate
-   *                           aValueToAccumulate.
-   * @return true on success, false on failure.
-   *
-   * NOTE: This function will work as a wrapper of StyleAnimationValue::Add()
-   * if |aProperty| isn't color or shadow or filter.  For these properties,
-   * this function may return a color value that at least one of its components
-   * has a value which is outside the range [0, 1] so that we can calculate
-   * plausible values as interpolation with the return value.
+   * Accumulates |aA| onto |aA| |aCount| times then accumulates |aB| onto the
+   * result.
+   * If |aCount| is zero or no accumulation or addition procedure is defined
+   * for |aProperty| the result will be |aB|.
    */
-  static MOZ_MUST_USE bool
-  Accumulate(nsCSSPropertyID aProperty, StyleAnimationValue& aDest,
-             const StyleAnimationValue& aValueToAccumulate,
-             uint64_t aCount);
+  static StyleAnimationValue
+  Accumulate(nsCSSPropertyID aProperty,
+             const StyleAnimationValue& aA,
+             StyleAnimationValue&& aB,
+             uint64_t aCount = 1);
 
   // Type-conversion methods
   // -----------------------
@@ -302,17 +293,6 @@ public:
     nsCSSPropertyID aProperty,
     nsStyleContext* aStyleContext,
     StyleAnimationValue& aComputedValue);
-
-  /**
-   * Interpolates between 2 matrices by decomposing them.
-   *
-   * @param aMatrix1   First matrix, using CSS pixel units.
-   * @param aMatrix2   Second matrix, using CSS pixel units.
-   * @param aProgress  Interpolation value in the range [0.0, 1.0]
-   */
-  static gfx::Matrix4x4 InterpolateTransformMatrix(const gfx::Matrix4x4 &aMatrix1,
-                                                   const gfx::Matrix4x4 &aMatrix2,
-                                                   double aProgress);
 
   static already_AddRefed<nsCSSValue::Array>
     AppendTransformFunction(nsCSSKeyword aTransformFunction,

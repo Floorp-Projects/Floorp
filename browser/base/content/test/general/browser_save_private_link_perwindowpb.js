@@ -60,7 +60,7 @@ function promiseImageDownloaded() {
     MockFilePicker.displayDirectory = destDir;
     MockFilePicker.showCallback = function(fp) {
       fileName = fp.defaultString;
-      destFile.append (fileName);
+      destFile.append(fileName);
       MockFilePicker.returnFiles = [destFile];
       MockFilePicker.filterIndex = 1; // kSaveAsType_URL
     };
@@ -68,7 +68,7 @@ function promiseImageDownloaded() {
     mockTransferCallback = onTransferComplete;
     mockTransferRegisterer.register();
 
-    registerCleanupFunction(function () {
+    registerCleanupFunction(function() {
       mockTransferCallback = null;
       mockTransferRegisterer.unregister();
       MockFilePicker.cleanup();

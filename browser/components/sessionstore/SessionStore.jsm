@@ -243,8 +243,8 @@ this.SessionStore = {
     SessionStoreInternal.setTabState(aTab, aState);
   },
 
-  duplicateTab: function ss_duplicateTab(aWindow, aTab, aDelta = 0) {
-    return SessionStoreInternal.duplicateTab(aWindow, aTab, aDelta);
+  duplicateTab: function ss_duplicateTab(aWindow, aTab, aDelta = 0, aRestoreImmediately = true) {
+    return SessionStoreInternal.duplicateTab(aWindow, aTab, aDelta, aRestoreImmediately);
   },
 
   getClosedTabCount: function ss_getClosedTabCount(aWindow) {

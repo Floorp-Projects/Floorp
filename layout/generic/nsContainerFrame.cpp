@@ -1879,12 +1879,10 @@ nsContainerFrame::RenumberFrameAndDescendants(int32_t* aOrdinal,
   }
 
   // Do not renumber list for summary elements.
-  if (HTMLDetailsElement::IsDetailsEnabled()) {
-    HTMLSummaryElement* summary =
-      HTMLSummaryElement::FromContent(kid->GetContent());
-    if (summary && summary->IsMainSummary()) {
-      return false;
-    }
+  HTMLSummaryElement* summary =
+    HTMLSummaryElement::FromContent(kid->GetContent());
+  if (summary && summary->IsMainSummary()) {
+    return false;
   }
 
   bool kidRenumberedABullet = false;

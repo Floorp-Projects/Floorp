@@ -295,7 +295,7 @@ Submitter.prototype = {
       let names = [];
       for (let i of this.additionalDumps) {
         names.push(i.name);
-        formData.append("upload_file_minidump_"+i.name,
+        formData.append("upload_file_minidump_" + i.name,
                         File.createFromFileName(i.dump.path));
       }
     }

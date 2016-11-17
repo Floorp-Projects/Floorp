@@ -10,6 +10,7 @@ module.exports = {
       "vars": "local",
       "varsIgnorePattern": "^Cc|Ci|Cu|Cr|EXPORTED_SYMBOLS",
       "args": "none",
-    }]
+    }],
+    "no-shadow": "error"
   }
 };

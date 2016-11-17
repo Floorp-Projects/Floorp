@@ -245,22 +245,23 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
 static ReflowInput
 CloneReflowInputWithReducedContentBox(
   const ReflowInput& aButtonReflowInput,
-  const nsMargin& aFocusPadding)
+  const LogicalMargin& aFocusPadding)
 {
-  nscoord adjustedWidth =
-    aButtonReflowInput.ComputedWidth() - aFocusPadding.LeftRight();
-  adjustedWidth = std::max(0, adjustedWidth);
+  auto wm = aButtonReflowInput.GetWritingMode();
+  nscoord adjustedISize = aButtonReflowInput.ComputedISize();
+  adjustedISize -= aFocusPadding.IStartEnd(wm);
+  adjustedISize = std::max(0, adjustedISize);
 
-  // (Only adjust height if it's an actual length.)
-  nscoord adjustedHeight = aButtonReflowInput.ComputedHeight();
-  if (adjustedHeight != NS_INTRINSICSIZE) {
-    adjustedHeight -= aFocusPadding.TopBottom();
-    adjustedHeight = std::max(0, adjustedHeight);
+  // (Only adjust the block-size if it's an actual length.)
+  nscoord adjustedBSize = aButtonReflowInput.ComputedBSize();
+  if (adjustedBSize != NS_INTRINSICSIZE) {
+    adjustedBSize -= aFocusPadding.BStartEnd(wm);
+    adjustedBSize = std::max(0, adjustedBSize);
   }
 
   ReflowInput clone(aButtonReflowInput);
-  clone.SetComputedWidth(adjustedWidth);
-  clone.SetComputedHeight(adjustedHeight);
+  clone.SetComputedISize(adjustedISize);
+  clone.SetComputedBSize(adjustedBSize);
 
   return clone;
 }
@@ -316,8 +317,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   // Give child a clone of the button's reflow state, with height/width reduced
   // by focusPadding, so that descendants with height:100% don't protrude.
   ReflowInput adjustedButtonReflowInput =
-    CloneReflowInputWithReducedContentBox(aButtonReflowInput,
-                                          focusPadding.GetPhysicalMargin(wm));
+    CloneReflowInputWithReducedContentBox(aButtonReflowInput, focusPadding);
 
   ReflowInput contentsReflowInput(aPresContext,
                                         adjustedButtonReflowInput,

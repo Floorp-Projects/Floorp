@@ -10,7 +10,7 @@ function pluginBindingAttached() {
 }
 
 add_task(function* () {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     gTestBrowser.removeEventListener("PluginBindingAttached", pluginBindingAttached, true, true);
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
@@ -35,7 +35,7 @@ add_task(function* () {
   let testRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
   yield promiseTabLoadEvent(gBrowser.selectedTab, testRoot + "plugin_bug744745.html");
 
-  yield promiseForCondition(function () { return gNumPluginBindingsAttached == 1; });
+  yield promiseForCondition(function() { return gNumPluginBindingsAttached == 1; });
 
   yield ContentTask.spawn(gTestBrowser, {}, function* () {
     let plugin = content.document.getElementById("test");

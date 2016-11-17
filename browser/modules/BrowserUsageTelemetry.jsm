@@ -268,7 +268,7 @@ let BrowserUsageTelemetry = {
    *        The object describing the event that triggered the search.
    * @throws if source is not in the known sources list.
    */
-  recordSearch(engine, source, details={}) {
+  recordSearch(engine, source, details = {}) {
     const isOneOff = !!details.isOneOff;
 
     if (isOneOff) {

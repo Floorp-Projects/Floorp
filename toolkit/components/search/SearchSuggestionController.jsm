@@ -172,7 +172,7 @@ this.SearchSuggestionController.prototype = {
     if (this._request) {
       this._request.abort();
     } else if (!this.maxRemoteResults) {
-      Cu.reportError("SearchSuggestionController: Cannot stop fetching if remote results were not "+
+      Cu.reportError("SearchSuggestionController: Cannot stop fetching if remote results were not " +
                      "requested");
     }
     this._reset();
@@ -302,7 +302,7 @@ this.SearchSuggestionController.prototype = {
   /**
    * Called when this._remoteResultTimer fires indicating the remote request took too long.
    */
-  _onRemoteTimeout: function () {
+  _onRemoteTimeout: function() {
     this._request = null;
 
     // FIXME: bug 387341

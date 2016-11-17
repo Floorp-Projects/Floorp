@@ -27,17 +27,26 @@ function HighlightersOverlay(view) {
   let {CssRuleView} = require("devtools/client/inspector/rules/rules");
   this.isRuleView = view instanceof CssRuleView;
 
-  this.highlighterUtils = this.view.inspector.toolbox.highlighterUtils;
-
-  this._onMouseMove = this._onMouseMove.bind(this);
-  this._onMouseOut = this._onMouseOut.bind(this);
-
   this.highlighters = {};
 
+  // NodeFront of the grid container that is highlighted.
+  this.gridHighlighterShown = null;
+  // Name of the highlighter shown on mouse hover.
+  this.hoveredHighlighterShown = null;
+  // Name of the selector highlighter shown.
+  this.selectorHighlighterShown = null;
+
+  this.highlighterUtils = this.view.inspector.toolbox.highlighterUtils;
+
   // Only initialize the overlay if at least one of the highlighter types is
-  // supported
+  // supported.
   this.supportsHighlighters =
     this.highlighterUtils.supportsCustomHighlighters();
+
+  this._onClick = this._onClick.bind(this);
+  this._onMouseMove = this._onMouseMove.bind(this);
+  this._onMouseOut = this._onMouseOut.bind(this);
+  this._onWillNavigate = this._onWillNavigate.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -45,7 +54,7 @@ function HighlightersOverlay(view) {
 HighlightersOverlay.prototype = {
   /**
    * Add the highlighters overlay to the view. This will start tracking mouse
-   * movements and display highlighters when needed
+   * movements and display highlighters when needed.
    */
   addToView: function () {
     if (!this.supportsHighlighters || this._isStarted || this._isDestroyed) {
@@ -53,39 +62,81 @@ HighlightersOverlay.prototype = {
     }
 
     let el = this.view.element;
+    el.addEventListener("click", this._onClick, true);
     el.addEventListener("mousemove", this._onMouseMove, false);
     el.addEventListener("mouseout", this._onMouseOut, false);
     el.ownerDocument.defaultView.addEventListener("mouseout", this._onMouseOut, false);
+
+    if (this.isRuleView) {
+      this.view.inspector.target.on("will-navigate", this._onWillNavigate);
+    }
 
     this._isStarted = true;
   },
 
   /**
    * Remove the overlay from the current view. This will stop tracking mouse
-   * movement and showing highlighters
+   * movement and showing highlighters.
    */
   removeFromView: function () {
     if (!this.supportsHighlighters || !this._isStarted || this._isDestroyed) {
       return;
     }
 
-    this._hideCurrent();
-
     let el = this.view.element;
+    el.removeEventListener("click", this._onClick, true);
     el.removeEventListener("mousemove", this._onMouseMove, false);
     el.removeEventListener("mouseout", this._onMouseOut, false);
+
+    if (this.isRuleView) {
+      this.view.inspector.target.off("will-navigate", this._onWillNavigate);
+    }
 
     this._isStarted = false;
   },
 
+  _onClick: function (event) {
+    // Bail out if the target is not a grid property value.
+    if (!this._isDisplayGridValue(event.target)) {
+      return;
+    }
+
+    event.stopPropagation();
+
+    this._getHighlighter("CssGridHighlighter").then(highlighter => {
+      let node = this.view.inspector.selection.nodeFront;
+
+      // Toggle off the grid highlighter if the grid highlighter toggle is clicked
+      // for the current highlighted grid.
+      if (node === this.gridHighlighterShown) {
+        return highlighter.hide();
+      }
+
+      return highlighter.show(node);
+    }).then(isGridShown => {
+      // Toggle all the grid icons in the current rule view.
+      for (let gridIcon of this.view.element.querySelectorAll(".ruleview-grid")) {
+        gridIcon.classList.toggle("active", isGridShown);
+      }
+
+      if (isGridShown) {
+        this.gridHighlighterShown = this.view.inspector.selection.nodeFront;
+        this.emit("highlighter-shown");
+      } else {
+        this.gridHighlighterShown = null;
+        this.emit("highlighter-hidden");
+      }
+    }).catch(e => console.error(e));
+  },
+
   _onMouseMove: function (event) {
-    // Bail out if the target is the same as for the last mousemove
+    // Bail out if the target is the same as for the last mousemove.
     if (event.target === this._lastHovered) {
       return;
     }
 
-    // Only one highlighter can be displayed at a time, hide the currently shown
-    this._hideCurrent();
+    // Only one highlighter can be displayed at a time, hide the currently shown.
+    this._hideHoveredHighlighter();
 
     this._lastHovered = event.target;
 
@@ -94,7 +145,7 @@ HighlightersOverlay.prototype = {
       return;
     }
 
-    // Choose the type of highlighter required for the hovered node
+    // Choose the type of highlighter required for the hovered node.
     let type;
     if (this._isRuleViewTransform(nodeInfo) ||
         this._isComputedViewTransform(nodeInfo)) {
@@ -102,7 +153,7 @@ HighlightersOverlay.prototype = {
     }
 
     if (type) {
-      this.highlighterShown = type;
+      this.hoveredHighlighterShown = type;
       let node = this.view.inspector.selection.nodeFront;
       this._getHighlighter(type)
           .then(highlighter => highlighter.show(node))
@@ -123,11 +174,20 @@ HighlightersOverlay.prototype = {
 
     // Otherwise, hide the highlighter.
     this._lastHovered = null;
-    this._hideCurrent();
+    this._hideHoveredHighlighter();
   },
 
   /**
-   * Is the current hovered node a css transform property value in the rule-view
+   * Clear saved highlighter shown properties on will-navigate.
+   */
+  _onWillNavigate: function () {
+    this.gridHighlighterShown = null;
+    this.hoveredHighlighterShown = null;
+    this.selectorHighlighterShown = null;
+  },
+
+  /**
+   * Is the current hovered node a css transform property value in the rule-view.
    *
    * @param  {Object} nodeInfo
    * @return {Boolean}
@@ -143,7 +203,7 @@ HighlightersOverlay.prototype = {
 
   /**
    * Is the current hovered node a css transform property value in the
-   * computed-view
+   * computed-view.
    *
    * @param  {Object} nodeInfo
    * @return {Boolean}
@@ -155,10 +215,39 @@ HighlightersOverlay.prototype = {
   },
 
   /**
-   * Hide the currently shown highlighter
+   * Is the current clicked node a grid display property value in the
+   * rule-view.
+   *
+   * @param  {DOMNode} node
+   * @return {Boolean}
    */
-  _hideCurrent: function () {
-    if (!this.highlighterShown || !this.highlighters[this.highlighterShown]) {
+  _isDisplayGridValue: function (node) {
+    return this.isRuleView && node.classList.contains("ruleview-grid");
+  },
+
+  /**
+   * Hide the currently shown grid highlighter.
+   */
+  _hideGridHighlighter: function () {
+    if (!this.gridHighlighterShown || !this.highlighters.CssGridHighlighter) {
+      return;
+    }
+
+    let onHidden = this.highlighters.CssGridHighlighter.hide();
+    if (onHidden) {
+      onHidden.then(null, e => console.error(e));
+    }
+
+    this.gridHighlighterShown = null;
+    this.emit("highlighter-hidden");
+  },
+
+  /**
+   * Hide the currently shown hovered highlighter.
+   */
+  _hideHoveredHighlighter: function () {
+    if (!this.hoveredHighlighterShown ||
+        !this.highlighters[this.hoveredHighlighterShown]) {
       return;
     }
 
@@ -166,19 +255,20 @@ HighlightersOverlay.prototype = {
     // promise. This causes some tests to fail when trying to install a
     // rejection handler on the result of the call. To avoid this, check
     // whether the result is truthy before installing the handler.
-    let onHidden = this.highlighters[this.highlighterShown].hide();
+    let onHidden = this.highlighters[this.hoveredHighlighterShown].hide();
     if (onHidden) {
       onHidden.then(null, e => console.error(e));
     }
 
-    this.highlighterShown = null;
+    this.hoveredHighlighterShown = null;
     this.emit("highlighter-hidden");
   },
 
   /**
-   * Get a highlighter front given a type. It will only be initialized once
+   * Get a highlighter front given a type. It will only be initialized once.
    *
-   * @param  {String} type The highlighter type. One of this.highlighters
+   * @param  {String} type
+   *         The highlighter type. One of this.highlighters.
    * @return {Promise} that resolves to the highlighter
    */
   _getHighlighter: function (type) {
@@ -196,7 +286,7 @@ HighlightersOverlay.prototype = {
 
   /**
    * Destroy this overlay instance, removing it from the view and destroying
-   * all initialized highlighters
+   * all initialized highlighters.
    */
   destroy: function () {
     this.removeFromView();
@@ -208,8 +298,15 @@ HighlightersOverlay.prototype = {
       }
     }
 
-    this.view = null;
+    this.highlighters = null;
+
+    this.gridHighlighterShown = null;
+    this.hoveredHighlighterShown = null;
+    this.selectorHighlighterShown = null;
+
     this.highlighterUtils = null;
+    this.isRuleView = null;
+    this.view = null;
 
     this._isDestroyed = true;
   }

@@ -12,10 +12,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 
 function promiseObserverNotified(aTopic) {
   return new Promise(resolve => {
-    Services.obs.addObserver(function onNotification(aSubject, aTopic, aData) {
-      dump("notification promised "+aTopic);
-      Services.obs.removeObserver(onNotification, aTopic);
-      TestUtils.executeSoon(() => resolve({subject: aSubject, data: aData}));
+    Services.obs.addObserver(function onNotification(subject, topic, data) {
+      dump("notification promised " + topic);
+      Services.obs.removeObserver(onNotification, topic);
+      TestUtils.executeSoon(() => resolve({subject, data}));
     }, aTopic, false);
   });
 }
@@ -85,13 +85,13 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
       Task.spawn(finishCleanUp).then(finishcallback || defaultFinishChecks);
   }
   function removeAddedProviders(cleanup) {
-    manifests.forEach(function (m) {
+    manifests.forEach(function(m) {
       // If we're "cleaning up", don't call finish when done.
-      let callback = cleanup ? function () {} : finishIfDone;
+      let finishCb = cleanup ? function() {} : finishIfDone;
       // Similarly, if we're cleaning up, catch exceptions from removeProvider
       let removeProvider = SocialService.disableProvider.bind(SocialService);
       if (cleanup) {
-        removeProvider = function (origin, cb) {
+        removeProvider = function(origin, cb) {
           try {
             SocialService.disableProvider(origin, cb);
           } catch (ex) {
@@ -102,7 +102,7 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
           }
         }
       }
-      removeProvider(m.origin, callback);
+      removeProvider(m.origin, finishCb);
     });
   }
   function finishSocialTest(cleanup) {
@@ -111,7 +111,7 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
 
   let providersAdded = 0;
 
-  manifests.forEach(function (m) {
+  manifests.forEach(function(m) {
     SocialService.addProvider(m, function(provider) {
 
       providersAdded++;
@@ -125,7 +125,7 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
       // If we've added all the providers we need, call the callback to start
       // the tests (and give it a callback it can call to finish them)
       if (providersAdded == manifests.length) {
-        registerCleanupFunction(function () {
+        registerCleanupFunction(function() {
           finishSocialTest(true);
         });
         BrowserTestUtils.waitForCondition(() => provider.enabled,
@@ -180,7 +180,7 @@ function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
         try {
           func.call(tests, cleanupAndRunNextTest);
         } catch (ex) {
-          ok(false, "sub-test " + name + " failed: " + ex.toString() +"\n"+ex.stack);
+          ok(false, "sub-test " + name + " failed: " + ex.toString() + "\n" + ex.stack);
           cleanupAndRunNextTest();
         }
       })
@@ -235,13 +235,13 @@ function ensureFrameLoaded(frame, uri) {
 // (via browser/base/content/test/browser_bookmark_titles.js)
 var origProxyType = Services.prefs.getIntPref('network.proxy.type');
 
-function toggleOfflineStatus(goOffline) {
+function toggleOfflineStatus(goOfflineState) {
   // Bug 968887 fix.  when going on/offline, wait for notification before continuing
   return new Promise(resolve => {
-    if (!goOffline) {
+    if (!goOfflineState) {
       Services.prefs.setIntPref('network.proxy.type', origProxyType);
     }
-    if (goOffline != Services.io.offline) {
+    if (goOfflineState != Services.io.offline) {
       info("initial offline state " + Services.io.offline);
       let expect = !Services.io.offline;
       Services.obs.addObserver(function offlineChange(subject, topic, data) {
@@ -254,7 +254,7 @@ function toggleOfflineStatus(goOffline) {
     } else {
       resolve();
     }
-    if (goOffline) {
+    if (goOfflineState) {
       Services.prefs.setIntPref('network.proxy.type', 0);
       // LOAD_FLAGS_BYPASS_CACHE isn't good enough. So clear the cache.
       Services.cache2.clear();

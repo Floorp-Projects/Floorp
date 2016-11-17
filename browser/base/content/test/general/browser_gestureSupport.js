@@ -312,8 +312,8 @@ function test_emitLatchedEvents(eventPrefix, initialDelta, cmd)
 
   // Now go back in the opposite direction.
   test_utils.sendSimpleGestureEvent(eventPrefix + "Update", 0, 0, 0,
-				    - initialDelta, 0);
-  cumulativeDelta += - initialDelta;
+				    -initialDelta, 0);
+  cumulativeDelta += -initialDelta;
   if (isIncreasing) {
     expect.dec++;
     checkBoth(3, "Increasing command was triggered", "Decreasing command was not triggered");
@@ -507,10 +507,10 @@ function test_swipeGestures()
   for (let i = 0; i < combos.length; i++) {
     resetCounts();
     test_utils.sendSimpleGestureEvent("MozSwipeGesture", 0, 0, combos[i], 0, 0);
-    ok(cmdUp.callCount == 0, "Step 5-"+i+": Up command was triggered");
-    ok(cmdDown.callCount == 0, "Step 5-"+i+": Down command was triggered");
-    ok(cmdLeft.callCount == 0, "Step 5-"+i+": Left command was triggered");
-    ok(cmdRight.callCount == 0, "Step 5-"+i+": Right command was triggered");
+    ok(cmdUp.callCount == 0, "Step 5-" + i + ": Up command was triggered");
+    ok(cmdDown.callCount == 0, "Step 5-" + i + ": Down command was triggered");
+    ok(cmdLeft.callCount == 0, "Step 5-" + i + ": Left command was triggered");
+    ok(cmdRight.callCount == 0, "Step 5-" + i + ": Right command was triggered");
   }
 
   // Remove the test commands.
