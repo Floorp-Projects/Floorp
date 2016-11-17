@@ -22,6 +22,9 @@ bool
 IsWrappedAsyncFunction(JSFunction* fun);
 
 JSObject*
+WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped, HandleObject proto);
+
+JSObject*
 WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped);
 
 MOZ_MUST_USE bool
