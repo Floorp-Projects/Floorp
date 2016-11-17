@@ -1893,10 +1893,5 @@ NS_IMETHOD MozRequestFullScreen(void) final override                          \
   mozilla::ErrorResult rv;                                                    \
   Element::RequestFullscreen(rv);                                    \
   return rv.StealNSResult();                                                  \
-}                                                                             \
-NS_IMETHOD MozRequestPointerLock(void) final override                         \
-{                                                                             \
-  Element::RequestPointerLock();                                              \
-  return NS_OK;                                                               \
 }
 #endif // mozilla_dom_Element_h__

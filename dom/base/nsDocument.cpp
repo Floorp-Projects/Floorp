@@ -11773,22 +11773,6 @@ nsIDocument::UnlockPointer(nsIDocument* aDoc)
   nsDocument::UnlockPointer(aDoc);
 }
 
-NS_IMETHODIMP
-nsDocument::MozExitPointerLock()
-{
-  nsIDocument::ExitPointerLock();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetMozPointerLockElement(nsIDOMElement** aPointerLockedElement)
-{
-  Element* el = nsIDocument::GetPointerLockElement();
-  nsCOMPtr<nsIDOMElement> retval = do_QueryInterface(el);
-  retval.forget(aPointerLockedElement);
-  return NS_OK;
-}
-
 Element*
 nsIDocument::GetPointerLockElement()
 {
