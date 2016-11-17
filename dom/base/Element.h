@@ -1800,35 +1800,5 @@ NS_IMETHOD MozRemove() final override                                         \
 {                                                                             \
   nsINode::Remove();                                                          \
   return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetClientRects(nsIDOMClientRectList** _retval) final override      \
-{                                                                             \
-  *_retval = Element::GetClientRects().take();                                \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetBoundingClientRect(nsIDOMClientRect** _retval) final override   \
-{                                                                             \
-  *_retval = Element::GetBoundingClientRect().take();                         \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetClientTop(int32_t* aClientTop) final override                   \
-{                                                                             \
-  *aClientTop = Element::ClientTop();                                         \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetClientLeft(int32_t* aClientLeft) final override                 \
-{                                                                             \
-  *aClientLeft = Element::ClientLeft();                                       \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetClientWidth(int32_t* aClientWidth) final override               \
-{                                                                             \
-  *aClientWidth = Element::ClientWidth();                                     \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetClientHeight(int32_t* aClientHeight) final override             \
-{                                                                             \
-  *aClientHeight = Element::ClientHeight();                                   \
-  return NS_OK;                                                               \
 }
 #endif // mozilla_dom_Element_h__
