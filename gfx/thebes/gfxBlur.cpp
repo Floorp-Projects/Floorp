@@ -20,8 +20,7 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 gfxAlphaBoxBlur::gfxAlphaBoxBlur()
-  : mData(nullptr),
-    mAccelerated(false)
+  : mData(nullptr)
 {
 }
 
@@ -33,18 +32,16 @@ gfxAlphaBoxBlur::~gfxAlphaBoxBlur()
 }
 
 already_AddRefed<gfxContext>
-gfxAlphaBoxBlur::Init(gfxContext* aDestinationCtx,
-                      const gfxRect& aRect,
+gfxAlphaBoxBlur::Init(const gfxRect& aRect,
                       const IntSize& aSpreadRadius,
                       const IntSize& aBlurRadius,
                       const gfxRect* aDirtyRect,
                       const gfxRect* aSkipRect)
 {
-  DrawTarget* refDT = aDestinationCtx->GetDrawTarget();
   Maybe<Rect> dirtyRect = aDirtyRect ? Some(ToRect(*aDirtyRect)) : Nothing();
   Maybe<Rect> skipRect = aSkipRect ? Some(ToRect(*aSkipRect)) : Nothing();
   RefPtr<DrawTarget> dt =
-    InitDrawTarget(refDT, ToRect(aRect), aSpreadRadius, aBlurRadius,
+    InitDrawTarget(ToRect(aRect), aSpreadRadius, aBlurRadius,
                    dirtyRect.ptrOr(nullptr), skipRect.ptrOr(nullptr));
   if (!dt) {
     return nullptr;
@@ -57,8 +54,7 @@ gfxAlphaBoxBlur::Init(gfxContext* aDestinationCtx,
 }
 
 already_AddRefed<DrawTarget>
-gfxAlphaBoxBlur::InitDrawTarget(const DrawTarget* aReferenceDT,
-                                const Rect& aRect,
+gfxAlphaBoxBlur::InitDrawTarget(const Rect& aRect,
                                 const IntSize& aSpreadRadius,
                                 const IntSize& aBlurRadius,
                                 const Rect* aDirtyRect,
@@ -70,144 +66,90 @@ gfxAlphaBoxBlur::InitDrawTarget(const DrawTarget* aReferenceDT,
     return nullptr;
   }
 
-  BackendType backend = aReferenceDT->GetBackendType();
-
-  // Check if the backend has an accelerated DrawSurfaceWithShadow.
-  // Currently, only D2D1.1 supports this.
-  // Otherwise, DrawSurfaceWithShadow only supports square blurs without spread.
-  if (aBlurRadius.IsSquare() && aSpreadRadius.IsEmpty() &&
-      backend == BackendType::DIRECT2D1_1) {
-    mAccelerated = true;
-    mDrawTarget =
-      aReferenceDT->CreateShadowDrawTarget(mBlur.GetSize(),
-                                           SurfaceFormat::A8,
-                                           AlphaBoxBlur::CalculateBlurSigma(aBlurRadius.width));
-  } else {
-    // Make an alpha-only surface to draw on. We will play with the data after
-    // everything is drawn to create a blur effect.
-    mData = static_cast<uint8_t*>(calloc(1, blurDataSize));
-    if (!mData) {
-      return nullptr;
-    }
-    mDrawTarget =
-      Factory::DoesBackendSupportDataDrawtarget(backend) ?
-        Factory::CreateDrawTargetForData(backend,
-                                         mData,
-                                         mBlur.GetSize(),
-                                         mBlur.GetStride(),
-                                         SurfaceFormat::A8) :
-        gfxPlatform::CreateDrawTargetForData(mData,
-                                             mBlur.GetSize(),
-                                             mBlur.GetStride(),
-                                             SurfaceFormat::A8);
-  }
-
-  if (!mDrawTarget || !mDrawTarget->IsValid()) {
+  // Make an alpha-only surface to draw on. We will play with the data after
+  // everything is drawn to create a blur effect.
+  mData = static_cast<uint8_t*>(calloc(1, blurDataSize));
+  if (!mData) {
     return nullptr;
   }
-  mDrawTarget->SetTransform(Matrix::Translation(-mBlur.GetRect().TopLeft()));
-  return do_AddRef(mDrawTarget);
+
+  RefPtr<DrawTarget> dt =
+    gfxPlatform::CreateDrawTargetForData(mData,
+                                         mBlur.GetSize(),
+                                         mBlur.GetStride(),
+                                         SurfaceFormat::A8);
+  if (!dt || !dt->IsValid()) {
+    return nullptr;
+  }
+  dt->SetTransform(Matrix::Translation(-mBlur.GetRect().TopLeft()));
+  return dt.forget();
 }
 
-static void
-DrawBlur(DrawTarget* aDestDT,
-         Pattern* aPattern,
+void
+DrawBlur(gfxContext* aDestinationCtx,
          SourceSurface* aBlur,
          const IntPoint& aTopLeft,
          const Rect* aDirtyRect)
 {
-  // Avoid a semi-expensive clip operation if we can, otherwise
-  // clip to the dirty rect
-  if (aDirtyRect) {
-    aDestDT->PushClipRect(*aDirtyRect);
-  }
+    DrawTarget *dest = aDestinationCtx->GetDrawTarget();
 
-  Matrix oldTransform = aDestDT->GetTransform();
-  Matrix newTransform = oldTransform;
-  newTransform.PreTranslate(aTopLeft);
-  aDestDT->SetTransform(newTransform);
+    RefPtr<gfxPattern> thebesPat = aDestinationCtx->GetPattern();
+    Pattern* pat = thebesPat->GetPattern(dest, nullptr);
 
-  aDestDT->MaskSurface(*aPattern, aBlur, Point(0, 0));
+    Matrix oldTransform = dest->GetTransform();
+    Matrix newTransform = oldTransform;
+    newTransform.PreTranslate(aTopLeft.x, aTopLeft.y);
 
-  aDestDT->SetTransform(oldTransform);
+    // Avoid a semi-expensive clip operation if we can, otherwise
+    // clip to the dirty rect
+    if (aDirtyRect) {
+        dest->PushClipRect(*aDirtyRect);
+    }
 
-  if (aDirtyRect) {
-    aDestDT->PopClip();
-  }
+    dest->SetTransform(newTransform);
+    dest->MaskSurface(*pat, aBlur, Point(0, 0));
+    dest->SetTransform(oldTransform);
+
+    if (aDirtyRect) {
+        dest->PopClip();
+    }
 }
 
 already_AddRefed<SourceSurface>
-gfxAlphaBoxBlur::DoBlur(const Color* aShadowColor, IntPoint* aOutTopLeft)
+gfxAlphaBoxBlur::DoBlur(DrawTarget* aDT, IntPoint* aTopLeft)
 {
-  if (mData) {
     mBlur.Blur(mData);
-  }
 
-  if (aOutTopLeft) {
-    *aOutTopLeft = mBlur.GetRect().TopLeft();
-  }
+    *aTopLeft = mBlur.GetRect().TopLeft();
 
-  RefPtr<SourceSurface> blurMask = mDrawTarget->Snapshot();
-  if (mAccelerated) {
-    RefPtr<DrawTarget> blurDT =
-      Factory::CreateDrawTarget(mDrawTarget->GetBackendType(),
-                                blurMask->GetSize(),
-                                SurfaceFormat::A8);
-    if (!blurDT) {
-      return nullptr;
-    }
-    blurDT->DrawSurfaceWithShadow(blurMask, Point(0, 0), Color(1, 1, 1), Point(0, 0),
-                                  AlphaBoxBlur::CalculateBlurSigma(mBlur.GetBlurRadius().width),
-                                  CompositionOp::OP_OVER);
-    blurMask = blurDT->Snapshot();
-  }
-
-  if (!aShadowColor) {
-    return blurMask.forget();
-  }
-
-  RefPtr<DrawTarget> shadowDT =
-    Factory::CreateDrawTarget(mDrawTarget->GetBackendType(),
-                              blurMask->GetSize(),
-                              SurfaceFormat::B8G8R8A8);
-  if (!shadowDT) {
-    return nullptr;
-  }
-  ColorPattern shadowColor(ToDeviceColor(*aShadowColor));
-  shadowDT->MaskSurface(shadowColor, blurMask, Point(0, 0));
-
-  return shadowDT->Snapshot();
+    return aDT->CreateSourceSurfaceFromData(mData,
+                                            mBlur.GetSize(),
+                                            mBlur.GetStride(),
+                                            SurfaceFormat::A8);
 }
 
 void
 gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx)
 {
-  if (!mAccelerated && !mData) {
-    return;
-  }
+    if (!mData)
+        return;
 
-  DrawTarget *dest = aDestinationCtx->GetDrawTarget();
-  if (!dest) {
-    NS_WARNING("Blurring not supported for Thebes contexts!");
-    return;
-  }
+    DrawTarget *dest = aDestinationCtx->GetDrawTarget();
+    if (!dest) {
+      NS_WARNING("Blurring not supported for Thebes contexts!");
+      return;
+    }
 
-  RefPtr<gfxPattern> thebesPat = aDestinationCtx->GetPattern();
-  Pattern* pat = thebesPat->GetPattern(dest, nullptr);
-  if (!pat) {
-    NS_WARNING("Failed to get pattern for blur!");
-    return;
-  }
+    Rect* dirtyRect = mBlur.GetDirtyRect();
 
-  IntPoint topLeft;
-  RefPtr<SourceSurface> mask = DoBlur(nullptr, &topLeft);
-  if (!mask) {
-    NS_ERROR("Failed to create mask!");
-    return;
-  }
+    IntPoint topLeft;
+    RefPtr<SourceSurface> mask = DoBlur(dest, &topLeft);
+    if (!mask) {
+      NS_ERROR("Failed to create mask!");
+      return;
+    }
 
-  Rect* dirtyRect = mBlur.GetDirtyRect();
-  DrawBlur(dest, pat, mask, topLeft, dirtyRect);
+    DrawBlur(aDestinationCtx, mask, topLeft, dirtyRect);
 }
 
 IntSize gfxAlphaBoxBlur::CalculateBlurRadius(const gfxPoint& aStd)
@@ -491,15 +433,14 @@ CacheBlur(DrawTarget* aDT,
   }
 }
 
-// Blurs a small surface and creates the colored box shadow.
+// Blurs a small surface and creates the mask.
 static already_AddRefed<SourceSurface>
-CreateBoxShadow(DrawTarget* aDestDrawTarget,
-                const IntSize& aMinSize,
-                const RectCornerRadii* aCornerRadii,
-                const IntSize& aBlurRadius,
-                const Color& aShadowColor,
-                bool aMirrorCorners,
-                IntMargin& aOutBlurMargin)
+CreateBlurMask(DrawTarget* aDestDrawTarget,
+               const IntSize& aMinSize,
+               const RectCornerRadii* aCornerRadii,
+               const IntSize& aBlurRadius,
+               bool aMirrorCorners,
+               IntMargin& aOutBlurMargin)
 {
   gfxAlphaBoxBlur blur;
   Rect minRect(Point(0, 0), Size(aMinSize));
@@ -512,7 +453,7 @@ CreateBoxShadow(DrawTarget* aDestDrawTarget,
   }
   IntSize zeroSpread(0, 0);
   RefPtr<DrawTarget> blurDT =
-    blur.InitDrawTarget(aDestDrawTarget, blurRect, zeroSpread, aBlurRadius);
+    blur.InitDrawTarget(blurRect, zeroSpread, aBlurRadius);
   if (!blurDT) {
     return nullptr;
   }
@@ -528,7 +469,7 @@ CreateBoxShadow(DrawTarget* aDestDrawTarget,
   }
 
   IntPoint topLeft;
-  RefPtr<SourceSurface> result = blur.DoBlur(&aShadowColor, &topLeft);
+  RefPtr<SourceSurface> result = blur.DoBlur(aDestDrawTarget, &topLeft);
   if (!result) {
     return nullptr;
   }
@@ -539,6 +480,22 @@ CreateBoxShadow(DrawTarget* aDestDrawTarget,
   aOutBlurMargin = IntMargin(-topLeft.y, -topLeft.x, -topLeft.y, -topLeft.x);
 
   return result.forget();
+}
+
+static already_AddRefed<SourceSurface>
+CreateBoxShadow(DrawTarget* aDestDT, SourceSurface* aBlurMask, const Color& aShadowColor)
+{
+  IntSize blurredSize = aBlurMask->GetSize();
+  RefPtr<DrawTarget> boxShadowDT =
+    Factory::CreateDrawTarget(aDestDT->GetBackendType(), blurredSize, SurfaceFormat::B8G8R8A8);
+
+  if (!boxShadowDT) {
+    return nullptr;
+  }
+
+  ColorPattern shadowColor(ToDeviceColor(aShadowColor));
+  boxShadowDT->MaskSurface(shadowColor, aBlurMask, Point(0, 0));
+  return boxShadowDT->Snapshot();
 }
 
 static already_AddRefed<SourceSurface>
@@ -576,16 +533,21 @@ GetBlur(gfxContext* aDestinationCtx,
                                                aCornerRadii, aShadowColor,
                                                destDT->GetBackendType());
     if (cached) {
-      // See CreateBoxShadow() for these values
+      // See CreateBlurMask() for these values
       aOutBlurMargin = cached->mBlurMargin;
       RefPtr<SourceSurface> blur = cached->mBlur;
       return blur.forget();
     }
   }
 
-  RefPtr<SourceSurface> boxShadow =
-    CreateBoxShadow(destDT, minSize, aCornerRadii, aBlurRadius,
-                    aShadowColor, aMirrorCorners, aOutBlurMargin);
+  RefPtr<SourceSurface> blurMask =
+    CreateBlurMask(destDT, minSize, aCornerRadii, aBlurRadius,
+                   aMirrorCorners, aOutBlurMargin);
+  if (!blurMask) {
+    return nullptr;
+  }
+
+  RefPtr<SourceSurface> boxShadow = CreateBoxShadow(destDT, blurMask, aShadowColor);
   if (!boxShadow) {
     return nullptr;
   }
@@ -1045,7 +1007,7 @@ gfxAlphaBoxBlur::GetInsetBlur(const Rect& aOuterRect,
   }
   IntSize zeroSpread(0, 0);
   RefPtr<DrawTarget> minDrawTarget =
-    InitDrawTarget(aDestDrawTarget, blurRect, zeroSpread, aBlurRadius);
+    InitDrawTarget(blurRect, zeroSpread, aBlurRadius);
   if (!minDrawTarget) {
     return nullptr;
   }
@@ -1069,8 +1031,15 @@ gfxAlphaBoxBlur::GetInsetBlur(const Rect& aOuterRect,
   ColorPattern black(Color(0.f, 0.f, 0.f, 1.f));
   minDrawTarget->Fill(maskPath, black);
 
-  // Blur and fill in with the color we actually wanted
-  RefPtr<SourceSurface> minInsetBlur = DoBlur(&aShadowColor);
+  // Create the A8 mask
+  IntPoint topLeft;
+  RefPtr<SourceSurface> minMask = DoBlur(minDrawTarget, &topLeft);
+  if (!minMask) {
+    return nullptr;
+  }
+
+  // Fill in with the color we actually wanted
+  RefPtr<SourceSurface> minInsetBlur = CreateBoxShadow(aDestDrawTarget, minMask, aShadowColor);
   if (!minInsetBlur) {
     return nullptr;
   }

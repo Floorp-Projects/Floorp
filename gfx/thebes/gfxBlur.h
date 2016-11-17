@@ -56,9 +56,6 @@ public:
 
     /**
      * Constructs a box blur and initializes the temporary surface.
-     *
-     * @param aDestinationCtx The destination to blur to.
-     *
      * @param aRect The coordinates of the surface to create in device units.
      *
      * @param aBlurRadius The blur radius in pixels.  This is the radius of
@@ -76,27 +73,21 @@ public:
      *  for speed reasons. It is safe to pass nullptr here.
      */
     already_AddRefed<gfxContext>
-    Init(gfxContext* aDestinationCtx,
-         const gfxRect& aRect,
+    Init(const gfxRect& aRect,
          const mozilla::gfx::IntSize& aSpreadRadius,
          const mozilla::gfx::IntSize& aBlurRadius,
          const gfxRect* aDirtyRect,
          const gfxRect* aSkipRect);
 
     already_AddRefed<DrawTarget>
-    InitDrawTarget(const mozilla::gfx::DrawTarget* aReferenceDT,
-                   const mozilla::gfx::Rect& aRect,
+    InitDrawTarget(const mozilla::gfx::Rect& aRect,
                    const mozilla::gfx::IntSize& aSpreadRadius,
                    const mozilla::gfx::IntSize& aBlurRadius,
                    const mozilla::gfx::Rect* aDirtyRect = nullptr,
                    const mozilla::gfx::Rect* aSkipRect = nullptr);
 
-    /**
-     * Performs the blur and optionally colors the result if aShadowColor is not null.
-     */
     already_AddRefed<mozilla::gfx::SourceSurface>
-    DoBlur(const mozilla::gfx::Color* aShadowColor = nullptr,
-           mozilla::gfx::IntPoint* aOutTopLeft = nullptr);
+    DoBlur(DrawTarget* aDT, mozilla::gfx::IntPoint* aTopLeft);
 
     /**
      * Does the actual blurring/spreading and mask applying. Users of this
@@ -177,12 +168,6 @@ protected:
                  DrawTarget* aDestDrawTarget,
                  bool aMirrorCorners);
 
-
-    /**
-     * The DrawTarget of the temporary alpha surface.
-     */
-    RefPtr<DrawTarget> mDrawTarget;
-
     /**
      * The temporary alpha surface.
      */
@@ -192,11 +177,6 @@ protected:
       * The object that actually does the blurring for us.
       */
     mozilla::gfx::AlphaBoxBlur mBlur;
-
-    /**
-     * Indicates using DrawTarget-accelerated blurs.
-     */
-    bool mAccelerated;
 };
 
 #endif /* GFX_BLUR_H */
