@@ -17,7 +17,33 @@ android {
         versionName VERSION_NAME
         targetSdkVersion 23
         minSdkVersion 15
-        consumerProguardFiles 'proguard-rules.txt' 
+        consumerProguardFiles 'proguard-rules.txt'
+
+        // TODO: ensure these fields always agree with mobile/android/geckoview/BuildConfig.java.in,
+        // either by diffing the processed files or by generating the output from a single source.
+        buildConfigField 'String', "GRE_MILESTONE", "\"${mozconfig.substs.GRE_MILESTONE}\""
+        buildConfigField 'String', "MOZ_APP_ABI", "\"${mozconfig.substs.MOZ_APP_ABI}\"";
+        buildConfigField 'String', "MOZ_APP_BASENAME", "\"${mozconfig.substs.MOZ_APP_BASENAME}\"";
+
+        // For the benefit of future archaeologists:
+        // GRE_BUILDID is exactly the same as MOZ_APP_BUILDID unless you're running
+        // on XULRunner, which is never the case on Android.
+        buildConfigField 'String', "MOZ_APP_BUILDID", "\"${mozconfig.substs.MOZ_BUILDID}\"";
+        buildConfigField 'String', "MOZ_APP_ID", "\"${mozconfig.substs.MOZ_APP_ID}\"";
+        buildConfigField 'String', "MOZ_APP_NAME", "\"${mozconfig.substs.MOZ_APP_NAME}\"";
+        buildConfigField 'String', "MOZ_APP_VENDOR", "\"${mozconfig.substs.MOZ_APP_VENDOR}\"";
+        buildConfigField 'String', "MOZ_APP_VERSION", "\"${mozconfig.substs.MOZ_APP_VERSION}\"";
+        buildConfigField 'String', "MOZ_APP_DISPLAYNAME", "\"${mozconfig.substs.MOZ_APP_DISPLAYNAME}\"";
+        buildConfigField 'String', "MOZ_APP_UA_NAME", "\"${mozconfig.substs.MOZ_APP_UA_NAME}\"";
+
+        // MOZILLA_VERSION is oddly quoted from autoconf, but we don't have to handle it specially in Gradle.
+        buildConfigField 'String', "MOZILLA_VERSION", "\"${mozconfig.substs.MOZILLA_VERSION}\"";
+        buildConfigField 'String', "OMNIJAR_NAME", "\"${mozconfig.substs.OMNIJAR_NAME}\"";
+
+        buildConfigField 'String', "USER_AGENT_GECKOVIEW_MOBILE", "\"Mozilla/5.0 (Android \" + android.os.Build.VERSION.RELEASE + \"; Mobile; rv: ${mozconfig.substs.MOZ_APP_VERSION}) Gecko/${mozconfig.substs.MOZ_APP_VERSION} GeckoView/${mozconfig.substs.MOZ_APP_VERSION}\"";
+        buildConfigField 'String', "USER_AGENT_GECKOVIEW_TABLET", "\"Mozilla/5.0 (Android \" + android.os.Build.VERSION.RELEASE + \"; Tablet; rv: ${mozconfig.substs.MOZ_APP_VERSION}) Gecko/${mozconfig.substs.MOZ_APP_VERSION} GeckoView/${mozconfig.substs.MOZ_APP_VERSION}\"";
+
+        buildConfigField 'String', "ANDROID_CPU_ARCH", "\"${mozconfig.substs.ANDROID_CPU_ARCH}\"";
     }
 
     buildTypes {
