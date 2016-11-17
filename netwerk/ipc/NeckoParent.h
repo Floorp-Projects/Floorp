@@ -35,10 +35,10 @@ public:
 
   MOZ_MUST_USE
   static const char *
-  GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
-                      PContentParent* aBrowser,
-                      nsIPrincipal* aRequestingPrincipal,
-                      mozilla::DocShellOriginAttributes& aAttrs);
+  GetValidatedOriginAttributes(const SerializedLoadContext& aSerialized,
+                               PContentParent* aBrowser,
+                               nsIPrincipal* aRequestingPrincipal,
+                               mozilla::DocShellOriginAttributes& aAttrs);
 
   /*
    * Creates LoadContext for parent-side of an e10s channel.
