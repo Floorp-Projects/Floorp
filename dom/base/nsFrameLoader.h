@@ -46,12 +46,11 @@ class ContentParent;
 class PBrowserParent;
 class TabParent;
 class MutableTabContext;
+} // namespace dom
 
 namespace ipc {
 class StructuredCloneData;
 } // namespace ipc
-
-} // namespace dom
 
 namespace layout {
 class RenderFrameParent;

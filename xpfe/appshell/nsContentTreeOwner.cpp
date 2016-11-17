@@ -404,14 +404,6 @@ NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURI(nsIDocShell *aDocShell,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURIInThisProcess(nsIURI* aURI,
-                                                             bool* aRetVal)
-{
-  MOZ_ASSERT_UNREACHABLE("Should only be called in child process.");
-  *aRetVal = true;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsContentTreeOwner::ReloadInFreshProcess(nsIDocShell* aDocShell,
                                                        nsIURI* aURI,
                                                        nsIURI* aReferrer,
