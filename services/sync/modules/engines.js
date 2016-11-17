@@ -1791,6 +1791,11 @@ class Changeset {
     this.changes[id] = change;
   }
 
+  // Adds multiple entries to the changeset.
+  insert(changes) {
+    Object.assign(this.changes, changes);
+  }
+
   // Indicates whether an entry is in the changeset.
   has(id) {
     return id in this.changes;
