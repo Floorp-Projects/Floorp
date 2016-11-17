@@ -32,6 +32,9 @@ MOZ_MUST_USE bool
 AsyncFunctionAwaitedRejected(JSContext* cx, Handle<PromiseObject*> resultPromise,
                              HandleValue generatorVal, HandleValue reason);
 
+MOZ_MUST_USE bool
+CheckAsyncResumptionValue(JSContext* cx, HandleValue v);
+
 } // namespace js
 
 #endif /* vm_AsyncFunction_h */
