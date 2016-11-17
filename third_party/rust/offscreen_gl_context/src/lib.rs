@@ -59,7 +59,7 @@ mod glx {
     include!(concat!(env!("OUT_DIR"), "/glx_bindings.rs"));
 }
 
-#[cfg(any(target_os="linux", target_os="android"))]
+#[cfg(any(target_os="android", all(target_os="linux", feature = "test_egl_in_linux")))]
 #[allow(non_camel_case_types)]
 mod egl {
     use std::os::raw::{c_long, c_void};
