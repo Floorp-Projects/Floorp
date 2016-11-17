@@ -620,15 +620,41 @@ template<typename S>
 struct IsParameterStorageClass<StoreCopyPassByPtr<S>>
   : public mozilla::TrueType {};
 
-namespace detail {
+namespace mozilla {
 
-template<typename TWithoutPointer>
-struct NonnsISupportsPointerStorageClass
-  : mozilla::Conditional<mozilla::IsConst<TWithoutPointer>::value,
-                         StoreConstPtrPassByConstPtr<
-                           typename mozilla::RemoveConst<TWithoutPointer>::Type>,
-                         StorePtrPassByPtr<TWithoutPointer>>
+template<typename T>
+struct IsRefcountedSmartPointer : public mozilla::FalseType
 {};
+
+template<typename T>
+struct IsRefcountedSmartPointer<RefPtr<T>> : public mozilla::TrueType
+{};
+
+template<typename T>
+struct IsRefcountedSmartPointer<nsCOMPtr<T>> : public mozilla::TrueType
+{};
+
+template<typename T>
+struct RemoveSmartPointer
+{
+  typedef void Type;
+};
+
+template<typename T>
+struct RemoveSmartPointer<RefPtr<T>>
+{
+  typedef T Type;
+};
+
+template<typename T>
+struct RemoveSmartPointer<nsCOMPtr<T>>
+{
+  typedef T Type;
+};
+
+} // namespace mozilla
+
+namespace detail {
 
 template<typename>
 struct SFINAE1True : mozilla::TrueType
@@ -645,35 +671,13 @@ template<class T>
 struct HasRefCountMethods : decltype(HasRefCountMethodsTest<T>(0))
 {};
 
-template<typename T>
-struct IsRefcountedSmartPointer : public mozilla::FalseType
+template<typename TWithoutPointer>
+struct NonnsISupportsPointerStorageClass
+  : mozilla::Conditional<mozilla::IsConst<TWithoutPointer>::value,
+                         StoreConstPtrPassByConstPtr<
+                           typename mozilla::RemoveConst<TWithoutPointer>::Type>,
+                         StorePtrPassByPtr<TWithoutPointer>>
 {};
-
-template<typename T>
-struct IsRefcountedSmartPointer<RefPtr<T>> : public mozilla::TrueType
-{};
-
-template<typename T>
-struct IsRefcountedSmartPointer<nsCOMPtr<T>> : public mozilla::TrueType
-{};
-
-template<typename T>
-struct StripSmartPointer
-{
-  typedef void Type;
-};
-
-template<typename T>
-struct StripSmartPointer<RefPtr<T>>
-{
-  typedef T Type;
-};
-
-template<typename T>
-struct StripSmartPointer<nsCOMPtr<T>>
-{
-  typedef T Type;
-};
 
 template<typename TWithoutPointer>
 struct PointerStorageClass
@@ -694,9 +698,9 @@ struct LValueReferenceStorageClass
 
 template<typename T>
 struct SmartPointerStorageClass
-  : mozilla::Conditional<IsRefcountedSmartPointer<T>::value,
+  : mozilla::Conditional<mozilla::IsRefcountedSmartPointer<T>::value,
                          StorensRefPtrPassByPtr<
-                           typename StripSmartPointer<T>::Type>,
+                           typename mozilla::RemoveSmartPointer<T>::Type>,
                          StoreCopyPassByConstLRef<T>>
 {};
 
