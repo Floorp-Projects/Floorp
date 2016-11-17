@@ -105,7 +105,8 @@ runNetworkTest(() => {
      JSON.stringify(toComparable(config)), "getConfiguration");
   pc.close();
 
-  var push = prefs => SpecialPowers.pushPrefEnv(prefs);
+  var push = prefs => new Promise(resolve =>
+      SpecialPowers.pushPrefEnv(prefs, resolve));
 
   Promise.resolve()
   // This set of tests are setting the about:config User preferences for default

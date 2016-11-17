@@ -61,11 +61,12 @@ function play_non_autoplay_audio() {
 }
 
 add_task(function* setup_test_preference() {
-  yield
+  yield new Promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
       ["dom.audiochannel.audioCompeting", true],
       ["dom.ipc.processCount", 1]
-    ]});
+    ]}, resolve);
+  });
 });
 
 add_task(function* cross_tabs_audio_competing() {

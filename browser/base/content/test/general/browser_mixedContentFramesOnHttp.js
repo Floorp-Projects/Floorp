@@ -15,12 +15,14 @@ const gHttpTestUrl = "http://example.com/browser/browser/base/content/test/gener
 var gTestBrowser = null;
 
 add_task(function *() {
-  yield SpecialPowers.pushPrefEnv({
-    "set": [
-      ["security.mixed_content.block_active_content", true],
-      ["security.mixed_content.block_display_content", false]
-    ]});
-
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({
+      "set": [
+        ["security.mixed_content.block_active_content", true],
+        ["security.mixed_content.block_display_content", false]
+      ]
+    }, resolve);
+  });
   let url = gHttpTestUrl
   yield BrowserTestUtils.withNewTab({gBrowser, url}, function*() {
     gTestBrowser = gBrowser.selectedBrowser;

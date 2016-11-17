@@ -6,7 +6,9 @@
 'use strict';
 
 function waitForSetPref(pref, value) {
-  return SpecialPowers.pushPrefEnv({ 'set': [[pref, value]] });
+  return new Promise(function(resolve, reject) {
+    SpecialPowers.pushPrefEnv({ 'set': [[pref, value]] }, resolve);
+  });
 }
 
 /*

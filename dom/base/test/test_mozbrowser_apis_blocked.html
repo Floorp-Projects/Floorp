@@ -11,9 +11,12 @@
 <body>
 <script type="application/javascript;version=1.8">
   add_task(function*() {
-    yield SpecialPowers.pushPrefEnv(
-      { "set": [["dom.mozBrowserFramesEnabled", true],
-                ["network.disable.ipc.security", true]] });
+    yield new Promise(resolve => {
+      SpecialPowers.pushPrefEnv(
+        { "set": [["dom.mozBrowserFramesEnabled", true],
+                  ["network.disable.ipc.security", true]] },
+        resolve);
+    });
   });
 
   add_task(function*() {

@@ -15,10 +15,11 @@ function makeBookmarkFor(url, keyword) {
 
 add_task(function* openKeywordBookmarkWithWindowOpen() {
   // This is the current default, but let's not assume that...
-  yield SpecialPowers.pushPrefEnv({"set": [
-    [ 'browser.link.open_newwindow', 3 ],
-    [ 'dom.disable_open_during_load', true ]
-  ]});
+  yield new Promise((resolve, reject) => {
+    SpecialPowers.pushPrefEnv({ 'set': [[ 'browser.link.open_newwindow', 3 ],
+                                        [ 'dom.disable_open_during_load', true ]] },
+                              resolve);
+  });
 
   let moztab;
   let tabOpened = BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla")

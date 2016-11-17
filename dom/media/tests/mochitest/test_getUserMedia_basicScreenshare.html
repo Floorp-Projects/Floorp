@@ -11,7 +11,7 @@
     bug: "1211656"
   });
 
-  var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
+  var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
 
   /**
    * Run a test to verify that we can complete a start and stop media playback

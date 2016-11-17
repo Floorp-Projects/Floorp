@@ -28,7 +28,7 @@ function PC_BOTH_WAIT_FOR_ICE_FAILED(test) {
   .then(() => ok(true, "ICE on both sides must fail."));
 }
 
-var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
+var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
 var test;
 
 runNetworkTest(options =>

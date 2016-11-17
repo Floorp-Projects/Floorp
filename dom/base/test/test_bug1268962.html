@@ -61,7 +61,8 @@ const CROSS_ORIGIN = "http://example.com" + SJS_PATH;
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv({"set": [["network.prefetch-next.aggressive", true]]})
+new Promise(resolve =>
+  SpecialPowers.pushPrefEnv({"set": [["network.prefetch-next.aggressive", true]]}, resolve))
 
 // test same origin
 .then(() => testPrefetchEvent(SAME_ORIGIN + "?statusCode=200&cacheControl=no-cache", false, false))

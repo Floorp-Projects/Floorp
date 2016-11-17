@@ -1,7 +1,9 @@
 
 let tempFile;
 add_task(function* setup() {
-  yield SpecialPowers.pushPrefEnv({"set": [["ui.tooltipDelay", 0]]});
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [["ui.tooltipDelay", 0]]}, resolve);
+  });
   tempFile = createTempFile();
   registerCleanupFunction(function() {
     tempFile.remove(true);

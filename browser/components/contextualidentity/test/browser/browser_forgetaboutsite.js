@@ -318,9 +318,11 @@ function* test_storage_cleared() {
 
 add_task(function* setup() {
   // Make sure userContext is enabled.
-  yield SpecialPowers.pushPrefEnv({"set": [
-    ["privacy.userContext.enabled", true]
-  ]});
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["privacy.userContext.enabled", true]
+    ]}, resolve);
+  });
 
   // Create a http server for the image cache test.
   if (!gHttpServer) {

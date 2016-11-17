@@ -26,8 +26,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
 
   /** Test for Bug 1276553 **/
   function run() {
-    SpecialPowers.pushPrefEnv(
-      {'set' : [[ 'browser.groupedhistory.enabled', true ]]})
+    new Promise(resolve => SpecialPowers.pushPrefEnv(
+      {'set' : [[ 'browser.groupedhistory.enabled', true ]]}, resolve))
     .then(() => test(false))
     .then(() => test(true))
     .then(() => {

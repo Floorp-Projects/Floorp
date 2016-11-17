@@ -91,7 +91,8 @@ registerCleanupFunction(function() {
 });
 
 function pushPrefs(...aPrefs) {
-  return SpecialPowers.pushPrefEnv({"set": aPrefs});
+  return new Promise(resolve =>
+                     SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve));
 }
 
 /**
