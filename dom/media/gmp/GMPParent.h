@@ -189,7 +189,8 @@ private:
   mozilla::ipc::IPCResult RecvPGMPContentChildDestroyed() override;
   bool IsUsed()
   {
-    return mGMPContentChildCount > 0;
+    return mGMPContentChildCount > 0 ||
+           !mGetContentParentPromises.IsEmpty();
   }
 
   void ResolveGetContentParentPromises();
