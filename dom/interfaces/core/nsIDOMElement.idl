@@ -70,25 +70,4 @@ interface nsIDOMElement : nsIDOMNode
    * space-separated string.
    */
   nsIDOMHTMLCollection getElementsByClassName(in DOMString classes);
-
-  /**
-   * Returns a live nsIDOMNodeList of the current child elements.
-   */
-  [binaryname(ChildElements)]
-  readonly attribute nsIDOMNodeList children;
-  /**
-   * Similar as the attributes on nsIDOMNode, but navigates just elements
-   * rather than all nodes.
-   */
-  readonly attribute nsIDOMElement firstElementChild;
-  readonly attribute nsIDOMElement lastElementChild;
-  readonly attribute nsIDOMElement previousElementSibling;
-  readonly attribute nsIDOMElement nextElementSibling;
-  /**
-   * Returns the number of child nodes that are nsIDOMElements.
-   */
-  readonly attribute unsigned long childElementCount;
-
-  [binaryname(MozRemove)]
-  void remove();
 };
