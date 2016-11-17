@@ -167,7 +167,7 @@ fn test_multithread_render() {
     let primary = GLContext::<NativeGLContext>::new(size,
                                                     GLContextAttributes::default(),
                                                     ColorAttachmentType::Texture,
-                                                    None).unwrap(); 
+                                                    None).unwrap();
     test_gl_context(&primary);
     let (tx, rx) = mpsc::channel();
     let (end_tx, end_rx) = mpsc::channel();
@@ -217,7 +217,7 @@ fn test_multithread_sharing() {
                                                     ColorAttachmentType::Texture,
                                                     None).unwrap();
     primary.make_current().unwrap();
-    
+
     let primary_texture_id = primary.borrow_draw_buffer().unwrap().get_bound_texture_id().unwrap();
     assert!(primary_texture_id != 0);
 
