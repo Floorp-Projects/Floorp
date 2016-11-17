@@ -7,7 +7,7 @@ load(libdir + 'iteration.js')
 var g = newGlobal();
 g.debuggeeGlobal = this;
 g.eval("var dbg = new Debugger(debuggeeGlobal);" +
-       "dbg.onDebuggerStatement = function () { return {return: '!'}; };");
+       "dbg.onDebuggerStatement = function (frame) { return { return: frame.eval(\"({ done: true, value: '!' })\").return }; };");
 
 function* gen() {
     yield '1';
@@ -16,6 +16,6 @@ function* gen() {
 }
 var iter = gen();
 assertIteratorNext(iter, '1');
-assertEq(iter.next(), '!');
+assertIteratorDone(iter, '!');
 iter.next();
 assertEq(0, 1);

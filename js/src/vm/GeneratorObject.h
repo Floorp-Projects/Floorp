@@ -216,6 +216,9 @@ bool GeneratorThrowOrClose(JSContext* cx, AbstractFramePtr frame, Handle<Generat
                            HandleValue val, uint32_t resumeKind);
 void SetReturnValueForClosingGenerator(JSContext* cx, AbstractFramePtr frame);
 
+MOZ_MUST_USE bool
+CheckStarGeneratorResumptionValue(JSContext* cx, HandleValue v);
+
 } // namespace js
 
 template<>
