@@ -35,7 +35,7 @@ public:
                     int32_t aStride,
                     SurfaceFormat aFormat);
 
-  bool InitFromImage(sk_sp<SkImage> aImage,
+  bool InitFromImage(const sk_sp<SkImage>& aImage,
                      SurfaceFormat aFormat = SurfaceFormat::UNKNOWN,
                      DrawTargetSkia* aOwner = nullptr);
 

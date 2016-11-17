@@ -73,11 +73,11 @@ _shutdown = False
 def _python_exit():
     global _shutdown
     _shutdown = True
-    items = list(_threads_queues.items())
+    items = list(_threads_queues.items()) if _threads_queues else ()
     for t, q in items:
         q.put(None)
     for t, q in items:
-        t.join()
+        t.join(sys.maxint)
 
 # Controls how many more calls than processes will be queued in the call queue.
 # A smaller number will mean that processes spend more time idle waiting for
@@ -347,7 +347,7 @@ class ProcessPoolExecutor(_base.Executor):
             # Wake up queue management thread
             self._result_queue.put(None)
             if wait:
-                self._queue_management_thread.join()
+                self._queue_management_thread.join(sys.maxint)
         # To reduce the risk of openning too many files, remove references to
         # objects that use file descriptors.
         self._queue_management_thread = None
