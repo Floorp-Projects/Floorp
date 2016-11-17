@@ -154,13 +154,19 @@ TaggingService.prototype = {
           this._createTag(tag.name, aSource);
         }
 
-        if (this._getItemIdForTaggedURI(aURI, tag.name) == -1) {
+        let itemId = this._getItemIdForTaggedURI(aURI, tag.name);
+        if (itemId == -1) {
           // The provided URI is not yet tagged, add a tag for it.
           // Note that bookmarks under tag containers must have null titles.
           PlacesUtils.bookmarks.insertBookmark(
             tag.id, aURI, PlacesUtils.bookmarks.DEFAULT_INDEX,
             /* aTitle */ null, /* aGuid */ null, aSource
           );
+        } else {
+          // Otherwise, bump the tag's timestamp, so that we can increment the
+          // sync change counter for all bookmarks with the URI.
+          PlacesUtils.bookmarks.setItemLastModified(itemId,
+            PlacesUtils.toPRTime(Date.now()), aSource);
         }
 
         // Try to preserve user's tag name casing.
