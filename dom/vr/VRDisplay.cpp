@@ -637,6 +637,7 @@ VRFrameData::VRFrameData(nsISupports* aParent)
   , mRightProjectionMatrix(nullptr)
   , mRightViewMatrix(nullptr)
 {
+  mozilla::HoldJSObjects(this);
   mPose = new VRPose(aParent);
 }
 
