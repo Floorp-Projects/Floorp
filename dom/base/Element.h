@@ -1811,36 +1811,6 @@ NS_IMETHOD GetBoundingClientRect(nsIDOMClientRect** _retval) final override   \
   *_retval = Element::GetBoundingClientRect().take();                         \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetScrollTop(int32_t* aScrollTop) final override                   \
-{                                                                             \
-  *aScrollTop = Element::ScrollTop();                                         \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD SetScrollTop(int32_t aScrollTop) final override                    \
-{                                                                             \
-  Element::SetScrollTop(aScrollTop);                                          \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetScrollLeft(int32_t* aScrollLeft) final override                 \
-{                                                                             \
-  *aScrollLeft = Element::ScrollLeft();                                       \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD SetScrollLeft(int32_t aScrollLeft) final override                  \
-{                                                                             \
-  Element::SetScrollLeft(aScrollLeft);                                        \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetScrollWidth(int32_t* aScrollWidth) final override               \
-{                                                                             \
-  *aScrollWidth = Element::ScrollWidth();                                     \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetScrollHeight(int32_t* aScrollHeight) final override             \
-{                                                                             \
-  *aScrollHeight = Element::ScrollHeight();                                   \
-  return NS_OK;                                                               \
-}                                                                             \
 NS_IMETHOD GetClientTop(int32_t* aClientTop) final override                   \
 {                                                                             \
   *aClientTop = Element::ClientTop();                                         \
@@ -1859,16 +1829,6 @@ NS_IMETHOD GetClientWidth(int32_t* aClientWidth) final override               \
 NS_IMETHOD GetClientHeight(int32_t* aClientHeight) final override             \
 {                                                                             \
   *aClientHeight = Element::ClientHeight();                                   \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetScrollLeftMax(int32_t* aScrollLeftMax) final override           \
-{                                                                             \
-  *aScrollLeftMax = Element::ScrollLeftMax();                                 \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetScrollTopMax(int32_t* aScrollTopMax) final override             \
-{                                                                             \
-  *aScrollTopMax = Element::ScrollTopMax();                                   \
   return NS_OK;                                                               \
 }
 #endif // mozilla_dom_Element_h__
