@@ -236,11 +236,9 @@ promise_test(function(t) {
 // This is to test that we don't temporarily clear the flag when forcing
 // an unthrottled sample.
 promise_test(function(t) {
-  return new Promise(function(resolve) {
-    // Needs scrollbars to cause overflow.
-    SpecialPowers.pushPrefEnv({ set: [["ui.showHideScrollbars", 1]] },
-                              resolve);
-  }).then(function() {
+  // Needs scrollbars to cause overflow.
+  return SpecialPowers.pushPrefEnv({ set: [["ui.showHideScrollbars", 1]] })
+  .then(function() {
     var div = addDiv(t, { style: 'animation: rotate 100s' });
     var animation = div.getAnimations()[0];
 

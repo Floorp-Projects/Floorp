@@ -21,7 +21,7 @@ function promiseObserve(name)
 
 add_task(function* ()
 {
-  yield new Promise(resolve => SpecialPowers.pushPrefEnv({"set": [["places.history.enabled", false]]}, resolve));
+  yield SpecialPowers.pushPrefEnv({"set": [["places.history.enabled", false]]});
 
   let visitUriPromise = promiseObserve("uri-visit-saved");
 

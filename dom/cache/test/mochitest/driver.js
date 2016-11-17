@@ -18,16 +18,12 @@
 
 function runTests(testFile, order) {
   function setupPrefs() {
-    return new Promise(function(resolve, reject) {
-      SpecialPowers.pushPrefEnv({
-        "set": [["dom.caches.enabled", true],
-                ["dom.caches.testing.enabled", true],
-                ["dom.serviceWorkers.enabled", true],
-                ["dom.serviceWorkers.testing.enabled", true],
-                ["dom.serviceWorkers.exemptFromPerDomainMax", true]]
-      }, function() {
-        resolve();
-      });
+    return SpecialPowers.pushPrefEnv({
+      "set": [["dom.caches.enabled", true],
+              ["dom.caches.testing.enabled", true],
+              ["dom.serviceWorkers.enabled", true],
+              ["dom.serviceWorkers.testing.enabled", true],
+              ["dom.serviceWorkers.exemptFromPerDomainMax", true]]
     });
   }
 

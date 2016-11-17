@@ -28,10 +28,7 @@ function promiseReportCallMade(aValue) {
 }
 
 function pushPrefs(...aPrefs) {
-  return new Promise((resolve) => {
-    SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve);
-    resolve();
-  });
+  return SpecialPowers.pushPrefEnv({"set": aPrefs});
 }
 
 function popPrefs() {
