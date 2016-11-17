@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html reftest-zoom="0.5">
+<meta charset="utf-8">
+<title>Reference for test for bug 1315113: Gradient in border image</title>
+<style>
+
+body {
+  margin: 0;
+}
+
+#box {
+  width: 200px;
+  border: 80px solid transparent;
+  padding: 20px;
+  background: linear-gradient(red, blue);
+  background-origin: border-box;
+}
+
+</style>
+
+<div id="box"></div>
