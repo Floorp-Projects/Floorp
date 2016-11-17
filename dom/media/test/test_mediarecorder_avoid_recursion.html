@@ -16,6 +16,13 @@ function startTest() {
     var count = 0;
     mediaRecorder.start();
     info("mediaRecorder start");
+    mediaRecorder.onerror = function () {
+      ok(false, 'Unexpected onerror callback fired');
+      SimpleTest.finish();
+    };
+    mediaRecorder.onwarning = function () {
+      ok(false, 'Unexpected onwarning callback fired');
+    };
     mediaRecorder.ondataavailable = function (e) {
       ++count;
       info("got ondataavailable data size = " + e.data.size);
