@@ -440,6 +440,8 @@ function assertDeleted(id) {
 
 add_task(function* test_delete_buffering() {
   store.wipe();
+  yield PlacesTestUtils.markBookmarksAsSynced();
+
   try {
     _("Create a folder with two bookmarks.");
     let folder = new BookmarkFolder("bookmarks", "testfolder-1");
