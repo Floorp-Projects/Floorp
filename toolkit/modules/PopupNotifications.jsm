@@ -1060,17 +1060,14 @@ PopupNotifications.prototype = {
 
   _reshowNotifications: function PopupNotifications_reshowNotifications(anchor, browser) {
     // Mark notifications anchored to this anchor as un-dismissed
-    browser = browser || this.tabbrowser.selectedBrowser;
-    let notifications = this._getNotificationsForBrowser(browser);
+    let notifications = this._getNotificationsForBrowser(browser || this.tabbrowser.selectedBrowser);
     notifications.forEach(function (n) {
       if (n.anchorElement == anchor)
         n.dismissed = false;
     });
 
-    if (this._isActiveBrowser(browser)) {
-      // ...and then show them.
-      this._update(notifications, anchor);
-    }
+    // ...and then show them.
+    this._update(notifications, anchor);
   },
 
   _swapBrowserNotifications: function PopupNotifications_swapBrowserNoficications(ourBrowser, otherBrowser) {
