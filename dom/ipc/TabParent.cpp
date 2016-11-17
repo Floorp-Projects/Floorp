@@ -9,8 +9,6 @@
 #include "TabParent.h"
 
 #include "AudioChannelService.h"
-#include "AppProcessChecker.h"
-#include "mozIApplication.h"
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "nsAccessibilityService.h"
@@ -997,12 +995,7 @@ TabParent::AllocPIndexedDBPermissionRequestParent(const Principal& aPrincipal)
   }
 
   nsCOMPtr<nsIContentParent> manager = Manager();
-  if (manager->IsContentParent()) {
-    if (NS_WARN_IF(!AssertAppPrincipal(manager->AsContentParent(),
-                                       principal))) {
-      return nullptr;
-    }
-  } else {
+  if (!manager->IsContentParent()) {
     MOZ_CRASH("Figure out security checks for bridged content!");
   }
 
@@ -1497,16 +1490,6 @@ TabParent::RecvSyncMessage(const nsString& aMessage,
                            const IPC::Principal& aPrincipal,
                            nsTArray<StructuredCloneData>* aRetVal)
 {
-  // FIXME Permission check for TabParent in Content process
-  nsIPrincipal* principal = aPrincipal;
-  if (Manager()->IsContentParent()) {
-    ContentParent* parent = Manager()->AsContentParent();
-    if (!ContentParent::IgnoreIPCPrincipal() &&
-        parent && principal && !AssertAppPrincipal(parent, principal)) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-  }
-
   StructuredCloneData data;
   ipc::UnpackClonedMessageDataForParent(aData, data);
 
@@ -1524,16 +1507,6 @@ TabParent::RecvRpcMessage(const nsString& aMessage,
                           const IPC::Principal& aPrincipal,
                           nsTArray<StructuredCloneData>* aRetVal)
 {
-  // FIXME Permission check for TabParent in Content process
-  nsIPrincipal* principal = aPrincipal;
-  if (Manager()->IsContentParent()) {
-    ContentParent* parent = Manager()->AsContentParent();
-    if (!ContentParent::IgnoreIPCPrincipal() &&
-        parent && principal && !AssertAppPrincipal(parent, principal)) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-  }
-
   StructuredCloneData data;
   ipc::UnpackClonedMessageDataForParent(aData, data);
 
@@ -1550,16 +1523,6 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
                             const IPC::Principal& aPrincipal,
                             const ClonedMessageData& aData)
 {
-  // FIXME Permission check for TabParent in Content process
-  nsIPrincipal* principal = aPrincipal;
-  if (Manager()->IsContentParent()) {
-    ContentParent* parent = Manager()->AsContentParent();
-    if (!ContentParent::IgnoreIPCPrincipal() &&
-        parent && principal && !AssertAppPrincipal(parent, principal)) {
-      return IPC_FAIL_NO_REASON(this);
-    }
-  }
-
   StructuredCloneData data;
   ipc::UnpackClonedMessageDataForParent(aData, data);
 
@@ -2991,7 +2954,6 @@ public:
   NS_IMETHOD SetUsePrivateBrowsing(bool) NO_IMPL
   NS_IMETHOD SetPrivateBrowsing(bool) NO_IMPL
   NS_IMETHOD GetIsInIsolatedMozBrowserElement(bool*) NO_IMPL
-  NS_IMETHOD GetAppId(uint32_t*) NO_IMPL
   NS_IMETHOD GetOriginAttributes(JS::MutableHandleValue) NO_IMPL
   NS_IMETHOD GetUseRemoteTabs(bool*) NO_IMPL
   NS_IMETHOD SetRemoteTabs(bool) NO_IMPL

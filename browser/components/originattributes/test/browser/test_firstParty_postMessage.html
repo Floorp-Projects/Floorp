@@ -11,7 +11,7 @@ function onload() {
   iframe1.contentWindow.postMessage("HI", "http://mochi.test:8888");
 }
 
-window.onmessage = function (evt) {
+window.onmessage = function(evt) {
   document.getElementById("message").textContent = evt.data;
 
   let iframe2 = document.createElement("iframe");

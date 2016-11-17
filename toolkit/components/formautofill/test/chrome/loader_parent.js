@@ -38,7 +38,7 @@ var Assert = {
 function add_task_in_parent_process(taskFn, taskIdOverride) {
   let taskId = taskIdOverride || getTaskId(Components.stack.caller);
   Output.print("Registering in the parent process: " + taskId);
-  addMessageListener("start_task_" + taskId, function () {
+  addMessageListener("start_task_" + taskId, function() {
     Task.spawn(function* () {
       try {
         Output.print("Running in the parent process " + taskId);
@@ -51,14 +51,14 @@ function add_task_in_parent_process(taskFn, taskIdOverride) {
     });
   });
 }
-var add_task = function () {};
-var add_task_in_child_process = function () {};
+var add_task = function() {};
+var add_task_in_child_process = function() {};
 var add_task_in_both_processes = add_task_in_parent_process;
 
 // We need to wait for the child process to send us the path of the test file
 // to load before we can actually start loading it.
 var context = this;
-addMessageListener("start_load_in_parent", function (message) {
+addMessageListener("start_load_in_parent", function(message) {
   Output.print("Starting loading infrastructure in parent process.");
   let headUrl = "chrome://mochitests/content/chrome/" +
                 "toolkit/components/formautofill/test/chrome/head_common.js";

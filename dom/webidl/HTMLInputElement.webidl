@@ -88,7 +88,7 @@ interface HTMLInputElement : HTMLElement {
            attribute DOMString type;
   [Pure, SetterThrows]
            attribute DOMString defaultValue;
-  [Pure, TreatNullAs=EmptyString, Throws]
+  [Pure, TreatNullAs=EmptyString, SetterThrows, NeedsCallerType]
            attribute DOMString value;
   [Throws, Func="HTMLInputElement::ValueAsDateEnabled"]
            attribute Date? valueAsDate;
@@ -146,7 +146,8 @@ partial interface HTMLInputElement {
 
   [GetterThrows, ChromeOnly]
   readonly attribute nsIControllers        controllers;
-  [GetterThrows]
+  // Binaryname because we have a FragmentOrElement function named "TextLength()".
+  [NeedsCallerType, BinaryName="inputTextLength"]
   readonly attribute long                  textLength;
 
   [Throws, ChromeOnly]

@@ -15,7 +15,7 @@ var gPermissions = SitePermissions.listPermissions();
 gPermissions.push("plugins");
 
 var permissionObserver = {
-  observe: function (aSubject, aTopic, aData)
+  observe: function(aSubject, aTopic, aData)
   {
     if (aTopic == "perm-changed") {
       var permission = aSubject.QueryInterface(Components.interfaces.nsIPermission);

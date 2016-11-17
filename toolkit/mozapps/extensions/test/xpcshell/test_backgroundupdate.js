@@ -89,7 +89,7 @@ function run_test_2() {
 
   // Background update uses a different pref, if set
   Services.prefs.setCharPref("extensions.update.background.url",
-                             "http://localhost:" + gPort +"/data/test_backgroundupdate.rdf");
+                             "http://localhost:" + gPort + "/data/test_backgroundupdate.rdf");
   restartManager();
 
   // Do hotfix checks

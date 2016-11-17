@@ -110,7 +110,7 @@ function Control() {
 }
 
 Control.prototype = {
-  render: function () {
+  render: function() {
     let controlElem = document.createElement("button");
     let messageElem = document.createElement("p");
 
@@ -259,7 +259,7 @@ function AecLogging() {
 AecLogging.prototype = Object.create(Control.prototype);
 AecLogging.prototype.constructor = AecLogging;
 
-AecLogging.prototype.offState = function () {
+AecLogging.prototype.offState = function() {
   this._label = getString("aec_logging_off_state_label");
   try {
     let file = Services.prefs.getCharPref("media.webrtc.debug.aec_log_dir");
@@ -269,7 +269,7 @@ AecLogging.prototype.offState = function () {
   }
 };
 
-AecLogging.prototype.onState = function () {
+AecLogging.prototype.onState = function() {
   this._label = getString("aec_logging_on_state_label");
   try {
     let file = Services.prefs.getCharPref("media.webrtc.debug.aec_log_dir");
@@ -279,7 +279,7 @@ AecLogging.prototype.onState = function () {
   }
 };
 
-AecLogging.prototype.onClick = function () {
+AecLogging.prototype.onClick = function() {
   if (WebrtcGlobalInformation.aecDebug) {
     WebrtcGlobalInformation.aecDebug = false;
     this.offState();
@@ -437,7 +437,7 @@ PeerConnection.prototype = {
     return pc;
   },
 
-  renderHeading: function () {
+  renderHeading: function() {
     let pcInfo = this.getPCInfo(this._report);
     let heading = document.createElement("h3");
     let now = new Date(this._report.timestamp).toTimeString();

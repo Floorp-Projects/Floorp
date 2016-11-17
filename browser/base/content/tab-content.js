@@ -52,7 +52,7 @@ addEventListener("MozDOMPointerLock:Exited", function(aEvent) {
 });
 
 
-addMessageListener("Browser:HideSessionRestoreButton", function (message) {
+addMessageListener("Browser:HideSessionRestoreButton", function(message) {
   // Hide session restore button on about:home
   let doc = content.document;
   let container;
@@ -401,18 +401,18 @@ var ContentSearchMediator = {
     "about:newtab",
   ]),
 
-  init: function (chromeGlobal) {
+  init: function(chromeGlobal) {
     chromeGlobal.addEventListener("ContentSearchClient", this, true, true);
     addMessageListener("ContentSearch", this);
   },
 
-  handleEvent: function (event) {
+  handleEvent: function(event) {
     if (this._contentWhitelisted) {
       this._sendMsg(event.detail.type, event.detail.data);
     }
   },
 
-  receiveMessage: function (msg) {
+  receiveMessage: function(msg) {
     if (msg.data.type == "AddToWhitelist") {
       for (let uri of msg.data.data) {
         this.whitelist.add(uri);
@@ -429,14 +429,14 @@ var ContentSearchMediator = {
     return this.whitelist.has(content.document.documentURI);
   },
 
-  _sendMsg: function (type, data=null) {
+  _sendMsg: function(type, data = null) {
     sendAsyncMessage("ContentSearch", {
       type: type,
       data: data,
     });
   },
 
-  _fireEvent: function (type, data=null) {
+  _fireEvent: function(type, data = null) {
     let event = Cu.cloneInto({
       detail: {
         type: type,
@@ -491,7 +491,7 @@ var PageStyleHandler = {
     this.sendStyleSheetInfo();
   },
 
-  _stylesheetSwitchAll: function (frameset, title) {
+  _stylesheetSwitchAll: function(frameset, title) {
     if (!title || this._stylesheetInFrame(frameset, title)) {
       this._stylesheetSwitchFrame(frameset, title);
     }
@@ -502,7 +502,7 @@ var PageStyleHandler = {
     }
   },
 
-  _stylesheetSwitchFrame: function (frame, title) {
+  _stylesheetSwitchFrame: function(frame, title) {
     var docStyleSheets = frame.document.styleSheets;
 
     for (let i = 0; i < docStyleSheets.length; ++i) {
@@ -515,7 +515,7 @@ var PageStyleHandler = {
     }
   },
 
-  _stylesheetInFrame: function (frame, title) {
+  _stylesheetInFrame: function(frame, title) {
     return Array.some(frame.document.styleSheets, (styleSheet) => styleSheet.title == title);
   },
 

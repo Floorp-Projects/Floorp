@@ -71,7 +71,7 @@ function test2Setup() {
   var contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   var contextMenu = new nsContextMenu(contentAreaContextMenu);
 
-  gBrowser.tabContainer.addEventListener("TabOpen", function (event) {
+  gBrowser.tabContainer.addEventListener("TabOpen", function(event) {
     test2tab = event.target;
     gBrowser.tabContainer.removeEventListener("TabOpen", arguments.callee, false);
   }, false);
@@ -107,7 +107,7 @@ function test3Setup() {
   var contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   var contextMenu = new nsContextMenu(contentAreaContextMenu);
 
-  Services.ww.registerNotification(function (aSubject, aTopic, aData) {
+  Services.ww.registerNotification(function(aSubject, aTopic, aData) {
     if (aTopic == "domwindowopened")
       test3window = aSubject;
     Services.ww.unregisterNotification(arguments.callee);

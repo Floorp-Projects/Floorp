@@ -159,7 +159,7 @@ function startAddonManagerOnly() {
   addonManager.observe(null, "addons-startup", null);
 }
 
-function getExperimentAddons(previous=false) {
+function getExperimentAddons(previous = false) {
   let deferred = Promise.defer();
 
   AddonManager.getAddonsByTypes(["experiment"], (addons) => {
@@ -173,8 +173,8 @@ function getExperimentAddons(previous=false) {
   return deferred.promise;
 }
 
-function createAppInfo(ID="xpcshell@tests.mozilla.org", name="XPCShell",
-                       version="1.0", platformVersion="1.0") {
+function createAppInfo(ID = "xpcshell@tests.mozilla.org", name = "XPCShell",
+                       version = "1.0", platformVersion = "1.0") {
   AddonTestUtils.createAppInfo(ID, name, version, platformVersion);
   gAppInfo = AddonTestUtils.appInfo;
 }

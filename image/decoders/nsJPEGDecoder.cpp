@@ -77,7 +77,6 @@ nsJPEGDecoder::nsJPEGDecoder(RasterImage* aImage,
                                    SIZE_MAX),
           Transition::TerminateSuccess())
  , mDecodeStyle(aDecodeStyle)
- , mSampleSize(0)
 {
   mState = JPEG_HEADER;
   mReading = true;
@@ -242,17 +241,8 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
         return Transition::ContinueUnbuffered(State::JPEG_DATA); // I/O suspension
       }
 
-      // If we have a sample size specified for -moz-sample-size, use it.
-      if (mSampleSize > 0) {
-        mInfo.scale_num = 1;
-        mInfo.scale_denom = mSampleSize;
-      }
-
-      // Used to set up image size so arrays can be allocated
-      jpeg_calc_output_dimensions(&mInfo);
-
       // Post our size to the superclass
-      PostSize(mInfo.output_width, mInfo.output_height,
+      PostSize(mInfo.image_width, mInfo.image_height,
                ReadOrientationFromEXIF());
       if (HasError()) {
         // Setting the size led to an error.
@@ -387,6 +377,9 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
     mInfo.buffered_image = mDecodeStyle == PROGRESSIVE &&
                            jpeg_has_multiple_scans(&mInfo);
 
+    /* Used to set up image size so arrays can be allocated */
+    jpeg_calc_output_dimensions(&mInfo);
+
     MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
     nsresult rv = AllocateFrame(/* aFrameNum = */ 0, OutputSize(),
                                 FullOutputFrame(), SurfaceFormat::B8G8R8X8);
@@ -412,7 +405,7 @@ nsJPEGDecoder::ReadJPEGData(const char* aData, size_t aLength)
     MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
            ("        JPEGDecoderAccounting: nsJPEGDecoder::"
             "Write -- created image frame with %ux%u pixels",
-            mInfo.output_width, mInfo.output_height));
+            mInfo.image_width, mInfo.image_height));
 
     mState = JPEG_START_DECOMPRESS;
     MOZ_FALLTHROUGH; // to start decompressing.

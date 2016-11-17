@@ -1,19 +1,19 @@
 function test() {
   waitForExplicitFinish();
 
-  loadAndWait("data:text/plain,1", function () {
-    loadAndWait("data:text/plain,2", function () {
+  loadAndWait("data:text/plain,1", function() {
+    loadAndWait("data:text/plain,2", function() {
       loadAndWait("data:text/plain,3", runTests);
     });
   });
 }
 
 function runTests() {
-  duplicate(0, "maintained the original index", function () {
+  duplicate(0, "maintained the original index", function() {
     gBrowser.removeCurrentTab();
 
-    duplicate(-1, "went back", function () {
-      duplicate(1, "went forward", function () {
+    duplicate(-1, "went back", function() {
+      duplicate(1, "went forward", function() {
         gBrowser.removeCurrentTab();
         gBrowser.removeCurrentTab();
         gBrowser.addTab();
@@ -38,7 +38,7 @@ function duplicate(delta, msg, cb) {
 }
 
 function loadAndWait(url, cb) {
-  gBrowser.selectedBrowser.addEventListener("load", function () {
+  gBrowser.selectedBrowser.addEventListener("load", function() {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
     executeSoon(cb);
   }, true);

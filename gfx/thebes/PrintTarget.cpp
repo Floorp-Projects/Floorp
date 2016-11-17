@@ -6,7 +6,14 @@
 #include "PrintTarget.h"
 
 #include "cairo.h"
+#ifdef CAIRO_HAS_QUARTZ_SURFACE
+#include "cairo-quartz.h"
+#endif
+#ifdef CAIRO_HAS_WIN32_SURFACE
+#include "cairo-win32.h"
+#endif
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/HelpersCairo.h"
 #include "mozilla/gfx/Logging.h"
 
 namespace mozilla {
@@ -84,28 +91,53 @@ PrintTarget::MakeDrawTarget(const IntSize& aSize,
 }
 
 already_AddRefed<DrawTarget>
-PrintTarget::GetReferenceDrawTarget()
+PrintTarget::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
 {
   if (!mRefDT) {
-    IntSize size(1, 1);
+    const IntSize size(1, 1);
 
-    cairo_surface_t* surface =
-      cairo_surface_create_similar(mCairoSurface,
-                                   cairo_surface_get_content(mCairoSurface),
-                                   size.width, size.height);
+    cairo_surface_t* similar;
+    switch (cairo_surface_get_type(mCairoSurface)) {
+#ifdef CAIRO_HAS_WIN32_SURFACE
+    case CAIRO_SURFACE_TYPE_WIN32:
+      similar = cairo_win32_surface_create_with_dib(
+        CairoContentToCairoFormat(cairo_surface_get_content(mCairoSurface)),
+        size.width, size.height);
+      break;
+#endif
+#ifdef CAIRO_HAS_QUARTZ_SURFACE
+    case CAIRO_SURFACE_TYPE_QUARTZ:
+      similar = cairo_quartz_surface_create_cg_layer(
+                  mCairoSurface, cairo_surface_get_content(mCairoSurface),
+                  size.width, size.height);
+      break;
+#endif
+    default:
+      similar = cairo_surface_create_similar(
+                  mCairoSurface, cairo_surface_get_content(mCairoSurface),
+                  size.width, size.height);
+      break;
+    }
 
-    if (cairo_surface_status(surface)) {
+    if (cairo_surface_status(similar)) {
       return nullptr;
     }
 
     RefPtr<DrawTarget> dt =
-      Factory::CreateDrawTargetForCairoSurface(surface, size);
+      Factory::CreateDrawTargetForCairoSurface(similar, size);
 
     // The DT addrefs the surface, so we need drop our own reference to it:
-    cairo_surface_destroy(surface);
+    cairo_surface_destroy(similar);
 
     if (!dt || !dt->IsValid()) {
       return nullptr;
+    }
+
+    if (aRecorder) {
+      dt = CreateRecordingDrawTarget(aRecorder, dt);
+      if (!dt || !dt->IsValid()) {
+        return nullptr;
+      }
     }
 
     mRefDT = dt.forget();

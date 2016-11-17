@@ -48,7 +48,7 @@ function getDoubleStr(val, dec)
 {
   var str = val.toString();
   var inx = str.indexOf(".");
-  return str.substring(0, inx+dec+1);
+  return str.substring(0, inx + dec + 1);
 }
 
 // ---------------------------------------------------
@@ -92,17 +92,17 @@ function paperListElement(aPaperListElement)
 paperListElement.prototype =
   {
     clearPaperList:
-      function ()
+      function()
         {
           // remove the menupopup node child of the menulist.
           this.paperListElement.removeChild(this.paperListElement.firstChild);
         },
 
     appendPaperNames:
-      function (aDataObject)
+      function(aDataObject)
         {
           var popupNode = document.createElement("menupopup");
-          for (var i=0;i<aDataObject.length;i++)  {
+          for (var i = 0;i < aDataObject.length;i++)  {
             var paperObj = aDataObject[i];
             var itemNode = document.createElement("menuitem");
             var label;
@@ -138,7 +138,7 @@ function createPaperArrayFromDefaults()
 
   gPaperArray = new Array();
 
-  for (var i=0;i<paperNames.length;i++) {
+  for (var i = 0;i < paperNames.length;i++) {
     var obj    = {};
     obj.name   = paperNames[i];
     obj.width  = paperWidths[i];
@@ -174,7 +174,7 @@ function createPaperArrayFromPrinterFeatures()
     dump("processing " + numPapers + " entries...\n");
   }
 
-  for (var i=0;i<numPapers;i++) {
+  for (var i = 0;i < numPapers;i++) {
     var obj       = {};
     obj.name      = gPrefs.getCharPref("print.tmp.printerfeatures." + printername + ".paper." + i + ".name");
     obj.width_mm  = gPrefs.getIntPref("print.tmp.printerfeatures."  + printername + ".paper." + i + ".width_mm");
@@ -248,18 +248,18 @@ function loadDialog()
 
   if (doDebug) {
     dump("loadDialog******************************\n");
-    dump("paperSizeType   "+print_paper_unit+"\n");
-    dump("paperWidth      "+print_paper_width+"\n");
-    dump("paperHeight     "+print_paper_height+"\n");
-    dump("paperName       "+print_paper_name+"\n");
-    dump("print_color     "+print_color+"\n");
-    dump("print_jobtitle   "+print_jobtitle+"\n");
+    dump("paperSizeType   " + print_paper_unit + "\n");
+    dump("paperWidth      " + print_paper_width + "\n");
+    dump("paperHeight     " + print_paper_height + "\n");
+    dump("paperName       " + print_paper_name + "\n");
+    dump("print_color     " + print_color + "\n");
+    dump("print_jobtitle   " + print_jobtitle + "\n");
   }
 
   createPaperArray();
 
   var paperSelectedInx = 0;
-  for (var i=0;i<gPaperArray.length;i++) {
+  for (var i = 0;i < gPaperArray.length;i++) {
     if (print_paper_name == gPaperArray[i].name) {
       paperSelectedInx = i;
       break;
@@ -270,7 +270,7 @@ function loadDialog()
     if (i == gPaperArray.length)
       dump("loadDialog: No paper found.\n");
     else
-      dump("loadDialog: found paper '"+gPaperArray[paperSelectedInx].name+"'.\n");
+      dump("loadDialog: found paper '" + gPaperArray[paperSelectedInx].name + "'.\n");
   }
 
   createPaperSizeList(paperSelectedInx);
@@ -379,15 +379,15 @@ function onAccept()
 
     if (doDebug) {
       dump("onAccept******************************\n");
-      dump("paperSizeUnit    "+print_paper_unit+"\n");
-      dump("paperWidth       "+print_paper_width+"\n");
-      dump("paperHeight      "+print_paper_height+"\n");
-      dump("paperName       '"+print_paper_name+"'\n");
+      dump("paperSizeUnit    " + print_paper_unit + "\n");
+      dump("paperWidth       " + print_paper_width + "\n");
+      dump("paperHeight      " + print_paper_height + "\n");
+      dump("paperName       '" + print_paper_name + "'\n");
 
-      dump("printInColor     "+gPrintSettings.printInColor+"\n");
+      dump("printInColor     " + gPrintSettings.printInColor + "\n");
     }
   } else {
-    dump("************ onAccept gPrintSettings: "+gPrintSettings+"\n");
+    dump("************ onAccept gPrintSettings: " + gPrintSettings + "\n");
   }
 
   if (paramBlock) {

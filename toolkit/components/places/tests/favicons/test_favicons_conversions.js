@@ -34,7 +34,7 @@ function checkFaviconDataConversion(aFileName, aFileMimeType, aFileLength,
                                     aCallback) {
   let pageURI = NetUtil.newURI("http://places.test/page/" + aFileName);
   PlacesTestUtils.addVisits({ uri: pageURI, transition: TRANSITION_TYPED }).then(
-    function () {
+    function() {
       let faviconURI = NetUtil.newURI("http://places.test/icon/" + aFileName);
       let fileData = readFileOfLength(aFileName, aFileLength);
 

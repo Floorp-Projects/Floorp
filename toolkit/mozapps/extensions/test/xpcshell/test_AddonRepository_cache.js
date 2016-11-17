@@ -200,13 +200,13 @@ const WITHOUT_CACHE = [{
   type:                   "theme",
   name:                   "XPI Add-on 3",
   version:                "1.3",
-  get iconURL () {
+  get iconURL() {
     return get_subfile_uri(ADDON_IDS[2], "icon.png");
   },
-  get icons () {
+  get icons() {
     return { "32": get_subfile_uri(ADDON_IDS[2], "icon.png") };
   },
-  screenshots:            [{ get url () { return get_subfile_uri(ADDON_IDS[2], "preview.png"); } }],
+  screenshots:            [{ get url() { return get_subfile_uri(ADDON_IDS[2], "preview.png"); } }],
   sourceURI:              NetUtil.newURI(ADDON_FILES[2]).spec
 }];
 
@@ -310,10 +310,10 @@ const WITH_CACHE = [{
   type:                   "theme",
   name:                   "XPI Add-on 3",
   version:                "1.3",
-  get iconURL () {
+  get iconURL() {
     return get_subfile_uri(ADDON_IDS[2], "icon.png");
   },
-  get icons () {
+  get icons() {
     return { "32": get_subfile_uri(ADDON_IDS[2], "icon.png") };
   },
   screenshots:            [{
@@ -391,13 +391,13 @@ const WITH_EXTENSION_CACHE = [{
   type:                   "theme",
   name:                   "XPI Add-on 3",
   version:                "1.3",
-  get iconURL () {
+  get iconURL() {
     return get_subfile_uri(ADDON_IDS[2], "icon.png");
   },
-  get icons () {
+  get icons() {
     return { "32": get_subfile_uri(ADDON_IDS[2], "icon.png") };
   },
-  screenshots:            [{ get url () { return get_subfile_uri(ADDON_IDS[2], "preview.png"); } }],
+  screenshots:            [{ get url() { return get_subfile_uri(ADDON_IDS[2], "preview.png"); } }],
   sourceURI:              NetUtil.newURI(ADDON_FILES[2]).spec
 }];
 

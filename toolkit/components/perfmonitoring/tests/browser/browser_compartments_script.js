@@ -24,6 +24,6 @@ var interval = window.setInterval(() => {
   var array = [];
   var i = 0;
   while (Date.now() - date <= 100) {
-    array[i%2] = i++;
+    array[i % 2] = i++;
   }
 }, 300);

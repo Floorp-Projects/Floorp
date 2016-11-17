@@ -113,7 +113,6 @@ StartupCache::InitSingleton()
 StaticRefPtr<StartupCache> StartupCache::gStartupCache;
 bool StartupCache::gShutdownInitiated;
 bool StartupCache::gIgnoreDiskCache;
-enum StartupCache::TelemetrifyAge StartupCache::gPostFlushAgeAction = StartupCache::IGNORE_AGE;
 
 NS_IMPL_ISUPPORTS(StartupCache, nsIMemoryReporter)
 
@@ -154,7 +153,7 @@ StartupCache::Init()
   // This allows to override the startup cache filename
   // which is useful from xpcshell, when there is no ProfLDS directory to keep cache in.
   char *env = PR_GetEnv("MOZ_STARTUP_CACHE");
-  if (env) {
+  if (env && *env) {
     rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(env), false, getter_AddRefs(mFile));
   } else {
     nsCOMPtr<nsIFile> file;
@@ -211,7 +210,7 @@ StartupCache::Init()
                                      false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = LoadArchive(RECORD_AGE);
+  rv = LoadArchive();
 
   // Sometimes we don't have a cache yet, that's ok.
   // If it's corrupted, just remove it and start over.
@@ -229,7 +228,7 @@ StartupCache::Init()
  * LoadArchive can be called from the main thread or while reloading cache on write thread.
  */
 nsresult
-StartupCache::LoadArchive(enum TelemetrifyAge flag)
+StartupCache::LoadArchive()
 {
   if (gIgnoreDiskCache)
     return NS_ERROR_FAILURE;
@@ -242,32 +241,6 @@ StartupCache::LoadArchive(enum TelemetrifyAge flag)
   
   mArchive = new nsZipArchive();
   rv = mArchive->OpenArchive(mFile);
-  if (NS_FAILED(rv) || flag == IGNORE_AGE)
-    return rv;
-
-  nsCString comment;
-  if (!mArchive->GetComment(comment)) {
-    return rv;
-  }
-
-  const char *data;
-  size_t len = NS_CStringGetData(comment, &data);
-  PRTime creationStamp;
-  // We might not have a comment if the startup cache file was created
-  // before we started recording creation times in the comment.
-  if (len == sizeof(creationStamp)) {
-    memcpy(&creationStamp, data, len);
-    PRTime current = PR_Now();
-    int64_t diff = current - creationStamp;
-
-    // We can't use AccumulateTimeDelta here because we have no way of
-    // reifying a TimeStamp from creationStamp.
-    int64_t usec_per_hour = PR_USEC_PER_SEC * int64_t(3600);
-    int64_t hour_diff = (diff + usec_per_hour - 1) / usec_per_hour;
-    mozilla::Telemetry::Accumulate(Telemetry::STARTUP_CACHE_AGE_HOURS,
-                                   hour_diff);
-  }
-
   return rv;
 }
 
@@ -446,7 +419,7 @@ StartupCache::WriteToDisk()
 
   // If we didn't have an mArchive member, that means that we failed to
   // open the startup cache for reading.  Therefore, we need to record
-  // the time of creation in a zipfile comment; this will be useful for
+  // the time of creation in a zipfile comment; this has been useful for
   // Telemetry statistics.
   PRTime now = PR_Now();
   if (!mArchive) {
@@ -481,7 +454,7 @@ StartupCache::WriteToDisk()
   gIgnoreDiskCache = false;
 
   // Our reader's view of the archive is outdated now, reload it.
-  LoadArchive(gPostFlushAgeAction);
+  LoadArchive();
   
   return;
 }
@@ -497,11 +470,10 @@ StartupCache::InvalidateCache()
   if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
       rv != NS_ERROR_FILE_NOT_FOUND) {
     gIgnoreDiskCache = true;
-    mozilla::Telemetry::Accumulate(Telemetry::STARTUP_CACHE_INVALID, true);
     return;
   }
   gIgnoreDiskCache = false;
-  LoadArchive(gPostFlushAgeAction);
+  LoadArchive();
 }
 
 void
@@ -623,11 +595,11 @@ StartupCache::ResetStartupWriteTimer()
   return NS_OK;
 }
 
-nsresult
-StartupCache::RecordAgesAlways()
+bool
+StartupCache::StartupWriteComplete()
 {
-  gPostFlushAgeAction = RECORD_AGE;
-  return NS_OK;
+  WaitOnWriteThread();
+  return mStartupWriteInitiated && mTable.Count() == 0;
 }
 
 // StartupCacheDebugOutputStream implementation
@@ -772,13 +744,6 @@ StartupCacheWrapper::InvalidateCache()
   return NS_OK;
 }
 
-nsresult
-StartupCacheWrapper::IgnoreDiskCache()
-{
-  StartupCache::IgnoreDiskCache();
-  return NS_OK;
-}
-
 nsresult 
 StartupCacheWrapper::GetDebugObjectOutputStream(nsIObjectOutputStream* stream,
                                                 nsIObjectOutputStream** outStream) 
@@ -791,25 +756,6 @@ StartupCacheWrapper::GetDebugObjectOutputStream(nsIObjectOutputStream* stream,
 }
 
 nsresult
-StartupCacheWrapper::StartupWriteComplete(bool *complete)
-{
-  StartupCache* sc = StartupCache::GetSingleton();
-  if (!sc) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  sc->WaitOnWriteThread();
-  *complete = sc->mStartupWriteInitiated && sc->mTable.Count() == 0;
-  return NS_OK;
-}
-
-nsresult
-StartupCacheWrapper::ResetStartupWriteTimer()
-{
-  StartupCache* sc = StartupCache::GetSingleton();
-  return sc ? sc->ResetStartupWriteTimer() : NS_ERROR_NOT_INITIALIZED;
-}
-
-nsresult
 StartupCacheWrapper::GetObserver(nsIObserver** obv) {
   StartupCache* sc = StartupCache::GetSingleton();
   if (!sc) {
@@ -817,12 +763,6 @@ StartupCacheWrapper::GetObserver(nsIObserver** obv) {
   }
   NS_ADDREF(*obv = sc->mListener);
   return NS_OK;
-}
-
-nsresult
-StartupCacheWrapper::RecordAgesAlways() {
-  StartupCache *sc = StartupCache::GetSingleton();
-  return sc ? sc->RecordAgesAlways() : NS_ERROR_NOT_INITIALIZED;
 }
 
 } // namespace scache

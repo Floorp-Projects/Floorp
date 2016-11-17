@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_MouseEvent_h_
 #define mozilla_dom_MouseEvent_h_
 
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/EventForwards.h"
@@ -42,8 +43,8 @@ public:
     return Button() + 1;
   }
 
-  int32_t ScreenX();
-  int32_t ScreenY();
+  int32_t ScreenX(CallerType aCallerType);
+  int32_t ScreenY(CallerType aCallerType);
   int32_t ClientX();
   int32_t ClientY();
   int32_t OffsetX();

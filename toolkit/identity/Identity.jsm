@@ -252,7 +252,7 @@ IDService.prototype = {
    * @param aCallback
    *
    */
-  _fetchWellKnownFile: function _fetchWellKnownFile(aDomain, aCallback, aScheme='https') {
+  _fetchWellKnownFile: function _fetchWellKnownFile(aDomain, aCallback, aScheme = 'https') {
     // XXX bug 769854 make tests https and remove aScheme option
     let url = aScheme + '://' + aDomain + "/.well-known/browserid";
     log("_fetchWellKnownFile:", url);
@@ -275,10 +275,10 @@ IDService.prototype = {
         let idpParams = req.response;
 
         // Verify that the IdP returned a valid configuration
-        if (! (idpParams.provisioning &&
+        if (!(idpParams.provisioning &&
             idpParams.authentication &&
             idpParams['public-key'])) {
-          let errStr= "Invalid well-known file from: " + aDomain;
+          let errStr = "Invalid well-known file from: " + aDomain;
           log("_fetchWellKnownFile:", errStr);
           return aCallback(errStr);
         }

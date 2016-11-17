@@ -1076,10 +1076,8 @@ var SettingsRequestManager = {
       case "Settings:Run":
       case "Settings:Finalize":
         this.checkSoftLockup();
-        let kill_process = false;
         if (!msg.lockID) {
           Cu.reportError("Process sending request for lock that does not exist. Killing.");
-          kill_process = true;
         }
         else if (!this.lockInfo[msg.lockID]) {
           if (DEBUG) debug("Cannot find lock ID " + msg.lockID);
@@ -1090,12 +1088,6 @@ var SettingsRequestManager = {
         }
         else if (mm != this.lockInfo[msg.lockID]._mm) {
           Cu.reportError("Process trying to access settings lock from another process. Killing.");
-          kill_process = true;
-        }
-        if (kill_process) {
-          // Kill the app by checking for a non-existent permission
-          aMessage.target.assertPermission("message-manager-mismatch-kill");
-          return;
         }
       default:
       break;
@@ -1111,7 +1103,6 @@ var SettingsRequestManager = {
         if (!SettingsPermissions.hasSomeReadPermission(aMessage.principal)) {
           Cu.reportError("Settings message " + aMessage.name +
                          " from a content process with no 'settings-api-read' privileges.");
-          aMessage.target.assertPermission("message-manager-no-read-kill");
           return;
         }
         this.addObserver(mm, aMessage.principal);
@@ -1126,7 +1117,6 @@ var SettingsRequestManager = {
         // kill.
         if (msg.lockID in this.settingsLockQueue) {
           Cu.reportError("Trying to queue a lock with the same ID as an already queued lock. Killing app.");
-          aMessage.target.assertPermission("lock-id-duplicate-kill");
           return;
         }
 

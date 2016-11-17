@@ -81,7 +81,7 @@ InlineSpellChecker.prototype = {
 
     var range = this.mInlineSpellChecker.getMisspelledWord(rangeParent,
                                                           rangeOffset);
-    if (! range)
+    if (!range)
       return; // not over a misspelled word
 
     this.mMisspelling = range.toString();
@@ -150,9 +150,9 @@ InlineSpellChecker.prototype = {
     this.mMenu = menu;
     this.mSpellSuggestions = [];
     this.mSuggestionItems = [];
-    for (var i = 0; i < maxNumber; i ++) {
+    for (var i = 0; i < maxNumber; i++) {
       var suggestion = spellchecker.GetSuggestedWord();
-      if (! suggestion.length)
+      if (!suggestion.length)
         break;
       this.mSpellSuggestions.push(suggestion);
 
@@ -174,7 +174,7 @@ InlineSpellChecker.prototype = {
   // (call from popup hiding)
   clearSuggestionsFromMenu: function()
   {
-    for (var i = 0; i < this.mSuggestionItems.length; i ++) {
+    for (var i = 0; i < this.mSuggestionItems.length; i++) {
       this.mMenu.removeChild(this.mSuggestionItems[i]);
     }
     this.mSuggestionItems = [];
@@ -182,7 +182,7 @@ InlineSpellChecker.prototype = {
 
   sortDictionaryList: function(list) {
     var sortedList = [];
-    for (var i = 0; i < list.length; i ++) {
+    for (var i = 0; i < list.length; i++) {
       sortedList.push({"id": list[i],
                        "label": this.getDictionaryDisplayName(list[i])});
     }
@@ -227,7 +227,7 @@ InlineSpellChecker.prototype = {
 
     var sortedList = this.sortDictionaryList(list);
 
-    for (var i = 0; i < sortedList.length; i ++) {
+    for (var i = 0; i < sortedList.length; i++) {
       this.mDictionaryNames.push(sortedList[i].id);
       var item = menu.ownerDocument.createElement("menuitem");
       item.setAttribute("id", "spell-check-dictionary-" + sortedList[i].id);
@@ -321,7 +321,7 @@ InlineSpellChecker.prototype = {
   // (call on popup hiding)
   clearDictionaryListFromMenu: function()
   {
-    for (var i = 0; i < this.mDictionaryItems.length; i ++) {
+    for (var i = 0; i < this.mDictionaryItems.length; i++) {
       this.mDictionaryMenu.removeChild(this.mDictionaryItems[i]);
     }
     this.mDictionaryItems = [];
@@ -334,7 +334,7 @@ InlineSpellChecker.prototype = {
       this.mRemote.selectDictionary(index);
       return;
     }
-    if (! this.mInlineSpellChecker || index < 0 || index >= this.mDictionaryNames.length)
+    if (!this.mInlineSpellChecker || index < 0 || index >= this.mDictionaryNames.length)
       return;
     var spellchecker = this.mInlineSpellChecker.spellChecker;
     spellchecker.SetCurrentDictionary(this.mDictionaryNames[index]);
@@ -348,7 +348,7 @@ InlineSpellChecker.prototype = {
       this.mRemote.replaceMisspelling(index);
       return;
     }
-    if (! this.mInlineSpellChecker || ! this.mOverMisspelling)
+    if (!this.mInlineSpellChecker || !this.mOverMisspelling)
       return;
     if (index < 0 || index >= this.mSpellSuggestions.length)
       return;

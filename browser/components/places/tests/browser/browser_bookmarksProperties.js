@@ -91,7 +91,7 @@ gTests.push({
       self.window.removeEventListener("unload", arguments.callee, true);
       tagsField.popup.removeEventListener("popuphidden", popupListener, true);
       ok(self._cleanShutdown, "Dialog window should not be closed by pressing Enter on the autocomplete popup");
-      executeSoon(function () {
+      executeSoon(function() {
         self.finish();
       });
     }, true);
@@ -193,7 +193,7 @@ gTests.push({
       self.window.removeEventListener("unload", arguments.callee, true);
       tagsField.popup.removeEventListener("popuphidden", popupListener, true);
       ok(self._cleanShutdown, "Dialog window should not be closed by pressing Escape on the autocomplete popup");
-      executeSoon(function () {
+      executeSoon(function() {
         self.finish();
       });
     }, true);
@@ -288,7 +288,7 @@ gTests.push({
     this.window.addEventListener("unload", function(event) {
       self.window.removeEventListener("unload", arguments.callee, true);
       ok(self._cleanShutdown, "Dialog window should not be closed by pressing ESC in folder name textbox");
-      executeSoon(function () {
+      executeSoon(function() {
         self.finish();
       });
     }, true);
@@ -297,7 +297,7 @@ gTests.push({
       if (event.attrName != "place")
         return;
       folderTree.removeEventListener("DOMAttrModified", arguments.callee, false);
-      executeSoon(function () {
+      executeSoon(function() {
         // Create a new folder.
         var newFolderButton = self.window.document.getElementById("editBMPanel_newFolderButton");
         newFolderButton.doCommand();
@@ -404,20 +404,20 @@ function open_properties_dialog() {
       if (aTopic != "domwindowopened")
         return;
       ww.unregisterNotification(windowObserver);
-      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      let observerWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
       waitForFocus(() => {
         // Windows has been loaded, execute our test now.
-        executeSoon(function () {
+        executeSoon(function() {
           // Ensure overlay is loaded
-          ok(win.gEditItemOverlay.initialized, "EditItemOverlay is initialized");
-          gCurrentTest.window = win;
+          ok(observerWindow.gEditItemOverlay.initialized, "EditItemOverlay is initialized");
+          gCurrentTest.window = observerWindow;
           try {
             gCurrentTest.run();
           } catch (ex) {
             ok(false, "An error occured during test run: " + ex.message);
           }
         });
-      }, win);
+      }, observerWindow);
     }
     ww.registerNotification(windowObserver);
 

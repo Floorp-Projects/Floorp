@@ -316,12 +316,6 @@ this.SystemUpdateService = {
   },
 
   receiveMessage: function(aMessage) {
-    if (!aMessage.target.assertPermission("system-update")) {
-      debug("receive message " + aMessage.name +
-            " from a content process with no 'system-update' privileges.");
-      return null;
-    }
-
     let msg = aMessage.data || {};
     let mm = aMessage.target;
 

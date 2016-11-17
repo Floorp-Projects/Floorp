@@ -57,7 +57,7 @@ add_task(function* test_execute()
   var root = result.root;
   root.containerOpen = true;
   var cc = root.childCount;
-  for (var i=0; i < cc; ++i) {
+  for (var i = 0; i < cc; ++i) {
     var node = root.getChild(i);
     // test node properties in RESULTS_AS_VISIT
     do_check_eq(node.uri, testURI.spec);

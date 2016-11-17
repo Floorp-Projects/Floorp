@@ -773,9 +773,11 @@ FetchEvent::RespondWith(JSContext* aCx, Promise& aArg, ErrorResult& aRv)
 }
 
 void
-FetchEvent::PreventDefault(JSContext* aCx)
+FetchEvent::PreventDefault(JSContext* aCx, CallerType aCallerType)
 {
   MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aCallerType != CallerType::System,
+             "Since when do we support system-principal service workers?");
 
   if (mPreventDefaultScriptSpec.IsEmpty()) {
     // Note when the FetchEvent might have been canceled by script, but don't
@@ -788,7 +790,7 @@ FetchEvent::PreventDefault(JSContext* aCx)
                                   &mPreventDefaultColumnNumber);
   }
 
-  Event::PreventDefault(aCx);
+  Event::PreventDefault(aCx, aCallerType);
 }
 
 void

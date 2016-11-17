@@ -113,7 +113,7 @@ add_task(function*() {
 });
 
 var observer = {
-  reflow: function (start, end) {
+  reflow: function(start, end) {
     // Gather information about the current code path.
     let path = (new Error().stack).split("\n").slice(1).map(line => {
       return line.replace(/:\d+:\d+$/, "");
@@ -136,7 +136,7 @@ var observer = {
     ok(false, "unexpected uninterruptible reflow '" + pathWithLineNumbers + "'");
   },
 
-  reflowInterruptible: function (start, end) {
+  reflowInterruptible: function(start, end) {
     // We're not interested in interruptible reflows.
   },
 

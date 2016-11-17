@@ -274,7 +274,7 @@ ssl_PopulateSignedCertTimestamps(sslServerCert *sc,
     if (sc->signedCertTimestamps.len) {
         SECITEM_FreeItem(&sc->signedCertTimestamps, PR_FALSE);
     }
-    if (signedCertTimestamps) {
+    if (signedCertTimestamps && signedCertTimestamps->len) {
         return SECITEM_CopyItem(NULL, &sc->signedCertTimestamps,
                                 signedCertTimestamps);
     }

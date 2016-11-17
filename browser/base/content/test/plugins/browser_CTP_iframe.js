@@ -2,7 +2,7 @@ var rootDir = getRootDirectory(gTestPath);
 const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 
 add_task(function* () {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");

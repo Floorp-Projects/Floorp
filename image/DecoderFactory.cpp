@@ -114,8 +114,7 @@ DecoderFactory::CreateDecoder(DecoderType aType,
                               const IntSize& aIntrinsicSize,
                               const IntSize& aOutputSize,
                               DecoderFlags aDecoderFlags,
-                              SurfaceFlags aSurfaceFlags,
-                              int aSampleSize)
+                              SurfaceFlags aSurfaceFlags)
 {
   if (aType == DecoderType::UNKNOWN) {
     return nullptr;
@@ -133,7 +132,6 @@ DecoderFactory::CreateDecoder(DecoderType aType,
   decoder->SetOutputSize(aOutputSize);
   decoder->SetDecoderFlags(aDecoderFlags | DecoderFlags::FIRST_FRAME_ONLY);
   decoder->SetSurfaceFlags(aSurfaceFlags);
-  decoder->SetSampleSize(aSampleSize);
 
   if (NS_FAILED(decoder->Init())) {
     return nullptr;
@@ -212,8 +210,7 @@ DecoderFactory::CreateAnimationDecoder(DecoderType aType,
 /* static */ already_AddRefed<IDecodingTask>
 DecoderFactory::CreateMetadataDecoder(DecoderType aType,
                                       NotNull<RasterImage*> aImage,
-                                      NotNull<SourceBuffer*> aSourceBuffer,
-                                      int aSampleSize)
+                                      NotNull<SourceBuffer*> aSourceBuffer)
 {
   if (aType == DecoderType::UNKNOWN) {
     return nullptr;
@@ -226,7 +223,6 @@ DecoderFactory::CreateMetadataDecoder(DecoderType aType,
   // Initialize the decoder.
   decoder->SetMetadataDecode(true);
   decoder->SetIterator(aSourceBuffer->Iterator());
-  decoder->SetSampleSize(aSampleSize);
 
   if (NS_FAILED(decoder->Init())) {
     return nullptr;

@@ -23,4 +23,6 @@ SOURCES += [
     'FuzzerTracePC.cpp',
     'FuzzerTraceState.cpp',
     'FuzzerUtil.cpp',
+    'FuzzerUtilDarwin.cpp',
+    'FuzzerUtilLinux.cpp',
 ]

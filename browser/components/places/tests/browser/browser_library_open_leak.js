@@ -15,7 +15,7 @@
 
 function test() {
   waitForExplicitFinish();
-  openLibrary(function (win) {
+  openLibrary(function(win) {
     ok(true, "Library has been correctly opened");
     win.close();
     finish();

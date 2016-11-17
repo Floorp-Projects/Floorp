@@ -27,7 +27,7 @@ var searchText;
 
 // This global tracks if the page has been set up before, to prevent double inits
 var gInitialized = false;
-var gObserver = new MutationObserver(function (mutations) {
+var gObserver = new MutationObserver(function(mutations) {
   for (let mutation of mutations) {
     // The addition of the restore session button changes our width:
     if (mutation.attributeName == "session") {
@@ -43,7 +43,7 @@ var gObserver = new MutationObserver(function (mutations) {
   }
 });
 
-window.addEventListener("pageshow", function () {
+window.addEventListener("pageshow", function() {
   // Delay search engine setup, cause browser.js::BrowserOnAboutPageLoad runs
   // later and may use asynchronous getters.
   window.gObserver.observe(document.documentElement, { attributes: true });
@@ -118,7 +118,7 @@ function ensureSnippetsMapThen(aCallback)
     return;
   }
 
-  let invokeCallbacks = function () {
+  let invokeCallbacks = function() {
     if (!gSnippetsMap) {
       gSnippetsMap = Object.freeze(new Map());
     }
@@ -132,29 +132,29 @@ function ensureSnippetsMapThen(aCallback)
   let openRequest = indexedDB.open(DATABASE_NAME, {version: DATABASE_VERSION,
                                                    storage: DATABASE_STORAGE});
 
-  openRequest.onerror = function (event) {
+  openRequest.onerror = function(event) {
     // Try to delete the old database so that we can start this process over
     // next time.
     indexedDB.deleteDatabase(DATABASE_NAME);
     invokeCallbacks();
   };
 
-  openRequest.onupgradeneeded = function (event) {
+  openRequest.onupgradeneeded = function(event) {
     let db = event.target.result;
     if (!db.objectStoreNames.contains(SNIPPETS_OBJECTSTORE_NAME)) {
       db.createObjectStore(SNIPPETS_OBJECTSTORE_NAME);
     }
   }
 
-  openRequest.onsuccess = function (event) {
+  openRequest.onsuccess = function(event) {
     let db = event.target.result;
 
-    db.onerror = function (event) {
+    db.onerror = function() {
       invokeCallbacks();
     }
 
-    db.onversionchange = function (event) {
-      event.target.close();
+    db.onversionchange = function(versionChangeEvent) {
+      versionChangeEvent.target.close();
       invokeCallbacks();
     }
 
@@ -169,12 +169,12 @@ function ensureSnippetsMapThen(aCallback)
       return;
     }
 
-    cursorRequest.onerror = function (event) {
+    cursorRequest.onerror = function() {
       invokeCallbacks();
     }
 
-    cursorRequest.onsuccess = function(event) {
-      let cursor = event.target.result;
+    cursorRequest.onsuccess = function(cursorRequestEvent) {
+      let cursor = cursorRequestEvent.target.result;
 
       // Populate the cache from the persistent storage.
       if (cursor) {
@@ -186,18 +186,18 @@ function ensureSnippetsMapThen(aCallback)
       // The cache has been filled up, create the snippets map.
       gSnippetsMap = Object.freeze({
         get: (aKey) => cache.get(aKey),
-        set: function (aKey, aValue) {
+        set: function(aKey, aValue) {
           db.transaction(SNIPPETS_OBJECTSTORE_NAME, "readwrite")
             .objectStore(SNIPPETS_OBJECTSTORE_NAME).put(aValue, aKey);
           return cache.set(aKey, aValue);
         },
         has: (aKey) => cache.has(aKey),
-        delete: function (aKey) {
+        delete: function(aKey) {
           db.transaction(SNIPPETS_OBJECTSTORE_NAME, "readwrite")
             .objectStore(SNIPPETS_OBJECTSTORE_NAME).delete(aKey);
           return cache.delete(aKey);
         },
-        clear: function () {
+        clear: function() {
           db.transaction(SNIPPETS_OBJECTSTORE_NAME, "readwrite")
             .objectStore(SNIPPETS_OBJECTSTORE_NAME).clear();
           return cache.clear();
@@ -283,7 +283,7 @@ function loadSnippets()
     // Even if fetching should fail we don't want to spam the server, thus
     // set the last update time regardless its results.  Will retry tomorrow.
     gSnippetsMap.set("snippets-last-update", Date.now());
-    xhr.onloadend = function (event) {
+    xhr.onloadend = function() {
       if (xhr.status == 200) {
         gSnippetsMap.set("snippets", xhr.responseText);
         gSnippetsMap.set("snippets-cached-version", currentVersion);

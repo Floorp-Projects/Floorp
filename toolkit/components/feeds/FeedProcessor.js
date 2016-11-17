@@ -368,8 +368,8 @@ Feed.prototype = {
 
   // reset the bag to raw contents, not text constructs
   _resetBagMembersToRawText: function Feed_resetBagMembers(fieldLists) {
-    for (var i=0; i<fieldLists.length; i++) {
-      for (var j=0; j<fieldLists[i].length; j++) {
+    for (var i = 0; i < fieldLists.length; i++) {
+      for (var j = 0; j < fieldLists[i].length; j++) {
         if (bagHasKey(this.fields, fieldLists[i][j])) {
           var textConstruct = this.fields.getProperty(fieldLists[i][j]);
           this.fields.setPropertyAsAString(fieldLists[i][j],
@@ -709,7 +709,7 @@ function fieldsToObj(container, fields) {
   var props, prop, field, searchList;
   for (var key in fields) {
     searchList = fields[key];
-    for (var i=0; i < searchList.length; ++i) {
+    for (var i = 0; i < searchList.length; ++i) {
       props = searchList[i];
       prop = null;
       field = isArray(props) ? props[0] : props;
@@ -884,7 +884,7 @@ XHTMLHandler.prototype = {
     if (namespace == XHTML_NS) {
       this._buf += "<" + localName;
       var uri;
-      for (var i=0; i < attributes.length; ++i) {
+      for (var i = 0; i < attributes.length; ++i) {
         uri = attributes.getURI(i);
         // XHTML attributes aren't in a namespace
         if (uri == "") {

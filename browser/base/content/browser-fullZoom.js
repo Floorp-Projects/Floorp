@@ -89,7 +89,7 @@ var FullZoom = {
 
   // nsIObserver
 
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "nsPref:changed":
         switch (aData) {
@@ -154,8 +154,8 @@ var FullZoom = {
     let hasPref = false;
     let token = this._getBrowserToken(browser);
     this._cps2.getByDomainAndName(browser.currentURI.spec, this.name, ctxt, {
-      handleResult: function () { hasPref = true; },
-      handleCompletion: function () {
+      handleResult: function() { hasPref = true; },
+      handleCompletion: function() {
         if (!hasPref && token.isCurrent)
           this._applyPrefToZoom(undefined, browser);
       }.bind(this)
@@ -223,8 +223,8 @@ var FullZoom = {
     let value = undefined;
     let token = this._getBrowserToken(browser);
     this._cps2.getByDomainAndName(aURI.spec, this.name, ctxt, {
-      handleResult: function (resultPref) { value = resultPref.value; },
-      handleCompletion: function () {
+      handleResult: function(resultPref) { value = resultPref.value; },
+      handleCompletion: function() {
         if (!token.isCurrent) {
           this._notifyOnLocationChange(browser);
           return;
@@ -269,7 +269,7 @@ var FullZoom = {
    * Sets the zoom level for the given browser to the given floating
    * point value, where 1 is the default zoom level.
    */
-  setZoom: function (value, browser = gBrowser.selectedBrowser) {
+  setZoom: function(value, browser = gBrowser.selectedBrowser) {
     ZoomManager.setZoomForBrowser(browser, value);
     this._ignorePendingZoomAccesses(browser);
     this._applyZoomToPref(browser);
@@ -364,7 +364,7 @@ var FullZoom = {
     this._cps2.set(browser.currentURI.spec, this.name,
                    ZoomManager.getZoomForBrowser(browser),
                    this._loadContextFromBrowser(browser), {
-      handleCompletion: function () {
+      handleCompletion: function() {
         this._isNextContentPrefChangeInternal = true;
       }.bind(this),
     });
@@ -381,7 +381,7 @@ var FullZoom = {
       return;
     let ctxt = this._loadContextFromBrowser(browser);
     this._cps2.removeByDomainAndName(browser.currentURI.spec, this.name, ctxt, {
-      handleCompletion: function () {
+      handleCompletion: function() {
         this._isNextContentPrefChangeInternal = true;
       }.bind(this),
     });
@@ -487,7 +487,7 @@ var FullZoom = {
       }
       let value = undefined;
       this._cps2.getGlobal(this.name, this._loadContextFromBrowser(browser), {
-        handleResult: function (pref) { value = pref.value; },
+        handleResult: function(pref) { value = pref.value; },
         handleCompletion: (reason) => {
           this._globalValue = this._ensureValid(value);
           resolve(this._globalValue);
@@ -513,7 +513,7 @@ var FullZoom = {
    * consistent behavior.
    */
   _notifyOnLocationChange: function FullZoom__notifyOnLocationChange(browser) {
-    this._executeSoon(function () {
+    this._executeSoon(function() {
       Services.obs.notifyObservers(browser, "browser-fullZoom:location-change", "");
     });
   },

@@ -41,7 +41,7 @@ function timeDaysAgo(numDays) {
 }
 
 // utility function to make a visit for insetion into places db
-function makeVisit(index, daysAgo, isTyped, domain=TEST_URL) {
+function makeVisit(index, daysAgo, isTyped, domain = TEST_URL) {
   let {
     TRANSITION_TYPED,
     TRANSITION_LINK

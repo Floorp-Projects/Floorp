@@ -35,6 +35,7 @@ const std::string TlsAgent::kServerRsa = "rsa";    // both sign and encrypt
 const std::string TlsAgent::kServerRsaSign = "rsa_sign";
 const std::string TlsAgent::kServerRsaPss = "rsa_pss";
 const std::string TlsAgent::kServerRsaDecrypt = "rsa_decrypt";
+const std::string TlsAgent::kServerRsaChain = "rsa_chain";
 const std::string TlsAgent::kServerEcdsa256 = "ecdsa256";
 const std::string TlsAgent::kServerEcdsa384 = "ecdsa384";
 const std::string TlsAgent::kServerEcdsa521 = "ecdsa521";
@@ -199,6 +200,23 @@ SECStatus TlsAgent::GetClientAuthDataHook(void* self, PRFileDesc* fd,
     return SECSuccess;
   }
   return SECFailure;
+}
+
+bool TlsAgent::GetPeerChainLength(size_t* count) {
+  CERTCertList* chain = SSL_PeerCertificateChain(ssl_fd_);
+  if (!chain) return false;
+  *count = 0;
+
+  for (PRCList* cursor = PR_NEXT_LINK(&chain->list); cursor != &chain->list;
+       cursor = PR_NEXT_LINK(cursor)) {
+    CERTCertListNode* node = (CERTCertListNode*)cursor;
+    std::cerr << node->cert->subjectName << std::endl;
+    ++(*count);
+  }
+
+  CERT_DestroyCertList(chain);
+
+  return true;
 }
 
 void TlsAgent::RequestClientAuth(bool requireAuth) {
@@ -629,7 +647,11 @@ void TlsAgent::Connected() {
     PRInt32 cipherSuites = SSLInt_CountTls13CipherSpecs(ssl_fd_);
     // We use one ciphersuite in each direction, plus one that's kept around
     // by DTLS for retransmission.
-    EXPECT_EQ(((mode_ == DGRAM) && (role_ == CLIENT)) ? 3 : 2, cipherSuites);
+    PRInt32 expected = ((mode_ == DGRAM) && (role_ == CLIENT)) ? 3 : 2;
+    EXPECT_EQ(expected, cipherSuites);
+    if (expected != cipherSuites) {
+      SSLInt_PrintTls13CipherSpecs(ssl_fd_);
+    }
   }
 
   SetState(STATE_CONNECTED);
@@ -859,7 +881,8 @@ void TlsAgentTestBase::EnsureInit() {
     Init();
   }
   const std::vector<SSLNamedGroup> groups = {
-      ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1, ssl_grp_ffdhe_2048};
+      ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1,
+      ssl_grp_ffdhe_2048};
   agent_->ConfigNamedGroups(groups);
 }
 

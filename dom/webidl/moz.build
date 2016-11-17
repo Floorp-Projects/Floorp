@@ -59,7 +59,6 @@ WEBIDL_FILES = [
     'BrowserElement.webidl',
     'BrowserElementAudioChannel.webidl',
     'BrowserElementDictionaries.webidl',
-    'BrowserElementProxy.webidl',
     'Cache.webidl',
     'CacheStorage.webidl',
     'CanvasCaptureMediaStream.webidl',

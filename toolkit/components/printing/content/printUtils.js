@@ -82,7 +82,7 @@ var PrintUtils = {
    *
    * @return true on success, false on failure
    */
-  showPageSetup: function () {
+  showPageSetup: function() {
     try {
       var printSettings = this.getPrintSettings();
       var PRINTPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
@@ -95,7 +95,7 @@ var PrintUtils = {
         PSSVC.savePrintSettingsToPrefs(printSettings, true, printSettings.kInitSaveNativeData);
       }
     } catch (e) {
-      dump("showPageSetup "+e+"\n");
+      dump("showPageSetup " + e + "\n");
       return false;
     }
     return true;
@@ -109,7 +109,7 @@ var PrintUtils = {
    * @param aBrowser
    *        The <xul:browser> that the nsIDOMWindow for aWindowID belongs to.
    */
-  printWindow: function (aWindowID, aBrowser)
+  printWindow: function(aWindowID, aBrowser)
   {
     let mm = aBrowser.messageManager;
     mm.sendAsyncMessage("Printing:Print", {
@@ -124,7 +124,7 @@ var PrintUtils = {
    * Starts the process of printing the contents of window.content.
    *
    */
-  print: function ()
+  print: function()
   {
     if (gBrowser) {
       return this.printWindow(gBrowser.selectedBrowser.outerWindowID,
@@ -188,7 +188,7 @@ var PrintUtils = {
    *        print preview (in which case, the previous aListenerObj passed
    *        to it will be used).
    */
-  printPreview: function (aListenerObj)
+  printPreview: function(aListenerObj)
   {
     // if we're already in PP mode, don't set the listener; chances
     // are it is null because someone is calling printPreview() to
@@ -256,7 +256,7 @@ var PrintUtils = {
    *        The window from which to get the nsIWebBrowserPrint from.
    * @return nsIWebBrowserPrint
    */
-  getWebBrowserPrint: function (aWindow)
+  getWebBrowserPrint: function(aWindow)
   {
     let Deprecated = Components.utils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
     let text = "getWebBrowserPrint is now deprecated, and fully unsupported for " +
@@ -432,7 +432,7 @@ var PrintUtils = {
     return undefined;
   },
 
-  setPrinterDefaultsForSelectedPrinter: function (aPSSVC, aPrintSettings)
+  setPrinterDefaultsForSelectedPrinter: function(aPSSVC, aPrintSettings)
   {
     if (!aPrintSettings.printerName)
       aPrintSettings.printerName = aPSSVC.defaultPrinterName;
@@ -443,7 +443,7 @@ var PrintUtils = {
     aPSSVC.initPrintSettingsFromPrefs(aPrintSettings, true,  aPrintSettings.kInitSaveAll);
   },
 
-  getPrintSettings: function ()
+  getPrintSettings: function()
   {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
@@ -463,7 +463,7 @@ var PrintUtils = {
         printSettings = PSSVC.newPrintSettings;
       }
     } catch (e) {
-      dump("getPrintSettings: "+e+"\n");
+      dump("getPrintSettings: " + e + "\n");
     }
     return printSettings;
   },
@@ -474,7 +474,7 @@ var PrintUtils = {
     observe: function(aSubject, aTopic, aData)
     {
       // delay the print preview to show the content of the progress dialog
-      setTimeout(function () { PrintUtils.enterPrintPreview(); }, 0);
+      setTimeout(function() { PrintUtils.enterPrintPreview(); }, 0);
     },
 
     QueryInterface : function(iid)
@@ -487,12 +487,12 @@ var PrintUtils = {
     }
   },
 
-  setSimplifiedMode: function (shouldSimplify)
+  setSimplifiedMode: function(shouldSimplify)
   {
     this._shouldSimplify = shouldSimplify;
   },
 
-  enterPrintPreview: function ()
+  enterPrintPreview: function()
   {
     // Send a message to the print preview browser to initialize
     // print preview. If we happen to have gotten a print preview
@@ -502,7 +502,7 @@ var PrintUtils = {
     let ppBrowser = this._listener.getPrintPreviewBrowser();
     let mm = ppBrowser.messageManager;
 
-    let sendEnterPreviewMessage = function (browser, simplified) {
+    let sendEnterPreviewMessage = function(browser, simplified) {
       mm.sendAsyncMessage("Printing:Preview:Enter", {
         windowID: browser.outerWindowID,
         simplifiedMode: simplified,
@@ -622,7 +622,7 @@ var PrintUtils = {
     mm.addMessageListener("Printing:Preview:Entered", onEntered);
   },
 
-  exitPrintPreview: function ()
+  exitPrintPreview: function()
   {
     let ppBrowser = this._listener.getPrintPreviewBrowser();
     let browserMM = ppBrowser.messageManager;
@@ -651,13 +651,13 @@ var PrintUtils = {
     this._listener.onExit();
   },
 
-  logTelemetry: function (ID)
+  logTelemetry: function(ID)
   {
     let histogram = Services.telemetry.getHistogramById(ID);
     histogram.add(true);
   },
 
-  onKeyDownPP: function (aEvent)
+  onKeyDownPP: function(aEvent)
   {
     // Esc exits the PP
     if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
@@ -665,13 +665,13 @@ var PrintUtils = {
     }
   },
 
-  onKeyPressPP: function (aEvent)
+  onKeyPressPP: function(aEvent)
   {
     var closeKey;
     try {
       closeKey = document.getElementById("key_close")
                          .getAttribute("key");
-      closeKey = aEvent["DOM_VK_"+closeKey];
+      closeKey = aEvent["DOM_VK_" + closeKey];
     } catch (e) {}
     var isModif = aEvent.ctrlKey || aEvent.metaKey;
     // Ctrl-W exits the PP
