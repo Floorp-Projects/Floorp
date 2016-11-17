@@ -1425,6 +1425,12 @@ public:
   void SetNeedsCallerTypeAttr(bool, CallerType);
 };
 
+class TestHTMLConstructorInterface : public nsGenericHTMLElement
+{
+public:
+  virtual nsISupports* GetParentObject();
+};
+
 } // namespace dom
 } // namespace mozilla
 
