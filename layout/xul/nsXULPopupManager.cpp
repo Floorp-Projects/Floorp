@@ -2340,10 +2340,21 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
 
   bool consume = (mPopups || mActiveMenuBar);
   switch (keyCode) {
-    case nsIDOMKeyEvent::DOM_VK_LEFT:
-    case nsIDOMKeyEvent::DOM_VK_RIGHT:
     case nsIDOMKeyEvent::DOM_VK_UP:
     case nsIDOMKeyEvent::DOM_VK_DOWN:
+#ifndef XP_MACOSX
+      // roll up the popup when alt+up/down are pressed within a menulist.
+      bool alt;
+      aKeyEvent->GetAltKey(&alt);
+      if (alt && aTopVisibleMenuItem && aTopVisibleMenuItem->Frame()->IsMenuList()) {
+        Rollup(0, false, nullptr, nullptr);
+        break;
+      }
+      MOZ_FALLTHROUGH;
+#endif
+
+    case nsIDOMKeyEvent::DOM_VK_LEFT:
+    case nsIDOMKeyEvent::DOM_VK_RIGHT:
     case nsIDOMKeyEvent::DOM_VK_HOME:
     case nsIDOMKeyEvent::DOM_VK_END:
       HandleKeyboardNavigation(keyCode);
