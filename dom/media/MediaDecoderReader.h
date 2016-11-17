@@ -152,14 +152,6 @@ public:
     MOZ_CRASH();
   }
 
-  // By default, the reader return the decoded data. Some readers support
-  // retuning demuxed data.
-  virtual bool IsDemuxOnlySupported() const { return false; }
-
-  // Configure the reader to return demuxed or decoded data
-  // upon calls to Request{Audio,Video}Data.
-  virtual void SetDemuxOnly(bool /*aDemuxedOnly*/) {}
-
   // The default implementation of AsyncReadMetadata is implemented in terms of
   // synchronous ReadMetadata() calls. Implementations may also
   // override AsyncReadMetadata to create a more proper async implementation.
