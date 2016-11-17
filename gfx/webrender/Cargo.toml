@@ -28,8 +28,11 @@ time = "0.1"
 webrender_traits = {path = "../webrender_traits", default-features = false}
 bitflags = "0.7"
 
-[target.'cfg(any(target_os = "android", target_os = "windows", all(unix, not(target_os = "macos"))))'.dependencies]
-freetype = "0.1.1"
+[target.'cfg(any(target_os = "android", target_os = "windows"))'.dependencies]
+freetype = "0.1.2"
+
+[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
+freetype = {version = "0.1.2", default-features = false}
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-graphics = "0.4.1"
