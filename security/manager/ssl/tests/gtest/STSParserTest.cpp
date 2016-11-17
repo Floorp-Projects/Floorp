@@ -69,9 +69,9 @@ TEST(psm_STSParser, Test)
     TestSuccess("max-age  =100", false, 100, false, sss);
     TestSuccess(" max-age=100", false, 100, false, sss);
     TestSuccess("max-age = 100 ", false, 100, false, sss);
-    TestSuccess("max-age = \"100\" ", false, 100, false, sss);
-    TestSuccess("max-age=\"100\"", false, 100, false, sss);
-    TestSuccess(" max-age =\"100\" ", false, 100, false, sss);
+    TestSuccess(R"(max-age = "100" )", false, 100, false, sss);
+    TestSuccess(R"(max-age="100")", false, 100, false, sss);
+    TestSuccess(R"( max-age ="100" )", false, 100, false, sss);
     TestSuccess("\tmax-age\t=\t\"100\"\t", false, 100, false, sss);
     TestSuccess("max-age  =       100             ", false, 100, false, sss);
 
@@ -104,7 +104,7 @@ TEST(psm_STSParser, Test)
     TestSuccess("\r\n\t\t    \tcompletelyUnrelated = foobar; max-age= 34520103"
                 "\t \t; alsoUnrelated;asIsThis;\tincludeSubdomains\t\t \t",
                 true, 34520103, true, sss);
-    TestSuccess("max-age=100; unrelated=\"quoted \\\"thingy\\\"\"",
+    TestSuccess(R"(max-age=100; unrelated="quoted \"thingy\"")",
                 true, 100, false, sss);
 
     // SHOULD FAIL:
@@ -125,7 +125,7 @@ TEST(psm_STSParser, Test)
     TestFailure("max-ag=100", sss);
     TestFailure("includesubdomains", sss);
     TestFailure(";", sss);
-    TestFailure("max-age=\"100", sss);
+    TestFailure(R"(max-age="100)", sss);
     // The max-age directive here doesn't conform to the spec, so it MUST
     // be ignored. Consequently, the REQUIRED max-age directive is not
     // present in this header, and so it is invalid.
