@@ -19,7 +19,7 @@ using namespace mozilla;
 class psm_DataStorageTest : public ::testing::Test
 {
 protected:
-  virtual void SetUp()
+  void SetUp() override
   {
     const ::testing::TestInfo* const testInfo =
       ::testing::UnitTest::GetInstance()->current_test_info();
