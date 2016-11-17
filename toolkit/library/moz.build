@@ -393,7 +393,6 @@ if CONFIG['MOZ_ENABLE_WEBRENDER']:
     if CONFIG['OS_ARCH'] == 'Linux':
         OS_LIBS += [
             'GL',
-            'EGL',
         ]
     elif CONFIG['OS_ARCH'] == 'WINNT':
         OS_LIBS += [
