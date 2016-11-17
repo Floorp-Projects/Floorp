@@ -255,7 +255,7 @@ class CommonTestCase(unittest.TestCase):
         self.httpd = self._httpd_weakref()
         if self.marionette.session is None:
             self.marionette.start_session()
-        self.marionette.reset_timeouts()
+        self.marionette.timeout.reset()
 
         super(CommonTestCase, self).setUp()
 
