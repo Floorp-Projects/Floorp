@@ -13,6 +13,7 @@
 #include "PerformanceMeasure.h"
 #include "PerformanceObserver.h"
 #include "PerformanceResourceTiming.h"
+#include "PerformanceService.h"
 #include "PerformanceWorker.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/PerformanceBinding.h"
@@ -141,6 +142,17 @@ Performance::Performance(nsPIDOMWindowInner* aWindow)
 Performance::~Performance()
 {}
 
+DOMHighResTimeStamp
+Performance::TimeOrigin()
+{
+  if (!mPerformanceService) {
+    mPerformanceService = PerformanceService::GetOrCreate();
+  }
+
+  MOZ_ASSERT(mPerformanceService);
+  return mPerformanceService->TimeOrigin(CreationTimeStamp());
+}
+
 JSObject*
 Performance::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
@@ -266,7 +278,7 @@ Performance::ClearMarks(const Optional<nsAString>& aName)
 
 DOMHighResTimeStamp
 Performance::ResolveTimestampFromName(const nsAString& aName,
-                                          ErrorResult& aRv)
+                                      ErrorResult& aRv)
 {
   AutoTArray<RefPtr<PerformanceEntry>, 1> arr;
   DOMHighResTimeStamp ts;
