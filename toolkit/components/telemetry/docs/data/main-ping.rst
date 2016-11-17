@@ -62,6 +62,7 @@ Structure:
       keyedHistograms: {...},
       chromeHangs: {...},
       threadHangStats: [...],
+      capturedStacks: {...},
       log: [...],
       webrtc: {...},
       gc: {...},
@@ -262,6 +263,39 @@ Structure:
       },
       ... other threads ...
      ]
+
+capturedStacks
+--------------
+Contains information about stacks captured on demand via Telemetry API. This is similar to `chromeHangs`, but only stacks captured on the main thread of the parent process are reported. It reports precise C++ stacks are reported and is only available on Windows, either in Firefox Nightly or in builds using "--enable-profiling" switch.
+
+Limits for captured stacks are the same as for chromeHangs (see below). Furthermore:
+
+* the key length is limited to 50 characters,
+* keys are restricted to alpha-numeric characters and `-`.
+
+Structure:
+
+.. code-block:: js
+
+    "capturedStacks" : {
+      "memoryMap": [
+        ["wgdi32.pdb", "08A541B5942242BDB4AEABD8C87E4CFF2"],
+        ["igd10iumd32.pdb", "D36DEBF2E78149B5BE1856B772F1C3991"],
+        // ... other entries in the format ["module name", "breakpad identifier"] ...
+      ],
+      "stacks": [
+        [
+           [
+             0, // the module index or -1 for invalid module indices
+             190649 // the offset of this program counter in its module or an absolute pc
+           ],
+           [1, 2540075],
+           // ... other frames ...
+        ],
+        // ... other stacks ...
+      ],
+      "captures": [["string-key", stack-index, count], ... ]
+    }
 
 chromeHangs
 -----------
