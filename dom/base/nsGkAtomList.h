@@ -2214,7 +2214,6 @@ GK_ATOM(monospace, "monospace")
 // IPC stuff
 GK_ATOM(Remote, "remote")
 GK_ATOM(RemoteId, "_remote_id")
-GK_ATOM(RemoteType, "remoteType")
 GK_ATOM(DisplayPort, "_displayport")
 GK_ATOM(DisplayPortMargins, "_displayportmargins")
 GK_ATOM(DisplayPortBase, "_displayportbase")

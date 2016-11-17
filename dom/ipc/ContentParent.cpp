@@ -644,7 +644,7 @@ ContentParent::JoinAllSubprocesses()
 }
 
 /*static*/ already_AddRefed<ContentParent>
-ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
+ContentParent::GetNewOrUsedBrowserProcess(bool aForBrowserElement,
                                           ProcessPriority aPriority,
                                           ContentParent* aOpener,
                                           bool aLargeAllocationProcess)
@@ -689,7 +689,8 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
     } while (currIdx != startIdx);
   }
 
-  RefPtr<ContentParent> p = new ContentParent(aOpener, aRemoteType);
+  RefPtr<ContentParent> p = new ContentParent(aOpener,
+                                              aForBrowserElement);
 
   if (!p->LaunchSubprocess(aPriority)) {
     return nullptr;
@@ -773,7 +774,8 @@ ContentParent::RecvCreateChildProcess(const IPCTabContext& aContext,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  cp = GetNewOrUsedBrowserProcess(DEFAULT_REMOTE_TYPE, aPriority, this);
+  cp = GetNewOrUsedBrowserProcess(/* isBrowserElement = */ true,
+                                  aPriority, this);
 
   if (!cp) {
     *aCpId = 0;
@@ -965,15 +967,9 @@ ContentParent::CreateBrowser(const TabContext& aContext,
     if (aOpenerContentParent) {
       constructorSender = aOpenerContentParent;
     } else {
-      nsAutoString remoteType;
-      if (!aFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType,
-                                  remoteType)) {
-        remoteType.Assign(DEFAULT_REMOTE_TYPE);
-      }
-
       constructorSender =
-        GetNewOrUsedBrowserProcess(remoteType, initialPriority, nullptr,
-                                   aFreshProcess);
+        GetNewOrUsedBrowserProcess(aContext.IsMozBrowserElement(),
+                                   initialPriority, nullptr, aFreshProcess);
       if (!constructorSender) {
         return nullptr;
       }
@@ -1147,9 +1143,6 @@ ContentParent::ForwardKnownInfo()
   if (!mMetamorphosed) {
     return;
   }
-
-  Unused << SendRemoteType(mRemoteType);
-
 #ifdef MOZ_WIDGET_GONK
   InfallibleTArray<VolumeInfo> volumeInfo;
   RefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
@@ -1796,11 +1789,10 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
 }
 
 ContentParent::ContentParent(ContentParent* aOpener,
-                             const nsAString& aRemoteType)
+                             bool aIsForBrowser)
   : nsIContentParent()
   , mOpener(aOpener)
-  , mRemoteType(aRemoteType)
-  , mIsForBrowser(!mRemoteType.IsEmpty())
+  , mIsForBrowser(aIsForBrowser)
   , mLargeAllocationProcess(false)
 {
   InitializeMembers();  // Perform common initialization.
