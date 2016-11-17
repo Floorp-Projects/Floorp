@@ -170,7 +170,7 @@ pub struct WebRenderFrameBuilder {
     pub auxiliary_lists_builder: AuxiliaryListsBuilder,
     pub root_pipeline_id: PipelineId,
     pub root_dl_builder: webrender_traits::DisplayListBuilder,
-    pub temp_dl_builder: webrender_traits::DisplayListBuilder,
+    pub dl_builder: Vec<webrender_traits::DisplayListBuilder>,
 }
 
 impl WebRenderFrameBuilder {
@@ -179,7 +179,7 @@ impl WebRenderFrameBuilder {
             auxiliary_lists_builder: AuxiliaryListsBuilder::new(),
             root_pipeline_id: root_pipeline_id,
             root_dl_builder: webrender_traits::DisplayListBuilder::new(),
-            temp_dl_builder: webrender_traits::DisplayListBuilder::new(),
+            dl_builder: vec![],
         }
     }
 }
@@ -289,7 +289,7 @@ pub extern fn wr_create(window: &mut WrWindowState, width: u32, height: u32, lay
 pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width: u32, height: u32) {
     state.size = (width, height);
     state.frame_builder.root_dl_builder.list.clear();
-    state.frame_builder.temp_dl_builder.list.clear();
+    state.frame_builder.dl_builder.clear();
     state.z_index = 0;
 
     if state.pipeline_id == window.root_pipeline_id {
@@ -317,7 +317,7 @@ pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width
 #[no_mangle]
 pub extern fn wr_push_dl_builder(state:&mut WrState)
 {
-    state.frame_builder.temp_dl_builder.list.clear();
+    state.frame_builder.dl_builder.push(webrender_traits::DisplayListBuilder::new());
 }
 
 #[no_mangle]
@@ -350,11 +350,9 @@ pub extern fn wr_pop_dl_builder(window: &mut WrWindowState, state: &mut WrState,
     state.frame_builder.root_dl_builder.push_stacking_context(sc);
     assert!(state.frame_builder.root_dl_builder.list.len() != 0);
 
-    state.frame_builder.root_dl_builder.list.append(&mut state.frame_builder.temp_dl_builder.list);
+    let mut display_list = state.frame_builder.dl_builder.pop().unwrap();
+    state.frame_builder.root_dl_builder.list.append(&mut display_list.list);
 
-    assert!(state.frame_builder.temp_dl_builder.list.len() == 0);
-    // Not sure we have to pop? Before we just had a stack of both display items
-    // and stacking contexts
     state.frame_builder.root_dl_builder.pop_stacking_context();
 }
 
@@ -415,27 +413,38 @@ pub extern fn wr_delete_image(window: &mut WrWindowState, key: ImageKey) {
 
 #[no_mangle]
 pub extern fn wr_dp_push_rect(state:&mut WrState, rect: WrRect, clip: WrRect, r: f32, g: f32, b: f32, a: f32) {
+    if state.frame_builder.dl_builder.is_empty() {
+        return;
+    }
     //let (width, height) = state.size;
     let clip_region = webrender_traits::ClipRegion::new(&clip.to_rect(),
                                                         Vec::new(),
                                                         None,
                                                         &mut state.frame_builder.auxiliary_lists_builder);
 
-    state.frame_builder.temp_dl_builder.push_rect(rect.to_rect(),
+    state.frame_builder.dl_builder.last_mut().unwrap().push_rect(
+                                    rect.to_rect(),
                                     clip_region,
-                                    ColorF::new(r, g, b, a));
+                                    ColorF::new(r, g, b, a)
+                                    );
 }
 
 #[no_mangle]
 pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
+    if state.frame_builder.dl_builder.is_empty() {
+        return;
+    }
+
     let clip_region = webrender_traits::ClipRegion::new(&clip.to_rect(),
                                                         Vec::new(),
                                                         None,
                                                         &mut state.frame_builder.auxiliary_lists_builder);
     let pipeline_id = PipelineId((layers_id >> 32) as u32, layers_id as u32);
-    state.frame_builder.temp_dl_builder.push_iframe(rect.to_rect(),
-                                      clip_region,
-                                      pipeline_id);
+    state.frame_builder.dl_builder.last_mut().unwrap().push_iframe(
+                                                        rect.to_rect(),
+                                                        clip_region,
+                                                        pipeline_id
+                                                        );
 }
 
 #[repr(C)]
@@ -465,6 +474,10 @@ impl WrRect
 
 #[no_mangle]
 pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect, mask: *const WrImageMask, key: ImageKey) {
+    if state.frame_builder.dl_builder.is_empty() {
+        return;
+    }
+
     //let (width, height) = state.size;
     let bounds = bounds.to_rect();
     let clip = clip.to_rect();
@@ -477,7 +490,7 @@ pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect
                                                         mask,
                                                         &mut state.frame_builder.auxiliary_lists_builder);
     let rect = bounds;
-    state.frame_builder.temp_dl_builder.push_image(rect,
+    state.frame_builder.dl_builder.last_mut().unwrap().push_image(rect,
                                                    clip_region,
                                                    rect.size,
                                                    rect.size,
