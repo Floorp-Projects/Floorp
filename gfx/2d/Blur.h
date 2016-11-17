@@ -69,14 +69,6 @@ public:
                float aSigmaX,
                float aSigmaY);
 
-  AlphaBoxBlur();
-
-  void Init(const Rect& aRect,
-            const IntSize& aSpreadRadius,
-            const IntSize& aBlurRadius,
-            const Rect* aDirtyRect,
-            const Rect* aSkipRect);
-
   ~AlphaBoxBlur();
 
   /**
