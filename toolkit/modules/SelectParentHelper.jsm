@@ -68,6 +68,10 @@ this.SelectParentHelper = {
 
   handleEvent: function(event) {
     switch (event.type) {
+      case "mouseup":
+        currentBrowser.messageManager.sendAsyncMessage("Forms:MouseUp", {});
+        break;
+
       case "mouseover":
         currentBrowser.messageManager.sendAsyncMessage("Forms:MouseOver", {});
         break;
@@ -130,6 +134,7 @@ this.SelectParentHelper = {
     popup.addEventListener("popuphidden", this);
     popup.addEventListener("mouseover", this);
     popup.addEventListener("mouseout", this);
+    browser.ownerDocument.defaultView.addEventListener("mouseup", this, true);
     browser.ownerDocument.defaultView.addEventListener("keydown", this, true);
     browser.ownerDocument.defaultView.addEventListener("fullscreen", this, true);
     browser.messageManager.addMessageListener("Forms:UpdateDropDown", this);
@@ -140,6 +145,7 @@ this.SelectParentHelper = {
     popup.removeEventListener("popuphidden", this);
     popup.removeEventListener("mouseover", this);
     popup.removeEventListener("mouseout", this);
+    browser.ownerDocument.defaultView.removeEventListener("mouseup", this, true);
     browser.ownerDocument.defaultView.removeEventListener("keydown", this, true);
     browser.ownerDocument.defaultView.removeEventListener("fullscreen", this, true);
     browser.messageManager.removeMessageListener("Forms:UpdateDropDown", this);
