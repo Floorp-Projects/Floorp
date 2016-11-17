@@ -20,7 +20,7 @@
 </menulist>
 <button id="button2" label="Two"/>
 <menulist id="list2">
-  <menupopup id="popup" onpopupshown="checkCursorNavigation();">
+  <menupopup id="popup" onpopupshown="checkCursorNavigation();" onpopuphidden="done()">
     <menuitem id="b1" label="One"/>
     <menuitem id="b2" label="Two" selected="true"/>
     <menuitem id="b3" label="Three"/>
@@ -230,7 +230,7 @@ function verifyPopupOnClose()
   is(gModifiers, 2, "modifiers checked when set");
 
   ok(!list.open, "list closed on enter press with modifiers");
-  list.removeEventListener("popuphidden", verifyPopupOnClose, false);
+  list.removeEventListener("popuphidden", done, false);
 
   list = $("list2");
   list.focus();
@@ -268,13 +268,11 @@ function checkCursorNavigation()
   is(list.menuBoxObject.activeChild,
      document.getElementById(iswin || ismac ? "b4" : "b1"), "cursor down wrap while open");
 
-  synthesizeKey("VK_UP", { altKey: true });
-  is(list.open, ismac, "alt+up closes popup");
- 
-  if (ismac) {
-    list.open = false;
-  }
+  list.open = false;
+}
 
+function done()
+{
   SimpleTest.finish();
 }
 
