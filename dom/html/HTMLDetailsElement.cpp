@@ -6,38 +6,11 @@
 #include "mozilla/dom/HTMLDetailsElement.h"
 
 #include "mozilla/dom/HTMLDetailsElementBinding.h"
-#include "mozilla/dom/HTMLUnknownElement.h"
-#include "mozilla/Preferences.h"
 
-// Expand NS_IMPL_NS_NEW_HTML_ELEMENT(Details) to add pref check.
-nsGenericHTMLElement*
-NS_NewHTMLDetailsElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                         mozilla::dom::FromParser aFromParser)
-{
-  if (!mozilla::dom::HTMLDetailsElement::IsDetailsEnabled()) {
-    return new mozilla::dom::HTMLUnknownElement(aNodeInfo);
-  }
-
-  return new mozilla::dom::HTMLDetailsElement(aNodeInfo);
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Details)
 
 namespace mozilla {
 namespace dom {
-
-/* static */ bool
-HTMLDetailsElement::IsDetailsEnabled()
-{
-  static bool isDetailsEnabled = false;
-  static bool added = false;
-
-  if (!added) {
-    Preferences::AddBoolVarCache(&isDetailsEnabled,
-                                 "dom.details_element.enabled");
-    added = true;
-  }
-
-  return isDetailsEnabled;
-}
 
 HTMLDetailsElement::~HTMLDetailsElement()
 {

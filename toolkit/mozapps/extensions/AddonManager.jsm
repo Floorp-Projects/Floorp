@@ -1870,13 +1870,12 @@ var AddonManagerInternal = {
    *         Optional placeholder icons while the add-on is being downloaded
    * @param  aVersion
    *         An optional placeholder version while the add-on is being downloaded
-   * @param  aLoadGroup
-   *         An optional nsILoadGroup to associate any network requests with
+   * @param  aBrowser
+   *         An optional <browser> element for download permissions prompts.
    * @throws if the aUrl, aCallback or aMimetype arguments are not specified
    */
-  getInstallForURL: function(aUrl, aCallback, aMimetype,
-                                                  aHash, aName, aIcons,
-                                                  aVersion, aBrowser) {
+  getInstallForURL: function(aUrl, aCallback, aMimetype, aHash, aName,
+                             aIcons, aVersion, aBrowser) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -3197,16 +3196,22 @@ this.AddonManager = {
     ["STATE_DOWNLOADED", 3],
     // The download failed.
     ["STATE_DOWNLOAD_FAILED", 4],
+    // The install may not proceed until the user accepts permissions
+    ["STATE_AWAITING_PERMISSIONS", 5],
+    // Any permission prompts are done
+    ["STATE_PERMISSION_GRANTED", 6],
     // The install has been postponed.
-    ["STATE_POSTPONED", 5],
+    ["STATE_POSTPONED", 7],
+    // The install is ready to be applied.
+    ["STATE_READY", 8],
     // The add-on is being installed.
-    ["STATE_INSTALLING", 6],
+    ["STATE_INSTALLING", 9],
     // The add-on has been installed.
-    ["STATE_INSTALLED", 7],
+    ["STATE_INSTALLED", 10],
     // The install failed.
-    ["STATE_INSTALL_FAILED", 8],
+    ["STATE_INSTALL_FAILED", 11],
     // The install has been cancelled.
-    ["STATE_CANCELLED", 9],
+    ["STATE_CANCELLED", 12],
   ]),
 
   // Constants representing different types of errors while downloading an

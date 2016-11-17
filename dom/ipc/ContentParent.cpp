@@ -206,14 +206,6 @@
 # include "AndroidBridge.h"
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-#include "nsIVolume.h"
-#include "nsVolumeService.h"
-#include "nsIVolumeService.h"
-#include "SpeakerManagerService.h"
-using namespace mozilla::system;
-#endif
-
 #ifdef MOZ_WIDGET_GTK
 #include <gdk/gdk.h>
 #endif
@@ -3135,35 +3127,6 @@ ContentParent::RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor)
 #else
   return false;
 #endif
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvSpeakerManagerGetSpeakerStatus(bool* aValue)
-{
-#ifdef MOZ_WIDGET_GONK
-  *aValue = false;
-  RefPtr<SpeakerManagerService> service =
-  SpeakerManagerService::GetOrCreateSpeakerManagerService();
-  MOZ_ASSERT(service);
-
-  *aValue = service->GetSpeakerStatus();
-  return IPC_OK();
-#endif
-  return IPC_FAIL_NO_REASON(this);
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvSpeakerManagerForceSpeaker(const bool& aEnable)
-{
-#ifdef MOZ_WIDGET_GONK
-  RefPtr<SpeakerManagerService> service =
-  SpeakerManagerService::GetOrCreateSpeakerManagerService();
-  MOZ_ASSERT(service);
-  service->ForceSpeaker(aEnable, mChildID);
-
-  return IPC_OK();
-#endif
-  return IPC_FAIL_NO_REASON(this);
 }
 
 mozilla::ipc::IPCResult

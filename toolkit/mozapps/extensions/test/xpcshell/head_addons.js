@@ -47,6 +47,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Extension",
                                   "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionTestUtils",
                                   "resource://testing-common/ExtensionXPCShellUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionTestCommon",
+                                  "resource://testing-common/ExtensionTestCommon.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
                                   "resource://testing-common/httpd.js");
 XPCOMUtils.defineLazyModuleGetter(this, "MockAsyncShutdown",
@@ -70,6 +72,7 @@ const {
   promiseAddonsByIDs,
   promiseAddonsWithOperationsByTypes,
   promiseCompleteAllInstalls,
+  promiseCompleteInstall,
   promiseConsoleOutput,
   promiseFindAddonUpdates,
   promiseInstallAllFiles,

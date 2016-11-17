@@ -363,6 +363,22 @@ this.ExtensionData = class {
     });
   }
 
+  // This method should return a structured representation of any
+  // capabilities this extension has access to, as derived from the
+  // manifest.  The current implementation just returns the contents
+  // of the permissions attribute, if we add things like url_overrides,
+  // they should also be added here.
+  userPermissions() {
+    let result = {
+      hosts: this.whiteListedHosts.pat,
+      apis: [...this.apiNames],
+    };
+    const EXP_PATTERN = /^experiments\.\w+/;
+    result.permissions = [...this.permissions]
+      .filter(p => !result.hosts.includes(p) && !EXP_PATTERN.test(p));
+    return result;
+  }
+
   // Reads the extension's |manifest.json| file, and stores its
   // parsed contents in |this.manifest|.
   readManifest() {
