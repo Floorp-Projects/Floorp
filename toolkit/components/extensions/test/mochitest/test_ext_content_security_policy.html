@@ -116,7 +116,7 @@ function* testPolicy(customCSP = null) {
   baseURL = yield extension.awaitMessage("base-url");
 
 
-  window.open(`${baseURL}/tab.html`);
+  let win1 = window.open(`${baseURL}/tab.html`);
 
   let frame = document.createElement("iframe");
   frame.src = `${baseURL}/content.html`;
@@ -136,6 +136,8 @@ function* testPolicy(customCSP = null) {
   let contentCSP = getCSP(frame.contentWindow);
   checkCSP(contentCSP, "content frame");
 
+
+  win1.close();
   frame.remove();
 
   yield extension.unload();
