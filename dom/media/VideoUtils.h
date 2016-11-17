@@ -288,7 +288,7 @@ RefPtr<GenericPromise> InvokeUntil(Work aWork, Condition aCondition) {
   }
 
   struct Helper {
-    static void Iteration(RefPtr<GenericPromise::Private> aPromise, Work aLocalWork, Condition aLocalCondition) {
+    static void Iteration(const RefPtr<GenericPromise::Private>& aPromise, Work aLocalWork, Condition aLocalCondition) {
       if (!aLocalWork()) {
         aPromise->Reject(NS_ERROR_FAILURE, __func__);
       } else if (aLocalCondition()) {

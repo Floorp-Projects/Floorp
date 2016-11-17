@@ -240,7 +240,7 @@ AltSvcMapping::TTL()
 }
 
 void
-AltSvcMapping::SyncString(nsCString str)
+AltSvcMapping::SyncString(const nsCString& str)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mStorage->Put(HashKey(), str,

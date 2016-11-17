@@ -313,7 +313,8 @@ stage-extensions: make-stage-dir
 
 
 check::
-	@$(topsrcdir)/mach --log-no-times python-test
+	$(eval cores=$(shell $(PYTHON) -c 'import multiprocessing; print(multiprocessing.cpu_count())'))
+	@$(topsrcdir)/mach --log-no-times python-test -j$(cores)
 
 
 .PHONY: \
