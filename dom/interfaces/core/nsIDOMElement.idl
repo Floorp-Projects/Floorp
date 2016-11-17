@@ -173,15 +173,4 @@ interface nsIDOMElement : nsIDOMNode
      set to arbitrarily large values. */
   readonly attribute long             scrollLeftMax;
   readonly attribute long             scrollTopMax;
-
-
-  // Selectors API
-  /**
-   * Returns whether this element would be selected by the given selector
-   * string.
-   *
-   * See <http://dev.w3.org/2006/webapi/selectors-api2/#matchesselector>
-   */
-  boolean mozMatchesSelector([Null(Stringify)] in DOMString selector);
-
 };
