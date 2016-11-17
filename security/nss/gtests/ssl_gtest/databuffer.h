@@ -28,7 +28,7 @@ class DataBuffer {
   DataBuffer(const uint8_t* data, size_t len) : data_(nullptr), len_(0) {
     Assign(data, len);
   }
-  explicit DataBuffer(const DataBuffer& other) : data_(nullptr), len_(0) {
+  DataBuffer(const DataBuffer& other) : data_(nullptr), len_(0) {
     Assign(other);
   }
   ~DataBuffer() { delete[] data_; }

@@ -46,11 +46,11 @@ AutoCompleteInput.prototype = {
   get searchCount() {
     return this.searches.length;
   },
-  getSearchAt: function (aIndex) {
+  getSearchAt: function(aIndex) {
     return this.searches[aIndex];
   },
 
-  onSearchBegin: function () {},
+  onSearchBegin: function() {},
   onSearchComplete: function() {},
 
   get popupOpen() {
@@ -58,7 +58,7 @@ AutoCompleteInput.prototype = {
   },
   popup: {
     set selectedIndex(aIndex) {},
-    invalidate: function () {},
+    invalidate: function() {},
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup])
   },
 

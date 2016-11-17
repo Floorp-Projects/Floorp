@@ -204,15 +204,16 @@ const CustomizableWidgets = [
 
       PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                          .asyncExecuteLegacyQueries([query], 1, options, {
-        handleResult: function (aResultSet) {
-          let onItemCommand = function (aEvent) {
+        handleResult: function(aResultSet) {
+          let onItemCommand = function(aItemCommandEvent) {
             // Only handle the click event for middle clicks, we're using the command
             // event otherwise.
-            if (aEvent.type == "click" && aEvent.button != 1) {
+            if (aItemCommandEvent.type == "click" &&
+                aItemCommandEvent.button != 1) {
               return;
             }
-            let item = aEvent.target;
-            win.openUILink(item.getAttribute("targetURI"), aEvent);
+            let item = aItemCommandEvent.target;
+            win.openUILink(item.getAttribute("targetURI"), aItemCommandEvent);
             CustomizableUI.hidePanelForNode(item);
           };
           let fragment = doc.createDocumentFragment();
@@ -236,10 +237,10 @@ const CustomizableWidgets = [
           }
           items.appendChild(fragment);
         },
-        handleError: function (aError) {
+        handleError: function(aError) {
           log.debug("History view tried to show but had an error: " + aError);
         },
-        handleCompletion: function (aReason) {
+        handleCompletion: function(aReason) {
           log.debug("History view is being shown!");
         },
       });
@@ -441,7 +442,7 @@ const CustomizableWidgets = [
         Services.obs.notifyObservers(null, "synced-tabs-menu:test:tabs-updated", null);
       });
     },
-    _clearTabList () {
+    _clearTabList() {
       let list = this._tabsList;
       while (list.lastChild) {
         list.lastChild.remove();
@@ -461,7 +462,7 @@ const CustomizableWidgets = [
       appendTo.appendChild(messageLabel);
       return messageLabel;
     },
-    _appendClient: function (client, attachFragment) {
+    _appendClient: function(client, attachFragment) {
       let doc = attachFragment.ownerDocument;
       // Create the element for the remote client.
       let clientItem = doc.createElementNS(kNSXUL, "label");
@@ -699,11 +700,11 @@ const CustomizableWidgets = [
           updateCombinedWidgetStyle(node, aArea, true);
           updateZoomResetButton();
 
-          let areaType = CustomizableUI.getAreaType(aArea);
-          if (areaType == CustomizableUI.TYPE_MENU_PANEL) {
+          let newAreaType = CustomizableUI.getAreaType(aArea);
+          if (newAreaType == CustomizableUI.TYPE_MENU_PANEL) {
             let panel = aDocument.getElementById(kPanelId);
             panel.addEventListener("popupshowing", updateZoomResetButton);
-          } else if (areaType == CustomizableUI.TYPE_TOOLBAR) {
+          } else if (newAreaType == CustomizableUI.TYPE_TOOLBAR) {
             let container = window.gBrowser.tabContainer;
             container.addEventListener("TabSelect", updateZoomResetButton);
           }
@@ -713,11 +714,11 @@ const CustomizableWidgets = [
           if (aWidgetId != this.id)
             return;
 
-          let areaType = CustomizableUI.getAreaType(aPrevArea);
-          if (areaType == CustomizableUI.TYPE_MENU_PANEL) {
+          let formerAreaType = CustomizableUI.getAreaType(aPrevArea);
+          if (formerAreaType == CustomizableUI.TYPE_MENU_PANEL) {
             let panel = aDocument.getElementById(kPanelId);
             panel.removeEventListener("popupshowing", updateZoomResetButton);
-          } else if (areaType == CustomizableUI.TYPE_TOOLBAR) {
+          } else if (formerAreaType == CustomizableUI.TYPE_TOOLBAR) {
             let container = window.gBrowser.tabContainer;
             container.removeEventListener("TabSelect", updateZoomResetButton);
           }
@@ -1104,7 +1105,7 @@ const CustomizableWidgets = [
       let win = doc.defaultView;
       let items = doc.getElementById("PanelUI-containersItems");
 
-      let onItemCommand = function (aEvent) {
+      let onItemCommand = function(aEvent) {
         let item = aEvent.target;
         if (item.hasAttribute("usercontextid")) {
           let userContextId = parseInt(item.getAttribute("usercontextid"));

@@ -36,8 +36,8 @@
 #     These files should be in a sub-directory "security" immediately below the
 #        directory containing the other Unicode data files.
 #
-#     We also require the latest data file for UTR50, currently revision-15:
-#        http://www.unicode.org/Public/vertical/revision-15/VerticalOrientation-15.txt
+#     We also require the latest data file for UTR50, currently revision-16:
+#        http://www.unicode.org/Public/vertical/revision-16/VerticalOrientation-16.txt
 #     This file should be in a sub-directory "vertical" immediately below the
 #        directory containing the other Unicode data files.
 #
@@ -681,8 +681,8 @@ while (<FH>) {
 }
 close FH;
 
-# read VerticalOrientation-15.txt
-open FH, "< $UNICODE/vertical/VerticalOrientation-15.txt" or die "can't open UTR50 data file VerticalOrientation-15.txt\n";
+# read VerticalOrientation-16.txt
+open FH, "< $UNICODE/vertical/VerticalOrientation-16.txt" or die "can't open UTR50 data file VerticalOrientation-16.txt\n";
 push @versionInfo, "";
 while (<FH>) {
     chomp;

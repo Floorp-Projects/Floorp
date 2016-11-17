@@ -21,7 +21,7 @@ var DevEdition = {
     return theme && theme.id == "firefox-devedition@mozilla.org";
   },
 
-  init: function () {
+  init: function() {
     this.initialized = true;
     Services.prefs.addObserver(this._devtoolsThemePrefName, this, false);
     Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
@@ -42,7 +42,7 @@ var DevEdition = {
     this.styleSheet.sheet.disabled = true;
   },
 
-  observe: function (subject, topic, data) {
+  observe: function(subject, topic, data) {
     if (topic == "lightweight-theme-styling-update") {
       let newTheme = JSON.parse(data);
       if (newTheme && newTheme.id == "firefox-devedition@mozilla.org") {
@@ -122,7 +122,7 @@ var DevEdition = {
     }
   },
 
-  uninit: function () {
+  uninit: function() {
     Services.prefs.removeObserver(this._devtoolsThemePrefName, this);
     Services.obs.removeObserver(this, "lightweight-theme-styling-update", false);
     Services.obs.removeObserver(this, "lightweight-theme-window-updated", false);

@@ -78,12 +78,6 @@ this.PresentationDeviceInfoService = {
   },
 
   receiveMessage: function(aMessage) {
-    if (!aMessage.target.assertPermission("presentation-device-manage")) {
-      debug("receive message " + aMessage.name +
-            " from a content process with no 'presentation-device-manage' privileges.");
-      return null;
-    }
-
     let msg = aMessage.data || {};
     let mm = aMessage.target;
 

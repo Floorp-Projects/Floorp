@@ -284,11 +284,11 @@ function run_test_1() {
 function run_test_2() {
   addon1.version = "1.1";
   writeInstallRDFForExtension(addon1, userDir);
-  addon2.version="2.1";
+  addon2.version = "2.1";
   writeInstallRDFForExtension(addon2, profileDir);
-  addon2.version="2.2";
+  addon2.version = "2.2";
   writeInstallRDFForExtension(addon2, globalDir);
-  addon2.version="2.3";
+  addon2.version = "2.3";
   writeInstallRDFForExtension(addon2, userDir);
   var dest = profileDir.clone();
   dest.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));

@@ -4,7 +4,7 @@
 function testURLBarCopy(targetValue) {
   return new Promise((resolve, reject) => {
     info("Expecting copy of: " + targetValue);
-    waitForClipboard(targetValue, function () {
+    waitForClipboard(targetValue, function() {
       gURLBar.focus();
       gURLBar.select();
 

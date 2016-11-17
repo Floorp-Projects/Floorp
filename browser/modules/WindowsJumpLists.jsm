@@ -274,7 +274,7 @@ this.WinTaskbarJumpList =
   _buildTasks: function WTBJL__buildTasks() {
     var items = Cc["@mozilla.org/array;1"].
                 createInstance(Ci.nsIMutableArray);
-    this._tasks.forEach(function (task) {
+    this._tasks.forEach(function(task) {
       if ((this._shuttingDown && !task.close) || (!this._shuttingDown && !task.open))
         return;
       var item = this._getHandlerAppItem(task.title, task.description,
@@ -311,7 +311,7 @@ this.WinTaskbarJumpList =
     this._pendingStatements[LIST_TYPE.FREQUENT] = this._getHistoryResults(
       Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING,
       this._maxItemCount,
-      function (aResult) {
+      function(aResult) {
         if (!aResult) {
           delete this._pendingStatements[LIST_TYPE.FREQUENT];
           // The are no more results, build the list.
@@ -346,7 +346,7 @@ this.WinTaskbarJumpList =
     this._pendingStatements[LIST_TYPE.RECENT] = this._getHistoryResults(
       Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING,
       this._maxItemCount * 2,
-      function (aResult) {
+      function(aResult) {
         if (!aResult) {
           // The are no more results, build the list.
           this._buildCustom(_getString("taskbar.recent.label"), items);
@@ -426,7 +426,7 @@ this.WinTaskbarJumpList =
     // Return the pending statement to the caller, to allow cancelation.
     return PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                               .asyncExecuteLegacyQueries([query], 1, options, {
-      handleResult: function (aResultSet) {
+      handleResult: function(aResultSet) {
         for (let row; (row = aResultSet.getNextRow());) {
           try {
             aCallback.call(aScope,
@@ -436,11 +436,11 @@ this.WinTaskbarJumpList =
           } catch (e) {}
         }
       },
-      handleError: function (aError) {
+      handleError: function(aError) {
         Components.utils.reportError(
           "Async execution error (" + aError.result + "): " + aError.message);
       },
-      handleCompletion: function (aReason) {
+      handleCompletion: function(aReason) {
         aCallback.call(WinTaskbarJumpList, null);
       },
     });
@@ -508,7 +508,7 @@ this.WinTaskbarJumpList =
     if (this._enabled && !this._shuttingDown && !this._timer) {
       this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       this._timer.initWithCallback(this,
-                                   _prefs.getIntPref(PREF_TASKBAR_REFRESH)*1000,
+                                   _prefs.getIntPref(PREF_TASKBAR_REFRESH) * 1000,
                                    this._timer.TYPE_REPEATING_SLACK);
     }
     else if ((!this._enabled || this._shuttingDown) && this._timer) {

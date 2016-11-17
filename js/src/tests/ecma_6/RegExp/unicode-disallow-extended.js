@@ -81,9 +81,17 @@ assertThrowsInstanceOf(() => eval(`/\\x0/u`), SyntaxError);
 assertThrowsInstanceOf(() => eval(`/\\x1/u`), SyntaxError);
 assertThrowsInstanceOf(() => eval(`/\\x1G/u`), SyntaxError);
 
+assertThrowsInstanceOf(() => eval(`/[\\x]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\x0]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\x1]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\x1G]/u`), SyntaxError);
+
 // LegacyOctalEscapeSequence
 assertThrowsInstanceOf(() => eval(`/\\52/u`), SyntaxError);
 assertThrowsInstanceOf(() => eval(`/\\052/u`), SyntaxError);
+
+assertThrowsInstanceOf(() => eval(`/[\\52]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\052]/u`), SyntaxError);
 
 // DecimalEscape
 assertEqArray(/\0/u.exec("\0"),
@@ -112,6 +120,20 @@ assertThrowsInstanceOf(() => eval(`/\\7/u`), SyntaxError);
 assertThrowsInstanceOf(() => eval(`/\\8/u`), SyntaxError);
 assertThrowsInstanceOf(() => eval(`/\\9/u`), SyntaxError);
 assertThrowsInstanceOf(() => eval(`/\\10/u`), SyntaxError);
+
+assertThrowsInstanceOf(() => eval(`/[\\00]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\01]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\09]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\1]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\2]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\3]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\4]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\5]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\6]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\7]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\8]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\9]/u`), SyntaxError);
+assertThrowsInstanceOf(() => eval(`/[\\10]/u`), SyntaxError);
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);

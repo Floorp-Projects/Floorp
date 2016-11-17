@@ -16,6 +16,9 @@ namespace nss_test {
 
 struct ScopedDelete {
   void operator()(CERTCertificate* cert) { CERT_DestroyCertificate(cert); }
+  void operator()(CERTCertificateList* list) {
+    CERT_DestroyCertificateList(list);
+  }
   void operator()(CERTSubjectPublicKeyInfo* spki) {
     SECKEY_DestroySubjectPublicKeyInfo(spki);
   }
@@ -40,6 +43,7 @@ struct ScopedMaybeDelete {
 #define SCOPED(x) typedef std::unique_ptr<x, ScopedMaybeDelete<x> > Scoped##x
 
 SCOPED(CERTCertificate);
+SCOPED(CERTCertificateList);
 SCOPED(CERTSubjectPublicKeyInfo);
 SCOPED(PK11SlotInfo);
 SCOPED(PK11SymKey);

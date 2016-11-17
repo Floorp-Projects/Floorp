@@ -165,8 +165,8 @@ function getTestPluginEnabledState(pluginName) {
 // Returns a promise for nsIObjectLoadingContent props data.
 function promiseForPluginInfo(aId, aBrowser) {
   let browser = aBrowser || gTestBrowser;
-  return ContentTask.spawn(browser, aId, function* (aId) {
-    let plugin = content.document.getElementById(aId);
+  return ContentTask.spawn(browser, aId, function* (contentId) {
+    let plugin = content.document.getElementById(contentId);
     if (!(plugin instanceof Ci.nsIObjectLoadingContent))
       throw new Error("no plugin found");
     return {
@@ -182,8 +182,8 @@ function promiseForPluginInfo(aId, aBrowser) {
 // playPlugin() method.
 function promisePlayObject(aId, aBrowser) {
   let browser = aBrowser || gTestBrowser;
-  return ContentTask.spawn(browser, aId, function* (aId) {
-    let plugin = content.document.getElementById(aId);
+  return ContentTask.spawn(browser, aId, function* (contentId) {
+    let plugin = content.document.getElementById(contentId);
     let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     objLoadingContent.playPlugin();
   });
@@ -191,8 +191,8 @@ function promisePlayObject(aId, aBrowser) {
 
 function promiseCrashObject(aId, aBrowser) {
   let browser = aBrowser || gTestBrowser;
-  return ContentTask.spawn(browser, aId, function* (aId) {
-    let plugin = content.document.getElementById(aId);
+  return ContentTask.spawn(browser, aId, function* (contentId) {
+    let plugin = content.document.getElementById(contentId);
     Components.utils.waiveXrays(plugin).crash();
   });
 }
@@ -200,8 +200,8 @@ function promiseCrashObject(aId, aBrowser) {
 // Return a promise and call the plugin's getObjectValue() method.
 function promiseObjectValueResult(aId, aBrowser) {
   let browser = aBrowser || gTestBrowser;
-  return ContentTask.spawn(browser, aId, function* (aId) {
-    let plugin = content.document.getElementById(aId);
+  return ContentTask.spawn(browser, aId, function* (contentId) {
+    let plugin = content.document.getElementById(contentId);
     return Components.utils.waiveXrays(plugin).getObjectValue();
   });
 }
@@ -209,8 +209,8 @@ function promiseObjectValueResult(aId, aBrowser) {
 // Return a promise and reload the target plugin in the page
 function promiseReloadPlugin(aId, aBrowser) {
   let browser = aBrowser || gTestBrowser;
-  return ContentTask.spawn(browser, aId, function* (aId) {
-    let plugin = content.document.getElementById(aId);
+  return ContentTask.spawn(browser, aId, function* (contentId) {
+    let plugin = content.document.getElementById(contentId);
     plugin.src = plugin.src;
   });
 }

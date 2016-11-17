@@ -30,7 +30,7 @@ function test() {
     {
       name: "context menu search",
       searchURL: base,
-      run: function () {
+      run: function() {
         // Simulate a contextmenu search
         // FIXME: This is a bit "low-level"...
         BrowserSearch.loadSearch("foo", false, "contextmenu");
@@ -39,7 +39,7 @@ function test() {
     {
       name: "keyword search",
       searchURL: base,
-      run: function () {
+      run: function() {
         gURLBar.value = "? foo";
         gURLBar.focus();
         EventUtils.synthesizeKey("VK_RETURN", {});
@@ -48,7 +48,7 @@ function test() {
     {
       name: "keyword search",
       searchURL: base,
-      run: function () {
+      run: function() {
         gURLBar.value = "g foo";
         gURLBar.focus();
         EventUtils.synthesizeKey("VK_RETURN", {});
@@ -57,11 +57,11 @@ function test() {
     {
       name: "search bar search",
       searchURL: base,
-      run: function () {
+      run: function() {
         let sb = BrowserSearch.searchBar;
         sb.focus();
         sb.value = "foo";
-        registerCleanupFunction(function () {
+        registerCleanupFunction(function() {
           sb.value = "";
         });
         EventUtils.synthesizeKey("VK_RETURN", {});
@@ -70,7 +70,7 @@ function test() {
     {
       name: "new tab search",
       searchURL: base,
-      run: function () {
+      run: function() {
         function doSearch(doc) {
           // Re-add the listener, and perform a search
           gBrowser.addProgressListener(listener);
@@ -83,9 +83,9 @@ function test() {
         gBrowser.removeProgressListener(listener);
         gBrowser.loadURI("about:newtab");
         info("Waiting for about:newtab load");
-        tab.linkedBrowser.addEventListener("load", function load(event) {
-          if (event.originalTarget != tab.linkedBrowser.contentDocument ||
-              event.target.location.href == "about:blank") {
+        tab.linkedBrowser.addEventListener("load", function load(loadEvent) {
+          if (loadEvent.originalTarget != tab.linkedBrowser.contentDocument ||
+              loadEvent.target.location.href == "about:blank") {
             info("skipping spurious load event");
             return;
           }
@@ -99,9 +99,9 @@ function test() {
           }
           else {
             info("Waiting for newtab search init");
-            win.addEventListener("ContentSearchService", function done(event) {
-              info("Got newtab search event " + event.detail.type);
-              if (event.detail.type == "State") {
+            win.addEventListener("ContentSearchService", function done(searchServiceEvent) {
+              info("Got newtab search event " + searchServiceEvent.detail.type);
+              if (searchServiceEvent.detail.type == "State") {
                 win.removeEventListener("ContentSearchService", done);
                 // Let gSearch respond to the event before continuing.
                 executeSoon(() => doSearch(win.document));
@@ -149,7 +149,7 @@ function test() {
     }
   }
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     engine.alias = undefined;
     gBrowser.removeProgressListener(listener);
     gBrowser.removeTab(tab);

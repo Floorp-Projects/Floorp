@@ -1285,7 +1285,7 @@ function check_test_7() {
 
 // Test that background update checks for lightweight themes do not use the cache
 // The update body from test 7 shouldn't be used since the cache should be bypassed.
-add_test(function () {
+add_test(function() {
   // XXX The lightweight theme manager strips non-https updateURLs so hack it
   // back in.
   let themes = JSON.parse(Services.prefs.getCharPref("lightweightThemes.usedThemes"));

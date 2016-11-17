@@ -38,9 +38,9 @@ Message::Message()
   header()->num_fds = 0;
 #endif
 #ifdef MOZ_TASK_TRACER
-  header()->source_event_id = 0;
-  header()->parent_task_id = 0;
-  header()->source_event_type = SourceEventType::Unknown;
+  GetCurTraceInfo(&header()->source_event_id,
+                  &header()->parent_task_id,
+                  &header()->source_event_type);
 #endif
   InitLoggingVariables();
 }
@@ -68,9 +68,9 @@ Message::Message(int32_t routing_id, msgid_t type, NestedLevel nestedLevel, Prio
   header()->cookie = 0;
 #endif
 #ifdef MOZ_TASK_TRACER
-  header()->source_event_id = 0;
-  header()->parent_task_id = 0;
-  header()->source_event_type = SourceEventType::Unknown;
+  GetCurTraceInfo(&header()->source_event_id,
+                  &header()->parent_task_id,
+                  &header()->source_event_type);
 #endif
   InitLoggingVariables(aName);
 }
@@ -88,11 +88,6 @@ Message::Message(Message&& other) : Pickle(mozilla::Move(other)) {
 #if defined(OS_POSIX)
   file_descriptor_set_ = other.file_descriptor_set_.forget();
 #endif
-#ifdef MOZ_TASK_TRACER
-  header()->source_event_id = other.header()->source_event_id;
-  header()->parent_task_id = other.header()->parent_task_id;
-  header()->source_event_type = other.header()->source_event_type;
-#endif
 }
 
 void Message::InitLoggingVariables(const char* const aName) {
@@ -104,11 +99,6 @@ Message& Message::operator=(Message&& other) {
   InitLoggingVariables(other.name_);
 #if defined(OS_POSIX)
   file_descriptor_set_.swap(other.file_descriptor_set_);
-#endif
-#ifdef MOZ_TASK_TRACER
-  std::swap(header()->source_event_id, other.header()->source_event_id);
-  std::swap(header()->parent_task_id, other.header()->parent_task_id);
-  std::swap(header()->source_event_type, other.header()->source_event_type);
 #endif
   return *this;
 }

@@ -1,5 +1,5 @@
 function check_clear_visible(browser, aVisible) {
-  return ContentTask.spawn(browser, aVisible, function (aVisible) {
+  return ContentTask.spawn(browser, aVisible, function(aVisible) {
     let doc = content.document;
     let visible = false;
     let button = doc.getElementById("clear-reports");

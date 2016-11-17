@@ -11,7 +11,7 @@ Components.utils.import("resource://testing-common/httpd.js");
 var testserver;
 
 var next_test = null;
-var gItemsNotChecked =[];
+var gItemsNotChecked = [];
 
 var ADDONS = [ {id: "bug324121_1@tests.mozilla.org",
                 addon: "test_bug324121_1",

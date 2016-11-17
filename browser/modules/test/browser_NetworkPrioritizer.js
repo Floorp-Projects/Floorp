@@ -31,12 +31,12 @@ function* setPriority(aBrowser, aPriority) {
   if (aBrowser.localName == "tab")
     aBrowser = aBrowser.linkedBrowser;
 
-  yield ContentTask.spawn(aBrowser, aPriority, function* (aPriority) {
+  yield ContentTask.spawn(aBrowser, aPriority, function* (contentPriority) {
     docShell.QueryInterface(Components.interfaces.nsIWebNavigation)
                                     .QueryInterface(Components.interfaces.nsIDocumentLoader)
                                     .loadGroup
                                     .QueryInterface(Ci.nsISupportsPriority)
-                                    .priority = aPriority;
+                                    .priority = contentPriority;
   });
 }
 

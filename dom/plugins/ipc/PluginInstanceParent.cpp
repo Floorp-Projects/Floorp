@@ -1347,12 +1347,6 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
     } else {
         SubclassPluginWindow(reinterpret_cast<HWND>(aWindow->window));
 
-        // Skip SetWindow call for hidden QuickTime plugins.
-        if ((mParent->GetQuirks() & QUIRK_QUICKTIME_AVOID_SETWINDOW) &&
-            aWindow->width == 0 && aWindow->height == 0) {
-            return NPERR_NO_ERROR;
-        }
-
         window.window = reinterpret_cast<uint64_t>(aWindow->window);
         window.x = aWindow->x;
         window.y = aWindow->y;

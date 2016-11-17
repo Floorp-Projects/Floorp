@@ -8,7 +8,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var gAppInfo = null;
 
-function createAppInfo(ID, name, version, platformVersion="1.0") {
+function createAppInfo(ID, name, version, platformVersion = "1.0") {
   let tmp = {};
   Components.utils.import("resource://testing-common/AppInfo.jsm", tmp);
   gAppInfo = tmp.newAppInfo({
@@ -18,7 +18,7 @@ function createAppInfo(ID, name, version, platformVersion="1.0") {
   });
 
   let XULAppInfoFactory = {
-    createInstance: function (outer, iid) {
+    createInstance: function(outer, iid) {
       if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
       return gAppInfo.QueryInterface(iid);

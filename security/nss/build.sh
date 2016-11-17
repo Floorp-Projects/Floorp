@@ -6,12 +6,14 @@
 
 set -e
 
+source $(dirname $0)/coreconf/nspr.sh
+
 # Usage info
 show_help() {
 cat << EOF
 
 Usage: ${0##*/} [-hcgv] [-j <n>] [--test] [--fuzz] [--scan-build[=output]]
-                [-m32] [--opt|-o]
+                [-m32] [--opt|-o] [--asan] [--ubsan] [--sancov[=edge|bb|func]]
 
 This script builds NSS with gyp and ninja.
 
@@ -31,6 +33,10 @@ NSS build tool options:
     --scan-build  run the build with scan-build (scan-build has to be in the path)
                   --scan-build=/out/path sets the output path for scan-build
     --opt|-o      do an opt build
+    --asan        do an asan build
+    --ubsan       do an ubsan build
+    --sancov      do sanitize coverage builds
+                  --sancov=func sets coverage to function level for example
 EOF
 }
 
@@ -43,17 +49,40 @@ build_64=0
 clean=0
 rebuild_gyp=0
 target=Debug
+params=$(echo "$* $CC $CCC" | tr " " "\n")
+verbose=0
+
+cwd=$(cd $(dirname $0); pwd -P)
+dist_dir="$cwd/../dist"
+
+cwd=$(cd $(dirname $0); pwd -P)
+dist_dir="$cwd/../dist"
 
 # try to guess sensible defaults
-arch=$(uname -m)
-if [ "$arch" = "x86_64" -o "$arch" = "aarch64" ]; then
+arch=$(python "$cwd/coreconf/detect_host_arch.py")
+if [ "$arch" = "x64" -o "$arch" = "aarch64" ]; then
     build_64=1
 fi
 
 gyp_params=()
 ninja_params=()
 scanbuild=()
-nspr_env=()
+
+enable_fuzz()
+{
+    nspr_sanitizer asan
+    nspr_sanitizer ubsan
+    nspr_sanitizer sancov edge
+    gyp_params+=(-Duse_asan=1)
+    gyp_params+=(-Duse_ubsan=1)
+    gyp_params+=(-Duse_sancov=edge)
+
+    # Adding debug symbols even for opt builds.
+    nspr_opt+=(--enable-debug-symbols)
+
+    # Clone libFuzzer repository.
+    $cwd/fuzz/clone_libfuzzer.sh &>/dev/null
+}
 
 # parse command line arguments
 while [ $# -gt 0 ]; do
@@ -61,13 +90,17 @@ while [ $# -gt 0 ]; do
         -c) clean=1 ;;
         -g) rebuild_gyp=1 ;;
         -j) ninja_params+=(-j "$2"); shift ;;
-        -v) ninja_params+=(-v) ;;
+        -v) ninja_params+=(-v); verbose=1 ;;
         --test) gyp_params+=(-Dtest_build=1) ;;
-        --fuzz) gyp_params+=(-Dtest_build=1 -Dfuzz=1) ;;
+        --fuzz) gyp_params+=(-Dtest_build=1 -Dfuzz=1); enable_fuzz ;;
         --scan-build) scanbuild=(scan-build) ;;
         --scan-build=?*) scanbuild=(scan-build -o "${1#*=}") ;;
-        --opt|-o) opt_build=1; nspr_env+=(BUILD_OPT=1) ;;
+        --opt|-o) opt_build=1 ;;
         -m32|--m32) build_64=0 ;;
+        --asan) gyp_params+=(-Duse_asan=1); nspr_sanitizer asan ;;
+        --ubsan) gyp_params+=(-Duse_ubsan=1); nspr_sanitizer ubsan ;;
+        --sancov) gyp_params+=(-Duse_sancov=edge); nspr_sanitizer sancov edge ;;
+        --sancov=?*) gyp_params+=(-Duse_sancov="${1#*=}"); nspr_sanitizer sancov "${1#*=}" ;;
         *) show_help; exit ;;
     esac
     shift
@@ -75,39 +108,48 @@ done
 
 if [ "$opt_build" = "1" ]; then
     target=Release
+    nspr_opt+=(--disable-debug --enable-optimize)
 else
     target=Debug
 fi
 if [ "$build_64" == "1" ]; then
-    target="${target}_x64"
-    nspr_env+=(USE_64=1)
+    nspr_opt+=(--enable-64bit)
 else
     gyp_params+=(-Dtarget_arch=ia32)
+    nspr_opt+=(--enable-x32)
+fi
+
+# check if we have to rebuild gyp
+if [ "$params" != "$(cat $cwd/out/config 2>/dev/null)" -o "$rebuild_gyp" == 1 -o "$clean" == 1 ]; then
+    rebuild_gyp=1
+    rm -rf "$cwd/../nspr/$target" # force NSPR to rebuild
 fi
 
 # set paths
-cwd=$(cd $(dirname $0); pwd -P)
-dist_dir="$cwd/../dist"
 target_dir="$cwd/out/$target"
 
 # get the realpath of $dist_dir
 dist_dir=$(mkdir -p $dist_dir; cd $dist_dir; pwd -P)
 
-# save the chosen target
-echo $target > $dist_dir/latest
-
 # get object directory
 obj_dir="$dist_dir/$target"
 gyp_params+=(-Dnss_dist_dir=$dist_dir)
 gyp_params+=(-Dnss_dist_obj_dir=$obj_dir)
+gyp_params+=(-Dnspr_lib_dir=$obj_dir/lib)
+gyp_params+=(-Dnspr_include_dir=$obj_dir/include/nspr)
 
 # -c = clean first
 if [ "$clean" = 1 ]; then
     rm -rf "$cwd/out"
     rm -rf "$cwd/../nspr/$target"
+    rm -rf "$dist_dir"
 fi
 
-# figure out the scan-build string
+# save the chosen target
+mkdir -p $dist_dir
+echo $target > $dist_dir/latest
+
+# pass on CC and CCC
 if [ "${#scanbuild[@]}" -gt 0 ]; then
     if [ -n "$CC" ]; then
        scanbuild+=(--use-cc="$CC")
@@ -120,13 +162,16 @@ if [ "${#scanbuild[@]}" -gt 0 ]; then
 # These steps can take a while, so don't overdo them.
 # Force a redo with -g.
 if [ "$rebuild_gyp" = 1 -o ! -d "$target_dir" ]; then
-    # Build NSPR.
-    make "${nspr_env[@]}" -C "$cwd" NSS_GYP_PREFIX=$obj_dir install_nspr
+    build_nspr $verbose
 
     # Run gyp.
-    PKG_CONFIG_PATH="$obj_dir/lib/pkgconfig" \
-        "${scanbuild[@]}" gyp -f ninja "${gyp_params[@]}" --depth="$cwd" \
-          --generator-output="." "$cwd/nss.gyp"
+    [ $verbose = 1 ] && set -v -x
+    "${scanbuild[@]}" gyp -f ninja "${gyp_params[@]}" --depth="$cwd" \
+      --generator-output="." "$cwd/nss.gyp"
+    [ $verbose = 1 ] && set +v +x
+
+    # Store used parameters for next run.
+    echo "$params" > "$cwd/out/config"
 fi
 
 # Run ninja.

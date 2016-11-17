@@ -64,7 +64,7 @@ function setDefaultPrefs() {
 
 function createElementWithAttrs(document, type, attrs) {
   let element = document.createElement(type);
-  Object.keys(attrs).forEach(function (attr) {
+  Object.keys(attrs).forEach(function(attr) {
     element.setAttribute(attr, attrs[attr]);
   })
   return element;

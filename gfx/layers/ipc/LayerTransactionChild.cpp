@@ -72,15 +72,6 @@ void
 LayerTransactionChild::ActorDestroy(ActorDestroyReason why)
 {
   mDestroyed = true;
-#ifdef MOZ_B2G
-  // Due to poor lifetime management of gralloc (and possibly shmems) we will
-  // crash at some point in the future when we get destroyed due to abnormal
-  // shutdown. Its better just to crash here. On desktop though, we have a chance
-  // of recovering.
-  if (why == AbnormalShutdown) {
-    NS_RUNTIMEABORT("ActorDestroy by IPC channel failure at LayerTransactionChild");
-  }
-#endif
 }
 
 } // namespace layers

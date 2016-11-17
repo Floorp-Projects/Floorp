@@ -458,7 +458,7 @@ function nsPlacesExpiration()
 {
   // Smart Getters
 
-  XPCOMUtils.defineLazyGetter(this, "_db", function () {
+  XPCOMUtils.defineLazyGetter(this, "_db", function() {
     let db = Cc["@mozilla.org/browser/nav-history-service;1"].
              getService(Ci.nsPIPlacesDatabase).
              DBConnection;
@@ -907,7 +907,7 @@ nsPlacesExpiration.prototype = {
         this._pagesCount = row.getResultByIndex(0);
         this._statsCount = row.getResultByIndex(1);
       },
-      handleCompletion: function (aReason) {
+      handleCompletion: function(aReason) {
         if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
           aCallback(this._pagesCount, this._statsCount);
         }

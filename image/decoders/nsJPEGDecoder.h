@@ -52,11 +52,6 @@ class nsJPEGDecoder : public Decoder
 public:
   virtual ~nsJPEGDecoder();
 
-  virtual void SetSampleSize(int aSampleSize) override
-  {
-    mSampleSize = aSampleSize;
-  }
-
   void NotifyDone();
 
 protected:
@@ -115,8 +110,6 @@ public:
   const Decoder::DecodeStyle mDecodeStyle;
 
   uint32_t mCMSMode;
-
-  int mSampleSize;
 };
 
 } // namespace image

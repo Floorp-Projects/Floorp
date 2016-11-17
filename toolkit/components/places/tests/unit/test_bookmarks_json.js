@@ -186,7 +186,7 @@ function* checkItem(aExpected, aNode) {
           let deferred = Promise.defer();
           PlacesUtils.favicons.getFaviconDataForPage(
             NetUtil.newURI(aExpected.url),
-            function (aURI, aDataLen, aData, aMimeType) {
+            function(aURI, aDataLen, aData, aMimeType) {
               deferred.resolve(aData);
             });
           let data = yield deferred.promise;

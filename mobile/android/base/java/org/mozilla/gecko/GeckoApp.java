@@ -2156,7 +2156,10 @@ public abstract class GeckoApp
             return;
         }
 
-        lastSelectedTabId = Tabs.getInstance().getSelectedTab().getId();
+        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+        if (selectedTab != null) {
+            lastSelectedTabId = selectedTab.getId();
+        }
         lastActiveGeckoApp = new WeakReference<GeckoApp>(this);
 
         final HealthRecorder rec = mHealthRecorder;

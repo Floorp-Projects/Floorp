@@ -47,7 +47,7 @@ const kURIs = [
 
 var gProgressListener = {
   _runCount: 0,
-  onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+  onStateChange: function(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     if ((aStateFlags & kCompleteState) == kCompleteState) {
       if (++this._runCount != kURIs.length)
         return;
@@ -86,7 +86,7 @@ function finishTest() {
   gBrowser.removeTabsProgressListener(gProgressListener);
 
   // Close opened tabs
-  for (var i = gBrowser.tabs.length-1; i > 0; i--)
+  for (var i = gBrowser.tabs.length - 1; i > 0; i--)
     gBrowser.removeTab(gBrowser.tabs[i]);
 
   finish();

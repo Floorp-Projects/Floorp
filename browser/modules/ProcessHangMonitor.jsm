@@ -95,7 +95,7 @@ var ProcessHangMonitor = {
    * Dismiss the browser notification and invoke an appropriate action based on
    * the hang type.
    */
-  stopIt: function (win) {
+  stopIt: function(win) {
     let report = this.findActiveReport(win.gBrowser.selectedBrowser);
     if (!report) {
       return;

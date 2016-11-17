@@ -1538,7 +1538,9 @@ private:
     nsresult rv2 = target->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
     if (NS_WARN_IF(NS_FAILED(rv2)) || !event->WaitToRespond()) {
       nsCOMPtr<nsIRunnable> runnable;
-      if (event->DefaultPrevented(aCx)) {
+      MOZ_ASSERT(!aWorkerPrivate->UsesSystemPrincipal(),
+                 "We don't support system-principal serviceworkers");
+      if (event->DefaultPrevented(CallerType::NonSystem)) {
         event->ReportCanceled();
       } else if (event->WidgetEventPtr()->mFlags.mExceptionWasRaised) {
         // Exception logged via the WorkerPrivate ErrorReporter

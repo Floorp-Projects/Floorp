@@ -69,11 +69,11 @@ function runTestAudio(aAudio) {
   info("User agent (help diagnose bug #943556): " + navigator.userAgent);
   var isAndroid = navigator.userAgent.includes("Android");
   var expectedHeight = isAndroid ? 103 : 28;
-  var condition = function () {
+  var condition = function() {
     var boundingRect = aAudio.getBoundingClientRect();
     return boundingRect.height == expectedHeight;
   };
-  waitForCondition(condition, function () {
+  waitForCondition(condition, function() {
     var boundingRect = aAudio.getBoundingClientRect();
     is(boundingRect.height, expectedHeight,
        "Height of audio element should be " + expectedHeight + ", which is equal to the controls bar.");
