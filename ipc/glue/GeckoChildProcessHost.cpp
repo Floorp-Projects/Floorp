@@ -733,8 +733,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 #if defined(OS_LINUX) || defined(OS_MACOSX) || defined(OS_BSD)
   base::environment_map newEnvVars;
   ChildPrivileges privs = mPrivileges;
-  if (privs == base::PRIVILEGES_DEFAULT ||
-      privs == base::PRIVILEGES_FILEREAD) {
+  if (privs == base::PRIVILEGES_DEFAULT) {
     privs = DefaultChildPrivileges();
   }
 
@@ -1027,8 +1026,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
         // For now we treat every failure as fatal in SetSecurityLevelForContentProcess
         // and just crash there right away. Should this change in the future then we
         // should also handle the error here.
-        mSandboxBroker.SetSecurityLevelForContentProcess(mSandboxLevel,
-                                                         mPrivileges);
+        mSandboxBroker.SetSecurityLevelForContentProcess(mSandboxLevel);
         shouldSandboxCurrentProcess = true;
         AddContentSandboxAllowedFiles(mSandboxLevel, mAllowedFilesRead);
       }
