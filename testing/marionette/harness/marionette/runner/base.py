@@ -308,12 +308,6 @@ class BaseMarionetteArguments(ArgumentParser):
         self.add_argument('--symbols-path',
                           help='absolute path to directory containing breakpad symbols, or the '
                                'url of a zip file containing symbols')
-        self.add_argument('--timeout',
-                          type=int,
-                          help='if a --timeout value is given, it will set the default page load '
-                               'timeout, search timeout and script timeout to the given value. '
-                               'If not passed in, it will use the default values of 30000ms for '
-                               'page load, 0ms for search timeout and 10000ms for script timeout')
         self.add_argument('--startup-timeout',
                           type=int,
                           default=60,
@@ -508,7 +502,7 @@ class BaseMarionetteTestRunner(object):
                  app=None, app_args=None, binary=None, profile=None,
                  logger=None, logdir=None,
                  repeat=0, testvars=None,
-                 symbols_path=None, timeout=None,
+                 symbols_path=None,
                  shuffle=False, shuffle_seed=random.randint(0, sys.maxint), this_chunk=1,
                  total_chunks=1,
                  server_root=None, gecko_log=None, result_callbacks=None,
@@ -538,7 +532,6 @@ class BaseMarionetteTestRunner(object):
         self.logdir = logdir
         self.repeat = repeat
         self.symbols_path = symbols_path
-        self.timeout = timeout
         self.socket_timeout = socket_timeout
         self.shuffle = shuffle
         self.shuffle_seed = shuffle_seed
@@ -723,7 +716,6 @@ class BaseMarionetteTestRunner(object):
             os.mkdir(self.logdir)
 
         kwargs = {
-            'timeout': self.timeout,
             'socket_timeout': self.socket_timeout,
             'prefs': self.prefs,
             'startup_timeout': self.startup_timeout,
