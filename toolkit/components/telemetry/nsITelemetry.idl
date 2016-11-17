@@ -140,6 +140,47 @@ interface nsITelemetry : nsISupports
   readonly attribute jsval chromeHangs;
 
   /*
+   * Record the current thread's call stack on demand. Note that, the stack is
+   * only captured at the first call. All subsequent calls result in incrementing
+   * the capture counter without doing actual stack unwinding.
+   *
+   * @param aKey - A user defined key associated with the captured stack.
+   *
+   * NOTE: Unwinding call stacks is an expensive operation performance-wise.
+   */
+  void captureStack(in ACString name);
+
+  /*
+   * Returns a snapshot of captured stacks. The data has the following structure:
+   *
+   * {
+   *  "memoryMap": [
+   *      ["wgdi32.pdb", "08A541B5942242BDB4AEABD8C87E4CFF2"],
+   *      ["igd10iumd32.pdb", "D36DEBF2E78149B5BE1856B772F1C3991"],
+   *      ... other entries in the format ["module name", "breakpad identifier"] ...
+   *   ],
+   *   "stacks": [
+   *      [
+   *         [
+   *           0, // the module index or -1 for invalid module indices
+   *           190649 // the offset of this program counter in its module or an absolute pc
+   *         ],
+   *         [1, 2540075],
+   *         ... other frames ...
+   *      ],
+   *      ... other stacks ...
+   *   ],
+   *   "captures": [["string-key", stack-index, count], ... ]
+   * }
+   *
+   * @param clear Whether to clear out the subsession histograms after taking a  snapshot.
+   *
+   * @return A snapshot of captured stacks.
+   */
+  [implicit_jscontext]
+  jsval snapshotCapturedStacks([optional] in boolean clear);
+
+  /*
    * An array of thread hang stats,
    *   [<thread>, <thread>, ...]
    * <thread> represents a single thread,
