@@ -569,6 +569,11 @@ var DebuggerServer = {
       constructor: "EmulationActor",
       type: { tab: true }
     });
+    this.registerModule("devtools/server/actors/webextension-inspected-window", {
+      prefix: "webExtensionInspectedWindow",
+      constructor: "WebExtensionInspectedWindowActor",
+      type: { tab: true }
+    });
   },
 
   /**
