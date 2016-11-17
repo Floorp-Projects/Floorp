@@ -24,8 +24,8 @@
 
 #include "jscntxt.h"
 
-#include "wasm/WasmBinaryFormat.h"
 #include "wasm/WasmBinaryIterator.h"
+#include "wasm/WasmValidate.h"
 
 using namespace js;
 using namespace js::wasm;
