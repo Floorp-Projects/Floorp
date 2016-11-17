@@ -95,7 +95,7 @@ add_task(function* test_webRequest_background_events() {
       }
 
       fetch("https://example.com/example.txt").then(() => {
-        browser.test.succeed("Fetch succeeded.");
+        browser.test.pass("Fetch succeeded.");
       }, () => {
         browser.test.fail("fetch recieved");
         browser.test.sendMessage("done");

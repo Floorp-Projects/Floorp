@@ -18,19 +18,6 @@
 var {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm");
 var {CustomizableUI} = Cu.import("resource:///modules/CustomizableUI.jsm");
 
-// We run tests under two different configurations, from browser.ini and
-// browser-remote.ini. When running from browser-remote.ini, the tests are
-// copied to the sub-directory "test-oop-extensions", which we detect here, and
-// use to select our configuration.
-if (gTestPath.includes("test-oop-extensions")) {
-  add_task(() => {
-    return SpecialPowers.pushPrefEnv({set: [
-      ["dom.ipc.processCount", 1],
-      ["extensions.webextensions.remote", true],
-    ]});
-  });
-}
-
 // Bug 1239884: Our tests occasionally hit a long GC pause at unpredictable
 // times in debug builds, which results in intermittent timeouts. Until we have
 // a better solution, we force a GC after certain strategic tests, which tend to
@@ -145,7 +132,7 @@ function getPanelForNode(node) {
 
 var awaitBrowserLoaded = browser => ContentTask.spawn(browser, null, () => {
   if (content.document.readyState !== "complete") {
-    return ContentTaskUtils.waitForEvent(this, "load", true).then(() => {});
+    return ContentTaskUtils.waitForEvent(content, "load").then(() => {});
   }
 });
 
@@ -157,7 +144,7 @@ var awaitExtensionPanel = Task.async(function* (extension, win = window, awaitLo
   yield Promise.all([
     promisePopupShown(getPanelForNode(browser)),
 
-    awaitLoad && awaitBrowserLoaded(browser, awaitLoad),
+    awaitLoad && awaitBrowserLoaded(browser),
   ]);
 
   return browser;

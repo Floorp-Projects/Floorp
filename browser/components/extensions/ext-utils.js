@@ -123,7 +123,7 @@ class BasePopup {
     this.destroyed = true;
     this.browserLoadedDeferred.reject(new Error("Popup destroyed"));
     return this.browserReady.then(() => {
-      this.destroyBrowser(this.browser, true);
+      this.destroyBrowser(this.browser);
       this.browser.remove();
 
       this.viewNode.removeEventListener(this.DESTROY_EVENT, this);
@@ -141,19 +141,16 @@ class BasePopup {
     });
   }
 
-  destroyBrowser(browser, finalize = false) {
+  destroyBrowser(browser) {
     let mm = browser.messageManager;
     // If the browser has already been removed from the document, because the
-    // popup was closed externally, there will be no message manager here, so
-    // just replace our receiveMessage method with a stub.
+    // popup was closed externally, there will be no message manager here.
     if (mm) {
       mm.removeMessageListener("DOMTitleChanged", this);
       mm.removeMessageListener("Extension:BrowserBackgroundChanged", this);
       mm.removeMessageListener("Extension:BrowserContentLoaded", this);
       mm.removeMessageListener("Extension:BrowserResized", this);
       mm.removeMessageListener("Extension:DOMWindowClose", this);
-    } else if (finalize) {
-      this.receiveMessage = () => {};
     }
   }
 
@@ -228,12 +225,7 @@ class BasePopup {
     this.browser.setAttribute("disableglobalhistory", "true");
     this.browser.setAttribute("transparent", "true");
     this.browser.setAttribute("class", "webextension-popup-browser");
-    this.browser.setAttribute("webextension-view-type", "popup");
     this.browser.setAttribute("tooltip", "aHTMLTooltip");
-
-    if (this.extension.remote) {
-      this.browser.setAttribute("remote", "true");
-    }
 
     // We only need flex sizing for the sake of the slide-in sub-views of the
     // main menu panel, so that the browser occupies the full width of the view,
@@ -245,33 +237,35 @@ class BasePopup {
     // starts out smaller than 30px by 10px. This isn't an issue now, but it
     // will be if and when we popup debugging.
 
-
-    let readyPromise;
-    if (this.extension.remote) {
-      readyPromise = promiseEvent(this.browser, "XULFrameLoaderCreated");
-    } else {
-      readyPromise = promiseEvent(this.browser, "load");
-    }
-
     viewNode.appendChild(this.browser);
 
     extensions.emit("extension-browser-inserted", this.browser);
+    let windowId = WindowManager.getId(this.browser.ownerGlobal);
+    this.browser.messageManager.sendAsyncMessage("Extension:InitExtensionView", {
+      viewType: "popup",
+      windowId,
+    });
+    // TODO(robwu): Rework this to use the Extension:ExtensionViewLoaded message
+    // to detect loads and so on. And definitely move this content logic inside
+    // a file in the child process.
 
-    readyPromise = readyPromise.then(() => {
-      let mm = this.browser.messageManager;
+    let initBrowser = browser => {
+      let mm = browser.messageManager;
       mm.addMessageListener("DOMTitleChanged", this);
       mm.addMessageListener("Extension:BrowserBackgroundChanged", this);
       mm.addMessageListener("Extension:BrowserContentLoaded", this);
       mm.addMessageListener("Extension:BrowserResized", this);
       mm.addMessageListener("Extension:DOMWindowClose", this, true);
-      return this.browser;
-    });
+    };
 
     if (!popupURL) {
-      return readyPromise;
+      initBrowser(this.browser);
+      return this.browser;
     }
 
-    return readyPromise.then(() => {
+    return promiseEvent(this.browser, "load").then(() => {
+      initBrowser(this.browser);
+
       let mm = this.browser.messageManager;
 
       mm.loadFrameScript(
@@ -285,7 +279,7 @@ class BasePopup {
         stylesheets: this.STYLESHEETS,
       });
 
-      this.browser.loadURI(popupURL);
+      this.browser.setAttribute("src", popupURL);
     });
   }
 
@@ -380,8 +374,8 @@ class PanelPopup extends BasePopup {
 
   closePopup() {
     promisePopupShown(this.viewNode).then(() => {
-      // Make sure we're not already destroyed, or removed from the DOM.
-      if (this.viewNode && this.viewNode.hidePopup) {
+      // Make sure we're not already destroyed.
+      if (this.viewNode) {
         this.viewNode.hidePopup();
       }
     });
@@ -470,7 +464,7 @@ class ViewPopup extends BasePopup {
 
       // Create a new browser in the real popup.
       let browser = this.browser;
-      yield this.createBrowser(this.viewNode);
+      this.createBrowser(this.viewNode);
 
       this.browser.swapDocShells(browser);
       this.destroyBrowser(browser);
@@ -507,8 +501,9 @@ class ViewPopup extends BasePopup {
   }
 
   closePopup() {
-    CustomizableUI.hidePanelForNode(this.viewNode);
-    if (!this.attached) {
+    if (this.attached) {
+      CustomizableUI.hidePanelForNode(this.viewNode);
+    } else {
       this.destroy();
     }
   }
@@ -694,46 +689,21 @@ ExtensionTabManager.prototype = {
   },
 };
 
-function getBrowserInfo(browser) {
-  if (!browser.ownerGlobal.gBrowser) {
-    // When we're loaded into a <browser> inside about:addons, we need to go up
-    // one more level.
-    browser = browser.ownerGlobal.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDocShell)
-                     .chromeEventHandler;
-
-    if (!browser) {
-      return {};
-    }
-  }
-
-  let result = {};
-
-  let window = browser.ownerGlobal;
-  if (window.gBrowser) {
-    let tab = window.gBrowser.getTabForBrowser(browser);
-    if (tab) {
-      result.tabId = TabManager.getId(tab);
-    }
-
-    result.windowId = WindowManager.getId(window);
-  }
-
-  return result;
-}
-global.getBrowserInfo = getBrowserInfo;
-
 // Sends the tab and windowId upon request. This is primarily used to support
 // the synchronous `browser.extension.getViews` API.
 let onGetTabAndWindowId = {
   receiveMessage({name, target, sync}) {
-    let result = getBrowserInfo(target);
-
-    if (result.tabId) {
+    let {gBrowser} = target.ownerGlobal;
+    let tab = gBrowser && gBrowser.getTabForBrowser(target);
+    if (tab) {
+      let reply = {
+        tabId: TabManager.getId(tab),
+        windowId: WindowManager.getId(tab.ownerGlobal),
+      };
       if (sync) {
-        return result;
+        return reply;
       }
-      target.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", result);
+      target.messageManager.sendAsyncMessage("Extension:SetTabAndWindowId", reply);
     }
   },
 };
