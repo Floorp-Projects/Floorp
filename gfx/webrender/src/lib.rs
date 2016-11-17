@@ -60,6 +60,7 @@ mod geometry;
 mod gpu_store;
 mod internal_types;
 mod layer;
+mod mask_cache;
 mod prim_store;
 mod profiler;
 mod record;
@@ -75,15 +76,21 @@ pub mod bindings;
 mod platform {
     #[cfg(target_os="macos")]
     pub use platform::macos::font;
-    #[cfg(any(target_os = "android", target_os = "windows", all(unix, not(target_os = "macos"))))]
+    #[cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))]
     pub use platform::unix::font;
+    #[cfg(target_os = "windows")]
+    pub use platform::windows::font;
 
     #[cfg(target_os="macos")]
     pub mod macos {
         pub mod font;
     }
-    #[cfg(any(target_os = "android", target_os = "windows", all(unix, not(target_os = "macos"))))]
+    #[cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))]
     pub mod unix {
+        pub mod font;
+    }
+    #[cfg(target_os = "windows")]
+    pub mod windows {
         pub mod font;
     }
 }
@@ -94,6 +101,13 @@ pub mod renderer;
 extern crate core_graphics;
 #[cfg(target_os="macos")]
 extern crate core_text;
+
+#[cfg(all(unix, not(target_os="macos")))]
+extern crate freetype;
+
+#[cfg(target_os = "windows")]
+extern crate dwrote;
+
 #[cfg(target_os="macos")]
 extern crate core_foundation;
 #[cfg(not(target_os="macos"))]

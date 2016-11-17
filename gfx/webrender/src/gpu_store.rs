@@ -5,7 +5,7 @@
 use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use std::mem;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
 pub struct GpuStoreAddress(pub i32);
 
 /// A CPU-side buffer storing content to be uploaded to the GPU.

@@ -19,7 +19,6 @@ use std::cell::Cell;
 use std::ffi::CString;
 use std::fmt::{self, Debug, Formatter};
 use std::io::{Error, ErrorKind};
-use std::marker::PhantomData;
 use std::mem;
 use std::ops::Deref;
 use std::ptr;
@@ -307,11 +306,6 @@ impl OsIpcReceiver {
 #[derive(PartialEq, Debug)]
 pub struct OsIpcSender {
     port: mach_port_t,
-    // Make sure this is `!Sync`, to match `mpsc::Sender`; and to discourage sharing references.
-    //
-    // (Rather, senders should just be cloned, as they are shared internally anyway --
-    // another layer of sharing only adds unnecessary overhead...)
-    nosync_marker: PhantomData<Cell<()>>,
 }
 
 impl Drop for OsIpcSender {
@@ -340,7 +334,6 @@ impl Clone for OsIpcSender {
         }
         OsIpcSender {
             port: self.port,
-            nosync_marker: PhantomData,
         }
     }
 }
@@ -349,7 +342,6 @@ impl OsIpcSender {
     fn from_name(port: mach_port_t) -> OsIpcSender {
         OsIpcSender {
             port: port,
-            nosync_marker: PhantomData,
         }
     }
 
@@ -488,7 +480,6 @@ impl OsOpaqueIpcChannel {
     pub fn to_sender(&mut self) -> OsIpcSender {
         OsIpcSender {
             port: mem::replace(&mut self.port, MACH_PORT_NULL),
-            nosync_marker: PhantomData,
         }
     }
 
@@ -529,7 +520,12 @@ impl OsIpcReceiverSet {
     }
 
     pub fn select(&mut self) -> Result<Vec<OsIpcSelectionResult>,MachError> {
-        select(self.port.get(), BlockingMode::Blocking).map(|result| vec![result])
+        match select(self.port.get(), BlockingMode::Blocking).map(|result| vec![result]) {
+            Ok(results) => Ok(results),
+            Err(error) => {
+                Err(error)
+            }
+        }
     }
 }
 
@@ -577,29 +573,33 @@ fn select(port: mach_port_t, blocking_mode: BlockingMode)
                                  timeout,
                                  MACH_PORT_NULL) {
             MACH_RCV_TOO_LARGE => {
-                // the actual size gets written into msgh_size by the kernel
-                let max_trailer_size = mem::size_of::<mach_sys::mach_msg_max_trailer_t>() as mach_sys::mach_msg_size_t;
-                let actual_size = (*message).header.msgh_size + max_trailer_size;
-                allocated_buffer = Some(libc::malloc(actual_size as size_t));
-                setup_receive_buffer(slice::from_raw_parts_mut(
-                                        allocated_buffer.unwrap() as *mut u8,
-                                        actual_size as usize),
-                                     port);
-                message = allocated_buffer.unwrap() as *mut Message;
-                match mach_sys::mach_msg(message as *mut _,
-                                         flags,
-                                         0,
-                                         actual_size,
-                                         port,
-                                         timeout,
-                                         MACH_PORT_NULL) {
-                    MACH_MSG_SUCCESS => {},
-                    MACH_RCV_TOO_LARGE => {
-                        panic!("message was bigger than we were told");
-                    }
-                    os_result => {
-                        libc::free(allocated_buffer.unwrap() as *mut _);
-                        return Err(MachError(os_result))
+                // Do a loop. There's no way I know of to figure out precisely in advance how big
+                // the message actually is!
+                let mut extra_size = 8;
+                loop {
+                    let actual_size = (*message).header.msgh_size + extra_size;
+                    allocated_buffer = Some(libc::malloc(actual_size as size_t));
+                    setup_receive_buffer(slice::from_raw_parts_mut(
+                                            allocated_buffer.unwrap() as *mut u8,
+                                            actual_size as usize),
+                                         port);
+                    message = allocated_buffer.unwrap() as *mut Message;
+                    match mach_sys::mach_msg(message as *mut _,
+                                             flags,
+                                             0,
+                                             actual_size,
+                                             port,
+                                             timeout,
+                                             MACH_PORT_NULL) {
+                        MACH_MSG_SUCCESS => break,
+                        MACH_RCV_TOO_LARGE => {
+                            libc::free(allocated_buffer.unwrap() as *mut _);
+                            extra_size *= 2;
+                        }
+                        os_result => {
+                            libc::free(allocated_buffer.unwrap() as *mut _);
+                            return Err(MachError(os_result))
+                        }
                     }
                 }
             }
@@ -651,7 +651,7 @@ fn select(port: mach_port_t, blocking_mode: BlockingMode)
 }
 
 pub struct OsIpcOneShotServer {
-    receiver: OsIpcReceiver,
+    receiver: Option<OsIpcReceiver>,
     name: String,
 }
 
@@ -666,17 +666,21 @@ impl OsIpcOneShotServer {
         let receiver = try!(OsIpcReceiver::new());
         let name = try!(receiver.register_bootstrap_name());
         Ok((OsIpcOneShotServer {
-            receiver: receiver,
+            receiver: Some(receiver),
             name: name.clone(),
         }, name))
     }
 
-    pub fn accept(self) -> Result<(OsIpcReceiver,
-                                   Vec<u8>,
-                                   Vec<OsOpaqueIpcChannel>,
-                                   Vec<OsIpcSharedMemory>),MachError> {
-        let (bytes, channels, shared_memory_regions) = try!(self.receiver.recv());
-        Ok((self.receiver.consume(), bytes, channels, shared_memory_regions))
+    pub fn accept(mut self) -> Result<(OsIpcReceiver,
+                                       Vec<u8>,
+                                       Vec<OsOpaqueIpcChannel>,
+                                       Vec<OsIpcSharedMemory>),MachError> {
+        let (bytes, channels, shared_memory_regions) =
+            try!(self.receiver.as_mut().unwrap().recv());
+        Ok((mem::replace(&mut self.receiver, None).unwrap(),
+            bytes,
+            channels,
+            shared_memory_regions))
     }
 }
 

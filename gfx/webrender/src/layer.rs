@@ -7,6 +7,7 @@ use spring::{DAMPING, STIFFNESS, Spring};
 use webrender_traits::{PipelineId, ScrollLayerId};
 
 /// Contains scroll and transform information for scrollable and root stacking contexts.
+#[derive(Clone)]
 pub struct Layer {
     /// Manages scrolling offset, overscroll state etc.
     pub scrolling: ScrollingState,

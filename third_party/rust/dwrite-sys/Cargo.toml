@@ -1,0 +1,17 @@
+[package]
+name = "dwrite-sys"
+version = "0.2.0"
+authors = ["Peter Atashian <retep998@gmail.com>"]
+description = "Contains function definitions for the Windows API library dwrite. See winapi for types and constants."
+documentation = "https://retep998.github.io/doc/dwrite/"
+repository = "https://github.com/retep998/winapi-rs"
+readme = "README.md"
+keywords = ["windows", "ffi", "win32", "directx"]
+license = "MIT"
+build = "build.rs"
+[lib]
+name = "dwrite"
+[dependencies]
+winapi = { version = "0.2.5", path = "../.." }
+[build-dependencies]
+winapi-build = { version = "0.1.1", path = "../../build" }

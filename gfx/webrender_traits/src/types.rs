@@ -13,6 +13,7 @@ use ipc_channel::ipc::{IpcBytesSender, IpcSender};
 use offscreen_gl_context::{GLContextAttributes, GLLimits};
 
 #[cfg(target_os = "macos")] use core_graphics::font::CGFont;
+#[cfg(target_os = "windows")] use dwrote::FontDescriptor;
 
 #[derive(Debug, Copy, Clone)]
 pub enum RendererKind {
@@ -33,22 +34,18 @@ pub enum ApiMsg {
     /// Drops an image from the resource cache.
     DeleteImage(ImageKey),
     CloneApi(IpcSender<IdNamespace>),
+    // Flushes all messages
+    Flush,
     /// Supplies a new frame to WebRender.
     ///
-    /// The first `StackingContextId` describes the root stacking context. The actual stacking
-    /// contexts are supplied as the sixth parameter, while the display lists that make up those
-    /// stacking contexts are supplied as the seventh parameter.
-    ///
-    /// After receiving this message, WebRender will read the display lists, followed by the
+    /// After receiving this message, WebRender will read the display list, followed by the
     /// auxiliary lists, from the payload channel.
-    SetRootStackingContext(StackingContextId,
-                           ColorF,
-                           Epoch,
-                           PipelineId,
-                           Size2D<f32>,
-                           Vec<(StackingContextId, StackingContext)>,
-                           Vec<(DisplayListId, BuiltDisplayListDescriptor)>,
-                           AuxiliaryListsDescriptor),
+    SetRootDisplayList(ColorF,
+                       Epoch,
+                       PipelineId,
+                       Size2D<f32>,
+                       BuiltDisplayListDescriptor,
+                       AuxiliaryListsDescriptor),
     SetRootPipeline(PipelineId),
     Scroll(Point2D<f32>, Point2D<f32>, ScrollEventPhase),
     TickScrollingBounce,
@@ -210,23 +207,10 @@ pub struct DisplayItem {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct DisplayListId(pub u32, pub u32);
-
-#[derive(Clone, Copy, Deserialize, Serialize)]
-pub struct DisplayListItem {
-    pub specific: SpecificDisplayListItem,
-}
-
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum DisplayListMode {
     Default,
     PseudoFloat,
     PseudoPositionedContent,
-}
-
-#[derive(Clone, Copy, Deserialize, Serialize)]
-pub struct DrawListInfo {
-    pub items: ItemRange,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
@@ -302,15 +286,19 @@ pub struct GradientStop {
 }
 known_heap_size!(0, GradientStop);
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct IdNamespace(pub u32);
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct PushStackingContextDisplayItem {
+    pub stacking_context: StackingContext,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct IframeDisplayItem {
+    pub pipeline_id: PipelineId,
+}
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct IframeInfo {
-    pub id: PipelineId,
-    pub bounds: Rect<f32>,
-    pub clip: ClipRegion,
-}
+pub struct IdNamespace(pub u32);
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ImageDisplayItem {
@@ -339,7 +327,7 @@ pub enum ImageRendering {
     Pixelated,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct ItemRange {
     pub start: usize,
     pub length: usize,
@@ -369,9 +357,12 @@ pub enum MixBlendMode {
 pub type NativeFontHandle = CGFont;
 
 /// Native fonts are not used on Linux; all fonts are raw.
-#[cfg(not(target_os = "macos"))]
-#[cfg_attr(not(target_os = "macos"), derive(Clone, Serialize, Deserialize))]
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[cfg_attr(not(any(target_os = "macos", target_os = "windows")), derive(Clone, Serialize, Deserialize))]
 pub struct NativeFontHandle;
+
+#[cfg(target_os = "windows")]
+pub type NativeFontHandle = FontDescriptor;
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct PipelineId(pub u32, pub u32);
@@ -391,6 +382,10 @@ pub trait RenderNotifier: Send {
     fn new_frame_ready(&mut self);
     fn new_scroll_frame_ready(&mut self, composite_needed: bool);
     fn pipeline_size_changed(&mut self, pipeline_id: PipelineId, size: Option<Size2D<f32>>);
+}
+
+pub trait FlushNotifier: Send {
+    fn all_messages_flushed(&mut self);
 }
 
 // Trait to allow dispatching functions to a specific thread or event loop.
@@ -449,36 +444,22 @@ pub enum SpecificDisplayItem {
     Border(BorderDisplayItem),
     BoxShadow(BoxShadowDisplayItem),
     Gradient(GradientDisplayItem),
+    Iframe(IframeDisplayItem),
+    PushStackingContext(PushStackingContextDisplayItem),
+    PopStackingContext,
 }
 
-#[derive(Clone, Copy, Deserialize, Serialize)]
-pub enum SpecificDisplayListItem {
-    DrawList(DrawListInfo),
-    StackingContext(StackingContextInfo),
-    Iframe(IframeInfo),
-}
-
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct StackingContext {
     pub scroll_layer_id: Option<ScrollLayerId>,
     pub scroll_policy: ScrollPolicy,
     pub bounds: Rect<f32>,
     pub overflow: Rect<f32>,
     pub z_index: i32,
-    pub display_lists: Vec<DisplayListId>,
     pub transform: Matrix4D<f32>,
     pub perspective: Matrix4D<f32>,
-    pub establishes_3d_context: bool,
     pub mix_blend_mode: MixBlendMode,
     pub filters: ItemRange,
-}
-
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct StackingContextId(pub u32, pub u32);
-
-#[derive(Clone, Copy, Deserialize, Serialize)]
-pub struct StackingContextInfo {
-    pub id: StackingContextId,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]

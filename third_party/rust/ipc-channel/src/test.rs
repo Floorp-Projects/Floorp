@@ -7,25 +7,19 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use ipc::{self, IpcReceiver, IpcReceiverSet, IpcSender, IpcSharedMemory};
+use ipc::{self, IpcOneShotServer, IpcReceiver, IpcReceiverSet, IpcSender, IpcSharedMemory};
 use ipc::{OpaqueIpcSender};
 use router::ROUTER;
 use libc;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::cell::RefCell;
+use std::io::Error;
 use std::iter;
 use std::ptr;
 use std::sync::Arc;
 use std::sync::mpsc::{self, Sender};
 use std::thread;
 
-#[cfg(not(any(feature = "force-inprocess", target_os = "windows", target_os = "android")))]
-use ipc::IpcOneShotServer;
-
-#[cfg(not(any(feature = "force-inprocess", target_os = "windows", target_os = "android")))]
-use std::io::Error;
-
-#[cfg(not(any(feature = "force-inprocess", target_os = "windows", target_os = "android")))]
+///XXXjdm Windows' libc doesn't include fork.
+#[cfg(not(windows))]
 // I'm not actually sure invoking this is indeed unsafe -- but better safe than sorry...
 pub unsafe fn fork<F: FnOnce()>(child_func: F) -> libc::pid_t {
     match libc::fork() {
@@ -135,8 +129,9 @@ fn select() {
     }
 }
 
-#[cfg(not(any(feature = "force-inprocess", target_os = "windows", target_os = "android")))]
 #[test]
+///XXXjdm Windows' libc doesn't include fork.
+#[cfg(not(windows))]
 fn cross_process_embedded_senders() {
     let person = ("Patrick Walton".to_owned(), 29);
     let (server0, server0_name) = IpcOneShotServer::new().unwrap();
@@ -388,41 +383,4 @@ fn test_so_linger() {
         Err(e) => { panic!("err: `{}`", e); }
     };
     assert_eq!(val, 42);
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct HasWeirdSerializer (Option<String>);
-
-thread_local! { static WEIRD_CHANNEL: RefCell<Option<IpcSender<HasWeirdSerializer>>> = RefCell::new(None) }
-
-impl Serialize for HasWeirdSerializer {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
-        where S: Serializer
-    {
-        if self.0.is_some() {
-            WEIRD_CHANNEL.with(|chan| { chan.borrow().as_ref().unwrap().send(HasWeirdSerializer(None)).unwrap(); });
-        }
-        self.0.serialize(serializer)
-    }
-}
-
-impl Deserialize for HasWeirdSerializer {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
-        where D: Deserializer
-    {
-        Ok(HasWeirdSerializer(try!(Deserialize::deserialize(deserializer))))
-    }
-}
-
-#[test]
-fn test_reentrant() {
-    let null = HasWeirdSerializer(None);
-    let hello = HasWeirdSerializer(Some(String::from("hello")));
-    let (sender, receiver) = ipc::channel().unwrap();
-    WEIRD_CHANNEL.with(|chan| { *chan.borrow_mut() = Some(sender.clone()); });
-    sender.send(hello.clone()).unwrap();
-    assert_eq!(null, receiver.recv().unwrap());
-    assert_eq!(hello, receiver.recv().unwrap());
-    sender.send(null.clone()).unwrap();
-    assert_eq!(null, receiver.recv().unwrap());
 }
