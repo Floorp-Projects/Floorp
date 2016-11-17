@@ -21,9 +21,9 @@
       this.containerNode = getNode("outerDiv");
 
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, getNode("child")),
         new invokerChecker(EVENT_HIDE, getNode("childDoc")),
         new invokerChecker(EVENT_SHOW, "newChildDoc"),
+        new invokerChecker(EVENT_HIDE, getNode("child")),
         new invokerChecker(EVENT_REORDER, this.containerNode)
       ];
 
@@ -47,7 +47,7 @@
     }
 
     //enableLogging("tree");
-    gA11yEventDumpToConsole = true;
+    //gA11yEventDumpToConsole = true;
     var gQueue = null;
     function doTest()
     {

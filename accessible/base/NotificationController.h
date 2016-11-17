@@ -160,17 +160,6 @@ public:
 #endif
 
   /**
-   * Queue a mutation event to emit if not coalesced away.  Returns true if the
-   * event was queued and has not yet been coalesced.
-   */
-  bool QueueMutationEvent(AccTreeMutationEvent* aEvent);
-
-  /**
-   * Coalesce all queued mutation events.
-   */
-  void CoalesceMutationEvents();
-
-  /**
    * Schedule binding the child document to the tree of this document.
    */
   void ScheduleChildDocBinding(DocAccessible* aDocument);
@@ -303,16 +292,6 @@ private:
 
 private:
   /**
-   * get rid of a mutation event that is no longer necessary.
-   */
-  void DropMutationEvent(AccTreeMutationEvent* aEvent);
-
-  /**
-   * Fire all necessary mutation events.
-   */
-  void ProcessMutationEvents();
-
-  /**
    * Indicates whether we're waiting on an event queue processing from our
    * notification controller to flush events.
    */
@@ -397,40 +376,6 @@ private:
 
   friend class MoveGuard;
   friend class EventTree;
-
-  /**
-   * A list of all mutation events we may want to emit.  Ordered from the first
-   * event that should be emitted to the last one to emit.
-   */
-  RefPtr<AccTreeMutationEvent> mFirstMutationEvent;
-  RefPtr<AccTreeMutationEvent> mLastMutationEvent;
-
-  /**
-   * A class to map an accessible and event type to an event.
-   */
-  class EventMap
-  {
-  public:
-    enum EventType
-    {
-      ShowEvent = 0x0,
-      HideEvent = 0x1,
-      ReorderEvent = 0x2,
-    };
-
-    void PutEvent(AccTreeMutationEvent* aEvent);
-    AccTreeMutationEvent* GetEvent(Accessible* aTarget, EventType aType);
-    void RemoveEvent(AccTreeMutationEvent* aEvent);
-    void Clear() { mTable.Clear(); }
-
-  private:
-    EventType GetEventType(AccTreeMutationEvent* aEvent);
-
-    nsRefPtrHashtable<nsUint64HashKey, AccTreeMutationEvent> mTable;
-  };
-
-  EventMap mMutationMap;
-  uint32_t mEventGeneration;
 };
 
 } // namespace a11y

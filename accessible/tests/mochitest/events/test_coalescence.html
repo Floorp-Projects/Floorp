@@ -419,8 +419,8 @@
       this.lb = getAccessible("t5_lb");
 
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, this.b),
         new invokerChecker(EVENT_HIDE, this.o),
+        new invokerChecker(EVENT_HIDE, this.b),
         new invokerChecker(EVENT_REORDER, "t5"),
         new unexpectedInvokerChecker(EVENT_HIDE, this.ofc),
         new unexpectedInvokerChecker(EVENT_REORDER, this.o),
@@ -539,8 +539,8 @@
         new invokerChecker(EVENT_HIDE, getNode('t8_c1_child')),
         new invokerChecker(EVENT_HIDE, 't8_c2_moved'),
         new invokerChecker(EVENT_SHOW, 't8_c2_moved'),
-        new invokerChecker(EVENT_REORDER, 't8_c2'),
         new invokerChecker(EVENT_REORDER, 't8_c1'),
+        new invokerChecker(EVENT_REORDER, 't8_c2')
       ];
 
       this.invoke = function test8_invoke()
@@ -578,13 +578,13 @@
     {
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getNode('t9_c1_child')),
-        new invokerChecker(EVENT_HIDE, getNode('t9_c2_child')),
         new invokerChecker(EVENT_HIDE, 't9_c3_moved'),
         new invokerChecker(EVENT_HIDE, 't9_c2_moved'),
         new invokerChecker(EVENT_SHOW, 't9_c2_moved'),
-        new invokerChecker(EVENT_REORDER, 't9_c3'),
-        new invokerChecker(EVENT_REORDER, 't9_c2'),
         new invokerChecker(EVENT_REORDER, 't9_c1'),
+        new invokerChecker(EVENT_HIDE, getNode('t9_c2_child')),
+        new invokerChecker(EVENT_REORDER, 't9_c2'),
+        new invokerChecker(EVENT_REORDER, 't9_c3'),
         new unexpectedInvokerChecker(EVENT_SHOW, 't9_c3_moved')
       ];
 
@@ -624,12 +624,12 @@
     {
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getNode('t10_c1_child')),
-        new invokerChecker(EVENT_HIDE, getNode('t10_c2_child')),
         new invokerChecker(EVENT_HIDE, getNode('t10_c2_moved')),
         new invokerChecker(EVENT_HIDE, getNode('t10_c3_moved')),
         new invokerChecker(EVENT_SHOW, getNode('t10_c2_moved')),
-        new invokerChecker(EVENT_REORDER, 't10_c2'),
         new invokerChecker(EVENT_REORDER, 't10_c1'),
+        new invokerChecker(EVENT_HIDE, getNode('t10_c2_child')),
+        new invokerChecker(EVENT_REORDER, 't10_c2'),
         new invokerChecker(EVENT_REORDER, 't10_c3')
       ];
 
@@ -659,11 +659,9 @@
     {
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, getNode('t11_c1_child')),
+        new invokerChecker(EVENT_SHOW, 't11_c2_child'),
         new invokerChecker(EVENT_HIDE, getNode('t11_c2')),
-        new orderChecker(),
-        new asyncInvokerChecker(EVENT_SHOW, 't11_c2_child'),
-        new asyncInvokerChecker(EVENT_SHOW, 't11_c2'),
-        new orderChecker(),
+        new invokerChecker(EVENT_SHOW, 't11_c2'),
         new invokerChecker(EVENT_REORDER, 't11'),
         new unexpectedInvokerChecker(EVENT_HIDE, 't11_c2_child'),
         new unexpectedInvokerChecker(EVENT_REORDER, 't11_c1'),
@@ -691,7 +689,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Do tests.
 
-    gA11yEventDumpToConsole = true; // debug stuff
+    //gA11yEventDumpToConsole = true; // debug stuff
     //enableLogging("eventTree");
 
     var gQueue = null;
