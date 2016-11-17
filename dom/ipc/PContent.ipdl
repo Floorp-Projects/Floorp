@@ -486,6 +486,7 @@ child:
 
     async SetOffline(bool offline);
     async SetConnectivity(bool connectivity);
+    async SetCaptivePortalState(int32_t aState);
 
     async NotifyVisited(URIParams uri);
 
@@ -692,7 +693,8 @@ parent:
     sync GetProcessAttributes()
         returns (ContentParentId cpId, bool isForBrowser);
     sync GetXPCOMProcessAttributes()
-        returns (bool isOffline, bool isConnected, bool isLangRTL,
+        returns (bool isOffline, bool isConnected, int32_t captivePortalState,
+                 bool isLangRTL,
                  bool haveBidiKeyboards, nsString[] dictionaries,
                  ClipboardCapabilities clipboardCaps,
                  DomainPolicyClone domainPolicy,
