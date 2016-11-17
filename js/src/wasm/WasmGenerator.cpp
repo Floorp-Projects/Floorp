@@ -24,6 +24,7 @@
 #include <algorithm>
 
 #include "wasm/WasmBaselineCompile.h"
+#include "wasm/WasmCompile.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmStubs.h"
 
@@ -99,7 +100,7 @@ ModuleGenerator::~ModuleGenerator()
 }
 
 bool
-ModuleGenerator::init(UniqueModuleGeneratorData shared, const CompileArgs& args,
+ModuleGenerator::init(UniqueModuleEnvironment shared, const CompileArgs& args,
                       Metadata* maybeAsmJSMetadata)
 {
     shared_ = Move(shared);
@@ -133,7 +134,7 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, const CompileArgs& args,
     if (!assumptions_.clone(args.assumptions))
         return false;
 
-    // For asm.js, the Vectors in ModuleGeneratorData are max-sized reservations
+    // For asm.js, the Vectors in ModuleEnvironment are max-sized reservations
     // and will be initialized in a linear order via init* functions as the
     // module is generated. For wasm, the Vectors are correctly-sized and
     // already initialized.
@@ -1130,7 +1131,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     metadata_->memoryPatches = masm_.extractMemoryPatches();
     metadata_->boundsChecks = masm_.extractBoundsChecks();
 
-    // Copy over data from the ModuleGeneratorData.
+    // Copy over data from the ModuleEnvironment.
     metadata_->memoryUsage = shared_->memoryUsage;
     metadata_->minMemoryLength = shared_->minMemoryLength;
     metadata_->maxMemoryLength = shared_->maxMemoryLength;

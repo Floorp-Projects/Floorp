@@ -37,6 +37,7 @@
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
 #include "wasm/WasmBinaryFormat.h"
+#include "wasm/WasmCompile.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmJS.h"
@@ -1841,20 +1842,20 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!args.initFromContext(cx_, Move(scriptedCaller)))
             return false;
 
-        auto genData = MakeUnique<ModuleGeneratorData>(ModuleKind::AsmJS);
-        if (!genData ||
-            !genData->sigs.resize(MaxSigs) ||
-            !genData->funcSigs.resize(MaxFuncs) ||
-            !genData->funcImportGlobalDataOffsets.resize(AsmJSMaxImports) ||
-            !genData->tables.resize(MaxTables) ||
-            !genData->asmJSSigToTableIndex.resize(MaxSigs))
+        auto env = MakeUnique<ModuleEnvironment>(ModuleKind::AsmJS);
+        if (!env ||
+            !env->sigs.resize(MaxSigs) ||
+            !env->funcSigs.resize(MaxFuncs) ||
+            !env->funcImportGlobalDataOffsets.resize(AsmJSMaxImports) ||
+            !env->tables.resize(MaxTables) ||
+            !env->asmJSSigToTableIndex.resize(MaxSigs))
         {
             return false;
         }
 
-        genData->minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
+        env->minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
 
-        if (!mg_.init(Move(genData), args, asmJSMetadata_.get()))
+        if (!mg_.init(Move(env), args, asmJSMetadata_.get()))
             return false;
 
         return true;
