@@ -82,7 +82,7 @@ function* testInArea(area) {
           () => {
             browser.test.log(`Set popup to "c" and click browser action. Expect popup "c".`);
             browser.browserAction.setPopup({popup: "popup-c.html"});
-            sendClick({expectEvent: false, expectPopup: "c", closePopup: false});
+            sendClick({expectEvent: false, expectPopup: "c", waitUntilClosed: true});
           },
           () => {
             browser.test.log(`Set popup to "b" and click browser action. Expect popup "b".`);
@@ -120,7 +120,7 @@ function* testInArea(area) {
         let expect = {};
         sendClick = ({expectEvent, expectPopup, runNextTest, waitUntilClosed, closePopup}, message = "send-click") => {
           if (closePopup == undefined) {
-            closePopup = true;
+            closePopup = !expectEvent;
           }
 
           expect = {event: expectEvent, popup: expectPopup, runNextTest, waitUntilClosed, closePopup};
@@ -190,8 +190,11 @@ function* testInArea(area) {
       CustomizableUI.addWidgetToArea(widget.id, area);
     }
     if (expecting.waitUntilClosed) {
+      yield new Promise(resolve => setTimeout(resolve, 0));
+
       let panel = getBrowserActionPopup(extension);
       if (panel && panel.state != "closed") {
+        info("Popup is open. Waiting for close");
         yield promisePopupHidden(panel);
       }
     } else if (expecting.closePopupUsingWindow) {
@@ -204,9 +207,16 @@ function* testInArea(area) {
       yield promisePopupHidden(panel);
       ok(true, "Panel is closed");
     } else if (expecting.closePopup) {
+      if (!getBrowserActionPopup(extension)) {
+        info("Waiting for panel");
+        yield awaitExtensionPanel(extension);
+      }
+
+      info("Closing for panel");
       yield closeBrowserAction(extension);
     }
 
+    info("Starting next test");
     extension.sendMessage("next-test");
   }));
 

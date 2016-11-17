@@ -82,6 +82,10 @@ function* testExecuteBrowserActionWithOptions(options = {}) {
 
   if (options.withPopup) {
     yield extension.awaitFinish("execute-browser-action-popup-opened");
+
+    if (!getBrowserActionPopup(extension)) {
+      yield awaitExtensionPanel(extension);
+    }
     yield closeBrowserAction(extension);
   } else {
     yield extension.awaitFinish("execute-browser-action-on-clicked-fired");
