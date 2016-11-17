@@ -205,9 +205,6 @@ NeckoParent::GetValidatedOriginAttributes(const SerializedLoadContext& aSerializ
   // that time we probably don't have any valid tabcontext, but still, we want
   // to support http channel requests coming from that ServiceWorker.
   if (aRequestingPrincipal) {
-    MOZ_ASSERT(BasePrincipal::Cast(aRequestingPrincipal)->OriginAttributesRef() ==
-                 aSerialized.mOriginAttributes);
-
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (swm &&
         swm->MayHaveActiveServiceWorkerInstance(static_cast<ContentParent*>(aContent),
