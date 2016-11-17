@@ -127,7 +127,7 @@ body > div > div {width: 1000px;height: 1000px;}\
                                            gBrowser.selectedBrowser);
 
     if (prefsChanged) {
-      yield SpecialPowers.popPrefEnv();
+      yield new Promise(resolve => SpecialPowers.popPrefEnv(resolve));
     }
 
     // Start checking for the scroll.
