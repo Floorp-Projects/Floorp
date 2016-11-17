@@ -96,7 +96,7 @@ public:
 
 private:
   virtual ~AltSvcMapping() {};
-  void     SyncString(nsCString val);
+  void     SyncString(const nsCString& val);
   RefPtr<DataStorage> mStorage;
   int32_t             mStorageEpoch;
   void Serialize (nsCString &out);

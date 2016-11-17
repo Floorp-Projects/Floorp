@@ -529,7 +529,8 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 
 /* Overlay a badge on top of the icon of additional open search providers
    in the search panel. */
-.addengine-item > .button-box > .button-icon {
+.addengine-item > .button-box > .button-icon,
+.addengine-item[type="menu"] > .button-box > .box-inherit > .button-icon {
   -moz-binding: url("chrome://browser/content/search/search.xml#addengine-icon");
   display: -moz-stack;
 }

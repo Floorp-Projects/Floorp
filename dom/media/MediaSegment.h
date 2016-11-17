@@ -139,7 +139,7 @@ public:
    * Called by the MediaStreamGraph as it appends a chunk with a different
    * principal id than the current one.
    */
-  void SetLastPrincipalHandle(PrincipalHandle aLastPrincipalHandle)
+  void SetLastPrincipalHandle(const PrincipalHandle& aLastPrincipalHandle)
   {
     mLastPrincipalHandle = aLastPrincipalHandle;
   }
