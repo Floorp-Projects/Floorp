@@ -571,7 +571,8 @@ size_t
 Import::serializedSize() const
 {
     return module.serializedSize() +
-           field.serializedSize();
+           field.serializedSize() +
+           sizeof(kind);
 }
 
 uint8_t*
@@ -579,6 +580,7 @@ Import::serialize(uint8_t* cursor) const
 {
     cursor = module.serialize(cursor);
     cursor = field.serialize(cursor);
+    cursor = WriteScalar<DefinitionKind>(cursor, kind);
     return cursor;
 }
 
@@ -586,7 +588,8 @@ const uint8_t*
 Import::deserialize(const uint8_t* cursor)
 {
     (cursor = module.deserialize(cursor)) &&
-    (cursor = field.deserialize(cursor));
+    (cursor = field.deserialize(cursor)) &&
+    (cursor = ReadScalar<DefinitionKind>(cursor, &kind));
     return cursor;
 }
 
