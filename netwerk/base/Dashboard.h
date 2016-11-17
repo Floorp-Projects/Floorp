@@ -69,7 +69,7 @@ private:
         WebSocketData():lock("Dashboard.webSocketData")
         {
         }
-        uint32_t IndexOf(nsCString hostname, uint32_t mSerial)
+        uint32_t IndexOf(const nsCString& hostname, uint32_t mSerial)
         {
             LogData temp(hostname, mSerial, false);
             return data.IndexOf(temp);

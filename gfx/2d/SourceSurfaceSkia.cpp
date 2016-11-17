@@ -59,7 +59,7 @@ SourceSurfaceSkia::InitFromData(unsigned char* aData,
 }
 
 bool
-SourceSurfaceSkia::InitFromImage(sk_sp<SkImage> aImage,
+SourceSurfaceSkia::InitFromImage(const sk_sp<SkImage>& aImage,
                                  SurfaceFormat aFormat,
                                  DrawTargetSkia* aOwner)
 {

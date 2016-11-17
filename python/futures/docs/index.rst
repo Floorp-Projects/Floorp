@@ -112,7 +112,7 @@ And:
 
 .. class:: ThreadPoolExecutor(max_workers)
 
-   Executes calls asynchronously using at pool of at most *max_workers* threads.
+   Executes calls asynchronously using a pool of at most *max_workers* threads.
 
 .. _threadpoolexecutor-example:
 

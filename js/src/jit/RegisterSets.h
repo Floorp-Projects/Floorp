@@ -1305,7 +1305,7 @@ class ABIArg
 // clobbers all registers besides |unused|, but does not clobber floating point
 // registers.
 inline LiveGeneralRegisterSet
-SavedNonVolatileRegisters(AllocatableGeneralRegisterSet unused)
+SavedNonVolatileRegisters(const AllocatableGeneralRegisterSet& unused)
 {
     LiveGeneralRegisterSet result;
 

@@ -732,7 +732,7 @@ void nsViewManager::WillPaintWindow(nsIWidget* aWidget)
 }
 
 bool nsViewManager::PaintWindow(nsIWidget* aWidget,
-                                LayoutDeviceIntRegion aRegion)
+                                const LayoutDeviceIntRegion& aRegion)
 {
   if (!aWidget || !mContext)
     return false;

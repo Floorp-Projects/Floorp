@@ -47,7 +47,7 @@ WidevineDecryptor::SetCDM(RefPtr<CDMWrapper> aCDM, uint32_t aInstanceId)
 {
   mCDM = aCDM;
   mInstanceId = aInstanceId;
-  sDecryptors[mInstanceId] = aCDM;
+  sDecryptors[mInstanceId] = aCDM.forget();
 }
 
 void

@@ -17,8 +17,10 @@ class TableUpdateV4;
 class LookupCacheV4 final : public LookupCache
 {
 public:
-  explicit LookupCacheV4(const nsACString& aTableName, nsIFile* aStoreFile)
-    : LookupCache(aTableName, aStoreFile) {}
+  explicit LookupCacheV4(const nsACString& aTableName,
+                         const nsACString& aProvider,
+                         nsIFile* aStoreFile)
+    : LookupCache(aTableName, aProvider, aStoreFile) {}
   ~LookupCacheV4() {}
 
   virtual nsresult Init() override;
