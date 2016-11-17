@@ -493,44 +493,6 @@
          <item name="android:nextFocusLeft">@+id/info</item>
     </style>
 
-    <!-- Tabs panel -->
-    <style name="TabsPanelSectionBase">
-        <item name="android:orientation">vertical</item>
-        <item name="android:layout_marginLeft">40dp</item>
-        <item name="android:layout_marginRight">40dp</item>
-    </style>
-
-    <style name="TabsPanelSection" parent="TabsPanelSectionBase">
-        <!-- We set values in landscape. -->
-    </style>
-
-    <style name="TabsPanelItemBase">
-        <item name="android:layout_marginBottom">28dp</item>
-        <item name="android:layout_gravity">center</item>
-        <item name="android:gravity">center</item>
-    </style>
-
-    <style name="TabsPanelItem" parent="TabsPanelItemBase">
-        <!-- We set values in landscape. -->
-    </style>
-
-    <style name="TabsPanelItem.TextAppearance">
-        <item name="android:textColor">#C0C9D0</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:lineSpacingMultiplier">1.35</item>
-    </style>
-
-    <style name="TabsPanelItem.TextAppearance.Header">
-        <item name="android:textSize">18sp</item>
-        <item name="android:layout_marginBottom">16dp</item>
-    </style>
-
-    <style name="TabsPanelItem.TextAppearance.Linkified">
-        <item name="android:clickable">true</item>
-        <item name="android:focusable">true</item>
-        <item name="android:textColor">#0292D6</item>
-    </style>
-
     <style name="Widget.RemoteTabsItemView" parent="Widget.TwoLinePageRow"/>
 
     <style name="Widget.RemoteTabsClientView" parent="Widget.TwoLinePageRow">
@@ -558,13 +520,6 @@
         <item name="android:textColor">#FFA4A7A9</item>
     </style>
 
-    <!-- TabWidget --> 
-    <style name="TabWidget">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">40dip</item>
-        <item name="android:layout_weight">1.0</item>
-    </style>
-
     <!-- Find bar -->
     <style name="FindBar">
         <item name="android:background">@color/text_and_tabs_tray_grey</item>
@@ -584,12 +539,6 @@
         <item name="android:layout_centerVertical">true</item>
         <item name="android:background">@drawable/action_bar_button_inverse</item>
     </style>
-
-    <style name="GeckoDialogTitle">
-        <item name="android:textAppearance">@android:style/TextAppearance.DialogWindowTitle</item>
-    </style>
-
-    <style name="GeckoDialogTitle.SubTitle" />
 
     <style name="PopupAnimation">
         <item name="@android:windowEnterAnimation">@anim/popup_show</item>
