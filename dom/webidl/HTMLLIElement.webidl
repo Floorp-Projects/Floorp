@@ -13,6 +13,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-li-element
+[HTMLConstructor]
 interface HTMLLIElement : HTMLElement {
            [SetterThrows, Pure]
            attribute long value;
