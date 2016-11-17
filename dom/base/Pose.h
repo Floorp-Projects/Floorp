@@ -41,9 +41,6 @@ public:
                                       JS::MutableHandle<JSObject*> aRetval,
                                       ErrorResult& aRv) = 0;
 
-  virtual JSObject* WrapObject(JSContext* aJSContext,
-                               JS::Handle<JSObject*> aGivenProto) override;
-
 protected:
   virtual ~Pose();
 
