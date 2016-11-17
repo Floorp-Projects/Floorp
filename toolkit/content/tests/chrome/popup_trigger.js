@@ -88,16 +88,20 @@ var popupTests = [
 {
   // check that pressing cursor up wraps and highlights the last item
   testname: "cursor up wrap",
-  events: [ "DOMMenuItemInactive item1", "DOMMenuItemActive last" ],
+  events: function () {
+    // No wrapping on menus on Mac
+    return platformIsMac() ? [] : [ "DOMMenuItemInactive item1", "DOMMenuItemActive last" ]
+  },
   test: function() { synthesizeKey("VK_UP", { }); },
   result: function(testname) {
-    checkActive(gMenuPopup, "last", testname);
+    checkActive(gMenuPopup, platformIsMac() ? "item1" : "last", testname);
   }
 },
 {
   // check that pressing cursor down wraps and highlights the first item
   testname: "cursor down wrap",
-  events: [ "DOMMenuItemInactive last", "DOMMenuItemActive item1" ],
+  condition: function () { return !platformIsMac() },
+  events: ["DOMMenuItemInactive last", "DOMMenuItemActive item1" ],
   test: function() { synthesizeKey("VK_DOWN", { }); },
   result: function(testname) { checkActive(gMenuPopup, "item1", testname); }
 },
