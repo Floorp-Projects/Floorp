@@ -318,6 +318,7 @@ interface nsINavBookmarksService : nsISupports
   const unsigned short SOURCE_SYNC = 1;
   const unsigned short SOURCE_IMPORT = 2;
   const unsigned short SOURCE_IMPORT_REPLACE = 3;
+  const unsigned short SOURCE_SYNC_REPARENT_REMOVED_FOLDER_CHILDREN = 4;
 
   /**
    * Sync status flags.

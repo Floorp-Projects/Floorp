@@ -505,20 +505,20 @@ add_task(function* test_delete_buffering() {
 
     equal(PlacesUtils.bookmarks.getFolderIdForItem(fxRecordId), folderId);
 
-    ok(store._foldersToDelete.has(folder.id));
-    ok(store._atomsToDelete.has(fxRecord.id));
-    ok(!store._atomsToDelete.has(tbRecord.id));
+    ok(store._itemsToDelete.has(folder.id));
+    ok(store._itemsToDelete.has(fxRecord.id));
+    ok(!store._itemsToDelete.has(tbRecord.id));
 
     _("Process pending deletions and ensure that the right things are deleted.");
-    let updatedGuids = yield store.deletePending();
+    let newChangeRecords = yield store.deletePending();
 
-    deepEqual(updatedGuids.sort(), ["get-tndrbrd1", "toolbar"]);
+    deepEqual(Object.keys(newChangeRecords).sort(), ["get-tndrbrd1", "toolbar"]);
 
     assertDeleted(fxRecordId);
     assertDeleted(folderId);
 
-    ok(!store._foldersToDelete.has(folder.id));
-    ok(!store._atomsToDelete.has(fxRecord.id));
+    ok(!store._itemsToDelete.has(folder.id));
+    ok(!store._itemsToDelete.has(fxRecord.id));
 
     equal(PlacesUtils.bookmarks.getFolderIdForItem(tbRecordId),
           PlacesUtils.bookmarks.toolbarFolder);

@@ -2078,3 +2078,241 @@ add_task(function* test_pushChanges() {
   yield PlacesUtils.bookmarks.eraseEverything();
   yield PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(function* test_touch() {
+  yield ignoreChangedRoots();
+
+  strictEqual(yield PlacesSyncUtils.bookmarks.touch(makeGuid()), null,
+    "Should not revive nonexistent items");
+
+  {
+    let folder = yield PlacesSyncUtils.bookmarks.insert({
+      kind: "folder",
+      syncId: makeGuid(),
+      parentSyncId: "menu",
+    });
+    strictEqual(yield PlacesSyncUtils.bookmarks.touch(folder.syncId), null,
+      "Should not revive folders");
+  }
+
+  {
+    let bmk = yield PlacesSyncUtils.bookmarks.insert({
+      kind: "bookmark",
+      syncId: makeGuid(),
+      parentSyncId: "menu",
+      url: "https://mozilla.org",
+    });
+
+    let changes = yield PlacesSyncUtils.bookmarks.touch(bmk.syncId);
+    deepEqual(Object.keys(changes).sort(), [bmk.syncId, "menu"].sort(),
+      "Should return change records for revived bookmark and parent");
+    equal(changes[bmk.syncId].counter, 1,
+      "Change counter for revived bookmark should be 1");
+
+    yield setChangesSynced(changes);
+  }
+
+  // Livemarks are stored as folders, but their kinds are different, so we
+  // should still bump their change counters.
+  let { site, stopServer } = makeLivemarkServer();
+  try {
+    let livemark = yield PlacesSyncUtils.bookmarks.insert({
+      kind: "livemark",
+      syncId: makeGuid(),
+      feed: site + "/feed/1",
+      parentSyncId: "unfiled",
+    });
+
+    let changes = yield PlacesSyncUtils.bookmarks.touch(livemark.syncId);
+    deepEqual(Object.keys(changes).sort(), [livemark.syncId, "unfiled"].sort(),
+      "Should return change records for revived livemark and parent");
+    equal(changes[livemark.syncId].counter, 1,
+      "Change counter for revived livemark should be 1");
+  } finally {
+    yield stopServer();
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
+
+add_task(function* test_remove() {
+  yield ignoreChangedRoots();
+
+  do_print("Insert subtree for removal");
+  let parentFolder = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "folder",
+    parentSyncId: "menu",
+    syncId: makeGuid(),
+  });
+  let childBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    parentSyncId: parentFolder.syncId,
+    syncId: makeGuid(),
+    url: "https://example.com",
+  });
+  let childFolder = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "folder",
+    parentSyncId: parentFolder.syncId,
+    syncId: makeGuid(),
+  });
+  let grandChildBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    parentSyncId: childFolder.syncId,
+    syncId: makeGuid(),
+    url: "https://example.edu",
+  });
+
+  do_print("Remove entire subtree");
+  yield PlacesSyncUtils.bookmarks.remove([
+    parentFolder.syncId,
+    childFolder.syncId,
+    childBmk.syncId,
+    grandChildBmk.syncId,
+  ]);
+
+  /**
+   * Even though we've removed the entire subtree, we still track the menu
+   * because we 1) removed `parentFolder`, 2) reparented `childFolder` to
+   * `menu`, and 3) removed `childFolder`.
+   *
+   * This depends on the order of the folders passed to `remove`. If we
+   * removed `childFolder` *before* `parentFolder`, we wouldn't reparent
+   * anything to `menu`.
+   *
+   * `deleteSyncedFolder` could check if it's reparenting an item that will
+   * eventually be removed, and avoid bumping the new parent's change counter.
+   * Unfortunately, that introduces inconsistencies if `deleteSyncedFolder` is
+   * interrupted by shutdown. If the server changes before the next sync,
+   * we'll never upload records for the reparented item or the new parent.
+   *
+   * Another alternative: we can try to remove folders in level order, instead
+   * of the order passed to `remove`. But that means we need a recursive query
+   * to determine the order. This is already enough of an edge case that
+   * occasionally reuploading the closest living ancestor is the simplest
+   * solution.
+   */
+  let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+  deepEqual(Object.keys(changes), ["menu"],
+    "Should track closest living ancestor of removed subtree");
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
+
+add_task(function* test_remove_partial() {
+  yield ignoreChangedRoots();
+
+  do_print("Insert subtree for partial removal");
+  let parentFolder = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "folder",
+    parentSyncId: PlacesUtils.bookmarks.menuGuid,
+    syncId: makeGuid(),
+  });
+  let prevSiblingBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    parentSyncId: parentFolder.syncId,
+    syncId: makeGuid(),
+    url: "https://example.net",
+  });
+  let childBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    parentSyncId: parentFolder.syncId,
+    syncId: makeGuid(),
+    url: "https://example.com",
+  });
+  let nextSiblingBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    parentSyncId: parentFolder.syncId,
+    syncId: makeGuid(),
+    url: "https://example.org",
+  });
+  let childFolder = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "folder",
+    parentSyncId: parentFolder.syncId,
+    syncId: makeGuid(),
+  });
+  let grandChildBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    parentSyncId: parentFolder.syncId,
+    syncId: makeGuid(),
+    url: "https://example.edu",
+  });
+  let grandChildSiblingBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    parentSyncId: parentFolder.syncId,
+    syncId: makeGuid(),
+    url: "https://mozilla.org",
+  });
+  let grandChildFolder = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "folder",
+    parentSyncId: childFolder.syncId,
+    syncId: makeGuid(),
+  });
+  let greatGrandChildPrevSiblingBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    parentSyncId: grandChildFolder.syncId,
+    syncId: makeGuid(),
+    url: "http://getfirefox.com",
+  });
+  let greatGrandChildNextSiblingBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    parentSyncId: grandChildFolder.syncId,
+    syncId: makeGuid(),
+    url: "http://getthunderbird.com",
+  });
+  let menuBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    parentSyncId: "menu",
+    syncId: makeGuid(),
+    url: "https://example.info",
+  });
+
+  do_print("Remove subset of folders and items in subtree");
+  let changes = yield PlacesSyncUtils.bookmarks.remove([
+    parentFolder.syncId,
+    childBmk.syncId,
+    grandChildFolder.syncId,
+    grandChildBmk.syncId,
+    childFolder.syncId,
+  ]);
+  deepEqual(Object.keys(changes).sort(), [
+    // Closest living ancestor.
+    "menu",
+    // Reparented bookmarks.
+    prevSiblingBmk.syncId,
+    nextSiblingBmk.syncId,
+    grandChildSiblingBmk.syncId,
+    greatGrandChildPrevSiblingBmk.syncId,
+    greatGrandChildNextSiblingBmk.syncId,
+  ].sort(), "Should track reparented bookmarks and their closest living ancestor");
+
+  /**
+   * Reparented bookmarks should maintain their order relative to their
+   * siblings: `prevSiblingBmk` (0) should precede `nextSiblingBmk` (2) in the
+   * menu, and `greatGrandChildPrevSiblingBmk` (0) should precede
+   * `greatGrandChildNextSiblingBmk` (1).
+   */
+  let menuChildren = yield PlacesSyncUtils.bookmarks.fetchChildSyncIds(
+    PlacesUtils.bookmarks.menuGuid);
+  deepEqual(menuChildren, [
+    // Existing bookmark.
+    menuBmk.syncId,
+    // 1) Moved out of `parentFolder` to `menu`.
+    prevSiblingBmk.syncId,
+    nextSiblingBmk.syncId,
+    // 3) Moved out of `childFolder` to `menu`. After this step, `childFolder`
+    // is deleted.
+    grandChildSiblingBmk.syncId,
+    // 2) Moved out of `grandChildFolder` to `childFolder`, because we remove
+    // `grandChildFolder` *before* `childFolder`. After this step,
+    // `grandChildFolder` is deleted and `childFolder`'s children are
+    // `[grandChildSiblingBmk, greatGrandChildPrevSiblingBmk,
+    // greatGrandChildNextSiblingBmk]`.
+    greatGrandChildPrevSiblingBmk.syncId,
+    greatGrandChildNextSiblingBmk.syncId,
+  ], "Should move descendants to closest living ancestor");
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
