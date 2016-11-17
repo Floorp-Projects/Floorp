@@ -116,6 +116,7 @@ var Bookmarks = Object.freeze({
     SYNC: Ci.nsINavBookmarksService.SOURCE_SYNC,
     IMPORT: Ci.nsINavBookmarksService.SOURCE_IMPORT,
     IMPORT_REPLACE: Ci.nsINavBookmarksService.SOURCE_IMPORT_REPLACE,
+    SYNC_REPARENT_REMOVED_FOLDER_CHILDREN: Ci.nsINavBookmarksService.SOURCE_SYNC_REPARENT_REMOVED_FOLDER_CHILDREN,
   },
 
   /**
