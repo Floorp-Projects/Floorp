@@ -2,6 +2,9 @@
 import mozdevice
 import logging
 import unittest
+
+import mozunit
+
 from sut import MockAgent
 
 
@@ -21,4 +24,4 @@ class TestRemove(unittest.TestCase):
         self.assertEqual(None, d.removeDir("/mnt/sdcard/test"))
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

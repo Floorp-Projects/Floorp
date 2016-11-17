@@ -6,6 +6,9 @@ import logging
 import shutil
 import tempfile
 import unittest
+
+import mozunit
+
 from sut import MockAgent
 
 
@@ -69,4 +72,4 @@ class TestFileMethods(unittest.TestCase):
         shutil.rmtree(tmpdir)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

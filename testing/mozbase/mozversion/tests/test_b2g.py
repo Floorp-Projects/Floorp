@@ -9,6 +9,8 @@ import tempfile
 import unittest
 import zipfile
 
+import mozunit
+
 import mozfile
 from mozversion import get_version, errors
 
@@ -72,4 +74,4 @@ class SourcesTest(unittest.TestCase):
         self.assertRaises(errors.RemoteAppNotFoundError, get_version)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

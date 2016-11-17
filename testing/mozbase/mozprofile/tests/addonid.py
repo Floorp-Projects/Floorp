@@ -4,6 +4,9 @@ import os
 import tempfile
 import unittest
 import shutil
+
+import mozunit
+
 from mozprofile import addons
 
 
@@ -181,4 +184,4 @@ class AddonIDTest(unittest.TestCase):
         return tests
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

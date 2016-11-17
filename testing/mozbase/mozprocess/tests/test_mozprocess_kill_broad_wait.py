@@ -2,8 +2,10 @@
 
 import os
 import time
-import unittest
 import proctest
+
+import mozunit
+
 from mozprocess import processhandler
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -30,4 +32,4 @@ class ProcTestKill(proctest.ProcTest):
         self.determine_status(p, expectedfail=('returncode',))
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()
