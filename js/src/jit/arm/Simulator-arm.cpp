@@ -1051,8 +1051,8 @@ FlushICacheLocked(Simulator::ICacheMap& i_cache, void* start_addr, size_t size)
         FlushOnePageLocked(i_cache, start, size);
 }
 
-void
-Simulator::checkICacheLocked(Simulator::ICacheMap& i_cache, SimInstruction* instr)
+static void
+CheckICacheLocked(Simulator::ICacheMap& i_cache, SimInstruction* instr)
 {
     intptr_t address = reinterpret_cast<intptr_t>(instr);
     void* page = reinterpret_cast<void*>(address & (~CachePage::kPageMask));
@@ -1062,27 +1062,11 @@ Simulator::checkICacheLocked(Simulator::ICacheMap& i_cache, SimInstruction* inst
     char* cache_valid_byte = cache_page->validityByte(offset);
     bool cache_hit = (*cache_valid_byte == CachePage::LINE_VALID);
     char* cached_line = cache_page->cachedData(offset & ~CachePage::kLineMask);
-
-    // Read all state before considering signal handler effects.
-    int cmpret = 0;
     if (cache_hit) {
         // Check that the data in memory matches the contents of the I-cache.
-        cmpret = memcmp(reinterpret_cast<void*>(instr),
-                        cache_page->cachedData(offset),
-                        SimInstruction::kInstrSize);
-    }
-
-    // Check for signal handler interruption between reading state and asserting.
-    // It is safe for the signal to arrive during the !cache_hit path, since it
-    // will be cleared the next time this function is called.
-    if (cacheInvalidatedBySignalHandler_) {
-        i_cache.clear();
-        cacheInvalidatedBySignalHandler_ = false;
-        return;
-    }
-
-    if (cache_hit) {
-        MOZ_ASSERT(cmpret == 0);
+        MOZ_ASSERT(memcmp(reinterpret_cast<void*>(instr),
+                          cache_page->cachedData(offset),
+                          SimInstruction::kInstrSize) == 0);
     } else {
         // Cache miss. Load memory into the cache.
         memcpy(cached_line, line, CachePage::kLineLength);
@@ -1144,7 +1128,6 @@ Simulator::Simulator(JSContext* cx)
     single_stepping_ = false;
     single_step_callback_ = nullptr;
     single_step_callback_arg_ = nullptr;
-    cacheInvalidatedBySignalHandler_ = false;
     skipCalleeSavedRegsCheck = false;
 
     // Set up architecture state.
@@ -4664,7 +4647,7 @@ Simulator::instructionDecode(SimInstruction* instr)
 {
     if (Simulator::ICacheCheckingEnabled) {
         AutoLockSimulatorCache als(this);
-        checkICacheLocked(icache(), instr);
+        CheckICacheLocked(icache(), instr);
     }
 
     pc_modified_ = false;
