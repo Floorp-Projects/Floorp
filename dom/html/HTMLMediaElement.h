@@ -1273,6 +1273,7 @@ protected:
 
   // A method to check whether the media element is allowed to start playback.
   bool IsAllowedToPlay();
+  bool IsAllowedToPlayByAudioChannel();
 
   // If the network state is empty and then we would trigger DoLoad().
   void MaybeDoLoad();
