@@ -15,6 +15,9 @@ interface nsICaptivePortalServiceCallback : nsISupports
 
 /**
  * Service used for captive portal detection.
+ * The service is only active in the main process. It is also available in the
+ * content process, but only to mirror the captive portal state from the main
+ * process.
  */
 [scriptable, uuid(bdbe0555-fc3d-4f7b-9205-c309ceb2d641)]
 interface nsICaptivePortalService : nsISupports
@@ -28,6 +31,7 @@ interface nsICaptivePortalService : nsISupports
    * Called from XPCOM to trigger a captive portal recheck.
    * A network request will only be performed if no other checks are currently
    * ongoing.
+   * Will not do anything if called in the content process.
    */
   void recheckCaptivePortal();
 
@@ -42,3 +46,14 @@ interface nsICaptivePortalService : nsISupports
    */
   readonly attribute unsigned long long lastChecked;
 };
+
+%{C++
+/**
+ * This observer notification will be emitted when the captive portal state
+ * changes. After receiving it, the ContentParent will send an IPC message
+ * to the ContentChild, which will set the state in the captive portal service
+ * in the child.
+ */
+#define NS_IPC_CAPTIVE_PORTAL_SET_STATE "ipc:network:captive-portal-set-state"
+
+%}

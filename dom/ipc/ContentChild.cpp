@@ -54,6 +54,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/net/CaptivePortalService.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
@@ -961,17 +962,19 @@ ContentChild::InitXPCOM()
 
   bool isOffline, isLangRTL, haveBidiKeyboards;
   bool isConnected;
+  int32_t captivePortalState;
   ClipboardCapabilities clipboardCaps;
   DomainPolicyClone domainPolicy;
   StructuredCloneData initialData;
 
-  SendGetXPCOMProcessAttributes(&isOffline, &isConnected,
+  SendGetXPCOMProcessAttributes(&isOffline, &isConnected, &captivePortalState,
                                 &isLangRTL, &haveBidiKeyboards,
                                 &mAvailableDictionaries,
                                 &clipboardCaps, &domainPolicy, &initialData,
                                 &mFontFamilies);
   RecvSetOffline(isOffline);
   RecvSetConnectivity(isConnected);
+  RecvSetCaptivePortalState(captivePortalState);
   RecvBidiKeyboardNotify(isLangRTL, haveBidiKeyboards);
 
   // Create the CPOW manager as soon as possible.
@@ -2062,6 +2065,21 @@ ContentChild::RecvSetConnectivity(const bool& connectivity)
   NS_ASSERTION(ioInternal, "IO Service can not be null");
 
   ioInternal->SetConnectivity(connectivity);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvSetCaptivePortalState(const int32_t& aState)
+{
+  nsCOMPtr<nsICaptivePortalService> cps = do_GetService(NS_CAPTIVEPORTAL_CID);
+  if (!cps) {
+    return IPC_OK();
+  }
+
+  mozilla::net::CaptivePortalService *portal =
+    static_cast<mozilla::net::CaptivePortalService*>(cps.get());
+  portal->SetStateInChild(aState);
 
   return IPC_OK();
 }

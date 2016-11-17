@@ -34,6 +34,10 @@ public:
   nsresult Initialize();
   nsresult Start();
   nsresult Stop();
+
+  // This method is only called in the content process, in order to mirror
+  // the captive portal state in the parent process.
+  void SetStateInChild(int32_t aState);
 private:
   virtual ~CaptivePortalService();
   nsresult PerformCheck();
