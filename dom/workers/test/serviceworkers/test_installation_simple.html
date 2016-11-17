@@ -48,7 +48,7 @@
     }, function(e) {
       ok(e.name === "SecurityError", "Should fail with a SecurityError");
     }).then(function() {
-      return SpecialPowers.popPrefEnv();
+      return new Promise((resolve) => SpecialPowers.popPrefEnv(resolve));
     });
   }
 

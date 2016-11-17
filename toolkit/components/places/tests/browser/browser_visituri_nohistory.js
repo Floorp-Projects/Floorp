@@ -27,7 +27,7 @@ add_task(function* ()
 
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, INITIAL_URL);
 
-  yield SpecialPowers.popPrefEnv();
+  yield new Promise(resolve => SpecialPowers.popPrefEnv(resolve));
 
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   gBrowser.loadURI(FINAL_URL);
