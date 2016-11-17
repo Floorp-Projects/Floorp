@@ -46,15 +46,6 @@ DOMDownloadManagerImpl.prototype = {
     this.initDOMRequestHelper(aWindow,
                               ["Downloads:Added",
                                "Downloads:Removed"]);
-
-    // Get the manifest URL if this is an installed app
-    let appsService = Cc["@mozilla.org/AppsService;1"]
-                        .getService(Ci.nsIAppsService);
-    let principal = aWindow.document.nodePrincipal;
-    // This returns the empty string if we're not an installed app.  Coerce to
-    // null.
-    this._manifestURL = appsService.getManifestURLByLocalId(principal.appId) ||
-                          null;
   },
 
   uninit: function() {
@@ -164,7 +155,7 @@ DOMDownloadManagerImpl.prototype = {
         path: computedPath,
         contentType: aAdoptDownloadDict.contentType,
         startTime: aAdoptDownloadDict.startTime.valueOf() || Date.now(),
-        sourceAppManifestURL: this._manifestURL
+        sourceAppManifestURL: ""
       };
 
       DownloadsIPC.adoptDownload(jsonDownload).then(

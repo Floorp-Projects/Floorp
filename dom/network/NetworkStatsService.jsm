@@ -57,10 +57,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "networkService",
                                    "@mozilla.org/network/service;1",
                                    "nsINetworkService");
 
-XPCOMUtils.defineLazyServiceGetter(this, "appsService",
-                                   "@mozilla.org/AppsService;1",
-                                   "nsIAppsService");
-
 XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
                                    "nsISettingsService");
@@ -403,19 +399,6 @@ this.NetworkStatsService = {
     let network = msg.network;
     let netId = this.getNetworkId(network.id, network.type);
 
-    let appId = 0;
-    let appManifestURL = msg.appManifestURL;
-    if (appManifestURL) {
-      appId = appsService.getAppLocalIdByManifestURL(appManifestURL);
-
-      if (!appId) {
-        mm.sendAsyncMessage("NetworkStats:Get:Return",
-                            { id: msg.id,
-                              error: "Invalid appManifestURL", result: null });
-        return;
-      }
-    }
-
     let browsingTrafficOnly = msg.browsingTrafficOnly || false;
     let serviceType = msg.serviceType || "";
 
@@ -426,7 +409,7 @@ this.NetworkStatsService = {
       this._db.find(function onStatsFound(aError, aResult) {
         mm.sendAsyncMessage("NetworkStats:Get:Return",
                             { id: msg.id, error: aError, result: aResult });
-      }, appId, browsingTrafficOnly, serviceType, network, start, end, appManifestURL);
+      }, 0, browsingTrafficOnly, serviceType, network, start, end, null);
     }).bind(this);
 
     this.validateNetwork(network, function onValidateNetwork(aNetId) {
@@ -440,11 +423,10 @@ this.NetworkStatsService = {
       // retrieving stats from the DB.
       if (this._networks[aNetId].status == NETWORK_STATUS_READY) {
         debug("getstats for network " + network.id + " of type " + network.type);
-        debug("appId: " + appId + " from appManifestURL: " + appManifestURL);
         debug("browsingTrafficOnly: " + browsingTrafficOnly);
         debug("serviceType: " + serviceType);
 
-        if (appId || serviceType) {
+        if (serviceType) {
           this.updateCachedStats(callback);
           return;
         }
@@ -459,7 +441,7 @@ this.NetworkStatsService = {
       this._db.find(function onStatsFound(aError, aResult) {
         mm.sendAsyncMessage("NetworkStats:Get:Return",
                             { id: msg.id, error: aError, result: aResult });
-      }, appId, browsingTrafficOnly, serviceType, network, start, end, appManifestURL);
+      }, 0, browsingTrafficOnly, serviceType, network, start, end, null);
     }.bind(this));
   },
 

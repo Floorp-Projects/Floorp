@@ -29,7 +29,6 @@ interfaces = [
     'notification',
     'svg',
     'smil',
-    'apps',
     'push',
 ]
 
