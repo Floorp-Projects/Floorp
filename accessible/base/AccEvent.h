@@ -94,7 +94,6 @@ public:
     eGenericEvent,
     eStateChangeEvent,
     eTextChangeEvent,
-    eTreeMutationEvent,
     eMutationEvent,
     eReorderEvent,
     eHideEvent,
@@ -130,7 +129,6 @@ protected:
   friend class EventQueue;
   friend class EventTree;
   friend class ::nsEventShell;
-  friend class NotificationController;
 };
 
 
@@ -202,51 +200,17 @@ private:
   nsString mModifiedText;
 
   friend class EventTree;
-  friend class NotificationController;
 };
 
-/**
- * A base class for events related to tree mutation, either an AccMutation
- * event, or an AccReorderEvent.
- */
-class AccTreeMutationEvent : public AccEvent
-{
-public:
-  AccTreeMutationEvent(uint32_t aEventType, Accessible* aTarget) :
-    AccEvent(aEventType, aTarget, eAutoDetect, eCoalesceReorder), mGeneration(0) {}
-
-  // Event
-  static const EventGroup kEventGroup = eTreeMutationEvent;
-  virtual unsigned int GetEventGroups() const override
-  {
-    return AccEvent::GetEventGroups() | (1U << eTreeMutationEvent);
-  }
-
-  void SetNextEvent(AccTreeMutationEvent* aNext) { mNextEvent = aNext; }
-  void SetPrevEvent(AccTreeMutationEvent* aPrev) { mPrevEvent = aPrev; }
-  AccTreeMutationEvent* NextEvent() const { return mNextEvent; }
-  AccTreeMutationEvent* PrevEvent() const { return mPrevEvent; }
-
-  /**
-   * A sequence number to know when this event was fired.
-   */
-  uint32_t EventGeneration() const { return mGeneration; }
-  void SetEventGeneration(uint32_t aGeneration) { mGeneration = aGeneration; }
-
-private:
-  RefPtr<AccTreeMutationEvent> mNextEvent;
-  RefPtr<AccTreeMutationEvent> mPrevEvent;
-  uint32_t mGeneration;
-};
 
 /**
  * Base class for show and hide accessible events.
  */
-class AccMutationEvent: public AccTreeMutationEvent
+class AccMutationEvent: public AccEvent
 {
 public:
   AccMutationEvent(uint32_t aEventType, Accessible* aTarget) :
-    AccTreeMutationEvent(aEventType, aTarget)
+    AccEvent(aEventType, aTarget, eAutoDetect, eCoalesceReorder)
   {
     // Don't coalesce these since they are coalesced by reorder event. Coalesce
     // contained text change events.
@@ -258,7 +222,7 @@ public:
   static const EventGroup kEventGroup = eMutationEvent;
   virtual unsigned int GetEventGroups() const override
   {
-    return AccTreeMutationEvent::GetEventGroups() | (1U << eMutationEvent);
+    return AccEvent::GetEventGroups() | (1U << eMutationEvent);
   }
 
   // MutationEvent
@@ -273,7 +237,6 @@ protected:
   RefPtr<AccTextChangeEvent> mTextChangeEvent;
 
   friend class EventTree;
-  friend class NotificationController;
 };
 
 
@@ -304,7 +267,6 @@ protected:
   RefPtr<Accessible> mPrevSibling;
 
   friend class EventTree;
-  friend class NotificationController;
 };
 
 
@@ -336,18 +298,19 @@ private:
 /**
  * Class for reorder accessible event. Takes care about
  */
-class AccReorderEvent : public AccTreeMutationEvent
+class AccReorderEvent : public AccEvent
 {
 public:
   explicit AccReorderEvent(Accessible* aTarget) :
-    AccTreeMutationEvent(::nsIAccessibleEvent::EVENT_REORDER, aTarget) { }
+    AccEvent(::nsIAccessibleEvent::EVENT_REORDER, aTarget,
+             eAutoDetect, eCoalesceReorder) { }
   virtual ~AccReorderEvent() { }
 
   // Event
   static const EventGroup kEventGroup = eReorderEvent;
   virtual unsigned int GetEventGroups() const override
   {
-    return AccTreeMutationEvent::GetEventGroups() | (1U << eReorderEvent);
+    return AccEvent::GetEventGroups() | (1U << eReorderEvent);
   }
 };
 

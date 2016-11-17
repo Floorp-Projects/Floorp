@@ -1860,8 +1860,8 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
                         "container", aContainer, "child", iter.Child(), nullptr);
 #endif
 
-      CreateSubtree(iter.Child());
       mt.AfterInsertion(iter.Child());
+      CreateSubtree(iter.Child());
       continue;
     }
 
@@ -1907,10 +1907,10 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer, nsIContent* aNode)
       if (!aContainer->InsertAfter(child, walker.Prev())) {
         return;
       }
-      CreateSubtree(child);
       mt.AfterInsertion(child);
       mt.Done();
 
+      CreateSubtree(child);
       FireEventsOnInsertion(aContainer);
     }
   }
