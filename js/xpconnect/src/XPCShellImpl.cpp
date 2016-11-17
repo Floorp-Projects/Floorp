@@ -28,7 +28,6 @@
 #include "nsJSPrincipals.h"
 #include "xpcpublic.h"
 #include "xpcprivate.h"
-#include "xpctest_private.h"
 #include "BackstagePass.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
@@ -63,6 +62,10 @@
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #include "nsICrashReporter.h"
+#endif
+
+#ifdef ENABLE_TESTS
+#include "xpctest_private.h"
 #endif
 
 using namespace mozilla;
@@ -644,6 +647,7 @@ RegisterAppManifest(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+#ifdef ENABLE_TESTS
 static bool
 RegisterXPCTestComponents(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -659,6 +663,7 @@ RegisterXPCTestComponents(JSContext* cx, unsigned argc, Value* vp)
     }
     return true;
 }
+#endif
 
 static const JSFunctionSpec glob_functions[] = {
     JS_FS("print",           Print,          0,0),
@@ -679,7 +684,9 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FS("setInterruptCallback", SetInterruptCallback, 1,0),
     JS_FS("simulateActivityCallback", SimulateActivityCallback, 1,0),
     JS_FS("registerAppManifest", RegisterAppManifest, 1, 0),
+#ifdef ENABLE_TESTS
     JS_FS("registerXPCTestComponents", RegisterXPCTestComponents, 0, 0),
+#endif
     JS_FS_END
 };
 
