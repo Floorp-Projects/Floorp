@@ -53,6 +53,7 @@ this.SelectContentHelper.prototype = {
     this.global.addMessageListener("Forms:DismissedDropDown", this);
     this.global.addMessageListener("Forms:MouseOver", this);
     this.global.addMessageListener("Forms:MouseOut", this);
+    this.global.addMessageListener("Forms:MouseUp", this);
     this.global.addEventListener("pagehide", this);
     this.global.addEventListener("mozhidedropdown", this);
     let MutationObserver = this.element.ownerDocument.defaultView.MutationObserver;
@@ -71,6 +72,7 @@ this.SelectContentHelper.prototype = {
     this.global.removeMessageListener("Forms:DismissedDropDown", this);
     this.global.removeMessageListener("Forms:MouseOver", this);
     this.global.removeMessageListener("Forms:MouseOut", this);
+    this.global.removeMessageListener("Forms:MouseUp", this);
     this.global.removeEventListener("pagehide", this);
     this.global.removeEventListener("mozhidedropdown", this);
     this.element = null;
@@ -170,6 +172,10 @@ this.SelectContentHelper.prototype = {
 
       case "Forms:MouseOut":
         DOMUtils.removeContentState(this.element, kStateHover);
+        break;
+
+      case "Forms:MouseUp":
+        DOMUtils.removeContentState(this.element, kStateActive);
         break;
 
     }
