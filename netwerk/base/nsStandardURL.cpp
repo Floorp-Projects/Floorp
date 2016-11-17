@@ -27,89 +27,6 @@
 #include "prprf.h"
 #include "nsReadableUtils.h"
 
-
-//
-// setenv MOZ_LOG nsStandardURL:5
-//
-static LazyLogModule gStandardURLLog("nsStandardURL");
-
-// The Chromium code defines its own LOG macro which we don't want
-#undef LOG
-#define LOG(args)     MOZ_LOG(gStandardURLLog, LogLevel::Debug, args)
-#undef LOG_ENABLED
-#define LOG_ENABLED() MOZ_LOG_TEST(gStandardURLLog, LogLevel::Debug)
-
-#ifdef MOZ_RUST_URLPARSE
-
-#include "RustURL.h"
-
-// Fall back to CPP-parsed URLs if the Rust one doesn't match.
-#define MOZ_RUST_URLPARSE_FALLBACK
-
-#ifdef MOZ_RUST_URLPARSE_FALLBACK
-#define MOZ_RUST_URLPARSE_FALLBACK_MACRO(expr) expr
-#else
-#define MOZ_RUST_URLPARSE_FALLBACK_MACRO(expr)
-#endif
-
-#define CALL_RUST_SETTER(func, ...)  \
-do {                                 \
-    mRustURL->func(__VA_ARGS__);     \
-    nsAutoCString rustSpec;          \
-    mRustURL->GetSpec(rustSpec);     \
-    if (mSpec != rustSpec) {         \
-        LOG(("Spec diff detected after setter (%s): rust: %s standard-url: %s\n", \
-             #func, rustSpec.get(), mSpec.get())); \
-    }                                \
-} while (0)
-
-#define CALL_RUST_GETTER_STR(result, func, ...)  \
-do {                                             \
-    nsAutoCString backup(result);                \
-    mRustURL->func(__VA_ARGS__);                 \
-    if (backup != result) {                      \
-        LOG(("Diff detected calling getter (%s): rust: %s standard-url: %s\n", \
-             #func, result.BeginReading() , backup.BeginReading())); \
-        MOZ_RUST_URLPARSE_FALLBACK_MACRO(result = backup);          \
-    }                                            \
-} while (0)
-
-#define CALL_RUST_GETTER_INT(result, func, ...)  \
-do {                                             \
-    int32_t backup = *result;                    \
-    mRustURL->func(__VA_ARGS__);                 \
-    if (backup != *result) {                     \
-        LOG(("Diff detected calling getter (%s): rust: %d standard-url: %d\n", \
-             #func, *result , backup)); \
-        MOZ_RUST_URLPARSE_FALLBACK_MACRO(*result = backup);         \
-    }                                            \
-} while (0)
-
-#define COPY_RUST_MEMBER                \
-do {                                    \
-  RefPtr<RustURL> url = new RustURL();  \
-  nsAutoCString spec;                   \
-  GetSpec(spec);                        \
-  url->SetSpec(spec);                   \
-  mRustURL = url;                       \
-} while (0)
-
-#define CALL_RUST_SYNC  mRustURL->SetSpec(mSpec)
-#define CALL_SET_MUTABLE  mRustURL->SetMutable(value)
-#define CALL_RUST_INIT mRustURL->Init(urlType, defaultPort, spec, charset, baseURI)
-
-#else
-
-#define CALL_RUST_SETTER(func, ...)
-#define CALL_RUST_GETTER_STR(expected, func, ...)
-#define CALL_RUST_GETTER_INT(expected, func, ...)
-#define CALL_RUST_INIT
-#define CALL_RUST_SYNC
-#define CALL_SET_MUTABLE
-#define COPY_RUST_MEMBER
-
-#endif // MOZ_RUST_URLPARSE
-
 using mozilla::dom::EncodingUtils;
 using namespace mozilla::ipc;
 
@@ -124,6 +41,17 @@ bool nsStandardURL::gInitialized = false;
 bool nsStandardURL::gEscapeUTF8 = true;
 bool nsStandardURL::gAlwaysEncodeInUTF8 = true;
 char nsStandardURL::gHostLimitDigits[] = { '/', '\\', '?', '#', 0 };
+
+//
+// setenv MOZ_LOG nsStandardURL:5
+//
+static LazyLogModule gStandardURLLog("nsStandardURL");
+
+// The Chromium code defines its own LOG macro which we don't want
+#undef LOG
+#define LOG(args)     MOZ_LOG(gStandardURLLog, LogLevel::Debug, args)
+#undef LOG_ENABLED
+#define LOG_ENABLED() MOZ_LOG_TEST(gStandardURLLog, LogLevel::Debug)
 
 //----------------------------------------------------------------------------
 
@@ -348,10 +276,6 @@ nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
             PR_INIT_CLIST(&mDebugCList);
         }
     }
-#endif
-
-#ifdef MOZ_RUST_URLPARSE
-    mRustURL = new RustURL();
 #endif
 }
 
@@ -1281,7 +1205,6 @@ nsStandardURL::GetSpec(nsACString &result)
     MOZ_ASSERT(mSpec.Length() <= (uint32_t) net_GetURLMaxLength(),
                "The spec should never be this long, we missed a check.");
     result = mSpec;
-    CALL_RUST_GETTER_STR(result, GetSpec, result);
     return NS_OK;
 }
 
@@ -1293,7 +1216,6 @@ nsStandardURL::GetSensitiveInfoHiddenSpec(nsACString &result)
     if (mPassword.mLen >= 0) {
       result.Replace(mPassword.mPos, mPassword.mLen, "****");
     }
-    CALL_RUST_GETTER_STR(result, GetSensitiveInfoHiddenSpec, result);
     return NS_OK;
 }
 
@@ -1309,7 +1231,6 @@ nsStandardURL::GetSpecIgnoringRef(nsACString &result)
     } else {
         result = mSpec;
     }
-    CALL_RUST_GETTER_STR(result, GetSpecIgnoringRef, result);
     return NS_OK;
 }
 
@@ -1318,7 +1239,6 @@ NS_IMETHODIMP
 nsStandardURL::GetPrePath(nsACString &result)
 {
     result = Prepath();
-    CALL_RUST_GETTER_STR(result, GetPrePath, result);
     return NS_OK;
 }
 
@@ -1327,7 +1247,6 @@ NS_IMETHODIMP
 nsStandardURL::GetScheme(nsACString &result)
 {
     result = Scheme();
-    CALL_RUST_GETTER_STR(result, GetScheme, result);
     return NS_OK;
 }
 
@@ -1336,7 +1255,6 @@ NS_IMETHODIMP
 nsStandardURL::GetUserPass(nsACString &result)
 {
     result = Userpass();
-    CALL_RUST_GETTER_STR(result, GetUserPass, result);
     return NS_OK;
 }
 
@@ -1345,7 +1263,6 @@ NS_IMETHODIMP
 nsStandardURL::GetUsername(nsACString &result)
 {
     result = Username();
-    CALL_RUST_GETTER_STR(result, GetUsername, result);
     return NS_OK;
 }
 
@@ -1354,7 +1271,6 @@ NS_IMETHODIMP
 nsStandardURL::GetPassword(nsACString &result)
 {
     result = Password();
-    CALL_RUST_GETTER_STR(result, GetPassword, result);
     return NS_OK;
 }
 
@@ -1362,7 +1278,6 @@ NS_IMETHODIMP
 nsStandardURL::GetHostPort(nsACString &result)
 {
     result = Hostport();
-    CALL_RUST_GETTER_STR(result, GetHostPort, result);
     return NS_OK;
 }
 
@@ -1370,7 +1285,6 @@ NS_IMETHODIMP
 nsStandardURL::GetHost(nsACString &result)
 {
     result = Host();
-    CALL_RUST_GETTER_STR(result, GetHost, result);
     return NS_OK;
 }
 
@@ -1380,7 +1294,6 @@ nsStandardURL::GetPort(int32_t *result)
     // should never be more than 16 bit
     MOZ_ASSERT(mPort <= std::numeric_limits<uint16_t>::max());
     *result = mPort;
-    CALL_RUST_GETTER_INT(result, GetPort, result);
     return NS_OK;
 }
 
@@ -1389,7 +1302,6 @@ NS_IMETHODIMP
 nsStandardURL::GetPath(nsACString &result)
 {
     result = Path();
-    CALL_RUST_GETTER_STR(result, GetPath, result);
     return NS_OK;
 }
 
@@ -1406,7 +1318,6 @@ nsStandardURL::GetAsciiSpec(nsACString &result)
 
     if (mSpecEncoding == eEncoding_ASCII) {
         result = mSpec;
-        CALL_RUST_GETTER_STR(result, GetAsciiSpec, result);
         return NS_OK;
     }
 
@@ -1423,7 +1334,6 @@ nsStandardURL::GetAsciiSpec(nsACString &result)
     result += hostport;
 
     NS_EscapeURL(Path(), esc_OnlyNonASCII | esc_AlwaysCopy, result);
-    CALL_RUST_GETTER_STR(result, GetAsciiSpec, result);
     return NS_OK;
 }
 
@@ -1433,7 +1343,6 @@ nsStandardURL::GetAsciiHostPort(nsACString &result)
 {
     if (mHostEncoding == eEncoding_ASCII) {
         result = Hostport();
-        CALL_RUST_GETTER_STR(result, GetAsciiHostPort, result);
         return NS_OK;
     }
 
@@ -1448,7 +1357,6 @@ nsStandardURL::GetAsciiHostPort(nsACString &result)
     if (pos < mPath.mPos)
         result += Substring(mSpec, pos, mPath.mPos - pos);
 
-    CALL_RUST_GETTER_STR(result, GetAsciiHostPort, result);
     return NS_OK;
 }
 
@@ -1458,21 +1366,18 @@ nsStandardURL::GetAsciiHost(nsACString &result)
 {
     if (mHostEncoding == eEncoding_ASCII) {
         result = Host();
-        CALL_RUST_GETTER_STR(result, GetAsciiHost, result);
         return NS_OK;
     }
 
     // perhaps we have it cached...
     if (mHostA) {
         result = mHostA;
-        CALL_RUST_GETTER_STR(result, GetAsciiHost, result);
         return NS_OK;
     }
 
     if (gIDN) {
         nsresult rv;
         rv = gIDN->ConvertUTF8toACE(Host(), result);
-        CALL_RUST_GETTER_STR(result, GetAsciiHost, result);
         if (NS_SUCCEEDED(rv)) {
             mHostA = ToNewCString(result);
             return NS_OK;
@@ -1482,7 +1387,6 @@ nsStandardURL::GetAsciiHost(nsACString &result)
 
     // something went wrong... guess all we can do is URL escape :-/
     NS_EscapeURL(Host(), esc_OnlyNonASCII | esc_AlwaysCopy, result);
-    CALL_RUST_GETTER_STR(result, GetAsciiHost, result);
     return NS_OK;
 }
 
@@ -1493,7 +1397,6 @@ nsStandardURL::GetOriginCharset(nsACString &result)
         result.AssignLiteral("UTF-8");
     else
         result = mOriginCharset;
-    CALL_RUST_GETTER_STR(result, GetOriginCharset, result);
     return NS_OK;
 }
 
@@ -1598,8 +1501,6 @@ nsStandardURL::SetSpec(const nsACString &input)
         LOG((" query     = (%u,%d)\n", mQuery.mPos,     mQuery.mLen));
         LOG((" ref       = (%u,%d)\n", mRef.mPos,       mRef.mLen));
     }
-
-    CALL_RUST_SETTER(SetSpec, input);
     return rv;
 }
 
@@ -1644,7 +1545,6 @@ nsStandardURL::SetScheme(const nsACString &input)
     // XXX the string code unfortunately doesn't provide a ToLowerCase
     //     that operates on a substring.
     net_ToLowerCase((char *) mSpec.get(), mScheme.mLen);
-    CALL_RUST_SETTER(SetScheme, input);
     return NS_OK;
 }
 
@@ -1686,8 +1586,6 @@ nsStandardURL::SetUserPass(const nsACString &input)
             mUsername.mLen = -1;
             mPassword.mLen = -1;
         }
-
-        CALL_RUST_SETTER(SetUserPass, input);
         return NS_OK;
     }
 
@@ -1752,8 +1650,6 @@ nsStandardURL::SetUserPass(const nsACString &input)
     mPassword.mLen = passwordLen;
     if (passwordLen)
         mPassword.mPos = mUsername.mPos + mUsername.mLen + 1;
-
-    CALL_RUST_SETTER(SetUserPass, input);
     return NS_OK;
 }
 
@@ -1803,8 +1699,6 @@ nsStandardURL::SetUsername(const nsACString &input)
         mAuthority.mLen += shift;
         ShiftFromPassword(shift);
     }
-
-    CALL_RUST_SETTER(SetUsername, input);
     return NS_OK;
 }
 
@@ -1842,7 +1736,6 @@ nsStandardURL::SetPassword(const nsACString &input)
             mAuthority.mLen -= (mPassword.mLen + 1);
             mPassword.mLen = -1;
         }
-        CALL_RUST_SETTER(SetPassword, input);
         return NS_OK;
     }
 
@@ -1867,7 +1760,6 @@ nsStandardURL::SetPassword(const nsACString &input)
         mAuthority.mLen += shift;
         ShiftFromHost(shift);
     }
-    CALL_RUST_SETTER(SetPassword, input);
     return NS_OK;
 }
 
@@ -1951,7 +1843,7 @@ nsStandardURL::SetHostPort(const nsACString &aValue)
             return NS_ERROR_MALFORMED_URI;
         }
     }
-    CALL_RUST_SETTER(SetHostPort, aValue);
+
     return NS_OK;
 }
 
@@ -1964,7 +1856,6 @@ nsStandardURL::SetHostAndPort(const nsACString &aValue)
   // the port number.
   nsresult rv = SetPort(-1);
   NS_ENSURE_SUCCESS(rv, rv);
-  CALL_RUST_SETTER(SetHostAndPort, aValue);
   return SetHostPort(aValue);
 }
 
@@ -2066,7 +1957,7 @@ nsStandardURL::SetHost(const nsACString &input)
 
     // Now canonicalize the host to lowercase
     net_ToLowerCase(mSpec.BeginWriting() + mHost.mPos, mHost.mLen);
-    CALL_RUST_SETTER(SetHost, input);
+
     return NS_OK;
 }
 
@@ -2098,7 +1989,6 @@ nsStandardURL::SetPort(int32_t port)
     ReplacePortInSpec(port);
 
     mPort = port;
-    CALL_RUST_SETTER(SetPort, port);
     return NS_OK;
 }
 
@@ -2177,7 +2067,6 @@ nsStandardURL::SetPath(const nsACString &input)
         mQuery.mLen = -1;
         mRef.mLen = -1;
     }
-    CALL_RUST_SETTER(SetPath, input);
     return NS_OK;
 }
 
@@ -2363,7 +2252,6 @@ nsresult nsStandardURL::CopyMembers(nsStandardURL * source,
     mSupportsFileURL = source->mSupportsFileURL;
     mHostEncoding = source->mHostEncoding;
 
-    COPY_RUST_MEMBER;
     if (copyCached) {
         mFile = source->mFile;
         mHostA = source->mHostA ? strdup(source->mHostA) : nullptr;
@@ -2380,7 +2268,6 @@ nsresult nsStandardURL::CopyMembers(nsStandardURL * source,
     } else if (refHandlingMode == eReplaceRef) {
         SetRef(newRef);
     }
-
 
     return NS_OK;
 }
@@ -2886,7 +2773,6 @@ nsStandardURL::SetQuery(const nsACString &input)
             mQuery.mPos = 0;
             mQuery.mLen = -1;
         }
-        CALL_RUST_SETTER(SetQuery, input);
         return NS_OK;
     }
 
@@ -2927,7 +2813,6 @@ nsStandardURL::SetQuery(const nsACString &input)
         mPath.mLen += shift;
         ShiftFromRef(shift);
     }
-    CALL_RUST_SETTER(SetQuery, input);
     return NS_OK;
 }
 
@@ -2959,7 +2844,6 @@ nsStandardURL::SetRef(const nsACString &input)
             mRef.mPos = 0;
             mRef.mLen = -1;
         }
-        CALL_RUST_SETTER(SetRef, input);
         return NS_OK;
     }
 
@@ -2994,7 +2878,6 @@ nsStandardURL::SetRef(const nsACString &input)
     int32_t shift = ReplaceSegment(mRef.mPos, mRef.mLen, ref, refLen);
     mPath.mLen += shift;
     mRef.mLen = refLen;
-    CALL_RUST_SETTER(SetRef, input);
     return NS_OK;
 }
 
@@ -3274,8 +3157,6 @@ nsStandardURL::Init(uint32_t urlType,
         baseURI = nullptr;
     }
 
-    CALL_RUST_INIT;
-
     if (!baseURI)
         return SetSpec(spec);
 
@@ -3323,7 +3204,6 @@ nsStandardURL::SetMutable(bool value)
     NS_ENSURE_ARG(mMutable || !value);
 
     mMutable = value;
-    CALL_SET_MUTABLE;
     return NS_OK;
 }
 
@@ -3443,7 +3323,6 @@ nsStandardURL::Read(nsIObjectInputStream *stream)
         mExtension.Merge(mSpec, ';', old_param);
     }
     
-    CALL_RUST_SYNC;
     return NS_OK;
 }
 
@@ -3633,8 +3512,6 @@ nsStandardURL::Deserialize(const URIParams& aParams)
     mMutable = params.isMutable();
     mSupportsFileURL = params.supportsFileURL();
     mHostEncoding = params.hostEncoding();
-
-    CALL_RUST_SYNC;
 
     // mSpecEncoding and mHostA are just caches that can be recovered as needed.
     return true;
