@@ -1968,3 +1968,6 @@ fuzzy(8,1900) == 1291528.html 1291528-ref.html
 # should be same.  |fuzzy()| here allows the difference in border, but not
 # background color.
 fuzzy(255,1000) skip-if(!cocoaWidget) == 1294102-1.html 1294102-1-ref.html
+fuzzy(2,320000) == 1315113-1.html 1315113-1-ref.html
+fuzzy(2,20000) == 1315113-2.html 1315113-2-ref.html
+
