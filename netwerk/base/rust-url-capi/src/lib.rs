@@ -236,28 +236,11 @@ pub unsafe extern "C" fn rusturl_set_password(urlptr: rusturl_ptr, password: *mu
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_set_host_port(urlptr: rusturl_ptr, host_port: *mut libc::c_char, len: size_t) -> i32 {
-  if urlptr.is_null() {
-    return NSError::InvalidArg.error_code();
-  }
-  let mut url: &mut Url = mem::transmute(urlptr);
-  let slice = std::slice::from_raw_parts(host_port as *const libc::c_uchar, len as usize);
-
-  let host_port_ = match str::from_utf8(slice).ok() {
-    Some(p) => p,
-    None => return ParseError::InvalidDomainCharacter.error_code() // utf-8 failed
-  };
-
-  quirks::set_host(url, host_port_).error_code()
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn rusturl_set_host_and_port(urlptr: rusturl_ptr, host_and_port: *mut libc::c_char, len: size_t) -> i32 {
   if urlptr.is_null() {
     return NSError::InvalidArg.error_code();
   }
   let mut url: &mut Url = mem::transmute(urlptr);
-  url.set_port(None);
   let slice = std::slice::from_raw_parts(host_and_port as *const libc::c_uchar, len as usize);
 
   let host_and_port_ = match str::from_utf8(slice).ok() {
