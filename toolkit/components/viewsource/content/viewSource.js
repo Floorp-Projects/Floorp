@@ -666,9 +666,12 @@ ViewSourceChrome.prototype = {
    *        True if the browser should be made remote. If the browsers
    *        remoteness already matches this value, this function does
    *        nothing.
+   * @param remoteType
+   *        The type of remote browser process.
    */
-  updateBrowserRemoteness(shouldBeRemote) {
-    if (this.browser.isRemoteBrowser == shouldBeRemote) {
+  updateBrowserRemoteness(shouldBeRemote, remoteType) {
+    if (this.browser.isRemoteBrowser == shouldBeRemote &&
+        this.browser.remoteType == remoteType) {
       return;
     }
 
@@ -685,8 +688,10 @@ ViewSourceChrome.prototype = {
     this.browser.remove();
     if (shouldBeRemote) {
       this.browser.setAttribute("remote", "true");
+      this.browser.setAttribute("remoteType", remoteType);
     } else {
       this.browser.removeAttribute("remote");
+      this.browser.removeAttribute("remoteType");
     }
 
     this.browser.relatedBrowser = relatedBrowser;
