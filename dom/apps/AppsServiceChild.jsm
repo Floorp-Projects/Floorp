@@ -355,11 +355,6 @@ this.DOMApplicationRegistry = {
   /**
    * nsIAppsService API
    */
-  getAppByManifestURL: function getAppByManifestURL(aManifestURL) {
-    debug("getAppByManifestURL " + aManifestURL);
-    return AppsUtils.getAppByManifestURL(this.webapps, aManifestURL);
-  },
-
   getAppLocalIdByManifestURL: function getAppLocalIdByManifestURL(aManifestURL) {
     debug("getAppLocalIdByManifestURL " + aManifestURL);
     return AppsUtils.getAppLocalIdByManifestURL(this.webapps, aManifestURL);
@@ -368,17 +363,6 @@ this.DOMApplicationRegistry = {
   getAppLocalIdByStoreId: function(aStoreId) {
     debug("getAppLocalIdByStoreId:" + aStoreId);
     return AppsUtils.getAppLocalIdByStoreId(this.webapps, aStoreId);
-  },
-
-  getAppByLocalId: function getAppByLocalId(aLocalId) {
-    debug("getAppByLocalId " + aLocalId + " - ready: " + this.ready);
-    let app = this.localIdIndex[aLocalId];
-    if (!app) {
-      debug("Ouch, No app!");
-      return null;
-    }
-
-    return new mozIApplication(app);
   },
 
   getManifestURLByLocalId: function getManifestURLByLocalId(aLocalId) {

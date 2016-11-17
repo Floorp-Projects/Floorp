@@ -144,33 +144,6 @@ var AlertsHelper = {
 
   registerAppListener: function(uid, listener) {
     this._listeners[uid] = listener;
-
-    appsService.getManifestFor(listener.manifestURL).then((manifest) => {
-      let app = appsService.getAppByManifestURL(listener.manifestURL);
-      let helper = new ManifestHelper(manifest, app.origin, app.manifestURL);
-      let getNotificationURLFor = function(messages) {
-        if (!messages) {
-          return null;
-        }
-
-        for (let i = 0; i < messages.length; i++) {
-          let message = messages[i];
-          if (message === kNotificationSystemMessageName) {
-            return helper.fullLaunchPath();
-          } else if (typeof message === "object" &&
-                     kNotificationSystemMessageName in message) {
-            return helper.resolveURL(message[kNotificationSystemMessageName]);
-          }
-        }
-
-        // No message found...
-        return null;
-      }
-
-      listener.target = getNotificationURLFor(manifest.messages);
-
-      // Bug 816944 - Support notification messages for entry_points.
-    });
   },
 
   deserializeStructuredClone: function(dataString) {
@@ -222,14 +195,6 @@ var AlertsHelper = {
       send(null, null);
       return;
     }
-
-    // If we have a manifest URL, get the icon and title from the manifest
-    // to prevent spoofing.
-    appsService.getManifestFor(manifestURL).then((manifest) => {
-      let app = appsService.getAppByManifestURL(manifestURL);
-      let helper = new ManifestHelper(manifest, app.origin, manifestURL);
-      send(helper.name, helper.iconURLForSize(kNotificationIconSize));
-    });
   },
 
   showAlertNotification: function(aMessage) {
