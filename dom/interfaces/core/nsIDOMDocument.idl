@@ -342,10 +342,4 @@ interface nsIDOMDocument : nsIDOMNode
    */
   readonly attribute boolean hidden;
   readonly attribute DOMString visibilityState;
-
-  /**
-   * Returns "BackCompat" if we're in quirks mode or "CSS1Compat" if we're in
-   * strict mode.  (XML documents are always in strict mode.)
-   */
-  readonly attribute DOMString compatMode;
 };
