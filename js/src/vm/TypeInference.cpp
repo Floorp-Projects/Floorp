@@ -4521,7 +4521,7 @@ AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM()
         JSRuntime* rt = zone->runtimeFromMainThread();
         js::CancelOffThreadIonCompile(rt);
         zone->setPreservingCode(false);
-        zone->discardJitCode(rt->defaultFreeOp());
+        zone->discardJitCode(rt->defaultFreeOp(), /* discardBaselineCode = */ false);
         zone->types.clearAllNewScriptsOnOOM();
     }
 }
