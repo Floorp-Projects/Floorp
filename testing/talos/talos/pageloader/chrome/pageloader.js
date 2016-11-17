@@ -221,6 +221,10 @@ function plInit() {
       var browserLoadFunc = function (ev) {
         browserWindow.removeEventListener('load', browserLoadFunc, true);
 
+        function firstPageCanLoadAsRemote() {
+          return E10SUtils.canLoadURIInProcess(pageUrls[0], Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT);
+        }
+
         // do this half a second after load, because we need to be
         // able to resize the window and not have it get clobbered
         // by the persisted values
@@ -228,20 +232,20 @@ function plInit() {
                      // For e10s windows, since bug 1261842, the initial browser is remote unless
                      // it attempts to browse to a URI that should be non-remote (landed at bug 1047603).
                      //
-                     // However, when it loads a URI that requires a different remote type,
-                     // we lose the load listener and the injected tpRecordTime.remote,
+                     // However, when it loads such URI and reinitializes as non-remote, we lose the
+                     // load listener and the injected tpRecordTime.
+                     //
+                     // The preferred pageloader behaviour in e10s is to run the pages as as remote,
+                     // so if the page can load as remote, we will load it as remote.
                      //
                      // It also probably means that per test (or, in fact, per pageloader browser
                      // instance which adds the load listener and injects tpRecordTime), all the
                      // pages should be able to load in the same mode as the initial page - due
                      // to this reinitialization on the switch.
                      if (browserWindow.gMultiProcessBrowser) {
-                       let remoteType = E10SUtils.getRemoteTypeForURI(pageUrls[0], true);
-                       if (remoteType) {
-                         browserWindow.XULBrowserWindow.forceInitialBrowserRemote(remoteType);
-                       } else {
+                       if (!firstPageCanLoadAsRemote())
                          browserWindow.XULBrowserWindow.forceInitialBrowserNonRemote(null);
-                       }
+                       // Implicit else: initial browser in e10s is remote by default.
                      }
 
                      browserWindow.resizeTo(winWidth, winHeight);

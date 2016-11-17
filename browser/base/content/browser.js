@@ -4209,10 +4209,10 @@ var XULBrowserWindow = {
     // unsupported
   },
 
-  forceInitialBrowserRemote: function(aRemoteType) {
+  forceInitialBrowserRemote: function() {
     let initBrowser =
       document.getAnonymousElementByAttribute(gBrowser, "anonid", "initialBrowser");
-    gBrowser.updateBrowserRemoteness(initBrowser, true, aRemoteType, null);
+    return initBrowser.frameLoader.tabParent;
   },
 
   forceInitialBrowserNonRemote: function(aOpener) {
