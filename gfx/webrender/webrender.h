@@ -110,11 +110,6 @@ wr_dp_push_iframe(wrstate* wrState, WRRect bounds, WRRect clip,
                   uint64_t layers_id)
 WR_FUNC;
 
-WR_INLINE void
-wr_set_async_scroll(wrwindowstate* wrWindow, wrstate* wrState,
-                    uint64_t scroll_id, float x, float y)
-WR_FUNC;
-
 // The pointer returned by wr_readback_buffer must be freed by rust, not C.
 // After using the data, it is the responsibility of the caller to free the memory
 // by giving the pointer, out_length, out_capacity to wr_free_buffer.
