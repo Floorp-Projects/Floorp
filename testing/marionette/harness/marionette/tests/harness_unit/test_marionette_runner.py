@@ -122,7 +122,7 @@ def test_build_kwargs_basic_args(build_kwargs_using):
     always be included, irrespective of the runner's settings)
     get passed to the call to runner.driverclass'''
 
-    basic_args = ['timeout', 'socket_timeout', 'prefs',
+    basic_args = ['socket_timeout', 'prefs',
                   'startup_timeout', 'verbose', 'symbols_path']
     built_kwargs = build_kwargs_using([(a, getattr(sentinel, a)) for a in basic_args])
     for arg in basic_args:

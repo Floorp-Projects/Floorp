@@ -6,6 +6,11 @@
 import errors
 
 
+DEFAULT_SCRIPT_TIMEOUT = 30
+DEFAULT_PAGE_LOAD_TIMEOUT = 300
+DEFAULT_IMPLICIT_WAIT_TIMEOUT = 0
+
+
 class Timeouts(object):
     """Manage timeout settings in the Marionette session.
 
@@ -85,3 +90,9 @@ class Timeouts(object):
 
         """
         self._set("implicit", sec)
+
+    def reset(self):
+        """Resets timeouts to their default values."""
+        self.script = DEFAULT_SCRIPT_TIMEOUT
+        self.page_load = DEFAULT_PAGE_LOAD_TIMEOUT
+        self.implicit = DEFAULT_IMPLICIT_WAIT_TIMEOUT
