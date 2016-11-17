@@ -99,9 +99,9 @@ function waitForSomeTabToLoad() {
  * Ensure the Mixed Content Blocker is enabled.
  */
 add_task(function* test_initialize() {
-  yield SpecialPowers.pushPrefEnv({
+  yield new Promise(resolve => SpecialPowers.pushPrefEnv({
     "set": [["security.mixed_content.block_active_content", true]],
-  });
+  }, resolve));
 });
 
 /**

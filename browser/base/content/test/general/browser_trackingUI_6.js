@@ -18,7 +18,10 @@ function waitForSecurityChange(numChanges = 1) {
 }
 
 add_task(function* test_fetch() {
-  yield SpecialPowers.pushPrefEnv({ set: [['privacy.trackingprotection.enabled', true]] });
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({ set: [['privacy.trackingprotection.enabled', true]] },
+                              resolve);
+  });
 
   yield BrowserTestUtils.withNewTab({ gBrowser, url: URL }, function* (newTabBrowser) {
     let securityChange = waitForSecurityChange();

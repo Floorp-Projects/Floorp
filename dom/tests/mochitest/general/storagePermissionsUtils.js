@@ -26,7 +26,9 @@ if (inFrame) {
 }
 
 function setCookieBehavior(behavior) {
-  return SpecialPowers.pushPrefEnv({"set": [[kPrefName, behavior]]});
+    return new Promise((resolve, reject) => {
+        SpecialPowers.pushPrefEnv({"set": [[kPrefName, behavior]]}, resolve);
+    });
 }
 
 function runIFrame(url) {

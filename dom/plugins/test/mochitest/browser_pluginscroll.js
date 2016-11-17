@@ -25,16 +25,18 @@ add_task(function* () {
 });
 
 add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({
-    "set": [
-             ["general.smoothScroll", true],
-             ["general.smoothScroll.other", true],
-             ["general.smoothScroll.mouseWheel", true],
-             ["general.smoothScroll.other.durationMaxMS", 2000],
-             ["general.smoothScroll.other.durationMinMS", 1999],
-             ["general.smoothScroll.mouseWheel.durationMaxMS", 2000],
-             ["general.smoothScroll.mouseWheel.durationMinMS", 1999],
-           ]});
+  yield new Promise((resolve) => {
+    SpecialPowers.pushPrefEnv({
+      "set": [
+               ["general.smoothScroll", true],
+               ["general.smoothScroll.other", true],
+               ["general.smoothScroll.mouseWheel", true],
+               ["general.smoothScroll.other.durationMaxMS", 2000],
+               ["general.smoothScroll.other.durationMinMS", 1999],
+               ["general.smoothScroll.mouseWheel.durationMaxMS", 2000],
+               ["general.smoothScroll.mouseWheel.durationMinMS", 1999],
+             ]}, resolve);
+  });
 });
 
 /*

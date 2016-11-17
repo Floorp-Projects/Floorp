@@ -40,8 +40,11 @@
   }
 
   function httpsOnly() {
-    return SpecialPowers.pushPrefEnv({'set': [["dom.serviceWorkers.testing.enabled", false]] })
-    .then(function() {
+    var promise = new Promise(function(resolve) {
+      SpecialPowers.pushPrefEnv({'set': [["dom.serviceWorkers.testing.enabled", false]] }, resolve);
+    });
+
+    return promise.then(function() {
       return navigator.serviceWorker.register("/worker.js");
     }).then(function(w) {
       ok(false, "non-HTTPS pages cannot register ServiceWorkers");

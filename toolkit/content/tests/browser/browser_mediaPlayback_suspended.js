@@ -155,9 +155,11 @@ function* suspended_block(url, browser) {
 }
 
 add_task(function* setup_test_preference() {
-  yield SpecialPowers.pushPrefEnv({"set": [
-    ["media.useAudioChannelService.testing", true]
-  ]});
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["media.useAudioChannelService.testing", true]
+    ]}, resolve);
+  });
 });
 
 add_task(function* test_suspended_pause() {

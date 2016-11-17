@@ -480,9 +480,11 @@ function* test_delayed_tabattr_removal() {
 }
 
 add_task(function*() {
-  yield SpecialPowers.pushPrefEnv({"set": [
-                                    ["browser.tabs.showAudioPlayingIcon", true],
-                                  ]});
+  yield new Promise((resolve) => {
+    SpecialPowers.pushPrefEnv({"set": [
+                                ["browser.tabs.showAudioPlayingIcon", true],
+                              ]}, resolve);
+  });
 });
 
 requestLongerTimeout(2);

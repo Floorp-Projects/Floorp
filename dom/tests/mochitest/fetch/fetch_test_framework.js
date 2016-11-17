@@ -12,11 +12,13 @@ function testScript(script) {
   }
 
   function setupPrefs() {
-    return SpecialPowers.pushPrefEnv({
-      "set": [["dom.requestcontext.enabled", true],
-              ["dom.serviceWorkers.enabled", true],
-              ["dom.serviceWorkers.testing.enabled", true],
-              ["dom.serviceWorkers.exemptFromPerDomainMax", true]]
+    return new Promise(function(resolve, reject) {
+      SpecialPowers.pushPrefEnv({
+        "set": [["dom.requestcontext.enabled", true],
+                ["dom.serviceWorkers.enabled", true],
+                ["dom.serviceWorkers.testing.enabled", true],
+                ["dom.serviceWorkers.exemptFromPerDomainMax", true]]
+      }, resolve);
     });
   }
 

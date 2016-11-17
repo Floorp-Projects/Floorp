@@ -544,7 +544,9 @@ function modifySessionStorage(browser, data, options = {}) {
 }
 
 function pushPrefs(...aPrefs) {
-  return SpecialPowers.pushPrefEnv({"set": aPrefs});
+  return new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve);
+  });
 }
 
 function popPrefs() {

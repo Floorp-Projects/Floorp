@@ -85,13 +85,15 @@ function generateKeyInfo(aData) {
 
 add_task(function* setup() {
   // Make sure userContext is enabled.
-  yield SpecialPowers.pushPrefEnv({"set": [
-    [ "privacy.userContext.enabled", true ],
-    [ "media.mediasource.enabled", true ],
-    [ "media.eme.apiVisible", true ],
-    [ "media.mediasource.webm.enabled", true ],
-    [ "media.clearkey.persistent-license.enabled", true ],
-  ]});
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [
+      [ "privacy.userContext.enabled", true ],
+      [ "media.mediasource.enabled", true ],
+      [ "media.eme.apiVisible", true ],
+      [ "media.mediasource.webm.enabled", true ],
+      [ "media.clearkey.persistent-license.enabled", true ],
+    ]}, resolve);
+  });
 });
 
 add_task(function* test() {
