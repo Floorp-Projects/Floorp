@@ -158,23 +158,21 @@ nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
     // Check if this clipPath is itself clipped by another clipPath:
     nsSVGClipPathFrame* clipPathThatClipsClipPath =
       nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(nullptr);
-    bool clippingOfClipPathRequiredMasking;
-    if (clipPathThatClipsClipPath) {
-      aMaskContext.Save();
-      clippingOfClipPathRequiredMasking = !clipPathThatClipsClipPath->IsTrivial();
-      if (!clippingOfClipPathRequiredMasking) {
-        clipPathThatClipsClipPath->ApplyClipPath(aMaskContext, aClippedFrame,
-                                                 aMatrix);
-      } else {
-        Matrix maskTransform;
-        RefPtr<SourceSurface> mask =
-          clipPathThatClipsClipPath->GetClipMask(aMaskContext, aClippedFrame,
-                                                 aMatrix, &maskTransform);
-        aMaskContext.PushGroupForBlendBack(gfxContentType::ALPHA, 1.0,
-                                   mask, maskTransform);
-        // The corresponding PopGroupAndBlend call below will mask the
-        // blend using |mask|.
-      }
+    nsSVGUtils::MaskUsage maskUsage;
+    nsSVGUtils::DetermineMaskUsage(this, true, maskUsage);
+
+    if (maskUsage.shouldApplyClipPath) {
+      clipPathThatClipsClipPath->ApplyClipPath(aMaskContext, aClippedFrame,
+                                               aMatrix);
+    } else if (maskUsage.shouldGenerateClipMaskLayer) {
+      Matrix maskTransform;
+      RefPtr<SourceSurface> mask =
+        clipPathThatClipsClipPath->GetClipMask(aMaskContext, aClippedFrame,
+                                               aMatrix, &maskTransform);
+      aMaskContext.PushGroupForBlendBack(gfxContentType::ALPHA, 1.0,
+                                         mask, maskTransform);
+      // The corresponding PopGroupAndBlend call below will mask the
+      // blend using |mask|.
     }
 
     // Paint our children into the mask:
@@ -183,12 +181,10 @@ nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
       result &= PaintFrameIntoMask(kid, aClippedFrame, aMaskContext, aMatrix);
     }
 
-
-    if (clipPathThatClipsClipPath) {
-      if (clippingOfClipPathRequiredMasking) {
-        aMaskContext.PopGroupAndBlend();
-      }
-      aMaskContext.Restore();
+    if (maskUsage.shouldGenerateClipMaskLayer) {
+      aMaskContext.PopGroupAndBlend();
+    } else if (maskUsage.shouldApplyClipPath) {
+      aMaskContext.PopClip();
     }
   }
 
@@ -226,23 +222,19 @@ nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame *aFrame,
     return DrawResult::SUCCESS;
   }
 
-  bool childsClipPathRequiresMasking;
-
-  if (clipPathThatClipsChild) {
-    childsClipPathRequiresMasking = !clipPathThatClipsChild->IsTrivial();
-    aTarget.Save();
-    if (!childsClipPathRequiresMasking) {
-      clipPathThatClipsChild->ApplyClipPath(aTarget, aClippedFrame, aMatrix);
-    } else {
-      Matrix maskTransform;
-      RefPtr<SourceSurface> mask =
-        clipPathThatClipsChild->GetClipMask(aTarget, aClippedFrame,
-                                            aMatrix, &maskTransform);
-      aTarget.PushGroupForBlendBack(gfxContentType::ALPHA, 1.0,
-                                 mask, maskTransform);
-      // The corresponding PopGroupAndBlend call below will mask the
-      // blend using |mask|.
-    }
+  nsSVGUtils::MaskUsage maskUsage;
+  nsSVGUtils::DetermineMaskUsage(aFrame, true, maskUsage);
+  if (maskUsage.shouldApplyClipPath) {
+    clipPathThatClipsChild->ApplyClipPath(aTarget, aClippedFrame, aMatrix);
+  } else if (maskUsage.shouldGenerateClipMaskLayer) {
+    Matrix maskTransform;
+    RefPtr<SourceSurface> mask =
+      clipPathThatClipsChild->GetClipMask(aTarget, aClippedFrame,
+                                          aMatrix, &maskTransform);
+    aTarget.PushGroupForBlendBack(gfxContentType::ALPHA, 1.0,
+                               mask, maskTransform);
+    // The corresponding PopGroupAndBlend call below will mask the
+    // blend using |mask|.
   }
 
   gfxMatrix toChildsUserSpace = mMatrixForChildren;
@@ -259,11 +251,10 @@ nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame *aFrame,
   // only the geometry (opaque black) if set.
   DrawResult result = frame->PaintSVG(aTarget, toChildsUserSpace);
 
-  if (clipPathThatClipsChild) {
-    if (childsClipPathRequiresMasking) {
-      aTarget.PopGroupAndBlend();
-    }
-    aTarget.Restore();
+  if (maskUsage.shouldGenerateClipMaskLayer) {
+    aTarget.PopGroupAndBlend();
+  } else if (maskUsage.shouldApplyClipPath) {
+    aTarget.PopClip();
   }
 
   return result;
