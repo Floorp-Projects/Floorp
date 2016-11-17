@@ -508,7 +508,6 @@ RTCPeerConnection.prototype = {
   // Add a function to the internal operations chain.
 
   _chain: function(func) {
-    this._checkClosed(); // out here DOMException line-numbers work.
     let p = this._operationsChain.then(() => {
       // Don't _checkClosed() inside the chain, because it throws, and spec
       // behavior as of this writing is to NOT reject outstanding promises on
@@ -531,13 +530,18 @@ RTCPeerConnection.prototype = {
   // It also serves as guard against settling promises past close().
 
   _legacyCatchAndCloseGuard: function(onSuccess, onError, func) {
+    let operation = () => {
+      this._checkClosed();
+      return func();
+    };
+
     if (!onSuccess) {
-      return this._win.Promise.resolve(func())
+      return this._win.Promise.resolve(operation())
         .then(v => (this._closed ? new Promise(() => {}) : v),
               e => (this._closed ? new Promise(() => {}) : Promise.reject(e)));
     }
     try {
-      return this._win.Promise.resolve(func())
+      return this._win.Promise.resolve(operation())
         .then(this._wrapLegacyCallback(onSuccess),
               this._wrapLegacyCallback(onError));
     } catch (e) {
@@ -950,6 +954,7 @@ RTCPeerConnection.prototype = {
   },
 
   getIdentityAssertion: function() {
+    this._checkClosed();
     let origin = Cu.getWebIDLCallerPrincipal().origin;
     return this._chain(
       () => this._certificateReady.then(
@@ -1623,6 +1628,7 @@ RTCRtpSender.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
   replaceTrack: function(withTrack) {
+    this._pc._checkClosed();
     return this._pc._chain(() => this._pc._replaceTrack(this, withTrack));
   },
 
