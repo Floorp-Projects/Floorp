@@ -203,10 +203,10 @@ class ADBAndroid(ADBDevice):
                                                            timeout=timeout) != 'Permissive'):
                         self._logger.info('Setting SELinux Permissive Mode')
                         self.shell_output("setenforce Permissive", timeout=timeout, root=True)
-                    if self.is_dir(ready_path, timeout=timeout, root=True):
-                        self.rmdir(ready_path, timeout=timeout, root=True)
-                    self.mkdir(ready_path, timeout=timeout, root=True)
-                    self.rmdir(ready_path, timeout=timeout, root=True)
+                    if self.is_dir(ready_path, timeout=timeout):
+                        self.rmdir(ready_path, timeout=timeout)
+                    self.mkdir(ready_path, timeout=timeout)
+                    self.rmdir(ready_path, timeout=timeout)
                     # Invoke the pm list commands to see if it is up and
                     # running.
                     for pm_list_cmd in pm_list_commands:
