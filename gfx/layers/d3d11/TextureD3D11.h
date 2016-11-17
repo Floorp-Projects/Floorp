@@ -19,7 +19,7 @@
 namespace mozilla {
 namespace layers {
 
-class AutoTextureLock
+class MOZ_RAII AutoTextureLock
 {
 public:
   AutoTextureLock(IDXGIKeyedMutex* aMutex, HRESULT& aResult,
