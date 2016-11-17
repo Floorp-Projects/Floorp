@@ -5025,8 +5025,7 @@ nsBrowserAccess.prototype = {
                           ? aParams.openerOriginAttributes.userContextId
                           : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID
 
-    let referrer = aParams.referrer ? makeURI(aParams.referrer) : null;
-    let browser = this._openURIInNewTab(aURI, referrer,
+    let browser = this._openURIInNewTab(aURI, aParams.referrer,
                                         aParams.referrerPolicy,
                                         aParams.isPrivate,
                                         isExternal, false,
