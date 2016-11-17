@@ -13,7 +13,6 @@
 #include "mozilla/Attributes.h"
 #include "nsString.h"
 #include "nsCRT.h"
-#include "mozIApplicationClearPrivateDataParams.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/DebugOnly.h"

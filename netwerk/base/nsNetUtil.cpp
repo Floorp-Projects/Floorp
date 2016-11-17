@@ -13,7 +13,6 @@
 #include "mozilla/Telemetry.h"
 #include "nsNetUtil.h"
 #include "nsNetUtilInlines.h"
-#include "mozIApplicationClearPrivateDataParams.h"
 #include "nsCategoryCache.h"
 #include "nsContentUtils.h"
 #include "nsHashKeys.h"
@@ -1334,39 +1333,6 @@ NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport)
   }
 
   return NS_FAILED(loadingPrincipal->CheckMayLoad(uri, aReport, dataInherits));
-}
-
-nsresult
-NS_GetAppInfoFromClearDataNotification(nsISupports *aSubject,
-                                       uint32_t *aAppID,
-                                       bool *aBrowserOnly)
-{
-    nsresult rv;
-
-    nsCOMPtr<mozIApplicationClearPrivateDataParams>
-        clearParams(do_QueryInterface(aSubject));
-    MOZ_ASSERT(clearParams);
-    if (!clearParams) {
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    uint32_t appId;
-    rv = clearParams->GetAppId(&appId);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    MOZ_ASSERT(appId != NECKO_UNKNOWN_APP_ID);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (appId == NECKO_UNKNOWN_APP_ID) {
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    bool browserOnly = false;
-    rv = clearParams->GetBrowserOnly(&browserOnly);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    *aAppID = appId;
-    *aBrowserOnly = browserOnly;
-    return NS_OK;
 }
 
 bool
