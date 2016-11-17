@@ -153,7 +153,6 @@ public:
     using nsDocument::SetTitle;
     using nsDocument::GetLastStyleSheetSet;
     using nsDocument::MozSetImageElement;
-    using nsDocument::GetMozFullScreenElement;
     using nsIDocument::GetLocation;
 
     // nsDocument interface overrides
