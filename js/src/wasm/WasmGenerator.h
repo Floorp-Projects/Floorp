@@ -20,50 +20,15 @@
 #define wasm_generator_h
 
 #include "jit/MacroAssembler.h"
-#include "wasm/WasmCompile.h"
+#include "wasm/WasmBinaryFormat.h"
 #include "wasm/WasmModule.h"
 
 namespace js {
 namespace wasm {
 
+struct CompileArgs;
+
 class FunctionGenerator;
-
-// The ModuleGeneratorData holds all the state shared between the
-// ModuleGenerator thread and background compile threads. The background
-// threads are given a read-only view of the ModuleGeneratorData and the
-// ModuleGenerator is careful to initialize, and never subsequently mutate,
-// any given datum before being read by a background thread. In particular,
-// once created, the Vectors are never resized.
-
-struct ModuleGeneratorData
-{
-    ModuleKind                kind;
-    MemoryUsage               memoryUsage;
-    mozilla::Atomic<uint32_t> minMemoryLength;
-    Maybe<uint32_t>           maxMemoryLength;
-
-    SigWithIdVector           sigs;
-    SigWithIdPtrVector        funcSigs;
-    Uint32Vector              funcImportGlobalDataOffsets;
-    GlobalDescVector          globals;
-    TableDescVector           tables;
-    Uint32Vector              asmJSSigToTableIndex;
-
-    explicit ModuleGeneratorData(ModuleKind kind = ModuleKind::Wasm)
-      : kind(kind),
-        memoryUsage(MemoryUsage::None),
-        minMemoryLength(0)
-    {}
-
-    bool isAsmJS() const {
-        return kind == ModuleKind::AsmJS;
-    }
-    bool funcIsImport(uint32_t funcIndex) const {
-        return funcIndex < funcImportGlobalDataOffsets.length();
-    }
-};
-
-typedef UniquePtr<ModuleGeneratorData> UniqueModuleGeneratorData;
 
 // A ModuleGenerator encapsulates the creation of a wasm module. During the
 // lifetime of a ModuleGenerator, a sequence of FunctionGenerators are created
@@ -91,7 +56,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     ElemSegmentVector               elemSegments_;
 
     // Data scoped to the ModuleGenerator's lifetime
-    UniqueModuleGeneratorData       shared_;
+    UniqueModuleEnvironment         shared_;
     uint32_t                        numSigs_;
     uint32_t                        numTables_;
     LifoAlloc                       lifo_;
@@ -132,7 +97,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     explicit ModuleGenerator(ImportVector&& imports);
     ~ModuleGenerator();
 
-    MOZ_MUST_USE bool init(UniqueModuleGeneratorData shared, const CompileArgs& args,
+    MOZ_MUST_USE bool init(UniqueModuleEnvironment shared, const CompileArgs& args,
                            Metadata* maybeAsmJSMetadata = nullptr);
 
     bool isAsmJS() const { return metadata_->kind == ModuleKind::AsmJS; }
