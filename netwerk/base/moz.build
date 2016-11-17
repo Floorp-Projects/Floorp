@@ -259,10 +259,6 @@ UNIFIED_SOURCES += [
     'TLSServerSocket.cpp',
 ]
 
-if CONFIG['MOZ_RUST']:
-    EXPORTS.mozilla.net += [ 'RustURL.h' ]
-    UNIFIED_SOURCES += [ 'RustURL.cpp' ]
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
         'nsURLHelperWin.cpp',
