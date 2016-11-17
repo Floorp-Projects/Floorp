@@ -113,7 +113,6 @@
 @BINPATH@/components/directory.xpt
 @BINPATH@/components/docshell.xpt
 @BINPATH@/components/dom.xpt
-@BINPATH@/components/dom_apps.xpt
 @BINPATH@/components/dom_base.xpt
 @BINPATH@/components/dom_canvas.xpt
 @BINPATH@/components/dom_core.xpt
@@ -353,8 +352,6 @@
 @BINPATH@/components/TelemetryStartup.manifest
 @BINPATH@/components/XULStore.js
 @BINPATH@/components/XULStore.manifest
-@BINPATH@/components/AppsService.js
-@BINPATH@/components/AppsService.manifest
 @BINPATH@/components/htmlMenuBuilder.js
 @BINPATH@/components/htmlMenuBuilder.manifest
 

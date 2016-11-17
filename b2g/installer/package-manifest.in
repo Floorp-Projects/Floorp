@@ -148,7 +148,6 @@
 @RESPATH@/components/docshell.xpt
 @RESPATH@/components/dom.xpt
 @RESPATH@/components/dom_activities.xpt
-@RESPATH@/components/dom_apps.xpt
 @RESPATH@/components/dom_audiochannel.xpt
 @RESPATH@/components/dom_base.xpt
 @RESPATH@/components/dom_system.xpt
@@ -533,8 +532,6 @@
 @RESPATH@/components/TelemetryStartup.manifest
 @RESPATH@/components/XULStore.js
 @RESPATH@/components/XULStore.manifest
-@RESPATH@/components/AppsService.js
-@RESPATH@/components/AppsService.manifest
 @RESPATH@/components/Push.js
 @RESPATH@/components/Push.manifest
 @RESPATH@/components/PushComponents.js
@@ -797,7 +794,6 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/components/HelperAppDialog.js
 @RESPATH@/components/DownloadsUI.js
 @RESPATH@/components/SystemMessageGlue.js
-@RESPATH@/components/B2GAppMigrator.js
 @RESPATH@/components/B2GPresentationDevicePrompt.js
 @RESPATH@/components/PresentationRequestUIGlue.js
 

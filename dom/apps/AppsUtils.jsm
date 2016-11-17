@@ -19,11 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "appsService",
-                                   "@mozilla.org/AppsService;1",
-                                   "nsIAppsService");
-
-// Shared code for AppsServiceChild.jsm, Webapps.jsm and Webapps.js
+// Shared code for Webapps.jsm and Webapps.js
 
 this.EXPORTED_SYMBOLS =
   ["AppsUtils", "ManifestHelper", "isAbsoluteURI"];
@@ -634,15 +630,6 @@ this.AppsUtils = {
   // Returns the hash for a JS object.
   computeObjectHash: function(aObject) {
     return this.computeHash(JSON.stringify(aObject));
-  },
-
-  getAppManifestURLFromWindow: function(aWindow) {
-    let appId = aWindow.document.nodePrincipal.appId;
-    if (appId === Ci.nsIScriptSecurityManager.NO_APP_ID) {
-      return null;
-    }
-
-    return appsService.getManifestURLByLocalId(appId);
   },
 }
 

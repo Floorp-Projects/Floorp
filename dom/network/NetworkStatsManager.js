@@ -181,8 +181,8 @@ NetworkStatsManager.prototype = {
                                   threshold: aThreshold,
                                   startTime: aOptions.startTime,
                                   data: aOptions.data,
-                                  manifestURL: this.manifestURL,
-                                  pageURL: this.pageURL}});
+                                  manifestURL: "",
+                                  pageURL: ""}});
     return request;
   },
 
@@ -196,7 +196,7 @@ NetworkStatsManager.prototype = {
     cpmm.sendAsyncMessage("NetworkStats:GetAlarms",
                           {id: this.getRequestId(request),
                            data: {network: network,
-                                  manifestURL: this.manifestURL}});
+                                  manifestURL: ""}});
     return request;
   },
 
@@ -209,7 +209,7 @@ NetworkStatsManager.prototype = {
     cpmm.sendAsyncMessage("NetworkStats:RemoveAlarms",
                           {id: this.getRequestId(request),
                            data: {alarmId: aAlarmId,
-                                  manifestURL: this.manifestURL}});
+                                  manifestURL: ""}});
 
     return request;
   },
@@ -352,17 +352,6 @@ NetworkStatsManager.prototype = {
                                         "NetworkStats:SetAlarm:Return",
                                         "NetworkStats:GetAlarms:Return",
                                         "NetworkStats:RemoveAlarms:Return"]);
-
-    // Init app properties.
-    let appsService = Cc["@mozilla.org/AppsService;1"]
-                        .getService(Ci.nsIAppsService);
-
-    this.manifestURL = appsService.getManifestURLByLocalId(principal.appId);
-
-    let isApp = !!this.manifestURL.length;
-    if (isApp) {
-      this.pageURL = principal.URI.spec;
-    }
 
     this.window = aWindow;
   },

@@ -50,7 +50,6 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Telemetry.h"
-#include "nsIAppsService.h"
 #include "nsIConsoleService.h"
 #include "nsVariant.h"
 
