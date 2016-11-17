@@ -210,9 +210,6 @@ Object.assign(PushServiceParent.prototype, {
       this.notificationForOriginClosed(data);
       return;
     }
-    if (!target.assertPermission("push")) {
-      return;
-    }
     if (name === "Push:ReportError") {
       this.reportDeliveryError(data.messageId, data.reason);
       return;

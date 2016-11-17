@@ -26,7 +26,7 @@ add_task(function* searchSuggestions() {
   Services.search.currentEngine = engine;
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.search.currentEngine = oldCurrentEngine;
     Services.prefs.clearUserPref(SUGGEST_ALL_PREF);
     Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);

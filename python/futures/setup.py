@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+from warnings import warn
+import sys
+
+if sys.version_info[0] > 2:
+    warn('This backport is meant only for Python 2.\n'
+         'Python 3 users do not need it, as the concurrent.futures '
+         'package is available in the standard library.')
 
 extras = {}
 try:
@@ -8,7 +15,7 @@ except ImportError:
     from distutils.core import setup
 
 setup(name='futures',
-      version='3.0.2',
+      version='3.0.5',
       description='Backport of the concurrent.futures package from Python 3.2',
       author='Brian Quinlan',
       author_email='brian@sweetapp.com',

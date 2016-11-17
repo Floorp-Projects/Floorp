@@ -11,14 +11,16 @@
 #include "nsCSSPseudoElements.h"
 #include "nsFormControlFrame.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNode.h"
 #include "nsIFormControl.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "nsIDocument.h"
 
 using mozilla::dom::Element;
+using mozilla::dom::HTMLInputElement;
+using mozilla::dom::CallerType;
 
 nsColorControlFrame::nsColorControlFrame(nsStyleContext* aContext)
   : nsHTMLButtonControlFrame(aContext)
@@ -100,8 +102,8 @@ nsColorControlFrame::UpdateColor()
   // Get the color from the "value" property of our content; it will return the
   // default color (through the sanitization algorithm) if there is none.
   nsAutoString color;
-  nsCOMPtr<nsIDOMHTMLInputElement> elt = do_QueryInterface(mContent);
-  elt->GetValue(color);
+  HTMLInputElement* elt = HTMLInputElement::FromContent(mContent);
+  elt->GetValue(color, CallerType::System);
   MOZ_ASSERT(!color.IsEmpty(),
              "Content node's GetValue() should return a valid color string "
              "(the default color, in case no valid color is set)");

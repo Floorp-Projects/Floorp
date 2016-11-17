@@ -58,11 +58,11 @@ function countEntries(name, message, check) {
 
   let count;
   FormHistory.count(obj, { handleResult: result => count = result,
-                           handleError: function (error) {
+                           handleError: function(error) {
                              deferred.reject(error)
                              throw new Error("Error occurred searching form history: " + error);
                            },
-                           handleCompletion: function (reason) {
+                           handleCompletion: function(reason) {
                              if (!reason) {
                                check(count, message);
                                deferred.resolve();
@@ -99,7 +99,7 @@ function* onHistoryReady() {
   let formHistoryPromise = promiseFormHistoryRemoved();
 
   // Clear 10 minutes ago
-  s.range = [now_uSec - 10*60*1000000, now_uSec];
+  s.range = [now_uSec - 10 * 60 * 1000000, now_uSec];
   yield s.sanitize();
   s.range = null;
 
@@ -207,7 +207,7 @@ function* onHistoryReady() {
   formHistoryPromise = promiseFormHistoryRemoved();
 
   // Clear 1 hour 10 minutes
-  s.range = [now_uSec - 70*60*1000000, now_uSec];
+  s.range = [now_uSec - 70 * 60 * 1000000, now_uSec];
   yield s.sanitize();
   s.range = null;
 
@@ -294,7 +294,7 @@ function* onHistoryReady() {
   formHistoryPromise = promiseFormHistoryRemoved();
 
   // Clear 2 hours 10 minutes
-  s.range = [now_uSec - 130*60*1000000, now_uSec];
+  s.range = [now_uSec - 130 * 60 * 1000000, now_uSec];
   yield s.sanitize();
   s.range = null;
 
@@ -365,7 +365,7 @@ function* onHistoryReady() {
   formHistoryPromise = promiseFormHistoryRemoved();
 
   // Clear 4 hours 10 minutes
-  s.range = [now_uSec - 250*60*1000000, now_uSec];
+  s.range = [now_uSec - 250 * 60 * 1000000, now_uSec];
   yield s.sanitize();
   s.range = null;
 
@@ -493,11 +493,11 @@ function* setupFormHistory() {
 
     let results = [];
     FormHistory.search(terms, params, { handleResult: result => results.push(result),
-                                        handleError: function (error) {
+                                        handleError: function(error) {
                                           deferred.reject(error);
                                           throw new Error("Error occurred searching form history: " + error);
                                         },
-                                        handleCompletion: function (reason) { deferred.resolve(results); }
+                                        handleCompletion: function(reason) { deferred.resolve(results); }
                                       });
     return deferred.promise;
   }
@@ -505,11 +505,11 @@ function* setupFormHistory() {
   function update(changes)
   {
     let deferred = Promise.defer();
-    FormHistory.update(changes, { handleError: function (error) {
+    FormHistory.update(changes, { handleError: function(error) {
                                     deferred.reject(error);
                                     throw new Error("Error occurred searching form history: " + error);
                                   },
-                                  handleCompletion: function (reason) { deferred.resolve(); }
+                                  handleCompletion: function(reason) { deferred.resolve(); }
                                 });
     return deferred.promise;
   }

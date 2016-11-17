@@ -289,11 +289,11 @@
         toolbar: this,
         contextMenu: null,
 
-        get active () {
+        get active() {
           return !!this.contextMenu;
         },
 
-        init: function (event) {
+        init: function(event) {
           let node = event.target;
           while (node != this.toolbar) {
             if (node.localName == "menupopup")
@@ -313,7 +313,7 @@
           this.contextMenu.addEventListener("popuphiding", this, false);
           this.toolbar.addEventListener("mousemove", this, false);
         },
-        handleEvent: function (event) {
+        handleEvent: function(event) {
           switch (event.type) {
             case "popupshown":
               this.toolbar.removeEventListener("mousemove", this, false);
@@ -338,7 +338,7 @@
 
       <method name="_setInactiveAsync">
         <body><![CDATA[
-          this._inactiveTimeout = setTimeout(function (self) {
+          this._inactiveTimeout = setTimeout(function(self) {
             if (self.getAttribute("autohide") == "true") {
               self._inactiveTimeout = null;
               self._setInactive();
@@ -567,7 +567,7 @@
       </method>
       <method name="getMigratedItems">
         <body><![CDATA[
-          return [... this._currentSetMigrated];
+          return [...this._currentSetMigrated];
         ]]></body>
       </method>
       <method name="_updateMigratedSet">

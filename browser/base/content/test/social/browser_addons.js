@@ -25,7 +25,7 @@ var manifestUpgrade = { // used for testing install
 function test() {
   waitForExplicitFinish();
   PopupNotifications.panel.setAttribute("animate", "false");
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     PopupNotifications.panel.removeAttribute("animate");
   });
 
@@ -35,7 +35,7 @@ function test() {
   is(SocialService.getOriginActivationType(manifest2.origin), "foreign", "manifest2 is foreign");
 
   Services.prefs.setBoolPref("social.remote-install.enabled", true);
-  runSocialTests(tests, undefined, undefined, function () {
+  runSocialTests(tests, undefined, undefined, function() {
     Services.prefs.clearUserPref("social.remote-install.enabled");
     ok(!Services.prefs.prefHasUserValue(prefname), "manifest is not in user-prefs");
     // just in case the tests failed, clear these here as well
@@ -91,7 +91,7 @@ var tests = {
     is(SocialService.getOriginActivationType(installFrom), "foreign", "testing foriegn install");
     let data = {
       origin: installFrom,
-      url: installFrom+"/activate",
+      url: installFrom + "/activate",
       manifest: manifest,
       window: window
     }

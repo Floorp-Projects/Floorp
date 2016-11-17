@@ -18,16 +18,16 @@ function test() {
   Services.prefs.setBoolPref(kShowUIPref, true);
   let tab = gBrowser.addTab();
   gBrowser.selectedTab = tab;
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     gBrowser.removeTab(tab);
     Services.prefs.clearUserPref(kShowUIPref);
   });
   tab.linkedBrowser.addEventListener("load", function onload() {
     tab.linkedBrowser.removeEventListener("load", onload, true);
     Task.spawn(function* () {
-      for (let test of gTests) {
-        info(test.desc);
-        yield test.run();
+      for (let testCase of gTests) {
+        info(testCase.desc);
+        yield testCase.run();
       }
     }).then(finish, ex => {
      ok(false, "Unexpected Exception: " + ex);

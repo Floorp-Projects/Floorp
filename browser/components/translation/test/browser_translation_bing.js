@@ -17,7 +17,7 @@ add_task(function* setup() {
   Services.prefs.setCharPref(kClientIdPref, "testClient");
   Services.prefs.setCharPref(kClientSecretPref, "testSecret");
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref(kClientIdPref);
     Services.prefs.clearUserPref(kClientSecretPref);
   });

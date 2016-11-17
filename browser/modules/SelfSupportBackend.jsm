@@ -53,11 +53,11 @@ const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_TELEMETRY_UNIFIED, false);
 var gLogAppenderDump = null;
 
 this.SelfSupportBackend = Object.freeze({
-  init: function () {
+  init: function() {
     SelfSupportBackendInternal.init();
   },
 
-  uninit: function () {
+  uninit: function() {
     SelfSupportBackendInternal.uninit();
   },
 });
@@ -75,7 +75,7 @@ var SelfSupportBackendInternal = {
   /**
    * Initializes the self support backend.
    */
-  init: function () {
+  init: function() {
     this._configureLogging();
 
     this._log.trace("init");
@@ -108,7 +108,7 @@ var SelfSupportBackendInternal = {
   /**
    * Shut down the self support backend, if active.
    */
-  uninit: function () {
+  uninit: function() {
     this._log.trace("uninit");
 
     Preferences.ignore(PREF_BRANCH_LOG, this._configureLogging, this);
@@ -142,7 +142,7 @@ var SelfSupportBackendInternal = {
    * Handle notifications. Once all windows are created, we wait a little bit more
    * since tabs might still be loading. Then, we open the self support.
    */
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     this._log.trace("observe - Topic " + aTopic);
 
     if (aTopic === "sessionstore-windows-restored") {
@@ -312,7 +312,7 @@ ProgressListener.prototype = {
     }
   },
 
-  onStateChange: function (aWebProgress, aRequest, aFlags, aStatus) {
+  onStateChange: function(aWebProgress, aRequest, aFlags, aStatus) {
     if (aFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         aFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
         aFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW &&
@@ -321,7 +321,7 @@ ProgressListener.prototype = {
     }
   },
 
-  destroy: function () {
+  destroy: function() {
     // Make sure we don't try to reload self support when shutting down.
     clearTimeout(this._reloadTimerId);
   },

@@ -802,54 +802,6 @@ dtls_SendSavedWriteData(sslSocket *ss)
     return SECSuccess;
 }
 
-/* Compress, MAC, encrypt a DTLS record. Allows specification of
- * the epoch using epoch value. If use_epoch is PR_TRUE then
- * we use the provided epoch. If use_epoch is PR_FALSE then
- * whatever the current value is in effect is used.
- *
- * Called from ssl3_SendRecord()
- */
-SECStatus
-dtls_CompressMACEncryptRecord(sslSocket *ss,
-                              ssl3CipherSpec *cwSpec,
-                              SSL3ContentType type,
-                              const SSL3Opaque *pIn,
-                              PRUint32 contentLen,
-                              sslBuffer *wrBuf)
-{
-    SECStatus rv = SECFailure;
-
-    ssl_GetSpecReadLock(ss); /********************************/
-
-    /* The reason for this switch-hitting code is that we might have
-     * a flight of records spanning an epoch boundary, e.g.,
-     *
-     * ClientKeyExchange (epoch = 0)
-     * ChangeCipherSpec (epoch = 0)
-     * Finished (epoch = 1)
-     *
-     * Thus, each record needs a different cipher spec. The information
-     * about which epoch to use is carried with the record.
-     */
-    if (!cwSpec) {
-        cwSpec = ss->ssl3.cwSpec;
-    } else {
-        PORT_Assert(type == content_handshake ||
-                    type == content_change_cipher_spec);
-    }
-
-    if (cwSpec->version < SSL_LIBRARY_VERSION_TLS_1_3) {
-        rv = ssl3_CompressMACEncryptRecord(cwSpec, ss->sec.isServer, PR_TRUE,
-                                           PR_FALSE, type, pIn, contentLen,
-                                           wrBuf);
-    } else {
-        rv = tls13_ProtectRecord(ss, cwSpec, type, pIn, contentLen, wrBuf);
-    }
-    ssl_ReleaseSpecReadLock(ss); /************************************/
-
-    return rv;
-}
-
 static SECStatus
 dtls_StartTimer(sslSocket *ss, PRUint32 time, DTLSTimerCb cb)
 {

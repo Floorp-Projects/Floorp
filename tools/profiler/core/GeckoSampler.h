@@ -83,11 +83,6 @@ class GeckoSampler: public Sampler {
   virtual void RequestSave() override
   {
     mSaveRequested = true;
-#ifdef MOZ_TASK_TRACER
-    if (mTaskTracer) {
-      mozilla::tasktracer::StopLogging();
-    }
-#endif
   }
 
   virtual void HandleSaveRequest() override;

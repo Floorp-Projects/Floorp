@@ -16,11 +16,18 @@ const gridSpec = generateActorSpec({
 const layoutSpec = generateActorSpec({
   typeName: "layout",
 
+  events: {
+    "grid-layout-changed": {
+      type: "grid-layout-changed",
+      grids: Arg(0, "array:grid")
+    }
+  },
+
   methods: {
     getAllGrids: {
       request: {
         rootNode: Arg(0, "domnode"),
-        traverseFrames: Arg(1, "boolean")
+        traverseFrames: Arg(1, "nullable:boolean")
       },
       response: {
         grids: RetVal("array:grid")

@@ -5,7 +5,7 @@
     </head>
     <body>
         <script>
-            document.onreadystatechange = function () {
+            document.onreadystatechange = function() {
                 let msg = new window.CustomEvent("WebChannelMessageToChrome", {
                     detail: JSON.stringify({
                         id: "newtab",

@@ -105,6 +105,8 @@ union ChromeRegistryItem
 namespace mozilla {
 namespace dom {
 
+// Used on Android/B2G to pass the list of fonts on the device
+// to the child process
 struct FontListEntry {
     nsString  familyName;
     nsString  faceName;
@@ -114,6 +116,15 @@ struct FontListEntry {
     uint8_t   italic;
     uint8_t   index;
     bool      isHidden;
+};
+
+// Used on Mac OS X to pass the list of font families (not faces)
+// from chrome to content processes.
+// The entryType field distinguishes several types of font family
+// record; see gfxMacPlatformFontList.h for values and meaning.
+struct FontFamilyListEntry {
+    nsString familyName;
+    uint8_t  entryType;
 };
 
 struct DeviceStorageFreeSpaceParams
@@ -391,27 +402,20 @@ both:
     // The child creates the PBrowser as part of
     // TabChild::BrowserFrameProvideWindow (which happens when the child's
     // content calls window.open()), and the parent creates the PBrowser as part
-    // of ContentParent::CreateBrowserOrApp.
+    // of ContentParent::CreateBrowser.
     //
-    // When the parent constructs a PBrowser, the child trusts the app token and
-    // other attributes it receives from the parent.  In that case, the
-    // context should be FrameIPCTabContext.
+    // When the parent constructs a PBrowser, the child trusts the attributes it
+    // receives from the parent.  In that case, the context should be
+    // FrameIPCTabContext.
     //
-    // When the child constructs a PBrowser, the parent doesn't trust the app
-    // token it receives from the child.  In this case, context must have type
-    // PopupIPCTabContext.  The browser created using a PopupIPCTabContext has
-    // the opener PBrowser's app-id and containing-app-id.  The parent checks
-    // that if the opener is a browser element, the context is also for a
-    // browser element.
-    //
-    // This allows the parent to prevent a malicious child from escalating its
-    // privileges by requesting a PBrowser corresponding to a highly-privileged
-    // app; the child can only request privileges for an app which the child has
-    // access to (in the form of a TabChild).
+    // When the child constructs a PBrowser, the parent doesn't trust the
+    // attributes it receives from the child.  In this case, context must have
+    // type PopupIPCTabContext.  The parent checks that if the opener is a
+    // browser element, the context is also for a browser element.
     //
     // Keep the last 3 attributes in sync with GetProcessAttributes!
     async PBrowser(TabId tabId, IPCTabContext context, uint32_t chromeFlags,
-                   ContentParentId cpId, bool isForApp, bool isForBrowser);
+                   ContentParentId cpId, bool isForBrowser);
 
     async PBlob(BlobConstructorParams params);
 
@@ -455,8 +459,6 @@ child:
      * Sent to notify that aTabId has been allocated aLayersId
      */
     async NotifyLayerAllocated(TabId aTabId, uint64_t aLayersId);
-
-    async SpeakerManagerNotify();
 
     /**
      * Communication between the PuppetBidiKeyboard and the actual
@@ -527,7 +529,6 @@ child:
 
     async AppInfo(nsCString version, nsCString buildID, nsCString name, nsCString UAName,
                   nsCString ID, nsCString vendor);
-    async AppInit();
 
     /**
      * Send ServiceWorkerRegistrationData to child process.
@@ -678,26 +679,25 @@ parent:
      * startup.  (The message is sync to allow the content process to
      * control when it receives the information.)
      *
-     * |id| is a unique ID among all subprocesses.  When |isForApp &&
-     * isForBrowser|, we're loading <browser> for an app.  When
-     * |isForBrowser|, we're loading <browser>.  When |!isForApp &&
-     * !isForBrowser|, we're probably loading <xul:browser remote>.
+     * |id| is a unique ID among all subprocesses. When
+     * |isForBrowser|, we're loading <browser> or <xul:browser remote>.
      *
      * Keep the return values in sync with PBrowser()!
      */
     sync GetProcessAttributes()
-        returns (ContentParentId cpId, bool isForApp, bool isForBrowser);
+        returns (ContentParentId cpId, bool isForBrowser);
     sync GetXPCOMProcessAttributes()
         returns (bool isOffline, bool isConnected, bool isLangRTL,
                  bool haveBidiKeyboards, nsString[] dictionaries,
                  ClipboardCapabilities clipboardCaps,
                  DomainPolicyClone domainPolicy,
-                 StructuredCloneData initialData);
+                 StructuredCloneData initialData,
+                 FontFamilyListEntry[] fontFamilies /* used on MacOSX only */);
 
     sync CreateChildProcess(IPCTabContext context,
                             ProcessPriority priority,
                             TabId openerTabId)
-        returns (ContentParentId cpId, bool isForApp, bool isForBrowser, TabId tabId);
+        returns (ContentParentId cpId, bool isForBrowser, TabId tabId);
     sync BridgeToChildProcess(ContentParentId cpId);
 
     async CreateGMPService();
@@ -913,9 +913,6 @@ parent:
     // Notify the parent of the presence or absence of private docshells
     async PrivateDocShellsExist(bool aExist);
 
-    // Tell the parent that the child has gone idle for the first time
-    async FirstIdle();
-
     async AudioChannelServiceStatus(bool aActiveTelephonyChannel,
                                     bool aContentOrNormalChannel,
                                     bool aAnyActiveChannel);
@@ -943,11 +940,6 @@ parent:
     sync AllocateLayerTreeId(ContentParentId cpId, TabId tabId)
         returns (uint64_t id);
     async DeallocateLayerTreeId(uint64_t id);
-
-    sync SpeakerManagerForceSpeaker(bool aEnable);
-
-    sync SpeakerManagerGetSpeakerStatus()
-        returns (bool value);
 
     /**
      * Notifies the parent about a recording device is starting or shutdown.

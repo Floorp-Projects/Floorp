@@ -43,9 +43,6 @@ var Utils = {
     }
 
     return mm;
-  },
-  checkPermissionForMM: function u_checkPermissionForMM(mm, permName) {
-    return mm.assertPermission(permName);
   }
 };
 
@@ -190,8 +187,8 @@ this.Keyboard = {
         this.formMM = null;
       }
     } else {
-      // Ignore notifications that aren't from a BrowserOrApp
-      if (!frameLoader.ownerIsMozBrowserOrAppFrame) {
+      // Ignore notifications that aren't from a Browser
+      if (!frameLoader.ownerIsMozBrowserFrame) {
         return;
       }
       this.initFormsFrameScript(mm);
@@ -215,32 +212,7 @@ this.Keyboard = {
   },
 
   receiveMessage: function keyboardReceiveMessage(msg) {
-    // If we get a 'Keyboard:XXX'/'System:XXX' message, check that the sender
-    // has the required permission.
-    let mm;
-
-    // Assert the permission based on the prefix of the message.
-    let permName;
-    if (msg.name.startsWith("Keyboard:")) {
-      permName = "input";
-    } else if (msg.name.startsWith("System:")) {
-      permName = "input-manage";
-    }
-
-    // There is no permission to check (nor we need to get the mm)
-    // for Form: messages.
-    if (permName) {
-      mm = Utils.getMMFromMessage(msg);
-      if (!mm) {
-        dump("Keyboard.jsm: Message " + msg.name + " has no message manager.");
-        return;
-      }
-      if (!Utils.checkPermissionForMM(mm, permName)) {
-        dump("Keyboard.jsm: Message " + msg.name +
-          " from a content process with no '" + permName + "' privileges.\n");
-        return;
-      }
-    }
+    let mm = Utils.getMMFromMessage(msg);
 
     // we don't process kb messages (other than register)
     // if they come from a kb that we're currently not regsitered for.
@@ -537,13 +509,6 @@ function InputRegistryGlue() {
 
 InputRegistryGlue.prototype.receiveMessage = function(msg) {
   let mm = Utils.getMMFromMessage(msg);
-
-  let permName = msg.name.startsWith("System:") ? "input-mgmt" : "input";
-  if (!Utils.checkPermissionForMM(mm, permName)) {
-    dump("InputRegistryGlue message " + msg.name +
-      " from a content process with no " + permName + " privileges.");
-    return;
-  }
 
   switch (msg.name) {
     case 'InputRegistry:Add':

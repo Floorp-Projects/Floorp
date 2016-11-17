@@ -43,7 +43,7 @@ var tests = [
       browserStartupDeferred.resolve(aWindow);
     }, "browser-delayed-startup-finished", false);
 
-    yield ContentTask.spawn(gBrowser.selectedBrowser, myDocIdentifier, myDocIdentifier => {
+    yield ContentTask.spawn(gBrowser.selectedBrowser, myDocIdentifier, contentMyDocIdentifier => {
       let onVisibilityChange = () => {
         if (!content.document.hidden) {
           let win = Cu.waiveXrays(content);
@@ -51,7 +51,7 @@ var tests = [
         }
       };
       content.document.addEventListener("visibilitychange", onVisibilityChange);
-      content.document.myExpando = myDocIdentifier;
+      content.document.myExpando = contentMyDocIdentifier;
     });
     gContentAPI.showHighlight("appMenu");
 
@@ -65,8 +65,8 @@ var tests = [
     yield elementVisiblePromise(newWindowHighlight);
 
     let selectedTab = gContentWindow.gBrowser.selectedTab;
-    yield ContentTask.spawn(selectedTab.linkedBrowser, myDocIdentifier, myDocIdentifier => {
-      is(content.document.myExpando, myDocIdentifier, "Document should be selected in new window");
+    yield ContentTask.spawn(selectedTab.linkedBrowser, myDocIdentifier, contentMyDocIdentifier => {
+      is(content.document.myExpando, contentMyDocIdentifier, "Document should be selected in new window");
     });
     ok(UITour.tourBrowsersByWindow && UITour.tourBrowsersByWindow.has(gContentWindow), "Window should be known");
     ok(UITour.tourBrowsersByWindow.get(gContentWindow).has(selectedTab.linkedBrowser), "Selected browser should be known");

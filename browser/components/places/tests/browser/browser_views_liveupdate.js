@@ -152,7 +152,7 @@ function startTest() {
   bs.moveItem(id, bs.unfiledBookmarksFolder, 0);
 
   // Remove all added bookmarks.
-  addedBookmarks.forEach(function (aItem) {
+  addedBookmarks.forEach(function(aItem) {
     // If we remove an item after its containing folder has been removed,
     // this will throw, but we can ignore that.
     try {
@@ -312,7 +312,7 @@ function searchItemInView(aItemId, aView, aValidator) {
  * @returns [node, index] or [null, null] if not found.
  */
 function getNodeForToolbarItem(aItemId, aValidator) {
-  var toolbar = document.getElementById("PlacesToolbarItems");
+  var placesToolbarItems = document.getElementById("PlacesToolbarItems");
 
   function findNode(aContainer) {
     var children = aContainer.childNodes;
@@ -344,7 +344,7 @@ function getNodeForToolbarItem(aItemId, aValidator) {
     return [null, null];
   }
 
-  return findNode(toolbar);
+  return findNode(placesToolbarItems);
 }
 
 /**

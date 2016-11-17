@@ -59,7 +59,6 @@ WEBIDL_FILES = [
     'BrowserElement.webidl',
     'BrowserElementAudioChannel.webidl',
     'BrowserElementDictionaries.webidl',
-    'BrowserElementProxy.webidl',
     'Cache.webidl',
     'CacheStorage.webidl',
     'CanvasCaptureMediaStream.webidl',
@@ -684,7 +683,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'MozNetworkStatsData.webidl',
         'MozNetworkStatsInterface.webidl',
         'MozNetworkStatsManager.webidl',
-        'MozSpeakerManager.webidl',
     ]
 else:
     WEBIDL_FILES += [

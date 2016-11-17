@@ -499,7 +499,7 @@ function test_multiple() {
     installs[0].cancel();
 
     let addon = yield new Promise(resolve => {
-      AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", function (result) {
+      AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", function(result) {
         resolve(result);
       });
     });
@@ -1121,7 +1121,7 @@ function test_failedSecurity() {
 var gTestStart = null;
 
 var XPInstallObserver = {
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     var installInfo = aSubject.QueryInterface(Components.interfaces.amIWebInstallInfo);
     info("Observed " + aTopic + " for " + installInfo.installs.length + " installs");
     installInfo.installs.forEach(function(aInstall) {

@@ -1,33 +1,25 @@
 #!/usr/bin/env python
-# Copyright 2014 The Chromium Authors. All rights reserved.
-# Use of this source code is governed by a BSD-style license that can be
-# found in the LICENSE file.
-"""Outputs host CPU architecture in format recognized by gyp."""
-import platform
-import re
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
 
-def HostArch():
-  """Returns the host architecture with a predictable string."""
-  host_arch = platform.machine().lower()
-  # Convert machine type to format recognized by gyp.
-  if re.match(r'i.86', host_arch) or host_arch == 'i86pc':
-    host_arch = 'ia32'
-  elif host_arch in ['x86_64', 'amd64']:
-    host_arch = 'x64'
-  elif host_arch.startswith('arm'):
-    host_arch = 'arm'
-  elif host_arch.startswith('mips'):
-    host_arch = 'mips'
-  # platform.machine is based on running kernel. It's possible to use 64-bit
-  # kernel with 32-bit userland, e.g. to give linker slightly more memory.
-  # Distinguish between different userland bitness by querying
-  # the python binary.
-  if host_arch == 'x64' and platform.architecture()[0] == '32bit':
-    host_arch = 'ia32'
-  return host_arch
-def DoMain(_):
-  """Hook to be called from gyp without starting a separate python
-  interpreter."""
-  return HostArch()
+from __future__ import print_function
+
+import fnmatch
+import platform
+
+def main():
+    host_arch = platform.machine().lower()
+    if host_arch in ('amd64', 'x86_64'):
+        host_arch = 'x64'
+    elif fnmatch.fnmatch(host_arch, 'i?86') or host_arch == 'i86pc':
+        host_arch = 'x64'
+    elif host_arch.startswith('arm'):
+        host_arch = 'arm'
+    elif host_arch.startswith('mips'):
+        host_arch = 'mips'
+    print(host_arch)
+
 if __name__ == '__main__':
-  print DoMain([])
+    main()

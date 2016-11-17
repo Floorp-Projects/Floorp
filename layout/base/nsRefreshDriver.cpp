@@ -447,7 +447,13 @@ public:
     }
 
     if (mVsyncChild) {
-      mVsyncRate = mVsyncChild->GetVsyncRate();
+      // VsyncChild::VsyncRate() is a simple getter for the cached
+      // hardware vsync rate. We depend on that
+      // VsyncChild::GetVsyncRate() being called in the constructor
+      // will result in a response with the actual vsync rate sooner
+      // or later. Until that happens VsyncChild::VsyncRate() returns
+      // TimeDuration::Forever() and we have to guess below.
+      mVsyncRate = mVsyncChild->VsyncRate();
     }
 
     // If hardware queries fail / are unsupported, we have to just guess.

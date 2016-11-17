@@ -165,6 +165,23 @@ GfxFormatToCairoFormat(SurfaceFormat format)
   }
 }
 
+static inline cairo_format_t
+CairoContentToCairoFormat(cairo_content_t content)
+{
+  switch (content)
+  {
+    case CAIRO_CONTENT_COLOR:
+      return CAIRO_FORMAT_RGB24;
+    case CAIRO_CONTENT_ALPHA:
+      return CAIRO_FORMAT_A8;
+    case CAIRO_CONTENT_COLOR_ALPHA:
+      return CAIRO_FORMAT_ARGB32;
+    default:
+      gfxCriticalError() << "Unknown cairo content type " << (int)content;
+      return CAIRO_FORMAT_A8; // least likely to cause OOB reads
+  }
+}
+
 static inline cairo_content_t
 GfxFormatToCairoContent(SurfaceFormat format)
 {

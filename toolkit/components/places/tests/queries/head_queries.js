@@ -205,7 +205,7 @@ function* task_populateDB(aArray)
  */
 function queryData(obj) {
   this.isVisit = obj.isVisit ? obj.isVisit : false;
-  this.isBookmark = obj.isBookmark ? obj.isBookmark: false;
+  this.isBookmark = obj.isBookmark ? obj.isBookmark : false;
   this.uri = obj.uri ? obj.uri : "";
   this.lastVisit = obj.lastVisit ? obj.lastVisit : today;
   this.referrer = obj.referrer ? obj.referrer : null;
@@ -215,7 +215,7 @@ function queryData(obj) {
   this.title = obj.title ? obj.title : "";
   this.markPageAsTyped = obj.markPageAsTyped ? obj.markPageAsTyped : false;
   this.isPageAnnotation = obj.isPageAnnotation ? obj.isPageAnnotation : false;
-  this.removeAnnotation= obj.removeAnnotation ? true : false;
+  this.removeAnnotation = obj.removeAnnotation ? true : false;
   this.annoName = obj.annoName ? obj.annoName : "";
   this.annoVal = obj.annoVal ? obj.annoVal : "";
   this.annoFlags = obj.annoFlags ? obj.annoFlags : 0;
@@ -333,7 +333,7 @@ function isInResult(aQueryData, aRoot) {
     uri = aQueryData[0].uri;
   }
 
-  for (var i=0; i < aRoot.childCount; i++) {
+  for (var i = 0; i < aRoot.childCount; i++) {
     if (uri == aRoot.getChild(i).uri) {
       rv = true;
       break;
@@ -361,7 +361,7 @@ function displayResultSet(aRoot) {
     return;
   }
 
-  for (var i=0; i < aRoot.childCount; ++i) {
+  for (var i = 0; i < aRoot.childCount; ++i) {
     do_print("Result Set URI: " + aRoot.getChild(i).uri + "   Title: " +
         aRoot.getChild(i).title + "   Visit Time: " + aRoot.getChild(i).time);
   }

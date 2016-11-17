@@ -17,6 +17,7 @@
 #include "nsIDOMNSEditableElement.h"
 #include "nsCOMPtr.h"
 #include "nsIConstraintValidation.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLFormElement.h" // for HasEverTriedInvalidSubmit()
 #include "mozilla/dom/HTMLInputElementBinding.h"
 #include "mozilla/dom/Promise.h"
@@ -660,8 +661,9 @@ public:
     SetHTMLAttr(nsGkAtoms::value, aValue, aRv);
   }
 
-  void GetValue(nsAString& aValue, ErrorResult& aRv);
-  void SetValue(const nsAString& aValue, ErrorResult& aRv);
+  void SetValue(const nsAString& aValue, CallerType aCallerType,
+                ErrorResult& aRv);
+  void GetValue(nsAString& aValue, CallerType aCallerType);
 
   Nullable<Date> GetValueAsDate(ErrorResult& aRv);
 
@@ -770,7 +772,7 @@ public:
 
   nsIControllers* GetControllers(ErrorResult& aRv);
 
-  int32_t GetTextLength(ErrorResult& aRv);
+  int32_t InputTextLength(CallerType aCallerType);
 
   void MozGetFileNameArray(nsTArray<nsString>& aFileNames, ErrorResult& aRv);
 
@@ -925,10 +927,17 @@ protected:
    */
   nsresult SetValueInternal(const nsAString& aValue, uint32_t aFlags);
 
-  nsresult GetValueInternal(nsAString& aValue) const;
+  // Generic getter for the value that doesn't do experimental control type
+  // sanitization.
+  void GetValueInternal(nsAString& aValue, CallerType aCallerType) const;
+
+  // A getter for callers that know we're not dealing with a file input, so they
+  // don't have to think about the caller type.
+  void GetNonFileValueInternal(nsAString& aValue) const;
 
   /**
-   * Returns whether the current value is the empty string.
+   * Returns whether the current value is the empty string.  This only makes
+   * sense for some input types; does NOT make sense for file inputs.
    *
    * @return whether the current value is the empty string.
    */
@@ -1347,7 +1356,7 @@ protected:
    *
    * @param aValue The Decimal that will be used to set the value.
    */
-  void SetValue(Decimal aValue);
+  void SetValue(Decimal aValue, CallerType aCallerType);
 
   /**
    * Update the HAS_RANGE bit field value.

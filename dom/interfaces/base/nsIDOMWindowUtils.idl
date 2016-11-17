@@ -1810,8 +1810,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * Supported properties:
    *   "overdraw": Report a percentage between 0 and 999 indicate how many times
    *               each pixels on the destination window have been touched.
-   *   "missed_hwc": Report a bool if hardware composer is supported but was
-   *                 not used for the last frame.
    */
   float requestCompositorProperty(in AString aProperty);
 

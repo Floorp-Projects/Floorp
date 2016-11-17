@@ -30,7 +30,11 @@
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports'
-      ]
+      ],
+      'variables': {
+        # This is purely for the use of the Mozilla build system.
+        'no_expand_libs': 1,
+      },
     }
   ],
   'variables': {

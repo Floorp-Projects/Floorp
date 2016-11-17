@@ -19,7 +19,7 @@ interface DataTransfer {
 
   // ReturnValueNeedsContainsHack on .types because lots of extension
   // code was expecting .contains() back when it was a DOMStringList.
-  [Pure, Cached, Frozen, NeedsSubjectPrincipal, ReturnValueNeedsContainsHack]
+  [Pure, Cached, Frozen, NeedsCallerType, ReturnValueNeedsContainsHack]
   readonly attribute sequence<DOMString> types;
   [Throws, NeedsSubjectPrincipal]
   DOMString getData(DOMString format);
@@ -76,7 +76,7 @@ partial interface DataTransfer {
    * at the specified index. If the index is not in the range from 0 to
    * itemCount - 1, an empty string list is returned.
    */
-  [Throws]
+  [Throws, NeedsCallerType]
   DOMStringList mozTypesAt(unsigned long index);
 
   /**

@@ -16,11 +16,11 @@ function countDeletedEntries(expected)
       do_check_eq(expected, resultSet.getNextRow().getResultByName("numEntries"));
       deferred.resolve();
     },
-    handleError : function () {
+    handleError : function() {
       do_throw("Error occurred counting deleted entries: " + error);
       deferred.reject();
     },
-    handleCompletion : function () {
+    handleCompletion : function() {
       stmt.finalize();
     }
   });
@@ -37,11 +37,11 @@ function checkTimeDeleted(guid, checkFunction)
       checkFunction(resultSet.getNextRow().getResultByName("timeDeleted"));
       deferred.resolve();
     },
-    handleError : function () {
+    handleError : function() {
       do_throw("Error occurred getting deleted entries: " + error);
       deferred.reject();
     },
-    handleCompletion : function () {
+    handleCompletion : function() {
       stmt.finalize();
     }
   });
@@ -81,11 +81,11 @@ function promiseSearchEntries(terms, params)
   let results = [];
   FormHistory.search(terms, params,
                      { handleResult: result => results.push(result),
-                       handleError: function (error) {
+                       handleError: function(error) {
                          do_throw("Error occurred searching form history: " + error);
                          deferred.reject(error);
                        },
-                       handleCompletion: function (reason) { if (!reason) deferred.resolve(results); }
+                       handleCompletion: function(reason) { if (!reason) deferred.resolve(results); }
                      });
   return deferred.promise;
 }
@@ -93,7 +93,7 @@ function promiseSearchEntries(terms, params)
 function promiseCountEntries(name, value, checkFn)
 {
   let deferred = Promise.defer();
-  countEntries(name, value, function (result) { checkFn(result); deferred.resolve(); } );
+  countEntries(name, value, function(result) { checkFn(result); deferred.resolve(); } );
   return deferred.promise;
 }
 
@@ -143,10 +143,10 @@ add_task(function* ()
   let stmt = dbConnection.createAsyncStatement("DELETE FROM moz_deleted_formhistory");
   stmt.executeAsync({
     handleResult: function(resultSet) { },
-    handleError : function () {
+    handleError : function() {
       do_throw("Error occurred counting deleted all entries: " + error);
     },
-    handleCompletion : function () {
+    handleCompletion : function() {
       stmt.finalize();
       deferred.resolve();
     }
@@ -170,7 +170,7 @@ add_task(function* ()
   deferred = Promise.defer();
   yield FormHistory.count({ fieldname: null, value: null },
                           { handleResult: result => checkNotExists(result),
-                            handleError: function (error) {
+                            handleError: function(error) {
                               do_throw("Error occurred searching form history: " + error);
                             },
                             handleCompletion: function(reason) { if (!reason) deferred.resolve() }

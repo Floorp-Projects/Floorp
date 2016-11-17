@@ -30,7 +30,9 @@ dictionary TouchInit {
 interface Touch {
   readonly    attribute long         identifier;
   readonly    attribute EventTarget? target;
+  [NeedsCallerType]
   readonly    attribute long         screenX;
+  [NeedsCallerType]
   readonly    attribute long         screenY;
   readonly    attribute long         clientX;
   readonly    attribute long         clientY;

@@ -65,11 +65,6 @@ typedef CONTEXT tickcontext_t;
 typedef ucontext_t tickcontext_t;
 #endif
 
-#if defined(LINUX) || defined(XP_MACOSX)
-#include <sys/types.h>
-pid_t gettid();
-#endif
-
 #if defined(__arm__) && defined(ANDROID)
  // Should also work on ARM Linux, but not tested there yet.
  #define USE_EHABI_STACKWALK
@@ -291,6 +286,12 @@ GeckoSampler::~GeckoSampler()
   // Cancel any in-flight async profile gatherering
   // requests
   mGatherer->Cancel();
+
+#ifdef MOZ_TASK_TRACER
+  if (mTaskTracer) {
+    mozilla::tasktracer::StopLogging();
+  }
+#endif
 }
 
 void GeckoSampler::HandleSaveRequest()

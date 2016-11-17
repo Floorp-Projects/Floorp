@@ -297,15 +297,6 @@ nsNodeUtils::LastRelease(nsINode* aNode)
                                          NodeWillBeDestroyed, (aNode));
     }
 
-    if (aNode->IsElement()) {
-      Element* elem = aNode->AsElement();
-      FragmentOrElement::nsDOMSlots* domSlots =
-        static_cast<FragmentOrElement::nsDOMSlots*>(slots);
-      for (auto& reg : domSlots->mRegisteredIntersectionObservers) {
-        reg.observer->UnlinkTarget(*elem);
-      }
-    }
-
     delete slots;
     aNode->mSlots = nullptr;
   }

@@ -274,7 +274,7 @@ AddonLocalizationConverter.prototype = {
 
     let string = (
       aStream.available() ?
-      NetUtil.readInputStreamToString(aStream, aStream.available()): ""
+      NetUtil.readInputStreamToString(aStream, aStream.available()) : ""
     );
     return this.convertToStream(addonId, string);
   },

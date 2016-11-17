@@ -1357,11 +1357,6 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     switch (aWindow.type) {
       case NPWindowTypeWindow:
       {
-          // This check is now done in PluginInstanceParent before this call, so
-          // we should never see it here.
-          MOZ_ASSERT(!(GetQuirks() & QUIRK_QUICKTIME_AVOID_SETWINDOW) ||
-                     aWindow.width != 0 || aWindow.height != 0);
-
           MOZ_ASSERT(mPluginWindowHWND,
                      "Child plugin window must exist before call to SetWindow");
 

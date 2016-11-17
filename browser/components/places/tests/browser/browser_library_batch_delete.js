@@ -17,7 +17,7 @@ gTests.push({
   run: function() {
     let testURI = makeURI(TEST_URL);
     PlacesUtils.history.runInBatchMode({
-      runBatched: function (aUserData) {
+      runBatched: function(aUserData) {
         // Create a folder in unserted and populate it with bookmarks.
         let folder = PlacesUtils.bookmarks.createFolder(
           PlacesUtils.unfiledBookmarksFolderId, "deleteme",
@@ -92,7 +92,7 @@ gTests.push({
 
 function test() {
   waitForExplicitFinish();
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     PlacesUtils.bookmarks
                .removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
   });
@@ -102,9 +102,9 @@ function test() {
 
 function nextTest() {
   if (gTests.length) {
-    var test = gTests.shift();
-    info("Start of test: " + test.desc);
-    test.run();
+    var testCase = gTests.shift();
+    info("Start of test: " + testCase.desc);
+    testCase.run();
   }
   else {
     // Close Library window.

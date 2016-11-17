@@ -61,7 +61,7 @@ function test() {
     mockTransferCallback = onTransferComplete;
     mockTransferRegisterer.register();
 
-    registerCleanupFunction(function () {
+    registerCleanupFunction(function() {
       mockTransferRegisterer.unregister();
       MockFilePicker.cleanup();
       destDir.remove(true);

@@ -221,7 +221,7 @@ TransactionsHistory.__proto__ = {
    * @return the proxified transaction object.
    * @see getRawTransaction for retrieving the raw transaction.
    */
-  proxifyTransaction: function (aRawTransaction) {
+  proxifyTransaction: function(aRawTransaction) {
     let proxy = Object.freeze({
       transact() {
         return TransactionsManager.transact(this);
@@ -667,7 +667,7 @@ function DefineTransaction(aRequiredProps = [], aOptionalProps = []) {
       throw new Error("Property '" + prop + "' is not defined");
   }
 
-  let ctor = function (aInput) {
+  let ctor = function(aInput) {
     // We want to support both syntaxes:
     // let t = new PlacesTransactions.NewBookmark(),
     // let t = PlacesTransactions.NewBookmark()
@@ -709,7 +709,7 @@ function isPrimitive(v) {
   return v === null || (typeof(v) != "object" && typeof(v) != "function");
 }
 
-DefineTransaction.annotationObjectValidate = function (obj) {
+DefineTransaction.annotationObjectValidate = function(obj) {
   let checkProperty = (aPropName, aRequired, aCheckFunc) => {
     if (aPropName in obj)
       return aCheckFunc(obj[aPropName]);
@@ -741,12 +741,12 @@ DefineTransaction.urlValidate = function(url) {
 
 DefineTransaction.inputProps = new Map();
 DefineTransaction.defineInputProps =
-function (aNames, aValidationFunction, aDefaultValue) {
+function(aNames, aValidationFunction, aDefaultValue) {
   for (let name of aNames) {
     // Workaround bug 449811.
     let propName = name;
     this.inputProps.set(propName, {
-      validateValue: function (aValue) {
+      validateValue: function(aValue) {
         if (aValue === undefined)
           return aDefaultValue;
         try {
@@ -757,7 +757,7 @@ function (aNames, aValidationFunction, aDefaultValue) {
         }
       },
 
-      validateInput: function (aInput, aRequired) {
+      validateInput: function(aInput, aRequired) {
         if (aRequired && !(propName in aInput))
           throw new Error(`Required input property is missing: ${propName}`);
         return this.validateValue(aInput[propName]);
@@ -769,13 +769,13 @@ function (aNames, aValidationFunction, aDefaultValue) {
 };
 
 DefineTransaction.defineArrayInputProp =
-function (aName, aBasePropertyName) {
+function(aName, aBasePropertyName) {
   let baseProp = this.inputProps.get(aBasePropertyName);
   if (!baseProp)
     throw new Error(`Unknown input property: ${aBasePropertyName}`);
 
   this.inputProps.set(aName, {
-    validateValue: function (aValue) {
+    validateValue: function(aValue) {
       if (aValue == undefined)
         return [];
 
@@ -790,7 +790,7 @@ function (aName, aBasePropertyName) {
     // We allow setting either the array property itself (e.g. urls), or a
     // single element of it (url, in that example), that is then transformed
     // into a single-element array.
-    validateInput: function (aInput, aRequired) {
+    validateInput: function(aInput, aRequired) {
       if (aName in aInput) {
         // It's not allowed to set both though.
         if (aBasePropertyName in aInput) {
@@ -820,12 +820,12 @@ function (aName, aBasePropertyName) {
 };
 
 DefineTransaction.validatePropertyValue =
-function (aProp, aInput, aRequired) {
+function(aProp, aInput, aRequired) {
   return this.inputProps.get(aProp).validateInput(aInput, aRequired);
 };
 
 DefineTransaction.getInputObjectForSingleValue =
-function (aInput, aRequiredProps, aOptionalProps) {
+function(aInput, aRequiredProps, aOptionalProps) {
   // The following input forms may be deduced from a single value:
   // * a single required property with or without optional properties (the given
   //   value is set to the required property).
@@ -844,7 +844,7 @@ function (aInput, aRequiredProps, aOptionalProps) {
 };
 
 DefineTransaction.verifyInput =
-function (aInput, aRequiredProps = [], aOptionalProps = []) {
+function(aInput, aRequiredProps = [], aOptionalProps = []) {
   if (aRequiredProps.length == 0 && aOptionalProps.length == 0)
     return {};
 
@@ -1084,8 +1084,8 @@ PT.NewBookmark = DefineTransaction(["parentGuid", "url"],
                                    ["index", "title", "keyword", "postData",
                                     "annotations", "tags"]);
 PT.NewBookmark.prototype = Object.seal({
-  execute: function (aParentGuid, aURI, aIndex, aTitle,
-                     aKeyword, aPostData, aAnnos, aTags) {
+  execute: function(aParentGuid, aURI, aIndex, aTitle,
+                    aKeyword, aPostData, aAnnos, aTags) {
     return ExecuteCreateItem(this, aParentGuid,
       function* (parentId, guidToRestore = "") {
         let itemId = PlacesUtils.bookmarks.insertBookmark(
@@ -1128,7 +1128,7 @@ PT.NewBookmark.prototype = Object.seal({
 PT.NewFolder = DefineTransaction(["parentGuid", "title"],
                                  ["index", "annotations"]);
 PT.NewFolder.prototype = Object.seal({
-  execute: function (aParentGuid, aTitle, aIndex, aAnnos) {
+  execute: function(aParentGuid, aTitle, aIndex, aAnnos) {
     return ExecuteCreateItem(this,  aParentGuid,
       function* (parentId, guidToRestore = "") {
         let itemId = PlacesUtils.bookmarks.createFolder(
@@ -1151,7 +1151,7 @@ PT.NewFolder.prototype = Object.seal({
  */
 PT.NewSeparator = DefineTransaction(["parentGuid"], ["index"]);
 PT.NewSeparator.prototype = Object.seal({
-  execute: function (aParentGuid, aIndex) {
+  execute: function(aParentGuid, aIndex) {
     return ExecuteCreateItem(this, aParentGuid,
       function* (parentId, guidToRestore = "") {
         let itemId = PlacesUtils.bookmarks.insertSeparator(

@@ -259,11 +259,11 @@ function run_test()
 // if we want to avoid tests overlapping.
 function test_cycles(size, tc) {
   // Now, restart this with unreferenced cycles
-  for (i = 0; i < size/2; ++i) {
+  for (i = 0; i < size / 2; ++i) {
     let a = {
-      a: ctypes.CDataFinalizer(tc.acquire(i*2), tc.release),
+      a: ctypes.CDataFinalizer(tc.acquire(i * 2), tc.release),
       b: {
-        b: ctypes.CDataFinalizer(tc.acquire(i*2+1), tc.release)
+        b: ctypes.CDataFinalizer(tc.acquire(i * 2 + 1), tc.release)
       }
     };
     a.b.a = a;
@@ -329,7 +329,7 @@ function test_result_dispose(size, tc, cleanup) {
     let witness = ref[i].dispose();
     ref[i] = null;
     if (!tc.released(i, witness)) {
-      do_print("test_result_dispose failure at index "+i);
+      do_print("test_result_dispose failure at index " + i);
       do_check_true(false);
     }
   }

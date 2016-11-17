@@ -61,7 +61,7 @@ public:
       mSoftBegin(nullptr, 0), mSoftEnd(nullptr, 0),
       mNextWordIndex(-1), mSoftTextValid(false) {}
 
-  nsresult Init(nsWeakPtr aWeakEditor);
+  nsresult Init(const nsWeakPtr& aWeakEditor);
 
   nsresult SetEnd(nsINode* aEndNode, int32_t aEndOffset);
 

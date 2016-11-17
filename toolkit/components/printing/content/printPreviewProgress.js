@@ -19,7 +19,7 @@ var progressParams = null;
 
 function ellipseString(aStr, doFront)
 {
-  if (aStr.length > 3 && (aStr.substr(0, 3) == "..." || aStr.substr(aStr.length-4, 3) == "..."))
+  if (aStr.length > 3 && (aStr.substr(0, 3) == "..." || aStr.substr(aStr.length - 4, 3) == "..."))
     return aStr;
 
   var fixedLen = 64;
@@ -27,7 +27,7 @@ function ellipseString(aStr, doFront)
     return aStr;
 
   if (doFront)
-    return "..." + aStr.substr(aStr.length-fixedLen, fixedLen);
+    return "..." + aStr.substr(aStr.length - fixedLen, fixedLen);
 
   return aStr.substr(0, fixedLen) + "...";
 }
@@ -35,13 +35,13 @@ function ellipseString(aStr, doFront)
 // all progress notifications are done through the nsIWebProgressListener implementation...
 var progressListener = {
 
-  onStateChange: function (aWebProgress, aRequest, aStateFlags, aStatus)
+  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus)
   {
     if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
       window.close();
   },
 
-  onProgressChange: function (aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
+  onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
     if (!progressParams)
       return;
@@ -58,16 +58,16 @@ var progressListener = {
     }
   },
 
-  onLocationChange: function (aWebProgress, aRequest, aLocation, aFlags) {},
-  onSecurityChange: function (aWebProgress, aRequest, state) {},
+  onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {},
+  onSecurityChange: function(aWebProgress, aRequest, state) {},
 
-  onStatusChange: function (aWebProgress, aRequest, aStatus, aMessage)
+  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage)
   {
     if (aMessage)
       dialog.title.setAttribute("value", aMessage);
   },
 
-  QueryInterface: function (iid)
+  QueryInterface: function(iid)
   {
     if (iid.equals(Components.interfaces.nsIWebProgressListener) || iid.equals(Components.interfaces.nsISupportsWeakReference))
       return this;
@@ -117,11 +117,11 @@ function onUnload()
   catch (e) {}
 }
 
-function getString (stringId) {
+function getString(stringId) {
   // Check if we've fetched this string already.
   if (!(stringId in dialog.strings)) {
     // Try to get it.
-    var elem = document.getElementById( "dialog.strings."+stringId);
+    var elem = document.getElementById( "dialog.strings." + stringId);
     try {
       if (elem && elem.childNodes && elem.childNodes[0] &&
           elem.childNodes[0].nodeValue)
@@ -135,7 +135,7 @@ function getString (stringId) {
 }
 
 // If the user presses cancel, tell the app launcher and close the dialog...
-function onCancel ()
+function onCancel()
 {
   // Cancel app launcher.
   try {

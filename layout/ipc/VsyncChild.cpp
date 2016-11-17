@@ -83,6 +83,12 @@ VsyncChild::GetVsyncRate()
   return mVsyncRate;
 }
 
+TimeDuration
+VsyncChild::VsyncRate()
+{
+  return mVsyncRate;
+}
+
 mozilla::ipc::IPCResult
 VsyncChild::RecvVsyncRate(const float& aVsyncRate)
 {

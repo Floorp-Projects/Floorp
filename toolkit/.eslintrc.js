@@ -36,6 +36,9 @@ module.exports = {
     // Always require a trailing EOL
     "eol-last": "error",
 
+    // No spaces between function name and parentheses
+    "func-call-spacing": "error",
+
     // Require function* name()
     // "generator-star-spacing": ["error", {"before": false, "after": true}],
 
@@ -138,9 +141,6 @@ module.exports = {
     // No declaring variables that hide things like arguments
     "no-shadow-restricted-names": "error",
 
-    // No spaces between function name and parentheses
-    // "no-spaced-func": "error",
-
     // No trailing whitespace
     "no-trailing-spaces": "error",
 
@@ -166,6 +166,9 @@ module.exports = {
     // No using with
     "no-with": "error",
 
+    // No spacing inside rest or spread expressions
+    "rest-spread-spacing": "error",
+
     // Always require semicolon at end of statement
     // "semi": ["error", "always"],
 
@@ -173,16 +176,22 @@ module.exports = {
     "space-before-blocks": "error",
 
     // Never use spaces before function parentheses
-    // "space-before-function-paren": ["error", { "anonymous": "always", "named": "never" }],
+    "space-before-function-paren": ["error", "never"],
 
     // No space padding in parentheses
     // "space-in-parens": ["error", "never"],
 
     // Require spaces around operators
-    // "space-infix-ops": "error",
+    "space-infix-ops": ["error", { "int32Hint": true }],
 
     // ++ and -- should not need spacing
-    // "space-unary-ops": ["error", { "words": true, "nonwords": false }],
+    "space-unary-ops": ["error", {
+      "words": true,
+      "nonwords": false,
+      "overrides": {
+        "typeof": false // We tend to use typeof as a function call
+      }
+    }],
 
     // Requires or disallows a whitespace (space or tab) beginning a comment
     "spaced-comment": "error",
