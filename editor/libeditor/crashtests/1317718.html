@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<script>
+addEventListener('DOMContentLoaded', function() {
+  let root = document.documentElement;
+  while(root.firstChild) {
+    root.removeChild(root.firstChild);
+  }
+  document.designMode = 'on';
+  document.removeChild(document.documentElement);
+  document.execCommand('justifyleft', false, null);
+});
+</script>
+</html>
