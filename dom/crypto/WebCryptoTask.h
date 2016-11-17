@@ -7,12 +7,13 @@
 #ifndef mozilla_dom_WebCryptoTask_h
 #define mozilla_dom_WebCryptoTask_h
 
-#include "nsNSSShutDown.h"
-#include "nsIGlobalObject.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/dom/DOMException.h"
-#include "mozilla/dom/SubtleCryptoBinding.h"
+#include "ScopedNSSTypes.h"
 #include "mozilla/dom/CryptoKey.h"
+#include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/SubtleCryptoBinding.h"
+#include "nsIGlobalObject.h"
+#include "nsNSSShutDown.h"
 
 namespace mozilla {
 namespace dom {
@@ -225,7 +226,7 @@ public:
                             const ObjectOrString& aAlgorithm, bool aExtractable,
                             const Sequence<nsString>& aKeyUsages);
 protected:
-  ScopedPLArenaPool mArena;
+  UniquePLArenaPool mArena;
   UniquePtr<CryptoKeyPair> mKeyPair;
   nsString mAlgName;
   CK_MECHANISM_TYPE mMechanism;
@@ -239,8 +240,8 @@ protected:
   virtual void Cleanup() override;
 
 private:
-  ScopedSECKEYPublicKey mPublicKey;
-  ScopedSECKEYPrivateKey mPrivateKey;
+  UniqueSECKEYPublicKey mPublicKey;
+  UniqueSECKEYPrivateKey mPrivateKey;
 };
 
 } // namespace dom
