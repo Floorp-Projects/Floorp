@@ -12,6 +12,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-meter-element
+[HTMLConstructor]
 interface HTMLMeterElement : HTMLElement {
            [SetterThrows]
            attribute double value;

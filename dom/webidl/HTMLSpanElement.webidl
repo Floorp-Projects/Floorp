@@ -12,4 +12,5 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-span-element
+[HTMLConstructor]
 interface HTMLSpanElement : HTMLElement {};

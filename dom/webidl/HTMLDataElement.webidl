@@ -7,6 +7,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/multipage/text-level-semantics.html#the-data-element
  */
 
+[HTMLConstructor]
 interface HTMLDataElement : HTMLElement {
            [SetterThrows]
            attribute DOMString value;
