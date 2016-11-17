@@ -548,7 +548,9 @@ function pushPrefs(...aPrefs) {
 }
 
 function popPrefs() {
-  return SpecialPowers.popPrefEnv();
+  return new Promise(resolve => {
+    SpecialPowers.popPrefEnv(resolve);
+  });
 }
 
 function* checkScroll(tab, expected, msg) {
