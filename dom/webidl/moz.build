@@ -683,7 +683,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'MozNetworkStatsData.webidl',
         'MozNetworkStatsInterface.webidl',
         'MozNetworkStatsManager.webidl',
-        'MozSpeakerManager.webidl',
     ]
 else:
     WEBIDL_FILES += [

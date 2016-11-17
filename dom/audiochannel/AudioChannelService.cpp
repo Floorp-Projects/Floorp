@@ -29,7 +29,6 @@
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsJSUtils.h"
-#include "SpeakerManagerService.h"
 #endif
 
 #include "mozilla/Preferences.h"
@@ -247,9 +246,6 @@ AudioChannelService::Shutdown()
     gAudioChannelService->mWindows.Clear();
     gAudioChannelService->mPlayingChildren.Clear();
     gAudioChannelService->mTabParents.Clear();
-#ifdef MOZ_WIDGET_GONK
-    gAudioChannelService->mSpeakerManager.Clear();
-#endif
 
     gAudioChannelService = nullptr;
   }
@@ -338,13 +334,6 @@ AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
   // released in their callback.
   RefPtr<AudioChannelAgent> kungFuDeathGrip(aAgent);
   winData->RemoveAgent(aAgent);
-
-#ifdef MOZ_WIDGET_GONK
-  bool active = AnyAudioChannelIsActive();
-  for (uint32_t i = 0; i < mSpeakerManager.Length(); i++) {
-    mSpeakerManager[i]->SetAudioChannelActive(active);
-  }
-#endif
 
   MaybeSendStatusUpdate();
 }
@@ -571,12 +560,6 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic,
       }
     }
 
-#ifdef MOZ_WIDGET_GONK
-    bool active = AnyAudioChannelIsActive();
-    for (uint32_t i = 0; i < mSpeakerManager.Length(); i++) {
-      mSpeakerManager[i]->SetAudioChannelActive(active);
-    }
-#endif
   } else if (!strcmp(aTopic, "ipc:content-shutdown")) {
     nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aSubject);
     if (!props) {

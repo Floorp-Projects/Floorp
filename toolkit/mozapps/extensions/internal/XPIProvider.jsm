@@ -994,6 +994,7 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   addon.iconURL = null;
   addon.icon64URL = null;
   addon.icons = manifest.icons || {};
+  addon.userPermissions = extension.userPermissions();
 
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
@@ -1332,6 +1333,7 @@ let loadManifestFromRDF = Task.async(function*(aUri, aStream) {
 
   // icons will be filled by the calling function
   addon.icons = {};
+  addon.userPermissions = null;
 
   return addon;
 });
@@ -3983,9 +3985,24 @@ this.XPIProvider = {
    */
   getInstallForURL: function(aUrl, aHash, aName, aIcons, aVersion, aBrowser,
                              aCallback) {
-    createDownloadInstall(function(aInstall) {
-      aCallback(aInstall.wrapper);
-    }, aUrl, aHash, aName, aIcons, aVersion, aBrowser);
+    let location = XPIProvider.installLocationsByName[KEY_APP_PROFILE];
+    let url = NetUtil.newURI(aUrl);
+
+    let options = {
+      hash: aHash,
+      browser: aBrowser,
+      name: aName,
+      icons: aIcons,
+      version: aVersion,
+    };
+
+    if (url instanceof Ci.nsIFileURL) {
+      let install = new LocalAddonInstall(location, url, options);
+      install.init().then(() => { aCallback(install.wrapper); });
+    } else {
+      let install = new DownloadAddonInstall(location, url, options);
+      aCallback(install.wrapper);
+    }
   },
 
   /**
@@ -5343,34 +5360,47 @@ class AddonInstall {
   /**
    * Instantiates an AddonInstall.
    *
-   * @param  aInstallLocation
+   * @param  installLocation
    *         The install location the add-on will be installed into
-   * @param  aUrl
+   * @param  url
    *         The nsIURL to get the add-on from. If this is an nsIFileURL then
    *         the add-on will not need to be downloaded
-   * @param  aHash
+   * @param  options
+   *         Additional options for the install
+   * @param  options.hash
    *         An optional hash for the add-on
-   * @param  aExistingAddon
+   * @param  options.existingAddon
    *         The add-on this install will update if known
+   * @param  options.name
+   *         An optional name for the add-on
+   * @param  options.type
+   *         An optional type for the add-on
+   * @param  options.icons
+   *         Optional icons for the add-on
+   * @param  options.version
+   *         An optional version for the add-on
+   * @param  options.permHandler
+   *         A callback to present permissions to the user before installing.
    */
-  constructor(aInstallLocation, aUrl, aHash, aExistingAddon) {
+  constructor(installLocation, url, options = {}) {
     this.wrapper = new AddonInstallWrapper(this);
-    this.installLocation = aInstallLocation;
-    this.sourceURI = aUrl;
+    this.installLocation = installLocation;
+    this.sourceURI = url;
 
-    if (aHash) {
-      let hashSplit = aHash.toLowerCase().split(":");
+    if (options.hash) {
+      let hashSplit = options.hash.toLowerCase().split(":");
       this.originalHash = {
         algorithm: hashSplit[0],
         data: hashSplit[1]
       };
     }
     this.hash = this.originalHash;
-    this.existingAddon = aExistingAddon;
+    this.existingAddon = options.existingAddon || null;
+    this.permHandler = options.permHandler || (() => Promise.resolve());
     this.releaseNotesURI = null;
 
     this.listeners = [];
-    this.icons = {};
+    this.icons = options.icons || {};
     this.error = 0;
 
     this.progress = 0;
@@ -5379,9 +5409,9 @@ class AddonInstall {
     // Giving each instance of AddonInstall a reference to the logger.
     this.logger = logger;
 
-    this.name = null;
-    this.type = null;
-    this.version = null;
+    this.name = options.name || null;
+    this.type = options.type || null;
+    this.version = options.version || null;
 
     this.file = null;
     this.ownsTempFile = null;
@@ -5407,6 +5437,12 @@ class AddonInstall {
   install() {
     switch (this.state) {
     case AddonManager.STATE_DOWNLOADED:
+      this.checkPermissions();
+      break;
+    case AddonManager.STATE_PERMISSION_GRANTED:
+      this.checkForBlockers();
+      break;
+    case AddonManager.STATE_READY:
       this.startInstall();
       break;
     case AddonManager.STATE_POSTPONED:
@@ -5775,6 +5811,61 @@ class AddonInstall {
       this.addon.appDisabled = !isUsableAddon(this.addon);
       return undefined;
     }).bind(this));
+  }
+
+  /**
+   * This method should be called when the XPI is ready to be installed,
+   * i.e., when a download finishes or when a local file has been verified.
+   * It should only be called from install() when the install is in
+   * STATE_DOWNLOADED (which actually means that the file is available
+   * and has been verified).
+   */
+  checkPermissions() {
+    Task.spawn((function*() {
+      if (this.permHandler) {
+        let info = {
+          existinAddon: this.existingAddon,
+          addon: this.addon,
+        };
+
+        try {
+          yield this.permHandler(info);
+        } catch (err) {
+          logger.info(`Install of ${this.addon.id} cancelled since user declined permissions`);
+          this.state = AddonManager.STATE_CANCELLED;
+          XPIProvider.removeActiveInstall(this);
+          AddonManagerPrivate.callInstallListeners("onInstallCancelled",
+                                                   this.listeners, this.wrapper);
+          return;
+        }
+      }
+      this.state = AddonManager.STATE_PERMISSION_GRANTED;
+      this.install();
+    }).bind(this));
+  }
+
+  /**
+   * This method should be called when we have the XPI and any needed
+   * permissions prompts have been completed.  If there are any upgrade
+   * listeners, they are invoked and the install moves into STATE_POSTPONED.
+   * Otherwise, the install moves into STATE_INSTALLING
+   */
+  checkForBlockers() {
+    // If an upgrade listener is registered for this add-on, pass control
+    // over the upgrade to the add-on.
+    if (AddonManagerPrivate.hasUpgradeListener(this.addon.id)) {
+      logger.info(`add-on ${this.addon.id} has an upgrade listener, postponing upgrade until restart`);
+      let resumeFn = () => {
+        logger.info(`${this.addon.id} has resumed a previously postponed upgrade`);
+        this.state = AddonManager.STATE_READY;
+        this.install();
+      }
+      this.postpone(resumeFn);
+      return;
+    }
+
+    this.state = AddonManager.STATE_READY;
+    this.install();
   }
 
   // TODO This relies on the assumption that we are always installing into the
@@ -6189,33 +6280,32 @@ class DownloadAddonInstall extends AddonInstall {
    *         The InstallLocation the add-on will be installed into
    * @param  url
    *         The nsIURL to get the add-on from
-   * @param  name
-   *         An optional name for the add-on
-   * @param  hash
+   * @param  options
+   *         Additional options for the install
+   * @param  options.hash
    *         An optional hash for the add-on
-   * @param  existingAddon
+   * @param  options.existingAddon
    *         The add-on this install will update if known
-   * @param  browser
+   * @param  options.browser
    *         The browser performing the install, used to display
    *         authentication prompts.
-   * @param  type
+   * @param  options.name
+   *         An optional name for the add-on
+   * @param  options.type
    *         An optional type for the add-on
-   * @param  icons
+   * @param  options.icons
    *         Optional icons for the add-on
-   * @param  version
+   * @param  options.version
    *         An optional version for the add-on
+   * @param  options.permHandler
+   *         A callback to present permissions to the user before installing.
    */
-  constructor(installLocation, url, hash, existingAddon, browser,
-              name, type, icons, version) {
-    super(installLocation, url, hash, existingAddon);
+  constructor(installLocation, url, options = {}) {
+    super(installLocation, url, options);
 
-    this.browser = browser;
+    this.browser = options.browser;
 
     this.state = AddonManager.STATE_AVAILABLE;
-    this.name = name;
-    this.type = type;
-    this.version = version;
-    this.icons = icons;
 
     this.stream = null;
     this.crypto = null;
@@ -6571,24 +6661,12 @@ class DownloadAddonInstall extends AddonInstall {
         if (this.state != AddonManager.STATE_DOWNLOADED)
           return;
 
-        // If an upgrade listener is registered for this add-on, pass control
-        // over the upgrade to the add-on.
-        if (AddonManagerPrivate.hasUpgradeListener(this.addon.id)) {
-          logger.info(`add-on ${this.addon.id} has an upgrade listener, postponing upgrade until restart`);
-          let resumeFn = () => {
-            logger.info(`${this.addon.id} has resumed a previously postponed upgrade`);
-            this.state = AddonManager.STATE_DOWNLOADED;
-            this.install();
-          }
-          this.postpone(resumeFn);
-        } else {
-          // no upgrade listener present, so proceed with normal install
-          this.install();
-          if (this.linkedInstalls) {
-            for (let install of this.linkedInstalls) {
-              if (install.state == AddonManager.STATE_DOWNLOADED)
-                install.install();
-            }
+        // proceed with the install state machine.
+        this.install();
+        if (this.linkedInstalls) {
+          for (let install of this.linkedInstalls) {
+            if (install.state == AddonManager.STATE_DOWNLOADED)
+              install.install();
           }
         }
       }
@@ -6675,40 +6753,6 @@ function createLocalInstall(file, location) {
 }
 
 /**
- * Creates a new AddonInstall to download and install a URL.
- *
- * @param  aCallback
- *         The callback to pass the new AddonInstall to
- * @param  aUri
- *         The URI to download
- * @param  aHash
- *         A hash for the add-on
- * @param  aName
- *         A name for the add-on
- * @param  aIcons
- *         An icon URLs for the add-on
- * @param  aVersion
- *         A version for the add-on
- * @param  aBrowser
- *         The browser performing the install
- */
-function createDownloadInstall(aCallback, aUri, aHash, aName, aIcons,
-                               aVersion, aBrowser) {
-  let location = XPIProvider.installLocationsByName[KEY_APP_PROFILE];
-  let url = NetUtil.newURI(aUri);
-
-  if (url instanceof Ci.nsIFileURL) {
-    let install = new LocalAddonInstall(location, url, aHash);
-    install.init().then(() => { aCallback(install); });
-  } else {
-    let install = new DownloadAddonInstall(location, url, aHash, null,
-                                           aBrowser, aName, null, aIcons,
-                                           aVersion);
-    aCallback(install);
-  }
-}
-
-/**
  * Creates a new AddonInstall for an update.
  *
  * @param  aCallback
@@ -6722,16 +6766,20 @@ function createUpdate(aCallback, aAddon, aUpdate) {
   let url = NetUtil.newURI(aUpdate.updateURL);
 
   Task.spawn(function*() {
+    let opts = {
+      hash: aUpdate.updateHash,
+      existingAddon: aAddon,
+      name: aAddon.selectedLocale.name,
+      type: aAddon.type,
+      icons: aAddon.icons,
+      version: aUpdate.version,
+    };
     let install;
     if (url instanceof Ci.nsIFileURL) {
-      install = new LocalAddonInstall(aAddon._installLocation, url,
-                                      aUpdate.updateHash, aAddon);
+      install = new LocalAddonInstall(aAddon._installLocation, url, opts);
       yield install.init();
     } else {
-      install = new DownloadAddonInstall(aAddon._installLocation, url,
-                                         aUpdate.updateHash, aAddon, null,
-                                         aAddon.selectedLocale.name, aAddon.type,
-                                         aAddon.icons, aUpdate.version);
+      install = new DownloadAddonInstall(aAddon._installLocation, url, opts);
     }
     try {
       if (aUpdate.updateInfoURL)
@@ -6792,6 +6840,10 @@ AddonInstallWrapper.prototype = {
     if (!install.linkedInstalls)
       return null;
     return install.linkedInstalls.map(i => i.wrapper);
+  },
+
+  set _permHandler(handler) {
+    installFor(this).permHandler = handler;
   },
 
   install: function() {

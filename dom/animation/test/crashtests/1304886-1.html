@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<script>
+window.onload=function(){
+  var e = document.createElement("div");
+  document.documentElement.appendChild(e);
+  e.animate([{"font":"status-bar"},
+             {"font":"unset"}],
+            {duration:6,
+             iterationStart:4,
+             iterationComposite:"accumulate"});
+};
+</script>
+</html>

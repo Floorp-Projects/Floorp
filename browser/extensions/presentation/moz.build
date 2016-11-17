@@ -1,0 +1,14 @@
+DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
+DEFINES['MOZ_APP_MAXVERSION'] = CONFIG['MOZ_APP_MAXVERSION']
+
+DIRS += ['locale']
+
+FINAL_TARGET_FILES.features['presentation@mozilla.org'] += [
+  'bootstrap.js'
+]
+
+FINAL_TARGET_PP_FILES.features['presentation@mozilla.org'] += [
+  'install.rdf.in'
+]
+
+JAR_MANIFESTS += ['jar.mn']
