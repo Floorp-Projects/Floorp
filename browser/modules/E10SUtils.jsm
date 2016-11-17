@@ -26,13 +26,20 @@ function getAboutModule(aURL) {
 
 const NOT_REMOTE = null;
 const WEB_REMOTE_TYPE = "web";
+const FILE_REMOTE_TYPE = "file";
 // This must match the one in ContentParent.h.
 const DEFAULT_REMOTE_TYPE = WEB_REMOTE_TYPE;
+
+function validatedWebRemoteType(aPreferredRemoteType) {
+  return aPreferredRemoteType && aPreferredRemoteType.startsWith(WEB_REMOTE_TYPE)
+         ? aPreferredRemoteType : WEB_REMOTE_TYPE;
+}
 
 this.E10SUtils = {
   DEFAULT_REMOTE_TYPE,
   NOT_REMOTE,
   WEB_REMOTE_TYPE,
+  FILE_REMOTE_TYPE,
 
   canLoadURIInProcess: function(aURL, aProcess) {
     let remoteType = aProcess == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
@@ -53,6 +60,11 @@ this.E10SUtils = {
     // Javascript urls can load in any process, they apply to the current document
     if (aURL.startsWith("javascript:")) {
       return aPreferredRemoteType;
+    }
+
+    if (aURL.startsWith("file:")) {
+      return Services.prefs.getBoolPref("browser.tabs.remote.separateFileUriProcess")
+             ? FILE_REMOTE_TYPE : DEFAULT_REMOTE_TYPE;
     }
 
     if (aURL.startsWith("about:")) {
@@ -115,7 +127,7 @@ this.E10SUtils = {
                                       aMultiProcess, aPreferredRemoteType);
     }
 
-    return WEB_REMOTE_TYPE;
+    return validatedWebRemoteType(aPreferredRemoteType);
   },
 
   shouldLoadURIInThisProcess: function(aURI) {
