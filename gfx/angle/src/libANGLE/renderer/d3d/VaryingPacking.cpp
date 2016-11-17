@@ -73,6 +73,10 @@ bool VaryingPacking::packVarying(const PackedVarying &packedVarying)
 
     unsigned int maxVaryingVectors = static_cast<unsigned int>(mRegisterMap.size());
 
+    if (varyingRows > maxVaryingVectors) {
+        return false;
+    }
+
     // "For 2, 3 and 4 component variables packing is started using the 1st column of the 1st row.
     // Variables are then allocated to successive rows, aligning them to the 1st column."
     if (varyingColumns >= 2 && varyingColumns <= 4)
