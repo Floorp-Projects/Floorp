@@ -127,6 +127,7 @@ def target_tasks_graphics(full_task_graph, parameters):
        the graphics branch that aren't on the candidate branches of artifact
        builds"""
     filtered_for_project = target_tasks_default(full_task_graph, parameters)
+
     def filter(task):
         if task.attributes['kind'] == 'artifact-build':
             return False
