@@ -50,6 +50,7 @@
 #include "mozilla/layers/PLayerTransactionParent.h"
 #include "mozilla/layers/RemoteContentController.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
+#include "mozilla/layers/WebRenderCompositorOGL.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/media/MediaSystemResourceService.h" // for MediaSystemResourceService
 #include "mozilla/mozalloc.h"           // for operator new, etc
@@ -1852,8 +1853,9 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId,
   MOZ_ASSERT(aPipelineId == mRootLayerTreeID);
 
   RefPtr<gl::GLContext> glc(gl::GLContextProvider::CreateForCompositorWidget(mWidget, true));
+  RefPtr<Compositor> compositor = new WebRenderCompositorOGL(glc.get());
   WebRenderBridgeParent* parent = new WebRenderBridgeParent(aPipelineId,
-        &aResourcePath, mWidget, glc.get(), nullptr);
+        &aResourcePath, mWidget, glc.get(), nullptr, compositor.get());
   parent->AddRef(); // IPDL reference
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   MOZ_ASSERT(sIndirectLayerTrees[aPipelineId].mWRBridge == nullptr);
