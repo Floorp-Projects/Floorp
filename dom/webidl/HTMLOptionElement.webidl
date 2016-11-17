@@ -11,7 +11,7 @@
  * and create derivative works of this document.
  */
 
-[NamedConstructor=Option(optional DOMString text, optional DOMString value, optional boolean defaultSelected, optional boolean selected)]
+[HTMLConstructor, NamedConstructor=Option(optional DOMString text, optional DOMString value, optional boolean defaultSelected, optional boolean selected)]
 interface HTMLOptionElement : HTMLElement {
            [SetterThrows]
            attribute boolean disabled;
