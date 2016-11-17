@@ -23,16 +23,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
 XPCOMUtils.defineLazyModuleGetter(this, "BinarySearch",
   "resource://gre/modules/BinarySearch.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "gPrincipal", function () {
+XPCOMUtils.defineLazyGetter(this, "gPrincipal", function() {
   let uri = Services.io.newURI("about:newtab", null, null);
   return Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
 });
 
-XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function () {
+XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function() {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 });
 
-XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function () {
+XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function() {
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = 'utf8';
@@ -101,7 +101,7 @@ function LinksStorage() {
     // Something went wrong in the update process, we can't recover from here,
     // so just clear the storage and start from scratch (dataloss!).
     Components.utils.reportError(
-      "Unable to migrate the newTab storage to the current version. "+
+      "Unable to migrate the newTab storage to the current version. " +
       "Restarting from scratch.\n" + ex);
     this.clear();
   }
@@ -306,7 +306,7 @@ var AllPages = {
       }
     }
     // and all notifications get forwarded to each page.
-    this._pages.forEach(function (aPage) {
+    this._pages.forEach(function(aPage) {
       aPage.observe(aSubject, aTopic, aData);
     }, this);
   },
@@ -319,7 +319,7 @@ var AllPages = {
     Services.prefs.addObserver(PREF_NEWTAB_ENABLED, this, true);
     Services.prefs.addObserver(PREF_NEWTAB_ENHANCED, this, true);
     Services.obs.addObserver(this, "page-thumbnail:create", true);
-    this._addObserver = function () {};
+    this._addObserver = function() {};
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -428,10 +428,10 @@ var PinnedLinks = {
     let links = this.links;
     links[index] = null;
     // trim trailing nulls
-    let i=links.length-1;
+    let i = links.length - 1;
     while (i >= 0 && links[i] == null)
       i--;
-    links.splice(i +1);
+    links.splice(i + 1);
     this.save();
   },
 
@@ -522,7 +522,7 @@ var BlockedLinks = {
   /**
    * Registers an object that will be notified when the blocked links change.
    */
-  addObserver: function (aObserver) {
+  addObserver: function(aObserver) {
     this._observers.push(aObserver);
   },
 
@@ -648,7 +648,7 @@ var PlacesProvider = {
     let links = [];
 
     let callback = {
-      handleResult: function (aResultSet) {
+      handleResult: function(aResultSet) {
         let row;
 
         while ((row = aResultSet.getNextRow())) {
@@ -668,12 +668,12 @@ var PlacesProvider = {
         }
       },
 
-      handleError: function (aError) {
+      handleError: function(aError) {
         // Should we somehow handle this error?
         aCallback([]);
       },
 
-      handleCompletion: function (aReason) {
+      handleCompletion: function(aReason) {
         // The Places query breaks ties in frecency by place ID descending, but
         // that's different from how Links.compareLinks breaks ties, because
         // compareLinks doesn't have access to place IDs.  It's very important
@@ -857,7 +857,7 @@ var Links = {
   /**
    * Registers an object that will be notified when links updates.
    */
-  addObserver: function (aObserver) {
+  addObserver: function(aObserver) {
     this._observers.push(aObserver);
   },
 
@@ -934,7 +934,7 @@ var Links = {
     }
 
     // Filter blocked and pinned links and duplicate base domains.
-    links = links.filter(function (link) {
+    links = links.filter(function(link) {
       let site = NewTabUtils.extractSite(link.url);
       if (site == null || sites.has(site))
         return false;
@@ -1021,7 +1021,7 @@ var Links = {
     * @param aLink The link that will affect siteMap
     * @param increment A boolean for whether to increment or decrement siteMap
     */
-  _adjustSiteMapAndNotify: function(aLink, increment=true) {
+  _adjustSiteMapAndNotify: function(aLink, increment = true) {
     for (let [provider, cache] of this._providers) {
       // We only update siteMap if aLink is already stored in linkMap.
       if (cache.linkMap.get(aLink.url)) {
@@ -1058,7 +1058,7 @@ var Links = {
    * @param aForce When true, populates the provider's cache even when it's
    *               already filled.
    */
-  _populateProviderCache: function (aProvider, aCallback, aForce) {
+  _populateProviderCache: function(aProvider, aCallback, aForce) {
     let cache = this._providers.get(aProvider);
     let createCache = !cache;
     if (createCache) {
@@ -1144,7 +1144,7 @@ var Links = {
                    cache in _providers. Defaults to -1 if the provider doesn't know the index
    * @param aDeleted Boolean indicating if the provider has deleted the link.
    */
-  onLinkChanged: function Links_onLinkChanged(aProvider, aLink, aIndex=-1, aDeleted=false) {
+  onLinkChanged: function Links_onLinkChanged(aProvider, aLink, aIndex = -1, aDeleted = false) {
     if (!("url" in aLink))
       throw new Error("Changed links must have a url property");
 
@@ -1258,7 +1258,7 @@ var Links = {
     // Make sure to update open about:newtab instances. If there are no opened
     // pages we can just wait for the next new tab to populate the cache again.
     if (AllPages.length && AllPages.enabled)
-      this.populateCache(function () { AllPages.update() }, true);
+      this.populateCache(function() { AllPages.update() }, true);
     else
       this.resetCache();
   },
@@ -1281,7 +1281,7 @@ var Links = {
    */
   _addObserver: function Links_addObserver() {
     Services.obs.addObserver(this, "browser:purge-session-history", true);
-    this._addObserver = function () {};
+    this._addObserver = function() {};
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -1375,7 +1375,7 @@ var ExpirationFilter = {
       return;
     }
 
-    Links.populateCache(function () {
+    Links.populateCache(function() {
       let urls = [];
 
       // Add all URLs to the list that we want to keep thumbnails for.
@@ -1462,7 +1462,7 @@ this.NewTabUtils = {
     PinnedLinks.resetCache();
     BlockedLinks.resetCache();
 
-    Links.populateCache(function () {
+    Links.populateCache(function() {
       AllPages.update();
     }, true);
   },

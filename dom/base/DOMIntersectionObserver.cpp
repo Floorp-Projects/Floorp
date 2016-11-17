@@ -159,23 +159,15 @@ DOMIntersectionObserver::Observe(Element& aTarget)
 void
 DOMIntersectionObserver::Unobserve(Element& aTarget)
 {
-  if (UnlinkTarget(aTarget)) {
-    aTarget.UnregisterIntersectionObserver(this);
+  if (!mObservationTargets.Contains(&aTarget)) {
+    return;
   }
-}
-
-bool
-DOMIntersectionObserver::UnlinkTarget(Element& aTarget)
-{
-    if (!mObservationTargets.Contains(&aTarget)) {
-        return false;
-    }
-    if (mObservationTargets.Count() == 1) {
-        Disconnect();
-        return false;
-    }
-    mObservationTargets.RemoveEntry(&aTarget);
-    return true;
+  if (mObservationTargets.Count() == 1) {
+    Disconnect();
+    return;
+  }
+  aTarget.UnregisterIntersectionObserver(this);
+  mObservationTargets.RemoveEntry(&aTarget);
 }
 
 void
@@ -200,10 +192,8 @@ DOMIntersectionObserver::Disconnect()
     target->UnregisterIntersectionObserver(this);
   }
   mObservationTargets.Clear();
-  if (mOwner) {
-    nsIDocument* document = mOwner->GetExtantDoc();
-    document->RemoveIntersectionObserver(this);
-  }
+  nsIDocument* document = mOwner->GetExtantDoc();
+  document->RemoveIntersectionObserver(this);
   mConnected = false;
 }
 

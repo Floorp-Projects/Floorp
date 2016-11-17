@@ -236,13 +236,13 @@ function suggestionsPresent() {
   return false;
 }
 
-function assertVisible(visible, win=window) {
+function assertVisible(visible, win = window) {
   let style =
     win.getComputedStyle(win.gURLBar.popup.searchSuggestionsNotification);
   Assert.equal(style.visibility, visible ? "visible" : "collapse");
 }
 
-function promiseTransition(win=window) {
+function promiseTransition(win = window) {
   return new Promise(resolve => {
     win.gURLBar.popup.addEventListener("transitionend", function onEnd() {
       win.gURLBar.popup.removeEventListener("transitionend", onEnd, true);

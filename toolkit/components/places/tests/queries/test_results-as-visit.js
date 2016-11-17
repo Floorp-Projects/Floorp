@@ -61,7 +61,7 @@ add_task(function* test_results_as_visit()
    root.containerOpen = true;
 
    do_print("Number of items in result set: " + root.childCount);
-   for (let i=0; i < root.childCount; ++i) {
+   for (let i = 0; i < root.childCount; ++i) {
      do_print("result: " + root.getChild(i).uri + " Title: " + root.getChild(i).title);
    }
 
@@ -72,13 +72,13 @@ add_task(function* test_results_as_visit()
    // Add to the query set
    do_print("Adding item to query")
    var tmp = [];
-   for (let i=0; i < 2; i++) {
+   for (let i = 0; i < 2; i++) {
      tmp.push({ isVisit: true,
                 uri: "http://foo.com/added.html",
                 title: "ab moz" });
    }
    yield task_populateDB(tmp);
-   for (let i=0; i < 2; i++)
+   for (let i = 0; i < 2; i++)
      do_check_eq(root.getChild(i).title, "ab moz");
 
    // Update an existing URI

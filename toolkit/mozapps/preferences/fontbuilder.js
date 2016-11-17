@@ -6,7 +6,7 @@
 
 var FontBuilder = {
   _enumerator: null,
-  get enumerator ()
+  get enumerator()
   {
     if (!this._enumerator) {
       this._enumerator = Components.classes["@mozilla.org/gfx/fontenumerator;1"]
@@ -17,7 +17,7 @@ var FontBuilder = {
 
   _allFonts: null,
   _langGroupSupported: false,
-  buildFontList: function (aLanguage, aFontType, aMenuList)
+  buildFontList: function(aLanguage, aFontType, aMenuList)
   {
     // Reset the list
     while (aMenuList.hasChildNodes())

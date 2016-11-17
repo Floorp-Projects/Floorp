@@ -80,7 +80,7 @@ function test() {
   tab.linkedBrowser.addEventListener("load", function onload() {
     tab.linkedBrowser.removeEventListener("load", onload, true);
     TranslationStub.browser = gBrowser.selectedBrowser;
-    registerCleanupFunction(function () {
+    registerCleanupFunction(function() {
       gBrowser.removeTab(tab);
       Services.prefs.clearUserPref(kShowUIPref);
     });

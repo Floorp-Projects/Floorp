@@ -550,7 +550,7 @@ Extension.prototype = {
 function Extensions(addons) {
   this._cache = {};
 
-  addons.forEach(function (addon) {
+  addons.forEach(function(addon) {
     this._cache[addon.id] = new Extension(addon);
   }, this);
 }
@@ -664,7 +664,7 @@ extApplication.prototype = {
   },
 
   getExtensions: function(callback) {
-    AddonManager.getAddonsByTypes(["extension"], function (addons) {
+    AddonManager.getAddonsByTypes(["extension"], function(addons) {
       callback.callback(new Extensions(addons));
     });
   },

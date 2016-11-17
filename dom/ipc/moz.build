@@ -39,15 +39,12 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla += [
-    'AppProcessChecker.h',
-    'PreallocatedProcessManager.h',
     'ProcessHangMonitor.h',
     'ProcessHangMonitorIPC.h',
     'ProcessPriorityManager.h',
 ]
 
 UNIFIED_SOURCES += [
-    'AppProcessChecker.cpp',
     'ColorPickerParent.cpp',
     'ContentBridgeChild.cpp',
     'ContentBridgeParent.cpp',
@@ -60,7 +57,6 @@ UNIFIED_SOURCES += [
     'nsIContentChild.cpp',
     'nsIContentParent.cpp',
     'PermissionMessageUtils.cpp',
-    'PreallocatedProcessManager.cpp',
     'ProcessPriorityManager.cpp',
     'ScreenManagerParent.cpp',
     'StructuredCloneData.cpp',

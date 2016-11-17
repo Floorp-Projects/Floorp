@@ -177,6 +177,7 @@ function whereToOpenLink( e, ignoreButton, ignoreAlt )
  *   allowPinnedTabHostChange (boolean)
  *   allowPopups          (boolean)
  *   userContextId        (unsigned int)
+ *   targetBrowser        (XUL browser)
  */
 function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI) {
   var params;
@@ -226,19 +227,6 @@ function openLinkIn(url, where, params) {
   var aForceAboutBlankViewerInCurrent =
       params.forceAboutBlankViewerInCurrent;
 
-  // Establish a window in which we're running this code.
-  var w = getTopWin();
-
-  if ((where == "tab" || where == "tabshifted") &&
-      w && !w.toolbar.visible) {
-    w = getTopWin(true);
-    aRelatedToCurrent = false;
-  }
-
-  // Can only do this after we're sure of what |w| will be the rest of this function.
-  // Note that if |w| is null we might have no current browser (we'll open a new window).
-  var aCurrentBrowser = params.currentBrowser || (w && w.gBrowser.selectedBrowser);
-
   if (where == "save") {
     // TODO(1073187): propagate referrerPolicy.
 
@@ -255,6 +243,21 @@ function openLinkIn(url, where, params) {
       saveURL(url, null, null, true, true, aNoReferrer ? null : aReferrerURI, aInitiatingDoc);
     }
     return;
+  }
+
+  // Establish which window we'll load the link in.
+  let w;
+  if (where == "current" && params.targetBrowser) {
+    w = params.targetBrowser.ownerGlobal;
+  } else {
+    w = getTopWin();
+  }
+  // We don't want to open tabs in popups, so try to find a non-popup window in
+  // that case.
+  if ((where == "tab" || where == "tabshifted") &&
+      w && !w.toolbar.visible) {
+    w = getTopWin(true);
+    aRelatedToCurrent = false;
   }
 
   if (!w || where == "window") {
@@ -310,45 +313,47 @@ function openLinkIn(url, where, params) {
     return;
   }
 
-  let loadInBackground = where == "current" ? false : aInBackground;
-  if (loadInBackground == null) {
-    loadInBackground = aFromChrome ?
-                         false :
-                         getBoolPref("browser.tabs.loadInBackground");
-  }
-
-  let uriObj;
-  if (where == "current") {
-    try {
-      uriObj = Services.io.newURI(url, null, null);
-    } catch (e) {}
-  }
-
-  // We avoid using |w| here because in the 'popup window' case,
-  // if we pass a currentBrowser param |w.gBrowser| might not be the
-  // tabbrowser that contains |aCurrentBrowser|. We really only care
-  // about the tab linked to |aCurrentBrowser|.
-  let tab = aCurrentBrowser.getTabBrowser().getTabForBrowser(aCurrentBrowser);
-  if (where == "current" && tab.pinned &&
-      !aAllowPinnedTabHostChange) {
-    try {
-      // nsIURI.host can throw for non-nsStandardURL nsIURIs.
-      if (!uriObj || (!uriObj.schemeIs("javascript") &&
-                      aCurrentBrowser.currentURI.host != uriObj.host)) {
-        where = "tab";
-        loadInBackground = false;
-      }
-    } catch (err) {
-      where = "tab";
-      loadInBackground = false;
-    }
-  }
+  // We're now committed to loading the link in an existing browser window.
 
   // Raise the target window before loading the URI, since loading it may
   // result in a new frontmost window (e.g. "javascript:window.open('');").
   w.focus();
 
-  let browserUsedForLoad = null;
+  let targetBrowser;
+  let loadInBackground;
+  let uriObj;
+
+  if (where == "current") {
+    targetBrowser = params.targetBrowser || w.gBrowser.selectedBrowser;
+    loadInBackground = false;
+
+    try {
+      uriObj = Services.io.newURI(url, null, null);
+    } catch (e) {}
+
+    if (w.gBrowser.getTabForBrowser(targetBrowser).pinned &&
+        !aAllowPinnedTabHostChange) {
+      try {
+        // nsIURI.host can throw for non-nsStandardURL nsIURIs.
+        if (!uriObj || (!uriObj.schemeIs("javascript") &&
+                        targetBrowser.currentURI.host != uriObj.host)) {
+          where = "tab";
+          loadInBackground = false;
+        }
+      } catch (err) {
+        where = "tab";
+        loadInBackground = false;
+      }
+    }
+  } else {
+    // 'where' is "tab" or "tabshifted", so we'll load the link in a new tab.
+    loadInBackground = aInBackground;
+    if (loadInBackground == null) {
+      loadInBackground =
+        aFromChrome ? false : getBoolPref("browser.tabs.loadInBackground");
+    }
+  }
+
   switch (where) {
   case "current":
     let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -374,17 +379,16 @@ function openLinkIn(url, where, params) {
     }
 
     if (aForceAboutBlankViewerInCurrent) {
-      aCurrentBrowser.createAboutBlankContentViewer(aPrincipal);
+      targetBrowser.createAboutBlankContentViewer(aPrincipal);
     }
 
-    aCurrentBrowser.loadURIWithFlags(url, {
+    targetBrowser.loadURIWithFlags(url, {
       flags: flags,
       referrerURI: aNoReferrer ? null : aReferrerURI,
       referrerPolicy: aReferrerPolicy,
       postData: aPostData,
       userContextId: aUserContextId
     });
-    browserUsedForLoad = aCurrentBrowser;
     break;
   case "tabshifted":
     loadInBackground = !loadInBackground;
@@ -404,14 +408,13 @@ function openLinkIn(url, where, params) {
       userContextId: aUserContextId,
       originPrincipal: aPrincipal,
     });
-    browserUsedForLoad = tabUsedForLoad.linkedBrowser;
+    targetBrowser = tabUsedForLoad.linkedBrowser;
     break;
   }
 
   // Focus the content, but only if the browser used for the load is selected.
-  if (browserUsedForLoad &&
-      browserUsedForLoad == browserUsedForLoad.getTabBrowser().selectedBrowser) {
-    browserUsedForLoad.focus();
+  if (targetBrowser == w.gBrowser.selectedBrowser) {
+    targetBrowser.focus();
   }
 
   if (!loadInBackground && w.isBlankPageURL(url)) {
@@ -565,7 +568,7 @@ function eventMatchesKey(aEvent, aKey)
 }
 
 // Gather all descendent text under given document node.
-function gatherTextUnder ( root )
+function gatherTextUnder( root )
 {
   var text = "";
   var node = root.firstChild;

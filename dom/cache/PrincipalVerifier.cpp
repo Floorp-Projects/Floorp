@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/cache/PrincipalVerifier.h"
 
-#include "mozilla/AppProcessChecker.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/cache/ManagerId.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -145,11 +144,6 @@ PrincipalVerifier::VerifyOnMainThread()
     return;
   }
 
-  // Verify that a child process claims to own the app for this principal
-  if (NS_WARN_IF(actor && !AssertAppPrincipal(actor, principal))) {
-    DispatchToInitiatingThread(NS_ERROR_FAILURE);
-    return;
-  }
   actor = nullptr;
 
 #ifdef DEBUG

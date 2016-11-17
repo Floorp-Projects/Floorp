@@ -351,8 +351,11 @@ HTMLTextFieldAccessible::Value(nsString& aValue)
   }
 
   HTMLInputElement* input = HTMLInputElement::FromContent(mContent);
-  if (input)
-    input->GetValue(aValue);
+  if (input) {
+    // Pass NonSystem as the caller type, to be safe.  We don't expect to have a
+    // file input here.
+    input->GetValue(aValue, CallerType::NonSystem);
+  }
 }
 
 void
@@ -552,7 +555,10 @@ HTMLSpinnerAccessible::Value(nsString& aValue)
   if (!aValue.IsEmpty())
     return;
 
-  HTMLInputElement::FromContent(mContent)->GetValue(aValue);
+  // Pass NonSystem as the caller type, to be safe.  We don't expect to have a
+  // file input here.
+  HTMLInputElement::FromContent(mContent)->GetValue(aValue,
+                                                    CallerType::NonSystem);
 }
 
 double
@@ -628,7 +634,10 @@ HTMLRangeAccessible::Value(nsString& aValue)
   if (!aValue.IsEmpty())
     return;
 
-  HTMLInputElement::FromContent(mContent)->GetValue(aValue);
+  // Pass NonSystem as the caller type, to be safe.  We don't expect to have a
+  // file input here.
+  HTMLInputElement::FromContent(mContent)->GetValue(aValue,
+                                                    CallerType::NonSystem);
 }
 
 double

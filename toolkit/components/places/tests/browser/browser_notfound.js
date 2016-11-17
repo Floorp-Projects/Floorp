@@ -11,28 +11,28 @@ add_task(function* () {
   // Create and add history observer.
   let visitedPromise = new Promise(resolve => {
     let historyObserver = {
-      onVisit: function (aURI, aVisitID, aTime, aSessionID, aReferringID,
+      onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID,
                         aTransitionType) {
         PlacesUtils.history.removeObserver(historyObserver);
         info("Received onVisit: " + aURI.spec);
-        fieldForUrl(aURI, "frecency", function (aFrecency) {
+        fieldForUrl(aURI, "frecency", function(aFrecency) {
           is(aFrecency, 0, "Frecency should be 0");
-          fieldForUrl(aURI, "hidden", function (aHidden) {
+          fieldForUrl(aURI, "hidden", function(aHidden) {
             is(aHidden, 0, "Page should not be hidden");
-            fieldForUrl(aURI, "typed", function (aTyped) {
+            fieldForUrl(aURI, "typed", function(aTyped) {
               is(aTyped, 0, "page should not be marked as typed");
               resolve();
             });
           });
         });
       },
-      onBeginUpdateBatch: function () {},
-      onEndUpdateBatch: function () {},
-      onTitleChanged: function () {},
-      onDeleteURI: function () {},
-      onClearHistory: function () {},
-      onPageChanged: function () {},
-      onDeleteVisits: function () {},
+      onBeginUpdateBatch: function() {},
+      onEndUpdateBatch: function() {},
+      onTitleChanged: function() {},
+      onDeleteURI: function() {},
+      onClearHistory: function() {},
+      onPageChanged: function() {},
+      onDeleteVisits: function() {},
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
     };
     PlacesUtils.history.addObserver(historyObserver, false);

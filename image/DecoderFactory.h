@@ -63,8 +63,6 @@ public:
    * @param aDecoderFlags Flags specifying the behavior of this decoder.
    * @param aSurfaceFlags Flags specifying the type of output this decoder
    *                      should produce.
-   * @param aSampleSize The sample size requested using #-moz-samplesize (or 0
-   *                    if none).
    */
   static already_AddRefed<IDecodingTask>
   CreateDecoder(DecoderType aType,
@@ -73,8 +71,7 @@ public:
                 const gfx::IntSize& aIntrinsicSize,
                 const gfx::IntSize& aOutputSize,
                 DecoderFlags aDecoderFlags,
-                SurfaceFlags aSurfaceFlags,
-                int aSampleSize);
+                SurfaceFlags aSurfaceFlags);
 
   /**
    * Creates and initializes a decoder for animated images of type @aType.
@@ -110,14 +107,11 @@ public:
    *               notifications as decoding progresses.
    * @param aSourceBuffer The SourceBuffer which the decoder will read its data
    *                      from.
-   * @param aSampleSize The sample size requested using #-moz-samplesize (or 0
-   *                    if none).
    */
   static already_AddRefed<IDecodingTask>
   CreateMetadataDecoder(DecoderType aType,
                         NotNull<RasterImage*> aImage,
-                        NotNull<SourceBuffer*> aSourceBuffer,
-                        int aSampleSize);
+                        NotNull<SourceBuffer*> aSourceBuffer);
 
   /**
    * Creates and initializes a decoder for an ICO resource, which may be either

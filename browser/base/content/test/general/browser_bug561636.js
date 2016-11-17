@@ -17,7 +17,7 @@ function checkPopupHide()
 var gObserver = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver]),
 
-  notifyInvalidSubmit : function (aFormElement, aInvalidElements)
+  notifyInvalidSubmit : function(aFormElement, aInvalidElements)
   {
   }
 };
@@ -297,14 +297,14 @@ add_task(function* ()
 
         // Clean-up
         Services.obs.removeObserver(gObserver, "invalidformsubmit");
-        gObserver.notifyInvalidSubmit = function () {};
+        gObserver.notifyInvalidSubmit = function() {};
         resolve();
       });
     };
 
     Services.obs.addObserver(gObserver, "invalidformsubmit", false);
 
-    executeSoon(function () {
+    executeSoon(function() {
       browser.contentDocument.getElementById('s').click();
     });
   });

@@ -35,7 +35,7 @@ add_task(function*() {
   let output = yield ContentTask.spawn(browser, { }, function* (arg) {
     return content.document.getElementById("output").textContent;
   });
-  is (output, "Passed", "Paste file");
+  is(output, "Passed", "Paste file");
 
   textbox.focus();
 

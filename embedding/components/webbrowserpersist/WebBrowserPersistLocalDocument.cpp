@@ -1201,7 +1201,8 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
         return rv;
     }
 
-        nsCOMPtr<nsIDOMHTMLInputElement> nodeAsInput = do_QueryInterface(aNodeIn);
+    RefPtr<dom::HTMLInputElement> nodeAsInput =
+        dom::HTMLInputElement::FromContentOrNull(content);
     if (nodeAsInput) {
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
@@ -1232,7 +1233,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
                 case NS_FORM_INPUT_DATE:
                 case NS_FORM_INPUT_TIME:
                 case NS_FORM_INPUT_COLOR:
-                    nodeAsInput->GetValue(valueStr);
+                    nodeAsInput->GetValue(valueStr, dom::CallerType::System);
                     // Avoid superfluous value="" serialization
                     if (valueStr.IsEmpty())
                       outElt->RemoveAttribute(valueAttr);
@@ -1241,9 +1242,10 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
                     break;
                 case NS_FORM_INPUT_CHECKBOX:
                 case NS_FORM_INPUT_RADIO:
-                    bool checked;
-                    nodeAsInput->GetChecked(&checked);
-                    outElt->SetDefaultChecked(checked);
+                    {
+                        bool checked = nodeAsInput->Checked();
+                        outElt->SetDefaultChecked(checked);
+                    }
                     break;
                 default:
                     break;

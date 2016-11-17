@@ -37,7 +37,6 @@ public:
       // Notified when this display's vsync occurs, on the vsync thread
       // The aVsyncTimestamp should normalize to the Vsync time that just occured
       // However, different platforms give different vsync notification times.
-      // b2g - The vsync timestamp of the previous frame that was just displayed
       // OSX - The vsync timestamp of the upcoming frame, in the future
       // Windows: It's messy, see gfxWindowsPlatform.
       // Android: TODO

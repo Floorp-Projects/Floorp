@@ -92,7 +92,7 @@ FormAutoCompleteResult.prototype = {
     return this._values.length;
   },
 
-  _checkIndexBounds : function (index) {
+  _checkIndexBounds : function(index) {
     if (index < 0 || index >= this._values.length) {
       throw Components.Exception("Index out of range.", Cr.NS_ERROR_ILLEGAL_VALUE);
     }

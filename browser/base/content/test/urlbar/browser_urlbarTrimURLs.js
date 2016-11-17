@@ -3,7 +3,7 @@ add_task(function* () {
 
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
 
-  registerCleanupFunction(function* () {
+  registerCleanupFunction(function*() {
     yield BrowserTestUtils.removeTab(tab);
     Services.prefs.clearUserPref(PREF_TRIMURLS);
     URLBarSetURI();
@@ -87,7 +87,7 @@ function testVal(originalValue, targetValue) {
 
 function testCopy(originalValue, targetValue) {
   return new Promise((resolve, reject) => {
-    waitForClipboard(targetValue, function () {
+    waitForClipboard(targetValue, function() {
       is(gURLBar.textValue, originalValue, "url bar copy value set");
 
       gURLBar.focus();

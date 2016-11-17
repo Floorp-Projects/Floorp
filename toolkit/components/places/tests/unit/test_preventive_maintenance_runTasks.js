@@ -17,8 +17,8 @@ function run_test() {
     let negatives = [];
     let infos = [];
 
-    aLog.forEach(function (aMsg) {
-      print (aMsg);
+    aLog.forEach(function(aMsg) {
+      print(aMsg);
       switch (aMsg.substr(0, 1)) {
         case "+":
           positives.push(aMsg);

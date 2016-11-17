@@ -20,7 +20,7 @@ var gMainPane = {
   /**
    * Initialization of this.
    */
-  init: function ()
+  init: function()
   {
     function setEventListener(aId, aEventType, aCallback)
     {
@@ -121,7 +121,7 @@ var gMainPane = {
               .notifyObservers(window, "main-pane-loaded", null);
   },
 
-  enableE10SChange: function ()
+  enableE10SChange: function()
   {
     if (AppConstants.E10S_TESTING_ONLY) {
       let e10sCheckbox = document.getElementById("e10sAutoStart");
@@ -155,7 +155,7 @@ var gMainPane = {
     }
   },
 
-  separateProfileModeChange: function ()
+  separateProfileModeChange: function()
   {
     if (AppConstants.MOZ_DEV_EDITION) {
       function quitApp() {
@@ -206,7 +206,7 @@ var gMainPane = {
     }
   },
 
-  onGetStarted: function (aEvent) {
+  onGetStarted: function(aEvent) {
     if (AppConstants.MOZ_DEV_EDITION) {
       const Cc = Components.classes, Ci = Components.interfaces;
       let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
@@ -241,7 +241,7 @@ var gMainPane = {
    *   option is preserved.
    */
 
-  syncFromHomePref: function ()
+  syncFromHomePref: function()
   {
     let homePref = document.getElementById("browser.startup.homepage");
 
@@ -260,7 +260,7 @@ var gMainPane = {
     return undefined;
   },
 
-  syncToHomePref: function (value)
+  syncToHomePref: function(value)
   {
     // If the value is "", use about:home.
     if (value == "")
@@ -275,7 +275,7 @@ var gMainPane = {
    * most recent browser window contains multiple tabs), updating preference
    * window UI to reflect this.
    */
-  setHomePageToCurrent: function ()
+  setHomePageToCurrent: function()
   {
     let homePage = document.getElementById("browser.startup.homepage");
     let tabs = this._getTabsForHomePage();
@@ -293,7 +293,7 @@ var gMainPane = {
    * page.  If the user selects a bookmark, that bookmark's name is displayed in
    * UI and the bookmark's address is stored to the home page preference.
    */
-  setHomePageToBookmark: function ()
+  setHomePageToBookmark: function()
   {
     var rv = { urls: null, names: null };
     gSubDialog.open("chrome://browser/content/preferences/selectBookmark.xul",
@@ -316,7 +316,7 @@ var gMainPane = {
    * Switches the "Use Current Page" button between its singular and plural
    * forms.
    */
-  _updateUseCurrentButton: function () {
+  _updateUseCurrentButton: function() {
     let useCurrent = document.getElementById("useCurrent");
 
 
@@ -335,7 +335,7 @@ var gMainPane = {
     useCurrent.disabled = !tabs.length
   },
 
-  _getTabsForHomePage: function ()
+  _getTabsForHomePage: function()
   {
     var win;
     var tabs = [];
@@ -359,7 +359,7 @@ var gMainPane = {
   /**
    * Check to see if a tab is not about:preferences
    */
-  isNotAboutPreferences: function (aElement, aIndex, aArray)
+  isNotAboutPreferences: function(aElement, aIndex, aArray)
   {
     return !aElement.linkedBrowser.currentURI.spec.startsWith("about:preferences");
   },
@@ -367,7 +367,7 @@ var gMainPane = {
   /**
    * Restores the default home page as the user's home page.
    */
-  restoreDefaultHomePage: function ()
+  restoreDefaultHomePage: function()
   {
     var homePage = document.getElementById("browser.startup.homepage");
     homePage.value = homePage.defaultValue;
@@ -409,7 +409,7 @@ var gMainPane = {
    * Enables/disables the folder field and Browse button based on whether a
    * default download directory is being used.
    */
-  readUseDownloadDir: function ()
+  readUseDownloadDir: function()
   {
     var downloadFolder = document.getElementById("downloadFolder");
     var chooseFolder = document.getElementById("chooseFolder");
@@ -522,7 +522,7 @@ var gMainPane = {
   /**
    * Returns the textual path of a folder in readable form.
    */
-  _getDisplayNameOfFile: function (aFolder)
+  _getDisplayNameOfFile: function(aFolder)
   {
     // TODO: would like to add support for 'Downloads on Macintosh HD'
     //       for OS X users.

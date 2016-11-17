@@ -176,7 +176,7 @@ function checkAutocompleteResults(aExpected, aCallback)
     completeDefaultIndex: false,
     get popup() { return this; },
     onSearchBegin: function() {},
-    onSearchComplete:  function ()
+    onSearchComplete:  function()
     {
       info("Found " + gController.matchCount + " matches.");
       // Check to see the expected uris and titles match up (in any order)

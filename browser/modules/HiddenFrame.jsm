@@ -39,7 +39,7 @@ HiddenFrame.prototype = {
    * @returns Promise Returns a promise which is resolved when the hidden frame has finished
    *          loading.
    */
-  get: function () {
+  get: function() {
     if (!this._deferred) {
       this._deferred = PromiseUtils.defer();
       this._create();
@@ -48,7 +48,7 @@ HiddenFrame.prototype = {
     return this._deferred.promise;
   },
 
-  destroy: function () {
+  destroy: function() {
     clearTimeout(this._retryTimerId);
 
     if (this._frame) {
@@ -62,7 +62,7 @@ HiddenFrame.prototype = {
     }
   },
 
-  handleEvent: function () {
+  handleEvent: function() {
     let contentWindow = this._frame.contentWindow;
     if (contentWindow.location.href === XUL_PAGE) {
       this._frame.removeEventListener("load", this, true);
@@ -72,7 +72,7 @@ HiddenFrame.prototype = {
     }
   },
 
-  _create: function () {
+  _create: function() {
     if (this.isReady) {
       let doc = this.hiddenDOMDocument;
       this._frame = doc.createElementNS(HTML_NS, "iframe");

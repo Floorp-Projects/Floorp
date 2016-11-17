@@ -14,7 +14,7 @@
           'files': [
             'nssckbi.h'
           ],
-          'destination': '<(nss_dist_dir)/public/<(module)'
+          'destination': '<(nss_public_dist_dir)/<(module)'
         }
       ]
     }

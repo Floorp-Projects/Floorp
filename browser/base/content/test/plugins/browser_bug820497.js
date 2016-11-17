@@ -3,7 +3,7 @@ var gTestBrowser = null;
 var gNumPluginBindingsAttached = 0;
 
 add_task(function* () {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
@@ -23,11 +23,11 @@ add_task(function* () {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Second Test Plug-in");
 
-  gTestBrowser.addEventListener("PluginBindingAttached", function () { gNumPluginBindingsAttached++ }, true, true);
+  gTestBrowser.addEventListener("PluginBindingAttached", function() { gNumPluginBindingsAttached++ }, true, true);
 
   yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_bug820497.html");
 
-  yield promiseForCondition(function () { return gNumPluginBindingsAttached == 1; });
+  yield promiseForCondition(function() { return gNumPluginBindingsAttached == 1; });
 
   yield ContentTask.spawn(gTestBrowser, null, () => {
     // Note we add the second plugin in the code farther down, so there's
@@ -51,7 +51,7 @@ add_task(function* () {
     XPCNativeWrapper.unwrap(content).addSecondPlugin();
   });
 
-  yield promiseForCondition(function () { return gNumPluginBindingsAttached == 2; });
+  yield promiseForCondition(function() { return gNumPluginBindingsAttached == 2; });
 
   yield ContentTask.spawn(gTestBrowser, null, () => {
     let doc = content.document;

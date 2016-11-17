@@ -15,6 +15,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsPoint.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/EventBinding.h"
 #include "nsIScriptGlobalObject.h"
 #include "Units.h"
@@ -178,16 +179,16 @@ public:
   // xpidl implementation
   // void PreventDefault();
 
-  // You MUST NOT call PreventDefaultJ(JSContext*) from C++ code.  A call of
-  // this method always sets Event.defaultPrevented true for web contents.
-  // If default action handler calls this, web applications meet wrong
+  // You MUST NOT call PreventDefault(JSContext*, CallerType) from C++ code.  A
+  // call of this method always sets Event.defaultPrevented true for web
+  // contents.  If default action handler calls this, web applications see wrong
   // defaultPrevented value.
-  virtual void PreventDefault(JSContext* aCx);
+  virtual void PreventDefault(JSContext* aCx, CallerType aCallerType);
 
-  // You MUST NOT call DefaultPrevented(JSContext*) from C++ code.  This may
+  // You MUST NOT call DefaultPrevented(CallerType) from C++ code.  This may
   // return false even if PreventDefault() has been called.
-  // See comments in its implementation for the detail.
-  bool DefaultPrevented(JSContext* aCx) const;
+  // See comments in its implementation for the details.
+  bool DefaultPrevented(CallerType aCallerType) const;
 
   bool DefaultPrevented() const
   {
@@ -273,12 +274,6 @@ protected:
     return IsTrusted() && mWantsPopupControlCheck;
   }
 
-  /**
-   * IsChrome() returns true if aCx is chrome context or the event is created
-   * in chrome's thread.  Otherwise, false.
-   */
-  bool IsChrome(JSContext* aCx) const;
-
   void SetComposed(bool aComposed)
   {
     mEvent->SetComposed(aComposed);
@@ -363,7 +358,7 @@ private:
 
 #define NS_FORWARD_TO_EVENT \
   NS_FORWARD_NSIDOMEVENT(Event::) \
-  virtual void PreventDefault(JSContext* aCx) override { Event::PreventDefault(aCx); }
+  virtual void PreventDefault(JSContext* aCx, CallerType aCallerType) override { Event::PreventDefault(aCx, aCallerType); }
 
 #define NS_FORWARD_NSIDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION(_to) \
   NS_IMETHOD GetType(nsAString& aType) override { return _to GetType(aType); } \
@@ -392,7 +387,7 @@ private:
 
 #define NS_FORWARD_TO_EVENT_NO_SERIALIZATION_NO_DUPLICATION \
   NS_FORWARD_NSIDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION(Event::) \
-  virtual void PreventDefault(JSContext* aCx) override { Event::PreventDefault(aCx); }
+  virtual void PreventDefault(JSContext* aCx, CallerType aCallerType) override { Event::PreventDefault(aCx, aCallerType); }
 
 inline nsISupports*
 ToSupports(mozilla::dom::Event* e)

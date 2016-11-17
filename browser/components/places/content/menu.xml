@@ -322,7 +322,6 @@
         }
 
         if (window.XULBrowserWindow) {
-          let elt = event.target;
           let placesNode = elt._placesNode;
 
           var linkURI;

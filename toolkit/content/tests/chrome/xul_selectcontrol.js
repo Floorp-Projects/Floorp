@@ -353,7 +353,7 @@ function test_nsIDOMXULSelectControlElement_UI(element, testprefix)
                              dontSelectDisabled ? "!select" : "select",
                              testid + "mouse select disabled");
   test_nsIDOMXULSelectControlElement_States(element, testid + "mouse select disabled", 4,
-    dontSelectDisabled ? firstitem: seconditem, dontSelectDisabled ? 0 : 1,
+    dontSelectDisabled ? firstitem : seconditem, dontSelectDisabled ? 0 : 1,
     dontSelectDisabled ? "first" : "second");
 
   if (dontSelectDisabled) {

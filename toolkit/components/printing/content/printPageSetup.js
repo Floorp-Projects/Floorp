@@ -99,7 +99,7 @@ function setOrientation()
     gPageWidth = temp;
   }
   var div = gDoingMetric ? 100 : 10;
-  style += "width:" + gPageWidth/div + unitString() + ";height:" + gPageHeight/div + unitString() + ";";
+  style += "width:" + gPageWidth / div + unitString() + ";height:" + gPageHeight / div + unitString() + ";";
   gDialog.marginPage.setAttribute( "style", style );
 }
 
@@ -125,7 +125,7 @@ function changeMargin( node )
   // Reset the margin height/width for this node.
   var val = node.value;
   var nodeToStyle;
-  var attr="width";
+  var attr = "width";
   if ( node == gDialog.topInput ) {
     nodeToStyle = gDialog.marginTop;
     val = checkMargin( val, gPageHeight, gDialog.bottomInput );
@@ -141,7 +141,7 @@ function changeMargin( node )
     nodeToStyle = gDialog.marginRight;
     val = checkMargin( val, gPageWidth, gDialog.leftInput );
   }
-  var style = attr + ":" + (val/10) + unitString() + ";";
+  var style = attr + ":" + (val / 10) + unitString() + ";";
   nodeToStyle.setAttribute( "style", style );
 }
 
@@ -174,7 +174,7 @@ function customize( node )
 // ---------------------------------------------------
 function setHeaderFooter( node, value )
 {
-  node.value= hfValueToId(value);
+  node.value = hfValueToId(value);
   if (node.value == 6) {
     // Remember current Custom... value.
     node.custom = value;
@@ -243,7 +243,7 @@ function setPrinterDefaultsForSelectedPrinter()
   gPrintService.initPrintSettingsFromPrefs(gPrintSettings, true, gPrintSettingsInterface.kInitSaveAll);
 
   if (gDoDebug) {
-    dump("pagesetup/setPrinterDefaultsForSelectedPrinter: printerName='"+gPrintSettings.printerName+"', orientation='"+gPrintSettings.orientation+"'\n");
+    dump("pagesetup/setPrinterDefaultsForSelectedPrinter: printerName='" + gPrintSettings.printerName + "', orientation='" + gPrintSettings.orientation + "'\n");
   }
 }
 
@@ -267,7 +267,7 @@ function loadDialog()
       }
     }
   } catch (ex) {
-    dump("loadDialog: ex="+ex+"\n");
+    dump("loadDialog: ex=" + ex + "\n");
   }
 
   setPrinterDefaultsForSelectedPrinter();
@@ -298,12 +298,12 @@ function loadDialog()
   print_margin_bottom = convertMarginInchesToUnits(gPrintSettings.marginBottom, gDoingMetric);
 
   if (gDoDebug) {
-    dump("print_orientation   "+print_orientation+"\n");
+    dump("print_orientation   " + print_orientation + "\n");
 
-    dump("print_margin_top    "+print_margin_top+"\n");
-    dump("print_margin_left   "+print_margin_left+"\n");
-    dump("print_margin_right  "+print_margin_right+"\n");
-    dump("print_margin_bottom "+print_margin_bottom+"\n");
+    dump("print_margin_top    " + print_margin_top + "\n");
+    dump("print_margin_left   " + print_margin_left + "\n");
+    dump("print_margin_right  " + print_margin_right + "\n");
+    dump("print_margin_bottom " + print_margin_bottom + "\n");
   }
 
   if (print_orientation == gPrintSettingsInterface.kPortraitOrientation) {
@@ -428,10 +428,10 @@ function onAccept()
 
     if (gDoDebug) {
       dump("******* Page Setup Accepting ******\n");
-      dump("print_margin_top    "+gDialog.topInput.value+"\n");
-      dump("print_margin_left   "+gDialog.leftInput.value+"\n");
-      dump("print_margin_right  "+gDialog.bottomInput.value+"\n");
-      dump("print_margin_bottom "+gDialog.rightInput.value+"\n");
+      dump("print_margin_top    " + gDialog.topInput.value + "\n");
+      dump("print_margin_left   " + gDialog.leftInput.value + "\n");
+      dump("print_margin_right  " + gDialog.bottomInput.value + "\n");
+      dump("print_margin_bottom " + gDialog.rightInput.value + "\n");
     }
   }
 

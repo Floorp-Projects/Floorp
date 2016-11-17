@@ -117,7 +117,7 @@ add_task(function*() {
   yield loadURI(tabs[1], "data:text/html;charset=utf-8,<title>tab1</title><body>tab1<iframe>");
   yield loadURI(tabs[2], "data:text/plain;charset=utf-8,tab2");
   yield loadURI(tabs[3], "data:text/html;charset=utf-8,<title>tab3</title><body>tab3<iframe>");
-  yield loadURI(tabs[4], "data:text/html;charset=utf-8,<body onload='clicks=0' onclick='++clicks'>"+embed);
+  yield loadURI(tabs[4], "data:text/html;charset=utf-8,<body onload='clicks=0' onclick='++clicks'>" + embed);
   yield BrowserTestUtils.switchTab(gBrowser, tabs[3]);
 
   swapTabsAndCloseOther(2, 3); // now: 0 1 2 4

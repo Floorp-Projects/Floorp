@@ -30,7 +30,7 @@ var parentScript = SpecialPowers.loadChromeScript(
 var testUrl = location.href.replace(/\.\w+$/, ".js");
 
 // Start loading the test script in the parent process.
-var promiseParentInitFinished = new Promise(function (resolve) {
+var promiseParentInitFinished = new Promise(function(resolve) {
   parentScript.addMessageListener("finish_load_in_parent", resolve);
 });
 parentScript.sendAsyncMessage("start_load_in_parent", { testUrl: testUrl });
@@ -78,7 +78,7 @@ window.addEventListener("load", function onLoad() {
         } else {
           // This is a task executed in the parent process.
           info("Running task in parent process: " + taskFn.name);
-          let promiseFinished = new Promise(function (resolve) {
+          let promiseFinished = new Promise(function(resolve) {
             parentScript.addMessageListener("finish_task_" + taskId, resolve);
           });
           parentScript.sendAsyncMessage("start_task_" + taskId);

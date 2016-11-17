@@ -27,7 +27,7 @@ RemoteSecurityUI.prototype = {
   get state() { return this._state; },
   get tooltipText() { return ""; },
 
-  _update: function (aStatus, aState) {
+  _update: function(aStatus, aState) {
     this._SSLStatus = aStatus;
     this._state = aState;
   }

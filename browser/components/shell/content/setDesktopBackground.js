@@ -20,7 +20,7 @@ var gSetBackground = {
                      .getService(Ci.nsIShellService);
   },
 
-  load: function ()
+  load: function()
   {
     this._canvas = document.getElementById("screen");
     this._screenWidth = screen.width;
@@ -49,7 +49,7 @@ var gSetBackground = {
     }, 0, this);
   },
 
-  init: function (aImage)
+  init: function(aImage)
   {
     this._image = aImage;
 
@@ -76,7 +76,7 @@ var gSetBackground = {
     this.updatePosition();
   },
 
-  setDesktopBackground: function ()
+  setDesktopBackground: function()
   {
     if (AppConstants.platform != "macosx") {
       document.persist("menuPosition", "value");
@@ -95,7 +95,7 @@ var gSetBackground = {
                                      Ci.nsIShellService["BACKGROUND_" + this._position]);
   },
 
-  updatePosition: function ()
+  updatePosition: function()
   {
     var ctx = this._canvas.getContext("2d");
     ctx.clearRect(0, 0, this._screenWidth, this._screenHeight);
@@ -159,7 +159,7 @@ var gSetBackground = {
 };
 
 if (AppConstants.platform != "macosx") {
-  gSetBackground["_initColor"] = function ()
+  gSetBackground["_initColor"] = function()
   {
     var color = this._shell.desktopBackgroundColor;
 
@@ -175,27 +175,27 @@ if (AppConstants.platform != "macosx") {
     colorpicker.color = this._backgroundColor;
   };
 
-  gSetBackground["updateColor"] = function (aColor)
+  gSetBackground["updateColor"] = function(aColor)
   {
     this._backgroundColor = aColor;
     this._canvas.style.backgroundColor = aColor;
   };
 
   // Converts a color string in the format "#RRGGBB" to an integer.
-  gSetBackground["_hexStringToLong"] = function (aString)
+  gSetBackground["_hexStringToLong"] = function(aString)
   {
     return parseInt(aString.substring(1, 3), 16) << 16 |
            parseInt(aString.substring(3, 5), 16) << 8 |
            parseInt(aString.substring(5, 7), 16);
   };
 
-  gSetBackground["_rgbToHex"] = function (aR, aG, aB)
+  gSetBackground["_rgbToHex"] = function(aR, aG, aB)
   {
     return "#" + [aR, aG, aB].map(aInt => aInt.toString(16).replace(/^(.)$/, "0$1"))
                              .join("").toUpperCase();
   };
 } else {
-  gSetBackground["observe"] = function (aSubject, aTopic, aData)
+  gSetBackground["observe"] = function(aSubject, aTopic, aData)
   {
     if (aTopic == "shell:desktop-background-changed") {
       document.getElementById("setDesktopBackground").hidden = true;

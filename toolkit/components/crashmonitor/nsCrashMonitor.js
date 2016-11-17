@@ -18,7 +18,7 @@ CrashMonitor.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsIObserver]),
 
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
     case "profile-after-change":
       MonitorAPI.init();

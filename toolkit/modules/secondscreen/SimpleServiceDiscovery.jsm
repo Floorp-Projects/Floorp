@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/Timer.jsm");
 
 var log = Cu.reportError;
 
-XPCOMUtils.defineLazyGetter(this, "converter", function () {
+XPCOMUtils.defineLazyGetter(this, "converter", function() {
   let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
   conv.charset = "utf8";
   return conv;
