@@ -52,7 +52,6 @@ pub enum ApiMsg {
     SetRootPipeline(PipelineId),
     Scroll(Point2D<f32>, Point2D<f32>, ScrollEventPhase),
     TickScrollingBounce,
-    SetScrollOffset(ScrollLayerId, Point2D<f32>),
     GenerateFrame,
     TranslatePointToLayerSpace(Point2D<f32>, IpcSender<(Point2D<f32>, PipelineId)>),
     GetScrollLayerState(IpcSender<Vec<ScrollLayerState>>),
