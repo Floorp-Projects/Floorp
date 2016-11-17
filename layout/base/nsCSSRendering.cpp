@@ -1632,7 +1632,6 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
     // transparent in the shadow, so drawing them changes nothing.
     gfxContext* renderContext = aRenderingContext.ThebesContext();
     DrawTarget* drawTarget = renderContext->GetDrawTarget();
-    nsContextBoxBlur blurringArea;
 
     // Clip the context to the area of the frame's padding rect, so no part of the
     // shadow is painted outside. Also cut out anything beyond where the inset shadow
@@ -6123,9 +6122,8 @@ nsContextBoxBlur::InsetBoxBlur(gfxContext* aDestinationCtx,
 
   mAlphaBoxBlur.BlurInsetBox(aDestinationCtx, transformedDestRect,
                              transformedShadowClipRect,
-                             blurRadius, spreadRadius,
-                             aShadowColor, aHasBorderRadius,
-                             aInnerClipRectRadii, transformedSkipRect,
-                             aShadowOffset);
+                             blurRadius, aShadowColor,
+                             aHasBorderRadius ? &aInnerClipRectRadii : nullptr,
+                             transformedSkipRect, aShadowOffset);
   return true;
 }

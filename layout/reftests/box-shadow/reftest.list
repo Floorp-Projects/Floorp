@@ -18,12 +18,12 @@ fuzzy-if(skiaContent,1,50) HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic-r
 random-if(d2d) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
 random-if(d2d) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
 random-if(d2d) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
-== boxshadow-skiprect.html boxshadow-skiprect-ref.html
+fuzzy(2,440) == boxshadow-skiprect.html boxshadow-skiprect-ref.html
 == boxshadow-opacity.html boxshadow-opacity-ref.html
 == boxshadow-color-rounding.html boxshadow-color-rounding-ref.html
 == boxshadow-color-rounding-middle.html boxshadow-color-rounding-middle-ref.html
 fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,568) == boxshadow-large-border-radius.html boxshadow-large-border-radius-ref.html # Bug 1209649
-fuzzy-if(d2d,2,1080) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
+fuzzy(3,500) fuzzy-if(d2d,3,1080) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
 == boxshadow-inset-neg-spread.html about:blank
 == boxshadow-inset-neg-spread2.html boxshadow-inset-neg-spread2-ref.html
 fuzzy(26,3610) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 1211264
