@@ -335,39 +335,6 @@ interface nsIDOMDocument : nsIDOMNode
                           in nsIDOMElement aImageElement);
 
   /**
-   * Element which is currently the full-screen element as per the DOM
-   * full-screen api.
-   *
-   * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
-   */
-  readonly attribute nsIDOMElement mozFullScreenElement;
-
-  /**
-   * Causes the document to leave DOM full-screen mode, if it's in
-   * full-screen mode, as per the DOM full-screen api.
-   *
-   * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
-   */
-  void mozCancelFullScreen();   
-  
-  /**
-   * Denotes whether this document is in DOM full-screen mode, as per the DOM
-   * full-screen api.
-   *
-   * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
-   */
-  readonly attribute boolean mozFullScreen;  
-
-  /**
-   * Denotes whether the full-screen-api.enabled is true, no windowed
-   * plugins are present, and all ancestor documents have the
-   * allowfullscreen attribute set.
-   *
-   * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
-   */
-  readonly attribute boolean mozFullScreenEnabled;
-
-  /**
    * Retrieve the location of the caret position (DOM node and character
    * offset within that node), given a point.
    *
