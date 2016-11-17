@@ -495,7 +495,8 @@ ContentParentsMemoryReporter::CollectReports(
   return NS_OK;
 }
 
-nsClassHashtable<nsStringHashKey, nsTArray<ContentParent*>>* ContentParent::sBrowserContentParents;
+nsTArray<ContentParent*>* ContentParent::sBrowserContentParents;
+nsTArray<ContentParent*>* ContentParent::sLargeAllocationContentParents;
 nsTArray<ContentParent*>* ContentParent::sPrivateContent;
 StaticAutoPtr<LinkedList<ContentParent> > ContentParent::sContentParents;
 #if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
@@ -649,22 +650,24 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
                                           ContentParent* aOpener,
                                           bool aLargeAllocationProcess)
 {
-  if (!sBrowserContentParents) {
-    sBrowserContentParents =
-      new nsClassHashtable<nsStringHashKey, nsTArray<ContentParent*>>;
-  }
+  nsTArray<ContentParent*>* contentParents;
+  int32_t maxContentParents;
 
   // Decide which pool of content parents we are going to be pulling from based
-  // on the aRemoteType and aLargeAllocationProcess flag.
-  nsAutoString contentProcessType(aLargeAllocationProcess
-                                  ? LARGE_ALLOCATION_REMOTE_TYPE : aRemoteType);
-  nsTArray<ContentParent*>* contentParents =
-    sBrowserContentParents->LookupOrAdd(contentProcessType);
+  // on the aLargeAllocationProcess flag.
+  if (aLargeAllocationProcess) {
+    if (!sLargeAllocationContentParents) {
+      sLargeAllocationContentParents = new nsTArray<ContentParent*>();
+    }
+    contentParents = sLargeAllocationContentParents;
 
-  int32_t maxContentParents;
-  nsAutoCString processCountPref("dom.ipc.processCount.");
-  processCountPref.Append(NS_ConvertUTF16toUTF8(contentProcessType));
-  if (NS_FAILED(Preferences::GetInt(processCountPref.get(), &maxContentParents))) {
+    maxContentParents = Preferences::GetInt("dom.ipc.dedicatedProcessCount", 2);
+  } else {
+    if (!sBrowserContentParents) {
+      sBrowserContentParents = new nsTArray<ContentParent*>();
+    }
+    contentParents = sBrowserContentParents;
+
     maxContentParents = Preferences::GetInt("dom.ipc.processCount", 1);
   }
 
@@ -687,13 +690,15 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
     } while (currIdx != startIdx);
   }
 
-  RefPtr<ContentParent> p = new ContentParent(aOpener, contentProcessType);
+  RefPtr<ContentParent> p = new ContentParent(aOpener, aRemoteType);
 
   if (!p->LaunchSubprocess(aPriority)) {
     return nullptr;
   }
 
   p->Init();
+
+  p->mLargeAllocationProcess = aLargeAllocationProcess;
 
   p->ForwardKnownInfo();
 
@@ -1305,17 +1310,18 @@ void
 ContentParent::MarkAsDead()
 {
   if (sBrowserContentParents) {
-    nsTArray<ContentParent*>* contentParents =
-      sBrowserContentParents->Get(mRemoteType);
-    if (contentParents) {
-      contentParents->RemoveElement(this);
-      if (contentParents->IsEmpty()) {
-        sBrowserContentParents->Remove(mRemoteType);
-        if (sBrowserContentParents->IsEmpty()) {
-          delete sBrowserContentParents;
-          sBrowserContentParents = nullptr;
-        }
-      }
+    sBrowserContentParents->RemoveElement(this);
+    if (!sBrowserContentParents->Length()) {
+      delete sBrowserContentParents;
+      sBrowserContentParents = nullptr;
+    }
+  }
+
+  if (sLargeAllocationContentParents) {
+    sLargeAllocationContentParents->RemoveElement(this);
+    if (!sLargeAllocationContentParents->Length()) {
+      delete sLargeAllocationContentParents;
+      sLargeAllocationContentParents = nullptr;
     }
   }
 
@@ -1644,13 +1650,10 @@ ContentParent::NotifyTabDestroying(const TabId& aTabId,
         return;
     }
 
-    if (sBrowserContentParents && cp->mRemoteType.Equals(DEFAULT_REMOTE_TYPE)) {
-      auto contentParents = sBrowserContentParents->Get(cp->mRemoteType);
-      int32_t numberOfParents = contentParents ? contentParents->Length() : 0;
-      int32_t processesToKeepAlive = Preferences::GetInt("dom.ipc.keepProcessesAlive", 0);
-      if (numberOfParents <= processesToKeepAlive) {
-        return;
-      }
+    uint32_t numberOfParents = sBrowserContentParents ? sBrowserContentParents->Length() : 0;
+    int32_t processesToKeepAlive = Preferences::GetInt("dom.ipc.keepProcessesAlive", 0);
+    if (!cp->mLargeAllocationProcess && static_cast<int32_t>(numberOfParents) <= processesToKeepAlive) {
+      return;
     }
 
     // We're dying now, so prevent this content process from being
@@ -1704,13 +1707,10 @@ ContentParent::NotifyTabDestroyed(const TabId& aTabId,
 
   // We might want to keep alive some content processes for testing, because of performance
   // reasons, but we don't want to alter behavior if the pref is not set.
-  bool shouldKeepAliveThis = false;
-  if (sBrowserContentParents && mRemoteType.Equals(DEFAULT_REMOTE_TYPE)) {
-    auto contentParents = sBrowserContentParents->Get(mRemoteType);
-    int32_t numberOfParents = contentParents ? contentParents->Length() : 0;
-    int32_t processesToKeepAlive = Preferences::GetInt("dom.ipc.keepProcessesAlive", 0);
-    shouldKeepAliveThis = numberOfParents <= processesToKeepAlive;
-  }
+  uint32_t numberOfParents = sBrowserContentParents ? sBrowserContentParents->Length() : 0;
+  int32_t processesToKeepAlive = Preferences::GetInt("dom.ipc.keepProcessesAlive", 0);
+  bool shouldKeepAliveAny = !mLargeAllocationProcess && processesToKeepAlive > 0;
+  bool shouldKeepAliveThis = shouldKeepAliveAny && static_cast<int32_t>(numberOfParents) <= processesToKeepAlive;
 
   if (tabIds.Length() == 1 && !shouldKeepAliveThis) {
     // In the case of normal shutdown, send a shutdown message to child to
@@ -1802,6 +1802,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
   , mOpener(aOpener)
   , mRemoteType(aRemoteType)
   , mIsForBrowser(!mRemoteType.IsEmpty())
+  , mLargeAllocationProcess(false)
 {
   InitializeMembers();  // Perform common initialization.
 
@@ -1839,9 +1840,10 @@ ContentParent::~ContentParent()
 
   // We should be removed from all these lists in ActorDestroy.
   MOZ_ASSERT(!sPrivateContent || !sPrivateContent->Contains(this));
-  MOZ_ASSERT(!sBrowserContentParents ||
-             !sBrowserContentParents->Contains(mRemoteType) ||
-             !sBrowserContentParents->Get(mRemoteType)->Contains(this));
+  MOZ_ASSERT((!sBrowserContentParents ||
+              !sBrowserContentParents->Contains(this)) &&
+             (!sLargeAllocationContentParents ||
+              !sLargeAllocationContentParents->Contains(this)));
 }
 
 void
