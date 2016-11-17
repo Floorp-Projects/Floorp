@@ -118,8 +118,6 @@ struct PrintData {
    */
   float widthScale;
   float heightScale;
-  double adjustedPaperWidth;
-  double adjustedPaperHeight;
 };
 
 } // namespace embedding
