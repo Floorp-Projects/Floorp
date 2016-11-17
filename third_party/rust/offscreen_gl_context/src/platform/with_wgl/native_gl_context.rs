@@ -127,48 +127,53 @@ impl NativeGLContextMethods for NativeGLContext {
             // and bind the original share context again when the wglShareList is completed.
             let (tx, rx) = mpsc::channel();
             dispatcher.dispatch(Box::new(move || {
-                unsafe {
+                let result = unsafe {
                     if wgl::MakeCurrent(ptr::null_mut(), ptr::null_mut()) == 0 {
-                        error!("WGL MakeCurrent failed");
+                        Err(())
+                    } else {
+                        Ok(())
                     }
-                }
-                tx.send(()).unwrap();
+                };
+                tx.send(result).unwrap();
             }));
             // Wait until wglMakeCurrent operation is completed in the thread of the shared context
-            rx.recv().unwrap();
+            if rx.recv().unwrap().is_err() {
+                return Err("Error creating WGL context: WGL::MakeCurrent failed in shared context")
+            }
         }
 
-        match unsafe { utils::create_offscreen(render_ctx, &WGLAttributes::default()) } {
+        let result = match unsafe { utils::create_offscreen(render_ctx, &WGLAttributes::default()) } {
             Ok(ref res) => {
                 let ctx = NativeGLContext {
                     render_ctx: res.0,
                     device_ctx: res.1,
                     weak: false,
                 };
-
-                // Restore shared context
-                if let Some(ref dispatcher) = dispatcher {
-                    let (tx, rx) = mpsc::channel();
-                    let handle = NativeGLContextHandle(render_ctx, device_ctx);
-                    dispatcher.dispatch(Box::new(move || {
-                        unsafe { 
-                            if wgl::MakeCurrent(handle.1 as *const _, handle.0 as *const _) == 0 {
-                                error!("WGL MakeCurrent failed!");
-                            } 
-                        };
-                        tx.send(()).unwrap();
-                    }));
-                    // Wait until wglMakeCurrent operation is completed in the thread of the shared context
-                    rx.recv().unwrap();
-                }
-
                 Ok(ctx)
             }
             Err(s) => {
                 error!("WGL: {}", s);
                 Err("Error creating WGL context")
             }
+        };
+
+        // Restore shared context
+        if let Some(ref dispatcher) = dispatcher {
+            let (tx, rx) = mpsc::channel();
+            let handle = NativeGLContextHandle(render_ctx, device_ctx);
+            dispatcher.dispatch(Box::new(move || {
+                unsafe { 
+                    if wgl::MakeCurrent(handle.1 as *const _, handle.0 as *const _) == 0 {
+                        error!("Error restoring WGL shared context: WGL MakeCurrent failed");
+                    } 
+                };
+                tx.send(()).unwrap();
+            }));
+            // Wait until wglMakeCurrent operation is completed in the thread of the shared context
+            rx.recv().unwrap();
         }
+
+        result
     }
 
     fn is_current(&self) -> bool {
