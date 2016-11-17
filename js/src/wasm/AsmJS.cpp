@@ -8462,7 +8462,7 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, ExclusiveContext* c
     size_t bytecodeSize, compiledSize;
     module.serializedSize(&bytecodeSize, &compiledSize);
 
-    size_t serializedSize = 2 * sizeof(size_t) +
+    size_t serializedSize = 2 * sizeof(uint32_t) +
                             bytecodeSize + compiledSize +
                             moduleChars.serializedSize();
 
@@ -8482,8 +8482,14 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, ExclusiveContext* c
 
     uint8_t* cursor = entry.memory;
 
-    cursor = WriteScalar<size_t>(cursor, bytecodeSize);
-    cursor = WriteScalar<size_t>(cursor, compiledSize);
+    // Everything serialized before the Module must not change incompatibly
+    // between any two builds (regardless of platform, architecture, ...).
+    // (The Module::assumptionsMatch() guard everything in the Module and
+    // afterwards.)
+    MOZ_RELEASE_ASSERT(bytecodeSize <= UINT32_MAX);
+    MOZ_RELEASE_ASSERT(compiledSize <= UINT32_MAX);
+    cursor = WriteScalar<uint32_t>(cursor, bytecodeSize);
+    cursor = WriteScalar<uint32_t>(cursor, compiledSize);
 
     uint8_t* compiledBegin = cursor;
     uint8_t* bytecodeBegin = compiledBegin + compiledSize;;
@@ -8519,9 +8525,9 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
 
     const uint8_t* cursor = entry.memory;
 
-    size_t bytecodeSize, compiledSize;
-    cursor = ReadScalar<size_t>(cursor, &bytecodeSize);
-    cursor = ReadScalar<size_t>(cursor, &compiledSize);
+    uint32_t bytecodeSize, compiledSize;
+    cursor = ReadScalar<uint32_t>(cursor, &bytecodeSize);
+    cursor = ReadScalar<uint32_t>(cursor, &compiledSize);
 
     const uint8_t* compiledBegin = cursor;
     const uint8_t* bytecodeBegin = compiledBegin + compiledSize;
