@@ -40,8 +40,11 @@ GlobalObject::initAsyncFunction(JSContext* cx, Handle<GlobalObject*> global)
                                                         proto));
     if (!asyncFunction)
         return false;
-    if (!LinkConstructorAndPrototype(cx, asyncFunction, asyncFunctionProto))
+    if (!LinkConstructorAndPrototype(cx, asyncFunction, asyncFunctionProto,
+                                     JSPROP_PERMANENT | JSPROP_READONLY, JSPROP_READONLY))
+    {
         return false;
+    }
 
     global->setReservedSlot(ASYNC_FUNCTION, ObjectValue(*asyncFunction));
     global->setReservedSlot(ASYNC_FUNCTION_PROTO, ObjectValue(*asyncFunctionProto));
