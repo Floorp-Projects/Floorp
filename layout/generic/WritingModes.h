@@ -463,7 +463,7 @@ public:
   {
     auto side = static_cast<LogicalSide>(aDir);
     if (IsInline(side)) {
-      return !IsInlineReversed() ? side : GetOppositeSide(side);
+      return IsBidiLTR() ? side : GetOppositeSide(side);
     }
     return !IsLineInverted() ? side : GetOppositeSide(side);
   }
