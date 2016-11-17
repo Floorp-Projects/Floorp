@@ -32,7 +32,7 @@ function testWorker() {
                       { type: "text/javascript" });
   var w = new Worker(URL.createObjectURL(blob));
   w.onmessage = function(e) {
-    ok (e.now + e.timeOrigin > now + performance.now, "Comparing worker.now and window.now");
+    ok (e.now + e.timeOrigin > now + performance.timeOrigin, "Comparing worker.now and window.now");
     next();
   }
 }
@@ -44,7 +44,7 @@ function testSharedWorker() {
                       { type: "text/javascript" });
   var w = new SharedWorker(URL.createObjectURL(blob));
   w.port.onmessage = function(e) {
-    ok (e.now + e.timeOrigin > now + performance.now, "Comparing worker.now and window.now");
+    ok (e.now + e.timeOrigin > now + performance.timeOrigin, "Comparing worker.now and window.now");
     next();
   }
 }
