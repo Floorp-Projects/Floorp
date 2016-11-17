@@ -693,6 +693,7 @@ private:
   virtual mozilla::ipc::IPCResult
   RecvGetXPCOMProcessAttributes(bool* aIsOffline,
                                 bool* aIsConnected,
+                                int32_t* aCaptivePortalState,
                                 bool* aIsLangRTL,
                                 bool* aHaveBidiKeyboards,
                                 InfallibleTArray<nsString>* dictionaries,
