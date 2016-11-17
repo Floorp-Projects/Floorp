@@ -2442,7 +2442,6 @@ if test -n "$MOZ_RUST"; then
     fi
     if test -n "$MOZ_RUST_URLPARSE"; then
         AC_DEFINE(MOZ_RUST_URLPARSE)
-        AC_SUBST(MOZ_RUST_URLPARSE)
     fi
 fi
 

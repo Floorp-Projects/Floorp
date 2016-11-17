@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 extern crate url;
-use url::{Url, ParseError, ParseOptions, Position};
+use url::{Url, ParseError, ParseOptions};
 use url::quirks;
 extern crate libc;
 use libc::size_t;
@@ -144,7 +144,7 @@ pub unsafe extern "C" fn rusturl_get_path(urlptr: rusturl_ptr, cont: *mut libc::
   if url.cannot_be_a_base() {
       cont.set_size(0)
   } else {
-      cont.assign(&url[Position::BeforePath..])
+      cont.assign(url.path())
   }
 }
 
