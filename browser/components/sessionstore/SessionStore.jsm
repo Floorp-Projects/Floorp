@@ -3527,13 +3527,8 @@ var SessionStoreInternal = {
     // flip the remoteness of any browser that is not being displayed.
     this.markTabAsRestoring(aTab);
 
-    let isRemotenessUpdate = false;
-    if (aReloadInFreshProcess) {
-      isRemotenessUpdate = tabbrowser.switchBrowserIntoFreshProcess(browser);
-    } else {
-      isRemotenessUpdate = tabbrowser.updateBrowserRemotenessByURL(browser, uri);
-    }
-
+    let isRemotenessUpdate =
+      tabbrowser.updateBrowserRemotenessByURL(browser, uri, aReloadInFreshProcess);
     if (isRemotenessUpdate) {
       // We updated the remoteness, so we need to send the history down again.
       //
