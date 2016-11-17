@@ -263,9 +263,15 @@ public:
    * number of output frames will be exactly equal. */
   uint32_t input_needed_for_output(uint32_t output_frame_count)
   {
-    return (uint32_t)ceilf((output_frame_count - samples_to_frames(resampling_out_buffer.length()))
-                           * resampling_ratio);
-
+    int32_t unresampled_frames_left = samples_to_frames(resampling_in_buffer.length());
+    int32_t resampled_frames_left = samples_to_frames(resampling_out_buffer.length());
+    float input_frames_needed =
+      (output_frame_count - unresampled_frames_left) * resampling_ratio
+        - resampled_frames_left;
+    if (input_frames_needed < 0) {
+      return 0;
+    }
+    return (uint32_t)ceilf(input_frames_needed);
   }
 
   /** Returns a pointer to the input buffer, that contains empty space for at
