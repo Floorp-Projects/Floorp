@@ -146,7 +146,7 @@ class ADBAndroid(ADBDevice):
         percentage = 0
         cmd = "dumpsys battery"
         re_parameter = re.compile(r'\s+(\w+):\s+(\d+)')
-        lines = self.shell_output(cmd, timeout=timeout).split('\r')
+        lines = self.shell_output(cmd, timeout=timeout).splitlines()
         for line in lines:
             match = re_parameter.match(line)
             if match:
