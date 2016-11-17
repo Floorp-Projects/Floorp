@@ -9,7 +9,7 @@ use offscreen_gl_context::{GLContextAttributes, GLLimits};
 use std::cell::Cell;
 use {ApiMsg, AuxiliaryLists, BuiltDisplayList, ColorF, DisplayListId, Epoch};
 use {FontKey, IdNamespace, ImageFormat, ImageKey, NativeFontHandle, PipelineId};
-use {RenderApiSender, ResourceId, ScrollEventPhase, ScrollLayerId, ScrollLayerState};
+use {RenderApiSender, ResourceId, ScrollEventPhase, ScrollLayerState};
 use {StackingContext, StackingContextId, WebGLContextId, WebGLCommand};
 use {GlyphKey, GlyphDimensions};
 
@@ -203,11 +203,6 @@ impl RenderApi {
 
     pub fn tick_scrolling_bounce_animations(&self) {
         let msg = ApiMsg::TickScrollingBounce;
-        self.api_sender.send(msg).unwrap();
-    }
-
-    pub fn set_scroll_offset(&self, scroll_id: ScrollLayerId, offset: Point2D<f32>) {
-        let msg = ApiMsg::SetScrollOffset(scroll_id, offset);
         self.api_sender.send(msg).unwrap();
     }
 
