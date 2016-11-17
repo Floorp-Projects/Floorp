@@ -4450,7 +4450,7 @@ AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM()
     if (oom) {
         JSRuntime* rt = zone->runtimeFromMainThread();
         zone->setPreservingCode(false);
-        zone->discardJitCode(rt->defaultFreeOp());
+        zone->discardJitCode(rt->defaultFreeOp(), /* discardBaselineCode = */ false);
         zone->types.clearAllNewScriptsOnOOM();
     }
 }
