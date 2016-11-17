@@ -404,12 +404,4 @@ interface nsIDOMDocument : nsIDOMNode
    * strict mode.  (XML documents are always in strict mode.)
    */
   readonly attribute DOMString compatMode;
-
-  /**
-   * Return nodes that match a given CSS selector.
-   *
-   * @see <http://dev.w3.org/2006/webapi/selectors-api/>
-   */
-  nsIDOMElement querySelector([Null(Stringify)] in DOMString selectors);
-  nsIDOMNodeList querySelectorAll([Null(Stringify)] in DOMString selectors);
 };
