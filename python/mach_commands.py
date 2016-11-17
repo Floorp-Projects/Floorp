@@ -15,6 +15,9 @@ from concurrent.futures import (
     thread,
 )
 
+import mozinfo
+from manifestparser import TestManifest
+
 from mozbuild.base import (
     MachCommandBase,
 )
@@ -128,6 +131,10 @@ class MachCommands(MachCommandBase):
             self.log(logging.WARN, 'python-test', {}, message)
             return 1
 
+        mp = TestManifest()
+        mp.tests.extend(test_objects)
+        tests = mp.active_tests(disabled=False, **mozinfo.info)
+
         self.jobs = jobs
         self.terminate = False
         self.verbose = verbose
@@ -135,7 +142,7 @@ class MachCommands(MachCommandBase):
         return_code = 0
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
             futures = [executor.submit(self._run_python_test, test['path'])
-                       for test in test_objects]
+                       for test in tests]
 
             try:
                 for future in as_completed(futures):
