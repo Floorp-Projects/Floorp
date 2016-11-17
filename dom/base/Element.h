@@ -773,14 +773,6 @@ public:
         (aRetargetToElement ? CAPTURE_RETARGETTOELEMENT : 0));
     }
   }
-
-  void SetCaptureAlways(bool aRetargetToElement)
-  {
-    nsIPresShell::SetCapturingContent(this,
-        CAPTURE_PREVENTDRAG | CAPTURE_IGNOREALLOWED |
-        (aRetargetToElement ? CAPTURE_RETARGETTOELEMENT : 0));
-  }
-
   void ReleaseCapture()
   {
     if (nsIPresShell::GetCapturingContent() == this) {
