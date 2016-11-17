@@ -50,7 +50,9 @@ class ShowTaskGraphSubCommand(SubCommand):
                             default="true",
                             help="do not remove tasks from the graph that are found in the "
                             "index (a.k.a. optimize the graph)"),
-            CommandArgument('--tasks-regex', '--tasks', default=None)
+            CommandArgument('--tasks-regex', '--tasks', default=None,
+                            help="only return tasks with labels matching this regular "
+                            "expression.")
 
         ]
         for arg in args:
