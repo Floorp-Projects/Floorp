@@ -246,12 +246,6 @@
       </xul:arrowscrollbox>
     </content>
 
-    <implementation>
-      <field name="scrollBox" readonly="true">
-        document.getAnonymousElementByAttribute(this, "class", "popup-internal-box");
-      </field>
-    </implementation>
-
     <handlers>
       <handler event="popupshowing" phase="target">
         <![CDATA[
@@ -634,9 +628,9 @@
 
   <binding id="popup-scrollbars" extends="chrome://global/content/bindings/popup.xml#popup">
     <content>
-      <xul:scrollbox class="popup-internal-box" flex="1" orient="vertical" style="overflow: auto;">
+      <xul:hbox class="popup-internal-box" flex="1" orient="vertical" style="overflow: auto;">
         <children/>
-      </xul:scrollbox>
+      </xul:hbox>
     </content>
   </binding>
 
