@@ -2,6 +2,8 @@
  * Bug 1264572 - A test case for image cache isolation.
  */
 
+requestLongerTimeout(2);
+
 let Cu = Components.utils;
 let {HttpServer} = Cu.import("resource://testing-common/httpd.js", {});
 
