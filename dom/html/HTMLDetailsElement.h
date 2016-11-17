@@ -23,8 +23,6 @@ class HTMLDetailsElement final : public nsGenericHTMLElement
 public:
   using NodeInfo = mozilla::dom::NodeInfo;
 
-  static bool IsDetailsEnabled();
-
   explicit HTMLDetailsElement(already_AddRefed<NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {

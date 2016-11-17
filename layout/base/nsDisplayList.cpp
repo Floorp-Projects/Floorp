@@ -343,6 +343,19 @@ static void AddTransformFunctions(nsCSSValueList* aList,
         aFunctions.AppendElement(TransformMatrix(matrix));
         break;
       }
+      case eCSSKeyword_accumulatematrix:
+      {
+        bool dummy;
+        Matrix4x4 matrix;
+        nsStyleTransformMatrix::ProcessAccumulateMatrix(matrix, array,
+                                                        aContext,
+                                                        aPresContext,
+                                                        conditions,
+                                                        aRefBox,
+                                                        &dummy);
+        aFunctions.AppendElement(TransformMatrix(matrix));
+        break;
+      }
       case eCSSKeyword_perspective:
       {
         aFunctions.AppendElement(Perspective(array->Item(1).GetFloatValue()));

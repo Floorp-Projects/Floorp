@@ -368,24 +368,16 @@ KeyframeEffectReadOnly::ComposeStyle(
         prop.mSegments.LastElement();
       // FIXME: Bug 1293492: Add a utility function to calculate both of
       // below StyleAnimationValues.
-      DebugOnly<bool> accumulateResult =
+      fromValue =
         StyleAnimationValue::Accumulate(prop.mProperty,
-                                        fromValue,
                                         lastSegment.mToValue,
+                                        Move(fromValue),
                                         computedTiming.mCurrentIteration);
-      // We can't check the accumulation result in case of filter property.
-      // That's because some filter property can't accumulate,
-      // e.g. 'contrast(2) brightness(2)' onto 'brightness(1) contrast(1)'
-      // because of mismatch of the order.
-      MOZ_ASSERT(accumulateResult || prop.mProperty == eCSSProperty_filter,
-                 "could not accumulate value");
-      accumulateResult =
+      toValue =
         StyleAnimationValue::Accumulate(prop.mProperty,
-                                        toValue,
                                         lastSegment.mToValue,
+                                        Move(toValue),
                                         computedTiming.mCurrentIteration);
-      MOZ_ASSERT(accumulateResult || prop.mProperty == eCSSProperty_filter,
-                 "could not accumulate value");
     }
 
     // Special handling for zero-length segments

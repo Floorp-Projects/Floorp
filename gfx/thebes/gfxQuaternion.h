@@ -53,7 +53,7 @@ struct gfxQuaternion : public mozilla::gfx::BasePoint4D<gfxFloat, gfxQuaternion>
         w = cos(aAngle/2.0);
     }
 
-    gfxQuaternion Slerp(const gfxQuaternion &aOther, gfxFloat aCoeff) {
+    gfxQuaternion Slerp(const gfxQuaternion &aOther, gfxFloat aCoeff) const {
         gfxFloat dot = mozilla::clamped(DotProduct(aOther), -1.0, 1.0);
         if (dot == 1.0) {
             return *this;
@@ -72,7 +72,30 @@ struct gfxQuaternion : public mozilla::gfx::BasePoint4D<gfxFloat, gfxQuaternion>
         return left + right;
     }
 
-    mozilla::gfx::Matrix4x4 ToMatrix() {
+    using Super::operator*=;
+
+    // Quaternion multiplication
+    // Reference:
+    // https://en.wikipedia.org/wiki/Quaternion#Ordered_list_form
+    //
+    // (w1, x1, y1, z1)(w2, x2, y2, z2) = (w1w2 - x1x2 - y1y2 - z1z2,
+    //                                     w1x2 + x1w2 + y1z2 - z1y2,
+    //                                     w1y2 - x1z2 + y1w2 + z1x2,
+    //                                     w1z2 + x1y2 - y1x2 + z1w2)
+    gfxQuaternion operator*(const gfxQuaternion& aOther) const {
+        return gfxQuaternion(
+          w * aOther.x + x * aOther.w + y * aOther.z - z * aOther.y,
+          w * aOther.y - x * aOther.z + y * aOther.w + z * aOther.x,
+          w * aOther.z + x * aOther.y - y * aOther.x + z * aOther.w,
+          w * aOther.w - x * aOther.x - y * aOther.y - z * aOther.z
+        );
+    }
+    gfxQuaternion& operator*=(const gfxQuaternion& aOther) {
+        *this = *this * aOther;
+        return *this;
+    }
+
+    mozilla::gfx::Matrix4x4 ToMatrix() const {
       mozilla::gfx::Matrix4x4 temp;
 
         temp[0][0] = 1 - 2 * (y * y + z * z);

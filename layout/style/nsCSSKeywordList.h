@@ -335,6 +335,7 @@ CSS_KEY(inset, inset)
 CSS_KEY(inside, inside)
 // CSS_KEY(inter-character, inter_character) // TODO see bug 1055672
 CSS_KEY(interpolatematrix, interpolatematrix)
+CSS_KEY(accumulatematrix, accumulatematrix)
 CSS_KEY(intersect, intersect)
 CSS_KEY(isolate, isolate)
 CSS_KEY(isolate-override, isolate_override)

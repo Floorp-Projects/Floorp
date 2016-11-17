@@ -912,10 +912,6 @@ private:
 
   virtual mozilla::ipc::IPCResult RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>* aLookAndFeelIntCache) override;
 
-  virtual mozilla::ipc::IPCResult RecvSpeakerManagerGetSpeakerStatus(bool* aValue) override;
-
-  virtual mozilla::ipc::IPCResult RecvSpeakerManagerForceSpeaker(const bool& aEnable) override;
-
   virtual mozilla::ipc::IPCResult RecvCreateFakeVolume(const nsString& aFsName,
                                                        const nsString& aMountPoint) override;
 

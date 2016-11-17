@@ -132,7 +132,37 @@ ToPrimitive(nsCSSKeyword aKeyword)
 static bool
 TransformFunctionsMatch(nsCSSKeyword func1, nsCSSKeyword func2)
 {
+  // Handle eCSSKeyword_accumulatematrix as different function to be calculated
+  // (decomposed and recomposed) them later.
+  if (func1 == eCSSKeyword_accumulatematrix ||
+      func2 == eCSSKeyword_accumulatematrix) {
+    return false;
+  }
+
   return ToPrimitive(func1) == ToPrimitive(func2);
+}
+
+static bool
+TransformFunctionListsMatch(const nsCSSValueList *list1,
+                            const nsCSSValueList *list2)
+{
+  const nsCSSValueList *item1 = list1, *item2 = list2;
+  do {
+    nsCSSKeyword func1 = nsStyleTransformMatrix::TransformFunctionOf(
+        item1->mValue.GetArrayValue());
+    nsCSSKeyword func2 = nsStyleTransformMatrix::TransformFunctionOf(
+        item2->mValue.GetArrayValue());
+
+    if (!TransformFunctionsMatch(func1, func2)) {
+      return false;
+    }
+
+    item1 = item1->mNext;
+    item2 = item2->mNext;
+  } while (item1 && item2);
+
+  // Length match?
+  return !item1 && !item2;
 }
 
 static already_AddRefed<nsCSSValue::Array>
@@ -150,6 +180,7 @@ AppendFunction(nsCSSKeyword aTransformFunction)
       nargs = 4;
       break;
     case eCSSKeyword_interpolatematrix:
+    case eCSSKeyword_accumulatematrix:
     case eCSSKeyword_translate3d:
     case eCSSKeyword_scale3d:
       nargs = 3;
@@ -804,7 +835,8 @@ ComputeShapeDistance(nsCSSPropertyID aProperty,
 
 static nsCSSValueList*
 AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
-                  double aCoeff2, const nsCSSValueList* aList2);
+                  double aCoeff2, const nsCSSValueList* aList2,
+                  nsCSSKeyword aOperatorType = eCSSKeyword_interpolatematrix);
 
 static double
 ComputeTransform2DMatrixDistance(const Matrix& aMatrix1,
@@ -1058,6 +1090,7 @@ ComputeTransformDistance(nsCSSValue::Array* aArray1,
       break;
     }
     case eCSSKeyword_interpolatematrix:
+    case eCSSKeyword_accumulatematrix:
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported transform function");
       break;
@@ -1519,29 +1552,11 @@ StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
       } else if (list2->mValue.GetUnit() == eCSSUnit_None) {
         nsAutoPtr<nsCSSValueList> none(AddTransformLists(0, list1, 0, list1));
         aDistance = ComputeTransformListDistance(list1, none);
+      } else if (TransformFunctionListsMatch(list1, list2)) {
+        aDistance = ComputeTransformListDistance(list1, list2);
       } else {
-        const nsCSSValueList *item1 = list1, *item2 = list2;
-        do {
-          nsCSSKeyword func1 = nsStyleTransformMatrix::TransformFunctionOf(
-            item1->mValue.GetArrayValue());
-          nsCSSKeyword func2 = nsStyleTransformMatrix::TransformFunctionOf(
-            item2->mValue.GetArrayValue());
-          if (!TransformFunctionsMatch(func1, func2)) {
-            break;
-          }
-
-          item1 = item1->mNext;
-          item2 = item2->mNext;
-        } while (item1 && item2);
-
-        if (item1 || item2) {
-          // Either the transform function types don't match or
-          // the lengths don't match.
-          aDistance =
-            ComputeMismatchedTransfromListDistance(list1, list2, aStyleContext);
-        } else {
-          aDistance = ComputeTransformListDistance(list1, list2);
-        }
+        aDistance =
+          ComputeMismatchedTransfromListDistance(list1, list2, aStyleContext);
       }
       return true;
     }
@@ -1831,104 +1846,17 @@ StyleAnimationValue::AppendTransformFunction(nsCSSKeyword aTransformFunction,
   return arr.forget();
 }
 
-template<typename T>
-T InterpolateNumerically(const T& aOne, const T& aTwo, double aCoeff)
-{
-  return aOne + (aTwo - aOne) * aCoeff;
-}
-
-
-/* static */ Matrix4x4
-StyleAnimationValue::InterpolateTransformMatrix(const Matrix4x4 &aMatrix1,
-                                                const Matrix4x4 &aMatrix2,
-                                                double aProgress)
-{
-  // Decompose both matrices
-
-  // TODO: What do we do if one of these returns false (singular matrix)
-  Point3D scale1(1, 1, 1), translate1;
-  Point4D perspective1(0, 0, 0, 1);
-  gfxQuaternion rotate1;
-  nsStyleTransformMatrix::ShearArray shear1{0.0f, 0.0f, 0.0f};
-
-  Point3D scale2(1, 1, 1), translate2;
-  Point4D perspective2(0, 0, 0, 1);
-  gfxQuaternion rotate2;
-  nsStyleTransformMatrix::ShearArray shear2{0.0f, 0.0f, 0.0f};
-
-  Matrix matrix2d1, matrix2d2;
-  if (aMatrix1.Is2D(&matrix2d1) && aMatrix2.Is2D(&matrix2d2)) {
-    Decompose2DMatrix(matrix2d1, scale1, shear1, rotate1, translate1);
-    Decompose2DMatrix(matrix2d2, scale2, shear2, rotate2, translate2);
-  } else {
-    Decompose3DMatrix(aMatrix1, scale1, shear1,
-                      rotate1, translate1, perspective1);
-    Decompose3DMatrix(aMatrix2, scale2, shear2,
-                      rotate2, translate2, perspective2);
-  }
-
-  // Interpolate each of the pieces
-  Matrix4x4 result;
-
-  Point4D perspective =
-    InterpolateNumerically(perspective1, perspective2, aProgress);
-  result.SetTransposedVector(3, perspective);
-
-  Point3D translate =
-    InterpolateNumerically(translate1, translate2, aProgress);
-  result.PreTranslate(translate.x, translate.y, translate.z);
-
-  gfxQuaternion q3 = rotate1.Slerp(rotate2, aProgress);
-  Matrix4x4 rotate = q3.ToMatrix();
-  if (!rotate.IsIdentity()) {
-      result = rotate * result;
-  }
-
-  // TODO: Would it be better to interpolate these as angles?
-  //       How do we convert back to angles?
-  float yzshear =
-    InterpolateNumerically(shear1[ShearType::YZSHEAR],
-                           shear2[ShearType::YZSHEAR],
-                           aProgress);
-  if (yzshear != 0.0) {
-    result.SkewYZ(yzshear);
-  }
-
-  float xzshear =
-    InterpolateNumerically(shear1[ShearType::XZSHEAR],
-                           shear2[ShearType::XZSHEAR],
-                           aProgress);
-  if (xzshear != 0.0) {
-    result.SkewXZ(xzshear);
-  }
-
-  float xyshear =
-    InterpolateNumerically(shear1[ShearType::XYSHEAR],
-                           shear2[ShearType::XYSHEAR],
-                           aProgress);
-  if (xyshear != 0.0) {
-    result.SkewXY(xyshear);
-  }
-
-  Point3D scale =
-    InterpolateNumerically(scale1, scale2, aProgress);
-  if (scale != Point3D(1.0, 1.0, 1.0)) {
-    result.PreScale(scale.x, scale.y, scale.z);
-  }
-
-  return result;
-}
-
 static nsCSSValueList*
 AddDifferentTransformLists(double aCoeff1, const nsCSSValueList* aList1,
-                           double aCoeff2, const nsCSSValueList* aList2)
+                           double aCoeff2, const nsCSSValueList* aList2,
+                           nsCSSKeyword aOperatorType)
 {
   nsAutoPtr<nsCSSValueList> result;
   nsCSSValueList **resultTail = getter_Transfers(result);
 
   RefPtr<nsCSSValue::Array> arr;
   arr =
-    StyleAnimationValue::AppendTransformFunction(eCSSKeyword_interpolatematrix,
+    StyleAnimationValue::AppendTransformFunction(aOperatorType,
                                                  resultTail);
 
   // FIXME: We should change the other transform code to also only
@@ -1936,6 +1864,10 @@ AddDifferentTransformLists(double aCoeff1, const nsCSSValueList* aList1,
   // sum to 1 doesn't make sense for these.
   if (aList1 == aList2) {
     arr->Item(1).Reset();
+    // For accumulation, we need to increase accumulation count for |aList1|.
+    if (aOperatorType == eCSSKeyword_accumulatematrix) {
+      aCoeff2 += 1.0;
+    }
   } else {
     aList1->CloneInto(arr->Item(1).SetListValue());
   }
@@ -2350,7 +2282,8 @@ AddShapeFunction(nsCSSPropertyID aProperty,
 
 static nsCSSValueList*
 AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
-                  double aCoeff2, const nsCSSValueList* aList2)
+                  double aCoeff2, const nsCSSValueList* aList2,
+                  nsCSSKeyword aOperatorType)
 {
   nsAutoPtr<nsCSSValueList> result;
   nsCSSValueList **resultTail = getter_Transfers(result);
@@ -2502,10 +2435,14 @@ AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
 
         if (aList1 == aList2) {
           *resultTail =
-            AddDifferentTransformLists(aCoeff1, &tempList1, aCoeff2, &tempList1);
+            AddDifferentTransformLists(aCoeff1, &tempList1,
+                                       aCoeff2, &tempList1,
+                                       aOperatorType);
         } else {
           *resultTail =
-            AddDifferentTransformLists(aCoeff1, &tempList1, aCoeff2, &tempList2);
+            AddDifferentTransformLists(aCoeff1, &tempList1,
+                                       aCoeff2, &tempList2,
+                                       aOperatorType);
         }
 
         // Now advance resultTail to point to the new tail slot.
@@ -2516,7 +2453,8 @@ AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
         break;
       }
       default:
-        MOZ_ASSERT(false, "unknown transform function");
+        MOZ_ASSERT_UNREACHABLE(
+          "unknown transform function or accumulatematrix");
     }
 
     aList1 = aList1->mNext;
@@ -3022,35 +2960,13 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
       } else {
         if (list2->mValue.GetUnit() == eCSSUnit_None) {
           result = AddTransformLists(0, list1, aCoeff1, list1);
+        } else if (TransformFunctionListsMatch(list1, list2)) {
+          result = AddTransformLists(aCoeff1, list1, aCoeff2, list2,
+                                     eCSSKeyword_interpolatematrix);
         } else {
-          bool match = true;
-
-          {
-            const nsCSSValueList *item1 = list1, *item2 = list2;
-            do {
-              nsCSSKeyword func1 = nsStyleTransformMatrix::TransformFunctionOf(
-                                     item1->mValue.GetArrayValue());
-              nsCSSKeyword func2 = nsStyleTransformMatrix::TransformFunctionOf(
-                                     item2->mValue.GetArrayValue());
-
-              if (!TransformFunctionsMatch(func1, func2)) {
-                break;
-              }
-
-              item1 = item1->mNext;
-              item2 = item2->mNext;
-            } while (item1 && item2);
-            if (item1 || item2) {
-              // Either |break| above or length mismatch.
-              match = false;
-            }
-          }
-
-          if (match) {
-            result = AddTransformLists(aCoeff1, list1, aCoeff2, list2);
-          } else {
-            result = AddDifferentTransformLists(aCoeff1, list1, aCoeff2, list2);
-          }
+          result = AddDifferentTransformLists(aCoeff1, list1,
+                                              aCoeff2, list2,
+                                              eCSSKeyword_interpolatematrix);
         }
       }
 
@@ -3100,52 +3016,82 @@ StyleAnimationValue::AddWeighted(nsCSSPropertyID aProperty,
   return false;
 }
 
-bool
+StyleAnimationValue
 StyleAnimationValue::Accumulate(nsCSSPropertyID aProperty,
-                                StyleAnimationValue& aDest,
-                                const StyleAnimationValue& aValueToAccumulate,
+                                const StyleAnimationValue& aA,
+                                StyleAnimationValue&& aB,
                                 uint64_t aCount)
 {
+  StyleAnimationValue result(Move(aB));
+
+  if (aCount == 0) {
+    return result;
+  }
+
   Unit commonUnit =
-    GetCommonUnit(aProperty, aDest.GetUnit(), aValueToAccumulate.GetUnit());
+    GetCommonUnit(aProperty, result.GetUnit(), aA.GetUnit());
   switch (commonUnit) {
     case eUnit_Filter: {
-      UniquePtr<nsCSSValueList> result =
-        AddWeightedFilterList(1.0, aDest.GetCSSValueListValue(),
-                              aCount, aValueToAccumulate.GetCSSValueListValue(),
+      UniquePtr<nsCSSValueList> resultList =
+        AddWeightedFilterList(1.0, result.GetCSSValueListValue(),
+                              aCount, aA.GetCSSValueListValue(),
                               ColorAdditionType::Unclamped);
-      if (!result) {
-        return false;
+      if (resultList) {
+        result.SetAndAdoptCSSValueListValue(resultList.release(), eUnit_Filter);
       }
-
-      aDest.SetAndAdoptCSSValueListValue(result.release(), eUnit_Filter);
-      return true;
+      break;
     }
     case eUnit_Shadow: {
-      UniquePtr<nsCSSValueList> result =
-        AddWeightedShadowList(1.0, aDest.GetCSSValueListValue(),
-                              aCount, aValueToAccumulate.GetCSSValueListValue(),
+      UniquePtr<nsCSSValueList> resultList =
+        AddWeightedShadowList(1.0, result.GetCSSValueListValue(),
+                              aCount, aA.GetCSSValueListValue(),
                               ColorAdditionType::Unclamped);
-      if (!result) {
-        return false;
+      if (resultList) {
+        result.SetAndAdoptCSSValueListValue(resultList.release(), eUnit_Shadow);
       }
-      aDest.SetAndAdoptCSSValueListValue(result.release(), eUnit_Shadow);
-      return true;
+      break;
     }
     case eUnit_Color: {
-      RGBAColorData color1 = ExtractColor(aDest);
-      RGBAColorData color2 = ExtractColor(aValueToAccumulate);
+      RGBAColorData color1 = ExtractColor(result);
+      RGBAColorData color2 = ExtractColor(aA);
       auto resultColor = MakeUnique<nsCSSValue>();
       resultColor->SetRGBAColorValue(
         AddWeightedColors(1.0, color1, aCount, color2));
-      aDest.SetAndAdoptCSSValueValue(resultColor.release(), eUnit_Color);
-      return true;
+      result.SetAndAdoptCSSValueValue(resultColor.release(), eUnit_Color);
+      break;
+    }
+    case eUnit_Transform: {
+      const nsCSSValueList* listA =
+        aA.GetCSSValueSharedListValue()->mHead;
+      const nsCSSValueList* listB =
+        result.GetCSSValueSharedListValue()->mHead;
+
+      MOZ_ASSERT(listA);
+      MOZ_ASSERT(listB);
+
+      nsAutoPtr<nsCSSValueList> resultList;
+      if (listA->mValue.GetUnit() == eCSSUnit_None ||
+          listB->mValue.GetUnit() == eCSSUnit_None) {
+        break;
+      } else if (TransformFunctionListsMatch(listA, listB)) {
+        resultList = AddTransformLists(1.0, listB, aCount, listA,
+                                       eCSSKeyword_accumulatematrix);
+      } else {
+        resultList = AddDifferentTransformLists(1.0, listB,
+                                                aCount, listA,
+                                                eCSSKeyword_accumulatematrix);
+      }
+      result.SetTransformValue(new nsCSSValueSharedList(resultList.forget()));
+      break;
     }
     default:
-      return Add(aProperty, aDest, aValueToAccumulate, aCount);
+      Unused << AddWeighted(aProperty,
+                            1.0, result,
+                            aCount, aA,
+                            result);
+      break;
   }
-  MOZ_ASSERT_UNREACHABLE("Can't accumulate using the given common unit");
-  return false;
+  return result;
 }
 
 already_AddRefed<css::StyleRule>
