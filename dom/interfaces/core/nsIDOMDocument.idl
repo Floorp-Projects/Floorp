@@ -368,14 +368,6 @@ interface nsIDOMDocument : nsIDOMNode
   readonly attribute boolean mozFullScreenEnabled;
 
   /**
-   * The element to which the mouse pointer is locked, if any, as per the
-   * DOM pointer lock api.
-   *
-   * @see <http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html>
-   */
-  readonly attribute nsIDOMElement mozPointerLockElement;
-
-  /**
    * Retrieve the location of the caret position (DOM node and character
    * offset within that node), given a point.
    *
@@ -385,13 +377,6 @@ interface nsIDOMDocument : nsIDOMNode
    *          page coordinates.
    */
   nsISupports /* CaretPosition */ caretPositionFromPoint(in float x, in float y);
-
-  /**
-   * Exit pointer is lock if locked, as per the DOM pointer lock api.
-   *
-   * @see <http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html>
-   */
-  void mozExitPointerLock();
 
   /**
    * Visibility API implementation.
