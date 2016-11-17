@@ -131,6 +131,12 @@ interface Element : Node {
    */
   void releaseCapture();
 
+  /*
+   * Chrome-only version of setCapture that works outside of a mousedown event.
+   */
+  [ChromeOnly]
+  void setCaptureAlways(optional boolean retargetToElement = false);
+
   // Mozilla extensions
 
   // Obsolete methods.
