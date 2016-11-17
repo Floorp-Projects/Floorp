@@ -1456,15 +1456,12 @@ var CustomizableUIInternal = {
     return def;
   },
 
-  addShortcut: function(aShortcutNode, aTargetNode) {
-    if (!aTargetNode)
-      aTargetNode = aShortcutNode;
-    let document = aShortcutNode.ownerDocument;
-
+  addShortcut: function(aShortcutNode, aTargetNode = aShortcutNode) {
     // Detect if we've already been here before.
-    if (!aTargetNode || aTargetNode.hasAttribute("shortcut"))
+    if (aTargetNode.hasAttribute("shortcut"))
       return;
 
+    let document = aShortcutNode.ownerDocument;
     let shortcutId = aShortcutNode.getAttribute("key");
     let shortcut;
     if (shortcutId) {
