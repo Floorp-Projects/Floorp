@@ -11,6 +11,7 @@
  * and create derivative works of this document.
  */
 
+[HTMLConstructor]
 interface HTMLFrameSetElement : HTMLElement {
   [SetterThrows]
   attribute DOMString cols;

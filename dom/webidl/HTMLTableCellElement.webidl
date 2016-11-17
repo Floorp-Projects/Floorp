@@ -11,6 +11,7 @@
  * and create derivative works of this document.
  */
 
+[HTMLConstructor]
 interface HTMLTableCellElement : HTMLElement {
            [SetterThrows]
            attribute unsigned long colSpan;

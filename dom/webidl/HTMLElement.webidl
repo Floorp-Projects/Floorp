@@ -12,6 +12,7 @@
  * and create derivative works of this document.
  */
 
+[HTMLConstructor]
 interface HTMLElement : Element {
   // metadata attributes
            attribute DOMString title;
