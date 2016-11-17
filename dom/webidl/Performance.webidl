@@ -17,6 +17,9 @@ typedef sequence <PerformanceEntry> PerformanceEntryList;
 interface Performance {
   [DependsOn=DeviceState, Affects=Nothing]
   DOMHighResTimeStamp now();
+
+  [Constant]
+  readonly attribute DOMHighResTimeStamp timeOrigin;
 };
 
 [Exposed=Window]
