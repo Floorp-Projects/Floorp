@@ -77,11 +77,9 @@ function loadFaviconHandler(metadata, response) {
 
 add_task(function* setup() {
   // Make sure userContext is enabled.
-  yield new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["privacy.userContext.enabled", true]
-    ]}, resolve);
-  });
+  yield SpecialPowers.pushPrefEnv({"set": [
+    ["privacy.userContext.enabled", true]
+  ]});
 
   // Create a http server for the image cache test.
   if (!gHttpServer) {

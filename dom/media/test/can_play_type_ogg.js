@@ -41,23 +41,17 @@ function check_ogg(v, enabled, finish) {
   }
 
   function opus_enable() {
-    return new Promise(function(resolve, reject) {
-      SpecialPowers.pushPrefEnv({"set": [['media.opus.enabled', true]]},
-                                function() {
-                                  check("audio/ogg; codecs=opus", "probably");
-                                  resolve();
-                                });
-    });
+    return SpecialPowers.pushPrefEnv({"set": [['media.opus.enabled', true]]})
+           .then(function() {
+             check("audio/ogg; codecs=opus", "probably");
+           });
   }
 
   function opus_disable() {
-    return new Promise(function(resolve, reject) {
-      SpecialPowers.pushPrefEnv({"set": [['media.opus.enabled', false]]},
-                                function() {
-                                  check("audio/ogg; codecs=opus", "");
-                                  resolve();
-                                });
-    });
+    return SpecialPowers.pushPrefEnv({"set": [['media.opus.enabled', false]]})
+           .then(function() {
+             check("audio/ogg; codecs=opus", "");
+           });
   }
 
   function unspported_ogg() {
