@@ -8,6 +8,7 @@
 
 #include "GLContext.h"
 #include "GLContextProvider.h"
+#include "mozilla/layers/Compositor.h"
 #include "mozilla/widget/CompositorWidget.h"
 
 namespace mozilla {
@@ -17,14 +18,17 @@ WebRenderBridgeParent::WebRenderBridgeParent(const uint64_t& aPipelineId,
                                              const nsString* aResourcePath,
                                              widget::CompositorWidget* aWidget,
                                              gl::GLContext* aGlContext,
-                                             wrwindowstate* aWrWindowState)
+                                             wrwindowstate* aWrWindowState,
+                                             layers::Compositor* aCompositor)
   : mPipelineId(aPipelineId)
   , mWidget(aWidget)
   , mWRState(nullptr)
   , mGLContext(aGlContext)
   , mWRWindowState(aWrWindowState)
+  , mCompositor(aCompositor)
 {
   MOZ_ASSERT(mGLContext);
+  MOZ_ASSERT(mCompositor);
   if (!mWRWindowState) {
     // mWRWindowState should only be null for the root WRBP of a layers tree,
     // i.e. the one created by the CompositorBridgeParent as opposed to the
@@ -53,8 +57,12 @@ mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvDestroy()
 {
   MOZ_ASSERT(mWRState);
+  MOZ_ASSERT(mCompositor);
   wr_destroy(mWRState);
   mWRState = nullptr;
+  if (mWidget) {
+    mCompositor->Destroy();
+  }
   return IPC_OK();
 }
 
