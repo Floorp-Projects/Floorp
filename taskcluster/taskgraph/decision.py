@@ -128,6 +128,12 @@ def get_decision_parameters(options):
         'target_tasks_method',
     ] if n in options}
 
+    # Define default filter list, as most configurations shouldn't need
+    # custom filters.
+    parameters['filters'] = [
+        'target_tasks_method',
+    ]
+
     # owner must be an email, but sometimes (e.g., for ffxbld) it is not, in which
     # case, fake it
     if '@' not in parameters['owner']:
