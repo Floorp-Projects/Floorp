@@ -20,8 +20,8 @@
 #define wasm_generator_h
 
 #include "jit/MacroAssembler.h"
-#include "wasm/WasmBinaryFormat.h"
 #include "wasm/WasmModule.h"
+#include "wasm/WasmValidate.h"
 
 namespace js {
 namespace wasm {
