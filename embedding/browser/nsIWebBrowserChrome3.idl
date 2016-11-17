@@ -48,8 +48,6 @@ interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
                      in nsIURI         aURI,
                      in nsIURI         aReferrer);
 
-  bool shouldLoadURIInThisProcess(in nsIURI aURI);
-
   /**
    * Attempts to load the currently loaded page into a fresh process to increase
    * available memory.

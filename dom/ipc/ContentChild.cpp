@@ -654,43 +654,6 @@ ContentChild::ProvideWindow(mozIDOMWindowProxy* aParent,
                              aForceNoOpener, aWindowIsNew, aReturn);
 }
 
-static nsresult
-GetWindowParamsFromParent(mozIDOMWindowProxy* aParent,
-                          nsACString& aBaseURIString, float* aFullZoom,
-                          DocShellOriginAttributes& aOriginAttributes)
-{
-  *aFullZoom = 1.0f;
-  auto* opener = nsPIDOMWindowOuter::From(aParent);
-  if (!opener) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocument> doc = opener->GetDoc();
-  nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
-  if (!baseURI) {
-    NS_ERROR("nsIDocument didn't return a base URI");
-    return NS_ERROR_FAILURE;
-  }
-
-  baseURI->GetSpec(aBaseURIString);
-
-  RefPtr<nsDocShell> openerDocShell =
-    static_cast<nsDocShell*>(opener->GetDocShell());
-  if (!openerDocShell) {
-    return NS_OK;
-  }
-
-  aOriginAttributes = openerDocShell->GetOriginAttributes();
-
-  nsCOMPtr<nsIContentViewer> cv;
-  nsresult rv = openerDocShell->GetContentViewer(getter_AddRefs(cv));
-  if (NS_SUCCEEDED(rv) && cv) {
-    cv->GetFullZoom(aFullZoom);
-  }
-
-  return NS_OK;
-}
-
 nsresult
 ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                                   mozIDOMWindowProxy* aParent,
@@ -710,43 +673,8 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
 
   nsAutoPtr<IPCTabContext> ipcContext;
   TabId openerTabId = TabId(0);
-  nsAutoCString features(aFeatures);
 
-  nsresult rv;
   if (aTabOpener) {
-    // Check to see if the target URI can be loaded in this process.
-    // If not create and load it in an unrelated tab/window.
-    nsCOMPtr<nsIWebBrowserChrome3> browserChrome3;
-    rv = aTabOpener->GetWebBrowserChrome(getter_AddRefs(browserChrome3));
-    if (NS_SUCCEEDED(rv) && browserChrome3) {
-      bool shouldLoad;
-      rv = browserChrome3->ShouldLoadURIInThisProcess(aURI, &shouldLoad);
-      if (NS_SUCCEEDED(rv) && !shouldLoad) {
-        nsAutoCString baseURIString;
-        float fullZoom;
-        DocShellOriginAttributes originAttributes;
-        rv = GetWindowParamsFromParent(aParent, baseURIString, &fullZoom,
-                                       originAttributes);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        URIParams uriToLoad;
-        SerializeURI(aURI, uriToLoad);
-        Unused << SendCreateWindowInDifferentProcess(aTabOpener, aChromeFlags,
-                                                     aCalledFromJS,
-                                                     aPositionSpecified,
-                                                     aSizeSpecified,
-                                                     uriToLoad, features,
-                                                     baseURIString,
-                                                     originAttributes, fullZoom);
-
-        // We return NS_ERROR_ABORT, so that the caller knows that we've abandoned
-        // the window open as far as it is concerned.
-        return NS_ERROR_ABORT;
-      }
-    }
-
     PopupIPCTabContext context;
     openerTabId = aTabOpener->GetTabId();
     context.opener() = openerTabId;
@@ -785,6 +713,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     GetID(), IsForBrowser());
 
   nsString name(aName);
+  nsAutoCString features(aFeatures);
   nsTArray<FrameScriptInfo> frameScripts;
   nsCString urlToLoad;
 
@@ -810,20 +739,40 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                                          &layersId);
   } else {
     nsAutoCString baseURIString;
-    float fullZoom;
-    DocShellOriginAttributes originAttributes;
-    rv = GetWindowParamsFromParent(aParent, baseURIString, &fullZoom,
-                                   originAttributes);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (aTabOpener) {
+      auto* opener = nsPIDOMWindowOuter::From(aParent);
+      nsCOMPtr<nsIDocument> doc = opener->GetDoc();
+      nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
+      if (!baseURI) {
+        NS_ERROR("nsIDocument didn't return a base URI");
+        return NS_ERROR_FAILURE;
+      }
+
+      baseURI->GetSpec(baseURIString);
     }
 
+    auto* opener = nsPIDOMWindowOuter::From(aParent);
+    nsIDocShell* openerShell;
+    RefPtr<nsDocShell> openerDocShell;
+    float fullZoom = 1.0f;
+    if (opener && (openerShell = opener->GetDocShell())) {
+      openerDocShell = static_cast<nsDocShell*>(openerShell);
+      nsCOMPtr<nsIContentViewer> cv;
+      openerDocShell->GetContentViewer(getter_AddRefs(cv));
+      if (cv) {
+        cv->GetFullZoom(&fullZoom);
+      }
+    }
+
+    nsresult rv;
     if (!SendCreateWindow(aTabOpener, newChild, renderFrame,
                           aChromeFlags, aCalledFromJS, aPositionSpecified,
                           aSizeSpecified,
                           features,
                           baseURIString,
-                          originAttributes,
+                          openerDocShell
+                            ? openerDocShell->GetOriginAttributes()
+                            : DocShellOriginAttributes(),
                           fullZoom,
                           &rv,
                           aWindowIsNew,
