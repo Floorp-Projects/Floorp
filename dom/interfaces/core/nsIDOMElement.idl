@@ -184,21 +184,4 @@ interface nsIDOMElement : nsIDOMNode
    */
   boolean mozMatchesSelector([Null(Stringify)] in DOMString selector);
 
-
-  // Proprietary extensions
-  /**
-   * Set this during a mousedown event to grab and retarget all mouse events
-   * to this element until the mouse button is released or releaseCapture is
-   * called. If retargetToElement is true, then all events are targetted at
-   * this element. If false, events can also fire at descendants of this
-   * element.
-   * 
-   */
-  void setCapture([optional] in boolean retargetToElement);
-
-  /**
-   * If this element has captured the mouse, release the capture. If another
-   * element has captured the mouse, this method has no effect.
-   */
-  void releaseCapture();
 };
