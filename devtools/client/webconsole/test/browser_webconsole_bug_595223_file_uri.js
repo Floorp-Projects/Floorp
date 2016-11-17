@@ -7,6 +7,7 @@
 
 const PREF = "devtools.webconsole.persistlog";
 const TEST_FILE = "test-network.html";
+const TEST_URI = "data:text/html;charset=utf8,<p>test file URI";
 
 var hud;
 
@@ -21,9 +22,7 @@ add_task(function* () {
   dir.append(TEST_FILE);
   let uri = Services.io.newFileURI(dir);
 
-  // We need a file remote type to make sure we don't switch processes when we
-  // load the file:// URI.
-  let { browser } = yield loadTab("about:blank", "file");
+  let { browser } = yield loadTab(TEST_URI);
 
   hud = yield openConsole();
   hud.jsterm.clearOutput();
