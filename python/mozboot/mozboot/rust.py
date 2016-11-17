@@ -123,10 +123,8 @@ def make_checksums(version, validate=False):
     for platform in RUSTUP_HASHES.keys():
         if validate:
             print('Checking %s... ' % platform, end='')
-            sys.stdout.flush()
         else:
             print('Fetching %s... ' % platform, end='')
-            sys.stdout.flush()
         checksum = http_download_and_hash(rustup_url(platform, version))
         if validate and checksum != rustup_hash(platform):
             print('mismatch:\n  script: %s\n  server: %s' % (
@@ -138,6 +136,11 @@ def make_checksums(version, validate=False):
 
 if __name__ == '__main__':
     '''Allow invoking the module as a utility to update checksums.'''
+
+    # Unbuffer stdout so our two-part 'Checking...' messages print correctly
+    # even if there's network delay.
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+
     update = False
     if len(sys.argv) > 1:
         if sys.argv[1] == '--update':
@@ -147,7 +150,6 @@ if __name__ == '__main__':
             sys.exit(1)
 
     print('Checking latest installer version... ', end='')
-    sys.stdout.flush()
     version = rustup_latest_version()
     if not version:
         print('ERROR: Could not query current rustup installer version.')
