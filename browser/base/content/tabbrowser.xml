@@ -2583,6 +2583,13 @@
             this._removingTabs.push(aTab);
             this._visibleTabs = null; // invalidate cache
 
+            // Start closing the FrameLoaderOwners which are inactive, so that
+            // they are cleaned up as well.
+            let frameLoader = browser.frameLoader;
+            if (frameLoader && frameLoader.groupedSessionHistory) {
+              frameLoader.groupedSessionHistory.closeInactiveFrameLoaderOwners();
+            }
+
             // Invalidate hovered tab state tracking for this closing tab.
             if (this.tabContainer._hoveredTab == aTab)
               aTab._mouseleave();
