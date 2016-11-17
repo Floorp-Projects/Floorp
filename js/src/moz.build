@@ -360,7 +360,6 @@ UNIFIED_SOURCES += [
     'vm/Xdr.cpp',
     'wasm/AsmJS.cpp',
     'wasm/WasmBaselineCompile.cpp',
-    'wasm/WasmBinaryFormat.cpp',
     'wasm/WasmBinaryIterator.cpp',
     'wasm/WasmBinaryToAST.cpp',
     'wasm/WasmBinaryToExperimentalText.cpp',
@@ -379,7 +378,8 @@ UNIFIED_SOURCES += [
     'wasm/WasmTable.cpp',
     'wasm/WasmTextToBinary.cpp',
     'wasm/WasmTextUtils.cpp',
-    'wasm/WasmTypes.cpp'
+    'wasm/WasmTypes.cpp',
+    'wasm/WasmValidate.cpp'
 ]
 
 # jsarray.cpp and jsatom.cpp cannot be built in unified mode because

@@ -115,10 +115,10 @@
 # include "jit/x86-shared/Assembler-x86-shared.h"
 #endif
 
-#include "wasm/WasmBinaryFormat.h"
 #include "wasm/WasmBinaryIterator.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmSignalHandlers.h"
+#include "wasm/WasmValidate.h"
 
 #include "jit/MacroAssembler-inl.h"
 
