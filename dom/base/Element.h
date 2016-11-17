@@ -1877,15 +1877,5 @@ NS_IMETHOD MozMatchesSelector(const nsAString& selector,                      \
   mozilla::ErrorResult rv;                                                    \
   *_retval = Element::Matches(selector, rv);                                  \
   return rv.StealNSResult();                                                  \
-}                                                                             \
-NS_IMETHOD SetCapture(bool retargetToElement) final override                  \
-{                                                                             \
-  Element::SetCapture(retargetToElement);                                     \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD ReleaseCapture(void) final override                                \
-{                                                                             \
-  Element::ReleaseCapture();                                                  \
-  return NS_OK;                                                               \
 }
 #endif // mozilla_dom_Element_h__

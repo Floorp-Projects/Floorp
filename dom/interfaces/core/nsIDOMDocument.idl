@@ -295,14 +295,6 @@ interface nsIDOMDocument : nsIDOMNode
   readonly attribute nsIDOMElement  currentScript;
 
   /**
-   * Release the current mouse capture if it is on an element within this
-   * document.
-   *
-   * @see <https://developer.mozilla.org/en/DOM/document.releaseCapture>
-   */
-  void releaseCapture();
-
-  /**
    * Use the given DOM element as the source image of target |-moz-element()|.
    *
    * This function introduces a new special ID (called "image element ID"),
