@@ -120,32 +120,6 @@ interface nsIDOMElement : nsIDOMNode
   nsIDOMClientRect getBoundingClientRect();
 
   /**
-   * The vertical scroll position of the element, or 0 if the element is not
-   * scrollable. This property may be assigned a value to change the
-   * vertical scroll position.
-   */
-  attribute long             scrollTop;
-
-  /**
-   * The horizontal scroll position of the element, or 0 if the element is not
-   * scrollable. This property may be assigned a value to change the
-   * horizontal scroll position.
-   */
-  attribute long             scrollLeft;
-
-  /**
-   * The width of the scrollable area of the element. If the element is not
-   * scrollable, scrollWidth is equivalent to the offsetWidth.
-   */
-  readonly attribute long             scrollWidth;
-
-  /**
-   * The height of the scrollable area of the element. If the element is not
-   * scrollable, scrollHeight is equivalent to the offsetHeight.
-   */
-  readonly attribute long             scrollHeight;
-
-  /**
    * The height in CSS pixels of the element's top border.
    */
   readonly attribute long             clientTop;
@@ -167,10 +141,4 @@ interface nsIDOMElement : nsIDOMNode
    * scrollable, the scroll bars are included inside this height.
    */
   readonly attribute long             clientHeight;
-
-  /* The maximum offset that the element can be scrolled to
-     (i.e., the value that scrollLeft/scrollTop would be clamped to if they were
-     set to arbitrarily large values. */
-  readonly attribute long             scrollLeftMax;
-  readonly attribute long             scrollTopMax;
 };
