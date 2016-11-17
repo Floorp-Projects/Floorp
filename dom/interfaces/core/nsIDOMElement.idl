@@ -210,12 +210,4 @@ interface nsIDOMElement : nsIDOMNode
    * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
    */
   void mozRequestFullScreen();
-
-  /**
-   * Requests that this element be made the pointer-locked element, as per the DOM
-   * pointer lock api.
-   *
-   * @see <http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html>
-   */
-  void mozRequestPointerLock();
 };
