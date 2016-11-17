@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="100">
+  <style>
+    html {
+      overflow: hidden;
+    }
+    #section {
+      padding-top: 1px;
+    }
+    #header {
+      position: sticky;
+      top: 0;
+    }
+    #header > div {
+      margin-top: -50px;
+      border: solid blue 2px;
+      height: 100px;
+      width: 100px;
+    }
+    #spacer {
+      height: 1500px;
+    }
+  </style>
+  <div id="section">
+      <div id="header">
+        <div></div>
+      </div>
+      <div id="spacer"></div>
+  </div>
+</html>

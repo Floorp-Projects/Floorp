@@ -73,18 +73,17 @@ Damp.prototype = {
     });
   },
 
-  closeToolbox: function() {
+  closeToolbox: Task.async(function*() {
     let tab = getActiveTab(getMostRecentBrowserWindow());
     let target = devtools.TargetFactory.forTab(tab);
+    yield target.client.waitForRequestsToSettle();
     let startRecordTimestamp = performance.now();
-    let closePromise = gDevTools.closeToolbox(target);
-    return closePromise.then(() => {
-      let stopRecordTimestamp = performance.now();
-      return {
-        time: stopRecordTimestamp - startRecordTimestamp
-      };
-    });
-  },
+    yield gDevTools.closeToolbox(target);
+    let stopRecordTimestamp = performance.now();
+    return {
+      time: stopRecordTimestamp - startRecordTimestamp
+    };
+  }),
 
   saveHeapSnapshot: function(label) {
     let tab = getActiveTab(getMostRecentBrowserWindow());
