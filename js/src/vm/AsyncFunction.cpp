@@ -9,6 +9,7 @@
 #include "jscompartment.h"
 
 #include "builtin/Promise.h"
+#include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/SelfHosting.h"
@@ -232,3 +233,8 @@ js::IsWrappedAsyncFunction(JSFunction* fun)
     return fun->maybeNative() == WrappedAsyncFunction;
 }
 
+MOZ_MUST_USE bool
+js::CheckAsyncResumptionValue(JSContext* cx, HandleValue v)
+{
+    return CheckStarGeneratorResumptionValue(cx, v);
+}
