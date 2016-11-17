@@ -149,43 +149,41 @@ nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
   MOZ_ASSERT(maskDT->GetFormat() == SurfaceFormat::A8);
 
   // Paint this clipPath's contents into aMaskDT:
-  {
-    // We need to set mMatrixForChildren here so that under the PaintSVG calls
-    // on our children (below) our GetCanvasTM() method will return the correct
-    // transform.
-    mMatrixForChildren = GetClipPathTransform(aClippedFrame) * aMatrix;
+  // We need to set mMatrixForChildren here so that under the PaintSVG calls
+  // on our children (below) our GetCanvasTM() method will return the correct
+  // transform.
+  mMatrixForChildren = GetClipPathTransform(aClippedFrame) * aMatrix;
 
-    // Check if this clipPath is itself clipped by another clipPath:
-    nsSVGClipPathFrame* clipPathThatClipsClipPath =
-      nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(nullptr);
-    nsSVGUtils::MaskUsage maskUsage;
-    nsSVGUtils::DetermineMaskUsage(this, true, maskUsage);
+  // Check if this clipPath is itself clipped by another clipPath:
+  nsSVGClipPathFrame* clipPathThatClipsClipPath =
+    nsSVGEffects::GetEffectProperties(this).GetClipPathFrame(nullptr);
+  nsSVGUtils::MaskUsage maskUsage;
+  nsSVGUtils::DetermineMaskUsage(this, true, maskUsage);
 
-    if (maskUsage.shouldApplyClipPath) {
-      clipPathThatClipsClipPath->ApplyClipPath(aMaskContext, aClippedFrame,
-                                               aMatrix);
-    } else if (maskUsage.shouldGenerateClipMaskLayer) {
-      Matrix maskTransform;
-      RefPtr<SourceSurface> mask =
-        clipPathThatClipsClipPath->GetClipMask(aMaskContext, aClippedFrame,
-                                               aMatrix, &maskTransform);
-      aMaskContext.PushGroupForBlendBack(gfxContentType::ALPHA, 1.0,
-                                         mask, maskTransform);
-      // The corresponding PopGroupAndBlend call below will mask the
-      // blend using |mask|.
-    }
+  if (maskUsage.shouldApplyClipPath) {
+    clipPathThatClipsClipPath->ApplyClipPath(aMaskContext, aClippedFrame,
+                                             aMatrix);
+  } else if (maskUsage.shouldGenerateClipMaskLayer) {
+    Matrix maskTransform;
+    RefPtr<SourceSurface> mask =
+      clipPathThatClipsClipPath->GetClipMask(aMaskContext, aClippedFrame,
+                                             aMatrix, &maskTransform);
+    aMaskContext.PushGroupForBlendBack(gfxContentType::ALPHA, 1.0,
+                                       mask, maskTransform);
+    // The corresponding PopGroupAndBlend call below will mask the
+    // blend using |mask|.
+  }
 
-    // Paint our children into the mask:
-    for (nsIFrame* kid = mFrames.FirstChild(); kid;
-         kid = kid->GetNextSibling()) {
-      result &= PaintFrameIntoMask(kid, aClippedFrame, aMaskContext, aMatrix);
-    }
+  // Paint our children into the mask:
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
+    result &= PaintFrameIntoMask(kid, aClippedFrame, aMaskContext, aMatrix);
+  }
 
-    if (maskUsage.shouldGenerateClipMaskLayer) {
-      aMaskContext.PopGroupAndBlend();
-    } else if (maskUsage.shouldApplyClipPath) {
-      aMaskContext.PopClip();
-    }
+  if (maskUsage.shouldGenerateClipMaskLayer) {
+    aMaskContext.PopGroupAndBlend();
+  } else if (maskUsage.shouldApplyClipPath) {
+    aMaskContext.PopClip();
   }
 
   // Moz2D transforms in the opposite direction to Thebes
