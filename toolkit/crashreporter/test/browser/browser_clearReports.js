@@ -49,7 +49,7 @@ Services.prompt = {
   },
 };
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   Services.prompt = oldPrompt;
 });
 
@@ -93,7 +93,7 @@ add_task(function* test() {
   report4.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   report4.lastModifiedTime = Date.now() - 63172000000;
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     cleanup_fake_appdir();
   });
 

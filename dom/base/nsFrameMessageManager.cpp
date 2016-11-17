@@ -8,7 +8,6 @@
 
 #include "nsFrameMessageManager.h"
 
-#include "AppProcessChecker.h"
 #include "ContentChild.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
@@ -193,10 +192,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameMessageManager)
   /* Global process message managers (process message managers) support nsIGlobalProcessScriptLoader. */
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIGlobalProcessScriptLoader,
                                      mChrome && mIsProcessManager && mIsBroadcaster)
-
-  /* Message senders in the chrome process support nsIProcessChecker. */
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIProcessChecker,
-                                     mChrome && !mIsBroadcaster)
 
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(ChromeMessageBroadcaster,
                                                    mChrome && mIsBroadcaster)
@@ -965,95 +960,6 @@ nsFrameMessageManager::Atob(const nsAString& aAsciiString,
                             nsAString& aBinaryData)
 {
   return nsContentUtils::Atob(aAsciiString, aBinaryData);
-}
-
-// nsIProcessChecker
-
-NS_IMETHODIMP
-nsFrameMessageManager::KillChild(bool *aValid)
-{
-  if (!mCallback) {
-    *aValid = false;
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  *aValid = mCallback->KillChild();
-  return NS_OK;
-}
-
-nsresult
-nsFrameMessageManager::AssertProcessInternal(ProcessCheckerType aType,
-                                             const nsAString& aCapability,
-                                             bool* aValid)
-{
-  *aValid = false;
-
-  // This API is only supported for message senders in the chrome process.
-  if (!mChrome || mIsBroadcaster) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  if (!mCallback) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  switch (aType) {
-    case PROCESS_CHECKER_PERMISSION:
-      *aValid = mCallback->CheckPermission(aCapability);
-      break;
-    case PROCESS_CHECKER_MANIFEST_URL:
-      *aValid = mCallback->CheckManifestURL(aCapability);
-      break;
-    case ASSERT_APP_HAS_PERMISSION:
-      *aValid = mCallback->CheckAppHasPermission(aCapability);
-      break;
-    default:
-      break;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::AssertPermission(const nsAString& aPermission,
-                                        bool* aHasPermission)
-{
-  return AssertProcessInternal(PROCESS_CHECKER_PERMISSION,
-                               aPermission,
-                               aHasPermission);
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::AssertContainApp(const nsAString& aManifestURL,
-                                        bool* aHasManifestURL)
-{
-  return AssertProcessInternal(PROCESS_CHECKER_MANIFEST_URL,
-                               aManifestURL,
-                               aHasManifestURL);
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::AssertAppHasPermission(const nsAString& aPermission,
-                                              bool* aHasPermission)
-{
-  return AssertProcessInternal(ASSERT_APP_HAS_PERMISSION,
-                               aPermission,
-                               aHasPermission);
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::AssertAppHasStatus(unsigned short aStatus,
-                                          bool* aHasStatus)
-{
-  *aHasStatus = false;
-
-  // This API is only supported for message senders in the chrome process.
-  if (!mChrome || mIsBroadcaster) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  if (!mCallback) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  *aHasStatus = mCallback->CheckAppHasStatus(aStatus);
-
-  return NS_OK;
 }
 
 class MMListenerRemover
@@ -1974,30 +1880,6 @@ public:
       return rv;
     }
     return NS_OK;
-  }
-
-  bool CheckPermission(const nsAString& aPermission) override
-  {
-    // In a single-process scenario, the child always has all capabilities.
-    return true;
-  }
-
-  bool CheckManifestURL(const nsAString& aManifestURL) override
-  {
-    // In a single-process scenario, the child always has all capabilities.
-    return true;
-  }
-
-  bool CheckAppHasPermission(const nsAString& aPermission) override
-  {
-    // In a single-process scenario, the child always has all capabilities.
-    return true;
-  }
-
-  bool CheckAppHasStatus(unsigned short aStatus) override
-  {
-    // In a single-process scenario, the child always has all capabilities.
-    return true;
   }
 };
 

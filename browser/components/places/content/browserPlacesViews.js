@@ -952,9 +952,9 @@ function PlacesToolbar(aPlace) {
     ["_dropIndicator",        "PlacesToolbarDropIndicator"],
     ["_chevron",              "PlacesChevron"],
     ["_chevronPopup",         "PlacesChevronPopup"]
-  ].forEach(function (elementGlobal) {
+  ].forEach(function(elementGlobal) {
     let [name, id] = elementGlobal;
-    thisView.__defineGetter__(name, function () {
+    thisView.__defineGetter__(name, function() {
       let element = document.getElementById(id);
       if (!element)
         return null;
@@ -1569,7 +1569,7 @@ PlacesToolbar.prototype = {
       // of dragging.
       let translateY = this._cachedMouseMoveEvent.clientY - aEvent.clientY;
       let translateX = this._cachedMouseMoveEvent.clientX - aEvent.clientX;
-      if ((translateY) >= Math.abs(translateX/2)) {
+      if ((translateY) >= Math.abs(translateX / 2)) {
         // Don't start the drag.
         aEvent.preventDefault();
         // Open the menu.

@@ -116,13 +116,13 @@ function test() {
         case "domwindowclosed":
           // Give the preference window a chance to finish closing before
           // closing the add-ons manager.
-          waitForFocus(function () {
+          waitForFocus(function() {
             test_next_addon();
           });
           break;
         case "domwindowopened":
           let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
-          waitForFocus(function () {
+          waitForFocus(function() {
             // If the openDialog privileges are wrong a new browser window
             // will open, let the test proceed (and fail) rather than timeout.
             if (win.location != currentAddon.optionsURL &&

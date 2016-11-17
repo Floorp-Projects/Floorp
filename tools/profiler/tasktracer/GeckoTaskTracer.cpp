@@ -20,27 +20,6 @@
 
 #include <stdarg.h>
 
-// We need a definition of gettid(), but glibc doesn't provide a
-// wrapper for it.
-#if defined(__GLIBC__)
-#include <unistd.h>
-#include <sys/syscall.h>
-static inline pid_t gettid()
-{
-  return (pid_t) syscall(SYS_gettid);
-}
-#elif defined(XP_MACOSX)
-#include <unistd.h>
-#include <sys/syscall.h>
-static inline pid_t gettid()
-{
-  return (pid_t) syscall(SYS_thread_selfid);
-}
-#elif defined(LINUX)
-#include <sys/types.h>
-pid_t gettid();
-#endif
-
 // NS_ENSURE_TRUE_VOID() without the warning on the debug build.
 #define ENSURE_TRUE_VOID(x)   \
   do {                        \
@@ -59,6 +38,11 @@ pid_t gettid();
 
 namespace mozilla {
 namespace tasktracer {
+
+#define SOURCE_EVENT_NAME(type) \
+  const char* CreateSourceEvent##type () { return "SourceEvent" #type; }
+#include "SourceEventTypeMap.h"
+#undef SOURCE_EVENT_NAME
 
 static MOZ_THREAD_LOCAL(TraceInfo*) sTraceInfoTLS;
 static mozilla::StaticMutex sMutex;
@@ -126,12 +110,11 @@ CreateSourceEvent(SourceEventType aType)
   info->mCurTraceSourceType = aType;
   info->mCurTaskId = newId;
 
-  uintptr_t* namePtr;
+  uintptr_t namePtr;
 #define SOURCE_EVENT_NAME(type)         \
   case SourceEventType::type:           \
   {                                     \
-    static int CreateSourceEvent##type; \
-    namePtr = (uintptr_t*)&CreateSourceEvent##type; \
+    namePtr = (uintptr_t)&CreateSourceEvent##type; \
     break;                              \
   }
 
@@ -140,11 +123,11 @@ CreateSourceEvent(SourceEventType aType)
     default:
       MOZ_CRASH("Unknown SourceEvent.");
   }
-#undef CREATE_SOURCE_EVENT_NAME
+#undef SOURCE_EVENT_NAME
 
   // Log a fake dispatch and start for this source event.
   LogDispatch(newId, newId, newId, aType);
-  LogVirtualTablePtr(newId, newId, namePtr);
+  LogVirtualTablePtr(newId, newId, &namePtr);
   LogBegin(newId, newId);
 }
 
@@ -184,7 +167,7 @@ SetLogStarted(bool aIsStartLogging)
 static void
 CleanUp()
 {
-  SetLogStarted(false);
+  MOZ_ASSERT(!IsStartLogging());
   StaticMutexAutoLock lock(sMutex);
 
   if (sTraceInfos) {
@@ -230,9 +213,7 @@ InitTaskTracer(uint32_t aFlags)
   MOZ_ASSERT(!sTraceInfos);
   sTraceInfos = new nsTArray<UniquePtr<TraceInfo>>();
 
-  if (!sTraceInfoTLS.initialized()) {
-    Unused << sTraceInfoTLS.init();
-  }
+  sTraceInfoTLS.init();
 }
 
 void
@@ -246,7 +227,11 @@ FreeTraceInfo(TraceInfo* aTraceInfo)
 {
   StaticMutexAutoLock lock(sMutex);
   if (aTraceInfo) {
-    sTraceInfos->RemoveElement(aTraceInfo);
+    UniquePtr<TraceInfo> traceinfo(aTraceInfo);
+    mozilla::DebugOnly<bool> removed =
+      sTraceInfos->RemoveElement(traceinfo);
+    MOZ_ASSERT(removed);
+    Unused << traceinfo.release(); // A dirty hack to prevent double free.
   }
 }
 
@@ -258,7 +243,7 @@ void FreeTraceInfo()
 TraceInfo*
 GetOrCreateTraceInfo()
 {
-  ENSURE_TRUE(sTraceInfoTLS.initialized(), nullptr);
+  ENSURE_TRUE(sTraceInfoTLS.init(), nullptr);
   ENSURE_TRUE(IsStartLogging(), nullptr);
 
   TraceInfo* info = sTraceInfoTLS.get();
@@ -389,7 +374,10 @@ LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, uintptr_t* aVptr)
   // [4 taskId address]
   nsCString* log = info->AppendLog();
   if (log) {
-    log->AppendPrintf("%d %lld %p", ACTION_GET_VTABLE, aTaskId, aVptr);
+    // Since addr2line used by SPS addon can not solve non-function
+    // addresses, we use the first entry of vtable as the symbol to
+    // solve.  We should find a better solution later.
+    log->AppendPrintf("%d %lld %p", ACTION_GET_VTABLE, aTaskId, *aVptr);
   }
 }
 
@@ -447,7 +435,9 @@ GetLoggedData(TimeStamp aTimeStamp)
   StaticMutexAutoLock lock(sMutex);
 
   for (uint32_t i = 0; i < sTraceInfos->Length(); ++i) {
-    (*sTraceInfos)[i]->MoveLogsInto(*result);
+    if (!(*sTraceInfos)[i]->mObsolete) {
+      (*sTraceInfos)[i]->MoveLogsInto(*result);
+    }
   }
 
   return result;

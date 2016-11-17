@@ -12,5 +12,6 @@
  */
 
 interface RadioNodeList : NodeList {
+  [NeedsCallerType]
   attribute DOMString value;
 };

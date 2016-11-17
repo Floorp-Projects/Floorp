@@ -301,7 +301,6 @@ public:
 
   int32_t Pid() const;
   uint64_t ChildID() const;
-  bool IsPreallocated() const;
 
   /**
    * Used in logging, this method returns the ContentParent's name followed by
@@ -618,15 +617,12 @@ ProcessPriorityManagerImpl::NotifyProcessPriorityChanged(
   ProcessPriority aOldPriority)
 {
   ProcessPriority newPriority = aParticularManager->CurrentPriority();
-  bool isPreallocated = aParticularManager->IsPreallocated();
 
   if (newPriority == PROCESS_PRIORITY_BACKGROUND &&
-      aOldPriority != PROCESS_PRIORITY_BACKGROUND &&
-      !isPreallocated) {
+      aOldPriority != PROCESS_PRIORITY_BACKGROUND) {
     mBackgroundLRUPool.Add(aParticularManager);
   } else if (newPriority != PROCESS_PRIORITY_BACKGROUND &&
-      aOldPriority == PROCESS_PRIORITY_BACKGROUND &&
-      !isPreallocated) {
+      aOldPriority == PROCESS_PRIORITY_BACKGROUND) {
     mBackgroundLRUPool.Remove(aParticularManager);
   }
 
@@ -809,12 +805,6 @@ ParticularProcessPriorityManager::Pid() const
   return mContentParent ? mContentParent->Pid() : -1;
 }
 
-bool
-ParticularProcessPriorityManager::IsPreallocated() const
-{
-  return mContentParent ? mContentParent->IsPreallocated() : false;
-}
-
 const nsAutoCString&
 ParticularProcessPriorityManager::NameWithComma()
 {
@@ -861,10 +851,10 @@ ParticularProcessPriorityManager::OnRemoteBrowserFrameShown(nsISupports* aSubjec
     return;
   }
 
-  // Ignore notifications that aren't from a BrowserOrApp
-  bool isMozBrowserOrApp;
-  fl->GetOwnerIsMozBrowserOrAppFrame(&isMozBrowserOrApp);
-  if (isMozBrowserOrApp) {
+  // Ignore notifications that aren't from a Browser
+  bool isMozBrowser;
+  fl->GetOwnerIsMozBrowserFrame(&isMozBrowser);
+  if (isMozBrowser) {
     ResetPriority();
   }
 

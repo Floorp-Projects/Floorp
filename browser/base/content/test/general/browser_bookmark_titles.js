@@ -42,7 +42,7 @@ add_task(function* () {
     BrowserOffline.toggleOfflineStatus();
     let proxy = Services.prefs.getIntPref('network.proxy.type');
     Services.prefs.setIntPref('network.proxy.type', 0);
-    registerCleanupFunction(function () {
+    registerCleanupFunction(function() {
         BrowserOffline.toggleOfflineStatus();
         Services.prefs.setIntPref('network.proxy.type', proxy);
     });

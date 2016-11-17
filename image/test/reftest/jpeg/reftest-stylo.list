@@ -53,5 +53,3 @@ fails random-if(Android) == jpg-srgb-icc.jpg jpg-srgb-icc.jpg
 # "Here is the beginning of a boundary," and --$(boundary)-- means "All done
 # sending you parts.")
 skip HTTP == webcam-simulacrum.mjpg webcam-simulacrum.mjpg
-skip pref(image.mozsamplesize.enabled,true) == jpg-size-32x32.jpg#-moz-samplesize=2 jpg-size-32x32.jpg#-moz-samplesize=2
-skip pref(image.mozsamplesize.enabled,true) == jpg-size-32x32.jpg#-moz-samplesize=8 jpg-size-32x32.jpg#-moz-samplesize=8

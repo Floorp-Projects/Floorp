@@ -62,6 +62,9 @@ BackendTypeBit(BackendType b)
 }
 
 } // namespace gfx
+namespace dom {
+class FontFamilyListEntry;
+}
 } // namespace mozilla
 
 #define MOZ_PERFORMANCE_WARNING(module, ...) \
@@ -319,6 +322,15 @@ public:
                                  nsTArray<nsString>& aListOfFonts);
 
     /**
+     * Fill aFontFamilies with a list of FontFamilyListEntry records for the
+     * available fonts on the platform; used to pass the list from chrome to
+     * content process. Currently implemented only on MacOSX.
+     */
+    virtual void GetSystemFontFamilyList(
+      InfallibleTArray<mozilla::dom::FontFamilyListEntry>* aFontFamilies)
+    { }
+
+    /**
      * Rebuilds the any cached system font lists
      */
     virtual nsresult UpdateFontList();
@@ -393,9 +405,7 @@ public:
      * True when zooming should not require reflow, so glyph metrics and
      * positioning should not be adjusted for device pixels.
      * If this is TRUE, then FontHintingEnabled() should be FALSE,
-     * but the converse is not necessarily required; in particular,
-     * B2G always has FontHintingEnabled FALSE, but RequiresLinearZoom
-     * is only true for the browser process, not Gaia or other apps.
+     * but the converse is not necessarily required;
      *
      * Like FontHintingEnabled (above), this setting shouldn't
      * change per gecko process, while the process is live.  If so the

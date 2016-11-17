@@ -20,7 +20,7 @@ var global = this;
 
 
 // Lazily load the finder code
-addMessageListener("Finder:Initialize", function () {
+addMessageListener("Finder:Initialize", function() {
   let {RemoteFinderListener} = Cu.import("resource://gre/modules/RemoteFinder.jsm", {});
   new RemoteFinderListener(global);
 });
@@ -501,12 +501,12 @@ var Printing = {
     // By using ReaderMode primitives, we parse given document and place the
     // resulting JS object into the DOM of current browser.
     let articlePromise = ReaderMode.parseDocument(contentWindow.document).catch(Cu.reportError);
-    articlePromise.then(function (article) {
+    articlePromise.then(function(article) {
       // We make use of a web progress listener in order to know when the content we inject
       // into the DOM has finished rendering. If our layout engine is still painting, we
       // will wait for MozAfterPaint event to be fired.
       let webProgressListener = {
-        onStateChange: function (webProgress, req, flags, status) {
+        onStateChange: function(webProgress, req, flags, status) {
           if (flags & Ci.nsIWebProgressListener.STATE_STOP) {
             webProgress.removeProgressListener(webProgressListener);
             let domUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -919,7 +919,7 @@ WebChannelMessageToChromeListener.init();
 
 // This should be kept in sync with /browser/base/content.js.
 // Add message listener for "WebChannelMessageToContent" messages from chrome scripts.
-addMessageListener("WebChannelMessageToContent", function (e) {
+addMessageListener("WebChannelMessageToContent", function(e) {
   if (e.data) {
     // e.objects.eventTarget will be defined if sending a response to
     // a WebChannelMessageToChrome event. An unsolicited send
@@ -1058,7 +1058,7 @@ addMessageListener("Browser:PurgeSessionHistory", function BrowserPurgeHistory()
 });
 
 var ViewSelectionSource = {
-  init: function () {
+  init: function() {
     addMessageListener("ViewSource:GetSelection", this);
   },
 
@@ -1100,7 +1100,7 @@ var ViewSelectionSource = {
     return path;
   },
 
-  getSelection: function () {
+  getSelection: function() {
     // These are markers used to delimit the selection during processing. They
     // are removed from the final rendering.
     // We use noncharacter Unicode codepoints to minimize the risk of clashing
@@ -1160,10 +1160,10 @@ var ViewSelectionSource = {
     var tmpNode;
     if (canDrawSelection) {
       var i;
-      for (i = startPath ? startPath.length-1 : -1; i >= 0; i--) {
+      for (i = startPath ? startPath.length - 1 : -1; i >= 0; i--) {
         startContainer = startContainer.childNodes.item(startPath[i]);
       }
-      for (i = endPath ? endPath.length-1 : -1; i >= 0; i--) {
+      for (i = endPath ? endPath.length - 1 : -1; i >= 0; i--) {
         endContainer = endContainer.childNodes.item(endPath[i]);
       }
 
@@ -1273,7 +1273,7 @@ var ViewSelectionSource = {
     + '</style>'
     + '</head>'
     + '<body id="viewsource"' + wrapClass
-    +        ' onload="document.title=\''+title+'\'; document.getElementById(\'target\').scrollIntoView(true)">'
+    +        ' onload="document.title=\'' + title + '\'; document.getElementById(\'target\').scrollIntoView(true)">'
     + '<pre>'
     + this.getOuterMarkup(topNode, 0)
     + '</pre></body></html>'
@@ -1523,12 +1523,12 @@ let AutoCompletePopup = {
     }
   },
 
-  get input () { return this._input; },
-  get overrideValue () { return null; },
-  set selectedIndex (index) {
+  get input() { return this._input; },
+  get overrideValue() { return null; },
+  set selectedIndex(index) {
     sendAsyncMessage("FormAutoComplete:SetSelectedIndex", { index });
   },
-  get selectedIndex () {
+  get selectedIndex() {
     // selectedIndex getter must be synchronous because we need the
     // correct value when the controller is in controller::HandleEnter.
     // We can't easily just let the parent inform us the new value every
@@ -1537,11 +1537,11 @@ let AutoCompletePopup = {
     // list).
     return sendSyncMessage("FormAutoComplete:GetSelectedIndex", {});
   },
-  get popupOpen () {
+  get popupOpen() {
     return this._popupOpen;
   },
 
-  openAutocompletePopup: function (input, element) {
+  openAutocompletePopup: function(input, element) {
     if (this._popupOpen || !input) {
       return;
     }
@@ -1556,7 +1556,7 @@ let AutoCompletePopup = {
     this._input = input;
   },
 
-  closePopup: function () {
+  closePopup: function() {
     // We set this here instead of just waiting for the
     // PopupClosed message to do it so that we don't end
     // up in a state where the content thinks that a popup
@@ -1565,7 +1565,7 @@ let AutoCompletePopup = {
     sendAsyncMessage("FormAutoComplete:ClosePopup", {});
   },
 
-  invalidate: function () {
+  invalidate: function() {
     if (this._popupOpen) {
       let results = this.getResultsFromController(this._input);
       sendAsyncMessage("FormAutoComplete:Invalidate", { results });

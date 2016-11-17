@@ -19,7 +19,7 @@ function promiseNotificationShown(aWindow, aName) {
 function promiseReportCallMade(aValue) {
   return new Promise((resolve) => {
     let old = gTestHangReport.testCallback;
-    gTestHangReport.testCallback = function (val) {
+    gTestHangReport.testCallback = function(val) {
       gTestHangReport.testCallback = old;
       is(aValue, val, "was the correct method call made on the hang report object?");
       resolve();
@@ -50,7 +50,7 @@ let gTestHangReport = {
   TEST_CALLBACK_TERMPLUGIN: 3,
 
   _hangType: 1,
-  _tcb: function (aCallbackType) {},
+  _tcb: function(aCallbackType) {},
 
   get hangType() {
     return this._hangType;
@@ -64,22 +64,22 @@ let gTestHangReport = {
     this._tcb = aValue;
   },
 
-  QueryInterface: function (aIID) {
+  QueryInterface: function(aIID) {
     if (aIID.equals(Components.interfaces.nsIHangReport) ||
         aIID.equals(Components.interfaces.nsISupports))
       return this;
     throw Components.results.NS_NOINTERFACE;
   },
 
-  userCanceled: function () {
+  userCanceled: function() {
     this._tcb(this.TEST_CALLBACK_CANCELED);
   },
 
-  terminateScript: function () {
+  terminateScript: function() {
     this._tcb(this.TEST_CALLBACK_TERMSCRIPT);
   },
 
-  terminatePlugin: function () {
+  terminatePlugin: function() {
     this._tcb(this.TEST_CALLBACK_TERMPLUGIN);
   },
 

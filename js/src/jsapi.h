@@ -4602,13 +4602,6 @@ typedef bool
 extern JS_PUBLIC_API(void)
 SetAsyncTaskCallbacks(JSContext* cx, StartAsyncTaskCallback start, FinishAsyncTaskCallback finish);
 
-} // namespace JS
-
-extern JS_PUBLIC_API(bool)
-JS_IsRunning(JSContext* cx);
-
-namespace JS {
-
 /**
  * This class can be used to store a pointer to the youngest frame of a saved
  * stack in the specified JSContext. This reference will be picked up by any new

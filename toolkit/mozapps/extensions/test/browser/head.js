@@ -413,7 +413,7 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
 
     if (gUseInContentUI) {
       info("Loading manager window in tab");
-      Services.obs.addObserver(function (aSubject, aTopic, aData) {
+      Services.obs.addObserver(function(aSubject, aTopic, aData) {
         Services.obs.removeObserver(arguments.callee, aTopic);
         if (aSubject.location.href != MANAGER_URI) {
           info("Ignoring load event for " + aSubject.location.href);
@@ -426,7 +426,7 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
       switchToTabHavingURI(MANAGER_URI, true);
     } else {
       info("Loading manager window in dialog");
-      Services.obs.addObserver(function (aSubject, aTopic, aData) {
+      Services.obs.addObserver(function(aSubject, aTopic, aData) {
         Services.obs.removeObserver(arguments.callee, aTopic);
         setup_manager(aSubject);
       }, "EM-loaded", false);
@@ -551,7 +551,7 @@ function promiseAddonsByIDs(aIDs) {
  *
  * The callback will receive the Addon for the installed add-on.
  */
-function install_addon(path, cb, pathPrefix=TESTROOT) {
+function install_addon(path, cb, pathPrefix = TESTROOT) {
   let p = new Promise((resolve, reject) => {
     AddonManager.getInstallForURL(pathPrefix + path, (install) => {
       install.addListener({
@@ -648,7 +648,7 @@ CertOverrideListener.prototype = {
   host: null,
   bits: null,
 
-  getInterface: function (aIID) {
+  getInterface: function(aIID) {
     return this.QueryInterface(aIID);
   },
 
@@ -661,7 +661,7 @@ CertOverrideListener.prototype = {
     throw Components.Exception("No interface", Components.results.NS_ERROR_NO_INTERFACE);
   },
 
-  notifyCertProblem: function (socketInfo, sslStatus, targetHost) {
+  notifyCertProblem: function(socketInfo, sslStatus, targetHost) {
     var cert = sslStatus.QueryInterface(Components.interfaces.nsISSLStatus)
                         .serverCert;
     var cos = Cc["@mozilla.org/security/certoverride;1"].

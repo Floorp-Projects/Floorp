@@ -66,7 +66,7 @@ function run_test() {
 
 add_test(function before_rebuild() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org",
-                            function check_before_rebuild (a1) {
+                            function check_before_rebuild(a1) {
     // First check that it migrated OK once
     // addon1 was disabled in the database
     do_check_neq(a1, null);

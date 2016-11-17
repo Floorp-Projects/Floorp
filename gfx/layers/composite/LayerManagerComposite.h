@@ -281,8 +281,6 @@ public:
     mDisabledApzWarning = true;
   }
 
-  bool LastFrameMissedHWC() { return mLastFrameMissedHWC; }
-
   bool AsyncPanZoomEnabled() const override;
 
   void AppendImageCompositeNotification(const ImageCompositeNotification& aNotification)
@@ -386,10 +384,6 @@ private:
   RefPtr<CompositingRenderTarget> mTwoPassTmpTarget;
   RefPtr<TextRenderer> mTextRenderer;
   bool mGeometryChanged;
-
-  // Testing property. If hardware composer is supported, this will return
-  // true if the last frame was deemed 'too complicated' to be rendered.
-  bool mLastFrameMissedHWC;
 
   bool mWindowOverlayChanged;
   RefPtr<PaintCounter> mPaintCounter;

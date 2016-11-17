@@ -66,7 +66,7 @@ function cleanup_fake_appdir() {
   try {
     dirSvc.undefine("UAppData");
   } catch (ex) {
-    dump("cleanup_fake_appdir: dirSvc.undefine failed: " + ex.message +"\n");
+    dump("cleanup_fake_appdir: dirSvc.undefine failed: " + ex.message + "\n");
   }
 }
 

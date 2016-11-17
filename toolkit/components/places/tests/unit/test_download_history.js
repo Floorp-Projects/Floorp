@@ -104,7 +104,7 @@ add_test(function test_dh_addMultiRemoveDownload()
   PlacesTestUtils.addVisits({
     uri: DOWNLOAD_URI,
     transition: TRANSITION_TYPED
-  }).then(function () {
+  }).then(function() {
     waitForOnVisit(function DHAD_onVisit(aURI) {
       do_check_true(aURI.equals(DOWNLOAD_URI));
       do_check_true(!!page_in_database(DOWNLOAD_URI));

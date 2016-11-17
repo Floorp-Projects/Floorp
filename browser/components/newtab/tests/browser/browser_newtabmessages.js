@@ -109,7 +109,7 @@ add_task(function* placesMessages_request() {
   }
 
   // utility function to make a visit for insertion into places db
-  function makeVisit(index, daysAgo, isTyped, domain=TEST_URL) {
+  function makeVisit(index, daysAgo, isTyped, domain = TEST_URL) {
     let {
       TRANSITION_TYPED,
       TRANSITION_LINK

@@ -124,7 +124,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gCatMan",
                                    "@mozilla.org/categorymanager;1",
                                    "nsICategoryManager");
 
-XPCOMUtils.defineLazyGetter(this, "gCompReg", function () {
+XPCOMUtils.defineLazyGetter(this, "gCompReg", function() {
   return Cm.QueryInterface(Ci.nsIComponentRegistrar);
 });
 
@@ -271,7 +271,7 @@ const gTest8TimerCallback = {
   notify: function T8CB_notify(aTimer) {
     TESTS[8].notified = true;
     TESTS[8].notifyTime = Date.now();
-    do_execute_soon(function () {
+    do_execute_soon(function() {
       check_test8thru9(gTest8TimerCallback);
     });
   },
@@ -291,7 +291,7 @@ const gTest9TimerCallback = {
   notify: function T9CB_notify(aTimer) {
     TESTS[9].notified = true;
     TESTS[9].notifyTime = Date.now();
-    do_execute_soon(function () {
+    do_execute_soon(function() {
       check_test8thru9(gTest9TimerCallback);
     });
   },

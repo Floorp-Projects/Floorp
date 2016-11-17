@@ -6,7 +6,7 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var gProtocols = [];
 var gContainer;
-window.onload = function () {
+window.onload = function() {
   gContainer = document.getElementById("abouts");
   findAbouts();
 }
@@ -20,7 +20,7 @@ function findAbouts() {
       var contract = "@mozilla.org/network/protocol/about;1?what=" + aboutType;
       try {
         var am = Cc[contract].getService(Ci.nsIAboutModule);
-        var uri = ios.newURI("about:"+aboutType, null, null);
+        var uri = ios.newURI("about:" + aboutType, null, null);
         var flags = am.getURIFlags(uri);
         if (!(flags & Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT)) {
           gProtocols.push(aboutType);

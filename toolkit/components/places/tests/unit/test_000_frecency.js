@@ -127,7 +127,7 @@ function* task_initializeBucket(bucket) {
         bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder, calculatedURI, bmsvc.DEFAULT_INDEX, matchTitle);
       }
       else
-        matchTitle = calculatedURI.spec.substr(calculatedURI.spec.lastIndexOf("/")+1);
+        matchTitle = calculatedURI.spec.substr(calculatedURI.spec.lastIndexOf("/") + 1);
       yield PlacesTestUtils.addVisits({
         uri: calculatedURI,
         transition: visitType,

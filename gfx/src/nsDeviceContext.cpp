@@ -366,7 +366,7 @@ nsDeviceContext::CreateRenderingContextCommon(bool aWantReferenceContext)
 
     RefPtr<gfx::DrawTarget> dt;
     if (aWantReferenceContext) {
-      dt = printingTarget->GetReferenceDrawTarget();
+      dt = printingTarget->GetReferenceDrawTarget(recorder);
     } else {
       dt = printingTarget->MakeDrawTarget(gfx::IntSize(mWidth, mHeight), recorder);
     }

@@ -23,10 +23,10 @@ function doSearch(aString, aUserContextId) {
   let deferred = Promise.defer();
   let search = new AutoCompleteSearch("test");
 
-  search.startSearch = function (aSearchString,
-                                 aSearchParam,
-                                 aPreviousResult,
-                                 aListener) {
+  search.startSearch = function(aSearchString,
+                                aSearchParam,
+                                aPreviousResult,
+                                aListener) {
     unregisterAutoCompleteSearch(search);
     deferred.resolve(aSearchParam);
   };

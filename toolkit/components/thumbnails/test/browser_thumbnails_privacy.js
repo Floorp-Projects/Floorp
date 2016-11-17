@@ -6,7 +6,7 @@ const URL = "://example.com/browser/toolkit/components/thumbnails/" +
             "test/privacy_cache_control.sjs";
 
 function* runTests() {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref(PREF_DISK_CACHE_SSL);
   });
 

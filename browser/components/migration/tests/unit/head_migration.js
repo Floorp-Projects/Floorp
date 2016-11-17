@@ -30,7 +30,7 @@ function promiseMigration(migrator, resourceType, aProfile = null) {
   let availableSources = migrator.getMigrateData(aProfile, false);
   Assert.ok((availableSources & resourceType) > 0, "Resource supported by migrator");
 
-  return new Promise (resolve => {
+  return new Promise(resolve => {
     Services.obs.addObserver(function onMigrationEnded() {
       Services.obs.removeObserver(onMigrationEnded, "Migration:Ended");
       resolve();

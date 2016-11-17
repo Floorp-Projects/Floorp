@@ -32,13 +32,13 @@ function InitWithToolbox(aToolbox)
   dispatchCustomizationEvent("beforecustomization");
   gToolboxDocument = gToolbox.ownerDocument;
   gToolbox.customizing = true;
-  forEachCustomizableToolbar(function (toolbar) {
+  forEachCustomizableToolbar(function(toolbar) {
     toolbar.setAttribute("customizing", "true");
   });
   gPaletteBox = document.getElementById("palette-box");
 
   var elts = getRootElements();
-  for (let i=0; i < elts.length; i++) {
+  for (let i = 0; i < elts.length; i++) {
     elts[i].addEventListener("dragstart", onToolbarDragStart, true);
     elts[i].addEventListener("dragover", onToolbarDragOver, true);
     elts[i].addEventListener("dragexit", onToolbarDragExit, true);
@@ -68,7 +68,7 @@ function finishToolbarCustomization()
   unwrapToolbarItems();
   persistCurrentSets();
   gToolbox.customizing = false;
-  forEachCustomizableToolbar(function (toolbar) {
+  forEachCustomizableToolbar(function(toolbar) {
     toolbar.removeAttribute("customizing");
   });
 
@@ -119,7 +119,7 @@ function repositionDialog(aWindow)
 function removeToolboxListeners()
 {
   var elts = getRootElements();
-  for (let i=0; i < elts.length; i++) {
+  for (let i = 0; i < elts.length; i++) {
     elts[i].removeEventListener("dragstart", onToolbarDragStart, true);
     elts[i].removeEventListener("dragover", onToolbarDragOver, true);
     elts[i].removeEventListener("dragexit", onToolbarDragExit, true);
@@ -162,7 +162,7 @@ function persistCurrentSets()
     return;
 
   var customCount = 0;
-  forEachCustomizableToolbar(function (toolbar) {
+  forEachCustomizableToolbar(function(toolbar) {
     // Calculate currentset and store it in the attribute.
     var currentSet = toolbar.currentSet;
     toolbar.setAttribute("currentset", currentSet);
@@ -174,9 +174,9 @@ function persistCurrentSets()
         gToolbox.removeChild(toolbar);
       } else if (gToolbox.toolbarset) {
         // Persist custom toolbar info on the <toolbarset/>
-        gToolbox.toolbarset.setAttribute("toolbar"+(++customCount),
+        gToolbox.toolbarset.setAttribute("toolbar" + (++customCount),
                                          toolbar.toolbarName + ":" + currentSet);
-        gToolboxDocument.persist(gToolbox.toolbarset.id, "toolbar"+customCount);
+        gToolboxDocument.persist(gToolbox.toolbarset.id, "toolbar" + customCount);
       }
     }
 
@@ -187,9 +187,9 @@ function persistCurrentSets()
   });
 
   // Remove toolbarX attributes for removed toolbars.
-  while (gToolbox.toolbarset && gToolbox.toolbarset.hasAttribute("toolbar"+(++customCount))) {
-    gToolbox.toolbarset.removeAttribute("toolbar"+customCount);
-    gToolboxDocument.persist(gToolbox.toolbarset.id, "toolbar"+customCount);
+  while (gToolbox.toolbarset && gToolbox.toolbarset.hasAttribute("toolbar" + (++customCount))) {
+    gToolbox.toolbarset.removeAttribute("toolbar" + customCount);
+    gToolboxDocument.persist(gToolbox.toolbarset.id, "toolbar" + customCount);
   }
 }
 
@@ -198,8 +198,8 @@ function persistCurrentSets()
  */
 function wrapToolbarItems()
 {
-  forEachCustomizableToolbar(function (toolbar) {
-    Array.forEach(toolbar.childNodes, function (item) {
+  forEachCustomizableToolbar(function(toolbar) {
+    Array.forEach(toolbar.childNodes, function(item) {
       if (AppConstants.platform == "macosx") {
         if (item.firstChild && item.firstChild.localName == "menubar")
           return;
@@ -223,7 +223,7 @@ function getRootElements()
 function unwrapToolbarItems()
 {
   let elts = getRootElements();
-  for (let i=0; i < elts.length; i++) {
+  for (let i = 0; i < elts.length; i++) {
     let paletteItems = elts[i].getElementsByTagName("toolbarpaletteitem");
     let paletteItem;
     while ((paletteItem = paletteItems.item(0)) != null) {
@@ -243,7 +243,7 @@ function createWrapper(aId, aDocument)
   var wrapper = aDocument.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                          "toolbarpaletteitem");
 
-  wrapper.id = "wrapper-"+aId;
+  wrapper.id = "wrapper-" + aId;
   return wrapper;
 }
 
@@ -289,7 +289,7 @@ function wrapToolbarItem(aToolbarItem)
 function getCurrentItemIds()
 {
   var currentItems = {};
-  forEachCustomizableToolbar(function (toolbar) {
+  forEachCustomizableToolbar(function(toolbar) {
     var child = toolbar.firstChild;
     while (child) {
       if (isToolbarItem(child))
@@ -441,10 +441,10 @@ function setDragActive(aItem, aValue)
 {
   var node = aItem;
   var direction = window.getComputedStyle(aItem, null).direction;
-  var value = direction == "ltr"? "left" : "right";
+  var value = direction == "ltr" ? "left" : "right";
   if (aItem.localName == "toolbar") {
     node = aItem.lastChild;
-    value = direction == "ltr"? "right" : "left";
+    value = direction == "ltr" ? "right" : "left";
   }
 
   if (!node)
@@ -536,7 +536,7 @@ function restoreDefaultSet()
   }
 
   // Restore the defaultset for fixed toolbars.
-  forEachCustomizableToolbar(function (toolbar) {
+  forEachCustomizableToolbar(function(toolbar) {
     var defaultSet = toolbar.getAttribute("defaultset");
     if (defaultSet)
       toolbar.currentSet = defaultSet;
@@ -575,7 +575,7 @@ function updateToolboxProperty(aProp, aValue, aToolkitDefault) {
   gToolbox.setAttribute(aProp, aValue || toolboxDefault);
   gToolboxDocument.persist(gToolbox.id, aProp);
 
-  forEachCustomizableToolbar(function (toolbar) {
+  forEachCustomizableToolbar(function(toolbar) {
     var toolbarDefault = toolbar.getAttribute("default" + aProp) ||
                          toolboxDefault;
     if (toolbar.getAttribute("lock" + aProp) == "true" &&
@@ -723,12 +723,12 @@ function onToolbarDrop(aEvent)
   while (toolbar.localName != "toolbar")
     toolbar = toolbar.parentNode;
 
-  var draggedPaletteWrapper = document.getElementById("wrapper-"+draggedItemId);
+  var draggedPaletteWrapper = document.getElementById("wrapper-" + draggedItemId);
   if (!draggedPaletteWrapper) {
     // The wrapper has been dragged from the toolbar.
     // Get the wrapper from the toolbar document and make sure that
     // it isn't being dropped on itself.
-    let wrapper = gToolboxDocument.getElementById("wrapper-"+draggedItemId);
+    let wrapper = gToolboxDocument.getElementById("wrapper-" + draggedItemId);
     if (wrapper == gCurrentDragOverItem)
        return;
 
@@ -762,7 +762,7 @@ function onToolbarDrop(aEvent)
 
     // Prepare the item and wrapper to look good on the toolbar.
     cleanupItemForToolbar(newItem, wrapper);
-    wrapper.id = "wrapper-"+newItem.id;
+    wrapper.id = "wrapper-" + newItem.id;
     wrapper.flex = newItem.flex;
 
     // Remove the wrapper from the palette.
@@ -795,7 +795,7 @@ function onPaletteDrop(aEvent)
   var documentId = gToolboxDocument.documentElement.id;
   var itemId = aEvent.dataTransfer.getData("text/toolbarwrapper-id/" + documentId);
 
-  var wrapper = gToolboxDocument.getElementById("wrapper-"+itemId);
+  var wrapper = gToolboxDocument.getElementById("wrapper-" + itemId);
   if (wrapper) {
     // Don't allow non-removable kids (e.g., the menubar) to move.
     if (wrapper.firstChild.getAttribute("removable") != "true")

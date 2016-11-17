@@ -14916,6 +14916,10 @@
         "url": "/cssom-view/elementsFromPoint.html"
       },
       {
+        "path": "cssom-view/mouseEvent.html",
+        "url": "/cssom-view/mouseEvent.html"
+      },
+      {
         "path": "cssom-view/negativeMargins.html",
         "url": "/cssom-view/negativeMargins.html"
       },
@@ -20718,6 +20722,10 @@
       {
         "path": "html/semantics/embedded-content/the-img-element/update-media.html",
         "url": "/html/semantics/embedded-content/the-img-element/update-media.html"
+      },
+      {
+        "path": "html/semantics/embedded-content/the-img-element/update-src-complete.html",
+        "url": "/html/semantics/embedded-content/the-img-element/update-src-complete.html"
       },
       {
         "path": "html/semantics/embedded-content/the-img-element/update-the-image-data/fail-to-resolve.html",

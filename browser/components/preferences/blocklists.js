@@ -22,7 +22,7 @@ var gBlocklistManager = {
     get rowCount() {
       return this._rowCount;
     },
-    getCellText: function (row, column) {
+    getCellText: function(row, column) {
       if (column.id == "listCol") {
         let list = gBlocklistManager._blockLists[row];
         let desc = list.description ? list.description : "";
@@ -56,7 +56,7 @@ var gBlocklistManager = {
     }
   },
 
-  onWindowKeyPress: function (event) {
+  onWindowKeyPress: function(event) {
     if (event.keyCode == KeyEvent.DOM_VK_ESCAPE) {
       window.close();
     } else if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
@@ -64,13 +64,13 @@ var gBlocklistManager = {
     }
   },
 
-  onLoad: function () {
+  onLoad: function() {
     this._bundle = document.getElementById("bundlePreferences");
     let params = window.arguments[0];
     this.init(params);
   },
 
-  init: function (params) {
+  init: function(params) {
     if (this._type) {
       // reusing an open dialog, clear the old observer
       this.uninit();
@@ -97,9 +97,9 @@ var gBlocklistManager = {
     this._loadBlockLists();
   },
 
-  uninit: function () {},
+  uninit: function() {},
 
-  onListSelected: function () {
+  onListSelected: function() {
     for (let list of this._blockLists) {
       list.selected = false;
     }
@@ -108,7 +108,7 @@ var gBlocklistManager = {
     this._updateTree();
   },
 
-  onApplyChanges: function () {
+  onApplyChanges: function() {
     let activeList = this._getActiveList();
     let selected = null;
     for (let list of this._blockLists) {
@@ -153,7 +153,7 @@ var gBlocklistManager = {
     window.close();
   },
 
-  _loadBlockLists: function () {
+  _loadBlockLists: function() {
     this._blockLists = [];
 
     // Load blocklists into a table.
@@ -171,7 +171,7 @@ var gBlocklistManager = {
     this._updateTree();
   },
 
-  _createOrUpdateBlockList: function (itemName) {
+  _createOrUpdateBlockList: function(itemName) {
     let branch = Services.prefs.getBranch(LISTS_PREF_BRANCH);
     let key = branch.getCharPref(itemName);
     let value = this._bundle.getString(key);
@@ -192,13 +192,13 @@ var gBlocklistManager = {
     return list;
   },
 
-  _updateTree: function () {
+  _updateTree: function() {
     this._tree = document.getElementById("blocklistsTree");
     this._view._rowCount = this._blockLists.length;
     this._tree.view = this._view;
   },
 
-  _getActiveList: function () {
+  _getActiveList: function() {
     let trackingTable = Services.prefs.getCharPref(TRACKING_TABLE_PREF);
     return trackingTable.includes(CONTENT_LIST_ID) ? CONTENT_LIST_ID : BASE_LIST_ID;
   }

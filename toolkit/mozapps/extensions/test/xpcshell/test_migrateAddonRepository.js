@@ -80,7 +80,7 @@ function run_test() {
 
 
   Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
-  AddonRepository.getCachedAddonByID("test1@tests.mozilla.org", function (aAddon) {
+  AddonRepository.getCachedAddonByID("test1@tests.mozilla.org", function(aAddon) {
     do_check_neq(aAddon, null);
     do_check_eq(aAddon.screenshots.length, 1);
     do_check_true(aAddon.screenshots[0].width === null);

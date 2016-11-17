@@ -85,7 +85,7 @@ add_task(function* () {
   { // test for bug 445768
     let focusedWindow = document.commandDispatcher.focusedWindow;
     let eventConsumed = true;
-    let detectKeyEvent = function (event) {
+    let detectKeyEvent = function(event) {
       eventConsumed = event.defaultPrevented;
     };
     document.addEventListener("keypress", detectKeyEvent, false);
@@ -143,7 +143,7 @@ add_task(function* () {
   }
 
   function selectTabs(tabs) {
-    tabs.forEach(function (index) {
+    tabs.forEach(function(index) {
       gBrowser.selectedTab = gBrowser.tabs[index];
     });
   }
@@ -179,7 +179,7 @@ add_task(function* () {
     }
 
     is(gBrowser.tabContainer.selectedIndex, expectedIndex,
-       "With "+ tabCount +" tabs open and tab " + indexStart
+       "With " + tabCount + " tabs open and tab " + indexStart
        + " selected, Ctrl+Tab*" + tabTimes + " goes " + where);
   }
 });

@@ -93,8 +93,8 @@ function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection, aC
   }
 
   var rect = aElement.getBoundingClientRect();
-  var startingPoint = { x: (rect.right - rect.left)/2,
-                        y: (rect.bottom - rect.top)/2 };
+  var startingPoint = { x: (rect.right - rect.left) / 2,
+                        y: (rect.bottom - rect.top) / 2 };
 
   EventUtils.synthesizeMouse(aElement,
                              startingPoint.x,
@@ -158,19 +158,19 @@ var gTests = [
 
       info("Dragging left");
       synthesizeDragWithDirection(element, expectedData, dragDirections.LEFT,
-        function ()
+        function()
         {
           info("Dragging right");
           synthesizeDragWithDirection(element, expectedData, dragDirections.RIGHT,
-            function ()
+            function()
             {
               info("Dragging up");
               synthesizeDragWithDirection(element, expectedData, dragDirections.UP,
-                function ()
+                function()
                 {
                   info("Dragging down");
                   synthesizeDragWithDirection(element, new Array(), dragDirections.DOWN,
-                    function () {
+                    function() {
                       // Cleanup.
                       PlacesUtils.bookmarks.removeItem(folderId);
                       nextTest();
@@ -200,19 +200,19 @@ var gTests = [
 
       info("Dragging left");
       synthesizeDragWithDirection(element, expectedData, dragDirections.LEFT,
-        function ()
+        function()
         {
           info("Dragging right");
           synthesizeDragWithDirection(element, expectedData, dragDirections.RIGHT,
-            function ()
+            function()
             {
               info("Dragging up");
               synthesizeDragWithDirection(element, expectedData, dragDirections.UP,
-                function ()
+                function()
                 {
                   info("Dragging down");
                   synthesizeDragWithDirection(element, expectedData, dragDirections.DOWN,
-                    function () {
+                    function() {
                       // Cleanup.
                       PlacesUtils.bookmarks.removeItem(itemId);
                       nextTest();
@@ -226,10 +226,10 @@ var gTests = [
 
 function nextTest() {
   if (gTests.length) {
-    var test = gTests.shift();
+    var testCase = gTests.shift();
     waitForFocus(function() {
-      info("Start of test: " + test.desc);
-      test.run();
+      info("Start of test: " + testCase.desc);
+      testCase.run();
     });
   }
   else if (wasCollapsed) {

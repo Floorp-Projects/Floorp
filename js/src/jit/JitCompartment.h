@@ -391,17 +391,23 @@ class JitZone
     }
 };
 
-enum class CacheKind;
+enum class CacheKind : uint8_t;
 class CacheIRStubInfo;
+
+enum class ICStubEngine : uint8_t {
+    Baseline = 0,
+    IonMonkey
+};
 
 struct CacheIRStubKey : public DefaultHasher<CacheIRStubKey> {
     struct Lookup {
         CacheKind kind;
+        ICStubEngine engine;
         const uint8_t* code;
         uint32_t length;
 
-        Lookup(CacheKind kind, const uint8_t* code, uint32_t length)
-          : kind(kind), code(code), length(length)
+        Lookup(CacheKind kind, ICStubEngine engine, const uint8_t* code, uint32_t length)
+          : kind(kind), engine(engine), code(code), length(length)
         {}
     };
 
