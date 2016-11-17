@@ -12,7 +12,7 @@ import sys
 import urllib2
 
 from distutils.version import LooseVersion
-
+from mozboot import rust
 
 NO_MERCURIAL = '''
 Could not find Mercurial (hg) in the current shell's path. Try starting a new
@@ -95,6 +95,24 @@ https://rustup.rs/
 Please move it out of the way and run the bootstrap script again.
 Or if you prefer and know how, use the current rustup to install
 a compatible version of the Rust programming language yourself.
+'''
+
+RUST_UPGRADE_FAILED = '''
+We attempted to upgrade Rust to a modern version (%s or newer).
+However, you appear to still have version %s.
+
+It's possible rustup failed. It's also possible the new Rust is not being
+installed in the search path for this shell. Try creating a new shell and
+run this bootstrapper again.
+
+If this continues to fail and you are sure you have a modern Rust on your
+system, ensure it is on the $PATH and try again. If that fails, you'll need to
+install Rust manually and ensure the path with the rustc and cargo  binaries
+are listed in the $PATH environment variable.
+
+We recommend the installer from https://rustup.rs/ for installing Rust,
+but you may be able to get a recent enough version from a software install
+tool or package manager on your system, or directly from https://rust-lang.org/
 '''
 
 BROWSER_ARTIFACT_MODE_MOZCONFIG = '''
@@ -481,9 +499,9 @@ class BaseBootstrapper(object):
         print(PYTHON_UNABLE_UPGRADE % (current, MODERN_PYTHON_VERSION))
 
     def is_rust_modern(self):
-        rust = self.which('rustc')
-        if not rust:
-            print('Could not find rust compiler.')
+        rustc = self.which('rustc')
+        if not rustc:
+            print('Could not find a Rust compiler.')
             return False, None
 
         cargo = self.which('cargo')
@@ -502,7 +520,7 @@ class BaseBootstrapper(object):
             return
 
         if not version:
-            '''Rust wasn't in PATH. Try a few things.'''
+            # Rust wasn't in PATH. Try the standard path.
             cargo_home = os.environ.get('CARGO_HOME',
                     os.path.expanduser(os.path.join('~', '.cargo')))
             cargo_bin = os.path.join(cargo_home, 'bin')
@@ -513,24 +531,69 @@ class BaseBootstrapper(object):
                                            'cargo_home': cargo_home })
                 sys.exit(1)
 
-            rustup = self.which('rustup')
-            if rustup:
-                print('Found rustup.')
-                version = self._parse_version(rustup)
-                if not version:
-                    print(RUSTUP_OLD)
-                    sys.exit(1)
-
-            print('Please download and run the installer from https://rustup.rs/')
-            sys.exit(1)
-
-        # TODO: Upgrade rust.
+        rustup = self.which('rustup')
+        if rustup:
+            rustup_version = self._parse_version(rustup)
+            if not rustup_version:
+                print(RUSTUP_OLD)
+                sys.exit(1)
+            if not version:
+                # We have rustup but no rustc.
+                # Try running rustup; maybe it will fix things.
+                print('Found rustup. Will try to upgrade.')
+            else:
+                # We have both rustup and rustc.
+                print('Your version of Rust (%s) is too old. Will try to upgrade.' %
+                  version)
+            self.upgrade_rust(rustup)
+        else:
+            # No rustc or rustup.
+            print('Will try to install Rust.')
+            self.install_rust()
 
         modern, after = self.is_rust_modern()
 
         if not modern:
             print(RUST_UPGRADE_FAILED % (MODERN_RUST_VERSION, after))
             sys.exit(1)
+
+    def upgrade_rust(self, rustup):
+        """Upgrade Rust.
+
+        Invoke rustup from the given path to update the rust install."""
+        subprocess.check_call([rustup, 'update'])
+
+    def install_rust(self):
+        """Download and run the rustup installer."""
+        import errno
+        import stat
+        import tempfile
+        platform = rust.platform()
+        url = rust.rustup_url(platform)
+        checksum = rust.rustup_hash(platform)
+        if not url or not checksum:
+            print('ERROR: Could not download installer.')
+            sys.exit(1)
+        print('Downloading rustup-init... ', end='')
+        fd, rustup_init = tempfile.mkstemp(prefix=os.path.basename(url))
+        os.close(fd)
+        try:
+            self.http_download_and_save(url, rustup_init, checksum)
+            mode = os.stat(rustup_init).st_mode
+            os.chmod(rustup_init, mode | stat.S_IRWXU)
+            print('Ok')
+            print('Running rustup-init...')
+            subprocess.check_call([rustup_init, '-y',
+                '--default-toolchain', 'stable',
+                '--default-host', platform,
+            ])
+            print('Rust installation complete.')
+        finally:
+            try:
+                os.remove(rustup_init)
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
 
     def http_download_and_save(self, url, dest, sha256hexhash):
         f = urllib2.urlopen(url)
