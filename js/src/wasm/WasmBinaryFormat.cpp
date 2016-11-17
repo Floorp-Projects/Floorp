@@ -632,14 +632,18 @@ DecodeGlobalSection(Decoder& d, GlobalDescVector* globals)
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-    uint32_t numGlobals;
-    if (!d.readVarU32(&numGlobals))
+    uint32_t numDefs;
+    if (!d.readVarU32(&numDefs))
         return d.fail("expected number of globals");
 
+    uint32_t numGlobals = globals->length() + numDefs;
     if (numGlobals > MaxGlobals)
         return d.fail("too many globals");
 
-    for (uint32_t i = 0; i < numGlobals; i++) {
+    if (!globals->reserve(numGlobals))
+        return false;
+
+    for (uint32_t i = 0; i < numDefs; i++) {
         ValType type;
         bool isMutable;
         if (!DecodeGlobalType(d, &type, &isMutable))
@@ -649,8 +653,7 @@ DecodeGlobalSection(Decoder& d, GlobalDescVector* globals)
         if (!DecodeInitializerExpression(d, *globals, type, &initializer))
             return false;
 
-        if (!globals->append(GlobalDesc(initializer, isMutable)))
-            return false;
+        globals->infallibleAppend(GlobalDesc(initializer, isMutable));
     }
 
     if (!d.finishSection(sectionStart, sectionSize, "global"))
