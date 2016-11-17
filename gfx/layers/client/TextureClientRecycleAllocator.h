@@ -125,9 +125,6 @@ protected:
 
   std::map<TextureClient*, RefPtr<TextureClientHolder> > mInUseClients;
 
-  // On b2g gonk, std::queue might be a better choice.
-  // On ICS, fence wait happens implicitly before drawing.
-  // Since JB, fence wait happens explicitly when fetching a client from the pool.
   // stack is good from Graphics cache usage point of view.
   std::stack<RefPtr<TextureClientHolder> > mPooledClients;
   Mutex mLock;

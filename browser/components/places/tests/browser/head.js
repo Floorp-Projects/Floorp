@@ -14,8 +14,8 @@ if (!cachedLeftPaneFolderIdGetter && typeof(getter) == "function") {
 
 // ...And restore it when test ends.
 registerCleanupFunction(function() {
-  let getter = PlacesUIUtils.__lookupGetter__("leftPaneFolderId");
-  if (cachedLeftPaneFolderIdGetter && typeof(getter) != "function") {
+  let updatedGetter = PlacesUIUtils.__lookupGetter__("leftPaneFolderId");
+  if (cachedLeftPaneFolderIdGetter && typeof(updatedGetter) != "function") {
     PlacesUIUtils.__defineGetter__("leftPaneFolderId", cachedLeftPaneFolderIdGetter);
   }
 });
@@ -24,7 +24,7 @@ function openLibrary(callback, aLeftPaneRoot) {
   let library = window.openDialog("chrome://browser/content/places/places.xul",
                                   "", "chrome,toolbar=yes,dialog=no,resizable",
                                   aLeftPaneRoot);
-  waitForFocus(function () {
+  waitForFocus(function() {
     callback(library);
   }, library);
 
@@ -150,7 +150,7 @@ function synthesizeClickOnSelectedTreeCell(aTree, aOptions) {
 function promiseIsURIVisited(aURI) {
   let deferred = Promise.defer();
 
-  PlacesUtils.asyncHistory.isURIVisited(aURI, function(aURI, aIsVisited) {
+  PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
     deferred.resolve(aIsVisited);
   });
 

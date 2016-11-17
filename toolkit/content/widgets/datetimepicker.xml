@@ -184,7 +184,7 @@
         <![CDATA[
           if (this._hasEntry && event.charCode &&
               this._currentField != this._fieldAMPM &&
-	      ! (event.altKey || event.ctrlKey || event.metaKey) &&
+	            !(event.altKey || event.ctrlKey || event.metaKey) &&
               (event.charCode < 48 || event.charCode > 57))
             event.preventDefault();
         ]]>

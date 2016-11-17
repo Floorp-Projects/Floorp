@@ -98,7 +98,6 @@ public:
 
   /**
    * Get all TabContext which are inside the given content process.
-   * Used for AppProcessChecker to cehck app status.
    */
   nsTArray<TabContext>
   GetTabContextByContentProcess(const ContentParentId& aChildCpId);
@@ -142,15 +141,6 @@ public:
   already_AddRefed<TabParent>
   GetTopLevelTabParentByProcessAndTabId(const ContentParentId& aChildCpId,
                                         const TabId& aChildTabId);
-
-  /**
-   * Return appId by given TabId and ContentParentId.
-   * It will return nsIScriptSecurityManager::NO_APP_ID
-   * if the given tab is not an app.
-   */
-  uint32_t
-  GetAppIdByProcessAndTabId(const ContentParentId& aChildCpId,
-                            const TabId& aChildTabId);
 
 private:
   static StaticAutoPtr<ContentProcessManager> sSingleton;

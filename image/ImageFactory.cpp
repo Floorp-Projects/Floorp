@@ -205,25 +205,6 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
   aProgressTracker->SetImage(newImage);
   newImage->SetProgressTracker(aProgressTracker);
 
-  nsAutoCString ref;
-  aURI->GetRef(ref);
-  net::nsMediaFragmentURIParser parser(ref);
-  if (parser.HasSampleSize()) {
-      /* Get our principal */
-      nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
-      nsCOMPtr<nsIPrincipal> principal;
-      if (chan) {
-        nsContentUtils::GetSecurityManager()
-          ->GetChannelResultPrincipal(chan, getter_AddRefs(principal));
-      }
-
-      if ((principal &&
-           principal->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED) ||
-          gfxPrefs::ImageMozSampleSizeEnabled()) {
-        newImage->SetRequestedSampleSize(parser.GetSampleSize());
-      }
-  }
-
   rv = newImage->Init(aMimeType.get(), aImageFlags);
   if (NS_FAILED(rv)) {
     return BadImage("RasterImage::Init failed", newImage);

@@ -634,7 +634,7 @@ function buildContextMenu(aEvent)
 // Drag and Drop
 var gDownloadDNDObserver =
 {
-  onDragStart: function (aEvent)
+  onDragStart: function(aEvent)
   {
     if (!gDownloadsView.selectedItem)
       return;
@@ -652,7 +652,7 @@ var gDownloadDNDObserver =
     dt.addElement(dl);
   },
 
-  onDragOver: function (aEvent)
+  onDragOver: function(aEvent)
   {
     var types = aEvent.dataTransfer.types;
     if (types.includes("text/uri-list") ||

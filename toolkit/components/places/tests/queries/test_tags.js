@@ -16,7 +16,7 @@ add_task(function* tags_getter_setter() {
   var [query] = makeQuery();
   do_check_eq(query.tags.length, 0);
 
-  do_print("Setting tags to an empty array, tags getter should return "+
+  do_print("Setting tags to an empty array, tags getter should return " +
            "empty array");
   [query] = makeQuery([]);
   do_check_eq(query.tags.length, 0);
@@ -156,7 +156,7 @@ add_task(function* () {
 add_task(function* tag_to_uri() {
   do_print("Querying history on tag associated with a URI should return " +
            "that URI");
-  yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
+  yield task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo"]);
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
     [query, opts] = makeQuery(["bar"]);
@@ -169,7 +169,7 @@ add_task(function* tag_to_uri() {
 add_task(function* tags_to_uri() {
   do_print("Querying history on many tags associated with a URI should " +
            "return that URI");
-  yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
+  yield task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo", "bar"]);
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
     [query, opts] = makeQuery(["foo", "baz"]);
@@ -184,7 +184,7 @@ add_task(function* tags_to_uri() {
 add_task(function* repeated_tag() {
   do_print("Specifying the same tag multiple times in a history query " +
            "should not matter");
-  yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
+  yield task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo", "foo"]);
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
     [query, opts] = makeQuery(["foo", "foo", "foo", "bar", "bar", "baz"]);
@@ -195,7 +195,7 @@ add_task(function* repeated_tag() {
 add_task(function* many_tags_no_uri() {
   do_print("Querying history on many tags associated with a URI and " +
            "tags not associated with that URI should not return that URI");
-  yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
+  yield task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo", "bogus"]);
     executeAndCheckQueryResults(query, opts, []);
     [query, opts] = makeQuery(["foo", "bar", "bogus"]);
@@ -207,7 +207,7 @@ add_task(function* many_tags_no_uri() {
 
 add_task(function* nonexistent_tags() {
   do_print("Querying history on nonexistent tags should return no results");
-  yield task_doWithVisit(["foo", "bar", "baz"], function (aURI) {
+  yield task_doWithVisit(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["bogus"]);
     executeAndCheckQueryResults(query, opts, []);
     [query, opts] = makeQuery(["bogus", "gnarly"]);
@@ -218,7 +218,7 @@ add_task(function* nonexistent_tags() {
 add_task(function* tag_to_bookmark() {
   do_print("Querying bookmarks on tag associated with a URI should " +
            "return that URI");
-  yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
+  yield task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo"]);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -234,7 +234,7 @@ add_task(function* tag_to_bookmark() {
 add_task(function* many_tags_to_bookmark() {
   do_print("Querying bookmarks on many tags associated with a URI " +
            "should return that URI");
-  yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
+  yield task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo", "bar"]);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -253,7 +253,7 @@ add_task(function* many_tags_to_bookmark() {
 add_task(function* repeated_tag_to_bookmarks() {
   do_print("Specifying the same tag multiple times in a bookmark query " +
            "should not matter");
-  yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
+  yield task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo", "foo"]);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     executeAndCheckQueryResults(query, opts, [aURI.spec]);
@@ -266,7 +266,7 @@ add_task(function* repeated_tag_to_bookmarks() {
 add_task(function* many_tags_no_bookmark() {
   do_print("Querying bookmarks on many tags associated with a URI and " +
            "tags not associated with that URI should not return that URI");
-  yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
+  yield task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["foo", "bogus"]);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     executeAndCheckQueryResults(query, opts, []);
@@ -281,7 +281,7 @@ add_task(function* many_tags_no_bookmark() {
 
 add_task(function* nonexistent_tags_bookmark() {
   do_print("Querying bookmarks on nonexistent tag should return no results");
-  yield task_doWithBookmark(["foo", "bar", "baz"], function (aURI) {
+  yield task_doWithBookmark(["foo", "bar", "baz"], function(aURI) {
     var [query, opts] = makeQuery(["bogus"]);
     opts.queryType = opts.QUERY_TYPE_BOOKMARKS;
     executeAndCheckQueryResults(query, opts, []);
@@ -670,7 +670,7 @@ function makeQuery(aTags, aTagsAreNot) {
   if (aTags) {
     query.tags = aTags;
     var uniqueTags = [];
-    aTags.forEach(function (t) {
+    aTags.forEach(function(t) {
       if (typeof(t) === "string" && uniqueTags.indexOf(t) < 0)
         uniqueTags.push(t);
     });

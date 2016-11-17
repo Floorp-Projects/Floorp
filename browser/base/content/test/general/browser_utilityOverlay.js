@@ -10,7 +10,7 @@ const gTests = [
   test_openUILink
 ];
 
-function test () {
+function test() {
   waitForExplicitFinish();
   executeSoon(runNextTest);
 }

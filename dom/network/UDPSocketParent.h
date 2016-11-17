@@ -68,9 +68,7 @@ private:
   void SendInternalError(nsIEventTarget *aThread,
                          uint32_t aLineNo);
 
-  // One of these will be null and the other non-null.
   PBackgroundParent* mBackgroundManager;
-  PNeckoParent* mNeckoManager;
 
   bool mIPCOpen;
   nsCOMPtr<nsIUDPSocket> mSocket;

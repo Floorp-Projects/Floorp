@@ -123,7 +123,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FetchEvent, ExtendableEvent)
 
   // Note, we cannot use NS_FORWARD_TO_EVENT because we want a different
-  // PreventDefault(JSContext*) override.
+  // PreventDefault(JSContext*, CallerType) override.
   NS_FORWARD_NSIDOMEVENT(Event::)
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
@@ -176,7 +176,7 @@ public:
   Default();
 
   void
-  PreventDefault(JSContext* aCx) override;
+  PreventDefault(JSContext* aCx, CallerType aCallerType) override;
 
   void
   ReportCanceled();

@@ -13,7 +13,7 @@ try {
 
 // Get annotation service
 try {
-  var annosvc= Cc["@mozilla.org/browser/annotation-service;1"].getService(Ci.nsIAnnotationService);
+  var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].getService(Ci.nsIAnnotationService);
 } catch (ex) {
   do_throw("Could not get annotation service\n");
 }

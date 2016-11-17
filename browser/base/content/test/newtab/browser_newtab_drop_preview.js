@@ -22,7 +22,7 @@ add_task(function* () {
     content.gDrag._draggedSite = null;
 
     sites = sites.slice(0, 9);
-    return sites.map(function (aSite) {
+    return sites.map(function(aSite) {
       if (!aSite)
         return "";
 

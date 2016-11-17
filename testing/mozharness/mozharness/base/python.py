@@ -511,12 +511,11 @@ class PerfherderResourceOptionsMixin(ScriptMixin):
             # Try to load EC2 instance type from metadata file. This file
             # may not exist in many scenarios (including when inside a chroot).
             # So treat it as optional.
-            # TODO support Windows.
             try:
                 # This file should exist on Linux in EC2.
                 with open('/etc/instance_metadata.json', 'rb') as fh:
                     im = json.load(fh)
-                    instance = im['aws_instance_type'].encode('ascii')
+                    instance = im.get('aws_instance_type', u'unknown').encode('ascii')
             except IOError as e:
                 if e.errno != errno.ENOENT:
                     raise
@@ -527,6 +526,9 @@ class PerfherderResourceOptionsMixin(ScriptMixin):
                              traceback.format_exc())
 
             opts.append('buildbot-%s' % instance)
+
+        # Allow configs to specify their own values.
+        opts.extend(self.config.get('perfherder_extra_options', []))
 
         return opts
 

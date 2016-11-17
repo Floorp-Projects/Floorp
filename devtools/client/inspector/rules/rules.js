@@ -255,15 +255,15 @@ CssRuleView.prototype = {
     selectorIcon.classList.remove("highlighted");
 
     this.unhighlightSelector().then(() => {
-      if (selector !== this.highlightedSelector) {
-        this.highlightedSelector = selector;
+      if (selector !== this.highlighters.selectorHighlighterShown) {
+        this.highlighters.selectorHighlighterShown = selector;
         selectorIcon.classList.add("highlighted");
         this.lastSelectorIcon = selectorIcon;
         this.highlightSelector(selector).then(() => {
           this.emit("ruleview-selectorhighlighter-toggled", true);
         }, e => console.error(e));
       } else {
-        this.highlightedSelector = null;
+        this.highlighters.selectorHighlighterShown = null;
         this.emit("ruleview-selectorhighlighter-toggled", false);
       }
     }, e => console.error(e));
@@ -1505,15 +1505,15 @@ function RuleViewTool(inspector, window) {
 
   this.view = new CssRuleView(this.inspector, this.document);
 
-  this.onLinkClicked = this.onLinkClicked.bind(this);
-  this.onSelected = this.onSelected.bind(this);
-  this.refresh = this.refresh.bind(this);
   this.clearUserProperties = this.clearUserProperties.bind(this);
-  this.onPropertyChanged = this.onPropertyChanged.bind(this);
-  this.onViewRefreshed = this.onViewRefreshed.bind(this);
-  this.onPanelSelected = this.onPanelSelected.bind(this);
+  this.refresh = this.refresh.bind(this);
+  this.onLinkClicked = this.onLinkClicked.bind(this);
   this.onMutations = this.onMutations.bind(this);
+  this.onPanelSelected = this.onPanelSelected.bind(this);
+  this.onPropertyChanged = this.onPropertyChanged.bind(this);
   this.onResized = this.onResized.bind(this);
+  this.onSelected = this.onSelected.bind(this);
+  this.onViewRefreshed = this.onViewRefreshed.bind(this);
 
   this.view.on("ruleview-changed", this.onPropertyChanged);
   this.view.on("ruleview-refreshed", this.onViewRefreshed);

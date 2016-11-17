@@ -446,6 +446,21 @@ IsSyntaxCharacter(widechar c)
   }
 }
 
+inline bool
+IsInRange(int value, int lower_limit, int higher_limit)
+{
+    MOZ_ASSERT(lower_limit <= higher_limit);
+    return static_cast<unsigned int>(value - lower_limit) <=
+           static_cast<unsigned int>(higher_limit - lower_limit);
+}
+
+inline bool
+IsDecimalDigit(widechar c)
+{
+    // ECMA-262, 3rd, 7.8.3 (p 16)
+    return IsInRange(c, '0', '9');
+}
+
 #ifdef DEBUG
 // Currently only used in an assert.kASSERT.
 static bool
@@ -522,14 +537,17 @@ RegExpParser<CharT>::ParseClassCharacterEscape(widechar* code)
         *code = '\\';
         return true;
       }
-      case '0': case '1': case '2': case '3': case '4': case '5':
-      case '6': case '7':
+      case '0':
         if (unicode_) {
-            if (current() == '0') {
-                Advance();
-                *code = 0;
-                return true;
-            }
+            Advance();
+            if (IsDecimalDigit(current()))
+                return ReportError(JSMSG_INVALID_DECIMAL_ESCAPE);
+            *code = 0;
+            return true;
+        }
+        MOZ_FALLTHROUGH;
+      case '1': case '2': case '3': case '4': case '5': case '6': case '7':
+        if (unicode_) {
             ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
             return false;
         }
@@ -1156,21 +1174,6 @@ RegExpParser<CharT>::ScanForCaptures()
     }
     capture_count_ = capture_count;
     is_scanned_for_captures_ = true;
-}
-
-inline bool
-IsInRange(int value, int lower_limit, int higher_limit)
-{
-    MOZ_ASSERT(lower_limit <= higher_limit);
-    return static_cast<unsigned int>(value - lower_limit) <=
-           static_cast<unsigned int>(higher_limit - lower_limit);
-}
-
-inline bool
-IsDecimalDigit(widechar c)
-{
-    // ECMA-262, 3rd, 7.8.3 (p 16)
-    return IsInRange(c, '0', '9');
 }
 
 template <typename CharT>

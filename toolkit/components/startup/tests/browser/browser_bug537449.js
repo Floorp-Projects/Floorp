@@ -20,7 +20,7 @@ function test() {
   gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
   let browser = gBrowser.selectedBrowser;
 
-  whenBrowserLoaded(browser, function () {
+  whenBrowserLoaded(browser, function() {
     let seenDialog = false;
 
     // Cancel the prompt the first time.

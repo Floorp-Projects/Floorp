@@ -8,6 +8,7 @@
 #include "nsGkAtoms.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "nsContentUtils.h"
 // MouseEvent suppression in PP
 #include "nsContentList.h"
@@ -139,19 +140,18 @@ nsGfxButtonControlFrame::GetLabel(nsXPIDLString& aLabel)
 {
   // Get the text from the "value" property on our content if there is
   // one; otherwise set it to a default value (localized).
-  nsresult rv;
-  nsCOMPtr<nsIDOMHTMLInputElement> elt = do_QueryInterface(mContent);
+  dom::HTMLInputElement* elt = dom::HTMLInputElement::FromContent(mContent);
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::value) && elt) {
-    rv = elt->GetValue(aLabel);
+    elt->GetValue(aLabel, dom::CallerType::System);
   } else {
     // Generate localized label.
     // We can't make any assumption as to what the default would be
     // because the value is localized for non-english platforms, thus
     // it might not be the string "Reset", "Submit Query", or "Browse..."
+    nsresult rv;
     rv = GetDefaultLabel(aLabel);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Compress whitespace out of label if needed.
   if (!StyleText()->WhiteSpaceIsSignificant()) {

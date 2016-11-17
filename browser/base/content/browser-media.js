@@ -144,7 +144,7 @@ var gEMEHandler = {
     var box = gBrowser.getNotificationBox(browser);
     ["drmContentDisabled",
      "drmContentCDMInstalling"
-     ].forEach(function (value) {
+     ].forEach(function(value) {
         var notification = box.getNotificationWithValue(value);
         if (notification)
           box.removeNotification(notification);

@@ -106,46 +106,6 @@ protected:
   RefPtr<gl::GLContext> mGL;
 };
 
-/**
- * Reuse gl textures from a pool of textures that haven't yet been
- * used during the current frame.
- * All the textures that are not used at the end of a frame are
- * deleted.
- * This strategy seems to work well with gralloc textures because destroying
- * unused textures which are bound to gralloc buffers let drivers know that it
- * can unlock the gralloc buffers.
- */
-class PerFrameTexturePoolOGL : public CompositorTexturePoolOGL
-{
-public:
-  explicit PerFrameTexturePoolOGL(gl::GLContext* aGL)
-  : mTextureTarget(0) // zero is never a valid texture target
-  , mGL(aGL)
-  {}
-
-  virtual ~PerFrameTexturePoolOGL()
-  {
-    DestroyTextures();
-  }
-
-  virtual void Clear() override
-  {
-    DestroyTextures();
-  }
-
-  virtual GLuint GetTexture(GLenum aTarget, GLenum aUnit) override;
-
-  virtual void EndFrame() override;
-
-protected:
-  void DestroyTextures();
-
-  GLenum mTextureTarget;
-  RefPtr<gl::GLContext> mGL;
-  nsTArray<GLuint> mCreatedTextures;
-  nsTArray<GLuint> mUnusedTextures;
-};
-
 // If you want to make this class not final, first remove calls to virtual
 // methods (Destroy) that are made in the destructor.
 class CompositorOGL final : public Compositor
@@ -212,7 +172,6 @@ public:
                             const gfx::Rect& aVisibleRect) override;
 
   virtual void EndFrame() override;
-  virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) override;
 
   virtual bool SupportsPartialTextureUpdate() override;
 
@@ -249,19 +208,6 @@ public:
   virtual void Pause() override;
   virtual bool Resume() override;
 
-  virtual bool HasImageHostOverlays() override
-  {
-    return false;
-  }
-
-  virtual void AddImageHostOverlay(ImageHostOverlay* aOverlay) override
-  {
-  }
-
-  virtual void RemoveImageHostOverlay(ImageHostOverlay* aOverlay) override
-  {
-  }
-
   GLContext* gl() const { return mGLContext; }
   /**
    * Clear the program state. This must be called
@@ -276,9 +222,7 @@ public:
 
   /**
    * The compositor provides with temporary textures for use with direct
-   * textruing like gralloc texture.
-   * Doing so lets us use gralloc the way it has been designed to be used
-   * (see https://wiki.mozilla.org/Platform/GFX/Gralloc)
+   * textruing.
    */
   GLuint GetTemporaryTexture(GLenum aTarget, GLenum aUnit);
 

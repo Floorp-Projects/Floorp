@@ -18,7 +18,7 @@ add_task(function* setup() {
   Services.prefs.setCharPref(kApiKeyPref, "yandexValidKey");
   Services.prefs.setBoolPref(kShowUIPref, true);
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref(kEnginePref);
     Services.prefs.clearUserPref(kApiKeyPref);
     Services.prefs.clearUserPref(kShowUIPref);

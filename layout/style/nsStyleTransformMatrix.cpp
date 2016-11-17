@@ -264,15 +264,191 @@ ProcessMatrix3D(Matrix4x4& aMatrix,
   aMatrix = temp * aMatrix;
 }
 
-/* Helper function to process two matrices that we need to interpolate between */
-void
-ProcessInterpolateMatrix(Matrix4x4& aMatrix,
-                         const nsCSSValue::Array* aData,
-                         nsStyleContext* aContext,
-                         nsPresContext* aPresContext,
-                         RuleNodeCacheConditions& aConditions,
-                         TransformReferenceBox& aRefBox,
-                         bool* aContains3dTransform)
+// For accumulation for transform functions, |aOne| corresponds to |aB| and
+// |aTwo| corresponds to |aA| for StyleAnimationValue::Accumulate().
+class Accumulate {
+public:
+  template<typename T>
+  static T operate(const T& aOne, const T& aTwo, double aCoeff)
+  {
+    return aOne + aTwo * aCoeff;
+  }
+
+  static Point4D operateForPerspective(const Point4D& aOne,
+                                       const Point4D& aTwo,
+                                       double aCoeff)
+  {
+    return (aOne - Point4D(0, 0, 0, 1)) +
+           (aTwo - Point4D(0, 0, 0, 1)) * aCoeff +
+           Point4D(0, 0, 0, 1);
+  }
+  static Point3D operateForScale(const Point3D& aOne,
+                                 const Point3D& aTwo,
+                                 double aCoeff)
+  {
+    // For scale, the identify element is 1, see AddTransformScale in
+    // StyleAnimationValue.cpp.
+    return (aOne - Point3D(1, 1, 1)) +
+           (aTwo - Point3D(1, 1, 1)) * aCoeff +
+           Point3D(1, 1, 1);
+  }
+
+  static Matrix4x4 operateForRotate(const gfxQuaternion& aOne,
+                                    const gfxQuaternion& aTwo,
+                                    double aCoeff)
+  {
+    if (aCoeff == 0.0) {
+      return aOne.ToMatrix();
+    }
+
+    double theta = acos(mozilla::clamped(aTwo.w, -1.0, 1.0));
+    double scale = (theta != 0.0) ? 1.0 / sin(theta) : 0.0;
+    theta *= aCoeff;
+    scale *= sin(theta);
+
+    gfxQuaternion result = gfxQuaternion(scale * aTwo.x,
+                                         scale * aTwo.y,
+                                         scale * aTwo.z,
+                                         cos(theta)) * aOne;
+    return result.ToMatrix();
+  }
+};
+
+class Interpolate {
+public:
+  template<typename T>
+  static T operate(const T& aOne, const T& aTwo, double aCoeff)
+  {
+    MOZ_ASSERT(aCoeff >= 0.0 && aCoeff <= 1.0,
+               "Coefficient should be in the range [0.0, 1.0]");
+    return aOne + (aTwo - aOne) * aCoeff;
+  }
+
+  static Point4D operateForPerspective(const Point4D& aOne,
+                                       const Point4D& aTwo,
+                                       double aCoeff)
+  {
+    MOZ_ASSERT(aCoeff >= 0.0 && aCoeff <= 1.0,
+               "Coefficient should be in the range [0.0, 1.0]");
+    return aOne + (aTwo - aOne) * aCoeff;
+  }
+
+  static Point3D operateForScale(const Point3D& aOne,
+                                 const Point3D& aTwo,
+                                 double aCoeff)
+  {
+    MOZ_ASSERT(aCoeff >= 0.0 && aCoeff <= 1.0,
+               "Coefficient should be in the range [0.0, 1.0]");
+    return aOne + (aTwo - aOne) * aCoeff;
+  }
+
+  static Matrix4x4 operateForRotate(const gfxQuaternion& aOne,
+                                    const gfxQuaternion& aTwo,
+                                    double aCoeff)
+  {
+    MOZ_ASSERT(aCoeff >= 0.0 && aCoeff <= 1.0,
+               "Coefficient should be in the range [0.0, 1.0]");
+    return aOne.Slerp(aTwo, aCoeff).ToMatrix();
+  }
+};
+
+/**
+ * Calculate 2 matrices by decomposing them with Operator.
+ *
+ * @param aMatrix1   First matrix, using CSS pixel units.
+ * @param aMatrix2   Second matrix, using CSS pixel units.
+ * @param aProgress  Coefficient for the Operator.
+ */
+template <typename Operator>
+static Matrix4x4
+OperateTransformMatrix(const Matrix4x4 &aMatrix1,
+                       const Matrix4x4 &aMatrix2,
+                       double aProgress)
+{
+  // Decompose both matrices
+
+  // TODO: What do we do if one of these returns false (singular matrix)
+  Point3D scale1(1, 1, 1), translate1;
+  Point4D perspective1(0, 0, 0, 1);
+  gfxQuaternion rotate1;
+  nsStyleTransformMatrix::ShearArray shear1{0.0f, 0.0f, 0.0f};
+
+  Point3D scale2(1, 1, 1), translate2;
+  Point4D perspective2(0, 0, 0, 1);
+  gfxQuaternion rotate2;
+  nsStyleTransformMatrix::ShearArray shear2{0.0f, 0.0f, 0.0f};
+
+  Matrix matrix2d1, matrix2d2;
+  if (aMatrix1.Is2D(&matrix2d1) && aMatrix2.Is2D(&matrix2d2)) {
+    Decompose2DMatrix(matrix2d1, scale1, shear1, rotate1, translate1);
+    Decompose2DMatrix(matrix2d2, scale2, shear2, rotate2, translate2);
+  } else {
+    Decompose3DMatrix(aMatrix1, scale1, shear1,
+                      rotate1, translate1, perspective1);
+    Decompose3DMatrix(aMatrix2, scale2, shear2,
+                      rotate2, translate2, perspective2);
+  }
+
+  Matrix4x4 result;
+
+  // Operate each of the pieces in response to |Operator|.
+  Point4D perspective =
+    Operator::operateForPerspective(perspective1, perspective2, aProgress);
+  result.SetTransposedVector(3, perspective);
+
+  Point3D translate =
+    Operator::operate(translate1, translate2, aProgress);
+  result.PreTranslate(translate.x, translate.y, translate.z);
+
+  Matrix4x4 rotate = Operator::operateForRotate(rotate1, rotate2, aProgress);
+  if (!rotate.IsIdentity()) {
+    result = rotate * result;
+  }
+
+  // TODO: Would it be better to operate these as angles?
+  //       How do we convert back to angles?
+  float yzshear =
+    Operator::operate(shear1[ShearType::YZSHEAR],
+                      shear2[ShearType::YZSHEAR],
+                      aProgress);
+  if (yzshear != 0.0) {
+    result.SkewYZ(yzshear);
+  }
+
+  float xzshear =
+    Operator::operate(shear1[ShearType::XZSHEAR],
+                      shear2[ShearType::XZSHEAR],
+                      aProgress);
+  if (xzshear != 0.0) {
+    result.SkewXZ(xzshear);
+  }
+
+  float xyshear =
+    Operator::operate(shear1[ShearType::XYSHEAR],
+                      shear2[ShearType::XYSHEAR],
+                      aProgress);
+  if (xyshear != 0.0) {
+    result.SkewXY(xyshear);
+  }
+
+  Point3D scale =
+    Operator::operateForScale(scale1, scale2, aProgress);
+  if (scale != Point3D(1.0, 1.0, 1.0)) {
+    result.PreScale(scale.x, scale.y, scale.z);
+  }
+
+  return result;
+}
+
+template <typename Operator>
+static void
+ProcessMatrixOperator(Matrix4x4& aMatrix,
+                      const nsCSSValue::Array* aData,
+                      nsStyleContext* aContext,
+                      nsPresContext* aPresContext,
+                      RuleNodeCacheConditions& aConditions,
+                      TransformReferenceBox& aRefBox,
+                      bool* aContains3dTransform)
 {
   NS_PRECONDITION(aData->Count() == 4, "Invalid array!");
 
@@ -294,8 +470,36 @@ ProcessInterpolateMatrix(Matrix4x4& aMatrix,
   double progress = aData->Item(3).GetPercentValue();
 
   aMatrix =
-    StyleAnimationValue::InterpolateTransformMatrix(matrix1, matrix2, progress)
-    * aMatrix;
+    OperateTransformMatrix<Operator>(matrix1, matrix2, progress) * aMatrix;
+}
+
+/* Helper function to process two matrices that we need to interpolate between */
+void
+ProcessInterpolateMatrix(Matrix4x4& aMatrix,
+                         const nsCSSValue::Array* aData,
+                         nsStyleContext* aContext,
+                         nsPresContext* aPresContext,
+                         RuleNodeCacheConditions& aConditions,
+                         TransformReferenceBox& aRefBox,
+                         bool* aContains3dTransform)
+{
+  ProcessMatrixOperator<Interpolate>(aMatrix, aData, aContext, aPresContext,
+                                     aConditions, aRefBox,
+                                     aContains3dTransform);
+}
+
+void
+ProcessAccumulateMatrix(Matrix4x4& aMatrix,
+                        const nsCSSValue::Array* aData,
+                        nsStyleContext* aContext,
+                        nsPresContext* aPresContext,
+                        RuleNodeCacheConditions& aConditions,
+                        TransformReferenceBox& aRefBox,
+                        bool* aContains3dTransform)
+{
+  ProcessMatrixOperator<Accumulate>(aMatrix, aData, aContext, aPresContext,
+                                    aConditions, aRefBox,
+                                    aContains3dTransform);
 }
 
 /* Helper function to process a translatex function. */
@@ -661,9 +865,14 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
                     aConditions, aRefBox);
     break;
   case eCSSKeyword_interpolatematrix:
-    ProcessInterpolateMatrix(aMatrix, aData, aContext, aPresContext,
-                             aConditions, aRefBox,
-                             aContains3dTransform);
+    ProcessMatrixOperator<Interpolate>(aMatrix, aData, aContext, aPresContext,
+                                       aConditions, aRefBox,
+                                       aContains3dTransform);
+    break;
+  case eCSSKeyword_accumulatematrix:
+    ProcessMatrixOperator<Accumulate>(aMatrix, aData, aContext, aPresContext,
+                                      aConditions, aRefBox,
+                                      aContains3dTransform);
     break;
   case eCSSKeyword_perspective:
     *aContains3dTransform = true;

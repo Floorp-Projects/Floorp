@@ -109,7 +109,7 @@
             return;
           var stars = this.stars;
           for (let i = 0; i < stars.length; i++)
-            stars[i].setAttribute("on", i <= (aScore -1));
+            stars[i].setAttribute("on", i <= (aScore - 1));
         ]]></body>
       </method>
 

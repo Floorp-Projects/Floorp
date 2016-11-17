@@ -56,14 +56,14 @@ function sendActivationEvent(tab, callback, nullManifest) {
 }
 
 function activateProvider(domain, callback, nullManifest) {
-  let activationURL = domain+"/browser/browser/base/content/test/social/social_activate_basic.html"
+  let activationURL = domain + "/browser/browser/base/content/test/social/social_activate_basic.html"
   newTab(activationURL).then(tab => {
     sendActivationEvent(tab, callback, nullManifest);
   });
 }
 
 function activateIFrameProvider(domain, callback) {
-  let activationURL = domain+"/browser/browser/base/content/test/social/social_activate_iframe.html"
+  let activationURL = domain + "/browser/browser/base/content/test/social/social_activate_iframe.html"
   newTab(activationURL).then(tab => {
     sendActivationEvent(tab, callback, false);
   });
@@ -111,7 +111,7 @@ function clickAddonRemoveButton(tab, aCallback) {
 }
 
 function activateOneProvider(manifest, finishActivation, aCallback) {
-  info("activating provider "+manifest.name);
+  info("activating provider " + manifest.name);
   let panel = document.getElementById("servicesInstall-notification");
   BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown").then(() => {
     ok(!panel.hidden, "servicesInstall-notification panel opened");
@@ -164,7 +164,7 @@ var gProviders = [
 
 function test() {
   PopupNotifications.panel.setAttribute("animate", "false");
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     PopupNotifications.panel.removeAttribute("animate");
   });
   waitForExplicitFinish();

@@ -434,7 +434,7 @@ EdgeProfileMigrator.prototype.getLastUsedDate = function() {
   let dbPath = gEdgeDatabase.path;
   let cookieMigrator = MSMigrationUtils.getCookiesMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE);
   let cookiePaths = cookieMigrator._cookiesFolders.map(f => f.path);
-  let datePromises = [logFilePath, dbPath, ... cookiePaths].map(path => {
+  let datePromises = [logFilePath, dbPath, ...cookiePaths].map(path => {
     return OS.File.stat(path).catch(() => null).then(info => {
       return info ? info.lastModificationDate : 0;
     });
@@ -444,7 +444,7 @@ EdgeProfileMigrator.prototype.getLastUsedDate = function() {
     try {
       typedURLs = MSMigrationUtils.getTypedURLs(kEdgeRegistryRoot);
     } catch (ex) {}
-    let times = [0, ... typedURLs.values()];
+    let times = [0, ...typedURLs.values()];
     resolve(Math.max.apply(Math, times));
   }));
   return Promise.all(datePromises).then(dates => {

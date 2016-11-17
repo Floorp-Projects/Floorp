@@ -375,7 +375,7 @@ SkImageIsMask(const sk_sp<SkImage>& aImage)
 }
 
 static bool
-ExtractAlphaBitmap(sk_sp<SkImage> aImage, SkBitmap* aResultBitmap)
+ExtractAlphaBitmap(const sk_sp<SkImage>& aImage, SkBitmap* aResultBitmap)
 {
   SkImageInfo info = SkImageInfo::MakeA8(aImage->width(), aImage->height());
   SkBitmap bitmap;
@@ -1573,7 +1573,7 @@ DrawTargetSkia::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
   // is then we want similar storage to avoid losing fidelity (if and when this
   // DrawTarget is Snapshot()'ed, drawning a raster back into this DrawTarget
   // will lose fidelity).
-  if (mCanvas->imageInfo().colorType() != kUnknown_SkColorType) {
+  if (mCanvas->imageInfo().colorType() == kUnknown_SkColorType) {
     NS_WARNING("Not backed by pixels - we need to handle PDF backed SkCanvas");
   }
 #endif

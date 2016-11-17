@@ -14,7 +14,7 @@ InputListAutoComplete.prototype = {
   classID       : Components.ID("{bf1e01d0-953e-11df-981c-0800200c9a66}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIInputListAutoComplete]),
 
-  autoCompleteSearch : function (aUntrimmedSearchString, aField) {
+  autoCompleteSearch : function(aUntrimmedSearchString, aField) {
     let [values, labels] = this.getListSuggestions(aField);
     let searchResult = values.length > 0 ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
                                          : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
@@ -24,7 +24,7 @@ InputListAutoComplete.prototype = {
                                       values, labels, [], null);
   },
 
-  getListSuggestions : function (aField) {
+  getListSuggestions : function(aField) {
     let values = [];
     let labels = [];
 

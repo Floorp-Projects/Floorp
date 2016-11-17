@@ -109,7 +109,7 @@ struct JS_PUBLIC_API(ShortestPaths)
         }
 
         bool
-        operator()(Traversal& traversal, JS::ubi::Node origin, JS::ubi::Edge& edge,
+        operator()(Traversal& traversal, const JS::ubi::Node& origin, JS::ubi::Edge& edge,
                    BackEdge* back, bool first)
         {
             MOZ_ASSERT(back);

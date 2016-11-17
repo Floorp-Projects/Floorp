@@ -15,7 +15,7 @@ add_task(function* () {
       ok(acceptBtn.disabled, "Accept button is disabled");
 
       let promiseKeywordNotification = promiseBookmarksNotification(
-        "onItemChanged", (itemId, prop, isAnno, val) => prop == "keyword" && val =="kw");
+        "onItemChanged", (itemId, prop, isAnno, val) => prop == "keyword" && val == "kw");
 
       fillBookmarkTextField("editBMPanel_keywordField", "kw", dialogWin);
 

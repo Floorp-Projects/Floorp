@@ -133,7 +133,7 @@ this.BookmarkJSONUtils = Object.freeze({
    * @rejects JavaScript exception.
    * @deprecated passing an nsIFile is deprecated
    */
-  exportToFile: function BJU_exportToFile(aFilePath, aOptions={}) {
+  exportToFile: function BJU_exportToFile(aFilePath, aOptions = {}) {
     if (aFilePath instanceof Ci.nsIFile) {
       Deprecated.warning("Passing an nsIFile to BookmarksJSONUtils.exportToFile " +
                          "is deprecated. Please use an OS.File path string instead.",

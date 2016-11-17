@@ -1234,8 +1234,6 @@ ClientMultiTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& a
   // we use a coherent update rect that is intersected with the screen at the
   // time of issuing the draw command. This will paint faster but also potentially
   // make the progressive paint more visible to the user while scrolling.
-  // On B2G uploads are cheaper and we value coherency more, especially outside
-  // the browser, so we always use the entire user-visible area.
   IntRect coherentUpdateRect(RoundedOut(
 #ifdef MOZ_WIDGET_ANDROID
     transformedCompositionBounds->Intersect(aPaintData->mCompositionBounds)

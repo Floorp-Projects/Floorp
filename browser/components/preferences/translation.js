@@ -51,7 +51,7 @@ Tree.prototype = {
   get rowCount() {
     return this._data.length;
   },
-  getCellText: function (aRow, aColumn) {
+  getCellText: function(aRow, aColumn) {
     return this._data[aRow];
   },
   isSeparator: function(aIndex) {
@@ -140,7 +140,7 @@ var gTranslationExceptions = {
         if (!this._sites.length)
           return;
         let removed = this._sites.splice(0, this._sites.length);
-        this._siteTree.boxObject.rowCountChanged(0, - removed.length);
+        this._siteTree.boxObject.rowCountChanged(0, -removed.length);
       }
       else {
         let perm = aSubject.QueryInterface(Ci.nsIPermission);

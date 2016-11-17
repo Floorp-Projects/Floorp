@@ -23,7 +23,7 @@ function testVal(aExpected) {
 function test() {
   const prefname = "browser.urlbar.formatting.enabled";
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref(prefname);
     URLBarSetURI();
   });
@@ -108,7 +108,7 @@ function test() {
              "[1:2:3:4::255.255.255.255]",
              "[1:2:3:4:5::255.255.255.255]",
              "[1:2:3:4:5:6:255.255.255.255]"];
-  IPs.forEach(function (IP) {
+  IPs.forEach(function(IP) {
     testVal(IP);
     testVal(IP + "</file.ext>");
     testVal(IP + "<:666/file.ext>");

@@ -6,7 +6,6 @@
 
 #include "nsIContentParent.h"
 
-#include "mozilla/AppProcessChecker.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ContentParent.h"
@@ -122,11 +121,9 @@ nsIContentParent::AllocPBrowserParent(const TabId& aTabId,
                                       const IPCTabContext& aContext,
                                       const uint32_t& aChromeFlags,
                                       const ContentParentId& aCpId,
-                                      const bool& aIsForApp,
                                       const bool& aIsForBrowser)
 {
   Unused << aCpId;
-  Unused << aIsForApp;
   Unused << aIsForBrowser;
 
   if (!CanOpenBrowser(aContext)) {
@@ -219,16 +216,6 @@ nsIContentParent::RecvSyncMessage(const nsString& aMsg,
                                   const IPC::Principal& aPrincipal,
                                   nsTArray<ipc::StructuredCloneData>* aRetvals)
 {
-  // FIXME Permission check in Content process
-  nsIPrincipal* principal = aPrincipal;
-  if (IsContentParent()) {
-    ContentParent* parent = AsContentParent();
-    if (!ContentParent::IgnoreIPCPrincipal() &&
-        parent && principal && !AssertAppPrincipal(parent, principal)) {
-      return IPC_FAIL_NO_REASON(parent);
-    }
-  }
-
   RefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ipc::StructuredCloneData data;
@@ -248,16 +235,6 @@ nsIContentParent::RecvRpcMessage(const nsString& aMsg,
                                  const IPC::Principal& aPrincipal,
                                  nsTArray<ipc::StructuredCloneData>* aRetvals)
 {
-  // FIXME Permission check in Content process
-  nsIPrincipal* principal = aPrincipal;
-  if (IsContentParent()) {
-    ContentParent* parent = AsContentParent();
-    if (!ContentParent::IgnoreIPCPrincipal() &&
-        parent && principal && !AssertAppPrincipal(parent, principal)) {
-      return IPC_FAIL_NO_REASON(parent);
-    }
-  }
-
   RefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ipc::StructuredCloneData data;
@@ -302,16 +279,6 @@ nsIContentParent::RecvAsyncMessage(const nsString& aMsg,
                                    const IPC::Principal& aPrincipal,
                                    const ClonedMessageData& aData)
 {
-  // FIXME Permission check in Content process
-  nsIPrincipal* principal = aPrincipal;
-  if (IsContentParent()) {
-    ContentParent* parent = AsContentParent();
-    if (!ContentParent::IgnoreIPCPrincipal() &&
-        parent && principal && !AssertAppPrincipal(parent, principal)) {
-      return IPC_FAIL_NO_REASON(parent);
-    }
-  }
-
   RefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ipc::StructuredCloneData data;

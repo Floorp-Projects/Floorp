@@ -1849,15 +1849,6 @@ nsPluginHost::GetSpecialType(const nsACString & aMIMEType)
     return eSpecialType_Silverlight;
   }
 
-  if (aMIMEType.LowerCaseEqualsASCII("audio/x-pn-realaudio-plugin")) {
-    NS_WARNING("You are loading RealPlayer");
-    return eSpecialType_RealPlayer;
-  }
-
-  if (aMIMEType.LowerCaseEqualsASCII("application/pdf")) {
-    return eSpecialType_PDF;
-  }
-
   if (aMIMEType.LowerCaseEqualsASCII("application/vnd.unity")) {
     return eSpecialType_Unity;
   }
@@ -2539,39 +2530,6 @@ nsresult nsPluginHost::FindPlugins(bool aCreatePluginList, bool * aPluginsChange
     rv = mPrivateDirServiceProvider->GetPLIDDirectories(getter_AddRefs(dirList));
     if (NS_SUCCEEDED(rv)) {
       ScanPluginsDirectoryList(dirList, aCreatePluginList, &pluginschanged);
-
-      if (pluginschanged)
-        *aPluginsChanged = true;
-
-      // if we are just looking for possible changes,
-      // no need to proceed if changes are detected
-      if (!aCreatePluginList && *aPluginsChanged) {
-        NS_ITERATIVE_UNREF_LIST(RefPtr<nsPluginTag>, mCachedPlugins, mNext);
-        NS_ITERATIVE_UNREF_LIST(RefPtr<nsInvalidPluginTag>, mInvalidPlugins, mNext);
-        return NS_OK;
-      }
-    }
-  }
-
-
-  // Scan the installation paths of our popular plugins if the prefs are enabled
-
-  // This table controls the order of scanning
-  const char* const prefs[] = {NS_WIN_ACROBAT_SCAN_KEY,
-                               NS_WIN_QUICKTIME_SCAN_KEY,
-                               NS_WIN_WMP_SCAN_KEY};
-
-  uint32_t size = sizeof(prefs) / sizeof(prefs[0]);
-
-  for (uint32_t i = 0; i < size; i+=1) {
-    nsCOMPtr<nsIFile> dirToScan;
-    bool bExists;
-    if (NS_SUCCEEDED(dirService->Get(prefs[i], NS_GET_IID(nsIFile), getter_AddRefs(dirToScan))) &&
-        dirToScan &&
-        NS_SUCCEEDED(dirToScan->Exists(&bExists)) &&
-        bExists) {
-
-      ScanPluginsDirectory(dirToScan, aCreatePluginList, &pluginschanged);
 
       if (pluginschanged)
         *aPluginsChanged = true;

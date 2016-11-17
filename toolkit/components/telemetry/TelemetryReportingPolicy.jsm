@@ -95,7 +95,7 @@ NotifyPolicyRequest.prototype = Object.freeze({
   /**
    * Called when the user is notified of the policy.
    */
-  onUserNotifyComplete: function () {
+  onUserNotifyComplete: function() {
     return TelemetryReportingPolicyImpl._infobarShownCallback();
    },
 
@@ -105,7 +105,7 @@ NotifyPolicyRequest.prototype = Object.freeze({
    * @param error
    *        (Error) Explains what went wrong.
    */
-  onUserNotifyFailed: function (error) {
+  onUserNotifyFailed: function(error) {
     this._log.error("onUserNotifyFailed - " + error);
   },
 });
@@ -414,7 +414,7 @@ var TelemetryReportingPolicyImpl = {
 
     const isFirstRun = Preferences.get(PREF_FIRST_RUN, true);
     const delay =
-      isFirstRun ? NOTIFICATION_DELAY_FIRST_RUN_MSEC: NOTIFICATION_DELAY_NEXT_RUNS_MSEC;
+      isFirstRun ? NOTIFICATION_DELAY_FIRST_RUN_MSEC : NOTIFICATION_DELAY_NEXT_RUNS_MSEC;
 
     this._startupNotificationTimerId = Policy.setShowInfobarTimeout(
         // Calling |canUpload| eventually shows the infobar, if needed.

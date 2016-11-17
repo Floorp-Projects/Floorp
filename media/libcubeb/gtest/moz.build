@@ -1,0 +1,80 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+UNIFIED_SOURCES += [
+#  'test_duplex.cpp', # DISABLED: See bug 1314514.
+#  'test_record.cpp', # DISABLED: See bug 1314514.
+  'test_tone.cpp',
+  'test_utils.cpp'
+]
+
+if CONFIG['MOZ_PULSEAUDIO'] or CONFIG['OS_TARGET'] in ('Darwin', 'WINNT', 'Android'):
+  UNIFIED_SOURCES += [
+    'test_resampler.cpp',
+  ]
+
+if CONFIG['OS_TARGET'] != 'Android':
+  UNIFIED_SOURCES += [
+    'test_audio.cpp',
+    'test_latency.cpp',
+    'test_sanity.cpp'
+  ]
+
+LOCAL_INCLUDES += [
+    '../include',
+    '../src'
+]
+
+USE_LIBS += [
+    'cubeb',
+    'speex'
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    # On windows, the WASAPI backend needs the resampler we have in
+    # /media/libspeex_resampler, so we can't get away with just linking cubeb's
+    # .o
+    USE_LIBS += [
+        'cubeb',
+        'speex',
+    ]
+    OS_LIBS += [
+        'ole32'
+    ]
+else:
+    # Otherwise, we can just grab all the compiled .o and compile against that,
+    # linking the appriopriate libraries.
+    USE_LIBS += [
+        'cubeb',
+    ]
+    # Don't link gkmedias for it introduces dependencies on Android.
+    if CONFIG['OS_TARGET'] == 'Android':
+        USE_LIBS += [
+            'speex',
+        ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    OS_LIBS += [
+        '-framework AudioUnit',
+        '-framework CoreAudio',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
+    OS_LIBS += [
+      '-framework CoreFoundation',
+      '-framework AudioToolbox',
+    ]
+elif CONFIG['OS_TARGET'] == 'OpenBSD':
+    OS_LIBS += [
+        'sndio',
+    ]
+else:
+    OS_LIBS += CONFIG['MOZ_ALSA_LIBS']
+    OS_LIBS += CONFIG['MOZ_PULSEAUDIO_LIBS']
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']
+
+FINAL_LIBRARY = 'xul-gtest'

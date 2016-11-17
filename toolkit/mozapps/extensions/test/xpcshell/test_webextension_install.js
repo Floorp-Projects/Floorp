@@ -476,3 +476,76 @@ add_task(function* test_strict_min_max() {
   yield extension.unload();
   AddonManager.checkCompatibility = savedCheckCompatibilityValue;
 });
+
+// Check permissions prompt
+add_task(function* test_permissions() {
+  const manifest = {
+    name: "permissions test",
+    description: "permissions test",
+    manifest_version: 2,
+    version: "1.0",
+
+    permissions: ["tabs", "storage", "https://*.example.com/*", "<all_urls>", "experiments.test"],
+  };
+
+  let xpi = ExtensionTestCommon.generateXPI({manifest});
+
+  let install = yield new Promise(resolve => {
+    AddonManager.getInstallForFile(xpi, resolve);
+  });
+
+  let perminfo;
+  install._permHandler = info => {
+    perminfo = info;
+    return Promise.resolve();
+  };
+
+  yield promiseCompleteInstall(install);
+
+  notEqual(perminfo, undefined, "Permission handler was invoked");
+  equal(perminfo.existingAddon, null, "Permission info does not include an existing addon");
+  notEqual(perminfo.addon, null, "Permission info includes the new addon");
+  let perms = perminfo.addon.userPermissions;
+  deepEqual(perms.permissions, ["tabs", "storage"], "API permissions are correct");
+  deepEqual(perms.hosts, ["https://*.example.com/*", "<all_urls>"], "Host permissions are correct");
+  deepEqual(perms.apis, ["test"], "Experiments permissions are correct");
+
+  let addon = yield promiseAddonByID(perminfo.addon.id);
+  notEqual(addon, null, "Extension was installed");
+
+  addon.uninstall();
+  yield OS.File.remove(xpi.path);
+});
+
+// Check permissions prompt cancellation
+add_task(function* test_permissions() {
+  const manifest = {
+    name: "permissions test",
+    description: "permissions test",
+    manifest_version: 2,
+    version: "1.0",
+
+    permissions: ["webRequestBlocking"],
+  };
+
+  let xpi = ExtensionTestCommon.generateXPI({manifest});
+
+  let install = yield new Promise(resolve => {
+    AddonManager.getInstallForFile(xpi, resolve);
+  });
+
+  let perminfo;
+  install._permHandler = info => {
+    perminfo = info;
+    return Promise.reject();
+  };
+
+  yield promiseCompleteInstall(install);
+
+  notEqual(perminfo, undefined, "Permission handler was invoked");
+
+  let addon = yield promiseAddonByID(perminfo.addon.id);
+  equal(addon, null, "Extension was not installed");
+
+  yield OS.File.remove(xpi.path);
+});

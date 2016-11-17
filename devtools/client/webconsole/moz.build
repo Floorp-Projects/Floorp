@@ -18,5 +18,6 @@ DevToolsModules(
     'jsterm.js',
     'panel.js',
     'utils.js',
+    'webconsole-connection-proxy.js',
     'webconsole.js',
 )

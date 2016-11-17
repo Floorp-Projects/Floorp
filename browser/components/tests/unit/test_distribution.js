@@ -79,7 +79,7 @@ function run_test() {
   run_next_test();
 }
 
-do_register_cleanup(function () {
+do_register_cleanup(function() {
   // Remove the distribution dir, even if the test failed, otherwise all
   // next tests will use it.
   let distDir = gProfD.clone();

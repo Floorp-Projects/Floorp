@@ -12,17 +12,17 @@ Cu.import("resource://gre/modules/SimpleServiceDiscovery.jsm");
 
 
 var CastingApps = {
-  _sendEventToVideo: function (element, data) {
+  _sendEventToVideo: function(element, data) {
     let event = element.ownerDocument.createEvent("CustomEvent");
     event.initCustomEvent("media-videoCasting", false, true, JSON.stringify(data));
     element.dispatchEvent(event);
   },
 
-  makeURI: function (url, charset, baseURI) {
+  makeURI: function(url, charset, baseURI) {
     return Services.io.newURI(url, charset, baseURI);
   },
 
-  getVideo: function (element) {
+  getVideo: function(element) {
     if (!element) {
       return null;
     }
@@ -65,7 +65,7 @@ var CastingApps = {
     return null;
   },
 
-  sendVideoToService: function (videoElement, service) {
+  sendVideoToService: function(videoElement, service) {
     if (!service)
       return;
 
@@ -116,7 +116,7 @@ var CastingApps = {
     });
   },
 
-  getServicesForVideo: function (videoElement) {
+  getServicesForVideo: function(videoElement) {
     let video = this.getVideo(videoElement);
     if (!video) {
       return {};
@@ -130,12 +130,12 @@ var CastingApps = {
     return filteredServices;
   },
 
-  getServicesForMirroring: function () {
+  getServicesForMirroring: function() {
     return SimpleServiceDiscovery.services.filter(service => service.mirror);
   },
 
   // RemoteMedia callback API methods
-  onRemoteMediaStart: function (remoteMedia) {
+  onRemoteMediaStart: function(remoteMedia) {
     if (!this.session) {
       return;
     }
@@ -148,17 +148,17 @@ var CastingApps = {
     }
   },
 
-  onRemoteMediaStop: function (remoteMedia) {
+  onRemoteMediaStop: function(remoteMedia) {
   },
 
-  onRemoteMediaStatus: function (remoteMedia) {
+  onRemoteMediaStatus: function(remoteMedia) {
   },
 
-  allowableExtension: function (uri, extensions) {
+  allowableExtension: function(uri, extensions) {
     return (uri instanceof Ci.nsIURL) && extensions.indexOf(uri.fileExtension) != -1;
   },
 
-  allowableMimeType: function (type, types) {
+  allowableMimeType: function(type, types) {
     return types.indexOf(type) != -1;
   }
 };

@@ -24,14 +24,6 @@
 "filename": "MacOSX10.7.sdk.tar.bz2"
 },
 {
-"version": "cargo 0.13.0-nightly (eca9e15 2016-11-01) repack",
-"size": 3027932,
-"digest": "a5c99eeb12b3b9b49632c259c762e34ec13cf72dadf90a0608b8ab1dc66b36cb114c5b45f71d326e12d31d9e88a41b029e6a728ca64cef392c0a8d211c2fe191",
-"algorithm": "sha512",
-"filename": "cargo.tar.xz",
-"unpack": true
-},
-{
 "size": 167175,
 "digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
 "algorithm": "sha512",

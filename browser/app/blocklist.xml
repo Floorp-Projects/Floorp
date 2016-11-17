@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1479216129114" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1479324316851" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i988" id="{b12785f5-d8d0-4530-a3ea-5c4263b85bef}">
       <prefs/>
@@ -267,11 +267,11 @@
       <versionRange minVersion="1.6.160" maxVersion="1.6.160" severity="3"/>
       <versionRange minVersion="0" maxVersion="0.*" severity="3"/>
     </emItem>
-    <emItem blockID="i1210" id="auto-plugin-checker@jetpack">
+    <emItem blockID="i497" id="{872b5b88-9db5-4310-bdd0-ac189557e5f5}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
-    <emItem blockID="i497" id="{872b5b88-9db5-4310-bdd0-ac189557e5f5}">
+    <emItem blockID="i1210" id="auto-plugin-checker@jetpack">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
@@ -598,16 +598,16 @@
       </prefs>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
-    <emItem blockID="i400" id="{dd6b651f-dfb9-4142-b0bd-09912ad22674}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
     <emItem blockID="i1227" id="{A34CAF42-A3E3-11E5-945F-18C31D5D46B0}">
       <prefs>
         <pref>security.csp.enable</pref>
         <pref>security.fileuri.strict_origin_policy</pref>
         <pref>security.mixed_content.block_active_content</pref>
       </prefs>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i400" id="{dd6b651f-dfb9-4142-b0bd-09912ad22674}">
+      <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
     <emItem blockID="i11" id="yslow@yahoo-inc.com">
@@ -2102,6 +2102,11 @@
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="13.0.0.302" minVersion="13.0.0.302" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
+    <pluginItem blockID="p1420">
+      <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="23.0.0.205" minVersion="23.0.0.185" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
     <pluginItem blockID="p248">
       <match exp="Scorch\.plugin" name="filename"/>
       <versionRange maxVersion="6.2.0b88" minVersion="0" severity="1"/>
@@ -2150,6 +2155,11 @@
     <pluginItem blockID="p102">
       <match exp="npmozax\.dll" name="filename"/>
       <versionRange maxVersion="*" minVersion="0"/>
+    </pluginItem>
+    <pluginItem blockID="p1419" os="Linux">
+      <match exp="libflashplayer\.so" name="filename"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="11.2.202.643" minVersion="11.2.202.637" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="p80">
       <match exp="\(TM\)" name="name"/>

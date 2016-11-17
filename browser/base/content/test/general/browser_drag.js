@@ -35,7 +35,7 @@ function test()
   var tab = gBrowser.addTab("about:blank", {skipAnimation: true});
   var browser = gBrowser.getBrowserForTab(tab);
 
-  browser.addEventListener("load", function () {
+  browser.addEventListener("load", function() {
     is(browser.contentWindow.location, "http://mochi.test:8888/", "drop on tab");
     gBrowser.removeTab(tab);
     finish();

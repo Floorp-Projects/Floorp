@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_EventTarget_h_
 #define mozilla_dom_EventTarget_h_
 
+#include "mozilla/dom/BindingDeclarations.h"
 #include "nsIDOMEventTarget.h"
 #include "nsWrapperCache.h"
 #include "nsIAtom.h"
@@ -54,7 +55,7 @@ public:
                                    EventListener* aCallback,
                                    const EventListenerOptionsOrBoolean& aOptions,
                                    ErrorResult& aRv);
-  bool DispatchEvent(JSContext* aCx, Event& aEvent, ErrorResult& aRv);
+  bool DispatchEvent(Event& aEvent, CallerType aCallerType, ErrorResult& aRv);
 
   // Note, this takes the type in onfoo form!
   EventHandlerNonNull* GetEventHandler(const nsAString& aType)

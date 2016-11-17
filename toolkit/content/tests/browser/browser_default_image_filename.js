@@ -28,7 +28,7 @@ add_task(function* () {
     }
   });
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     MockFilePicker.cleanup();
   });
 

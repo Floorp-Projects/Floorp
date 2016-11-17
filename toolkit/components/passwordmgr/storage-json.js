@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
-this.LoginManagerStorage_json = function () {};
+this.LoginManagerStorage_json = function() {};
 
 this.LoginManagerStorage_json.prototype = {
   classID: Components.ID("{c00c432d-a0c9-46d7-bef6-9c45b4d07341}"),

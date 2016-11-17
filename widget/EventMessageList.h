@@ -426,9 +426,6 @@ NS_EVENT_MESSAGE(eMediaRecorderDataAvailable)
 NS_EVENT_MESSAGE(eMediaRecorderWarning)
 NS_EVENT_MESSAGE(eMediaRecorderStop)
 
-// SpeakerManager events
-NS_EVENT_MESSAGE(eSpeakerForcedChange)
-
 #ifdef MOZ_GAMEPAD
 // Gamepad input events
 NS_EVENT_MESSAGE(eGamepadButtonDown)

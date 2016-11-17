@@ -1481,7 +1481,7 @@ TypedArrayObject::protoFunctions[] = {
     JS_SELF_HOSTED_FN("forEach", "TypedArrayForEach", 1, 0),
     JS_SELF_HOSTED_FN("indexOf", "TypedArrayIndexOf", 2, 0),
     JS_SELF_HOSTED_FN("join", "TypedArrayJoin", 1, 0),
-    JS_SELF_HOSTED_FN("lastIndexOf", "TypedArrayLastIndexOf", 2, 0),
+    JS_SELF_HOSTED_FN("lastIndexOf", "TypedArrayLastIndexOf", 1, 0),
     JS_SELF_HOSTED_FN("map", "TypedArrayMap", 1, 0),
     JS_SELF_HOSTED_FN("reduce", "TypedArrayReduce", 1, 0),
     JS_SELF_HOSTED_FN("reduceRight", "TypedArrayReduceRight", 1, 0),

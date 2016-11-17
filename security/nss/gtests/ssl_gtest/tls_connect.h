@@ -247,6 +247,7 @@ class TlsKeyExchangeTest : public TlsConnectGeneric {
  protected:
   TlsExtensionCapture* groups_capture_;
   TlsExtensionCapture* shares_capture_;
+  TlsExtensionCapture* shares_capture2_;
   TlsInspectorRecordHandshakeMessage* capture_hrr_;
 
   void EnsureKeyShareSetup();
@@ -254,8 +255,15 @@ class TlsKeyExchangeTest : public TlsConnectGeneric {
   std::vector<SSLNamedGroup> GetGroupDetails(const DataBuffer& ext);
   std::vector<SSLNamedGroup> GetShareDetails(const DataBuffer& ext);
   void CheckKEXDetails(const std::vector<SSLNamedGroup>& expectedGroups,
+                       const std::vector<SSLNamedGroup>& expectedShares);
+  void CheckKEXDetails(const std::vector<SSLNamedGroup>& expectedGroups,
                        const std::vector<SSLNamedGroup>& expectedShares,
-                       bool expect_hrr = false);
+                       SSLNamedGroup expectedShare2);
+
+ private:
+  void CheckKEXDetails(const std::vector<SSLNamedGroup>& expectedGroups,
+                       const std::vector<SSLNamedGroup>& expectedShares,
+                       bool expect_hrr);
 };
 
 class TlsKeyExchangeTest13 : public TlsKeyExchangeTest {};

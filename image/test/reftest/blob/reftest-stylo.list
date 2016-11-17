@@ -1,8 +1,0 @@
-# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-# Blob URI tests 
-
-# Test that blob URIs don't get merged if they have different ref params.
-# (We run the test twice to check both cached and non-cached cases.)
-default-preferences pref(image.mozsamplesize.enabled,true)
-== blob-uri-with-ref-param.html blob-uri-with-ref-param.html
-== blob-uri-with-ref-param.html blob-uri-with-ref-param.html

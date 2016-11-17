@@ -7,7 +7,7 @@ const ALERT_SERVICE = Cc["@mozilla.org/alerts-service;1"]
                         .getService(Ci.nsIAlertsService)
                         .QueryInterface(Ci.nsIAlertsDoNotDisturb);
 
-function test () {
+function test() {
   waitForExplicitFinish();
 
   try {

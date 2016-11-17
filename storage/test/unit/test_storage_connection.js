@@ -273,7 +273,7 @@ add_task(function* test_close_fails_with_async_statement_ran() {
   Assert.throws(() => db.close(), /NS_ERROR_UNEXPECTED/);
 
   // Clean up after ourselves.
-  db.asyncClose(function () {
+  db.asyncClose(function() {
     // Reset gDBConn so that later tests will get a new connection object.
     gDBConn = null;
     deferred.resolve();
@@ -330,7 +330,7 @@ function* standardAsyncTest(promisedDB, name, shouldInit = false) {
   do_print("Extracting data");
   stmt = adb.createAsyncStatement("SELECT * FROM test");
   let found = false;
-  yield executeAsync(stmt, function (results) {
+  yield executeAsync(stmt, function(results) {
     do_print("Data has been extracted");
     for (let row = results.getNextRow(); row != null; row = results.getNextRow()) {
       if (row.getResultByName("name") == name) {
@@ -415,7 +415,7 @@ add_task(function* test_async_open_with_shared_cache() {
   do_print("Extracting data");
   stmt = adb.createAsyncStatement("SELECT * FROM test");
   let found = false;
-  yield executeAsync(stmt, function (results) {
+  yield executeAsync(stmt, function(results) {
     do_print("Data has been extracted");
     for (let row = results.getNextRow(); row != null; row = results.getNextRow()) {
       if (row.getResultByName("name") == "clockworker") {
@@ -468,7 +468,7 @@ add_task(function* test_clone_no_optional_param_async() {
   do_print("Extracting data from clone db");
   stmt = adb2.createAsyncStatement("SELECT * FROM test");
   let found = false;
-  yield executeAsync(stmt, function (results) {
+  yield executeAsync(stmt, function(results) {
     do_print("Data has been extracted");
     for (let row = results.getNextRow(); row != null; row = results.getNextRow()) {
       if (row.getResultByName("name") == "yoric") {
@@ -536,7 +536,7 @@ add_task(function* test_close_clone_fails() {
     "openDatabase",
     "openUnsharedDatabase",
   ];
-  calls.forEach(function (methodName) {
+  calls.forEach(function(methodName) {
     let db = getService()[methodName](getTestDB());
     db.close();
     expectError(Cr.NS_ERROR_NOT_INITIALIZED, () => db.clone());
@@ -559,9 +559,9 @@ add_task(function* test_clone_copies_functions() {
     "createFunction",
     "createAggregateFunction",
   ];
-  calls.forEach(function (methodName) {
-    [true, false].forEach(function (readOnly) {
-      functionMethods.forEach(function (functionMethod) {
+  calls.forEach(function(methodName) {
+    [true, false].forEach(function(readOnly) {
+      functionMethods.forEach(function(functionMethod) {
         let db1 = getService()[methodName](getTestDB());
         // Create a function for db1.
         db1[functionMethod](FUNC_NAME, 1, {
@@ -605,9 +605,9 @@ add_task(function* test_clone_copies_overridden_functions() {
     "createFunction",
     "createAggregateFunction",
   ];
-  calls.forEach(function (methodName) {
-    [true, false].forEach(function (readOnly) {
-      functionMethods.forEach(function (functionMethod) {
+  calls.forEach(function(methodName) {
+    [true, false].forEach(function(readOnly) {
+      functionMethods.forEach(function(functionMethod) {
         let db1 = getService()[methodName](getTestDB());
         // Create a function for db1.
         let func = new test_func();
@@ -642,14 +642,14 @@ add_task(function* test_clone_copies_pragmas() {
   let db1 = getService().openUnsharedDatabase(getTestDB());
 
   // Sanity check initial values are different from enforced ones.
-  PRAGMAS.forEach(function (pragma) {
+  PRAGMAS.forEach(function(pragma) {
     let stmt = db1.createStatement("PRAGMA " + pragma.name);
     do_check_true(stmt.executeStep());
     do_check_neq(pragma.value, stmt.getInt32(0));
     stmt.finalize();
   });
   // Execute pragmas.
-  PRAGMAS.forEach(function (pragma) {
+  PRAGMAS.forEach(function(pragma) {
     db1.executeSimpleSQL("PRAGMA " + pragma.name + " = " + pragma.value);
   });
 
@@ -657,7 +657,7 @@ add_task(function* test_clone_copies_pragmas() {
   do_check_true(db2.connectionReady);
 
   // Check cloned connection inherited pragma values.
-  PRAGMAS.forEach(function (pragma) {
+  PRAGMAS.forEach(function(pragma) {
     let stmt = db2.createStatement("PRAGMA " + pragma.name);
     do_check_true(stmt.executeStep());
     let validate = pragma.copied ? do_check_eq : do_check_neq;
@@ -684,14 +684,14 @@ add_task(function* test_readonly_clone_copies_pragmas() {
   let db1 = getService().openUnsharedDatabase(getTestDB());
 
   // Sanity check initial values are different from enforced ones.
-  PRAGMAS.forEach(function (pragma) {
+  PRAGMAS.forEach(function(pragma) {
     let stmt = db1.createStatement("PRAGMA " + pragma.name);
     do_check_true(stmt.executeStep());
     do_check_neq(pragma.value, stmt.getInt32(0));
     stmt.finalize();
   });
   // Execute pragmas.
-  PRAGMAS.forEach(function (pragma) {
+  PRAGMAS.forEach(function(pragma) {
     db1.executeSimpleSQL("PRAGMA " + pragma.name + " = " + pragma.value);
   });
 
@@ -699,7 +699,7 @@ add_task(function* test_readonly_clone_copies_pragmas() {
   do_check_true(db2.connectionReady);
 
   // Check cloned connection inherited pragma values.
-  PRAGMAS.forEach(function (pragma) {
+  PRAGMAS.forEach(function(pragma) {
     let stmt = db2.createStatement("PRAGMA " + pragma.name);
     do_check_true(stmt.executeStep());
     let validate = pragma.copied ? do_check_eq : do_check_neq;

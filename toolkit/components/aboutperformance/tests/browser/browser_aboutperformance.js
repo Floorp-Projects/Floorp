@@ -226,7 +226,7 @@ var promiseExpectContent = Task.async(function*(options) {
 // Test that we can find the title of a webpage in about:performance
 add_task(function* test_find_title() {
     for (let displayRecent of [true, false]) {
-      info(`Testing with autoRefresh, in ${displayRecent?"recent":"global"} mode`);
+      info(`Testing with autoRefresh, in ${displayRecent ? "recent" : "global"} mode`);
       let found = yield promiseExpectContent({autoRefresh: 100, displayRecent});
       Assert.ok(found, `The page title appears when about:performance is set to auto-refresh`);
     }
@@ -267,7 +267,7 @@ add_task(function* test_close_tab() {
 
         let {ok, found, error} = yield promiseContentResponse(gTabAboutPerformance.linkedBrowser, "aboutperformance-test:closeTab", {url: URL, autoRefresh: true, mode, displayRecent});
         Assert.ok(ok, `Message aboutperformance-test:closeTab was handled correctly ${JSON.stringify(error)}`);
-        info(`URL ${URL} ${found?"found":"hasn't been found yet"}`);
+        info(`URL ${URL} ${found ? "found" : "hasn't been found yet"}`);
         if (found) {
           break;
         }

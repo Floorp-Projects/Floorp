@@ -56,11 +56,11 @@ function test() {
   waitForExplicitFinish();
   // turn on logging for nsBlocklistService.js
   Services.prefs.setBoolPref("extensions.logging.enabled", true);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("extensions.logging.enabled");
   });
 
-  runSocialTests(tests, undefined, undefined, function () {
+  runSocialTests(tests, undefined, undefined, function() {
     resetBlocklist().then(finish); // restore to original pref
   });
 }

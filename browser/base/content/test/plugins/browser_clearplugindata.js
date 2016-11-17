@@ -34,7 +34,7 @@ function stored(needles) {
 }
 
 add_task(function* () {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
@@ -83,7 +83,7 @@ add_task(function* () {
 
   // Clear 20 seconds ago
   let now_uSec = Date.now() * 1000;
-  sanitizer.range = [now_uSec - 20*1000000, now_uSec];
+  sanitizer.range = [now_uSec - 20 * 1000000, now_uSec];
   yield sanitizer.sanitize();
 
   ok(stored(["bar.com", "qux.com"]), "Data stored for sites");
@@ -116,7 +116,7 @@ add_task(function* () {
   // NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED, which should result in us
   // clearing all data regardless of age.
   let now_uSec = Date.now() * 1000;
-  sanitizer.range = [now_uSec - 20*1000000, now_uSec];
+  sanitizer.range = [now_uSec - 20 * 1000000, now_uSec];
   yield sanitizer.sanitize();
 
   ok(!stored(null), "All data cleared");

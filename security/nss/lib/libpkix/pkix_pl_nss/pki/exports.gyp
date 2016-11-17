@@ -30,7 +30,7 @@
             'pkix_pl_publickey.h',
             'pkix_pl_x500name.h'
           ],
-          'destination': '<(nss_dist_dir)/private/<(module)'
+          'destination': '<(nss_private_dist_dir)/<(module)'
         }
       ]
     }

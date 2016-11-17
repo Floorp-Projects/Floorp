@@ -326,16 +326,16 @@ function TestProvider(getLinksFn) {
 }
 
 TestProvider.prototype = {
-  addObserver: function (observer) {
+  addObserver: function(observer) {
     this._observers.add(observer);
   },
-  notifyLinkChanged: function (link, index=-1, deleted=false) {
+  notifyLinkChanged: function(link, index = -1, deleted = false) {
     this._notifyObservers("onLinkChanged", link, index, deleted);
   },
-  notifyManyLinksChanged: function () {
+  notifyManyLinksChanged: function() {
     this._notifyObservers("onManyLinksChanged");
   },
-  _notifyObservers: function () {
+  _notifyObservers: function() {
     let observerMethodName = arguments[0];
     let args = Array.prototype.slice.call(arguments, 1);
     args.unshift(this);

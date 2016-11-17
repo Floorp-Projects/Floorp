@@ -27,12 +27,6 @@ function run_test() {
     // We finish in clean_up()
     do_test_pending();
 
-    try {
-        if (pb.getCharPref('dom.ipc.processPrelaunch.enabled')) {
-            dump('WARNING: Content process may already have launched, so this test may not be meaningful.');
-        }
-    } catch(e) { }
-
     initialValue = pb.getCharPref(kPrefName);
 
     test_user_setting();

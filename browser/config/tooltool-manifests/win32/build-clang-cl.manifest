@@ -14,14 +14,6 @@
 "unpack": true
 },
 {
-"version": "cargo 0.13.0-nightly (eca9e15 2016-11-01) repack",
-"size": 2214397,
-"digest": "4f378fc4178d72d9e0434fca3df342d9dd7619c7c524ec6aedeee78a19583f2a675dfc54224be87030d72a36cef77f997e5275fe1cebac065c38949fa464d842",
-"algorithm": "sha512",
-"filename": "cargo.tar.bz2",
-"unpack": true
-},
-{
 "size": 167175,
 "digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
 "algorithm": "sha512",
