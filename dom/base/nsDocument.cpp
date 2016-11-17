@@ -7075,19 +7075,6 @@ nsIDocument::GetDocumentURIObject() const
   return mChromeXHRDocURI;
 }
 
-
-// Returns "BackCompat" if we are in quirks mode, "CSS1Compat" if we are
-// in almost standards or full standards mode. See bug 105640.  This was
-// implemented to match MSIE's compatMode property.
-NS_IMETHODIMP
-nsDocument::GetCompatMode(nsAString& aCompatMode)
-{
-  nsString temp;
-  nsIDocument::GetCompatMode(temp);
-  aCompatMode = temp;
-  return NS_OK;
-}
-
 void
 nsIDocument::GetCompatMode(nsString& aCompatMode) const
 {
