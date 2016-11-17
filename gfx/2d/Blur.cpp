@@ -28,7 +28,7 @@ namespace gfx {
 /**
  * Helper function to process each row of the box blur.
  * It takes care of transposing the data on input or output depending
- * on whether intend a horizontal or vertical blur, and whether we're
+ * on whether we intend a horizontal or vertical blur, and whether we're
  * reading from the initial source or writing to the final destination.
  * It allows starting or ending anywhere within the row to accomodate
  * a skip rect.
@@ -52,7 +52,7 @@ BoxBlurRow(const uint8_t* aInput,
   const int32_t inputStep = aTransposeInput ? aStride : 1;
   const int32_t outputStep = aTransposeOutput ? aStride : 1;
 
-  // We need to sample aLeftLove pixels to the left and aRight pixels to
+  // We need to sample aLeftLobe pixels to the left and aRightLobe pixels to
   // the right of the current position, then average them. So this is
   // the size of the total width of this filter.
   const int32_t boxSize = aLeftLobe + aRightLobe + 1;
