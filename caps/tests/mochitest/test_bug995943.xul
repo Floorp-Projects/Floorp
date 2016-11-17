@@ -63,7 +63,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=995943
   }
 
   function pushPrefs(prefs) {
-    return SpecialPowers.pushPrefEnv({ set: prefs });
+    return new Promise(function(resolve) { SpecialPowers.pushPrefEnv({ set: prefs }, resolve); });
   }
 
   function popPrefs() {
