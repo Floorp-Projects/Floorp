@@ -150,7 +150,7 @@ SetupMachMemory(pid_t pid,
   if (pidIsParent) {
     gParentPid = pid;
   }
-  MemoryPorts* listen_ports = new MemoryPorts(listen_port_ack, listen_port);
+  auto* listen_ports = new MemoryPorts(listen_port_ack, listen_port);
   pthread_t thread;
   pthread_attr_t attr;
   pthread_attr_init(&attr);
@@ -249,8 +249,8 @@ GetMemoryPortsForPid(pid_t pid)
     // Create two receiving ports in this process to send to the parent. One will be used for
     // for listening for incoming memory to be shared, the other for getting the Handle of
     // memory we share to the other process.
-    ReceivePort* ports_in_receiver = new ReceivePort();
-    ReceivePort* ports_out_receiver = new ReceivePort();
+    auto* ports_in_receiver = new ReceivePort();
+    auto* ports_out_receiver = new ReceivePort();
     mach_port_t raw_ports_in_sender, raw_ports_out_sender;
     if (!RequestPorts(parent,
                       ports_in_receiver->GetPort(),
@@ -263,8 +263,8 @@ GetMemoryPortsForPid(pid_t pid)
     }
     // Our parent process sent us two ports, one is for sending new memory to, the other
     // is for replying with the Handle when we receive new memory.
-    MachPortSender* ports_in_sender = new MachPortSender(raw_ports_in_sender);
-    MachPortSender* ports_out_sender = new MachPortSender(raw_ports_out_sender);
+    auto* ports_in_sender = new MachPortSender(raw_ports_in_sender);
+    auto* ports_out_sender = new MachPortSender(raw_ports_out_sender);
     SetupMachMemory(pid,
                     ports_in_receiver,
                     ports_in_sender,
@@ -372,11 +372,11 @@ HandleGetPortsMessage(MachReceiveMessage* rmsg, MemoryPorts* ports)
       return;
     }
 
-    MachPortSender* ports_in_sender = new MachPortSender(rmsg->GetTranslatedPort(0));
-    MachPortSender* ports_out_sender = new MachPortSender(rmsg->GetTranslatedPort(1));
+    auto* ports_in_sender = new MachPortSender(rmsg->GetTranslatedPort(0));
+    auto* ports_out_sender = new MachPortSender(rmsg->GetTranslatedPort(1));
 
-    ReceivePort* ports_in_receiver = new ReceivePort();
-    ReceivePort* ports_out_receiver = new ReceivePort();
+    auto* ports_in_receiver = new ReceivePort();
+    auto* ports_out_receiver = new ReceivePort();
     if (SendReturnPortsMsg(ports->mSender, ports_in_receiver->GetPort(), ports_out_receiver->GetPort())) {
       SetupMachMemory(pid_pair->mRequester,
                       ports_out_receiver,
