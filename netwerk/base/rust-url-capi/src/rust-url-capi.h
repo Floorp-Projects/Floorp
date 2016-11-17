@@ -30,7 +30,6 @@ int32_t rusturl_has_fragment(rusturl_ptr url); // 1 true, 0 false, < 0 error
 int32_t rusturl_set_scheme(rusturl_ptr url, const char *scheme, size_t len);
 int32_t rusturl_set_username(rusturl_ptr url, const char *user, size_t len);
 int32_t rusturl_set_password(rusturl_ptr url, const char *pass, size_t len);
-int32_t rusturl_set_host_port(rusturl_ptr url, const char *hostport, size_t len);
 int32_t rusturl_set_host_and_port(rusturl_ptr url, const char *hostport, size_t len);
 int32_t rusturl_set_host(rusturl_ptr url, const char *host, size_t len);
 int32_t rusturl_set_port(rusturl_ptr url, const char *port, size_t len);
