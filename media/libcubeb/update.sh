@@ -59,4 +59,7 @@ else
 fi
 
 echo "Applying a patch on top of $version"
+patch -p1 < ./unresampled-frames.patch
+
+echo "Applying a patch on top of $version"
 patch -p1 < ./bug1302231_emergency_bailout.patch
