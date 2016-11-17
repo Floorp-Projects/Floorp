@@ -315,8 +315,8 @@ var shaders = gl.getAttachedShaders(standardProgram);
 shouldBe('shaders.length', '2');
 shouldBeTrue('shaders[0] == standardVert && shaders[1] == standardFrag || shaders[1] == standardVert && shaders[0] == standardFrag');
 wtu.glErrorShouldBe(gl, gl.NO_ERROR);
-shouldBeNull('gl.getAttachedShaders(null)');
-wtu.glErrorShouldBe(gl, gl.INVALID_VALUE);
+shouldThrow('gl.getAttachedShaders(null)');
+wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 shouldThrow('gl.getAttachedShaders(standardVert)');
 wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
@@ -729,6 +729,8 @@ debug("Test cases where name == 0");
 gl.deleteTexture(texture);
 shouldBe('gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)', 'gl.NONE');
 gl.deleteRenderbuffer(renderbuffer);
+gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION);
 shouldBe('gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)', 'gl.NONE');
 gl.deleteBuffer(buffer);
 shouldBeNull('gl.getVertexAttrib(1, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING)');
@@ -738,8 +740,6 @@ if (contextVersion > 1) {
     debug("");
     debug("Test getInternalformatParameter")
 
-    gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
-    wtu.glErrorShouldBe(gl, gl.NO_ERROR);
     shouldBeNonNull('gl.getInternalformatParameter(gl.RENDERBUFFER, gl.R32I, gl.SAMPLES)');
     wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
@@ -859,7 +859,7 @@ if (contextVersion > 1) {
         "pname",
         validArrayForSamplerParameter,
         function(pname) {
-	    return gl.getSamplerParameter(sampler, pname);
+            return gl.getSamplerParameter(sampler, pname);
     });
 
     debug("");
@@ -904,16 +904,16 @@ if (contextVersion > 1) {
     // Queries' results are tested elsewhere in the conformance suite. It's complicated
     // to wait for this query's result to become available and verify it.
     var validArrayForPname = new Array(
-	gl.QUERY_RESULT,
-	gl.QUERY_RESULT_AVAILABLE
+        gl.QUERY_RESULT,
+        gl.QUERY_RESULT_AVAILABLE
     );
     testInvalidArgument(
-	"getQueryParameter",
-	"pname",
-	validArrayForPname,
-	function(pname) {
-	    return gl.getQueryParameter(query, pname);
-	}
+        "getQueryParameter",
+        "pname",
+        validArrayForPname,
+        function(pname) {
+            return gl.getQueryParameter(query, pname);
+        }
     );
 
     debug("");
@@ -1003,11 +1003,11 @@ if (contextVersion > 1) {
         gl.UNIFORM_IS_ROW_MAJOR
     );
     testInvalidArgument(
-	"getActiveUniforms",
-	"pname",
-	validArrayForPname,
-	function(pname) {
-	    return gl.getActiveUniforms(program, uniformIndices, pname);
+        "getActiveUniforms",
+        "pname",
+        validArrayForPname,
+        function(pname) {
+            return gl.getActiveUniforms(program, uniformIndices, pname);
         }
     );
 
@@ -1070,20 +1070,20 @@ if (contextVersion > 1) {
         testFailed("expected value >= 0" + " actual value for UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES for uniform index[" + i + "]:" + indices[i]);
     }
     var validArrayForPname = new Array(
-	gl.UNIFORM_BLOCK_BINDING,
-	gl.UNIFORM_BLOCK_DATA_SIZE,
-	gl.UNIFORM_BLOCK_ACTIVE_UNIFORMS,
-	gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES,
-	gl.UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER,
-	gl.UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER
+        gl.UNIFORM_BLOCK_BINDING,
+        gl.UNIFORM_BLOCK_DATA_SIZE,
+        gl.UNIFORM_BLOCK_ACTIVE_UNIFORMS,
+        gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES,
+        gl.UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER,
+        gl.UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER
     );
     testInvalidArgument(
-	"getActiveUniformBlockParameter",
-	"pname",
-	validArrayForPname,
-	function(pname) {
-	    return gl.getActiveUniformBlockParameter(program, 0, pname);
-	}
+        "getActiveUniformBlockParameter",
+        "pname",
+        validArrayForPname,
+        function(pname) {
+            return gl.getActiveUniformBlockParameter(program, 0, pname);
+        }
     );
 }
 
