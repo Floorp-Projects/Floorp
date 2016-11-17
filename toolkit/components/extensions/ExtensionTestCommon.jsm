@@ -132,11 +132,8 @@ class MockExtension {
   }
 
   cleanupGeneratedFile() {
-    return this._extensionPromise.then(extension => {
-      return extension.broadcast("Extension:FlushJarCache", {path: this.file.path});
-    }).then(() => {
-      return OS.File.remove(this.file.path);
-    });
+    flushJarCache(this.file);
+    return OS.File.remove(this.file.path);
   }
 }
 

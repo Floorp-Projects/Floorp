@@ -65,17 +65,11 @@ class TestMetadata(object):
         for path, tests in test_data.items():
             for metadata in tests:
                 if defaults:
-                    defaults_manifests = [metadata['manifest']]
-
-                    ancestor_manifest = metadata.get('ancestor-manifest')
-                    if ancestor_manifest:
-                        defaults_manifests.append(ancestor_manifest)
-
-                    for manifest in defaults_manifests:
-                        manifest_defaults = defaults.get(manifest)
-                        if manifest_defaults:
-                            metadata = manifestparser.combine_fields(manifest_defaults,
-                                                                     metadata)
+                    manifest = metadata['manifest']
+                    manifest_defaults = defaults.get(manifest)
+                    if manifest_defaults:
+                        metadata = manifestparser.combine_fields(manifest_defaults,
+                                                                 metadata)
                 self._tests_by_path[path].append(metadata)
                 self._test_dirs.add(os.path.dirname(path))
                 flavor = metadata.get('flavor')
