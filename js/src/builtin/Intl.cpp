@@ -768,42 +768,54 @@ static const JSFunctionSpec collator_methods[] = {
 };
 
 /**
- * Collator constructor.
- * Spec: ECMAScript Internationalization API Specification, 10.1
+ * 10.1.2 Intl.Collator([ locales [, options]])
+ *
+ * ES2017 Intl draft rev 94045d234762ad107a3d09bb6f7381a65f1a2f9b
  */
 static bool
 Collator(JSContext* cx, const CallArgs& args, bool construct)
 {
     RootedObject obj(cx);
 
+    // We're following ECMA-402 1st Edition when Collator is called because of
+    // backward compatibility issues.
+    // See https://github.com/tc39/ecma402/issues/57
     if (!construct) {
-        // 10.1.2.1 step 3
+        // ES Intl 1st ed., 10.1.2.1 step 3
         JSObject* intl = cx->global()->getOrCreateIntlObject(cx);
         if (!intl)
             return false;
         RootedValue self(cx, args.thisv());
         if (!self.isUndefined() && (!self.isObject() || self.toObject() != *intl)) {
-            // 10.1.2.1 step 4
+            // ES Intl 1st ed., 10.1.2.1 step 4
             obj = ToObject(cx, self);
             if (!obj)
                 return false;
 
-            // 10.1.2.1 step 5
+            // ES Intl 1st ed., 10.1.2.1 step 5
             bool extensible;
             if (!IsExtensible(cx, obj, &extensible))
                 return false;
             if (!extensible)
                 return Throw(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE);
         } else {
-            // 10.1.2.1 step 3.a
+            // ES Intl 1st ed., 10.1.2.1 step 3.a
             construct = true;
         }
     }
+
     if (construct) {
-        // 10.1.3.1 paragraph 2
-        RootedObject proto(cx, cx->global()->getOrCreateCollatorPrototype(cx));
-        if (!proto)
+        // Steps 2-5 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
+        RootedObject proto(cx);
+        if (args.isConstructing() && !GetPrototypeFromCallableConstructor(cx, args, &proto))
             return false;
+
+        if (!proto) {
+            proto = cx->global()->getOrCreateCollatorPrototype(cx);
+            if (!proto)
+                return false;
+        }
+
         obj = NewObjectWithGivenProto(cx, &CollatorClass, proto);
         if (!obj)
             return false;
@@ -811,15 +823,13 @@ Collator(JSContext* cx, const CallArgs& args, bool construct)
         obj->as<NativeObject>().setReservedSlot(UCOLLATOR_SLOT, PrivateValue(nullptr));
     }
 
-    // 10.1.2.1 steps 1 and 2; 10.1.3.1 steps 1 and 2
     RootedValue locales(cx, args.length() > 0 ? args[0] : UndefinedValue());
     RootedValue options(cx, args.length() > 1 ? args[1] : UndefinedValue());
 
-    // 10.1.2.1 step 6; 10.1.3.1 step 3
+    // Step 6.
     if (!IntlInitialize(cx, obj, cx->names().InitializeCollator, locales, options))
         return false;
 
-    // 10.1.2.1 steps 3.a and 7
     args.rval().setObject(*obj);
     return true;
 }
@@ -836,6 +846,7 @@ js::intl_Collator(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(!args.isConstructing());
     // intl_Collator is an intrinsic for self-hosted JavaScript, so it cannot
     // be used with "new", but it still has to be treated as a constructor.
     return Collator(cx, args, true);
@@ -1260,42 +1271,54 @@ static const JSFunctionSpec numberFormat_methods[] = {
 };
 
 /**
- * NumberFormat constructor.
- * Spec: ECMAScript Internationalization API Specification, 11.1
+ * 11.2.1 Intl.NumberFormat([ locales [, options]])
+ *
+ * ES2017 Intl draft rev 94045d234762ad107a3d09bb6f7381a65f1a2f9b
  */
 static bool
 NumberFormat(JSContext* cx, const CallArgs& args, bool construct)
 {
     RootedObject obj(cx);
 
+    // We're following ECMA-402 1st Edition when NumberFormat is called
+    // because of backward compatibility issues.
+    // See https://github.com/tc39/ecma402/issues/57
     if (!construct) {
-        // 11.1.2.1 step 3
+        // ES Intl 1st ed., 11.1.2.1 step 3
         JSObject* intl = cx->global()->getOrCreateIntlObject(cx);
         if (!intl)
             return false;
         RootedValue self(cx, args.thisv());
         if (!self.isUndefined() && (!self.isObject() || self.toObject() != *intl)) {
-            // 11.1.2.1 step 4
+            // ES Intl 1st ed., 11.1.2.1 step 4
             obj = ToObject(cx, self);
             if (!obj)
                 return false;
 
-            // 11.1.2.1 step 5
+            // ES Intl 1st ed., 11.1.2.1 step 5
             bool extensible;
             if (!IsExtensible(cx, obj, &extensible))
                 return false;
             if (!extensible)
                 return Throw(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE);
         } else {
-            // 11.1.2.1 step 3.a
+            // ES Intl 1st ed., 11.1.2.1 step 3.a
             construct = true;
         }
     }
+
     if (construct) {
-        // 11.1.3.1 paragraph 2
-        RootedObject proto(cx, cx->global()->getOrCreateNumberFormatPrototype(cx));
-        if (!proto)
+        // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
+        RootedObject proto(cx);
+        if (args.isConstructing() && !GetPrototypeFromCallableConstructor(cx, args, &proto))
             return false;
+
+        if (!proto) {
+            proto = cx->global()->getOrCreateNumberFormatPrototype(cx);
+            if (!proto)
+                return false;
+        }
+
         obj = NewObjectWithGivenProto(cx, &NumberFormatClass, proto);
         if (!obj)
             return false;
@@ -1303,15 +1326,13 @@ NumberFormat(JSContext* cx, const CallArgs& args, bool construct)
         obj->as<NativeObject>().setReservedSlot(UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
     }
 
-    // 11.1.2.1 steps 1 and 2; 11.1.3.1 steps 1 and 2
     RootedValue locales(cx, args.length() > 0 ? args[0] : UndefinedValue());
     RootedValue options(cx, args.length() > 1 ? args[1] : UndefinedValue());
 
-    // 11.1.2.1 step 6; 11.1.3.1 step 3
+    // Step 3.
     if (!IntlInitialize(cx, obj, cx->names().InitializeNumberFormat, locales, options))
         return false;
 
-    // 11.1.2.1 steps 3.a and 7
     args.rval().setObject(*obj);
     return true;
 }
@@ -1328,6 +1349,7 @@ js::intl_NumberFormat(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(!args.isConstructing());
     // intl_NumberFormat is an intrinsic for self-hosted JavaScript, so it
     // cannot be used with "new", but it still has to be treated as a
     // constructor.
@@ -1728,42 +1750,54 @@ static const JSFunctionSpec dateTimeFormat_methods[] = {
 };
 
 /**
- * DateTimeFormat constructor.
- * Spec: ECMAScript Internationalization API Specification, 12.1
+ * 12.2.1 Intl.DateTimeFormat([ locales [, options]])
+ *
+ * ES2017 Intl draft rev 94045d234762ad107a3d09bb6f7381a65f1a2f9b
  */
 static bool
 DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct)
 {
     RootedObject obj(cx);
 
+    // We're following ECMA-402 1st Edition when DateTimeFormat is called
+    // because of backward compatibility issues.
+    // See https://github.com/tc39/ecma402/issues/57
     if (!construct) {
-        // 12.1.2.1 step 3
+        // ES Intl 1st ed., 12.1.2.1 step 3
         JSObject* intl = cx->global()->getOrCreateIntlObject(cx);
         if (!intl)
             return false;
         RootedValue self(cx, args.thisv());
         if (!self.isUndefined() && (!self.isObject() || self.toObject() != *intl)) {
-            // 12.1.2.1 step 4
+            // ES Intl 1st ed., 12.1.2.1 step 4
             obj = ToObject(cx, self);
             if (!obj)
                 return false;
 
-            // 12.1.2.1 step 5
+            // ES Intl 1st ed., 12.1.2.1 step 5
             bool extensible;
             if (!IsExtensible(cx, obj, &extensible))
                 return false;
             if (!extensible)
                 return Throw(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE);
         } else {
-            // 12.1.2.1 step 3.a
+            // ES Intl 1st ed., 12.1.2.1 step 3.a
             construct = true;
         }
     }
+
     if (construct) {
-        // 12.1.3.1 paragraph 2
-        RootedObject proto(cx, cx->global()->getOrCreateDateTimeFormatPrototype(cx));
-        if (!proto)
+        // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
+        RootedObject proto(cx);
+        if (args.isConstructing() && !GetPrototypeFromCallableConstructor(cx, args, &proto))
             return false;
+
+        if (!proto) {
+            proto = cx->global()->getOrCreateDateTimeFormatPrototype(cx);
+            if (!proto)
+                return false;
+        }
+
         obj = NewObjectWithGivenProto(cx, &DateTimeFormatClass, proto);
         if (!obj)
             return false;
@@ -1771,15 +1805,13 @@ DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct)
         obj->as<NativeObject>().setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(nullptr));
     }
 
-    // 12.1.2.1 steps 1 and 2; 12.1.3.1 steps 1 and 2
     RootedValue locales(cx, args.length() > 0 ? args[0] : UndefinedValue());
     RootedValue options(cx, args.length() > 1 ? args[1] : UndefinedValue());
 
-    // 12.1.2.1 step 6; 12.1.3.1 step 3
+    // Step 3.
     if (!IntlInitialize(cx, obj, cx->names().InitializeDateTimeFormat, locales, options))
         return false;
 
-    // 12.1.2.1 steps 3.a and 7
     args.rval().setObject(*obj);
     return true;
 }
@@ -1796,6 +1828,7 @@ js::intl_DateTimeFormat(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(!args.isConstructing());
     // intl_DateTimeFormat is an intrinsic for self-hosted JavaScript, so it
     // cannot be used with "new", but it still has to be treated as a
     // constructor.
