@@ -294,8 +294,10 @@ CodeGeneratorX86Shared::visitWasmStackArg(LWasmStackArg* ins)
     } else {
         switch (mir->input()->type()) {
           case MIRType::Double:
-          case MIRType::Float32:
             masm.storeDouble(ToFloatRegister(ins->arg()), dst);
+            return;
+          case MIRType::Float32:
+            masm.storeFloat32(ToFloatRegister(ins->arg()), dst);
             return;
           // StackPointer is SIMD-aligned and ABIArgGenerator guarantees
           // stack offsets are SIMD-aligned.
