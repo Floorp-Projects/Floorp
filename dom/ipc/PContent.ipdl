@@ -532,11 +532,6 @@ child:
                   nsCString ID, nsCString vendor);
 
     /**
-     * Send the remote type associated with the content process.
-     */
-    async RemoteType(nsString aRemoteType);
-
-    /**
      * Send ServiceWorkerRegistrationData to child process.
      */
     async InitServiceWorkers(ServiceWorkerConfiguration aConfig);
