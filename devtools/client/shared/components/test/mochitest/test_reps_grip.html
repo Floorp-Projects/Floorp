@@ -321,14 +321,13 @@ window.onload = Task.async(function* () {
 
     const defaultOutput = `Object { p0: "0", p1: "1", p2: "2", 98 more… }`;
 
-    // Generate string with 100 properties, which is the max limit
-    // for 'long' mode.
-    let props = "";
-    for (let i = 0; i < 100; i++) {
-      props += "p" + i + ": \"" + i + "\", ";
+    // Generate string with 10 properties, which is the max limit for 'long' mode.
+    let props = [];
+    for (let i = 0; i < 10; i++) {
+      props.push(`p${i}: "${i}"`);
     }
 
-    const longOutput = `Object { ${props}1 more… }`;
+    const longOutput = `Object { ${props.join(", ")}, 91 more… }`;
 
     const modeTests = [
       {
