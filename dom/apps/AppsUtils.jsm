@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "appsService",
 // Shared code for AppsServiceChild.jsm, Webapps.jsm and Webapps.js
 
 this.EXPORTED_SYMBOLS =
-  ["AppsUtils", "ManifestHelper", "isAbsoluteURI", "mozIApplication"];
+  ["AppsUtils", "ManifestHelper", "isAbsoluteURI"];
 
 function debug(s) {
   //dump("-*- AppsUtils.jsm: " + s + "\n");
@@ -37,46 +37,6 @@ this.isAbsoluteURI = function(aURI) {
   let bar = Services.io.newURI("http://bar", null, null);
   return Services.io.newURI(aURI, null, foo).prePath != foo.prePath ||
          Services.io.newURI(aURI, null, bar).prePath != bar.prePath;
-}
-
-this.mozIApplication = function(aApp) {
-  _setAppProperties(this, aApp);
-}
-
-mozIApplication.prototype = {
-  hasPermission: function(aPermission) {
-    // This helper checks an URI inside |aApp|'s origin and part of |aApp| has a
-    // specific permission. It is not checking if browsers inside |aApp| have such
-    // permission.
-    let perm = Services.perms.testExactPermissionFromPrincipal(this.principal,
-                                                               aPermission);
-    return (perm === Ci.nsIPermissionManager.ALLOW_ACTION);
-  },
-
-  get principal() {
-    if (this._principal) {
-      return this._principal;
-    }
-
-    this._principal = null;
-
-    try {
-      this._principal = Services.scriptSecurityManager.createCodebasePrincipal(
-        Services.io.newURI(this.origin, null, null),
-        {appId: this.localId});
-    } catch(e) {
-      dump("Could not create app principal " + e + "\n");
-    }
-
-    return this._principal;
-  },
-
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.mozIApplication) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
 }
 
 function _setAppProperties(aObj, aApp) {
@@ -220,21 +180,6 @@ this.AppsUtils = {
     return aPagePath.substr(pathPos, pathLen);
   },
 
-  getAppByManifestURL: function getAppByManifestURL(aApps, aManifestURL) {
-    debug("getAppByManifestURL " + aManifestURL);
-    // This could be O(1) if |webapps| was a dictionary indexed on manifestURL
-    // which should be the unique app identifier.
-    // It's currently O(n).
-    for (let id in aApps) {
-      let app = aApps[id];
-      if (app.manifestURL == aManifestURL) {
-        return new mozIApplication(app);
-      }
-    }
-
-    return null;
-  },
-
   getManifestFor: function getManifestFor(aManifestURL) {
     debug("getManifestFor(" + aManifestURL + ")");
     return DOMApplicationRegistry.getManifestFor(aManifestURL);
@@ -260,18 +205,6 @@ this.AppsUtils = {
     }
 
     return Ci.nsIScriptSecurityManager.NO_APP_ID;
-  },
-
-  getAppByLocalId: function getAppByLocalId(aApps, aLocalId) {
-    debug("getAppByLocalId " + aLocalId);
-    for (let id in aApps) {
-      let app = aApps[id];
-      if (app.localId == aLocalId) {
-        return new mozIApplication(app);
-      }
-    }
-
-    return null;
   },
 
   getManifestURLByLocalId: function getManifestURLByLocalId(aApps, aLocalId) {

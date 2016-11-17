@@ -37,11 +37,6 @@ AppsService.prototype = {
             localId == Ci.nsIScriptSecurityManager.UNKNOWN_APP_ID);
   },
 
-  getAppByManifestURL: function getAppByManifestURL(aManifestURL) {
-    debug("GetAppByManifestURL( " + aManifestURL + " )");
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
-
   getManifestFor: function getManifestFor(aManifestURL) {
     debug("getManifestFor(" + aManifestURL + ")");
     if (this.inParent) {
@@ -59,14 +54,6 @@ AppsService.prototype = {
 
   getAppLocalIdByStoreId: function getAppLocalIdByStoreId(aStoreId) {
     debug("getAppLocalIdByStoreId( " + aStoreId + " )");
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
-
-  getAppByLocalId: function getAppByLocalId(aLocalId) {
-    debug("getAppByLocalId( " + aLocalId + " )");
-    if (this.isInvalidId(aLocalId)) {
-      return null;
-    }
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
