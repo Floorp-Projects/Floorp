@@ -95,7 +95,7 @@ mochitest:
     instance-size: xlarge
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-15/debug: 26
+            android-4.3-arm7-api-15/debug: 32
             default: 20
     loopback-video: true
     e10s: false
