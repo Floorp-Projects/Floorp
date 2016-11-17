@@ -275,6 +275,23 @@ CustomElementRegistry::LookupCustomElementDefinition(const nsAString& aLocalName
   return nullptr;
 }
 
+CustomElementDefinition*
+CustomElementRegistry::LookupCustomElementDefinition(JSContext* aCx,
+                                                     JSObject* aConstructor) const
+{
+  JS::Rooted<JSObject*> constructor(aCx, js::CheckedUnwrap(aConstructor));
+
+  const auto& ptr = mConstructors.lookup(constructor);
+  if (!ptr) {
+    return nullptr;
+  }
+
+  CustomElementDefinition* definition = mCustomDefinitions.Get(ptr->value());
+  MOZ_ASSERT(definition, "Definition must be found in mCustomDefinitions");
+
+  return definition;
+}
+
 void
 CustomElementRegistry::RegisterUnresolvedElement(Element* aElement, nsIAtom* aTypeName)
 {
