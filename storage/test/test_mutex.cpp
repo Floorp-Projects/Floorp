@@ -22,11 +22,11 @@ test_AutoLock()
     SQLITE_MUTEX_FAST,
     SQLITE_MUTEX_RECURSIVE,
   };
-  for (size_t i = 0; i < ArrayLength(lockTypes); i++) {
+  for (int lockType : lockTypes) {
     // Get our test mutex (we have to allocate a SQLite mutex of the right type
     // too!).
     SQLiteMutex mutex("TestMutex");
-    sqlite3_mutex *inner = sqlite3_mutex_alloc(lockTypes[i]);
+    sqlite3_mutex *inner = sqlite3_mutex_alloc(lockType);
     do_check_true(inner);
     mutex.initWithMutex(inner);
 
@@ -50,11 +50,11 @@ test_AutoUnlock()
     SQLITE_MUTEX_FAST,
     SQLITE_MUTEX_RECURSIVE,
   };
-  for (size_t i = 0; i < ArrayLength(lockTypes); i++) {
+  for (int lockType : lockTypes) {
     // Get our test mutex (we have to allocate a SQLite mutex of the right type
     // too!).
     SQLiteMutex mutex("TestMutex");
-    sqlite3_mutex *inner = sqlite3_mutex_alloc(lockTypes[i]);
+    sqlite3_mutex *inner = sqlite3_mutex_alloc(lockType);
     do_check_true(inner);
     mutex.initWithMutex(inner);
 
