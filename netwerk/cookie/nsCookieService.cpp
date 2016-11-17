@@ -3115,7 +3115,7 @@ void
 nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
                                          bool aIsForeign,
                                          bool aHttpBound,
-                                         const NeckoOriginAttributes aOriginAttrs,
+                                         const NeckoOriginAttributes& aOriginAttrs,
                                          bool aIsPrivate,
                                          nsCString &aCookieString)
 {

@@ -1161,6 +1161,68 @@ DebuggerClient.prototype = {
     activeRequestsToReject.forEach(request => reject("active", request));
   },
 
+  /**
+   * Search for all requests in process for this client, including those made via
+   * protocol.js and wait all of them to complete.  Since the requests seen when this is
+   * first called may in turn trigger more requests, we keep recursing through this
+   * function until there is no more activity.
+   *
+   * This is a fairly heavy weight process, so it's only meant to be used in tests.
+   *
+   * @return Promise
+   *         Resolved when all requests have settled.
+   */
+  waitForRequestsToSettle() {
+    let requests = [];
+
+    // Gather all pending and active requests in this client
+    // The request object supports a Promise API for completion (it has .then())
+    this._pendingRequests.forEach(requestsForActor => {
+      // Each value is an array of pending requests
+      requests = requests.concat(requestsForActor);
+    });
+    this._activeRequests.forEach(requestForActor => {
+      // Each value is a single active request
+      requests = requests.concat(requestForActor);
+    });
+
+    // protocol.js
+    // Use a Set because some fronts (like domwalker) seem to have multiple parents.
+    let fronts = new Set();
+    let poolsToVisit = [...this._pools];
+
+    // With protocol.js, each front can potentially have it's own pools containing child
+    // fronts, forming a tree.  Descend through all the pools to locate all child fronts.
+    while (poolsToVisit.length) {
+      let pool = poolsToVisit.shift();
+      fronts.add(pool);
+      for (let child of pool.poolChildren()) {
+        poolsToVisit.push(child);
+      }
+    }
+
+    // For each front, wait for its requests to settle
+    for (let front of fronts) {
+      if (front.hasRequests()) {
+        requests.push(front.waitForRequestsToSettle());
+      }
+    }
+
+    // Abort early if there are no requests
+    if (!requests.length) {
+      return Promise.resolve();
+    }
+
+    return DevToolsUtils.settleAll(requests).catch(() => {
+      // One of the requests might have failed, but ignore that situation here and pipe
+      // both success and failure through the same path.  The important part is just that
+      // we waited.
+    }).then(() => {
+      // Repeat, more requests may have started in response to those we just waited for
+      return this.waitForRequestsToSettle();
+    });
+  },
+
   registerClient: function (client) {
     let actorID = client.actor;
     if (!actorID) {
