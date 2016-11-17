@@ -3300,13 +3300,6 @@ nsIDocument::GetElementsByClassName(const nsAString& aClasses)
   return nsContentUtils::GetElementsByClassName(this, aClasses);
 }
 
-NS_IMETHODIMP
-nsDocument::ReleaseCapture()
-{
-  nsIDocument::ReleaseCapture();
-  return NS_OK;
-}
-
 void
 nsIDocument::ReleaseCapture() const
 {
