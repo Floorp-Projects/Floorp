@@ -2,7 +2,9 @@
 
 import io
 import os
-import unittest
+
+import mozunit
+
 import proctest
 from mozprocess import processhandler
 
@@ -54,4 +56,4 @@ class ProcTestOutput(proctest.ProcTest):
         self.determine_status(p, False, ())
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

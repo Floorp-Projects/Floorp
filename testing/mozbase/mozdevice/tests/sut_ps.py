@@ -2,6 +2,8 @@ from sut import MockAgent
 import mozdevice
 import unittest
 
+import mozunit
+
 
 class PsTest(unittest.TestCase):
 
@@ -47,4 +49,4 @@ class PsTest(unittest.TestCase):
             a.wait()
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

@@ -2,6 +2,9 @@
 import mozdevice
 import logging
 import unittest
+
+import mozunit
+
 from sut import MockAgent
 
 
@@ -15,4 +18,4 @@ class TestGetCurrentTime(unittest.TestCase):
         self.assertEqual(d.getCurrentTime(), int(command[0][1]))
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

@@ -2,6 +2,9 @@
 import mozdevice
 import logging
 import unittest
+
+import mozunit
+
 from sut import MockAgent
 
 
@@ -19,4 +22,4 @@ class TestChmod(unittest.TestCase):
         self.assertEqual(None, d.chmodDir('/mnt/sdcard/test'))
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

@@ -6,6 +6,9 @@
 
 import unittest
 import os
+
+import mozunit
+
 from mozprofile import Profile
 
 
@@ -27,4 +30,4 @@ class TestProfile(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

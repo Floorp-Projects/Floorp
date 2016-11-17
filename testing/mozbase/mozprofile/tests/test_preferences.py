@@ -10,6 +10,9 @@ import os
 import shutil
 import tempfile
 import unittest
+
+import mozunit
+
 from mozprofile.cli import MozProfileCLI
 from mozprofile.prefs import Preferences
 from mozprofile.profile import Profile
@@ -375,4 +378,4 @@ user_pref("webgl.force-enabled", true);
             httpd.stop()
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

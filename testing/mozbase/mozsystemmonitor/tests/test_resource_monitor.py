@@ -6,6 +6,8 @@ import multiprocessing
 import time
 import unittest
 
+import mozunit
+
 try:
     import psutil
 except ImportError:
@@ -181,4 +183,4 @@ class TestResourceMonitor(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()
