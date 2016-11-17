@@ -4,7 +4,7 @@
 const URL = "http://mochi.test:8888/";
 const URL_COPY = URL + "#copy";
 
-XPCOMUtils.defineLazyGetter(this, "Sanitizer", function () {
+XPCOMUtils.defineLazyGetter(this, "Sanitizer", function() {
   let tmp = {};
   Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Ci.mozIJSSubScriptLoader)
@@ -102,8 +102,8 @@ function promiseClearHistory(aUseRange) {
 
 function promiseCreateThumbnail() {
   return new Promise(resolve => {
-    addTab(URL, function () {
-      whenFileExists(URL, function () {
+    addTab(URL, function() {
+      whenFileExists(URL, function() {
         gBrowser.removeTab(gBrowser.selectedTab);
         resolve();
       });

@@ -627,17 +627,6 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(RefPtr<nsNPAPIPluginInstance> &a
       (WNDPROC)::GetWindowLongPtr((HWND)window, GWLP_WNDPROC);
     if (!mPrevWinProc && currentWndProc != PluginWndProc)
       mPrevWinProc = currentWndProc;
-
-    // PDF plugin v7.0.9, v8.1.3, and v9.0 subclass parent window, bug 531551
-    // V8.2.2 and V9.1 don't have such problem.
-    if (mPluginType == nsPluginHost::eSpecialType_PDF) {
-      HWND parent = ::GetParent((HWND)window);
-      if (mParentWnd != parent) {
-        NS_ASSERTION(!mParentWnd, "Plugin's parent window changed");
-        mParentWnd = parent;
-        mParentProc = ::GetWindowLongPtr(mParentWnd, GWLP_WNDPROC);
-      }
-    }
   }
 
   nsPluginNativeWindow::CallSetWindow(aPluginInstance);

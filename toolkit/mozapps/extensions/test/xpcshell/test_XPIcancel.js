@@ -14,7 +14,7 @@ function run_test() {
   // Check that a basic object gets cancelled
   let getsCancelled = {
     isCancelled: false,
-    cancel: function () {
+    cancel: function() {
       if (this.isCancelled)
         do_throw("Already cancelled");
       this.isCancelled = true;
@@ -36,7 +36,7 @@ function run_test() {
   getsCancelled.isCancelled = false;
   let addsAnother = {
     isCancelled: false,
-    cancel: function () {
+    cancel: function() {
       if (this.isCancelled)
         do_throw("Already cancelled");
       this.isCancelled = true;
@@ -52,7 +52,7 @@ function run_test() {
   // order that members were added
   let removesAnother = {
     isCancelled: false,
-    cancel: function () {
+    cancel: function() {
       if (this.isCancelled)
         do_throw("Already cancelled");
       this.isCancelled = true;

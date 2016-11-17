@@ -225,7 +225,7 @@ this.MigratorPrototype = {
       resources = resources.filter(r => aItems & r.type);
 
     // Used to periodically give back control to the main-thread loop.
-    let unblockMainThread = function () {
+    let unblockMainThread = function() {
       return new Promise(resolve => {
         Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
       });

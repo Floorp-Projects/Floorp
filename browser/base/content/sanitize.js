@@ -38,14 +38,14 @@ function Sanitizer() {
 }
 Sanitizer.prototype = {
   // warning to the caller: this one may raise an exception (e.g. bug #265028)
-  clearItem: function (aItemName)
+  clearItem: function(aItemName)
   {
     this.items[aItemName].clear();
   },
 
   prefDomain: "",
 
-  getNameFromPreference: function (aPreferenceName)
+  getNameFromPreference: function(aPreferenceName)
   {
     return aPreferenceName.substr(this.prefDomain.length);
   },
@@ -731,7 +731,7 @@ Sanitizer.TIMESPAN_24HOURS    = 6;
 // in the uSec-since-epoch format that PRTime likes.  If we should
 // clear everything, return null.  Use ts if it is defined; otherwise
 // use the timeSpan pref.
-Sanitizer.getClearRange = function (ts) {
+Sanitizer.getClearRange = function(ts) {
   if (ts === undefined)
     ts = Sanitizer.prefs.getIntPref("timeSpan");
   if (ts === Sanitizer.TIMESPAN_EVERYTHING)
@@ -781,7 +781,7 @@ Sanitizer.__defineGetter__("prefs", function()
 Sanitizer.showUI = function(aParentWindow)
 {
   let win = AppConstants.platform == "macosx" ?
-    null: // make this an app-modal window on Mac
+    null : // make this an app-modal window on Mac
     aParentWindow;
   Services.ww.openWindow(win,
                          "chrome://browser/content/sanitize.xul",

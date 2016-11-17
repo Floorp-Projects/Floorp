@@ -5,7 +5,7 @@
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function () {
+XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
   return Components.utils.import("resource://gre/modules/FxAccountsCommon.js", {});
 });
 
@@ -29,7 +29,7 @@ var gTests = [
         channel_id: TEST_CHANNEL_ID,
       });
       let promiseObserver = new Promise((resolve, reject) => {
-        makeObserver(FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION, function (subject, topic, data) {
+        makeObserver(FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION, function(subject, topic, data) {
           Assert.equal(data, "abc123");
           client.tearDown();
           resolve();
@@ -180,7 +180,7 @@ var gTests = [
 ]; // gTests
 
 function makeObserver(aObserveTopic, aObserveFunc) {
-  let callback = function (aSubject, aTopic, aData) {
+  let callback = function(aSubject, aTopic, aData) {
     if (aTopic == aObserveTopic) {
       removeMe();
       aObserveFunc(aSubject, aTopic, aData);

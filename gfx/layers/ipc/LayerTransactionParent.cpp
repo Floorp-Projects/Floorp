@@ -24,7 +24,6 @@
 #include "mozilla/layers/ImageLayerComposite.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayersMessages.h"  // for EditReply, etc
-#include "mozilla/layers/LayersSurfaces.h"  // for PGrallocBufferParent
 #include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_LOG
 #include "mozilla/layers/PCompositableParent.h"
 #include "mozilla/layers/PLayerParent.h"  // for PLayerParent
@@ -927,8 +926,6 @@ LayerTransactionParent::RecvRequestProperty(const nsString& aProperty, float* aV
 {
   if (aProperty.Equals(NS_LITERAL_STRING("overdraw"))) {
     *aValue = layer_manager()->GetCompositor()->GetFillRatio();
-  } else if (aProperty.Equals(NS_LITERAL_STRING("missed_hwc"))) {
-    *aValue = layer_manager()->LastFrameMissedHWC() ? 1 : 0;
   } else {
     *aValue = -1;
   }

@@ -154,8 +154,7 @@ public:
 
   /**
    * Should be called when deataching a TextureClient from a Compositable, because
-   * some platforms need to do some extra book keeping when this happens (for
-   * example to properly keep track of fences on Gonk).
+   * some platforms need to do some extra book keeping when this happens.
    *
    * See AutoRemoveTexture to automatically invoke this at the end of a scope.
    */

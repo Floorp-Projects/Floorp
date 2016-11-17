@@ -803,11 +803,11 @@ winmm_query_supported_formats(UINT devid, DWORD formats,
 static char *
 guid_to_cstr(LPGUID guid)
 {
-  char * ret = malloc(sizeof(char) * 40);
+  char * ret = malloc(40);
   if (!ret) {
     return NULL;
   }
-  _snprintf_s(ret, sizeof(char) * 40, _TRUNCATE,
+  _snprintf_s(ret, 40, _TRUNCATE,
       "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
       guid->Data1, guid->Data2, guid->Data3,
       guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3],
@@ -821,12 +821,12 @@ winmm_query_preferred_out_device(UINT devid)
   DWORD mmpref = WAVE_MAPPER, compref = WAVE_MAPPER, status;
   cubeb_device_pref ret = CUBEB_DEVICE_PREF_NONE;
 
-  if (waveOutMessage((HWAVEOUT)(size_t)WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET,
+  if (waveOutMessage((HWAVEOUT) WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET,
         (DWORD_PTR)&mmpref, (DWORD_PTR)&status) == MMSYSERR_NOERROR &&
       devid == mmpref)
     ret |= CUBEB_DEVICE_PREF_MULTIMEDIA | CUBEB_DEVICE_PREF_NOTIFICATION;
 
-  if (waveOutMessage((HWAVEOUT)(size_t)WAVE_MAPPER, DRVM_MAPPER_CONSOLEVOICECOM_GET,
+  if (waveOutMessage((HWAVEOUT) WAVE_MAPPER, DRVM_MAPPER_CONSOLEVOICECOM_GET,
         (DWORD_PTR)&compref, (DWORD_PTR)&status) == MMSYSERR_NOERROR &&
       devid == compref)
     ret |= CUBEB_DEVICE_PREF_VOICE;
@@ -837,7 +837,7 @@ winmm_query_preferred_out_device(UINT devid)
 static char *
 device_id_idx(UINT devid)
 {
-  char * ret = (char *)malloc(sizeof(char)*16);
+  char * ret = malloc(16);
   if (!ret) {
     return NULL;
   }
@@ -854,7 +854,7 @@ winmm_create_device_from_outcaps2(LPWAVEOUTCAPS2A caps, UINT devid)
   if (!ret) {
     return NULL;
   }
-  ret->devid = (cubeb_devid)(size_t)devid;
+  ret->devid = (cubeb_devid) devid;
   ret->device_id = device_id_idx(devid);
   ret->friendly_name = _strdup(caps->szPname);
   ret->group_id = guid_to_cstr(&caps->ProductGuid);
@@ -885,7 +885,7 @@ winmm_create_device_from_outcaps(LPWAVEOUTCAPSA caps, UINT devid)
   if (!ret) {
     return NULL;
   }
-  ret->devid = (cubeb_devid)(size_t)devid;
+  ret->devid = (cubeb_devid) devid;
   ret->device_id = device_id_idx(devid);
   ret->friendly_name = _strdup(caps->szPname);
   ret->group_id = NULL;
@@ -913,12 +913,12 @@ winmm_query_preferred_in_device(UINT devid)
   DWORD mmpref = WAVE_MAPPER, compref = WAVE_MAPPER, status;
   cubeb_device_pref ret = CUBEB_DEVICE_PREF_NONE;
 
-  if (waveInMessage((HWAVEIN)(size_t)WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET,
+  if (waveInMessage((HWAVEIN) WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET,
         (DWORD_PTR)&mmpref, (DWORD_PTR)&status) == MMSYSERR_NOERROR &&
       devid == mmpref)
     ret |= CUBEB_DEVICE_PREF_MULTIMEDIA | CUBEB_DEVICE_PREF_NOTIFICATION;
 
-  if (waveInMessage((HWAVEIN)(size_t)WAVE_MAPPER, DRVM_MAPPER_CONSOLEVOICECOM_GET,
+  if (waveInMessage((HWAVEIN) WAVE_MAPPER, DRVM_MAPPER_CONSOLEVOICECOM_GET,
         (DWORD_PTR)&compref, (DWORD_PTR)&status) == MMSYSERR_NOERROR &&
       devid == compref)
     ret |= CUBEB_DEVICE_PREF_VOICE;
@@ -935,7 +935,7 @@ winmm_create_device_from_incaps2(LPWAVEINCAPS2A caps, UINT devid)
   if (!ret) {
     return NULL;
   }
-  ret->devid = (cubeb_devid)(size_t)devid;
+  ret->devid = (cubeb_devid) devid;
   ret->device_id = device_id_idx(devid);
   ret->friendly_name = _strdup(caps->szPname);
   ret->group_id = guid_to_cstr(&caps->ProductGuid);
@@ -966,7 +966,7 @@ winmm_create_device_from_incaps(LPWAVEINCAPSA caps, UINT devid)
   if (!ret) {
     return NULL;
   }
-  ret->devid = (cubeb_devid)(size_t)devid;
+  ret->devid = (cubeb_devid) devid;
   ret->device_id = device_id_idx(devid);
   ret->friendly_name = _strdup(caps->szPname);
   ret->group_id = NULL;

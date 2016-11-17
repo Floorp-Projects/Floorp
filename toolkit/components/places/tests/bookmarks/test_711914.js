@@ -19,7 +19,7 @@ function run_test() {
     onItemAdded: forceBookmarkCaching,
     onItemChanged: forceBookmarkCaching,
     onItemMoved: forceBookmarkCaching,
-    onItemRemoved: function (id) {
+    onItemRemoved: function(id) {
       try {
         forceBookmarkCaching(id);
         do_throw("trying to fetch a removed bookmark should throw");

@@ -155,7 +155,7 @@ TileManager.prototype = {
     if (destCriticalRect)
       this._tileCache.forEachIntersectingRect(destCriticalRect, false, appendNonDirtyTile, this);
     let end = Date.now();
-    dump("start: " + (end-start) + "\n")
+    dump("start: " + (end - start) + "\n")
   },
 
   beginCriticalMove: function beginCriticalMove(destCriticalRect) {
@@ -237,7 +237,7 @@ TileManager.prototype = {
     }
 
     let end = Date.now();
-    dump("start: " + (end-start) + "\n")
+    dump("start: " + (end - start) + "\n")
   },
 
   endCriticalMove: function endCriticalMove(destCriticalRect, doCriticalPaint) {

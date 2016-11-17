@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,10 +18,13 @@ def sign(lib_file):
     bin_path = os.path.realpath(os.path.join(ld_lib_path, '../bin'))
 
     env = os.environ.copy()
-    env['LD_LIBRARY_PATH'] = env['DYLD_LIBRARY_PATH'] = ld_lib_path
+    if sys.platform == 'win32':
+        env['PATH'] = os.pathsep.join((env['PATH'], ld_lib_path))
+    else:
+        env['LD_LIBRARY_PATH'] = env['DYLD_LIBRARY_PATH'] = ld_lib_path
 
     dev_null = open(os.devnull, 'wb')
-    subprocess.Popen([os.path.join(bin_path, 'shlibsign'), '-v', '-i', lib_file], env=env, stdout=dev_null, stderr=dev_null).wait()
+    subprocess.check_call([os.path.join(bin_path, 'shlibsign'), '-v', '-i', lib_file], env=env, stdout=dev_null, stderr=dev_null)
 
 if __name__ == '__main__':
     main()

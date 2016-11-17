@@ -143,7 +143,7 @@ FormHandler.prototype = {
    *          interface, or null if the operation failed because the constraints
    *          on the allowed fields were not honored.
    */
-  collectFormFields: function () {
+  collectFormFields: function() {
     let autofillData = {
       sections: [],
     };
@@ -225,7 +225,7 @@ FormHandler.prototype = {
    *          ],
    *        }
    */
-  autofillFormFields: function (aAutofillResult) {
+  autofillFormFields: function(aAutofillResult) {
     for (let field of aAutofillResult.fields) {
       // Get the field details, if it was processed by the user interface.
       let fieldDetail = this.fieldDetails
@@ -244,8 +244,8 @@ FormHandler.prototype = {
   /**
    * Waits for one tick of the event loop before resolving the returned promise.
    */
-  waitForTick: function () {
-    return new Promise(function (resolve) {
+  waitForTick: function() {
+    return new Promise(function(resolve) {
       Services.tm.currentThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
     });
   },
@@ -263,7 +263,7 @@ FormAutofillContentService.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormAutofillContentService]),
 
   // nsIFormAutofillContentService
-  requestAutocomplete: function (aForm, aWindow) {
+  requestAutocomplete: function(aForm, aWindow) {
     new FormHandler(aForm, aWindow).handleRequestAutocomplete()
                                    .catch(Cu.reportError);
   },

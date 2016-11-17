@@ -88,7 +88,7 @@ add_task(function* test_setup() {
   // Open the password manager dialog.
   pwmgrdlg = window.openDialog(PWMGR_DLG, "Toolkit:PasswordManager", "");
 
-  Services.ww.registerNotification(function (aSubject, aTopic, aData) {
+  Services.ww.registerNotification(function(aSubject, aTopic, aData) {
     if (aTopic == "domwindowopened") {
       let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
       SimpleTest.waitForFocus(function() {

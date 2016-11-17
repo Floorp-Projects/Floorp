@@ -91,14 +91,14 @@ var test = {
                                          DEFAULT_INDEX, this._queryTitle3);
   },
 
-  clean: function () {},
+  clean: function() {},
 
   validate: function validate() {
     // Throw a wrench in the works by inserting some new bookmarks,
     // ensuring folder ids won't be the same, when restoring.
     for (let i = 0; i < 10; i++) {
       PlacesUtils.bookmarks.
-                  insertBookmark(PlacesUtils.bookmarksMenuFolderId, uri("http://aaaa"+i), DEFAULT_INDEX, "");
+                  insertBookmark(PlacesUtils.bookmarksMenuFolderId, uri("http://aaaa" + i), DEFAULT_INDEX, "");
     }
 
     var toolbar =
@@ -113,16 +113,16 @@ var test = {
     folderNode.containerOpen = true;
 
     // |_count| folders + the query node
-    do_check_eq(folderNode.childCount, this._count+3);
+    do_check_eq(folderNode.childCount, this._count + 3);
 
     for (let i = 0; i < this._count; i++) {
       var subFolder = folderNode.getChild(i);
-      do_check_eq(subFolder.title, "folder"+i);
+      do_check_eq(subFolder.title, "folder" + i);
       subFolder.QueryInterface(Ci.nsINavHistoryContainerResultNode);
       subFolder.containerOpen = true;
       do_check_eq(subFolder.childCount, 1);
       var child = subFolder.getChild(0);
-      do_check_eq(child.title, "bookmark"+i);
+      do_check_eq(child.title, "bookmark" + i);
       do_check_true(uri(child.uri).equals(uri("http://" + i)))
     }
 

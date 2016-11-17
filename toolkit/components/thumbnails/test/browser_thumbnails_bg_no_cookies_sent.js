@@ -8,7 +8,7 @@ function* runTests() {
   let browser = tab.linkedBrowser;
 
   // The root element of the page shouldn't be green yet.
-  yield ContentTask.spawn(browser, null, function () {
+  yield ContentTask.spawn(browser, null, function() {
     Assert.notEqual(content.document.documentElement.style.backgroundColor,
                     "rgb(0, 255, 0)",
                     "The page shouldn't be green yet.");
@@ -18,7 +18,7 @@ function* runTests() {
   // will be green if the cookie's set.
   browser.reload();
   yield BrowserTestUtils.browserLoaded(browser);
-  yield ContentTask.spawn(browser, null, function () {
+  yield ContentTask.spawn(browser, null, function() {
     Assert.equal(content.document.documentElement.style.backgroundColor,
                  "rgb(0, 255, 0)",
                  "The page should be green now.");
@@ -29,7 +29,7 @@ function* runTests() {
   yield bgCapture(url);
   ok(thumbnailExists(url), "Thumbnail file should exist after capture.");
 
-  retrieveImageDataForURL(url, function ([r, g, b]) {
+  retrieveImageDataForURL(url, function([r, g, b]) {
     isnot([r, g, b].toString(), [0, 255, 0].toString(),
           "The captured page should not be green.");
     gBrowser.removeTab(tab);

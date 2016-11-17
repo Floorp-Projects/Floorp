@@ -21,7 +21,7 @@ function test_begin_authentication_flow() {
   // The identity-auth notification is sent up to the UX from the
   // _doAuthentication function.  Be ready to receive it and call
   // beginAuthentication
-  makeObserver("identity-auth", function (aSubject, aTopic, aData) {
+  makeObserver("identity-auth", function(aSubject, aTopic, aData) {
     do_check_neq(aSubject, null);
 
     do_check_eq(aSubject.wrappedJSObject.provId, _provId);
@@ -88,7 +88,7 @@ function test_complete_authentication_flow() {
       run_next_test();
     });
 
-    makeObserver("identity-login-state-changed", function (aSubject, aTopic, aData) {
+    makeObserver("identity-login-state-changed", function(aSubject, aTopic, aData) {
       do_check_neq(aSubject, null);
 
       do_check_eq(aSubject.wrappedJSObject.rpId, mockedDoc.id);

@@ -58,7 +58,7 @@ add_task(function* test_setup() {
 function checkExperimentListsEqual(list, list2) {
   Assert.equal(list.length, list2.length, "Lists should have the same length.")
 
-  for (let i=0; i<list.length; ++i) {
+  for (let i = 0; i < list.length; ++i) {
     for (let k of Object.keys(list[i])) {
       Assert.equal(list[i][k], list2[i][k],
                    "Field '" + k + "' should match for list entry " + i + ".");
@@ -127,7 +127,7 @@ add_task(function* test_cache() {
   let startDates = [];
   let endDates   = [];
 
-  for (let i=0; i<gManifestObject.experiments.length; ++i) {
+  for (let i = 0; i < gManifestObject.experiments.length; ++i) {
     let experiment = gManifestObject.experiments[i];
     startDates.push(futureDate(baseDate, (50 + (150 * i)) * MS_IN_ONE_DAY));
     endDates  .push(futureDate(startDates[i], 50 * MS_IN_ONE_DAY));
@@ -306,7 +306,7 @@ add_task(function* test_expiration() {
   let startDates = [];
   let endDates   = [];
 
-  for (let i=0; i<gManifestObject.experiments.length; ++i) {
+  for (let i = 0; i < gManifestObject.experiments.length; ++i) {
     let experiment = gManifestObject.experiments[i];
     // Spread out experiments in time so that one experiment can end and expire while
     // the next is still running.

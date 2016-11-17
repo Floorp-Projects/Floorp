@@ -23,7 +23,7 @@ function run_test() {
   startupManager();
   AddonManager.checkCompatibility = false;
 
-  installAllFiles(ADDONS.map(do_get_addon), function () {
+  installAllFiles(ADDONS.map(do_get_addon), function() {
     restartManager();
 
     AddonManager.getAddonsByIDs(IDS, function([a1, a2, a3]) {

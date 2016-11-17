@@ -6790,18 +6790,7 @@ class MAdd : public MBinaryArithInstruction
         setResultType(MIRType::Value);
     }
 
-    MAdd(MDefinition* left, MDefinition* right, MIRType type)
-      : MAdd(left, right)
-    {
-        specialization_ = type;
-        setResultType(type);
-        if (type == MIRType::Int32) {
-            setTruncateKind(Truncate);
-            setCommutative();
-        }
-    }
-
-    MAdd(MDefinition* left, MDefinition* right, MIRType type, TruncateKind truncateKind)
+    MAdd(MDefinition* left, MDefinition* right, MIRType type, TruncateKind truncateKind = Truncate)
       : MAdd(left, right)
     {
         specialization_ = type;

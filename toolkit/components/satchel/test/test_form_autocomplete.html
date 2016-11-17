@@ -443,7 +443,7 @@ function runTest() {
     case 51:
         checkForm("value");
         countEntries("field1", "value1",
-          function (num) {
+          function(num) {
             ok(!num, testNum + " checking that f1/v1 was deleted");
             runTest();
           });
@@ -483,7 +483,7 @@ function runTest() {
     case 55:
         checkForm("");
         countEntries("field1", "value3",
-          function (num) {
+          function(num) {
             ok(!num, testNum + " checking that f1/v3 was deleted");
             runTest();
           });
@@ -523,7 +523,7 @@ function runTest() {
 
     case 59:
         countEntries("field1", "value4",
-          function (num) {
+          function(num) {
             ok(!num, testNum + " checking that f1/v4 was deleted");
             runTest();
           });
@@ -562,7 +562,7 @@ function runTest() {
     case 63:
         checkForm("");
         countEntries("field1", "value2",
-          function (num) {
+          function(num) {
             ok(!num, testNum + " checking that f1/v2 was deleted");
             runTest();
           });
@@ -1056,7 +1056,7 @@ function checkMenuEntries(expectedValues, testNumber) {
     var actualValues = getMenuEntries();
     is(actualValues.length, expectedValues.length, testNumber + " Checking length of expected menu");
     for (var i = 0; i < expectedValues.length; i++)
-        is(actualValues[i], expectedValues[i], testNumber + " Checking menu entry #"+i);
+        is(actualValues[i], expectedValues[i], testNumber + " Checking menu entry #" + i);
 }
 
 function startTest() {

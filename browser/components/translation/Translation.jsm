@@ -188,9 +188,9 @@ TranslationUI.prototype = {
 
       if (aTopic != "showing")
         return false;
-      let notification = this.notificationBox.getNotificationWithValue("translation");
-      if (notification)
-        notification.close();
+      let translationNotification = this.notificationBox.getNotificationWithValue("translation");
+      if (translationNotification)
+        translationNotification.close();
       else
         this.showTranslationInfoBar();
       return true;
@@ -298,7 +298,7 @@ TranslationUI.prototype = {
  */
 this.TranslationTelemetry = {
 
-  init: function () {
+  init: function() {
     // Constructing histograms.
     const plain = (id) => Services.telemetry.getHistogramById(id);
     const keyed = (id) => Services.telemetry.getKeyedHistogramById(id);
@@ -326,7 +326,7 @@ this.TranslationTelemetry = {
    * @param language
    *        The language of the page.
    */
-  recordTranslationOpportunity: function (language) {
+  recordTranslationOpportunity: function(language) {
     return this._recordOpportunity(language, true);
   },
 
@@ -337,7 +337,7 @@ this.TranslationTelemetry = {
    * @param language
    *        The language of the page.
    */
-  recordMissedTranslationOpportunity: function (language) {
+  recordMissedTranslationOpportunity: function(language) {
     return this._recordOpportunity(language, false);
   },
 
@@ -351,7 +351,7 @@ this.TranslationTelemetry = {
    * These translation opportunities should still be recorded in addition to
    * recording the automatic rejection of the offer.
    */
-  recordAutoRejectedTranslationOffer: function () {
+  recordAutoRejectedTranslationOffer: function() {
     if (!this._canRecord) return;
     this.HISTOGRAMS.AUTO_REJECTED().add();
   },
@@ -365,7 +365,7 @@ this.TranslationTelemetry = {
    * @param numCharacters
    *        The number of characters that were translated
    */
-  recordTranslation: function (langFrom, langTo, numCharacters) {
+  recordTranslation: function(langFrom, langTo, numCharacters) {
     if (!this._canRecord) return;
     this.HISTOGRAMS.PAGES().add();
     this.HISTOGRAMS.PAGES_BY_LANG().add(langFrom + " -> " + langTo);
@@ -384,7 +384,7 @@ this.TranslationTelemetry = {
    *        the user has manually adjusted the detected language false should
    *        be passed.
    */
-  recordDetectedLanguageChange: function (beforeFirstTranslation) {
+  recordDetectedLanguageChange: function(beforeFirstTranslation) {
     if (!this._canRecord) return;
     this.HISTOGRAMS.DETECTION_CHANGES().add(beforeFirstTranslation);
   },
@@ -394,7 +394,7 @@ this.TranslationTelemetry = {
    * only be called when actually executing a translation, not every time the
    * user changes in the language in the UI.
    */
-  recordTargetLanguageChange: function () {
+  recordTargetLanguageChange: function() {
     if (!this._canRecord) return;
     this.HISTOGRAMS.TARGET_CHANGES().add();
   },
@@ -402,7 +402,7 @@ this.TranslationTelemetry = {
   /**
    * Record a denied translation offer.
    */
-  recordDeniedTranslationOffer: function () {
+  recordDeniedTranslationOffer: function() {
     if (!this._canRecord) return;
     this.HISTOGRAMS.DENIED().add();
   },
@@ -410,7 +410,7 @@ this.TranslationTelemetry = {
   /**
    * Record a "Show Original" command use.
    */
-  recordShowOriginalContent: function () {
+  recordShowOriginalContent: function() {
     if (!this._canRecord) return;
     this.HISTOGRAMS.SHOW_ORIGINAL().add();
   },
@@ -418,7 +418,7 @@ this.TranslationTelemetry = {
   /**
    * Record the state of translation preferences.
    */
-  recordPreferences: function () {
+  recordPreferences: function() {
     if (!this._canRecord) return;
     if (Services.prefs.getBoolPref(TRANSLATION_PREF_SHOWUI)) {
       this.HISTOGRAMS.SHOW_UI().add(1);
@@ -438,7 +438,7 @@ this.TranslationTelemetry = {
    * A shortcut for reading the telemetry preference.
    *
    */
-  _canRecord: function () {
+  _canRecord: function() {
     return Services.prefs.getBoolPref("toolkit.telemetry.enabled");
   }
 };

@@ -1629,15 +1629,6 @@ CompositorOGL::EndFrame()
 }
 
 void
-CompositorOGL::EndFrameForExternalComposition(const gfx::Matrix& aTransform)
-{
-  MOZ_ASSERT(!mTarget);
-  if (mTexturePool) {
-    mTexturePool->EndFrame();
-  }
-}
-
-void
 CompositorOGL::SetDestinationSurfaceSize(const IntSize& aSize)
 {
   mSurfaceSize.width = aSize.width;
@@ -1811,90 +1802,6 @@ PerUnitTexturePoolOGL::DestroyTextures()
     }
   }
   mTextures.SetLength(0);
-}
-
-void
-PerFrameTexturePoolOGL::DestroyTextures()
-{
-  if (!mGL->MakeCurrent()) {
-    return;
-  }
-
-  if (mUnusedTextures.Length() > 0) {
-    mGL->fDeleteTextures(mUnusedTextures.Length(), &mUnusedTextures[0]);
-    mUnusedTextures.Clear();
-  }
-
-  if (mCreatedTextures.Length() > 0) {
-    mGL->fDeleteTextures(mCreatedTextures.Length(), &mCreatedTextures[0]);
-    mCreatedTextures.Clear();
-  }
-}
-
-GLuint
-PerFrameTexturePoolOGL::GetTexture(GLenum aTarget, GLenum)
-{
-  if (mTextureTarget == 0) {
-    mTextureTarget = aTarget;
-  }
-
-  // The pool should always use the same texture target because it is illegal
-  // to change the target of an already exisiting gl texture.
-  // If we need to use several targets, a pool with several sub-pools (one per
-  // target) will have to be implemented.
-  // At the moment this pool is only used with tiling on b2g so we always need
-  // the same target.
-  MOZ_ASSERT(mTextureTarget == aTarget);
-
-  GLuint texture = 0;
-
-  if (!mUnusedTextures.IsEmpty()) {
-    // Try to reuse one from the unused pile first
-    texture = mUnusedTextures[0];
-    mUnusedTextures.RemoveElementAt(0);
-  } else if (mGL->MakeCurrent()) {
-    // There isn't one to reuse, create one.
-    mGL->fGenTextures(1, &texture);
-    mGL->fBindTexture(aTarget, texture);
-    mGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-    mGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-  }
-
-  if (texture) {
-    mCreatedTextures.AppendElement(texture);
-  }
-
-  return texture;
-}
-
-void
-PerFrameTexturePoolOGL::EndFrame()
-{
-  if (!mGL->MakeCurrent()) {
-    // this means the context got destroyed underneith us somehow, and the driver
-    // already has destroyed the textures.
-    mCreatedTextures.Clear();
-    mUnusedTextures.Clear();
-    return;
-  }
-
-  // Some platforms have issues unlocking Gralloc buffers even when they're
-  // rebound.
-  if (gfxPrefs::OverzealousGrallocUnlocking()) {
-    mUnusedTextures.AppendElements(mCreatedTextures);
-    mCreatedTextures.Clear();
-  }
-
-  // Delete unused textures
-  for (size_t i = 0; i < mUnusedTextures.Length(); i++) {
-    GLuint texture = mUnusedTextures[i];
-    mGL->fDeleteTextures(1, &texture);
-  }
-  mUnusedTextures.Clear();
-
-  // Move all created textures into the unused pile
-  mUnusedTextures.AppendElements(mCreatedTextures);
-  mCreatedTextures.Clear();
 }
 
 } // namespace layers

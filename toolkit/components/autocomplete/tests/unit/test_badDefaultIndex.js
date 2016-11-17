@@ -46,7 +46,7 @@ add_test(function autocomplete_noMatch_success() {
   controller.input = input;
   controller.startSearch(INPUT_STR);
 
-  input.onSearchComplete = function () {
+  input.onSearchComplete = function() {
     // Should not try to autoFill to an empty value.
     do_check_eq(input.textValue, "moz");
 
@@ -81,7 +81,7 @@ add_test(function autocomplete_defaultIndex_exceeds_matchCount() {
   controller.input = input;
   controller.startSearch(INPUT_STR);
 
-  input.onSearchComplete = function () {
+  input.onSearchComplete = function() {
     // Should not try to autoFill to an empty value.
     do_check_eq(input.textValue, "moz");
 

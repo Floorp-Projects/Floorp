@@ -3,7 +3,7 @@ const BASE_DOMAIN = "mochi.test";
 
 add_task(function* setup() {
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("privacy.firstparty.isolate");
   });
 });
@@ -14,7 +14,7 @@ add_task(function* setup() {
  */
 add_task(function* principal_test() {
   let tab = gBrowser.addTab(BASE_URL + "test_firstParty.html");
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser, true, function (url) {
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser, true, function(url) {
     return url == BASE_URL + "test_firstParty.html";
   });
 
@@ -129,7 +129,7 @@ add_task(function* postMessage_test() {
   // another message from the iframe, once it receives the message, it will
   // create another iframe, dummy.html.
   // So we wait until dummy.html is loaded
-  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser, true, function (url) {
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser, true, function(url) {
     return url == BASE_URL + "dummy.html";
   });
 
@@ -148,7 +148,7 @@ add_task(function* postMessage_test() {
  */
 add_task(function* openWindow_test() {
   Services.prefs.setIntPref("browser.link.open_newwindow", 2);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.link.open_newwindow");
   });
 

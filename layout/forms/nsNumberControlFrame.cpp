@@ -404,7 +404,7 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // Initialize the text field value:
   nsAutoString value;
-  content->GetValue(value);
+  content->GetValue(value, CallerType::System);
   SetValueOfAnonTextControl(value);
 
   // If we're readonly, make sure our anonymous text control is too:
@@ -691,7 +691,14 @@ nsNumberControlFrame::SetValueOfAnonTextControl(const nsAString& aValue)
   // this must be its value, and not its 'value' attribute (the default value),
   // since the default value is ignored once a user types into the text
   // control.
-  HTMLInputElement::FromContent(mTextField)->SetValue(localizedValue);
+  //
+  // Pass NonSystem as the caller type; this should work fine for actual number
+  // inputs, and be safe in case our input has a type we don't expect for some
+  // reason.
+  IgnoredErrorResult rv;
+  HTMLInputElement::FromContent(mTextField)->SetValue(localizedValue,
+                                                      CallerType::NonSystem,
+                                                      rv);
 }
 
 void
@@ -702,7 +709,7 @@ nsNumberControlFrame::GetValueOfAnonTextControl(nsAString& aValue)
     return;
   }
 
-  HTMLInputElement::FromContent(mTextField)->GetValue(aValue);
+  HTMLInputElement::FromContent(mTextField)->GetValue(aValue, CallerType::System);
 
 #ifdef ENABLE_INTL_API
   // Here we need to de-localize any number typed in by the user. That is, we
@@ -755,7 +762,7 @@ nsNumberControlFrame::AnonTextControlIsEmpty()
     return true;
   }
   nsAutoString value;
-  HTMLInputElement::FromContent(mTextField)->GetValue(value);
+  HTMLInputElement::FromContent(mTextField)->GetValue(value, CallerType::System);
   return value.IsEmpty();
 }
 

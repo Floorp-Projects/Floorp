@@ -22,12 +22,12 @@ add_task(function* () {
 
     let locationChangePromise;
     let resolveLocationChangePromise;
-    let expectURL = url => {
-      expectedURL = url;
+    let expectURL = urlTemp => {
+      expectedURL = urlTemp;
       locationChangePromise = new Promise(r => resolveLocationChangePromise = r);
     };
     let wpl = {
-      onLocationChange(wpl, request, location, flags) {
+      onLocationChange(unused, unused2, location) {
         is(location.spec, expectedURL, "Got the expected URL");
         resolveLocationChangePromise();
       },

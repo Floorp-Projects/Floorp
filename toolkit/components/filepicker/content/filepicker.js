@@ -789,7 +789,7 @@ function processPathEntry(path, fileArray)
   try {
     file = sfile.clone().QueryInterface(nsILocalFile);
   } catch (e) {
-    dump("Couldn't clone\n"+e);
+    dump("Couldn't clone\n" + e);
     return false;
   }
 
@@ -815,7 +815,7 @@ function processPathEntry(path, fileArray)
     try {
       file.initWithPath(file.path + "/" + filePath);
     } catch (e) {
-      dump("Couldn't init path\n"+e);
+      dump("Couldn't init path\n" + e);
       return false;
     }
   }
@@ -823,7 +823,7 @@ function processPathEntry(path, fileArray)
     try {
       file.appendRelativePath(filePath);
     } catch (e) {
-      dump("Couldn't append path\n"+e);
+      dump("Couldn't append path\n" + e);
       return false;
     }
   }

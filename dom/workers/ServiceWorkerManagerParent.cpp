@@ -6,7 +6,6 @@
 
 #include "ServiceWorkerManagerParent.h"
 #include "ServiceWorkerManagerService.h"
-#include "mozilla/AppProcessChecker.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -128,8 +127,6 @@ public:
   NS_IMETHOD Run() override
   {
     if (NS_IsMainThread()) {
-      nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(mPrincipalInfo);
-      AssertAppPrincipal(mContentParent, principal);
       mContentParent = nullptr;
 
       mBackgroundThread->Dispatch(this, NS_DISPATCH_NORMAL);

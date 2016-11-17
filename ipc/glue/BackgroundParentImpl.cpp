@@ -12,7 +12,6 @@
 #include "CamerasParent.h"
 #endif
 #include "mozilla/media/MediaParent.h"
-#include "mozilla/AppProcessChecker.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMTypes.h"
@@ -522,7 +521,6 @@ public:
     NullifyContentParentRAII raii(mContentParent);
 
     nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(mPrincipalInfo);
-    AssertAppPrincipal(mContentParent, principal);
 
     if (principal->GetIsNullPrincipal()) {
       mContentParent->KillHard("BroadcastChannel killed: no null principal.");
@@ -610,12 +608,6 @@ private:
     if (mPermissionCheckType == FileSystemBase::ePermissionCheckByTestingPref &&
         mozilla::Preferences::GetBool("device.storage.prompt.testing", false)) {
       return true;
-    }
-
-    if (!AssertAppProcessPermission(mContentParent.get(),
-                                    mPermissionName.get())) {
-      mContentParent->KillHard("PBackground actor killed: permission denied.");
-      return false;
     }
 
     return true;

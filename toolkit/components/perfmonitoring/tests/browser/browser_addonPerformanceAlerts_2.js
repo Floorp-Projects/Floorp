@@ -18,7 +18,7 @@ add_task(function* test_watch_addon_then_install_it() {
     let addon = new AddonBurner(addonId);
 
     Assert.ok((yield addon.run(topic, 10, realListener)), `5. The real listener was triggered ${topic}`);
-    Assert.ok(realListener.result >= addon.jankThreshold, `5. jank is at least ${addon.jankThreshold/1000}ms (${realListener.result}µs) ${topic}`);
+    Assert.ok(realListener.result >= addon.jankThreshold, `5. jank is at least ${addon.jankThreshold / 1000}ms (${realListener.result}µs) ${topic}`);
     realListener.unregister();
     addon.dispose();
   }

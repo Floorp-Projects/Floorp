@@ -50,7 +50,7 @@ this.Social = {
     // front-end can generate UI
     if (SocialService.hasEnabledProviders) {
       // Retrieve the current set of providers, and set the current provider.
-      SocialService.getOrderedProviderList(function (providers) {
+      SocialService.getOrderedProviderList(function(providers) {
         Social._updateProviderCache(providers);
         Social._updateEnabledState(SocialService.enabled);
         deferred.resolve(false);
@@ -99,7 +99,7 @@ this.Social = {
   },
 
   // Called to update our cache of providers and set the current provider
-  _updateProviderCache: function (providers) {
+  _updateProviderCache: function(providers) {
     this.providers = providers;
     Services.obs.notifyObservers(null, "social:providers-changed", null);
   },
@@ -108,7 +108,7 @@ this.Social = {
     return !this._disabledForSafeMode && this.providers.length > 0;
   },
 
-  _getProviderFromOrigin: function (origin) {
+  _getProviderFromOrigin: function(origin) {
     for (let p of this.providers) {
       if (p.origin == origin) {
         return p;
@@ -121,7 +121,7 @@ this.Social = {
     return SocialService.getManifestByOrigin(origin);
   },
 
-  installProvider: function(data, installCallback, options={}) {
+  installProvider: function(data, installCallback, options = {}) {
     SocialService.installProvider(data, installCallback, options);
   },
 
@@ -130,7 +130,7 @@ this.Social = {
   },
 
   // Activation functionality
-  activateFromOrigin: function (origin, callback) {
+  activateFromOrigin: function(origin, callback) {
     // It's OK if the provider has already been activated - we still get called
     // back with it.
     SocialService.enableProvider(origin, callback);
@@ -233,7 +233,7 @@ this.OpenGraphBuilder = {
     let [endpointURL, queryString] = URLTemplate.split("?");
     let query = {};
     if (queryString) {
-      queryString.split('&').forEach(function (val) {
+      queryString.split('&').forEach(function(val) {
         let [name, value] = val.split('=');
         let p = /%\{(.+)\}/.exec(value);
         if (!p) {

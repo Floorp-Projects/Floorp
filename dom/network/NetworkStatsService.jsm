@@ -141,10 +141,6 @@ this.NetworkStatsService = {
   },
 
   receiveMessage: function(aMessage) {
-    if (!aMessage.target.assertPermission("networkstats-manage")) {
-      return;
-    }
-
     debug("receiveMessage " + aMessage.name);
 
     let mm = aMessage.target;

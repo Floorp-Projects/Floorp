@@ -25,8 +25,5 @@ interface nsIDOMGeoGeolocation : nsISupports
   int32_t watchPosition(in nsIDOMGeoPositionCallback callback,
                         in nsIDOMGeoPositionErrorCallback errorCallback,
                         in PositionOptionsRef options);
-  void getCurrentPosition(in nsIDOMGeoPositionCallback callback,
-                          in nsIDOMGeoPositionErrorCallback errorCallback,
-                          in PositionOptionsRef options);
   void clearWatch(in long watchId);
 };

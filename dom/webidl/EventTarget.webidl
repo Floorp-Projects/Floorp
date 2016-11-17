@@ -38,7 +38,7 @@ interface EventTarget {
   void removeEventListener(DOMString type,
                            EventListener? listener,
                            optional (EventListenerOptions or boolean) options);
-  [Throws]
+  [Throws, NeedsCallerType]
   boolean dispatchEvent(Event event);
 };
 

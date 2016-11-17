@@ -15,7 +15,7 @@ var security = {
   },
 
   // Display the server certificate (static)
-  viewCert : function () {
+  viewCert : function() {
     var cert = security._cert;
     viewCertHelper(window, cert);
   },

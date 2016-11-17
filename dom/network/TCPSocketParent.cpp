@@ -9,7 +9,6 @@
 #include "jsfriendapi.h"
 #include "nsJSUtils.h"
 #include "mozilla/Unused.h"
-#include "mozilla/AppProcessChecker.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/PNeckoParent.h"
 #include "mozilla/dom/ContentParent.h"
@@ -73,13 +72,7 @@ TCPSocketParentBase::~TCPSocketParentBase()
 uint32_t
 TCPSocketParent::GetAppId()
 {
-  const PContentParent *content = Manager()->Manager();
-  if (PBrowserParent* browser = SingleManagedOrNull(content->ManagedPBrowserParent())) {
-    TabParent *tab = TabParent::GetFrom(browser);
-    return tab->OwnAppId();
-  } else {
-    return nsIScriptSecurityManager::UNKNOWN_APP_ID;
-  }
+  return nsIScriptSecurityManager::UNKNOWN_APP_ID;
 };
 
 bool
@@ -124,14 +117,6 @@ mozilla::ipc::IPCResult
 TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bool& aUseSSL,
                           const bool& aUseArrayBuffers)
 {
-  // We don't have browser actors in xpcshell, and hence can't run automated
-  // tests without this loophole.
-  if (net::UsingNeckoIPCSecurity() &&
-      !AssertAppProcessPermission(Manager()->Manager(), "tcp-socket")) {
-    FireInteralError(this, __LINE__);
-    return IPC_OK();
-  }
-
   // Obtain App ID
   uint32_t appId = GetAppId();
   bool     inIsolatedMozBrowser = GetInIsolatedMozBrowser();
@@ -152,12 +137,6 @@ TCPSocketParent::RecvOpenBind(const nsCString& aRemoteHost,
                               const bool&     aUseArrayBuffers,
                               const nsCString& aFilter)
 {
-  if (net::UsingNeckoIPCSecurity() &&
-      !AssertAppProcessPermission(Manager()->Manager(), "tcp-socket")) {
-    FireInteralError(this, __LINE__);
-    return IPC_OK();
-  }
-
   nsresult rv;
   nsCOMPtr<nsISocketTransportService> sts =
     do_GetService("@mozilla.org/network/socket-transport-service;1", &rv);
@@ -211,20 +190,15 @@ TCPSocketParent::RecvOpenBind(const nsCString& aRemoteHost,
     }
   }
 
-  // Obtain App ID
-  uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
   bool     inIsolatedMozBrowser = false;
   const PContentParent *content = Manager()->Manager();
   if (PBrowserParent* browser = SingleManagedOrNull(content->ManagedPBrowserParent())) {
-    // appId's are for B2G only currently, where managees.Count() == 1
-    // This is not guaranteed currently in Desktop, so skip this there.
     TabParent *tab = TabParent::GetFrom(browser);
-    appId = tab->OwnAppId();
     inIsolatedMozBrowser = tab->IsIsolatedMozBrowserElement();
   }
 
   mSocket = new TCPSocket(nullptr, NS_ConvertUTF8toUTF16(aRemoteHost), aRemotePort, aUseSSL, aUseArrayBuffers);
-  mSocket->SetAppIdAndBrowser(appId, inIsolatedMozBrowser);
+  mSocket->SetAppIdAndBrowser(nsIScriptSecurityManager::NO_APP_ID, inIsolatedMozBrowser);
   mSocket->SetSocketBridgeParent(this);
   rv = mSocket->InitWithUnconnectedTransport(socketTransport);
   NS_ENSURE_SUCCESS(rv, IPC_OK());

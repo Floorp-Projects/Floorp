@@ -262,68 +262,6 @@ let gData = [
     test: TestGet
   },
 
-  // Certified application with permision granted
-  {
-    type: 'pictures',
-    shouldPass: true,
-    fileExtension: '.png',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:pictures"],
-
-    test: TestGet
-  },
-  {
-    type: 'videos',
-    shouldPass: true,
-    fileExtension: '.ogv',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:videos"],
-
-    test: TestGet
-  },
-  {
-    type: 'videos',
-    shouldPass: true,
-    fileExtension: '.ogg',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:videos"],
-
-    test: TestGet
-  },
-  {
-    type: 'music',
-    shouldPass: true,
-    fileExtension: '.ogg',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:music"],
-
-    test: TestGet
-  },
-  {
-    type: 'music',
-    shouldPass: false,
-    fileExtension: '.txt',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:music"],
-
-    test: TestGet
-  },
-  {
-    type: 'sdcard',
-    shouldPass: true,
-    fileExtension: '.txt',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:sdcard"],
-
-    test: TestGet
-  },
-
   // Directory#createDirectory
 
   // Web applications with no permissions
@@ -377,44 +315,6 @@ let gData = [
     type: 'sdcard',
     shouldPass: true,
 
-    permissions: ["device-storage:sdcard"],
-
-    test: TestCreateDirectory
-  },
-
-  // Certified application with permision granted
-  {
-    type: 'pictures',
-    shouldPass: true,
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:pictures"],
-
-    test: TestCreateDirectory
-  },
-  {
-    type: 'videos',
-    shouldPass: true,
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:videos"],
-
-    test: TestCreateDirectory
-  },
-  {
-    type: 'music',
-    shouldPass: true,
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:music"],
-
-    test: TestCreateDirectory
-  },
-  {
-    type: 'sdcard',
-    shouldPass: true,
-
-    app: "https://example.com/manifest_cert.webapp",
     permissions: ["device-storage:sdcard"],
 
     test: TestCreateDirectory
@@ -528,74 +428,6 @@ let gData = [
     test: TestCreateFile
   },
 
-  // Certified application with permision granted
-  {
-    type: 'pictures',
-    mimeType: 'image/png',
-    shouldPass: true,
-    fileExtension: '.png',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:pictures"],
-
-    test: TestCreateFile
-  },
-  {
-    type: 'videos',
-    mimeType: 'video/ogv',
-    shouldPass: true,
-    fileExtension: '.ogv',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:videos"],
-
-    test: TestCreateFile
-  },
-  {
-    type: 'videos',
-    mimeType: 'video/ogg',
-    shouldPass: true,
-    fileExtension: '.ogg',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:videos"],
-
-    test: TestCreateFile
-  },
-  {
-    type: 'music',
-    mimeType: 'audio/ogg',
-    shouldPass: true,
-    fileExtension: '.ogg',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:music"],
-
-    test: TestCreateFile
-  },
-  {
-    type: 'music',
-    mimeType: 'audio/ogg',
-    shouldPass: false,
-    fileExtension: '.txt',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:music"],
-
-    test: TestCreateFile
-  },
-  {
-    type: 'sdcard',
-    mimeType: 'text/plain',
-    shouldPass: true,
-    fileExtension: '.txt',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:sdcard"],
-
-    test: TestCreateFile
-  },
-
   // Directory#remove
 
   // Web applications with no permissions
@@ -692,68 +524,6 @@ let gData = [
     test: TestRemove
   },
 
-  // Certified application with permision granted
-  {
-    type: 'pictures',
-    shouldPass: true,
-    fileExtension: '.png',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:pictures"],
-
-    test: TestRemove
-  },
-  {
-    type: 'videos',
-    shouldPass: true,
-    fileExtension: '.ogv',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:videos"],
-
-    test: TestRemove
-  },
-  {
-    type: 'videos',
-    shouldPass: true,
-    fileExtension: '.ogg',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:videos"],
-
-    test: TestRemove
-  },
-  {
-    type: 'music',
-    shouldPass: true,
-    fileExtension: '.ogg',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:music"],
-
-    test: TestRemove
-  },
-  {
-    type: 'music',
-    shouldPass: false,
-    fileExtension: '.txt',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:music"],
-
-    test: TestRemove
-  },
-  {
-    type: 'sdcard',
-    shouldPass: true,
-    fileExtension: '.txt',
-
-    app: "https://example.com/manifest_cert.webapp",
-    permissions: ["device-storage:sdcard"],
-
-    test: TestRemove
-  }
-
 ];
 
 function setupTest(iframe,data) {
@@ -786,9 +556,6 @@ function runTest() {
     let data = gData.shift();
 
     iframe.setAttribute('mozbrowser', '');
-    if (data.app) {
-      iframe.setAttribute('mozapp', data.app);
-    }
 
     iframe.src = gTestUri;
 

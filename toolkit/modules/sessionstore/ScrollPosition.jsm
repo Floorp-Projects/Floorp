@@ -37,7 +37,7 @@ var ScrollPositionInternal = {
    *         Returns null when there is no scroll data we want to store for the
    *         given |frame|.
    */
-  collect: function (frame) {
+  collect: function(frame) {
     let ifreq = frame.QueryInterface(Ci.nsIInterfaceRequestor);
     let utils = ifreq.getInterface(Ci.nsIDOMWindowUtils);
     let scrollX = {}, scrollY = {};
@@ -56,7 +56,7 @@ var ScrollPositionInternal = {
    * @param frame (DOMWindow)
    * @param value (object, see collect())
    */
-  restore: function (frame, value) {
+  restore: function(frame, value) {
     let match;
 
     if (value && (match = /(\d+),(\d+)/.exec(value))) {
@@ -84,7 +84,7 @@ var ScrollPositionInternal = {
    *          ]
    *        }
    */
-  restoreTree: function (root, data) {
+  restoreTree: function(root, data) {
     if (data.hasOwnProperty("scroll")) {
       this.restore(root, data.scroll);
     }
