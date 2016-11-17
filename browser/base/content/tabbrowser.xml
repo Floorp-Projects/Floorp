@@ -2863,6 +2863,13 @@
               this._swapBrowserDocShells(aOurTab, otherBrowser, Ci.nsIBrowser.SWAP_DEFAULT);
             }
 
+            // Unregister the previously opened URI
+            if (otherBrowser.registeredOpenURI) {
+              this._unifiedComplete.unregisterOpenPage(otherBrowser.registeredOpenURI,
+                                                       otherBrowser.getAttribute("usercontextid") || 0);
+              delete otherBrowser.registeredOpenURI;
+            }
+
             // Handle findbar data (if any)
             let otherFindBar = aOtherTab._findBar;
             if (otherFindBar &&
@@ -2979,17 +2986,15 @@
         <parameter name="aOtherBrowser"/>
         <body>
           <![CDATA[
-            // If the current URI is registered as open remove it from the list.
-            if (aOurBrowser.registeredOpenURI) {
-              this._unifiedComplete.unregisterOpenPage(aOurBrowser.registeredOpenURI,
-                                                       aOurBrowser.getAttribute("usercontextid") || 0);
-              delete aOurBrowser.registeredOpenURI;
-            }
-
-            // If the other/new URI is registered as open then copy it over.
+            // Swap the registeredOpenURI properties of the two browsers
+            let tmp = aOurBrowser.registeredOpenURI;
+            delete aOurBrowser.registeredOpenURI;
             if (aOtherBrowser.registeredOpenURI) {
               aOurBrowser.registeredOpenURI = aOtherBrowser.registeredOpenURI;
               delete aOtherBrowser.registeredOpenURI;
+            }
+            if (tmp) {
+              aOtherBrowser.registeredOpenURI = tmp;
             }
           ]]>
         </body>
