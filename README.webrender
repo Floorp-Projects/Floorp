@@ -33,3 +33,36 @@ For a debug webrender build:
     Use a debug mozconfig (ac_add_options --enable-debug)
     You can also use an opt build but make webrender less optimized by putting opt-level=0 in the [profile.release] section of your gfx/webrender/Cargo.toml file
     See also https://groups.google.com/forum/#!topic/mozilla.dev.servo/MbeMcqqO1fs
+
+
+What if you have to make changes to webrender itself?
+
+1) Update your graphics branch checkout to the latest code on the
+graphics branch
+2) Separately, check out the webrender repo to the last version we
+used in-tree (right now it's
+git:b91db5452e57a9fe5c444d57b0021cd2507723f5)
+3) Do a diff between the webrender repo and the stuff we have in-tree
+to see what the differences are and make a note
+4) Update the webrender repo to the version you want
+5) Copy over the webrender files into gfx/webrender (and
+gfx/webrender_traits) but make sure you keep the changes from step 3.
+You're basically doing a rebase-by-hand here which can be tricky.
+6) Commit your changes to the graphics branch locally
+7) Run |mach vendor rust| to update the rust dependencies in third_party/rust
+8) Commit the vendored changes locally
+9) Build and test. You may need to make changes in bindings.rs or on
+the C++ side depending on what changed in webrender. This can
+potentially be quite tricky if you don't fully understand the API
+changes on the webrender side. In this step, try to not use your new
+features yet, just get the build working with the minimal changes.
+10) Commit the changes locally from step 9, and push everything to the
+graphics branch.
+11) Now you have an update webrender with the new features you wanted,
+so you can write gecko code against them.
+
+Yes, this is very painful. Once we split the bindings into a separate
+crate (bug 1316223) this will become simpler because it will remove
+step 2-3, and simplify step 5 to a copy. Step 9 is likely going to
+remain tricky if there are incompatible API changes on the WR side,
+hopefully those will be kept to a minimum.
