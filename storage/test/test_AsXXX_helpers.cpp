@@ -21,7 +21,7 @@ public:
   NS_DECL_ASYNCSTATEMENTSPINNER
   Spinner() {}
 protected:
-  virtual ~Spinner() = default;
+  ~Spinner() override = default;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED0(Spinner,

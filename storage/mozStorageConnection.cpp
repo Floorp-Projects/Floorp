@@ -415,7 +415,7 @@ public:
     return NS_OK;
   }
 
-  ~AsyncCloseConnection() {
+  ~AsyncCloseConnection() override {
     NS_ReleaseOnMainThread(mConnection.forget());
     NS_ReleaseOnMainThread(mCallbackEvent.forget());
   }
@@ -473,7 +473,7 @@ private:
     return mClone->threadOpenedOn->Dispatch(event, NS_DISPATCH_NORMAL);
   }
 
-  ~AsyncInitializeClone() {
+  ~AsyncInitializeClone() override {
     nsCOMPtr<nsIThread> thread;
     DebugOnly<nsresult> rv = NS_GetMainThread(getter_AddRefs(thread));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
