@@ -225,34 +225,126 @@ add_task(function* test_order() {
   yield PlacesSyncUtils.bookmarks.reset();
 });
 
-add_task(function* test_changeGuid_invalid() {
-  yield rejects(PlacesSyncUtils.bookmarks.changeGuid(makeGuid()),
-    "Should require a new GUID");
-  yield rejects(PlacesSyncUtils.bookmarks.changeGuid(makeGuid(), "!@#$"),
-    "Should reject invalid GUIDs");
-  yield rejects(PlacesSyncUtils.bookmarks.changeGuid(makeGuid(), makeGuid()),
-    "Should reject nonexistent item GUIDs");
-  yield rejects(
-    PlacesSyncUtils.bookmarks.changeGuid(PlacesUtils.bookmarks.menuGuid,
-      makeGuid()),
-    "Should reject roots");
-});
+add_task(function* test_dedupe() {
+  yield ignoreChangedRoots();
 
-add_task(function* test_changeGuid() {
-  let item = yield PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+  let parentFolder = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "folder",
+    syncId: makeGuid(),
+    parentSyncId: "menu",
+  });
+  let differentParentFolder = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "folder",
+    syncId: makeGuid(),
+    parentSyncId: "menu",
+  });
+  let mozBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: parentFolder.syncId,
     url: "https://mozilla.org",
   });
-  let id = yield PlacesUtils.promiseItemId(item.guid);
+  let fxBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: parentFolder.syncId,
+    url: "http://getfirefox.com",
+  });
+  let tbBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: parentFolder.syncId,
+    url: "http://getthunderbird.com",
+  });
 
-  let newGuid = makeGuid();
-  let result = yield PlacesSyncUtils.bookmarks.changeGuid(item.guid, newGuid);
-  equal(result, newGuid, "Should return new GUID");
+  yield rejects(
+    PlacesSyncUtils.bookmarks.dedupe(makeGuid(), makeGuid(), makeGuid()),
+    "Should reject attempts to de-dupe nonexistent items"
+  );
+  yield rejects(PlacesSyncUtils.bookmarks.dedupe("menu", makeGuid(), "places"),
+    "Should reject attempts to de-dupe local roots");
 
-  equal(yield PlacesUtils.promiseItemId(newGuid), id, "Should map ID to new GUID");
-  yield rejects(PlacesUtils.promiseItemId(item.guid), "Should not map ID to old GUID");
-  equal(yield PlacesUtils.promiseItemGuid(id), newGuid, "Should map new GUID to ID");
+  do_print("De-dupe with same remote parent");
+  {
+    let localId = yield PlacesUtils.promiseItemId(mozBmk.syncId);
+    let newRemoteSyncId = makeGuid();
+
+    let changes = yield PlacesSyncUtils.bookmarks.dedupe(
+      mozBmk.syncId, newRemoteSyncId, parentFolder.syncId);
+    deepEqual(Object.keys(changes).sort(), [
+      parentFolder.syncId, // Parent.
+      mozBmk.syncId, // Tombstone for old sync ID.
+    ].sort(), "Should bump change counter of parent");
+    ok(changes[mozBmk.syncId].tombstone,
+      "Should write tombstone for old local sync ID");
+    ok(Object.values(changes).every(change => change.counter === 1),
+      "Change counter for every bookmark should be 1");
+
+    ok(!(yield PlacesUtils.bookmarks.fetch(mozBmk.syncId)),
+      "Bookmark with old local sync ID should not exist");
+    yield rejects(PlacesUtils.promiseItemId(mozBmk.syncId),
+      "Should invalidate GUID cache entry for old local sync ID");
+
+    let newMozBmk = yield PlacesUtils.bookmarks.fetch(newRemoteSyncId);
+    equal(newMozBmk.guid, newRemoteSyncId,
+      "Should change local sync ID to remote sync ID");
+    equal(yield PlacesUtils.promiseItemId(newRemoteSyncId), localId,
+      "Should add new remote sync ID to GUID cache");
+
+    yield setChangesSynced(changes);
+  }
+
+  do_print("De-dupe with different remote parent");
+  {
+    let localId = yield PlacesUtils.promiseItemId(fxBmk.syncId);
+    let newRemoteSyncId = makeGuid();
+
+    let changes = yield PlacesSyncUtils.bookmarks.dedupe(
+      fxBmk.syncId, newRemoteSyncId, differentParentFolder.syncId);
+    deepEqual(Object.keys(changes).sort(), [
+      parentFolder.syncId, // Old local parent.
+      differentParentFolder.syncId, // New remote parent.
+      fxBmk.syncId, // Tombstone for old sync ID.
+    ].sort(), "Should bump change counter of old parent and new parent");
+    ok(changes[fxBmk.syncId].tombstone,
+      "Should write tombstone for old local sync ID");
+    ok(Object.values(changes).every(change => change.counter === 1),
+      "Change counter for every bookmark should be 1");
+
+    let newFxBmk = yield PlacesUtils.bookmarks.fetch(newRemoteSyncId);
+    equal(newFxBmk.parentGuid, parentFolder.syncId,
+      "De-duping should not move bookmark to new parent");
+    equal(yield PlacesUtils.promiseItemId(newRemoteSyncId), localId,
+      "De-duping with different remote parent should cache new sync ID");
+
+    yield setChangesSynced(changes);
+  }
+
+  do_print("De-dupe with nonexistent remote parent");
+  {
+    let localId = yield PlacesUtils.promiseItemId(tbBmk.syncId);
+    let newRemoteSyncId = makeGuid();
+    let remoteParentSyncId = makeGuid();
+
+    let changes = yield PlacesSyncUtils.bookmarks.dedupe(
+      tbBmk.syncId, newRemoteSyncId, remoteParentSyncId);
+    deepEqual(Object.keys(changes).sort(), [
+      parentFolder.syncId, // Old local parent.
+      tbBmk.syncId, // Tombstone for old sync ID.
+    ].sort(), "Should bump change counter of old parent");
+    ok(changes[tbBmk.syncId].tombstone,
+      "Should write tombstone for old local sync ID");
+    ok(Object.values(changes).every(change => change.counter === 1),
+      "Change counter for every bookmark should be 1");
+
+    equal(yield PlacesUtils.promiseItemId(newRemoteSyncId), localId,
+      "De-duping with nonexistent remote parent should cache new sync ID");
+
+    yield setChangesSynced(changes);
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_order_roots() {
