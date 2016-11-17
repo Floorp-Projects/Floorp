@@ -460,38 +460,38 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 // Section decoding.
 
 static bool
-DecodeImportSection(Decoder& d, ModuleGeneratorData* init, ImportVector* imports)
+DecodeImportSection(Decoder& d, ModuleEnvironment* env, ImportVector* imports)
 {
     Maybe<Limits> memory;
-    if (!DecodeImportSection(d, init->sigs, &init->funcSigs, &init->globals, &init->tables, &memory,
+    if (!DecodeImportSection(d, env->sigs, &env->funcSigs, &env->globals, &env->tables, &memory,
                              imports))
         return false;
 
-    // The global data offsets will be filled in by ModuleGenerator::init.
-    if (!init->funcImportGlobalDataOffsets.resize(init->funcSigs.length()))
+    // The global data offsets will be filled in by ModuleGenerator::env.
+    if (!env->funcImportGlobalDataOffsets.resize(env->funcSigs.length()))
         return false;
 
     if (memory) {
-        init->memoryUsage = MemoryUsage::Unshared;
-        init->minMemoryLength = memory->initial;
-        init->maxMemoryLength = memory->maximum;
+        env->memoryUsage = MemoryUsage::Unshared;
+        env->minMemoryLength = memory->initial;
+        env->maxMemoryLength = memory->maximum;
     }
 
     return true;
 }
 
 static bool
-DecodeMemorySection(Decoder& d, ModuleGeneratorData* init)
+DecodeMemorySection(Decoder& d, ModuleEnvironment* env)
 {
     bool present;
     Limits memory;
-    if (!DecodeMemorySection(d, UsesMemory(init->memoryUsage), &memory, &present))
+    if (!DecodeMemorySection(d, UsesMemory(env->memoryUsage), &memory, &present))
         return false;
 
     if (present) {
-        init->memoryUsage = MemoryUsage::Unshared;
-        init->minMemoryLength = memory.initial;
-        init->maxMemoryLength = memory.maximum;
+        env->memoryUsage = MemoryUsage::Unshared;
+        env->minMemoryLength = memory.initial;
+        env->maxMemoryLength = memory.maximum;
     }
 
     return true;
@@ -653,34 +653,34 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
 
     Decoder d(bytecode.begin(), bytecode.end(), error);
 
-    auto init = js::MakeUnique<ModuleGeneratorData>();
-    if (!init)
+    auto env = js::MakeUnique<ModuleEnvironment>();
+    if (!env)
         return nullptr;
 
     if (!DecodePreamble(d))
         return nullptr;
 
-    if (!DecodeTypeSection(d, &init->sigs))
+    if (!DecodeTypeSection(d, &env->sigs))
         return nullptr;
 
     ImportVector imports;
-    if (!::DecodeImportSection(d, init.get(), &imports))
+    if (!::DecodeImportSection(d, env.get(), &imports))
         return nullptr;
 
-    if (!DecodeFunctionSection(d, init->sigs, &init->funcSigs))
+    if (!DecodeFunctionSection(d, env->sigs, &env->funcSigs))
         return nullptr;
 
-    if (!DecodeTableSection(d, &init->tables))
+    if (!DecodeTableSection(d, &env->tables))
         return nullptr;
 
-    if (!::DecodeMemorySection(d, init.get()))
+    if (!::DecodeMemorySection(d, env.get()))
         return nullptr;
 
-    if (!DecodeGlobalSection(d, &init->globals))
+    if (!DecodeGlobalSection(d, &env->globals))
         return nullptr;
 
     ModuleGenerator mg(Move(imports));
-    if (!mg.init(Move(init), args))
+    if (!mg.init(Move(env), args))
         return nullptr;
 
     if (!::DecodeExportSection(d, mg))

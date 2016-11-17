@@ -25,7 +25,7 @@
 namespace js {
 namespace wasm {
 
-struct ModuleGeneratorData;
+struct ModuleEnvironment;
 
 typedef Vector<jit::MIRType, 8, SystemAllocPolicy> MIRTypeVector;
 typedef jit::ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
@@ -102,24 +102,24 @@ class IonCompileTask
     enum class CompileMode { None, Baseline, Ion };
 
   private:
-    const ModuleGeneratorData& mg_;
-    LifoAlloc                  lifo_;
-    UniqueFuncBytes            func_;
-    CompileMode                mode_;
-    Maybe<FuncCompileResults>  results_;
+    const ModuleEnvironment&  env_;
+    LifoAlloc                 lifo_;
+    UniqueFuncBytes           func_;
+    CompileMode               mode_;
+    Maybe<FuncCompileResults> results_;
 
     IonCompileTask(const IonCompileTask&) = delete;
     IonCompileTask& operator=(const IonCompileTask&) = delete;
 
   public:
-    IonCompileTask(const ModuleGeneratorData& mg, size_t defaultChunkSize)
-      : mg_(mg), lifo_(defaultChunkSize), func_(nullptr), mode_(CompileMode::None)
+    IonCompileTask(const ModuleEnvironment& env, size_t defaultChunkSize)
+      : env_(env), lifo_(defaultChunkSize), func_(nullptr), mode_(CompileMode::None)
     {}
     LifoAlloc& lifo() {
         return lifo_;
     }
-    const ModuleGeneratorData& mg() const {
-        return mg_;
+    const ModuleEnvironment& env() const {
+        return env_;
     }
     void init(UniqueFuncBytes func, CompileMode mode) {
         MOZ_ASSERT(!func_);
