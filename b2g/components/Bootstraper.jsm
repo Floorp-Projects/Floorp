@@ -12,7 +12,6 @@ const Cu = Components.utils;
 const CC = Components.Constructor;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 function debug(aMsg) {
   //dump("-*- Bootstraper: " + aMsg + "\n");
@@ -24,7 +23,6 @@ function debug(aMsg) {
   */
 this.Bootstraper = {
   _manifestURL: null,
-  _startupURL: null,
 
   bailout: function(aMsg) {
     dump("************************************************************\n");
@@ -33,33 +31,6 @@ this.Bootstraper = {
     let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
                        .getService(Ci.nsIAppStartup);
     appStartup.quit(appStartup.eForceQuit);
-  },
-
-  installSystemApp: function(aManifest) {
-    // Get the appropriate startup url from the manifest launch_path.
-    let base = Services.io.newURI(this._manifestURL, null, null);
-    let origin = base.prePath;
-    let helper = new ManifestHelper(aManifest, origin, this._manifestURL);
-    this._startupURL = helper.fullLaunchPath();
-
-    return new Promise((aResolve, aReject) => {
-      debug("Origin is " + origin);
-      let appData = {
-        app: {
-          installOrigin: origin,
-          origin: origin,
-          manifest: aManifest,
-          manifestURL: this._manifestURL,
-          manifestHash: AppsUtils.computeHash(JSON.stringify(aManifest)),
-          appStatus: Ci.nsIPrincipal.APP_STATUS_CERTIFIED
-        },
-        appId: 1,
-        isBrowser: false,
-        isPackage: false
-      };
-
-      //DOMApplicationRegistry.confirmInstall(appData, null, aResolve);
-    });
   },
 
   /**
@@ -90,9 +61,8 @@ this.Bootstraper = {
   },
 
   configure: function() {
-    debug("Setting startup prefs... " + this._startupURL);
     Services.prefs.setCharPref("b2g.system_manifest_url", this._manifestURL);
-    Services.prefs.setCharPref("b2g.system_startup_url", this._startupURL);
+    Services.prefs.setCharPref("b2g.system_startup_url", "");
     return Promise.resolve();
   },
 
@@ -147,7 +117,6 @@ this.Bootstraper = {
     return new Promise((aResolve, aReject) => {
       this.uninstallPreviousSystemApp.bind(this)
           .then(this.loadManifest.bind(this))
-          .then(this.installSystemApp.bind(this))
           .then(this.configure.bind(this))
           .then(aResolve)
           .catch(aReject);
