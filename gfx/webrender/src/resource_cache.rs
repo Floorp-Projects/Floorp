@@ -3,13 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use device::{TextureFilter, TextureId};
+use device::TextureFilter;
 use euclid::{Point2D, Size2D};
 use fnv::FnvHasher;
 use frame::FrameId;
-use freelist::FreeList;
-use internal_types::FontTemplate;
-use internal_types::{TextureUpdateList, DrawListId, DrawList};
+use internal_types::{FontTemplate, SourceTexture, TextureUpdateList};
 use platform::font::{FontContext, RasterizedGlyph};
 use rayon::prelude::*;
 use std::cell::RefCell;
@@ -18,9 +16,9 @@ use std::collections::hash_map::Entry::{self, Occupied, Vacant};
 use std::fmt::Debug;
 use std::hash::BuildHasherDefault;
 use std::hash::Hash;
-use texture_cache::{TextureCache, TextureCacheItem, TextureCacheItemId};
-use webrender_traits::{Epoch, FontKey, GlyphKey, ImageKey, ImageFormat, DisplayItem, ImageRendering};
-use webrender_traits::{FontRenderMode, GlyphDimensions, PipelineId, WebGLContextId};
+use texture_cache::{TextureCache, TextureCacheItemId};
+use webrender_traits::{Epoch, FontKey, GlyphKey, ImageKey, ImageFormat, ImageRendering};
+use webrender_traits::{FontRenderMode, GlyphDimensions, WebGLContextId};
 
 thread_local!(pub static FONT_CONTEXT: RefCell<FontContext> = RefCell::new(FontContext::new()));
 
@@ -34,7 +32,7 @@ thread_local!(pub static FONT_CONTEXT: RefCell<FontContext> = RefCell::new(FontC
 // we don't need to go through and update
 // various CPU-side structures.
 pub struct CacheItem {
-    pub texture_id: TextureId,
+    pub texture_id: SourceTexture,
     pub uv0: Point2D<f32>,
     pub uv1: Point2D<f32>,
 }
@@ -67,12 +65,6 @@ enum State {
     Idle,
     AddResources,
     QueryResources,
-}
-
-#[derive(Clone, Debug)]
-pub struct DummyResources {
-    pub white_image_id: TextureCacheItemId,
-    pub opaque_mask_image_id: TextureCacheItemId,
 }
 
 struct ImageResource {
@@ -169,7 +161,7 @@ enum ResourceRequest {
 }
 
 struct WebGLTexture {
-    id: TextureId,
+    id: SourceTexture,
     size: Size2D<i32>,
 }
 
@@ -180,7 +172,6 @@ pub struct ResourceCache {
     // TODO(pcwalton): Figure out the lifecycle of these.
     webgl_textures: HashMap<WebGLContextId, WebGLTexture, BuildHasherDefault<FnvHasher>>,
 
-    draw_lists: FreeList<DrawList>,
     font_templates: HashMap<FontKey, FontTemplate, BuildHasherDefault<FnvHasher>>,
     image_templates: HashMap<ImageKey, ImageResource, BuildHasherDefault<FnvHasher>>,
     device_pixel_ratio: f32,
@@ -204,7 +195,6 @@ impl ResourceCache {
             cached_glyphs: ResourceClassCache::new(),
             cached_images: ResourceClassCache::new(),
             webgl_textures: HashMap::with_hasher(Default::default()),
-            draw_lists: FreeList::new(),
             font_templates: HashMap::with_hasher(Default::default()),
             image_templates: HashMap::with_hasher(Default::default()),
             cached_glyph_dimensions: HashMap::with_hasher(Default::default()),
@@ -275,26 +265,19 @@ impl ResourceCache {
         self.image_templates.remove(&image_key);
     }
 
-    pub fn add_webgl_texture(&mut self, id: WebGLContextId, texture_id: TextureId, size: Size2D<i32>) {
+    pub fn add_webgl_texture(&mut self, id: WebGLContextId, texture_id: SourceTexture, size: Size2D<i32>) {
         self.webgl_textures.insert(id, WebGLTexture {
             id: texture_id,
             size: size,
         });
-        self.texture_cache.add_raw_update(texture_id, size);
     }
 
-    pub fn update_webgl_texture(&mut self, id: WebGLContextId, texture_id: TextureId, size: Size2D<i32>) {
+    pub fn update_webgl_texture(&mut self, id: WebGLContextId, texture_id: SourceTexture, size: Size2D<i32>) {
         let webgl_texture = self.webgl_textures.get_mut(&id).unwrap();
 
-        // Remove existing cache if texture id has changed
-        if webgl_texture.id != texture_id {
-            self.texture_cache.add_raw_remove(webgl_texture.id);
-        }
         // Update new texture id and size
         webgl_texture.id = texture_id;
         webgl_texture.size = size;
-
-        self.texture_cache.add_raw_update(texture_id, size);
     }
 
     pub fn request_image(&mut self,
@@ -347,19 +330,6 @@ impl ResourceCache {
         }
     }
 
-    pub fn add_draw_list(&mut self, items: Vec<DisplayItem>, pipeline_id: PipelineId)
-                         -> DrawListId {
-        self.draw_lists.insert(DrawList::new(items, pipeline_id))
-    }
-
-    pub fn get_draw_list(&self, draw_list_id: DrawListId) -> &DrawList {
-        self.draw_lists.get(draw_list_id)
-    }
-
-    pub fn remove_draw_list(&mut self, draw_list_id: DrawListId) {
-        self.draw_lists.free(draw_list_id);
-    }
-
     pub fn pending_updates(&mut self) -> TextureUpdateList {
         self.texture_cache.pending_updates()
     }
@@ -369,13 +339,13 @@ impl ResourceCache {
                          size: Au,
                          glyph_indices: &[u32],
                          render_mode: FontRenderMode,
-                         mut f: F) -> TextureId where F: FnMut(usize, Point2D<f32>, Point2D<f32>) {
+                         mut f: F) -> SourceTexture where F: FnMut(usize, Point2D<f32>, Point2D<f32>) {
         debug_assert!(self.state == State::QueryResources);
         let mut glyph_key = RenderedGlyphKey::new(font_key,
                                                   size,
                                                   0,
                                                   render_mode);
-        let mut texture_id = TextureId::invalid();
+        let mut texture_id = None;
         for (loop_index, glyph_index) in glyph_indices.iter().enumerate() {
             glyph_key.key.index = *glyph_index;
             let image_id = self.cached_glyphs.get(&glyph_key, self.current_frame_id);
@@ -386,12 +356,13 @@ impl ResourceCache {
                 let uv1 = Point2D::new(cache_item.pixel_rect.bottom_right.x as f32,
                                        cache_item.pixel_rect.bottom_right.y as f32);
                 f(loop_index, uv0, uv1);
-                debug_assert!(texture_id == TextureId::invalid() ||
-                              texture_id == cache_item.texture_id);
-                texture_id = cache_item.texture_id;
+                debug_assert!(texture_id == None ||
+                              texture_id == Some(cache_item.texture_id));
+                texture_id = Some(cache_item.texture_id);
             }
         }
-        texture_id
+
+        texture_id.map_or(SourceTexture::Invalid, SourceTexture::TextureCache)
     }
 
     pub fn get_glyph_dimensions(&mut self, glyph_key: &GlyphKey) -> Option<GlyphDimensions> {
@@ -434,7 +405,7 @@ impl ResourceCache {
                                                  self.current_frame_id);
         let item = self.texture_cache.get(image_info.texture_cache_id);
         CacheItem {
-            texture_id: item.texture_id,
+            texture_id: SourceTexture::TextureCache(item.texture_id),
             uv0: Point2D::new(item.pixel_rect.top_left.x as f32,
                               item.pixel_rect.top_left.y as f32),
             uv1: Point2D::new(item.pixel_rect.bottom_right.x as f32,
@@ -449,12 +420,6 @@ impl ResourceCache {
             format: image_template.format,
             is_opaque: image_template.is_opaque,
         }
-    }
-
-    #[inline]
-    pub fn get_image_by_cache_id(&self, texture_cache_id: TextureCacheItemId)
-                                 -> &TextureCacheItem {
-        self.texture_cache.get(texture_cache_id)
     }
 
     #[inline]

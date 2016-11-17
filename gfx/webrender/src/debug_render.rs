@@ -161,22 +161,19 @@ impl DebugRenderer {
     pub fn render(&mut self,
                   device: &mut Device,
                   viewport_size: &Size2D<u32>) {
-        if !self.font_indices.is_empty() ||
-           !self.line_vertices.is_empty() ||
-           !self.tri_vertices.is_empty() {
+        device.disable_depth();
+        device.set_blend(true);
+        device.set_blend_mode_alpha();
 
-            device.disable_depth();
-            device.set_blend(true);
-            device.set_blend_mode_alpha();
+        let projection = Matrix4D::ortho(0.0,
+                                         viewport_size.width as f32,
+                                         viewport_size.height as f32,
+                                         0.0,
+                                         ORTHO_NEAR_PLANE,
+                                         ORTHO_FAR_PLANE);
 
-            let projection = Matrix4D::ortho(0.0,
-                                             viewport_size.width as f32,
-                                             viewport_size.height as f32,
-                                             0.0,
-                                             ORTHO_NEAR_PLANE,
-                                             ORTHO_FAR_PLANE);
-
-            // Triangles
+        // Triangles
+        if !self.tri_vertices.is_empty() {
             device.bind_program(self.color_program_id, &projection);
             device.bind_vao(self.tri_vao);
             device.update_vao_indices(self.tri_vao,
@@ -186,17 +183,22 @@ impl DebugRenderer {
                                             &self.tri_vertices,
                                             VertexUsageHint::Dynamic);
             device.draw_triangles_u32(0, self.tri_indices.len() as i32);
+        }
 
-            // Lines
+        // Lines
+        if !self.line_vertices.is_empty() {
+            device.bind_program(self.color_program_id, &projection);
             device.bind_vao(self.line_vao);
             device.update_vao_main_vertices(self.line_vao,
                                             &self.line_vertices,
                                             VertexUsageHint::Dynamic);
             device.draw_nonindexed_lines(0, self.line_vertices.len() as i32);
+        }
 
-            // Glyphs
+        // Glyph
+        if !self.font_indices.is_empty() {
             device.bind_program(self.font_program_id, &projection);
-            device.bind_texture(TextureSampler::Color, self.font_texture_id);
+            device.bind_texture(TextureSampler::Color0, self.font_texture_id);
             device.bind_vao(self.font_vao);
             device.update_vao_indices(self.font_vao,
                                       &self.font_indices,

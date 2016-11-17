@@ -36,6 +36,9 @@
 
 uniform sampler2DArray sCache;
 
+flat varying vec4 vClipMaskUvBounds;
+varying vec3 vClipMaskUv;
+
 #ifdef WR_VERTEX_SHADER
 
 #define VECS_PER_LAYER             13
@@ -49,7 +52,6 @@ uniform sampler2DArray sCache;
 uniform sampler2D sLayers;
 uniform sampler2D sRenderTasks;
 uniform sampler2D sPrimGeometry;
-uniform sampler2D sClips;
 
 uniform sampler2D sData16;
 uniform sampler2D sData32;
@@ -152,6 +154,26 @@ Tile fetch_tile(int index) {
     return tile;
 }
 
+struct ClipArea {
+    vec4 task_bounds;
+    vec4 screen_origin_target_index;
+};
+
+ClipArea fetch_clip_area(int index) {
+    ClipArea area;
+
+    if (index == 0x7FFFFFFF) { //special sentinel task index
+        area.task_bounds = vec4(0.0, 0.0, 0.0, 0.0);
+        area.screen_origin_target_index = vec4(0.0, 0.0, 0.0, 0.0);
+    } else {
+        RenderTaskData task = fetch_render_task(index);
+        area.task_bounds = task.data0;
+        area.screen_origin_target_index = task.data1;
+    }
+
+    return area;
+}
+
 struct Gradient {
     vec4 start_end_point;
     vec4 kind;
@@ -252,8 +274,8 @@ struct PrimitiveInstance {
     int global_prim_index;
     int specific_prim_index;
     int render_task_index;
+    int clip_task_index;
     int layer_index;
-    int clip_address;
     int sub_index;
     ivec2 user_data;
 };
@@ -269,8 +291,8 @@ PrimitiveInstance fetch_instance(int index) {
     pi.global_prim_index = data0.x;
     pi.specific_prim_index = data0.y;
     pi.render_task_index = data0.z;
-    pi.layer_index = data0.w;
-    pi.clip_address = data1.x;
+    pi.clip_task_index = data0.w;
+    pi.layer_index = data1.x;
     pi.sub_index = data1.y;
     pi.user_data = data1.zw;
 
@@ -322,10 +344,10 @@ CachePrimitiveInstance fetch_cache_instance(int index) {
 struct Primitive {
     Layer layer;
     Tile tile;
+    ClipArea clip_area;
     vec4 local_rect;
     vec4 local_clip_rect;
     int prim_index;
-    int clip_index;
     // when sending multiple primitives of the same type (e.g. border segments)
     // this index allows the vertex shader to recognize the difference
     int sub_index;
@@ -339,88 +361,17 @@ Primitive load_primitive(int index) {
 
     prim.layer = fetch_layer(pi.layer_index);
     prim.tile = fetch_tile(pi.render_task_index);
+    prim.clip_area = fetch_clip_area(pi.clip_task_index);
 
     PrimitiveGeometry pg = fetch_prim_geometry(pi.global_prim_index);
     prim.local_rect = pg.local_rect;
     prim.local_clip_rect = pg.local_clip_rect;
 
     prim.prim_index = pi.specific_prim_index;
-    prim.clip_index = pi.clip_address;
     prim.sub_index = pi.sub_index;
     prim.user_data = pi.user_data;
 
     return prim;
-}
-
-struct ClipRect {
-    vec4 rect;
-    vec4 dummy;
-};
-
-ClipRect fetch_clip_rect(int index) {
-    ClipRect rect;
-
-    ivec2 uv = get_fetch_uv_2(index);
-
-    rect.rect = texelFetchOffset(sData32, uv, 0, ivec2(0, 0));
-    //rect.dummy = texelFetchOffset(sData32, uv, 0, ivec2(1, 0));
-    rect.dummy = vec4(0.0, 0.0, 0.0, 0.0);
-
-    return rect;
-}
-
-struct ImageMaskData {
-    vec4 uv_rect;
-    vec4 local_rect;
-};
-
-ImageMaskData fetch_mask_data(int index) {
-    ImageMaskData info;
-
-    ivec2 uv = get_fetch_uv_2(index);
-
-    info.uv_rect = texelFetchOffset(sData32, uv, 0, ivec2(0, 0));
-    info.local_rect = texelFetchOffset(sData32, uv, 0, ivec2(1, 0));
-
-    return info;
-}
-
-struct ClipCorner {
-    vec4 rect;
-    vec4 outer_inner_radius;
-};
-
-ClipCorner fetch_clip_corner(int index) {
-    ClipCorner corner;
-
-    ivec2 uv = get_fetch_uv_2(index);
-
-    corner.rect = texelFetchOffset(sData32, uv, 0, ivec2(0, 0));
-    corner.outer_inner_radius = texelFetchOffset(sData32, uv, 0, ivec2(1, 0));
-
-    return corner;
-}
-
-struct ClipData {
-    ClipRect rect;
-    ClipCorner top_left;
-    ClipCorner top_right;
-    ClipCorner bottom_left;
-    ClipCorner bottom_right;
-    ImageMaskData mask_data;
-};
-
-ClipData fetch_clip(int index) {
-    ClipData clip;
-
-    clip.rect = fetch_clip_rect(index + 0);
-    clip.top_left = fetch_clip_corner(index + 1);
-    clip.top_right = fetch_clip_corner(index + 2);
-    clip.bottom_left = fetch_clip_corner(index + 3);
-    clip.bottom_right = fetch_clip_corner(index + 4);
-    clip.mask_data = fetch_mask_data(index + 5);
-
-    return clip;
 }
 
 // Return the intersection of the plane (set up by "normal" and "point")
@@ -497,7 +448,7 @@ VertexInfo write_vertex(vec4 instance_rect,
 
     local_pos = clamp_rect(local_pos, layer.local_clip_rect);
 
-    vec4 world_pos = layer.transform * vec4(local_pos, 0, 1);
+    vec4 world_pos = layer.transform * vec4(local_pos, 0.0, 1.0);
     world_pos.xyz /= world_pos.w;
 
     vec2 device_pos = world_pos.xy * uDevicePixelRatio;
@@ -521,6 +472,7 @@ VertexInfo write_vertex(vec4 instance_rect,
 
 struct TransformVertexInfo {
     vec3 local_pos;
+    vec2 global_clamped_pos;
     vec4 clipped_local_rect;
 };
 
@@ -577,9 +529,9 @@ TransformVertexInfo write_transform_vertex(vec4 instance_rect,
     // apply the task offset
     vec2 final_pos = clamped_pos + tile.screen_origin_task_origin.zw - tile.screen_origin_task_origin.xy;
 
-    gl_Position = uTransform * vec4(final_pos, 0, 1);
+    gl_Position = uTransform * vec4(final_pos, 0.0, 1.0);
 
-    return TransformVertexInfo(layer_pos.xyw, clipped_local_rect);
+    return TransformVertexInfo(layer_pos.xyw, clamped_pos, clipped_local_rect);
 }
 
 #endif //WR_FEATURE_TRANSFORM
@@ -675,7 +627,14 @@ Composite fetch_composite(int index) {
 
     return composite;
 }
-#endif
+
+void write_clip(vec2 global_pos, ClipArea area) {
+    vec2 texture_size = textureSize(sCache, 0).xy;
+    vec2 uv = global_pos + area.task_bounds.xy - area.screen_origin_target_index.xy;
+    vClipMaskUvBounds = area.task_bounds / texture_size.xyxy;
+    vClipMaskUv = vec3(uv / texture_size, area.screen_origin_target_index.z);
+}
+#endif //WR_VERTEX_SHADER
 
 #ifdef WR_FRAGMENT_SHADER
 float distance_from_rect(vec2 p, vec2 origin, vec2 size) {
@@ -695,4 +654,14 @@ vec2 init_transform_fs(vec3 local_pos, vec4 local_rect, out float fragment_alpha
 
     return pos;
 }
-#endif
+
+float do_clip() {
+    // anything outside of the mask is considered transparent
+    bvec4 inside = lessThanEqual(
+        vec4(vClipMaskUvBounds.xy, vClipMaskUv.xy),
+        vec4(vClipMaskUv.xy, vClipMaskUvBounds.zw));
+    // check for the dummy bounds, which are given to the opaque objects
+    return vClipMaskUvBounds.xy == vClipMaskUvBounds.zw ? 1.0:
+        all(inside) ? textureLod(sCache, vClipMaskUv, 0).a : 0.0;
+}
+#endif //WR_FRAGMENT_SHADER

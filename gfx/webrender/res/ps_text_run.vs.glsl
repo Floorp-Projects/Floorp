@@ -25,7 +25,9 @@ void main(void) {
     vec2 f = (vi.local_clamped_pos - vi.local_rect.p0) / (vi.local_rect.p1 - vi.local_rect.p0);
 #endif
 
-    vec2 texture_size = vec2(textureSize(sDiffuse, 0));
+    write_clip(vi.global_clamped_pos, prim.clip_area);
+
+    vec2 texture_size = vec2(textureSize(sColor0, 0));
     vec2 st0 = glyph.uv_rect.xy / texture_size;
     vec2 st1 = glyph.uv_rect.zw / texture_size;
 
