@@ -10,8 +10,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 
@@ -20,48 +21,55 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(TestRunner.class)
 public class TestFloatUtils {
+
     @Test
-    public void testZeros() {
+    public void testEqualIfComparingZeros() {
         assertTrue(FloatUtils.fuzzyEquals(0, 0));
     }
 
     @Test
-    public void testNotEqual() {
+    public void testEqualFailIf5thDigitIsDifferent() {
+        assertFalse(FloatUtils.fuzzyEquals(0.00001f, 0.00002f));
+    }
+
+    @Test
+    public void testEqualSuccessIf6thDigitIsDifferent() {
+        assertTrue(FloatUtils.fuzzyEquals(0.000001f, 0.000002f));
+    }
+
+    @Test
+    public void testEqualFail() {
         assertFalse(FloatUtils.fuzzyEquals(10, 0));
     }
 
     @Test
-    public void testEqualsPromoted() {
+    public void testEqualSuccessIfPromoted() {
         assertTrue(FloatUtils.fuzzyEquals(5, 5));
     }
 
     @Test
-    public void testEqualsUnPromoted() {
+    public void testEqualSuccessIfUnPromoted() {
         assertTrue(FloatUtils.fuzzyEquals(5.6f, 5.6f));
     }
 
     @Test
     public void testClampSuccess() {
-        assertTrue(3 == FloatUtils.clamp(3, 1, 5));
+        assertEquals(3, FloatUtils.clamp(3, 1, 5), 0);
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testClampFail() {
-        try {
-            FloatUtils.clamp(3, 5, 1);
-        } catch (IllegalArgumentException e) {
-            assertNotNull(e);
-        }
+        FloatUtils.clamp(3, 5, 1);
     }
 
     @Test
     public void testInterpolateSuccess() {
-        assertTrue(4 == FloatUtils.interpolate(1, 2, 3));
+        assertEquals(4f ,FloatUtils.interpolate(1, 2, 3), 0f);
     }
 
     @Test
     public void testInterpolateFail() {
-        assertFalse(3 == FloatUtils.interpolate(1, 2, 3));
+        assertNotEquals(3f ,FloatUtils.interpolate(1, 2, 3), 0f);
     }
 
 
