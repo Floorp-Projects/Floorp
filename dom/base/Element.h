@@ -1887,11 +1887,5 @@ NS_IMETHOD ReleaseCapture(void) final override                                \
 {                                                                             \
   Element::ReleaseCapture();                                                  \
   return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD MozRequestFullScreen(void) final override                          \
-{                                                                             \
-  mozilla::ErrorResult rv;                                                    \
-  Element::RequestFullscreen(rv);                                    \
-  return rv.StealNSResult();                                                  \
 }
 #endif // mozilla_dom_Element_h__
