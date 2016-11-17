@@ -220,18 +220,106 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   },
 
   /**
-   * Removes an item from the database. Options are passed through to
-   * PlacesUtils.bookmarks.remove.
+   * Removes items from the database. Sync buffers incoming tombstones, and
+   * calls this method to apply them at the end of each sync. Deletion
+   * happens in three steps:
+   *
+   *  1. Remove all non-folder items. Deleting a folder on a remote client
+   *     uploads tombstones for the folder and its children at the time of
+   *     deletion. This preserves any new children we've added locally since
+   *     the last sync.
+   *  2. Reparent remaining children to the tombstoned folder's parent. This
+   *     bumps the change counter for the children and their new parent.
+   *  3. Remove the tombstoned folder. Because we don't do this in a
+   *     transaction, the user might move new items into the folder before we
+   *     can remove it. In that case, we keep the folder and upload the new
+   *     subtree to the server.
+   *
+   * See the comment above `BookmarksStore::deletePending` for the details on
+   * why delete works the way it does.
    */
-  remove: Task.async(function* (syncId, options = {}) {
-    let guid = BookmarkSyncUtils.syncIdToGuid(syncId);
-    if (guid in ROOT_GUID_TO_SYNC_ID) {
-      BookmarkSyncLog.warn(`remove: Refusing to remove root ${syncId}`);
+  remove: Task.async(function* (syncIds) {
+    if (!syncIds.length) {
       return null;
     }
-    return PlacesUtils.bookmarks.remove(guid, Object.assign({}, options, {
-      source: SOURCE_SYNC,
-    }));
+
+    let folderGuids = [];
+    for (let syncId of syncIds) {
+      if (syncId in ROOT_SYNC_ID_TO_GUID) {
+        BookmarkSyncLog.warn(`remove: Refusing to remove root ${syncId}`);
+        continue;
+      }
+      let guid = BookmarkSyncUtils.syncIdToGuid(syncId);
+      let bookmarkItem = yield PlacesUtils.bookmarks.fetch(guid);
+      if (!bookmarkItem) {
+        BookmarkSyncLog.trace(`remove: Item ${guid} already removed`);
+        continue;
+      }
+      let kind = yield getKindForItem(bookmarkItem);
+      if (kind == BookmarkSyncUtils.KINDS.FOLDER) {
+        folderGuids.push(bookmarkItem.guid);
+        continue;
+      }
+      let wasRemoved = yield deleteSyncedAtom(bookmarkItem);
+      if (wasRemoved) {
+         BookmarkSyncLog.trace(`remove: Removed item ${guid} with ` +
+                               `kind ${kind}`);
+      }
+    }
+
+    for (let guid of folderGuids) {
+      let bookmarkItem = yield PlacesUtils.bookmarks.fetch(guid);
+      if (!bookmarkItem) {
+        BookmarkSyncLog.trace(`remove: Folder ${guid} already removed`);
+        continue;
+      }
+      let wasRemoved = yield deleteSyncedFolder(bookmarkItem);
+      if (wasRemoved) {
+        BookmarkSyncLog.trace(`remove: Removed folder ${bookmarkItem.guid}`);
+      }
+    }
+
+    // TODO (Bug 1313890): Refactor the bookmarks engine to pull change records
+    // before uploading, instead of returning records to merge into the engine's
+    // initial changeset.
+    return PlacesUtils.withConnectionWrapper("BookmarkSyncUtils: remove",
+      db => pullSyncChanges(db));
+  }),
+
+  /**
+   * Increments the change counter of a non-folder item and its parent. Sync
+   * calls this method to override a remote deletion for an item that's changed
+   * locally.
+   *
+   * @param syncId
+   *        The sync ID to revive.
+   * @return {Promise} resolved once the change counters have been updated.
+   * @resolves to `null` if the item doesn't exist or is a folder. Otherwise,
+   *           resolves to an object containing new change records for the item
+   *           and its parent. The bookmarks engine merges these records into
+   *           the changeset for the current sync.
+   */
+  touch: Task.async(function* (syncId) {
+    PlacesUtils.SYNC_BOOKMARK_VALIDATORS.syncId(syncId);
+    let guid = BookmarkSyncUtils.syncIdToGuid(syncId);
+
+    let bookmarkItem = yield PlacesUtils.bookmarks.fetch(guid);
+    if (!bookmarkItem) {
+      return null;
+    }
+    let kind = yield getKindForItem(bookmarkItem);
+    if (kind == BookmarkSyncUtils.KINDS.FOLDER) {
+      // We avoid reviving folders since reviving them properly would require
+      // reviving their children as well. Unfortunately, this is the wrong
+      // choice in the case of a bookmark restore where the bookmarks engine
+      // fails to wipe the server. In that case, if the server has the folder
+      // as deleted, we *would* want to reupload this folder. This is mitigated
+      // by the fact that `remove` moves any undeleted children to the
+      // grandparent when deleting the parent.
+      return null;
+    }
+    return PlacesUtils.withConnectionWrapper("BookmarkSyncUtils: touch",
+      db => touchSyncBookmark(db, bookmarkItem));
   }),
 
   /**
@@ -560,7 +648,7 @@ function validateChangeRecord(changeRecord, behavior) {
 
 // Similar to the private `fetchBookmarksByParent` implementation in
 // `Bookmarks.jsm`.
-var fetchAllChildren = Task.async(function* (db, parentGuid) {
+var fetchChildGuids = Task.async(function* (db, parentGuid) {
   let rows = yield db.executeCached(`
     SELECT guid
     FROM moz_bookmarks
@@ -1392,6 +1480,27 @@ var pullSyncChanges = Task.async(function* (db) {
   return changeRecords;
 });
 
+var touchSyncBookmark = Task.async(function* (db, bookmarkItem) {
+  if (BookmarkSyncLog.level <= Log.Level.Trace) {
+    BookmarkSyncLog.trace(
+      `touch: Reviving item "${bookmarkItem.guid}" and marking parent ` +
+      BookmarkSyncUtils.guidToSyncId(bookmarkItem.parentGuid) + ` as modified`);
+  }
+
+  // Bump the change counter of the item and its parent, so that we upload
+  // both.
+  yield db.executeCached(`
+    UPDATE moz_bookmarks SET
+      syncChangeCounter = syncChangeCounter + 1
+    WHERE guid IN (:guid, :parentGuid)`,
+    { guid: bookmarkItem.guid, parentGuid: bookmarkItem.parentGuid });
+
+  // TODO (Bug 1313890): Refactor the bookmarks engine to pull change records
+  // before uploading, instead of returning records to merge into the engine's
+  // initial changeset.
+  return pullSyncChanges(db);
+});
+
 var dedupeSyncBookmark = Task.async(function* (db, localGuid, remoteGuid,
                                                remoteParentGuid) {
   let rows = yield db.executeCached(`
@@ -1477,6 +1586,88 @@ var dedupeSyncBookmark = Task.async(function* (db, localGuid, remoteGuid,
   }
 
   return changeRecords;
+});
+
+// Moves a synced folder's remaining children to its parent, and deletes the
+// folder if it's empty.
+var deleteSyncedFolder = Task.async(function* (bookmarkItem) {
+  // At this point, any member in the folder that remains is either a folder
+  // pending deletion (which we'll get to in this function), or an item that
+  // should not be deleted. To avoid deleting these items, we first move them
+  // to the parent of the folder we're about to delete.
+  let db = yield PlacesUtils.promiseDBConnection();
+  let childGuids = yield fetchChildGuids(db, bookmarkItem.guid);
+  if (!childGuids.length) {
+    // No children -- just delete the folder.
+    return deleteSyncedAtom(bookmarkItem);
+  }
+
+  if (BookmarkSyncLog.level <= Log.Level.Trace) {
+    BookmarkSyncLog.trace(
+      `deleteSyncedFolder: Moving ${JSON.stringify(childGuids)} children of ` +
+      `"${bookmarkItem.guid}" to grandparent
+      "${BookmarkSyncUtils.guidToSyncId(bookmarkItem.parentGuid)}" before ` +
+      `deletion`);
+  }
+
+  // Move children out of the parent and into the grandparent
+  for (let guid of childGuids) {
+    yield PlacesUtils.bookmarks.update({
+      guid,
+      parentGuid: bookmarkItem.parentGuid,
+      index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+      // `SYNC_REPARENT_REMOVED_FOLDER_CHILDREN` bumps the change counter for
+      // the child and its new parent, without incrementing the bookmark
+      // tracker's score.
+      //
+      // We intentionally don't check if the child is one we'll remove later,
+      // so it's possible we'll bump the change counter of the closest living
+      // ancestor when it's not needed. This avoids inconsistency if removal
+      // is interrupted, since we don't run this operation in a transaction.
+      source: PlacesUtils.bookmarks.SOURCES.SYNC_REPARENT_REMOVED_FOLDER_CHILDREN,
+    });
+  }
+
+  // Delete the (now empty) parent
+  try {
+    yield PlacesUtils.bookmarks.remove(bookmarkItem.guid, {
+      preventRemovalOfNonEmptyFolders: true,
+      // We don't want to bump the change counter for this deletion, because
+      // a tombstone for the folder is already on the server.
+      source: SOURCE_SYNC,
+    });
+  } catch (e) {
+    // We failed, probably because someone added something to this folder
+    // between when we got the children and now (or the database is corrupt,
+    // or something else happened...) This is unlikely, but possible. To
+    // avoid corruption in this case, we need to reupload the record to the
+    // server.
+    //
+    // (Ideally this whole operation would be done in a transaction, and this
+    // wouldn't be possible).
+    BookmarkSyncLog.trace(`deleteSyncedFolder: Error removing parent ` +
+                          `${bookmarkItem.guid} after reparenting children`, e);
+    return false;
+  }
+
+  return true;
+});
+
+// Removes a synced bookmark or empty folder from the database.
+var deleteSyncedAtom = Task.async(function* (bookmarkItem) {
+  try {
+    yield PlacesUtils.bookmarks.remove(bookmarkItem.guid, {
+      preventRemovalOfNonEmptyFolders: true,
+      source: SOURCE_SYNC,
+    });
+  } catch (ex) {
+    // Likely already removed.
+    BookmarkSyncLog.trace(`deleteSyncedAtom: Error removing ` +
+                          bookmarkItem.guid, ex);
+    return false;
+  }
+
+  return true;
 });
 
 /**
