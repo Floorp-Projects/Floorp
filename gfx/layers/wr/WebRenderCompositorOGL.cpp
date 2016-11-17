@@ -13,10 +13,9 @@
 namespace mozilla {
 
 using namespace gfx;
+using namespace gl;
 
 namespace layers {
-
-using namespace mozilla::gl;
 
 WebRenderCompositorOGL::WebRenderCompositorOGL(GLContext* aGLContext)
   : Compositor(nullptr, nullptr)

@@ -61,6 +61,8 @@ WebRenderBridgeParent::RecvDestroy()
   wr_destroy(mWRState);
   mWRState = nullptr;
   if (mWidget) {
+    // Only the "root" WebRenderBridgeParent (the one with the widget ptr) owns
+    // the compositor ref and needs to destroy it.
     mCompositor->Destroy();
   }
   return IPC_OK();
