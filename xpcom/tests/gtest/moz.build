@@ -6,7 +6,6 @@
 
 UNIFIED_SOURCES += [
     'Helpers.cpp',
-    'TestArray.cpp',
     'TestAtoms.cpp',
     'TestAutoPtr.cpp',
     'TestAutoRef.cpp',
