@@ -81,16 +81,16 @@ function configureClients(clients, clientSettings = {}) {
 }
 
 // The tests.
-add_task(async function test_noClients() {
+add_task(function* test_noClients() {
   // no clients, can't be tabs.
-  await configureClients({});
+  yield configureClients({});
 
-  let tabs = await SyncedTabs.getTabClients();
+  let tabs = yield SyncedTabs.getTabClients();
   equal(Object.keys(tabs).length, 0);
 });
 
-add_task(async function test_clientWithTabs() {
-  await configureClients({
+add_task(function* test_clientWithTabs() {
+  yield configureClients({
     guid_desktop: {
       clientName: "My Desktop",
       tabs: [
@@ -105,7 +105,7 @@ add_task(async function test_clientWithTabs() {
     }
   });
 
-  let clients = await SyncedTabs.getTabClients();
+  let clients = yield SyncedTabs.getTabClients();
   equal(clients.length, 2);
   clients.sort((a, b) => { return a.name.localeCompare(b.name);});
   equal(clients[0].tabs.length, 1);
@@ -115,8 +115,8 @@ add_task(async function test_clientWithTabs() {
   equal(clients[1].tabs.length, 0);
 });
 
-add_task(async function test_staleClientWithTabs() {
-  await configureClients({
+add_task(function* test_staleClientWithTabs() {
+  yield configureClients({
     guid_desktop: {
       clientName: "My Desktop",
       tabs: [
@@ -156,7 +156,7 @@ add_task(async function test_staleClientWithTabs() {
     // of the possibly stale tabs collection.
     guid_stale_name_desktop: "My Laptop",
   });
-  let clients = await SyncedTabs.getTabClients();
+  let clients = yield SyncedTabs.getTabClients();
   clients.sort((a, b) => { return a.name.localeCompare(b.name);});
   equal(clients.length, 3);
   equal(clients[0].name, "My Desktop");
@@ -169,9 +169,9 @@ add_task(async function test_staleClientWithTabs() {
   equal(clients[2].tabs.length, 0);
 });
 
-add_task(async function test_clientWithTabsIconsDisabled() {
+add_task(function* test_clientWithTabsIconsDisabled() {
   Services.prefs.setBoolPref("services.sync.syncedTabs.showRemoteIcons", false);
-  await configureClients({
+  yield configureClients({
     guid_desktop: {
       clientName: "My Desktop",
       tabs: [
@@ -182,7 +182,7 @@ add_task(async function test_clientWithTabsIconsDisabled() {
     },
   });
 
-  let clients = await SyncedTabs.getTabClients();
+  let clients = yield SyncedTabs.getTabClients();
   equal(clients.length, 1);
   clients.sort((a, b) => { return a.name.localeCompare(b.name);});
   equal(clients[0].tabs.length, 1);
@@ -192,9 +192,9 @@ add_task(async function test_clientWithTabsIconsDisabled() {
   Services.prefs.clearUserPref("services.sync.syncedTabs.showRemoteIcons");
 });
 
-add_task(async function test_filter() {
+add_task(function* test_filter() {
   // Nothing matches.
-  await configureClients({
+  yield configureClients({
     guid_desktop: {
       clientName: "My Desktop",
       tabs: [
@@ -209,12 +209,12 @@ add_task(async function test_filter() {
     },
   });
 
-  let clients = await SyncedTabs.getTabClients("foo");
+  let clients = yield SyncedTabs.getTabClients("foo");
   equal(clients.length, 1);
   equal(clients[0].tabs.length, 1);
   equal(clients[0].tabs[0].url, "http://foo.com/");
   // check it matches the title.
-  clients = await SyncedTabs.getTabClients("test");
+  clients = yield SyncedTabs.getTabClients("test");
   equal(clients.length, 1);
   equal(clients[0].tabs.length, 1);
   equal(clients[0].tabs[0].url, "http://foo.com/");

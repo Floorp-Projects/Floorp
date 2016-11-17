@@ -318,13 +318,13 @@ function validationPing(server, client, duration) {
   }, true); // Allow "failing" pings, since having validation info indicates failure.
 }
 
-add_task(async function test_telemetry_integration() {
+add_task(function *test_telemetry_integration() {
   let {server, client} = getDummyServerAndClient();
   // remove "c"
   server.pop();
   server[0].children.pop();
   const duration = 50;
-  let ping = await validationPing(server, client, duration);
+  let ping = yield validationPing(server, client, duration);
   ok(ping.engines);
   let bme = ping.engines.find(e => e.name === "bookmarks");
   ok(bme);

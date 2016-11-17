@@ -109,6 +109,6 @@ add_test(function test_load_logging() {
   }));
 });
 
-add_task(async function test_undefined_callback() {
-  await Utils.jsonSave("foo", {}, ["v1", "v2"]);
+add_task(function* test_undefined_callback() {
+  yield Utils.jsonSave("foo", {}, ["v1", "v2"]);
 });

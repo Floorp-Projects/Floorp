@@ -436,27 +436,6 @@ function sync_engine_and_validate_telem(engine, allowErrorPings, onError) {
   });
 }
 
-// Returns a promise that resolves once the specified observer notification
-// has fired.
-function promiseOneObserver(topic, callback) {
-  return new Promise((resolve, reject) => {
-    let observer = function(subject, data) {
-      Svc.Obs.remove(topic, observer);
-      resolve({ subject: subject, data: data });
-    }
-    Svc.Obs.add(topic, observer)
-  });
-}
-
-function promiseStopServer(server) {
-  return new Promise(resolve => server.stop(resolve));
-}
-
-function promiseNextTick() {
-  return new Promise(resolve => {
-    Utils.nextTick(resolve);
-  });
-}
 // Avoid an issue where `client.name2` containing unicode characters causes
 // a number of tests to fail, due to them assuming that we do not need to utf-8
 // encode or decode data sent through the mocked server (see bug 1268912).

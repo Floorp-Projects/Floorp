@@ -43,8 +43,8 @@ function sync_httpd_setup(infoHandler) {
   return httpd_setup(handlers);
 }
 
-async function setUp(server) {
-  await configureIdentity({username: "johndoe"});
+function* setUp(server) {
+  yield configureIdentity({username: "johndoe"});
   Service.serverURL = server.baseURI + "/";
   Service.clusterURL = server.baseURI + "/";
   new FakeCryptoService();
@@ -66,63 +66,72 @@ function do_check_hard_eol(eh, start) {
   do_check_true(Status.eol);
 }
 
-add_identity_test(this, async function test_200_hard() {
+add_identity_test(this, function* test_200_hard() {
   let eh = Service.errorHandler;
   let start = Date.now();
   let server = sync_httpd_setup(handler200("hard-eol"));
-  await setUp(server);
+  yield setUp(server);
 
-  let promiseObserved = promiseOneObserver("weave:eol");
+  let deferred = Promise.defer();
+  let obs = function (subject, topic, data) {
+    Svc.Obs.remove("weave:eol", obs);
+    do_check_eq("hard-eol", subject.code);
+    do_check_hard_eol(eh, start);
+    do_check_eq(Service.scheduler.eolInterval, Service.scheduler.syncInterval);
+    eh.clearServerAlerts();
+    server.stop(deferred.resolve);
+  };
 
+  Svc.Obs.add("weave:eol", obs);
   Service._fetchInfo();
   Service.scheduler.adjustSyncInterval();   // As if we failed or succeeded in syncing.
-
-  let { subject } = await promiseObserved;
-  do_check_eq("hard-eol", subject.code);
-  do_check_hard_eol(eh, start);
-  do_check_eq(Service.scheduler.eolInterval, Service.scheduler.syncInterval);
-  eh.clearServerAlerts();
-  await promiseStopServer(server);
+  yield deferred.promise;
 });
 
-add_identity_test(this, async function test_513_hard() {
+add_identity_test(this, function* test_513_hard() {
   let eh = Service.errorHandler;
   let start = Date.now();
   let server = sync_httpd_setup(handler513);
-  await setUp(server);
+  yield setUp(server);
 
-  let promiseObserved = promiseOneObserver("weave:eol");
+  let deferred = Promise.defer();
+  let obs = function (subject, topic, data) {
+    Svc.Obs.remove("weave:eol", obs);
+    do_check_eq("hard-eol", subject.code);
+    do_check_hard_eol(eh, start);
+    do_check_eq(Service.scheduler.eolInterval, Service.scheduler.syncInterval);
+    eh.clearServerAlerts();
+    server.stop(deferred.resolve);
+  };
 
+  Svc.Obs.add("weave:eol", obs);
   try {
     Service._fetchInfo();
     Service.scheduler.adjustSyncInterval();   // As if we failed or succeeded in syncing.
   } catch (ex) {
     // Because fetchInfo will fail on a 513.
   }
-  let { subject } = await promiseObserved;
-  do_check_eq("hard-eol", subject.code);
-  do_check_hard_eol(eh, start);
-  do_check_eq(Service.scheduler.eolInterval, Service.scheduler.syncInterval);
-  eh.clearServerAlerts();
-
-  await promiseStopServer(server);
+  yield deferred.promise;
 });
 
-add_identity_test(this, async function test_200_soft() {
+add_identity_test(this, function* test_200_soft() {
   let eh = Service.errorHandler;
   let start = Date.now();
   let server = sync_httpd_setup(handler200("soft-eol"));
-  await setUp(server);
+  yield setUp(server);
 
-  let promiseObserved = promiseOneObserver("weave:eol");
+  let deferred = Promise.defer();
+  let obs = function (subject, topic, data) {
+    Svc.Obs.remove("weave:eol", obs);
+    do_check_eq("soft-eol", subject.code);
+    do_check_soft_eol(eh, start);
+    do_check_eq(Service.scheduler.singleDeviceInterval, Service.scheduler.syncInterval);
+    eh.clearServerAlerts();
+    server.stop(deferred.resolve);
+  };
 
+  Svc.Obs.add("weave:eol", obs);
   Service._fetchInfo();
   Service.scheduler.adjustSyncInterval();   // As if we failed or succeeded in syncing.
-  let { subject } = await promiseObserved;
-  do_check_eq("soft-eol", subject.code);
-  do_check_soft_eol(eh, start);
-  do_check_eq(Service.scheduler.singleDeviceInterval, Service.scheduler.syncInterval);
-  eh.clearServerAlerts();
-
-  await promiseStopServer(server);
+  yield deferred.promise;
 });
