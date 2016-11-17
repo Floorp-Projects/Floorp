@@ -43,20 +43,21 @@ typedef OpIter<ValidatingPolicy> ValidatingOpIter;
 
 class FunctionDecoder
 {
-    const ModuleGenerator& mg_;
+    const ModuleEnvironment& env_;
     const ValTypeVector& locals_;
     ValidatingOpIter iter_;
 
   public:
-    FunctionDecoder(const ModuleGenerator& mg, const ValTypeVector& locals, Decoder& d)
-      : mg_(mg), locals_(locals), iter_(d)
+    FunctionDecoder(const ModuleEnvironment& env, const ValTypeVector& locals, Decoder& d)
+      : env_(env), locals_(locals), iter_(d)
     {}
-    const ModuleGenerator& mg() const { return mg_; }
+
+    const ModuleEnvironment& env() const { return env_; }
     ValidatingOpIter& iter() { return iter_; }
     const ValTypeVector& locals() const { return locals_; }
 
     bool checkHasMemory() {
-        if (!mg().usesMemory())
+        if (!env().usesMemory())
             return iter().fail("can't touch memory without memory");
         return true;
     }
@@ -91,13 +92,13 @@ DecodeCall(FunctionDecoder& f)
     if (!f.iter().readCall(&funcIndex))
         return false;
 
-    if (funcIndex >= f.mg().numFuncs())
+    if (funcIndex >= f.env().numFuncs())
         return f.iter().fail("callee index out of range");
 
     if (!f.iter().inReachableCode())
         return true;
 
-    const Sig* sig = &f.mg().funcSig(funcIndex);
+    const Sig* sig = f.env().funcSigs[funcIndex];
 
     return DecodeCallArgs(f, *sig) &&
            DecodeCallReturn(f, *sig);
@@ -106,20 +107,20 @@ DecodeCall(FunctionDecoder& f)
 static bool
 DecodeCallIndirect(FunctionDecoder& f)
 {
-    if (!f.mg().numTables())
+    if (!f.env().numTables())
         return f.iter().fail("can't call_indirect without a table");
 
     uint32_t sigIndex;
     if (!f.iter().readCallIndirect(&sigIndex, nullptr))
         return false;
 
-    if (sigIndex >= f.mg().numSigs())
+    if (sigIndex >= f.env().numSigs())
         return f.iter().fail("signature index out of range");
 
     if (!f.iter().inReachableCode())
         return true;
 
-    const Sig& sig = f.mg().sig(sigIndex);
+    const Sig& sig = f.env().sigs[sigIndex];
     if (!DecodeCallArgs(f, sig))
         return false;
 
@@ -184,9 +185,9 @@ DecodeFunctionBodyExprs(FunctionDecoder& f)
           case uint16_t(Op::TeeLocal):
             CHECK(f.iter().readTeeLocal(f.locals(), nullptr, nullptr));
           case uint16_t(Op::GetGlobal):
-            CHECK(f.iter().readGetGlobal(f.mg().globals(), nullptr));
+            CHECK(f.iter().readGetGlobal(f.env().globals, nullptr));
           case uint16_t(Op::SetGlobal):
-            CHECK(f.iter().readSetGlobal(f.mg().globals(), nullptr, nullptr));
+            CHECK(f.iter().readSetGlobal(f.env().globals, nullptr, nullptr));
           case uint16_t(Op::Select):
             CHECK(f.iter().readSelect(nullptr, nullptr, nullptr, nullptr));
           case uint16_t(Op::Block):
@@ -435,7 +436,7 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
     if (!DecodeLocalEntries(d, ModuleKind::Wasm, &locals))
         return false;
 
-    FunctionDecoder f(mg, locals, d);
+    FunctionDecoder f(mg.env(), locals, d);
 
     if (!f.iter().readFunctionStart(sig.ret()))
         return false;
