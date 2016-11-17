@@ -1682,10 +1682,12 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TextInputHandler::HandleKeyDownEvent, "
-     "keydown handled=%s, keypress handled=%s, causedOtherKeyEvents=%s",
+     "keydown handled=%s, keypress handled=%s, causedOtherKeyEvents=%s, "
+     "compositionDispatched=%s",
      this, TrueOrFalse(currentKeyEvent->mKeyDownHandled),
      TrueOrFalse(currentKeyEvent->mKeyPressHandled),
-     TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents)));
+     TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents),
+     TrueOrFalse(currentKeyEvent->mCompositionDispatched)));
   return currentKeyEvent->IsDefaultPrevented();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
@@ -2119,7 +2121,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
      "aReplacementRange=%p { location=%llu, length=%llu }, "
      "IsIMEComposing()=%s, IgnoreIMEComposition()=%s, "
      "keyevent=%p, keydownHandled=%s, keypressDispatched=%s, "
-     "causedOtherKeyEvents=%s",
+     "causedOtherKeyEvents=%s, compositionDispatched=%s",
      this, GetCharacters([aAttrString string]), aReplacementRange,
      aReplacementRange ? aReplacementRange->location : 0,
      aReplacementRange ? aReplacementRange->length : 0,
@@ -2130,7 +2132,9 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
      currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mKeyPressDispatched) : "N/A",
      currentKeyEvent ?
-       TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A"));
+       TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A",
+     currentKeyEvent ?
+       TrueOrFalse(currentKeyEvent->mCompositionDispatched) : "N/A"));
 
   if (IgnoreIMEComposition()) {
     return;
@@ -2188,15 +2192,15 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     return;
   }
 
-  if (str.Length() != 1 || IsIMEComposing()) {
+  if (str.Length() != 1 || IsIMEComposing() ||
+      (currentKeyEvent && currentKeyEvent->mCompositionDispatched)) {
     InsertTextAsCommittingComposition(aAttrString, aReplacementRange);
     // For now, consume keypress events when we dispatch the string with a
     // composition for preventing to dispatch keypress events later.
     // TODO: When there is a currentKeyEvent, we should dispatch keypress
     //       events even if the length of the string is over 1.
     if (currentKeyEvent) {
-      currentKeyEvent->mKeyPressHandled = true;
-      currentKeyEvent->mKeyPressDispatched = true;
+      currentKeyEvent->mCompositionDispatched = true;
     }
     return;
   }
