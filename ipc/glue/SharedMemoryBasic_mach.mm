@@ -451,15 +451,15 @@ SharedMemoryBasic::Shutdown()
 {
   StaticMutexAutoLock smal(gMutex);
 
-  for (auto it = gThreads.begin(); it != gThreads.end(); ++it) {
+  for (auto& thread : gThreads) {
     MachSendMessage shutdownMsg(kShutdownMsg);
-    it->second.mPorts->mReceiver->SendMessageToSelf(shutdownMsg, kTimeout);
+    thread.second.mPorts->mReceiver->SendMessageToSelf(shutdownMsg, kTimeout);
   }
   gThreads.clear();
 
-  for (auto it = gMemoryCommPorts.begin(); it != gMemoryCommPorts.end(); ++it) {
-    delete it->second.mSender;
-    delete it->second.mReceiver;
+  for (auto& memoryCommPort : gMemoryCommPorts) {
+    delete memoryCommPort.second.mSender;
+    delete memoryCommPort.second.mReceiver;
   }
   gMemoryCommPorts.clear();
 }
@@ -480,11 +480,11 @@ SharedMemoryBasic::CleanupForPid(pid_t pid)
 
   if (gParentPid == 0) {
     // We're the parent. Broadcast the cleanup message to everyone else.
-    for (auto it = gMemoryCommPorts.begin(); it != gMemoryCommPorts.end(); ++it) {
+    for (auto& memoryCommPort : gMemoryCommPorts) {
       MachSendMessage msg(kCleanupMsg);
       msg.SetData(&pid, sizeof(pid));
       // We don't really care if this fails, we could be trying to send to an already shut down proc
-      it->second.mSender->SendMessage(msg, kTimeout);
+      memoryCommPort.second.mSender->SendMessage(msg, kTimeout);
     }
   }
 
