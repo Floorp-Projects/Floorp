@@ -67,5 +67,54 @@ PrintTargetCG::CreateOrNull(CGContextRef aContext, const IntSize& aSize)
   return target.forget();
 }
 
+static size_t
+PutBytesNull(void* info, const void* buffer, size_t count)
+{
+  return count;
+}
+
+already_AddRefed<DrawTarget>
+PrintTargetCG::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
+{
+  if (!mRefDT) {
+    const IntSize size(1, 1);
+
+    CGDataConsumerCallbacks callbacks = {PutBytesNull, nullptr};
+    CGDataConsumerRef consumer = CGDataConsumerCreate(nullptr, &callbacks);
+    CGContextRef pdfContext = CGPDFContextCreate(consumer, nullptr, nullptr);
+    CGDataConsumerRelease(consumer);
+
+    cairo_surface_t* similar =
+      cairo_quartz_surface_create_for_cg_context(
+        pdfContext, size.width, size.height);
+
+    CGContextRelease(pdfContext);
+
+    if (cairo_surface_status(similar)) {
+      return nullptr;
+    }
+
+    RefPtr<DrawTarget> dt =
+      Factory::CreateDrawTargetForCairoSurface(similar, size);
+
+    // The DT addrefs the surface, so we need drop our own reference to it:
+    cairo_surface_destroy(similar);
+
+    if (!dt || !dt->IsValid()) {
+      return nullptr;
+    }
+
+    if (aRecorder) {
+      dt = CreateRecordingDrawTarget(aRecorder, dt);
+      if (!dt || !dt->IsValid()) {
+        return nullptr;
+      }
+    }
+
+    mRefDT = dt.forget();
+  }
+  return do_AddRef(mRefDT);
+}
+
 } // namespace gfx
 } // namespace mozilla
