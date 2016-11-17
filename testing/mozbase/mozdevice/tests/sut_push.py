@@ -7,6 +7,8 @@ import hashlib
 import tempfile
 import os
 
+import mozunit
+
 
 class PushTest(unittest.TestCase):
 
@@ -85,4 +87,4 @@ class PushTest(unittest.TestCase):
         # FIXME: delete directory when done
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

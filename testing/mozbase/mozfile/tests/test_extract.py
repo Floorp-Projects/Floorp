@@ -7,6 +7,8 @@ import tempfile
 import unittest
 import zipfile
 
+import mozunit
+
 import mozfile
 
 import stubs
@@ -152,3 +154,7 @@ class TestExtract(unittest.TestCase):
             shutil.rmtree(tempdir)
         archive.close()
         return filename
+
+
+if __name__ == '__main__':
+    mozunit.main()

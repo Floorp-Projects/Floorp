@@ -6,6 +6,9 @@
 
 import os
 import unittest
+
+import mozunit
+
 from manifestparser import ManifestParser
 from manifestparser import combine_fields
 
@@ -112,4 +115,4 @@ class TestSubsuiteDefaults(unittest.TestCase):
                              value['subsuite'])
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

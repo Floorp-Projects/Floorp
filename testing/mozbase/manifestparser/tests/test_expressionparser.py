@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 import unittest
+
+import mozunit
+
 from manifestparser import parse
 
 
@@ -149,4 +152,4 @@ class ExpressionParserTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

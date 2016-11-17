@@ -9,6 +9,8 @@ import shutil
 import unittest
 from tempfile import mkdtemp
 
+import mozunit
+
 from mozprofile.webapps import WebappCollection, Webapp, WebappFormatException
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -199,4 +201,4 @@ class WebappTest(unittest.TestCase):
         self.assertEqual(webapps_json, manifest_json_2)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

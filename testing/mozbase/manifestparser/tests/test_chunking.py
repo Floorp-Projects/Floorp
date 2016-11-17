@@ -5,6 +5,8 @@ from unittest import TestCase
 import os
 import random
 
+import mozunit
+
 from manifestparser.filters import (
     chunk_by_dir,
     chunk_by_runtime,
@@ -300,3 +302,7 @@ class ChunkByRuntime(TestCase):
             'c/e': 1,
         }
         self.run_all_combos(dirs)
+
+
+if __name__ == '__main__':
+    mozunit.main()

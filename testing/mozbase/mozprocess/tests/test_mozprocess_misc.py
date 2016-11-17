@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import os
-import unittest
+
+import mozunit
+
 import proctest
 from mozprocess import processhandler
 
@@ -38,4 +40,4 @@ class ProcTestMisc(proctest.ProcTest):
         p.wait()
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

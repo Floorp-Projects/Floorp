@@ -6,6 +6,8 @@ import math
 import time
 import unittest
 
+import mozunit
+
 from moztest.results import TestContext, TestResult, TestResultCollection
 
 
@@ -52,4 +54,4 @@ class Collection(unittest.TestCase):
         self.assertEqual(len(self.collection.contexts), 3)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()
