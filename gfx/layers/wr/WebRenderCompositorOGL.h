@@ -79,8 +79,6 @@ public:
 
   virtual void EndFrame() override { }
 
-  virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) override { }
-
   virtual bool SupportsPartialTextureUpdate() override;
 
   virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) override
