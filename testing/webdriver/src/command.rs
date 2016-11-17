@@ -51,6 +51,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     AddCookie(AddCookieParameters),
     DeleteCookies,
     DeleteCookie(String),
+    GetTimeouts,
     SetTimeouts(TimeoutsParameters),
     //Actions(ActionsParameters),
     ElementClick(WebElement),
@@ -127,6 +128,7 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
             Route::GetWindowHandle => WebDriverCommand::GetWindowHandle,
             Route::GetWindowHandles => WebDriverCommand::GetWindowHandles,
             Route::CloseWindow => WebDriverCommand::CloseWindow,
+            Route::GetTimeouts => WebDriverCommand::GetTimeouts,
             Route::SetTimeouts => {
                 let parameters: TimeoutsParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::SetTimeouts(parameters)
@@ -344,61 +346,64 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
 impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
     fn to_json(&self) -> Json {
         let parameters = match self.command {
-            WebDriverCommand::NewSession(_) |
-            WebDriverCommand::DeleteSession |
-            WebDriverCommand::GetCurrentUrl |
-            WebDriverCommand::GoBack |
-            WebDriverCommand::GoForward |
-            WebDriverCommand::Refresh |
-            WebDriverCommand::GetTitle |
-            WebDriverCommand::GetPageSource |
-            WebDriverCommand::GetWindowHandle |
-            WebDriverCommand::GetWindowHandles |
-            WebDriverCommand::CloseWindow |
-            WebDriverCommand::GetWindowSize |
-            WebDriverCommand::GetWindowPosition |
-            WebDriverCommand::MaximizeWindow |
-            WebDriverCommand::SwitchToParentFrame |
-            WebDriverCommand::GetActiveElement |
-            WebDriverCommand::IsDisplayed(_) |
-            WebDriverCommand::IsSelected(_) |
-            WebDriverCommand::GetElementAttribute(_, _) |
-            WebDriverCommand::GetElementProperty(_, _) |
-            WebDriverCommand::GetCSSValue(_, _) |
-            WebDriverCommand::GetElementText(_) |
-            WebDriverCommand::GetElementTagName(_) |
-            WebDriverCommand::GetElementRect(_) |
-            WebDriverCommand::IsEnabled(_) |
-            WebDriverCommand::GetCookies |
-            WebDriverCommand::GetCookie(_) |
-            WebDriverCommand::DeleteCookies |
-            WebDriverCommand::DeleteCookie(_) |
-            WebDriverCommand::DismissAlert |
             WebDriverCommand::AcceptAlert |
-            WebDriverCommand::GetAlertText |
+            WebDriverCommand::CloseWindow |
+            WebDriverCommand::DeleteCookie(_) |
+            WebDriverCommand::DeleteCookies |
+            WebDriverCommand::DeleteSession |
+            WebDriverCommand::DismissAlert |
+            WebDriverCommand::ElementClear(_) |
             WebDriverCommand::ElementClick(_) |
             WebDriverCommand::ElementTap(_) |
-            WebDriverCommand::ElementClear(_) |
-            WebDriverCommand::TakeScreenshot |
+            WebDriverCommand::GetActiveElement |
+            WebDriverCommand::GetAlertText |
+            WebDriverCommand::GetCookie(_) |
+            WebDriverCommand::GetCookies |
+            WebDriverCommand::GetCSSValue(_, _) |
+            WebDriverCommand::GetCurrentUrl |
+            WebDriverCommand::GetElementAttribute(_, _) |
+            WebDriverCommand::GetElementProperty(_, _) |
+            WebDriverCommand::GetElementRect(_) |
+            WebDriverCommand::GetElementTagName(_) |
+            WebDriverCommand::GetElementText(_) |
+            WebDriverCommand::GetPageSource |
+            WebDriverCommand::GetTimeouts |
+            WebDriverCommand::GetTitle |
+            WebDriverCommand::GetWindowHandle |
+            WebDriverCommand::GetWindowHandles |
+            WebDriverCommand::GetWindowPosition |
+            WebDriverCommand::GetWindowSize |
+            WebDriverCommand::GoBack |
+            WebDriverCommand::GoForward |
+            WebDriverCommand::IsDisplayed(_) |
+            WebDriverCommand::IsEnabled(_) |
+            WebDriverCommand::IsSelected(_) |
+            WebDriverCommand::MaximizeWindow |
+            WebDriverCommand::NewSession(_) |
+            WebDriverCommand::Refresh |
+            WebDriverCommand::Status |
+            WebDriverCommand::SwitchToParentFrame |
             WebDriverCommand::TakeElementScreenshot(_) |
-            WebDriverCommand::Status => {
+            WebDriverCommand::TakeScreenshot => {
                 None
             },
-            WebDriverCommand::Get(ref x) => Some(x.to_json()),
-            WebDriverCommand::SetTimeouts(ref x) => Some(x.to_json()),
-            WebDriverCommand::SetWindowSize(ref x) => Some(x.to_json()),
-            WebDriverCommand::SetWindowPosition(ref x) => Some(x.to_json()),
-            WebDriverCommand::SwitchToWindow(ref x) => Some(x.to_json()),
-            WebDriverCommand::SwitchToFrame(ref x) => Some(x.to_json()),
-            WebDriverCommand::FindElement(ref x) => Some(x.to_json()),
-            WebDriverCommand::FindElements(ref x) => Some(x.to_json()),
+
+            WebDriverCommand::AddCookie(ref x) => Some(x.to_json()),
+            WebDriverCommand::ElementSendKeys(_, ref x) => Some(x.to_json()),
+            WebDriverCommand::ExecuteAsyncScript(ref x) |
+            WebDriverCommand::ExecuteScript(ref x) => Some(x.to_json()),
             WebDriverCommand::FindElementElement(_, ref x) => Some(x.to_json()),
             WebDriverCommand::FindElementElements(_, ref x) => Some(x.to_json()),
-            WebDriverCommand::ElementSendKeys(_, ref x) => Some(x.to_json()),
-            WebDriverCommand::ExecuteScript(ref x) |
-            WebDriverCommand::ExecuteAsyncScript(ref x) => Some(x.to_json()),
-            WebDriverCommand::AddCookie(ref x) => Some(x.to_json()),
+            WebDriverCommand::FindElement(ref x) => Some(x.to_json()),
+            WebDriverCommand::FindElements(ref x) => Some(x.to_json()),
+            WebDriverCommand::Get(ref x) => Some(x.to_json()),
             WebDriverCommand::SendAlertText(ref x) => Some(x.to_json()),
+            WebDriverCommand::SetTimeouts(ref x) => Some(x.to_json()),
+            WebDriverCommand::SetWindowPosition(ref x) => Some(x.to_json()),
+            WebDriverCommand::SetWindowSize(ref x) => Some(x.to_json()),
+            WebDriverCommand::SwitchToFrame(ref x) => Some(x.to_json()),
+            WebDriverCommand::SwitchToWindow(ref x) => Some(x.to_json()),
+
             WebDriverCommand::Extension(ref x) => x.parameters_json(),
         };
 
