@@ -6,9 +6,14 @@ rust:
  - beta
  - nightly
 
+before_script:
+  - export PATH=$HOME/.local/bin:/Users/travis/Library/Python/2.7/bin:$PATH
+  - pip install servo_tidy --user `whoami`
+
 script:
  - cargo build
  - cargo test
+  - servo-tidy
 
 notifications:
   webhooks: http://build.servo.org:54856/travis

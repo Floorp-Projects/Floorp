@@ -16,6 +16,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_upper_case_globals)]
 
+#[cfg(feature = "servo-freetype-sys")]
 extern crate freetype_sys;
 extern crate libc;
 
