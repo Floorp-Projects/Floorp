@@ -84,6 +84,10 @@ class TabContext;
 class ContentBridgeParent;
 class GetFilesHelper;
 
+// This must match the one in E10SUtils.jsm.
+static NS_NAMED_LITERAL_STRING(DEFAULT_REMOTE_TYPE, "web");
+static NS_NAMED_LITERAL_STRING(NO_REMOTE_TYPE, "");
+
 class ContentParent final : public PContentParent
                           , public nsIContentParent
                           , public nsIObserver
@@ -129,7 +133,7 @@ public:
    * 3. normal iframe
    */
   static already_AddRefed<ContentParent>
-  GetNewOrUsedBrowserProcess(bool aForBrowserElement = false,
+  GetNewOrUsedBrowserProcess(const nsAString& aRemoteType = NO_REMOTE_TYPE,
                              hal::ProcessPriority aPriority =
                              hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
                              ContentParent* aOpener = nullptr,
@@ -565,7 +569,7 @@ private:
   FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
 
   ContentParent(ContentParent* aOpener,
-                bool aIsForBrowser);
+                const nsAString& aRemoteType);
 
   // The common initialization for the constructors.
   void InitializeMembers();
@@ -1043,6 +1047,8 @@ private:
 
   GeckoChildProcessHost* mSubprocess;
   ContentParent* mOpener;
+
+  nsString mRemoteType;
 
   ContentParentId mChildID;
   int32_t mGeolocationWatchID;
