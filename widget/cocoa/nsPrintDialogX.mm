@@ -145,18 +145,7 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter *aParent, nsIPrintSettings *aSett
       [dict setObject: [NSNumber numberWithFloat: 1]
                forKey: NSPrintScalingFactor];
     }
-    // Set the scaling factor to 100% in the NSPrintInfo
-    // object so that it will not affect the paper size
-    // retrieved from the PMPageFormat routines.
-    [copy setScalingFactor:1.0];
-  } else {
-    aSettings->SetScaling([copy scalingFactor]);
   }
-
-  // Set the adjusted paper size now that we've updated
-  // the scaling factor.
-  settingsX->InitAdjustedPaperSize();
-
   [copy release];
 
   int16_t pageRange;

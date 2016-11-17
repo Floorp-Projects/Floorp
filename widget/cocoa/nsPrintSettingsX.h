@@ -25,8 +25,6 @@ public:
   void SetCocoaPrintInfo(NSPrintInfo* aPrintInfo);
   virtual nsresult ReadPageFormatFromPrefs();
   virtual nsresult WritePageFormatToPrefs();
-  virtual nsresult GetEffectivePageSize(double *aWidth,
-      double *aHeight) override;
 
   PMPrintSettings GetPMPrintSettings();
   PMPrintSession GetPMPrintSession();
@@ -37,15 +35,8 @@ public:
   // Should be called whenever mPageFormat is initialized or overwritten.
   nsresult InitUnwriteableMargin();
 
-  // Re-initialize mAdjustedPaper{Width,Height} with values from mPageFormat.
-  // Should be called whenever mPageFormat is initialized or overwritten.
-  nsresult InitAdjustedPaperSize();
-
   void SetInchesScale(float aWidthScale, float aHeightScale);
   void GetInchesScale(float *aWidthScale, float *aHeightScale);
-
-  void SetAdjustedPaperSize(double aWidth, double aHeight);
-  void GetAdjustedPaperSize(double *aWidth, double *aHeight);
 
 protected:
   virtual ~nsPrintSettingsX();
@@ -66,8 +57,6 @@ protected:
   // paper size units to inches
   float mWidthScale;
   float mHeightScale;
-  double mAdjustedPaperWidth;
-  double mAdjustedPaperHeight;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPrintSettingsX, NS_PRINTSETTINGSX_IID)
