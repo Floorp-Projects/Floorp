@@ -17,6 +17,10 @@ class nsIAtom;
 
    To change the list of tags, see nsHTMLTagList.h
 
+   These enum values are used as the index of array in various places.
+   If we change the structure of the enum by adding entries to it or removing
+   entries from it _directly_, not via nsHTMLTagList.h, don't forget to update
+   dom/bindings/BindingUtils.cpp and dom/html/nsHTMLContentSink.cpp as well.
  */
 #define HTML_TAG(_tag, _classname, _interfacename) eHTMLTag_##_tag,
 #define HTML_OTHER(_tag) eHTMLTag_##_tag,
