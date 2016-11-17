@@ -170,8 +170,8 @@ function runBindingTest() {
 
     // Shouldn't be able to bind a deleted buffer.
     gl.bindBuffer(gl.UNIFORM_BUFFER, b2);
+    wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "binding a deleted buffer should generate INVALID_OPERATION");
     shouldBeNull("gl.getParameter(gl.UNIFORM_BUFFER_BINDING)");
-    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "there should be no errors");
 }
 
 function runDrawTest() {
@@ -193,48 +193,68 @@ function runDrawTest() {
         return;
     }
 
-    var blockIndex = gl.getUniformBlockIndex(program, "UBOData");
-    var blockSize = gl.getActiveUniformBlockParameter(program, blockIndex, gl.UNIFORM_BLOCK_DATA_SIZE);
-    var uniformIndices = gl.getUniformIndices(program, ["UBORed", "UBOGreen", "UBOBlue"]);
-    var uniformOffsets = gl.getActiveUniforms(program, uniformIndices, gl.UNIFORM_OFFSET);
+    var blockIndex_1 = gl.getUniformBlockIndex(program, "UBOData");
+    var blockSize_1 = gl.getActiveUniformBlockParameter(program, blockIndex_1, gl.UNIFORM_BLOCK_DATA_SIZE);
+    var uniformIndices_1 = gl.getUniformIndices(program, ["UBORed", "UBOGreen", "UBOBlue"]);
+    var uniformOffsets_1 = gl.getActiveUniforms(program, uniformIndices_1, gl.UNIFORM_OFFSET);
+    var blockIndex_2 = gl.getUniformBlockIndex(program, "UBOD");
+    var blockSize_2 = gl.getActiveUniformBlockParameter(program, blockIndex_2, gl.UNIFORM_BLOCK_DATA_SIZE);
+    var uniformIndices_2 = gl.getUniformIndices(program, ["UBOR", "UBOG", "UBOB"]);
+    var uniformOffsets_2 = gl.getActiveUniforms(program, uniformIndices_2, gl.UNIFORM_OFFSET);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be able to query uniform block information without error");
 
-    if (uniformOffsets.length < 3) {
+    if (uniformOffsets_1.length < 3 || uniformOffsets_2.length < 3) {
         testFailed("Could not query uniform offsets");
         return;
     }
 
     // Verify that the uniform offsets are aligned on 4-byte boundries
     // While unaligned values are allowed by the ES3 spec it would be *really* weird for anyone to actually do that.
-    if (uniformOffsets[0] / Float32Array.BYTES_PER_ELEMENT != Math.floor(uniformOffsets[0] / Float32Array.BYTES_PER_ELEMENT) ||
-        uniformOffsets[1] / Float32Array.BYTES_PER_ELEMENT != Math.floor(uniformOffsets[1] / Float32Array.BYTES_PER_ELEMENT) ||
-        uniformOffsets[2] / Float32Array.BYTES_PER_ELEMENT != Math.floor(uniformOffsets[2] / Float32Array.BYTES_PER_ELEMENT)) {
+    if (uniformOffsets_1[0] / Float32Array.BYTES_PER_ELEMENT != Math.floor(uniformOffsets_1[0] / Float32Array.BYTES_PER_ELEMENT) ||
+        uniformOffsets_1[1] / Float32Array.BYTES_PER_ELEMENT != Math.floor(uniformOffsets_1[1] / Float32Array.BYTES_PER_ELEMENT) ||
+        uniformOffsets_1[2] / Float32Array.BYTES_PER_ELEMENT != Math.floor(uniformOffsets_1[2] / Float32Array.BYTES_PER_ELEMENT) ||
+        uniformOffsets_2[0] / Float32Array.BYTES_PER_ELEMENT != Math.floor(uniformOffsets_2[0] / Float32Array.BYTES_PER_ELEMENT) ||
+        uniformOffsets_2[1] / Float32Array.BYTES_PER_ELEMENT != Math.floor(uniformOffsets_2[1] / Float32Array.BYTES_PER_ELEMENT) ||
+        uniformOffsets_2[2] / Float32Array.BYTES_PER_ELEMENT != Math.floor(uniformOffsets_2[2] / Float32Array.BYTES_PER_ELEMENT)) {
         testFailed("Uniform offsets are not well aligned");
         return;
     }
 
-    var uboArray = new ArrayBuffer(blockSize);
-    var uboFloatView = new Float32Array(uboArray);
-    uboFloatView[uniformOffsets[0] / Float32Array.BYTES_PER_ELEMENT] = 1.0; // UBORed
-    uboFloatView[uniformOffsets[1] / Float32Array.BYTES_PER_ELEMENT] = 0.0; // UBOGreen
-    uboFloatView[uniformOffsets[2] / Float32Array.BYTES_PER_ELEMENT] = 0.0; // UBOBlue
+    var uboArray_1 = new ArrayBuffer(blockSize_1);
+    var uboFloatView_1 = new Float32Array(uboArray_1);
+    uboFloatView_1[uniformOffsets_1[0] / Float32Array.BYTES_PER_ELEMENT] = 1.0; // UBORed
+    uboFloatView_1[uniformOffsets_1[1] / Float32Array.BYTES_PER_ELEMENT] = 0.0; // UBOGreen
+    uboFloatView_1[uniformOffsets_1[2] / Float32Array.BYTES_PER_ELEMENT] = 0.0; // UBOBlue
+    var uboArray_2 = new ArrayBuffer(blockSize_2);
+    var uboFloatView_2 = new Float32Array(uboArray_2);
+    uboFloatView_2[uniformOffsets_2[0] / Float32Array.BYTES_PER_ELEMENT] = 1.0; // UBOR
+    uboFloatView_2[uniformOffsets_2[1] / Float32Array.BYTES_PER_ELEMENT] = 1.0; // UBOG
+    uboFloatView_2[uniformOffsets_2[2] / Float32Array.BYTES_PER_ELEMENT] = 1.0; // UBOB
 
-    b1 = gl.createBuffer();
-    gl.bindBuffer(gl.UNIFORM_BUFFER, b1);
-    gl.bufferData(gl.UNIFORM_BUFFER, uboArray, gl.DYNAMIC_DRAW);
+    var b_1 = gl.createBuffer();
+    gl.bindBuffer(gl.UNIFORM_BUFFER, b_1);
+    gl.bufferData(gl.UNIFORM_BUFFER, uboFloatView_1, gl.DYNAMIC_DRAW);
+    var b_2 = gl.createBuffer();
+    gl.bindBuffer(gl.UNIFORM_BUFFER, b_2);
+    gl.bufferData(gl.UNIFORM_BUFFER, uboFloatView_2, gl.DYNAMIC_DRAW);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be able to set UBO data with no errors");
 
-    gl.bindBufferBase(gl.UNIFORM_BUFFER, blockIndex, b1);
+    var bindings = [1, 2];
+    gl.uniformBlockBinding(program, blockIndex_1, bindings[0]);
+    gl.bindBufferBase(gl.UNIFORM_BUFFER, bindings[0], b_1);
+    gl.uniformBlockBinding(program, blockIndex_2, bindings[1]);
+    gl.bindBufferBase(gl.UNIFORM_BUFFER, bindings[1], b_2);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be able to call bindBufferBase without errors");
 
     wtu.clearAndDrawUnitQuad(gl);
     wtu.checkCanvas(gl, [255, 0, 0, 255], "draw call should set canvas to red", 2);
 
     debug("Changing the data in the uniform buffer should automatically update the uniforms exposed to the draw call");
-    uboFloatView[uniformOffsets[0] / Float32Array.BYTES_PER_ELEMENT] = 0.0; // UBORed
-    uboFloatView[uniformOffsets[1] / Float32Array.BYTES_PER_ELEMENT] = 0.0; // UBOGreen
-    uboFloatView[uniformOffsets[2] / Float32Array.BYTES_PER_ELEMENT] = 1.0; // UBOBlue
-    gl.bufferData(gl.UNIFORM_BUFFER, uboArray, gl.DYNAMIC_DRAW);
+    uboFloatView_1[uniformOffsets_1[0] / Float32Array.BYTES_PER_ELEMENT] = 0.0; // UBORed
+    uboFloatView_1[uniformOffsets_1[1] / Float32Array.BYTES_PER_ELEMENT] = 0.0; // UBOGreen
+    uboFloatView_1[uniformOffsets_1[2] / Float32Array.BYTES_PER_ELEMENT] = 1.0; // UBOBlue
+    gl.bindBuffer(gl.UNIFORM_BUFFER, b_1);
+    gl.bufferData(gl.UNIFORM_BUFFER, uboFloatView_1, gl.DYNAMIC_DRAW);
 
     wtu.clearAndDrawUnitQuad(gl);
     wtu.checkCanvas(gl, [0, 0, 255, 255], "draw call should set canvas to blue", 2);
@@ -283,7 +303,9 @@ function runNamedDrawTest() {
     gl.bufferData(gl.UNIFORM_BUFFER, uboArray, gl.DYNAMIC_DRAW);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be able to set UBO data with no errors");
 
-    gl.bindBufferBase(gl.UNIFORM_BUFFER, blockIndex, b1);
+    var binding = 3;
+    gl.uniformBlockBinding(program, blockIndex, binding);
+    gl.bindBufferBase(gl.UNIFORM_BUFFER, binding, b1);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be able to call bindBufferBase without errors");
 
     wtu.clearAndDrawUnitQuad(gl);
@@ -369,13 +391,13 @@ function runNamedArrayDrawTest() {
     gl.bufferData(gl.UNIFORM_BUFFER, uboArray, gl.DYNAMIC_DRAW);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be able to set UBO data with no errors");
 
-    var binding = [2, 3];
-    gl.uniformBlockBinding(program, blockIndex[0], binding[0]);
-    gl.bindBufferRange(gl.UNIFORM_BUFFER, binding[0], b1, 0, blockSize[0]);
-    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be able to call bindBufferBase without errors");
-    gl.uniformBlockBinding(program, blockIndex[1], binding[1]);
-    gl.bindBufferRange(gl.UNIFORM_BUFFER, binding[1], b1, offset, blockSize[1]);
-    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be able to call bindBufferBase without errors");
+    var bindings = [4, 5];
+    gl.uniformBlockBinding(program, blockIndex[0], bindings[0]);
+    gl.bindBufferRange(gl.UNIFORM_BUFFER, bindings[0], b1, 0, blockSize[0]);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be able to call bindBufferRange without errors");
+    gl.uniformBlockBinding(program, blockIndex[1], bindings[1]);
+    gl.bindBufferRange(gl.UNIFORM_BUFFER, bindings[1], b1, offset, blockSize[1]);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should be able to call bindBufferRange without errors");
 
     wtu.clearAndDrawUnitQuad(gl);
     wtu.checkCanvas(gl, [127, 0, 127, 255], "draw call should set canvas to (0.5, 0, 0.5)", 2);
