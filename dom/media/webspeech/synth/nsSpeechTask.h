@@ -86,7 +86,9 @@ protected:
 
   virtual nsresult DispatchBoundaryImpl(const nsAString& aName,
                                         float aElapsedTime,
-                                        uint32_t aCharIndex);
+                                        uint32_t aCharIndex,
+                                        uint32_t aCharLength,
+                                        uint8_t argc);
 
   virtual nsresult DispatchMarkImpl(const nsAString& aName,
                                     float aElapsedTime, uint32_t aCharIndex);
