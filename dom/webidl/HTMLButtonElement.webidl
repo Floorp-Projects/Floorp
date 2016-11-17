@@ -11,6 +11,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-button-element
+[HTMLConstructor]
 interface HTMLButtonElement : HTMLElement {
   [SetterThrows, Pure]
            attribute boolean autofocus;

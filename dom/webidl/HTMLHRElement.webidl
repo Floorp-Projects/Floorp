@@ -12,6 +12,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-hr-element
+[HTMLConstructor]
 interface HTMLHRElement : HTMLElement {
 };
 

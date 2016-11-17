@@ -12,6 +12,7 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-pre-element
+[HTMLConstructor]
 interface HTMLPreElement : HTMLElement {
 };
 
