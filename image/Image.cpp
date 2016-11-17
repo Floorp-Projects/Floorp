@@ -146,5 +146,25 @@ ImageResource::EvaluateAnimation()
   }
 }
 
+void
+ImageResource::SendOnUnlockedDraw(uint32_t aFlags)
+{
+  if (!mProgressTracker) {
+    return;
+  }
+
+  if (!(aFlags & FLAG_ASYNC_NOTIFY)) {
+    mProgressTracker->OnUnlockedDraw();
+  } else {
+    NotNull<RefPtr<ImageResource>> image = WrapNotNull(this);
+    NS_DispatchToMainThread(NS_NewRunnableFunction([=]() -> void {
+      RefPtr<ProgressTracker> tracker = image->GetProgressTracker();
+      if (tracker) {
+        tracker->OnUnlockedDraw();
+      }
+    }));
+  }
+}
+
 } // namespace image
 } // namespace mozilla
