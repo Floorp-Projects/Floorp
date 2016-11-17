@@ -26,268 +26,159 @@ namespace mozilla {
 namespace gfx {
 
 /**
- * Helper function to process each row of the box blur.
- * It takes care of transposing the data on input or output depending
- * on whether intend a horizontal or vertical blur, and whether we're
- * reading from the initial source or writing to the final destination.
- * It allows starting or ending anywhere within the row to accomodate
- * a skip rect.
+ * Box blur involves looking at one pixel, and setting its value to the average
+ * of its neighbouring pixels.
+ * @param aInput The input buffer.
+ * @param aOutput The output buffer.
+ * @param aLeftLobe The number of pixels to blend on the left.
+ * @param aRightLobe The number of pixels to blend on the right.
+ * @param aWidth The number of columns in the buffers.
+ * @param aRows The number of rows in the buffers.
+ * @param aSkipRect An area to skip blurring in.
+ * XXX shouldn't we pass stride in separately here?
  */
-template<bool aTransposeInput, bool aTransposeOutput>
-static inline void
-BoxBlurRow(const uint8_t* aInput,
-           uint8_t* aOutput,
-           int32_t aLeftLobe,
-           int32_t aRightLobe,
-           int32_t aWidth,
-           int32_t aStride,
-           int32_t aStart,
-           int32_t aEnd)
+static void
+BoxBlurHorizontal(unsigned char* aInput,
+                  unsigned char* aOutput,
+                  int32_t aLeftLobe,
+                  int32_t aRightLobe,
+                  int32_t aWidth,
+                  int32_t aRows,
+                  const IntRect& aSkipRect)
 {
-  // If the input or output is transposed, then we will move down a row
-  // for each step, instead of moving over a column. Since these values
-  // only depend on a template parameter, they will more easily get
-  // copy-propagated in the non-transposed case, which is why they
-  // are not passed as parameters.
-  const int32_t inputStep = aTransposeInput ? aStride : 1;
-  const int32_t outputStep = aTransposeOutput ? aStride : 1;
+    MOZ_ASSERT(aWidth > 0);
 
-  // We need to sample aLeftLove pixels to the left and aRight pixels to
-  // the right of the current position, then average them. So this is
-  // the size of the total width of this filter.
-  const int32_t boxSize = aLeftLobe + aRightLobe + 1;
-
-  // Instead of dividing the pixel sum by boxSize to average, we can just
-  // compute a scale that will normalize the result so that it can be quickly
-  // shifted into the desired range.
-  const uint32_t reciprocal = (1 << 24) / boxSize;
-
-  // The shift would normally truncate the result, whereas we would rather
-  // prefer to round the result to the closest increment. By adding 0.5 units
-  // to the initial sum, we bias the sum so that it will be rounded by the
-  // truncation instead.
-  uint32_t alphaSum = (boxSize + 1) / 2;
-
-  // We process the row with a moving filter, keeping a sum (alphaSum) of
-  // boxSize pixels. As we move over a pixel, we need to add on a pixel
-  // from the right extreme of the window that moved into range, and subtract
-  // off a pixel from the left extreme of window that moved out of range.
-  // But first, we need to initialization alphaSum to the contents of
-  // the window before we can get going. If the window moves out of bounds
-  // of the row, we clamp each sample to be the closest pixel from within
-  // row bounds, so the 0th and aWidth-1th pixel.
-  int32_t initLeft = aStart - aLeftLobe;
-  if (initLeft < 0) {
-    // If the left lobe samples before the row, add in clamped samples.
-    alphaSum += -initLeft * aInput[0];
-    initLeft = 0;
-  }
-  int32_t initRight = aStart + boxSize - aLeftLobe;
-  if (initRight > aWidth) {
-    // If the right lobe samples after the row, add in clamped samples.
-    alphaSum += (initRight - aWidth) * aInput[(aWidth - 1) * inputStep];
-    initRight = aWidth;
-  }
-  // Finally, add in all the valid, non-clamped samples to fill up the
-  // rest of the window.
-  const uint8_t* src = &aInput[initLeft * inputStep];
-  const uint8_t* iterEnd = &aInput[initRight * inputStep];
-
-  #define INIT_ITER \
-    alphaSum += *src; \
-    src += inputStep;
-
-  // We unroll the per-pixel loop here substantially. The amount of work
-  // done per sample is so small that the cost of a loop condition check
-  // and a branch can substantially add to or even dominate the performance
-  // of the loop.
-  while (src + 16 * inputStep <= iterEnd) {
-    INIT_ITER; INIT_ITER; INIT_ITER; INIT_ITER;
-    INIT_ITER; INIT_ITER; INIT_ITER; INIT_ITER;
-    INIT_ITER; INIT_ITER; INIT_ITER; INIT_ITER;
-    INIT_ITER; INIT_ITER; INIT_ITER; INIT_ITER;
-  }
-  while (src < iterEnd) {
-    INIT_ITER;
-  }
-
-  // Now we start moving the window over the row. We will be accessing
-  // pixels form aStart - aLeftLobe up to aEnd + aRightLobe, which may be
-  // out of bounds of the row. To avoid having to check within the inner
-  // loops if we are in bound, we instead compute the points at which
-  // we will move out of bounds of the row on the left side (splitLeft)
-  // and right side (splitRight).
-  int32_t splitLeft = min(max(aLeftLobe, aStart), aEnd);
-  int32_t splitRight = min(max(aWidth - (boxSize - aLeftLobe), aStart), aEnd);
-  // If the filter window is actually large than the size of the row,
-  // there will be a middle area of overlap where the leftmost and rightmost
-  // pixel of the filter will both be outside the row. In this case, we need
-  // to invert the splits so that splitLeft <= splitRight.
-  if (boxSize > aWidth) {
-    swap(splitLeft, splitRight);
-  }
-
-  // Process all pixels up to splitLeft that would sample before the start of the row.
-  // Note that because inputStep and outputStep may not be a const 1 value, it is more
-  // performant to increment pointers here for the source and destination rather than
-  // use a loop counter, since doing so would entail an expensive multiplication that
-  // significantly slows down the loop.
-  uint8_t* dst = &aOutput[aStart * outputStep];
-  iterEnd = &aOutput[splitLeft * outputStep];
-  src = &aInput[(aStart + boxSize - aLeftLobe) * inputStep];
-  uint8_t firstVal = aInput[0];
-
-  #define LEFT_ITER \
-    *dst = (alphaSum * reciprocal) >> 24; \
-    alphaSum += *src - firstVal; \
-    dst += outputStep; \
-    src += inputStep;
-
-  while (dst + 16 * outputStep <= iterEnd) {
-    LEFT_ITER; LEFT_ITER; LEFT_ITER; LEFT_ITER;
-    LEFT_ITER; LEFT_ITER; LEFT_ITER; LEFT_ITER;
-    LEFT_ITER; LEFT_ITER; LEFT_ITER; LEFT_ITER;
-    LEFT_ITER; LEFT_ITER; LEFT_ITER; LEFT_ITER;
-  }
-  while (dst < iterEnd) {
-    LEFT_ITER;
-  }
-
-  // Process all pixels between splitLeft and splitRight.
-  iterEnd = &aOutput[splitRight * outputStep];
-  if (boxSize <= aWidth) {
-    // The filter window is smaller than the row size, so the leftmost and rightmost
-    // samples are both within row bounds.
-    src = &aInput[(splitLeft - aLeftLobe) * inputStep];
-    int32_t boxStep = boxSize * inputStep;
-
-    #define CENTER_ITER \
-      *dst = (alphaSum * reciprocal) >> 24; \
-      alphaSum += src[boxStep] - *src; \
-      dst += outputStep; \
-      src += inputStep;
-
-    while (dst +  16 * outputStep <= iterEnd) {
-      CENTER_ITER; CENTER_ITER; CENTER_ITER; CENTER_ITER;
-      CENTER_ITER; CENTER_ITER; CENTER_ITER; CENTER_ITER;
-      CENTER_ITER; CENTER_ITER; CENTER_ITER; CENTER_ITER;
-      CENTER_ITER; CENTER_ITER; CENTER_ITER; CENTER_ITER;
+    int32_t boxSize = aLeftLobe + aRightLobe + 1;
+    bool skipRectCoversWholeRow = 0 >= aSkipRect.x &&
+                                  aWidth <= aSkipRect.XMost();
+    if (boxSize == 1) {
+        memcpy(aOutput, aInput, aWidth*aRows);
+        return;
     }
-    while (dst < iterEnd) {
-      CENTER_ITER;
+    uint32_t reciprocal = uint32_t((uint64_t(1) << 32) / boxSize);
+
+    for (int32_t y = 0; y < aRows; y++) {
+        // Check whether the skip rect intersects this row. If the skip
+        // rect covers the whole surface in this row, we can avoid
+        // this row entirely (and any others along the skip rect).
+        bool inSkipRectY = y >= aSkipRect.y &&
+                           y < aSkipRect.YMost();
+        if (inSkipRectY && skipRectCoversWholeRow) {
+            y = aSkipRect.YMost() - 1;
+            continue;
+        }
+
+        uint32_t alphaSum = 0;
+        for (int32_t i = 0; i < boxSize; i++) {
+            int32_t pos = i - aLeftLobe;
+            // See assertion above; if aWidth is zero, then we would have no
+            // valid position to clamp to.
+            pos = max(pos, 0);
+            pos = min(pos, aWidth - 1);
+            alphaSum += aInput[aWidth * y + pos];
+        }
+        for (int32_t x = 0; x < aWidth; x++) {
+            // Check whether we are within the skip rect. If so, go
+            // to the next point outside the skip rect.
+            if (inSkipRectY && x >= aSkipRect.x &&
+                x < aSkipRect.XMost()) {
+                x = aSkipRect.XMost();
+                if (x >= aWidth)
+                    break;
+
+                // Recalculate the neighbouring alpha values for
+                // our new point on the surface.
+                alphaSum = 0;
+                for (int32_t i = 0; i < boxSize; i++) {
+                    int32_t pos = x + i - aLeftLobe;
+                    // See assertion above; if aWidth is zero, then we would have no
+                    // valid position to clamp to.
+                    pos = max(pos, 0);
+                    pos = min(pos, aWidth - 1);
+                    alphaSum += aInput[aWidth * y + pos];
+                }
+            }
+            int32_t tmp = x - aLeftLobe;
+            int32_t last = max(tmp, 0);
+            int32_t next = min(tmp + boxSize, aWidth - 1);
+
+            aOutput[aWidth * y + x] = (uint64_t(alphaSum) * reciprocal) >> 32;
+
+            alphaSum += aInput[aWidth * y + next] -
+                        aInput[aWidth * y + last];
+        }
     }
-  } else {
-    // The filter window is larger than the row size, and we're in the area of split
-    // overlap. So the leftmost and rightmost samples are both out of bounds and need
-    // to be clamped. We can just precompute the difference here consequently.
-    int32_t firstLastDiff = aInput[(aWidth -1) * inputStep] - aInput[0];
-    while (dst < iterEnd) {
-      *dst = (alphaSum * reciprocal) >> 24;
-      alphaSum += firstLastDiff;
-      dst += outputStep;
-    }
-  }
-
-  // Process all remaining pixels after splitRight that would sample after the row end.
-  iterEnd = &aOutput[aEnd * outputStep];
-  src = &aInput[(splitRight - aLeftLobe) * inputStep];
-  uint8_t lastVal = aInput[(aWidth - 1) * inputStep];
-
-  #define RIGHT_ITER \
-    *dst = (alphaSum * reciprocal) >> 24; \
-    alphaSum += lastVal - *src; \
-    dst += outputStep; \
-    src += inputStep;
-
-  while (dst + 16 * outputStep <= iterEnd) {
-    RIGHT_ITER; RIGHT_ITER; RIGHT_ITER; RIGHT_ITER;
-    RIGHT_ITER; RIGHT_ITER; RIGHT_ITER; RIGHT_ITER;
-    RIGHT_ITER; RIGHT_ITER; RIGHT_ITER; RIGHT_ITER;
-    RIGHT_ITER; RIGHT_ITER; RIGHT_ITER; RIGHT_ITER;
-  }
-  while (dst < iterEnd) {
-    RIGHT_ITER;
-  }
 }
 
 /**
- * Box blur involves looking at one pixel, and setting its value to the average
- * of its neighbouring pixels. This is meant to provide a 3-pass approximation of a
- * Gaussian blur.
- * @param aTranspose Whether to transpose the buffer when reading and writing to it.
- * @param aData The buffer to be blurred.
- * @param aLobes The number of pixels to blend on the left and right for each of 3 passes.
- * @param aWidth The number of columns in the buffers.
- * @param aRows The number of rows in the buffers.
- * @param aStride The stride of the buffer.
+ * Identical to BoxBlurHorizontal, except it blurs top and bottom instead of
+ * left and right.
+ * XXX shouldn't we pass stride in separately here?
  */
-template<bool aTranspose>
 static void
-BoxBlur(uint8_t* aData,
-        const int32_t aLobes[3][2],
-        int32_t aWidth,
-        int32_t aRows,
-        int32_t aStride,
-        IntRect aSkipRect)
+BoxBlurVertical(unsigned char* aInput,
+                unsigned char* aOutput,
+                int32_t aTopLobe,
+                int32_t aBottomLobe,
+                int32_t aWidth,
+                int32_t aRows,
+                const IntRect& aSkipRect)
 {
-  if (aTranspose) {
-    swap(aWidth, aRows);
-    swap(aSkipRect.x, aSkipRect.y);
-    swap(aSkipRect.width, aSkipRect.height);
-  }
+    MOZ_ASSERT(aRows > 0);
 
-  MOZ_ASSERT(aWidth > 0);
-
-  // All three passes of the box blur that approximate the Gaussian are done
-  // on each row in turn, so we only need two temporary row buffers to process
-  // each row, instead of a full-sized buffer. Data moves from the source to the
-  // first temporary, from the first temporary to the second, then from the second
-  // back to the destination. This way is more cache-friendly than processing whe
-  // whole buffer in each pass and thus yields a nice speedup.
-  uint8_t* tmpRow = new (std::nothrow) uint8_t[2 * aWidth];
-  if (!tmpRow) {
-    return;
-  }
-  uint8_t* tmpRow2 = tmpRow + aWidth;
-
-  const int32_t stride = aTranspose ? 1 : aStride;
-  bool skipRectCoversWholeRow = 0 >= aSkipRect.x &&
-                                aWidth <= aSkipRect.XMost();
-
-  for (int32_t y = 0; y < aRows; y++) {
-    // Check whether the skip rect intersects this row. If the skip
-    // rect covers the whole surface in this row, we can avoid
-    // this row entirely (and any others along the skip rect).
-    bool inSkipRectY = y >= aSkipRect.y &&
-                       y < aSkipRect.YMost();
-    if (inSkipRectY && skipRectCoversWholeRow) {
-      aData += stride * (aSkipRect.YMost() - y);
-      y = aSkipRect.YMost() - 1;
-      continue;
+    int32_t boxSize = aTopLobe + aBottomLobe + 1;
+    bool skipRectCoversWholeColumn = 0 >= aSkipRect.y &&
+                                     aRows <= aSkipRect.YMost();
+    if (boxSize == 1) {
+        memcpy(aOutput, aInput, aWidth*aRows);
+        return;
     }
+    uint32_t reciprocal = uint32_t((uint64_t(1) << 32) / boxSize);
 
-    // Read in data from the source transposed if necessary.
-    BoxBlurRow<aTranspose, false>(aData, tmpRow, aLobes[0][0], aLobes[0][1], aWidth, aStride, 0, aWidth);
+    for (int32_t x = 0; x < aWidth; x++) {
+        bool inSkipRectX = x >= aSkipRect.x &&
+                           x < aSkipRect.XMost();
+        if (inSkipRectX && skipRectCoversWholeColumn) {
+            x = aSkipRect.XMost() - 1;
+            continue;
+        }
 
-    // For the middle pass, the data is already pre-transposed and does not need to be post-transposed yet.
-    BoxBlurRow<false, false>(tmpRow, tmpRow2, aLobes[1][0], aLobes[1][1], aWidth, aStride, 0, aWidth);
+        uint32_t alphaSum = 0;
+        for (int32_t i = 0; i < boxSize; i++) {
+            int32_t pos = i - aTopLobe;
+            // See assertion above; if aRows is zero, then we would have no
+            // valid position to clamp to.
+            pos = max(pos, 0);
+            pos = min(pos, aRows - 1);
+            alphaSum += aInput[aWidth * pos + x];
+        }
+        for (int32_t y = 0; y < aRows; y++) {
+            if (inSkipRectX && y >= aSkipRect.y &&
+                y < aSkipRect.YMost()) {
+                y = aSkipRect.YMost();
+                if (y >= aRows)
+                    break;
 
-    // Write back data to the destination transposed if necessary too.
-    // Make sure not to overwrite the skip rect by only outputting to the
-    // destination before and after the skip rect, if requested.
-    int32_t skipStart = inSkipRectY ? min(max(aSkipRect.x, 0), aWidth) : aWidth;
-    int32_t skipEnd = max(skipStart, aSkipRect.XMost());
-    if (skipStart > 0) {
-      BoxBlurRow<false, aTranspose>(tmpRow2, aData, aLobes[2][0], aLobes[2][1], aWidth, aStride, 0, skipStart);
+                alphaSum = 0;
+                for (int32_t i = 0; i < boxSize; i++) {
+                    int32_t pos = y + i - aTopLobe;
+                    // See assertion above; if aRows is zero, then we would have no
+                    // valid position to clamp to.
+                    pos = max(pos, 0);
+                    pos = min(pos, aRows - 1);
+                    alphaSum += aInput[aWidth * pos + x];
+                }
+            }
+            int32_t tmp = y - aTopLobe;
+            int32_t last = max(tmp, 0);
+            int32_t next = min(tmp + boxSize, aRows - 1);
+
+            aOutput[aWidth * y + x] = (uint64_t(alphaSum) * reciprocal) >> 32;
+
+            alphaSum += aInput[aWidth * next + x] -
+                        aInput[aWidth * last + x];
+        }
     }
-    if (skipEnd < aWidth) {
-      BoxBlurRow<false, aTranspose>(tmpRow2, aData, aLobes[2][0], aLobes[2][1], aWidth, aStride, skipEnd, aWidth);
-    }
-
-    aData += stride;
-  }
-
-  delete[] tmpRow;
 }
 
 static void ComputeLobes(int32_t aRadius, int32_t aLobes[3][2])
@@ -336,8 +227,8 @@ static void ComputeLobes(int32_t aRadius, int32_t aLobes[3][2])
 }
 
 static void
-SpreadHorizontal(uint8_t* aInput,
-                 uint8_t* aOutput,
+SpreadHorizontal(unsigned char* aInput,
+                 unsigned char* aOutput,
                  int32_t aRadius,
                  int32_t aWidth,
                  int32_t aRows,
@@ -384,8 +275,8 @@ SpreadHorizontal(uint8_t* aInput,
 }
 
 static void
-SpreadVertical(uint8_t* aInput,
-               uint8_t* aOutput,
+SpreadVertical(unsigned char* aInput,
+               unsigned char* aOutput,
                int32_t aRadius,
                int32_t aWidth,
                int32_t aRows,
@@ -590,7 +481,7 @@ AlphaBoxBlur::Blur(uint8_t* aData)
     if (mSpreadRadius.width > 0 || mSpreadRadius.height > 0) {
       // No need to use CheckedInt here - we have validated it in the constructor.
       size_t szB = stride * size.height;
-      uint8_t* tmpData = new (std::nothrow) uint8_t[szB];
+      unsigned char* tmpData = new (std::nothrow) uint8_t[szB];
 
       if (!tmpData) {
         return;
@@ -598,8 +489,8 @@ AlphaBoxBlur::Blur(uint8_t* aData)
 
       memset(tmpData, 0, szB);
 
-      SpreadHorizontal(aData, tmpData, mSpreadRadius.width, size.width, size.height, stride, mSkipRect);
-      SpreadVertical(tmpData, aData, mSpreadRadius.height, size.width, size.height, stride, mSkipRect);
+      SpreadHorizontal(aData, tmpData, mSpreadRadius.width, GetSize().width, GetSize().height, stride, mSkipRect);
+      SpreadVertical(tmpData, aData, mSpreadRadius.height, GetSize().width, GetSize().height, stride, mSkipRect);
 
       delete [] tmpData;
     }
@@ -618,12 +509,39 @@ AlphaBoxBlur::Blur(uint8_t* aData)
     if ((integralImageSize.width * integralImageSize.height) > (1 << 24)) {
       // Fallback to old blurring code when the surface is so large it may
       // overflow our integral image!
+
+      // No need to use CheckedInt here - we have validated it in the constructor.
+      size_t szB = stride * size.height;
+      uint8_t* tmpData = new (std::nothrow) uint8_t[szB];
+      if (!tmpData) {
+        return;
+      }
+
+      memset(tmpData, 0, szB);
+
+      uint8_t* a = aData;
+      uint8_t* b = tmpData;
       if (mBlurRadius.width > 0) {
-        BoxBlur<false>(aData, horizontalLobes, size.width, size.height, stride, mSkipRect);
+        BoxBlurHorizontal(a, b, horizontalLobes[0][0], horizontalLobes[0][1], stride, GetSize().height, mSkipRect);
+        BoxBlurHorizontal(b, a, horizontalLobes[1][0], horizontalLobes[1][1], stride, GetSize().height, mSkipRect);
+        BoxBlurHorizontal(a, b, horizontalLobes[2][0], horizontalLobes[2][1], stride, GetSize().height, mSkipRect);
+      } else {
+        a = tmpData;
+        b = aData;
       }
+      // The result is in 'b' here.
       if (mBlurRadius.height > 0) {
-        BoxBlur<true>(aData, verticalLobes, size.width, size.height, stride, mSkipRect);
+        BoxBlurVertical(b, a, verticalLobes[0][0], verticalLobes[0][1], stride, GetSize().height, mSkipRect);
+        BoxBlurVertical(a, b, verticalLobes[1][0], verticalLobes[1][1], stride, GetSize().height, mSkipRect);
+        BoxBlurVertical(b, a, verticalLobes[2][0], verticalLobes[2][1], stride, GetSize().height, mSkipRect);
+      } else {
+        a = b;
       }
+      // The result is in 'a' here.
+      if (a == tmpData) {
+        memcpy(aData, tmpData, szB);
+      }
+      delete [] tmpData;
     } else {
       size_t integralImageStride = GetAlignedStride<16>(integralImageSize.width, 4);
       if (integralImageStride == 0) {
