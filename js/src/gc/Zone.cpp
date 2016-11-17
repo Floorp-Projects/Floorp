@@ -203,7 +203,7 @@ Zone::sweepWeakMaps()
 }
 
 void
-Zone::discardJitCode(FreeOp* fop)
+Zone::discardJitCode(FreeOp* fop, bool discardBaselineCode)
 {
     if (!jitZone())
         return;
@@ -212,14 +212,16 @@ Zone::discardJitCode(FreeOp* fop)
         PurgeJITCaches(this);
     } else {
 
+        if (discardBaselineCode) {
 #ifdef DEBUG
-        /* Assert no baseline scripts are marked as active. */
-        for (auto script = cellIter<JSScript>(); !script.done(); script.next())
-            MOZ_ASSERT_IF(script->hasBaselineScript(), !script->baselineScript()->active());
+            /* Assert no baseline scripts are marked as active. */
+            for (auto script = cellIter<JSScript>(); !script.done(); script.next())
+                MOZ_ASSERT_IF(script->hasBaselineScript(), !script->baselineScript()->active());
 #endif
 
-        /* Mark baseline scripts on the stack as active. */
-        jit::MarkActiveBaselineScripts(this);
+            /* Mark baseline scripts on the stack as active. */
+            jit::MarkActiveBaselineScripts(this);
+        }
 
         /* Only mark OSI points if code is being discarded. */
         jit::InvalidateAll(fop, this);
@@ -231,7 +233,8 @@ Zone::discardJitCode(FreeOp* fop)
              * Discard baseline script if it's not marked as active. Note that
              * this also resets the active flag.
              */
-            jit::FinishDiscardBaselineScript(fop, script);
+            if (discardBaselineCode)
+                jit::FinishDiscardBaselineScript(fop, script);
 
             /*
              * Warm-up counter for scripts are reset on GC. After discarding code we
@@ -249,7 +252,8 @@ Zone::discardJitCode(FreeOp* fop)
          *
          * Defer freeing any allocated blocks until after the next minor GC.
          */
-        jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(fop->runtime());
+        if (discardBaselineCode)
+            jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(fop->runtime());
     }
 }
 
