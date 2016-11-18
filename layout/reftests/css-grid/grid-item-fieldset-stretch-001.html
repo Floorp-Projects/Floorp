@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: stretching fieldset items with auto-margins and/or orthogonal writing-mode</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1316051">
+  <link rel="help" href="https://drafts.csswg.org/css-align-3/#valdef-justify-self-normal">
+  <link rel="match" href="grid-item-table-stretch-004-ref.html">
+  <style type="text/css">
+.grid {
+  display: inline-grid;
+  border: 3px solid grey;
+  grid: 10px 60px 3px / 6px 100px 4px;
+}
+
+fieldset {
+  border: 1px solid;
+  padding: 0;
+  margin: 0;
+  background: lightgrey;
+  grid-area:2/2;
+}
+legend { border: 1px dashed blue;}
+x { display:block; width:16px; height:16px; }
+t { display:block; width:20px; height:20px; }
+i { display:block; background:grey; }
+
+.m { margin: 7px 3px 1px 5px; }
+.p { padding: 3px 1px 5px 7px; }
+.hma10 { margin: 7px 3px 1px auto; }
+.hmaa  { margin: 7px auto 1px auto; }
+.vma10 { margin: auto 7px 3px 1px; }
+.vmaa  { margin: auto 7px auto 1px; }
+
+.vr { writing-mode: vertical-rl; }
+  </style>
+</head>
+<body>
+
+<div class="grid"><fieldset class="m"><legend><x></x></legend><i><t></t></i></fieldset></div>
+<div class="grid"><fieldset class="hma10"><legend><x></x></legend><i><t></t></i></fieldset></div>
+<div class="grid"><fieldset class="hmaa"><legend><x></x></legend><i><t></t></i></fieldset></div>
+<div class="grid"><fieldset class="vr hma10"><legend><x></x></legend><i><t></t></i></fieldset></div>
+<div class="grid"><fieldset class="vr hmaa"><legend><x></x></legend><i><t></t></i></fieldset></div>
+<div class="grid"><fieldset class="vr"><legend><x></x></legend><i><t></t></i></fieldset></div>
+
+<div class="grid"><fieldset class="vma10"><legend><x></x></legend><i><t></t></i></fieldset></div>
+<div class="grid"><fieldset class="vmaa"><legend><x></x></legend><i><t></t></i></fieldset></div>
+<div class="grid"><fieldset class="vr vma10"><legend><x></x></legend><i><t></t></i></fieldset></div>
+<div class="grid"><fieldset class="vr vmaa"><legend><x></x></legend><i><t></t></i></fieldset></div>
+<div class="grid"><fieldset class="vr p vma10"><legend><x></x></legend><i><t></t></i></fieldset></div>
+<div class="grid"><fieldset class="vr p vmaa"><legend><x></x></legend><i><t></t></i></fieldset></div>
+
+</body>
+</html>
