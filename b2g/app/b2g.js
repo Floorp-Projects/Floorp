@@ -843,10 +843,6 @@ pref("media.webspeech.synth.enabled", true);
 // Enable Web Speech recognition API
 pref("media.webspeech.recognition.enable", true);
 
-// Downloads API
-pref("dom.mozDownloads.enabled", true);
-pref("dom.downloads.max_retention_days", 7);
-
 // External Helper Application Handling
 //
 // All external helper application handling can require the docshell to be
