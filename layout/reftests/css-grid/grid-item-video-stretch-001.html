@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: stretching video items with auto-margins and/or orthogonal writing-mode</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1316051">
+  <link rel="help" href="https://drafts.csswg.org/css-align-3/#valdef-justify-self-normal">
+  <link rel="match" href="grid-item-video-stretch-001-ref.html">
+  <style type="text/css">
+* { vertical-align: top; }
+.grid {
+  display: inline-grid;
+  border: 3px solid grey;
+  grid: 10px 50px 3px / 6px 100px 4px;
+}
+
+video {
+  border: 1px solid;
+  padding: 0;
+  margin: 0;
+  background: lightgrey;
+  grid-area: 2/2;
+}
+
+.m { margin: 7px 3px 1px 5px; }
+.p { padding: 3px 1px 5px 7px; }
+.hma10 { margin: 7px 3px 1px auto; }
+.hmaa  { margin: 7px auto 1px auto; }
+.vma10 { margin: auto 7px 3px 1px; }
+.vmaa  { margin: auto 7px auto 1px; }
+.mxw { max-width: 32px; }
+.mxh { max-height: 16px; }
+
+.vr { writing-mode: vertical-rl; }
+  </style>
+</head>
+<body>
+
+<div class="grid"><video class="m" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="hma10" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="hmaa" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="vr hma10" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="vr hmaa" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="vr" src="support/colors-16x8.webm"></div>
+
+<div class="grid"><video class="vma10" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="vmaa" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="vr vma10" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="vr vmaa" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="vr p vma10" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="vr p vmaa" src="support/colors-16x8.webm"></div>
+
+<div class="grid"><video class="mxw m" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="mxw hma10" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="mxw hmaa" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="mxw vr hma10" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="mxw vr hmaa" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="mxw vr" src="support/colors-16x8.webm"></div>
+
+<div class="grid"><video class="mxh m" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="mxh hma10" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="mxh hmaa" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="mxh vr hma10" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="mxh vr hmaa" src="support/colors-16x8.webm"></div>
+<div class="grid"><video class="mxh vr" src="support/colors-16x8.webm"></div>
+
+</body>
+</html>
