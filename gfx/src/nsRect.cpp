@@ -4,16 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsRect.h"
-#include "mozilla/gfx/Types.h"          // for NS_SIDE_BOTTOM, etc
+#include "mozilla/gfx/Types.h"          // for eSideBottom, etc
 #include "mozilla/CheckedInt.h"         // for CheckedInt
 #include "nsDeviceContext.h"            // for nsDeviceContext
 #include "nsString.h"               // for nsAutoString, etc
 #include "nsMargin.h"                   // for nsMargin
 
-static_assert((int(NS_SIDE_TOP) == 0) &&
-              (int(NS_SIDE_RIGHT) == 1) &&
-              (int(NS_SIDE_BOTTOM) == 2) &&
-              (int(NS_SIDE_LEFT) == 3),
+static_assert((int(eSideTop) == 0) &&
+              (int(eSideRight) == 1) &&
+              (int(eSideBottom) == 2) &&
+              (int(eSideLeft) == 3),
               "The mozilla::Side sequence must match the nsMargin nscoord sequence");
 
 const mozilla::gfx::IntRect& GetMaxSizedIntRect() {

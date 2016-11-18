@@ -555,22 +555,22 @@ inline nsStyleUnit nsStyleSides::GetUnit(mozilla::Side aSide) const
 
 inline nsStyleUnit nsStyleSides::GetLeftUnit() const
 {
-  return GetUnit(NS_SIDE_LEFT);
+  return GetUnit(mozilla::eSideLeft);
 }
 
 inline nsStyleUnit nsStyleSides::GetTopUnit() const
 {
-  return GetUnit(NS_SIDE_TOP);
+  return GetUnit(mozilla::eSideTop);
 }
 
 inline nsStyleUnit nsStyleSides::GetRightUnit() const
 {
-  return GetUnit(NS_SIDE_RIGHT);
+  return GetUnit(mozilla::eSideRight);
 }
 
 inline nsStyleUnit nsStyleSides::GetBottomUnit() const
 {
-  return GetUnit(NS_SIDE_BOTTOM);
+  return GetUnit(mozilla::eSideBottom);
 }
 
 inline nsStyleCoord nsStyleSides::Get(mozilla::Side aSide) const
@@ -580,22 +580,22 @@ inline nsStyleCoord nsStyleSides::Get(mozilla::Side aSide) const
 
 inline nsStyleCoord nsStyleSides::GetLeft() const
 {
-  return Get(NS_SIDE_LEFT);
+  return Get(mozilla::eSideLeft);
 }
 
 inline nsStyleCoord nsStyleSides::GetTop() const
 {
-  return Get(NS_SIDE_TOP);
+  return Get(mozilla::eSideTop);
 }
 
 inline nsStyleCoord nsStyleSides::GetRight() const
 {
-  return Get(NS_SIDE_RIGHT);
+  return Get(mozilla::eSideRight);
 }
 
 inline nsStyleCoord nsStyleSides::GetBottom() const
 {
-  return Get(NS_SIDE_BOTTOM);
+  return Get(mozilla::eSideBottom);
 }
 
 inline void nsStyleSides::Set(mozilla::Side aSide, const nsStyleCoord& aCoord)
@@ -605,22 +605,22 @@ inline void nsStyleSides::Set(mozilla::Side aSide, const nsStyleCoord& aCoord)
 
 inline void nsStyleSides::SetLeft(const nsStyleCoord& aCoord)
 {
-  Set(NS_SIDE_LEFT, aCoord);
+  Set(mozilla::eSideLeft, aCoord);
 }
 
 inline void nsStyleSides::SetTop(const nsStyleCoord& aCoord)
 {
-  Set(NS_SIDE_TOP, aCoord);
+  Set(mozilla::eSideTop, aCoord);
 }
 
 inline void nsStyleSides::SetRight(const nsStyleCoord& aCoord)
 {
-  Set(NS_SIDE_RIGHT, aCoord);
+  Set(mozilla::eSideRight, aCoord);
 }
 
 inline void nsStyleSides::SetBottom(const nsStyleCoord& aCoord)
 {
-  Set(NS_SIDE_BOTTOM, aCoord);
+  Set(mozilla::eSideBottom, aCoord);
 }
 
 // -------------------------

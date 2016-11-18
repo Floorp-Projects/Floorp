@@ -4523,10 +4523,10 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
     case eStyleAnimType_Sides_Bottom:
     case eStyleAnimType_Sides_Left: {
       static_assert(
-       NS_SIDE_TOP    == eStyleAnimType_Sides_Top   -eStyleAnimType_Sides_Top &&
-       NS_SIDE_RIGHT  == eStyleAnimType_Sides_Right -eStyleAnimType_Sides_Top &&
-       NS_SIDE_BOTTOM == eStyleAnimType_Sides_Bottom-eStyleAnimType_Sides_Top &&
-       NS_SIDE_LEFT   == eStyleAnimType_Sides_Left  -eStyleAnimType_Sides_Top,
+       eSideTop    == eStyleAnimType_Sides_Top   -eStyleAnimType_Sides_Top &&
+       eSideRight  == eStyleAnimType_Sides_Right -eStyleAnimType_Sides_Top &&
+       eSideBottom == eStyleAnimType_Sides_Bottom-eStyleAnimType_Sides_Top &&
+       eSideLeft   == eStyleAnimType_Sides_Left  -eStyleAnimType_Sides_Top,
        "box side constants out of sync with animation side constants");
 
       const nsStyleCoord &coord =

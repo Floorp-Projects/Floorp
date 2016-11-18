@@ -476,24 +476,24 @@ MakeBevelColor(mozilla::Side whichSide, uint8_t style,
       (style == NS_STYLE_BORDER_STYLE_RIDGE)) {
     // Flip colors for these two border styles
     switch (whichSide) {
-    case NS_SIDE_BOTTOM: whichSide = NS_SIDE_TOP;    break;
-    case NS_SIDE_RIGHT:  whichSide = NS_SIDE_LEFT;   break;
-    case NS_SIDE_TOP:    whichSide = NS_SIDE_BOTTOM; break;
-    case NS_SIDE_LEFT:   whichSide = NS_SIDE_RIGHT;  break;
+    case eSideBottom: whichSide = eSideTop;    break;
+    case eSideRight:  whichSide = eSideLeft;   break;
+    case eSideTop:    whichSide = eSideBottom; break;
+    case eSideLeft:   whichSide = eSideRight;  break;
     }
   }
 
   switch (whichSide) {
-  case NS_SIDE_BOTTOM:
+  case eSideBottom:
     theColor = colors[1];
     break;
-  case NS_SIDE_RIGHT:
+  case eSideRight:
     theColor = colors[1];
     break;
-  case NS_SIDE_TOP:
+  case eSideTop:
     theColor = colors[0];
     break;
-  case NS_SIDE_LEFT:
+  case eSideLeft:
   default:
     theColor = colors[0];
     break;
@@ -1484,10 +1484,10 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
 
         Float borderSizes[4];
 
-        borderSizes[NS_SIDE_LEFT] = spreadDistance;
-        borderSizes[NS_SIDE_TOP] = spreadDistance;
-        borderSizes[NS_SIDE_RIGHT] = spreadDistance;
-        borderSizes[NS_SIDE_BOTTOM] = spreadDistance;
+        borderSizes[eSideLeft] = spreadDistance;
+        borderSizes[eSideTop] = spreadDistance;
+        borderSizes[eSideRight] = spreadDistance;
+        borderSizes[eSideBottom] = spreadDistance;
 
         nsCSSBorderRenderer::ComputeOuterRadii(borderRadii, borderSizes,
             &clipRectRadii);
@@ -1596,19 +1596,19 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
 
       // See PaintBoxShadowOuter and bug 514670
       if (innerRadii[C_TL].width > 0 || innerRadii[C_BL].width > 0) {
-        borderSizes[NS_SIDE_LEFT] = spreadDistance;
+        borderSizes[eSideLeft] = spreadDistance;
       }
 
       if (innerRadii[C_TL].height > 0 || innerRadii[C_TR].height > 0) {
-        borderSizes[NS_SIDE_TOP] = spreadDistance;
+        borderSizes[eSideTop] = spreadDistance;
       }
 
       if (innerRadii[C_TR].width > 0 || innerRadii[C_BR].width > 0) {
-        borderSizes[NS_SIDE_RIGHT] = spreadDistance;
+        borderSizes[eSideRight] = spreadDistance;
       }
 
       if (innerRadii[C_BL].height > 0 || innerRadii[C_BR].height > 0) {
-        borderSizes[NS_SIDE_BOTTOM] = spreadDistance;
+        borderSizes[eSideBottom] = spreadDistance;
       }
 
       nsCSSBorderRenderer::ComputeInnerRadii(innerRadii, borderSizes,
@@ -4175,32 +4175,32 @@ DrawSolidBorderSegment(DrawTarget&          aDrawTarget,
     Float startBevelOffset =
       NSAppUnitsToFloatPixels(aStartBevelOffset, aAppUnitsPerDevPixel);
     switch(aStartBevelSide) {
-    case NS_SIDE_TOP:
+    case eSideTop:
       poly[0].x += startBevelOffset;
       break;
-    case NS_SIDE_BOTTOM:
+    case eSideBottom:
       poly[3].x += startBevelOffset;
       break;
-    case NS_SIDE_RIGHT:
+    case eSideRight:
       poly[1].y += startBevelOffset;
       break;
-    case NS_SIDE_LEFT:
+    case eSideLeft:
       poly[0].y += startBevelOffset;
     }
 
     Float endBevelOffset =
       NSAppUnitsToFloatPixels(aEndBevelOffset, aAppUnitsPerDevPixel);
     switch(aEndBevelSide) {
-    case NS_SIDE_TOP:
+    case eSideTop:
       poly[1].x -= endBevelOffset;
       break;
-    case NS_SIDE_BOTTOM:
+    case eSideBottom:
       poly[2].x -= endBevelOffset;
       break;
-    case NS_SIDE_RIGHT:
+    case eSideRight:
       poly[2].y -= endBevelOffset;
       break;
-    case NS_SIDE_LEFT:
+    case eSideLeft:
       poly[3].y -= endBevelOffset;
     }
 
@@ -4252,7 +4252,7 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
                                        uint8_t                  aEndBevelSide,
                                        nscoord                  aEndBevelOffset)
 {
-  bool horizontal = ((NS_SIDE_TOP == aStartBevelSide) || (NS_SIDE_BOTTOM == aStartBevelSide));
+  bool horizontal = ((eSideTop == aStartBevelSide) || (eSideBottom == aStartBevelSide));
   nscoord twipsPerPixel = NSIntPixelsToAppUnits(1, aAppUnitsPerCSSPixel);
   uint8_t ridgeGroove = NS_STYLE_BORDER_STYLE_RIDGE;
 
@@ -4336,7 +4336,7 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
                             ? RoundFloatToPixel(0.5f * (float)aStartBevelOffset, twipsPerPixel, true) : 0;
       nscoord endBevel =   (aEndBevelOffset > 0)
                             ? RoundFloatToPixel(0.5f * (float)aEndBevelOffset, twipsPerPixel, true) : 0;
-      mozilla::Side ridgeGrooveSide = (horizontal) ? NS_SIDE_TOP : NS_SIDE_LEFT;
+      mozilla::Side ridgeGrooveSide = (horizontal) ? eSideTop : eSideLeft;
       // FIXME: In theory, this should use the visited-dependent
       // background color, but I don't care.
       nscolor bevelColor = MakeBevelColor(ridgeGrooveSide, ridgeGroove,
@@ -4347,11 +4347,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
       if (horizontal) { // top, bottom
         half = RoundFloatToPixel(0.5f * (float)aBorder.height, twipsPerPixel);
         rect.height = half;
-        if (NS_SIDE_TOP == aStartBevelSide) {
+        if (eSideTop == aStartBevelSide) {
           rect.x += startBevel;
           rect.width -= startBevel;
         }
-        if (NS_SIDE_TOP == aEndBevelSide) {
+        if (eSideTop == aEndBevelSide) {
           rect.width -= endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rect, bevelColor,
@@ -4362,11 +4362,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
       else { // left, right
         half = RoundFloatToPixel(0.5f * (float)aBorder.width, twipsPerPixel);
         rect.width = half;
-        if (NS_SIDE_LEFT == aStartBevelSide) {
+        if (eSideLeft == aStartBevelSide) {
           rect.y += startBevel;
           rect.height -= startBevel;
         }
-        if (NS_SIDE_LEFT == aEndBevelSide) {
+        if (eSideLeft == aEndBevelSide) {
           rect.height -= endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rect, bevelColor,
@@ -4376,7 +4376,7 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
       }
 
       rect = aBorder;
-      ridgeGrooveSide = (NS_SIDE_TOP == ridgeGrooveSide) ? NS_SIDE_BOTTOM : NS_SIDE_RIGHT;
+      ridgeGrooveSide = (eSideTop == ridgeGrooveSide) ? eSideBottom : eSideRight;
       // FIXME: In theory, this should use the visited-dependent
       // background color, but I don't care.
       bevelColor = MakeBevelColor(ridgeGrooveSide, ridgeGroove,
@@ -4384,11 +4384,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
       if (horizontal) {
         rect.y = rect.y + half;
         rect.height = aBorder.height - half;
-        if (NS_SIDE_BOTTOM == aStartBevelSide) {
+        if (eSideBottom == aStartBevelSide) {
           rect.x += startBevel;
           rect.width -= startBevel;
         }
-        if (NS_SIDE_BOTTOM == aEndBevelSide) {
+        if (eSideBottom == aEndBevelSide) {
           rect.width -= endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rect, bevelColor,
@@ -4399,11 +4399,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
       else {
         rect.x = rect.x + half;
         rect.width = aBorder.width - half;
-        if (NS_SIDE_RIGHT == aStartBevelSide) {
+        if (eSideRight == aStartBevelSide) {
           rect.y += aStartBevelOffset - startBevel;
           rect.height -= startBevel;
         }
-        if (NS_SIDE_RIGHT == aEndBevelSide) {
+        if (eSideRight == aEndBevelSide) {
           rect.height -= endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rect, bevelColor,
@@ -4428,11 +4428,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
 
         // draw the top line or rect
         nsRect topRect(aBorder.x, aBorder.y, aBorder.width, thirdHeight);
-        if (NS_SIDE_TOP == aStartBevelSide) {
+        if (eSideTop == aStartBevelSide) {
           topRect.x += aStartBevelOffset - startBevel;
           topRect.width -= aStartBevelOffset - startBevel;
         }
-        if (NS_SIDE_TOP == aEndBevelSide) {
+        if (eSideTop == aEndBevelSide) {
           topRect.width -= aEndBevelOffset - endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, topRect, aBorderColor,
@@ -4443,11 +4443,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
         // draw the botom line or rect
         nscoord heightOffset = aBorder.height - thirdHeight;
         nsRect bottomRect(aBorder.x, aBorder.y + heightOffset, aBorder.width, aBorder.height - heightOffset);
-        if (NS_SIDE_BOTTOM == aStartBevelSide) {
+        if (eSideBottom == aStartBevelSide) {
           bottomRect.x += aStartBevelOffset - startBevel;
           bottomRect.width -= aStartBevelOffset - startBevel;
         }
-        if (NS_SIDE_BOTTOM == aEndBevelSide) {
+        if (eSideBottom == aEndBevelSide) {
           bottomRect.width -= aEndBevelOffset - endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, bottomRect, aBorderColor,
@@ -4459,11 +4459,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
         nscoord thirdWidth = RoundFloatToPixel(0.333333f * (float)aBorder.width, twipsPerPixel);
 
         nsRect leftRect(aBorder.x, aBorder.y, thirdWidth, aBorder.height);
-        if (NS_SIDE_LEFT == aStartBevelSide) {
+        if (eSideLeft == aStartBevelSide) {
           leftRect.y += aStartBevelOffset - startBevel;
           leftRect.height -= aStartBevelOffset - startBevel;
         }
-        if (NS_SIDE_LEFT == aEndBevelSide) {
+        if (eSideLeft == aEndBevelSide) {
           leftRect.height -= aEndBevelOffset - endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, leftRect, aBorderColor,
@@ -4473,11 +4473,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
 
         nscoord widthOffset = aBorder.width - thirdWidth;
         nsRect rightRect(aBorder.x + widthOffset, aBorder.y, aBorder.width - widthOffset, aBorder.height);
-        if (NS_SIDE_RIGHT == aStartBevelSide) {
+        if (eSideRight == aStartBevelSide) {
           rightRect.y += aStartBevelOffset - startBevel;
           rightRect.height -= aStartBevelOffset - startBevel;
         }
-        if (NS_SIDE_RIGHT == aEndBevelSide) {
+        if (eSideRight == aEndBevelSide) {
           rightRect.height -= aEndBevelOffset - endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rightRect, aBorderColor,
