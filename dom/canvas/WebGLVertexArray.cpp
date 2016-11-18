@@ -17,7 +17,7 @@ namespace mozilla {
 JSObject*
 WebGLVertexArray::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 {
-    return dom::WebGLVertexArrayObjectOESBinding::Wrap(cx, this, givenProto);
+    return dom::WebGLVertexArrayObjectBinding::Wrap(cx, this, givenProto);
 }
 
 WebGLVertexArray::WebGLVertexArray(WebGLContext* webgl)
