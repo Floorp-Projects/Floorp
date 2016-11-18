@@ -329,13 +329,11 @@ def generic_worker_setup(config, test, taskdesc):
     worker['max-run-time'] = test['max-run-time']
     worker['artifacts'] = artifacts
 
-    env = worker['env'] = {
-        # Bug 1306989
+    worker['env'] = {
         'APPDATA': '%cd%\\AppData\\Roaming',
         'LOCALAPPDATA': '%cd%\\AppData\\Local',
         'TEMP': '%cd%\\AppData\\Local\\Temp',
         'TMP': '%cd%\\AppData\\Local\\Temp',
-        'USERPROFILE': '%cd%',
     }
 
     # assemble the command line
@@ -369,13 +367,15 @@ def generic_worker_setup(config, test, taskdesc):
                 if isinstance(c, basestring) and c.startswith('--test-suite'):
                     mh_command[i] += suffix
 
-    worker['command'] = [
-        'mkdir {} {}'.format(env['APPDATA'], env['TMP']),
+    # bug 1311966 - symlink to artifacts until generic worker supports virtual artifact paths
+    artifact_link_commands = ['mklink /d %cd%\\public\\test_info %cd%\\build\\blobber_upload_dir']
+    for link in [a['path'] for a in artifacts if a['path'].startswith('public\\logs\\')]:
+        artifact_link_commands.append('mklink %cd%\\{} %cd%\\{}'.format(link, link[7:]))
+
+    worker['command'] = artifact_link_commands + [
         {'task-reference': 'c:\\mozilla-build\\wget\\wget.exe {}'.format(mozharness_url)},
         'c:\\mozilla-build\\info-zip\\unzip.exe mozharness.zip',
-        {'task-reference': ' '.join(mh_command)},
-        'xcopy build\\blobber_upload_dir public\\test_info /e /i',
-        'copy /y logs\\*.* public\\logs\\'
+        {'task-reference': ' '.join(mh_command)}
     ]
 
 

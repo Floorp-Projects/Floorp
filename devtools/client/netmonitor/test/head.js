@@ -9,8 +9,13 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
   this);
 
-var NetworkHelper = require("devtools/shared/webconsole/network-helper");
 var { Toolbox } = require("devtools/client/framework/toolbox");
+const {
+  decodeUnicodeUrl,
+  getUrlBaseName,
+  getUrlQuery,
+  getUrlHost,
+} = require("devtools/client/netmonitor/request-utils");
 
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/netmonitor/test/";
 const HTTPS_EXAMPLE_URL = "https://example.com/browser/devtools/client/netmonitor/test/";
@@ -260,11 +265,10 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
         transferred, size, time, displayedStatus } = aData;
   let { attachment, target } = aRequestItem;
 
-  let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
-  let unicodeUrl = NetworkHelper.convertToUnicode(unescape(aUrl));
-  let name = NetworkHelper.convertToUnicode(unescape(uri.fileName || uri.filePath || "/"));
-  let query = NetworkHelper.convertToUnicode(unescape(uri.query));
-  let hostPort = uri.hostPort;
+  let unicodeUrl = decodeUnicodeUrl(aUrl);
+  let name = getUrlBaseName(aUrl);
+  let query = getUrlQuery(aUrl);
+  let hostPort = getUrlHost(aUrl);
   let remoteAddress = attachment.remoteAddress;
 
   if (fuzzyUrl) {
