@@ -35,7 +35,7 @@ freetype = "0.1.2"
 freetype = {version = "0.1.2", default-features = false}
 
 [target.'cfg(target_os = "windows")'.dependencies]
-dwrote = "0.1.0"
+dwrote = "0.1.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-graphics = "0.4.1"
