@@ -436,26 +436,6 @@ nsNSSCertificate::GetDisplayName(nsAString& aDisplayName)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetNickname(nsAString& aNickname)
-{
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  if (mCert->nickname) {
-    CopyUTF8toUTF16(mCert->nickname, aNickname);
-  } else {
-    nsresult rv;
-    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-    if (NS_FAILED(rv) || !nssComponent) {
-      return NS_ERROR_FAILURE;
-    }
-    nssComponent->GetPIPNSSBundleString("CertNoNickname", aNickname);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNSSCertificate::GetEmailAddress(nsAString& aEmailAddress)
 {
   nsNSSShutDownPreventionLock locker;

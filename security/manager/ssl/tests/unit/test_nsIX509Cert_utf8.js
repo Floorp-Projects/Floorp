@@ -45,8 +45,6 @@ function run_test() {
     "hD/h2nawrCFwc5gJW10aLJGFL/mcS7ViAIT9HCVk23j4TuBjsVmnZ0VKxB5edux+" +
     "LIEqtU428UVHZWU/I5ngLw==");
 
-  equal(cert.nickname, "(no nickname)",
-        "Actual and expected nickname should match");
   equal(cert.emailAddress, "ludek.rasek@centrum.cz",
         "Actual and expected emailAddress should match");
   equal(cert.subjectName, "serialNumber=ICA - 10003769,SN=Rašek,name=Luděk Rašek,initials=LR,givenName=Luděk,E=ludek.rasek@centrum.cz,L=\"Pacov, Nádražní 769\",ST=Vysočina,CN=Luděk Rašek,C=CZ",

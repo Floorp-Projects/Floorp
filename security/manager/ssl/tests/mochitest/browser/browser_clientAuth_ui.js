@@ -70,7 +70,7 @@ function checkDialogContents(win, notBefore, notAfter) {
                "Actual and expected issuer organization should be equal");
 
   Assert.equal(win.document.getElementById("nicknames").label,
-               "test client certificate [03]",
+               "Mochitest client [03]",
                "Actual and expected selected cert nickname and serial should " +
                "be equal");
 
