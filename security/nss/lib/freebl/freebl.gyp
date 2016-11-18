@@ -103,9 +103,6 @@
               'dependencies': [
                 '<(DEPTH)/lib/util/util.gyp:nssutil3',
               ],
-              'defines': [
-                'CT_VERIF',
-              ],
             }],
             [ 'target_arch=="x64"', {
               'sources': [
@@ -222,6 +219,11 @@
           ],
           'defines': [
             'UNSAFE_FUZZER_MODE',
+          ],
+        }],
+        [ 'test_build==1', {
+          'defines': [
+            'CT_VERIF',
           ],
         }],
         [ 'OS=="mac"', {

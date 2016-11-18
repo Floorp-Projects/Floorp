@@ -6,4 +6,4 @@ git clone -q https://chromium.googlesource.com/chromium/llvm-project/llvm/lib/Fu
 mv tmp/.git libFuzzer/
 rm -fr tmp
 cd libFuzzer
-git reset --hard 4333f2ca71eb7951fcafcdcb111012fbe25c5e7e
+git reset --hard 1b543d6e5073b56be214394890c9193979a3d7e1
