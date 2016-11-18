@@ -37,6 +37,10 @@ GripMessageBody.propTypes = {
   userProvidedStyle: PropTypes.string,
 };
 
+GripMessageBody.defaultProps = {
+  mode: "long",
+};
+
 function GripMessageBody(props) {
   const { grip, userProvidedStyle, serviceContainer } = props;
 

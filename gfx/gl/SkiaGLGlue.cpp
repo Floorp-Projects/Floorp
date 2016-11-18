@@ -140,7 +140,7 @@ glGetString_mozilla(GLContext* aContext, GrGLenum aName)
 
 static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
 {
-    GrGLInterface* i = new GrGLInterface();
+    auto *i = new GrGLInterface();
 
     context->MakeCurrent();
 

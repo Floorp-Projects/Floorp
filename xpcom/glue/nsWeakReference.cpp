@@ -36,7 +36,7 @@ public:
 
   // nsIWeakReference...
   NS_DECL_NSIWEAKREFERENCE
-  virtual size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 private:
   MOZ_WEAKREF_DECL_OWNINGTHREAD

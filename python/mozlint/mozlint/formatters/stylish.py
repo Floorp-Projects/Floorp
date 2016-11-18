@@ -43,7 +43,7 @@ class StylishFormatter(object):
         'brightyellow': [11, 3],
     }
     fmt = "  {c1}{lineno}{column}  {c2}{level}{normal}  {message}  {c1}{rule}({linter}){normal}"
-    fmt_summary = "{t.bold}{c}\u2716 {problem} ({error}, {warning}){t.normal}"
+    fmt_summary = "{t.bold}{c}\u2716 {problem} ({error}, {warning}{failure}){t.normal}"
 
     def __init__(self, disable_colors=None):
         if disable_colors or not blessings:
@@ -77,8 +77,9 @@ class StylishFormatter(object):
             s += 's'
         return str(num) + ' ' + s
 
-    def __call__(self, result):
+    def __call__(self, result, failed=None, **kwargs):
         message = []
+        failed = failed or []
 
         num_errors = 0
         num_warnings = 0
@@ -110,13 +111,21 @@ class StylishFormatter(object):
 
             message.append('')  # newline
 
+        # If there were failures, make it clear which linters failed
+        for fail in failed:
+            message.append("{c}A failure occured in the {name} linter.".format(
+                c=self.color('brightred'),
+                name=fail,
+            ))
+
         # Print a summary
         message.append(self.fmt_summary.format(
             t=self.term,
-            c=self.color('brightred') if num_errors else self.color('brightyellow'),
-            problem=self._pluralize('problem', num_errors + num_warnings),
+            c=self.color('brightred') if num_errors or failed else self.color('brightyellow'),
+            problem=self._pluralize('problem', num_errors + num_warnings + len(failed)),
             error=self._pluralize('error', num_errors),
             warning=self._pluralize('warning', num_warnings),
+            failure=', {}'.format(self._pluralize('failure', len(failed))) if failed else '',
         ))
 
         return '\n'.join(message)
