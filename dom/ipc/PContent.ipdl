@@ -46,6 +46,7 @@ include protocol PRemoteSpellcheckEngine;
 include protocol PWebBrowserPersistDocument;
 include protocol PWebrtcGlobal;
 include protocol PPresentation;
+include protocol PURLClassifier;
 include protocol PVRManager;
 include protocol PVideoDecoderManager;
 include protocol PFlyWebPublishedServer;
@@ -394,6 +395,7 @@ nested(upto inside_cpow) sync protocol PContent
     manages PWebrtcGlobal;
     manages PPresentation;
     manages PFlyWebPublishedServer;
+    manages PURLClassifier;
 
 both:
     // Depending on exactly how the new browser is being created, it might be
@@ -825,6 +827,9 @@ parent:
     async PPresentation();
 
     async PFlyWebPublishedServer(nsString name, FlyWebPublishOptions params);
+
+    sync PURLClassifier(Principal principal, bool useTrackingProtection)
+        returns (bool success);
 
     // Services remoting
 

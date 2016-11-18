@@ -3,6 +3,7 @@
 <head>
   <title>Bug 1233914 - ping doesn't honor the TP list here.</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 
@@ -20,6 +21,12 @@
   const host_track = "http://trackertest.org/";
   const path_ping = "tests/toolkit/components/url-classifier/tests/mochitest/ping.sjs";
   const TP_ENABLE_PREF = "privacy.trackingprotection.enabled";
+
+  var testData = [
+    { url: "trackertest.org/",
+      db: "test-track-simple"
+    }
+  ];
 
   function testPingNonBlacklist() {
     SpecialPowers.setBoolPref(TP_ENABLE_PREF, true);
@@ -96,7 +103,8 @@
   }
 
   function runTest() {
-    Promise.resolve()
+    classifierHelper.waitForInit()
+      .then(() => classifierHelper.addUrlToDB(testData))
       .then(testPingNonBlacklist)
       .then(testPingBlacklistSafebrowsingOff)
       .then(testPingBlacklistSafebrowsingOn)
