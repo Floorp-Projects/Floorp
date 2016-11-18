@@ -283,16 +283,7 @@ StickyScrollContainer::GetScrollRanges(nsIFrame* aFrame, nsRect* aOuter,
   aOuter->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
   aInner->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
 
-  // Due to margin collapsing, |firstCont->GetNormalPosition()| can sometimes
-  // fall outside of |contain|. (This is because GetNormalPosition() returns
-  // the actual position after margin collapsing, while|contain| is
-  // calculated based on the frame's GetUsedMargin() which is pre-collapsing.)
-  // This can cause |aInner|, as computed below, to not be contained inside
-  // |aOuter|, which confuses the code that consumes these values.
-  // This is hard to fix properly (TODO), but clamping |normalPosition| to
-  // |contain| works around it.
-  const nsPoint normalPosition =
-      contain.ClampPoint(firstCont->GetNormalPosition());
+  const nsPoint normalPosition = firstCont->GetNormalPosition();
 
   // Bottom and top
   if (stick.YMost() != nscoord_MAX/2) {
