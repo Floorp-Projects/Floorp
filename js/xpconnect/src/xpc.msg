@@ -226,3 +226,10 @@ XPC_MSG_DEF(NS_ERROR_DOM_PUSH_MISMATCHED_KEY_ERR      , "A subscription with a d
 /* Codes defined in WebIDL https://heycam.github.io/webidl/#idl-DOMException-error-names */
 XPC_MSG_DEF(NS_ERROR_DOM_NOT_FOUND_ERR                , "The object can not be found here.")
 XPC_MSG_DEF(NS_ERROR_DOM_NOT_ALLOWED_ERR              , "The request is not allowed.")
+
+/* Codes related to the URIClassifier service */
+XPC_MSG_DEF(NS_ERROR_MALWARE_URI                      , "The URI is malware")
+XPC_MSG_DEF(NS_ERROR_PHISHING_URI                     , "The URI is phishing")
+XPC_MSG_DEF(NS_ERROR_TRACKING_URI                     , "The URI is tracking")
+XPC_MSG_DEF(NS_ERROR_UNWANTED_URI                     , "The URI is unwanted")
+XPC_MSG_DEF(NS_ERROR_BLOCKED_URI                      , "The URI is blocked")

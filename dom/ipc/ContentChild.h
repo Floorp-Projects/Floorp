@@ -30,6 +30,7 @@ class nsIObserver;
 struct SubstitutionMapping;
 struct OverrideMapping;
 class nsIDomainPolicy;
+class nsIURIClassifierCallback;
 
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
@@ -630,6 +631,13 @@ public:
   SystemFontFamilyList() {
     return mFontFamilies;
   }
+
+  virtual PURLClassifierChild*
+  AllocPURLClassifierChild(const Principal& aPrincipal,
+                           const bool& aUseTrackingProtection,
+                           bool* aSuccess) override;
+  virtual bool
+  DeallocPURLClassifierChild(PURLClassifierChild* aActor) override;
 
   /**
    * Helper function for protocols that use the GPU process when available.

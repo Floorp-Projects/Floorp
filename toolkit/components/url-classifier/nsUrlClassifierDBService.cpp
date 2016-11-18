@@ -50,6 +50,9 @@
 #include "Classifier.h"
 #include "ProtocolParser.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/dom/URLClassifierChild.h"
 
 namespace mozilla {
 namespace safebrowsing {
@@ -1418,6 +1421,20 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
                                    bool* result)
 {
   NS_ENSURE_ARG(aPrincipal);
+
+  if (XRE_IsContentProcess()) {
+    using namespace mozilla::dom;
+    auto actor = static_cast<URLClassifierChild*>
+      (ContentChild::GetSingleton()->
+         SendPURLClassifierConstructor(IPC::Principal(aPrincipal),
+                                       aTrackingProtectionEnabled,
+                                       result));
+    if (actor) {
+      actor->SetCallback(c);
+    }
+    return NS_OK;
+  }
+
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   if (!(mCheckMalware || mCheckPhishing || aTrackingProtectionEnabled ||
