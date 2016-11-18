@@ -134,6 +134,6 @@ function* testPreviousHost() {
 }
 
 function checkToolboxLoaded(iframe) {
-  let tabs = iframe.contentDocument.getElementById("toolbox-tabs");
+  let tabs = iframe.contentDocument.querySelector(".toolbox-tabs");
   ok(tabs, "toolbox UI has been loaded into iframe");
 }

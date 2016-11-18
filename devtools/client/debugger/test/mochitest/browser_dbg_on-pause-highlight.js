@@ -35,18 +35,14 @@ function testPause() {
 
   gDebugger.gThreadClient.addOneTimeListener("paused", () => {
     gToolbox.selectTool("webconsole").then(() => {
-      ok(gToolboxTab.hasAttribute("highlighted") &&
-         gToolboxTab.getAttribute("highlighted") == "true",
+      ok(gToolboxTab.classList.contains("highlighted"),
         "The highlighted class is present");
-      ok(!gToolboxTab.hasAttribute("selected") ||
-          gToolboxTab.getAttribute("selected") != "true",
+      ok(!gToolboxTab.classList.contains("selected"),
         "The tab is not selected");
     }).then(() => gToolbox.selectTool("jsdebugger")).then(() => {
-      ok(gToolboxTab.hasAttribute("highlighted") &&
-         gToolboxTab.getAttribute("highlighted") == "true",
+      ok(gToolboxTab.classList.contains("highlighted"),
         "The highlighted class is present");
-      ok(gToolboxTab.hasAttribute("selected") &&
-         gToolboxTab.getAttribute("selected") == "true",
+      ok(gToolboxTab.classList.contains("selected"),
         "...and the tab is selected, so the glow will not be present.");
     }).then(testResume);
   });
@@ -66,8 +62,7 @@ function testResume() {
     gToolbox.selectTool("webconsole").then(() => {
       ok(!gToolboxTab.classList.contains("highlighted"),
         "The highlighted class is not present now after the resume");
-      ok(!gToolboxTab.hasAttribute("selected") ||
-          gToolboxTab.getAttribute("selected") != "true",
+      ok(!gToolboxTab.classList.contains("selected"),
         "The tab is not selected");
     }).then(() => closeDebuggerAndFinish(gPanel));
   });

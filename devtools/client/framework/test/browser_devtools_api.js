@@ -152,11 +152,13 @@ var continueTests = Task.async(function* (toolbox, panel) {
   ok(toolbox.getCurrentPanel(), "panel value is correct");
   is(toolbox.currentToolId, toolId2, "toolbox _currentToolId is correct");
 
-  ok(!toolbox.doc.getElementById("toolbox-tab-" + toolId2).hasAttribute("icon-invertable"),
-    "The tool tab does not have the invertable attribute");
+  ok(!toolbox.doc.getElementById("toolbox-tab-" + toolId2)
+     .classList.contains("icon-invertable"),
+     "The tool tab does not have the invertable class");
 
-  ok(toolbox.doc.getElementById("toolbox-tab-inspector").hasAttribute("icon-invertable"),
-    "The builtin tool tabs do have the invertable attribute");
+  ok(toolbox.doc.getElementById("toolbox-tab-inspector")
+     .classList.contains("icon-invertable"),
+     "The builtin tool tabs do have the invertable class");
 
   let toolDefinitions = gDevTools.getToolDefinitionMap();
   ok(toolDefinitions.has(toolId2), "The tool is in gDevTools");

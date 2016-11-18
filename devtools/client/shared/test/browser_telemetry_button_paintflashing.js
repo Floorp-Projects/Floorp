@@ -13,6 +13,7 @@ const TOOL_DELAY = 200;
 add_task(function* () {
   yield addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
+  yield pushPref("devtools.command-button-paintflashing.enabled", true);
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let toolbox = yield gDevTools.showToolbox(target, "inspector");
