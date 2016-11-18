@@ -9,6 +9,7 @@ use internal_types::{PackedVertex, PackedVertexForQuad};
 use internal_types::{RenderTargetMode, TextureSampler};
 use internal_types::{VertexAttribute, DebugFontVertex, DebugColorVertex, DEFAULT_TEXTURE};
 //use notify::{self, Watcher};
+use super::shader_source;
 use std::collections::HashMap;
 use std::fs::File;
 use std::hash::BuildHasherDefault;
@@ -37,7 +38,7 @@ const SHADER_VERSION: &'static str = "#version 150\n";
 #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
 const SHADER_VERSION: &'static str = "#version 300 es\n";
 
-static SHADER_PREAMBLE: &'static str = "shared.glsl";
+static SHADER_PREAMBLE: &'static str = "shared";
 
 pub type ViewportDimensions = [u32; 2];
 
@@ -65,6 +66,24 @@ pub enum VertexFormat {
     Rectangles,
     DebugFont,
     DebugColor,
+}
+
+fn get_optional_shader_source(shader_name: &str, base_path: &Option<PathBuf>) -> Option<String> {
+    if let Some(ref base) = *base_path {
+        let shader_path = base.join(&format!("{}.glsl", shader_name));
+        if shader_path.exists() {
+            let mut source = String::new();
+            File::open(&shader_path).unwrap().read_to_string(&mut source).unwrap();
+            return Some(source);
+        }
+    }
+
+    shader_source::SHADERS.get(shader_name).and_then(|s| Some((*s).to_owned()))
+}
+
+fn get_shader_source(shader_name: &str, base_path: &Option<PathBuf>) -> String {
+    get_optional_shader_source(shader_name, base_path)
+        .expect(&format!("Couldn't get required shader: {}", shader_name))
 }
 
 pub trait FileWatcherHandler : Send {
@@ -325,8 +344,9 @@ impl Drop for Texture {
 struct Program {
     id: gl::GLuint,
     u_transform: gl::GLint,
-    vs_path: PathBuf,
-    fs_path: PathBuf,
+    name: String,
+    vs_source: String,
+    fs_source: String,
     prefix: Option<String>,
     vs_id: Option<gl::GLuint>,
     fs_id: Option<gl::GLuint>,
@@ -733,7 +753,7 @@ pub struct Device {
     inside_frame: bool,
 
     // resources
-    resource_path: PathBuf,
+    resource_override_path: Option<PathBuf>,
     textures: HashMap<TextureId, Texture, BuildHasherDefault<FnvHasher>>,
     programs: HashMap<ProgramId, Program, BuildHasherDefault<FnvHasher>>,
     vaos: HashMap<VAOId, VAO, BuildHasherDefault<FnvHasher>>,
@@ -748,20 +768,16 @@ pub struct Device {
 }
 
 impl Device {
-    pub fn new(resource_path: PathBuf,
+    pub fn new(resource_override_path: Option<PathBuf>,
                device_pixel_ratio: f32,
                _file_changed_handler: Box<FileWatcherHandler>) -> Device {
         //let file_watcher = FileWatcherThread::new(file_changed_handler);
 
-        let mut path = resource_path.clone();
-        path.push(SHADER_PREAMBLE);
-        let mut f = File::open(&path).unwrap();
-        let mut shader_preamble = String::new();
-        f.read_to_string(&mut shader_preamble).unwrap();
-        //file_watcher.add_watch(path);
+        let shader_preamble = get_shader_source(SHADER_PREAMBLE, &resource_override_path);
+        //file_watcher.add_watch(resource_path);
 
         Device {
-            resource_path: resource_path,
+            resource_override_path: resource_override_path,
             device_pixel_ratio: device_pixel_ratio,
             inside_frame: false,
 
@@ -791,20 +807,20 @@ impl Device {
         &self.capabilities
     }
 
-    pub fn compile_shader(path: &PathBuf,
+    pub fn compile_shader(name: &str,
+                          source_str: &str,
                           shader_type: gl::GLenum,
                           shader_preamble: &[String],
                           panic_on_fail: bool)
                           -> Option<gl::GLuint> {
-        debug!("compile {:?}", path);
+        debug!("compile {:?}", name);
 
-        let mut f = File::open(&path).unwrap();
         let mut s = String::new();
         s.push_str(SHADER_VERSION);
         for prefix in shader_preamble {
             s.push_str(&prefix);
         }
-        f.read_to_string(&mut s).unwrap();
+        s.push_str(source_str);
 
         let id = gl::create_shader(shader_type);
         let mut source = Vec::new();
@@ -813,7 +829,7 @@ impl Device {
         gl::compile_shader(id);
         let log = gl::get_shader_info_log(id);
         if gl::get_shader_iv(id, gl::COMPILE_STATUS) == (0 as gl::GLint) {
-            println!("Failed to compile shader: {:?}\n{}", path, log);
+            println!("Failed to compile shader: {:?}\n{}", name, log);
             if panic_on_fail {
                 panic!("-- Shader compile failed - exiting --");
             }
@@ -821,7 +837,7 @@ impl Device {
             None
         } else {
             if !log.is_empty() {
-                println!("Warnings detected on shader: {:?}\n{}", path, log);
+                println!("Warnings detected on shader: {:?}\n{}", name, log);
             }
             Some(id)
         }
@@ -1191,30 +1207,28 @@ impl Device {
         debug_assert!(self.inside_frame);
 
         let pid = gl::create_program();
-        let base_path = self.resource_path.join(base_filename);
 
-        let vs_path = base_path.with_extension("vs.glsl");
-        //self.file_watcher.add_watch(vs_path.clone());
-
-        let fs_path = base_path.with_extension("fs.glsl");
-        //self.file_watcher.add_watch(fs_path.clone());
+        let mut vs_name = String::from(base_filename);
+        vs_name.push_str(".vs");
+        let mut fs_name = String::from(base_filename);
+        fs_name.push_str(".fs");
 
         let mut include = format!("// Base shader: {}\n", base_filename);
         for inc_filename in include_filenames {
-            let include_path = self.resource_path.join(inc_filename).with_extension("glsl");
-            File::open(&include_path).unwrap().read_to_string(&mut include).unwrap();
+            let src = get_shader_source(inc_filename, &self.resource_override_path);
+            include.push_str(&src);
         }
 
-        let shared_path = base_path.with_extension("glsl");
-        if let Ok(mut f) = File::open(&shared_path) {
-            f.read_to_string(&mut include).unwrap();
-        }
+        if let Some(shared_src) = get_optional_shader_source(base_filename, &self.resource_override_path) {
+            include.push_str(&shared_src);
+        }    
 
         let program = Program {
+            name: base_filename.to_owned(),
             id: pid,
             u_transform: -1,
-            vs_path: vs_path,
-            fs_path: fs_path,
+            vs_source: get_shader_source(&vs_name, &self.resource_override_path),
+            fs_source: get_shader_source(&fs_name, &self.resource_override_path),
             prefix: prefix,
             vs_id: None,
             fs_id: None,
@@ -1256,11 +1270,13 @@ impl Device {
         fs_preamble.push(include);
 
         // todo(gw): store shader ids so they can be freed!
-        let vs_id = Device::compile_shader(&program.vs_path,
+        let vs_id = Device::compile_shader(&program.name,
+                                           &program.vs_source,
                                            gl::VERTEX_SHADER,
                                            &vs_preamble,
                                            panic_on_fail);
-        let fs_id = Device::compile_shader(&program.fs_path,
+        let fs_id = Device::compile_shader(&program.name,
+                                           &program.fs_source,
                                            gl::FRAGMENT_SHADER,
                                            &fs_preamble,
                                            panic_on_fail);
@@ -1365,6 +1381,11 @@ impl Device {
                 let u_data128 = gl::get_uniform_location(program.id, "sData128");
                 if u_data128 != -1 {
                     gl::uniform_1i(u_data128, TextureSampler::Data128    as i32);
+                }
+
+                let u_resource_rects = gl::get_uniform_location(program.id, "sResourceRects");
+                if u_resource_rects != -1 {
+                    gl::uniform_1i(u_resource_rects, TextureSampler::ResourceRects as i32);
                 }
             }
         }

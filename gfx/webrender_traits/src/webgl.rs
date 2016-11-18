@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use channel::MsgSender;
 use gleam::gl;
-use ipc_channel::ipc::IpcSender;
 use offscreen_gl_context::{GLContext, NativeGLContextMethods};
 use std::fmt;
 use {WebGLBufferId, WebGLCommand, WebGLError, WebGLFramebufferBindingRequest};
@@ -362,14 +362,14 @@ impl WebGLCommand {
     }
 
     fn read_pixels(x: i32, y: i32, width: i32, height: i32, format: u32, pixel_type: u32,
-                   chan: IpcSender<Vec<u8>>) {
+                   chan: MsgSender<Vec<u8>>) {
       let result = gl::read_pixels(x, y, width, height, format, pixel_type);
       chan.send(result).unwrap()
     }
 
     fn active_attrib(program_id: WebGLProgramId,
                      index: u32,
-                     chan: IpcSender<WebGLResult<(i32, u32, String)>>) {
+                     chan: MsgSender<WebGLResult<(i32, u32, String)>>) {
         let result = if index >= gl::get_program_iv(program_id.get(), gl::ACTIVE_ATTRIBUTES) as u32 {
             Err(WebGLError::InvalidValue)
         } else {
@@ -380,7 +380,7 @@ impl WebGLCommand {
 
     fn active_uniform(program_id: WebGLProgramId,
                       index: u32,
-                      chan: IpcSender<WebGLResult<(i32, u32, String)>>) {
+                      chan: MsgSender<WebGLResult<(i32, u32, String)>>) {
         let result = if index >= gl::get_program_iv(program_id.get(), gl::ACTIVE_UNIFORMS) as u32 {
             Err(WebGLError::InvalidValue)
         } else {
@@ -391,7 +391,7 @@ impl WebGLCommand {
 
     fn attrib_location(program_id: WebGLProgramId,
                        name: String,
-                       chan: IpcSender<Option<i32>> ) {
+                       chan: MsgSender<Option<i32>> ) {
         let attrib_location = gl::get_attrib_location(program_id.get(), &name);
 
         let attrib_location = if attrib_location == -1 {
@@ -404,7 +404,7 @@ impl WebGLCommand {
     }
 
     fn parameter(param_id: u32,
-                 chan: IpcSender<WebGLResult<WebGLParameter>>) {
+                 chan: MsgSender<WebGLResult<WebGLParameter>>) {
         let result = match param_id {
             gl::ACTIVE_TEXTURE |
             //gl::ALPHA_BITS |
@@ -525,14 +525,14 @@ impl WebGLCommand {
         chan.send(result).unwrap();
     }
 
-    fn finish(chan: IpcSender<()>) {
+    fn finish(chan: MsgSender<()>) {
         gl::finish();
         chan.send(()).unwrap();
     }
 
     fn vertex_attrib(index: u32,
                      pname: u32,
-                     chan: IpcSender<WebGLResult<WebGLParameter>>) {
+                     chan: MsgSender<WebGLResult<WebGLParameter>>) {
         let result = if index >= gl::get_integer_v(gl::MAX_VERTEX_ATTRIBS) as u32 {
             Err(WebGLError::InvalidValue)
         } else {
@@ -556,7 +556,7 @@ impl WebGLCommand {
 
     fn buffer_parameter(target: u32,
                         param_id: u32,
-                        chan: IpcSender<WebGLResult<WebGLParameter>>) {
+                        chan: MsgSender<WebGLResult<WebGLParameter>>) {
         let result = match param_id {
             gl::BUFFER_SIZE |
             gl::BUFFER_USAGE =>
@@ -569,7 +569,7 @@ impl WebGLCommand {
 
     fn program_parameter(program_id: WebGLProgramId,
                          param_id: u32,
-                         chan: IpcSender<WebGLResult<WebGLParameter>>) {
+                         chan: MsgSender<WebGLResult<WebGLParameter>>) {
         let result = match param_id {
             gl::DELETE_STATUS |
             gl::LINK_STATUS |
@@ -587,7 +587,7 @@ impl WebGLCommand {
 
     fn shader_parameter(shader_id: WebGLShaderId,
                         param_id: u32,
-                        chan: IpcSender<WebGLResult<WebGLParameter>>) {
+                        chan: MsgSender<WebGLResult<WebGLParameter>>) {
         let result = match param_id {
             gl::SHADER_TYPE =>
                 Ok(WebGLParameter::Int(gl::get_shader_iv(shader_id.get(), param_id))),
@@ -602,7 +602,7 @@ impl WebGLCommand {
 
     fn uniform_location(program_id: WebGLProgramId,
                         name: String,
-                        chan: IpcSender<Option<i32>>) {
+                        chan: MsgSender<Option<i32>>) {
         let location = gl::get_uniform_location(program_id.get(), &name);
         let location = if location == -1 {
             None
@@ -614,17 +614,17 @@ impl WebGLCommand {
     }
 
 
-    fn shader_info_log(shader_id: WebGLShaderId, chan: IpcSender<String>) {
+    fn shader_info_log(shader_id: WebGLShaderId, chan: MsgSender<String>) {
         let log = gl::get_shader_info_log(shader_id.get());
         chan.send(log).unwrap();
     }
 
-    fn program_info_log(program_id: WebGLProgramId, chan: IpcSender<String>) {
+    fn program_info_log(program_id: WebGLProgramId, chan: MsgSender<String>) {
         let log = gl::get_program_info_log(program_id.get());
         chan.send(log).unwrap();
     }
 
-    fn create_buffer(chan: IpcSender<Option<WebGLBufferId>>) {
+    fn create_buffer(chan: MsgSender<Option<WebGLBufferId>>) {
         let buffer = gl::gen_buffers(1)[0];
         let buffer = if buffer == 0 {
             None
@@ -634,7 +634,7 @@ impl WebGLCommand {
         chan.send(buffer).unwrap();
     }
 
-    fn create_framebuffer(chan: IpcSender<Option<WebGLFramebufferId>>) {
+    fn create_framebuffer(chan: MsgSender<Option<WebGLFramebufferId>>) {
         let framebuffer = gl::gen_framebuffers(1)[0];
         let framebuffer = if framebuffer == 0 {
             None
@@ -645,7 +645,7 @@ impl WebGLCommand {
     }
 
 
-    fn create_renderbuffer(chan: IpcSender<Option<WebGLRenderbufferId>>) {
+    fn create_renderbuffer(chan: MsgSender<Option<WebGLRenderbufferId>>) {
         let renderbuffer = gl::gen_renderbuffers(1)[0];
         let renderbuffer = if renderbuffer == 0 {
             None
@@ -655,7 +655,7 @@ impl WebGLCommand {
         chan.send(renderbuffer).unwrap();
     }
 
-    fn create_texture(chan: IpcSender<Option<WebGLTextureId>>) {
+    fn create_texture(chan: MsgSender<Option<WebGLTextureId>>) {
         let texture = gl::gen_textures(1)[0];
         let texture = if texture == 0 {
             None
@@ -666,7 +666,7 @@ impl WebGLCommand {
     }
 
 
-    fn create_program(chan: IpcSender<Option<WebGLProgramId>>) {
+    fn create_program(chan: MsgSender<Option<WebGLProgramId>>) {
         let program = gl::create_program();
         let program = if program == 0 {
             None
@@ -676,7 +676,7 @@ impl WebGLCommand {
         chan.send(program).unwrap();
     }
 
-    fn create_shader(shader_type: u32, chan: IpcSender<Option<WebGLShaderId>>) {
+    fn create_shader(shader_type: u32, chan: MsgSender<Option<WebGLShaderId>>) {
         let shader = gl::create_shader(shader_type);
         let shader = if shader == 0 {
             None

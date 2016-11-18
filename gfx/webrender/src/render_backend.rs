@@ -6,7 +6,6 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use frame::Frame;
 use internal_types::{FontTemplate, GLContextHandleWrapper, GLContextWrapper};
 use internal_types::{SourceTexture, ResultMsg, RendererFrame};
-use ipc_channel::ipc::{IpcBytesReceiver, IpcBytesSender, IpcReceiver};
 use profiler::BackendProfileCounters;
 use resource_cache::ResourceCache;
 use scene::Scene;
@@ -16,8 +15,9 @@ use std::io::{Cursor, Read};
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Sender;
 use texture_cache::TextureCache;
-use webrender_traits::{ApiMsg, AuxiliaryLists, BuiltDisplayList, IdNamespace};
+use webrender_traits::{ApiMsg, AuxiliaryLists, BuiltDisplayList, IdNamespace, ImageData};
 use webrender_traits::{FlushNotifier, RenderNotifier, RenderDispatcher, WebGLCommand, WebGLContextId};
+use webrender_traits::channel::{PayloadHelperMethods, PayloadReceiver, PayloadSender, MsgReceiver};
 use record;
 use tiling::FrameBuilderConfig;
 use offscreen_gl_context::GLContextDispatcher;
@@ -27,9 +27,9 @@ use offscreen_gl_context::GLContextDispatcher;
 ///
 /// The render backend operates on its own thread.
 pub struct RenderBackend {
-    api_rx: IpcReceiver<ApiMsg>,
-    payload_rx: IpcBytesReceiver,
-    payload_tx: IpcBytesSender,
+    api_rx: MsgReceiver<ApiMsg>,
+    payload_rx: PayloadReceiver,
+    payload_tx: PayloadSender,
     result_tx: Sender<ResultMsg>,
 
     device_pixel_ratio: f32,
@@ -52,9 +52,9 @@ pub struct RenderBackend {
 }
 
 impl RenderBackend {
-    pub fn new(api_rx: IpcReceiver<ApiMsg>,
-               payload_rx: IpcBytesReceiver,
-               payload_tx: IpcBytesSender,
+    pub fn new(api_rx: MsgReceiver<ApiMsg>,
+               payload_rx: PayloadReceiver,
+               payload_tx: PayloadSender,
                result_tx: Sender<ResultMsg>,
                device_pixel_ratio: f32,
                texture_cache: TextureCache,
@@ -124,14 +124,16 @@ impl RenderBackend {
                             };
                             tx.send(glyph_dimensions).unwrap();
                         }
-                        ApiMsg::AddImage(id, width, height, stride, format, bytes) => {
-                            profile_counters.image_templates.inc(bytes.len());
+                        ApiMsg::AddImage(id, width, height, stride, format, data) => {
+                            if let ImageData::Raw(ref bytes) = data {
+                                profile_counters.image_templates.inc(bytes.len());
+                            }
                             self.resource_cache.add_image_template(id,
                                                                    width,
                                                                    height,
                                                                    stride,
                                                                    format,
-                                                                   bytes);
+                                                                   data);
                         }
                         ApiMsg::Flush => {
                             let mut flush_notifier = self.flush_notifier.lock();
@@ -176,7 +178,7 @@ impl RenderBackend {
                                 leftover_auxiliary_data.push(auxiliary_data)
                             }
                             for leftover_auxiliary_data in leftover_auxiliary_data {
-                                self.payload_tx.send(&leftover_auxiliary_data[..]).unwrap()
+                                self.payload_tx.send_vec(leftover_auxiliary_data).unwrap()
                             }
                             if self.enable_recording {
                                 record::write_payload(frame_counter, &auxiliary_data);
@@ -251,12 +253,6 @@ impl RenderBackend {
 
                             self.publish_frame_and_notify_compositor(frame, &mut profile_counters);
                         }
-                        ApiMsg::GenerateFrame => {
-                            let frame = profile_counters.total_time.profile(|| {
-                                self.render()
-                            });
-                            self.publish_frame_and_notify_compositor(frame, &mut profile_counters);
-                        }
                         ApiMsg::TranslatePointToLayerSpace(..) => {
                             panic!("unused api - remove from webrender_traits");
                         }
@@ -320,6 +316,15 @@ impl RenderBackend {
                             ctx.make_current();
                             ctx.apply_command(command);
                             self.current_bound_webgl_context_id = Some(context_id);
+                        }
+                        ApiMsg::GenerateFrame => {
+                            let frame = profile_counters.total_time.profile(|| {
+                                self.render()
+                            });
+                            if self.scene.root_pipeline_id.is_some() {
+                                self.publish_frame_and_notify_compositor(frame, &mut profile_counters);
+                                frame_counter += 1;
+                            }
                         }
                     }
                 }

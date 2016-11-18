@@ -13,6 +13,7 @@ extern crate euclid;
 extern crate gleam;
 #[macro_use]
 extern crate heapsize;
+#[cfg(feature = "ipc")]
 extern crate ipc_channel;
 extern crate offscreen_gl_context;
 extern crate serde;
@@ -33,6 +34,7 @@ include!(concat!(env!("OUT_DIR"), "/types.rs"));
 include!("types.rs");
 
 mod api;
+pub mod channel;
 mod display_item;
 mod display_list;
 mod stacking_context;
