@@ -13,6 +13,7 @@ Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 Cu.import("resource:///modules/PlacesUIUtils.jsm");
@@ -40,6 +41,7 @@ function* resetTracker() {
 }
 
 function* cleanup() {
+  engine.lastSync = 0;
   store.wipe();
   yield resetTracker();
   yield stopTracking();
@@ -125,6 +127,46 @@ var populateTree = Task.async(function* populate(parentId, ...items) {
   }
   return guids;
 });
+
+function* insertBookmarksToMigrate() {
+  let mozBmk = yield PlacesUtils.bookmarks.insert({
+    guid: "0gtWTOgYcoJD",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "https://mozilla.org",
+  });
+  let fxBmk = yield PlacesUtils.bookmarks.insert({
+    guid: "0dbpnMdxKxfg",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "http://getfirefox.com",
+  });
+  let tbBmk = yield PlacesUtils.bookmarks.insert({
+    guid: "r5ouWdPB3l28",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "http://getthunderbird.com",
+  });
+  let bzBmk = yield PlacesUtils.bookmarks.insert({
+    guid: "YK5Bdq5MIqL6",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "https://bugzilla.mozilla.org",
+  });
+  let exampleBmk = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "https://example.com",
+  });
+
+  yield PlacesTestUtils.setBookmarkSyncFields({
+    guid: fxBmk.guid,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+  }, {
+    guid: tbBmk.guid,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN,
+  }, {
+    guid: exampleBmk.guid,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+  });
+
+  yield PlacesUtils.bookmarks.remove(exampleBmk.guid);
+}
 
 add_task(function* test_tracking() {
   _("Test starting and stopping the tracker");
@@ -1589,6 +1631,173 @@ add_task(function* test_mobile_query() {
     _("Clean up.");
     yield cleanup();
   }
+});
+
+add_task(function* test_skip_migration() {
+  yield* insertBookmarksToMigrate();
+
+  let originalTombstones = yield PlacesTestUtils.fetchSyncTombstones();
+  let originalFields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+    "0gtWTOgYcoJD", "0dbpnMdxKxfg", "r5ouWdPB3l28", "YK5Bdq5MIqL6");
+
+  let filePath = OS.Path.join(OS.Constants.Path.profileDir, "weave", "changes",
+    "bookmarks.json");
+
+  _("No tracker file");
+  {
+    yield Utils.jsonRemove("changes/bookmarks", tracker);
+    ok(!(yield OS.File.exists(filePath)), "Tracker file should not exist");
+
+    yield tracker._migrateOldEntries();
+
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      "0gtWTOgYcoJD", "0dbpnMdxKxfg", "r5ouWdPB3l28", "YK5Bdq5MIqL6");
+    deepEqual(fields, originalFields,
+      "Sync fields should not change if tracker file is missing");
+    let tombstones = yield PlacesTestUtils.fetchSyncTombstones();
+    deepEqual(tombstones, originalTombstones,
+      "Tombstones should not change if tracker file is missing");
+  }
+
+  _("Existing tracker file; engine disabled");
+  {
+    yield Utils.jsonSave("changes/bookmarks", tracker, {});
+    ok(yield OS.File.exists(filePath),
+      "Tracker file should exist before disabled engine migration");
+
+    engine.disabled = true;
+    yield tracker._migrateOldEntries();
+    engine.disabled = false;
+
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      "0gtWTOgYcoJD", "0dbpnMdxKxfg", "r5ouWdPB3l28", "YK5Bdq5MIqL6");
+    deepEqual(fields, originalFields,
+      "Sync fields should not change on disabled engine migration");
+    let tombstones = yield PlacesTestUtils.fetchSyncTombstones();
+    deepEqual(tombstones, originalTombstones,
+      "Tombstones should not change if tracker file is missing");
+
+    ok(!(yield OS.File.exists(filePath)),
+      "Tracker file should be deleted after disabled engine migration");
+  }
+
+  _("Existing tracker file; first sync");
+  {
+    yield Utils.jsonSave("changes/bookmarks", tracker, {});
+    ok(yield OS.File.exists(filePath),
+      "Tracker file should exist before first sync migration");
+
+    engine.lastSync = 0;
+    yield tracker._migrateOldEntries();
+
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      "0gtWTOgYcoJD", "0dbpnMdxKxfg", "r5ouWdPB3l28", "YK5Bdq5MIqL6");
+    deepEqual(fields, originalFields,
+      "Sync fields should not change on first sync migration");
+    let tombstones = yield PlacesTestUtils.fetchSyncTombstones();
+    deepEqual(tombstones, originalTombstones,
+      "Tombstones should not change if tracker file is missing");
+
+    ok(!(yield OS.File.exists(filePath)),
+      "Tracker file should be deleted after first sync migration");
+  }
+
+  yield* cleanup();
+});
+
+add_task(function* test_migrate_empty_tracker() {
+  _("Migration with empty tracker file");
+  yield* insertBookmarksToMigrate();
+
+  yield Utils.jsonSave("changes/bookmarks", tracker, {});
+
+  engine.lastSync = Date.now() / 1000;
+  yield tracker._migrateOldEntries();
+
+  let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+    "0gtWTOgYcoJD", "0dbpnMdxKxfg", "r5ouWdPB3l28", "YK5Bdq5MIqL6");
+  for (let field of fields) {
+    equal(field.syncStatus, PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      `Sync status of migrated bookmark ${field.guid} should be NORMAL`);
+    strictEqual(field.syncChangeCounter, 0,
+      `Change counter of migrated bookmark ${field.guid} should be 0`);
+  }
+
+  let tombstones = yield PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(tombstones, [], "Migration should delete old tombstones");
+
+  let filePath = OS.Path.join(OS.Constants.Path.profileDir, "weave", "changes",
+    "bookmarks.json");
+  ok(!(yield OS.File.exists(filePath)),
+    "Tracker file should be deleted after empty tracker migration");
+
+  yield* cleanup();
+});
+
+add_task(function* test_migrate_existing_tracker() {
+  _("Migration with existing tracker entries");
+  yield* insertBookmarksToMigrate();
+
+  let mozBmk = yield PlacesUtils.bookmarks.fetch("0gtWTOgYcoJD");
+  let fxBmk = yield PlacesUtils.bookmarks.fetch("0dbpnMdxKxfg");
+  let mozChangeTime = Math.floor(mozBmk.lastModified / 1000) - 60;
+  let fxChangeTime = Math.floor(fxBmk.lastModified / 1000) + 60;
+  yield Utils.jsonSave("changes/bookmarks", tracker, {
+    "0gtWTOgYcoJD": mozChangeTime,
+    "0dbpnMdxKxfg": {
+      modified: fxChangeTime,
+      deleted: false,
+    },
+    "3kdIPWHs9hHC": {
+      modified: 1479494951,
+      deleted: true,
+    },
+    "l7DlMy2lL1jL": 1479496460,
+  });
+
+  engine.lastSync = Date.now() / 1000;
+  yield tracker._migrateOldEntries();
+
+  let changedFields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+    "0gtWTOgYcoJD", "0dbpnMdxKxfg");
+  for (let field of changedFields) {
+    if (field.guid == "0gtWTOgYcoJD") {
+      ok(field.lastModified.getTime(), mozBmk.lastModified.getTime(),
+        `Modified time for ${field.guid} should not be reset to older change time`);
+    } else if (field.guid == "0dbpnMdxKxfg") {
+      equal(field.lastModified.getTime(), fxChangeTime * 1000,
+        `Modified time for ${field.guid} should be updated to newer change time`);
+    }
+    equal(field.syncStatus, PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      `Sync status of migrated bookmark ${field.guid} should be NORMAL`);
+    ok(field.syncChangeCounter > 0,
+      `Change counter of migrated bookmark ${field.guid} should be > 0`);
+  }
+
+  let unchangedFields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+    "r5ouWdPB3l28", "YK5Bdq5MIqL6");
+  for (let field of unchangedFields) {
+    equal(field.syncStatus, PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      `Sync status of unchanged bookmark ${field.guid} should be NORMAL`);
+    strictEqual(field.syncChangeCounter, 0,
+      `Change counter of unchanged bookmark ${field.guid} should be 0`);
+  }
+
+  let tombstones = yield PlacesTestUtils.fetchSyncTombstones();
+  yield deepEqual(tombstones, [{
+    guid: "3kdIPWHs9hHC",
+    dateRemoved: new Date(1479494951 * 1000),
+  }, {
+    guid: "l7DlMy2lL1jL",
+    dateRemoved: new Date(1479496460 * 1000),
+  }], "Should write tombstones for deleted tracked items");
+
+  let filePath = OS.Path.join(OS.Constants.Path.profileDir, "weave", "changes",
+    "bookmarks.json");
+  ok(!(yield OS.File.exists(filePath)),
+    "Tracker file should be deleted after existing tracker migration");
+
+  yield* cleanup();
 });
 
 function run_test() {
