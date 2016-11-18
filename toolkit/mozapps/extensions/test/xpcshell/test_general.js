@@ -13,7 +13,6 @@ function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  var count = 0;
   startupManager();
   AddonManager.getAddonsByTypes(null, function(list) {
     gCount = list.length;

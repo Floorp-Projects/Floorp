@@ -106,7 +106,7 @@ function getXS() {
 
 add_task(function* detect_touches() {
   startupManager();
-  let [pe, pd, ue, ud] = yield promiseAddonsByIDs([
+  let [/* pe */, pd, /* ue */, ud] = yield promiseAddonsByIDs([
          "packed-enabled@tests.mozilla.org",
          "packed-disabled@tests.mozilla.org",
          "unpacked-enabled@tests.mozilla.org",
@@ -181,7 +181,7 @@ add_task(function* detect_touches() {
  * extensions.xpiState preference.
  */
 add_task(function* uninstall_bootstrap() {
-  let [pe, pd, ue, ud] = yield promiseAddonsByIDs([
+  let [pe, /* pd, ue, ud */] = yield promiseAddonsByIDs([
          "packed-enabled@tests.mozilla.org",
          "packed-disabled@tests.mozilla.org",
          "unpacked-enabled@tests.mozilla.org",

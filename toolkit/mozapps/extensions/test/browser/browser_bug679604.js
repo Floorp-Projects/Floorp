@@ -5,8 +5,6 @@
 // Bug 679604 - Test that a XUL persisted category from an older version of
 // Firefox doesn't break the add-ons manager when that category doesn't exist
 
-var gManagerWindow;
-
 function test() {
   waitForExplicitFinish();
 

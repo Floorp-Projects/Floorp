@@ -106,8 +106,6 @@ function check_test_1() {
       do_check_true(b1.hasResource("install.rdf"));
       do_check_false(b1.hasResource("bootstrap.js"));
 
-      let dir = do_get_addon_root_uri(profileDir, "langpack-x-testing@tests.mozilla.org");
-
       AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
         do_check_eq(list.length, 0);
 

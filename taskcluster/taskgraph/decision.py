@@ -51,6 +51,11 @@ PER_PROJECT_PARAMETERS = {
         'optimize_target_tasks': True,
     },
 
+    'graphics': {
+        'target_tasks_method': 'graphics_tasks',
+        'optimize_target_tasks': True,
+    },
+
     # the default parameters are used for projects that do not match above.
     'default': {
         'target_tasks_method': 'default',

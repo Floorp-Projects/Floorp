@@ -33,7 +33,6 @@ function finish_test(count) {
 
   Services.perms.remove(makeURI("http://example.com"), "install");
 
-  var doc = gBrowser.contentDocument;
   is(gBrowser.currentURI.spec, TESTROOT + "triggerredirect.html#foo", "Should have redirected");
 
   gBrowser.removeCurrentTab();

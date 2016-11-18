@@ -18,34 +18,28 @@ class UpdateBaseArguments(object):
                     'build to the latest beta build.'
         }],
         [['--update-channel'], {
-            'dest': 'update_channel',
             'metavar': 'CHANNEL',
             'help': 'Channel to use for the update check.'
         }],
         [['--update-direct-only'], {
-            'dest': 'update_direct_only',
             'default': False,
             'action': 'store_true',
             'help': 'Only perform a direct update'
         }],
         [['--update-fallback-only'], {
-            'dest': 'update_fallback_only',
             'default': False,
             'action': 'store_true',
             'help': 'Only perform a fallback update'
         }],
-        [['--update-override-url'], {
-            'dest': 'update_override_url',
+        [['--update-url'], {
             'metavar': 'URL',
             'help': 'Force specified URL to use for update checks.'
         }],
         [['--update-target-version'], {
-            'dest': 'update_target_version',
             'metavar': 'VERSION',
             'help': 'Version of the updated build.'
         }],
         [['--update-target-buildid'], {
-            'dest': 'update_target_buildid',
             'metavar': 'BUILD_ID',
             'help': 'Build ID of the updated build.'
         }],

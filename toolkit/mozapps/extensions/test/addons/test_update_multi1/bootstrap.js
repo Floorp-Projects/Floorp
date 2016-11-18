@@ -1,3 +1,4 @@
+/* exported startup, shutdown, install, uninstall */
 
 function install(data, reason) {}
 function startup(data, reason) {}

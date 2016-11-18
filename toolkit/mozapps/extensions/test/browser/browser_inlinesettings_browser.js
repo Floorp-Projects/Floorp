@@ -11,8 +11,6 @@ var gOtherAddon;
 var gManagerWindow;
 var gCategoryUtilities;
 
-var installedAddons = [];
-
 function installAddon(details) {
   let id = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator)
                                               .generateUUID().number;
