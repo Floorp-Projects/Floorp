@@ -15,6 +15,9 @@ category webextension-scripts theme chrome://browser/content/ext-theme.js
 category webextension-scripts utils chrome://browser/content/ext-utils.js
 category webextension-scripts windows chrome://browser/content/ext-windows.js
 
+# scripts specific for devtools extension contexts.
+category webextension-scripts-devtools devtools-inspectedWindow chrome://browser/content/ext-c-devtools-inspectedWindow.js
+
 # scripts that must run in the same process as addon code.
 category webextension-scripts-addon contextMenus chrome://browser/content/ext-c-contextMenus.js
 category webextension-scripts-addon omnibox chrome://browser/content/ext-c-omnibox.js
@@ -28,6 +31,7 @@ category webextension-schemas commands chrome://browser/content/schemas/commands
 category webextension-schemas context_menus chrome://browser/content/schemas/context_menus.json
 category webextension-schemas context_menus_internal chrome://browser/content/schemas/context_menus_internal.json
 category webextension-schemas devtools chrome://browser/content/schemas/devtools.json
+category webextension-schemas devtools_inspected_window chrome://browser/content/schemas/devtools_inspected_window.json
 category webextension-schemas history chrome://browser/content/schemas/history.json
 category webextension-schemas omnibox chrome://browser/content/schemas/omnibox.json
 category webextension-schemas page_action chrome://browser/content/schemas/page_action.json
