@@ -139,17 +139,24 @@ ul.children + .tag-line::before {
   padding-left: 2px;
 }
 
-.tag-line[selected] + .children {
+.tag-line[selected] + .children,
+.tag-line[selected] ~ .tag-line {
   background-image: linear-gradient(to top, var(--markup-outline), var(--markup-outline));
+  background-position-x: -6px;
   background-repeat: no-repeat;
-  /* Shorten the outline height by 4px to account for the 2px top padding and
-   * allow for a 2px bottom padding */
-  background-size: 1.5px calc(100% - 4px);
-  /* Align the outline to under the expander arrow and provide 2px top
-   * padding */
-  background-position: -6px 2px;
+  background-size: 1.5px 100%;
   border-left: 6px solid transparent;
   margin-left: -6px;
+}
+
+.tag-line[selected] + .children {
+  background-position-y: 2px;
+}
+
+.tag-line[selected] ~ .tag-line {
+  background-position-y: -2px;
+  /* Unset transition-property to prevent the markup outline from horizontal shifting */
+  transition-property: none;
 }
 
 .html-editor-container {
