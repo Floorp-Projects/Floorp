@@ -208,12 +208,10 @@ function* setDownloadDir() {
     });
   }
 
-  yield new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["browser.download.folderList", 2],
-      ["browser.download.dir", tmpDir, Ci.nsIFile],
-    ]}, resolve);
-  });
+  yield SpecialPowers.pushPrefEnv({"set": [
+    ["browser.download.folderList", 2],
+    ["browser.download.dir", tmpDir, Ci.nsIFile],
+  ]});
 }
 
 

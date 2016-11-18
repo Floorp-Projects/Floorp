@@ -14,7 +14,7 @@
   });
 
   var test;
-  var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
+  var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
 
   function selectRecvSsrc(pc, index) {
     var receivers = pc._pc.getReceivers();

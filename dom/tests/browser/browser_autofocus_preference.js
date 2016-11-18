@@ -1,7 +1,5 @@
 add_task(function* () {
-  yield new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [["browser.autofocus", false]]}, resolve);
-  });
+  yield SpecialPowers.pushPrefEnv({"set": [["browser.autofocus", false]]});
 
   const url = "data:text/html,<!DOCTYPE html><html><body><input autofocus><button autofocus></button><textarea autofocus></textarea><select autofocus></select></body></html>";
 
