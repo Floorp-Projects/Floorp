@@ -211,10 +211,13 @@ typedef enum {
   /* Paints items of popup menus. */
   MOZ_GTK_MENUITEM,
   MOZ_GTK_IMAGEMENUITEM,
-  MOZ_GTK_CHECKMENUITEM_CONTAINER,
-  MOZ_GTK_RADIOMENUITEM_CONTAINER,
+  /* Paints a menuitem with check indicator, or the gets the style context for
+     a menuitem that contains a checkbox. */
   MOZ_GTK_CHECKMENUITEM,
+  /* Gets the style context for a checkbox in a check menuitem. */
+  MOZ_GTK_CHECKMENUITEM_INDICATOR,
   MOZ_GTK_RADIOMENUITEM,
+  MOZ_GTK_RADIOMENUITEM_INDICATOR,
   MOZ_GTK_MENUSEPARATOR,
   /* GtkVPaned base class */
   MOZ_GTK_SPLITTER_HORIZONTAL,
