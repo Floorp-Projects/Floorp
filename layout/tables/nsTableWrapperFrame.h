@@ -179,8 +179,12 @@ public:
     return map->GetEffectiveRowSpan(aRowIdx, aColIdx);
   }
 
-protected:
+  /**
+   * The CB size to use for the inner table frame if we're a grid item.
+   */
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridItemCBSizeProperty, mozilla::LogicalSize);
 
+protected:
 
   explicit nsTableWrapperFrame(nsStyleContext* aContext);
   virtual ~nsTableWrapperFrame();
