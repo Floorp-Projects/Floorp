@@ -43,11 +43,11 @@ graphics branch
 used in-tree (right now it's
 git:b2a15e8b948a7c5db7f5fe7fbfa6fe4c8dda4a0b)
 3) Do a diff between the webrender repo and the stuff we have in-tree
-to see what the differences are and make a note
+to see what the differences are and make a note. The only differences (if any)
+should be in the Cargo.toml file.
 4) Update the webrender repo to the version you want
 5) Copy over the webrender files into gfx/webrender (and
 gfx/webrender_traits) but make sure you keep the changes from step 3.
-You're basically doing a rebase-by-hand here which can be tricky.
 6) Commit your changes to the graphics branch locally
 7) Run |mach vendor rust| to update the rust dependencies in third_party/rust
 8) Commit the vendored changes locally
@@ -56,14 +56,14 @@ the C++ side depending on what changed in webrender. This can
 potentially be quite tricky if you don't fully understand the API
 changes on the webrender side. In this step, try to not use your new
 features yet, just get the build working with the minimal changes.
-10) Update the git revision in (2)
+10) Update the git revision in this README.webrender file, step (2) above
 11) Commit the changes locally from step 9, and push everything to the
 graphics branch.
 12) Now you have an update webrender with the new features you wanted,
 so you can write gecko code against them.
 
-Yes, this is very painful. Once we split the bindings into a separate
-crate (bug 1316223) this will become simpler because it will remove
+Yes, this is very painful. Once we upstream all the webrender changes
+we have in our local tree, this will become simpler because it will remove
 step 2-3, and simplify step 5 to a copy. Step 9 is likely going to
 remain tricky if there are incompatible API changes on the WR side,
 hopefully those will be kept to a minimum.
