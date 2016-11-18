@@ -6,7 +6,6 @@
 
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/dom/PoseBinding.h"
 #include "mozilla/dom/Pose.h"
 
 namespace mozilla {
@@ -82,12 +81,6 @@ Pose::SetFloat32Array(JSContext* aJSContext, JS::MutableHandle<JSObject*> aRetVa
   }
 
   aRetVal.set(aObj);
-}
-
-/* virtual */ JSObject*
-Pose::WrapObject(JSContext* aJSContext, JS::Handle<JSObject*> aGivenProto)
-{
-  return PoseBinding::Wrap(aJSContext, this, aGivenProto);
 }
 
 } // namespace dom

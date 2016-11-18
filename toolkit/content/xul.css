@@ -168,6 +168,10 @@ browser {
   -moz-binding: url("chrome://global/content/bindings/browser.xml#browser");
 }
 
+browser[remote=true]:not(.lightweight) {
+  -moz-binding: url("chrome://global/content/bindings/remote-browser.xml#remote-browser");
+}
+
 editor {
   -moz-binding: url("chrome://global/content/bindings/editor.xml#editor");
 }

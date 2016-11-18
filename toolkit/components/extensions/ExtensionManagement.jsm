@@ -25,6 +25,8 @@ XPCOMUtils.defineLazyGetter(this, "UUIDMap", () => {
   return UUIDMap;
 });
 
+var ExtensionManagement;
+
 /*
  * This file should be kept short and simple since it's loaded even
  * when no extensions are running.
@@ -208,17 +210,20 @@ var Service = {
   },
 
   generateBackgroundPageUrl(extension) {
-    let background_scripts = extension.manifest.background &&
-      extension.manifest.background.scripts;
+    let background_scripts = (extension.manifest.background &&
+                              extension.manifest.background.scripts);
+
     if (!background_scripts) {
       return;
     }
-    let html = "<!DOCTYPE html>\n<body>\n";
+
+    let html = "<!DOCTYPE html>\n<html>\n<body>\n";
     for (let script of background_scripts) {
       script = script.replace(/"/g, "&quot;");
       html += `<script src="${script}"></script>\n`;
     }
     html += "</body>\n</html>\n";
+
     return "data:text/html;charset=utf-8," + encodeURIComponent(html);
   },
 
@@ -259,9 +264,7 @@ function getAPILevelForWindow(window, addonId) {
     return NO_PRIVILEGES;
   }
 
-  // Extension pages running in the content process always defaults to
-  // "content script API level privileges".
-  if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+  if (!ExtensionManagement.isExtensionProcess) {
     return CONTENTSCRIPT_PRIVILEGES;
   }
 
@@ -300,7 +303,12 @@ function getAPILevelForWindow(window, addonId) {
   return FULL_PRIVILEGES;
 }
 
-this.ExtensionManagement = {
+ExtensionManagement = {
+  get isExtensionProcess() {
+    return (this.useRemoteWebExtensions ||
+            Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT);
+  },
+
   startupExtension: Service.startupExtension.bind(Service),
   shutdownExtension: Service.shutdownExtension.bind(Service),
 
@@ -319,3 +327,6 @@ this.ExtensionManagement = {
 
   APIs,
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(ExtensionManagement, "useRemoteWebExtensions",
+                                      "extensions.webextensions.remote", false);

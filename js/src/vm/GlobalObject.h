@@ -952,12 +952,14 @@ GlobalObject::createArrayFromBuffer<uint8_clamped>() const
 }
 
 /*
- * Define ctor.prototype = proto as non-enumerable, non-configurable, and
- * non-writable; define proto.constructor = ctor as non-enumerable but
- * configurable and writable.
+ * Unless otherwise specified, define ctor.prototype = proto as non-enumerable,
+ * non-configurable, and non-writable; and define proto.constructor = ctor as
+ * non-enumerable but configurable and writable.
  */
 extern bool
-LinkConstructorAndPrototype(JSContext* cx, JSObject* ctor, JSObject* proto);
+LinkConstructorAndPrototype(JSContext* cx, JSObject* ctor, JSObject* proto,
+                            unsigned prototypeAttrs = JSPROP_PERMANENT | JSPROP_READONLY,
+                            unsigned constructorAttrs = 0);
 
 /*
  * Define properties and/or functions on any object. Either ps or fs, or both,

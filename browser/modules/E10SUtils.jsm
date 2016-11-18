@@ -9,6 +9,10 @@ this.EXPORTED_SYMBOLS = ["E10SUtils"];
 const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "useRemoteWebExtensions",
+                                      "extensions.webextensions.remote", false);
 
 function getAboutModule(aURL) {
   // Needs to match NS_GetAboutModuleName
@@ -61,6 +65,7 @@ this.E10SUtils = {
         canLoadRemote = true;
         mustLoadRemote = false;
       }
+
       if (url) {
         let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
                         getService(Ci.nsIXULChromeRegistry);
@@ -70,8 +75,8 @@ this.E10SUtils = {
     }
 
     if (aURL.startsWith("moz-extension:")) {
-      canLoadRemote = false;
-      mustLoadRemote = false;
+      canLoadRemote = useRemoteWebExtensions;
+      mustLoadRemote = useRemoteWebExtensions;
     }
 
     if (aURL.startsWith("view-source:")) {

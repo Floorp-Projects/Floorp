@@ -13,9 +13,7 @@
     <script>
       add_task(function* () {
         // Push the correct preferences for the test
-        yield new Promise((done) => {
-          SpecialPowers.pushPrefEnv({'set': [['dom.select_events.enabled', true]]}, done);
-        });
+        yield SpecialPowers.pushPrefEnv({'set': [['dom.select_events.enabled', true]]});
 
         // Start the actual test
         yield new Promise((done) => {

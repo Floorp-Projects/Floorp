@@ -122,11 +122,13 @@ add_task(function* test_inline_browser_addon() {
 
     let heightDiff = browser.clientHeight - expected;
     ok(heightDiff >= 0 && heightDiff < 50,
-       "Browser should be slightly taller than the document body");
+       `Browser should be slightly taller than the document body (${browser.clientHeight} vs. ${expected})`);
   }
 
   // Delay long enough to avoid hitting our resize rate limit.
   let delay = () => new Promise(resolve => setTimeout(resolve, 300));
+
+  yield delay();
 
   checkHeights(300);
 

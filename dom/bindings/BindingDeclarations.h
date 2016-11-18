@@ -524,7 +524,7 @@ public:
 } // namespace binding_detail
 
 // Enum to represent a system or non-system caller type.
-enum class CallerType {
+enum class CallerType : uint32_t {
   System,
   NonSystem
 };

@@ -295,14 +295,6 @@ interface nsIDOMDocument : nsIDOMNode
   readonly attribute nsIDOMElement  currentScript;
 
   /**
-   * Release the current mouse capture if it is on an element within this
-   * document.
-   *
-   * @see <https://developer.mozilla.org/en/DOM/document.releaseCapture>
-   */
-  void releaseCapture();
-
-  /**
    * Use the given DOM element as the source image of target |-moz-element()|.
    *
    * This function introduces a new special ID (called "image element ID"),
@@ -335,47 +327,6 @@ interface nsIDOMDocument : nsIDOMNode
                           in nsIDOMElement aImageElement);
 
   /**
-   * Element which is currently the full-screen element as per the DOM
-   * full-screen api.
-   *
-   * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
-   */
-  readonly attribute nsIDOMElement mozFullScreenElement;
-
-  /**
-   * Causes the document to leave DOM full-screen mode, if it's in
-   * full-screen mode, as per the DOM full-screen api.
-   *
-   * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
-   */
-  void mozCancelFullScreen();   
-  
-  /**
-   * Denotes whether this document is in DOM full-screen mode, as per the DOM
-   * full-screen api.
-   *
-   * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
-   */
-  readonly attribute boolean mozFullScreen;  
-
-  /**
-   * Denotes whether the full-screen-api.enabled is true, no windowed
-   * plugins are present, and all ancestor documents have the
-   * allowfullscreen attribute set.
-   *
-   * @see <https://wiki.mozilla.org/index.php?title=Gecko:FullScreenAPI>
-   */
-  readonly attribute boolean mozFullScreenEnabled;
-
-  /**
-   * The element to which the mouse pointer is locked, if any, as per the
-   * DOM pointer lock api.
-   *
-   * @see <http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html>
-   */
-  readonly attribute nsIDOMElement mozPointerLockElement;
-
-  /**
    * Retrieve the location of the caret position (DOM node and character
    * offset within that node), given a point.
    *
@@ -387,29 +338,8 @@ interface nsIDOMDocument : nsIDOMNode
   nsISupports /* CaretPosition */ caretPositionFromPoint(in float x, in float y);
 
   /**
-   * Exit pointer is lock if locked, as per the DOM pointer lock api.
-   *
-   * @see <http://dvcs.w3.org/hg/pointerlock/raw-file/default/index.html>
-   */
-  void mozExitPointerLock();
-
-  /**
    * Visibility API implementation.
    */
   readonly attribute boolean hidden;
   readonly attribute DOMString visibilityState;
-
-  /**
-   * Returns "BackCompat" if we're in quirks mode or "CSS1Compat" if we're in
-   * strict mode.  (XML documents are always in strict mode.)
-   */
-  readonly attribute DOMString compatMode;
-
-  /**
-   * Return nodes that match a given CSS selector.
-   *
-   * @see <http://dev.w3.org/2006/webapi/selectors-api/>
-   */
-  nsIDOMElement querySelector([Null(Stringify)] in DOMString selectors);
-  nsIDOMNodeList querySelectorAll([Null(Stringify)] in DOMString selectors);
 };

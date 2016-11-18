@@ -17,11 +17,4 @@
 [builtinclass, uuid(48eb8d72-95bb-402e-a8fc-f2b187abcbdb)]
 interface nsIDOMDocumentFragment : nsIDOMNode
 {
-  /**
-   * Return nodes that match a given CSS selector.
-   *
-   * @see <http://dev.w3.org/2006/webapi/selectors-api/>
-   */
-  nsIDOMElement querySelector([Null(Stringify)] in DOMString selectors);
-  nsIDOMNodeList querySelectorAll([Null(Stringify)] in DOMString selectors);
 };
