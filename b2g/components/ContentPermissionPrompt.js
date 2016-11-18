@@ -25,7 +25,6 @@ const ALLOW_MULTIPLE_REQUESTS = ["audio-capture", "video-capture"];
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
-Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
 Cu.import("resource://gre/modules/PermissionsTable.jsm");
 
 var permissionManager = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
@@ -183,43 +182,6 @@ ContentPermissionPrompt.prototype = {
     return false;
   },
 
-  handledByApp: function handledByApp(request, typesInfo) {
-    if (request.principal.appId == Ci.nsIScriptSecurityManager.NO_APP_ID ||
-        request.principal.appId == Ci.nsIScriptSecurityManager.UNKNOWN_APP_ID) {
-      // This should not really happen
-      request.cancel();
-      return true;
-    }
-
-    let appsService = Cc["@mozilla.org/AppsService;1"]
-                        .getService(Ci.nsIAppsService);
-    let app = appsService.getAppByLocalId(request.principal.appId);
-
-    // Check each permission if it's denied by permission manager with app's
-    // URL.
-    let notDenyAppPrincipal = function(type) {
-      let url = Services.io.newURI(app.origin, null, null);
-      let principal =
-        secMan.createCodebasePrincipal(url,
-                                       {appId: request.principal.appId});
-      let result = Services.perms.testExactPermissionFromPrincipal(principal,
-                                                                   type.access);
-
-      if (result == Ci.nsIPermissionManager.ALLOW_ACTION ||
-          result == Ci.nsIPermissionManager.PROMPT_ACTION) {
-        type.deny = false;
-      }
-      return !type.deny;
-    }
-    // Cancel the entire request if one of the requested permissions is denied
-    if (!typesInfo.every(notDenyAppPrincipal)) {
-      request.cancel();
-      return true;
-    }
-
-    return false;
-  },
-
   handledByPermissionType: function handledByPermissionType(request, typesInfo) {
     for (let i in typesInfo) {
       if (permissionSpecificChecker.hasOwnProperty(typesInfo[i].permission) &&
@@ -271,8 +233,7 @@ ContentPermissionPrompt.prototype = {
       return;
     }
 
-    if (this.handledByApp(request, typesInfo) ||
-        this.handledByPermissionType(request, typesInfo)) {
+    if (this.handledByPermissionType(request, typesInfo)) {
       return;
     }
 

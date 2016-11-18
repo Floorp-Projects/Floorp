@@ -96,7 +96,7 @@ public:
                                       JS::Handle<JSObject *> aCpows,
                                       nsIPrincipal* aPrincipal) override;
 
-  virtual nsresult PreHandleEvent(
+  virtual nsresult GetEventTargetParent(
                      mozilla::EventChainPreVisitor& aVisitor) override;
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
@@ -167,7 +167,7 @@ protected:
   bool mLoadingScript;
 
   // Is this the message manager for an in-process <iframe mozbrowser>? This
-  // affects where events get sent, so it affects PreHandleEvent.
+  // affects where events get sent, so it affects GetEventTargetParent.
   bool mIsBrowserFrame;
   bool mPreventEventsEscaping;
 

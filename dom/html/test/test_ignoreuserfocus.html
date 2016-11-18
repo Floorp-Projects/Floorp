@@ -145,7 +145,8 @@
           function() {
             SpecialPowers.pushPrefEnv({
               "set": [
-                ["dom.mozBrowserFramesEnabled", true]
+                ["dom.mozBrowserFramesEnabled", true],
+                ["network.disable.ipc.security", true],
               ]
             }, function() {
               SimpleTest.waitForFocus(runTest);

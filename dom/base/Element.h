@@ -773,6 +773,14 @@ public:
         (aRetargetToElement ? CAPTURE_RETARGETTOELEMENT : 0));
     }
   }
+
+  void SetCaptureAlways(bool aRetargetToElement)
+  {
+    nsIPresShell::SetCapturingContent(this,
+        CAPTURE_PREVENTDRAG | CAPTURE_IGNOREALLOWED |
+        (aRetargetToElement ? CAPTURE_RETARGETTOELEMENT : 0));
+  }
+
   void ReleaseCapture()
   {
     if (nsIPresShell::GetCapturingContent() == this) {
@@ -1346,7 +1354,7 @@ protected:
   /**
    * Handle status bar updates before they can be cancelled.
    */
-  nsresult PreHandleEventForLinks(EventChainPreVisitor& aVisitor);
+  nsresult GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor);
 
   /**
    * Handle default actions for link event if the event isn't consumed yet.

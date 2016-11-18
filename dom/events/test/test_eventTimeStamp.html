@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=77992
 <script type="text/js-worker" id="worker-src">
   // Simply returns the event timestamp
   onmessage = function(evt) {
-    postMessage(evt.timeStamp);
+    postMessage(evt.timeStamp + performance.timeOrigin);
   }
 </script>
 <script type="text/js-worker" id="shared-worker-src">
@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=77992
   onconnect = function(evt) {
     var port = evt.ports[0];
     port.onmessage = function(messageEvt) {
-      port.postMessage(messageEvt.timeStamp);
+      port.postMessage(messageEvt.timeStamp + performance.timeOrigin);
     };
   };
 </script>
@@ -57,9 +57,9 @@ function testRegularEvents() {
     finishTests();
     return;
   }
-  var timeBeforeEvent = window.performance.now();
-  window.addEventListener("load", function(evt) {
-    var timeAfterEvent = window.performance.now();
+  var timeBeforeEvent = performance.now();
+  addEventListener("load", function(evt) {
+    var timeAfterEvent = performance.now();
     ok(evt.timeStamp > timeBeforeEvent &&
        evt.timeStamp < timeAfterEvent,
        "Event timestamp (" + evt.timeStamp + ") is in expected range: (" +
@@ -71,18 +71,18 @@ function testRegularEvents() {
 function testWorkerEvents() {
   var blob = new Blob([ document.getElementById("worker-src").textContent ],
                       { type: "text/javascript" });
-  var worker = new Worker(window.URL.createObjectURL(blob));
+  var worker = new Worker(URL.createObjectURL(blob));
   worker.onmessage = function(evt) {
-    var timeAfterEvent = window.performance.now();
-    ok(evt.data > timeBeforeEvent &&
-       evt.data < timeAfterEvent,
+    var timeAfterEvent = performance.now() + performance.timeOrigin;
+    ok(evt.data >= timeBeforeEvent &&
+       evt.data <= timeAfterEvent,
        "Event timestamp in dedicated worker (" + evt.data +
          ") is in expected range: (" +
          timeBeforeEvent + ", " + timeAfterEvent + ")");
     worker.terminate();
     testSharedWorkerEvents();
   };
-  var timeBeforeEvent = window.performance.now();
+  var timeBeforeEvent = performance.now() + performance.timeOrigin;
   worker.postMessage("");
 }
 
@@ -92,16 +92,16 @@ function testSharedWorkerEvents() {
              { type: "text/javascript" });
   // Delay creation of worker slightly so it is easier to distinguish
   // shared worker creation time from this document's navigation start
-  window.setTimeout(function() {
-    var timeBeforeWorkerCreation = window.performance.now();
-    var worker = new SharedWorker(window.URL.createObjectURL(blob));
+  setTimeout(function() {
+  var timeBeforeEvent = performance.now() + performance.timeOrigin;
+    var worker = new SharedWorker(URL.createObjectURL(blob));
     worker.port.onmessage = function(evt) {
-      var timeAfterEvent = window.performance.now();
-      ok(evt.data > 0 &&
-         evt.data < timeAfterEvent - timeBeforeWorkerCreation,
+      var timeAfterEvent = performance.now() + performance.timeOrigin;
+      ok(evt.data >= timeBeforeEvent &&
+         evt.data <= timeAfterEvent,
          "Event timestamp in shared worker (" + evt.data +
            ") is in expected range: (0, " +
-           (timeAfterEvent - timeBeforeWorkerCreation) + ")");
+           timeBeforeEvent + ", " + timeAfterEvent + ")");
       worker.port.close();
       finishTests();
     };

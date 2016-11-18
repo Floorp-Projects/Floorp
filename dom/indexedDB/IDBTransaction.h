@@ -314,7 +314,7 @@ public:
 
   // nsIDOMEventTarget
   virtual nsresult
-  PreHandleEvent(EventChainPreVisitor& aVisitor) override;
+  GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
 private:
   IDBTransaction(IDBDatabase* aDatabase,

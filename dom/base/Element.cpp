@@ -2991,7 +2991,7 @@ Element::CheckHandleEventForLinksPrecondition(EventChainVisitor& aVisitor,
 }
 
 nsresult
-Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
+Element::GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor)
 {
   // Optimisation: return early if this event doesn't interest us.
   // IMPORTANT: this switch and the switch below it must be kept in sync!
@@ -3013,8 +3013,9 @@ Element::PreHandleEventForLinks(EventChainPreVisitor& aVisitor)
 
   nsresult rv = NS_OK;
 
-  // We do the status bar updates in PreHandleEvent so that the status bar gets
-  // updated even if the event is consumed before we have a chance to set it.
+  // We do the status bar updates in GetEventTargetParent so that the status bar
+  // gets updated even if the event is consumed before we have a chance to set
+  // it.
   switch (aVisitor.mEvent->mMessage) {
   // Set the status bar similarly for mouseover and focus
   case eMouseOver:
