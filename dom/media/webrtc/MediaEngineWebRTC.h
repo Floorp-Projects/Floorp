@@ -268,7 +268,12 @@ public:
 
   void StartRecording(SourceMediaStream *aStream, AudioDataListener *aListener)
   {
+#ifdef MOZ_WIDGET_ANDROID
+    // OpenSL ES does not support enumerating devices.
+    MOZ_ASSERT(!mDevices);
+#else
     MOZ_ASSERT(mDevices);
+#endif
 
     if (mInUseCount == 0) {
       ScopedCustomReleasePtr<webrtc::VoEExternalMedia> ptrVoERender;
