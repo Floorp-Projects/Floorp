@@ -2659,7 +2659,6 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
 
   // offset below is where you find yourself in rightBlock when you traverse
   // upwards from leftBlock
-  EditActionResult ret(NS_OK);
   if (EditorUtils::IsDescendantOf(leftBlock, rightBlock, &rightOffset)) {
     // Tricky case.  Left block is inside right block.  Do ws adjustment.  This
     // just destroys non-visible ws at boundaries we will be joining.
@@ -2695,6 +2694,7 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     // Do br adjustment.
     nsCOMPtr<Element> brNode =
       CheckForInvisibleBR(*leftBlock, BRLocation::blockEnd);
+    EditActionResult ret(NS_OK);
     if (mergeLists) {
       // The idea here is to take all children in rightList that are past
       // offset, and pull them into leftlist.
@@ -2718,9 +2718,12 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     if (brNode && NS_SUCCEEDED(htmlEditor->DeleteNode(brNode))) {
       ret.MarkAsHandled();
     }
+    return ret;
+  }
+
   // Offset below is where you find yourself in leftBlock when you traverse
   // upwards from rightBlock
-  } else if (EditorUtils::IsDescendantOf(rightBlock, leftBlock, &leftOffset)) {
+  if (EditorUtils::IsDescendantOf(rightBlock, leftBlock, &leftOffset)) {
     // Tricky case.  Right block is inside left block.  Do ws adjustment.  This
     // just destroys non-visible ws at boundaries we will be joining.
     nsresult rv = WSRunObject::ScrubBlockBoundary(htmlEditor,
@@ -2755,6 +2758,7 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     // Do br adjustment.
     nsCOMPtr<Element> brNode =
       CheckForInvisibleBR(*leftBlock, BRLocation::beforeBlock, leftOffset);
+    EditActionResult ret(NS_OK);
     if (mergeLists) {
       // XXX Why do we ignore the result of MoveContents()?
       EditActionResult retMoveContents =
@@ -2830,47 +2834,49 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     if (brNode && NS_SUCCEEDED(htmlEditor->DeleteNode(brNode))) {
       ret.MarkAsHandled();
     }
-  } else {
-    // Normal case.  Blocks are siblings, or at least close enough.  An example
-    // of the latter is <p>paragraph</p><ul><li>one<li>two<li>three</ul>.  The
-    // first li and the p are not true siblings, but we still want to join them
-    // if you backspace from li into p.
+    return ret;
+  }
 
-    // Adjust whitespace at block boundaries
-    nsresult rv =
-      WSRunObject::PrepareToJoinBlocks(htmlEditor, leftBlock, rightBlock);
+  // Normal case.  Blocks are siblings, or at least close enough.  An example
+  // of the latter is <p>paragraph</p><ul><li>one<li>two<li>three</ul>.  The
+  // first li and the p are not true siblings, but we still want to join them
+  // if you backspace from li into p.
+
+  // Adjust whitespace at block boundaries
+  nsresult rv =
+    WSRunObject::PrepareToJoinBlocks(htmlEditor, leftBlock, rightBlock);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditActionIgnored(rv);
+  }
+  // Do br adjustment.
+  nsCOMPtr<Element> brNode =
+    CheckForInvisibleBR(*leftBlock, BRLocation::blockEnd);
+  EditActionResult ret(NS_OK);
+  if (mergeLists || leftBlock->NodeInfo()->NameAtom() ==
+                    rightBlock->NodeInfo()->NameAtom()) {
+    // Nodes are same type.  merge them.
+    EditorDOMPoint pt = JoinNodesSmart(*leftBlock, *rightBlock);
+    if (pt.node && mergeLists) {
+      nsCOMPtr<Element> newBlock;
+      ConvertListType(rightBlock, getter_AddRefs(newBlock),
+                      existingList, nsGkAtoms::li);
+    }
+    ret.MarkAsHandled();
+  } else {
+    // Nodes are dissimilar types.
+    ret |= MoveBlock(*leftBlock, *rightBlock, leftOffset, rightOffset);
+    if (NS_WARN_IF(ret.Failed())) {
+      return ret;
+    }
+  }
+  if (brNode) {
+    rv = htmlEditor->DeleteNode(brNode);
+    // XXX In other top level if blocks, the result of DeleteNode()
+    //     is ignored.  Why does only this result is respected?
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return EditActionIgnored(rv);
+      return ret.SetResult(rv);
     }
-    // Do br adjustment.
-    nsCOMPtr<Element> brNode =
-      CheckForInvisibleBR(*leftBlock, BRLocation::blockEnd);
-    if (mergeLists || leftBlock->NodeInfo()->NameAtom() ==
-                      rightBlock->NodeInfo()->NameAtom()) {
-      // Nodes are same type.  merge them.
-      EditorDOMPoint pt = JoinNodesSmart(*leftBlock, *rightBlock);
-      if (pt.node && mergeLists) {
-        nsCOMPtr<Element> newBlock;
-        ConvertListType(rightBlock, getter_AddRefs(newBlock),
-                        existingList, nsGkAtoms::li);
-      }
-      ret.MarkAsHandled();
-    } else {
-      // Nodes are dissimilar types.
-      ret |= MoveBlock(*leftBlock, *rightBlock, leftOffset, rightOffset);
-      if (NS_WARN_IF(ret.Failed())) {
-        return ret;
-      }
-    }
-    if (brNode) {
-      rv = htmlEditor->DeleteNode(brNode);
-      // XXX In other top level if/else-if blocks, the result of DeleteNode()
-      //     is ignored.  Why does only this result is respected?
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return ret.SetResult(rv);
-      }
-      ret.MarkAsHandled();
-    }
+    ret.MarkAsHandled();
   }
   return ret;
 }
@@ -2946,22 +2952,22 @@ HTMLEditRules::MoveNodeSmart(nsIContent& aNode,
     }
     // XXX Should we check if the node is actually moved in this case?
     return EditActionHandled();
-  } else {
-    // If it can't, move its children (if any), and then delete it.
-    EditActionResult ret(NS_OK);
-    if (aNode.IsElement()) {
-      ret = MoveContents(*aNode.AsElement(), aDestElement, aInOutDestOffset);
-      if (NS_WARN_IF(ret.Failed())) {
-        return ret;
-      }
-    }
-
-    nsresult rv = htmlEditor->DeleteNode(&aNode);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return ret.SetResult(rv);
-    }
-    return ret.MarkAsHandled();
   }
+
+  // If it can't, move its children (if any), and then delete it.
+  EditActionResult ret(NS_OK);
+  if (aNode.IsElement()) {
+    ret = MoveContents(*aNode.AsElement(), aDestElement, aInOutDestOffset);
+    if (NS_WARN_IF(ret.Failed())) {
+      return ret;
+    }
+  }
+
+  nsresult rv = htmlEditor->DeleteNode(&aNode);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return ret.SetResult(rv);
+  }
+  return ret.MarkAsHandled();
 }
 
 EditActionResult
