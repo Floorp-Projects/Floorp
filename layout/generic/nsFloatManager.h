@@ -349,18 +349,19 @@ private:
       return aShapeType == ShapeType::Margin ? BEnd() : ShapeBoxRect().YMost();
     }
 
-    // Compute the minimum x-axis difference between the bounding shape box
-    // and its rounded corner within the given band (y-axis region). This is
-    // used as a helper function to compute the LineRight() and LineLeft().
-    // See the picture in the implementation for an example.
+    // Compute the minimum line-axis difference between the bounding shape
+    // box and its rounded corner within the given band (block-axis region).
+    // This is used as a helper function to compute the LineRight() and
+    // LineLeft(). See the picture in the implementation for an example.
+    // RadiusL and RadiusB stand for radius on the line-axis and block-axis.
     //
-    // Returns the x-axis diff, or 0 if there's no rounded corner within
-    // the given band.
-    static nscoord ComputeEllipseXInterceptDiff(
-      const nscoord aShapeBoxY, const nscoord aShapeBoxYMost,
-      const nscoord aTopCornerRadiusX, const nscoord aTopCornerRadiusY,
-      const nscoord aBottomCornerRadiusX, const nscoord aBottomCornerRadiusY,
-      const nscoord aBandY, const nscoord aBandYMost);
+    // Returns radius-x diff on the line-axis, or 0 if there's no rounded
+    // corner within the given band.
+    static nscoord ComputeEllipseLineInterceptDiff(
+      const nscoord aShapeBoxBStart, const nscoord aShapeBoxBEnd,
+      const nscoord aBStartCornerRadiusL, const nscoord aBStartCornerRadiusB,
+      const nscoord aBEndCornerRadiusL, const nscoord aBEndCornerRadiusB,
+      const nscoord aBandBStart, const nscoord aBandBEnd);
 
     static nscoord XInterceptAtY(const nscoord aY, const nscoord aRadiusX,
                                  const nscoord aRadiusY);

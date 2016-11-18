@@ -637,7 +637,7 @@ nsFloatManager::FloatInfo::LineLeft(WritingMode aWM,
     }
 
     nscoord lineLeftDiff =
-      ComputeEllipseXInterceptDiff(
+      ComputeEllipseLineInterceptDiff(
         ShapeBoxRect().y, ShapeBoxRect().YMost(),
         blockStartCornerRadiusL, blockStartCornerRadiusB,
         blockEndCornerRadiusL, blockEndCornerRadiusB,
@@ -695,7 +695,7 @@ nsFloatManager::FloatInfo::LineRight(WritingMode aWM,
     }
 
     nscoord lineRightDiff =
-      ComputeEllipseXInterceptDiff(
+      ComputeEllipseLineInterceptDiff(
         ShapeBoxRect().y, ShapeBoxRect().YMost(),
         blockStartCornerRadiusL, blockStartCornerRadiusB,
         blockEndCornerRadiusL, blockEndCornerRadiusB,
@@ -709,29 +709,30 @@ nsFloatManager::FloatInfo::LineRight(WritingMode aWM,
 }
 
 /* static */ nscoord
-nsFloatManager::FloatInfo::ComputeEllipseXInterceptDiff(
-  const nscoord aShapeBoxY, const nscoord aShapeBoxYMost,
-  const nscoord aTopCornerRadiusX, const nscoord aTopCornerRadiusY,
-  const nscoord aBottomCornerRadiusX, const nscoord aBottomCornerRadiusY,
-  const nscoord aBandY, const nscoord aBandYMost)
+nsFloatManager::FloatInfo::ComputeEllipseLineInterceptDiff(
+  const nscoord aShapeBoxBStart, const nscoord aShapeBoxBEnd,
+  const nscoord aBStartCornerRadiusL, const nscoord aBStartCornerRadiusB,
+  const nscoord aBEndCornerRadiusL, const nscoord aBEndCornerRadiusB,
+  const nscoord aBandBStart, const nscoord aBandBEnd)
 {
-  // An Example for the band intersects with the top right corner of an ellipse.
+  // An example for the band intersecting with the top right corner of an
+  // ellipse with writing-mode horizontal-tb.
   //
-  //                                xIntercept xDiff
+  //                             lineIntercept lineDiff
   //                                    |       |
-  //  +---------------------------------|-------|-+---- aShapeBoxY
+  //  +---------------------------------|-------|-+---- aShapeBoxBStart
   //  |                ##########^      |       | |
   //  |            ##############|####  |       | |
-  //  +---------#################|######|-------|-+---- aBandY
+  //  +---------#################|######|-------|-+---- aBandBStart
   //  |       ###################|######|##     | |
-  //  |      # aTopCornerRadiusY |######|###    | |
+  //  |     aBStartCornerRadiusB |######|###    | |
   //  |    ######################|######|#####  | |
-  //  +---#######################|<-----------><->^---- aBandYMost
+  //  +---#######################|<-----------><->^---- aBandBEnd
   //  |  ########################|##############  |
-  //  |  ########################|##############  |---- y
+  //  |  ########################|##############  |---- b
   //  | #########################|############### |
   //  | ######################## v<-------------->v
-  //  |######################### aTopCornerRadiusX|
+  //  |###################### aBStartCornerRadiusL|
   //  |###########################################|
   //  |###########################################|
   //  |###########################################|
@@ -747,34 +748,34 @@ nsFloatManager::FloatInfo::ComputeEllipseXInterceptDiff(
   //  |         #########################         |
   //  |            ###################            |
   //  |                ###########                |
-  //  +-------------------------------------------+----- aShapeBoxYMost
+  //  +-------------------------------------------+----- aShapeBoxBEnd
 
-  NS_ASSERTION(aShapeBoxY <= aShapeBoxYMost, "Bad shape box coordinates!");
-  NS_ASSERTION(aBandY <= aBandYMost, "Bad band coordinates!");
+  NS_ASSERTION(aShapeBoxBStart <= aShapeBoxBEnd, "Bad shape box coordinates!");
+  NS_ASSERTION(aBandBStart <= aBandBEnd, "Bad band coordinates!");
 
-  nscoord xDiff = 0;
+  nscoord lineDiff = 0;
 
-  // If the band intersects both the top and bottom corners, we don't need
-  // to enter either branch because the correct xDiff is 0.
-  if (aTopCornerRadiusY > 0 &&
-      aBandYMost >= aShapeBoxY &&
-      aBandYMost <= aShapeBoxY + aTopCornerRadiusY) {
-    // The band intersects only the top corner.
-    nscoord y = aTopCornerRadiusY - (aBandYMost - aShapeBoxY);
-    nscoord xIntercept =
-      XInterceptAtY(y, aTopCornerRadiusX, aTopCornerRadiusY);
-    xDiff = aTopCornerRadiusX - xIntercept;
-  } else if (aBottomCornerRadiusY > 0 &&
-             aBandY >= aShapeBoxYMost - aBottomCornerRadiusY &&
-             aBandY <= aShapeBoxYMost) {
-    // The band intersects only the bottom corner.
-    nscoord y = aBottomCornerRadiusY - (aShapeBoxYMost - aBandY);
-    nscoord xIntercept =
-      XInterceptAtY(y, aBottomCornerRadiusX, aBottomCornerRadiusY);
-    xDiff = aBottomCornerRadiusX - xIntercept;
+  // If the band intersects both the block-start and block-end corners, we
+  // don't need to enter either branch because the correct lineDiff is 0.
+  if (aBStartCornerRadiusB > 0 &&
+      aBandBEnd >= aShapeBoxBStart &&
+      aBandBEnd <= aShapeBoxBStart + aBStartCornerRadiusB) {
+    // The band intersects only the block-start corner.
+    nscoord b = aBStartCornerRadiusB - (aBandBEnd - aShapeBoxBStart);
+    nscoord lineIntercept =
+      XInterceptAtY(b, aBStartCornerRadiusL, aBStartCornerRadiusB);
+    lineDiff = aBStartCornerRadiusL - lineIntercept;
+  } else if (aBEndCornerRadiusB > 0 &&
+             aBandBStart >= aShapeBoxBEnd - aBEndCornerRadiusB &&
+             aBandBStart <= aShapeBoxBEnd) {
+    // The band intersects only the block-end corner.
+    nscoord b = aBEndCornerRadiusB - (aShapeBoxBEnd - aBandBStart);
+    nscoord lineIntercept =
+      XInterceptAtY(b, aBEndCornerRadiusL, aBEndCornerRadiusB);
+    lineDiff = aBEndCornerRadiusL - lineIntercept;
   }
 
-  return xDiff;
+  return lineDiff;
 }
 
 /* static */ nscoord
