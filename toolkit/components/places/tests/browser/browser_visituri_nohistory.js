@@ -21,13 +21,13 @@ function promiseObserve(name)
 
 add_task(function* ()
 {
-  yield new Promise(resolve => SpecialPowers.pushPrefEnv({"set": [["places.history.enabled", false]]}, resolve));
+  yield SpecialPowers.pushPrefEnv({"set": [["places.history.enabled", false]]});
 
   let visitUriPromise = promiseObserve("uri-visit-saved");
 
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, INITIAL_URL);
 
-  yield new Promise(resolve => SpecialPowers.popPrefEnv(resolve));
+  yield SpecialPowers.popPrefEnv();
 
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   gBrowser.loadURI(FINAL_URL);

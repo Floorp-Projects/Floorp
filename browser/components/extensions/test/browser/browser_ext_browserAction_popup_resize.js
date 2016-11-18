@@ -24,7 +24,7 @@ add_task(function* testBrowserActionPopupResize() {
 
   yield extension.startup();
 
-  let browser = yield openPanel(extension);
+  let browser = yield openPanel(extension, undefined, true);
 
   function* checkSize(expected) {
     let dims = yield promiseContentDimensions(browser);

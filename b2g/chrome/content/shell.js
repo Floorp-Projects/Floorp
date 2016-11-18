@@ -7,7 +7,6 @@
 window.performance.mark('gecko-shell-loadstart');
 
 Cu.import('resource://gre/modules/NotificationDB.jsm');
-Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import('resource://gre/modules/UserAgentOverrides.jsm');
 Cu.import('resource://gre/modules/Keyboard.jsm');
 Cu.import('resource://gre/modules/ErrorPage.jsm');

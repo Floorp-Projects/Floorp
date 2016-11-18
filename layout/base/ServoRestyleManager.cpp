@@ -88,6 +88,19 @@ MarkSelfAndDescendantsAsNotDirtyForServo(nsIContent* aContent)
   }
 }
 
+/* static */ void
+ServoRestyleManager::ClearServoDataFromSubtree(nsIContent* aContent)
+{
+  aContent->ClearServoData();
+  aContent->SetIsDirtyForServo();
+  aContent->UnsetHasDirtyDescendantsForServo();
+
+  AllChildrenIterator it(aContent, nsIContent::eAllChildren);
+  for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+    ClearServoDataFromSubtree(n);
+  }
+}
+
 void
 ServoRestyleManager::RecreateStyleContexts(nsIContent* aContent,
                                            nsStyleContext* aParentContext,
