@@ -86,6 +86,7 @@
 #endif
 
 #include "LayerScope.h"
+using namespace std;
 
 namespace mozilla {
 
@@ -95,6 +96,8 @@ namespace layers {
 typedef map<uint64_t, CompositorBridgeParent::LayerTreeState> LayerTreeMap;
 extern LayerTreeMap sIndirectLayerTrees;
 extern StaticAutoPtr<mozilla::Monitor> sIndirectLayerTreesLock;
+void UpdateIndirectTree(uint64_t aId, Layer* aRoot, const TargetConfig& aTargetConfig);
+void EraseLayerState(uint64_t aId);
 
 mozilla::ipc::IPCResult
 CrossProcessCompositorBridgeParent::RecvRequestNotifyAfterRemotePaint()
