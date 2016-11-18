@@ -37,6 +37,7 @@
 #include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/nsIContentChild.h"
+#include "mozilla/dom/URLClassifierChild.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/psm/PSMContentListener.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
@@ -3230,6 +3231,23 @@ ContentChild::FatalErrorIfNotUsingGPUProcess(const char* const aProtocolName,
     formattedMessage.AppendLiteral(R"(".)");
     NS_WARNING(formattedMessage.get());
   }
+}
+
+PURLClassifierChild*
+ContentChild::AllocPURLClassifierChild(const Principal& aPrincipal,
+                                       const bool& aUseTrackingProtection,
+                                       bool* aSuccess)
+{
+  *aSuccess = true;
+  return new URLClassifierChild();
+}
+
+bool
+ContentChild::DeallocPURLClassifierChild(PURLClassifierChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+  delete aActor;
+  return true;
 }
 
 } // namespace dom

@@ -63,6 +63,7 @@
 #include "mozilla/dom/FlyWebPublishedServerIPC.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
+#include "mozilla/dom/URLClassifierParent.h"
 #include "mozilla/embedding/printingui/PrintingParent.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -4817,4 +4818,44 @@ ContentParent::RecvAccumulateChildKeyedHistogram(
 {
   Telemetry::AccumulateChildKeyed(GeckoProcessType_Content, aAccumulations);
   return IPC_OK();
+}
+
+PURLClassifierParent*
+ContentParent::AllocPURLClassifierParent(const Principal& aPrincipal,
+                                         const bool& aUseTrackingProtection,
+                                         bool* aSuccess)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  *aSuccess = true;
+  RefPtr<URLClassifierParent> actor = new URLClassifierParent();
+  return actor.forget().take();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvPURLClassifierConstructor(PURLClassifierParent* aActor,
+                                             const Principal& aPrincipal,
+                                             const bool& aUseTrackingProtection,
+                                             bool* aSuccess)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aActor);
+
+  auto* actor = static_cast<URLClassifierParent*>(aActor);
+  nsCOMPtr<nsIPrincipal> principal(aPrincipal);
+  if (!principal) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return actor->StartClassify(principal, aUseTrackingProtection, aSuccess);
+}
+
+bool
+ContentParent::DeallocPURLClassifierParent(PURLClassifierParent* aActor)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aActor);
+
+  RefPtr<URLClassifierParent> actor =
+    dont_AddRef(static_cast<URLClassifierParent*>(aActor));
+  return true;
 }
