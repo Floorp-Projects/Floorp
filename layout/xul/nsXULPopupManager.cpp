@@ -945,7 +945,7 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
   }
 
   if (aSelectFirstItem) {
-    nsMenuFrame* next = GetNextMenuItem(aPopupFrame, nullptr, true);
+    nsMenuFrame* next = GetNextMenuItem(aPopupFrame, nullptr, true, false);
     aPopupFrame->SetCurrentMenuItem(next);
   }
 
@@ -2207,8 +2207,8 @@ nsXULPopupManager::HandleKeyboardNavigation(uint32_t aKeyCode)
   
     if (NS_DIRECTION_IS_INLINE(theDirection)) {
       nsMenuFrame* nextItem = (theDirection == eNavigationDirection_End) ?
-                              GetNextMenuItem(mActiveMenuBar, currentMenu, false) : 
-                              GetPreviousMenuItem(mActiveMenuBar, currentMenu, false);
+                              GetNextMenuItem(mActiveMenuBar, currentMenu, false, true) : 
+                              GetPreviousMenuItem(mActiveMenuBar, currentMenu, false, true);
       mActiveMenuBar->ChangeMenuItem(nextItem, true, true);
       return true;
     }
@@ -2243,7 +2243,7 @@ nsXULPopupManager::HandleKeyboardNavigationInPopup(nsMenuChainItem* item,
     // We've been opened, but we haven't had anything selected.
     // We can handle End, but our parent handles Start.
     if (aDir == eNavigationDirection_End) {
-      nsMenuFrame* nextItem = GetNextMenuItem(aFrame, nullptr, true);
+      nsMenuFrame* nextItem = GetNextMenuItem(aFrame, nullptr, true, false);
       if (nextItem) {
         aFrame->ChangeMenuItem(nextItem, false, true);
         return true;
@@ -2277,14 +2277,28 @@ nsXULPopupManager::HandleKeyboardNavigationInPopup(nsMenuChainItem* item,
       NS_DIRECTION_IS_BLOCK_TO_EDGE(aDir)) {
     nsMenuFrame* nextItem;
 
-    if (aDir == eNavigationDirection_Before)
-      nextItem = GetPreviousMenuItem(aFrame, currentMenu, true);
-    else if (aDir == eNavigationDirection_After)
-      nextItem = GetNextMenuItem(aFrame, currentMenu, true);
-    else if (aDir == eNavigationDirection_First)
-      nextItem = GetNextMenuItem(aFrame, nullptr, true);
-    else
-      nextItem = GetPreviousMenuItem(aFrame, nullptr, true);
+    if (aDir == eNavigationDirection_Before ||
+        aDir == eNavigationDirection_After) {
+      // Cursor navigation does not wrap on Mac or for menulists on Windows.
+      bool wrap =
+#ifdef XP_WIN
+        aFrame->IsMenuList() ? false : true;
+#elif defined XP_MACOSX
+        false;
+#else
+        true;
+#endif
+
+      if (aDir == eNavigationDirection_Before) {
+        nextItem = GetPreviousMenuItem(aFrame, currentMenu, true, wrap);
+      } else {
+        nextItem = GetNextMenuItem(aFrame, currentMenu, true, wrap);
+      }
+    } else if (aDir == eNavigationDirection_First) {
+      nextItem = GetNextMenuItem(aFrame, nullptr, true, false);
+    } else {
+      nextItem = GetPreviousMenuItem(aFrame, nullptr, true, false);
+    }
 
     if (nextItem) {
       aFrame->ChangeMenuItem(nextItem, false, true);
@@ -2326,10 +2340,21 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
 
   bool consume = (mPopups || mActiveMenuBar);
   switch (keyCode) {
-    case nsIDOMKeyEvent::DOM_VK_LEFT:
-    case nsIDOMKeyEvent::DOM_VK_RIGHT:
     case nsIDOMKeyEvent::DOM_VK_UP:
     case nsIDOMKeyEvent::DOM_VK_DOWN:
+#ifndef XP_MACOSX
+      // roll up the popup when alt+up/down are pressed within a menulist.
+      bool alt;
+      aKeyEvent->GetAltKey(&alt);
+      if (alt && aTopVisibleMenuItem && aTopVisibleMenuItem->Frame()->IsMenuList()) {
+        Rollup(0, false, nullptr, nullptr);
+        break;
+      }
+      MOZ_FALLTHROUGH;
+#endif
+
+    case nsIDOMKeyEvent::DOM_VK_LEFT:
+    case nsIDOMKeyEvent::DOM_VK_RIGHT:
     case nsIDOMKeyEvent::DOM_VK_HOME:
     case nsIDOMKeyEvent::DOM_VK_END:
       HandleKeyboardNavigation(keyCode);
@@ -2406,7 +2431,8 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
 nsMenuFrame*
 nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
                                    nsMenuFrame* aStart,
-                                   bool aIsPopup)
+                                   bool aIsPopup,
+                                   bool aWrap)
 {
   nsPresContext* presContext = aParent->PresContext();
   auto insertion = presContext->PresShell()->
@@ -2441,6 +2467,10 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
       currFrame = currFrame->GetNextSibling();
   }
 
+  if (!aWrap) {
+    return aStart;
+  }
+
   currFrame = immediateParent->PrincipalChildList().FirstChild();
 
   // Still don't have anything. Try cycling from the beginning.
@@ -2467,7 +2497,8 @@ nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
 nsMenuFrame*
 nsXULPopupManager::GetPreviousMenuItem(nsContainerFrame* aParent,
                                        nsMenuFrame* aStart,
-                                       bool aIsPopup)
+                                       bool aIsPopup,
+                                       bool aWrap)
 {
   nsPresContext* presContext = aParent->PresContext();
   auto insertion = presContext->PresShell()->
@@ -2504,6 +2535,10 @@ nsXULPopupManager::GetPreviousMenuItem(nsContainerFrame* aParent,
       currFrame = currFrame->GetParent()->GetPrevSibling();
     else
       currFrame = currFrame->GetPrevSibling();
+  }
+
+  if (!aWrap) {
+    return aStart;
   }
 
   currFrame = frames.LastChild();

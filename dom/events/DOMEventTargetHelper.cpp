@@ -329,7 +329,7 @@ DOMEventTargetHelper::GetEventHandler(nsIAtom* aType,
 }
 
 nsresult
-DOMEventTargetHelper::PreHandleEvent(EventChainPreVisitor& aVisitor)
+DOMEventTargetHelper::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
   aVisitor.mParentTarget = nullptr;

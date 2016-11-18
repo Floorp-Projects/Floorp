@@ -1364,7 +1364,7 @@ IsObjectValueInCompartment(const Value& v, JSCompartment* comp)
 
 extern bool
 NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
-                     Handle<PropertyDescriptor> desc,
+                     Handle<JS::PropertyDescriptor> desc,
                      ObjectOpResult& result);
 
 extern bool
@@ -1397,7 +1397,7 @@ NativeHasProperty(JSContext* cx, HandleNativeObject obj, HandleId id, bool* foun
 
 extern bool
 NativeGetOwnPropertyDescriptor(JSContext* cx, HandleNativeObject obj, HandleId id,
-                               MutableHandle<PropertyDescriptor> desc);
+                               MutableHandle<JS::PropertyDescriptor> desc);
 
 extern bool
 NativeGetProperty(JSContext* cx, HandleNativeObject obj, HandleValue receiver, HandleId id,

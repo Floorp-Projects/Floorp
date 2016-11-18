@@ -140,6 +140,8 @@ ALLOWED_XPCOM_GLUE = {
     ('sdp_file_parser', 'media/webrtc/signaling/fuzztest'),
     ('signaling_unittests', 'media/webrtc/signaling/test'),
     ('TestMailCookie', 'mailnews/base/test'),
+    ('calbasecomps', 'calendar/base/backend/libical/build'),
+    ('purplexpcom', 'extensions/purple/purplexpcom/src'),
 }
 
 
@@ -413,10 +415,17 @@ class TreeMetadataEmitter(LoggingMixin):
 
         key = (obj.name, obj.relativedir)
         substs = context.config.substs
-        extra_allowed = [
-            (substs.get('MOZ_APP_NAME'), '%s/app' % substs.get('MOZ_BUILD_APP')),
-            ('%s-bin' % substs.get('MOZ_APP_NAME'), '%s/app' % substs.get('MOZ_BUILD_APP')),
-        ]
+        extra_allowed = []
+        moz_build_app = substs.get('MOZ_BUILD_APP')
+        if moz_build_app is not None: # None during some test_emitter.py tests.
+            if moz_build_app.startswith('../'):
+                # For comm-central builds, where topsrcdir is not the root
+                # source dir.
+                moz_build_app = moz_build_app[3:]
+            extra_allowed = [
+                (substs.get('MOZ_APP_NAME'), '%s/app' % moz_build_app),
+                ('%s-bin' % substs.get('MOZ_APP_NAME'), '%s/app' % moz_build_app),
+            ]
         if substs.get('MOZ_WIDGET_TOOLKIT') != 'android':
             extra_allowed.append((substs.get('MOZ_CHILD_PROCESS_NAME'), 'ipc/app'))
 

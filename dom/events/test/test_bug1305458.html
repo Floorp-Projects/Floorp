@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1305458
+-->
+<head>
+  <title>Test for Bug 1305458</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+   input[type=number] {
+     -moz-appearance: textfield;
+   }
+   input[type=number]:focus,
+   input[type=number]:hover {
+     -moz-appearance: number-input;
+   }
+  </style>
+</head>
+<body onload="doTest()">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1305458">Mozilla Bug 1305458</a>
+  <input id="test_input" type="number">
+  <div id="test_div">bar</div>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    var change_count = 0;
+    function doTest() {
+      let input = document.getElementById("test_input");
+      let div = document.getElementById("test_div");
+      input.addEventListener("change", () => {
+        ++change_count;
+      }, false);
+      // mouse hover
+      input.focus();
+      synthesizeMouse(input, 1, 1, {type: "mousemove"});
+      synthesizeKey("1", {});
+      input.blur();
+      is(change_count, 1, "input should fire change when blur");
+
+      input.focus();
+      synthesizeMouse(div, 1, 1, {type: "mousemove"});
+      synthesizeKey("1", {});
+      input.blur();
+      is(change_count, 2, "input should fire change when blur");
+      SimpleTest.finish();
+    }
+  </script>
+</body>
+</html>

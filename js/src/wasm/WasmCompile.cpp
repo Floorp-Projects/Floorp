@@ -411,244 +411,6 @@ DecodeFunctionBodyExprs(FunctionDecoder& f)
 }
 
 static bool
-DecodeImportSection(Decoder& d, ModuleGeneratorData* init, ImportVector* imports)
-{
-    Maybe<Limits> memory;
-    Uint32Vector funcSigIndices;
-    if (!DecodeImportSection(d, init->sigs, &funcSigIndices, &init->globals, &init->tables, &memory,
-                             imports))
-        return false;
-
-    for (uint32_t sigIndex : funcSigIndices) {
-        if (!init->funcSigs.append(&init->sigs[sigIndex]))
-            return false;
-    }
-
-    // The global data offsets will be filled in by ModuleGenerator::init.
-    if (!init->funcImportGlobalDataOffsets.resize(init->funcSigs.length()))
-        return false;
-
-    if (memory) {
-        init->memoryUsage = MemoryUsage::Unshared;
-        init->minMemoryLength = memory->initial;
-        init->maxMemoryLength = memory->maximum;
-    }
-
-    return true;
-}
-
-static bool
-DecodeFunctionSection(Decoder& d, ModuleGeneratorData* init)
-{
-    Uint32Vector funcSigIndexes;
-    if (!DecodeFunctionSection(d, init->sigs, init->funcSigs.length(), &funcSigIndexes))
-        return false;
-
-    if (!init->funcSigs.reserve(init->funcSigs.length() + funcSigIndexes.length()))
-        return false;
-
-    for (uint32_t sigIndex : funcSigIndexes)
-        init->funcSigs.infallibleAppend(&init->sigs[sigIndex]);
-
-    return true;
-}
-
-static bool
-DecodeTableSection(Decoder& d, ModuleGeneratorData* init)
-{
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Table, &sectionStart, &sectionSize, "table"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t numTables;
-    if (!d.readVarU32(&numTables))
-        return d.fail("failed to read number of tables");
-
-    if (numTables != 1)
-        return d.fail("the number of tables must be exactly one");
-
-    if (!DecodeTableLimits(d, &init->tables))
-        return false;
-
-    if (!d.finishSection(sectionStart, sectionSize, "table"))
-        return false;
-
-    return true;
-}
-
-static bool
-DecodeMemorySection(Decoder& d, ModuleGeneratorData* init)
-{
-    bool present;
-    Limits memory;
-    if (!DecodeMemorySection(d, UsesMemory(init->memoryUsage), &memory, &present))
-        return false;
-
-    if (present) {
-        init->memoryUsage = MemoryUsage::Unshared;
-        init->minMemoryLength = memory.initial;
-        init->maxMemoryLength = memory.maximum;
-    }
-
-    return true;
-}
-
-static bool
-DecodeGlobalSection(Decoder& d, ModuleGeneratorData* init)
-{
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Global, &sectionStart, &sectionSize, "global"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t numGlobals;
-    if (!d.readVarU32(&numGlobals))
-        return d.fail("expected number of globals");
-
-    if (numGlobals > MaxGlobals)
-        return d.fail("too many globals");
-
-    for (uint32_t i = 0; i < numGlobals; i++) {
-        ValType type;
-        bool isMutable;
-        if (!DecodeGlobalType(d, &type, &isMutable))
-            return false;
-
-        InitExpr initializer;
-        if (!DecodeInitializerExpression(d, init->globals, type, &initializer))
-            return false;
-
-        if (!init->globals.append(GlobalDesc(initializer, isMutable)))
-            return false;
-    }
-
-    if (!d.finishSection(sectionStart, sectionSize, "global"))
-        return false;
-
-    return true;
-}
-
-typedef HashSet<const char*, CStringHasher, SystemAllocPolicy> CStringSet;
-
-static UniqueChars
-DecodeExportName(Decoder& d, CStringSet* dupSet)
-{
-    UniqueChars exportName = DecodeName(d);
-    if (!exportName) {
-        d.fail("expected valid export name");
-        return nullptr;
-    }
-
-    CStringSet::AddPtr p = dupSet->lookupForAdd(exportName.get());
-    if (p) {
-        d.fail("duplicate export");
-        return nullptr;
-    }
-
-    if (!dupSet->add(p, exportName.get()))
-        return nullptr;
-
-    return Move(exportName);
-}
-
-static bool
-DecodeExport(Decoder& d, ModuleGenerator& mg, CStringSet* dupSet)
-{
-    UniqueChars fieldName = DecodeExportName(d, dupSet);
-    if (!fieldName)
-        return false;
-
-    uint32_t exportKind;
-    if (!d.readVarU32(&exportKind))
-        return d.fail("failed to read export kind");
-
-    switch (DefinitionKind(exportKind)) {
-      case DefinitionKind::Function: {
-        uint32_t funcIndex;
-        if (!d.readVarU32(&funcIndex))
-            return d.fail("expected export internal index");
-
-        if (funcIndex >= mg.numFuncs())
-            return d.fail("exported function index out of bounds");
-
-        return mg.addFuncExport(Move(fieldName), funcIndex);
-      }
-      case DefinitionKind::Table: {
-        uint32_t tableIndex;
-        if (!d.readVarU32(&tableIndex))
-            return d.fail("expected table index");
-
-        if (tableIndex >= mg.tables().length())
-            return d.fail("exported table index out of bounds");
-
-        return mg.addTableExport(Move(fieldName));
-      }
-      case DefinitionKind::Memory: {
-        uint32_t memoryIndex;
-        if (!d.readVarU32(&memoryIndex))
-            return d.fail("expected memory index");
-
-        if (memoryIndex > 0 || !mg.usesMemory())
-            return d.fail("exported memory index out of bounds");
-
-        return mg.addMemoryExport(Move(fieldName));
-      }
-      case DefinitionKind::Global: {
-        uint32_t globalIndex;
-        if (!d.readVarU32(&globalIndex))
-            return d.fail("expected global index");
-
-        if (globalIndex >= mg.globals().length())
-            return d.fail("exported global index out of bounds");
-
-        const GlobalDesc& global = mg.globals()[globalIndex];
-        if (!GlobalIsJSCompatible(d, global.type(), global.isMutable()))
-            return false;
-
-        return mg.addGlobalExport(Move(fieldName), globalIndex);
-      }
-      default:
-        return d.fail("unexpected export kind");
-    }
-
-    MOZ_CRASH("unreachable");
-}
-
-static bool
-DecodeExportSection(Decoder& d, ModuleGenerator& mg)
-{
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Export, &sectionStart, &sectionSize, "export"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    CStringSet dupSet;
-    if (!dupSet.init())
-        return false;
-
-    uint32_t numExports;
-    if (!d.readVarU32(&numExports))
-        return d.fail("failed to read number of exports");
-
-    if (numExports > MaxExports)
-        return d.fail("too many exports");
-
-    for (uint32_t i = 0; i < numExports; i++) {
-        if (!DecodeExport(d, mg, &dupSet))
-            return false;
-    }
-
-    if (!d.finishSection(sectionStart, sectionSize, "export"))
-        return false;
-
-    return true;
-}
-
-static bool
 DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 {
     uint32_t bodySize;
@@ -695,35 +457,75 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
     return mg.finishFuncDef(funcIndex, &fg);
 }
 
+// Section decoding.
+
+static bool
+DecodeImportSection(Decoder& d, ModuleGeneratorData* init, ImportVector* imports)
+{
+    Maybe<Limits> memory;
+    if (!DecodeImportSection(d, init->sigs, &init->funcSigs, &init->globals, &init->tables, &memory,
+                             imports))
+        return false;
+
+    // The global data offsets will be filled in by ModuleGenerator::init.
+    if (!init->funcImportGlobalDataOffsets.resize(init->funcSigs.length()))
+        return false;
+
+    if (memory) {
+        init->memoryUsage = MemoryUsage::Unshared;
+        init->minMemoryLength = memory->initial;
+        init->maxMemoryLength = memory->maximum;
+    }
+
+    return true;
+}
+
+static bool
+DecodeMemorySection(Decoder& d, ModuleGeneratorData* init)
+{
+    bool present;
+    Limits memory;
+    if (!DecodeMemorySection(d, UsesMemory(init->memoryUsage), &memory, &present))
+        return false;
+
+    if (present) {
+        init->memoryUsage = MemoryUsage::Unshared;
+        init->minMemoryLength = memory.initial;
+        init->maxMemoryLength = memory.maximum;
+    }
+
+    return true;
+}
+
+static bool
+DecodeExportSection(Decoder& d, ModuleGenerator& mg)
+{
+    ExportVector exports;
+    if (!DecodeExportSection(d, mg.numFuncs(), mg.numTables(), mg.usesMemory(), mg.globals(),
+                             &exports))
+        return false;
+
+    return mg.setExports(Move(exports));
+}
+
 static bool
 DecodeStartSection(Decoder& d, ModuleGenerator& mg)
 {
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Start, &sectionStart, &sectionSize, "start"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t funcIndex;
-    if (!d.readVarU32(&funcIndex))
-        return d.fail("failed to read start func index");
-
-    if (funcIndex >= mg.numFuncs())
-        return d.fail("unknown start function");
-
-    const Sig& sig = mg.funcSig(funcIndex);
-    if (!IsVoid(sig.ret()))
-        return d.fail("start function must not return anything");
-
-    if (sig.args().length())
-        return d.fail("start function must be nullary");
-
-    if (!mg.setStartFunction(funcIndex))
+    Maybe<uint32_t> startFuncIndex;
+    if (!DecodeStartSection(d, mg.funcSigs(), &startFuncIndex))
         return false;
 
-    if (!d.finishSection(sectionStart, sectionSize, "start"))
+    return !startFuncIndex || mg.setStartFunction(*startFuncIndex);
+}
+
+static bool
+DecodeElemSection(Decoder& d, ModuleGenerator& mg)
+{
+    ElemSegmentVector elems;
+    if (!DecodeElemSection(d, mg.tables(), mg.globals(), mg.numFuncs(), &elems))
         return false;
 
+    mg.setElemSegments(Move(elems));
     return true;
 }
 
@@ -763,56 +565,13 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
-DecodeElemSection(Decoder& d, ModuleGenerator& mg)
+DecodeDataSection(Decoder& d, ModuleGenerator& mg)
 {
-    uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Elem, &sectionStart, &sectionSize, "elem"))
-        return false;
-    if (sectionStart == Decoder::NotStarted)
-        return true;
-
-    uint32_t numSegments;
-    if (!d.readVarU32(&numSegments))
-        return d.fail("failed to read number of elem segments");
-
-    if (numSegments > MaxElemSegments)
-        return d.fail("too many elem segments");
-
-    for (uint32_t i = 0; i < numSegments; i++) {
-        uint32_t tableIndex;
-        if (!d.readVarU32(&tableIndex))
-            return d.fail("expected table index");
-
-        MOZ_ASSERT(mg.tables().length() <= 1);
-        if (tableIndex >= mg.tables().length())
-            return d.fail("table index out of range");
-
-        InitExpr offset;
-        if (!DecodeInitializerExpression(d, mg.globals(), ValType::I32, &offset))
-            return false;
-
-        uint32_t numElems;
-        if (!d.readVarU32(&numElems))
-            return d.fail("expected segment size");
-
-        Uint32Vector elemFuncIndices;
-        if (!elemFuncIndices.resize(numElems))
-            return false;
-
-        for (uint32_t i = 0; i < numElems; i++) {
-            if (!d.readVarU32(&elemFuncIndices[i]))
-                return d.fail("failed to read element function index");
-            if (elemFuncIndices[i] >= mg.numFuncs())
-                return d.fail("table element out of range");
-        }
-
-        if (!mg.addElemSegment(offset, Move(elemFuncIndices)))
-            return false;
-    }
-
-    if (!d.finishSection(sectionStart, sectionSize, "elem"))
+    DataSegmentVector dataSegments;
+    if (!DecodeDataSection(d, mg.usesMemory(), mg.minMemoryLength(), mg.globals(), &dataSegments))
         return false;
 
+    mg.setDataSegments(Move(dataSegments));
     return true;
 }
 
@@ -863,17 +622,6 @@ MaybeDecodeNameSectionBody(Decoder& d, ModuleGenerator& mg)
 }
 
 static bool
-DecodeDataSection(Decoder& d, ModuleGenerator& mg)
-{
-    DataSegmentVector dataSegments;
-    if (!DecodeDataSection(d, mg.usesMemory(), mg.minMemoryLength(), mg.globals(), &dataSegments))
-        return false;
-
-    mg.setDataSegments(Move(dataSegments));
-    return true;
-}
-
-static bool
 DecodeNameSection(Decoder& d, ModuleGenerator& mg)
 {
     uint32_t sectionStart, sectionSize;
@@ -919,29 +667,29 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!::DecodeImportSection(d, init.get(), &imports))
         return nullptr;
 
-    if (!::DecodeFunctionSection(d, init.get()))
+    if (!DecodeFunctionSection(d, init->sigs, &init->funcSigs))
         return nullptr;
 
-    if (!DecodeTableSection(d, init.get()))
+    if (!DecodeTableSection(d, &init->tables))
         return nullptr;
 
     if (!::DecodeMemorySection(d, init.get()))
         return nullptr;
 
-    if (!DecodeGlobalSection(d, init.get()))
+    if (!DecodeGlobalSection(d, &init->globals))
         return nullptr;
 
     ModuleGenerator mg(Move(imports));
     if (!mg.init(Move(init), args))
         return nullptr;
 
-    if (!DecodeExportSection(d, mg))
+    if (!::DecodeExportSection(d, mg))
         return nullptr;
 
-    if (!DecodeStartSection(d, mg))
+    if (!::DecodeStartSection(d, mg))
         return nullptr;
 
-    if (!DecodeElemSection(d, mg))
+    if (!::DecodeElemSection(d, mg))
         return nullptr;
 
     if (!DecodeCodeSection(d, mg))

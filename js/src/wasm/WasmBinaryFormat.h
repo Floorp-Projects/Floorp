@@ -624,33 +624,11 @@ class Decoder
 
 // Misc helpers.
 
-UniqueChars
-DecodeName(Decoder& d);
-
-MOZ_MUST_USE bool
-DecodeTableLimits(Decoder& d, TableDescVector* tables);
-
-MOZ_MUST_USE bool
-GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable);
-
 MOZ_MUST_USE bool
 EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
 
 MOZ_MUST_USE bool
 DecodeLocalEntries(Decoder& d, ModuleKind kind, ValTypeVector* locals);
-
-MOZ_MUST_USE bool
-DecodeGlobalType(Decoder& d, ValType* type, bool* isMutable);
-
-MOZ_MUST_USE bool
-DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, ValType expected,
-                            InitExpr* init);
-
-MOZ_MUST_USE bool
-DecodeLimits(Decoder& d, Limits* limits);
-
-MOZ_MUST_USE bool
-DecodeMemoryLimits(Decoder& d, bool hasMemory, Limits* memory);
 
 // Section macros.
 
@@ -661,23 +639,40 @@ MOZ_MUST_USE bool
 DecodeTypeSection(Decoder& d, SigWithIdVector* sigs);
 
 MOZ_MUST_USE bool
-DecodeImportSection(Decoder& d, const SigWithIdVector& sigs, Uint32Vector* funcSigIndices,
+DecodeImportSection(Decoder& d, const SigWithIdVector& sigs, SigWithIdPtrVector* funcSigs,
                     GlobalDescVector* globals, TableDescVector* tables, Maybe<Limits>* memory,
                     ImportVector* imports);
 
 MOZ_MUST_USE bool
-DecodeFunctionSection(Decoder& d, const SigWithIdVector& sigs, size_t numImportedFunc,
-                      Uint32Vector* funcSigIndexes);
+DecodeFunctionSection(Decoder& d, const SigWithIdVector& sigs, SigWithIdPtrVector* funcSigs);
 
 MOZ_MUST_USE bool
-DecodeUnknownSections(Decoder& d);
+DecodeTableSection(Decoder& d, TableDescVector* tables);
+
+MOZ_MUST_USE bool
+DecodeMemorySection(Decoder& d, bool hasMemory, Limits* memory, bool* present);
+
+MOZ_MUST_USE bool
+DecodeGlobalSection(Decoder& d, GlobalDescVector* globals);
+
+MOZ_MUST_USE bool
+DecodeExportSection(Decoder& d, size_t numFuncs, size_t numTables, bool usesMemory,
+                    const GlobalDescVector& globals, ExportVector* exports);
+
+MOZ_MUST_USE bool
+DecodeStartSection(Decoder& d, const SigWithIdPtrVector& funcSigs,
+                   Maybe<uint32_t>* startFunctionIndex);
+
+MOZ_MUST_USE bool
+DecodeElemSection(Decoder& d, const TableDescVector& tables, const GlobalDescVector& globals,
+                  size_t numFuncs, ElemSegmentVector* elemSegments);
 
 MOZ_MUST_USE bool
 DecodeDataSection(Decoder& d, bool usesMemory, uint32_t minMemoryByteLength,
                   const GlobalDescVector& globals, DataSegmentVector* segments);
 
 MOZ_MUST_USE bool
-DecodeMemorySection(Decoder& d, bool hasMemory, Limits* memory, bool* present);
+DecodeUnknownSections(Decoder& d);
 
 } // namespace wasm
 } // namespace js

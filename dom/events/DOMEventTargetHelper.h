@@ -248,10 +248,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(DOMEventTargetHelper,
 
 /* Use this macro to declare functions that forward the behavior of this
  * interface to another object.
- * This macro doesn't forward PreHandleEvent because sometimes subclasses
+ * This macro doesn't forward GetEventTargetParent because sometimes subclasses
  * want to override it.
  */
-#define NS_FORWARD_NSIDOMEVENTTARGET_NOPREHANDLEEVENT(_to) \
+#define NS_FORWARD_NSIDOMEVENTTARGET_NOGETEVENTTARGETPARENT(_to) \
   NS_IMETHOD AddEventListener(const nsAString & type, nsIDOMEventListener *listener, bool useCapture, bool wantsUntrusted, uint8_t _argc) { \
     return _to AddEventListener(type, listener, useCapture, wantsUntrusted, _argc); \
   } \

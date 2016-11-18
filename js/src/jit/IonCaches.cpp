@@ -600,6 +600,9 @@ jit::IsCacheableGetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shap
         return false;
 
     JSFunction& getter = shape->getterValue().toObject().as<JSFunction>();
+    if (getter.isNative())
+        return false;
+
     if (!getter.hasJITCode()) {
         if (isTemporarilyUnoptimizable)
             *isTemporarilyUnoptimizable = true;
