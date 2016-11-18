@@ -40,6 +40,7 @@ public:
   using nsINode::QuerySelectorAll;
   // Make sure bindings can see our superclass' protected GetElementById method.
   using nsINode::GetElementById;
+  using nsINode::AppendChild;
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
