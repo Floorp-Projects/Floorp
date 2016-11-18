@@ -39,11 +39,18 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'gecko/nsProfiler.cpp',
         'gecko/nsProfilerFactory.cpp',
         'gecko/nsProfilerStartParams.cpp',
-        'gecko/ProfileGatherer.cpp',
         'gecko/ProfilerIOInterposeObserver.cpp',
         'gecko/SaveProfileTask.cpp',
         'gecko/ThreadResponsiveness.cpp',
     ]
+    if CONFIG['OS_TARGET'] == 'Darwin':
+        SOURCES += [
+            'gecko/ProfileGatherer.cpp',
+        ]
+    else:
+        UNIFIED_SOURCES += [
+            'gecko/ProfileGatherer.cpp',
+        ]
 
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
         UNIFIED_SOURCES += [
