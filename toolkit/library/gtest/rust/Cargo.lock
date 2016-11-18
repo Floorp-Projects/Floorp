@@ -115,20 +115,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "dwrite-sys"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "winapi-build 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "dwrote"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "dwrite-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gdi32-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -546,7 +536,7 @@ dependencies = [
  "byteorder 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-graphics 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-text 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "dwrote 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dwrote 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "fnv 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "freetype 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -581,7 +571,7 @@ dependencies = [
  "app_units 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-graphics 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "dwrote 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dwrote 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.2.24 (registry+https://github.com/rust-lang/crates.io-index)",
  "heapsize 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -631,8 +621,7 @@ dependencies = [
 "checksum core-graphics 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "66e998abb8823fecd2a8a7205429b17a340d447d8c69b3bce86846dcdea3e33b"
 "checksum core-text 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2debbf22a8358e5e270e958b6d65694667be7a2ef9c3a2bf05a0872a3124dc98"
 "checksum deque 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "1614659040e711785ed8ea24219140654da1729f3ec8a47a9719d041112fe7bf"
-"checksum dwrite-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a7918280f33862bc8542212d74f2149b1a87ab402fd15f4ce9a1c56582958d6e"
-"checksum dwrote 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "65c6ec960350000aaeb2ae745e63d01f225a5485d537c8e265a12a781ed1fdf0"
+"checksum dwrote 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c85f0fecf7e4d1f47b25a84adbdb5bfa9662e51c0d0fb59935a0147ace261216"
 "checksum euclid 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)" = "44ef2a3e4a621518e488db36820a12b49a9d5004764b8daf1458bbe5d7c9b626"
 "checksum fnv 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "6cc484842f1e2884faf56f529f960cc12ad8c71ce96cc7abba0a067c98fee344"
 "checksum freetype 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6a89563eaf185762cf495c56cb16277549d2aaa7b1240d93338e8429fa33acd1"
