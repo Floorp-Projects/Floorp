@@ -2172,12 +2172,13 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
                                   address_of(selPointNode), &selPointOffset);
         NS_ENSURE_STATE(leftNode && leftNode->IsContent() &&
                         rightNode && rightNode->IsContent());
-        bool handled = false, canceled = false;
-        rv = TryToJoinBlocks(*leftNode->AsContent(), *rightNode->AsContent(),
-                             &canceled, &handled);
-        *aHandled |= handled;
-        *aCancel |= canceled;
-        NS_ENSURE_SUCCESS(rv, rv);
+        EditActionResult ret =
+          TryToJoinBlocks(*leftNode->AsContent(), *rightNode->AsContent());
+        *aHandled |= ret.Handled();
+        *aCancel |= ret.Canceled();
+        if (NS_WARN_IF(ret.Failed())) {
+          return ret.Rv();
+        }
       }
 
       // If TryToJoinBlocks() didn't handle it  and it's not canceled,
@@ -2239,15 +2240,16 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
                                   address_of(selPointNode), &selPointOffset);
         NS_ENSURE_STATE(leftNode->IsContent() && rightNode->IsContent());
-        bool handled = false, canceled = false;
-        rv = TryToJoinBlocks(*leftNode->AsContent(), *rightNode->AsContent(),
-                             &canceled, &handled);
+        EditActionResult ret =
+          TryToJoinBlocks(*leftNode->AsContent(), *rightNode->AsContent());
         // This should claim that trying to join the block means that
         // this handles the action because the caller shouldn't do anything
         // anymore in this case.
         *aHandled = true;
-        *aCancel |= canceled;
-        NS_ENSURE_SUCCESS(rv, rv);
+        *aCancel |= ret.Canceled();
+        if (NS_WARN_IF(ret.Failed())) {
+          return ret.Rv();
+        }
       }
       aSelection->Collapse(selPointNode, selPointOffset);
       return NS_OK;
@@ -2418,11 +2420,12 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         }
 
         if (join) {
-          bool handled = false, canceled = false;
-          rv = TryToJoinBlocks(*leftParent, *rightParent, &canceled, &handled);
+          EditActionResult ret = TryToJoinBlocks(*leftParent, *rightParent);
           MOZ_ASSERT(*aHandled);
-          *aCancel |= canceled;
-          NS_ENSURE_SUCCESS(rv, rv);
+          *aCancel |= ret.Canceled();
+          if (NS_WARN_IF(ret.Failed())) {
+            return ret.Rv();
+          }
         }
       }
     }
@@ -2571,59 +2574,58 @@ HTMLEditRules::GetGoodSelPointForNode(nsINode& aNode,
   return ret;
 }
 
-nsresult
+EditActionResult
 HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
-                               nsIContent& aRightNode,
-                               bool* aCanceled,
-                               bool* aHandled)
+                               nsIContent& aRightNode)
 {
-  MOZ_ASSERT(aCanceled);
-  MOZ_ASSERT(aHandled);
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return EditActionIgnored(NS_ERROR_UNEXPECTED);
+  }
 
-  *aCanceled = false;
-  *aHandled = false;
-
-  NS_ENSURE_STATE(mHTMLEditor);
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
 
   nsCOMPtr<Element> leftBlock = htmlEditor->GetBlock(aLeftNode);
   nsCOMPtr<Element> rightBlock = htmlEditor->GetBlock(aRightNode);
 
   // Sanity checks
-  NS_ENSURE_TRUE(leftBlock && rightBlock, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_STATE(leftBlock != rightBlock);
+  if (NS_WARN_IF(!leftBlock) || NS_WARN_IF(!rightBlock)) {
+    return EditActionIgnored(NS_ERROR_NULL_POINTER);
+  }
+  if (NS_WARN_IF(leftBlock == rightBlock)) {
+    return EditActionIgnored(NS_ERROR_UNEXPECTED);
+  }
 
   if (HTMLEditUtils::IsTableElement(leftBlock) ||
       HTMLEditUtils::IsTableElement(rightBlock)) {
     // Do not try to merge table elements
-    *aCanceled = true;
-    *aHandled = true;
-    return NS_OK;
+    return EditActionCanceled();
   }
 
   // Make sure we don't try to move things into HR's, which look like blocks
   // but aren't containers
   if (leftBlock->IsHTMLElement(nsGkAtoms::hr)) {
     leftBlock = htmlEditor->GetBlockNodeParent(leftBlock);
+    if (NS_WARN_IF(!leftBlock)) {
+      return EditActionIgnored(NS_ERROR_UNEXPECTED);
+    }
   }
   if (rightBlock->IsHTMLElement(nsGkAtoms::hr)) {
     rightBlock = htmlEditor->GetBlockNodeParent(rightBlock);
+    if (NS_WARN_IF(!rightBlock)) {
+      return EditActionIgnored(NS_ERROR_UNEXPECTED);
+    }
   }
-  NS_ENSURE_STATE(leftBlock && rightBlock);
 
   // Bail if both blocks the same
   if (leftBlock == rightBlock) {
-    *aCanceled = true;
-    *aHandled = true;
-    return NS_OK;
+    return EditActionIgnored();
   }
 
   // Joining a list item to its parent is a NOP.
   if (HTMLEditUtils::IsList(leftBlock) &&
       HTMLEditUtils::IsListItem(rightBlock) &&
       rightBlock->GetParentNode() == leftBlock) {
-    *aHandled = true;
-    return NS_OK;
+    return EditActionHandled();
   }
 
   // Special rule here: if we are trying to join list items, and they are in
@@ -2657,6 +2659,7 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
 
   // offset below is where you find yourself in rightBlock when you traverse
   // upwards from leftBlock
+  EditActionResult ret(NS_OK);
   if (EditorUtils::IsDescendantOf(leftBlock, rightBlock, &rightOffset)) {
     // Tricky case.  Left block is inside right block.  Do ws adjustment.  This
     // just destroys non-visible ws at boundaries we will be joining.
@@ -2664,7 +2667,9 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     nsresult rv = WSRunObject::ScrubBlockBoundary(htmlEditor,
                                                   WSRunObject::kBlockEnd,
                                                   leftBlock);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditActionIgnored(rv);
+    }
 
     {
       // We can't just track rightBlock because it's an Element.
@@ -2674,11 +2679,16 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
       rv = WSRunObject::ScrubBlockBoundary(htmlEditor,
                                            WSRunObject::kAfterBlock,
                                            rightBlock, rightOffset);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EditActionIgnored(rv);
+      }
+
       if (trackingRightBlock->IsElement()) {
         rightBlock = trackingRightBlock->AsElement();
       } else {
-        NS_ENSURE_STATE(trackingRightBlock->GetParentElement());
+        if (NS_WARN_IF(!trackingRightBlock->GetParentElement())) {
+          return EditActionIgnored(NS_ERROR_UNEXPECTED);
+        }
         rightBlock = trackingRightBlock->GetParentElement();
       }
     }
@@ -2691,17 +2701,22 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
       for (nsCOMPtr<nsIContent> child = rightList->GetChildAt(offset);
            child; child = rightList->GetChildAt(rightOffset)) {
         rv = htmlEditor->MoveNode(child, leftList, -1);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return EditActionIgnored(rv);
+        }
       }
       // XXX Should this set to true only when above for loop moves the node?
-      *aHandled = true;
+      ret.MarkAsHandled();
     } else {
-      bool handled = false;
-      MoveBlock(*leftBlock, *rightBlock, leftOffset, rightOffset, &handled);
-      *aHandled |= handled;
+      // XXX Why do we ignore the result of MoveBlock()?
+      EditActionResult retMoveBlock =
+        MoveBlock(*leftBlock, *rightBlock, leftOffset, rightOffset);
+      if (retMoveBlock.Handled()) {
+        ret.MarkAsHandled();
+      }
     }
     if (brNode && NS_SUCCEEDED(htmlEditor->DeleteNode(brNode))) {
-      *aHandled = true;
+      ret.MarkAsHandled();
     }
   // Offset below is where you find yourself in leftBlock when you traverse
   // upwards from rightBlock
@@ -2711,7 +2726,10 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     nsresult rv = WSRunObject::ScrubBlockBoundary(htmlEditor,
                                                   WSRunObject::kBlockStart,
                                                   rightBlock);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditActionIgnored(rv);
+    }
+
     {
       // We can't just track leftBlock because it's an Element, so track
       // something else.
@@ -2721,11 +2739,16 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
       rv = WSRunObject::ScrubBlockBoundary(htmlEditor,
                                            WSRunObject::kBeforeBlock,
                                            leftBlock, leftOffset);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EditActionIgnored(rv);
+      }
+
       if (trackingLeftBlock->IsElement()) {
         leftBlock = trackingLeftBlock->AsElement();
       } else {
-        NS_ENSURE_STATE(trackingLeftBlock->GetParentElement());
+        if (NS_WARN_IF(!trackingLeftBlock->GetParentElement())) {
+          return EditActionIgnored(NS_ERROR_UNEXPECTED);
+        }
         leftBlock = trackingLeftBlock->GetParentElement();
       }
     }
@@ -2733,9 +2756,12 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     nsCOMPtr<Element> brNode =
       CheckForInvisibleBR(*leftBlock, BRLocation::beforeBlock, leftOffset);
     if (mergeLists) {
-      bool handled = false;
-      MoveContents(*rightList, *leftList, &leftOffset, &handled);
-      *aHandled |= handled;
+      // XXX Why do we ignore the result of MoveContents()?
+      EditActionResult retMoveContents =
+        MoveContents(*rightList, *leftList, &leftOffset);
+      if (retMoveContents.Handled()) {
+        ret.MarkAsHandled();
+      }
     } else {
       // Left block is a parent of right block, and the parent of the previous
       // visible content.  Right block is a child and contains the contents we
@@ -2780,7 +2806,9 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
                            &previousContentOffset,
                            nullptr, nullptr, nullptr,
                            getter_AddRefs(splittedPreviousContent));
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return EditActionIgnored(rv);
+        }
 
         if (splittedPreviousContent) {
           previousContentParent = splittedPreviousContent->GetParentNode();
@@ -2789,16 +2817,18 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
         }
       }
 
-      NS_ENSURE_TRUE(previousContentParent, NS_ERROR_NULL_POINTER);
+      if (NS_WARN_IF(!previousContentParent)) {
+        return EditActionIgnored(NS_ERROR_NULL_POINTER);
+      }
 
-      bool handled = false;
-      rv = MoveBlock(*previousContentParent->AsElement(), *rightBlock,
-                     previousContentOffset, rightOffset, &handled);
-      *aHandled |= handled;
-      NS_ENSURE_SUCCESS(rv, rv);
+      ret |= MoveBlock(*previousContentParent->AsElement(), *rightBlock,
+                       previousContentOffset, rightOffset);
+      if (NS_WARN_IF(ret.Failed())) {
+        return ret;
+      }
     }
     if (brNode && NS_SUCCEEDED(htmlEditor->DeleteNode(brNode))) {
-      *aHandled = true;
+      ret.MarkAsHandled();
     }
   } else {
     // Normal case.  Blocks are siblings, or at least close enough.  An example
@@ -2809,7 +2839,9 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
     // Adjust whitespace at block boundaries
     nsresult rv =
       WSRunObject::PrepareToJoinBlocks(htmlEditor, leftBlock, rightBlock);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditActionIgnored(rv);
+    }
     // Do br adjustment.
     nsCOMPtr<Element> brNode =
       CheckForInvisibleBR(*leftBlock, BRLocation::blockEnd);
@@ -2822,81 +2854,83 @@ HTMLEditRules::TryToJoinBlocks(nsIContent& aLeftNode,
         ConvertListType(rightBlock, getter_AddRefs(newBlock),
                         existingList, nsGkAtoms::li);
       }
-      *aHandled = true;
+      ret.MarkAsHandled();
     } else {
       // Nodes are dissimilar types.
-      bool handled = false;
-      rv =
-        MoveBlock(*leftBlock, *rightBlock, leftOffset, rightOffset, &handled);
-      *aHandled |= handled;
-      NS_ENSURE_SUCCESS(rv, rv);
+      ret |= MoveBlock(*leftBlock, *rightBlock, leftOffset, rightOffset);
+      if (NS_WARN_IF(ret.Failed())) {
+        return ret;
+      }
     }
     if (brNode) {
       rv = htmlEditor->DeleteNode(brNode);
       // XXX In other top level if/else-if blocks, the result of DeleteNode()
       //     is ignored.  Why does only this result is respected?
-      NS_ENSURE_SUCCESS(rv, rv);
-      *aHandled = true;
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return ret.SetResult(rv);
+      }
+      ret.MarkAsHandled();
     }
   }
-  return NS_OK;
+  return ret;
 }
 
-nsresult
+EditActionResult
 HTMLEditRules::MoveBlock(Element& aLeftBlock,
                          Element& aRightBlock,
                          int32_t aLeftOffset,
-                         int32_t aRightOffset,
-                         bool* aHandled)
+                         int32_t aRightOffset)
 {
-  MOZ_ASSERT(aHandled);
-
-  *aHandled = false;
-
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
   // GetNodesFromPoint is the workhorse that figures out what we wnat to move.
   nsresult rv = GetNodesFromPoint(EditorDOMPoint(&aRightBlock, aRightOffset),
                                   EditAction::makeList, arrayOfNodes,
                                   TouchContent::yes);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditActionIgnored(rv);
+  }
+
+  EditActionResult ret(NS_OK);
   for (uint32_t i = 0; i < arrayOfNodes.Length(); i++) {
     // get the node to act on
     if (IsBlockNode(arrayOfNodes[i])) {
       // For block nodes, move their contents only, then delete block.
-      bool handled = false;
-      rv = MoveContents(*arrayOfNodes[i]->AsElement(), aLeftBlock,
-                        &aLeftOffset, &handled);
-      *aHandled |= handled;
-      NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_STATE(mHTMLEditor);
+      ret |=
+        MoveContents(*arrayOfNodes[i]->AsElement(), aLeftBlock, &aLeftOffset);
+      if (NS_WARN_IF(ret.Failed())) {
+        return ret;
+      }
+      if (NS_WARN_IF(!mHTMLEditor)) {
+        return ret.SetResult(NS_ERROR_UNEXPECTED);
+      }
       rv = mHTMLEditor->DeleteNode(arrayOfNodes[i]);
-      *aHandled = true;
+      ret.MarkAsHandled();
     } else {
       // Otherwise move the content as is, checking against the DTD.
-      bool handled = false;
-      rv = MoveNodeSmart(*arrayOfNodes[i]->AsContent(), aLeftBlock,
-                         &aLeftOffset, &handled);
-      *aHandled |= handled;
+      ret |=
+        MoveNodeSmart(*arrayOfNodes[i]->AsContent(), aLeftBlock, &aLeftOffset);
     }
   }
 
   // XXX We're only checking return value of the last iteration
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+  if (NS_WARN_IF(ret.Failed())) {
+    return ret;
+  }
+
+  return ret;
 }
 
-nsresult
+EditActionResult
 HTMLEditRules::MoveNodeSmart(nsIContent& aNode,
                              Element& aDestElement,
-                             int32_t* aInOutDestOffset,
-                             bool* aHandled)
+                             int32_t* aInOutDestOffset)
 {
   MOZ_ASSERT(aInOutDestOffset);
-  MOZ_ASSERT(aHandled);
 
-  *aHandled = false;
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return EditActionIgnored(NS_ERROR_UNEXPECTED);
+  }
 
-  NS_ENSURE_STATE(mHTMLEditor);
   RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
 
   // Check if this node can go into the destination node
@@ -2904,50 +2938,52 @@ HTMLEditRules::MoveNodeSmart(nsIContent& aNode,
     // If it can, move it there
     nsresult rv =
       htmlEditor->MoveNode(&aNode, &aDestElement, *aInOutDestOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditActionIgnored(rv);
+    }
     if (*aInOutDestOffset != -1) {
       (*aInOutDestOffset)++;
     }
     // XXX Should we check if the node is actually moved in this case?
-    *aHandled = true;
+    return EditActionHandled();
   } else {
     // If it can't, move its children (if any), and then delete it.
+    EditActionResult ret(NS_OK);
     if (aNode.IsElement()) {
-      bool handled = false;
-      nsresult rv = MoveContents(*aNode.AsElement(), aDestElement,
-                                 aInOutDestOffset, &handled);
-      *aHandled |= handled;
-      NS_ENSURE_SUCCESS(rv, rv);
+      ret = MoveContents(*aNode.AsElement(), aDestElement, aInOutDestOffset);
+      if (NS_WARN_IF(ret.Failed())) {
+        return ret;
+      }
     }
 
     nsresult rv = htmlEditor->DeleteNode(&aNode);
-    NS_ENSURE_SUCCESS(rv, rv);
-    *aHandled = true;
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return ret.SetResult(rv);
+    }
+    return ret.MarkAsHandled();
   }
-  return NS_OK;
 }
 
-nsresult
+EditActionResult
 HTMLEditRules::MoveContents(Element& aElement,
                             Element& aDestElement,
-                            int32_t* aInOutDestOffset,
-                            bool* aHandled)
+                            int32_t* aInOutDestOffset)
 {
   MOZ_ASSERT(aInOutDestOffset);
-  MOZ_ASSERT(aHandled);
 
-  *aHandled = false;
-
-  NS_ENSURE_TRUE(&aElement != &aDestElement, NS_ERROR_ILLEGAL_VALUE);
-
-  while (aElement.GetFirstChild()) {
-    bool handled = false;
-    nsresult rv = MoveNodeSmart(*aElement.GetFirstChild(), aDestElement,
-                                aInOutDestOffset, &handled);
-    *aHandled |= handled;
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(&aElement == &aDestElement)) {
+    return EditActionIgnored(NS_ERROR_ILLEGAL_VALUE);
   }
-  return NS_OK;
+
+  EditActionResult ret(NS_OK);
+  while (aElement.GetFirstChild()) {
+    ret |=
+      MoveNodeSmart(*aElement.GetFirstChild(), aDestElement, aInOutDestOffset);
+    if (NS_WARN_IF(ret.Failed())) {
+      return ret;
+    }
+  }
+  return ret;
 }
 
 
