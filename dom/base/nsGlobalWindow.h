@@ -1482,9 +1482,6 @@ public:
   void ClearTimeoutOrInterval(int32_t aTimerId,
                               mozilla::dom::Timeout::Reason aReason);
 
-  // JS specific timeout functions (JS args grabbed from context).
-  nsresult ResetTimersForNonBackgroundWindow();
-
   // The timeout implementation functions.
   void RunTimeout(mozilla::dom::Timeout* aTimeout);
   void RunTimeout() { RunTimeout(nullptr); }
@@ -1709,10 +1706,20 @@ private:
   friend class nsPIDOMWindow<nsISupports>;
 
   // Apply back pressure to the window if the TabGroup ThrottledEventQueue
-  // exists and has too many runnables waiting to run.  For example, suspend
-  // timers until we have a chance to catch up, etc.
+  // exists and has too many runnables waiting to run.  For example, increase
+  // the minimum timer delay, etc.
   void
   MaybeApplyBackPressure();
+
+  // Check the current ThrottledEventQueue depth and update the back pressure
+  // state.  If the queue has drained back pressure may be canceled.
+  void
+  CancelOrUpdateBackPressure();
+
+  // When timers are being throttled and we reduce the thottle delay we must
+  // reschedule.  The amount of the old throttle delay must be provided in
+  // order to bound how many timers must be examined.
+  nsresult ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS);
 
   mozilla::dom::TabGroup* TabGroupInner();
   mozilla::dom::TabGroup* TabGroupOuter();
@@ -1851,7 +1858,7 @@ protected:
   mozilla::LinkedList<mozilla::dom::Timeout> mTimeouts;
   // If mTimeoutInsertionPoint is non-null, insertions should happen after it.
   // This is a dummy timeout at the moment; if that ever changes, the logic in
-  // ResetTimersForNonBackgroundWindow needs to change.
+  // ResetTimersForThrottleReduction needs to change.
   mozilla::dom::Timeout*      mTimeoutInsertionPoint;
   uint32_t                    mTimeoutIdCounter;
   uint32_t                    mTimeoutFiringDepth;
@@ -1867,6 +1874,8 @@ protected:
 
   uint32_t mSuspendDepth;
   uint32_t mFreezeDepth;
+
+  int32_t mBackPressureDelayMS;
 
   // the method that was used to focus mFocusedNode
   uint32_t mFocusMethod;
