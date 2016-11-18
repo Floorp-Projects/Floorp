@@ -6,4 +6,4 @@ extern crate mp4parse_capi;
 extern crate nsstring;
 extern crate rust_url_capi;
 #[cfg(feature = "quantum_render")]
-extern crate webrender;
+extern crate webrender_bindings;

@@ -6,13 +6,13 @@ license = "MPL-2.0"
 description = "Shared Rust code for libxul"
 
 [features]
-quantum_render = ["webrender"]
+quantum_render = ["webrender_bindings"]
 
 [dependencies]
 mp4parse_capi = { path = "../../../../media/libstagefright/binding/mp4parse_capi" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 rust_url_capi = { path = "../../../../netwerk/base/rust-url-capi" }
-webrender = { path = "../../../../gfx/webrender", optional = true }
+webrender_bindings = { path = "../../../../gfx/webrender_bindings", optional = true }
 
 [lib]
 path = "lib.rs"

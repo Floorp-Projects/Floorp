@@ -71,7 +71,6 @@ mod spring;
 mod texture_cache;
 mod tiling;
 mod util;
-pub mod bindings;
 
 mod shader_source {
     include!(concat!(env!("OUT_DIR"), "/shaders.rs"));
@@ -105,18 +104,12 @@ pub mod renderer;
 extern crate core_graphics;
 #[cfg(target_os="macos")]
 extern crate core_text;
-#[cfg(target_os="macos")]
-extern crate core_foundation;
 
 #[cfg(all(unix, not(target_os="macos")))]
 extern crate freetype;
 
 #[cfg(target_os = "windows")]
 extern crate dwrote;
-#[cfg(target_os="windows")]
-extern crate kernel32;
-#[cfg(target_os="windows")]
-extern crate winapi;
 
 extern crate app_units;
 extern crate bincode;

@@ -1,17 +1,15 @@
 use std::path::PathBuf;
-use webrender_traits::{PipelineId, AuxiliaryListsBuilder};
-use renderer::{Renderer, RendererOptions};
-extern crate webrender_traits;
-
-use euclid::{Size2D, Point2D, Rect, Matrix4D};
-use gleam::gl;
 use std::ffi::CStr;
+use std::{mem, slice};
+use std::os::raw::c_uchar;
+use gleam::gl;
+use euclid::{Size2D, Point2D, Rect, Matrix4D};
+use webrender_traits::{PipelineId, AuxiliaryListsBuilder};
 use webrender_traits::{ServoScrollRootId};
 use webrender_traits::{Epoch, ColorF};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
-use std::mem;
-use std::slice;
-use std::os::raw::c_uchar;
+use webrender::renderer::{Renderer, RendererOptions};
+extern crate webrender_traits;
 
 #[cfg(target_os = "linux")]
 mod linux {
@@ -473,8 +471,6 @@ pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect
     if state.frame_builder.dl_builder.is_empty() {
         return;
     }
-
-    //let (width, height) = state.size;
     let bounds = bounds.to_rect();
     let clip = clip.to_rect();
 

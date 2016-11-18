@@ -10,7 +10,7 @@ include "mozilla/GfxMessageUtils.h";
 include WebRenderMessages;
 include protocol PCompositorBridge;
 
-using WRImageFormat from "webrender.h";
+using WRImageFormat from "mozilla/gfx/webrender.h";
 using mozilla::gfx::ByteBuffer from "mozilla/layers/WebRenderTypes.h";
 
 namespace mozilla {
