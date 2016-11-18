@@ -15,6 +15,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "uuidGenerator",
+  "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
 
 function debug(msg) {
   Services.console.logStringMessage("SessionHistory: " + msg);
@@ -41,6 +43,11 @@ this.SessionHistory = Object.freeze({
  * The internal API for the SessionHistory module.
  */
 var SessionHistoryInternal = {
+  /**
+   * Mapping from legacy docshellIDs to docshellUUIDs.
+   */
+  _docshellUUIDMap: new Map(),
+
   /**
    * Returns whether the given docShell's session history is empty.
    *
@@ -132,7 +139,7 @@ var SessionHistoryInternal = {
       entry.cacheKey = cacheKey.data;
     }
     entry.ID = shEntry.ID;
-    entry.docshellID = shEntry.docshellID;
+    entry.docshellUUID = shEntry.docshellID.toString();
 
     // We will include the property only if it's truthy to save a couple of
     // bytes when the resulting object is stringified and saved to disk.
@@ -328,8 +335,22 @@ var SessionHistoryInternal = {
       shEntry.ID = id;
     }
 
-    if (entry.docshellID)
-      shEntry.docshellID = entry.docshellID;
+    // If we have the legacy docshellID on our entry, upgrade it to a
+    // docshellUUID by going through the mapping.
+    if (entry.docshellID) {
+      if (!this._docshellUUIDMap.has(entry.docshellID)) {
+        // Convert the nsID to a string so that the docshellUUID property
+        // is correctly stored as a string.
+        this._docshellUUIDMap.set(entry.docshellID,
+                                  uuidGenerator.generateUUID().toString());
+      }
+      entry.docshellUUID = this._docshellUUIDMap.get(entry.docshellID);
+      delete entry.docshellID;
+    }
+
+    if (entry.docshellUUID) {
+      shEntry.docshellID = Components.ID(entry.docshellUUID);
+    }
 
     if (entry.structuredCloneState && entry.structuredCloneVersion) {
       shEntry.stateData =

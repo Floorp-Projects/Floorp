@@ -66,9 +66,7 @@ var aboutNewTabService = Cc["@mozilla.org/browser/aboutnewtab-service;1"]
                            .getService(Ci.nsIAboutNewTabService);
 
 function pushPrefs(...aPrefs) {
-  return new Promise((resolve) => {
-    SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve);
-  });
+  return SpecialPowers.pushPrefEnv({"set": aPrefs});
 }
 
 /*

@@ -22,7 +22,7 @@ interface nsIURI;
 #include "nsTArrayForwardDeclare.h"
 %}
 
-[ref] native nsDocshellIDArray(nsTArray<uint64_t>);
+[ref] native nsDocshellIDArray(nsTArray<nsID>);
 
 [scriptable, uuid(3dfb2f54-378d-4d3c-a9f9-95dd2673248c)]
 interface nsISHistoryInternal: nsISupports

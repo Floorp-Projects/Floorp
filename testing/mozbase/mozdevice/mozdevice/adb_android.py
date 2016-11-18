@@ -10,7 +10,7 @@ from abc import ABCMeta
 
 import version_codes
 
-from adb import ADBDevice, ADBError
+from adb import ADBDevice, ADBError, ADBRootError
 
 
 class ADBAndroid(ADBDevice):
@@ -90,7 +90,8 @@ class ADBAndroid(ADBDevice):
             if self.shell_output('getenforce', timeout=timeout) != 'Permissive':
                 self._logger.info('Setting SELinux Permissive Mode')
                 self.shell_output("setenforce Permissive", timeout=timeout, root=True)
-        except ADBError:
+        except (ADBError, ADBRootError), e:
+            self._logger.warning('Unable to set SELinux Permissive due to %s.', e)
             self.selinux = False
 
         self.version = int(self.shell_output("getprop ro.build.version.sdk",
@@ -145,7 +146,7 @@ class ADBAndroid(ADBDevice):
         percentage = 0
         cmd = "dumpsys battery"
         re_parameter = re.compile(r'\s+(\w+):\s+(\d+)')
-        lines = self.shell_output(cmd, timeout=timeout).split('\r')
+        lines = self.shell_output(cmd, timeout=timeout).splitlines()
         for line in lines:
             match = re_parameter.match(line)
             if match:
@@ -202,10 +203,10 @@ class ADBAndroid(ADBDevice):
                                                            timeout=timeout) != 'Permissive'):
                         self._logger.info('Setting SELinux Permissive Mode')
                         self.shell_output("setenforce Permissive", timeout=timeout, root=True)
-                    if self.is_dir(ready_path, timeout=timeout, root=True):
-                        self.rmdir(ready_path, timeout=timeout, root=True)
-                    self.mkdir(ready_path, timeout=timeout, root=True)
-                    self.rmdir(ready_path, timeout=timeout, root=True)
+                    if self.is_dir(ready_path, timeout=timeout):
+                        self.rmdir(ready_path, timeout=timeout)
+                    self.mkdir(ready_path, timeout=timeout)
+                    self.rmdir(ready_path, timeout=timeout)
                     # Invoke the pm list commands to see if it is up and
                     # running.
                     for pm_list_cmd in pm_list_commands:

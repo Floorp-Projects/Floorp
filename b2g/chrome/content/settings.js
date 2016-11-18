@@ -479,9 +479,6 @@ setUpdateTrackingId();
 
 // ======================= Dogfooders FOTA ==========================
 if (AppConstants.MOZ_B2G_RIL) {
-  XPCOMUtils.defineLazyModuleGetter(this, "AppsUtils",
-                                    "resource://gre/modules/AppsUtils.jsm");
-
   SettingsListener.observe('debug.performance_data.dogfooding', false,
     isDogfooder => {
       if (!isDogfooder) {
@@ -498,24 +495,6 @@ if (AppConstants.MOZ_B2G_RIL) {
         dump('AUS:Settings: There is no mozMobileConnections!\n');
         return;
       }
-
-      let conn = navigator.mozMobileConnections[0];
-      conn.addEventListener('radiostatechange', function onradiostatechange() {
-        if (conn.radioState !== 'enabled') {
-          return;
-        }
-
-        conn.removeEventListener('radiostatechange', onradiostatechange);
-        navigator.mozTelephony.dial('*#06#').then(call => {
-          return call.result.then(res => {
-            if (res.success && res.statusMessage
-                && (res.serviceCode === 'scImei')) {
-              Services.prefs.setCharPref("app.update.imei_hash",
-                                         AppsUtils.computeHash(res.statusMessage, "SHA512"));
-            }
-          });
-        });
-      });
     });
 }
 

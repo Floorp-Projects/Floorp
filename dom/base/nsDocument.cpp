@@ -55,6 +55,7 @@
 
 #include "nsIDOMStyleSheet.h"
 #include "mozilla/dom/Attr.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentXBL.h"
 #include "mozilla/dom/Element.h"
@@ -2887,6 +2888,27 @@ nsIDocument::GetDocGroup()
   return mDocGroup;
 }
 
+nsresult
+nsIDocument::Dispatch(const char* aName,
+                      TaskCategory aCategory,
+                      already_AddRefed<nsIRunnable>&& aRunnable)
+{
+  // Note that this method may be called off the main thread.
+  if (mDocGroup) {
+    return mDocGroup->Dispatch(aName, aCategory, Move(aRunnable));
+  }
+  return DispatcherTrait::Dispatch(aName, aCategory, Move(aRunnable));
+}
+
+already_AddRefed<nsIEventTarget>
+nsIDocument::CreateEventTarget(const char* aName, TaskCategory aCategory)
+{
+  if (mDocGroup) {
+    return mDocGroup->CreateEventTarget(aName, aCategory);
+  }
+  return DispatcherTrait::CreateEventTarget(aName, aCategory);
+}
+
 NS_IMETHODIMP
 nsDocument::GetApplicationCache(nsIApplicationCache **aApplicationCache)
 {
@@ -3298,13 +3320,6 @@ already_AddRefed<nsContentList>
 nsIDocument::GetElementsByClassName(const nsAString& aClasses)
 {
   return nsContentUtils::GetElementsByClassName(this, aClasses);
-}
-
-NS_IMETHODIMP
-nsDocument::ReleaseCapture()
-{
-  nsIDocument::ReleaseCapture();
-  return NS_OK;
 }
 
 void
@@ -7056,9 +7071,10 @@ nsIDocument::GetURL(nsString& aURL) const
 }
 
 void
-nsIDocument::GetDocumentURIFromJS(nsString& aDocumentURI, ErrorResult& aRv) const
+nsIDocument::GetDocumentURIFromJS(nsString& aDocumentURI, CallerType aCallerType,
+                                  ErrorResult& aRv) const
 {
-  if (!mChromeXHRDocURI || !nsContentUtils::IsCallerChrome()) {
+  if (!mChromeXHRDocURI || aCallerType != CallerType::System) {
     aRv = GetDocumentURI(aDocumentURI);
     return;
   }
@@ -7080,19 +7096,6 @@ nsIDocument::GetDocumentURIObject() const
   }
 
   return mChromeXHRDocURI;
-}
-
-
-// Returns "BackCompat" if we are in quirks mode, "CSS1Compat" if we are
-// in almost standards or full standards mode. See bug 105640.  This was
-// implemented to match MSIE's compatMode property.
-NS_IMETHODIMP
-nsDocument::GetCompatMode(nsAString& aCompatMode)
-{
-  nsString temp;
-  nsIDocument::GetCompatMode(temp);
-  aCompatMode = temp;
-  return NS_OK;
 }
 
 void
@@ -10468,13 +10471,6 @@ nsDocument::SetFullscreenRoot(nsIDocument* aRoot)
   mFullscreenRoot = do_GetWeakReference(aRoot);
 }
 
-NS_IMETHODIMP
-nsDocument::MozCancelFullScreen()
-{
-  nsIDocument::ExitFullscreen();
-  return NS_OK;
-}
-
 void
 nsIDocument::ExitFullscreen()
 {
@@ -11006,15 +11002,14 @@ HasFullScreenSubDocument(nsIDocument* aDoc)
 static const char*
 GetFullscreenError(nsIDocument* aDoc, bool aCallerIsChrome)
 {
-  if (nsContentUtils::IsFullScreenApiEnabled() && aCallerIsChrome) {
+  bool apiEnabled = nsContentUtils::IsFullScreenApiEnabled();
+  if (apiEnabled && aCallerIsChrome) {
     // Chrome code can always use the full-screen API, provided it's not
-    // explicitly disabled. Note IsCallerChrome() returns true when running
-    // in a Runnable, so don't use GetMozFullScreenEnabled() from a
-    // Runnable!
+    // explicitly disabled.
     return nullptr;
   }
 
-  if (!nsContentUtils::IsFullScreenApiEnabled()) {
+  if (!apiEnabled) {
     return "FullscreenDeniedDisabled";
   }
 
@@ -11412,15 +11407,6 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
   return true;
 }
 
-NS_IMETHODIMP
-nsDocument::GetMozFullScreenElement(nsIDOMElement **aFullScreenElement)
-{
-  Element* el = GetFullscreenElement();
-  nsCOMPtr<nsIDOMElement> retval = do_QueryInterface(el);
-  retval.forget(aFullScreenElement);
-  return NS_OK;
-}
-
 Element*
 nsDocument::GetFullscreenElement()
 {
@@ -11431,25 +11417,10 @@ nsDocument::GetFullscreenElement()
   return element;
 }
 
-NS_IMETHODIMP
-nsDocument::GetMozFullScreen(bool *aFullScreen)
-{
-  *aFullScreen = Fullscreen();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetMozFullScreenEnabled(bool *aFullScreen)
-{
-  NS_ENSURE_ARG_POINTER(aFullScreen);
-  *aFullScreen = FullscreenEnabled();
-  return NS_OK;
-}
-
 bool
-nsDocument::FullscreenEnabled()
+nsDocument::FullscreenEnabled(CallerType aCallerType)
 {
-  return !GetFullscreenError(this, nsContentUtils::IsCallerChrome());
+  return !GetFullscreenError(this, aCallerType == CallerType::System);
 }
 
 uint16_t
@@ -11670,7 +11641,7 @@ PointerLockRequest::Run()
 }
 
 void
-nsDocument::RequestPointerLock(Element* aElement)
+nsDocument::RequestPointerLock(Element* aElement, CallerType aCallerType)
 {
   NS_ASSERTION(aElement,
     "Must pass non-null element to nsDocument::RequestPointerLock");
@@ -11687,10 +11658,10 @@ nsDocument::RequestPointerLock(Element* aElement)
     return;
   }
 
-  bool userInputOrChromeCaller = EventStateManager::IsHandlingUserInput() ||
-                                 nsContentUtils::IsCallerChrome();
+  bool userInputOrSystemCaller = EventStateManager::IsHandlingUserInput() ||
+                                 aCallerType == CallerType::System;
   NS_DispatchToMainThread(new PointerLockRequest(aElement,
-                                                 userInputOrChromeCaller));
+                                                 userInputOrSystemCaller));
 }
 
 bool
@@ -11771,22 +11742,6 @@ void
 nsIDocument::UnlockPointer(nsIDocument* aDoc)
 {
   nsDocument::UnlockPointer(aDoc);
-}
-
-NS_IMETHODIMP
-nsDocument::MozExitPointerLock()
-{
-  nsIDocument::ExitPointerLock();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetMozPointerLockElement(nsIDOMElement** aPointerLockedElement)
-{
-  Element* el = nsIDocument::GetPointerLockElement();
-  nsCOMPtr<nsIDOMElement> retval = do_QueryInterface(el);
-  retval.forget(aPointerLockedElement);
-  return NS_OK;
 }
 
 Element*
@@ -12059,18 +12014,6 @@ nsDocument::DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
   // - many!
-}
-
-NS_IMETHODIMP
-nsDocument::QuerySelector(const nsAString& aSelector, nsIDOMElement **aReturn)
-{
-  return nsINode::QuerySelector(aSelector, aReturn);
-}
-
-NS_IMETHODIMP
-nsDocument::QuerySelectorAll(const nsAString& aSelector, nsIDOMNodeList **aReturn)
-{
-  return nsINode::QuerySelectorAll(aSelector, aReturn);
 }
 
 already_AddRefed<nsIDocument>

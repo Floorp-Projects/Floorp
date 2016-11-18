@@ -22,6 +22,8 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
+                                  "resource://gre/modules/ExtensionManagement.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
@@ -47,6 +49,7 @@ const {
   getMessageManager,
   getUniqueId,
   injectAPI,
+  promiseEvent,
 } = ExtensionUtils;
 
 const {
@@ -766,14 +769,7 @@ class ExtensionBaseContextChild extends BaseContext {
       throw new Error("Missing envType");
     }
 
-    if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
-      // This check is temporary. It should be removed once the proxy creation
-      // is asynchronous.
-      throw new Error("ExtensionContext cannot be created in child processes");
-    }
-
     super(params.envType, extension);
-
     let {viewType, uri, contentWindow, tabId} = params;
     this.viewType = viewType;
     this.uri = uri || extension.baseURI;
@@ -969,16 +965,14 @@ class ContentGlobal {
     this.tabId = -1;
     this.windowId = -1;
     this.initialized = false;
+
     this.global.addMessageListener("Extension:InitExtensionView", this);
     this.global.addMessageListener("Extension:SetTabAndWindowId", this);
-
-    this.initialDocuments = new WeakSet();
   }
 
   uninit() {
     this.global.removeMessageListener("Extension:InitExtensionView", this);
     this.global.removeMessageListener("Extension:SetTabAndWindowId", this);
-    this.global.removeEventListener("DOMContentLoaded", this);
   }
 
   ensureInitialized() {
@@ -996,23 +990,17 @@ class ContentGlobal {
       case "Extension:InitExtensionView":
         // The view type is initialized once and then fixed.
         this.global.removeMessageListener("Extension:InitExtensionView", this);
-        let {viewType, url} = data;
-        this.viewType = viewType;
+        this.viewType = data.viewType;
 
         if (data.devtoolsToolboxInfo) {
           this.devtoolsToolboxInfo = data.devtoolsToolboxInfo;
         }
 
-        this.global.addEventListener("DOMContentLoaded", this);
-        if (url) {
-          // TODO(robwu): Remove this check. It is only here because the popup
-          // implementation does not always load a URL at the initialization,
-          // and the logic is too complex to fix at once.
-          let {document} = this.global.content;
-          this.initialDocuments.add(document);
-          document.location.replace(url);
-        }
-        /* Falls through to allow these properties to be initialized at once */
+        promiseEvent(this.global, "DOMContentLoaded", true).then(() => {
+          this.global.sendAsyncMessage("Extension:ExtensionViewLoaded");
+        });
+
+        /* FALLTHROUGH */
       case "Extension:SetTabAndWindowId":
         this.handleSetTabAndWindowId(data);
         break;
@@ -1021,6 +1009,7 @@ class ContentGlobal {
 
   handleSetTabAndWindowId(data) {
     let {tabId, windowId} = data;
+
     if (tabId) {
       // Tab IDs are not expected to change.
       if (this.tabId !== -1 && tabId !== this.tabId) {
@@ -1028,6 +1017,7 @@ class ContentGlobal {
       }
       this.tabId = tabId;
     }
+
     if (windowId !== undefined) {
       // Window IDs may change if a tab is moved to a different location.
       // Note: This is the ID of the browser window for the extension API.
@@ -1036,24 +1026,13 @@ class ContentGlobal {
     }
     this.initialized = true;
   }
-
-  // "DOMContentLoaded" event.
-  handleEvent(event) {
-    let {document} = this.global.content;
-    if (event.target === document) {
-      // If the document was still being loaded at the time of navigation, then
-      // the DOMContentLoaded event is fired for the old document. Ignore it.
-      if (this.initialDocuments.has(document)) {
-        this.initialDocuments.delete(document);
-        return;
-      }
-      this.global.removeEventListener("DOMContentLoaded", this);
-      this.global.sendAsyncMessage("Extension:ExtensionViewLoaded");
-    }
-  }
 }
 
 ExtensionChild = {
+  ChildAPIManager,
+  Messenger,
+  Port,
+
   // Map<nsIContentFrameMessageManager, ContentGlobal>
   contentGlobals: new Map(),
 
@@ -1069,6 +1048,10 @@ ExtensionChild = {
   },
 
   init(global) {
+    if (!ExtensionManagement.isExtensionProcess) {
+      throw new Error("Cannot init extension page global in current process");
+    }
+
     this.contentGlobals.set(global, new ContentGlobal(global));
   },
 
@@ -1085,28 +1068,25 @@ ExtensionChild = {
    * @param {nsIDOMWindow} contentWindow The global of the page.
    */
   createExtensionContext(extension, contentWindow) {
+    if (!ExtensionManagement.isExtensionProcess) {
+      throw new Error("Cannot create an extension page context in current process");
+    }
+
     let windowId = getInnerWindowID(contentWindow);
     let context = this.extensionContexts.get(windowId);
     if (context) {
       if (context.extension !== extension) {
-        // Oops. This should never happen.
-        Cu.reportError("A different extension context already exists in this frame!");
-      } else {
-        // This should not happen either.
-        Cu.reportError("The extension context was already initialized in this frame.");
+        throw new Error("A different extension context already exists for this frame");
       }
-      return;
+      throw new Error("An extension context was already initialized for this frame");
     }
 
-    let mm = contentWindow
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDocShell)
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIContentFrameMessageManager);
-    let {
-      viewType, tabId,
-      devtoolsToolboxInfo,
-    } = this.contentGlobals.get(mm).ensureInitialized();
+    let mm = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDocShell)
+                          .QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIContentFrameMessageManager);
+
+    let {viewType, tabId, devtoolsToolboxInfo} = this.contentGlobals.get(mm).ensureInitialized();
 
     let uri = contentWindow.document.documentURIObject;
 
@@ -1143,20 +1123,3 @@ ExtensionChild = {
     }
   },
 };
-
-// TODO(robwu): Change this condition when addons move to a separate process.
-if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
-  Object.keys(ExtensionChild).forEach(function(key) {
-    if (typeof ExtensionChild[key] == "function") {
-      // :/
-      ExtensionChild[key] = () => {};
-    }
-  });
-}
-
-Object.assign(ExtensionChild, {
-  ChildAPIManager,
-  Messenger,
-  Port,
-});
-

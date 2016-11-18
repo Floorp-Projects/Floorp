@@ -22,7 +22,4 @@ interface nsIDOMDocumentType : nsIDOMNode
   readonly attribute  DOMString            publicId;
   readonly attribute  DOMString            systemId;
   readonly attribute  DOMString            internalSubset;
-
-  [binaryname(MozRemove)]
-  void remove();
 };

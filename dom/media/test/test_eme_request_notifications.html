@@ -13,9 +13,7 @@
 var manager = new MediaTestManager;
 
 function SetPrefs(prefs) {
-  return new Promise(function(resolve, reject) {
-    SpecialPowers.pushPrefEnv({"set": prefs}, function() { resolve(); });
-  });
+  return SpecialPowers.pushPrefEnv({"set": prefs});
 }
 
 function observe() {
