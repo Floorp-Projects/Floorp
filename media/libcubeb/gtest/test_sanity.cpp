@@ -66,6 +66,7 @@ static long
 test_data_callback(cubeb_stream * stm, void * user_ptr, const void * /*inputbuffer*/, void * outputbuffer, long nframes)
 {
   EXPECT_TRUE(stm && user_ptr == &dummy && outputbuffer && nframes > 0);
+  assert(outputbuffer);
 #if (defined(_WIN32) || defined(__WIN32__))
   memset(outputbuffer, 0, nframes * sizeof(float));
 #else
@@ -537,6 +538,7 @@ static long
 test_drain_data_callback(cubeb_stream * stm, void * user_ptr, const void * /*inputbuffer*/, void * outputbuffer, long nframes)
 {
   EXPECT_TRUE(stm && user_ptr == &dummy && outputbuffer && nframes > 0);
+  assert(outputbuffer);
   if (do_drain == 1) {
     do_drain = 2;
     return 0;
