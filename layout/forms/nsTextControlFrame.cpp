@@ -476,12 +476,23 @@ nsTextControlFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
 {
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
   LogicalSize autoSize = CalcIntrinsicSize(aRenderingContext, aWM, inflation);
+
+  // Note: nsContainerFrame::ComputeAutoSize only computes the inline-size (and
+  // only for 'auto'), the block-size it returns is always NS_UNCONSTRAINEDSIZE.
+  const nsStyleCoord& iSizeCoord = StylePosition()->ISize(aWM);
+  if (iSizeCoord.GetUnit() == eStyleUnit_Auto) {
+    if (aFlags & ComputeSizeFlags::eIClampMarginBoxMinSize) {
+      // CalcIntrinsicSize isn't aware of grid-item margin-box clamping, so we
+      // fall back to nsContainerFrame's ComputeAutoSize to handle that.
+      // XXX maybe a font-inflation issue here? (per the assertion below).
+      autoSize.ISize(aWM) =
+        nsContainerFrame::ComputeAutoSize(aRenderingContext, aWM,
+                                          aCBSize, aAvailableISize,
+                                          aMargin, aBorder,
+                                          aPadding, aFlags).ISize(aWM);
+    }
 #ifdef DEBUG
-  // Note: Ancestor ComputeAutoSize only computes a width if we're auto-width
-  {
-    const nsStyleCoord& inlineStyleCoord =
-      aWM.IsVertical() ? StylePosition()->mHeight : StylePosition()->mWidth;
-    if (inlineStyleCoord.GetUnit() == eStyleUnit_Auto) {
+    else {
       LogicalSize ancestorAutoSize =
         nsContainerFrame::ComputeAutoSize(aRenderingContext, aWM,
                                           aCBSize, aAvailableISize,
@@ -492,9 +503,8 @@ nsTextControlFrame::ComputeAutoSize(nsRenderingContext* aRenderingContext,
                  ancestorAutoSize.ISize(aWM) == autoSize.ISize(aWM),
                  "Incorrect size computed by ComputeAutoSize?");
     }
-  }
 #endif
-
+  }
   return autoSize;
 }
 
