@@ -676,19 +676,6 @@ Parser<ParseHandler>::strictModeErrorAt(uint32_t offset, unsigned errorNumber, .
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::reportWithNode(ParseReportKind kind, bool strict, Node pn, unsigned errorNumber, ...)
-{
-    uint32_t offset = (pn ? handler.getPosition(pn) : pos()).begin;
-
-    va_list args;
-    va_start(args, errorNumber);
-    bool result = reportHelper(kind, strict, offset, errorNumber, args);
-    va_end(args);
-    return result;
-}
-
-template <typename ParseHandler>
-bool
 Parser<ParseHandler>::reportNoOffset(ParseReportKind kind, bool strict, unsigned errorNumber, ...)
 {
     va_list args;
@@ -4054,7 +4041,7 @@ Parser<FullParseHandler>::checkDestructuringName(ParseNode* expr, Maybe<Declarat
     // around names).  Use our nicer error message for parenthesized, nested
     // patterns.
     if (handler.isParenthesizedDestructuringPattern(expr)) {
-        reportWithNode(ParseError, false, expr, JSMSG_BAD_DESTRUCT_PARENS);
+        errorAt(expr->pn_pos.begin, JSMSG_BAD_DESTRUCT_PARENS);
         return false;
     }
 
@@ -4064,7 +4051,7 @@ Parser<FullParseHandler>::checkDestructuringName(ParseNode* expr, Maybe<Declarat
         // Destructuring patterns in declarations must only contain
         // unparenthesized names.
         if (!handler.isUnparenthesizedName(expr)) {
-            reportWithNode(ParseError, false, expr, JSMSG_NO_VARIABLE_NAME);
+            errorAt(expr->pn_pos.begin, JSMSG_NO_VARIABLE_NAME);
             return false;
         }
 
@@ -4075,11 +4062,8 @@ Parser<FullParseHandler>::checkDestructuringName(ParseNode* expr, Maybe<Declarat
     // Otherwise this is an expression in destructuring outside a declaration.
     if (handler.isNameAnyParentheses(expr)) {
         if (const char* chars = handler.nameIsArgumentsEvalAnyParentheses(expr, context)) {
-            if (!reportWithNode(ParseStrictError, pc->sc()->strict(), expr,
-                                JSMSG_BAD_STRICT_ASSIGN, chars))
-            {
+            if (!strictModeErrorAt(expr->pn_pos.begin, JSMSG_BAD_STRICT_ASSIGN, chars))
                 return false;
-            }
         }
 
         return true;
@@ -4088,7 +4072,7 @@ Parser<FullParseHandler>::checkDestructuringName(ParseNode* expr, Maybe<Declarat
     if (handler.isPropertyAccess(expr))
         return true;
 
-    reportWithNode(ParseError, pc->sc()->strict(), expr, JSMSG_BAD_DESTRUCT_TARGET);
+    errorAt(expr->pn_pos.begin, JSMSG_BAD_DESTRUCT_TARGET);
     return false;
 }
 
@@ -4147,7 +4131,7 @@ Parser<FullParseHandler>::checkDestructuringArray(ParseNode* arrayPattern,
         ParseNode* target;
         if (element->isKind(PNK_SPREAD)) {
             if (element->pn_next) {
-                reportWithNode(ParseError, false, element->pn_next, JSMSG_PARAMETER_AFTER_REST);
+                errorAt(element->pn_next->pn_pos.begin, JSMSG_PARAMETER_AFTER_REST);
                 return false;
             }
             target = element->pn_kid;
@@ -4210,7 +4194,7 @@ Parser<FullParseHandler>::checkDestructuringPattern(ParseNode* pattern,
                                                     PossibleError* possibleError /* = nullptr */)
 {
     if (pattern->isKind(PNK_ARRAYCOMP)) {
-        reportWithNode(ParseError, false, pattern, JSMSG_ARRAY_COMP_LEFTSIDE);
+        errorAt(pattern->pn_pos.begin, JSMSG_ARRAY_COMP_LEFTSIDE);
         return false;
     }
 
@@ -5720,7 +5704,7 @@ Parser<ParseHandler>::forStatement(YieldHandling yieldHandling)
             iflags |= JSITER_ENUMERATE;
         } else {
             if (isForEach) {
-                reportWithNode(ParseError, false, startNode, JSMSG_BAD_FOR_EACH_LOOP);
+                errorAt(begin, JSMSG_BAD_FOR_EACH_LOOP);
                 return null();
             }
 
