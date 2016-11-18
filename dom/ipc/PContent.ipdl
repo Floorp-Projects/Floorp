@@ -830,6 +830,8 @@ parent:
 
     sync PURLClassifier(Principal principal, bool useTrackingProtection)
         returns (bool success);
+    sync ClassifyLocal(URIParams uri, nsCString tables)
+        returns (nsCString results);
 
     // Services remoting
 
