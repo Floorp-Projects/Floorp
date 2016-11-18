@@ -520,6 +520,7 @@ def host_variables(host):
         HOST_OS_ARCH=os_arch,
     )
 
+set_config('HOST_CPU_ARCH', delayed_getattr(host, 'cpu'))
 set_config('HOST_OS_ARCH', delayed_getattr(host_variables, 'HOST_OS_ARCH'))
 add_old_configure_assignment('HOST_OS_ARCH',
                              delayed_getattr(host_variables, 'HOST_OS_ARCH'))

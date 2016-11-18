@@ -12,7 +12,6 @@ const deviceSpec = generateActorSpec({
     getDescription: {request: {}, response: { value: RetVal("json")}},
     getWallpaper: {request: {}, response: { value: RetVal("longstring")}},
     screenshotToDataURL: {request: {}, response: { value: RetVal("longstring")}},
-    getRawPermissionsTable: {request: {}, response: { value: RetVal("json")}},
   },
 });
 
