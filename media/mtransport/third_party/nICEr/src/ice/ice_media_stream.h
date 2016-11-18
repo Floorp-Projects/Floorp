@@ -59,8 +59,13 @@ struct nr_ice_media_stream_ {
 #define NR_ICE_MEDIA_STREAM_UNPAIRED           1
 #define NR_ICE_MEDIA_STREAM_CHECKS_FROZEN      2
 #define NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE      3
-#define NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED   4
+#define NR_ICE_MEDIA_STREAM_CHECKS_CONNECTED   4
 #define NR_ICE_MEDIA_STREAM_CHECKS_FAILED      5
+
+  int disconnected;
+
+#define NR_ICE_MEDIA_STREAM_CONNECTED    0
+#define NR_ICE_MEDIA_STREAM_DISCONNECTED 1
 
   nr_ice_cand_pair_head check_list;
   nr_ice_cand_pair_head trigger_check_queue;
@@ -87,6 +92,10 @@ int nr_ice_media_stream_unfreeze_pairs_foundation(nr_ice_media_stream *stream, c
 int nr_ice_media_stream_dump_state(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream,FILE *out);
 int nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_component *component);
 int nr_ice_media_stream_component_failed(nr_ice_media_stream *stream,nr_ice_component *component);
+void nr_ice_media_stream_refresh_consent_all(nr_ice_media_stream *stream);
+void nr_ice_media_stream_disconnect_all_components(nr_ice_media_stream *stream);
+void nr_ice_media_stream_set_disconnected(nr_ice_media_stream *stream, int disconnected);
+int nr_ice_media_stream_check_if_connected(nr_ice_media_stream *stream);
 int nr_ice_media_stream_set_state(nr_ice_media_stream *str, int state);
 int nr_ice_media_stream_get_best_candidate(nr_ice_media_stream *str, int component, nr_ice_candidate **candp);
 int nr_ice_media_stream_send(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, int component, UCHAR *data, int len);

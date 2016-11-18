@@ -83,6 +83,8 @@ int nr_ice_peer_ctx_parse_global_attributes(nr_ice_peer_ctx *pctx, char **attrs,
 int nr_ice_peer_ctx_start_checks(nr_ice_peer_ctx *pctx);
 int nr_ice_peer_ctx_start_checks2(nr_ice_peer_ctx *pctx, int allow_non_first);
 void nr_ice_peer_ctx_stream_started_checks(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream);
+void nr_ice_peer_ctx_refresh_consent_all_streams(nr_ice_peer_ctx *pctx);
+void nr_ice_peer_ctx_disconnect_all_streams(nr_ice_peer_ctx *pctx);
 void nr_ice_peer_ctx_disconnected(nr_ice_peer_ctx *pctx);
 void nr_ice_peer_ctx_connected(nr_ice_peer_ctx *pctx);
 int nr_ice_peer_ctx_dump_state(nr_ice_peer_ctx *pctx,FILE *out);
