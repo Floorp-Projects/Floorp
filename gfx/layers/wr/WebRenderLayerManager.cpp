@@ -11,8 +11,6 @@
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
-#include "nsDirectoryService.h"
-#include "nsDirectoryServiceDefs.h"
 #include "nsThreadUtils.h"
 #include "TreeTraversal.h"
 #include "WebRenderCanvasLayer.h"
@@ -145,20 +143,7 @@ WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild, uint64_t aLa
 {
   MOZ_ASSERT(mWRChild == nullptr);
 
-  // Since the WebRenderBridgeParent might be in the compositor process with
-  // no access to the directory service, we have to get the directory here and
-  // send it over. We only need to do this for the parent process; the content
-  // processes ignore it anyway since they don't initialize new WR renderer
-  // instances.
-  nsAutoString resourcePath;
-  if (XRE_IsParentProcess()) {
-    nsCOMPtr<nsIFile> greDir;
-    nsDirectoryService::gService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(greDir));
-    greDir->Append(NS_LITERAL_STRING("webrender"));
-    greDir->GetPath(resourcePath);
-  }
-
-  PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(aLayersId, resourcePath);
+  PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(aLayersId);
   MOZ_ASSERT(bridge);
   mWRChild = static_cast<WebRenderBridgeChild*>(bridge);
   LayoutDeviceIntSize size = mWidget->GetClientSize();

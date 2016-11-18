@@ -819,11 +819,6 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/components/SanityTest.js
 #endif
 
-; webrender
-#ifdef MOZ_ENABLE_WEBRENDER
-@RESPATH@/webrender/*
-#endif
-
 #ifdef MOZ_MULET
 #include ../../b2g/installer/package-manifest.in
 #endif

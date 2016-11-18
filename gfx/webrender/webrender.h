@@ -60,7 +60,7 @@ struct wrstate;
 #endif
 
 WR_INLINE wrwindowstate*
-wr_init_window(uint64_t root_pipeline_id, const char* path_utf8)
+wr_init_window(uint64_t root_pipeline_id)
 WR_FUNC;
 
 WR_INLINE wrstate*

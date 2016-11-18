@@ -228,8 +228,7 @@ public:
 
   void WillEndTransaction();
 
-  PWebRenderBridgeChild* AllocPWebRenderBridgeChild(const uint64_t& aPipelineId,
-                                                    const nsString& aResourcePath) override;
+  PWebRenderBridgeChild* AllocPWebRenderBridgeChild(const uint64_t& aPipelineId) override;
   bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor) override;
 
 private:

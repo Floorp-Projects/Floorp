@@ -15,7 +15,6 @@ namespace mozilla {
 namespace layers {
 
 WebRenderBridgeParent::WebRenderBridgeParent(const uint64_t& aPipelineId,
-                                             const nsString* aResourcePath,
                                              widget::CompositorWidget* aWidget,
                                              gl::GLContext* aGlContext,
                                              wrwindowstate* aWrWindowState,
@@ -34,9 +33,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(const uint64_t& aPipelineId,
     // i.e. the one created by the CompositorBridgeParent as opposed to the
     // CrossProcessCompositorBridgeParent
     MOZ_ASSERT(mWidget);
-    MOZ_ASSERT(aResourcePath);
-    mWRWindowState = wr_init_window(mPipelineId,
-                                    NS_ConvertUTF16toUTF8(*aResourcePath).get());
+    mWRWindowState = wr_init_window(mPipelineId);
   }
 }
 
