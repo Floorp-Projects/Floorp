@@ -27,7 +27,7 @@ When making changes:
 
 For a debug webrender build:
     Use a debug mozconfig (ac_add_options --enable-debug)
-    You can also use an opt build but make webrender less optimized by putting opt-level=0 in the [profile.release] section of your gfx/webrender/Cargo.toml file
+    You can also use an opt build but make webrender less optimized by putting opt-level=0 in the [profile.release] section of your toolkit/library/rust/Cargo.toml file
     See also https://groups.google.com/forum/#!topic/mozilla.dev.servo/MbeMcqqO1fs
 
 
