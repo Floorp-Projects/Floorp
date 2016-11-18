@@ -1,0 +1,56 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using WRImageKey from "webrender.h";
+using WRRect from "webrender.h";
+using MaybeImageMask from "mozilla/layers/WebRenderTypes.h";
+using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
+
+namespace mozilla {
+namespace layers {
+
+struct OpPushDLBuilder { };
+
+struct OpPopDLBuilder {
+  WRRect bounds;
+  WRRect overflow;
+  Matrix4x4 matrix;
+  uint64_t scrollid;
+};
+
+struct OpDPPushRect {
+  WRRect bounds;
+  WRRect clip;
+  float r;
+  float g;
+  float b;
+  float a;
+};
+
+struct OpDPPushImage {
+  WRRect bounds;
+  WRRect clip;
+  MaybeImageMask mask;
+  WRImageKey key;
+};
+
+struct OpDPPushIframe {
+  WRRect bounds;
+  WRRect clip;
+  uint64_t layersid;
+};
+
+union WebRenderCommand {
+  OpPushDLBuilder;
+  OpPopDLBuilder;
+  OpDPPushRect;
+  OpDPPushImage;
+  OpDPPushIframe;
+};
+
+} // namespace
+} // namespace

@@ -24,11 +24,12 @@ WebRenderContainerLayer::RenderLayer()
   gfx::Matrix4x4 transform;// = GetTransform();
   if (gfxPrefs::LayersDump()) printf_stderr("ContainerLayer %p using %s as bounds/overflow, %s as transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
 
-  WRBridge()->SendPushDLBuilder();
+  WRBridge()->AddWebRenderCommand(OpPushDLBuilder());
   for (Layer* child : children) {
     ToWebRenderLayer(child)->RenderLayer();
   }
-  WRBridge()->SendPopDLBuilder(toWrRect(relBounds), toWrRect(relBounds), transform, FrameMetrics::NULL_SCROLL_ID);
+  WRBridge()->AddWebRenderCommand(
+    OpPopDLBuilder(toWrRect(relBounds), toWrRect(relBounds), transform, FrameMetrics::NULL_SCROLL_ID));
 }
 
 void
@@ -39,7 +40,7 @@ WebRenderRefLayer::RenderLayer()
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Matrix4x4 transform;// = GetTransform();
   if (gfxPrefs::LayersDump()) printf_stderr("RefLayer %p (%" PRIu64 ") using %s as bounds/overflow, %s as transform\n", this, mId, Stringify(relBounds).c_str(), Stringify(transform).c_str());
-  WRBridge()->SendDPPushIframe(toWrRect(relBounds), toWrRect(relBounds), mId);
+  WRBridge()->AddWebRenderCommand(OpDPPushIframe(toWrRect(relBounds), toWrRect(relBounds), mId));
 }
 
 } // namespace layers

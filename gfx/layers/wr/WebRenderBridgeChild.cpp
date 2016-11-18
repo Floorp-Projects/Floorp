@@ -12,7 +12,38 @@ namespace mozilla {
 namespace layers {
 
 WebRenderBridgeChild::WebRenderBridgeChild(const uint64_t& aPipelineId)
+  : mIsInTransaction(false)
 {
+}
+
+void
+WebRenderBridgeChild::AddWebRenderCommand(const WebRenderCommand& aCmd)
+{
+  MOZ_ASSERT(mIsInTransaction);
+  mCommands.AppendElement(aCmd);
+}
+
+bool
+WebRenderBridgeChild::DPBegin(uint32_t aWidth, uint32_t aHeight)
+{
+  MOZ_ASSERT(!mIsInTransaction);
+  bool success = false;
+  this->SendDPBegin(aWidth, aHeight, &success);
+  if (!success) {
+    return false;
+  }
+
+  mIsInTransaction = true;
+  return true;
+}
+
+void
+WebRenderBridgeChild::DPEnd()
+{
+  MOZ_ASSERT(mIsInTransaction);
+  this->SendDPEnd(mCommands);
+  mCommands.Clear();
+  mIsInTransaction = false;
 }
 
 } // namespace layers
