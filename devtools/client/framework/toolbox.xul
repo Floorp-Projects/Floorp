@@ -47,28 +47,7 @@
 
   <vbox id="toolbox-container" flex="1">
     <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-notificationbox"/>
-    <toolbar class="devtools-tabbar">
-      <hbox id="toolbox-picker-container" />
-      <hbox id="toolbox-tabs" flex="1" role="tablist" />
-      <hbox id="toolbox-buttons" pack="end">
-        <html:button id="command-button-frames"
-                     class="command-button command-button-invertable devtools-button"
-                     title="&toolboxFramesTooltip;"
-                     hidden="true" />
-        <html:button id="command-button-noautohide"
-                     class="command-button command-button-invertable devtools-button"
-                     title="&toolboxNoAutoHideTooltip;"
-                     hidden="true" />
-      </hbox>
-      <vbox id="toolbox-controls-separator" class="devtools-separator"/>
-      <hbox id="toolbox-option-container"/>
-      <hbox id="toolbox-controls">
-        <hbox id="toolbox-dock-buttons"/>
-        <html:button id="toolbox-close"
-                     class="devtools-button"
-                     title="&toolboxCloseButton.tooltip;"/>
-      </hbox>
-    </toolbar>
+    <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-toolbar-mount" />
     <vbox flex="1" class="theme-body">
       <!-- Set large flex to allow the toolbox-panel-webconsole to have a
            height set to a small value without flexing to fill up extra

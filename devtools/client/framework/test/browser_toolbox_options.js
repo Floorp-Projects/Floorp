@@ -293,22 +293,8 @@ function checkRegistered(toolId, deferred, event, data) {
   if (data == toolId) {
     ok(true, "Correct tool added back");
     // checking tab on the toolbox
-    let radio = doc.getElementById("toolbox-tab-" + toolId);
-    ok(radio, "Tab added back for " + toolId);
-    if (radio.previousSibling) {
-      ok(+radio.getAttribute("ordinal") >=
-         +radio.previousSibling.getAttribute("ordinal"),
-         "Inserted tab's ordinal is greater than equal to its previous tab." +
-         "Expected " + radio.getAttribute("ordinal") + " >= " +
-         radio.previousSibling.getAttribute("ordinal"));
-    }
-    if (radio.nextSibling) {
-      ok(+radio.getAttribute("ordinal") <
-         +radio.nextSibling.getAttribute("ordinal"),
-         "Inserted tab's ordinal is less than its next tab. Expected " +
-         radio.getAttribute("ordinal") + " < " +
-         radio.nextSibling.getAttribute("ordinal"));
-    }
+    let button = doc.getElementById("toolbox-tab-" + toolId);
+    ok(button, "Tab added back for " + toolId);
   } else {
     ok(false, "Something went wrong, " + toolId + " was not registered");
   }

@@ -27,11 +27,13 @@ const test = function(unit) {
   return function*(assert) {
     assert.isRendered = (panel, toolbox) => {
       const doc = toolbox.doc;
-      assert.ok(doc.querySelector("[value='" + panel.label + "']"),
-                "panel.label is found in the developer toolbox DOM");
-      assert.ok(doc.querySelector("[tooltiptext='" + panel.tooltip + "']"),
-                "panel.tooltip is found in the developer toolbox DOM");
-
+      assert.ok(Array.from(doc.querySelectorAll(".devtools-tab"))
+                     .find(el => el.textContent === panel.label),
+                "panel.label is found in the developer toolbox DOM " + panel.label);
+      if (panel.tooltip) {
+        assert.ok(doc.querySelector("[title='" + panel.tooltip + "']"),
+                  `panel.tooltip is found in the developer toolbox DOM "${panel.tooltip}"`);
+      }
       assert.ok(doc.querySelector("#toolbox-panel-" + panel.id),
                 "toolbar panel with a matching id is present");
     };
