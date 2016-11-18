@@ -2316,3 +2316,69 @@ add_task(function* test_remove_partial() {
   yield PlacesUtils.bookmarks.eraseEverything();
   yield PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(function* test_migrateOldTrackerEntries() {
+  let unknownBmk = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "http://getfirefox.com",
+    title: "Get Firefox!",
+  });
+  let newBmk = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "http://getthunderbird.com",
+    title: "Get Thunderbird!",
+  });
+  let normalBmk = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "https://mozilla.org",
+    title: "Mozilla",
+  });
+
+  yield PlacesTestUtils.setBookmarkSyncFields({
+    guid: unknownBmk.guid,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN,
+    syncChangeCounter: 0,
+  }, {
+    guid: normalBmk.guid,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+  });
+  PlacesUtils.tagging.tagURI(uri("http://getfirefox.com"), ["taggy"]);
+
+  let tombstoneSyncId = makeGuid();
+  yield PlacesSyncUtils.bookmarks.migrateOldTrackerEntries([{
+    syncId: normalBmk.guid,
+    modified: Date.now(),
+  }, {
+    syncId: tombstoneSyncId,
+    modified: 1479162463976,
+  }]);
+
+  let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+  deepEqual(Object.keys(changes).sort(), [normalBmk.guid, tombstoneSyncId].sort(),
+    "Should return change records for migrated bookmark and tombstone");
+
+  let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+    unknownBmk.guid, newBmk.guid, normalBmk.guid);
+  for (let field of fields) {
+    if (field.guid == normalBmk.guid) {
+      ok(field.lastModified > normalBmk.lastModified,
+        `Should bump last modified date for migrated bookmark ${field.guid}`);
+      equal(field.syncChangeCounter, 1,
+        `Should bump change counter for migrated bookmark ${field.guid}`);
+    } else {
+      strictEqual(field.syncChangeCounter, 0,
+        `Should not bump change counter for ${field.guid}`);
+    }
+    equal(field.syncStatus, PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      `Should set sync status for ${field.guid} to NORMAL`);
+  }
+
+  let tombstones = yield PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(tombstones, [{
+    guid: tombstoneSyncId,
+    dateRemoved: new Date(1479162463976),
+  }], "Should write tombstone for nonexistent migrated item");
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
