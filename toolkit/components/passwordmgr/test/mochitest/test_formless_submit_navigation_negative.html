@@ -102,8 +102,8 @@ add_task(function* test() {
       info("Running " + scriptName + " script to check for a submission");
       frameDoc.defaultView.eval(SCRIPTS[scriptName]);
 
-      // Wait for 500ms to see if the promise above resolves.
-      yield new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for 5000ms to see if the promise above resolves.
+      yield new Promise(resolve => setTimeout(resolve, 5000));
       ok(true, "Done waiting for captures");
     }
   }
