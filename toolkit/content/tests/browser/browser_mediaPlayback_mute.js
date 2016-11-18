@@ -75,11 +75,9 @@ function* test_visibility(url, browser) {
 }
 
 add_task(function*() {
-  yield new Promise((resolve) => {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["media.useAudioChannelService.testing", true]
-    ]}, resolve);
-  });
+  yield SpecialPowers.pushPrefEnv({"set": [
+    ["media.useAudioChannelService.testing", true]
+  ]});
 });
 
 add_task(function* test_page() {

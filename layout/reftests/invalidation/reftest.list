@@ -6,7 +6,7 @@
 == 543681-1.html 543681-1-ref.html
 == 1243409-1.html 1243409-1-ref.html
 skip == test-image-layers.html test-image-layers-ref.html # Bug 1067360
-== test-image-layers-multiple-displayitem.html test-image-layers-ref.html
+skip == test-image-layers-multiple-displayitem.html test-image-layers-ref.html # Bug 1067360
 pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == test-animated-image-layers.html test-animated-image-layers-ref.html
 pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == test-animated-image-layers-background.html test-animated-image-layers-ref.html
 == box-shadow-border-radius.html box-shadow-border-radius-ref.html

@@ -1,3 +1,8 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
 "react-virtualized" uses UMD style loading to work in many different environments.
 It assumes that "react", "react-addons-shallow-compare", and "react-dom" are all included
 separately via require statements. The paths to our installations are different.

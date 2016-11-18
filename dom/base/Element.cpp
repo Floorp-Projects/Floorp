@@ -3313,14 +3313,6 @@ Element::AttrValueToCORSMode(const nsAttrValue* aValue)
 static const char*
 GetFullScreenError(nsIDocument* aDoc)
 {
-  if (aDoc->NodePrincipal()->GetAppStatus() >= nsIPrincipal::APP_STATUS_INSTALLED) {
-    // Request is in a web app and in the same origin as the web app.
-    // Don't enforce as strict security checks for web apps, the user
-    // is supposed to have trust in them. However documents cross-origin
-    // to the web app must still confirm to the normal security checks.
-    return nullptr;
-  }
-
   if (!nsContentUtils::IsRequestFullScreenAllowed()) {
     return "FullscreenDeniedNotInputDriven";
   }
@@ -3329,7 +3321,7 @@ GetFullScreenError(nsIDocument* aDoc)
 }
 
 void
-Element::RequestFullscreen(ErrorResult& aError)
+Element::RequestFullscreen(CallerType aCallerType, ErrorResult& aError)
 {
   // Only grant full-screen requests if this is called from inside a trusted
   // event handler (i.e. inside an event handler for a user initiated event).
@@ -3344,15 +3336,15 @@ Element::RequestFullscreen(ErrorResult& aError)
   }
 
   auto request = MakeUnique<FullscreenRequest>(this);
-  request->mIsCallerChrome = nsContentUtils::IsCallerChrome();
+  request->mIsCallerChrome = (aCallerType == CallerType::System);
 
   OwnerDoc()->AsyncRequestFullScreen(Move(request));
 }
 
 void
-Element::RequestPointerLock()
+Element::RequestPointerLock(CallerType aCallerType)
 {
-  OwnerDoc()->RequestPointerLock(this);
+  OwnerDoc()->RequestPointerLock(this, aCallerType);
 }
 
 void

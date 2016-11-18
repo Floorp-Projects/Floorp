@@ -608,6 +608,7 @@ IDBFactory::OpenInternal(JSContext* aCx,
       MOZ_CRASH("Figure out security checks for workers!");
     }
     MOZ_ASSERT(nsContentUtils::IsCallerChrome());
+    MOZ_DIAGNOSTIC_ASSERT(mPrivateBrowsingMode == (aPrincipal->GetPrivateBrowsingId() > 0));
 
     if (NS_WARN_IF(NS_FAILED(PrincipalToPrincipalInfo(aPrincipal,
                                                       &principalInfo)))) {
