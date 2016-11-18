@@ -305,11 +305,11 @@ Module::serialize(uint8_t* bytecodeBegin, size_t bytecodeSize,
 }
 
 /* static */ bool
-Module::assumptionsMatch(const Assumptions& current, const uint8_t* cursor)
+Module::assumptionsMatch(const Assumptions& current, const uint8_t* compiledBegin,
+                         size_t compiledSize)
 {
     Assumptions cached;
-    cursor = cached.deserialize(cursor);
-    if (!cursor)
+    if (!cached.deserialize(compiledBegin, compiledSize))
         return false;
 
     return current == cached;
@@ -330,10 +330,8 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
 
     MOZ_RELEASE_ASSERT(bytecodeEnd == bytecodeBegin + bytecodeSize);
 
-    const uint8_t* cursor = compiledBegin;
-
     Assumptions assumptions;
-    cursor = assumptions.deserialize(cursor);
+    const uint8_t* cursor = assumptions.deserialize(compiledBegin, compiledSize);
     if (!cursor)
         return nullptr;
 
@@ -440,7 +438,7 @@ wasm::CompiledModuleAssumptionsMatch(PRFileDesc* compiled, JS::BuildIdCharVector
         return false;
 
     Assumptions assumptions(Move(buildId));
-    return Module::assumptionsMatch(assumptions, mapping.get());
+    return Module::assumptionsMatch(assumptions, mapping.get(), info.size);
 }
 
 SharedModule
