@@ -275,11 +275,9 @@ function* suspended_block(url, browser) {
 }
 
 add_task(function* setup_test_preference() {
-  yield new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["media.useAudioChannelService.testing", true]
-    ]}, resolve);
-  });
+  yield SpecialPowers.pushPrefEnv({"set": [
+    ["media.useAudioChannelService.testing", true]
+  ]});
 });
 
 add_task(function* test_suspended_pause() {

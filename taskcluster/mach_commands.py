@@ -11,6 +11,7 @@ import json
 import logging
 import sys
 import traceback
+import re
 
 from mach.decorators import (
     CommandArgument,
@@ -49,6 +50,10 @@ class ShowTaskGraphSubCommand(SubCommand):
                             default="true",
                             help="do not remove tasks from the graph that are found in the "
                             "index (a.k.a. optimize the graph)"),
+            CommandArgument('--tasks-regex', '--tasks', default=None,
+                            help="only return tasks with labels matching this regular "
+                            "expression.")
+
         ]
         for arg in args:
             after = arg(after)
@@ -229,6 +234,7 @@ class MachCommands(MachCommandBase):
             tg = getattr(tgg, graph_attr)
 
             show_method = getattr(self, 'show_taskgraph_' + (options['format'] or 'labels'))
+            tg = self.get_filtered_taskgraph(tg, options["tasks_regex"])
             show_method(tg)
         except Exception:
             traceback.print_exc()
@@ -241,6 +247,31 @@ class MachCommands(MachCommandBase):
     def show_taskgraph_json(self, taskgraph):
         print(json.dumps(taskgraph.to_json(),
               sort_keys=True, indent=2, separators=(',', ': ')))
+
+    def get_filtered_taskgraph(self, taskgraph, tasksregex):
+        from taskgraph.graph import Graph
+        from taskgraph.taskgraph import TaskGraph
+        """
+        This class method filters all the tasks on basis of a regular expression
+        and returns a new TaskGraph object
+        """
+        # return original taskgraph if no regular expression is passed
+        if not tasksregex:
+            return taskgraph
+        named_links_dict = taskgraph.graph.named_links_dict()
+        filteredtasks = {}
+        filterededges = set()
+        regexprogram = re.compile(tasksregex)
+
+        for key in taskgraph.graph.visit_postorder():
+            task = taskgraph.tasks[key]
+            if regexprogram.match(task.label):
+                filteredtasks[key] = task
+                for depname, dep in named_links_dict[key].iteritems():
+                    if regexprogram.match(dep):
+                        filterededges.add((key, dep, depname))
+        filtered_taskgraph = TaskGraph(filteredtasks, Graph(set(filteredtasks), filterededges))
+        return filtered_taskgraph
 
 
 @CommandProvider

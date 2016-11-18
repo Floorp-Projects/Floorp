@@ -383,6 +383,7 @@ timezoneTypes:table(nofallback){
             "Asia:Dili"{"tldil"}
             "Asia:Dubai"{"aedxb"}
             "Asia:Dushanbe"{"tjdyu"}
+            "Asia:Famagusta"{"cyfmg"}
             "Asia:Gaza"{"gaza"}
             "Asia:Hebron"{"hebron"}
             "Asia:Hong_Kong"{"hkhkg"}

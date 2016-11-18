@@ -1,7 +1,5 @@
 function pushPrefs(...aPrefs) {
-  return new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve);
-  });
+  return SpecialPowers.pushPrefEnv({"set": aPrefs});
 }
 
 function promiseWaitForEvent(object, eventName, capturing = false, chrome = false) {

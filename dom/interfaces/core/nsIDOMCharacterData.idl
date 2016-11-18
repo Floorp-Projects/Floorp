@@ -36,7 +36,4 @@ interface nsIDOMCharacterData : nsIDOMNode
                                         in unsigned long count, 
                                         in DOMString arg)
                                   raises(DOMException);
-
-  [binaryname(MozRemove)]
-  void remove();
 };

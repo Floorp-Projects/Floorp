@@ -4,7 +4,6 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 function BootstrapCommandlineHandler() {
   this.wrappedJSObject = this;
@@ -35,11 +34,6 @@ BootstrapCommandlineHandler.prototype = {
       }
 
       if (!this.startManifestURL) {
-        return;
-      }
-
-      if (!isAbsoluteURI(this.startManifestURL)) {
-        this.bailout("The start manifest url must be absolute.");
         return;
       }
     },

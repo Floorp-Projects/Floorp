@@ -29,7 +29,7 @@ public:
     DeleteCriticalSection(&critical_section);
   }
 
-  void enter()
+  void lock()
   {
     EnterCriticalSection(&critical_section);
 #ifndef NDEBUG
@@ -38,7 +38,7 @@ public:
 #endif
   }
 
-  void leave()
+  void unlock()
   {
 #ifndef NDEBUG
     /* GetCurrentThreadId cannot return 0: it is not a the valid thread id */
