@@ -1838,7 +1838,7 @@ void nsMenuPopupFrame::ChangeByPage(bool aIsUp)
     // just use this as the newMenu and leave currentMenu null so that no
     // check for a later element is performed. When moving down, set currentMenu
     // so that we look for one page down from the first item.
-    newMenu = nsXULPopupManager::GetNextMenuItem(this, nullptr, true);
+    newMenu = nsXULPopupManager::GetNextMenuItem(this, nullptr, true, false);
     if (!aIsUp) {
       currentMenu = newMenu;
     }
@@ -2066,7 +2066,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
   //       been destroyed already.  One strategy would be to 
   //       setTimeout(<func>,0) as detailed in:
   //       <http://bugzilla.mozilla.org/show_bug.cgi?id=126675#c32>
-  nsIFrame* firstMenuItem = nsXULPopupManager::GetNextMenuItem(immediateParent, nullptr, true);
+  nsIFrame* firstMenuItem = nsXULPopupManager::GetNextMenuItem(immediateParent, nullptr, true, false);
   nsIFrame* currFrame = firstMenuItem;
 
   int32_t menuAccessKey = -1;
@@ -2131,7 +2131,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
     }
 
     nsMenuFrame* menu = do_QueryFrame(currFrame);
-    currFrame = nsXULPopupManager::GetNextMenuItem(immediateParent, menu, true);
+    currFrame = nsXULPopupManager::GetNextMenuItem(immediateParent, menu, true, true);
     if (currFrame == firstMenuItem)
       break;
   }

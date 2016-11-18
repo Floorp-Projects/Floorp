@@ -14,7 +14,6 @@
 #include "prenv.h"
 
 #include "nsDocShell.h"
-#include "nsIAppsService.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMMozBrowserFrame.h"

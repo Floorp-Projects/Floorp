@@ -16,17 +16,6 @@ UNIFIED_SOURCES += [
     'PermissionUtils.cpp',
 ]
 
-EXTRA_COMPONENTS += [
-    'PermissionPromptService.js',
-    'PermissionPromptService.manifest',
-    'PermissionSettings.js',
-    'PermissionSettings.manifest',
-]
-
-EXTRA_JS_MODULES += [
-    'PermissionSettings.jsm',
-]
-
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']

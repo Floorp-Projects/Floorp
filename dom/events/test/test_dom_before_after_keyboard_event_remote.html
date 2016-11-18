@@ -166,6 +166,7 @@ var tests = [
     SpecialPowers.pushPrefEnv(
       { "set": [["dom.beforeAfterKeyboardEvent.enabled", true],
                 ["dom.mozBrowserFramesEnabled", true],
+                ["network.disable.ipc.security", true],
                 ["dom.ipc.tabs.disabled", false]] },
       runTests);
   },

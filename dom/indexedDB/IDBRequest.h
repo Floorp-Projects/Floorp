@@ -90,7 +90,7 @@ public:
 
   // nsIDOMEventTarget
   virtual nsresult
-  PreHandleEvent(EventChainPreVisitor& aVisitor) override;
+  GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
   void
   GetSource(Nullable<OwningIDBObjectStoreOrIDBIndexOrIDBCursor>& aSource) const;
