@@ -426,6 +426,7 @@ IPDL_SOURCES = [
     'ipc/PTexture.ipdl',
     'ipc/PVideoBridge.ipdl',
     'ipc/PWebRenderBridge.ipdl',
+    'ipc/WebRenderMessages.ipdlh',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

@@ -25,8 +25,16 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild
 
 public:
   explicit WebRenderBridgeChild(const uint64_t& aPipelineId);
+
+  void AddWebRenderCommand(const WebRenderCommand& aCmd);
+
+  bool DPBegin(uint32_t aWidth, uint32_t aHeight);
+  void DPEnd();
 protected:
   ~WebRenderBridgeChild() {}
+
+  nsTArray<WebRenderCommand> mCommands;
+  bool mIsInTransaction;
 };
 
 } // namespace layers

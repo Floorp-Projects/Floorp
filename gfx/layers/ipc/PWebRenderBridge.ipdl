@@ -7,14 +7,11 @@
 
 include "mozilla/GfxMessageUtils.h";
 
+include WebRenderMessages;
 include protocol PCompositorBridge;
 
 using WRImageFormat from "webrender.h";
-using WRImageKey from "webrender.h";
-using WRRect from "webrender.h";
-using MaybeImageMask from "mozilla/layers/WebRenderTypes.h";
 using mozilla::gfx::ByteBuffer from "mozilla/layers/WebRenderTypes.h";
-using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 
 namespace mozilla {
 namespace layers {
@@ -32,15 +29,9 @@ parent:
   sync UpdateImage(WRImageKey aImageKey, uint32_t aWidth, uint32_t aHeight,
                    WRImageFormat aFormat, ByteBuffer aBytes);
   sync DeleteImage(WRImageKey aImageKey);
-  sync PushDLBuilder();
-  sync PopDLBuilder(WRRect aBounds, WRRect aOverflow, Matrix4x4 aMatrix,
-                    uint64_t aScrollId);
   sync DPBegin(uint32_t aWidth, uint32_t aHeight)
     returns (bool aOutSuccess);
-  sync DPEnd();
-  sync DPPushRect(WRRect aBounds, WRRect aClip, float r, float g, float b, float a);
-  sync DPPushImage(WRRect aBounds, WRRect aClip, MaybeImageMask aMask, WRImageKey aKey);
-  sync DPPushIframe(WRRect aBounds, WRRect aClip, uint64_t aLayersId);
+  async DPEnd(WebRenderCommand[] commands);
 
   async __delete__();
 };
