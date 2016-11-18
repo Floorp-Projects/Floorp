@@ -4,10 +4,16 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import logging
+import os
+
 from . import (
     target_tasks,
 )
 
+logger = logging.getLogger(__name__)
+
+GECKO = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 filter_task_functions = {}
 
@@ -30,3 +36,24 @@ def filter_target_tasks(graph, parameters):
     attr = parameters.get('target_tasks_method', 'all_tasks')
     fn = target_tasks.get_method(attr)
     return fn(graph, parameters)
+
+
+@filter_task('check_servo')
+def filter_servo(graph, parameters):
+    """Filters out tasks requiring Servo if Servo isn't present."""
+    if os.path.exists(os.path.join(GECKO, 'servo')):
+        return graph.tasks.keys()
+
+    logger.info('servo/ directory not present; removing tasks requiring it')
+
+    SERVO_PLATFORMS = {
+        'linux64-stylo',
+    }
+
+    def fltr(task):
+        if task.attributes.get('build_platform') in SERVO_PLATFORMS:
+            return False
+
+        return True
+
+    return [l for l, t in graph.tasks.iteritems() if fltr(t)]
