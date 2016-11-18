@@ -15,6 +15,7 @@ use std::collections::hash_map::Entry;
 use std::hash::BuildHasherDefault;
 use std::mem;
 use std::slice::Iter;
+use std::sync::Arc;
 use time;
 use util;
 use webrender_traits::ImageFormat;
@@ -729,7 +730,7 @@ impl TextureCache {
                   height: u32,
                   stride: Option<u32>,
                   _format: ImageFormat,
-                  bytes: Vec<u8>) {
+                  bytes: Arc<Vec<u8>>) {
         let existing_item = self.items.get(image_id);
 
         // TODO(gw): Handle updates to size/format!
@@ -758,7 +759,7 @@ impl TextureCache {
                   stride: Option<u32>,
                   format: ImageFormat,
                   filter: TextureFilter,
-                  bytes: Vec<u8>) {
+                  bytes: Arc<Vec<u8>>) {
         let result = self.allocate(image_id,
                                    width,
                                    height,
@@ -798,7 +799,7 @@ impl TextureCache {
                                                 result.item.allocated_rect.origin.y,
                                                 result.item.allocated_rect.size.width,
                                                 1,
-                                                top_row_bytes,
+                                                Arc::new(top_row_bytes),
                                                 None)
                 };
 
@@ -810,7 +811,7 @@ impl TextureCache {
                             result.item.requested_rect.size.height + 1,
                         result.item.allocated_rect.size.width,
                         1,
-                        bottom_row_bytes,
+                        Arc::new(bottom_row_bytes),
                         None)
                 };
 
@@ -821,7 +822,7 @@ impl TextureCache {
                         result.item.requested_rect.origin.y,
                         1,
                         result.item.requested_rect.size.height,
-                        left_column_bytes,
+                        Arc::new(left_column_bytes),
                         None)
                 };
 
@@ -831,7 +832,7 @@ impl TextureCache {
                                                 result.item.requested_rect.origin.y,
                                                 1,
                                                 result.item.requested_rect.size.height,
-                                                right_column_bytes,
+                                                Arc::new(right_column_bytes),
                                                 None)
                 };
 

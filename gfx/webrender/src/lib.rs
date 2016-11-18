@@ -73,6 +73,10 @@ mod tiling;
 mod util;
 pub mod bindings;
 
+mod shader_source {
+    include!(concat!(env!("OUT_DIR"), "/shaders.rs"));
+}
+
 mod platform {
     #[cfg(target_os="macos")]
     pub use platform::macos::font;
@@ -119,7 +123,6 @@ extern crate bincode;
 extern crate euclid;
 extern crate fnv;
 extern crate gleam;
-extern crate ipc_channel;
 extern crate num_traits;
 //extern crate notify;
 extern crate time;
@@ -128,4 +131,5 @@ extern crate offscreen_gl_context;
 extern crate byteorder;
 extern crate rayon;
 
+pub use renderer::{ExternalImage, ExternalImageSource, ExternalImageHandler};
 pub use renderer::{Renderer, RendererOptions};

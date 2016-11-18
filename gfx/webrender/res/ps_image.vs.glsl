@@ -6,6 +6,7 @@
 void main(void) {
     Primitive prim = load_primitive(gl_InstanceID);
     Image image = fetch_image(prim.prim_index);
+    ResourceRect res = fetch_resource_rect(prim.user_data.x);
 
 #ifdef WR_FEATURE_TRANSFORM
     TransformVertexInfo vi = write_transform_vertex(prim.local_rect,
@@ -26,8 +27,8 @@ void main(void) {
 
     // vUv will contain how many times this image has wrapped around the image size.
     vec2 texture_size = vec2(textureSize(sColor0, 0));
-    vec2 st0 = image.st_rect.xy / texture_size;
-    vec2 st1 = image.st_rect.zw / texture_size;
+    vec2 st0 = res.uv_rect.xy / texture_size;
+    vec2 st1 = res.uv_rect.zw / texture_size;
 
     vTextureSize = st1 - st0;
     vTextureOffset = st0;

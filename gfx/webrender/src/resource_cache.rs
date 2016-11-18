@@ -16,9 +16,11 @@ use std::collections::hash_map::Entry::{self, Occupied, Vacant};
 use std::fmt::Debug;
 use std::hash::BuildHasherDefault;
 use std::hash::Hash;
+use std::sync::Arc;
 use texture_cache::{TextureCache, TextureCacheItemId};
 use webrender_traits::{Epoch, FontKey, GlyphKey, ImageKey, ImageFormat, ImageRendering};
-use webrender_traits::{FontRenderMode, GlyphDimensions, WebGLContextId};
+use webrender_traits::{FontRenderMode, ImageData, GlyphDimensions, WebGLContextId};
+use webrender_traits::ExternalImageId;
 
 thread_local!(pub static FONT_CONTEXT: RefCell<FontContext> = RefCell::new(FontContext::new()));
 
@@ -58,6 +60,10 @@ impl RenderedGlyphKey {
 pub struct ImageProperties {
     pub format: ImageFormat,
     pub is_opaque: bool,
+    pub external_id: Option<ExternalImageId>,
+    pub width: u32,
+    pub height: u32,
+    pub stride: Option<u32>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -68,7 +74,7 @@ enum State {
 }
 
 struct ImageResource {
-    bytes: Vec<u8>,
+    data: ImageData,
     width: u32,
     height: u32,
     stride: Option<u32>,
@@ -218,14 +224,18 @@ impl ResourceCache {
                               height: u32,
                               stride: Option<u32>,
                               format: ImageFormat,
-                              bytes: Vec<u8>) {
+                              data: ImageData) {
+        let is_opaque = match data {
+            ImageData::Raw(ref bytes) => is_image_opaque(format, bytes),
+            ImageData::External(..) => false,           // TODO: Allow providing this through API.
+        };
         let resource = ImageResource {
-            is_opaque: is_image_opaque(format, &bytes),
+            is_opaque: is_opaque,
             width: width,
             height: height,
             stride: stride,
             format: format,
-            bytes: bytes,
+            data: data,
             epoch: Epoch(0),
         };
 
@@ -254,7 +264,7 @@ impl ResourceCache {
             height: height,
             stride: None,
             format: format,
-            bytes: bytes,
+            data: ImageData::new(bytes),
             epoch: next_epoch,
         };
 
@@ -321,7 +331,7 @@ impl ResourceCache {
                                           None,
                                           ImageFormat::RGBA8,
                                           TextureFilter::Linear,
-                                          result.bytes);
+                                          Arc::new(result.bytes));
                 Some(image_id)
             } else {
                 None
@@ -397,10 +407,11 @@ impl ResourceCache {
     }
 
     #[inline]
-    pub fn get_image(&self,
-                     image_key: ImageKey,
-                     image_rendering: ImageRendering) -> CacheItem {
+    pub fn get_cached_image(&self,
+                            image_key: ImageKey,
+                            image_rendering: ImageRendering) -> CacheItem {
         debug_assert!(self.state == State::QueryResources);
+
         let image_info = &self.cached_images.get(&(image_key, image_rendering),
                                                  self.current_frame_id);
         let item = self.texture_cache.get(image_info.texture_cache_id);
@@ -416,9 +427,18 @@ impl ResourceCache {
     pub fn get_image_properties(&self, image_key: ImageKey) -> ImageProperties {
         let image_template = &self.image_templates[&image_key];
 
+        let external_id = match image_template.data {
+            ImageData::External(id) => Some(id),
+            ImageData::Raw(..) => None,
+        };
+
         ImageProperties {
             format: image_template.format,
             is_opaque: image_template.is_opaque,
+            external_id: external_id,
+            width: image_template.width,
+            height: image_template.height,
+            stride: image_template.stride,
         }
     }
 
@@ -453,47 +473,52 @@ impl ResourceCache {
                     let cached_images = &mut self.cached_images;
                     let image_template = &self.image_templates[&key];
 
-                    match cached_images.entry((key, rendering), self.current_frame_id) {
-                        Occupied(entry) => {
-                            let image_id = entry.get().texture_cache_id;
+                    match image_template.data {
+                        ImageData::Raw(ref bytes) => {
+                            match cached_images.entry((key, rendering), self.current_frame_id) {
+                                Occupied(entry) => {
+                                    let image_id = entry.get().texture_cache_id;
 
-                            if entry.get().epoch != image_template.epoch {
-                                // TODO: Can we avoid the clone of the bytes here?
-                                self.texture_cache.update(image_id,
-                                                          image_template.width,
-                                                          image_template.height,
-                                                          image_template.stride,
-                                                          image_template.format,
-                                                          image_template.bytes.clone());
+                                    if entry.get().epoch != image_template.epoch {
+                                        self.texture_cache.update(image_id,
+                                                                  image_template.width,
+                                                                  image_template.height,
+                                                                  image_template.stride,
+                                                                  image_template.format,
+                                                                  bytes.clone());
 
-                                // Update the cached epoch
-                                *entry.into_mut() = CachedImageInfo {
-                                    texture_cache_id: image_id,
-                                    epoch: image_template.epoch,
-                                };
+                                        // Update the cached epoch
+                                        *entry.into_mut() = CachedImageInfo {
+                                            texture_cache_id: image_id,
+                                            epoch: image_template.epoch,
+                                        };
+                                    }
+                                }
+                                Vacant(entry) => {
+                                    let image_id = self.texture_cache.new_item_id();
+
+                                    let filter = match rendering {
+                                        ImageRendering::Pixelated => TextureFilter::Nearest,
+                                        ImageRendering::Auto | ImageRendering::CrispEdges => TextureFilter::Linear,
+                                    };
+
+                                    self.texture_cache.insert(image_id,
+                                                              image_template.width,
+                                                              image_template.height,
+                                                              image_template.stride,
+                                                              image_template.format,
+                                                              filter,
+                                                              bytes.clone());
+
+                                    entry.insert(CachedImageInfo {
+                                        texture_cache_id: image_id,
+                                        epoch: image_template.epoch,
+                                    });
+                                }
                             }
                         }
-                        Vacant(entry) => {
-                            let image_id = self.texture_cache.new_item_id();
-
-                            let filter = match rendering {
-                                ImageRendering::Pixelated => TextureFilter::Nearest,
-                                ImageRendering::Auto | ImageRendering::CrispEdges => TextureFilter::Linear,
-                            };
-
-                            // TODO: Can we avoid the clone of the bytes here?
-                            self.texture_cache.insert(image_id,
-                                                      image_template.width,
-                                                      image_template.height,
-                                                      image_template.stride,
-                                                      image_template.format,
-                                                      filter,
-                                                      image_template.bytes.clone());
-
-                            entry.insert(CachedImageInfo {
-                                texture_cache_id: image_id,
-                                epoch: image_template.epoch,
-                            });
+                        ImageData::External(..) => {
+                            // External images don't get added to the texture cache!
                         }
                     }
                 }

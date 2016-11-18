@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use display_list::AuxiliaryListsBuilder;
-use euclid::{Rect, Size2D};
+use euclid::{Point2D, Rect, Size2D};
 use {BorderRadius, BorderDisplayItem, ClipRegion, ColorF, ComplexClipRegion};
 use {FontKey, ImageKey, PipelineId, ScrollLayerId, ScrollLayerInfo, ServoScrollRootId};
 use {ImageMask, ItemRange};
@@ -93,10 +93,30 @@ impl ColorF {
 }
 
 impl ComplexClipRegion {
+    /// Create a new complex clip region.
     pub fn new(rect: Rect<f32>, radii: BorderRadius) -> ComplexClipRegion {
         ComplexClipRegion {
             rect: rect,
             radii: radii,
+        }
+    }
+
+    //TODO: move to `util` module?
+    /// Return a maximum aligned rectangle that is fully inside the clip region.
+    pub fn get_inner_rect(&self) -> Option<Rect<f32>> {
+        let k = 0.5; //rough, could be better
+        let xl = self.rect.origin.x +
+            k * self.radii.top_left.width.max(self.radii.bottom_left.width);
+        let xr = self.rect.origin.x + self.rect.size.width -
+            k * self.radii.top_right.width.max(self.radii.bottom_right.width);
+        let yt = self.rect.origin.y +
+            k * self.radii.top_left.height.max(self.radii.top_right.height);
+        let yb = self.rect.origin.y + self.rect.size.height -
+            k * self.radii.bottom_left.height.max(self.radii.bottom_right.height);
+        if xl <= xr && yt <= yb {
+            Some(Rect::new(Point2D::new(xl, yt), Size2D::new(xr-xl, yb-yt)))
+        } else {
+            None
         }
     }
 }
