@@ -120,3 +120,41 @@ win64/pgo:
         config:
             - builds/taskcluster_firefox_win64_opt.py
 
+win64-qr/debug:
+    description: "Win64 Debug QuantumRender"
+    index:
+        product: firefox
+        job-name: win64-qr-debug
+    treeherder:
+        platform: windows2012-64/debug
+        symbol: tc(QR)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        implementation: generic-worker
+        max-run-time: 7200
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_win64_qr_debug.py
+
+win64-qr/opt:
+    description: "Win64 Opt QuantumRender"
+    index:
+        product: firefox
+        job-name: win64-qr-opt
+    treeherder:
+        platform: windows2012-64/opt
+        symbol: tc(QR)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        implementation: generic-worker
+        max-run-time: 7200
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_win64_qr_opt.py
+
