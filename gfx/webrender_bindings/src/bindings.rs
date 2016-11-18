@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use std::ffi::CStr;
 use std::{mem, slice};
 use std::os::raw::c_uchar;
@@ -283,6 +282,7 @@ pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width
     state.size = (width, height);
     state.frame_builder.root_dl_builder.list.clear();
     state.frame_builder.dl_builder.clear();
+    wr_push_dl_builder(state);
     state.z_index = 0;
 
     if state.pipeline_id == window.root_pipeline_id {
@@ -314,7 +314,7 @@ pub extern fn wr_push_dl_builder(state:&mut WrState)
 }
 
 #[no_mangle]
-pub extern fn wr_pop_dl_builder(window: &mut WrWindowState, state: &mut WrState, bounds: WrRect, overflow: WrRect, transform: &Matrix4D<f32>, scroll_id: u64)
+pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, overflow: WrRect, transform: &Matrix4D<f32>, scroll_id: u64)
 {
     // 
     state.z_index += 1;
@@ -340,13 +340,12 @@ pub extern fn wr_pop_dl_builder(window: &mut WrWindowState, state: &mut WrState,
                                                Vec::new(),
                                                &mut state.frame_builder.auxiliary_lists_builder);
 
-    state.frame_builder.root_dl_builder.push_stacking_context(sc);
-    assert!(state.frame_builder.root_dl_builder.list.len() != 0);
+    let mut dl = state.frame_builder.dl_builder.pop().unwrap();
+    let mut prev_dl = state.frame_builder.dl_builder.last_mut().unwrap();
 
-    let mut display_list = state.frame_builder.dl_builder.pop().unwrap();
-    state.frame_builder.root_dl_builder.list.append(&mut display_list.list);
-
-    state.frame_builder.root_dl_builder.pop_stacking_context();
+    prev_dl.push_stacking_context(sc);
+    prev_dl.list.append(&mut dl.list);
+    prev_dl.pop_stacking_context()
 }
 
 #[no_mangle]
@@ -357,6 +356,10 @@ pub extern fn wr_dp_end(window: &mut WrWindowState, state: &mut WrState) {
     let (width, height) = state.size;
 
     // Should be the root one
+    assert!(state.frame_builder.dl_builder.len() == 1);
+    let mut dl = state.frame_builder.dl_builder.pop().unwrap();
+    state.frame_builder.root_dl_builder.list.append(&mut dl.list);
+
     state.frame_builder.root_dl_builder.pop_stacking_context();
 
     let fb = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(pipeline_id));
