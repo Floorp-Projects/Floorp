@@ -6,7 +6,6 @@
 // when the preference is unlocked / locked
 var {classes: Cc, interfaces: Ci} = Components;
 const gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
-const gIsOSX = ("nsILocalFileMac" in Ci);
 const gIsLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc) ||
   ("@mozilla.org/gio-service;1" in Cc);
 

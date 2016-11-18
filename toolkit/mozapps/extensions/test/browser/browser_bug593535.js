@@ -9,7 +9,6 @@ const PREF_GETADDONS_GETSEARCHRESULTS = "extensions.getAddons.search.url";
 const SEARCH_URL = TESTROOT + "browser_bug593535.xml";
 const QUERY = "NOTFOUND";
 
-var gProvider;
 var gManagerWindow;
 
 function test() {

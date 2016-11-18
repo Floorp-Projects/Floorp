@@ -1684,10 +1684,12 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TextInputHandler::HandleKeyDownEvent, "
-     "keydown handled=%s, keypress handled=%s, causedOtherKeyEvents=%s",
+     "keydown handled=%s, keypress handled=%s, causedOtherKeyEvents=%s, "
+     "compositionDispatched=%s",
      this, TrueOrFalse(currentKeyEvent->mKeyDownHandled),
      TrueOrFalse(currentKeyEvent->mKeyPressHandled),
-     TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents)));
+     TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents),
+     TrueOrFalse(currentKeyEvent->mCompositionDispatched)));
   // Insert empty line to the log for easier to read.
   MOZ_LOG(gLog, LogLevel::Info, (""));
   return currentKeyEvent->IsDefaultPrevented();
@@ -2123,7 +2125,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
      "aReplacementRange=%p { location=%llu, length=%llu }, "
      "IsIMEComposing()=%s, IgnoreIMEComposition()=%s, "
      "keyevent=%p, keydownHandled=%s, keypressDispatched=%s, "
-     "causedOtherKeyEvents=%s",
+     "causedOtherKeyEvents=%s, compositionDispatched=%s",
      this, GetCharacters([aAttrString string]), aReplacementRange,
      aReplacementRange ? aReplacementRange->location : 0,
      aReplacementRange ? aReplacementRange->length : 0,
@@ -2134,7 +2136,9 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
      currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mKeyPressDispatched) : "N/A",
      currentKeyEvent ?
-       TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A"));
+       TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A",
+     currentKeyEvent ?
+       TrueOrFalse(currentKeyEvent->mCompositionDispatched) : "N/A"));
 
   if (IgnoreIMEComposition()) {
     return;
@@ -2200,11 +2204,16 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
   // If this is not caused by pressing a key, there is a composition or
   // replacing a range which is different from current selection, let's
   // insert the text as committing a composition.
-  if (!currentKeyEvent || IsIMEComposing() || isReplacingSpecifiedRange) {
+  // If InsertText() is called two or more times, we should insert all
+  // text with composition events.
+  // XXX When InsertText() is called multiple times, Chromium dispatches
+  //     only one composition event.  So, we need to store InsertText()
+  //     calls and flush later.
+  if (!currentKeyEvent || currentKeyEvent->mCompositionDispatched ||
+      IsIMEComposing() || isReplacingSpecifiedRange) {
     InsertTextAsCommittingComposition(aAttrString, aReplacementRange);
     if (currentKeyEvent) {
-      currentKeyEvent->mKeyPressHandled = true;
-      currentKeyEvent->mKeyPressDispatched = true;
+      currentKeyEvent->mCompositionDispatched = true;
     }
     return;
   }
@@ -3157,7 +3166,8 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
      "aReplacementRange=%p { location=%llu, length=%llu }, "
      "Destroyed()=%s, IgnoreIMEComposition()=%s, IsIMEComposing()=%s, "
      "mMarkedRange={ location=%llu, length=%llu }, keyevent=%p, "
-     "keydownHandled=%s, keypressDispatched=%s, causedOtherKeyEvents=%s",
+     "keydownHandled=%s, keypressDispatched=%s, causedOtherKeyEvents=%s, "
+     "compositionDispatched=%s",
      this, GetCharacters([aAttrString string]),
      aSelectedRange.location, aSelectedRange.length, aReplacementRange,
      aReplacementRange ? aReplacementRange->location : 0,
@@ -3171,14 +3181,15 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
      currentKeyEvent ?
        TrueOrFalse(currentKeyEvent->mKeyPressDispatched) : "N/A",
      currentKeyEvent ?
-       TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A"));
+       TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A",
+     currentKeyEvent ?
+       TrueOrFalse(currentKeyEvent->mCompositionDispatched) : "N/A"));
 
-  // If SetMarkedText() is called during composition, that means that
+  // If SetMarkedText() is called during handling a key press, that means that
   // the key event caused this composition.  So, keypress event shouldn't
-  // be dispatched later, let's consume it here.
+  // be dispatched later, let's mark the key event causing composition event.
   if (currentKeyEvent) {
-    currentKeyEvent->mKeyPressHandled = true;
-    currentKeyEvent->mKeyPressDispatched = true;
+    currentKeyEvent->mCompositionDispatched = true;
   }
 
   if (Destroyed() || IgnoreIMEComposition()) {

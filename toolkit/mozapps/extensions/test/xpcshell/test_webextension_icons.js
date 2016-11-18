@@ -153,8 +153,6 @@ add_task(function*() {
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
 
-  let uri = do_get_addon_root_uri(profileDir, ID);
-
   deepEqual(addon.icons, {});
 
   equal(addon.iconURL, null);

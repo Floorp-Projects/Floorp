@@ -10,7 +10,6 @@ Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 Components.utils.import("resource://testing-common/httpd.js");
 var testserver;
 
-var next_test = null;
 var gItemsNotChecked = [];
 
 var ADDONS = [ {id: "bug324121_1@tests.mozilla.org",
@@ -144,8 +143,6 @@ function run_test() {
       restartManager();
 
       AddonManager.getAddonsByTypes(["extension"], function(installedItems) {
-        var items = [];
-
         for (let addon of ADDONS) {
           for (let installedItem of installedItems) {
             if (addon.id != installedItem.id)

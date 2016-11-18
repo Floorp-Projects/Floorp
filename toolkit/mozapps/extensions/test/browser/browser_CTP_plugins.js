@@ -54,6 +54,7 @@ add_task(function*() {
   ok(testPluginId, "part2: Test Plug-in should exist");
 
   let testPlugin = yield new Promise(resolve => AddonManager.getAddonByID(testPluginId, resolve));
+  isnot(testPlugin, null, "part2.1: Test Plug-in should exist");
 
   let pluginEl = get_addon_element(managerWindow, testPluginId);
   pluginEl.parentNode.ensureElementIsVisible(pluginEl);

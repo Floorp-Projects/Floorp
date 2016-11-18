@@ -34,17 +34,6 @@ var theme1 = {
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-function dummyLWTheme(id) {
-  return {
-    id: id || Math.random().toString(),
-    name: Math.random().toString(),
-    headerURL: "http://lwttest.invalid/a.png",
-    footerURL: "http://lwttest.invalid/b.png",
-    textcolor: Math.random().toString(),
-    accentcolor: Math.random().toString()
-  };
-}
-
 // Sets up the profile by installing an add-on.
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");

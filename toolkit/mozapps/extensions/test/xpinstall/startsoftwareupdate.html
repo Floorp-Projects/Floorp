@@ -9,6 +9,7 @@
 <title>InstallTrigger tests</title>
 <script type="text/javascript">
 /* globals InstallTrigger */
+/* exported startInstall */
 function startInstall() {
   InstallTrigger.startSoftwareUpdate(decodeURIComponent(document.location.search.substring(1)));
 }

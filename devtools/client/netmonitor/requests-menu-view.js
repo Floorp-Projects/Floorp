@@ -2,16 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-disable mozilla/reject-some-requires */
 /* globals document, window, dumpn, $, gNetwork, EVENTS, Prefs,
            NetMonitorController, NetMonitorView */
 
 "use strict";
 
-/* eslint-disable mozilla/reject-some-requires */
 const { Cu } = require("chrome");
 const {Task} = require("devtools/shared/task");
 const {DeferredTask} = Cu.import("resource://gre/modules/DeferredTask.jsm", {});
-/* eslint-disable mozilla/reject-some-requires */
 const {SideMenuWidget} = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const {setImageTooltip, getImageDimensions} =
