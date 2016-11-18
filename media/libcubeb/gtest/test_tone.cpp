@@ -114,7 +114,7 @@ TEST(cubeb, tone)
   user_data = (struct cb_user_data *) malloc(sizeof(*user_data));
   if (user_data == NULL) {
     fprintf(stderr, "Error allocating user data\n");
-    ASSERT_EQ(r, CUBEB_OK);
+    FAIL();
   }
   user_data->position = 0;
 
