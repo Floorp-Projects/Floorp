@@ -554,7 +554,7 @@ add_task(function* init() {
   writeInstallRDFForExtension(regexpblock_1, profileDir);
   startupManager();
 
-  let [s1, s2, s3, s4, s5, h, r] = yield promiseAddonsByIDs(ADDON_IDS);
+  let [/* s1 */, /* s2 */, /* s3 */, s4, s5, /* h, r */] = yield promiseAddonsByIDs(ADDON_IDS);
   s4.userDisabled = true;
   s5.userDisabled = false;
 });
@@ -968,7 +968,7 @@ add_task(function* run_addon_change_2_test() {
 
   startupManager(false);
 
-  let [s1, s2, s3, s4, s5, h, r] = yield promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, /* s4 */, /* s5 */, h, r] = yield promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
@@ -1005,7 +1005,7 @@ add_task(function* addon_change_2_test_2() {
 
   startupManager(false);
 
-  let [s1, s2, s3, s4, s5, h, r] = yield promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, /* s4 */, /* s5 */, h, r] = yield promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "3.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "3.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
@@ -1219,7 +1219,7 @@ add_task(function* run_manual_update_2_test() {
 
   startupManager(false);
 
-  let [s1, s2, s3, s4, s5, h, r] = yield promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, /* s5 */, h, r] = yield promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
@@ -1237,7 +1237,7 @@ add_task(function* run_manual_update_2_test() {
   yield Pmanual_update("2");
   yield promiseRestartManager();
 
-  [s1, s2, s3, s4, s5, h, r] = yield promiseAddonsByIDs(ADDON_IDS);
+  [s1, s2, s3, s4, /* s5 */, h, r] = yield promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "2.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
@@ -1251,7 +1251,7 @@ add_task(function* run_manual_update_2_test() {
   yield Pmanual_update("3");
   yield promiseRestartManager();
 
-  [s1, s2, s3, s4, s5, h, r] = yield promiseAddonsByIDs(ADDON_IDS);
+  [s1, s2, s3, s4, /* s5 */, h, r] = yield promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "3.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "3.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
@@ -1295,7 +1295,7 @@ add_task(function* run_local_install_test() {
   // Should have finished all installs without needing to restart
   do_check_eq(aInstalls.length, 0);
 
-  let [s1, s2, s3, s4, s5, h, r] = yield promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, /* s4 */, /* s5 */, h, r] = yield promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);

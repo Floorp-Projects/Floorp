@@ -15,7 +15,6 @@ var gCategoryUtilities;
 
 var gApp = document.getElementById("bundle_brand").getString("brandShortName");
 var gVersion = Services.appinfo.version;
-var gBlocklistURL = Services.urlFormatter.formatURLPref("extensions.blocklist.detailsURL");
 var gDate = new Date(2010, 7, 16);
 var infoURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
 
@@ -472,10 +471,9 @@ add_task(function*() {
 
 // Check the add-ons are now in the right state
 add_task(function*() {
-  let [a1, a2, a4, a6] = yield promiseAddonsByIDs(["addon1@tests.mozilla.org",
-                                                   "addon2@tests.mozilla.org",
-                                                   "addon4@tests.mozilla.org",
-                                                   "addon6@tests.mozilla.org"]);
+  let [a1, a2, a4] = yield promiseAddonsByIDs(["addon1@tests.mozilla.org",
+                                               "addon2@tests.mozilla.org",
+                                               "addon4@tests.mozilla.org"]);
 
   is(a1.pendingOperations, AddonManager.PENDING_DISABLE, "Add-on 1 should be pending disable");
   is(a2.pendingOperations, AddonManager.PENDING_ENABLE, "Add-on 2 should be pending enable");
@@ -847,7 +845,7 @@ add_task(function*() {
   info("Addon 10");
   let addon = items["Test add-on 10"];
   addon.parentNode.ensureElementIsVisible(addon);
-  let { name, version } = yield get_tooltip_info(addon);
+  let { name } = yield get_tooltip_info(addon);
   is(get_node(addon, "name").value, "Test add-on 10", "Name should be correct");
   is(name, "Test add-on 10", "Tooltip name should be correct");
 
@@ -867,7 +865,7 @@ add_task(function*() {
   info("Addon 11");
   addon = items["Test add-on 11"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 11", "Name should be correct");
   is(name, "Test add-on 11", "Tooltip name should be correct");
 
@@ -887,7 +885,7 @@ add_task(function*() {
   info("Addon 12");
   addon = items["Test add-on 12"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon))
+  ({ name } = yield get_tooltip_info(addon))
   is(get_node(addon, "name").value, "Test add-on 12", "Name should be correct");
   is(name, "Test add-on 12", "Tooltip name should be correct");
 
@@ -904,7 +902,7 @@ add_task(function*() {
   info("Addon 13");
   addon = items["Test add-on 13"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = yield get_tooltip_info(addon));
+  ({ name } = yield get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 13", "Name should be correct");
   is(name, "Test add-on 13", "Tooltip name should be correct");
 

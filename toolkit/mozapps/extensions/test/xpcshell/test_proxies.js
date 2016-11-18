@@ -39,11 +39,6 @@ var METADATA = {
 
 const ios = AM_Cc["@mozilla.org/network/io-service;1"].getService(AM_Ci.nsIIOService);
 
-const LocalFile = Components.Constructor("@mozilla.org/file/local;1",
-                                         "nsILocalFile", "initWithPath");
-const Process = Components.Constructor("@mozilla.org/process/util;1",
-                                       "nsIProcess", "init");
-
 const gHaveSymlinks = AppConstants.platform != "win";
 
 

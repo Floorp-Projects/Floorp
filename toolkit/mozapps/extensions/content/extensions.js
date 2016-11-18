@@ -5,7 +5,8 @@
 "use strict";
 
 /* import-globals-from ../../../content/contentAreaUtils.js */
-/* globals XMLStylesheetProcessingInstruction*/
+/* globals XMLStylesheetProcessingInstruction */
+/* exported UPDATES_RELEASENOTES_TRANSFORMFILE, XMLURI_PARSE_ERROR, loadView */
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
@@ -3168,8 +3169,6 @@ var gDetailView = {
     this._loadingTimer = setTimeout(() => {
       this.node.setAttribute("loading-extended", true);
     }, LOADING_MSG_DELAY);
-
-    var view = gViewController.currentViewId;
 
     AddonManager.getAddonByID(aAddonId, (aAddon) => {
       if (gViewController && aRequest != gViewController.currentViewRequest)

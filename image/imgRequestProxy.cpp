@@ -23,7 +23,7 @@ using namespace mozilla::image;
 class ProxyBehaviour
 {
  public:
-  virtual ~ProxyBehaviour() {}
+  virtual ~ProxyBehaviour() = default;
 
   virtual already_AddRefed<mozilla::image::Image> GetImage() const = 0;
   virtual bool HasImage() const = 0;
@@ -37,15 +37,15 @@ class RequestBehaviour : public ProxyBehaviour
  public:
   RequestBehaviour() : mOwner(nullptr), mOwnerHasImage(false) {}
 
-  virtual already_AddRefed<mozilla::image::Image>GetImage() const override;
-  virtual bool HasImage() const override;
-  virtual already_AddRefed<ProgressTracker> GetProgressTracker() const override;
+  already_AddRefed<mozilla::image::Image>GetImage() const override;
+  bool HasImage() const override;
+  already_AddRefed<ProgressTracker> GetProgressTracker() const override;
 
-  virtual imgRequest* GetOwner() const override {
+  imgRequest* GetOwner() const override {
     return mOwner;
   }
 
-  virtual void SetOwner(imgRequest* aOwner) override {
+  void SetOwner(imgRequest* aOwner) override {
     mOwner = aOwner;
 
     if (mOwner) {
@@ -1027,26 +1027,26 @@ class StaticBehaviour : public ProxyBehaviour
 public:
   explicit StaticBehaviour(mozilla::image::Image* aImage) : mImage(aImage) {}
 
-  virtual already_AddRefed<mozilla::image::Image>
+  already_AddRefed<mozilla::image::Image>
   GetImage() const override {
     RefPtr<mozilla::image::Image> image = mImage;
     return image.forget();
   }
 
-  virtual bool HasImage() const override {
+  bool HasImage() const override {
     return mImage;
   }
 
-  virtual already_AddRefed<ProgressTracker> GetProgressTracker()
+  already_AddRefed<ProgressTracker> GetProgressTracker()
     const override  {
     return mImage->GetProgressTracker();
   }
 
-  virtual imgRequest* GetOwner() const override {
+  imgRequest* GetOwner() const override {
     return nullptr;
   }
 
-  virtual void SetOwner(imgRequest* aOwner) override {
+  void SetOwner(imgRequest* aOwner) override {
     MOZ_ASSERT(!aOwner,
                "We shouldn't be giving static requests a non-null owner.");
   }

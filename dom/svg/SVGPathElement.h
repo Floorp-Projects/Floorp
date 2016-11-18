@@ -27,8 +27,6 @@ namespace dom {
 
 class SVGPathElement final : public SVGPathElementBase
 {
-friend class nsSVGPathFrame;
-
   typedef mozilla::gfx::Path Path;
 
 protected:
