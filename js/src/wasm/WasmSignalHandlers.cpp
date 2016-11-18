@@ -1273,7 +1273,18 @@ static void
 JitInterruptHandler(int signum, siginfo_t* info, void* context)
 {
     if (JSRuntime* rt = RuntimeForCurrentThread()) {
+
+#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
+        bool prevICacheCheckingState = Simulator::ICacheCheckingEnabled;
+        Simulator::ICacheCheckingEnabled = false;
+#endif
+
         RedirectJitCodeToInterruptCheck(rt, (CONTEXT*)context);
+
+#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
+        Simulator::ICacheCheckingEnabled = prevICacheCheckingState;
+#endif // JS_SIMULATOR
+
         rt->finishHandlingJitInterrupt();
     }
 }
