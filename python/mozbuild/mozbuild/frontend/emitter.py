@@ -1266,6 +1266,8 @@ class TreeMetadataEmitter(LoggingMixin):
         manifest_dir = mozpath.dirname(path)
         manifest_reldir = mozpath.dirname(mozpath.relpath(path,
             context.config.topsrcdir))
+        manifest_sources = [mozpath.relpath(pth, context.config.topsrcdir)
+                            for pth in mpmanifest.source_files]
         install_prefix = mozpath.join(install_root, install_subdir)
 
         try:
@@ -1277,6 +1279,7 @@ class TreeMetadataEmitter(LoggingMixin):
             obj = TestManifest(context, path, mpmanifest, flavor=flavor,
                 install_prefix=install_prefix,
                 relpath=mozpath.join(manifest_reldir, mozpath.basename(path)),
+                sources=manifest_sources,
                 dupe_manifest='dupe-manifest' in defaults)
 
             filtered = mpmanifest.tests
