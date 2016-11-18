@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-using WRImageKey from "webrender.h";
-using WRRect from "webrender.h";
+using WRImageKey from "mozilla/gfx/webrender.h";
+using WRRect from "mozilla/gfx/webrender.h";
 using MaybeImageMask from "mozilla/layers/WebRenderTypes.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 

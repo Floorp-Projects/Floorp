@@ -1,0 +1,19 @@
+[package]
+name = "webrender_bindings"
+version = "0.1.0"
+authors = ["The Mozilla Project Developers"]
+license = "MPL-2.0"
+
+[dependencies]
+webrender = {path = "../webrender"}
+webrender_traits = {path = "../webrender_traits"}
+euclid = "0.10"
+app_units = "0.3"
+gleam = "0.2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.2.2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+kernel32-sys = "0.2"
+winapi = "0.2.8"
