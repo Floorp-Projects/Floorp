@@ -1,10 +1,11 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* eslint-disable mozilla/reject-some-requires */
 /* globals window, document, NetMonitorView, gStore, Actions */
 /* exported loader */
+
 "use strict";
 
 var { utils: Cu } = Components;
@@ -35,7 +36,6 @@ var { loader, require } = BrowserLoaderModule.BrowserLoader({
 
 const promise = require("promise");
 const Services = require("Services");
-/* eslint-disable mozilla/reject-some-requires */
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Editor = require("devtools/client/sourceeditor/editor");
