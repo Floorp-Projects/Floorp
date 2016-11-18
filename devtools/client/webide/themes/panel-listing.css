@@ -130,7 +130,6 @@ button.panel-item:not(:disabled):hover {
 .project-panel-item-openpackaged  { background-image: -moz-image-rect(url("icons.png"), 260, 438, 286, 412); }
 .runtime-panel-item-simulator     { background-image: -moz-image-rect(url("icons.png"), 0, 438, 26, 412); }
 .runtime-panel-item-other         { background-image: -moz-image-rect(url("icons.png"), 26, 438, 52, 412); }
-#runtime-permissions              { background-image: -moz-image-rect(url("icons.png"), 105, 438, 131, 412); }
 #runtime-screenshot               { background-image: -moz-image-rect(url("icons.png"), 131, 438, 156, 412); }
 
 #runtime-preferences,

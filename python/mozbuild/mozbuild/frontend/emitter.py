@@ -184,8 +184,6 @@ class TreeMetadataEmitter(LoggingMixin):
         if os.path.exists(subconfigures):
             paths = open(subconfigures).read().splitlines()
         self._external_paths = set(mozpath.normsep(d) for d in paths)
-        # Add security/nss manually, since it doesn't have a subconfigure.
-        self._external_paths.add('security/nss')
 
         self._emitter_time = 0.0
         self._object_count = 0

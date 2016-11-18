@@ -440,7 +440,6 @@ var UI = {
     // Runtime commands
     let monitorCmd = document.querySelector("#cmd_showMonitor");
     let screenshotCmd = document.querySelector("#cmd_takeScreenshot");
-    let permissionsCmd = document.querySelector("#cmd_showPermissionsTable");
     let detailsCmd = document.querySelector("#cmd_showRuntimeDetails");
     let disconnectCmd = document.querySelector("#cmd_disconnectRuntime");
     let devicePrefsCmd = document.querySelector("#cmd_showDevicePrefs");
@@ -450,7 +449,6 @@ var UI = {
       if (AppManager.deviceFront) {
         monitorCmd.removeAttribute("disabled");
         detailsCmd.removeAttribute("disabled");
-        permissionsCmd.removeAttribute("disabled");
         screenshotCmd.removeAttribute("disabled");
       }
       if (AppManager.preferenceFront) {
@@ -463,7 +461,6 @@ var UI = {
     } else {
       monitorCmd.setAttribute("disabled", "true");
       detailsCmd.setAttribute("disabled", "true");
-      permissionsCmd.setAttribute("disabled", "true");
       screenshotCmd.setAttribute("disabled", "true");
       disconnectCmd.setAttribute("disabled", "true");
       devicePrefsCmd.setAttribute("disabled", "true");
@@ -1045,10 +1042,6 @@ var Cmds = {
         UI.openInBrowser(dataURL);
       });
     }), "taking screenshot");
-  },
-
-  showPermissionsTable: function () {
-    UI.selectDeckPanel("permissionstable");
   },
 
   showRuntimeDetails: function () {

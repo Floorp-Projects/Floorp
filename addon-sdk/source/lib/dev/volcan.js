@@ -3296,17 +3296,6 @@ module.exports={
               "_retval": "longstring"
             }
           }
-        },
-        {
-          "name": "getRawPermissionsTable",
-          "request": {
-            "type": "getRawPermissionsTable"
-          },
-          "response": {
-            "value": {
-              "_retval": "json"
-            }
-          }
         }
       ],
       "events": {}

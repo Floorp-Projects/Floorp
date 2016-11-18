@@ -10,8 +10,7 @@
 #define OK 0
 
 // Error codes that are no longer used should not be used again unless they
-// aren't used in client code (e.g. nsUpdateService.js, updates.js,
-// UpdatePrompt.js, etc.).
+// aren't used in client code (e.g. nsUpdateService.js, updates.js, etc.).
 
 #define MAR_ERROR_EMPTY_ACTION_LIST 1
 #define LOADSOURCE_ERROR_WRONG_SIZE 2

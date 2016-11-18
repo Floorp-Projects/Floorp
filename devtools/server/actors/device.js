@@ -13,7 +13,6 @@ const {DebuggerServer} = require("devtools/server/main");
 const {getSystemInfo, getSetting} = require("devtools/shared/system");
 const {deviceSpec} = require("devtools/shared/specs/device");
 const FileReader = require("FileReader");
-const {PermissionsTable} = require("resource://gre/modules/PermissionsTable.jsm");
 
 var DeviceActor = exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
   _desc: null,
@@ -56,15 +55,5 @@ var DeviceActor = exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, 
     context.drawWindow(window, 0, 0, width, height, "rgb(255,255,255)", flags);
     let dataURL = canvas.toDataURL("image/png");
     return new LongStringActor(this.conn, dataURL);
-  },
-
-  getRawPermissionsTable: function () {
-    return {
-      rawPermissionsTable: PermissionsTable,
-      UNKNOWN_ACTION: Ci.nsIPermissionManager.UNKNOWN_ACTION,
-      ALLOW_ACTION: Ci.nsIPermissionManager.ALLOW_ACTION,
-      DENY_ACTION: Ci.nsIPermissionManager.DENY_ACTION,
-      PROMPT_ACTION: Ci.nsIPermissionManager.PROMPT_ACTION
-    };
   }
 });

@@ -1,0 +1,38 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+gyp_vars = {}
+
+os = CONFIG['OS_TARGET']
+
+if os == 'WINNT':
+    gyp_vars.update(
+        MSVS_VERSION=CONFIG['_MSVS_VERSION'],
+        MSVS_OS_BITS=64 if CONFIG['HAVE_64BIT_BUILD'] else 32,
+    )
+
+flavors = {
+    'WINNT': 'win',
+    'Android': 'linux' if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' else 'android',
+    'Linux': 'linux',
+    'Darwin': 'mac' if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa' else 'ios',
+    'SunOS': 'solaris',
+    'GNU/kFreeBSD': 'freebsd',
+    'DragonFly': 'dragonfly',
+    'FreeBSD': 'freebsd',
+    'NetBSD': 'netbsd',
+    'OpenBSD': 'openbsd',
+}
+gyp_vars['OS'] = flavors.get(os)
+
+arches = {
+    'x86_64': 'x64',
+    'x86': 'ia32',
+    'aarch64': 'arm64',
+}
+
+gyp_vars['host_arch'] = arches.get(CONFIG['HOST_CPU_ARCH'], CONFIG['HOST_CPU_ARCH'])
+gyp_vars['target_arch'] = arches.get(CONFIG['CPU_ARCH'], CONFIG['CPU_ARCH'])

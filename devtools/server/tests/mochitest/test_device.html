@@ -18,7 +18,6 @@ window.onload = function() {
   var Cc = Components.classes;
   var Ci = Components.interfaces;
 
-  Cu.import("resource://gre/modules/PermissionsTable.jsm");
   var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   var {DebuggerClient} = require("devtools/shared/client/main");
   var {DebuggerServer} = require("devtools/server/main");
@@ -38,7 +37,7 @@ window.onload = function() {
     client.listTabs(function onListTabs(aResponse) {
       var d = getDeviceFront(client, aResponse);
 
-      var desc, permissions;
+      var desc;
       var appInfo = Services.appinfo;
       var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
@@ -72,11 +71,6 @@ window.onload = function() {
         var profileDir = currProfD.path;
         ok(profileDir.indexOf(desc.profile.length > 0 && desc.profile) != -1, "valid profile name");
 
-        var a = JSON.stringify(PermissionsTable);
-        var b = JSON.stringify(permissions.rawPermissionsTable);
-
-        is(a, b, "Permissions Tables is valid");
-
         client.close().then(() => {
           DebuggerServer.destroy();
           SimpleTest.finish()
@@ -85,8 +79,6 @@ window.onload = function() {
 
 
       d.getDescription().then((v) => desc = v)
-      .then(() => d.getRawPermissionsTable())
-      .then((json) => permissions = json)
       .then(checkValues);
 
     });
