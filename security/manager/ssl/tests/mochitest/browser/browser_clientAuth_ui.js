@@ -90,8 +90,19 @@ function checkDialogContents(win, notBefore, notAfter) {
                "Actual and expected token name should be equal");
 }
 
+function findCertByCommonName(commonName) {
+  let certEnumerator = certDB.getCerts().getEnumerator();
+  while (certEnumerator.hasMoreElements()) {
+    let cert = certEnumerator.getNext().QueryInterface(Ci.nsIX509Cert);
+    if (cert.commonName == commonName) {
+      return cert;
+    }
+  }
+  return null;
+}
+
 add_task(function* setup() {
-  cert = certDB.findCertByNickname("test client certificate");
+  cert = findCertByCommonName("Mochitest client");
   Assert.notEqual(cert, null, "Should be able to find the test client cert");
 });
 

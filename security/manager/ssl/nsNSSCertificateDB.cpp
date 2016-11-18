@@ -11,6 +11,7 @@
 #include "SharedSSLState.h"
 #include "certdb.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Unused.h"
 #include "nsArray.h"
@@ -1332,8 +1333,14 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
 NS_IMETHODIMP
 nsNSSCertificateDB::AddCertFromBase64(const nsACString& aBase64,
                                       const nsACString& aTrust,
-                                      const nsACString& /*aName*/)
+                                      nsIX509Cert** addedCertificate)
 {
+  MOZ_ASSERT(addedCertificate);
+  if (!addedCertificate) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *addedCertificate = nullptr;
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -1359,7 +1366,12 @@ nsNSSCertificateDB::AddCertFromBase64(const nsACString& aBase64,
   // If there's already a certificate that matches this one in the database, we
   // still want to set its trust to the given value.
   if (tmpCert->isperm) {
-    return SetCertTrustFromString(newCert, aTrust);
+    rv = SetCertTrustFromString(newCert, aTrust);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    newCert.forget(addedCertificate);
+    return NS_OK;
   }
 
   UniquePORTString nickname(CERT_MakeCANickname(tmpCert.get()));
@@ -1373,17 +1385,22 @@ nsNSSCertificateDB::AddCertFromBase64(const nsACString& aBase64,
 
   SECStatus srv = CERT_AddTempCertToPerm(tmpCert.get(), nickname.get(),
                                          trust.GetTrust());
-  return MapSECStatus(srv);
+  if (srv != SECSuccess) {
+    return MapSECStatus(srv);
+  }
+  newCert.forget(addedCertificate);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::AddCert(const nsACString& aCertDER, const nsACString& aTrust,
-                            const nsACString& aName)
+nsNSSCertificateDB::AddCert(const nsACString& aCertDER,
+                            const nsACString& aTrust,
+                            nsIX509Cert** addedCertificate)
 {
   nsCString base64;
   nsresult rv = Base64Encode(aCertDER, base64);
   NS_ENSURE_SUCCESS(rv, rv);
-  return AddCertFromBase64(base64, aTrust, aName);
+  return AddCertFromBase64(base64, aTrust, addedCertificate);
 }
 
 NS_IMETHODIMP

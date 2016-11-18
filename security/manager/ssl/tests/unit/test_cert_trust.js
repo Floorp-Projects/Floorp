@@ -9,15 +9,10 @@ do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb  = Cc["@mozilla.org/security/x509certdb;1"]
                   .getService(Ci.nsIX509CertDB);
 
-var certList = [
-  'ee',
-  'int',
-  'ca',
-];
-
 function load_cert(cert_name, trust_string) {
   let cert_filename = cert_name + ".pem";
-  addCertFromFile(certdb, "test_cert_trust/" + cert_filename, trust_string);
+  return addCertFromFile(certdb, "test_cert_trust/" + cert_filename,
+                         trust_string);
 }
 
 function setup_basic_trusts(ca_cert, int_cert) {
@@ -50,7 +45,7 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
 
 
   // Test of active distrust. No usage should pass.
-  setCertTrust(cert_to_modify_trust, 'p,p,p');
+  setCertTrust(cert_to_modify_trust, "p,p,p");
   checkCertErrorGeneric(certdb, ee_cert, SEC_ERROR_UNTRUSTED_ISSUER,
                         certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, ee_cert, SEC_ERROR_UNTRUSTED_ISSUER,
@@ -70,7 +65,7 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
 
   // Trust set to T  -  trusted CA to issue client certs, where client cert is
   // usageSSLClient.
-  setCertTrust(cert_to_modify_trust, 'T,T,T');
+  setCertTrust(cert_to_modify_trust, "T,T,T");
   checkCertErrorGeneric(certdb, ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER
                                                   : PRErrorCodeSuccess,
                         certificateUsageSSLServer);
@@ -101,7 +96,7 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
 
 
   // Now tests on the SSL trust bit
-  setCertTrust(cert_to_modify_trust, 'p,C,C');
+  setCertTrust(cert_to_modify_trust, "p,C,C");
   checkCertErrorGeneric(certdb, ee_cert, SEC_ERROR_UNTRUSTED_ISSUER,
                         certificateUsageSSLServer);
 
@@ -122,7 +117,7 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
                         certificateUsageStatusResponder);
 
   // Inherited trust SSL
-  setCertTrust(cert_to_modify_trust, ',C,C');
+  setCertTrust(cert_to_modify_trust, ",C,C");
   checkCertErrorGeneric(certdb, ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER
                                                   : PRErrorCodeSuccess,
                         certificateUsageSSLServer);
@@ -143,7 +138,7 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
                         certificateUsageStatusResponder);
 
   // Now tests on the EMAIL trust bit
-  setCertTrust(cert_to_modify_trust, 'C,p,C');
+  setCertTrust(cert_to_modify_trust, "C,p,C");
   checkCertErrorGeneric(certdb, ee_cert, PRErrorCodeSuccess,
                         certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, ee_cert, SEC_ERROR_UNTRUSTED_ISSUER,
@@ -163,7 +158,7 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
 
 
   //inherited EMAIL Trust
-  setCertTrust(cert_to_modify_trust, 'C,,C');
+  setCertTrust(cert_to_modify_trust, "C,,C");
   checkCertErrorGeneric(certdb, ee_cert, PRErrorCodeSuccess,
                         certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER
@@ -187,16 +182,22 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
 
 
 function run_test() {
+  let certList = [
+    "ca",
+    "int",
+    "ee",
+  ];
+  let loadedCerts = [];
   for (let i = 0 ; i < certList.length; i++) {
-    load_cert(certList[i], ',,');
+    loadedCerts.push(load_cert(certList[i], ",,"));
   }
 
-  let ca_cert = certdb.findCertByNickname('ca');
-  notEqual(ca_cert, null, "CA cert should be in the cert DB");
-  let int_cert = certdb.findCertByNickname('int');
-  notEqual(int_cert, null, "Intermediate cert should be in the cert DB");
-  let ee_cert = certdb.findCertByNickname('ee');
-  notEqual(ee_cert, null, "EE cert should be in the cert DB");
+  let ca_cert = loadedCerts[0];
+  notEqual(ca_cert, null, "CA cert should have successfully loaded");
+  let int_cert = loadedCerts[1];
+  notEqual(int_cert, null, "Intermediate cert should have successfully loaded");
+  let ee_cert = loadedCerts[2];
+  notEqual(ee_cert, null, "EE cert should have successfully loaded");
 
   setup_basic_trusts(ca_cert, int_cert);
   test_ca_distrust(ee_cert, ca_cert, true);
