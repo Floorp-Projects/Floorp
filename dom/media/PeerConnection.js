@@ -1042,11 +1042,6 @@ RTCPeerConnection.prototype = {
     stream.getTracks().forEach(track => this.addTrack(track, stream));
   },
 
-  getStreamById: function(id) {
-    throw new this._win.DOMException("getStreamById not yet implemented",
-                                     "NotSupportedError");
-  },
-
   addTrack: function(track, stream) {
     if (stream.currentTime === undefined) {
       throw new this._win.DOMException("invalid stream.", "InvalidParameterError");

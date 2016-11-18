@@ -1,9 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
-const { getAbbreviatedMimeType,
-        getUriNameWithQuery,
-        getUriHostPort,
-        loadCauseString } = require("./request-utils");
+const {
+  getAbbreviatedMimeType,
+  getUrlBaseNameWithQuery,
+  getUrlHost,
+  loadCauseString,
+} = require("./request-utils");
 
 /**
  * Predicates used when sorting items.
@@ -36,8 +42,8 @@ function method(first, second) {
 }
 
 function file(first, second) {
-  let firstUrl = getUriNameWithQuery(first.url).toLowerCase();
-  let secondUrl = getUriNameWithQuery(second.url).toLowerCase();
+  let firstUrl = getUrlBaseNameWithQuery(first.url).toLowerCase();
+  let secondUrl = getUrlBaseNameWithQuery(second.url).toLowerCase();
   if (firstUrl == secondUrl) {
     return first.startedMillis - second.startedMillis;
   }
@@ -45,8 +51,8 @@ function file(first, second) {
 }
 
 function domain(first, second) {
-  let firstDomain = getUriHostPort(first.url).toLowerCase();
-  let secondDomain = getUriHostPort(second.url).toLowerCase();
+  let firstDomain = getUrlHost(first.url).toLowerCase();
+  let secondDomain = getUrlHost(second.url).toLowerCase();
   if (firstDomain == secondDomain) {
     return first.startedMillis - second.startedMillis;
   }

@@ -34,7 +34,6 @@
 #include "nsSocketTransportService2.h"
 #include "nsAlgorithm.h"
 #include "ASpdySession.h"
-#include "mozIApplicationClearPrivateDataParams.h"
 #include "EventTokenBucket.h"
 #include "Tickler.h"
 #include "nsIXULAppInfo.h"
@@ -391,7 +390,6 @@ nsHttpHandler::Init()
         obsService->AddObserver(this, "net:prune-all-connections", true);
         obsService->AddObserver(this, "net:failed-to-process-uri-content", true);
         obsService->AddObserver(this, "last-pb-context-exited", true);
-        obsService->AddObserver(this, "webapps-clear-data", true);
         obsService->AddObserver(this, "browser:purge-session-history", true);
         obsService->AddObserver(this, NS_NETWORK_LINK_TOPIC, true);
         obsService->AddObserver(this, "application-background", true);
@@ -2168,10 +2166,6 @@ nsHttpHandler::Observe(nsISupports *subject,
         }
     } else if (!strcmp(topic, "last-pb-context-exited")) {
         mPrivateAuthCache.ClearAll();
-        if (mConnMgr) {
-            mConnMgr->ClearAltServiceMappings();
-        }
-    } else if (!strcmp(topic, "webapps-clear-data")) {
         if (mConnMgr) {
             mConnMgr->ClearAltServiceMappings();
         }

@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489415
 <script type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
-var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
+var pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
 var throwOutside = e => setTimeout(() => { throw e; });
 
 // Generate a random key. The first load with that key will return

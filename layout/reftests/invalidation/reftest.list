@@ -5,8 +5,8 @@
 == 540247-1.xul 540247-1-ref.xul
 == 543681-1.html 543681-1-ref.html
 == 1243409-1.html 1243409-1-ref.html
-== test-image-layers.html test-image-layers-ref.html
-== test-image-layers-multiple-displayitem.html test-image-layers-ref.html
+skip == test-image-layers.html test-image-layers-ref.html # Bug 1067360
+skip == test-image-layers-multiple-displayitem.html test-image-layers-ref.html # Bug 1067360
 pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == test-animated-image-layers.html test-animated-image-layers-ref.html
 pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == test-animated-image-layers-background.html test-animated-image-layers-ref.html
 == box-shadow-border-radius.html box-shadow-border-radius-ref.html
@@ -78,3 +78,16 @@ pref(layers.single-tile.enabled,false) != fast-scrolling.html about:blank
 == zero-opacity-animation.html about:blank
 == zero-opacity-text.html about:blank
 == negative-w-component.html negative-w-component-ref.html
+
+== mask-invalidation-1a.html mask-invalidation-1-ref.html
+== mask-invalidation-1b.html mask-invalidation-1-ref.html
+
+== mask-invalidation-2a.html mask-invalidation-2-ref.html
+== mask-invalidation-2b.html mask-invalidation-2-ref.html
+== mask-invalidation-2c.html mask-invalidation-2-ref.html
+== mask-invalidation-2d.html mask-invalidation-2-ref.html
+
+== clip-path-invalidation-1a.html mask-invalidation-2-ref.html
+== clip-path-invalidation-1b.html mask-invalidation-2-ref.html
+== clip-path-invalidation-1c.html mask-invalidation-2-ref.html
+== clip-path-invalidation-1d.html mask-invalidation-2-ref.html

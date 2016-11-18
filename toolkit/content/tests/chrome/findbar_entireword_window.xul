@@ -105,10 +105,8 @@
 
     function onLoad() {
       Task.spawn(function* () {
-        yield new Promise(resolve => {
-          SpecialPowers.pushPrefEnv(
-            { set: [["findbar.entireword", true]] }, resolve);
-        });
+        yield SpecialPowers.pushPrefEnv(
+          { set: [["findbar.entireword", true]] });
 
         gFindBar = document.getElementById("FindToolbar");
         for (let browserId of ["content", "content-remote"]) {

@@ -5,30 +5,45 @@
 add_task(function* testTabEvents() {
   async function background() {
     let events = [];
+    let eventPromise;
+    let checkEvents = () => {
+      if (eventPromise && events.length >= eventPromise.names.length) {
+        eventPromise.resolve();
+      }
+    };
+
     browser.tabs.onCreated.addListener(tab => {
       events.push({type: "onCreated", tab});
+      checkEvents();
     });
 
     browser.tabs.onAttached.addListener((tabId, info) => {
       events.push(Object.assign({type: "onAttached", tabId}, info));
+      checkEvents();
     });
 
     browser.tabs.onDetached.addListener((tabId, info) => {
       events.push(Object.assign({type: "onDetached", tabId}, info));
+      checkEvents();
     });
 
     browser.tabs.onRemoved.addListener((tabId, info) => {
       events.push(Object.assign({type: "onRemoved", tabId}, info));
+      checkEvents();
     });
 
     browser.tabs.onMoved.addListener((tabId, info) => {
       events.push(Object.assign({type: "onMoved", tabId}, info));
+      checkEvents();
     });
 
     async function expectEvents(names) {
       browser.test.log(`Expecting events: ${names.join(", ")}`);
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => {
+        eventPromise = {names, resolve};
+        checkEvents();
+      });
 
       browser.test.assertEq(names.length, events.length, "Got expected number of events");
       for (let [i, name] of names.entries()) {

@@ -140,12 +140,16 @@ DevTools.prototype = {
       tool = this._tools.get(tool);
     }
     else {
+      let {Deprecated} = Cu.import("resource://gre/modules/Deprecated.jsm", {});
+      Deprecated.warning("Deprecation WARNING: gDevTools.unregisterTool(tool) is deprecated. " +
+                         "You should unregister a tool using its toolId: " +
+                         "gDevTools.unregisterTool(toolId).");
       toolId = tool.id;
     }
     this._tools.delete(toolId);
 
     if (!isQuitApplication) {
-      this.emit("tool-unregistered", tool);
+      this.emit("tool-unregistered", toolId);
     }
   },
 

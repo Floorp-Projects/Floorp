@@ -3,8 +3,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const TEST_APP_ID            = "xpcshell@tests.mozilla.org";
-
 
 const EVENT_NAME = "blocklist-data-gfxItems";
 

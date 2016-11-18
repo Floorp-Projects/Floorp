@@ -186,15 +186,15 @@ OptionsPanel.prototype = {
       "tools-not-supported-label");
     let atleastOneToolNotSupported = false;
 
+    const toolbox = this.toolbox;
+
+    // Signal tool registering/unregistering globally (for the tools registered
+    // globally) and per toolbox (for the tools registered to a single toolbox).
     let onCheckboxClick = function (id) {
-      let toolDefinition = gDevTools._tools.get(id);
+      let toolDefinition = gDevTools._tools.get(id) || toolbox.getToolDefinition(id);
       // Set the kill switch pref boolean to true
       Services.prefs.setBoolPref(toolDefinition.visibilityswitch, this.checked);
-      if (this.checked) {
-        gDevTools.emit("tool-registered", id);
-      } else {
-        gDevTools.emit("tool-unregistered", toolDefinition);
-      }
+      gDevTools.emit(this.checked ? "tool-registered" : "tool-unregistered", id);
     };
 
     let createToolCheckbox = tool => {
@@ -239,6 +239,13 @@ OptionsPanel.prototype = {
     // Populating the additional tools list that came from add-ons.
     let atleastOneAddon = false;
     for (let tool of gDevTools.getAdditionalTools()) {
+      atleastOneAddon = true;
+      additionalToolsBox.appendChild(createToolCheckbox(tool));
+    }
+
+    // Populating the additional toolbox-specific tools list that came
+    // from WebExtension add-ons.
+    for (let tool of this.toolbox.getAdditionalTools()) {
       atleastOneAddon = true;
       additionalToolsBox.appendChild(createToolCheckbox(tool));
     }

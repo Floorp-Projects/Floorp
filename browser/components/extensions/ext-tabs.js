@@ -25,29 +25,21 @@ var {
 // This function is pretty tightly tied to Extension.jsm.
 // Its job is to fill in the |tab| property of the sender.
 function getSender(extension, target, sender) {
+  let tabId;
   if ("tabId" in sender) {
-    // The message came from an ExtensionContext. In that case, it should
-    // include a tabId property (which is filled in by the page-open
-    // listener below).
-    let tab = TabManager.getTab(sender.tabId, null, null);
+    // The message came from a privileged extension page running in a tab. In
+    // that case, it should include a tabId property (which is filled in by the
+    // page-open listener below).
+    tabId = sender.tabId;
     delete sender.tabId;
+  } else if (target instanceof Ci.nsIDOMXULElement) {
+    tabId = getBrowserInfo(target).tabId;
+  }
+
+  if (tabId) {
+    let tab = TabManager.getTab(tabId, null, null);
     if (tab) {
       sender.tab = TabManager.convert(extension, tab);
-      return;
-    }
-  }
-  if (target instanceof Ci.nsIDOMXULElement) {
-    // If the message was sent from a content script to a <browser> element,
-    // then we can just get the `tab` from `target`.
-    let tabbrowser = target.ownerGlobal.gBrowser;
-    if (tabbrowser) {
-      let tab = tabbrowser.getTabForBrowser(target);
-
-      // `tab` can be `undefined`, e.g. for extension popups. This condition is
-      // reached if `getSender` is called for a popup without a valid `tabId`.
-      if (tab) {
-        sender.tab = TabManager.convert(extension, tab);
-      }
     }
   }
 }
@@ -76,10 +68,13 @@ extensions.on("page-shutdown", (type, context) => {
 });
 
 extensions.on("fill-browser-data", (type, browser, data) => {
-  let gBrowser = browser && browser.ownerGlobal.gBrowser;
-  let tab = gBrowser && gBrowser.getTabForBrowser(browser);
-  data.tabId = tab ? TabManager.getId(tab) : -1;
-  data.windowId = tab ? WindowManager.getId(tab.ownerGlobal) : -1;
+  let tabId, windowId;
+  if (browser) {
+    ({tabId, windowId} = getBrowserInfo(browser));
+  }
+
+  data.tabId = tabId || -1;
+  data.windowId = windowId || -1;
 });
 /* eslint-enable mozilla/balanced-listeners */
 

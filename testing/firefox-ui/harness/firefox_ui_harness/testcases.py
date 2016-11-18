@@ -36,6 +36,8 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
     def __init__(self, *args, **kwargs):
         super(UpdateTestCase, self).__init__(*args, **kwargs)
 
+        self.update_url = kwargs.pop('update_url')
+
         self.target_buildid = kwargs.pop('update_target_buildid')
         self.target_version = kwargs.pop('update_target_version')
 
@@ -58,6 +60,8 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
 
         # Ensure that there exists no already partially downloaded update
         self.remove_downloaded_update()
+
+        self.set_preferences_defaults()
 
         # If requested modify the default update channel. It will be active
         # after the next restart of the application
@@ -370,6 +374,13 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
         self.logger.info('Clean-up update staging directory: {}'.format(path))
         mozfile.remove(path)
 
+    def restart(self, *args, **kwargs):
+        super(UpdateTestCase, self).restart(*args, **kwargs)
+
+        # After a restart default preference values as set in the former session are lost.
+        # Make sure that any of those are getting restored.
+        self.set_preferences_defaults()
+
     def restore_config_files(self):
         # Reset channel-prefs.js file if modified
         try:
@@ -392,6 +403,12 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
         except IOError:
             self.logger.error('Failed to reset the default mar channels.',
                               exc_info=True)
+
+    def set_preferences_defaults(self):
+        """Set the default value for specific preferences to force its usage."""
+        if self.update_url:
+            self.puppeteer.prefs.set_pref("app.update.url", self.update_url,
+                                          default_branch=True)
 
     def wait_for_download_finished(self, window, timeout=TIMEOUT_UPDATE_DOWNLOAD):
         """ Waits until download is completed.

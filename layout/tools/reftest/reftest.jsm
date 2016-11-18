@@ -311,6 +311,7 @@ this.OnRefTestLoad = function OnRefTestLoad(win)
       gBrowser.setAttribute("mozbrowser", "");
     } else {
       gBrowser = gContainingWindow.document.createElementNS(XUL_NS, "xul:browser");
+      gBrowser.setAttribute("class", "lightweight");
     }
     gBrowser.setAttribute("id", "browser");
     gBrowser.setAttribute("type", "content-primary");

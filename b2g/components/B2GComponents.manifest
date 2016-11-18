@@ -91,10 +91,6 @@ component {fd663ec8-cf3f-4c2b-aacb-17a6915ccb44} BootstrapCommandLine.js
 contract @mozilla.org/commandlinehandler/general-startup;1?type=b2gbootstrap {fd663ec8-cf3f-4c2b-aacb-17a6915ccb44}
 category command-line-handler m-b2gbootstrap @mozilla.org/commandlinehandler/general-startup;1?type=b2gbootstrap
 
-# B2GAppMigrator.js
-component {7211ece0-b458-4635-9afc-f8d7f376ee95} B2GAppMigrator.js
-contract @mozilla.org/app-migrator;1 {7211ece0-b458-4635-9afc-f8d7f376ee95}
-
 # B2GPresentationDevicePrompt.js
 component {4a300c26-e99b-4018-ab9b-c48cf9bc4de1} B2GPresentationDevicePrompt.js
 contract @mozilla.org/presentation-device/prompt;1 {4a300c26-e99b-4018-ab9b-c48cf9bc4de1}

@@ -150,6 +150,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t numSigs() const { return numSigs_; }
     const SigWithId& sig(uint32_t sigIndex) const;
     const SigWithId& funcSig(uint32_t funcIndex) const;
+    const SigWithIdPtrVector& funcSigs() const { return shared_->funcSigs; }
 
     // Globals:
     const GlobalDescVector& globals() const { return shared_->globals; }
@@ -160,10 +161,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t numFuncs() const;
 
     // Exports:
-    MOZ_MUST_USE bool addFuncExport(UniqueChars fieldName, uint32_t funcIndex);
-    MOZ_MUST_USE bool addTableExport(UniqueChars fieldName);
-    MOZ_MUST_USE bool addMemoryExport(UniqueChars fieldName);
-    MOZ_MUST_USE bool addGlobalExport(UniqueChars fieldName, uint32_t globalIndex);
+    MOZ_MUST_USE bool setExports(ExportVector&& exports);
 
     // Function definitions:
     MOZ_MUST_USE bool startFuncDefs();
@@ -176,7 +174,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Segments:
     void setDataSegments(DataSegmentVector&& segments);
-    MOZ_MUST_USE bool addElemSegment(InitExpr offset, Uint32Vector&& elemFuncIndices);
+    void setElemSegments(ElemSegmentVector&& segments);
 
     // Function names:
     void setFuncNames(NameInBytecodeVector&& funcNames);

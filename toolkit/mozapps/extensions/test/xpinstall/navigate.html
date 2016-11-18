@@ -9,9 +9,8 @@
 <head>
 <title>Navigation tests</title>
 <script type="text/javascript">
+/* exported navigate */
 function navigate() {
-  // Pass our parameters over to the child
-  var child = window.frames[0];
   var url = decodeURIComponent(document.location.search.substr(1));
   var link = document.getElementById("link");
   link.href = url;

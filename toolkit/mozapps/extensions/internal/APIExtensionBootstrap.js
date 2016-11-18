@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* exported startup, shutdown, install, uninstall */
+
 Components.utils.import("resource://gre/modules/ExtensionManagement.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 

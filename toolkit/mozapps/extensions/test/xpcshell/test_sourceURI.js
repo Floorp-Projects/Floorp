@@ -10,7 +10,6 @@ const PREF_GETADDONS_CACHE_ENABLED       = "extensions.getAddons.cache.enabled";
 
 const PORT          = gServer.identity.primaryPort;
 const BASE_URL      = "http://localhost:" + PORT;
-const DEFAULT_URL   = "about:blank";
 
 var addon = {
   id: "addon@tests.mozilla.org",

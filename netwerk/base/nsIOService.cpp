@@ -53,7 +53,7 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/dom/ContentParent.h"
-#include "CaptivePortalService.h"
+#include "mozilla/net/CaptivePortalService.h"
 #include "ReferrerPolicy.h"
 #include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
