@@ -7,8 +7,8 @@
 #define GFX_BYTEBUFFER_H
 
 #include "chrome/common/ipc_message_utils.h"
+#include "mozilla/gfx/webrender.h"
 #include "mozilla/Maybe.h"
-#include "webrender.h"
 
 typedef mozilla::Maybe<WRImageMask> MaybeImageMask;
 

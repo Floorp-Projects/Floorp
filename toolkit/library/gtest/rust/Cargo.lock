@@ -185,7 +185,7 @@ dependencies = [
  "mp4parse_capi 0.6.0",
  "nsstring 0.1.0",
  "rust_url_capi 0.0.1",
- "webrender 0.10.0",
+ "webrender_bindings 0.1.0",
 ]
 
 [[package]]
@@ -544,7 +544,6 @@ dependencies = [
  "bit-set 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "core-foundation 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-graphics 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-text 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "dwrote 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -552,13 +551,25 @@ dependencies = [
  "fnv 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "freetype 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.2.24 (registry+https://github.com/rust-lang/crates.io-index)",
- "kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.1.36 (registry+https://github.com/rust-lang/crates.io-index)",
  "offscreen_gl_context 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)",
+ "webrender_traits 0.10.0",
+]
+
+[[package]]
+name = "webrender_bindings"
+version = "0.1.0"
+dependencies = [
+ "app_units 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "core-foundation 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "euclid 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gleam 0.2.24 (registry+https://github.com/rust-lang/crates.io-index)",
+ "kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "webrender 0.10.0",
  "webrender_traits 0.10.0",
  "winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

@@ -6,8 +6,8 @@
 #include "WebRenderColorLayer.h"
 
 #include "LayersLogging.h"
+#include "mozilla/gfx/webrender.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
-#include "webrender.h"
 
 namespace mozilla {
 namespace layers {

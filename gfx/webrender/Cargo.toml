@@ -36,13 +36,10 @@ freetype = {version = "0.1.2", default-features = false}
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.1.0"
-kernel32-sys = "0.2"
-winapi = "0.2.8"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-graphics = "0.4.1"
 core-text = "2.0"
-core-foundation = "0.2.2"
 
 [profile.release]
 panic = "abort"
