@@ -1514,7 +1514,7 @@ TypedArrayObject::staticProperties[] = {
 
 static const ClassSpec
 TypedArrayObjectSharedTypedArrayPrototypeClassSpec = {
-    GenericCreateConstructor<TypedArrayConstructor, 3, gc::AllocKind::FUNCTION>,
+    GenericCreateConstructor<TypedArrayConstructor, 0, gc::AllocKind::FUNCTION>,
     GenericCreatePrototype,
     TypedArrayObject::staticFunctions,
     TypedArrayObject::staticProperties,

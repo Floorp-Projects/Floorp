@@ -69,7 +69,7 @@ ArchiveRequest::~ArchiveRequest()
 }
 
 nsresult
-ArchiveRequest::PreHandleEvent(EventChainPreVisitor& aVisitor)
+ArchiveRequest::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
   aVisitor.mParentTarget = nullptr;

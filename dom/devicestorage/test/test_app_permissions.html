@@ -469,6 +469,7 @@ var gTestRunner = runTest();
 SpecialPowers.addPermission("browser", true, gTestUri);
 
 SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true],
+                                   ["network.disable.ipc.security", true],
                                    ["device.storage.enabled", true],
                                    ["device.storage.testing", true],
                                    ["device.storage.prompt.testing", false]]},

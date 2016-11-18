@@ -589,7 +589,7 @@ SVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
 // nsIContent methods:
 
 nsresult
-SVGSVGElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
+SVGSVGElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   if (aVisitor.mEvent->mMessage == eSVGLoad) {
     if (mTimedDocumentRoot) {
@@ -600,7 +600,7 @@ SVGSVGElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
       AnimationNeedsResample();
     }
   }
-  return SVGSVGElementBase::PreHandleEvent(aVisitor);
+  return SVGSVGElementBase::GetEventTargetParent(aVisitor);
 }
 
 bool

@@ -36,7 +36,8 @@ public:
   // nsIDOMHTMLMenuItemElement
   NS_DECL_NSIDOMHTMLMENUITEMELEMENT
 
-  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) override;
+  virtual nsresult GetEventTargetParent(
+                     EventChainPreVisitor& aVisitor) override;
   virtual nsresult PostHandleEvent(
                      EventChainPostVisitor& aVisitor) override;
 

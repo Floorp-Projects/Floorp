@@ -503,7 +503,7 @@ HTMLTextAreaElement::IsDisabledForEvents(EventMessage aMessage)
 }
 
 nsresult
-HTMLTextAreaElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
+HTMLTextAreaElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
   if (IsDisabledForEvents(aVisitor.mEvent->mMessage)) {
@@ -531,11 +531,22 @@ HTMLTextAreaElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     aVisitor.mEvent->mFlags.mNoContentDispatch = false;
   }
 
-  // Fire onchange (if necessary), before we do the blur, bug 370521.
   if (aVisitor.mEvent->mMessage == eBlur) {
-    FireChangeEventIfNeeded();
+    // Set mWantsPreHandleEvent and fire change event in PreHandleEvent to
+    // prevent it breaks event target chain creation.
+    aVisitor.mWantsPreHandleEvent = true;
   }
 
+  return nsGenericHTMLFormElementWithState::GetEventTargetParent(aVisitor);
+}
+
+nsresult
+HTMLTextAreaElement::PreHandleEvent(EventChainVisitor& aVisitor)
+{
+  if (aVisitor.mEvent->mMessage == eBlur) {
+    // Fire onchange (if necessary), before we do the blur, bug 370521.
+    FireChangeEventIfNeeded();
+  }
   return nsGenericHTMLFormElementWithState::PreHandleEvent(aVisitor);
 }
 

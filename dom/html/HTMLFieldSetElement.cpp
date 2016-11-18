@@ -70,7 +70,7 @@ HTMLFieldSetElement::IsDisabledForEvents(EventMessage aMessage)
 
 // nsIContent
 nsresult
-HTMLFieldSetElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
+HTMLFieldSetElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   // Do not process any DOM events if the element is disabled.
   aVisitor.mCanHandle = false;
@@ -78,7 +78,7 @@ HTMLFieldSetElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
     return NS_OK;
   }
 
-  return nsGenericHTMLFormElement::PreHandleEvent(aVisitor);
+  return nsGenericHTMLFormElement::GetEventTargetParent(aVisitor);
 }
 
 nsresult

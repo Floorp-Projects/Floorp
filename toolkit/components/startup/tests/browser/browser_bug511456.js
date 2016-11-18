@@ -12,19 +12,21 @@ function test() {
   waitForExplicitFinish();
   ignoreAllUncaughtExceptions();
 
+  // Create foreground window
   let win2 = window.openDialog(location, "", "chrome,all,dialog=no", "about:blank");
   win2.addEventListener("load", function onLoad() {
     win2.removeEventListener("load", onLoad);
 
-    gBrowser.selectedTab = gBrowser.addTab(TEST_URL);
-    let browser = gBrowser.selectedBrowser;
+    // Create background test tab
+    let browser = gBrowser.addTab(TEST_URL).linkedBrowser;
 
     whenBrowserLoaded(browser, function() {
       let seenDialog = false;
 
       // Cancel the prompt the first time.
       waitForOnBeforeUnloadDialog(browser, (btnLeave, btnStay) => {
-        seenDialog = true;
+        seenDialog = Services.focus.activeWindow == window &&
+                     gBrowser.selectedBrowser == browser;
         btnStay.click();
       });
 

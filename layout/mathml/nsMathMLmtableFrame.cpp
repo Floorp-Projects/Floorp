@@ -190,7 +190,7 @@ ApplyBorderToStyle(const nsMathMLmtdFrame* aFrame,
   aFrame->GetColIndex(columnIndex);
 
   nscoord borderWidth =
-    aFrame->PresContext()->GetBorderWidthTable()[NS_STYLE_BORDER_WIDTH_THIN];
+    nsPresContext::GetBorderWidthForKeyword(NS_STYLE_BORDER_WIDTH_THIN);
 
   nsTArray<int8_t>* rowLinesList =
     FindCellProperty(aFrame, RowLinesProperty());
