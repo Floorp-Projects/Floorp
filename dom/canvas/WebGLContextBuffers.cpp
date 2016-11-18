@@ -75,6 +75,9 @@ WebGLContext::ValidateBufferSelection(const char* funcName, GLenum target)
         return nullptr;
     }
 
+    if (!ValidateForNonTransformFeedback(funcName, buffer.get()))
+        return nullptr;
+
     return buffer.get();
 }
 
@@ -212,6 +215,15 @@ WebGLContext::BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer)
     if (buffer) {
         buffer->SetContentAfterBind(target);
     }
+
+    switch (target) {
+    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
+        mBoundTransformFeedback->OnIndexedBindingsChanged();
+        break;
+    case LOCAL_GL_UNIFORM:
+        OnUBIndexedBindingsChanged();
+        break;
+    }
 }
 
 void
@@ -295,6 +307,15 @@ WebGLContext::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
 
     if (buffer) {
         buffer->SetContentAfterBind(target);
+    }
+
+    switch (target) {
+    case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
+        mBoundTransformFeedback->OnIndexedBindingsChanged();
+        break;
+    case LOCAL_GL_UNIFORM:
+        OnUBIndexedBindingsChanged();
+        break;
     }
 }
 
@@ -382,13 +403,6 @@ WebGLContext::BufferSubDataImpl(GLenum target, WebGLsizeiptr dstByteOffset,
     const auto& buffer = ValidateBufferSelection(funcName, target);
     if (!buffer)
         return;
-
-    if (buffer->mNumActiveTFOs) {
-        ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
-                              " object.",
-                              "bufferSubData");
-        return;
-    }
 
     if (!buffer->ValidateRange(funcName, dstByteOffset, dataLen))
         return;
