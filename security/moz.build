@@ -1,0 +1,125 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG['MOZ_SYSTEM_NSS']:
+    Library('nss')
+    OS_LIBS += CONFIG['NSS_LIBS']
+else:
+    include('/build/gyp_base.mozbuild')
+    if CONFIG['MOZ_FOLD_LIBS']:
+        GeckoSharedLibrary('nss', linkage=None)
+        # TODO: The library name can be changed when bug 845217 is fixed.
+        SHARED_LIBRARY_NAME = 'nss3'
+
+        SDK_LIBRARY = True
+
+        USE_LIBS += [
+            'nspr4',
+            'nss3_static',
+            'nssutil',
+            'plc4',
+            'plds4',
+            'smime3_static',
+            'ssl',
+        ]
+
+        OS_LIBS += CONFIG['REALTIME_LIBS']
+
+        SYMBOLS_FILE = 'nss.symbols'
+        # This changes the default targets in the NSS build, among
+        # other things.
+        gyp_vars['moz_fold_libs'] = 1
+        # Some things in NSS need to link against nssutil, which
+        # gets folded, so this tells them what to link against.
+        gyp_vars['moz_folded_library_name'] = 'nss'
+        # Force things in NSS that want to link against NSPR to link
+        # against the folded library.
+        gyp_vars['nspr_libs'] = 'nss'
+    else:
+        Library('nss')
+        USE_LIBS += [
+            'nss3',
+            'nssutil3',
+            'smime3',
+            'sqlite',
+            'ssl3',
+        ]
+        gyp_vars['nspr_libs'] = 'nspr4 plc4 plds4'
+
+    # This disables building some NSS tools.
+    gyp_vars['mozilla_client'] = 1
+    # We run shlibsign as part of packaging, not build.
+    gyp_vars['sign_libs'] = 0
+    gyp_vars['python'] = CONFIG['PYTHON']
+    # The NSS gyp files do not have a default for this.
+    gyp_vars['nss_dist_dir'] = '$PRODUCT_DIR/dist'
+    # NSS wants to put public headers in $nss_dist_dir/public/nss by default,
+    # which would wind up being mapped to dist/include/public/nss (by
+    # gyp_reader's `handle_copies`).
+    # This forces it to put them in dist/include/nss.
+    gyp_vars['nss_public_dist_dir'] = '$PRODUCT_DIR/dist'
+    gyp_vars['nss_dist_obj_dir'] = '$PRODUCT_DIR/dist/bin'
+    # We don't currently build NSS tests.
+    gyp_vars['disable_tests'] = 1
+    if CONFIG['NSS_DISABLE_DBM']:
+        gyp_vars['disable_dbm'] = 1
+    gyp_vars['disable_libpkix'] = 1
+    # pkg-config won't reliably find zlib on our builders, so just force it.
+    # System zlib is only used for modutil and signtool unless
+    # SSL zlib is enabled, which we are disabling immediately below this.
+    gyp_vars['zlib_libs'] = '-lz'
+    gyp_vars['ssl_enable_zlib'] = 0
+    # System sqlite here is the in-tree mozsqlite.
+    gyp_vars['use_system_sqlite'] = 1
+    gyp_vars['sqlite_libs'] = 'sqlite'
+    gyp_vars['nspr_include_dir'] = CONFIG['NSPR_INCLUDE_DIR']
+    gyp_vars['nspr_lib_dir'] = CONFIG['NSPR_LIB_DIR']
+    # The Python scripts that detect clang need it to be set as CC
+    # in the environment, which isn't true here. I don't know that
+    # setting that would be harmful, but we already have this information
+    # anyway.
+    if CONFIG['CLANG_CXX']:
+        gyp_vars['cc_is_clang'] = 1
+
+    GYP_DIRS += ['nss']
+    GYP_DIRS['nss'].input = 'nss/nss.gyp'
+    GYP_DIRS['nss'].variables = gyp_vars
+
+    sandbox_vars = {
+        # NSS explicitly exports its public symbols
+        # with linker scripts.
+        'NO_VISIBILITY_FLAGS': True,
+        # XXX: We should fix these warnings.
+        'ALLOW_COMPILER_WARNINGS': True,
+        # NSS' build system doesn't currently build NSS with PGO.
+        # We could probably do so, but not without a lot of
+        # careful consideration.
+        'NO_PGO': True,
+    }
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        if CONFIG['CPU_ARCH'] == 'x86':
+            # This should really be the default.
+            sandbox_vars['ASFLAGS'] = ['-safeseh']
+    if CONFIG['OS_TARGET'] == 'Android':
+        sandbox_vars['CFLAGS'] = [
+            '-include', TOPSRCDIR + '/security/manager/android_stub.h',
+            # Setting sandbox_vars['DEFINES'] is broken currently.
+            '-DCHECK_FORK_GETPID',
+        ]
+        if CONFIG['ANDROID_VERSION']:
+            sandbox_vars['CFLAGS'] += ['-DANDROID_VERSION=' + CONFIG['ANDROID_VERSION']]
+    GYP_DIRS['nss'].sandbox_vars = sandbox_vars
+    GYP_DIRS['nss'].no_chromium = True
+    GYP_DIRS['nss'].no_unified = True
+    # This maps action names from gyp files to
+    # Python scripts that can be used in moz.build GENERATED_FILES.
+    GYP_DIRS['nss'].action_overrides = {
+        'generate_certdata_c': 'generate_certdata.py',
+        'generate_mapfile': 'generate_mapfile.py',
+    }
+
+if CONFIG['NSS_EXTRA_SYMBOLS_FILE']:
+    DEFINES['NSS_EXTRA_SYMBOLS_FILE'] = CONFIG['NSS_EXTRA_SYMBOLS_FILE']

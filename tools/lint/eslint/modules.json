@@ -167,7 +167,6 @@
   "passwords.js": ["PasswordEngine", "LoginRec", "PasswordValidator"],
   "passwords.jsm": ["Password", "DumpPasswords"],
   "PdfJsNetwork.jsm": ["NetworkManager"],
-  "PermissionsTable.jsm": ["PermissionsTable", "PermissionsReverseTable", "expandPermissions", "appendAccessToPermName", "isExplicitInPermissionsTable", "AllPossiblePermissions"],
   "PhoneNumberMetaData.jsm": ["PHONE_NUMBER_META_DATA"],
   "PlacesUtils.jsm": ["PlacesUtils", "PlacesAggregatedTransaction", "PlacesCreateFolderTransaction", "PlacesCreateBookmarkTransaction", "PlacesCreateSeparatorTransaction", "PlacesCreateLivemarkTransaction", "PlacesMoveItemTransaction", "PlacesRemoveItemTransaction", "PlacesEditItemTitleTransaction", "PlacesEditBookmarkURITransaction", "PlacesSetItemAnnotationTransaction", "PlacesSetPageAnnotationTransaction", "PlacesEditBookmarkKeywordTransaction", "PlacesEditBookmarkPostDataTransaction", "PlacesEditItemDateAddedTransaction", "PlacesEditItemLastModifiedTransaction", "PlacesSortFolderByNameTransaction", "PlacesTagURITransaction", "PlacesUntagURITransaction"],
   "PluginProvider.jsm": [],

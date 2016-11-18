@@ -70,7 +70,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
     if not CONFIG['JS_STANDALONE']:
         DIRS += [
             'config/external',
-            'config/external/nss',
+            'security',
         ]
 
     if CONFIG['BUILD_CTYPES']:
