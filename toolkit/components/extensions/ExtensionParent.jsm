@@ -461,8 +461,22 @@ ParentAPIManager = {
   call(data, target) {
     let context = this.getContextById(data.childId);
     if (context.parentMessageManager !== target.messageManager) {
-      Cu.reportError("WebExtension warning: Message manager unexpectedly changed");
+      throw new Error("Got message on unexpected message manager");
     }
+
+    let reply = result => {
+      if (!context.parentMessageManager) {
+        Cu.reportError("Cannot send function call result: other side closed connection");
+        return;
+      }
+
+      context.parentMessageManager.sendAsyncMessage(
+        "API:CallResult",
+        Object.assign({
+          childId: data.childId,
+          callId: data.callId,
+        }, result));
+    };
 
     try {
       let args = Cu.cloneInto(data.args, context.sandbox);
@@ -474,28 +488,16 @@ ParentAPIManager = {
         result.then(result => {
           result = result instanceof SpreadArgs ? [...result] : [result];
 
-          context.parentMessageManager.sendAsyncMessage("API:CallResult", {
-            childId: data.childId,
-            callId: data.callId,
-            result,
-          });
+          reply({result});
         }, error => {
           error = context.normalizeError(error);
-          context.parentMessageManager.sendAsyncMessage("API:CallResult", {
-            childId: data.childId,
-            callId: data.callId,
-            error: {message: error.message},
-          });
+          reply({error: {message: error.message}});
         });
       }
     } catch (e) {
       if (data.callId) {
         let error = context.normalizeError(e);
-        context.parentMessageManager.sendAsyncMessage("API:CallResult", {
-          childId: data.childId,
-          callId: data.callId,
-          error: {message: error.message},
-        });
+        reply({error: {message: error.message}});
       } else {
         Cu.reportError(e);
       }
@@ -505,7 +507,7 @@ ParentAPIManager = {
   addListener(data, target) {
     let context = this.getContextById(data.childId);
     if (context.parentMessageManager !== target.messageManager) {
-      Cu.reportError("WebExtension warning: Message manager unexpectedly changed");
+      throw new Error("Got message on unexpected message manager");
     }
 
     let {childId} = data;
