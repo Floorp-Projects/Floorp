@@ -3261,7 +3261,8 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
 
   // URI
   if (NS_SUCCEEDED(aQuery->GetHasUri(&hasIt)) && hasIt) {
-    clause.Condition("h.url =").Param(":uri");
+    clause.Condition("h.url_hash = hash(").Param(":uri").Str(")")
+          .Condition("h.url =").Param(":uri");
   }
 
   // annotation
