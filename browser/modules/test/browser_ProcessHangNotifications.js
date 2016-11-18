@@ -32,10 +32,7 @@ function pushPrefs(...aPrefs) {
 }
 
 function popPrefs() {
-  return new Promise((resolve) => {
-    SpecialPowers.popPrefEnv(resolve);
-    resolve();
-  });
+  return SpecialPowers.popPrefEnv();
 }
 
 let gTestHangReport = {
