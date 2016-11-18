@@ -224,6 +224,3 @@ res/table-remove-row.gif
 browser/chrome/browser/content/browser/defaultthemes/devedition.icon.png
 browser/chrome/browser/content/branding/icon64.png
 browser/chrome/devtools/content/framework/dev-edition-promo/dev-edition-logo.png
-webrender/ps_clear.glsl
-webrender/ps_gradient.glsl
-webrender/ps_gradient_clip.glsl
