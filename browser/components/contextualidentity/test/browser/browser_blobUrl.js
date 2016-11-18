@@ -6,13 +6,10 @@ const BASE_URI = "http://mochi.test:8888/browser/browser/components/"
   + "contextualidentity/test/browser/empty_file.html";
 
 add_task(function* setup() {
-  yield new Promise((resolve) => {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["privacy.userContext.enabled", true]
-    ]}, resolve);
-  });
+  yield SpecialPowers.pushPrefEnv({"set": [
+    ["privacy.userContext.enabled", true]
+  ]});
 });
-
 
 add_task(function* test() {
   info("Creating a tab with UCI = 1...");

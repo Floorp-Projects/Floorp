@@ -5592,28 +5592,24 @@ HTMLEditRules::GetNodesForOperation(
     // elements needs to be moved.
     for (int32_t i = 0; i < rangeCount; i++) {
       RefPtr<nsRange> r = aArrayOfRanges[i];
-      nsCOMPtr<nsIContent> endParent = do_QueryInterface(r->GetEndParent());
-      if (!htmlEditor->IsTextNode(endParent)) {
+      nsCOMPtr<nsINode> endParent = r->GetEndParent();
+      if (!endParent->IsNodeOfType(nsINode::eTEXT)) {
         continue;
       }
-      nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(endParent);
-      if (textNode) {
-        int32_t offset = r->EndOffset();
-        nsAutoString tempString;
-        textNode->GetData(tempString);
+      int32_t offset = r->EndOffset();
 
-        if (0 < offset && offset < static_cast<int32_t>(tempString.Length())) {
-          // Split the text node.
-          nsCOMPtr<nsIDOMNode> tempNode;
-          nsresult rv = htmlEditor->SplitNode(endParent->AsDOMNode(), offset,
-                                              getter_AddRefs(tempNode));
-          NS_ENSURE_SUCCESS(rv, rv);
+      if (0 < offset &&
+          offset < static_cast<int32_t>(endParent->Length())) {
+        // Split the text node.
+        nsCOMPtr<nsIDOMNode> tempNode;
+        nsresult rv = htmlEditor->SplitNode(endParent->AsDOMNode(), offset,
+                                            getter_AddRefs(tempNode));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-          // Correct the range.
-          // The new end parent becomes the parent node of the text.
-          nsCOMPtr<nsIContent> newParent = endParent->GetParent();
-          r->SetEnd(newParent, newParent->IndexOf(endParent));
-        }
+        // Correct the range.
+        // The new end parent becomes the parent node of the text.
+        nsCOMPtr<nsIContent> newParent = endParent->GetParent();
+        r->SetEnd(newParent, newParent->IndexOf(endParent));
       }
     }
   }

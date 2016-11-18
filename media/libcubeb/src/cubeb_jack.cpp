@@ -9,16 +9,10 @@
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
 #define _POSIX_SOURCE
-#include <algorithm>
 #include <dlfcn.h>
-#include <limits>
 #include <stdio.h>
-#include <sys/time.h>
-#include <assert.h>
 #include <string.h>
 #include <limits.h>
-#include <poll.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <math.h>

@@ -327,8 +327,13 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
                               RuleNodeCacheConditions& aConditions);
 
 struct CalcLengthCalcOps : public css::BasicCoordCalcOps,
-                           public css::NumbersAlreadyNormalizedOps
+                           public css::FloatCoeffsAlreadyNormalizedOps
 {
+  // Declare that we have floats as coefficients so that we unambiguously
+  // resolve coeff_type (BasicCoordCalcOps and FloatCoeffsAlreadyNormalizedOps
+  // both have |typedef float coeff_type|).
+  typedef float coeff_type;
+
   // All of the parameters to CalcLengthWith except aValue.
   const nscoord mFontSize;
   const nsStyleFont* const mStyleFont;
@@ -667,7 +672,7 @@ nsRuleNode::CalcLengthWithInitialFont(nsPresContext* aPresContext,
                         true, false, conditions);
 }
 
-struct LengthPercentPairCalcOps : public css::NumbersAlreadyNormalizedOps
+struct LengthPercentPairCalcOps : public css::FloatCoeffsAlreadyNormalizedOps
 {
   typedef nsRuleNode::ComputedCalc result_type;
 
@@ -3318,8 +3323,13 @@ nsRuleNode::FindNextLargerFontSize(nscoord aFontSize, int32_t aBasePointSize,
 }
 
 struct SetFontSizeCalcOps : public css::BasicCoordCalcOps,
-                            public css::NumbersAlreadyNormalizedOps
+                            public css::FloatCoeffsAlreadyNormalizedOps
 {
+  // Declare that we have floats as coefficients so that we unambiguously
+  // resolve coeff_type (BasicCoordCalcOps and FloatCoeffsAlreadyNormalizedOps
+  // both have |typedef float coeff_type|).
+  typedef float coeff_type;
+
   // The parameters beyond aValue that we need for CalcLengthWith.
   const nscoord mParentSize;
   const nsStyleFont* const mParentFont;
@@ -4449,7 +4459,7 @@ struct LineHeightCalcObj
   bool mIsNumber;
 };
 
-struct SetLineHeightCalcOps : public css::NumbersAlreadyNormalizedOps
+struct SetLineHeightCalcOps : public css::FloatCoeffsAlreadyNormalizedOps
 {
   typedef LineHeightCalcObj result_type;
   nsStyleContext* const mStyleContext;
@@ -4889,7 +4899,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                  webkitTextStrokeWidthValue->GetIntValue() == NS_STYLE_BORDER_WIDTH_THICK,
                  "Unexpected enum value");
     text->mWebkitTextStrokeWidth.SetCoordValue(
-      mPresContext->GetBorderWidthTable()[webkitTextStrokeWidthValue->GetIntValue()]);
+      nsPresContext::GetBorderWidthForKeyword(webkitTextStrokeWidthValue->GetIntValue()));
   } else {
     SetCoord(*webkitTextStrokeWidthValue, text->mWebkitTextStrokeWidth,
              parentText->mWebkitTextStrokeWidth,
@@ -7495,7 +7505,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
                      value.GetIntValue() == NS_STYLE_BORDER_WIDTH_THICK,
                      "Unexpected enum value");
         border->SetBorderWidth(side,
-                               (mPresContext->GetBorderWidthTable())[value.GetIntValue()]);
+          nsPresContext::GetBorderWidthForKeyword(value.GetIntValue()));
       }
       // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
       else if (SetCoord(value, coord, nsStyleCoord(),
@@ -7513,7 +7523,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
       else if (eCSSUnit_Initial == value.GetUnit() ||
                eCSSUnit_Unset == value.GetUnit()) {
         border->SetBorderWidth(side,
-          (mPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM]);
+          nsPresContext::GetBorderWidthForKeyword(NS_STYLE_BORDER_WIDTH_MEDIUM));
       }
       else {
         NS_ASSERTION(eCSSUnit_Null == value.GetUnit(),
@@ -9119,7 +9129,7 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   if (eCSSUnit_Initial == widthValue.GetUnit() ||
       eCSSUnit_Unset == widthValue.GetUnit()) {
     column->SetColumnRuleWidth(
-        (mPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM]);
+        nsPresContext::GetBorderWidthForKeyword(NS_STYLE_BORDER_WIDTH_MEDIUM));
   }
   else if (eCSSUnit_Enumerated == widthValue.GetUnit()) {
     NS_ASSERTION(widthValue.GetIntValue() == NS_STYLE_BORDER_WIDTH_THIN ||
@@ -9127,7 +9137,7 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
                  widthValue.GetIntValue() == NS_STYLE_BORDER_WIDTH_THICK,
                  "Unexpected enum value");
     column->SetColumnRuleWidth(
-        (mPresContext->GetBorderWidthTable())[widthValue.GetIntValue()]);
+        nsPresContext::GetBorderWidthForKeyword(widthValue.GetIntValue()));
   }
   else if (eCSSUnit_Inherit == widthValue.GetUnit()) {
     column->SetColumnRuleWidth(parent->GetComputedColumnRuleWidth());

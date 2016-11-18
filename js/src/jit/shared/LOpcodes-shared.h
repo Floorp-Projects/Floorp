@@ -169,6 +169,7 @@
     _(Hypot)                        \
     _(PowI)                         \
     _(PowD)                         \
+    _(PowV)                         \
     _(PowHalfD)                     \
     _(Random)                       \
     _(MathFunctionD)                \

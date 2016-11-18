@@ -153,9 +153,7 @@ add_task(function* init() {
   // New profile so new add-ons are ignored
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
 
-  let a1, a2, a3, a4, a5, a6, a7, t1, t2;
-
-  [a2, a3, a4, a7, t2] =
+  let [a2, a3, a4, a7, t2] =
     yield promiseAddonsByIDs(["addon2@tests.mozilla.org",
                               "addon3@tests.mozilla.org",
                               "addon4@tests.mozilla.org",

@@ -131,6 +131,12 @@ interface Element : Node {
    */
   void releaseCapture();
 
+  /*
+   * Chrome-only version of setCapture that works outside of a mousedown event.
+   */
+  [ChromeOnly]
+  void setCaptureAlways(optional boolean retargetToElement = false);
+
   // Mozilla extensions
 
   // Obsolete methods.
@@ -244,16 +250,16 @@ Element implements GeometryUtils;
 
 // https://fullscreen.spec.whatwg.org/#api
 partial interface Element {
-  [Throws, UnsafeInPrerendering, Func="nsDocument::IsUnprefixedFullscreenEnabled"]
+  [Throws, UnsafeInPrerendering, Func="nsDocument::IsUnprefixedFullscreenEnabled", NeedsCallerType]
   void requestFullscreen();
-  [Throws, UnsafeInPrerendering, BinaryName="requestFullscreen"]
+  [Throws, UnsafeInPrerendering, BinaryName="requestFullscreen", NeedsCallerType]
   void mozRequestFullScreen();
 };
 
 // https://w3c.github.io/pointerlock/#extensions-to-the-element-interface
 partial interface Element {
-  [UnsafeInPrerendering]
+  [UnsafeInPrerendering, NeedsCallerType]
   void requestPointerLock();
-  [UnsafeInPrerendering, BinaryName="requestPointerLock", Pref="pointer-lock-api.prefixed.enabled"]
+  [UnsafeInPrerendering, BinaryName="requestPointerLock", Pref="pointer-lock-api.prefixed.enabled", NeedsCallerType]
   void mozRequestPointerLock();
 };

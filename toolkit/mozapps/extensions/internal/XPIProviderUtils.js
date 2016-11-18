@@ -247,16 +247,6 @@ function logSQLError(aError, aErrorString) {
 }
 
 /**
- * A helper function to log any errors that occur during async statements.
- *
- * @param  aError
- *         A mozIStorageError to log
- */
-function asyncErrorLogger(aError) {
-  logSQLError(aError.result, aError.message);
-}
-
-/**
  * A helper function to step a statement synchronously and log any error that
  * occurs.
  *
@@ -292,27 +282,6 @@ function copyProperties(aObject, aProperties, aTarget) {
   aProperties.forEach(function(aProp) {
     if (aProp in aObject)
       aTarget[aProp] = aObject[aProp];
-  });
-  return aTarget;
-}
-
-/**
- * Copies properties from a mozIStorageRow to an object. If no target object is
- * passed a new object will be created and returned.
- *
- * @param  aRow
- *         A mozIStorageRow to copy from
- * @param  aProperties
- *         An array of properties to be copied
- * @param  aTarget
- *         An optional target object to copy the properties to
- * @return the object that the properties were copied onto
- */
-function copyRowProperties(aRow, aProperties, aTarget) {
-  if (!aTarget)
-    aTarget = {};
-  aProperties.forEach(function(aProp) {
-    aTarget[aProp] = aRow.getResultByName(aProp);
   });
   return aTarget;
 }
@@ -1585,7 +1554,7 @@ this.XPIDatabaseReconcile = {
   getVisibleAddons(addonMap) {
     let map = new Map();
 
-    for (let [location, addons] of addonMap) {
+    for (let addons of addonMap.values()) {
       for (let [id, addon] of addons) {
         if (!addon.visible)
           continue;
@@ -2026,7 +1995,7 @@ this.XPIDatabaseReconcile = {
     // for those add-ons must be removed from the database.
     for (let [locationName, addons] of previousAddons) {
       if (!currentAddons.has(locationName)) {
-        for (let [id, oldAddon] of addons)
+        for (let oldAddon of addons.values())
           this.removeMetadata(oldAddon);
       }
     }

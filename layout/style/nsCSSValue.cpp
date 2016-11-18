@@ -953,7 +953,7 @@ struct CSSValueSerializeCalcOps {
     aValue.AppendToString(mProperty, mResult, mValueSerialization);
   }
 
-  void AppendNumber(const input_type& aValue)
+  void AppendCoefficient(const input_type& aValue)
   {
     MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
     aValue.AppendToString(mProperty, mResult, mValueSerialization);

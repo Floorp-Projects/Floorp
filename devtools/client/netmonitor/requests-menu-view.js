@@ -2,16 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-disable mozilla/reject-some-requires */
 /* globals document, window, dumpn, $, gNetwork, EVENTS, Prefs,
            NetMonitorController, NetMonitorView */
 
 "use strict";
 
-/* eslint-disable mozilla/reject-some-requires */
 const { Cu } = require("chrome");
 const {Task} = require("devtools/shared/task");
 const {DeferredTask} = Cu.import("resource://gre/modules/DeferredTask.jsm", {});
-/* eslint-disable mozilla/reject-some-requires */
 const {SideMenuWidget} = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const {setImageTooltip, getImageDimensions} =
@@ -24,17 +23,15 @@ const {Sorters} = require("./sort-predicates");
 const {L10N, WEBCONSOLE_L10N} = require("./l10n");
 const {formDataURI,
        writeHeaderText,
+       decodeUnicodeUrl,
        getKeyWithEvent,
        getAbbreviatedMimeType,
-       getUriNameWithQuery,
-       getUriHostPort,
-       getUriHost,
+       getUrlBaseNameWithQuery,
+       getUrlHost,
+       getUrlHostName,
        loadCauseString} = require("./request-utils");
 const Actions = require("./actions/index");
 const RequestListContextMenu = require("./request-list-context-menu");
-
-loader.lazyRequireGetter(this, "NetworkHelper",
-  "devtools/shared/webconsole/network-helper");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const EPSILON = 0.001;
@@ -925,17 +922,10 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         break;
       }
       case "url": {
-        let uri;
-        try {
-          uri = NetworkHelper.nsIURL(value);
-        } catch (e) {
-          // User input may not make a well-formed url yet.
-          break;
-        }
-        let nameWithQuery = getUriNameWithQuery(uri);
-        let hostPort = getUriHostPort(uri);
-        let host = getUriHost(uri);
-        let unicodeUrl = NetworkHelper.convertToUnicode(unescape(uri.spec));
+        let nameWithQuery = getUrlBaseNameWithQuery(value);
+        let hostPort = getUrlHost(value);
+        let host = getUrlHostName(value);
+        let unicodeUrl = decodeUnicodeUrl(value);
 
         let file = $(".requests-menu-file", target);
         file.setAttribute("value", nameWithQuery);

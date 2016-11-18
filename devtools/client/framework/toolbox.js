@@ -895,6 +895,7 @@ Toolbox.prototype = {
    * Add tabs to the toolbox UI for registered tools
    */
   _buildTabs: function () {
+    // Build tabs for global registered tools.
     for (let definition of gDevTools.getToolDefinitionArray()) {
       this._buildTabForTool(definition);
     }
@@ -1253,6 +1254,81 @@ Toolbox.prototype = {
   },
 
   /**
+   * Lazily created map of the additional tools registered to this toolbox.
+   *
+   * @returns {Map<string, object>}
+   *          a map of the tools definitions registered to this
+   *          particular toolbox (the key is the toolId string, the value
+   *          is the tool definition plain javascript object).
+   */
+  get additionalToolDefinitions() {
+    if (!this._additionalToolDefinitions) {
+      this._additionalToolDefinitions = new Map();
+    }
+
+    return this._additionalToolDefinitions;
+  },
+
+  /**
+   * Retrieve the array of the additional tools registered to this toolbox.
+   *
+   * @return {Array<object>}
+   *         the array of additional tool definitions registered on this toolbox.
+   */
+  getAdditionalTools() {
+    return Array.from(this.additionalToolDefinitions.values());
+  },
+
+  /**
+   * Test the existence of a additional tools registered to this toolbox by tool id.
+   *
+   * @param {string} toolId
+   *        the id of the tool to test for existence.
+   *
+   * @return {boolean}
+   *
+   */
+  hasAdditionalTool(toolId) {
+    return this.additionalToolDefinitions.has(toolId);
+  },
+
+  /**
+   * Register and load an additional tool on this particular toolbox.
+   *
+   * @param {object} definition
+   *        the additional tool definition to register and add to this toolbox.
+   */
+  addAdditionalTool(definition) {
+    if (!definition.id) {
+      throw new Error("Tool definition id is missing");
+    }
+
+    if (this.isToolRegistered(definition.id)) {
+      throw new Error("Tool definition already registered: " +
+                      definition.id);
+    }
+
+    this.additionalToolDefinitions.set(definition.id, definition);
+    this._buildTabForTool(definition);
+  },
+
+  /**
+   * Unregister and unload an additional tool from this particular toolbox.
+   *
+   * @param {string} toolId
+   *        the id of the additional tool to unregister and remove.
+   */
+  removeAdditionalTool(toolId) {
+    if (!this.hasAdditionalTool(toolId)) {
+      throw new Error("Tool definition not registered to this toolbox: " +
+                      toolId);
+    }
+
+    this.unloadTool(toolId);
+    this.additionalToolDefinitions.delete(toolId);
+  },
+
+  /**
    * Ensure the tool with the given id is loaded.
    *
    * @param {string} id
@@ -1280,7 +1356,9 @@ Toolbox.prototype = {
       return deferred.promise;
     }
 
-    let definition = gDevTools.getToolDefinition(id);
+    // Retrieve the tool definition (from the global or the per-toolbox tool maps)
+    let definition = this.getToolDefinition(id);
+
     if (!definition) {
       deferred.reject(new Error("no such tool id " + id));
       return deferred.promise;
@@ -1907,41 +1985,47 @@ Toolbox.prototype = {
   },
 
   /**
-   * Return if the tool is available as a tab (i.e. if it's checked
-   * in the options panel). This is different from Toolbox.getPanel -
-   * a tool could be registered but not yet opened in which case
-   * isToolRegistered would return true but getPanel would return false.
+   * Test the availability of a tool (both globally registered tools and
+   * additional tools registered to this toolbox) by tool id.
+   *
+   * @param  {string} toolId
+   *         Id of the tool definition to search in the per-toolbox or globally
+   *         registered tools.
+   *
+   * @returns {bool}
+   *         Returns true if the tool is registered globally or on this toolbox.
    */
   isToolRegistered: function (toolId) {
-    return gDevTools.getToolDefinitionMap().has(toolId);
+    return !!this.getToolDefinition(toolId);
   },
 
   /**
-   * Handler for the tool-registered event.
-   * @param  {string} event
-   *         Name of the event ("tool-registered")
+   * Return the tool definition registered globally or additional tools registered
+   * to this toolbox.
+   *
    * @param  {string} toolId
-   *         Id of the tool that was registered
+   *         Id of the tool definition to retrieve for the per-toolbox and globally
+   *         registered tools.
+   *
+   * @returns {object}
+   *         The plain javascript object that represents the requested tool definition.
    */
-  _toolRegistered: function (event, toolId) {
-    let tool = gDevTools.getToolDefinition(toolId);
-    this._buildTabForTool(tool);
-    // Emit the event so tools can listen to it from the toolbox level
-    // instead of gDevTools
-    this.emit("tool-registered", toolId);
+  getToolDefinition: function (toolId) {
+    return gDevTools.getToolDefinition(toolId) ||
+      this.additionalToolDefinitions.get(toolId);
   },
 
   /**
-   * Handler for the tool-unregistered event.
-   * @param  {string} event
-   *         Name of the event ("tool-unregistered")
-   * @param  {string|object} toolId
-   *         Definition or id of the tool that was unregistered. Passing the
-   *         tool id should be avoided as it is a temporary measure.
+   * Internal helper that removes a loaded tool from the toolbox,
+   * it removes a loaded tool panel and tab from the toolbox without removing
+   * its definition, so that it can still be listed in options and re-added later.
+   *
+   * @param  {string} toolId
+   *         Id of the tool to be removed.
    */
-  _toolUnregistered: function (event, toolId) {
+  unloadTool: function (toolId) {
     if (typeof toolId != "string") {
-      toolId = toolId.id;
+      throw new Error("Unexpected non-string toolId received.");
     }
 
     if (this._toolPanels.has(toolId)) {
@@ -1980,6 +2064,38 @@ Toolbox.prototype = {
         key.parentNode.removeChild(key);
       }
     }
+  },
+
+  /**
+   * Handler for the tool-registered event.
+   * @param  {string} event
+   *         Name of the event ("tool-registered")
+   * @param  {string} toolId
+   *         Id of the tool that was registered
+   */
+  _toolRegistered: function (event, toolId) {
+    let tool = this.getToolDefinition(toolId);
+    if (!tool) {
+      // Ignore if the tool is not found, when a per-toolbox tool
+      // has been toggle in the toolbox options view, every toolbox will receive
+      // the toolbox-register and toolbox-unregister events.
+      return;
+    }
+    this._buildTabForTool(tool);
+    // Emit the event so tools can listen to it from the toolbox level
+    // instead of gDevTools.
+    this.emit("tool-registered", toolId);
+  },
+
+  /**
+   * Handler for the tool-unregistered event.
+   * @param  {string} event
+   *         Name of the event ("tool-unregistered")
+   * @param  {string} toolId
+   *         id of the tool that was unregistered
+   */
+  _toolUnregistered: function (event, toolId) {
+    this.unloadTool(toolId);
     // Emit the event so tools can listen to it from the toolbox level
     // instead of gDevTools
     this.emit("tool-unregistered", toolId);

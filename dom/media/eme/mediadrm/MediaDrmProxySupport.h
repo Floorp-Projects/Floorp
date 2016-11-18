@@ -54,13 +54,15 @@ public:
 
   void Shutdown();
 
+  const nsString& GetMediaDrmStubId() const { return mMediaDrmStubId; }
+
 private:
   const nsString mKeySystem;
   java::MediaDrmProxy::GlobalRef mBridgeProxy;
   java::MediaDrmProxy::NativeMediaDrmProxyCallbacks::GlobalRef mJavaCallbacks;
   DecryptorProxyCallback* mCallback;
   bool mDestroyed;
-
+  nsString mMediaDrmStubId;
 };
 
 } // namespace mozilla

@@ -126,9 +126,10 @@ public class JavaAddonManagerV1 implements NativeEventListener {
                     if (dispatcher == null) {
                         Log.w(LOGTAG, "Attempting to unload addon with unknown associated dispatcher; ignoring.");
                         callback.sendSuccess(false);
+                    } else {
+                        dispatcher.unregisterAllEventListeners();
+                        callback.sendSuccess(true);
                     }
-                    dispatcher.unregisterAllEventListeners();
-                    callback.sendSuccess(true);
                 }
                 break;
             }

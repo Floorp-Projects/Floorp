@@ -317,7 +317,8 @@ public:
 
     void InitAsyncSurrogates();
 
-    layers::TextureClientRecycleAllocator* EnsureTextureAllocator();
+    layers::TextureClientRecycleAllocator* EnsureTextureAllocatorForDirectBitmap();
+    layers::TextureClientRecycleAllocator* EnsureTextureAllocatorForDXGISurface();
 
 protected:
     void NotifyFlashHang();
@@ -367,7 +368,8 @@ protected:
     nsresult          mAsyncNewRv;
     uint32_t          mRunID;
 
-    RefPtr<layers::TextureClientRecycleAllocator> mTextureAllocator;
+    RefPtr<layers::TextureClientRecycleAllocator> mTextureAllocatorForDirectBitmap;
+    RefPtr<layers::TextureClientRecycleAllocator> mTextureAllocatorForDXGISurface;
 };
 
 class PluginModuleContentParent : public PluginModuleParent
