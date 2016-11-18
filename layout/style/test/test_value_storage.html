@@ -91,6 +91,24 @@ var gComputedStyle = window.getComputedStyle(gElement, "");
 var gPrereqDeclaration =
   document.getElementById("prereqsheet").sheet.cssRules[0].style;
 
+// On Android, avoid most 'TEST-PASS' logging by overriding
+// SimpleTest.is/isnot, to improve performance
+if (navigator.appVersion.indexOf("Android") >= 0) {
+  is = function is(a, b, name)
+  {
+    var pass = Object.is(a, b);
+    if (!pass)
+      SimpleTest.is(a, b, name);
+  }
+
+  isnot = function isnot(a, b, name)
+  {
+    var pass = !Object.is(a, b);
+    if (!pass)
+      SimpleTest.isnot(a, b, name);
+  }
+}
+
 // Returns true if propA and propB are equivalent, considering aliasing.
 // (i.e. if one is an alias of the other, or if they're both aliases of
 // the same 3rd property)
@@ -155,7 +173,7 @@ function test_property(property)
       for (idx in info.subproperties)
         step1comps.push(gComputedStyle.getPropertyValue(info.subproperties[idx]));
 
-    isnot(step1val, "", "setting '" + value + "' on '" + property + "'");
+    SimpleTest.isnot(step1val, "", "setting '" + value + "' on '" + property + "'");
     if ("subproperties" in info)
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
