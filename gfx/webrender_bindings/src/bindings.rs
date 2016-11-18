@@ -282,7 +282,7 @@ pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width
     state.size = (width, height);
     state.frame_builder.root_dl_builder.list.clear();
     state.frame_builder.dl_builder.clear();
-    wr_push_dl_builder(state);
+    state.frame_builder.dl_builder.push(webrender_traits::DisplayListBuilder::new());
     state.z_index = 0;
 
     if state.pipeline_id == window.root_pipeline_id {
@@ -410,9 +410,7 @@ pub extern fn wr_delete_image(window: &mut WrWindowState, key: ImageKey) {
 
 #[no_mangle]
 pub extern fn wr_dp_push_rect(state:&mut WrState, rect: WrRect, clip: WrRect, r: f32, g: f32, b: f32, a: f32) {
-    if state.frame_builder.dl_builder.is_empty() {
-        return;
-    }
+    assert!(!state.frame_builder.dl_builder.is_empty());
     //let (width, height) = state.size;
     let clip_region = webrender_traits::ClipRegion::new(&clip.to_rect(),
                                                         Vec::new(),
@@ -428,9 +426,7 @@ pub extern fn wr_dp_push_rect(state:&mut WrState, rect: WrRect, clip: WrRect, r:
 
 #[no_mangle]
 pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
-    if state.frame_builder.dl_builder.is_empty() {
-        return;
-    }
+    assert!(!state.frame_builder.dl_builder.is_empty());
 
     let clip_region = webrender_traits::ClipRegion::new(&clip.to_rect(),
                                                         Vec::new(),
@@ -471,9 +467,8 @@ impl WrRect
 
 #[no_mangle]
 pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect, mask: *const WrImageMask, key: ImageKey) {
-    if state.frame_builder.dl_builder.is_empty() {
-        return;
-    }
+    assert!(!state.frame_builder.dl_builder.is_empty());
+
     let bounds = bounds.to_rect();
     let clip = clip.to_rect();
 
