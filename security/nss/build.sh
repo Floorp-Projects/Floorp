@@ -49,11 +49,12 @@ build_64=0
 clean=0
 rebuild_gyp=0
 target=Debug
-params=$(echo "$* $CC $CCC" | tr " " "\n")
 verbose=0
 
-cwd=$(cd $(dirname $0); pwd -P)
-dist_dir="$cwd/../dist"
+# parse parameters to store in config
+params=$(echo "$*" | perl -pe 's/-c|-v|-g|-j [0-9]*|-h//g' | perl -pe 's/^[ \t]*//')
+params=$(echo "$params $CC $CCC" | tr " " "\n" | perl -pe '/^\s*$/d')
+params=$(echo "${params[*]}" | sort)
 
 cwd=$(cd $(dirname $0); pwd -P)
 dist_dir="$cwd/../dist"
