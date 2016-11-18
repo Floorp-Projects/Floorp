@@ -28,5 +28,6 @@ browser.jar:
     content/browser/ext-utils.js
     content/browser/ext-windows.js
     content/browser/ext-c-contextMenus.js
+    content/browser/ext-c-devtools-inspectedWindow.js
     content/browser/ext-c-omnibox.js
     content/browser/ext-c-tabs.js
