@@ -227,20 +227,27 @@ class TaskClusterArtifactFinderMixin(object):
         # Task definition
         child_task = self.get_task(child_task_id)
 
+        properties = child_task['payload']['properties']
+
         # Case A: The parent_task_id is defined (mozci scheduling)
-        if child_task['payload']['properties'].get('parent_task_id'):
+        # or installer_path is defined (intree scheduling)
+        if any(k in properties for k in ('parent_task_id', 'installer_path')):
             # parent_task_id is used to point to the task from which to grab artifacts
             # rather than the one we depend on
-            parent_id = child_task['payload']['properties']['parent_task_id']
+            parent_id = properties.get('parent_task_id', self.find_parent_task_id(child_task_id))
 
             # Find out where the parent task uploaded the build
             parent_task = self.get_task(parent_id)
 
-            # Case 1: The parent task is a pure TC task
-            if parent_task['extra'].get('locations'):
-                # Build tasks generated under TC specify where they upload their builds
-                installer_path = parent_task['extra']['locations']['build']
+            # in-tree bbb jobs have the installer_path property
+            # otherwise we look for the build path in task locations
+            installer_path = properties.get(
+                'installer_path',
+                parent_task['extra'].get('locations', {}).get('build')
+            )
 
+            # Case 1: The parent task is a pure TC task
+            if installer_path:
                 self.set_artifacts(
                     self.url_to_artifact(parent_id, installer_path),
                     self.url_to_artifact(parent_id, 'public/build/test_packages.json'),
@@ -253,7 +260,6 @@ class TaskClusterArtifactFinderMixin(object):
                     task_id=parent_id,
                     properties_file_path='public/build/buildbot_properties.json'
                 )
-
         else:
             # Case B: We need to query who the parent is since 'parent_task_id'
             # was not defined as a Buildbot property
