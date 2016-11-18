@@ -40,7 +40,12 @@ function WeakSetConstructorInit(iterable) {
         var nextValue = next.value;
 
         // Steps 8.d-e.
-        callContentFunction(adder, set, nextValue);
+        try {
+            callContentFunction(adder, set, nextValue);
+        } catch (e) {
+            IteratorCloseThrow(iter);
+            throw e;
+        }
     }
 }
 
