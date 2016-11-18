@@ -6,6 +6,22 @@
 
 HAS_MISC_RULE = True
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+
+DEFINES['MOZ_APP_VERSION'] = '"%s"' % CONFIG['MOZ_APP_VERSION']
+
+LOCAL_INCLUDES += [
+    '/xpcom/build',
+    '/xpcom/threads',
+]
+
+SPHINX_TREES['telemetry'] = 'docs'
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wno-error=shadow']
+
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
@@ -58,17 +74,16 @@ TESTING_JS_MODULES += [
   'tests/unit/TelemetryArchiveTesting.jsm',
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
-
-FINAL_LIBRARY = 'xul'
-
 GENERATED_FILES = [
+    'TelemetryEventData.h',
+    'TelemetryEventEnums.h',
     'TelemetryHistogramData.inc',
     'TelemetryHistogramEnums.h',
     'TelemetryScalarData.h',
     'TelemetryScalarEnums.h',
 ]
 
+# Generate histogram files.
 histogram_files = [
     'Histograms.json',
     '/dom/base/UseCounters.conf',
@@ -83,7 +98,7 @@ enums = GENERATED_FILES['TelemetryHistogramEnums.h']
 enums.script = 'gen-histogram-enum.py'
 enums.inputs = histogram_files
 
-# Generate Scalars
+# Generate scalar files.
 scalar_files = [
     'Scalars.yaml',
 ]
@@ -96,17 +111,18 @@ scalar_enums = GENERATED_FILES['TelemetryScalarEnums.h']
 scalar_enums.script = 'gen-scalar-enum.py'
 scalar_enums.inputs = scalar_files
 
-DEFINES['MOZ_APP_VERSION'] = '"%s"' % CONFIG['MOZ_APP_VERSION']
-
-LOCAL_INCLUDES += [
-    '/xpcom/build',
-    '/xpcom/threads',
+# Generate event files.
+event_files = [
+    'Events.yaml',
 ]
 
-SPHINX_TREES['telemetry'] = 'docs'
+event_data = GENERATED_FILES['TelemetryEventData.h']
+event_data.script = 'gen-event-data.py'
+event_data.inputs = event_files
 
-if CONFIG['GNU_CXX']:
-    CXXFLAGS += ['-Wno-error=shadow']
+event_enums = GENERATED_FILES['TelemetryEventEnums.h']
+event_enums.script = 'gen-event-enum.py'
+event_enums.inputs = event_files
 
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Telemetry')
