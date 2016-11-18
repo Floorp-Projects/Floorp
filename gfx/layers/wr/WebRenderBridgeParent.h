@@ -8,6 +8,7 @@
 #define mozilla_layers_WebRenderBridgeParent_h
 
 #include "GLContextProvider.h"
+#include "mozilla/layers/CompositorVsyncScheduler.h"
 #include "mozilla/layers/PWebRenderBridgeParent.h"
 #include "mozilla/layers/WebRenderTypes.h"
 
@@ -26,11 +27,13 @@ namespace layers {
 class Compositor;
 
 class WebRenderBridgeParent final : public PWebRenderBridgeParent
+                                  , public CompositorVsyncSchedulerOwner
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeParent)
 
 public:
-  WebRenderBridgeParent(const uint64_t& aPipelineId,
+  WebRenderBridgeParent(WebRenderBridgeParent* aParent,
+                        const uint64_t& aPipelineId,
                         const nsString* aResourcePath,
                         widget::CompositorWidget* aWidget,
                         gl::GLContext* aGlContext,
@@ -63,17 +66,25 @@ public:
 
   void ActorDestroy(ActorDestroyReason aWhy) override {}
 
+  // CompositorVsyncSchedulerOwner
+  bool IsPendingComposite() override { return false; }
+  void FinishPendingComposite() override { }
+  void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr) override;
+
 protected:
   virtual ~WebRenderBridgeParent();
   void DeleteOldImages();
-
+  void ScheduleComposition();
 private:
+  // XXX remove mParent in Bug 1317935
+  RefPtr<WebRenderBridgeParent> mParent;
   uint64_t mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
   wrstate* mWRState;
   RefPtr<gl::GLContext> mGLContext;
   wrwindowstate* mWRWindowState;
   RefPtr<layers::Compositor> mCompositor;
+  RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   std::vector<WRImageKey> mKeysToDelete;
 };
 

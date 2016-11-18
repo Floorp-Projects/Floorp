@@ -14,13 +14,15 @@
 namespace mozilla {
 namespace layers {
 
-WebRenderBridgeParent::WebRenderBridgeParent(const uint64_t& aPipelineId,
+WebRenderBridgeParent::WebRenderBridgeParent(WebRenderBridgeParent* aParent,
+                                             const uint64_t& aPipelineId,
                                              const nsString* aResourcePath,
                                              widget::CompositorWidget* aWidget,
                                              gl::GLContext* aGlContext,
                                              wrwindowstate* aWrWindowState,
                                              layers::Compositor* aCompositor)
-  : mPipelineId(aPipelineId)
+  : mParent(aParent)
+  , mPipelineId(aPipelineId)
   , mWidget(aWidget)
   , mWRState(nullptr)
   , mGLContext(aGlContext)
@@ -37,6 +39,9 @@ WebRenderBridgeParent::WebRenderBridgeParent(const uint64_t& aPipelineId,
     MOZ_ASSERT(aResourcePath);
     mWRWindowState = wr_init_window(mPipelineId,
                                     NS_ConvertUTF16toUTF8(*aResourcePath).get());
+  }
+  if (mWidget) {
+    mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
   }
 }
 
@@ -65,6 +70,11 @@ WebRenderBridgeParent::RecvDestroy()
     // the compositor ref and needs to destroy it.
     mCompositor->Destroy();
   }
+  if (mCompositorScheduler) {
+    mCompositorScheduler->Destroy();
+    mCompositorScheduler = nullptr;
+  }
+  mParent = nullptr;
   return IPC_OK();
 }
 
@@ -109,17 +119,6 @@ WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
                                    bool* aOutSuccess)
 {
   MOZ_ASSERT(mWRState);
-  if (mWidget) {
-    mozilla::widget::WidgetRenderingContext widgetContext;
-#if defined(XP_MACOSX)
-    widgetContext.mGL = mGLContext;
-#endif
-    if (!mWidget->PreRender(&widgetContext)) {
-      *aOutSuccess = false;
-      return IPC_OK();
-    }
-  }
-  mGLContext->MakeCurrent();
   wr_dp_begin(mWRWindowState, mWRState, aWidth, aHeight);
   *aOutSuccess = true;
   return IPC_OK();
@@ -161,19 +160,37 @@ WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& commands)
         NS_RUNTIMEABORT("not reached");
     }
   }
-  mGLContext->MakeCurrent();
   wr_dp_end(mWRWindowState, mWRState);
-  mGLContext->SwapBuffers();
-  if (mWidget) {
+  ScheduleComposition();
+  DeleteOldImages();
+  return IPC_OK();
+}
+
+void
+WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect)
+{
+  if (aTarget) {
+    // XXX Add compositing to DrawTarget
+    return;
+  }
+  if (!mWidget) {
+    return;
+  }
+
+  MOZ_ASSERT(mWRState);
+  {
     mozilla::widget::WidgetRenderingContext widgetContext;
 #if defined(XP_MACOSX)
     widgetContext.mGL = mGLContext;
 #endif
-    mWidget->PostRender(&widgetContext);
+    if (!mWidget->PreRender(&widgetContext)) {
+      return;
+    }
   }
 
-  DeleteOldImages();
-  return IPC_OK();
+  mGLContext->MakeCurrent();
+  wr_composite(mWRWindowState);
+  mGLContext->SwapBuffers();
 }
 
 WebRenderBridgeParent::~WebRenderBridgeParent()
@@ -187,6 +204,16 @@ WebRenderBridgeParent::DeleteOldImages()
     wr_delete_image(mWRWindowState, key);
   }
   mKeysToDelete.clear();
+}
+
+void
+WebRenderBridgeParent::ScheduleComposition()
+{
+  if (mWidget) {
+    mCompositorScheduler->ScheduleComposition();
+  } else {
+    mParent->ScheduleComposition();
+  }
 }
 
 } // namespace layers
