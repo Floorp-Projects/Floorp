@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: stretching input items with auto-margins and/or orthogonal writing-mode</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1317168">
+  <link rel="help" href="https://drafts.csswg.org/css-align-3/#valdef-justify-self-normal">
+  <link rel="match" href="grid-item-input-stretch-001-ref.html">
+  <style type="text/css">
+* { color:black; background-color:white; font:10px/1 monospace; padding:0; margin:0; }
+* { vertical-align: top; }
+.grid {
+  display: inline-grid;
+  border: 1px solid;
+  grid: 2px 30px 3px / 6px 200px 4px;
+}
+
+input {
+  border: 1px solid;
+  padding: 0;
+  margin: 0;
+  background: lightgrey;
+  grid-area: 2/2;
+}
+
+.m { margin: 7px 3px 1px 5px; }
+.p { padding: 3px 1px 5px 7px; }
+.hma10 { margin: 7px 3px 1px auto; }
+.hmaa  { margin: 7px auto 1px auto; }
+.vma10 { margin: auto 7px 3px 1px; }
+.vmaa  { margin: auto 7px auto 1px; }
+.mxw { max-width: 32px; }
+.mxh { max-height: 16px; }
+
+.vr { writing-mode: vertical-rl; }
+  </style>
+</head>
+<body>
+
+<div class="grid"><input class="m"></div>
+<div class="grid"><input class="hma10"></div>
+<div class="grid"><input class="hmaa"></div>
+<div class="grid"><input class="vr hma10"></div>
+<div class="grid"><input class="vr hmaa"></div>
+<div class="grid"><input class="vr"></div>
+
+<div class="grid"><input class="vma10"></div>
+<div class="grid"><input class="vmaa"></div>
+<div class="grid"><input class="vr vma10"></div>
+<div class="grid"><input class="vr vmaa"></div>
+<div class="grid"><input class="vr p vma10"></div>
+<div class="grid"><input class="vr p vmaa"></div>
+
+<div class="grid"><input class="mxw m"></div>
+<div class="grid"><input class="mxw hma10"></div>
+<div class="grid"><input class="mxw hmaa"></div>
+<div class="grid"><input class="mxw vr hma10"></div>
+<div class="grid"><input class="mxw vr"></div>
+
+<div class="grid"><input class="mxh m"></div>
+<div class="grid"><input class="mxh hma10"></div>
+<div class="grid"><input class="mxh hmaa"></div>
+<div class="grid"><input class="mxh vr hmaa"></div>
+<div class="grid"><input class="mxh vr"></div>
+
+<div class="grid" style="grid:minmax(min-content,0) / minmax(min-content,0)"><input style="grid-area:1/1"></div>
+<div class="grid" style="grid:minmax(min-content,0) / minmax(min-content,0); align-items:start; justify-items:start"><input style="grid-area:1/1"></div>
+
+</body>
+</html>
