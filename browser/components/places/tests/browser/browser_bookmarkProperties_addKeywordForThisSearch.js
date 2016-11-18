@@ -8,7 +8,7 @@ add_task(function* () {
     url: TEST_URL,
   }, function* (browser) {
     // We must wait for the context menu code to build metadata.
-    yield openContextMenuForContentSelector(browser, 'form > input[name="search"]');
+    yield openContextMenuForContentSelector(browser, '#form1 > input[name="search"]');
 
     yield withBookmarksDialog(true, AddKeywordForSearchField, function* (dialogWin) {
       let acceptBtn = dialogWin.document.documentElement.getButton("accept");
@@ -43,6 +43,61 @@ add_task(function* () {
       let data = yield getShortcutOrURIAndPostData("kw test");
       is(getPostDataString(data.postData), "accenti=\u00E0\u00E8\u00EC\u00F2\u00F9&search=test", "getShortcutOrURI POST data is correct");
       is(data.url, TEST_URL, "getShortcutOrURI URL is correct");
+    });
+  });
+});
+
+add_task(function* reopen_same_field() {
+  yield PlacesUtils.keywords.insert({
+    url: TEST_URL,
+    keyword: "kw",
+    postData: "accenti%3D%E0%E8%EC%F2%F9&search%3D%25s"
+  });
+  registerCleanupFunction(function* () {
+    yield PlacesUtils.keywords.remove("kw");
+  });
+  // Reopening on the same input field should show the existing keyword.
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: TEST_URL,
+  }, function* (browser) {
+    // We must wait for the context menu code to build metadata.
+    yield openContextMenuForContentSelector(browser, '#form1 > input[name="search"]');
+
+    yield withBookmarksDialog(true, AddKeywordForSearchField, function* (dialogWin) {
+      let acceptBtn = dialogWin.document.documentElement.getButton("accept");
+      ok(acceptBtn.disabled, "Accept button is disabled");
+
+      let elt = dialogWin.document.getElementById("editBMPanel_keywordField");
+      is(elt.value, "kw");
+    });
+  });
+});
+
+add_task(function* open_other_field() {
+  yield PlacesUtils.keywords.insert({
+    url: TEST_URL,
+    keyword: "kw2",
+    postData: "search%3D%25s"
+  });
+  registerCleanupFunction(function* () {
+    yield PlacesUtils.keywords.remove("kw2");
+  });
+  // Reopening on another field of the same page that has different postData
+  // should not show the existing keyword.
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: TEST_URL,
+  }, function* (browser) {
+    // We must wait for the context menu code to build metadata.
+    yield openContextMenuForContentSelector(browser, '#form2 > input[name="search"]');
+
+    yield withBookmarksDialog(true, AddKeywordForSearchField, function* (dialogWin) {
+      let acceptBtn = dialogWin.document.documentElement.getButton("accept");
+      ok(acceptBtn.disabled, "Accept button is disabled");
+
+      let elt = dialogWin.document.getElementById("editBMPanel_keywordField");
+      is(elt.value, "");
     });
   });
 });

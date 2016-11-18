@@ -123,7 +123,7 @@ define(function (require, exports, module) {
         items = [span({className: "length"}, isEmpty ? "" : objectLength)];
         brackets = needSpace(false);
       } else {
-        let max = (mode == "short") ? 3 : 300;
+        let max = (mode == "short") ? 3 : 10;
         items = this.arrayIterator(object, max);
         brackets = needSpace(items.length > 0);
       }

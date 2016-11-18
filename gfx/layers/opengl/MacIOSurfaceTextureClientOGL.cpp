@@ -21,8 +21,7 @@ MacIOSurfaceTextureData::MacIOSurfaceTextureData(MacIOSurface* aSurface,
   MOZ_ASSERT(mSurface);
 }
 
-MacIOSurfaceTextureData::~MacIOSurfaceTextureData()
-{}
+MacIOSurfaceTextureData::~MacIOSurfaceTextureData() = default;
 
 // static
 MacIOSurfaceTextureData*

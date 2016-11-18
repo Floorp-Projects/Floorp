@@ -32,12 +32,13 @@ define(function (require, exports, module) {
     },
 
     getTitle: function (grip) {
+      const title = "#text";
       if (this.props.objectLink) {
         return this.props.objectLink({
           object: grip
-        }, "#text ");
+        }, title);
       }
-      return "";
+      return title;
     },
 
     render: function () {
@@ -57,33 +58,17 @@ define(function (require, exports, module) {
         });
       }
 
-      if (mode == "short" || mode == "tiny") {
-        return (
-          DOM.span(baseConfig,
-            this.getTitle(grip),
-            DOM.span({className: "nodeValue"},
-              "\"" + this.getTextContent(grip) + "\""
-            )
-          )
-        );
+      if (mode == "tiny") {
+        return DOM.span(baseConfig, this.getTitle(grip));
       }
 
-      let objectLink = this.props.objectLink || DOM.span;
       return (
         DOM.span(baseConfig,
           this.getTitle(grip),
-          objectLink({
-            object: grip
-          }, "<"),
-          DOM.span({className: "nodeTag"}, "TextNode"),
-          " textContent=\"",
           DOM.span({className: "nodeValue"},
-            this.getTextContent(grip)
-          ),
-          "\"",
-          objectLink({
-            object: grip
-          }, ">;")
+            " ",
+            `"${this.getTextContent(grip)}"`
+          )
         )
       );
     },

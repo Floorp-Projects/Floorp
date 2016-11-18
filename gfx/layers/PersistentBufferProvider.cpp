@@ -430,8 +430,8 @@ PersistentBufferProviderShared::Destroy()
   mSnapshot = nullptr;
   mDrawTarget = nullptr;
 
-  for (uint32_t i = 0; i < mTextures.length(); ++i) {
-    TextureClient* texture = mTextures[i];
+  for (auto& mTexture : mTextures) {
+    TextureClient* texture = mTexture;
     if (texture && texture->IsLocked()) {
       MOZ_ASSERT(false);
       texture->Unlock();

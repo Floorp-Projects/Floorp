@@ -10,13 +10,9 @@
 
 namespace mozilla {
 
-FileLocation::FileLocation()
-{
-}
+FileLocation::FileLocation() = default;
 
-FileLocation::~FileLocation()
-{
-}
+FileLocation::~FileLocation() = default;
 
 FileLocation::FileLocation(nsIFile* aFile)
 {

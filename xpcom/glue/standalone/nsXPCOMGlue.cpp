@@ -134,7 +134,7 @@ static DependentLib* sTop;
 static void
 AppendDependentLib(LibHandleType aLibHandle)
 {
-  DependentLib* d = new DependentLib;
+  auto* d = new DependentLib;
   if (!d) {
     return;
   }

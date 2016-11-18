@@ -26,7 +26,7 @@ InvalidArrayIndex_CRASH(size_t aIndex, size_t aLength)
   // Leak the buffer on the heap to make sure that it lives long enough, as
   // MOZ_CRASH_ANNOTATE expects the pointer passed to it to live to the end of
   // the program.
-  char* buffer = new char[CAPACITY];
+  auto* buffer = new char[CAPACITY];
   snprintf(buffer, CAPACITY,
            "ElementAt(aIndex = %llu, aLength = %llu)",
            (long long unsigned) aIndex,
