@@ -160,7 +160,7 @@ moz_gtk_menuitem_get_horizontal_padding(gint* horizontal_padding)
 gint
 moz_gtk_checkmenuitem_get_horizontal_padding(gint* horizontal_padding)
 {
-    GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_CHECKMENUITEM_CONTAINER);
+    GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_CHECKMENUITEM);
     gtk_style_context_get_style(style,
                                 "horizontal-padding", horizontal_padding,
                                 nullptr);
@@ -1872,10 +1872,10 @@ moz_gtk_menu_arrow_paint(cairo_t *cr, GdkRectangle* rect,
 
 // See gtk_real_check_menu_item_draw_indicator() for reference.
 static gint
-moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
+moz_gtk_check_menu_item_paint(WidgetNodeType widgetType,
+                              cairo_t *cr, GdkRectangle* rect,
                               GtkWidgetState* state,
-                              gboolean checked, gboolean isradio,
-                              GtkTextDirection direction)
+                              gboolean checked, GtkTextDirection direction)
 {
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
     GtkStyleContext* style;
@@ -1889,9 +1889,7 @@ moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
       state_flags = static_cast<GtkStateFlags>(state_flags|checkbox_check_state);
     }
 
-    style = ClaimStyleContext(isradio ? MOZ_GTK_RADIOMENUITEM_CONTAINER :
-                                        MOZ_GTK_CHECKMENUITEM_CONTAINER,
-                              direction);
+    style = ClaimStyleContext(widgetType, direction);
     gtk_style_context_get_style(style,
                                 "indicator-size", &indicator_size,
                                 "horizontal-padding", &horizontal_padding,
@@ -1899,9 +1897,10 @@ moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
     gtk_style_context_get_padding(style, state_flags, &padding);
     ReleaseStyleContext(style);
 
-    style = ClaimStyleContext(isradio ? MOZ_GTK_RADIOMENUITEM :
-                                        MOZ_GTK_CHECKMENUITEM,
-                              direction, state_flags);
+    bool isRadio = (widgetType == MOZ_GTK_RADIOMENUITEM);
+    WidgetNodeType indicatorType = isRadio ? MOZ_GTK_RADIOMENUITEM_INDICATOR
+                                           : MOZ_GTK_CHECKMENUITEM_INDICATOR;
+    style = ClaimStyleContext(indicatorType, direction, state_flags);
     gint offset = padding.left + 2;
 
     if (direction == GTK_TEXT_DIR_RTL) {
@@ -1917,7 +1916,7 @@ moz_gtk_check_menu_item_paint(cairo_t *cr, GdkRectangle* rect,
         gtk_render_frame(style, cr, x, y, indicator_size, indicator_size);
     }
 
-    if (isradio) {
+    if (isRadio) {
       gtk_render_option(style, cr, x, y, indicator_size, indicator_size);
     } else {
       gtk_render_check(style, cr, x, y, indicator_size, indicator_size);
@@ -2162,8 +2161,7 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
         {
             // Bug 1274143 for MOZ_GTK_MENUBARITEM
             WidgetNodeType type =
-                widget == MOZ_GTK_MENUBARITEM || widget == MOZ_GTK_MENUITEM ?
-                MOZ_GTK_MENUITEM : MOZ_GTK_CHECKMENUITEM_CONTAINER;
+                widget == MOZ_GTK_MENUBARITEM ? MOZ_GTK_MENUITEM : widget;
             style = ClaimStyleContext(type);
 
             moz_gtk_add_style_padding(style, left, top, right, bottom);
@@ -2779,10 +2777,8 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
         break;
     case MOZ_GTK_CHECKMENUITEM:
     case MOZ_GTK_RADIOMENUITEM:
-        return moz_gtk_check_menu_item_paint(cr, rect, state,
-                                             (gboolean) flags,
-                                             (widget == MOZ_GTK_RADIOMENUITEM),
-                                             direction);
+        return moz_gtk_check_menu_item_paint(widget, cr, rect, state,
+                                             (gboolean) flags, direction);
         break;
     case MOZ_GTK_SPLITTER_HORIZONTAL:
         return moz_gtk_vpaned_paint(cr, rect, state);
