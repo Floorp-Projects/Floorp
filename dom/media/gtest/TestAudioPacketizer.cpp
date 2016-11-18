@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <math.h>
+#include <memory>
 #include "../AudioPacketizer.h"
 #include "gtest/gtest.h"
 
@@ -37,7 +38,7 @@ int16_t Sequence(int16_t* aBuffer, uint32_t aSize, uint32_t aStart = 0)
   return aStart + i;
 }
 
-void IsSequence(int16_t* aBuffer, uint32_t aSize, uint32_t aStart = 0)
+void IsSequence(std::unique_ptr<int16_t[]> aBuffer, uint32_t aSize, uint32_t aStart = 0)
 {
   for (uint32_t i = 0; i < aSize; i++) {
     ASSERT_TRUE(aBuffer[i] == static_cast<int64_t>(aStart + i)) <<
@@ -46,7 +47,7 @@ void IsSequence(int16_t* aBuffer, uint32_t aSize, uint32_t aStart = 0)
   // Buffer is a sequence.
 }
 
-void Zero(int16_t* aBuffer, uint32_t aSize)
+void Zero(std::unique_ptr<int16_t[]> aBuffer, uint32_t aSize)
 {
   for (uint32_t i = 0; i < aSize; i++) {
     ASSERT_TRUE(aBuffer[i] == 0) <<
@@ -65,9 +66,8 @@ TEST(AudioPacketizer, Test)
     {
       AudioPacketizer<int16_t, int16_t> ap(441, channels);
       for (int16_t i = 0; i < 10; i++) {
-        int16_t* out = ap.Output();
-        Zero(out, 441);
-        delete[] out;
+        std::unique_ptr<int16_t[]> out(ap.Output());
+        Zero(std::move(out), 441);
       }
     }
     // Simple test, with input/output buffer size aligned on the packet size,
@@ -80,9 +80,8 @@ TEST(AudioPacketizer, Test)
         int16_t prevEnd = seqEnd;
         seqEnd = Sequence(b.Get(), channels * 441, prevEnd);
         ap.Input(b.Get(), 441);
-        int16_t* out = ap.Output();
-        IsSequence(out, 441 * channels, prevEnd);
-        delete[] out;
+        std::unique_ptr<int16_t[]> out(ap.Output());
+        IsSequence(std::move(out), 441 * channels, prevEnd);
       }
     }
     // Simple test, with input/output buffer size aligned on the packet size,
@@ -99,12 +98,10 @@ TEST(AudioPacketizer, Test)
         seqEnd = Sequence(b1.Get(), 441 * channels, seqEnd);
         ap.Input(b.Get(), 441);
         ap.Input(b1.Get(), 441);
-        int16_t* out = ap.Output();
-        int16_t* out2 = ap.Output();
-        IsSequence(out, 441 * channels, prevEnd0);
-        IsSequence(out2, 441 * channels, prevEnd1);
-        delete[] out;
-        delete[] out2;
+        std::unique_ptr<int16_t[]> out(ap.Output());
+        std::unique_ptr<int16_t[]> out2(ap.Output());
+        IsSequence(std::move(out), 441 * channels, prevEnd0);
+        IsSequence(std::move(out2), 441 * channels, prevEnd1);
       }
     }
     // Input/output buffer size not aligned on the packet size,
@@ -120,14 +117,12 @@ TEST(AudioPacketizer, Test)
         prevSeq = Sequence(b1.Get(), 480 * channels, prevSeq);
         ap.Input(b.Get(), 480);
         ap.Input(b1.Get(), 480);
-        int16_t* out = ap.Output();
-        int16_t* out2 = ap.Output();
-        IsSequence(out, 441 * channels, prevEnd);
+        std::unique_ptr<int16_t[]> out(ap.Output());
+        std::unique_ptr<int16_t[]> out2(ap.Output());
+        IsSequence(std::move(out), 441 * channels, prevEnd);
         prevEnd += 441 * channels;
-        IsSequence(out2, 441 * channels, prevEnd);
+        IsSequence(std::move(out2), 441 * channels, prevEnd);
         prevEnd += 441 * channels;
-        delete[] out;
-        delete[] out2;
       }
       printf("Available: %d\n", ap.PacketsAvailable());
     }
@@ -151,7 +146,7 @@ TEST(AudioPacketizer, Test)
         }
         ap.Input(b.Get(), 128);
         while (ap.PacketsAvailable()) {
-          int16_t* packet = ap.Output();
+          std::unique_ptr<int16_t[]> packet(ap.Output());
           for (uint32_t k = 0; k < ap.PacketSize(); k++) {
             for (int32_t c = 0; c < channels; c++) {
               ASSERT_TRUE(packet[k * channels + c] ==
@@ -159,7 +154,6 @@ TEST(AudioPacketizer, Test)
             }
             outPhase++;
           }
-          delete [] packet;
         }
       }
     }

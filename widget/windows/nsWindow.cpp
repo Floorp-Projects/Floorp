@@ -6267,6 +6267,8 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
     if (mLastSizeMode != nsSizeMode_Normal && mSizeMode == nsSizeMode_Normal)
       DispatchFocusToTopLevelWindow(true);
 
+    mLastSizeMode = mSizeMode;
+
     // Skip window size change events below on minimization.
     if (mSizeMode == nsSizeMode_Minimized)
       return;

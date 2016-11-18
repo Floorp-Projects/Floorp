@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18px" height="18px" viewBox="0 0 18 18">
+  <style>
+    use:not(:target) {
+      display: none;
+    }
+    use {
+      fill: #ffffff;
+    }
+    use[id$="-hover"] {
+      fill: #48a0f7;
+    }
+    use[id$="-active"] {
+      fill: #2d89e6;
+    }
+    use[id$="-focus"] {
+      fill: #48a0f7;
+    }
+    use[id$="-disabled"] {
+      fill: #ffffff;
+    }
+  </style>
+  <symbol id="fullscreen-shape">
+    <path d="M6.728,10.188l-3.235,3.094l0.017-2.267l-1.513-0.016l0,5l4.987-0.008l0.011-1.537l-2.281-0.022
+  l3.097-3.158L6.728,10.188z M14.453,11.004l-0.022,2.281l-3.158-3.097l-1.086,1.083l3.094,3.235l-2.267-0.017l-0.016,1.514l5,0
+  l-0.008-4.988L14.453,11.004z M11.015,2.01l-0.011,1.537l2.281,0.022l-3.097,3.158l1.083,1.086l3.235-3.094L14.49,6.986
+  l1.513,0.016v-5L11.015,2.01z M6.986,3.511l0.016-1.514l-5,0L2.01,6.985l1.537,0.011l0.022-2.281l3.158,3.097l1.086-1.083
+  L4.718,3.494L6.986,3.511z"/>
+  </symbol>
+  <symbol id="unfullscreen-shape">
+    <path d="M2.047,11.135l-0.011,1.537l2.281,0.022L1.22,15.851l1.083,1.086l3.235-3.094l-0.017,2.268l1.513,0.016
+  l0-5L2.047,11.135z M13.781,12.587l2.267,0.017l0.016-1.514l-5,0l0.008,4.988l1.537,0.011l0.022-2.281l3.158,3.097l1.086-1.083
+  L13.781,12.587z M16.058,5.578l-2.281-0.021l3.097-3.158l-1.083-1.086l-3.235,3.094l0.017-2.267L11.06,2.123v5l4.988-0.008
+  L16.058,5.578z M5.516,2.098L5.494,4.379L2.336,1.283L1.25,2.365L4.344,5.6L2.077,5.583L2.06,7.097l5,0L7.053,2.109L5.516,2.098z"/>
+  </symbol>
+  <use id="fullscreen" xlink:href="#fullscreen-shape"/>
+  <use id="fullscreen-hover" xlink:href="#fullscreen-shape"/>
+  <use id="fullscreen-active" xlink:href="#fullscreen-shape"/>
+  <use id="fullscreen-focus" xlink:href="#fullscreen-shape"/>
+  <use id="fullscreen-disabled" xlink:href="#fullscreen-shape"/>
+
+  <use id="unfullscreen" xlink:href="#unfullscreen-shape"/>
+  <use id="unfullscreen-hover" xlink:href="#unfullscreen-shape"/>
+  <use id="unfullscreen-active" xlink:href="#unfullscreen-shape"/>
+  <use id="unfullscreen-focus" xlink:href="#unfullscreen-shape"/>
+  <use id="unfullscreen-disabled" xlink:href="#unfullscreen-shape"/>
+</svg>

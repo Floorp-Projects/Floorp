@@ -34,6 +34,21 @@ ServoStyleSet::Init(nsPresContext* aPresContext)
 void
 ServoStyleSet::BeginShutdown()
 {
+  // It's important to do this before mRawSet is released, since that will cause
+  // a RuleTree GC, which needs to happen after we have dropped all of the
+  // document's strong references to RuleNodes.  We also need to do it here,
+  // in BeginShutdown, and not in Shutdown, since Shutdown happens after the
+  // frame tree has been destroyed, but before the script runners that delete
+  // native anonymous content (which also could be holding on the RuleNodes)
+  // have run.  By clearing style here, before the frame tree is destroyed,
+  // the AllChildrenIterator will find the anonymous content.
+  //
+  // Note that this is pretty bad for performance; we should find a way to
+  // get by with the ServoNodeDatas being dropped as part of the document
+  // going away.
+  if (Element* root = mPresContext->Document()->GetRootElement()) {
+    ServoRestyleManager::ClearServoDataFromSubtree(root);
+  }
 }
 
 void

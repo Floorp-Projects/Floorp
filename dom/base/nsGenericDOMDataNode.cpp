@@ -235,13 +235,6 @@ nsGenericDOMDataNode::SubstringData(uint32_t aStart, uint32_t aCount,
   }
 }
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::MozRemove()
-{
-  Remove();
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 
 nsresult

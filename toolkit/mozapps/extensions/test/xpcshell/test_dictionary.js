@@ -173,8 +173,6 @@ function check_test_1() {
       do_check_false(b1.hasResource("bootstrap.js"));
       do_check_in_crash_annotation("ab-CD@dictionaries.addons.mozilla.org", "1.0");
 
-      let dir = do_get_addon_root_uri(profileDir, "ab-CD@dictionaries.addons.mozilla.org");
-
       let chromeReg = AM_Cc["@mozilla.org/chrome/chrome-registry;1"].
                       getService(AM_Ci.nsIChromeRegistry);
       try {
@@ -576,8 +574,6 @@ function check_test_23() {
       do_check_true(b1.hasResource("install.rdf"));
       do_check_false(b1.hasResource("bootstrap.js"));
       do_check_in_crash_annotation("ab-CD@dictionaries.addons.mozilla.org", "1.0");
-
-      let dir = do_get_addon_root_uri(profileDir, "ab-CD@dictionaries.addons.mozilla.org");
 
       AddonManager.getAddonsWithOperationsByTypes(null, callback_soon(function(list) {
         do_check_eq(list.length, 0);

@@ -19,10 +19,6 @@ class TestCapabilities(MarionetteTestCase):
             self.os_version = self.marionette.execute_script(
                 "return Services.sysinfo.getProperty('version')")
 
-    @property
-    def is_b2g(self):
-        return self.appinfo["name"] == "B2G"
-
     def test_mandates_capabilities(self):
         self.assertIn("browserName", self.caps)
         self.assertIn("browserVersion", self.caps)
@@ -42,7 +38,6 @@ class TestCapabilities(MarionetteTestCase):
         self.assertIn("takesElementScreenshot", self.caps)
         self.assertIn("takesScreenshot", self.caps)
 
-        self.assertEqual(self.caps["rotatable"], self.is_b2g)
         self.assertFalse(self.caps["acceptSslCerts"])
         self.assertTrue(self.caps["takesElementScreenshot"])
         self.assertTrue(self.caps["takesScreenshot"])

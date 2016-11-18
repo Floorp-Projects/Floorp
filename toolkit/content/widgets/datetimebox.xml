@@ -282,21 +282,25 @@
           if (this.mHourField && !this.mHourField.disabled &&
               !this.mHourField.readOnly) {
             this.mHourField.value = "";
+            this.mHourField.setAttribute("typeBuffer", "");
           }
 
           if (this.mMinuteField && !this.mMinuteField.disabled &&
               !this.mMinuteField.readOnly) {
             this.mMinuteField.value = "";
+            this.mMinuteField.setAttribute("typeBuffer", "");
           }
 
           if (this.mSecondField && !this.mSecondField.disabled &&
               !this.mSecondField.readOnly) {
             this.mSecondField.value = "";
+            this.mSecondField.setAttribute("typeBuffer", "");
           }
 
           if (this.mMillisecField && !this.mMillisecField.disabled &&
               !this.mMillisecField.readOnly) {
             this.mMillisecField.value = "";
+            this.mMillisecField.setAttribute("typeBuffer", "");
           }
 
           if (this.mDayPeriodField && !this.mDayPeriodField.disabled &&
@@ -579,8 +583,39 @@
         this.mMax = this.mInputElement.max;
         this.mStep = this.mInputElement.step;
         this.mIsPickerOpen = false;
+
+        this.EVENTS.forEach((eventName) => {
+          this.addEventListener(eventName, this, { mozSystemGroup: true });
+        });
+        // Handle keypress separately since we need to catch it on capturing.
+        this.addEventListener("keypress", this, {
+          capture: true,
+          mozSystemGroup: true
+        });
       ]]>
       </constructor>
+
+      <destructor>
+      <![CDATA[
+        this.mInputElement = null;
+
+        this.EVENTS.forEach((eventName) => {
+          this.removeEventListener(eventName, this, { mozSystemGroup: true });
+        });
+        this.removeEventListener("keypress", onKeyPress, {
+          capture: true,
+          mozSystemGroup: true
+        });
+      ]]>
+      </destructor>
+
+      <property name="EVENTS" readonly="true">
+        <getter>
+        <![CDATA[
+          return ["click", "focus", "blur", "copy", "cut", "paste"];
+        ]]>
+        </getter>
+      </property>
 
       <method name="log">
         <parameter name="aMsg"/>
@@ -736,72 +771,127 @@
         </body>
       </method>
 
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          this.log("handleEvent: " + aEvent.type);
+
+          switch (aEvent.type) {
+            case "keypress": {
+              this.onKeyPress(aEvent);
+              break;
+            }
+            case "click": {
+              this.onClick(aEvent);
+              break;
+            }
+            case "focus": {
+              this.onFocus(aEvent);
+              break;
+            }
+            case "blur": {
+              this.setInputValueFromFields();
+              break;
+            }
+            case "copy":
+            case "cut":
+            case "paste": {
+              aEvent.preventDefault();
+              break;
+            }
+            default:
+              break;
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="onFocus">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          this.log("onFocus originalTarget: " + aEvent.originalTarget);
+
+          let target = aEvent.originalTarget;
+          if ((target instanceof HTMLInputElement) && target.type == "text") {
+            this.mLastFocusedField = target;
+            target.select();
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="onKeyPress">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          this.log("onKeyPress key: " + aEvent.key);
+
+          switch (aEvent.key) {
+            // Close picker on Enter or Space key.
+            case "Enter":
+            case " ": {
+              this.mInputElement.closeDateTimePicker();
+              aEvent.preventDefault();
+              break;
+            }
+            case "Backspace": {
+              let targetField = aEvent.originalTarget;
+              targetField.setAttribute("typeBuffer", "");
+              break;
+            }
+            case "ArrowRight":
+            case "ArrowLeft": {
+              this.advanceToNextField(aEvent.key == "ArrowRight" ? false : true);
+              aEvent.preventDefault();
+              break;
+            }
+            case "ArrowUp":
+            case "ArrowDown":
+            case "PageUp":
+            case "PageDown":
+            case "Home":
+            case "End": {
+              this.handleKeyboardNav(aEvent);
+              aEvent.preventDefault();
+              break;
+            }
+            default: {
+              // printable characters
+              if (aEvent.keyCode == 0 &&
+                  !(aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey)) {
+                this.handleKeypress(aEvent);
+                aEvent.preventDefault();
+              }
+              break;
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="onClick">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          this.log("onClick originalTarget: " + aEvent.originalTarget);
+
+          // XXX: .originalTarget is not expected.
+          // When clicking on one of the inner text boxes, the .originalTarget is
+          // a HTMLDivElement and when clicking on the reset button, it's a
+          // HTMLButtonElement but it's not equal to our reset-button.
+          if (aEvent.defaultPrevented || this.isDisabled() || this.isReadonly()) {
+            return;
+          }
+
+          if (!(aEvent.originalTarget instanceof HTMLButtonElement)) {
+            this.mInputElement.openDateTimePicker(this.getCurrentValue());
+          }
+        ]]>
+        </body>
+      </method>
     </implementation>
-
-    <handlers>
-      <handler event="focus">
-      <![CDATA[
-        this.log("focus on: " + event.originalTarget);
-
-        let target = event.originalTarget;
-        if (target.type == "text") {
-          this.mLastFocusedField = target;
-          target.select();
-        }
-      ]]>
-      </handler>
-
-      <handler event="blur">
-      <![CDATA[
-        this.setInputValueFromFields();
-      ]]>
-      </handler>
-
-      <handler event="click">
-      <![CDATA[
-        // XXX: .originalTarget is not expected.
-        // When clicking on one of the inner text boxes, the .originalTarget is
-        // a HTMLDivElement and when clicking on the reset button, it's a
-        // HTMLButtonElement but it's not equal to our reset-button.
-        this.log("click on: " + event.originalTarget);
-        if (event.defaultPrevented || this.isDisabled() || this.isReadonly()) {
-          return;
-        }
-
-        if (!(event.originalTarget instanceof HTMLButtonElement)) {
-          this.mInputElement.openDateTimePicker(this.getCurrentValue());
-        }
-      ]]>
-      </handler>
-
-      <handler event="keypress" phase="capturing">
-      <![CDATA[
-        let key = event.key;
-        this.log("keypress: " + key);
-
-        if (key == "Backspace" || key == "Tab") {
-          return;
-        }
-
-        if (key == "Enter" || key == " ") {
-          // Close picker on Enter and Space.
-          this.mInputElement.closeDateTimePicker();
-        }
-
-        if (key == "ArrowUp" || key == "ArrowDown" ||
-            key == "PageUp" || key == "PageDown" ||
-            key == "Home" || key == "End") {
-          this.handleKeyboardNav(event);
-        } else if (key == "ArrowRight" || key == "ArrowLeft") {
-          this.advanceToNextField((key == "ArrowRight" ? false : true));
-        } else {
-          this.handleKeypress(event);
-        }
-
-        event.preventDefault();
-      ]]>
-      </handler>
-    </handlers>
   </binding>
 
 </bindings>

@@ -127,7 +127,7 @@ IDBFileHandle::Run()
 }
 
 nsresult
-IDBFileHandle::PreHandleEvent(EventChainPreVisitor& aVisitor)
+IDBFileHandle::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
   AssertIsOnOwningThread();
 

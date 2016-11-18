@@ -48,7 +48,7 @@ public:
 #endif
   }
 
-  void enter()
+  void lock()
   {
 #ifndef NDEBUG
     int r =
@@ -59,7 +59,7 @@ public:
 #endif
   }
 
-  void leave()
+  void unlock()
   {
 #ifndef NDEBUG
     int r =

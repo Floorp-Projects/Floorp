@@ -5,6 +5,8 @@
 package org.mozilla.gecko.media;
 
 import android.media.MediaCodec.BufferInfo;
+import android.media.MediaCodec.CryptoInfo;
+import android.media.MediaCrypto;
 import android.media.MediaFormat;
 import android.os.Handler;
 import android.view.Surface;
@@ -22,7 +24,7 @@ public interface AsyncCodec {
     }
 
     public abstract void setCallbacks(Callbacks callbacks, Handler handler);
-    public abstract void configure(MediaFormat format, Surface surface, int flags);
+    public abstract void configure(MediaFormat format, Surface surface, MediaCrypto crypto, int flags);
     public abstract void start();
     public abstract void stop();
     public abstract void flush();
@@ -30,5 +32,6 @@ public interface AsyncCodec {
     public abstract ByteBuffer getInputBuffer(int index);
     public abstract ByteBuffer getOutputBuffer(int index);
     public abstract void queueInputBuffer(int index, int offset, int size, long presentationTimeUs, int flags);
+    public abstract void queueSecureInputBuffer(int index, int offset, CryptoInfo info, long presentationTimeUs, int flags);
     public abstract void releaseOutputBuffer(int index, boolean render);
 }

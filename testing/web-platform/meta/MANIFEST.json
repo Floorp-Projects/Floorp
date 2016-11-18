@@ -38757,6 +38757,30 @@
             "url": "/web-animations/interfaces/KeyframeEffectReadOnly/copy-contructor.html"
           }
         ],
+        "webaudio/the-audio-api/the-audioparam-interface/retrospective-exponentialRampToValueAtTime.html": [
+          {
+            "path": "webaudio/the-audio-api/the-audioparam-interface/retrospective-exponentialRampToValueAtTime.html",
+            "url": "/webaudio/the-audio-api/the-audioparam-interface/retrospective-exponentialRampToValueAtTime.html"
+          }
+        ],
+        "webaudio/the-audio-api/the-audioparam-interface/retrospective-linearRampToValueAtTime.html": [
+          {
+            "path": "webaudio/the-audio-api/the-audioparam-interface/retrospective-linearRampToValueAtTime.html",
+            "url": "/webaudio/the-audio-api/the-audioparam-interface/retrospective-linearRampToValueAtTime.html"
+          }
+        ],
+        "webaudio/the-audio-api/the-audioparam-interface/retrospective-setTargetAtTime.html": [
+          {
+            "path": "webaudio/the-audio-api/the-audioparam-interface/retrospective-setTargetAtTime.html",
+            "url": "/webaudio/the-audio-api/the-audioparam-interface/retrospective-setTargetAtTime.html"
+          }
+        ],
+        "webaudio/the-audio-api/the-audioparam-interface/retrospective-setValueCurveAtTime.html": [
+          {
+            "path": "webaudio/the-audio-api/the-audioparam-interface/retrospective-setValueCurveAtTime.html",
+            "url": "/webaudio/the-audio-api/the-audioparam-interface/retrospective-setValueCurveAtTime.html"
+          }
+        ],
         "webaudio/the-audio-api/the-constantsourcenode-interface/test-constantsourcenode.html": [
           {
             "path": "webaudio/the-audio-api/the-constantsourcenode-interface/test-constantsourcenode.html",

@@ -311,7 +311,8 @@ GlobalObject::initStarGenerators(JSContext* cx, Handle<GlobalObject*> global)
     RootedObject genFunctionProto(cx, NewSingletonObjectWithFunctionPrototype(cx, global));
     if (!genFunctionProto || !genFunctionProto->setDelegate(cx))
         return false;
-    if (!LinkConstructorAndPrototype(cx, genFunctionProto, genObjectProto) ||
+    if (!LinkConstructorAndPrototype(cx, genFunctionProto, genObjectProto, JSPROP_READONLY,
+                                     JSPROP_READONLY) ||
         !DefineToStringTag(cx, genFunctionProto, cx->names().GeneratorFunction))
     {
         return false;
@@ -328,8 +329,11 @@ GlobalObject::initStarGenerators(JSContext* cx, Handle<GlobalObject*> global)
                                                       SingletonObject));
     if (!genFunction)
         return false;
-    if (!LinkConstructorAndPrototype(cx, genFunction, genFunctionProto))
+    if (!LinkConstructorAndPrototype(cx, genFunction, genFunctionProto,
+                                     JSPROP_PERMANENT | JSPROP_READONLY, JSPROP_READONLY))
+    {
         return false;
+    }
 
     global->setReservedSlot(STAR_GENERATOR_OBJECT_PROTO, ObjectValue(*genObjectProto));
     global->setReservedSlot(STAR_GENERATOR_FUNCTION, ObjectValue(*genFunction));

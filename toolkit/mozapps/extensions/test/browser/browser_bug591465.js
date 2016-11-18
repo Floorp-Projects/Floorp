@@ -10,7 +10,6 @@ Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", te
 var LightweightThemeManager = tempScope.LightweightThemeManager;
 
 
-const PREF_GETADDONS_MAXRESULTS = "extensions.getAddons.maxResults";
 const PREF_GETADDONS_GETSEARCHRESULTS = "extensions.getAddons.search.url";
 const SEARCH_URL = TESTROOT + "browser_bug591465.xml";
 const SEARCH_QUERY = "SEARCH";

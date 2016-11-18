@@ -684,15 +684,6 @@ bool NS_GetAppInfo(nsIChannel *aChannel,
                    bool *aIsInIsolatedMozBrowserElement);
 
 /**
- *  Gets appId and browserOnly parameters from the TOPIC_WEB_APP_CLEAR_DATA
- *  nsIObserverService notification.  Used when clearing user data or
- *  uninstalling web apps.
- */
-nsresult NS_GetAppInfoFromClearDataNotification(nsISupports *aSubject,
-                                                uint32_t *aAppID,
-                                                bool *aBrowserOnly);
-
-/**
  * Determines whether appcache should be checked for a given URI.
  */
 bool NS_ShouldCheckAppCache(nsIURI *aURI, bool usePrivateBrowsing);

@@ -726,13 +726,14 @@ gDevTools.getToolDefinitionArray()
 // and the new ones.
 gDevTools.on("tool-registered", function (ev, toolId) {
   let toolDefinition = gDevTools._tools.get(toolId);
-  gDevToolsBrowser._addToolToWindows(toolDefinition);
+  // If the tool has been registered globally, add to all the
+  // available windows.
+  if (toolDefinition) {
+    gDevToolsBrowser._addToolToWindows(toolDefinition);
+  }
 });
 
 gDevTools.on("tool-unregistered", function (ev, toolId) {
-  if (typeof toolId != "string") {
-    toolId = toolId.id;
-  }
   gDevToolsBrowser._removeToolFromWindows(toolId);
 });
 

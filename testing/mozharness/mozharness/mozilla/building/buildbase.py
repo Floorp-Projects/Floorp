@@ -349,6 +349,7 @@ class BuildOptionParser(object):
         'tsan': 'builds/releng_sub_%s_configs/%s_tsan.py',
         'cross-debug': 'builds/releng_sub_%s_configs/%s_cross_debug.py',
         'cross-opt': 'builds/releng_sub_%s_configs/%s_cross_opt.py',
+        'cross-universal': 'builds/releng_sub_%s_configs/%s_cross_universal.py',
         'cross-qr-debug': 'builds/releng_sub_%s_configs/%s_cross_qr_debug.py',
         'cross-qr-opt': 'builds/releng_sub_%s_configs/%s_cross_qr_opt.py',
         'debug': 'builds/releng_sub_%s_configs/%s_debug.py',

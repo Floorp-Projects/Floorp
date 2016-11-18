@@ -22,6 +22,8 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
+                                  "resource://gre/modules/ExtensionManagement.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
@@ -32,6 +34,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
 
 const CATEGORY_EXTENSION_SCRIPTS_ADDON = "webextension-scripts-addon";
+const CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS = "webextension-scripts-devtools";
 
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
@@ -46,6 +49,7 @@ const {
   getMessageManager,
   getUniqueId,
   injectAPI,
+  promiseEvent,
 } = ExtensionUtils;
 
 const {
@@ -463,6 +467,29 @@ var apiManager = new class extends SchemaAPIManager {
   }
 }();
 
+var devtoolsAPIManager = new class extends SchemaAPIManager {
+  constructor() {
+    super("devtools");
+    this.initialized = false;
+  }
+
+  generateAPIs(...args) {
+    if (!this.initialized) {
+      this.initialized = true;
+      for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS)) {
+        this.loadScript(value);
+      }
+    }
+    return super.generateAPIs(...args);
+  }
+
+  registerSchemaAPI(namespace, envType, getAPI) {
+    if (envType == "devtools_child") {
+      super.registerSchemaAPI(namespace, envType, getAPI);
+    }
+  }
+}();
+
 /**
  * An object that runs an remote implementation of an API.
  */
@@ -686,6 +713,19 @@ class ChildAPIManager {
     if (allowedContexts.includes("addon_parent_only")) {
       return false;
     }
+
+    // Do not generate devtools APIs, unless explicitly allowed.
+    if (this.context.envType === "devtools_child" &&
+        !allowedContexts.includes("devtools")) {
+      return false;
+    }
+
+    // Do not generate devtools APIs, unless explicitly allowed.
+    if (this.context.envType !== "devtools_child" &&
+        allowedContexts.includes("devtools_only")) {
+      return false;
+    }
+
     return true;
   }
 
@@ -711,32 +751,25 @@ class ChildAPIManager {
   }
 }
 
-class ExtensionPageContextChild extends BaseContext {
+class ExtensionBaseContextChild extends BaseContext {
   /**
-   * This ExtensionPageContextChild represents a privileged addon
-   * execution environment that has full access to the WebExtensions
-   * APIs (provided that the correct permissions have been requested).
-   *
-   * This is the child side of the ExtensionPageContextParent class
-   * defined in ExtensionParent.jsm.
+   * This ExtensionBaseContextChild represents an addon execution environment
+   * that is running in an addon or devtools child process.
    *
    * @param {BrowserExtensionContent} extension This context's owner.
    * @param {object} params
+   * @param {string} params.envType One of "addon_child" or "devtools_child".
    * @param {nsIDOMWindow} params.contentWindow The window where the addon runs.
-   * @param {string} params.viewType One of "background", "popup" or "tab".
-   *     "background" and "tab" are used by `browser.extension.getViews`.
-   *     "popup" is only used internally to identify page action and browser
-   *     action popups and options_ui pages.
+   * @param {string} params.viewType One of "background", "popup", "tab",
+   *   "devtools_page" or "devtools_panel".
    * @param {number} [params.tabId] This tab's ID, used if viewType is "tab".
    */
   constructor(extension, params) {
-    super("addon_child", extension);
-    if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
-      // This check is temporary. It should be removed once the proxy creation
-      // is asynchronous.
-      throw new Error("ExtensionPageContextChild cannot be created in child processes");
+    if (!params.envType) {
+      throw new Error("Missing envType");
     }
 
+    super(params.envType, extension);
     let {viewType, uri, contentWindow, tabId} = params;
     this.viewType = viewType;
     this.uri = uri || extension.baseURI;
@@ -769,8 +802,6 @@ class ExtensionPageContextChild extends BaseContext {
       Schemas.inject(chromeObj, chromeApiWrapper);
       return chromeObj;
     });
-
-    this.extension.views.add(this);
   }
 
   get cloneScope() {
@@ -808,11 +839,10 @@ class ExtensionPageContextChild extends BaseContext {
     }
 
     super.unload();
-    this.extension.views.delete(this);
   }
 }
 
-defineLazyGetter(ExtensionPageContextChild.prototype, "messenger", function() {
+defineLazyGetter(ExtensionBaseContextChild.prototype, "messenger", function() {
   let filter = {extensionId: this.extension.id};
   let optionalFilter = {};
   // Addon-generated messages (not necessarily from the same process as the
@@ -823,16 +853,89 @@ defineLazyGetter(ExtensionPageContextChild.prototype, "messenger", function() {
                        filter, optionalFilter);
 });
 
+class ExtensionPageContextChild extends ExtensionBaseContextChild {
+  /**
+   * This ExtensionPageContextChild represents a privileged addon
+   * execution environment that has full access to the WebExtensions
+   * APIs (provided that the correct permissions have been requested).
+   *
+   * This is the child side of the ExtensionPageContextParent class
+   * defined in ExtensionParent.jsm.
+   *
+   * @param {BrowserExtensionContent} extension This context's owner.
+   * @param {object} params
+   * @param {nsIDOMWindow} params.contentWindow The window where the addon runs.
+   * @param {string} params.viewType One of "background", "popup" or "tab".
+   *     "background" and "tab" are used by `browser.extension.getViews`.
+   *     "popup" is only used internally to identify page action and browser
+   *     action popups and options_ui pages.
+   * @param {number} [params.tabId] This tab's ID, used if viewType is "tab".
+   */
+  constructor(extension, params) {
+    super(extension, Object.assign(params, {envType: "addon_child"}));
+
+    this.extension.views.add(this);
+  }
+
+  unload() {
+    super.unload();
+    this.extension.views.delete(this);
+  }
+}
+
 defineLazyGetter(ExtensionPageContextChild.prototype, "childManager", function() {
   let localApis = {};
   apiManager.generateAPIs(this, localApis);
+
+  let childManager = new ChildAPIManager(this, this.messageManager, localApis, {
+    envType: "addon_parent",
+    viewType: this.viewType,
+    url: this.uri.spec,
+    incognito: this.incognito,
+  });
+
+  this.callOnClose(childManager);
 
   if (this.viewType == "background") {
     apiManager.global.initializeBackgroundPage(this.contentWindow);
   }
 
+  return childManager;
+});
+
+class DevtoolsContextChild extends ExtensionBaseContextChild {
+  /**
+   * This DevtoolsContextChild represents a devtools-related addon execution
+   * environment that has access to the devtools API namespace and to the same subset
+   * of APIs available in a content script execution environment.
+   *
+   * @param {BrowserExtensionContent} extension This context's owner.
+   * @param {object} params
+   * @param {nsIDOMWindow} params.contentWindow The window where the addon runs.
+   * @param {string} params.viewType One of "devtools_page" or "devtools_panel".
+   * @param {object} [params.devtoolsToolboxInfo] This devtools toolbox's information,
+   *   used if viewType is "devtools_page" or "devtools_panel".
+   */
+  constructor(extension, params) {
+    super(extension, Object.assign(params, {envType: "devtools_child"}));
+
+    this.devtoolsToolboxInfo = params.devtoolsToolboxInfo;
+
+    this.extension.devtoolsViews.add(this);
+  }
+
+  unload() {
+    super.unload();
+    this.extension.devtoolsViews.delete(this);
+  }
+}
+
+defineLazyGetter(DevtoolsContextChild.prototype, "childManager", function() {
+  let localApis = {};
+  devtoolsAPIManager.generateAPIs(this, localApis);
+
   let childManager = new ChildAPIManager(this, this.messageManager, localApis, {
-    envType: "addon_parent",
+    envType: "devtools_parent",
     viewType: this.viewType,
     url: this.uri.spec,
     incognito: this.incognito,
@@ -862,16 +965,14 @@ class ContentGlobal {
     this.tabId = -1;
     this.windowId = -1;
     this.initialized = false;
+
     this.global.addMessageListener("Extension:InitExtensionView", this);
     this.global.addMessageListener("Extension:SetTabAndWindowId", this);
-
-    this.initialDocuments = new WeakSet();
   }
 
   uninit() {
     this.global.removeMessageListener("Extension:InitExtensionView", this);
     this.global.removeMessageListener("Extension:SetTabAndWindowId", this);
-    this.global.removeEventListener("DOMContentLoaded", this);
   }
 
   ensureInitialized() {
@@ -889,18 +990,17 @@ class ContentGlobal {
       case "Extension:InitExtensionView":
         // The view type is initialized once and then fixed.
         this.global.removeMessageListener("Extension:InitExtensionView", this);
-        let {viewType, url} = data;
-        this.viewType = viewType;
-        this.global.addEventListener("DOMContentLoaded", this);
-        if (url) {
-          // TODO(robwu): Remove this check. It is only here because the popup
-          // implementation does not always load a URL at the initialization,
-          // and the logic is too complex to fix at once.
-          let {document} = this.global.content;
-          this.initialDocuments.add(document);
-          document.location.replace(url);
+        this.viewType = data.viewType;
+
+        if (data.devtoolsToolboxInfo) {
+          this.devtoolsToolboxInfo = data.devtoolsToolboxInfo;
         }
-        /* Falls through to allow these properties to be initialized at once */
+
+        promiseEvent(this.global, "DOMContentLoaded", true).then(() => {
+          this.global.sendAsyncMessage("Extension:ExtensionViewLoaded");
+        });
+
+        /* FALLTHROUGH */
       case "Extension:SetTabAndWindowId":
         this.handleSetTabAndWindowId(data);
         break;
@@ -909,6 +1009,7 @@ class ContentGlobal {
 
   handleSetTabAndWindowId(data) {
     let {tabId, windowId} = data;
+
     if (tabId) {
       // Tab IDs are not expected to change.
       if (this.tabId !== -1 && tabId !== this.tabId) {
@@ -916,6 +1017,7 @@ class ContentGlobal {
       }
       this.tabId = tabId;
     }
+
     if (windowId !== undefined) {
       // Window IDs may change if a tab is moved to a different location.
       // Note: This is the ID of the browser window for the extension API.
@@ -924,24 +1026,13 @@ class ContentGlobal {
     }
     this.initialized = true;
   }
-
-  // "DOMContentLoaded" event.
-  handleEvent(event) {
-    let {document} = this.global.content;
-    if (event.target === document) {
-      // If the document was still being loaded at the time of navigation, then
-      // the DOMContentLoaded event is fired for the old document. Ignore it.
-      if (this.initialDocuments.has(document)) {
-        this.initialDocuments.delete(document);
-        return;
-      }
-      this.global.removeEventListener("DOMContentLoaded", this);
-      this.global.sendAsyncMessage("Extension:ExtensionViewLoaded");
-    }
-  }
 }
 
 ExtensionChild = {
+  ChildAPIManager,
+  Messenger,
+  Port,
+
   // Map<nsIContentFrameMessageManager, ContentGlobal>
   contentGlobals: new Map(),
 
@@ -957,6 +1048,10 @@ ExtensionChild = {
   },
 
   init(global) {
+    if (!ExtensionManagement.isExtensionProcess) {
+      throw new Error("Cannot init extension page global in current process");
+    }
+
     this.contentGlobals.set(global, new ContentGlobal(global));
   },
 
@@ -973,29 +1068,36 @@ ExtensionChild = {
    * @param {nsIDOMWindow} contentWindow The global of the page.
    */
   createExtensionContext(extension, contentWindow) {
+    if (!ExtensionManagement.isExtensionProcess) {
+      throw new Error("Cannot create an extension page context in current process");
+    }
+
     let windowId = getInnerWindowID(contentWindow);
     let context = this.extensionContexts.get(windowId);
     if (context) {
       if (context.extension !== extension) {
-        // Oops. This should never happen.
-        Cu.reportError("A different extension context already exists in this frame!");
-      } else {
-        // This should not happen either.
-        Cu.reportError("The extension context was already initialized in this frame.");
+        throw new Error("A different extension context already exists for this frame");
       }
-      return;
+      throw new Error("An extension context was already initialized for this frame");
     }
 
-    let mm = contentWindow
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDocShell)
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIContentFrameMessageManager);
-    let {viewType, tabId} = this.contentGlobals.get(mm).ensureInitialized();
+    let mm = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDocShell)
+                          .QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIContentFrameMessageManager);
+
+    let {viewType, tabId, devtoolsToolboxInfo} = this.contentGlobals.get(mm).ensureInitialized();
 
     let uri = contentWindow.document.documentURIObject;
 
-    context = new ExtensionPageContextChild(extension, {viewType, contentWindow, uri, tabId});
+    if (devtoolsToolboxInfo) {
+      context = new DevtoolsContextChild(extension, {
+        viewType, contentWindow, uri, tabId, devtoolsToolboxInfo,
+      });
+    } else {
+      context = new ExtensionPageContextChild(extension, {viewType, contentWindow, uri, tabId});
+    }
+
     this.extensionContexts.set(windowId, context);
   },
 
@@ -1021,20 +1123,3 @@ ExtensionChild = {
     }
   },
 };
-
-// TODO(robwu): Change this condition when addons move to a separate process.
-if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
-  Object.keys(ExtensionChild).forEach(function(key) {
-    if (typeof ExtensionChild[key] == "function") {
-      // :/
-      ExtensionChild[key] = () => {};
-    }
-  });
-}
-
-Object.assign(ExtensionChild, {
-  ChildAPIManager,
-  Messenger,
-  Port,
-});
-

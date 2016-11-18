@@ -7,12 +7,10 @@ const BASE_URI = "http://mochi.test:8888/browser/browser/components/"
   + "contextualidentity/test/browser/empty_file.html";
 
 add_task(function* setup() {
-  yield new Promise((resolve) => {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["privacy.userContext.enabled", true],
-      ["browser.link.open_newwindow", 2],
-    ]}, resolve);
-  });
+  yield SpecialPowers.pushPrefEnv({"set": [
+    ["privacy.userContext.enabled", true],
+    ["browser.link.open_newwindow", 2],
+  ]});
 });
 
 
