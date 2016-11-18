@@ -41,11 +41,6 @@ if CONFIG['MOZ_B2G']:
         'RecoveryService.js',
     ]
 
-if CONFIG['MOZ_UPDATER']:
-    EXTRA_COMPONENTS += [
-        'UpdatePrompt.js',
-    ]
-
 EXTRA_JS_MODULES += [
     'AboutServiceWorkers.jsm',
     'ActivityChannel.jsm',
