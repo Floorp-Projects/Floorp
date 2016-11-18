@@ -4674,6 +4674,8 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
         event2.mClickCount = aEvent->mClickCount;
         event2.mModifiers = aEvent->mModifiers;
         event2.buttons = aEvent->buttons;
+        event2.mTime = aEvent->mTime;
+        event2.mTimeStamp = aEvent->mTimeStamp;
         event2.mFlags.mNoContentDispatch = notDispatchToContents;
         event2.button = aEvent->button;
         event2.inputSource = aEvent->inputSource;
