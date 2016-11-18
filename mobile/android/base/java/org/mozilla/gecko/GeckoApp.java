@@ -2315,7 +2315,7 @@ public abstract class GeckoApp
     }
 
     public void showSDKVersionError() {
-        final String message = getString(R.string.unsupported_sdk_version, Build.CPU_ABI, Build.VERSION.SDK_INT);
+        final String message = getString(R.string.unsupported_sdk_version, Build.CPU_ABI, Integer.toString(Build.VERSION.SDK_INT));
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
