@@ -80,7 +80,7 @@ interface WebGLTexture {
 interface WebGLUniformLocation {
 };
 
-interface WebGLVertexArrayObjectOES {
+interface WebGLVertexArrayObject {
 };
 
 [Exposed=(Window,Worker),
@@ -982,10 +982,10 @@ interface EXT_color_buffer_half_float
 interface OES_vertex_array_object {
     const GLenum VERTEX_ARRAY_BINDING_OES = 0x85B5;
 
-    WebGLVertexArrayObjectOES? createVertexArrayOES();
-    void deleteVertexArrayOES(WebGLVertexArrayObjectOES? arrayObject);
-    [WebGLHandlesContextLoss] GLboolean isVertexArrayOES(WebGLVertexArrayObjectOES? arrayObject);
-    void bindVertexArrayOES(WebGLVertexArrayObjectOES? arrayObject);
+    WebGLVertexArrayObject? createVertexArrayOES();
+    void deleteVertexArrayOES(WebGLVertexArrayObject? arrayObject);
+    [WebGLHandlesContextLoss] GLboolean isVertexArrayOES(WebGLVertexArrayObject? arrayObject);
+    void bindVertexArrayOES(WebGLVertexArrayObject? arrayObject);
 };
 
 [NoInterfaceObject]
