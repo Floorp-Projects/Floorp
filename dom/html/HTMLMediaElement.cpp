@@ -1759,7 +1759,12 @@ void HTMLMediaElement::SelectResource()
       const char16_t* params[] = { src.get() };
       ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
     }
-    NoSupportedMediaSourceError();
+    // The media element has neither a src attribute nor a source element child:
+    // set the networkState to NETWORK_EMPTY, and abort these steps; the
+    // synchronous section ends.
+    nsCOMPtr<nsIRunnable> event =
+        NewRunnableMethod<nsCString>(this, &HTMLMediaElement::NoSupportedMediaSourceError, nsCString());
+    NS_DispatchToMainThread(event);
   } else {
     // Otherwise, the source elements will be used.
     mIsLoadingFromSourceChildren = true;
