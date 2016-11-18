@@ -48,9 +48,9 @@ add_task(function* test_simple() {
  * Moving back in history should set hasInsecureLoginForms to true again.
  */
 add_task(function* test_subframe_navigation() {
-  yield new Promise(resolve => SpecialPowers.pushPrefEnv({
+  yield SpecialPowers.pushPrefEnv({
     "set": [["security.mixed_content.block_active_content", false]],
-  }, resolve));
+  });
 
   // Load the page with the subframe in a new tab.
   let tab = gBrowser.addTab("https" + testUrlPath + "insecure_test.html");

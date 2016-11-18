@@ -20,9 +20,7 @@ https://bugzilla.mozilla.org/1281963
 // Set a pref value asynchronously, returning a promise that resolves
 // when it succeeds.
 let setPref = function* (key, value) {
-  return new Promise(function(resolve, reject) {
-    SpecialPowers.pushPrefEnv({"set": [[key, value]]}, resolve);
-  });
+  return SpecialPowers.pushPrefEnv({"set": [[key, value]]});
 };
 
 // Run a test to see that we don't expose the supported mimeTypes
