@@ -153,6 +153,7 @@ nsINode::~nsINode()
   MOZ_ASSERT(!HasSlots(), "nsNodeUtils::LastRelease was not called?");
   MOZ_ASSERT(mSubtreeRoot == this, "Didn't restore state properly?");
 #ifdef MOZ_STYLO
+  NS_ASSERTION(!HasServoData(), "expected ServoNodeData to be cleared earlier");
   ClearServoData();
 #endif
 }
