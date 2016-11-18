@@ -66,12 +66,12 @@ BarProp::GetVisibleByFlag(uint32_t aChromeFlag, ErrorResult& aRv)
 
 void
 BarProp::SetVisibleByFlag(bool aVisible, uint32_t aChromeFlag,
-                          ErrorResult& aRv)
+                          CallerType aCallerType, ErrorResult& aRv)
 {
   nsCOMPtr<nsIWebBrowserChrome> browserChrome = GetBrowserChrome();
   NS_ENSURE_TRUE_VOID(browserChrome);
 
-  if (!nsContentUtils::IsCallerChrome()) {
+  if (aCallerType != CallerType::System) {
     return;
   }
 
@@ -124,7 +124,8 @@ MenubarProp::GetVisible(CallerType aCallerType, ErrorResult& aRv)
 void
 MenubarProp::SetVisible(bool aVisible, CallerType aCallerType, ErrorResult& aRv)
 {
-  BarProp::SetVisibleByFlag(aVisible, nsIWebBrowserChrome::CHROME_MENUBAR, aRv);
+  BarProp::SetVisibleByFlag(aVisible, nsIWebBrowserChrome::CHROME_MENUBAR,
+                            aCallerType, aRv);
 }
 
 //
@@ -150,7 +151,7 @@ void
 ToolbarProp::SetVisible(bool aVisible, CallerType aCallerType, ErrorResult& aRv)
 {
   BarProp::SetVisibleByFlag(aVisible, nsIWebBrowserChrome::CHROME_TOOLBAR,
-                            aRv);
+                            aCallerType, aRv);
 }
 
 //
@@ -178,7 +179,7 @@ LocationbarProp::SetVisible(bool aVisible, CallerType aCallerType,
                             ErrorResult& aRv)
 {
   BarProp::SetVisibleByFlag(aVisible, nsIWebBrowserChrome::CHROME_LOCATIONBAR,
-                            aRv);
+                            aCallerType, aRv);
 }
 
 //
@@ -207,7 +208,7 @@ PersonalbarProp::SetVisible(bool aVisible, CallerType aCallerType,
 {
   BarProp::SetVisibleByFlag(aVisible,
                             nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR,
-                            aRv);
+                            aCallerType, aRv);
 }
 
 //
@@ -234,7 +235,8 @@ StatusbarProp::SetVisible(bool aVisible, CallerType aCallerType,
                           ErrorResult& aRv)
 {
   return BarProp::SetVisibleByFlag(aVisible,
-                                   nsIWebBrowserChrome::CHROME_STATUSBAR, aRv);
+                                   nsIWebBrowserChrome::CHROME_STATUSBAR,
+                                   aCallerType, aRv);
 }
 
 //

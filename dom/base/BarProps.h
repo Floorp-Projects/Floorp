@@ -51,7 +51,8 @@ protected:
   virtual ~BarProp();
 
   bool GetVisibleByFlag(uint32_t aChromeFlag, ErrorResult& aRv);
-  void SetVisibleByFlag(bool aVisible, uint32_t aChromeFlag, ErrorResult &aRv);
+  void SetVisibleByFlag(bool aVisible, uint32_t aChromeFlag,
+                        CallerType aCallerType, ErrorResult &aRv);
 
   already_AddRefed<nsIWebBrowserChrome> GetBrowserChrome();
 
