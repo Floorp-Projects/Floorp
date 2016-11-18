@@ -262,7 +262,9 @@ const CustomizableWidgets = [
       let elementCount = tabsFragment.childElementCount;
       separator.hidden = !elementCount;
       while (--elementCount >= 0) {
-        tabsFragment.children[elementCount].classList.add("subviewbutton", "cui-withicon");
+        let element = tabsFragment.children[elementCount];
+        CustomizableUI.addShortcut(element);
+        element.classList.add("subviewbutton", "cui-withicon");
       }
       recentlyClosedTabs.appendChild(tabsFragment);
 
@@ -272,7 +274,9 @@ const CustomizableWidgets = [
       elementCount = windowsFragment.childElementCount;
       separator.hidden = !elementCount;
       while (--elementCount >= 0) {
-        windowsFragment.children[elementCount].classList.add("subviewbutton", "cui-withicon");
+        let element = windowsFragment.children[elementCount];
+        CustomizableUI.addShortcut(element);
+        element.classList.add("subviewbutton", "cui-withicon");
       }
       recentlyClosedWindows.appendChild(windowsFragment);
     },

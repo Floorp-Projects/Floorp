@@ -11,7 +11,6 @@
 #include "nsServiceManagerUtils.h"
 #include "plstr.h"
 #include "nsIObserverService.h"
-#include "mozIApplicationClearPrivateDataParams.h"
 #include "nsIURI.h"
 
 #include "mozilla/net/NeckoChild.h"

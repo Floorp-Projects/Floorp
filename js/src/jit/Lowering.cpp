@@ -1565,12 +1565,22 @@ void
 LIRGenerator::visitPow(MPow* ins)
 {
     MDefinition* input = ins->input();
-    MOZ_ASSERT(input->type() == MIRType::Double);
-
     MDefinition* power = ins->power();
+    LInstruction* lir;
+
+    if (ins->specialization() == MIRType::None) {
+        MOZ_ASSERT(input->type() == MIRType::Value);
+        MOZ_ASSERT(power->type() == MIRType::Value);
+
+        lir = new(alloc()) LPowV(useBoxAtStart(input), useBoxAtStart(power));
+        defineReturn(lir, ins);
+        assignSafepoint(lir, ins);
+        return;
+    }
+
+    MOZ_ASSERT(input->type() == MIRType::Double);
     MOZ_ASSERT(power->type() == MIRType::Int32 || power->type() == MIRType::Double);
 
-    LInstruction* lir;
     if (power->type() == MIRType::Int32) {
         // Note: useRegisterAtStart here is safe, the temp is a GP register so
         // it will never get the same register.

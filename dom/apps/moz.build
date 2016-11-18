@@ -6,14 +6,7 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-EXTRA_COMPONENTS += [
-    'AppsService.js',
-    'AppsService.manifest',
-]
-
 EXTRA_JS_MODULES += [
-    'AppsServiceChild.jsm',
-    'PermissionsInstaller.jsm',
     'PermissionsTable.jsm',
 ]
 

@@ -16,10 +16,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.importGlobalProperties(["indexedDB"]);
 
-XPCOMUtils.defineLazyServiceGetter(this, "appsService",
-                                   "@mozilla.org/AppsService;1",
-                                   "nsIAppsService");
-
 const DB_NAME = "net_stats";
 const DB_VERSION = 9;
 const DEPRECATED_STATS_STORE_NAME =
@@ -425,17 +421,7 @@ NetworkStatsDB.prototype = {
             return;
           }
           let newStats = cursor.value;
-          // Augment records by adding the new isInBrowser attribute.
-          // Notes:
-          // 1. Key value cannot be boolean type. Use 1/0 instead of true/false.
-          // 2. Most traffic of system app should come from its browser iframe,
-          //    thus assign isInBrowser as 1 for system app.
-          let manifestURL = appsService.getManifestURLByLocalId(newStats.appId);
-          if (manifestURL && manifestURL.search(/app:\/\/system\./) === 0) {
-            newStats.isInBrowser = 1;
-          } else {
-            newStats.isInBrowser = 0;
-          }
+          newStats.isInBrowser = 0;
           newObjectStore.put(newStats);
           cursor.continue();
         };

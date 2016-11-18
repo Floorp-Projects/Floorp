@@ -192,6 +192,18 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
 #endif
 }
 
+void
+OriginAttributes::CreateAnonymizedSuffix(nsACString& aStr) const
+{
+  OriginAttributes attrs = *this;
+
+  if (!attrs.mFirstPartyDomain.IsEmpty()) {
+    attrs.mFirstPartyDomain.AssignLiteral("_anonymizedFirstPartyDomain_");
+  }
+
+  attrs.CreateSuffix(aStr);
+}
+
 namespace {
 
 class MOZ_STACK_CLASS PopulateFromSuffixIterator final
@@ -588,13 +600,8 @@ BasePrincipal::GetOriginSuffix(nsACString& aOriginAttributes)
 NS_IMETHODIMP
 BasePrincipal::GetAppStatus(uint16_t* aAppStatus)
 {
-  if (AppId() == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
-    NS_WARNING("Asking for app status on a principal with an unknown app id");
-    *aAppStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-    return NS_OK;
-  }
-
-  *aAppStatus = nsScriptSecurityManager::AppStatusForPrincipal(this);
+  // TODO: Remove GetAppStatus.
+  *aAppStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
   return NS_OK;
 }
 

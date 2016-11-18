@@ -46,7 +46,7 @@ public:
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
   virtual EventStates IntrinsicState() const override;
 
-  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) override
+  virtual nsresult GetEventTargetParent(EventChainPreVisitor& aVisitor) override
   {
     MOZ_ASSERT(IsInNativeAnonymousSubtree());
     if (aVisitor.mEvent->mMessage == eLoad ||
@@ -54,7 +54,7 @@ public:
       // Don't propagate the events to the parent.
       return NS_OK;
     }
-    return nsXMLElement::PreHandleEvent(aVisitor);
+    return nsXMLElement::GetEventTargetParent(aVisitor);
   }
   
 private:
