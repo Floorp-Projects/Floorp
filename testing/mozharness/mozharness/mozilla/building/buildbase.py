@@ -356,6 +356,8 @@ class BuildOptionParser(object):
         'stat-and-debug': 'builds/releng_sub_%s_configs/%s_stat_and_debug.py',
         'code-coverage': 'builds/releng_sub_%s_configs/%s_code_coverage.py',
         'source': 'builds/releng_sub_%s_configs/%s_source.py',
+        'stylo': 'builds/releng_sub_%s_configs/%s_stylo.py',
+        'stylo-debug': 'builds/releng_sub_%s_configs/%s_stylo_debug.py',
         'api-15-gradle-dependencies': 'builds/releng_sub_%s_configs/%s_api_15_gradle_dependencies.py',
         'api-15': 'builds/releng_sub_%s_configs/%s_api_15.py',
         'api-15-debug': 'builds/releng_sub_%s_configs/%s_api_15_debug.py',
