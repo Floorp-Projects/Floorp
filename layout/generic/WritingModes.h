@@ -324,7 +324,7 @@ public:
     // two-bit values:
     //   bit 0 = the eOrientationMask value
     //   bit 1 = the eBlockFlowMask value
-    static const mozilla::css::Side kLogicalBlockSides[][2] = {
+    static const mozilla::Side kLogicalBlockSides[][2] = {
       { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // horizontal-tb
       { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // vertical-rl
       { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // (horizontal-bt)
@@ -352,7 +352,7 @@ public:
     // is no horizontal-bt writing-mode, and no text-orientation value that
     // produces "inverted" text. (The former 'sideways-left' value, no longer
     // in the spec, would have produced this in vertical-rl mode.)
-    static const mozilla::css::Side kLogicalInlineSides[][2] = {
+    static const mozilla::Side kLogicalInlineSides[][2] = {
       { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // horizontal-tb               ltr
       { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // vertical-rl                 ltr
       { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // horizontal-tb               rtl
@@ -404,7 +404,7 @@ public:
    * given the current writing mode.
    * (This is the inverse of the PhysicalSide() method above.)
    */
-  LogicalSide LogicalSideForPhysicalSide(mozilla::css::Side aSide) const
+  LogicalSide LogicalSideForPhysicalSide(mozilla::Side aSide) const
   {
     // indexes are four-bit values:
     //   bit 0 = the eOrientationMask value
