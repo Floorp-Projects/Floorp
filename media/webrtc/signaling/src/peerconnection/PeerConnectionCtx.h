@@ -18,7 +18,7 @@
 #include "nsIRunnable.h"
 
 namespace mozilla {
-class PeerConnectionCtxShutdown;
+class PeerConnectionCtxObserver;
 
 namespace dom {
 class WebrtcGlobalInformation;
@@ -47,6 +47,8 @@ class PeerConnectionCtx {
   void onGMPReady();
 
   bool gmpHasH264();
+
+  static void UpdateNetworkState(bool online);
 
   // Make these classes friend so that they can access mPeerconnections.
   friend class PeerConnectionImpl;
@@ -101,7 +103,7 @@ private:
   static PeerConnectionCtx *gInstance;
 public:
   static nsIThread *gMainThread;
-  static mozilla::StaticRefPtr<mozilla::PeerConnectionCtxShutdown> gPeerConnectionCtxShutdown;
+  static mozilla::StaticRefPtr<mozilla::PeerConnectionCtxObserver> gPeerConnectionCtxObserver;
 };
 
 } // namespace mozilla
