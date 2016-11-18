@@ -331,7 +331,7 @@ interface nsITelemetry : nsISupports
   readonly attribute jsval fileIOReports;
 
   /**
-   * Return the number of milliseconds since process start using monotonic
+   * Return the number of seconds since process start using monotonic
    * timestamps (unaffected by system clock changes).
    * @throws NS_ERROR_NOT_AVAILABLE if TimeStamp doesn't have the data.
    */
@@ -430,40 +430,4 @@ interface nsITelemetry : nsISupports
    * process. This is intended only to be used on process shutdown.
    */
   void flushBatchedChildTelemetry();
-
-  /**
-   * Record an event in Telemetry.
-   *
-   * @param aCategory The category name.
-   * @param aMethod The method name.
-   * @param aMethod The object name.
-   * @param aValue An optional string value to record.
-   * @param aExtra An optional object of the form (string -> string).
-   *               It should only contain registered extra keys.
-   *
-   * @throws NS_ERROR_INVALID_ARG When trying to record an unknown event.
-   */
-  [implicit_jscontext, optional_argc]
-  void recordEvent(in ACString aCategory, in ACString aMethod, in ACString aObject, [optional] in jsval aValue, [optional] in jsval extra);
-
-  /**
-   * Serializes the recorded events to a JSON-appropriate array and optionally resets them.
-   * The returned structure looks like this:
-   *   [
-   *     // [timestamp, category, method, object, stringValue, extraValues]
-   *     [43245, "category1", "method1", "object1", "string value", null],
-   *     [43258, "category1", "method2", "object1", null, {"key1": "string value"}],
-   *     ...
-   *   ]
-   *
-   * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
-   * @param [aClear=false] Whether to clear out the scalars after snapshotting.
-   */
-  [implicit_jscontext, optional_argc]
-  jsval snapshotBuiltinEvents(in uint32_t aDataset, [optional] in boolean aClear);
-
-  /**
-   * Resets all the stored events. This is intended to be only used in tests.
-   */
-  void clearEvents();
 };

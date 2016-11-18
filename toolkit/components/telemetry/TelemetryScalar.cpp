@@ -12,6 +12,8 @@
 #include "nsClassHashtable.h"
 #include "nsIXPConnect.h"
 #include "nsContentUtils.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 #include "nsThreadUtils.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
@@ -26,7 +28,6 @@ using mozilla::Telemetry::Common::AutoHashtable;
 using mozilla::Telemetry::Common::IsExpiredVersion;
 using mozilla::Telemetry::Common::CanRecordDataset;
 using mozilla::Telemetry::Common::IsInDataset;
-using mozilla::Telemetry::Common::LogToBrowserConsole;
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -752,6 +753,35 @@ KeyedScalarStorageMapType gKeyedScalarStorageMap;
 namespace {
 
 /**
+ * Dumps a log message to the Browser Console using the provided level.
+ *
+ * @param aLogLevel The level to use when displaying the message in the browser console
+ *        (e.g. nsIScriptError::warningFlag, ...).
+ * @param aMsg The text message to print to the console.
+ */
+void
+internal_LogToBrowserConsole(uint32_t aLogLevel, const nsAString& aMsg)
+{
+  if (!NS_IsMainThread()) {
+    nsString msg(aMsg);
+    nsCOMPtr<nsIRunnable> task =
+      NS_NewRunnableFunction([aLogLevel, msg]() { internal_LogToBrowserConsole(aLogLevel, msg); });
+    NS_DispatchToMainThread(task.forget(), NS_DISPATCH_NORMAL);
+    return;
+  }
+
+  nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
+  if (!console) {
+    NS_WARNING("Failed to log message to console.");
+    return;
+  }
+
+  nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+  error->Init(aMsg, EmptyString(), EmptyString(), 0, 0, aLogLevel, "chrome javascript");
+  console->LogMessage(error);
+}
+
+/**
  * Checks if the error should be logged.
  *
  * @param aSr The error code.
@@ -811,7 +841,7 @@ internal_LogScalarError(const nsACString& aScalarName, ScalarResult aSr)
       return;
   }
 
-  LogToBrowserConsole(nsIScriptError::warningFlag, errorMessage);
+  internal_LogToBrowserConsole(nsIScriptError::warningFlag, errorMessage);
 }
 
 } // namespace
