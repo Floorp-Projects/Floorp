@@ -23,12 +23,10 @@ var {CustomizableUI} = Cu.import("resource:///modules/CustomizableUI.jsm");
 // copied to the sub-directory "test-oop-extensions", which we detect here, and
 // use to select our configuration.
 if (gTestPath.includes("test-oop-extensions")) {
-  add_task(() => {
-    return SpecialPowers.pushPrefEnv({set: [
-      ["dom.ipc.processCount", 1],
-      ["extensions.webextensions.remote", true],
-    ]});
-  });
+  SpecialPowers.pushPrefEnv({set: [
+    ["dom.ipc.processCount", 1],
+    ["extensions.webextensions.remote", true],
+  ]});
 }
 
 // Bug 1239884: Our tests occasionally hit a long GC pause at unpredictable
