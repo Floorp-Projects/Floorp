@@ -111,7 +111,7 @@ template <>
 struct EventTarget<DispatchPolicy::Async, AbstractThread> {
   static void
   Dispatch(AbstractThread* aTarget, already_AddRefed<nsIRunnable> aTask) {
-    aTarget->Dispatch(Move(aTask));
+    aTarget->Dispatch(Move(aTask), AbstractThread::DontAssertDispatchSuccess);
   }
 };
 
