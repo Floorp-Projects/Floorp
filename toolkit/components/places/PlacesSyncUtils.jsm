@@ -111,6 +111,98 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   }),
 
   /**
+   * Migrates an array of `{ syncId, modified }` tuples from the old JSON-based
+   * tracker to the new sync change counter. `modified` is when the change was
+   * added to the old tracker, in milliseconds.
+   *
+   * Sync calls this method before the first bookmark sync after the Places
+   * schema migration.
+   */
+  migrateOldTrackerEntries(entries) {
+    return PlacesUtils.withConnectionWrapper(
+      "BookmarkSyncUtils: migrateOldTrackerEntries", function(db) {
+        return db.executeTransaction(function* () {
+          // Mark all existing bookmarks as synced, and clear their change
+          // counters to avoid a full upload on the next sync. Note that
+          // this means we'll miss changes made between startup and the first
+          // post-migration sync, as well as changes made on a new release
+          // channel that weren't synced before the user downgraded. This is
+          // unfortunate, but no worse than the behavior of the old tracker.
+          //
+          // We also likely have bookmarks that don't exist on the server,
+          // because the old tracker missed them. We'll eventually fix the
+          // server once we decide on a repair strategy.
+          yield db.executeCached(`
+            WITH RECURSIVE
+            syncedItems(id) AS (
+              SELECT b.id FROM moz_bookmarks b
+              WHERE b.guid IN ('menu________', 'toolbar_____', 'unfiled_____',
+                               'mobile______')
+              UNION ALL
+              SELECT b.id FROM moz_bookmarks b
+              JOIN syncedItems s ON b.parent = s.id
+            )
+            UPDATE moz_bookmarks SET
+              syncStatus = :syncStatus,
+              syncChangeCounter = 0
+            WHERE id IN syncedItems`,
+            { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL });
+
+          yield db.executeCached(`DELETE FROM moz_bookmarks_deleted`);
+
+          yield db.executeCached(`CREATE TEMP TABLE moz_bookmarks_tracked (
+            guid TEXT PRIMARY KEY,
+            time INTEGER
+          )`);
+
+          try {
+            for (let { syncId, modified } of entries) {
+              let guid = BookmarkSyncUtils.syncIdToGuid(syncId);
+              if (!PlacesUtils.isValidGuid(guid)) {
+                BookmarkSyncLog.warn(`migrateOldTrackerEntries: Ignoring ` +
+                                     `change for invalid item ${guid}`);
+                continue;
+              }
+              let time = PlacesUtils.toPRTime(Number.isFinite(modified) ?
+                                              modified : Date.now());
+              yield db.executeCached(`
+                INSERT OR IGNORE INTO moz_bookmarks_tracked (guid, time)
+                VALUES (:guid, :time)`,
+                { guid, time });
+            }
+
+            // Bump the change counter for existing tracked items.
+            yield db.executeCached(`
+              INSERT OR REPLACE INTO moz_bookmarks (id, fk, type, parent,
+                                                    position, title,
+                                                    dateAdded, lastModified,
+                                                    guid, syncChangeCounter,
+                                                    syncStatus)
+              SELECT b.id, b.fk, b.type, b.parent, b.position, b.title,
+                     b.dateAdded, MAX(b.lastModified, t.time), b.guid,
+                     b.syncChangeCounter + 1, b.syncStatus
+              FROM moz_bookmarks b
+              JOIN moz_bookmarks_tracked t ON b.guid = t.guid`);
+
+            // Insert tombstones for nonexistent tracked items, using the most
+            // recent deletion date for more accurate reconciliation. We assume
+            // the tracked item belongs to a synced root.
+            yield db.executeCached(`
+              INSERT OR REPLACE INTO moz_bookmarks_deleted (guid, dateRemoved)
+              SELECT t.guid, MAX(IFNULL((SELECT dateRemoved FROM moz_bookmarks_deleted
+                                         WHERE guid = t.guid), 0), t.time)
+              FROM moz_bookmarks_tracked t
+              LEFT JOIN moz_bookmarks b ON t.guid = b.guid
+              WHERE b.guid IS NULL`);
+          } finally {
+            yield db.executeCached(`DROP TABLE moz_bookmarks_tracked`);
+          }
+        });
+      }
+    );
+  },
+
+  /**
    * Reorders a folder's children, based on their order in the array of sync
    * IDs.
    *

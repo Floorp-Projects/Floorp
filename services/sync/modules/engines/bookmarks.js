@@ -856,6 +856,7 @@ BookmarksStore.prototype = {
 function BookmarksTracker(name, engine) {
   this._batchDepth = 0;
   this._batchSawScoreIncrement = false;
+  this._migratedOldEntries = false;
   Tracker.call(this, name, engine);
 
   delete this.changedIDs; // so our getter/setter takes effect.
@@ -933,10 +934,61 @@ BookmarksTracker.prototype = {
     }
   },
 
+  // Migrates tracker entries from the old JSON-based tracker to Places. This
+  // is called the first time we start tracking changes.
+  _migrateOldEntries: Task.async(function* () {
+    let existingIDs = yield Utils.jsonLoad("changes/" + this.file, this);
+    if (existingIDs === null) {
+      // If the tracker file doesn't exist, we don't need to migrate, even if
+      // the engine is enabled. It's possible we're upgrading before the first
+      // sync. In the worst case, getting this wrong has the same effect as a
+      // restore: we'll reupload everything to the server.
+      this._log.debug("migrateOldEntries: Missing bookmarks tracker file; " +
+                      "skipping migration");
+      return null;
+    }
+
+    if (!this._needsMigration()) {
+      // We have a tracker file, but bookmark syncing is disabled, or this is
+      // the first sync. It's likely the tracker file is stale. Remove it and
+      // skip migration.
+      this._log.debug("migrateOldEntries: Bookmarks engine disabled or " +
+                      "first sync; skipping migration");
+      return Utils.jsonRemove("changes/" + this.file, this);
+    }
+
+    // At this point, we know the engine is enabled, we have a tracker file
+    // (though it may be empty), and we've synced before.
+    this._log.debug("migrateOldEntries: Migrating old tracker entries");
+    let entries = [];
+    for (let syncID in existingIDs) {
+      let change = existingIDs[syncID];
+      // Allow raw timestamps for backward-compatibility with changed IDs
+      // persisted before bug 1274496.
+      let timestamp = typeof change == "number" ? change : change.modified;
+      entries.push({
+        syncId: syncID,
+        modified: timestamp * 1000,
+      });
+    }
+    yield PlacesSyncUtils.bookmarks.migrateOldTrackerEntries(entries);
+    return Utils.jsonRemove("changes/" + this.file, this);
+  }),
+
+  _needsMigration() {
+    return this.engine && this.engineIsEnabled() && this.engine.lastSync > 0;
+  },
+
   observe: function observe(subject, topic, data) {
     Tracker.prototype.observe.call(this, subject, topic, data);
 
     switch (topic) {
+      case "weave:engine:start-tracking":
+        if (!this._migratedOldEntries) {
+          this._migratedOldEntries = true;
+          Async.promiseSpinningly(this._migrateOldEntries());
+        }
+        break;
       case "bookmarks-restore-begin":
         this._log.debug("Ignoring changes from importing bookmarks.");
         break;
