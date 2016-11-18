@@ -8,6 +8,7 @@ import os
 import yaml
 
 from .graph import Graph
+from .target_tasks import get_method
 from .taskgraph import TaskGraph
 from .optimize import optimize_task_graph
 from .util.python_path import find_object
@@ -51,20 +52,17 @@ class TaskGraphGenerator(object):
     # each "phase" of generation.  This allows some mach subcommands to short-
     # circuit generation of the entire graph by never completing the generator.
 
-    def __init__(self, root_dir, parameters,
-                 target_tasks_method):
+    def __init__(self, root_dir, parameters):
         """
         @param root_dir: root directory, with subdirectories for each kind
         @param parameters: parameters for this task-graph generation
         @type parameters: dict
-        @param target_tasks_method: function to determine the target_task_set;
-                see `./target_tasks.py`.
-        @type target_tasks_method: function
         """
-
         self.root_dir = root_dir
         self.parameters = parameters
-        self.target_tasks_method = target_tasks_method
+
+        target_tasks_method = parameters.get('target_tasks_method', 'all_tasks')
+        self.target_tasks_method = get_method(target_tasks_method)
 
         # this can be set up until the time the target task set is generated;
         # it defaults to parameters['target_tasks']
