@@ -60,17 +60,18 @@ static pfn_VR_GetGenericInterface vr_GetGenericInterface = nullptr;
 
 // EButton_System, EButton_DPad_xx, and EButton_A
 // can not be triggered in Steam Vive in OpenVR SDK 1.0.3.
+// Reminder: changing the order of these buttons may break web content.
 const uint64_t gOpenVRButtonMask[] = {
   // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_System),
-  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_ApplicationMenu),
+  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_SteamVR_Touchpad),
+  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_SteamVR_Trigger),
+  // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_A),
   vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_Grip),
+  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_ApplicationMenu)
   // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_DPad_Left),
   // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_DPad_Up),
   // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_DPad_Right),
-  // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_DPad_Down),
-  // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_A),
-  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_SteamVR_Touchpad),
-  vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_SteamVR_Trigger)
+  // vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_DPad_Down)
 };
 
 const uint32_t gNumOpenVRButtonMask = sizeof(gOpenVRButtonMask) /
