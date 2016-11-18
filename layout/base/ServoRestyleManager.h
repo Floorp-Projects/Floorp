@@ -93,6 +93,13 @@ public:
   static nsIFrame* FrameForPseudoElement(const nsIContent* aContent,
                                          nsIAtom* aPseudoTagOrNull);
 
+  /**
+   * Clears the ServoNodeData from all content nodes in the subtree rooted
+   * at aContent, and sets the IsDirtyForServo bit and clears the
+   * HasDirtyDescendantsForServo bit on them too.
+   */
+  static void ClearServoDataFromSubtree(nsIContent* aContent);
+
 protected:
   ~ServoRestyleManager() {}
 
