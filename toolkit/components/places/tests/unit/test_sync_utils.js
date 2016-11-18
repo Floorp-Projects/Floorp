@@ -1,3 +1,4 @@
+Cu.import("resource://gre/modules/ObjectUtils.jsm");
 Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 const {
   // `fetchGuidsWithAnno` isn't exported, but we can still access it here via a
@@ -113,6 +114,63 @@ var syncIdToId = Task.async(function* syncIdToId(syncId) {
   return PlacesUtils.promiseItemId(guid);
 });
 
+var moveSyncedBookmarksToUnsyncedParent = Task.async(function* () {
+  do_print("Insert synced bookmarks");
+  let syncedGuids = yield populateTree(PlacesUtils.bookmarks.menuGuid, {
+    kind: "folder",
+    title: "folder",
+    children: [{
+      kind: "bookmark",
+      title: "childBmk",
+      url: "https://example.org",
+    }],
+  }, {
+    kind: "bookmark",
+    title: "topBmk",
+    url: "https://example.com",
+  });
+  // Pretend we've synced each bookmark at least once.
+  yield PlacesTestUtils.setBookmarkSyncFields(...Object.values(syncedGuids).map(
+    guid => ({ guid, syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL })
+  ));
+
+  do_print("Make new folder");
+  let unsyncedFolder = yield PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "unsyncedFolder",
+  });
+
+  do_print("Move synced bookmarks into unsynced new folder");
+  for (let guid of Object.values(syncedGuids)) {
+    yield PlacesUtils.bookmarks.update({
+      guid,
+      parentGuid: unsyncedFolder.guid,
+      index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+    });
+  }
+
+  return { syncedGuids, unsyncedFolder };
+});
+
+var setChangesSynced = Task.async(function* (changes) {
+  for (let syncId in changes) {
+    changes[syncId].synced = true;
+  }
+  yield PlacesSyncUtils.bookmarks.pushChanges(changes);
+});
+
+var ignoreChangedRoots = Task.async(function* () {
+  let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+  let expectedRoots = ["menu", "mobile", "toolbar", "unfiled"];
+  if (!ObjectUtils.deepEqual(Object.keys(changes).sort(), expectedRoots)) {
+    // Make sure the previous test cleaned up.
+    throw new Error(`Unexpected changes at start of test: ${
+      JSON.stringify(changes)}`);
+  }
+  yield setChangesSynced(changes);
+});
+
 add_task(function* test_order() {
   do_print("Insert some bookmarks");
   let guids = yield populateTree(PlacesUtils.bookmarks.menuGuid, {
@@ -164,6 +222,7 @@ add_task(function* test_order() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_changeGuid_invalid() {
@@ -206,6 +265,7 @@ add_task(function* test_order_roots() {
   deepEqual(oldOrder, newOrder, "Should ignore attempts to reorder roots");
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_update_tags() {
@@ -264,6 +324,142 @@ add_task(function* test_update_tags() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
+
+add_task(function* test_pullChanges_tags() {
+  yield ignoreChangedRoots();
+
+  do_print("Insert untagged items with same URL");
+  let firstItem = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: "menu",
+    url: "https://example.org",
+  });
+  let secondItem = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: "menu",
+    url: "https://example.org",
+  });
+  let untaggedItem = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: "menu",
+    url: "https://bugzilla.org",
+  });
+  let taggedItem = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: "menu",
+    url: "https://mozilla.org",
+  });
+
+  do_print("Create tag");
+  PlacesUtils.tagging.tagURI(uri("https://example.org"), ["taggy"]);
+  let tagFolderId = PlacesUtils.bookmarks.getIdForItemAt(
+    PlacesUtils.tagsFolderId, 0);
+  let tagFolderGuid = yield PlacesUtils.promiseItemGuid(tagFolderId);
+
+  do_print("Tagged bookmarks should be in changeset");
+  {
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(changes).sort(),
+      [firstItem.syncId, secondItem.syncId].sort(),
+      "Should include tagged bookmarks in changeset");
+    yield setChangesSynced(changes);
+  }
+
+  do_print("Change tag case");
+  {
+    PlacesUtils.tagging.tagURI(uri("https://mozilla.org"), ["TaGgY"]);
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(changes).sort(),
+      [firstItem.syncId, secondItem.syncId, taggedItem.syncId].sort(),
+      "Should include tagged bookmarks after changing case");
+    assertTagForURLs("TaGgY", ["https://example.org/", "https://mozilla.org/"],
+      "Should add tag for new URL");
+    yield setChangesSynced(changes);
+  }
+
+  // These tests change a tag item directly, without going through the tagging
+  // service. This behavior isn't supported, but the tagging service registers
+  // an observer to handle these cases, so we make sure we handle them
+  // correctly.
+
+  do_print("Rename tag folder using Bookmarks.setItemTitle");
+  {
+    PlacesUtils.bookmarks.setItemTitle(tagFolderId, "sneaky");
+    deepEqual(PlacesUtils.tagging.allTags, ["sneaky"],
+      "Tagging service should update cache with new title");
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(changes).sort(),
+      [firstItem.syncId, secondItem.syncId].sort(),
+      "Should include tagged bookmarks after renaming tag folder");
+    yield setChangesSynced(changes);
+  }
+
+  do_print("Rename tag folder using Bookmarks.update");
+  {
+    yield PlacesUtils.bookmarks.update({
+      guid: tagFolderGuid,
+      title: "tricky",
+    });
+    deepEqual(PlacesUtils.tagging.allTags, ["tricky"],
+      "Tagging service should update cache after updating tag folder");
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(changes).sort(),
+      [firstItem.syncId, secondItem.syncId].sort(),
+      "Should include tagged bookmarks after updating tag folder");
+    yield setChangesSynced(changes);
+  }
+
+  do_print("Change tag entry URI using Bookmarks.changeBookmarkURI");
+  {
+    let tagId = PlacesUtils.bookmarks.getIdForItemAt(tagFolderId, 0);
+    PlacesUtils.bookmarks.changeBookmarkURI(tagId, uri("https://bugzilla.org"));
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(changes).sort(),
+      [firstItem.syncId, secondItem.syncId, untaggedItem.syncId].sort(),
+      "Should include tagged bookmarks after changing tag entry URI");
+    assertTagForURLs("tricky", ["https://bugzilla.org/", "https://mozilla.org/"],
+      "Should remove tag entry for old URI");
+    yield setChangesSynced(changes);
+  }
+
+  do_print("Change tag entry URL using Bookmarks.update");
+  {
+    let tagGuid = yield PlacesUtils.promiseItemGuid(
+      PlacesUtils.bookmarks.getIdForItemAt(tagFolderId, 0));
+    yield PlacesUtils.bookmarks.update({
+      guid: tagGuid,
+      url: "https://example.com",
+    });
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(changes).sort(),
+      [untaggedItem.syncId].sort(),
+      "Should include tagged bookmarks after changing tag entry URL");
+    assertTagForURLs("tricky", ["https://example.com/", "https://mozilla.org/"],
+      "Should remove tag entry for old URL");
+    yield setChangesSynced(changes);
+  }
+
+  do_print("Remove all tag folders");
+  {
+    deepEqual(PlacesUtils.tagging.allTags, ["tricky"], "Should have existing tags");
+
+    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.tagsFolderId);
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(changes).sort(), [taggedItem.syncId].sort(),
+      "Should include tagged bookmarks after removing all tags");
+
+    deepEqual(PlacesUtils.tagging.allTags, [], "Should remove all tags from tag service");
+    yield setChangesSynced(changes);
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_update_keyword() {
@@ -332,6 +528,7 @@ add_task(function* test_update_keyword() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_update_annos() {
@@ -394,6 +591,7 @@ add_task(function* test_update_annos() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_update_move_root() {
@@ -417,6 +615,7 @@ add_task(function* test_update_move_root() {
   }));
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_insert() {
@@ -473,6 +672,7 @@ add_task(function* test_insert() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_insert_livemark() {
@@ -523,6 +723,7 @@ add_task(function* test_insert_livemark() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_update_livemark() {
@@ -707,6 +908,7 @@ add_task(function* test_update_livemark() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_insert_tags() {
@@ -742,6 +944,7 @@ add_task(function* test_insert_tags() {
     "Should support tagging tag queries");
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_insert_tags_whitespace() {
@@ -774,7 +977,12 @@ add_task(function* test_insert_tags_whitespace() {
   assertTagForURLs("taggy", ["https://example.net/", "https://example.org/"],
     "Should exclude falsy tags");
 
+  PlacesUtils.tagging.untagURI(uri("https://example.org"), ["untrimmed", "taggy"]);
+  PlacesUtils.tagging.untagURI(uri("https://example.net"), ["taggy"]);
+  deepEqual(PlacesUtils.tagging.allTags, [], "Should clean up all tags");
+
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_insert_keyword() {
@@ -807,6 +1015,7 @@ add_task(function* test_insert_keyword() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_insert_annos() {
@@ -873,6 +1082,7 @@ add_task(function* test_insert_annos() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_insert_tag_query() {
@@ -937,9 +1147,12 @@ add_task(function* test_insert_tag_query() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_insert_orphans() {
+  yield ignoreChangedRoots();
+
   let grandParentGuid = makeGuid();
   let parentGuid = makeGuid();
   let childGuid = makeGuid();
@@ -993,6 +1206,7 @@ add_task(function* test_insert_orphans() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_move_orphans() {
@@ -1043,6 +1257,7 @@ add_task(function* test_move_orphans() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_reorder_orphans() {
@@ -1088,6 +1303,7 @@ add_task(function* test_reorder_orphans() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_set_orphan_indices() {
@@ -1121,6 +1337,7 @@ add_task(function* test_set_orphan_indices() {
       PlacesUtils.bookmarks.setItemIndex(fxId, 1);
       PlacesUtils.bookmarks.setItemIndex(tbId, 0);
     }, null);
+    yield PlacesTestUtils.promiseAsyncUpdates();
     let orphanGuids = yield fetchGuidsWithAnno(SYNC_PARENT_ANNO,
       nonexistentSyncId);
     deepEqual(orphanGuids, [],
@@ -1128,6 +1345,7 @@ add_task(function* test_set_orphan_indices() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_unsynced_orphans() {
@@ -1174,6 +1392,7 @@ add_task(function* test_unsynced_orphans() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_fetch() {
@@ -1287,6 +1506,7 @@ add_task(function* test_fetch() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(function* test_fetch_livemark() {
@@ -1316,4 +1536,453 @@ add_task(function* test_fetch_livemark() {
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
+
+add_task(function* test_pullChanges_new_parent() {
+  yield ignoreChangedRoots();
+
+  let { syncedGuids, unsyncedFolder } = yield moveSyncedBookmarksToUnsyncedParent();
+
+  do_print("Unsynced parent and synced items should be tracked");
+  let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+  deepEqual(Object.keys(changes).sort(),
+    [syncedGuids.folder, syncedGuids.topBmk, syncedGuids.childBmk,
+      unsyncedFolder.guid, "menu"].sort(),
+    "Should return change records for moved items and new parent"
+  );
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
+
+add_task(function* test_pullChanges_deleted_folder() {
+  yield ignoreChangedRoots();
+
+  let { syncedGuids, unsyncedFolder } = yield moveSyncedBookmarksToUnsyncedParent();
+
+  do_print("Remove unsynced new folder");
+  yield PlacesUtils.bookmarks.remove(unsyncedFolder.guid);
+
+  do_print("Deleted synced items should be tracked; unsynced folder should not");
+  let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+  deepEqual(Object.keys(changes).sort(),
+    [syncedGuids.folder, syncedGuids.topBmk, syncedGuids.childBmk,
+      "menu"].sort(),
+    "Should return change records for all deleted items"
+  );
+  for (let guid of Object.values(syncedGuids)) {
+    strictEqual(changes[guid].tombstone, true,
+      `Tombstone flag should be set for deleted item ${guid}`);
+    equal(changes[guid].counter, 1,
+      `Change counter should be 1 for deleted item ${guid}`);
+    equal(changes[guid].status, PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      `Sync status should be normal for deleted item ${guid}`);
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
+
+add_task(function* test_pullChanges_import_html() {
+  yield ignoreChangedRoots();
+
+  do_print("Add unsynced bookmark");
+  let unsyncedBmk = yield PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "https://example.com",
+  });
+
+  {
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      unsyncedBmk.guid);
+    ok(fields.every(field =>
+      field.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NEW
+    ), "Unsynced bookmark statuses should match");
+  }
+
+  do_print("Import new bookmarks from HTML");
+  let { path } = do_get_file("./sync_utils_bookmarks.html");
+  yield BookmarkHTMLUtils.importFromFile(path, false);
+
+  // Bookmarks.html doesn't store GUIDs, so we need to look these up.
+  let mozBmk = yield PlacesUtils.bookmarks.fetch({
+    url: "https://www.mozilla.org/",
+  });
+  let fxBmk = yield PlacesUtils.bookmarks.fetch({
+    url: "https://www.mozilla.org/en-US/firefox/",
+  });
+  // All Bookmarks.html bookmarks are stored under the menu. For toolbar
+  // bookmarks, this means they're imported into a "Bookmarks Toolbar"
+  // subfolder under the menu, instead of the real toolbar root.
+  let toolbarSubfolder = (yield PlacesUtils.bookmarks.search({
+    title: "Bookmarks Toolbar",
+  })).find(item => item.guid != PlacesUtils.bookmarks.toolbarGuid);
+  let importedFields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+    mozBmk.guid, fxBmk.guid, toolbarSubfolder.guid);
+  ok(importedFields.every(field =>
+    field.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NEW
+  ), "Sync statuses should match for HTML imports");
+
+  do_print("Fetch new HTML imports");
+  {
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(changes).sort(), [mozBmk.guid, fxBmk.guid,
+      toolbarSubfolder.guid, "menu",
+      unsyncedBmk.guid].sort(),
+      "Should return new GUIDs imported from HTML file"
+    );
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      unsyncedBmk.guid, mozBmk.guid, fxBmk.guid, toolbarSubfolder.guid);
+    ok(fields.every(field =>
+      field.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
+    ), "Pulling new imports should update sync statuses");
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
+
+add_task(function* test_pullChanges_import_json() {
+  yield ignoreChangedRoots();
+
+  do_print("Add synced folder");
+  let syncedFolder = yield PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "syncedFolder",
+  });
+  yield PlacesTestUtils.setBookmarkSyncFields({
+    guid: syncedFolder.guid,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+  });
+
+  do_print("Import new bookmarks from JSON");
+  let { path } = do_get_file("./sync_utils_bookmarks.json");
+  yield BookmarkJSONUtils.importFromFile(path, false);
+  {
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      syncedFolder.guid, "NnvGl3CRA4hC", "APzP8MupzA8l");
+    deepEqual(fields.map(field => field.syncStatus), [
+      PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+      PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+    ], "Sync statuses should match for JSON imports");
+  }
+
+  do_print("Fetch new JSON imports");
+  {
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(changes).sort(), ["NnvGl3CRA4hC", "APzP8MupzA8l",
+      "menu", "toolbar", syncedFolder.guid].sort(),
+      "Should return items imported from JSON backup"
+    );
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      syncedFolder.guid, "NnvGl3CRA4hC", "APzP8MupzA8l");
+    ok(fields.every(field =>
+      field.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
+    ), "Pulling new imports should update sync statuses");
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
+
+add_task(function* test_pullChanges_restore_json_tracked() {
+  yield ignoreChangedRoots();
+
+  let unsyncedBmk = yield PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "https://example.com",
+  });
+  do_print(`Unsynced bookmark GUID: ${unsyncedBmk.guid}`);
+  let syncedFolder = yield PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "syncedFolder",
+  });
+  do_print(`Synced folder GUID: ${syncedFolder.guid}`);
+  yield PlacesTestUtils.setBookmarkSyncFields({
+    guid: syncedFolder.guid,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+  });
+  {
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      unsyncedBmk.guid, syncedFolder.guid);
+    deepEqual(fields.map(field => field.syncStatus), [
+      PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+      PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+    ], "Sync statuses should match before restoring from JSON");
+  }
+
+  do_print("Restore from JSON, replacing existing items");
+  let { path } = do_get_file("./sync_utils_bookmarks.json");
+  yield BookmarkJSONUtils.importFromFile(path, true);
+  {
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      "NnvGl3CRA4hC", "APzP8MupzA8l");
+    ok(fields.every(field =>
+      field.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN
+    ), "All bookmarks should be UNKNOWN after restoring from JSON");
+  }
+
+  do_print("Fetch new items restored from JSON");
+  {
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(changes).sort(), [
+      "menu",
+      "toolbar",
+      "unfiled",
+      "mobile",
+      syncedFolder.guid, // Tombstone.
+      "NnvGl3CRA4hC",
+      "APzP8MupzA8l",
+    ].sort(), "Should restore items from JSON backup");
+
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      PlacesUtils.bookmarks.menuGuid, PlacesUtils.bookmarks.toolbarGuid,
+      PlacesUtils.bookmarks.unfiledGuid, "NnvGl3CRA4hC", "APzP8MupzA8l");
+    ok(fields.every(field =>
+      field.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
+    ), "NEW and UNKNOWN roots should be NORMAL after pulling restored JSON backup");
+
+    strictEqual(changes[syncedFolder.guid].tombstone, true,
+      `Should include tombstone for overwritten synced bookmark ${
+      syncedFolder.guid}`);
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
+
+add_task(function* test_pullChanges_custom_roots() {
+  yield ignoreChangedRoots();
+
+  do_print("Append items to Places root");
+  let unsyncedGuids = yield populateTree(PlacesUtils.bookmarks.rootGuid, {
+    kind: "folder",
+    title: "rootFolder",
+    children: [{
+      kind: "bookmark",
+      title: "childBmk",
+      url: "https://example.com",
+    }, {
+      kind: "folder",
+      title: "childFolder",
+      children: [{
+        kind: "bookmark",
+        title: "grandChildBmk",
+        url: "https://example.org",
+      }],
+    }],
+  }, {
+    kind: "bookmark",
+    title: "rootBmk",
+    url: "https://example.net",
+  });
+
+  do_print("Append items to menu");
+  let syncedGuids = yield populateTree(PlacesUtils.bookmarks.menuGuid, {
+    kind: "folder",
+    title: "childFolder",
+    children: [{
+      kind: "bookmark",
+      title: "grandChildBmk",
+      url: "https://example.info",
+    }],
+  });
+
+  {
+    let newChanges = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(newChanges).sort(), ["menu", syncedGuids.childFolder,
+      syncedGuids.grandChildBmk].sort(),
+      "Pulling changes should ignore custom roots");
+    yield setChangesSynced(newChanges);
+  }
+
+  do_print("Append sibling to custom root");
+  {
+    let unsyncedSibling = yield PlacesUtils.bookmarks.insert({
+      parentGuid: unsyncedGuids.rootFolder,
+      url: "https://example.club",
+    });
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(changes, {}, `Pulling changes should ignore unsynced sibling ${
+      unsyncedSibling.guid}`);
+  }
+
+  do_print("Clear custom root using old API");
+  {
+    let unsyncedRootId = yield PlacesUtils.promiseItemId(unsyncedGuids.rootFolder);
+    PlacesUtils.bookmarks.removeFolderChildren(unsyncedRootId);
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(changes, {}, "Clearing custom root should not write tombstones for children");
+  }
+
+  do_print("Remove custom root");
+  {
+    yield PlacesUtils.bookmarks.remove(unsyncedGuids.rootFolder);
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(changes, {}, "Removing custom root should not write tombstone");
+  }
+
+  do_print("Append sibling to menu");
+  {
+    let syncedSibling = yield PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      url: "https://example.ninja",
+    });
+    let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+    deepEqual(Object.keys(changes).sort(), ["menu", syncedSibling.guid].sort(),
+      "Pulling changes should track synced sibling and parent");
+    yield setChangesSynced(changes);
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
+});
+
+add_task(function* test_pushChanges() {
+  yield ignoreChangedRoots();
+
+  do_print("Populate test bookmarks");
+  let guids = yield populateTree(PlacesUtils.bookmarks.menuGuid, {
+    kind: "bookmark",
+    title: "unknownBmk",
+    url: "https://example.org",
+  }, {
+    kind: "bookmark",
+    title: "syncedBmk",
+    url: "https://example.com",
+  }, {
+    kind: "bookmark",
+    title: "newBmk",
+    url: "https://example.info",
+  }, {
+    kind: "bookmark",
+    title: "deletedBmk",
+    url: "https://example.edu",
+  }, {
+    kind: "bookmark",
+    title: "unchangedBmk",
+    url: "https://example.systems",
+  });
+
+  do_print("Update sync statuses");
+  yield PlacesTestUtils.setBookmarkSyncFields({
+    guid: guids.syncedBmk,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+  }, {
+    guid: guids.unknownBmk,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN,
+  }, {
+    guid: guids.deletedBmk,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+  }, {
+    guid: guids.unchangedBmk,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+    syncChangeCounter: 0,
+  });
+
+  do_print("Change synced bookmark; should bump change counter");
+  yield PlacesUtils.bookmarks.update({
+    guid: guids.syncedBmk,
+    url: "https://example.ninja",
+  });
+
+  do_print("Remove synced bookmark");
+  {
+    yield PlacesUtils.bookmarks.remove(guids.deletedBmk);
+    let tombstones = yield PlacesTestUtils.fetchSyncTombstones();
+    ok(tombstones.some(({ guid }) => guid == guids.deletedBmk),
+      "Should write tombstone for deleted synced bookmark");
+  }
+
+  do_print("Pull changes");
+  let changes = yield PlacesSyncUtils.bookmarks.pullChanges();
+  {
+    let actualChanges = Object.entries(changes).map(([syncId, change]) => ({
+      syncId,
+      syncChangeCounter: change.counter,
+    }));
+    let expectedChanges = [{
+      syncId: guids.unknownBmk,
+      syncChangeCounter: 1,
+    }, {
+      // Parent of changed bookmarks.
+      syncId: "menu",
+      syncChangeCounter: 6,
+    }, {
+      syncId: guids.syncedBmk,
+      syncChangeCounter: 2,
+    }, {
+      syncId: guids.newBmk,
+      syncChangeCounter: 1,
+    }, {
+      syncId: guids.deletedBmk,
+      syncChangeCounter: 1,
+    }];
+    deepEqual(sortBy(actualChanges, "syncId"), sortBy(expectedChanges, "syncId"),
+      "Should return deleted, new, and unknown bookmarks"
+    );
+  }
+
+  do_print("Modify changed bookmark to bump its counter");
+  yield PlacesUtils.bookmarks.update({
+    guid: guids.newBmk,
+    url: "https://example.club",
+  });
+
+  do_print("Mark some bookmarks as synced");
+  for (let title of ["unknownBmk", "newBmk", "deletedBmk"]) {
+    let guid = guids[title];
+    strictEqual(changes[guid].synced, false,
+      "All bookmarks should not be marked as synced yet");
+    changes[guid].synced = true;
+  }
+
+  yield PlacesSyncUtils.bookmarks.pushChanges(changes);
+
+  {
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      guids.newBmk, guids.unknownBmk);
+    ok(fields.every(field =>
+      field.syncStatus == PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
+    ), "Should update sync statuses for synced bookmarks");
+  }
+
+  {
+    let tombstones = yield PlacesTestUtils.fetchSyncTombstones();
+    ok(!tombstones.some(({ guid }) => guid == guids.deletedBmk),
+      "Should remove tombstone after syncing");
+
+    let syncFields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      guids.unknownBmk, guids.syncedBmk, guids.newBmk);
+    {
+      let info = syncFields.find(field => field.guid == guids.unknownBmk);
+      equal(info.syncStatus, PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+        "Syncing an UNKNOWN bookmark should set its sync status to NORMAL");
+      strictEqual(info.syncChangeCounter, 0,
+        "Syncing an UNKNOWN bookmark should reduce its change counter");
+    }
+    {
+      let info = syncFields.find(field => field.guid == guids.syncedBmk);
+      equal(info.syncStatus, PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+        "Syncing a NORMAL bookmark should not update its sync status");
+      equal(info.syncChangeCounter, 2,
+        "Should not reduce counter for NORMAL bookmark not marked as synced");
+    }
+    {
+      let info = syncFields.find(field => field.guid == guids.newBmk);
+      equal(info.syncStatus, PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+        "Syncing a NEW bookmark should update its sync status");
+      strictEqual(info.syncChangeCounter, 1,
+        "Updating new bookmark after pulling changes should bump change counter");
+    }
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+  yield PlacesSyncUtils.bookmarks.reset();
 });
