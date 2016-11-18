@@ -36,7 +36,6 @@ DIRS += ['interfaces/' + i for i in interfaces]
 
 DIRS += [
     'animation',
-    'apps',
     'base',
     'archivereader',
     'bindings',

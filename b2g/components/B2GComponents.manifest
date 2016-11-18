@@ -9,13 +9,6 @@ contract @mozilla.org/system-alerts-service;1 {fe33c107-82a4-41d6-8c64-5353267e0
 component {8c719f03-afe0-4aac-91ff-6c215895d467} ContentPermissionPrompt.js
 contract @mozilla.org/content-permission/prompt;1 {8c719f03-afe0-4aac-91ff-6c215895d467}
 
-#ifdef MOZ_UPDATER
-# UpdatePrompt.js
-component {88b3eb21-d072-4e3b-886d-f89d8c49fe59} UpdatePrompt.js
-contract @mozilla.org/updates/update-prompt;1 {88b3eb21-d072-4e3b-886d-f89d8c49fe59}
-category system-update-provider MozillaProvider @mozilla.org/updates/update-prompt;1,{88b3eb21-d072-4e3b-886d-f89d8c49fe59}
-#endif
-
 #ifdef MOZ_B2G
 # DirectoryProvider.js
 component {9181eb7c-6f87-11e1-90b1-4f59d80dd2e5} DirectoryProvider.js

@@ -11,7 +11,6 @@ var runtimeList = new RuntimeList(window, window.parent);
 window.addEventListener("load", function onLoad() {
   window.removeEventListener("load", onLoad, true);
   document.getElementById("runtime-screenshot").onclick = TakeScreenshot;
-  document.getElementById("runtime-permissions").onclick = ShowPermissionsTable;
   document.getElementById("runtime-details").onclick = ShowRuntimeDetails;
   document.getElementById("runtime-disconnect").onclick = DisconnectRuntime;
   document.getElementById("runtime-preferences").onclick = ShowDevicePreferences;
@@ -35,10 +34,6 @@ function TakeScreenshot() {
 
 function ShowRuntimeDetails() {
   runtimeList.showRuntimeDetails();
-}
-
-function ShowPermissionsTable() {
-  runtimeList.showPermissionsTable();
 }
 
 function ShowDevicePreferences() {

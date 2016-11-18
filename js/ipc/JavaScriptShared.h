@@ -96,6 +96,7 @@ class IdToObjectMap
 
     bool add(ObjectId id, JSObject* obj);
     JSObject* find(ObjectId id);
+    JSObject* findPreserveColor(ObjectId id);
     void remove(ObjectId id);
 
     void clear();
