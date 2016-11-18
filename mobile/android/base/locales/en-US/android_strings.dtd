@@ -156,6 +156,7 @@
 <!ENTITY overlay_share_bookmark_btn_label_already "Already bookmarked">
 <!ENTITY overlay_share_send_other "Send to other devices">
 
+<!ENTITY overlay_share_open_browser_btn_label "Open in &brandShortName;">
 <!-- Localization note (overlay_share_send_tab_btn_label) : Used on the
      share overlay menu to represent the "Send Tab" action when the user
      either has not set up Sync, or has no other devices to send a tab
