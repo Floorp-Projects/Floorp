@@ -892,11 +892,12 @@ DecodeFunctionSection(Decoder& d, ModuleEnvironment* env)
     if (!d.readVarU32(&numDefs))
         return d.fail("expected number of function definitions");
 
-    uint32_t numFuncs = env->funcSigs.length() + numDefs;
-    if (numFuncs > MaxFuncs)
+    CheckedInt<uint32_t> numFuncs = env->funcSigs.length();
+    numFuncs += numDefs;
+    if (!numFuncs.isValid() || numFuncs.value() > MaxFuncs)
         return d.fail("too many functions");
 
-    if (!env->funcSigs.reserve(numFuncs))
+    if (!env->funcSigs.reserve(numFuncs.value()))
         return false;
 
     for (uint32_t i = 0; i < numDefs; i++) {
@@ -1038,11 +1039,12 @@ DecodeGlobalSection(Decoder& d, GlobalDescVector* globals)
     if (!d.readVarU32(&numDefs))
         return d.fail("expected number of globals");
 
-    uint32_t numGlobals = globals->length() + numDefs;
-    if (numGlobals > MaxGlobals)
+    CheckedInt<uint32_t> numGlobals = globals->length();
+    numGlobals += numDefs;
+    if (!numGlobals.isValid() || numGlobals.value() > MaxGlobals)
         return d.fail("too many globals");
 
-    if (!globals->reserve(numGlobals))
+    if (!globals->reserve(numGlobals.value()))
         return false;
 
     for (uint32_t i = 0; i < numDefs; i++) {
