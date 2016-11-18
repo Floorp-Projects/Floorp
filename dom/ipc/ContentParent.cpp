@@ -4859,3 +4859,24 @@ ContentParent::DeallocPURLClassifierParent(PURLClassifierParent* aActor)
     dont_AddRef(static_cast<URLClassifierParent*>(aActor));
   return true;
 }
+
+mozilla::ipc::IPCResult
+ContentParent::RecvClassifyLocal(const URIParams& aURI, const nsCString& aTables,
+                                 nsCString* aResults)
+{
+  MOZ_ASSERT(aResults);
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  if (!uri) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  nsCOMPtr<nsIURIClassifier> uriClassifier =
+    do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID);
+  if (!uriClassifier) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  nsresult rv = uriClassifier->ClassifyLocalWithTables(uri, aTables, *aResults);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IPC_FAIL(this, "ClassifyLocalWithTables error");
+  }
+  return IPC_OK();
+}

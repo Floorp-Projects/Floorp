@@ -53,6 +53,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/URLClassifierChild.h"
+#include "mozilla/ipc/URIUtils.h"
 
 namespace mozilla {
 namespace safebrowsing {
@@ -1466,8 +1467,25 @@ nsUrlClassifierDBService::ClassifyLocalWithTables(nsIURI *aURI,
                                                   const nsACString & aTables,
                                                   nsACString & aTableResults)
 {
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
   MOZ_ASSERT(NS_IsMainThread(), "ClassifyLocalWithTables must be on main thread");
+
+  if (XRE_IsContentProcess()) {
+    using namespace mozilla::dom;
+    using namespace mozilla::ipc;
+    URIParams uri;
+    SerializeURI(aURI, uri);
+    nsAutoCString tables(aTables);
+    nsAutoCString results;
+    bool result = ContentChild::GetSingleton()->SendClassifyLocal(uri, tables,
+                                                                  &results);
+    if (result) {
+      aTableResults = results;
+      return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  }
+
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
 
   nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
