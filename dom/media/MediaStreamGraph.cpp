@@ -124,7 +124,7 @@ MediaStreamGraphImpl::AddStreamGraphThread(MediaStream* aStream)
   } else {
     mStreams.AppendElement(aStream);
     STREAM_LOG(LogLevel::Debug, ("Adding media stream %p to graph %p, count %lu", aStream, this, mStreams.Length()));
-    LIFECYCLE_LOG("Adding media stream %p to graph %p, count %lu", aStream, this, mStreams.Length());
+    LIFECYCLE_LOG("Adding media stream %p to graph %p, count %lu", aStream, this, (long)mStreams.Length());
   }
 
   SetStreamOrderDirty();
@@ -157,7 +157,7 @@ MediaStreamGraphImpl::RemoveStreamGraphThread(MediaStream* aStream)
   STREAM_LOG(LogLevel::Debug, ("Removed media stream %p from graph %p, count %lu",
                                aStream, this, mStreams.Length()));
   LIFECYCLE_LOG("Removed media stream %p from graph %p, count %lu",
-                aStream, this, mStreams.Length());
+                aStream, this, (long)mStreams.Length());
 
   NS_RELEASE(aStream); // probably destroying it
 }
@@ -2682,7 +2682,7 @@ SourceMediaStream::AddTrackInternal(TrackID aID, TrackRate aRate, StreamTime aSt
   nsTArray<TrackData> *track_data = (aFlags & ADDTRACK_QUEUED) ?
                                     &mPendingTracks : &mUpdateTracks;
   TrackData* data = track_data->AppendElement();
-  LIFECYCLE_LOG("AddTrackInternal: %lu/%lu", mPendingTracks.Length(), mUpdateTracks.Length());
+  LIFECYCLE_LOG("AddTrackInternal: %lu/%lu", (long)mPendingTracks.Length(), (long)mUpdateTracks.Length());
   data->mID = aID;
   data->mInputRate = aRate;
   data->mResamplerChannelCount = 0;
@@ -2708,7 +2708,7 @@ SourceMediaStream::FinishAddTracks()
 {
   MutexAutoLock lock(mMutex);
   mUpdateTracks.AppendElements(Move(mPendingTracks));
-  LIFECYCLE_LOG("FinishAddTracks: %lu/%lu", mPendingTracks.Length(), mUpdateTracks.Length());
+  LIFECYCLE_LOG("FinishAddTracks: %lu/%lu", (long)mPendingTracks.Length(), (long)mUpdateTracks.Length());
   if (GraphImpl()) {
     GraphImpl()->EnsureNextIteration();
   }
