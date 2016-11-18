@@ -218,6 +218,7 @@ pub enum TransformedRectKind {
 pub struct TransformedRect {
     pub local_rect: Rect<f32>,
     pub bounding_rect: DeviceRect,
+    pub inner_rect: DeviceRect,
     pub vertices: [Point4D<f32>; 4],
     pub kind: TransformedRectKind,
 }
@@ -286,32 +287,35 @@ impl TransformedRect {
                                                               1.0)),
                 ];
 
+                let (mut xs, mut ys) = ([0.0; 4], [0.0; 4]);
 
-                let mut screen_min : Point2D<f32> = Point2D::new(10000000.0, 10000000.0);
-                let mut screen_max : Point2D<f32>  = Point2D::new(-10000000.0, -10000000.0);
-
-                for vertex in &vertices {
+                for (vertex, (x, y)) in vertices.iter().zip(xs.iter_mut().zip(ys.iter_mut())) {
                     let inv_w = 1.0 / vertex.w;
-                    let vx = vertex.x * inv_w;
-                    let vy = vertex.y * inv_w;
-                    screen_min.x = screen_min.x.min(vx);
-                    screen_min.y = screen_min.y.min(vy);
-                    screen_max.x = screen_max.x.max(vx);
-                    screen_max.y = screen_max.y.max(vy);
+                    *x = vertex.x * inv_w;
+                    *y = vertex.y * inv_w;
                 }
 
-                let screen_min_dp = DevicePoint::new((screen_min.x * device_pixel_ratio).floor() as i32,
-                                                     (screen_min.y * device_pixel_ratio).floor() as i32);
-                let screen_max_dp = DevicePoint::new((screen_max.x * device_pixel_ratio).ceil() as i32,
-                                                     (screen_max.y * device_pixel_ratio).ceil() as i32);
+                xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                ys.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-                let screen_rect_dp = DeviceRect::new(screen_min_dp, DeviceSize::new(screen_max_dp.x - screen_min_dp.x,
-                                                                                    screen_max_dp.y - screen_min_dp.y));
+                let outer_min_dp = DevicePoint::new((xs[0] * device_pixel_ratio).floor() as i32,
+                                                    (ys[0] * device_pixel_ratio).floor() as i32);
+                let outer_max_dp = DevicePoint::new((xs[3] * device_pixel_ratio).ceil() as i32,
+                                                    (ys[3] * device_pixel_ratio).ceil() as i32);
+                let inner_min_dp = DevicePoint::new((xs[1] * device_pixel_ratio).ceil() as i32,
+                                                    (ys[1] * device_pixel_ratio).ceil() as i32);
+                let inner_max_dp = DevicePoint::new((xs[2] * device_pixel_ratio).floor() as i32,
+                                                    (ys[2] * device_pixel_ratio).floor() as i32);
 
                 TransformedRect {
                     local_rect: *rect,
                     vertices: vertices,
-                    bounding_rect: screen_rect_dp,
+                    bounding_rect: DeviceRect::new(outer_min_dp,
+                                                   DeviceSize::new(outer_max_dp.x - outer_min_dp.x,
+                                                                   outer_max_dp.y - outer_min_dp.y)),
+                    inner_rect: DeviceRect::new(inner_min_dp,
+                                                DeviceSize::new(inner_max_dp.x - inner_min_dp.x,
+                                                                inner_max_dp.y - inner_min_dp.y)),
                     kind: kind,
                 }
                 /*

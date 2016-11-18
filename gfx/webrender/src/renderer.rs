@@ -13,13 +13,12 @@ use debug_colors;
 use debug_render::DebugRenderer;
 use device::{Device, ProgramId, TextureId, VertexFormat, GpuProfiler};
 use device::{TextureFilter, VAOId, VertexUsageHint, FileWatcherHandler, TextureTarget};
-use euclid::{Matrix4D, Size2D};
+use euclid::{Matrix4D, Point2D, Size2D};
 use fnv::FnvHasher;
 use internal_types::{CacheTextureId, RendererFrame, ResultMsg, TextureUpdateOp};
 use internal_types::{TextureUpdateList, PackedVertex, RenderTargetMode};
 use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, DevicePoint, SourceTexture};
 use internal_types::{BatchTextures, TextureSampler, GLContextHandleWrapper};
-use ipc_channel::ipc;
 use profiler::{Profiler, BackendProfileCounters};
 use profiler::{GpuProfileTag, RendererProfileTimers, RendererProfileCounters};
 use render_backend::RenderBackend;
@@ -38,7 +37,8 @@ use tiling::{RenderTarget, ClearTile};
 use time::precise_time_ns;
 use util::TransformedRectKind;
 use webrender_traits::{ColorF, Epoch, FlushNotifier, PipelineId, RenderNotifier, RenderDispatcher};
-use webrender_traits::{ImageFormat, RenderApiSender, RendererKind};
+use webrender_traits::{ExternalImageId, ImageFormat, RenderApiSender, RendererKind};
+use webrender_traits::channel;
 
 pub const MAX_VERTEX_TEXTURE_WIDTH: usize = 1024;
 
@@ -388,6 +388,8 @@ pub struct Renderer {
     data32_texture: VertexDataTexture,
     data64_texture: VertexDataTexture,
     data128_texture: VertexDataTexture,
+    resource_rects_texture: VertexDataTexture,
+
     pipeline_epoch_map: HashMap<PipelineId, Epoch, BuildHasherDefault<FnvHasher>>,
     /// Used to dispatch functions to the main thread's event loop.
     /// Required to allow GLContext sharing in some implementations like WGL.
@@ -400,6 +402,13 @@ pub struct Renderer {
     /// freed by the backend thread. This saves having to
     /// use a hashmap, and allows a flat vector for performance.
     cache_texture_id_map: Vec<Option<TextureId>>,
+
+    /// Optional trait object that allows the client
+    /// application to provide external buffers for image data.
+    external_image_handler: Option<Box<ExternalImageHandler>>,
+
+    /// Map of external image IDs to native textures.
+    external_images: HashMap<ExternalImageId, TextureId, BuildHasherDefault<FnvHasher>>,
 }
 
 impl Renderer {
@@ -415,7 +424,7 @@ impl Renderer {
     /// # use std::path::PathBuf;
     /// let opts = webrender::RendererOptions {
     ///    device_pixel_ratio: 1.0,
-    ///    resource_path: PathBuf::from("../webrender/res"),
+    ///    resource_override_path: None,
     ///    enable_aa: false,
     ///    enable_msaa: false,
     ///    enable_profiler: false,
@@ -423,8 +432,8 @@ impl Renderer {
     /// let (renderer, sender) = Renderer::new(opts);
     /// ```
     pub fn new(options: RendererOptions) -> (Renderer, RenderApiSender) {
-        let (api_tx, api_rx) = ipc::channel().unwrap();
-        let (payload_tx, payload_rx) = ipc::bytes_channel().unwrap();
+        let (api_tx, api_rx) = channel::msg_channel().unwrap();
+        let (payload_tx, payload_rx) = channel::payload_channel().unwrap();
         let (result_tx, result_rx) = channel();
 
         let notifier = Arc::new(Mutex::new(None));
@@ -435,7 +444,7 @@ impl Renderer {
             notifier: notifier.clone(),
         };
 
-        let mut device = Device::new(options.resource_path.clone(),
+        let mut device = Device::new(options.resource_override_path.clone(),
                                      options.device_pixel_ratio,
                                      Box::new(file_watch_handler));
         device.begin_frame();
@@ -585,7 +594,7 @@ impl Renderer {
                              None,
                              ImageFormat::RGBA8,
                              TextureFilter::Linear,
-                             white_pixels);
+                             Arc::new(white_pixels));
 
         let dummy_mask_image_id = texture_cache.new_item_id();
         texture_cache.insert(dummy_mask_image_id,
@@ -594,7 +603,7 @@ impl Renderer {
                              None,
                              ImageFormat::A8,
                              TextureFilter::Linear,
-                             mask_pixels);
+                             Arc::new(mask_pixels));
 
         let debug_renderer = DebugRenderer::new(&mut device);
 
@@ -606,6 +615,7 @@ impl Renderer {
         let data32_texture = VertexDataTexture::new(&mut device);
         let data64_texture = VertexDataTexture::new(&mut device);
         let data128_texture = VertexDataTexture::new(&mut device);
+        let resource_rects_texture = VertexDataTexture::new(&mut device);
 
         let x0 = 0.0;
         let y0 = 0.0;
@@ -721,9 +731,12 @@ impl Renderer {
             data32_texture: data32_texture,
             data64_texture: data64_texture,
             data128_texture: data128_texture,
+            resource_rects_texture: resource_rects_texture,
             pipeline_epoch_map: HashMap::with_hasher(Default::default()),
             main_thread_dispatcher: main_thread_dispatcher,
             cache_texture_id_map: Vec::new(),
+            external_image_handler: None,
+            external_images: HashMap::with_hasher(Default::default()),
         };
 
         let sender = RenderApiSender::new(api_tx, payload_tx);
@@ -800,11 +813,21 @@ impl Renderer {
         match texture_id {
             &SourceTexture::Invalid => TextureId::invalid(),
             &SourceTexture::WebGL(id) => TextureId::new(id),
+            &SourceTexture::External(ref key) => {
+                *self.external_images
+                     .get(key)
+                     .expect("BUG: External image should be resolved by now!")
+            }
             &SourceTexture::TextureCache(index) => {
                 self.cache_texture_id_map[index.0]
                     .expect("BUG: Texture should exist in texture cache map!")
             }
         }
+    }
+
+    /// Set a callback for handling external images.
+    pub fn set_external_image_handler(&mut self, handler: Box<ExternalImageHandler>) {
+        self.external_image_handler = Some(handler);
     }
 
     /// Renders the current frame.
@@ -909,27 +932,14 @@ impl Renderer {
                             self.cache_texture_id_map[cache_texture_index] = Some(texture_id);
                         }
 
-                        // TODO: clean up match
-                        match maybe_bytes {
-                            Some(bytes) => {
-                                self.device.init_texture(texture_id,
-                                                         width,
-                                                         height,
-                                                         format,
-                                                         filter,
-                                                         mode,
-                                                         Some(bytes.as_slice()));
-                            }
-                            None => {
-                                self.device.init_texture(texture_id,
-                                                         width,
-                                                         height,
-                                                         format,
-                                                         filter,
-                                                         mode,
-                                                         None);
-                            }
-                        }
+                        let maybe_slice = maybe_bytes.as_ref().map(|bytes|{ bytes.as_slice() });
+                        self.device.init_texture(texture_id,
+                                                 width,
+                                                 height,
+                                                 format,
+                                                 filter,
+                                                 mode,
+                                                 maybe_slice);
                     }
                     TextureUpdateOp::Grow(new_width,
                                           new_height,
@@ -1321,9 +1331,52 @@ impl Renderer {
         self.device.set_blend(false);
     }
 
+    fn update_deferred_resolves(&mut self, frame: &mut Frame) {
+        // The first thing we do is run through any pending deferred
+        // resolves, and use a callback to get the UV rect for this
+        // custom item. Then we patch the resource_rects structure
+        // here before it's uploaded to the GPU.
+        if !frame.deferred_resolves.is_empty() {
+            let handler = self.external_image_handler
+                              .as_mut()
+                              .expect("Found external image, but no handler set!");
+
+            for deferred_resolve in &frame.deferred_resolves {
+                let props = &deferred_resolve.image_properties;
+                let external_id = props.external_id
+                                       .expect("BUG: Deferred resolves must be external images!");
+                let image = handler.get(external_id);
+
+                let texture_id = match image.source {
+                    ExternalImageSource::NativeTexture(texture_id) => TextureId::new(texture_id),
+                };
+
+                self.external_images.insert(external_id, texture_id);
+                let resource_rect_index = deferred_resolve.resource_address.0 as usize;
+                let resource_rect = &mut frame.gpu_resource_rects[resource_rect_index];
+                resource_rect.uv0 = Point2D::new(image.u0, image.v0);
+                resource_rect.uv1 = Point2D::new(image.u1, image.v1);
+            }
+        }
+    }
+
+    fn release_external_textures(&mut self) {
+        if !self.external_images.is_empty() {
+            let handler = self.external_image_handler
+                              .as_mut()
+                              .expect("Found external image, but no handler set!");
+
+            for (external_id, _) in self.external_images.drain() {
+                handler.release(external_id);
+            }
+        }
+    }
+
     fn draw_tile_frame(&mut self,
                        frame: &mut Frame,
                        framebuffer_size: &Size2D<u32>) {
+        self.update_deferred_resolves(frame);
+
         // Some tests use a restricted viewport smaller than the main screen size.
         // Ensure we clear the framebuffer in these tests.
         // TODO(gw): Find a better solution for this?
@@ -1382,6 +1435,7 @@ impl Renderer {
             self.data64_texture.init(&mut self.device, &mut frame.gpu_data64);
             self.data128_texture.init(&mut self.device, &mut frame.gpu_data128);
             self.prim_geom_texture.init(&mut self.device, &mut frame.gpu_geometry);
+            self.resource_rects_texture.init(&mut self.device, &mut frame.gpu_resource_rects);
 
             self.device.bind_texture(TextureSampler::Layers, self.layer_texture.id);
             self.device.bind_texture(TextureSampler::RenderTasks, self.render_task_texture.id);
@@ -1390,6 +1444,7 @@ impl Renderer {
             self.device.bind_texture(TextureSampler::Data32, self.data32_texture.id);
             self.device.bind_texture(TextureSampler::Data64, self.data64_texture.id);
             self.device.bind_texture(TextureSampler::Data128, self.data128_texture.id);
+            self.device.bind_texture(TextureSampler::ResourceRects, self.resource_rects_texture.id);
 
             let mut src_id = None;
 
@@ -1432,6 +1487,8 @@ impl Renderer {
                                 max_prim_items,
                                 &projection);
         }
+
+        self.release_external_textures();
     }
 
     pub fn debug_renderer<'a>(&'a mut self) -> &'a mut DebugRenderer {
@@ -1447,10 +1504,40 @@ impl Renderer {
     }
 }
 
+pub enum ExternalImageSource {
+    // TODO(gw): Work out the API for raw buffers.
+    //RawData(*const u8, usize),
+    NativeTexture(u32),                // Is a gl::GLuint texture handle
+}
+
+/// The data that an external client should provide about
+/// an external image. The timestamp is used to test if
+/// the renderer should upload new texture data this
+/// frame. For instance, if providing video frames, the
+/// application could call wr.render() whenever a new
+/// video frame is ready. If the callback increments
+/// the returned timestamp for a given image, the renderer
+/// will know to re-upload the image data to the GPU.
+/// Note that the UV coords are supplied in texel-space!
+pub struct ExternalImage {
+    pub u0: f32,
+    pub v0: f32,
+    pub u1: f32,
+    pub v1: f32,
+    pub source: ExternalImageSource,
+}
+
+/// Interface that an application can implement
+/// to support providing external image buffers.
+pub trait ExternalImageHandler {
+    fn get(&mut self, key: ExternalImageId) -> ExternalImage;
+    fn release(&mut self, key: ExternalImageId);
+}
+
 #[derive(Clone, Debug)]
 pub struct RendererOptions {
     pub device_pixel_ratio: f32,
-    pub resource_path: PathBuf,
+    pub resource_override_path: Option<PathBuf>,
     pub enable_aa: bool,
     pub enable_msaa: bool,
     pub enable_profiler: bool,

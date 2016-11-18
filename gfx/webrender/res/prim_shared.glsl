@@ -57,6 +57,7 @@ uniform sampler2D sData16;
 uniform sampler2D sData32;
 uniform sampler2D sData64;
 uniform sampler2D sData128;
+uniform sampler2D sResourceRects;
 
 ivec2 get_fetch_uv(int index, int vecs_per_item) {
     int items_per_row = WR_MAX_VERTEX_TEXTURE_WIDTH / vecs_per_item;
@@ -208,16 +209,14 @@ GradientStop fetch_gradient_stop(int index) {
 
 struct Glyph {
     vec4 offset;
-    vec4 uv_rect;
 };
 
 Glyph fetch_glyph(int index) {
     Glyph glyph;
 
-    ivec2 uv = get_fetch_uv_2(index);
+    ivec2 uv = get_fetch_uv_1(index);
 
-    glyph.offset = texelFetchOffset(sData32, uv, 0, ivec2(0, 0));
-    glyph.uv_rect = texelFetchOffset(sData32, uv, 0, ivec2(1, 0));
+    glyph.offset = texelFetchOffset(sData16, uv, 0, ivec2(0, 0));
 
     return glyph;
 }
@@ -324,19 +323,22 @@ struct CachePrimitiveInstance {
     int specific_prim_index;
     int render_task_index;
     int sub_index;
+    ivec4 user_data;
 };
 
 CachePrimitiveInstance fetch_cache_instance(int index) {
     CachePrimitiveInstance cpi;
 
-    int offset = index * 1;
+    int offset = index * 2;
 
     ivec4 data0 = int_data[offset + 0];
+    ivec4 data1 = int_data[offset + 1];
 
     cpi.global_prim_index = data0.x;
     cpi.specific_prim_index = data0.y;
     cpi.render_task_index = data0.z;
     cpi.sub_index = data0.w;
+    cpi.user_data = data1;
 
     return cpi;
 }
@@ -536,6 +538,20 @@ TransformVertexInfo write_transform_vertex(vec4 instance_rect,
 
 #endif //WR_FEATURE_TRANSFORM
 
+struct ResourceRect {
+    vec4 uv_rect;
+};
+
+ResourceRect fetch_resource_rect(int index) {
+    ResourceRect rect;
+
+    ivec2 uv = get_fetch_uv_1(index);
+
+    rect.uv_rect = texelFetchOffset(sResourceRects, uv, 0, ivec2(0, 0));
+
+    return rect;
+}
+
 struct Rectangle {
     vec4 color;
 };
@@ -565,7 +581,6 @@ TextRun fetch_text_run(int index) {
 }
 
 struct Image {
-    vec4 st_rect;                        // Location of the image texture in the texture atlas.
     vec4 stretch_size_and_tile_spacing;  // Size of the actual image and amount of space between
                                          //     tiled instances of this image.
 };
@@ -573,10 +588,9 @@ struct Image {
 Image fetch_image(int index) {
     Image image;
 
-    ivec2 uv = get_fetch_uv_2(index);
+    ivec2 uv = get_fetch_uv_1(index);
 
-    image.st_rect = texelFetchOffset(sData32, uv, 0, ivec2(0, 0));
-    image.stretch_size_and_tile_spacing = texelFetchOffset(sData32, uv, 0, ivec2(1, 0));
+    image.stretch_size_and_tile_spacing = texelFetchOffset(sData16, uv, 0, ivec2(0, 0));
 
     return image;
 }
