@@ -19,13 +19,13 @@
   },
   {
     "namespace": "runtime",
-    "allowedContexts": ["content"],
+    "allowedContexts": ["content", "devtools"],
     "description": "Use the <code>browser.runtime</code> API to retrieve the background page, return details about the manifest, and listen for and respond to events in the app or extension lifecycle. You can also use this API to convert the relative path of URLs to fully-qualified URLs.",
     "types": [
       {
         "id": "Port",
         "type": "object",
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "An object which allows two way communication with other pages.",
         "properties": {
           "name": {"type": "string"},
@@ -44,7 +44,7 @@
       {
         "id": "MessageSender",
         "type": "object",
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "An object containing information about the script context that sent a message or request.",
         "properties": {
           "tab": {"$ref": "tabs.Tab", "optional": true, "description": "The $(ref:tabs.Tab) which opened the connection, if any. This property will <strong>only</strong> be present when the connection was opened from a tab (including content scripts), and <strong>only</strong> if the receiver is an extension, not an app."},
@@ -57,7 +57,7 @@
       {
         "id": "PlatformOs",
         "type": "string",
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "The operating system the browser is running on.",
         "enum": ["mac", "win", "android", "cros", "linux", "openbsd"]
       },
@@ -65,13 +65,13 @@
         "id": "PlatformArch",
         "type": "string",
         "enum": ["arm", "x86-32", "x86-64"],
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "The machine's processor architecture."
       },
       {
         "id": "PlatformInfo",
         "type": "object",
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "An object containing information about the current platform.",
         "properties": {
           "os": {
@@ -116,20 +116,20 @@
         "id": "RequestUpdateCheckStatus",
         "type": "string",
         "enum": ["throttled", "no_update", "update_available"],
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "Result of the update check."
       },
       {
         "id": "OnInstalledReason",
         "type": "string",
         "enum": ["install", "update", "browser_update"],
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "The reason that this event is being dispatched."
       },
       {
         "id": "OnRestartRequiredReason",
         "type": "string",
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "The reason that the event is being dispatched. 'app_update' is used when the restart is needed because the application is updated to a newer version. 'os_update' is used when the restart is needed because the browser/OS is updated to a newer version. 'periodic' is used when the system runs for more than the permitted uptime set in the enterprise policy.",
         "enum": ["app_update", "os_update", "periodic"]
       }
@@ -138,7 +138,7 @@
       "lastError": {
         "type": "object",
         "optional": true,
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "This will be defined during an API method callback if there was an error",
         "properties": {
           "message": {
@@ -153,7 +153,7 @@
       },
       "id": {
         "type": "string",
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "The ID of the extension/app."
       }
     },
@@ -194,7 +194,7 @@
       },
       {
         "name": "getManifest",
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "Returns details about the app or extension from the manifest. The object returned is a serialization of the full $(topic:manifest)[manifest file].",
         "type": "function",
         "parameters": [],
@@ -208,7 +208,7 @@
       {
         "name": "getURL",
         "type": "function",
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "Converts a relative path within an app/extension install directory to a fully-qualified URL.",
         "parameters": [
           {
@@ -291,7 +291,7 @@
       {
         "name": "connect",
         "type": "function",
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "Attempts to connect to connect listeners within an extension/app (such as the background page), or other extensions/apps. This is useful for content scripts connecting to their extension processes, inter-app/extension communication, and $(topic:manifest/externally_connectable)[web messaging]. Note that this does not connect to any listeners in a content script. Extensions may connect to content scripts embedded in tabs via $(ref:tabs.connect).",
         "parameters": [
           {"type": "string", "name": "extensionId", "optional": true, "description": "The ID of the extension or app to connect to. If omitted, a connection will be attempted with your own extension. Required if sending messages from a web page for $(topic:manifest/externally_connectable)[web messaging]."},
@@ -331,7 +331,7 @@
         "name": "sendMessage",
         "type": "function",
         "allowAmbiguousOptionalArguments": true,
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "Sends a single message to event listeners within your extension/app or a different extension/app. Similar to $(ref:runtime.connect) but only sends a single message, with an optional response. If sending to your extension, the $(ref:runtime.onMessage) event will be fired in each page, or $(ref:runtime.onMessageExternal), if a different extension. Note that extensions cannot send messages to content scripts using this method. To send messages to content scripts, use $(ref:tabs.sendMessage).",
         "async": "responseCallback",
         "parameters": [
@@ -527,7 +527,7 @@
       {
         "name": "onConnect",
         "type": "function",
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "Fired when a connection is made from either an extension process or a content script.",
         "parameters": [
           {"$ref": "Port", "name": "port"}
@@ -545,7 +545,7 @@
       {
         "name": "onMessage",
         "type": "function",
-        "allowedContexts": ["content"],
+        "allowedContexts": ["content", "devtools"],
         "description": "Fired when a message is sent from either an extension process or a content script.",
         "parameters": [
           {"name": "message", "type": "any", "optional": true, "description": "The message sent by the calling script."},

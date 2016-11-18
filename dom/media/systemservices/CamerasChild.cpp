@@ -222,7 +222,7 @@ public:
     Dispatch();
   }
 
-  const T& ReturnValue() const {
+  T ReturnValue() const {
     if (mSuccess) {
       return mSuccessValue;
     } else {

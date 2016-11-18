@@ -5,14 +5,18 @@
 package org.mozilla.gecko.media;
 
 import android.annotation.TargetApi;
+import android.media.DeniedByServerException;
+import android.media.NotProvisionedException;
+
 import static android.os.Build.VERSION_CODES.M;
 import android.media.MediaDrm;
 import android.util.Log;
+import java.lang.IllegalStateException;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.List;
 
 public class GeckoMediaDrmBridgeV23 extends GeckoMediaDrmBridgeV21 {
-
-    private static final String LOGTAG = "GeckoMediaDrmBridgeV23";
     private static final boolean DEBUG = false;
 
     GeckoMediaDrmBridgeV23(String keySystem) throws Exception {
@@ -39,6 +43,43 @@ public class GeckoMediaDrmBridgeV23 extends GeckoMediaDrmBridgeV21 {
                                                  keyStatus.getStatusCode());
             }
             onSessionBatchedKeyChanged(sessionId, keyInfos);
+            if (DEBUG) Log.d(LOGTAG, "Key successfully added for session " + new String(sessionId));
         }
+    }
+
+    @Override
+    public void updateSession(int promiseId,
+                              String sessionId,
+                              byte[] response) {
+        if (DEBUG) Log.d(LOGTAG, "updateSession(), sessionId = " + sessionId);
+        if (mDrm == null) {
+            onRejectPromise(promiseId, "MediaDrm instance doesn't exist !!");
+            return;
+        }
+
+        ByteBuffer session = ByteBuffer.wrap(sessionId.getBytes());
+        if (!sessionExists(session)) {
+            onRejectPromise(promiseId, "Invalid session during updateSession.");
+            return;
+        }
+
+        try {
+            final byte [] keySetId = mDrm.provideKeyResponse(session.array(), response);
+            if (DEBUG) {
+                HashMap<String, String> infoMap = mDrm.queryKeyStatus(session.array());
+                for (String strKey : infoMap.keySet()) {
+                    String strValue = infoMap.get(strKey);
+                    Log.d(LOGTAG, "InfoMap : key(" + strKey + ")/value(" + strValue + ")");
+                }
+            }
+            onSessionUpdated(promiseId, session.array());
+            return;
+        } catch (final NotProvisionedException | DeniedByServerException | IllegalStateException e) {
+            if (DEBUG) Log.d(LOGTAG, "Failed to provide key response:", e);
+            onSessionError(session.array(), "Got exception during updateSession.");
+            onRejectPromise(promiseId, "Got exception during updateSession.");
+        }
+        release();
+        return;
     }
 }

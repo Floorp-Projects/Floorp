@@ -56,9 +56,10 @@ public:
   VideoDataDecoder(const VideoInfo& aConfig,
                    MediaFormat::Param aFormat,
                    MediaDataDecoderCallback* aCallback,
-                   layers::ImageContainer* aImageContainer)
+                   layers::ImageContainer* aImageContainer,
+                   const nsString& aDrmStubId)
     : MediaCodecDataDecoder(MediaData::Type::VIDEO_DATA, aConfig.mMimeType,
-                            aFormat, aCallback)
+                            aFormat, aCallback, aDrmStubId)
     , mImageContainer(aImageContainer)
     , mConfig(aConfig)
   {
@@ -81,7 +82,6 @@ public:
     if (NS_FAILED(InitDecoder(mSurfaceTexture->JavaSurface()))) {
       return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
     }
-
     return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
   }
 
@@ -127,15 +127,59 @@ protected:
   layers::ImageContainer* mImageContainer;
   const VideoInfo& mConfig;
   RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
+  RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
 };
+
+
+
+class EMEVideoDataDecoder : public VideoDataDecoder {
+public:
+  EMEVideoDataDecoder(const VideoInfo& aConfig,
+                      MediaFormat::Param aFormat,
+                      MediaDataDecoderCallback* aCallback,
+                      layers::ImageContainer* aImageContainer,
+                      const nsString& aDrmStubId,
+                      CDMProxy* aProxy,
+                      TaskQueue* aTaskQueue)
+   : VideoDataDecoder(aConfig, aFormat, aCallback, aImageContainer, aDrmStubId)
+   , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aCallback,
+                                                    aTaskQueue, aProxy))
+  {
+  }
+
+  void Input(MediaRawData* aSample) override;
+  void Shutdown() override;
+
+private:
+  RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
+};
+
+void
+EMEVideoDataDecoder::Input(MediaRawData* aSample)
+{
+  if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
+    return;
+  }
+  VideoDataDecoder::Input(aSample);
+}
+
+void
+EMEVideoDataDecoder::Shutdown()
+{
+  VideoDataDecoder::Shutdown();
+
+  mSamplesWaitingForKey->BreakCycles();
+  mSamplesWaitingForKey = nullptr;
+}
 
 class AudioDataDecoder : public MediaCodecDataDecoder
 {
 public:
   AudioDataDecoder(const AudioInfo& aConfig, MediaFormat::Param aFormat,
-                   MediaDataDecoderCallback* aCallback)
+                   MediaDataDecoderCallback* aCallback,
+                   const nsString& aDrmStubId)
     : MediaCodecDataDecoder(MediaData::Type::AUDIO_DATA, aConfig.mMimeType,
-                            aFormat, aCallback)
+                            aFormat, aCallback, aDrmStubId)
   {
     JNIEnv* const env = jni::GetEnvForThread();
 
@@ -210,27 +254,89 @@ public:
   }
 };
 
+class EMEAudioDataDecoder : public AudioDataDecoder {
+public:
+  EMEAudioDataDecoder(const AudioInfo& aConfig, MediaFormat::Param aFormat,
+                      MediaDataDecoderCallback* aCallback, const nsString& aDrmStubId,
+                      CDMProxy* aProxy, TaskQueue* aTaskQueue)
+   : AudioDataDecoder(aConfig, aFormat, aCallback, aDrmStubId)
+   , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aCallback,
+                                                    aTaskQueue, aProxy))
+  {
+  }
+
+  void Input(MediaRawData* aSample) override;
+  void Shutdown() override;
+
+private:
+  RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
+};
+
+void
+EMEAudioDataDecoder::Input(MediaRawData* aSample)
+{
+  if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
+    return;
+  }
+  AudioDataDecoder::Input(aSample);
+}
+
+void
+EMEAudioDataDecoder::Shutdown()
+{
+  AudioDataDecoder::Shutdown();
+
+  mSamplesWaitingForKey->BreakCycles();
+  mSamplesWaitingForKey = nullptr;
+}
+
 MediaDataDecoder*
 MediaCodecDataDecoder::CreateAudioDecoder(const AudioInfo& aConfig,
-                                          MediaFormat::Param aFormat,
-                                          MediaDataDecoderCallback* aCallback)
+                                          java::sdk::MediaFormat::Param aFormat,
+                                          MediaDataDecoderCallback* aCallback,
+                                          const nsString& aDrmStubId,
+                                          CDMProxy* aProxy,
+                                          TaskQueue* aTaskQueue)
 {
-  return new AudioDataDecoder(aConfig, aFormat, aCallback);
+  if (!aProxy) {
+    return new AudioDataDecoder(aConfig, aFormat, aCallback, aDrmStubId);
+  } else {
+    return new EMEAudioDataDecoder(aConfig,
+                                   aFormat,
+                                   aCallback,
+                                   aDrmStubId,
+                                   aProxy,
+                                   aTaskQueue);
+  }
 }
 
 MediaDataDecoder*
 MediaCodecDataDecoder::CreateVideoDecoder(const VideoInfo& aConfig,
-                                          MediaFormat::Param aFormat,
+                                          java::sdk::MediaFormat::Param aFormat,
                                           MediaDataDecoderCallback* aCallback,
-                                          layers::ImageContainer* aImageContainer)
+                                          layers::ImageContainer* aImageContainer,
+                                          const nsString& aDrmStubId,
+                                          CDMProxy* aProxy,
+                                          TaskQueue* aTaskQueue)
 {
-  return new VideoDataDecoder(aConfig, aFormat, aCallback, aImageContainer);
+  if (!aProxy) {
+    return new VideoDataDecoder(aConfig, aFormat, aCallback, aImageContainer, aDrmStubId);
+  } else {
+    return new EMEVideoDataDecoder(aConfig,
+                                   aFormat,
+                                   aCallback,
+                                   aImageContainer,
+                                   aDrmStubId,
+                                   aProxy,
+                                   aTaskQueue);
+  }
 }
 
 MediaCodecDataDecoder::MediaCodecDataDecoder(MediaData::Type aType,
                                              const nsACString& aMimeType,
                                              MediaFormat::Param aFormat,
-                                             MediaDataDecoderCallback* aCallback)
+                                             MediaDataDecoderCallback* aCallback,
+                                             const nsString& aDrmStubId)
   : mType(aType)
   , mMimeType(aMimeType)
   , mFormat(aFormat)
@@ -239,8 +345,8 @@ MediaCodecDataDecoder::MediaCodecDataDecoder(MediaData::Type aType,
   , mOutputBuffers(nullptr)
   , mMonitor("MediaCodecDataDecoder::mMonitor")
   , mState(ModuleState::kDecoding)
+  , mDrmStubId(aDrmStubId)
 {
-
 }
 
 MediaCodecDataDecoder::~MediaCodecDataDecoder()
@@ -273,8 +379,11 @@ MediaCodecDataDecoder::InitDecoder(Surface::Param aSurface)
     return NS_ERROR_FAILURE;
   }
 
+  MediaCrypto::LocalRef crypto = MediaDrmProxy::GetMediaCrypto(mDrmStubId);
+  bool hascrypto = !!crypto;
+  LOG("Has(%d) MediaCrypto (%s)", hascrypto, NS_ConvertUTF16toUTF8(mDrmStubId).get());
   nsresult rv;
-  NS_ENSURE_SUCCESS(rv = mDecoder->Configure(mFormat, aSurface, nullptr, 0), rv);
+  NS_ENSURE_SUCCESS(rv = mDecoder->Configure(mFormat, aSurface, crypto, 0), rv);
   NS_ENSURE_SUCCESS(rv = mDecoder->Start(), rv);
 
   NS_ENSURE_SUCCESS(rv = ResetInputBuffers(), rv);
