@@ -1580,7 +1580,9 @@ protected:
     }
 
     WebGLRefPtr<WebGLBuffer>* ValidateBufferSlot(const char* funcName, GLenum target);
+public:
     WebGLBuffer* ValidateBufferSelection(const char* funcName, GLenum target);
+protected:
     IndexedBufferBinding* ValidateIndexedBufferSlot(const char* funcName, GLenum target,
                                                     GLuint index);
 
@@ -1595,6 +1597,8 @@ protected:
         }
         return true;
     }
+
+    bool ValidateForNonTransformFeedback(const char* funcName, WebGLBuffer* buffer);
 
 public:
     template<typename T>
@@ -1754,6 +1758,17 @@ protected:
 
     ////////////////////////////////////
 
+private:
+    mutable bool mBuffersForUB_Dirty;
+    mutable std::set<const WebGLBuffer*> mBuffersForUB;
+
+public:
+    void OnUBIndexedBindingsChanged() const { mBuffersForUB_Dirty = true; }
+    const decltype(mBuffersForUB)& BuffersForUB() const;
+
+    ////////////////////////////////////
+
+protected:
     // Generic Vertex Attributes
     UniquePtr<GLenum[]> mVertexAttribType;
     GLfloat mVertexAttrib0Vector[4];
