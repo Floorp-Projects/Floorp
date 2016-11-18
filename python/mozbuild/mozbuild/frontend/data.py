@@ -641,13 +641,17 @@ class TestManifest(ContextDerived):
         # The relative path of the parsed manifest within the objdir.
         'manifest_obj_relpath',
 
+        # The relative paths to all source files for this manifest.
+        'source_relpaths',
+
         # If this manifest is a duplicate of another one, this is the
         # manifestparser.TestManifest of the other one.
         'dupe_manifest',
     )
 
     def __init__(self, context, path, manifest, flavor=None,
-            install_prefix=None, relpath=None, dupe_manifest=False):
+            install_prefix=None, relpath=None, sources=(),
+            dupe_manifest=False):
         ContextDerived.__init__(self, context)
 
         assert flavor in all_test_flavors()
@@ -659,6 +663,7 @@ class TestManifest(ContextDerived):
         self.install_prefix = install_prefix
         self.manifest_relpath = relpath
         self.manifest_obj_relpath = relpath
+        self.source_relpaths = sources
         self.dupe_manifest = dupe_manifest
         self.installs = {}
         self.pattern_installs = []
