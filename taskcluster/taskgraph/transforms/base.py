@@ -103,26 +103,23 @@ def get_keyed_by(item, field, item_name, subfield=None):
         if not isinstance(value, dict):
             return value
 
-    assert len(value) == 1, "Invalid attribute {} in {}".format(field, item_name)
     keyed_by = value.keys()[0]
+    if len(value) > 1 or not keyed_by.startswith('by-'):
+        return value
+
     values = value[keyed_by]
-    if keyed_by.startswith('by-'):
-        keyed_by = keyed_by[3:]  # extract just the keyed-by field name
-        if item[keyed_by] in values:
-            return values[item[keyed_by]]
-        for k in values.keys():
-            if re.match(k, item[keyed_by]):
-                return values[k]
-        if 'default' in values:
-            return values['default']
-        for k in item[keyed_by], 'default':
-            if k in values:
-                return values[k]
-        else:
-            raise Exception(
-                "Neither {} {} nor 'default' found while determining item {} in {}".format(
-                    keyed_by, item[keyed_by], field, item_name))
+    keyed_by = keyed_by[3:]  # strip 'by-' off the keyed-by field name
+    if item[keyed_by] in values:
+        return values[item[keyed_by]]
+    for k in values.keys():
+        if re.match(k, item[keyed_by]):
+            return values[k]
+    if 'default' in values:
+        return values['default']
+    for k in item[keyed_by], 'default':
+        if k in values:
+            return values[k]
     else:
         raise Exception(
-            "Invalid attribute {} keyed-by value {} in {}".format(
-                field, keyed_by, item_name))
+            "Neither {} {} nor 'default' found while determining item {} in {}".format(
+                keyed_by, item[keyed_by], field, item_name))
