@@ -154,21 +154,27 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
   doc->SetDocumentCharacterSet(NS_LITERAL_CSTRING("UTF-8"));
   
   if (aDoctype) {
-    nsCOMPtr<nsIDOMNode> tmpNode;
-    rv = doc->AppendChild(aDoctype, getter_AddRefs(tmpNode));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsINode> doctypeAsNode = do_QueryInterface(aDoctype);
+    ErrorResult result;
+    d->AppendChild(*doctypeAsNode, result);
+    if (NS_WARN_IF(result.Failed())) {
+      return result.StealNSResult();
+    }
   }
   
   if (!aQualifiedName.IsEmpty()) {
-    nsCOMPtr<nsIDOMElement> root;
-    rv = doc->CreateElementNS(aNamespaceURI, aQualifiedName,
-                              getter_AddRefs(root));
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult result;
+    nsCOMPtr<Element> root =
+      doc->CreateElementNS(aNamespaceURI, aQualifiedName,
+                           ElementCreationOptions(), result);
+    if (NS_WARN_IF(result.Failed())) {
+      return result.StealNSResult();
+    }
 
-    nsCOMPtr<nsIDOMNode> tmpNode;
-
-    rv = doc->AppendChild(root, getter_AddRefs(tmpNode));
-    NS_ENSURE_SUCCESS(rv, rv);
+    d->AppendChild(*root, result);
+    if (NS_WARN_IF(result.Failed())) {
+      return result.StealNSResult();
+    }
   }
 
   *aInstancePtrResult = doc;
