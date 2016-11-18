@@ -3646,11 +3646,6 @@
     "n_buckets": 20,
     "description": "Time spent shutting down plugins (ms)"
   },
-  "PLUGIN_CALLED_DIRECTLY": {
-    "expires_in_version": "never",
-    "kind": "flag",
-    "description": "A plugin object was successfully invoked as a function"
-  },
   "FLASH_PLUGIN_STATES": {
     "expires_in_version": "50",
     "kind": "enumerated",
