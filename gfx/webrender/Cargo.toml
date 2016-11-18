@@ -37,7 +37,3 @@ dwrote = "0.1.1"
 [target.'cfg(target_os = "macos")'.dependencies]
 core-graphics = "0.4.1"
 core-text = "2.0"
-
-[profile.release]
-panic = "abort"
-debug = true
