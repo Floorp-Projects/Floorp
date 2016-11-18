@@ -1270,6 +1270,10 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
   if (!GetEventPoint(aEvent, eventPoint)) {
     return NS_OK;
   }
+
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
+      (uint32_t) ScrollInputMethod::MainThreadScrollbarTrackClick);
+
   if (IsXULHorizontal() ? eventPoint.x < thumbRect.x 
                         : eventPoint.y < thumbRect.y)
     change = -1;
