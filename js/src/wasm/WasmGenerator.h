@@ -50,13 +50,9 @@ class MOZ_STACK_CLASS ModuleGenerator
     Assumptions                     assumptions_;
     LinkData                        linkData_;
     MutableMetadata                 metadata_;
-    ExportVector                    exports_;
-    ImportVector                    imports_;
-    DataSegmentVector               dataSegments_;
-    ElemSegmentVector               elemSegments_;
 
     // Data scoped to the ModuleGenerator's lifetime
-    UniqueModuleEnvironment         shared_;
+    UniqueModuleEnvironment         env_;
     uint32_t                        numSigs_;
     uint32_t                        numTables_;
     LifoAlloc                       lifo_;
@@ -93,56 +89,48 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOff);
     MOZ_MUST_USE bool allocateGlobal(GlobalDesc* global);
 
+    MOZ_MUST_USE bool initAsmJS(Metadata* asmJSMetadata);
+    MOZ_MUST_USE bool initWasm();
+
   public:
-    explicit ModuleGenerator(ImportVector&& imports);
+    explicit ModuleGenerator();
     ~ModuleGenerator();
 
-    MOZ_MUST_USE bool init(UniqueModuleEnvironment shared, const CompileArgs& args,
+    MOZ_MUST_USE bool init(UniqueModuleEnvironment env, const CompileArgs& args,
                            Metadata* maybeAsmJSMetadata = nullptr);
+
+    const ModuleEnvironment& env() const { return *env_; }
 
     bool isAsmJS() const { return metadata_->kind == ModuleKind::AsmJS; }
     jit::MacroAssembler& masm() { return masm_; }
 
     // Memory:
-    bool usesMemory() const { return UsesMemory(shared_->memoryUsage); }
-    uint32_t minMemoryLength() const { return shared_->minMemoryLength; }
+    bool usesMemory() const { return env_->usesMemory(); }
+    uint32_t minMemoryLength() const { return env_->minMemoryLength; }
 
     // Tables:
     uint32_t numTables() const { return numTables_; }
-    const TableDescVector& tables() const { return shared_->tables; }
+    const TableDescVector& tables() const { return env_->tables; }
 
     // Signatures:
     uint32_t numSigs() const { return numSigs_; }
     const SigWithId& sig(uint32_t sigIndex) const;
     const SigWithId& funcSig(uint32_t funcIndex) const;
-    const SigWithIdPtrVector& funcSigs() const { return shared_->funcSigs; }
+    const SigWithIdPtrVector& funcSigs() const { return env_->funcSigs; }
 
     // Globals:
-    const GlobalDescVector& globals() const { return shared_->globals; }
+    const GlobalDescVector& globals() const { return env_->globals; }
 
     // Functions declarations:
     uint32_t numFuncImports() const;
     uint32_t numFuncDefs() const;
     uint32_t numFuncs() const;
 
-    // Exports:
-    MOZ_MUST_USE bool setExports(ExportVector&& exports);
-
     // Function definitions:
     MOZ_MUST_USE bool startFuncDefs();
     MOZ_MUST_USE bool startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg);
     MOZ_MUST_USE bool finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg);
     MOZ_MUST_USE bool finishFuncDefs();
-
-    // Start function:
-    bool setStartFunction(uint32_t funcIndex);
-
-    // Segments:
-    void setDataSegments(DataSegmentVector&& segments);
-    void setElemSegments(ElemSegmentVector&& segments);
-
-    // Function names:
-    void setFuncNames(NameInBytecodeVector&& funcNames);
 
     // asm.js lazy initialization:
     void initSig(uint32_t sigIndex, Sig&& sig);
@@ -153,11 +141,13 @@ class MOZ_STACK_CLASS ModuleGenerator
     void initMemoryUsage(MemoryUsage memoryUsage);
     void bumpMinMemoryLength(uint32_t newMinMemoryLength);
     MOZ_MUST_USE bool addGlobal(ValType type, bool isConst, uint32_t* index);
+    MOZ_MUST_USE bool addExport(CacheableChars&& fieldChars, uint32_t funcIndex);
 
     // Finish compilation, provided the list of imports and source bytecode.
     // Both these Vectors may be empty (viz., b/c asm.js does different things
     // for imports and source).
-    SharedModule finish(const ShareableBytes& bytecode);
+    SharedModule finish(const ShareableBytes& bytecode, DataSegmentVector&& dataSegments,
+                        NameInBytecodeVector&& funcNames);
 };
 
 // A FunctionGenerator encapsulates the generation of a single function body.
