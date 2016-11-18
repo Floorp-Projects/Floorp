@@ -1045,8 +1045,9 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _process_test_manifest(self, obj, backend_file):
         # Much of the logic in this function could be moved to CommonBackend.
-        self.backend_input_files.add(mozpath.join(obj.topsrcdir,
-            obj.manifest_relpath))
+        for source in obj.source_relpaths:
+            self.backend_input_files.add(mozpath.join(obj.topsrcdir,
+                source))
 
         # Don't allow files to be defined multiple times unless it is allowed.
         # We currently allow duplicates for non-test files or test files if
