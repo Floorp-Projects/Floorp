@@ -8,7 +8,7 @@ use gleam::gl;
 use std::ffi::CStr;
 use webrender_traits::{ServoScrollRootId};
 use webrender_traits::{Epoch, ColorF};
-use webrender_traits::{ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
+use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
 use std::mem;
 use std::slice;
 use std::os::raw::c_uchar;
@@ -216,9 +216,6 @@ pub struct WrState {
 
 #[no_mangle]
 pub extern fn wr_init_window(root_pipeline_id: u64) -> *mut WrWindowState {
-    // hack to find the directory for the shaders
-    let res_path = concat!(env!("CARGO_MANIFEST_DIR"),"/res");
-
     let library = GlLibrary::new();
     gl::load_with(|symbol| library.query(symbol));
     gl::clear_color(0.3, 0.0, 0.0, 1.0);
@@ -229,11 +226,10 @@ pub extern fn wr_init_window(root_pipeline_id: u64) -> *mut WrWindowState {
     };
 
     println!("OpenGL version new {}", version);
-    println!("Shader resource path: {}", res_path);
 
     let opts = RendererOptions {
         device_pixel_ratio: 1.0,
-        resource_path: PathBuf::from(res_path),
+        resource_override_path: None,
         enable_aa: false,
         enable_subpixel_aa: false,
         enable_msaa: false,
@@ -396,7 +392,8 @@ pub extern fn wr_add_image(window: &mut WrWindowState, width: u32, height: u32, 
         0 => None,
         _ => Some(stride),
     };
-    window.api.add_image(width, height, stride_option, format, bytes)
+
+    window.api.add_image(width, height, stride_option, format, ImageData::new(bytes))
 }
 
 #[no_mangle]
