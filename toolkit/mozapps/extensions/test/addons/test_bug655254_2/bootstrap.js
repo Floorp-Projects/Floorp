@@ -1,3 +1,4 @@
+/* exported startup, shutdown */
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 function startup(data, reason) {

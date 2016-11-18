@@ -49,10 +49,6 @@ function installNext() {
   tab.linkedBrowser.messageManager.sendAsyncMessage("Test:StartInstall");
 }
 
-function winForTab(t) {
-  return t.linkedBrowser.contentWindow;
-}
-
 function createTab(url) {
   let tab = gBrowser.addTab(url);
   tab.linkedBrowser.messageManager.loadFrameScript("data:,(" + frame_script.toString() + ")();", true);

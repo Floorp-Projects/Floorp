@@ -9,7 +9,7 @@ from cStringIO import StringIO
 
 from ipdl.cgen import IPDLCodeGen
 from ipdl.lower import LowerToCxx, msgenums
-from ipdl.parser import Parser
+from ipdl.parser import Parser, ParseError
 from ipdl.type import TypeCheck
 
 from ipdl.cxx.cgen import CxxCodeGen
@@ -26,8 +26,12 @@ def parse(specstring, filename='/stdin', includedirs=[ ], errout=sys.stderr):
         type = 'header'
     else:
         type = 'protocol'
-    return Parser(type, name).parse(specstring, os.path.abspath(filename), includedirs, errout)
 
+    try:
+        return Parser(type, name).parse(specstring, os.path.abspath(filename), includedirs, errout)
+    except ParseError as p:
+        print >>errout, p
+        return None
 
 def typecheck(ast, errout=sys.stderr):
     '''Return True iff |ast| is well typed.  Print errors to |errout| if

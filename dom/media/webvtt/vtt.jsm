@@ -1151,7 +1151,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
 
     if (controls) {
       controlBar = controls.ownerDocument.getAnonymousElementByAttribute(
-        controls, "class", "controlBar");
+        controls, "anonid", "controlBar");
       controlBarShown = controlBar ? !!controlBar.clientHeight : false;
     }
 

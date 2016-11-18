@@ -84,7 +84,7 @@ add_task(function* cancel_during_check() {
   a1.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
 
   // Wait for the http request to arrive
-  let [request, response] = yield httpReceived.promise;
+  let [/* request */, response] = yield httpReceived.promise;
 
   // cancelUpdate returns true if there is an update check in progress
   do_check_true(a1.cancelUpdate());
@@ -119,7 +119,7 @@ add_task(function* shutdown_during_check() {
   a1.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
 
   // Wait for the http request to arrive
-  let [request, response] = yield httpReceived.promise;
+  let [/* request */, response] = yield httpReceived.promise;
 
   shutdownManager();
 
