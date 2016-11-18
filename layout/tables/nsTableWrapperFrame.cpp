@@ -381,10 +381,28 @@ nsTableWrapperFrame::ChildShrinkWrapISize(nsRenderingContext* aRenderingContext,
     offsets.ComputedLogicalPadding().Size(childWM).ConvertTo(aWM, childWM);
   LogicalSize bpSize =
     offsets.ComputedLogicalBorderPadding().Size(childWM).ConvertTo(aWM, childWM);
+
+  // Shrink-wrap aChildFrame by default, except if we're a stretched grid item.
+  auto flags = ComputeSizeFlags::eShrinkWrap;
+  auto parent = GetParent();
+  nsIAtom* parentFrameType = parent ? parent->GetType() : nullptr;
+  bool isGridItem = (parentFrameType == nsGkAtoms::gridContainerFrame &&
+                     !HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
+  if (MOZ_UNLIKELY(isGridItem) &&
+      !StyleMargin()->HasInlineAxisAuto(aWM)) {
+    auto inlineAxisAlignment = aWM.IsOrthogonalTo(parent->GetWritingMode()) ?
+                     StylePosition()->UsedAlignSelf(parent->StyleContext()) :
+                     StylePosition()->UsedJustifySelf(parent->StyleContext());
+    if (inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
+        inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
+      flags = nsIFrame::ComputeSizeFlags::eDefault;
+    }
+  }
+
   LogicalSize size =
     aChildFrame->ComputeSize(aRenderingContext, aWM, aCBSize, aAvailableISize,
                              marginSize, bpSize - paddingSize, paddingSize,
-                             nsIFrame::ComputeSizeFlags::eShrinkWrap);
+                             flags);
   if (aMarginResult) {
     *aMarginResult = offsets.ComputedLogicalMargin().IStartEnd(aWM);
   }
