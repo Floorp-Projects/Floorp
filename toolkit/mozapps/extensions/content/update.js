@@ -8,6 +8,9 @@
 
 "use strict";
 
+/* exported gAdminDisabledPage, gFinishedPage, gFoundPage, gInstallErrorsPage,
+ *          gNoUpdatesPage, gOfflinePage, gUpdatePage */
+
 const PREF_UPDATE_EXTENSIONS_ENABLED            = "extensions.update.enabled";
 const PREF_XPINSTALL_ENABLED                    = "xpinstall.enabled";
 
@@ -411,7 +414,6 @@ var gFoundPage = {
                                   null, false);
 
     var foundUpdates = document.getElementById("found.updates");
-    var itemCount = gUpdateWizard.addonsToUpdate.length;
     for (let install of gUpdateWizard.addonsToUpdate) {
       let listItem = foundUpdates.appendItem(install.name + " " + install.version);
       listItem.setAttribute("type", "checkbox");

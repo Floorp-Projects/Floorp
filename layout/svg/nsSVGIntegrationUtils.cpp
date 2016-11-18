@@ -757,33 +757,12 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
     bool isOK = true;
     nsSVGClipPathFrame *clipPathFrame =
       effectProperties.GetClipPathFrame(&isOK);
-    // XXX Bug 1317636. Split nsSVGClipPathFrame::GetClipMask into two
-    // functions:
-    // 1. nsSVGClipPathFrame::CreateClipMask
-    //    Create an A8 surface with right size for painting clip-path mask.
-    // 2. nsSVGClipPathFrame::PaintClipMask
-    //    Paint the content of clip-path _direct_ onto a given A8 surface.
-    // With this change, we can skip one extra draw call
-    // (DrawTarget::MaskSurface) bellow.
-    RefPtr<SourceSurface> clipMaskSurface =
-      clipPathFrame->GetClipMask(ctx, frame, cssPxToDevPxMatrix,
-                                 &clipMaskTransform, nullptr,
-                                 ToMatrix(ctx.CurrentMatrix()), &result);
-
-    if (clipMaskSurface) {
-      gfxContextMatrixAutoSaveRestore matRestore(&ctx);
-      ctx.Multiply(ThebesMatrix(clipMaskTransform));
-      CompositionOp op = maskUsage.shouldGenerateMaskLayer
-                         ? CompositionOp::OP_IN : CompositionOp::OP_OVER;
-      target->MaskSurface(ColorPattern(Color(0.0, 0.0, 0.0, 1.0)),
-                          clipMaskSurface,
-                          Point(),
-                          DrawOptions(1.0, op));
-    } else {
-      // Either entire surface is clipped out, or gfx buffer allocation
-      // failure in nsSVGClipPathFrame::GetClipMask.
-      return result;
-    }
+    RefPtr<SourceSurface> maskSurface =
+      maskUsage.shouldGenerateMaskLayer ? target->Snapshot() : nullptr;
+    result =
+      clipPathFrame->PaintClipMask(ctx, frame, cssPxToDevPxMatrix,
+                                   &clipMaskTransform, maskSurface,
+                                   ToMatrix(ctx.CurrentMatrix()));
   }
 
   return result;
