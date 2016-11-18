@@ -57,8 +57,8 @@ function run_test() {
         "Actual and expected organization should match");
   equal(cert.organizationalUnit, "",
         "Actual and expected organizationalUnit should match");
-  equal(cert.windowTitle, "Luděk Rašek",
-        "Actual and expected windowTitle should match");
+  equal(cert.displayName, "Luděk Rašek",
+        "Actual and expected displayName should match");
   equal(cert.issuerName, "OU=Akreditovaný poskytovatel certifikačních služeb,O=První certifikační autorita a.s.,L=\"Podvinný mlýn 2178/6, 190 00 Praha 9\",C=CZ,CN=I.CA - Qualified root certificate (kvalifikovaný certifikát poskytovatele) - PSEUDONYM",
         "Actual and expected issuerName should match");
   equal(cert.issuerCommonName, "I.CA - Qualified root certificate (kvalifikovaný certifikát poskytovatele) - PSEUDONYM",
