@@ -156,6 +156,8 @@ if test -n "$MOZ_SYSTEM_NSPR" -o -n "$NSPR_CFLAGS" -o -n "$NSPR_LIBS"; then
                 ,
                 AC_MSG_ERROR([system NSPR does not support PR_UINT64 or including prtypes.h does not provide it]))
     CFLAGS=$_SAVE_CFLAGS
+    NSPR_INCLUDE_DIR=`echo ${NSPR_CFLAGS} | sed -e 's/.*-I\([^ ]*\).*/\1/'`
+    NSPR_LIB_DIR=`echo ${NSPR_LIBS} | sed -e 's/.*-L\([^ ]*\).*/\1/'`
 elif test -z "$JS_POSIX_NSPR"; then
     NSPR_INCLUDE_DIR="${DIST}/include/nspr"
     NSPR_CFLAGS="-I${NSPR_INCLUDE_DIR}"

@@ -789,7 +789,7 @@ WrapperAnswer::RecvDOMInstanceOf(const ObjectId& objId, const int& prototypeID,
 bool
 WrapperAnswer::RecvDropObject(const ObjectId& objId)
 {
-    JSObject* obj = objects_.find(objId);
+    JSObject* obj = objects_.findPreserveColor(objId);
     if (obj) {
         objectIdMap(objId.hasXrayWaiver()).remove(obj);
         objects_.remove(objId);

@@ -1157,12 +1157,18 @@ class BuildReader(object):
                     raise SandboxValidationError('Cannot find %s.' % source,
                         context)
                 non_unified_sources.add(source)
+            action_overrides = {}
+            for action, script in gyp_dir.action_overrides.iteritems():
+                action_overrides[action] = SourcePath(context, script)
             time_start = time.time()
             for gyp_context in read_from_gyp(context.config,
                                              mozpath.join(curdir, gyp_dir.input),
                                              mozpath.join(context.objdir,
                                                           target_dir),
                                              gyp_dir.variables,
+                                             gyp_dir.no_chromium,
+                                             gyp_dir.no_unified,
+                                             action_overrides,
                                              non_unified_sources = non_unified_sources):
                 gyp_context.update(gyp_dir.sandbox_vars)
                 gyp_contexts.append(gyp_context)
