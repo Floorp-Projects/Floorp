@@ -113,7 +113,6 @@
 @BINPATH@/components/directory.xpt
 @BINPATH@/components/docshell.xpt
 @BINPATH@/components/dom.xpt
-@BINPATH@/components/dom_apps.xpt
 @BINPATH@/components/dom_base.xpt
 @BINPATH@/components/dom_canvas.xpt
 @BINPATH@/components/dom_core.xpt
@@ -134,7 +133,6 @@
 @BINPATH@/components/dom_range.xpt
 @BINPATH@/components/dom_security.xpt
 @BINPATH@/components/dom_settings.xpt
-@BINPATH@/components/dom_permissionsettings.xpt
 @BINPATH@/components/dom_sidebar.xpt
 @BINPATH@/components/dom_mobilemessage.xpt
 @BINPATH@/components/dom_storage.xpt
@@ -281,10 +279,6 @@
 @BINPATH@/components/FeedProcessor.js
 @BINPATH@/components/WellKnownOpportunisticUtils.js
 @BINPATH@/components/WellKnownOpportunisticUtils.manifest
-@BINPATH@/components/PermissionSettings.js
-@BINPATH@/components/PermissionSettings.manifest
-@BINPATH@/components/PermissionPromptService.js
-@BINPATH@/components/PermissionPromptService.manifest
 @BINPATH@/components/nsDNSServiceDiscovery.manifest
 @BINPATH@/components/nsDNSServiceDiscovery.js
 @BINPATH@/components/toolkitsearch.manifest
@@ -358,8 +352,6 @@
 @BINPATH@/components/TelemetryStartup.manifest
 @BINPATH@/components/XULStore.js
 @BINPATH@/components/XULStore.manifest
-@BINPATH@/components/AppsService.js
-@BINPATH@/components/AppsService.manifest
 @BINPATH@/components/htmlMenuBuilder.js
 @BINPATH@/components/htmlMenuBuilder.manifest
 

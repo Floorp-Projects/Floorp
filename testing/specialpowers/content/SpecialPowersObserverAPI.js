@@ -601,28 +601,6 @@ SpecialPowersObserverAPI.prototype = {
         return undefined;
       }
 
-      case "SPClearAppPrivateData": {
-        let appId = aMessage.data.appId;
-        let browserOnly = aMessage.data.browserOnly;
-
-        let attributes = { appId: appId };
-        if (browserOnly) {
-          attributes.inIsolatedMozBrowser = true;
-        }
-        this._notifyCategoryAndObservers(null,
-                                         "clear-origin-attributes-data",
-                                         JSON.stringify(attributes));
-
-        let subject = {
-          appId: appId,
-          browserOnly: browserOnly,
-          QueryInterface: XPCOMUtils.generateQI([Ci.mozIApplicationClearPrivateDataParams])
-        };
-        this._notifyCategoryAndObservers(subject, "webapps-clear-data", null);
-
-        return undefined;
-      }
-
       default:
         throw new SpecialPowersError("Unrecognized Special Powers API");
     }

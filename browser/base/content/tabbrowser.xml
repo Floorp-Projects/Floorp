@@ -5013,6 +5013,14 @@
                             this._getTabForContentWindow(event.target.top) :
                             this.getTabForBrowser(event.originalTarget);
 
+          // Focus window for beforeunload dialog so it is seen but don't
+          // steal focus from other applications.
+          if (event.detail &&
+              event.detail.tabPrompt &&
+              event.detail.inPermitUnload &&
+              Services.focus.activeWindow)
+            window.focus();
+
           // Don't need to act if the tab is already selected:
           if (tabForEvent.selected)
             return;

@@ -30,8 +30,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/HashFunctions.h"
 
-#include "nsIAppsService.h"
-
 using namespace mozilla;
 
 static bool gIsWhitelistingTestDomains = false;

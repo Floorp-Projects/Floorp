@@ -5090,11 +5090,12 @@ IonBuilder::jsop_pow()
     if (!arithTrySharedStub(&emitted, JSOP_POW, base, exponent) || emitted)
         return emitted;
 
-    // For now, use MIRType::Double, as a safe cover-all. See bug 1188079.
-    MPow* pow = MPow::New(alloc(), base, exponent, MIRType::Double);
+    // For now, use MIRType::None as a safe cover-all. See bug 1188079.
+    MPow* pow = MPow::New(alloc(), base, exponent, MIRType::None);
     current->add(pow);
     current->push(pow);
-    return true;
+    MOZ_ASSERT(pow->isEffectful());
+    return resumeAfter(pow);
 }
 
 bool

@@ -77,59 +77,6 @@ struct LinkData : LinkDataCacheablePod
 typedef UniquePtr<LinkData> UniqueLinkData;
 typedef UniquePtr<const LinkData> UniqueConstLinkData;
 
-// Export describes the export of a definition in a Module to a field in the
-// export object. For functions, Export stores an index into the
-// FuncExportVector in Metadata. For memory and table exports, there is
-// at most one (default) memory/table so no index is needed. Note: a single
-// definition can be exported by multiple Exports in the ExportVector.
-//
-// ExportVector is built incrementally by ModuleGenerator and then stored
-// immutably by Module.
-
-class Export
-{
-    CacheableChars fieldName_;
-    struct CacheablePod {
-        DefinitionKind kind_;
-        uint32_t index_;
-    } pod;
-
-  public:
-    Export() = default;
-    explicit Export(UniqueChars fieldName, uint32_t index, DefinitionKind kind);
-    explicit Export(UniqueChars fieldName, DefinitionKind kind);
-
-    const char* fieldName() const { return fieldName_.get(); }
-
-    DefinitionKind kind() const { return pod.kind_; }
-    uint32_t funcIndex() const;
-    uint32_t globalIndex() const;
-
-    WASM_DECLARE_SERIALIZABLE(Export)
-};
-
-typedef Vector<Export, 0, SystemAllocPolicy> ExportVector;
-
-// ElemSegment represents an element segment in the module where each element
-// describes both its function index and its code range.
-
-struct ElemSegment
-{
-    uint32_t tableIndex;
-    InitExpr offset;
-    Uint32Vector elemFuncIndices;
-    Uint32Vector elemCodeRangeIndices;
-
-    ElemSegment() = default;
-    ElemSegment(uint32_t tableIndex, InitExpr offset, Uint32Vector&& elemFuncIndices)
-      : tableIndex(tableIndex), offset(offset), elemFuncIndices(Move(elemFuncIndices))
-    {}
-
-    WASM_DECLARE_SERIALIZABLE(ElemSegment)
-};
-
-typedef Vector<ElemSegment, 0, SystemAllocPolicy> ElemSegmentVector;
-
 // Module represents a compiled wasm module and primarily provides two
 // operations: instantiation and serialization. A Module can be instantiated any
 // number of times to produce new Instance objects. A Module can be serialized

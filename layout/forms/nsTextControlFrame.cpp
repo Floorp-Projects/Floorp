@@ -769,10 +769,11 @@ nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
   // isIncreasing checks to avoid possible errors.
 
   RefPtr<nsRange> range = new nsRange(mContent);
-  nsresult rv = range->SetStart(aStartNode, aStartOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = range->SetEnd(aEndNode, aEndOffset);
+  // Be careful to use internal nsRange methods which do not check to make sure
+  // we have access to the node.
+  nsCOMPtr<nsINode> start = do_QueryInterface(aStartNode);
+  nsCOMPtr<nsINode> end = do_QueryInterface(aEndNode);
+  nsresult rv = range->Set(start, aStartOffset, end, aEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the selection, clear it and add the new range to it!

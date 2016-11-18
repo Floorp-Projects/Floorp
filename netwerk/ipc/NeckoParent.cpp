@@ -24,6 +24,7 @@
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/ChannelDiverterParent.h"
 #include "mozilla/net/IPCTransportProvider.h"
+#include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/dom/TabParent.h"
@@ -34,7 +35,6 @@
 #include "mozilla/LoadContext.h"
 #include "nsPrintfCString.h"
 #include "nsHTMLDNSPrefetch.h"
-#include "nsIAppsService.h"
 #include "nsEscape.h"
 #include "SerializedLoadContext.h"
 #include "nsAuthInformationHolder.h"
@@ -46,6 +46,7 @@
 
 using mozilla::DocShellOriginAttributes;
 using mozilla::NeckoOriginAttributes;
+using mozilla::dom::ChromeUtils;
 using mozilla::dom::ContentParent;
 using mozilla::dom::TabContext;
 using mozilla::dom::TabParent;
@@ -140,8 +141,8 @@ GetRequestingPrincipal(const FTPChannelCreationArgs& aArgs)
   return GetRequestingPrincipal(args.loadInfo());
 }
 
-// Bug 1289001 - If GetValidatedAppInfo returns an error string, that usually
-// leads to a content crash with very little info about the cause.
+// Bug 1289001 - If GetValidatedOriginAttributes returns an error string, that
+// usually leads to a content crash with very little info about the cause.
 // We prefer to crash on the parent, so we get the reason in the crash report.
 static MOZ_NORETURN MOZ_COLD
 void CrashWithReason(const char * reason)
@@ -153,14 +154,14 @@ void CrashWithReason(const char * reason)
 }
 
 const char*
-NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
-                                 PContentParent* aContent,
-                                 nsIPrincipal* aRequestingPrincipal,
-                                 DocShellOriginAttributes& aAttrs)
+NeckoParent::GetValidatedOriginAttributes(const SerializedLoadContext& aSerialized,
+                                          PContentParent* aContent,
+                                          nsIPrincipal* aRequestingPrincipal,
+                                          DocShellOriginAttributes& aAttrs)
 {
   if (!aSerialized.IsNotNull()) {
     if (UsingNeckoIPCSecurity()) {
-      CrashWithReason("GetValidatedAppInfo | SerializedLoadContext from child is null");
+      CrashWithReason("GetValidatedOriginAttributes | SerializedLoadContext from child is null");
       return "SerializedLoadContext from child is null";
     }
 
@@ -173,26 +174,28 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
   nsTArray<TabContext> contextArray =
     static_cast<ContentParent*>(aContent)->GetManagedTabContext();
 
+  nsAutoCString serializedSuffix;
+  aSerialized.mOriginAttributes.CreateAnonymizedSuffix(serializedSuffix);
+
   nsAutoCString debugString;
   for (uint32_t i = 0; i < contextArray.Length(); i++) {
-    TabContext tabContext = contextArray[i];
-    bool inBrowserElement = aSerialized.mOriginAttributes.mInIsolatedMozBrowser;
+    const TabContext& tabContext = contextArray[i];
 
-    if (aSerialized.mOriginAttributes.mUserContextId != tabContext.OriginAttributesRef().mUserContextId) {
+    if (!ChromeUtils::IsOriginAttributesEqual(aSerialized.mOriginAttributes,
+                                              tabContext.OriginAttributesRef())) {
       debugString.Append("(");
-      debugString.AppendInt(aSerialized.mOriginAttributes.mUserContextId);
+      debugString.Append(serializedSuffix);
       debugString.Append(",");
-      debugString.AppendInt(tabContext.OriginAttributesRef().mUserContextId);
+
+      nsAutoCString tabSuffix;
+      tabContext.OriginAttributesRef().CreateAnonymizedSuffix(tabSuffix);
+      debugString.Append(tabSuffix);
+
       debugString.Append(")");
       continue;
     }
-    aAttrs = DocShellOriginAttributes();
-    aAttrs.mAppId = nsIScriptSecurityManager::NO_APP_ID;
-    aAttrs.mInIsolatedMozBrowser = inBrowserElement;
-    aAttrs.mUserContextId = aSerialized.mOriginAttributes.mUserContextId;
-    aAttrs.mPrivateBrowsingId = aSerialized.mOriginAttributes.mPrivateBrowsingId;
-    aAttrs.mFirstPartyDomain = aSerialized.mOriginAttributes.mFirstPartyDomain;
 
+    aAttrs = aSerialized.mOriginAttributes;
     return nullptr;
   }
 
@@ -201,9 +204,6 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
   // that time we probably don't have any valid tabcontext, but still, we want
   // to support http channel requests coming from that ServiceWorker.
   if (aRequestingPrincipal) {
-    MOZ_ASSERT(BasePrincipal::Cast(aRequestingPrincipal)->OriginAttributesRef() ==
-                 aSerialized.mOriginAttributes);
-
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (swm &&
         swm->MayHaveActiveServiceWorkerInstance(static_cast<ContentParent*>(aContent),
@@ -213,19 +213,14 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
     }
   }
 
-  if (contextArray.IsEmpty()) {
-    if (UsingNeckoIPCSecurity()) {
-      CrashWithReason("GetValidatedAppInfo | ContentParent does not have any PBrowsers");
-      return "ContentParent does not have any PBrowsers";
-    }
-
-    // We are running xpcshell tests
+  if (!UsingNeckoIPCSecurity()) {
+    // We are running some tests
     aAttrs = aSerialized.mOriginAttributes;
     return nullptr;
   }
 
   nsAutoCString errorString;
-  errorString.Append("GetValidatedAppInfo | App does not have permission -");
+  errorString.Append("GetValidatedOriginAttributes | App does not have permission -");
   errorString.Append(debugString);
 
   // Leak the buffer on the heap to make sure that it lives long enough, as
@@ -244,8 +239,8 @@ NeckoParent::CreateChannelLoadContext(const PBrowserOrId& aBrowser,
                                       nsCOMPtr<nsILoadContext> &aResult)
 {
   DocShellOriginAttributes attrs;
-  const char* error = GetValidatedAppInfo(aSerialized, aContent,
-                                          aRequestingPrincipal, attrs);
+  const char* error = GetValidatedOriginAttributes(aSerialized, aContent,
+                                                   aRequestingPrincipal, attrs);
   if (error) {
     return error;
   }

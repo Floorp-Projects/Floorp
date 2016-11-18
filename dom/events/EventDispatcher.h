@@ -31,14 +31,14 @@ class EventTarget;
  * About event dispatching:
  * When either EventDispatcher::Dispatch or
  * EventDispatcher::DispatchDOMEvent is called an event target chain is
- * created. EventDispatcher creates the chain by calling PreHandleEvent 
+ * created. EventDispatcher creates the chain by calling GetEventTargetParent 
  * on each event target and the creation continues until either the mCanHandle
  * member of the EventChainPreVisitor object is false or the mParentTarget
  * does not point to a new target. The event target chain is created in the
  * heap.
  *
  * If the event needs retargeting, mEventTargetAtParent must be set in
- * PreHandleEvent.
+ * GetEventTargetParent.
  *
  * The capture, target and bubble phases of the event dispatch are handled
  * by iterating through the event target chain. Iteration happens twice,
@@ -86,7 +86,7 @@ public:
 
   /**
    * Bits for items in the event target chain.
-   * Set in PreHandleEvent() and used in PostHandleEvent().
+   * Set in GetEventTargetParent() and used in PostHandleEvent().
    *
    * @note These bits are different for each item in the event target chain.
    *       It is up to the Pre/PostHandleEvent implementation to decide how to
@@ -98,7 +98,7 @@ public:
 
   /**
    * Data for items in the event target chain.
-   * Set in PreHandleEvent() and used in PostHandleEvent().
+   * Set in GetEventTargetParent() and used in PostHandleEvent().
    *
    * @note This data is different for each item in the event target chain.
    *       It is up to the Pre/PostHandleEvent implementation to decide how to
@@ -123,6 +123,7 @@ public:
     , mOriginalTargetIsInAnon(aIsInAnon)
     , mWantsWillHandleEvent(false)
     , mMayHaveListenerManager(true)
+    , mWantsPreHandleEvent(false)
     , mParentTarget(nullptr)
     , mEventTargetAtParent(nullptr)
   {
@@ -137,13 +138,14 @@ public:
     mForceContentDispatch = false;
     mWantsWillHandleEvent = false;
     mMayHaveListenerManager = true;
+    mWantsPreHandleEvent = false;
     mParentTarget = nullptr;
     mEventTargetAtParent = nullptr;
   }
 
   /**
-   * Member that must be set in PreHandleEvent by event targets. If set to false,
-   * indicates that this event target will not be handling the event and
+   * Member that must be set in GetEventTargetParent by event targets. If set to
+   * false, indicates that this event target will not be handling the event and
    * construction of the event target chain is complete. The target that sets
    * mCanHandle to false is NOT included in the event target chain.
    */
@@ -170,7 +172,7 @@ public:
 
   /**
    * true if the original target of the event is inside anonymous content.
-   * This is set before calling PreHandleEvent on event targets.
+   * This is set before calling GetEventTargetParent on event targets.
    */
   bool                  mOriginalTargetIsInAnon;
 
@@ -182,9 +184,15 @@ public:
 
   /**
    * If it is known that the current target doesn't have a listener manager
-   * when PreHandleEvent is called, set this to false.
+   * when GetEventTargetParent is called, set this to false.
    */
   bool                  mMayHaveListenerManager;
+
+  /**
+   * Whether or not nsIDOMEventTarget::PreHandleEvent will be called. Default is
+   * false;
+   */
+  bool mWantsPreHandleEvent;
 
   /**
    * Parent item in the event target chain.

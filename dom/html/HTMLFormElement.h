@@ -93,7 +93,8 @@ public:
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult) override;
-  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) override;
+  virtual nsresult GetEventTargetParent(
+                     EventChainPreVisitor& aVisitor) override;
   virtual nsresult WillHandleEvent(
                      EventChainPostVisitor& aVisitor) override;
   virtual nsresult PostHandleEvent(
