@@ -2,11 +2,9 @@
 // application versions
 const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
-const PREF_XPI_STATE                  = "extensions.xpiState";
 const PREF_APP_UPDATE_ENABLED         = "app.update.enabled";
 
 Components.utils.import("resource://testing-common/httpd.js");
-const { computeHash } = Components.utils.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
 
 BootstrapMonitor.init();
 
@@ -74,12 +72,6 @@ var root = testserver.identity.primaryScheme + "://" +
            testserver.identity.primaryHost + ":" +
            testserver.identity.primaryPort + "/data/"
 Services.prefs.setCharPref(PREF_SYSTEM_ADDON_UPDATE_URL, root + "update.xml");
-
-function makeUUID() {
-  let uuidGen = AM_Cc["@mozilla.org/uuid-generator;1"].
-                getService(AM_Ci.nsIUUIDGenerator);
-  return uuidGen.generateUUID().toString();
-}
 
 function* check_installed(conditions) {
   for (let i = 0; i < conditions.length; i++) {

@@ -63,8 +63,6 @@ var PREF_EM_CHECK_COMPATIBILITY = MOZ_COMPATIBILITY_NIGHTLY ?
                                   PREF_EM_CHECK_COMPATIBILITY_BASE + ".nightly" :
                                   undefined;
 
-const TOOLKIT_ID                      = "toolkit@mozilla.org";
-
 const VALID_TYPES_REGEXP = /^[\w\-]+$/;
 
 const WEBAPI_INSTALL_HOSTS = ["addons.mozilla.org", "testpilot.firefox.com"];
@@ -1310,7 +1308,6 @@ var AddonManagerInternal = {
         break;
       }
       case PREF_EM_UPDATE_ENABLED: {
-        let oldValue = gUpdateEnabled;
         try {
           gUpdateEnabled = Services.prefs.getBoolPref(PREF_EM_UPDATE_ENABLED);
         } catch (e) {
@@ -1321,7 +1318,6 @@ var AddonManagerInternal = {
         break;
       }
       case PREF_EM_AUTOUPDATE_DEFAULT: {
-        let oldValue = gAutoUpdateDefault;
         try {
           gAutoUpdateDefault = Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
         } catch (e) {

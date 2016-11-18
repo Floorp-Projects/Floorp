@@ -411,7 +411,7 @@ GMPWrapper.prototype = {
       this._log.error("Malformed EME video message with data: " + data);
       return;
     }
-    let {status: status, keySystem: keySystem} = parsedData;
+    let {status} = parsedData;
     if (status == "cdm-not-installed") {
       this.checkForUpdates(0);
     }
@@ -543,7 +543,7 @@ var GMPProvider = {
 
     Preferences.observe(GMPPrefs.KEY_LOG_BASE, configureLogging);
 
-    for (let [id, plugin] of this._plugins) {
+    for (let plugin of this._plugins.values()) {
       let wrapper = plugin.wrapper;
       let gmpPath = wrapper.gmpPath;
       let isEnabled = wrapper.isActive;
@@ -681,7 +681,7 @@ var GMPProvider = {
 
   ensureProperCDMInstallState: function() {
     if (!GMPPrefs.get(GMPPrefs.KEY_EME_ENABLED, true)) {
-      for (let [id, plugin] of this._plugins) {
+      for (let plugin of this._plugins.values()) {
         if (plugin.isEME && plugin.wrapper.isInstalled) {
           gmpService.addPluginDirectory(plugin.wrapper.gmpPath);
           plugin.wrapper.uninstallPlugin();

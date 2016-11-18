@@ -1,7 +1,5 @@
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-var startupOrder = [];
-
 function mockAddonProvider(name) {
   let mockProvider = {
     markSafe: false,
@@ -11,7 +9,6 @@ function mockAddonProvider(name) {
       if (this.markSafe)
         AddonManagerPrivate.markProviderSafe(this);
 
-      let uri = Services.io.newURI("beard://long", null, null);
       AddonManager.isInstallEnabled("made-up-mimetype");
     },
     supportsMimetype(mimetype) {

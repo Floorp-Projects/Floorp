@@ -65,7 +65,7 @@ MOZ_DEFINE_MALLOC_SIZE_OF(ImagesMallocSizeOf)
 
 class imgMemoryReporter final : public nsIMemoryReporter
 {
-  ~imgMemoryReporter() { }
+  ~imgMemoryReporter() = default;
 
 public:
   NS_DECL_ISUPPORTS
@@ -938,7 +938,7 @@ using namespace std;
 void
 imgCacheQueue::Remove(imgCacheEntry* entry)
 {
-  queueContainer::iterator it = find(mQueue.begin(), mQueue.end(), entry);
+  auto it = find(mQueue.begin(), mQueue.end(), entry);
   if (it != mQueue.end()) {
     mSize -= (*it)->GetDataSize();
     mQueue.erase(it);
@@ -1066,7 +1066,7 @@ public:
   imgCacheExpirationTracker();
 
 protected:
-  void NotifyExpired(imgCacheEntry* entry);
+  void NotifyExpired(imgCacheEntry* entry) override;
 };
 
 imgCacheExpirationTracker::imgCacheExpirationTracker()

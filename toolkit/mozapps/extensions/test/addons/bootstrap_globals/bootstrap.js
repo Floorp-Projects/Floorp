@@ -1,3 +1,4 @@
+/* exported startup, shutdown, install, uninstall */
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 var seenGlobals = new Set();

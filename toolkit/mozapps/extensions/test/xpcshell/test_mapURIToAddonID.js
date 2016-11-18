@@ -52,10 +52,6 @@ function check_mapping(uri, id) {
   do_check_eq(val.value, id);
 }
 
-function getActiveVersion() {
-  return Services.prefs.getIntPref("bootstraptest.active_version");
-}
-
 function run_test() {
   do_test_pending();
 

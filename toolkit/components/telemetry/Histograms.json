@@ -8853,12 +8853,16 @@
   "TRACKING_PROTECTION_ENABLED": {
     "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Whether or not a session has tracking protection enabled"
+    "description": "True if tracking protection is enabled globally at the time that a non-Private-Browsing session is initialized.",
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "bug_numbers": [1058133]
   },
   "TRACKING_PROTECTION_PBM_DISABLED": {
     "expires_in_version": "60",
     "kind": "boolean",
-    "description": "Is the tracking protection in private browsing mode disabled?"
+    "description": "True if tracking protection in Private Browsing mode is disabled at the time that a non-Private-Browsing session is initialized.",
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "bug_numbers": [1200944]
   },
   "FENNEC_TRACKING_PROTECTION_STATE": {
     "expires_in_version": "60",
@@ -8872,13 +8876,17 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 4,
-    "description": "Tracking protection shield (0 = not shown, 1 = loaded, 2 = blocked)"
+    "description": "Status of the shield icon for each top-level pageload (outside of Private Browsing mode) when tracking protection is enabled (0 = shield not shown because no trackers were detected, 1 = shield crossed out because TP was disabled on this page by the user, 2 = shield shown because a tracker was blocked)",
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "bug_numbers": [1058133]
   },
   "TRACKING_PROTECTION_EVENTS": {
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 3,
-    "description": "Doorhanger shown = 0, Disable = 1, Enable = 2"
+    "description": "A value of 0 is sent when the security UI changes on pages loaded outside of Private Browsing mode, a value of 1 is sent when users manually disable TP on that page, and 2 is sent when users manually re-enable TP on that page.",
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "bug_numbers": [1058133]
   },
   "SERVICE_WORKER_REGISTRATION_LOADING": {
     "expires_in_version": "never",

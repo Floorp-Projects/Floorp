@@ -239,12 +239,6 @@ add_test(function() {
     return;
   }
 
-  function promiseViewLoad(manager) {
-    return new Promise(resolve => {
-      wait_for_view_load(manager, resolve);
-    });
-  }
-
   function promiseManagerLoaded(manager) {
     return new Promise(resolve => {
       wait_for_manager_load(manager, resolve);

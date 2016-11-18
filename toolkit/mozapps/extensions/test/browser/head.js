@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
-/* globals end_test*/
+/* globals end_test */
+
+/* eslint no-unused-vars: ["error", {vars: "local", args: "none"}] */
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
