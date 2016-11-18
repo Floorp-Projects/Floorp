@@ -6136,6 +6136,12 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(ForOfIterator) {
     bool next(JS::MutableHandleValue val, bool* done);
 
     /**
+     * Close the iterator.
+     * For the case that completion type is throw.
+     */
+    void closeThrow();
+
+    /**
      * If initialized with throwOnNonCallable = false, check whether
      * the value is iterable.
      */
