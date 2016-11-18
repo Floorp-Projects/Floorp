@@ -135,8 +135,6 @@ ALLOWED_XPCOM_GLUE = {
     ('test_unlock_notify', 'storage/test'),
     ('test_IHistory', 'toolkit/components/places/tests/cpp'),
     ('testcrasher', 'toolkit/crashreporter/test'),
-    ('jsep_session_unittest', 'media/webrtc/signaling/test'),
-    ('jsep_track_unittest', 'media/webrtc/signaling/test'),
     ('mediaconduit_unittests', 'media/webrtc/signaling/test'),
     ('mediapipeline_unittest', 'media/webrtc/signaling/test'),
     ('sdp_file_parser', 'media/webrtc/signaling/fuzztest'),

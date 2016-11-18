@@ -507,7 +507,7 @@ class CodeOffsetJump
         return jumpTableIndex_;
     }
 #else
-    CodeOffsetJump(size_t offset) : offset_(offset) {}
+    explicit CodeOffsetJump(size_t offset) : offset_(offset) {}
 #endif
 
     CodeOffsetJump() {
