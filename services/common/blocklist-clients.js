@@ -42,21 +42,10 @@ this.FILENAME_ADDONS_JSON  = "blocklist-addons.json";
 this.FILENAME_GFX_JSON     = "blocklist-gfx.json";
 this.FILENAME_PLUGINS_JSON = "blocklist-plugins.json";
 
-function mergeChanges(localRecords, changes) {
-  // Kinto.js adds attributes to local records that aren't present on server.
-  // (e.g. _status)
-  const stripPrivateProps = (obj) => {
-    return Object.keys(obj).reduce((current, key) => {
-      if (!key.startsWith("_")) {
-        current[key] = obj[key];
-      }
-      return current;
-    }, {});
-  };
-
+function mergeChanges(collection, localRecords, changes) {
   const records = {};
   // Local records by id.
-  localRecords.forEach((record) => records[record.id] = stripPrivateProps(record));
+  localRecords.forEach((record) => records[record.id] = collection.cleanLocalFields(record));
   // All existing records are replaced by the version from the server.
   changes.forEach((record) => records[record.id] = record);
 
@@ -128,7 +117,7 @@ class BlocklistClient {
         };
       } else {
         const localRecords = (yield collection.list()).data;
-        const records = mergeChanges(localRecords, payload.changes);
+        const records = mergeChanges(collection, localRecords, payload.changes);
         toSerialize = {
           last_modified: `${payload.lastModified}`,
           data: records
