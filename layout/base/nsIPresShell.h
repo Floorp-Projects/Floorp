@@ -1277,11 +1277,13 @@ public:
     uint16_t mPointerType;
     bool mActiveState;
     bool mPrimaryState;
+    bool mPreventMouseEventByContent;
     explicit PointerInfo(bool aActiveState, uint16_t aPointerType,
                          bool aPrimaryState)
       : mPointerType(aPointerType)
       , mActiveState(aActiveState)
       , mPrimaryState(aPrimaryState)
+      , mPreventMouseEventByContent(false)
     {
     }
   };

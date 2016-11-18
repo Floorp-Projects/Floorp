@@ -120,14 +120,15 @@ public final class RemoteManager implements IBinder.DeathRecipient {
 
     public synchronized CodecProxy createCodec(MediaFormat format,
                                                Surface surface,
-                                               CodecProxy.Callbacks callbacks) {
+                                               CodecProxy.Callbacks callbacks,
+                                               String drmStubId) {
         if (mRemote == null) {
             if (DEBUG) Log.d(LOGTAG, "createCodec failed due to not initialize");
             return null;
         }
         try {
             ICodec remote = mRemote.createCodec();
-            CodecProxy proxy = CodecProxy.createCodecProxy(format, surface, callbacks);
+            CodecProxy proxy = CodecProxy.createCodecProxy(format, surface, callbacks, drmStubId);
             if (proxy.init(remote)) {
                 mProxies.add(proxy);
                 return proxy;

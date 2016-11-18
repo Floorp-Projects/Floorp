@@ -7,8 +7,6 @@ from mock import Mock, patch, sentinel
 
 from marionette.runtests import MarionetteTestRunner, MarionetteHarness, cli
 
-# avoid importing MarionetteJSTestCase to prevent pytest from
-# collecting and running it as part of this test suite
 import marionette.marionette_test as marionette_test
 
 
@@ -102,7 +100,6 @@ def test_harness_sets_up_default_test_handlers(mach_parsed_kwargs):
     mach_parsed_kwargs.pop('tests')
     runner = harness._runner_class(**mach_parsed_kwargs)
     assert marionette_test.MarionetteTestCase in runner.test_handlers
-    assert marionette_test.MarionetteJSTestCase in runner.test_handlers
 
 
 if __name__ == '__main__':

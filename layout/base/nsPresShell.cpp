@@ -6834,6 +6834,82 @@ FlushThrottledStyles(nsIDocument *aDocument, void *aData)
   return true;
 }
 
+/*
+ * This function handles the preventDefault behavior of pointerdown. When user
+ * preventDefault on pointerdown, We have to mark the active pointer to prevent
+ * sebsequent mouse events (except mouse transition events) and default
+ * behaviors.
+ *
+ * We add mPreventMouseEventByContent flag in PointerInfo to represent the
+ * active pointer won't firing compatible mouse events. It's set to true when
+ * content preventDefault on pointerdown
+ */
+static void
+PostHandlePointerEventsPreventDefault(WidgetPointerEvent* aPointerEvent,
+                                      WidgetGUIEvent* aMouseOrTouchEvent)
+{
+  if (!aPointerEvent->mIsPrimary || aPointerEvent->mMessage != ePointerDown ||
+      !aPointerEvent->DefaultPreventedByContent()) {
+    return;
+  }
+  nsIPresShell::PointerInfo* pointerInfo = nullptr;
+  if (!sActivePointersIds->Get(aPointerEvent->pointerId, &pointerInfo) ||
+      !pointerInfo) {
+    // We already added the PointerInfo for active pointer when
+    // PresShell::HandleEvent handling pointerdown event.
+#ifdef DEBUG
+    MOZ_CRASH("Got ePointerDown w/o active pointer info!!");
+#endif // #ifdef DEBUG
+    return;
+  }
+  // PreventDefault only applied for active pointers.
+  if (!pointerInfo->mActiveState) {
+    return;
+  }
+  aMouseOrTouchEvent->PreventDefault(false);
+  pointerInfo->mPreventMouseEventByContent = true;
+}
+
+/*
+ * This function handles the case when content had called preventDefault on the
+ * active pointer. In that case we have to prevent firing subsequent mouse
+ * to content. We check the flag PointerInfo::mPreventMouseEventByContent and
+ * call PreventDefault(false) to stop default behaviors and stop firing mouse
+ * events to content and chrome.
+ *
+ * note: mouse transition events are excluded
+ * note: we have to clean mPreventMouseEventByContent on pointerup for those
+ *       devices support hover
+ * note: we don't suppress firing mouse events to chrome and system group
+ *       handlers because they may implement default behaviors
+ */
+static void
+PreHandlePointerEventsPreventDefault(WidgetPointerEvent* aPointerEvent,
+                                     WidgetGUIEvent* aMouseOrTouchEvent)
+{
+  if (!aPointerEvent->mIsPrimary || aPointerEvent->mMessage == ePointerDown) {
+    return;
+  }
+  nsIPresShell::PointerInfo* pointerInfo = nullptr;
+  if (!sActivePointersIds->Get(aPointerEvent->pointerId, &pointerInfo) ||
+      !pointerInfo) {
+    // The PointerInfo for active pointer should be added for normal cases. But
+    // in some cases, we may receive mouse events before adding PointerInfo in
+    // sActivePointersIds. (e.g. receive mousemove before eMouseEnterIntoWidget
+    // or change preference 'dom.w3c_pointer_events.enabled' from off to on).
+    // In these cases, we could ignore them because they are not the events
+    // between a DefaultPrevented pointerdown and the corresponding pointerup.
+    return;
+  }
+  if (!pointerInfo->mPreventMouseEventByContent) {
+    return;
+  }
+  aMouseOrTouchEvent->PreventDefault(false);
+  if (aPointerEvent->mMessage == ePointerUp) {
+    pointerInfo->mPreventMouseEventByContent = false;
+  }
+}
+
 static nsresult
 DispatchPointerFromMouseOrTouch(PresShell* aShell,
                                 nsIFrame* aFrame,
@@ -6880,8 +6956,10 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
                      mouseEvent->pressure ? mouseEvent->pressure : 0.5f :
                      0.0f;
     event.convertToPointer = mouseEvent->convertToPointer = false;
+    PreHandlePointerEventsPreventDefault(&event, aEvent);
     aShell->HandleEvent(aFrame, &event, aDontRetargetEvents, aStatus,
                         aTargetContent);
+    PostHandlePointerEventsPreventDefault(&event, aEvent);
   } else if (aEvent->mClass == eTouchEventClass) {
     WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
     // loop over all touches and dispatch pointer events on each touch
@@ -6926,8 +7004,10 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
       event.buttons = WidgetMouseEvent::eLeftButtonFlag;
       event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
       event.convertToPointer = touch->convertToPointer = false;
+      PreHandlePointerEventsPreventDefault(&event, aEvent);
       aShell->HandleEvent(aFrame, &event, aDontRetargetEvents, aStatus,
                           aTargetContent);
+      PostHandlePointerEventsPreventDefault(&event, aEvent);
     }
   }
   return NS_OK;

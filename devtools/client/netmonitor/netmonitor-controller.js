@@ -56,14 +56,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Chart",
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
 
-Object.defineProperty(this, "NetworkHelper", {
-  get: function () {
-    return require("devtools/shared/webconsole/network-helper");
-  },
-  configurable: true,
-  enumerable: true
-});
-
 /**
  * Object defining the network monitor controller components.
  */

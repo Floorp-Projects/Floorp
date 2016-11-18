@@ -95,7 +95,8 @@ let apiManager = new class extends SchemaAPIManager {
   }
 
   registerSchemaAPI(namespace, envType, getAPI) {
-    if (envType == "addon_parent" || envType == "content_parent") {
+    if (envType == "addon_parent" || envType == "content_parent" ||
+        envType == "devtools_parent") {
       super.registerSchemaAPI(namespace, envType, getAPI);
     }
   }
@@ -332,6 +333,8 @@ class ExtensionPageContextParent extends ProxyContextParent {
     super(envType, extension, params, xulBrowser, extension.principal);
 
     this.viewType = params.viewType;
+
+    extension.emit("extension-proxy-context-load", this);
   }
 
   // The window that contains this context. This may change due to moving tabs.
@@ -437,7 +440,7 @@ ParentAPIManager = {
     }
 
     let context;
-    if (envType == "addon_parent") {
+    if (envType == "addon_parent" || envType == "devtools_parent") {
       context = new ExtensionPageContextParent(envType, extension, data, target);
     } else if (envType == "content_parent") {
       context = new ContentScriptContextParent(envType, extension, data, target, principal);

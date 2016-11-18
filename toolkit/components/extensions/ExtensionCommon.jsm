@@ -542,6 +542,7 @@ class SchemaAPIManager extends EventEmitter {
    *     "main" - The main, one and only chrome browser process.
    *     "addon" - An addon process.
    *     "content" - A content process.
+   *     "devtools" - A devtools process.
    */
   constructor(processType) {
     super();
@@ -553,6 +554,8 @@ class SchemaAPIManager extends EventEmitter {
       addon_child: [],
       content_parent: [],
       content_child: [],
+      devtools_parent: [],
+      devtools_child: [],
     };
   }
 
@@ -608,6 +611,8 @@ class SchemaAPIManager extends EventEmitter {
    *     - "addon_child" - addon APIs that runs in an addon process.
    *     - "content_parent" - content script APIs that runs in the main process.
    *     - "content_child" - content script APIs that runs in a content process.
+   *     - "devtools_parent" - devtools APIs that runs in the main process.
+   *     - "devtools_child" - devtools APIs that runs in a devtools process.
    * @param {function(BaseContext)} getAPI A function that returns an object
    *     that will be merged with |chrome| and |browser|. The next example adds
    *     the create, update and remove methods to the tabs API.

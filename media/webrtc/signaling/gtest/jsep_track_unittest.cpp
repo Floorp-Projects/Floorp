@@ -6,23 +6,10 @@
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
-#include "gtest_utils.h"
-
-// Magic linker includes :(
-#include "FakeMediaStreams.h"
-#include "FakeMediaStreamsImpl.h"
-#include "FakeLogging.h"
 
 #include "signaling/src/jsep/JsepTrack.h"
 #include "signaling/src/sdp/SipccSdp.h"
 #include "signaling/src/sdp/SdpHelper.h"
-
-#include "mtransport_test_utils.h"
-
-#include "FakeIPC.h"
-#include "FakeIPC.cpp"
-
-#include "TestHarness.h"
 
 namespace mozilla {
 
@@ -1256,14 +1243,3 @@ TEST_F(JsepTrackTest, NonDefaultOpusParameters)
 }
 
 } // namespace mozilla
-
-int
-main(int argc, char** argv)
-{
-  // Prevents some log spew
-  ScopedXPCOM xpcom("jsep_track_unittest");
-
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
-

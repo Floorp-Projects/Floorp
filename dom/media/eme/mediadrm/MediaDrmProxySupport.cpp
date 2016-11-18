@@ -204,6 +204,9 @@ MediaDrmProxySupport::MediaDrmProxySupport(const nsAString& aKeySystem)
     MediaDrmProxy::Create(mKeySystem,
                           mJavaCallbacks,
                           MediaPrefs::PDMAndroidRemoteCodecEnabled());
+
+  MOZ_ASSERT(mBridgeProxy, "mBridgeProxy should not be null");
+  mMediaDrmStubId = mBridgeProxy->GetStubId()->ToString();
 }
 
 MediaDrmProxySupport::~MediaDrmProxySupport()
