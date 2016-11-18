@@ -2302,6 +2302,21 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
     gl::GLContext* gl = webgl->GL();
     gl->MakeCurrent();
 
+    GLenum scopeBindTarget;
+    switch (target.get()) {
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        scopeBindTarget = LOCAL_GL_TEXTURE_CUBE_MAP;
+        break;
+    default:
+        scopeBindTarget = target.get();
+        break;
+    }
+    ScopedBindTexture scopeBindTexture(gl, tex, scopeBindTarget);
     auto compression = usage->format->compression;
     if (compression) {
         MOZ_RELEASE_ASSERT(!xOffset && !yOffset && !zOffset, "GFX: Can't zero compressed texture with offsets.");
@@ -2380,7 +2395,6 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
 
     ScopedUnpackReset scopedReset(webgl);
     gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1); // Don't bother with striding it well.
-
     const auto error = DoTexSubImage(gl, target, level, xOffset, yOffset, zOffset, width,
                                      height, depth, packing, zeros.get());
     if (error)
