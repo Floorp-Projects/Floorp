@@ -92,7 +92,7 @@ WR_FUNC;
 
 //XXX: matrix should use a proper type
 WR_INLINE void
-wr_pop_dl_builder(wrwindowstate* wrWindow, wrstate *wrState, WRRect bounds,
+wr_pop_dl_builder(wrstate *wrState, WRRect bounds,
                   WRRect overflow, const float* matrix, uint64_t scrollId)
 WR_FUNC;
 
