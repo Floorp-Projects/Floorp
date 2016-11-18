@@ -110,14 +110,17 @@ WrappedAsyncFunction(JSContext* cx, unsigned argc, Value* vp)
 //  the async function's body, replacing `await` with `yield`.  `wrapped` is a
 // function that is visible to the outside, and handles yielded values.
 JSObject*
-js::WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped, HandleObject proto)
+js::WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped)
 {
     MOZ_ASSERT(unwrapped->isStarGenerator());
-    MOZ_ASSERT(proto, "We need an explicit prototype to avoid the default"
-                      "%FunctionPrototype% fallback in NewFunctionWithProto().");
 
     // Create a new function with AsyncFunctionPrototype, reusing the name and
     // the length of `unwrapped`.
+
+    // Step 1.
+    RootedObject proto(cx, GlobalObject::getOrCreateAsyncFunctionPrototype(cx, cx->global()));
+    if (!proto)
+        return nullptr;
 
     RootedAtom funName(cx, unwrapped->name());
     uint16_t length;
@@ -139,16 +142,6 @@ js::WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped, HandleOb
     wrapped->setExtendedSlot(WRAPPED_ASYNC_UNWRAPPED_SLOT, ObjectValue(*unwrapped));
 
     return wrapped;
-}
-
-JSObject*
-js::WrapAsyncFunction(JSContext* cx, HandleFunction unwrapped)
-{
-    RootedObject proto(cx, GlobalObject::getOrCreateAsyncFunctionPrototype(cx, cx->global()));
-    if (!proto)
-        return nullptr;
-
-    return WrapAsyncFunctionWithProto(cx, unwrapped, proto);
 }
 
 enum class ResumeKind {
