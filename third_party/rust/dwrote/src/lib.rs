@@ -17,7 +17,6 @@ extern crate gdi32;
 extern crate kernel32;
 extern crate libc;
 extern crate serde;
-extern crate dwrite;
 
 #[cfg(feature = "serde_codegen")]
 include!(concat!(env!("OUT_DIR"), "/types.rs"));
@@ -27,15 +26,18 @@ include!("types.rs");
 
 use winapi::DWRITE_FACTORY_TYPE_SHARED;
 use winapi::IDWriteFactory;
+use std::ffi::CString;
 
 use comptr::ComPtr;
 use winapi::S_OK;
 
 mod comptr;
 mod helpers;
+use helpers::ToWide;
 
 #[cfg(test)]
 mod test;
+
 
 // We still use the DWrite structs for things like metrics; re-export them
 // here
@@ -59,8 +61,20 @@ unsafe impl Sync for ComPtr<IDWriteFactory> { }
 lazy_static! {
     static ref DWRITE_FACTORY_RAW_PTR: usize = {
         unsafe {
+            type DWriteCreateFactoryType = extern "system" fn(winapi::DWRITE_FACTORY_TYPE, winapi::REFIID, *mut *mut winapi::IUnknown) -> winapi::HRESULT;
+
+            let dwrite_dll = kernel32::LoadLibraryW("dwrite.dll".to_wide_null().as_ptr());
+            assert!(!dwrite_dll.is_null());
+            let create_factory_name = CString::new("DWriteCreateFactory").unwrap();
+            let dwrite_create_factory_ptr =
+                kernel32::GetProcAddress(dwrite_dll, create_factory_name.as_ptr() as winapi::LPCSTR);
+            assert!(!dwrite_create_factory_ptr.is_null());
+
+            println!("create_factory_ptr: {:?}", dwrite_create_factory_ptr);
+            let dwrite_create_factory: DWriteCreateFactoryType = mem::transmute(dwrite_create_factory_ptr);
+
             let mut factory: ComPtr<IDWriteFactory> = ComPtr::new();
-            let hr = dwrite::DWriteCreateFactory(
+            let hr = dwrite_create_factory(
                 DWRITE_FACTORY_TYPE_SHARED,
                 &UuidOfIDWriteFactory,
                 factory.getter_addrefs());
