@@ -122,7 +122,7 @@ exports.getHighlighterUtils = function (toolbox) {
     }
     isPicking = true;
 
-    toolbox.pickerButtonChecked = true;
+    toolbox.pickerButton.isChecked = true;
     yield toolbox.selectTool("inspector");
     toolbox.on("select", cancelPicker);
 
@@ -156,7 +156,7 @@ exports.getHighlighterUtils = function (toolbox) {
     }
     isPicking = false;
 
-    toolbox.pickerButtonChecked = false;
+    toolbox.pickerButton.isChecked = false;
 
     if (isRemoteHighlightable()) {
       yield toolbox.highlighter.cancelPick();

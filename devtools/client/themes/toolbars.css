@@ -187,7 +187,7 @@
 /* Invert the colors of certain light theme images for displaying
  * inside of the dark theme.
  */
-.devtools-tab[icon-invertable] > image,
+.devtools-tab.icon-invertable > img,
 .devtools-toolbarbutton > image,
 .devtools-button::before,
 #breadcrumb-separator-normal,

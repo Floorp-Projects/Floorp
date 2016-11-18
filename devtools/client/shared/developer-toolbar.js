@@ -10,7 +10,6 @@ const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const { TargetFactory } = require("devtools/client/framework/target");
 const Telemetry = require("devtools/client/shared/telemetry");
-const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 const {Task} = require("devtools/shared/task");
@@ -67,71 +66,56 @@ var CommandUtils = {
   },
 
   /**
-   * A toolbarSpec is an array of strings each of which is a GCLI command.
+   * Create a list of props for React components that manage the state of the buttons.
+   *
+   * @param {Array} toolbarSpec - An array of strings each of which is a GCLI command.
+   * @param {Object} target
+   * @param {Object} document - Used to listen to unload event of the window.
+   * @param {Requisition} requisition
+   * @param {Function} createButtonState - A function that provides a common interface
+   *                                       to create a button for the toolbox.
+   *
+   * @return {Array} List of ToolboxButton objects..
    *
    * Warning: this method uses the unload event of the window that owns the
    * buttons that are of type checkbox. this means that we don't properly
    * unregister event handlers until the window is destroyed.
    */
-  createButtons: function (toolbarSpec, target, document, requisition) {
+  createCommandButtons: function (toolbarSpec, target, document, requisition,
+                                  createButtonState) {
     return util.promiseEach(toolbarSpec, typed => {
       // Ask GCLI to parse the typed string (doesn't execute it)
       return requisition.update(typed).then(() => {
-        let button = document.createElementNS(NS_XHTML, "button");
-
         // Ignore invalid commands
         let command = requisition.commandAssignment.value;
         if (command == null) {
           throw new Error("No command '" + typed + "'");
         }
-
-        if (command.buttonId != null) {
-          button.id = command.buttonId;
-          if (command.buttonClass != null) {
-            button.className = command.buttonClass;
-          }
-        } else {
-          button.setAttribute("text-as-image", "true");
-          button.setAttribute("label", command.name);
+        if (!command.buttonId) {
+          throw new Error("Attempting to add a button to the toolbar, and the command " +
+                          "did not have an id.");
         }
+        // Create the ToolboxButton.
+        let button = createButtonState({
+          id: command.buttonId,
+          className: command.buttonClass,
+          description: command.tooltipText || command.description,
+          onClick: requisition.updateExec.bind(requisition, typed)
+        });
 
-        button.classList.add("devtools-button");
-
-        if (command.tooltipText != null) {
-          button.setAttribute("title", command.tooltipText);
-        } else if (command.description != null) {
-          button.setAttribute("title", command.description);
-        }
-
-        button.addEventListener("click",
-          requisition.updateExec.bind(requisition, typed));
-
-        button.addEventListener("keypress", (event) => {
-          if (ViewHelpers.isSpaceOrReturn(event)) {
-            event.preventDefault();
-            requisition.updateExec(typed);
-          }
-        }, false);
-
-        // Allow the command button to be toggleable
-        let onChange = null;
+        // Allow the command button to be toggleable.
         if (command.state) {
-          button.setAttribute("autocheck", false);
-
           /**
            * The onChange event should be called with an event object that
            * contains a target property which specifies which target the event
            * applies to. For legacy reasons the event object can also contain
            * a tab property.
            */
-          onChange = (eventName, ev) => {
+          const onChange = (eventName, ev) => {
             if (ev.target == target || ev.tab == target.tab) {
               let updateChecked = (checked) => {
-                if (checked) {
-                  button.setAttribute("checked", true);
-                } else if (button.hasAttribute("checked")) {
-                  button.removeAttribute("checked");
-                }
+                // This will emit a ToolboxButton update event.
+                button.isChecked = checked;
               };
 
               // isChecked would normally be synchronous. An annoying quirk
@@ -150,14 +134,13 @@ var CommandUtils = {
 
           command.state.onChange(target, onChange);
           onChange("", { target: target });
+
+          document.defaultView.addEventListener("unload", function (event) {
+            if (command.state.offChange) {
+              command.state.offChange(target, onChange);
+            }
+          }, { once: true });
         }
-        document.defaultView.addEventListener("unload", function (event) {
-          if (onChange && command.state.offChange) {
-            command.state.offChange(target, onChange);
-          }
-          button.remove();
-          button = null;
-        }, { once: true });
 
         requisition.clear();
 
