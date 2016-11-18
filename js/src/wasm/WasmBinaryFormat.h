@@ -651,6 +651,10 @@ struct ModuleEnvironment
     GlobalDescVector          globals;
     TableDescVector           tables;
     Uint32Vector              asmJSSigToTableIndex;
+    ImportVector              imports;
+    ExportVector              exports;
+    Maybe<uint32_t>           startFuncIndex;
+    ElemSegmentVector         elemSegments;
 
     explicit ModuleEnvironment(ModuleKind kind = ModuleKind::Wasm)
       : kind(kind),
@@ -658,11 +662,32 @@ struct ModuleEnvironment
         minMemoryLength(0)
     {}
 
+    size_t numFuncs() const {
+        // asm.js pre-reserves a bunch of function index space which is
+        // incrementally filled in during function-body validation. Thus, there
+        // are a few possible interpretations of numFuncs() (total index space
+        // size vs.  exact number of imports/definitions encountered so far) and
+        // to simplify things we simply only define this quantity for wasm.
+        MOZ_ASSERT(!isAsmJS());
+        return funcSigs.length();
+    }
+    size_t numFuncDefs() const {
+        // asm.js overallocates the length of funcSigs and in general does not
+        // know the number of function definitions until it's done compiling.
+        MOZ_ASSERT(!isAsmJS());
+        return funcSigs.length() - funcImportGlobalDataOffsets.length();
+    }
+    bool usesMemory() const {
+        return UsesMemory(memoryUsage);
+    }
     bool isAsmJS() const {
         return kind == ModuleKind::AsmJS;
     }
     bool funcIsImport(uint32_t funcIndex) const {
         return funcIndex < funcImportGlobalDataOffsets.length();
+    }
+    uint32_t funcIndexToSigIndex(uint32_t funcIndex) const {
+        return funcSigs[funcIndex] - sigs.begin();
     }
 };
 
@@ -671,43 +696,10 @@ typedef UniquePtr<ModuleEnvironment> UniqueModuleEnvironment;
 // Section macros.
 
 MOZ_MUST_USE bool
-DecodePreamble(Decoder& d);
+DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env);
 
 MOZ_MUST_USE bool
-DecodeTypeSection(Decoder& d, SigWithIdVector* sigs);
-
-MOZ_MUST_USE bool
-DecodeImportSection(Decoder& d, const SigWithIdVector& sigs, SigWithIdPtrVector* funcSigs,
-                    GlobalDescVector* globals, TableDescVector* tables, Maybe<Limits>* memory,
-                    ImportVector* imports);
-
-MOZ_MUST_USE bool
-DecodeFunctionSection(Decoder& d, const SigWithIdVector& sigs, SigWithIdPtrVector* funcSigs);
-
-MOZ_MUST_USE bool
-DecodeTableSection(Decoder& d, TableDescVector* tables);
-
-MOZ_MUST_USE bool
-DecodeMemorySection(Decoder& d, bool hasMemory, Limits* memory, bool* present);
-
-MOZ_MUST_USE bool
-DecodeGlobalSection(Decoder& d, GlobalDescVector* globals);
-
-MOZ_MUST_USE bool
-DecodeExportSection(Decoder& d, size_t numFuncs, size_t numTables, bool usesMemory,
-                    const GlobalDescVector& globals, ExportVector* exports);
-
-MOZ_MUST_USE bool
-DecodeStartSection(Decoder& d, const SigWithIdPtrVector& funcSigs,
-                   Maybe<uint32_t>* startFunctionIndex);
-
-MOZ_MUST_USE bool
-DecodeElemSection(Decoder& d, const TableDescVector& tables, const GlobalDescVector& globals,
-                  size_t numFuncs, ElemSegmentVector* elemSegments);
-
-MOZ_MUST_USE bool
-DecodeDataSection(Decoder& d, bool usesMemory, uint32_t minMemoryByteLength,
-                  const GlobalDescVector& globals, DataSegmentVector* segments);
+DecodeDataSection(Decoder& d, const ModuleEnvironment& env, DataSegmentVector* segments);
 
 MOZ_MUST_USE bool
 DecodeUnknownSections(Decoder& d);

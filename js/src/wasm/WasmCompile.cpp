@@ -458,77 +458,6 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 }
 
 // Section decoding.
-
-static bool
-DecodeImportSection(Decoder& d, ModuleEnvironment* env, ImportVector* imports)
-{
-    Maybe<Limits> memory;
-    if (!DecodeImportSection(d, env->sigs, &env->funcSigs, &env->globals, &env->tables, &memory,
-                             imports))
-        return false;
-
-    // The global data offsets will be filled in by ModuleGenerator::env.
-    if (!env->funcImportGlobalDataOffsets.resize(env->funcSigs.length()))
-        return false;
-
-    if (memory) {
-        env->memoryUsage = MemoryUsage::Unshared;
-        env->minMemoryLength = memory->initial;
-        env->maxMemoryLength = memory->maximum;
-    }
-
-    return true;
-}
-
-static bool
-DecodeMemorySection(Decoder& d, ModuleEnvironment* env)
-{
-    bool present;
-    Limits memory;
-    if (!DecodeMemorySection(d, UsesMemory(env->memoryUsage), &memory, &present))
-        return false;
-
-    if (present) {
-        env->memoryUsage = MemoryUsage::Unshared;
-        env->minMemoryLength = memory.initial;
-        env->maxMemoryLength = memory.maximum;
-    }
-
-    return true;
-}
-
-static bool
-DecodeExportSection(Decoder& d, ModuleGenerator& mg)
-{
-    ExportVector exports;
-    if (!DecodeExportSection(d, mg.numFuncs(), mg.numTables(), mg.usesMemory(), mg.globals(),
-                             &exports))
-        return false;
-
-    return mg.setExports(Move(exports));
-}
-
-static bool
-DecodeStartSection(Decoder& d, ModuleGenerator& mg)
-{
-    Maybe<uint32_t> startFuncIndex;
-    if (!DecodeStartSection(d, mg.funcSigs(), &startFuncIndex))
-        return false;
-
-    return !startFuncIndex || mg.setStartFunction(*startFuncIndex);
-}
-
-static bool
-DecodeElemSection(Decoder& d, ModuleGenerator& mg)
-{
-    ElemSegmentVector elems;
-    if (!DecodeElemSection(d, mg.tables(), mg.globals(), mg.numFuncs(), &elems))
-        return false;
-
-    mg.setElemSegments(Move(elems));
-    return true;
-}
-
 static bool
 DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
 {
@@ -564,19 +493,8 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
     return mg.finishFuncDefs();
 }
 
-static bool
-DecodeDataSection(Decoder& d, ModuleGenerator& mg)
-{
-    DataSegmentVector dataSegments;
-    if (!DecodeDataSection(d, mg.usesMemory(), mg.minMemoryLength(), mg.globals(), &dataSegments))
-        return false;
-
-    mg.setDataSegments(Move(dataSegments));
-    return true;
-}
-
 static void
-MaybeDecodeNameSectionBody(Decoder& d, ModuleGenerator& mg)
+MaybeDecodeNameSectionBody(Decoder& d, NameInBytecodeVector* pfuncNames)
 {
     // For simplicity, ignore all failures, even OOM. Failure will simply result
     // in the names section not being included for this module.
@@ -588,6 +506,8 @@ MaybeDecodeNameSectionBody(Decoder& d, ModuleGenerator& mg)
     if (numFuncNames > MaxFuncs)
         return;
 
+    // Use a local vector (and not pfuncNames) since it could result in a
+    // partially initialized result in case of failure in the middle.
     NameInBytecodeVector funcNames;
     if (!funcNames.resize(numFuncNames))
         return;
@@ -618,11 +538,11 @@ MaybeDecodeNameSectionBody(Decoder& d, ModuleGenerator& mg)
         }
     }
 
-    mg.setFuncNames(Move(funcNames));
+    *pfuncNames = Move(funcNames);
 }
 
 static bool
-DecodeNameSection(Decoder& d, ModuleGenerator& mg)
+DecodeNameSection(Decoder& d, NameInBytecodeVector* funcNames)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startUserDefinedSection(NameSectionName, &sectionStart, &sectionSize))
@@ -632,7 +552,7 @@ DecodeNameSection(Decoder& d, ModuleGenerator& mg)
 
     // Once started, user-defined sections do not report validation errors.
 
-    MaybeDecodeNameSectionBody(d, mg);
+    MaybeDecodeNameSectionBody(d, funcNames);
 
     d.finishUserDefinedSection(sectionStart, sectionSize);
     return true;
@@ -657,48 +577,22 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!env)
         return nullptr;
 
-    if (!DecodePreamble(d))
+    if (!DecodeModuleEnvironment(d, env.get()))
         return nullptr;
 
-    if (!DecodeTypeSection(d, &env->sigs))
-        return nullptr;
-
-    ImportVector imports;
-    if (!::DecodeImportSection(d, env.get(), &imports))
-        return nullptr;
-
-    if (!DecodeFunctionSection(d, env->sigs, &env->funcSigs))
-        return nullptr;
-
-    if (!DecodeTableSection(d, &env->tables))
-        return nullptr;
-
-    if (!::DecodeMemorySection(d, env.get()))
-        return nullptr;
-
-    if (!DecodeGlobalSection(d, &env->globals))
-        return nullptr;
-
-    ModuleGenerator mg(Move(imports));
+    ModuleGenerator mg;
     if (!mg.init(Move(env), args))
-        return nullptr;
-
-    if (!::DecodeExportSection(d, mg))
-        return nullptr;
-
-    if (!::DecodeStartSection(d, mg))
-        return nullptr;
-
-    if (!::DecodeElemSection(d, mg))
         return nullptr;
 
     if (!DecodeCodeSection(d, mg))
         return nullptr;
 
-    if (!::DecodeDataSection(d, mg))
+    DataSegmentVector dataSegments;
+    if (!DecodeDataSection(d, mg.env(), &dataSegments))
         return nullptr;
 
-    if (!DecodeNameSection(d, mg))
+    NameInBytecodeVector funcNames;
+    if (!DecodeNameSection(d, &funcNames))
         return nullptr;
 
     if (!DecodeUnknownSections(d))
@@ -706,5 +600,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
 
     MOZ_ASSERT(!*error, "unreported error in decoding");
 
-    return mg.finish(bytecode);
+    return mg.finish(bytecode,
+                     Move(dataSegments),
+                     Move(funcNames));
 }
