@@ -4,6 +4,7 @@
 import os
 from datetime import datetime, timedelta
 from urlparse import urljoin
+from mozharness.base.log import INFO
 
 from mozharness.base.log import LogMixin
 
@@ -162,7 +163,6 @@ class Taskcluster(LogMixin):
 class TaskClusterArtifactFinderMixin(object):
     # This class depends that you have extended from the base script
     QUEUE_URL = 'https://queue.taskcluster.net/v1/task/'
-    SCHEDULER_URL = 'https://scheduler.taskcluster.net/v1/task-graph/'
 
     def get_task(self, task_id):
         """ Get Task Definition """
@@ -181,22 +181,12 @@ class TaskClusterArtifactFinderMixin(object):
         """ Return a URL for an artifact. """
         return urljoin(self.QUEUE_URL, '{}/artifacts/{}'.format(task_id, full_path))
 
-    def get_inspect_graph(self, task_group_id):
-        """ Inspect Task Graph """
-        # Signature: inspect(taskGraphId) : result
-        return self.load_json_url(urljoin(self.SCHEDULER_URL, '{}/inspect'.format(task_group_id)))
-
     def find_parent_task_id(self, task_id):
         """ Returns the task_id of the parent task associated to the given task_id."""
         # Find group id to associated to all related tasks
-        task_group_id = self.get_task(task_id)['taskGroupId']
-
-        # Find child task and determine on which task it depends on
-        for task in self.get_inspect_graph(task_group_id)['tasks']:
-            if task['taskId'] == task_id:
-                parent_task_id = task['requires'][0]
-
-        return parent_task_id
+        task = self.load_json_url(urljoin(self.QUEUE_URL, task_id))
+        self.log('Task dependencies: {}'.format(' '.join(task['dependencies'])))
+        return task['dependencies'][0]
 
     def set_bbb_artifacts(self, task_id, properties_file_path):
         """ Find BBB artifacts through properties_file_path and set them. """
