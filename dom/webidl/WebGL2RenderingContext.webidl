@@ -22,10 +22,6 @@ interface WebGLSync {
 interface WebGLTransformFeedback {
 };
 
-[Pref="webgl.enable-webgl2"]
-interface WebGLVertexArrayObject {
-};
-
 typedef (Uint32Array or sequence<GLuint>) Uint32List;
 
 [Pref="webgl.enable-webgl2"]
