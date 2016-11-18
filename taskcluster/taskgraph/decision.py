@@ -16,7 +16,6 @@ import yaml
 from .generator import TaskGraphGenerator
 from .create import create_tasks
 from .parameters import Parameters
-from .target_tasks import get_method
 from .taskgraph import TaskGraph
 
 from taskgraph.util.templates import Templates
@@ -79,12 +78,9 @@ def taskgraph_decision(options):
     parameters = get_decision_parameters(options)
 
     # create a TaskGraphGenerator instance
-    target_tasks_method = parameters.get('target_tasks_method', 'all_tasks')
-    target_tasks_method = get_method(target_tasks_method)
     tgg = TaskGraphGenerator(
         root_dir=options['root'],
-        parameters=parameters,
-        target_tasks_method=target_tasks_method)
+        parameters=parameters)
 
     # write out the parameters used to generate this graph
     write_artifact('parameters.yml', dict(**parameters))
