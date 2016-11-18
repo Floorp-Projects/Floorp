@@ -5,22 +5,18 @@ Step 1: Install/switch to Rust Nightly
     Note: do NOT install rust using ./mach bootstrap, as that will install the stable version and we need Nightly.
           If you have already installed stable rust, make sure it is not in your $PATH
 
-Step 2: Install cmake (required to build servo-freetype-sys)
-    For Linux/Mac use your package manager of choice (apt-get/brew/whatever)
-    For Windows download the installer from https://cmake.org/download/ (3.6.3 stable confirmed working)
-
-Step 3: Set up environment
+Step 2: Set up environment
     Add the following two lines to your mozconfig:
         ac_add_options --enable-rust
         ac_add_options --enable-webrender
-    Ensure rustc, cargo, and cmake are in your $PATH.
+    Ensure rustc and cargo are in your $PATH.
         On Windows in the MozillaBuild shell you can run:
-            export PATH="$PATH:/c/Program Files/Rust nightly MSVC 1.14/bin:/c/Program Files/CMake/bin"
+            export PATH="$PATH:/c/Program Files/Rust nightly MSVC 1.14/bin"
         to add them to your path assuming you used the default installation options when installing.
         You can also add the export statement to your mozconfig
     The first time you do a build with these changes, you should also run |mach clobber|
 
-Step 4:
+Step 3:
     Build using |mach build|
 
 
