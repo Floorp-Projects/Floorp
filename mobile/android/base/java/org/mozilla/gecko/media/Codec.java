@@ -7,6 +7,7 @@ package org.mozilla.gecko.media;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
+import android.media.MediaCrypto;
 import android.media.MediaFormat;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -167,6 +168,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                 Sample sample = mInputSamples.poll();
                 long pts = sample.info.presentationTimeUs;
                 int flags = sample.info.flags;
+                MediaCodec.CryptoInfo cryptoInfo = sample.cryptoInfo;
                 if (!sample.isEOS() && sample.buffer != null) {
                     len = sample.info.size;
                     ByteBuffer buf = mCodec.getInputBuffer(index);
@@ -180,7 +182,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                     }
                     mSamplePool.recycleInput(sample);
                 }
-                mCodec.queueInputBuffer(index, 0, len, pts, flags);
+
+                if (cryptoInfo != null) {
+                    mCodec.queueSecureInputBuffer(index, 0, cryptoInfo, pts, flags);
+                } else {
+                    mCodec.queueInputBuffer(index, 0, len, pts, flags);
+                }
             }
         }
 
@@ -214,7 +221,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     }
 
     @Override
-    public synchronized boolean configure(FormatParam format, Surface surface, int flags) throws RemoteException {
+    public synchronized boolean configure(FormatParam format,
+                                          Surface surface,
+                                          int flags,
+                                          String drmStubId) throws RemoteException {
         if (mCallbacks == null) {
             Log.e(LOGTAG, "FAIL: callbacks must be set before calling configure()");
             return false;
@@ -236,8 +246,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
         try {
             AsyncCodec codec = AsyncCodecFactory.create(codecName);
+
+            MediaCrypto crypto = RemoteMediaDrmBridgeStub.getMediaCrypto(drmStubId);
+            if (DEBUG) {
+                boolean hasCrypto = crypto != null;
+                Log.d(LOGTAG, "configure mediacodec with crypto(" + hasCrypto + ") / Id :" + drmStubId);
+            }
+
             codec.setCallbacks(new Callbacks(mCallbacks), null);
-            codec.configure(fmt, surface, flags);
+            codec.configure(fmt, surface, crypto, flags);
             mCodec = codec;
             mInputProcessor = new InputProcessor();
             mSamplePool = new SamplePool(codecName);

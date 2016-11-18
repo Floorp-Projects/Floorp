@@ -1,26 +1,24 @@
 "use strict";
+
 /* eslint-disable mozilla/reject-some-requires */
 const { Ci } = require("chrome");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 const { Task } = require("devtools/shared/task");
-const NetworkHelper = require("devtools/shared/webconsole/network-helper");
 
 /**
  * Helper method to get a wrapped function which can be bound to as
  * an event listener directly and is executed only when data-key is
  * present in event.target.
  *
- * @param function callback
- *          Function to execute execute when data-key
- *          is present in event.target.
- * @param bool onlySpaceOrReturn
- *          Flag to indicate if callback should only be called
-            when the space or return button is pressed
- * @return function
- *          Wrapped function with the target data-key as the first argument
- *          and the event as the second argument.
+ * @param {function} callback - function to execute execute when data-key
+ *                              is present in event.target.
+ * @param {bool} onlySpaceOrReturn - flag to indicate if callback should only
+ *                                   be called when the space or return button
+ *                                   is pressed
+ * @return {function} wrapped function with the target data-key as the first argument
+ *                    and the event as the second argument.
  */
-exports.getKeyWithEvent = function (callback, onlySpaceOrReturn) {
+function getKeyWithEvent(callback, onlySpaceOrReturn) {
   return function (event) {
     let key = event.target.getAttribute("data-key");
     let filterKeyboardEvent = !onlySpaceOrReturn ||
@@ -31,24 +29,19 @@ exports.getKeyWithEvent = function (callback, onlySpaceOrReturn) {
       callback.call(null, key);
     }
   };
-};
+}
 
 /**
  * Extracts any urlencoded form data sections (e.g. "?foo=bar&baz=42") from a
  * POST request.
  *
- * @param object headers
- *        The "requestHeaders".
- * @param object uploadHeaders
- *        The "requestHeadersFromUploadStream".
- * @param object postData
- *        The "requestPostData".
- * @param object getString
-          Callback to retrieve a string from a LongStringGrip.
- * @return array
- *        A promise that is resolved with the extracted form data.
+ * @param {object} headers - the "requestHeaders".
+ * @param {object} uploadHeaders - the "requestHeadersFromUploadStream".
+ * @param {object} postData - the "requestPostData".
+ * @param {function} getString - callback to retrieve a string from a LongStringGrip.
+ * @return {array} a promise list that is resolved with the extracted form data.
  */
-exports.getFormDataSections = Task.async(function* (headers, uploadHeaders, postData,
+const getFormDataSections = Task.async(function* (headers, uploadHeaders, postData,
                                                     getString) {
   let formDataSections = [];
 
@@ -83,73 +76,132 @@ exports.getFormDataSections = Task.async(function* (headers, uploadHeaders, post
 /**
  * Form a data: URI given a mime type, encoding, and some text.
  *
- * @param {String} mimeType the mime type
- * @param {String} encoding the encoding to use; if not set, the
- *        text will be base64-encoded.
- * @param {String} text the text of the URI.
- * @return {String} a data: URI
+ * @param {string} mimeType - mime type
+ * @param {string} encoding - encoding to use; if not set, the
+ *                            text will be base64-encoded.
+ * @param {string} text - text of the URI.
+ * @return {string} a data URI
  */
-exports.formDataURI = function (mimeType, encoding, text) {
+function formDataURI(mimeType, encoding, text) {
   if (!encoding) {
     encoding = "base64";
     text = btoa(text);
   }
   return "data:" + mimeType + ";" + encoding + "," + text;
-};
+}
 
 /**
  * Write out a list of headers into a chunk of text
  *
- * @param array headers
- *        Array of headers info {name, value}
- * @return string text
- *         List of headers in text format
+ * @param {array} headers - array of headers info { name, value }
+ * @return {string} list of headers in text format
  */
-exports.writeHeaderText = function (headers) {
+function writeHeaderText(headers) {
   return headers.map(({name, value}) => name + ": " + value).join("\n");
-};
+}
+
+/**
+ * Convert a string into unicode if string is valid.
+ * If there is a malformed URI sequence, it returns input string.
+ *
+ * @param {string} url - a string
+ * @return {string} unicode string
+ */
+function decodeUnicodeUrl(string) {
+  try {
+    return decodeURIComponent(string);
+  } catch (err) {
+    // Ignore error and return input string directly.
+  }
+  return string;
+}
 
 /**
  * Helper for getting an abbreviated string for a mime type.
  *
- * @param string mimeType
- * @return string
+ * @param {string} mimeType - mime type
+ * @return {string} abbreviated mime type
  */
-exports.getAbbreviatedMimeType = function (mimeType) {
+function getAbbreviatedMimeType(mimeType) {
   if (!mimeType) {
     return "";
   }
   return (mimeType.split(";")[0].split("/")[1] || "").split("+")[0];
-};
+}
 
 /**
- * Helpers for getting details about an nsIURL.
+ * Helpers for getting the last portion of a url.
+ * For example helper returns "basename" from http://domain.com/path/basename
+ * If basename portion is empty, it returns the url pathname.
  *
- * @param nsIURL | string url
- * @return string
+ * @param {string} url - url string
+ * @return {string} unicode basename of a url
  */
-exports.getUriNameWithQuery = function (url) {
-  if (!(url instanceof Ci.nsIURL)) {
-    url = NetworkHelper.nsIURL(url);
+function getUrlBaseName(url) {
+  const pathname = (new URL(url)).pathname;
+  return decodeUnicodeUrl(
+    pathname.replace(/\S*\//, "") || pathname || "/");
+}
+
+/**
+ * Helpers for getting the query portion of a url.
+ *
+ * @param {string} url - url string
+ * @return {string} unicode query of a url
+ */
+function getUrlQuery(url) {
+  return decodeUnicodeUrl((new URL(url)).search.replace(/^\?/, ""));
+}
+
+/**
+ * Helpers for getting unicode name and query portions of a url.
+ *
+ * @param {string} url - url string
+ * @return {string} unicode basename and query portions of a url
+ */
+function getUrlBaseNameWithQuery(url) {
+  return getUrlBaseName(url) + decodeUnicodeUrl((new URL(url)).search);
+}
+
+/**
+ * Helpers for getting unicode hostname portion of an URL.
+ *
+ * @param {string} url - url string
+ * @return {string} unicode hostname of a url
+ */
+function getUrlHostName(url) {
+  return decodeUnicodeUrl((new URL(url)).hostname);
+}
+
+/**
+ * Helpers for getting unicode host portion of an URL.
+ *
+ * @param {string} url - url string
+ * @return {string} unicode host of a url
+ */
+function getUrlHost(url) {
+  return decodeUnicodeUrl((new URL(url)).host);
+}
+
+/**
+ * Parse a url's query string into its components
+ *
+ * @param {string} query - query string of a url portion
+ * @return {array} array of query params { name, value }
+ */
+function parseQueryString(query) {
+  if (!query) {
+    return null;
   }
 
-  let name = NetworkHelper.convertToUnicode(
-    unescape(url.fileName || url.filePath || "/"));
-  let query = NetworkHelper.convertToUnicode(unescape(url.query));
-
-  return name + (query ? "?" + query : "");
-};
-
-exports.getUriHostPort = function (url) {
-  if (!(url instanceof Ci.nsIURL)) {
-    url = NetworkHelper.nsIURL(url);
-  }
-  return NetworkHelper.convertToUnicode(unescape(url.hostPort));
-};
-
-exports.getUriHost = function (url) {
-  return exports.getUriHostPort(url).replace(/:\d+$/, "");
-};
+  return query.replace(/^[?&]/, "").split("&").map(e => {
+    let param = e.split("=");
+    return {
+      name: param[0] ? decodeUnicodeUrl(param[0]) : "",
+      value: param[1] ? decodeUnicodeUrl(param[1]) : "",
+    };
+  });
+}
 
 /**
  * Convert a nsIContentPolicy constant to a display string
@@ -180,6 +232,22 @@ const LOAD_CAUSE_STRINGS = {
   [Ci.nsIContentPolicy.TYPE_WEB_MANIFEST]: "webManifest"
 };
 
-exports.loadCauseString = function (causeType) {
+function loadCauseString(causeType) {
   return LOAD_CAUSE_STRINGS[causeType] || "unknown";
+}
+
+module.exports = {
+  getKeyWithEvent,
+  getFormDataSections,
+  formDataURI,
+  writeHeaderText,
+  decodeUnicodeUrl,
+  getAbbreviatedMimeType,
+  getUrlBaseName,
+  getUrlQuery,
+  getUrlBaseNameWithQuery,
+  getUrlHostName,
+  getUrlHost,
+  parseQueryString,
+  loadCauseString,
 };

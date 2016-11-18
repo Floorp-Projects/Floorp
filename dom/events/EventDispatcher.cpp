@@ -407,7 +407,8 @@ EventTargetChainItem::HandleEventTargetChain(
   }
   aVisitor.mEvent->mFlags.mInBubblingPhase = false;
 
-  if (!aVisitor.mEvent->mFlags.mInSystemGroup) {
+  if (!aVisitor.mEvent->mFlags.mInSystemGroup &&
+      aVisitor.mEvent->IsAllowedToDispatchInSystemGroup()) {
     // Dispatch to the system event group.  Make sure to clear the
     // STOP_DISPATCH flag since this resets for each event group.
     aVisitor.mEvent->mFlags.mPropagationStopped = false;

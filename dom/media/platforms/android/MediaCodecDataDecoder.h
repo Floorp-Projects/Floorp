@@ -23,12 +23,18 @@ class MediaCodecDataDecoder : public MediaDataDecoder {
 public:
   static MediaDataDecoder* CreateAudioDecoder(const AudioInfo& aConfig,
                                               java::sdk::MediaFormat::Param aFormat,
-                                              MediaDataDecoderCallback* aCallback);
+                                              MediaDataDecoderCallback* aCallback,
+                                              const nsString& aDrmStubId,
+                                              CDMProxy* aProxy,
+                                              TaskQueue* aTaskQueue);
 
   static MediaDataDecoder* CreateVideoDecoder(const VideoInfo& aConfig,
                                               java::sdk::MediaFormat::Param aFormat,
                                               MediaDataDecoderCallback* aCallback,
-                                              layers::ImageContainer* aImageContainer);
+                                              layers::ImageContainer* aImageContainer,
+                                              const nsString& aDrmStubId,
+                                              CDMProxy* aProxy,
+                                              TaskQueue* aTaskQueue);
 
   virtual ~MediaCodecDataDecoder();
 
@@ -58,7 +64,8 @@ protected:
   MediaCodecDataDecoder(MediaData::Type aType,
                         const nsACString& aMimeType,
                         java::sdk::MediaFormat::Param aFormat,
-                        MediaDataDecoderCallback* aCallback);
+                        MediaDataDecoderCallback* aCallback,
+                        const nsString& aDrmStubId);
 
   static const char* ModuleStateStr(ModuleState aState);
 
@@ -119,6 +126,8 @@ protected:
   SampleQueue mQueue;
   // Durations are stored in microseconds.
   std::deque<media::TimeUnit> mDurations;
+
+  nsString mDrmStubId;
 };
 
 } // namespace mozilla

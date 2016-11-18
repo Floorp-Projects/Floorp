@@ -8,10 +8,6 @@
 /* exported $, $all */
 "use strict";
 
-XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function () {
-  return require("devtools/shared/webconsole/network-helper");
-});
-
 /* eslint-disable mozilla/reject-some-requires */
 const {VariablesView} = require("resource://devtools/client/shared/widgets/VariablesView.jsm");
 /* eslint-disable mozilla/reject-some-requires */
@@ -20,9 +16,15 @@ const {ToolSidebar} = require("devtools/client/framework/sidebar");
 const {testing: isTesting} = require("devtools/shared/flags");
 const {ViewHelpers, Heritage} = require("devtools/client/shared/widgets/view-helpers");
 const {Filters} = require("./filter-predicates");
-const {getFormDataSections,
-       formDataURI,
-       getUriHostPort} = require("./request-utils");
+const {
+  formDataURI,
+  decodeUnicodeUrl,
+  getFormDataSections,
+  getUrlBaseName,
+  getUrlQuery,
+  getUrlHost,
+  parseQueryString,
+} = require("./request-utils");
 const {L10N} = require("./l10n");
 const {RequestsMenuView} = require("./requests-menu-view");
 const {CustomRequestView} = require("./custom-request-view");
@@ -552,7 +554,7 @@ NetworkDetailsView.prototype = {
    */
   _setSummary: function (data) {
     if (data.url) {
-      let unicodeUrl = NetworkHelper.convertToUnicode(unescape(data.url));
+      let unicodeUrl = decodeUnicodeUrl(data.url);
       $("#headers-summary-url-value").setAttribute("value", unicodeUrl);
       $("#headers-summary-url-value").setAttribute("tooltiptext", unicodeUrl);
       $("#headers-summary-url").removeAttribute("hidden");
@@ -743,7 +745,7 @@ NetworkDetailsView.prototype = {
    *        The request's url.
    */
   _setRequestGetParams: function (url) {
-    let query = NetworkHelper.nsIURL(url).query;
+    let query = getUrlQuery(url);
     if (query) {
       this._addParams(this._paramsQueryString, query);
     }
@@ -825,7 +827,7 @@ NetworkDetailsView.prototype = {
    *        A query string of params (e.g. "?foo=bar&baz=42").
    */
   _addParams: function (name, queryString) {
-    let paramsArray = NetworkHelper.parseQueryString(queryString);
+    let paramsArray = parseQueryString(queryString);
     if (!paramsArray) {
       return;
     }
@@ -918,7 +920,7 @@ NetworkDetailsView.prototype = {
       // Immediately display additional information about the image:
       // file name, mime type and encoding.
       $("#response-content-image-name-value").setAttribute("value",
-        NetworkHelper.nsIURL(url).fileName);
+        getUrlBaseName(url));
       $("#response-content-image-mime-value").setAttribute("value", mimeType);
 
       // Wait for the image to load in order to display the width and height.
@@ -1126,7 +1128,7 @@ NetworkDetailsView.prototype = {
       setValue("#security-ciphersuite-value", securityInfo.cipherSuite);
 
       // Host header
-      let domain = getUriHostPort(url);
+      let domain = getUrlHost(url);
       let hostHeader = L10N.getFormatStr("netmonitor.security.hostHeader",
         domain);
       setValue("#security-info-host-header", hostHeader);
