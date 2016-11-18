@@ -26,7 +26,7 @@ window.onload = Task.async(function* () {
   let componentUnderTest = ArrayRep;
   const maxLength = {
     short: 3,
-    long: 300
+    long: 10
   };
 
   try {
@@ -222,14 +222,10 @@ window.onload = Task.async(function* () {
 
   function testArray() {
     let stub = [
-      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
-      "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-    ];
+      "a", "b", "c", "d", "e", "f", "g", "h", "i", "j"];
 
-    const defaultOutput = `[ "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",` +
-                          ` "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",` +
-                          ` "u", "v", "w", "x", "y", "z" ]`;
-    const shortOutput = `[ "a", "b", "c", 23 more… ]`;
+    const defaultOutput = `[ "a", "b", "c", "d", "e", "f", "g", "h", "i", "j" ]`;
+    const shortOutput = `[ "a", "b", "c", 7 more… ]`;
 
     const modeTests = [
       {
@@ -238,7 +234,7 @@ window.onload = Task.async(function* () {
       },
       {
         mode: "tiny",
-        expectedOutput: `[26]`,
+        expectedOutput: `[10]`,
       },
       {
         mode: "short",

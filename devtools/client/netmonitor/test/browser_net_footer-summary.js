@@ -10,15 +10,17 @@
 
 add_task(function* () {
   requestLongerTimeout(2);
-  let { getSummary } = require("devtools/client/netmonitor/selectors/index");
-  let { L10N } = require("devtools/client/netmonitor/l10n");
-  let { PluralForm } = require("devtools/shared/plural-form");
 
   let { tab, monitor } = yield initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
   let { $, NetMonitorView, gStore } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
+
+  let winRequire = monitor.panelWin.require;
+  let { getSummary } = winRequire("devtools/client/netmonitor/selectors/index");
+  let { L10N } = winRequire("devtools/client/netmonitor/l10n");
+  let { PluralForm } = winRequire("devtools/shared/plural-form");
 
   RequestsMenu.lazyUpdate = false;
   testStatus();

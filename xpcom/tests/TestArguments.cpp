@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
       return 6;
   if (strcmp("argument with spaces", argv[7]) != 0)
       return 7;
-  if (strcmp("\"argument with quotes\"", argv[8]) != 0)
+  if (strcmp(R"("argument with quotes")", argv[8]) != 0)
       return 8;
   
   return 0;

@@ -460,7 +460,7 @@ MacIOSurface::GetAsSurface() {
   size_t ioHeight = GetDevicePixelHeight();
 
   unsigned char* ioData = (unsigned char*)GetBaseAddress();
-  unsigned char* dataCpy =
+  auto *dataCpy =
       new unsigned char[bytesPerRow * ioHeight / sizeof(unsigned char)];
   for (size_t i = 0; i < ioHeight; i++) {
     memcpy(dataCpy + i * bytesPerRow,

@@ -21,12 +21,12 @@ public:
     pthread_create(&mThread, nullptr, ThreadCallback, static_cast<WorkerThread*>(this));
   }
 
-  ~WorkerThreadPosix()
+  ~WorkerThreadPosix() override
   {
     pthread_join(mThread, nullptr);
   }
 
-  virtual void SetName(const char*) override
+  void SetName(const char*) override
   {
 // XXX - temporarily disabled, see bug 1209039
 //
@@ -160,8 +160,7 @@ EventObject::EventObject()
 : mIsSet(false)
 {}
 
-EventObject::~EventObject()
-{}
+EventObject::~EventObject() = default;
 
 bool
 EventObject::Peak()

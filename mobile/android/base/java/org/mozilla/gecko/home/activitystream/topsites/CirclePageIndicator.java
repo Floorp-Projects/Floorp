@@ -34,6 +34,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.FloatUtils;
 
 import static android.graphics.Paint.ANTI_ALIAS_FLAG;
 import static android.widget.LinearLayout.HORIZONTAL;
@@ -277,7 +278,7 @@ public class CirclePageIndicator
             }
 
             // Only paint stroke if a stroke width was non-zero
-            if (pageFillRadius != mRadius) {
+            if (!FloatUtils.fuzzyEquals(pageFillRadius, mRadius)) {
                 canvas.drawCircle(dX, dY, mRadius, mPaintStroke);
             }
         }

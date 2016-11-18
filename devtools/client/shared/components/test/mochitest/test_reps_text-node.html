@@ -60,25 +60,24 @@ window.onload = Task.async(function* () {
 
   function testRendering() {
     const stub = gripStubs.get("testRendering");
-    const defaultShortOutput = `"hello world"`;
-    const defaultLongOutput = `<TextNode textContent="hello world">;`;
+    const defaultOutput = `#text "hello world"`;
 
     const modeTests = [
       {
         mode: undefined,
-        expectedOutput: defaultShortOutput,
+        expectedOutput: defaultOutput,
       },
       {
         mode: "tiny",
-        expectedOutput: defaultShortOutput,
+        expectedOutput: "#text",
       },
       {
         mode: "short",
-        expectedOutput: defaultShortOutput,
+        expectedOutput: defaultOutput,
       },
       {
         mode: "long",
-        expectedOutput: defaultLongOutput,
+        expectedOutput: defaultOutput,
       }
     ];
 
@@ -87,25 +86,24 @@ window.onload = Task.async(function* () {
 
   function testRenderingWithEOL() {
     const stub = gripStubs.get("testRenderingWithEOL");
-    const defaultShortOutput = `"hello\nworld"`;
-    const defaultLongOutput = `<TextNode textContent="hello\nworld">;`;
+    const defaultOutput = `#text "hello\nworld"`;
 
     const modeTests = [
       {
         mode: undefined,
-        expectedOutput: defaultShortOutput,
+        expectedOutput: defaultOutput,
       },
       {
         mode: "tiny",
-        expectedOutput: defaultShortOutput,
+        expectedOutput: "#text",
       },
       {
         mode: "short",
-        expectedOutput: defaultShortOutput,
+        expectedOutput: defaultOutput,
       },
       {
         mode: "long",
-        expectedOutput: defaultLongOutput,
+        expectedOutput: defaultOutput,
       }
     ];
 

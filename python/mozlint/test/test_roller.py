@@ -27,7 +27,7 @@ def test_roll_successful(lint, linters, files):
 
     result = lint.roll(files)
     assert len(result) == 1
-    assert lint.return_code == 1
+    assert lint.failed == []
 
     path = result.keys()[0]
     assert os.path.basename(path) == 'foobar.js'
@@ -59,23 +59,23 @@ def test_roll_with_excluded_path(lint, linters, files):
     result = lint.roll(files)
 
     assert len(result) == 0
-    assert lint.return_code == 0
+    assert lint.failed == []
 
 
 def test_roll_with_invalid_extension(lint, lintdir, filedir):
     lint.read(os.path.join(lintdir, 'external.lint'))
     result = lint.roll(os.path.join(filedir, 'foobar.py'))
     assert len(result) == 0
-    assert lint.return_code == 0
+    assert lint.failed == []
 
 
 def test_roll_with_failure_code(lint, lintdir, files):
     lint.read(os.path.join(lintdir, 'badreturncode.lint'))
 
-    assert lint.return_code is None
+    assert lint.failed is None
     result = lint.roll(files)
     assert len(result) == 0
-    assert lint.return_code == 1
+    assert lint.failed == ['BadReturnCodeLinter']
 
 
 if __name__ == '__main__':
