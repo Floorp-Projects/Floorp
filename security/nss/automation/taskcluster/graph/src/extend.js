@@ -267,6 +267,8 @@ async function scheduleFuzzing() {
        // bug 1316276
       ASAN_OPTIONS: "allocator_may_return_null=1:detect_odr_violation=0",
       UBSAN_OPTIONS: "print_stacktrace=1",
+      NSS_DISABLE_ARENA_FREE_LIST: "1",
+      NSS_DISABLE_UNLOAD: "1",
       CC: "clang",
       CCC: "clang++"
     },
@@ -312,6 +314,21 @@ async function scheduleFuzzing() {
     tests: "ssl_gtests gtests",
     cycle: "standard",
     symbol: "Gtest",
+    kind: "test"
+  }));
+
+  queue.scheduleTask(merge(base, {
+    parent: task_build,
+    name: "Cert",
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
+        "cert nss/fuzz/corpus/cert -max_total_time=300"
+    ],
+    // Need a privileged docker container to remove this.
+    env: {ASAN_OPTIONS: "detect_leaks=0"},
+    symbol: "SCert",
     kind: "test"
   }));
 
