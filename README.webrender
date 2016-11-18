@@ -41,7 +41,7 @@ What if you have to make changes to webrender itself?
 graphics branch
 2) Separately, check out the webrender repo to the last version we
 used in-tree (right now it's
-git:3f6da4476ecfa5f8130fa3d4d5e4450958d4ccf7)
+git:b2a15e8b948a7c5db7f5fe7fbfa6fe4c8dda4a0b)
 3) Do a diff between the webrender repo and the stuff we have in-tree
 to see what the differences are and make a note
 4) Update the webrender repo to the version you want
