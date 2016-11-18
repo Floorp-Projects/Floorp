@@ -158,7 +158,7 @@ select[size="1"] {
   padding: 0 1px 0 1px;
 }
 
-* > input:not([type="image"]) {
+* > input:not(:-moz-any([type="image"], [type="checkbox"], [type="radio"])) {
   border-width: 1px;
   padding: 1px;
 }
@@ -186,10 +186,6 @@ button {
 input[type="radio"],
 input[type="checkbox"] {
   border: 1px solid var(--form_border) !important;
-  padding-inline-start: 1px;
-  padding-inline-end: 1px;
-  padding-block-start: 2px;
-  padding-block-end: 2px;
 }
 
 select > button {
