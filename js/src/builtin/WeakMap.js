@@ -40,10 +40,17 @@ function WeakMapConstructorInit(iterable) {
         var nextItem = next.value;
 
         // Step 8.d.
-        if (!IsObject(nextItem))
+        if (!IsObject(nextItem)) {
+            IteratorCloseThrow(iter);
             ThrowTypeError(JSMSG_INVALID_MAP_ITERABLE, "WeakMap");
+        }
 
         // Steps 8.e-j.
-        callContentFunction(adder, map, nextItem[0], nextItem[1]);
+        try {
+            callContentFunction(adder, map, nextItem[0], nextItem[1]);
+        } catch (e) {
+            IteratorCloseThrow(iter);
+            throw e;
+        }
     }
 }
