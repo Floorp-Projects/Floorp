@@ -107,11 +107,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 if CONFIG['MOZ_SECUREELEMENT']:
     DIRS += ['secureelement']
 
-if CONFIG['MOZ_B2G']:
-    DIRS += [
-        'downloads',
-    ]
-
 DIRS += ['presentation']
 
 TEST_DIRS += [
