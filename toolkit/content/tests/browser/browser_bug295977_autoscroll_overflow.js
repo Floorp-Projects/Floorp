@@ -2,7 +2,7 @@ requestLongerTimeout(2);
 add_task(function* ()
 {
   function pushPref(name, value) {
-    return new Promise(resolve => SpecialPowers.pushPrefEnv({"set": [[name, value]]}, resolve));
+    return SpecialPowers.pushPrefEnv({"set": [[name, value]]});
   }
 
   yield pushPref("general.autoScroll", true);

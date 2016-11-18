@@ -184,9 +184,7 @@ function* openDocumentSelect(aURI, aCSSSelector) {
 }
 
 function pushPrefs(...aPrefs) {
-  return new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve);
-  });
+  return SpecialPowers.pushPrefEnv({"set": aPrefs});
 }
 
 function waitForPrefChange(pref) {
