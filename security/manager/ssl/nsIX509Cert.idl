@@ -29,11 +29,6 @@ interface nsICertVerificationListener;
 interface nsIX509Cert : nsISupports {
 
   /**
-   *  A nickname for the certificate.
-   */
-  readonly attribute AString nickname;
-
-  /**
    *  The primary email address of the certificate, if present.
    */
   readonly attribute AString emailAddress;
