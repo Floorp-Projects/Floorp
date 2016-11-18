@@ -8,6 +8,7 @@ module.exports = {  // eslint-disable-line no-undef
     "browserActionFor": true,
     "currentWindow": true,
     "EventEmitter": true,
+    "getBrowserInfo": true,
     "getCookieStoreIdForTab": true,
     "IconDetails": true,
     "makeWidgetId": true,

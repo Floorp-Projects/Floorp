@@ -455,7 +455,7 @@ class ADBHost(ADBCommand):
             r"([^\s]+)\s+(offline|bootloader|device|host|recovery|sideload|"
             "no permissions|unauthorized|unknown)")
         devices = []
-        lines = self.command_output(["devices", "-l"], timeout=timeout).split('\n')
+        lines = self.command_output(["devices", "-l"], timeout=timeout).splitlines()
         for line in lines:
             if line == 'List of devices attached ':
                 continue
@@ -931,7 +931,7 @@ class ADBDevice(ADBCommand):
                  * ADBError
         """
         forwards = self.command_output(["forward", "--list"], timeout=timeout)
-        return [tuple(line.split(" ")) for line in forwards.split("\n") if line.strip()]
+        return [tuple(line.split(" ")) for line in forwards.splitlines() if line.strip()]
 
     def remove_forwards(self, local=None, timeout=None):
         """Remove existing port forwards.
@@ -1218,7 +1218,7 @@ class ADBDevice(ADBCommand):
         """
         buffers = self._get_logcat_buffer_args(buffers)
         cmds = ["logcat", "-v", format, "-d"] + buffers + filter_specs
-        lines = self.command_output(cmds, timeout=timeout).split('\r')
+        lines = self.command_output(cmds, timeout=timeout).splitlines()
 
         for regex in filter_out_regexps:
             lines = [line for line in lines if not re.search(regex, line)]
@@ -1319,7 +1319,7 @@ class ADBDevice(ADBCommand):
             except ADBError:
                 output = ''
 
-            for line in output.split("\n"):
+            for line in output.splitlines():
                 if not matched_interface:
                     match = re1_ip.match(line)
                     if match:
@@ -1363,7 +1363,7 @@ class ADBDevice(ADBCommand):
             output = self.shell_output('netcfg', timeout=timeout)
         except ADBError:
             output = ''
-        for line in output.split("\n"):
+        for line in output.splitlines():
             match = re3_netcfg.search(line)
             if match:
                 matched_interface, matched_ip = match.groups()
@@ -1556,7 +1556,7 @@ class ADBDevice(ADBCommand):
             try:
                 data = self.shell_output("%s %s" % (self._ls, path),
                                          timeout=timeout,
-                                         root=root).split('\r\n')
+                                         root=root).splitlines()
                 self._logger.debug('list_files: data: %s' % data)
             except ADBError:
                 self._logger.error('Ignoring exception in ADBDevice.list_files\n%s' %
@@ -1628,7 +1628,7 @@ class ADBDevice(ADBCommand):
                     path += '*'
         lines = self.shell_output('%s %s %s' % (self._ls, recursive_flag, path),
                                   timeout=timeout,
-                                  root=root).split('\r\n')
+                                  root=root).splitlines()
         for line in lines:
             line = line.strip()
             if not line:

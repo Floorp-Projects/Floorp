@@ -530,10 +530,6 @@ nsDOMWindowUtils::SetDisplayPortBaseForElement(int32_t aX,
 NS_IMETHODIMP
 nsDOMWindowUtils::SetResolution(float aResolution)
 {
-  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   nsIPresShell* presShell = GetPresShell();
   if (!presShell) {
     return NS_ERROR_FAILURE;
@@ -601,10 +597,6 @@ nsDOMWindowUtils::GetIsResolutionSet(bool* aIsResolutionSet) {
 NS_IMETHODIMP
 nsDOMWindowUtils::SetIsFirstPaint(bool aIsFirstPaint)
 {
-  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   nsIPresShell* presShell = GetPresShell();
   if (presShell) {
     presShell->SetIsFirstPaint(aIsFirstPaint);
@@ -616,10 +608,6 @@ nsDOMWindowUtils::SetIsFirstPaint(bool aIsFirstPaint)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetIsFirstPaint(bool *aIsFirstPaint)
 {
-  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   nsIPresShell* presShell = GetPresShell();
   if (presShell) {
     *aIsFirstPaint = presShell->GetIsFirstPaint();
@@ -3005,10 +2993,6 @@ nsDOMWindowUtils::EnableDialogs()
 NS_IMETHODIMP
 nsDOMWindowUtils::DisableDialogs()
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
@@ -3019,10 +3003,6 @@ nsDOMWindowUtils::DisableDialogs()
 NS_IMETHODIMP
 nsDOMWindowUtils::AreDialogsEnabled(bool* aResult)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
@@ -3774,10 +3754,6 @@ NS_IMETHODIMP
 nsDOMWindowUtils::SetHandlingUserInput(bool aHandlingUserInput,
                                        nsIJSRAIIHelper** aHelper)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   RefPtr<HandlingUserInputHelper> helper(
     new HandlingUserInputHelper(aHandlingUserInput));
   helper.forget(aHelper);

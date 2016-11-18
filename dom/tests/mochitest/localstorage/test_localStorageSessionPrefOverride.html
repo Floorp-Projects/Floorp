@@ -8,11 +8,8 @@
       const ACCEPT_SESSION = 2;
 
       add_task(function*() {
-        yield new Promise((resolve, reject) => {
-          SpecialPowers.pushPrefEnv({"set": [["network.cookie.lifetimePolicy",
-                                              ACCEPT_SESSION]]},
-                                    resolve);
-        });
+        yield SpecialPowers.pushPrefEnv({"set": [["network.cookie.lifetimePolicy",
+                                                  ACCEPT_SESSION]]});
 
         // Before setting permission
         yield new Promise((resolve) => {

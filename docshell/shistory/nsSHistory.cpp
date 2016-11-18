@@ -379,6 +379,13 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
 {
   NS_ENSURE_ARG(aSHEntry);
 
+  // If we have a root docshell, update the docshell id of the root shentry to
+  // match the id of that docshell
+  if (mRootDocShell) {
+    nsID docshellID = mRootDocShell->HistoryID();
+    aSHEntry->SetDocshellID(&docshellID);
+  }
+
   nsCOMPtr<nsISHTransaction> currentTxn;
 
   if (mListRoot) {
@@ -1277,7 +1284,7 @@ nsSHistory::GloballyEvictAllContentViewers()
 
 void
 GetDynamicChildren(nsISHContainer* aContainer,
-                   nsTArray<uint64_t>& aDocshellIDs,
+                   nsTArray<nsID>& aDocshellIDs,
                    bool aOnlyTopLevelDynamic)
 {
   int32_t count = 0;
@@ -1289,8 +1296,7 @@ GetDynamicChildren(nsISHContainer* aContainer,
       bool dynAdded = false;
       child->IsDynamicallyAdded(&dynAdded);
       if (dynAdded) {
-        uint64_t docshellID = 0;
-        child->GetDocshellID(&docshellID);
+        nsID docshellID = child->DocshellID();
         aDocshellIDs.AppendElement(docshellID);
       }
       if (!dynAdded || !aOnlyTopLevelDynamic) {
@@ -1306,7 +1312,7 @@ GetDynamicChildren(nsISHContainer* aContainer,
 
 bool
 RemoveFromSessionHistoryContainer(nsISHContainer* aContainer,
-                                  nsTArray<uint64_t>& aDocshellIDs)
+                                  nsTArray<nsID>& aDocshellIDs)
 {
   nsCOMPtr<nsISHEntry> root = do_QueryInterface(aContainer);
   NS_ENSURE_TRUE(root, false);
@@ -1318,8 +1324,7 @@ RemoveFromSessionHistoryContainer(nsISHContainer* aContainer,
     nsCOMPtr<nsISHEntry> child;
     aContainer->GetChildAt(i, getter_AddRefs(child));
     if (child) {
-      uint64_t docshelldID = 0;
-      child->GetDocshellID(&docshelldID);
+      nsID docshelldID = child->DocshellID();
       if (aDocshellIDs.Contains(docshelldID)) {
         didRemove = true;
         aContainer->RemoveChild(child);
@@ -1340,7 +1345,7 @@ RemoveFromSessionHistoryContainer(nsISHContainer* aContainer,
 
 bool
 RemoveChildEntries(nsISHistory* aHistory, int32_t aIndex,
-                   nsTArray<uint64_t>& aEntryIDs)
+                   nsTArray<nsID>& aEntryIDs)
 {
   nsCOMPtr<nsISHEntry> rootHE;
   aHistory->GetEntryAtIndex(aIndex, false, getter_AddRefs(rootHE));
@@ -1455,7 +1460,7 @@ nsSHistory::RemoveDuplicate(int32_t aIndex, bool aKeepNext)
 }
 
 NS_IMETHODIMP_(void)
-nsSHistory::RemoveEntries(nsTArray<uint64_t>& aIDs, int32_t aStartIndex)
+nsSHistory::RemoveEntries(nsTArray<nsID>& aIDs, int32_t aStartIndex)
 {
   int32_t index = aStartIndex;
   while (index >= 0 && RemoveChildEntries(this, --index, aIDs)) {
@@ -1487,16 +1492,16 @@ nsSHistory::RemoveDynEntries(int32_t aOldIndex, int32_t aNewIndex)
   nsCOMPtr<nsISHEntry> originalSH;
   GetEntryAtIndex(aOldIndex, false, getter_AddRefs(originalSH));
   nsCOMPtr<nsISHContainer> originalContainer = do_QueryInterface(originalSH);
-  AutoTArray<uint64_t, 16> toBeRemovedEntries;
+  AutoTArray<nsID, 16> toBeRemovedEntries;
   if (originalContainer) {
-    nsTArray<uint64_t> originalDynDocShellIDs;
+    nsTArray<nsID> originalDynDocShellIDs;
     GetDynamicChildren(originalContainer, originalDynDocShellIDs, true);
     if (originalDynDocShellIDs.Length()) {
       nsCOMPtr<nsISHEntry> currentSH;
       GetEntryAtIndex(aNewIndex, false, getter_AddRefs(currentSH));
       nsCOMPtr<nsISHContainer> newContainer = do_QueryInterface(currentSH);
       if (newContainer) {
-        nsTArray<uint64_t> newDynDocShellIDs;
+        nsTArray<nsID> newDynDocShellIDs;
         GetDynamicChildren(newContainer, newDynDocShellIDs, false);
         for (uint32_t i = 0; i < originalDynDocShellIDs.Length(); ++i) {
           if (!newDynDocShellIDs.Contains(originalDynDocShellIDs[i])) {
@@ -1775,16 +1780,14 @@ nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
     if (!nChild) {
       continue;
     }
-    uint64_t docshellID = 0;
-    nChild->GetDocshellID(&docshellID);
+    nsID docshellID = nChild->DocshellID();
 
     // Then find the associated docshell.
     nsIDocShell* dsChild = nullptr;
     int32_t count = docshells.Count();
     for (int32_t j = 0; j < count; ++j) {
-      uint64_t shellID = 0;
       nsIDocShell* shell = docshells[j];
-      shell->GetHistoryID(&shellID);
+      nsID shellID = shell->HistoryID();
       if (shellID == docshellID) {
         dsChild = shell;
         break;
@@ -1801,8 +1804,7 @@ nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
       nsCOMPtr<nsISHEntry> child;
       prevContainer->GetChildAt(k, getter_AddRefs(child));
       if (child) {
-        uint64_t dID = 0;
-        child->GetDocshellID(&dID);
+        nsID dID = child->DocshellID();
         if (dID == docshellID) {
           pChild = child;
           break;
