@@ -18,6 +18,10 @@ enum WRImageFormat {
 struct WRImageKey {
   uint32_t a;
   uint32_t b;
+
+  bool operator==(const WRImageKey& aRhs) const {
+    return a == aRhs.a && b == aRhs.b;
+  }
 };
 
 struct WRRect {
@@ -25,6 +29,11 @@ struct WRRect {
   float y;
   float width;
   float height;
+
+  bool operator==(const WRRect& aRhs) const {
+    return x == aRhs.x && y == aRhs.y &&
+           width == aRhs.width && height == aRhs.height;
+  }
 };
 
 struct WRImageMask
@@ -32,6 +41,10 @@ struct WRImageMask
     WRImageKey image;
     WRRect rect;
     bool repeat;
+
+    bool operator==(const WRImageMask& aRhs) const {
+      return image == aRhs.image && rect == aRhs.rect && repeat == aRhs.repeat;
+    }
 };
 
 

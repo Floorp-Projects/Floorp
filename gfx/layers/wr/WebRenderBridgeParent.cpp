@@ -104,25 +104,6 @@ WebRenderBridgeParent::RecvDeleteImage(const WRImageKey& aImageKey)
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvPushDLBuilder()
-{
-  MOZ_ASSERT(mWRState);
-  wr_push_dl_builder(mWRState);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvPopDLBuilder(const WRRect& aBounds,
-                                        const WRRect& aOverflow,
-                                        const gfx::Matrix4x4& aMatrix,
-                                        const uint64_t& aScrollId)
-{
-  MOZ_ASSERT(mWRState);
-  wr_pop_dl_builder(mWRWindowState, mWRState, aBounds, aOverflow, &aMatrix.components[0], aScrollId);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
                                    const uint32_t& aHeight,
                                    bool* aOutSuccess)
@@ -145,9 +126,41 @@ WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPEnd()
+WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& commands)
 {
   MOZ_ASSERT(mWRState);
+  for (InfallibleTArray<WebRenderCommand>::index_type i = 0; i < commands.Length(); ++i) {
+    const WebRenderCommand& cmd = commands[i];
+
+    switch (cmd.type()) {
+      case WebRenderCommand::TOpPushDLBuilder: {
+        wr_push_dl_builder(mWRState);
+        break;
+      }
+      case WebRenderCommand::TOpPopDLBuilder: {
+        const OpPopDLBuilder& op = cmd.get_OpPopDLBuilder();
+        wr_pop_dl_builder(mWRWindowState, mWRState, op.bounds(), op.overflow(), &(op.matrix().components[0]), op.scrollid());
+        break;
+      }
+      case WebRenderCommand::TOpDPPushRect: {
+        const OpDPPushRect& op = cmd.get_OpDPPushRect();
+        wr_dp_push_rect(mWRState, op.bounds(), op.clip(), op.r(), op.g(), op.b(), op.a());
+        break;
+      }
+      case WebRenderCommand::TOpDPPushImage: {
+        const OpDPPushImage& op = cmd.get_OpDPPushImage();
+        wr_dp_push_image(mWRState, op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.key());
+        break;
+      }
+      case WebRenderCommand::TOpDPPushIframe: {
+        const OpDPPushIframe& op = cmd.get_OpDPPushIframe();
+        wr_dp_push_iframe(mWRState, op.bounds(), op.clip(), op.layersid());
+        break;
+      }
+      default:
+        NS_RUNTIMEABORT("not reached");
+    }
+  }
   mGLContext->MakeCurrent();
   wr_dp_end(mWRWindowState, mWRState);
   mGLContext->SwapBuffers();
@@ -160,38 +173,6 @@ WebRenderBridgeParent::RecvDPEnd()
   }
 
   DeleteOldImages();
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPPushRect(const WRRect& aBounds,
-                                      const WRRect& aClip,
-                                      const float& r, const float& g,
-                                      const float& b, const float& a)
-{
-  MOZ_ASSERT(mWRState);
-  wr_dp_push_rect(mWRState, aBounds, aClip, r, g, b, a);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPPushImage(const WRRect& aBounds,
-                                       const WRRect& aClip,
-                                       const Maybe<WRImageMask>& aMask,
-                                       const WRImageKey& aKey)
-{
-  MOZ_ASSERT(mWRState);
-  wr_dp_push_image(mWRState, aBounds, aClip, aMask.ptrOr(nullptr), aKey);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPPushIframe(const WRRect& aBounds,
-                                        const WRRect& aClip,
-                                        const uint64_t& aLayersId)
-{
-  MOZ_ASSERT(mWRState);
-  wr_dp_push_iframe(mWRState, aBounds, aClip, aLayersId);
   return IPC_OK();
 }
 

@@ -102,7 +102,7 @@ WRScrollFrameStackingContextGenerator::WRScrollFrameStackingContextGenerator(
       continue;
     }
     if (gfxPrefs::LayersDump()) printf_stderr("Pushing stacking context id %" PRIu64"\n", fm.GetScrollId());
-    mLayer->WRBridge()->SendPushDLBuilder();
+    mLayer->WRBridge()->AddWebRenderCommand(OpPushDLBuilder());
   }
 }
 
@@ -129,7 +129,8 @@ WRScrollFrameStackingContextGenerator::~WRScrollFrameStackingContextGenerator()
       printf_stderr("Popping stacking context id %" PRIu64 " with bounds=%s overflow=%s\n",
         fm.GetScrollId(), Stringify(bounds).c_str(), Stringify(overflow).c_str());
     }
-    mLayer->WRBridge()->SendPopDLBuilder(toWrRect(bounds), toWrRect(overflow), identity, fm.GetScrollId());
+    mLayer->WRBridge()->AddWebRenderCommand(
+      OpPopDLBuilder(toWrRect(bounds), toWrRect(overflow), identity, fm.GetScrollId()));
   }
 }
 
@@ -223,15 +224,13 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   mAnimationReadyTime = TimeStamp::Now();
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
-  bool success = false;
-  WRBridge()->SendDPBegin(size.width, size.height, &success);
-  if (!success) {
+  if (!WRBridge()->DPBegin(size.width, size.height)) {
     return;
   }
 
   WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer();
 
-  WRBridge()->SendDPEnd();
+  WRBridge()->DPEnd();
 }
 
 void
