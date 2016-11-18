@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_listener_proxies() {
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+
+    manifest: {
+      "permissions": ["storage"],
+    },
+
+    async background() {
+      // Test that adding multiple listeners for the same event works as
+      // expected.
+
+      let awaitChanged = () => new Promise(resolve => {
+        browser.storage.onChanged.addListener(function listener() {
+          browser.storage.onChanged.removeListener(listener);
+          resolve();
+        });
+      });
+
+      let promises = [
+        awaitChanged(),
+        awaitChanged(),
+      ];
+
+      function removedListener() {}
+      browser.storage.onChanged.addListener(removedListener);
+      browser.storage.onChanged.removeListener(removedListener);
+
+      promises.push(awaitChanged(), awaitChanged());
+
+      browser.storage.local.set({foo: "bar"});
+
+      await Promise.all(promises);
+
+      browser.test.notifyPass("onchanged-listeners");
+    },
+  });
+
+  yield extension.startup();
+
+  yield extension.awaitFinish("onchanged-listeners");
+
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

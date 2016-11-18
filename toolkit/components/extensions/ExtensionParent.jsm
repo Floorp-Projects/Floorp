@@ -516,7 +516,7 @@ ParentAPIManager = {
         });
     }
 
-    context.listenerProxies.set(data.path, listener);
+    context.listenerProxies.set(data.listenerId, listener);
 
     let args = Cu.cloneInto(data.args, context.sandbox);
     findPathInObject(context.apiObj, data.path).addListener(listener, ...args);
@@ -524,7 +524,7 @@ ParentAPIManager = {
 
   removeListener(data) {
     let context = this.getContextById(data.childId);
-    let listener = context.listenerProxies.get(data.path);
+    let listener = context.listenerProxies.get(data.listenerId);
     findPathInObject(context.apiObj, data.path).removeListener(listener);
   },
 
