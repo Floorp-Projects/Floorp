@@ -32,3 +32,4 @@ function i18nApiFactory(context) {
 }
 extensions.registerSchemaAPI("i18n", "addon_child", i18nApiFactory);
 extensions.registerSchemaAPI("i18n", "content_child", i18nApiFactory);
+extensions.registerSchemaAPI("i18n", "devtools_child", i18nApiFactory);

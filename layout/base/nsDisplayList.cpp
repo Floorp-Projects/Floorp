@@ -7140,29 +7140,18 @@ bool nsDisplayMask::ShouldPaintOnMaskLayer(LayerManager* aManager)
   nsSVGUtils::MaskUsage maskUsage;
   nsSVGUtils::DetermineMaskUsage(mFrame, mHandleOpacity, maskUsage);
 
-  if (!maskUsage.shouldGenerateMaskLayer ||
-      maskUsage.opacity != 1.0 || maskUsage.shouldApplyClipPath ||
-      maskUsage.shouldApplyBasicShape ||
-      maskUsage.shouldGenerateClipMaskLayer) {
+  if (!maskUsage.shouldGenerateMaskLayer &&
+      !maskUsage.shouldGenerateClipMaskLayer) {
+    return false;
+  }
+
+  if (maskUsage.opacity != 1.0 || maskUsage.shouldApplyClipPath ||
+      maskUsage.shouldApplyBasicShape) {
     return false;
   }
 
   if (!nsSVGIntegrationUtils::IsMaskResourceReady(mFrame)) {
     return false;
-  }
-
-  // XXX temporary disable drawing SVG mask onto mask layer before bug 1313877
-  // been fixed.
-  nsIFrame* firstFrame =
-    nsLayoutUtils::FirstContinuationOrIBSplitSibling(mFrame);
-  nsSVGEffects::EffectProperties effectProperties =
-    nsSVGEffects::GetEffectProperties(firstFrame);
-  nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
-  for (size_t i = 0; i < maskFrames.Length() ; i++) {
-    nsSVGMaskFrame *maskFrame = maskFrames[i];
-    if (maskFrame) {
-      return false; // Found SVG mask.
-    }
   }
 
   if (gfxPrefs::DrawMaskLayer()) {

@@ -22,6 +22,7 @@ import struct
 import os
 import re
 import subprocess
+import buildconfig
 from collections import OrderedDict
 
 # Regular expressions for unifying install.rdf
@@ -80,7 +81,8 @@ class UnifiedExecutableFile(BaseFile):
                 os.close(fd)
                 tmpfiles.append(f)
                 e.copy(f, skip_if_older=False)
-            subprocess.call(['lipo', '-create'] + tmpfiles + ['-output', dest])
+            lipo = buildconfig.substs.get('LIPO') or 'lipo'
+            subprocess.call([lipo, '-create'] + tmpfiles + ['-output', dest])
         finally:
             for f in tmpfiles:
                 os.unlink(f)

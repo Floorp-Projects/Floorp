@@ -13,16 +13,18 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 const { L10N } = require("./l10n");
-const { formDataURI, getFormDataSections } = require("./request-utils");
+const {
+  formDataURI,
+  getFormDataSections,
+  getUrlQuery,
+  parseQueryString,
+} = require("./request-utils");
 
 loader.lazyRequireGetter(this, "HarExporter",
   "devtools/client/netmonitor/har/har-exporter", true);
 
 loader.lazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
-
-loader.lazyRequireGetter(this, "NetworkHelper",
-  "devtools/shared/webconsole/network-helper");
 
 function RequestListContextMenu() {}
 
@@ -56,8 +58,7 @@ RequestListContextMenu.prototype = {
       id: "request-menu-context-copy-url-params",
       label: L10N.getStr("netmonitor.context.copyUrlParams"),
       accesskey: L10N.getStr("netmonitor.context.copyUrlParams.accesskey"),
-      visible: !!(selectedItem &&
-               NetworkHelper.nsIURL(selectedItem.attachment.url).query),
+      visible: !!(selectedItem && getUrlQuery(selectedItem.attachment.url)),
       click: () => this.copyUrlParams(),
     }));
 
@@ -203,7 +204,7 @@ RequestListContextMenu.prototype = {
    */
   copyUrlParams() {
     let { url } = this.selectedItem.attachment;
-    let params = NetworkHelper.nsIURL(url).query.split("&");
+    let params = getUrlQuery(url).split("&");
     let string = params.join(Services.appinfo.OS === "WINNT" ? "\r\n" : "\n");
     clipboardHelper.copyString(string);
   },
@@ -224,7 +225,7 @@ RequestListContextMenu.prototype = {
 
     let params = [];
     formDataSections.forEach(section => {
-      let paramsArray = NetworkHelper.parseQueryString(section);
+      let paramsArray = parseQueryString(section);
       if (paramsArray) {
         params = [...params, ...paramsArray];
       }

@@ -28,6 +28,7 @@ public final class CodecProxy {
     private FormatParam mFormat;
     private Surface mOutputSurface;
     private CallbacksForwarder mCallbacks;
+    private String mRemoteDrmStubId;
 
     public interface Callbacks {
         void onInputExhausted();
@@ -82,24 +83,31 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
-    public static CodecProxy create(MediaFormat format, Surface surface, Callbacks callbacks) {
-        return RemoteManager.getInstance().createCodec(format, surface, callbacks);
+    public static CodecProxy create(MediaFormat format,
+                                    Surface surface,
+                                    Callbacks callbacks,
+                                    String drmStubId) {
+        return RemoteManager.getInstance().createCodec(format, surface, callbacks, drmStubId);
     }
 
-    public static CodecProxy createCodecProxy(MediaFormat format, Surface surface, Callbacks callbacks) {
-        return new CodecProxy(format, surface, callbacks);
+    public static CodecProxy createCodecProxy(MediaFormat format,
+                                              Surface surface,
+                                              Callbacks callbacks,
+                                              String drmStubId) {
+        return new CodecProxy(format, surface, callbacks, drmStubId);
     }
 
-    private CodecProxy(MediaFormat format, Surface surface, Callbacks callbacks) {
+    private CodecProxy(MediaFormat format, Surface surface, Callbacks callbacks, String drmStubId) {
         mFormat = new FormatParam(format);
         mOutputSurface = surface;
+        mRemoteDrmStubId = drmStubId;
         mCallbacks = new CallbacksForwarder(callbacks);
     }
 
     boolean init(ICodec remote) {
         try {
             remote.setCallbacks(mCallbacks);
-            remote.configure(mFormat, mOutputSurface, 0);
+            remote.configure(mFormat, mOutputSurface, 0, mRemoteDrmStubId);
             remote.start();
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -128,7 +136,6 @@ public final class CodecProxy {
             Log.e(LOGTAG, "cannot send input to an ended codec");
             return false;
         }
-
         try {
             Sample sample = (info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) ?
                     Sample.EOS : mRemote.dequeueInput(info.size).set(bytes, info, cryptoInfo);
