@@ -39,7 +39,7 @@ function readAndTamperWithNthByte(certificatePath, n) {
 const BYTE_IN_SIGNATURE = -8;
 function addSignatureTamperedCertificate(certificatePath) {
   let base64 = readAndTamperWithNthByte(certificatePath, BYTE_IN_SIGNATURE);
-  certdb.addCertFromBase64(base64, ",,", null);
+  certdb.addCertFromBase64(base64, ",,");
 }
 
 function ensureSignatureVerificationFailure(certificatePath) {
@@ -74,7 +74,7 @@ const BYTE_IN_SERIAL_NUMBER = 17;
 function addSerialNumberTamperedCertificate(certificatePath) {
   let base64 = readAndTamperWithNthByte(certificatePath,
                                         BYTE_IN_SERIAL_NUMBER);
-  certdb.addCertFromBase64(base64, ",,", null);
+  certdb.addCertFromBase64(base64, ",,");
 }
 
 function tamperWithSerialNumberAndEnsureVerificationFailure(certificatePath) {

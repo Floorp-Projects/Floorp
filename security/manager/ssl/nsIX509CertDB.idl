@@ -338,13 +338,13 @@ interface nsIX509CertDB : nsISupports {
    * Add a cert to a cert DB from a binary string.
    *
    * @param certDER The raw DER encoding of a certificate.
-   * @param aTrust decoded by CERT_DecodeTrustString. 3 comma separated characters,
-   *                indicating SSL, Email, and Obj signing trust
-   * @param aName name of the cert for display purposes.
-   *              TODO(bug 857627): aName is currently ignored. It should either
-   *              not be ignored, or be removed.
+   * @param trust String describing the trust settings to assign the
+   *              certificate. Decoded by CERT_DecodeTrustString. Consists of 3
+   *              comma separated sets of characters, indicating SSL, Email, and
+   *              Object signing trust.
+   * @return nsIX509Cert the resulting certificate
    */
-  void addCert(in ACString certDER, in ACString aTrust, in AUTF8String aName);
+  nsIX509Cert addCert(in ACString certDER, in ACString trust);
 
   // Flags for verifyCertNow (these must match the values in CertVerifier.cpp):
   // Prevent network traffic. Doesn't work with classic verification.
@@ -407,16 +407,14 @@ interface nsIX509CertDB : nsISupports {
   /*
    * Add a cert to a cert DB from a base64 encoded string.
    *
-   * @param base64 The raw representation of a certificate,
-   *                encoded as Base 64.
-   * @param aTrust decoded by CERT_DecodeTrustString. 3 comma separated characters,
-   *                indicating SSL, Email, and Obj signing trust
-   * @param aName name of the cert for display purposes.
-   *              TODO(bug 857627): aName is currently ignored. It should either
-   *              not be ignored, or be removed.
+   * @param base64 The raw representation of a certificate, encoded as Base 64.
+   * @param trust String describing the trust settings to assign the
+   *              certificate. Decoded by CERT_DecodeTrustString. Consists of 3
+   *              comma separated sets of characters, indicating SSL, Email, and
+   *              Object signing trust.
+   * @return nsIX509Cert the resulting certificate
    */
-  void addCertFromBase64(in ACString base64, in ACString aTrust,
-                         in AUTF8String aName);
+  nsIX509Cert addCertFromBase64(in ACString base64, in ACString trust);
 
   /*
    * Get all the known certs in the database
