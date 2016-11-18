@@ -269,7 +269,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& 
   WebRenderBridgeParent* root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWRBridge.get();
 
   WebRenderBridgeParent* parent = new WebRenderBridgeParent(
-    root, aPipelineId, nullptr, nullptr, root->GLContext(), root->WindowState(), root->Compositor());
+    aPipelineId, nullptr, nullptr, root->GLContext(), root->WindowState(), root->Compositor());
   parent->AddRef(); // IPDL reference
   sIndirectLayerTrees[aPipelineId].mWRBridge = parent;
 
