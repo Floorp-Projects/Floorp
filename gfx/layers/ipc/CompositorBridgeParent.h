@@ -28,7 +28,6 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/SharedMemory.h"
 #include "mozilla/layers/CompositorController.h"
-#include "mozilla/layers/CompositorVsyncScheduler.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/ISurfaceAllocator.h" // for ShmemAllocator
 #include "mozilla/layers/LayersMessages.h"  // for TargetConfig
@@ -38,6 +37,7 @@
 #include "mozilla/widget/CompositorWidget.h"
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
+#include "mozilla/VsyncDispatcher.h"
 
 class MessageLoop;
 class nsIWidget;
@@ -81,6 +81,91 @@ struct ScopedLayerTreeRegistration
 
 private:
   uint64_t mLayersId;
+};
+
+/**
+ * Manages the vsync (de)registration and tracking on behalf of the
+ * compositor when it need to paint.
+ * Turns vsync notifications into scheduled composites.
+ **/
+class CompositorVsyncScheduler
+{
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorVsyncScheduler)
+
+public:
+  explicit CompositorVsyncScheduler(CompositorBridgeParent* aCompositorBridgeParent,
+                                    widget::CompositorWidget* aWidget);
+
+  bool NotifyVsync(TimeStamp aVsyncTimestamp);
+  void SetNeedsComposite();
+  void OnForceComposeToTarget();
+
+  void ScheduleTask(already_AddRefed<CancelableRunnable>, int);
+  void ResumeComposition();
+  void ComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
+  void PostCompositeTask(TimeStamp aCompositeTimestamp);
+  void Destroy();
+  void ScheduleComposition();
+  void CancelCurrentCompositeTask();
+  bool NeedsComposite();
+  void Composite(TimeStamp aVsyncTimestamp);
+  void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect);
+
+  const TimeStamp& GetLastComposeTime()
+  {
+    return mLastCompose;
+  }
+
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  const TimeStamp& GetExpectedComposeStartTime()
+  {
+    return mExpectedComposeStartTime;
+  }
+#endif
+
+private:
+  virtual ~CompositorVsyncScheduler();
+
+  void NotifyCompositeTaskExecuted();
+  void ObserveVsync();
+  void UnobserveVsync();
+  void DispatchTouchEvents(TimeStamp aVsyncTimestamp);
+  void DispatchVREvents(TimeStamp aVsyncTimestamp);
+  void CancelCurrentSetNeedsCompositeTask();
+
+  class Observer final : public VsyncObserver
+  {
+  public:
+    explicit Observer(CompositorVsyncScheduler* aOwner);
+    virtual bool NotifyVsync(TimeStamp aVsyncTimestamp) override;
+    void Destroy();
+  private:
+    virtual ~Observer();
+
+    Mutex mMutex;
+    // Hold raw pointer to avoid mutual reference.
+    CompositorVsyncScheduler* mOwner;
+  };
+
+  CompositorBridgeParent* mCompositorBridgeParent;
+  TimeStamp mLastCompose;
+
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  TimeStamp mExpectedComposeStartTime;
+#endif
+
+  bool mAsapScheduling;
+  bool mIsObservingVsync;
+  uint32_t mNeedsComposite;
+  int32_t mVsyncNotificationsSkipped;
+  widget::CompositorWidget* mWidget;
+  RefPtr<CompositorVsyncScheduler::Observer> mVsyncObserver;
+
+  mozilla::Monitor mCurrentCompositeTaskMonitor;
+  RefPtr<CancelableRunnable> mCurrentCompositeTask;
+
+  mozilla::Monitor mSetNeedsCompositeMonitor;
+  RefPtr<CancelableRunnable> mSetNeedsCompositeTask;
 };
 
 class CompositorBridgeParentBase : public PCompositorBridgeParent,
@@ -149,8 +234,8 @@ public:
 
 class CompositorBridgeParent final : public CompositorBridgeParentBase
                                    , public CompositorController
-                                   , public CompositorVsyncSchedulerOwner
 {
+  friend class CompositorVsyncScheduler;
   friend class CompositorThreadHolder;
   friend class InProcessCompositorSession;
   friend class gfx::GPUProcessManager;
@@ -493,6 +578,7 @@ protected:
                                  bool* aSuccess) override;
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) override;
   virtual void ScheduleTask(already_AddRefed<CancelableRunnable>, int);
+  void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
 
   void SetEGLSurfaceSize(int width, int height);
 
@@ -503,11 +589,8 @@ protected:
   void ForceComposition();
   void CancelCurrentCompositeTask();
   void Invalidate();
-
-  // CompositorVsyncSchedulerOwner
-  bool IsPendingComposite() override;
-  void FinishPendingComposite() override;
-  void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr) override;
+  bool IsPendingComposite();
+  void FinishPendingComposite();
 
   RefPtr<Compositor> NewCompositor(const nsTArray<LayersBackend>& aBackendHints);
   void ResetCompositorTask(const nsTArray<LayersBackend>& aBackendHints,

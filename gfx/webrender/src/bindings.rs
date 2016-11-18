@@ -375,13 +375,17 @@ pub extern fn wr_dp_end(window: &mut WrWindowState, state: &mut WrState) {
                                      fb.root_dl_builder.finalize(),
                                      fb.auxiliary_lists_builder.finalize()
                                      );
+
+    gl::clear(gl::COLOR_BUFFER_BIT);
+    window.renderer.update();
+
+    window.renderer.render(window.size);
 }
 
 #[no_mangle]
 pub extern fn wr_composite(window: &mut WrWindowState) {
     window.api.generate_frame();
 
-    gl::clear(gl::COLOR_BUFFER_BIT);
     window.renderer.update();
     window.renderer.render(window.size);
 }
