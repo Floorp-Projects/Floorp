@@ -1242,13 +1242,22 @@ static void nr_ice_component_consent_timeout_cb(NR_SOCKET s, int how, void *cb_a
   }
 
 
-static void nr_ice_component_consent_request_timed_out(nr_ice_component *comp)
+void nr_ice_component_disconnected(nr_ice_component *comp)
   {
     if (!comp->can_send) {
       return;
     }
 
-    nr_ice_peer_ctx_disconnected(comp->stream->pctx);
+    if (comp->disconnected) {
+      return;
+    }
+
+    r_log(LOG_ICE,LOG_WARNING,"ICE(%s)/STREAM(%s)/COMP(%d): component disconnected",
+          comp->ctx->label, comp->stream->label, comp->component_id);
+    comp->disconnected = 1;
+
+    /* a single disconnected component disconnects the stream */
+    nr_ice_media_stream_set_disconnected(comp->stream, NR_ICE_MEDIA_STREAM_DISCONNECTED);
   }
 
 static void nr_ice_component_consent_refreshed(nr_ice_component *comp)
@@ -1264,7 +1273,9 @@ static void nr_ice_component_consent_refreshed(nr_ice_component *comp)
         comp->ctx->label, comp->stream->label, comp->component_id,
         comp->consent_last_seen.tv_sec);
 
-    nr_ice_peer_ctx_connected(comp->stream->pctx);
+    comp->disconnected = 0;
+
+    nr_ice_media_stream_check_if_connected(comp->stream);
 
     if (comp->consent_timeout)
       NR_async_timer_cancel(comp->consent_timeout);
@@ -1297,7 +1308,7 @@ static void nr_ice_component_refresh_consent_cb(NR_SOCKET s, int how, void *cb_a
       case NR_STUN_CLIENT_STATE_TIMED_OUT:
         r_log(LOG_ICE, LOG_INFO, "ICE(%s)/STREAM(%s)/COMP(%d): A single consent refresh request timed out",
               comp->ctx->label, comp->stream->label, comp->component_id);
-        nr_ice_component_consent_request_timed_out(comp);
+        nr_ice_component_disconnected(comp);
         break;
       default:
         break;
@@ -1340,6 +1351,9 @@ static void nr_ice_component_consent_timer_cb(NR_SOCKET s, int how, void *cb_arg
     nr_ice_component *comp=cb_arg;
     int r;
 
+    if (comp->consent_timer) {
+      NR_async_timer_cancel(comp->consent_timer);
+    }
     comp->consent_timer = 0;
 
     comp->consent_ctx->params.ice_binding_request.username =
@@ -1361,12 +1375,6 @@ static void nr_ice_component_consent_timer_cb(NR_SOCKET s, int how, void *cb_arg
                                            comp)) {
       r_log(LOG_ICE,LOG_ERR,"ICE(%s)/STREAM(%s)/COMP(%d): Refresh consent failed with %d",
             comp->ctx->label, comp->stream->label, comp->component_id, r);
-      /* In case our attempt to send the refresh binding request reports an
-       * error we don't have to wait for timeouts, but declare this connection
-       * dead right away. */
-      if (r != R_WOULDBLOCK) {
-        nr_ice_component_consent_failed(comp);
-      }
     }
 
     nr_ice_component_consent_schedule_consent_timer(comp);
@@ -1382,6 +1390,11 @@ void nr_ice_component_consent_schedule_consent_timer(nr_ice_component *comp)
     NR_ASYNC_TIMER_SET(comp->consent_ctx->maximum_transmits_timeout_ms,
                        nr_ice_component_consent_timer_cb, comp,
                        &comp->consent_timer);
+  }
+
+void nr_ice_component_refresh_consent_now(nr_ice_component *comp)
+  {
+    nr_ice_component_consent_timer_cb(0, 0, comp);
   }
 
 void nr_ice_component_consent_destroy(nr_ice_component *comp)
@@ -1401,6 +1414,7 @@ void nr_ice_component_consent_destroy(nr_ice_component *comp)
     }
     if (comp->consent_ctx) {
       nr_stun_client_ctx_destroy(&comp->consent_ctx);
+      comp->consent_ctx = 0;
     }
   }
 
@@ -1410,6 +1424,8 @@ int nr_ice_component_setup_consent(nr_ice_component *comp)
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/STREAM(%s)/COMP(%d): Setting up refresh consent",
           comp->ctx->label, comp->stream->label, comp->component_id);
+
+    nr_ice_component_consent_destroy(comp);
 
     if (r=nr_stun_client_ctx_create("consent", comp->active->local->osock,
                                     &comp->active->remote->addr, 0,
@@ -1423,6 +1439,7 @@ int nr_ice_component_setup_consent(nr_ice_component *comp)
       ABORT(r);
 
     comp->can_send = 1;
+    comp->disconnected = 0;
     nr_ice_component_consent_refreshed(comp);
 
     nr_ice_component_consent_calc_consent_timer(comp);

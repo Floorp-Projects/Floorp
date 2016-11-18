@@ -43,7 +43,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_media_stream.c,v 1.2 2008/04/28 17:5
 #include "ice_ctx.h"
 
 static char *nr_ice_media_stream_states[]={"INVALID",
-  "UNPAIRED","FROZEN","ACTIVE","COMPLETED","FAILED"
+  "UNPAIRED","FROZEN","ACTIVE","CONNECTED","FAILED"
 };
 
 int nr_ice_media_stream_set_state(nr_ice_media_stream *str, int state);
@@ -74,6 +74,7 @@ int nr_ice_media_stream_create(nr_ice_ctx *ctx,char *label,int components, nr_ic
     TAILQ_INIT(&stream->check_list);
     TAILQ_INIT(&stream->trigger_check_queue);
 
+    stream->disconnected = 0;
     stream->component_ct=components;
     stream->ice_state = NR_ICE_MEDIA_STREAM_UNPAIRED;
     *streamp=stream;
@@ -339,7 +340,7 @@ static void nr_ice_media_stream_check_timer_cb(NR_SOCKET s, int h, void *cb_arg)
       pair=TAILQ_NEXT(pair,triggered_check_queue_entry);
     }
 
-    if (stream->ice_state != NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED) {
+    if (stream->ice_state != NR_ICE_MEDIA_STREAM_CHECKS_CONNECTED) {
       if(!pair){
         /* Find the highest priority WAITING check and move it to RUNNING */
         pair=TAILQ_FIRST(&stream->check_list);
@@ -392,7 +393,7 @@ int nr_ice_media_stream_start_checks(nr_ice_peer_ctx *pctx, nr_ice_media_stream 
     /* Even if the stream is completed already remote can still create a new
      * triggered check request which needs to fire, but not change our stream
      * state. */
-    if (stream->ice_state != NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED) {
+    if (stream->ice_state != NR_ICE_MEDIA_STREAM_CHECKS_CONNECTED) {
       if(r=nr_ice_media_stream_set_state(stream,NR_ICE_MEDIA_STREAM_CHECKS_ACTIVE)) {
         ABORT(r);
       }
@@ -584,6 +585,80 @@ int nr_ice_media_stream_set_state(nr_ice_media_stream *str, int state)
     return(0);
   }
 
+
+void nr_ice_media_stream_refresh_consent_all(nr_ice_media_stream *stream)
+  {
+    nr_ice_component *comp;
+
+    comp=STAILQ_FIRST(&stream->components);
+    while(comp){
+      if((comp->state != NR_ICE_COMPONENT_DISABLED) &&
+         (comp->local_component->state != NR_ICE_COMPONENT_DISABLED) &&
+          comp->disconnected) {
+        nr_ice_component_refresh_consent_now(comp);
+      }
+
+      comp=STAILQ_NEXT(comp,entry);
+    }
+  }
+
+void nr_ice_media_stream_disconnect_all_components(nr_ice_media_stream *stream)
+  {
+    nr_ice_component *comp;
+
+    comp=STAILQ_FIRST(&stream->components);
+    while(comp){
+      if((comp->state != NR_ICE_COMPONENT_DISABLED) &&
+         (comp->local_component->state != NR_ICE_COMPONENT_DISABLED)) {
+        comp->disconnected = 1;
+      }
+
+      comp=STAILQ_NEXT(comp,entry);
+    }
+  }
+
+void nr_ice_media_stream_set_disconnected(nr_ice_media_stream *stream, int disconnected)
+  {
+    if (stream->disconnected == disconnected) {
+      return;
+    }
+
+    if (stream->ice_state != NR_ICE_MEDIA_STREAM_CHECKS_CONNECTED) {
+      return;
+    }
+    stream->disconnected = disconnected;
+
+    if (disconnected == NR_ICE_MEDIA_STREAM_DISCONNECTED) {
+      nr_ice_peer_ctx_disconnected(stream->pctx);
+    } else {
+      nr_ice_peer_ctx_check_if_connected(stream->pctx);
+    }
+  }
+
+int nr_ice_media_stream_check_if_connected(nr_ice_media_stream *stream)
+  {
+    nr_ice_component *comp;
+
+    comp=STAILQ_FIRST(&stream->components);
+    while(comp){
+      if((comp->state != NR_ICE_COMPONENT_DISABLED) &&
+         (comp->local_component->state != NR_ICE_COMPONENT_DISABLED) &&
+         comp->disconnected)
+        break;
+
+      comp=STAILQ_NEXT(comp,entry);
+    }
+
+    /* At least one disconnected component */
+    if(comp)
+      goto done;
+
+    nr_ice_media_stream_set_disconnected(stream, NR_ICE_MEDIA_STREAM_CONNECTED);
+
+  done:
+    return(0);
+  }
+
 /* S OK, this component has a nominated. If every component has a nominated,
    the stream is ready */
 int nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_component *component)
@@ -607,7 +682,7 @@ int nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_c
 
     /* All done... */
     r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/ICE-STREAM(%s): all active components have nominated candidate pairs",stream->pctx->label,stream->label);
-    nr_ice_media_stream_set_state(stream,NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED);
+    nr_ice_media_stream_set_state(stream,NR_ICE_MEDIA_STREAM_CHECKS_CONNECTED);
 
     /* Cancel our timer */
     if(stream->timer){
@@ -747,8 +822,12 @@ int nr_ice_media_stream_send(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, in
        2. Use the address on the remote side
     */
     if(r=nr_socket_sendto(comp->active->local->osock,data,len,0,
-                          &comp->active->remote->addr))
+                          &comp->active->remote->addr)) {
+      if ((r==R_IO_ERROR) || (r==R_EOD)) {
+        nr_ice_component_disconnected(comp);
+      }
       ABORT(r);
+    }
 
     _status=0;
   abort:
