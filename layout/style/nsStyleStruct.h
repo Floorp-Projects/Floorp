@@ -1315,13 +1315,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
 
   uint8_t GetBorderStyle(mozilla::Side aSide) const
   {
-    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
+    NS_ASSERTION(aSide <= mozilla::eSideLeft, "bad side");
     return mBorderStyle[aSide];
   }
 
   void SetBorderStyle(mozilla::Side aSide, uint8_t aStyle)
   {
-    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
+    NS_ASSERTION(aSide <= mozilla::eSideLeft, "bad side");
     mBorderStyle[aSide] = aStyle;
     mComputedBorder.Side(aSide) =
       (HasVisibleStyle(aSide) ? mBorder.Side(aSide) : 0);
