@@ -205,7 +205,7 @@ public:
   // two situations at the moment:
   //
   // 1) Functions used in WebIDL Func annotations.
-  // 2) Bindings code.
+  // 2) Bindings code or other code called directly from the JS engine.
   //
   // Use pretty much anywhere else is almost certainly wrong and should be
   // replaced with [NeedsCallerType] annotations in bindings.
