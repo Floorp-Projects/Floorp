@@ -229,8 +229,8 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
     nsSVGUtils::ConvertToSurfaceSize(maskSurfaceRect.Size(), &resultOverflows);
 
   if (resultOverflows || maskSurfaceSize.IsEmpty()) {
-    // XXXjwatt we should return an empty surface so we don't paint
-    // aParams.maskedFrame!
+    // Return value other then DrawResult::SUCCESS, so the caller can skip
+    // painting the masked frame(aParams.maskedFrame).
     return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
   }
 
