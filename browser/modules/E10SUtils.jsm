@@ -72,6 +72,7 @@ this.E10SUtils = {
         canLoadRemote = chromeReg.canLoadURLRemotely(url);
         mustLoadRemote = chromeReg.mustLoadURLRemotely(url);
       }
+    }
 
     if (aURL.startsWith("moz-extension:")) {
       canLoadRemote = useRemoteWebExtensions;
