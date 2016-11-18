@@ -272,8 +272,6 @@ public:
   // nsIConstraintValidation::SetCustomValidity() is fine.
 
   using nsINode::Remove;
-  using nsINode::AppendChild;
-
 
   // nsINode
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
