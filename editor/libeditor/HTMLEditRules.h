@@ -163,14 +163,71 @@ protected:
   nsresult InsertBRIfNeeded(Selection* aSelection);
   mozilla::EditorDOMPoint GetGoodSelPointForNode(nsINode& aNode,
                                                  nsIEditor::EDirection aAction);
-  nsresult JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
-                      bool* aCanceled);
+
+  /**
+   * TryToJoinBlocks() tries to join two block elements.  The right element is
+   * always joined to the left element.  If the elements are the same type and
+   * not nested within each other, JoinNodesSmart() is called (example, joining
+   * two list items together into one).  If the elements are not the same type,
+   * or one is a descendant of the other, we instead destroy the right block
+   * placing its children into leftblock.  DTD containment rules are followed
+   * throughout.
+   *
+   * @param aCanceled   returns true if the operation should do nothing anymore
+   *                    even if this doesn't join the blocks.
+   *                    NOTE: When this returns an error, nobody should refer
+   *                          the result of this.
+   * @param aHandled    returns true if this actually handles the request.
+   *                    Note that this may return true even if this does not
+   *                    join the block.  E.g., if the blocks shouldn't be
+   *                    joined or it's impossible to join them but it's not
+   *                    unexpected case, this returns true with this.
+   *                    NOTE: When this returns an error, nobody should refer
+   *                          the result of this.
+   */
+  nsresult TryToJoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
+                           bool* aCanceled, bool* aHandled);
+
+  /**
+   * MoveBlock() moves the content from aRightBlock starting from aRightOffset
+   * into aLeftBlock at aLeftOffset. Note that the "block" can be inline nodes
+   * between <br>s, or between blocks, etc.  DTD containment rules are followed
+   * throughout.
+   *
+   * @param aHandled    returns true if this actually joins the nodes.
+   *                    NOTE: When this returns an error, nobody should refer
+   *                          the result of this.
+   */
   nsresult MoveBlock(Element& aLeftBlock, Element& aRightBlock,
-                     int32_t aLeftOffset, int32_t aRightOffset);
+                     int32_t aLeftOffset, int32_t aRightOffset,
+                     bool* aHandled);
+
+  /**
+   * MoveNodeSmart() moves aNode to (aDestElement, aInOutDestOffset).
+   * DTD containment rules are followed throughout.
+   *
+   * @param aOffset                 returns the point after inserted content.
+   * @param aHandled                returns true if this actually moves the
+   *                                nodes.
+   *                                NOTE: When this returns an error, nobody
+   *                                      should refer the result of this.
+   */
   nsresult MoveNodeSmart(nsIContent& aNode, Element& aDestElement,
-                         int32_t* aOffset);
+                         int32_t* aInOutDestOffset, bool* aHandled);
+
+  /**
+   * MoveContents() moves the contents of aElement to (aDestElement,
+   * aInOutDestOffset).  DTD containment rules are followed throughout.
+   *
+   * @param aInOutDestOffset        updated to point after inserted content.
+   * @param aHandled                returns true if this actually moves the
+   *                                nodes.
+   *                                NOTE: When this returns an error, nobody
+   *                                      should refer the result of this.
+   */
   nsresult MoveContents(Element& aElement, Element& aDestElement,
-                        int32_t* aOffset);
+                        int32_t* aInOutDestOffset, bool* aHandled);
+
   nsresult DeleteNonTableElements(nsINode* aNode);
   nsresult WillMakeList(Selection* aSelection,
                         const nsAString* aListType,
