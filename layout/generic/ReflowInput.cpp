@@ -2384,9 +2384,14 @@ ReflowInput::InitConstraints(nsPresContext*     aPresContext,
           ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eUseAutoBSize);
       }
 
-      nsIFrame* parent = mFrame->GetParent();
-      nsIAtom* parentFrameType = parent ? parent->GetType() : nullptr;
-      if (parentFrameType == nsGkAtoms::gridContainerFrame) {
+      nsIFrame* alignCB = mFrame->GetParent();
+      nsIAtom* alignCBType = alignCB ? alignCB->GetType() : nullptr;
+      if (alignCBType == nsGkAtoms::tableWrapperFrame &&
+          alignCB->GetParent()) {
+        alignCB = alignCB->GetParent();
+        alignCBType = alignCB->GetType();
+      }
+      if (alignCBType == nsGkAtoms::gridContainerFrame) {
         // Shrink-wrap grid items that will be aligned (rather than stretched)
         // in its inline axis.
         auto inlineAxisAlignment = wm.IsOrthogonalTo(cbwm) ?
@@ -2414,7 +2419,7 @@ ReflowInput::InitConstraints(nsPresContext*     aPresContext,
             ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
         }
 
-        if (parentFrameType == nsGkAtoms::flexContainerFrame) {
+        if (alignCBType == nsGkAtoms::flexContainerFrame) {
           computeSizeFlags =
             ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
 
@@ -2456,8 +2461,8 @@ ReflowInput::InitConstraints(nsPresContext*     aPresContext,
       if (isBlock &&
           !IsSideCaption(mFrame, mStyleDisplay, cbwm) &&
           mStyleDisplay->mDisplay != StyleDisplay::InlineTable &&
-          parentFrameType != nsGkAtoms::flexContainerFrame &&
-          parentFrameType != nsGkAtoms::gridContainerFrame) {
+          alignCBType != nsGkAtoms::flexContainerFrame &&
+          alignCBType != nsGkAtoms::gridContainerFrame) {
         CalculateBlockSideMargins(aFrameType);
       }
     }
