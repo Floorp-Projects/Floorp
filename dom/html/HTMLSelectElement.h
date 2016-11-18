@@ -272,6 +272,7 @@ public:
   // nsIConstraintValidation::SetCustomValidity() is fine.
 
   using nsINode::Remove;
+  using nsINode::AppendChild;
 
 
   // nsINode
