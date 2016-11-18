@@ -8523,11 +8523,14 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
     if (!open(cx->global(), begin, limit, &entry.serializedSize, &entry.memory, &entry.handle))
         return true;
 
+    size_t remain = entry.serializedSize;
     const uint8_t* cursor = entry.memory;
 
     uint32_t bytecodeSize, compiledSize;
-    cursor = ReadScalar<uint32_t>(cursor, &bytecodeSize);
-    cursor = ReadScalar<uint32_t>(cursor, &compiledSize);
+    (cursor = ReadScalarChecked<uint32_t>(cursor, &remain, &bytecodeSize)) &&
+    (cursor = ReadScalarChecked<uint32_t>(cursor, &remain, &compiledSize));
+    if (!cursor)
+        return true;
 
     const uint8_t* compiledBegin = cursor;
     const uint8_t* bytecodeBegin = compiledBegin + compiledSize;
@@ -8536,7 +8539,7 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
     if (!assumptions.initBuildIdFromContext(cx))
         return false;
 
-    if (!Module::assumptionsMatch(assumptions, compiledBegin))
+    if (!Module::assumptionsMatch(assumptions, compiledBegin, remain))
         return true;
 
     MutableAsmJSMetadata asmJSMetadata = cx->new_<AsmJSMetadata>();
