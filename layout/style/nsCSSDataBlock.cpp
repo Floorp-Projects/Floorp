@@ -241,7 +241,7 @@ EnsurePhysicalProperty(nsCSSPropertyID& aProperty, nsRuleData* aRuleData)
     // We handle block axis logical properties separately to save a bit of
     // work that the WritingMode constructor does that is unnecessary
     // unless we have an inline axis property.
-    mozilla::css::Side side;
+    mozilla::Side side;
     if (isBlock) {
       uint8_t wm = aRuleData->mStyleContext->StyleVisibility()->mWritingMode;
       side = WritingMode::PhysicalSideForBlockAxis(wm, edge);

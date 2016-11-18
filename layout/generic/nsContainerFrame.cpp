@@ -834,9 +834,9 @@ nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
                   aType == nsLayoutUtils::PREF_ISIZE, "bad type");
 
   WritingMode wm = GetWritingMode();
-  mozilla::css::Side startSide =
+  mozilla::Side startSide =
     wm.PhysicalSideForInlineAxis(eLogicalEdgeStart);
-  mozilla::css::Side endSide =
+  mozilla::Side endSide =
     wm.PhysicalSideForInlineAxis(eLogicalEdgeEnd);
 
   const nsStylePadding *stylePadding = StylePadding();

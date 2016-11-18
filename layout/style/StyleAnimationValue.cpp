@@ -4531,7 +4531,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
 
       const nsStyleCoord &coord =
         StyleDataAtOffset<nsStyleSides>(styleStruct, ssOffset).
-          Get(mozilla::css::Side(animType - eStyleAnimType_Sides_Top));
+          Get(mozilla::Side(animType - eStyleAnimType_Sides_Top));
       return StyleCoordToValue(coord, aComputedValue);
     }
     case eStyleAnimType_Corner_TopLeft:
