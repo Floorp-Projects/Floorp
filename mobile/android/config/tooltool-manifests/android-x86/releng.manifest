@@ -50,8 +50,8 @@
 "visibility": "public",
 "filename": "jcentral.tar.xz",
 "unpack": true,
-"digest": "8e50f0993e129d3447b228d7da77d661d4ae3d490d791630dabb73e7d8021920f765317a258fd6e819aca48daaa8d0d86ec07cb6c30736199bbf2c4f92270cb5",
-"size": 47164284
+"digest": "e6738ce04dcc9da38d047d8e3f71b117b8349553ba40dd85ecf8ae0ff58987253b2f288dc606f53967bef1bebcad20ee7555ba13723167ab51f23e15e0e384a5",
+"size": 47420144
 },
 {
 "algorithm": "sha512",
