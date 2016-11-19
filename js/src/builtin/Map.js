@@ -85,6 +85,11 @@ function MapForEach(callbackfn, thisArg = undefined) {
     }
 }
 
+function MapEntries() {
+    return callFunction(std_Map_iterator, this);
+}
+_SetCanonicalName(MapEntries, "entries");
+
 var iteratorTemp = { mapIterationResultPair : null };
 
 function MapIteratorNext() {
