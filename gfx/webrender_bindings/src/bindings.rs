@@ -8,6 +8,7 @@ use webrender_traits::{ServoScrollRootId};
 use webrender_traits::{Epoch, ColorF};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
 use webrender::renderer::{Renderer, RendererOptions};
+use std::sync::{Arc, Mutex, Condvar};
 extern crate webrender_traits;
 
 #[cfg(target_os = "linux")]
@@ -196,12 +197,26 @@ impl webrender_traits::RenderNotifier for Notifier {
     }
 }
 
+struct FlushNotifier {
+    render_thread_notifier: Arc<(Mutex<bool>, Condvar)>,
+}
+
+impl webrender_traits::FlushNotifier for FlushNotifier {
+    fn  all_messages_flushed(&mut self) {
+        let &(ref lock, ref cvar) = &*self.render_thread_notifier;
+        let mut finished = lock.lock().unwrap();
+        *finished = true;
+        cvar.notify_one();
+    }
+}
+
 pub struct WrWindowState {
     renderer: Renderer,
     api: webrender_traits::RenderApi,
     _gl_library: GlLibrary,
     root_pipeline_id: PipelineId,
     size: Size2D<u32>,
+    flush_notifier_lock: Arc<(Mutex<bool>, Condvar)>,
 }
 
 pub struct WrState {
@@ -244,6 +259,11 @@ pub extern fn wr_init_window(root_pipeline_id: u64) -> *mut WrWindowState {
     let notifier = Box::new(Notifier{});
     renderer.set_render_notifier(notifier);
 
+    let flush_notification_lock = Arc::new((Mutex::new(false), Condvar::new()));
+    let flush_notifier_lock_clone = flush_notification_lock.clone();
+    let flush_notifier = Box::new(FlushNotifier{render_thread_notifier: flush_notification_lock});
+    renderer.set_flush_notifier(flush_notifier);
+
     let pipeline_id = PipelineId((root_pipeline_id >> 32) as u32, root_pipeline_id as u32);
     api.set_root_pipeline(pipeline_id);
 
@@ -253,6 +273,7 @@ pub extern fn wr_init_window(root_pipeline_id: u64) -> *mut WrWindowState {
         _gl_library: library,
         root_pipeline_id: pipeline_id,
         size: Size2D::new(0, 0),
+        flush_notifier_lock: flush_notifier_lock_clone,
     });
     Box::into_raw(state)
 }
@@ -348,6 +369,12 @@ pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, overflow: W
     prev_dl.pop_stacking_context()
 }
 
+pub fn composite_window(window: &mut WrWindowState) {
+    gl::clear(gl::COLOR_BUFFER_BIT);
+    window.renderer.update();
+    window.renderer.render(window.size);
+}
+
 #[no_mangle]
 pub extern fn wr_dp_end(window: &mut WrWindowState, state: &mut WrState) {
     let epoch = Epoch(0);
@@ -372,18 +399,7 @@ pub extern fn wr_dp_end(window: &mut WrWindowState, state: &mut WrState) {
                                      fb.auxiliary_lists_builder.finalize()
                                      );
 
-    gl::clear(gl::COLOR_BUFFER_BIT);
-    window.renderer.update();
-
-    window.renderer.render(window.size);
-}
-
-#[no_mangle]
-pub extern fn wr_composite(window: &mut WrWindowState) {
-    window.api.generate_frame();
-
-    window.renderer.update();
-    window.renderer.render(window.size);
+    composite_window(window);
 }
 
 #[no_mangle]
@@ -495,10 +511,30 @@ pub extern fn wr_destroy(state:*mut WrState) {
   }
 }
 
+fn wait_for_flush_notification(notifier: &Arc<(Mutex<bool>, Condvar)>) {
+    let &(ref lock, ref cvar) = &**notifier;
+    let mut finished = lock.lock().unwrap();
+    while !*finished {
+        finished = cvar.wait(finished).unwrap();
+    }
+    // For the next sync one
+    *finished = false;
+}
+
+fn force_sync_composite(window: &mut WrWindowState) {
+    window.api.flush();
+    wait_for_flush_notification(&window.flush_notifier_lock);
+
+    composite_window(window);
+    gl::flush();
+}
+
 #[no_mangle]
 // read the function definition to make sure we free this memory correctly.
-pub extern fn wr_readback_buffer(width: u32, height: u32, out_length: *mut u32, out_capacity: *mut u32) -> *const c_uchar {
-    gl::flush();
+pub extern fn wr_readback_buffer(window: &mut WrWindowState, width: u32, height: u32,
+                                 out_length: *mut u32, out_capacity: *mut u32) -> *const c_uchar {
+    force_sync_composite(window);
+
     let mut pixels = gl::read_pixels(0, 0,
                                  width as gl::GLsizei,
                                  height as gl::GLsizei,

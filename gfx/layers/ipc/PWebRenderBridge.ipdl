@@ -32,6 +32,9 @@ parent:
   sync DPBegin(uint32_t aWidth, uint32_t aHeight)
     returns (bool aOutSuccess);
   async DPEnd(WebRenderCommand[] commands);
+  sync DPSyncEnd(WebRenderCommand[] commands);
+  sync DPGetSnapshot(uint32_t aWidth, uint32_t aHeight)
+    returns (uint8_t[] aOutImageSnapshot);
 
   async __delete__();
 };
