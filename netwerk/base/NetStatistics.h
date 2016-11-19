@@ -13,7 +13,6 @@
 #include "nsError.h"
 #include "nsINetworkInterface.h"
 #include "nsINetworkManager.h"
-#include "nsINetworkStatsServiceProxy.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 
@@ -42,57 +41,6 @@ GetActiveNetworkInfo(nsCOMPtr<nsINetworkInfo> &aNetworkInfo)
 
   return NS_OK;
 }
-
-class SaveNetworkStatsEvent : public Runnable {
-public:
-  SaveNetworkStatsEvent(uint32_t aAppId,
-                        bool aIsInIsolatedMozBrowser,
-                        nsMainThreadPtrHandle<nsINetworkInfo> &aActiveNetworkInfo,
-                        uint64_t aCountRecv,
-                        uint64_t aCountSent,
-                        bool aIsAccumulative)
-    : mAppId(aAppId),
-      mIsInIsolatedMozBrowser(aIsInIsolatedMozBrowser),
-      mActiveNetworkInfo(aActiveNetworkInfo),
-      mCountRecv(aCountRecv),
-      mCountSent(aCountSent),
-      mIsAccumulative(aIsAccumulative)
-  {
-    MOZ_ASSERT(mAppId != NECKO_NO_APP_ID);
-    MOZ_ASSERT(mActiveNetworkInfo);
-  }
-
-  NS_IMETHOD Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsresult rv;
-    nsCOMPtr<nsINetworkStatsServiceProxy> mNetworkStatsServiceProxy =
-      do_GetService("@mozilla.org/networkstatsServiceProxy;1", &rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // save the network stats through NetworkStatsServiceProxy
-    mNetworkStatsServiceProxy->SaveAppStats(mAppId,
-                                            mIsInIsolatedMozBrowser,
-                                            mActiveNetworkInfo,
-                                            PR_Now() / 1000,
-                                            mCountRecv,
-                                            mCountSent,
-                                            mIsAccumulative,
-                                            nullptr);
-
-    return NS_OK;
-  }
-private:
-  uint32_t mAppId;
-  bool     mIsInIsolatedMozBrowser;
-  nsMainThreadPtrHandle<nsINetworkInfo> mActiveNetworkInfo;
-  uint64_t mCountRecv;
-  uint64_t mCountSent;
-  bool mIsAccumulative;
-};
 
 } // namespace mozilla:net
 } // namespace mozilla
