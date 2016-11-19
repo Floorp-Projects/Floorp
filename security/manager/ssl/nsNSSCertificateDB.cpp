@@ -95,36 +95,6 @@ nsNSSCertificateDB::~nsNSSCertificateDB()
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::FindCertByNickname(const nsAString& nickname,
-                                       nsIX509Cert** _rvCert)
-{
-  NS_ENSURE_ARG_POINTER(_rvCert);
-  *_rvCert = nullptr;
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  char *asciiname = nullptr;
-  NS_ConvertUTF16toUTF8 aUtf8Nickname(nickname);
-  asciiname = const_cast<char*>(aUtf8Nickname.get());
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting \"%s\"\n", asciiname));
-  UniqueCERTCertificate cert(PK11_FindCertFromNickname(asciiname, nullptr));
-  if (!cert) {
-    cert.reset(CERT_FindCertByNickname(CERT_GetDefaultCertDB(), asciiname));
-  }
-  if (cert) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("got it\n"));
-    nsCOMPtr<nsIX509Cert> pCert = nsNSSCertificate::Create(cert.get());
-    if (pCert) {
-      pCert.forget(_rvCert);
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsNSSCertificateDB::FindCertByDBKey(const char* aDBKey,nsIX509Cert** _cert)
 {
   NS_ENSURE_ARG_POINTER(aDBKey);
@@ -1036,80 +1006,6 @@ nsNSSCertificateDB::ExportPKCS12File(nsISupports* aToken,
   }
   blob.SetToken(localRef);
   return blob.ExportToFile(aFile, certs, count);
-}
-
-NS_IMETHODIMP
-nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString& aNickname,
-                                            nsIX509Cert** _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nullptr;
-
-  if (aNickname.IsEmpty())
-    return NS_OK;
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
-  char *asciiname = nullptr;
-  NS_ConvertUTF16toUTF8 aUtf8Nickname(aNickname);
-  asciiname = const_cast<char*>(aUtf8Nickname.get());
-
-  /* Find a good cert in the user's database */
-  UniqueCERTCertificate cert(CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(),
-                                                      asciiname,
-                                                      certUsageEmailRecipient,
-                                                      true, ctx));
-  if (!cert) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIX509Cert> nssCert = nsNSSCertificate::Create(cert.get());
-  if (!nssCert) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nssCert.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSCertificateDB::FindEmailSigningCert(const nsAString& aNickname,
-                                         nsIX509Cert** _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nullptr;
-
-  if (aNickname.IsEmpty())
-    return NS_OK;
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
-  char *asciiname = nullptr;
-  NS_ConvertUTF16toUTF8 aUtf8Nickname(aNickname);
-  asciiname = const_cast<char*>(aUtf8Nickname.get());
-
-  /* Find a good cert in the user's database */
-  UniqueCERTCertificate cert(CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(),
-                                                      asciiname,
-                                                      certUsageEmailSigner,
-                                                      true, ctx));
-  if (!cert) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIX509Cert> nssCert = nsNSSCertificate::Create(cert.get());
-  if (!nssCert) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nssCert.forget(_retval);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
