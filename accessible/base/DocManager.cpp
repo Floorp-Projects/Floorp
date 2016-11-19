@@ -86,6 +86,20 @@ DocManager::FindAccessibleInCache(nsINode* aNode) const
 }
 
 void
+DocManager::RemoveFromXPCDocumentCache(DocAccessible* aDocument)
+{
+  xpcAccessibleDocument* xpcDoc = mXPCDocumentCache.GetWeak(aDocument);
+  if (xpcDoc) {
+    xpcDoc->Shutdown();
+    mXPCDocumentCache.Remove(aDocument);
+  }
+
+  if (!HasXPCDocuments()) {
+    MaybeShutdownAccService(nsAccessibilityService::eXPCOM);
+  }
+}
+
+void
 DocManager::NotifyOfDocumentShutdown(DocAccessible* aDocument,
                                      nsIDocument* aDOMDocument)
 {
@@ -99,23 +113,28 @@ DocManager::NotifyOfDocumentShutdown(DocAccessible* aDocument,
     return;
   }
 
-  xpcAccessibleDocument* xpcDoc = mXPCDocumentCache.GetWeak(aDocument);
-  if (xpcDoc) {
-    xpcDoc->Shutdown();
-    mXPCDocumentCache.Remove(aDocument);
-  }
-
+  RemoveFromXPCDocumentCache(aDocument);
   mDocAccessibleCache.Remove(aDOMDocument);
 }
 
 void
-DocManager::NotifyOfRemoteDocShutdown(DocAccessibleParent* aDoc)
+DocManager::RemoveFromRemoteXPCDocumentCache(DocAccessibleParent* aDoc)
 {
   xpcAccessibleDocument* doc = GetCachedXPCDocument(aDoc);
   if (doc) {
     doc->Shutdown();
     sRemoteXPCDocumentCache->Remove(aDoc);
   }
+
+  if (sRemoteXPCDocumentCache && sRemoteXPCDocumentCache->Count() == 0) {
+    MaybeShutdownAccService(nsAccessibilityService::eXPCOM);
+  }
+}
+
+void
+DocManager::NotifyOfRemoteDocShutdown(DocAccessibleParent* aDoc)
+{
+  RemoveFromRemoteXPCDocumentCache(aDoc);
 }
 
 xpcAccessibleDocument*

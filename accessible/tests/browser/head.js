@@ -4,8 +4,8 @@
 
 'use strict';
 
-/* exported initPromise, shutdownPromise,
-            setE10sPrefs, unsetE10sPrefs, forceGC */
+/* exported initPromise, shutdownPromise, waitForEvent, setE10sPrefs,
+            unsetE10sPrefs, forceGC */
 
 /**
  * Set e10s related preferences in the test environment.
@@ -108,9 +108,33 @@ function shutdownPromise(contentBrowser) {
 }
 
 /**
+ * Simpler verions of waitForEvent defined in
+ * accessible/tests/browser/e10s/events.js
+ */
+function waitForEvent(eventType, expectedId) {
+  return new Promise(resolve => {
+    let eventObserver = {
+      observe(subject) {
+        let event = subject.QueryInterface(Ci.nsIAccessibleEvent);
+        if (event.eventType === eventType &&
+            event.accessible.id === expectedId) {
+          Services.obs.removeObserver(this, 'accessible-event');
+          resolve(event);
+        }
+      }
+    };
+    Services.obs.addObserver(eventObserver, 'accessible-event', false);
+  });
+}
+
+/**
  * Force garbage collection.
  */
 function forceGC() {
-  Cu.forceCC();
-  Cu.forceGC();
+  SpecialPowers.gc();
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+  SpecialPowers.gc();
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
 }
