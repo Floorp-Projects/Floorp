@@ -458,6 +458,3 @@ default-preferences
 
 == clipPath-and-mask-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
 == clipPath-and-mask-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
-
-!= nested-mask-mode.svg about:blank
-== mask-empty-size.svg about:blank

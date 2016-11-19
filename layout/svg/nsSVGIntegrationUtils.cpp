@@ -459,7 +459,7 @@ PaintMaskSurface(const PaintFramesParams& aParams,
   // aMaskDT one at a time.
   for (int i = aMaskFrames.Length() - 1; i >= 0 ; i--) {
     nsSVGMaskFrame *maskFrame = aMaskFrames[i];
-    DrawResult result = DrawResult::SUCCESS;
+
     CompositionOp compositionOp = (i == int(aMaskFrames.Length() - 1))
       ? CompositionOp::OP_OVER
       : nsCSSRendering::GetGFXCompositeMode(svgReset->mMask.mLayers[i].mComposite);
@@ -468,25 +468,19 @@ PaintMaskSurface(const PaintFramesParams& aParams,
     // maskFrame == nullptr means we get an image mask.
     if (maskFrame) {
       Matrix svgMaskMatrix;
-      nsSVGMaskFrame::MaskParams params(maskContext, aParams.frame,
-                                                  cssPxToDevPxMatrix,
-                                                  aOpacity, &svgMaskMatrix,
-                                                  svgReset->mMask.mLayers[i].mMaskMode);
-      RefPtr<SourceSurface> svgMask;
-      Tie(result, svgMask) = maskFrame->GetMaskForMaskedFrame(params);
-
+      RefPtr<SourceSurface> svgMask =
+        maskFrame->GetMaskForMaskedFrame(maskContext, aParams.frame,
+                                         cssPxToDevPxMatrix,
+                                         aOpacity,
+                                         &svgMaskMatrix,
+                                         svgReset->mMask.mLayers[i].mMaskMode);
       if (svgMask) {
-        MOZ_ASSERT(result == DrawResult::SUCCESS);
         gfxContextMatrixAutoSaveRestore matRestore(maskContext);
 
         maskContext->Multiply(ThebesMatrix(svgMaskMatrix));
         aMaskDT->MaskSurface(ColorPattern(Color(0.0, 0.0, 0.0, 1.0)), svgMask,
                              Point(0, 0),
                              DrawOptions(1.0, compositionOp));
-      }
-
-      if (result != DrawResult::SUCCESS) {
-        return result;
       }
     } else {
       gfxContextMatrixAutoSaveRestore matRestore(maskContext);
@@ -502,7 +496,7 @@ PaintMaskSurface(const PaintFramesParams& aParams,
                                                       nsCSSRendering::PAINTBG_MASK_IMAGE,
                                                       i, compositionOp);
 
-      result =
+      DrawResult result =
         nsCSSRendering::PaintBackgroundWithSC(params, aSC,
                                               *aParams.frame->StyleBorder());
       if (result != DrawResult::SUCCESS) {
@@ -527,19 +521,19 @@ CreateAndPaintMaskSurface(const PaintFramesParams& aParams,
   MOZ_ASSERT(aMaskFrames.Length() > 0);
 
   gfxContext& ctx = aParams.ctx;
-  DrawResult result = DrawResult::SUCCESS;
 
   // There is only one SVG mask.
   if (((aMaskFrames.Length() == 1) && aMaskFrames[0])) {
     gfxMatrix cssPxToDevPxMatrix =
     nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aParams.frame);
-    nsSVGMaskFrame::MaskParams params(&ctx, aParams.frame, cssPxToDevPxMatrix,
-                                      aOpacity, &aOutMaskTransform,
-                                      svgReset->mMask.mLayers[0].mMaskMode);
+
     aOpacityApplied = true;
-    Tie(result, aOutMaskSurface) =
-      aMaskFrames[0]->GetMaskForMaskedFrame(params);
-    return result;
+    aOutMaskSurface =
+      aMaskFrames[0]->GetMaskForMaskedFrame(&ctx, aParams.frame,
+                                            cssPxToDevPxMatrix, aOpacity,
+                                            &aOutMaskTransform,
+                                            svgReset->mMask.mLayers[0].mMaskMode);
+    return DrawResult::SUCCESS;
   }
 
   const IntRect& maskSurfaceRect = aParams.maskRect;
@@ -564,9 +558,10 @@ CreateAndPaintMaskSurface(const PaintFramesParams& aParams,
   gfxMatrix maskSurfaceMatrix =
     ctx.CurrentMatrix() * gfxMatrix::Translation(-aParams.maskRect.TopLeft());
 
-  result = PaintMaskSurface(aParams, maskDT, aOpacityApplied ? aOpacity : 1.0,
-                            aSC, aMaskFrames, maskSurfaceMatrix,
-                            aOffsetToUserSpace);
+  DrawResult result = PaintMaskSurface(aParams, maskDT,
+                                       aOpacityApplied ? aOpacity : 1.0,
+                                       aSC, aMaskFrames, maskSurfaceMatrix,
+                                       aOffsetToUserSpace);
   if (result != DrawResult::SUCCESS) {
     return result;
   }
