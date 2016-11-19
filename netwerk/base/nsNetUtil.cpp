@@ -1259,23 +1259,6 @@ NS_GetOriginAttributes(nsIChannel *aChannel,
 }
 
 bool
-NS_GetAppInfo(nsIChannel *aChannel,
-              uint32_t *aAppID,
-              bool *aIsInIsolatedMozBrowserElement)
-{
-    NeckoOriginAttributes attrs;
-
-    if (!NS_GetOriginAttributes(aChannel, attrs)) {
-      return false;
-    }
-
-    *aAppID = attrs.mAppId;
-    *aIsInIsolatedMozBrowserElement = attrs.mInIsolatedMozBrowser;
-
-    return true;
-}
-
-bool
 NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport)
 {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
