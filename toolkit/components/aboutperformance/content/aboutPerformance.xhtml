@@ -142,6 +142,15 @@
         border-color: var(--in-content-table-border-dark-color);
         border-spacing: 40px;
       }
+      .options {
+        width: 100%;
+      }
+      .options > .toggle-container-with-text {
+        display: inline-flex;
+      }
+      .options > .toggle-container-with-text:not(:first-child) {
+        margin-inline-start: 2ch;
+      }
     </style>
   </head>
   <body onload="go()">
@@ -155,11 +164,15 @@
         </tr>
       </table>
     </div>
-    <div>
-      <input type="checkbox" checked="false" id="check-display-recent"></input> 
-      <label for="check-display-recent" id="label-display-recent">Display only the last few seconds.</label>
-      <input type="checkbox" checked="true" id="check-autorefresh"></input>
-      <label for="check-autorefresh">Refresh automatically</label>
+    <div class="options">
+      <div class="toggle-container-with-text">
+        <input type="checkbox" checked="false" id="check-display-recent"></input>
+        <label for="check-display-recent" id="label-display-recent">Display only the last few seconds.</label>
+      </div>
+      <div class="toggle-container-with-text">
+        <input type="checkbox" checked="true" id="check-autorefresh"></input>
+        <label for="check-autorefresh">Refresh automatically</label>
+      </div>
     </div>
     <div>
       <h2>Performance of Add-ons</h2>
