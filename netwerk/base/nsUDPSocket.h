@@ -58,8 +58,6 @@ private:
                                   const PRNetAddr& aIface);
   nsresult SetMulticastInterfaceInternal(const PRNetAddr& aIface);
 
-  void SaveNetworkStats(bool aEnforce);
-
   void CloseSocket();
 
   // lock protects access to mListener;

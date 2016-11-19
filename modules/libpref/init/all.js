@@ -4816,9 +4816,6 @@ pref("dom.push.http2.reset_retry_count_after_ms", 60000);
 pref("dom.push.http2.maxRetries", 2);
 pref("dom.push.http2.retryInterval", 5000);
 
-// WebNetworkStats
-pref("dom.mozNetworkStats.enabled", false);
-
 // WebSettings
 pref("dom.mozSettings.enabled", false);
 

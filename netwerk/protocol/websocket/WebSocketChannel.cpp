@@ -1178,8 +1178,6 @@ WebSocketChannel::WebSocketChannel() :
   mDynamicOutput(nullptr),
   mPrivateBrowsing(false),
   mConnectionLogService(nullptr),
-  mCountRecv(0),
-  mCountSent(0),
   mAppId(NECKO_NO_APP_ID),
   mIsInIsolatedMozBrowser(false)
 {
@@ -3524,9 +3522,6 @@ WebSocketChannel::Close(uint16_t code, const nsACString & reason)
   LOG(("WebSocketChannel::Close() %p\n", this));
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
-  // save the networkstats (bug 855949)
-  SaveNetworkStats(true);
-
   if (mRequestedClose) {
     return NS_OK;
   }
@@ -3920,9 +3915,6 @@ WebSocketChannel::OnInputStreamReady(nsIAsyncInputStream *aStream)
     rv = mSocketIn->Read((char *)buffer, 2048, &count);
     LOG(("WebSocketChannel::OnInputStreamReady: read %u rv %x\n", count, rv));
 
-    // accumulate received bytes
-    CountRecvBytes(count);
-
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
       mSocketIn->AsyncWait(this, 0, 0, mSocketThread);
       return NS_OK;
@@ -3993,9 +3985,6 @@ WebSocketChannel::OnOutputStreamReady(nsIAsyncOutputStream *aStream)
       LOG(("WebSocketChannel::OnOutputStreamReady: write %u rv %x\n",
            amtSent, rv));
 
-      // accumulate sent bytes
-      CountSentBytes(amtSent);
-
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         mSocketOut->AsyncWait(this, 0, 0, mSocketThread);
         return NS_OK;
@@ -4058,47 +4047,6 @@ WebSocketChannel::OnDataAvailable(nsIRequest *aRequest,
          aCount));
 
   return NS_OK;
-}
-
-nsresult
-WebSocketChannel::SaveNetworkStats(bool enforce)
-{
-#ifdef MOZ_WIDGET_GONK
-  // Check if the active network and app id are valid.
-  if(!mActiveNetworkInfo || mAppId == NECKO_NO_APP_ID) {
-    return NS_OK;
-  }
-
-  uint64_t countRecv = 0;
-  uint64_t countSent = 0;
-
-  mCountRecv.exchange(countRecv);
-  mCountSent.exchange(countSent);
-
-  if (countRecv == 0 && countSent == 0) {
-    // There is no traffic, no need to save.
-    return NS_OK;
-  }
-
-  // If |enforce| is false, the traffic amount is saved
-  // only when the total amount exceeds the predefined
-  // threshold.
-  uint64_t totalBytes = countRecv + countSent;
-  if (!enforce && totalBytes < NETWORK_STATS_THRESHOLD) {
-    return NS_OK;
-  }
-
-  // Create the event to save the network statistics.
-  // the event is then dispatched to the main thread.
-  RefPtr<Runnable> event =
-    new SaveNetworkStatsEvent(mAppId, mIsInIsolatedMozBrowser, mActiveNetworkInfo,
-                              countRecv, countSent, false);
-  NS_DispatchToMainThread(event);
-
-  return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 } // namespace net
