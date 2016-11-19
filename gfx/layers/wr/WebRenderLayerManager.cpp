@@ -216,12 +216,9 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
 
   WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer();
 
-  if (mTarget) {
-    WRBridge()->DPSyncEnd();
-    MakeSnapshotIfRequired(size);
-  } else {
-    WRBridge()->DPEnd();
-  }
+  bool sync = mTarget != nullptr;
+  WRBridge()->DPEnd(sync);
+  MakeSnapshotIfRequired(size);
 }
 
 void
