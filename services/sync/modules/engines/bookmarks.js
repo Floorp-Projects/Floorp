@@ -349,12 +349,12 @@ BookmarksEngine.prototype = {
           if (query && query.value) {
             key = "q" + query.value;
           } else {
-            key = "b" + node.uri + ":" + node.title;
+            key = "b" + node.uri + ":" + (node.title || "");
           }
           break;
         case PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER:
           // Folder
-          key = "f" + node.title;
+          key = "f" + (node.title || "");
           break;
         case PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR:
           // Separator
@@ -365,7 +365,7 @@ BookmarksEngine.prototype = {
           continue;
       }
 
-      let parentName = parent.title;
+      let parentName = parent.title || "";
       if (guidMap[parentName] == null)
         guidMap[parentName] = {};
 
@@ -393,17 +393,17 @@ BookmarksEngine.prototype = {
         // hack should get them to dupe correctly.
         if (item.queryId) {
           key = "q" + item.queryId;
-          altKey = "b" + item.bmkUri + ":" + item.title;
+          altKey = "b" + item.bmkUri + ":" + (item.title || "");
           break;
         }
         // No queryID? Fall through to the regular bookmark case.
       case "bookmark":
       case "microsummary":
-        key = "b" + item.bmkUri + ":" + item.title;
+        key = "b" + item.bmkUri + ":" + (item.title || "");
         break;
       case "folder":
       case "livemark":
-        key = "f" + item.title;
+        key = "f" + (item.title || "");
         break;
       case "separator":
         key = "s" + item.pos;
@@ -417,8 +417,9 @@ BookmarksEngine.prototype = {
     let guidMap = this._guidMap;
 
     // Give the GUID if we have the matching pair.
-    this._log.trace("Finding mapping: " + item.parentName + ", " + key);
-    let parent = guidMap[item.parentName];
+    let parentName = item.parentName || "";
+    this._log.trace("Finding mapping: " + parentName + ", " + key);
+    let parent = guidMap[parentName];
 
     if (!parent) {
       this._log.trace("No parent => no dupe.");
