@@ -65,6 +65,7 @@ LOCAL_INCLUDES += [
     '../../widget',
     '../base',
     '../generic',
+    '../painting',
     '../style',
     '../xul',
     '/dom/base',
