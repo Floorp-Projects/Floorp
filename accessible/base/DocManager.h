@@ -66,6 +66,8 @@ public:
   void NotifyOfDocumentShutdown(DocAccessible* aDocument,
                                 nsIDocument* aDOMDocument);
 
+  void RemoveFromXPCDocumentCache(DocAccessible* aDocument);
+
   /**
    * Return XPCOM accessible document.
    */
@@ -95,6 +97,8 @@ public:
    */
   static void NotifyOfRemoteDocShutdown(DocAccessibleParent* adoc);
 
+  static void RemoveFromRemoteXPCDocumentCache(DocAccessibleParent* aDoc);
+
   /**
    * Get a XPC document for a remote document.
    */
@@ -122,6 +126,12 @@ protected:
    * Shutdown the manager.
    */
   void Shutdown();
+
+  bool HasXPCDocuments()
+  {
+    return mXPCDocumentCache.Count() > 0 ||
+           (sRemoteXPCDocumentCache && sRemoteXPCDocumentCache->Count() > 0);
+  }
 
 private:
   DocManager(const DocManager&);
