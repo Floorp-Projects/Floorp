@@ -1316,10 +1316,9 @@ ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber)
 }
 
 bool
-ThrowReadOnlyError(JSContext* cx, HandleObject handle)
+ThrowReadOnlyError(JSContext* cx, int32_t index)
 {
-    HandleNativeObject obj = handle.as<NativeObject>();
-    RootedValue val(cx, ObjectValue(*obj));
+    RootedValue val(cx, Int32Value(index));
     ReportValueError(cx, JSMSG_READ_ONLY, JSDVG_IGNORE_STACK, val, nullptr);
     return false;
 }
