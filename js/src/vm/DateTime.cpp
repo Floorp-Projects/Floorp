@@ -294,7 +294,7 @@ js::DateTimeInfo::sanityCheck()
 /* static */ js::ExclusiveData<js::DateTimeInfo>*
 js::DateTimeInfo::instance;
 
-/* static */ ExclusiveData<IcuTimeZoneStatus>*
+/* static */ js::ExclusiveData<js::IcuTimeZoneStatus>*
 js::IcuTimeZoneState;
 
 bool
@@ -337,7 +337,7 @@ JS::ResetTimeZone()
     js::DateTimeInfo::updateTimeZoneAdjustment();
 
 #if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
-    IcuTimeZoneState->lock().get() = IcuTimeZoneStatus::NeedsUpdate;
+    js::IcuTimeZoneState->lock().get() = js::IcuTimeZoneStatus::NeedsUpdate;
 #endif
 }
 
