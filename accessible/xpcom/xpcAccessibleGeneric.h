@@ -41,8 +41,7 @@ public:
   xpcAccessibleGeneric(ProxyAccessible* aProxy, uint8_t aInterfaces) :
     mIntl(aProxy), mSupportedIfaces(aInterfaces) {}
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(xpcAccessibleGeneric, nsIAccessible)
+  NS_DECL_ISUPPORTS
 
   // nsIAccessible
   virtual Accessible* ToInternalAccessible() const final override;
@@ -51,7 +50,7 @@ public:
   virtual void Shutdown();
 
 protected:
-  virtual ~xpcAccessibleGeneric() {}
+  virtual ~xpcAccessibleGeneric();
 
   AccessibleOrProxy mIntl;
 
