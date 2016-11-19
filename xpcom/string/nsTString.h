@@ -368,6 +368,9 @@ public:
    *
    *  @param  aSet -- characters to be cut from this
    */
+#ifdef CharT_is_PRUnichar
+  using nsTSubstring_CharT::StripChars;
+#endif
   void StripChars(const char* aSet);
 
 
