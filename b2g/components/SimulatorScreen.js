@@ -25,10 +25,6 @@ function fireOrientationEvent(window) {
 function hookScreen(window) {
   let nodePrincipal = window.document.nodePrincipal;
   let origin = nodePrincipal.origin;
-  if (nodePrincipal.appStatus == nodePrincipal.APP_STATUS_NOT_INSTALLED) {
-    // Only inject screen mock for apps
-    return;
-  }
 
   let screen = window.wrappedJSObject.screen;
 
