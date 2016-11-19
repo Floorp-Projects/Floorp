@@ -134,6 +134,7 @@ WRScrollFrameStackingContextGenerator::~WRScrollFrameStackingContextGenerator()
 
 WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   : mWidget(aWidget)
+  , mTarget(nullptr)
 {
 }
 
@@ -175,6 +176,7 @@ WebRenderLayerManager::GetMaxTextureSize() const
 bool
 WebRenderLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
+  mTarget = aTarget;
   return BeginTransaction();
 }
 
@@ -214,7 +216,51 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
 
   WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer();
 
-  WRBridge()->DPEnd();
+  if (mTarget) {
+    WRBridge()->DPSyncEnd();
+    MakeSnapshotIfRequired(size);
+  } else {
+    WRBridge()->DPEnd();
+  }
+}
+
+void
+WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
+{
+  if (!mTarget) {
+    return;
+  }
+
+  nsTArray<uint8_t> data;
+  WRBridge()->SendDPGetSnapshot(aSize.width, aSize.height, &data);
+
+  // TODO: fixup for proper surface format.
+  RefPtr<DataSourceSurface> snapshot =
+                                   Factory::CreateWrappingDataSourceSurface(data.Elements(),
+                                                                            aSize.width * 4,
+                                                                            IntSize(aSize.width, aSize.height),
+                                                                            SurfaceFormat::B8G8R8A8);
+
+/*
+  static int count = 0;
+  char filename[100];
+  snprintf(filename, 100, "output%d.png", count++);
+  printf_stderr("Writing to :%s\n", filename);
+  gfxUtils::WriteAsPNG(snapshot, filename);
+  */
+
+  IntRect bounds = ToOutsideIntRect(mTarget->GetClipExtents());
+  Rect dst(bounds.x, bounds.y, bounds.width, bounds.height);
+  Rect src(0, 0, bounds.width, bounds.height);
+
+  // The data we get from webrender is upside down. So flip and translate up so the image is rightside up.
+  SurfacePattern pattern(snapshot, ExtendMode::CLAMP,
+                         Matrix::Scaling(1.0, -1.0).PostTranslate(0.0, bounds.height));
+  DrawTarget* dt = mTarget->GetDrawTarget();
+  MOZ_RELEASE_ASSERT(dt);
+  dt->FillRect(dst, pattern);
+
+  mTarget = nullptr;
 }
 
 void

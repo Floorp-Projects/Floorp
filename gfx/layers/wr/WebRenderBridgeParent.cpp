@@ -122,12 +122,12 @@ WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& commands)
+void
+WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& aCommands)
 {
   MOZ_ASSERT(mWRState);
-  for (InfallibleTArray<WebRenderCommand>::index_type i = 0; i < commands.Length(); ++i) {
-    const WebRenderCommand& cmd = commands[i];
+  for (InfallibleTArray<WebRenderCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
+    const WebRenderCommand& cmd = aCommands[i];
 
     switch (cmd.type()) {
       case WebRenderCommand::TOpPushDLBuilder: {
@@ -170,6 +170,24 @@ WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& commands)
   }
 
   DeleteOldImages();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvDPGetSnapshot(const uint32_t& aWidth,
+                                         const uint32_t& aHeight,
+                                         InfallibleTArray<uint8_t>* aOutImageSnapshot)
+{
+  MOZ_ASSERT(mWRState);
+  mGLContext->MakeCurrent();
+
+  uint32_t length = 0;
+  uint32_t capacity = 0;
+  const uint8_t* webrenderSnapshot = wr_readback_buffer(mWRWindowState, aWidth, aHeight, &length, &capacity);
+
+  aOutImageSnapshot->ReplaceElementsAt(0, aOutImageSnapshot->Length(), webrenderSnapshot, length);
+
+  wr_free_buffer(webrenderSnapshot, length, capacity);
+
   return IPC_OK();
 }
 

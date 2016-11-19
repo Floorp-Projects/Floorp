@@ -46,5 +46,14 @@ WebRenderBridgeChild::DPEnd()
   mIsInTransaction = false;
 }
 
+void
+WebRenderBridgeChild::DPSyncEnd()
+{
+  MOZ_ASSERT(mIsInTransaction);
+  this->SendDPSyncEnd(mCommands);
+  mCommands.Clear();
+  mIsInTransaction = false;
+}
+
 } // namespace layers
 } // namespace mozilla
