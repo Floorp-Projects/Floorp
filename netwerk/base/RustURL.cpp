@@ -6,21 +6,6 @@
   #error "Should be defined"
 #endif
 
-// the following two functions will be replaced with the Rust
-// nsstring bindings
-// allows Rust to resize a nsACString
-extern "C" int32_t c_fn_set_size(void * container, size_t size)
-{
-  ((nsACString *) container)->SetLength(size);
-  return 0;
-}
-
-// allows Rust to access the backing buffer of an nsACString
-extern "C" char * c_fn_get_buffer(void * container)
-{
-  return ((nsACString *) container)->BeginWriting();
-}
-
 using namespace mozilla::ipc;
 
 namespace mozilla {
@@ -74,7 +59,7 @@ RustURL::SetSpec(const nsACString & aSpec)
 {
   ENSURE_MUTABLE();
 
-  rusturl* ptr = rusturl_new(aSpec.BeginReading(), aSpec.Length());
+  rusturl* ptr = rusturl_new(&aSpec);
   if (!ptr) {
     return NS_ERROR_FAILURE;
   }
@@ -127,7 +112,7 @@ RustURL::SetScheme(const nsACString & aScheme)
 {
   ENSURE_MUTABLE();
 
-  return static_cast<nsresult>(rusturl_set_scheme(mURL.get(), aScheme.BeginReading(), aScheme.Length()));
+  return static_cast<nsresult>(rusturl_set_scheme(mURL.get(), &aScheme));
 }
 
 NS_IMETHODIMP
@@ -168,10 +153,10 @@ RustURL::SetUserPass(const nsACString & aUserPass)
     pass = Substring(aUserPass, colonPos + 1, aUserPass.Length());
   }
 
-  if (rusturl_set_username(mURL.get(), user.BeginReading(), user.Length()) != 0) {
+  if (rusturl_set_username(mURL.get(), &user) != 0) {
     return NS_ERROR_FAILURE;
   }
-  return static_cast<nsresult>(rusturl_set_password(mURL.get(), pass.BeginReading(), pass.Length()));
+  return static_cast<nsresult>(rusturl_set_password(mURL.get(), &pass));
 }
 
 NS_IMETHODIMP
@@ -184,7 +169,7 @@ NS_IMETHODIMP
 RustURL::SetUsername(const nsACString & aUsername)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_username(mURL.get(), aUsername.BeginReading(), aUsername.Length()));
+  return static_cast<nsresult>(rusturl_set_username(mURL.get(), &aUsername));
 }
 
 NS_IMETHODIMP
@@ -197,7 +182,7 @@ NS_IMETHODIMP
 RustURL::SetPassword(const nsACString & aPassword)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_password(mURL.get(), aPassword.BeginReading(), aPassword.Length()));
+  return static_cast<nsresult>(rusturl_set_password(mURL.get(), &aPassword));
 }
 
 NS_IMETHODIMP
@@ -225,14 +210,14 @@ NS_IMETHODIMP
 RustURL::SetHostPort(const nsACString & aHostPort)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_host_port(mURL.get(), aHostPort.BeginReading(), aHostPort.Length()));
+  return static_cast<nsresult>(rusturl_set_host_port(mURL.get(), &aHostPort));
 }
 
 NS_IMETHODIMP
 RustURL::SetHostAndPort(const nsACString & hostport)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_host_and_port(mURL.get(), hostport.BeginReading(), hostport.Length()));
+  return static_cast<nsresult>(rusturl_set_host_and_port(mURL.get(), &hostport));
 }
 
 NS_IMETHODIMP
@@ -257,7 +242,7 @@ NS_IMETHODIMP
 RustURL::SetHost(const nsACString & aHost)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_host(mURL.get(), aHost.BeginReading(), aHost.Length()));
+  return static_cast<nsresult>(rusturl_set_host(mURL.get(), &aHost));
 }
 
 NS_IMETHODIMP
@@ -357,7 +342,7 @@ RustURL::Clone(nsIURI * *aRetVal)
 NS_IMETHODIMP
 RustURL::Resolve(const nsACString & relativePath, nsACString & aRetVal)
 {
-  return static_cast<nsresult>(rusturl_resolve(mURL.get(), relativePath.BeginReading(), relativePath.Length(), &aRetVal));
+  return static_cast<nsresult>(rusturl_resolve(mURL.get(), &relativePath, &aRetVal));
 }
 
 NS_IMETHODIMP
@@ -395,7 +380,7 @@ NS_IMETHODIMP
 RustURL::SetRef(const nsACString & aRef)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_fragment(mURL.get(), aRef.BeginReading(), aRef.Length()));
+  return static_cast<nsresult>(rusturl_set_fragment(mURL.get(), &aRef));
 }
 
 NS_IMETHODIMP
@@ -481,7 +466,7 @@ NS_IMETHODIMP
 RustURL::SetFilePath(const nsACString & aFilePath)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_path(mURL.get(), aFilePath.BeginReading(), aFilePath.Length()));
+  return static_cast<nsresult>(rusturl_set_path(mURL.get(), &aFilePath));
 }
 
 NS_IMETHODIMP
@@ -494,7 +479,7 @@ NS_IMETHODIMP
 RustURL::SetQuery(const nsACString & aQuery)
 {
   ENSURE_MUTABLE();
-  return static_cast<nsresult>(rusturl_set_query(mURL.get(), aQuery.BeginReading(), aQuery.Length()));
+  return static_cast<nsresult>(rusturl_set_query(mURL.get(), &aQuery));
 }
 
 NS_IMETHODIMP
