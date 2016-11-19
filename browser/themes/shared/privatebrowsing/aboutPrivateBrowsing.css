@@ -135,6 +135,23 @@ a.button {
   display: inline-block;
 }
 
+/**
+ * We want to hide the checkbox in lieu of the toggle-btn
+ * "slider toggle". We need to make the toggle keyboard
+ * focusable, however, which is not possible if it's
+ * display:none. We work around this by making the toggle
+ * invisible but still present in the display list, allowing
+ * it to receive keyboard events. When it is focused by keyboard,
+ * we use the -moz-focusring selector on the invisible checkbox
+ * to show a focus ring around the slider toggle.
+ */
+.toggle-input {
+  opacity: 0;
+  width: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
 .toggle + .toggle-btn {
   box-sizing: border-box;
   cursor: pointer;
