@@ -193,7 +193,10 @@ DottedCornerFinder::Next(void)
 
   // Find unfilled and filled circles.
   (void)FindNext(mBestOverlap);
-  (void)FindNext(mBestOverlap);
+  if (mHasMore) {
+    (void)FindNext(mBestOverlap);
+  }
+
   return Result(mLastC, mLastR);
 }
 
@@ -343,6 +346,17 @@ DottedCornerFinder::FindNext(Float overlap)
     }
 
     circlesDist = sqrt(circlesDistSquare);
+  }
+
+  if (mHasZeroBorderWidth) {
+    // When calculating circle around r=0, it may result in wrong radius that
+    // is bigger than previous circle.  Detect it and stop calculating.
+    const Float R_MARGIN = 0.1f;
+    if (mLastR < R_MARGIN && r > mLastR) {
+      mHasMore = false;
+      mLastR = 0.0f;
+      return 0.0f;
+    }
   }
 
   mLastT = t;
