@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>dashed border with radius</title>
+    <style>
+.box {
+  position: relative;
+  width: 220px;
+  height: 220px;
+}
+.mask {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 220px;
+  height: 220px;
+}
+
+div.border {
+  border-style: dotted;
+  border-width: 4px 0 4px 0px;
+  width: 200px;
+  height: 200px;
+  border-top-right-radius: 40px 200px;
+}
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <div class="border">
+      </div>
+      <img class="mask" src="border-dotted-radius-zero-filled-mask.png">
+    </div>
+    <div class="box">
+      <div class="border">
+      </div>
+      <img class="mask" src="border-dotted-radius-zero-unfilled-mask.png">
+    </div>
+  </body>
+</html>
+
