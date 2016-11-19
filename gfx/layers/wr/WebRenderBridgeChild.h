@@ -30,6 +30,7 @@ public:
 
   bool DPBegin(uint32_t aWidth, uint32_t aHeight);
   void DPEnd();
+  void DPSyncEnd();
 protected:
   ~WebRenderBridgeChild() {}
 

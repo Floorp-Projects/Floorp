@@ -133,6 +133,21 @@ private:
   void *mPaintedLayerCallbackData;
 
   RefPtr<WebRenderBridgeChild> mWRChild;
+
+ // When we're doing a transaction in order to draw to a non-default
+ // target, the layers transaction is only performed in order to send
+ // a PLayers:Update.  We save the original non-default target to
+ // mTarget, and then perform the transaction. After the transaction ends,
+ // we send a message to our remote side to capture the actual pixels
+ // being drawn to the default target, and then copy those pixels
+ // back to mTarget.
+ RefPtr<gfxContext> mTarget;
+
+ /**
+  * Take a snapshot of the parent context, and copy
+  * it into mTarget.
+  */
+ void MakeSnapshotIfRequired(LayoutDeviceIntSize aSize);
 };
 
 } // namespace layers
