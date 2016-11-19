@@ -75,17 +75,6 @@ interface nsIX509CertDB : nsISupports {
   const unsigned long TRUSTED_OBJSIGN = 1 << 2;
 
   /**
-   *  Given a nickname,
-   *  locate the matching certificate.
-   *
-   *  @param aNickname The nickname to be used as the key
-   *                   to find a certificate.
-   *
-   *  @return The matching certificate if found.
-   */
-  nsIX509Cert findCertByNickname(in AString aNickname);
-
-  /**
    *  Will find a certificate based on its dbkey
    *  retrieved by getting the dbKey attribute of
    *  the certificate.
@@ -94,26 +83,6 @@ interface nsIX509CertDB : nsISupports {
    *                attribute dbkey in nsIX509Cert.
    */
   nsIX509Cert findCertByDBKey(in string aDBkey);
-
-  /**
-   *  Find user's own email encryption certificate by nickname.
-   *
-   *  @param aNickname The nickname to be used as the key
-   *                   to find the certificate.
-   *
-   *  @return The matching certificate if found.
-   */
-  nsIX509Cert findEmailEncryptionCert(in AString aNickname);
-
-  /**
-   *  Find user's own email signing certificate by nickname.
-   *
-   *  @param aNickname The nickname to be used as the key
-   *                   to find the certificate.
-   *
-   *  @return The matching certificate if found.
-   */
-  nsIX509Cert findEmailSigningCert(in AString aNickname);
 
   /**
    *  Find a certificate by email address.

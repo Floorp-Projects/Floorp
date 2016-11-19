@@ -669,7 +669,6 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
     return NS_ERROR_NOT_AVAILABLE;
 
   NS_ENSURE_ARG(_rvChain);
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting chain for \"%s\"\n", mCert->nickname));
 
   mozilla::pkix::Time now(mozilla::pkix::Now());
 
@@ -703,9 +702,6 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
     if ((usage & otherUsagesToTest) == 0) {
       continue;
     }
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("pipnss: PKIX attempting chain(%d) for '%s'\n",
-            usage, mCert->nickname));
     if (certVerifier->VerifyCert(mCert.get(), usage, now,
                                  nullptr, /*XXX fixme*/
                                  nullptr, /*hostname*/
@@ -721,9 +717,6 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
     // There is not verified path for the chain, however we still want to
     // present to the user as much of a possible chain as possible, in the case
     // where there was a problem with the cert or the issuers.
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("pipnss: getchain :CertVerify failed to get chain for '%s'\n",
-            mCert->nickname));
     nssChain = UniqueCERTCertList(
       CERT_GetCertChainFromCert(mCert.get(), PR_Now(), certUsageSSLClient));
   }
@@ -740,8 +733,6 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
   for (node = CERT_LIST_HEAD(nssChain.get());
        !CERT_LIST_END(node, nssChain.get());
        node = CERT_LIST_NEXT(node)) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-           ("adding %s to chain\n", node->cert->nickname));
     nsCOMPtr<nsIX509Cert> cert = nsNSSCertificate::Create(node->cert);
     array->AppendElement(cert, false);
   }
@@ -763,7 +754,6 @@ nsNSSCertificate::GetAllTokenNames(uint32_t* aLength, char16_t*** aTokenNames)
   *aTokenNames = nullptr;
 
   // Get the slots from NSS
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting slots for \"%s\"\n", mCert->nickname));
   UniquePK11SlotList slots(PK11_GetAllSlotsForCert(mCert.get(), nullptr));
   if (!slots) {
     if (PORT_GetError() == SEC_ERROR_NO_TOKEN) {
