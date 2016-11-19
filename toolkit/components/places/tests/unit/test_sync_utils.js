@@ -1058,14 +1058,15 @@ add_task(function* test_fetch() {
       description: "Folder description",
       childSyncIds: [folderBmk.syncId, folderSep.syncId],
       parentTitle: "Bookmarks Menu",
-    }, "Should include description, children, and parent title in folder");
+      title: "",
+    }, "Should include description, children, title, and parent title in folder");
   }
 
   do_print("Fetch bookmark with description, sidebar anno, and tags");
   {
     let item = yield PlacesSyncUtils.bookmarks.fetch(bmk.syncId);
-    deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId", "url",
-      "tags", "description", "loadInSidebar", "parentTitle"].sort(),
+    deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId",
+      "url", "tags", "description", "loadInSidebar", "parentTitle", "title"].sort(),
       "Should include bookmark-specific properties");
     equal(item.syncId, bmk.syncId, "Sync ID should match");
     equal(item.url.href, "https://example.com/", "Should return URL");
@@ -1074,17 +1075,20 @@ add_task(function* test_fetch() {
     equal(item.description, "Bookmark description", "Should return bookmark description");
     strictEqual(item.loadInSidebar, true, "Should return sidebar anno");
     equal(item.parentTitle, "Bookmarks Menu", "Should return parent title");
+    strictEqual(item.title, "", "Should return empty title");
   }
 
   do_print("Fetch bookmark with keyword; without parent title or annos");
   {
     let item = yield PlacesSyncUtils.bookmarks.fetch(folderBmk.syncId);
     deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId",
-      "url", "keyword", "tags", "loadInSidebar"].sort(),
+      "url", "keyword", "tags", "loadInSidebar", "parentTitle", "title"].sort(),
       "Should omit blank bookmark-specific properties");
     strictEqual(item.loadInSidebar, false, "Should not load bookmark in sidebar");
     deepEqual(item.tags, [], "Tags should be empty");
     equal(item.keyword, "kw", "Should return keyword");
+    strictEqual(item.parentTitle, "", "Should include parent title even if empty");
+    strictEqual(item.title, "", "Should include bookmark title even if empty");
   }
 
   do_print("Fetch separator");
@@ -1132,11 +1136,12 @@ add_task(function* test_fetch_livemark() {
     do_print("Fetch livemark");
     let item = yield PlacesSyncUtils.bookmarks.fetch(livemark.guid);
     deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId",
-      "description", "feed", "site", "parentTitle"].sort(),
+      "description", "feed", "site", "parentTitle", "title"].sort(),
       "Should include livemark-specific properties");
     equal(item.description, "Livemark description", "Should return description");
     equal(item.feed.href, site + "/feed/1", "Should return feed URL");
     equal(item.site.href, site + "/", "Should return site URL");
+    strictEqual(item.title, "", "Should include livemark title even if empty");
   } finally {
     yield stopServer();
   }
