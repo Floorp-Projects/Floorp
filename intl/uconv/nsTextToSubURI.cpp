@@ -31,7 +31,7 @@ static const char16_t sNetworkIDNBlacklistChars[] =
   0x2156, 0x2157, 0x2158, 0x2159, 0x215A, 0x215B, 0x215C, 0x215D,
   0x215E, 0x215F, 0x2215, 0x2236, 0x23AE, 0x2571, 0x29F6, 0x29F8,
   0x2AFB, 0x2AFD, 0x2FF0, 0x2FF1, 0x2FF2, 0x2FF3, 0x2FF4, 0x2FF5,
-  0x2FF6, 0x2FF7, 0x2FF8, 0x2FF9, 0x2FFA, 0x2FFB, 0x3000, 0x3002,
+  0x2FF6, 0x2FF7, 0x2FF8, 0x2FF9, 0x2FFA, 0x2FFB, /*0x3000,*/ 0x3002,
   0x3014, 0x3015, 0x3033, 0x3164, 0x321D, 0x321E, 0x33AE, 0x33AF,
   0x33C6, 0x33DF, 0xA789, 0xFE14, 0xFE15, 0xFE3F, 0xFE5D, 0xFE5E,
   0xFEFF, 0xFF0E, 0xFF0F, 0xFF61, 0xFFA0, 0xFFF9, 0xFFFA, 0xFFFB,
@@ -236,15 +236,15 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
 
   // If there are any characters that are unsafe for URIs, reescape those.
   if (mUnsafeChars.IsEmpty()) {
-    nsCOMPtr<nsISupportsString> blacklist;
-    nsresult rv = mozilla::Preferences::GetComplex("network.IDN.blacklist_chars",
-                                                   NS_GET_IID(nsISupportsString),
-                                                   getter_AddRefs(blacklist));
+    nsAdoptingString blacklist;
+    nsresult rv = mozilla::Preferences::GetString("network.IDN.blacklist_chars",
+                                                  &blacklist);
     if (NS_SUCCEEDED(rv)) {
-      nsString chars;
-      blacklist->ToString(getter_Copies(chars));
-      chars.StripChars(" "); // we allow SPACE in this method
-      mUnsafeChars.AppendElements(static_cast<const char16_t*>(chars.Data()), chars.Length());
+      nsAString& chars = blacklist;
+      // we allow SPACE and IDEOGRAPHIC SPACE in this method
+      chars.StripChars(u" \u3000");
+      mUnsafeChars.AppendElements(static_cast<const char16_t*>(chars.Data()),
+                                  chars.Length());
     } else {
       NS_WARNING("Failed to get the 'network.IDN.blacklist_chars' preference");
     }
