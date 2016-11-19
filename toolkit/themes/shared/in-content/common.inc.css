@@ -554,6 +554,11 @@ xul|richlistitem > xul|*.checkbox-check {
   margin: 3px 6px;
 }
 
+html|*.toggle-container-with-text {
+  display: flex;
+  align-items: center;
+}
+
 xul|radio {
   margin-inline-start: 0;
 }

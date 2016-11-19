@@ -70,7 +70,7 @@ module.exports = createClass({
 
     return dom.div({ className: "addons-top" },
       dom.div({ className: "addons-controls" },
-        dom.div({ className: "addons-options" },
+        dom.div({ className: "addons-options toggle-container-with-text" },
           dom.input({
             id: "enable-addon-debugging",
             type: "checkbox",
