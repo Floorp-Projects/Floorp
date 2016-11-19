@@ -19,12 +19,12 @@ body {
 }
 
 #refreshDiv {
-  text-align: end;
+  justify-content: flex-end;
   margin-bottom: 0.5em;
 }
 
 #refreshButton {
-  vertical-align: middle;
+  margin-top: 0;
 }
 
 /** Categories **/
