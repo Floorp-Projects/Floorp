@@ -786,10 +786,13 @@ bool ObjectIsConstructor(JSObject* obj);
 
 MOZ_MUST_USE bool
 ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber);
+
 MOZ_MUST_USE bool
-ThrowReadOnlyError(JSContext* cx, HandleObject obj);
+ThrowReadOnlyError(JSContext* cx, int32_t index);
+
 MOZ_MUST_USE bool
 BaselineThrowUninitializedThis(JSContext* cx, BaselineFrame* frame);
+
 MOZ_MUST_USE bool
 ThrowBadDerivedReturn(JSContext* cx, HandleValue v);
 
