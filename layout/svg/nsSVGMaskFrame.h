@@ -38,7 +38,6 @@ class nsSVGMaskFrame final : public nsSVGContainerFrame
 
   typedef mozilla::gfx::Matrix Matrix;
   typedef mozilla::gfx::SourceSurface SourceSurface;
-  typedef mozilla::image::DrawResult DrawResult;
 
 protected:
   explicit nsSVGMaskFrame(nsStyleContext* aContext)
@@ -51,25 +50,14 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  struct MaskParams {
-    gfxContext* ctx;
-    nsIFrame* maskedFrame;
-    const gfxMatrix& toUserSpace;
-    float opacity;
-    Matrix* maskTransform;
-    uint8_t maskMode;
-
-    explicit MaskParams(gfxContext* aCtx, nsIFrame* aMaskedFrame,
-                        const gfxMatrix& aToUserSpace, float aOpacity,
-                        Matrix* aMaskTransform, uint8_t aMaskMode)
-    : ctx(aCtx), maskedFrame(aMaskedFrame), toUserSpace(aToUserSpace),
-      opacity(aOpacity), maskTransform(aMaskTransform), maskMode(aMaskMode)
-    { }
-  };
-
   // nsSVGMaskFrame method:
-  Pair<DrawResult, RefPtr<SourceSurface>>
-  GetMaskForMaskedFrame(MaskParams& aParams);
+  already_AddRefed<SourceSurface>
+  GetMaskForMaskedFrame(gfxContext* aContext,
+                        nsIFrame* aMaskedFrame,
+                        const gfxMatrix &aMatrix,
+                        float aOpacity,
+                        Matrix* aMaskTransform,
+                        uint8_t aMaskOp = NS_STYLE_MASK_MODE_MATCH_SOURCE);
 
   gfxRect
   GetMaskArea(nsIFrame* aMaskedFrame);
