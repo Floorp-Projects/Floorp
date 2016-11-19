@@ -160,8 +160,8 @@ OmxDataDecoder::Init()
 
   // TODO: it needs to get permission from resource manager before allocating
   //       Omx component.
-  InvokeAsync(mOmxTaskQueue, mOmxLayer.get(), __func__, &OmxPromiseLayer::Init,
-              mTrackInfo.get())
+  InvokeAsync<const TrackInfo*>(mOmxTaskQueue, mOmxLayer.get(), __func__,
+                                &OmxPromiseLayer::Init, mTrackInfo.get())
     ->Then(mOmxTaskQueue, __func__,
       [self] () {
         // Omx state should be OMX_StateIdle.
