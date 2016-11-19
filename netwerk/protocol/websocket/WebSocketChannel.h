@@ -300,12 +300,6 @@ private:
   bool                            mPrivateBrowsing;
 
   nsCOMPtr<nsIDashboardEventNotifier> mConnectionLogService;
-
-  uint32_t                        mAppId;
-  bool                            mIsInIsolatedMozBrowser;
-#ifdef MOZ_WIDGET_GONK
-  nsMainThreadPtrHandle<nsINetworkInfo> mActiveNetworkInfo;
-#endif
 };
 
 class WebSocketSSLChannel : public WebSocketChannel
