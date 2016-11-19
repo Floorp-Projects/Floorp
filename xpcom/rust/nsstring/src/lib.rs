@@ -572,26 +572,26 @@ impl nsACString {
         Gecko_FinalizeCString(self);
     }
 
-    pub fn assign<T: AsRef<[u8]>>(&mut self, other: &T) {
+    pub fn assign<T: AsRef<[u8]> + ?Sized>(&mut self, other: &T) {
         let s = nsCString::from(other.as_ref());
         unsafe {
             Gecko_AssignCString(self, &*s);
         }
     }
 
-    pub fn assign_utf16<T: AsRef<[u16]>>(&mut self, other: &T) {
+    pub fn assign_utf16<T: AsRef<[u16]> + ?Sized>(&mut self, other: &T) {
         self.assign(&[]);
         self.append_utf16(other);
     }
 
-    pub fn append<T: AsRef<[u8]>>(&mut self, other: &T) {
+    pub fn append<T: AsRef<[u8]> + ?Sized>(&mut self, other: &T) {
         let s = nsCString::from(other.as_ref());
         unsafe {
             Gecko_AppendCString(self, &*s);
         }
     }
 
-    pub fn append_utf16<T: AsRef<[u16]>>(&mut self, other: &T) {
+    pub fn append_utf16<T: AsRef<[u16]> + ?Sized>(&mut self, other: &T) {
         let s = nsString::from(other.as_ref());
         unsafe {
             Gecko_AppendUTF16toCString(self, &*s);
@@ -679,26 +679,26 @@ impl nsAString {
         Gecko_FinalizeString(self);
     }
 
-    pub fn assign<T: AsRef<[u16]>>(&mut self, other: &T) {
+    pub fn assign<T: AsRef<[u16]> + ?Sized>(&mut self, other: &T) {
         let s = nsString::from(other.as_ref());
         unsafe {
             Gecko_AssignString(self, &*s);
         }
     }
 
-    pub fn assign_utf8<T: AsRef<[u8]>>(&mut self, other: &T) {
+    pub fn assign_utf8<T: AsRef<[u8]> + ?Sized>(&mut self, other: &T) {
         self.assign(&[]);
         self.append_utf8(other);
     }
 
-    pub fn append<T: AsRef<[u16]>>(&mut self, other: &T) {
+    pub fn append<T: AsRef<[u16]> + ?Sized>(&mut self, other: &T) {
         let s = nsString::from(other.as_ref());
         unsafe {
             Gecko_AppendString(self, &*s);
         }
     }
 
-    pub fn append_utf8<T: AsRef<[u8]>>(&mut self, other: &T) {
+    pub fn append_utf8<T: AsRef<[u8]> + ?Sized>(&mut self, other: &T) {
         let s = nsCString::from(other.as_ref());
         unsafe {
             Gecko_AppendUTF8toString(self, &*s);
