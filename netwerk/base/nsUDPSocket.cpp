@@ -249,8 +249,6 @@ nsUDPMessage::GetDataAsTArray()
 nsUDPSocket::nsUDPSocket()
   : mLock("nsUDPSocket.mLock")
   , mFD(nullptr)
-  , mAppId(NECKO_UNKNOWN_APP_ID)
-  , mIsInIsolatedMozBrowserElement(false)
   , mAttached(false)
   , mByteReadCount(0)
   , mByteWriteCount(0)
@@ -616,21 +614,6 @@ nsUDPSocket::InitWithAddress(const NetAddr *aAddr, nsIPrincipal *aPrincipal,
     NS_WARNING("unable to create UDP socket");
     return NS_ERROR_FAILURE;
   }
-
-  if (aPrincipal) {
-    mAppId = aPrincipal->GetAppId();
-    mIsInIsolatedMozBrowserElement =
-      aPrincipal->GetIsInIsolatedMozBrowserElement();
-  }
-
-#ifdef MOZ_WIDGET_GONK
-  if (mAppId != NECKO_UNKNOWN_APP_ID) {
-    nsCOMPtr<nsINetworkInfo> activeNetworkInfo;
-    GetActiveNetworkInfo(activeNetworkInfo);
-    mActiveNetworkInfo =
-      new nsMainThreadPtrHolder<nsINetworkInfo>(activeNetworkInfo);
-  }
-#endif
 
   uint16_t port;
   if (NS_FAILED(net::GetPort(aAddr, &port))) {
