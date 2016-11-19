@@ -10,3 +10,4 @@ fuzzy(80,1500) == border-dashed-radius.html masked.html
 fuzzy(80,1500) == border-mixed.html masked.html
 fuzzy(80,1500) == border-dashed-non-integer.html masked.html
 fuzzy(80,1500) == border-dashed-radius-zoom.html masked-zoom.html
+fuzzy(80,1500) == border-dotted-radius-zero.html masked-small.html
