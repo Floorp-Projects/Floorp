@@ -36,7 +36,6 @@ from mozscreenshot import printstatus, dump_screen
 # ---------------------------------------------------------------
 
 _DEFAULT_PREFERENCE_FILE = os.path.join(SCRIPT_DIR, 'prefs_general.js')
-_DEFAULT_APPS_FILE = os.path.join(SCRIPT_DIR, 'webapps_mochitest.json')
 
 _DEFAULT_WEB_SERVER = "127.0.0.1"
 _DEFAULT_HTTP_PORT = 8888
