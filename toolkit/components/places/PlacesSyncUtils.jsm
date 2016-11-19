@@ -601,7 +601,9 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
     }
 
     // Convert the Places bookmark object to a Sync bookmark and add
-    // kind-specific properties.
+    // kind-specific properties. Titles are required for bookmarks,
+    // folders, and livemarks; optional for queries, and omitted for
+    // separators.
     let kind = yield getKindForItem(bookmarkItem);
     let item;
     switch (kind) {
@@ -631,12 +633,11 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
         throw new Error(`Unknown bookmark kind: ${kind}`);
     }
 
-    // Sync uses the parent title for de-duping.
+    // Sync uses the parent title for de-duping. All Sync bookmark objects
+    // except the Places root should have this property.
     if (bookmarkItem.parentGuid) {
       let parent = yield PlacesUtils.bookmarks.fetch(bookmarkItem.parentGuid);
-      if ("title" in parent) {
-        item.parentTitle = parent.title;
-      }
+      item.parentTitle = parent.title || "";
     }
 
     return item;
@@ -1418,6 +1419,10 @@ function syncBookmarkToPlacesBookmark(info) {
 var fetchBookmarkItem = Task.async(function* (bookmarkItem) {
   let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
 
+  if (!item.title) {
+    item.title = "";
+  }
+
   item.tags = PlacesUtils.tagging.getTagsForURI(
     PlacesUtils.toURI(bookmarkItem.url), {});
 
@@ -1445,6 +1450,10 @@ var fetchBookmarkItem = Task.async(function* (bookmarkItem) {
 var fetchFolderItem = Task.async(function* (bookmarkItem) {
   let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
 
+  if (!item.title) {
+    item.title = "";
+  }
+
   let description = yield getAnno(bookmarkItem.guid,
                                   BookmarkSyncUtils.DESCRIPTION_ANNO);
   if (description) {
@@ -1464,6 +1473,10 @@ var fetchFolderItem = Task.async(function* (bookmarkItem) {
 // description, children (none), feed URI, and site URI.
 var fetchLivemarkItem = Task.async(function* (bookmarkItem) {
   let item = yield placesBookmarkToSyncBookmark(bookmarkItem);
+
+  if (!item.title) {
+    item.title = "";
+  }
 
   let description = yield getAnno(bookmarkItem.guid,
                                   BookmarkSyncUtils.DESCRIPTION_ANNO);

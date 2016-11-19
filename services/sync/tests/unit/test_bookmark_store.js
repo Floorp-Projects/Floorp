@@ -167,7 +167,7 @@ add_test(function test_bookmark_createRecord() {
 
     _("Verify that the record is created accordingly.");
     let record = store.createRecord(bmk1_guid);
-    do_check_eq(record.title, null);
+    do_check_eq(record.title, "");
     do_check_eq(record.description, null);
     do_check_eq(record.keyword, null);
 
