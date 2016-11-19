@@ -8195,7 +8195,7 @@ CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir)
     emitStoreElementHoleV(lir);
 }
 
-typedef bool (*ThrowReadOnlyFn)(JSContext*, HandleObject);
+typedef bool (*ThrowReadOnlyFn)(JSContext*, int32_t);
 static const VMFunction ThrowReadOnlyInfo =
     FunctionInfo<ThrowReadOnlyFn>(ThrowReadOnlyError, "ThrowReadOnlyError");
 
@@ -8210,9 +8210,12 @@ CodeGenerator::visitFallibleStoreElementT(LFallibleStoreElementT* lir)
     if (!lir->mir()->strict()) {
         masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN), &isFrozen);
     } else {
-        Register object = ToRegister(lir->object());
-        OutOfLineCode* ool = oolCallVM(ThrowReadOnlyInfo, lir,
-                ArgList(object), StoreNothing());
+        const LAllocation* index = lir->index();
+        OutOfLineCode* ool;
+        if (index->isConstant())
+            ool = oolCallVM(ThrowReadOnlyInfo, lir, ArgList(Imm32(ToInt32(index))), StoreNothing());
+        else
+            ool = oolCallVM(ThrowReadOnlyInfo, lir, ArgList(ToRegister(index)), StoreNothing());
         masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN), ool->entry());
         // This OOL code should have thrown an exception, so will never return.
         // So, do not bind ool->rejoin() anywhere, so that it implicitly (and without the cost
@@ -8235,9 +8238,12 @@ CodeGenerator::visitFallibleStoreElementV(LFallibleStoreElementV* lir)
     if (!lir->mir()->strict()) {
         masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN), &isFrozen);
     } else {
-        Register object = ToRegister(lir->object());
-        OutOfLineCode* ool = oolCallVM(ThrowReadOnlyInfo, lir,
-                ArgList(object), StoreNothing());
+        const LAllocation* index = lir->index();
+        OutOfLineCode* ool;
+        if (index->isConstant())
+            ool = oolCallVM(ThrowReadOnlyInfo, lir, ArgList(Imm32(ToInt32(index))), StoreNothing());
+        else
+            ool = oolCallVM(ThrowReadOnlyInfo, lir, ArgList(ToRegister(index)), StoreNothing());
         masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN), ool->entry());
         // This OOL code should have thrown an exception, so will never return.
         // So, do not bind ool->rejoin() anywhere, so that it implicitly (and without the cost
