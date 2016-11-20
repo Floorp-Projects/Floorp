@@ -115,22 +115,22 @@ function activateOneProvider(manifest, finishActivation, aCallback) {
   let panel = document.getElementById("servicesInstall-notification");
   BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown").then(() => {
     ok(!panel.hidden, "servicesInstall-notification panel opened");
+    BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden").then(() => {
+      ok(panel.hidden, "servicesInstall-notification panel hidden");
+      if (!finishActivation) {
+        ok(panel.hidden, "activation panel is not showing");
+        executeSoon(aCallback);
+      } else {
+        waitForProviderLoad(manifest.origin).then(() => {
+          checkSocialUI();
+          executeSoon(aCallback);
+        });
+      }
+    });
     if (finishActivation)
       panel.button.click();
     else
       panel.closebutton.click();
-  });
-  BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden").then(() => {
-    ok(panel.hidden, "servicesInstall-notification panel hidden");
-    if (!finishActivation) {
-      ok(panel.hidden, "activation panel is not showing");
-      executeSoon(aCallback);
-    } else {
-      waitForProviderLoad(manifest.origin).then(() => {
-        checkSocialUI();
-        executeSoon(aCallback);
-      });
-    }
   });
 
   // the test will continue as the popup events fire...
