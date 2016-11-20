@@ -15394,6 +15394,10 @@
         "url": "/cors/status.htm"
       },
       {
+        "path": "cssom/serialization-CSSDeclaration-with-important.html",
+        "url": "/cssom/serialization-CSSDeclaration-with-important.html"
+      },
+      {
         "path": "cssom-view/HTMLBody-ScrollArea_quirksmode.html",
         "url": "/cssom-view/HTMLBody-ScrollArea_quirksmode.html"
       },
