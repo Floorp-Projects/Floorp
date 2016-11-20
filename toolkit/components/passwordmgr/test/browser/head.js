@@ -118,9 +118,12 @@ function clickDoorhangerButton(aPopup, aButtonIndex) {
   if (aButtonIndex == 0) {
     ok(true, "Triggering main action");
     notification.button.doCommand();
+  } else if (aButtonIndex == 1) {
+    ok(true, "Triggering secondary action");
+    notification.secondaryButton.doCommand();
   } else if (aButtonIndex <= aPopup.secondaryActions.length) {
     ok(true, "Triggering secondary action " + aButtonIndex);
-    notification.childNodes[aButtonIndex].doCommand();
+    notification.childNodes[aButtonIndex - 1].doCommand();
   }
 }
 

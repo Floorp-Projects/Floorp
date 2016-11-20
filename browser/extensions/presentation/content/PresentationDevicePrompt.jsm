@@ -76,7 +76,6 @@ PresentationPermissionPrompt.prototype = {
   },
   get popupOptions() {
     return {
-      hideNotNow: true,
       removeOnDismissal: true,
       popupIconURL: kNotificationPopupIcon, // Icon shown on prompt content
       eventCallback: (aTopic, aNewBrowser) => {
@@ -162,7 +161,7 @@ PresentationPermissionPrompt.prototype = {
         this._isResponded = true;
         this.request.cancel(Cr.NS_ERROR_NOT_AVAILABLE);
       },
-      dismiss: true, // For hideNotNow.
+      dismiss: true,
     }];
   },
   // PRIVATE APIs
