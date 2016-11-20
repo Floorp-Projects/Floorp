@@ -401,8 +401,7 @@ private:
   uint64_t mVideoLatencyAvg;
   uint32_t mMinBitrate;
   uint32_t mStartBitrate;
-  uint32_t mPrefMaxBitrate;
-  uint32_t mNegotiatedMaxBitrate;
+  uint32_t mMaxBitrate;
   uint32_t mMinBitrateEstimate;
 
   bool mRtpStreamIdEnabled;
