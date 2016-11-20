@@ -252,6 +252,13 @@ add_task(function* test_with_permission_key() {
       permissionKey: kTestPermissionKey,
       message: kTestMessage,
       promptActions: [mainAction, secondaryAction],
+      popupOptions: {
+        checkbox: {
+          label: "Remember this decision",
+          show: true,
+          checked: true
+        }
+      }
     };
 
     let shownPromise =

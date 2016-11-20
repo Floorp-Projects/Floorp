@@ -73,7 +73,7 @@ function checkOnlyLoginWasUsedTwice({ justChanged }) {
 // Begin popup notification (doorhanger) functions //
 
 const REMEMBER_BUTTON = 0;
-const NEVER_BUTTON = 1;
+const NEVER_BUTTON = 2;
 
 const CHANGE_BUTTON = 0;
 const DONT_CHANGE_BUTTON = 1;
@@ -94,7 +94,7 @@ function getCaptureDoorhanger(aKind, popupNotifications = PopupNotifications) {
     if (aKind == "password-change") {
       is(notification.mainAction.label, "Update", "Main action label matches update doorhanger.");
     } else if (aKind == "password-save") {
-      is(notification.mainAction.label, "Remember", "Main action label matches save doorhanger.");
+      is(notification.mainAction.label, "Save", "Main action label matches save doorhanger.");
     }
   }
   return notification;
