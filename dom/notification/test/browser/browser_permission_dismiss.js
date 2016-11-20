@@ -96,16 +96,3 @@ add_task(function* test_requestPermission_denied() {
      Services.perms.DENY_ACTION,
      "Check permission in perm. manager");
 });
-
-add_task(function* test_requestPermission_dismissed() {
-  yield tabWithRequest(function() {
-    PopupNotifications.panel.hidePopup();
-  }, "default");
-
-  ok(!PopupNotifications.getNotification("web-notifications"),
-     "Should remove the doorhanger notification icon if dismissed");
-
-  is(Services.perms.testPermission(ORIGIN_URI, PERMISSION_NAME),
-     Services.perms.UNKNOWN_ACTION,
-     "Check permission in perm. manager");
-});
