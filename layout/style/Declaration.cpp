@@ -1590,7 +1590,7 @@ Declaration::AppendPropertyAndValueToString(nsCSSPropertyID aProperty,
   else
     aResult.Append(aValue);
   if (GetPropertyIsImportantByID(aProperty)) {
-    aResult.AppendLiteral(" ! important");
+    aResult.AppendLiteral(" !important");
   }
   aResult.AppendLiteral("; ");
 }
@@ -1643,7 +1643,7 @@ Declaration::AppendVariableAndValueToString(const nsAString& aName,
   }
 
   if (important) {
-    aResult.AppendLiteral("! important");
+    aResult.AppendLiteral("!important");
   }
   aResult.AppendLiteral("; ");
 }
