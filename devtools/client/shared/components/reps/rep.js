@@ -12,6 +12,7 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   const { isGrip } = require("./rep-utils");
+  const { MODE } = require("./constants");
 
   // Load all existing rep templates
   const { Undefined } = require("./undefined");
@@ -90,7 +91,8 @@ define(function (require, exports, module) {
     propTypes: {
       object: React.PropTypes.any,
       defaultRep: React.PropTypes.object,
-      mode: React.PropTypes.string
+      // @TODO Change this to Object.values once it's supported in Node's version of V8
+      mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
     },
 
     render: function () {

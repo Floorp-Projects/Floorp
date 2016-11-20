@@ -7,8 +7,11 @@
 
 // Make this available to both AMD and CJS environments
 define(function (require, exports, module) {
+  // Dependencies
   const React = require("devtools/client/shared/vendor/react");
   const { createFactories } = require("./rep-utils");
+  const { MODE } = require("./constants");
+  // Shortcuts
   const { span } = React.DOM;
 
   /**
@@ -29,7 +32,8 @@ define(function (require, exports, module) {
       equal: React.PropTypes.string,
       // Delimiter character used to separate individual properties.
       delim: React.PropTypes.string,
-      mode: React.PropTypes.string,
+      // @TODO Change this to Object.values once it's supported in Node's version of V8
+      mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
     },
 
     render: function () {
@@ -44,7 +48,7 @@ define(function (require, exports, module) {
       } else {
         key = Rep({
           object: this.props.name,
-          mode: this.props.mode || "tiny",
+          mode: this.props.mode || MODE.TINY,
           defaultRep: Grip,
           objectLink: this.props.objectLink,
         });

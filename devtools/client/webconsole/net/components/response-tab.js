@@ -9,6 +9,7 @@ const React = require("devtools/client/shared/vendor/react");
 const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
 const TreeView = React.createFactory(require("devtools/client/shared/components/tree/tree-view"));
 const { Rep } = createFactories(require("devtools/client/shared/components/reps/rep"));
+const { MODE } = require("devtools/client/shared/components/reps/constants");
 
 // Network
 const SizeLimit = React.createFactory(require("./size-limit"));
@@ -104,7 +105,7 @@ var ResponseTab = React.createClass({
       content: TreeView({
         columns: [{id: "value"}],
         object: json,
-        mode: "tiny",
+        mode: MODE.TINY,
         renderValue: props => Rep(Object.assign({}, props, {
           cropLimit: 50,
         })),

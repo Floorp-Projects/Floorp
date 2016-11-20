@@ -7,8 +7,9 @@
 define(function (require, exports, module) {
   // ReactJS
   const React = require("devtools/client/shared/vendor/react");
-  // Dependencies
+  // Utils
   const { isGrip } = require("./rep-utils");
+  const { MODE } = require("./constants");
   // Shortcuts
   const { span } = React.DOM;
 
@@ -20,7 +21,8 @@ define(function (require, exports, module) {
 
     propTypes: {
       object: React.PropTypes.object.isRequired,
-      mode: React.PropTypes.string
+      // @TODO Change this to Object.values once it's supported in Node's version of V8
+      mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
     },
 
     render: function () {
@@ -30,11 +32,11 @@ define(function (require, exports, module) {
         ? preview.name
         : "Error";
 
-      let content = this.props.mode === "tiny"
+      let content = this.props.mode === MODE.TINY
         ? name
         : `${name}: ${preview.message}`;
 
-      if (preview.stack && this.props.mode !== "tiny") {
+      if (preview.stack && this.props.mode !== MODE.TINY) {
         /*
          * Since Reps are used in the JSON Viewer, we can't localize
          * the "Stack trace" label (defined in debugger.properties as

@@ -12,6 +12,7 @@ define(function (require, exports, module) {
 
   // Reps
   const { isGrip, cropString } = require("./rep-utils");
+  const { MODE } = require("./constants");
 
   // Shortcuts
   const DOM = React.DOM;
@@ -24,7 +25,8 @@ define(function (require, exports, module) {
 
     propTypes: {
       object: React.PropTypes.object.isRequired,
-      mode: React.PropTypes.string,
+      // @TODO Change this to Object.values once it's supported in Node's version of V8
+      mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
     },
 
     getTextContent: function (grip) {
@@ -42,8 +44,10 @@ define(function (require, exports, module) {
     },
 
     render: function () {
-      let grip = this.props.object;
-      let mode = this.props.mode || "short";
+      let {
+        object: grip,
+        mode = MODE.SHORT,
+      } = this.props;
 
       let baseConfig = {className: "objectBox objectBox-textNode"};
       if (this.props.onDOMNodeMouseOver) {
@@ -58,7 +62,7 @@ define(function (require, exports, module) {
         });
       }
 
-      if (mode == "tiny") {
+      if (mode === MODE.TINY) {
         return DOM.span(baseConfig, this.getTitle(grip));
       }
 
