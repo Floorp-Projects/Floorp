@@ -3005,6 +3005,11 @@ MBinaryArithInstruction::constantDoubleResult(TempAllocator& alloc)
 MDefinition*
 MRsh::foldsTo(TempAllocator& alloc)
 {
+    MDefinition* f = MBinaryBitwiseInstruction::foldsTo(alloc);
+
+    if (f != this)
+        return f;
+
     MDefinition* lhs = getOperand(0);
     MDefinition* rhs = getOperand(1);
 
