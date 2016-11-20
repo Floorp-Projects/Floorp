@@ -207,7 +207,7 @@
 .tab-icon-sound[muted],
 .tab-icon-sound[blocked] {
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio);
-  filter: url(chrome://browser/skin/filters.svg#fill);
+  filter: url(chrome://global/skin/filters.svg#fill);
   fill: currentColor;
 }
 
@@ -222,13 +222,13 @@
 .tab-icon-sound:-moz-lwtheme-darktext[soundplaying],
 .tab-icon-sound:-moz-lwtheme-darktext[muted],
 .tab-icon-sound:-moz-lwtheme-darktext[blocked] {
-  filter: url(chrome://browser/skin/filters.svg#fill) drop-shadow(1px 1px 1px white);
+  filter: url(chrome://global/skin/filters.svg#fill) drop-shadow(1px 1px 1px white);
 }
 
 .tab-icon-sound:-moz-lwtheme-brighttext[soundplaying],
 .tab-icon-sound:-moz-lwtheme-brighttext[muted],
 .tab-icon-sound:-moz-lwtheme-brighttext[blocked] {
-  filter: url(chrome://browser/skin/filters.svg#fill) drop-shadow(1px 1px 1px black);
+  filter: url(chrome://global/skin/filters.svg#fill) drop-shadow(1px 1px 1px black);
 }
 
 .tab-icon-sound[soundplaying]:not(:hover),
@@ -553,7 +553,7 @@
 .alltabs-endimage[muted],
 .alltabs-endimage[blocked] {
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio.svg#tab-audio);
-  filter: url(chrome://browser/skin/filters.svg#fill);
+  filter: url(chrome://global/skin/filters.svg#fill);
   fill: currentColor;
 }
 
