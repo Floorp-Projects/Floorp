@@ -1,4 +1,9 @@
 Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
+const {
+  // `fetchGuidsWithAnno` isn't exported, but we can still access it here via a
+  // backstage pass.
+  fetchGuidsWithAnno,
+} = Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://testing-common/httpd.js");
 Cu.importGlobalProperties(["crypto", "URLSearchParams"]);
 
@@ -979,8 +984,6 @@ add_task(function* test_insert_orphans() {
       parentGuid, "Child should still have orphan anno");
   }
 
-  // Note that only `PlacesSyncUtils` reparents orphans, though Sync adds an
-  // observer that removes the orphan anno if the orphan is manually moved.
   do_print("Insert the missing parent");
   {
     let parent = yield PlacesSyncUtils.bookmarks.insert({
@@ -997,6 +1000,187 @@ add_task(function* test_insert_orphans() {
     let child = yield PlacesUtils.bookmarks.fetch({ guid: childGuid });
     equal(child.parentGuid, parentGuid,
       "Should reparent child after inserting missing parent");
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+});
+
+add_task(function* test_move_orphans() {
+  let nonexistentSyncId = makeGuid();
+  let fxBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: nonexistentSyncId,
+    url: "http://getfirefox.com",
+  });
+  let tbBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: nonexistentSyncId,
+    url: "http://getthunderbird.com",
+  });
+
+  do_print("Verify synced orphan annos match");
+  {
+    let orphanGuids = yield fetchGuidsWithAnno(SYNC_PARENT_ANNO,
+      nonexistentSyncId);
+    deepEqual(orphanGuids.sort(), [fxBmk.syncId, tbBmk.syncId].sort(),
+      "Orphaned bookmarks should match before moving");
+  }
+
+  do_print("Move synced orphan using async API");
+  {
+    yield PlacesUtils.bookmarks.update({
+      guid: fxBmk.syncId,
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+    });
+    let orphanGuids = yield fetchGuidsWithAnno(SYNC_PARENT_ANNO,
+      nonexistentSyncId);
+    deepEqual(orphanGuids, [tbBmk.syncId],
+      "Should remove orphan annos from updated bookmark");
+  }
+
+  do_print("Move synced orphan using sync API");
+  {
+    let tbId = yield syncIdToId(tbBmk.syncId);
+    PlacesUtils.bookmarks.moveItem(tbId, PlacesUtils.toolbarFolderId,
+      PlacesUtils.bookmarks.DEFAULT_INDEX);
+    let orphanGuids = yield fetchGuidsWithAnno(SYNC_PARENT_ANNO,
+      nonexistentSyncId);
+    deepEqual(orphanGuids, [],
+      "Should remove orphan annos from moved bookmark");
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+});
+
+add_task(function* test_reorder_orphans() {
+  let nonexistentSyncId = makeGuid();
+  let fxBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: nonexistentSyncId,
+    url: "http://getfirefox.com",
+  });
+  let tbBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: nonexistentSyncId,
+    url: "http://getthunderbird.com",
+  });
+  let mozBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: nonexistentSyncId,
+    url: "https://mozilla.org",
+  });
+
+  do_print("Verify synced orphan annos match");
+  {
+    let orphanGuids = yield fetchGuidsWithAnno(SYNC_PARENT_ANNO,
+      nonexistentSyncId);
+    deepEqual(orphanGuids.sort(), [
+      fxBmk.syncId,
+      tbBmk.syncId,
+      mozBmk.syncId,
+    ].sort(), "Orphaned bookmarks should match before reordering");
+  }
+
+  do_print("Reorder synced orphans");
+  {
+    yield PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
+      [tbBmk.syncId, fxBmk.syncId]);
+    let orphanGuids = yield fetchGuidsWithAnno(SYNC_PARENT_ANNO,
+      nonexistentSyncId);
+    deepEqual(orphanGuids, [mozBmk.syncId],
+      "Should remove orphan annos from explicitly reordered bookmarks");
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+});
+
+add_task(function* test_set_orphan_indices() {
+  let nonexistentSyncId = makeGuid();
+  let fxBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: nonexistentSyncId,
+    url: "http://getfirefox.com",
+  });
+  let tbBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: nonexistentSyncId,
+    url: "http://getthunderbird.com",
+  });
+
+  do_print("Verify synced orphan annos match");
+  {
+    let orphanGuids = yield fetchGuidsWithAnno(SYNC_PARENT_ANNO,
+      nonexistentSyncId);
+    deepEqual(orphanGuids.sort(), [fxBmk.syncId, tbBmk.syncId].sort(),
+      "Orphaned bookmarks should match before changing indices");
+  }
+
+  do_print("Set synced orphan indices");
+  {
+    let fxId = yield syncIdToId(fxBmk.syncId);
+    let tbId = yield syncIdToId(tbBmk.syncId);
+    PlacesUtils.bookmarks.runInBatchMode(_ => {
+      PlacesUtils.bookmarks.setItemIndex(fxId, 1);
+      PlacesUtils.bookmarks.setItemIndex(tbId, 0);
+    }, null);
+    let orphanGuids = yield fetchGuidsWithAnno(SYNC_PARENT_ANNO,
+      nonexistentSyncId);
+    deepEqual(orphanGuids, [],
+      "Should remove orphan annos after updating indices");
+  }
+
+  yield PlacesUtils.bookmarks.eraseEverything();
+});
+
+add_task(function* test_unsynced_orphans() {
+  let nonexistentSyncId = makeGuid();
+  let newBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: nonexistentSyncId,
+    url: "http://getfirefox.com",
+  });
+  let unknownBmk = yield PlacesSyncUtils.bookmarks.insert({
+    kind: "bookmark",
+    syncId: makeGuid(),
+    parentSyncId: nonexistentSyncId,
+    url: "http://getthunderbird.com",
+  });
+  yield PlacesTestUtils.setBookmarkSyncFields({
+    guid: newBmk.syncId,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+  }, {
+    guid: unknownBmk.syncId,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN,
+  });
+
+  do_print("Reorder unsynced orphans");
+  {
+    yield PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
+      [unknownBmk.syncId, newBmk.syncId]);
+    let orphanGuids = yield fetchGuidsWithAnno(SYNC_PARENT_ANNO,
+      nonexistentSyncId);
+    deepEqual(orphanGuids.sort(), [newBmk.syncId, unknownBmk.syncId].sort(),
+      "Should not remove orphan annos from reordered unsynced bookmarks");
+  }
+
+  do_print("Move unsynced orphan");
+  {
+    let unknownId = yield syncIdToId(unknownBmk.syncId);
+    PlacesUtils.bookmarks.moveItem(unknownId, PlacesUtils.toolbarFolderId,
+      PlacesUtils.bookmarks.DEFAULT_INDEX);
+    let orphanGuids = yield fetchGuidsWithAnno(SYNC_PARENT_ANNO,
+      nonexistentSyncId);
+    deepEqual(orphanGuids.sort(), [newBmk.syncId, unknownBmk.syncId].sort(),
+      "Should not remove orphan annos from moved unsynced bookmarks");
   }
 
   yield PlacesUtils.bookmarks.eraseEverything();
