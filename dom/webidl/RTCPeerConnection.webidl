@@ -67,17 +67,6 @@ dictionary RTCOfferOptions : RTCOfferAnswerOptions {
   // Mozilla proprietary options (at risk: Bug 1196974)
   boolean mozDontOfferDataChannel;
   boolean mozBundleOnly;
-
-  // TODO: Remove old constraint-like RTCOptions support soon (Bug 1064223).
-  DeprecatedRTCOfferOptionsSet mandatory;
-  sequence<DeprecatedRTCOfferOptionsSet> _optional;
-};
-
-dictionary DeprecatedRTCOfferOptionsSet {
-  boolean OfferToReceiveAudio;     // Note the uppercase 'O'
-  boolean OfferToReceiveVideo;     // Note the uppercase 'O'
-  boolean MozDontOfferDataChannel; // Note the uppercase 'M'
-  boolean MozBundleOnly;           // Note the uppercase 'M'
 };
 
 interface RTCDataChannel;
