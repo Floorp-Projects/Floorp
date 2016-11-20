@@ -1567,3 +1567,9 @@ pref("services.sync.validation.enabled", true);
 
 // Preferences for the form autofill system extension
 pref("browser.formautofill.experimental", false);
+
+// Enable safebrowsing v4 tables (suffixed by "-proto") update.
+#ifdef NIGHTLY_BUILD
+pref("urlclassifier.malwareTable", "goog-malware-shavar,goog-unwanted-shavar,goog-malware-proto,goog-unwanted-proto,test-malware-simple,test-unwanted-simple");
+pref("urlclassifier.phishTable", "goog-phish-shavar,goog-phish-proto,test-phish-simple");
+#endif
