@@ -4861,7 +4861,7 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
           res = aSelection->Collapse(blockParent, offset + 1);
           NS_ENSURE_SUCCESS(res, res);
         }
-      } else {
+      } else if (aAction != nsIEditor::eNone) {
         NS_RUNTIMEABORT("CheckForEmptyBlock doesn't support this action yet");
       }
     }
