@@ -19,6 +19,7 @@ Test Obj rep
 window.onload = Task.async(function* () {
   let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
   let { Obj } = browserRequire("devtools/client/shared/components/reps/object");
+  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
 
   const componentUnderTest = Obj;
 
@@ -57,15 +58,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: defaultOutput,
       }
     ];
@@ -85,15 +86,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `Object`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: defaultOutput,
       }
     ];
@@ -114,15 +115,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `Object`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: defaultOutput,
       }
     ];
@@ -140,15 +141,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `Object`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: defaultOutput,
       }
     ];
@@ -173,15 +174,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `Object`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: defaultOutput,
       }
     ];
@@ -204,15 +205,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `Object`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: defaultOutput,
       }
     ];
