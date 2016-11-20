@@ -309,6 +309,11 @@ PopupNotifications.prototype = {
    *        persistWhileVisible:
    *                     A boolean. If true, a visible notification will always
    *                     persist across location changes.
+   *        persistent:  A boolean. If true, the notification will always
+   *                     persist even across tab and app changes (but not across
+   *                     location changes), until the user accepts or rejects
+   *                     the request. The notification will never be implicitly
+   *                     dismissed.
    *        dismissed:   Whether the notification should be added as a dismissed
    *                     notification. Dismissed notifications can be activated
    *                     by clicking on their anchorElement.
@@ -475,7 +480,7 @@ PopupNotifications.prototype = {
       if (notification.options.persistWhileVisible &&
           this.isPanelOpen) {
         if ("persistence" in notification.options &&
-          notification.options.persistence)
+            notification.options.persistence)
           notification.options.persistence--;
         return true;
       }
@@ -587,6 +592,14 @@ PopupNotifications.prototype = {
   _dismiss: function PopupNotifications_dismiss(telemetryReason) {
     if (telemetryReason) {
       this.nextDismissReason = telemetryReason;
+    }
+
+    // An explicitly dismissed persistent notification effectively becomes
+    // non-persistent.
+    if (this.panel.firstChild &&
+        (telemetryReason == TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON ||
+         telemetryReason == TELEMETRY_STAT_DISMISSAL_NOT_NOW)) {
+      this.panel.firstChild.notification.options.persistent = false;
     }
 
     let browser = this.panel.firstChild &&
@@ -831,7 +844,7 @@ PopupNotifications.prototype = {
     // If the panel is already open but we're changing anchors, we need to hide
     // it first.  Otherwise it can appear in the wrong spot.  (_hidePanel is
     // safe to call even if the panel is already hidden.)
-    let promise = this._hidePanel().then(() => {
+    this._hidePanel().then(() => {
       // If the anchor element is hidden or null, use the tab as the anchor. We
       // only ever show notifications for the current browser, so we can just use
       // the current tab.
@@ -845,6 +858,12 @@ PopupNotifications.prototype = {
       }
 
       this._currentAnchorElement = anchorElement;
+
+      if (notificationsToShow.some(n => n.options.persistent)) {
+        this.panel.setAttribute("noautohide", "true");
+      } else {
+        this.panel.removeAttribute("noautohide");
+      }
 
       // On OS X and Linux we need a different panel arrow color for
       // click-to-play plugins, so copy the popupid and use css.
@@ -931,9 +950,10 @@ PopupNotifications.prototype = {
       }
     }
 
-    // Filter out notifications that have been dismissed.
+    // Filter out notifications that have been dismissed, unless they are
+    // persistent.
     let notificationsToShow = notifications.filter(function(n) {
-      return !n.dismissed && !n.options.neverShow;
+      return (!n.dismissed || n.options.persistent) && !n.options.neverShow;
     });
 
     if (useIconBox) {
@@ -1111,7 +1131,7 @@ PopupNotifications.prototype = {
     }
 
     // Ensure we move focus into the panel because it's opened through user interaction:
-    this.panel.removeAttribute("noautofocus", "true");
+    this.panel.removeAttribute("noautofocus");
 
     this._reshowNotifications(anchor);
   },

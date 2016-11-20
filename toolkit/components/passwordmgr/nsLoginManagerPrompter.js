@@ -957,9 +957,9 @@ LoginManagerPrompter.prototype = {
       mainAction,
       secondaryActions,
       {
-        timeout: Date.now() + 10000,
         displayURI: Services.io.newURI(login.hostname, null, null),
         persistWhileVisible: true,
+        persistent: true,
         passwordNotificationType: type,
         eventCallback: function(topic) {
           switch (topic) {
