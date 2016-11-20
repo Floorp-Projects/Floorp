@@ -160,23 +160,6 @@ var tests = [
       goNext();
     }
   },
-  // the hideNotNow option
-  { id: "Test#7",
-    run: function() {
-      this.notifyObj = new BasicNotification(this.id);
-      this.notifyObj.options.hideNotNow = true;
-      this.notifyObj.mainAction.dismiss = true;
-      this.notification = showNotification(this.notifyObj);
-    },
-    onShown: function(popup) {
-      // checkPopup verifies that the Not Now item is hidden, and that no separator is added.
-      checkPopup(popup, this.notifyObj);
-      triggerMainCommand(popup);
-    },
-    onHidden: function(popup) {
-      this.notification.remove();
-    }
-  },
   // the main action callback can keep the notification.
   { id: "Test#8",
     run: function() {

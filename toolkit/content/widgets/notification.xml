@@ -502,7 +502,7 @@
             </xul:vbox>
             <xul:toolbarbutton anonid="closebutton"
                                class="messageCloseButton close-icon popup-notification-closebutton tabbable"
-                               xbl:inherits="oncommand=closebuttoncommand"
+                               xbl:inherits="oncommand=closebuttoncommand,hidden=closebuttonhidden"
                                tooltiptext="&closeNotification.tooltip;"/>
           </xul:hbox>
           <children includes="popupnotificationcontent"/>
@@ -513,27 +513,25 @@
           <xul:description class="popup-notification-warning" xbl:inherits="hidden=warninghidden,xbl:text=warninglabel"/>
         </xul:vbox>
       </xul:hbox>
-      <xul:hbox pack="end" class="popup-notification-button-container">
+      <xul:hbox class="popup-notification-button-container">
         <children includes="button"/>
-        <xul:hbox class="popup-notification-button-wrapper">
-          <xul:button anonid="button"
-                      class="popup-notification-button"
-                      default="true"
-                      xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,disabled=mainactiondisabled"/>
-          <xul:toolbarseparator/>
-          <xul:button type="menu"
-                      class="popup-notification-button popup-notification-dropmarker"
-                      xbl:inherits="onpopupshown=buttonpopupshown">
-            <xul:menupopup anonid="menupopup"
-                           position="after_end"
-                           xbl:inherits="oncommand=menucommand">
-              <children/>
-              <xul:menuitem class="menuitem-iconic popup-notification-closeitem"
-                            label="&closeNotificationItem.label;"
-                            xbl:inherits="oncommand=closeitemcommand,hidden=hidenotnow"/>
-            </xul:menupopup>
-          </xul:button>
-        </xul:hbox>
+        <xul:button anonid="secondarybutton"
+                    class="popup-notification-button"
+                    xbl:inherits="oncommand=secondarybuttoncommand,label=secondarybuttonlabel,accesskey=secondarybuttonaccesskey,hidden=secondarybuttonhidden"/>
+        <xul:toolbarseparator xbl:inherits="hidden=dropmarkerhidden"/>
+        <xul:button type="menu"
+                    class="popup-notification-button popup-notification-dropmarker"
+                    xbl:inherits="onpopupshown=dropmarkerpopupshown,hidden=dropmarkerhidden">
+          <xul:menupopup anonid="menupopup"
+                         position="after_end"
+                         xbl:inherits="oncommand=menucommand">
+            <children/>
+          </xul:menupopup>
+        </xul:button>
+        <xul:button anonid="button"
+                    class="popup-notification-button"
+                    default="true"
+                    xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,disabled=mainactiondisabled"/>
       </xul:hbox>
     </content>
     <resources>
@@ -548,6 +546,9 @@
       </field>
       <field name="button" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "button");
+      </field>
+      <field name="secondaryButton" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "secondarybutton");
       </field>
       <field name="menupopup" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "menupopup");

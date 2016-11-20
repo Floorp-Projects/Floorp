@@ -2856,7 +2856,6 @@ var E10SAccessibilityCheck = {
       learnMoreURL: Services.urlFormatter.formatURLPref("app.support.e10sAccessibilityUrl"),
       persistent: true,
       persistWhileVisible: true,
-      hideNotNow: true,
     };
 
     notification =

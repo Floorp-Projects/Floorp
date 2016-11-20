@@ -14,20 +14,18 @@ const TEST_URL = "http://mochi.test:8888/browser/dom/notification/test/browser/n
  * @note modified from toolkit/components/passwordmgr/test/browser/head.js
  */
 function clickDoorhangerButton(aButtonIndex) {
-  ok(true, "Looking for action at index " + aButtonIndex);
-
   let popup = PopupNotifications.getNotification("web-notifications");
   let notifications = popup.owner.panel.childNodes;
   ok(notifications.length > 0, "at least one notification displayed");
   ok(true, notifications.length + " notification(s)");
   let notification = notifications[0];
 
-  if (aButtonIndex == -1) {
+  if (aButtonIndex == PROMPT_ALLOW_BUTTON) {
     ok(true, "Triggering main action");
     notification.button.doCommand();
-  } else if (aButtonIndex <= popup.secondaryActions.length) {
-    ok(true, "Triggering secondary action " + aButtonIndex);
-    notification.childNodes[aButtonIndex].doCommand();
+  } else {
+    ok(true, "Triggering secondary action");
+    notification.secondaryButton.doCommand();
   }
 }
 

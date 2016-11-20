@@ -101,7 +101,7 @@ var tests = [
       ok(false, "Should have removed the notification after navigation");
       // Properly dismiss and cleanup in case the unthinkable happens.
       this.complete = true;
-      triggerSecondaryCommand(popup, 1);
+      triggerSecondaryCommand(popup, 0);
     },
     onHidden: function(popup) {
       ok(!this.complete, "Should have hidden the notification after navigation");
@@ -131,9 +131,9 @@ var tests = [
       let browser = gBrowser.selectedBrowser;
       yield BrowserTestUtils.synthesizeMouseAtCenter("body", {}, browser)
 
-      // Notification should be hidden after dismissal via Not Now.
+      // Notification should be hidden after dismissal via Don't Allow.
       this.complete = true;
-      triggerSecondaryCommand(popup, 1);
+      triggerSecondaryCommand(popup, 0);
     },
     onHidden: function(popup) {
       ok(this.complete, "Should have hidden the notification after clicking Not Now");

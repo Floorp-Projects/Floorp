@@ -37,7 +37,7 @@ add_task(function test1() {
   });
   registerPopupEventHandler("popupshown", function () {
     ok(true, "prompt shown");
-    triggerSecondaryCommand(this, 0);
+    triggerSecondaryCommand(this);
   });
   registerPopupEventHandler("popuphidden", function () {
     ok(true, "prompt hidden");
