@@ -337,6 +337,7 @@ this.PermissionPromptPrototype = {
     if (!options.hasOwnProperty('displayURI') || options.displayURI) {
       options.displayURI = this.principal.URI;
     }
+    options.persistent = true;
 
     this.onBeforeShow();
     chromeWin.PopupNotifications.show(this.browser,

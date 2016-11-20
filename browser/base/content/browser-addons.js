@@ -88,10 +88,10 @@ const gXPInstallObserver = {
 
     const anchorID = "addons-notification-icon";
 
-    // Make notifications persist a minimum of 30 seconds
+    // Make notifications persistent
     var options = {
       displayURI: installInfo.originatingURI,
-      timeout: Date.now() + 30000,
+      persistent: true,
     };
 
     let cancelInstallation = () => {
@@ -230,9 +230,10 @@ const gXPInstallObserver = {
     var brandShortName = brandBundle.getString("brandShortName");
 
     var notificationID = aTopic;
-    // Make notifications persist a minimum of 30 seconds
+    // Make notifications persistent
     var options = {
       displayURI: installInfo.originatingURI,
+      persistent: true,
       timeout: Date.now() + 30000,
     };
 
@@ -567,7 +568,7 @@ var LightWeightThemeWebInstaller = {
         };
 
         let options = {
-          timeout: Date.now() + 30000
+          persistent: true
         };
 
         PopupNotifications.show(gBrowser.selectedBrowser, "addon-theme-change",
