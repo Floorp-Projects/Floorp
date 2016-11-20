@@ -24,31 +24,7 @@ public:
   // This constructor is used by the UpdateVolumeRunnable constructor
   nsVolume(const Volume* aVolume);
 
-  // This constructor is used by nsVolumeService::SetFakeVolumeState
   nsVolume(const nsVolume* aVolume);
-
-  // This constructor is used by ContentChild::RecvFileSystemUpdate which is
-  // used to update the volume cache maintained in the child process.
-  nsVolume(const nsAString& aName, const nsAString& aMountPoint,
-           const int32_t& aState, const int32_t& aMountGeneration,
-           const bool& aIsMediaPresent, const bool& aIsSharing,
-           const bool& aIsFormatting, const bool& aIsFake,
-           const bool& aIsUnmounting, const bool& aIsRemovable,
-           const bool& aIsHotSwappable)
-    : mName(aName),
-      mMountPoint(aMountPoint),
-      mState(aState),
-      mMountGeneration(aMountGeneration),
-      mMountLocked(false),
-      mIsFake(aIsFake),
-      mIsMediaPresent(aIsMediaPresent),
-      mIsSharing(aIsSharing),
-      mIsFormatting(aIsFormatting),
-      mIsUnmounting(aIsUnmounting),
-      mIsRemovable(aIsRemovable),
-      mIsHotSwappable(aIsHotSwappable)
-  {
-  }
 
   bool Equals(nsIVolume* aVolume);
   void UpdateMountLock(nsVolume* aOldVolume);
