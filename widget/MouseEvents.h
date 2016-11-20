@@ -43,21 +43,27 @@ namespace dom {
 class WidgetPointerHelper
 {
 public:
-  bool convertToPointer;
   uint32_t pointerId;
   uint32_t tiltX;
   uint32_t tiltY;
+  bool convertToPointer;
   bool retargetedByPointerCapture;
 
-  WidgetPointerHelper() : convertToPointer(true), pointerId(0), tiltX(0), tiltY(0),
-                          retargetedByPointerCapture(false) {}
+  WidgetPointerHelper()
+    : pointerId(0)
+    , tiltX(0)
+    , tiltY(0)
+    , convertToPointer(true)
+    , retargetedByPointerCapture(false)
+  {
+  }
 
   void AssignPointerHelperData(const WidgetPointerHelper& aEvent)
   {
-    convertToPointer = aEvent.convertToPointer;
     pointerId = aEvent.pointerId;
     tiltX = aEvent.tiltX;
     tiltY = aEvent.tiltY;
+    convertToPointer = aEvent.convertToPointer;
     retargetedByPointerCapture = aEvent.retargetedByPointerCapture;
   }
 };
