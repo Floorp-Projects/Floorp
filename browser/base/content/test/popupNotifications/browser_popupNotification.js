@@ -48,7 +48,7 @@ var tests = [
     }
   },
   { id: "Test#2b",
-    run: function () {
+    run: function() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.secondaryActions.push({
         label: "Extra Secondary Action",
@@ -57,18 +57,18 @@ var tests = [
       });
       showNotification(this.notifyObj);
     },
-    onShown: function (popup) {
+    onShown: function(popup) {
       checkPopup(popup, this.notifyObj);
       triggerSecondaryCommand(popup, 1);
     },
-    onHidden: function (popup) {
+    onHidden: function(popup) {
       ok(this.extraSecondaryActionClicked, "extra secondary action was clicked");
       ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
     }
   },
   { id: "Test#2c",
-    run: function () {
+    run: function() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.secondaryActions.push({
         label: "Extra Secondary Action",
@@ -81,11 +81,11 @@ var tests = [
       });
       showNotification(this.notifyObj);
     },
-    onShown: function (popup) {
+    onShown: function(popup) {
       checkPopup(popup, this.notifyObj);
       triggerSecondaryCommand(popup, 2);
     },
-    onHidden: function (popup) {
+    onHidden: function(popup) {
       ok(this.extraSecondaryActionClicked, "extra secondary action was clicked");
       ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
