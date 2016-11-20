@@ -12,6 +12,7 @@ define(function (require, exports, module) {
   const { createFactories } = require("./rep-utils");
   const { Caption } = createFactories(require("./caption"));
   const { PropRep } = createFactories(require("./prop-rep"));
+  const { MODE } = require("./constants");
   // Shortcuts
   const { span } = React.DOM;
   /**
@@ -23,7 +24,8 @@ define(function (require, exports, module) {
 
     propTypes: {
       object: React.PropTypes.object,
-      mode: React.PropTypes.string,
+      // @TODO Change this to Object.values once it's supported in Node's version of V8
+      mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
     },
 
     getTitle: function (object) {
@@ -97,7 +99,7 @@ define(function (require, exports, module) {
       }
 
       // Hardcode tiny mode to avoid recursive handling.
-      let mode = "tiny";
+      let mode = MODE.TINY;
 
       try {
         for (let name in object) {
@@ -135,7 +137,7 @@ define(function (require, exports, module) {
       let props = this.safePropIterator(object);
       let objectLink = this.props.objectLink || span;
 
-      if (this.props.mode == "tiny" || !props.length) {
+      if (this.props.mode === MODE.TINY || !props.length) {
         return (
           span({className: "objectBox objectBox-object"},
             objectLink({className: "objectTitle"}, this.getTitle(object))
