@@ -342,6 +342,62 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
       return getKindForItem(item)
     });
   },
+
+  /**
+   * Returns the sync change counter increment for a change source constant.
+   */
+  determineSyncChangeDelta(source) {
+    // Don't bump the change counter when applying changes made by Sync, to
+    // avoid sync loops.
+    return source == PlacesUtils.bookmarks.SOURCES.SYNC ? 0 : 1;
+  },
+
+  /**
+   * Returns the sync status for a new item inserted by a change source.
+   */
+  determineInitialSyncStatus(source) {
+    if (source == PlacesUtils.bookmarks.SOURCES.SYNC) {
+      // Incoming bookmarks are "NORMAL", since they already exist on the server.
+      return PlacesUtils.bookmarks.SYNC_STATUS.NORMAL;
+    }
+    if (source == PlacesUtils.bookmarks.SOURCES.IMPORT_REPLACE) {
+      // If the user restores from a backup, or Places automatically recovers
+      // from a corrupt database, all prior sync tracking is lost. Setting the
+      // status to "UNKNOWN" allows Sync to reconcile restored bookmarks with
+      // those on the server.
+      return PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN;
+    }
+    // For all other sources, mark items as "NEW". We'll update their statuses
+    // to "NORMAL" after the first sync.
+    return PlacesUtils.bookmarks.SYNC_STATUS.NEW;
+  },
+
+  /**
+   * An internal helper that bumps the change counter for all bookmarks with
+   * a given URL. This is used to update bookmarks when adding or changing a
+   * tag or keyword entry.
+   *
+   * @param db
+   *        the Sqlite.jsm connection handle.
+   * @param url
+   *        the bookmark URL object.
+   * @param syncChangeDelta
+   *        the sync change counter increment.
+   * @return {Promise} resolved when the counters have been updated.
+   */
+  addSyncChangesForBookmarksWithURL(db, url, syncChangeDelta) {
+    if (!url || !syncChangeDelta) {
+      return Promise.resolve();
+    }
+    return db.executeCached(`
+      UPDATE moz_bookmarks
+        SET syncChangeCounter = syncChangeCounter + :syncChangeDelta
+      WHERE type = :type AND
+            fk = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND
+                  url = :url)`,
+      { syncChangeDelta, type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        url: url.href });
+  },
 });
 
 XPCOMUtils.defineLazyGetter(this, "BookmarkSyncLog", () => {
@@ -434,7 +490,6 @@ var reparentOrphans = Task.async(function* (item) {
   BookmarkSyncLog.debug(`reparentOrphans: Reparenting ${
     JSON.stringify(orphanGuids)} to ${item.syncId}`);
   for (let i = 0; i < orphanGuids.length; ++i) {
-    let isReparented = false;
     try {
       // Reparenting can fail if we have a corrupted or incomplete tree
       // where an item's parent is one of its descendants.
@@ -446,16 +501,9 @@ var reparentOrphans = Task.async(function* (item) {
         index: PlacesUtils.bookmarks.DEFAULT_INDEX,
         source: SOURCE_SYNC,
       });
-      isReparented = true;
     } catch (ex) {
       BookmarkSyncLog.error(`reparentOrphans: Failed to reparent item ${
         orphanGuids[i]} to ${item.syncId}`, ex);
-    }
-    if (isReparented) {
-      // Remove the annotation once we've reparented the item.
-      let orphanId = yield PlacesUtils.promiseItemId(orphanGuids[i]);
-      PlacesUtils.annotations.removeItemAnnotation(orphanId,
-        BookmarkSyncUtils.SYNC_PARENT_ANNO, SOURCE_SYNC);
     }
   }
 });
