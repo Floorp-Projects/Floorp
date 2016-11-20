@@ -78,6 +78,8 @@ function waitForProgressNotification(aPanelOpen = false, aExpectedCount = 1) {
       let nodes = Array.from(PopupNotifications.panel.childNodes);
       let notification = nodes.find(n => n.id == notificationId + "-notification");
       ok(notification, `Should have seen the right notification`);
+      ok(notification.button.hasAttribute("disabled"),
+         "The install button should be disabled");
     }
 
     return PopupNotifications.panel;
@@ -142,8 +144,8 @@ function waitForNotificationClose() {
 function waitForInstallDialog() {
   return Task.spawn(function* () {
     if (Preferences.get("xpinstall.customConfirmationUI", false)) {
-      yield waitForNotification("addon-install-confirmation");
-      return;
+      let panel = yield waitForNotification("addon-install-confirmation");
+      return panel.childNodes[0];
     }
 
     info("Waiting for install dialog");
@@ -176,7 +178,7 @@ function waitForInstallDialog() {
     let button = domwindow.document.documentElement.getButton("accept");
     button.disabled = false;
 
-    return;
+    return null;
   });
 }
 
@@ -187,18 +189,18 @@ function removeTab() {
   ]);
 }
 
-function acceptInstallDialog() {
+function acceptInstallDialog(installDialog) {
   if (Preferences.get("xpinstall.customConfirmationUI", false)) {
-    document.getElementById("addon-install-confirmation-accept").click();
+    installDialog.button.click();
   } else {
     let win = Services.wm.getMostRecentWindow("Addons:Install");
     win.document.documentElement.acceptDialog();
   }
 }
 
-function cancelInstallDialog() {
+function cancelInstallDialog(installDialog) {
   if (Preferences.get("xpinstall.customConfirmationUI", false)) {
-    document.getElementById("addon-install-confirmation-cancel").click();
+    installDialog.secondaryButton.click();
   } else {
     let win = Services.wm.getMostRecentWindow("Addons:Install");
     win.document.documentElement.cancelDialog();
@@ -293,10 +295,10 @@ function test_blockedInstall() {
     ok(PopupNotifications.isPanelOpen, "Notification should still be open");
     notification = panel.childNodes[0];
     is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
-    yield dialogPromise;
+    let installDialog = yield dialogPromise;
 
     notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog();
+    acceptInstallDialog(installDialog);
     panel = yield notificationPromise;
 
     notification = panel.childNodes[0];
@@ -328,14 +330,14 @@ function test_whitelistedInstall() {
     BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?"
       + triggers).then(newTab => tab = newTab);
     yield progressPromise;
-    yield dialogPromise;
+    let installDialog = yield dialogPromise;
     yield BrowserTestUtils.waitForCondition(() => !!tab, "tab should be present");
 
     is(gBrowser.selectedTab, tab,
        "tab selected in response to the addon-install-confirmation notification");
 
     let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog();
+    acceptInstallDialog(installDialog);
     let panel = yield notificationPromise;
 
     let notification = panel.childNodes[0];
@@ -440,10 +442,10 @@ function test_restartless() {
     gBrowser.selectedTab = gBrowser.addTab();
     gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
     yield progressPromise;
-    yield dialogPromise;
+    let installDialog = yield dialogPromise;
 
     let notificationPromise = waitForNotification("addon-install-complete");
-    acceptInstallDialog();
+    acceptInstallDialog(installDialog);
     let panel = yield notificationPromise;
 
     let notification = panel.childNodes[0];
@@ -482,10 +484,10 @@ function test_multiple() {
     }));
     BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
     let panel = yield progressPromise;
-    yield dialogPromise;
+    let installDialog = yield dialogPromise;
 
     let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog();
+    acceptInstallDialog(installDialog);
     yield notificationPromise;
 
     let notification = panel.childNodes[0];
@@ -527,7 +529,7 @@ function test_sequential() {
     }));
     BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
     yield progressPromise;
-    yield dialogPromise;
+    let installDialog = yield dialogPromise;
 
     // Should see the right add-on
     let container = document.getElementById("addon-install-confirmation-content");
@@ -566,7 +568,7 @@ function test_sequential() {
     is(container.childNodes.length, 1, "Should be one item listed");
     is(container.childNodes[0].firstChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
 
-    cancelInstallDialog();
+    cancelInstallDialog(installDialog);
 
     ok(PopupNotifications.isPanelOpen, "Panel should still be open");
     is(PopupNotifications.panel.childNodes.length, 1, "Should be the right number of notifications");
@@ -579,7 +581,7 @@ function test_sequential() {
 
     Services.perms.remove(makeURI("http://example.com"), "install");
     let closePromise = waitForNotificationClose();
-    cancelInstallDialog();
+    cancelInstallDialog(installDialog);
     yield closePromise;
     yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
@@ -605,7 +607,7 @@ function test_someUnverified() {
     }));
     BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
     yield progressPromise;
-    yield dialogPromise;
+    let installDialog = yield dialogPromise;
 
     let notification = document.getElementById("addon-install-confirmation-notification");
     let message = notification.getAttribute("label");
@@ -622,7 +624,7 @@ function test_someUnverified() {
     is(container.childNodes[1].childNodes.length, 1, "Shouldn't have the unverified marker");
 
     let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog();
+    acceptInstallDialog(installDialog);
     yield notificationPromise;
 
     let [addon, theme] = yield new Promise(resolve => {
@@ -662,7 +664,7 @@ function test_allUnverified() {
     }));
     BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
     yield progressPromise;
-    yield dialogPromise;
+    let installDialog = yield dialogPromise;
 
     let notification = document.getElementById("addon-install-confirmation-notification");
     let message = notification.getAttribute("label");
@@ -674,7 +676,7 @@ function test_allUnverified() {
     is(container.childNodes[0].childNodes.length, 1, "Shouldn't have the unverified marker");
 
     let notificationPromise = waitForNotification("addon-install-complete");
-    acceptInstallDialog();
+    acceptInstallDialog(installDialog);
     yield notificationPromise;
 
     let addon = yield new Promise(resolve => {
@@ -697,10 +699,10 @@ function test_url() {
     yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     gBrowser.loadURI(TESTROOT + "amosigned.xpi");
     yield progressPromise;
-    yield dialogPromise;
+    let installDialog = yield dialogPromise;
 
     let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog();
+    acceptInstallDialog(installDialog);
     let panel = yield notificationPromise;
 
     let notification = panel.childNodes[0];
@@ -865,10 +867,10 @@ function test_reload() {
     }));
     BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
     yield progressPromise;
-    yield dialogPromise;
+    let installDialog = yield dialogPromise;
 
     let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog();
+    acceptInstallDialog(installDialog);
     let panel = yield notificationPromise;
 
     let notification = panel.childNodes[0];
@@ -908,10 +910,10 @@ function test_theme() {
     }));
     BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
     yield progressPromise;
-    yield dialogPromise;
+    let installDialog = yield dialogPromise;
 
     let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog();
+    acceptInstallDialog(installDialog);
     let panel = yield notificationPromise;
 
     let notification = panel.childNodes[0];
@@ -988,11 +990,11 @@ function test_renotifyInstalled() {
     }));
     BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
     yield progressPromise;
-    yield dialogPromise;
+    let installDialog = yield dialogPromise;
 
     // Wait for the complete notification
     let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog();
+    acceptInstallDialog(installDialog);
     let panel = yield notificationPromise;
 
     let closePromise = waitForNotificationClose();
@@ -1007,13 +1009,13 @@ function test_renotifyInstalled() {
     dialogPromise = waitForInstallDialog();
     gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
     yield progressPromise;
-    yield dialogPromise;
+    installDialog = yield dialogPromise;
 
     info("Timeouts after this probably mean bug 589954 regressed");
 
     // Wait for the complete notification
     notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog();
+    acceptInstallDialog(installDialog);
     yield notificationPromise;
 
     let installs = yield getInstalls();
@@ -1048,7 +1050,6 @@ function test_cancel() {
     is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
     notification = panel.childNodes[0];
     is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
-    let button = document.getElementById("addon-progress-cancel");
 
     // Cancel the download
     let install = notification.notification.options.installs[0];
@@ -1060,7 +1061,7 @@ function test_cancel() {
         }
       });
     });
-    EventUtils.synthesizeMouseAtCenter(button, {});
+    EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
     yield cancelledPromise;
 
     yield new Promise(resolve => executeSoon(resolve));
