@@ -305,7 +305,7 @@ const kActionNever = 3;
 
 function activateSecondaryAction(aAction) {
   let notification = PopupNotifications.panel.firstChild;
-  notification.button.focus();
+  notification.button.nextSibling.nextSibling.focus();
   let popup = notification.menupopup;
   popup.addEventListener("popupshown", function() {
     popup.removeEventListener("popupshown", arguments.callee, false);
