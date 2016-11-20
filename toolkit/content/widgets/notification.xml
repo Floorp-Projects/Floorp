@@ -486,40 +486,46 @@
   </binding>
 
   <binding id="popup-notification">
-    <content>
-      <xul:vbox>
+    <content orient="vertical">
+      <xul:hbox align="start" class="popup-notification-body-container">
         <xul:image class="popup-notification-icon"
                    xbl:inherits="popupid,src=icon,class=iconclass"/>
-      </xul:vbox>
-      <xul:vbox class="popup-notification-body" xbl:inherits="popupid">
-        <xul:hbox align="start">
-          <xul:vbox flex="1">
-            <xul:label class="popup-notification-origin header"
-                       xbl:inherits="value=origin,tooltiptext=origin"
-                       crop="center"/>
-            <xul:description class="popup-notification-description"
-                             xbl:inherits="xbl:text=label,popupid"/>
-          </xul:vbox>
-          <xul:toolbarbutton anonid="closebutton"
-                             class="messageCloseButton close-icon popup-notification-closebutton tabbable"
-                             xbl:inherits="oncommand=closebuttoncommand"
-                             tooltiptext="&closeNotification.tooltip;"/>
-        </xul:hbox>
-        <children includes="popupnotificationcontent"/>
-        <xul:label class="text-link popup-notification-learnmore-link"
-               xbl:inherits="onclick=learnmoreclick,href=learnmoreurl">&learnMore;</xul:label>
-        <xul:checkbox anonid="checkbox"
-                      xbl:inherits="hidden=checkboxhidden,checked=checkboxchecked,label=checkboxlabel,oncommand=checkboxcommand" />
-        <xul:description class="popup-notification-warning" xbl:inherits="hidden=warninghidden,xbl:text=warninglabel"/>
-        <xul:spacer flex="1"/>
-        <xul:hbox class="popup-notification-button-container"
-                  pack="end" align="center">
-          <children includes="button"/>
+        <xul:vbox flex="1" pack="start"
+                  class="popup-notification-body" xbl:inherits="popupid">
+          <xul:hbox align="start">
+            <xul:vbox flex="1">
+              <xul:label class="popup-notification-origin header"
+                         xbl:inherits="value=origin,tooltiptext=origin"
+                         crop="center"/>
+              <xul:description class="popup-notification-description"
+                               xbl:inherits="xbl:text=label,popupid"/>
+            </xul:vbox>
+            <xul:toolbarbutton anonid="closebutton"
+                               class="messageCloseButton close-icon popup-notification-closebutton tabbable"
+                               xbl:inherits="oncommand=closebuttoncommand"
+                               tooltiptext="&closeNotification.tooltip;"/>
+          </xul:hbox>
+          <children includes="popupnotificationcontent"/>
+          <xul:label class="text-link popup-notification-learnmore-link"
+                     xbl:inherits="onclick=learnmoreclick,href=learnmoreurl">&learnMore;</xul:label>
+          <xul:checkbox anonid="checkbox"
+                        xbl:inherits="hidden=checkboxhidden,checked=checkboxchecked,label=checkboxlabel,oncommand=checkboxcommand" />
+          <xul:description class="popup-notification-warning" xbl:inherits="hidden=warninghidden,xbl:text=warninglabel"/>
+        </xul:vbox>
+      </xul:hbox>
+      <xul:hbox pack="end" class="popup-notification-button-container">
+        <children includes="button"/>
+        <xul:hbox class="popup-notification-button-wrapper">
           <xul:button anonid="button"
-                      class="popup-notification-menubutton"
-                      type="menu-button"
-                      xbl:inherits="oncommand=buttoncommand,onpopupshown=buttonpopupshown,label=buttonlabel,accesskey=buttonaccesskey,disabled=mainactiondisabled">
+                      class="popup-notification-button"
+                      default="true"
+                      xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,disabled=mainactiondisabled"/>
+          <xul:toolbarseparator/>
+          <xul:button type="menu"
+                      class="popup-notification-button popup-notification-dropmarker"
+                      xbl:inherits="onpopupshown=buttonpopupshown">
             <xul:menupopup anonid="menupopup"
+                           position="after_end"
                            xbl:inherits="oncommand=menucommand">
               <children/>
               <xul:menuitem class="menuitem-iconic popup-notification-closeitem"
@@ -528,7 +534,7 @@
             </xul:menupopup>
           </xul:button>
         </xul:hbox>
-      </xul:vbox>
+      </xul:hbox>
     </content>
     <resources>
       <stylesheet src="chrome://global/skin/notification.css"/>
