@@ -158,7 +158,7 @@ const FlyWebPermissionPromptIntegration = (base) => ({
           notificationIcon.setAttribute("aria-label",
                                         "View the publish-server request");
           notificationIcon.style.filter =
-            "url('chrome://browser/skin/filters.svg#fill')";
+            "url('chrome://global/skin/filters.svg#fill')";
           notificationIcon.style.fill = "currentcolor";
           notificationIcon.style.opacity = "0.4";
           notificationPopupBox.appendChild(notificationIcon);

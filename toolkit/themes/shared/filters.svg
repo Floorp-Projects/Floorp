@@ -6,4 +6,12 @@
   <filter id="fill">
     <feComposite in="FillPaint" in2="SourceGraphic" operator="in"/>
   </filter>
+  <filter id="iconPressed" color-interpolation-filters="sRGB">
+    <!-- Multiply all components with 0.55. -->
+    <feComponentTransfer>
+      <feFuncR type="linear" slope=".55"/>
+      <feFuncG type="linear" slope=".55"/>
+      <feFuncB type="linear" slope=".55"/>
+    </feComponentTransfer>
+  </filter>
 </svg>

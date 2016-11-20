@@ -296,7 +296,7 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
 
 .tab-icon-sound[soundplaying],
 .tab-icon-sound[muted] {
-  filter: url(chrome://browser/skin/filters.svg#fill) !important; /* removes drop-shadow filter */
+  filter: url(chrome://global/skin/filters.svg#fill) !important; /* removes drop-shadow filter */
 }
 
 /* Don't need space for the tab curves (66px - 30px) */
