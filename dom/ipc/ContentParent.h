@@ -930,14 +930,6 @@ private:
 
   virtual mozilla::ipc::IPCResult RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>* aLookAndFeelIntCache) override;
 
-  virtual mozilla::ipc::IPCResult RecvCreateFakeVolume(const nsString& aFsName,
-                                                       const nsString& aMountPoint) override;
-
-  virtual mozilla::ipc::IPCResult RecvSetFakeVolumeState(const nsString& aFsName,
-                                                         const int32_t& aFsState) override;
-
-  virtual mozilla::ipc::IPCResult RecvRemoveFakeVolume(const nsString& fsName) override;
-
   virtual mozilla::ipc::IPCResult RecvKeywordToURI(const nsCString& aKeyword,
                                                    nsString* aProviderName,
                                                    OptionalInputStreamParams* aPostData,
@@ -1081,10 +1073,6 @@ private:
   // false, but some previously scheduled IPC traffic may still pass
   // through.
   bool mIsAlive;
-
-  // True only the if process is already a browser or has
-  // been transformed into one.
-  bool mMetamorphosed;
 
   bool mSendPermissionUpdates;
   bool mIsForBrowser;

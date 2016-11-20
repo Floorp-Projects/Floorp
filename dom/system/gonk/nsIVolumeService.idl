@@ -20,13 +20,6 @@ interface nsIVolumeService : nsISupports
     nsIArray getVolumeNames();
 
     void Dump(in DOMString label);
-
-    /* for test case only to simulate sdcard insertion/removal */
-    void createFakeVolume(in DOMString name, in DOMString path);
-    void SetFakeVolumeState(in DOMString name, in long state);
-
-    /* for test case only to test removal of storage area */
-    void removeFakeVolume(in DOMString name);
 };
 
 %{C++

@@ -528,11 +528,6 @@ static const char* sObserverTopics[] = {
   "child-mmu-request",
   "last-pb-context-exited",
   "file-watcher-update",
-#ifdef MOZ_WIDGET_GONK
-  NS_VOLUME_STATE_CHANGED,
-  NS_VOLUME_REMOVED,
-  "phone-state-changed",
-#endif
 #ifdef ACCESSIBILITY
   "a11y-init-or-shutdown",
 #endif
@@ -702,8 +697,6 @@ ContentParent::GetNewOrUsedBrowserProcess(bool aForBrowserElement,
   p->Init();
 
   p->mLargeAllocationProcess = aLargeAllocationProcess;
-
-  p->ForwardKnownInfo();
 
   contentParents->AppendElement(p);
   return p.forget();
@@ -1137,23 +1130,6 @@ ContentParent::Init()
 
   RefPtr<GeckoMediaPluginServiceParent> gmps(GeckoMediaPluginServiceParent::GetSingleton());
   gmps->UpdateContentProcessGMPCapabilities();
-}
-
-void
-ContentParent::ForwardKnownInfo()
-{
-  MOZ_ASSERT(mMetamorphosed);
-  if (!mMetamorphosed) {
-    return;
-  }
-#ifdef MOZ_WIDGET_GONK
-  InfallibleTArray<VolumeInfo> volumeInfo;
-  RefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
-  if (vs) {
-    vs->GetVolumesForIPC(&volumeInfo);
-    Unused << SendVolumes(volumeInfo);
-  }
-#endif /* MOZ_WIDGET_GONK */
 }
 
 namespace {
@@ -1753,7 +1729,6 @@ ContentParent::InitializeMembers()
   mGeolocationWatchID = -1;
   mNumDestroyingTabs = 0;
   mIsAlive = true;
-  mMetamorphosed = false;
   mSendPermissionUpdates = false;
   mCalledClose = false;
   mCalledKillHard = false;
@@ -1799,8 +1774,6 @@ ContentParent::ContentParent(ContentParent* aOpener,
   , mLargeAllocationProcess(false)
 {
   InitializeMembers();  // Perform common initialization.
-
-  mMetamorphosed = true;
 
   // Insert ourselves into the global linked list of ContentParent objects.
   if (!sContentParents) {
@@ -2421,50 +2394,6 @@ ContentParent::Observe(nsISupports* aSubject,
     DeviceStorageFile* file = static_cast<DeviceStorageFile*>(aSubject);
     Unused << SendFilePathUpdate(file->mStorageType, file->mStorageName, file->mPath, creason);
   }
-#ifdef MOZ_WIDGET_GONK
-  else if(!strcmp(aTopic, NS_VOLUME_STATE_CHANGED)) {
-    nsCOMPtr<nsIVolume> vol = do_QueryInterface(aSubject);
-    if (!vol) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    nsString volName;
-    nsString mountPoint;
-    int32_t  state;
-    int32_t  mountGeneration;
-    bool   isMediaPresent;
-    bool   isSharing;
-    bool   isFormatting;
-    bool   isFake;
-    bool   isUnmounting;
-    bool   isRemovable;
-    bool   isHotSwappable;
-
-    vol->GetName(volName);
-    vol->GetMountPoint(mountPoint);
-    vol->GetState(&state);
-    vol->GetMountGeneration(&mountGeneration);
-    vol->GetIsMediaPresent(&isMediaPresent);
-    vol->GetIsSharing(&isSharing);
-    vol->GetIsFormatting(&isFormatting);
-    vol->GetIsFake(&isFake);
-    vol->GetIsUnmounting(&isUnmounting);
-    vol->GetIsRemovable(&isRemovable);
-    vol->GetIsHotSwappable(&isHotSwappable);
-
-    Unused << SendFileSystemUpdate(volName, mountPoint, state,
-                                   mountGeneration, isMediaPresent,
-                                   isSharing, isFormatting, isFake,
-                                   isUnmounting, isRemovable, isHotSwappable);
-  } else if (!strcmp(aTopic, "phone-state-changed")) {
-    nsString state(aData);
-    Unused << SendNotifyPhoneStateChange(state);
-  }
-  else if(!strcmp(aTopic, NS_VOLUME_REMOVED)) {
-    nsString volName(aData);
-    Unused << SendVolumeRemoved(volName);
-  }
-#endif
 #ifdef ACCESSIBILITY
   else if (aData && !strcmp(aTopic, "a11y-init-or-shutdown")) {
     if (*aData == '1') {
@@ -3708,55 +3637,6 @@ ContentParent::SendPBrowserConstructor(PBrowserParent* aActor,
                                                  aChromeFlags,
                                                  aCpId,
                                                  aIsForBrowser);
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvCreateFakeVolume(const nsString& fsName,
-                                    const nsString& mountPoint)
-{
-#ifdef MOZ_WIDGET_GONK
-  nsresult rv;
-  nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID, &rv);
-  if (vs) {
-    vs->CreateFakeVolume(fsName, mountPoint);
-  }
-  return IPC_OK();
-#else
-  NS_WARNING("ContentParent::RecvCreateFakeVolume shouldn't be called when MOZ_WIDGET_GONK is not defined");
-  return IPC_FAIL_NO_REASON(this);
-#endif
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvSetFakeVolumeState(const nsString& fsName, const int32_t& fsState)
-{
-#ifdef MOZ_WIDGET_GONK
-  nsresult rv;
-  nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID, &rv);
-  if (vs) {
-    vs->SetFakeVolumeState(fsName, fsState);
-  }
-  return IPC_OK();
-#else
-  NS_WARNING("ContentParent::RecvSetFakeVolumeState shouldn't be called when MOZ_WIDGET_GONK is not defined");
-  return IPC_FAIL_NO_REASON(this);
-#endif
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvRemoveFakeVolume(const nsString& fsName)
-{
-#ifdef MOZ_WIDGET_GONK
-  nsresult rv;
-  nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID, &rv);
-  if (vs) {
-    vs->RemoveFakeVolume(fsName);
-  }
-  return IPC_OK();
-#else
-  NS_WARNING("ContentParent::RecvRemoveFakeVolume shouldn't be called when MOZ_WIDGET_GONK is not defined");
-  return IPC_FAIL_NO_REASON(this);
-#endif
 }
 
 mozilla::ipc::IPCResult
