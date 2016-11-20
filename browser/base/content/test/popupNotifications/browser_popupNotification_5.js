@@ -201,5 +201,65 @@ var tests = [
         goNext();
       });
     }
-  }
+  },
+  // Test that only the first persistent notification is shown on update
+  { id: "Test#8",
+    run: function() {
+      this.notifyObj1 = new BasicNotification(this.id);
+      this.notifyObj1.id += "_1";
+      this.notifyObj1.anchorID = "default-notification-icon";
+      this.notifyObj1.options.persistent = true;
+      this.notification1 = showNotification(this.notifyObj1);
+
+      this.notifyObj2 = new BasicNotification(this.id);
+      this.notifyObj2.id += "_2";
+      this.notifyObj2.anchorID = "geo-notification-icon";
+      this.notifyObj2.options.persistent = true;
+      this.notification2 = showNotification(this.notifyObj2);
+
+      PopupNotifications._update();
+    },
+    onShown: function(popup) {
+      checkPopup(popup, this.notifyObj1);
+      this.notification1.remove();
+      this.notification2.remove();
+    },
+    onHidden: function(popup) { }
+  },
+  // Test that persistent notifications are shown stacked by anchor on update
+  { id: "Test#9",
+    run: function() {
+      this.notifyObj1 = new BasicNotification(this.id);
+      this.notifyObj1.id += "_1";
+      this.notifyObj1.anchorID = "default-notification-icon";
+      this.notifyObj1.options.persistent = true;
+      this.notification1 = showNotification(this.notifyObj1);
+
+      this.notifyObj2 = new BasicNotification(this.id);
+      this.notifyObj2.id += "_2";
+      this.notifyObj2.anchorID = "geo-notification-icon";
+      this.notifyObj2.options.persistent = true;
+      this.notification2 = showNotification(this.notifyObj2);
+
+      this.notifyObj3 = new BasicNotification(this.id);
+      this.notifyObj3.id += "_3";
+      this.notifyObj3.anchorID = "default-notification-icon";
+      this.notifyObj3.options.persistent = true;
+      this.notification3 = showNotification(this.notifyObj3);
+
+      PopupNotifications._update();
+    },
+    onShown: function(popup) {
+      let notifications = popup.childNodes;
+      is(notifications.length, 2, "two notifications displayed");
+      let [notification1, notification2] = notifications;
+      is(notification1.id, this.notifyObj1.id + "-notification", "id 1 matches");
+      is(notification2.id, this.notifyObj3.id + "-notification", "id 2 matches");
+
+      this.notification1.remove();
+      this.notification2.remove();
+      this.notification3.remove();
+    },
+    onHidden: function(popup) { }
+  },
 ];
