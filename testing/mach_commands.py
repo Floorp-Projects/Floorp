@@ -503,7 +503,18 @@ class JsapiTestsCommand(MachCommandBase):
 
 def autotry_parser():
     from autotry import arg_parser
-    return arg_parser()
+    parser = arg_parser()
+    # The --no-artifact flag is only interpreted locally by |mach try|; it's not
+    # like the --artifact flag, which is interpreted remotely by the try server.
+    #
+    # We need a tri-state where set is different than the default value, so we
+    # use a different variable than --artifact.
+    parser.add_argument('--no-artifact',
+                        dest='no_artifact',
+                        action='store_true',
+                        help='Force compiled (non-artifact) builds even when '
+                             '--enable-artifact-builds is set.')
+    return parser
 
 @CommandProvider
 class PushToTry(MachCommandBase):
@@ -679,12 +690,31 @@ class PushToTry(MachCommandBase):
         else:
             paths_by_flavor = {}
 
+        # Add --artifact if --enable-artifact-builds is set ...
+        if self.substs.get("MOZ_ARTIFACT_BUILDS"):
+            extra["artifact"] = True
+        # ... unless --no-artifact is explicitly given.
+        if kwargs["no_artifact"]:
+            if "artifact" in extra:
+                del extra["artifact"]
+
         try:
             msg = at.calc_try_syntax(platforms, tests, talos, builds, paths_by_flavor, tags,
                                      extra, kwargs["intersection"])
         except ValueError as e:
             print(e.message)
             sys.exit(1)
+
+        if kwargs["verbose"]:
+            if self.substs.get("MOZ_ARTIFACT_BUILDS"):
+                if kwargs["no_artifact"]:
+                    print('mozconfig has --enable-artifact-builds but '
+                          '--no-artifact specified, not including --artifact '
+                          'flag in try syntax')
+                else:
+                    print('mozconfig has --enable-artifact-builds; including '
+                          '--artifact flag in try syntax (use --no-artifact '
+                          'to override)')
 
         if kwargs["verbose"] and paths_by_flavor:
             print('The following tests will be selected: ')
