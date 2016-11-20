@@ -58,6 +58,15 @@ public:
   {
   }
 
+  WidgetPointerHelper(uint32_t aPointerId, uint32_t aTiltX, uint32_t aTiltY)
+    : pointerId(aPointerId)
+    , tiltX(aTiltX)
+    , tiltY(aTiltY)
+    , convertToPointer(true)
+    , retargetedByPointerCapture(false)
+  {
+  }
+
   void AssignPointerHelperData(const WidgetPointerHelper& aEvent)
   {
     pointerId = aEvent.pointerId;
