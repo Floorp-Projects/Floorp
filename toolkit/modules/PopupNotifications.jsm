@@ -817,6 +817,10 @@ PopupNotifications.prototype = {
     this.panel.hidden = false;
 
     notificationsToShow = notificationsToShow.filter(n => {
+      if (anchorElement != n.anchorElement) {
+        return false;
+      }
+
       let dismiss = this._fireCallback(n, NOTIFICATION_EVENT_SHOWING);
       if (dismiss)
         n.dismissed = true;
