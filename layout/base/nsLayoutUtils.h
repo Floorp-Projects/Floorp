@@ -821,7 +821,7 @@ public:
    * frames under the area of a rectangle that receives a mouse event,
    * or nullptr if there is no such frame.
    * @param aRect the rect, relative to the frame origin
-   * @param aOutFrames an array to append all the frames found
+   * @param aOutFrames an array to add all the frames found
    * @param aFlags some combination of FrameForPointFlags
    */
   static nsresult GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
