@@ -110,11 +110,6 @@ notification[type="info"]:not([value="translation"]) .close-icon:not(:hover) {
   outline-offset: -2px;
 }
 
-/* This is changed due to hover transparency looking invisible when buttons are hovered */
-.popup-notification-button-wrapper {
-  --panel-separator-color: white;
-}
-
 .popup-notification-warning {
   color: #aa1b08;
 }

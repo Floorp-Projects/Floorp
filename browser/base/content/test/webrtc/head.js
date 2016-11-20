@@ -305,13 +305,19 @@ const kActionNever = 3;
 
 function activateSecondaryAction(aAction) {
   let notification = PopupNotifications.panel.firstChild;
-  notification.button.nextSibling.nextSibling.focus();
+
+  if (aAction == kActionAlways) {
+    notification.secondaryButton.click();
+    return;
+  }
+
+  notification.secondaryButton.nextSibling.nextSibling.focus();
   let popup = notification.menupopup;
   popup.addEventListener("popupshown", function() {
     popup.removeEventListener("popupshown", arguments.callee, false);
 
     // Press 'down' as many time as needed to select the requested action.
-    while (aAction--)
+    while (--aAction)
       EventUtils.synthesizeKey("VK_DOWN", {});
 
     // Activate
