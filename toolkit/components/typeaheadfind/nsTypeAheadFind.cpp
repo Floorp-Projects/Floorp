@@ -1182,42 +1182,6 @@ nsTypeAheadFind::IsRangeVisible(nsIDOMRange *aRange,
 }
 
 bool
-IsFrameVisibleInFrameStack(nsIFrame *aFrame,
-                           const nsTArray<nsIFrame*>& aOrderedFramesFrontToBack)
-{
-  // Visibility requires that aFrame appears in aOrderedFramesFrontToBack,
-  // and that overlaying frames are not entirely opaque. We stop evaluating
-  // once we reach aFrame, because we don't want frames underneath aFrame to
-  // affect the test.
-
-  // This definition is conservative; this function will return false in some
-  // cases where aFrame may actually be visible, including:
-  // a) aFrame is only partially covered by another frame.
-  // b) A frame covering aFrame is opaque but empty.
-
-  for (nsIFrame* f : aOrderedFramesFrontToBack) {
-    if (!f) {
-      continue;
-    }
-
-    if (f == aFrame) {
-      return true;
-    }
-
-    if (f->StyleEffects()->mOpacity < 1.0f) {
-      continue;
-    }
-
-    // Something fully opaque is at least partially obscuring aFrame, so
-    // aFrame is considered not visible.
-    return false;
-  }
-
-  // We didn't find aFrame, which means it wasn't visible.
-  return false;
-}
-
-bool
 nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
                                 nsPresContext *aPresContext,
                                 nsIDOMRange *aRange,
@@ -1228,8 +1192,9 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   NS_ASSERTION(aPresShell && aPresContext && aRange && aFirstVisibleRange, 
                "params are invalid");
 
-  // We need to know if the range start and end are both visible.
-  // In all cases, return the first visible range in aFirstVisibleRange.
+  // We need to know if the range start is visible.
+  // Otherwise, return the first visible range start 
+  // in aFirstVisibleRange
   aRange->CloneRange(aFirstVisibleRange);
 
   if (aFlushLayout) {
@@ -1237,17 +1202,15 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   }
 
   nsCOMPtr<nsIDOMNode> node;
-  aRange->GetCommonAncestorContainer(getter_AddRefs(node));
+  aRange->GetStartContainer(getter_AddRefs(node));
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-  if (!content) {
+  if (!content)
     return false;
-  }
 
   nsIFrame *frame = content->GetPrimaryFrame();
-  if (!frame) {
+  if (!frame)
     return false;  // No frame! Not visible then.
-  }
 
   // Having a primary frame doesn't mean that the range is visible inside the
   // viewport. Do a hit-test to determine that quickly and properly.
@@ -1264,13 +1227,8 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
     nsLayoutUtils::GetFramesForArea(rootFrame, r, frames,
       nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
   }
-  if (!frames.Length()) {
+  if (!frames.Length())
     return false;
-  }
-
-  if (!IsFrameVisibleInFrameStack(frame, frames)) {
-    return false;
-  }
 
   // Detect if we are _inside_ a text control, or something else with its own
   // selection controller.
