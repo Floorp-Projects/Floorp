@@ -5877,19 +5877,23 @@
     "n_buckets": 10,
     "description": "Time taken to compress telemetry object (ms)"
   },
-  "TELEMETRY_PING": {
+  "TELEMETRY_SEND_SUCCESS" : {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1318284],
     "expires_in_version": "never",
     "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "Time taken to submit telemetry info (ms)"
+    "high": 120000,
+    "n_buckets": 20,
+    "description": "Time needed (in ms) for a successful send of a Telemetry ping to the servers and getting a reply back."
   },
-  "TELEMETRY_SEND" : {
+  "TELEMETRY_SEND_FAILURE" : {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1318284],
     "expires_in_version": "never",
     "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "Time to send the compressed string to the Telemetry servers and get a reply back (ms)"
+    "high": 120000,
+    "n_buckets": 20,
+    "description": "Time needed (in ms) for a failed send of a Telemetry ping to the servers and getting a reply back."
   },
   "TELEMETRY_STRINGIFY" : {
     "expires_in_version": "never",
