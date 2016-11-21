@@ -303,11 +303,12 @@ private:
     bool mHttpsProxy;
     uint32_t     mConnectionFlags;
 
-    // This is only non-empty when "privacy.firstparty.isolate" is enabled.
-    // It is used to create sockets. It's the only way to carry it down to NSPR
-    // layers which are final consumers.  It must be set before the socket
-    // transport is built.
-    nsCString    mFirstPartyDomain;
+    // The origin attributes are used to create sockets.  The first party domain
+    // will eventually be used to isolate OCSP cache and is only non-empty when
+    // "privacy.firstparty.isolate" is enabled.  Setting this is the only way to
+    // carry origin attributes down to NSPR layers which are final consumers.
+    // It must be set before the socket transport is built.
+    NeckoOriginAttributes mOriginAttributes;
     
     uint16_t         SocketPort() { return (!mProxyHost.IsEmpty() && !mProxyTransparent) ? mProxyPort : mPort; }
     const nsCString &SocketHost() { return (!mProxyHost.IsEmpty() && !mProxyTransparent) ? mProxyHost : mHost; }
