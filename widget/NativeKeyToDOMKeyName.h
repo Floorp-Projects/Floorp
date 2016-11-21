@@ -193,6 +193,7 @@ KEY_MAP_GTK     (Enter, GDK_Return)
 KEY_MAP_GTK     (Enter, GDK_KP_Enter)
 KEY_MAP_GTK     (Enter, GDK_ISO_Enter)
 KEY_MAP_GTK     (Enter, GDK_3270_Enter)
+KEY_MAP_ANDROID (Enter, AKEYCODE_DPAD_CENTER)
 KEY_MAP_ANDROID (Enter, AKEYCODE_ENTER)
 KEY_MAP_ANDROID (Enter, AKEYCODE_NUMPAD_ENTER)
 
@@ -331,7 +332,6 @@ KEY_MAP_GTK     (Undo, GDK_Undo)
  ******************************************************************************/
 // Accept
 KEY_MAP_WIN     (Accept, VK_ACCEPT)
-KEY_MAP_ANDROID (Accept, AKEYCODE_DPAD_CENTER)
 
 // Attn
 KEY_MAP_WIN_OTH (Attn, VK_ATTN) // not valid with Japanese keyboard layout
@@ -1011,7 +1011,6 @@ KEY_MAP_GTK     (LaunchApplication16, GDK_LaunchF)
 KEY_MAP_WIN     (BrowserBack, VK_BROWSER_BACK)
 KEY_MAP_WIN_CMD (BrowserBack, APPCOMMAND_BROWSER_BACKWARD)
 KEY_MAP_GTK     (BrowserBack, GDK_Back)
-KEY_MAP_ANDROID (BrowserBack, AKEYCODE_BACK)
 
 // BrowserFavorites
 KEY_MAP_WIN     (BrowserFavorites, VK_BROWSER_FAVORITES)
@@ -1063,6 +1062,9 @@ KEY_MAP_ANDROID_EXCEPT_B2G(CameraFocus,       AKEYCODE_FOCUS)
 
 // EndCall
 KEY_MAP_ANDROID (EndCall, AKEYCODE_ENDCALL)
+
+// GoBack
+KEY_MAP_ANDROID (GoBack, AKEYCODE_BACK)
 
 // GoHome
 KEY_MAP_ANDROID_EXCEPT_B2G(GoHome,     AKEYCODE_HOME)
@@ -1192,6 +1194,9 @@ KEY_MAP_ANDROID (ColorF2Yellow, AKEYCODE_PROG_YELLOW)
 KEY_MAP_GTK     (ColorF3Blue, GDK_Blue)
 KEY_MAP_ANDROID (ColorF3Blue, AKEYCODE_PROG_BLUE)
 
+// ClosedCaptionToggle
+KEY_MAP_ANDROID (ClosedCaptionToggle, AKEYCODE_CAPTIONS)
+
 // Dimmer
 KEY_MAP_GTK     (Dimmer, GDK_BrightnessAdjust)
 
@@ -1257,7 +1262,6 @@ KEY_MAP_ANDROID (STBPower, AKEYCODE_STB_POWER)
 
 // Subtitle
 KEY_MAP_GTK     (Subtitle, GDK_Subtitle)
-KEY_MAP_ANDROID (Subtitle, AKEYCODE_CAPTIONS)
 
 // Teletext
 KEY_MAP_ANDROID (Teletext, AKEYCODE_TV_TELETEXT)
