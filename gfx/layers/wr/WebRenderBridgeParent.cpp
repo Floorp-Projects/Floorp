@@ -122,6 +122,21 @@ WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
   return IPC_OK();
 }
 
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& commands)
+{
+  ProcessWebrenderCommands(commands);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& commands)
+{
+  ProcessWebrenderCommands(commands);
+  return IPC_OK();
+}
+
 void
 WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& aCommands)
 {
