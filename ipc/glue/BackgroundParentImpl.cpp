@@ -467,7 +467,7 @@ BackgroundParentImpl::AllocPBroadcastChannelParent(
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  nsString originChannelKey;
+  nsAutoString originChannelKey;
 
   // The format of originChannelKey is:
   //  <channelName>|<origin+OriginAttributes>
@@ -478,7 +478,11 @@ BackgroundParentImpl::AllocPBroadcastChannelParent(
 
   originChannelKey.Append(NS_ConvertUTF8toUTF16(aOrigin));
 
-  return new BroadcastChannelParent(originChannelKey);
+  RefPtr<BroadcastChannelParent> agent =
+    new BroadcastChannelParent(originChannelKey);
+
+  // Released in DeallocPBroadcastChannelParent.
+  return agent.forget().take();
 }
 
 namespace {
@@ -501,9 +505,12 @@ class CheckPrincipalRunnable final : public Runnable
 {
 public:
   CheckPrincipalRunnable(already_AddRefed<ContentParent> aParent,
+                         BroadcastChannelParent* aActor,
                          const PrincipalInfo& aPrincipalInfo,
                          const nsCString& aOrigin)
     : mContentParent(aParent)
+    , mActor(aActor)
+    , mBackgroundEventTarget(NS_GetCurrentThread())
     , mPrincipalInfo(aPrincipalInfo)
     , mOrigin(aOrigin)
   {
@@ -511,38 +518,66 @@ public:
     AssertIsOnBackgroundThread();
 
     MOZ_ASSERT(mContentParent);
+    MOZ_ASSERT(mActor);
+    MOZ_ASSERT(mBackgroundEventTarget);
+  }
+
+  ~CheckPrincipalRunnable()
+  {
+     NS_ProxyRelease(mBackgroundEventTarget, mActor.forget());
   }
 
   NS_IMETHOD Run() override
   {
-    MOZ_ASSERT(NS_IsMainThread());
+    // This runnable is dispatched to the main-thread first. Here we do some
+    // security check about what the principal can load and what we've received
+    // from the child actor.
+    if (NS_IsMainThread()) {
+      NullifyContentParentRAII raii(mContentParent);
 
-    NullifyContentParentRAII raii(mContentParent);
+      nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(mPrincipalInfo);
 
-    nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(mPrincipalInfo);
+      if (principal->GetIsNullPrincipal()) {
+        mContentParent->KillHard("BroadcastChannel killed: no null principal.");
+        return NS_OK;
+      }
 
-    if (principal->GetIsNullPrincipal()) {
-      mContentParent->KillHard("BroadcastChannel killed: no null principal.");
-      return NS_OK;
+      nsAutoCString origin;
+      nsresult rv = principal->GetOrigin(origin);
+      if (NS_FAILED(rv)) {
+        mContentParent->KillHard("BroadcastChannel killed: principal::GetOrigin failed.");
+        return NS_OK;
+      }
+
+      if (NS_WARN_IF(!mOrigin.Equals(origin))) {
+        mContentParent->KillHard("BroadcastChannel killed: origins do not match.");
+        return NS_OK;
+      }
+
+      return mBackgroundEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
     }
 
-    nsAutoCString origin;
-    nsresult rv = principal->GetOrigin(origin);
-    if (NS_FAILED(rv)) {
-      mContentParent->KillHard("BroadcastChannel killed: principal::GetOrigin failed.");
-      return NS_OK;
+    // When the checks are passed, the same runnable is dispatched back to the
+    // PBackground thread where we can 'start' the actor.
+
+    AssertIsOnBackgroundThread();
+
+    // It can happen that this actor has been destroyed in the meantime we were
+    // on the main-thread.
+    if (!mActor->Destroyed()) {
+      mActor->Start();
     }
 
-    if (NS_WARN_IF(!mOrigin.Equals(origin))) {
-      mContentParent->KillHard("BroadcastChannel killed: origins do not match.");
-      return NS_OK;
-    }
-
+    // Let's release the actor on the correct thread.
+    mActor = nullptr;
     return NS_OK;
   }
 
 private:
   RefPtr<ContentParent> mContentParent;
+  RefPtr<BroadcastChannelParent> mActor;
+  nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
+
   PrincipalInfo mPrincipalInfo;
   nsCString mOrigin;
 };
@@ -626,7 +661,7 @@ private:
 
 mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPBroadcastChannelConstructor(
-                                            PBroadcastChannelParent* actor,
+                                            PBroadcastChannelParent* aActor,
                                             const PrincipalInfo& aPrincipalInfo,
                                             const nsCString& aOrigin,
                                             const nsString& aChannel)
@@ -634,16 +669,21 @@ BackgroundParentImpl::RecvPBroadcastChannelConstructor(
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
+  RefPtr<BroadcastChannelParent> actor =
+    static_cast<BroadcastChannelParent*>(aActor);
+  MOZ_ASSERT(actor);
+
   RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
 
   // If the ContentParent is null we are dealing with a same-process actor.
   if (!parent) {
     MOZ_ASSERT(aPrincipalInfo.type() != PrincipalInfo::TNullPrincipalInfo);
+    actor->Start();
     return IPC_OK();
   }
 
   RefPtr<CheckPrincipalRunnable> runnable =
-    new CheckPrincipalRunnable(parent.forget(), aPrincipalInfo, aOrigin);
+    new CheckPrincipalRunnable(parent.forget(), actor, aPrincipalInfo, aOrigin);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
 
   return IPC_OK();
@@ -657,7 +697,9 @@ BackgroundParentImpl::DeallocPBroadcastChannelParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  delete static_cast<BroadcastChannelParent*>(aActor);
+  RefPtr<BroadcastChannelParent> actor =
+    dont_AddRef(static_cast<BroadcastChannelParent*>(aActor));
+  MOZ_ASSERT(actor);
   return true;
 }
 
