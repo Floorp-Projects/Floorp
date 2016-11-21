@@ -49,16 +49,6 @@ static_assert((((1 << nsStyleStructID_Length) - 1) &
 /* static */ const int32_t nsStyleGridLine::kMaxLine;
 
 static bool
-EqualURIs(nsIURI *aURI1, nsIURI *aURI2)
-{
-  bool eq;
-  return aURI1 == aURI2 ||    // handle null==null, and optimize
-         (aURI1 && aURI2 &&
-          NS_SUCCEEDED(aURI1->Equals(aURI2, &eq)) && // not equal on fail
-          eq);
-}
-
-static bool
 DefinitelyEqualURIs(css::URLValueData* aURI1,
                     css::URLValueData* aURI2)
 {
@@ -72,23 +62,6 @@ DefinitelyEqualURIsAndPrincipal(css::URLValueData* aURI1,
 {
   return aURI1 == aURI2 ||
          (aURI1 && aURI2 && aURI1->DefinitelyEqualURIsAndPrincipal(*aURI2));
-}
-
-static bool
-EqualImages(imgIRequest *aImage1, imgIRequest* aImage2)
-{
-  if (aImage1 == aImage2) {
-    return true;
-  }
-
-  if (!aImage1 || !aImage2) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> uri1, uri2;
-  aImage1->GetURI(getter_AddRefs(uri1));
-  aImage2->GetURI(getter_AddRefs(uri2));
-  return EqualURIs(uri1, uri2);
 }
 
 static bool
