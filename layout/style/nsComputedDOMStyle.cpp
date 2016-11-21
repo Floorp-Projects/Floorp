@@ -2399,20 +2399,29 @@ void
 nsComputedDOMStyle::SetValueToURLValue(const css::URLValueData* aURL,
                                        nsROCSSPrimitiveValue* aValue)
 {
-  if (aURL && aURL->IsLocalRef()) {
-    nsString fragment;
-    aURL->GetSourceString(fragment);
-    fragment.Insert(u"url(\"", 0);
-    fragment.Append(u"\")");
-    aValue->SetString(fragment);
-  } else {
-    nsCOMPtr<nsIURI> url;
-    if (aURL && (url = aURL->GetURI())) {
-      aValue->SetURI(url);
-    } else {
-      aValue->SetIdent(eCSSKeyword_none);
+  if (!aURL) {
+    aValue->SetIdent(eCSSKeyword_none);
+    return;
+  }
+
+  // If we have a usable nsIURI in the URLValueData, and the url() wasn't
+  // a fragment-only URL, serialize the nsIURI.
+  if (!aURL->IsLocalRef()) {
+    if (nsIURI* uri = aURL->GetURI()) {
+      aValue->SetURI(uri);
+      return;
     }
   }
+
+  // Otherwise, serialize the specified URL value.
+  nsAutoString source;
+  aURL->GetSourceString(source);
+
+  nsAutoString url;
+  url.AppendLiteral(u"url(");
+  nsStyleUtil::AppendEscapedCSSString(source, url, '"');
+  url.Append(')');
+  aValue->SetString(url);
 }
 
 already_AddRefed<CSSValue>
@@ -4120,11 +4129,8 @@ nsComputedDOMStyle::DoGetCursor()
   for (const nsCursorImage& item : ui->mCursorImages) {
     RefPtr<nsDOMCSSValueList> itemList = GetROCSSValueList(false);
 
-    nsCOMPtr<nsIURI> uri;
-    item.GetImage()->GetURI(getter_AddRefs(uri));
-
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetURI(uri);
+    SetValueToURLValue(item.mImage->GetImageValue(), val);
     itemList->AppendCSSValue(val.forget());
 
     if (item.mHaveHotspot) {

@@ -369,6 +369,8 @@ public:
   // return true from URLValueData::DefinitelyEqualURIs.
   bool DefinitelyEquals(const nsStyleImageRequest& aOther) const;
 
+  mozilla::css::ImageValue* GetImageValue() const { return mImageValue; }
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsStyleImageRequest);
 
 private:
@@ -3334,10 +3336,10 @@ struct nsCursorImage
 {
   bool mHaveHotspot;
   float mHotspotX, mHotspotY;
+  RefPtr<nsStyleImageRequest> mImage;
 
   nsCursorImage();
   nsCursorImage(const nsCursorImage& aOther);
-  ~nsCursorImage();
 
   nsCursorImage& operator=(const nsCursorImage& aOther);
 
@@ -3347,22 +3349,9 @@ struct nsCursorImage
     return !(*this == aOther);
   }
 
-  void SetImage(imgIRequest *aImage) {
-    if (mImage) {
-      mImage->UnlockImage();
-      mImage->RequestDiscard();
-    }
-    mImage = aImage;
-    if (mImage) {
-      mImage->LockImage();
-    }
+  imgRequestProxy* GetImage() const {
+    return mImage->get();
   }
-  imgIRequest* GetImage() const {
-    return mImage;
-  }
-
-private:
-  nsCOMPtr<imgIRequest> mImage;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUserInterface
@@ -3370,7 +3359,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUserInterface
   explicit nsStyleUserInterface(StyleStructContext aContext);
   nsStyleUserInterface(const nsStyleUserInterface& aOther);
   ~nsStyleUserInterface();
-  void FinishStyle(nsPresContext* aPresContext) {}
+
+  void FinishStyle(nsPresContext* aPresContext);
 
   void* operator new(size_t sz, nsStyleUserInterface* aSelf) { return aSelf; }
   void* operator new(size_t sz, nsPresContext* aContext) {
