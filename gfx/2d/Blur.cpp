@@ -336,10 +336,26 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
                            const IntSize& aBlurRadius,
                            const Rect* aDirtyRect,
                            const Rect* aSkipRect)
- : mSpreadRadius(aSpreadRadius),
-   mBlurRadius(aBlurRadius),
-   mSurfaceAllocationSize(0)
+  : mSurfaceAllocationSize(0)
 {
+  Init(aRect, aSpreadRadius, aBlurRadius, aDirtyRect, aSkipRect);
+}
+
+AlphaBoxBlur::AlphaBoxBlur()
+  : mSurfaceAllocationSize(0)
+{
+}
+
+void
+AlphaBoxBlur::Init(const Rect& aRect,
+                   const IntSize& aSpreadRadius,
+                   const IntSize& aBlurRadius,
+                   const Rect* aDirtyRect,
+                   const Rect* aSkipRect)
+{
+  mSpreadRadius = aSpreadRadius;
+  mBlurRadius = aBlurRadius;
+
   Rect rect(aRect);
   rect.Inflate(Size(aBlurRadius + aSpreadRadius));
   rect.RoundOut();
@@ -356,8 +372,7 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
     mHasDirtyRect = false;
   }
 
-  mRect = IntRect(int32_t(rect.x), int32_t(rect.y),
-                  int32_t(rect.width), int32_t(rect.height));
+  mRect = TruncatedToInt(rect);
   if (mRect.IsEmpty()) {
     return;
   }
@@ -367,11 +382,8 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
     // blurring/spreading we need to do. We convert it to IntRect to avoid
     // expensive int<->float conversions if we were to use Rect instead.
     Rect skipRect = *aSkipRect;
-    skipRect.RoundIn();
     skipRect.Deflate(Size(aBlurRadius + aSpreadRadius));
-    mSkipRect = IntRect(int32_t(skipRect.x), int32_t(skipRect.y),
-                        int32_t(skipRect.width), int32_t(skipRect.height));
-
+    mSkipRect = RoundedIn(skipRect);
     mSkipRect = mSkipRect.Intersect(mRect);
     if (mSkipRect.IsEqualInterior(mRect))
       return;
@@ -398,8 +410,7 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
                            int32_t aStride,
                            float aSigmaX,
                            float aSigmaY)
-  : mRect(int32_t(aRect.x), int32_t(aRect.y),
-          int32_t(aRect.width), int32_t(aRect.height)),
+  : mRect(TruncatedToInt(aRect)),
     mSpreadRadius(),
     mBlurRadius(CalculateBlurRadius(Point(aSigmaX, aSigmaY))),
     mStride(aStride),
