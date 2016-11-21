@@ -41,14 +41,11 @@ or from https://rust-lang.org/ or from your package manager.
 
 def rustup_url(host, version=RUSTUP_VERSION):
     '''Download url for a particular version of the installer.'''
-    ext = ''
-    if 'windows' in host:
-        ext = '.exe'
-    return os.path.join(RUSTUP_URL_BASE,
-        'archive/%(version)s/%(host)s/rustup-init%(ext)s') % {
+    return '%(base)s/archive/%(version)s/%(host)s/rustup-init%(ext)s' % {
+                'base': RUSTUP_URL_BASE,
                 'version': version,
                 'host': host,
-                'ext': ext}
+                'ext': exe_suffix(host)}
 
 def rustup_hash(host):
     '''Look up the checksum for the given installer.'''
@@ -67,6 +64,13 @@ def platform():
         return 'x86_64-unknown-freebsd'
 
     return None
+
+def exe_suffix(host=None):
+    if not host:
+        host = platform()
+    if 'windows' in host:
+        return '.exe'
+    return ''
 
 USAGE = '''
 python rust.py [--update]
