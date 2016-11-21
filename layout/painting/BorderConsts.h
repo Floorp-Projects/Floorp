@@ -10,13 +10,6 @@
 #define DOT_LENGTH  1           // square
 #define DASH_LENGTH 3           // 3 times longer than dot
 
-// some shorthand for side bits
-#define SIDE_BIT_TOP (1 << eSideTop)
-#define SIDE_BIT_RIGHT (1 << eSideRight)
-#define SIDE_BIT_BOTTOM (1 << eSideBottom)
-#define SIDE_BIT_LEFT (1 << eSideLeft)
-#define SIDE_BITS_ALL (SIDE_BIT_TOP|SIDE_BIT_RIGHT|SIDE_BIT_BOTTOM|SIDE_BIT_LEFT)
-
 #define C_TL NS_CORNER_TOP_LEFT
 #define C_TR NS_CORNER_TOP_RIGHT
 #define C_BR NS_CORNER_BOTTOM_RIGHT
