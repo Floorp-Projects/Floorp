@@ -112,9 +112,7 @@ and may contain any of the following fields:
    <code>debug</code>, <code>config</code>,
    <code>info</code>, <code>warn</code>,
    <code>error</code>, and <code>fatal</code>.
-   If left undefined, the default is for optimised Firefox builds
-   to use <code>info</code>
-   and non-optimised builds to use <code>debug</code>.
+   If left undefined the default is <code>info</code>.
  </tr>
 </table>
 
