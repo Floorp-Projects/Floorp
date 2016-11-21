@@ -734,7 +734,10 @@ AndroidBridge::GetGlobalContextRef() {
 }
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS(nsAndroidBridge, nsIAndroidEventDispatcher, nsIAndroidBridge)
+NS_IMPL_ISUPPORTS(nsAndroidBridge,
+                  nsIAndroidEventDispatcher,
+                  nsIAndroidBridge,
+                  nsIObserver)
 
 nsAndroidBridge::nsAndroidBridge()
 {
@@ -750,7 +753,6 @@ nsAndroidBridge::nsAndroidBridge()
 
 nsAndroidBridge::~nsAndroidBridge()
 {
-  RemoveObservers();
 }
 
 NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(JS::HandleValue val,
