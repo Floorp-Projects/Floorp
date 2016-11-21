@@ -20,3 +20,12 @@
 #PopupAutoComplete > richlistbox {
   padding: 0;
 }
+
+/* Insecure field warning */
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {
+  background-color: #F6F6F6; /* Bug 1319176 */
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-site-icon {
+  list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg#icon);
+}
