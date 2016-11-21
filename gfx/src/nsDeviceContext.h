@@ -300,9 +300,6 @@ private:
     nsCOMPtr<nsIScreenManager>     mScreenManager;
     nsCOMPtr<nsIDeviceContextSpec> mDeviceContextSpec;
     RefPtr<PrintTarget>            mPrintTarget;
-#ifdef XP_MACOSX
-    RefPtr<PrintTarget>            mCachedPrintTarget;
-#endif
 #ifdef DEBUG
     bool mIsInitialized;
 #endif
