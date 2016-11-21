@@ -456,7 +456,7 @@ moz_gtk_get_widget_min_size(WidgetNodeType aGtkWidgetType, int* width,
 }
 
 static void
-moz_gtk_rectangle_inset(GdkRectangle* rect, GtkBorder& aBorder)
+Inset(GdkRectangle* rect, GtkBorder& aBorder)
 {
     MOZ_ASSERT(rect);
     rect->x += aBorder.left;
@@ -465,17 +465,16 @@ moz_gtk_rectangle_inset(GdkRectangle* rect, GtkBorder& aBorder)
     rect->height -= aBorder.top + aBorder.bottom;
 }
 
-/* Subtracting margin is used to inset drawing of element which can have margins,
- * like scrollbar, scrollbar's trough, thumb and scrollbar's button */
+// Inset a rectangle by the margins specified in a style context.
 static void
-moz_gtk_subtract_margin(GtkStyleContext* style, GdkRectangle* rect)
+InsetByMargin(GdkRectangle* rect, GtkStyleContext* style)
 {
     MOZ_ASSERT(rect);
     GtkBorder margin;
 
     gtk_style_context_get_margin(style, gtk_style_context_get_state(style),
                                  &margin);
-    moz_gtk_rectangle_inset(rect, margin);
+    Inset(rect, margin);
 }
 
 static gint
@@ -521,7 +520,7 @@ moz_gtk_scrollbar_button_paint(cairo_t *cr, const GdkRectangle* aRect,
     if (gtk_check_version(3,20,0) == nullptr) {
       // The "trough-border" is not used since GTK 3.20.  The stepper margin
       // box occupies the full width of the "contents" gadget content box.
-      moz_gtk_subtract_margin(style, &rect);
+      InsetByMargin(&rect, style);
     } else {
       // Scrollbar button has to be inset by trough_border because its DOM
       // element is filling width of vertical scrollbar's track (or height
@@ -594,7 +593,7 @@ moz_gtk_draw_styled_frame(GtkStyleContext* style, cairo_t *cr,
 {
     GdkRectangle rect = *aRect;
     if (gtk_check_version(3, 6, 0) == nullptr) {
-        moz_gtk_subtract_margin(style, &rect);
+        InsetByMargin(&rect, style);
     }
     gtk_render_background(style, cr, rect.x, rect.y, rect.width, rect.height);
     gtk_render_frame(style, cr, rect.x, rect.y, rect.width, rect.height);
@@ -657,7 +656,7 @@ moz_gtk_scrollbar_thumb_paint(WidgetNodeType widget,
 
     GdkRectangle rect = *aRect;
     GtkStyleContext* style = ClaimStyleContext(widget, direction, state_flags);
-    moz_gtk_subtract_margin(style, &rect);
+    InsetByMargin(&rect, style);
 
     gtk_render_slider(style, cr,
                       rect.x,
@@ -1292,16 +1291,16 @@ moz_gtk_tooltip_paint(cairo_t *cr, const GdkRectangle* aRect,
     rect.width -= 12;
     rect.height -= 12;
 
-    moz_gtk_subtract_margin(boxStyle, &rect);
+    InsetByMargin(&rect, boxStyle);
     gtk_render_background(boxStyle, cr, rect.x, rect.y, rect.width, rect.height);
     gtk_render_frame(boxStyle, cr, rect.x, rect.y, rect.width, rect.height);
 
     // Label drawing
     GtkBorder padding, border;
     gtk_style_context_get_padding(boxStyle, GTK_STATE_FLAG_NORMAL, &padding);
-    moz_gtk_rectangle_inset(&rect, padding);
+    Inset(&rect, padding);
     gtk_style_context_get_border(boxStyle, GTK_STATE_FLAG_NORMAL, &border);
-    moz_gtk_rectangle_inset(&rect, border);
+    Inset(&rect, border);
 
     GtkStyleContext* labelStyle =
         CreateStyleForWidget(gtk_label_new(nullptr), boxStyle);
