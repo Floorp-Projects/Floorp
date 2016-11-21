@@ -2075,6 +2075,24 @@
 
       <handler event="mousemove"><![CDATA[
         let target = event.originalTarget;
+
+        // Handle mouseover on the add-engine menu button and its popup items.
+        if (target.getAttribute("anonid") == "addengine-menu-button" ||
+            (target.localName == "menuitem" &&
+             target.classList.contains("addengine-item"))) {
+          // Make the menu button visually selected.  It's highlighted in the
+          // CSS when the popup is open, but the popup doesn't open until a
+          // short timeout has elapsed.  Making the button visually selected now
+          // provides better feedback to the user.
+          let menuButton = document.getAnonymousElementByAttribute(
+            this, "anonid", "addengine-menu-button"
+          );
+          this._changeVisuallySelectedButton(menuButton);
+          this._addEngineMenuShouldBeOpen = true;
+          this._resetAddEngineMenuTimeout();
+          return;
+        }
+
         if (target.localName != "button")
           return;
 
@@ -2092,26 +2110,22 @@
         }
       ]]></handler>
 
-      <handler event="mouseenter"><![CDATA[
-        let target = event.originalTarget;
-        if (target.getAttribute("anonid") == "addengine-menu-button") {
-          this._addEngineMenuShouldBeOpen = true;
-          this._resetAddEngineMenuTimeout();
-          return;
-        }
-      ]]></handler>
+      <handler event="mouseout"><![CDATA[
 
-      <handler event="mouseleave"><![CDATA[
         let target = event.originalTarget;
-        if (target.getAttribute("anonid") == "addengine-menu-button") {
+
+        // Handle mouseout on the add-engine menu button and its popup items.
+        if (target.getAttribute("anonid") == "addengine-menu-button" ||
+            (target.localName == "menuitem" &&
+             target.classList.contains("addengine-item"))) {
+          // The menu button will appear selected since the mouse is either over
+          // it or over one of the menu items in the popup.  Make it unselected.
+          this._changeVisuallySelectedButton(null);
           this._addEngineMenuShouldBeOpen = false;
           this._resetAddEngineMenuTimeout();
           return;
         }
-      ]]></handler>
 
-      <handler event="mouseout"><![CDATA[
-        let target = event.originalTarget;
         if (target.localName != "button") {
           return;
         }
