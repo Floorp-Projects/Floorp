@@ -29,8 +29,7 @@ if test "$OS_ARCH" = "WINNT"; then
   fi
 fi
 
-if test "$MOZ_UPDATE_CHANNEL" = "default" -o \
-        "$MOZ_UPDATE_CHANNEL" = "nightly"; then
+if test "$NIGHTLY_BUILD"; then
   MOZ_RUST_URLPARSE=1
 fi
 
