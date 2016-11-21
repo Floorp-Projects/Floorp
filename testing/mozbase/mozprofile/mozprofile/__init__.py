@@ -18,3 +18,4 @@ from permissions import *
 from prefs import *
 from profile import *
 from view import *
+from webapps import *
