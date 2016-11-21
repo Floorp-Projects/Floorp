@@ -141,8 +141,9 @@ class TupOnly(CommonBackend, PartialBackend):
             '*.rs',
         )
 
-        # This is a 'group' dependency - All rules that list this as an output
+        # These are 'group' dependencies - All rules that list these as an output
         # will be built before any rules that list this as an input.
+        self._installed_idls = '$(MOZ_OBJ_ROOT)/<installed-idls>'
         self._installed_files = '$(MOZ_OBJ_ROOT)/<installed-files>'
 
     def _get_backend_file(self, relativedir):
@@ -382,7 +383,7 @@ class TupOnly(CommonBackend, PartialBackend):
 
         dist_idl_backend_file = self._get_backend_file('dist/idl')
         for idl in manager.idls.values():
-            dist_idl_backend_file.symlink_rule(idl['source'], output_group=self._installed_files)
+            dist_idl_backend_file.symlink_rule(idl['source'], output_group=self._installed_idls)
 
         backend_file = self._get_backend_file('xpcom/xpidl')
         backend_file.export_shell()
@@ -409,11 +410,12 @@ class TupOnly(CommonBackend, PartialBackend):
                 inputs=[
                     '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl/xpidllex.py',
                     '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl/xpidlyacc.py',
-                    self._installed_files,
+                    self._installed_idls,
                 ],
                 display='XPIDL %s' % module,
                 cmd=cmd,
                 outputs=outputs,
+                extra_outputs=[self._installed_files],
             )
 
         for manifest, entries in manager.interface_manifests.items():
@@ -491,6 +493,7 @@ class TupOnly(CommonBackend, PartialBackend):
             display='IPDL code generation',
             cmd=cmd,
             outputs=outputs,
+            extra_outputs=[self._installed_files],
             check_unchanged=True,
         )
 
@@ -522,6 +525,7 @@ class TupOnly(CommonBackend, PartialBackend):
             cmd=cmd,
             inputs=webidls.all_non_static_basenames(),
             outputs=outputs,
+            extra_outputs=[self._installed_files],
             check_unchanged=True,
         )
 
