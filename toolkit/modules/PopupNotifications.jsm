@@ -31,7 +31,6 @@ const TELEMETRY_STAT_ACTION_LAST = 4;
 const TELEMETRY_STAT_DISMISSAL_CLICK_ELSEWHERE = 5;
 const TELEMETRY_STAT_DISMISSAL_LEAVE_PAGE = 6;
 const TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON = 7;
-const TELEMETRY_STAT_DISMISSAL_NOT_NOW = 8;
 const TELEMETRY_STAT_OPEN_SUBMENU = 10;
 const TELEMETRY_STAT_LEARN_MORE = 11;
 
@@ -309,6 +308,11 @@ PopupNotifications.prototype = {
    *        persistWhileVisible:
    *                     A boolean. If true, a visible notification will always
    *                     persist across location changes.
+   *        persistent:  A boolean. If true, the notification will always
+   *                     persist even across tab and app changes (but not across
+   *                     location changes), until the user accepts or rejects
+   *                     the request. The notification will never be implicitly
+   *                     dismissed.
    *        dismissed:   Whether the notification should be added as a dismissed
    *                     notification. Dismissed notifications can be activated
    *                     by clicking on their anchorElement.
@@ -347,6 +351,8 @@ PopupNotifications.prototype = {
    *                     removed when they would have otherwise been dismissed
    *                     (i.e. any time the popup is closed due to user
    *                     interaction).
+   *        hideClose:   Indicate that the little close button in the corner of
+   *                     the panel should be hidden.
    *        checkbox:    An object that allows you to add a checkbox and
    *                     control its behavior with these fields:
    *                       label:
@@ -367,11 +373,6 @@ PopupNotifications.prototype = {
    *                         (optional) An object that allows you to customize
    *                         the notification state when the checkbox is not checked.
    *                         Has the same attributes as checkedState.
-   *        hideNotNow:  If true, indicates that the 'Not Now' menuitem should
-   *                     not be shown. If 'Not Now' is hidden, it needs to be
-   *                     replaced by another 'do nothing' item, so providing at
-   *                     least one secondary action is required; and one of the
-   *                     actions needs to have the 'dismiss' property set to true.
    *        popupIconClass:
    *                     A string. A class (or space separated list of classes)
    *                     that will be applied to the icon in the popup so that
@@ -406,10 +407,6 @@ PopupNotifications.prototype = {
       throw "PopupNotifications_show: invalid mainAction";
     if (secondaryActions && secondaryActions.some(isInvalidAction))
       throw "PopupNotifications_show: invalid secondaryActions";
-    if (options && options.hideNotNow &&
-        (!secondaryActions || !secondaryActions.length ||
-         !secondaryActions.concat(mainAction).some(action => action.dismiss)))
-      throw "PopupNotifications_show: 'Not Now' item hidden without replacement";
 
     let notification = new Notification(id, message, anchorID, mainAction,
                                         secondaryActions, browser, this, options);
@@ -475,7 +472,7 @@ PopupNotifications.prototype = {
       if (notification.options.persistWhileVisible &&
           this.isPanelOpen) {
         if ("persistence" in notification.options &&
-          notification.options.persistence)
+            notification.options.persistence)
           notification.options.persistence--;
         return true;
       }
@@ -589,6 +586,13 @@ PopupNotifications.prototype = {
       this.nextDismissReason = telemetryReason;
     }
 
+    // An explicitly dismissed persistent notification effectively becomes
+    // non-persistent.
+    if (this.panel.firstChild &&
+        telemetryReason == TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON) {
+      this.panel.firstChild.notification.options.persistent = false;
+    }
+
     let browser = this.panel.firstChild &&
                   this.panel.firstChild.notification.browser;
     this.panel.hidePopup();
@@ -674,18 +678,16 @@ PopupNotifications.prototype = {
         popupnotification.setAttribute("buttonlabel", n.mainAction.label);
         popupnotification.setAttribute("buttonaccesskey", n.mainAction.accessKey);
         popupnotification.setAttribute("buttoncommand", "PopupNotifications._onButtonEvent(event, 'buttoncommand');");
-        popupnotification.setAttribute("buttonpopupshown", "PopupNotifications._onButtonEvent(event, 'buttonpopupshown');");
+        popupnotification.setAttribute("dropmarkerpopupshown", "PopupNotifications._onButtonEvent(event, 'dropmarkerpopupshown');");
         popupnotification.setAttribute("learnmoreclick", "PopupNotifications._onButtonEvent(event, 'learnmoreclick');");
         popupnotification.setAttribute("menucommand", "PopupNotifications._onMenuCommand(event);");
-        popupnotification.setAttribute("closeitemcommand", `PopupNotifications._dismiss(${TELEMETRY_STAT_DISMISSAL_NOT_NOW});event.stopPropagation();`);
       } else {
         popupnotification.removeAttribute("buttonlabel");
         popupnotification.removeAttribute("buttonaccesskey");
         popupnotification.removeAttribute("buttoncommand");
-        popupnotification.removeAttribute("buttonpopupshown");
+        popupnotification.removeAttribute("dropmarkerpopupshown");
         popupnotification.removeAttribute("learnmoreclick");
         popupnotification.removeAttribute("menucommand");
-        popupnotification.removeAttribute("closeitemcommand");
       }
 
       if (n.options.popupIconClass) {
@@ -716,17 +718,26 @@ PopupNotifications.prototype = {
       } else
         popupnotification.removeAttribute("origin");
 
+      if (n.options.hideClose)
+        popupnotification.setAttribute("closebuttonhidden", "true");
+
       popupnotification.notification = n;
 
-      if (n.secondaryActions) {
+      if (n.secondaryActions && n.secondaryActions.length > 0) {
         let telemetryStatId = TELEMETRY_STAT_ACTION_2;
 
-        n.secondaryActions.forEach(function(a) {
+        let secondaryAction = n.secondaryActions[0];
+        popupnotification.setAttribute("secondarybuttonlabel", secondaryAction.label);
+        popupnotification.setAttribute("secondarybuttonaccesskey", secondaryAction.accessKey);
+        popupnotification.setAttribute("secondarybuttoncommand", "PopupNotifications._onButtonEvent(event, 'secondarybuttoncommand');");
+
+        for (let i = 1; i < n.secondaryActions.length; i++) {
+          let action = n.secondaryActions[i];
           let item = doc.createElementNS(XUL_NS, "menuitem");
-          item.setAttribute("label", a.label);
-          item.setAttribute("accesskey", a.accessKey);
+          item.setAttribute("label", action.label);
+          item.setAttribute("accesskey", action.accessKey);
           item.notification = n;
-          item.action = a;
+          item.action = action;
 
           popupnotification.appendChild(item);
 
@@ -736,15 +747,14 @@ PopupNotifications.prototype = {
           if (telemetryStatId < TELEMETRY_STAT_ACTION_LAST) {
             telemetryStatId++;
           }
-        }, this);
+        }
 
-        if (n.options.hideNotNow) {
-          popupnotification.setAttribute("hidenotnow", "true");
+        if (n.secondaryActions.length < 2) {
+          popupnotification.setAttribute("dropmarkerhidden", "true");
         }
-        else if (n.secondaryActions.length) {
-          let closeItemSeparator = doc.createElementNS(XUL_NS, "menuseparator");
-          popupnotification.appendChild(closeItemSeparator);
-        }
+      } else {
+        popupnotification.setAttribute("secondarybuttonhidden", "true");
+        popupnotification.setAttribute("dropmarkerhidden", "true");
       }
 
       let checkbox = n.options.checkbox;
@@ -775,11 +785,14 @@ PopupNotifications.prototype = {
   },
 
   _setNotificationUIState(notification, state = {}) {
-    notification.setAttribute("mainactiondisabled", state.disableMainAction || "false");
-
+    if (state.disableMainAction) {
+      notification.setAttribute("mainactiondisabled", "true");
+    } else {
+      notification.removeAttribute("mainactiondisabled");
+    }
     if (state.warningLabel) {
       notification.setAttribute("warninglabel", state.warningLabel);
-      notification.setAttribute("warninghidden", "false");
+      notification.removeAttribute("warninghidden");
     } else {
       notification.setAttribute("warninghidden", "true");
     }
@@ -804,6 +817,10 @@ PopupNotifications.prototype = {
     this.panel.hidden = false;
 
     notificationsToShow = notificationsToShow.filter(n => {
+      if (anchorElement != n.anchorElement) {
+        return false;
+      }
+
       let dismiss = this._fireCallback(n, NOTIFICATION_EVENT_SHOWING);
       if (dismiss)
         n.dismissed = true;
@@ -831,7 +848,7 @@ PopupNotifications.prototype = {
     // If the panel is already open but we're changing anchors, we need to hide
     // it first.  Otherwise it can appear in the wrong spot.  (_hidePanel is
     // safe to call even if the panel is already hidden.)
-    let promise = this._hidePanel().then(() => {
+    this._hidePanel().then(() => {
       // If the anchor element is hidden or null, use the tab as the anchor. We
       // only ever show notifications for the current browser, so we can just use
       // the current tab.
@@ -845,6 +862,12 @@ PopupNotifications.prototype = {
       }
 
       this._currentAnchorElement = anchorElement;
+
+      if (notificationsToShow.some(n => n.options.persistent)) {
+        this.panel.setAttribute("noautohide", "true");
+      } else {
+        this.panel.removeAttribute("noautohide");
+      }
 
       // On OS X and Linux we need a different panel arrow color for
       // click-to-play plugins, so copy the popupid and use css.
@@ -931,9 +954,10 @@ PopupNotifications.prototype = {
       }
     }
 
-    // Filter out notifications that have been dismissed.
+    // Filter out notifications that have been dismissed, unless they are
+    // persistent.
     let notificationsToShow = notifications.filter(function(n) {
-      return !n.dismissed && !n.options.neverShow;
+      return (!n.dismissed || n.options.persistent) && !n.options.neverShow;
     });
 
     if (useIconBox) {
@@ -1111,7 +1135,7 @@ PopupNotifications.prototype = {
     }
 
     // Ensure we move focus into the panel because it's opened through user interaction:
-    this.panel.removeAttribute("noautofocus", "true");
+    this.panel.removeAttribute("noautofocus");
 
     this._reshowNotifications(anchor);
   },
@@ -1253,7 +1277,7 @@ PopupNotifications.prototype = {
 
     let notification = notificationEl.notification;
 
-    if (type == "buttonpopupshown") {
+    if (type == "dropmarkerpopupshown") {
       notification._recordTelemetryStat(TELEMETRY_STAT_OPEN_SUBMENU);
       return;
     }
@@ -1263,34 +1287,46 @@ PopupNotifications.prototype = {
       return;
     }
 
-    // Record the total timing of the main action since the notification was
-    // created, even if the notification was dismissed in the meantime.
-    let timeSinceCreated = this.window.performance.now() - notification.timeCreated;
-    if (!notification.recordedTelemetryMainAction) {
-      notification.recordedTelemetryMainAction = true;
-      notification._recordTelemetry("POPUP_NOTIFICATION_MAIN_ACTION_MS",
-                                    timeSinceCreated);
+    if (type == "buttoncommand") {
+      // Record the total timing of the main action since the notification was
+      // created, even if the notification was dismissed in the meantime.
+      let timeSinceCreated = this.window.performance.now() - notification.timeCreated;
+      if (!notification.recordedTelemetryMainAction) {
+        notification.recordedTelemetryMainAction = true;
+        notification._recordTelemetry("POPUP_NOTIFICATION_MAIN_ACTION_MS",
+                                      timeSinceCreated);
+      }
     }
 
-    let timeSinceShown = this.window.performance.now() - notification.timeShown;
-    if (timeSinceShown < this.buttonDelay) {
-      Services.console.logStringMessage("PopupNotifications._onButtonEvent: " +
-                                        "Button click happened before the security delay: " +
-                                        timeSinceShown + "ms");
-      return;
+    if (type == "buttoncommand" || type == "secondarybuttoncommand") {
+      let timeSinceShown = this.window.performance.now() - notification.timeShown;
+      if (timeSinceShown < this.buttonDelay) {
+        Services.console.logStringMessage("PopupNotifications._onButtonEvent: " +
+                                          "Button click happened before the security delay: " +
+                                          timeSinceShown + "ms");
+        return;
+      }
     }
 
-    notification._recordTelemetryStat(TELEMETRY_STAT_ACTION_1);
+    let action = notification.mainAction;
+    let telemetryStatId = TELEMETRY_STAT_ACTION_1;
+
+    if (type == "secondarybuttoncommand") {
+      action = notification.secondaryActions[0];
+      telemetryStatId = TELEMETRY_STAT_ACTION_2;
+    }
+
+    notification._recordTelemetryStat(telemetryStatId);
 
     try {
-      notification.mainAction.callback.call(undefined, {
+      action.callback.call(undefined, {
         checkboxChecked: notificationEl.checkbox.checked
       });
     } catch (error) {
       Cu.reportError(error);
     }
 
-    if (notification.mainAction.dismiss) {
+    if (action.dismiss) {
       this._dismiss();
       return;
     }

@@ -217,7 +217,9 @@ PartialSHistory::OnRequestCrossBrowserNavigation(uint32_t aIndex)
     // Cycle collected?
     return NS_ERROR_UNEXPECTED;
   }
-  return mOwnerFrameLoader->RequestGroupedHistoryNavigation(aIndex);
+
+  nsCOMPtr<nsISupports> promise;
+  return mOwnerFrameLoader->RequestGroupedHistoryNavigation(aIndex, getter_AddRefs(promise));
 }
 
 /*******************************************************************************

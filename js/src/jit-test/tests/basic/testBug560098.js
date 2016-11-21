@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 Function("\
     for each(let w in [(5), false, Number, false]) {\
         (function f(zzzzzz) {\

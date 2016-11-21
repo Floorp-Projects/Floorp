@@ -50,6 +50,7 @@ clean=0
 rebuild_gyp=0
 target=Debug
 verbose=0
+fuzz=0
 
 # parse parameters to store in config
 params=$(echo "$*" | perl -pe 's/-c|-v|-g|-j [0-9]*|-h//g' | perl -pe 's/^[ \t]*//')
@@ -71,6 +72,7 @@ scanbuild=()
 
 enable_fuzz()
 {
+    fuzz=1
     nspr_sanitizer asan
     nspr_sanitizer ubsan
     nspr_sanitizer sancov edge
@@ -80,9 +82,6 @@ enable_fuzz()
 
     # Adding debug symbols even for opt builds.
     nspr_opt+=(--enable-debug-symbols)
-
-    # Clone libFuzzer repository.
-    $cwd/fuzz/clone_libfuzzer.sh &>/dev/null
 }
 
 # parse command line arguments
@@ -118,6 +117,19 @@ if [ "$build_64" == "1" ]; then
 else
     gyp_params+=(-Dtarget_arch=ia32)
     nspr_opt+=(--enable-x32)
+fi
+
+# clone fuzzing stuff
+if [ "$fuzz" = "1" ]; then
+    [ $verbose = 0 ] && exec 3>/dev/null || exec 3>&1
+
+    echo "[1/2] Cloning libFuzzer files ..."
+    $cwd/fuzz/clone_libfuzzer.sh 1>&3 2>&3
+
+    echo "[2/2] Cloning fuzzing corpus ..."
+    $cwd/fuzz/clone_corpus.sh 1>&3 2>&3
+
+    exec 3>&-
 fi
 
 # check if we have to rebuild gyp

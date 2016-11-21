@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: stretching table items with 'normal' and/or 'stretch' and min/max-size, with Automatic Minimum Size clamping</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1316051">
+  <link rel="help" href="https://drafts.csswg.org/css-align-3/#valdef-justify-self-normal">
+  <link rel="match" href="grid-item-table-stretch-001-ref.html">
+  <style type="text/css">
+* { vertical-align: bottom; }
+.grid {
+  display: inline-grid;
+  border: 3px solid grey;
+  grid: 32px / 4px;
+  margin-right:20px;
+}
+.r { grid: 4px / 32px; }
+
+table {
+  border: 1px solid;
+  padding: 0;
+  margin: 0;
+  background: lightgrey;
+}
+x { display:block; width:16px; height:16px; }
+
+.start {align-self:start; justify-self:start}
+.na {align-self:normal; justify-self:start}
+.sa {align-self:stretch; justify-self:start}
+.an {align-self:start; justify-self:normal}
+.as {align-self:start; justify-self:stretch}
+.w20 { width: 20px }
+.mw20 { min-width: 20px }
+.mxw10 { max-width: 10px }
+.mxw2 { max-width: 2px }
+.mw0 { min-width: 0px }
+
+.h20 { height: 20px }
+.mh20 { min-height: 20px }
+.mxh10 { max-height: 10px }
+.mxh2 { max-height: 2px }
+.mh0 { min-height: 0px }
+
+  </style>
+</head>
+<body>
+
+<div class="grid r"><table cellpadding=0 cellspacing=0><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa mxw10"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na mxw2"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="as"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="as mxw10"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="an"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="an mxw2"><td><x></x></td></table></div>
+
+<pre><!--min-height:20px--></pre>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="mh20"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="mh20 mxw10"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="start mh20 mxw10"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa mh20"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa mh20 mxw10"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na mh20"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na mh20 mxw10"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="as mh20"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="an mh20"><td><x></x></td></table></div>
+
+<pre><!--min-height:0--></pre>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="mh0"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="mh0 mxw10"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa mh0"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa mh0 mxw10"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na mh0"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na mh0 mxw2"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="as mh0"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="an mh0"><td><x></x></td></table></div>
+
+<pre><!----></pre>
+
+<div class="grid"><table cellpadding=0 cellspacing=0><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="mxw2"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="start"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="start mxw2"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa mxw2"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na mxw2"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as mxw2"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an mxw2"><td><x></x></td></table></div>
+
+<pre><!--min-width:20px--></pre>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="mw20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="mw20 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="start mw20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="start mw20 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa mw20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa mw20 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na mw20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na mw20 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as mw20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as mw20 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an mw20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an mw20 mxh10"><td><x></x></td></table></div>
+
+<pre><!--min-width:0--></pre>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="mw0"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="mw0 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="start mw0"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="start mw0 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa mw0"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa mw0 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na mw0"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na mw0 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as mw0"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as mw0 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an mw0"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an mw0 mxh10"><td><x></x></td></table></div>
+
+<pre><!--width:20px--></pre>
+
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="w20"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="w20 mxh10"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="start w20 mxh10"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa w20"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na w20"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="as w20"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="an w20"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="an w20 mxh2"><td><x></x></td></table></div>
+
+<pre><!--width:20px--></pre>
+
+<div class="grid"><table cellpadding=0 cellspacing=0 class="start w20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="start w20 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="start w20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="start w20 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa w20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa w20 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na w20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na w20 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as w20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as w20 mxh10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an w20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an w20 mxh10"><td><x></x></td></table></div>
+
+<pre><!--height:20px--></pre>
+
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="h20"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="h20 mxw10"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="start h20"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="start h20 mxw10"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="as h20"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="as h20 mxw10"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="an h20"><td><x></x></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="an h20 mxw10"><td><x></x></td></table></div>
+
+<pre><!--height:20px--></pre>
+
+<div class="grid"><table cellpadding=0 cellspacing=0 class="h20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="h20 mxw2"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="start h20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="start h20 mxw10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa h20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa h20 mxw2"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na h20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na h20 mxw10"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as h20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as h20 mxw2"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an h20"><td><x></x></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an h20 mxw10"><td><x></x></td></table></div>
+
+</body>
+</html>

@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 // Debugger.prototype.{addDebuggee,hasDebuggee,removeDebuggee} recognize globals
 // regardless of how they are specified.
 

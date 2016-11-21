@@ -1321,15 +1321,9 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 #if !JS_HAS_FOR_EACH_IN
         return false;
 #else
-        return versionNumber() >= JSVERSION_1_6;
+        return options().forEachStatementOption && versionNumber() >= JSVERSION_1_6;
 #endif
     }
-
-    enum AssignmentFlavor {
-        KeyedDestructuringAssignment,
-        IncrementAssignment,
-        DecrementAssignment,
-    };
 
     bool matchInOrOf(bool* isForInp, bool* isForOfp);
 
@@ -1356,6 +1350,10 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     bool finishFunction();
     bool leaveInnerFunction(ParseContext* outerpc);
 
+    bool matchOrInsertSemicolonHelper(TokenStream::Modifier modifier);
+    bool matchOrInsertSemicolonAfterExpression();
+    bool matchOrInsertSemicolonAfterNonExpression();
+
   public:
     enum FunctionCallBehavior {
         PermitAssignmentToFunctionCalls,
@@ -1366,10 +1364,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                                        FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
 
   private:
-    bool reportIfArgumentsEvalTarget(Node nameNode);
-    bool reportIfNotValidSimpleAssignmentTarget(Node target, AssignmentFlavor flavor);
-
-    bool checkAndMarkAsIncOperand(Node kid, AssignmentFlavor flavor);
+    bool checkIncDecOperand(Node operand, uint32_t operandOffset);
     bool checkStrictAssignment(Node lhs);
     bool checkStrictBinding(PropertyName* name, TokenPos pos);
 
@@ -1423,8 +1418,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     bool checkDestructuringArray(Node arrayPattern, const mozilla::Maybe<DeclarationKind>& maybeDecl);
     bool checkDestructuringObject(Node objectPattern, const mozilla::Maybe<DeclarationKind>& maybeDecl);
     bool checkDestructuringName(Node expr, mozilla::Maybe<DeclarationKind> maybeDecl);
-
-    bool checkAssignmentToCall(Node node, unsigned errnum);
 
     Node newNumber(const Token& tok) {
         return handler.newNumber(tok.number(), tok.decimalPoint(), tok.pos);

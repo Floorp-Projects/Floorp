@@ -185,4 +185,49 @@ promise_test(testCase => {
 }, 'Created+deleted stores are still marked as deleted after their ' +
     'transaction aborts');
 
+promise_test(testCase => {
+    let migrationTransaction = null, migrationDatabase = null;
+    return createDatabase(testCase, (database, transaction) => {
+        createBooksStore(testCase, database);
+        createNotBooksStore(testCase, database);
+    }).then(database => {
+        database.close();
+    }).then(() => migrateDatabase(testCase, 2, (database, transaction) => {
+        migrationDatabase = database;
+        migrationTransaction = transaction;
+
+        database.deleteObjectStore('not_books');
+        assert_array_equals(
+            transaction.objectStoreNames, ['books'],
+            'IDBTransaction.objectStoreNames should stop including the ' +
+            'deleted store immediately after IDBDatabase.deleteObjectStore() ' +
+            'returns');
+        assert_array_equals(
+            database.objectStoreNames, ['books'],
+            'IDBDatabase.objectStoreNames should stop including the newly ' +
+            'created store immediately after IDBDatabase.deleteObjectStore() ' +
+            'returns');
+
+        transaction.abort();
+        assert_array_equals(
+            database.objectStoreNames, ['books', 'not_books'],
+            'IDBDatabase.objectStoreNames should include the deleted store ' +
+            'store immediately after IDBTransaction.abort() returns');
+        assert_array_equals(
+            transaction.objectStoreNames, ['books', 'not_books'],
+            'IDBTransaction.objectStoreNames should include the deleted ' +
+            'store immediately after IDBTransaction.abort() returns');
+    })).then(() => {
+        assert_array_equals(
+            migrationDatabase.objectStoreNames, ['books', 'not_books'],
+            'IDBDatabase.objectStoreNames should include the previously ' +
+            'deleted store after the transaction is aborted');
+        assert_array_equals(
+            migrationTransaction.objectStoreNames, ['books', 'not_books'],
+            'IDBTransaction.objectStoreNames should include the previously ' +
+            'deleted store after the transaction is aborted');
+    });
+}, 'Un-instantiated deleted stores get marked as not-deleted after the ' +
+   'transaction aborts');
+
 </script>

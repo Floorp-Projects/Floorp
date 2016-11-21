@@ -105,7 +105,6 @@
 #include "ScriptLoader.h"
 #include "ServiceWorkerEvents.h"
 #include "ServiceWorkerManager.h"
-#include "ServiceWorkerWindowClient.h"
 #include "SharedWorker.h"
 #include "WorkerDebuggerManager.h"
 #include "WorkerHolder.h"
@@ -609,11 +608,6 @@ private:
 class MessageEventRunnable final : public WorkerRunnable
                                  , public StructuredCloneHolder
 {
-  // This is only used for messages dispatched to a service worker.
-  UniquePtr<ServiceWorkerClientInfo> mEventSource;
-
-  RefPtr<PromiseNativeHandler> mHandler;
-
 public:
   MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                        TargetAndBusyBehavior aBehavior)
@@ -621,14 +615,6 @@ public:
   , StructuredCloneHolder(CloningSupported, TransferringSupported,
                           StructuredCloneScope::SameProcessDifferentThread)
   {
-  }
-
-  void
-  SetServiceWorkerData(UniquePtr<ServiceWorkerClientInfo>&& aSource,
-                       PromiseNativeHandler* aHandler)
-  {
-    mEventSource = Move(aSource);
-    mHandler = aHandler;
   }
 
   bool
@@ -690,62 +676,22 @@ public:
     }
 
     nsCOMPtr<nsIDOMEvent> domEvent;
-    RefPtr<ExtendableMessageEvent> extendableEvent;
-    // For messages dispatched to service worker, use ExtendableMessageEvent
-    // https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#extendablemessage-event-section
-    if (mEventSource) {
-      RefPtr<ServiceWorkerClient> client =
-        new ServiceWorkerWindowClient(aTarget, *mEventSource);
-
-      RootedDictionary<ExtendableMessageEventInit> init(aCx);
-
-      init.mBubbles = false;
-      init.mCancelable = false;
-
-      init.mData = messageData;
-      init.mPorts = ports;
-      init.mSource.SetValue().SetAsClient() = client;
-
-      ErrorResult rv;
-      extendableEvent = ExtendableMessageEvent::Constructor(
-        aTarget, NS_LITERAL_STRING("message"), init, rv);
-      if (NS_WARN_IF(rv.Failed())) {
-        rv.SuppressException();
-        return false;
-      }
-
-      domEvent = do_QueryObject(extendableEvent);
-    } else {
-      RefPtr<MessageEvent> event = new MessageEvent(aTarget, nullptr, nullptr);
-      event->InitMessageEvent(nullptr,
-                              NS_LITERAL_STRING("message"),
-                              false /* non-bubbling */,
-                              false /* cancelable */,
-                              messageData,
-                              EmptyString(),
-                              EmptyString(),
-                              nullptr,
-                              ports);
-      domEvent = do_QueryObject(event);
-    }
+    RefPtr<MessageEvent> event = new MessageEvent(aTarget, nullptr, nullptr);
+    event->InitMessageEvent(nullptr,
+                            NS_LITERAL_STRING("message"),
+                            false /* non-bubbling */,
+                            false /* cancelable */,
+                            messageData,
+                            EmptyString(),
+                            EmptyString(),
+                            nullptr,
+                            ports);
+    domEvent = do_QueryObject(event);
 
     domEvent->SetTrusted(true);
 
     nsEventStatus dummy = nsEventStatus_eIgnore;
     aTarget->DispatchDOMEvent(nullptr, domEvent, nullptr, &dummy);
-
-    if (extendableEvent && mHandler) {
-      RefPtr<Promise> waitUntilPromise = extendableEvent->GetPromise();
-      if (!waitUntilPromise) {
-        waitUntilPromise = Promise::Resolve(parent, aCx,
-                                            JS::UndefinedHandleValue, rv);
-        MOZ_RELEASE_ASSERT(!rv.Failed());
-      }
-
-      MOZ_ASSERT(waitUntilPromise);
-
-      waitUntilPromise->AppendNativeHandler(mHandler);
-    }
 
     return true;
   }
@@ -2977,8 +2923,6 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
                                             JSContext* aCx,
                                             JS::Handle<JS::Value> aMessage,
                                             const Optional<Sequence<JS::Value>>& aTransferable,
-                                            UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
-                                            PromiseNativeHandler* aHandler,
                                             ErrorResult& aRv)
 {
   AssertIsOnParentThread();
@@ -3040,8 +2984,6 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
     return;
   }
 
-  runnable->SetServiceWorkerData(Move(aClientInfo), aHandler);
-
   if (!runnable->Dispatch()) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
@@ -3054,21 +2996,7 @@ WorkerPrivateParent<Derived>::PostMessage(
                              const Optional<Sequence<JS::Value>>& aTransferable,
                              ErrorResult& aRv)
 {
-  PostMessageInternal(aCx, aMessage, aTransferable, nullptr, nullptr, aRv);
-}
-
-template <class Derived>
-void
-WorkerPrivateParent<Derived>::PostMessageToServiceWorker(
-                             JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                             const Optional<Sequence<JS::Value>>& aTransferable,
-                             UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
-                             PromiseNativeHandler* aHandler,
-                             ErrorResult& aRv)
-{
-  AssertIsOnMainThread();
-  PostMessageInternal(aCx, aMessage, aTransferable, Move(aClientInfo),
-                      aHandler, aRv);
+  PostMessageInternal(aCx, aMessage, aTransferable, aRv);
 }
 
 template <class Derived>
