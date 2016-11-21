@@ -378,7 +378,7 @@ MSG_DEF(JSMSG_WASM_BAD_IMP_MAX,        1, JSEXN_TYPEERR,     "imported {0} with 
 MSG_DEF(JSMSG_WASM_BAD_ELEMENT,        0, JSEXN_TYPEERR,     "\"element\" property of table descriptor must be \"anyfunc\"")
 MSG_DEF(JSMSG_WASM_BAD_IMPORT_ARG,     0, JSEXN_TYPEERR,     "second argument must be an object")
 MSG_DEF(JSMSG_WASM_BAD_IMPORT_FIELD,   2, JSEXN_TYPEERR,     "import object field '{0}' is not {1}")
-MSG_DEF(JSMSG_WASM_BAD_IMPORT_SIG,     0, JSEXN_TYPEERR,     "imported function signature mismatch")
+MSG_DEF(JSMSG_WASM_BAD_IMPORT_SIG,     2, JSEXN_TYPEERR,     "imported function '{0}.{1}' signature mismatch")
 MSG_DEF(JSMSG_WASM_BAD_TABLE_VALUE,    0, JSEXN_TYPEERR,     "can only assign WebAssembly exported functions to Table")
 MSG_DEF(JSMSG_WASM_BAD_I64,            0, JSEXN_TYPEERR,     "cannot pass i64 to or from JS")
 MSG_DEF(JSMSG_WASM_NO_TRANSFER,        0, JSEXN_TYPEERR,     "cannot transfer WebAssembly/asm.js ArrayBuffer")
