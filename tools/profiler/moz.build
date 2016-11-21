@@ -135,6 +135,7 @@ if CONFIG['MOZ_TASK_TRACER']:
     EXPORTS += [
         'tasktracer/GeckoTaskTracer.h',
         'tasktracer/GeckoTaskTracerImpl.h',
+        'tasktracer/SourceEventTypeMap.h',
         'tasktracer/TracedTaskCommon.h',
     ]
     UNIFIED_SOURCES += [
