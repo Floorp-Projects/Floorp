@@ -530,21 +530,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   /*
    * @deprecated, use nsIDocShell.QueryInterface(nsIDOMStorageManager) instead.
    *
-   * Retrieves the WebApps session storage object for the supplied principal.
-   *
-   * @param principal returns a storage for this principal
-   * @param documentURI new storage will be created with reference to this
-   *                    document.documentURI that will appear in storage event
-   * @param create If true and a session storage object doesn't
-   *               already exist, a new one will be created.
-   */
-  nsIDOMStorage getSessionStorageForPrincipal(in nsIPrincipal principal,
-                                              in DOMString documentURI,
-                                              in boolean create);
-
-  /*
-   * @deprecated, use nsIDocShell.QueryInterface(nsIDOMStorageManager) instead.
-   *
    * Add a WebApps session storage object to the docshell.
    *
    * @param principal the principal the storage object is associated with

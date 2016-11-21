@@ -3007,29 +3007,6 @@ nsDocShell::TopSessionStorageManager()
   return mSessionStorageManager;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
-                                          const nsAString& aDocumentURI,
-                                          bool aCreate,
-                                          nsIDOMStorage** aStorage)
-{
-  nsCOMPtr<nsIDOMStorageManager> manager = TopSessionStorageManager();
-  if (!manager) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> domWin = GetWindow();
-
-  AssertOriginAttributesMatchPrivateBrowsing();
-  if (aCreate) {
-    return manager->CreateStorage(domWin->GetCurrentInnerWindow(), aPrincipal,
-                                  aDocumentURI, aStorage);
-  }
-
-  return manager->GetStorage(domWin->GetCurrentInnerWindow(), aPrincipal,
-                             aStorage);
-}
-
 nsresult
 nsDocShell::AddSessionStorage(nsIPrincipal* aPrincipal, nsIDOMStorage* aStorage)
 {

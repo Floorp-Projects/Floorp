@@ -1078,6 +1078,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     nsContentUtils::GetCurrentJSContext() ? nsContentUtils::SubjectPrincipal() :
                                             nullptr;
 
+  bool shouldCheckPrivateBrowsingId = false;
   if (windowIsNew) {
     auto* docShell = static_cast<nsDocShell*>(newDocShell.get());
 
@@ -1086,6 +1087,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
     if (subjectPrincipal &&
         !nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal) &&
         docShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
+      shouldCheckPrivateBrowsingId = true;
       DocShellOriginAttributes attrs;
       attrs.InheritFromDocToChildDocShell(BasePrincipal::Cast(subjectPrincipal)->OriginAttributesRef());
 
@@ -1218,9 +1220,13 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
       do_QueryInterface(newDocShell);
 
     if (parentStorageManager && newStorageManager) {
+      if (shouldCheckPrivateBrowsingId) {
+        MOZ_DIAGNOSTIC_ASSERT(
+          (subjectPrincipal->GetPrivateBrowsingId() > 0) == isPrivateBrowsingWindow);
+      }
+
       nsCOMPtr<nsIDOMStorage> storage;
       nsCOMPtr<nsPIDOMWindowInner> pInnerWin = parentWindow->GetCurrentInnerWindow();
-
       parentStorageManager->GetStorage(pInnerWin, subjectPrincipal,
                                        getter_AddRefs(storage));
       if (storage) {
