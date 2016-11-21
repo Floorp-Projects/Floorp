@@ -22,7 +22,9 @@ nsFindService::nsFindService()
 }
 
 
-nsFindService::~nsFindService() = default;
+nsFindService::~nsFindService()
+{
+}
 
 NS_IMPL_ISUPPORTS(nsFindService, nsIFindService)
 
