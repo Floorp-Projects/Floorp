@@ -4866,8 +4866,7 @@ SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
                 if (!stack.append(",", 1))
                     oomUnsafe.crash("stack.append");
             }
-            auto chars = frames[i].label.get();
-            if (!stack.append(chars, strlen(chars)))
+            if (!stack.append(frames[i].label, strlen(frames[i].label)))
                 oomUnsafe.crash("stack.append");
             frameNo++;
         }
