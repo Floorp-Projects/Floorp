@@ -872,25 +872,25 @@ KEY_MAP_WIN_CMD (AudioBassBoostDown, APPCOMMAND_BASS_DOWN)
 KEY_MAP_WIN_CMD (AudioBassBoostUp, APPCOMMAND_BASS_UP)
 
 // AudioVolumeDown
-KEY_MAP_WIN               (AudioVolumeDown, VK_VOLUME_DOWN)
-KEY_MAP_WIN_CMD           (AudioVolumeDown, APPCOMMAND_VOLUME_DOWN)
-KEY_MAP_COCOA             (AudioVolumeDown, kVK_VolumeDown)
-KEY_MAP_GTK               (AudioVolumeDown, GDK_AudioLowerVolume)
-KEY_MAP_ANDROID           (AudioVolumeDown, AKEYCODE_VOLUME_DOWN)
+KEY_MAP_WIN     (AudioVolumeDown, VK_VOLUME_DOWN)
+KEY_MAP_WIN_CMD (AudioVolumeDown, APPCOMMAND_VOLUME_DOWN)
+KEY_MAP_COCOA   (AudioVolumeDown, kVK_VolumeDown)
+KEY_MAP_GTK     (AudioVolumeDown, GDK_AudioLowerVolume)
+KEY_MAP_ANDROID (AudioVolumeDown, AKEYCODE_VOLUME_DOWN)
 
 // AudioVolumeUp
-KEY_MAP_WIN               (AudioVolumeUp, VK_VOLUME_UP)
-KEY_MAP_WIN_CMD           (AudioVolumeUp, APPCOMMAND_VOLUME_UP)
-KEY_MAP_COCOA             (AudioVolumeUp, kVK_VolumeUp)
-KEY_MAP_GTK               (AudioVolumeUp, GDK_AudioRaiseVolume)
-KEY_MAP_ANDROID           (AudioVolumeUp, AKEYCODE_VOLUME_UP)
+KEY_MAP_WIN     (AudioVolumeUp, VK_VOLUME_UP)
+KEY_MAP_WIN_CMD (AudioVolumeUp, APPCOMMAND_VOLUME_UP)
+KEY_MAP_COCOA   (AudioVolumeUp, kVK_VolumeUp)
+KEY_MAP_GTK     (AudioVolumeUp, GDK_AudioRaiseVolume)
+KEY_MAP_ANDROID (AudioVolumeUp, AKEYCODE_VOLUME_UP)
 
 // AudioVolumeMute
-KEY_MAP_WIN               (AudioVolumeMute, VK_VOLUME_MUTE)
-KEY_MAP_WIN_CMD           (AudioVolumeMute, APPCOMMAND_VOLUME_MUTE)
-KEY_MAP_COCOA             (AudioVolumeMute, kVK_Mute)
-KEY_MAP_GTK               (AudioVolumeMute, GDK_AudioMute)
-KEY_MAP_ANDROID           (AudioVolumeMute, AKEYCODE_VOLUME_MUTE)
+KEY_MAP_WIN     (AudioVolumeMute, VK_VOLUME_MUTE)
+KEY_MAP_WIN_CMD (AudioVolumeMute, APPCOMMAND_VOLUME_MUTE)
+KEY_MAP_COCOA   (AudioVolumeMute, kVK_Mute)
+KEY_MAP_GTK     (AudioVolumeMute, GDK_AudioMute)
+KEY_MAP_ANDROID (AudioVolumeMute, AKEYCODE_VOLUME_MUTE)
 
 // MicrophoneVolumeMute
 KEY_MAP_ANDROID (MicrophoneVolumeMute, AKEYCODE_MUTE)
@@ -1058,7 +1058,7 @@ KEY_MAP_ANDROID (Call, AKEYCODE_CALL)
 KEY_MAP_ANDROID (Camera, AKEYCODE_CAMERA)
 
 // CameraFocus
-KEY_MAP_ANDROID_EXCEPT_B2G(CameraFocus,       AKEYCODE_FOCUS)
+KEY_MAP_ANDROID_EXCEPT_B2G(CameraFocus, AKEYCODE_FOCUS)
 
 // EndCall
 KEY_MAP_ANDROID (EndCall, AKEYCODE_ENDCALL)
