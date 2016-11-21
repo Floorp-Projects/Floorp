@@ -68,6 +68,7 @@ nsFormFillController::nsFormFillController() :
   mTimeout(50),
   mMinResultsForPopup(1),
   mMaxRows(0),
+  mContextMenuFiredBeforeFocus(false),
   mDisableAutoComplete(false),
   mCompleteDefaultIndex(false),
   mCompleteSelectedIndex(false),
@@ -854,6 +855,7 @@ nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
   if (type.EqualsLiteral("contextmenu")) {
+    mContextMenuFiredBeforeFocus = true;
     if (mFocusedPopup)
       mFocusedPopup->ClosePopup();
     return NS_OK;
@@ -929,6 +931,14 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(
     aEvent->InternalDOMEvent()->GetTarget());
   MaybeStartControllingInput(input);
+
+  // If this focus doesn't immediately follow a contextmenu event then show
+  // the autocomplete popup
+  if (!mContextMenuFiredBeforeFocus && mPwmgrInputs.Get(mFocusedInputNode)) {
+    ShowPopup();
+  }
+
+  mContextMenuFiredBeforeFocus = false;
   return NS_OK;
 }
 
@@ -1061,6 +1071,12 @@ nsFormFillController::MouseDown(nsIDOMEvent* aEvent)
   if (button != 0)
     return NS_OK;
 
+  return ShowPopup();
+}
+
+nsresult
+nsFormFillController::ShowPopup()
+{
   bool isOpen = false;
   GetPopupOpen(&isOpen);
   if (isOpen) {
@@ -1223,6 +1239,10 @@ nsFormFillController::StopControllingInput()
 
     mFocusedInputNode = nullptr;
     mFocusedInput = nullptr;
+  }
+
+  if (mFocusedPopup) {
+    mFocusedPopup->ClosePopup();
   }
   mFocusedPopup = nullptr;
 }
