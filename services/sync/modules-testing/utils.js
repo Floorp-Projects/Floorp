@@ -144,6 +144,8 @@ this.setBasicCredentials =
 
 // Return an identity configuration suitable for testing with our identity
 // providers.  |overrides| can specify overrides for any default values.
+// |server| is optional, but if specified, will be used to form the cluster
+// URL for the FxA identity.
 this.makeIdentityConfig = function(overrides) {
   // first setup the defaults.
   let result = {
@@ -249,13 +251,28 @@ this.configureFxAccountIdentity = function(authService,
   authService._account = config.fxaccount.user.email;
 }
 
-this.configureIdentity = async function(identityOverrides) {
-  let config = makeIdentityConfig(identityOverrides);
+this.configureIdentity = async function(identityOverrides, server) {
+  let config = makeIdentityConfig(identityOverrides, server);
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
 
+  if (server) {
+    ns.Service.serverURL = server.baseURI;
+  }
+
   if (ns.Service.identity instanceof BrowserIDManager) {
     // do the FxAccounts thang...
+
+    // If a server was specified, ensure FxA has a correct cluster URL available.
+    if (server && !config.fxaccount.token.endpoint) {
+      let ep = server.baseURI;
+      if (!ep.endsWith("/")) {
+        ep += "/";
+      }
+      ep += "1.1/" + config.username + "/";
+      config.fxaccount.token.endpoint = ep;
+    }
+
     configureFxAccountIdentity(ns.Service.identity, config);
     await ns.Service.identity.initializeWithCurrentIdentity();
     // need to wait until this identity manager is readyToAuthenticate.

@@ -52,8 +52,6 @@ function run_test() {
   Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.ErrorHandler").level = Log.Level.Trace;
 
-  ensureLegacyIdentityManager();
-
   run_next_test();
 }
 
@@ -406,21 +404,19 @@ add_identity_test(this, function test_shouldReportLoginFailureWithNoCluster() {
   do_check_false(errorHandler.shouldReportError());
 });
 
-// XXX - how to arrange for 'Service.identity.basicPassword = null;' in
-// an fxaccounts environment?
 add_task(async function test_login_syncAndReportErrors_non_network_error() {
   // Test non-network errors are reported
   // when calling syncAndReportErrors
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
-  Service.identity.basicPassword = null;
+  Service.identity.resetSyncKey();
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   errorHandler.syncAndReportErrors();
   await promiseObserved;
-  do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
+  do_check_eq(Status.login, LOGIN_FAILED_NO_PASSPHRASE);
 
   clean();
   await promiseStopServer(server);
@@ -456,21 +452,19 @@ add_identity_test(this, async function test_sync_syncAndReportErrors_non_network
   clean();
 });
 
-// XXX - how to arrange for 'Service.identity.basicPassword = null;' in
-// an fxaccounts environment?
 add_task(async function test_login_syncAndReportErrors_prolonged_non_network_error() {
   // Test prolonged, non-network errors are
   // reported when calling syncAndReportErrors.
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
-  Service.identity.basicPassword = null;
+  Service.identity.resetSyncKey();
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
 
   setLastSync(PROLONGED_ERROR_DURATION);
   errorHandler.syncAndReportErrors();
   await promiseObserved;
-  do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
+  do_check_eq(Status.login, LOGIN_FAILED_NO_PASSPHRASE);
 
   clean();
   await promiseStopServer(server);
@@ -581,7 +575,7 @@ add_task(async function test_login_prolonged_non_network_error() {
   // Test prolonged, non-network errors are reported
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
-  Service.identity.basicPassword = null;
+  Service.identity.resetSyncKey();
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
 
@@ -663,14 +657,14 @@ add_task(async function test_login_non_network_error() {
   // Test non-network errors are reported
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
-  Service.identity.basicPassword = null;
+  Service.identity.resetSyncKey();
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   Service.sync();
   await promiseObserved;
-  do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
+  do_check_eq(Status.login, LOGIN_FAILED_NO_PASSPHRASE);
   do_check_false(errorHandler.didReportProlongedError);
 
   clean();
