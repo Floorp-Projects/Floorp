@@ -3490,14 +3490,18 @@ tls13_VerifyFinished(sslSocket *ss, SSL3HandshakeType message,
     }
 
     if (length != finishedLen) {
+#ifndef UNSAFE_FUZZER_MODE
         FATAL_ERROR(ss, message == finished ? SSL_ERROR_RX_MALFORMED_FINISHED : SSL_ERROR_RX_MALFORMED_CLIENT_HELLO, illegal_parameter);
         return SECFailure;
+#endif
     }
 
     if (NSS_SecureMemcmp(b, finishedBuf, finishedLen) != 0) {
+#ifndef UNSAFE_FUZZER_MODE
         FATAL_ERROR(ss, SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE,
                     decrypt_error);
         return SECFailure;
+#endif
     }
 
     return SECSuccess;
