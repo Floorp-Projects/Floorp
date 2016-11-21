@@ -18,6 +18,8 @@
 
 #include "wasm/WasmCompile.h"
 
+#include "mozilla/CheckedInt.h"
+
 #include "jsprf.h"
 
 #include "wasm/WasmBinaryFormat.h"
@@ -29,6 +31,7 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
+using mozilla::CheckedInt;
 using mozilla::IsNaN;
 
 namespace {
@@ -504,14 +507,16 @@ DecodeGlobalSection(Decoder& d, ModuleGeneratorData* init)
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-    uint32_t numGlobals;
-    if (!d.readVarU32(&numGlobals))
+    uint32_t numDefs;
+    if (!d.readVarU32(&numDefs))
         return d.fail("expected number of globals");
 
-    if (numGlobals > MaxGlobals)
+    CheckedInt<uint32_t> numGlobals = init->globals.length();
+    numGlobals += numDefs;
+    if (!numGlobals.isValid() || numGlobals.value() > MaxGlobals)
         return d.fail("too many globals");
 
-    for (uint32_t i = 0; i < numGlobals; i++) {
+    for (uint32_t i = 0; i < numDefs; i++) {
         ValType type;
         bool isMutable;
         if (!DecodeGlobalType(d, &type, &isMutable))
