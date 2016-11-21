@@ -1,1 +1,1 @@
-var importedArgs = ['endianness.wast']; load(scriptdir + '../spec.js');
+var importedArgs = ['endianness.wast']; load(scriptdir + '../wast.js');

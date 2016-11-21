@@ -1,1 +1,1 @@
-var importedArgs = ['skip-stack-guard-page.wast']; load(scriptdir + '../spec.js');
+var importedArgs = ['skip-stack-guard-page.wast']; load(scriptdir + '../wast.js');
