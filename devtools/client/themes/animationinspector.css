@@ -375,7 +375,7 @@ body {
 
 .animation-timeline .animation .name {
   position: absolute;
-  color: var(--theme-selection-color3);
+  color: var(--theme-content-color3);
   top: 0px;
   left: 0px;
   height: 100%;
