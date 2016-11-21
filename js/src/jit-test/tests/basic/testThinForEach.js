@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 function testThinForEach() {
     var a = ["red"];
     var n = 0;

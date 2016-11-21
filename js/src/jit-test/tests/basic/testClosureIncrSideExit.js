@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 function testClosureIncrSideExit() {
     {
       let f = function (y) {

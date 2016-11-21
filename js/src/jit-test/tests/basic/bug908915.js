@@ -1,4 +1,4 @@
-// |jit-test| error: 42
+// |jit-test| error: 42; need-for-each
 load(libdir + "immutable-prototype.js");
 
 // Suppress the large quantity of output on stdout (eg from calling

@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 (function() {
   try { (function() {
       for each(let x in [0, /x/, 0, {}]) {

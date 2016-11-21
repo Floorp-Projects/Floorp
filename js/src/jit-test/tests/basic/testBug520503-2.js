@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 for each(let a in [new Boolean(false)]) {}
 for (var b = 0; b < 13; ++b) {
     if (b % 3 == 1) {

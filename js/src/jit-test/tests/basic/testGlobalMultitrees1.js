@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 //test no multitrees assert
 function testGlobalMultitrees1() {
     (function() { 

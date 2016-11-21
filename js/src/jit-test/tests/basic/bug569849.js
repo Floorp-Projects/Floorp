@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 function g() {
     function f(a) {
         delete a.x;
