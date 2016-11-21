@@ -137,6 +137,14 @@ private:
   RefPtr<Promise> mPromise;
 };
 
+MediaDevices::~MediaDevices()
+{
+  MediaManager* mediamanager = MediaManager::GetIfExists();
+  if (mediamanager) {
+    mediamanager->RemoveDeviceChangeCallback(this);
+  }
+}
+
 NS_IMPL_ISUPPORTS(MediaDevices::GumResolver, nsIDOMGetUserMediaSuccessCallback)
 NS_IMPL_ISUPPORTS(MediaDevices::EnumDevResolver, nsIGetUserMediaDevicesSuccessCallback)
 NS_IMPL_ISUPPORTS(MediaDevices::GumRejecter, nsIDOMGetUserMediaErrorCallback)
