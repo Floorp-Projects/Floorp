@@ -27,13 +27,10 @@ function prepareCryptoWrap(collection, id) {
   return w;
 }
 
-function run_test() {
+add_task(async function test_records_crypto() {
   let server;
-  do_test_pending();
 
-  ensureLegacyIdentityManager();
-  Service.identity.username = "john@example.com";
-  Service.identity.syncKey = "a-abcde-abcde-abcde-abcde-abcde";
+  await configureIdentity({ username: "john@example.com" });
   let keyBundle = Service.identity.syncKeyBundle;
 
   try {
@@ -177,6 +174,6 @@ function run_test() {
     log.info("Done!");
   }
   finally {
-    server.stop(do_test_finished);
+    await promiseStopServer(server);
   }
-}
+});

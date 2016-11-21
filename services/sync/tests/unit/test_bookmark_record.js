@@ -15,10 +15,9 @@ function prepareBookmarkItem(collection, id) {
   return b;
 }
 
-function run_test() {
-  ensureLegacyIdentityManager();
-  Service.identity.username = "john@example.com";
-  Service.identity.syncKey = "abcdeabcdeabcdeabcdeabcdea";
+add_task(async function test_bookmark_record() {
+  await configureIdentity();
+
   generateNewKeys(Service.collectionKeys);
   let keyBundle = Service.identity.syncKeyBundle;
 
@@ -45,4 +44,4 @@ function run_test() {
   do_check_eq(payload.stuff, "my payload here");
   do_check_eq(bookmarkItem.getTypeObject(bookmarkItem.type), Bookmark);
   do_check_neq(payload, bookmarkItem.payload); // wrap.data.payload is the encrypted one
-}
+});
