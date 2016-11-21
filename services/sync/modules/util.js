@@ -367,7 +367,10 @@ this.Utils = {
       }
     }
 
-    callback.call(that, json);
+    if (callback) {
+      callback.call(that, json);
+    }
+    return json;
   }),
 
   /**

@@ -84,7 +84,7 @@ MediaDrmCDMProxy::CreateSession(uint32_t aCreateSessionToken,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mOwnerThread);
 
-  nsAutoPtr<CreateSessionData> data(new CreateSessionData());
+  UniquePtr<CreateSessionData> data(new CreateSessionData());
   data->mSessionType = aSessionType;
   data->mCreateSessionToken = aCreateSessionToken;
   data->mPromiseId = aPromiseId;
@@ -92,9 +92,9 @@ MediaDrmCDMProxy::CreateSession(uint32_t aCreateSessionToken,
   data->mInitData = Move(aInitData);
 
   nsCOMPtr<nsIRunnable> task(
-    NewRunnableMethod<nsAutoPtr<CreateSessionData>>(this,
-                                                    &MediaDrmCDMProxy::md_CreateSession,
-                                                    data));
+    NewRunnableMethod<UniquePtr<CreateSessionData>&&>(this,
+                                                      &MediaDrmCDMProxy::md_CreateSession,
+                                                      Move(data)));
   mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
 }
 
@@ -125,15 +125,15 @@ MediaDrmCDMProxy::UpdateSession(const nsAString& aSessionId,
   MOZ_ASSERT(mOwnerThread);
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
 
-  nsAutoPtr<UpdateSessionData> data(new UpdateSessionData());
+  UniquePtr<UpdateSessionData> data(new UpdateSessionData());
   data->mPromiseId = aPromiseId;
   data->mSessionId = NS_ConvertUTF16toUTF8(aSessionId);
   data->mResponse = Move(aResponse);
 
   nsCOMPtr<nsIRunnable> task(
-    NewRunnableMethod<nsAutoPtr<UpdateSessionData>>(this,
-                                                    &MediaDrmCDMProxy::md_UpdateSession,
-                                                    data));
+    NewRunnableMethod<UniquePtr<UpdateSessionData>&&>(this,
+                                                      &MediaDrmCDMProxy::md_UpdateSession,
+                                                      Move(data)));
   mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
 }
 
@@ -145,14 +145,14 @@ MediaDrmCDMProxy::CloseSession(const nsAString& aSessionId,
   MOZ_ASSERT(mOwnerThread);
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
 
-  nsAutoPtr<SessionOpData> data(new SessionOpData());
+  UniquePtr<SessionOpData> data(new SessionOpData());
   data->mPromiseId = aPromiseId;
   data->mSessionId = NS_ConvertUTF16toUTF8(aSessionId);
 
   nsCOMPtr<nsIRunnable> task(
-    NewRunnableMethod<nsAutoPtr<SessionOpData>>(this,
-                                                &MediaDrmCDMProxy::md_CloseSession,
-                                                data));
+    NewRunnableMethod<UniquePtr<SessionOpData>&&>(this,
+                                                  &MediaDrmCDMProxy::md_CloseSession,
+                                                  Move(data)));
   mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
 }
 
@@ -403,8 +403,8 @@ MediaDrmCDMProxy::md_Init(uint32_t aPromiseId)
   MOZ_ASSERT(IsOnOwnerThread());
   MOZ_ASSERT(mCDM);
 
-  mCallback = new MediaDrmCDMCallbackProxy(this);
-  mCDM->Init(mCallback);
+  mCallback.reset(new MediaDrmCDMCallbackProxy(this));
+  mCDM->Init(mCallback.get());
   nsCOMPtr<nsIRunnable> task(
     NewRunnableMethod<uint32_t>(this,
                                 &MediaDrmCDMProxy::OnCDMCreated,
@@ -413,7 +413,7 @@ MediaDrmCDMProxy::md_Init(uint32_t aPromiseId)
 }
 
 void
-MediaDrmCDMProxy::md_CreateSession(nsAutoPtr<CreateSessionData> aData)
+MediaDrmCDMProxy::md_CreateSession(UniquePtr<CreateSessionData>&& aData)
 {
   MOZ_ASSERT(IsOnOwnerThread());
 
@@ -431,7 +431,7 @@ MediaDrmCDMProxy::md_CreateSession(nsAutoPtr<CreateSessionData> aData)
 }
 
 void
-MediaDrmCDMProxy::md_UpdateSession(nsAutoPtr<UpdateSessionData> aData)
+MediaDrmCDMProxy::md_UpdateSession(UniquePtr<UpdateSessionData>&& aData)
 {
   MOZ_ASSERT(IsOnOwnerThread());
 
@@ -446,7 +446,7 @@ MediaDrmCDMProxy::md_UpdateSession(nsAutoPtr<UpdateSessionData> aData)
 }
 
 void
-MediaDrmCDMProxy::md_CloseSession(nsAutoPtr<SessionOpData> aData)
+MediaDrmCDMProxy::md_CloseSession(UniquePtr<SessionOpData>&& aData)
 {
   MOZ_ASSERT(IsOnOwnerThread());
 
