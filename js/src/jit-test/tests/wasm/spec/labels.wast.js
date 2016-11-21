@@ -1,1 +1,1 @@
-var importedArgs = ['labels.wast']; load(scriptdir + '../spec.js');
+var importedArgs = ['labels.wast']; load(scriptdir + '../wast.js');
