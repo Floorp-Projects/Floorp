@@ -20,6 +20,8 @@
 
 #include <stdarg.h>
 
+#define MAX_SIZE_LOG (1024 * 128)
+
 // NS_ENSURE_TRUE_VOID() without the warning on the debug build.
 #define ENSURE_TRUE_VOID(x)   \
   do {                        \
@@ -74,33 +76,8 @@ AllocTraceInfo(int aTid)
 }
 
 static void
-SaveCurTraceInfo()
-{
-  TraceInfo* info = GetOrCreateTraceInfo();
-  ENSURE_TRUE_VOID(info);
-
-  info->mSavedCurTraceSourceId = info->mCurTraceSourceId;
-  info->mSavedCurTraceSourceType = info->mCurTraceSourceType;
-  info->mSavedCurTaskId = info->mCurTaskId;
-}
-
-static void
-RestoreCurTraceInfo()
-{
-  TraceInfo* info = GetOrCreateTraceInfo();
-  ENSURE_TRUE_VOID(info);
-
-  info->mCurTraceSourceId = info->mSavedCurTraceSourceId;
-  info->mCurTraceSourceType = info->mSavedCurTraceSourceType;
-  info->mCurTaskId = info->mSavedCurTaskId;
-}
-
-static void
 CreateSourceEvent(SourceEventType aType)
 {
-  // Save the currently traced source event info.
-  SaveCurTraceInfo();
-
   // Create a new unique task id.
   uint64_t newId = GenNewUniqueTaskId();
   TraceInfo* info = GetOrCreateTraceInfo();
@@ -139,9 +116,6 @@ DestroySourceEvent()
   ENSURE_TRUE_VOID(info);
 
   LogEnd(info->mCurTraceSourceId, info->mCurTraceSourceId);
-
-  // Restore the previously saved source event info.
-  RestoreCurTraceInfo();
 }
 
 inline static bool
@@ -180,6 +154,9 @@ ObsoleteCurrentTraceInfos()
 nsCString*
 TraceInfo::AppendLog()
 {
+  if (mLogs.Length() >= MAX_SIZE_LOG) {
+    return nullptr;
+  }
   return mLogs.AppendElement();
 }
 
@@ -266,12 +243,12 @@ GenNewUniqueTaskId()
 
 AutoSaveCurTraceInfo::AutoSaveCurTraceInfo()
 {
-  SaveCurTraceInfo();
+  GetCurTraceInfo(&mSavedSourceEventId, &mSavedTaskId, &mSavedSourceEventType);
 }
 
 AutoSaveCurTraceInfo::~AutoSaveCurTraceInfo()
 {
-  RestoreCurTraceInfo();
+  SetCurTraceInfo(mSavedSourceEventId, mSavedTaskId, mSavedSourceEventType);
 }
 
 void
@@ -378,6 +355,7 @@ LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, uintptr_t* aVptr)
 }
 
 AutoSourceEvent::AutoSourceEvent(SourceEventType aType)
+  : AutoSaveCurTraceInfo()
 {
   CreateSourceEvent(aType);
 }

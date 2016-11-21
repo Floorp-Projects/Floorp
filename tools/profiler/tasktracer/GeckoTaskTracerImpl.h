@@ -21,10 +21,7 @@ struct TraceInfo
   TraceInfo(uint32_t aThreadId)
     : mCurTraceSourceId(0)
     , mCurTaskId(0)
-    , mSavedCurTraceSourceId(0)
-    , mSavedCurTaskId(0)
     , mCurTraceSourceType(Unknown)
-    , mSavedCurTraceSourceType(Unknown)
     , mThreadId(aThreadId)
     , mLastUniqueTaskId(0)
     , mObsolete(false)
@@ -40,10 +37,7 @@ struct TraceInfo
 
   uint64_t mCurTraceSourceId;
   uint64_t mCurTaskId;
-  uint64_t mSavedCurTraceSourceId;
-  uint64_t mSavedCurTaskId;
   SourceEventType mCurTraceSourceType;
-  SourceEventType mSavedCurTraceSourceType;
   uint32_t mThreadId;
   uint32_t mLastUniqueTaskId;
   mozilla::Atomic<bool> mObsolete;
@@ -59,18 +53,8 @@ TraceInfo* GetOrCreateTraceInfo();
 
 uint64_t GenNewUniqueTaskId();
 
-class AutoSaveCurTraceInfo
-{
-public:
-  AutoSaveCurTraceInfo();
-  ~AutoSaveCurTraceInfo();
-};
-
 void SetCurTraceInfo(uint64_t aSourceEventId, uint64_t aParentTaskId,
                      SourceEventType aSourceEventType);
-
-void GetCurTraceInfo(uint64_t* aOutSourceEventId, uint64_t* aOutParentTaskId,
-                     SourceEventType* aOutSourceEventType);
 
 /**
  * Logging functions of different trace actions.
