@@ -2447,13 +2447,20 @@ GeckoDriver.prototype.getWindowSize = function (cmd, resp) {
  * the window outerWidth and outerHeight values, which include scroll
  * bars, title bars, etc.
  */
-GeckoDriver.prototype.setWindowSize = function (cmd, resp) {
+GeckoDriver.prototype.setWindowSize = function* (cmd, resp) {
   assert.firefox()
 
   let {width, height} = cmd.parameters;
+
   let win = this.getCurrentWindow();
-  win.resizeTo(width, height);
-  this.getWindowSize(cmd, resp);
+  yield new Promise(resolve => {
+    win.addEventListener("resize", resolve, {once: true});
+    win.resizeTo(width, height);
+  });
+  return {
+    width: win.outerWidth,
+    height: win.outerHeight,
+  };
 };
 
 /**
