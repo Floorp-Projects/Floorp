@@ -730,9 +730,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return nullptr;
 
         int32_t byteOffset = 0;
-        int32_t length = -1;
-
-        if (args.length() > 1) {
+        if (args.hasDefined(1)) {
             if (!ToInt32(cx, args[1], &byteOffset))
                 return nullptr;
             if (byteOffset < 0) {
@@ -741,16 +739,17 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                                           "1");
                 return nullptr;
             }
+        }
 
-            if (args.length() > 2) {
-                if (!ToInt32(cx, args[2], &length))
-                    return nullptr;
-                if (length < 0) {
-                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                              JSMSG_TYPED_ARRAY_NEGATIVE_ARG,
-                                              "2");
-                    return nullptr;
-                }
+        int32_t length = -1;
+        if (args.hasDefined(2)) {
+            if (!ToInt32(cx, args[2], &length))
+                return nullptr;
+            if (length < 0) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                          JSMSG_TYPED_ARRAY_NEGATIVE_ARG,
+                                          "2");
+                return nullptr;
             }
         }
 
