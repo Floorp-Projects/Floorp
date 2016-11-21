@@ -92,9 +92,11 @@ var e = wasmEvalText('(module (func $i2v (param i32)) (export "i2v" $i2v) (func 
 var i2vm = new Module(wasmTextToBinary('(module (import "a" "b" (param i32)))'));
 var f2vm = new Module(wasmTextToBinary('(module (import "a" "b" (param f32)))'));
 assertEq(new Instance(i2vm, {a:{b:e.i2v}}) instanceof Instance, true);
-assertErrorMessage(() => new Instance(i2vm, {a:{b:e.f2v}}), TypeError, /imported function signature mismatch/);
-assertErrorMessage(() => new Instance(f2vm, {a:{b:e.i2v}}), TypeError, /imported function signature mismatch/);
+assertErrorMessage(() => new Instance(i2vm, {a:{b:e.f2v}}), TypeError, /imported function 'a.b' signature mismatch/);
+assertErrorMessage(() => new Instance(f2vm, {a:{b:e.i2v}}), TypeError, /imported function 'a.b' signature mismatch/);
 assertEq(new Instance(f2vm, {a:{b:e.f2v}}) instanceof Instance, true);
+var l2vm = new Module(wasmTextToBinary('(module (import "x" "y" (memory 1)) (import "c" "d" (param i64)))'));
+assertErrorMessage(() => new Instance(l2vm, {x:{y:mem1Page}, c:{d:e.i2v}}), TypeError, /imported function 'c.d' signature mismatch/);
 
 // Import order:
 
