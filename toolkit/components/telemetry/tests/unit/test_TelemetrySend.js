@@ -69,6 +69,10 @@ var checkPingsSaved = Task.async(function* (pingIds) {
   return allFound;
 });
 
+function histogramValueCount(h) {
+  return h.counts.reduce((a, b) => a + b);
+}
+
 add_task(function* test_setup() {
   // Trigger a proper telemetry init.
   do_get_profile(true);
@@ -85,6 +89,13 @@ add_task(function* test_sendPendingPings() {
 
   const TYPE_A_COUNT = 20;
   const TYPE_B_COUNT = 5;
+
+  let histSuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
+  let histSendTimeSuccess = Telemetry.getHistogramById("TELEMETRY_SEND_SUCCESS");
+  let histSendTimeFail = Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE");
+  histSuccess.clear();
+  histSendTimeSuccess.clear();
+  histSendTimeFail.clear();
 
   // Fake a current date.
   let now = TelemetryUtils.truncateToDays(new Date());
@@ -115,6 +126,13 @@ add_task(function* test_sendPendingPings() {
   Assert.equal(TelemetrySend.pendingPingCount, TYPE_A_COUNT + TYPE_B_COUNT,
                "Should have correct pending ping count");
 
+  Assert.deepEqual(histSuccess.snapshot().counts, [0, 0, 0],
+               "Should not have recorded any sending in histograms yet.");
+  Assert.equal(histSendTimeSuccess.snapshot().sum, 0,
+               "Should not have recorded any sending in histograms yet.");
+  Assert.equal(histSendTimeFail.snapshot().sum, 0,
+               "Should not have recorded any sending in histograms yet.");
+
   // Now enable sending to the ping server.
   now = fakeNow(futureDate(now, MS_IN_A_MINUTE));
   PingServer.start();
@@ -138,6 +156,13 @@ add_task(function* test_sendPendingPings() {
                "Should have received the correct amount of type B pings");
   Assert.equal(countByType.get(TEST_TYPE_A), 10 - TYPE_B_COUNT,
                "Should have received the correct amount of type A pings");
+
+  Assert.deepEqual(histSuccess.snapshot().counts, [0, 10, 0],
+               "Should have recorded sending success in histograms.");
+  Assert.equal(histogramValueCount(histSendTimeSuccess.snapshot()), 10,
+               "Should have recorded successful send times in histograms.");
+  Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0,
+               "Should not have recorded any failed sending in histograms yet.");
 
   // As we hit the ping send limit and still have pending pings, a send tick should
   // be scheduled in a minute.
@@ -195,16 +220,27 @@ add_task(function* test_backoffTimeout() {
   const TEST_TYPE_D = TYPE_PREFIX + "D";
   const TEST_TYPE_E = TYPE_PREFIX + "E";
 
+  let histSuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
+  let histSendTimeSuccess = Telemetry.getHistogramById("TELEMETRY_SEND_SUCCESS");
+  let histSendTimeFail = Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE");
+
   // Failing a ping send now should trigger backoff behavior.
   let now = fakeNow(2010, 1, 1, 11, 0, 0);
   yield TelemetrySend.reset();
   PingServer.stop();
+
+  histSuccess.clear();
+  histSendTimeSuccess.clear();
+  histSendTimeFail.clear();
+
   fakePingId("c", 0);
   now = fakeNow(futureDate(now, MS_IN_A_MINUTE));
+  let sendAttempts = 0;
   let timerPromise = waitForTimer();
   yield TelemetryController.submitExternalPing(TEST_TYPE_C, {});
   let [pingSendTimerCallback, pingSendTimeout] = yield timerPromise;
   Assert.equal(TelemetrySend.pendingPingCount, 1, "Should have one pending ping.");
+  ++sendAttempts;
 
   const MAX_BACKOFF_TIMEOUT = 120 * MS_IN_A_MINUTE;
   for (let timeout = 2 * MS_IN_A_MINUTE; timeout <= MAX_BACKOFF_TIMEOUT; timeout *= 2) {
@@ -216,12 +252,23 @@ add_task(function* test_backoffTimeout() {
     timerPromise = waitForTimer();
     yield callback();
     [pingSendTimerCallback, pingSendTimeout] = yield timerPromise;
+    ++sendAttempts;
   }
 
   timerPromise = waitForTimer();
   yield pingSendTimerCallback();
   [pingSendTimerCallback, pingSendTimeout] = yield timerPromise;
   Assert.equal(pingSendTimeout, MAX_BACKOFF_TIMEOUT, "Tick timeout should be capped");
+  ++sendAttempts;
+
+  Assert.deepEqual(histSuccess.snapshot().counts, [sendAttempts, 0, 0],
+               "Should have recorded sending failure in histograms.");
+  Assert.equal(histSendTimeSuccess.snapshot().sum, 0,
+               "Should not have recorded any sending success in histograms yet.");
+  Assert.greater(histSendTimeFail.snapshot().sum, 0,
+               "Should have recorded send failure times in histograms.");
+  Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), sendAttempts,
+               "Should have recorded send failure times in histograms.");
 
   // Submitting a new ping should reset the backoff behavior.
   fakePingId("d", 0);
@@ -230,6 +277,7 @@ add_task(function* test_backoffTimeout() {
   yield TelemetryController.submitExternalPing(TEST_TYPE_D, {});
   [pingSendTimerCallback, pingSendTimeout] = yield timerPromise;
   Assert.equal(pingSendTimeout, 2 * MS_IN_A_MINUTE, "Send tick timeout should be correct");
+  sendAttempts += 2;
 
   // With the server running again, we should send out the pending pings immediately
   // when a new ping is submitted.
@@ -249,10 +297,28 @@ add_task(function* test_backoffTimeout() {
 
   yield TelemetrySend.testWaitOnOutgoingPings();
   Assert.equal(TelemetrySend.pendingPingCount, 0, "Should have no pending pings left");
+
+  Assert.deepEqual(histSuccess.snapshot().counts, [sendAttempts, 3, 0],
+               "Should have recorded sending failure in histograms.");
+  Assert.greater(histSendTimeSuccess.snapshot().sum, 0,
+               "Should have recorded sending success in histograms.");
+  Assert.equal(histogramValueCount(histSendTimeSuccess.snapshot()), 3,
+               "Should have recorded sending success in histograms.");
+  Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), sendAttempts,
+               "Should have recorded send failure times in histograms.");
 });
 
 add_task(function* test_discardBigPings() {
   const TEST_PING_TYPE = "test-ping-type";
+
+  let histSizeExceeded = Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_SEND");
+  let histDiscardedSize = Telemetry.getHistogramById("TELEMETRY_DISCARDED_SEND_PINGS_SIZE_MB");
+  let histSuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
+  let histSendTimeSuccess = Telemetry.getHistogramById("TELEMETRY_SEND_SUCCESS");
+  let histSendTimeFail = Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE");
+  for (let h of [histSizeExceeded, histDiscardedSize, histSuccess, histSendTimeSuccess, histSendTimeFail]) {
+    h.clear();
+  }
 
   // Generate a 2MB string and create an oversized payload.
   const OVERSIZED_PAYLOAD = {"data": generateRandomString(2 * 1024 * 1024)};
@@ -264,24 +330,38 @@ add_task(function* test_discardBigPings() {
   // Submit a ping of a normal size and check that we don't count it in the histogram.
   yield TelemetryController.submitExternalPing(TEST_PING_TYPE, { test: "test" });
   yield TelemetrySend.testWaitOnOutgoingPings();
-  let h = Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_SEND").snapshot();
-  Assert.equal(h.sum, 0, "Telemetry must report no oversized ping submitted.");
-  h = Telemetry.getHistogramById("TELEMETRY_DISCARDED_SEND_PINGS_SIZE_MB").snapshot();
-  Assert.equal(h.sum, 0, "Telemetry must report no oversized pings.");
+
+  Assert.equal(histSizeExceeded.snapshot().sum, 0, "Telemetry must report no oversized ping submitted.");
+  Assert.equal(histDiscardedSize.snapshot().sum, 0, "Telemetry must report no oversized pings.");
+  Assert.deepEqual(histSuccess.snapshot().counts, [0, 1, 0], "Should have recorded sending success.");
+  Assert.equal(histogramValueCount(histSendTimeSuccess.snapshot()), 1, "Should have recorded send success time.");
+  Assert.greater(histSendTimeSuccess.snapshot().sum, 0, "Should have recorded send success time.");
+  Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0, "Should not have recorded send failure time.");
 
   // Submit an oversized ping and check that it gets discarded.
   yield TelemetryController.submitExternalPing(TEST_PING_TYPE, OVERSIZED_PAYLOAD);
   yield TelemetrySend.testWaitOnOutgoingPings();
-  h = Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_SEND").snapshot();
-  Assert.equal(h.sum, 1, "Telemetry must report 1 oversized ping submitted.");
-  h = Telemetry.getHistogramById("TELEMETRY_DISCARDED_SEND_PINGS_SIZE_MB").snapshot();
-  Assert.equal(h.counts[2], 1, "Telemetry must report a 2MB, oversized, ping submitted.");
+
+  Assert.equal(histSizeExceeded.snapshot().sum, 1, "Telemetry must report 1 oversized ping submitted.");
+  Assert.equal(histDiscardedSize.snapshot().counts[2], 1, "Telemetry must report a 2MB, oversized, ping submitted.");
+  Assert.deepEqual(histSuccess.snapshot().counts, [0, 1, 0], "Should have recorded sending success.");
+  Assert.equal(histogramValueCount(histSendTimeSuccess.snapshot()), 1, "Should have recorded send success time.");
+  Assert.greater(histSendTimeSuccess.snapshot().sum, 0, "Should have recorded send success time.");
+  Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0, "Should not have recorded send failure time.");
 });
 
 add_task(function* test_evictedOnServerErrors() {
   const TEST_TYPE = "test-evicted";
 
   yield TelemetrySend.reset();
+
+  let histEvicted = Telemetry.getHistogramById("TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS");
+  let histSuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
+  let histSendTimeSuccess = Telemetry.getHistogramById("TELEMETRY_SEND_SUCCESS");
+  let histSendTimeFail = Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE");
+  for (let h of [histEvicted, histSuccess, histSendTimeSuccess, histSendTimeFail]) {
+    h.clear();
+  }
 
   // Write a custom ping handler which will return 403. This will trigger ping eviction
   // on client side.
@@ -292,12 +372,15 @@ add_task(function* test_evictedOnServerErrors() {
   });
 
   // Clear the histogram and submit a ping.
-  Telemetry.getHistogramById("TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS").clear();
   let pingId = yield TelemetryController.submitExternalPing(TEST_TYPE, {});
   yield TelemetrySend.testWaitOnOutgoingPings();
 
-  let h = Telemetry.getHistogramById("TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS").snapshot();
-  Assert.equal(h.sum, 1, "Telemetry must report a ping evicted due to server errors");
+  Assert.equal(histEvicted.snapshot().sum, 1,
+               "Telemetry must report a ping evicted due to server errors");
+  Assert.deepEqual(histSuccess.snapshot().counts, [0, 1, 0]);
+  Assert.equal(histogramValueCount(histSendTimeSuccess.snapshot()), 1);
+  Assert.greater(histSendTimeSuccess.snapshot().sum, 0);
+  Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0);
 
   // The ping should not be persisted.
   yield Assert.rejects(TelemetryStorage.loadPendingPing(pingId), "The ping must not be persisted.");
@@ -310,8 +393,11 @@ add_task(function* test_evictedOnServerErrors() {
   Assert.equal(ping[0].id, pingId, "The correct ping must be received");
 
   // We should not have updated the error histogram.
-  h = Telemetry.getHistogramById("TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS").snapshot();
-  Assert.equal(h.sum, 1, "Telemetry must report a ping evicted due to server errors");
+  yield TelemetrySend.testWaitOnOutgoingPings();
+  Assert.equal(histEvicted.snapshot().sum, 1, "Telemetry must report only one ping evicted due to server errors");
+  Assert.deepEqual(histSuccess.snapshot().counts, [0, 2, 0]);
+  Assert.equal(histogramValueCount(histSendTimeSuccess.snapshot()), 2);
+  Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0);
 });
 
 // Test that the current, non-persisted pending pings are properly saved on shutdown.
