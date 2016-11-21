@@ -44,10 +44,31 @@ android {
     }
 
     buildTypes {
-        release {
-            shrinkResources true
+        // We have the following difficult situation.  Minification (Proguard) is only available per
+        // Android-Gradle `buildType`.  Instrumentation (Robocop) is only available for exactly one
+        // `buildType` (see Android-Gradle `testBuildType`, which defaults to "debug").  Local
+        // developers expect to build and run tests against the "debug" build type.  Automation
+        // needs to produce an instrumentation (Robocop) APK against a Fennec APK that will ship.
+        // (This is very unusual; usually, instrumentation tests do _not_ run against a shipping
+        // APK.)
+        //
+        // Given these constraints, we should not change `testBuildType` to avoid confusing local
+        // developers.  Also, we should not Proguard any "debug" builds, because we don't want local
+        // developers to incur the cost of Proguard.  However, we still need to find a way to
+        // Proguard a shipping APK and produce an instrumentation (Robocop APK) against it.  To
+        // achieve this, we make "debug" builds Proguard in automation alone.  This does have the
+        // unfortunate side effect of Proguarding the instrumentation (Robocop) APK, but nothing
+        // uses runtime inspection or class-loading with that APK, so it shouldn't be a problem.
+        def configureMinifyClosure = {
+            // Bug 1229269: we can't yet shrinkResources effectively.  Be sure
+            // to use -stripped.ap_ after enabling this.
+            // shrinkResources true
             minifyEnabled true
             proguardFile "${topsrcdir}/mobile/android/config/proguard/proguard.cfg"
+        }
+        release configureMinifyClosure
+        if (mozconfig.substs.MOZILLA_OFFICIAL) {
+            debug configureMinifyClosure
         }
     }
 
