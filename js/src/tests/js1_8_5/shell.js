@@ -31,3 +31,5 @@ if (typeof version != 'undefined')
   version(185);
 }
 
+if (typeof enableForEach === "function")
+    enableForEach();
