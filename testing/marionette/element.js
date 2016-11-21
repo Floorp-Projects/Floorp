@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/Log.jsm");
 
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/error.js");
+Cu.import("chrome://marionette/content/wait.js");
 
 const logger = Log.repository.getLogger("Marionette");
 
@@ -246,9 +247,14 @@ element.find = function (container, strategy, selector, opts = {}) {
   }
 
   return new Promise((resolve, reject) => {
-    let findElements = implicitlyWaitFor(
-        () => find_(container, strategy, selector, searchFn, opts),
-        opts.timeout);
+    let findElements = wait.until((resolve, reject) => {
+      let res = find_(container, strategy, selector, searchFn, opts);
+      if (res.length > 0) {
+        resolve(Array.from(res));
+      } else {
+        reject([]);
+      }
+    }, opts.timeout);
 
     findElements.then(foundEls => {
       // the following code ought to be moved into findElement
@@ -554,82 +560,6 @@ function findElements(using, value, rootNode, startNode) {
     default:
       throw new InvalidSelectorError(`No such strategy: ${using}`);
   }
-}
-
-/**
- * Runs function off the main thread until its return value is truthy
- * or the provided timeout is reached.  The function is guaranteed to be
- * run at least once, irregardless of the timeout.
- *
- * A truthy return value constitutes a truthful boolean, positive number,
- * object, or non-empty array.
- *
- * The |func| is evaluated every |interval| for as long as its runtime
- * duration does not exceed |interval|.  If the runtime evaluation duration
- * of |func| is greater than |interval|, evaluations of |func| are queued.
- *
- * @param {function(): ?} func
- *     Function to run off the main thread.
- * @param {number} timeout
- *     Desired timeout.  If 0 or less than the runtime evaluation time
- *     of |func|, |func| is guaranteed to run at least once.
- * @param {number=} interval
- *     Duration between each poll of |func| in milliseconds.  Defaults to
- *     100 milliseconds.
- *
- * @return {Promise}
- *     Yields the return value from |func|.  The promise is rejected if
- *     |func| throws.
- */
-function implicitlyWaitFor(func, timeout, interval = 100) {
-  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
-  return new Promise((resolve, reject) => {
-    let startTime = new Date().getTime();
-    let endTime = startTime + timeout;
-
-    let elementSearch = function() {
-      let res;
-      try {
-        res = func();
-      } catch (e) {
-        reject(e);
-      }
-
-      if (
-        // collections that might contain web elements
-        // should be checked until they are not empty
-        (element.isCollection(res) && res.length > 0)
-
-        // !![] (ensuring boolean type on empty array) always returns true
-        // and we can only use it on non-collections
-        || (!element.isCollection(res) && !!res)
-
-        // return immediately if timeout is 0,
-        // allowing |func| to be evaluted at least once
-        || startTime == endTime
-
-        // return if timeout has elapsed
-        || new Date().getTime() >= endTime
-      ) {
-        resolve(res);
-      }
-    };
-
-    // the repeating slack timer waits |interval|
-    // before invoking |elementSearch|
-    elementSearch();
-
-    timer.init(elementSearch, interval, Ci.nsITimer.TYPE_REPEATING_SLACK);
-
-  // cancel timer and propagate result
-  }).then(res => {
-    timer.cancel();
-    return res;
-  }, err => {
-    timer.cancel();
-    throw err;
-  });
 }
 
 /** Determines if |obj| is an HTML or JS collection. */
