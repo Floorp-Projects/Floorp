@@ -382,6 +382,8 @@ class BaseBootstrapper(object):
         '''
         if not name:
             name = os.path.basename(path)
+        if name.endswith('.exe'):
+            name = name[:-4]
 
         info = self.check_output([path, '--version'],
                                  env=env,
@@ -506,7 +508,7 @@ class BaseBootstrapper(object):
 
         cargo = self.which('cargo')
 
-        our = self._parse_version(rust)
+        our = self._parse_version(rustc)
         if not our:
             return False, None
 
@@ -524,8 +526,10 @@ class BaseBootstrapper(object):
             cargo_home = os.environ.get('CARGO_HOME',
                     os.path.expanduser(os.path.join('~', '.cargo')))
             cargo_bin = os.path.join(cargo_home, 'bin')
-            have_rustc = os.path.exists(os.path.join(cargo_bin, 'rustc'))
-            have_cargo = os.path.exists(os.path.join(cargo_bin, 'cargo'))
+            try_rustc = os.path.join(cargo_bin, 'rustc' + rust.exe_suffix())
+            try_cargo = os.path.join(cargo_bin, 'cargo' + rust.exe_suffix())
+            have_rustc = os.path.exists(try_rustc)
+            have_cargo = os.path.exists(try_cargo)
             if have_rustc or have_cargo:
                 print(RUST_NOT_IN_PATH % { 'cargo_bin': cargo_bin,
                                            'cargo_home': cargo_home })
