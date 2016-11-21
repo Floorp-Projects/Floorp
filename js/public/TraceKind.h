@@ -164,12 +164,12 @@ template <> struct MapTypeToRootKind<JSFunction*> : public MapTypeToRootKind<JSO
 // type designated by |traceKind| as the functor's template argument. The
 // |thing| parameter is optional; without it, we simply pass through |... args|.
 
-// GCC and Clang require an explicit template declaration in front of the
-// specialization of operator() because it is a dependent template. MSVC, on
-// the other hand, gets very confused if we have a |template| token there.
+// VS2017+, GCC and Clang require an explicit template declaration in front of
+// the specialization of operator() because it is a dependent template. VS2015,
+// on the other hand, gets very confused if we have a |template| token there.
 // The clang-cl front end defines _MSC_VER, but still requires the explicit
 // template declaration, so we must test for __clang__ here as well.
-#if defined(_MSC_VER) && !defined(__clang__)
+#if (defined(_MSC_VER) && _MSC_VER < 1910) && !defined(__clang__)
 # define JS_DEPENDENT_TEMPLATE_HINT
 #else
 # define JS_DEPENDENT_TEMPLATE_HINT template
