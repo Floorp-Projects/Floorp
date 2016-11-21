@@ -210,7 +210,6 @@ typedef enum {
   MOZ_GTK_MENUBARITEM,
   /* Paints items of popup menus. */
   MOZ_GTK_MENUITEM,
-  MOZ_GTK_IMAGEMENUITEM,
   /* Paints a menuitem with check indicator, or the gets the style context for
      a menuitem that contains a checkbox. */
   MOZ_GTK_CHECKMENUITEM,
