@@ -87,11 +87,11 @@ CreateSourceEvent(SourceEventType aType)
   info->mCurTraceSourceType = aType;
   info->mCurTaskId = newId;
 
-  uintptr_t namePtr;
+  uintptr_t* namePtr;
 #define SOURCE_EVENT_NAME(type)         \
   case SourceEventType::type:           \
   {                                     \
-    namePtr = (uintptr_t)&CreateSourceEvent##type; \
+    namePtr = (uintptr_t*)&CreateSourceEvent##type; \
     break;                              \
   }
 
@@ -104,7 +104,7 @@ CreateSourceEvent(SourceEventType aType)
 
   // Log a fake dispatch and start for this source event.
   LogDispatch(newId, newId, newId, aType);
-  LogVirtualTablePtr(newId, newId, &namePtr);
+  LogVirtualTablePtr(newId, newId, namePtr);
   LogBegin(newId, newId);
 }
 
@@ -350,7 +350,7 @@ LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, uintptr_t* aVptr)
     // Since addr2line used by SPS addon can not solve non-function
     // addresses, we use the first entry of vtable as the symbol to
     // solve.  We should find a better solution later.
-    log->AppendPrintf("%d %lld %p", ACTION_GET_VTABLE, aTaskId, *aVptr);
+    log->AppendPrintf("%d %lld %p", ACTION_GET_VTABLE, aTaskId, aVptr);
   }
 }
 
