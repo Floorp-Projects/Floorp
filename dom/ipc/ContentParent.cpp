@@ -3144,7 +3144,7 @@ ContentParent::RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor)
 #ifdef MOZ_WEBSPEECH
   return IPC_OK();
 #else
-  return false;
+  return IPC_FAIL_NO_REASON(this);
 #endif
 }
 
