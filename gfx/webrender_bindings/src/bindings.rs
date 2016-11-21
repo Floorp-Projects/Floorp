@@ -202,7 +202,7 @@ struct FlushNotifier {
 }
 
 impl webrender_traits::FlushNotifier for FlushNotifier {
-    fn  all_messages_flushed(&mut self) {
+    fn all_messages_flushed(&mut self) {
         let &(ref lock, ref cvar) = &*self.render_thread_notifier;
         let mut finished = lock.lock().unwrap();
         *finished = true;

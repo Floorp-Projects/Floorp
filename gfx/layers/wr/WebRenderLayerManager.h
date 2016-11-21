@@ -124,6 +124,13 @@ public:
   WebRenderBridgeChild* WRBridge() { return mWRChild; }
 
 private:
+ /**
+  * Take a snapshot of the parent context, and copy
+  * it into mTarget.
+  */
+ void MakeSnapshotIfRequired(LayoutDeviceIntSize aSize);
+
+private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
   std::vector<WRImageKey> mImageKeys;
 
@@ -142,12 +149,6 @@ private:
  // being drawn to the default target, and then copy those pixels
  // back to mTarget.
  RefPtr<gfxContext> mTarget;
-
- /**
-  * Take a snapshot of the parent context, and copy
-  * it into mTarget.
-  */
- void MakeSnapshotIfRequired(LayoutDeviceIntSize aSize);
 };
 
 } // namespace layers
