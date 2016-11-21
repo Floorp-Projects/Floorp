@@ -47,6 +47,50 @@ var tests = [
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
     }
   },
+  { id: "Test#2b",
+    run: function() {
+      this.notifyObj = new BasicNotification(this.id);
+      this.notifyObj.secondaryActions.push({
+        label: "Extra Secondary Action",
+        accessKey: "E",
+        callback: () => this.extraSecondaryActionClicked = true,
+      });
+      showNotification(this.notifyObj);
+    },
+    onShown: function(popup) {
+      checkPopup(popup, this.notifyObj);
+      triggerSecondaryCommand(popup, 1);
+    },
+    onHidden: function(popup) {
+      ok(this.extraSecondaryActionClicked, "extra secondary action was clicked");
+      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
+      ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
+    }
+  },
+  { id: "Test#2c",
+    run: function() {
+      this.notifyObj = new BasicNotification(this.id);
+      this.notifyObj.secondaryActions.push({
+        label: "Extra Secondary Action",
+        accessKey: "E",
+        callback: () => ok(false, "unexpected callback invocation"),
+      }, {
+        label: "Other Extra Secondary Action",
+        accessKey: "O",
+        callback: () => this.extraSecondaryActionClicked = true,
+      });
+      showNotification(this.notifyObj);
+    },
+    onShown: function(popup) {
+      checkPopup(popup, this.notifyObj);
+      triggerSecondaryCommand(popup, 2);
+    },
+    onHidden: function(popup) {
+      ok(this.extraSecondaryActionClicked, "extra secondary action was clicked");
+      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
+      ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
+    }
+  },
   { id: "Test#3",
     run: function() {
       this.notifyObj = new BasicNotification(this.id);

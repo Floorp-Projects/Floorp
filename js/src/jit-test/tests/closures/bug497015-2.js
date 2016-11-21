@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 actual = '';
 expected = 'zzz ,zzz 100,zzz 100,zzz 7777,zzz 100,zzz 100,zzz 8888,zzz 100,zzz 100,zzz /x/,zzz 100,zzz 100,';
 

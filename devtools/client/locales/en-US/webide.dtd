@@ -32,8 +32,6 @@
 <!ENTITY runtimeMenu_accesskey "R">
 <!ENTITY runtimeMenu_disconnect_label "Disconnect">
 <!ENTITY runtimeMenu_disconnect_accesskey "D">
-<!ENTITY runtimeMenu_showPermissionTable_label "Permissions Table">
-<!ENTITY runtimeMenu_showPermissionTable_accesskey "P">
 <!ENTITY runtimeMenu_takeScreenshot_label "Screenshot">
 <!ENTITY runtimeMenu_takeScreenshot_accesskey "S">
 <!ENTITY runtimeMenu_showDetails_label "Runtime Info">
@@ -140,10 +138,6 @@
 <!ENTITY prefs_options_keybindings_default "Default">
 <!ENTITY prefs_options_autosavefiles "Autosave files">
 <!ENTITY prefs_options_autosavefiles_tooltip "Automatically save edited files before running project">
-
-<!-- Permissions Table -->
-<!ENTITY permissionstable_title "Permissions Table">
-<!ENTITY permissionstable_name_header "Name">
 
 <!-- Runtime Details -->
 <!ENTITY runtimedetails_title "Runtime Info">

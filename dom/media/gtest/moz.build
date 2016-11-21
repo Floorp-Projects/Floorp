@@ -17,7 +17,7 @@ UNIFIED_SOURCES += [
     'TestIntervalSet.cpp',
     'TestMediaDataDecoder.cpp',
     'TestMediaEventSource.cpp',
-    'TestMediaFormatReader.cpp',
+    #'TestMediaFormatReader.cpp', disabled for bug 1316792, will be removed in bug 1318225
     'TestMozPromise.cpp',
     'TestMP3Demuxer.cpp',
     'TestMP4Demuxer.cpp',

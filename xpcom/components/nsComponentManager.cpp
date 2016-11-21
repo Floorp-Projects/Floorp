@@ -721,7 +721,7 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& aCx,
   *permanentCID = cid;
 
   PL_ARENA_ALLOCATE(place, &mArena, sizeof(mozilla::Module::CIDEntry));
-  mozilla::Module::CIDEntry* e = new (place) mozilla::Module::CIDEntry();
+  auto* e = new (place) mozilla::Module::CIDEntry();
   e->cid = permanentCID;
 
   f = new nsFactoryEntry(e, km);
@@ -1691,7 +1691,7 @@ nsComponentManagerImpl::EnumerateCIDs(nsISimpleEnumerator** aEnumerator)
 NS_IMETHODIMP
 nsComponentManagerImpl::EnumerateContractIDs(nsISimpleEnumerator** aEnumerator)
 {
-  nsTArray<nsCString>* array = new nsTArray<nsCString>;
+  auto* array = new nsTArray<nsCString>;
   for (auto iter = mContractIDs.Iter(); !iter.Done(); iter.Next()) {
     const nsACString& contract = iter.Key();
     array->AppendElement(contract);
@@ -1803,8 +1803,8 @@ nsFactoryEntry::nsFactoryEntry(const nsCID& aCID, nsIFactory* aFactory)
   , mModule(nullptr)
   , mFactory(aFactory)
 {
-  mozilla::Module::CIDEntry* e = new mozilla::Module::CIDEntry();
-  nsCID* cid = new nsCID;
+  auto* e = new mozilla::Module::CIDEntry();
+  auto* cid = new nsCID;
   *cid = aCID;
   e->cid = cid;
   mCIDEntry = e;

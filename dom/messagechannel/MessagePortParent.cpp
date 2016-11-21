@@ -41,7 +41,7 @@ MessagePortParent::Entangle(const nsID& aDestinationUUID,
 }
 
 mozilla::ipc::IPCResult
-MessagePortParent::RecvPostMessages(nsTArray<MessagePortMessage>&& aMessages)
+MessagePortParent::RecvPostMessages(nsTArray<ClonedMessageData>&& aMessages)
 {
   // This converts the object in a data struct where we have BlobImpls.
   FallibleTArray<RefPtr<SharedMessagePortMessage>> messages;
@@ -71,7 +71,7 @@ MessagePortParent::RecvPostMessages(nsTArray<MessagePortMessage>&& aMessages)
 }
 
 mozilla::ipc::IPCResult
-MessagePortParent::RecvDisentangle(nsTArray<MessagePortMessage>&& aMessages)
+MessagePortParent::RecvDisentangle(nsTArray<ClonedMessageData>&& aMessages)
 {
   // This converts the object in a data struct where we have BlobImpls.
   FallibleTArray<RefPtr<SharedMessagePortMessage>> messages;
@@ -141,7 +141,7 @@ MessagePortParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 bool
-MessagePortParent::Entangled(const nsTArray<MessagePortMessage>& aMessages)
+MessagePortParent::Entangled(const nsTArray<ClonedMessageData>& aMessages)
 {
   MOZ_ASSERT(!mEntangled);
   mEntangled = true;

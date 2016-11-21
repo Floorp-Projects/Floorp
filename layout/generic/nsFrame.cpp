@@ -4720,8 +4720,24 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
   const nsStyleCoord* blockStyleCoord = &stylePos->BSize(aWM);
 
   nsIAtom* parentFrameType = GetParent() ? GetParent()->GetType() : nullptr;
+  auto alignCB = GetParent();
   bool isGridItem = (parentFrameType == nsGkAtoms::gridContainerFrame &&
                      !(GetStateBits() & NS_FRAME_OUT_OF_FLOW));
+  if (parentFrameType == nsGkAtoms::tableWrapperFrame &&
+      GetType() == nsGkAtoms::tableFrame) {
+    // An inner table frame is sized as a grid item if its table wrapper is,
+    // because they actually have the same CB (the wrapper's CB).
+    // @see ReflowInput::InitCBReflowInput
+    auto tableWrapper = GetParent();
+    auto grandParent = tableWrapper->GetParent();
+    isGridItem = (grandParent->GetType() == nsGkAtoms::gridContainerFrame &&
+                  !(tableWrapper->GetStateBits() & NS_FRAME_OUT_OF_FLOW));
+    if (isGridItem) {
+      // When resolving justify/align-self below, we want to use the grid
+      // container's justify/align-items value and WritingMode.
+      alignCB = grandParent;
+    }
+  }
   bool isFlexItem = (parentFrameType == nsGkAtoms::flexContainerFrame &&
                      !(GetStateBits() & NS_FRAME_OUT_OF_FLOW));
   bool isInlineFlexItem = false;
@@ -4772,9 +4788,9 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
     if (!(aFlags & nsIFrame::eShrinkWrap) &&
         !StyleMargin()->HasInlineAxisAuto(aWM)) {
       auto inlineAxisAlignment =
-        aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
-          StylePosition()->UsedAlignSelf(GetParent()->StyleContext()) :
-          StylePosition()->UsedJustifySelf(GetParent()->StyleContext());
+        aWM.IsOrthogonalTo(alignCB->GetWritingMode()) ?
+          StylePosition()->UsedAlignSelf(alignCB->StyleContext()) :
+          StylePosition()->UsedJustifySelf(alignCB->StyleContext());
       stretch = inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
                 inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH;
     }
@@ -4859,9 +4875,9 @@ nsFrame::ComputeSize(nsRenderingContext* aRenderingContext,
         bool stretch = false;
         if (!StyleMargin()->HasBlockAxisAuto(aWM)) {
           auto blockAxisAlignment =
-            !aWM.IsOrthogonalTo(GetParent()->GetWritingMode()) ?
-              StylePosition()->UsedAlignSelf(StyleContext()->GetParent()) :
-              StylePosition()->UsedJustifySelf(StyleContext()->GetParent());
+            !aWM.IsOrthogonalTo(alignCB->GetWritingMode()) ?
+              StylePosition()->UsedAlignSelf(alignCB->StyleContext()) :
+              StylePosition()->UsedJustifySelf(alignCB->StyleContext());
           stretch = blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
                     blockAxisAlignment == NS_STYLE_ALIGN_STRETCH;
         }

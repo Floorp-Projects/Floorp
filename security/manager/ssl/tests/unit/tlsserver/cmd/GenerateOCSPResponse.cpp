@@ -77,9 +77,9 @@ StringToOCSPResponseType(const char* respText,
   if (!OCSPType) {
     return false;
   }
-  for (uint32_t i = 0; i < mozilla::ArrayLength(kOCSPResponseNameList); i++) {
-    if (strcmp(respText, kOCSPResponseNameList[i].mTypeString) == 0) {
-      *OCSPType = kOCSPResponseNameList[i].mORT;
+  for (auto ocspResponseName : kOCSPResponseNameList) {
+    if (strcmp(respText, ocspResponseName.mTypeString) == 0) {
+      *OCSPType = ocspResponseName.mORT;
       return true;
     }
   }

@@ -72,7 +72,7 @@ D3D11SurfaceHolder::CopyToTextureClient(TextureClient* aClient)
   }
 
   {
-    AutoTextureLock(mutex, hr);
+    AutoTextureLock lock(mutex, hr);
     if (hr == WAIT_ABANDONED || hr == WAIT_TIMEOUT || FAILED(hr)) {
       NS_WARNING("Could not acquire DXGI surface lock - plugin forgot to release?");
       return false;

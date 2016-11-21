@@ -150,20 +150,12 @@ function runTests()
      + " and/or does not remove the first character.");
   reset();
 
-  // Backspace doesn't work here yet.
   editor3.focus();
   moveCaretToEndOf(editor3);
   synthesizeKey("VK_BACK_SPACE", { });
-  todo_is(container.innerHTML, kTestCase1_editor3_backspaceAtEnd,
-          "Pressing backspace key at end of editor3 changes adjacent elements"
-          + " and/or does not remove the last character.");
-  reset();
-  //  We can still check that adjacent elements are not affected.
-  editor3.focus();
-  moveCaretToEndOf(editor3);
-  synthesizeKey("VK_BACK_SPACE", { });
-  is(container.innerHTML, kTestCase1,
-     "Pressing backspace key at end of editor3 changes the content");
+  is(container.innerHTML, kTestCase1_editor3_backspaceAtEnd,
+     "Pressing backspace key at end of editor3 changes adjacent elements"
+     + " and/or does not remove the last character.");
   reset();
 
   /* TestCase #2:

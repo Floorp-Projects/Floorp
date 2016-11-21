@@ -143,18 +143,10 @@ this.GeckoDriver = function(appName, server) {
     "raisesAccessibilityExceptions": false,
     "rotatable": this.appName == "B2G",
     "acceptSslCerts": false,
-    "takesElementScreenshot": true,
-    "takesScreenshot": true,
     "proxy": {},
 
-    // Selenium 2 compat
-    "platform": Services.sysinfo.getProperty("name").toUpperCase(),
-
     // proprietary extensions
-    "XULappId" : Services.appinfo.ID,
-    "appBuildId" : Services.appinfo.appBuildID,
     "processId" : Services.appinfo.processID,
-    "version": Services.appinfo.version,
   };
 
   this.mm = globalMessageManager;

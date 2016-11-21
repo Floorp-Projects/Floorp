@@ -32,6 +32,12 @@ struct MessagePortIdentifier
   bool neutered;
 };
 
+/**
+ * Cross-process representation for postMessage() style payloads where Blobs may
+ * be referenced/"cloned" and (optionally) messageports transferred.  Use
+ * StructuredCloneData in your code to convert between this wire representation
+ * and the StructuredCloneData StructuredCloneHolder-subclass.
+ */
 struct ClonedMessageData
 {
   SerializedStructuredCloneBuffer data;

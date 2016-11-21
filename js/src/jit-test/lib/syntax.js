@@ -1162,6 +1162,7 @@ function test_syntax(postfixes, check_error, ignore_opts) {
 
   // for each...in
 
+  enableForEach();
   test("for each ");
   test("for each (");
   test("for each (x ");
@@ -1180,6 +1181,7 @@ function test_syntax(postfixes, check_error, ignore_opts) {
   test("for each (let x in ");
   test("for each (let x in y ");
   test("for each (let x in y) ");
+  disableForEach();
 
   // ==== asm.js ====
 

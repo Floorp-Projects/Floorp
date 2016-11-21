@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 N = 0;
 function n() {}
 s = n;

@@ -14,12 +14,14 @@
 function runTest(i) {
   var t = tests[i];
   count++;
+  SpecialPowers.Cu.getJSTestingFunctions().enableForEach();
   try {
     Function("for each (var a in []) {}");
     ok(t.enabled, "JavaScript" + ("version" in t ? " " + t.version : "") + " supports for-each-in");
   } catch (e) {
     ok(!t.enabled, "JavaScript" + ("version" in t ? " " + t.version : "") + " does NOT support for-each-in");
   }
+  SpecialPowers.Cu.getJSTestingFunctions().disableForEach();
 }
 </div>
 <pre id="test">

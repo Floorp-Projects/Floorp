@@ -28,9 +28,9 @@ public:
   // virtual dtor because Bar uses our Release()
   virtual ~Foo();
 
-  NS_IMETHOD_(MozExternalRefCountType) AddRef();
-  NS_IMETHOD_(MozExternalRefCountType) Release();
-  NS_IMETHOD QueryInterface( const nsIID&, void** );
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
+  NS_IMETHOD_(MozExternalRefCountType) Release() override;
+  NS_IMETHOD QueryInterface( const nsIID&, void** ) override;
   void MemberFunction( int, int*, int& );
   virtual void VirtualMemberFunction( int, int*, int& );
   virtual void VirtualConstMemberFunction( int, int*, int& ) const;
@@ -128,7 +128,7 @@ nsresult
 CreateFoo( void** result )
   // a typical factory function (that calls AddRef)
 {
-  Foo* foop = new Foo;
+  auto* foop = new Foo;
 
   foop->AddRef();
   *result = foop;
@@ -163,12 +163,12 @@ public:
 
 public:
   Bar();
-  virtual ~Bar();
+  ~Bar() override;
 
   NS_IMETHOD QueryInterface( const nsIID&, void** ) override;
 
-  virtual void VirtualMemberFunction( int, int*, int& ) override;
-  virtual void VirtualConstMemberFunction( int, int*, int& ) const override;
+  void VirtualMemberFunction( int, int*, int& ) override;
+  void VirtualConstMemberFunction( int, int*, int& ) const override;
 
   static int total_constructions_;
   static int total_destructions_;
@@ -331,10 +331,10 @@ TEST(nsRefPtr, AddRefHelpers)
   Foo::total_addrefs_ = 0;
 
   {
-    Foo* raw_foo1p = new Foo;
+    auto* raw_foo1p = new Foo;
     raw_foo1p->AddRef();
 
-    Foo* raw_foo2p = new Foo;
+    auto* raw_foo2p = new Foo;
     raw_foo2p->AddRef();
 
     ASSERT_EQ(Foo::total_addrefs_, 2);
@@ -419,9 +419,7 @@ class ObjectForConstPtr
 {
   private:
     // Reference-counted classes cannot have public destructors.
-    ~ObjectForConstPtr()
-    {
-    }
+    ~ObjectForConstPtr() = default;
   public:
     NS_INLINE_DECL_THREADSAFE_MUTABLE_REFCOUNTING(ObjectForConstPtr)
       void ConstMemberFunction( int aArg1, int* aArgPtr, int& aArgRef ) const

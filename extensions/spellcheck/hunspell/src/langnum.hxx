@@ -38,12 +38,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _LANGNUM_HXX_
-#define _LANGNUM_HXX_
+#ifndef LANGNUM_HXX_
+#define LANGNUM_HXX_
 
 /*
  language numbers for language specific codes
- see http://l10n.openoffice.org/languages.html
+ see https://wiki.openoffice.org/w/index.php?title=Languages&oldid=230199
 */
 
 enum {

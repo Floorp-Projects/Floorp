@@ -1,4 +1,4 @@
-// |jit-test| error:98
+// |jit-test| error:98; need-for-each
 function foo() {
     function gen() {
         try {

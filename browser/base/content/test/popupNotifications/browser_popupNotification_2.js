@@ -187,22 +187,6 @@ var tests = [
       goNext();
     }
   },
-  // Test notification "Not Now" menu item
-  { id: "Test#8",
-    run: function() {
-      this.notifyObj = new BasicNotification(this.id);
-      this.notification = showNotification(this.notifyObj);
-    },
-    onShown: function(popup) {
-      checkPopup(popup, this.notifyObj);
-      triggerSecondaryCommand(popup, 1);
-    },
-    onHidden: function(popup) {
-      ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback triggered");
-      this.notification.remove();
-      ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
-    }
-  },
   // Test notification close button
   { id: "Test#9",
     run: function() {

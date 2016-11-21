@@ -772,10 +772,12 @@ LoginManagerPrompter.prototype = {
     let { browser } = this._getNotifyWindow();
 
     let saveMsgNames = {
-      prompt: login.username === "" ? "rememberLoginMsgNoUser"
-                                    : "rememberLoginMsg",
-      buttonLabel: "rememberLoginButtonText",
-      buttonAccessKey: "rememberLoginButtonAccessKey",
+      prompt: login.username === "" ? "saveLoginMsgNoUser"
+                                    : "saveLoginMsg",
+      buttonLabel: "saveLoginButtonAllow.label",
+      buttonAccessKey: "saveLoginButtonAllow.accesskey",
+      secondaryButtonLabel: "saveLoginButtonDeny.label",
+      secondaryButtonAccessKey: "saveLoginButtonDeny.accesskey",
     };
 
     let changeMsgNames = {
@@ -783,6 +785,8 @@ LoginManagerPrompter.prototype = {
                                     : "updateLoginMsg",
       buttonLabel: "updateLoginButtonText",
       buttonAccessKey: "updateLoginButtonAccessKey",
+      secondaryButtonLabel: "updateLoginButtonDeny.label",
+      secondaryButtonAccessKey: "updateLoginButtonDeny.accesskey",
     };
 
     let initialMsgNames = type == "password-save" ? saveMsgNames
@@ -790,7 +794,8 @@ LoginManagerPrompter.prototype = {
 
     let brandBundle = Services.strings.createBundle(BRAND_BUNDLE);
     let brandShortName = brandBundle.GetStringFromName("brandShortName");
-    let promptMsg = type == "password-save" ? this._getLocalizedString(saveMsgNames.prompt, [brandShortName])
+    let host = this._getShortDisplayHost(login.hostname);
+    let promptMsg = type == "password-save" ? this._getLocalizedString(saveMsgNames.prompt, [brandShortName, host])
                                             : this._getLocalizedString(changeMsgNames.prompt);
 
     let histogramName = type == "password-save" ? "PWMGR_PROMPT_REMEMBER_ACTION"
@@ -803,7 +808,7 @@ LoginManagerPrompter.prototype = {
     let currentNotification;
 
     let updateButtonStatus = (element) => {
-      let mainActionButton = chromeDoc.getAnonymousElementByAttribute(element.button, "anonid", "button");
+      let mainActionButton = element.button;
       // Disable the main button inside the menu-button if the password field is empty.
       if (login.password.length == 0) {
         mainActionButton.setAttribute("disabled", true);
@@ -919,7 +924,7 @@ LoginManagerPrompter.prototype = {
       }
     };
 
-    // The main action is the "Remember" or "Update" button.
+    // The main action is the "Save" or "Update" button.
     let mainAction = {
       label: this._getLocalizedString(initialMsgNames.buttonLabel),
       accessKey: this._getLocalizedString(initialMsgNames.buttonAccessKey),
@@ -934,16 +939,26 @@ LoginManagerPrompter.prototype = {
       }
     };
 
-    // Include a "Never for this site" button when saving a new password.
-    let secondaryActions = type == "password-save" ? [{
-      label: this._getLocalizedString("notifyBarNeverRememberButtonText"),
-      accessKey: this._getLocalizedString("notifyBarNeverRememberButtonAccessKey"),
+    let secondaryActions = [{
+      label: this._getLocalizedString(initialMsgNames.secondaryButtonLabel),
+      accessKey: this._getLocalizedString(initialMsgNames.secondaryButtonAccessKey),
       callback: () => {
-        histogram.add(PROMPT_NEVER);
-        Services.logins.setLoginSavingEnabled(login.hostname, false);
+        histogram.add(PROMPT_NOTNOW);
         browser.focus();
       }
-    }] : null;
+    }];
+    // Include a "Never for this site" button when saving a new password.
+    if (type == "password-save") {
+      secondaryActions.push({
+        label: this._getLocalizedString("notifyBarNeverRememberButtonText2"),
+        accessKey: this._getLocalizedString("notifyBarNeverRememberButtonAccessKey2"),
+        callback: () => {
+          histogram.add(PROMPT_NEVER);
+          Services.logins.setLoginSavingEnabled(login.hostname, false);
+          browser.focus();
+        }
+      });
+    }
 
     let usernamePlaceholder = this._getLocalizedString("noUsernamePlaceholder");
     let togglePasswordLabel = this._getLocalizedString("togglePasswordLabel");
@@ -957,10 +972,10 @@ LoginManagerPrompter.prototype = {
       mainAction,
       secondaryActions,
       {
-        timeout: Date.now() + 10000,
-        displayURI: Services.io.newURI(login.hostname, null, null),
         persistWhileVisible: true,
+        persistent: true,
         passwordNotificationType: type,
+        hideClose: true,
         eventCallback: function(topic) {
           switch (topic) {
             case "showing":
@@ -1025,9 +1040,9 @@ LoginManagerPrompter.prototype = {
     // with some weird rules for handling access keys that do not occur
     // in the string, for L10N. See commonDialog.js's setLabelForNode().
     var neverButtonText =
-          this._getLocalizedString("notifyBarNeverRememberButtonText");
+          this._getLocalizedString("notifyBarNeverRememberButtonText2");
     var neverButtonAccessKey =
-          this._getLocalizedString("notifyBarNeverRememberButtonAccessKey");
+          this._getLocalizedString("notifyBarNeverRememberButtonAccessKey2");
     var rememberButtonText =
           this._getLocalizedString("notifyBarRememberPasswordButtonText");
     var rememberButtonAccessKey =

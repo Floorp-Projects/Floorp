@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 // Comprehensive test of get/setVariable on many kinds of environments and
 // bindings.
 

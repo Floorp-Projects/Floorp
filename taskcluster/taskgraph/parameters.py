@@ -14,6 +14,7 @@ from mozbuild.util import ReadOnlyDict
 PARAMETER_NAMES = set([
     'base_repository',
     'build_date',
+    'filters',
     'head_ref',
     'head_repository',
     'head_rev',

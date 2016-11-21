@@ -31,40 +31,6 @@ class TestMarionette(MarionetteTestCase):
         self.assertLess(time.time() - start_time, 5)
 
 
-class TestProtocol1Errors(MarionetteTestCase):
-    def setUp(self):
-        MarionetteTestCase.setUp(self)
-        self.op = self.marionette.protocol
-        self.marionette.protocol = 1
-
-    def tearDown(self):
-        self.marionette.protocol = self.op
-        MarionetteTestCase.tearDown(self)
-
-    def test_malformed_packet(self):
-        for t in [{}, {"error": None}]:
-            with self.assertRaisesRegexp(errors.MarionetteException, "Malformed packet"):
-                self.marionette._handle_error(t)
-
-    def test_known_error_code(self):
-        with self.assertRaises(errors.NoSuchElementException):
-            self.marionette._handle_error(
-                {"error": {"status": errors.NoSuchElementException.code[0]}})
-
-    def test_known_error_status(self):
-        with self.assertRaises(errors.NoSuchElementException):
-            self.marionette._handle_error(
-                {"error": {"status": errors.NoSuchElementException.status}})
-
-    def test_unknown_error_code(self):
-        with self.assertRaises(errors.MarionetteException):
-            self.marionette._handle_error({"error": {"status": 123456}})
-
-    def test_unknown_error_status(self):
-        with self.assertRaises(errors.MarionetteException):
-            self.marionette._handle_error({"error": {"status": "barbera"}})
-
-
 class TestProtocol2Errors(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
@@ -84,24 +50,10 @@ class TestProtocol2Errors(MarionetteTestCase):
         for p in filter(lambda p: len(p) < 3, ps):
             self.assertRaises(KeyError, self.marionette._handle_error, p)
 
-    def test_known_error_code(self):
-        with self.assertRaises(errors.NoSuchElementException):
-            self.marionette._handle_error(
-                {"error": errors.NoSuchElementException.code[0],
-                 "message": None,
-                 "stacktrace": None})
-
     def test_known_error_status(self):
         with self.assertRaises(errors.NoSuchElementException):
             self.marionette._handle_error(
                 {"error": errors.NoSuchElementException.status,
-                 "message": None,
-                 "stacktrace": None})
-
-    def test_unknown_error_code(self):
-        with self.assertRaises(errors.MarionetteException):
-            self.marionette._handle_error(
-                {"error": 123456,
                  "message": None,
                  "stacktrace": None})
 

@@ -122,9 +122,7 @@ nsSingletonEnumerator::nsSingletonEnumerator(nsISupports* aValue)
   mConsumed = (mValue ? false : true);
 }
 
-nsSingletonEnumerator::~nsSingletonEnumerator()
-{
-}
+nsSingletonEnumerator::~nsSingletonEnumerator() = default;
 
 NS_IMPL_ISUPPORTS(nsSingletonEnumerator, nsISimpleEnumerator)
 
@@ -201,9 +199,7 @@ nsUnionEnumerator::nsUnionEnumerator(nsISimpleEnumerator* aFirstEnumerator,
 {
 }
 
-nsUnionEnumerator::~nsUnionEnumerator()
-{
-}
+nsUnionEnumerator::~nsUnionEnumerator() = default;
 
 NS_IMPL_ISUPPORTS(nsUnionEnumerator, nsISimpleEnumerator)
 
@@ -279,8 +275,8 @@ NS_NewUnionEnumerator(nsISimpleEnumerator** aResult,
   } else if (!aSecondEnumerator) {
     *aResult = aFirstEnumerator;
   } else {
-    nsUnionEnumerator* enumer = new nsUnionEnumerator(aFirstEnumerator,
-                                                      aSecondEnumerator);
+    auto* enumer = new nsUnionEnumerator(aFirstEnumerator,
+                                         aSecondEnumerator);
     if (!enumer) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

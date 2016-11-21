@@ -27,9 +27,7 @@ public:
     mWord = aWord;
   }
 
-  ~TestUniChar()
-  {
-  }
+  ~TestUniChar() = default;
 
   uint32_t GetChar() const { return mWord; }
 
@@ -71,7 +69,7 @@ public:
 
   explicit EntityToUnicodeEntry(const char* aKey) { mNode = nullptr; }
   EntityToUnicodeEntry(const EntityToUnicodeEntry& aEntry) { mNode = aEntry.mNode; }
-  ~EntityToUnicodeEntry() { }
+  ~EntityToUnicodeEntry() = default;
 
   bool KeyEquals(const char* aEntity) const { return !strcmp(mNode->mStr, aEntity); }
   static const char* KeyToPointer(const char* aEntity) { return aEntity; }
@@ -146,9 +144,9 @@ class IFoo final : public nsISupports
 
       IFoo();
 
-      NS_IMETHOD_(MozExternalRefCountType) AddRef();
-      NS_IMETHOD_(MozExternalRefCountType) Release();
-      NS_IMETHOD QueryInterface( const nsIID&, void** );
+      NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
+      NS_IMETHOD_(MozExternalRefCountType) Release() override;
+      NS_IMETHOD QueryInterface( const nsIID&, void** ) override;
 
       NS_IMETHOD SetString(const nsACString& /*in*/ aString);
       NS_IMETHOD GetString(nsACString& /*out*/ aString);
@@ -246,7 +244,7 @@ nsresult
 CreateIFoo( IFoo** result )
     // a typical factory function (that calls AddRef)
   {
-    IFoo* foop = new IFoo();
+    auto* foop = new IFoo();
 
     foop->AddRef();
     *result = foop;
@@ -284,14 +282,14 @@ TEST(Hashtables, DataHashtable)
   // check a data-hashtable
   nsDataHashtable<nsUint32HashKey,const char*> UniToEntity(ENTITY_COUNT);
 
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
-    UniToEntity.Put(gEntities[i].mUnicode, gEntities[i].mStr);
+  for (auto& entity : gEntities) {
+    UniToEntity.Put(entity.mUnicode, entity.mStr);
   }
 
   const char* str;
 
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
-    ASSERT_TRUE(UniToEntity.Get(gEntities[i].mUnicode, &str));
+  for (auto& entity : gEntities) {
+    ASSERT_TRUE(UniToEntity.Get(entity.mUnicode, &str));
   }
 
   ASSERT_FALSE(UniToEntity.Get(99446, &str));
@@ -317,15 +315,15 @@ TEST(Hashtables, ClassHashtable)
   // check a class-hashtable
   nsClassHashtable<nsCStringHashKey,TestUniChar> EntToUniClass(ENTITY_COUNT);
 
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
-    TestUniChar* temp = new TestUniChar(gEntities[i].mUnicode);
-    EntToUniClass.Put(nsDependentCString(gEntities[i].mStr), temp);
+  for (auto& entity : gEntities) {
+    auto* temp = new TestUniChar(entity.mUnicode);
+    EntToUniClass.Put(nsDependentCString(entity.mStr), temp);
   }
 
   TestUniChar* myChar;
 
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
-    ASSERT_TRUE(EntToUniClass.Get(nsDependentCString(gEntities[i].mStr), &myChar));
+  for (auto& entity : gEntities) {
+    ASSERT_TRUE(EntToUniClass.Get(nsDependentCString(entity.mStr), &myChar));
   }
 
   ASSERT_FALSE(EntToUniClass.Get(NS_LITERAL_CSTRING("xxxx"), &myChar));
@@ -396,17 +394,17 @@ TEST(Hashtables, InterfaceHashtable)
   // check an interface-hashtable with an uint32_t key
   nsInterfaceHashtable<nsUint32HashKey,IFoo> UniToEntClass2(ENTITY_COUNT);
 
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
+  for (auto& entity : gEntities) {
     nsCOMPtr<IFoo> foo;
     CreateIFoo(getter_AddRefs(foo));
-    foo->SetString(nsDependentCString(gEntities[i].mStr));
+    foo->SetString(nsDependentCString(entity.mStr));
 
-    UniToEntClass2.Put(gEntities[i].mUnicode, foo);
+    UniToEntClass2.Put(entity.mUnicode, foo);
   }
 
-  for (uint32_t i = 0; i < ENTITY_COUNT; ++i) {
+  for (auto& entity : gEntities) {
     nsCOMPtr<IFoo> myEnt;
-    ASSERT_TRUE(UniToEntClass2.Get(gEntities[i].mUnicode, getter_AddRefs(myEnt)));
+    ASSERT_TRUE(UniToEntClass2.Get(entity.mUnicode, getter_AddRefs(myEnt)));
 
     nsAutoCString myEntStr;
     myEnt->GetString(myEntStr);

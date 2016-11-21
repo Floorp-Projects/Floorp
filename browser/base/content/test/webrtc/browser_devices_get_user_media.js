@@ -474,7 +474,7 @@ var gTests = [
 },
 
 {
-  desc: "'Always Allow' ignored and not shown on http pages",
+  desc: "'Always Allow' disabled on http pages",
   run: function* checkNoAlwaysOnHttp() {
     // Load an http page instead of the https version.
     let browser = gBrowser.selectedBrowser;
@@ -494,16 +494,16 @@ var gTests = [
     yield promise;
     yield expectObserverCalled("getUserMedia:request");
 
-    // Ensure that the 'Always Allow' action isn't shown.
-    let alwaysLabel = gNavigatorBundle.getString("getUserMedia.always.label");
-    ok(!!alwaysLabel, "found the 'Always Allow' localized label");
-    let labels = [];
+    // Ensure that checking the 'Remember this decision' checkbox disables
+    // 'Allow'.
     let notification = PopupNotifications.panel.firstChild;
-    for (let node of notification.childNodes) {
-      if (node.localName == "menuitem")
-        labels.push(node.getAttribute("label"));
-    }
-    is(labels.indexOf(alwaysLabel), -1, "The 'Always Allow' item isn't shown");
+    let checkbox = notification.checkbox;
+    ok(!!checkbox, "checkbox is present");
+    ok(!checkbox.checked, "checkbox is not checked");
+    checkbox.click();
+    ok(checkbox.checked, "checkbox now checked");
+    ok(notification.button.disabled, "Allow button is disabled");
+    ok(!notification.hasAttribute("warninghidden"), "warning message is shown");
 
     // Cleanup.
     yield closeStream(true);

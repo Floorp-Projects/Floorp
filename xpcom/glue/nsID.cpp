@@ -13,9 +13,7 @@ void nsID::Clear()
   m0 = 0;
   m1 = 0;
   m2 = 0;
-  for (int i = 0; i < 8; ++i) {
-    m3[i] = 0;
-  }
+  memset(m3, 0, sizeof(m3));
 }
 
 /**

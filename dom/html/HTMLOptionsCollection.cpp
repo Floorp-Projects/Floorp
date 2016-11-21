@@ -131,12 +131,13 @@ HTMLOptionsCollection::SetLength(uint32_t aLength)
   return mSelect->SetLength(aLength);
 }
 
-NS_IMETHODIMP
-HTMLOptionsCollection::SetOption(uint32_t aIndex,
-                                 nsIDOMHTMLOptionElement* aOption)
+void
+HTMLOptionsCollection::IndexedSetter(uint32_t aIndex,
+                                     HTMLOptionElement* aOption,
+                                     ErrorResult& aError)
 {
   if (!mSelect) {
-    return NS_OK;
+    return;
   }
 
   // if the new option is null, just remove this option.  Note that it's safe
@@ -145,43 +146,41 @@ HTMLOptionsCollection::SetOption(uint32_t aIndex,
     mSelect->Remove(aIndex);
 
     // We're done.
-    return NS_OK;
+    return;
   }
-
-  nsresult rv = NS_OK;
-
-  uint32_t index = uint32_t(aIndex);
 
   // Now we're going to be setting an option in our collection
-  if (index > mElements.Length()) {
+  if (aIndex > mElements.Length()) {
     // Fill our array with blank options up to (but not including, since we're
     // about to change it) aIndex, for compat with other browsers.
-    rv = SetLength(index);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  NS_ASSERTION(index <= mElements.Length(), "SetLength lied");
-  
-  nsCOMPtr<nsIDOMNode> ret;
-  if (index == mElements.Length()) {
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aOption);
-    rv = mSelect->AppendChild(node, getter_AddRefs(ret));
-  } else {
-    // Find the option they're talking about and replace it
-    // hold a strong reference to follow COM rules.
-    RefPtr<HTMLOptionElement> refChild = ItemAsOption(index);
-    NS_ENSURE_TRUE(refChild, NS_ERROR_UNEXPECTED);
-
-    nsCOMPtr<nsINode> parent = refChild->GetParent();
-    if (parent) {
-      nsCOMPtr<nsINode> node = do_QueryInterface(aOption);
-      ErrorResult res;
-      parent->ReplaceChild(*node, *refChild, res);
-      rv = res.StealNSResult();
+    nsresult rv = SetLength(aIndex);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aError.Throw(rv);
+      return;
     }
   }
 
-  return rv;
+  NS_ASSERTION(aIndex <= mElements.Length(), "SetLength lied");
+  
+  if (aIndex == mElements.Length()) {
+    mSelect->AppendChild(*aOption, aError);
+    return;
+  }
+
+  // Find the option they're talking about and replace it
+  // hold a strong reference to follow COM rules.
+  RefPtr<HTMLOptionElement> refChild = ItemAsOption(aIndex);
+  if (!refChild) {
+    aError.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  nsCOMPtr<nsINode> parent = refChild->GetParent();
+  if (!parent) {
+    return;
+  }
+
+  parent->ReplaceChild(*aOption, *refChild, aError);
 }
 
 int32_t

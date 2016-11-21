@@ -92,9 +92,13 @@
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "nsSandboxFlags.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/dom/CustomEvent.h"
 
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/WebBrowserPersistLocalDocument.h"
+#include "mozilla/dom/GroupedHistoryEvent.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 
 #include "nsPrincipal.h"
 
@@ -155,6 +159,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener, bool 
   , mRemoteBrowser(nullptr)
   , mChildID(0)
   , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
+  , mBrowserChangingProcessBlockers(nullptr)
   , mIsPrerendered(false)
   , mDepthTooGreat(false)
   , mIsTopLevelContent(false)
@@ -382,91 +387,297 @@ nsFrameLoader::GetGroupedSessionHistory(nsIGroupedSHistory** aResult)
   return NS_OK;
 }
 
+bool
+nsFrameLoader::SwapBrowsersAndNotify(nsFrameLoader* aOther)
+{
+  // Cache the owner content before calling SwapBrowsers, which will change
+  // these member variables.
+  RefPtr<mozilla::dom::Element> primaryContent = mOwnerContent;
+  RefPtr<mozilla::dom::Element> secondaryContent = aOther->mOwnerContent;
+
+  // Swap loaders through our owner, so the owner's listeners will be correctly
+  // setup.
+  nsCOMPtr<nsIBrowser> ourBrowser = do_QueryInterface(primaryContent);
+  nsCOMPtr<nsIBrowser> otherBrowser = do_QueryInterface(secondaryContent);
+  if (NS_WARN_IF(!ourBrowser || !otherBrowser)) {
+    return false;
+  }
+  nsresult rv = ourBrowser->SwapBrowsers(otherBrowser, nsIBrowser::SWAP_KEEP_PERMANENT_KEY);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  // Swap the GroupedSessionHistory
+  mGroupedSessionHistory.swap(aOther->mGroupedSessionHistory);
+
+  // Dispatch the BrowserChangedProcess event to tell JS that the process swap
+  // has occurred.
+  GroupedHistoryEventInit eventInit;
+  eventInit.mBubbles = true;
+  eventInit.mCancelable= false;
+  eventInit.mOtherBrowser = secondaryContent;
+  RefPtr<GroupedHistoryEvent> event =
+    GroupedHistoryEvent::Constructor(primaryContent,
+                                     NS_LITERAL_STRING("BrowserChangedProcess"),
+                                     eventInit);
+  event->SetTrusted(true);
+  bool dummy;
+  primaryContent->DispatchEvent(event, &dummy);
+
+  return true;
+}
+
+class AppendPartialSessionHistoryAndSwapHelper : public PromiseNativeHandler
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(AppendPartialSessionHistoryAndSwapHelper)
+
+  AppendPartialSessionHistoryAndSwapHelper(nsFrameLoader* aThis,
+                                           nsFrameLoader* aOther,
+                                           Promise* aPromise)
+    : mThis(aThis), mOther(aOther), mPromise(aPromise) {}
+
+  void
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    nsCOMPtr<nsIGroupedSHistory> otherGroupedHistory;
+    mOther->GetGroupedSessionHistory(getter_AddRefs(otherGroupedHistory));
+    MOZ_ASSERT(!otherGroupedHistory,
+               "Cannot append a GroupedSHistory owner to another.");
+    if (otherGroupedHistory) {
+      mPromise->MaybeRejectWithUndefined();
+      return;
+    }
+
+    // Append ourselves.
+    nsresult rv;
+    if (!mThis->mGroupedSessionHistory) {
+      mThis->mGroupedSessionHistory = new GroupedSHistory();
+      nsCOMPtr<nsIPartialSHistory> partialSHistory;
+      MOZ_ALWAYS_SUCCEEDS(mThis->GetPartialSessionHistory(getter_AddRefs(partialSHistory)));
+      rv = mThis->mGroupedSessionHistory->AppendPartialSessionHistory(partialSHistory);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        mPromise->MaybeRejectWithUndefined();
+        return;
+      }
+    }
+
+    // Append the other.
+    nsCOMPtr<nsIPartialSHistory> otherPartialSHistory;
+    MOZ_ALWAYS_SUCCEEDS(mOther->GetPartialSessionHistory(getter_AddRefs(otherPartialSHistory)));
+    rv = mThis->mGroupedSessionHistory->AppendPartialSessionHistory(otherPartialSHistory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mPromise->MaybeRejectWithUndefined();
+      return;
+    }
+
+    // Swap the browsers and fire the BrowserChangedProcess event.
+    if (mThis->SwapBrowsersAndNotify(mOther)) {
+      mPromise->MaybeResolveWithUndefined();
+    } else {
+      mPromise->MaybeRejectWithUndefined();
+    }
+  }
+
+  void
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    mPromise->MaybeRejectWithUndefined();
+  }
+
+private:
+  ~AppendPartialSessionHistoryAndSwapHelper() {}
+  RefPtr<nsFrameLoader> mThis;
+  RefPtr<nsFrameLoader> mOther;
+  RefPtr<Promise> mPromise;
+};
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(AppendPartialSessionHistoryAndSwapHelper)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(AppendPartialSessionHistoryAndSwapHelper)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AppendPartialSessionHistoryAndSwapHelper)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION(AppendPartialSessionHistoryAndSwapHelper,
+                         mThis, mPromise)
+
+class RequestGroupedHistoryNavigationHelper : public PromiseNativeHandler
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(RequestGroupedHistoryNavigationHelper)
+
+  RequestGroupedHistoryNavigationHelper(nsFrameLoader* aThis,
+                                        uint32_t aGlobalIndex,
+                                        Promise* aPromise)
+    : mThis(aThis), mGlobalIndex(aGlobalIndex), mPromise(aPromise) {}
+
+  void
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    // Navigate the loader to the new index
+    nsCOMPtr<nsIFrameLoader> otherLoader;
+    nsresult rv = mThis->mGroupedSessionHistory->
+                    GotoIndex(mGlobalIndex, getter_AddRefs(otherLoader));
+    if (NS_WARN_IF(!otherLoader || NS_FAILED(rv))) {
+      mPromise->MaybeRejectWithUndefined();
+      return;
+    }
+    nsFrameLoader* other = static_cast<nsFrameLoader*>(otherLoader.get());
+
+    if (other == mThis) {
+      mPromise->MaybeRejectWithUndefined();
+      return;
+    }
+
+    // Swap the browsers and fire the BrowserChangedProcess event.
+    if (mThis->SwapBrowsersAndNotify(other)) {
+      mPromise->MaybeResolveWithUndefined();
+    } else {
+      mPromise->MaybeRejectWithUndefined();
+    }
+  }
+
+  void
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
+  {
+    mPromise->MaybeRejectWithUndefined();
+  }
+
+private:
+  ~RequestGroupedHistoryNavigationHelper() {}
+  RefPtr<nsFrameLoader> mThis;
+  uint32_t mGlobalIndex;
+  RefPtr<Promise> mPromise;
+};
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(RequestGroupedHistoryNavigationHelper)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(RequestGroupedHistoryNavigationHelper)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RequestGroupedHistoryNavigationHelper)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION(RequestGroupedHistoryNavigationHelper,
+                         mThis, mPromise)
+
+already_AddRefed<Promise>
+nsFrameLoader::FireWillChangeProcessEvent()
+{
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mOwnerContent->GetOwnerGlobal()))) {
+    return nullptr;
+  }
+  JSContext* cx = jsapi.cx();
+  GlobalObject global(cx, mOwnerContent->GetOwnerGlobal()->GetGlobalJSObject());
+  MOZ_ASSERT(!global.Failed());
+
+  // Set our mBrowserChangingProcessBlockers property to refer to the blockers
+  // list. We will synchronously dispatch a DOM event to collect this list of
+  // blockers.
+  nsTArray<RefPtr<Promise>> blockers;
+  mBrowserChangingProcessBlockers = &blockers;
+
+  GroupedHistoryEventInit eventInit;
+  eventInit.mBubbles = true;
+  eventInit.mCancelable = false;
+  eventInit.mOtherBrowser = nullptr;
+  RefPtr<GroupedHistoryEvent> event =
+    GroupedHistoryEvent::Constructor(mOwnerContent,
+                                     NS_LITERAL_STRING("BrowserWillChangeProcess"),
+                                     eventInit);
+  event->SetTrusted(true);
+  bool dummy;
+  mOwnerContent->DispatchEvent(event, &dummy);
+
+  mBrowserChangingProcessBlockers = nullptr;
+
+  ErrorResult rv;
+  RefPtr<Promise> allPromise = Promise::All(global, blockers, rv);
+  return allPromise.forget();
+}
+
 NS_IMETHODIMP
-nsFrameLoader::AppendPartialSessionHistoryAndSwap(nsIFrameLoader* aOther)
+nsFrameLoader::AppendPartialSessionHistoryAndSwap(nsIFrameLoader* aOther, nsISupports** aPromise)
 {
   if (!aOther) {
     return NS_ERROR_INVALID_POINTER;
-  }
-
-  nsCOMPtr<nsIGroupedSHistory> otherGroupedHistory;
-  aOther->GetGroupedSessionHistory(getter_AddRefs(otherGroupedHistory));
-  MOZ_ASSERT(!otherGroupedHistory,
-             "Cannot append a GroupedSHistory owner to another.");
-  if (otherGroupedHistory) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // Append ourselves.
-  nsresult rv;
-  if (!mGroupedSessionHistory) {
-    mGroupedSessionHistory = new GroupedSHistory();
-    rv = mGroupedSessionHistory->AppendPartialSessionHistory(mPartialSessionHistory);
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_FAILURE;
-    }
   }
 
   if (aOther == this) {
     return NS_OK;
   }
 
-  // Append the other.
   RefPtr<nsFrameLoader> otherLoader = static_cast<nsFrameLoader*>(aOther);
-  rv = mGroupedSessionHistory->
-         AppendPartialSessionHistory(otherLoader->mPartialSessionHistory);
-  if (NS_FAILED(rv)) {
+
+  RefPtr<Promise> ready = FireWillChangeProcessEvent();
+  if (NS_WARN_IF(!ready)) {
     return NS_ERROR_FAILURE;
   }
 
-  // Swap loaders through our owner, so the owner's listeners will be correctly
-  // setup.
-  nsCOMPtr<nsIBrowser> ourBrowser = do_QueryInterface(mOwnerContent);
-  nsCOMPtr<nsIBrowser> otherBrowser = do_QueryInterface(otherLoader->mOwnerContent);
-  if (!ourBrowser || !otherBrowser) {
-    return NS_ERROR_FAILURE;
+  // This promise will be resolved when the swap has finished, we return it now
+  // and pass it to our helper so our helper can resolve it.
+  ErrorResult rv;
+  RefPtr<Promise> complete = Promise::Create(mOwnerContent->GetOwnerGlobal(), rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
-  if (NS_FAILED(ourBrowser->SwapBrowsers(otherBrowser))) {
-    return NS_ERROR_FAILURE;
-  }
-  mGroupedSessionHistory.swap(otherLoader->mGroupedSessionHistory);
 
+  // Attach our handler to the ready promise, and make it fulfil the complete
+  // promise when we are done.
+  RefPtr<AppendPartialSessionHistoryAndSwapHelper> helper =
+    new AppendPartialSessionHistoryAndSwapHelper(this, otherLoader, complete);
+  ready->AppendNativeHandler(helper);
+  complete.forget(aPromise);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFrameLoader::RequestGroupedHistoryNavigation(uint32_t aGlobalIndex)
+nsFrameLoader::RequestGroupedHistoryNavigation(uint32_t aGlobalIndex, nsISupports** aPromise)
 {
   if (!mGroupedSessionHistory) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsIFrameLoader> targetLoader;
-  nsresult rv = mGroupedSessionHistory->
-                  GotoIndex(aGlobalIndex, getter_AddRefs(targetLoader));
-  if (NS_FAILED(rv)) {
+  RefPtr<Promise> ready = FireWillChangeProcessEvent();
+  if (NS_WARN_IF(!ready)) {
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsFrameLoader> otherLoader = static_cast<nsFrameLoader*>(targetLoader.get());
-  if (!targetLoader) {
-    return NS_ERROR_FAILURE;
+  // This promise will be resolved when the swap has finished, we return it now
+  // and pass it to our helper so our helper can resolve it.
+  ErrorResult rv;
+  RefPtr<Promise> complete = Promise::Create(mOwnerContent->GetOwnerGlobal(), rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
-  if (targetLoader == this) {
-    return NS_OK;
-  }
+  // Attach our handler to the ready promise, and make it fulfil the complete
+  // promise when we are done.
+  RefPtr<RequestGroupedHistoryNavigationHelper> helper =
+    new RequestGroupedHistoryNavigationHelper(this, aGlobalIndex, complete);
+  ready->AppendNativeHandler(helper);
+  complete.forget(aPromise);
+  return NS_OK;
+}
 
-  nsCOMPtr<nsIBrowser> ourBrowser = do_QueryInterface(mOwnerContent);
-  nsCOMPtr<nsIBrowser> otherBrowser = do_QueryInterface(otherLoader->mOwnerContent);
-  if (!ourBrowser || !otherBrowser) {
+NS_IMETHODIMP
+nsFrameLoader::AddProcessChangeBlockingPromise(js::Handle<js::Value> aPromise,
+                                               JSContext* aCx)
+{
+  nsCOMPtr<nsIGlobalObject> go = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+  if (!go) {
     return NS_ERROR_FAILURE;
   }
-  if (NS_FAILED(ourBrowser->SwapBrowsers(otherBrowser))) {
-    return NS_ERROR_FAILURE;
+  ErrorResult rv;
+  RefPtr<Promise> promise = Promise::Resolve(go, aCx, aPromise, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
-  mGroupedSessionHistory.swap(otherLoader->mGroupedSessionHistory);
 
+  if (NS_WARN_IF(!mBrowserChangingProcessBlockers)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  mBrowserChangingProcessBlockers->AppendElement(promise);
   return NS_OK;
 }
 

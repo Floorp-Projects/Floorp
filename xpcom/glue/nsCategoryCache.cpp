@@ -62,9 +62,7 @@ nsCategoryObserver::nsCategoryObserver(const char* aCategory)
   }
 }
 
-nsCategoryObserver::~nsCategoryObserver()
-{
-}
+nsCategoryObserver::~nsCategoryObserver() = default;
 
 NS_IMPL_ISUPPORTS(nsCategoryObserver, nsIObserver)
 
