@@ -74,6 +74,7 @@ EXPORTS.mozilla = [
     'RefCounted.h',
     'RefCountType.h',
     'RefPtr.h',
+    'Result.h',
     'ReverseIterator.h',
     'RollingMean.h',
     'Saturate.h',
