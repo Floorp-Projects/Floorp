@@ -6,7 +6,6 @@
 
 SOURCES += [
     'nsCollationUnix.cpp',
-    'nsDateTimeFormatUnix.cpp',
     'nsPosixLocale.cpp',
 ]
 
