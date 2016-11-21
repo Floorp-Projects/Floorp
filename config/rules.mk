@@ -930,6 +930,18 @@ cargo_build_flags += --color=always
 endif
 endif
 
+# Cargo currently supports only two interesting profiles for building:
+# development and release.  Those map (roughly) to --enable-debug and
+# --disable-debug in Gecko, respectively, but there's another axis that we'd
+# like to support: --{disable,enable}-optimize.  Since that would be four
+# choices, and Cargo only supports two, we choose to enable various
+# optimization levels in our Cargo.toml files all the time, and override the
+# optimization level here, if necessary.  (The Cargo.toml files already
+# specify debug-assertions appropriately for --{disable,enable}-debug.)
+ifndef MOZ_OPTIMIZE
+rustflags_override = RUSTFLAGS='-C opt-level=0'
+endif
+
 # Assume any system libraries rustc links against are already in the target's LIBS.
 #
 # We need to run cargo unconditionally, because cargo is the only thing that
@@ -937,7 +949,7 @@ endif
 # build.
 force-cargo-build:
 	$(REPORT_BUILD)
-	env CARGO_TARGET_DIR=. RUSTC=$(RUSTC) $(CARGO) build $(cargo_build_flags) --
+	env $(rustflags_override) CARGO_TARGET_DIR=. RUSTC=$(RUSTC) $(CARGO) build $(cargo_build_flags) --
 
 $(RUST_LIBRARY_FILE): force-cargo-build
 endif # CARGO_FILE
