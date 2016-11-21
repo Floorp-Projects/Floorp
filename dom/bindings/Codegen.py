@@ -1696,7 +1696,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
         chromeOnlyCheck = ""
         if isChromeOnly(self._ctor):
             chromeOnlyCheck = dedent("""
-                if (!nsContentUtils::ThreadsafeIsCallerChrome()) {
+                if (!nsContentUtils::ThreadsafeIsSystemCaller(cx)) {
                   return ThrowingConstructor(cx, argc, vp);
                 }
 
@@ -2883,7 +2883,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             properties = "nullptr"
         if self.properties.hasChromeOnly():
-            chromeProperties = "nsContentUtils::ThreadsafeIsCallerChrome() ? sChromeOnlyNativeProperties.Upcast() : nullptr"
+            chromeProperties = "nsContentUtils::ThreadsafeIsSystemCaller(aCx) ? sChromeOnlyNativeProperties.Upcast() : nullptr"
         else:
             chromeProperties = "nullptr"
 
@@ -3293,7 +3293,7 @@ def getConditionList(idlobj, cxName, objName):
         assert isinstance(pref, list) and len(pref) == 1
         conditions.append('Preferences::GetBool("%s")' % pref[0])
     if idlobj.getExtendedAttribute("ChromeOnly"):
-        conditions.append("nsContentUtils::ThreadsafeIsCallerChrome()")
+        conditions.append("nsContentUtils::ThreadsafeIsSystemCaller(%s)" % cxName)
     func = idlobj.getExtendedAttribute("Func")
     if func:
         assert isinstance(func, list) and len(func) == 1
@@ -3438,7 +3438,7 @@ def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode,
         if array.hasChromeOnly():
             unforgeables.append(
                 CGIfWrapper(CGGeneric(template % array.variableName(True)),
-                            "nsContentUtils::ThreadsafeIsCallerChrome()"))
+                            "nsContentUtils::ThreadsafeIsSystemCaller(aCx)"))
 
     if descriptor.interface.getExtendedAttribute("Unforgeable"):
         # We do our undefined toJSON and toPrimitive here, not as a regular
@@ -3781,7 +3781,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
         else:
             properties = "nullptr"
         if self.properties.hasChromeOnly():
-            chromeProperties = "nsContentUtils::ThreadsafeIsCallerChrome() ? sChromeOnlyNativeProperties.Upcast() : nullptr"
+            chromeProperties = "nsContentUtils::ThreadsafeIsSystemCaller(aCx) ? sChromeOnlyNativeProperties.Upcast() : nullptr"
         else:
             chromeProperties = "nullptr"
 
@@ -6985,7 +6985,11 @@ class CGCallGenerator(CGThing):
             args.append(CGGeneric("subjectPrincipal"))
 
         if needsCallerType:
-            args.append(CGGeneric("callerType"))
+            if descriptor.interface.isExposedInAnyWorker():
+                systemCallerGetter = "nsContentUtils::ThreadsafeIsSystemCaller"
+            else:
+                systemCallerGetter = "nsContentUtils::IsSystemCaller"
+            args.append(CGGeneric("%s(cx) ? CallerType::System : CallerType::NonSystem" % systemCallerGetter))
 
         if isFallible:
             args.append(CGGeneric("rv"))
@@ -7052,24 +7056,6 @@ class CGCallGenerator(CGThing):
                     subjectPrincipal = static_cast<nsIPrincipal*>(nsJSPrincipals::get(principals));
                     """,
                     getPrincipal=getPrincipal)))
-
-        if needsCallerType:
-            # Note that we do not want to use
-            # IsCallerChrome/ThreadsafeIsCallerChrome directly because those
-            # will pull in the check for UniversalXPConnect, which we ideally
-            # don't want to have in the new thing we're doing here.  If not
-            # NS_IsMainThread(), though, we'll go ahead and call
-            # ThreasafeIsCallerChrome(), since that won't mess with
-            # UnivesalXPConnect and we don't want to worry about the right
-            # worker includes here.
-            callerCheck = CGGeneric("callerType = nsContentUtils::IsSystemPrincipal(nsContentUtils::SubjectPrincipal()) ? CallerType::System : CallerType::NonSystem;\n")
-            if descriptor.interface.isExposedInAnyWorker():
-                callerCheck = CGIfElseWrapper(
-                    "NS_IsMainThread()",
-                    callerCheck,
-                    CGGeneric("callerType = nsContentUtils::ThreadsafeIsCallerChrome() ? CallerType::System : CallerType::NonSystem;\n"));
-            self.cgRoot.prepend(callerCheck)
-            self.cgRoot.prepend(CGGeneric("CallerType callerType;\n"))
 
         if isFallible:
             self.cgRoot.prepend(CGGeneric("binding_detail::FastErrorResult rv;\n"))
@@ -7626,7 +7612,7 @@ class CGPerSignatureCall(CGThing):
                 # migrate some DOMStringLists to FrozenArray.
                 postConversionSteps += dedent(
                     """
-                    if (args.rval().isObject() && nsContentUtils::ThreadsafeIsCallerChrome()) {
+                    if (args.rval().isObject() && nsContentUtils::ThreadsafeIsSystemCaller(cx)) {
                       JS::Rooted<JSObject*> rvalObj(cx, &args.rval().toObject());
                       JS::Rooted<JS::Value> includesVal(cx);
                       if (!JS_GetProperty(cx, rvalObj, "includes", &includesVal) ||

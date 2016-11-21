@@ -1353,7 +1353,8 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
 
 static MOZ_MUST_USE bool PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator,
                                            HandleObject C, HandleObject promiseObj,
-                                           HandleObject resolve, HandleObject reject);
+                                           HandleObject resolve, HandleObject reject,
+                                           bool* done);
 
 // ES2016, 25.4.4.1.
 static bool
@@ -1394,12 +1395,14 @@ Promise_static_all(JSContext* cx, unsigned argc, Value* vp)
     // Step 6 (implicit).
 
     // Step 7.
-    bool result = PerformPromiseAll(cx, iter, C, resultPromise, resolve, reject);
+    bool done;
+    bool result = PerformPromiseAll(cx, iter, C, resultPromise, resolve, reject, &done);
 
     // Step 8.
     if (!result) {
         // Step 8.a.
-        // TODO: implement iterator closing.
+        if (!done)
+            iter.closeThrow();
 
         // Step 8.b.
         return AbruptRejectPromise(cx, args, resultPromise, reject);
@@ -1582,8 +1585,11 @@ RunResolutionFunction(JSContext *cx, HandleObject resolutionFun, HandleValue res
 // ES2016, 25.4.4.1.1.
 static MOZ_MUST_USE bool
 PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
-                  HandleObject promiseObj, HandleObject resolve, HandleObject reject)
+                  HandleObject promiseObj, HandleObject resolve, HandleObject reject,
+                  bool* done)
 {
+    *done = false;
+
     RootedObject unwrappedPromiseObj(cx);
     if (IsWrapper(promiseObj)) {
         unwrappedPromiseObj = CheckedUnwrap(promiseObj);
@@ -1650,14 +1656,19 @@ PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
     RootedValue rejectFunVal(cx, ObjectOrNullValue(reject));
 
     while (true) {
-        bool done;
-        // Steps a, b, c, e, f, g.
-        if (!iterator.next(&nextValue, &done))
+        // Steps a-c, e-g.
+        if (!iterator.next(&nextValue, done)) {
+            // Steps b, f.
+            *done = true;
+
+            // Steps c, g.
             return false;
+        }
 
         // Step d.
-        if (done) {
+        if (*done) {
             // Step d.i (implicit).
+
             // Step d.ii.
             int32_t remainingCount = dataHolder->decreaseRemainingCount();
 
@@ -1806,7 +1817,8 @@ PromiseAllResolveElementFunction(JSContext* cx, unsigned argc, Value* vp)
 
 static MOZ_MUST_USE bool PerformPromiseRace(JSContext *cx, JS::ForOfIterator& iterator,
                                             HandleObject C, HandleObject promiseObj,
-                                            HandleObject resolve, HandleObject reject);
+                                            HandleObject resolve, HandleObject reject,
+                                            bool* done);
 
 // ES2016, 25.4.4.3.
 static bool
@@ -1847,12 +1859,14 @@ Promise_static_race(JSContext* cx, unsigned argc, Value* vp)
     // Step 6 (implicit).
 
     // Step 7.
-    bool result = PerformPromiseRace(cx, iter, C, resultPromise, resolve, reject);
+    bool done;
+    bool result = PerformPromiseRace(cx, iter, C, resultPromise, resolve, reject, &done);
 
     // Step 8.
     if (!result) {
         // Step 8.a.
-        // TODO: implement iterator closing.
+        if (!done)
+            iter.closeThrow();
 
         // Step 8.b.
         return AbruptRejectPromise(cx, args, resultPromise, reject);
@@ -1866,25 +1880,30 @@ Promise_static_race(JSContext* cx, unsigned argc, Value* vp)
 // ES2016, 25.4.4.3.1.
 static MOZ_MUST_USE bool
 PerformPromiseRace(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
-                   HandleObject promiseObj, HandleObject resolve, HandleObject reject)
+                   HandleObject promiseObj, HandleObject resolve, HandleObject reject,
+                   bool* done)
 {
+    *done = false;
     MOZ_ASSERT(C->isConstructor());
     RootedValue CVal(cx, ObjectValue(*C));
 
     RootedValue nextValue(cx);
     RootedValue resolveFunVal(cx, ObjectOrNullValue(resolve));
     RootedValue rejectFunVal(cx, ObjectOrNullValue(reject));
-    bool done;
 
     while (true) {
         // Steps a-c, e-g.
-        if (!iterator.next(&nextValue, &done))
+        if (!iterator.next(&nextValue, done)) {
+            // Steps b, f.
+            *done = true;
+
+            // Steps c, g.
             return false;
+        }
 
         // Step d.
-        if (done) {
-            // Step d.i.
-            // TODO: implement iterator closing.
+        if (*done) {
+            // Step d.i (implicit).
 
             // Step d.ii.
             return true;

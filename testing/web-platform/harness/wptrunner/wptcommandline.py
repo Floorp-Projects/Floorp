@@ -102,6 +102,9 @@ scheme host and port.""")
 
     debugging_group.add_argument('--pause-on-unexpected', action="store_true",
                                  help="Halt the test runner when an unexpected result is encountered")
+    debugging_group.add_argument('--no-restart-on-unexpected', dest="restart_on_unexpected",
+                                 default=True, action="store_false",
+                                 help="Don't restart on an unexpected result")
 
     debugging_group.add_argument("--symbols-path", action="store", type=url_or_path,
                                  help="Path or url to symbols file used to analyse crash minidumps.")
@@ -173,16 +176,12 @@ scheme host and port.""")
     gecko_group.add_argument("--stackfix-dir", dest="stackfix_dir", action="store",
                              help="Path to directory containing assertion stack fixing scripts")
 
-    b2g_group = parser.add_argument_group("B2G-specific")
-    b2g_group.add_argument("--b2g-no-backup", action="store_true", default=False,
-                           help="Don't backup device before testrun with --product=b2g")
-
     servo_group = parser.add_argument_group("Servo-specific")
     servo_group.add_argument("--user-stylesheet",
                              default=[], action="append", dest="user_stylesheets",
                              help="Inject a user CSS stylesheet into every test.")
     servo_group.add_argument("--servo-backend",
-                             default="cpu", choices=["cpu", "webrender"],
+                             default="webrender", choices=["cpu", "webrender"],
                              help="Rendering backend to use with Servo.")
 
 

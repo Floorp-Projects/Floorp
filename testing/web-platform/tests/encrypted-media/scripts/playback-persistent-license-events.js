@@ -47,24 +47,19 @@ function runTest(config,qualifier) {
                 _events.push(event.messageType + '-response');
                 return _mediaKeySession.update(response);
             }).then(test.step_func(function() {
-                _events.push('updated');
+                _events.push('update-resolved');
                 if (event.messageType === 'license-release') {
-                    assert_array_equals(_events,
-                                [
-                                    'generaterequest',
-                                    'license-request',
-                                    'license-request-response',
-                                    'updated',
-                                    'keystatuseschange',
-                                    'playing',
-                                    'remove',
-                                    'keystatuseschange',
-                                    'license-release',
-                                    'license-release-response',
-                                    'closed-promise',
-                                    'updated'
-                                ],
-                                "Expected events sequence" );
+                    checkEventSequence( _events,
+                                    ['generaterequest',
+                                        ['license-request', 'license-request-response', 'update-resolved'], // potentially repeating
+                                        'keystatuseschange',
+                                        'playing',
+                                        'remove-resolved',
+                                        'keystatuseschange',
+                                        'license-release',
+                                        'license-release-response',
+                                        'closed-attribute-resolved',
+                                        'update-resolved' ]);
                     test.done();
                 }
             })).catch(onFailure);
@@ -95,7 +90,7 @@ function runTest(config,qualifier) {
                 _video.load();
 
                 _startedReleaseSequence = true;
-                _mediaKeySession.remove().then(recordEventFunc('remove')).catch(onFailure);
+                _mediaKeySession.remove().then(recordEventFunc('remove-resolved')).catch(onFailure);
             }
         }
 
@@ -117,11 +112,13 @@ function runTest(config,qualifier) {
             _mediaKeySession = _mediaKeys.createSession( 'persistent-license' );
             waitForEventAndRunStep('keystatuseschange', _mediaKeySession, onKeyStatusesChange, test);
             waitForEventAndRunStep('message', _mediaKeySession, onMessage, test);
-            _mediaKeySession.closed.then( recordEventFunc( 'closed-promise' ) );
+            _mediaKeySession.closed.then( recordEventFunc( 'closed-attribute-resolved' ) );
             return testmediasource(config);
         }).then(function(source) {
             _mediaSource = source;
             _video.src = URL.createObjectURL(_mediaSource);
+            return source.done;
+        }).then(function(){
             _video.play();
         }).catch(onFailure);
     }, testname);

@@ -1095,7 +1095,12 @@ class JS_PUBLIC_API(ContextOptions) {
         dumpStackOnDebuggeeWouldRun_(false),
         werror_(false),
         strictMode_(false),
-        extraWarnings_(false)
+        extraWarnings_(false),
+#ifdef NIGHTLY_BUILD
+        forEachStatement_(false)
+#else
+        forEachStatement_(true)
+#endif
     {
     }
 
@@ -1219,6 +1224,12 @@ class JS_PUBLIC_API(ContextOptions) {
         return *this;
     }
 
+    bool forEachStatement() const { return forEachStatement_; }
+    ContextOptions& setForEachStatement(bool flag) {
+        forEachStatement_ = flag;
+        return *this;
+    }
+
   private:
     bool baseline_ : 1;
     bool ion_ : 1;
@@ -1234,6 +1245,7 @@ class JS_PUBLIC_API(ContextOptions) {
     bool werror_ : 1;
     bool strictMode_ : 1;
     bool extraWarnings_ : 1;
+    bool forEachStatement_: 1;
 };
 
 JS_PUBLIC_API(ContextOptions&)
@@ -3750,6 +3762,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
         canLazilyParse(true),
         strictOption(false),
         extraWarningsOption(false),
+        forEachStatementOption(false),
         werrorOption(false),
         asmJSOption(AsmJSOption::Disabled),
         throwOnAsmJSValidationFailureOption(false),
@@ -3785,6 +3798,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
     bool canLazilyParse;
     bool strictOption;
     bool extraWarningsOption;
+    bool forEachStatementOption;
     bool werrorOption;
     AsmJSOption asmJSOption;
     bool throwOnAsmJSValidationFailureOption;
@@ -6134,6 +6148,12 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(ForOfIterator) {
      * after this call, do not examine val.
      */
     bool next(JS::MutableHandleValue val, bool* done);
+
+    /**
+     * Close the iterator.
+     * For the case that completion type is throw.
+     */
+    void closeThrow();
 
     /**
      * If initialized with throwOnNonCallable = false, check whether

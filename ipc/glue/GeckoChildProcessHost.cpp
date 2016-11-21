@@ -23,7 +23,7 @@
 #include "prenv.h"
 #include "nsXPCOMPrivate.h"
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_CONTENT_SANDBOX)
 #include "nsAppDirectoryServiceDefs.h"
 #endif
 
@@ -107,6 +107,34 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
 #endif
 {
     MOZ_COUNT_CTOR(GeckoChildProcessHost);
+
+#if defined(OS_WIN) && defined(MOZ_CONTENT_SANDBOX)
+    // Add $PROFILE/chrome to the white list because it may located on network
+    // drive.
+    if (mProcessType == GeckoProcessType_Content) {
+        nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
+        NS_ASSERTION(directoryService, "Expected XPCOM to be available");
+        if (directoryService) {
+            // Full path to the profile dir
+            nsCOMPtr<nsIFile> profileDir;
+            nsresult rv = directoryService->Get(NS_APP_USER_PROFILE_50_DIR,
+                                                NS_GET_IID(nsIFile),
+                                                getter_AddRefs(profileDir));
+            if (NS_SUCCEEDED(rv)) {
+                profileDir->Append(NS_LITERAL_STRING("chrome"));
+                profileDir->Append(NS_LITERAL_STRING("*"));
+                nsAutoCString path;
+                MOZ_ALWAYS_SUCCEEDS(profileDir->GetNativePath(path));
+                std::wstring wpath = UTF8ToWide(path.get());
+                // If the patch starts with "\\\\", it is a UNC path.
+                if (wpath.find(L"\\\\") == 0) {
+                    wpath.insert(1, L"??\\UNC");
+                }
+                mAllowedFilesRead.push_back(wpath);
+            }
+        }
+    }
+#endif
 }
 
 GeckoChildProcessHost::~GeckoChildProcessHost()

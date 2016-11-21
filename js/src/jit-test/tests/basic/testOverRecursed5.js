@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 JSON.__proto__[1] = new Uint8ClampedArray().buffer
 f = (function() {
     function g(c) {

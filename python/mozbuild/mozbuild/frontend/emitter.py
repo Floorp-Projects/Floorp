@@ -133,7 +133,6 @@ ALLOWED_XPCOM_GLUE = {
     ('test_transaction_helper', 'storage/test'),
     ('test_true_async', 'storage/test'),
     ('test_unlock_notify', 'storage/test'),
-    ('test_IHistory', 'toolkit/components/places/tests/cpp'),
     ('testcrasher', 'toolkit/crashreporter/test'),
     ('mediaconduit_unittests', 'media/webrtc/signaling/test'),
     ('mediapipeline_unittest', 'media/webrtc/signaling/test'),
@@ -184,8 +183,6 @@ class TreeMetadataEmitter(LoggingMixin):
         if os.path.exists(subconfigures):
             paths = open(subconfigures).read().splitlines()
         self._external_paths = set(mozpath.normsep(d) for d in paths)
-        # Add security/nss manually, since it doesn't have a subconfigure.
-        self._external_paths.add('security/nss')
 
         self._emitter_time = 0.0
         self._object_count = 0

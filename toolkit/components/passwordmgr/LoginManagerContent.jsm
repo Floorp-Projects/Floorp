@@ -1294,13 +1294,10 @@ UserAutoCompleteResult.prototype = {
       return duplicates;
     }
 
-    let currentMatchingLogins = (!LoginHelper.insecureAutofill && !this._isSecure) ?
-                                [] : this._matchingLogins;
-
     this._showInsecureFieldWarning = (!this._isSecure && LoginHelper.showInsecureFieldWarning) ? 1 : 0;
-    this.logins = currentMatchingLogins.sort(loginSort);
-    this.matchCount = currentMatchingLogins.length + this._showInsecureFieldWarning;
-    this._duplicateUsernames = findDuplicates(currentMatchingLogins);
+    this.logins = this._matchingLogins.sort(loginSort);
+    this.matchCount = this._matchingLogins.length + this._showInsecureFieldWarning;
+    this._duplicateUsernames = findDuplicates(this._matchingLogins);
 
     if (this.matchCount > 0) {
       this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;

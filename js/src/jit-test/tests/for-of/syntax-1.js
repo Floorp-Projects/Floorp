@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 // We correctly reject bogus for-of loop syntax.
 
 load(libdir + "asserts.js");

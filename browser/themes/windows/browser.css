@@ -2668,19 +2668,16 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
 
 #ContentSelectDropdown > menupopup > menucaption,
 #ContentSelectDropdown > menupopup > menuitem {
-  padding: 4px 6px;
+  padding: 0 6px;
+  border-width: 0;
 }
 
 #ContentSelectDropdown > menupopup > menucaption > .menu-iconic-text,
 #ContentSelectDropdown > menupopup > menuitem > .menu-iconic-text {
-  font: message-box;
-  font-size: 11px;
-  /**
-   * Remove the extra vertical padding set by menu.css since
-   * the menuitem itself will include enough padding.
-   */
-  padding-top: 0px;
-  padding-bottom: 0px;
+  /* Padding should follow the 4/12 ratio, where 12px is the default font-size
+     with 4px being the preferred padding size. */
+  padding-top: .3333em;
+  padding-bottom: .3333em;
 }
 
 #ContentSelectDropdown > menupopup > menucaption > .menu-iconic-text {
@@ -2700,8 +2697,10 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
   color: GrayText;
 }
 
-#ContentSelectDropdown > .isOpenedViaTouch > menucaption,
-#ContentSelectDropdown > .isOpenedViaTouch > menuitem {
-  padding-top: 11px;
-  padding-bottom: 11px;
+#ContentSelectDropdown > .isOpenedViaTouch > menucaption > .menu-iconic-text,
+#ContentSelectDropdown > .isOpenedViaTouch > menuitem > .menu-iconic-text {
+  /* Touch padding should follow the 11/12 ratio, where 12px is the default
+     font-size with 11px being the preferred padding size. */
+  padding-top: .9167em;
+  padding-bottom: .9167em;
 }

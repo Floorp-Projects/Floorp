@@ -197,7 +197,7 @@ define(function (require, exports, module) {
     render: function () {
       let object = this.props.object;
       let props = this.safePropIterator(object,
-        (this.props.mode == "long") ? 100 : 3);
+        (this.props.mode == "long") ? 10 : 3);
 
       let objectLink = this.props.objectLink || span;
       if (this.props.mode == "tiny") {

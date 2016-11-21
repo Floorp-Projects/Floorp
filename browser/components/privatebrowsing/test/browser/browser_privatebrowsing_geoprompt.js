@@ -24,9 +24,9 @@ add_task(function* test() {
 
       if (aPrivateMode) {
         // Make sure the notification is correctly displayed without a remember control
-        is(notification.secondaryActions.length, 0, "Secondary actions shouldn't exist (always/never remember)");
+        ok(!notification.options.checkbox.show, "Secondary actions should exist (always/never remember)");
       } else {
-        ok(notification.secondaryActions.length > 1, "Secondary actions should exist (always/never remember)");
+        ok(notification.options.checkbox.show, "Secondary actions should exist (always/never remember)");
       }
       notification.remove();
 

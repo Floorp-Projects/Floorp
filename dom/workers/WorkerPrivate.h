@@ -252,8 +252,6 @@ private:
   void
   PostMessageInternal(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                       const Optional<Sequence<JS::Value>>& aTransferable,
-                      UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
-                      PromiseNativeHandler* aHandler,
                       ErrorResult& aRv);
 
   nsresult
@@ -366,13 +364,6 @@ public:
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
               const Optional<Sequence<JS::Value>>& aTransferable,
               ErrorResult& aRv);
-
-  void
-  PostMessageToServiceWorker(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                             const Optional<Sequence<JS::Value>>& aTransferable,
-                             UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
-                             PromiseNativeHandler* aHandler,
-                             ErrorResult& aRv);
 
   void
   UpdateContextOptions(const JS::ContextOptions& aContextOptions);

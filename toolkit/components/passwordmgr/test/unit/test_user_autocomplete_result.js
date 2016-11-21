@@ -300,6 +300,26 @@ let expectedResults = [
       value: "",
       label: "This connection is not secure. Logins entered here could be compromised.",
       style: "insecureWarning"
+    }, {
+      value: "",
+      label: LABEL_NO_USERNAME,
+      style: ""
+    }, {
+      value: "tempuser1",
+      label: "tempuser1",
+      style: ""
+    }, {
+      value: "testuser2",
+      label: "testuser2",
+      style: ""
+    }, {
+      value: "testuser3",
+      label: "testuser3",
+      style: ""
+    }, {
+      value: "zzzuser4",
+      label: "zzzuser4",
+      style: ""
     }]
   },
   {
@@ -340,6 +360,26 @@ let expectedResults = [
       value: "",
       label: "This connection is not secure. Logins entered here could be compromised.",
       style: "insecureWarning"
+    }, {
+      value: "emptypass1",
+      label: LABEL_NO_USERNAME,
+      style: ""
+    }, {
+      value: "temppass1",
+      label: "tempuser1",
+      style: ""
+    }, {
+      value: "testpass2",
+      label: "testuser2",
+      style: ""
+    }, {
+      value: "testpass3",
+      label: "testuser3",
+      style: ""
+    }, {
+      value: "zzzpass4",
+      label: "zzzuser4",
+      style: ""
     }]
   },
   {

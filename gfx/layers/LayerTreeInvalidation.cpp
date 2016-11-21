@@ -157,7 +157,7 @@ struct LayerPropertiesBase : public LayerProperties
   {
     MOZ_COUNT_CTOR(LayerPropertiesBase);
   }
-  ~LayerPropertiesBase()
+  ~LayerPropertiesBase() override
   {
     MOZ_COUNT_DTOR(LayerPropertiesBase);
   }
@@ -167,11 +167,11 @@ protected:
   LayerPropertiesBase& operator=(const LayerPropertiesBase& a) = delete;
 
 public:
-  virtual nsIntRegion ComputeDifferences(Layer* aRoot,
-                                         NotifySubDocInvalidationFunc aCallback,
-                                         bool* aGeometryChanged);
+  nsIntRegion ComputeDifferences(Layer* aRoot,
+                                 NotifySubDocInvalidationFunc aCallback,
+                                 bool* aGeometryChanged) override;
 
-  virtual void MoveBy(const IntPoint& aOffset);
+  void MoveBy(const IntPoint& aOffset) override;
 
   nsIntRegion ComputeChange(NotifySubDocInvalidationFunc aCallback,
                             bool& aGeometryChanged)
@@ -454,8 +454,8 @@ protected:
   ColorLayerProperties& operator=(const ColorLayerProperties& a) = delete;
 
 public:
-  virtual nsIntRegion ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback,
-                                            bool& aGeometryChanged)
+  nsIntRegion ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback,
+                                    bool& aGeometryChanged) override
   {
     ColorLayer* color = static_cast<ColorLayer*>(mLayer.get());
 
@@ -505,8 +505,8 @@ struct ImageLayerProperties : public LayerPropertiesBase
     }
   }
 
-  virtual nsIntRegion ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback,
-                                            bool& aGeometryChanged)
+  nsIntRegion ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback,
+                                    bool& aGeometryChanged) override
   {
     ImageLayer* imageLayer = static_cast<ImageLayer*>(mLayer.get());
 
@@ -566,8 +566,8 @@ struct CanvasLayerProperties : public LayerPropertiesBase
     mFrameID = mImageHost ? mImageHost->GetFrameID() : -1;
   }
 
-  virtual nsIntRegion ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback,
-                                            bool& aGeometryChanged)
+  nsIntRegion ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback,
+                                    bool& aGeometryChanged) override
   {
     CanvasLayer* canvasLayer = static_cast<CanvasLayer*>(mLayer.get());
 
