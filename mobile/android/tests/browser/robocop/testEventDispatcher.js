@@ -48,13 +48,11 @@ function send_test_message(type) {
 
 function get_dispatcher(scope) {
   if (scope === 'global') {
-    return Services.androidBridge;
+    return EventDispatcher.instance;
   }
   if (scope === 'window') {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
-    let view = win.arguments[0].QueryInterface(Components.interfaces.nsIAndroidView);
-    ok(view, "View object should exist in window arguments: " + view);
-    return view;
+    return EventDispatcher.for(win);
   }
   ok(false, "Invalid scope argument: " + scope);
 }
