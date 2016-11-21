@@ -17,8 +17,6 @@
 
 namespace mozilla {
 
-class StartTimeRendezvous;
-
 typedef MozPromise<bool, bool, /* isExclusive = */ false> HaveStartTimePromise;
 
 typedef Variant<MediaData*, MediaResult> AudioCallbackData;
@@ -52,7 +50,6 @@ public:
 
   media::TimeUnit StartTime() const;
   RefPtr<MetadataPromise> ReadMetadata();
-  RefPtr<HaveStartTimePromise> AwaitStartTime();
 
   decltype(mAudioCallback)& AudioCallback() { return mAudioCallback; }
   decltype(mVideoCallback)& VideoCallback() { return mVideoCallback; }
@@ -130,7 +127,7 @@ private:
   const RefPtr<MediaDecoderReader> mReader;
 
   bool mShutdown = false;
-  RefPtr<StartTimeRendezvous> mStartTimeRendezvous;
+  Maybe<media::TimeUnit> mStartTime;
 
   MozPromiseRequestHolder<MediaDataPromise> mAudioDataRequest;
   MozPromiseRequestHolder<MediaDataPromise> mVideoDataRequest;

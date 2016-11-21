@@ -2,13 +2,20 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
+const {
+  // `fetchGuidsWithAnno` isn't exported, but we can still access it here via a
+  // backstage pass.
+  fetchGuidsWithAnno,
+} = Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 Cu.import("resource:///modules/PlacesUIUtils.jsm");
 
 Service.engineManager.register(BookmarksEngine);
@@ -23,17 +30,18 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 // Test helpers.
 function* verifyTrackerEmpty() {
-  let changes = engine.pullNewChanges();
-  equal(changes.count(), 0);
+  let changes = yield tracker.promiseChangedIDs();
+  deepEqual(changes, {});
   equal(tracker.score, 0);
 }
 
 function* resetTracker() {
-  tracker.clearChangedIDs();
+  yield PlacesTestUtils.markBookmarksAsSynced();
   tracker.resetScore();
 }
 
 function* cleanup() {
+  engine.lastSync = 0;
   store.wipe();
   yield resetTracker();
   yield stopTracking();
@@ -43,6 +51,7 @@ function* cleanup() {
 // after this is called (ie, things already tracked should be discarded.)
 function* startTracking() {
   Svc.Obs.notify("weave:engine:start-tracking");
+  yield PlacesTestUtils.markBookmarksAsSynced();
 }
 
 function* stopTracking() {
@@ -50,12 +59,12 @@ function* stopTracking() {
 }
 
 function* verifyTrackedItems(tracked) {
-  let changes = engine.pullNewChanges();
-  let trackedIDs = new Set(changes.ids());
+  let changedIDs = yield tracker.promiseChangedIDs();
+  let trackedIDs = new Set(Object.keys(changedIDs));
   for (let guid of tracked) {
-    ok(changes.has(guid), `${guid} should be tracked`);
-    ok(changes.getModifiedTimestamp(guid) > 0,
-      `${guid} should have a modified time`);
+    ok(guid in changedIDs, `${guid} should be tracked`);
+    ok(changedIDs[guid].modified > 0, `${guid} should have a modified time`);
+    ok(changedIDs[guid].counter >= -1, `${guid} should have a change counter`);
     trackedIDs.delete(guid);
   }
   equal(trackedIDs.size, 0, `Unhandled tracked IDs: ${
@@ -63,23 +72,118 @@ function* verifyTrackedItems(tracked) {
 }
 
 function* verifyTrackedCount(expected) {
-  let changes = engine.pullNewChanges();
-  equal(changes.count(), expected);
+  let changedIDs = yield tracker.promiseChangedIDs();
+  do_check_attribute_count(changedIDs, expected);
 }
 
-// Copied from PlacesSyncUtils.jsm.
-function findAnnoItems(anno, val) {
-  let annos = PlacesUtils.annotations;
-  return annos.getItemsWithAnnotation(anno, {}).filter(id =>
-    annos.getItemAnnotation(id, anno) == val);
+// A debugging helper that dumps the full bookmarks tree.
+function* dumpBookmarks() {
+  let columns = ["id", "title", "guid", "syncStatus", "syncChangeCounter", "position"];
+  return PlacesUtils.promiseDBConnection().then(connection => {
+    let all = [];
+    return connection.executeCached(`SELECT ${columns.join(", ")} FROM moz_bookmarks;`,
+                                    {},
+                                    row => {
+                                      let repr = {};
+                                      for (let column of columns) {
+                                        repr[column] = row.getResultByName(column);
+                                      }
+                                      all.push(repr);
+                                    }
+    ).then(() => {
+      dump("All bookmarks:\n");
+      dump(JSON.stringify(all, undefined, 2));
+    });
+  })
+}
+
+var populateTree = Task.async(function* populate(parentId, ...items) {
+  let guids = {};
+  for (let item of items) {
+    let itemId;
+    switch (item.type) {
+      case PlacesUtils.bookmarks.TYPE_BOOKMARK:
+        itemId = PlacesUtils.bookmarks.insertBookmark(parentId,
+          Utils.makeURI(item.url),
+          PlacesUtils.bookmarks.DEFAULT_INDEX, item.title);
+        break;
+
+      case PlacesUtils.bookmarks.TYPE_FOLDER: {
+        itemId = PlacesUtils.bookmarks.createFolder(parentId,
+          item.title, PlacesUtils.bookmarks.DEFAULT_INDEX);
+        Object.assign(guids, yield* populate(itemId, ...item.children));
+        break;
+      }
+
+      default:
+        throw new Error(`Unsupported item type: ${item.type}`);
+    }
+    if (item.exclude) {
+      PlacesUtils.annotations.setItemAnnotation(
+        itemId, BookmarkAnnos.EXCLUDEBACKUP_ANNO, "Don't back this up", 0,
+        PlacesUtils.annotations.EXPIRE_NEVER);
+    }
+    guids[item.title] = yield PlacesUtils.promiseItemGuid(itemId);
+  }
+  return guids;
+});
+
+function* insertBookmarksToMigrate() {
+  let mozBmk = yield PlacesUtils.bookmarks.insert({
+    guid: "0gtWTOgYcoJD",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "https://mozilla.org",
+  });
+  let fxBmk = yield PlacesUtils.bookmarks.insert({
+    guid: "0dbpnMdxKxfg",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "http://getfirefox.com",
+  });
+  let tbBmk = yield PlacesUtils.bookmarks.insert({
+    guid: "r5ouWdPB3l28",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "http://getthunderbird.com",
+  });
+  let bzBmk = yield PlacesUtils.bookmarks.insert({
+    guid: "YK5Bdq5MIqL6",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "https://bugzilla.mozilla.org",
+  });
+  let exampleBmk = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "https://example.com",
+  });
+
+  yield PlacesTestUtils.setBookmarkSyncFields({
+    guid: fxBmk.guid,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+  }, {
+    guid: tbBmk.guid,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN,
+  }, {
+    guid: exampleBmk.guid,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+  });
+
+  yield PlacesUtils.bookmarks.remove(exampleBmk.guid);
 }
 
 add_task(function* test_tracking() {
   _("Test starting and stopping the tracker");
 
+  // Remove existing tracking information for roots.
+  yield startTracking();
+
   let folder = PlacesUtils.bookmarks.createFolder(
     PlacesUtils.bookmarks.bookmarksMenuFolder,
     "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
+
+  // creating the folder should have made 2 changes - the folder itself and
+  // the parent of the folder.
+  yield verifyTrackedCount(2);
+  // Reset the changes as the rest of the test doesn't want to see these.
+  yield resetTracker();
+
   function createBmk() {
     return PlacesUtils.bookmarks.insertBookmark(
       folder, Utils.makeURI("http://getfirefox.com"),
@@ -87,37 +191,18 @@ add_task(function* test_tracking() {
   }
 
   try {
-    _("Create bookmark. Won't show because we haven't started tracking yet");
-    createBmk();
-    yield verifyTrackedCount(0);
-    do_check_eq(tracker.score, 0);
-
     _("Tell the tracker to start tracking changes.");
     yield startTracking();
     createBmk();
     // We expect two changed items because the containing folder
     // changed as well (new child).
     yield verifyTrackedCount(2);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
 
     _("Notifying twice won't do any harm.");
-    yield startTracking();
     createBmk();
     yield verifyTrackedCount(3);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 4);
-
-    _("Let's stop tracking again.");
-    yield resetTracker();
-    yield stopTracking();
-    createBmk();
-    yield verifyTrackedCount(0);
-    do_check_eq(tracker.score, 0);
-
-    _("Notifying twice won't do any harm.");
-    yield stopTracking();
-    createBmk();
-    yield verifyTrackedCount(0);
-    do_check_eq(tracker.score, 0);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
 
   } finally {
     _("Clean up.");
@@ -205,6 +290,11 @@ add_task(function* test_tracker_sql_batching() {
 
   do_check_eq(createdIDs.length, numItems);
   yield verifyTrackedCount(numItems + 1); // the folder is also tracked.
+  yield resetTracker();
+
+  PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.unfiledBookmarksFolder);
+  yield verifyTrackedCount(numItems + 1);
+
   yield cleanup();
 });
 
@@ -220,7 +310,7 @@ add_task(function* test_onItemAdded() {
       PlacesUtils.bookmarks.DEFAULT_INDEX);
     let syncFolderGUID = engine._store.GUIDForId(syncFolderID);
     yield verifyTrackedItems(["menu", syncFolderGUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
 
     yield resetTracker();
     yield startTracking();
@@ -232,7 +322,7 @@ add_task(function* test_onItemAdded() {
       "Sync Bookmark");
     let syncBmkGUID = engine._store.GUIDForId(syncBmkID);
     yield verifyTrackedItems([syncFolderGUID, syncBmkGUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
 
     yield resetTracker();
     yield startTracking();
@@ -243,7 +333,7 @@ add_task(function* test_onItemAdded() {
       PlacesUtils.bookmarks.getItemIndex(syncFolderID));
     let syncSepGUID = engine._store.GUIDForId(syncSepID);
     yield verifyTrackedItems(["menu", syncSepGUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -263,7 +353,7 @@ add_task(function* test_async_onItemAdded() {
       title: "Async Folder",
     });
     yield verifyTrackedItems(["menu", asyncFolder.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
 
     yield resetTracker();
     yield startTracking();
@@ -276,7 +366,7 @@ add_task(function* test_async_onItemAdded() {
       title: "Async Bookmark",
     });
     yield verifyTrackedItems([asyncFolder.guid, asyncBmk.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
 
     yield resetTracker();
     yield startTracking();
@@ -288,7 +378,7 @@ add_task(function* test_async_onItemAdded() {
       index: asyncFolder.index,
     });
     yield verifyTrackedItems(["menu", asyncSep.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -429,7 +519,7 @@ add_task(function* test_onItemTagged() {
 
     // bookmark should be tracked, folder should not be.
     yield verifyTrackedItems([bGUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 5);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -461,7 +551,7 @@ add_task(function* test_onItemUntagged() {
     PlacesUtils.tagging.untagURI(uri, ["foo"]);
 
     yield verifyTrackedItems([fx1GUID, fx2GUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 4);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -504,7 +594,7 @@ add_task(function* test_async_onItemUntagged() {
     yield PlacesUtils.bookmarks.remove(fxTag.guid);
 
     yield verifyTrackedItems([fxBmk1.guid, fxBmk2.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 4);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -562,7 +652,7 @@ add_task(function* test_async_onItemTagged() {
     });
 
     yield verifyTrackedItems([fxBmk1.guid, fxBmk2.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 6);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 4);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -697,7 +787,8 @@ add_task(function* test_onItemPostDataChanged() {
     // PlacesTransactions.NewBookmark.
     _("Post data for the bookmark should be ignored");
     yield PlacesUtils.setPostDataForBookmark(fx_id, "postData");
-    yield verifyTrackerEmpty();
+    yield verifyTrackedItems([]);
+    do_check_eq(tracker.score, 0);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -773,9 +864,7 @@ add_task(function* test_onItemAdded_filtered_root() {
 
     _("New root and bookmark should be ignored");
     yield verifyTrackedItems([]);
-    // ...But we'll still increment the score and filter out the changes at
-    // sync time.
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 6);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -783,7 +872,7 @@ add_task(function* test_onItemAdded_filtered_root() {
 });
 
 add_task(function* test_onItemDeleted_filtered_root() {
-  _("Deleted items outside the change roots should be tracked");
+  _("Deleted items outside the change roots should not be tracked");
 
   try {
     yield stopTracking();
@@ -800,13 +889,9 @@ add_task(function* test_onItemDeleted_filtered_root() {
 
     PlacesUtils.bookmarks.removeItem(rootBmkID);
 
-    // We shouldn't upload tombstones for items in filtered roots, but the
-    // `onItemRemoved` observer doesn't have enough context to determine
-    // the root, so we'll end up uploading it.
-    yield verifyTrackedItems([rootBmkGUID]);
-    // We'll increment the counter twice (once for the removed item, and once
-    // for the Places root), then filter out the root.
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    yield verifyTrackedItems([]);
+    // We'll still increment the counter for the removed item.
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -832,13 +917,15 @@ add_task(function* test_onPageAnnoChanged() {
     _("Add a page annotation");
     PlacesUtils.annotations.setPageAnnotation(pageURI, "URIProperties/characterSet",
       "UTF-8", 0, PlacesUtils.annotations.EXPIRE_NEVER);
-    yield verifyTrackerEmpty();
+    yield verifyTrackedItems([]);
+    do_check_eq(tracker.score, 0);
     yield resetTracker();
 
     _("Remove the page annotation");
     PlacesUtils.annotations.removePageAnnotation(pageURI,
       "URIProperties/characterSet");
-    yield verifyTrackerEmpty();
+    yield verifyTrackedItems([]);
+    do_check_eq(tracker.score, 0);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -877,7 +964,8 @@ add_task(function* test_onFaviconChanged() {
         },
         Services.scriptSecurityManager.getSystemPrincipal());
     });
-    yield verifyTrackerEmpty();
+    yield verifyTrackedItems([]);
+    do_check_eq(tracker.score, 0);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -901,9 +989,9 @@ add_task(function* test_onLivemarkAdded() {
     livemark.terminate();
 
     yield verifyTrackedItems(["menu", livemark.guid]);
-    // Three changes: one for the parent, one for creating the livemark
-    // folder, and one for setting the "livemark/feedURI" anno on the folder.
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    // Two observer notifications: one for creating the livemark folder, and
+    // one for setting the "livemark/feedURI" anno on the folder.
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -931,7 +1019,7 @@ add_task(function* test_onLivemarkDeleted() {
     });
 
     yield verifyTrackedItems(["menu", livemark.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -965,13 +1053,14 @@ add_task(function* test_onItemMoved() {
     yield verifyTrackedItems(['menu']);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
     yield resetTracker();
+    yield PlacesTestUtils.markBookmarksAsSynced();
 
     // Moving a bookmark to a different folder will track the old
     // folder, the new folder and the bookmark.
     PlacesUtils.bookmarks.moveItem(fx_id, PlacesUtils.bookmarks.toolbarFolder,
                                    PlacesUtils.bookmarks.DEFAULT_INDEX);
     yield verifyTrackedItems(['menu', 'toolbar', fx_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
 
   } finally {
     _("Clean up.");
@@ -1017,7 +1106,7 @@ add_task(function* test_async_onItemMoved_update() {
       index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     });
     yield verifyTrackedItems(['menu', 'toolbar', tbBmk.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -1170,7 +1259,7 @@ add_task(function* test_onItemDeleted_removeFolderTransaction() {
     _("Execute the remove folder transaction");
     txn.doTransaction();
     yield verifyTrackedItems(["menu", folder_guid, fx_guid, tb_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 6);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     yield resetTracker();
 
     _("Undo the remove folder transaction");
@@ -1180,13 +1269,13 @@ add_task(function* test_onItemDeleted_removeFolderTransaction() {
     let new_folder_guid = yield PlacesUtils.promiseItemGuid(folder_id);
 
     yield verifyTrackedItems(["menu", new_folder_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
     yield resetTracker();
 
     _("Redo the transaction");
     txn.redoTransaction();
     yield verifyTrackedItems(["menu", new_folder_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -1232,7 +1321,7 @@ add_task(function* test_treeMoved() {
       folder2_id, PlacesUtils.bookmarks.bookmarksMenuFolder, 0);
     // the menu and both folders should be tracked, the children should not be.
     yield verifyTrackedItems(['menu', folder1_guid, folder2_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -1262,7 +1351,7 @@ add_task(function* test_onItemDeleted() {
     PlacesUtils.bookmarks.removeItem(tb_id);
 
     yield verifyTrackedItems(['menu', tb_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -1294,7 +1383,7 @@ add_task(function* test_async_onItemDeleted() {
     yield PlacesUtils.bookmarks.remove(fxBmk.guid);
 
     yield verifyTrackedItems(["menu", fxBmk.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -1363,18 +1452,22 @@ add_task(function* test_async_onItemDeleted_eraseEverything() {
     _(`Bugs grandchild GUID: ${bugsGrandChildBmk.guid}`);
 
     yield startTracking();
-
+    // Simulate moving a synced item into a new folder. Deleting the folder
+    // should write a tombstone for the item, but not the folder.
+    yield PlacesTestUtils.setBookmarkSyncFields({
+      guid: bugsChildFolder.guid,
+      syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NEW,
+    });
     yield PlacesUtils.bookmarks.eraseEverything();
 
-    // `eraseEverything` removes all items from the database before notifying
-    // observers. Because of this, grandchild lookup in the tracker's
-    // `onItemRemoved` observer will fail. That means we won't track
-    // (bzBmk.guid, bugsGrandChildBmk.guid, bugsChildFolder.guid), even
-    // though we should.
+    // bugsChildFolder's sync status is still "NEW", so it shouldn't be
+    // tracked. bugsGrandChildBmk is "NORMAL", so we *should* write a
+    // tombstone and track it.
     yield verifyTrackedItems(["menu", mozBmk.guid, mdnBmk.guid, "toolbar",
                               bugsFolder.guid, "mobile", fxBmk.guid,
-                              tbBmk.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 10);
+                              tbBmk.guid, "unfiled", bzBmk.guid,
+                              bugsGrandChildBmk.guid]);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 8);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -1416,7 +1509,7 @@ add_task(function* test_onItemDeleted_removeFolderChildren() {
     PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.mobileFolderId);
 
     yield verifyTrackedItems(["mobile", fx_guid, tb_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 4);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -1461,7 +1554,7 @@ add_task(function* test_onItemDeleted_tree() {
     PlacesUtils.bookmarks.removeItem(folder2_id);
 
     yield verifyTrackedItems([fx_guid, tb_guid, folder1_guid, folder2_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 6);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
   } finally {
     _("Clean up.");
     yield cleanup();
@@ -1472,30 +1565,34 @@ add_task(function* test_mobile_query() {
   _("Ensure we correctly create the mobile query");
 
   try {
+    yield startTracking();
+
     // Creates the organizer queries as a side effect.
     let leftPaneId = PlacesUIUtils.leftPaneFolderId;
     _(`Left pane root ID: ${leftPaneId}`);
 
-    let allBookmarksIds = findAnnoItems("PlacesOrganizer/OrganizerQuery", "AllBookmarks");
-    equal(allBookmarksIds.length, 1, "Should create folder with all bookmarks queries");
-    let allBookmarkGuid = yield PlacesUtils.promiseItemGuid(allBookmarksIds[0]);
+    let allBookmarksGuids = yield fetchGuidsWithAnno("PlacesOrganizer/OrganizerQuery",
+                                                     "AllBookmarks");
+    equal(allBookmarksGuids.length, 1, "Should create folder with all bookmarks queries");
+    let allBookmarkGuid = allBookmarksGuids[0];
 
     _("Try creating query after organizer is ready");
     tracker._ensureMobileQuery();
-    let queryIds = findAnnoItems("PlacesOrganizer/OrganizerQuery", "MobileBookmarks");
-    equal(queryIds.length, 0, "Should not create query without any mobile bookmarks");
+    let queryGuids = yield fetchGuidsWithAnno("PlacesOrganizer/OrganizerQuery",
+                                              "MobileBookmarks");
+    equal(queryGuids.length, 0, "Should not create query without any mobile bookmarks");
 
     _("Insert mobile bookmark, then create query");
-    yield PlacesUtils.bookmarks.insert({
+    let mozBmk = yield PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.mobileGuid,
       url: "https://mozilla.org",
     });
     tracker._ensureMobileQuery();
-    queryIds = findAnnoItems("PlacesOrganizer/OrganizerQuery", "MobileBookmarks", {});
-    equal(queryIds.length, 1, "Should create query once mobile bookmarks exist");
+    queryGuids = yield fetchGuidsWithAnno("PlacesOrganizer/OrganizerQuery",
+                                          "MobileBookmarks");
+    equal(queryGuids.length, 1, "Should create query once mobile bookmarks exist");
 
-    let queryId = queryIds[0];
-    let queryGuid = yield PlacesUtils.promiseItemGuid(queryId);
+    let queryGuid = queryGuids[0];
 
     let queryInfo = yield PlacesUtils.bookmarks.fetch(queryGuid);
     equal(queryInfo.url, `place:folder=${PlacesUtils.mobileFolderId}`, "Query should point to mobile root");
@@ -1528,12 +1625,179 @@ add_task(function* test_mobile_query() {
       "Should fix query URL to point to mobile root");
 
     _("We shouldn't track the query or the left pane root");
-    yield verifyTrackedCount(0);
-    do_check_eq(tracker.score, 0);
+    yield verifyTrackedItems([mozBmk.guid, "mobile"]);
+    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 5);
   } finally {
     _("Clean up.");
     yield cleanup();
   }
+});
+
+add_task(function* test_skip_migration() {
+  yield* insertBookmarksToMigrate();
+
+  let originalTombstones = yield PlacesTestUtils.fetchSyncTombstones();
+  let originalFields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+    "0gtWTOgYcoJD", "0dbpnMdxKxfg", "r5ouWdPB3l28", "YK5Bdq5MIqL6");
+
+  let filePath = OS.Path.join(OS.Constants.Path.profileDir, "weave", "changes",
+    "bookmarks.json");
+
+  _("No tracker file");
+  {
+    yield Utils.jsonRemove("changes/bookmarks", tracker);
+    ok(!(yield OS.File.exists(filePath)), "Tracker file should not exist");
+
+    yield tracker._migrateOldEntries();
+
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      "0gtWTOgYcoJD", "0dbpnMdxKxfg", "r5ouWdPB3l28", "YK5Bdq5MIqL6");
+    deepEqual(fields, originalFields,
+      "Sync fields should not change if tracker file is missing");
+    let tombstones = yield PlacesTestUtils.fetchSyncTombstones();
+    deepEqual(tombstones, originalTombstones,
+      "Tombstones should not change if tracker file is missing");
+  }
+
+  _("Existing tracker file; engine disabled");
+  {
+    yield Utils.jsonSave("changes/bookmarks", tracker, {});
+    ok(yield OS.File.exists(filePath),
+      "Tracker file should exist before disabled engine migration");
+
+    engine.disabled = true;
+    yield tracker._migrateOldEntries();
+    engine.disabled = false;
+
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      "0gtWTOgYcoJD", "0dbpnMdxKxfg", "r5ouWdPB3l28", "YK5Bdq5MIqL6");
+    deepEqual(fields, originalFields,
+      "Sync fields should not change on disabled engine migration");
+    let tombstones = yield PlacesTestUtils.fetchSyncTombstones();
+    deepEqual(tombstones, originalTombstones,
+      "Tombstones should not change if tracker file is missing");
+
+    ok(!(yield OS.File.exists(filePath)),
+      "Tracker file should be deleted after disabled engine migration");
+  }
+
+  _("Existing tracker file; first sync");
+  {
+    yield Utils.jsonSave("changes/bookmarks", tracker, {});
+    ok(yield OS.File.exists(filePath),
+      "Tracker file should exist before first sync migration");
+
+    engine.lastSync = 0;
+    yield tracker._migrateOldEntries();
+
+    let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+      "0gtWTOgYcoJD", "0dbpnMdxKxfg", "r5ouWdPB3l28", "YK5Bdq5MIqL6");
+    deepEqual(fields, originalFields,
+      "Sync fields should not change on first sync migration");
+    let tombstones = yield PlacesTestUtils.fetchSyncTombstones();
+    deepEqual(tombstones, originalTombstones,
+      "Tombstones should not change if tracker file is missing");
+
+    ok(!(yield OS.File.exists(filePath)),
+      "Tracker file should be deleted after first sync migration");
+  }
+
+  yield* cleanup();
+});
+
+add_task(function* test_migrate_empty_tracker() {
+  _("Migration with empty tracker file");
+  yield* insertBookmarksToMigrate();
+
+  yield Utils.jsonSave("changes/bookmarks", tracker, {});
+
+  engine.lastSync = Date.now() / 1000;
+  yield tracker._migrateOldEntries();
+
+  let fields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+    "0gtWTOgYcoJD", "0dbpnMdxKxfg", "r5ouWdPB3l28", "YK5Bdq5MIqL6");
+  for (let field of fields) {
+    equal(field.syncStatus, PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      `Sync status of migrated bookmark ${field.guid} should be NORMAL`);
+    strictEqual(field.syncChangeCounter, 0,
+      `Change counter of migrated bookmark ${field.guid} should be 0`);
+  }
+
+  let tombstones = yield PlacesTestUtils.fetchSyncTombstones();
+  deepEqual(tombstones, [], "Migration should delete old tombstones");
+
+  let filePath = OS.Path.join(OS.Constants.Path.profileDir, "weave", "changes",
+    "bookmarks.json");
+  ok(!(yield OS.File.exists(filePath)),
+    "Tracker file should be deleted after empty tracker migration");
+
+  yield* cleanup();
+});
+
+add_task(function* test_migrate_existing_tracker() {
+  _("Migration with existing tracker entries");
+  yield* insertBookmarksToMigrate();
+
+  let mozBmk = yield PlacesUtils.bookmarks.fetch("0gtWTOgYcoJD");
+  let fxBmk = yield PlacesUtils.bookmarks.fetch("0dbpnMdxKxfg");
+  let mozChangeTime = Math.floor(mozBmk.lastModified / 1000) - 60;
+  let fxChangeTime = Math.floor(fxBmk.lastModified / 1000) + 60;
+  yield Utils.jsonSave("changes/bookmarks", tracker, {
+    "0gtWTOgYcoJD": mozChangeTime,
+    "0dbpnMdxKxfg": {
+      modified: fxChangeTime,
+      deleted: false,
+    },
+    "3kdIPWHs9hHC": {
+      modified: 1479494951,
+      deleted: true,
+    },
+    "l7DlMy2lL1jL": 1479496460,
+  });
+
+  engine.lastSync = Date.now() / 1000;
+  yield tracker._migrateOldEntries();
+
+  let changedFields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+    "0gtWTOgYcoJD", "0dbpnMdxKxfg");
+  for (let field of changedFields) {
+    if (field.guid == "0gtWTOgYcoJD") {
+      ok(field.lastModified.getTime(), mozBmk.lastModified.getTime(),
+        `Modified time for ${field.guid} should not be reset to older change time`);
+    } else if (field.guid == "0dbpnMdxKxfg") {
+      equal(field.lastModified.getTime(), fxChangeTime * 1000,
+        `Modified time for ${field.guid} should be updated to newer change time`);
+    }
+    equal(field.syncStatus, PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      `Sync status of migrated bookmark ${field.guid} should be NORMAL`);
+    ok(field.syncChangeCounter > 0,
+      `Change counter of migrated bookmark ${field.guid} should be > 0`);
+  }
+
+  let unchangedFields = yield PlacesTestUtils.fetchBookmarkSyncFields(
+    "r5ouWdPB3l28", "YK5Bdq5MIqL6");
+  for (let field of unchangedFields) {
+    equal(field.syncStatus, PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+      `Sync status of unchanged bookmark ${field.guid} should be NORMAL`);
+    strictEqual(field.syncChangeCounter, 0,
+      `Change counter of unchanged bookmark ${field.guid} should be 0`);
+  }
+
+  let tombstones = yield PlacesTestUtils.fetchSyncTombstones();
+  yield deepEqual(tombstones, [{
+    guid: "3kdIPWHs9hHC",
+    dateRemoved: new Date(1479494951 * 1000),
+  }, {
+    guid: "l7DlMy2lL1jL",
+    dateRemoved: new Date(1479496460 * 1000),
+  }], "Should write tombstones for deleted tracked items");
+
+  let filePath = OS.Path.join(OS.Constants.Path.profileDir, "weave", "changes",
+    "bookmarks.json");
+  ok(!(yield OS.File.exists(filePath)),
+    "Tracker file should be deleted after existing tracker migration");
+
+  yield* cleanup();
 });
 
 function run_test() {

@@ -1303,8 +1303,11 @@ SyncEngine.prototype = {
 
   _deleteId: function (id) {
     this._tracker.removeChangedID(id);
+    this._noteDeletedId(id);
+  },
 
-    // Remember this id to delete at the end of sync
+  // Marks an ID for deletion at the end of the sync.
+  _noteDeletedId(id) {
     if (this._delete.ids == null)
       this._delete.ids = [id];
     else
@@ -1631,9 +1634,12 @@ SyncEngine.prototype = {
       return;
     }
 
-    // Mark failed WBOs as changed again so they are reuploaded next time.
-    this.trackRemainingChanges();
-    this._modified.clear();
+    try {
+      // Mark failed WBOs as changed again so they are reuploaded next time.
+      this.trackRemainingChanges();
+    } finally {
+      this._modified.clear();
+    }
   },
 
   _sync: function () {
@@ -1783,6 +1789,11 @@ class Changeset {
   // Adds a change for a tracked ID to the changeset.
   set(id, change) {
     this.changes[id] = change;
+  }
+
+  // Adds multiple entries to the changeset.
+  insert(changes) {
+    Object.assign(this.changes, changes);
   }
 
   // Indicates whether an entry is in the changeset.

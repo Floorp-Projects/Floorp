@@ -359,7 +359,6 @@ public:
   void Enter()
   {
     MOZ_ASSERT(!mMaster->mVideoDecodeSuspended);
-    mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
   }
 
   void Exit() override
@@ -570,10 +569,6 @@ public:
     }
 
     mMaster->UpdatePlaybackPositionPeriodically();
-
-    // Ensure currentTime is up to date prior updating mNextFrameStatus so that
-    // the MediaDecoderOwner fire events at correct currentTime.
-    mMaster->UpdateNextFrameStatus();
 
     MOZ_ASSERT(!mMaster->IsPlaying() ||
                mMaster->IsStateMachineScheduled(),
@@ -1020,6 +1015,13 @@ public:
     // We've decoded all samples. We don't need decoders anymore.
     Reader()->ReleaseResources();
 
+    bool hasNextFrame = (!mMaster->HasAudio() || !mMaster->mAudioCompleted)
+      && (!mMaster->HasVideo() || !mMaster->mVideoCompleted);
+
+    mMaster->UpdateNextFrameStatus(hasNextFrame
+      ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
+      : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
+
     Step();
   }
 
@@ -1059,7 +1061,7 @@ public:
       mMaster->UpdatePlaybackPosition(clockTime);
 
       // Ensure readyState is updated before firing the 'ended' event.
-      mMaster->UpdateNextFrameStatus();
+      mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
 
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::PlaybackEnded);
 
@@ -1253,19 +1255,15 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
   if (Info().mMetadataDuration.isSome()) {
     mMaster->RecomputeDuration();
   } else if (Info().mUnadjustedMetadataEndTime.isSome()) {
-    RefPtr<Master> master = mMaster;
-    Reader()->AwaitStartTime()->Then(OwnerThread(), __func__,
-      [master] () {
-        NS_ENSURE_TRUE_VOID(!master->IsShutdown());
-        auto& info = master->mInfo.ref();
-        TimeUnit unadjusted = info.mUnadjustedMetadataEndTime.ref();
-        TimeUnit adjustment = master->mReader->StartTime();
-        info.mMetadataDuration.emplace(unadjusted - adjustment);
-        master->RecomputeDuration();
-      }, [master, this] () {
-        SWARN("Adjusting metadata end time failed");
-      }
-    );
+    const TimeUnit unadjusted = Info().mUnadjustedMetadataEndTime.ref();
+    const TimeUnit adjustment = Info().mStartTime;
+    mMaster->mInfo->mMetadataDuration.emplace(unadjusted - adjustment);
+    mMaster->RecomputeDuration();
+  }
+
+  // If we don't know the duration by this point, we assume infinity, per spec.
+  if (mMaster->mDuration.Ref().isNothing()) {
+    mMaster->mDuration = Some(TimeUnit::FromInfinity());
   }
 
   if (mMaster->HasVideo()) {
@@ -1275,22 +1273,11 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
          mMaster->GetAmpleVideoFrames());
   }
 
-  // In general, we wait until we know the duration before notifying the decoder.
-  // However, we notify  unconditionally in this case without waiting for the start
-  // time, since the caller might be waiting on metadataloaded to be fired before
-  // feeding in the CDM, which we need to decode the first frame (and
-  // thus get the metadata). We could fix this if we could compute the start
-  // time by demuxing without necessaring decoding.
-  bool waitingForCDM = Info().IsEncrypted() && !mMaster->mCDMProxy;
+  MOZ_ASSERT(mMaster->mDuration.Ref().isSome());
 
-  mMaster->mNotifyMetadataBeforeFirstFrame =
-    mMaster->mDuration.Ref().isSome() || waitingForCDM;
+  mMaster->EnqueueLoadedMetadataEvent();
 
-  if (mMaster->mNotifyMetadataBeforeFirstFrame) {
-    mMaster->EnqueueLoadedMetadataEvent();
-  }
-
-  if (waitingForCDM) {
+  if (Info().IsEncrypted() && !mMaster->mCDMProxy) {
     // Metadata parsing was successful but we're still waiting for CDM caps
     // to become available so that we can build the correct decryptor/decoder.
     SetState<WaitForCDMState>();
@@ -1342,8 +1329,6 @@ DecodingFirstFrameState::Enter(SeekJob aPendingSeek)
 
   // Dispatch tasks to decode first frames.
   mMaster->DispatchDecodeTasksIfNeeded();
-
-  mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
 }
 
 RefPtr<MediaDecoder::SeekPromise>
@@ -1406,6 +1391,8 @@ DecodingState::Enter()
     SetState<CompletedState>();
     return;
   }
+
+  mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_AVAILABLE);
 
   mDecodeStartTime = TimeStamp::Now();
 
@@ -1471,32 +1458,7 @@ void
 MediaDecoderStateMachine::
 SeekingState::SeekCompleted()
 {
-  int64_t seekTime = mSeekTask->GetSeekTarget().GetTime().ToMicroseconds();
-  int64_t newCurrentTime = seekTime;
-
-  // Setup timestamp state.
-  RefPtr<MediaData> video = mMaster->VideoQueue().PeekFront();
-  if (seekTime == mMaster->Duration().ToMicroseconds()) {
-    newCurrentTime = seekTime;
-  } else if (mMaster->HasAudio()) {
-    RefPtr<MediaData> audio = AudioQueue().PeekFront();
-    // Though we adjust the newCurrentTime in audio-based, and supplemented
-    // by video. For better UX, should NOT bind the slide position to
-    // the first audio data timestamp directly.
-    // While seeking to a position where there's only either audio or video, or
-    // seeking to a position lies before audio or video, we need to check if
-    // seekTime is bounded in suitable duration. See Bug 1112438.
-    int64_t audioStart = audio ? audio->mTime : seekTime;
-    // We only pin the seek time to the video start time if the video frame
-    // contains the seek time.
-    if (video && video->mTime <= seekTime && video->GetEndTime() > seekTime) {
-      newCurrentTime = std::min(audioStart, video->mTime);
-    } else {
-      newCurrentTime = audioStart;
-    }
-  } else {
-    newCurrentTime = video ? video->mTime : seekTime;
-  }
+  const int64_t newCurrentTime = mSeekTask->CalculateNewCurrentTime();
 
   bool isLiveStream = Resource()->IsLiveStream();
   if (newCurrentTime == mMaster->Duration().ToMicroseconds() && !isLiveStream) {
@@ -1537,13 +1499,9 @@ SeekingState::SeekCompleted()
   // Try to decode another frame to detect if we're at the end...
   SLOG("Seek completed, mCurrentPosition=%lld", mMaster->mCurrentPosition.Ref());
 
-  if (video) {
+  if (mMaster->VideoQueue().PeekFront()) {
     mMaster->mMediaSink->Redraw(Info().mVideo);
     mMaster->mOnPlaybackEvent.Notify(MediaEventType::Invalidate);
-  }
-
-  if (mVisibility == EventVisibility::Observable) {
-    mMaster->UpdateNextFrameStatus();
   }
 
   SetState<DecodingState>();
@@ -1699,7 +1657,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS),
   mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_USECS),
   mAudioCaptured(false),
-  mNotifyMetadataBeforeFirstFrame(false),
   mMinimizePreroll(false),
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
@@ -1723,7 +1680,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_MIRROR(mIsVisible, true),
   INIT_CANONICAL(mDuration, NullableTimeUnit()),
   INIT_CANONICAL(mIsShutdown, false),
-  INIT_CANONICAL(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED),
+  INIT_CANONICAL(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE),
   INIT_CANONICAL(mCurrentPosition, 0),
   INIT_CANONICAL(mPlaybackOffset, 0),
   INIT_CANONICAL(mIsAudioDataAudible, false)
@@ -1831,28 +1788,6 @@ MediaDecoderStateMachine::CreateMediaSink(bool aAudioCaptured)
                   mVideoFrameContainer, *mFrameStats,
                   sVideoQueueSendToCompositorSize);
   return mediaSink.forget();
-}
-
-bool MediaDecoderStateMachine::HasFutureAudio()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  NS_ASSERTION(HasAudio(), "Should only call HasFutureAudio() when we have audio");
-  // We've got audio ready to play if:
-  // 1. We've not completed playback of audio, and
-  // 2. we either have more than the threshold of decoded audio available, or
-  //    we've completely decoded all audio (but not finished playing it yet
-  //    as per 1).
-  return !mAudioCompleted &&
-         (GetDecodedAudioDuration() >
-            mLowAudioThresholdUsecs * mPlaybackRate ||
-          AudioQueue().IsFinished());
-}
-
-bool MediaDecoderStateMachine::HaveNextFrameData()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  return (!HasAudio() || HasFutureAudio()) &&
-         (!HasVideo() || VideoQueue().GetSize() > 1);
 }
 
 int64_t
@@ -2345,7 +2280,10 @@ void MediaDecoderStateMachine::RecomputeDuration()
     duration = TimeUnit::FromSeconds(d);
   } else if (mEstimatedDuration.Ref().isSome()) {
     duration = mEstimatedDuration.Ref().ref();
-  } else if (Info().mMetadataDuration.isSome()) {
+  } else if (mInfo.isSome() && Info().mMetadataDuration.isSome()) {
+    // We need to check mInfo.isSome() because that this method might be invoked
+    // while mObservedDuration is changed which might before the metadata been
+    // read.
     duration = Info().mMetadataDuration.ref();
   } else {
     return;
@@ -2806,22 +2744,12 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
 
   mMediaSink->Redraw(Info().mVideo);
 
-  // If we don't know the duration by this point, we assume infinity, per spec.
-  if (mDuration.Ref().isNothing()) {
-    mDuration = Some(TimeUnit::FromInfinity());
-  }
-
   DECODER_LOG("Media duration %lld, "
               "transportSeekable=%d, mediaSeekable=%d",
               Duration().ToMicroseconds(), mResource->IsTransportSeekable(), mMediaSeekable);
 
   // Get potentially updated metadata
   mReader->ReadUpdatedMetadata(mInfo.ptr());
-
-  if (!mNotifyMetadataBeforeFirstFrame) {
-    // If we didn't have duration and/or start time before, we should now.
-    EnqueueLoadedMetadataEvent();
-  }
 
   EnqueueFirstFrameLoadedEvent();
 }
@@ -2963,15 +2891,6 @@ MediaDecoderStateMachine::UpdateNextFrameStatus(NextFrameStatus aStatus)
     DECODER_LOG("Changed mNextFrameStatus to %s", ToStr(aStatus));
     mNextFrameStatus = aStatus;
   }
-}
-
-void
-MediaDecoderStateMachine::UpdateNextFrameStatus()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  UpdateNextFrameStatus(HaveNextFrameData()
-    ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
-    : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
 }
 
 bool

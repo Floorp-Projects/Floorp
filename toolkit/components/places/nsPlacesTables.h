@@ -107,6 +107,34 @@
     ", dateAdded INTEGER" \
     ", lastModified INTEGER" \
     ", guid TEXT" \
+    /* The sync status is determined from the change source. We set this to
+       SYNC_STATUS_NEW = 1 for new local bookmarks, and SYNC_STATUS_NORMAL = 2
+       for bookmarks from other devices. Uploading a local bookmark for the
+       first time changes its status to SYNC_STATUS_NORMAL. For bookmarks
+       restored from a backup, we set SYNC_STATUS_UNKNOWN = 0, indicating that
+       Sync should reconcile them with bookmarks on the server. If Sync is
+       disconnected or never set up, all bookmarks will stay in SYNC_STATUS_NEW.
+    */ \
+    ", syncStatus INTEGER NOT NULL DEFAULT 0" \
+    /* This field is incremented for every bookmark change that should trigger
+       a sync. It's a counter instead of a Boolean so that we can track changes
+       made during a sync, and queue them for the next sync. Changes made by
+       Sync don't bump the counter, to avoid sync loops. If Sync is
+       disconnected, we'll reset the counter to 1 for all bookmarks.
+    */ \
+    ", syncChangeCounter INTEGER NOT NULL DEFAULT 1" \
+  ")" \
+)
+
+// This table stores tombstones for bookmarks with SYNC_STATUS_NORMAL. We
+// upload tombstones during a sync, and delete them from this table on success.
+// If Sync is disconnected, we'll delete all stored tombstones. If Sync is
+// never set up, we'll never write new tombstones, since all bookmarks will stay
+// in SYNC_STATUS_NEW.
+#define CREATE_MOZ_BOOKMARKS_DELETED NS_LITERAL_CSTRING( \
+  "CREATE TABLE moz_bookmarks_deleted (" \
+    "  guid TEXT PRIMARY KEY" \
+    ", dateRemoved INTEGER NOT NULL DEFAULT 0" \
   ")" \
 )
 

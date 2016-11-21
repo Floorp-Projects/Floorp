@@ -39542,10 +39542,22 @@
             "url": "/uievents/order-of-events/focus-events/focus-automated-blink-webkit.html"
           }
         ],
+        "web-animations/animation-model/animation-types/spacing-keyframes-filters.html": [
+          {
+            "path": "web-animations/animation-model/animation-types/spacing-keyframes-filters.html",
+            "url": "/web-animations/animation-model/animation-types/spacing-keyframes-filters.html"
+          }
+        ],
         "web-animations/animation-model/animation-types/spacing-keyframes-shapes.html": [
           {
             "path": "web-animations/animation-model/animation-types/spacing-keyframes-shapes.html",
             "url": "/web-animations/animation-model/animation-types/spacing-keyframes-shapes.html"
+          }
+        ],
+        "web-animations/animation-model/animation-types/spacing-keyframes-transform.html": [
+          {
+            "path": "web-animations/animation-model/animation-types/spacing-keyframes-transform.html",
+            "url": "/web-animations/animation-model/animation-types/spacing-keyframes-transform.html"
           }
         ],
         "web-animations/interfaces/KeyframeEffect/copy-contructor.html": [

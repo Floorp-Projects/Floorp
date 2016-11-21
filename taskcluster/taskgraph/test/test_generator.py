@@ -7,7 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import unittest
 
 from ..generator import TaskGraphGenerator, Kind
-from .. import graph
+from .. import graph, target_tasks as target_tasks_mod
 from ..task import base
 from mozunit import main
 
@@ -65,7 +65,15 @@ class TestGenerator(unittest.TestCase):
 
         def target_tasks_method(full_task_graph, parameters):
             return self.target_tasks
-        return WithFakeKind('/root', {'kinds': kinds}, target_tasks_method)
+
+        target_tasks_mod._target_task_methods['test_method'] = target_tasks_method
+
+        parameters = {
+            'kinds': kinds,
+            'target_tasks_method': 'test_method',
+        }
+
+        return WithFakeKind('/root', parameters)
 
     def test_kind_ordering(self):
         "When task kinds depend on each other, they are loaded in postorder"

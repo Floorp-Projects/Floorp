@@ -36,6 +36,11 @@ all-tests:
     - web-platform-tests-wdspec
     - xpcshell
 
+stylo-tests:
+    - cppunit
+    - crashtest
+    - reftest-stylo
+
 asan-tests:
     - cppunit
     - crashtest

@@ -1,9 +1,14 @@
-<!doctype html>
+<!DOCTYPE html>
 <meta charset=utf-8>
-<script src="../testcommon.js"></script>
+<title>Keyframe spacing tests on transform</title>
+<link rel="help" href="https://w3c.github.io/web-animations/#spacing-keyframes">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../../testcommon.js"></script>
 <body>
+<div id="log"></div>
 <script>
-'use strict';
+"use strict";
 
 const pi  = Math.PI;
 const cos = Math.cos;
@@ -46,65 +51,65 @@ function createMatrix(elements, Is3D) {
 }
 
 test(function(t) {
-  var anim = addDiv(t).animate([ { transform: "none" },
-                                 { transform: "translate(-20px)" },
-                                 { transform: "translate(100px)" },
-                                 { transform: "translate(50px)"} ],
-                               { spacing: "paced(transform)" });
+  var anim = createDiv(t).animate([ { transform: "none" },
+                                    { transform: "translate(-20px)" },
+                                    { transform: "translate(100px)" },
+                                    { transform: "translate(50px)"} ],
+                                  { spacing: "paced(transform)" });
   assert_animation_offsets(anim, [ 0, 20, 120, 50 ]);
 }, 'Test spacing on translate' );
 
 test(function(t) {
   var anim =
-    addDiv(t).animate([ { transform: "none" },
-                        { transform: "translate3d(-20px, 10px, 100px)" },
-                        { transform: "translate3d(100px, 200px, 50px)" },
-                        { transform: "translate(50px, -10px)"} ],
-                      { spacing: "paced(transform)" });
+    createDiv(t).animate([ { transform: "none" },
+                           { transform: "translate3d(-20px, 10px, 100px)" },
+                           { transform: "translate3d(100px, 200px, 50px)" },
+                           { transform: "translate(50px, -10px)"} ],
+                         { spacing: "paced(transform)" });
   var dist = [ 0,
-               Math.sqrt(20 * 20 + 10 * 10 + 100 * 100),
-               Math.sqrt(120 * 120 + 190 * 190 + 50 * 50),
-               Math.sqrt(50 * 50 + 210 * 210 + 50 * 50) ];
+               sqrt(20 * 20 + 10 * 10 + 100 * 100),
+               sqrt(120 * 120 + 190 * 190 + 50 * 50),
+               sqrt(50 * 50 + 210 * 210 + 50 * 50) ];
   assert_animation_offsets(anim, dist);
 }, 'Test spacing on translate3d' );
 
 test(function(t) {
-  var anim = addDiv(t).animate([ { transform: "scale(0.5)" },
-                                 { transform: "scale(4.5)" },
-                                 { transform: "scale(2.5)" },
-                                 { transform: "none"} ],
-                               { spacing: "paced(transform)" });
+  var anim = createDiv(t).animate([ { transform: "scale(0.5)" },
+                                    { transform: "scale(4.5)" },
+                                    { transform: "scale(2.5)" },
+                                    { transform: "none"} ],
+                                  { spacing: "paced(transform)" });
   assert_animation_offsets(anim, [ 0, 4.0, 2.0, 1.5 ]);
 }, 'Test spacing on scale' );
 
 test(function(t) {
-  var anim = addDiv(t).animate([ { transform: "scale(0.5, 0.5)" },
-                                 { transform: "scale3d(4.5, 5.0, 2.5)" },
-                                 { transform: "scale3d(2.5, 1.0, 2.0)" },
-                                 { transform: "scale3d(1, 0.5, 1.0)"} ],
-                               { spacing:"paced(transform)" });
+  var anim = createDiv(t).animate([ { transform: "scale(0.5, 0.5)" },
+                                    { transform: "scale3d(4.5, 5.0, 2.5)" },
+                                    { transform: "scale3d(2.5, 1.0, 2.0)" },
+                                    { transform: "scale3d(1, 0.5, 1.0)"} ],
+                                  { spacing:"paced(transform)" });
   var dist = [ 0,
-               Math.sqrt(4.0 * 4.0 + 4.5 * 4.5 + 1.5 * 1.5),
-               Math.sqrt(2.0 * 2.0 + 4.0 * 4.0 + 0.5 * 0.5),
-               Math.sqrt(1.5 * 1.5 + 0.5 * 0.5 + 1.0 * 1.0) ];
+               sqrt(4.0 * 4.0 + 4.5 * 4.5 + 1.5 * 1.5),
+               sqrt(2.0 * 2.0 + 4.0 * 4.0 + 0.5 * 0.5),
+               sqrt(1.5 * 1.5 + 0.5 * 0.5 + 1.0 * 1.0) ];
   assert_animation_offsets(anim, dist);
 }, 'Test spacing on scale3d' );
 
 test(function(t) {
-  var anim = addDiv(t).animate([ { transform: "rotate(60deg)" },
-                                 { transform: "none" },
-                                 { transform: "rotate(720deg)" },
-                                 { transform: "rotate(-360deg)"} ],
-                               { spacing: "paced(transform)" });
+  var anim = createDiv(t).animate([ { transform: "rotate(60deg)" },
+                                    { transform: "none" },
+                                    { transform: "rotate(720deg)" },
+                                    { transform: "rotate(-360deg)"} ],
+                                  { spacing: "paced(transform)" });
   assert_animation_offsets(anim, [ 0, 60, 720, 1080 ]);
 }, 'Test spacing on rotate' );
 
 test(function(t) {
-  var anim = addDiv(t).animate([ { transform: "rotate3d(1,0,0,60deg)" },
-                                 { transform: "rotate3d(1,0,0,70deg)" },
-                                 { transform: "rotate3d(0,0,1,-110deg)" },
-                                 { transform: "rotate3d(1,0,0,219deg)"} ],
-                               { spacing: "paced(transform)" });
+  var anim = createDiv(t).animate([ { transform: "rotate3d(1,0,0,60deg)" },
+                                    { transform: "rotate3d(1,0,0,70deg)" },
+                                    { transform: "rotate3d(0,0,1,-110deg)" },
+                                    { transform: "rotate3d(1,0,0,219deg)"} ],
+                                  { spacing: "paced(transform)" });
   var dist = [ 0,
                getAngleDist({ axis: [1,0,0], angle: 60 * pi / 180 },
                             { axis: [1,0,0], angle: 70 * pi / 180 }),
@@ -116,20 +121,20 @@ test(function(t) {
 }, 'Test spacing on rotate3d' );
 
 test(function(t) {
-  var anim = addDiv(t).animate([ { transform: "skew(60deg)" },
-                                 { transform: "none" },
-                                 { transform: "skew(-90deg)" },
-                                 { transform: "skew(90deg)"} ],
-                               { spacing: "paced(transform)" });
+  var anim = createDiv(t).animate([ { transform: "skew(60deg)" },
+                                    { transform: "none" },
+                                    { transform: "skew(-90deg)" },
+                                    { transform: "skew(90deg)"} ],
+                                  { spacing: "paced(transform)" });
   assert_animation_offsets(anim, [ 0, 60, 90, 180 ]);
 }, 'Test spacing on skew' );
 
 test(function(t) {
-  var anim = addDiv(t).animate([ { transform: "skew(60deg, 30deg)" },
-                                 { transform: "none" },
-                                 { transform: "skew(-90deg, 60deg)" },
-                                 { transform: "skew(90deg, 60deg)"} ],
-                               { spacing: "paced(transform)" });
+  var anim = createDiv(t).animate([ { transform: "skew(60deg, 30deg)" },
+                                    { transform: "none" },
+                                    { transform: "skew(-90deg, 60deg)" },
+                                    { transform: "skew(90deg, 60deg)"} ],
+                                  { spacing: "paced(transform)" });
   var dist = [ 0,
                sqrt(60 * 60 + 30 * 30),
                sqrt(90 * 90 + 60 * 60),
@@ -145,22 +150,21 @@ test(function(t) {
   // perspective 2: (0, 0, -1/infinity = 0, 1);
   // perspective 3: (0, 0, -1/1024, 1);
   // perspective 4: (0, 0, -1/32, 1);
-  var anim = addDiv(t).animate([ { transform: "perspective(128px)" },
-                                 { transform: "none" },
-                                 { transform: "perspective(1024px)" },
-                                 { transform: "perspective(32px)"} ],
-                               { spacing: "paced(transform)" });
-  assert_animation_offsets(anim,
-                           [ 0, 1/128, 1/1024, 1/32 - 1/1024 ]);
+  var anim = createDiv(t).animate([ { transform: "perspective(128px)" },
+                                    { transform: "none" },
+                                    { transform: "perspective(1024px)" },
+                                    { transform: "perspective(32px)"} ],
+                                  { spacing: "paced(transform)" });
+  assert_animation_offsets(anim, [ 0, 1/128, 1/1024, 1/32 - 1/1024 ]);
 }, 'Test spacing on perspective' );
 
 test(function(t) {
   var anim =
-    addDiv(t).animate([ { transform: "none" },
-                        { transform: "rotate(180deg) translate(0px)" },
-                        { transform: "rotate(180deg) translate(1000px)" },
-                        { transform: "rotate(360deg) translate(1000px)"} ],
-                      { spacing: "paced(transform)" });
+    createDiv(t).animate([ { transform: "none" },
+                           { transform: "rotate(180deg) translate(0px)" },
+                           { transform: "rotate(180deg) translate(1000px)" },
+                           { transform: "rotate(360deg) translate(1000px)"} ],
+                         { spacing: "paced(transform)" });
   var dist = [ 0,
                sqrt(pi * pi + 0),
                sqrt(1000 * 1000),
@@ -177,11 +181,11 @@ test(function(t) {
                                 -sin(pi), cos(pi),
                                  1000, 0 ]);
   const matrix3 = createMatrix([ 1.5, 0, 0, 0.7, 1000, 0 ]);
-  var anim = addDiv(t).animate([ { transform: "none" },
-                                 { transform: matrix1 },
-                                 { transform: matrix2 },
-                                 { transform: matrix3 } ],
-                               { spacing: "paced(transform)" });
+  var anim = createDiv(t).animate([ { transform: "none" },
+                                    { transform: matrix1 },
+                                    { transform: matrix2 },
+                                    { transform: matrix3 } ],
+                                  { spacing: "paced(transform)" });
   var dist = [ 0,
                sqrt(100 * 100 + 50 * 50 + pi/4 * pi/4),
                sqrt(900 * 900 + 50 * 50 + pi * pi + pi/4 * pi/4),
@@ -205,11 +209,11 @@ test(function(t) {
                                  0, 0.7, 0, 0,
                                  0, 0, 2.2, 0,
                                  1000, 0, 0, 1 ], true);
-  var anim = addDiv(t).animate([ { transform: "none" },
-                                 { transform: matrix1 },
-                                 { transform: matrix2 },
-                                 { transform: matrix3 } ],
-                               { spacing: "paced(transform)" });
+  var anim = createDiv(t).animate([ { transform: "none" },
+                                    { transform: matrix1 },
+                                    { transform: matrix2 },
+                                    { transform: matrix3 } ],
+                                  { spacing: "paced(transform)" });
   var dist = [ 0,
                sqrt(100 * 100 + 50 * 50 + 10 * 10 + pi/4 * pi/4),
                sqrt(900 * 900 + 50 * 50 + 10 * 10 + pi/4 * pi/4 + pi * pi),
@@ -219,13 +223,13 @@ test(function(t) {
 
 test(function(t) {
   var anim =
-    addDiv(t).animate([ { transform: "none" },
-                        { transform: "translate(100px, 50px) skew(45deg)" },
-                        { transform: "translate(1000px) " +
-                                     "rotate3d(1, 0, 0, 180deg)" },
-                        { transform: "translate(1000px) " +
-                                     "scale3d(2.5, 0.5, 0.7)" } ],
-                      { spacing: "paced(transform)" });
+    createDiv(t).animate([ { transform: "none" },
+                           { transform: "translate(100px, 50px) skew(45deg)" },
+                           { transform: "translate(1000px) " +
+                                        "rotate3d(1, 0, 0, 180deg)" },
+                           { transform: "translate(1000px) " +
+                                        "scale3d(2.5, 0.5, 0.7)" } ],
+                         { spacing: "paced(transform)" });
 
   var dist = [ 0,
                sqrt(100 * 100 + 50 * 50 + pi/4 * pi/4),
@@ -233,8 +237,6 @@ test(function(t) {
                sqrt(1.5 * 1.5 + 0.5 * 0.5 + 0.3 * 0.3 + pi * pi) ];
   assert_animation_offsets(anim, dist);
 }, 'Test spacing on mismatched transform list' );
-
-done();
 
 </script>
 </body>
