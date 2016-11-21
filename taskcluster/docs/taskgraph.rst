@@ -91,8 +91,8 @@ Graph generation, as run via ``mach taskgraph decision``, proceeds as follows:
 #. For all kinds, generate all tasks.  The result is the "full task set"
 #. Create dependency links between tasks using kind-specific mechanisms.  The
    result is the "full task graph".
-#. Select the target tasks (based on try syntax or a tree-specific
-   specification).  The result is the "target task set".
+#. Filter the target tasks (based on a series of filters, such as try syntax,
+   tree-specific specifications, etc). The result is the "target task set".
 #. Based on the full task graph, calculate the transitive closure of the target
    task set.  That is, the target tasks and all requirements of those tasks.
    The result is the "target task graph".

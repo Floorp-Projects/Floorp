@@ -697,7 +697,7 @@ struct SmartPointerStorageClass
   : mozilla::Conditional<IsRefcountedSmartPointer<T>::value,
                          StorensRefPtrPassByPtr<
                            typename StripSmartPointer<T>::Type>,
-                         StoreCopyPassByValue<T>>
+                         StoreCopyPassByConstLRef<T>>
 {};
 
 template<typename T>
@@ -737,9 +737,9 @@ struct NonParameterStorageClass
 // - T&&       -> StoreCopyPassByRRef<T>         : Store T, pass Move(T).
 // - RefPtr<T>, nsCOMPtr<T>
 //             -> StorensRefPtrPassByPtr<T>      : Store RefPtr<T>, pass T*
-// - Other T   -> StoreCopyPassByValue<T>        : Store T, pass T.
+// - Other T   -> StoreCopyPassByConstLRef<T>    : Store T, pass const T&.
 // Other available explicit options:
-// -              StoreCopyPassByConstLRef<T>    : Store T, pass const T&.
+// -              StoreCopyPassByValue<T>        : Store T, pass T.
 // -              StoreCopyPassByLRef<T>         : Store T, pass T& (of copy!)
 // -              StoreCopyPassByConstPtr<T>     : Store T, pass const T*
 // -              StoreCopyPassByPtr<T>          : Store T, pass T* (of copy!)

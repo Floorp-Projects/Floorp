@@ -109,14 +109,6 @@ nsConditionalResetStyleData::GetConditionalStyleData(nsStyleStructID aSID,
   return nullptr;
 }
 
-// Creates and returns an imgRequestProxy based on the specified
-// value in aValue.
-static imgRequestProxy*
-GetImageRequest(nsPresContext* aPresContext, const nsCSSValue& aValue)
-{
-  return aValue.GetImageValue(aPresContext->Document());
-}
-
 // Creates an imgRequestProxy based on the specified value in
 // aValue and calls aCallback with it.  If the nsPresContext
 // is static (e.g. for printing), then a static request (i.e.
@@ -142,16 +134,13 @@ SetStyleImageRequest(function<void(nsStyleImageRequest*)> aCallback,
                        nsStyleImageRequest::Mode::Track)
 {
   SetImageRequest([&](imgRequestProxy* aProxy) {
-    RefPtr<nsStyleImageRequest> request;
-    if (aProxy) {
-      css::ImageValue* imageValue = aValue.GetImageStructValue();
-      ImageTracker* imageTracker =
-        (aModeFlags & nsStyleImageRequest::Mode::Track)
-        ? aPresContext->Document()->ImageTracker()
-        : nullptr;
-      request =
-        new nsStyleImageRequest(aModeFlags, aProxy, imageValue, imageTracker);
-    }
+    css::ImageValue* imageValue = aValue.GetImageStructValue();
+    ImageTracker* imageTracker =
+      (aModeFlags & nsStyleImageRequest::Mode::Track)
+      ? aPresContext->Document()->ImageTracker()
+      : nullptr;
+    RefPtr<nsStyleImageRequest> request =
+      new nsStyleImageRequest(aModeFlags, aProxy, imageValue, imageTracker);
     aCallback(request);
   }, aPresContext, aValue);
 }
@@ -5103,17 +5092,16 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
       const nsCSSValueList* list = cursorValue->GetListValue();
       for ( ; list->mValue.GetUnit() == eCSSUnit_Array; list = list->mNext) {
         nsCSSValue::Array* arr = list->mValue.GetArrayValue();
-        imgRequestProxy* req =
-          GetImageRequest(aContext->PresContext(), arr->Item(0));
-        if (req) {
+        SetStyleImageRequest([&](nsStyleImageRequest* req) {
           nsCursorImage* item = ui->mCursorImages.AppendElement();
-          item->SetImage(req);
+          item->mImage = req;
           if (arr->Item(1).GetUnit() != eCSSUnit_Null) {
             item->mHaveHotspot = true;
             item->mHotspotX = arr->Item(1).GetFloatValue();
             item->mHotspotY = arr->Item(2).GetFloatValue();
           }
-        }
+        }, aContext->PresContext(), arr->Item(0),
+           nsStyleImageRequest::Mode::Discard);
       }
 
       NS_ASSERTION(list, "Must have non-array value at the end");

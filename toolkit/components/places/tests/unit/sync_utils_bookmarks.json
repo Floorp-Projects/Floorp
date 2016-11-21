@@ -1,0 +1,80 @@
+{
+  "guid": "root________",
+  "title": "",
+  "index": 0,
+  "dateAdded": 1449080379324000,
+  "lastModified": 1471365727344000,
+  "id": 1,
+  "type": "text/x-moz-place-container",
+  "root": "placesRoot",
+  "children": [{
+    "guid": "menu________",
+    "title": "Bookmarks Menu",
+    "index": 0,
+    "dateAdded": 1449080379324000,
+    "lastModified": 1471365683893000,
+    "id": 2,
+    "type": "text/x-moz-place-container",
+    "root": "bookmarksMenuFolder",
+    "children": [{
+      "guid": "NnvGl3CRA4hC",
+      "title": "Mozilla",
+      "index": 0,
+      "dateAdded": 1471365662585000,
+      "lastModified": 1471365667573000,
+      "id": 6,
+      "charset": "UTF-8",
+      "annos": [{
+        "name": "bookmarkProperties/description",
+        "flags": 0,
+        "expires": 4,
+        "value": "Mozilla home"
+      }],
+      "type": "text/x-moz-place",
+      "uri": "https://www.mozilla.org/"
+    }]
+  }, {
+    "guid": "toolbar_____",
+    "title": "Bookmarks Toolbar",
+    "index": 1,
+    "dateAdded": 1449080379324000,
+    "lastModified": 1471365683893000,
+    "id": 3,
+    "annos": [{
+      "name": "bookmarkProperties/description",
+      "flags": 0,
+      "expires": 4,
+      "value": "Add bookmarks to this folder to see them displayed on the Bookmarks Toolbar"
+    }],
+    "type": "text/x-moz-place-container",
+    "root": "toolbarFolder",
+    "children": [{
+      "guid": "APzP8MupzA8l",
+      "title": "Firefox",
+      "index": 0,
+      "dateAdded": 1471365681801000,
+      "lastModified": 1471365687887000,
+      "id": 7,
+      "charset": "UTF-8",
+      "tags": "browser",
+      "annos": [{
+        "name": "bookmarkProperties/description",
+        "flags": 0,
+        "expires": 4,
+        "value": "Firefox home"
+      }],
+      "type": "text/x-moz-place",
+      "uri": "https://www.mozilla.org/en-US/firefox/",
+      "keyword": "fx"
+    }]
+  }, {
+    "guid": "unfiled_____",
+    "title": "Other Bookmarks",
+    "index": 3,
+    "dateAdded": 1449080379324000,
+    "lastModified": 1471365629626000,
+    "id": 5,
+    "type": "text/x-moz-place-container",
+    "root": "unfiledBookmarksFolder"
+  }]
+}

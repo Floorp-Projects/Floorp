@@ -167,7 +167,7 @@ add_test(function test_bookmark_createRecord() {
 
     _("Verify that the record is created accordingly.");
     let record = store.createRecord(bmk1_guid);
-    do_check_eq(record.title, null);
+    do_check_eq(record.title, "");
     do_check_eq(record.description, null);
     do_check_eq(record.keyword, null);
 
@@ -440,6 +440,8 @@ function assertDeleted(id) {
 
 add_task(function* test_delete_buffering() {
   store.wipe();
+  yield PlacesTestUtils.markBookmarksAsSynced();
+
   try {
     _("Create a folder with two bookmarks.");
     let folder = new BookmarkFolder("bookmarks", "testfolder-1");
@@ -503,20 +505,20 @@ add_task(function* test_delete_buffering() {
 
     equal(PlacesUtils.bookmarks.getFolderIdForItem(fxRecordId), folderId);
 
-    ok(store._foldersToDelete.has(folder.id));
-    ok(store._atomsToDelete.has(fxRecord.id));
-    ok(!store._atomsToDelete.has(tbRecord.id));
+    ok(store._itemsToDelete.has(folder.id));
+    ok(store._itemsToDelete.has(fxRecord.id));
+    ok(!store._itemsToDelete.has(tbRecord.id));
 
     _("Process pending deletions and ensure that the right things are deleted.");
-    let updatedGuids = yield store.deletePending();
+    let newChangeRecords = yield store.deletePending();
 
-    deepEqual(updatedGuids.sort(), ["get-tndrbrd1", "toolbar"]);
+    deepEqual(Object.keys(newChangeRecords).sort(), ["get-tndrbrd1", "toolbar"]);
 
     assertDeleted(fxRecordId);
     assertDeleted(folderId);
 
-    ok(!store._foldersToDelete.has(folder.id));
-    ok(!store._atomsToDelete.has(fxRecord.id));
+    ok(!store._itemsToDelete.has(folder.id));
+    ok(!store._itemsToDelete.has(fxRecord.id));
 
     equal(PlacesUtils.bookmarks.getFolderIdForItem(tbRecordId),
           PlacesUtils.bookmarks.toolbarFolder);

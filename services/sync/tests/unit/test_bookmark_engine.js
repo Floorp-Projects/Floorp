@@ -23,6 +23,28 @@ function* assertChildGuids(folderGuid, expectedChildGuids, message) {
   deepEqual(childGuids, expectedChildGuids, message);
 }
 
+function* fetchAllSyncIds() {
+  let db = yield PlacesUtils.promiseDBConnection();
+  let rows = yield db.executeCached(`
+    WITH RECURSIVE
+    syncedItems(id, guid) AS (
+      SELECT b.id, b.guid FROM moz_bookmarks b
+      WHERE b.guid IN ('menu________', 'toolbar_____', 'unfiled_____',
+                       'mobile______')
+      UNION ALL
+      SELECT b.id, b.guid FROM moz_bookmarks b
+      JOIN syncedItems s ON b.parent = s.id
+    )
+    SELECT guid FROM syncedItems`);
+  let syncIds = new Set();
+  for (let row of rows) {
+    let syncId = PlacesSyncUtils.bookmarks.guidToSyncId(
+      row.getResultByName("guid"));
+    syncIds.add(syncId);
+  }
+  return syncIds;
+}
+
 add_task(function* test_delete_invalid_roots_from_server() {
   _("Ensure that we delete the Places and Reading List roots from the server.");
 
@@ -97,6 +119,7 @@ add_task(function* test_change_during_sync() {
   let bz_guid = yield PlacesUtils.promiseItemGuid(bz_id);
     _(`Bugzilla GUID: ${bz_guid}`);
 
+  yield PlacesTestUtils.markBookmarksAsSynced();
   Svc.Obs.notify("weave:engine:start-tracking");
 
   try {
@@ -250,14 +273,15 @@ add_task(function* bad_record_allIDs() {
   _("Type: " + PlacesUtils.bookmarks.getItemType(badRecordID));
 
   _("Fetching all IDs.");
-  let all = store.getAllIDs();
+  let all = yield* fetchAllSyncIds();
 
-  _("All IDs: " + JSON.stringify(all));
-  do_check_true("menu" in all);
-  do_check_true("toolbar" in all);
+  _("All IDs: " + JSON.stringify([...all]));
+  do_check_true(all.has("menu"));
+  do_check_true(all.has("toolbar"));
 
   _("Clean up.");
   PlacesUtils.bookmarks.removeItem(badRecordID);
+  yield PlacesSyncUtils.bookmarks.reset();
   yield new Promise(r => server.stop(r));
 });
 
@@ -335,6 +359,7 @@ add_task(function* test_processIncoming_error_orderChildren() {
     store.wipe();
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
+    yield PlacesSyncUtils.bookmarks.reset();
     yield new Promise(resolve => server.stop(resolve));
   }
 });
@@ -407,12 +432,12 @@ add_task(function* test_restorePromptsReupload() {
     yield BookmarkJSONUtils.importFromFile(backupFile, true);
 
     _("Ensure we have the bookmarks we expect locally.");
-    let guids = store.getAllIDs();
-    _("GUIDs: " + JSON.stringify(guids));
+    let guids = yield* fetchAllSyncIds();
+    _("GUIDs: " + JSON.stringify([...guids]));
     let found = false;
     let count = 0;
     let newFX;
-    for (let guid in guids) {
+    for (let guid of guids) {
       count++;
       let id = store.idForGUID(guid, true);
       // Only one bookmark, so _all_ should be Firefox!
@@ -466,9 +491,8 @@ add_task(function* test_restorePromptsReupload() {
     store.wipe();
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
-    let deferred = Promise.defer();
-    server.stop(deferred.resolve);
-    yield deferred.promise;
+    yield PlacesSyncUtils.bookmarks.reset();
+    yield new Promise(r => server.stop(r));
   }
 });
 
@@ -547,6 +571,7 @@ add_task(function* test_mismatched_types() {
     store.wipe();
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
+    yield PlacesSyncUtils.bookmarks.reset();
     yield new Promise(r => server.stop(r));
   }
 });
@@ -600,6 +625,7 @@ add_task(function* test_bookmark_guidMap_fail() {
   do_check_eq(err, "Nooo");
 
   PlacesUtils.promiseBookmarksTree = pbt;
+  yield PlacesSyncUtils.bookmarks.reset();
   yield new Promise(r => server.stop(r));
 });
 
@@ -712,6 +738,7 @@ add_task(function* test_misreconciled_root() {
   do_check_eq(parentGUIDBefore, parentGUIDAfter);
   do_check_eq(parentIDBefore, parentIDAfter);
 
+  yield PlacesSyncUtils.bookmarks.reset();
   yield new Promise(r => server.stop(r));
 });
 

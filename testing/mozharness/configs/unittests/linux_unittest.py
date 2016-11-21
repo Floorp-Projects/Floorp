@@ -223,6 +223,11 @@ config = {
             "options": ["--suite=reftest",
                         "--setpref=layers.acceleration.force-enabled=disabled"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]},
+        "reftest-stylo": {
+            "options": ["--suite=reftest",
+                        "--disable-e10s"],
+            "tests": ["tests/reftest/tests/layout/reftests/reftest-stylo.list"],
+        },
     },
     "all_xpcshell_suites": {
         "xpcshell": {
