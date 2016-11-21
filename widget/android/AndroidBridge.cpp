@@ -738,10 +738,12 @@ NS_IMPL_ISUPPORTS(nsAndroidBridge, nsIAndroidEventDispatcher, nsIAndroidBridge)
 
 nsAndroidBridge::nsAndroidBridge()
 {
-  RefPtr<widget::EventDispatcher> dispatcher = new widget::EventDispatcher();
-  dispatcher->Attach(java::EventDispatcher::GetInstance(),
-                     /* window */ nullptr);
-  mEventDispatcher = dispatcher;
+  if (jni::IsAvailable()) {
+    RefPtr<widget::EventDispatcher> dispatcher = new widget::EventDispatcher();
+    dispatcher->Attach(java::EventDispatcher::GetInstance(),
+                       /* window */ nullptr);
+    mEventDispatcher = dispatcher;
+  }
 
   AddObservers();
 }
