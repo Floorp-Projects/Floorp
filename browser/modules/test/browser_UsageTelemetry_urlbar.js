@@ -58,6 +58,9 @@ add_task(function* setup() {
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
   Services.prefs.setBoolPref(ONEOFF_URLBAR_PREF, true);
 
+  // Enable Extended Telemetry.
+  yield SpecialPowers.pushPrefEnv({"set": [["toolkit.telemetry.enabled", true]]});
+
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(function* () {
     Services.search.currentEngine = originalEngine;
@@ -70,6 +73,7 @@ add_task(function* setup() {
 add_task(function* test_simpleQuery() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
+  let search_hist = getSearchCountsHistogram();
 
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
@@ -86,12 +90,16 @@ add_task(function* test_simpleQuery() {
   Assert.equal(Object.keys(scalars[SCALAR_URLBAR]).length, 1,
                "This search must only increment one entry in the scalar.");
 
+  // Make sure SEARCH_COUNTS contains identical values.
+  checkKeyedHistogram(search_hist, 'other-MozSearch.urlbar', 1);
+
   yield BrowserTestUtils.removeTab(tab);
 });
 
 add_task(function* test_searchAlias() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
+  let search_hist = getSearchCountsHistogram();
 
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
@@ -108,12 +116,16 @@ add_task(function* test_searchAlias() {
   Assert.equal(Object.keys(scalars[SCALAR_URLBAR]).length, 1,
                "This search must only increment one entry in the scalar.");
 
+  // Make sure SEARCH_COUNTS contains identical values.
+  checkKeyedHistogram(search_hist, 'other-MozSearch.urlbar', 1);
+
   yield BrowserTestUtils.removeTab(tab);
 });
 
 add_task(function* test_oneOff() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
+  let search_hist = getSearchCountsHistogram();
 
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
@@ -133,12 +145,16 @@ add_task(function* test_oneOff() {
   Assert.equal(Object.keys(scalars[SCALAR_URLBAR]).length, 1,
                "This search must only increment one entry in the scalar.");
 
+  // Make sure SEARCH_COUNTS contains identical values.
+  checkKeyedHistogram(search_hist, 'other-MozSearch.urlbar', 1);
+
   yield BrowserTestUtils.removeTab(tab);
 });
 
 add_task(function* test_suggestion() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
+  let search_hist = getSearchCountsHistogram();
 
   // Create an engine to generate search suggestions and add it as default
   // for this test.
@@ -168,6 +184,9 @@ add_task(function* test_suggestion() {
   checkKeyedScalar(scalars, SCALAR_URLBAR, "search_suggestion", 1);
   Assert.equal(Object.keys(scalars[SCALAR_URLBAR]).length, 1,
                "This search must only increment one entry in the scalar.");
+
+  // Make sure SEARCH_COUNTS contains identical values.
+  checkKeyedHistogram(search_hist, 'other-' + suggestionEngine.name + '.urlbar', 1);
 
   Services.search.currentEngine = previousEngine;
   Services.search.removeEngine(suggestionEngine);
