@@ -28,7 +28,6 @@ add_task(function setupPrefs() {
   ]});
 });
 
-//var worker;
 add_task(function* test_worker_ref_gc() {
   let registration = yield navigator.serviceWorker.register(
     "lazy_worker.js", { scope: "./lazy_worker_scope_timeout"} )
@@ -45,10 +44,32 @@ add_task(function* test_worker_ref_gc() {
         });
       });
     });
-
   ok(true, "Got activated event!");
 
   yield registration.unregister();
+});
+
+add_task(function* test_worker_ref_gc_ready_promise() {
+  let wait_active = navigator.serviceWorker.ready.then(function(reg) {
+    SpecialPowers.exactGC();
+    ok(reg.active, "Got active worker.");
+    ok(reg.active.state === "activating", "Worker is in activating state");
+    return new Promise(function(res) {
+      reg.active.onstatechange = function(e) {
+        reg.active.onstatechange = null;
+        ok(reg.active.state === "activated", "Worker was activated");
+        res();
+      }
+    });
+  });
+
+  let registration = yield navigator.serviceWorker.register(
+    "lazy_worker.js", { scope: "."} );
+  yield wait_active;
+  yield registration.unregister();
+});
+
+add_task(function* cleanup() {
   yield SpecialPowers.popPrefEnv();
 });
 </script>
