@@ -307,8 +307,8 @@ TEST(ThreadUtils, main)
 
   static_assert(
       mozilla::IsSame< ::detail::ParameterStorage<int>::Type,
-                      StoreCopyPassByValue<int>>::value,
-      "detail::ParameterStorage<int>::Type should be StoreCopyPassByValue<int>");
+                      StoreCopyPassByConstLRef<int>>::value,
+      "detail::ParameterStorage<int>::Type should be StoreCopyPassByConstLRef<int>");
   static_assert(
       mozilla::IsSame< ::detail::ParameterStorage<StoreCopyPassByValue<int>>::Type,
                       StoreCopyPassByValue<int>>::value,

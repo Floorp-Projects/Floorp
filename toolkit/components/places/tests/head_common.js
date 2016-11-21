@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const CURRENT_SCHEMA_VERSION = 35;
+const CURRENT_SCHEMA_VERSION = 36;
 const FIRST_UPGRADABLE_SCHEMA_VERSION = 11;
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
@@ -866,4 +866,18 @@ function* foreign_count(url) {
      WHERE url_hash = hash(:url) AND url = :url
     `, { url });
   return rows.length == 0 ? 0 : rows[0].getResultByName("foreign_count");
+}
+
+function compareAscending(a, b) {
+  if (a > b) {
+    return 1;
+  }
+  if (a < b) {
+    return -1;
+  }
+  return 0;
+}
+
+function sortBy(array, prop) {
+  return array.sort((a, b) => compareAscending(a[prop], b[prop]));
 }
