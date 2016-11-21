@@ -124,7 +124,7 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
         void* returnAddress;
         void* activation;
         const char* label;
-    };
+    } JS_HAZ_GC_INVALIDATED;
 
     bool isWasm() const;
     bool isJit() const;
