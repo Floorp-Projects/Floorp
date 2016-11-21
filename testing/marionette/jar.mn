@@ -18,6 +18,7 @@ marionette.jar:
   content/cert.js (cert.js)
   content/event.js  (event.js)
   content/error.js (error.js)
+  content/wait.js (wait.js)
   content/message.js (message.js)
   content/dispatcher.js (dispatcher.js)
   content/modal.js (modal.js)
