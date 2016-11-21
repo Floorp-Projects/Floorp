@@ -210,6 +210,8 @@ struct TexImageSource
     const dom::Element* mDomElem;
     ErrorResult* mOut_error;
 
+    bool IsNull() const { return (!mView && !mImageData && !mDomElem); }
+
 protected:
     TexImageSource() {
         memset(this, 0, sizeof(*this));
