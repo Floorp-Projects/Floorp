@@ -14,26 +14,25 @@ namespace gfx {
 
 /**
  * CoreGraphics printing target.
- *
- * Note that a CGContextRef obtained from PMSessionGetCGGraphicsContext is
- * valid only for the current page.  As a consequence instances of this class
- * should only be used to print a single page.
  */
 class PrintTargetCG final : public PrintTarget
 {
 public:
   static already_AddRefed<PrintTargetCG>
-  CreateOrNull(const IntSize& aSize, gfxImageFormat aFormat);
+  CreateOrNull(PMPrintSession aPrintSession, const IntSize& aSize);
 
-  static already_AddRefed<PrintTargetCG>
-  CreateOrNull(CGContextRef aContext, const IntSize& aSize);
+  virtual nsresult BeginPage() final;
+  virtual nsresult EndPage() final;
 
   virtual already_AddRefed<DrawTarget>
   GetReferenceDrawTarget(DrawEventRecorder* aRecorder) final;
 
 private:
-  PrintTargetCG(cairo_surface_t* aCairoSurface,
+  PrintTargetCG(PMPrintSession aPrintSession,
                 const IntSize& aSize);
+  ~PrintTargetCG();
+
+  PMPrintSession mPrintSession;
 };
 
 } // namespace gfx
