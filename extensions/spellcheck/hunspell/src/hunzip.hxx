@@ -41,12 +41,14 @@
 /* hunzip: file decompression for sorted dictionaries with optional encryption,
  * algorithm: prefix-suffix encoding and 16-bit Huffman encoding */
 
-#ifndef _HUNZIP_HXX_
-#define _HUNZIP_HXX_
+#ifndef HUNZIP_HXX_
+#define HUNZIP_HXX_
 
 #include "hunvisapi.h"
 
 #include <stdio.h>
+#include <fstream>
+#include <vector>
 
 #define BUFSIZE 65536
 #define HZIP_EXTENSION ".hz"
@@ -68,9 +70,9 @@ class LIBHUNSPELL_DLL_EXPORTED Hunzip {
 
  protected:
   char* filename;
-  FILE* fin;
+  std::ifstream fin;
   int bufsiz, lastbit, inc, inbits, outc;
-  struct bit* dec;          // code table
+  std::vector<bit> dec;     // code table
   char in[BUFSIZE];         // input buffer
   char out[BUFSIZE + 1];    // Huffman-decoded buffer
   char line[BUFSIZE + 50];  // decoded line
@@ -81,7 +83,8 @@ class LIBHUNSPELL_DLL_EXPORTED Hunzip {
  public:
   Hunzip(const char* filename, const char* key = NULL);
   ~Hunzip();
-  const char* getline();
+  bool is_open() { return fin.is_open(); }
+  bool getline(std::string& dest);
 };
 
 #endif

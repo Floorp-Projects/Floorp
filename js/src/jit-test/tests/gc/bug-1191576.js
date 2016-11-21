@@ -1,4 +1,4 @@
-// |jit-test| allow-oom
+// |jit-test| allow-oom; need-for-each
 
 if (!('gczeal' in this && 'oomAfterAllocations' in this))
     quit();

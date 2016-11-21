@@ -12,7 +12,8 @@ function wasmEvalText(str, imports) {
         m = new WebAssembly.Module(binary);
         assertEq(valid, true);
     } catch(e) {
-        assertEq(valid, false);
+        if (!e.toString().match(/out of memory/))
+            assertEq(valid, false);
         throw e;
     }
 

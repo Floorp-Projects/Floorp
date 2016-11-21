@@ -88,10 +88,20 @@ const gXPInstallObserver = {
 
     const anchorID = "addons-notification-icon";
 
-    // Make notifications persist a minimum of 30 seconds
+    // Make notifications persistent
     var options = {
       displayURI: installInfo.originatingURI,
-      timeout: Date.now() + 30000,
+      persistent: true,
+    };
+
+    let acceptInstallation = () => {
+      for (let install of installInfo.installs)
+        install.install();
+      installInfo = null;
+
+      Services.telemetry
+              .getHistogramById("SECURITY_UI")
+              .add(Ci.nsISecurityUITelemetry.WARNING_CONFIRM_ADDON_INSTALL_CLICK_THROUGH);
     };
 
     let cancelInstallation = () => {
@@ -104,8 +114,6 @@ const gXPInstallObserver = {
             install.cancel();
         }
       }
-
-      this.acceptInstallation = null;
 
       showNextConfirmation();
     };
@@ -142,16 +150,6 @@ const gXPInstallObserver = {
 
             addonList.appendChild(container);
           }
-
-          this.acceptInstallation = () => {
-            for (let install of installInfo.installs)
-              install.install();
-            installInfo = null;
-
-            Services.telemetry
-                    .getHistogramById("SECURITY_UI")
-                    .add(Ci.nsISecurityUITelemetry.WARNING_CONFIRM_ADDON_INSTALL_CLICK_THROUGH);
-          };
           break;
       }
     };
@@ -187,13 +185,17 @@ const gXPInstallObserver = {
     messageString = messageString.replace("#1", brandShortName);
     messageString = messageString.replace("#2", installInfo.installs.length);
 
-    let cancelButton = document.getElementById("addon-install-confirmation-cancel");
-    cancelButton.label = gNavigatorBundle.getString("addonInstall.cancelButton.label");
-    cancelButton.accessKey = gNavigatorBundle.getString("addonInstall.cancelButton.accesskey");
+    let action = {
+      label: gNavigatorBundle.getString("addonInstall.acceptButton.label"),
+      accessKey: gNavigatorBundle.getString("addonInstall.acceptButton.accesskey"),
+      callback: acceptInstallation,
+    };
 
-    let acceptButton = document.getElementById("addon-install-confirmation-accept");
-    acceptButton.label = gNavigatorBundle.getString("addonInstall.acceptButton.label");
-    acceptButton.accessKey = gNavigatorBundle.getString("addonInstall.acceptButton.accesskey");
+    let secondaryAction = {
+      label: gNavigatorBundle.getString("addonInstall.cancelButton.label"),
+      accessKey: gNavigatorBundle.getString("addonInstall.cancelButton.accesskey"),
+      callback: () => {},
+    };
 
     if (height) {
       notification.style.minHeight = height + "px";
@@ -205,8 +207,8 @@ const gXPInstallObserver = {
     }
 
     let popup = PopupNotifications.show(browser, "addon-install-confirmation",
-                                        messageString, anchorID, null, null,
-                                        options);
+                                        messageString, anchorID, action,
+                                        [secondaryAction], options);
 
     removeNotificationOnEnd(popup, installInfo.installs);
 
@@ -230,9 +232,10 @@ const gXPInstallObserver = {
     var brandShortName = brandBundle.getString("brandShortName");
 
     var notificationID = aTopic;
-    // Make notifications persist a minimum of 30 seconds
+    // Make notifications persistent
     var options = {
       displayURI: installInfo.originatingURI,
+      persistent: true,
       timeout: Date.now() + 30000,
     };
 
@@ -305,29 +308,46 @@ const gXPInstallObserver = {
       options.installs = installInfo.installs;
       options.contentWindow = browser.contentWindow;
       options.sourceURI = browser.currentURI;
-      options.eventCallback = (aEvent) => {
+      options.eventCallback = function(aEvent) {
         switch (aEvent) {
+          case "shown":
+            let notificationElement = [...this.owner.panel.childNodes]
+                                      .find(n => n.notification == this);
+            if (notificationElement) {
+              if (Preferences.get("xpinstall.customConfirmationUI", false)) {
+                notificationElement.setAttribute("mainactiondisabled", "true");
+              } else {
+                notificationElement.button.hidden = true;
+              }
+            }
+            break;
           case "removed":
             options.contentWindow = null;
             options.sourceURI = null;
             break;
         }
       };
+      action = {
+        label: gNavigatorBundle.getString("addonInstall.acceptButton.label"),
+        accessKey: gNavigatorBundle.getString("addonInstall.acceptButton.accesskey"),
+        callback: () => {},
+      };
+      let secondaryAction = {
+        label: gNavigatorBundle.getString("addonInstall.cancelButton.label"),
+        accessKey: gNavigatorBundle.getString("addonInstall.cancelButton.accesskey"),
+        callback: () => {
+          for (let install of installInfo.installs) {
+            if (install.state != AddonManager.STATE_CANCELLED) {
+              install.cancel();
+            }
+          }
+        },
+      };
       let notification = PopupNotifications.show(browser, notificationID, messageString,
-                                                 anchorID, null, null, options);
+                                                 anchorID, action,
+                                                 [secondaryAction], options);
       notification._startTime = Date.now();
 
-      let cancelButton = document.getElementById("addon-progress-cancel");
-      cancelButton.label = gNavigatorBundle.getString("addonInstall.cancelButton.label");
-      cancelButton.accessKey = gNavigatorBundle.getString("addonInstall.cancelButton.accesskey");
-
-      let acceptButton = document.getElementById("addon-progress-accept");
-      if (Preferences.get("xpinstall.customConfirmationUI", false)) {
-        acceptButton.label = gNavigatorBundle.getString("addonInstall.acceptButton.label");
-        acceptButton.accessKey = gNavigatorBundle.getString("addonInstall.acceptButton.accesskey");
-      } else {
-        acceptButton.hidden = true;
-      }
       break; }
     case "addon-install-failed": {
       // TODO This isn't terribly ideal for the multiple failure case
@@ -567,7 +587,7 @@ var LightWeightThemeWebInstaller = {
         };
 
         let options = {
-          timeout: Date.now() + 30000
+          persistent: true
         };
 
         PopupNotifications.show(gBrowser.selectedBrowser, "addon-theme-change",

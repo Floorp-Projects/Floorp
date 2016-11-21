@@ -75,35 +75,99 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "affixmgr.hxx"
 #include "hunspell.hxx"
+#include "suggestmgr.hxx"
 #include "hunspell.h"
-#ifndef MOZILLA_CLIENT
-#include "config.h"
-#endif
 #include "csutil.hxx"
 
 #include <limits>
 #include <string>
 
-#define MAXWORDLEN 176
 #define MAXWORDUTF8LEN (MAXWORDLEN * 3)
 
-Hunspell::Hunspell(const char* affpath, const char* dpath, const char* key) {
-  encoding = NULL;
+class HunspellImpl
+{
+public:
+  HunspellImpl(const char* affpath, const char* dpath, const char* key);
+  ~HunspellImpl();
+  int add_dic(const char* dpath, const char* key);
+  std::vector<std::string> suffix_suggest(const std::string& root_word);
+  std::vector<std::string> generate(const std::string& word, const std::vector<std::string>& pl);
+  std::vector<std::string> generate(const std::string& word, const std::string& pattern);
+  std::vector<std::string> stem(const std::string& word);
+  std::vector<std::string> stem(const std::vector<std::string>& morph);
+  std::vector<std::string> analyze(const std::string& word);
+  int get_langnum() const;
+  bool input_conv(const std::string& word, std::string& dest);
+  bool spell(const std::string& word, int* info = NULL, std::string* root = NULL);
+  std::vector<std::string> suggest(const std::string& word);
+  const std::string& get_wordchars() const;
+  const std::vector<w_char>& get_wordchars_utf16() const;
+  const std::string& get_dict_encoding() const;
+  int add(const std::string& word);
+  int add_with_affix(const std::string& word, const std::string& example);
+  int remove(const std::string& word);
+  const std::string& get_version() const;
+
+
+private:
+  AffixMgr* pAMgr;
+  std::vector<HashMgr*> m_HMgrs;
+  SuggestMgr* pSMgr;
+  char* affixpath;
+  std::string encoding;
+  struct cs_info* csconv;
+  int langnum;
+  int utf8;
+  int complexprefixes;
+  std::vector<std::string> wordbreak;
+
+private:
+  void cleanword(std::string& dest, const std::string&, int* pcaptype, int* pabbrev);
+  size_t cleanword2(std::string& dest,
+                    std::vector<w_char>& dest_u,
+                    const std::string& src,
+                    int* pcaptype,
+                    size_t* pabbrev);
+  void mkinitcap(std::string& u8);
+  int mkinitcap2(std::string& u8, std::vector<w_char>& u16);
+  int mkinitsmall2(std::string& u8, std::vector<w_char>& u16);
+  void mkallcap(std::string& u8);
+  int mkallsmall2(std::string& u8, std::vector<w_char>& u16);
+  struct hentry* checkword(const std::string& source, int* info, std::string* root);
+  std::string sharps_u8_l1(const std::string& source);
+  hentry*
+  spellsharps(std::string& base, size_t start_pos, int, int, int* info, std::string* root);
+  int is_keepcase(const hentry* rv);
+  void insert_sug(std::vector<std::string>& slst, const std::string& word);
+  void cat_result(std::string& result, const std::string& st);
+  std::vector<std::string> spellml(const std::string& word);
+  std::string get_xml_par(const char* par);
+  const char* get_xml_pos(const char* s, const char* attr);
+  std::vector<std::string> get_xml_list(const char* list, const char* tag);
+  int check_xml_par(const char* q, const char* attr, const char* value);
+private:
+  HunspellImpl(const HunspellImpl&);
+  HunspellImpl& operator=(const HunspellImpl&);
+};
+
+Hunspell::Hunspell(const char* affpath, const char* dpath, const char* key)
+  : m_Impl(new HunspellImpl(affpath, dpath, key)) {
+}
+
+HunspellImpl::HunspellImpl(const char* affpath, const char* dpath, const char* key) {
   csconv = NULL;
   utf8 = 0;
   complexprefixes = 0;
   affixpath = mystrdup(affpath);
-  maxdic = 0;
 
   /* first set up the hash manager */
-  pHMgr[0] = new HashMgr(dpath, affpath, key);
-  if (pHMgr[0])
-    maxdic = 1;
+  m_HMgrs.push_back(new HashMgr(dpath, affpath, key));
 
   /* next set up the affix manager */
   /* it needs access to the hash manager lookup methods */
-  pAMgr = new AffixMgr(affpath, pHMgr, &maxdic, key);
+  pAMgr = new AffixMgr(affpath, m_HMgrs, key);
 
   /* get the preferred try string and the dictionary */
   /* encoding from the Affix Manager for that dictionary */
@@ -123,20 +187,20 @@ Hunspell::Hunspell(const char* affpath, const char* dpath, const char* key) {
 }
 
 Hunspell::~Hunspell() {
+  delete m_Impl;
+}
+
+HunspellImpl::~HunspellImpl() {
   delete pSMgr;
   delete pAMgr;
-  for (int i = 0; i < maxdic; i++)
-    delete pHMgr[i];
-  maxdic = 0;
+  for (size_t i = 0; i < m_HMgrs.size(); ++i)
+    delete m_HMgrs[i];
   pSMgr = NULL;
   pAMgr = NULL;
 #ifdef MOZILLA_CLIENT
   delete[] csconv;
 #endif
   csconv = NULL;
-  if (encoding)
-    free(encoding);
-  encoding = NULL;
   if (affixpath)
     free(affixpath);
   affixpath = NULL;
@@ -144,13 +208,14 @@ Hunspell::~Hunspell() {
 
 // load extra dictionaries
 int Hunspell::add_dic(const char* dpath, const char* key) {
-  if (maxdic == MAXDIC || !affixpath)
+  return m_Impl->add_dic(dpath, key);
+}
+
+// load extra dictionaries
+int HunspellImpl::add_dic(const char* dpath, const char* key) {
+  if (!affixpath)
     return 1;
-  pHMgr[maxdic] = new HashMgr(dpath, affixpath, key);
-  if (pHMgr[maxdic])
-    maxdic++;
-  else
-    return 1;
+  m_HMgrs.push_back(new HashMgr(dpath, affixpath, key));
   return 0;
 }
 
@@ -161,16 +226,15 @@ int Hunspell::add_dic(const char* dpath, const char* key) {
 // set the capitalization type
 // return the length of the "cleaned" (and UTF-8 encoded) word
 
-size_t Hunspell::cleanword2(std::string& dest,
+size_t HunspellImpl::cleanword2(std::string& dest,
                          std::vector<w_char>& dest_utf,
-                         const char* src,
-                         int* nc,
+                         const std::string& src,
                          int* pcaptype,
                          size_t* pabbrev) {
   dest.clear();
   dest_utf.clear();
 
-  const char* q = src;
+  const char* q = src.c_str();
 
   // first skip over any leading blanks
   while ((*q != '\0') && (*q == ' '))
@@ -193,21 +257,20 @@ size_t Hunspell::cleanword2(std::string& dest,
   dest.append(q, nl);
   nl = dest.size();
   if (utf8) {
-    *nc = u8_u16(dest_utf, dest);
+    u8_u16(dest_utf, dest);
     *pcaptype = get_captype_utf8(dest_utf, langnum);
   } else {
     *pcaptype = get_captype(dest, csconv);
-    *nc = nl;
   }
   return nl;
 }
 
-void Hunspell::cleanword(std::string& dest,
-                        const char* src,
+void HunspellImpl::cleanword(std::string& dest,
+                        const std::string& src,
                         int* pcaptype,
                         int* pabbrev) {
   dest.clear();
-  const unsigned char* q = (const unsigned char*)src;
+  const unsigned char* q = (const unsigned char*)src.c_str();
   int firstcap = 0;
 
   // first skip over any leading blanks
@@ -277,7 +340,7 @@ void Hunspell::cleanword(std::string& dest,
   }
 }
 
-void Hunspell::mkallcap(std::string& u8) {
+void HunspellImpl::mkallcap(std::string& u8) {
   if (utf8) {
     std::vector<w_char> u16;
     u8_u16(u16, u8);
@@ -288,7 +351,7 @@ void Hunspell::mkallcap(std::string& u8) {
   }
 }
 
-int Hunspell::mkallsmall2(std::string& u8, std::vector<w_char>& u16) {
+int HunspellImpl::mkallsmall2(std::string& u8, std::vector<w_char>& u16) {
   if (utf8) {
     ::mkallsmall_utf(u16, langnum);
     u16_u8(u8, u16);
@@ -299,19 +362,19 @@ int Hunspell::mkallsmall2(std::string& u8, std::vector<w_char>& u16) {
 }
 
 // convert UTF-8 sharp S codes to latin 1
-std::string Hunspell::sharps_u8_l1(const std::string& source) {
+std::string HunspellImpl::sharps_u8_l1(const std::string& source) {
   std::string dest(source);
   mystrrep(dest, "\xC3\x9F", "\xDF");
   return dest;
 }
 
 // recursive search for right ss - sharp s permutations
-hentry* Hunspell::spellsharps(std::string& base,
+hentry* HunspellImpl::spellsharps(std::string& base,
                               size_t n_pos,
                               int n,
                               int repnum,
                               int* info,
-                              char** root) {
+                              std::string* root) {
   size_t pos = base.find("ss", n_pos);
   if (pos != std::string::npos && (n < MAXSHARPS)) {
     base[pos] = '\xC3';
@@ -326,36 +389,28 @@ hentry* Hunspell::spellsharps(std::string& base,
       return h;
   } else if (repnum > 0) {
     if (utf8)
-      return checkword(base.c_str(), info, root);
+      return checkword(base, info, root);
     std::string tmp(sharps_u8_l1(base));
-    return checkword(tmp.c_str(), info, root);
+    return checkword(tmp, info, root);
   }
   return NULL;
 }
 
-int Hunspell::is_keepcase(const hentry* rv) {
+int HunspellImpl::is_keepcase(const hentry* rv) {
   return pAMgr && rv->astr && pAMgr->get_keepcase() &&
          TESTAFF(rv->astr, pAMgr->get_keepcase(), rv->alen);
 }
 
-/* insert a word to the beginning of the suggestion array and return ns */
-int Hunspell::insert_sug(char*** slst, const char* word, int ns) {
-  if (!*slst)
-    return ns;
-  char* dup = mystrdup(word);
-  if (!dup)
-    return ns;
-  if (ns == MAXSUGGESTION) {
-    ns--;
-    free((*slst)[ns]);
-  }
-  for (int k = ns; k > 0; k--)
-    (*slst)[k] = (*slst)[k - 1];
-  (*slst)[0] = dup;
-  return ns + 1;
+/* insert a word to the beginning of the suggestion array */
+void HunspellImpl::insert_sug(std::vector<std::string>& slst, const std::string& word) {
+  slst.insert(slst.begin(), word);
 }
 
-int Hunspell::spell(const char* word, int* info, char** root) {
+bool Hunspell::spell(const std::string& word, int* info, std::string* root) {
+  return m_Impl->spell(word, info, root);
+}
+
+bool HunspellImpl::spell(const std::string& word, int* info, std::string* root) {
   struct hentry* rv = NULL;
 
   int info2 = 0;
@@ -365,15 +420,14 @@ int Hunspell::spell(const char* word, int* info, char** root) {
     *info = 0;
 
   // Hunspell supports XML input of the simplified API (see manual)
-  if (strcmp(word, SPELL_XML) == 0)
-    return 1;
-  int nc = strlen(word);
+  if (word == SPELL_XML)
+    return true;
   if (utf8) {
-    if (nc >= MAXWORDUTF8LEN)
-      return 0;
+    if (word.size() >= MAXWORDUTF8LEN)
+      return false;
   } else {
-    if (nc >= MAXWORDLEN)
-      return 0;
+    if (word.size() >= MAXWORDLEN)
+      return false;
   }
   int captype = NOCAP;
   size_t abbv = 0;
@@ -383,17 +437,15 @@ int Hunspell::spell(const char* word, int* info, char** root) {
   std::vector<w_char> sunicw;
 
   // input conversion
-  RepList* rl = (pAMgr) ? pAMgr->get_iconvtable() : NULL;
+  RepList* rl = pAMgr ? pAMgr->get_iconvtable() : NULL;
   {
     std::string wspace;
 
-    int convstatus = rl ? rl->conv(word, wspace) : 0;
-    if (convstatus < 0)
-      return 0;
-    else if (convstatus > 0)
-      wl = cleanword2(scw, sunicw, wspace.c_str(), &nc, &captype, &abbv);
+    bool convstatus = rl ? rl->conv(word, wspace) : false;
+    if (convstatus)
+      wl = cleanword2(scw, sunicw, wspace, &captype, &abbv);
     else
-      wl = cleanword2(scw, sunicw, word, &nc, &captype, &abbv);
+      wl = cleanword2(scw, sunicw, word, &captype, &abbv);
   }
 
 #ifdef MOZILLA_CLIENT
@@ -402,10 +454,10 @@ int Hunspell::spell(const char* word, int* info, char** root) {
   abbv = 1;
 #endif
 
-  if (wl == 0 || maxdic == 0)
-    return 1;
+  if (wl == 0 || m_HMgrs.empty())
+    return true;
   if (root)
-    *root = NULL;
+    root->clear();
 
   // allow numbers with dots, dashes and commas (but forbid double separators:
   // "..", "--" etc.)
@@ -424,7 +476,7 @@ int Hunspell::spell(const char* word, int* info, char** root) {
       break;
   }
   if ((i == wl) && (nstate == NNUM))
-    return 1;
+    return true;
 
   switch (captype) {
     case HUHCAP:
@@ -433,22 +485,22 @@ int Hunspell::spell(const char* word, int* info, char** root) {
       *info += SPELL_ORIGCAP;
     /* FALLTHROUGH */
     case NOCAP:
-      rv = checkword(scw.c_str(), info, root);
+      rv = checkword(scw, info, root);
       if ((abbv) && !(rv)) {
         std::string u8buffer(scw);
         u8buffer.push_back('.');
-        rv = checkword(u8buffer.c_str(), info, root);
+        rv = checkword(u8buffer, info, root);
       }
       break;
     case ALLCAP: {
       *info += SPELL_ORIGCAP;
-      rv = checkword(scw.c_str(), info, root);
+      rv = checkword(scw, info, root);
       if (rv)
         break;
       if (abbv) {
         std::string u8buffer(scw);
         u8buffer.push_back('.');
-        rv = checkword(u8buffer.c_str(), info, root);
+        rv = checkword(u8buffer, info, root);
         if (rv)
           break;
       }
@@ -470,18 +522,18 @@ int Hunspell::spell(const char* word, int* info, char** root) {
             scw = part1 + part2;
             sunicw = part1u;
             sunicw.insert(sunicw.end(), part2u.begin(), part2u.end());
-            rv = checkword(scw.c_str(), info, root);
+            rv = checkword(scw, info, root);
             if (rv)
               break;
           } else {
             mkinitcap2(part2, sunicw);
             scw = part1 + part2;
-            rv = checkword(scw.c_str(), info, root);
+            rv = checkword(scw, info, root);
             if (rv)
               break;
           }
           mkinitcap2(scw, sunicw);
-          rv = checkword(scw.c_str(), info, root);
+          rv = checkword(scw, info, root);
           if (rv)
             break;
         }
@@ -516,7 +568,7 @@ int Hunspell::spell(const char* word, int* info, char** root) {
       mkinitcap2(scw, sunicw);
       if (captype == INITCAP)
         *info += SPELL_INITCAP;
-      rv = checkword(scw.c_str(), info, root);
+      rv = checkword(scw, info, root);
       if (captype == INITCAP)
         *info -= SPELL_INITCAP;
       // forbid bad capitalization
@@ -531,16 +583,16 @@ int Hunspell::spell(const char* word, int* info, char** root) {
       if (rv)
         break;
 
-      rv = checkword(u8buffer.c_str(), info, root);
+      rv = checkword(u8buffer, info, root);
       if (abbv && !rv) {
         u8buffer.push_back('.');
-        rv = checkword(u8buffer.c_str(), info, root);
+        rv = checkword(u8buffer, info, root);
         if (!rv) {
           u8buffer = scw;
           u8buffer.push_back('.');
           if (captype == INITCAP)
             *info += SPELL_INITCAP;
-          rv = checkword(u8buffer.c_str(), info, root);
+          rv = checkword(u8buffer, info, root);
           if (captype == INITCAP)
             *info -= SPELL_INITCAP;
           if (rv && is_keepcase(rv) && (captype == ALLCAP))
@@ -565,89 +617,86 @@ int Hunspell::spell(const char* word, int* info, char** root) {
         TESTAFF(rv->astr, pAMgr->get_warn(), rv->alen)) {
       *info += SPELL_WARN;
       if (pAMgr->get_forbidwarn())
-        return 0;
-      return HUNSPELL_OK_WARN;
+        return false;
+      return true;
     }
-    return HUNSPELL_OK;
+    return true;
   }
 
   // recursive breaking at break points
-  if (wordbreak) {
+  if (!wordbreak.empty()) {
 
     int nbr = 0;
     wl = scw.size();
-    int numbreak = pAMgr ? pAMgr->get_numbreak() : 0;
 
     // calculate break points for recursion limit
-    for (int j = 0; j < numbreak; j++) {
-      size_t len = strlen(wordbreak[j]);
+    for (size_t j = 0; j < wordbreak.size(); ++j) {
       size_t pos = 0;
-      while ((pos = scw.find(wordbreak[j], pos, len)) != std::string::npos) {
+      while ((pos = scw.find(wordbreak[j], pos)) != std::string::npos) {
         ++nbr;
-        pos += len;
+        pos += wordbreak[j].size();
       }
     }
     if (nbr >= 10)
-      return 0;
+      return false;
 
     // check boundary patterns (^begin and end$)
-    for (int j = 0; j < numbreak; j++) {
-      size_t plen = strlen(wordbreak[j]);
+    for (size_t j = 0; j < wordbreak.size(); ++j) {
+      size_t plen = wordbreak[j].size();
       if (plen == 1 || plen > wl)
         continue;
 
       if (wordbreak[j][0] == '^' &&
-          scw.compare(0, plen - 1, wordbreak[j] + 1, plen -1) == 0 && spell(scw.c_str() + plen - 1))
-        return 1;
+          scw.compare(0, plen - 1, wordbreak[j], 1, plen -1) == 0 && spell(scw.substr(plen - 1)))
+        return true;
 
       if (wordbreak[j][plen - 1] == '$' &&
-          scw.compare(wl - plen + 1, plen - 1, wordbreak[j], plen - 1) == 0) {
-        char r = scw[wl - plen + 1];
-        scw[wl - plen + 1] = '\0';
-        if (spell(scw.c_str()))
-          return 1;
-        scw[wl - plen + 1] = r;
+          scw.compare(wl - plen + 1, plen - 1, wordbreak[j], 0, plen - 1) == 0) {
+        std::string suffix(scw.substr(wl - plen + 1));
+        scw.resize(wl - plen + 1);
+        if (spell(scw))
+          return true;
+        scw.append(suffix);
       }
     }
 
     // other patterns
-    for (int j = 0; j < numbreak; j++) {
-      size_t plen = strlen(wordbreak[j]);
+    for (size_t j = 0; j < wordbreak.size(); ++j) {
+      size_t plen = wordbreak[j].size();
       size_t found = scw.find(wordbreak[j]);
       if ((found > 0) && (found < wl - plen)) {
-        if (!spell(scw.c_str() + found + plen))
+        if (!spell(scw.substr(found + plen)))
           continue;
-        char r = scw[found];
-        scw[found] = '\0';
+        std::string suffix(scw.substr(found));
+        scw.resize(found);
         // examine 2 sides of the break point
-        if (spell(scw.c_str()))
-          return 1;
-        scw[found] = r;
+        if (spell(scw))
+          return true;
+        scw.append(suffix);
 
         // LANG_hu: spec. dash rule
-        if (langnum == LANG_hu && strcmp(wordbreak[j], "-") == 0) {
-          r = scw[found + 1];
-          scw[found + 1] = '\0';
-          if (spell(scw.c_str()))
-            return 1;  // check the first part with dash
-          scw[found + 1] = r;
+        if (langnum == LANG_hu && wordbreak[j] == "-") {
+          suffix = scw.substr(found + 1);
+          scw.resize(found + 1);
+          if (spell(scw))
+            return true;  // check the first part with dash
+          scw.append(suffix);
         }
         // end of LANG specific region
       }
     }
   }
 
-  return 0;
+  return false;
 }
 
-struct hentry* Hunspell::checkword(const char* w, int* info, char** root) {
-  struct hentry* he = NULL;
+struct hentry* HunspellImpl::checkword(const std::string& w, int* info, std::string* root) {
   bool usebuffer = false;
-  int len, i;
   std::string w2;
   const char* word;
+  int len;
 
-  char* ignoredchars = pAMgr ? pAMgr->get_ignore() : NULL;
+  const char* ignoredchars = pAMgr ? pAMgr->get_ignore() : NULL;
   if (ignoredchars != NULL) {
     w2.assign(w);
     if (utf8) {
@@ -658,11 +707,12 @@ struct hentry* Hunspell::checkword(const char* w, int* info, char** root) {
       remove_ignored_chars(w2, ignoredchars);
     }
     word = w2.c_str();
+    len = w2.size();
     usebuffer = true;
-  } else
-    word = w;
-
-  len = strlen(word);
+  } else {
+    word = w.c_str();
+    len = w.size();
+  }
 
   if (!len)
     return NULL;
@@ -684,8 +734,9 @@ struct hentry* Hunspell::checkword(const char* w, int* info, char** root) {
   }
 
   // look word in hash table
-  for (i = 0; (i < maxdic) && !he; i++) {
-    he = (pHMgr[i])->lookup(word);
+  struct hentry* he = NULL;
+  for (size_t i = 0; (i < m_HMgrs.size()) && !he; ++i) {
+    he = m_HMgrs[i]->lookup(word);
 
     // check forbidden and onlyincompound words
     if ((he) && (he->astr) && (pAMgr) &&
@@ -736,40 +787,33 @@ struct hentry* Hunspell::checkword(const char* w, int* info, char** root) {
         return NULL;
       }
       if (root) {
-        std::string word_root(he->word);
+        root->assign(he->word);
         if (complexprefixes) {
           if (utf8)
-            reverseword_utf(word_root);
+            reverseword_utf(*root);
           else
-            reverseword(word_root);
+            reverseword(*root);
         }
-        *root = mystrdup(word_root.c_str());
       }
       // try check compound word
     } else if (pAMgr->get_compound()) {
       struct hentry* rwords[100];  // buffer for COMPOUND pattern checking
-      he = pAMgr->compound_check(word, len, 0, 0, 100, 0, NULL, (hentry**)&rwords, 0, 0, info);
+      he = pAMgr->compound_check(word, 0, 0, 100, 0, NULL, (hentry**)&rwords, 0, 0, info);
       // LANG_hu section: `moving rule' with last dash
       if ((!he) && (langnum == LANG_hu) && (word[len - 1] == '-')) {
-        char* dup = mystrdup(word);
-        if (!dup)
-          return NULL;
-        dup[len - 1] = '\0';
-        he = pAMgr->compound_check(dup, len - 1, -5, 0, 100, 0, NULL, (hentry**)&rwords, 1, 0,
-                                   info);
-        free(dup);
+        std::string dup(word, len - 1);
+        he = pAMgr->compound_check(dup, -5, 0, 100, 0, NULL, (hentry**)&rwords, 1, 0, info);
       }
       // end of LANG specific region
       if (he) {
         if (root) {
-          std::string word_root(he->word);
+          root->assign(he->word);
           if (complexprefixes) {
             if (utf8)
-              reverseword_utf(word_root);
+              reverseword_utf(*root);
             else
-              reverseword(word_root);
+              reverseword(*root);
           }
-          *root = mystrdup(word_root.c_str());
         }
         if (info)
           *info += SPELL_COMPOUND;
@@ -780,22 +824,27 @@ struct hentry* Hunspell::checkword(const char* w, int* info, char** root) {
   return he;
 }
 
-int Hunspell::suggest(char*** slst, const char* word) {
+std::vector<std::string> Hunspell::suggest(const std::string& word) {
+  return m_Impl->suggest(word);
+}
+
+std::vector<std::string> HunspellImpl::suggest(const std::string& word) {
+  std::vector<std::string> slst;
+
   int onlycmpdsug = 0;
-  if (!pSMgr || maxdic == 0)
-    return 0;
-  *slst = NULL;
+  if (!pSMgr || m_HMgrs.empty())
+    return slst;
+
   // process XML input of the simplified API (see manual)
-  if (strncmp(word, SPELL_XML, sizeof(SPELL_XML) - 3) == 0) {
-    return spellml(slst, word);
+  if (word.compare(0, sizeof(SPELL_XML) - 3, SPELL_XML, sizeof(SPELL_XML) - 3) == 0) {
+    return spellml(word);
   }
-  int nc = strlen(word);
   if (utf8) {
-    if (nc >= MAXWORDUTF8LEN)
-      return 0;
+    if (word.size() >= MAXWORDUTF8LEN)
+      return slst;
   } else {
-    if (nc >= MAXWORDLEN)
-      return 0;
+    if (word.size() >= MAXWORDLEN)
+      return slst;
   }
   int captype = NOCAP;
   size_t abbv = 0;
@@ -809,121 +858,102 @@ int Hunspell::suggest(char*** slst, const char* word) {
   {
     std::string wspace;
 
-    int convstatus = rl ? rl->conv(word, wspace) : 0;
-    if (convstatus < 0)
-      return 0;
-    else if (convstatus > 0)
-      wl = cleanword2(scw, sunicw, wspace.c_str(), &nc, &captype, &abbv);
+    bool convstatus = rl ? rl->conv(word, wspace) : false;
+    if (convstatus)
+      wl = cleanword2(scw, sunicw, wspace, &captype, &abbv);
     else
-      wl = cleanword2(scw, sunicw, word, &nc, &captype, &abbv);
+      wl = cleanword2(scw, sunicw, word, &captype, &abbv);
 
     if (wl == 0)
-      return 0;
+      return slst;
   }
 
-  int ns = 0;
   int capwords = 0;
 
   // check capitalized form for FORCEUCASE
   if (pAMgr && captype == NOCAP && pAMgr->get_forceucase()) {
     int info = SPELL_ORIGCAP;
-    if (checkword(scw.c_str(), &info, NULL)) {
+    if (checkword(scw, &info, NULL)) {
       std::string form(scw);
       mkinitcap(form);
-
-      char** wlst = (char**)malloc(MAXSUGGESTION * sizeof(char*));
-      if (wlst == NULL)
-        return -1;
-      *slst = wlst;
-      wlst[0] = mystrdup(form.c_str());
-      for (int i = 1; i < MAXSUGGESTION; ++i) {
-        wlst[i] = NULL;
-      }
-
-      return 1;
+      slst.push_back(form);
+      return slst;
     }
   }
 
   switch (captype) {
     case NOCAP: {
-      ns = pSMgr->suggest(slst, scw.c_str(), ns, &onlycmpdsug);
+      pSMgr->suggest(slst, scw.c_str(), &onlycmpdsug);
       break;
     }
 
     case INITCAP: {
       capwords = 1;
-      ns = pSMgr->suggest(slst, scw.c_str(), ns, &onlycmpdsug);
-      if (ns == -1)
-        break;
+      pSMgr->suggest(slst, scw.c_str(), &onlycmpdsug);
       std::string wspace(scw);
       mkallsmall2(wspace, sunicw);
-      ns = pSMgr->suggest(slst, wspace.c_str(), ns, &onlycmpdsug);
+      pSMgr->suggest(slst, wspace.c_str(), &onlycmpdsug);
       break;
     }
     case HUHINITCAP:
       capwords = 1;
     case HUHCAP: {
-      ns = pSMgr->suggest(slst, scw.c_str(), ns, &onlycmpdsug);
-      if (ns != -1) {
-        // something.The -> something. The
-        size_t dot_pos = scw.find('.');
-        if (dot_pos != std::string::npos) {
-          std::string postdot = scw.substr(dot_pos + 1);
-          int captype_;
-          if (utf8) {
-            std::vector<w_char> postdotu;
-            u8_u16(postdotu, postdot);
-            captype_ = get_captype_utf8(postdotu, langnum);
-          } else {
-            captype_ = get_captype(postdot, csconv);
-          }
-          if (captype_ == INITCAP) {
-            std::string str(scw);
-            str.insert(dot_pos + 1, 1, ' ');
-            ns = insert_sug(slst, str.c_str(), ns);
-          }
+      pSMgr->suggest(slst, scw.c_str(), &onlycmpdsug);
+      // something.The -> something. The
+      size_t dot_pos = scw.find('.');
+      if (dot_pos != std::string::npos) {
+        std::string postdot = scw.substr(dot_pos + 1);
+        int captype_;
+        if (utf8) {
+          std::vector<w_char> postdotu;
+          u8_u16(postdotu, postdot);
+          captype_ = get_captype_utf8(postdotu, langnum);
+        } else {
+          captype_ = get_captype(postdot, csconv);
         }
-
-        std::string wspace;
-
-        if (captype == HUHINITCAP) {
-          // TheOpenOffice.org -> The OpenOffice.org
-          wspace = scw;
-          mkinitsmall2(wspace, sunicw);
-          ns = pSMgr->suggest(slst, wspace.c_str(), ns, &onlycmpdsug);
+        if (captype_ == INITCAP) {
+          std::string str(scw);
+          str.insert(dot_pos + 1, 1, ' ');
+          insert_sug(slst, str);
         }
+      }
+
+      std::string wspace;
+
+      if (captype == HUHINITCAP) {
+        // TheOpenOffice.org -> The OpenOffice.org
         wspace = scw;
-        mkallsmall2(wspace, sunicw);
+        mkinitsmall2(wspace, sunicw);
+        pSMgr->suggest(slst, wspace.c_str(), &onlycmpdsug);
+      }
+      wspace = scw;
+      mkallsmall2(wspace, sunicw);
+      if (spell(wspace.c_str()))
+        insert_sug(slst, wspace);
+      size_t prevns = slst.size();
+      pSMgr->suggest(slst, wspace.c_str(), &onlycmpdsug);
+      if (captype == HUHINITCAP) {
+        mkinitcap2(wspace, sunicw);
         if (spell(wspace.c_str()))
-          ns = insert_sug(slst, wspace.c_str(), ns);
-        int prevns = ns;
-        ns = pSMgr->suggest(slst, wspace.c_str(), ns, &onlycmpdsug);
-        if (captype == HUHINITCAP) {
-          mkinitcap2(wspace, sunicw);
-          if (spell(wspace.c_str()))
-            ns = insert_sug(slst, wspace.c_str(), ns);
-          ns = pSMgr->suggest(slst, wspace.c_str(), ns, &onlycmpdsug);
-        }
-        // aNew -> "a New" (instead of "a new")
-        for (int j = prevns; j < ns; j++) {
-          char* space = strchr((*slst)[j], ' ');
-          if (space) {
-            size_t slen = strlen(space + 1);
-            // different case after space (need capitalisation)
-            if ((slen < wl) && strcmp(scw.c_str() + wl - slen, space + 1)) {
-              std::string first((*slst)[j], space + 1);
-              std::string second(space + 1);
-              std::vector<w_char> w;
-              if (utf8)
-                u8_u16(w, second);
-              mkinitcap2(second, w);
-              // set as first suggestion
-              char* r = (*slst)[j];
-              for (int k = j; k > 0; k--)
-                (*slst)[k] = (*slst)[k - 1];
-              free(r);
-              (*slst)[0] = mystrdup((first + second).c_str());
-            }
+          insert_sug(slst, wspace);
+        pSMgr->suggest(slst, wspace.c_str(), &onlycmpdsug);
+      }
+      // aNew -> "a New" (instead of "a new")
+      for (size_t j = prevns; j < slst.size(); ++j) {
+        const char* space = strchr(slst[j].c_str(), ' ');
+        if (space) {
+          size_t slen = strlen(space + 1);
+          // different case after space (need capitalisation)
+          if ((slen < wl) && strcmp(scw.c_str() + wl - slen, space + 1)) {
+            std::string first(slst[j].c_str(), space + 1);
+            std::string second(space + 1);
+            std::vector<w_char> w;
+            if (utf8)
+              u8_u16(w, second);
+            mkinitcap2(second, w);
+            // set as first suggestion
+            slst.erase(slst.begin() + j);
+            slst.insert(slst.begin(), first + second);
           }
         }
       }
@@ -933,28 +963,20 @@ int Hunspell::suggest(char*** slst, const char* word) {
     case ALLCAP: {
       std::string wspace(scw);
       mkallsmall2(wspace, sunicw);
-      ns = pSMgr->suggest(slst, wspace.c_str(), ns, &onlycmpdsug);
-      if (ns == -1)
-        break;
+      pSMgr->suggest(slst, wspace.c_str(), &onlycmpdsug);
       if (pAMgr && pAMgr->get_keepcase() && spell(wspace.c_str()))
-        ns = insert_sug(slst, wspace.c_str(), ns);
+        insert_sug(slst, wspace);
       mkinitcap2(wspace, sunicw);
-      ns = pSMgr->suggest(slst, wspace.c_str(), ns, &onlycmpdsug);
-      for (int j = 0; j < ns; j++) {
-        std::string form((*slst)[j]);
-        mkallcap(form);
-
+      pSMgr->suggest(slst, wspace.c_str(), &onlycmpdsug);
+      for (size_t j = 0; j < slst.size(); ++j) {
+        mkallcap(slst[j]);
         if (pAMgr && pAMgr->get_checksharps()) {
           if (utf8) {
-            mystrrep(form, "\xC3\x9F", "SS");
+            mystrrep(slst[j], "\xC3\x9F", "SS");
           } else {
-            mystrrep(form, "\xDF", "SS");
+            mystrrep(slst[j], "\xDF", "SS");
           }
         }
-
-        free((*slst)[j]);
-        (*slst)[j] = mystrdup(form.c_str());
-
       }
       break;
     }
@@ -962,29 +984,27 @@ int Hunspell::suggest(char*** slst, const char* word) {
 
   // LANG_hu section: replace '-' with ' ' in Hungarian
   if (langnum == LANG_hu) {
-    for (int j = 0; j < ns; j++) {
-      char* pos = strchr((*slst)[j], '-');
-      if (pos) {
+    for (size_t j = 0; j < slst.size(); ++j) {
+      size_t pos = slst[j].find('-');
+      if (pos != std::string::npos) {
         int info;
-        *pos = '\0';
-        std::string w((*slst)[j]);
-        w.append(pos + 1);
-        (void)spell(w.c_str(), &info, NULL);
+        std::string w(slst[j].substr(0, pos));
+        w.append(slst[j].substr(pos + 1));
+        (void)spell(w, &info, NULL);
         if ((info & SPELL_COMPOUND) && (info & SPELL_FORBIDDEN)) {
-          *pos = ' ';
+          slst[j][pos] = ' ';
         } else
-          *pos = '-';
+          slst[j][pos] = '-';
       }
     }
   }
   // END OF LANG_hu section
 
   // try ngram approach since found nothing or only compound words
-  if (pAMgr && (ns == 0 || onlycmpdsug) && (pAMgr->get_maxngramsugs() != 0) &&
-      (*slst)) {
+  if (pAMgr && (slst.empty() || onlycmpdsug) && (pAMgr->get_maxngramsugs() != 0)) {
     switch (captype) {
       case NOCAP: {
-        ns = pSMgr->ngsuggest(*slst, scw.c_str(), ns, pHMgr, maxdic);
+        pSMgr->ngsuggest(slst, scw.c_str(), m_HMgrs);
         break;
       }
       case HUHINITCAP:
@@ -992,26 +1012,23 @@ int Hunspell::suggest(char*** slst, const char* word) {
       case HUHCAP: {
         std::string wspace(scw);
         mkallsmall2(wspace, sunicw);
-        ns = pSMgr->ngsuggest(*slst, wspace.c_str(), ns, pHMgr, maxdic);
+        pSMgr->ngsuggest(slst, wspace.c_str(), m_HMgrs);
         break;
       }
       case INITCAP: {
         capwords = 1;
         std::string wspace(scw);
         mkallsmall2(wspace, sunicw);
-        ns = pSMgr->ngsuggest(*slst, wspace.c_str(), ns, pHMgr, maxdic);
+        pSMgr->ngsuggest(slst, wspace.c_str(), m_HMgrs);
         break;
       }
       case ALLCAP: {
         std::string wspace(scw);
         mkallsmall2(wspace, sunicw);
-        int oldns = ns;
-        ns = pSMgr->ngsuggest(*slst, wspace.c_str(), ns, pHMgr, maxdic);
-        for (int j = oldns; j < ns; j++) {
-          std::string form((*slst)[j]);
-          mkallcap(form);
-          free((*slst)[j]);
-          (*slst)[j] = mystrdup(form.c_str());
+        size_t oldns = slst.size();
+        pSMgr->ngsuggest(slst, wspace.c_str(), m_HMgrs);
+        for (size_t j = oldns; j < slst.size(); ++j) {
+          mkallcap(slst[j]);
         }
         break;
       }
@@ -1022,8 +1039,8 @@ int Hunspell::suggest(char*** slst, const char* word) {
   size_t dash_pos = scw.find('-');
   if (dash_pos != std::string::npos) {
     int nodashsug = 1;
-    for (int j = 0; j < ns && nodashsug == 1; j++) {
-      if (strchr((*slst)[j], '-'))
+    for (size_t j = 0; j < slst.size() && nodashsug == 1; ++j) {
+      if (slst[j].find('-') != std::string::npos)
         nodashsug = 0;
     }
 
@@ -1035,20 +1052,16 @@ int Hunspell::suggest(char*** slst, const char* word) {
         last = 1;
       std::string chunk = scw.substr(prev_pos, dash_pos - prev_pos);
       if (!spell(chunk.c_str())) {
-        char** nlst = NULL;
-        int nn = suggest(&nlst, chunk.c_str());
-        for (int j = nn - 1; j >= 0; j--) {
+        std::vector<std::string> nlst = suggest(chunk.c_str());
+        for (std::vector<std::string>::reverse_iterator j = nlst.rbegin(); j != nlst.rend(); ++j) {
           std::string wspace = scw.substr(0, prev_pos);
-          wspace.append(nlst[j]);
+          wspace.append(*j);
           if (!last) {
             wspace.append("-");
             wspace.append(scw.substr(dash_pos + 1));
           }
-          ns = insert_sug(slst, wspace.c_str(), ns);
-          free(nlst[j]);
+          insert_sug(slst, wspace);
         }
-        if (nlst != NULL)
-          free(nlst);
         nodashsug = 0;
       }
       if (!last) {
@@ -1062,31 +1075,24 @@ int Hunspell::suggest(char*** slst, const char* word) {
 
   // word reversing wrapper for complex prefixes
   if (complexprefixes) {
-    for (int j = 0; j < ns; j++) {
-      std::string root((*slst)[j]);
-      free((*slst)[j]);
+    for (size_t j = 0; j < slst.size(); ++j) {
       if (utf8)
-        reverseword_utf(root);
+        reverseword_utf(slst[j]);
       else
-        reverseword(root);
-      (*slst)[j] = mystrdup(root.c_str());
+        reverseword(slst[j]);
     }
   }
 
   // capitalize
   if (capwords)
-    for (int j = 0; j < ns; j++) {
-      std::string form((*slst)[j]);
-      free((*slst)[j]);
-      mkinitcap(form);
-      (*slst)[j] = mystrdup(form.c_str());
+    for (size_t j = 0; j < slst.size(); ++j) {
+      mkinitcap(slst[j]);
     }
 
   // expand suggestions with dot(s)
   if (abbv && pAMgr && pAMgr->get_sugswithdots()) {
-    for (int j = 0; j < ns; j++) {
-      (*slst)[j] = (char*)realloc((*slst)[j], strlen((*slst)[j]) + 1 + abbv);
-      strcat((*slst)[j], word + strlen(word) - abbv);
+    for (size_t j = 0; j < slst.size(); ++j) {
+      slst[j].append(word.substr(word.size() - abbv));
     }
   }
 
@@ -1095,96 +1101,90 @@ int Hunspell::suggest(char*** slst, const char* word) {
     switch (captype) {
       case INITCAP:
       case ALLCAP: {
-        int l = 0;
-        for (int j = 0; j < ns; j++) {
-          if (!strchr((*slst)[j], ' ') && !spell((*slst)[j])) {
+        size_t l = 0;
+        for (size_t j = 0; j < slst.size(); ++j) {
+          if (slst[j].find(' ') == std::string::npos && !spell(slst[j])) {
             std::string s;
             std::vector<w_char> w;
             if (utf8) {
-              u8_u16(w, (*slst)[j]);
+              u8_u16(w, slst[j]);
             } else {
-              s = (*slst)[j];
+              s = slst[j];
             }
             mkallsmall2(s, w);
-            free((*slst)[j]);
-            if (spell(s.c_str())) {
-              (*slst)[l] = mystrdup(s.c_str());
-              if ((*slst)[l])
-                l++;
+            if (spell(s)) {
+              slst[l] = s;
+              ++l;
             } else {
               mkinitcap2(s, w);
-              if (spell(s.c_str())) {
-                (*slst)[l] = mystrdup(s.c_str());
-                if ((*slst)[l])
-                  l++;
+              if (spell(s)) {
+                slst[l] = s;
+                ++l;
               }
             }
           } else {
-            (*slst)[l] = (*slst)[j];
-            l++;
+            slst[l] = slst[j];
+            ++l;
           }
         }
-        ns = l;
+        slst.resize(l);
       }
     }
   }
 
   // remove duplications
-  int l = 0;
-  for (int j = 0; j < ns; j++) {
-    (*slst)[l] = (*slst)[j];
-    for (int k = 0; k < l; k++) {
-      if (strcmp((*slst)[k], (*slst)[j]) == 0) {
-        free((*slst)[j]);
-        l--;
+  size_t l = 0;
+  for (size_t j = 0; j < slst.size(); ++j) {
+    slst[l] = slst[j];
+    for (size_t k = 0; k < l; ++k) {
+      if (slst[k] == slst[j]) {
+        --l;
         break;
       }
     }
-    l++;
+    ++l;
   }
-  ns = l;
+  slst.resize(l);
 
   // output conversion
   rl = (pAMgr) ? pAMgr->get_oconvtable() : NULL;
-  for (int j = 0; rl && j < ns; j++) {
+  for (size_t j = 0; rl && j < slst.size(); ++j) {
     std::string wspace;
-    if (rl->conv((*slst)[j], wspace) > 0) {
-      free((*slst)[j]);
-      (*slst)[j] = mystrdup(wspace.c_str());
+    if (rl->conv(slst[j], wspace)) {
+      slst[j] = wspace;
     }
   }
 
-  // if suggestions removed by nosuggest, onlyincompound parameters
-  if (l == 0 && *slst) {
-    free(*slst);
-    *slst = NULL;
-  }
-  return l;
+  return slst;
 }
 
-void Hunspell::free_list(char*** slst, int n) {
-  freelist(slst, n);
+const std::string& Hunspell::get_dict_encoding() const {
+  return m_Impl->get_dict_encoding();
 }
 
-char* Hunspell::get_dic_encoding() {
+const std::string& HunspellImpl::get_dict_encoding() const {
   return encoding;
 }
 
-int Hunspell::stem(char*** slst, char** desc, int n) {
+std::vector<std::string> Hunspell::stem(const std::vector<std::string>& desc) {
+  return m_Impl->stem(desc);
+}
+
+std::vector<std::string> HunspellImpl::stem(const std::vector<std::string>& desc) {
+  std::vector<std::string> slst;
 
   std::string result2;
-  *slst = NULL;
-  if (n == 0)
-    return 0;
-  for (int i = 0; i < n; i++) {
+  if (desc.empty())
+    return slst;
+  for (size_t i = 0; i < desc.size(); ++i) {
 
     std::string result;
 
     // add compound word parts (except the last one)
-    char* s = (char*)desc[i];
-    char* part = strstr(s, MORPH_PART);
+    const char* s = desc[i].c_str();
+    const char* part = strstr(s, MORPH_PART);
     if (part) {
-      char* nextpart = strstr(part + 1, MORPH_PART);
+      const char* nextpart = strstr(part + 1, MORPH_PART);
       while (nextpart) {
         std::string field;
         copy_field(field, part, MORPH_PART);
@@ -1195,36 +1195,34 @@ int Hunspell::stem(char*** slst, char** desc, int n) {
       s = part;
     }
 
-    char** pl;
     std::string tok(s);
     size_t alt = 0;
     while ((alt = tok.find(" | ", alt)) != std::string::npos) {
       tok[alt + 1] = MSEP_ALT;
     }
-    int pln = line_tok(tok.c_str(), &pl, MSEP_ALT);
-    for (int k = 0; k < pln; k++) {
+    std::vector<std::string> pl = line_tok(tok, MSEP_ALT);
+    for (size_t k = 0; k < pl.size(); ++k) {
       // add derivational suffixes
-      if (strstr(pl[k], MORPH_DERI_SFX)) {
+      if (pl[k].find(MORPH_DERI_SFX) != std::string::npos) {
         // remove inflectional suffixes
-        char* is = strstr(pl[k], MORPH_INFL_SFX);
-        if (is)
-          *is = '\0';
-        char* sg = pSMgr->suggest_gen(&(pl[k]), 1, pl[k]);
-        if (sg) {
-          char** gen;
-          int genl = line_tok(sg, &gen, MSEP_REC);
-          free(sg);
-          for (int j = 0; j < genl; j++) {
+        const size_t is = pl[k].find(MORPH_INFL_SFX);
+        if (is != std::string::npos)
+          pl[k].resize(is);
+        std::vector<std::string> singlepl;
+        singlepl.push_back(pl[k]);
+        std::string sg = pSMgr->suggest_gen(singlepl, pl[k]);
+        if (!sg.empty()) {
+          std::vector<std::string> gen = line_tok(sg, MSEP_REC);
+          for (size_t j = 0; j < gen.size(); ++j) {
             result2.push_back(MSEP_REC);
             result2.append(result);
             result2.append(gen[j]);
           }
-          freelist(&gen, genl);
         }
       } else {
         result2.push_back(MSEP_REC);
         result2.append(result);
-        if (strstr(pl[k], MORPH_SURF_PFX)) {
+        if (pl[k].find(MORPH_SURF_PFX) != std::string::npos) {
           std::string field;
           copy_field(field, pl[k], MORPH_SURF_PFX);
           result2.append(field);
@@ -1234,29 +1232,37 @@ int Hunspell::stem(char*** slst, char** desc, int n) {
         result2.append(field);
       }
     }
-    freelist(&pl, pln);
   }
-  int sln = line_tok(result2.c_str(), slst, MSEP_REC);
-  return uniqlist(*slst, sln);
+  slst = line_tok(result2, MSEP_REC);
+  uniqlist(slst);
+  return slst;
 }
 
-int Hunspell::stem(char*** slst, const char* word) {
-  char** pl;
-  int pln = analyze(&pl, word);
-  int pln2 = stem(slst, pl, pln);
-  freelist(&pl, pln);
-  return pln2;
+std::vector<std::string> Hunspell::stem(const std::string& word) {
+  return m_Impl->stem(word);
 }
 
-const char* Hunspell::get_wordchars() {
+std::vector<std::string> HunspellImpl::stem(const std::string& word) {
+  return stem(analyze(word));
+}
+
+const std::string& Hunspell::get_wordchars() const {
+  return m_Impl->get_wordchars();
+}
+
+const std::string& HunspellImpl::get_wordchars() const {
   return pAMgr->get_wordchars();
 }
 
-const std::vector<w_char>& Hunspell::get_wordchars_utf16() {
+const std::vector<w_char>& Hunspell::get_wordchars_utf16() const {
+  return m_Impl->get_wordchars_utf16();
+}
+
+const std::vector<w_char>& HunspellImpl::get_wordchars_utf16() const {
   return pAMgr->get_wordchars_utf16();
 }
 
-void Hunspell::mkinitcap(std::string& u8) {
+void HunspellImpl::mkinitcap(std::string& u8) {
   if (utf8) {
     std::vector<w_char> u16;
     u8_u16(u16, u8);
@@ -1267,7 +1273,7 @@ void Hunspell::mkinitcap(std::string& u8) {
   }
 }
 
-int Hunspell::mkinitcap2(std::string& u8, std::vector<w_char>& u16) {
+int HunspellImpl::mkinitcap2(std::string& u8, std::vector<w_char>& u16) {
   if (utf8) {
     ::mkinitcap_utf(u16, langnum);
     u16_u8(u8, u16);
@@ -1277,7 +1283,7 @@ int Hunspell::mkinitcap2(std::string& u8, std::vector<w_char>& u16) {
   return u8.size();
 }
 
-int Hunspell::mkinitsmall2(std::string& u8, std::vector<w_char>& u16) {
+int HunspellImpl::mkinitsmall2(std::string& u8, std::vector<w_char>& u16) {
   if (utf8) {
     ::mkinitsmall_utf(u16, langnum);
     u16_u8(u8, u16);
@@ -1287,52 +1293,66 @@ int Hunspell::mkinitsmall2(std::string& u8, std::vector<w_char>& u16) {
   return u8.size();
 }
 
-int Hunspell::add(const char* word) {
-  if (pHMgr[0])
-    return (pHMgr[0])->add(word);
+int Hunspell::add(const std::string& word) {
+  return m_Impl->add(word);
+}
+
+int HunspellImpl::add(const std::string& word) {
+  if (!m_HMgrs.empty())
+    return m_HMgrs[0]->add(word);
   return 0;
 }
 
-int Hunspell::add_with_affix(const char* word, const char* example) {
-  if (pHMgr[0])
-    return (pHMgr[0])->add_with_affix(word, example);
+int Hunspell::add_with_affix(const std::string& word, const std::string& example) {
+  return m_Impl->add_with_affix(word, example);
+}
+
+int HunspellImpl::add_with_affix(const std::string& word, const std::string& example) {
+  if (!m_HMgrs.empty())
+    return m_HMgrs[0]->add_with_affix(word, example);
   return 0;
 }
 
-int Hunspell::remove(const char* word) {
-  if (pHMgr[0])
-    return (pHMgr[0])->remove(word);
+int Hunspell::remove(const std::string& word) {
+  return m_Impl->remove(word);
+}
+
+int HunspellImpl::remove(const std::string& word) {
+  if (!m_HMgrs.empty())
+    return m_HMgrs[0]->remove(word);
   return 0;
 }
 
-const char* Hunspell::get_version() {
+const std::string& Hunspell::get_version() const {
+  return m_Impl->get_version();
+}
+
+const std::string& HunspellImpl::get_version() const {
   return pAMgr->get_version();
 }
 
-struct cs_info* Hunspell::get_csconv() {
-  return csconv;
-}
-
-void Hunspell::cat_result(std::string& result, char* st) {
-  if (st) {
+void HunspellImpl::cat_result(std::string& result, const std::string& st) {
+  if (!st.empty()) {
     if (!result.empty())
       result.append("\n");
     result.append(st);
-    free(st);
   }
 }
 
-int Hunspell::analyze(char*** slst, const char* word) {
-  *slst = NULL;
-  if (!pSMgr || maxdic == 0)
-    return 0;
-  int nc = strlen(word);
+std::vector<std::string> Hunspell::analyze(const std::string& word) {
+  return m_Impl->analyze(word);
+}
+
+std::vector<std::string> HunspellImpl::analyze(const std::string& word) {
+  std::vector<std::string> slst;
+  if (!pSMgr || m_HMgrs.empty())
+    return slst;
   if (utf8) {
-    if (nc >= MAXWORDUTF8LEN)
-      return 0;
+    if (word.size() >= MAXWORDUTF8LEN)
+      return slst;
   } else {
-    if (nc >= MAXWORDLEN)
-      return 0;
+    if (word.size() >= MAXWORDLEN)
+      return slst;
   }
   int captype = NOCAP;
   size_t abbv = 0;
@@ -1346,13 +1366,11 @@ int Hunspell::analyze(char*** slst, const char* word) {
   {
     std::string wspace;
 
-    int convstatus = rl ? rl->conv(word, wspace) : 0;
-    if (convstatus < 0)
-      return 0;
-    else if (convstatus > 0)
-      wl = cleanword2(scw, sunicw, wspace.c_str(), &nc, &captype, &abbv);
+    bool convstatus = rl ? rl->conv(word, wspace) : false;
+    if (convstatus)
+      wl = cleanword2(scw, sunicw, wspace, &captype, &abbv);
     else
-      wl = cleanword2(scw, sunicw, word, &nc, &captype, &abbv);
+      wl = cleanword2(scw, sunicw, word, &captype, &abbv);
   }
 
   if (wl == 0) {
@@ -1362,18 +1380,18 @@ int Hunspell::analyze(char*** slst, const char* word) {
         scw.push_back('.');
       abbv = 0;
     } else
-      return 0;
+      return slst;
   }
 
   std::string result;
 
   size_t n = 0;
-  size_t n2 = 0;
-  size_t n3 = 0;
-
   // test numbers
   // LANG_hu section: set dash information for suggestions
   if (langnum == LANG_hu) {
+    size_t n2 = 0;
+    size_t n3 = 0;
+
     while ((n < wl) && (((scw[n] <= '9') && (scw[n] >= '0')) ||
                         (((scw[n] == '.') || (scw[n] == ',')) && (n > 0)))) {
       n++;
@@ -1387,22 +1405,20 @@ int Hunspell::analyze(char*** slst, const char* word) {
     }
 
     if ((n == wl) && (n3 > 0) && (n - n3 > 3))
-      return 0;
+      return slst;
     if ((n == wl) || ((n > 0) && ((scw[n] == '%') || (scw[n] == '\xB0')) &&
-                      checkword(scw.c_str() + n, NULL, NULL))) {
+                      checkword(scw.substr(n), NULL, NULL))) {
       result.append(scw);
       result.resize(n - 1);
       if (n == wl)
-        cat_result(result, pSMgr->suggest_morph(scw.c_str() + n - 1));
+        cat_result(result, pSMgr->suggest_morph(scw.substr(n - 1)));
       else {
-        char sign = scw[n];
-        scw[n] = '\0';
-        cat_result(result, pSMgr->suggest_morph(scw.c_str() + n - 1));
+        std::string chunk = scw.substr(n - 1, 1);
+        cat_result(result, pSMgr->suggest_morph(chunk));
         result.push_back('+');  // XXX SPEC. MORPHCODE
-        scw[n] = sign;
-        cat_result(result, pSMgr->suggest_morph(scw.c_str() + n));
+        cat_result(result, pSMgr->suggest_morph(scw.substr(n)));
       }
-      return line_tok(result.c_str(), slst, MSEP_REC);
+      return line_tok(result, MSEP_REC);
     }
   }
   // END OF LANG_hu section
@@ -1411,52 +1427,52 @@ int Hunspell::analyze(char*** slst, const char* word) {
     case HUHCAP:
     case HUHINITCAP:
     case NOCAP: {
-      cat_result(result, pSMgr->suggest_morph(scw.c_str()));
+      cat_result(result, pSMgr->suggest_morph(scw));
       if (abbv) {
         std::string u8buffer(scw);
         u8buffer.push_back('.');
-        cat_result(result, pSMgr->suggest_morph(u8buffer.c_str()));
+        cat_result(result, pSMgr->suggest_morph(u8buffer));
       }
       break;
     }
     case INITCAP: {
-      wl = mkallsmall2(scw, sunicw);
+      mkallsmall2(scw, sunicw);
       std::string u8buffer(scw);
       mkinitcap2(scw, sunicw);
-      cat_result(result, pSMgr->suggest_morph(u8buffer.c_str()));
-      cat_result(result, pSMgr->suggest_morph(scw.c_str()));
+      cat_result(result, pSMgr->suggest_morph(u8buffer));
+      cat_result(result, pSMgr->suggest_morph(scw));
       if (abbv) {
         u8buffer.push_back('.');
-        cat_result(result, pSMgr->suggest_morph(u8buffer.c_str()));
+        cat_result(result, pSMgr->suggest_morph(u8buffer));
 
         u8buffer = scw;
         u8buffer.push_back('.');
 
-        cat_result(result, pSMgr->suggest_morph(u8buffer.c_str()));
+        cat_result(result, pSMgr->suggest_morph(u8buffer));
       }
       break;
     }
     case ALLCAP: {
-      cat_result(result, pSMgr->suggest_morph(scw.c_str()));
+      cat_result(result, pSMgr->suggest_morph(scw));
       if (abbv) {
         std::string u8buffer(scw);
         u8buffer.push_back('.');
-        cat_result(result, pSMgr->suggest_morph(u8buffer.c_str()));
+        cat_result(result, pSMgr->suggest_morph(u8buffer));
       }
       mkallsmall2(scw, sunicw);
       std::string u8buffer(scw);
       mkinitcap2(scw, sunicw);
 
-      cat_result(result, pSMgr->suggest_morph(u8buffer.c_str()));
-      cat_result(result, pSMgr->suggest_morph(scw.c_str()));
+      cat_result(result, pSMgr->suggest_morph(u8buffer));
+      cat_result(result, pSMgr->suggest_morph(scw));
       if (abbv) {
         u8buffer.push_back('.');
-        cat_result(result, pSMgr->suggest_morph(u8buffer.c_str()));
+        cat_result(result, pSMgr->suggest_morph(u8buffer));
 
         u8buffer = scw;
         u8buffer.push_back('.');
 
-        cat_result(result, pSMgr->suggest_morph(u8buffer.c_str()));
+        cat_result(result, pSMgr->suggest_morph(u8buffer));
       }
       break;
     }
@@ -1470,62 +1486,58 @@ int Hunspell::analyze(char*** slst, const char* word) {
       else
         reverseword(result);
     }
-    return line_tok(result.c_str(), slst, MSEP_REC);
+    return line_tok(result, MSEP_REC);
   }
 
   // compound word with dash (HU) I18n
   // LANG_hu section: set dash information for suggestions
 
   size_t dash_pos = langnum == LANG_hu ? scw.find('-') : std::string::npos;
-  int nresult = 0;
   if (dash_pos != std::string::npos) {
+    int nresult = 0;
+
     std::string part1 = scw.substr(0, dash_pos);
     std::string part2 = scw.substr(dash_pos+1);
 
     // examine 2 sides of the dash
     if (part2.empty()) {  // base word ending with dash
-      if (spell(part1.c_str())) {
-        char* p = pSMgr->suggest_morph(part1.c_str());
-        if (p) {
-          int ret = line_tok(p, slst, MSEP_REC);
-          free(p);
-          return ret;
+      if (spell(part1)) {
+        std::string p = pSMgr->suggest_morph(part1);
+        if (!p.empty()) {
+          slst = line_tok(p, MSEP_REC);
+          return slst;
         }
       }
     } else if (part2.size() == 1 && part2[0] == 'e') {  // XXX (HU) -e hat.
-      if (spell(part1.c_str()) && (spell("-e"))) {
-        char* st = pSMgr->suggest_morph(part1.c_str());
-        if (st) {
+      if (spell(part1) && (spell("-e"))) {
+        std::string st = pSMgr->suggest_morph(part1);
+        if (!st.empty()) {
           result.append(st);
-          free(st);
         }
         result.push_back('+');  // XXX spec. separator in MORPHCODE
         st = pSMgr->suggest_morph("-e");
-        if (st) {
+        if (!st.empty()) {
           result.append(st);
-          free(st);
         }
-        return line_tok(result.c_str(), slst, MSEP_REC);
+        return line_tok(result, MSEP_REC);
       }
     } else {
       // first word ending with dash: word- XXX ???
       part1.push_back(' ');
-      nresult = spell(part1.c_str());
+      nresult = spell(part1);
       part1.erase(part1.size() - 1);
-      if (nresult && spell(part2.c_str()) &&
+      if (nresult && spell(part2) &&
           ((part2.size() > 1) || ((part2[0] > '0') && (part2[0] < '9')))) {
-        char* st = pSMgr->suggest_morph(part1.c_str());
-        if (st) {
+        std::string st = pSMgr->suggest_morph(part1);
+        if (!st.empty()) {
           result.append(st);
-          free(st);
           result.push_back('+');  // XXX spec. separator in MORPHCODE
         }
-        st = pSMgr->suggest_morph(part2.c_str());
-        if (st) {
+        st = pSMgr->suggest_morph(part2);
+        if (!st.empty()) {
           result.append(st);
-          free(st);
         }
-        return line_tok(result.c_str(), slst, MSEP_REC);
+        return line_tok(result, MSEP_REC);
       }
     }
     // affixed number in correct word
@@ -1550,37 +1562,38 @@ int Hunspell::analyze(char*** slst, const char* word) {
             continue;
         }
         std::string chunk = scw.substr(dash_pos - n);
-        if (checkword(chunk.c_str(), NULL, NULL)) {
+        if (checkword(chunk, NULL, NULL)) {
           result.append(chunk);
-          char* st = pSMgr->suggest_morph(chunk.c_str());
-          if (st) {
+          std::string st = pSMgr->suggest_morph(chunk);
+          if (!st.empty()) {
             result.append(st);
-            free(st);
           }
-          return line_tok(result.c_str(), slst, MSEP_REC);
+          return line_tok(result, MSEP_REC);
         }
       }
     }
   }
-  return 0;
+  return slst;
 }
 
-int Hunspell::generate(char*** slst, const char* word, char** pl, int pln) {
-  *slst = NULL;
-  if (!pSMgr || !pln)
-    return 0;
-  char** pl2;
-  int pl2n = analyze(&pl2, word);
+std::vector<std::string> Hunspell::generate(const std::string& word, const std::vector<std::string>& pl) {
+  return m_Impl->generate(word, pl);
+}
+
+std::vector<std::string> HunspellImpl::generate(const std::string& word, const std::vector<std::string>& pl) {
+  std::vector<std::string> slst;
+  if (!pSMgr || pl.empty())
+    return slst;
+  std::vector<std::string> pl2 = analyze(word);
   int captype = NOCAP;
   int abbv = 0;
   std::string cw;
   cleanword(cw, word, &captype, &abbv);
   std::string result;
 
-  for (int i = 0; i < pln; i++) {
-    cat_result(result, pSMgr->suggest_gen(pl2, pl2n, pl[i]));
+  for (size_t i = 0; i < pl.size(); ++i) {
+    cat_result(result, pSMgr->suggest_gen(pl2, pl[i]));
   }
-  freelist(&pl2, pl2n);
 
   if (!result.empty()) {
     // allcap
@@ -1588,50 +1601,42 @@ int Hunspell::generate(char*** slst, const char* word, char** pl, int pln) {
       mkallcap(result);
 
     // line split
-    int linenum = line_tok(result.c_str(), slst, MSEP_REC);
+    slst = line_tok(result, MSEP_REC);
 
     // capitalize
     if (captype == INITCAP || captype == HUHINITCAP) {
-      for (int j = 0; j < linenum; j++) {
-        std::string form((*slst)[j]);
-        free((*slst)[j]);
-        mkinitcap(form);
-        (*slst)[j] = mystrdup(form.c_str());
+      for (size_t j = 0; j < slst.size(); ++j) {
+        mkinitcap(slst[j]);
       }
     }
 
     // temporary filtering of prefix related errors (eg.
     // generate("undrinkable", "eats") --> "undrinkables" and "*undrinks")
-
-    int r = 0;
-    for (int j = 0; j < linenum; j++) {
-      if (!spell((*slst)[j])) {
-        free((*slst)[j]);
-        (*slst)[j] = NULL;
-      } else {
-        if (r < j)
-          (*slst)[r] = (*slst)[j];
-        r++;
+    std::vector<std::string>::iterator it = slst.begin();
+    while (it != slst.end()) {
+      if (!spell(*it)) {
+        it = slst.erase(it);
+      } else  {
+        ++it;
       }
     }
-    if (r > 0)
-      return r;
-    free(*slst);
-    *slst = NULL;
   }
-  return 0;
+  return slst;
 }
 
-int Hunspell::generate(char*** slst, const char* word, const char* pattern) {
-  char** pl;
-  int pln = analyze(&pl, pattern);
-  int n = generate(slst, word, pl, pln);
-  freelist(&pl, pln);
-  return uniqlist(*slst, n);
+std::vector<std::string> Hunspell::generate(const std::string& word, const std::string& pattern) {
+  return m_Impl->generate(word, pattern);
+}
+
+std::vector<std::string> HunspellImpl::generate(const std::string& word, const std::string& pattern) {
+  std::vector<std::string> pl = analyze(pattern);
+  std::vector<std::string> slst = generate(word, pl);
+  uniqlist(slst);
+  return slst;
 }
 
 // minimal XML parser functions
-std::string Hunspell::get_xml_par(const char* par) {
+std::string HunspellImpl::get_xml_par(const char* par) {
   std::string dest;
   if (!par)
     return dest;
@@ -1649,16 +1654,28 @@ std::string Hunspell::get_xml_par(const char* par) {
 }
 
 int Hunspell::get_langnum() const {
+  return m_Impl->get_langnum();
+}
+
+int HunspellImpl::get_langnum() const {
   return langnum;
 }
 
-int Hunspell::input_conv(const char* word, char* dest, size_t destsize) {
-  RepList* rl = (pAMgr) ? pAMgr->get_iconvtable() : NULL;
-  return (rl && rl->conv(word, dest, destsize) > 0);
+bool Hunspell::input_conv(const std::string& word, std::string& dest) {
+  return m_Impl->input_conv(word, dest);
+}
+
+bool HunspellImpl::input_conv(const std::string& word, std::string& dest) {
+  RepList* rl = pAMgr ? pAMgr->get_iconvtable() : NULL;
+  if (rl) {
+    return rl->conv(word, dest);
+  }
+  dest.assign(word);
+  return false;
 }
 
 // return the beginning of the element (attr == NULL) or the attribute
-const char* Hunspell::get_xml_pos(const char* s, const char* attr) {
+const char* HunspellImpl::get_xml_pos(const char* s, const char* attr) {
   const char* end = strchr(s, '>');
   const char* p = s;
   if (attr == NULL)
@@ -1671,7 +1688,7 @@ const char* Hunspell::get_xml_pos(const char* s, const char* attr) {
   return p + strlen(attr);
 }
 
-int Hunspell::check_xml_par(const char* q,
+int HunspellImpl::check_xml_par(const char* q,
                             const char* attr,
                             const char* value) {
   std::string cw = get_xml_par(get_xml_pos(q, attr));
@@ -1680,53 +1697,48 @@ int Hunspell::check_xml_par(const char* q,
   return 0;
 }
 
-int Hunspell::get_xml_list(char*** slst, const char* list, const char* tag) {
+std::vector<std::string> HunspellImpl::get_xml_list(const char* list, const char* tag) {
+  std::vector<std::string> slst;
   if (!list)
-    return 0;
-  int n = 0;
-  const char* p;
-  for (p = list; ((p = strstr(p, tag)) != NULL); p++)
-    n++;
-  if (n == 0)
-    return 0;
-  *slst = (char**)malloc(sizeof(char*) * n);
-  if (!*slst)
-    return 0;
-  for (p = list, n = 0; ((p = strstr(p, tag)) != NULL); p++, n++) {
+    return slst;
+  const char* p = list;
+  for (size_t n = 0; ((p = strstr(p, tag)) != NULL); ++p, ++n) {
     std::string cw = get_xml_par(p + strlen(tag) - 1);
     if (cw.empty()) {
       break;
     }
-    (*slst)[n] = mystrdup(cw.c_str());
+    slst.push_back(cw);
   }
-  return n;
+  return slst;
 }
 
-int Hunspell::spellml(char*** slst, const char* word) {
+std::vector<std::string> HunspellImpl::spellml(const std::string& in_word) {
+  std::vector<std::string> slst;
+
+  const char* word = in_word.c_str();
+
   const char* q = strstr(word, "<query");
   if (!q)
-    return 0;  // bad XML input
+    return slst;  // bad XML input
   const char* q2 = strchr(q, '>');
   if (!q2)
-    return 0;  // bad XML input
+    return slst;  // bad XML input
   q2 = strstr(q2, "<word");
   if (!q2)
-    return 0;  // bad XML input
+    return slst;  // bad XML input
   if (check_xml_par(q, "type=", "analyze")) {
-    int n = 0;
     std::string cw = get_xml_par(strchr(q2, '>'));
     if (!cw.empty())
-      n = analyze(slst, cw.c_str());
-    if (n == 0)
-      return 0;
+      slst = analyze(cw);
+    if (slst.empty())
+      return slst;
     // convert the result to <code><a>ana1</a><a>ana2</a></code> format
     std::string r;
     r.append("<code>");
-    for (int i = 0; i < n; i++) {
+    for (size_t i = 0; i < slst.size(); ++i) {
       r.append("<a>");
 
-      std::string entry((*slst)[i]);
-      free((*slst)[i]);
+      std::string entry(slst[i]);
       mystrrep(entry, "\t", " ");
       mystrrep(entry, "&", "&amp;");
       mystrrep(entry, "<", "&lt;");
@@ -1735,36 +1747,101 @@ int Hunspell::spellml(char*** slst, const char* word) {
       r.append("</a>");
     }
     r.append("</code>");
-    (*slst)[0] = mystrdup(r.c_str());
-    return 1;
+    slst.clear();
+    slst.push_back(r);
+    return slst;
   } else if (check_xml_par(q, "type=", "stem")) {
     std::string cw = get_xml_par(strchr(q2, '>'));
     if (!cw.empty())
-      return stem(slst, cw.c_str());
+      return stem(cw);
   } else if (check_xml_par(q, "type=", "generate")) {
     std::string cw = get_xml_par(strchr(q2, '>'));
     if (cw.empty())
-      return 0;
+      return slst;
     const char* q3 = strstr(q2 + 1, "<word");
     if (q3) {
       std::string cw2 = get_xml_par(strchr(q3, '>'));
       if (!cw2.empty()) {
-        return generate(slst, cw.c_str(), cw2.c_str());
+        return generate(cw, cw2);
       }
     } else {
       if ((q2 = strstr(q2 + 1, "<code")) != NULL) {
-        char** slst2;
-        int n = get_xml_list(&slst2, strchr(q2, '>'), "<a>");
-        if (n != 0) {
-          int n2 = generate(slst, cw.c_str(), slst2, n);
-          freelist(&slst2, n);
-          return uniqlist(*slst, n2);
+        std::vector<std::string> slst2 = get_xml_list(strchr(q2, '>'), "<a>");
+        if (!slst2.empty()) {
+          slst = generate(cw, slst2);
+          uniqlist(slst);
+          return slst;
         }
-        freelist(&slst2, n);
       }
     }
   }
-  return 0;
+  return slst;
+}
+
+int Hunspell::spell(const char* word, int* info, char** root) {
+  std::string sroot;
+  bool ret = m_Impl->spell(word, info, root ? &sroot : NULL);
+  if (root) {
+    if (sroot.empty()) {
+      *root = NULL;
+    } else {
+      *root = mystrdup(sroot.c_str());
+    }
+  }
+  return ret;
+}
+
+namespace {
+  int munge_vector(char*** slst, const std::vector<std::string>& items) {
+    if (items.empty()) {
+      *slst = NULL;
+      return 0;
+    } else {
+      *slst = (char**)malloc(sizeof(char*) * items.size());
+      if (!*slst)
+        return 0;
+      for (size_t i = 0; i < items.size(); ++i)
+        (*slst)[i] = mystrdup(items[i].c_str());
+    }
+    return items.size();
+  }
+}
+
+void Hunspell::free_list(char*** slst, int n) {
+  Hunspell_free_list((Hunhandle*)(this), slst, n);
+}
+
+int Hunspell::suggest(char*** slst, const char* word) {
+  return Hunspell_suggest((Hunhandle*)(this), slst, word);
+}
+
+int Hunspell::suffix_suggest(char*** slst, const char* root_word) {
+  std::vector<std::string> stems = m_Impl->suffix_suggest(root_word);
+  return munge_vector(slst, stems);
+}
+
+const char* Hunspell::get_dic_encoding() const {
+  return Hunspell_get_dic_encoding((Hunhandle*)(this));
+}
+
+int Hunspell::stem(char*** slst, char** desc, int n) {
+  return Hunspell_stem2((Hunhandle*)(this), slst, desc, n);
+}
+
+int Hunspell::stem(char*** slst, const char* word) {
+  return Hunspell_stem((Hunhandle*)(this), slst, word);
+}
+
+int Hunspell::analyze(char*** slst, const char* word) {
+  return Hunspell_analyze((Hunhandle*)(this), slst, word);
+}
+
+int Hunspell::generate(char*** slst, const char* word, char** pl, int pln) {
+  return Hunspell_generate2((Hunhandle*)(this), slst, word, pl, pln);
+}
+
+int Hunspell::generate(char*** slst, const char* word, const char* pattern) {
+  return Hunspell_generate((Hunhandle*)(this), slst, word, pattern);
 }
 
 Hunhandle* Hunspell_create(const char* affpath, const char* dpath) {
@@ -1774,46 +1851,56 @@ Hunhandle* Hunspell_create(const char* affpath, const char* dpath) {
 Hunhandle* Hunspell_create_key(const char* affpath,
                                const char* dpath,
                                const char* key) {
-  return (Hunhandle*)(new Hunspell(affpath, dpath, key));
+  return reinterpret_cast<Hunhandle*>(new Hunspell(affpath, dpath, key));
 }
 
 void Hunspell_destroy(Hunhandle* pHunspell) {
-  delete (Hunspell*)(pHunspell);
+  delete reinterpret_cast<Hunspell*>(pHunspell);
 }
 
 int Hunspell_add_dic(Hunhandle* pHunspell, const char* dpath) {
-  return ((Hunspell*)pHunspell)->add_dic(dpath);
+  return reinterpret_cast<Hunspell*>(pHunspell)->add_dic(dpath);
 }
 
 int Hunspell_spell(Hunhandle* pHunspell, const char* word) {
-  return ((Hunspell*)pHunspell)->spell(word);
+  return reinterpret_cast<Hunspell*>(pHunspell)->spell(std::string(word));
 }
 
-char* Hunspell_get_dic_encoding(Hunhandle* pHunspell) {
-  return ((Hunspell*)pHunspell)->get_dic_encoding();
+const char* Hunspell_get_dic_encoding(Hunhandle* pHunspell) {
+  return (reinterpret_cast<Hunspell*>(pHunspell)->get_dict_encoding()).c_str();
 }
 
 int Hunspell_suggest(Hunhandle* pHunspell, char*** slst, const char* word) {
-  return ((Hunspell*)pHunspell)->suggest(slst, word);
+  std::vector<std::string> suggests = reinterpret_cast<Hunspell*>(pHunspell)->suggest(word);
+  return munge_vector(slst, suggests);
 }
 
 int Hunspell_analyze(Hunhandle* pHunspell, char*** slst, const char* word) {
-  return ((Hunspell*)pHunspell)->analyze(slst, word);
+  std::vector<std::string> stems = reinterpret_cast<Hunspell*>(pHunspell)->analyze(word);
+  return munge_vector(slst, stems);
 }
 
 int Hunspell_stem(Hunhandle* pHunspell, char*** slst, const char* word) {
-  return ((Hunspell*)pHunspell)->stem(slst, word);
+
+  std::vector<std::string> stems = reinterpret_cast<Hunspell*>(pHunspell)->stem(word);
+  return munge_vector(slst, stems);
 }
 
 int Hunspell_stem2(Hunhandle* pHunspell, char*** slst, char** desc, int n) {
-  return ((Hunspell*)pHunspell)->stem(slst, desc, n);
+  std::vector<std::string> morph;
+  for (int i = 0; i < n; ++i)
+    morph.push_back(desc[i]);
+
+  std::vector<std::string> stems = reinterpret_cast<Hunspell*>(pHunspell)->stem(morph);
+  return munge_vector(slst, stems);
 }
 
 int Hunspell_generate(Hunhandle* pHunspell,
                       char*** slst,
                       const char* word,
-                      const char* word2) {
-  return ((Hunspell*)pHunspell)->generate(slst, word, word2);
+                      const char* pattern) {
+  std::vector<std::string> stems = reinterpret_cast<Hunspell*>(pHunspell)->generate(word, pattern);
+  return munge_vector(slst, stems);
 }
 
 int Hunspell_generate2(Hunhandle* pHunspell,
@@ -1821,7 +1908,12 @@ int Hunspell_generate2(Hunhandle* pHunspell,
                        const char* word,
                        char** desc,
                        int n) {
-  return ((Hunspell*)pHunspell)->generate(slst, word, desc, n);
+  std::vector<std::string> morph;
+  for (int i = 0; i < n; ++i)
+    morph.push_back(desc[i]);
+
+  std::vector<std::string> stems = reinterpret_cast<Hunspell*>(pHunspell)->generate(word, morph);
+  return munge_vector(slst, stems);
 }
 
 /* functions for run-time modification of the dictionary */
@@ -1829,7 +1921,7 @@ int Hunspell_generate2(Hunhandle* pHunspell,
 /* add word to the run-time dictionary */
 
 int Hunspell_add(Hunhandle* pHunspell, const char* word) {
-  return ((Hunspell*)pHunspell)->add(word);
+  return reinterpret_cast<Hunspell*>(pHunspell)->add(word);
 }
 
 /* add word to the run-time dictionary with affix flags of
@@ -1840,25 +1932,35 @@ int Hunspell_add(Hunhandle* pHunspell, const char* word) {
 int Hunspell_add_with_affix(Hunhandle* pHunspell,
                             const char* word,
                             const char* example) {
-  return ((Hunspell*)pHunspell)->add_with_affix(word, example);
+  return reinterpret_cast<Hunspell*>(pHunspell)->add_with_affix(word, example);
 }
 
 /* remove word from the run-time dictionary */
 
 int Hunspell_remove(Hunhandle* pHunspell, const char* word) {
-  return ((Hunspell*)pHunspell)->remove(word);
+  return reinterpret_cast<Hunspell*>(pHunspell)->remove(word);
 }
 
-void Hunspell_free_list(Hunhandle*, char*** slst, int n) {
-  freelist(slst, n);
+void Hunspell_free_list(Hunhandle*, char*** list, int n) {
+  if (list && *list) {
+    for (int i = 0; i < n; i++)
+      free((*list)[i]);
+    free(*list);
+    *list = NULL;
+  }
 }
 
-int Hunspell::suffix_suggest(char*** slst, const char* root_word) {
+std::vector<std::string> Hunspell::suffix_suggest(const std::string& root_word) {
+  return m_Impl->suffix_suggest(root_word);
+}
+
+std::vector<std::string> HunspellImpl::suffix_suggest(const std::string& root_word) {
+  std::vector<std::string> slst;
   struct hentry* he = NULL;
   int len;
   std::string w2;
   const char* word;
-  char* ignoredchars = pAMgr->get_ignore();
+  const char* ignoredchars = pAMgr->get_ignore();
   if (ignoredchars != NULL) {
     w2.assign(root_word);
     if (utf8) {
@@ -1870,26 +1972,18 @@ int Hunspell::suffix_suggest(char*** slst, const char* root_word) {
     }
     word = w2.c_str();
   } else
-    word = root_word;
+    word = root_word.c_str();
 
   len = strlen(word);
 
   if (!len)
-    return 0;
+    return slst;
 
-  char** wlst = (char**)malloc(MAXSUGGESTION * sizeof(char*));
-  if (wlst == NULL)
-    return -1;
-  *slst = wlst;
-  for (int i = 0; i < MAXSUGGESTION; i++) {
-    wlst[i] = NULL;
-  }
-
-  for (int i = 0; (i < maxdic) && !he; i++) {
-    he = (pHMgr[i])->lookup(word);
+  for (size_t i = 0; (i < m_HMgrs.size()) && !he; ++i) {
+    he = m_HMgrs[i]->lookup(word);
   }
   if (he) {
-    return pAMgr->get_suffix_words(he->astr, he->alen, root_word, *slst);
+    slst = pAMgr->get_suffix_words(he->astr, he->alen, root_word.c_str());
   }
-  return 0;
+  return slst;
 }

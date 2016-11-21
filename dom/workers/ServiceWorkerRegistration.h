@@ -45,6 +45,9 @@ public:
   InvalidateWorkers(WhichServiceWorker aWhichOnes) = 0;
 
   virtual void
+  TransitionWorker(WhichServiceWorker aWhichOne) = 0;
+
+  virtual void
   RegistrationRemoved() = 0;
 
   virtual void

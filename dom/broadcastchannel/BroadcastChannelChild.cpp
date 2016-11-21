@@ -43,17 +43,8 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
 {
   // Make sure to retrieve all blobs from the message before returning to avoid
   // leaking their actors.
-  nsTArray<RefPtr<BlobImpl>> blobs;
-  if (!aData.blobsChild().IsEmpty()) {
-    blobs.SetCapacity(aData.blobsChild().Length());
-
-    for (uint32_t i = 0, len = aData.blobsChild().Length(); i < len; ++i) {
-      RefPtr<BlobImpl> impl =
-        static_cast<BlobChild*>(aData.blobsChild()[i])->GetBlobImpl();
-
-      blobs.AppendElement(impl);
-    }
-  }
+  ipc::StructuredCloneDataNoTransfers cloneData;
+  cloneData.BorrowFromClonedMessageDataForBackgroundChild(aData);
 
   nsCOMPtr<DOMEventTargetHelper> helper = mBC;
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(helper);
@@ -87,15 +78,10 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
     return IPC_OK();
   }
 
-  ipc::StructuredCloneData cloneData;
-  cloneData.BlobImpls().AppendElements(blobs);
-
-  const SerializedStructuredCloneBuffer& buffer = aData.data();
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> value(cx, JS::NullValue());
-  if (buffer.data.Size()) {
+  if (cloneData.DataLength()) {
     ErrorResult rv;
-    cloneData.UseExternalData(buffer.data);
     cloneData.Read(cx, &value, rv);
     if (NS_WARN_IF(rv.Failed())) {
       rv.SuppressException();

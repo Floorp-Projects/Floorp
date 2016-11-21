@@ -152,13 +152,13 @@ function run_test() {
     attribute: "callback"
   });
 
-  let principal = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
-  test_twice(principal, {});
+  let cmdline = Cc["@mozilla.org/toolkit/command-line;1"].createInstance(Ci.nsICommandLine);
+  test_twice(cmdline, {});
 
-  test_twice(Object.getPrototypeOf(principal), {
-    method: "subsumes",
-    constant: "APP_STATUS_INSTALLED",
-    attribute: "origin"
+  test_twice(Object.getPrototypeOf(cmdline), {
+    method: "getArgument",
+    constant: "STATE_INITIAL_LAUNCH",
+    attribute: "length"
   });
 
   // Test a tearoff object.

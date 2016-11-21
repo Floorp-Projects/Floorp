@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 // Binary: cache/js-dbg-64-e8de64e7e9fe-linux
 // Flags: --ion-eager
 //

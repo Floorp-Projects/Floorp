@@ -38,7 +38,6 @@ interface nsIDOMNode : nsISupports
                                           // raises(DOMException) on retrieval
   readonly attribute unsigned short   nodeType;
   readonly attribute nsIDOMNode       parentNode;
-  readonly attribute nsIDOMElement    parentElement;
   readonly attribute nsIDOMNodeList   childNodes;
   readonly attribute nsIDOMNode       firstChild;
   readonly attribute nsIDOMNode       lastChild;
@@ -46,21 +45,11 @@ interface nsIDOMNode : nsISupports
   readonly attribute nsIDOMNode       nextSibling;
   // Modified in DOM Level 2:
   readonly attribute nsIDOMDocument   ownerDocument;
-  nsIDOMNode                insertBefore(in nsIDOMNode newChild,
-                                         in nsIDOMNode refChild)
-                                          raises(DOMException);
-  nsIDOMNode                replaceChild(in nsIDOMNode newChild,
-                                         in nsIDOMNode oldChild)
-                                          raises(DOMException);
   nsIDOMNode                removeChild(in nsIDOMNode oldChild)
-                                         raises(DOMException);
-  nsIDOMNode                appendChild(in nsIDOMNode newChild)
                                          raises(DOMException);
   boolean                   hasChildNodes();
   // Modified in DOM Level 4:
   [optional_argc] nsIDOMNode                cloneNode([optional] in boolean deep);
-  // Modified in DOM Level 2:
-  void                      normalize();
   // Introduced in DOM Level 2:
   readonly attribute DOMString        namespaceURI;
   // Modified in DOM Core
@@ -68,14 +57,6 @@ interface nsIDOMNode : nsISupports
 
   // Introduced in DOM Level 2:
   readonly attribute DOMString        localName;
-
-  // For vtable compatibility (see bug 1078674)
-  [noscript] bool           unusedPlaceholder();
-
-  // Introduced in DOM Level 3:
-  // This uses a binaryname to avoid warnings due to name collision with
-  // nsINode::GetBaseURI
-  [binaryname(DOMBaseURI)] readonly attribute DOMString baseURI;
 
   // DocumentPosition
   const unsigned short      DOCUMENT_POSITION_DISCONNECTED = 0x01;
@@ -86,26 +67,7 @@ interface nsIDOMNode : nsISupports
   const unsigned short      DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20;
 
   // Introduced in DOM Level 3:
-  unsigned short     compareDocumentPosition(in nsIDOMNode other)
-                                        raises(DOMException);
-  // Introduced in DOM Level 3:
            attribute DOMString       textContent;
                                         // raises(DOMException) on setting
                                         // raises(DOMException) on retrieval
-
-  // Introduced in DOM Level 3:
-  DOMString          lookupPrefix(in DOMString namespaceURI);
-  // Introduced in DOM Level 3:
-  boolean            isDefaultNamespace(in DOMString namespaceURI);
-  // Introduced in DOM Level 3:
-  DOMString          lookupNamespaceURI(in DOMString prefix);
-  // Introduced in DOM Level 3:
-  boolean            isEqualNode(in nsIDOMNode arg);
-  // Introduced in DOM Level 3:
-  nsIVariant         setUserData(in DOMString key,
-                                 in nsIVariant data);
-  // Introduced in DOM Level 3:
-  nsIVariant         getUserData(in DOMString key);
-
-  boolean            contains(in nsIDOMNode aOther);
 };

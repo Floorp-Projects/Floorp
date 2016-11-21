@@ -1,4 +1,4 @@
-// |jit-test| error: TypeError
+// |jit-test| error: TypeError; need-for-each
 
 (function() {
   var a, b;

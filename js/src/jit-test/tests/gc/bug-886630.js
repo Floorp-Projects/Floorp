@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 function errorToString(e) {
     try {} catch (e2) {}
 }

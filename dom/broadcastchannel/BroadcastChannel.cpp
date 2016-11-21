@@ -10,6 +10,7 @@
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -32,15 +33,15 @@ using namespace ipc;
 namespace dom {
 
 using namespace workers;
+using namespace ipc;
 
-class BroadcastChannelMessage final : public StructuredCloneHolder
+class BroadcastChannelMessage final : public StructuredCloneDataNoTransfers
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(BroadcastChannelMessage)
 
   BroadcastChannelMessage()
-    : StructuredCloneHolder(CloningSupported, TransferringNotSupported,
-                            StructuredCloneScope::DifferentProcess)
+    : StructuredCloneDataNoTransfers()
   {}
 
 private:
@@ -151,33 +152,7 @@ public:
     }
 
     ClonedMessageData message;
-
-    bool success;
-    SerializedStructuredCloneBuffer& buffer = message.data();
-    auto iter = mData->BufferData().Iter();
-    buffer.data = mData->BufferData().Borrow<js::SystemAllocPolicy>(iter, mData->BufferData().Size(), &success);
-    if (NS_WARN_IF(!success)) {
-      return NS_OK;
-    }
-
-    PBackgroundChild* backgroundManager = mActor->Manager();
-    MOZ_ASSERT(backgroundManager);
-
-    const nsTArray<RefPtr<BlobImpl>>& blobImpls = mData->BlobImpls();
-
-    if (!blobImpls.IsEmpty()) {
-      message.blobsChild().SetCapacity(blobImpls.Length());
-
-      for (uint32_t i = 0, len = blobImpls.Length(); i < len; ++i) {
-        PBlobChild* blobChild =
-          BackgroundChild::GetOrCreateActorForBlobImpl(backgroundManager,
-                                                       blobImpls[i]);
-        MOZ_ASSERT(blobChild);
-
-        message.blobsChild().AppendElement(blobChild);
-      }
-    }
-
+    mData->BuildClonedMessageDataForBackgroundChild(mActor->Manager(), message);
     mActor->SendPostMessage(message);
     return NS_OK;
   }

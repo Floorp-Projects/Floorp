@@ -26,6 +26,22 @@ interface nsIBrowser : nsISupports
                  [array, size_is(linksCount)] in wstring links);
 
   /**
+   * Flags for controlling the behavior of swapBrowsers
+   */
+
+  /**
+   * The default options. This is used for swapping browsers between windows
+   */
+  const unsigned long SWAP_DEFAULT = 0;
+
+  /**
+   * If this bit is set, swapping the browsers will not swap the permanentKey of
+   * the browsers. This is used when performing cross process loads by swapping
+   * browsers.
+   */
+  const unsigned long SWAP_KEEP_PERMANENT_KEY = 0x1;
+
+  /**
    * Swapping of frameloaders are usually initiated from a frameloader owner
    * or other components operating on frameloader owners. This is done by calling
    * swapFrameLoaders at MozFrameLoaderOwner webidl interface.
@@ -37,7 +53,7 @@ interface nsIBrowser : nsISupports
    * frameloader owners such as <xul:browser> can setup their properties and /
    * or listeners properly on swapping.
    */
-  void swapBrowsers(in nsIBrowser aOtherBrowser);
+  void swapBrowsers(in nsIBrowser aOtherBrowser, in unsigned long aFlags);
 
   /**
    * Close the browser (usually means to remove a tab).

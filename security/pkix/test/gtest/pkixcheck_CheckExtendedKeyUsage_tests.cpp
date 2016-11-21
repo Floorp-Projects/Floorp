@@ -160,6 +160,11 @@ struct EKUTestcase
   Result expectedResultCA;
 };
 
+::std::ostream& operator<<(::std::ostream& os, const EKUTestcase&)
+{
+  return os << "TODO (bug 1318770)";
+}
+
 class CheckExtendedKeyUsageTest
   : public ::testing::Test
   , public ::testing::WithParamInterface<EKUTestcase>
@@ -479,6 +484,11 @@ struct EKUChainTestcase
   KeyPurposeId keyPurposeId;
   Result expectedResult;
 };
+
+::std::ostream& operator<<(::std::ostream& os, const EKUChainTestcase&)
+{
+  return os << "TODO (bug 1318770)";
+}
 
 class CheckExtendedKeyUsageChainTest
   : public ::testing::Test

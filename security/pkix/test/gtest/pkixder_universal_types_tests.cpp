@@ -913,6 +913,11 @@ class pkixder_universal_types_tests_Integer
 {
 };
 
+::std::ostream& operator<<(::std::ostream& os, const IntegerTestParams&)
+{
+  return os << "TODO (bug 1318770)";
+}
+
 #define INVALID 0xFF
 
 static const IntegerTestParams INTEGER_TEST_PARAMS[] =

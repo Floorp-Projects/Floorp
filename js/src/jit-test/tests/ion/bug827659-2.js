@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 function f(x) {
     return x["__proto__"]
 }

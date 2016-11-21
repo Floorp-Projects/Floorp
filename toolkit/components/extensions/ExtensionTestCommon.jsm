@@ -314,7 +314,7 @@ class ExtensionTestCommon {
   static generate(data) {
     let file = this.generateXPI(data);
 
-    flushJarCache(file);
+    flushJarCache(file.path);
     Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {path: file.path});
 
     let fileURI = Services.io.newFileURI(file);

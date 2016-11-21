@@ -4397,14 +4397,14 @@ Tab.prototype = {
     const mediaDurationThreshold = 1.0;
 
     let audioElements = this.browser.contentDocument.getElementsByTagName("audio");
-    for each (let audio in audioElements) {
+    for (let audio of audioElements) {
       if (audio.paused == inactive && audio.duration > mediaDurationThreshold) {
         return true;
       }
     }
 
     let videoElements = this.browser.contentDocument.getElementsByTagName("video");
-    for each (let video in videoElements) {
+    for (let video of videoElements) {
       if (video.paused == inactive && video.duration > mediaDurationThreshold) {
         return true;
       }

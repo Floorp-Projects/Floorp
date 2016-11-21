@@ -139,15 +139,21 @@ MessagePortService::RequestEntangling(MessagePortParent* aParent,
     // We activate this port, sending all the messages.
     data->mParent = aParent;
     data->mWaitingForNewParent = false;
-    FallibleTArray<MessagePortMessage> array;
+
+    // We want to ensure we clear data->mMessages even if we early return, while
+    // also ensuring that its contents remain alive until after array's contents
+    // are destroyed because of JSStructuredCloneData borrowing.  So we use
+    // Move to initialize things swapped and do it before we declare `array` so
+    // that reverse destruction order works for us.
+    FallibleTArray<RefPtr<SharedMessagePortMessage>>
+      messages(Move(data->mMessages));
+    FallibleTArray<ClonedMessageData> array;
     if (!SharedMessagePortMessage::FromSharedToMessagesParent(aParent,
-                                                              data->mMessages,
+                                                              messages,
                                                               array)) {
       CloseAll(aParent->ID());
       return false;
     }
-
-    data->mMessages.Clear();
 
     // We can entangle the port.
     if (!aParent->Entangled(array)) {
@@ -226,7 +232,7 @@ MessagePortService::DisentanglePort(
   data->mParent = nextParent;
   data->mNextParents.RemoveElementAt(index);
 
-  FallibleTArray<MessagePortMessage> array;
+  FallibleTArray<ClonedMessageData> array;
   if (!SharedMessagePortMessage::FromSharedToMessagesParent(data->mParent,
                                                             aMessages,
                                                             array)) {
@@ -348,15 +354,19 @@ MessagePortService::PostMessages(
 
   // If the parent can send data to the child, let's proceed.
   if (data->mParent && data->mParent->CanSendData()) {
-    FallibleTArray<MessagePortMessage> messages;
-    if (!SharedMessagePortMessage::FromSharedToMessagesParent(data->mParent,
-                                                              data->mMessages,
-                                                              messages)) {
-      return false;
-    }
+    {
+      FallibleTArray<ClonedMessageData> messages;
+      if (!SharedMessagePortMessage::FromSharedToMessagesParent(data->mParent,
+                                                                data->mMessages,
+                                                                messages)) {
+        return false;
+      }
 
+      Unused << data->mParent->SendReceiveData(messages);
+    }
+    // `messages` borrows the underlying JSStructuredCloneData so we need to
+    // avoid destroying the `mMessages` until after we've destroyed `messages`.
     data->mMessages.Clear();
-    Unused << data->mParent->SendReceiveData(messages);
   }
 
   return true;

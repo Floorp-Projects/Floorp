@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 (function() {
     Object.defineProperty(this, "h2", {
         e: false,

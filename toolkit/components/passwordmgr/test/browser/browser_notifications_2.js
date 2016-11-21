@@ -39,7 +39,7 @@ add_task(function* test_empty_password() {
       yield EventUtils.synthesizeKey("VK_RIGHT", {});
       yield EventUtils.synthesizeKey("VK_BACK_SPACE", {});
 
-      let mainActionButton = document.getAnonymousElementByAttribute(notificationElement.button, "anonid", "button");
+      let mainActionButton = notificationElement.button;
       Assert.ok(mainActionButton.disabled, "Main action button is disabled");
 
       // Makes sure submiting an empty password throws an error

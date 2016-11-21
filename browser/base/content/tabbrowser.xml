@@ -2860,7 +2860,14 @@
                   this.mIsBusy = true;
               }
 
-              this._swapBrowserDocShells(aOurTab, otherBrowser);
+              this._swapBrowserDocShells(aOurTab, otherBrowser, Ci.nsIBrowser.SWAP_DEFAULT);
+            }
+
+            // Unregister the previously opened URI
+            if (otherBrowser.registeredOpenURI) {
+              this._unifiedComplete.unregisterOpenPage(otherBrowser.registeredOpenURI,
+                                                       otherBrowser.getAttribute("usercontextid") || 0);
+              delete otherBrowser.registeredOpenURI;
             }
 
             // Handle findbar data (if any)
@@ -2893,9 +2900,21 @@
         </body>
       </method>
 
+      <method name="swapBrowsers">
+        <parameter name="aOurTab"/>
+        <parameter name="aOtherBrowser"/>
+        <parameter name="aFlags"/>
+        <body>
+          <![CDATA[
+            this._swapBrowserDocShells(aOurTab, aOtherBrowser, aFlags);
+          ]]>
+        </body>
+      </method>
+
       <method name="_swapBrowserDocShells">
         <parameter name="aOurTab"/>
         <parameter name="aOtherBrowser"/>
+        <parameter name="aFlags"/>
         <body>
           <![CDATA[
             // Unhook our progress listener
@@ -2937,15 +2956,17 @@
               remoteBrowser._outerWindowIDBrowserMap.set(aOtherBrowser.outerWindowID, aOtherBrowser);
             }
 
-            // Swap permanentKey properties.
-            let ourPermanentKey = ourBrowser.permanentKey;
-            ourBrowser.permanentKey = aOtherBrowser.permanentKey;
-            aOtherBrowser.permanentKey = ourPermanentKey;
-            aOurTab.permanentKey = ourBrowser.permanentKey;
-            if (remoteBrowser) {
-              let otherTab = remoteBrowser.getTabForBrowser(aOtherBrowser);
-              if (otherTab) {
-                otherTab.permanentKey = aOtherBrowser.permanentKey;
+            if (!(aFlags & Ci.nsIBrowser.SWAP_KEEP_PERMANENT_KEY)) {
+              // Swap permanentKey properties.
+              let ourPermanentKey = ourBrowser.permanentKey;
+              ourBrowser.permanentKey = aOtherBrowser.permanentKey;
+              aOtherBrowser.permanentKey = ourPermanentKey;
+              aOurTab.permanentKey = ourBrowser.permanentKey;
+              if (remoteBrowser) {
+                let otherTab = remoteBrowser.getTabForBrowser(aOtherBrowser);
+                if (otherTab) {
+                  otherTab.permanentKey = aOtherBrowser.permanentKey;
+                }
               }
             }
 
@@ -2965,17 +2986,15 @@
         <parameter name="aOtherBrowser"/>
         <body>
           <![CDATA[
-            // If the current URI is registered as open remove it from the list.
-            if (aOurBrowser.registeredOpenURI) {
-              this._unifiedComplete.unregisterOpenPage(aOurBrowser.registeredOpenURI,
-                                                       aOurBrowser.getAttribute("usercontextid") || 0);
-              delete aOurBrowser.registeredOpenURI;
-            }
-
-            // If the other/new URI is registered as open then copy it over.
+            // Swap the registeredOpenURI properties of the two browsers
+            let tmp = aOurBrowser.registeredOpenURI;
+            delete aOurBrowser.registeredOpenURI;
             if (aOtherBrowser.registeredOpenURI) {
               aOurBrowser.registeredOpenURI = aOtherBrowser.registeredOpenURI;
               delete aOtherBrowser.registeredOpenURI;
+            }
+            if (tmp) {
+              aOtherBrowser.registeredOpenURI = tmp;
             }
           ]]>
         </body>

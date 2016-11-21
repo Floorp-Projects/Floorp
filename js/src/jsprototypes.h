@@ -104,8 +104,8 @@
     real(Uint8ClampedArray,     33,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8Clamped)) \
     real(Proxy,                 34,     InitProxyClass,         js::ProxyClassPtr) \
     real(WeakMap,               35,     InitWeakMapClass,       OCLASP(WeakMap)) \
-    real(Map,                   36,     InitMapClass,           OCLASP(Map)) \
-    real(Set,                   37,     InitSetClass,           OCLASP(Set)) \
+    real(Map,                   36,     InitViaClassSpec,       OCLASP(Map)) \
+    real(Set,                   37,     InitViaClassSpec,       OCLASP(Set)) \
     real(DataView,              38,     InitDataViewClass,      OCLASP(DataView)) \
     real(Symbol,                39,     InitSymbolClass,        OCLASP(Symbol)) \
 IF_SAB(real,imaginary)(SharedArrayBuffer,       40,     InitViaClassSpec, OCLASP(SharedArrayBuffer)) \

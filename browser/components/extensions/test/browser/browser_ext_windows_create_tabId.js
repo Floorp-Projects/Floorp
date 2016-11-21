@@ -104,8 +104,6 @@ add_task(function* testWindowCreate() {
         promiseTabUpdated("http://example.org/"),
       ]);
 
-      await new Promise(resolve => setTimeout(resolve, 0));
-
       window = await browser.windows.create({url: ["http://example.com/", "http://example.org/"]});
       await readyPromise;
 

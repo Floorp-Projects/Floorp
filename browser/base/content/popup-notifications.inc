@@ -22,7 +22,7 @@
         <label id="webRTC-selectWindow-label"
                control="webRTC-selectWindow-menulist"/>
         <menulist id="webRTC-selectWindow-menulist"
-                  oncommand="webrtcUI.updateMainActionLabel(this);">
+                  oncommand="webrtcUI.updateWarningLabel(this);">
           <menupopup id="webRTC-selectWindow-menupopup"/>
         </menulist>
         <description id="webRTC-all-windows-shared" hidden="true">&getUserMedia.allWindowsShared.message;</description>
@@ -66,16 +66,8 @@
         <progressmeter id="addon-progress-notification-progressmeter"/>
         <label id="addon-progress-notification-progresstext" crop="end"/>
       </popupnotificationcontent>
-      <button id="addon-progress-cancel"
-              oncommand="this.parentNode.cancel();"/>
-      <button id="addon-progress-accept" disabled="true"/>
     </popupnotification>
 
     <popupnotification id="addon-install-confirmation-notification" hidden="true">
       <popupnotificationcontent id="addon-install-confirmation-content" orient="vertical"/>
-      <button id="addon-install-confirmation-cancel"
-              oncommand="PopupNotifications.getNotification('addon-install-confirmation').remove();"/>
-      <button id="addon-install-confirmation-accept"
-              oncommand="gXPInstallObserver.acceptInstallation();
-                         PopupNotifications.getNotification('addon-install-confirmation').remove();"/>
     </popupnotification>

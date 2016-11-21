@@ -199,6 +199,23 @@ public:
   static bool     ThreadsafeIsCallerChrome();
   static bool     IsCallerContentXBL();
 
+  // The APIs for checking whether the caller is system (in the sense of system
+  // principal) should only be used when the JSContext is known to accurately
+  // represent the caller.  In practice, that means you should only use them in
+  // two situations at the moment:
+  //
+  // 1) Functions used in WebIDL Func annotations.
+  // 2) Bindings code or other code called directly from the JS engine.
+  //
+  // Use pretty much anywhere else is almost certainly wrong and should be
+  // replaced with [NeedsCallerType] annotations in bindings.
+
+  // Check whether the caller is system if you know you're on the main thread.
+  static bool IsSystemCaller(JSContext* aCx);
+
+  // Check whether the caller is system if you might be on a worker thread.
+  static bool ThreadsafeIsSystemCaller(JSContext* aCx);
+
   // In the traditional Gecko architecture, both C++ code and untrusted JS code
   // needed to rely on the same XPCOM method/getter/setter to get work done.
   // This required lots of security checks in the various exposed methods, which

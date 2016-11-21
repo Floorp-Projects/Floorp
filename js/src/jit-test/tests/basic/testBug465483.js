@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 function testBug465483() {
     var a = new Array(4);
     var c = 0;

@@ -66,34 +66,9 @@ notification[type="critical"] {
   padding-right: 11px;
 }
 
-/* Popup notification */
+%include ../../shared/popupnotification.inc.css
 
-.popup-notification-body {
-  max-width: 25em;
-}
-
-.popup-notification-origin:not([value]),
-.popup-notification-learnmore-link:not([href]) {
-  display: none;
-}
-
-.popup-notification-origin {
-  margin-bottom: .3em !important;
-}
-
-.popup-notification-learnmore-link {
-  margin-top: .5em !important;
-}
-
-.popup-notification-button-container {
-  margin-top: 17px;
-}
-
-.popup-notification-closebutton {
-  margin-inline-end: -10px;
-  margin-top: -6px;
-}
-
-.popup-notification-menubutton > .button-menubutton-button[disabled] {
-  opacity: 0.5;
+.popup-notification-button:focus {
+  outline: 1px -moz-dialogtext dotted;
+  outline-offset: -5px;
 }

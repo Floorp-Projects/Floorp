@@ -50,6 +50,11 @@ struct PresentedMatchesReference
   bool expectedMatches; // only valid when expectedResult == Success
 };
 
+::std::ostream& operator<<(::std::ostream& os, const PresentedMatchesReference&)
+{
+  return os << "TODO (bug 1318770)";
+}
+
 #define DNS_ID_MATCH(a, b) \
   { \
     ByteString(reinterpret_cast<const uint8_t*>(a), sizeof(a) - 1), \
@@ -319,6 +324,11 @@ struct InputValidity
   bool isValidPresentedID;
 };
 
+::std::ostream& operator<<(::std::ostream& os, const InputValidity&)
+{
+  return os << "TODO (bug 1318770)";
+}
+
 // str is null-terminated, which is why we subtract 1. str may contain embedded
 // nulls (including at the end) preceding the null terminator though.
 #define I(str, validReferenceID, validPresentedID) \
@@ -571,6 +581,12 @@ struct IPAddressParams
   bool isValid;
   uint8_t expectedValueIfValid[L];
 };
+
+template <unsigned int L>
+::std::ostream& operator<<(::std::ostream& os, const IPAddressParams<L>&)
+{
+  return os << "TODO (bug 1318770)";
+}
 
 #define IPV4_VALID(str, a, b, c, d) \
   { \
@@ -1079,6 +1095,11 @@ struct CheckCertHostnameParams
   ByteString subjectAltName;
   Result result;
 };
+
+::std::ostream& operator<<(::std::ostream& os, const CheckCertHostnameParams&)
+{
+  return os << "TODO (bug 1318770)";
+}
 
 class pkixnames_CheckCertHostname
   : public ::testing::Test
@@ -1810,6 +1831,11 @@ struct NameConstraintParams
   Result expectedPermittedSubtreesResult;
   Result expectedExcludedSubtreesResult;
 };
+
+::std::ostream& operator<<(::std::ostream& os, const NameConstraintParams&)
+{
+  return os << "TODO (bug 1318770)";
+}
 
 static ByteString
 PermittedSubtrees(const ByteString& generalSubtrees)

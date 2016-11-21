@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 function testGeneratorDeepBail() {
     function g() { yield 2; }
     var iterables = [[1], [], [], [], g()];

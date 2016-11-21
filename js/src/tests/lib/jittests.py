@@ -122,6 +122,7 @@ class JitTest:
         self.expect_status = 0 # Exit status to expect from shell
         self.expect_crash = False # Exit status or error output.
         self.is_module = False
+        self.need_for_each = False # Enable for-each syntax
         self.test_reflect_stringify = None  # Reflect.stringify implementation to test
 
         # Expected by the test runner. Always true for jit-tests.
@@ -146,6 +147,7 @@ class JitTest:
         t.test_reflect_stringify = self.test_reflect_stringify
         t.enable = True
         t.is_module = self.is_module
+        t.need_for_each = self.need_for_each
         return t
 
     def copy_and_extend_jitflags(self, variant):
@@ -262,6 +264,8 @@ class JitTest:
                     elif name.startswith('--'):
                         # // |jit-test| --ion-gvn=off; --no-sse4
                         test.jitflags.append(name)
+                    elif name == 'need-for-each':
+                        test.need_for_each = True
                     else:
                         print('{}: warning: unrecognized |jit-test| attribute'
                               ' {}'.format(path, part))
@@ -296,6 +300,9 @@ class JitTest:
             js_quote(quotechar, sys.platform),
             js_quote(quotechar, libdir),
             js_quote(quotechar, scriptdir_var))
+
+        if self.need_for_each:
+            expr += "; enableForEach()"
 
         # We may have specified '-a' or '-d' twice: once via --jitflags, once
         # via the "|jit-test|" line.  Remove dups because they are toggles.

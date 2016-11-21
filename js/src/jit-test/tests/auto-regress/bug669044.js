@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 // Binary: cache/js-dbg-32-f59568ec0513-linux
 // Flags: -j
 //

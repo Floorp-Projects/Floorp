@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 var a = [];
 for (let j = 0; j < 6; ++j) {
   e = 3; 

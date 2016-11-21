@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 // for-each should be warned once and only once.
 
 function testWarn(code) {

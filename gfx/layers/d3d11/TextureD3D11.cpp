@@ -124,7 +124,8 @@ AutoTextureLock::AutoTextureLock(IDXGIKeyedMutex* aMutex,
 
 AutoTextureLock::~AutoTextureLock()
 {
-  if (!FAILED(mResult)) {
+  if (!FAILED(mResult) && mResult != WAIT_TIMEOUT &&
+      mResult != WAIT_ABANDONED) {
     mMutex->ReleaseSync(0);
   }
 }
@@ -1242,7 +1243,7 @@ SyncObjectD3D11::FinalizeFrame()
     RefPtr<IDXGIKeyedMutex> mutex;
     hr = mD3D11Texture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
     {
-      AutoTextureLock(mutex, hr, 20000);
+      AutoTextureLock lock(mutex, hr, 20000);
 
       if (hr == WAIT_TIMEOUT) {
         if (DeviceManagerDx::Get()->HasDeviceReset()) {

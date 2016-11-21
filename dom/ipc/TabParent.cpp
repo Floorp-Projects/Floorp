@@ -3254,7 +3254,9 @@ TabParent::RecvRequestCrossBrowserNavigation(const uint32_t& aGlobalIndex)
     return IPC_OK();
   }
 
-  if (NS_FAILED(frameLoader->RequestGroupedHistoryNavigation(aGlobalIndex))) {
+  nsCOMPtr<nsISupports> promise;
+  if (NS_FAILED(frameLoader->RequestGroupedHistoryNavigation(aGlobalIndex,
+                                                             getter_AddRefs(promise)))) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
