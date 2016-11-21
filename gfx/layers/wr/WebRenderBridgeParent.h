@@ -58,17 +58,8 @@ public:
   mozilla::ipc::IPCResult RecvDPBegin(const uint32_t& aWidth,
                                       const uint32_t& aHeight,
                                       bool* aOutSuccess) override;
-  mozilla::ipc::IPCResult RecvDPEnd(InfallibleTArray<WebRenderCommand>&& commands) override
-  {
-    ProcessWebrenderCommands(commands);
-    return IPC_OK();
-  }
-
-  mozilla::ipc::IPCResult RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& commands) override
-  {
-    ProcessWebrenderCommands(commands);
-    return IPC_OK();
-  }
+  mozilla::ipc::IPCResult RecvDPEnd(InfallibleTArray<WebRenderCommand>&& commands) override;
+  mozilla::ipc::IPCResult RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& commands) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(const uint32_t& aWidth,
                                             const uint32_t& aHeight,
                                             InfallibleTArray<uint8_t>* aOutImageSnapshot) override;
