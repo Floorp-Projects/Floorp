@@ -4,27 +4,39 @@
 
 "use strict";
 
-const { getStr } = require("../utils/l10n");
-const { DOM: dom, createClass } = require("devtools/client/shared/vendor/react");
+const { addons, createClass, DOM: dom, PropTypes } =
+  require("devtools/client/shared/vendor/react");
 
-const Grid = createClass({
+const Types = require("../types");
+const { getStr } = require("../utils/l10n");
+
+module.exports = createClass({
 
   displayName: "Grid",
 
+  propTypes: {
+    grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
+  },
+
+  mixins: [ addons.PureRenderMixin ],
+
   render() {
+    let {
+      grids,
+    } = this.props;
+
     return dom.div(
       {
-        id: "layoutview-grid-container",
+        id: "layout-grid-container",
       },
-      dom.div(
-        {
-          className: "layoutview-no-grids"
-        },
-        getStr("layout.noGrids")
-      )
+      !grids.length ?
+        dom.div(
+          {
+            className: "layout-no-grids"
+          },
+          getStr("layout.noGrids")
+        ) : null
     );
   },
 
 });
-
-module.exports = Grid;
