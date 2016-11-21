@@ -24,7 +24,7 @@ jobs:
             kind: test
             tier: 2
             symbol: tc(Mn-h)
-        worker-type: aws-provisioner-v1/desktop-test-xlarge
+        worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
         worker:
             implementation: docker-worker
             docker-image: {in-tree: desktop-build}  # NOTE: better to use the lint image
