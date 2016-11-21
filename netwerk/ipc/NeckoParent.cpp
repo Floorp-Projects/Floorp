@@ -147,7 +147,7 @@ GetRequestingPrincipal(const FTPChannelCreationArgs& aArgs)
 // Bug 1289001 - If GetValidatedAppInfo returns an error string, that usually
 // leads to a content crash with very little info about the cause.
 // We prefer to crash on the parent, so we get the reason in the crash report.
-static MOZ_NORETURN MOZ_COLD
+static MOZ_COLD
 void CrashWithReason(const char * reason)
 {
 #ifndef RELEASE_BUILD
