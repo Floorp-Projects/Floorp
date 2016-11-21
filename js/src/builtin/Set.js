@@ -40,7 +40,12 @@ function SetConstructorInit(iterable) {
         var nextValue = next.value;
 
         // Steps 8.d-e.
-        callContentFunction(adder, set, nextValue);
+        try {
+            callContentFunction(adder, set, nextValue);
+        } catch (e) {
+            IteratorCloseThrow(iter);
+            throw e;
+        }
     }
 }
 
@@ -73,6 +78,11 @@ function SetForEach(callbackfn, thisArg = undefined) {
         callContentFunction(callbackfn, thisArg, value, value, S);
     }
 }
+
+function SetValues() {
+    return callFunction(std_Set_iterator, this);
+}
+_SetCanonicalName(SetValues, "values");
 
 // ES6 final draft 23.2.2.2.
 function SetSpecies() {

@@ -24,7 +24,7 @@
 #include "jsprf.h"
 
 #include "jit/AtomicOp.h"
-#include "wasm/WasmBinaryFormat.h"
+#include "wasm/WasmValidate.h"
 
 namespace js {
 namespace wasm {

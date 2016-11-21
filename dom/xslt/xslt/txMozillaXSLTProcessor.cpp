@@ -35,6 +35,7 @@
 #include "nsJSUtils.h"
 #include "nsIXPConnect.h"
 #include "nsVariant.h"
+#include "nsTextNode.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/XSLTProcessorBinding.h"
 
@@ -1120,18 +1121,11 @@ txMozillaXSLTProcessor::reportError(nsresult aResult,
 void
 txMozillaXSLTProcessor::notifyError()
 {
-    nsresult rv;
-    nsCOMPtr<nsIDOMDocument> errorDocument = do_CreateInstance(kXMLDocumentCID,
-                                                               &rv);
-    if (NS_FAILED(rv)) {
-        return;
-    }
-
-    // Set up the document
-    nsCOMPtr<nsIDocument> document = do_QueryInterface(errorDocument);
+    nsCOMPtr<nsIDocument> document = do_CreateInstance(kXMLDocumentCID);
     if (!document) {
         return;
     }
+
     URIUtils::ResetWithSource(document, mSource);
 
     MOZ_ASSERT(document->GetReadyStateEnum() ==
@@ -1141,51 +1135,43 @@ txMozillaXSLTProcessor::notifyError()
 
     NS_NAMED_LITERAL_STRING(ns, "http://www.mozilla.org/newlayout/xml/parsererror.xml");
 
-    nsCOMPtr<nsIDOMElement> element;
-    rv = errorDocument->CreateElementNS(ns, NS_LITERAL_STRING("parsererror"),
-                                        getter_AddRefs(element));
-    if (NS_FAILED(rv)) {
+    IgnoredErrorResult rv;
+    nsCOMPtr<Element> element =
+        document->CreateElementNS(ns, NS_LITERAL_STRING("parsererror"),
+                                  ElementCreationOptions(), rv);
+    if (rv.Failed()) {
         return;
     }
 
-    nsCOMPtr<nsIDOMNode> resultNode;
-    rv = errorDocument->AppendChild(element, getter_AddRefs(resultNode));
-    if (NS_FAILED(rv)) {
+    document->AppendChild(*element, rv);
+    if (rv.Failed()) {
         return;
     }
 
-    nsCOMPtr<nsIDOMText> text;
-    rv = errorDocument->CreateTextNode(mErrorText, getter_AddRefs(text));
-    if (NS_FAILED(rv)) {
-        return;
-    }
+    RefPtr<nsTextNode> text = document->CreateTextNode(mErrorText);
 
-    rv = element->AppendChild(text, getter_AddRefs(resultNode));
-    if (NS_FAILED(rv)) {
+    element->AppendChild(*text, rv);
+    if (rv.Failed()) {
         return;
     }
 
     if (!mSourceText.IsEmpty()) {
-        nsCOMPtr<nsIDOMElement> sourceElement;
-        rv = errorDocument->CreateElementNS(ns,
-                                            NS_LITERAL_STRING("sourcetext"),
-                                            getter_AddRefs(sourceElement));
-        if (NS_FAILED(rv)) {
+        nsCOMPtr<Element> sourceElement =
+            document->CreateElementNS(ns, NS_LITERAL_STRING("sourcetext"),
+                                      ElementCreationOptions(), rv);
+        if (rv.Failed()) {
             return;
         }
     
-        rv = element->AppendChild(sourceElement, getter_AddRefs(resultNode));
-        if (NS_FAILED(rv)) {
+        element->AppendChild(*sourceElement, rv);
+        if (rv.Failed()) {
             return;
         }
 
-        rv = errorDocument->CreateTextNode(mSourceText, getter_AddRefs(text));
-        if (NS_FAILED(rv)) {
-            return;
-        }
+        text = document->CreateTextNode(mSourceText);
     
-        rv = sourceElement->AppendChild(text, getter_AddRefs(resultNode));
-        if (NS_FAILED(rv)) {
+        sourceElement->AppendChild(*text, rv);
+        if (rv.Failed()) {
             return;
         }
     }

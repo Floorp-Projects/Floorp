@@ -34,11 +34,11 @@ function runTest(config,qualifier) {
             }
 
             config.messagehandler(event.messageType, event.message).then(function(response) {
-                _events.push('license-response');
+                _events.push('license-request-response');
                 waitForEventAndRunStep('keystatuseschange', _mediaKeySession, onKeyStatusesChange, test);
                 return _mediaKeySession.update( response );
             }).then(function() {
-                _events.push('updated');
+                _events.push('update-resolved');
             }).catch(onFailure);
         }
 
@@ -76,21 +76,16 @@ function runTest(config,qualifier) {
         }
 
         function onClosed(event) {
-            _events.push('closed-promise');
+            _events.push('closed-attribute-resolved');
             setTimeout(test.step_func(function() {
-                assert_array_equals(_events,
-                                    [
-                                        'generaterequest',
-                                        'license-request',
-                                        'license-response',
-                                        'updated',
+                checkEventSequence( _events,
+                                    ['generaterequest',
+                                        ['license-request', 'license-request-response', 'update-resolved'], // potentially repeating
                                         'allkeysusable',
                                         'playing',
-                                        'closed',
-                                        'closed-promise',
-                                        'emptykeyslist'
-                                    ],
-                                    "Expected events sequence");
+                                        'closed-attribute-resolved',
+                                        'close-promise-resolved',
+                                        'emptykeyslist']);
                 test.done();
             } ), 0);
         }
@@ -102,7 +97,7 @@ function runTest(config,qualifier) {
 
                 _mediaKeySession.closed.then(test.step_func(onClosed));
                 _mediaKeySession.close().then(function() {
-                    _events.push('closed');
+                    _events.push('close-promise-resolved');
                 }).catch(onFailure);
             }
         }
@@ -128,6 +123,8 @@ function runTest(config,qualifier) {
         }).then(function(source) {
             _mediaSource = source;
             _video.src = URL.createObjectURL(_mediaSource);
+            return source.done;
+        }).then(function(){
             _video.play();
         }).catch(onFailure);
     }, testname);

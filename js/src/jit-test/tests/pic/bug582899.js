@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 try {
     (function () {
         __proto__ = [];

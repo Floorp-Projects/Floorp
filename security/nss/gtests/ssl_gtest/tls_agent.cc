@@ -781,18 +781,21 @@ void TlsAgent::SendData(size_t bytes, size_t blocksize) {
       ++send_ctr_;
     }
 
-    LOGV("Writing " << tosend << " bytes");
-    int32_t rv = PR_Write(ssl_fd_, block, tosend);
-    if (expect_readwrite_error_) {
-      EXPECT_GT(0, rv);
-      EXPECT_NE(PR_WOULD_BLOCK_ERROR, error_code_);
-      error_code_ = PR_GetError();
-      expect_readwrite_error_ = false;
-    } else {
-      ASSERT_EQ(tosend, static_cast<size_t>(rv));
-    }
-
+    SendBuffer(DataBuffer(block, tosend));
     bytes -= tosend;
+  }
+}
+
+void TlsAgent::SendBuffer(const DataBuffer& buf) {
+  LOGV("Writing " << buf.len() << " bytes");
+  int32_t rv = PR_Write(ssl_fd_, buf.data(), buf.len());
+  if (expect_readwrite_error_) {
+    EXPECT_GT(0, rv);
+    EXPECT_NE(PR_WOULD_BLOCK_ERROR, error_code_);
+    error_code_ = PR_GetError();
+    expect_readwrite_error_ = false;
+  } else {
+    ASSERT_EQ(buf.len(), static_cast<size_t>(rv));
   }
 }
 

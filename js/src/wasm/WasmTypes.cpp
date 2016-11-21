@@ -748,10 +748,10 @@ Assumptions::serialize(uint8_t* cursor) const
 }
 
 const uint8_t*
-Assumptions::deserialize(const uint8_t* cursor)
+Assumptions::deserialize(const uint8_t* cursor, size_t remain)
 {
-    (cursor = ReadScalar<uint32_t>(cursor, &cpuId)) &&
-    (cursor = DeserializePodVector(cursor, &buildId));
+    (cursor = ReadScalarChecked<uint32_t>(cursor, &remain, &cpuId)) &&
+    (cursor = DeserializePodVectorChecked(cursor, &remain, &buildId));
     return cursor;
 }
 

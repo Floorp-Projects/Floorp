@@ -281,6 +281,15 @@ exports.testValidateMapWithMissingKeyAndThrown = function (assert) {
   assert.deepEqual(val, { baz: "foo" });
 };
 
+function forEachEnabled() {
+  try {
+    eval(`for each (var x in {}) {}`);
+  } catch (e) {
+    return false;
+  }
+  return true;
+}
+
 exports.testAddIterator = function testAddIterator (assert) {
   let obj = {};
   let keys = ["foo", "bar", "baz"];
@@ -303,14 +312,17 @@ exports.testAddIterator = function testAddIterator (assert) {
   for (let i = 0; i < keys.length; i++)
     assert.equal(keysItr[i], keys[i], "the key is correct");
 
-  let valsItr = [];
-  for each (let val in obj)
-    valsItr.push(val);
-  assert.equal(valsItr.length, vals.length,
-                   "the vals iterator returns the correct number of items");
-  for (let i = 0; i < vals.length; i++)
-    assert.equal(valsItr[i], vals[i], "the val is correct");
-
+  if (forEachEnabled()) {
+    eval(`
+    let valsItr = [];
+    for each (let val in obj)
+      valsItr.push(val);
+    assert.equal(valsItr.length, vals.length,
+                     "the vals iterator returns the correct number of items");
+    for (let i = 0; i < vals.length; i++)
+      assert.equal(valsItr[i], vals[i], "the val is correct");
+  `);
+  }
 };
 
 require("sdk/test").run(exports);

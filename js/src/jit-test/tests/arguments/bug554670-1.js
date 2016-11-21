@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 x = true;
 (function() {
   for each(let c in [0, x]) {
