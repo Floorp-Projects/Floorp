@@ -18,26 +18,16 @@ class PrincipalInfo;
 
 namespace dom {
 
-class BroadcastChannelParentMessage;
 class BroadcastChannelService;
 
 class BroadcastChannelParent final : public PBroadcastChannelParent
 {
-  NS_INLINE_DECL_REFCOUNTING(BroadcastChannelParent)
-
   friend class mozilla::ipc::BackgroundParentImpl;
 
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
 
 public:
-  void Deliver(BroadcastChannelParentMessage* aMsg);
-
-  bool Destroyed() const
-  {
-    return mStatus == eDestroyed;
-  }
-
-  void Start();
+  void Deliver(const ClonedMessageData& aData);
 
 private:
   explicit BroadcastChannelParent(const nsAString& aOriginChannelKey);
@@ -50,41 +40,8 @@ private:
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  void DeliverInternal(BroadcastChannelParentMessage* aMsg);
-
-  void Shutdown();
-
   RefPtr<BroadcastChannelService> mService;
   const nsString mOriginChannelKey;
-
-  // Messages received from the child actor, but not broadcasted yet.
-  nsTArray<RefPtr<BroadcastChannelParentMessage>> mPendingMessages;
-
-  // Messages to be sent to the child actor.
-  nsTArray<RefPtr<BroadcastChannelParentMessage>> mDeliveringMessages;
-
-  enum {
-    // This is the default state when the actor is created. All the received
-    // messages will be stored in mPendingMessages. All the broadcasted messages
-    // will be stored in mDeliveringMessages.
-    // If RecvClose() is called, we move the state to mClosing.
-    // This state can change only if ActorDestroy() or Start() is called.
-    eInitializing,
-
-    // This state is set by Start() if we where in eInitializing state.
-    // The connection with BroadcastChannelService is done and all the pending
-    // messages are dispatched/broadcasted.
-    eInitialized,
-
-    // If RecvClose() is called when we are in eInitializing state, we still
-    // need to wait for Start() (or ActorDestroy()).
-    // When Start() is called, we will call Send__delete__ after flushing the
-    // pending queue.
-    eClosing,
-
-    // The actor has been destroyed.
-    eDestroyed
-  } mStatus;
 };
 
 } // namespace dom

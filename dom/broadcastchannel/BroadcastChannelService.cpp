@@ -94,16 +94,28 @@ BroadcastChannelService::UnregisterActor(BroadcastChannelParent* aParent,
 
 void
 BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
-                                     BroadcastChannelParentMessage* aMsg,
+                                     const ClonedMessageData& aData,
                                      const nsAString& aOriginChannelKey)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
-  MOZ_ASSERT(aMsg);
 
   nsTArray<BroadcastChannelParent*>* parents;
   if (!mAgents.Get(aOriginChannelKey, &parents)) {
     MOZ_CRASH("Invalid state");
+  }
+
+  // We need to keep the array alive for the life-time of this operation.
+  nsTArray<RefPtr<BlobImpl>> blobs;
+  if (!aData.blobsParent().IsEmpty()) {
+    blobs.SetCapacity(aData.blobsParent().Length());
+
+    for (uint32_t i = 0, len = aData.blobsParent().Length(); i < len; ++i) {
+      RefPtr<BlobImpl> impl =
+        static_cast<BlobParent*>(aData.blobsParent()[i])->GetBlobImpl();
+     MOZ_ASSERT(impl);
+     blobs.AppendElement(impl);
+    }
   }
 
   for (uint32_t i = 0; i < parents->Length(); ++i) {
@@ -111,7 +123,7 @@ BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
     MOZ_ASSERT(parent);
 
     if (parent != aParent) {
-      parent->Deliver(aMsg);
+      parent->Deliver(aData);
     }
   }
 }
