@@ -16,7 +16,7 @@ var { loader, require } = BrowserLoaderModule.BrowserLoader({
 var { Task } = require("devtools/shared/task");
 /* exported Heritage, ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout */
 var { Heritage, ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
-var { gDevTools } = require("devtools/client/framework/devtools");
+var { PrefObserver } = require("devtools/client/shared/prefs");
 
 // Events emitted by various objects in the panel.
 var EVENTS = require("devtools/client/performance/events");
@@ -143,7 +143,8 @@ var PerformanceController = {
     RecordingsView.on(EVENTS.UI_RECORDING_SELECTED, this._onRecordingSelectFromView);
     DetailsView.on(EVENTS.UI_DETAILS_VIEW_SELECTED, this._pipe);
 
-    gDevTools.on("pref-changed", this._onThemeChanged);
+    this._prefObserver = new PrefObserver("devtools.");
+    this._prefObserver.on("devtools.theme", this._onThemeChanged);
   }),
 
   /**
@@ -163,7 +164,8 @@ var PerformanceController = {
     RecordingsView.off(EVENTS.UI_RECORDING_SELECTED, this._onRecordingSelectFromView);
     DetailsView.off(EVENTS.UI_DETAILS_VIEW_SELECTED, this._pipe);
 
-    gDevTools.off("pref-changed", this._onThemeChanged);
+    this._prefObserver.off("devtools.theme", this._onThemeChanged);
+    this._prefObserver.destroy();
   },
 
   /**
@@ -402,14 +404,9 @@ var PerformanceController = {
   /*
    * Called when the developer tools theme changes.
    */
-  _onThemeChanged: function (_, data) {
-    // Right now, gDevTools only emits `pref-changed` for the theme,
-    // but this could change in the future.
-    if (data.pref !== "devtools.theme") {
-      return;
-    }
-
-    this.emit(EVENTS.THEME_CHANGED, data.newValue);
+  _onThemeChanged: function () {
+    let newValue = Services.prefs.getCharPref("devtools.theme");
+    this.emit(EVENTS.THEME_CHANGED, newValue);
   },
 
   /**

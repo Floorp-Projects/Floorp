@@ -318,14 +318,6 @@ DevTools.prototype = {
         theme.id == currTheme) {
       Services.prefs.setCharPref("devtools.theme", "light");
 
-      let data = {
-        pref: "devtools.theme",
-        newValue: "light",
-        oldValue: currTheme
-      };
-
-      this.emit("pref-changed", data);
-
       this.emit("theme-unregistered", theme);
     }
 
