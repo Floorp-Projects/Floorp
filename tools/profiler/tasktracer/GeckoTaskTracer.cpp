@@ -153,26 +153,15 @@ IsStartLogging()
 static void
 SetLogStarted(bool aIsStartLogging)
 {
-  MOZ_ASSERT(aIsStartLogging != IsStartLogging());
+  MOZ_ASSERT(aIsStartLogging != sStarted);
+  MOZ_ASSERT(sTraceInfos != nullptr);
   sStarted = aIsStartLogging;
 
   StaticMutexAutoLock lock(sMutex);
-  if (!aIsStartLogging) {
+  if (!aIsStartLogging && sTraceInfos) {
     for (uint32_t i = 0; i < sTraceInfos->Length(); ++i) {
       (*sTraceInfos)[i]->mObsolete = true;
     }
-  }
-}
-
-static void
-CleanUp()
-{
-  MOZ_ASSERT(!IsStartLogging());
-  StaticMutexAutoLock lock(sMutex);
-
-  if (sTraceInfos) {
-    delete sTraceInfos;
-    sTraceInfos = nullptr;
   }
 }
 
@@ -191,7 +180,6 @@ ObsoleteCurrentTraceInfos()
 nsCString*
 TraceInfo::AppendLog()
 {
-  MutexAutoLock lock(mLogsMutex);
   return mLogs.AppendElement();
 }
 
@@ -205,21 +193,26 @@ TraceInfo::MoveLogsInto(TraceInfoLogsType& aResult)
 void
 InitTaskTracer(uint32_t aFlags)
 {
+  StaticMutexAutoLock lock(sMutex);
+
   if (aFlags & FORKED_AFTER_NUWA) {
     ObsoleteCurrentTraceInfos();
     return;
   }
 
   MOZ_ASSERT(!sTraceInfos);
-  sTraceInfos = new nsTArray<UniquePtr<TraceInfo>>();
 
   sTraceInfoTLS.init();
+  // A memory barrier is necessary here.
+  sTraceInfos = new nsTArray<UniquePtr<TraceInfo>>();
 }
 
 void
 ShutdownTaskTracer()
 {
-  CleanUp();
+  if (IsStartLogging()) {
+    SetLogStarted(false);
+  }
 }
 
 static void
@@ -243,7 +236,6 @@ void FreeTraceInfo()
 TraceInfo*
 GetOrCreateTraceInfo()
 {
-  ENSURE_TRUE(sTraceInfoTLS.init(), nullptr);
   ENSURE_TRUE(IsStartLogging(), nullptr);
 
   TraceInfo* info = sTraceInfoTLS.get();
@@ -325,6 +317,7 @@ LogDispatch(uint64_t aTaskId, uint64_t aParentTaskId, uint64_t aSourceEventId,
   uint64_t time = (aDelayTimeMs <= 0) ? GetTimestamp() :
                   GetTimestamp() + aDelayTimeMs;
 
+  MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [0 taskId dispatchTime sourceEventId sourceEventType parentTaskId]
   nsCString* log = info->AppendLog();
@@ -341,6 +334,7 @@ LogBegin(uint64_t aTaskId, uint64_t aSourceEventId)
   TraceInfo* info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
+  MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [1 taskId beginTime processId threadId]
   nsCString* log = info->AppendLog();
@@ -356,6 +350,7 @@ LogEnd(uint64_t aTaskId, uint64_t aSourceEventId)
   TraceInfo* info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
+  MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [2 taskId endTime]
   nsCString* log = info->AppendLog();
@@ -370,6 +365,7 @@ LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, uintptr_t* aVptr)
   TraceInfo* info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
+  MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [4 taskId address]
   nsCString* log = info->AppendLog();
@@ -402,6 +398,7 @@ void AddLabel(const char* aFormat, ...)
   buffer.AppendPrintf(aFormat, args);
   va_end(args);
 
+  MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [3 taskId "label"]
   nsCString* log = info->AppendLog();
