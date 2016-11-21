@@ -14306,24 +14306,11 @@ nsDocShell::OnOverLink(nsIContent* aContent,
     }
   }
 
-  nsCOMPtr<nsITextToSubURI> textToSubURI =
-    do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // use url origin charset to unescape the URL
-  nsAutoCString charset;
-  rv = aURI->GetOriginCharset(charset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsAutoCString spec;
   rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString uStr;
-  rv = textToSubURI->UnEscapeURIForUI(charset, spec, uStr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ConvertUTF8toUTF16 uStr(spec);
 
   mozilla::net::PredictorPredict(aURI, mCurrentURI,
                                  nsINetworkPredictor::PREDICT_LINK,
