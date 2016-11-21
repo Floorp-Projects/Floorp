@@ -367,7 +367,7 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
     Assert.ok(payload.simpleMeasurements.startupSessionRestoreWriteBytes > 0);
   }
 
-  const TELEMETRY_PING = "TELEMETRY_PING";
+  const TELEMETRY_SEND_SUCCESS = "TELEMETRY_SEND_SUCCESS";
   const TELEMETRY_SUCCESS = "TELEMETRY_SUCCESS";
   const TELEMETRY_TEST_FLAG = "TELEMETRY_TEST_FLAG";
   const TELEMETRY_TEST_COUNT = "TELEMETRY_TEST_COUNT";
@@ -375,7 +375,7 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
   const TELEMETRY_TEST_KEYED_COUNT = "TELEMETRY_TEST_KEYED_COUNT";
 
   if (successfulPings > 0) {
-    Assert.ok(TELEMETRY_PING in payload.histograms);
+    Assert.ok(TELEMETRY_SEND_SUCCESS in payload.histograms);
   }
   Assert.ok(TELEMETRY_TEST_FLAG in payload.histograms);
   Assert.ok(TELEMETRY_TEST_COUNT in payload.histograms);
