@@ -1106,7 +1106,11 @@ toolbar[brighttext] #close-button {
   #minimize-button,
   #restore-button,
   #close-button {
-    list-style-image: url("chrome://global/skin/icons/windowControls.png");
+    /* Important to ensure this applies even on toolbar[brighttext] */
+    list-style-image: url("chrome://global/skin/icons/windowControls.png") !important;
+    /* Also override background color to a avoid hover background styling
+     * leaking through around the image. */
+    background-color: transparent !important;
     padding: 0;
   }
 
