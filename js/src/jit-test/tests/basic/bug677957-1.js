@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 function test() {
     for each (var i in []) {}
 }

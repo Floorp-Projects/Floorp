@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 
 c = {}.__proto__[1] = 3;
 (function() {

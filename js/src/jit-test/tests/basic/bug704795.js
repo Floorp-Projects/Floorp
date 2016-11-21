@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 Function("\
   gczeal(4,false);\
   function f(){\
