@@ -371,16 +371,6 @@ browser.Context = class {
     }
   }
 
-  /**
-   * Returns the position of the OS window.
-   */
-  get position() {
-    return {
-      x: this.window.screenX,
-      y: this.window.screenY,
-    };
-  }
-
 };
 
 /**

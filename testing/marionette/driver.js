@@ -1156,7 +1156,11 @@ GeckoDriver.prototype.getChromeWindowHandles = function (cmd, resp) {
  *     Object with |x| and |y| coordinates.
  */
 GeckoDriver.prototype.getWindowPosition = function (cmd, resp) {
-  return this.curBrowser.position;
+  let win = this.getCurrentWindow();
+  return {
+    x: win.screenX,
+    y: win.screenY,
+  };
 };
 
 /**
