@@ -2189,7 +2189,7 @@ HttpBaseChannel::AddSecurityMessage(const nsAString &aMessageTag,
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t innerWindowID = loadInfo->GetInnerWindowID();
+  auto innerWindowID = loadInfo->GetInnerWindowID();
 
   nsXPIDLString errorText;
   rv = nsContentUtils::GetLocalizedString(
