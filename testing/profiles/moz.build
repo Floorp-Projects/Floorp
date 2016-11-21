@@ -6,6 +6,7 @@
 
 mochitest_profile_files = [
     'prefs_general.js',
+    'webapps_mochitest.json',
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.profile_data += mochitest_profile_files
