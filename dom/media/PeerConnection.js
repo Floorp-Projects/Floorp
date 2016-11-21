@@ -449,7 +449,8 @@ RTCPeerConnection.prototype = {
 
     this._impl.initialize(this._observer, this._win, rtcConfig,
                           Services.tm.currentThread);
-    this._initCertificate(rtcConfig.certificates);
+
+    this._certificateReady = this._initCertificate(rtcConfig.certificates);
     this._initIdp();
     _globalPCList.notifyLifecycleObservers(this, "initialized");
   },
@@ -467,35 +468,39 @@ RTCPeerConnection.prototype = {
     return this._config;
   },
 
-  _initCertificate: function(certificates = []) {
-    let certPromise;
-    if (certificates.length > 0) {
-      if (certificates.length > 1) {
-        throw new this._win.DOMException(
-          "RTCPeerConnection does not currently support multiple certificates",
-          "NotSupportedError");
-      }
-      let cert = certificates.find(c => c.expires > Date.now());
-      if (!cert) {
+  _initCertificate: async function(certificates = []) {
+    let certificate;
+    if (certificates.length > 1) {
+      throw new this._win.DOMException(
+        "RTCPeerConnection does not currently support multiple certificates",
+        "NotSupportedError");
+    }
+    if (certificates.length) {
+      certificate = certificates.find(c => c.expires > Date.now());
+      if (!certificate) {
         throw new this._win.DOMException(
           "Unable to create RTCPeerConnection with an expired certificate",
           "InvalidParameterError");
       }
-      certPromise = Promise.resolve(cert);
-    } else {
-      certPromise = this._win.RTCPeerConnection.generateCertificate({
+    }
+
+    if (!certificate) {
+      certificate = await this._win.RTCPeerConnection.generateCertificate({
         name: "ECDSA", namedCurve: "P-256"
       });
     }
-    this._certificateReady = certPromise
-      .then(cert => this._impl.certificate = cert);
+    this._impl.certificate = certificate;
   },
 
-  _initIdp: function() {
+  _resetPeerIdentityPromise: function() {
     this._peerIdentity = new this._win.Promise((resolve, reject) => {
       this._resolvePeerIdentity = resolve;
       this._rejectPeerIdentity = reject;
     });
+  },
+
+  _initIdp: function() {
+    this._resetPeerIdentityPromise();
     this._lastIdentityValidation = this._win.Promise.resolve();
 
     let prefName = "media.peerconnection.identity.timeout";
@@ -506,20 +511,22 @@ RTCPeerConnection.prototype = {
 
   // Add a function to the internal operations chain.
 
-  _chain: function(func) {
-    let p = this._operationsChain.then(() => {
+  _chain: async function(func) {
+    let p = (async () => {
+      await this._operationsChain;
       // Don't _checkClosed() inside the chain, because it throws, and spec
-      // behavior as of this writing is to NOT reject outstanding promises on
-      // close. This is what happens most of the time anyways, as the c++ code
-      // stops calling us once closed, hanging the chain. However, c++ may
-      // already have queued tasks on us, so if we're one of those then sit back.
-      if (!this._closed) {
-        return func();
+      // behavior is to NOT reject outstanding promises on close. This is what
+      // happens most of the time anyways, as the c++ code stops calling us once
+      // closed, hanging the chain. However, c++ may already have queued tasks
+      // on us, so if we're one of those then sit back.
+      if (this._closed) {
+        return;
       }
-    });
+      return await func();
+    })();
     // don't propagate errors in the operations chain (this is a fork of p).
     this._operationsChain = p.catch(() => {});
-    return p;
+    return await p;
   },
 
   // This wrapper helps implement legacy callbacks in a manner that produces
@@ -718,18 +725,6 @@ RTCPeerConnection.prototype = {
                           });
   },
 
-  _addIdentityAssertion: function(sdpPromise, origin) {
-    if (!this._localIdp.enabled) {
-      return sdpPromise;
-    }
-    return Promise.all([
-      this._certificateReady
-        .then(() => this._localIdp.getIdentityAssertion(this._impl.fingerprint,
-                                                        origin)),
-      sdpPromise
-    ]).then(([,sdp]) => this._localIdp.addIdentityAttribute(sdp));
-  },
-
   createOffer: function(optionsOrOnSuccess, onError, options) {
     // This entry-point handles both new and legacy call sig. Decipher which one
     let onSuccess;
@@ -738,17 +733,25 @@ RTCPeerConnection.prototype = {
     } else {
       options = optionsOrOnSuccess;
     }
-    return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
+    return this._legacyCatchAndCloseGuard(onSuccess, onError, async () => {
       let origin = Cu.getWebIDLCallerPrincipal().origin;
-      return this._chain(() => {
-        let p = Promise.all([this._getPermission(), this._certificateReady])
-          .then(() => new Promise((resolve, reject) => {
-            this._onCreateOfferSuccess = resolve;
-            this._onCreateOfferFailure = reject;
-            this._impl.createOffer(options);
-          }));
-        p = this._addIdentityAssertion(p, origin);
-        return p.then(sdp => Cu.cloneInto({ type: "offer", sdp }, this._win));
+      return await this._chain(async () => {
+        let haveAssertion;
+        if (this._localIdp.enabled) {
+          haveAssertion = this._getIdentityAssertion(origin);
+        }
+        await this._getPermission();
+        await this._certificateReady;
+        let sdp = await new Promise((resolve, reject) => {
+          this._onCreateOfferSuccess = resolve;
+          this._onCreateOfferFailure = reject;
+          this._impl.createOffer(options);
+        });
+        if (haveAssertion) {
+          await haveAssertion;
+          sdp = this._localIdp.addIdentityAttribute(sdp);
+        }
+        return Cu.cloneInto({ type: "offer", sdp }, this._win);
       });
     });
   },
@@ -761,51 +764,61 @@ RTCPeerConnection.prototype = {
     } else {
       options = optionsOrOnSuccess;
     }
-    return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
+    return this._legacyCatchAndCloseGuard(onSuccess, onError, async () => {
       let origin = Cu.getWebIDLCallerPrincipal().origin;
-      return this._chain(() => {
-        let p = Promise.all([this._getPermission(), this._certificateReady])
-          .then(() => new Promise((resolve, reject) => {
-            // We give up line-numbers in errors by doing this here, but do all
-            // state-checks inside the chain, to support the legacy feature that
-            // callers don't have to wait for setRemoteDescription to finish.
-            if (!this.remoteDescription) {
-              throw new this._win.DOMException("setRemoteDescription not called",
-                                               "InvalidStateError");
-            }
-            if (this.remoteDescription.type != "offer") {
-              throw new this._win.DOMException("No outstanding offer",
-                                               "InvalidStateError");
-            }
-            this._onCreateAnswerSuccess = resolve;
-            this._onCreateAnswerFailure = reject;
-            this._impl.createAnswer();
-          }));
-        p = this._addIdentityAssertion(p, origin);
-        return p.then(sdp => Cu.cloneInto({ type: "answer", sdp }, this._win));
+      return await this._chain(async () => {
+        // We give up line-numbers in errors by doing this here, but do all
+        // state-checks inside the chain, to support the legacy feature that
+        // callers don't have to wait for setRemoteDescription to finish.
+        if (!this.remoteDescription) {
+          throw new this._win.DOMException("setRemoteDescription not called",
+                                           "InvalidStateError");
+        }
+        if (this.remoteDescription.type != "offer") {
+          throw new this._win.DOMException("No outstanding offer",
+                                           "InvalidStateError");
+        }
+        let haveAssertion;
+        if (this._localIdp.enabled) {
+          haveAssertion = this._getIdentityAssertion(origin);
+        }
+        await this._getPermission();
+        await this._certificateReady;
+        let sdp = await new Promise((resolve, reject) => {
+          this._onCreateAnswerSuccess = resolve;
+          this._onCreateAnswerFailure = reject;
+          this._impl.createAnswer();
+        });
+        if (haveAssertion) {
+          await haveAssertion;
+          sdp = this._localIdp.addIdentityAttribute(sdp);
+        }
+        return Cu.cloneInto({ type: "answer", sdp }, this._win);
       });
     });
   },
 
-  _getPermission: function() {
-    if (this._havePermission) {
-      return this._havePermission;
-    }
-    if (this._isChrome ||
-        AppConstants.MOZ_B2G ||
-        Services.prefs.getBoolPref("media.navigator.permission.disabled")) {
-      return this._havePermission = Promise.resolve();
-    }
-    return this._havePermission = new Promise((resolve, reject) => {
-      this._settlePermission = { allow: resolve, deny: reject };
-      let outerId = this._win.QueryInterface(Ci.nsIInterfaceRequestor).
-          getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+  _getPermission: async function() {
+    if (!this._havePermission) {
+      let privileged = this._isChrome || AppConstants.MOZ_B2G ||
+          Services.prefs.getBoolPref("media.navigator.permission.disabled");
 
-      let chrome = new CreateOfferRequest(outerId, this._winID,
-                                          this._globalPCListId, false);
-      let request = this._win.CreateOfferRequest._create(this._win, chrome);
-      Services.obs.notifyObservers(request, "PeerConnection:request", null);
-    });
+      if (privileged) {
+        this._havePermission = Promise.resolve();
+      } else {
+        this._havePermission = new Promise((resolve, reject) => {
+          this._settlePermission = { allow: resolve, deny: reject };
+          let outerId = this._win.QueryInterface(Ci.nsIInterfaceRequestor).
+              getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+
+          let chrome = new CreateOfferRequest(outerId, this._winID,
+                                              this._globalPCListId, false);
+          let request = this._win.CreateOfferRequest._create(this._win, chrome);
+          Services.obs.notifyObservers(request, "PeerConnection:request", null);
+        });
+      }
+    }
+    return await this._havePermission;
   },
 
   _actions: {
@@ -817,7 +830,7 @@ RTCPeerConnection.prototype = {
   },
 
   setLocalDescription: function({ type, sdp }, onSuccess, onError) {
-    return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
+    return this._legacyCatchAndCloseGuard(onSuccess, onError, async () => {
       this._localType = type;
 
       let action = this._actions[type];
@@ -837,24 +850,27 @@ RTCPeerConnection.prototype = {
             "InvalidParameterError");
       }
 
-      return this._chain(() => this._getPermission()
-          .then(() => new Promise((resolve, reject) => {
-        this._onSetLocalDescriptionSuccess = resolve;
-        this._onSetLocalDescriptionFailure = reject;
-        this._impl.setLocalDescription(action, sdp);
-      })));
+      return await this._chain(async () => {
+        await this._getPermission();
+        await new Promise((resolve, reject) => {
+          this._onSetLocalDescriptionSuccess = resolve;
+          this._onSetLocalDescriptionFailure = reject;
+          this._impl.setLocalDescription(action, sdp);
+        });
+      });
     });
   },
 
-  _validateIdentity: function(sdp, origin) {
+  _validateIdentity: async function(sdp, origin) {
     let expectedIdentity;
 
     // Only run a single identity verification at a time.  We have to do this to
     // avoid problems with the fact that identity validation doesn't block the
     // resolution of setRemoteDescription().
-    let validation = this._lastIdentityValidation
-      .then(() => this._remoteIdp.verifyIdentityFromSDP(sdp, origin))
-      .then(msg => {
+    let p = (async () => {
+      try {
+        await this._lastIdentityValidation;
+        let msg = await this._remoteIdp.verifyIdentityFromSDP(sdp, origin);
         expectedIdentity = this._impl.peerIdentity;
         // If this pc has an identity already, then the identity in sdp must match
         if (expectedIdentity && (!msg || msg.identity !== expectedIdentity)) {
@@ -871,28 +887,27 @@ RTCPeerConnection.prototype = {
             name: msg.identity
           }, this._win));
         }
-      })
-      .catch(e => {
+      } catch(e) {
         this._rejectPeerIdentity(e);
         // If we don't expect a specific peer identity, failure to get a valid
         // peer identity is not a terminal state, so replace the promise to
         // allow another attempt.
         if (!this._impl.peerIdentity) {
-          this._peerIdentity = new this._win.Promise((resolve, reject) => {
-            this._resolvePeerIdentity = resolve;
-            this._rejectPeerIdentity = reject;
-          });
+          this._resetPeerIdentityPromise();
         }
         throw e;
-      });
-    this._lastIdentityValidation = validation.catch(() => {});
+      }
+    })();
+    this._lastIdentityValidation = p.catch(() => {});
 
     // Only wait for IdP validation if we need identity matching
-    return expectedIdentity ? validation : this._win.Promise.resolve();
+    if (expectedIdentity) {
+      await p;
+    }
   },
 
   setRemoteDescription: function({ type, sdp }, onSuccess, onError) {
-    return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
+    return this._legacyCatchAndCloseGuard(onSuccess, onError, async () => {
       this._remoteType = type;
 
       let action = this._actions[type];
@@ -915,21 +930,22 @@ RTCPeerConnection.prototype = {
       // Get caller's origin before hitting the promise chain
       let origin = Cu.getWebIDLCallerPrincipal().origin;
 
-      return this._chain(() => {
-        let setRem = this._getPermission()
-          .then(() => new Promise((resolve, reject) => {
+      return await this._chain(async () => {
+        let haveSetRemote = (async () => {
+          await this._getPermission();
+          await new Promise((resolve, reject) => {
             this._onSetRemoteDescriptionSuccess = resolve;
             this._onSetRemoteDescriptionFailure = reject;
             this._impl.setRemoteDescription(action, sdp);
-          })).then(() => { this._updateCanTrickle(); });
+          });
+          this._updateCanTrickle();
+        })();
 
-        if (action == Ci.IPeerConnection.kActionRollback) {
-          return setRem;
+        if (action != Ci.IPeerConnection.kActionRollback) {
+          // Do setRemoteDescription and identity validation in parallel
+          await this._validateIdentity(sdp, origin);
         }
-
-        // Do setRemoteDescription and identity validation in parallel
-        let validId = this._validateIdentity(sdp, origin);
-        return Promise.all([setRem, validId]).then(() => {}); // return undefined
+        await haveSetRemote;
       });
     });
   },
@@ -939,14 +955,16 @@ RTCPeerConnection.prototype = {
     this._localIdp.setIdentityProvider(provider, protocol, username);
   },
 
+  _getIdentityAssertion: async function(origin) {
+    await this._certificateReady;
+    return await this._localIdp.getIdentityAssertion(this._impl.fingerprint, origin);
+  },
+
   getIdentityAssertion: function() {
     this._checkClosed();
     let origin = Cu.getWebIDLCallerPrincipal().origin;
-    return this._chain(
-      () => this._certificateReady.then(
-        () => this._localIdp.getIdentityAssertion(this._impl.fingerprint, origin)
-      )
-    );
+    return this._win.Promise.resolve(this._chain(() =>
+        this._getIdentityAssertion(origin)));
   },
 
   get canTrickleIceCandidates() {
@@ -984,13 +1002,13 @@ RTCPeerConnection.prototype = {
 
   // TODO: Implement processing for end-of-candidates (bug 1318167)
   addIceCandidate: function(candidate, onSuccess, onError) {
-    let add = ({ candidate, sdpMid, sdpMLineIndex }) => {
+    let add = async ({ candidate, sdpMid, sdpMLineIndex }) => {
       if (sdpMid === null && sdpMLineIndex === null) {
         throw new this._win.DOMException(
             "Invalid candidate (both sdpMid and sdpMLineIndex are null).",
             "TypeError");
       }
-      return this._chain(() => new Promise((resolve, reject) => {
+      return await this._chain(() => new Promise((resolve, reject) => {
         this._onAddIceCandidateSuccess = resolve;
         this._onAddIceCandidateError = reject;
         this._impl.addIceCandidate(candidate, sdpMid || "", sdpMLineIndex);
