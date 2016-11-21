@@ -214,8 +214,9 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
             int result = mCodec.dequeueInputBuffer(DEQUEUE_TIMEOUT_US);
             if (result >= 0) {
                 mCallbackSender.notifyInputBuffer(result);
-                schedulePollingIfNotCanceled(BufferPoller.MSG_POLL_INPUT_BUFFERS);
-            } else if (result != MediaCodec.INFO_TRY_AGAIN_LATER) {
+            } else if (result == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                mBufferPoller.schedulePollingIfNotCanceled(BufferPoller.MSG_POLL_INPUT_BUFFERS);
+            } else {
                 mCallbackSender.notifyError(result);
             }
         }
@@ -229,9 +230,6 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
                     mOutputEnded = true;
                 }
                 mCallbackSender.notifyOutputBuffer(result, info);
-                if (!hasMessages(MSG_POLL_INPUT_BUFFERS)) {
-                    schedulePollingIfNotCanceled(MSG_POLL_INPUT_BUFFERS);
-                }
             } else if (result == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
                 mOutputBuffers = mCodec.getOutputBuffers();
             } else if (result == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
@@ -326,8 +324,10 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
         mInputEnded = false;
         mOutputEnded = false;
         mInputBuffers = mCodec.getInputBuffers();
+        for (int i = 0; i < mInputBuffers.length; i++) {
+            mBufferPoller.schedulePolling(BufferPoller.MSG_POLL_INPUT_BUFFERS);
+        }
         mOutputBuffers = mCodec.getOutputBuffers();
-        mBufferPoller.schedulePolling(BufferPoller.MSG_POLL_INPUT_BUFFERS);
     }
 
     @Override
@@ -344,8 +344,8 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
             return;
         }
 
-        mBufferPoller.schedulePolling(BufferPoller.MSG_POLL_INPUT_BUFFERS);
         mBufferPoller.schedulePolling(BufferPoller.MSG_POLL_OUTPUT_BUFFERS);
+        mBufferPoller.schedulePolling(BufferPoller.MSG_POLL_INPUT_BUFFERS);
     }
 
     @Override
@@ -399,7 +399,9 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
         mOutputEnded = false;
         cancelPendingTasks();
         mCodec.flush();
-        mBufferPoller.schedulePolling(BufferPoller.MSG_POLL_INPUT_BUFFERS);
+        for (int i = 0; i < mInputBuffers.length; i++) {
+            mBufferPoller.schedulePolling(BufferPoller.MSG_POLL_INPUT_BUFFERS);
+        }
     }
 
     private void cancelPendingTasks() {
