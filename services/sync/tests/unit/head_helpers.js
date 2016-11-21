@@ -282,7 +282,7 @@ function assert_valid_ping(record) {
     record.syncs.forEach(p => {
       lessOrEqual(p.when, Date.now());
       if (p.devices) {
-        ok(!p.devices.some(device => device.id == p.deviceID));
+        ok(!p.devices.some(device => device.id == record.deviceID));
         equal(new Set(p.devices.map(device => device.id)).size,
               p.devices.length, "Duplicate device ids in ping devices list");
       }
@@ -415,7 +415,7 @@ function sync_engine_and_validate_telem(engine, allowErrorPings, onError) {
       equal(ping.syncs.length, 1);
       if (caughtError) {
         if (onError) {
-          onError(ping.syncs[0]);
+          onError(ping.syncs[0], ping);
         }
         reject(caughtError);
       } else {
