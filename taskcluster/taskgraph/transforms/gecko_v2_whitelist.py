@@ -40,6 +40,8 @@ JOB_NAME_WHITELIST = set([
     'linux64-qr-debug',
     'linux64-qr-opt',
     'linux64-st-an-opt',
+    'linux64-stylo-debug',
+    'linux64-stylo-opt',
     'linux64-valgrind-opt',
     'linux-debug',
     'linux-opt',

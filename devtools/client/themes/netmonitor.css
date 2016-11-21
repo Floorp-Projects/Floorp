@@ -7,10 +7,16 @@
   overflow: hidden;
 }
 
-#react-clear-button-hook,
-#react-summary-button-hook,
-#react-details-pane-toggle-hook {
+.devtools-toolbar-container {
   display: flex;
+  justify-content: space-between;
+}
+
+.devtools-toolbar-group {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
 }
 
 /**
@@ -135,6 +141,11 @@
 
 #requests-menu-toolbar {
   padding: 0;
+}
+
+#requests-menu-filter-buttons {
+  display: flex;
+  flex-wrap: nowrap;
 }
 
 .theme-firebug #requests-menu-toolbar {
@@ -745,6 +756,7 @@
 
 #requests-menu-network-summary-button {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   background: none;
   box-shadow: none;

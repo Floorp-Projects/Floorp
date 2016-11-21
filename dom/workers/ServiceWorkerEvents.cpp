@@ -767,9 +767,9 @@ FetchEvent::RespondWith(JSContext* aCx, Promise& aArg, ErrorResult& aRv)
                            spec, line, column);
   aArg.AppendNativeHandler(handler);
 
-  // Append directly to the lifecycle promises array.  Don't call WaitUntil()
-  // because that will lead to double-reporting any errors.
-  mPromises.AppendElement(&aArg);
+  if (!WaitOnPromise(aArg)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
 void
@@ -912,12 +912,29 @@ ExtendableEvent::ExtendableEvent(EventTarget* aOwner)
 {
 }
 
+bool
+ExtendableEvent::WaitOnPromise(Promise& aPromise)
+{
+  MOZ_ASSERT(mExtensionsHandler);
+  return mExtensionsHandler->WaitOnPromise(aPromise);
+}
+
+void
+ExtendableEvent::SetKeepAliveHandler(ExtensionsHandler* aExtensionsHandler)
+{
+  MOZ_ASSERT(!mExtensionsHandler);
+  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(worker);
+  worker->AssertIsOnWorkerThread();
+  mExtensionsHandler = aExtensionsHandler;
+}
+
 void
 ExtendableEvent::WaitUntil(JSContext* aCx, Promise& aPromise, ErrorResult& aRv)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  if (EventPhase() == nsIDOMEvent::NONE) {
+  if (!WaitOnPromise(aPromise)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -927,34 +944,6 @@ ExtendableEvent::WaitUntil(JSContext* aCx, Promise& aPromise, ErrorResult& aRv)
   RefPtr<WaitUntilHandler> handler =
     new WaitUntilHandler(GetCurrentThreadWorkerPrivate(), aCx);
   aPromise.AppendNativeHandler(handler);
-
-  mPromises.AppendElement(&aPromise);
-}
-
-already_AddRefed<Promise>
-ExtendableEvent::GetPromise()
-{
-  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(worker);
-  worker->AssertIsOnWorkerThread();
-
-  nsIGlobalObject* globalObj = worker->GlobalScope();
-
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(globalObj)) {
-    return nullptr;
-  }
-  JSContext* cx = jsapi.cx();
-
-  GlobalObject global(cx, globalObj->GetGlobalJSObject());
-
-  ErrorResult result;
-  RefPtr<Promise> p = Promise::All(global, Move(mPromises), result);
-  if (NS_WARN_IF(result.MaybeSetPendingException(cx))) {
-    return nullptr;
-  }
-
-  return p.forget();
 }
 
 NS_IMPL_ADDREF_INHERITED(ExtendableEvent, Event)
@@ -962,8 +951,6 @@ NS_IMPL_RELEASE_INHERITED(ExtendableEvent, Event)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ExtendableEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ExtendableEvent, Event, mPromises)
 
 namespace {
 nsresult

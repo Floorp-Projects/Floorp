@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: stretching input items with auto-margins and/or orthogonal writing-mode</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1317168">
+  <style type="text/css">
+* { color:black; background-color:white; font:10px/1 monospace; padding:0; margin:0; }
+* { vertical-align: top; }
+.grid {
+  display: inline-grid;
+  border: 1px solid;
+  grid: 30px / 200px;
+  padding: 2px 4px 3px 6px;
+  align-items: start;
+  justify-items: start;
+}
+
+input {
+  border: 1px solid;
+  padding: 0;
+  margin: 0;
+  background: lightgrey;
+}
+
+.js { justify-self: start; }
+.je { justify-self: end; }
+.jc { justify-self: center; }
+.as { align-self: start; }
+.ae { align-self: end; }
+.ac { align-self: center; }
+
+.m { margin: 7px 3px 1px 5px; }
+.p { padding: 3px 1px 5px 7px; }
+.hma10 { margin: 7px 3px 1px 0; }
+.hmaa  { margin: 7px 0 1px 0; }
+.vma10 { margin: 0 7px 3px 1px; }
+.vmaa  { margin: 0 7px 0 1px; }
+.mxw { width: 32px; }
+.mxh { height: 16px; }
+
+.vr { writing-mode: vertical-rl; }
+  </style>
+</head>
+<body>
+
+<div class="grid"><input class="m" style="width:190px; height:20px"></div>
+<div class="grid"><input class="hma10 je" style="height:20px"></div>
+<div class="grid"><input class="hmaa jc" style="height:20px"></div>
+<div class="grid"><input class="vr hma10 je" style="height:20px"></div>
+<div class="grid"><input class="vr hmaa jc" style="height:20px"></div>
+<div class="grid"><input class="vr je" style="width:198px; height:28px"></div>
+
+<div class="grid"><input class="vma10 ae" style="width:190px"></div>
+<div class="grid"><input class="vmaa ac" style="width:190px"></div>
+<div class="grid"><input class="vr vma10" style="width:190px; height:25px"></div>
+<div class="grid"><input class="vr vmaa ac" style="width:190px; height:28px"></div>
+<div class="grid"><input class="vr p vma10" style="width:182px; height:17px"></div>
+<div class="grid"><input class="vr p vmaa ac" style="width:182px; height:20px"></div>
+
+<div class="grid"><input class="mxw m" style="height:20px"></div>
+<div class="grid"><input class="mxw hma10 je" style="height:20px"></div>
+<div class="grid"><input class="mxw hmaa jc" style="height:20px"></div>
+<div class="grid"><input class="mxw vr hma10 je" style="width:10px; height:20px"></div>
+<div class="grid"><input class="mxw vr" style="height:28px"></div>
+
+<div class="grid"><input class="mxh m je" style="width:190px"></div>
+<div class="grid"><input class="mxh hma10 je"></div>
+<div class="grid"><input class="mxh hmaa jc"></div>
+<div class="grid"><input class="mxh vr hmaa jc" style="width:10px"></div>
+<div class="grid"><input class="mxh vr" style="width:198px"></div>
+
+<div class="grid" style="grid:2px/2px; padding:0;"><input style="width:0;height:0"></div>
+<div class="grid" style="grid:2px/2px; padding:0;"><input style="width:0;height:0"></div>
+
+</body>
+</html>

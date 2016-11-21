@@ -52,9 +52,8 @@ class Parser:
         self.parser = None
         self.tu = TranslationUnit(type, name)
         self.direction = None
-        self.errout = None
 
-    def parse(self, input, filename, includedirs, errout):
+    def parse(self, input, filename, includedirs):
         assert os.path.isabs(filename)
 
         if filename in Parser.parsed:
@@ -69,7 +68,6 @@ class Parser:
         self.filename = filename
         self.includedirs = includedirs
         self.tu.filename = filename
-        self.errout = errout
 
         Parser.parsed[filename] = self
         Parser.parseStack.append(Parser.current)
@@ -270,7 +268,7 @@ def p_IncludeStmt(p):
         raise ParseError(loc, "can't locate include file `%s'"% (
                 inc.file))
 
-    inc.tu = Parser(type, id).parse(open(path).read(), path, Parser.current.includedirs, Parser.current.errout)
+    inc.tu = Parser(type, id).parse(open(path).read(), path, Parser.current.includedirs)
     p[0] = inc
 
 def p_UsingStmt(p):

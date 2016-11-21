@@ -1,0 +1,191 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: stretching table items that has a side-caption with 'normal' and/or 'stretch' and min/max-size, with Automatic Minimum Size clamping</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1316051">
+  <style type="text/css">
+* { vertical-align: bottom; }
+.grid {
+  display: inline-grid;
+  border: 3px solid grey;
+  grid: 32px / 4px;
+  margin-right:20px;
+  align-items: start;
+  justify-items: start;
+}
+.r { grid: 4px / 32px; }
+
+table {
+  border: 1px solid;
+  padding: 0;
+  margin: 0;
+  background: lightgrey;
+}
+caption { border: 1px dashed blue; caption-side: right; }
+x { display:block; width:16px; height:16px; }
+t { display:block; width:6px; height:6px; }
+
+.w20 { width: 20px }
+.mxw2 { width: 2px }
+.mxw10 { width: 10px }
+.mw20 { width: 20px }
+.wfill { width:14px }
+
+.h20 { height: 20px }
+.mxh10 { height: 10px }
+.mxh2 { height: 2px }
+.mh20 { height: 20px }
+.h16 { height: 16px } /* XXX to workaround bug 307866 */
+.h8 { height: 8px } /* XXX to workaround bug 307866 */
+.w8 { width: 8px } /* XXX to workaround bug 307866 */
+.hfill { height:32px }
+
+.as, .an, .end { margin-top:14px; }
+.sa, .na, .end { margin-left:-22px; }
+.sa.mw20, .na.mw20, .end.mw20 { margin-left:-34px; }
+.sa.w20, .na.w20, .end.w20 { margin-left:-34px; }
+.sa caption, .na caption, .end caption { width:px; }
+.sa.mw20 caption, .na.mw20 caption, .end.mw20 caption { width:px; }
+.sa.w20 caption, .na.w20 caption, .end.w20 caption { width:px; }
+.r .as, .r .an, .r .end { margin-top:-14px; }
+.as.h20, .an.h20, .end.h20 { margin-top:12px; }
+.r .as.h20, .r .an.h20, .r .end.h20 { margin-top:-16px; }
+.r .sa, .r .na, .r .end { margin-left:6px; }
+.r .sa.w20, .r .na.w20, .r .end.w20 { margin-left:-6px; }
+.r .sa caption, .r .na caption, .r .end caption { width:aauto; }
+  </style>
+</head>
+<body>
+
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="wfill"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa w8"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na mxw2"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="wfill as"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="as mxw10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="wfill an"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="an mxw2"><caption><x></x></caption><td><t></t></td></table></div>
+
+<pre><!--min-height:20px--></pre>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="wfill mh20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="mh20 mxw10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="end h8 w8"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa mh20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa mh20 w8"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na mh20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na mh20 w8"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="wfill as h8"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="wfill an h8"><caption><x></x></caption><td><t></t></td></table></div>
+
+<pre><!--min-height:0--></pre>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="wfill mh0"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="mh0 mxw10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa mh0"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa w8 mh0 mxw10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na mh0"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na mh0 mxw2"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="wfill as mh0"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="wfill an mh0"><caption><x></x></caption><td><t></t></td></table></div>
+
+<pre><!----></pre>
+
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill mxw2"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="end"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="end mxw2"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill sa"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill sa mxw2"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill na"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill na mxw2"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as mxw2"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an mxw2"><caption><x></x></caption><td><t></t></td></table></div>
+
+<pre><!--min-width:20px--></pre>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill mw20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="mw20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="end mw20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="end h8 mw20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill sa mw20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa mw20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill na mw20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na mw20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as mw20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as h8 mw20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an mw20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an h8 mw20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+
+<pre><!--min-width:0--></pre>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill mw0"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="mw0 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="end mw0"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="end h8 mw0 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill sa mw0"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa mw0 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill na mw0"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na mw0 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as mw0"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as h8 mw0 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an mw0"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an h8 mw0 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+
+<pre><!--width:20px--></pre>
+
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="w20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="h8 w20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="h8 end w20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="sa w20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="na w20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="as w20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="an w20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="an w20 mxh2"><caption><x></x></caption><td><t></t></td></table></div>
+
+<pre><!--width:20px--></pre>
+
+<div class="grid"><table cellpadding=0 cellspacing=0 class="end w20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="h8 end w20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="end w20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="h8 end w20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill sa w20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa w20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="hfill na w20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na w20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as w20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="h8 as w20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an w20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="h8 an w20 mxh10"><caption><x></x></caption><td><t></t></td></table></div>
+
+<pre><!--height:20px--></pre>
+
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="wfill h20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="h20 mxw10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="end h20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="w8 end h20 mxw10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="wfill as h20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="as h20 mxw10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="wfill an h20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid r"><table cellpadding=0 cellspacing=0 class="an h20 mxw10"><caption><x></x></caption><td><t></t></td></table></div>
+
+<pre><!--height:20px--></pre>
+
+<div class="grid"><table cellpadding=0 cellspacing=0 class="h20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="h20 mxw2"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="end h20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="w8 end h20 mxw10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa h20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="sa h20 mxw2"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="na h20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="w8 na h20 mxw10"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as h20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="as h20 mxw2"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="an h20"><caption><x></x></caption><td><t></t></td></table></div>
+<div class="grid"><table cellpadding=0 cellspacing=0 class="w8 an h20 mxw10"><caption><x></x></caption><td><t></t></td></table></div>
+
+</body>
+</html>

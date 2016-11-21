@@ -36,7 +36,7 @@ public:
   {
   }
 
-  ~NSPRIOAutoObservation()
+  ~NSPRIOAutoObservation() override
   {
     Report();
   }

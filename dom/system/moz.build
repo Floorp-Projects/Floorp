@@ -19,7 +19,6 @@ elif toolkit in ('gtk2', 'gtk3'):
 
 XPIDL_SOURCES += [
     'nsIOSFileConstantsService.idl',
-    'nsISystemUpdateProvider.idl',
 ]
 
 XPIDL_MODULE = 'dom_system'
@@ -40,12 +39,6 @@ UNIFIED_SOURCES += [
 EXTRA_COMPONENTS += [
     'NetworkGeolocationProvider.js',
     'NetworkGeolocationProvider.manifest',
-    'SystemUpdate.manifest',
-    'SystemUpdateManager.js',
-]
-
-EXTRA_JS_MODULES += [
-    'SystemUpdateService.jsm',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

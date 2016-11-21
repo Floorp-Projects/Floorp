@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <dlfcn.h>
-#include "android/log.h"
+#include <android/log.h>
 
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"

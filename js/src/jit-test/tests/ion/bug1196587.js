@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 
 const numRows = 600;
 const numCols = 600;

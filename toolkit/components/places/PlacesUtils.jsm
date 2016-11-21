@@ -293,6 +293,18 @@ const SYNC_BOOKMARK_VALIDATORS = Object.freeze({
   url: BOOKMARK_VALIDATORS.url,
 });
 
+// Sync change records are passed between `PlacesSyncUtils` and the Sync
+// bookmarks engine, and are used to update an item's sync status and change
+// counter at the end of a sync.
+const SYNC_CHANGE_RECORD_VALIDATORS = Object.freeze({
+  modified: simpleValidateFunc(v => typeof v == "number" && v >= 0),
+  counter: simpleValidateFunc(v => typeof v == "number" && v >= 0),
+  status: simpleValidateFunc(v => typeof v == "number" &&
+                                  Object.values(PlacesUtils.bookmarks.SYNC_STATUS).includes(v)),
+  tombstone: simpleValidateFunc(v => v === true || v === false),
+  synced: simpleValidateFunc(v => v === true || v === false),
+});
+
 this.PlacesUtils = {
   // Place entries that are containers, e.g. bookmark folders or queries.
   TYPE_X_MOZ_PLACE_CONTAINER: "text/x-moz-place-container",
@@ -565,6 +577,7 @@ this.PlacesUtils = {
 
   BOOKMARK_VALIDATORS,
   SYNC_BOOKMARK_VALIDATORS,
+  SYNC_CHANGE_RECORD_VALIDATORS,
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIObserver
@@ -2271,6 +2284,9 @@ var Keywords = {
             `, { url: url.href, keyword: keyword, post_data: postData });
         }
 
+        yield PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
+          db, url, PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source));
+
         cache.set(keyword, { keyword, url, postData });
 
         // In any case, notify about the new keyword.
@@ -2307,6 +2323,9 @@ var Keywords = {
 
       yield db.execute(`DELETE FROM moz_keywords WHERE keyword = :keyword`,
                        { keyword });
+
+      yield PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
+        db, url, PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source));
 
       // Notify bookmarks about the removal.
       yield notifyKeywordChange(url.href, "", source);

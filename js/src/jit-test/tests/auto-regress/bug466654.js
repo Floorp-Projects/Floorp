@@ -1,4 +1,4 @@
-// |jit-test| error:TypeError
+// |jit-test| error:TypeError; need-for-each
 
 // Binary: cache/js-dbg-32-29add08d84ae-linux
 // Flags: -j

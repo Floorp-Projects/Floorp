@@ -127,15 +127,17 @@
           typeof(expected) + ")")));
       $("verbose").appendChild(createEl('br'));
     }
-    
+
+    let testObject = plugin.getInvokeDefaultObject();
+
     // Test calling the invokedefault method of plugin-defined object
-    is(plugin(), "Test Plug-in", 
+    is(testObject(), "Test Plug-in", 
         "calling NPN_InvokeDefault on plugin-defined Object doesn't work");
-    is(plugin(1), "Test Plug-in;1", 
+    is(testObject(1), "Test Plug-in;1", 
         "calling NPN_InvokeDefault on plugin-defined Object doesn't work");
-    is(plugin("test"), "Test Plug-in;test", 
+    is(testObject("test"), "Test Plug-in;test", 
         "calling NPN_InvokeDefault on plugin-defined Object doesn't work");
-    is(plugin(undefined, -1, null), "Test Plug-in;undefined;-1;null", 
+    is(testObject(undefined, -1, null), "Test Plug-in;undefined;-1;null", 
         "calling NPN_InvokeDefault on plugin-defined Object doesn't work");
   
     SimpleTest.finish();

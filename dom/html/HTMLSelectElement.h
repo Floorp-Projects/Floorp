@@ -273,7 +273,6 @@ public:
 
   using nsINode::Remove;
 
-
   // nsINode
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 

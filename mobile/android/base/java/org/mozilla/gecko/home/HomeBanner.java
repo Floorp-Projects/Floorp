@@ -12,6 +12,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.PropertyAnimator.Property;
 import org.mozilla.gecko.animation.ViewHelper;
+import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -291,7 +292,7 @@ public class HomeBanner extends LinearLayout
 
                 // Don't change this value if it wasn't a significant movement
                 if (delta >= 10 || delta <= -10) {
-                    mUserSwipedDown = (newTranslationY == mHeight);
+                    mUserSwipedDown = FloatUtils.fuzzyEquals(newTranslationY, mHeight);
                 }
 
                 ViewHelper.setTranslationY(this, newTranslationY);

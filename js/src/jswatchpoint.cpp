@@ -184,17 +184,18 @@ WatchpointMap::markAll(JSTracer* trc)
 {
     for (Map::Enum e(map); !e.empty(); e.popFront()) {
         Map::Entry& entry = e.front();
-        WatchKey key = entry.key();
-        WatchKey prior = key;
-        MOZ_ASSERT(JSID_IS_STRING(prior.id) || JSID_IS_INT(prior.id) || JSID_IS_SYMBOL(prior.id));
+        JSObject* object = entry.key().object;
+        jsid id = entry.key().id;
+        JSObject* priorObject = object;
+        jsid priorId = id;
+        MOZ_ASSERT(JSID_IS_STRING(priorId) || JSID_IS_INT(priorId) || JSID_IS_SYMBOL(priorId));
 
-        TraceEdge(trc, const_cast<PreBarrieredObject*>(&key.object),
-                   "held Watchpoint object");
-        TraceEdge(trc, const_cast<PreBarrieredId*>(&key.id), "WatchKey::id");
+        TraceManuallyBarrieredEdge(trc, &object, "held Watchpoint object");
+        TraceManuallyBarrieredEdge(trc, &id, "WatchKey::id");
         TraceEdge(trc, &entry.value().closure, "Watchpoint::closure");
 
-        if (prior.object != key.object || prior.id != key.id)
-            e.rekeyFront(key);
+        if (priorObject != object || priorId != id)
+            e.rekeyFront(WatchKey(object, id));
     }
 }
 

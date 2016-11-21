@@ -78,14 +78,31 @@ function populateReportList() {
     return;
   }
 
-  const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
-                 .getService(Ci.nsIXULChromeRegistry)
-                 .getSelectedLocale("global", true);
-  var dateFormatter = new Intl.DateTimeFormat(locale, { year: '2-digit',
-                                                        month: 'numeric',
-                                                        day: 'numeric' });
-  var timeFormatter = new Intl.DateTimeFormat(locale, { hour: 'numeric',
-                                                        minute: 'numeric' });
+  var dateFormatter;
+  var timeFormatter;
+  try {
+    const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                   .getService(Ci.nsIXULChromeRegistry)
+                   .getSelectedLocale("global", true);
+    dateFormatter = new Intl.DateTimeFormat(locale, { year: '2-digit',
+                                                      month: 'numeric',
+                                                      day: 'numeric' });
+    timeFormatter = new Intl.DateTimeFormat(locale, { hour: 'numeric',
+                                                      minute: 'numeric' });
+  } catch (e) {
+    // XXX Fallback to be removed once bug 1215247 is complete
+    // and the Intl API is available on all platforms.
+    dateFormatter = {
+      format: function(date) {
+        return date.toLocaleDateString();
+      }
+    }
+    timeFormatter = {
+      format: function(date) {
+        return date.toLocaleTimeString();
+      }
+    }
+  }
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
   var reportURI = ios.newURI(reportURL, null, null);

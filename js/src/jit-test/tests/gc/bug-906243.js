@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 a2 = []
 g = function() r
 Object.defineProperty(a2, 0, {
