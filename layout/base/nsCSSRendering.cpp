@@ -5909,10 +5909,10 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
   dirtyRect = transform.TransformBounds(dirtyRect);
   if (aSkipRect) {
     gfxRect skipRect = transform.TransformBounds(*aSkipRect);
-    mContext = mAlphaBoxBlur.Init(rect, spreadRadius,
+    mContext = mAlphaBoxBlur.Init(aDestinationCtx, rect, spreadRadius,
                                   blurRadius, &dirtyRect, &skipRect);
   } else {
-    mContext = mAlphaBoxBlur.Init(rect, spreadRadius,
+    mContext = mAlphaBoxBlur.Init(aDestinationCtx, rect, spreadRadius,
                                   blurRadius, &dirtyRect, nullptr);
   }
 
