@@ -82,10 +82,10 @@ nsGConfService::Init()
       return NS_ERROR_FAILURE;
   }
 
-  for (auto GConfSymbol : kGConfSymbols) {
-    *GConfSymbol.function =
-      PR_FindFunctionSymbol(gconfLib, GConfSymbol.functionName);
-    if (!*GConfSymbol.function) {
+  for (uint32_t i = 0; i < ArrayLength(kGConfSymbols); i++) {
+    *kGConfSymbols[i].function =
+      PR_FindFunctionSymbol(gconfLib, kGConfSymbols[i].functionName);
+    if (!*kGConfSymbols[i].function) {
       return NS_ERROR_FAILURE;
     }
   }

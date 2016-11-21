@@ -1086,7 +1086,7 @@ class Action
 {
 public:
   Action() : mProgressCost(1), mNext(nullptr) { }
-  virtual ~Action() = default;
+  virtual ~Action() { }
 
   virtual int Parse(NS_tchar *line) = 0;
 
@@ -1115,10 +1115,10 @@ class RemoveFile : public Action
 public:
   RemoveFile() : mSkip(0) { }
 
-  int Parse(NS_tchar *line) override;
-  int Prepare() override;
-  int Execute() override;
-  void Finish(int status) override;
+  int Parse(NS_tchar *line);
+  int Prepare();
+  int Execute();
+  void Finish(int status);
 
 private:
   mozilla::UniquePtr<NS_tchar[]> mFile;
@@ -1246,10 +1246,10 @@ class RemoveDir : public Action
 public:
   RemoveDir() : mSkip(0) { }
 
-  int Parse(NS_tchar *line) override;
-  int Prepare() override; // check that the source dir exists
-  int Execute() override;
-  void Finish(int status) override;
+  virtual int Parse(NS_tchar *line);
+  virtual int Prepare(); // check that the source dir exists
+  virtual int Execute();
+  virtual void Finish(int status);
 
 private:
   mozilla::UniquePtr<NS_tchar[]> mDir;
@@ -1363,10 +1363,10 @@ class AddFile : public Action
 public:
   AddFile() : mAdded(false) { }
 
-  int Parse(NS_tchar *line) override;
-  int Prepare() override;
-  int Execute() override;
-  void Finish(int status) override;
+  virtual int Parse(NS_tchar *line);
+  virtual int Prepare();
+  virtual int Execute();
+  virtual void Finish(int status);
 
 private:
   mozilla::UniquePtr<NS_tchar[]> mFile;
@@ -1466,12 +1466,12 @@ class PatchFile : public Action
 public:
   PatchFile() : mPatchFile(nullptr), mPatchIndex(-1), buf(nullptr) { }
 
-  ~PatchFile() override;
+  virtual ~PatchFile();
 
-  int Parse(NS_tchar *line) override;
-  int Prepare() override; // should check for patch file and for checksum here
-  int Execute() override;
-  void Finish(int status) override;
+  virtual int Parse(NS_tchar *line);
+  virtual int Prepare(); // should check for patch file and for checksum here
+  virtual int Execute();
+  virtual void Finish(int status);
 
 private:
   int LoadSourceFile(FILE* ofile);
@@ -1787,10 +1787,10 @@ PatchFile::Finish(int status)
 class AddIfFile : public AddFile
 {
 public:
-  int Parse(NS_tchar *line) override;
-  int Prepare() override;
-  int Execute() override;
-  void Finish(int status) override;
+  virtual int Parse(NS_tchar *line);
+  virtual int Prepare();
+  virtual int Execute();
+  virtual void Finish(int status);
 
 protected:
   mozilla::UniquePtr<NS_tchar[]> mTestFile;
@@ -1848,10 +1848,10 @@ AddIfFile::Finish(int status)
 class AddIfNotFile : public AddFile
 {
 public:
-  int Parse(NS_tchar *line) override;
-  int Prepare() override;
-  int Execute() override;
-  void Finish(int status) override;
+  virtual int Parse(NS_tchar *line);
+  virtual int Prepare();
+  virtual int Execute();
+  virtual void Finish(int status);
 
 protected:
   mozilla::UniquePtr<NS_tchar[]> mTestFile;
@@ -1909,10 +1909,10 @@ AddIfNotFile::Finish(int status)
 class PatchIfFile : public PatchFile
 {
 public:
-  int Parse(NS_tchar *line) override;
-  int Prepare() override; // should check for patch file and for checksum here
-  int Execute() override;
-  void Finish(int status) override;
+  virtual int Parse(NS_tchar *line);
+  virtual int Prepare(); // should check for patch file and for checksum here
+  virtual int Execute();
+  virtual void Finish(int status);
 
 private:
   mozilla::UniquePtr<NS_tchar[]> mTestFile;
