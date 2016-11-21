@@ -264,6 +264,7 @@ function getSerializedSecurityInfo(docShell) {
 var AboutNetAndCertErrorListener = {
   init: function(chromeGlobal) {
     addMessageListener("CertErrorDetails", this);
+    addMessageListener("Browser:CaptivePortalFreed", this);
     chromeGlobal.addEventListener('AboutNetErrorLoad', this, false, true);
     chromeGlobal.addEventListener('AboutNetErrorOpenCaptivePortal', this, false, true);
     chromeGlobal.addEventListener('AboutNetErrorSetAutomatic', this, false, true);
@@ -287,6 +288,9 @@ var AboutNetAndCertErrorListener = {
     switch (msg.name) {
       case "CertErrorDetails":
         this.onCertErrorDetails(msg);
+        break;
+      case "Browser:CaptivePortalFreed":
+        this.onCaptivePortalFreed(msg);
         break;
     }
   },
@@ -338,6 +342,10 @@ var AboutNetAndCertErrorListener = {
         learnMoreLink.href = baseURL  + "time-errors";
         break;
     }
+  },
+
+  onCaptivePortalFreed(msg) {
+    content.dispatchEvent(new content.CustomEvent("AboutNetErrorCaptivePortalFreed"));
   },
 
   handleEvent: function(aEvent) {
