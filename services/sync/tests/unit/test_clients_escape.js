@@ -7,17 +7,14 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-function run_test() {
+add_task(async function test_clients_escape() {
   _("Set up test fixtures.");
 
-  ensureLegacyIdentityManager();
-  Service.identity.username = "john@example.com";
-  Service.clusterURL = "http://fakebase/";
+  await configureIdentity();
   let baseUri = "http://fakebase/1.1/foo/storage/";
   let pubUri = baseUri + "keys/pubkey";
   let privUri = baseUri + "keys/privkey";
 
-  Service.identity.syncKey = "abcdeabcdeabcdeabcdeabcdea";
   let keyBundle = Service.identity.syncKeyBundle;
 
   let engine = Service.clientsEngine;
@@ -61,4 +58,4 @@ function run_test() {
   } finally {
     Svc.Prefs.resetBranch("");
   }
-}
+});
