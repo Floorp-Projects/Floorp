@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1316302
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1316302</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1316302">Mozilla Bug 1316302</a>
+<div contenteditable>
+<blockquote><p>abc</p></blockquote>
+</div>
+<script type="application/javascript">
+/** Test for Bug 1316302 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(()=>{
+  var editor = document.getElementsByTagName("div")[0];
+  var blockquote = document.getElementsByTagName("blockquote")[0];
+  var selection = window.getSelection();
+
+  editor.focus();
+
+  // Try to remove the last character from the end of the <blockquote>
+  selection.collapse(blockquote, blockquote.childNodes.length);
+  var range = selection.getRangeAt(0);
+  ok(range.collapsed, "range should be collapsed at the end of <blockquote>");
+  is(range.startContainer, blockquote, "range should be collapsed in the <blockquote>");
+  is(range.startOffset, blockquote.childNodes.length, "range should be collapsed at the end");
+  synthesizeKey("KEY_Backspace", { code: "Backspace" });
+  is(blockquote.innerHTML, "<p>ab</p>", "Pressing Backspace key at the end of <blockquote> should remove the last character in the <p>");
+
+  // Try to remove the first character from the start of the <blockquote>
+  selection.collapse(blockquote, 0);
+  range = selection.getRangeAt(0);
+  ok(range.collapsed, "range should be collapsed at the start of <blockquote>");
+  is(range.startContainer, blockquote, "range should be collapsed in the <blockquote>");
+  is(range.startOffset, 0, "range should be collapsed at the start");
+  synthesizeKey("KEY_Delete", { code: "Delete" });
+  is(blockquote.innerHTML, "<p>b</p>", "Pressing Delete key at the start of <blockquote> should remove the first character in the <p>");
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

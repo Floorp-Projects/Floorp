@@ -664,8 +664,8 @@ private:
                                 ClipboardCapabilities* clipboardCaps,
                                 DomainPolicyClone* domainPolicy,
                                 StructuredCloneData* initialData,
-                                InfallibleTArray<FontFamilyListEntry>* fontFamilies)
-                                override;
+                                InfallibleTArray<FontFamilyListEntry>* fontFamilies,
+                                OptionalURIParams* aUserContentSheetURL) override;
 
   virtual bool
   DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) override;

@@ -329,9 +329,10 @@ var gTests = [
     yield setSignedInUser();
     let tab = yield promiseNewTabLoadEvent("about:accounts");
     // sign the user out - the tab should have action=signin
+    let loadPromise = promiseOneMessage(tab, "test:document:load");
     yield signOut();
     // wait for the new load.
-    yield promiseOneMessage(tab, "test:document:load");
+    yield loadPromise;
     is(tab.linkedBrowser.contentDocument.location.href, "about:accounts?action=signin");
   }
 },
@@ -435,12 +436,11 @@ function promiseNewTabLoadEvent(aUrl)
   let browser = tab.linkedBrowser;
   let mm = browser.messageManager;
 
-  // give it an e10s-friendly content script to help with our tests.
-  mm.loadFrameScript(CHROME_BASE + "content_aboutAccounts.js", true);
+  // give it an e10s-friendly content script to help with our tests,
   // and wait for it to tell us about the load.
-  return promiseOneMessage(tab, "test:document:load").then(
-    () => tab
-  );
+  let promise = promiseOneMessage(tab, "test:document:load");
+  mm.loadFrameScript(CHROME_BASE + "content_aboutAccounts.js", true);
+  return promise.then(() => tab);
 }
 
 // Returns a promise which is resolved with the iframe's URL after a new
@@ -451,13 +451,13 @@ function promiseNewTabWithIframeLoadEvent(aUrl) {
   let browser = tab.linkedBrowser;
   let mm = browser.messageManager;
 
-  // give it an e10s-friendly content script to help with our tests.
-  mm.loadFrameScript(CHROME_BASE + "content_aboutAccounts.js", true);
+  // give it an e10s-friendly content script to help with our tests,
   // and wait for it to tell us about the iframe load.
   mm.addMessageListener("test:iframe:load", function onFrameLoad(message) {
     mm.removeMessageListener("test:iframe:load", onFrameLoad);
     deferred.resolve([tab, message.data.url]);
   });
+  mm.loadFrameScript(CHROME_BASE + "content_aboutAccounts.js", true);
   return deferred.promise;
 }
 

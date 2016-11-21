@@ -175,7 +175,7 @@ endif
 tup:
 	$(call BUILDSTATUS,TIERS make tup)
 	$(call BUILDSTATUS,TIER_START make)
-	$(MAKE) install-manifests buildid.h source-repo.h
+	$(MAKE) buildid.h source-repo.h
 	$(call BUILDSTATUS,TIER_FINISH make)
 	$(call BUILDSTATUS,TIER_START tup)
 	@$(TUP) $(if $(findstring s,$(filter-out --%,$(MAKEFLAGS))),,--verbose)

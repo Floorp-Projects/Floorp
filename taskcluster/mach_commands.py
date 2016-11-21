@@ -224,12 +224,9 @@ class MachCommands(MachCommandBase):
             parameters = taskgraph.parameters.load_parameters_file(options)
             parameters.check()
 
-            target_tasks_method = parameters.get('target_tasks_method', 'all_tasks')
-            target_tasks_method = taskgraph.target_tasks.get_method(target_tasks_method)
             tgg = taskgraph.generator.TaskGraphGenerator(
                 root_dir=options['root'],
-                parameters=parameters,
-                target_tasks_method=target_tasks_method)
+                parameters=parameters)
 
             tg = getattr(tgg, graph_attr)
 
