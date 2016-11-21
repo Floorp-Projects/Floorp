@@ -36,6 +36,7 @@ Cu.import("chrome://marionette/content/modal.js");
 Cu.import("chrome://marionette/content/proxy.js");
 Cu.import("chrome://marionette/content/session.js");
 Cu.import("chrome://marionette/content/simpletest.js");
+Cu.import("chrome://marionette/content/wait.js");
 
 this.EXPORTED_SYMBOLS = ["GeckoDriver", "Context"];
 
@@ -1176,7 +1177,7 @@ GeckoDriver.prototype.getWindowPosition = function (cmd, resp) {
  * @return {Object.<string, number>}
  *     Object with |x| and |y| coordinates.
  */
-GeckoDriver.prototype.setWindowPosition = function (cmd, resp) {
+GeckoDriver.prototype.setWindowPosition = function* (cmd, resp) {
   assert.firefox()
 
   let {x, y} = cmd.parameters;
@@ -1184,7 +1185,11 @@ GeckoDriver.prototype.setWindowPosition = function (cmd, resp) {
   assert.positiveInteger(y);
 
   let win = this.getCurrentWindow();
+  let orig = {screenX: win.screenX, screenY: win.screenY};
+
   win.moveTo(x, y);
+  yield wait.until(() => win.screenX != orig.screenX ||
+      win.screenY != orig.screenY);
 
   return this.curBrowser.position;
 };
