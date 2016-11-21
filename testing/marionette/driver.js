@@ -2429,8 +2429,10 @@ GeckoDriver.prototype.setScreenOrientation = function (cmd, resp) {
  */
 GeckoDriver.prototype.getWindowSize = function (cmd, resp) {
   let win = this.getCurrentWindow();
-  resp.body.width = win.outerWidth;
-  resp.body.height = win.outerHeight;
+  return {
+    width: win.outerWidth,
+    height: win.outerHeight,
+  };
 };
 
 /**
