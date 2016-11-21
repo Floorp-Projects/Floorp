@@ -68,11 +68,11 @@
 #ifdef HAVE_64BIT_BUILD
 !define HAVE_64BIT_BUILD
 !define ARCH "x64"
+!define MinSupportedVer "Microsoft Windows 7 x64"
 #else
+!define MinSupportedVer "Microsoft Windows 7"
 !define ARCH "x86"
 #endif
-
-!define MinSupportedVer "Microsoft Windows 7"
 
 !define MinSupportedCPU "SSE2"
 
