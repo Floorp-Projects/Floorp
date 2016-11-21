@@ -12,7 +12,6 @@ UNIFIED_SOURCES += [
     'BroadcastChannel.cpp',
     'BroadcastChannelChild.cpp',
     'BroadcastChannelParent.cpp',
-    'BroadcastChannelParentMessage.cpp',
     'BroadcastChannelService.cpp',
 ]
 
