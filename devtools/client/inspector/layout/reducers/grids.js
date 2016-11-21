@@ -4,11 +4,17 @@
 
 "use strict";
 
-const INITIAL_GRIDS = {
+const {
+  UPDATE_GRIDS,
+} = require("../actions/index");
 
-};
+const INITIAL_GRIDS = [];
 
 let reducers = {
+
+  [UPDATE_GRIDS](_, { grids }) {
+    return grids;
+  },
 
 };
 
