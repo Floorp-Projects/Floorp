@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 summary=/(?!AB+D)AB/.exec("AB") + '';
 try {
   var s = "throw 42";

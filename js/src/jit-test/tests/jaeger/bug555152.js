@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 
 (function() {
   for each(let x in [new Boolean(), new Boolean(), /x/, /x/]) {

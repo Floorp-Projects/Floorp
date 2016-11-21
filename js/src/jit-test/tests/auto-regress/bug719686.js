@@ -1,4 +1,4 @@
-// |jit-test| slow;
+// |jit-test| slow; need-for-each
 
 // Binary: cache/js-dbg-32-e5e66f40c35b-linux
 // Flags:

@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 /* Don't assert. */
 x = [1,2,3]
 function f(aaa) {

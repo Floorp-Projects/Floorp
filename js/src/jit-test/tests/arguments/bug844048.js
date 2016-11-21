@@ -1,3 +1,4 @@
+// |jit-test| need-for-each
 
 function foo() {
   eval("\

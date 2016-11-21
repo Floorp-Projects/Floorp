@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 if (typeof gczeal != "function")
     gczeal = function() {}
 

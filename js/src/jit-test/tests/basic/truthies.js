@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 load(libdir + 'andTestHelper.js');
 load(libdir + 'orTestHelper.js');
 
