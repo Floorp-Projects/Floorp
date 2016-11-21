@@ -66,7 +66,7 @@ private:
   class EnumDevResolver;
   class GumRejecter;
 
-  virtual ~MediaDevices() {}
+  virtual ~MediaDevices();
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(MediaDevices,
