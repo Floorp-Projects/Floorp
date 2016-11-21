@@ -4,11 +4,18 @@
 
 "use strict";
 
-const { createEnum } = require("devtools/client/shared/enum");
+const { UPDATE_GRIDS } = require("./index");
 
-createEnum([
+module.exports = {
 
-  // Update the entire grids state with the new list of grids.
-  "UPDATE_GRIDS",
+  /**
+   * Update the grid state with the new list of grids.
+   */
+  updateGrids(grids) {
+    return {
+      type: UPDATE_GRIDS,
+      grids,
+    };
+  },
 
-], module.exports);
+};

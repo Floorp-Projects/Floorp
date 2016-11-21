@@ -28,6 +28,7 @@ DevToolsModules(
     'devtools-file-watcher.js',
     'DOMHelpers.jsm',
     'doorhanger.js',
+    'enum.js',
     'file-watcher-worker.js',
     'file-watcher.js',
     'getjson.js',
