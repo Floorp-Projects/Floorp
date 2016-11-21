@@ -198,14 +198,13 @@ function CssComputedView(inspector, document, pageStyle) {
   // No results text.
   this.noResults = this.styleDocument.getElementById("computedview-no-results");
 
-  // Refresh panel when color unit changed.
+  // Refresh panel when color unit changed or pref for showing
+  // original sources changes.
   this._handlePrefChange = this._handlePrefChange.bind(this);
-  gDevTools.on("pref-changed", this._handlePrefChange);
-
-  // Refresh panel when pref for showing original sources changes
   this._onSourcePrefChanged = this._onSourcePrefChanged.bind(this);
   this._prefObserver = new PrefObserver("devtools.");
   this._prefObserver.on(PREF_ORIG_SOURCES, this._onSourcePrefChanged);
+  this._prefObserver.on("devtools.defaultColorUnit", this._handlePrefChange);
 
   // The element that we're inspecting, and the document that it comes from.
   this._viewedElement = null;
@@ -262,8 +261,7 @@ CssComputedView.prototype = {
   },
 
   _handlePrefChange: function (event, data) {
-    if (this._computed && (data.pref === "devtools.defaultColorUnit" ||
-        data.pref === PREF_ORIG_SOURCES)) {
+    if (this._computed) {
       this.refreshPanel();
     }
   },
@@ -600,6 +598,7 @@ CssComputedView.prototype = {
   },
 
   _onSourcePrefChanged: function () {
+    this._handlePrefChange();
     for (let propView of this.propertyViews) {
       propView.updateSourceLinks();
     }
@@ -734,9 +733,8 @@ CssComputedView.prototype = {
     this._viewedElement = null;
     this._outputParser = null;
 
-    gDevTools.off("pref-changed", this._handlePrefChange);
-
     this._prefObserver.off(PREF_ORIG_SOURCES, this._onSourcePrefChanged);
+    this._prefObserver.off("devtools.defaultColorUnit", this._handlePrefChange);
     this._prefObserver.destroy();
 
     // Cancel tree construction
