@@ -7,6 +7,7 @@
 #include "ServiceWorkerPrivate.h"
 
 #include "ServiceWorkerManager.h"
+#include "ServiceWorkerWindowClient.h"
 #include "nsContentUtils.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
@@ -100,64 +101,6 @@ ServiceWorkerPrivate::~ServiceWorkerPrivate()
   MOZ_ASSERT(mSupportsArray.IsEmpty());
 
   mIdleWorkerTimer->Cancel();
-}
-
-namespace {
-
-class MessageWaitUntilHandler final : public PromiseNativeHandler
-{
- nsMainThreadPtrHandle<nsISupports> mKeepAliveToken;
-
-  ~MessageWaitUntilHandler()
-  {
-  }
-
-public:
-  explicit MessageWaitUntilHandler(const nsMainThreadPtrHandle<nsISupports>& aKeepAliveToken)
-    : mKeepAliveToken(aKeepAliveToken)
-  {
-    MOZ_ASSERT(mKeepAliveToken);
-  }
-
-  void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
-  {
-    mKeepAliveToken = nullptr;
-  }
-
-  void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
-  {
-    mKeepAliveToken = nullptr;
-  }
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-};
-
-NS_IMPL_ISUPPORTS0(MessageWaitUntilHandler)
-
-} // anonymous namespace
-
-nsresult
-ServiceWorkerPrivate::SendMessageEvent(JSContext* aCx,
-                                       JS::Handle<JS::Value> aMessage,
-                                       const Optional<Sequence<JS::Value>>& aTransferable,
-                                       UniquePtr<ServiceWorkerClientInfo>&& aClientInfo)
-{
-  ErrorResult rv(SpawnWorkerIfNeeded(MessageEvent, nullptr));
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  nsMainThreadPtrHandle<nsISupports> token(
-    new nsMainThreadPtrHolder<nsISupports>(CreateEventKeepAliveToken()));
-
-  RefPtr<PromiseNativeHandler> handler = new MessageWaitUntilHandler(token);
-
-  mWorkerPrivate->PostMessageToServiceWorker(aCx, aMessage, aTransferable,
-                                             Move(aClientInfo), handler,
-                                             rv);
-  return rv.StealNSResult();
 }
 
 namespace {
@@ -472,6 +415,112 @@ public:
     return true;
   }
 };
+
+class SendMesssageEventRunnable final : public ExtendableEventWorkerRunnable
+                                      , public StructuredCloneHolder
+{
+  UniquePtr<ServiceWorkerClientInfo> mEventSource;
+
+public:
+  SendMesssageEventRunnable(WorkerPrivate*  aWorkerPrivate,
+                            KeepAliveToken* aKeepAliveToken,
+                            UniquePtr<ServiceWorkerClientInfo>&& aEventSource)
+    : ExtendableEventWorkerRunnable(aWorkerPrivate, aKeepAliveToken)
+    , StructuredCloneHolder(CloningSupported, TransferringSupported,
+                            StructuredCloneScope::SameProcessDifferentThread)
+    , mEventSource(Move(aEventSource))
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(mEventSource);
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    JS::Rooted<JS::Value> messageData(aCx);
+    nsCOMPtr<nsIGlobalObject> sgo = aWorkerPrivate->GlobalScope();
+    ErrorResult rv;
+    Read(sgo, aCx, &messageData, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return true;
+    }
+
+    Sequence<OwningNonNull<MessagePort>> ports;
+    if (!TakeTransferredPortsAsSequence(ports)) {
+      return true;
+    }
+
+    RefPtr<ServiceWorkerClient> client = new ServiceWorkerWindowClient(sgo,
+                                                                       *mEventSource);
+    RootedDictionary<ExtendableMessageEventInit> init(aCx);
+
+    init.mBubbles = false;
+    init.mCancelable = false;
+
+    init.mData = messageData;
+    init.mPorts = ports;
+    init.mSource.SetValue().SetAsClient() = client;
+
+    RefPtr<EventTarget> target = aWorkerPrivate->GlobalScope();
+    RefPtr<ExtendableMessageEvent> extendableEvent =
+      ExtendableMessageEvent::Constructor(target, NS_LITERAL_STRING("message"),
+                                          init, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
+      return false;
+    }
+
+    extendableEvent->SetTrusted(true);
+
+    return DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(),
+                                                extendableEvent, nullptr);
+  }
+};
+
+} // anonymous namespace
+
+nsresult
+ServiceWorkerPrivate::SendMessageEvent(JSContext* aCx,
+                                       JS::Handle<JS::Value> aMessage,
+                                       const Optional<Sequence<JS::Value>>& aTransferable,
+                                       UniquePtr<ServiceWorkerClientInfo>&& aClientInfo)
+{
+  AssertIsOnMainThread();
+
+  ErrorResult rv(SpawnWorkerIfNeeded(MessageEvent, nullptr));
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  JS::Rooted<JS::Value> transferable(aCx, JS::UndefinedHandleValue);
+  if (aTransferable.WasPassed()) {
+    const Sequence<JS::Value>& value = aTransferable.Value();
+    JS::HandleValueArray elements =
+      JS::HandleValueArray::fromMarkedLocation(value.Length(), value.Elements());
+
+    JSObject* array = JS_NewArrayObject(aCx, elements);
+    if (!array) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    transferable.setObject(*array);
+  }
+  RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
+  RefPtr<SendMesssageEventRunnable> runnable =
+    new SendMesssageEventRunnable(mWorkerPrivate, token, Move(aClientInfo));
+
+  runnable->Write(aCx, aMessage, transferable, JS::CloneDataPolicy(), rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  if (!runnable->Dispatch()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+namespace {
 
 // Handle functional event
 // 9.9.7 If the time difference in seconds calculated by the current time minus
