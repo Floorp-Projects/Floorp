@@ -477,6 +477,19 @@ InsetByMargin(GdkRectangle* rect, GtkStyleContext* style)
     Inset(rect, margin);
 }
 
+// Inset a rectangle by the border and padding specified in a style context.
+static void
+InsetByBorderPadding(GdkRectangle* rect, GtkStyleContext* style)
+{
+    GtkStateFlags state = gtk_style_context_get_state(style);
+    GtkBorder padding, border;
+
+    gtk_style_context_get_padding(style, state, &padding);
+    Inset(rect, padding);
+    gtk_style_context_get_border(style, state, &border);
+    Inset(rect, border);
+}
+
 static gint
 moz_gtk_scrollbar_button_paint(cairo_t *cr, const GdkRectangle* aRect,
                                GtkWidgetState* state,
@@ -1296,11 +1309,7 @@ moz_gtk_tooltip_paint(cairo_t *cr, const GdkRectangle* aRect,
     gtk_render_frame(boxStyle, cr, rect.x, rect.y, rect.width, rect.height);
 
     // Label drawing
-    GtkBorder padding, border;
-    gtk_style_context_get_padding(boxStyle, GTK_STATE_FLAG_NORMAL, &padding);
-    Inset(&rect, padding);
-    gtk_style_context_get_border(boxStyle, GTK_STATE_FLAG_NORMAL, &border);
-    Inset(&rect, border);
+    InsetByBorderPadding(&rect, boxStyle);
 
     GtkStyleContext* labelStyle =
         CreateStyleForWidget(gtk_label_new(nullptr), boxStyle);
@@ -1869,7 +1878,8 @@ moz_gtk_menu_arrow_paint(cairo_t *cr, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
-// See gtk_real_check_menu_item_draw_indicator() for reference.
+// For reference, see gtk_check_menu_item_size_allocate() in GTK versions after
+// 3.20 and gtk_real_check_menu_item_draw_indicator() in earlier versions.
 static gint
 moz_gtk_check_menu_item_paint(WidgetNodeType widgetType,
                               cairo_t *cr, GdkRectangle* rect,
@@ -1878,7 +1888,6 @@ moz_gtk_check_menu_item_paint(WidgetNodeType widgetType,
 {
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
     GtkStyleContext* style;
-    GtkBorder padding;
     gint indicator_size, horizontal_padding;
     gint x, y;
 
@@ -1888,29 +1897,39 @@ moz_gtk_check_menu_item_paint(WidgetNodeType widgetType,
       state_flags = static_cast<GtkStateFlags>(state_flags|checkbox_check_state);
     }
 
+    bool pre_3_20 = gtk_get_minor_version() < 20;
+    gint offset;
     style = ClaimStyleContext(widgetType, direction);
     gtk_style_context_get_style(style,
                                 "indicator-size", &indicator_size,
                                 "horizontal-padding", &horizontal_padding,
                                 NULL);
-    gtk_style_context_get_padding(style, state_flags, &padding);
+    if (pre_3_20) {
+        GtkBorder padding;
+        gtk_style_context_get_padding(style, state_flags, &padding);
+        offset = horizontal_padding + padding.left + 2;
+    } else {
+        GdkRectangle r = { 0 };
+        InsetByMargin(&r, style);
+        InsetByBorderPadding(&r, style);
+        offset = r.x;
+    }
     ReleaseStyleContext(style);
 
     bool isRadio = (widgetType == MOZ_GTK_RADIOMENUITEM);
     WidgetNodeType indicatorType = isRadio ? MOZ_GTK_RADIOMENUITEM_INDICATOR
                                            : MOZ_GTK_CHECKMENUITEM_INDICATOR;
     style = ClaimStyleContext(indicatorType, direction, state_flags);
-    gint offset = padding.left + 2;
 
     if (direction == GTK_TEXT_DIR_RTL) {
-        x = rect->width - indicator_size - offset - horizontal_padding;
+        x = rect->width - indicator_size - offset;
     }
     else {
-        x = rect->x + offset + horizontal_padding;
+        x = rect->x + offset;
     }
     y = rect->y + (rect->height - indicator_size) / 2;
 
-    if (gtk_check_version(3, 20, 0) == nullptr) {
+    if (!pre_3_20) {
         gtk_render_background(style, cr, x, y, indicator_size, indicator_size);
         gtk_render_frame(style, cr, x, y, indicator_size, indicator_size);
     }
@@ -2163,8 +2182,12 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
                 widget == MOZ_GTK_MENUBARITEM ? MOZ_GTK_MENUITEM : widget;
             style = ClaimStyleContext(type);
 
-            moz_gtk_add_style_padding(style, left, top, right, bottom);
-
+            if (gtk_get_minor_version() < 20) {
+                moz_gtk_add_style_padding(style, left, top, right, bottom);
+            } else {
+                moz_gtk_add_margin_border_padding(style,
+                                                  left, top, right, bottom);
+            }
             ReleaseStyleContext(style);
             return MOZ_GTK_SUCCESS;
         }
