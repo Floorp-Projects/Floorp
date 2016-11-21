@@ -186,6 +186,17 @@ class pkixcert_IsValidChainForAlgorithm
 {
 };
 
+::std::ostream& operator<<(::std::ostream& os,
+                           const pkixcert_IsValidChainForAlgorithm&)
+{
+  return os << "TODO (bug 1318770)";
+}
+
+::std::ostream& operator<<(::std::ostream& os, const ChainValidity&)
+{
+  return os << "TODO (bug 1318770)";
+}
+
 TEST_P(pkixcert_IsValidChainForAlgorithm, IsValidChainForAlgorithm)
 {
   const ChainValidity& chainValidity(GetParam());
