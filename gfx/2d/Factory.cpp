@@ -770,7 +770,10 @@ Factory::CreateWrappingDataSourceSurface(uint8_t *aData,
                                          SourceSurfaceDeallocator aDeallocator /* = nullptr */,
                                          void* aClosure /* = nullptr */)
 {
-  if (!AllowedSurfaceSize(aSize)) {
+  // Just check for negative/zero size instead of the full AllowedSurfaceSize() - since
+  // the data is already allocated we do not need to check for a possible overflow - it
+  // already worked.
+  if (aSize.width <= 0 || aSize.height <= 0) {
     return nullptr;
   }
   if (!aDeallocator && aClosure) {
