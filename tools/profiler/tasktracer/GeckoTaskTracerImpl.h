@@ -14,7 +14,55 @@
 namespace mozilla {
 namespace tasktracer {
 
-typedef nsTArray<nsCString> TraceInfoLogsType;
+struct LogRecDispatch {
+  uint32_t mType;
+  uint32_t mSourceEventType;
+  uint64_t mTaskId;
+  uint64_t mTime;
+  uint64_t mSourceEventId;
+  uint64_t mParentTaskId;
+};
+
+struct LogRecBegin {
+  uint32_t mType;
+  uint64_t mTaskId;
+  uint64_t mTime;
+  uint32_t mPid;
+  uint32_t mTid;
+};
+
+struct LogRecEnd {
+  uint32_t mType;
+  uint64_t mTaskId;
+  uint64_t mTime;
+};
+
+struct LogRecVPtr {
+  uint32_t mType;
+  uint64_t mTaskId;
+  uintptr_t mVPtr;
+};
+
+struct LogRecLabel {
+  uint32_t mType;
+  uint32_t mStrIdx;
+  uint64_t mTaskId;
+  uint64_t mTime;
+};
+
+union TraceInfoLogType {
+  uint32_t mType;
+  LogRecDispatch mDispatch;
+  LogRecBegin mBegin;
+  LogRecEnd mEnd;
+  LogRecVPtr mVPtr;
+  LogRecLabel mLabel;
+};
+
+struct TraceInfoLogNode {
+  TraceInfoLogType mLog;
+  TraceInfoLogNode* mNext;
+};
 
 struct TraceInfo
 {
@@ -26,14 +74,23 @@ struct TraceInfo
     , mLastUniqueTaskId(0)
     , mObsolete(false)
     , mLogsMutex("TraceInfoMutex")
+    , mLogsHead(nullptr)
+    , mLogsTail(nullptr)
+    , mLogsSize(0)
   {
     MOZ_COUNT_CTOR(TraceInfo);
   }
 
-  ~TraceInfo() { MOZ_COUNT_DTOR(TraceInfo); }
+  ~TraceInfo() {
+    MOZ_COUNT_DTOR(TraceInfo);
+    while (mLogsHead) {
+      auto node = mLogsHead;
+      mLogsHead = node->mNext;
+      delete node;
+    }
+  }
 
-  nsCString* AppendLog();
-  void MoveLogsInto(TraceInfoLogsType& aResult);
+  TraceInfoLogType* AppendLog();
 
   uint64_t mCurTraceSourceId;
   uint64_t mCurTaskId;
@@ -42,10 +99,12 @@ struct TraceInfo
   uint32_t mLastUniqueTaskId;
   mozilla::Atomic<bool> mObsolete;
 
-  // This mutex protects the following log array because MoveLogsInto() might
-  // be called on another thread.
+  // This mutex protects the following log
   mozilla::Mutex mLogsMutex;
-  TraceInfoLogsType mLogs;
+  TraceInfoLogNode* mLogsHead;
+  TraceInfoLogNode* mLogsTail;
+  int mLogsSize;
+  nsTArray<nsCString> mStrs;
 };
 
 // Return the TraceInfo of current thread, allocate a new one if not exit.

@@ -151,20 +151,22 @@ ObsoleteCurrentTraceInfos()
 
 } // namespace anonymous
 
-nsCString*
+TraceInfoLogType*
 TraceInfo::AppendLog()
 {
-  if (mLogs.Length() >= MAX_SIZE_LOG) {
+  if (mLogsSize >= MAX_SIZE_LOG) {
     return nullptr;
   }
-  return mLogs.AppendElement();
-}
-
-void
-TraceInfo::MoveLogsInto(TraceInfoLogsType& aResult)
-{
-  MutexAutoLock lock(mLogsMutex);
-  aResult.AppendElements(Move(mLogs));
+  TraceInfoLogNode* node = new TraceInfoLogNode;
+  node->mNext = nullptr;
+  if (mLogsTail) {
+    mLogsTail->mNext = node;
+    mLogsTail = node;
+  } else {
+    mLogsTail = mLogsHead = node;
+  }
+  mLogsSize++;
+  return &node->mLog;
 }
 
 void
@@ -297,11 +299,14 @@ LogDispatch(uint64_t aTaskId, uint64_t aParentTaskId, uint64_t aSourceEventId,
   MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [0 taskId dispatchTime sourceEventId sourceEventType parentTaskId]
-  nsCString* log = info->AppendLog();
+  TraceInfoLogType* log = info->AppendLog();
   if (log) {
-    log->AppendPrintf("%d %lld %lld %lld %d %lld",
-                      ACTION_DISPATCH, aTaskId, time, aSourceEventId,
-                      aSourceEventType, aParentTaskId);
+    log->mDispatch.mType = ACTION_DISPATCH;
+    log->mDispatch.mTaskId = aTaskId;
+    log->mDispatch.mTime = time;
+    log->mDispatch.mSourceEventId = aSourceEventId;
+    log->mDispatch.mSourceEventType = aSourceEventType;
+    log->mDispatch.mParentTaskId = aParentTaskId;
   }
 }
 
@@ -314,10 +319,13 @@ LogBegin(uint64_t aTaskId, uint64_t aSourceEventId)
   MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [1 taskId beginTime processId threadId]
-  nsCString* log = info->AppendLog();
+  TraceInfoLogType* log = info->AppendLog();
   if (log) {
-    log->AppendPrintf("%d %lld %lld %d %d",
-                      ACTION_BEGIN, aTaskId, GetTimestamp(), getpid(), gettid());
+    log->mBegin.mType = ACTION_BEGIN;
+    log->mBegin.mTaskId = aTaskId;
+    log->mBegin.mTime = GetTimestamp();
+    log->mBegin.mPid = getpid();
+    log->mBegin.mTid = gettid();
   }
 }
 
@@ -330,9 +338,11 @@ LogEnd(uint64_t aTaskId, uint64_t aSourceEventId)
   MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [2 taskId endTime]
-  nsCString* log = info->AppendLog();
+  TraceInfoLogType* log = info->AppendLog();
   if (log) {
-    log->AppendPrintf("%d %lld %lld", ACTION_END, aTaskId, GetTimestamp());
+    log->mEnd.mType = ACTION_END;
+    log->mEnd.mTaskId = aTaskId;
+    log->mEnd.mTime = GetTimestamp();
   }
 }
 
@@ -345,12 +355,14 @@ LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, uintptr_t* aVptr)
   MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [4 taskId address]
-  nsCString* log = info->AppendLog();
+  TraceInfoLogType* log = info->AppendLog();
   if (log) {
     // Since addr2line used by SPS addon can not solve non-function
     // addresses, we use the first entry of vtable as the symbol to
     // solve.  We should find a better solution later.
-    log->AppendPrintf("%d %lld %p", ACTION_GET_VTABLE, aTaskId, aVptr);
+    log->mVPtr.mType = ACTION_GET_VTABLE;
+    log->mVPtr.mTaskId = aTaskId;
+    log->mVPtr.mVPtr = reinterpret_cast<uintptr_t>(aVptr);
   }
 }
 
@@ -370,19 +382,21 @@ void AddLabel(const char* aFormat, ...)
   TraceInfo* info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
-  va_list args;
-  va_start(args, aFormat);
-  nsAutoCString buffer;
-  buffer.AppendPrintf(aFormat, args);
-  va_end(args);
-
   MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [3 taskId "label"]
-  nsCString* log = info->AppendLog();
+  TraceInfoLogType* log = info->AppendLog();
   if (log) {
-    log->AppendPrintf("%d %lld %lld \"%s\"", ACTION_ADD_LABEL, info->mCurTaskId,
-                      GetTimestamp(), buffer.get());
+    va_list args;
+    va_start(args, aFormat);
+    nsCString &buffer = *info->mStrs.AppendElement();
+    buffer.AppendPrintf(aFormat, args);
+    va_end(args);
+
+    log->mLabel.mType = ACTION_ADD_LABEL;
+    log->mLabel.mTaskId = info->mCurTaskId;
+    log->mLabel.mTime = GetTimestamp();
+    log->mLabel.mStrIdx = info->mStrs.Length() - 1;
   }
 }
 
@@ -401,17 +415,64 @@ StopLogging()
   SetLogStarted(false);
 }
 
-UniquePtr<TraceInfoLogsType>
+UniquePtr<nsTArray<nsCString>>
 GetLoggedData(TimeStamp aTimeStamp)
 {
-  auto result = MakeUnique<TraceInfoLogsType>();
+  auto result = MakeUnique<nsTArray<nsCString>>();
 
   // TODO: This is called from a signal handler. Use semaphore instead.
   StaticMutexAutoLock lock(sMutex);
 
   for (uint32_t i = 0; i < sTraceInfos->Length(); ++i) {
-    if (!(*sTraceInfos)[i]->mObsolete) {
-      (*sTraceInfos)[i]->MoveLogsInto(*result);
+    TraceInfo* info = (*sTraceInfos)[i].get();
+    MutexAutoLock lockLogs(info->mLogsMutex);
+    if (info->mObsolete) {
+      continue;
+    }
+
+    nsTArray<nsCString> &strs = info->mStrs;
+    for (TraceInfoLogNode* node = info->mLogsHead; node; node = node->mNext) {
+      TraceInfoLogType &log = node->mLog;
+      nsCString &buffer = *result->AppendElement();
+
+      switch (log.mType) {
+      case ACTION_DISPATCH:
+        buffer.AppendPrintf("%d %lld %lld %lld %d %lld",
+                            ACTION_DISPATCH,
+                            log.mDispatch.mTaskId,
+                            log.mDispatch.mTime,
+                            log.mDispatch.mSourceEventId,
+                            log.mDispatch.mSourceEventType,
+                            log.mDispatch.mParentTaskId);
+        break;
+
+      case ACTION_BEGIN:
+        buffer.AppendPrintf("%d %lld %lld %d %d",
+                            ACTION_BEGIN, log.mBegin.mTaskId,
+                            log.mBegin.mTime, log.mBegin.mPid,
+                            log.mBegin.mTid);
+        break;
+
+      case ACTION_END:
+        buffer.AppendPrintf("%d %lld %lld",
+                            ACTION_END, log.mEnd.mTaskId, log.mEnd.mTime);
+        break;
+
+      case ACTION_GET_VTABLE:
+        buffer.AppendPrintf("%d %lld %p",
+                            ACTION_GET_VTABLE, log.mVPtr.mTaskId,
+                            log.mVPtr.mVPtr);
+        break;
+
+      case ACTION_ADD_LABEL:
+        buffer.AppendPrintf("%d %lld %lld \"%s\"",
+                            ACTION_ADD_LABEL, log.mLabel.mTaskId,
+                            log.mLabel.mTime, strs[log.mLabel.mStrIdx].get());
+        break;
+
+      default:
+        MOZ_CRASH("Unknow TaskTracer log type!");
+      }
     }
   }
 
