@@ -1369,6 +1369,10 @@ ssl3_VerifySignedHashes(sslSocket *ss, SSLSignatureScheme scheme, SSL3Hashes *ha
     if (signature) {
         SECITEM_FreeItem(signature, PR_TRUE);
     }
+#ifdef UNSAFE_FUZZER_MODE
+    rv = SECSuccess;
+    PORT_SetError(0);
+#endif
     if (rv != SECSuccess) {
         ssl_MapLowLevelError(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
     }
@@ -2591,6 +2595,10 @@ ssl_ProtectRecord(sslSocket *ss, ssl3CipherSpec *cwSpec,
 
     isTLS13 = (PRBool)(cwSpec->version >= SSL_LIBRARY_VERSION_TLS_1_3);
 
+#ifdef UNSAFE_FUZZER_MODE
+    rv = Null_Cipher(NULL, protBuf.buf, (int *)&protBuf.len, protBuf.space,
+                     pIn, contentLen);
+#else
     if (isTLS13) {
         rv = tls13_ProtectRecord(ss, cwSpec, type, pIn, contentLen, &protBuf);
     } else {
@@ -2598,6 +2606,7 @@ ssl_ProtectRecord(sslSocket *ss, ssl3CipherSpec *cwSpec,
                                            IS_DTLS(ss), capRecordVersion, type,
                                            pIn, contentLen, &protBuf);
     }
+#endif
     if (rv != SECSuccess) {
         return SECFailure; /* error was set */
     }
@@ -2605,9 +2614,12 @@ ssl_ProtectRecord(sslSocket *ss, ssl3CipherSpec *cwSpec,
     PORT_Assert(protBuf.len <= MAX_FRAGMENT_LENGTH + (isTLS13 ? 256 : 1024));
     wrBuf->len = protBuf.len + headerLen;
 
+#ifndef UNSAFE_FUZZER_MODE
     if (isTLS13 && cipher_def->calg != ssl_calg_null) {
         wrBuf->buf[0] = content_application_data;
-    } else {
+    } else
+#endif
+    {
         wrBuf->buf[0] = type;
     }
 
@@ -11376,10 +11388,12 @@ ssl3_HandleFinished(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
     if (isTLS) {
         TLSFinished tlsFinished;
 
-        if (length != sizeof tlsFinished) {
+        if (length != sizeof(tlsFinished)) {
+#ifndef UNSAFE_FUZZER_MODE
             (void)SSL3_SendAlert(ss, alert_fatal, decode_error);
             PORT_SetError(SSL_ERROR_RX_MALFORMED_FINISHED);
             return SECFailure;
+#endif
         }
         rv = ssl3_ComputeTLSFinished(ss, ss->ssl3.crSpec, !isServer,
                                      hashes, &tlsFinished);
@@ -11387,12 +11401,15 @@ ssl3_HandleFinished(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
             ss->ssl3.hs.finishedMsgs.tFinished[1] = tlsFinished;
         else
             ss->ssl3.hs.finishedMsgs.tFinished[0] = tlsFinished;
-        ss->ssl3.hs.finishedBytes = sizeof tlsFinished;
+        ss->ssl3.hs.finishedBytes = sizeof(tlsFinished);
         if (rv != SECSuccess ||
-            0 != NSS_SecureMemcmp(&tlsFinished, b, length)) {
+            0 != NSS_SecureMemcmp(&tlsFinished, b,
+                                  PR_MIN(length, ss->ssl3.hs.finishedBytes))) {
+#ifndef UNSAFE_FUZZER_MODE
             (void)SSL3_SendAlert(ss, alert_fatal, decrypt_error);
             PORT_SetError(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
             return SECFailure;
+#endif
         }
     } else {
         if (length != sizeof(SSL3Finished)) {
@@ -12569,6 +12586,10 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *databuf)
         return SECSuccess;
     }
 
+#ifdef UNSAFE_FUZZER_MODE
+    rv = Null_Cipher(NULL, plaintext->buf, (int *)&plaintext->len,
+                     plaintext->space, cText->buf->buf, cText->buf->len);
+#else
     /* IMPORTANT: Unprotect functions MUST NOT send alerts
      * because we still hold the spec read lock. Instead, if they
      * return SECFailure, they set *alert to the alert to be sent. */
@@ -12579,6 +12600,7 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *databuf)
     } else {
         rv = tls13_UnprotectRecord(ss, cText, plaintext, &alert);
     }
+#endif
 
     if (rv != SECSuccess) {
         ssl_ReleaseSpecReadLock(ss); /***************************/

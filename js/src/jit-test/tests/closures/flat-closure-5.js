@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 actual = '';
 expected = 'undefined,[object Object],undefined,[object Object],undefined,[object Object],undefined,[object Object],undefined,[object Object],undefined,[object Object],undefined,[object Object],undefined,[object Object],undefined,[object Object],undefined,[object Object],';
 

@@ -1454,17 +1454,11 @@ GetCurrentThreadWorkerPrivate()
   JSContext* cx = ccjscx->Context();
   MOZ_ASSERT(cx);
 
-  void* cxPrivate = JS_GetContextPrivate(cx);
-  if (!cxPrivate) {
-    // This can happen if the nsCycleCollector_shutdown() in ~WorkerJSContext()
-    // triggers any calls to GetCurrentThreadWorkerPrivate().  At this stage
-    // CycleCollectedJSContext::Get() will still return a context, but
-    // the context private has already been cleared.
-    return nullptr;
-  }
-
-  return
-    static_cast<WorkerThreadContextPrivate*>(cxPrivate)->GetWorkerPrivate();
+  // Note that we can return nullptr if the nsCycleCollector_shutdown() in
+  // ~WorkerJSContext() triggers any calls to GetCurrentThreadWorkerPrivate().
+  // At this stage CycleCollectedJSContext::Get() will still return a context,
+  // but the context private has already been cleared.
+  return GetWorkerPrivateFromContext(cx);
 }
 
 bool

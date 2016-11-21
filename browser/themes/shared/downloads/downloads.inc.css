@@ -138,8 +138,8 @@ toolbarseparator.downloadsDropmarkerSplitter {
 .downloadsDropmarker > .button-box > .button-menu-dropmarker > .dropmarker-icon {
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://browser/skin/downloads/menubutton-dropmarker.svg");
-  filter: url("chrome://browser/skin/filters.svg#fill");
+  list-style-image: url("chrome://global/skin/icons/menubutton-dropmarker.svg");
+  filter: url("chrome://global/skin/filters.svg#fill");
   fill: currentColor;
 }
 
@@ -267,7 +267,7 @@ richlistitem[type="download"] > .downloadMainArea {
   width: 16px;
   height: 16px;
   margin: 1px;
-  filter: url("chrome://browser/skin/filters.svg#fill");
+  filter: url("chrome://global/skin/filters.svg#fill");
   fill: currentColor;
 }
 

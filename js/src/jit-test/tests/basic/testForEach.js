@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 function testForEach() {
     var r;
     var a = ["zero", "one", "two", "three"];

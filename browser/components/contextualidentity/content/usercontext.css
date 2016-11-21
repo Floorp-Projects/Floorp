@@ -83,7 +83,7 @@
 .subviewbutton[usercontextid] > .toolbarbutton-icon,
 #userContext-indicator {
   background-image: var(--identity-icon);
-  filter: url(chrome://browser/skin/filters.svg#fill);
+  filter: url(chrome://global/skin/filters.svg#fill);
   fill: var(--identity-icon-color);
   background-size: contain;
   background-repeat: no-repeat;

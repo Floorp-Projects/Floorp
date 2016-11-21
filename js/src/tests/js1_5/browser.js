@@ -1,0 +1,1 @@
+SpecialPowers.Cu.getJSTestingFunctions().enableForEach();

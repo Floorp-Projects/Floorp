@@ -423,7 +423,7 @@ description#identity-popup-content-verifier,
   width: 16px;
   height: 16px;
   list-style-image: url(chrome://browser/skin/panel-icons.svg#cancel);
-  filter: url(chrome://browser/skin/filters.svg#fill);
+  filter: url(chrome://global/skin/filters.svg#fill);
   fill: graytext;
 }
 

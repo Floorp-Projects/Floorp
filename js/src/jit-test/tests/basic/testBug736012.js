@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 evaluate("\
 function fatty() {\
     try { fatty(); } catch (e) {\

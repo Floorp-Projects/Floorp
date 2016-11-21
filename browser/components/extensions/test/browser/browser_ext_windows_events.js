@@ -84,6 +84,8 @@ add_task(function* testWindowsEvents() {
   let win2Id = yield extension.awaitMessage("window-created");
   info(`Window 2 ID: ${win2Id}`);
 
+  win2.focus();
+
   winId = yield extension.awaitMessage(`window-focus-changed`);
   is(winId, win2Id, "Got focus change event for the correct window ID.");
 

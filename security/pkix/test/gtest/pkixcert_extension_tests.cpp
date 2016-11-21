@@ -122,6 +122,11 @@ struct ExtensionTestcase
   Result expectedResult;
 };
 
+::std::ostream& operator<<(::std::ostream& os, const ExtensionTestcase&)
+{
+  return os << "TODO (bug 1318770)";
+}
+
 static const ExtensionTestcase EXTENSION_TESTCASES[] =
 {
   // Tests that a non-critical extension not in the id-ce or id-pe arcs (which

@@ -18,6 +18,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
+  return Services.strings.createBundle("chrome://branding/locale/brand.properties");
+});
+
 this.webrtcUI = {
   init: function() {
     Services.obs.addObserver(maybeAddMenuIndicator, "browser-delayed-startup-finished", false);
@@ -155,20 +159,10 @@ this.webrtcUI = {
     identityBox.click();
   },
 
-  updateMainActionLabel: function(aMenuList) {
+  updateWarningLabel: function(aMenuList) {
     let type = aMenuList.selectedItem.getAttribute("devicetype");
     let document = aMenuList.ownerDocument;
     document.getElementById("webRTC-all-windows-shared").hidden = type != "Screen";
-
-    // If we are also requesting audio in addition to screen sharing,
-    // always use a generic label.
-    if (!document.getElementById("webRTC-selectMicrophone").hidden)
-      type = "";
-
-    let bundle = document.defaultView.gNavigatorBundle;
-    let stringId = "getUserMedia.share" + (type || "SelectedItems") + ".label";
-    let popupnotification = aMenuList.parentNode.parentNode;
-    popupnotification.setAttribute("buttonlabel", bundle.getString(stringId));
   },
 
   receiveMessage: function(aMessage) {
@@ -294,21 +288,13 @@ function prompt(aBrowser, aRequest) {
   let host = getHost(uri);
   let chromeDoc = aBrowser.ownerDocument;
   let stringBundle = chromeDoc.defaultView.gNavigatorBundle;
-  let stringId = "getUserMedia.share" + requestTypes.join("And") + ".message";
+  let stringId = "getUserMedia.share" + requestTypes.join("And") + "2.message";
   let message = stringBundle.getFormattedString(stringId, [host]);
-
-  let mainLabel;
-  if (sharingScreen || sharingAudio) {
-    mainLabel = stringBundle.getString("getUserMedia.shareSelectedItems.label");
-  } else {
-    let string = stringBundle.getString("getUserMedia.shareSelectedDevices.label");
-    mainLabel = PluralForm.get(requestTypes.length, string);
-  }
 
   let notification; // Used by action callbacks.
   let mainAction = {
-    label: mainLabel,
-    accessKey: stringBundle.getString("getUserMedia.shareSelectedDevices.accesskey"),
+    label: stringBundle.getString("getUserMedia.allow.label"),
+    accessKey: stringBundle.getString("getUserMedia.allow.accesskey"),
     // The real callback will be set during the "showing" event. The
     // empty function here is so that PopupNotifications.show doesn't
     // reject the action.
@@ -317,45 +303,46 @@ function prompt(aBrowser, aRequest) {
 
   let secondaryActions = [
     {
-      label: stringBundle.getString("getUserMedia.denyRequest.label"),
-      accessKey: stringBundle.getString("getUserMedia.denyRequest.accesskey"),
-      callback: function() {
+      label: stringBundle.getString("getUserMedia.dontAllow.label"),
+      accessKey: stringBundle.getString("getUserMedia.dontAllow.accesskey"),
+      callback: function(aState) {
         denyRequest(notification.browser, aRequest);
+        if (aState && aState.checkboxChecked) {
+          let perms = Services.perms;
+          if (audioDevices.length)
+            perms.add(uri, "microphone", perms.DENY_ACTION);
+          if (videoDevices.length)
+            perms.add(uri, "camera", perms.DENY_ACTION);
+        }
       }
     }
   ];
-  // Bug 1037438: implement 'never' for screen sharing.
-  if (!sharingScreen && !sharingAudio) {
-    secondaryActions.push({
-      label: stringBundle.getString("getUserMedia.never.label"),
-      accessKey: stringBundle.getString("getUserMedia.never.accesskey"),
-      callback: function() {
-        denyRequest(notification.browser, aRequest);
-        // Let someone save "Never" for http sites so that they can be stopped from
-        // bothering you with doorhangers.
-        let perms = Services.perms;
-        if (audioDevices.length)
-          perms.add(uri, "microphone", perms.DENY_ACTION);
-        if (videoDevices.length)
-          perms.add(uri, "camera", perms.DENY_ACTION);
-      }
-    });
-  }
 
-  if (aRequest.secure && !sharingScreen && !sharingAudio) {
-    // Don't show the 'Always' action if the connection isn't secure, or for
-    // screen/audio sharing (because we can't guess which window the user wants
-    // to share without prompting).
-    secondaryActions.unshift({
-      label: stringBundle.getString("getUserMedia.always.label"),
-      accessKey: stringBundle.getString("getUserMedia.always.accesskey"),
-      callback: function(aState) {
-        mainAction.callback(aState, true);
-      }
-    });
+  let productName = gBrandBundle.GetStringFromName("brandShortName");
+
+  // Disable the permanent 'Allow' action if the connection isn't secure, or for
+  // screen/audio sharing (because we can't guess which window the user wants to
+  // share without prompting).
+  let reasonForNoPermanentAllow = "";
+  if (sharingScreen) {
+    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.screen";
+  } else if (sharingAudio) {
+    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.audio";
+  } else if (!aRequest.secure) {
+    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.insecure";
   }
 
   let options = {
+    persistent: true,
+    hideClose: true,
+    checkbox: {
+      label: stringBundle.getString("getUserMedia.remember"),
+      checkedState: reasonForNoPermanentAllow ? {
+        disableMainAction: true,
+        warningLabel: stringBundle.getFormattedString(reasonForNoPermanentAllow,
+                                                      [productName])
+      } : undefined,
+    },
     eventCallback: function(aTopic, aNewBrowser) {
       if (aTopic == "swapping")
         return true;
@@ -603,7 +590,8 @@ function prompt(aBrowser, aRequest) {
       if (!sharingAudio)
         listDevices(micMenupopup, audioDevices);
 
-      this.mainAction.callback = function(aState, aRemember) {
+      this.mainAction.callback = function(aState) {
+        let remember = aState && aState.checkboxChecked;
         let allowedDevices = [];
         let perms = Services.perms;
         if (videoDevices.length) {
@@ -617,7 +605,7 @@ function prompt(aBrowser, aRequest) {
             perms.add(uri, "MediaManagerVideo", perms.ALLOW_ACTION,
                       perms.EXPIRE_SESSION);
           }
-          if (aRemember) {
+          if (remember) {
             perms.add(uri, "camera",
                       allowCamera ? perms.ALLOW_ACTION : perms.DENY_ACTION);
           }
@@ -628,7 +616,7 @@ function prompt(aBrowser, aRequest) {
             let allowMic = audioDeviceIndex != "-1";
             if (allowMic)
               allowedDevices.push(audioDeviceIndex);
-            if (aRemember) {
+            if (remember) {
               perms.add(uri, "microphone",
                         allowMic ? perms.ALLOW_ACTION : perms.DENY_ACTION);
             }
@@ -643,7 +631,7 @@ function prompt(aBrowser, aRequest) {
           return;
         }
 
-        if (aRemember) {
+        if (remember) {
           // Remember on which URIs we set persistent permissions so that we
           // can remove them if the user clicks 'Stop Sharing'.
           aBrowser._devicePermissionURIs = aBrowser._devicePermissionURIs || [];

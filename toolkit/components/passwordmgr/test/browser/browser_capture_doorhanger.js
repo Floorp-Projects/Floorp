@@ -380,9 +380,9 @@ add_task(function* test_checkUPSaveText() {
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-save");
     ok(notif, "got notification popup");
-    // Check the text, which comes from the localized saveLoginText string.
+    // Check the text, which comes from the localized saveLoginMsg string.
     let notificationText = notif.message;
-    let expectedText = "Would you like " + BRAND_SHORT_NAME + " to remember this login?";
+    let expectedText = "Would you like " + BRAND_SHORT_NAME + " to save this login for example.com?";
     is(expectedText, notificationText, "Checking text: " + notificationText);
     notif.remove();
   });
@@ -398,9 +398,9 @@ add_task(function* test_checkPSaveText() {
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-save");
     ok(notif, "got notification popup");
-    // Check the text, which comes from the localized saveLoginTextNoUser string.
+    // Check the text, which comes from the localized saveLoginMsgNoUser string.
     let notificationText = notif.message;
-    let expectedText = "Would you like " + BRAND_SHORT_NAME + " to remember this password?";
+    let expectedText = "Would you like " + BRAND_SHORT_NAME + " to save this password for example.com?";
     is(expectedText, notificationText, "Checking text: " + notificationText);
     notif.remove();
   });

@@ -133,7 +133,6 @@ ALLOWED_XPCOM_GLUE = {
     ('test_transaction_helper', 'storage/test'),
     ('test_true_async', 'storage/test'),
     ('test_unlock_notify', 'storage/test'),
-    ('test_IHistory', 'toolkit/components/places/tests/cpp'),
     ('testcrasher', 'toolkit/crashreporter/test'),
     ('mediaconduit_unittests', 'media/webrtc/signaling/test'),
     ('mediapipeline_unittest', 'media/webrtc/signaling/test'),

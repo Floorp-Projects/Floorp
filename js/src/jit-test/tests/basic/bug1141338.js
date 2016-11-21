@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 z = [];
 m = evalcx("");
 Object.freeze(m);

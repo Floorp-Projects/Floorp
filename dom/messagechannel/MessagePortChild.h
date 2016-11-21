@@ -33,10 +33,10 @@ private:
   }
 
   virtual mozilla::ipc::IPCResult
-  RecvEntangled(nsTArray<MessagePortMessage>&& aMessages) override;
+  RecvEntangled(nsTArray<ClonedMessageData>&& aMessages) override;
 
   virtual mozilla::ipc::IPCResult
-  RecvReceiveData(nsTArray<MessagePortMessage>&& aMessages) override;
+  RecvReceiveData(nsTArray<ClonedMessageData>&& aMessages) override;
 
   virtual mozilla::ipc::IPCResult RecvStopSendingDataConfirmed() override;
 

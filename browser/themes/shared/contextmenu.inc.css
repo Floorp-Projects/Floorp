@@ -12,7 +12,7 @@
   width: 16px;
   height: 16px;
   margin: 7px;
-  filter: url(chrome://browser/skin/filters.svg#fill);
+  filter: url(chrome://global/skin/filters.svg#fill);
   fill: currentColor;
 }
 

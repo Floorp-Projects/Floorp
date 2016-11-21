@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 delete b;
 delete q;
 

@@ -149,11 +149,8 @@ public:
   void Remove(int32_t aIndex, ErrorResult& aError);
   int32_t GetSelectedIndex(ErrorResult& aError);
   void SetSelectedIndex(int32_t aSelectedIndex, ErrorResult& aError);
-  void IndexedSetter(uint32_t aIndex, nsIDOMHTMLOptionElement* aOption,
-                     ErrorResult& aError)
-  {
-    aError = SetOption(aIndex, aOption);
-  }
+  void IndexedSetter(uint32_t aIndex, HTMLOptionElement* aOption,
+                     ErrorResult& aError);
   virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
 
 private:

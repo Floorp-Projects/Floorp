@@ -176,6 +176,7 @@ static bool stopAudioPlayback(NPObject* npobj, const NPVariant* args, uint32_t a
 static bool getAudioMuted(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool nativeWidgetIsVisible(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getLastCompositionText(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getInvokeDefaultObject(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -250,6 +251,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "audioMuted",
   "nativeWidgetIsVisible",
   "getLastCompositionText",
+  "getInvokeDefaultObject",
 };
 static NPIdentifier sPluginMethodIdentifiers[MOZ_ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
@@ -325,6 +327,7 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   getAudioMuted,
   nativeWidgetIsVisible,
   getLastCompositionText,
+  getInvokeDefaultObject,
 };
 
 static_assert(MOZ_ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
@@ -657,7 +660,6 @@ void scriptableDeallocate(NPObject* npobj);
 void scriptableInvalidate(NPObject* npobj);
 bool scriptableHasMethod(NPObject* npobj, NPIdentifier name);
 bool scriptableInvoke(NPObject* npobj, NPIdentifier name, const NPVariant* args, uint32_t argCount, NPVariant* result);
-bool scriptableInvokeDefault(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 bool scriptableHasProperty(NPObject* npobj, NPIdentifier name);
 bool scriptableGetProperty(NPObject* npobj, NPIdentifier name, NPVariant* result);
 bool scriptableSetProperty(NPObject* npobj, NPIdentifier name, const NPVariant* value);
@@ -755,7 +757,7 @@ NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs)
   sNPClass.invalidate =     (NPInvalidateFunctionPtr)scriptableInvalidate;
   sNPClass.hasMethod =      (NPHasMethodFunctionPtr)scriptableHasMethod;
   sNPClass.invoke =         (NPInvokeFunctionPtr)scriptableInvoke;
-  sNPClass.invokeDefault =  (NPInvokeDefaultFunctionPtr)scriptableInvokeDefault;
+  sNPClass.invokeDefault =  nullptr;
   sNPClass.hasProperty =    (NPHasPropertyFunctionPtr)scriptableHasProperty;
   sNPClass.getProperty =    (NPGetPropertyFunctionPtr)scriptableGetProperty;
   sNPClass.setProperty =    (NPSetPropertyFunctionPtr)scriptableSetProperty;
@@ -2084,53 +2086,6 @@ scriptableInvoke(NPObject* npobj, NPIdentifier name, const NPVariant* args, uint
       return sPluginMethodFunctions[i](npobj, args, argCount, result);
   }
   return false;
-}
-
-bool
-scriptableInvokeDefault(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
-{
-  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
-  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-  if (id->throwOnNextInvoke) {
-    id->throwOnNextInvoke = false;
-    if (argCount == 0) {
-      NPN_SetException(npobj, nullptr);
-    }
-    else {
-      for (uint32_t i = 0; i < argCount; i++) {
-        const NPString* argstr = &NPVARIANT_TO_STRING(args[i]);
-        NPN_SetException(npobj, argstr->UTF8Characters);
-      }
-    }
-    return false;
-  }
-
-  ostringstream value;
-  value << sPluginName;
-  for (uint32_t i = 0; i < argCount; i++) {
-    switch(args[i].type) {
-      case NPVariantType_Int32:
-        value << ";" << NPVARIANT_TO_INT32(args[i]);
-        break;
-      case NPVariantType_String: {
-        const NPString* argstr = &NPVARIANT_TO_STRING(args[i]);
-        value << ";" << argstr->UTF8Characters;
-        break;
-      }
-      case NPVariantType_Void:
-        value << ";undefined";
-        break;
-      case NPVariantType_Null:
-        value << ";null";
-        break;
-      default:
-        value << ";other";
-    }
-  }
-
-  char *outval = NPN_StrDup(value.str().c_str());
-  STRINGZ_TO_NPVARIANT(outval, *result);
-  return true;
 }
 
 bool
@@ -3565,6 +3520,69 @@ getLastCompositionText(NPObject* npobj, const NPVariant* args,
   // XXX not implemented
   return false;
 #endif
+}
+
+bool
+scriptableInvokeDefault(NPObject* npobj, const NPVariant* args,
+                        uint32_t argCount, NPVariant* result)
+{
+  ostringstream value;
+  value << sPluginName;
+  for (uint32_t i = 0; i < argCount; i++) {
+    switch(args[i].type) {
+      case NPVariantType_Int32:
+        value << ";" << NPVARIANT_TO_INT32(args[i]);
+        break;
+      case NPVariantType_String: {
+        const NPString* argstr = &NPVARIANT_TO_STRING(args[i]);
+        value << ";" << argstr->UTF8Characters;
+        break;
+      }
+      case NPVariantType_Void:
+        value << ";undefined";
+        break;
+      case NPVariantType_Null:
+        value << ";null";
+        break;
+      default:
+        value << ";other";
+    }
+  }
+
+  char *outval = NPN_StrDup(value.str().c_str());
+  STRINGZ_TO_NPVARIANT(outval, *result);
+  return true;
+}
+
+static const NPClass kInvokeDefaultClass = {
+  NP_CLASS_STRUCT_VERSION,
+  nullptr,
+  nullptr,
+  nullptr,
+  nullptr,
+  nullptr,
+  scriptableInvokeDefault,
+  nullptr,
+  nullptr,
+  nullptr,
+  nullptr,
+  nullptr,
+  nullptr
+};
+
+bool
+getInvokeDefaultObject(NPObject* npobj, const NPVariant* args,
+                       uint32_t argCount, NPVariant* result)
+{
+  if (0 != argCount) {
+    return false;
+  }
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  NPObject* testObject =
+    NPN_CreateObject(npp, const_cast<NPClass*>(&kInvokeDefaultClass));
+  OBJECT_TO_NPVARIANT(testObject, *result);
+  return true;
 }
 
 bool

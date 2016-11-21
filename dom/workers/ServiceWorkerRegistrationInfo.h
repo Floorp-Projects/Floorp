@@ -111,9 +111,6 @@ public:
   IsLastUpdateCheckTimeOverOneDay() const;
 
   void
-  NotifyListenersOnChange(WhichServiceWorker aChangedWorkers);
-
-  void
   MaybeScheduleTimeCheckAndUpdate();
 
   void
@@ -175,6 +172,29 @@ public:
   // Determine if the registration is actively performing work.
   bool
   IsIdle() const;
+
+private:
+  enum TransitionType {
+    TransitionToNextState = 0,
+    Invalidate
+  };
+
+  // Queued as a runnable from UpdateRegistrationStateProperties.
+  void
+  AsyncUpdateRegistrationStateProperties(WhichServiceWorker aWorker, TransitionType aType);
+
+  // Roughly equivalent to [[Update Registration State algorithm]]. Make sure
+  // this is called *before* updating SW instances' state, otherwise they
+  // may get CC-ed.
+  void
+  UpdateRegistrationStateProperties(WhichServiceWorker aWorker, TransitionType aType);
+
+  // Used by devtools to track changes to the properties of *nsIServiceWorkerRegistrationInfo*.
+  // Note, this doesn't necessarily need to be in sync with the DOM registration objects, but
+  // it does need to be called in the same task that changed |mInstallingWorker|,
+  // |mWaitingWorker| or |mActiveWorker|.
+  void
+  NotifyChromeRegistrationListeners();
 };
 
 } // namespace workers

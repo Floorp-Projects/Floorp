@@ -128,6 +128,9 @@ public:
   InvalidateWorkers(WhichServiceWorker aWhichOnes) override;
 
   void
+  TransitionWorker(WhichServiceWorker aWhichOne) override;
+
+  void
   RegistrationRemoved() override;
 
   void
@@ -302,6 +305,24 @@ void
 ServiceWorkerRegistrationMainThread::UpdateFound()
 {
   DispatchTrustedEvent(NS_LITERAL_STRING("updatefound"));
+}
+
+void
+ServiceWorkerRegistrationMainThread::TransitionWorker(WhichServiceWorker aWhichOne)
+{
+  AssertIsOnMainThread();
+
+  // We assert the worker's previous state because the 'statechange'
+  // event is dispatched in a queued runnable.
+  if (aWhichOne == WhichServiceWorker::INSTALLING_WORKER) {
+    MOZ_ASSERT_IF(mInstallingWorker, mInstallingWorker->State() == ServiceWorkerState::Installing);
+    mWaitingWorker = mInstallingWorker.forget();
+  } else if (aWhichOne == WhichServiceWorker::WAITING_WORKER) {
+    MOZ_ASSERT_IF(mWaitingWorker, mWaitingWorker->State() == ServiceWorkerState::Installed);
+    mActiveWorker = mWaitingWorker.forget();
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Invalid transition!");
+  }
 }
 
 void
@@ -982,6 +1003,13 @@ public:
   // ServiceWorkerRegistrationListener
   void
   UpdateFound() override;
+
+  void
+  TransitionWorker(WhichServiceWorker aWhichOne) override
+  {
+    AssertIsOnMainThread();
+    NS_WARNING("FIXME: Not implemented!");
+  }
 
   void
   InvalidateWorkers(WhichServiceWorker aWhichOnes) override

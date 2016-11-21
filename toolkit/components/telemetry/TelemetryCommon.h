@@ -8,6 +8,7 @@
 
 #include "nsTHashtable.h"
 #include "jsapi.h"
+#include "nsIScriptError.h"
 
 namespace mozilla {
 namespace Telemetry {
@@ -49,6 +50,23 @@ AutoHashtable<EntryType>::ReflectIntoJS(ReflectEntryFunc entryFunc,
 bool IsExpiredVersion(const char* aExpiration);
 bool IsInDataset(uint32_t aDataset, uint32_t aContainingDataset);
 bool CanRecordDataset(uint32_t aDataset, bool aCanRecordBase, bool aCanRecordExtended);
+
+/**
+ * Return the number of milliseconds since process start using monotonic
+ * timestamps (unaffected by system clock changes).
+ *
+ * @return NS_OK on success, NS_ERROR_NOT_AVAILABLE if TimeStamp doesn't have the data.
+ */
+nsresult MsSinceProcessStart(double* aResult);
+
+/**
+ * Dumps a log message to the Browser Console using the provided level.
+ *
+ * @param aLogLevel The level to use when displaying the message in the browser console
+ *        (e.g. nsIScriptError::warningFlag, ...).
+ * @param aMsg The text message to print to the console.
+ */
+void LogToBrowserConsole(uint32_t aLogLevel, const nsAString& aMsg);
 
 } // namespace Common
 } // namespace Telemetry
