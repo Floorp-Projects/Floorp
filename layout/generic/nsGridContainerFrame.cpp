@@ -11,6 +11,7 @@
 #include <algorithm> // for std::stable_sort
 #include <limits>
 #include "mozilla/CSSAlignUtils.h"
+#include "mozilla/dom/GridBinding.h"
 #include "mozilla/Function.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h" // for PodZero
@@ -24,11 +25,11 @@
 #include "nsHashKeys.h"
 #include "nsIFrameInlines.h"
 #include "nsPresContext.h"
-#include "nsRenderingContext.h"
 #include "nsReadableUtils.h"
+#include "nsRenderingContext.h"
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
-#include "mozilla/dom/GridBinding.h"
+#include "nsTableWrapperFrame.h"
 
 #if defined(__clang__) && __clang_major__ == 3 && __clang_minor__ <= 8
 #define CLANG_CRASH_BUG 1
@@ -5147,7 +5148,8 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   LogicalMargin pad(aState.mReflowInput->ComputedLogicalPadding());
   const LogicalPoint padStart(wm, pad.IStart(wm), pad.BStart(wm));
   const bool isGridItem = !!aGridItemInfo;
-  MOZ_ASSERT(isGridItem == (aChild->GetType() != nsGkAtoms::placeholderFrame));
+  auto childType = aChild->GetType();
+  MOZ_ASSERT(isGridItem == (childType != nsGkAtoms::placeholderFrame));
   LogicalRect cb(wm);
   WritingMode childWM = aChild->GetWritingMode();
   bool isConstrainedBSize = false;
@@ -5249,6 +5251,18 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   ReflowInput childRI(pc, *aState.mReflowInput, aChild, childCBSize,
                       &percentBasis, flags);
   childRI.mFlags.mIsTopOfPage = aFragmentainer ? aFragmentainer->mIsTopOfPage : false;
+
+  // A table-wrapper needs to propagate the CB size we give it to its
+  // inner table frame later.  @see nsTableWrapperFrame::InitChildReflowInput.
+  if (childType == nsGkAtoms::tableWrapperFrame) {
+    const auto& props = aChild->Properties();
+    LogicalSize* cb = props.Get(nsTableWrapperFrame::GridItemCBSizeProperty());
+    if (!cb) {
+      cb = new LogicalSize(childWM);
+      props.Set(nsTableWrapperFrame::GridItemCBSizeProperty(), cb);
+    }
+    *cb = percentBasis;
+  }
 
   // If the child is stretching in its block axis, and we might be fragmenting
   // it in that axis, then setup a frame property to tell

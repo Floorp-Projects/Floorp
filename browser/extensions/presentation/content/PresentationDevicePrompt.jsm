@@ -76,7 +76,6 @@ PresentationPermissionPrompt.prototype = {
   },
   get popupOptions() {
     return {
-      hideNotNow: true,
       removeOnDismissal: true,
       popupIconURL: kNotificationPopupIcon, // Icon shown on prompt content
       eventCallback: (aTopic, aNewBrowser) => {
@@ -127,7 +126,7 @@ PresentationPermissionPrompt.prototype = {
       notificationIcon.setAttribute("role", "button");
       notificationIcon.setAttribute("tooltiptext",
                                     GetString("presentation.urlbar.tooltiptext"));
-      notificationIcon.style.filter = "url('chrome://browser/skin/filters.svg#fill')";
+      notificationIcon.style.filter = "url('chrome://global/skin/filters.svg#fill')";
       notificationIcon.style.fill = "currentcolor";
       notificationIcon.style.opacity = "0.4";
       notificationPopupBox.appendChild(notificationIcon);
@@ -162,7 +161,7 @@ PresentationPermissionPrompt.prototype = {
         this._isResponded = true;
         this.request.cancel(Cr.NS_ERROR_NOT_AVAILABLE);
       },
-      dismiss: true, // For hideNotNow.
+      dismiss: true,
     }];
   },
   // PRIVATE APIs

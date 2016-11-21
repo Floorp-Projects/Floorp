@@ -6,7 +6,7 @@ import os
 
 from .base import NullBrowser, ExecutorBrowser, require_arg
 from ..executors import executor_kwargs as base_executor_kwargs
-from ..executors.executorservo import ServoTestharnessExecutor, ServoRefTestExecutor
+from ..executors.executorservo import ServoTestharnessExecutor, ServoRefTestExecutor, ServoWdspecExecutor
 
 here = os.path.join(os.path.split(__file__)[0])
 
@@ -14,7 +14,8 @@ __wptrunner__ = {"product": "servo",
                  "check_args": "check_args",
                  "browser": "ServoBrowser",
                  "executor": {"testharness": "ServoTestharnessExecutor",
-                              "reftest": "ServoRefTestExecutor"},
+                              "reftest": "ServoRefTestExecutor",
+                              "wdspec": "ServoWdspecExecutor"},
                  "browser_kwargs": "browser_kwargs",
                  "executor_kwargs": "executor_kwargs",
                  "env_options": "env_options",
@@ -64,7 +65,7 @@ def render_arg(render_backend):
 
 class ServoBrowser(NullBrowser):
     def __init__(self, logger, binary, debug_info=None, binary_args=None,
-                 user_stylesheets=None, render_backend="cpu"):
+                 user_stylesheets=None, render_backend="webrender"):
         NullBrowser.__init__(self, logger)
         self.binary = binary
         self.debug_info = debug_info

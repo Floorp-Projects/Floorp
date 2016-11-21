@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 var otherGlobal = newGlobal();
 
 function test(str, arg, result)

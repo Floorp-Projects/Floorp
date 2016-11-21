@@ -278,6 +278,7 @@ var gPluginHandler = {
 
     let options = {
       dismissed: !showNow,
+      persistent: showNow,
       eventCallback: this._clickToPlayNotificationEventCallback,
       primaryPlugin: primaryPluginPermission,
       pluginData: pluginData,

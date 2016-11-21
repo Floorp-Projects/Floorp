@@ -36,6 +36,12 @@ public:
    * aElement is the element pointer corresponding to this link.
    */
   explicit Link(Element* aElement);
+
+  /**
+   * This constructor is only used for testing.
+   */
+  explicit Link();
+
   virtual void SetLinkState(nsLinkState aState);
 
   /**

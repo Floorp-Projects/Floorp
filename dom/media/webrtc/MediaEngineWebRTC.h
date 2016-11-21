@@ -191,8 +191,13 @@ public:
 
   int GetNumOfRecordingDevices(int& aDevices)
   {
+#ifdef MOZ_WIDGET_ANDROID
+    // OpenSL ES does not support enumerate device.
+    aDevices = 1;
+#else
     UpdateDeviceList();
     aDevices = mDeviceIndexes->Length();
+#endif
     return 0;
   }
 
@@ -222,17 +227,26 @@ public:
   {
     // Assert sMutex is held
     sMutex.AssertCurrentThreadOwns();
+#ifdef MOZ_WIDGET_ANDROID
+    aID = nullptr;
+    return true;
+#else
     int dev_index = DeviceIndex(aDeviceIndex);
     if (dev_index != -1) {
       aID = mDevices->device[dev_index]->devid;
       return true;
     }
     return false;
+#endif
   }
 
   int GetRecordingDeviceName(int aIndex, char aStrNameUTF8[128],
                              char aStrGuidUTF8[128])
   {
+#ifdef MOZ_WIDGET_ANDROID
+    aStrNameUTF8[0] = '\0';
+    aStrGuidUTF8[0] = '\0';
+#else
     int32_t devindex = DeviceIndex(aIndex);
     if (!mDevices || devindex < 0) {
       return 1;
@@ -240,6 +254,7 @@ public:
     PR_snprintf(aStrNameUTF8, 128, "%s%s", aIndex == -1 ? "default: " : "",
                 mDevices->device[devindex]->friendly_name);
     aStrGuidUTF8[0] = '\0';
+#endif
     return 0;
   }
 
@@ -253,7 +268,12 @@ public:
 
   void StartRecording(SourceMediaStream *aStream, AudioDataListener *aListener)
   {
+#ifdef MOZ_WIDGET_ANDROID
+    // OpenSL ES does not support enumerating devices.
+    MOZ_ASSERT(!mDevices);
+#else
     MOZ_ASSERT(mDevices);
+#endif
 
     if (mInUseCount == 0) {
       ScopedCustomReleasePtr<webrtc::VoEExternalMedia> ptrVoERender;

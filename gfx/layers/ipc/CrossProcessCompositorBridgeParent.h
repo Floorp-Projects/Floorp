@@ -8,6 +8,7 @@
 #define mozilla_layers_CrossProcessCompositorBridgeParent_h
 
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorThread.h"
 
 namespace mozilla {
 namespace layers {

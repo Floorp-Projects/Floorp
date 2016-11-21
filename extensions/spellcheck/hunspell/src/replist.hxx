@@ -72,17 +72,15 @@
  */
 
 /* string replacement list class */
-#ifndef _REPLIST_HXX_
-#define _REPLIST_HXX_
-
-#include "hunvisapi.h"
+#ifndef REPLIST_HXX_
+#define REPLIST_HXX_
 
 #include "w_char.hxx"
 
 #include <string>
 #include <vector>
 
-class LIBHUNSPELL_DLL_EXPORTED RepList {
+class RepList {
  private:
   RepList(const RepList&);
   RepList& operator=(const RepList&);
@@ -93,15 +91,13 @@ class LIBHUNSPELL_DLL_EXPORTED RepList {
   int pos;
 
  public:
-  RepList(int n);
+  explicit RepList(int n);
   ~RepList();
 
-  int get_pos();
-  int add(char* pat1, char* pat2);
+  int add(const std::string& pat1, const std::string& pat2);
   replentry* item(int n);
-  int near(const char* word);
-  int match(const char* word, int n);
-  int conv(const char* word, char* dest, size_t destsize);
-  bool conv(const char* word, std::string& dest);
+  int find(const char* word);
+  std::string replace(const char* word, int n, bool atstart);
+  bool conv(const std::string& word, std::string& dest);
 };
 #endif

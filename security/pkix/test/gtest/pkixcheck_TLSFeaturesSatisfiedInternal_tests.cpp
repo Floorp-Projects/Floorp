@@ -40,6 +40,11 @@ struct TLSFeaturesTestParams
   Result expectedResultWithoutResponse;
 };
 
+::std::ostream& operator<<(::std::ostream& os, const TLSFeaturesTestParams&)
+{
+  return os << "TODO (bug 1318770)";
+}
+
 #define BS(s) ByteString(s, MOZILLA_PKIX_ARRAY_LENGTH(s))
 static const uint8_t statusRequest[] = {
   0x30, 0x03, 0x02, 0x01, 0x05

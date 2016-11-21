@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  -->
+<head>
+  <title>Test for Bug 1317266</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="error_reporting_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1317266">Mozilla Bug 1317266</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+SimpleTest.requestFlakyTimeout("Forcing a race with the cycle collector.");
+
+add_task(function setupPrefs() {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]});
+});
+
+//var worker;
+add_task(function* test_worker_ref_gc() {
+  let registration = yield navigator.serviceWorker.register(
+    "lazy_worker.js", { scope: "./lazy_worker_scope_timeout"} )
+    .then(function(registration) {
+      SpecialPowers.exactGC();
+      var worker = registration.installing;
+      return new Promise(function(resolve) {
+        worker.addEventListener('statechange', function() {
+          info("state is " + worker.state + "\n");
+          SpecialPowers.exactGC();
+          if (worker.state === 'activated') {
+            resolve(registration);
+          }
+        });
+      });
+    });
+
+  ok(true, "Got activated event!");
+
+  yield registration.unregister();
+  yield SpecialPowers.popPrefEnv();
+});
+</script>
+</body>
+</html>

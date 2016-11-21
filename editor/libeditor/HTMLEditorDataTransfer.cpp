@@ -2098,6 +2098,7 @@ HTMLEditor::CreateDOMFragmentFromPaste(const nsAString& aInputString,
   }
 
   nsCOMPtr<nsIContent> contextLeafAsContent = do_QueryInterface(contextLeaf);
+  MOZ_ASSERT_IF(contextLeaf, contextLeafAsContent);
 
   // create fragment for pasted html
   nsIAtom* contextAtom;
@@ -2122,8 +2123,8 @@ HTMLEditor::CreateDOMFragmentFromPaste(const nsAString& aInputString,
 
   if (contextAsNode) {
     // unite the two trees
-    nsCOMPtr<nsIDOMNode> junk;
-    contextLeaf->AppendChild(fragment, getter_AddRefs(junk));
+    IgnoredErrorResult ignored;
+    contextLeafAsContent->AppendChild(*fragment, ignored);
     fragment = contextAsNode;
   }
 

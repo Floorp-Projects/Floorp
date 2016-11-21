@@ -816,13 +816,13 @@ AddCacheIRGetPropFunction(ICCacheIR_Monitored* stub, JSObject** holder, Shape** 
 
     MOZ_ASSERT_IF(*commonGetter, *commonGetter == getter);
 
-    if (!AddReceiver(receiver, receivers, convertUnboxedGroups))
-        return false;
-
     if (obj->as<NativeObject>().lastProperty() != objShape) {
         // Skip this stub as the shape is no longer correct.
         return true;
     }
+
+    if (!AddReceiver(receiver, receivers, convertUnboxedGroups))
+        return false;
 
     *holder = obj;
     *holderShape = objShape;

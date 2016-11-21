@@ -93,7 +93,6 @@ class MapObject : public NativeObject {
                   "IteratorKind Entries must match self-hosting define for item kind "
                   "key-and-value.");
 
-    static JSObject* initClass(JSContext* cx, JSObject* obj);
     static const Class class_;
 
     enum { NurseryKeysSlot, SlotCount };
@@ -124,6 +123,7 @@ class MapObject : public NativeObject {
     friend class OrderedHashTableRef<MapObject>;
 
   private:
+    static const ClassSpec classSpec_;
     static const ClassOps classOps_;
 
     static const JSPropertySpec properties[];
@@ -199,7 +199,6 @@ class SetObject : public NativeObject {
                   "IteratorKind Entries must match self-hosting define for item kind "
                   "key-and-value.");
 
-    static JSObject* initClass(JSContext* cx, JSObject* obj);
     static const Class class_;
 
     enum { NurseryKeysSlot, SlotCount };
@@ -224,6 +223,7 @@ class SetObject : public NativeObject {
     friend class OrderedHashTableRef<SetObject>;
 
   private:
+    static const ClassSpec classSpec_;
     static const ClassOps classOps_;
 
     static const JSPropertySpec properties[];
@@ -327,12 +327,6 @@ IsOptimizableInitForSet(JSContext* cx, HandleObject setObject, HandleValue itera
 
     return stubChain->tryOptimizeArray(cx, array.as<ArrayObject>(), optimized);
 }
-
-extern JSObject*
-InitMapClass(JSContext* cx, HandleObject obj);
-
-extern JSObject*
-InitSetClass(JSContext* cx, HandleObject obj);
 
 } /* namespace js */
 

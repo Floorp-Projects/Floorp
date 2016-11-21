@@ -148,6 +148,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
     testArrayBuffer();
 
+    testMap();
+
+    testSet();
+
     // We could also test DataView and Iterator here for completeness, but it's
     // more trouble than it's worth.
 
@@ -264,6 +268,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     is(typeof SharedArrayBuffer, "undefined", "Enable tests!");
   }
 
+  gPrototypeProperties['Map'] =
+    ["constructor", "size", Symbol.toStringTag, "get", "has", "set", "delete",
+     "keys", "values", "clear", "forEach", "entries", Symbol.iterator];
+  gConstructorProperties['Map'] =
+    constructorProps([Symbol.species]);
+
+  gPrototypeProperties['Set'] =
+    ["constructor", "size", Symbol.toStringTag, "has", "add", "delete",
+     "keys", "values", "clear", "forEach", "entries", Symbol.iterator];
+  gConstructorProperties['Set'] =
+    constructorProps([Symbol.species]);
+
   // Sort an array that may contain symbols as well as strings.
   function sortProperties(arr) {
     function sortKey(prop) {
@@ -319,10 +335,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
         // If invoking this method returns something non-Xrayable, the
         // stringification is going to return [object Opaque].
-        ok(!/Opaque/.test(method.call(xray)), "Method result is xrayable");
-        is(method.call(xray) + "",
-           lookupCallable(xray.wrappedJSObject).call(xray.wrappedJSObject) + "",
-           "Xray and waived method results stringify identically");
+        // This happens for set[@@iterator] and other Iterator objects.
+        if (!/Opaque/.test(method.call(xray))) {
+          is(method.call(xray) + "",
+             lookupCallable(xray.wrappedJSObject).call(xray.wrappedJSObject) + "",
+             "Xray and waived method results stringify identically");
+        }
       }
     }
   }
@@ -940,6 +958,43 @@ for (var prop of props) {
       t = (new iwin.Int32Array(2)).buffer;
       is(t.byteLength, 8, `Can access ${c} returned by buffer property`);
     }
+  }
+
+  function testMap() {
+    testXray('Map', new iwin.Map(), new iwin.Map());
+
+    var t = iwin.eval(`new Map([[1, "a"], [null, "b"]])`);
+    is(t.size, 2, "Map size is correct");
+    is(t.get(1), "a", "Key 1 has the correct value");
+    is(t.get(null), "b", "Key null has the correct value");
+    is(t.has(1), true, "Has Key 1");
+    is(t.set(3, 5).get(3), 5, "Correctly sets key");
+    is(t.delete(null), true, "Key null can be deleted");
+
+    let values = [];
+    t.forEach((value, key) => values.push(value));
+    is(values.toString(), "a,5", "forEach enumerates values correctly");
+
+    t.clear();
+    is(t.size, 0, "Map is empty after calling clear");
+  }
+
+  function testSet() {
+    testXray('Set', new iwin.Set(), new iwin.Set());
+
+    var t = iwin.eval(`new Set([1, null])`);
+    is(t.size, 2, "Set size is correct");
+    is(t.has(1), true, "Contains 1");
+    is(t.has(null), true, "Contains null");
+    is(t.add(5).has(5), true, "Can add value to set");
+    is(t.delete(null), true, "Value null can be deleted");
+
+    let values = [];
+    t.forEach(value => values.push(value));
+    is(values.toString(), "1,5", "forEach enumerates values correctly");
+
+    t.clear();
+    is(t.size, 0, "Set is empty after calling clear");
   }
 
   ]]>

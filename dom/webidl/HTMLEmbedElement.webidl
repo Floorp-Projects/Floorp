@@ -23,8 +23,6 @@ interface HTMLEmbedElement : HTMLElement {
            attribute DOMString width;
   [Pure, SetterThrows]
            attribute DOMString height;
-  [Throws]
-  legacycaller any (any... arguments);
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#HTMLEmbedElement-partial

@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 gczeal(2)
 try {
     (function () {

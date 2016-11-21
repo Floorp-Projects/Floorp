@@ -65,14 +65,26 @@ interface nsIFrameLoader : nsISupports
 
   /**
    * Append partial session history from another frame loader.
+   *
+   * @return A promise which will be resolved when the navigation is complete.
    */
-  void appendPartialSessionHistoryAndSwap(in nsIFrameLoader aOther);
+  nsISupports appendPartialSessionHistoryAndSwap(in nsIFrameLoader aOther);
 
   /**
    * If grouped session history is applied, use this function to navigate to
    * an entry of session history object of another frameloader.
+   *
+   * @return A promise which will be resolved when the navigation is complete.
    */
-  void requestGroupedHistoryNavigation(in unsigned long aGlobalIndex);
+  nsISupports requestGroupedHistoryNavigation(in unsigned long aGlobalIndex);
+
+  /**
+   * Adds a blocking promise for the current cross process navigation.
+   * This method can only be called while the "BrowserWillChangeProcess" event
+   * is being fired.
+   */
+  [implicit_jscontext]
+  void addProcessChangeBlockingPromise(in jsval aPromise);
 
   /**
    * Destroy the frame loader and everything inside it. This will

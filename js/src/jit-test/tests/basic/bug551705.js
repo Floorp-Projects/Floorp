@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 (Function("\
   for each(let x in [\n\
   true,\n\

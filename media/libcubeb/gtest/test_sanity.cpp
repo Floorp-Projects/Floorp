@@ -618,6 +618,9 @@ TEST(cubeb, drain)
 
   cubeb_stream_destroy(stream);
   cubeb_destroy(ctx);
+
+  got_drain = 0;
+  do_drain = 0;
 }
 
 TEST(cubeb, DISABLED_eos_during_prefill)

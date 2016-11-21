@@ -46,6 +46,12 @@ struct CheckSignatureAlgorithmTestParams
   Result expectedResult;
 };
 
+::std::ostream& operator<<(::std::ostream& os,
+                           const CheckSignatureAlgorithmTestParams&)
+{
+  return os << "TODO (bug 1318770)";
+}
+
 #define BS(s) ByteString(s, MOZILLA_PKIX_ARRAY_LENGTH(s))
 
 // python DottedOIDToCode.py --tlv sha256WithRSAEncryption 1.2.840.113549.1.1.11

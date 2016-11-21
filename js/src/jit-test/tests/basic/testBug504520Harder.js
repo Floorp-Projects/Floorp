@@ -1,3 +1,5 @@
+// |jit-test| need-for-each
+
 function testBug504520Harder() {
     // test 1024 similar cases
     var vals = [1/0, -1/0, 0, 0/0];

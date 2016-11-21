@@ -160,23 +160,6 @@ var tests = [
       goNext();
     }
   },
-  // the hideNotNow option
-  { id: "Test#7",
-    run: function() {
-      this.notifyObj = new BasicNotification(this.id);
-      this.notifyObj.options.hideNotNow = true;
-      this.notifyObj.mainAction.dismiss = true;
-      this.notification = showNotification(this.notifyObj);
-    },
-    onShown: function(popup) {
-      // checkPopup verifies that the Not Now item is hidden, and that no separator is added.
-      checkPopup(popup, this.notifyObj);
-      triggerMainCommand(popup);
-    },
-    onHidden: function(popup) {
-      this.notification.remove();
-    }
-  },
   // the main action callback can keep the notification.
   { id: "Test#8",
     run: function() {
@@ -226,69 +209,6 @@ var tests = [
       ok(!notifyObj.shownCallbackTriggered, "the shown callback wasn't triggered");
       notification.remove();
       goNext();
-    }
-  },
-  // panel updates should fire the showing and shown callbacks again.
-  { id: "Test#11",
-    run: function() {
-      this.notifyObj = new BasicNotification(this.id);
-      this.notification = showNotification(this.notifyObj);
-    },
-    onShown: function(popup) {
-      checkPopup(popup, this.notifyObj);
-
-      this.notifyObj.showingCallbackTriggered = false;
-      this.notifyObj.shownCallbackTriggered = false;
-
-      // Force an update of the panel. This is typically called
-      // automatically when receiving 'activate' or 'TabSelect' events,
-      // but from a setTimeout, which is inconvenient for the test.
-      PopupNotifications._update();
-
-      checkPopup(popup, this.notifyObj);
-
-      this.notification.remove();
-    },
-    onHidden: function() { }
-  },
-  // A first dismissed notification shouldn't stop _update from showing a second notification
-  { id: "Test#12",
-    run: function() {
-      this.notifyObj1 = new BasicNotification(this.id);
-      this.notifyObj1.id += "_1";
-      this.notifyObj1.anchorID = "default-notification-icon";
-      this.notifyObj1.options.dismissed = true;
-      this.notification1 = showNotification(this.notifyObj1);
-
-      this.notifyObj2 = new BasicNotification(this.id);
-      this.notifyObj2.id += "_2";
-      this.notifyObj2.anchorID = "geo-notification-icon";
-      this.notifyObj2.options.dismissed = true;
-      this.notification2 = showNotification(this.notifyObj2);
-
-      this.notification2.dismissed = false;
-      PopupNotifications._update();
-    },
-    onShown: function(popup) {
-      checkPopup(popup, this.notifyObj2);
-      this.notification1.remove();
-      this.notification2.remove();
-    },
-    onHidden: function(popup) { }
-  },
-  // The anchor icon should be shown for notifications in background windows.
-  { id: "Test#13",
-    run: function() {
-      let notifyObj = new BasicNotification(this.id);
-      notifyObj.options.dismissed = true;
-      let win = gBrowser.replaceTabWithWindow(gBrowser.addTab("about:blank"));
-      whenDelayedStartupFinished(win, function() {
-        showNotification(notifyObj);
-        let anchor = document.getElementById("default-notification-icon");
-        is(anchor.getAttribute("showing"), "true", "the anchor is shown");
-        win.close();
-        goNext();
-      });
     }
   }
 ];

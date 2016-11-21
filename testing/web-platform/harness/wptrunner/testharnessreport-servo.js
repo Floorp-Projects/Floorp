@@ -3,12 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var props = {output:%(output)d};
-
+var start_loc = document.createElement('a');
+start_loc.href = location.href;
 setup(props);
 
 add_completion_callback(function (tests, harness_status) {
-    var id = location.pathname + location.search + location.hash;
-    alert("RESULT: " + JSON.stringify([
+    var id = start_loc.pathname + start_loc.search + start_loc.hash;
+    console.log("ALERT: RESULT: " + JSON.stringify([
         id,
         harness_status.status,
         harness_status.message,
