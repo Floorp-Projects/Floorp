@@ -9,6 +9,7 @@ const { Task } = require("devtools/shared/task");
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
+const { updateGrids } = require("./actions/grids");
 const App = createFactory(require("./components/app"));
 const Store = require("./store");
 
@@ -86,8 +87,8 @@ LayoutView.prototype = {
   },
 
   /**
-   * Refresh the layout view. This is called when the layout view becomes visible or
-   * the view needs to be updated with new grid data.
+   * Refreshes the layout view by dispatching the new grid data. This is called when the
+   * layout view becomes visible or the view needs to be updated with new grid data.
    *
    * @param {Array|null} gridFronts
    *        Optional array of all GridFront in the current page.
@@ -115,7 +116,7 @@ LayoutView.prototype = {
       });
     }
 
-    // TODO - Part 3: Dispatch and update the redux store with the grids data.
+    this.store.dispatch(updateGrids(grids));
   }),
 
   /**
