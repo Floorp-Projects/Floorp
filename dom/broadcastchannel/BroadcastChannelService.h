@@ -19,7 +19,7 @@ namespace mozilla {
 namespace dom {
 
 class BroadcastChannelParent;
-class ClonedMessageData;
+class BroadcastChannelParentMessage;
 
 class BroadcastChannelService final
 {
@@ -34,7 +34,7 @@ public:
                        const nsAString& aOriginChannelKey);
 
   void PostMessage(BroadcastChannelParent* aParent,
-                   const ClonedMessageData& aData,
+                   BroadcastChannelParentMessage* aMessage,
                    const nsAString& aOriginChannelKey);
 
 private:
