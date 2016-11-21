@@ -21,6 +21,7 @@
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Rect.h"           // for IntSize
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/CompositorVsyncSchedulerOwner.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
