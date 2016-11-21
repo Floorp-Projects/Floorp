@@ -1740,10 +1740,10 @@ ReadSPSProfilingStack(JSContext* cx, unsigned argc, Value* vp)
 
     struct InlineFrameInfo
     {
-        InlineFrameInfo(const char* kind, UniqueChars&& label)
-          : kind(kind), label(mozilla::Move(label)) {}
+        InlineFrameInfo(const char* kind, const char* label)
+          : kind(kind), label(label) {}
         const char* kind;
-        UniqueChars label;
+        const char* label;
     };
 
     Vector<Vector<InlineFrameInfo, 0, TempAllocPolicy>, 0, TempAllocPolicy> frameInfo(cx);
@@ -1808,8 +1808,7 @@ ReadSPSProfilingStack(JSContext* cx, unsigned argc, Value* vp)
             if (!JS_DefineProperty(cx, inlineFrameInfo, "kind", frameKind, propAttrs))
                 return false;
 
-            auto chars = inlineFrame.label.release();
-            frameLabel = NewString<CanGC>(cx, reinterpret_cast<Latin1Char*>(chars), strlen(chars));
+            frameLabel = NewStringCopyZ<CanGC>(cx, inlineFrame.label);
             if (!frameLabel)
                 return false;
 
