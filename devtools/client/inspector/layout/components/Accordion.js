@@ -21,6 +21,8 @@ const Accordion = React.createClass({
     items: PropTypes.array
   },
 
+  mixins: [ React.addons.PureRenderMixin ],
+
   getInitialState: function () {
     return { opened: this.props.items.map(item => item.opened),
              created: [] };
