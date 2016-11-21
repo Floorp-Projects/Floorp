@@ -593,6 +593,22 @@ reftest-no-accel:
         extra-options:
             - --reftest-suite=reftest-no-accel
 
+reftest-stylo:
+    description: "Reftest run for Stylo"
+    suite: reftest/reftest-stylo
+    treeherder-symbol: tc-R(Rs)
+    chunks: 16
+    mozharness:
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --reftest-suite=reftest-stylo
+
 web-platform-tests:
     description: "Web platform test run"
     suite: web-platform-tests

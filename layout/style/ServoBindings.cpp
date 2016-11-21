@@ -782,6 +782,33 @@ Gecko_CopyImageValueFrom(nsStyleImage* aImage, const nsStyleImage* aOther)
   *aImage = *aOther;
 }
 
+void
+Gecko_SetCursorArrayLength(nsStyleUserInterface* aStyleUI, size_t aLen)
+{
+  aStyleUI->mCursorImages.Clear();
+  aStyleUI->mCursorImages.SetLength(aLen);
+}
+
+void
+Gecko_SetCursorImage(nsCursorImage* aCursor,
+                     const uint8_t* aURLString, uint32_t aURLStringLength,
+                     ThreadSafeURIHolder* aBaseURI,
+                     ThreadSafeURIHolder* aReferrer,
+                     ThreadSafePrincipalHolder* aPrincipal)
+{
+  aCursor->mImage =
+    CreateStyleImageRequest(nsStyleImageRequest::Mode::Discard,
+                            aURLString, aURLStringLength,
+                            aBaseURI, aReferrer, aPrincipal);
+}
+
+void
+Gecko_CopyCursorArrayFrom(nsStyleUserInterface* aDest,
+                          const nsStyleUserInterface* aSrc)
+{
+  aDest->mCursorImages = aSrc->mCursorImages;
+}
+
 nsStyleGradient*
 Gecko_CreateGradient(uint8_t aShape,
                      uint8_t aSize,

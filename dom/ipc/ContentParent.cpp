@@ -182,6 +182,8 @@
 
 #include "nsIBidiKeyboard.h"
 
+#include "nsLayoutStylesheetCache.h"
+
 #ifdef MOZ_WEBRTC
 #include "signaling/src/peerconnection/WebrtcGlobalParent.h"
 #endif
@@ -2546,7 +2548,8 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
                                              ClipboardCapabilities* clipboardCaps,
                                              DomainPolicyClone* domainPolicy,
                                              StructuredCloneData* aInitialData,
-                                             InfallibleTArray<FontFamilyListEntry>* fontFamilies)
+                                             InfallibleTArray<FontFamilyListEntry>* fontFamilies,
+                                             OptionalURIParams* aUserContentCSSURL)
 {
   nsCOMPtr<nsIIOService> io(do_GetIOService());
   MOZ_ASSERT(io, "No IO service?");
@@ -2611,6 +2614,15 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
 
   // This is only implemented (returns a non-empty list) by MacOSX at present.
   gfxPlatform::GetPlatform()->GetSystemFontFamilyList(fontFamilies);
+
+  // Content processes have no permission to access profile directory, so we
+  // send the file URL instead.
+  StyleSheet* ucs = nsLayoutStylesheetCache::For(StyleBackendType::Gecko)->UserContentSheet();
+  if (ucs) {
+    SerializeURI(ucs->GetSheetURI(), *aUserContentCSSURL);
+  } else {
+    SerializeURI(nullptr, *aUserContentCSSURL);
+  }
 
   return IPC_OK();
 }

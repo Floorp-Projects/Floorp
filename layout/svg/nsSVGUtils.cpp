@@ -564,60 +564,110 @@ nsSVGUtils::DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
   }
 }
 
-static IntRect
-ComputeClipExtsInDeviceSpace(gfxContext& aCtx)
-{
-  gfxContextMatrixAutoSaveRestore matRestore(&aCtx);
+class MixModeBlender {
+public:
+  typedef mozilla::gfx::Factory Factory;
 
-  // Get the clip extents in device space.
-  aCtx.SetMatrix(gfxMatrix());
-  gfxRect clippedFrameSurfaceRect = aCtx.GetClipExtents();
-  clippedFrameSurfaceRect.RoundOut();
-
-  IntRect result;
-  ToRect(clippedFrameSurfaceRect).ToIntRect(&result);
-  return mozilla::gfx::Factory::CheckSurfaceSize(result.Size()) ? result
-                                                                : IntRect();
-}
-
-static already_AddRefed<gfxContext>
-CreateBlendTarget(gfxContext* aContext, IntPoint& aTargetOffset)
-{
-  // Create a temporary context to draw to so we can blend it back with
-  // another operator.
-  IntRect drawRect = ComputeClipExtsInDeviceSpace(*aContext);
-
-  RefPtr<DrawTarget> targetDT =
-    aContext->GetDrawTarget()->CreateSimilarDrawTarget(drawRect.Size(),
-                                                       SurfaceFormat::B8G8R8A8);
-  if (!targetDT || !targetDT->IsValid()) {
-    return nullptr;
+  MixModeBlender(nsIFrame *aFrame, gfxContext* aContext)
+    : mFrame(aFrame), mSourceCtx(aContext)
+  {
+    MOZ_ASSERT(mFrame && mSourceCtx);
   }
 
-  RefPtr<gfxContext> target = gfxContext::CreateOrNull(targetDT);
-  MOZ_ASSERT(target); // already checked the draw target above
-  target->SetMatrix(aContext->CurrentMatrix() *
-                    gfxMatrix::Translation(-drawRect.TopLeft()));
-  aTargetOffset = drawRect.TopLeft();
+  bool ShouldCreateDrawTargetForBlend() const
+  {
+    return mFrame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL;
+  }
 
-  return target.forget();
-}
+  gfxContext* CreateBlendTarget(const gfxMatrix& aTransform)
+  {
+    MOZ_ASSERT(ShouldCreateDrawTargetForBlend());
 
-static void
-BlendToTarget(nsIFrame* aFrame, gfxContext* aSource, gfxContext* aTarget,
-              const IntPoint& aTargetOffset)
-{
-  MOZ_ASSERT(aFrame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL);
+    // Create a temporary context to draw to so we can blend it back with
+    // another operator.
+    IntRect drawRect = ComputeClipExtsInDeviceSpace(aTransform);
 
-  RefPtr<DrawTarget> targetDT = aTarget->GetDrawTarget();
-  RefPtr<SourceSurface> targetSurf = targetDT->Snapshot();
+    RefPtr<DrawTarget> targetDT =
+      mSourceCtx->GetDrawTarget()->CreateSimilarDrawTarget(drawRect.Size(),
+                                                           SurfaceFormat::B8G8R8A8);
+    if (!targetDT || !targetDT->IsValid()) {
+      return nullptr;
+    }
 
-  gfxContextAutoSaveRestore save(aSource);
-  aSource->SetMatrix(gfxMatrix()); // This will be restored right after.
-  RefPtr<gfxPattern> pattern = new gfxPattern(targetSurf, Matrix::Translation(aTargetOffset.x, aTargetOffset.y));
-  aSource->SetPattern(pattern);
-  aSource->Paint();
-}
+    MOZ_ASSERT(!mTargetCtx,
+               "CreateBlendTarget is designed to be used once only.");
+
+    mTargetCtx = gfxContext::CreateOrNull(targetDT);
+    MOZ_ASSERT(mTargetCtx); // already checked the draw target above
+    mTargetCtx->SetMatrix(mSourceCtx->CurrentMatrix() *
+                          gfxMatrix::Translation(-drawRect.TopLeft()));
+
+    mTargetOffset = drawRect.TopLeft();
+
+    return mTargetCtx;
+  }
+
+  void BlendToTarget()
+  {
+    MOZ_ASSERT(ShouldCreateDrawTargetForBlend());
+    MOZ_ASSERT(mTargetCtx,
+               "BlendToTarget should be used after CreateBlendTarget.");
+
+    RefPtr<SourceSurface> targetSurf = mTargetCtx->GetDrawTarget()->Snapshot();
+
+    gfxContextAutoSaveRestore save(mSourceCtx);
+    mSourceCtx->SetMatrix(gfxMatrix()); // This will be restored right after.
+    RefPtr<gfxPattern> pattern =
+      new gfxPattern(targetSurf,
+                     Matrix::Translation(mTargetOffset.x, mTargetOffset.y));
+    mSourceCtx->SetPattern(pattern);
+    mSourceCtx->Paint();
+  }
+
+private:
+  MixModeBlender() = delete;
+
+  IntRect ComputeClipExtsInDeviceSpace(const gfxMatrix& aTransform)
+  {
+    // These are used if we require a temporary surface for a custom blend
+    // mode. Clip the source context first, so that we can generate a smaller
+    // temporary surface. (Since we will clip this context in
+    // SetupContextMatrix, a pair of save/restore is needed.)
+    gfxContextAutoSaveRestore saver(mSourceCtx);
+
+    if (!(mFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+      // aFrame has a valid visual overflow rect, so clip to it before calling
+      // PushGroup() to minimize the size of the surfaces we'll composite:
+      gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(mSourceCtx);
+      mSourceCtx->Multiply(aTransform);
+      nsRect overflowRect = mFrame->GetVisualOverflowRectRelativeToSelf();
+      if (mFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
+          mFrame->IsSVGText()) {
+        // Unlike containers, leaf frames do not include GetPosition() in
+        // GetCanvasTM().
+        overflowRect = overflowRect + mFrame->GetPosition();
+      }
+      mSourceCtx->Clip(NSRectToSnappedRect(overflowRect,
+                                           mFrame->PresContext()->AppUnitsPerDevPixel(),
+                                           *mSourceCtx->GetDrawTarget()));
+    }
+
+    // Get the clip extents in device space.
+    mSourceCtx->SetMatrix(gfxMatrix());
+    gfxRect clippedFrameSurfaceRect = mSourceCtx->GetClipExtents();
+    clippedFrameSurfaceRect.RoundOut();
+
+    IntRect result;
+    ToRect(clippedFrameSurfaceRect).ToIntRect(&result);
+
+    return Factory::CheckSurfaceSize(result.Size()) ? result : IntRect();
+  }
+
+  nsIFrame* mFrame;
+  gfxContext* mSourceCtx;
+  RefPtr<gfxContext> mTargetCtx;
+  IntPoint mTargetOffset;
+};
 
 DrawResult
 nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
@@ -709,57 +759,38 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
     return DrawResult::SUCCESS;
   }
 
-  // These are used if we require a temporary surface for a custom blend mode.
-  // Clip the source context first, so that we can generate a smaller temporary
-  // surface. (Since we will clip this context in SetupContextMatrix, a pair
-  // of save/restore is needed.)
-  aContext.Save();
-  if (!(aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
-    // aFrame has a valid visual overflow rect, so clip to it before calling
-    // PushGroup() to minimize the size of the surfaces we'll composite:
-    gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(&aContext);
-    aContext.Multiply(aTransform);
-    nsRect overflowRect = aFrame->GetVisualOverflowRectRelativeToSelf();
-    if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
-        aFrame->IsSVGText()) {
-      // Unlike containers, leaf frames do not include GetPosition() in
-      // GetCanvasTM().
-      overflowRect = overflowRect + aFrame->GetPosition();
-    }
-    aContext.Clip(NSRectToSnappedRect(overflowRect,
-                                      aFrame->PresContext()->AppUnitsPerDevPixel(),
-                                      *aContext.GetDrawTarget()));
-  }
-  IntPoint targetOffset;
-  RefPtr<gfxContext> target =
-    (aFrame->StyleEffects()->mMixBlendMode == NS_STYLE_BLEND_NORMAL)
-      ? RefPtr<gfxContext>(&aContext).forget()
-      : CreateBlendTarget(&aContext, targetOffset);
-  aContext.Restore();
+  MixModeBlender blender(aFrame, &aContext);
+  gfxContext* target = blender.ShouldCreateDrawTargetForBlend()
+                       ? blender.CreateBlendTarget(aTransform) : &aContext;
 
   if (!target) {
     return DrawResult::TEMPORARY_ERROR;
   }
 
+  DrawResult result = DrawResult::SUCCESS;
+
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
   bool shouldGenerateMask = (maskUsage.opacity != 1.0f ||
                              maskUsage.shouldGenerateClipMaskLayer ||
-                             maskUsage.shouldGenerateMaskLayer ||
-                             aFrame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL);
+                             maskUsage.shouldGenerateMaskLayer);
 
   if (shouldGenerateMask) {
     Matrix maskTransform;
     RefPtr<SourceSurface> maskSurface;
 
     if (maskUsage.shouldGenerateMaskLayer) {
-      maskSurface =
-        maskFrame->GetMaskForMaskedFrame(&aContext, aFrame, aTransform,
-                                         maskUsage.opacity, &maskTransform);
+      uint8_t maskMode =
+        aFrame->StyleSVGReset()->mMask.mLayers[0].mMaskMode;
+      nsSVGMaskFrame::MaskParams params(&aContext, aFrame, aTransform,
+                                        maskUsage.opacity, &maskTransform,
+                                        maskMode);
+      Tie(result, maskSurface) = maskFrame->GetMaskForMaskedFrame(params);
 
       if (!maskSurface) {
-        // Entire surface is clipped out.
-        return DrawResult::SUCCESS;
+        // Either entire surface is clipped out, or gfx buffer allocation
+        // failure in nsSVGMaskFrame::GetMaskForMaskedFrame.
+        return result;
       }
     }
 
@@ -768,11 +799,15 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
       RefPtr<SourceSurface> clipMaskSurface =
         clipPathFrame->GetClipMask(aContext, aFrame, aTransform,
                                    &clippedMaskTransform, maskSurface,
-                                   maskTransform);
+                                   maskTransform, &result);
 
       if (clipMaskSurface) {
         maskSurface = clipMaskSurface;
         maskTransform = clippedMaskTransform;
+      } else {
+        // Either entire surface is clipped out, or gfx buffer allocation
+        // failure in nsSVGClipPathFrame::GetClipMask.
+        return result;
       }
     }
 
@@ -793,8 +828,6 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
       nsCSSClipPathInstance::ApplyBasicShapeClip(aContext, aFrame);
     }
   }
-
-  DrawResult result = DrawResult::SUCCESS;
 
   /* Paint the child */
   if (effectProperties.HasValidFilter()) {
@@ -834,9 +867,9 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
     target->PopGroupAndBlend();
   }
 
-  if (aFrame->StyleEffects()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
+  if (blender.ShouldCreateDrawTargetForBlend()) {
     MOZ_ASSERT(target != &aContext);
-    BlendToTarget(aFrame, &aContext, target, targetOffset);
+    blender.BlendToTarget();
   }
 
   return result;

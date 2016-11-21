@@ -71,6 +71,11 @@ nsPrintOptionsX::SerializeToPrintData(nsIPrintSettings* aSettings,
     return NS_ERROR_FAILURE;
   }
 
+  double adjustedWidth, adjustedHeight;
+  settingsX->GetAdjustedPaperSize(&adjustedWidth, &adjustedHeight);
+  data->adjustedPaperWidth() = adjustedWidth;
+  data->adjustedPaperHeight() = adjustedHeight;
+
   NSDictionary* dict = [printInfo dictionary];
   if (NS_WARN_IF(!dict)) {
     return NS_ERROR_FAILURE;
@@ -284,6 +289,9 @@ nsPrintOptionsX::DeserializeToPrintSettings(const PrintData& data,
   // And now swap in the new NSPrintInfo we've just populated.
   settingsX->SetCocoaPrintInfo(newPrintInfo);
   [newPrintInfo release];
+
+  settingsX->SetAdjustedPaperSize(data.adjustedPaperWidth(),
+                                  data.adjustedPaperHeight());
 
   return NS_OK;
 }

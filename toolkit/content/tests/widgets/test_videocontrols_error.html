@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test - Error</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <video id="video" controls preload="auto"></video>
+</div>
+
+<pre id="test">
+<script clas="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  const domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
+    getService(SpecialPowers.Ci.inIDOMUtils);
+
+  const video = document.getElementById("video");
+  const statusOverlay = getElementByAttribute("anonid", "statusOverlay");
+  const statusIcon = getElementByAttribute("anonid", "statusIcon");
+
+  const testCases = [];
+
+  testCases.push(() => new Promise(resolve => {
+    ok(statusOverlay.hidden, "statusOverlay shoud not present without error");
+    ok(!statusOverlay.hasAttribute("error"), "statusOverlay should not in error state");
+    isnot(statusIcon.getAttribute("type"), "error", "should not show error icon");
+
+    resolve();
+  }));
+
+  testCases.push(() => new Promise(resolve => {
+    video.src = "invalid-path.ogg";
+    video.addEventListener("error", resolve);
+  }));
+
+  testCases.push(() => new Promise(resolve => {
+    const errorType = "errorSrcNotSupported";
+
+    ok(!statusOverlay.hidden, `statusOverlay should show when ${errorType}`);
+    is(statusOverlay.getAttribute("error"), errorType, `statusOverlay should have correct error state: ${errorType}`);
+    is(statusIcon.getAttribute("type"), "error", `should show error icon when ${errorType}`);
+
+    resolve();
+  }));
+
+  function executeTestCases(tasks) {
+    return tasks.reduce((promise, task) => promise.then(task), Promise.resolve());
+  }
+
+  function getElementByAttribute(aName, aValue) {
+    const videoControl = domUtils.getChildrenForNode(video, true)[1];
+
+    return SpecialPowers.wrap(document)
+      .getAnonymousElementByAttribute(videoControl, aName, aValue);
+  }
+
+  function startTest() {
+    executeTestCases(testCases).then(SimpleTest.finish);
+  }
+
+  function loadevent() {
+    SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startTest);
+  }
+
+  window.addEventListener("load", loadevent, false);
+</script>
+</pre>
+</body>
+</html>

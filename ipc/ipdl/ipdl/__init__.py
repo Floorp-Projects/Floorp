@@ -28,7 +28,7 @@ def parse(specstring, filename='/stdin', includedirs=[ ], errout=sys.stderr):
         type = 'protocol'
 
     try:
-        return Parser(type, name).parse(specstring, os.path.abspath(filename), includedirs, errout)
+        return Parser(type, name).parse(specstring, os.path.abspath(filename), includedirs)
     except ParseError as p:
         print >>errout, p
         return None
@@ -44,7 +44,7 @@ def gencxx(ipdlfilename, ast, outheadersdir, outcppdir):
 
     def resolveHeader(hdr):
         return [
-            hdr, 
+            hdr,
             os.path.join(
                 outheadersdir,
                 *([ns.name for ns in ast.namespaces] + [hdr.name]))

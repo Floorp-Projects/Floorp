@@ -159,5 +159,109 @@ this.PlacesTestUtils = Object.freeze({
        WHERE url_hash = hash(:url) AND url = :url`,
       { url });
     return rows[0].getResultByIndex(0);
-  })
+  }),
+
+  /**
+   * Marks all syncable bookmarks as synced by setting their sync statuses to
+   * "NORMAL", resetting their change counters, and removing all tombstones.
+   * Used by tests to avoid calling `PlacesSyncUtils.bookmarks.pullChanges`
+   * and `PlacesSyncUtils.bookmarks.pushChanges`.
+   *
+   * @resolves When all bookmarks have been updated.
+   * @rejects JavaScript exception.
+   */
+  markBookmarksAsSynced() {
+    return PlacesUtils.withConnectionWrapper("PlacesTestUtils: markBookmarksAsSynced", function(db) {
+      return db.executeTransaction(function* () {
+        yield db.executeCached(
+          `WITH RECURSIVE
+           syncedItems(id) AS (
+             SELECT b.id FROM moz_bookmarks b
+             WHERE b.guid IN ('menu________', 'toolbar_____', 'unfiled_____',
+                              'mobile______')
+             UNION ALL
+             SELECT b.id FROM moz_bookmarks b
+             JOIN syncedItems s ON b.parent = s.id
+           )
+           UPDATE moz_bookmarks
+           SET syncChangeCounter = 0,
+               syncStatus = :syncStatus
+           WHERE id IN syncedItems`,
+          { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL });
+        yield db.executeCached("DELETE FROM moz_bookmarks_deleted");
+      });
+    });
+  },
+
+  /**
+   * Sets sync fields for multiple bookmarks.
+   * @param aStatusInfos
+   *        One or more objects with the following properties:
+   *          { [required] guid: The bookmark's GUID,
+   *            syncStatus: An `nsINavBookmarksService::SYNC_STATUS_*` constant,
+   *            syncChangeCounter: The sync change counter value,
+   *            lastModified: The last modified time,
+   *            dateAdded: The date added time.
+   *          }
+   *
+   * @resolves When all bookmarks have been updated.
+   * @rejects JavaScript exception.
+   */
+  setBookmarkSyncFields(...aFieldInfos) {
+    return PlacesUtils.withConnectionWrapper("PlacesTestUtils: setBookmarkSyncFields", function(db) {
+      return db.executeTransaction(function* () {
+        for (let info of aFieldInfos) {
+          if (!PlacesUtils.isValidGuid(info.guid)) {
+            throw new Error(`Invalid GUID: ${info.guid}`);
+          }
+          yield db.executeCached(
+            `UPDATE moz_bookmarks
+             SET syncStatus = IFNULL(:syncStatus, syncStatus),
+                 syncChangeCounter = IFNULL(:syncChangeCounter, syncChangeCounter),
+                 lastModified = IFNULL(:lastModified, lastModified),
+                 dateAdded = IFNULL(:dateAdded, dateAdded)
+             WHERE guid = :guid`,
+             { guid: info.guid, syncChangeCounter: info.syncChangeCounter,
+               syncStatus: "syncStatus" in info ? info.syncStatus : null,
+               lastModified: "lastModified" in info ? PlacesUtils.toPRTime(info.lastModified) : null,
+               dateAdded: "dateAdded" in info ? PlacesUtils.toPRTime(info.dateAdded) : null });
+        }
+      });
+    });
+  },
+
+  fetchBookmarkSyncFields: Task.async(function* (...aGuids) {
+    let db = yield PlacesUtils.promiseDBConnection();
+    let results = [];
+    for (let guid of aGuids) {
+      let rows = yield db.executeCached(`
+        SELECT syncStatus, syncChangeCounter, lastModified, dateAdded
+        FROM moz_bookmarks
+        WHERE guid = :guid`,
+        { guid });
+      if (!rows.length) {
+        throw new Error(`Bookmark ${guid} does not exist`);
+      }
+      results.push({
+        guid,
+        syncStatus: rows[0].getResultByName("syncStatus"),
+        syncChangeCounter: rows[0].getResultByName("syncChangeCounter"),
+        lastModified: PlacesUtils.toDate(rows[0].getResultByName("lastModified")),
+        dateAdded: PlacesUtils.toDate(rows[0].getResultByName("dateAdded")),
+      });
+    }
+    return results;
+  }),
+
+  fetchSyncTombstones: Task.async(function* () {
+    let db = yield PlacesUtils.promiseDBConnection();
+    let rows = yield db.executeCached(`
+      SELECT guid, dateRemoved
+      FROM moz_bookmarks_deleted
+      ORDER BY guid`);
+    return rows.map(row => ({
+      guid: row.getResultByName("guid"),
+      dateRemoved: PlacesUtils.toDate(row.getResultByName("dateRemoved")),
+    }));
+  }),
 });

@@ -16,6 +16,7 @@ from .common import CommonBackend
 from ..frontend.data import (
     ContextDerived,
     Defines,
+    FinalTargetFiles,
     FinalTargetPreprocessedFiles,
     GeneratedFile,
     HostDefines,
@@ -23,6 +24,11 @@ from ..frontend.data import (
 )
 from ..util import (
     FileAvoidWrite,
+)
+from ..frontend.context import (
+    AbsolutePath,
+    RenamedSourcePath,
+    ObjDirPath,
 )
 
 
@@ -80,6 +86,19 @@ class BackendTupfile(object):
             'extra_outputs': ' | ' + ' '.join(extra_outputs) if extra_outputs else '',
         })
 
+    def symlink_rule(self, source, output_group=None):
+        outputs = [mozpath.basename(source)]
+        if output_group:
+            outputs.append(output_group)
+
+        # The !tup_ln macro does a symlink or file copy (depending on the
+        # platform) without shelling out to a subprocess.
+        self.rule(
+            cmd=['!tup_ln'],
+            inputs=[source],
+            outputs=outputs,
+        )
+
     def export_shell(self):
         if not self.shell_exported:
             # These are used by mach/mixin/process.py to determine the current
@@ -105,6 +124,10 @@ class TupOnly(CommonBackend, PartialBackend):
 
         self._backend_files = {}
         self._cmd = MozbuildObject.from_environment()
+
+        # This is a 'group' dependency - All rules that list this as an output
+        # will be built before any rules that list this as an input.
+        self._installed_files = '$(MOZ_OBJ_ROOT)/<installed-files>'
 
     def _get_backend_file(self, relativedir):
         objdir = mozpath.join(self.environment.topobjdir, relativedir)
@@ -133,11 +156,8 @@ class TupOnly(CommonBackend, PartialBackend):
             return False
 
         consumed = CommonBackend.consume_object(self, obj)
-
-        # Even if CommonBackend acknowledged the object, we still need to let
-        # the RecursiveMake backend also handle these objects.
         if consumed:
-            return False
+            return True
 
         backend_file = self._get_backend_file_for(obj)
 
@@ -163,6 +183,8 @@ class TupOnly(CommonBackend, PartialBackend):
             self._process_defines(backend_file, obj)
         elif isinstance(obj, HostDefines):
             self._process_defines(backend_file, obj, host=True)
+        elif isinstance(obj, FinalTargetFiles):
+            self._process_final_target_files(obj)
         elif isinstance(obj, FinalTargetPreprocessedFiles):
             self._process_final_target_pp_files(obj, backend_file)
         elif isinstance(obj, ObjdirPreprocessedFiles):
@@ -243,6 +265,46 @@ class TupOnly(CommonBackend, PartialBackend):
             else:
                 backend_file.defines = defines
 
+    def _process_final_target_files(self, obj):
+        target = obj.install_target
+        path = mozpath.basedir(target, (
+            'dist/bin',
+            'dist/xpi-stage',
+            '_tests',
+            'dist/include',
+            'dist/branding',
+            'dist/sdk',
+        ))
+        if not path:
+            raise Exception("Cannot install to " + target)
+
+        reltarget = mozpath.relpath(target, path)
+
+        for path, files in obj.files.walk():
+            backend_file = self._get_backend_file(mozpath.join(target, path))
+            for f in files:
+                assert not isinstance(f, RenamedSourcePath)
+                dest = mozpath.join(reltarget, path, f.target_basename)
+                if not isinstance(f, ObjDirPath):
+                    if '*' in f:
+                        if f.startswith('/') or isinstance(f, AbsolutePath):
+                            basepath, wild = os.path.split(f.full_path)
+                            if '*' in basepath:
+                                raise Exception("Wildcards are only supported in the filename part of "
+                                                "srcdir-relative or absolute paths.")
+
+                            # TODO: This is only needed for Windows, so we can
+                            # skip this for now.
+                            pass
+                        else:
+                            # TODO: This is needed for tests
+                            pass
+                    else:
+                        backend_file.symlink_rule(f.full_path, output_group=self._installed_files)
+                else:
+                    # TODO: Support installing generated files
+                    pass
+
     def _process_final_target_pp_files(self, obj, backend_file):
         for i, (path, files) in enumerate(obj.files.walk()):
             for f in files:
@@ -250,6 +312,10 @@ class TupOnly(CommonBackend, PartialBackend):
                                  destdir=mozpath.join(self.environment.topobjdir, obj.install_target, path))
 
     def _handle_idl_manager(self, manager):
+        dist_idl_backend_file = self._get_backend_file('dist/idl')
+        for idl in manager.idls.values():
+            dist_idl_backend_file.symlink_rule(idl['source'], output_group=self._installed_files)
+
         backend_file = self._get_backend_file('xpcom/xpidl')
         backend_file.export_shell()
 
@@ -275,6 +341,7 @@ class TupOnly(CommonBackend, PartialBackend):
                 inputs=[
                     '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl/xpidllex.py',
                     '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl/xpidlyacc.py',
+                    self._installed_files,
                 ],
                 display='XPIDL %s' % module,
                 cmd=cmd,

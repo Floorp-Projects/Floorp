@@ -35,25 +35,12 @@ class TestCapabilities(MarionetteTestCase):
     def test_supported_features(self):
         self.assertIn("rotatable", self.caps)
         self.assertIn("acceptSslCerts", self.caps)
-        self.assertIn("takesElementScreenshot", self.caps)
-        self.assertIn("takesScreenshot", self.caps)
 
         self.assertFalse(self.caps["acceptSslCerts"])
-        self.assertTrue(self.caps["takesElementScreenshot"])
-        self.assertTrue(self.caps["takesScreenshot"])
 
-    def test_selenium2_compat(self):
-        self.assertIn("platform", self.caps)
-        self.assertEqual(self.caps["platform"], self.caps["platformName"].upper())
-
-    def test_extensions(self):
-        self.assertIn("XULappId", self.caps)
-        self.assertIn("appBuildId", self.caps)
-        self.assertIn("version", self.caps)
-
-        self.assertEqual(self.caps["XULappId"], self.appinfo["ID"])
-        self.assertEqual(self.caps["appBuildId"], self.appinfo["appBuildID"])
-        self.assertEqual(self.caps["version"], self.appinfo["version"])
+    def test_additional_capabilities(self):
+        self.assertIn("processId", self.caps)
+        self.assertEqual(self.caps["processId"], self.appinfo["processID"])
 
     def test_we_can_pass_in_capabilities_on_session_start(self):
         self.marionette.delete_session()

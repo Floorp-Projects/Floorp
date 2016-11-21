@@ -745,10 +745,10 @@ GetWidgetRootStyle(WidgetNodeType aNodeType)
     case MOZ_GTK_IMAGEMENUITEM:
       style = CreateStyleForWidget(gtk_image_menu_item_new(), MOZ_GTK_MENUPOPUP);
       break;
-    case MOZ_GTK_CHECKMENUITEM_CONTAINER:
+    case MOZ_GTK_CHECKMENUITEM:
       style = CreateStyleForWidget(gtk_check_menu_item_new(), MOZ_GTK_MENUPOPUP);
       break;
-    case MOZ_GTK_RADIOMENUITEM_CONTAINER:
+    case MOZ_GTK_RADIOMENUITEM:
       style = CreateStyleForWidget(gtk_radio_menu_item_new(nullptr),
                                    MOZ_GTK_MENUPOPUP);
       break;
@@ -825,13 +825,13 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       style = CreateChildCSSNode(GTK_STYLE_CLASS_CHECK,
                                  MOZ_GTK_CHECKBUTTON_CONTAINER);
       break;
-    case MOZ_GTK_RADIOMENUITEM:
+    case MOZ_GTK_RADIOMENUITEM_INDICATOR:
       style = CreateChildCSSNode(GTK_STYLE_CLASS_RADIO,
-                                 MOZ_GTK_RADIOMENUITEM_CONTAINER);
+                                 MOZ_GTK_RADIOMENUITEM);
       break;
-    case MOZ_GTK_CHECKMENUITEM:
+    case MOZ_GTK_CHECKMENUITEM_INDICATOR:
       style = CreateChildCSSNode(GTK_STYLE_CLASS_CHECK,
-                                 MOZ_GTK_CHECKMENUITEM_CONTAINER);
+                                 MOZ_GTK_CHECKMENUITEM);
       break;
     case MOZ_GTK_PROGRESS_TROUGH:
       /* Progress bar background (trough) */
@@ -969,11 +969,11 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
     case MOZ_GTK_CHECKBUTTON:
       return GetWidgetStyleWithClass(MOZ_GTK_CHECKBUTTON_CONTAINER,
                                      GTK_STYLE_CLASS_CHECK);
-    case MOZ_GTK_RADIOMENUITEM:
-      return GetWidgetStyleWithClass(MOZ_GTK_RADIOMENUITEM_CONTAINER,
+    case MOZ_GTK_RADIOMENUITEM_INDICATOR:
+      return GetWidgetStyleWithClass(MOZ_GTK_RADIOMENUITEM,
                                      GTK_STYLE_CLASS_RADIO);
-    case MOZ_GTK_CHECKMENUITEM:
-      return GetWidgetStyleWithClass(MOZ_GTK_CHECKMENUITEM_CONTAINER,
+    case MOZ_GTK_CHECKMENUITEM_INDICATOR:
+      return GetWidgetStyleWithClass(MOZ_GTK_CHECKMENUITEM,
                                      GTK_STYLE_CLASS_CHECK);
     case MOZ_GTK_PROGRESS_TROUGH:
       return GetWidgetStyleWithClass(MOZ_GTK_PROGRESSBAR,
