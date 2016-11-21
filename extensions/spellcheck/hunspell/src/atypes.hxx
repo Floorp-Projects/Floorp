@@ -38,8 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _ATYPES_HXX_
-#define _ATYPES_HXX_
+#ifndef ATYPES_HXX_
+#define ATYPES_HXX_
 
 #ifndef HUNSPELL_WARNING
 #include <stdio.h>
@@ -63,7 +63,7 @@ static inline void HUNSPELL_WARNING(FILE*, const char*, ...) {}
 #define SETSIZE 256
 #define CONTSIZE 65536
 
-// affentry options
+// AffEntry options
 #define aeXPRODUCT (1 << 0)
 #define aeUTF8 (1 << 1)
 #define aeALIASF (1 << 2)
@@ -85,8 +85,6 @@ static inline void HUNSPELL_WARNING(FILE*, const char*, ...) {}
 #define SPELL_ORIGCAP (1 << 5)
 #define SPELL_WARN (1 << 6)
 
-#define MAXLNLEN 8192
-
 #define MINCPDLEN 3
 #define MAXCOMPOUND 10
 #define MAXCONDLEN 20
@@ -100,46 +98,25 @@ static inline void HUNSPELL_WARNING(FILE*, const char*, ...) {}
 
 #define TESTAFF(a, b, c) (std::binary_search(a, a + c, b))
 
-struct affentry {
-  std::string strip;
-  std::string appnd;
-  char numconds;
-  char opts;
-  unsigned short aflag;
-  unsigned short* contclass;
-  short contclasslen;
-  union {
-    char conds[MAXCONDLEN];
-    struct {
-      char conds1[MAXCONDLEN_1];
-      char* conds2;
-    } l;
-  } c;
-  char* morphcode;
-};
-
 struct guessword {
   char* word;
   bool allow;
   char* orig;
 };
 
-struct mapentry {
-  char** set;
-  int len;
-};
-
-struct flagentry {
-  FLAG* def;
-  int len;
-};
+typedef std::vector<std::string> mapentry;
+typedef std::vector<FLAG> flagentry;
 
 struct patentry {
-  char* pattern;
-  char* pattern2;
-  char* pattern3;
+  std::string pattern;
+  std::string pattern2;
+  std::string pattern3;
   FLAG cond;
   FLAG cond2;
+  patentry()
+    : cond(FLAG_NULL)
+    , cond2(FLAG_NULL) {
+  }
 };
 
 #endif

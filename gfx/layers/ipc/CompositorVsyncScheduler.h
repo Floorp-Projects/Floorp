@@ -32,13 +32,7 @@ class DrawTarget;
 
 namespace layers {
 
-class CompositorVsyncSchedulerOwner
-{
-public:
-  virtual bool IsPendingComposite() = 0;
-  virtual void FinishPendingComposite() = 0;
-  virtual void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr) = 0;
-};
+class CompositorVsyncSchedulerOwner;
 
 /**
  * Manages the vsync (de)registration and tracking on behalf of the

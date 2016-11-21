@@ -1096,7 +1096,10 @@ struct Assumptions
     bool operator==(const Assumptions& rhs) const;
     bool operator!=(const Assumptions& rhs) const { return !(*this == rhs); }
 
-    WASM_DECLARE_SERIALIZABLE(Assumptions)
+    size_t serializedSize() const;
+    uint8_t* serialize(uint8_t* cursor) const;
+    const uint8_t* deserialize(const uint8_t* cursor, size_t remain);
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 // A Module can either be asm.js or wasm.

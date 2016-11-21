@@ -51,6 +51,7 @@ var DEFAULT_PREFERENCES =
   "useOnlyCssZoom": false,
   "externalLinkTarget": 0,
   "enhanceTextSelection": false,
+  "renderer": "canvas",
   "renderInteractiveForms": false,
   "disablePageLabels": false
 }

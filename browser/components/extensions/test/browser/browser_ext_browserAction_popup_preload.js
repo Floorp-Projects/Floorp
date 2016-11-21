@@ -87,8 +87,9 @@ add_task(function* testBrowserActionDisabled() {
       },
     },
 
-    background() {
-      browser.browserAction.disable();
+    background: async function() {
+      await browser.browserAction.disable();
+      browser.test.sendMessage("browserAction-disabled");
     },
 
     files: {
@@ -101,12 +102,17 @@ add_task(function* testBrowserActionDisabled() {
 
   yield extension.startup();
 
+  yield extension.awaitMessage("browserAction-disabled");
+
   const {GlobalManager, Management: {global: {browserActionFor}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
   let ext = GlobalManager.extensionMap.get(extension.id);
   let browserAction = browserActionFor(ext);
 
   let widget = getBrowserActionWidget(extension).forWindow(window);
+
+  is(widget.node.getAttribute("disabled"), "true", "Button is disabled");
+  is(browserAction.pendingPopup, null, "Have no pending popup prior to click");
 
   // Test canceled click.
   EventUtils.synthesizeMouseAtCenter(widget.node, {type: "mousedown", button: 0}, window);

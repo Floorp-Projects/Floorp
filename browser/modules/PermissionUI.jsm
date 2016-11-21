@@ -226,7 +226,10 @@ this.PermissionPromptPrototype = {
    *
    *    If action is not set, expireType will be ignored.
    *  callback (function, optional)
-   *    A callback function that will fire if the user makes this choice.
+   *    A callback function that will fire if the user makes this choice, with
+   *    a single parameter, state. State is an Object that contains the property
+   *    checkboxChecked, which identifies whether the checkbox to remember this
+   *    decision was checked.
    */
   get promptActions() {
     return [];
@@ -297,14 +300,14 @@ this.PermissionPromptPrototype = {
       let action = {
         label: promptAction.label,
         accessKey: promptAction.accessKey,
-        callback: () => {
+        callback: state => {
           if (promptAction.callback) {
             promptAction.callback();
           }
 
           if (this.permissionKey) {
             // Remember permissions.
-            if (promptAction.action) {
+            if (state && state.checkboxChecked && promptAction.action) {
               Services.perms.addFromPrincipal(this.principal,
                                               this.permissionKey,
                                               promptAction.action,
@@ -337,6 +340,9 @@ this.PermissionPromptPrototype = {
     if (!options.hasOwnProperty('displayURI') || options.displayURI) {
       options.displayURI = this.principal.URI;
     }
+    // Permission prompts are always persistent and don't have a close button.
+    options.persistent = true;
+    options.hideClose = true;
 
     this.onBeforeShow();
     chromeWin.PopupNotifications.show(this.browser,
@@ -413,9 +419,25 @@ GeolocationPermissionPrompt.prototype = {
 
   get popupOptions() {
     let pref = "browser.geolocation.warning.infoURL";
-    return {
+    let options = {
       learnMoreURL: Services.urlFormatter.formatURLPref(pref),
+      displayURI: false
     };
+
+    if (this.principal.URI.schemeIs("file")) {
+      options.checkbox = { show: false };
+    } else {
+      // Don't offer "always remember" action in PB mode
+      options.checkbox = {
+        show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal)
+      };
+    }
+
+    if (options.checkbox.show) {
+      options.checkbox.label = gBrowserBundle.GetStringFromName("geolocation.remember");
+    }
+
+    return options;
   },
 
   get notificationID() {
@@ -429,9 +451,14 @@ GeolocationPermissionPrompt.prototype = {
   get message() {
     let message;
     if (this.principal.URI.schemeIs("file")) {
-      message = gBrowserBundle.GetStringFromName("geolocation.shareWithFile2");
+      message = gBrowserBundle.GetStringFromName("geolocation.shareWithFile3");
     } else {
-      message = gBrowserBundle.GetStringFromName("geolocation.shareWithSite2");
+      let hostPort = "<>";
+      try {
+        hostPort = this.principal.URI.hostPort;
+      } catch (ex) { }
+      message = gBrowserBundle.formatStringFromName("geolocation.shareWithSite3",
+                                                    [hostPort], 1);
     }
     return message;
   },
@@ -448,44 +475,33 @@ GeolocationPermissionPrompt.prototype = {
 
     let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
 
-    let actions = [{
-      label: gBrowserBundle.GetStringFromName("geolocation.shareLocation"),
+    return [{
+      label: gBrowserBundle.GetStringFromName("geolocation.allowLocation"),
       accessKey:
-        gBrowserBundle.GetStringFromName("geolocation.shareLocation.accesskey"),
+        gBrowserBundle.GetStringFromName("geolocation.allowLocation.accesskey"),
       action: null,
       expireType: null,
-      callback: function() {
-        secHistogram.add(SHARE_LOCATION);
+      callback: function(state) {
+        if (state && state.checkboxChecked) {
+          secHistogram.add(ALWAYS_SHARE);
+        } else {
+          secHistogram.add(SHARE_LOCATION);
+        }
+      },
+    }, {
+      label: gBrowserBundle.GetStringFromName("geolocation.dontAllowLocation"),
+      accessKey:
+        gBrowserBundle.GetStringFromName("geolocation.dontAllowLocation.accesskey"),
+      action: Ci.nsIPermissionManager.DENY_ACTION,
+      expireType: PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal) ?
+                  Ci.nsIPermissionManager.EXPIRE_SESSION :
+                  null,
+      callback: function(state) {
+        if (state && state.checkboxChecked) {
+          secHistogram.add(NEVER_SHARE);
+        }
       },
     }];
-
-    if (!this.principal.URI.schemeIs("file")) {
-      // Always share location action.
-      actions.push({
-        label: gBrowserBundle.GetStringFromName("geolocation.alwaysShareLocation"),
-        accessKey:
-          gBrowserBundle.GetStringFromName("geolocation.alwaysShareLocation.accesskey"),
-        action: Ci.nsIPermissionManager.ALLOW_ACTION,
-        expireType: null,
-        callback: function() {
-          secHistogram.add(ALWAYS_SHARE);
-        },
-      });
-
-      // Never share location action.
-      actions.push({
-        label: gBrowserBundle.GetStringFromName("geolocation.neverShareLocation"),
-        accessKey:
-          gBrowserBundle.GetStringFromName("geolocation.neverShareLocation.accesskey"),
-        action: Ci.nsIPermissionManager.DENY_ACTION,
-        expireType: null,
-        callback: function() {
-          secHistogram.add(NEVER_SHARE);
-        },
-      });
-    }
-
-    return actions;
   },
 
   onBeforeShow() {
@@ -520,25 +536,23 @@ DesktopNotificationPermissionPrompt.prototype = {
     let learnMoreURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "push";
 
-    // The eventCallback is bound to the Notification that's being
-    // shown. We'll stash a reference to this in the closure so that
-    // the request can be cancelled.
-    let prompt = this;
-
-    let eventCallback = function(type) {
-      if (type == "dismissed") {
-        // Bug 1259148: Hide the doorhanger icon. Unlike other permission
-        // doorhangers, the user can't restore the doorhanger using the icon
-        // in the location bar. Instead, the site will be notified that the
-        // doorhanger was dismissed.
-        this.remove();
-        prompt.request.cancel();
-      }
+    let checkbox = {
+      show: true,
+      checked: true,
+      label: gBrowserBundle.GetStringFromName("webNotifications.remember")
     };
+
+    // In PB mode, the "always remember" checkbox should only remember for the
+    // session.
+    if (PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal)) {
+      checkbox.label =
+        gBrowserBundle.GetStringFromName("webNotifications.rememberForSession");
+    }
 
     return {
       learnMoreURL,
-      eventCallback,
+      checkbox,
+      displayURI: false
     };
   },
 
@@ -551,43 +565,35 @@ DesktopNotificationPermissionPrompt.prototype = {
   },
 
   get message() {
-    return gBrowserBundle.GetStringFromName("webNotifications.receiveFromSite");
+    let hostPort = "<>";
+    try {
+      hostPort = this.principal.URI.hostPort;
+    } catch (ex) { }
+    return gBrowserBundle.formatStringFromName("webNotifications.receiveFromSite2",
+                                               [hostPort], 1);
   },
 
   get promptActions() {
-    let promptActions;
-    // Only show "allow for session" in PB mode, we don't
-    // support "allow for session" in non-PB mode.
-    if (PrivateBrowsingUtils.isBrowserPrivate(this.browser)) {
-      promptActions = [
-        {
-          label: gBrowserBundle.GetStringFromName("webNotifications.receiveForSession"),
-          accessKey:
-            gBrowserBundle.GetStringFromName("webNotifications.receiveForSession.accesskey"),
-          action: Ci.nsIPermissionManager.ALLOW_ACTION,
-          expireType: Ci.nsIPermissionManager.EXPIRE_SESSION,
-        }
-      ];
-    } else {
-      promptActions = [
-        {
-          label: gBrowserBundle.GetStringFromName("webNotifications.alwaysReceive"),
-          accessKey:
-            gBrowserBundle.GetStringFromName("webNotifications.alwaysReceive.accesskey"),
-          action: Ci.nsIPermissionManager.ALLOW_ACTION,
-          expireType: null,
-        },
-        {
-          label: gBrowserBundle.GetStringFromName("webNotifications.neverShow"),
-          accessKey:
-            gBrowserBundle.GetStringFromName("webNotifications.neverShow.accesskey"),
-          action: Ci.nsIPermissionManager.DENY_ACTION,
-          expireType: null,
-        },
-      ];
-    }
-
-    return promptActions;
+    return [
+      {
+        label: gBrowserBundle.GetStringFromName("webNotifications.allow"),
+        accessKey:
+          gBrowserBundle.GetStringFromName("webNotifications.allow.accesskey"),
+        action: Ci.nsIPermissionManager.ALLOW_ACTION,
+        expireType: PrivateBrowsingUtils.isBrowserPrivate(this.browser) ?
+                    Ci.nsIPermissionManager.EXPIRE_SESSION :
+                    null,
+      },
+      {
+        label: gBrowserBundle.GetStringFromName("webNotifications.dontAllow"),
+        accessKey:
+          gBrowserBundle.GetStringFromName("webNotifications.dontAllow.accesskey"),
+        action: Ci.nsIPermissionManager.DENY_ACTION,
+        expireType: PrivateBrowsingUtils.isBrowserPrivate(this.browser) ?
+                    Ci.nsIPermissionManager.EXPIRE_SESSION :
+                    null,
+      },
+    ];
   },
 };
 

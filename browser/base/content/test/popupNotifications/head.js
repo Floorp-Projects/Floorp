@@ -213,25 +213,24 @@ function checkPopup(popup, notifyObj) {
     is(notification.getAttribute("buttonaccesskey"),
        notifyObj.mainAction.accessKey, "main action accesskey matches");
   }
-  let actualSecondaryActions =
+  if (notifyObj.secondaryActions && notifyObj.secondaryActions.length > 0) {
+    let secondaryAction = notifyObj.secondaryActions[0];
+    is(notification.getAttribute("secondarybuttonlabel"), secondaryAction.label,
+       "secondary action label matches");
+    is(notification.getAttribute("secondarybuttonaccesskey"),
+       secondaryAction.accessKey, "secondary action accesskey matches");
+  }
+  // Additional secondary actions appear as menu items.
+  let actualExtraSecondaryActions =
     Array.filter(notification.childNodes, child => child.nodeName == "menuitem");
-  let secondaryActions = notifyObj.secondaryActions || [];
-  let actualSecondaryActionsCount = actualSecondaryActions.length;
-  if (notifyObj.options.hideNotNow) {
-    is(notification.getAttribute("hidenotnow"), "true", "'Not Now' item hidden");
-    if (secondaryActions.length)
-      is(notification.lastChild.tagName, "menuitem", "no menuseparator");
-  }
-  else if (secondaryActions.length) {
-    is(notification.lastChild.tagName, "menuseparator", "menuseparator exists");
-  }
-  is(actualSecondaryActionsCount, secondaryActions.length,
-    actualSecondaryActions.length + " secondary actions");
-  secondaryActions.forEach(function(a, i) {
-    is(actualSecondaryActions[i].getAttribute("label"), a.label,
-       "label for secondary action " + i + " matches");
-    is(actualSecondaryActions[i].getAttribute("accesskey"), a.accessKey,
-       "accessKey for secondary action " + i + " matches");
+  let extraSecondaryActions = notifyObj.secondaryActions ? notifyObj.secondaryActions.slice(1) : [];
+  is(actualExtraSecondaryActions.length, extraSecondaryActions.length,
+     "number of extra secondary actions matches");
+  extraSecondaryActions.forEach(function(a, i) {
+    is(actualExtraSecondaryActions[i].getAttribute("label"), a.label,
+       "label for extra secondary action " + i + " matches");
+    is(actualExtraSecondaryActions[i].getAttribute("accesskey"), a.accessKey,
+       "accessKey for extra secondary action " + i + " matches");
   });
 }
 
@@ -263,8 +262,7 @@ function triggerMainCommand(popup) {
   ok(notifications.length > 0, "at least one notification displayed");
   let notification = notifications[0];
   info("Triggering main command for notification " + notification.id);
-  // 20, 10 so that the inner button is hit
-  EventUtils.synthesizeMouse(notification.button, 20, 10, {});
+  EventUtils.synthesizeMouseAtCenter(notification.button, {});
 }
 
 function triggerSecondaryCommand(popup, index) {
@@ -272,17 +270,21 @@ function triggerSecondaryCommand(popup, index) {
   ok(notifications.length > 0, "at least one notification displayed");
   let notification = notifications[0];
   info("Triggering secondary command for notification " + notification.id);
-  // Cancel the arrow panel slide-in transition (bug 767133) such that
-  // it won't interfere with us interacting with the dropdown.
-  document.getAnonymousNodes(popup)[0].style.transition = "none";
 
-  notification.button.focus();
+  if (index == 0) {
+    EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
+    return;
+  }
+
+  // Extra secondary actions appear in a menu.
+  notification.secondaryButton.nextSibling.nextSibling.focus();
 
   popup.addEventListener("popupshown", function handle() {
     popup.removeEventListener("popupshown", handle, false);
     info("Command popup open for notification " + notification.id);
-    // Press down until the desired command is selected
-    for (let i = 0; i <= index; i++) {
+    // Press down until the desired command is selected. Decrease index by one
+    // since the secondary action was handled above.
+    for (let i = 0; i <= index - 1; i++) {
       EventUtils.synthesizeKey("VK_DOWN", {});
     }
     // Activate

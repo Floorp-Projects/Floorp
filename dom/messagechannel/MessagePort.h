@@ -22,9 +22,9 @@ class nsIGlobalObject;
 namespace mozilla {
 namespace dom {
 
+class ClonedMessageData;
 class MessagePortChild;
 class MessagePortIdentifier;
-class MessagePortMessage;
 class PostMessageRunnable;
 class SharedMessagePortMessage;
 
@@ -84,8 +84,8 @@ public:
 
   // These methods are useful for MessagePortChild
 
-  void Entangled(nsTArray<MessagePortMessage>& aMessages);
-  void MessagesReceived(nsTArray<MessagePortMessage>& aMessages);
+  void Entangled(nsTArray<ClonedMessageData>& aMessages);
+  void MessagesReceived(nsTArray<ClonedMessageData>& aMessages);
   void StopSendingDataConfirmed();
   void Closed();
 

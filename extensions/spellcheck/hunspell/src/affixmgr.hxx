@@ -71,14 +71,13 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _AFFIXMGR_HXX_
-#define _AFFIXMGR_HXX_
-
-#include "hunvisapi.h"
+#ifndef AFFIXMGR_HXX_
+#define AFFIXMGR_HXX_
 
 #include <stdio.h>
 
 #include <string>
+#include <vector>
 
 #include "atypes.hxx"
 #include "baseaffix.hxx"
@@ -93,17 +92,16 @@
 class PfxEntry;
 class SfxEntry;
 
-class LIBHUNSPELL_DLL_EXPORTED AffixMgr {
+class AffixMgr {
   PfxEntry* pStart[SETSIZE];
   SfxEntry* sStart[SETSIZE];
   PfxEntry* pFlag[SETSIZE];
   SfxEntry* sFlag[SETSIZE];
-  HashMgr* pHMgr;
-  HashMgr** alldic;
-  int* maxdic;
-  char* keystring;
-  char* trystring;
-  char* encoding;
+  const std::vector<HashMgr*>& alldic;
+  const HashMgr* pHMgr;
+  std::string keystring;
+  std::string trystring;
+  std::string encoding;
   struct cs_info* csconv;
   int utf8;
   int complexprefixes;
@@ -125,19 +123,19 @@ class LIBHUNSPELL_DLL_EXPORTED AffixMgr {
   FLAG nongramsuggest;
   FLAG needaffix;
   int cpdmin;
-  int numrep;
-  replentry* reptable;
+  bool parsedrep;
+  std::vector<replentry> reptable;
   RepList* iconvtable;
   RepList* oconvtable;
-  int nummap;
-  mapentry* maptable;
-  int numbreak;
-  char** breaktable;
-  int numcheckcpd;
-  patentry* checkcpdtable;
+  bool parsedmaptable;
+  std::vector<mapentry> maptable;
+  bool parsedbreaktable;
+  std::vector<std::string> breaktable;
+  bool parsedcheckcpd;
+  std::vector<patentry> checkcpdtable;
   int simplifiedcpd;
-  int numdefcpd;
-  flagentry* defcpdtable;
+  bool parseddefcpd;
+  std::vector<flagentry> defcpdtable;
   phonetable* phone;
   int maxngramsugs;
   int maxcpdsugs;
@@ -147,10 +145,9 @@ class LIBHUNSPELL_DLL_EXPORTED AffixMgr {
   int sugswithdots;
   int cpdwordmax;
   int cpdmaxsyllable;
-  char* cpdvowels;
-  w_char* cpdvowels_utf16;
-  int cpdvowels_utf16_len;
-  char* cpdsyllablenum;
+  std::string cpdvowels; // vowels (for calculating of Hungarian compounding limit,
+  std::vector<w_char> cpdvowels_utf16; //vowels for UTF-8 encoding
+  std::string cpdsyllablenum; // syllable count incrementing flag
   const char* pfxappnd;  // BUG: not stateless
   const char* sfxappnd;  // BUG: not stateless
   int sfxextra;          // BUG: not stateless
@@ -159,12 +156,12 @@ class LIBHUNSPELL_DLL_EXPORTED AffixMgr {
   SfxEntry* sfx;         // BUG: not stateless
   PfxEntry* pfx;         // BUG: not stateless
   int checknum;
-  char* wordchars;
+  std::string wordchars; // letters + spec. word characters
   std::vector<w_char> wordchars_utf16;
-  char* ignorechars;
+  std::string ignorechars; // letters + spec. word characters
   std::vector<w_char> ignorechars_utf16;
-  char* version;
-  char* lang;
+  std::string version;   // affix and dictionary file version string
+  std::string lang;	 // language
   int langnum;
   FLAG lemma_present;
   FLAG circumfix;
@@ -182,7 +179,7 @@ class LIBHUNSPELL_DLL_EXPORTED AffixMgr {
                                // affix)
 
  public:
-  AffixMgr(const char* affpath, HashMgr** ptr, int* md, const char* key = NULL);
+  AffixMgr(const char* affpath, const std::vector<HashMgr*>& ptr, const char* key = NULL);
   ~AffixMgr();
   struct hentry* affix_check(const char* word,
                              int len,
@@ -202,9 +199,6 @@ class LIBHUNSPELL_DLL_EXPORTED AffixMgr {
                               int len,
                               int sfxopts,
                               PfxEntry* ppfx,
-                              char** wlst,
-                              int maxSug,
-                              int* ns,
                               const FLAG cclass = FLAG_NULL,
                               const FLAG needflag = FLAG_NULL,
                               char in_compound = IN_CPD_NOT);
@@ -214,39 +208,39 @@ class LIBHUNSPELL_DLL_EXPORTED AffixMgr {
                                      PfxEntry* ppfx,
                                      const FLAG needflag = FLAG_NULL);
 
-  char* affix_check_morph(const char* word,
-                          int len,
-                          const FLAG needflag = FLAG_NULL,
-                          char in_compound = IN_CPD_NOT);
-  char* prefix_check_morph(const char* word,
-                           int len,
-                           char in_compound,
-                           const FLAG needflag = FLAG_NULL);
-  char* suffix_check_morph(const char* word,
-                           int len,
-                           int sfxopts,
-                           PfxEntry* ppfx,
-                           const FLAG cclass = FLAG_NULL,
-                           const FLAG needflag = FLAG_NULL,
-                           char in_compound = IN_CPD_NOT);
+  std::string affix_check_morph(const char* word,
+                                int len,
+                                const FLAG needflag = FLAG_NULL,
+                                char in_compound = IN_CPD_NOT);
+  std::string prefix_check_morph(const char* word,
+                                 int len,
+                                 char in_compound,
+                                 const FLAG needflag = FLAG_NULL);
+  std::string suffix_check_morph(const char* word,
+                                 int len,
+                                 int sfxopts,
+                                 PfxEntry* ppfx,
+                                 const FLAG cclass = FLAG_NULL,
+                                 const FLAG needflag = FLAG_NULL,
+                                 char in_compound = IN_CPD_NOT);
 
-  char* prefix_check_twosfx_morph(const char* word,
-                                  int len,
-                                  char in_compound,
-                                  const FLAG needflag = FLAG_NULL);
-  char* suffix_check_twosfx_morph(const char* word,
-                                  int len,
-                                  int sfxopts,
-                                  PfxEntry* ppfx,
-                                  const FLAG needflag = FLAG_NULL);
+  std::string prefix_check_twosfx_morph(const char* word,
+                                        int len,
+                                        char in_compound,
+                                        const FLAG needflag = FLAG_NULL);
+  std::string suffix_check_twosfx_morph(const char* word,
+                                        int len,
+                                        int sfxopts,
+                                        PfxEntry* ppfx,
+                                        const FLAG needflag = FLAG_NULL);
 
-  char* morphgen(const char* ts,
-                 int wl,
-                 const unsigned short* ap,
-                 unsigned short al,
-                 const char* morph,
-                 const char* targetmorph,
-                 int level);
+  std::string morphgen(const char* ts,
+                       int wl,
+                       const unsigned short* ap,
+                       unsigned short al,
+                       const char* morph,
+                       const char* targetmorph,
+                       int level);
 
   int expand_rootword(struct guessword* wlst,
                       int maxn,
@@ -273,8 +267,7 @@ class LIBHUNSPELL_DLL_EXPORTED AffixMgr {
   int cpdcase_check(const char* word, int len);
   inline int candidate_check(const char* word, int len);
   void setcminmax(int* cmin, int* cmax, const char* word, int len);
-  struct hentry* compound_check(const char* word,
-                                int len,
+  struct hentry* compound_check(const std::string& word,
                                 short wordnum,
                                 short numsyllable,
                                 short maxwordnum,
@@ -294,47 +287,37 @@ class LIBHUNSPELL_DLL_EXPORTED AffixMgr {
                            hentry** words,
                            hentry** rwords,
                            char hu_mov_rule,
-                           char** result,
-                           char* partresult);
+                           std::string& result,
+                           const std::string* partresult);
 
-  int get_suffix_words(short unsigned* suff,
+  std::vector<std::string> get_suffix_words(short unsigned* suff,
                        int len,
-                       const char* root_word,
-                       char** slst);
+                       const char* root_word);
 
   struct hentry* lookup(const char* word);
-  int get_numrep() const;
-  struct replentry* get_reptable() const;
+  const std::vector<replentry>& get_reptable() const;
   RepList* get_iconvtable() const;
   RepList* get_oconvtable() const;
   struct phonetable* get_phonetable() const;
-  int get_nummap() const;
-  struct mapentry* get_maptable() const;
-  int get_numbreak() const;
-  char** get_breaktable() const;
-  char* get_encoding();
+  const std::vector<mapentry>& get_maptable() const;
+  const std::vector<std::string>& get_breaktable() const;
+  const std::string& get_encoding();
   int get_langnum() const;
   char* get_key_string();
   char* get_try_string() const;
-  const char* get_wordchars() const;
+  const std::string& get_wordchars() const;
   const std::vector<w_char>& get_wordchars_utf16() const;
-  char* get_ignore() const;
+  const char* get_ignore() const;
   const std::vector<w_char>& get_ignore_utf16() const;
   int get_compound() const;
   FLAG get_compoundflag() const;
-  FLAG get_compoundbegin() const;
   FLAG get_forbiddenword() const;
   FLAG get_nosuggest() const;
   FLAG get_nongramsuggest() const;
   FLAG get_needaffix() const;
   FLAG get_onlyincompound() const;
-  FLAG get_compoundroot() const;
-  FLAG get_lemma_present() const;
-  int get_checknum() const;
-  const char* get_prefix() const;
-  const char* get_suffix() const;
   const char* get_derived() const;
-  const char* get_version() const;
+  const std::string& get_version() const;
   int have_contclass() const;
   int get_utf8() const;
   int get_complexprefixes() const;
@@ -355,26 +338,25 @@ class LIBHUNSPELL_DLL_EXPORTED AffixMgr {
 
  private:
   int parse_file(const char* affpath, const char* key);
-  int parse_flag(char* line, unsigned short* out, FileMgr* af);
-  int parse_num(char* line, int* out, FileMgr* af);
-  int parse_cpdsyllable(char* line, FileMgr* af);
-  int parse_reptable(char* line, FileMgr* af);
-  int parse_convtable(char* line,
+  bool parse_flag(const std::string& line, unsigned short* out, FileMgr* af);
+  bool parse_num(const std::string& line, int* out, FileMgr* af);
+  bool parse_cpdsyllable(const std::string& line, FileMgr* af);
+  bool parse_reptable(const std::string& line, FileMgr* af);
+  bool parse_convtable(const std::string& line,
                       FileMgr* af,
                       RepList** rl,
-                      const char* keyword);
-  int parse_phonetable(char* line, FileMgr* af);
-  int parse_maptable(char* line, FileMgr* af);
-  int parse_breaktable(char* line, FileMgr* af);
-  int parse_checkcpdtable(char* line, FileMgr* af);
-  int parse_defcpdtable(char* line, FileMgr* af);
-  int parse_affix(char* line, const char at, FileMgr* af, char* dupflags);
+                      const std::string& keyword);
+  bool parse_phonetable(const std::string& line, FileMgr* af);
+  bool parse_maptable(const std::string& line, FileMgr* af);
+  bool parse_breaktable(const std::string& line, FileMgr* af);
+  bool parse_checkcpdtable(const std::string& line, FileMgr* af);
+  bool parse_defcpdtable(const std::string& line, FileMgr* af);
+  bool parse_affix(const std::string& line, const char at, FileMgr* af, char* dupflags);
 
   void reverse_condition(std::string&);
-  void debugflag(char* result, unsigned short flag);
   std::string& debugflag(std::string& result, unsigned short flag);
   int condlen(const char*);
-  int encodeit(affentry& entry, const char* cs);
+  int encodeit(AffEntry& entry, const char* cs);
   int build_pfxtree(PfxEntry* pfxptr);
   int build_sfxtree(SfxEntry* sfxptr);
   int process_pfx_order();

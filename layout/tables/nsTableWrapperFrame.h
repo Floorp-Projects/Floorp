@@ -179,8 +179,12 @@ public:
     return map->GetEffectiveRowSpan(aRowIdx, aColIdx);
   }
 
-protected:
+  /**
+   * The CB size to use for the inner table frame if we're a grid item.
+   */
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(GridItemCBSizeProperty, mozilla::LogicalSize);
 
+protected:
 
   explicit nsTableWrapperFrame(nsStyleContext* aContext);
   virtual ~nsTableWrapperFrame();
@@ -261,6 +265,19 @@ protected:
   {
     return static_cast<nsTableFrame*>(mFrames.FirstChild());
   }
+
+  /**
+   * Helper for ComputeAutoSize.
+   * Compute the margin-box inline size of aChildFrame given the inputs.
+   * If aMarginResult is non-null, fill it with the part of the
+   * margin-isize that was contributed by the margin.
+   */
+  nscoord ChildShrinkWrapISize(nsRenderingContext*  aRenderingContext,
+                               nsIFrame*            aChildFrame,
+                               mozilla::WritingMode aWM,
+                               mozilla::LogicalSize aCBSize,
+                               nscoord              aAvailableISize,
+                               nscoord*             aMarginResult = nullptr) const;
 
 private:
   nsFrameList   mCaptionFrames;

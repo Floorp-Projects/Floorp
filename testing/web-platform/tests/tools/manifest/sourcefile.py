@@ -1,4 +1,3 @@
-import imp
 import os
 import re
 from six.moves.urllib.parse import urljoin
@@ -99,7 +98,7 @@ class SourceFile(object):
         if self.contents is not None:
             file_obj = ContextManagerBytesIO(self.contents)
         elif self.use_committed:
-            git = vcs.get_git_func(os.path.dirname(__file__))
+            git = vcs.get_git_func(os.path.dirname(self.tests_root))
             blob = git("show", "HEAD:%s" % self.rel_path)
             file_obj = ContextManagerBytesIO(blob)
         else:
@@ -339,11 +338,11 @@ class SourceFile(object):
         elif self.name_is_multi_global:
             rv = [
                 TestharnessTest(self, replace_end(self.url, ".any.js", ".any.html")),
-                TestharnessTest(self, replace_end(self.url, ".any.js", ".any.worker")),
+                TestharnessTest(self, replace_end(self.url, ".any.js", ".any.worker.html")),
             ]
 
         elif self.name_is_worker:
-            rv = [TestharnessTest(self, replace_end(self.url, ".worker.js", ".worker"),
+            rv = [TestharnessTest(self, replace_end(self.url, ".worker.js", ".worker.html"),
                                   timeout=self.timeout)]
 
         elif self.name_is_webdriver:

@@ -6,7 +6,7 @@
 #ifndef mozilla_dom_SharedMessagePortMessage_h
 #define mozilla_dom_SharedMessagePortMessage_h
 
-#include "mozilla/dom/StructuredCloneHolder.h"
+#include "mozilla/dom/ipc/StructuredCloneData.h"
 
 namespace mozilla {
 namespace dom {
@@ -15,36 +15,43 @@ class MessagePortChild;
 class MessagePortMessage;
 class MessagePortParent;
 
-class SharedMessagePortMessage final : public StructuredCloneHolder
+class SharedMessagePortMessage final : public ipc::StructuredCloneData
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(SharedMessagePortMessage)
 
   SharedMessagePortMessage()
-    : StructuredCloneHolder(CloningSupported, TransferringSupported,
-                            StructuredCloneScope::DifferentProcess)
+    : ipc::StructuredCloneData()
   {}
 
+  // Note that the populated ClonedMessageData borrows the underlying
+  // JSStructuredCloneData from the SharedMessagePortMessage, so the caller is
+  // required to ensure that the ClonedMessageData instances are destroyed prior
+  // to the SharedMessagePortMessage instances.
   static void
   FromSharedToMessagesChild(
                       MessagePortChild* aActor,
                       const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
-                      nsTArray<MessagePortMessage>& aArray);
+                      nsTArray<ClonedMessageData>& aArray);
 
   static bool
   FromMessagesToSharedChild(
-                     nsTArray<MessagePortMessage>& aArray,
+                     nsTArray<ClonedMessageData>& aArray,
                      FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData);
 
+  // Note that the populated ClonedMessageData borrows the underlying
+  // JSStructuredCloneData from the SharedMessagePortMessage, so the caller is
+  // required to ensure that the ClonedMessageData instances are destroyed prior
+  // to the SharedMessagePortMessage instances.
   static bool
   FromSharedToMessagesParent(
                       MessagePortParent* aActor,
                       const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
-                      FallibleTArray<MessagePortMessage>& aArray);
+                      FallibleTArray<ClonedMessageData>& aArray);
 
   static bool
   FromMessagesToSharedParent(
-                     nsTArray<MessagePortMessage>& aArray,
+                     nsTArray<ClonedMessageData>& aArray,
                      FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData);
 
 private:
