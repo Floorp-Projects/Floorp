@@ -771,7 +771,7 @@ TokenStream::reportErrorNoOffset(unsigned errorNumber, ...)
 }
 
 bool
-TokenStream::reportWarning(unsigned errorNumber, ...)
+TokenStream::warning(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -952,9 +952,10 @@ TokenStream::getDirective(bool isMultiline, bool shouldWarnDeprecated,
     int32_t c;
 
     if (peekChars(directiveLength, peeked) && CharsMatch(peeked, directive)) {
-        if (shouldWarnDeprecated &&
-            !reportWarning(JSMSG_DEPRECATED_PRAGMA, errorMsgPragma))
-            return false;
+        if (shouldWarnDeprecated) {
+            if (!warning(JSMSG_DEPRECATED_PRAGMA, errorMsgPragma))
+                return false;
+        }
 
         skipChars(directiveLength);
         tokenbuf.clear();
@@ -1549,10 +1550,11 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
                 // grammar. We might not always be so permissive, so we warn
                 // about it.
                 if (c >= '8') {
-                    if (!reportWarning(JSMSG_BAD_OCTAL, c == '8' ? "08" : "09")) {
+                    if (!warning(JSMSG_BAD_OCTAL, c == '8' ? "08" : "09"))
                         goto error;
-                    }
-                    goto decimal;   // use the decimal scanner for the rest of the number
+
+                    // Use the decimal scanner for the rest of the number.
+                    goto decimal;
                 }
                 c = getCharIgnoreEOL();
             }
