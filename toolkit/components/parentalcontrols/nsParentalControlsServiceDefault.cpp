@@ -16,7 +16,9 @@ nsParentalControlsService::nsParentalControlsService() :
   mozilla::Unused << mEnabled;
 }
 
-nsParentalControlsService::~nsParentalControlsService() = default;
+nsParentalControlsService::~nsParentalControlsService()
+{
+}
 
 NS_IMETHODIMP
 nsParentalControlsService::GetParentalControlsEnabled(bool *aResult)
