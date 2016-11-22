@@ -87,6 +87,7 @@ impl<F> TyParamBuilder<F>
 
     pub fn build(self) -> F::Result {
         self.callback.invoke(TyParam {
+            attrs: vec![],
             ident: self.id,
             bounds: self.bounds,
             default: self.default,

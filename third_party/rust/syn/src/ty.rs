@@ -105,6 +105,16 @@ impl PathParameters {
     pub fn none() -> Self {
         PathParameters::AngleBracketed(AngleBracketedParameterData::default())
     }
+
+    pub fn is_empty(&self) -> bool {
+        match *self {
+            PathParameters::AngleBracketed(ref bracketed) => {
+                bracketed.lifetimes.is_empty() && bracketed.types.is_empty() &&
+                bracketed.bindings.is_empty()
+            }
+            PathParameters::Parenthesized(_) => false,
+        }
+    }
 }
 
 /// A path like `Foo<'a, T>`
@@ -166,9 +176,24 @@ pub struct QSelf {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct BareFnTy {
+    pub unsafety: Unsafety,
+    pub abi: Option<Abi>,
     pub lifetimes: Vec<LifetimeDef>,
     pub inputs: Vec<BareFnArg>,
     pub output: FunctionRetTy,
+    pub variadic: bool,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum Unsafety {
+    Unsafe,
+    Normal,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum Abi {
+    Named(String),
+    Rust,
 }
 
 /// An argument in a function type.
@@ -195,14 +220,20 @@ pub enum FunctionRetTy {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-    use {TraitBoundModifier, TyParamBound};
+    #[cfg(feature = "full")]
+    use ConstExpr;
     use constant::parsing::const_expr;
+    #[cfg(feature = "full")]
+    use expr::parsing::expr;
     use generics::parsing::{lifetime, lifetime_def, ty_param_bound, bound_lifetimes};
     use ident::parsing::ident;
+    use lit::parsing::quoted_string;
     use std::str;
 
     named!(pub ty -> Ty, alt!(
-        ty_poly_trait_ref // must be before ty_path
+        ty_paren // must be before ty_tup
+        |
+        ty_path // must be before ty_poly_trait_ref
         |
         ty_vec
         |
@@ -218,11 +249,9 @@ pub mod parsing {
         |
         ty_tup
         |
-        ty_path
+        ty_poly_trait_ref
         |
         ty_impl_trait
-        |
-        ty_paren
     ));
 
     named!(ty_vec -> Ty, do_parse!(
@@ -232,12 +261,26 @@ pub mod parsing {
         (Ty::Slice(Box::new(elem)))
     ));
 
+    #[cfg(not(feature = "full"))]
     named!(ty_array -> Ty, do_parse!(
         punct!("[") >>
         elem: ty >>
         punct!(";") >>
         len: const_expr >>
         punct!("]") >>
+        (Ty::Array(Box::new(elem), len))
+    ));
+
+    #[cfg(feature = "full")]
+    named!(ty_array -> Ty, do_parse!(
+        punct!("[") >>
+        elem: ty >>
+        punct!(";") >>
+        len: alt!(
+            terminated!(const_expr, punct!("]"))
+            |
+            terminated!(expr, punct!("]")) => { ConstExpr::Other }
+        ) >>
         (Ty::Array(Box::new(elem), len))
     ));
 
@@ -267,26 +310,35 @@ pub mod parsing {
     ));
 
     named!(ty_bare_fn -> Ty, do_parse!(
-        keyword!("fn") >>
-        lifetimes: opt_vec!(delimited!(
-            punct!("<"),
-            terminated_list!(punct!(","), lifetime_def),
-            punct!(">")
+        lifetimes: opt_vec!(do_parse!(
+            keyword!("for") >>
+            punct!("<") >>
+            lifetimes: terminated_list!(punct!(","), lifetime_def) >>
+            punct!(">") >>
+            (lifetimes)
         )) >>
+        unsafety: unsafety >>
+        abi: option!(abi) >>
+        keyword!("fn") >>
         punct!("(") >>
-        inputs: terminated_list!(punct!(","), fn_arg) >>
+        inputs: separated_list!(punct!(","), fn_arg) >>
+        trailing_comma: option!(punct!(",")) >>
+        variadic: option!(cond_reduce!(trailing_comma.is_some(), punct!("..."))) >>
         punct!(")") >>
         output: option!(preceded!(
             punct!("->"),
             ty
         )) >>
         (Ty::BareFn(Box::new(BareFnTy {
+            unsafety: unsafety,
+            abi: abi,
             lifetimes: lifetimes,
             inputs: inputs,
             output: match output {
                 Some(ty) => FunctionRetTy::Ty(ty),
                 None => FunctionRetTy::Default,
             },
+            variadic: variadic.is_some(),
         })))
     ));
 
@@ -365,23 +417,13 @@ pub mod parsing {
                 }
             })
         )
+        |
+        map!(keyword!("self"), |_| (None, "self".into()))
     ));
 
-    named!(ty_poly_trait_ref -> Ty, do_parse!(
-        keyword!("for") >>
-        punct!("<") >>
-        lifetimes: terminated_list!(punct!(","), lifetime_def) >>
-        punct!(">") >>
-        trait_ref: path >>
-        (Ty::PolyTraitRef(vec![
-            TyParamBound::Trait(
-                PolyTraitRef {
-                    bound_lifetimes: lifetimes,
-                    trait_ref: trait_ref,
-                },
-                TraitBoundModifier::None,
-            ),
-        ]))
+    named!(ty_poly_trait_ref -> Ty, map!(
+        separated_nonempty_list!(punct!("+"), ty_param_bound),
+        Ty::PolyTraitRef
     ));
 
     named!(ty_impl_trait -> Ty, do_parse!(
@@ -428,6 +470,7 @@ pub mod parsing {
                 cond!(!lifetimes.is_empty() || !types.is_empty(), punct!(",")),
                 separated_nonempty_list!(punct!(","), type_binding)
             )) >>
+            cond!(!lifetimes.is_empty() || !types.is_empty() || !bindings.is_empty(), option!(punct!(","))) >>
             punct!(">") >>
             (PathSegment {
                 ident: id.unwrap_or_else(|| "".into()),
@@ -442,6 +485,14 @@ pub mod parsing {
         )
         |
         map!(ident, Into::into)
+        |
+        map!(alt!(
+            keyword!("super")
+            |
+            keyword!("self")
+            |
+            keyword!("Self")
+        ), Into::into)
     ));
 
     named!(type_binding -> TypeBinding, do_parse!(
@@ -457,13 +508,13 @@ pub mod parsing {
     named!(pub poly_trait_ref -> PolyTraitRef, do_parse!(
         bound_lifetimes: bound_lifetimes >>
         trait_ref: path >>
-        parenthesized: cond!(
+        parenthesized: option!(cond_reduce!(
             trait_ref.segments.last().unwrap().parameters == PathParameters::none(),
-            option!(parenthesized_parameter_data)
-        ) >>
+            parenthesized_parameter_data
+        )) >>
         ({
             let mut trait_ref = trait_ref;
-            if let Some(Some(parenthesized)) = parenthesized {
+            if let Some(parenthesized) = parenthesized {
                 trait_ref.segments.last_mut().unwrap().parameters = parenthesized;
             }
             PolyTraitRef {
@@ -474,11 +525,31 @@ pub mod parsing {
     ));
 
     named!(pub fn_arg -> BareFnArg, do_parse!(
-        name: option!(terminated!(ident, punct!(":"))) >>
+        name: option!(do_parse!(
+            name: ident >>
+            punct!(":") >>
+            not!(peek!(tag!(":"))) >> // not ::
+            (name)
+        )) >>
         ty: ty >>
         (BareFnArg {
             name: name,
             ty: ty,
+        })
+    ));
+
+    named!(pub unsafety -> Unsafety, alt!(
+        keyword!("unsafe") => { |_| Unsafety::Unsafe }
+        |
+        epsilon!() => { |_| Unsafety::Normal }
+    ));
+
+    named!(pub abi -> Abi, do_parse!(
+        keyword!("extern") >>
+        name: option!(quoted_string) >>
+        (match name {
+            Some(name) => Abi::Named(name),
+            None => Abi::Rust,
         })
     ));
 }
@@ -603,7 +674,12 @@ mod printing {
     impl ToTokens for PathSegment {
         fn to_tokens(&self, tokens: &mut Tokens) {
             self.ident.to_tokens(tokens);
-            self.parameters.to_tokens(tokens);
+            if self.ident.as_ref().is_empty() && self.parameters.is_empty() {
+                tokens.append("<");
+                tokens.append(">");
+            } else {
+                self.parameters.to_tokens(tokens);
+            }
         }
     }
 
@@ -692,14 +768,23 @@ mod printing {
 
     impl ToTokens for BareFnTy {
         fn to_tokens(&self, tokens: &mut Tokens) {
-            tokens.append("fn");
             if !self.lifetimes.is_empty() {
+                tokens.append("for");
                 tokens.append("<");
                 tokens.append_separated(&self.lifetimes, ",");
                 tokens.append(">");
             }
+            self.unsafety.to_tokens(tokens);
+            self.abi.to_tokens(tokens);
+            tokens.append("fn");
             tokens.append("(");
             tokens.append_separated(&self.inputs, ",");
+            if self.variadic {
+                if !self.inputs.is_empty() {
+                    tokens.append(",");
+                }
+                tokens.append("...");
+            }
             tokens.append(")");
             if let FunctionRetTy::Ty(ref ty) = self.output {
                 tokens.append("->");
@@ -715,6 +800,27 @@ mod printing {
                 tokens.append(":");
             }
             self.ty.to_tokens(tokens);
+        }
+    }
+
+    impl ToTokens for Unsafety {
+        fn to_tokens(&self, tokens: &mut Tokens) {
+            match *self {
+                Unsafety::Unsafe => tokens.append("unsafe"),
+                Unsafety::Normal => {
+                    // nothing
+                }
+            }
+        }
+    }
+
+    impl ToTokens for Abi {
+        fn to_tokens(&self, tokens: &mut Tokens) {
+            tokens.append("extern");
+            match *self {
+                Abi::Named(ref named) => named.to_tokens(tokens),
+                Abi::Rust => {}
+            }
         }
     }
 }

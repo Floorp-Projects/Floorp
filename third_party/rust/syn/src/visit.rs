@@ -141,7 +141,7 @@ pub fn walk_ty<V: Visitor>(visitor: &mut V, ty: &Ty) {
             walk_list!(visitor, visit_lifetime, opt_lifetime);
             visitor.visit_ty(&mutable_type.ty)
         }
-        Ty::Never => {}
+        Ty::Never | Ty::Infer => {}
         Ty::Tup(ref tuple_element_types) => {
             walk_list!(visitor, visit_ty, tuple_element_types);
         }
@@ -167,13 +167,10 @@ pub fn walk_ty<V: Visitor>(visitor: &mut V, ty: &Ty) {
             visitor.visit_ty(inner);
             visitor.visit_const_expr(len);
         }
-        Ty::PolyTraitRef(ref bounds) => {
-            walk_list!(visitor, visit_ty_param_bound, bounds);
-        }
+        Ty::PolyTraitRef(ref bounds) |
         Ty::ImplTrait(ref bounds) => {
             walk_list!(visitor, visit_ty_param_bound, bounds);
         }
-        Ty::Infer => {}
     }
 }
 
@@ -266,7 +263,7 @@ pub fn walk_field<V: Visitor>(visitor: &mut V, field: &Field) {
 pub fn walk_const_expr<V: Visitor>(visitor: &mut V, len: &ConstExpr) {
     match *len {
         ConstExpr::Call(ref function, ref args) => {
-            visitor.visit_const_expr(&function);
+            visitor.visit_const_expr(function);
             walk_list!(visitor, visit_const_expr, args);
         }
         ConstExpr::Binary(_op, ref left, ref right) => {
@@ -286,5 +283,13 @@ pub fn walk_const_expr<V: Visitor>(visitor: &mut V, len: &ConstExpr) {
         ConstExpr::Path(ref path) => {
             visitor.visit_path(path);
         }
+        ConstExpr::Index(ref expr, ref index) => {
+            visitor.visit_const_expr(expr);
+            visitor.visit_const_expr(index);
+        }
+        ConstExpr::Paren(ref expr) => {
+            visitor.visit_const_expr(expr);
+        }
+        ConstExpr::Other(_) => {}
     }
 }

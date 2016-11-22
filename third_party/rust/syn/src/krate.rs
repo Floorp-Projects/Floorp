@@ -11,18 +11,27 @@ pub struct Crate {
 pub mod parsing {
     use super::*;
     use attr::parsing::inner_attr;
-    use space::whitespace;
-    use item::parsing::item;
+    use item::parsing::items;
 
     named!(pub krate -> Crate, do_parse!(
+        option!(byte_order_mark) >>
+        shebang: option!(shebang) >>
         attrs: many0!(inner_attr) >>
-        items: many0!(item) >>
-        option!(whitespace) >>
+        items: items >>
         (Crate {
-            shebang: None,
+            shebang: shebang,
             attrs: attrs,
             items: items,
         })
+    ));
+
+    named!(byte_order_mark -> &str, tag!("\u{feff}"));
+
+    named!(shebang -> String, do_parse!(
+        tag!("#!") >>
+        not!(peek!(tag!("["))) >>
+        content: take_until!("\n") >>
+        (format!("#!{}", content))
     ));
 }
 
@@ -34,6 +43,9 @@ mod printing {
 
     impl ToTokens for Crate {
         fn to_tokens(&self, tokens: &mut Tokens) {
+            if let Some(ref shebang) = self.shebang {
+                tokens.append(&format!("{}\n", shebang));
+            }
             for attr in self.attrs.inner() {
                 attr.to_tokens(tokens);
             }
