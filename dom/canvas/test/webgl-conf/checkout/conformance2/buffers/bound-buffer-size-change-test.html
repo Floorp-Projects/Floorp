@@ -61,6 +61,8 @@ shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_SIZE, 0)", "0");
 shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_START, 0)", "0");
 
 gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, 4, gl.STATIC_DRAW);
+wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION);
+
 shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_BINDING, 0)", "buffer1");
 shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_SIZE, 0)", "0");
 shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_START, 0)", "0");
@@ -97,11 +99,13 @@ shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_SIZE, 0)", "8");
 shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_START, 0)", "4");
 
 gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, 4, gl.STATIC_DRAW);
+wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION);
 shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_BINDING, 0)", "buffer3");
 shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_SIZE, 0)", "8");
 shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_START, 0)", "4");
 
 gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, 12, gl.STATIC_DRAW);
+wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION);
 shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_BINDING, 0)", "buffer3");
 shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_SIZE, 0)", "8");
 shouldBe("gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_START, 0)", "4");
