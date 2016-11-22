@@ -11,6 +11,10 @@ extensions.registerSchemaAPI("extension", (extension, context) => {
         let result = Cu.cloneInto([], context.cloneScope);
 
         for (let view of extension.views) {
+          if (!context.principal.subsumes(view.principal)) {
+            continue;
+          }
+
           if (fetchProperties !== null) {
             if (fetchProperties.type !== null && view.type != fetchProperties.type) {
               continue;
