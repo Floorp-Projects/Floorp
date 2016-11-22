@@ -600,7 +600,7 @@ Parser<ParseHandler>::error(unsigned errorNumber, ...)
 #ifdef DEBUG
     bool result =
 #endif
-        reportHelper(ParseError, false, pos().begin, errorNumber, args);
+        tokenStream.reportCompileErrorNumberVA(pos().begin, JSREPORT_ERROR, errorNumber, args);
     MOZ_ASSERT(!result, "reporting an error returned true?");
     va_end(args);
 }
@@ -614,7 +614,7 @@ Parser<ParseHandler>::errorAt(uint32_t offset, unsigned errorNumber, ...)
 #ifdef DEBUG
     bool result =
 #endif
-        reportHelper(ParseError, false, offset, errorNumber, args);
+        tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_ERROR, errorNumber, args);
     MOZ_ASSERT(!result, "reporting an error returned true?");
     va_end(args);
 }
@@ -625,7 +625,8 @@ Parser<ParseHandler>::warning(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = reportHelper(ParseWarning, false, pos().begin, errorNumber, args);
+    bool result =
+        tokenStream.reportCompileErrorNumberVA(pos().begin, JSREPORT_WARNING, errorNumber, args);
     va_end(args);
     return result;
 }
@@ -636,7 +637,8 @@ Parser<ParseHandler>::warningAt(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = reportHelper(ParseWarning, false, offset, errorNumber, args);
+    bool result =
+        tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_WARNING, errorNumber, args);
     va_end(args);
     return result;
 }
@@ -647,7 +649,7 @@ Parser<ParseHandler>::extraWarning(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = reportHelper(ParseExtraWarning, false, pos().begin, errorNumber, args);
+    bool result = tokenStream.reportStrictWarningErrorNumberVA(pos().begin, errorNumber, args);
     va_end(args);
     return result;
 }
@@ -658,7 +660,9 @@ Parser<ParseHandler>::strictModeError(unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    bool res = reportHelper(ParseStrictError, pc->sc()->strict(), pos().begin, errorNumber, args);
+    bool res =
+        tokenStream.reportStrictModeErrorNumberVA(pos().begin, pc->sc()->strict(),
+                                                  errorNumber, args);
     va_end(args);
     return res;
 }
@@ -669,7 +673,8 @@ Parser<ParseHandler>::strictModeErrorAt(uint32_t offset, unsigned errorNumber, .
 {
     va_list args;
     va_start(args, errorNumber);
-    bool res = reportHelper(ParseStrictError, pc->sc()->strict(), offset, errorNumber, args);
+    bool res =
+        tokenStream.reportStrictModeErrorNumberVA(offset, pc->sc()->strict(), errorNumber, args);
     va_end(args);
     return res;
 }
@@ -680,7 +685,23 @@ Parser<ParseHandler>::reportNoOffset(ParseReportKind kind, bool strict, unsigned
 {
     va_list args;
     va_start(args, errorNumber);
-    bool result = reportHelper(kind, strict, TokenStream::NoOffset, errorNumber, args);
+    bool result = false;
+    uint32_t offset = TokenStream::NoOffset;
+    switch (kind) {
+      case ParseError:
+        result = tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_ERROR, errorNumber, args);
+        break;
+      case ParseWarning:
+        result =
+            tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_WARNING, errorNumber, args);
+        break;
+      case ParseExtraWarning:
+        result = tokenStream.reportStrictWarningErrorNumberVA(offset, errorNumber, args);
+        break;
+      case ParseStrictError:
+        result = tokenStream.reportStrictModeErrorNumberVA(offset, strict, errorNumber, args);
+        break;
+    }
     va_end(args);
     return result;
 }
