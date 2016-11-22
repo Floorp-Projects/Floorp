@@ -1,6 +1,9 @@
-from sut import MockAgent
-import mozdevice
 import unittest
+
+import mozunit
+
+import mozdevice
+from sut import MockAgent
 
 
 class FileExistsTest(unittest.TestCase):
@@ -26,4 +29,4 @@ class FileExistsTest(unittest.TestCase):
         self.assertTrue(d.fileExists('/init'))
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

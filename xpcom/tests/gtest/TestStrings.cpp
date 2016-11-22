@@ -816,8 +816,7 @@ TEST(String, parse_string)
 
 static void test_strip_chars_helper(const char16_t* str, const char16_t* strip, const nsAString& result, uint32_t offset=0)
 {
-  nsAutoString tmp(str);
-  nsAString& data = tmp;
+  nsAutoString data(str);
   data.StripChars(strip, offset);
   EXPECT_TRUE(data.Equals(result));
 }

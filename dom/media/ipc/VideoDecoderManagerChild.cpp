@@ -111,7 +111,9 @@ VideoDecoderManagerChild::GetManagerAbstractThread()
 }
 
 PVideoDecoderChild*
-VideoDecoderManagerChild::AllocPVideoDecoderChild()
+VideoDecoderManagerChild::AllocPVideoDecoderChild(const VideoInfo& aVideoInfo,
+                                                  const layers::TextureFactoryIdentifier& aIdentifier,
+                                                  bool* aSuccess)
 {
   return new VideoDecoderChild();
 }

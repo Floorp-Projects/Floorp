@@ -99,6 +99,7 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../base',
     '../generic',
+    '../painting',
     '../style',
     '/dom/base',
 ]

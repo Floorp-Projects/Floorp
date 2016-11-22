@@ -15,8 +15,9 @@ class L10n {
         return "XHR";
       case "webConsoleMoreInfoLabel":
         return "Learn More";
+      default:
+        return str;
     }
-    return str;
   }
 
   getFormatStr(str) {

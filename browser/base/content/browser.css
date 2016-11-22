@@ -502,12 +502,10 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-richlistitem-insecure-field");
   height: auto;
-  background-color: #F6F6F6;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-site-icon {
   display: initial;
-  list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg#icon);
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-title > .ac-text-overflow-container > .ac-title-text {

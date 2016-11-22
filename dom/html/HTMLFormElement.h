@@ -141,24 +141,15 @@ public:
    * Remove an element from the lookup table maintained by the form.
    * We can't fold this method into RemoveElement() because when
    * RemoveElement() is called it doesn't know if the element is
-   * removed because the id attribute has changed, or bacause the
+   * removed because the id attribute has changed, or because the
    * name attribute has changed.
    *
    * @param aElement the element to remove
    * @param aName the name or id of the element to remove
-   * @param aRemoveReason describe why this element is removed. If the element
-   *        is removed because it's removed from the form, it will be removed
-   *        from the past names map too, otherwise it will stay in the past
-   *        names map.
    * @return NS_OK if the element was successfully removed.
    */
-  enum RemoveElementReason {
-    AttributeUpdated,
-    ElementRemoved
-  };
   nsresult RemoveElementFromTable(nsGenericHTMLFormElement* aElement,
-                                  const nsAString& aName,
-                                  RemoveElementReason aRemoveReason);
+                                  const nsAString& aName);
 
   /**
    * Add an element to end of this form's list of elements
@@ -188,7 +179,7 @@ public:
    * @param aElement the image element to remove
    * @return NS_OK if the element was successfully removed.
    */
-  nsresult RemoveImageElement(mozilla::dom::HTMLImageElement* aElement);
+  nsresult RemoveImageElement(HTMLImageElement* aElement);
 
   /**
    * Remove an image element from the lookup table maintained by the form.
@@ -201,16 +192,15 @@ public:
    * @param aName the name or id of the element to remove
    * @return NS_OK if the element was successfully removed.
    */
-  nsresult RemoveImageElementFromTable(mozilla::dom::HTMLImageElement* aElement,
-                                      const nsAString& aName,
-                                      RemoveElementReason aRemoveReason);
+  nsresult RemoveImageElementFromTable(HTMLImageElement* aElement,
+                                      const nsAString& aName);
   /**
    * Add an image element to the end of this form's list of image elements
    *
    * @param aElement the element to add
    * @return NS_OK if the element was successfully added
    */
-  nsresult AddImageElement(mozilla::dom::HTMLImageElement* aElement);
+  nsresult AddImageElement(HTMLImageElement* aElement);
 
   /**
    * Add an image element to the lookup table maintained by the form.
@@ -219,8 +209,8 @@ public:
    * AddImageElement() is called, the image attributes can change.
    * The name or id attributes of the image are used as a key into the table.
    */
-  nsresult AddImageElementToTable(mozilla::dom::HTMLImageElement* aChild,
-                                 const nsAString& aName);
+  nsresult AddImageElementToTable(HTMLImageElement* aChild,
+                                  const nsAString& aName);
 
    /**
     * Returns true if implicit submission of this form is disabled. For more
@@ -538,6 +528,10 @@ protected:
   // Insert a element into the past names map.
   void AddToPastNamesMap(const nsAString& aName, nsISupports* aChild);
 
+  // Remove the given element from the past names map.  The element must be an
+  // nsGenericHTMLFormElement or HTMLImageElement.
+  void RemoveElementFromPastNamesMap(Element* aElement);
+
   nsresult
   AddElementToTableInternal(
     nsInterfaceHashtable<nsStringHashKey,nsISupports>& aTable,
@@ -606,7 +600,7 @@ protected:
   // This is needed to properly clean up the bi-directional references
   // (both weak and strong) between the form and its HTMLImageElements.
 
-  nsTArray<mozilla::dom::HTMLImageElement*> mImageElements;  // Holds WEAK references
+  nsTArray<HTMLImageElement*> mImageElements;  // Holds WEAK references
 
   // A map from an ID or NAME attribute to the HTMLImageElement(s), this
   // hash holds strong references either to the named HTMLImageElement, or

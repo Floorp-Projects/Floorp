@@ -13,6 +13,8 @@ import tempfile
 import unittest
 import mozinfo
 
+import mozunit
+
 
 class TestMozinfo(unittest.TestCase):
 
@@ -118,4 +120,4 @@ class TestStringVersion(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

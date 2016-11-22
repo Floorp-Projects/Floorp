@@ -2,6 +2,8 @@
 
 from time import sleep
 
+import mozunit
+
 import mozrunnertest
 
 
@@ -43,3 +45,7 @@ class MozrunnerStartTestCase(mozrunnertest.MozrunnerTestCase):
         sleep(15)
 
         self.assertFalse(self.runner.is_running())
+
+
+if __name__ == '__main__':
+    mozunit.main()

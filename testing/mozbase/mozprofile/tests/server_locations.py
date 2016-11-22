@@ -6,6 +6,9 @@
 
 import mozfile
 import unittest
+
+import mozunit
+
 from mozprofile.permissions import ServerLocations, \
     MissingPrimaryLocationError, MultiplePrimaryLocationsError, \
     DuplicateLocationError, BadPortLocationError, LocationsSyntaxError
@@ -148,4 +151,4 @@ http://example.org:80           privileged
 
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

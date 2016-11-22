@@ -38,8 +38,8 @@ for var in ('MOZ_CRASHREPORTER', 'MOZ_PROFILE_MIGRATOR',
         DEFINES[var] = True
 
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
-    PYTHON_UNIT_TESTS += [
-        'compare-mozconfig/compare-mozconfigs-wrapper.py',
+    PYTHON_UNITTEST_MANIFESTS += [
+        'compare-mozconfig/python.ini',
     ]
 
 if CONFIG['ENABLE_TESTS'] or CONFIG['MOZ_DMD']:

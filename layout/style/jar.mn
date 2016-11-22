@@ -31,5 +31,8 @@ toolkit.jar:
    res/accessiblecaret-tilt-right@1.5x.png   (res/accessiblecaret-tilt-right@1.5x.png)
    res/accessiblecaret-tilt-right@2x.png     (res/accessiblecaret-tilt-right@2x.png)
    res/accessiblecaret-tilt-right@2.25x.png  (res/accessiblecaret-tilt-right@2.25x.png)
+   res/checkmark.svg                         (res/checkmark.svg)
+   res/indeterminate-checkmark.svg           (res/indeterminate-checkmark.svg)
+   res/radio.svg                             (res/radio.svg)
 
 % resource gre-resources %res/

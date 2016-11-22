@@ -24,7 +24,9 @@ transforms = TransformSequence()
 def set_worker_implementation(config, tests):
     """Set the worker implementation based on the test platform."""
     for test in tests:
-        if test['test-platform'].startswith('win'):
+        if test.get('suite', '') == 'talos':
+            test['worker-implementation'] = 'buildbot-bridge'
+        elif test['test-platform'].startswith('win'):
             test['worker-implementation'] = 'generic-worker'
         elif test['test-platform'].startswith('macosx'):
             test['worker-implementation'] = 'macosx-engine'
