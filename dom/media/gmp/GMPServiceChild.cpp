@@ -73,28 +73,32 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
     [self, nodeId, api, tags, helper, rawHolder](GMPServiceChild* child) {
       UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>> holder(rawHolder);
       nsresult rv;
-      uint32_t pluginId = 0;
-      bool ok = child->SendSelectGMP(nodeId, api, tags, &pluginId, &rv);
-      if (!ok || rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
-        holder->Reject(rv, __func__);
-        return;
-      }
-
-      if (helper) {
-        self->ConnectCrashHelper(pluginId, helper);
-      }
 
       nsTArray<base::ProcessId> alreadyBridgedTo;
       child->GetAlreadyBridgedTo(alreadyBridgedTo);
 
       base::ProcessId otherProcess;
       nsCString displayName;
-      ok = child->SendLaunchGMP(pluginId,
-                                alreadyBridgedTo,
-                                &otherProcess,
-                                &displayName,
-                                &rv);
-      if (!ok || rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
+      uint32_t pluginId = 0;
+      bool ok = child->SendLaunchGMP(nodeId,
+                                     api,
+                                     tags,
+                                     alreadyBridgedTo,
+                                     &pluginId,
+                                     &otherProcess,
+                                     &displayName,
+                                     &rv);
+      if (helper && pluginId) {
+        // Note: Even if the launch failed, we need to connect the crash
+        // helper so that if the launch failed due to the plugin crashing,
+        // we can report the crash via the crash reporter. The crash
+        // handling notification will arrive shortly if the launch failed
+        // due to the plugin crashing.
+        self->ConnectCrashHelper(pluginId, helper);
+      }
+
+      if (!ok || NS_FAILED(rv)) {
+        LOGD(("GeckoMediaPluginServiceChild::GetContentParent SendLaunchGMP failed rv=%d", rv));
         holder->Reject(rv, __func__);
         return;
       }

@@ -256,14 +256,11 @@ public:
 
   static PGMPServiceParent* Create(Transport* aTransport, ProcessId aOtherPid);
 
-  mozilla::ipc::IPCResult RecvSelectGMP(const nsCString& aNodeId,
+  mozilla::ipc::IPCResult RecvLaunchGMP(const nsCString& aNodeId,
                                         const nsCString& aAPI,
                                         nsTArray<nsCString>&& aTags,
-                                        uint32_t* aOutPluginId,
-                                        nsresult* aOutRv) override;
-
-  mozilla::ipc::IPCResult RecvLaunchGMP(const uint32_t& aPluginId,
                                         nsTArray<ProcessId>&& aAlreadyBridgedTo,
+                                        uint32_t* aOutPluginId,
                                         ProcessId* aOutID,
                                         nsCString* aOutDisplayName,
                                         nsresult* aOutRv) override;

@@ -16,11 +16,11 @@ sync protocol PGMPService
 
 parent:
 
-  sync SelectGMP(nsCString nodeId, nsCString api, nsCString[] tags)
-    returns (uint32_t pluginId, nsresult aResult);
-
-  sync LaunchGMP(uint32_t pluginId, ProcessId[] alreadyBridgedTo)
-    returns (ProcessId id, nsCString displayName, nsresult aResult);
+  sync LaunchGMP(nsCString nodeId,
+                 nsCString api,
+                 nsCString[] tags,
+                 ProcessId[] alreadyBridgedTo)
+    returns (uint32_t pluginId, ProcessId id, nsCString displayName, nsresult aResult);
 
   sync GetGMPNodeId(nsString origin, nsString topLevelOrigin,
                     nsString gmpName,
