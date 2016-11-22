@@ -6,7 +6,20 @@
 
 "use strict";
 
-const PREF_RX = new RegExp("^ *pref\\(\"devtools");
+const PREF_WHITELIST = [
+  "devtools",
+  "layout.css.grid.enabled"
+];
+
+const acceptLine = function (line) {
+  let matches = line.match(/^ *pref\("([^"]+)"/);
+  if (!matches || !matches[1]) {
+    return false;
+  }
+
+  let [, prefName] = matches;
+  return PREF_WHITELIST.some(filter => prefName.startsWith(filter));
+};
 
 module.exports = function (content) {
   this.cacheable && this.cacheable();
@@ -47,7 +60,7 @@ module.exports = function (content) {
       }
     }
 
-    if (continuation || (!ignoring && PREF_RX.test(line))) {
+    if (continuation || (!ignoring && acceptLine(line))) {
       newLines.push(line);
 
       // The call to pref(...); might span more than one line.
