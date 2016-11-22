@@ -109,3 +109,35 @@ wasmFullPass(`(module
         get_global $g
     )
 )`, 1);
+
+// Branch table.
+for (let [p, result] of [
+    [0, 7],
+    [1, 6],
+    [2, 4],
+    [42, 4]
+]) {
+    wasmFullPass(`(module
+        (func (export "run") (result i32) (param $p i32) (local $n i32)
+            i32.const 0
+            set_local $n
+            block $c block $b block $a
+                get_local $p
+                br_table $a $b $c
+            end $a
+                get_local $n
+                i32.const 1
+                i32.add
+                set_local $n
+            end $b
+                get_local $n
+                i32.const 2
+                i32.add
+                set_local $n
+            end $c
+            get_local $n
+            i32.const 4
+            i32.add
+        )
+    )`, result, {}, p);
+}
