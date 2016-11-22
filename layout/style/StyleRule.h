@@ -337,6 +337,12 @@ public:
 
   virtual int32_t GetType() const override;
 
+  CSSStyleSheet* GetStyleSheet() const
+  {
+    StyleSheet* sheet = Rule::GetStyleSheet();
+    return sheet ? sheet->AsGecko() : nullptr;
+  }
+
   virtual already_AddRefed<Rule> Clone() const override;
 
   virtual nsIDOMCSSRule* GetDOMRule() override;
