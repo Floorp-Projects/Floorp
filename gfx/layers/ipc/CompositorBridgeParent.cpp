@@ -1552,7 +1552,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId)
 
   RefPtr<gl::GLContext> glc(gl::GLContextProvider::CreateForCompositorWidget(mWidget, true));
   RefPtr<Compositor> compositor = new WebRenderCompositorOGL(glc.get());
-  WebRenderBridgeParent* parent = new WebRenderBridgeParent(aPipelineId,
+  WebRenderBridgeParent* parent = new WebRenderBridgeParent(nullptr, aPipelineId,
         mWidget, glc.get(), nullptr, compositor.get());
   parent->AddRef(); // IPDL reference
   MonitorAutoLock lock(*sIndirectLayerTreesLock);

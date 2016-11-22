@@ -105,6 +105,10 @@ wr_dp_end(wrwindowstate* wrWindow, wrstate* wrState)
 WR_FUNC;
 
 WR_INLINE void
+wr_composite_window(wrwindowstate* wrWindow)
+WR_FUNC;
+
+WR_INLINE void
 wr_dp_push_rect(wrstate* wrState, WRRect bounds, WRRect clip,
                 float r, float g, float b, float a)
 WR_FUNC;
