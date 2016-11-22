@@ -369,7 +369,8 @@ pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, overflow: W
     prev_dl.pop_stacking_context()
 }
 
-pub fn composite_window(window: &mut WrWindowState) {
+#[no_mangle]
+pub fn wr_composite_window(window: &mut WrWindowState) {
     gl::clear(gl::COLOR_BUFFER_BIT);
     window.renderer.update();
     window.renderer.render(window.size);
@@ -398,8 +399,6 @@ pub extern fn wr_dp_end(window: &mut WrWindowState, state: &mut WrState) {
                                      fb.root_dl_builder.finalize(),
                                      fb.auxiliary_lists_builder.finalize()
                                      );
-
-    composite_window(window);
 }
 
 #[no_mangle]
@@ -525,7 +524,7 @@ fn force_sync_composite(window: &mut WrWindowState) {
     window.api.flush();
     wait_for_flush_notification(&window.flush_notifier_lock);
 
-    composite_window(window);
+    wr_composite_window(window);
     gl::flush();
 }
 
