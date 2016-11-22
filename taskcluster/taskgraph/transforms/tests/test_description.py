@@ -41,6 +41,9 @@ test_description_schema = Schema({
     # the test-name
     Optional('unittest-try-name'): basestring,
 
+    # the name by which this talos test is addressed in try syntax
+    Optional('talos-try-name'): basestring,
+
     # the symbol, or group(symbol), under which this task should appear in
     # treeherder.
     'treeherder-symbol': basestring,
@@ -224,6 +227,9 @@ test_description_schema = Schema({
 
     # the name of the test (the key in tests.yml)
     'test-name': basestring,
+
+    # the product name, defaults to firefox
+    Optional('product'): basestring,
 
 }, required=True)
 

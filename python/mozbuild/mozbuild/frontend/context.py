@@ -1154,10 +1154,6 @@ VARIABLES = {
         Implies FORCE_SHARED_LIB.
         """),
 
-    'PYTHON_UNIT_TESTS': (StrictOrderingOnAppendList, list,
-        """A list of python unit tests.
-        """),
-
     'HOST_LIBRARY_NAME': (unicode, unicode,
         """Name of target library generated when cross compiling.
         """),
@@ -1574,6 +1570,11 @@ VARIABLES = {
     'XPCSHELL_TESTS_MANIFESTS': (ManifestparserManifestList, list,
         """List of manifest files defining xpcshell tests.
         """),
+
+    'PYTHON_UNITTEST_MANIFESTS': (ManifestparserManifestList, list,
+        """List of manifest files defining python unit tests.
+        """),
+
 
     # The following variables are used to control the target of installed files.
     'XPI_NAME': (unicode, unicode,

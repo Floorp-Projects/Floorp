@@ -2,6 +2,8 @@
 
 import mozrunner
 
+import mozunit
+
 import mozrunnertest
 
 
@@ -16,3 +18,7 @@ class MozrunnerStatesTestCase(mozrunnertest.MozrunnerTestCase):
         self.assertRaises(mozrunner.RunnerNotStartedError, self.runner.is_running)
         self.assertRaises(mozrunner.RunnerNotStartedError, test_returncode)
         self.assertRaises(mozrunner.RunnerNotStartedError, self.runner.wait)
+
+
+if __name__ == '__main__':
+    mozunit.main()

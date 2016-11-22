@@ -19,8 +19,9 @@ const { Task } = Cu.import("resource://gre/modules/Task.jsm");
 const { OS } = Cu.import("resource://gre/modules/osfile.jsm");
 Cu.importGlobalProperties(["fetch"]);
 
-const { loadKinto } = Cu.import("resource://services-common/kinto-offline-client.js");
+const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js");
 const { KintoHttpClient } = Cu.import("resource://services-common/kinto-http-client.js");
+const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js");
 const { CanonicalJSON } = Components.utils.import("resource://gre/modules/CanonicalJSON.jsm");
 
 const PREF_SETTINGS_SERVER                   = "services.settings.server";
@@ -41,21 +42,10 @@ this.FILENAME_ADDONS_JSON  = "blocklist-addons.json";
 this.FILENAME_GFX_JSON     = "blocklist-gfx.json";
 this.FILENAME_PLUGINS_JSON = "blocklist-plugins.json";
 
-function mergeChanges(localRecords, changes) {
-  // Kinto.js adds attributes to local records that aren't present on server.
-  // (e.g. _status)
-  const stripPrivateProps = (obj) => {
-    return Object.keys(obj).reduce((current, key) => {
-      if (!key.startsWith("_")) {
-        current[key] = obj[key];
-      }
-      return current;
-    }, {});
-  };
-
+function mergeChanges(collection, localRecords, changes) {
   const records = {};
   // Local records by id.
-  localRecords.forEach((record) => records[record.id] = stripPrivateProps(record));
+  localRecords.forEach((record) => records[record.id] = collection.cleanLocalFields(record));
   // All existing records are replaced by the version from the server.
   changes.forEach((record) => records[record.id] = record);
 
@@ -90,10 +80,6 @@ function fetchRemoteCollection(collection) {
 function kintoClient() {
   let base = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
   let bucket = Services.prefs.getCharPref(PREF_BLOCKLIST_BUCKET);
-
-  let Kinto = loadKinto();
-
-  let FirefoxAdapter = Kinto.adapters.FirefoxAdapter;
 
   let config = {
     remote: base,
@@ -131,7 +117,7 @@ class BlocklistClient {
         };
       } else {
         const localRecords = (yield collection.list()).data;
-        const records = mergeChanges(localRecords, payload.changes);
+        const records = mergeChanges(collection, localRecords, payload.changes);
         toSerialize = {
           last_modified: `${payload.lastModified}`,
           data: records

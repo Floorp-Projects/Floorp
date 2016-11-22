@@ -772,10 +772,17 @@
   filter: var(--icon-filter);
   width: 16px;
   height: 16px;
+  opacity: 0.8;
 }
 
 #requests-menu-network-summary-button > .summary-info-text {
+  opacity: 0.8;
   margin-inline-start: 0.5em;
+}
+
+#requests-menu-network-summary-button:hover > .summary-info-icon,
+#requests-menu-network-summary-button:hover > .summary-info-text {
+  opacity: 1;
 }
 
 /* Performance analysis view */

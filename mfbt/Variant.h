@@ -49,16 +49,10 @@ template<typename Needle, typename... Haystack>
 struct IsVariant;
 
 template<typename Needle>
-struct IsVariant<Needle>
-{
-  static const bool value = false;
-};
+struct IsVariant<Needle> : FalseType {};
 
 template<typename Needle, typename... Haystack>
-struct IsVariant<Needle, Needle, Haystack...>
-{
-  static const bool value = true;
-};
+struct IsVariant<Needle, Needle, Haystack...> : TrueType {};
 
 template<typename Needle, typename T, typename... Haystack>
 struct IsVariant<Needle, T, Haystack...> : public IsVariant<Needle, Haystack...> { };
