@@ -902,12 +902,12 @@ const KTableEntry nsCSSProps::kBackgroundOriginKTable[] = {
 };
 
 KTableEntry nsCSSProps::kBackgroundClipKTable[] = {
-  { eCSSKeyword_border_box, NS_STYLE_IMAGELAYER_CLIP_BORDER },
-  { eCSSKeyword_padding_box, NS_STYLE_IMAGELAYER_CLIP_PADDING },
-  { eCSSKeyword_content_box, NS_STYLE_IMAGELAYER_CLIP_CONTENT },
+  { eCSSKeyword_border_box, StyleGeometryBox::Border },
+  { eCSSKeyword_padding_box, StyleGeometryBox::Padding },
+  { eCSSKeyword_content_box, StyleGeometryBox::Content },
   // The next entry is controlled by the layout.css.background-clip-text.enabled
   // pref.
-  { eCSSKeyword_text, NS_STYLE_IMAGELAYER_CLIP_TEXT },
+  { eCSSKeyword_text, StyleGeometryBox::Text },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -922,13 +922,13 @@ const KTableEntry nsCSSProps::kMaskOriginKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kMaskClipKTable[] = {
-  { eCSSKeyword_border_box, NS_STYLE_IMAGELAYER_CLIP_BORDER },
-  { eCSSKeyword_padding_box, NS_STYLE_IMAGELAYER_CLIP_PADDING },
-  { eCSSKeyword_content_box, NS_STYLE_IMAGELAYER_CLIP_CONTENT },
-  { eCSSKeyword_fill_box, NS_STYLE_IMAGELAYER_CLIP_FILL },
-  { eCSSKeyword_stroke_box, NS_STYLE_IMAGELAYER_CLIP_STROKE },
-  { eCSSKeyword_view_box, NS_STYLE_IMAGELAYER_CLIP_VIEW },
-  { eCSSKeyword_no_clip, NS_STYLE_IMAGELAYER_CLIP_NO_CLIP },
+  { eCSSKeyword_border_box, StyleGeometryBox::Border },
+  { eCSSKeyword_padding_box, StyleGeometryBox::Padding },
+  { eCSSKeyword_content_box, StyleGeometryBox::Content },
+  { eCSSKeyword_fill_box, StyleGeometryBox::Fill },
+  { eCSSKeyword_stroke_box, StyleGeometryBox::Stroke },
+  { eCSSKeyword_view_box, StyleGeometryBox::View },
+  { eCSSKeyword_no_clip, StyleGeometryBox::NoClip },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -2303,13 +2303,13 @@ const KTableEntry nsCSSProps::kFillRuleKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kClipPathGeometryBoxKTable[] = {
-  { eCSSKeyword_content_box, StyleClipPathGeometryBox::Content },
-  { eCSSKeyword_padding_box, StyleClipPathGeometryBox::Padding },
-  { eCSSKeyword_border_box, StyleClipPathGeometryBox::Border },
-  { eCSSKeyword_margin_box, StyleClipPathGeometryBox::Margin },
-  { eCSSKeyword_fill_box, StyleClipPathGeometryBox::Fill },
-  { eCSSKeyword_stroke_box, StyleClipPathGeometryBox::Stroke },
-  { eCSSKeyword_view_box, StyleClipPathGeometryBox::View },
+  { eCSSKeyword_content_box, StyleGeometryBox::Content },
+  { eCSSKeyword_padding_box, StyleGeometryBox::Padding },
+  { eCSSKeyword_border_box, StyleGeometryBox::Border },
+  { eCSSKeyword_margin_box, StyleGeometryBox::Margin },
+  { eCSSKeyword_fill_box, StyleGeometryBox::Fill },
+  { eCSSKeyword_stroke_box, StyleGeometryBox::Stroke },
+  { eCSSKeyword_view_box, StyleGeometryBox::View },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
