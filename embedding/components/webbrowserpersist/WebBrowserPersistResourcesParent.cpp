@@ -23,9 +23,7 @@ WebBrowserPersistResourcesParent::WebBrowserPersistResourcesParent(
     MOZ_ASSERT(aVisitor);
 }
 
-WebBrowserPersistResourcesParent::~WebBrowserPersistResourcesParent()
-{
-}
+WebBrowserPersistResourcesParent::~WebBrowserPersistResourcesParent() = default;
 
 void
 WebBrowserPersistResourcesParent::ActorDestroy(ActorDestroyReason aWhy)
