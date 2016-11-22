@@ -12403,7 +12403,7 @@ CSSParserImpl::ParseImageLayersItem(
   aState.mImage->mValue.SetNoneValue();
   aState.mAttachment->mValue.SetIntValue(NS_STYLE_IMAGELAYER_ATTACHMENT_SCROLL,
                                          eCSSUnit_Enumerated);
-  aState.mClip->mValue.SetIntValue(NS_STYLE_IMAGELAYER_CLIP_BORDER,
+  aState.mClip->mValue.SetIntValue(StyleGeometryBox::Border,
                                    eCSSUnit_Enumerated);
 
   aState.mRepeat->mXValue.SetIntValue(NS_STYLE_IMAGELAYER_REPEAT_REPEAT,
@@ -12416,10 +12416,10 @@ CSSParserImpl::ParseImageLayersItem(
   aState.mPositionY->mValue.SetArrayValue(positionYArr, eCSSUnit_Array);
 
   if (eCSSProperty_mask == aTable[nsStyleImageLayers::shorthand]) {
-    aState.mOrigin->mValue.SetIntValue(NS_STYLE_IMAGELAYER_ORIGIN_BORDER,
+    aState.mOrigin->mValue.SetIntValue(StyleGeometryBox::Border,
                                        eCSSUnit_Enumerated);
   } else {
-    aState.mOrigin->mValue.SetIntValue(NS_STYLE_IMAGELAYER_ORIGIN_PADDING,
+    aState.mOrigin->mValue.SetIntValue(StyleGeometryBox::Padding,
                                        eCSSUnit_Enumerated);
   }
   positionXArr->Item(1).SetPercentValue(0.0f);
@@ -12534,20 +12534,6 @@ CSSParserImpl::ParseImageLayersItem(
           MOZ_ASSERT(originTable[i].mValue == clipTable[i].mValue);
         }
 #endif
-        static_assert(NS_STYLE_IMAGELAYER_CLIP_BORDER ==
-                      NS_STYLE_IMAGELAYER_ORIGIN_BORDER &&
-                      NS_STYLE_IMAGELAYER_CLIP_PADDING ==
-                      NS_STYLE_IMAGELAYER_ORIGIN_PADDING &&
-                      NS_STYLE_IMAGELAYER_CLIP_CONTENT ==
-                      NS_STYLE_IMAGELAYER_ORIGIN_CONTENT &&
-                      NS_STYLE_IMAGELAYER_CLIP_FILL ==
-                      NS_STYLE_IMAGELAYER_ORIGIN_FILL &&
-                      NS_STYLE_IMAGELAYER_CLIP_STROKE ==
-                      NS_STYLE_IMAGELAYER_ORIGIN_STROKE &&
-                      NS_STYLE_IMAGELAYER_CLIP_VIEW ==
-                      NS_STYLE_IMAGELAYER_ORIGIN_VIEW,
-                      "bg-clip and bg-origin style constants must agree");
-
         CSSParseResult result =
           ParseSingleValueProperty(aState.mClip->mValue,
                                    aTable[nsStyleImageLayers::clip]);
