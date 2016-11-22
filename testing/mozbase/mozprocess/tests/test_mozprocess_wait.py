@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 import os
-import unittest
 import proctest
 import mozinfo
+
+import mozunit
+
 from mozprocess import processhandler
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -93,4 +95,4 @@ class ProcTestWait(proctest.ProcTest):
                          'Expected both returncodes of wait() to be equal')
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

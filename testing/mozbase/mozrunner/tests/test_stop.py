@@ -5,6 +5,8 @@
 
 import signal
 
+import mozunit
+
 import mozrunnertest
 
 
@@ -37,3 +39,7 @@ class MozrunnerStopTestCase(mozrunnertest.MozrunnerTestCase):
         self.assertIsNotNone(self.runner.process_handler)
 
         self.assertEqual(self.runner.wait(1), returncode)
+
+
+if __name__ == '__main__':
+    mozunit.main()

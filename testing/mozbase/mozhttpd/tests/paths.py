@@ -9,6 +9,8 @@ import os
 import unittest
 import urllib2
 
+import mozunit
+
 
 class PathTest(unittest.TestCase):
 
@@ -74,4 +76,4 @@ class PathTest(unittest.TestCase):
             httpd.stop()
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

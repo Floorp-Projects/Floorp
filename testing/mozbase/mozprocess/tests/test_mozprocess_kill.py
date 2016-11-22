@@ -5,6 +5,9 @@ import time
 import unittest
 import proctest
 import signal
+
+import mozunit
+
 from mozprocess import processhandler
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -88,4 +91,4 @@ class ProcTestKill(proctest.ProcTest):
         self.assertEquals(p.proc.returncode, -signal.SIGKILL)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

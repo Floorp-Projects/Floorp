@@ -2,6 +2,9 @@
 import mozdevice
 import logging
 import unittest
+
+import mozunit
+
 from sut import MockAgent
 
 
@@ -19,4 +22,4 @@ class TestListFiles(unittest.TestCase):
         self.assertEqual(expected, d.listFiles("/mnt/sdcard"))
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

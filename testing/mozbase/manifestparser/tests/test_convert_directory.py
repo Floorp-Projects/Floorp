@@ -9,6 +9,8 @@ import shutil
 import tempfile
 import unittest
 
+import mozunit
+
 from manifestparser import convert
 from manifestparser import ManifestParser
 
@@ -178,4 +180,4 @@ class TestDirectoryConversion(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

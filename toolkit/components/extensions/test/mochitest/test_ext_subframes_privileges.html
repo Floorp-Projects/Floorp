@@ -12,6 +12,7 @@
 
 <script type="text/javascript">
 "use strict";
+/* eslint-disable mozilla/balanced-listeners */
 
 add_task(function* test_webext_tab_subframe_privileges() {
   function background() {
@@ -196,6 +197,44 @@ add_task(function* test_webext_contentscript_iframe_subframe_privileges() {
   yield extension.unload();
 });
 
+add_task(function* test_webext_background_remote_subframe_privileges() {
+  function backgroundSubframeScript() {
+    window.addEventListener("message", evt => {
+      browser.test.assertEq("http://mochi.test:8888", evt.origin, "postmessage origin ok");
+      browser.test.assertFalse(evt.data.tabs, "remote frame cannot access webextension APIs");
+      browser.test.assertEq("cookie=monster", evt.data.cookie, "cookies yum yum");
+      browser.test.notifyPass("webext-background-subframe-privileges");
+    }, {once: true});
+    browser.cookies.set({url: "http://mochi.test:8888", name: "cookie", "value": "monster"});
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: ["cookies", "*://mochi.test/*", "tabs"],
+      background: {
+        page: "background.html",
+      },
+    },
+    files: {
+      "background.html": `<!DOCTYPE>
+         <head>
+           <meta charset="utf-8">
+           <script src="background-subframe.js"><\/script>
+         </head>
+         <body>
+           <iframe src='${SimpleTest.getTestFileURL("file_remote_frame.html")}'></iframe>
+         </body>
+       </html>`,
+      "background-subframe.js": backgroundSubframeScript,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  yield extension.startup();
+
+  yield extension.awaitFinish("webext-background-subframe-privileges");
+  yield extension.unload();
+});
 </script>
 
 </body>

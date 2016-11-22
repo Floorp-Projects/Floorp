@@ -3,6 +3,8 @@ import mozdevice
 import logging
 import unittest
 
+import mozunit
+
 
 class PullTest(unittest.TestCase):
 
@@ -44,4 +46,4 @@ class PullTest(unittest.TestCase):
         self.assertTrue(exceptionThrown)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

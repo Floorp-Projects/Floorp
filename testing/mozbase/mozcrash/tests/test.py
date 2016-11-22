@@ -12,6 +12,9 @@ import shutil
 import urlparse
 import zipfile
 import StringIO
+
+import mozunit
+
 import mozcrash
 import mozhttpd
 import mozlog.unstructured as mozlog
@@ -238,4 +241,4 @@ class TestJavaException(unittest.TestCase):
         self.assert_(not mozcrash.check_for_java_exception(passable_log, quiet=True))
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

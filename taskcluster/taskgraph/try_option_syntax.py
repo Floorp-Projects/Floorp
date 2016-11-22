@@ -524,7 +524,8 @@ class TryOptionSyntax(object):
             return True
 
         if attr('kind') in ('desktop-test', 'android-test'):
-            return match_test(self.unittests, 'unittest_try_name')
+            return match_test(self.unittests, 'unittest_try_name') \
+                 or match_test(self.talos, 'talos_try_name')
         elif attr('kind') in JOB_KINDS:
             # This will add 'job' tasks to the target set even if no try syntax was specified.
             if not self.jobs:
@@ -554,6 +555,7 @@ class TryOptionSyntax(object):
             "build_types: " + ", ".join(self.build_types),
             "platforms: " + none_for_all(self.platforms),
             "unittests: " + none_for_all(self.unittests),
+            "talos: " + none_for_all(self.talos),
             "jobs: " + none_for_all(self.jobs),
             "trigger_tests: " + str(self.trigger_tests),
             "interactive: " + str(self.interactive),

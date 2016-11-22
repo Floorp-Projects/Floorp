@@ -19,6 +19,7 @@ Test GripArray rep
 window.onload = Task.async(function* () {
   let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
   let { GripArray } = browserRequire("devtools/client/shared/components/reps/grip-array");
+  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
 
   let componentUnderTest = GripArray;
   const maxLength = {
@@ -41,9 +42,7 @@ window.onload = Task.async(function* () {
 
     yield testOnMouseOver();
     yield testOnMouseOut();
-
-
-  } catch(e) {
+  } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
     SimpleTest.finish();
@@ -67,15 +66,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `[]`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: defaultOutput,
       }
     ];
@@ -95,15 +94,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `[3]`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: defaultOutput,
       }
     ];
@@ -123,15 +122,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `[${maxLength.short + 1}]`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: `Array [ ${Array(maxLength.short + 1).fill("\"test string\"").join(", ")} ]`,
       }
     ];
@@ -152,15 +151,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultShortOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `[${maxLength.long + 1}]`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultShortOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: defaultLongOutput
       }
     ];
@@ -180,15 +179,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `[1]`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: defaultOutput,
       }
     ];
@@ -208,15 +207,15 @@ window.onload = Task.async(function* () {
         expectedOutput: shortOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `[11]`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: shortOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: defaultOutput,
       }
     ];
@@ -235,15 +234,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `[3]`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: defaultOutput,
       }
     ];
@@ -262,15 +261,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `[3]`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: defaultOutput,
       }
     ];
@@ -294,15 +293,15 @@ window.onload = Task.async(function* () {
         expectedOutput: defaultOutput,
       },
       {
-        mode: "tiny",
+        mode: MODE.TINY,
         expectedOutput: `[5]`,
       },
       {
-        mode: "short",
+        mode: MODE.SHORT,
         expectedOutput: defaultOutput,
       },
       {
-        mode: "long",
+        mode: MODE.LONG,
         expectedOutput: longOutput,
       }
     ];

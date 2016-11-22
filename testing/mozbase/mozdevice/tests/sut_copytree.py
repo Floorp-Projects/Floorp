@@ -8,6 +8,9 @@
 import mozdevice
 import logging
 import unittest
+
+import mozunit
+
 from sut import MockAgent
 
 
@@ -64,4 +67,4 @@ class CopyTreeTest(unittest.TestCase):
         self.assertTrue(d.fileExists('/mnt/sdcard/tests/foo2/bar'))
 
 if __name__ == "__main__":
-    unittest.main()
+    mozunit.main()

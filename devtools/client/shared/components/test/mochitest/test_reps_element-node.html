@@ -21,6 +21,7 @@ Test Element node rep
 window.onload = Task.async(function* () {
   let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
   let { ElementNode } = browserRequire("devtools/client/shared/components/reps/element-node");
+  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
 
   try {
     yield testBodyNode();
@@ -51,7 +52,7 @@ window.onload = Task.async(function* () {
       "Element node rep has expected text content for body node");
 
     const tinyRenderedComponent = renderComponent(
-      ElementNode.rep, { object: stub, mode: "tiny" });
+      ElementNode.rep, { object: stub, mode: MODE.TINY });
     is(tinyRenderedComponent.textContent, `body#body-id.body-class`,
       "Element node rep has expected text content for body node in tiny mode");
   }
@@ -67,7 +68,7 @@ window.onload = Task.async(function* () {
       "Element node rep has expected text content for document element node");
 
     const tinyRenderedComponent = renderComponent(
-      ElementNode.rep, { object: stub, mode: "tiny" });
+      ElementNode.rep, { object: stub, mode: MODE.TINY });
     is(tinyRenderedComponent.textContent, `html`,
       "Element node rep has expected text content for document element in tiny mode");
   }
@@ -85,7 +86,7 @@ window.onload = Task.async(function* () {
       "Element node rep has expected text content for element node");
 
     const tinyRenderedComponent = renderComponent(
-      ElementNode.rep, { object: stub, mode: "tiny" });
+      ElementNode.rep, { object: stub, mode: MODE.TINY });
     is(tinyRenderedComponent.textContent,
       `input#newtab-customize-button.bar.baz`,
       "Element node rep has expected text content for element node in tiny mode");
@@ -103,7 +104,7 @@ window.onload = Task.async(function* () {
       "Element node rep output element node with the class trailing spaces");
 
     const tinyRenderedComponent = renderComponent(
-      ElementNode.rep, { object: stub, mode: "tiny" });
+      ElementNode.rep, { object: stub, mode: MODE.TINY });
     is(tinyRenderedComponent.textContent,
       `body#nightly-whatsnew.html-ltr`,
       "Element node rep does not show leading nor trailing spaces " +
@@ -118,7 +119,7 @@ window.onload = Task.async(function* () {
       "Element node rep has expected text content for element node without attributes");
 
     const tinyRenderedComponent = renderComponent(
-      ElementNode.rep, { object: stub, mode: "tiny" });
+      ElementNode.rep, { object: stub, mode: MODE.TINY });
     is(tinyRenderedComponent.textContent, `p`,
       "Element node rep has expected text content for element node without attributes");
   }
@@ -133,7 +134,7 @@ window.onload = Task.async(function* () {
       "Element node rep has expected text content for node with lots of attributes");
 
     const tinyRenderedComponent = renderComponent(
-      ElementNode.rep, { object: stub, mode: "tiny" });
+      ElementNode.rep, { object: stub, mode: MODE.TINY });
     is(tinyRenderedComponent.textContent, `p#lots-of-attributes`,
       "Element node rep has expected text content for node in tiny mode");
   }
@@ -151,7 +152,7 @@ window.onload = Task.async(function* () {
       "Element node rep has expected text content for SVG element node");
 
     const tinyRenderedComponent = renderComponent(
-      ElementNode.rep, { object: stub, mode: "tiny" });
+      ElementNode.rep, { object: stub, mode: MODE.TINY });
     is(tinyRenderedComponent.textContent, `clipPath#clip.svg-element`,
       "Element node rep has expected text content for SVG element node in tiny mode");
   }
@@ -169,7 +170,7 @@ window.onload = Task.async(function* () {
       "Element node rep has expected text content for XHTML SVG element node");
 
     const tinyRenderedComponent = renderComponent(
-      ElementNode.rep, { object: stub, mode: "tiny" });
+      ElementNode.rep, { object: stub, mode: MODE.TINY });
     is(tinyRenderedComponent.textContent, `svg:circle.svg-element`,
       "Element node rep has expected text content for XHTML SVG element in tiny mode");
   }

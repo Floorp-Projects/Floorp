@@ -7,11 +7,10 @@
 
 // Make this available to both AMD and CJS environments
 define(function (require, exports, module) {
-  // ReactJS
+  // Dependencies
   const React = require("devtools/client/shared/vendor/react");
   const { isGrip, cropString, cropMultipleLines } = require("./rep-utils");
-
-  // Utils
+  const { MODE } = require("./constants");
   const nodeConstants = require("devtools/shared/dom-node-constants");
 
   // Shortcuts
@@ -25,18 +24,20 @@ define(function (require, exports, module) {
 
     propTypes: {
       object: React.PropTypes.object.isRequired,
-      mode: React.PropTypes.string,
+      // @TODO Change this to Object.values once it's supported in Node's version of V8
+      mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
     },
 
     render: function () {
-      let {object} = this.props;
-
-      let mode = this.props.mode || "short";
+      let {
+        object,
+        mode = MODE.SHORT
+      } = this.props;
 
       let {textContent} = object.preview;
-      if (mode === "tiny") {
+      if (mode === MODE.TINY) {
         textContent = cropMultipleLines(textContent, 30);
-      } else if (mode === "short") {
+      } else if (mode === MODE.SHORT) {
         textContent = cropString(textContent, 50);
       }
 

@@ -40,6 +40,7 @@ buildscript {
         }
         // Provided in tree.
         classpath 'com.jakewharton.sdkmanager:gradle-plugin:1.5.0-SNAPSHOT'
+        classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.6.1'
     }
 }
 

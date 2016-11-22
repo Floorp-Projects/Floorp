@@ -15,6 +15,9 @@ from concurrent.futures import (
     thread,
 )
 
+import mozinfo
+from manifestparser import TestManifest
+
 from mozbuild.base import (
     MachCommandBase,
 )
@@ -65,7 +68,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument('tests', nargs='*',
         metavar='TEST',
         help=('Tests to run. Each test can be a single file or a directory. '
-              'Default test resolution relies on PYTHON_UNIT_TESTS.'))
+              'Default test resolution relies on PYTHON_UNITTEST_MANIFESTS.'))
     def python_test(self,
                     tests=[],
                     test_objects=None,
@@ -118,15 +121,19 @@ class MachCommands(MachCommandBase):
                     test_objects = resolver.resolve_tests(paths=tests,
                                                           flavor='python')
                 else:
-                    # Otherwise just run everything in PYTHON_UNIT_TESTS
+                    # Otherwise just run everything in PYTHON_UNITTEST_MANIFESTS
                     test_objects = resolver.resolve_tests(flavor='python')
 
         if not test_objects:
             message = 'TEST-UNEXPECTED-FAIL | No tests collected'
             if not path_only:
-                message += ' (Not in PYTHON_UNIT_TESTS? Try --path-only?)'
+                message += ' (Not in PYTHON_UNITTEST_MANIFESTS? Try --path-only?)'
             self.log(logging.WARN, 'python-test', {}, message)
             return 1
+
+        mp = TestManifest()
+        mp.tests.extend(test_objects)
+        tests = mp.active_tests(disabled=False, **mozinfo.info)
 
         self.jobs = jobs
         self.terminate = False
@@ -135,7 +142,7 @@ class MachCommands(MachCommandBase):
         return_code = 0
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
             futures = [executor.submit(self._run_python_test, test['path'])
-                       for test in test_objects]
+                       for test in tests]
 
             try:
                 for future in as_completed(futures):

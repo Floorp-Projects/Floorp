@@ -6564,6 +6564,12 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
         NS_NOTREACHED("Shouldn't happen");
         return false;
       }
+      if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
+          aContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
+        // Comments and processing instructions never have frames, so we
+        // should not try to generate style contexts for them.
+        return false;
+      }
       // XXXbz when this code is killed, the state argument to
       // ResolveStyleContext can be made non-optional.
       RefPtr<nsStyleContext> styleContext =
