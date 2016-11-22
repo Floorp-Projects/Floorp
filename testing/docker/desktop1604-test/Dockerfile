@@ -53,7 +53,6 @@ ENV           LC_ALL        en_US.UTF-8
 # Add utilities and configuration
 COPY           dot-files/config              /home/worker/.config
 COPY           dot-files/pulse               /home/worker/.pulse
-COPY           bin                           /home/worker/bin
 RUN            chmod +x bin/*
 # TODO: remove this when buildbot is gone
 COPY           buildprops.json               /home/worker/buildprops.json
