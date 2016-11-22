@@ -306,7 +306,6 @@ subsExist: function(urls, cb)
 urlExistInMultipleTables: function(data, cb)
 {
   this.checkTables(data["url"], data["tables"], cb);
-  cb();
 }
 
 };
