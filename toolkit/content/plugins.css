@@ -80,3 +80,9 @@ th.type, th.suff {
 th.desc {
   width: 50%;
 }
+
+.notice {
+  background: -moz-cellhighlight;
+  border: 1px solid ThreeDShadow;
+  padding: 10px;
+}
