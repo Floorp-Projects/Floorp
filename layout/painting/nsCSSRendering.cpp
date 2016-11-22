@@ -1906,6 +1906,19 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
                                   bool aWillPaintBorder, nscoord aAppUnitsPerPixel,
                                   /* out */ ImageLayerClipState* aClipState)
 {
+  StyleGeometryBox backgroundClip = aLayer.mClip;
+
+  if (backgroundClip == StyleGeometryBox::NoClip) {
+    aClipState->mBGClipArea = aCallerDirtyRect;
+    aClipState->mHasAdditionalBGClipArea = false;
+    aClipState->mCustomClip = false;
+
+    SetupDirtyRects(aClipState->mBGClipArea, aCallerDirtyRect,
+                    aAppUnitsPerPixel, &aClipState->mDirtyRect,
+                    &aClipState->mDirtyRectGfx);
+    return;
+  }
+
   // Compute the outermost boundary of the area that might be painted.
   // Same coordinate space as aBorderArea.
   Sides skipSides = aForFrame->GetSkipSides();
@@ -1914,15 +1927,13 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
 
   bool haveRoundedCorners = GetRadii(aForFrame, aBorder, aBorderArea,
                                      clipBorderArea, aClipState->mRadii);
-  StyleGeometryBox backgroundClip = aLayer.mClip;
 
   // XXX TODO: bug 1303623 only implements the parser of fill-box|stroke-box|view-box|no-clip.
   // So we need to fallback to default value when rendering. We should remove this
   // in bug 1311270.
   if (backgroundClip == StyleGeometryBox::Fill ||
       backgroundClip == StyleGeometryBox::Stroke ||
-      backgroundClip == StyleGeometryBox::View ||
-      backgroundClip == StyleGeometryBox::NoClip) {
+      backgroundClip == StyleGeometryBox::View) {
     backgroundClip = StyleGeometryBox::Border;
   }
 
