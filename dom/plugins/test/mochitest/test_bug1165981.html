@@ -11,7 +11,6 @@
 
       SimpleTest.waitForExplicitFinish();
       ok(SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Shockwave Flash"), "Should find allowed test flash plugin");
-      ok(SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Silverlight Test Plug-in"), "Should find allowed test silverlight plugin");
       ok(!SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Third Test Plug-in"), "Should not find disallowed plugin");
 
       function findPlugin(pluginName) {
@@ -45,31 +44,23 @@
 
       function run() {
         createNode("plugin-flash", "application/x-shockwave-flash-test");
-        createNode("plugin-silverlight", "application/x-silverlight-test");
         createNode("disallowedPlugin", "application/x-third-test");
         var pluginElement = document.getElementById("plugin-flash");
-        is(pluginElement.identifierToStringTest("foo"), "foo", "Should be able to call a function provided by the plugin");
-
-        pluginElement = document.getElementById("plugin-silverlight");
         is(pluginElement.identifierToStringTest("foo"), "foo", "Should be able to call a function provided by the plugin");
 
         pluginElement = document.getElementById("disallowedPlugin");
         is(typeof pluginElement.identifierToStringTest, "undefined", "Should NOT be able to call a function on a disallowed plugin");
 
         ok(navigator.plugins["Shockwave Flash"], "Should have queried a plugin named 'Shockwave Flash'");
-        ok(navigator.plugins["Silverlight Test Plug-in"], "Should have queried a plugin named 'Silverlight Test Plug-in'");
         ok(!navigator.plugins["Third Test Plug-in"], "Should NOT have queried a disallowed plugin named 'Third Test Plug-in'");
 
         ok(findPlugin("Shockwave Flash"), "Should have found a plugin named 'Shockwave Flash'");
-        ok(findPlugin("Silverlight Test Plug-in"), "Should have found a plugin named 'Silverlight Test Plug-in'");
         ok(!findPlugin("Third Test Plug-in"), "Should NOT found a disallowed plugin named 'Third Test Plug-in'");
 
         ok(navigator.mimeTypes["application/x-shockwave-flash-test"], "Should have queried a MIME type named 'application/x-shockwave-flash-test'");
-        ok(navigator.mimeTypes["application/x-silverlight-test"], "Should have queried a MIME type named 'application/x-silverlight-test'");
         ok(!navigator.mimeTypes["application/x-third-test"], "Should NOT have queried a disallowed type named 'application/x-third-test'");
 
         ok(findMimeType("application/x-shockwave-flash-test"), "Should have found a MIME type named 'application/x-shockwave-flash-test'");
-        ok(findMimeType("application/x-silverlight-test"), "Should have found a MIME type named 'application/x-silverlight-test'");
         ok(!findMimeType("application/x-third-test"), "Should NOT have found a disallowed MIME type named 'application/x-third-test'");
 
         SimpleTest.finish();
