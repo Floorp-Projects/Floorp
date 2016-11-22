@@ -633,6 +633,7 @@ protected:
   virtual void DestroyCompositor();
   void DestroyLayerManager();
   void ReleaseContentController();
+  void RevokeTransactionIdAllocator();
 
   void FreeShutdownObserver();
 
