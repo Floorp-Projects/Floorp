@@ -1,4 +1,4 @@
-protocol multimanNonexistentManagers {
+protocol multimanNonexistentMgrs {
     manager Starsky or Hutch;
 
 child:
