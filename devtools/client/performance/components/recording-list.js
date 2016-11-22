@@ -3,12 +3,17 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {DOM, createClass} = require("devtools/client/shared/vendor/react");
+const {DOM, createClass, PropTypes} = require("devtools/client/shared/vendor/react");
 const {L10N} = require("devtools/client/performance/modules/global");
 const {ul, div} = DOM;
 
 module.exports = createClass({
   displayName: "Recording List",
+
+  propTypes: {
+    items: PropTypes.arrayOf(PropTypes.object).isRequired,
+    itemComponent: PropTypes.func.isRequired
+  },
 
   render() {
     const {

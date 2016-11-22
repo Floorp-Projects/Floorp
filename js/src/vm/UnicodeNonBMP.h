@@ -10,6 +10,16 @@
 #ifndef vm_UnicodeNonBMP_h
 #define vm_UnicodeNonBMP_h
 
+// |macro| receives the following arguments
+//   macro(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF)
+//     FROM:       code point where the range starts
+//     TO:         code point where the range ends
+//     LEAD:       common lead surrogate of FROM and TO
+//     TRAIL_FROM: trail surrogate of FROM
+//     TRAIL_FROM: trail surrogate of TO
+//     DIFF:       the difference between the code point in the range and
+//                 converted code point
+
 #define FOR_EACH_NON_BMP_LOWERCASE(macro) \
     macro(0x10400, 0x10427, 0xd801, 0xdc00, 0xdc27, 40) \
     macro(0x104b0, 0x104d3, 0xd801, 0xdcb0, 0xdcd3, 40) \

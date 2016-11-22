@@ -5865,33 +5865,39 @@
     "description": "The size (MB) of the ping data submitted to Telemetry exceeding the maximum size"
   },
   "TELEMETRY_DISCARDED_CONTENT_PINGS_COUNT": {
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "description": "Count of discarded content payloads."
   },
   "TELEMETRY_COMPRESS": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 3000,
     "n_buckets": 10,
     "description": "Time taken to compress telemetry object (ms)"
   },
-  "TELEMETRY_PING": {
+  "TELEMETRY_SEND_SUCCESS" : {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1318284],
     "expires_in_version": "never",
     "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "Time taken to submit telemetry info (ms)"
+    "high": 120000,
+    "n_buckets": 20,
+    "description": "Time needed (in ms) for a successful send of a Telemetry ping to the servers and getting a reply back."
   },
-  "TELEMETRY_SEND" : {
+  "TELEMETRY_SEND_FAILURE" : {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1318284],
     "expires_in_version": "never",
     "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "Time to send the compressed string to the Telemetry servers and get a reply back (ms)"
+    "high": 120000,
+    "n_buckets": 20,
+    "description": "Time needed (in ms) for a failed send of a Telemetry ping to the servers and getting a reply back."
   },
   "TELEMETRY_STRINGIFY" : {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 3000,
@@ -5899,6 +5905,7 @@
     "description": "Time to stringify telemetry object (ms)"
   },
   "TELEMETRY_SUCCESS": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Successful telemetry submission"
@@ -5976,11 +5983,13 @@
     "description": "Count of TelemetrySession triggering a daily ping."
   },
   "TELEMETRY_TEST_FLAG": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "flag",
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_COUNT": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "description": "a testing histogram; not meant to be touched"
@@ -5993,6 +6002,7 @@
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_COUNT_INIT_NO_RECORD": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "description": "a testing histogram; not meant to be touched - initially not recording"
@@ -6024,18 +6034,21 @@
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
     "description": "a testing histogram; not meant to be touched - initially not recording"
   },
   "TELEMETRY_TEST_KEYED_FLAG": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "flag",
     "keyed": true,
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_KEYED_COUNT": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
@@ -6050,18 +6063,21 @@
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_RELEASE_OPTOUT": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "flag",
     "releaseChannelCollection": "opt-out",
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_RELEASE_OPTIN": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "flag",
     "releaseChannelCollection": "opt-in",
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_KEYED_RELEASE_OPTIN": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "flag",
     "keyed": true,
@@ -6069,6 +6085,7 @@
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_KEYED_RELEASE_OPTOUT": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "flag",
     "keyed": true,
@@ -6100,6 +6117,12 @@
     "expires_in_version" : "never",
     "kind": "boolean",
     "bug_numbers": [1288745],
+    "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_EXPIRED": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "4.0a1",
+    "kind": "flag",
     "description": "a testing histogram; not meant to be touched"
   },
   "STARTUP_CRASH_DETECTED": {
@@ -8553,11 +8576,6 @@
     "kind": "enumerated",
     "n_values": 10,
     "description": "Presence of of the Server Authenticaton EKU in accepted SSL server certificates (0=No EKU, 1=EKU present and has id_kp_serverAuth, 2=EKU present and has id_kp_serverAuth as well as some other EKU, 3=EKU present but does not contain id_kp_serverAuth)"
-  },
-  "TELEMETRY_TEST_EXPIRED": {
-    "expires_in_version": "4.0a1",
-    "kind": "flag",
-    "description": "a testing histogram; not meant to be touched"
   },
   "TLS_ERROR_REPORT_UI": {
     "expires_in_version": "never",

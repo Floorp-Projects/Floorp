@@ -22,6 +22,7 @@
 #include "jscntxt.h"
 #include "jsobj.h"
 
+#include "builtin/IntlTimeZoneData.h"
 #if ENABLE_INTL_API
 #include "unicode/ucal.h"
 #include "unicode/ucol.h"
@@ -768,42 +769,54 @@ static const JSFunctionSpec collator_methods[] = {
 };
 
 /**
- * Collator constructor.
- * Spec: ECMAScript Internationalization API Specification, 10.1
+ * 10.1.2 Intl.Collator([ locales [, options]])
+ *
+ * ES2017 Intl draft rev 94045d234762ad107a3d09bb6f7381a65f1a2f9b
  */
 static bool
 Collator(JSContext* cx, const CallArgs& args, bool construct)
 {
     RootedObject obj(cx);
 
+    // We're following ECMA-402 1st Edition when Collator is called because of
+    // backward compatibility issues.
+    // See https://github.com/tc39/ecma402/issues/57
     if (!construct) {
-        // 10.1.2.1 step 3
+        // ES Intl 1st ed., 10.1.2.1 step 3
         JSObject* intl = cx->global()->getOrCreateIntlObject(cx);
         if (!intl)
             return false;
         RootedValue self(cx, args.thisv());
         if (!self.isUndefined() && (!self.isObject() || self.toObject() != *intl)) {
-            // 10.1.2.1 step 4
+            // ES Intl 1st ed., 10.1.2.1 step 4
             obj = ToObject(cx, self);
             if (!obj)
                 return false;
 
-            // 10.1.2.1 step 5
+            // ES Intl 1st ed., 10.1.2.1 step 5
             bool extensible;
             if (!IsExtensible(cx, obj, &extensible))
                 return false;
             if (!extensible)
                 return Throw(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE);
         } else {
-            // 10.1.2.1 step 3.a
+            // ES Intl 1st ed., 10.1.2.1 step 3.a
             construct = true;
         }
     }
+
     if (construct) {
-        // 10.1.3.1 paragraph 2
-        RootedObject proto(cx, cx->global()->getOrCreateCollatorPrototype(cx));
-        if (!proto)
+        // Steps 2-5 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
+        RootedObject proto(cx);
+        if (args.isConstructing() && !GetPrototypeFromCallableConstructor(cx, args, &proto))
             return false;
+
+        if (!proto) {
+            proto = cx->global()->getOrCreateCollatorPrototype(cx);
+            if (!proto)
+                return false;
+        }
+
         obj = NewObjectWithGivenProto(cx, &CollatorClass, proto);
         if (!obj)
             return false;
@@ -811,15 +824,13 @@ Collator(JSContext* cx, const CallArgs& args, bool construct)
         obj->as<NativeObject>().setReservedSlot(UCOLLATOR_SLOT, PrivateValue(nullptr));
     }
 
-    // 10.1.2.1 steps 1 and 2; 10.1.3.1 steps 1 and 2
     RootedValue locales(cx, args.length() > 0 ? args[0] : UndefinedValue());
     RootedValue options(cx, args.length() > 1 ? args[1] : UndefinedValue());
 
-    // 10.1.2.1 step 6; 10.1.3.1 step 3
+    // Step 6.
     if (!IntlInitialize(cx, obj, cx->names().InitializeCollator, locales, options))
         return false;
 
-    // 10.1.2.1 steps 3.a and 7
     args.rval().setObject(*obj);
     return true;
 }
@@ -836,6 +847,7 @@ js::intl_Collator(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(!args.isConstructing());
     // intl_Collator is an intrinsic for self-hosted JavaScript, so it cannot
     // be used with "new", but it still has to be treated as a constructor.
     return Collator(cx, args, true);
@@ -1260,42 +1272,54 @@ static const JSFunctionSpec numberFormat_methods[] = {
 };
 
 /**
- * NumberFormat constructor.
- * Spec: ECMAScript Internationalization API Specification, 11.1
+ * 11.2.1 Intl.NumberFormat([ locales [, options]])
+ *
+ * ES2017 Intl draft rev 94045d234762ad107a3d09bb6f7381a65f1a2f9b
  */
 static bool
 NumberFormat(JSContext* cx, const CallArgs& args, bool construct)
 {
     RootedObject obj(cx);
 
+    // We're following ECMA-402 1st Edition when NumberFormat is called
+    // because of backward compatibility issues.
+    // See https://github.com/tc39/ecma402/issues/57
     if (!construct) {
-        // 11.1.2.1 step 3
+        // ES Intl 1st ed., 11.1.2.1 step 3
         JSObject* intl = cx->global()->getOrCreateIntlObject(cx);
         if (!intl)
             return false;
         RootedValue self(cx, args.thisv());
         if (!self.isUndefined() && (!self.isObject() || self.toObject() != *intl)) {
-            // 11.1.2.1 step 4
+            // ES Intl 1st ed., 11.1.2.1 step 4
             obj = ToObject(cx, self);
             if (!obj)
                 return false;
 
-            // 11.1.2.1 step 5
+            // ES Intl 1st ed., 11.1.2.1 step 5
             bool extensible;
             if (!IsExtensible(cx, obj, &extensible))
                 return false;
             if (!extensible)
                 return Throw(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE);
         } else {
-            // 11.1.2.1 step 3.a
+            // ES Intl 1st ed., 11.1.2.1 step 3.a
             construct = true;
         }
     }
+
     if (construct) {
-        // 11.1.3.1 paragraph 2
-        RootedObject proto(cx, cx->global()->getOrCreateNumberFormatPrototype(cx));
-        if (!proto)
+        // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
+        RootedObject proto(cx);
+        if (args.isConstructing() && !GetPrototypeFromCallableConstructor(cx, args, &proto))
             return false;
+
+        if (!proto) {
+            proto = cx->global()->getOrCreateNumberFormatPrototype(cx);
+            if (!proto)
+                return false;
+        }
+
         obj = NewObjectWithGivenProto(cx, &NumberFormatClass, proto);
         if (!obj)
             return false;
@@ -1303,15 +1327,13 @@ NumberFormat(JSContext* cx, const CallArgs& args, bool construct)
         obj->as<NativeObject>().setReservedSlot(UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
     }
 
-    // 11.1.2.1 steps 1 and 2; 11.1.3.1 steps 1 and 2
     RootedValue locales(cx, args.length() > 0 ? args[0] : UndefinedValue());
     RootedValue options(cx, args.length() > 1 ? args[1] : UndefinedValue());
 
-    // 11.1.2.1 step 6; 11.1.3.1 step 3
+    // Step 3.
     if (!IntlInitialize(cx, obj, cx->names().InitializeNumberFormat, locales, options))
         return false;
 
-    // 11.1.2.1 steps 3.a and 7
     args.rval().setObject(*obj);
     return true;
 }
@@ -1328,6 +1350,7 @@ js::intl_NumberFormat(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(!args.isConstructing());
     // intl_NumberFormat is an intrinsic for self-hosted JavaScript, so it
     // cannot be used with "new", but it still has to be treated as a
     // constructor.
@@ -1728,42 +1751,54 @@ static const JSFunctionSpec dateTimeFormat_methods[] = {
 };
 
 /**
- * DateTimeFormat constructor.
- * Spec: ECMAScript Internationalization API Specification, 12.1
+ * 12.2.1 Intl.DateTimeFormat([ locales [, options]])
+ *
+ * ES2017 Intl draft rev 94045d234762ad107a3d09bb6f7381a65f1a2f9b
  */
 static bool
 DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct)
 {
     RootedObject obj(cx);
 
+    // We're following ECMA-402 1st Edition when DateTimeFormat is called
+    // because of backward compatibility issues.
+    // See https://github.com/tc39/ecma402/issues/57
     if (!construct) {
-        // 12.1.2.1 step 3
+        // ES Intl 1st ed., 12.1.2.1 step 3
         JSObject* intl = cx->global()->getOrCreateIntlObject(cx);
         if (!intl)
             return false;
         RootedValue self(cx, args.thisv());
         if (!self.isUndefined() && (!self.isObject() || self.toObject() != *intl)) {
-            // 12.1.2.1 step 4
+            // ES Intl 1st ed., 12.1.2.1 step 4
             obj = ToObject(cx, self);
             if (!obj)
                 return false;
 
-            // 12.1.2.1 step 5
+            // ES Intl 1st ed., 12.1.2.1 step 5
             bool extensible;
             if (!IsExtensible(cx, obj, &extensible))
                 return false;
             if (!extensible)
                 return Throw(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE);
         } else {
-            // 12.1.2.1 step 3.a
+            // ES Intl 1st ed., 12.1.2.1 step 3.a
             construct = true;
         }
     }
+
     if (construct) {
-        // 12.1.3.1 paragraph 2
-        RootedObject proto(cx, cx->global()->getOrCreateDateTimeFormatPrototype(cx));
-        if (!proto)
+        // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
+        RootedObject proto(cx);
+        if (args.isConstructing() && !GetPrototypeFromCallableConstructor(cx, args, &proto))
             return false;
+
+        if (!proto) {
+            proto = cx->global()->getOrCreateDateTimeFormatPrototype(cx);
+            if (!proto)
+                return false;
+        }
+
         obj = NewObjectWithGivenProto(cx, &DateTimeFormatClass, proto);
         if (!obj)
             return false;
@@ -1771,15 +1806,13 @@ DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct)
         obj->as<NativeObject>().setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(nullptr));
     }
 
-    // 12.1.2.1 steps 1 and 2; 12.1.3.1 steps 1 and 2
     RootedValue locales(cx, args.length() > 0 ? args[0] : UndefinedValue());
     RootedValue options(cx, args.length() > 1 ? args[1] : UndefinedValue());
 
-    // 12.1.2.1 step 6; 12.1.3.1 step 3
+    // Step 3.
     if (!IntlInitialize(cx, obj, cx->names().InitializeDateTimeFormat, locales, options))
         return false;
 
-    // 12.1.2.1 steps 3.a and 7
     args.rval().setObject(*obj);
     return true;
 }
@@ -1796,6 +1829,7 @@ js::intl_DateTimeFormat(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(!args.isConstructing());
     // intl_DateTimeFormat is an intrinsic for self-hosted JavaScript, so it
     // cannot be used with "new", but it still has to be treated as a
     // constructor.
@@ -1977,34 +2011,99 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/**
- * Create a time zone map key. Time zones are keyed by their upper case name.
- */
-static UniqueChars
-TimeZoneKey(JSContext* cx, const char* timeZone, size_t size)
+template<typename Char>
+static constexpr Char
+ToUpperASCII(Char c)
 {
-    auto timeZoneKey = cx->make_pod_array<char>(size);
-    if (!timeZoneKey)
-        return nullptr;
-    PodCopy(timeZoneKey.get(), timeZone, size);
+    return ('a' <= c && c <= 'z')
+           ? (c & ~0x20)
+           : c;
+}
 
-    // Convert time zone name to ASCII upper case.
-    char* chars = timeZoneKey.get();
-    for (unsigned i = 0; i < size; i++) {
-        char c = chars[i];
-        if ('a' <= c && c <= 'z')
-            chars[i] = c & ~0x20;
-        MOZ_ASSERT(unicode::ToUpperCase(c) == chars[i]);
+static_assert(ToUpperASCII('a') == 'A', "verifying 'a' uppercases correctly");
+static_assert(ToUpperASCII('m') == 'M', "verifying 'm' uppercases correctly");
+static_assert(ToUpperASCII('z') == 'Z', "verifying 'z' uppercases correctly");
+static_assert(ToUpperASCII(u'a') == u'A', "verifying u'a' uppercases correctly");
+static_assert(ToUpperASCII(u'k') == u'K', "verifying u'k' uppercases correctly");
+static_assert(ToUpperASCII(u'z') == u'Z', "verifying u'z' uppercases correctly");
+
+template<typename Char1, typename Char2>
+static bool
+EqualCharsIgnoreCaseASCII(const Char1* s1, const Char2* s2, size_t len)
+{
+    for (const Char1* s1end = s1 + len; s1 < s1end; s1++, s2++) {
+        if (ToUpperASCII(*s1) != ToUpperASCII(*s2))
+            return false;
     }
+    return true;
+}
 
-    return timeZoneKey;
+template<typename Char>
+static js::HashNumber
+HashStringIgnoreCaseASCII(const Char* s, size_t length)
+{
+    uint32_t hash = 0;
+    for (size_t i = 0; i < length; i++)
+        hash = mozilla::AddToHash(hash, ToUpperASCII(s[i]));
+    return hash;
+}
+
+js::SharedIntlData::TimeZoneHasher::Lookup::Lookup(JSFlatString* timeZone)
+  : isLatin1(timeZone->hasLatin1Chars()), length(timeZone->length())
+{
+    if (isLatin1) {
+        latin1Chars = timeZone->latin1Chars(nogc);
+        hash = HashStringIgnoreCaseASCII(latin1Chars, length);
+    } else {
+        twoByteChars = timeZone->twoByteChars(nogc);
+        hash = HashStringIgnoreCaseASCII(twoByteChars, length);
+    }
 }
 
 bool
-js::intl_availableTimeZones(JSContext* cx, unsigned argc, Value* vp)
+js::SharedIntlData::TimeZoneHasher::match(TimeZoneName key, const Lookup& lookup)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 0);
+    if (key->length() != lookup.length)
+        return false;
+
+    // Compare time zone names ignoring ASCII case differences.
+    if (key->hasLatin1Chars()) {
+        const Latin1Char* keyChars = key->latin1Chars(lookup.nogc);
+        if (lookup.isLatin1)
+            return EqualCharsIgnoreCaseASCII(keyChars, lookup.latin1Chars, lookup.length);
+        return EqualCharsIgnoreCaseASCII(keyChars, lookup.twoByteChars, lookup.length);
+    }
+
+    const char16_t* keyChars = key->twoByteChars(lookup.nogc);
+    if (lookup.isLatin1)
+        return EqualCharsIgnoreCaseASCII(lookup.latin1Chars, keyChars, lookup.length);
+    return EqualCharsIgnoreCaseASCII(keyChars, lookup.twoByteChars, lookup.length);
+}
+
+static bool
+IsLegacyICUTimeZone(const char* timeZone)
+{
+    for (const auto& legacyTimeZone : timezone::legacyICUTimeZones) {
+        if (equal(timeZone, legacyTimeZone))
+            return true;
+    }
+    return false;
+}
+
+bool
+js::SharedIntlData::ensureTimeZones(JSContext* cx)
+{
+    if (timeZoneDataInitialized)
+        return true;
+
+    // If initTimeZones() was called previously, but didn't complete due to
+    // OOM, clear all sets/maps and start from scratch.
+    if (availableTimeZones.initialized())
+        availableTimeZones.finish();
+    if (!availableTimeZones.init()) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
 
     UErrorCode status = U_ZERO_ERROR;
     UEnumeration* values = ucal_openTimeZones(&status);
@@ -2014,40 +2113,197 @@ js::intl_availableTimeZones(JSContext* cx, unsigned argc, Value* vp)
     }
     ScopedICUObject<UEnumeration, uenum_close> toClose(values);
 
-    RootedObject timeZones(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
-    if (!timeZones)
-        return false;
-    RootedString jsTimeZone(cx);
-    RootedValue element(cx);
+    RootedAtom timeZone(cx);
     while (true) {
         int32_t size;
-        const char* timeZone = uenum_next(values, &size, &status);
+        const char* rawTimeZone = uenum_next(values, &size, &status);
         if (U_FAILURE(status)) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
             return false;
         }
-        if (timeZone == nullptr)
+
+        if (rawTimeZone == nullptr)
             break;
 
+        // Skip legacy ICU time zone names.
+        if (IsLegacyICUTimeZone(rawTimeZone))
+            continue;
+
         MOZ_ASSERT(size >= 0);
-        UniqueChars timeZoneKey = TimeZoneKey(cx, timeZone, size_t(size));
-        if (!timeZoneKey)
+        timeZone = Atomize(cx, rawTimeZone, size_t(size));
+        if (!timeZone)
             return false;
 
-        RootedAtom atom(cx, Atomize(cx, timeZoneKey.get(), size_t(size)));
-        if (!atom)
-            return false;
+        TimeZoneHasher::Lookup lookup(timeZone);
+        TimeZoneSet::AddPtr p = availableTimeZones.lookupForAdd(lookup);
 
-        jsTimeZone = NewStringCopyN<CanGC>(cx, timeZone, size_t(size));
-        if (!jsTimeZone)
+        // ICU shouldn't report any duplicate time zone names, but if it does,
+        // just ignore the duplicate name.
+        if (!p && !availableTimeZones.add(p, timeZone)) {
+            ReportOutOfMemory(cx);
             return false;
-        element.setString(jsTimeZone);
-
-        if (!DefineProperty(cx, timeZones, atom->asPropertyName(), element))
-            return false;
+        }
     }
 
-    args.rval().setObject(*timeZones);
+    if (ianaZonesTreatedAsLinksByICU.initialized())
+        ianaZonesTreatedAsLinksByICU.finish();
+    if (!ianaZonesTreatedAsLinksByICU.init()) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    for (const char* rawTimeZone : timezone::ianaZonesTreatedAsLinksByICU) {
+        MOZ_ASSERT(rawTimeZone != nullptr);
+        timeZone = Atomize(cx, rawTimeZone, strlen(rawTimeZone));
+        if (!timeZone)
+            return false;
+
+        TimeZoneHasher::Lookup lookup(timeZone);
+        TimeZoneSet::AddPtr p = ianaZonesTreatedAsLinksByICU.lookupForAdd(lookup);
+        MOZ_ASSERT(!p, "Duplicate entry in timezone::ianaZonesTreatedAsLinksByICU");
+
+        if (!ianaZonesTreatedAsLinksByICU.add(p, timeZone)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+    }
+
+    if (ianaLinksCanonicalizedDifferentlyByICU.initialized())
+        ianaLinksCanonicalizedDifferentlyByICU.finish();
+    if (!ianaLinksCanonicalizedDifferentlyByICU.init()) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    RootedAtom linkName(cx);
+    RootedAtom& target = timeZone;
+    for (const auto& linkAndTarget : timezone::ianaLinksCanonicalizedDifferentlyByICU) {
+        const char* rawLinkName = linkAndTarget.link;
+        const char* rawTarget = linkAndTarget.target;
+
+        MOZ_ASSERT(rawLinkName != nullptr);
+        linkName = Atomize(cx, rawLinkName, strlen(rawLinkName));
+        if (!linkName)
+            return false;
+
+        MOZ_ASSERT(rawTarget != nullptr);
+        target = Atomize(cx, rawTarget, strlen(rawTarget));
+        if (!target)
+            return false;
+
+        TimeZoneHasher::Lookup lookup(linkName);
+        TimeZoneMap::AddPtr p = ianaLinksCanonicalizedDifferentlyByICU.lookupForAdd(lookup);
+        MOZ_ASSERT(!p, "Duplicate entry in timezone::ianaLinksCanonicalizedDifferentlyByICU");
+
+        if (!ianaLinksCanonicalizedDifferentlyByICU.add(p, linkName, target)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+    }
+
+    MOZ_ASSERT(!timeZoneDataInitialized, "ensureTimeZones is neither reentrant nor thread-safe");
+    timeZoneDataInitialized = true;
+
+    return true;
+}
+
+bool
+js::SharedIntlData::validateTimeZoneName(JSContext* cx, HandleString timeZone,
+                                         MutableHandleString result)
+{
+    if (!ensureTimeZones(cx))
+        return false;
+
+    Rooted<JSFlatString*> timeZoneFlat(cx, timeZone->ensureFlat(cx));
+    if (!timeZoneFlat)
+        return false;
+
+    TimeZoneHasher::Lookup lookup(timeZoneFlat);
+    if (TimeZoneSet::Ptr p = availableTimeZones.lookup(lookup))
+        result.set(*p);
+
+    return true;
+}
+
+bool
+js::SharedIntlData::tryCanonicalizeTimeZoneConsistentWithIANA(JSContext* cx, HandleString timeZone,
+                                                              MutableHandleString result)
+{
+    if (!ensureTimeZones(cx))
+        return false;
+
+    Rooted<JSFlatString*> timeZoneFlat(cx, timeZone->ensureFlat(cx));
+    if (!timeZoneFlat)
+        return false;
+
+    TimeZoneHasher::Lookup lookup(timeZoneFlat);
+    MOZ_ASSERT(availableTimeZones.has(lookup), "Invalid time zone name");
+
+    if (TimeZoneMap::Ptr p = ianaLinksCanonicalizedDifferentlyByICU.lookup(lookup)) {
+        // The effectively supported time zones aren't known at compile time,
+        // when
+        // 1. SpiderMonkey was compiled with "--with-system-icu".
+        // 2. ICU's dynamic time zone data loading feature was used.
+        //    (ICU supports loading time zone files at runtime through the
+        //    ICU_TIMEZONE_FILES_DIR environment variable.)
+        // Ensure ICU supports the new target zone before applying the update.
+        TimeZoneName targetTimeZone = p->value();
+        TimeZoneHasher::Lookup targetLookup(targetTimeZone);
+        if (availableTimeZones.has(targetLookup))
+            result.set(targetTimeZone);
+    } else if (TimeZoneSet::Ptr p = ianaZonesTreatedAsLinksByICU.lookup(lookup)) {
+        result.set(*p);
+    }
+
+    return true;
+}
+
+void
+js::SharedIntlData::destroyInstance()
+{
+    availableTimeZones.finish();
+    ianaZonesTreatedAsLinksByICU.finish();
+    ianaLinksCanonicalizedDifferentlyByICU.finish();
+}
+
+void
+js::SharedIntlData::trace(JSTracer* trc)
+{
+    // Atoms are always tenured.
+    if (!trc->runtime()->isHeapMinorCollecting()) {
+        availableTimeZones.trace(trc);
+        ianaZonesTreatedAsLinksByICU.trace(trc);
+        ianaLinksCanonicalizedDifferentlyByICU.trace(trc);
+    }
+}
+
+size_t
+js::SharedIntlData::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    return availableTimeZones.sizeOfExcludingThis(mallocSizeOf) +
+           ianaZonesTreatedAsLinksByICU.sizeOfExcludingThis(mallocSizeOf) +
+           ianaLinksCanonicalizedDifferentlyByICU.sizeOfExcludingThis(mallocSizeOf);
+}
+
+bool
+js::intl_IsValidTimeZoneName(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isString());
+
+    SharedIntlData& sharedIntlData = cx->sharedIntlData;
+
+    RootedString timeZone(cx, args[0].toString());
+    RootedString validatedTimeZone(cx);
+    if (!sharedIntlData.validateTimeZoneName(cx, timeZone, &validatedTimeZone))
+        return false;
+
+    if (validatedTimeZone)
+        args.rval().setString(validatedTimeZone);
+    else
+        args.rval().setNull();
+
     return true;
 }
 
@@ -2058,8 +2314,22 @@ js::intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 1);
     MOZ_ASSERT(args[0].isString());
 
+    SharedIntlData& sharedIntlData = cx->sharedIntlData;
+
+    // Some time zone names are canonicalized differently by ICU -- handle
+    // those first:
+    RootedString timeZone(cx, args[0].toString());
+    RootedString ianaTimeZone(cx);
+    if (!sharedIntlData.tryCanonicalizeTimeZoneConsistentWithIANA(cx, timeZone, &ianaTimeZone))
+        return false;
+
+    if (ianaTimeZone) {
+        args.rval().setString(ianaTimeZone);
+        return true;
+    }
+
     AutoStableStringChars stableChars(cx);
-    if (!stableChars.initTwoByte(cx, args[0].toString()))
+    if (!stableChars.initTwoByte(cx, timeZone))
         return false;
 
     mozilla::Range<const char16_t> tzchars = stableChars.twoByteRange();
@@ -2087,7 +2357,7 @@ js::intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp)
     }
 
     MOZ_ASSERT(size >= 0);
-    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size);
+    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size_t(size));
     if (!str)
         return false;
     args.rval().setString(str);

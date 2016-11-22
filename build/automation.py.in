@@ -36,18 +36,11 @@ from mozscreenshot import printstatus, dump_screen
 # ---------------------------------------------------------------
 
 _DEFAULT_PREFERENCE_FILE = os.path.join(SCRIPT_DIR, 'prefs_general.js')
-_DEFAULT_APPS_FILE = os.path.join(SCRIPT_DIR, 'webapps_mochitest.json')
 
 _DEFAULT_WEB_SERVER = "127.0.0.1"
 _DEFAULT_HTTP_PORT = 8888
 _DEFAULT_SSL_PORT = 4443
 _DEFAULT_WEBSOCKET_PORT = 9988
-
-# from nsIPrincipal.idl
-_APP_STATUS_NOT_INSTALLED = 0
-_APP_STATUS_INSTALLED     = 1
-_APP_STATUS_PRIVILEGED    = 2
-_APP_STATUS_CERTIFIED     = 3
 
 #expand _DIST_BIN = __XPC_BIN_PATH__
 #expand _IS_WIN32 = len("__WIN32__") != 0

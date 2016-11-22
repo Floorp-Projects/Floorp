@@ -8,6 +8,7 @@
 #include "SkLua.h"
 
 #if SK_SUPPORT_GPU
+#include "GrClip.h"
 #include "GrReducedClip.h"
 #endif
 
@@ -642,6 +643,8 @@ int SkLua::lcanvas_getReducedClipStack(lua_State* L) {
 #if SK_SUPPORT_GPU
     const SkCanvas* canvas = get_ref<SkCanvas>(L, 1);
     SkRect queryBounds = SkRect::Make(canvas->getTopLayerBounds());
+    SkASSERT(!GrClip::GetPixelIBounds(queryBounds).isEmpty());
+
     const GrReducedClip reducedClip(*canvas->getClipStack(), queryBounds);
 
     GrReducedClip::ElementList::Iter iter(reducedClip.elements());

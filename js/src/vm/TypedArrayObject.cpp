@@ -730,9 +730,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return nullptr;
 
         int32_t byteOffset = 0;
-        int32_t length = -1;
-
-        if (args.length() > 1) {
+        if (args.hasDefined(1)) {
             if (!ToInt32(cx, args[1], &byteOffset))
                 return nullptr;
             if (byteOffset < 0) {
@@ -741,16 +739,17 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                                           "1");
                 return nullptr;
             }
+        }
 
-            if (args.length() > 2) {
-                if (!ToInt32(cx, args[2], &length))
-                    return nullptr;
-                if (length < 0) {
-                    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                              JSMSG_TYPED_ARRAY_NEGATIVE_ARG,
-                                              "2");
-                    return nullptr;
-                }
+        int32_t length = -1;
+        if (args.hasDefined(2)) {
+            if (!ToInt32(cx, args[2], &length))
+                return nullptr;
+            if (length < 0) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                          JSMSG_TYPED_ARRAY_NEGATIVE_ARG,
+                                          "2");
+                return nullptr;
             }
         }
 
@@ -2687,30 +2686,6 @@ const Class TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
     IMPL_TYPED_ARRAY_CLASS(Uint8Clamped)
 };
 
-#define IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(_type) \
-{ \
-    DELEGATED_CLASSSPEC(TypedArrayObject::classes[Scalar::Type::_type].spec), \
-    nullptr, \
-    nullptr, \
-    nullptr, \
-    nullptr, \
-    nullptr, \
-    nullptr, \
-    JSProto_TypedArray | ClassSpec::IsDelegated \
-}
-
-static const ClassSpec TypedArrayObjectProtoClassSpecs[Scalar::MaxTypedArrayViewType] = {
-    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Int8),
-    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Uint8),
-    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Int16),
-    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Uint16),
-    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Int32),
-    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Uint32),
-    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Float32),
-    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Float64),
-    IMPL_TYPED_ARRAY_PROTO_CLASS_SPEC(Uint8Clamped)
-};
-
 // The various typed array prototypes are supposed to 1) be normal objects,
 // 2) stringify to "[object <name of constructor>]", and 3) (Gecko-specific)
 // be xrayable.  The first and second requirements mandate (in the absence of
@@ -2730,7 +2705,7 @@ static const ClassSpec TypedArrayObjectProtoClassSpecs[Scalar::MaxTypedArrayView
     #_type "ArrayPrototype", \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_type##Array), \
     JS_NULL_CLASS_OPS, \
-    &TypedArrayObjectProtoClassSpecs[Scalar::Type::_type] \
+    &TypedArrayObjectClassSpecs[Scalar::Type::_type] \
 }
 
 const Class TypedArrayObject::protoClasses[Scalar::MaxTypedArrayViewType] = {

@@ -676,14 +676,6 @@ bool NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport = false);
 #define NECKO_SAFEBROWSING_APP_ID UINT32_MAX - 1
 
 /**
- * Gets AppId and isInIsolatedMozBrowserElement from channel's nsILoadContext.
- * Returns false if error or channel's callbacks don't implement nsILoadContext.
- */
-bool NS_GetAppInfo(nsIChannel *aChannel,
-                   uint32_t *aAppID,
-                   bool *aIsInIsolatedMozBrowserElement);
-
-/**
  * Determines whether appcache should be checked for a given URI.
  */
 bool NS_ShouldCheckAppCache(nsIURI *aURI, bool usePrivateBrowsing);

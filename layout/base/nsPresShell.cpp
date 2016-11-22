@@ -163,6 +163,7 @@
 #endif
 
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "ClientLayerManager.h"
 #include "GeckoProfiler.h"
 #include "gfxPlatform.h"
 #include "Layers.h"
@@ -225,6 +226,7 @@ using namespace mozilla::layers;
 using namespace mozilla::gfx;
 using namespace mozilla::layout;
 using PaintFrameFlags = nsLayoutUtils::PaintFrameFlags;
+typedef FrameMetrics::ViewID ViewID;
 
 CapturingContentInfo nsIPresShell::gCaptureInfo =
   { false /* mAllowed */, false /* mPointerLock */, false /* mRetargetToElement */,
@@ -7511,6 +7513,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         delete event;
       }
     }
+    aEvent->mFlags.mIsSuppressedOrDelayed = true;
     return NS_OK;
   }
 

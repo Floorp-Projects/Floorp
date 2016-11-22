@@ -257,28 +257,10 @@ MapIteratorObject::createResultPair(JSContext* cx)
 
 /*** Map *****************************************************************************************/
 
-static const ClassSpec MapObjectProtoClassSpec = {
-    DELEGATED_CLASSSPEC(MapObject::class_.spec),
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    ClassSpec::IsDelegated
-};
-
-static const Class MapObjectProtoClass = {
-    js_Object_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Map),
-    JS_NULL_CLASS_OPS,
-    &MapObjectProtoClassSpec
-};
-
 static JSObject*
-CreatMapPrototype(JSContext* cx, JSProtoKey key)
+CreateMapPrototype(JSContext* cx, JSProtoKey key)
 {
-    return cx->global()->createBlankPrototype(cx, &MapObjectProtoClass);
+    return cx->global()->createBlankPrototype(cx, &MapObject::protoClass_);
 }
 
 const ClassOps MapObject::classOps_ = {
@@ -298,7 +280,7 @@ const ClassOps MapObject::classOps_ = {
 
 const ClassSpec MapObject::classSpec_ = {
     GenericCreateConstructor<MapObject::construct, 0, gc::AllocKind::FUNCTION>,
-    CreatMapPrototype,
+    CreateMapPrototype,
     nullptr,
     MapObject::staticProperties,
     MapObject::methods,
@@ -312,6 +294,13 @@ const Class MapObject::class_ = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_Map) |
     JSCLASS_FOREGROUND_FINALIZE,
     &MapObject::classOps_,
+    &MapObject::classSpec_
+};
+
+const Class MapObject::protoClass_ = {
+    js_Object_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Map),
+    JS_NULL_CLASS_OPS,
     &MapObject::classSpec_
 };
 
@@ -986,28 +975,10 @@ SetIteratorObject::createResult(JSContext* cx)
 
 /*** Set *****************************************************************************************/
 
-static const ClassSpec SetObjectProtoClassSpec = {
-    DELEGATED_CLASSSPEC(SetObject::class_.spec),
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    ClassSpec::IsDelegated
-};
-
-static const Class SetObjectProtoClass = {
-    js_Object_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Set),
-    JS_NULL_CLASS_OPS,
-    &SetObjectProtoClassSpec
-};
-
 static JSObject*
 CreateSetPrototype(JSContext* cx, JSProtoKey key)
 {
-    return cx->global()->createBlankPrototype(cx, &SetObjectProtoClass);
+    return cx->global()->createBlankPrototype(cx, &SetObject::protoClass_);
 }
 
 const ClassOps SetObject::classOps_ = {
@@ -1042,6 +1013,13 @@ const Class SetObject::class_ = {
     JSCLASS_FOREGROUND_FINALIZE,
     &SetObject::classOps_,
     &SetObject::classSpec_,
+};
+
+const Class SetObject::protoClass_ = {
+    js_Object_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Set),
+    JS_NULL_CLASS_OPS,
+    &SetObject::classSpec_
 };
 
 const JSPropertySpec SetObject::properties[] = {

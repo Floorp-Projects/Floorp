@@ -2766,20 +2766,9 @@ const Class PromiseObject::class_ = {
     &PromiseObjectClassSpec
 };
 
-static const ClassSpec PromiseObjectProtoClassSpec = {
-    DELEGATED_CLASSSPEC(PromiseObject::class_.spec),
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    ClassSpec::IsDelegated
-};
-
 const Class PromiseObject::protoClass_ = {
     "PromiseProto",
     JSCLASS_HAS_CACHED_PROTO(JSProto_Promise),
     JS_NULL_CLASS_OPS,
-    &PromiseObjectProtoClassSpec
+    &PromiseObjectClassSpec
 };
