@@ -152,7 +152,7 @@ public:
   typedef mozilla::CSSRect CSSRect;
   typedef mozilla::ScreenMargin ScreenMargin;
   typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
-  typedef mozilla::StyleClipPathGeometryBox StyleClipPathGeometryBox;
+  typedef mozilla::StyleGeometryBox StyleGeometryBox;
 
   /**
    * Finds previously assigned ViewID for the given content element, if any.
@@ -2871,7 +2871,7 @@ public:
   static bool IsInvisibleBreak(nsINode* aNode, nsIFrame** aNextLineFrame = nullptr);
 
   static nsRect ComputeGeometryBox(nsIFrame* aFrame,
-                                   StyleClipPathGeometryBox aGeometryBox);
+                                   StyleGeometryBox aGeometryBox);
 
 private:
   static uint32_t sFontSizeInflationEmPerLine;

@@ -9179,7 +9179,7 @@ nsLayoutUtils::IsInvisibleBreak(nsINode* aNode, nsIFrame** aNextLineFrame)
 
 static nsRect
 ComputeSVGReferenceRect(nsIFrame* aFrame,
-                        StyleClipPathGeometryBox aGeometryBox)
+                        StyleGeometryBox aGeometryBox)
 {
   MOZ_ASSERT(aFrame->GetContent()->IsSVGElement());
   nsRect r;
@@ -9187,7 +9187,7 @@ ComputeSVGReferenceRect(nsIFrame* aFrame,
   // For SVG elements without associated CSS layout box, the used value for
   // content-box, padding-box, border-box and margin-box is fill-box.
   switch (aGeometryBox) {
-    case StyleClipPathGeometryBox::Stroke: {
+    case StyleGeometryBox::Stroke: {
       // XXX Bug 1299876
       // The size of srtoke-box is not correct if this graphic element has
       // specific stroke-linejoin or stroke-linecap.
@@ -9197,7 +9197,7 @@ ComputeSVGReferenceRect(nsIFrame* aFrame,
                                          nsPresContext::AppUnitsPerCSSPixel());
       break;
     }
-    case StyleClipPathGeometryBox::View: {
+    case StyleGeometryBox::View: {
       nsIContent* content = aFrame->GetContent();
       nsSVGElement* element = static_cast<nsSVGElement*>(content);
       SVGSVGElement* svgElement = element->GetCtx();
@@ -9227,12 +9227,12 @@ ComputeSVGReferenceRect(nsIFrame* aFrame,
 
       break;
     }
-    case StyleClipPathGeometryBox::NoBox:
-    case StyleClipPathGeometryBox::Border:
-    case StyleClipPathGeometryBox::Content:
-    case StyleClipPathGeometryBox::Padding:
-    case StyleClipPathGeometryBox::Margin:
-    case StyleClipPathGeometryBox::Fill: {
+    case StyleGeometryBox::NoBox:
+    case StyleGeometryBox::Border:
+    case StyleGeometryBox::Content:
+    case StyleGeometryBox::Padding:
+    case StyleGeometryBox::Margin:
+    case StyleGeometryBox::Fill: {
       gfxRect bbox = nsSVGUtils::GetBBox(aFrame,
                                          nsSVGUtils::eBBoxIncludeFill);
       r = nsLayoutUtils::RoundGfxRectToAppRect(bbox,
@@ -9240,7 +9240,7 @@ ComputeSVGReferenceRect(nsIFrame* aFrame,
       break;
     }
     default:{
-      MOZ_ASSERT_UNREACHABLE("unknown StyleClipPathGeometryBox type");
+      MOZ_ASSERT_UNREACHABLE("unknown StyleGeometryBox type");
       gfxRect bbox = nsSVGUtils::GetBBox(aFrame,
                                          nsSVGUtils::eBBoxIncludeFill);
       r = nsLayoutUtils::RoundGfxRectToAppRect(bbox,
@@ -9254,31 +9254,31 @@ ComputeSVGReferenceRect(nsIFrame* aFrame,
 
 static nsRect
 ComputeHTMLReferenceRect(nsIFrame* aFrame,
-                         StyleClipPathGeometryBox aGeometryBox)
+                         StyleGeometryBox aGeometryBox)
 {
   nsRect r;
 
   // For elements with associated CSS layout box, the used value for fill-box,
   // stroke-box and view-box is border-box.
   switch (aGeometryBox) {
-    case StyleClipPathGeometryBox::Content:
+    case StyleGeometryBox::Content:
       r = aFrame->GetContentRectRelativeToSelf();
       break;
-    case StyleClipPathGeometryBox::Padding:
+    case StyleGeometryBox::Padding:
       r = aFrame->GetPaddingRectRelativeToSelf();
       break;
-    case StyleClipPathGeometryBox::Margin:
+    case StyleGeometryBox::Margin:
       r = aFrame->GetMarginRectRelativeToSelf();
       break;
-    case StyleClipPathGeometryBox::NoBox:
-    case StyleClipPathGeometryBox::Border:
-    case StyleClipPathGeometryBox::Fill:
-    case StyleClipPathGeometryBox::Stroke:
-    case StyleClipPathGeometryBox::View:
+    case StyleGeometryBox::NoBox:
+    case StyleGeometryBox::Border:
+    case StyleGeometryBox::Fill:
+    case StyleGeometryBox::Stroke:
+    case StyleGeometryBox::View:
       r = aFrame->GetRectRelativeToSelf();
       break;
     default:
-      MOZ_ASSERT_UNREACHABLE("unknown StyleClipPathGeometryBox type");
+      MOZ_ASSERT_UNREACHABLE("unknown StyleGeometryBox type");
       r = aFrame->GetRectRelativeToSelf();
       break;
   }
@@ -9288,7 +9288,7 @@ ComputeHTMLReferenceRect(nsIFrame* aFrame,
 
 /* static */ nsRect
 nsLayoutUtils::ComputeGeometryBox(nsIFrame* aFrame,
-                                  StyleClipPathGeometryBox aGeometryBox)
+                                  StyleGeometryBox aGeometryBox)
 {
   // We use ComputeSVGReferenceRect for all SVG elements, except <svg>
   // element, which does have an associated CSS layout box. In this case we

@@ -112,16 +112,35 @@ enum class StyleClear : uint8_t {
   Max = 13  // Max = (Both | Line)
 };
 
-// clip-path geometry box
-enum class StyleClipPathGeometryBox : uint8_t {
-  NoBox,
+// Define geometry box for clip-path's reference-box, background-clip,
+// background-origin, mask-clip and mask-origin.
+enum class StyleGeometryBox : uint8_t {
   Content,
   Padding,
   Border,
-  Margin,
-  Fill,
-  Stroke,
-  View,
+  Margin,  // XXX Bug 1260094 comment 9.
+           // Although margin-box is required by mask-origin and mask-clip, we
+           // do not implement that due to lack of support in other browsers.
+           // clip-path reference-box only.
+  Fill,    // mask-clip, mask-origin and clip-path reference-box only.
+  Stroke,  // mask-clip, mask-origin and clip-path reference-box only.
+  View,    // mask-clip, mask-origin and clip-path reference-box only.
+  NoClip,  // mask-clip only.
+  Text,    // background-clip only.
+  NoBox,   // Depending on which kind of element this style value applied on,
+           // the default value of a reference-box can be different.
+           // For an HTML element, the default value of reference-box is
+           // border-box; for an SVG element, the default value is fill-box.
+           // Since we can not determine the default value at parsing time,
+           // set it as NoBox so that we make a decision later.
+           // clip-path reference-box only.
+  MozAlmostPadding = 127 // A magic value that we use for our "pretend that
+                         // background-clip is 'padding' when we have a solid
+                         // border" optimization.  This isn't actually equal
+                         // to StyleGeometryBox::Padding because using that
+                         // causes antialiasing seams between the background
+                         // and border.
+                         // background-clip only.
 };
 
 // fill-rule
