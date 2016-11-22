@@ -154,16 +154,25 @@ extensions.on("shutdown", (type, extension) => {
 
 extensions.registerSchemaAPI("extension", "addon_parent", context => {
   let {extension} = context;
+
+  function getBackgroundPage() {
+    let win = backgroundPagesMap.get(extension).contentWindow;
+    if (win && context.principal.subsumes(Cu.getObjectPrincipal(win))) {
+      return win;
+    }
+    return null;
+  }
+
   return {
     extension: {
       getBackgroundPage: function() {
-        return backgroundPagesMap.get(extension).contentWindow;
+        return getBackgroundPage();
       },
     },
 
     runtime: {
       getBackgroundPage() {
-        return context.cloneScope.Promise.resolve(backgroundPagesMap.get(extension).contentWindow);
+        return context.cloneScope.Promise.resolve(getBackgroundPage());
       },
     },
   };

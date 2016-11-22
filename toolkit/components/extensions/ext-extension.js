@@ -11,6 +11,10 @@ extensions.registerSchemaAPI("extension", "addon_parent", context => {
           if (!view.active) {
             continue;
           }
+          if (!context.principal.subsumes(view.principal)) {
+            continue;
+          }
+
           if (fetchProperties !== null) {
             if (fetchProperties.type !== null && view.type != fetchProperties.type) {
               continue;
