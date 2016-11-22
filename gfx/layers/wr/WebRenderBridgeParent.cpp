@@ -235,9 +235,9 @@ WebRenderBridgeParent::DeleteOldImages()
 void
 WebRenderBridgeParent::ScheduleComposition()
 {
-  if (mWidget) {
+  if (mCompositorScheduler) {
     mCompositorScheduler->ScheduleComposition();
-  } else {
+  } else if (mParent) {
     mParent->ScheduleComposition();
   }
 }
