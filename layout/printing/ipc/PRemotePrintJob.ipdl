@@ -24,8 +24,7 @@ parent:
 
   // Translate the stored page recording and play back the events to the real
   // print device.
-  // This will always deallocate the shared memory.
-  async ProcessPage(Shmem aStoredPage);
+  async ProcessPage(nsCString aPageFileName);
 
   // This informs the real print device that we've finished, so it can trigger
   // the actual print.
