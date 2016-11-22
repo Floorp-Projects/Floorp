@@ -22,7 +22,7 @@ use std::time::Duration;
 use webdriver::command::{WebDriverCommand, WebDriverMessage, Parameters,
                          WebDriverExtensionCommand};
 use webdriver::command::WebDriverCommand::{
-    NewSession, DeleteSession, Get, GetCurrentUrl,
+    NewSession, DeleteSession, Status, Get, GetCurrentUrl,
     GoBack, GoForward, Refresh, GetTitle, GetPageSource, GetWindowHandle,
     GetWindowHandles, CloseWindow, SetWindowSize,
     GetWindowSize, MaximizeWindow, SwitchToWindow, SwitchToFrame,
@@ -416,6 +416,20 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
     fn handle_command(&mut self, _: &Option<Session>, mut msg: WebDriverMessage<GeckoExtensionRoute>) -> WebDriverResult<WebDriverResponse> {
         {
             let mut new_capabilities = None;
+            // First handle the status message which doesn't actually require a marionette
+            // connection or message
+            if msg.command == Status {
+                let (ready, message) = self.connection.lock()
+                    .map(|ref connection| connection
+                         .as_ref()
+                         .map(|_| (false, "Session already started"))
+                         .unwrap_or((true, "")))
+                    .unwrap_or((false, "geckodriver internal error"));
+                let mut value = BTreeMap::new();
+                value.insert("ready".to_string(), Json::Boolean(ready));
+                value.insert("message".to_string(), Json::String(message.into()));
+                return Ok(WebDriverResponse::Generic(ValueResponse::new(Json::Object(value))));
+            }
             match self.connection.lock() {
                 Ok(ref connection) => {
                     if connection.is_none() {
@@ -446,7 +460,7 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
             Ok(ref mut connection) => {
                 match connection.as_mut() {
                     Some(conn) => conn.send_command(&msg),
-                    None => panic!()
+                    None => panic!("Connection missing")
                 }
             },
             Err(_) => {
@@ -579,6 +593,7 @@ impl MarionetteSession {
                 return Err(WebDriverError::new(ErrorStatus::UnsupportedOperation,
                                                "Getting timeouts not yet supported"));
             },
+            Status => panic!("Got status command that should already have been handled"),
             GetWindowHandles => {
                 WebDriverResponse::Generic(ValueResponse::new(resp.result.clone()))
             },
@@ -842,6 +857,7 @@ impl MarionetteCommand {
                 body.insert("flags".to_owned(), vec!["eForceQuit".to_json()].to_json());
                 (Some("quitApplication"), Some(Ok(body)))
             },
+            Status => panic!("Got status command that should already have been handled"),
             Get(ref x) => (Some("get"), Some(x.to_marionette())),
             GetCurrentUrl => (Some("getCurrentUrl"), None),
             GoBack => (Some("goBack"), None),
