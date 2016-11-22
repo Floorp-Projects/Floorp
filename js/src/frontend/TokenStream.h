@@ -990,10 +990,10 @@ class MOZ_STACK_CLASS TokenStream
         MOZ_ASSERT(c == expect);
     }
 
-    int32_t peekChar() {
-        int32_t c = getChar();
-        ungetChar(c);
-        return c;
+    MOZ_MUST_USE bool peekChar(int32_t* c) {
+        *c = getChar();
+        ungetChar(*c);
+        return true;
     }
 
     void skipChars(int n) {
