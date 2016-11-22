@@ -3261,22 +3261,11 @@ const Class DateObject::class_ = {
     &DateObjectClassSpec
 };
 
-static const ClassSpec DateObjectProtoClassSpec = {
-    DELEGATED_CLASSSPEC(DateObject::class_.spec),
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    ClassSpec::IsDelegated
-};
-
 const Class DateObject::protoClass_ = {
     js_Object_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
     JS_NULL_CLASS_OPS,
-    &DateObjectProtoClassSpec
+    &DateObjectClassSpec
 };
 
 JSObject*
