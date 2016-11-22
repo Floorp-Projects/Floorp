@@ -544,8 +544,8 @@
   <string name="updater_downloading_select">&updater_downloading_select2;</string>
   <string name="updater_downloading_retry">&updater_downloading_retry2;</string>
 
-  <string name="updater_apply_title">&updater_apply_title2;</string>
-  <string name="updater_apply_select">&updater_apply_select2;</string>
+  <string name="updater_apply_title">&updater_apply_title3;</string>
+  <string name="updater_apply_select">&updater_apply_select3;</string>
 
   <string name="updater_permission_title">&brandShortName;</string>
   <string name="updater_permission_text">&updater_permission_text;</string>
