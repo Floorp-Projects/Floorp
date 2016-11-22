@@ -1098,6 +1098,57 @@ class BaseCompiler
             masm.move32(src.i32reg(), r);
     }
 
+    void loadConstI64(Register64 r, Stk &src) {
+        masm.move64(Imm64(src.i64val()), r);
+    }
+
+    void loadMemI64(Register64 r, Stk& src) {
+        loadFromFrameI64(r, src.offs());
+    }
+
+    void loadLocalI64(Register64 r, Stk& src) {
+        loadFromFrameI64(r, frameOffsetFromSlot(src.slot(), MIRType::Int64));
+    }
+
+    void loadRegisterI64(Register64 r, Stk& src) {
+        if (src.i64reg() != r)
+            masm.move64(src.i64reg(), r);
+    }
+
+    void loadConstF64(FloatRegister r, Stk &src) {
+        masm.loadConstantDouble(src.f64val(), r);
+    }
+
+    void loadMemF64(FloatRegister r, Stk& src) {
+        loadFromFrameF64(r, src.offs());
+    }
+
+    void loadLocalF64(FloatRegister r, Stk& src) {
+        loadFromFrameF64(r, frameOffsetFromSlot(src.slot(), MIRType::Double));
+    }
+
+    void loadRegisterF64(FloatRegister r, Stk& src) {
+        if (src.f64reg() != r)
+            masm.moveDouble(src.f64reg(), r);
+    }
+
+    void loadConstF32(FloatRegister r, Stk &src) {
+        masm.loadConstantFloat32(src.f32val(), r);
+    }
+
+    void loadMemF32(FloatRegister r, Stk& src) {
+        loadFromFrameF32(r, src.offs());
+    }
+
+    void loadLocalF32(FloatRegister r, Stk& src) {
+        loadFromFrameF32(r, frameOffsetFromSlot(src.slot(), MIRType::Float32));
+    }
+
+    void loadRegisterF32(FloatRegister r, Stk& src) {
+        if (src.f32reg() != r)
+            masm.moveFloat32(src.f32reg(), r);
+    }
+
     void loadI32(Register r, Stk& src) {
         switch (src.kind()) {
           case Stk::ConstI32:
@@ -1118,25 +1169,19 @@ class BaseCompiler
         }
     }
 
-    // TODO / OPTIMIZE: Refactor loadI64, loadF64, and loadF32 in the
-    // same way as loadI32 to avoid redundant dispatch in callers of
-    // these load() functions.  (Bug 1316816, also see annotations on
-    // popI64 et al below.)
-
     void loadI64(Register64 r, Stk& src) {
         switch (src.kind()) {
           case Stk::ConstI64:
-            masm.move64(Imm64(src.i64val()), r);
+            loadConstI64(r, src);
             break;
           case Stk::MemI64:
-            loadFromFrameI64(r, src.offs());
+            loadMemI64(r, src);
             break;
           case Stk::LocalI64:
-            loadFromFrameI64(r, frameOffsetFromSlot(src.slot(), MIRType::Int64));
+            loadLocalI64(r, src);
             break;
           case Stk::RegisterI64:
-            if (src.i64reg() != r)
-                masm.move64(src.i64reg(), r);
+            loadRegisterI64(r, src);
             break;
           case Stk::None:
           default:
@@ -1191,17 +1236,16 @@ class BaseCompiler
     void loadF64(FloatRegister r, Stk& src) {
         switch (src.kind()) {
           case Stk::ConstF64:
-            masm.loadConstantDouble(src.f64val(), r);
+            loadConstF64(r, src);
             break;
           case Stk::MemF64:
-            loadFromFrameF64(r, src.offs());
+            loadMemF64(r, src);
             break;
           case Stk::LocalF64:
-            loadFromFrameF64(r, frameOffsetFromSlot(src.slot(), MIRType::Double));
+            loadLocalF64(r, src);
             break;
           case Stk::RegisterF64:
-            if (src.f64reg() != r)
-                masm.moveDouble(src.f64reg(), r);
+            loadRegisterF64(r, src);
             break;
           case Stk::None:
           default:
@@ -1212,17 +1256,16 @@ class BaseCompiler
     void loadF32(FloatRegister r, Stk& src) {
         switch (src.kind()) {
           case Stk::ConstF32:
-            masm.loadConstantFloat32(src.f32val(), r);
+            loadConstF32(r, src);
             break;
           case Stk::MemF32:
-            loadFromFrameF32(r, src.offs());
+            loadMemF32(r, src);
             break;
           case Stk::LocalF32:
-            loadFromFrameF32(r, frameOffsetFromSlot(src.slot(), MIRType::Float32));
+            loadLocalF32(r, src);
             break;
           case Stk::RegisterF32:
-            if (src.f32reg() != r)
-                masm.moveFloat32(src.f32reg(), r);
+            loadRegisterF32(r, src);
             break;
           case Stk::None:
           default:
@@ -1453,7 +1496,7 @@ class BaseCompiler
             masm.Pop(r);
             break;
           case Stk::RegisterI32:
-            moveI32(v.i32reg(), r);
+            loadRegisterI32(r, v);
             break;
           case Stk::None:
           default:
@@ -1490,11 +1533,12 @@ class BaseCompiler
     // v must be the stack top.
 
     void popI64(Stk& v, RegI64 r) {
-        // TODO / OPTIMIZE: avoid loadI64() here.  (Bug 1316816)
         switch (v.kind()) {
           case Stk::ConstI64:
+            loadConstI64(r, v);
+            break;
           case Stk::LocalI64:
-            loadI64(r, v);
+            loadLocalI64(r, v);
             break;
           case Stk::MemI64:
 #ifdef JS_PUNBOX64
@@ -1505,7 +1549,7 @@ class BaseCompiler
 #endif
             break;
           case Stk::RegisterI64:
-            moveI64(v.i64reg(), r);
+            loadRegisterI64(r, v);
             break;
           case Stk::None:
           default:
@@ -1547,17 +1591,18 @@ class BaseCompiler
     // v must be the stack top.
 
     void popF64(Stk& v, RegF64 r) {
-        // TODO / OPTIMIZE: avoid loadF64 here.  (Bug 1316816)
         switch (v.kind()) {
           case Stk::ConstF64:
+            loadConstF64(r, v);
+            break;
           case Stk::LocalF64:
-            loadF64(r, v);
+            loadLocalF64(r, v);
             break;
           case Stk::MemF64:
             masm.Pop(r);
             break;
           case Stk::RegisterF64:
-            moveF64(v.f64reg(), r);
+            loadRegisterF64(r, v);
             break;
           case Stk::None:
           default:
@@ -1594,17 +1639,18 @@ class BaseCompiler
     // v must be the stack top.
 
     void popF32(Stk& v, RegF32 r) {
-        // TODO / OPTIMIZE: avoid loadF32 here.  (Bug 1316816)
         switch (v.kind()) {
           case Stk::ConstF32:
+            loadConstF32(r, v);
+            break;
           case Stk::LocalF32:
-            loadF32(r, v);
+            loadLocalF32(r, v);
             break;
           case Stk::MemF32:
             masm.Pop(r);
             break;
           case Stk::RegisterF32:
-            moveF32(v.f32reg(), r);
+            loadRegisterF32(r, v);
             break;
           case Stk::None:
           default:
