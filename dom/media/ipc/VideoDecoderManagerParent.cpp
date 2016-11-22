@@ -155,9 +155,13 @@ VideoDecoderManagerParent::~VideoDecoderManagerParent()
 }
 
 PVideoDecoderParent*
-VideoDecoderManagerParent::AllocPVideoDecoderParent()
+VideoDecoderManagerParent::AllocPVideoDecoderParent(const VideoInfo& aVideoInfo,
+                                                    const layers::TextureFactoryIdentifier& aIdentifier,
+                                                    bool* aSuccess)
 {
-  return new VideoDecoderParent(this, sManagerTaskQueue, new TaskQueue(SharedThreadPool::Get(NS_LITERAL_CSTRING("VideoDecoderParent"), 4)));
+  return new VideoDecoderParent(this, aVideoInfo, aIdentifier, sManagerTaskQueue,
+                                new TaskQueue(SharedThreadPool::Get(NS_LITERAL_CSTRING("VideoDecoderParent"), 4)),
+                                aSuccess);
 }
 
 bool
