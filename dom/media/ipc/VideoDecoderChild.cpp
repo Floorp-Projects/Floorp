@@ -10,6 +10,7 @@
 #include "MediaInfo.h"
 #include "ImageContainer.h"
 #include "GPUVideoImage.h"
+#include "mozilla/layers/SynchronousTask.h"
 
 namespace mozilla {
 namespace dom {
@@ -21,6 +22,7 @@ using namespace gfx;
 
 VideoDecoderChild::VideoDecoderChild()
   : mThread(VideoDecoderManagerChild::GetManagerThread())
+  , mFlushTask(nullptr)
   , mCanSend(false)
   , mInitialized(false)
   , mIsHardwareAccelerated(false)
@@ -107,6 +109,15 @@ VideoDecoderChild::RecvInitFailed(const nsresult& aReason)
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+VideoDecoderChild::RecvFlushComplete()
+{
+  MOZ_ASSERT(mFlushTask);
+  AutoCompleteTask complete(mFlushTask);
+  mFlushTask = nullptr;
+  return IPC_OK();
+}
+
 void
 VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy)
 {
@@ -122,10 +133,14 @@ VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy)
       }
     }));
   }
+  if (mFlushTask) {
+    AutoCompleteTask complete(mFlushTask);
+    mFlushTask = nullptr;
+  }
   mCanSend = false;
 }
 
-void
+bool
 VideoDecoderChild::InitIPDL(MediaDataDecoderCallback* aCallback,
                             const VideoInfo& aVideoInfo,
                             const layers::TextureFactoryIdentifier& aIdentifier)
@@ -137,16 +152,16 @@ VideoDecoderChild::InitIPDL(MediaDataDecoderCallback* aCallback,
   // ready, or we've notified the caller of it being no longer available.
   // If not, then the cycle repeats until we're ready.
   if (!manager || !manager->CanSend()) {
-    return;
+    return true;
   }
 
   mIPDLSelfRef = this;
   mCallback = aCallback;
-  mVideoInfo = aVideoInfo;
-  mIdentifier = aIdentifier;
-  if (manager->SendPVideoDecoderConstructor(this)) {
+  bool success = false;
+  if (manager->SendPVideoDecoderConstructor(this, aVideoInfo, aIdentifier, &success)) {
     mCanSend = true;
   }
+  return success;
 }
 
 void
@@ -177,7 +192,7 @@ VideoDecoderChild::Init()
   // If we failed to send this, then we'll still resolve the Init promise
   // as ActorDestroy handles it.
   if (mCanSend) {
-    SendInit(mVideoInfo, mIdentifier);
+    SendInit();
   }
   return mInitPromise.Ensure(__func__);
 }
@@ -212,11 +227,14 @@ VideoDecoderChild::Input(MediaRawData* aSample)
 }
 
 void
-VideoDecoderChild::Flush()
+VideoDecoderChild::Flush(SynchronousTask* aTask)
 {
   AssertOnManagerThread();
   if (mCanSend) {
     SendFlush();
+    mFlushTask = aTask;
+  } else {
+    AutoCompleteTask complete(aTask);
   }
 }
 
@@ -238,6 +256,7 @@ VideoDecoderChild::Shutdown()
     SendShutdown();
   }
   mInitialized = false;
+  mCallback = nullptr;
 }
 
 bool

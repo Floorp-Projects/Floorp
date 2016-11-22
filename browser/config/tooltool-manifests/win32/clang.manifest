@@ -14,11 +14,13 @@
 "unpack": true
 },
 {
-"size": 167175,
-"digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
+"version": "sccache rev b21198a7183a2fe226ff49348b1c0b51bae9f4f8",
 "algorithm": "sha512",
-"filename": "sccache.tar.bz2",
-"unpack": true
+"visibility": "public",
+"filename": "sccache2.tar.bz2",
+"unpack": true,
+"digest": "7dee5c5602b3830cb8ac45ebaa8542714bbac0e50eabbff58a06972a02ceeab75ed7c56ff22a23f760b8317ae8e9a01cdecfaf75a7acbd2a4cdd817967170d2e",
+"size": 1179901
 },
 {
 "version": "clang 3.9.0/r262971",

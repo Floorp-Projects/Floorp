@@ -341,28 +341,10 @@ SharedArrayBufferObject::copyData(Handle<SharedArrayBufferObject*> toBuffer,
                                               count);
 }
 
-static const ClassSpec SharedArrayBufferObjectProtoClassSpec = {
-    DELEGATED_CLASSSPEC(SharedArrayBufferObject::class_.spec),
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    ClassSpec::IsDelegated
-};
-
-static const Class SharedArrayBufferObjectProtoClass = {
-    "SharedArrayBufferPrototype",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer),
-    JS_NULL_CLASS_OPS,
-    &SharedArrayBufferObjectProtoClassSpec
-};
-
 static JSObject*
 CreateSharedArrayBufferPrototype(JSContext* cx, JSProtoKey key)
 {
-    return cx->global()->createBlankPrototype(cx, &SharedArrayBufferObjectProtoClass);
+    return cx->global()->createBlankPrototype(cx, &SharedArrayBufferObject::protoClass_);
 }
 
 static const ClassOps SharedArrayBufferObjectClassOps = {
@@ -400,7 +382,7 @@ static const JSPropertySpec prototype_properties[] = {
     JS_PS_END
 };
 
-static const ClassSpec ArrayBufferObjectClassSpec = {
+static const ClassSpec SharedArrayBufferObjectClassSpec = {
     GenericCreateConstructor<SharedArrayBufferObject::class_constructor, 1, gc::AllocKind::FUNCTION>,
     CreateSharedArrayBufferPrototype,
     static_functions,
@@ -416,8 +398,15 @@ const Class SharedArrayBufferObject::class_ = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer) |
     JSCLASS_BACKGROUND_FINALIZE,
     &SharedArrayBufferObjectClassOps,
-    &ArrayBufferObjectClassSpec,
+    &SharedArrayBufferObjectClassSpec,
     JS_NULL_CLASS_EXT
+};
+
+const Class SharedArrayBufferObject::protoClass_ = {
+    "SharedArrayBufferPrototype",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer),
+    JS_NULL_CLASS_OPS,
+    &SharedArrayBufferObjectClassSpec
 };
 
 bool

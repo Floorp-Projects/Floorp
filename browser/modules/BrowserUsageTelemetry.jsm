@@ -270,14 +270,17 @@ let BrowserUsageTelemetry = {
    */
   recordSearch(engine, source, details = {}) {
     const isOneOff = !!details.isOneOff;
+    const countId = getSearchEngineId(engine) + "." + source;
 
     if (isOneOff) {
       if (!KNOWN_ONEOFF_SOURCES.includes(source)) {
         // Silently drop the error if this bogus call
         // came from 'urlbar' or 'searchbar'. They're
         // calling |recordSearch| twice from two different
-        // code paths.
+        // code paths because they want to record the search
+        // in SEARCH_COUNTS.
         if (['urlbar', 'searchbar'].includes(source)) {
+          Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").add(countId);
           return;
         }
         throw new Error("Unknown source for one-off search: " + source);
@@ -286,7 +289,6 @@ let BrowserUsageTelemetry = {
       if (!KNOWN_SEARCH_SOURCES.includes(source)) {
         throw new Error("Unknown source for search: " + source);
       }
-      let countId = getSearchEngineId(engine) + "." + source;
       Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").add(countId);
     }
 

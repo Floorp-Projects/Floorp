@@ -83,6 +83,15 @@ const SEND_MAXIMUM_BACKOFF_DELAY_MS = 120 * MS_IN_A_MINUTE;
 // The age of a pending ping to be considered overdue (in milliseconds).
 const OVERDUE_PING_FILE_AGE = 7 * 24 * 60 * MS_IN_A_MINUTE; // 1 week
 
+function monotonicNow() {
+  try {
+    return Telemetry.msSinceProcessStart();
+  } catch (ex) {
+    // If this fails fall back to the (non-monotonic) Date value.
+    return Date.now();
+  }
+}
+
 /**
  * This is a policy object used to override behavior within this module.
  * Tests override properties on this object to allow for control of behavior
@@ -655,8 +664,8 @@ var TelemetrySendImpl = {
 
     const histograms = [
       "TELEMETRY_SUCCESS",
-      "TELEMETRY_SEND",
-      "TELEMETRY_PING",
+      "TELEMETRY_SEND_SUCCESS",
+      "TELEMETRY_SEND_FAILURE",
     ];
 
     histograms.forEach(h => Telemetry.getHistogramById(h).clear());
@@ -827,12 +836,12 @@ var TelemetrySendImpl = {
   _onPingRequestFinished: function(success, startTime, id, isPersisted) {
     this._log.trace("_onPingRequestFinished - success: " + success + ", persisted: " + isPersisted);
 
-    Telemetry.getHistogramById("TELEMETRY_SEND").add(new Date() - startTime);
-    let hping = Telemetry.getHistogramById("TELEMETRY_PING");
+    let sendId = success ? "TELEMETRY_SEND_SUCCESS" : "TELEMETRY_SEND_FAILURE";
+    let hsend = Telemetry.getHistogramById(sendId);
     let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
 
+    hsend.add(monotonicNow() - startTime);
     hsuccess.add(success);
-    hping.add(new Date() - startTime);
 
     if (!success) {
       // Let the scheduler know about send failures for triggering backoff timeouts.
@@ -910,7 +919,7 @@ var TelemetrySendImpl = {
     // Prevent the request channel from running though URLClassifier (bug 1296802)
     request.channel.loadFlags &= ~Ci.nsIChannel.LOAD_CLASSIFY_URI;
 
-    let startTime = new Date();
+    let startTime = monotonicNow();
     let deferred = PromiseUtils.defer();
 
     let onRequestFinished = (success, event) => {

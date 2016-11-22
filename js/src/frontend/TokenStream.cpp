@@ -118,13 +118,57 @@ IsIdentifier(const CharT* chars, size_t length)
     return true;
 }
 
+static uint32_t
+GetSingleCodePoint(const char16_t** p, const char16_t* end)
+{
+    uint32_t codePoint;
+    if (MOZ_UNLIKELY(unicode::IsLeadSurrogate(**p)) && *p + 1 < end) {
+        char16_t lead = **p;
+        char16_t maybeTrail = *(*p + 1);
+        if (unicode::IsTrailSurrogate(maybeTrail)) {
+            *p += 2;
+            return unicode::UTF16Decode(lead, maybeTrail);
+        }
+    }
+
+    codePoint = **p;
+    (*p)++;
+    return codePoint;
+}
+
+static bool
+IsIdentifierMaybeNonBMP(const char16_t* chars, size_t length)
+{
+    if (IsIdentifier(chars, length))
+        return true;
+
+    if (length == 0)
+        return false;
+
+    const char16_t* p = chars;
+    const char16_t* end = chars + length;
+    uint32_t codePoint;
+
+    codePoint = GetSingleCodePoint(&p, end);
+    if (!unicode::IsIdentifierStart(codePoint))
+        return false;
+
+    while (p < end) {
+        codePoint = GetSingleCodePoint(&p, end);
+        if (!unicode::IsIdentifierPart(codePoint))
+            return false;
+    }
+
+    return true;
+}
+
 bool
 frontend::IsIdentifier(JSLinearString* str)
 {
     JS::AutoCheckCannotGC nogc;
     return str->hasLatin1Chars()
            ? ::IsIdentifier(str->latin1Chars(nogc), str->length())
-           : ::IsIdentifier(str->twoByteChars(nogc), str->length());
+           : ::IsIdentifierMaybeNonBMP(str->twoByteChars(nogc), str->length());
 }
 
 bool
@@ -993,6 +1037,21 @@ IsTokenSane(Token* tp)
 #endif
 
 bool
+TokenStream::matchTrailForLeadSurrogate(char16_t lead, char16_t* trail, uint32_t* codePoint)
+{
+    int32_t maybeTrail = getCharIgnoreEOL();
+    if (!unicode::IsTrailSurrogate(maybeTrail)) {
+        ungetCharIgnoreEOL(maybeTrail);
+        return false;
+    }
+
+    if (trail)
+        *trail = maybeTrail;
+    *codePoint = unicode::UTF16Decode(lead, maybeTrail);
+    return true;
+}
+
+bool
 TokenStream::putIdentInTokenbuf(const char16_t* identStart)
 {
     int32_t c;
@@ -1003,11 +1062,39 @@ TokenStream::putIdentInTokenbuf(const char16_t* identStart)
     tokenbuf.clear();
     for (;;) {
         c = getCharIgnoreEOL();
+
+        if (MOZ_UNLIKELY(unicode::IsLeadSurrogate(c))) {
+            char16_t trail;
+            uint32_t codePoint;
+            if (matchTrailForLeadSurrogate(c, &trail, &codePoint)) {
+                if (!unicode::IsIdentifierPart(codePoint))
+                    break;
+
+                if (!tokenbuf.append(c) || !tokenbuf.append(trail)) {
+                    userbuf.setAddressOfNextRawChar(tmp);
+                    return false;
+                }
+                continue;
+            }
+        }
+
         if (!unicode::IsIdentifierPart(char16_t(c))) {
             if (c != '\\' || !matchUnicodeEscapeIdent(&qc))
                 break;
+
+            if (MOZ_UNLIKELY(unicode::IsSupplementary(qc))) {
+                char16_t lead, trail;
+                unicode::UTF16Encode(qc, &lead, &trail);
+                if (!tokenbuf.append(lead) || !tokenbuf.append(trail)) {
+                    userbuf.setAddressOfNextRawChar(tmp);
+                    return false;
+                }
+                continue;
+            }
+
             c = qc;
         }
+
         if (!tokenbuf.append(c)) {
             userbuf.setAddressOfNextRawChar(tmp);
             return false;
@@ -1168,10 +1255,21 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
         static_assert('_' < 128,
                       "IdentifierStart contains '_', but as !IsUnicodeIDStart('_'), "
                       "ensure that '_' is never handled here");
-        if (unicode::IsUnicodeIDStart(c)) {
+        if (unicode::IsUnicodeIDStart(char16_t(c))) {
             identStart = userbuf.addressOfNextRawChar() - 1;
             hadUnicodeEscape = false;
             goto identifier;
+        }
+
+        if (MOZ_UNLIKELY(unicode::IsLeadSurrogate(c))) {
+            uint32_t codePoint;
+            if (matchTrailForLeadSurrogate(c, nullptr, &codePoint) &&
+                unicode::IsUnicodeIDStart(codePoint))
+            {
+                identStart = userbuf.addressOfNextRawChar() - 2;
+                hadUnicodeEscape = false;
+                goto identifier;
+            }
         }
 
         goto badchar;
@@ -1224,6 +1322,17 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
             c = getCharIgnoreEOL();
             if (c == EOF)
                 break;
+
+            if (MOZ_UNLIKELY(unicode::IsLeadSurrogate(c))) {
+                uint32_t codePoint;
+                if (matchTrailForLeadSurrogate(c, nullptr, &codePoint)) {
+                    if (!unicode::IsIdentifierPart(codePoint))
+                        break;
+
+                    continue;
+                }
+            }
+
             if (!unicode::IsIdentifierPart(char16_t(c))) {
                 if (c != '\\' || !matchUnicodeEscapeIdent(&qc))
                     break;
@@ -1318,9 +1427,21 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
         }
         ungetCharIgnoreEOL(c);
 
-        if (c != EOF && unicode::IsIdentifierStart(char16_t(c))) {
-            reportError(JSMSG_IDSTART_AFTER_NUMBER);
-            goto error;
+        if (c != EOF) {
+            if (unicode::IsIdentifierStart(char16_t(c))) {
+                reportError(JSMSG_IDSTART_AFTER_NUMBER);
+                goto error;
+            }
+
+            if (MOZ_UNLIKELY(unicode::IsLeadSurrogate(c))) {
+                uint32_t codePoint;
+                if (matchTrailForLeadSurrogate(c, nullptr, &codePoint) &&
+                    unicode::IsIdentifierStart(codePoint))
+                {
+                    reportError(JSMSG_IDSTART_AFTER_NUMBER);
+                    goto error;
+                }
+            }
         }
 
         // Unlike identifiers and strings, numbers cannot contain escaped
@@ -1425,9 +1546,21 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
         }
         ungetCharIgnoreEOL(c);
 
-        if (c != EOF && unicode::IsIdentifierStart(char16_t(c))) {
-            reportError(JSMSG_IDSTART_AFTER_NUMBER);
-            goto error;
+        if (c != EOF) {
+            if (unicode::IsIdentifierStart(char16_t(c))) {
+                reportError(JSMSG_IDSTART_AFTER_NUMBER);
+                goto error;
+            }
+
+            if (MOZ_UNLIKELY(unicode::IsLeadSurrogate(c))) {
+                uint32_t codePoint;
+                if (matchTrailForLeadSurrogate(c, nullptr, &codePoint) &&
+                    unicode::IsIdentifierStart(codePoint))
+                {
+                    reportError(JSMSG_IDSTART_AFTER_NUMBER);
+                    goto error;
+                }
+            }
         }
 
         double dval;

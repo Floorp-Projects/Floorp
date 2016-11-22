@@ -31,8 +31,6 @@ void
 CreateDummyChannel(nsIURI* aHostURI, NeckoOriginAttributes& aAttrs, bool aIsPrivate,
                    nsIChannel** aChannel)
 {
-  MOZ_ASSERT(aAttrs.mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
-
   PrincipalOriginAttributes attrs;
   attrs.InheritFromNecko(aAttrs);
 

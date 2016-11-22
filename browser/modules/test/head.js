@@ -77,3 +77,21 @@ let typeInSearchField = Task.async(function* (browser, text, fieldName) {
     searchInput.value = contentText;
   });
 });
+
+/**
+ * Clear and get the SEARCH_COUNTS histogram.
+ */
+function getSearchCountsHistogram() {
+  let search_hist = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
+  search_hist.clear();
+  return search_hist;
+}
+
+/**
+ * Check that the keyed histogram contains the right value.
+ */
+function checkKeyedHistogram(h, key, expectedValue) {
+  const snapshot = h.snapshot();
+  Assert.ok(key in snapshot, `The histogram must contain ${key}.`);
+  Assert.equal(snapshot[key].sum, expectedValue, `The key ${key} must contain ${expectedValue}.`);
+}

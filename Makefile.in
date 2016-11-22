@@ -262,6 +262,14 @@ default all::
 
 include $(topsrcdir)/config/rules.mk
 
+ifdef SCCACHE_VERBOSE_STATS
+# This won't contain stats for both halves of a universal build, but I can live with that.
+default::
+	@echo "===SCCACHE STATS==="
+	-$(CCACHE) --show-stats
+	@echo "==================="
+endif
+
 distclean::
 	$(RM) $(DIST_GARBAGE)
 

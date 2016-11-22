@@ -269,7 +269,8 @@ bool GrClipStackClip::apply(GrContext* context, GrDrawContext* drawContext, bool
     }
 
     SkRect devBounds = SkRect::MakeIWH(drawContext->width(), drawContext->height());
-    if (!devBounds.intersect(out->clippedDrawBounds())) {
+    if (!devBounds.intersect(out->clippedDrawBounds()) ||
+        GrClip::GetPixelIBounds(devBounds).isEmpty()) {
         return false;
     }
 

@@ -27,13 +27,16 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoDecoderParent)
 
   VideoDecoderParent(VideoDecoderManagerParent* aParent,
+                     const VideoInfo& aVideoInfo,
+                     const layers::TextureFactoryIdentifier& aIdentifier,
                      TaskQueue* aManagerTaskQueue,
-                     TaskQueue* aDecodeTaskQueue);
+                     TaskQueue* aDecodeTaskQueue,
+                     bool* aSuccess);
 
   void Destroy();
 
   // PVideoDecoderParent
-  mozilla::ipc::IPCResult RecvInit(const VideoInfo& aVideoInfo, const layers::TextureFactoryIdentifier& aIdentifier) override;
+  mozilla::ipc::IPCResult RecvInit() override;
   mozilla::ipc::IPCResult RecvInput(const MediaRawDataIPDL& aData) override;
   mozilla::ipc::IPCResult RecvFlush() override;
   mozilla::ipc::IPCResult RecvDrain() override;
