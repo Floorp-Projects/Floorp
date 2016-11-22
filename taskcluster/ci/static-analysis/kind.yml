@@ -35,9 +35,8 @@ jobs:
             config:
                 - builds/releng_base_mac_64_cross_builds.py
                 - balrog/production.py
-            # Note that, despite the name "cross-opt", this config variant
             # enables static analysis.
-            custom-build-variant-cfg: cross-opt
+            custom-build-variant-cfg: cross-opt-st-an
             script: "mozharness/scripts/fx_desktop_build.py"
             secrets: true
             tooltool-downloads: internal
