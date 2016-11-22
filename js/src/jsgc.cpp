@@ -3751,6 +3751,23 @@ RelazifyFunctions(Zone* zone, AllocKind kind)
     }
 }
 
+static bool
+ShouldCollectZone(Zone* zone, JS::gcreason::Reason reason)
+{
+    // Normally we collect all scheduled zones.
+    if (reason != JS::gcreason::COMPARTMENT_REVIVED)
+        return zone->isGCScheduled();
+
+    // If we are repeating a GC becuase we noticed dead compartments haven't
+    // been collected, then only collect zones contianing those compartments.
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+        if (comp->scheduledForDestruction)
+            return true;
+    }
+
+    return false;
+}
+
 bool
 GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAccess& lock)
 {
@@ -3774,7 +3791,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason, AutoLockForExclusiveAcces
 #endif
 
         /* Set up which zones will be collected. */
-        if (zone->isGCScheduled()) {
+        if (ShouldCollectZone(zone, reason)) {
             if (!zone->isAtomsZone()) {
                 any = true;
                 zone->setGCState(Zone::Mark);
@@ -6280,6 +6297,20 @@ GCRuntime::checkIfGCAllowedInCurrentState(JS::gcreason::Reason reason)
     return true;
 }
 
+bool
+GCRuntime::shouldRepeatForDeadZone()
+{
+    if (!isIncremental || isIncrementalGCInProgress())
+        return false;
+
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
+        if (c->scheduledForDestruction)
+            return true;
+    }
+
+    return false;
+}
+
 void
 GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::Reason reason)
 {
@@ -6310,25 +6341,19 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
         poked = false;
         bool wasReset = gcCycle(nonincrementalByAPI, budget, reason);
 
-        /* Need to re-schedule all zones for GC. */
-        if (poked && cleanUpEverything)
-            JS::PrepareForFullGC(rt->contextFromMainThread());
-
-        /*
-         * This code makes an extra effort to collect compartments that we
-         * thought were dead at the start of the GC. See the large comment in
-         * beginMarkPhase.
-         */
         bool repeatForDeadZone = false;
-        if (!nonincrementalByAPI && !isIncrementalGCInProgress()) {
-            for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-                if (c->scheduledForDestruction) {
-                    nonincrementalByAPI = true;
-                    repeatForDeadZone = true;
-                    reason = JS::gcreason::COMPARTMENT_REVIVED;
-                    c->zone()->scheduleGC();
-                }
-            }
+        if (poked && cleanUpEverything) {
+            /* Need to re-schedule all zones for GC. */
+            JS::PrepareForFullGC(rt->contextFromMainThread());
+        } else if (shouldRepeatForDeadZone() && !wasReset) {
+            /*
+             * This code makes an extra effort to collect compartments that we
+             * thought were dead at the start of the GC. See the large comment
+             * in beginMarkPhase.
+             */
+            repeatForDeadZone = true;
+            reason = JS::gcreason::COMPARTMENT_REVIVED;
+            nonincrementalByAPI = true;
         }
 
         /*
