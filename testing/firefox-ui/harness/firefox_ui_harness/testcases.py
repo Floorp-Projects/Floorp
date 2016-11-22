@@ -36,11 +36,10 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
     def __init__(self, *args, **kwargs):
         super(UpdateTestCase, self).__init__(*args, **kwargs)
 
+        self.update_channel = kwargs.pop('update_channel')
+
         self.target_buildid = kwargs.pop('update_target_buildid')
         self.target_version = kwargs.pop('update_target_version')
-
-        self.update_channel = kwargs.pop('update_channel')
-        self.default_update_channel = None
 
         self.update_mar_channels = set(kwargs.pop('update_mar_channels'))
         self.default_mar_channels = None
@@ -59,16 +58,7 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
         # Ensure that there exists no already partially downloaded update
         self.remove_downloaded_update()
 
-        # If requested modify the default update channel. It will be active
-        # after the next restart of the application
-        # Bug 1142805 - Modify file via Python directly
-        if self.update_channel:
-            # Backup the original content and the path of the channel-prefs.js file
-            self.default_update_channel = {
-                'content': self.software_update.update_channel.file_contents,
-                'path': self.software_update.update_channel.file_path,
-            }
-            self.software_update.update_channel.default_channel = self.update_channel
+        self.set_preferences_defaults()
 
         # If requested modify the list of allowed MAR channels
         # Bug 1142805 - Modify file via Python directly
@@ -93,9 +83,6 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
             'patch': {},
             'success': False,
         }]
-
-        self.assertEqual(self.software_update.update_channel.default_channel,
-                         self.software_update.update_channel.channel)
 
         self.assertTrue(self.update_mar_channels.issubset(
                         self.software_update.mar_channels.channels),
@@ -371,17 +358,6 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
         mozfile.remove(path)
 
     def restore_config_files(self):
-        # Reset channel-prefs.js file if modified
-        try:
-            if self.default_update_channel:
-                path = self.default_update_channel['path']
-                self.logger.info('Restoring channel defaults for: {}'.format(path))
-                with open(path, 'w') as f:
-                    f.write(self.default_update_channel['content'])
-        except IOError:
-            self.logger.error('Failed to reset the default update channel.',
-                              exc_info=True)
-
         # Reset update-settings.ini file if modified
         try:
             if self.default_mar_channels:
@@ -392,6 +368,11 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
         except IOError:
             self.logger.error('Failed to reset the default mar channels.',
                               exc_info=True)
+
+    def set_preferences_defaults(self):
+        """Set the default value for specific preferences to force its usage."""
+        if self.update_channel:
+            self.software_update.update_channel = self.update_channel
 
     def wait_for_download_finished(self, window, timeout=TIMEOUT_UPDATE_DOWNLOAD):
         """ Waits until download is completed.
