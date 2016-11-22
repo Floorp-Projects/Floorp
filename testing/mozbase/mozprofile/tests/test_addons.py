@@ -10,6 +10,8 @@ import tempfile
 import unittest
 import urllib2
 
+import mozunit
+
 from manifestparser import ManifestParser
 import mozfile
 import mozhttpd
@@ -412,4 +414,4 @@ class TestAddonsManager(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

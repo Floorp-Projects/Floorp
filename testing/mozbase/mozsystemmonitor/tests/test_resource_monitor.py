@@ -6,6 +6,8 @@ import multiprocessing
 import time
 import unittest
 
+import mozunit
+
 try:
     import psutil
 except ImportError:
@@ -178,3 +180,7 @@ class TestResourceMonitor(unittest.TestCase):
         self.assertIsInstance(d['overall'], dict)
         self.assertIn('duration', d['overall'])
         self.assertIn('cpu_times', d['overall'])
+
+
+if __name__ == '__main__':
+    mozunit.main()

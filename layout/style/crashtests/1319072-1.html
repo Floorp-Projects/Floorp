@@ -1,0 +1,20 @@
+<!doctype html>
+<html class="reftest-wait">
+<title>Interpolation of decomposed matrices</title>
+<style>
+#target {
+  width: 100px; height: 100px;
+  background: blue;
+  animation: anim 0.1s cubic-bezier(0,1.5,1,1.5);
+}
+@keyframes anim {
+  from { transform: matrix(1, 0, 0, 1, 100, 200); }
+  to { transform: matrix(1, 0, 0, 1, 200, 100); }
+}
+</style>
+<div id="target"></div>
+<script>
+document.getElementById("target").addEventListener("animationend", () => {
+  document.documentElement.classList.remove("reftest-wait");
+}, false);
+</script>

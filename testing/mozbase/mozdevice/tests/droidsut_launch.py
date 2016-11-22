@@ -3,6 +3,8 @@ import mozdevice
 import logging
 import unittest
 
+import mozunit
+
 
 class LaunchTest(unittest.TestCase):
 
@@ -33,4 +35,4 @@ class LaunchTest(unittest.TestCase):
         a.wait()
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

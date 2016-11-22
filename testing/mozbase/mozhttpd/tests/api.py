@@ -12,6 +12,8 @@ import unittest
 import json
 import tempfile
 
+import mozunit
+
 here = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -263,4 +265,4 @@ class ProxyTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

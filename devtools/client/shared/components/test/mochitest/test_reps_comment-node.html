@@ -22,6 +22,7 @@ window.onload = Task.async(function* () {
   try {
     let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
     let { CommentNode } = browserRequire("devtools/client/shared/components/reps/comment-node");
+    const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
 
     let gripStub = {
       "type": "object",
@@ -55,7 +56,7 @@ window.onload = Task.async(function* () {
     // Test tiny rendering.
     const tinyRenderedComponent = renderComponent(CommentNode.rep, {
       object: gripStub,
-      mode: "tiny"
+      mode: MODE.TINY,
     });
     is(tinyRenderedComponent.textContent,
       `<!-- test\\nand test\\na… test\\nand test -->`,
@@ -64,7 +65,7 @@ window.onload = Task.async(function* () {
     // Test long rendering.
     const longRenderedComponent = renderComponent(CommentNode.rep, {
       object: gripStub,
-      mode: "long"
+      mode: MODE.LONG,
     });
     is(longRenderedComponent.textContent, `<!-- ${gripStub.preview.textContent} -->`,
       "CommentNode rep has expected text content in long mode");

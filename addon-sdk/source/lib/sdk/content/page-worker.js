@@ -13,8 +13,7 @@ const { Rules } = require('../util/rules');
 const { uuid } = require('../util/uuid');
 const { WorkerChild } = require("./worker-child");
 const { Cc, Ci, Cu } = require("chrome");
-const { observe } = require("../event/chrome");
-const { on } = require("../event/core");
+const { on: onSystemEvent } = require("../system/events");
 
 const appShell = Cc["@mozilla.org/appshell/appShellService;1"].getService(Ci.nsIAppShellService);
 
@@ -96,6 +95,7 @@ const ChildPage = Class({
     this.options.contentURL = url;
 
     url = this.options.contentURL ? data.url(this.options.contentURL) : "about:blank";
+
     this.webNav.loadURI(url, Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
   },
 
@@ -121,14 +121,15 @@ const ChildPage = Class({
   QueryInterface: XPCOMUtils.generateQI(["nsIWebProgressListener", "nsISupportsWeakReference"])
 });
 
-on(observe(DOC_INSERTED), "data", ({ target }) => {
-  let page = Array.from(pages.values()).find(p => p.contentWindow.document === target);
+onSystemEvent(DOC_INSERTED, ({type, subject, data}) => {
+  let page = Array.from(pages.values()).find(p => p.contentWindow.document === subject);
+
   if (!page)
     return;
 
   if (getAttachEventType(page.options) == DOC_INSERTED)
     page.attachWorker();
-});
+}, true);
 
 frames.port.on("sdk/frame/create", (frame, id, options) => {
   new ChildPage(frame, id, options);

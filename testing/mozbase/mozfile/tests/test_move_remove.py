@@ -9,6 +9,8 @@ import unittest
 import errno
 from contextlib import contextmanager
 
+import mozunit
+
 import mozfile
 import mozinfo
 
@@ -229,4 +231,4 @@ class MozFileMoveTestCase(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

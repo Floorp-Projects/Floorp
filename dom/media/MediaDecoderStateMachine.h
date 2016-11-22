@@ -326,8 +326,6 @@ private:
   // be held.
   bool IsPlaying() const;
 
-  // TODO: Those callback function may receive demuxed-only data.
-  // Need to figure out a suitable API name for this case.
   void OnAudioDecoded(MediaData* aAudio);
   void OnVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStartTime);
   void OnNotDecoded(MediaData::Type aType, const MediaResult& aError);
@@ -346,8 +344,7 @@ protected:
 
   // Inserts MediaData* samples into their respective MediaQueues.
   // aSample must not be null.
-
-  void Push(MediaData* aSample, MediaData::Type aSampleType);
+  void Push(MediaData* aSample);
 
   void OnAudioPopped(const RefPtr<MediaData>& aSample);
   void OnVideoPopped(const RefPtr<MediaData>& aSample);

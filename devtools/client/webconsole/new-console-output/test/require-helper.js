@@ -7,17 +7,20 @@ const requireHacker = require("require-hacker");
 requireHacker.global_hook("default", path => {
   switch (path) {
     // For Enzyme
+    case "react-dom":
     case "react-dom/server":
-      return `const React = require('react-dev'); module.exports = React`;
+      return `const React = require('devtools/client/shared/vendor/react-dev'); module.exports = React`;
     case "react-addons-test-utils":
-      return `const React = require('react-dev'); module.exports = React.addons.TestUtils`;
+      return `const React = require('devtools/client/shared/vendor/react-dev'); module.exports = React.addons.TestUtils`;
+    case "react-redux":
+      return `const ReactRedux = require('devtools/client/shared/vendor/react-redux'); module.exports = ReactRedux`;
     // Use react-dev. This would be handled by browserLoader in Firefox.
     case "react":
     case "devtools/client/shared/vendor/react":
-      return `const React = require('react-dev'); module.exports = React`;
+      return `const React = require('devtools/client/shared/vendor/react-dev'); module.exports = React`;
     // For Rep's use of AMD
     case "devtools/client/shared/vendor/react.default":
-      return `const React = require('react-dev'); module.exports = React`;
+      return `const React = require('devtools/client/shared/vendor/react-dev'); module.exports = React`;
   }
 
   // Some modules depend on Chrome APIs which don't work in mocha. When such a module

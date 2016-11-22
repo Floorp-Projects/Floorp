@@ -6,6 +6,8 @@ import os
 import tempfile
 import unittest
 
+import mozunit
+
 
 class TestBasic(unittest.TestCase):
     """ Test basic Mozhttpd capabilites """
@@ -43,4 +45,4 @@ class TestBasic(unittest.TestCase):
         mozfile.rmtree(tempdir)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

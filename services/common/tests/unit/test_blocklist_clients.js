@@ -8,7 +8,8 @@ Cu.import("resource://gre/modules/Timer.jsm");
 const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm");
 const { OS } = Cu.import("resource://gre/modules/osfile.jsm");
 
-const { loadKinto } = Cu.import("resource://services-common/kinto-offline-client.js");
+const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js");
+const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js");
 const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js");
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
@@ -26,8 +27,6 @@ let kintoClient;
 
 function kintoCollection(collectionName) {
   if (!kintoClient) {
-    const Kinto = loadKinto();
-    const FirefoxAdapter = Kinto.adapters.FirefoxAdapter;
     const config = {
       // Set the remote to be some server that will cause test failure when
       // hit since we should never hit the server directly, only via maybeSync()
