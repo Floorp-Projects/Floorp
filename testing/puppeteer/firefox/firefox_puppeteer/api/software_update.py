@@ -3,7 +3,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import re
 
 import mozinfo
 
@@ -164,6 +163,7 @@ class SoftwareUpdate(BaseLib):
     """The SoftwareUpdate API adds support for an easy access to the update process."""
     PREF_APP_DISTRIBUTION = 'distribution.id'
     PREF_APP_DISTRIBUTION_VERSION = 'distribution.version'
+    PREF_APP_UPDATE_CHANNEL = 'app.update.channel'
     PREF_APP_UPDATE_URL = 'app.update.url'
     PREF_APP_UPDATE_URL_OVERRIDE = 'app.update.url.override'
     PREF_DISABLED_ADDONS = 'extensions.disabledAddons'
@@ -174,7 +174,6 @@ class SoftwareUpdate(BaseLib):
         self.app_info = AppInfo(marionette)
         self.prefs = Preferences(marionette)
 
-        self._update_channel = UpdateChannel(marionette)
         self._mar_channels = MARChannels(marionette)
         self._active_update = ActiveUpdate(marionette)
 
@@ -224,7 +223,7 @@ class SoftwareUpdate(BaseLib):
 
         return {
             'buildid': self.app_info.appBuildID,
-            'channel': self.update_channel.channel,
+            'channel': self.update_channel,
             'disabled_addons': self.prefs.get_pref(self.PREF_DISABLED_ADDONS),
             'locale': self.app_info.locale,
             'mar_channels': self.mar_channels.channels,
@@ -295,7 +294,7 @@ class SoftwareUpdate(BaseLib):
     @property
     def patch_info(self):
         """ Returns information of the active update in the queue."""
-        info = {'channel': self.update_channel.channel}
+        info = {'channel': self.update_channel}
 
         if (self.active_update.exists):
             info['buildid'] = self.active_update.buildID
@@ -319,8 +318,17 @@ class SoftwareUpdate(BaseLib):
 
     @property
     def update_channel(self):
-        """ Holds a reference to an :class:`UpdateChannel` object."""
-        return self._update_channel
+        """Return the currently used update channel."""
+        return self.prefs.get_pref(self.PREF_APP_UPDATE_CHANNEL, default_branch=True)
+
+    @update_channel.setter
+    def update_channel(self, channel):
+        """Set the update channel to be used for update checks.
+
+        :param channel: New update channel to use
+
+        """
+        self.prefs.set_pref(self.PREF_APP_UPDATE_CHANNEL, channel, default_branch=True)
 
     @property
     def update_type(self):
@@ -373,56 +381,3 @@ class SoftwareUpdate(BaseLib):
 
         return url
 
-
-class UpdateChannel(BaseLib):
-    """Class to handle the update channel as listed in channel-prefs.js"""
-    REGEX_UPDATE_CHANNEL = re.compile(r'("app\.update\.channel", ")([^"].*)(?=")')
-
-    def __init__(self, marionette):
-        BaseLib.__init__(self, marionette)
-
-        self.prefs = Preferences(marionette)
-
-        self.file_path = self.marionette.execute_script("""
-          Components.utils.import('resource://gre/modules/Services.jsm');
-
-          let file = Services.dirsvc.get('PrfDef', Components.interfaces.nsIFile);
-          file.append('channel-prefs.js');
-
-          return file.path;
-        """)
-
-    @property
-    def file_contents(self):
-        """The contents of the channel-prefs.js file."""
-        with open(self.file_path) as f:
-            return f.read()
-
-    @property
-    def channel(self):
-        """The name of the update channel as stored in the
-        app.update.channel pref."""
-        return self.prefs.get_pref('app.update.channel', True)
-
-    @property
-    def default_channel(self):
-        """Get the default update channel
-
-        :returns: Current default update channel
-        """
-        matches = re.search(self.REGEX_UPDATE_CHANNEL, self.file_contents).groups()
-        assert len(matches) == 2, 'Update channel value has been found'
-
-        return matches[1]
-
-    @default_channel.setter
-    def default_channel(self, channel):
-        """Set default update channel.
-
-        :param channel: New default update channel
-        """
-        assert channel, 'Update channel has been specified'
-        new_content = re.sub(
-            self.REGEX_UPDATE_CHANNEL, r'\g<1>' + channel, self.file_contents)
-        with open(self.file_path, 'w') as f:
-            f.write(new_content)
