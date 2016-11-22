@@ -1369,7 +1369,7 @@ class CheckTypes(TcheckVisitor):
             if cycles:
                 self.error(
                     p.decl.loc,
-                    "cycle(s) detected in manager/manages heirarchy: %s",
+                    "cycle(s) detected in manager/manages hierarchy: %s",
                     formatcycles(cycles))
 
         if 1 == len(ptype.managers) and ptype is ptype.manager():
