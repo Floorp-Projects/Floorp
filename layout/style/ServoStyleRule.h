@@ -13,21 +13,52 @@
 #include "mozilla/ServoBindingTypes.h"
 
 #include "nsIDOMCSSStyleRule.h"
+#include "nsDOMCSSDeclaration.h"
 
 namespace mozilla {
+
+class ServoDeclarationBlock;
+
+class ServoStyleRuleDeclaration final : public nsDOMCSSDeclaration
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule** aParent) final;
+  nsINode* GetParentObject() final;
+
+protected:
+  DeclarationBlock* GetCSSDeclaration(Operation aOperation) final;
+  nsresult SetCSSDeclaration(DeclarationBlock* aDecl) final;
+  nsIDocument* DocToUpdate() final;
+  void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) final;
+
+private:
+  // For accessing the constructor.
+  friend class ServoStyleRule;
+
+  explicit ServoStyleRuleDeclaration(
+    already_AddRefed<RawServoDeclarationBlock> aDecls);
+  ~ServoStyleRuleDeclaration();
+
+  inline ServoStyleRule* Rule();
+
+  RefPtr<ServoDeclarationBlock> mDecls;
+};
 
 class ServoStyleRule final : public css::Rule
                            , public nsIDOMCSSStyleRule
 {
 public:
-  explicit ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule)
-    : css::Rule(0, 0)
-    , mRawRule(aRawRule)
-  {}
+  explicit ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ServoStyleRule,
+                                                         css::Rule)
   NS_DECL_NSIDOMCSSRULE
   NS_DECL_NSIDOMCSSSTYLERULE
+
+  RawServoStyleRule* Raw() const { return mRawRule; }
 
   // Methods of mozilla::css::Rule
   int32_t GetType() const final { return css::Rule::STYLE_RULE; }
@@ -42,8 +73,19 @@ public:
 private:
   ~ServoStyleRule() {}
 
+  // For computing the offset of mDecls.
+  friend class ServoStyleRuleDeclaration;
+
   RefPtr<RawServoStyleRule> mRawRule;
+  ServoStyleRuleDeclaration mDecls;
 };
+
+ServoStyleRule*
+ServoStyleRuleDeclaration::Rule()
+{
+  return reinterpret_cast<ServoStyleRule*>(reinterpret_cast<uint8_t*>(this) -
+                                           offsetof(ServoStyleRule, mDecls));
+}
 
 } // namespace mozilla
 
