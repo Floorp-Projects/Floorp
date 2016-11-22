@@ -29,9 +29,7 @@ SOURCES += [
 if CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
         'AnnexB.cpp',
-        'AudioDecoder.cpp',
         'VideoDecoder.cpp',
-        'WMFAACDecoder.cpp',
         'WMFH264Decoder.cpp',
     ]
 
