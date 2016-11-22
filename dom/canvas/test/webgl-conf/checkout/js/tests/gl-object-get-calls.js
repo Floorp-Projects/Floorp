@@ -315,8 +315,8 @@ var shaders = gl.getAttachedShaders(standardProgram);
 shouldBe('shaders.length', '2');
 shouldBeTrue('shaders[0] == standardVert && shaders[1] == standardFrag || shaders[1] == standardVert && shaders[0] == standardFrag');
 wtu.glErrorShouldBe(gl, gl.NO_ERROR);
-gl.getAttachedShaders(null);
-wtu.glErrorShouldBe(gl, gl.INVALID_VALUE);
+shouldThrow('gl.getAttachedShaders(null)');
+wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 shouldThrow('gl.getAttachedShaders(standardVert)');
 wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
