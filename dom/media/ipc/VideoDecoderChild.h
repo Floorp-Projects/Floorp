@@ -12,6 +12,9 @@
 #include "PlatformDecoderModule.h"
 
 namespace mozilla {
+namespace layers {
+class SynchronousTask;
+}
 namespace dom {
 
 class RemoteVideoDecoder;
@@ -32,12 +35,13 @@ public:
   mozilla::ipc::IPCResult RecvError(const nsresult& aError) override;
   mozilla::ipc::IPCResult RecvInitComplete(const bool& aHardware, const nsCString& aHardwareReason) override;
   mozilla::ipc::IPCResult RecvInitFailed(const nsresult& aReason) override;
+  mozilla::ipc::IPCResult RecvFlushComplete() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   RefPtr<MediaDataDecoder::InitPromise> Init();
   void Input(MediaRawData* aSample);
-  void Flush();
+  void Flush(layers::SynchronousTask* Task);
   void Drain();
   void Shutdown();
   bool IsHardwareAccelerated(nsACString& aFailureReason) const;
@@ -65,6 +69,8 @@ private:
   MediaDataDecoderCallback* mCallback;
 
   MozPromiseHolder<MediaDataDecoder::InitPromise> mInitPromise;
+
+  layers::SynchronousTask* mFlushTask;
 
   nsCString mHardwareAcceleratedReason;
   bool mCanSend;
