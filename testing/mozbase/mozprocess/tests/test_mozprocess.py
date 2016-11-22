@@ -7,8 +7,10 @@
 import os
 import subprocess
 import sys
-import unittest
 import proctest
+
+import mozunit
+
 from mozprocess import processhandler
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -232,4 +234,4 @@ class ProcTest(proctest.ProcTest):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

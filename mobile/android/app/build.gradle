@@ -3,6 +3,11 @@ buildDir "${topobjdir}/gradle/build/mobile/android/app"
 apply plugin: 'android-sdk-manager' // Must come before 'com.android.*'.
 apply plugin: 'com.android.application'
 apply plugin: 'checkstyle'
+apply plugin: 'com.getkeepsafe.dexcount'
+
+dexcount {
+    format = "tree"
+}
 
 android {
     compileSdkVersion 23
@@ -39,10 +44,31 @@ android {
     }
 
     buildTypes {
-        release {
-            shrinkResources true
+        // We have the following difficult situation.  Minification (Proguard) is only available per
+        // Android-Gradle `buildType`.  Instrumentation (Robocop) is only available for exactly one
+        // `buildType` (see Android-Gradle `testBuildType`, which defaults to "debug").  Local
+        // developers expect to build and run tests against the "debug" build type.  Automation
+        // needs to produce an instrumentation (Robocop) APK against a Fennec APK that will ship.
+        // (This is very unusual; usually, instrumentation tests do _not_ run against a shipping
+        // APK.)
+        //
+        // Given these constraints, we should not change `testBuildType` to avoid confusing local
+        // developers.  Also, we should not Proguard any "debug" builds, because we don't want local
+        // developers to incur the cost of Proguard.  However, we still need to find a way to
+        // Proguard a shipping APK and produce an instrumentation (Robocop APK) against it.  To
+        // achieve this, we make "debug" builds Proguard in automation alone.  This does have the
+        // unfortunate side effect of Proguarding the instrumentation (Robocop) APK, but nothing
+        // uses runtime inspection or class-loading with that APK, so it shouldn't be a problem.
+        def configureMinifyClosure = {
+            // Bug 1229269: we can't yet shrinkResources effectively.  Be sure
+            // to use -stripped.ap_ after enabling this.
+            // shrinkResources true
             minifyEnabled true
             proguardFile "${topsrcdir}/mobile/android/config/proguard/proguard.cfg"
+        }
+        release configureMinifyClosure
+        if (mozconfig.substs.MOZILLA_OFFICIAL) {
+            debug configureMinifyClosure
         }
     }
 
@@ -55,9 +81,6 @@ android {
             minSdkVersion 21
             dexOptions {
                 preDexLibraries true
-                // We only call `MultiDex.install()` for the automation build flavor
-                // so this may not work. However, I don't think the multidex support
-                // library is necessary for 21+, so I expect that it will work.
                 multiDexEnabled true
             }
         }
@@ -68,17 +91,6 @@ android {
         }
         // Automation builds.
         automation {
-            dexOptions {
-                // As of FF48 on beta, the "test", "lint", etc. treeherder jobs fail because they
-                // exceed the method limit. Beta includes Adjust and its GPS dependencies, which
-                // increase the method count & explain the failures. Furthermore, this error only
-                // occurs on debug builds because we don't proguard.
-                //
-                // We enable multidex as an easy, quick-fix with minimal side effects but before we
-                // move to gradle for our production builds, we should re-evaluate this decision
-                // (bug 1286677).
-                multiDexEnabled true
-            }
         }
     }
 
@@ -193,8 +205,6 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:multidex:1.0.0'
-
     compile "com.android.support:support-v4:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
     compile "com.android.support:appcompat-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
     compile "com.android.support:cardview-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"

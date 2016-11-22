@@ -904,8 +904,13 @@ pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com
 // Token server used by Firefox Account-authenticated Sync.
 pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");
 
-// Enable Presentation API
-pref("dom.presentation.enabled", false);
+#ifndef RELEASE_OR_BETA
+// Enable Presentation API on Nightly
+pref("dom.presentation.enabled", true);
+pref("dom.presentation.controller.enabled", true); // enable 1-UA mode
+pref("dom.presentation.receiver.enabled", true); // enable 1-UA mode
+#endif
+
 pref("dom.presentation.discovery.enabled", true);
 pref("dom.presentation.discovery.legacy.enabled", true); // for TV 2.5 backward capability
 

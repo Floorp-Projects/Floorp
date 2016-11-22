@@ -146,6 +146,7 @@ interface RTCPeerConnection : EventTarget  {
   attribute EventHandler ontrack;     // replaces onaddtrack and onaddstream.
   attribute EventHandler onremovestream;
   attribute EventHandler oniceconnectionstatechange;
+  attribute EventHandler onicegatheringstatechange;
 
   Promise<RTCStatsReport> getStats (optional MediaStreamTrack? selector);
 

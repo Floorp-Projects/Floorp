@@ -8,6 +8,9 @@ import mozhttpd
 import os
 import tempfile
 import unittest
+
+import mozunit
+
 from mozfile import load
 
 
@@ -59,4 +62,4 @@ class TestLoad(unittest.TestCase):
                 os.remove(tmp.name)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

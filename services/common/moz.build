@@ -19,6 +19,7 @@ EXTRA_JS_MODULES['services-common'] += [
     'blocklist-updater.js',
     'kinto-http-client.js',
     'kinto-offline-client.js',
+    'kinto-storage-adapter.js',
     'logmanager.js',
     'observers.js',
     'rest.js',

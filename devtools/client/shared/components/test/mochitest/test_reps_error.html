@@ -21,6 +21,7 @@ Test Error rep
 window.onload = Task.async(function* () {
   let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
   let { ErrorRep } = browserRequire("devtools/client/shared/components/reps/error");
+  const { MODE } = browserRequire("devtools/client/shared/components/reps/constants");
 
   try {
     // Test errors with different properties
@@ -56,7 +57,8 @@ window.onload = Task.async(function* () {
       "@debugger eval code:1:13\n",
       "Error Rep has expected text content for a simple error");
 
-    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    const tinyRenderedComponent = renderComponent(
+      ErrorRep.rep, {object: stub, mode: MODE.TINY});
     is(tinyRenderedComponent.textContent,
       "Error",
       "Error Rep has expected text content for a simple error in tiny mode");
@@ -87,7 +89,8 @@ window.onload = Task.async(function* () {
       "@debugger eval code:8:1\n",
       "Error Rep has expected text content for an error with a multiple line");
 
-    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    const tinyRenderedComponent = renderComponent(
+      ErrorRep.rep, {object: stub, mode: MODE.TINY});
     is(tinyRenderedComponent.textContent,
       "Error",
       "Error Rep has expected text content for an error with a multiple line in tiny mode");
@@ -104,7 +107,8 @@ window.onload = Task.async(function* () {
       "Error: Error message",
       "Error Rep has expected text content for an error without stacktrace");
 
-    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    const tinyRenderedComponent = renderComponent(
+      ErrorRep.rep, {object: stub, mode: MODE.TINY});
     is(tinyRenderedComponent.textContent,
       "Error",
       "Error Rep has expected text content for an error without stacktrace in tiny mode");
@@ -124,7 +128,8 @@ window.onload = Task.async(function* () {
       "@debugger eval code:10:13\n",
       "Error Rep has expected text content for an EvalError");
 
-    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    const tinyRenderedComponent = renderComponent(
+      ErrorRep.rep, {object: stub, mode: MODE.TINY});
     is(tinyRenderedComponent.textContent,
       "EvalError",
       "Error Rep has expected text content for an EvalError in tiny mode");
@@ -144,7 +149,8 @@ window.onload = Task.async(function* () {
       "@debugger eval code:11:13\n",
       "Error Rep has expected text content for an InternalError");
 
-    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    const tinyRenderedComponent = renderComponent(
+      ErrorRep.rep, {object: stub, mode: MODE.TINY});
     is(tinyRenderedComponent.textContent,
       "InternalError",
       "Error Rep has expected text content for an InternalError in tiny mode");
@@ -164,7 +170,8 @@ window.onload = Task.async(function* () {
       "@debugger eval code:12:13\n",
       "Error Rep has expected text content for RangeError");
 
-    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    const tinyRenderedComponent = renderComponent(
+      ErrorRep.rep, {object: stub, mode: MODE.TINY});
     is(tinyRenderedComponent.textContent,
       "RangeError",
       "Error Rep has expected text content for RangeError in tiny mode");
@@ -184,7 +191,8 @@ window.onload = Task.async(function* () {
       "@debugger eval code:13:13\n",
       "Error Rep has expected text content for ReferenceError");
 
-    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    const tinyRenderedComponent = renderComponent(
+      ErrorRep.rep, {object: stub, mode: MODE.TINY});
     is(tinyRenderedComponent.textContent,
       "ReferenceError",
       "Error Rep has expected text content for ReferenceError in tiny mode");
@@ -204,7 +212,8 @@ window.onload = Task.async(function* () {
       "@debugger eval code:14:13\n",
       "Error Rep has expected text content for SyntaxError");
 
-    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    const tinyRenderedComponent = renderComponent(
+      ErrorRep.rep, {object: stub, mode: MODE.TINY});
     is(tinyRenderedComponent.textContent,
       "SyntaxError",
       "SyntaxError Rep has expected text content for SyntaxError in tiny mode");
@@ -224,7 +233,8 @@ window.onload = Task.async(function* () {
       "@debugger eval code:15:13\n",
       "Error Rep has expected text content for TypeError");
 
-    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    const tinyRenderedComponent = renderComponent(
+      ErrorRep.rep, {object: stub, mode: MODE.TINY});
     is(tinyRenderedComponent.textContent,
       "TypeError",
       "Error Rep has expected text content for a TypeError in tiny mode");
@@ -244,7 +254,8 @@ window.onload = Task.async(function* () {
       "@debugger eval code:16:13\n",
       "Error Rep has expected text content for URIError");
 
-    const tinyRenderedComponent = renderComponent(ErrorRep.rep, {object: stub, mode: "tiny"});
+    const tinyRenderedComponent = renderComponent(
+      ErrorRep.rep, {object: stub, mode: MODE.TINY});
     is(tinyRenderedComponent.textContent,
       "URIError",
       "Error Rep has expected text content for URIError in tiny mode");

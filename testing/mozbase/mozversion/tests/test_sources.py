@@ -8,8 +8,9 @@ import os
 import tempfile
 import unittest
 
-import mozfile
+import mozunit
 
+import mozfile
 from mozversion import errors, get_version
 
 
@@ -82,4 +83,4 @@ SourceRepository = PlatformSourceRepo
 
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

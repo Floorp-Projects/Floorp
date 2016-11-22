@@ -9,8 +9,9 @@ import threading
 import time
 import unittest
 
-import mozfile
+import mozunit
 
+import mozfile
 import mozlog.unstructured as mozlog
 
 
@@ -232,7 +233,7 @@ class TestLoggingMixin(unittest.TestCase):
         self.assertTrue(not hasattr(loggable, "_logger"))
         loggable.log(mozlog.INFO, "This will instantiate the logger")
         self.assertTrue(hasattr(loggable, "_logger"))
-        self.assertEqual(loggable._logger.name, "test_logger.Loggable")
+        self.assertEqual(loggable._logger.name, "__main__.Loggable")
 
         self.assertRaises(ValueError, loggable.set_logger,
                           "not a logger")
@@ -261,4 +262,4 @@ class TestLoggingMixin(unittest.TestCase):
         self.assertEqual(expected_messages, actual_messages)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

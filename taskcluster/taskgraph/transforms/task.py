@@ -472,6 +472,17 @@ def build_macosx_engine_payload(config, task, task_def):
         'artifacts': artifacts,
     }
 
+
+@payload_builder('buildbot-bridge')
+def build_buildbot_bridge_payload(config, task, task_def):
+    worker = task['worker']
+    task_def['payload'] = {
+        'buildername': worker['buildername'],
+        'sourcestamp': worker['sourcestamp'],
+        'properties': worker['properties'],
+    }
+
+
 transforms = TransformSequence()
 
 
