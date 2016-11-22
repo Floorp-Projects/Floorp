@@ -667,12 +667,13 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         """
         Install APKs on the emulator
         """
-        assert self.installer_path is not None, \
-            "Either add installer_path to the config or use --installer-path."
         install_needed = self.config["suite_definitions"][self.test_suite].get("install")
         if install_needed == False:
             self.info("Skipping apk installation for %s" % self.test_suite)
             return
+
+        assert self.installer_path is not None, \
+            "Either add installer_path to the config or use --installer-path."
 
         self.sdk_level = self._run_with_timeout(30, [self.adb_path, '-s', self.emulator['device_id'],
             'shell', 'getprop', 'ro.build.version.sdk'])
