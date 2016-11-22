@@ -14,8 +14,11 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsIPrintSession.h"
 #include "nsIPrintSettings.h"
+#include "nsIUUIDGenerator.h"
 
 using mozilla::Unused;
 
@@ -60,6 +63,17 @@ nsDeviceContextSpecProxy::Init(nsIWidget* aWidget,
   if (NS_FAILED(rv) || !mRemotePrintJob) {
     NS_WARNING("We can't print via the parent without a RemotePrintJobChild.");
     return NS_ERROR_FAILURE;
+  }
+
+  rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
+                              getter_AddRefs(mRecordingDir));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mUuidGenerator = do_GetService("@mozilla.org/uuid-generator;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   return NS_OK;
@@ -129,12 +143,48 @@ nsDeviceContextSpecProxy::GetPrintingScale()
   return mRealDeviceContextSpec->GetPrintingScale();
 }
 
+nsresult
+nsDeviceContextSpecProxy::CreateUniqueTempPath(nsACString& aFilePath)
+{
+  MOZ_ASSERT(mRecordingDir);
+  MOZ_ASSERT(mUuidGenerator);
+
+  nsID uuid;
+  nsresult rv = mUuidGenerator->GenerateUUIDInPlace(&uuid);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  char uuidChars[NSID_LENGTH];
+  uuid.ToProvidedString(uuidChars);
+  mRecordingFileName.AssignASCII(uuidChars);
+
+  nsCOMPtr<nsIFile> recordingFile;
+  rv = mRecordingDir->Clone(getter_AddRefs(recordingFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = recordingFile->AppendNative(mRecordingFileName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return recordingFile->GetNativePath(aFilePath);
+}
+
 NS_IMETHODIMP
 nsDeviceContextSpecProxy::BeginDocument(const nsAString& aTitle,
                                         const nsAString& aPrintToFileName,
                                         int32_t aStartPage, int32_t aEndPage)
 {
-  mRecorder = new mozilla::gfx::DrawEventRecorderMemory();
+  nsAutoCString recordingPath;
+  nsresult rv = CreateUniqueTempPath(recordingPath);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  mRecorder = new mozilla::gfx::DrawEventRecorderFile(recordingPath.get());
   return mRemotePrintJob->InitializePrint(nsString(aTitle),
                                           nsString(aPrintToFileName),
                                           aStartPage, aEndPage);
@@ -157,34 +207,26 @@ nsDeviceContextSpecProxy::AbortDocument()
 NS_IMETHODIMP
 nsDeviceContextSpecProxy::BeginPage()
 {
+  // Reopen the file, if necessary, ready for the next page.
+  if (!mRecorder->IsOpen()) {
+    nsAutoCString recordingPath;
+    nsresult rv = CreateUniqueTempPath(recordingPath);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    mRecorder->OpenNew(recordingPath.get());
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDeviceContextSpecProxy::EndPage()
 {
-  // Save the current page recording to shared memory.
-  mozilla::ipc::Shmem storedPage;
-  size_t recordingSize = mRecorder->RecordingSize();
-  if (!mRemotePrintJob->AllocShmem(recordingSize,
-                                   mozilla::ipc::SharedMemory::TYPE_BASIC,
-                                   &storedPage)) {
-    NS_WARNING("Failed to create shared memory for remote printing.");
-    return NS_ERROR_FAILURE;
-  }
-
-  bool success = mRecorder->CopyRecording(storedPage.get<char>(), recordingSize);
-  if (!success) {
-    NS_WARNING("Copying recording to shared memory was not succesful.");
-    return NS_ERROR_FAILURE;
-  }
-
-  // Wipe the recording to free memory. The recorder does not forget which data
-  // backed objects that it has stored.
-  mRecorder->WipeRecording();
-
   // Send the page recording to the parent.
-  mRemotePrintJob->ProcessPage(storedPage);
+  mRecorder->Close();
+  mRemotePrintJob->ProcessPage(mRecordingFileName);
 
   return NS_OK;
 }
