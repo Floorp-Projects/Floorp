@@ -48,6 +48,18 @@ ARTIFACTS = [
     ("public/test_info/", "build/blobber_upload_dir/"),
 ]
 
+BUILDER_NAME_PREFIX = {
+    'linux64-pgo': 'Ubuntu VM 12.04 x64',
+    'linux64': 'Ubuntu VM 12.04 x64',
+    'linux64-asan': 'Ubuntu ASAN VM 12.04 x64',
+    'linux64-ccov': 'Ubuntu Code Coverage VM 12.04 x64',
+    'linux64-jsdcov': 'Ubuntu Code Coverage VM 12.04 x64',
+    'macosx64': 'Rev7 MacOSX Yosemite 10.10.5',
+    'android-4.3-arm7-api-15': 'Android 4.3 armv7 API 15+',
+    'android-4.2-x86': 'Android 4.2 x86 Emulator',
+    'android-4.3-arm7-api-15-gradle': 'Android 4.3 armv7 API 15+',
+}
+
 logger = logging.getLogger(__name__)
 
 transforms = TransformSequence()
@@ -65,7 +77,12 @@ def make_task_description(config, tests):
 
         build_label = test['build-label']
 
-        unittest_try_name = test.get('unittest-try-name', test['test-name'])
+        if 'talos-try-name' in test:
+            try_name = test['talos-try-name']
+            attr_try_name = 'talos_try_name'
+        else:
+            try_name = test.get('unittest-try-name', test['test-name'])
+            attr_try_name = 'unittest_try_name'
 
         attr_build_platform, attr_build_type = test['build-platform'].split('/', 1)
 
@@ -84,7 +101,7 @@ def make_task_description(config, tests):
             'test_chunk': str(test['this-chunk']),
             'unittest_suite': suite,
             'unittest_flavor': flavor,
-            'unittest_try_name': unittest_try_name,
+            attr_try_name: try_name,
         })
 
         taskdesc = {}
@@ -443,3 +460,53 @@ def macosx_engine_setup(config, test, taskdesc):
         download_symbols = mozharness['download-symbols']
         download_symbols = {True: 'true', False: 'false'}.get(download_symbols, download_symbols)
         command.append('--download-symbols=' + download_symbols)
+
+
+@worker_setup_function("buildbot-bridge")
+def buildbot_bridge_setup(config, test, taskdesc):
+    branch = config.params['project']
+    platform, build_type = test['build-platform'].split('/')
+    test_name = test.get('talos-try-name', test['test-name'])
+    mozharness = test['mozharness']
+
+    if test['e10s'] and not test_name.endswith('-e10s'):
+        test_name += '-e10s'
+
+    if mozharness.get('chunked', False):
+        this_chunk = test.get('this-chunk')
+        test_name = '{}-{}'.format(test_name, this_chunk)
+
+    worker = taskdesc['worker'] = {}
+    worker['implementation'] = test['worker-implementation']
+
+    taskdesc['worker-type'] = 'buildbot-bridge/buildbot-bridge'
+
+    if test.get('suite', '') == 'talos':
+        buildername = '{} {} talos {}'.format(
+            BUILDER_NAME_PREFIX[platform],
+            branch,
+            test_name
+        )
+        if buildername.startswith('Ubuntu'):
+            buildername = buildername.replace('VM', 'HW')
+    else:
+        buildername = '{} {} {} test {}'.format(
+            BUILDER_NAME_PREFIX[platform],
+            branch,
+            build_type,
+            test_name
+        )
+
+    worker.update({
+        'buildername': buildername,
+        'sourcestamp': {
+            'branch': branch,
+            'repository': config.params['head_repository'],
+            'revision': config.params['head_rev'],
+        },
+        'properties': {
+            'product': test.get('product', 'firefox'),
+            'who': config.params['owner'],
+            'installer_path': mozharness['build-artifact-name'],
+        }
+    })

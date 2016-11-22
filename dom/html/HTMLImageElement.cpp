@@ -380,8 +380,7 @@ HTMLImageElement::BeforeSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     GetAttr(kNameSpaceID_None, aName, tmp);
 
     if (!tmp.IsEmpty()) {
-      mForm->RemoveImageElementFromTable(this, tmp,
-                                         HTMLFormElement::AttributeUpdated);
+      mForm->RemoveImageElementFromTable(this, tmp);
     }
   }
 
@@ -711,6 +710,13 @@ HTMLImageElement::IntrinsicState() const
     nsImageLoadingContent::ImageState();
 }
 
+void
+HTMLImageElement::NodeInfoChanged()
+{
+  // Resetting the last selected source if adoption steps are run.
+  mLastSelectedSource = nullptr;
+}
+
 // static
 already_AddRefed<HTMLImageElement>
 HTMLImageElement::Image(const GlobalObject& aGlobal,
@@ -882,13 +888,11 @@ HTMLImageElement::ClearForm(bool aRemoveFromForm)
     mForm->RemoveImageElement(this);
 
     if (!nameVal.IsEmpty()) {
-      mForm->RemoveImageElementFromTable(this, nameVal,
-                                         HTMLFormElement::ElementRemoved);
+      mForm->RemoveImageElementFromTable(this, nameVal);
     }
 
     if (!idVal.IsEmpty()) {
-      mForm->RemoveImageElementFromTable(this, idVal,
-                                         HTMLFormElement::ElementRemoved);
+      mForm->RemoveImageElementFromTable(this, idVal);
     }
   }
 

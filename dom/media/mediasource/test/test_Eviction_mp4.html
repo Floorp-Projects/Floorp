@@ -31,46 +31,46 @@ function fillUpSourceBuffer(sourceBuffer, doAppendDataFunc, onCaughtExceptionCal
   });
 }
 
+addMSEPrefs(
+  ["media.mediasource.eviction_threshold.audio", 524288],
+  ["media.dormant-on-pause-timeout-ms", -1] // FIXME: bug 1319292
+);
+
 runWithMSE(function(ms, el) {
   el.controls = true;
   once(ms, 'sourceopen').then(function() {
     ok(true, "Receive a sourceopen event");
-    SpecialPowers.pushPrefEnv({
-      "set": [
-        ["media.mediasource.eviction_threshold.audio", 524288],
-      ]
-    }, function() {
-      let audiosb = ms.addSourceBuffer("audio/mp4");
-      audiosb.mode = "sequence";
-      fetchAndLoad(audiosb, 'bipbop/bipbop_audio', ['init'], '.mp4')
-      .then(function() {
-        fetchWithXHR('bipbop/bipbop_audio1.m4s', function(audioBuffer) {
-           fillUpSourceBuffer(audiosb,
-             function() { // doAppendDataFunc
-               audiosb.appendBuffer(audioBuffer);
-             },
-             function(ex) { // onCaughtExceptionCallback
-               is(ex.name, 'QuotaExceededError', "QuotaExceededError thrown");
-               is(audiosb.buffered.end(0), el.duration, "Duration is end of buffered range");
-               let seekTime = audiosb.buffered.end(0) / 2;
-               el.currentTime = seekTime;
-               once(el, 'seeked', () => {
-                 is(el.currentTime, seekTime, "correctly seeked to " + seekTime);
-                 try {
-                   audiosb.appendBuffer(audioBuffer);
-                 } catch(ex) {
-                   ok(false, "Shouldn't throw another time when data can be evicted");
-                   el.mozDumpDebugInfo();
-                   SimpleTest.finish();
-                   return;
-                 }
-                 once(audiosb, 'update', () => {
-                   ok(true, "appendBuffer succeeded");
-                   SimpleTest.finish();
-                 });
+    let audiosb = ms.addSourceBuffer("audio/mp4");
+    audiosb.mode = "sequence";
+    fetchAndLoad(audiosb, 'bipbop/bipbop_audio', ['init'], '.mp4')
+    .then(function() {
+      fetchWithXHR('bipbop/bipbop_audio1.m4s', function(audioBuffer) {
+         fillUpSourceBuffer(audiosb,
+           function() { // doAppendDataFunc
+             audiosb.appendBuffer(audioBuffer);
+           },
+           function(ex) { // onCaughtExceptionCallback
+             is(ex.name, 'QuotaExceededError', "QuotaExceededError thrown");
+             is(audiosb.buffered.end(0), el.duration, "Duration is end of buffered range");
+             let seekTime = audiosb.buffered.end(0) / 2;
+             el.currentTime = seekTime;
+             once(el, 'seeked', () => {
+               dump("dump: seeked to " + seekTime);
+               is(el.currentTime, seekTime, "correctly seeked to " + seekTime);
+               try {
+                 audiosb.appendBuffer(audioBuffer);
+               } catch(ex) {
+                 ok(false, "Shouldn't throw another time when data can be evicted");
+                 el.mozDumpDebugInfo();
+                 SimpleTest.finish();
+                 return;
+               }
+               once(audiosb, 'update', () => {
+                 ok(true, "appendBuffer succeeded");
+                 SimpleTest.finish();
                });
-            });
-        });
+             });
+          });
       });
     });
   });

@@ -172,6 +172,12 @@ GPUChild::ActorDestroy(ActorDestroyReason aWhy)
 #endif
     Telemetry::Accumulate(Telemetry::SUBPROCESS_ABNORMAL_ABORT,
         nsDependentCString(XRE_ChildProcessTypeToString(GeckoProcessType_GPU), 1));
+
+    // Notify the Telemetry environment so that we can refresh and do a subsession split
+    if (nsCOMPtr<nsIObserverService> obsvc = services::GetObserverService()) {
+      obsvc->NotifyObservers(nullptr, "compositor:process-aborted", nullptr);
+    }
+
   }
 
   gfxVars::RemoveReceiver(this);

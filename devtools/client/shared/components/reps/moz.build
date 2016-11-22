@@ -9,6 +9,7 @@ DevToolsModules(
     'attribute.js',
     'caption.js',
     'comment-node.js',
+    'constants.js',
     'date-time.js',
     'document.js',
     'element-node.js',

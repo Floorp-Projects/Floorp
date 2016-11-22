@@ -3,6 +3,9 @@
 import mozdevice
 import logging
 import unittest
+
+import mozunit
+
 from sut import MockAgent
 
 
@@ -20,4 +23,4 @@ class TestUnpack(unittest.TestCase):
                                             "/data/test/"))
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

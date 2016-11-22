@@ -8,8 +8,11 @@ import os
 import shutil
 import tempfile
 import unittest
-from manifestparser import ManifestParser
 from StringIO import StringIO
+
+import mozunit
+
+from manifestparser import ManifestParser
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -322,4 +325,4 @@ yellow = submarine"""  # noqa
         self.assertTrue(len(parser.manifests()) == 1)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

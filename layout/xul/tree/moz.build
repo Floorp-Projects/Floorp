@@ -45,6 +45,7 @@ LOCAL_INCLUDES += [
     '../../base',
     '../../forms',
     '../../generic',
+    '../../painting',
     '../../style',
     '/dom/base',
 ]

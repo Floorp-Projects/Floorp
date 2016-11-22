@@ -3,6 +3,8 @@ import mozdevice
 import logging
 import unittest
 
+import mozunit
+
 
 class BasicTest(unittest.TestCase):
 
@@ -70,4 +72,4 @@ class BasicTest(unittest.TestCase):
                 a.wait()
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

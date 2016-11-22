@@ -12,6 +12,7 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
   const { createFactories, isGrip } = require("./rep-utils");
   const { Caption } = createFactories(require("./caption"));
+  const { MODE } = require("./constants");
 
   // Shortcuts
   const { span } = React.DOM;
@@ -25,7 +26,8 @@ define(function (require, exports, module) {
 
     propTypes: {
       object: React.PropTypes.object.isRequired,
-      mode: React.PropTypes.string,
+      // @TODO Change this to Object.values once it's supported in Node's version of V8
+      mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
       provider: React.PropTypes.object,
     },
 
@@ -39,7 +41,7 @@ define(function (require, exports, module) {
 
     getTitle: function (object, context) {
       let objectLink = this.props.objectLink || span;
-      if (this.props.mode != "tiny") {
+      if (this.props.mode !== MODE.TINY) {
         return objectLink({
           object: object
         }, object.class + " ");
@@ -108,8 +110,10 @@ define(function (require, exports, module) {
     },
 
     render: function () {
-      let mode = this.props.mode || "short";
-      let object = this.props.object;
+      let {
+        object,
+        mode = MODE.SHORT
+      } = this.props;
 
       let items;
       let brackets;
@@ -117,13 +121,13 @@ define(function (require, exports, module) {
         return space ? { left: "[ ", right: " ]"} : { left: "[", right: "]"};
       };
 
-      if (mode == "tiny") {
+      if (mode === MODE.TINY) {
         let objectLength = this.getLength(object);
         let isEmpty = objectLength === 0;
         items = [span({className: "length"}, isEmpty ? "" : objectLength)];
         brackets = needSpace(false);
       } else {
-        let max = (mode == "short") ? 3 : 10;
+        let max = (mode === MODE.SHORT) ? 3 : 10;
         items = this.arrayIterator(object, max);
         brackets = needSpace(items.length > 0);
       }
@@ -170,7 +174,7 @@ define(function (require, exports, module) {
       return (
         span({},
           Rep(Object.assign({}, this.props, {
-            mode: "tiny"
+            mode: MODE.TINY
           })),
           this.props.delim
         )

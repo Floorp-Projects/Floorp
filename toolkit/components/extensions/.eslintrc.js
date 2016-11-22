@@ -3,10 +3,6 @@
 module.exports = { // eslint-disable-line no-undef
   "extends": "../../.eslintrc.js",
 
-  "parserOptions": {
-    "ecmaVersion": 8,
-  },
-
   "globals": {
     "Cc": true,
     "Ci": true,
