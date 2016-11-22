@@ -2013,7 +2013,7 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
         nsAutoCString tmpPath;
         nsAutoCString tmpBase;
         uint32_t duplicateCounter = 1;
-        while (1)
+        while (true)
         {
             // Make a file name,
             // Foo become foo_001, foo_002, etc.
