@@ -112,10 +112,6 @@ ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
 
 ClientLayerManager::~ClientLayerManager()
 {
-  if (mTransactionIdAllocator) {
-    TimeStamp now = TimeStamp::Now();
-    DidComposite(mLatestTransactionId, now, now);
-  }
   mMemoryPressureObserver->Destroy();
   ClearCachedResources();
   // Stop receiveing AsyncParentMessage at Forwarder.
@@ -137,6 +133,19 @@ ClientLayerManager::Destroy()
   // former will early-return if the later has already run.
   ClearCachedResources();
   LayerManager::Destroy();
+
+  if (mTransactionIdAllocator) {
+    // Make sure to notify the refresh driver just in case it's waiting on a
+    // pending transaction. Do this at the top of the event loop so we don't
+    // cause a paint to occur during compositor shutdown.
+    RefPtr<TransactionIdAllocator> allocator = mTransactionIdAllocator;
+    uint64_t id = mLatestTransactionId;
+
+    RefPtr<Runnable> task = NS_NewRunnableFunction([allocator, id] () -> void {
+      allocator->NotifyTransactionCompleted(id);
+    });
+    NS_DispatchToMainThread(task.forget());
+  }
 }
 
 int32_t

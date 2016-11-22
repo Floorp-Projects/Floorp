@@ -248,6 +248,7 @@ WidgetShutdownObserver::Unregister()
 void
 nsBaseWidget::Shutdown()
 {
+  RevokeTransactionIdAllocator();
   DestroyCompositor();
   FreeShutdownObserver();
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
@@ -293,6 +294,23 @@ void nsBaseWidget::DestroyCompositor()
     RefPtr<CompositorSession> session = mCompositorSession.forget();
     session->Shutdown();
   }
+}
+
+// This prevents the layer manager from starting a new transaction during
+// shutdown.
+void
+nsBaseWidget::RevokeTransactionIdAllocator()
+{
+  if (!mLayerManager) {
+    return;
+  }
+
+  ClientLayerManager* clm = mLayerManager->AsClientLayerManager();
+  if (!clm) {
+    return;
+  }
+
+  clm->SetTransactionIdAllocator(nullptr);
 }
 
 void nsBaseWidget::ReleaseContentController()
@@ -377,6 +395,7 @@ nsBaseWidget::~nsBaseWidget()
   }
 
   FreeShutdownObserver();
+  RevokeTransactionIdAllocator();
   DestroyLayerManager();
 
 #ifdef NOISY_WIDGET_LEAKS
