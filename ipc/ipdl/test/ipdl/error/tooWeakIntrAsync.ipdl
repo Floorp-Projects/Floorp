@@ -1,7 +1,7 @@
-protocol tooWeakRPCAsync {
+protocol tooWeakIntrAsync {
 
     // it's an error to declare an async protocol with an intr message
 
-parent:  intr Msg();
+parent: intr Msg();
 
 };
