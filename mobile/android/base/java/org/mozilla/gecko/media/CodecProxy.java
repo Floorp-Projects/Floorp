@@ -77,7 +77,7 @@ public final class CodecProxy {
             reportError(fatal);
         }
 
-        public void reportError(boolean fatal) {
+        private void reportError(boolean fatal) {
             mCallbacks.onError(fatal);
         }
     }
