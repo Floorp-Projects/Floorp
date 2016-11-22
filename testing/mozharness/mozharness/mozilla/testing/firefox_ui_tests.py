@@ -216,6 +216,9 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
             # additional reports helpful for Jenkins and inpection via Treeherder
             '--log-html', os.path.join(dirs['abs_blob_upload_dir'], 'report.html'),
             '--log-xunit', os.path.join(dirs['abs_blob_upload_dir'], 'report.xml'),
+
+            # Enable tracing output to log transmission protocol
+            '-vv',
         ]
 
         # Collect all pass-through harness options to the script
