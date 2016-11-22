@@ -842,7 +842,7 @@ AppendXMLAttr(const nsAString& key, const nsAString& aValue, nsAString& aBuffer)
         aBuffer.Append(' ');
     }
     aBuffer.Append(key);
-    aBuffer.AppendLiteral("=\"");
+    aBuffer.AppendLiteral(R"(=")");
     for (size_t i = 0; i < aValue.Length(); ++i) {
         switch (aValue[i]) {
             case '&':
