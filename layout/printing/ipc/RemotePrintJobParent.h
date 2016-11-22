@@ -34,7 +34,7 @@ public:
                            const int32_t& aStartPage,
                            const int32_t& aEndPage) final;
 
-  bool RecvProcessPage(Shmem&& aStoredPage) final;
+  bool RecvProcessPage(const nsCString& aPageFileName) final;
 
   bool RecvFinalizePrint() final;
 
@@ -70,7 +70,7 @@ private:
                                  const int32_t& aStartPage,
                                  const int32_t& aEndPage);
 
-  nsresult PrintPage(const Shmem& aStoredPage);
+  nsresult PrintPage(const nsCString& aPageFileName);
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   RefPtr<nsDeviceContext> mPrintDeviceContext;
