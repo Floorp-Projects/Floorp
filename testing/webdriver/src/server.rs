@@ -137,7 +137,7 @@ impl <T: WebDriverHandler<U>,
                     None => {
                         match msg.command {
                             WebDriverCommand::NewSession(_) => Ok(()),
-
+                            WebDriverCommand::Status => Ok(()),
                             _ => Err(WebDriverError::new(
                                 ErrorStatus::InvalidSessionId,
                                 "Tried to run a command before creating a session"))
