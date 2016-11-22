@@ -6,12 +6,14 @@
 
 #include "RemotePrintJobParent.h"
 
-#include <istream>
+#include <fstream>
 
 #include "gfxContext.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Unused.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsDeviceContext.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintSettings.h"
@@ -81,15 +83,9 @@ RemotePrintJobParent::InitializePrintDevice(const nsString& aDocumentTitle,
 }
 
 mozilla::ipc::IPCResult
-RemotePrintJobParent::RecvProcessPage(Shmem&& aStoredPage)
+RemotePrintJobParent::RecvProcessPage(const nsCString& aPageFileName)
 {
-  nsresult rv = PrintPage(aStoredPage);
-
-  // Always deallocate the shared memory no matter what the result.
-  if (!DeallocShmem(aStoredPage)) {
-    NS_WARNING("Failed to deallocated shared memory, remote print will abort.");
-    rv = NS_ERROR_FAILURE;
-  }
+  nsresult rv = PrintPage(aPageFileName);
 
   if (NS_FAILED(rv)) {
     Unused << SendAbortPrint(rv);
@@ -101,7 +97,7 @@ RemotePrintJobParent::RecvProcessPage(Shmem&& aStoredPage)
 }
 
 nsresult
-RemotePrintJobParent::PrintPage(const Shmem& aStoredPage)
+RemotePrintJobParent::PrintPage(const nsCString& aPageFileName)
 {
   MOZ_ASSERT(mPrintDeviceContext);
 
@@ -110,13 +106,36 @@ RemotePrintJobParent::PrintPage(const Shmem& aStoredPage)
     return rv;
   }
 
-  std::istringstream recording(std::string(aStoredPage.get<char>(),
-                                           aStoredPage.Size<char>()));
+  nsCOMPtr<nsIFile> recordingFile;
+  rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
+                              getter_AddRefs(recordingFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = recordingFile->AppendNative(aPageFileName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsAutoCString recordingPath;
+  rv = recordingFile->GetNativePath(recordingPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  std::ifstream recording(recordingPath.get(), std::ifstream::binary);
   if (!mPrintTranslator->TranslateRecording(recording)) {
     return NS_ERROR_FAILURE;
   }
 
   rv = mPrintDeviceContext->EndPage();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  recording.close();
+  rv = recordingFile->Remove(/* recursive= */ false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
