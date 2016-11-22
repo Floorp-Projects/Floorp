@@ -42,8 +42,8 @@ e.setAttribute("style", "font: menu; font-weight: -moz-use-system-font");
 is(e.style.cssText, "font: menu;", "serialize system font alone");
 is(e.style.font, "menu", "font getter returns value");
 
-e.setAttribute("style", "font: menu; font-weight: -moz-use-system-font ! important");
-is(e.style.cssText, "font: menu; font-weight: -moz-use-system-font ! important;", "serialize system font and subproperty that is important");
+e.setAttribute("style", "font: menu; font-weight: -moz-use-system-font !important");
+is(e.style.cssText, "font: menu; font-weight: -moz-use-system-font !important;", "serialize system font and subproperty that is important");
 is(e.style.font, "", "font getter returns nothing");
 
 e.setAttribute("style", "font: inherit; font-family: Helvetica;");
