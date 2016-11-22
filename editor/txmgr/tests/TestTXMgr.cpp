@@ -255,7 +255,7 @@ int32_t sAggregateBatchTestRedoOrderArr[] = {
 class TestTransaction : public nsITransaction
 {
 protected:
-  virtual ~TestTransaction() {}
+  virtual ~TestTransaction() = default;
 
 public:
 
@@ -288,9 +288,7 @@ public:
     : mVal(++sConstructorCount), mFlags(aFlags)
   {}
 
-  virtual ~SimpleTransaction()
-  {
-  }
+  virtual ~SimpleTransaction() = default;
 
   NS_IMETHOD DoTransaction()
   {
@@ -403,9 +401,7 @@ public:
     mNumChildrenPerNode = aNumChildrenPerNode;
   }
 
-  virtual ~AggregateTransaction()
-  {
-  }
+  virtual ~AggregateTransaction() = default;
 
   NS_IMETHOD DoTransaction()
   {
