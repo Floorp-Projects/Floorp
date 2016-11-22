@@ -82,7 +82,7 @@ class SharedIntlData
             JS::AutoCheckCannotGC nogc;
             HashNumber hash;
 
-            explicit Lookup(JSFlatString* timeZone);
+            explicit Lookup(JSLinearString* timeZone);
         };
 
         static js::HashNumber hash(const Lookup& lookup) { return lookup.hash; }
