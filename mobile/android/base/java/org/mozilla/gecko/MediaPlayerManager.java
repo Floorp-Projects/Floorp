@@ -77,6 +77,7 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
 
     @Override
     public void onStart() {
+        super.onStart();
         GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
                                                                   "MediaPlayer:Load",
                                                                   "MediaPlayer:Start",
@@ -105,6 +106,7 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
                                                                     "AndroidCastDevice:Start",
                                                                     "AndroidCastDevice:Stop",
                                                                     "AndroidCastDevice:SyncDevice");
+        super.onStop();
     }
 
     // GeckoEventListener implementation
