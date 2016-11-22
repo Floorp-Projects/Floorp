@@ -203,7 +203,7 @@ add_test(function test_properties() {
   }
 });
 
-add_test(function test_full_sync() {
+add_task(async function test_full_sync() {
   _("Ensure that Clients engine fetches all records for each sync.");
 
   let now = Date.now() / 1000;
@@ -216,7 +216,7 @@ add_test(function test_full_sync() {
   let server = serverForUsers({"foo": "password"}, contents);
   let user   = server.user("foo");
 
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   let activeID = Utils.makeGUID();
@@ -271,12 +271,12 @@ add_test(function test_full_sync() {
     try {
       server.deleteCollections("foo");
     } finally {
-      server.stop(run_next_test);
+      await promiseStopServer(server);
     }
   }
 });
 
-add_test(function test_sync() {
+add_task(async function test_sync() {
   _("Ensure that Clients engine uploads a new client record once a week.");
 
   let contents = {
@@ -288,7 +288,7 @@ add_test(function test_sync() {
   let server = serverForUsers({"foo": "password"}, contents);
   let user   = server.user("foo");
 
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   function clientWBO() {
@@ -326,7 +326,7 @@ add_test(function test_sync() {
   } finally {
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
-    server.stop(run_next_test);
+    await promiseStopServer(server);
   }
 });
 
@@ -524,7 +524,7 @@ add_test(function test_process_incoming_commands() {
   ok(!engine.processIncomingCommands());
 });
 
-add_test(function test_filter_duplicate_names() {
+add_task(async function test_filter_duplicate_names() {
   _("Ensure that we exclude clients with identical names that haven't synced in a week.");
 
   let now = Date.now() / 1000;
@@ -537,7 +537,7 @@ add_test(function test_filter_duplicate_names() {
   let server = serverForUsers({"foo": "password"}, contents);
   let user   = server.user("foo");
 
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   // Synced recently.
@@ -675,12 +675,12 @@ add_test(function test_filter_duplicate_names() {
     try {
       server.deleteCollections("foo");
     } finally {
-      server.stop(run_next_test);
+      await promiseStopServer(server);
     }
   }
 });
 
-add_test(function test_command_sync() {
+add_task(async function test_command_sync() {
   _("Ensure that commands are synced across clients.");
 
   engine._store.wipe();
@@ -693,7 +693,7 @@ add_test(function test_command_sync() {
     crypto: {}
   };
   let server   = serverForUsers({"foo": "password"}, contents);
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   let user     = server.user("foo");
   let remoteId = Utils.makeGUID();
@@ -753,7 +753,7 @@ add_test(function test_command_sync() {
       let collection = server.getCollection("foo", "clients");
       collection.remove(remoteId);
     } finally {
-      server.stop(run_next_test);
+      await promiseStopServer(server);
     }
   }
 });
@@ -880,7 +880,7 @@ add_test(function test_optional_client_fields() {
   run_next_test();
 });
 
-add_test(function test_merge_commands() {
+add_task(async function test_merge_commands() {
   _("Verifies local commands for remote clients are merged with the server's");
 
   let now = Date.now() / 1000;
@@ -893,7 +893,7 @@ add_test(function test_merge_commands() {
   let server = serverForUsers({"foo": "password"}, contents);
   let user   = server.user("foo");
 
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   let desktopID = Utils.makeGUID();
@@ -954,12 +954,12 @@ add_test(function test_merge_commands() {
     try {
       server.deleteCollections("foo");
     } finally {
-      server.stop(run_next_test);
+      await promiseStopServer(server);
     }
   }
 });
 
-add_test(function test_duplicate_remote_commands() {
+add_task(async function test_duplicate_remote_commands() {
   _("Verifies local commands for remote clients are sent only once (bug 1289287)");
 
   let now = Date.now() / 1000;
@@ -972,7 +972,7 @@ add_test(function test_duplicate_remote_commands() {
   let server = serverForUsers({"foo": "password"}, contents);
   let user   = server.user("foo");
 
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   let desktopID = Utils.makeGUID();
@@ -1024,12 +1024,12 @@ add_test(function test_duplicate_remote_commands() {
     try {
       server.deleteCollections("foo");
     } finally {
-      server.stop(run_next_test);
+      await promiseStopServer(server);
     }
   }
 });
 
-add_test(function test_upload_after_reboot() {
+add_task(async function test_upload_after_reboot() {
   _("Multiple downloads, reboot, then upload (bug 1289287)");
 
   let now = Date.now() / 1000;
@@ -1042,7 +1042,7 @@ add_test(function test_upload_after_reboot() {
   let server = serverForUsers({"foo": "password"}, contents);
   let user   = server.user("foo");
 
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   let deviceBID = Utils.makeGUID();
@@ -1115,12 +1115,12 @@ add_test(function test_upload_after_reboot() {
     try {
       server.deleteCollections("foo");
     } finally {
-      server.stop(run_next_test);
+      await promiseStopServer(server);
     }
   }
 });
 
-add_test(function test_keep_cleared_commands_after_reboot() {
+add_task(async function test_keep_cleared_commands_after_reboot() {
   _("Download commands, fail upload, reboot, then apply new commands (bug 1289287)");
 
   let now = Date.now() / 1000;
@@ -1133,7 +1133,7 @@ add_test(function test_keep_cleared_commands_after_reboot() {
   let server = serverForUsers({"foo": "password"}, contents);
   let user   = server.user("foo");
 
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   let deviceBID = Utils.makeGUID();
@@ -1233,12 +1233,12 @@ add_test(function test_keep_cleared_commands_after_reboot() {
     try {
       server.deleteCollections("foo");
     } finally {
-      server.stop(run_next_test);
+      await promiseStopServer(server);
     }
   }
 });
 
-add_test(function test_deleted_commands() {
+add_task(async function test_deleted_commands() {
   _("Verifies commands for a deleted client are discarded");
 
   let now = Date.now() / 1000;
@@ -1251,7 +1251,7 @@ add_test(function test_deleted_commands() {
   let server = serverForUsers({"foo": "password"}, contents);
   let user   = server.user("foo");
 
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   let activeID = Utils.makeGUID();
@@ -1302,12 +1302,12 @@ add_test(function test_deleted_commands() {
     try {
       server.deleteCollections("foo");
     } finally {
-      server.stop(run_next_test);
+      await promiseStopServer(server);
     }
   }
 });
 
-add_test(function test_send_uri_ack() {
+add_task(async function test_send_uri_ack() {
   _("Ensure a sent URI is deleted when the client syncs");
 
   let now = Date.now() / 1000;
@@ -1320,7 +1320,7 @@ add_test(function test_send_uri_ack() {
   let server = serverForUsers({"foo": "password"}, contents);
   let user   = server.user("foo");
 
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   try {
@@ -1365,12 +1365,12 @@ add_test(function test_send_uri_ack() {
     try {
       server.deleteCollections("foo");
     } finally {
-      server.stop(run_next_test);
+      await promiseStopServer(server);
     }
   }
 });
 
-add_test(function test_command_sync() {
+add_task(async function test_command_sync() {
   _("Notify other clients when writing their record.");
 
   engine._store.wipe();
@@ -1383,7 +1383,7 @@ add_test(function test_command_sync() {
     crypto: {}
   };
   let server    = serverForUsers({"foo": "password"}, contents);
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   let user       = server.user("foo");
   let collection = server.getCollection("foo", "clients");
@@ -1437,7 +1437,7 @@ add_test(function test_command_sync() {
     try {
       server.deleteCollections("foo");
     } finally {
-      server.stop(run_next_test);
+      await promiseStopServer(server);
     }
   }
 });
