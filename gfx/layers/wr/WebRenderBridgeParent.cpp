@@ -61,18 +61,7 @@ WebRenderBridgeParent::RecvDestroy()
 {
   MOZ_ASSERT(mWRState);
   MOZ_ASSERT(mCompositor);
-  wr_destroy(mWRState);
-  mWRState = nullptr;
-  if (mWidget) {
-    // Only the "root" WebRenderBridgeParent (the one with the widget ptr) owns
-    // the compositor ref and needs to destroy it.
-    mCompositor->Destroy();
-  }
-  if (mCompositorScheduler) {
-    mCompositorScheduler->Destroy();
-    mCompositorScheduler = nullptr;
-  }
-  mParent = nullptr;
+  ClearResources();
   return IPC_OK();
 }
 
@@ -198,6 +187,12 @@ WebRenderBridgeParent::RecvDPGetSnapshot(const uint32_t& aWidth,
 }
 
 void
+WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  ClearResources();
+}
+
+void
 WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
   if (aTarget) {
@@ -245,6 +240,26 @@ WebRenderBridgeParent::ScheduleComposition()
   } else {
     mParent->ScheduleComposition();
   }
+}
+
+void
+WebRenderBridgeParent::ClearResources()
+{
+  if (mWRState) {
+    wr_destroy(mWRState);
+    mWRState = nullptr;
+  }
+  if (mWidget) {
+    // Only the "root" WebRenderBridgeParent (the one with the widget ptr) owns
+    // the compositor ref and needs to destroy it.
+    mCompositor->Destroy();
+  }
+  if (mCompositorScheduler) {
+    mCompositorScheduler->Destroy();
+    mCompositorScheduler = nullptr;
+  }
+  mGLContext = nullptr;
+  mParent = nullptr;
 }
 
 } // namespace layers
