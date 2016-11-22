@@ -8,7 +8,9 @@ build = "build.rs"
 workspace = ".."
 
 [features]
-default = ["webrender_traits/codegen"]
+default = ["codegen", "freetype-lib"]
+codegen = ["webrender_traits/codegen"]
+freetype-lib = ["freetype/servo-freetype-sys"]
 serde_derive = ["webrender_traits/serde_derive"]
 
 [dependencies]
