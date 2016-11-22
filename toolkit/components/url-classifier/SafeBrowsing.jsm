@@ -50,7 +50,13 @@ const tablePreferences = [
   "urlclassifier.downloadAllowTable",
   "urlclassifier.trackingTable",
   "urlclassifier.trackingWhitelistTable",
-  "urlclassifier.blockedTable"
+  "urlclassifier.blockedTable",
+  "urlclassifier.flashAllowTable",
+  "urlclassifier.flashAllowExceptTable",
+  "urlclassifier.flashTable",
+  "urlclassifier.flashExceptTable",
+  "urlclassifier.flashSubDocTable",
+  "urlclassifier.flashSubDocExceptTable"
 ];
 
 this.SafeBrowsing = {
@@ -112,6 +118,9 @@ this.SafeBrowsing = {
     for (let i = 0; i < this.blockedLists.length; ++i) {
       this.registerTableWithURLs(this.blockedLists[i]);
     }
+    for (let i = 0; i < this.flashLists.length; ++i) {
+      this.registerTableWithURLs(this.flashLists[i]);
+    }
   },
 
 
@@ -121,6 +130,7 @@ this.SafeBrowsing = {
   trackingEnabled:      false,
   blockedEnabled:       false,
   trackingAnnotations:  false,
+  flashBlockEnabled:    false,
 
   phishingLists:                [],
   malwareLists:                 [],
@@ -183,6 +193,11 @@ this.SafeBrowsing = {
     this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
     this.blockedEnabled = Services.prefs.getBoolPref("browser.safebrowsing.blockedURIs.enabled");
     this.trackingAnnotations = Services.prefs.getBoolPref("privacy.trackingprotection.annotate_channels");
+    this.flashBlockEnabled = Services.prefs.getBoolPref("plugins.flashBlock.enabled");
+
+    let flashAllowTable, flashAllowExceptTable, flashTable,
+        flashExceptTable, flashSubDocTable,
+        flashSubDocExceptTable;
 
     [this.phishingLists,
      this.malwareLists,
@@ -190,7 +205,19 @@ this.SafeBrowsing = {
      this.downloadAllowLists,
      this.trackingProtectionLists,
      this.trackingProtectionWhitelists,
-     this.blockedLists] = tablePreferences.map(getLists);
+     this.blockedLists,
+     flashAllowTable,
+     flashAllowExceptTable,
+     flashTable,
+     flashExceptTable,
+     flashSubDocTable,
+     flashSubDocExceptTable] = tablePreferences.map(getLists);
+
+    this.flashLists = flashAllowTable.concat(flashAllowExceptTable,
+                                             flashTable,
+                                             flashExceptTable,
+                                             flashSubDocTable,
+                                             flashSubDocExceptTable)
 
     this.updateProviderURLs();
     this.registerTables();
@@ -269,7 +296,7 @@ this.SafeBrowsing = {
     log("phishingEnabled:", this.phishingEnabled, "malwareEnabled:",
         this.malwareEnabled, "trackingEnabled:", this.trackingEnabled,
         "blockedEnabled:", this.blockedEnabled, "trackingAnnotations",
-        this.trackingAnnotations);
+        this.trackingAnnotations, "flashBlockEnabled", this.flashBlockEnabled);
 
     let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
                       getService(Ci.nsIUrlListManager);
@@ -321,6 +348,13 @@ this.SafeBrowsing = {
         listManager.enableUpdate(this.blockedLists[i]);
       } else {
         listManager.disableUpdate(this.blockedLists[i]);
+      }
+    }
+    for (let i = 0; i < this.flashLists.length; ++i) {
+      if (this.flashBlockEnabled) {
+        listManager.enableUpdate(this.flashLists[i]);
+      } else {
+        listManager.disableUpdate(this.flashLists[i]);
       }
     }
     listManager.maybeToggleUpdateChecking();
