@@ -401,7 +401,7 @@ Structure:
           // Reasons include "None", "NonIncrementalRequested",
           // "AbortRequested", "KeepAtomsSet", "IncrementalDisabled",
           // "ModeChange", "MallocBytesTrigger", "GCBytesTrigger",
-          // "ZoneChange".
+          // "ZoneChange", "CompartmentRevived".
           "nonincremental_reason": "None",
           "allocated": 37, // In megabytes.
           "added_chunks": 54,
