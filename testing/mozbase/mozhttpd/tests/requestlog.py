@@ -7,6 +7,8 @@ import urllib2
 import os
 import unittest
 
+import mozunit
+
 here = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -38,4 +40,4 @@ class RequestLogTest(unittest.TestCase):
         self.assertEqual(len(request_log), 0)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

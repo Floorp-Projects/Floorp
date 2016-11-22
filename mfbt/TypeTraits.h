@@ -46,7 +46,7 @@ typename AddRvalueReference<T>::Type DeclVal();
 template<typename T, T Value>
 struct IntegralConstant
 {
-  static const T value = Value;
+  static constexpr T value = Value;
   typedef T ValueType;
   typedef IntegralConstant<T, Value> Type;
 };

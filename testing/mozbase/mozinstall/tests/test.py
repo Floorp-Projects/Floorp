@@ -11,6 +11,8 @@ import os
 import tempfile
 import unittest
 
+import mozunit
+
 # Store file location at load time
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -166,4 +168,4 @@ class TestMozInstall(unittest.TestCase):
             self.assertFalse(os.path.exists(installdir))
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

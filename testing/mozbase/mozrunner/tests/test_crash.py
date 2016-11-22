@@ -4,6 +4,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mock
+import mozunit
 
 import mozrunnertest
 
@@ -35,3 +36,7 @@ class MozrunnerCrashTestCase(mozrunnertest.MozrunnerTestCase):
         check_for_crashes.return_value = 0
         self.assertEqual(self.runner.check_for_crashes(), 0)
         self.assertEqual(self.runner.crashed, 4)
+
+
+if __name__ == '__main__':
+    mozunit.main()

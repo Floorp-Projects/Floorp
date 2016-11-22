@@ -229,6 +229,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     };
 
     static const Class class_;
+    static const Class protoClass_;
 
     static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
 

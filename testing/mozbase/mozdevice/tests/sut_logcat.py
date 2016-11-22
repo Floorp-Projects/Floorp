@@ -3,6 +3,9 @@
 import mozdevice
 import logging
 import unittest
+
+import mozunit
+
 from sut import MockAgent
 
 
@@ -49,4 +52,4 @@ class TestLogCat(unittest.TestCase):
         self.assertEqual(None, d.recordLogcat())
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

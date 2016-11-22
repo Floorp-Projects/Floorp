@@ -564,6 +564,8 @@ struct AssertionConditionType
          /* Do nothing. */ \
        } \
      } while (0)
+#  define MOZ_ALWAYS_OK(expr)        MOZ_ASSERT((expr).isOk())
+#  define MOZ_ALWAYS_ERR(expr)       MOZ_ASSERT((expr).isErr())
 #else
 #  define MOZ_ALWAYS_TRUE(expr) \
      do { \
@@ -574,6 +576,18 @@ struct AssertionConditionType
 #  define MOZ_ALWAYS_FALSE(expr) \
      do { \
        if ((expr)) { \
+         /* Silence MOZ_MUST_USE. */ \
+       } \
+     } while (0)
+#  define MOZ_ALWAYS_OK(expr) \
+     do { \
+       if ((expr).isOk()) { \
+         /* Silence MOZ_MUST_USE. */ \
+       } \
+     } while (0)
+#  define MOZ_ALWAYS_ERR(expr) \
+     do { \
+       if ((expr).isErr()) { \
          /* Silence MOZ_MUST_USE. */ \
        } \
      } while (0)

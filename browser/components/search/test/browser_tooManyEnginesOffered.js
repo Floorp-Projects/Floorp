@@ -31,7 +31,7 @@ add_task(function* test() {
   // Mouse over the menu button to open it.
   let buttonPopup = menuButton.firstChild;
   promise = promiseEvent(buttonPopup, "popupshown");
-  EventUtils.synthesizeMouse(menuButton, 5, 5, { type: "mouseover" });
+  EventUtils.synthesizeMouse(menuButton, 5, 5, { type: "mousemove" });
   yield promise;
 
   Assert.ok(menuButton.open, "Submenu should be open");

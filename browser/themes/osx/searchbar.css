@@ -247,8 +247,7 @@
   color: HighlightText;
 }
 
-.addengine-item[type=menu][selected],
-.addengine-item[type=menu][open] {
+.addengine-item[type=menu][selected] {
   color: inherit;
   background-color: var(--arrowpanel-dimmed-further);
 }

@@ -15,12 +15,13 @@
 "unpack": true
 },
 {
-"size": 167175,
-"visibility": "public",
-"digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
+"version": "sccache rev b21198a7183a2fe226ff49348b1c0b51bae9f4f8",
 "algorithm": "sha512",
-"filename": "sccache.tar.bz2",
-"unpack": true
+"visibility": "public",
+"filename": "sccache2.tar.xz",
+"unpack": true,
+"digest": "b89c40dbf28c2bd54fadf017c15a8789f6e7611252a623cc3a1507e3dd6fc9e5a50d746e81776ba856e33fdc99b4a6413ba7c3ac0aed5f4835705da2b758ef22",
+"size": 1020700
 },
 {
 "size": 30899096,
@@ -35,8 +36,8 @@
 "visibility": "public",
 "filename": "jcentral.tar.xz",
 "unpack": true,
-"digest": "8e50f0993e129d3447b228d7da77d661d4ae3d490d791630dabb73e7d8021920f765317a258fd6e819aca48daaa8d0d86ec07cb6c30736199bbf2c4f92270cb5",
-"size": 47164284
+"digest": "e6738ce04dcc9da38d047d8e3f71b117b8349553ba40dd85ecf8ae0ff58987253b2f288dc606f53967bef1bebcad20ee7555ba13723167ab51f23e15e0e384a5",
+"size": 47420144
 },
 {
 "algorithm": "sha512",

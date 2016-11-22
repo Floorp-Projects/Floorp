@@ -856,7 +856,7 @@ EventListenerManager::SetEventHandler(nsIAtom* aName,
     if (csp) {
       // let's generate a script sample and pass it as aContent,
       // it will not match the hash, but allows us to pass
-      // the script sample in aCOntent.
+      // the script sample in aContent.
       nsAutoString scriptSample, attr, tagName(NS_LITERAL_STRING("UNKNOWN"));
       aName->ToString(attr);
       nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTarget));
@@ -872,7 +872,7 @@ EventListenerManager::SetEventHandler(nsIAtom* aName,
       bool allowsInlineScript = true;
       rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
                                 EmptyString(), // aNonce
-                                false, // aParserCreated
+                                true, // aParserCreated (true because attribute event handler)
                                 scriptSample,
                                 0,             // aLineNumber
                                 &allowsInlineScript);

@@ -5,6 +5,8 @@ import shutil
 import tempfile
 import unittest
 
+import mozunit
+
 from manifestparser import TestManifest, ParseError
 from manifestparser.filters import subsuite
 
@@ -119,4 +121,4 @@ class TestTestManifest(unittest.TestCase):
         self.assertEqual(len(empty_manifest.active_tests()), 0)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

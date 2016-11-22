@@ -10,6 +10,8 @@ import tempfile
 import unittest
 import mozfile
 
+import mozunit
+
 from mozprofile.profile import Profile
 
 
@@ -60,4 +62,4 @@ class CloneCleanupTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

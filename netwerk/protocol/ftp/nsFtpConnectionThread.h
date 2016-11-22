@@ -214,18 +214,9 @@ private:
     nsCOMPtr<nsICancelable>  mProxyRequest;
     bool                     mDeferredCallbackPending;
 
-// These members are used for network per-app metering (bug 855948)
-// Currently, they are only available on gonk.
-    uint64_t                           mCountRecv;
 #ifdef MOZ_WIDGET_GONK
     nsMainThreadPtrHandle<nsINetworkInfo> mActiveNetworkInfo;
 #endif
-    nsresult                           SaveNetworkStats(bool);
-    void                               CountRecvBytes(uint64_t recvBytes)
-    {
-        mCountRecv += recvBytes;
-        SaveNetworkStats(false);
-    }
 };
 
 #endif //__nsFtpConnectionThread__h_

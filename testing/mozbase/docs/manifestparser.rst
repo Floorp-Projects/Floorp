@@ -455,12 +455,10 @@ To update from a directory of tests in `~/mozmill/src/mozmill-tests/firefox/` ru
 Tests
 `````
 
-manifestparser includes a suite of tests:
-
-https://github.com/mozilla/mozbase/tree/master/manifestparsery/tests
+manifestparser includes a suite of tests.
 
 `test_manifest.txt` is a doctest that may be helpful in figuring out
-how to use the API.  Tests are run via `python test.py`.
+how to use the API.  Tests are run via `mach python-test testing/mozbase/manifestparser`.
 
 Bugs
 ````
