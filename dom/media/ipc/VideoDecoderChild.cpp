@@ -255,6 +255,7 @@ VideoDecoderChild::Shutdown()
     SendShutdown();
   }
   mInitialized = false;
+  mCallback = nullptr;
 }
 
 bool
