@@ -198,7 +198,7 @@ VideoDecoderManagerParent::RecvReadback(const SurfaceDescriptorGPUVideo& aSD, Su
   }
 
   RefPtr<SourceSurface> source = image->GetAsSourceSurface();
-  if (!image) {
+  if (!source) {
     *aResult = null_t();
     return IPC_OK();
   }
