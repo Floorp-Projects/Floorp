@@ -24,6 +24,7 @@ LOCAL_INCLUDES += [
     '../generic',
     '../inspector',
     '../mathml',
+    '../painting',
     '../style',
     '../tables',
     '../xul',

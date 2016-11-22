@@ -42,6 +42,7 @@ static LazyLogModule gStandardURLLog("nsStandardURL");
 #ifdef MOZ_RUST_URLPARSE
 
 #include "RustURL.h"
+bool nsStandardURL::gRustEnabled = false;
 
 // Fall back to CPP-parsed URLs if the Rust one doesn't match.
 #define MOZ_RUST_URLPARSE_FALLBACK
@@ -54,6 +55,7 @@ static LazyLogModule gStandardURLLog("nsStandardURL");
 
 #define CALL_RUST_SETTER(func, ...)  \
 do {                                 \
+    if (!mRustURL) break;            \
     mRustURL->func(__VA_ARGS__);     \
     nsAutoCString rustSpec;          \
     mRustURL->GetSpec(rustSpec);     \
@@ -65,6 +67,7 @@ do {                                 \
 
 #define CALL_RUST_GETTER_STR(result, func, ...)  \
 do {                                             \
+    if (!mRustURL) break;                        \
     nsAutoCString backup(result);                \
     mRustURL->func(__VA_ARGS__);                 \
     if (backup != result) {                      \
@@ -76,6 +79,7 @@ do {                                             \
 
 #define CALL_RUST_GETTER_INT(result, func, ...)  \
 do {                                             \
+    if (!mRustURL) break;                        \
     int32_t backup = *result;                    \
     mRustURL->func(__VA_ARGS__);                 \
     if (backup != *result) {                     \
@@ -87,6 +91,7 @@ do {                                             \
 
 #define COPY_RUST_MEMBER                \
 do {                                    \
+  if (!gRustEnabled) break;             \
   RefPtr<RustURL> url = new RustURL();  \
   nsAutoCString spec;                   \
   GetSpec(spec);                        \
@@ -94,9 +99,23 @@ do {                                    \
   mRustURL = url;                       \
 } while (0)
 
-#define CALL_RUST_SYNC  mRustURL->SetSpec(mSpec)
-#define CALL_SET_MUTABLE  mRustURL->SetMutable(value)
-#define CALL_RUST_INIT mRustURL->Init(urlType, defaultPort, spec, charset, baseURI)
+#define CALL_RUST_SYNC                  \
+do {                                    \
+    if (!mRustURL) break;               \
+    mRustURL->SetSpec(mSpec);           \
+} while (0)
+
+#define CALL_SET_MUTABLE                \
+do {                                    \
+    if (!mRustURL) break;               \
+    mRustURL->SetMutable(value);        \
+} while (0)
+
+#define CALL_RUST_INIT                  \
+do {                                    \
+    if (!mRustURL) break;               \
+    mRustURL->Init(urlType, defaultPort, spec, charset, baseURI); \
+} while (0)
 
 #else
 
@@ -187,6 +206,7 @@ end:
 
 #define NS_NET_PREF_ESCAPEUTF8         "network.standard-url.escape-utf8"
 #define NS_NET_PREF_ALWAYSENCODEINUTF8 "network.standard-url.encode-utf8"
+#define NS_NET_PREF_ENABLE_RUST        "network.standard-url.enable-rust"
 
 NS_IMPL_ISUPPORTS(nsStandardURL::nsPrefObserver, nsIObserver)
 
@@ -351,7 +371,9 @@ nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
 #endif
 
 #ifdef MOZ_RUST_URLPARSE
-    mRustURL = new RustURL();
+    if (gRustEnabled) {
+        mRustURL = new RustURL();
+    }
 #endif
 }
 
@@ -398,7 +420,9 @@ nsStandardURL::InitGlobalObjects()
         nsCOMPtr<nsIObserver> obs( new nsPrefObserver() );
         prefBranch->AddObserver(NS_NET_PREF_ESCAPEUTF8, obs.get(), false);
         prefBranch->AddObserver(NS_NET_PREF_ALWAYSENCODEINUTF8, obs.get(), false);
-
+#ifdef MOZ_RUST_URLPARSE
+        prefBranch->AddObserver(NS_NET_PREF_ENABLE_RUST, obs.get(), false);
+#endif
         PrefsChanged(prefBranch, nullptr);
     }
 
@@ -1207,6 +1231,16 @@ nsStandardURL::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             gAlwaysEncodeInUTF8 = val;
         LOG(("encode in UTF-8 %s\n", gAlwaysEncodeInUTF8 ? "enabled" : "disabled"));
     }
+
+#ifdef MOZ_RUST_URLPARSE
+    if (PREF_CHANGED(NS_NET_PREF_ENABLE_RUST)) {
+        if (GOT_PREF(NS_NET_PREF_ENABLE_RUST, val)) {
+            gRustEnabled = val;
+        }
+        LOG(("Rust parser %s\n", gRustEnabled ? "enabled" : "disabled"));
+    }
+#endif // MOZ_RUST_URLPARSE
+
 #undef PREF_CHANGED
 #undef GOT_PREF
 }
