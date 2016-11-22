@@ -358,7 +358,7 @@ public:
     RefPtr<Layer> mRoot;
     RefPtr<GeckoContentController> mController;
     APZCTreeManagerParent* mApzcTreeManagerParent;
-    CompositorBridgeParent* mParent;
+    RefPtr<CompositorBridgeParent> mParent;
     LayerManagerComposite* mLayerManager;
     // Pointer to the CrossProcessCompositorBridgeParent. Used by APZCs to share
     // their FrameMetrics with the corresponding child process that holds
