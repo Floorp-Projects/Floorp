@@ -417,6 +417,9 @@ IProtocol::Lookup(int32_t aId)
 void
 IProtocol::Unregister(int32_t aId)
 {
+  if (mId == aId) {
+    mId = kFreedActorId;
+  }
   Manager()->Unregister(aId);
 }
 
@@ -518,12 +521,35 @@ IProtocol::DeallocShmem(Shmem& aMem)
   return ok;
 }
 
+void
+IProtocol::SetManager(IProtocol* aManager)
+{
+  MOZ_RELEASE_ASSERT(!mManager || mManager == aManager);
+  mManager = aManager;
+}
+
+void
+IProtocol::SetEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget)
+{
+  // Make sure we have a manager for the internal method to access.
+  aActor->SetManager(this);
+  SetEventTargetForActorInternal(aActor, aEventTarget);
+}
+
+void
+IProtocol::SetEventTargetForActorInternal(IProtocol* aActor,
+                                          nsIEventTarget* aEventTarget)
+{
+  Manager()->SetEventTargetForActorInternal(aActor, aEventTarget);
+}
+
 IToplevelProtocol::IToplevelProtocol(ProtocolId aProtoId, Side aSide)
  : IProtocol(aSide),
    mProtocolId(aProtoId),
    mOtherPid(mozilla::ipc::kInvalidProcessId),
-   mLastRouteId(aSide == ParentSide ? 1 : 0),
-   mLastShmemId(aSide == ParentSide ? 1 : 0)
+   mLastRouteId(aSide == ParentSide ? kFreedActorId : kNullActorId),
+   mLastShmemId(aSide == ParentSide ? kFreedActorId : kNullActorId),
+   mEventTargetMutex("ProtocolEventTargetMutex")
 {
 }
 
@@ -598,8 +624,22 @@ IToplevelProtocol::IsOnCxxStack() const
 int32_t
 IToplevelProtocol::Register(IProtocol* aRouted)
 {
+  if (aRouted->Id() != kNullActorId && aRouted->Id() != kFreedActorId) {
+    // If there's already an ID, just return that.
+    return aRouted->Id();
+  }
   int32_t id = GetSide() == ParentSide ? ++mLastRouteId : --mLastRouteId;
   mActorMap.AddWithID(aRouted, id);
+  aRouted->SetId(id);
+
+  // Inherit our event target from our manager.
+  if (IProtocol* manager = aRouted->Manager()) {
+    MutexAutoLock lock(mEventTargetMutex);
+    if (nsCOMPtr<nsIEventTarget> target = mEventTargetMap.Lookup(manager->Id())) {
+      mEventTargetMap.AddWithID(target, id);
+    }
+  }
+
   return id;
 }
 
@@ -608,6 +648,7 @@ IToplevelProtocol::RegisterID(IProtocol* aRouted,
                               int32_t aId)
 {
   mActorMap.AddWithID(aRouted, aId);
+  aRouted->SetId(aId);
   return aId;
 }
 
@@ -620,7 +661,10 @@ IToplevelProtocol::Lookup(int32_t aId)
 void
 IToplevelProtocol::Unregister(int32_t aId)
 {
-  return mActorMap.Remove(aId);
+  mActorMap.Remove(aId);
+
+  MutexAutoLock lock(mEventTargetMutex);
+  mEventTargetMap.RemoveIfPresent(aId);
 }
 
 Shmem::SharedMemory*
@@ -690,7 +734,7 @@ IToplevelProtocol::DestroySharedMemory(Shmem& shmem)
 void
 IToplevelProtocol::DeallocShmems()
 {
-  for (IDMap<SharedMemory>::const_iterator cit = mShmemMap.begin(); cit != mShmemMap.end(); ++cit) {
+  for (IDMap<SharedMemory*>::const_iterator cit = mShmemMap.begin(); cit != mShmemMap.end(); ++cit) {
     Shmem::Dealloc(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), cit->second);
   }
   mShmemMap.Clear();
@@ -724,6 +768,53 @@ IToplevelProtocol::ShmemDestroyed(const Message& aMsg)
     Shmem::Dealloc(Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead(), rawmem);
   }
   return true;
+}
+
+already_AddRefed<nsIEventTarget>
+IToplevelProtocol::GetMessageEventTarget(const Message& aMsg)
+{
+  int32_t route = aMsg.routing_id();
+
+  MutexAutoLock lock(mEventTargetMutex);
+  nsCOMPtr<nsIEventTarget> target = mEventTargetMap.Lookup(route);
+
+  if (aMsg.is_constructor()) {
+    ActorHandle handle;
+    PickleIterator iter = PickleIterator(aMsg);
+    if (!IPC::ReadParam(&aMsg, &iter, &handle)) {
+      return nullptr;
+    }
+
+    // Normally a new actor inherits its event target from its manager. If the
+    // manager has no event target, we give the subclass a chance to make a new
+    // one.
+    if (!target) {
+      MutexAutoUnlock unlock(mEventTargetMutex);
+      target = GetConstructedEventTarget(aMsg);
+    }
+
+    mEventTargetMap.AddWithID(target, handle.mId);
+  }
+
+  return target.forget();
+}
+
+void
+IToplevelProtocol::SetEventTargetForActorInternal(IProtocol* aActor,
+                                                  nsIEventTarget* aEventTarget)
+{
+  // We should only call this function on actors that haven't been used for IPC
+  // code yet. Otherwise we'll be posting stuff to the wrong event target before
+  // we're called.
+  MOZ_RELEASE_ASSERT(aActor->Id() == kNullActorId || aActor->Id() == kFreedActorId);
+
+  // Register the actor early. When it's registered again, it will keep the same
+  // ID.
+  int32_t id = Register(aActor);
+  aActor->SetId(id);
+
+  MutexAutoLock lock(mEventTargetMutex);
+  mEventTargetMap.AddWithID(aEventTarget, id);
 }
 
 } // namespace ipc

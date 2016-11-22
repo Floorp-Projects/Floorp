@@ -98,6 +98,14 @@ class Message : public Pickle {
     }
   }
 
+  bool is_constructor() const {
+    return (header()->flags & CONSTRUCTOR_BIT) != 0;
+  }
+
+  void set_constructor() {
+    header()->flags |= CONSTRUCTOR_BIT;
+  }
+
   // True if this is a synchronous message.
   bool is_sync() const {
     return (header()->flags & SYNC_BIT) != 0;
@@ -278,6 +286,7 @@ class Message : public Pickle {
     INTERRUPT_BIT   = 0x0040,
     COMPRESS_BIT    = 0x0080,
     COMPRESSALL_BIT = 0x0100,
+    CONSTRUCTOR_BIT = 0x0200,
   };
 
   struct Header : Pickle::Header {

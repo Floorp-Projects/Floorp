@@ -116,11 +116,29 @@ def ccache(value):
 
 ccache = check_prog('CCACHE', progs=(), input=ccache)
 
+# Distinguish ccache from sccache.
 @depends_if(ccache)
-def using_ccache(ccache):
+def ccache_is_sccache(ccache):
+    return check_cmd_output(ccache, '--version').startswith('sccache')
+
+@depends(ccache, ccache_is_sccache)
+def using_ccache(ccache, ccache_is_sccache):
+    return ccache and not ccache_is_sccache
+
+@depends_if(ccache, ccache_is_sccache)
+def using_sccache(ccache, ccache_is_sccache):
     return True
 
 set_config('MOZ_USING_CCACHE', using_ccache)
+set_config('MOZ_USING_SCCACHE', using_sccache)
+
+option(env='SCCACHE_VERBOSE_STATS', help='Print verbose sccache stats after build')
+
+@depends(using_sccache, 'SCCACHE_VERBOSE_STATS')
+def sccache_verbose_stats(using_sccache, verbose_stats):
+    return using_sccache and bool(verbose_stats)
+
+set_config('SCCACHE_VERBOSE_STATS', sccache_verbose_stats)
 
 @depends('--with-compiler-wrapper', ccache)
 @imports(_from='mozbuild.shellutil', _import='split', _as='shell_split')

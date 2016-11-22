@@ -1804,6 +1804,10 @@ TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event,
     mIgnoreKeyPressEvent = status == nsEventStatus_eConsumeNoDefault;
   }
 
+  if (localEvent.mFlags.mIsSuppressedOrDelayed) {
+    localEvent.PreventDefault();
+  }
+
   // If a response is desired from the content process, resend the key event.
   // If mAccessKeyForwardedToChild is set, then don't resend the key event yet
   // as RecvHandleAccessKey will do this.

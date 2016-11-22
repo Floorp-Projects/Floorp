@@ -144,36 +144,63 @@ def utf16_encode(code):
     return lead, trail
 
 def make_non_bmp_convert_macro(out_file, name, convert_map):
+    # Find continuous range in convert_map.
     convert_list = []
     entry = None
     for code in sorted(convert_map.keys()):
+        lead, trail = utf16_encode(code)
         converted = convert_map[code]
         diff = converted - code
 
-        if entry and code == entry['code'] + entry['length'] and diff == entry['diff']:
+        if (entry and code == entry['code'] + entry['length'] and
+            diff == entry['diff'] and lead == entry['lead']):
             entry['length'] += 1
             continue
 
-        entry = { 'code': code, 'diff': diff, 'length': 1 }
+        entry = {
+            'code': code,
+            'diff': diff,
+            'length': 1,
+            'lead': lead,
+            'trail': trail,
+        }
         convert_list.append(entry)
 
+    # Generate macro call for each range.
     lines = []
     for entry in convert_list:
         from_code = entry['code']
         to_code = entry['code'] + entry['length'] - 1
         diff = entry['diff']
 
-        from_lead, from_trail = utf16_encode(from_code)
-        to_lead, to_trail = utf16_encode(to_code)
-
-        assert from_lead == to_lead
+        lead = entry['lead']
+        from_trail = entry['trail']
+        to_trail = entry['trail'] + entry['length'] - 1
 
         lines.append('    macro(0x{:x}, 0x{:x}, 0x{:x}, 0x{:x}, 0x{:x}, {:d})'.format(
-            from_code, to_code, from_lead, from_trail, to_trail, diff))
+            from_code, to_code, lead, from_trail, to_trail, diff))
 
     out_file.write('#define FOR_EACH_NON_BMP_{}(macro) \\\n'.format(name))
     out_file.write(' \\\n'.join(lines))
     out_file.write('\n')
+
+def for_each_non_bmp_group(group_set):
+    # Find continuous range in group_set.
+    group_list = []
+    entry = None
+    for code in sorted(group_set.keys()):
+        if entry and code == entry['code'] + entry['length']:
+            entry['length'] += 1
+            continue
+
+        entry = {
+            'code': code,
+            'length': 1
+        }
+        group_list.append(entry)
+
+    for entry in group_list:
+        yield (entry['code'], entry['code'] + entry['length'] - 1)
 
 def process_derived_core_properties(derived_core_properties):
     id_start = set()
@@ -203,6 +230,9 @@ def process_unicode_data(unicode_data, derived_core_properties):
 
     non_bmp_lower_map = {}
     non_bmp_upper_map = {}
+    non_bmp_id_start_set = {}
+    non_bmp_id_cont_set = {}
+    non_bmp_space_set = {}
 
     (id_start, id_continue) = process_derived_core_properties(derived_core_properties)
 
@@ -235,6 +265,13 @@ def process_unicode_data(unicode_data, derived_core_properties):
                 non_bmp_lower_map[code] = lower
             if code != upper:
                 non_bmp_upper_map[code] = upper
+            if category == 'Zs':
+                non_bmp_space_set[code] = 1
+                test_space_table.append(code)
+            if code in id_start:
+                non_bmp_id_start_set[code] = 1
+            if code in id_continue:
+                non_bmp_id_cont_set[code] = 1
             continue
 
         # we combine whitespace and lineterminators because in pratice we don't need them separated
@@ -304,6 +341,8 @@ def process_unicode_data(unicode_data, derived_core_properties):
         table, index,
         same_upper_table, same_upper_index,
         non_bmp_lower_map, non_bmp_upper_map,
+        non_bmp_space_set,
+        non_bmp_id_start_set, non_bmp_id_cont_set,
         test_table, test_space_table,
     )
 
@@ -400,6 +439,16 @@ def make_non_bmp_file(version,
         non_bmp_file.write("""
 #ifndef vm_UnicodeNonBMP_h
 #define vm_UnicodeNonBMP_h
+
+// |macro| receives the following arguments
+//   macro(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF)
+//     FROM:       code point where the range starts
+//     TO:         code point where the range ends
+//     LEAD:       common lead surrogate of FROM and TO
+//     TRAIL_FROM: trail surrogate of FROM
+//     TRAIL_FROM: trail surrogate of TO
+//     DIFF:       the difference between the code point in the range and
+//                 converted code point
 
 """)
 
@@ -544,7 +593,9 @@ if (typeof reportCompare === "function")
 def make_unicode_file(version,
                       table, index,
                       same_upper_table, same_upper_index,
-                      folding_table, folding_index):
+                      folding_table, folding_index,
+                      non_bmp_space_set,
+                      non_bmp_id_start_set, non_bmp_id_cont_set):
     index1, index2, shift = splitbins(index)
 
     # Don't forget to update CharInfo in Unicode.h if you need to change this
@@ -659,7 +710,7 @@ def make_unicode_file(version,
         data_file.write(unicode_version_message.format(version))
         data_file.write(public_domain)
         data_file.write('#include "vm/Unicode.h"\n\n')
-        data_file.write('using namespace js;\n')
+        data_file.write('using namespace js;\n');
         data_file.write('using namespace js::unicode;\n')
         data_file.write(comment)
         data_file.write('const CharacterInfo unicode::js_charinfo[] = {\n')
@@ -700,6 +751,43 @@ def make_unicode_file(version,
         data_file.write('\n')
         dump(folding_index2, 'folding_index2', data_file)
         data_file.write('\n')
+
+        # If the following assert fails, it means space character is added to
+        # non-BMP area.  In that case the following code should be uncommented
+        # and the corresponding code should be added to frontend.
+        assert len(non_bmp_space_set.keys()) == 0
+
+        data_file.write("""\
+bool
+js::unicode::IsIdentifierStartNonBMP(uint32_t codePoint)
+{
+""")
+
+        for (from_code, to_code) in for_each_non_bmp_group(non_bmp_id_start_set):
+            data_file.write("""\
+    if (codePoint >= 0x{:x} && codePoint <= 0x{:x})
+        return true;
+""".format(from_code, to_code))
+
+        data_file.write("""\
+    return false;
+}
+
+bool
+js::unicode::IsIdentifierPartNonBMP(uint32_t codePoint)
+{
+""")
+
+        for (from_code, to_code) in for_each_non_bmp_group(non_bmp_id_cont_set):
+            data_file.write("""\
+    if (codePoint >= 0x{:x} && codePoint <= 0x{:x})
+        return true;
+""".format(from_code, to_code))
+
+        data_file.write("""\
+    return false;
+}
+""")
 
 def getsize(data):
     """ return smallest possible integer size for the given array """
@@ -821,6 +909,8 @@ def update_unicode(args):
             table, index,
             same_upper_table, same_upper_index,
             non_bmp_lower_map, non_bmp_upper_map,
+            non_bmp_space_set,
+            non_bmp_id_start_set, non_bmp_id_cont_set,
             test_table, test_space_table
         ) = process_unicode_data(unicode_data, derived_core_properties)
         (
@@ -833,7 +923,9 @@ def update_unicode(args):
     make_unicode_file(unicode_version,
                       table, index,
                       same_upper_table, same_upper_index,
-                      folding_table, folding_index)
+                      folding_table, folding_index,
+                      non_bmp_space_set,
+                      non_bmp_id_start_set, non_bmp_id_cont_set)
     make_non_bmp_file(unicode_version,
                       non_bmp_lower_map, non_bmp_upper_map,
                       non_bmp_folding_map, non_bmp_rev_folding_map)

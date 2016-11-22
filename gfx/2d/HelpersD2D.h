@@ -595,6 +595,8 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
   //
   //
 
+  int Bpp = BytesPerPixel(aSurface->GetFormat());
+
   if (uploadRect.Contains(rect)) {
     // Extend mode is irrelevant, the displayed rect is completely contained
     // by the source bitmap.
@@ -626,7 +628,7 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
 
       // A partial upload will suffice.
       aRT->CreateBitmap(D2D1::SizeU(uint32_t(uploadRect.width), uint32_t(uploadRect.height)),
-                        mapping.GetData() + int(uploadRect.x) * 4 + int(uploadRect.y) * mapping.GetStride(),
+                        mapping.GetData() + int(uploadRect.x) * Bpp + int(uploadRect.y) * mapping.GetStride(),
                         mapping.GetStride(),
                         D2D1::BitmapProperties(D2DPixelFormat(aSurface->GetFormat())),
                         getter_AddRefs(bitmap));
@@ -636,8 +638,6 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
 
     return bitmap.forget();
   } else {
-    int Bpp = BytesPerPixel(aSurface->GetFormat());
-
     if (Bpp != 4) {
       // This shouldn't actually happen in practice!
       MOZ_ASSERT(false);
