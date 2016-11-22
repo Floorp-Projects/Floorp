@@ -37,6 +37,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_Release, void,
                    RawServoStyleSheetBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,
                    RawServoStyleSheetBorrowed sheet)
+SERVO_BINDING_FUNC(Servo_StyleSheet_GetRules, ServoCssRulesStrong,
+                   RawServoStyleSheetBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSet_Init, RawServoStyleSetOwned)
 SERVO_BINDING_FUNC(Servo_StyleSet_Drop, void, RawServoStyleSetOwned set)
 SERVO_BINDING_FUNC(Servo_StyleSet_AppendStyleSheet, void,
@@ -48,6 +50,11 @@ SERVO_BINDING_FUNC(Servo_StyleSet_RemoveStyleSheet, void,
 SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
                    RawServoStyleSetBorrowed set, RawServoStyleSheetBorrowed sheet,
                    RawServoStyleSheetBorrowed reference)
+
+// CSSRuleList
+SERVO_BINDING_FUNC(Servo_CssRules_ListTypes, void,
+                   ServoCssRulesBorrowed rules,
+                   nsTArrayBorrowed_uintptr_t result)
 
 // Animations API
 SERVO_BINDING_FUNC(Servo_ParseProperty,
