@@ -33,8 +33,8 @@ use webdriver::command::WebDriverCommand::{
     ElementClick, ElementTap, ElementClear, ElementSendKeys,
     ExecuteScript, ExecuteAsyncScript, GetCookies, GetCookie, AddCookie,
     DeleteCookies, DeleteCookie, SetTimeouts, DismissAlert,
-    AcceptAlert, GetAlertText, SendAlertText, TakeScreenshot, Extension,
-    SetWindowPosition, GetWindowPosition};
+    AcceptAlert, GetAlertText, SendAlertText, TakeScreenshot, TakeElementScreenshot,
+    Extension, SetWindowPosition, GetWindowPosition};
 use webdriver::command::{
     NewSessionParameters, GetParameters, WindowSizeParameters, SwitchToWindowParameters,
     SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
@@ -568,7 +568,7 @@ impl MarionetteSession {
             IsSelected(_) | GetElementAttribute(_, _) | GetElementProperty(_, _) |
             GetCSSValue(_, _) | GetElementText(_) |
             GetElementTagName(_) | IsEnabled(_) | ExecuteScript(_) | ExecuteAsyncScript(_) |
-            GetAlertText | TakeScreenshot => {
+            GetAlertText | TakeScreenshot | TakeElementScreenshot(_) => {
                 let value = try_opt!(resp.result.find("value"),
                                      ErrorStatus::UnknownError,
                                      "Failed to find value field");
@@ -930,6 +930,13 @@ impl MarionetteCommand {
             TakeScreenshot => {
                 let mut data = BTreeMap::new();
                 data.insert("id".to_string(), Json::Null);
+                data.insert("highlights".to_string(), Json::Array(vec![]));
+                data.insert("full".to_string(), Json::Boolean(false));
+                (Some("takeScreenshot"), Some(Ok(data)))
+            },
+            TakeElementScreenshot(ref e) => {
+                let mut data = BTreeMap::new();
+                data.insert("id".to_string(), e.id.to_json());
                 data.insert("highlights".to_string(), Json::Array(vec![]));
                 data.insert("full".to_string(), Json::Boolean(false));
                 (Some("takeScreenshot"), Some(Ok(data)))
