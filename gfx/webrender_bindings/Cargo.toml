@@ -5,11 +5,15 @@ authors = ["The Mozilla Project Developers"]
 license = "MPL-2.0"
 
 [dependencies]
-webrender = {path = "../webrender"}
 webrender_traits = {path = "../webrender_traits"}
 euclid = "0.10"
 app_units = "0.3"
 gleam = "0.2"
+
+[dependencies.webrender]
+path = "../webrender"
+default-features = false
+features = ["codegen"]
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.2.2"
