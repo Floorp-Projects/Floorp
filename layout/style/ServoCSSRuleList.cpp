@@ -9,6 +9,7 @@
 #include "mozilla/ServoCSSRuleList.h"
 
 #include "mozilla/ServoBindings.h"
+#include "mozilla/ServoStyleRule.h"
 
 namespace mozilla {
 
@@ -35,7 +36,11 @@ ServoCSSRuleList::IndexedGetter(uint32_t aIndex, bool& aFound)
   if (rule <= kMaxRuleType) {
     RefPtr<css::Rule> ruleObj = nullptr;
     switch (rule) {
-      case nsIDOMCSSRule::STYLE_RULE:
+      case nsIDOMCSSRule::STYLE_RULE: {
+        ruleObj = new ServoStyleRule(
+          Servo_CssRules_GetStyleRuleAt(mRawRules, aIndex).Consume());
+        break;
+      }
       case nsIDOMCSSRule::MEDIA_RULE:
       case nsIDOMCSSRule::FONT_FACE_RULE:
       case nsIDOMCSSRule::KEYFRAMES_RULE:
