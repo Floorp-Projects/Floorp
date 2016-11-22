@@ -10,6 +10,7 @@
 #include "MediaInfo.h"
 #include "ImageContainer.h"
 #include "GPUVideoImage.h"
+#include "mozilla/layers/SynchronousTask.h"
 
 namespace mozilla {
 namespace dom {
@@ -107,6 +108,15 @@ VideoDecoderChild::RecvInitFailed(const nsresult& aReason)
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+VideoDecoderChild::RecvFlushComplete()
+{
+  MOZ_ASSERT(mFlushTask);
+  AutoCompleteTask complete(mFlushTask);
+  mFlushTask = nullptr;
+  return IPC_OK();
+}
+
 void
 VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy)
 {
@@ -121,6 +131,10 @@ VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy)
         ref->mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER, __func__);
       }
     }));
+  }
+  if (mFlushTask) {
+    AutoCompleteTask complete(mFlushTask);
+    mFlushTask = nullptr;
   }
   mCanSend = false;
 }
@@ -212,11 +226,14 @@ VideoDecoderChild::Input(MediaRawData* aSample)
 }
 
 void
-VideoDecoderChild::Flush()
+VideoDecoderChild::Flush(SynchronousTask* aTask)
 {
   AssertOnManagerThread();
   if (mCanSend) {
     SendFlush();
+    mFlushTask = aTask;
+  } else {
+    AutoCompleteTask complete(aTask);
   }
 }
 
