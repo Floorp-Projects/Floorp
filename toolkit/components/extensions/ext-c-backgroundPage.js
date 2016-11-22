@@ -25,10 +25,11 @@ global.initializeBackgroundPage = (contentWindow) => {
 extensions.registerSchemaAPI("extension", "addon_child", context => {
   function getBackgroundPage() {
     for (let view of context.extension.views) {
-      if (view.viewType == "background") {
+      if (view.viewType == "background" && context.principal.subsumes(view.principal)) {
         return view.contentWindow;
       }
     }
+    return null;
   }
   return {
     extension: {
