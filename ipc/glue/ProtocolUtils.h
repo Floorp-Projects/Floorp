@@ -16,7 +16,6 @@
 #include "prenv.h"
 
 #include "IPCMessageStart.h"
-#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/Shmem.h"
@@ -56,8 +55,6 @@ enum {
 };
 
 } // namespace
-
-class nsIEventTarget;
 
 namespace mozilla {
 namespace dom {
@@ -144,8 +141,6 @@ enum RacyInterruptPolicy {
     RIPParentWins
 };
 
-class IToplevelProtocol;
-
 class IProtocol : public HasResultCodes
 {
 public:
@@ -201,25 +196,10 @@ public:
     bool AllocUnsafeShmem(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aOutMem);
     bool DeallocShmem(Shmem& aMem);
 
-    // Sets an event target to which all messages for aActor will be
-    // dispatched. This method must be called before right before the SendPFoo
-    // message for aActor is sent. And SendPFoo *must* be called if
-    // SetEventTargetForActor is called. The receiver when calling
-    // SetEventTargetForActor must be the actor that will be the manager for
-    // aActor.
-    void SetEventTargetForActor(IProtocol* aActor, nsIEventTarget* aEventTarget);
-
 protected:
-    friend class IToplevelProtocol;
-
     void SetId(int32_t aId) { mId = aId; }
-    void SetManager(IProtocol* aManager);
+    void SetManager(IProtocol* aManager) { mManager = aManager; }
     void SetIPCChannel(MessageChannel* aChannel) { mChannel = aChannel; }
-
-    virtual void SetEventTargetForActorInternal(IProtocol* aActor, nsIEventTarget* aEventTarget);
-
-    static const int32_t kNullActorId = 0;
-    static const int32_t kFreedActorId = 1;
 
 private:
     int32_t mId;
@@ -379,16 +359,7 @@ public:
     virtual void ProcessRemoteNativeEventsInInterruptCall() {
     }
 
-    virtual already_AddRefed<nsIEventTarget>
-    GetMessageEventTarget(const Message& aMsg);
-
-protected:
-    virtual already_AddRefed<nsIEventTarget>
-    GetConstructedEventTarget(const Message& aMsg) { return nullptr; }
-
-    virtual void SetEventTargetForActorInternal(IProtocol* aActor, nsIEventTarget* aEventTarget);
-
-  private:
+private:
     ProtocolId mProtocolId;
     UniquePtr<Transport> mTrans;
     base::ProcessId mOtherPid;
@@ -396,9 +367,6 @@ protected:
     int32_t mLastRouteId;
     IDMap<Shmem::SharedMemory*> mShmemMap;
     Shmem::id_t mLastShmemId;
-
-    Mutex mEventTargetMutex;
-    IDMap<nsCOMPtr<nsIEventTarget>> mEventTargetMap;
 };
 
 class IShmemAllocator
