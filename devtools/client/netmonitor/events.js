@@ -58,9 +58,6 @@ const EVENTS = {
   // When the response body is displayed in the UI.
   RESPONSE_BODY_DISPLAYED: "NetMonitor:ResponseBodyAvailable",
 
-  // When the html response preview is displayed in the UI.
-  RESPONSE_HTML_PREVIEW_DISPLAYED: "NetMonitor:ResponseHtmlPreviewAvailable",
-
   // When the image response thumbnail is displayed in the UI.
   RESPONSE_IMAGE_THUMBNAIL_DISPLAYED:
     "NetMonitor:ResponseImageThumbnailAvailable",

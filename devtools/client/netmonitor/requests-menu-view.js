@@ -210,15 +210,16 @@ RequestsMenuView.prototype = {
     const action = Actions.updateRequest(id, data, true);
     yield this.store.dispatch(action);
 
-    const { responseContent, requestPostData } = action.data;
+    let { responseContent, requestPostData } = action.data;
 
-    // Fetch response data if the response is an image (to display thumbnail)
     if (responseContent && responseContent.content) {
       let request = getRequestById(this.store.getState(), action.id);
+      let { text, encoding } = responseContent.content;
       if (request) {
         let { mimeType } = request;
+
+        // Fetch response data if the response is an image (to display thumbnail)
         if (mimeType.includes("image/")) {
-          let { text, encoding } = responseContent.content;
           let responseBody = yield gNetwork.getString(text);
           const dataUri = formDataURI(mimeType, encoding, responseBody);
           yield this.store.dispatch(Actions.updateRequest(
@@ -227,6 +228,16 @@ RequestsMenuView.prototype = {
             true
           ));
           window.emit(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
+        // Fetch response text only if the response is html, but not all text/*
+        } else if (mimeType.includes("text/html") && typeof text !== "string") {
+          let responseBody = yield gNetwork.getString(text);
+          responseContent.content.text = responseBody;
+          responseContent = Object.assign({}, responseContent);
+          yield this.store.dispatch(Actions.updateRequest(
+            action.id,
+            { responseContent },
+            true
+          ));
         }
       }
     }

@@ -29,6 +29,7 @@ const {
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+const PreviewPanel = createFactory(require("./shared/components/preview-panel"));
 const SecurityPanel = createFactory(require("./shared/components/security-panel"));
 const TimingsPanel = createFactory(require("./shared/components/timings-panel"));
 
@@ -93,6 +94,13 @@ DetailsView.prototype = {
   initialize: function (store) {
     dumpn("Initializing the DetailsView");
 
+    this._previewPanelNode = $("#react-preview-tabpanel-hook");
+
+    ReactDOM.render(Provider(
+      { store },
+      PreviewPanel()
+    ), this._previewPanelNode);
+
     this._securityPanelNode = $("#react-security-tabpanel-hook");
 
     ReactDOM.render(Provider(
@@ -152,6 +160,7 @@ DetailsView.prototype = {
    */
   destroy: function () {
     dumpn("Destroying the DetailsView");
+    ReactDOM.unmountComponentAtNode(this._previewPanelNode);
     ReactDOM.unmountComponentAtNode(this._securityPanelNode);
     ReactDOM.unmountComponentAtNode(this._timingsPanelNode);
     this.sidebar.destroy();
@@ -262,10 +271,6 @@ DetailsView.prototype = {
         // "Response"
         case 3:
           yield view._setResponseBody(src.url, src.responseContent);
-          break;
-        // "Preview"
-        case 6:
-          yield view._setHtmlPreview(src.responseContent);
           break;
       }
       viewState.updating[tab] = false;
@@ -695,30 +700,6 @@ DetailsView.prototype = {
     }
 
     window.emit(EVENTS.RESPONSE_BODY_DISPLAYED);
-  }),
-
-  /**
-   * Sets the preview for HTML responses shown in this view.
-   *
-   * @param object response
-   *        The message received from the server.
-   * @return object
-   *        A promise that is resolved when the html preview is rendered.
-   */
-  _setHtmlPreview: Task.async(function* (response) {
-    if (!response) {
-      return promise.resolve();
-    }
-    let { text } = response.content;
-    let responseBody = yield gNetwork.getString(text);
-
-    // Always disable JS when previewing HTML responses.
-    let iframe = $("#response-preview");
-    iframe.contentDocument.docShell.allowJavascript = false;
-    iframe.contentDocument.documentElement.innerHTML = responseBody;
-
-    window.emit(EVENTS.RESPONSE_HTML_PREVIEW_DISPLAYED);
-    return undefined;
   }),
 
   _dataSrc: null,
