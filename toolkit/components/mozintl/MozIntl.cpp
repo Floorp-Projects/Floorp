@@ -14,9 +14,13 @@ using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(MozIntl, mozIMozIntl)
 
-MozIntl::MozIntl() = default;
+MozIntl::MozIntl()
+{
+}
 
-MozIntl::~MozIntl() = default;
+MozIntl::~MozIntl()
+{
+}
 
 NS_IMETHODIMP
 MozIntl::AddGetCalendarInfo(JS::Handle<JS::Value> val, JSContext* cx)

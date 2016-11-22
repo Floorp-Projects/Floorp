@@ -281,7 +281,8 @@ internal_GetRegisteredHistogramIds(bool keyed, uint32_t dataset,
 {
   nsTArray<char*> collection;
 
-  for (const auto & h : gHistograms) {
+  for (size_t i = 0; i < mozilla::ArrayLength(gHistograms); ++i) {
+    const HistogramInfo& h = gHistograms[i];
     if (IsExpiredVersion(h.expiration()) ||
         h.keyed != keyed ||
         !IsInDataset(h.dataset, dataset)) {
@@ -750,7 +751,9 @@ void internal_Accumulate(mozilla::Telemetry::ID aHistogram, uint32_t aSample);
 void
 internal_IdentifyCorruptHistograms(StatisticsRecorder::Histograms &hs)
 {
-  for (auto h : hs) {
+  for (HistogramIterator it = hs.begin(); it != hs.end(); ++it) {
+    Histogram *h = *it;
+
     mozilla::Telemetry::ID id;
     nsresult rv = internal_GetHistogramEnumId(h->histogram_name().c_str(), &id);
     // This histogram isn't a static histogram, just ignore it.
@@ -2061,7 +2064,8 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
   mozilla::PodArrayZero(gCorruptHistograms);
 
   // Create registered keyed histograms
-  for (const auto & h : gHistograms) {
+  for (size_t i = 0; i < mozilla::ArrayLength(gHistograms); ++i) {
+    const HistogramInfo& h = gHistograms[i];
     if (!h.keyed) {
       continue;
     }
@@ -2161,8 +2165,9 @@ void
 TelemetryHistogram::InitHistogramRecordingEnabled()
 {
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  for (auto recordingInitiallyDisabledID : kRecordingInitiallyDisabledIDs) {
-    internal_SetHistogramRecordingEnabled(recordingInitiallyDisabledID,
+  const size_t length = mozilla::ArrayLength(kRecordingInitiallyDisabledIDs);
+  for (size_t i = 0; i < length; i++) {
+    internal_SetHistogramRecordingEnabled(kRecordingInitiallyDisabledIDs[i],
                                           false);
   }
 }
@@ -2397,7 +2402,8 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
 
   // OK, now we can actually reflect things.
   JS::Rooted<JSObject*> hobj(cx);
-  for (auto h : hs) {
+  for (HistogramIterator it = hs.begin(); it != hs.end(); ++it) {
+    Histogram *h = *it;
     if (!internal_ShouldReflectHistogram(h) || internal_IsEmpty(h) ||
         internal_IsExpired(h)) {
       continue;
@@ -2637,7 +2643,8 @@ TelemetryHistogram::GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf
   StatisticsRecorder::Histograms hs;
   StatisticsRecorder::GetHistograms(&hs);
   size_t n = 0;
-  for (auto h : hs) {
+  for (HistogramIterator it = hs.begin(); it != hs.end(); ++it) {
+    Histogram *h = *it;
     n += h->SizeOfIncludingThis(aMallocSizeOf);
   }
   return n;
