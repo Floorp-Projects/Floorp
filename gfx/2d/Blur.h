@@ -69,6 +69,14 @@ public:
                float aSigmaX,
                float aSigmaY);
 
+  AlphaBoxBlur();
+
+  void Init(const Rect& aRect,
+            const IntSize& aSpreadRadius,
+            const IntSize& aBlurRadius,
+            const Rect* aDirtyRect,
+            const Rect* aSkipRect);
+
   ~AlphaBoxBlur();
 
   /**
@@ -93,6 +101,16 @@ public:
   Rect* GetDirtyRect();
 
   /**
+   * Return the spread radius, in pixels.
+   */
+  IntSize GetSpreadRadius() const { return mSpreadRadius; }
+
+  /**
+   * Return the blur radius, in pixels.
+   */
+  IntSize GetBlurRadius() const { return mBlurRadius; }
+
+  /**
    * Return the minimum buffer size that should be given to Blur() method.  If
    * zero, the class is not properly setup for blurring.  Note that this
    * includes the extra three bytes on top of the stride*width, where something
@@ -115,6 +133,7 @@ public:
    * constructor, above.
    */
   static IntSize CalculateBlurRadius(const Point& aStandardDeviation);
+  static Float CalculateBlurSigma(int32_t aBlurRadius);
 
 private:
 

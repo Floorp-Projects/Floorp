@@ -391,7 +391,7 @@
 @RESPATH@/components/UiccConnector.manifest
 #endif
 
-; WiFi, NetworkManager, NetworkStats
+; WiFi, NetworkManager
 #ifdef MOZ_WIDGET_GONK
 @RESPATH@/components/DOMWifiManager.js
 @RESPATH@/components/DOMWifiManager.manifest
@@ -405,10 +405,6 @@
 @RESPATH@/components/NetworkManager.manifest
 @RESPATH@/components/NetworkService.js
 @RESPATH@/components/NetworkService.manifest
-@RESPATH@/components/NetworkStatsManager.js
-@RESPATH@/components/NetworkStatsManager.manifest
-@RESPATH@/components/NetworkStatsServiceProxy.js
-@RESPATH@/components/NetworkStatsServiceProxy.manifest
 @RESPATH@/components/TetheringService.js
 @RESPATH@/components/TetheringService.manifest
 @RESPATH@/components/WifiWorker.js

@@ -4,11 +4,19 @@
 "use strict";
 
 const {L10N} = require("devtools/client/performance/modules/global");
-const {DOM, createClass} = require("devtools/client/shared/vendor/react");
+const {DOM, createClass, PropTypes} = require("devtools/client/shared/vendor/react");
 const {div, button} = DOM;
 
 module.exports = createClass({
   displayName: "Recording Controls",
+
+  propTypes: {
+    onClearButtonClick: PropTypes.func.isRequired,
+    onRecordButtonClick: PropTypes.func.isRequired,
+    onImportButtonClick: PropTypes.func.isRequired,
+    isRecording: PropTypes.bool,
+    isLocked: PropTypes.bool
+  },
 
   render() {
     let {
