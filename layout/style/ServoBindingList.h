@@ -58,6 +58,12 @@ SERVO_BINDING_FUNC(Servo_CssRules_ListTypes, void,
 SERVO_BINDING_FUNC(Servo_CssRules_GetStyleRuleAt, RawServoStyleRuleStrong,
                    ServoCssRulesBorrowed rules, uint32_t index)
 
+// CSS Rules
+SERVO_BINDING_FUNC(Servo_StyleRule_GetCssText, void,
+                   RawServoStyleRuleBorrowed rule, nsAString* result)
+SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorText, void,
+                   RawServoStyleRuleBorrowed rule, nsAString* result)
+
 // Animations API
 SERVO_BINDING_FUNC(Servo_ParseProperty,
                    RawServoDeclarationBlockStrong,
