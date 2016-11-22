@@ -165,7 +165,6 @@ class SoftwareUpdate(BaseLib):
     PREF_APP_DISTRIBUTION_VERSION = 'distribution.version'
     PREF_APP_UPDATE_CHANNEL = 'app.update.channel'
     PREF_APP_UPDATE_URL = 'app.update.url'
-    PREF_APP_UPDATE_URL_OVERRIDE = 'app.update.url.override'
     PREF_DISABLED_ADDONS = 'extensions.disabledAddons'
 
     def __init__(self, marionette):
@@ -219,7 +218,7 @@ class SoftwareUpdate(BaseLib):
 
         :returns: A dictionary of build information
         """
-        update_url = self.get_update_url(True)
+        update_url = self.get_formatted_update_url(True)
 
         return {
             'buildid': self.app_info.appBuildID,
@@ -331,6 +330,20 @@ class SoftwareUpdate(BaseLib):
         self.prefs.set_pref(self.PREF_APP_UPDATE_CHANNEL, channel, default_branch=True)
 
     @property
+    def update_url(self):
+        """Return the update URL used for update checks."""
+        return self.prefs.get_pref(self.PREF_APP_UPDATE_URL, default_branch=True)
+
+    @update_url.setter
+    def update_url(self, url):
+        """Set the update URL to be used for update checks.
+
+        :param url: New update URL to use
+
+        """
+        self.prefs.set_pref(self.PREF_APP_UPDATE_URL, url, default_branch=True)
+
+    @property
     def update_type(self):
         """Returns the type of the active update."""
         return self.active_update.type
@@ -355,22 +368,18 @@ class SoftwareUpdate(BaseLib):
 
         return snippet
 
-    def get_update_url(self, force=False):
-        """Retrieve the AUS update URL the update snippet is retrieved from.
+    def get_formatted_update_url(self, force=False):
+        """Retrieve the formatted AUS update URL the update snippet is retrieved from.
 
         :param force: Boolean flag to force an update check
 
         :returns: The URL of the update snippet
         """
-        url = self.prefs.get_pref(self.PREF_APP_UPDATE_URL_OVERRIDE)
-        if not url:
-            url = self.prefs.get_pref(self.PREF_APP_UPDATE_URL)
-
         # Format the URL by replacing placeholders
         url = self.marionette.execute_script("""
           Components.utils.import("resource://gre/modules/UpdateUtils.jsm")
           return UpdateUtils.formatUpdateURL(arguments[0]);
-        """, script_args=[url])
+        """, script_args=[self.update_url])
 
         if force:
             if '?' in url:
@@ -380,4 +389,3 @@ class SoftwareUpdate(BaseLib):
             url += 'force=1'
 
         return url
-
