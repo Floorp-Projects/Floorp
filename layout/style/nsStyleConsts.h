@@ -351,37 +351,12 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED         1
 #define NS_STYLE_IMAGELAYER_ATTACHMENT_LOCAL         2
 
-// See nsStyleImageLayers
-// Code depends on these constants having the same values as IMAGELAYER_ORIGIN_*
-// The *CLIP_FILL, *CLIP_STROKE, *CLIP_VIEW, *CLIP_NO_CLIP are only
-// supported by mask-clip, not background-clip.
-#define NS_STYLE_IMAGELAYER_CLIP_BORDER              0
-#define NS_STYLE_IMAGELAYER_CLIP_PADDING             1
-#define NS_STYLE_IMAGELAYER_CLIP_CONTENT             2
-#define NS_STYLE_IMAGELAYER_CLIP_FILL                3
-#define NS_STYLE_IMAGELAYER_CLIP_STROKE              4
-#define NS_STYLE_IMAGELAYER_CLIP_VIEW                5
-#define NS_STYLE_IMAGELAYER_CLIP_NO_CLIP             6
-// One extra constant which does not exist in IMAGELAYER_ORIGIN_*
-#define NS_STYLE_IMAGELAYER_CLIP_TEXT                7
-
 // A magic value that we use for our "pretend that background-clip is
 // 'padding' when we have a solid border" optimization.  This isn't
 // actually equal to NS_STYLE_IMAGELAYER_CLIP_PADDING because using that
 // causes antialiasing seams between the background and border.  This
 // is a backend-only value.
 #define NS_STYLE_IMAGELAYER_CLIP_MOZ_ALMOST_PADDING  127
-
-// See nsStyleImageLayers
-// Code depends on these constants having the same values as BG_CLIP_*
-// The *ORIGIN_FILL, *ORIGIN_STROKE, *ORIGIN_VIEW are only
-// supported by mask-clip, not background-clip.
-#define NS_STYLE_IMAGELAYER_ORIGIN_BORDER            0
-#define NS_STYLE_IMAGELAYER_ORIGIN_PADDING           1
-#define NS_STYLE_IMAGELAYER_ORIGIN_CONTENT           2
-#define NS_STYLE_IMAGELAYER_ORIGIN_FILL              3
-#define NS_STYLE_IMAGELAYER_ORIGIN_STROKE            4
-#define NS_STYLE_IMAGELAYER_ORIGIN_VIEW              5
 
 // See nsStyleImageLayers
 // The parser code depends on |ing these values together.
