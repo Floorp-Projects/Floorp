@@ -18,6 +18,7 @@
 namespace mozilla {
 
 class ServoDeclarationBlock;
+class ServoStyleRule;
 
 class ServoStyleRuleDeclaration final : public nsDOMCSSDeclaration
 {
