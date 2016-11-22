@@ -296,6 +296,7 @@ GROUP_NAMES = {
     'tc-Fxfn-r-e10s': 'Firefox functional tests (remote) executed by TaskCluster with e10s',
     'tc-M': 'Mochitests executed by TaskCluster',
     'tc-M-e10s': 'Mochitests executed by TaskCluster with e10s',
+    'tc-M-V': 'Mochitests on Valgrind executed by TaskCluster',
     'tc-R': 'Reftests executed by TaskCluster',
     'tc-R-e10s': 'Reftests executed by TaskCluster with e10s',
     'tc-VP': 'VideoPuppeteer tests executed by TaskCluster',
