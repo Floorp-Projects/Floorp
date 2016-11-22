@@ -170,7 +170,7 @@ private:
     nsCOMPtr<nsIURI> mFile;
     nsCOMPtr<nsIFile> mDataPath;
 
-    virtual ~OnWalk() { }
+    virtual ~OnWalk() = default;
 };
 
 NS_IMPL_ISUPPORTS(nsWebBrowserPersist::OnWalk,
@@ -195,7 +195,7 @@ private:
     nsCOMPtr<nsIURI> mFile;
     nsCOMPtr<nsIFile> mLocalFile;
 
-    virtual ~OnWrite() { }
+    virtual ~OnWrite() = default;
 };
 
 NS_IMPL_ISUPPORTS(nsWebBrowserPersist::OnWrite,
@@ -221,7 +221,7 @@ private:
     nsTArray<nsCString> mMapTo;
     nsCString mTargetBase;
 
-    virtual ~FlatURIMap() { }
+    virtual ~FlatURIMap() = default;
 };
 
 NS_IMPL_ISUPPORTS(nsWebBrowserPersist::FlatURIMap, nsIWebBrowserPersistURIMap)

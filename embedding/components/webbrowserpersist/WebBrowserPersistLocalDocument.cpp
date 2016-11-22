@@ -78,9 +78,7 @@ WebBrowserPersistLocalDocument::WebBrowserPersistLocalDocument(nsIDocument* aDoc
     MOZ_ASSERT(mDocument);
 }
 
-WebBrowserPersistLocalDocument::~WebBrowserPersistLocalDocument()
-{
-}
+WebBrowserPersistLocalDocument::~WebBrowserPersistLocalDocument() = default;
 
 NS_IMETHODIMP
 WebBrowserPersistLocalDocument::SetPersistFlags(uint32_t aFlags)
@@ -652,7 +650,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOCUMENTENCODERNODEFIXUP
 private:
-    virtual ~PersistNodeFixup() { }
+    virtual ~PersistNodeFixup() = default;
     RefPtr<WebBrowserPersistLocalDocument> mParent;
     nsClassHashtable<nsCStringHashKey, nsCString> mMap;
     nsCOMPtr<nsIURI> mCurrentBaseURI;
