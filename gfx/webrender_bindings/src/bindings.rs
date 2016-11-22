@@ -324,14 +324,16 @@ pub extern fn wr_init_window(root_pipeline_id: u64, external_image_handler: *mut
     let flush_notifier = Box::new(FlushNotifier{render_thread_notifier: flush_notification_lock});
     renderer.set_flush_notifier(flush_notifier);
 
-    renderer.set_external_image_handler(Box::new(
-        unsafe {
-            WrExternalImageHandler {
-                external_image_obj: (*external_image_handler).external_image_obj,
-                get_func: (*external_image_handler).get_func,
-                release_func: (*external_image_handler).release_func,
-            }
-        }));
+    if !external_image_handler.is_null() {
+        renderer.set_external_image_handler(Box::new(
+            unsafe {
+                WrExternalImageHandler {
+                    external_image_obj: (*external_image_handler).external_image_obj,
+                    get_func: (*external_image_handler).get_func,
+                    release_func: (*external_image_handler).release_func,
+                }
+            }));
+    }
 
     let pipeline_id = PipelineId((root_pipeline_id >> 32) as u32, root_pipeline_id as u32);
     api.set_root_pipeline(pipeline_id);
