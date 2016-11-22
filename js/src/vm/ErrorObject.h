@@ -38,9 +38,8 @@ class ErrorObject : public NativeObject
          ScopedJSFreePtr<JSErrorReport>* errorReport, HandleString fileName, HandleObject stack,
          uint32_t lineNumber, uint32_t columnNumber, HandleString message);
 
-    static const ClassSpec errorClassSpec_;
-    static const ClassSpec subErrorClassSpec_;
-    static const ClassSpec nonGlobalErrorClassSpec_;
+    static const ClassSpec classSpecs[JSEXN_ERROR_LIMIT];
+    static const Class protoClasses[JSEXN_ERROR_LIMIT];
 
   protected:
     static const uint32_t EXNTYPE_SLOT          = 0;
@@ -54,7 +53,7 @@ class ErrorObject : public NativeObject
     static const uint32_t RESERVED_SLOTS = MESSAGE_SLOT + 1;
 
   public:
-    static const Class classes[JSEXN_LIMIT];
+    static const Class classes[JSEXN_ERROR_LIMIT];
 
     static const Class * classForType(JSExnType type) {
         MOZ_ASSERT(type < JSEXN_WARN);
