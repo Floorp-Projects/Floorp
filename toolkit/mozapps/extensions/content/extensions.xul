@@ -353,6 +353,13 @@
                   &disabledUnsigned.devInfo.start;<label class="text-link plain" id="signing-dev-manual-link">&disabledUnsigned.devInfo.linkToManual;</label>&disabledUnsigned.devInfo.end;
                 </description>
               </vbox>
+              <vbox id="plugindeprecation-notice" class="alert-container">
+                <hbox class="alert">
+                  <description>&pluginDeprecation.description; &#160;
+                    <label class="text-link plain" id="plugindeprecation-learnmore-link">&pluginDeprecation.learnMore;</label>
+                  </description>
+                </hbox>
+              </vbox>
               <hbox class="view-header global-warning-container">
                 <!-- global warnings -->
                 <hbox class="global-warning" flex="1">

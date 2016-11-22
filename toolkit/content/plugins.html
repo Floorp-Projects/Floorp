@@ -9,6 +9,8 @@
 <script type="application/javascript">
   "use strict";
 
+  Components.utils.import("resource://gre/modules/Services.jsm");
+
   var Ci = Components.interfaces;
   var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
   var pluginsbundle = strBundleService.createBundle("chrome://global/locale/plugins.properties");
@@ -71,6 +73,15 @@
     enabledplugins.setAttribute("id", id);
     enabledplugins.appendChild(document.createTextNode(pluginsbundle.GetStringFromName(label)));
     fragment.appendChild(enabledplugins);
+
+    var deprecation = document.createElement("p");
+    deprecation.setAttribute("class", "notice");
+    deprecation.textContent = pluginsbundle.GetStringFromName("deprecation_description") + " \u00A0 ";
+    var deprecationLink = document.createElement("a");
+    deprecationLink.textContent = pluginsbundle.GetStringFromName("deprecation_learn_more");
+    deprecationLink.href = Services.urlFormatter.formatURLPref("app.support.baseURL") + "npapi";
+    deprecation.appendChild(deprecationLink);
+    fragment.appendChild(deprecation);
 
     var stateNames = {};
     ["STATE_SOFTBLOCKED",
