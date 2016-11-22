@@ -3,5 +3,5 @@ struct S {
 };
 
 protocol structUnknownField {
-child: __delete__(S s);
+child: async __delete__(S s);
 };
