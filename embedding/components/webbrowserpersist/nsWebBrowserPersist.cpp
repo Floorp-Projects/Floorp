@@ -1673,7 +1673,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         // filenames of saved URIs are known, the documents can be fixed up and
         // saved
 
-        DocData *docData = new DocData;
+        auto *docData = new DocData;
         docData->mBaseURI = mCurrentBaseURI;
         docData->mCharset = mCurrentCharset;
         docData->mDocument = aDocument;
@@ -1687,7 +1687,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
     }
     else
     {
-        DocData *docData = new DocData;
+        auto *docData = new DocData;
         docData->mBaseURI = mCurrentBaseURI;
         docData->mCharset = mCurrentCharset;
         docData->mDocument = aDocument;
@@ -1768,7 +1768,7 @@ nsWebBrowserPersist::FinishSaveDocumentInternal(nsIURI* aFile,
             }
             if (mPersistFlags & PERSIST_FLAGS_CLEANUP_ON_FAILURE) {
                 // Add to list of things to delete later if all goes wrong
-                CleanupData *cleanupData = new CleanupData;
+                auto *cleanupData = new CleanupData;
                 cleanupData->mFile = aDataPath;
                 cleanupData->mIsDirectory = true;
                 mCleanupList.AppendElement(cleanupData);
@@ -2308,7 +2308,7 @@ nsWebBrowserPersist::MakeOutputStreamFromFile(
     if (mPersistFlags & PERSIST_FLAGS_CLEANUP_ON_FAILURE)
     {
         // Add to cleanup list in event of failure
-        CleanupData *cleanupData = new CleanupData;
+        auto *cleanupData = new CleanupData;
         if (!cleanupData) {
           NS_RELEASE(*aOutputStream);
           return NS_ERROR_OUT_OF_MEMORY;
