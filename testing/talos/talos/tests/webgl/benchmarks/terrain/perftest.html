@@ -364,6 +364,11 @@
 
   // The full test starts here
   function test() {
+    // We initially hide the <body>, to reduce the chance of spinning our wheels
+    // with incremental ASAP-paint-mode paints during pageload. Now that onload
+    // has fired, we un-hide it:
+    document.body.style.display = "";
+
     gResults = {values: [], names: [], raw: []};
     // This test measures average frame interval during WebGL animation as follows:
     // 1. Creates a new WebGL canvas.
@@ -393,7 +398,7 @@
   }
 </script>
 </head>
-<body onload="test();" style="overflow:hidden; margin:0">
+<body onload="test();" style="overflow:hidden; margin:0; display:none">
 <canvas id="c"></canvas>
 <img src="grass.jpeg" style="display:none" id="grass"/>
 </body>
