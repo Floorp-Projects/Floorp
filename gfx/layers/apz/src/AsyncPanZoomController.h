@@ -752,10 +752,9 @@ public:
   };
 
   /**
-   * Query the transforms that should be applied to the layer corresponding
-   * to this APZC due to asynchronous panning and zooming.
-   * This function returns the async transform via the |aOutTransform|
-   * out parameter.
+   * Get the current scroll offset of the scrollable frame corresponding
+   * to this APZC, including the effects of any asynchronous panning and
+   * zooming, in ParentLayer pixels.
    */
   ParentLayerPoint GetCurrentAsyncScrollOffset(AsyncMode aMode) const;
 
