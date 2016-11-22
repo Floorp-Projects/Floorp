@@ -905,6 +905,8 @@ AST_MATCHER(CXXRecordDecl, needsMemMovableMembers) {
 AST_MATCHER(CXXConstructorDecl, isInterestingImplicitCtor) {
   const CXXConstructorDecl *Declaration = Node.getCanonicalDecl();
   return
+      // Skip constructors in system headers
+      !ASTIsInSystemHeader(Declaration->getASTContext(), *Declaration) &&
       // Skip ignored namespaces and paths
       !isInIgnoredNamespaceForImplicitCtor(Declaration) &&
       !isIgnoredPathForImplicitCtor(Declaration) &&
