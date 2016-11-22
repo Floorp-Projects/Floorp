@@ -569,6 +569,7 @@ def stylo(value):
     if value:
         return True
 
+set_config('MOZ_STYLO', stylo)
 set_define('MOZ_STYLO', stylo)
 imply_option('--enable-jemalloc', depends_if('--enable-stylo')(lambda _: 'moz'))
 
