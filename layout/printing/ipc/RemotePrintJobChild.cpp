@@ -47,12 +47,12 @@ RemotePrintJobChild::RecvPrintInitializationResult(const nsresult& aRv)
 }
 
 void
-RemotePrintJobChild::ProcessPage(Shmem& aStoredPage)
+RemotePrintJobChild::ProcessPage(const nsCString& aPageFileName)
 {
   MOZ_ASSERT(mPagePrintTimer);
 
   mPagePrintTimer->WaitForRemotePrint();
-  Unused << SendProcessPage(aStoredPage);
+  Unused << SendProcessPage(aPageFileName);
 }
 
 mozilla::ipc::IPCResult

@@ -36,7 +36,7 @@ public:
 
   mozilla::ipc::IPCResult RecvPrintInitializationResult(const nsresult& aRv) final;
 
-  void ProcessPage(Shmem& aStoredPage);
+  void ProcessPage(const nsCString& aPageFileName);
 
   mozilla::ipc::IPCResult RecvPageProcessed() final;
 

@@ -36,7 +36,7 @@ DrawEventRecorderPrivate::RecordEvent(const RecordedEvent &aEvent)
 }
 
 DrawEventRecorderFile::DrawEventRecorderFile(const char *aFilename)
-  : DrawEventRecorderPrivate(nullptr) 
+  : DrawEventRecorderPrivate(nullptr)
   , mOutputFile(aFilename, ofstream::binary)
 {
   mOutputStream = &mOutputFile;
@@ -53,6 +53,29 @@ void
 DrawEventRecorderFile::Flush()
 {
   mOutputFile.flush();
+}
+
+bool
+DrawEventRecorderFile::IsOpen()
+{
+  return mOutputFile.is_open();
+}
+
+void
+DrawEventRecorderFile::OpenNew(const char *aFilename)
+{
+  MOZ_ASSERT(!mOutputFile.is_open());
+
+  mOutputFile.open(aFilename, ofstream::binary);
+  WriteHeader();
+}
+
+void
+DrawEventRecorderFile::Close()
+{
+  MOZ_ASSERT(mOutputFile.is_open());
+
+  mOutputFile.close();
 }
 
 DrawEventRecorderMemory::DrawEventRecorderMemory()
