@@ -37,10 +37,18 @@ RemoteVideoDecoder::~RemoteVideoDecoder()
   // task queue for the VideoDecoderChild thread to keep
   // it alive until we send the delete message.
   RefPtr<VideoDecoderChild> actor = mActor;
-  VideoDecoderManagerChild::GetManagerThread()->Dispatch(NS_NewRunnableFunction([actor]() {
+
+  RefPtr<Runnable> task = NS_NewRunnableFunction([actor]() {
     MOZ_ASSERT(actor);
     actor->DestroyIPDL();
-  }), NS_DISPATCH_NORMAL);
+  });
+
+  // Drop out references to the actor so that the last ref
+  // always gets released on the manager thread.
+  actor = nullptr;
+  mActor = nullptr;
+
+  VideoDecoderManagerChild::GetManagerThread()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
