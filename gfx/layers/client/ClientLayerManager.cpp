@@ -137,6 +137,9 @@ ClientLayerManager::Destroy()
   // former will early-return if the later has already run.
   ClearCachedResources();
   LayerManager::Destroy();
+
+  // Forget the widget pointer in case we outlive our owning widget.
+  mWidget = nullptr;
 }
 
 int32_t
