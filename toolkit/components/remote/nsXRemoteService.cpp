@@ -110,7 +110,9 @@ FindExtensionParameterInCommand(const char* aParameterName,
 }
 
 
-nsXRemoteService::nsXRemoteService() = default;
+nsXRemoteService::nsXRemoteService()
+{    
+}
 
 void
 nsXRemoteService::XRemoteBaseStartup(const char *aAppName, const char *aProfileName)

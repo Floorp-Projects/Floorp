@@ -308,10 +308,10 @@ nsGSettingsService::Init()
       return NS_ERROR_FAILURE;
   }
 
-  for (auto GSettingsSymbol : kGSettingsSymbols) {
-    *GSettingsSymbol.function =
-      PR_FindFunctionSymbol(gioLib, GSettingsSymbol.functionName);
-    if (!*GSettingsSymbol.function) {
+  for (uint32_t i = 0; i < ArrayLength(kGSettingsSymbols); i++) {
+    *kGSettingsSymbols[i].function =
+      PR_FindFunctionSymbol(gioLib, kGSettingsSymbols[i].functionName);
+    if (!*kGSettingsSymbols[i].function) {
       return NS_ERROR_FAILURE;
     }
   }
