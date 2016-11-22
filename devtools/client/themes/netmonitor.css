@@ -742,7 +742,9 @@
 }
 
 #response-preview {
+  border: none;
   display: -moz-box;
+  -moz-box-orient: vertical;
   -moz-box-flex: 1;
 }
 
@@ -1138,6 +1140,7 @@
  * FIXME: normal html block element cannot fill outer XUL element
  * This workaround should be removed after sidebar is migrated to react
  */
+#react-preview-tabpanel-hook,
 #react-security-tabpanel-hook,
 #react-timings-tabpanel-hook {
   display: -moz-box;

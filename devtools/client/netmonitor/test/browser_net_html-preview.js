@@ -40,8 +40,9 @@ add_task(function* () {
   is($("#preview-tab").hidden, false,
     "The preview tab should be visible now.");
 
-  yield monitor.panelWin.once(EVENTS.RESPONSE_HTML_PREVIEW_DISPLAYED);
   let iframe = $("#response-preview");
+  yield once(iframe, "DOMContentLoaded");
+
   ok(iframe,
     "There should be a response preview iframe available.");
   ok(iframe.contentDocument,

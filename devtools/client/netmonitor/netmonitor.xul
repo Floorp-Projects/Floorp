@@ -272,9 +272,8 @@
               </tabpanel>
               <tabpanel id="preview-tabpanel"
                         class="tabpanel-content">
-                <html:iframe id="response-preview"
-                             frameborder="0"
-                             sandbox=""/>
+                <html:div xmlns="http://www.w3.org/1999/xhtml"
+                          id="react-preview-tabpanel-hook"/>
               </tabpanel>
             </tabpanels>
           </tabbox>
