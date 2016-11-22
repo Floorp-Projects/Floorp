@@ -4870,6 +4870,7 @@ BaseCompiler::endBlock(ExprType type)
 
     // Leave the block.
     popStackOnBlockExit(block.framePushed);
+    popValueStackTo(block.stackSize);
 
     // Bind after cleanup: branches out will have popped the stack.
     if (block.label->used()) {
@@ -4881,7 +4882,6 @@ BaseCompiler::endBlock(ExprType type)
         deadCode_ = false;
     }
 
-    popValueStackTo(block.stackSize);
     popControl();
 
     // Retain the value stored in joinReg by all paths, if there are any.
@@ -4923,8 +4923,8 @@ BaseCompiler::endLoop(ExprType type)
         r = popJoinRegUnlessVoid(type);
 
     popStackOnBlockExit(block.framePushed);
-
     popValueStackTo(block.stackSize);
+
     popControl();
 
     // Retain the value stored in joinReg by all paths.
@@ -4984,6 +4984,7 @@ BaseCompiler::endIfThen()
     Control& ifThen = controlItem(0);
 
     popStackOnBlockExit(ifThen.framePushed);
+    popValueStackTo(ifThen.stackSize);
 
     if (ifThen.otherLabel->used())
         masm.bind(ifThen.otherLabel);
@@ -4993,7 +4994,6 @@ BaseCompiler::endIfThen()
 
     deadCode_ = ifThen.deadOnArrival;
 
-    popValueStackTo(ifThen.stackSize);
     popControl();
 }
 
@@ -5018,6 +5018,7 @@ BaseCompiler::emitElse()
         r = popJoinRegUnlessVoid(thenType);
 
     popStackOnBlockExit(ifThenElse.framePushed);
+    popValueStackTo(ifThenElse.stackSize);
 
     if (!deadCode_)
         masm.jump(ifThenElse.label);
@@ -5026,8 +5027,6 @@ BaseCompiler::emitElse()
         masm.bind(ifThenElse.otherLabel);
 
     // Reset to the "else" branch.
-
-    popValueStackTo(ifThenElse.stackSize);
 
     if (!deadCode_)
         freeJoinRegUnlessVoid(r);
@@ -5054,6 +5053,7 @@ BaseCompiler::endIfThenElse(ExprType type)
         r = popJoinRegUnlessVoid(type);
 
     popStackOnBlockExit(ifThenElse.framePushed);
+    popValueStackTo(ifThenElse.stackSize);
 
     if (ifThenElse.label->used())
         masm.bind(ifThenElse.label);
@@ -5069,7 +5069,6 @@ BaseCompiler::endIfThenElse(ExprType type)
         deadCode_ = false;
     }
 
-    popValueStackTo(ifThenElse.stackSize);
     popControl();
 
     if (!deadCode_)
