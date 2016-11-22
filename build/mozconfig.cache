@@ -91,6 +91,7 @@ if test -z "$platform"; then
     case "${SYSTEMROOT}" in
     *Windows)
         platform=windows
+        suffix=.exe
         ;;
     esac
 fi
@@ -102,8 +103,8 @@ if test -z "$bucket"; then
         ac_add_options --with-ccache
     esac
 else
-    if ! test -e $topsrcdir/sccache/sccache.py; then
-        echo "Sccache missing in the tooltool manifest" >&2
+    if ! test -e $topsrcdir/sccache2/sccache${suffix}; then
+        echo "sccache2 missing in the tooltool manifest" >&2
         exit 1
     fi
     mk_add_options "export SCCACHE_BUCKET=$bucket"
@@ -112,13 +113,15 @@ else
         mk_add_options "export SCCACHE_NAMESERVER=169.254.169.253"
         ;;
     esac
-    ac_add_options "--with-compiler-wrapper=python2.7 $topsrcdir/sccache/sccache.py"
+    ac_add_options "--with-ccache=$topsrcdir/sccache2/sccache${suffix}"
+    export SCCACHE_VERBOSE_STATS=1
     mk_add_options MOZ_PREFLIGHT_ALL+=build/sccache.mk
     mk_add_options MOZ_POSTFLIGHT_ALL+=build/sccache.mk
     mk_add_options "UPLOAD_EXTRA_FILES+=sccache.log.gz"
     case "$platform" in
     win*)
         # sccache supports a special flag to create depfiles.
+        #TODO: bug 1318370 - move this all into toolchain.configure
         export _DEPEND_CFLAGS='-deps$(MDDEPDIR)/$(@F).pp'
         # Windows builds have a default wrapper that needs to be overridden
         mk_add_options "export CC_WRAPPER="

@@ -17,15 +17,6 @@ interface nsIWifiTetheringCallback : nsISupports
   void wifiTetheringEnabledChange(in jsval error);
 };
 
-[scriptable, function, uuid(9c128e68-5e4b-4626-bb88-84ec54cce5d8)]
-interface nsINetworkStatsCallback : nsISupports
-{
-  void networkStatsAvailable(in boolean success,
-                             in unsigned long rxBytes,
-                             in unsigned long txBytes,
-                             in unsigned long long timestamp);
-};
-
 [scriptable, function, uuid(0706bfa2-ac2d-11e2-9a8d-7b6d988d4767)]
 interface nsINetworkUsageAlarmCallback : nsISupports
 {
@@ -241,19 +232,6 @@ interface nsINetworkService : nsISupports
   void setDhcpServer(in boolean enabled,
                      in jsval config,
                      in nsISetDhcpServerCallback callback);
-
-
-  /**
-   * Retrieve network interface stats.
-   *
-   * @param networkName
-   *        Select the Network interface to request estats.
-   *
-   * @param callback
-   *        Callback to notify result and provide stats, connectionType
-   *        and the date when stats are retrieved
-   */
-  void getNetworkInterfaceStats(in DOMString networkName, in nsINetworkStatsCallback callback);
 
   /**
    * Set Alarm of usage per interface

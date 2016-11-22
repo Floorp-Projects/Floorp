@@ -39,6 +39,10 @@ const JITOptimizationsItem = createClass({
     onViewSourceInDebugger: PropTypes.func.isRequired,
     frameData: PropTypes.object.isRequired,
     type: PropTypes.oneOf(OPTIMIZATION_ITEM_TYPES).isRequired,
+    depth: PropTypes.number.isRequired,
+    arrow: PropTypes.element.isRequired,
+    item: PropTypes.object,
+    focused: PropTypes.bool
   },
 
   _renderSite({ item: site, onViewSourceInDebugger, frameData }) {

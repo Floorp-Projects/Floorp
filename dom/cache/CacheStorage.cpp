@@ -76,14 +76,7 @@ IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled)
   }
 
   // Require a ContentPrincipal to avoid null principal, etc.
-  //
-  // Also, an unknown appId means that this principal was created for the
-  // codebase without all the security information from the end document or
-  // worker.  We require exact knowledge of this information before allowing
-  // the caller to touch the disk using the Cache API.
-  if (NS_WARN_IF(aPrincipalInfo.type() != PrincipalInfo::TContentPrincipalInfo ||
-                 aPrincipalInfo.get_ContentPrincipalInfo().attrs().mAppId ==
-                 nsIScriptSecurityManager::UNKNOWN_APP_ID)) {
+  if (NS_WARN_IF(aPrincipalInfo.type() != PrincipalInfo::TContentPrincipalInfo)) {
     return false;
   }
 

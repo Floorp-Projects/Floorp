@@ -7,7 +7,15 @@
 #ifndef builtin_Intl_h
 #define builtin_Intl_h
 
+#include "mozilla/HashFunctions.h"
+#include "mozilla/MemoryReporting.h"
+
+#include "jsalloc.h"
 #include "NamespaceImports.h"
+
+#include "js/GCAPI.h"
+#include "js/GCHashTable.h"
+
 #if ENABLE_INTL_API
 #include "unicode/utypes.h"
 #endif
@@ -25,6 +33,140 @@ namespace js {
  */
 extern JSObject*
 InitIntlClass(JSContext* cx, HandleObject obj);
+
+/**
+ * Stores Intl data which can be shared across compartments (but not contexts).
+ *
+ * Used for data which is expensive when computed repeatedly or is not
+ * available through ICU.
+ */
+class SharedIntlData
+{
+    /**
+     * Information tracking the set of the supported time zone names, derived
+     * from the IANA time zone database <https://www.iana.org/time-zones>.
+     *
+     * There are two kinds of IANA time zone names: Zone and Link (denoted as
+     * such in database source files). Zone names are the canonical, preferred
+     * name for a time zone, e.g. Asia/Kolkata. Link names simply refer to
+     * target Zone names for their meaning, e.g. Asia/Calcutta targets
+     * Asia/Kolkata. That a name is a Link doesn't *necessarily* reflect a
+     * sense of deprecation: some Link names also exist partly for convenience,
+     * e.g. UTC and GMT as Link names targeting the Zone name Etc/UTC.
+     *
+     * Two data sources determine the time zone names we support: those ICU
+     * supports and IANA's zone information.
+     *
+     * Unfortunately the names ICU and IANA support, and their Link
+     * relationships from name to target, aren't identical, so we can't simply
+     * implicitly trust ICU's name handling. We must perform various
+     * preprocessing of user-provided zone names and post-processing of
+     * ICU-provided zone names to implement ECMA-402's IANA-consistent behavior.
+     *
+     * Also see <https://ssl.icu-project.org/trac/ticket/12044> and
+     * <http://unicode.org/cldr/trac/ticket/9892>.
+     */
+
+    using TimeZoneName = JSAtom*;
+
+    struct TimeZoneHasher
+    {
+        struct Lookup
+        {
+            union {
+                const JS::Latin1Char* latin1Chars;
+                const char16_t* twoByteChars;
+            };
+            bool isLatin1;
+            size_t length;
+            JS::AutoCheckCannotGC nogc;
+            HashNumber hash;
+
+            explicit Lookup(JSFlatString* timeZone);
+        };
+
+        static js::HashNumber hash(const Lookup& lookup) { return lookup.hash; }
+        static bool match(TimeZoneName key, const Lookup& lookup);
+    };
+
+    using TimeZoneSet = js::GCHashSet<TimeZoneName,
+                                      TimeZoneHasher,
+                                      js::SystemAllocPolicy>;
+
+    using TimeZoneMap = js::GCHashMap<TimeZoneName,
+                                      TimeZoneName,
+                                      TimeZoneHasher,
+                                      js::SystemAllocPolicy>;
+
+    /**
+     * As a threshold matter, available time zones are those time zones ICU
+     * supports, via ucal_openTimeZones. But ICU supports additional non-IANA
+     * time zones described in intl/icu/source/tools/tzcode/icuzones (listed in
+     * IntlTimeZoneData.cpp's |legacyICUTimeZones|) for its own backwards
+     * compatibility purposes. This set consists of ICU's supported time zones,
+     * minus all backwards-compatibility time zones.
+     */
+    TimeZoneSet availableTimeZones;
+
+    /**
+     * IANA treats some time zone names as Zones, that ICU instead treats as
+     * Links. For example, IANA considers "America/Indiana/Indianapolis" to be
+     * a Zone and "America/Fort_Wayne" a Link that targets it, but ICU
+     * considers the former a Link that targets "America/Indianapolis" (which
+     * IANA treats as a Link).
+     *
+     * ECMA-402 requires that we respect IANA data, so if we're asked to
+     * canonicalize a time zone name in this set, we must *not* return ICU's
+     * canonicalization.
+     */
+    TimeZoneSet ianaZonesTreatedAsLinksByICU;
+
+    /**
+     * IANA treats some time zone names as Links to one target, that ICU
+     * instead treats as either Zones, or Links to different targets. An
+     * example of the former is "Asia/Calcutta, which IANA assigns the target
+     * "Asia/Kolkata" but ICU considers its own Zone. An example of the latter
+     * is "America/Virgin", which IANA assigns the target
+     * "America/Port_of_Spain" but ICU assigns the target "America/St_Thomas".
+     *
+     * ECMA-402 requires that we respect IANA data, so if we're asked to
+     * canonicalize a time zone name that's a key in this map, we *must* return
+     * the corresponding value and *must not* return ICU's canonicalization.
+     */
+    TimeZoneMap ianaLinksCanonicalizedDifferentlyByICU;
+
+    bool timeZoneDataInitialized = false;
+
+    /**
+     * Precomputes the available time zone names, because it's too expensive to
+     * call ucal_openTimeZones() repeatedly.
+     */
+    bool ensureTimeZones(JSContext* cx);
+
+  public:
+    /**
+     * Returns the validated time zone name in |result|. If the input time zone
+     * isn't a valid IANA time zone name, |result| remains unchanged.
+     */
+    bool validateTimeZoneName(JSContext* cx, JS::HandleString timeZone,
+                              JS::MutableHandleString result);
+
+    /**
+     * Returns the canonical time zone name in |result|. If no canonical name
+     * was found, |result| remains unchanged.
+     *
+     * This method only handles time zones which are canonicalized differently
+     * by ICU when compared to IANA.
+     */
+    bool tryCanonicalizeTimeZoneConsistentWithIANA(JSContext* cx, JS::HandleString timeZone,
+                                                   JS::MutableHandleString result);
+
+    void destroyInstance();
+
+    void trace(JSTracer* trc);
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+};
 
 /*
  * The following functions are for use by self-hosted code.
@@ -159,21 +301,17 @@ extern MOZ_MUST_USE bool
 intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp);
 
 /**
- * Return a map of the supported time zone names, derived from the IANA time
- * zone database <https://www.iana.org/time-zones>.
+ * 6.4.1 IsValidTimeZoneName ( timeZone )
  *
- * There are two kinds of IANA time zone names: Zone and Link (denoted as such
- * in database source files). Zone names are the canonical, preferred name for
- * a time zone, e.g. Asia/Kolkata. Link names simply refer to target Zone names
- * for their meaning, e.g. Asia/Calcutta targets Asia/Kolkata. That a name is a
- * Link doesn't *necessarily* reflect a sense of deprecation: some Link names
- * also exist partly for convenience, e.g. UTC and GMT as Link names targeting
- * the Zone name Etc/UTC.
+ * Verifies that the given string is a valid time zone name. If it is a valid
+ * time zone name, its IANA time zone name is returned. Otherwise returns null.
  *
- * Usage: timeZones = intl_availableTimeZones()
+ * ES2017 Intl draft rev 4a23f407336d382ed5e3471200c690c9b020b5f3
+ *
+ * Usage: ianaTimeZone = intl_IsValidTimeZoneName(timeZone)
  */
 extern MOZ_MUST_USE bool
-intl_availableTimeZones(JSContext* cx, unsigned argc, Value* vp);
+intl_IsValidTimeZoneName(JSContext* cx, unsigned argc, Value* vp);
 
 /**
  * Return the canonicalized time zone name. Canonicalization resolves link

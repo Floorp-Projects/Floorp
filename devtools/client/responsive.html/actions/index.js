@@ -8,7 +8,7 @@
 // central list of constants makes it easy to see all possible action names at
 // a glance.  Please add a comment with each new action type.
 
-const { createEnum } = require("../utils/enum");
+const { createEnum } = require("devtools/client/shared/enum");
 
 createEnum([
 

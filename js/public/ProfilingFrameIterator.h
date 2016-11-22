@@ -123,8 +123,8 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
         void* stackAddress;
         void* returnAddress;
         void* activation;
-        UniqueChars label;
-    };
+        const char* label;
+    } JS_HAZ_GC_INVALIDATED;
 
     bool isWasm() const;
     bool isJit() const;

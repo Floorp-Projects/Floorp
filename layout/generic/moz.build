@@ -200,6 +200,7 @@ LOCAL_INCLUDES += [
     '../../dom/plugins/base',
     '../base',
     '../forms',
+    '../painting',
     '../style',
     '../svg',
     '../tables',

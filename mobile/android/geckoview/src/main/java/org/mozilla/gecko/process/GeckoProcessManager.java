@@ -53,7 +53,7 @@ public final class GeckoProcessManager {
                     try {
                         this.wait(5000); // 5 seconds
                     } catch (final InterruptedException e) {
-                        Log.e(LOGTAG, "Interrupted waiting for child service to start", e);
+                        Log.e(LOGTAG, "Interrupted while waiting for child service", e);
                     }
                 }
             }
@@ -86,12 +86,8 @@ public final class GeckoProcessManager {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            if (mChild != null) {
-                synchronized(INSTANCE.mConnections) {
-                    INSTANCE.mConnections.remove(mType);
-                }
-                mChild.asBinder().unlinkToDeath(this, 0);
-                mChild = null;
+            synchronized(INSTANCE.mConnections) {
+                INSTANCE.mConnections.remove(mType);
             }
             synchronized(this) {
                 if (mWait) {

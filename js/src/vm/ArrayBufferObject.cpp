@@ -119,28 +119,10 @@ arraybuffer_static_slice(JSContext* cx, unsigned argc, Value* vp)
  * ArrayBufferObject (base)
  */
 
-static const ClassSpec ArrayBufferObjectProtoClassSpec = {
-    DELEGATED_CLASSSPEC(ArrayBufferObject::class_.spec),
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    ClassSpec::IsDelegated
-};
-
-static const Class ArrayBufferObjectProtoClass = {
-    "ArrayBufferPrototype",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
-    JS_NULL_CLASS_OPS,
-    &ArrayBufferObjectProtoClassSpec
-};
-
 static JSObject*
 CreateArrayBufferPrototype(JSContext* cx, JSProtoKey key)
 {
-    return cx->global()->createBlankPrototype(cx, &ArrayBufferObjectProtoClass);
+    return cx->global()->createBlankPrototype(cx, &ArrayBufferObject::protoClass_);
 }
 
 static const ClassOps ArrayBufferObjectClassOps = {
@@ -204,6 +186,13 @@ const Class ArrayBufferObject::class_ = {
     &ArrayBufferObjectClassOps,
     &ArrayBufferObjectClassSpec,
     &ArrayBufferObjectClassExtension
+};
+
+const Class ArrayBufferObject::protoClass_ = {
+    "ArrayBufferPrototype",
+    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
+    JS_NULL_CLASS_OPS,
+    &ArrayBufferObjectClassSpec
 };
 
 bool

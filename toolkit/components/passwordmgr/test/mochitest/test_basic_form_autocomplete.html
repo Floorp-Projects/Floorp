@@ -826,6 +826,30 @@ add_task(function* test_form12_formless() {
   yield processedPromise;
   checkACForm("testuser", "testpass");
 });
+
+add_task(function* test_form12_open_on_trusted_focus() {
+  uname = $_(12, "uname");
+  pword = $_(12, "pword");
+  uname.value = "";
+  pword.value = "";
+
+  checkACForm("", "");
+  const firePrivEventPromise = new Promise((resolve) => {
+    uname.addEventListener("click", (e) => {
+      ok(e.isTrusted, "Ensure event is trusted");
+      resolve();
+    });
+  });
+  const shownPromise = promiseACShown();
+  synthesizeMouseAtCenter(uname, {});
+  yield firePrivEventPromise;
+  yield shownPromise;
+  doKey("down");
+  const processedPromise = promiseFormsProcessed();
+  doKey("return"); // not "enter"!
+  yield processedPromise;
+  checkACForm("testuser", "testpass");
+});
 </script>
 </pre>
 </body>

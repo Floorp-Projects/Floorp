@@ -249,6 +249,7 @@ LOCAL_INCLUDES += [
     '/layout/base',
     '/layout/forms',
     '/layout/generic',
+    '/layout/painting',
     '/layout/xul',
     '/view',
     '/widget',

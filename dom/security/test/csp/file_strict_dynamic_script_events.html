@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1316826 - 'strict-dynamic' blocking DOM event handlers</title>
+</head>
+<body>
+<div id="testdiv">blocked</div>
+
+ <img src='/nonexisting.jpg'
+      onerror='document.getElementById("testdiv").innerHTML = "allowed";'
+      style='display:none'>
+
+</body>
+</html>

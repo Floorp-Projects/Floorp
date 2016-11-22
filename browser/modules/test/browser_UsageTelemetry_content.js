@@ -23,6 +23,11 @@ add_task(function* setup() {
   let engineOneOff = Services.search.getEngineByName("MozSearch2");
   Services.search.moveEngine(engineOneOff, 0);
 
+  yield SpecialPowers.pushPrefEnv({"set": [
+    ["dom.select_events.enabled", true], // We want select events to be fired.
+    ["toolkit.telemetry.enabled", true]  // And Extended Telemetry to be enabled.
+  ]});
+
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(function* () {
     Services.search.currentEngine = originalEngine;
@@ -34,6 +39,7 @@ add_task(function* setup() {
 add_task(function* test_context_menu() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
+  let search_hist = getSearchCountsHistogram();
 
   // Open a new tab with a page containing some text.
   let tab =
@@ -65,6 +71,9 @@ add_task(function* test_context_menu() {
   Assert.equal(Object.keys(scalars[SCALAR_CONTEXT_MENU]).length, 1,
                "This search must only increment one entry in the scalar.");
 
+  // Make sure SEARCH_COUNTS contains identical values.
+  checkKeyedHistogram(search_hist, 'other-MozSearch.contextmenu', 1);
+
   contextMenu.hidePopup();
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   yield BrowserTestUtils.removeTab(tab);
@@ -73,6 +82,7 @@ add_task(function* test_context_menu() {
 add_task(function* test_about_newtab() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
+  let search_hist = getSearchCountsHistogram();
 
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab", false);
   yield ContentTask.spawn(tab.linkedBrowser, null, function* () {
@@ -91,6 +101,9 @@ add_task(function* test_about_newtab() {
   checkKeyedScalar(scalars, SCALAR_ABOUT_NEWTAB, "search_enter", 1);
   Assert.equal(Object.keys(scalars[SCALAR_ABOUT_NEWTAB]).length, 1,
                "This search must only increment one entry in the scalar.");
+
+  // Make sure SEARCH_COUNTS contains identical values.
+  checkKeyedHistogram(search_hist, 'other-MozSearch.newtab', 1);
 
   yield BrowserTestUtils.removeTab(tab);
 });

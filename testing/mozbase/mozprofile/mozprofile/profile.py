@@ -12,7 +12,6 @@ import mozfile
 from permissions import Permissions
 from prefs import Preferences
 from shutil import copytree
-from webapps import WebappCollection
 
 __all__ = ['Profile',
            'FirefoxProfile',
@@ -44,13 +43,12 @@ class Profile(object):
       # profile.cleanup() has been called here
     """
 
-    def __init__(self, profile=None, addons=None, addon_manifests=None, apps=None,
+    def __init__(self, profile=None, addons=None, addon_manifests=None,
                  preferences=None, locations=None, proxy=None, restore=True):
         """
         :param profile: Path to the profile
         :param addons: String of one or list of addons to install
         :param addon_manifests: Manifest for addons (see http://bit.ly/17jQ7i6)
-        :param apps: Dictionary or class of webapps to install
         :param preferences: Dictionary or class of preferences
         :param locations: ServerLocations object
         :param proxy: Setup a proxy
@@ -58,7 +56,6 @@ class Profile(object):
         """
         self._addons = addons
         self._addon_manifests = addon_manifests
-        self._apps = apps
         self._locations = locations
         self._proxy = proxy
 
@@ -116,10 +113,6 @@ class Profile(object):
         self.addon_manager = AddonManager(self.profile, restore=self.restore)
         self.addon_manager.install_addons(self._addons, self._addon_manifests)
 
-        # handle webapps
-        self.webapps = WebappCollection(profile=self.profile, apps=self._apps)
-        self.webapps.update_manifests()
-
     def __enter__(self):
         return self
 
@@ -142,8 +135,6 @@ class Profile(object):
                 self.addon_manager.clean()
             if getattr(self, 'permissions', None) is not None:
                 self.permissions.clean_db()
-            if getattr(self, 'webapps', None) is not None:
-                self.webapps.clean()
 
             # If it's a temporary profile we have to remove it
             if self.create_new:

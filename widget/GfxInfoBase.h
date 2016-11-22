@@ -78,6 +78,7 @@ public:
 
   static nsTArray<GfxDriverInfo>* mDriverInfo;
   static bool mDriverInfoObserverInitialized;
+  static bool mShutdownOccurred;
 
   virtual nsString Model() { return EmptyString(); }
   virtual nsString Hardware() { return EmptyString(); }

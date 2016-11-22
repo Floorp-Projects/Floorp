@@ -4,30 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files('ActiveLayerTracker.*'):
-    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
-
-with Files('Display*'):
-    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
-
-with Files('FrameLayerBuilder.*'):
-    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
-
-with Files('LayerState.*'):
-    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
-
-with Files('MaskLayerImageCache.*'):
-    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
-
-with Files('PaintTracker.*'):
-    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
-
-with Files('nsCSSRendering.*'):
-    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
-
-with Files('nsDisplay*'):
-    BUG_COMPONENT = ('Core', 'Layout: View Rendering')
-
 with Files('Restyle*'):
     BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 
@@ -55,14 +31,8 @@ if CONFIG['MOZ_DEBUG']:
 XPIDL_MODULE = 'layout_base'
 
 EXPORTS += [
-    'ActiveLayerTracker.h',
     'CaretAssociationHint.h',
-    'DisplayItemClip.h',
-    'DisplayItemScrollClip.h',
-    'DisplayListClipState.h',
-    'FrameLayerBuilder.h',
     'FramePropertyTable.h',
-    'LayerState.h',
     'LayoutLogging.h',
     'nsArenaMemoryStats.h',
     'nsBidi.h',
@@ -71,10 +41,6 @@ EXPORTS += [
     'nsChangeHint.h',
     'nsCompatibility.h',
     'nsCSSFrameConstructor.h',
-    'nsDisplayItemTypes.h',
-    'nsDisplayItemTypesList.h',
-    'nsDisplayList.h',
-    'nsDisplayListInvalidation.h',
     'nsFrameManager.h',
     'nsFrameManagerBase.h',
     'nsFrameTraversal.h',
@@ -105,7 +71,6 @@ EXPORTS.mozilla += [
     'ArenaRefPtrInlines.h',
     'GeometryUtils.h',
     'OverflowChangedTracker.h',
-    'PaintTracker.h',
     'RestyleLogging.h',
     'RestyleManager.h',
     'RestyleManagerBase.h',
@@ -119,27 +84,15 @@ UNIFIED_SOURCES += [
     'AccessibleCaret.cpp',
     'AccessibleCaretEventHub.cpp',
     'AccessibleCaretManager.cpp',
-    'ActiveLayerTracker.cpp',
-    'DashedCornerFinder.cpp',
-    'DisplayItemClip.cpp',
-    'DisplayItemScrollClip.cpp',
-    'DisplayListClipState.cpp',
-    'DottedCornerFinder.cpp',
-    'FrameLayerBuilder.cpp',
     'FramePropertyTable.cpp',
     'GeometryUtils.cpp',
     'LayoutLogging.cpp',
-    'MaskLayerImageCache.cpp',
     'MobileViewportManager.cpp',
     'nsBidiPresUtils.cpp',
     'nsCaret.cpp',
     'nsCounterManager.cpp',
     'nsCSSColorUtils.cpp',
     'nsCSSFrameConstructor.cpp',
-    'nsCSSRendering.cpp',
-    'nsCSSRenderingBorders.cpp',
-    'nsDisplayList.cpp',
-    'nsDisplayListInvalidation.cpp',
     'nsDocumentViewer.cpp',
     'nsFrameManager.cpp',
     'nsFrameTraversal.cpp',
@@ -152,7 +105,6 @@ UNIFIED_SOURCES += [
     'nsQuoteList.cpp',
     'nsStyleChangeList.cpp',
     'nsStyleSheetService.cpp',
-    'PaintTracker.cpp',
     'PositionedEventTargeting.cpp',
     'RestyleManager.cpp',
     'RestyleManagerBase.cpp',
@@ -196,6 +148,7 @@ LOCAL_INCLUDES += [
     '../forms',
     '../generic',
     '../mathml',
+    '../painting',
     '../printing',
     '../style',
     '../svg',
@@ -221,8 +174,6 @@ BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
 MARIONETTE_LAYOUT_MANIFESTS += ['tests/marionette/manifest.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
-
-CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 
 if CONFIG['_MSC_VER']:
     # This is intended as a temporary hack to support building with VS2015.

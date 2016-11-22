@@ -370,6 +370,8 @@ JSRuntime::destroyRuntime()
 
     fx.destroyInstance();
 
+    sharedIntlData.destroyInstance();
+
     if (gcInitialized) {
         /*
          * Finish any in-progress GCs first. This ensures the parseWaitingOnGC
@@ -500,6 +502,8 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
         rtSizes->sharedImmutableStringsCache +=
             sharedImmutableStrings_->sizeOfExcludingThis(mallocSizeOf);
     }
+
+    rtSizes->sharedIntlData += sharedIntlData.sizeOfExcludingThis(mallocSizeOf);
 
     rtSizes->uncompressedSourceCache +=
         cx->caches.uncompressedSourceCache.sizeOfExcludingThis(mallocSizeOf);
@@ -667,6 +671,12 @@ JSRuntime::getDefaultLocale()
 
     defaultLocale = lang;
     return defaultLocale;
+}
+
+void
+JSRuntime::traceSharedIntlData(JSTracer* trc)
+{
+    sharedIntlData.trace(trc);
 }
 
 void

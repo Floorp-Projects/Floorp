@@ -1,7 +1,16 @@
 function test() {
   waitForExplicitFinish();
-  // test the main (normal) browser window
-  testCustomize(window, testChromeless);
+
+  // test a normal browser window
+  var newWin = openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", "about:blank");
+  ok(newWin, "got new normal window");
+
+  whenDelayedStartupFinished(newWin, function() {
+    testCustomize(newWin, function() {
+      newWin.close();
+      testChromeless();
+    });
+  });
 }
 
 function testChromeless() {

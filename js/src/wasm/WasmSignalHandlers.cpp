@@ -1283,7 +1283,8 @@ JitInterruptHandler(int signum, siginfo_t* info, void* context)
 
 #if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
         Simulator::ICacheCheckingEnabled = prevICacheCheckingState;
-#endif // JS_SIMULATOR
+        rt->simulator()->cacheInvalidatedBySignalHandler_ = true;
+#endif
 
         rt->finishHandlingJitInterrupt();
     }

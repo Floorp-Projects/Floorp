@@ -72,6 +72,19 @@ var tests = [
     file: "file_strict_dynamic_script_inline.html",
     policy: "script-src 'strict-dynamic'"
   },
+  {
+    desc: "strict-dynamic with DOM events should be blocked",
+    result: "blocked",
+    file: "file_strict_dynamic_script_events.html",
+    policy: "script-src 'strict-dynamic' 'nonce-foo'"
+  },
+  {
+    // marquee is a special snowflake. Extra test for xbl things.
+    desc: "strict-dynamic with DOM events should be blocked (XBL)",
+    result: "blocked",
+    file: "file_strict_dynamic_script_events_xbl.html",
+    policy: "script-src 'strict-dynamic' 'nonce-foo'"
+  }
 ];
 
 var counter = 0;

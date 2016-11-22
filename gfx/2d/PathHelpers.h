@@ -224,6 +224,15 @@ struct RectCornerRadii {
     return true;
   }
 
+  bool AreRadiiSame() const {
+    for (size_t i = 1; i < RectCorner::Count; i++) {
+      if (radii[i] != radii[0]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   void Scale(Float aXScale, Float aYScale) {
     for (int i = 0; i < RectCorner::Count; i++) {
       radii[i].Scale(aXScale, aYScale);
