@@ -62,6 +62,17 @@ AVHWAccel ff_vp8_cuvid_hwaccel;
 AVHWAccel ff_vc1_cuvid_hwaccel;
 AVHWAccel ff_hevc_cuvid_hwaccel;
 AVHWAccel ff_h264_cuvid_hwaccel;
+/* Added by FFmpeg 3.2 */
+AVHWAccel ff_h263_cuvid_hwaccel;
+AVHWAccel ff_mjpeg_cuvid_hwaccel;
+AVHWAccel ff_mpeg1_cuvid_hwaccel;
+AVHWAccel ff_mpeg2_cuvid_hwaccel;
+AVHWAccel ff_mpeg4_cuvid_hwaccel;
+AVHWAccel ff_h264_mediacodec_hwaccel;
+AVHWAccel ff_hevc_mediacodec_hwaccel;
+AVHWAccel ff_mpeg4_mediacodec_hwaccel;
+AVHWAccel ff_vp8_mediacodec_hwaccel;
+AVHWAccel ff_vp9_mediacodec_hwaccel;
 
 AVCodec ff_a64multi_encoder;
 AVCodec ff_a64multi5_encoder;
@@ -713,6 +724,23 @@ AVCodec ff_sheervideo_decoder;
 AVCodec ff_magicyuv_decoder;
 AVCodec ff_m101_decoder;
 AVCodec ff_h264_mediacodec_decoder;
+/* Added by FFmpeg 3.2 */
+AVCodec ff_vp9_mediacodec_decoder;
+AVCodec ff_vp8_mediacodec_decoder;
+AVCodec ff_mpeg4_mediacodec_decoder;
+AVCodec ff_mpeg4_cuvid_decoder;
+AVCodec ff_mpeg2_cuvid_decoder;
+AVCodec ff_mpeg1_cuvid_decoder;
+AVCodec ff_mjpeg_cuvid_decoder;
+AVCodec ff_hevc_mediacodec_decoder;
+AVCodec ff_h263_cuvid_decoder;
+AVCodec ff_libopenh264_decoder;
+AVCodec ff_pcm_s64le_decoder;
+AVCodec ff_pcm_s64le_encoder;
+AVCodec ff_pcm_s64be_decoder;
+AVCodec ff_pcm_s64be_encoder;
+AVCodec ff_truehd_encoder;
+AVCodec ff_mlp_encoder;
 
 AVCodecParser ff_aac_parser;
 AVCodecParser ff_aac_latm_parser;
