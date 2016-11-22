@@ -141,6 +141,7 @@ ALLOWED_XPCOM_GLUE = {
     ('TestMailCookie', 'mailnews/base/test'),
     ('calbasecomps', 'calendar/base/backend/libical/build'),
     ('purplexpcom', 'extensions/purple/purplexpcom/src'),
+    ('ipdlunittest', 'ipc/ipdl/test/cxx/app'),
 }
 
 
