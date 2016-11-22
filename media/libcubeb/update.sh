@@ -57,3 +57,6 @@ if [ -n "$rev" ]; then
 else
   echo "Remember to update README_MOZILLA with the version details."
 fi
+
+echo "Applying a patch on top of $version"
+patch -p1 < ./bug1302231_emergency_bailout.patch
