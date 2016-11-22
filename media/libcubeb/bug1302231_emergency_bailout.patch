@@ -1,0 +1,209 @@
+diff --git a/media/libcubeb/src/cubeb_wasapi.cpp b/media/libcubeb/src/cubeb_wasapi.cpp
+--- a/media/libcubeb/src/cubeb_wasapi.cpp
++++ b/media/libcubeb/src/cubeb_wasapi.cpp
+@@ -20,16 +20,17 @@
+ #include <stdint.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <stdint.h>
+ #include <cmath>
+ #include <algorithm>
+ #include <memory>
+ #include <limits>
++#include <atomic>
+ 
+ #include "cubeb/cubeb.h"
+ #include "cubeb-internal.h"
+ #include "cubeb_resampler.h"
+ #include "cubeb_utils.h"
+ 
+ /* devicetopology.h missing in MinGW. */
+ #ifndef __devicetopology_h__
+@@ -225,19 +226,21 @@ struct cubeb_stream
+   /* WASAPI input works in "packets". We re-linearize the audio packets
+    * into this buffer before handing it to the resampler. */
+   auto_array<float> linear_input_buffer;
+   /* Stream volume.  Set via stream_set_volume and used to reset volume on
+      device changes. */
+   float volume;
+   /* True if the stream is draining. */
+   bool draining;
++  /* True when we've destroyed the stream. This pointer is leaked on stream
++   * destruction if we could not join the thread. */
++  std::atomic<std::atomic<bool>*> emergency_bailout;
+ };
+ 
+-
+ class wasapi_endpoint_notification_client : public IMMNotificationClient
+ {
+ public:
+   /* The implementation of MSCOM was copied from MSDN. */
+   ULONG STDMETHODCALLTYPE
+   AddRef()
+   {
+     return InterlockedIncrement(&ref_count);
+@@ -770,16 +773,17 @@ refill_callback_output(cubeb_stream * st
+ 
+   return got == output_frames || stm->draining;
+ }
+ 
+ static unsigned int __stdcall
+ wasapi_stream_render_loop(LPVOID stream)
+ {
+   cubeb_stream * stm = static_cast<cubeb_stream *>(stream);
++  std::atomic<bool> * emergency_bailout = stm->emergency_bailout;
+ 
+   bool is_playing = true;
+   HANDLE wait_array[4] = {
+     stm->shutdown_event,
+     stm->reconfigure_event,
+     stm->refill_event,
+     stm->input_available_event
+   };
+@@ -809,16 +813,20 @@ wasapi_stream_render_loop(LPVOID stream)
+      reset on each successful loop. */
+   unsigned timeout_count = 0;
+   const unsigned timeout_limit = 5;
+   while (is_playing) {
+     DWORD waitResult = WaitForMultipleObjects(ARRAY_LENGTH(wait_array),
+                                               wait_array,
+                                               FALSE,
+                                               1000);
++    if (*emergency_bailout) {
++      delete emergency_bailout;
++      return 0;
++    }
+     if (waitResult != WAIT_TIMEOUT) {
+       timeout_count = 0;
+     }
+     switch (waitResult) {
+     case WAIT_OBJECT_0: { /* shutdown */
+       is_playing = false;
+       /* We don't check if the drain is actually finished here, we just want to
+          shutdown. */
+@@ -1114,45 +1122,52 @@ int wasapi_init(cubeb ** context, char c
+ 
+   *context = ctx;
+ 
+   return CUBEB_OK;
+ }
+ }
+ 
+ namespace {
+-void stop_and_join_render_thread(cubeb_stream * stm)
++bool stop_and_join_render_thread(cubeb_stream * stm)
+ {
++  bool rv = true;
+   if (!stm->thread) {
+-    return;
++    return true;
+   }
+ 
+   BOOL ok = SetEvent(stm->shutdown_event);
+   if (!ok) {
+     LOG("Destroy SetEvent failed: %d\n", GetLastError());
+   }
+ 
+   /* Wait five seconds for the rendering thread to return. It's supposed to
+    * check its event loop very often, five seconds is rather conservative. */
+   DWORD r = WaitForSingleObject(stm->thread, 5000);
+   if (r == WAIT_TIMEOUT) {
+     /* Something weird happened, leak the thread and continue the shutdown
+      * process. */
++    *(stm->emergency_bailout) = true;
+     LOG("Destroy WaitForSingleObject on thread timed out,"
+         " leaking the thread: %d\n", GetLastError());
++    rv = false;
+   }
+   if (r == WAIT_FAILED) {
++    *(stm->emergency_bailout) = true;
+     LOG("Destroy WaitForSingleObject on thread failed: %d\n", GetLastError());
++    rv = false;
+   }
+ 
+   CloseHandle(stm->thread);
+   stm->thread = NULL;
+ 
+   CloseHandle(stm->shutdown_event);
+   stm->shutdown_event = 0;
++
++  return rv;
+ }
+ 
+ void wasapi_destroy(cubeb * context)
+ {
+   if (context->mmcss_module) {
+     FreeLibrary(context->mmcss_module);
+   }
+   free(context);
+@@ -1724,17 +1739,26 @@ void close_wasapi_stream(cubeb_stream * 
+   free(stm->mix_buffer);
+   stm->mix_buffer = NULL;
+ }
+ 
+ void wasapi_stream_destroy(cubeb_stream * stm)
+ {
+   XASSERT(stm);
+ 
+-  stop_and_join_render_thread(stm);
++  // Only free stm->emergency_bailout if we could not join the thread.
++  // If we could not join the thread, stm->emergency_bailout is true 
++  // and is still alive until the thread wakes up and exits cleanly.
++  if (stop_and_join_render_thread(stm)) {
++    delete stm->emergency_bailout.load();
++    stm->emergency_bailout = nullptr;
++  } else {
++    // If we're leaking, it must be that this is true.
++    assert(*(stm->emergency_bailout));
++  }
+ 
+   unregister_notification_client(stm);
+ 
+   SafeRelease(stm->reconfigure_event);
+   SafeRelease(stm->refill_event);
+   SafeRelease(stm->input_available_event);
+ 
+   {
+@@ -1793,16 +1817,18 @@ int stream_start_one_side(cubeb_stream *
+ 
+ int wasapi_stream_start(cubeb_stream * stm)
+ {
+   XASSERT(stm && !stm->thread && !stm->shutdown_event);
+   XASSERT(stm->output_client || stm->input_client);
+ 
+   auto_lock lock(stm->stream_reset_lock);
+ 
++  stm->emergency_bailout = new std::atomic<bool>(false);
++
+   if (stm->output_client) {
+     int rv = stream_start_one_side(stm, OUTPUT);
+     if (rv != CUBEB_OK) {
+       return rv;
+     }
+   }
+ 
+   if (stm->input_client) {
+@@ -1852,17 +1878,22 @@ int wasapi_stream_stop(cubeb_stream * st
+         return CUBEB_ERROR;
+       }
+     }
+ 
+ 
+     stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STOPPED);
+   }
+ 
+-  stop_and_join_render_thread(stm);
++  if (stop_and_join_render_thread(stm)) {
++    if (stm->emergency_bailout.load()) {
++      delete stm->emergency_bailout.load();
++      stm->emergency_bailout = nullptr;
++    }
++  }
+ 
+   return CUBEB_OK;
+ }
+ 
+ int wasapi_stream_get_position(cubeb_stream * stm, uint64_t * position)
+ {
+   XASSERT(stm && position);
+   auto_lock lock(stm->stream_reset_lock);

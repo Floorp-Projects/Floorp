@@ -73,3 +73,5 @@ echo "Applying another patch on top of $version"
 patch -p1 < ./bug1311911_logitech_delay.patch
 echo "Applying another patch on top of $version"
 patch -p1 < ./bug1306247_crash_fix.patch
+echo "Applying another patch on top of $version"
+patch -p1 < ./bug1302231_emergency_bailout.patch
