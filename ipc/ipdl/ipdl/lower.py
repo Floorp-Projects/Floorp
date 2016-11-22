@@ -4096,15 +4096,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         actortype = ipdl.type.ActorType(actorproto)
 
         if idexpr is None:
-            registerexpr = ExprCall(self.protocol.registerMethod(),
-                                    args=[ actorvar ])
+            idexpr = ExprCall(self.protocol.registerMethod(),
+                              args=[ actorvar ])
         else:
-            registerexpr = ExprCall(self.protocol.registerIDMethod(),
-                                    args=[ actorvar, idexpr ])
+            idexpr = ExprCall(self.protocol.registerIDMethod(),
+                              args=[ actorvar, idexpr ])
 
         return [
             self.failIfNullActor(actorvar, errfn, msg="Error constructing actor %s" % actortype.name() + self.side.capitalize()),
-            StmtExpr(ExprCall(registerexpr)),
+            StmtExpr(ExprCall(ExprSelect(actorvar, '->', 'SetId'), args=[idexpr])),
             StmtExpr(ExprCall(ExprSelect(actorvar, '->', 'SetManager'), args=[ExprVar.THIS])),
             StmtExpr(ExprCall(ExprSelect(actorvar, '->', 'SetIPCChannel'),
                               args=[self.protocol.callGetChannel()])),
@@ -4211,14 +4211,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             destroyedType = md.decl.type.constructedType()
         else:
             destroyedType = self.protocol.decl.type
-        managervar = ExprVar('mgr')
-        return ([ StmtDecl(Decl(Type('IProtocol', ptr=1), managervar.name),
-                           init=self.protocol.managerVar(actorexpr)),
-                  StmtExpr(self.callActorDestroy(actorexpr, why)),
+        return ([ StmtExpr(self.callActorDestroy(actorexpr, why)),
                   StmtExpr(self.callDeallocSubtree(md, actorexpr)),
                   StmtExpr(self.callRemoveActor(
                       actorexpr,
-                      manager=managervar,
+                      manager=self.protocol.managerVar(actorexpr),
                       ipdltype=destroyedType))
                 ])
 
@@ -4361,7 +4358,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def unregisterActor(self):
         return [ StmtExpr(ExprCall(self.protocol.unregisterMethod(),
-                                   args=[ _actorId() ])) ]
+                                   args=[ _actorId() ])),
+                 StmtExpr(ExprCall(ExprVar('SetId'), args=[_FREED_ACTOR_ID])) ]
 
     def makeMessage(self, md, errfn, fromActor=None):
         msgvar = self.msgvar
