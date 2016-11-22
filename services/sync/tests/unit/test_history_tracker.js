@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://gre/modules/PlacesDBUtils.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
@@ -17,7 +18,7 @@ var tracker = engine._tracker;
 // Don't write out by default.
 tracker.persistChangedIDs = false;
 
-async function addVisit(suffix) {
+async function addVisit(suffix, referrer = null, transition = PlacesUtils.history.TRANSITION_LINK) {
   let uriString = "http://getfirefox.com/" + suffix;
   let uri = Utils.makeURI(uriString);
   _("Adding visit for URI " + uriString);
@@ -25,7 +26,8 @@ async function addVisit(suffix) {
   await PlacesTestUtils.addVisits({
     uri,
     visitDate: Date.now() * 1000,
-    transition: PlacesUtils.history.TRANSITION_LINK,
+    transition,
+    referrer,
   });
 
   return uri;
@@ -213,6 +215,37 @@ add_task(async function test_stop_tracking_twice() {
   await stopTracking();
   await addVisit("stop_tracking_twice2");
   await verifyTrackerEmpty();
+
+  await cleanup();
+});
+
+add_task(async function test_filter_hidden() {
+  await startTracking();
+
+  _("Add visit; should be hidden by the redirect");
+  let hiddenURI = await addVisit("hidden");
+  let hiddenGUID = engine._store.GUIDForUri(hiddenURI);
+  _(`Hidden visit GUID: ${hiddenGUID}`);
+
+  _("Add redirect visit; should be tracked");
+  let trackedURI = await addVisit("redirect", hiddenURI,
+    PlacesUtils.history.TRANSITION_REDIRECT_PERMANENT);
+  let trackedGUID = engine._store.GUIDForUri(trackedURI);
+  _(`Tracked visit GUID: ${trackedGUID}`);
+
+  _("Add visit for framed link; should be ignored");
+  let embedURI = await addVisit("framed_link", null,
+    PlacesUtils.history.TRANSITION_FRAMED_LINK);
+  let embedGUID = engine._store.GUIDForUri(embedURI);
+  _(`Framed link visit GUID: ${embedGUID}`);
+
+  _("Run Places maintenance to mark redirect visit as hidden");
+  let maintenanceFinishedPromise =
+    promiseOneObserver("places-maintenance-finished");
+  PlacesDBUtils.maintenanceOnIdle();
+  await maintenanceFinishedPromise;
+
+  await verifyTrackedItems([trackedGUID]);
 
   await cleanup();
 });
