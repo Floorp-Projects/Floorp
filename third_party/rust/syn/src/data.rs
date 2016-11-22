@@ -42,33 +42,51 @@ pub struct Field {
     pub ty: Ty,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Visibility {
     Public,
+    Crate,
+    Restricted(Box<Path>),
     Inherited,
 }
 
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
+    use WhereClause;
     use attr::parsing::outer_attr;
     use constant::parsing::const_expr;
+    use generics::parsing::where_clause;
     use ident::parsing::ident;
-    use ty::parsing::ty;
+    use ty::parsing::{path, ty};
 
-    named!(pub struct_body -> VariantData, alt!(
-        struct_like_body => { VariantData::Struct }
+    named!(pub struct_body -> (WhereClause, VariantData), alt!(
+        do_parse!(
+            wh: where_clause >>
+            body: struct_like_body >>
+            (wh, VariantData::Struct(body))
+        )
         |
-        terminated!(tuple_like_body, punct!(";")) => { VariantData::Tuple }
+        do_parse!(
+            body: tuple_like_body >>
+            wh: where_clause >>
+            punct!(";") >>
+            (wh, VariantData::Tuple(body))
+        )
         |
-        punct!(";") => { |_| VariantData::Unit }
+        do_parse!(
+            wh: where_clause >>
+            punct!(";") >>
+            (wh, VariantData::Unit)
+        )
     ));
 
-    named!(pub enum_body -> Vec<Variant>, do_parse!(
+    named!(pub enum_body -> (WhereClause, Vec<Variant>), do_parse!(
+        wh: where_clause >>
         punct!("{") >>
         variants: terminated_list!(punct!(","), variant) >>
         punct!("}") >>
-        (variants)
+        (wh, variants)
     ));
 
     named!(variant -> Variant, do_parse!(
@@ -131,6 +149,22 @@ pub mod parsing {
     ));
 
     named!(pub visibility -> Visibility, alt!(
+        do_parse!(
+            keyword!("pub") >>
+            punct!("(") >>
+            keyword!("crate") >>
+            punct!(")") >>
+            (Visibility::Crate)
+        )
+        |
+        do_parse!(
+            keyword!("pub") >>
+            punct!("(") >>
+            restricted: path >>
+            punct!(")") >>
+            (Visibility::Restricted(Box::new(restricted)))
+        )
+        |
         keyword!("pub") => { |_| Visibility::Public }
         |
         epsilon!() => { |_| Visibility::Inherited }
@@ -190,8 +224,21 @@ mod printing {
 
     impl ToTokens for Visibility {
         fn to_tokens(&self, tokens: &mut Tokens) {
-            if let Visibility::Public = *self {
-                tokens.append("pub");
+            match *self {
+                Visibility::Public => tokens.append("pub"),
+                Visibility::Crate => {
+                    tokens.append("pub");
+                    tokens.append("(");
+                    tokens.append("crate");
+                    tokens.append(")");
+                }
+                Visibility::Restricted(ref path) => {
+                    tokens.append("pub");
+                    tokens.append("(");
+                    path.to_tokens(tokens);
+                    tokens.append(")");
+                }
+                Visibility::Inherited => {}
             }
         }
     }

@@ -50,16 +50,63 @@ impl<T: ?Sized> PartialEq<T> for Ident
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-    use space::whitespace;
+    use nom::IResult;
+    use space::skip_whitespace;
+    use unicode_xid::UnicodeXID;
 
-    fn ident_ch(ch: char) -> bool {
-        ch.is_alphanumeric() || ch == '_'
+    pub fn ident(input: &str) -> IResult<&str, Ident> {
+        let (rest, id) = match word(input) {
+            IResult::Done(rest, id) => (rest, id),
+            IResult::Error => return IResult::Error,
+        };
+
+        match id.as_ref() {
+            // From https://doc.rust-lang.org/grammar.html#keywords
+            "abstract" | "alignof" | "as" | "become" | "box" | "break" | "const" | "continue" |
+            "crate" | "do" | "else" | "enum" | "extern" | "false" | "final" | "fn" | "for" |
+            "if" | "impl" | "in" | "let" | "loop" | "macro" | "match" | "mod" | "move" |
+            "mut" | "offsetof" | "override" | "priv" | "proc" | "pub" | "pure" | "ref" |
+            "return" | "Self" | "self" | "sizeof" | "static" | "struct" | "super" | "trait" |
+            "true" | "type" | "typeof" | "unsafe" | "unsized" | "use" | "virtual" | "where" |
+            "while" | "yield" => IResult::Error,
+            _ => IResult::Done(rest, id),
+        }
     }
 
-    named!(pub ident -> Ident, preceded!(
-        option!(whitespace),
-        map!(take_while1!(ident_ch), Into::into)
-    ));
+    pub fn word(mut input: &str) -> IResult<&str, Ident> {
+        input = skip_whitespace(input);
+
+        let mut chars = input.char_indices();
+        match chars.next() {
+            Some((_, ch)) if UnicodeXID::is_xid_start(ch) || ch == '_' => {}
+            _ => return IResult::Error,
+        }
+
+        while let Some((i, ch)) = chars.next() {
+            if !UnicodeXID::is_xid_continue(ch) {
+                return IResult::Done(&input[i..], input[..i].into());
+            }
+        }
+
+        IResult::Done("", input.into())
+    }
+
+    #[cfg(feature = "full")]
+    pub fn wordlike(mut input: &str) -> IResult<&str, Ident> {
+        input = skip_whitespace(input);
+
+        for (i, ch) in input.char_indices() {
+            if !UnicodeXID::is_xid_start(ch) && !UnicodeXID::is_xid_continue(ch) {
+                return if i == 0 {
+                    IResult::Error
+                } else {
+                    IResult::Done(&input[i..], input[..i].into())
+                };
+            }
+        }
+
+        IResult::Done("", input.into())
+    }
 }
 
 #[cfg(feature = "printing")]

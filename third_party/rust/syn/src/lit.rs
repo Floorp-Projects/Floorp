@@ -6,7 +6,7 @@ pub enum Lit {
     /// A string literal (`"foo"`)
     Str(String, StrStyle),
     /// A byte string (`b"foo"`)
-    ByteStr(Vec<u8>),
+    ByteStr(Vec<u8>, StrStyle),
     /// A byte char (`b'f'`)
     Byte(u8),
     /// A character literal (`'a'`)
@@ -27,6 +27,42 @@ pub enum StrStyle {
     ///
     /// The uint is the number of `#` symbols used
     Raw(usize),
+}
+
+impl From<String> for Lit {
+    fn from(input: String) -> Lit {
+        Lit::Str(input, StrStyle::Cooked)
+    }
+}
+
+impl<'a> From<&'a str> for Lit {
+    fn from(input: &str) -> Lit {
+        Lit::Str(input.into(), StrStyle::Cooked)
+    }
+}
+
+impl From<Vec<u8>> for Lit {
+    fn from(input: Vec<u8>) -> Lit {
+        Lit::ByteStr(input, StrStyle::Cooked)
+    }
+}
+
+impl<'a> From<&'a [u8]> for Lit {
+    fn from(input: &[u8]) -> Lit {
+        Lit::ByteStr(input.into(), StrStyle::Cooked)
+    }
+}
+
+impl From<char> for Lit {
+    fn from(input: char) -> Lit {
+        Lit::Char(input)
+    }
+}
+
+impl From<bool> for Lit {
+    fn from(input: bool) -> Lit {
+        Lit::Bool(input)
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -51,12 +87,52 @@ pub enum FloatTy {
     Unsuffixed,
 }
 
+macro_rules! impl_from_for_lit {
+    (Int, [$($rust_type:ty => $syn_type:expr),+]) => {
+        $(
+            impl From<$rust_type> for Lit {
+                fn from(input: $rust_type) -> Lit {
+                    Lit::Int(input as u64, $syn_type)
+                }
+            }
+        )+
+    };
+    (Float, [$($rust_type:ty => $syn_type:expr),+]) => {
+        $(
+            impl From<$rust_type> for Lit {
+                fn from(input: $rust_type) -> Lit {
+                    Lit::Float(format!("{}", input), $syn_type)
+                }
+            }
+        )+
+    };
+}
+
+impl_from_for_lit! {Int, [
+    isize => IntTy::Isize,
+    i8 => IntTy::I8,
+    i16 => IntTy::I16,
+    i32 => IntTy::I32,
+    i64 => IntTy::I64,
+    usize => IntTy::Usize,
+    u8 => IntTy::U8,
+    u16 => IntTy::U16,
+    u32 => IntTy::U32,
+    u64 => IntTy::U64
+]}
+
+impl_from_for_lit! {Float, [
+    f32 => FloatTy::F32,
+    f64 => FloatTy::F64
+]}
+
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-    use escape::{cooked_char, cooked_string, raw_string};
-    use space::whitespace;
+    use escape::{cooked_byte, cooked_byte_string, cooked_char, cooked_string, raw_string};
+    use space::skip_whitespace;
     use nom::IResult;
+    use unicode_xid::UnicodeXID;
 
     named!(pub lit -> Lit, alt!(
         string
@@ -67,12 +143,11 @@ pub mod parsing {
         |
         character
         |
+        float // must be before int
+        |
         int => { |(value, ty)| Lit::Int(value, ty) }
-    // TODO: Float
         |
-        keyword!("true") => { |_| Lit::Bool(true) }
-        |
-        keyword!("false") => { |_| Lit::Bool(false) }
+        boolean
     ));
 
     named!(string -> Lit, alt!(
@@ -93,22 +168,22 @@ pub mod parsing {
     named!(byte_string -> Lit, alt!(
         delimited!(
             punct!("b\""),
-            cooked_string,
+            cooked_byte_string,
             tag!("\"")
-        ) => { |s: String| Lit::ByteStr(s.into_bytes()) }
+        ) => { |vec| Lit::ByteStr(vec, StrStyle::Cooked) }
         |
         preceded!(
             punct!("br"),
             raw_string
-        ) => { |(s, _): (String, _)| Lit::ByteStr(s.into_bytes()) }
+        ) => { |(s, n): (String, _)| Lit::ByteStr(s.into_bytes(), StrStyle::Raw(n)) }
     ));
 
     named!(byte -> Lit, do_parse!(
         punct!("b") >>
         tag!("'") >>
-        ch: cooked_char >>
+        b: cooked_byte >>
         tag!("'") >>
-        (Lit::Byte(ch as u8))
+        (Lit::Byte(b))
     ));
 
     named!(character -> Lit, do_parse!(
@@ -118,11 +193,20 @@ pub mod parsing {
         (Lit::Char(ch))
     ));
 
+    named!(float -> Lit, do_parse!(
+        value: float_string >>
+        suffix: alt!(
+            tag!("f32") => { |_| FloatTy::F32 }
+            |
+            tag!("f64") => { |_| FloatTy::F64 }
+            |
+            epsilon!() => { |_| FloatTy::Unsuffixed }
+        ) >>
+        (Lit::Float(value, suffix))
+    ));
+
     named!(pub int -> (u64, IntTy), tuple!(
-        preceded!(
-            option!(whitespace),
-            digits
-        ),
+        digits,
         alt!(
             tag!("isize") => { |_| IntTy::Isize }
             |
@@ -148,31 +232,140 @@ pub mod parsing {
         )
     ));
 
-    pub fn digits(input: &str) -> IResult<&str, u64> {
-        let mut value = 0u64;
-        let mut len = 0;
-        let mut bytes = input.bytes().peekable();
-        while let Some(&b) = bytes.peek() {
-            match b {
-                b'0'...b'9' => {
-                    value = match value.checked_mul(10) {
-                        Some(value) => value,
-                        None => return IResult::Error,
-                    };
-                    value = match value.checked_add((b - b'0') as u64) {
-                        Some(value) => value,
-                        None => return IResult::Error,
-                    };
-                    bytes.next();
+    named!(boolean -> Lit, alt!(
+        keyword!("true") => { |_| Lit::Bool(true) }
+        |
+        keyword!("false") => { |_| Lit::Bool(false) }
+    ));
+
+    fn float_string(mut input: &str) -> IResult<&str, String> {
+        input = skip_whitespace(input);
+
+        let mut chars = input.chars().peekable();
+        match chars.next() {
+            Some(ch) if ch >= '0' && ch <= '9' => {}
+            _ => return IResult::Error,
+        }
+
+        let mut len = 1;
+        let mut has_dot = false;
+        let mut has_exp = false;
+        while let Some(&ch) = chars.peek() {
+            match ch {
+                '0'...'9' | '_' => {
+                    chars.next();
                     len += 1;
+                }
+                '.' => {
+                    if has_dot {
+                        break;
+                    }
+                    chars.next();
+                    if chars.peek()
+                        .map(|&ch| ch == '.' || UnicodeXID::is_xid_start(ch))
+                        .unwrap_or(false) {
+                        return IResult::Error;
+                    }
+                    len += 1;
+                    has_dot = true;
+                }
+                'e' | 'E' => {
+                    chars.next();
+                    len += 1;
+                    has_exp = true;
+                    break;
                 }
                 _ => break,
             }
         }
-        if len > 0 {
-            IResult::Done(&input[len..], value)
+
+        let rest = &input[len..];
+        if !(has_dot || has_exp || rest.starts_with("f32") || rest.starts_with("f64")) {
+            return IResult::Error;
+        }
+
+        if has_exp {
+            let mut has_exp_value = false;
+            while let Some(&ch) = chars.peek() {
+                match ch {
+                    '+' | '-' => {
+                        if has_exp_value {
+                            break;
+                        }
+                        chars.next();
+                        len += 1;
+                    }
+                    '0'...'9' => {
+                        chars.next();
+                        len += 1;
+                        has_exp_value = true;
+                    }
+                    '_' => {
+                        chars.next();
+                        len += 1;
+                    }
+                    _ => break,
+                }
+            }
+            if !has_exp_value {
+                return IResult::Error;
+            }
+        }
+
+        IResult::Done(&input[len..], input[..len].replace("_", ""))
+    }
+
+    pub fn digits(mut input: &str) -> IResult<&str, u64> {
+        input = skip_whitespace(input);
+
+        let base = if input.starts_with("0x") {
+            input = &input[2..];
+            16
+        } else if input.starts_with("0o") {
+            input = &input[2..];
+            8
+        } else if input.starts_with("0b") {
+            input = &input[2..];
+            2
         } else {
+            10
+        };
+
+        let mut value = 0u64;
+        let mut len = 0;
+        let mut empty = true;
+        for b in input.bytes() {
+            let digit = match b {
+                b'0'...b'9' => (b - b'0') as u64,
+                b'a'...b'f' => 10 + (b - b'a') as u64,
+                b'A'...b'F' => 10 + (b - b'A') as u64,
+                b'_' => {
+                    if empty && base == 10 {
+                        return IResult::Error;
+                    }
+                    len += 1;
+                    continue;
+                }
+                _ => break,
+            };
+            if digit >= base {
+                return IResult::Error;
+            }
+            value = match value.checked_mul(base) {
+                Some(value) => value,
+                None => return IResult::Error,
+            };
+            value = match value.checked_add(digit) {
+                Some(value) => value,
+                None => return IResult::Error,
+            };
+            len += 1;
+            empty = false;
+        }
+        if empty {
             IResult::Error
+        } else {
+            IResult::Done(&input[len..], value)
         }
     }
 }
@@ -183,6 +376,7 @@ mod printing {
     use quote::{Tokens, ToTokens};
     use std::{ascii, iter};
     use std::fmt::{self, Display};
+    use std::str;
 
     impl ToTokens for Lit {
         fn to_tokens(&self, tokens: &mut Tokens) {
@@ -193,15 +387,35 @@ mod printing {
                         delim = iter::repeat("#").take(n).collect::<String>(),
                         string = s));
                 }
-                Lit::ByteStr(ref v) => {
+                Lit::ByteStr(ref v, StrStyle::Cooked) => {
                     let mut escaped = "b\"".to_string();
                     for &ch in v.iter() {
-                        escaped.extend(ascii::escape_default(ch).map(|c| c as char));
+                        match ch {
+                            0 => escaped.push_str(r"\0"),
+                            b'\'' => escaped.push('\''),
+                            _ => escaped.extend(ascii::escape_default(ch).map(|c| c as char)),
+                        }
                     }
                     escaped.push('"');
                     tokens.append(&escaped);
                 }
-                Lit::Byte(b) => tokens.append(&format!("b{:?}", b as char)),
+                Lit::ByteStr(ref vec, StrStyle::Raw(n)) => {
+                    tokens.append(&format!("br{delim}\"{string}\"{delim}",
+                        delim = iter::repeat("#").take(n).collect::<String>(),
+                        string = str::from_utf8(vec).unwrap()));
+                }
+                Lit::Byte(b) => {
+                    match b {
+                        0 => tokens.append(r"b'\0'"),
+                        b'\"' => tokens.append("b'\"'"),
+                        _ => {
+                            let mut escaped = "b'".to_string();
+                            escaped.extend(ascii::escape_default(b).map(|c| c as char));
+                            escaped.push('\'');
+                            tokens.append(&escaped);
+                        }
+                    }
+                }
                 Lit::Char(ch) => ch.to_tokens(tokens),
                 Lit::Int(value, ty) => tokens.append(&format!("{}{}", value, ty)),
                 Lit::Float(ref value, ty) => tokens.append(&format!("{}{}", value, ty)),

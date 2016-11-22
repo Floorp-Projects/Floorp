@@ -440,7 +440,7 @@ impl MacResult for DummyResult {
         if self.expr_only {
             None
         } else {
-            Some(SmallVector::zero())
+            Some(SmallVector::new())
         }
     }
 
@@ -448,7 +448,7 @@ impl MacResult for DummyResult {
         if self.expr_only {
             None
         } else {
-            Some(SmallVector::zero())
+            Some(SmallVector::new())
         }
     }
 
@@ -456,7 +456,7 @@ impl MacResult for DummyResult {
         if self.expr_only {
             None
         } else {
-            Some(SmallVector::zero())
+            Some(SmallVector::new())
         }
     }
 
@@ -517,12 +517,14 @@ pub type NamedSyntaxExtension = (Name, SyntaxExtension);
 pub trait Resolver {
     fn next_node_id(&mut self) -> ast::NodeId;
     fn get_module_scope(&mut self, id: ast::NodeId) -> Mark;
+    fn eliminate_crate_var(&mut self, item: P<ast::Item>) -> P<ast::Item>;
 
     fn visit_expansion(&mut self, mark: Mark, expansion: &Expansion);
     fn add_macro(&mut self, scope: Mark, def: ast::MacroDef, export: bool);
     fn add_ext(&mut self, ident: ast::Ident, ext: Rc<SyntaxExtension>);
     fn add_expansions_at_stmt(&mut self, id: ast::NodeId, macros: Vec<Mark>);
 
+    fn resolve_imports(&mut self);
     fn find_attr_invoc(&mut self, attrs: &mut Vec<Attribute>) -> Option<Attribute>;
     // FIXME(syntax): ignore unknown macros
     fn find_extension(&mut self, scope: Mark, name: ast::Name) -> Option<Rc<SyntaxExtension>>;
@@ -543,12 +545,14 @@ pub struct DummyResolver;
 impl Resolver for DummyResolver {
     fn next_node_id(&mut self) -> ast::NodeId { ast::DUMMY_NODE_ID }
     fn get_module_scope(&mut self, _id: ast::NodeId) -> Mark { Mark::root() }
+    fn eliminate_crate_var(&mut self, item: P<ast::Item>) -> P<ast::Item> { item }
 
     fn visit_expansion(&mut self, _invoc: Mark, _expansion: &Expansion) {}
     fn add_macro(&mut self, _scope: Mark, _def: ast::MacroDef, _export: bool) {}
     fn add_ext(&mut self, _ident: ast::Ident, _ext: Rc<SyntaxExtension>) {}
     fn add_expansions_at_stmt(&mut self, _id: ast::NodeId, _macros: Vec<Mark>) {}
 
+    fn resolve_imports(&mut self) {}
     fn find_attr_invoc(&mut self, _attrs: &mut Vec<Attribute>) -> Option<Attribute> { None }
     fn find_extension(&mut self, _scope: Mark, _name: ast::Name) -> Option<Rc<SyntaxExtension>> {
         None
@@ -623,7 +627,9 @@ impl<'a> ExtCtxt<'a> {
 
     pub fn new_parser_from_tts(&self, tts: &[tokenstream::TokenTree])
         -> parser::Parser<'a> {
-        parse::tts_to_parser(self.parse_sess, tts.to_vec())
+        let mut parser = parse::tts_to_parser(self.parse_sess, tts.to_vec());
+        parser.allow_interpolated_tts = false; // FIXME(jseyfried) `quote!` can't handle these yet
+        parser
     }
     pub fn codemap(&self) -> &'a CodeMap { self.parse_sess.codemap() }
     pub fn parse_sess(&self) -> &'a parse::ParseSess { self.parse_sess }

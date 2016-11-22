@@ -13,6 +13,7 @@ use syntex_syntax::ext::expand::Expansion;
 use syntex_syntax::ext::hygiene::Mark;
 use syntex_syntax::parse::token::intern;
 use syntex_syntax::parse::ParseSess;
+use syntex_syntax::ptr::P;
 
 pub struct Resolver<'a> {
     session: &'a ParseSess,
@@ -33,6 +34,7 @@ impl<'a> base::Resolver for Resolver<'a> {
         ast::DUMMY_NODE_ID
     }
     fn get_module_scope(&mut self, _id: ast::NodeId) -> Mark { Mark::root() }
+    fn eliminate_crate_var(&mut self, item: P<ast::Item>) -> P<ast::Item> { item }
 
     fn visit_expansion(&mut self, _invoc: Mark, _expansion: &Expansion) {}
     fn add_macro(&mut self, _scope: Mark, def: ast::MacroDef, _export: bool) {
@@ -45,6 +47,7 @@ impl<'a> base::Resolver for Resolver<'a> {
     }
     fn add_expansions_at_stmt(&mut self, _id: ast::NodeId, _macros: Vec<Mark>) {}
 
+    fn resolve_imports(&mut self) {}
     fn find_attr_invoc(&mut self, attrs: &mut Vec<Attribute>) -> Option<Attribute> {
         for i in 0..attrs.len() {
             let name = intern(&attrs[i].name());

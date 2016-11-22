@@ -65,6 +65,10 @@ impl<T> Extend<T> for SmallVector<T> {
 }
 
 impl<T> SmallVector<T> {
+    pub fn new() -> SmallVector<T> {
+        SmallVector::zero()
+    }
+
     pub fn zero() -> SmallVector<T> {
         SmallVector { repr: Zero }
     }
@@ -262,7 +266,7 @@ mod tests {
 
     #[test]
     fn test_len() {
-        let v: SmallVector<isize> = SmallVector::zero();
+        let v: SmallVector<isize> = SmallVector::new();
         assert_eq!(0, v.len());
 
         assert_eq!(1, SmallVector::one(1).len());
@@ -271,30 +275,30 @@ mod tests {
 
     #[test]
     fn test_push_get() {
-        let mut v = SmallVector::zero();
+        let mut v = SmallVector::new();
         v.push(1);
         assert_eq!(1, v.len());
-        assert_eq!(&1, v.get(0));
+        assert_eq!(1, v[0]);
         v.push(2);
         assert_eq!(2, v.len());
-        assert_eq!(&2, v.get(1));
+        assert_eq!(2, v[1]);
         v.push(3);
         assert_eq!(3, v.len());
-        assert_eq!(&3, v.get(2));
+        assert_eq!(3, v[2]);
     }
 
     #[test]
     fn test_from_iter() {
         let v: SmallVector<isize> = (vec![1, 2, 3]).into_iter().collect();
         assert_eq!(3, v.len());
-        assert_eq!(&1, v.get(0));
-        assert_eq!(&2, v.get(1));
-        assert_eq!(&3, v.get(2));
+        assert_eq!(1, v[0]);
+        assert_eq!(2, v[1]);
+        assert_eq!(3, v[2]);
     }
 
     #[test]
     fn test_move_iter() {
-        let v = SmallVector::zero();
+        let v = SmallVector::new();
         let v: Vec<isize> = v.into_iter().collect();
         assert_eq!(v, Vec::new());
 
@@ -308,7 +312,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_expect_one_zero() {
-        let _: isize = SmallVector::zero().expect_one("");
+        let _: isize = SmallVector::new().expect_one("");
     }
 
     #[test]
