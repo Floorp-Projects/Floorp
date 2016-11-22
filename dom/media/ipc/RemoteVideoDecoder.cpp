@@ -162,12 +162,19 @@ RemoteDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   MOZ_ASSERT(callback->OnReaderTaskQueue());
   RefPtr<RemoteVideoDecoder> object = new RemoteVideoDecoder(callback);
 
-  VideoInfo info = aParams.VideoConfig();
-
-  TextureFactoryIdentifier ident = aParams.mKnowsCompositor->GetTextureFactoryIdentifier();
-  VideoDecoderManagerChild::GetManagerThread()->Dispatch(NS_NewRunnableFunction([=]() {
-    object->mActor->InitIPDL(callback, info, ident);
+  SynchronousTask task("InitIPDL");
+  bool success;
+  VideoDecoderManagerChild::GetManagerThread()->Dispatch(NS_NewRunnableFunction([&]() {
+    AutoCompleteTask complete(&task);
+    success = object->mActor->InitIPDL(callback,
+                                       aParams.VideoConfig(),
+                                       aParams.mKnowsCompositor->GetTextureFactoryIdentifier());
   }), NS_DISPATCH_NORMAL);
+  task.Wait();
+
+  if (!success) {
+    return nullptr;
+  }
 
   return object.forget();
 }
