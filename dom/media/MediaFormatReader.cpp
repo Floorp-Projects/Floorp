@@ -74,7 +74,7 @@ public:
 private:
   class AutoDeallocToken;
   using PromisePrivate = Promise::Private;
-  DecoderAllocPolicy(TrackType aTrack);
+  explicit DecoderAllocPolicy(TrackType aTrack);
   ~DecoderAllocPolicy();
   // Called by the destructor of TokenImpl to restore the decoder limit.
   void Dealloc();
@@ -98,7 +98,7 @@ StaticMutex DecoderAllocPolicy::sMutex;
 class DecoderAllocPolicy::AutoDeallocToken : public Token
 {
 public:
-  AutoDeallocToken(TrackType aTrack)
+  explicit AutoDeallocToken(TrackType aTrack)
     : mTrack(aTrack)
   {}
 
