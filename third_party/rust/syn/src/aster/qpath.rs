@@ -65,6 +65,9 @@ impl<F> QPathTyBuilder<F>
     where F: Invoke<(QSelf, Path)>
 {
     /// Build a qualified path with a path builder.
+    // Clippy false positive
+    // https://github.com/Manishearth/rust-clippy/issues/1285
+    #[cfg_attr(feature = "clippy", allow(wrong_self_convention))]
     pub fn as_(self) -> PathBuilder<Self> {
         PathBuilder::with_callback(self)
     }

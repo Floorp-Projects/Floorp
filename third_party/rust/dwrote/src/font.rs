@@ -38,19 +38,19 @@ impl Font {
 
     pub fn stretch(&self) -> FontStretch {
         unsafe {
-            mem::transmute((*self.native.get()).GetStretch().0)
+            mem::transmute::<u32, FontStretch>((*self.native.get()).GetStretch().0)
         }
     }
 
     pub fn style(&self) -> FontStyle {
         unsafe {
-            mem::transmute((*self.native.get()).GetStyle().0)
+            mem::transmute::<u32, FontStyle>((*self.native.get()).GetStyle().0)
         }
     }
 
     pub fn weight(&self) -> FontWeight {
         unsafe {
-            mem::transmute((*self.native.get()).GetWeight().0)
+            mem::transmute::<u32, FontWeight>((*self.native.get()).GetWeight().0)
         }
     }
 

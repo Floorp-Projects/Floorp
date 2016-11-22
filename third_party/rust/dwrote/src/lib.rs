@@ -34,6 +34,7 @@ use winapi::S_OK;
 mod comptr;
 mod helpers;
 use helpers::ToWide;
+use std::os::raw::c_void;
 
 #[cfg(test)]
 mod test;
@@ -70,8 +71,8 @@ lazy_static! {
                 kernel32::GetProcAddress(dwrite_dll, create_factory_name.as_ptr() as winapi::LPCSTR);
             assert!(!dwrite_create_factory_ptr.is_null());
 
-            println!("create_factory_ptr: {:?}", dwrite_create_factory_ptr);
-            let dwrite_create_factory: DWriteCreateFactoryType = mem::transmute(dwrite_create_factory_ptr);
+            let dwrite_create_factory =
+                mem::transmute::<*const c_void, DWriteCreateFactoryType>(dwrite_create_factory_ptr);
 
             let mut factory: ComPtr<IDWriteFactory> = ComPtr::new();
             let hr = dwrite_create_factory(

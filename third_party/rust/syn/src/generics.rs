@@ -9,7 +9,18 @@ pub struct Generics {
     pub where_clause: WhereClause,
 }
 
+#[cfg(feature = "printing")]
+/// Returned by `Generics::split_for_impl`.
+#[derive(Debug)]
+pub struct ImplGenerics<'a>(&'a Generics);
+
+#[cfg(feature = "printing")]
+/// Returned by `Generics::split_for_impl`.
+#[derive(Debug)]
+pub struct TyGenerics<'a>(&'a Generics);
+
 impl Generics {
+    #[cfg(feature = "printing")]
     /// Split a type's generics into the pieces required for impl'ing a trait
     /// for that type.
     ///
@@ -29,50 +40,8 @@ impl Generics {
     /// # ;
     /// # }
     /// ```
-    pub fn split_for_impl(&self) -> (Generics, Generics, WhereClause) {
-        // Remove where clause and type parameter defaults.
-        let impl_generics = Generics {
-            lifetimes: self.lifetimes.clone(),
-            ty_params: self.ty_params
-                .iter()
-                .map(|ty_param| {
-                    TyParam {
-                        ident: ty_param.ident.clone(),
-                        bounds: ty_param.bounds.clone(),
-                        default: None,
-                    }
-                })
-                .collect(),
-            where_clause: WhereClause::none(),
-        };
-
-        // Remove where clause, type parameter defaults, and bounds.
-        let ty_generics = Generics {
-            lifetimes: self.lifetimes
-                .iter()
-                .map(|lifetime_def| {
-                    LifetimeDef {
-                        lifetime: lifetime_def.lifetime.clone(),
-                        bounds: Vec::new(),
-                    }
-                })
-                .collect(),
-            ty_params: self.ty_params
-                .iter()
-                .map(|ty_param| {
-                    TyParam {
-                        ident: ty_param.ident.clone(),
-                        bounds: Vec::new(),
-                        default: None,
-                    }
-                })
-                .collect(),
-            where_clause: WhereClause::none(),
-        };
-
-        let where_clause = self.where_clause.clone();
-
-        (impl_generics, ty_generics, where_clause)
+    pub fn split_for_impl(&self) -> (ImplGenerics, TyGenerics, &WhereClause) {
+        (ImplGenerics(self), TyGenerics(self), &self.where_clause)
     }
 }
 
@@ -96,6 +65,7 @@ impl Lifetime {
 /// A lifetime definition, e.g. `'a: 'b+'c+'d`
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct LifetimeDef {
+    pub attrs: Vec<Attribute>,
     pub lifetime: Lifetime,
     pub bounds: Vec<Lifetime>,
 }
@@ -103,6 +73,7 @@ pub struct LifetimeDef {
 impl LifetimeDef {
     pub fn new<T: Into<Ident>>(t: T) -> Self {
         LifetimeDef {
+            attrs: Vec::new(),
             lifetime: Lifetime::new(t),
             bounds: Vec::new(),
         }
@@ -111,6 +82,7 @@ impl LifetimeDef {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TyParam {
+    pub attrs: Vec<Attribute>,
     pub ident: Ident,
     pub bounds: Vec<TyParamBound>,
     pub default: Option<Ty>,
@@ -180,6 +152,7 @@ pub struct WhereRegionPredicate {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
+    use attr::parsing::outer_attr;
     use ident::parsing::ident;
     use ty::parsing::{ty, poly_trait_ref};
 
@@ -192,6 +165,7 @@ pub mod parsing {
                     cond!(!lifetimes.is_empty(), punct!(",")),
                     separated_nonempty_list!(punct!(","), ty_param)
                 )) >>
+                cond!(!lifetimes.is_empty() || !ty_params.is_empty(), option!(punct!(","))) >>
                 punct!(">") >>
                 (lifetimes, ty_params)
             )
@@ -207,18 +181,26 @@ pub mod parsing {
 
     named!(pub lifetime -> Lifetime, preceded!(
         punct!("'"),
-        map!(ident, |id| Lifetime {
-            ident: format!("'{}", id).into(),
-        })
+        alt!(
+            map!(ident, |id| Lifetime {
+                ident: format!("'{}", id).into(),
+            })
+            |
+            map!(keyword!("static"), |_| Lifetime {
+                ident: "'static".into(),
+            })
+        )
     ));
 
     named!(pub lifetime_def -> LifetimeDef, do_parse!(
+        attrs: many0!(outer_attr) >>
         life: lifetime >>
         bounds: opt_vec!(preceded!(
             punct!(":"),
-            separated_nonempty_list!(punct!("+"), lifetime)
+            separated_list!(punct!("+"), lifetime)
         )) >>
         (LifetimeDef {
+            attrs: attrs,
             lifetime: life,
             bounds: bounds,
         })
@@ -233,6 +215,7 @@ pub mod parsing {
     )));
 
     named!(ty_param -> TyParam, do_parse!(
+        attrs: many0!(outer_attr) >>
         id: ident >>
         bounds: opt_vec!(preceded!(
             punct!(":"),
@@ -243,6 +226,7 @@ pub mod parsing {
             ty
         )) >>
         (TyParam {
+            attrs: attrs,
             ident: id,
             bounds: bounds,
             default: default,
@@ -275,8 +259,10 @@ pub mod parsing {
     named!(where_predicate -> WherePredicate, alt!(
         do_parse!(
             ident: lifetime >>
-            punct!(":") >>
-            bounds: separated_nonempty_list!(punct!("+"), lifetime) >>
+            bounds: opt_vec!(preceded!(
+                punct!(":"),
+                separated_list!(punct!("+"), lifetime)
+            )) >>
             (WherePredicate::RegionPredicate(WhereRegionPredicate {
                 lifetime: ident,
                 bounds: bounds,
@@ -300,6 +286,7 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
+    use attr::FilterAttrs;
     use quote::{Tokens, ToTokens};
 
     impl ToTokens for Generics {
@@ -318,6 +305,50 @@ mod printing {
         }
     }
 
+    impl<'a> ToTokens for ImplGenerics<'a> {
+        fn to_tokens(&self, tokens: &mut Tokens) {
+            let has_lifetimes = !self.0.lifetimes.is_empty();
+            let has_ty_params = !self.0.ty_params.is_empty();
+            if has_lifetimes || has_ty_params {
+                tokens.append("<");
+                tokens.append_separated(&self.0.lifetimes, ",");
+                // Leave off the type parameter defaults
+                for (i, ty_param) in self.0.ty_params.iter().enumerate() {
+                    if i > 0 || has_lifetimes {
+                        tokens.append(",");
+                    }
+                    tokens.append_all(ty_param.attrs.outer());
+                    ty_param.ident.to_tokens(tokens);
+                    if !ty_param.bounds.is_empty() {
+                        tokens.append(":");
+                        tokens.append_separated(&ty_param.bounds, "+");
+                    }
+                }
+                tokens.append(">");
+            }
+        }
+    }
+
+    impl<'a> ToTokens for TyGenerics<'a> {
+        fn to_tokens(&self, tokens: &mut Tokens) {
+            let has_lifetimes = !self.0.lifetimes.is_empty();
+            let has_ty_params = !self.0.ty_params.is_empty();
+            if has_lifetimes || has_ty_params {
+                tokens.append("<");
+                // Leave off the lifetime bounds and attributes
+                let lifetimes = self.0.lifetimes.iter().map(|ld| &ld.lifetime);
+                tokens.append_separated(lifetimes, ",");
+                if has_lifetimes && has_ty_params {
+                    tokens.append(",");
+                }
+                // Leave off the type parameter bounds, defaults, and attributes
+                let ty_params = self.0.ty_params.iter().map(|tp| &tp.ident);
+                tokens.append_separated(ty_params, ",");
+                tokens.append(">");
+            }
+        }
+    }
+
     impl ToTokens for Lifetime {
         fn to_tokens(&self, tokens: &mut Tokens) {
             self.ident.to_tokens(tokens);
@@ -326,6 +357,7 @@ mod printing {
 
     impl ToTokens for LifetimeDef {
         fn to_tokens(&self, tokens: &mut Tokens) {
+            tokens.append_all(self.attrs.outer());
             self.lifetime.to_tokens(tokens);
             if !self.bounds.is_empty() {
                 tokens.append(":");
@@ -336,6 +368,7 @@ mod printing {
 
     impl ToTokens for TyParam {
         fn to_tokens(&self, tokens: &mut Tokens) {
+            tokens.append_all(self.attrs.outer());
             self.ident.to_tokens(tokens);
             if !self.bounds.is_empty() {
                 tokens.append(":");

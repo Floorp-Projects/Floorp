@@ -36,7 +36,7 @@ pub enum ItemKind {
     /// A module declaration (`mod` or `pub mod`).
     ///
     /// E.g. `mod foo;` or `mod foo { .. }`
-    Mod(Vec<Item>),
+    Mod(Option<Vec<Item>>),
     /// An external module (`extern` or `pub extern`).
     ///
     /// E.g. `extern {}` or `extern "C" {}`
@@ -80,6 +80,20 @@ pub enum ItemKind {
     Mac(Mac),
 }
 
+impl From<MacroInput> for Item {
+    fn from(input: MacroInput) -> Item {
+        Item {
+            ident: input.ident,
+            vis: input.vis,
+            attrs: input.attrs,
+            node: match input.body {
+                Body::Enum(variants) => ItemKind::Enum(variants, input.generics),
+                Body::Struct(variant_data) => ItemKind::Struct(variant_data, input.generics),
+            },
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ViewPath {
     /// `foo::bar::baz as quux`
@@ -104,12 +118,6 @@ pub struct PathListItem {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum Unsafety {
-    Unsafe,
-    Normal,
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Constness {
     Const,
     NotConst,
@@ -121,15 +129,12 @@ pub enum Defaultness {
     Final,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Abi(pub String);
-
 /// Foreign module declaration.
 ///
 /// E.g. `extern { .. }` or `extern "C" { .. }`
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ForeignMod {
-    pub abi: Option<Abi>,
+    pub abi: Abi,
     pub items: Vec<ForeignItem>,
 }
 
@@ -212,6 +217,7 @@ pub struct MethodSig {
 pub struct FnDecl {
     pub inputs: Vec<FnArg>,
     pub output: FunctionRetTy,
+    pub variadic: bool,
 }
 
 /// An argument in a function header.
@@ -228,17 +234,17 @@ pub enum FnArg {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-    use {DelimToken, FunctionRetTy, Generics, Ident, Mac, Path, TokenTree, VariantData, Visibility};
-    use attr::parsing::outer_attr;
+    use {Block, DelimToken, FunctionRetTy, Generics, Ident, Mac, Path, TokenTree, VariantData,
+         Visibility};
+    use attr::parsing::{inner_attr, outer_attr};
     use data::parsing::{struct_like_body, visibility};
-    use expr::parsing::{block, expr, pat};
+    use expr::parsing::{expr, pat, within_block};
     use generics::parsing::{generics, lifetime, ty_param_bound, where_clause};
     use ident::parsing::ident;
-    use lit::parsing::quoted_string;
     use mac::parsing::delimited;
     use macro_input::{Body, MacroInput};
     use macro_input::parsing::macro_input;
-    use ty::parsing::{mutability, path, ty};
+    use ty::parsing::{abi, mutability, path, ty, unsafety};
 
     named!(pub item -> Item, alt!(
         item_extern_crate
@@ -269,6 +275,8 @@ pub mod parsing {
         |
         item_mac
     ));
+
+    named!(pub items -> Vec<Item>, many0!(item));
 
     named!(item_mac -> Item, do_parse!(
         attrs: many0!(outer_attr) >>
@@ -358,7 +366,7 @@ pub mod parsing {
         path: path >>
         punct!("::") >>
         punct!("{") >>
-        items: separated_nonempty_list!(punct!(","), path_list_item) >>
+        items: terminated_list!(punct!(","), path_list_item) >>
         punct!("}") >>
         (ViewPath::List(path, items))
     ));
@@ -366,7 +374,7 @@ pub mod parsing {
     named!(view_path_list_root -> ViewPath, do_parse!(
         global: option!(punct!("::")) >>
         punct!("{") >>
-        items: separated_nonempty_list!(punct!(","), path_list_item) >>
+        items: terminated_list!(punct!(","), path_list_item) >>
         punct!("}") >>
         (ViewPath::List(Path {
             global: global.is_some(),
@@ -375,7 +383,11 @@ pub mod parsing {
     ));
 
     named!(path_list_item -> PathListItem, do_parse!(
-        name: ident >>
+        name: alt!(
+            ident
+            |
+            map!(keyword!("self"), Into::into)
+        ) >>
         rename: option!(preceded!(keyword!("as"), ident)) >>
         (PathListItem {
             name: name,
@@ -421,11 +433,11 @@ pub mod parsing {
     ));
 
     named!(item_fn -> Item, do_parse!(
-        attrs: many0!(outer_attr) >>
+        outer_attrs: many0!(outer_attr) >>
         vis: visibility >>
         constness: constness >>
         unsafety: unsafety >>
-        abi: option!(preceded!(keyword!("extern"), quoted_string)) >>
+        abi: option!(abi) >>
         keyword!("fn") >>
         name: ident >>
         generics: generics >>
@@ -434,24 +446,34 @@ pub mod parsing {
         punct!(")") >>
         ret: option!(preceded!(punct!("->"), ty)) >>
         where_clause: where_clause >>
-        body: block >>
+        punct!("{") >>
+        inner_attrs: many0!(inner_attr) >>
+        stmts: within_block >>
+        punct!("}") >>
         (Item {
             ident: name,
             vis: vis,
-            attrs: attrs,
+            attrs: {
+                let mut attrs = outer_attrs;
+                attrs.extend(inner_attrs);
+                attrs
+            },
             node: ItemKind::Fn(
                 Box::new(FnDecl {
                     inputs: inputs,
                     output: ret.map(FunctionRetTy::Ty).unwrap_or(FunctionRetTy::Default),
+                    variadic: false,
                 }),
                 unsafety,
                 constness,
-                abi.map(Abi),
+                abi,
                 Generics {
                     where_clause: where_clause,
                     .. generics
                 },
-                Box::new(body),
+                Box::new(Block {
+                    stmts: stmts,
+                }),
             ),
         })
     ));
@@ -462,12 +484,14 @@ pub mod parsing {
             lt: option!(lifetime) >>
             mutability: mutability >>
             keyword!("self") >>
+            not!(peek!(punct!(":"))) >>
             (FnArg::SelfRef(lt, mutability))
         )
         |
         do_parse!(
             mutability: mutability >>
             keyword!("self") >>
+            not!(peek!(punct!(":"))) >>
             (FnArg::SelfValue(mutability))
         )
         |
@@ -482,25 +506,45 @@ pub mod parsing {
     ));
 
     named!(item_mod -> Item, do_parse!(
-        attrs: many0!(outer_attr) >>
+        outer_attrs: many0!(outer_attr) >>
         vis: visibility >>
         keyword!("mod") >>
         id: ident >>
-        punct!("{") >>
-        items: many0!(item) >>
-        punct!("}") >>
-        (Item {
-            ident: id,
-            vis: vis,
-            attrs: attrs,
-            node: ItemKind::Mod(items),
+        content: alt!(
+            punct!(";") => { |_| None }
+            |
+            delimited!(
+                punct!("{"),
+                tuple!(
+                    many0!(inner_attr),
+                    items
+                ),
+                punct!("}")
+            ) => { Some }
+        ) >>
+        (match content {
+            Some((inner_attrs, items)) => Item {
+                ident: id,
+                vis: vis,
+                attrs: {
+                    let mut attrs = outer_attrs;
+                    attrs.extend(inner_attrs);
+                    attrs
+                },
+                node: ItemKind::Mod(Some(items)),
+            },
+            None => Item {
+                ident: id,
+                vis: vis,
+                attrs: outer_attrs,
+                node: ItemKind::Mod(None),
+            },
         })
     ));
 
     named!(item_foreign_mod -> Item, do_parse!(
         attrs: many0!(outer_attr) >>
-        keyword!("extern") >>
-        abi: option!(quoted_string) >>
+        abi: abi >>
         punct!("{") >>
         items: many0!(foreign_item) >>
         punct!("}") >>
@@ -509,7 +553,7 @@ pub mod parsing {
             vis: Visibility::Inherited,
             attrs: attrs,
             node: ItemKind::ForeignMod(ForeignMod {
-                abi: abi.map(Abi),
+                abi: abi,
                 items: items,
             }),
         })
@@ -528,7 +572,9 @@ pub mod parsing {
         name: ident >>
         generics: generics >>
         punct!("(") >>
-        inputs: terminated_list!(punct!(","), fn_arg) >>
+        inputs: separated_list!(punct!(","), fn_arg) >>
+        trailing_comma: option!(punct!(",")) >>
+        variadic: option!(cond_reduce!(trailing_comma.is_some(), punct!("..."))) >>
         punct!(")") >>
         ret: option!(preceded!(punct!("->"), ty)) >>
         where_clause: where_clause >>
@@ -540,6 +586,7 @@ pub mod parsing {
                 Box::new(FnDecl {
                     inputs: inputs,
                     output: ret.map(FunctionRetTy::Ty).unwrap_or(FunctionRetTy::Default),
+                    variadic: variadic.is_some(),
                 }),
                 Generics {
                     where_clause: where_clause,
@@ -573,6 +620,7 @@ pub mod parsing {
         keyword!("type") >>
         id: ident >>
         generics: generics >>
+        where_clause: where_clause >>
         punct!("=") >>
         ty: ty >>
         punct!(";") >>
@@ -580,7 +628,13 @@ pub mod parsing {
             ident: id,
             vis: vis,
             attrs: attrs,
-            node: ItemKind::Ty(Box::new(ty), generics),
+            node: ItemKind::Ty(
+                Box::new(ty),
+                Generics {
+                    where_clause: where_clause,
+                    ..generics
+                },
+            ),
         })
     ));
 
@@ -697,10 +751,10 @@ pub mod parsing {
     ));
 
     named!(trait_item_method -> TraitItem, do_parse!(
-        attrs: many0!(outer_attr) >>
+        outer_attrs: many0!(outer_attr) >>
         constness: constness >>
         unsafety: unsafety >>
-        abi: option!(preceded!(keyword!("extern"), quoted_string)) >>
+        abi: option!(abi) >>
         keyword!("fn") >>
         name: ident >>
         generics: generics >>
@@ -709,27 +763,42 @@ pub mod parsing {
         punct!(")") >>
         ret: option!(preceded!(punct!("->"), ty)) >>
         where_clause: where_clause >>
-        body: option!(block) >>
+        body: option!(delimited!(
+            punct!("{"),
+            tuple!(many0!(inner_attr), within_block),
+            punct!("}")
+        )) >>
         cond!(body.is_none(), punct!(";")) >>
-        (TraitItem {
-            ident: name,
-            attrs: attrs,
-            node: TraitItemKind::Method(
-                MethodSig {
-                    unsafety: unsafety,
-                    constness: constness,
-                    abi: abi.map(Abi),
-                    decl: FnDecl {
-                        inputs: inputs,
-                        output: ret.map(FunctionRetTy::Ty).unwrap_or(FunctionRetTy::Default),
-                    },
-                    generics: Generics {
-                        where_clause: where_clause,
-                        .. generics
-                    },
+        ({
+            let (inner_attrs, stmts) = match body {
+                Some((inner_attrs, stmts)) => (inner_attrs, Some(stmts)),
+                None => (Vec::new(), None),
+            };
+            TraitItem {
+                ident: name,
+                attrs: {
+                    let mut attrs = outer_attrs;
+                    attrs.extend(inner_attrs);
+                    attrs
                 },
-                body,
-            ),
+                node: TraitItemKind::Method(
+                    MethodSig {
+                        unsafety: unsafety,
+                        constness: constness,
+                        abi: abi,
+                        decl: FnDecl {
+                            inputs: inputs,
+                            output: ret.map(FunctionRetTy::Ty).unwrap_or(FunctionRetTy::Default),
+                            variadic: false,
+                        },
+                        generics: Generics {
+                            where_clause: where_clause,
+                            .. generics
+                        },
+                    },
+                    stmts.map(|stmts| Block { stmts: stmts }),
+                ),
+            }
         })
     ));
 
@@ -838,12 +907,12 @@ pub mod parsing {
     ));
 
     named!(impl_item_method -> ImplItem, do_parse!(
-        attrs: many0!(outer_attr) >>
+        outer_attrs: many0!(outer_attr) >>
         vis: visibility >>
         defaultness: defaultness >>
         constness: constness >>
         unsafety: unsafety >>
-        abi: option!(preceded!(keyword!("extern"), quoted_string)) >>
+        abi: option!(abi) >>
         keyword!("fn") >>
         name: ident >>
         generics: generics >>
@@ -852,27 +921,37 @@ pub mod parsing {
         punct!(")") >>
         ret: option!(preceded!(punct!("->"), ty)) >>
         where_clause: where_clause >>
-        body: block >>
+        punct!("{") >>
+        inner_attrs: many0!(inner_attr) >>
+        stmts: within_block >>
+        punct!("}") >>
         (ImplItem {
             ident: name,
             vis: vis,
             defaultness: defaultness,
-            attrs: attrs,
+            attrs: {
+                let mut attrs = outer_attrs;
+                attrs.extend(inner_attrs);
+                attrs
+            },
             node: ImplItemKind::Method(
                 MethodSig {
                     unsafety: unsafety,
                     constness: constness,
-                    abi: abi.map(Abi),
+                    abi: abi,
                     decl: FnDecl {
                         inputs: inputs,
                         output: ret.map(FunctionRetTy::Ty).unwrap_or(FunctionRetTy::Default),
+                        variadic: false,
                     },
                     generics: Generics {
                         where_clause: where_clause,
                         .. generics
                     },
                 },
-                body,
+                Block {
+                    stmts: stmts,
+                },
             ),
         })
     ));
@@ -928,12 +1007,6 @@ pub mod parsing {
         epsilon!() => { |_| Constness::NotConst }
     ));
 
-    named!(unsafety -> Unsafety, alt!(
-        keyword!("unsafe") => { |_| Unsafety::Unsafe }
-        |
-        epsilon!() => { |_| Unsafety::Normal }
-    ));
-
     named!(defaultness -> Defaultness, alt!(
         keyword!("default") => { |_| Defaultness::Default }
         |
@@ -954,6 +1027,7 @@ mod printing {
             tokens.append_all(self.attrs.outer());
             match self.node {
                 ItemKind::ExternCrate(ref original) => {
+                    self.vis.to_tokens(tokens);
                     tokens.append("extern");
                     tokens.append("crate");
                     if let Some(ref original) = *original {
@@ -1006,22 +1080,28 @@ mod printing {
                         ty.to_tokens(tokens);
                     }
                     generics.where_clause.to_tokens(tokens);
-                    block.to_tokens(tokens);
+                    tokens.append("{");
+                    tokens.append_all(self.attrs.inner());
+                    tokens.append_all(&block.stmts);
+                    tokens.append("}");
                 }
                 ItemKind::Mod(ref items) => {
                     self.vis.to_tokens(tokens);
                     tokens.append("mod");
                     self.ident.to_tokens(tokens);
-                    tokens.append("{");
-                    tokens.append_all(items);
-                    tokens.append("}");
+                    match *items {
+                        Some(ref items) => {
+                            tokens.append("{");
+                            tokens.append_all(self.attrs.inner());
+                            tokens.append_all(items);
+                            tokens.append("}");
+                        }
+                        None => tokens.append(";"),
+                    }
                 }
                 ItemKind::ForeignMod(ref foreign_mod) => {
                     self.vis.to_tokens(tokens);
-                    match foreign_mod.abi {
-                        Some(ref abi) => abi.to_tokens(tokens),
-                        None => tokens.append("extern"),
-                    }
+                    foreign_mod.abi.to_tokens(tokens);
                     tokens.append("{");
                     tokens.append_all(&foreign_mod.items);
                     tokens.append("}");
@@ -1031,6 +1111,7 @@ mod printing {
                     tokens.append("type");
                     self.ident.to_tokens(tokens);
                     generics.to_tokens(tokens);
+                    generics.where_clause.to_tokens(tokens);
                     tokens.append("=");
                     ty.to_tokens(tokens);
                     tokens.append(";");
@@ -1053,14 +1134,21 @@ mod printing {
                     tokens.append("struct");
                     self.ident.to_tokens(tokens);
                     generics.to_tokens(tokens);
-                    generics.where_clause.to_tokens(tokens);
-                    variant_data.to_tokens(tokens);
                     match *variant_data {
                         VariantData::Struct(_) => {
+                            generics.where_clause.to_tokens(tokens);
+                            variant_data.to_tokens(tokens);
                             // no semicolon
                         }
-                        VariantData::Tuple(_) |
-                        VariantData::Unit => tokens.append(";"),
+                        VariantData::Tuple(_) => {
+                            variant_data.to_tokens(tokens);
+                            generics.where_clause.to_tokens(tokens);
+                            tokens.append(";");
+                        }
+                        VariantData::Unit => {
+                            generics.where_clause.to_tokens(tokens);
+                            tokens.append(";");
+                        }
                     }
                 }
                 ItemKind::Union(ref variant_data, ref generics) => {
@@ -1076,11 +1164,11 @@ mod printing {
                     unsafety.to_tokens(tokens);
                     tokens.append("trait");
                     self.ident.to_tokens(tokens);
+                    generics.to_tokens(tokens);
                     if !bound.is_empty() {
                         tokens.append(":");
                         tokens.append_separated(bound, "+");
                     }
-                    generics.to_tokens(tokens);
                     generics.where_clause.to_tokens(tokens);
                     tokens.append("{");
                     tokens.append_all(items);
@@ -1182,6 +1270,7 @@ mod printing {
                     tokens.append(";");
                 }
                 TraitItemKind::Method(ref sig, ref block) => {
+                    sig.constness.to_tokens(tokens);
                     sig.unsafety.to_tokens(tokens);
                     sig.abi.to_tokens(tokens);
                     tokens.append("fn");
@@ -1196,7 +1285,12 @@ mod printing {
                     }
                     sig.generics.where_clause.to_tokens(tokens);
                     match *block {
-                        Some(ref block) => block.to_tokens(tokens),
+                        Some(ref block) => {
+                            tokens.append("{");
+                            tokens.append_all(self.attrs.inner());
+                            tokens.append_all(&block.stmts);
+                            tokens.append("}");
+                        }
                         None => tokens.append(";"),
                     }
                 }
@@ -1244,6 +1338,7 @@ mod printing {
                 ImplItemKind::Method(ref sig, ref block) => {
                     self.vis.to_tokens(tokens);
                     self.defaultness.to_tokens(tokens);
+                    sig.constness.to_tokens(tokens);
                     sig.unsafety.to_tokens(tokens);
                     sig.abi.to_tokens(tokens);
                     tokens.append("fn");
@@ -1257,7 +1352,10 @@ mod printing {
                         ty.to_tokens(tokens);
                     }
                     sig.generics.where_clause.to_tokens(tokens);
-                    block.to_tokens(tokens);
+                    tokens.append("{");
+                    tokens.append_all(self.attrs.inner());
+                    tokens.append_all(&block.stmts);
+                    tokens.append("}");
                 }
                 ImplItemKind::Type(ref ty) => {
                     self.vis.to_tokens(tokens);
@@ -1292,6 +1390,12 @@ mod printing {
                     generics.to_tokens(tokens);
                     tokens.append("(");
                     tokens.append_separated(&decl.inputs, ",");
+                    if decl.variadic {
+                        if !decl.inputs.is_empty() {
+                            tokens.append(",");
+                        }
+                        tokens.append("...");
+                    }
                     tokens.append(")");
                     if let FunctionRetTy::Ty(ref ty) = decl.output {
                         tokens.append("->");
@@ -1338,17 +1442,6 @@ mod printing {
         }
     }
 
-    impl ToTokens for Unsafety {
-        fn to_tokens(&self, tokens: &mut Tokens) {
-            match *self {
-                Unsafety::Unsafe => tokens.append("unsafe"),
-                Unsafety::Normal => {
-                    // nothing
-                }
-            }
-        }
-    }
-
     impl ToTokens for Constness {
         fn to_tokens(&self, tokens: &mut Tokens) {
             match *self {
@@ -1379,13 +1472,6 @@ mod printing {
                     // nothing
                 }
             }
-        }
-    }
-
-    impl ToTokens for Abi {
-        fn to_tokens(&self, tokens: &mut Tokens) {
-            tokens.append("extern");
-            self.0.to_tokens(tokens);
         }
     }
 }

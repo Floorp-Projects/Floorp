@@ -18,7 +18,8 @@ pub fn whitespace(input: &str) -> IResult<&str, ()> {
                     continue;
                 }
                 break;
-            } else if s.starts_with("/*") && !s.starts_with("/**") && !s.starts_with("/*!") {
+            } else if s.starts_with("/*") && (!s.starts_with("/**") || s.starts_with("/***")) &&
+                      !s.starts_with("/*!") {
                 match block_comment(s) {
                     IResult::Done(_, com) => {
                         i += com.len();
@@ -38,7 +39,7 @@ pub fn whitespace(input: &str) -> IResult<&str, ()> {
             b if b <= 0x7f => {}
             _ => {
                 let ch = s.chars().next().unwrap();
-                if ch.is_whitespace() {
+                if is_whitespace(ch) {
                     i += ch.len_utf8();
                     continue;
                 }
@@ -83,4 +84,16 @@ pub fn word_break(input: &str) -> IResult<&str, ()> {
         Some(ch) if UnicodeXID::is_xid_continue(ch) => IResult::Error,
         Some(_) | None => IResult::Done(input, ()),
     }
+}
+
+pub fn skip_whitespace(input: &str) -> &str {
+    match whitespace(input) {
+        IResult::Done(rest, _) => rest,
+        IResult::Error => input,
+    }
+}
+
+fn is_whitespace(ch: char) -> bool {
+    // Rust treats left-to-right mark and right-to-left mark as whitespace
+    ch.is_whitespace() || ch == '\u{200e}' || ch == '\u{200f}'
 }

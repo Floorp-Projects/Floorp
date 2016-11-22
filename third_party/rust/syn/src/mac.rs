@@ -114,7 +114,7 @@ pub mod parsing {
     use super::*;
     use Lifetime;
     use generics::parsing::lifetime;
-    use ident::parsing::ident;
+    use ident::parsing::{ident, word};
     use lit::parsing::lit;
     use space::{block_comment, whitespace};
 
@@ -128,28 +128,24 @@ pub mod parsing {
         })
     ));
 
-    named!(pub token_trees -> Vec<TokenTree>, do_parse!(
-        tts: many0!(token_tree) >>
-        option!(whitespace) >>
-        (tts)
-    ));
+    named!(pub token_trees -> Vec<TokenTree>, many0!(token_tree));
 
     named!(pub delimited -> Delimited, alt!(
         delimited!(
             punct!("("),
-            many0!(token_tree),
+            token_trees,
             punct!(")")
         ) => { |tts| Delimited { delim: DelimToken::Paren, tts: tts } }
         |
         delimited!(
             punct!("["),
-            many0!(token_tree),
+            token_trees,
             punct!("]")
         ) => { |tts| Delimited { delim: DelimToken::Bracket, tts: tts } }
         |
         delimited!(
             punct!("{"),
-            many0!(token_tree),
+            token_trees,
             punct!("}")
         ) => { |tts| Delimited { delim: DelimToken::Brace, tts: tts } }
     ));
@@ -179,17 +175,17 @@ pub mod parsing {
         |
         punct!(".") => { |_| Token::Dot }
         |
-        map!(bin_op_eq, Token::BinOpEq)
+        map!(doc_comment, Token::DocComment) // must be before bin_op
+        |
+        map!(bin_op_eq, Token::BinOpEq) // must be before bin_op
         |
         map!(bin_op, Token::BinOp)
         |
         map!(lit, Token::Literal)
         |
-        map!(ident, Token::Ident)
+        map!(word, Token::Ident)
         |
         map!(lifetime, |lt: Lifetime| Token::Lifetime(lt.ident))
-        |
-        map!(doc_comment, Token::DocComment)
         |
         punct!("<=") => { |_| Token::Le }
         |
@@ -383,9 +379,9 @@ mod printing {
                 Token::Dollar => tokens.append("$"),
                 Token::Question => tokens.append("?"),
                 Token::Literal(ref lit) => lit.to_tokens(tokens),
-                Token::Ident(ref ident) => ident.to_tokens(tokens),
-                Token::Underscore => tokens.append("_"),
+                Token::Ident(ref ident) |
                 Token::Lifetime(ref ident) => ident.to_tokens(tokens),
+                Token::Underscore => tokens.append("_"),
                 Token::DocComment(ref com) => {
                     tokens.append(&format!("{}\n", com));
                 }

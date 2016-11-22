@@ -21,8 +21,7 @@ pub mod parsing {
     use Generics;
     use attr::parsing::outer_attr;
     use data::parsing::{visibility, struct_body, enum_body};
-    use generics::parsing::{generics, where_clause};
-    use space::whitespace;
+    use generics::parsing::generics;
     use ident::parsing::ident;
 
     named!(pub macro_input -> MacroInput, do_parse!(
@@ -31,31 +30,29 @@ pub mod parsing {
         which: alt!(keyword!("struct") | keyword!("enum")) >>
         id: ident >>
         generics: generics >>
-        where_clause: where_clause >>
         item: switch!(value!(which),
-            "struct" => map!(struct_body, move |body| MacroInput {
+            "struct" => map!(struct_body, move |(wh, body)| MacroInput {
                 ident: id,
                 vis: vis,
                 attrs: attrs,
                 generics: Generics {
-                    where_clause: where_clause,
+                    where_clause: wh,
                     .. generics
                 },
                 body: Body::Struct(body),
             })
             |
-            "enum" => map!(enum_body, move |body| MacroInput {
+            "enum" => map!(enum_body, move |(wh, body)| MacroInput {
                 ident: id,
                 vis: vis,
                 attrs: attrs,
                 generics: Generics {
-                    where_clause: where_clause,
+                    where_clause: wh,
                     .. generics
                 },
                 body: Body::Enum(body),
             })
         ) >>
-        option!(whitespace) >>
         (item)
     ));
 }
@@ -79,15 +76,9 @@ mod printing {
             }
             self.ident.to_tokens(tokens);
             self.generics.to_tokens(tokens);
-            self.generics.where_clause.to_tokens(tokens);
-            self.body.to_tokens(tokens);
-        }
-    }
-
-    impl ToTokens for Body {
-        fn to_tokens(&self, tokens: &mut Tokens) {
-            match *self {
+            match self.body {
                 Body::Enum(ref variants) => {
+                    self.generics.where_clause.to_tokens(tokens);
                     tokens.append("{");
                     for variant in variants {
                         variant.to_tokens(tokens);
@@ -96,13 +87,21 @@ mod printing {
                     tokens.append("}");
                 }
                 Body::Struct(ref variant_data) => {
-                    variant_data.to_tokens(tokens);
                     match *variant_data {
                         VariantData::Struct(_) => {
+                            self.generics.where_clause.to_tokens(tokens);
+                            variant_data.to_tokens(tokens);
                             // no semicolon
                         }
-                        VariantData::Tuple(_) |
-                        VariantData::Unit => tokens.append(";"),
+                        VariantData::Tuple(_) => {
+                            variant_data.to_tokens(tokens);
+                            self.generics.where_clause.to_tokens(tokens);
+                            tokens.append(";");
+                        }
+                        VariantData::Unit => {
+                            self.generics.where_clause.to_tokens(tokens);
+                            tokens.append(";");
+                        }
                     }
                 }
             }
