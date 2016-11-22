@@ -24,7 +24,7 @@ use webdriver::command::{WebDriverCommand, WebDriverMessage, Parameters,
 use webdriver::command::WebDriverCommand::{
     NewSession, DeleteSession, Get, GetCurrentUrl,
     GoBack, GoForward, Refresh, GetTitle, GetPageSource, GetWindowHandle,
-    GetWindowHandles, Close, SetWindowSize,
+    GetWindowHandles, CloseWindow, SetWindowSize,
     GetWindowSize, MaximizeWindow, SwitchToWindow, SwitchToFrame,
     SwitchToParentFrame, FindElement, FindElements,
     FindElementElement, FindElementElements, GetActiveElement,
@@ -556,7 +556,7 @@ impl MarionetteSession {
 
         Ok(match msg.command {
             //Everything that doesn't have a response value
-            Get(_) | GoBack | GoForward | Refresh | Close | SetTimeouts(_) | SetWindowPosition(_) |
+            Get(_) | GoBack | GoForward | Refresh | CloseWindow | SetTimeouts(_) | SetWindowPosition(_) |
             SetWindowSize(_) | MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
             SwitchToParentFrame | AddCookie(_) | DeleteCookies | DeleteCookie(_) |
             DismissAlert | AcceptAlert | SendAlertText(_) | ElementClick(_) |
@@ -847,7 +847,7 @@ impl MarionetteCommand {
             GetPageSource => (Some("getPageSource"), None),
             GetWindowHandle => (Some("getWindowHandle"), None),
             GetWindowHandles => (Some("getWindowHandles"), None),
-            Close => (Some("close"), None),
+            CloseWindow => (Some("close"), None),
             SetTimeouts(ref x) => (Some("timeouts"), Some(x.to_marionette())),
             SetWindowSize(ref x) => (Some("setWindowSize"), Some(x.to_marionette())),
             GetWindowSize => (Some("getWindowSize"), None),
