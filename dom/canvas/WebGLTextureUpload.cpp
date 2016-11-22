@@ -445,10 +445,6 @@ WebGLTexture::TexSubImage(const char* funcName, TexImageTarget target, GLint lev
                           GLsizei height, GLsizei depth,
                           const webgl::PackingInfo& pi, const TexImageSource& src)
 {
-    if (src.IsNull()) {
-        mContext->ErrorInvalidValue("%s: Pixels must be non-null.", funcName);
-        return;
-    }
     const GLint border = 0;
     dom::RootedTypedArray<dom::Uint8ClampedArray> scopedArr(dom::RootingCx());
     const auto blob = ValidateTexOrSubImage(mContext, funcName, target, width, height,
