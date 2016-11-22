@@ -160,7 +160,12 @@ ServoStyleRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 void
 ServoStyleRule::List(FILE* out, int32_t aIndent) const
 {
-  // TODO Implement this!
+  nsAutoCString str;
+  for (int32_t i = 0; i < aIndent; i++) {
+    str.AppendLiteral("  ");
+  }
+  Servo_StyleRule_Debug(mRawRule, &str);
+  fprintf_stderr(out, "%s\n", str.get());
 }
 #endif
 
