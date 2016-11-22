@@ -36,6 +36,42 @@ add_task(function* test_noPermission() {
 add_task(function* test_badAuthURI() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
+      "applications": {
+        "gecko": {
+          "id": "identity@mozilla.org",
+        },
+      },
+      "permissions": [
+        "identity",
+        "https://example.com/",
+      ],
+    },
+    async background() {
+      let redirect_base = "https://35b64b676900f491c00e7f618d43f7040e88422e.example.com/";
+      await browser.test.assertEq(redirect_base,
+                                  browser.identity.getRedirectURL(),
+                                  "redirect url ok");
+      await browser.test.assertEq(redirect_base,
+                                  browser.identity.getRedirectURL(""),
+                                  "redirect url ok");
+      await browser.test.assertEq(redirect_base + "foobar",
+                                  browser.identity.getRedirectURL("foobar"),
+                                  "redirect url ok");
+      await browser.test.assertEq(redirect_base + "callback",
+                                  browser.identity.getRedirectURL("/callback"),
+                                  "redirect url ok");
+      browser.test.sendMessage("done");
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("done");
+  yield extension.unload();
+});
+
+add_task(function* test_badAuthURI() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
       "permissions": [
         "identity",
         "https://example.com/",
