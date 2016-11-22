@@ -809,7 +809,10 @@ StorageUI.prototype = {
       columns[f.name] = f.name;
       let columnName;
       try {
-        columnName = L10N.getStr("table.headers." + type + "." + f.name);
+        // Path key names for l10n in the case of a string change.
+        let name = f.name === "keyPath" ? "keyPath2" : f.name;
+
+        columnName = L10N.getStr("table.headers." + type + "." + name);
       } catch (e) {
         columnName = COOKIE_KEY_MAP[f.name];
       }

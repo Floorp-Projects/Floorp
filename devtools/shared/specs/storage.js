@@ -61,7 +61,7 @@ types.addDictType("cookiestoreobject", {
 
 // Common methods for edit/remove
 const editRemoveMethods = {
-  getEditableFields: {
+  getFields: {
     request: {},
     response: {
       value: RetVal("json")
