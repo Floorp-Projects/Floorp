@@ -2875,6 +2875,12 @@ public:
   virtual already_AddRefed<nsIEventTarget>
   EventTargetFor(mozilla::dom::TaskCategory aCategory) const override;
 
+  // The URLs passed to these functions should match what
+  // JS::DescribeScriptedCaller() returns, since these APIs are used to
+  // determine whether some code is being called from a tracking script.
+  void NoteScriptTrackingStatus(const nsACString& aURL, bool isTracking);
+  bool IsScriptTracking(const nsACString& aURL) const;
+
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
@@ -3333,6 +3339,11 @@ protected:
   mozilla::TimeStamp mPageUnloadingEventTimeStamp;
 
   RefPtr<mozilla::dom::DocGroup> mDocGroup;
+
+  // The set of all the tracking script URLs.  URLs are added to this set by
+  // calling NoteScriptTrackingStatus().  Currently we assume that a URL not
+  // existing in the set means the corresponding script isn't a tracking script.
+  nsTHashtable<nsCStringHashKey> mTrackingScripts;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
