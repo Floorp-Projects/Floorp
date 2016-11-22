@@ -364,16 +364,18 @@ class MOZ_STACK_CLASS TokenStream
     // TokenStream-specific error reporters.
     bool reportError(unsigned errorNumber, ...);
     bool reportErrorNoOffset(unsigned errorNumber, ...);
-    bool reportWarning(unsigned errorNumber, ...);
 
     // Report the given error at the current offset.
     void error(unsigned errorNumber, ...);
 
+    // Warn at the current offset.
+    MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
+
     static const uint32_t NoOffset = UINT32_MAX;
 
     // General-purpose error reporters.  You should avoid calling these
-    // directly, and instead use the more succinct alternatives (e.g.
-    // reportError()) in TokenStream, Parser, and BytecodeEmitter.
+    // directly, and instead use the more succinct alternatives (error(),
+    // warning(), &c.) in TokenStream, Parser, and BytecodeEmitter.
     bool reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigned errorNumber,
                                     va_list args);
     bool reportStrictModeErrorNumberVA(uint32_t offset, bool strictMode, unsigned errorNumber,
