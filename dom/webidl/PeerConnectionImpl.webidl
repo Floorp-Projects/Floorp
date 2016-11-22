@@ -101,7 +101,7 @@ interface PeerConnectionImpl  {
   /* Data channels */
   [Throws]
   DataChannel createDataChannel(DOMString label, DOMString protocol,
-    unsigned short type, boolean outOfOrderAllowed,
+    unsigned short type, boolean ordered,
     unsigned short maxTime, unsigned short maxNum,
     boolean externalNegotiated, unsigned short stream);
 };
