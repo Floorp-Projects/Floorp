@@ -71,7 +71,12 @@ function _deepEqual(a, b) {
   // 7.2 If the b value is a Date object, the a value is
   // equivalent if it is also a Date object that refers to the same time.
   }
-  if (instanceOf(a, "Date") && instanceOf(b, "Date")) {
+  let aIsDate = instanceOf(a, "Date");
+  let bIsDate = instanceOf(b, "Date");
+  if (aIsDate || bIsDate) {
+    if (!aIsDate || !bIsDate) {
+      return false;
+    }
     if (isNaN(a.getTime()) && isNaN(b.getTime()))
       return true;
     return a.getTime() === b.getTime();
@@ -79,8 +84,11 @@ function _deepEqual(a, b) {
   // equivalent if it is also a RegExp object with the same source and
   // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
   }
-  if (instanceOf(a, "RegExp") && instanceOf(b, "RegExp")) {
-    return a.source === b.source &&
+  let aIsRegExp = instanceOf(a, "RegExp");
+  let bIsRegExp = instanceOf(b, "RegExp");
+  if (aIsRegExp || bIsRegExp) {
+    return aIsRegExp && bIsRegExp &&
+           a.source === b.source &&
            a.global === b.global &&
            a.multiline === b.multiline &&
            a.lastIndex === b.lastIndex &&
@@ -88,7 +96,7 @@ function _deepEqual(a, b) {
   // 7.4 Other pairs that do not both pass typeof value == "object",
   // equivalence is determined by ==.
   }
-  if (typeof a != "object" && typeof b != "object") {
+  if (typeof a != "object" || typeof b != "object") {
     return a == b;
   }
   // 7.5 For all other Object pairs, including Array objects, equivalence is
