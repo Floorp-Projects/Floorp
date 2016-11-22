@@ -95,7 +95,12 @@ AccurateSeekTask::CalculateNewCurrentTime() const
   // For the fast seek, we update the newCurrentTime with the decoded audio and
   // video samples, set it to be the one which is closet to the seekTime.
   if (mTarget.IsFast()) {
-    MOZ_ASSERT(mSeekedAudioData || mSeekedVideoData);
+
+    // A situation that both audio and video approaches the end.
+    if (!mSeekedAudioData && !mSeekedVideoData) {
+      return seekTime;
+    }
+
     const int64_t audioStart = mSeekedAudioData ? mSeekedAudioData->mTime : INT64_MAX;
     const int64_t videoStart = mSeekedVideoData ? mSeekedVideoData->mTime : INT64_MAX;
     const int64_t audioGap = std::abs(audioStart - seekTime);
