@@ -2,6 +2,9 @@
 import mozdevice
 import logging
 import unittest
+
+import mozunit
+
 from sut import MockAgent
 
 
@@ -17,4 +20,4 @@ class TestApp(unittest.TestCase):
         self.assertEqual(command[0][1], d.getAppRoot('org.mozilla.firefox'))
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

@@ -10,6 +10,9 @@ import shutil
 import sqlite3
 import tempfile
 import unittest
+
+import mozunit
+
 from mozprofile.permissions import Permissions
 
 
@@ -48,4 +51,4 @@ http://127.0.0.1:8888           privileged
         self.assertEqual(schema_version, 5)
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

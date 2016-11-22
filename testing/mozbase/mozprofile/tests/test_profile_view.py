@@ -10,6 +10,8 @@ import os
 import tempfile
 import unittest
 
+import mozunit
+
 here = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -72,4 +74,4 @@ class TestProfilePrint(unittest.TestCase):
         self.assertTrue(set(ff_pref_lines).issubset(lines))
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

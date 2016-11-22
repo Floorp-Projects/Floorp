@@ -9,8 +9,9 @@ import unittest
 import signal
 import xml.etree.ElementTree as ET
 
-import mozfile
+import mozunit
 
+import mozfile
 from mozlog import (
     commandline,
     reader,
@@ -1095,4 +1096,4 @@ class TestReader(unittest.TestCase):
         self.assertEquals(handler.action_1_count, 1)
 
 if __name__ == "__main__":
-    unittest.main()
+    mozunit.main()

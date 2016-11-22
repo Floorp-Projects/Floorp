@@ -288,6 +288,7 @@ TEST_MANIFESTS = dict(
     FIREFOX_UI_FUNCTIONAL=('firefox-ui-functional', 'firefox-ui', '.', False),
     FIREFOX_UI_UPDATE=('firefox-ui-update', 'firefox-ui', '.', False),
     PUPPETEER_FIREFOX=('firefox-ui-functional', 'firefox-ui', '.', False),
+    PYTHON_UNITTEST=('python', 'python', '.', False),
 
     # marionette tests are run from the srcdir
     # TODO(ato): make packaging work as for other test suites
@@ -311,8 +312,7 @@ WEB_PLATFORM_TESTS_FLAVORS = ('web-platform-tests',)
 def all_test_flavors():
     return ([v[0] for v in TEST_MANIFESTS.values()] +
             list(REFTEST_FLAVORS) +
-            list(WEB_PLATFORM_TESTS_FLAVORS) +
-            ['python'])
+            list(WEB_PLATFORM_TESTS_FLAVORS))
 
 class TestInstallInfo(object):
     def __init__(self):

@@ -291,7 +291,9 @@ var ViewSourceContent = {
     const viewSrcURL = "view-source:" + URL;
 
     if (forcedCharSet) {
-      docShell.charset = forcedCharSet;
+      try {
+        docShell.charset = forcedCharSet;
+      } catch (e) { /* invalid charset */ }
     }
 
     if (lineNumber && lineNumber > 0) {

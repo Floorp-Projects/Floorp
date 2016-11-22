@@ -240,11 +240,10 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
     nsresult rv = mozilla::Preferences::GetString("network.IDN.blacklist_chars",
                                                   &blacklist);
     if (NS_SUCCEEDED(rv)) {
-      nsAString& chars = blacklist;
       // we allow SPACE and IDEOGRAPHIC SPACE in this method
-      chars.StripChars(u" \u3000");
-      mUnsafeChars.AppendElements(static_cast<const char16_t*>(chars.Data()),
-                                  chars.Length());
+      blacklist.StripChars(u" \u3000");
+      mUnsafeChars.AppendElements(static_cast<const char16_t*>(blacklist.Data()),
+                                  blacklist.Length());
     } else {
       NS_WARNING("Failed to get the 'network.IDN.blacklist_chars' preference");
     }
