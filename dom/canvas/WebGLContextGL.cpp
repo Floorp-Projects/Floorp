@@ -1187,98 +1187,12 @@ WebGLContext::PixelStorei(GLenum pname, GLint param)
     ErrorInvalidEnumInfo("pixelStorei: parameter", pname);
 }
 
-static bool
-IsNeedsANGLEWorkAround(const webgl::FormatInfo* format)
-{
-    switch (format->effectiveFormat) {
-    case webgl::EffectiveFormat::RGB16F:
-    case webgl::EffectiveFormat::RGBA16F:
-        return true;
-
-    default:
-        return false;
-    }
-}
-
 bool
 WebGLContext::DoReadPixelsAndConvert(const webgl::FormatInfo* srcFormat, GLint x, GLint y,
                                      GLsizei width, GLsizei height, GLenum format,
                                      GLenum destType, void* dest, uint32_t destSize,
                                      uint32_t rowStride)
 {
-    if (gl->WorkAroundDriverBugs() &&
-        gl->IsANGLE() &&
-        gl->Version() < 300 && // ANGLE ES2 doesn't support HALF_FLOAT reads properly.
-        IsNeedsANGLEWorkAround(srcFormat))
-    {
-        MOZ_RELEASE_ASSERT(!IsWebGL2()); // No SKIP_PIXELS, etc.
-        MOZ_ASSERT(!mBoundPixelPackBuffer); // Let's be real clear.
-
-        // You'd think ANGLE would want HALF_FLOAT_OES, but it rejects that.
-        const GLenum readType = LOCAL_GL_HALF_FLOAT;
-
-        const char funcName[] = "readPixels";
-        const auto readBytesPerPixel = webgl::BytesPerPixel({format, readType});
-        const auto destBytesPerPixel = webgl::BytesPerPixel({format, destType});
-
-        uint32_t readStride;
-        uint32_t readByteCount;
-        uint32_t destStride;
-        uint32_t destByteCount;
-        if (!ValidatePackSize(funcName, width, height, readBytesPerPixel, &readStride,
-                              &readByteCount) ||
-            !ValidatePackSize(funcName, width, height, destBytesPerPixel, &destStride,
-                              &destByteCount))
-        {
-            ErrorOutOfMemory("readPixels: Overflow calculating sizes for conversion.");
-            return false;
-        }
-
-        UniqueBuffer readBuffer = malloc(readByteCount);
-        if (!readBuffer) {
-            ErrorOutOfMemory("readPixels: Failed to alloc temp buffer for conversion.");
-            return false;
-        }
-
-        gl::GLContext::LocalErrorScope errorScope(*gl);
-
-        gl->fReadPixels(x, y, width, height, format, readType, readBuffer.get());
-
-        const GLenum error = errorScope.GetError();
-        if (error == LOCAL_GL_OUT_OF_MEMORY) {
-            ErrorOutOfMemory("readPixels: Driver ran out of memory.");
-            return false;
-        }
-
-        if (error) {
-            MOZ_RELEASE_ASSERT(false, "GFX: Unexpected driver error.");
-            return false;
-        }
-
-        size_t channelsPerRow = std::min(readStride / sizeof(uint16_t),
-                                         destStride / sizeof(float));
-
-        const uint8_t* srcRow = (uint8_t*)readBuffer.get();
-        uint8_t* dstRow = (uint8_t*)dest;
-
-        for (size_t j = 0; j < (size_t)height; j++) {
-            auto src = (const uint16_t*)srcRow;
-            auto dst = (float*)dstRow;
-
-            const auto srcEnd = src + channelsPerRow;
-            while (src != srcEnd) {
-                *dst = unpackFromFloat16(*src);
-                ++src;
-                ++dst;
-            }
-
-            srcRow += readStride;
-            dstRow += destStride;
-        }
-
-        return true;
-    }
-
     // On at least Win+NV, we'll get PBO errors if we don't have at least
     // `rowStride * height` bytes available to read into.
     const auto naiveBytesNeeded = CheckedUint32(rowStride) * height;
