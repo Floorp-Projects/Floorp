@@ -17,7 +17,7 @@ const TEST_CASES = [
     ["cookies", "test1.example.org"],
     getCookieId("c1", "test1.example.org", "/browser"), "name"
   ],
-  [["indexedDB", "http://test1.example.org", "idb1", "obj1"],
+  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
     1, "name"],
   [["Cache", "http://test1.example.org", "plop"],
     MAIN_DOMAIN + "404_cached_file.js", "url"],

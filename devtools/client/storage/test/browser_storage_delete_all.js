@@ -29,7 +29,7 @@ add_task(function* () {
       ["iframe-u-ss1", "iframe-u-ss2"]],
     [["sessionStorage", "https://sectest1.example.org"],
       ["iframe-s-ss1"]],
-    [["indexedDB", "http://test1.example.org", "idb1", "obj1"],
+    [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
       [1, 2, 3]],
     [["Cache", "http://test1.example.org", "plop"],
       [MAIN_DOMAIN + "404_cached_file.js", MAIN_DOMAIN + "browser_storage_basic.js"]],
@@ -41,7 +41,7 @@ add_task(function* () {
   const deleteHosts = [
     [["localStorage", "https://sectest1.example.org"], "iframe-s-ls1", "name"],
     [["sessionStorage", "https://sectest1.example.org"], "iframe-s-ss1", "name"],
-    [["indexedDB", "http://test1.example.org", "idb1", "obj1"], 1, "name"],
+    [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"], 1, "name"],
     [["Cache", "http://test1.example.org", "plop"],
       MAIN_DOMAIN + "404_cached_file.js", "url"],
   ];
@@ -78,7 +78,7 @@ add_task(function* () {
       ["iframe-u-ss1", "iframe-u-ss2"]],
     [["sessionStorage", "https://sectest1.example.org"],
       []],
-    [["indexedDB", "http://test1.example.org", "idb1", "obj1"],
+    [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
       []],
     [["Cache", "http://test1.example.org", "plop"],
       []],
