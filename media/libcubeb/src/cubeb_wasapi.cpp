@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <memory>
 #include <limits>
+#include <atomic>
 
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
@@ -230,8 +231,10 @@ struct cubeb_stream
   float volume;
   /* True if the stream is draining. */
   bool draining;
+  /* True when we've destroyed the stream. This pointer is leaked on stream
+   * destruction if we could not join the thread. */
+  std::atomic<std::atomic<bool>*> emergency_bailout;
 };
-
 
 class wasapi_endpoint_notification_client : public IMMNotificationClient
 {
@@ -775,6 +778,7 @@ static unsigned int __stdcall
 wasapi_stream_render_loop(LPVOID stream)
 {
   cubeb_stream * stm = static_cast<cubeb_stream *>(stream);
+  std::atomic<bool> * emergency_bailout = stm->emergency_bailout;
 
   bool is_playing = true;
   HANDLE wait_array[4] = {
@@ -814,6 +818,10 @@ wasapi_stream_render_loop(LPVOID stream)
                                               wait_array,
                                               FALSE,
                                               1000);
+    if (*emergency_bailout) {
+      delete emergency_bailout;
+      return 0;
+    }
     if (waitResult != WAIT_TIMEOUT) {
       timeout_count = 0;
     }
@@ -1119,10 +1127,11 @@ int wasapi_init(cubeb ** context, char const * context_name)
 }
 
 namespace {
-void stop_and_join_render_thread(cubeb_stream * stm)
+bool stop_and_join_render_thread(cubeb_stream * stm)
 {
+  bool rv = true;
   if (!stm->thread) {
-    return;
+    return true;
   }
 
   BOOL ok = SetEvent(stm->shutdown_event);
@@ -1136,11 +1145,15 @@ void stop_and_join_render_thread(cubeb_stream * stm)
   if (r == WAIT_TIMEOUT) {
     /* Something weird happened, leak the thread and continue the shutdown
      * process. */
+    *(stm->emergency_bailout) = true;
     LOG("Destroy WaitForSingleObject on thread timed out,"
         " leaking the thread: %d\n", GetLastError());
+    rv = false;
   }
   if (r == WAIT_FAILED) {
+    *(stm->emergency_bailout) = true;
     LOG("Destroy WaitForSingleObject on thread failed: %d\n", GetLastError());
+    rv = false;
   }
 
   CloseHandle(stm->thread);
@@ -1148,6 +1161,8 @@ void stop_and_join_render_thread(cubeb_stream * stm)
 
   CloseHandle(stm->shutdown_event);
   stm->shutdown_event = 0;
+
+  return rv;
 }
 
 void wasapi_destroy(cubeb * context)
@@ -1729,7 +1744,16 @@ void wasapi_stream_destroy(cubeb_stream * stm)
 {
   XASSERT(stm);
 
-  stop_and_join_render_thread(stm);
+  // Only free stm->emergency_bailout if we could not join the thread.
+  // If we could not join the thread, stm->emergency_bailout is true 
+  // and is still alive until the thread wakes up and exits cleanly.
+  if (stop_and_join_render_thread(stm)) {
+    delete stm->emergency_bailout.load();
+    stm->emergency_bailout = nullptr;
+  } else {
+    // If we're leaking, it must be that this is true.
+    assert(*(stm->emergency_bailout));
+  }
 
   unregister_notification_client(stm);
 
@@ -1798,6 +1822,8 @@ int wasapi_stream_start(cubeb_stream * stm)
 
   auto_lock lock(stm->stream_reset_lock);
 
+  stm->emergency_bailout = new std::atomic<bool>(false);
+
   if (stm->output_client) {
     int rv = stream_start_one_side(stm, OUTPUT);
     if (rv != CUBEB_OK) {
@@ -1857,7 +1883,12 @@ int wasapi_stream_stop(cubeb_stream * stm)
     stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STOPPED);
   }
 
-  stop_and_join_render_thread(stm);
+  if (stop_and_join_render_thread(stm)) {
+    if (stm->emergency_bailout.load()) {
+      delete stm->emergency_bailout.load();
+      stm->emergency_bailout = nullptr;
+    }
+  }
 
   return CUBEB_OK;
 }
