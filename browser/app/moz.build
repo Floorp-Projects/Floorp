@@ -91,4 +91,4 @@ if CONFIG['MOZ_LINUX_32_SSE2_STARTUP_ERROR']:
 
 for icon in ('firefox', 'document', 'newwindow', 'newtab', 'pbmode'):
     DEFINES[icon.upper() + '_ICO'] = '"%s/%s/%s.ico"' % (
-        TOPOBJDIR, CONFIG['MOZ_BRANDING_DIRECTORY'], icon)
+        TOPSRCDIR, CONFIG['MOZ_BRANDING_DIRECTORY'], icon)
