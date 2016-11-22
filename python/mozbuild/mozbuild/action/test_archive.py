@@ -51,7 +51,6 @@ TEST_HARNESS_DLLS = [
 ]
 
 TEST_PLUGIN_DLLS = [
-    'npctrltest',
     'npsecondtest',
     'npswftest',
     'nptest',
@@ -64,7 +63,6 @@ TEST_PLUGIN_DIRS = [
     'SecondTest.plugin/**',
     'Test.plugin/**',
     'ThirdTest.plugin/**',
-    'npctrltest.plugin/**',
     'npswftest.plugin/**',
 ]
 
