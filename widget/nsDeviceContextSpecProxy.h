@@ -9,12 +9,13 @@
 
 #include "nsIDeviceContextSpec.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 class nsIPrintSession;
 
 namespace mozilla {
 namespace gfx {
-class DrawEventRecorderMemory;
+class DrawEventRecorderFile;
 }
 
 namespace layout {
@@ -57,7 +58,8 @@ private:
   nsCOMPtr<nsIPrintSession> mPrintSession;
   nsCOMPtr<nsIDeviceContextSpec> mRealDeviceContextSpec;
   RefPtr<mozilla::layout::RemotePrintJobChild> mRemotePrintJob;
-  RefPtr<mozilla::gfx::DrawEventRecorderMemory> mRecorder;
+  RefPtr<mozilla::gfx::DrawEventRecorderFile> mRecorder;
+  nsCString mRecorderFile;
 };
 
 #endif // nsDeviceContextSpecProxy_h
