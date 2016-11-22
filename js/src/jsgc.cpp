@@ -6004,20 +6004,21 @@ gc::IsIncrementalGCUnsafe(JSRuntime* rt)
 }
 
 void
-GCRuntime::budgetIncrementalGC(SliceBudget& budget, AutoLockForExclusiveAccess& lock)
+GCRuntime::budgetIncrementalGC(JS::gcreason::Reason reason, SliceBudget& budget,
+                               AutoLockForExclusiveAccess& lock)
 {
     AbortReason unsafeReason = IsIncrementalGCUnsafe(rt);
+    if (unsafeReason == AbortReason::None) {
+        if (reason == JS::gcreason::COMPARTMENT_REVIVED)
+            unsafeReason = gc::AbortReason::CompartmentRevived;
+        else if (mode != JSGC_MODE_INCREMENTAL)
+            unsafeReason = gc::AbortReason::ModeChange;
+    }
+
     if (unsafeReason != AbortReason::None) {
         resetIncrementalGC(unsafeReason, lock);
         budget.makeUnlimited();
         stats.nonincremental(unsafeReason);
-        return;
-    }
-
-    if (mode != JSGC_MODE_INCREMENTAL) {
-        resetIncrementalGC(AbortReason::ModeChange, lock);
-        budget.makeUnlimited();
-        stats.nonincremental(AbortReason::ModeChange);
         return;
     }
 
@@ -6178,7 +6179,7 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
         stats.nonincremental(gc::AbortReason::NonIncrementalRequested);
         budget.makeUnlimited();
     } else {
-        budgetIncrementalGC(budget, session.lock);
+        budgetIncrementalGC(reason, budget, session.lock);
     }
 
     /* The GC was reset, so we need a do-over. */
@@ -6298,8 +6299,10 @@ GCRuntime::checkIfGCAllowedInCurrentState(JS::gcreason::Reason reason)
 }
 
 bool
-GCRuntime::shouldRepeatForDeadZone()
+GCRuntime::shouldRepeatForDeadZone(JS::gcreason::Reason reason)
 {
+    MOZ_ASSERT_IF(reason == JS::gcreason::COMPARTMENT_REVIVED, !isIncremental);
+
     if (!isIncremental || isIncrementalGCInProgress())
         return false;
 
@@ -6345,7 +6348,7 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
         if (poked && cleanUpEverything) {
             /* Need to re-schedule all zones for GC. */
             JS::PrepareForFullGC(rt->contextFromMainThread());
-        } else if (shouldRepeatForDeadZone() && !wasReset) {
+        } else if (shouldRepeatForDeadZone(reason) && !wasReset) {
             /*
              * This code makes an extra effort to collect compartments that we
              * thought were dead at the start of the GC. See the large comment
@@ -6353,7 +6356,6 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
              */
             repeatForDeadZone = true;
             reason = JS::gcreason::COMPARTMENT_REVIVED;
-            nonincrementalByAPI = true;
         }
 
         /*
