@@ -44,7 +44,7 @@ public:
   void SetSeekThreshold(const media::TimeUnit& aTime);
 
   MOZ_IS_CLASS_INIT
-  void InitIPDL(MediaDataDecoderCallback* aCallback,
+  bool InitIPDL(MediaDataDecoderCallback* aCallback,
                 const VideoInfo& aVideoInfo,
                 const layers::TextureFactoryIdentifier& aIdentifier);
   void DestroyIPDL();
@@ -66,8 +66,6 @@ private:
 
   MozPromiseHolder<MediaDataDecoder::InitPromise> mInitPromise;
 
-  VideoInfo mVideoInfo;
-  layers::TextureFactoryIdentifier mIdentifier;
   nsCString mHardwareAcceleratedReason;
   bool mCanSend;
   bool mInitialized;
