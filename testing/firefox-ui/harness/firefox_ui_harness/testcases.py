@@ -382,8 +382,7 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
         if self.update_channel:
             self.software_update.update_channel = self.update_channel
         if self.update_url:
-            self.puppeteer.prefs.set_pref("app.update.url", self.update_url,
-                                          default_branch=True)
+            self.software_update.update_url = self.update_url
 
     def wait_for_download_finished(self, window, timeout=TIMEOUT_UPDATE_DOWNLOAD):
         """ Waits until download is completed.

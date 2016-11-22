@@ -58,10 +58,10 @@ class TestSoftwareUpdate(PuppeteerMixin, MarionetteTestCase):
             os.remove(status_file)
 
     def test_get_update_url(self):
-        update_url = self.software_update.get_update_url()
+        update_url = self.software_update.get_formatted_update_url()
         self.assertIn('Firefox', update_url)
         self.assertNotIn('force=1', update_url)
-        update_url = self.software_update.get_update_url(True)
+        update_url = self.software_update.get_formatted_update_url(True)
         self.assertIn('Firefox', update_url)
         self.assertIn('force=1', update_url)
 
