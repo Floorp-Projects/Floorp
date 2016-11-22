@@ -74,6 +74,30 @@ NS_NewComputedDOMStyle(dom::Element* aElement, const nsAString& aPseudoElt,
   return computedStyle.forget();
 }
 
+static nsDOMCSSValueList*
+GetROCSSValueList(bool aCommaDelimited)
+{
+  return new nsDOMCSSValueList(aCommaDelimited, true);
+}
+
+template<typename T>
+already_AddRefed<CSSValue>
+GetBackgroundList(T nsStyleImageLayers::Layer::* aMember,
+                  uint32_t nsStyleImageLayers::* aCount,
+                  const nsStyleImageLayers& aLayers,
+                  const KTableEntry aTable[])
+{
+  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
+
+  for (uint32_t i = 0, i_end = aLayers.*aCount; i < i_end; ++i) {
+    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+    val->SetIdent(nsCSSProps::ValueToKeywordEnum(aLayers.mLayers[i].*aMember, aTable));
+    valueList->AppendCSSValue(val.forget());
+  }
+
+  return valueList.forget();
+}
+
 /**
  * An object that represents the ordered set of properties that are exposed on
  * an nsComputedDOMStyle object and how their computed values can be obtained.
@@ -1812,24 +1836,6 @@ nsComputedDOMStyle::DoGetFontVariantPosition()
   }
 
   return val.forget();
-}
-
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::GetBackgroundList(uint8_t nsStyleImageLayers::Layer::* aMember,
-                                      uint32_t nsStyleImageLayers::* aCount,
-                                      const nsStyleImageLayers& aLayers,
-                                      const KTableEntry aTable[])
-{
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
-
-  for (uint32_t i = 0, i_end = aLayers.*aCount; i < i_end; ++i) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetIdent(nsCSSProps::ValueToKeywordEnum(aLayers.mLayers[i].*aMember,
-                                                 aTable));
-    valueList->AppendCSSValue(val.forget());
-  }
-
-  return valueList.forget();
 }
 
 already_AddRefed<CSSValue>
@@ -5021,12 +5027,6 @@ nsComputedDOMStyle::DoGetTop()
   return GetOffsetWidthFor(eSideTop);
 }
 
-nsDOMCSSValueList*
-nsComputedDOMStyle::GetROCSSValueList(bool aCommaDelimited)
-{
-  return new nsDOMCSSValueList(aCommaDelimited, true);
-}
-
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::GetOffsetWidthFor(mozilla::Side aSide)
 {
@@ -6188,8 +6188,8 @@ nsComputedDOMStyle::DoGetMask()
   // need to support computed style for the cases where it used to be
   // a longhand.
   if (svg->mMask.mImageCount > 1 ||
-      firstLayer.mClip != NS_STYLE_IMAGELAYER_CLIP_BORDER ||
-      firstLayer.mOrigin != NS_STYLE_IMAGELAYER_ORIGIN_BORDER ||
+      firstLayer.mClip != StyleGeometryBox::Border ||
+      firstLayer.mOrigin != StyleGeometryBox::Border ||
       firstLayer.mComposite != NS_STYLE_MASK_COMPOSITE_ADD ||
       firstLayer.mMaskMode != NS_STYLE_MASK_MODE_MATCH_SOURCE ||
       !nsStyleImageLayers::IsInitialPositionForLayerType(

@@ -1914,26 +1914,27 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
 
   bool haveRoundedCorners = GetRadii(aForFrame, aBorder, aBorderArea,
                                      clipBorderArea, aClipState->mRadii);
-  uint8_t backgroundClip = aLayer.mClip;
+  StyleGeometryBox backgroundClip = aLayer.mClip;
 
   // XXX TODO: bug 1303623 only implements the parser of fill-box|stroke-box|view-box|no-clip.
   // So we need to fallback to default value when rendering. We should remove this
   // in bug 1311270.
-  if (backgroundClip == NS_STYLE_IMAGELAYER_CLIP_FILL ||
-      backgroundClip == NS_STYLE_IMAGELAYER_CLIP_STROKE ||
-      backgroundClip == NS_STYLE_IMAGELAYER_CLIP_VIEW ||
-      backgroundClip == NS_STYLE_IMAGELAYER_CLIP_NO_CLIP) {
-    backgroundClip = NS_STYLE_IMAGELAYER_CLIP_BORDER;
+  if (backgroundClip == StyleGeometryBox::Fill ||
+      backgroundClip == StyleGeometryBox::Stroke ||
+      backgroundClip == StyleGeometryBox::View ||
+      backgroundClip == StyleGeometryBox::NoClip) {
+    backgroundClip = StyleGeometryBox::Border;
   }
 
   bool isSolidBorder =
       aWillPaintBorder && IsOpaqueBorder(aBorder);
-  if (isSolidBorder && backgroundClip == NS_STYLE_IMAGELAYER_CLIP_BORDER) {
+  if (isSolidBorder && backgroundClip == StyleGeometryBox::Border) {
     // If we have rounded corners, we need to inflate the background
     // drawing area a bit to avoid seams between the border and
     // background.
-    backgroundClip = haveRoundedCorners ?
-      NS_STYLE_IMAGELAYER_CLIP_MOZ_ALMOST_PADDING : NS_STYLE_IMAGELAYER_CLIP_PADDING;
+    backgroundClip = haveRoundedCorners
+                     ? StyleGeometryBox::MozAlmostPadding
+                     : StyleGeometryBox::Padding;
   }
 
   aClipState->mBGClipArea = clipBorderArea;
@@ -1949,7 +1950,7 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
     // but the background is also clipped at a non-scrolling 'padding-box'
     // like the content. (See below.)
     // Therefore, only 'content-box' makes a difference here.
-    if (backgroundClip == NS_STYLE_IMAGELAYER_CLIP_CONTENT) {
+    if (backgroundClip == StyleGeometryBox::Content) {
       nsIScrollableFrame* scrollableFrame = do_QueryFrame(aForFrame);
       // Clip at a rectangle attached to the scrolled content.
       aClipState->mHasAdditionalBGClipArea = true;
@@ -1969,13 +1970,13 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
 
     // Also clip at a non-scrolling, rounded-corner 'padding-box',
     // same as the scrolled content because of the 'overflow' property.
-    backgroundClip = NS_STYLE_IMAGELAYER_CLIP_PADDING;
+    backgroundClip = StyleGeometryBox::Padding;
   }
 
-  if (backgroundClip != NS_STYLE_IMAGELAYER_CLIP_BORDER &&
-      backgroundClip != NS_STYLE_IMAGELAYER_CLIP_TEXT) {
+  if (backgroundClip != StyleGeometryBox::Border &&
+      backgroundClip != StyleGeometryBox::Text) {
     nsMargin border = aForFrame->GetUsedBorder();
-    if (backgroundClip == NS_STYLE_IMAGELAYER_CLIP_MOZ_ALMOST_PADDING) {
+    if (backgroundClip == StyleGeometryBox::MozAlmostPadding) {
       // Reduce |border| by 1px (device pixels) on all sides, if
       // possible, so that we don't get antialiasing seams between the
       // background and border.
@@ -1983,8 +1984,8 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
       border.right = std::max(0, border.right - aAppUnitsPerPixel);
       border.bottom = std::max(0, border.bottom - aAppUnitsPerPixel);
       border.left = std::max(0, border.left - aAppUnitsPerPixel);
-    } else if (backgroundClip != NS_STYLE_IMAGELAYER_CLIP_PADDING) {
-      NS_ASSERTION(backgroundClip == NS_STYLE_IMAGELAYER_CLIP_CONTENT,
+    } else if (backgroundClip != StyleGeometryBox::Padding) {
+      NS_ASSERTION(backgroundClip == StyleGeometryBox::Content,
                    "unexpected background-clip");
       border += aForFrame->GetUsedPadding();
     }
@@ -3311,7 +3312,7 @@ nsCSSRendering::PaintBackgroundWithSC(const PaintBGParams& aParams,
 
   if (drawBackgroundImage) {
     bool clipSet = false;
-    uint8_t currentBackgroundClip = NS_STYLE_IMAGELAYER_CLIP_BORDER;
+    StyleGeometryBox currentBackgroundClip = StyleGeometryBox::Border;
     NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT_WITH_RANGE(i, layers, layers.mImageCount - 1,
                                                          nLayers + (layers.mImageCount -
                                                          startLayer - 1)) {
@@ -3391,15 +3392,15 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
   // it to compute the effective image size for a CSS gradient.
   nsRect bgPositioningArea;
 
-  uint8_t backgroundOrigin = aLayer.mOrigin;
+  StyleGeometryBox backgroundOrigin = aLayer.mOrigin;
 
   // XXX TODO: bug 1303623 only implements the parser of fill-box|stroke-box|view-box|no-clip.
   // So we need to fallback to default value when rendering. We should remove this
   // in bug 1311270.
-  if (backgroundOrigin == NS_STYLE_IMAGELAYER_ORIGIN_FILL ||
-      backgroundOrigin == NS_STYLE_IMAGELAYER_ORIGIN_STROKE ||
-      backgroundOrigin == NS_STYLE_IMAGELAYER_ORIGIN_VIEW) {
-    backgroundOrigin = NS_STYLE_IMAGELAYER_ORIGIN_BORDER;
+  if (backgroundOrigin == StyleGeometryBox::Fill ||
+      backgroundOrigin == StyleGeometryBox::Stroke ||
+      backgroundOrigin == StyleGeometryBox::View) {
+    backgroundOrigin = StyleGeometryBox::Border;
   }
 
   nsIAtom* frameType = aForFrame->GetType();
@@ -3415,16 +3416,16 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
     // The ScrolledRect’s size does not include the borders or scrollbars,
     // reverse the handling of background-origin
     // compared to the common case below.
-    if (backgroundOrigin == NS_STYLE_IMAGELAYER_ORIGIN_BORDER) {
+    if (backgroundOrigin == StyleGeometryBox::Border) {
       nsMargin border = geometryFrame->GetUsedBorder();
       border.ApplySkipSides(geometryFrame->GetSkipSides());
       bgPositioningArea.Inflate(border);
       bgPositioningArea.Inflate(scrollableFrame->GetActualScrollbarSizes());
-    } else if (backgroundOrigin != NS_STYLE_IMAGELAYER_ORIGIN_PADDING) {
+    } else if (backgroundOrigin != StyleGeometryBox::Padding) {
       nsMargin padding = geometryFrame->GetUsedPadding();
       padding.ApplySkipSides(geometryFrame->GetSkipSides());
       bgPositioningArea.Deflate(padding);
-      NS_ASSERTION(backgroundOrigin == NS_STYLE_IMAGELAYER_ORIGIN_CONTENT,
+      NS_ASSERTION(backgroundOrigin == StyleGeometryBox::Content,
                    "unknown background-origin value");
     }
     *aAttachedToFrame = aForFrame;
@@ -3447,13 +3448,13 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
   // Background images are tiled over the 'background-clip' area
   // but the origin of the tiling is based on the 'background-origin' area
   // XXX: Bug 1303623 will bring in new origin value, we should iterate from
-  // NS_STYLE_IMAGELAYER_ORIGIN_MARGIN instead of
-  // NS_STYLE_IMAGELAYER_ORIGIN_BORDER.
-  if (aLayer.mOrigin != NS_STYLE_IMAGELAYER_ORIGIN_BORDER && geometryFrame) {
+  // StyleGeometryBox::Margin instead of
+  // StyleGeometryBox::Border.
+  if (backgroundOrigin != StyleGeometryBox::Border && geometryFrame) {
     nsMargin border = geometryFrame->GetUsedBorder();
-    if (backgroundOrigin != NS_STYLE_IMAGELAYER_ORIGIN_PADDING) {
+    if (backgroundOrigin != StyleGeometryBox::Padding) {
       border += geometryFrame->GetUsedPadding();
-      NS_ASSERTION(backgroundOrigin == NS_STYLE_IMAGELAYER_ORIGIN_CONTENT,
+      NS_ASSERTION(backgroundOrigin == StyleGeometryBox::Content,
                    "unknown background-origin value");
     }
     bgPositioningArea.Deflate(border);

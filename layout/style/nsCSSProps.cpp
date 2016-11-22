@@ -888,16 +888,10 @@ const KTableEntry nsCSSProps::kImageLayerAttachmentKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-static_assert(NS_STYLE_IMAGELAYER_CLIP_BORDER == NS_STYLE_IMAGELAYER_ORIGIN_BORDER &&
-              NS_STYLE_IMAGELAYER_CLIP_PADDING == NS_STYLE_IMAGELAYER_ORIGIN_PADDING &&
-              NS_STYLE_IMAGELAYER_CLIP_CONTENT == NS_STYLE_IMAGELAYER_ORIGIN_CONTENT,
-              "Except background-clip:text, all {background,mask}-clip and "
-              "{background,mask}-origin style constants must agree");
-
 const KTableEntry nsCSSProps::kBackgroundOriginKTable[] = {
-  { eCSSKeyword_border_box, NS_STYLE_IMAGELAYER_ORIGIN_BORDER },
-  { eCSSKeyword_padding_box, NS_STYLE_IMAGELAYER_ORIGIN_PADDING },
-  { eCSSKeyword_content_box, NS_STYLE_IMAGELAYER_ORIGIN_CONTENT },
+  { eCSSKeyword_border_box, StyleGeometryBox::Border },
+  { eCSSKeyword_padding_box, StyleGeometryBox::Padding },
+  { eCSSKeyword_content_box, StyleGeometryBox::Content },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -912,12 +906,12 @@ KTableEntry nsCSSProps::kBackgroundClipKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kMaskOriginKTable[] = {
-  { eCSSKeyword_border_box, NS_STYLE_IMAGELAYER_ORIGIN_BORDER },
-  { eCSSKeyword_padding_box, NS_STYLE_IMAGELAYER_ORIGIN_PADDING },
-  { eCSSKeyword_content_box, NS_STYLE_IMAGELAYER_ORIGIN_CONTENT },
-  { eCSSKeyword_fill_box, NS_STYLE_IMAGELAYER_ORIGIN_FILL },
-  { eCSSKeyword_stroke_box, NS_STYLE_IMAGELAYER_ORIGIN_STROKE },
-  { eCSSKeyword_view_box, NS_STYLE_IMAGELAYER_ORIGIN_VIEW },
+  { eCSSKeyword_border_box, StyleGeometryBox::Border },
+  { eCSSKeyword_padding_box, StyleGeometryBox::Padding },
+  { eCSSKeyword_content_box, StyleGeometryBox::Content },
+  { eCSSKeyword_fill_box, StyleGeometryBox::Fill },
+  { eCSSKeyword_stroke_box, StyleGeometryBox::Stroke },
+  { eCSSKeyword_view_box, StyleGeometryBox::View },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
