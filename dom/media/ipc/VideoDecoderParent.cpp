@@ -102,7 +102,7 @@ VideoDecoderParent::RecvInit()
   RefPtr<VideoDecoderParent> self = this;
   mDecoder->Init()->Then(mManagerTaskQueue, __func__,
     [self] (TrackInfo::TrackType aTrack) {
-      if (!self->mDestroyed) {
+      if (self->mDecoder) {
         nsCString hardwareReason;
         bool hardwareAccelerated = self->mDecoder->IsHardwareAccelerated(hardwareReason);
         Unused << self->SendInitComplete(hardwareAccelerated, hardwareReason);
