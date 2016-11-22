@@ -85,8 +85,15 @@ ExnTypeFromProtoKey(JSProtoKey key)
 {
     JSExnType type = static_cast<JSExnType>(key - JSProto_Error);
     MOZ_ASSERT(type >= JSEXN_ERR);
-    MOZ_ASSERT(type < JSEXN_WARN);
+    MOZ_ASSERT(type < JSEXN_ERROR_LIMIT);
     return type;
+}
+
+static inline bool
+IsErrorProtoKey(JSProtoKey key)
+{
+    JSExnType type = static_cast<JSExnType>(key - JSProto_Error);
+    return type >= JSEXN_ERR && type < JSEXN_ERROR_LIMIT;
 }
 
 class AutoClearPendingException
