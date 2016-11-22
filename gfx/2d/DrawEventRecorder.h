@@ -10,6 +10,7 @@
 #include "RecordedEvent.h"
 #include <ostream>
 #include <fstream>
+#include <string>
 
 #if defined(_MSC_VER)
 #include <unordered_set>
@@ -78,9 +79,24 @@ public:
   explicit DrawEventRecorderFile(const char *aFilename);
   ~DrawEventRecorderFile();
 
+  /**
+   * Re-opens and truncates the file. The recorder does NOT forget which objects
+   * it has recorded. This can be used with Close, so that a recording can be
+   * processed in chunks. If the file is already open this does nothing.
+   */
+  void OpenAndTruncate();
+
+  /**
+   * Closes the file so that it can be processed. The recorder does NOT forget
+   * which objects it has recorded. This can be used with OpenAndTruncate, so
+   * that a recording can be processed in chunks. The file must be open.
+   */
+  void Close();
+
 private:
   virtual void Flush();
 
+  std::string mOutputFilename;
   std::ofstream mOutputFile;
 };
 
