@@ -4,6 +4,14 @@ const prototypes = [
     WeakMap.prototype,
     WeakSet.prototype,
     Date.prototype,
+    Error.prototype,
+    InternalError.prototype,
+    EvalError.prototype,
+    RangeError.prototype,
+    ReferenceError.prototype,
+    SyntaxError.prototype,
+    TypeError.prototype,
+    URIError.prototype,
 ];
 
 for (const prototype of prototypes) {
