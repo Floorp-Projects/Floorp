@@ -243,14 +243,14 @@ function CanvasFrameAnonymousContentHelper(highlighterEnv, nodeBuilder) {
                                 this.anonymousContentDocument);
 
   // Only try to create the highlighter when the document is loaded,
-  // otherwise, wait for the navigate event to fire.
+  // otherwise, wait for the window-ready event to fire.
   let doc = this.highlighterEnv.document;
   if (doc.documentElement && doc.readyState != "uninitialized") {
     this._insert();
   }
 
-  this._onNavigate = this._onNavigate.bind(this);
-  this.highlighterEnv.on("navigate", this._onNavigate);
+  this._onWindowReady= this._onWindowReady.bind(this);
+  this.highlighterEnv.on("window-ready", this._onWindowReady);
 
   this.listeners = new Map();
 }
@@ -264,7 +264,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
       // If the current window isn't the one the content was inserted into, this
       // will fail, but that's fine.
     }
-    this.highlighterEnv.off("navigate", this._onNavigate);
+    this.highlighterEnv.off("window-ready", this._onWindowReady);
     this.highlighterEnv = this.nodeBuilder = this._content = null;
     this.anonymousContentDocument = null;
     this.anonymousContentGlobal = null;
@@ -274,13 +274,15 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
   _insert: function () {
     let doc = this.highlighterEnv.document;
-    // Insert the content node only if the document:
-    // * is loaded (navigate event will fire once it is),
-    // * still exists,
-    // * isn't in XUL.
-    if (doc.readyState == "uninitialized" ||
-        !doc.documentElement ||
-        isXUL(this.highlighterEnv.window)) {
+    // Wait for DOMContentLoaded before injecting the anonymous content.
+    if (doc.readyState != "interactive" && doc.readyState != "complete") {
+      doc.addEventListener("DOMContentLoaded", this._insert.bind(this),
+                           { once: true });
+      return;
+    }
+    // Reject XUL documents. Check that after DOMContentLoaded as we query
+    // documentElement which is only available after this event.
+    if (isXUL(this.highlighterEnv.window)) {
       return;
     }
 
@@ -300,7 +302,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
     this._content = doc.insertAnonymousContent(node);
   },
 
-  _onNavigate: function (e, {isTopLevel}) {
+  _onWindowReady: function (e, {isTopLevel}) {
     if (isTopLevel) {
       this._removeAllListeners();
       this._insert();
