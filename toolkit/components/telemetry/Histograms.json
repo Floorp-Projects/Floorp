@@ -6973,14 +6973,16 @@
   },
   "WEBRTC_ICE_FINAL_CONNECTION_STATE": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "53",
+    "bug_numbers": [1319268],
+    "expires_in_version": "58",
     "kind": "enumerated",
     "n_values": 7,
     "description": "The ICE connection state when the PC was closed"
   },
   "WEBRTC_ICE_ON_TIME_TRICKLE_ARRIVAL_TIME": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "53",
+    "bug_numbers": [1319268],
+    "expires_in_version": "58",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 20,
@@ -6988,7 +6990,8 @@
   },
   "WEBRTC_ICE_LATE_TRICKLE_ARRIVAL_TIME": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "53",
+    "bug_numbers": [1319268],
+    "expires_in_version": "58",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 20,
@@ -6996,7 +6999,8 @@
   },
   "WEBRTC_ICE_SUCCESS_TIME": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "53",
+    "bug_numbers": [1319268],
+    "expires_in_version": "58",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 20,
@@ -7004,7 +7008,8 @@
   },
   "WEBRTC_ICE_FAILURE_TIME": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "53",
+    "bug_numbers": [1319268],
+    "expires_in_version": "58",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 20,
@@ -7012,20 +7017,23 @@
   },
   "WEBRTC_ICE_SUCCESS_RATE": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "53",
+    "bug_numbers": [1319268],
+    "expires_in_version": "58",
     "kind": "boolean",
     "description": "The number of failed ICE Connections (0) vs. number of successful ICE connections (1)."
   },
   "WEBRTC_STUN_RATE_LIMIT_EXCEEDED_BY_TYPE_GIVEN_SUCCESS": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "53",
+    "bug_numbers": [1319268],
+    "expires_in_version": "58",
     "kind": "enumerated",
     "n_values": 4,
     "description": "For each successful PeerConnection, bit 0 indicates the short-duration rate limit was reached, bit 1 indicates the long-duration rate limit was reached"
   },
   "WEBRTC_STUN_RATE_LIMIT_EXCEEDED_BY_TYPE_GIVEN_FAILURE": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "53",
+    "bug_numbers": [1319268],
+    "expires_in_version": "58",
     "kind": "enumerated",
     "n_values": 4,
     "description": "For each failed PeerConnection, bit 0 indicates the short-duration rate limit was reached, bit 1 indicates the long-duration rate limit was reached"
@@ -7278,14 +7286,6 @@
     "n_buckets": 1000,
     "description": "The length of time (in seconds) that a call lasted."
   },
-  "WEBRTC_CALL_COUNT": {
-    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "48",
-    "kind": "exponential",
-    "high": 500,
-    "n_buckets": 50,
-    "description": "The number of calls made during a session."
-  },
   "WEBRTC_CALL_COUNT_2": {
     "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1261063],
@@ -7295,7 +7295,8 @@
   },
   "WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_SUCCESS": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "53",
+    "bug_numbers": [1319268],
+    "expires_in_version": "58",
     "kind": "linear",
     "high": 30,
     "n_buckets": 29,
@@ -7303,7 +7304,8 @@
   },
   "WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_FAILURE": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "53",
+    "bug_numbers": [1319268],
+    "expires_in_version": "58",
     "kind": "linear",
     "high": 30,
     "n_buckets": 29,
@@ -10211,7 +10213,8 @@
   },
   "WEBRTC_ICE_CHECKING_RATE": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "53",
+    "bug_numbers": [1319268],
+    "expires_in_version": "58",
     "kind": "boolean",
     "bug_numbers": [1188391],
     "description": "The number of ICE connections which immediately failed (0) vs. reached at least checking state (1)."
