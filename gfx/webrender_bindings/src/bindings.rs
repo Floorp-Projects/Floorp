@@ -4,7 +4,6 @@ use std::os::raw::c_uchar;
 use gleam::gl;
 use euclid::{Size2D, Point2D, Rect, Matrix4D};
 use webrender_traits::{PipelineId, AuxiliaryListsBuilder};
-use webrender_traits::{ServoScrollRootId};
 use webrender_traits::{Epoch, ColorF};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
 use webrender::renderer::{Renderer, RendererOptions};
@@ -313,9 +312,7 @@ pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width
     let bounds = Rect::new(Point2D::new(0.0, 0.0), Size2D::new(width as f32, height as f32));
 
     let root_stacking_context =
-        webrender_traits::StackingContext::new(Some(webrender_traits::ScrollLayerId::new(
-                                                    state.pipeline_id, 0, ServoScrollRootId(0))),
-                                               webrender_traits::ScrollPolicy::Scrollable,
+        webrender_traits::StackingContext::new(webrender_traits::ScrollPolicy::Scrollable,
                                                bounds,
                                                bounds,
                                                0,
@@ -335,23 +332,13 @@ pub extern fn wr_push_dl_builder(state:&mut WrState)
 }
 
 #[no_mangle]
-pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, overflow: WrRect, transform: &Matrix4D<f32>, scroll_id: u64)
+pub extern fn wr_pop_dl_builder(state: &mut WrState, bounds: WrRect, overflow: WrRect, transform: &Matrix4D<f32>)
 {
     // 
     state.z_index += 1;
 
-    let pipeline_id = state.frame_builder.root_pipeline_id;
-    let scroll_layer_id = if scroll_id == 0 {
-        None
-    } else {
-        Some(webrender_traits::ScrollLayerId::new(pipeline_id,
-                                                  scroll_id as usize, // WR issue 489
-                                                  ServoScrollRootId(0)))
-    };
-
     let sc =
-        webrender_traits::StackingContext::new(scroll_layer_id,
-                                               webrender_traits::ScrollPolicy::Scrollable,
+        webrender_traits::StackingContext::new(webrender_traits::ScrollPolicy::Scrollable,
                                                bounds.to_rect(),
                                                overflow.to_rect(),
                                                state.z_index,

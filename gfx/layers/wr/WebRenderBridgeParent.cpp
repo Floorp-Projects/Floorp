@@ -140,7 +140,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
       }
       case WebRenderCommand::TOpPopDLBuilder: {
         const OpPopDLBuilder& op = cmd.get_OpPopDLBuilder();
-        wr_pop_dl_builder(mWRState, op.bounds(), op.overflow(), &(op.matrix().components[0]), op.scrollid());
+        wr_pop_dl_builder(mWRState, op.bounds(), op.overflow(), &(op.matrix().components[0]));
         break;
       }
       case WebRenderCommand::TOpDPPushRect: {
