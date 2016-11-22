@@ -268,6 +268,10 @@ function normalizeCssData(db) {
     // Fill in any missing DB information from the static database.
     db = Object.assign({}, CSS_PROPERTIES_DB, db);
 
+    let missingSupports = !db.properties.color.supports;
+    let missingValues = !db.properties.color.values;
+    let missingSubproperties = !db.properties.background.subproperties;
+
     for (let name in db.properties) {
       // Skip the current property if we can't find it in CSS_PROPERTIES_DB.
       if (typeof CSS_PROPERTIES_DB.properties[name] !== "object") {
@@ -275,15 +279,15 @@ function normalizeCssData(db) {
       }
 
       // Add "supports" information to the css properties if it's missing.
-      if (!db.properties.color.supports) {
+      if (missingSupports) {
         db.properties[name].supports = CSS_PROPERTIES_DB.properties[name].supports;
       }
       // Add "values" information to the css properties if it's missing.
-      if (!db.properties.color.values) {
+      if (missingValues) {
         db.properties[name].values = CSS_PROPERTIES_DB.properties[name].values;
       }
       // Add "subproperties" information to the css properties if it's missing.
-      if (!db.properties.background.subproperties) {
+      if (missingSubproperties) {
         db.properties[name].subproperties =
           CSS_PROPERTIES_DB.properties[name].subproperties;
       }

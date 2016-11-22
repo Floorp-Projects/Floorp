@@ -4,8 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PYTHON_UNIT_TESTS += [
-    'test.py',
+PYTHON_UNITTEST_MANIFESTS += [
+    'manifestparser/tests/manifest.ini',
+    'mozcrash/tests/manifest.ini',
+    'mozdevice/tests/manifest.ini',
+    'mozfile/tests/manifest.ini',
+    'mozhttpd/tests/manifest.ini',
+    'mozinfo/tests/manifest.ini',
+    'mozinstall/tests/manifest.ini',
+    'mozlog/tests/manifest.ini',
+    'moznetwork/tests/manifest.ini',
+    'mozprocess/tests/manifest.ini',
+    'mozprofile/tests/manifest.ini',
+    'mozrunner/tests/manifest.ini',
+    'moztest/tests/manifest.ini',
+    'mozversion/tests/manifest.ini',
 ]
 
 python_modules = [
@@ -33,6 +46,4 @@ TEST_HARNESS_FILES.mozbase += [m + '/**' for m in python_modules]
 
 TEST_HARNESS_FILES.mozbase += [
     'setup_development.py',
-    'test-manifest.ini',
-    'test.py',
 ]

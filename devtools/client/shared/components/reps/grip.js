@@ -13,6 +13,7 @@ define(function (require, exports, module) {
   const { createFactories, isGrip } = require("./rep-utils");
   const { Caption } = createFactories(require("./caption"));
   const { PropRep } = createFactories(require("./prop-rep"));
+  const { MODE } = require("./constants");
   // Shortcuts
   const { span } = React.DOM;
 
@@ -26,7 +27,8 @@ define(function (require, exports, module) {
 
     propTypes: {
       object: React.PropTypes.object.isRequired,
-      mode: React.PropTypes.string,
+      // @TODO Change this to Object.values once it's supported in Node's version of V8
+      mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
       isInterestingProp: React.PropTypes.func
     },
 
@@ -55,7 +57,7 @@ define(function (require, exports, module) {
 
         return [Rep({
           object: object.preview.wrappedValue,
-          mode: this.props.mode || "tiny",
+          mode: this.props.mode || MODE.TINY,
           defaultRep: Grip,
         })];
       }
@@ -128,7 +130,7 @@ define(function (require, exports, module) {
         let value = this.getPropValue(properties[name]);
 
         props.push(PropRep(Object.assign({}, this.props, {
-          mode: "tiny",
+          mode: MODE.TINY,
           name: name,
           object: value,
           equal: ": ",
@@ -197,10 +199,10 @@ define(function (require, exports, module) {
     render: function () {
       let object = this.props.object;
       let props = this.safePropIterator(object,
-        (this.props.mode == "long") ? 10 : 3);
+        (this.props.mode === MODE.LONG) ? 10 : 3);
 
       let objectLink = this.props.objectLink || span;
-      if (this.props.mode == "tiny") {
+      if (this.props.mode === MODE.TINY) {
         return (
           span({className: "objectBox objectBox-object"},
             this.getTitle(object),

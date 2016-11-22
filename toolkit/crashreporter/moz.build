@@ -113,8 +113,8 @@ LOCAL_INCLUDES += [
     'google-breakpad/src',
 ]
 
-PYTHON_UNIT_TESTS += [
-    'tools/unit-symbolstore.py',
+PYTHON_UNITTEST_MANIFESTS += [
+    'tools/python.ini',
 ]
 
 include('/toolkit/crashreporter/crashreporter.mozbuild')

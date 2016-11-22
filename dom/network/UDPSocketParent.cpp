@@ -352,7 +352,7 @@ UDPSocketParent::RecvOutgoingData(const UDPData& aData,
 
     // Sending unallowed data, kill content.
     if (NS_WARN_IF(NS_FAILED(rv)) || !allowed) {
-      return IPC_FAIL_NO_REASON(this);
+      return IPC_FAIL(this, "Content tried to send non STUN packet");
     }
   }
 

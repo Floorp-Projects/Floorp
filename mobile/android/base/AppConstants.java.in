@@ -6,11 +6,7 @@
 
 package org.mozilla.gecko;
 
-import android.content.Context;
 import android.os.Build;
-//#ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-import android.support.multidex.MultiDex;
-//#endif
 
 /**
  * A collection of constants that pertain to the build and runtime state of the
@@ -322,23 +318,6 @@ public class AppConstants {
 
     // (bug 1266820) Temporarily disabled since no one is working on it.
     public static final boolean SCREENSHOTS_IN_BOOKMARKS_ENABLED = false;
-
-    /**
-     * Enables multidex depending on build flags. For more information,
-     * see `multiDexEnabled true` in mobile/android/app/build.gradle.
-     *
-     * As a method, this shouldn't be in AppConstants, but it's
-     * the only semi-relevant Java file that we pre-process.
-     */
-    public static void maybeInstallMultiDex(final Context context) {
-//#ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-        if (BuildConfig.FLAVOR.equals("automation")) {
-            MultiDex.install(context);
-        }
-//#else
-        // Do nothing.
-//#endif
-    }
 
     public static final boolean MOZ_ANDROID_ACTIVITY_STREAM =
 //#ifdef MOZ_ANDROID_ACTIVITY_STREAM

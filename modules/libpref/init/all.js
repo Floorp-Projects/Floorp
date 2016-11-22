@@ -5533,3 +5533,8 @@ pref("dom.storageManager.enabled", true);
 #else
 pref("dom.storageManager.enabled", false);
 #endif
+
+// Enable the Storage management in about:preferences and persistent-storage permission request
+// To enable the DOM implementation, turn on "dom.storageManager.enabled"
+pref("browser.storageManager.enabled", false);
+

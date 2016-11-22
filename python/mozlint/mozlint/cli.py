@@ -102,10 +102,10 @@ def run(paths, linters, fmt, rev, workdir, **lintargs):
 
     formatter = formatters.get(fmt)
 
-    # Explicitly utf-8 encode the output as some of the formatters make
-    # use of unicode characters. This will prevent a UnicodeEncodeError
-    # on environments where utf-8 isn't the default
-    print(formatter(results, failed=lint.failed).encode('utf-8', 'replace'))
+    # Encode output with 'replace' to avoid UnicodeEncodeErrors on
+    # environments that aren't using utf-8.
+    print(formatter(results, failed=lint.failed).encode(
+        sys.stdout.encoding or 'ascii', 'replace'))
     return 1 if results or lint.failed else 0
 
 

@@ -1,6 +1,8 @@
 import mozhttpd
 import unittest
 
+import mozunit
+
 
 class BaseUrlTest(unittest.TestCase):
 
@@ -16,4 +18,4 @@ class BaseUrlTest(unittest.TestCase):
         httpd.stop()
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

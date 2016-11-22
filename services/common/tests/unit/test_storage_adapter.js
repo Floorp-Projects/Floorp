@@ -2,10 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-common/kinto-offline-client.js");
+Cu.import("resource://services-common/kinto-storage-adapter.js");
 
 // set up what we need to make storage adapters
-const Kinto = loadKinto();
-const FirefoxAdapter = Kinto.adapters.FirefoxAdapter;
 const kintoFilename = "kinto.sqlite";
 
 let gFirefoxAdapter = null;

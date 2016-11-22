@@ -6,12 +6,9 @@
 
 TEST_DIRS += ['example']
 
-if CONFIG['HOST_OS_ARCH'] != 'Darwin':
-    # Disabled on Mac due to our builders still being on MacOS 10.7,
-    # see bug 1255588
-    PYTHON_UNIT_TESTS += [
-        'selftest.py',
-    ]
+PYTHON_UNITTEST_MANIFESTS += [
+    'python.ini',
+]
 
 TESTING_JS_MODULES += [
     'dbg-actors.js',

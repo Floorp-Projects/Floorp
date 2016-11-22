@@ -11,6 +11,8 @@ import re
 import subprocess
 import unittest
 
+import mozunit
+
 
 def verify_ip_in_list(ip):
     """
@@ -82,4 +84,4 @@ class TestGetIP(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    mozunit.main()

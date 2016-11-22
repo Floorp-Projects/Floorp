@@ -1,5 +1,14 @@
 // Helpers for Media Source Extensions tests
 
+var gMSETestPrefs = [
+  [ "media.mediasource.enabled", true ]
+];
+
+// Called before runWithMSE() to set the prefs before running MSE tests.
+function addMSEPrefs(...prefs) {
+  gMSETestPrefs = gMSETestPrefs.concat(prefs);
+}
+
 function runWithMSE(testFunction) {
   function bootstrapTest() {
     var ms = new MediaSource();
@@ -17,10 +26,7 @@ function runWithMSE(testFunction) {
   }
 
   addLoadEvent(function () {
-    SpecialPowers.pushPrefEnv({"set": [
-      [ "media.mediasource.enabled", true ],
-    ]},
-                              bootstrapTest);
+    SpecialPowers.pushPrefEnv({"set": gMSETestPrefs}, bootstrapTest);
   });
 }
 
