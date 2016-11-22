@@ -590,6 +590,64 @@ MappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj)
     return true;
 }
 
+// ES 2017 draft 9.4.4.2
+/* static */ bool
+MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj, HandleId id,
+                                          Handle<PropertyDescriptor> desc, ObjectOpResult& result)
+{
+    // Step 1.
+    Rooted<MappedArgumentsObject*> argsobj(cx, &obj->as<MappedArgumentsObject>());
+
+    // Steps 2-3.
+    bool isMapped = false;
+    if (JSID_IS_INT(id)) {
+        unsigned arg = unsigned(JSID_TO_INT(id));
+        isMapped = arg < argsobj->initialLength() && !argsobj->isElementDeleted(arg);
+    }
+
+    // Step 4.
+    Rooted<PropertyDescriptor> newArgDesc(cx, desc);
+    if (!desc.isAccessorDescriptor() && isMapped) {
+        // In this case the live mapping is supposed to keep working,
+        // we have to pass along the Getter/Setter otherwise they are overwritten.
+        newArgDesc.setGetter(MappedArgGetter);
+        newArgDesc.setSetter(MappedArgSetter);
+    }
+
+    // Steps 5-6. NativeDefineProperty will lookup [[Value]] for us.
+    if (!NativeDefineProperty(cx, obj.as<NativeObject>(), id, newArgDesc, result))
+        return false;
+    // Step 7.
+    if (!result.ok())
+        return true;
+
+    // Step 8.
+    if (isMapped) {
+        unsigned arg = unsigned(JSID_TO_INT(id));
+        if (desc.isAccessorDescriptor()) {
+            if (!argsobj->markElementDeleted(cx, arg))
+                return false;
+        } else {
+            if (desc.hasValue()) {
+                RootedFunction callee(cx, &argsobj->callee());
+                RootedScript script(cx, callee->getOrCreateScript(cx));
+                if (!script)
+                    return false;
+                argsobj->setElement(cx, arg, desc.value());
+                if (arg < script->functionNonDelazifying()->nargs())
+                    TypeScript::SetArgument(cx, script, arg, desc.value());
+            }
+            if (desc.hasWritable() && !desc.writable()) {
+                if (!argsobj->markElementDeleted(cx, arg))
+                    return false;
+            }
+        }
+    }
+
+    // Step 9.
+    return result.succeed();
+}
+
 static bool
 UnmappedArgGetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
@@ -808,6 +866,11 @@ const ClassOps MappedArgumentsObject::classOps_ = {
     ArgumentsObject::trace
 };
 
+const ObjectOps MappedArgumentsObject::objectOps_ = {
+    nullptr,                 /* lookupProperty */
+    MappedArgumentsObject::obj_defineProperty
+};
+
 const Class MappedArgumentsObject::class_ = {
     "Arguments",
     JSCLASS_DELAY_METADATA_BUILDER |
@@ -815,7 +878,10 @@ const Class MappedArgumentsObject::class_ = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
     JSCLASS_SKIP_NURSERY_FINALIZE |
     JSCLASS_BACKGROUND_FINALIZE,
-    &MappedArgumentsObject::classOps_
+    &MappedArgumentsObject::classOps_,
+    nullptr,
+    nullptr,
+    &MappedArgumentsObject::objectOps_
 };
 
 /*
