@@ -141,6 +141,16 @@ VideoDecoderParent::RecvFlush()
   if (mDecoder) {
     mDecoder->Flush();
   }
+
+  // Dispatch a runnable to our own event queue so that
+  // it will be processed after anything that got dispatched
+  // during the Flush call.
+  RefPtr<VideoDecoderParent> self = this;
+  mManagerTaskQueue->Dispatch(NS_NewRunnableFunction([self]() {
+    if (!self->mDestroyed) {
+      Unused << self->SendFlushComplete();
+    }
+  }));
   return IPC_OK();
 }
 

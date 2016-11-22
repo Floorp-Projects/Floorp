@@ -75,11 +75,12 @@ void
 RemoteVideoDecoder::Flush()
 {
   MOZ_ASSERT(mCallback->OnReaderTaskQueue());
-  RefPtr<RemoteVideoDecoder> self = this;
-  VideoDecoderManagerChild::GetManagerThread()->Dispatch(NS_NewRunnableFunction([self]() {
-    MOZ_ASSERT(self->mActor);
-    self->mActor->Flush();
+  SynchronousTask task("Decoder flush");
+  VideoDecoderManagerChild::GetManagerThread()->Dispatch(NS_NewRunnableFunction([&]() {
+    MOZ_ASSERT(this->mActor);
+    this->mActor->Flush(&task);
   }), NS_DISPATCH_NORMAL);
+  task.Wait();
 }
 
 void
