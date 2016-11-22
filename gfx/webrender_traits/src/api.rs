@@ -93,8 +93,7 @@ impl RenderApi {
                      stride: Option<u32>,
                      format: ImageFormat,
                      data: ImageData) -> ImageKey {
-        let new_id = self.next_unique_id();
-        let key = ImageKey::new(new_id.0, new_id.1);
+        let key = self.alloc_image();
         let msg = ApiMsg::AddImage(key, width, height, stride, format, data);
         self.api_sender.send(msg).unwrap();
         key
@@ -147,7 +146,7 @@ impl RenderApi {
 
     /// Supplies a new frame to WebRender.
     ///
-    /// Non-blocking, it notifies a worker process which processes the stacking context.
+    /// Non-blocking, it notifies a worker process which processes the display list.
     /// When it's done and a RenderNotifier has been set in `webrender::renderer::Renderer`,
     /// [new_frame_ready()][notifier] gets called.
     ///
@@ -155,13 +154,11 @@ impl RenderApi {
     ///
     /// Arguments:
     ///
-    /// * `stacking_context_id`: The ID of the root stacking context.
     /// * `background_color`: The background color of this pipeline.
     /// * `epoch`: The unique Frame ID, monotonically increasing.
     /// * `pipeline_id`: The ID of the pipeline that is supplying this display list.
     /// * `viewport_size`: The size of the viewport for this frame.
-    /// * `stacking_contexts`: Stacking contexts used in this frame.
-    /// * `display_lists`: Display lists used in this frame.
+    /// * `display_list`: The root Display list used in this frame.
     /// * `auxiliary_lists`: Various items that the display lists and stacking contexts reference.
     ///
     /// [notifier]: trait.RenderNotifier.html#tymethod.new_frame_ready

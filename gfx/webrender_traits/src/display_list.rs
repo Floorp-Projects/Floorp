@@ -12,8 +12,8 @@ use {BuiltDisplayListDescriptor, ClipRegion, ComplexClipRegion, ColorF};
 use {DisplayItem, DisplayListMode, FilterOp};
 use {FontKey, GlyphInstance, GradientDisplayItem, GradientStop, IframeDisplayItem};
 use {ImageDisplayItem, ImageKey, ImageRendering, ItemRange, PipelineId,};
-use {PushStackingContextDisplayItem, RectangleDisplayItem, SpecificDisplayItem};
-use {StackingContext, TextDisplayItem, WebGLContextId, WebGLDisplayItem};
+use {PushScrollLayerItem, PushStackingContextDisplayItem, RectangleDisplayItem, ScrollLayerId};
+use {SpecificDisplayItem, StackingContext, TextDisplayItem, WebGLContextId, WebGLDisplayItem};
 
 impl BuiltDisplayListDescriptor {
     pub fn size(&self) -> usize {
@@ -54,6 +54,12 @@ impl DisplayListBuilder {
         DisplayListBuilder {
             mode: DisplayListMode::Default,
             list: Vec::new(),
+        }
+    }
+
+    pub fn print_display_list(&mut self) {
+        for item in &self.list {
+            println!("{:?}", item);
         }
     }
 
@@ -238,6 +244,32 @@ impl DisplayListBuilder {
     pub fn pop_stacking_context(&mut self) {
         let item = DisplayItem {
             item: SpecificDisplayItem::PopStackingContext,
+            rect: Rect::zero(),
+            clip: ClipRegion::simple(&Rect::zero()),
+        };
+        self.list.push(item);
+    }
+
+    pub fn push_scroll_layer(&mut self,
+                             clip: Rect<f32>,
+                             content_size: Size2D<f32>,
+                             id: ScrollLayerId) {
+        let item = PushScrollLayerItem {
+            content_size: content_size,
+            id: id,
+        };
+
+        let item = DisplayItem {
+            item: SpecificDisplayItem::PushScrollLayer(item),
+            rect: clip,
+            clip: ClipRegion::simple(&Rect::zero()),
+        };
+        self.list.push(item);
+    }
+
+    pub fn pop_scroll_layer(&mut self) {
+        let item = DisplayItem {
+            item: SpecificDisplayItem::PopScrollLayer,
             rect: Rect::zero(),
             clip: ClipRegion::simple(&Rect::zero()),
         };

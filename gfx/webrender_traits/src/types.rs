@@ -294,6 +294,12 @@ pub struct PushStackingContextDisplayItem {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct PushScrollLayerItem {
+    pub content_size: Size2D<f32>,
+    pub id: ScrollLayerId,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct IframeDisplayItem {
     pub pipeline_id: PipelineId,
 }
@@ -436,6 +442,15 @@ pub struct ScrollLayerId {
     pub info: ScrollLayerInfo,
 }
 
+impl ScrollLayerId {
+    pub fn root(pipeline_id: PipelineId) -> ScrollLayerId {
+        ScrollLayerId {
+            pipeline_id: pipeline_id,
+            info: ScrollLayerInfo::Scrollable(0, ServoScrollRootId(0)),
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum ScrollLayerInfo {
     Fixed,
@@ -470,11 +485,12 @@ pub enum SpecificDisplayItem {
     Iframe(IframeDisplayItem),
     PushStackingContext(PushStackingContextDisplayItem),
     PopStackingContext,
+    PushScrollLayer(PushScrollLayerItem),
+    PopScrollLayer,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct StackingContext {
-    pub scroll_layer_id: Option<ScrollLayerId>,
     pub scroll_policy: ScrollPolicy,
     pub bounds: Rect<f32>,
     pub overflow: Rect<f32>,
