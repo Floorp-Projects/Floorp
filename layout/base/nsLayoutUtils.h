@@ -30,7 +30,7 @@
 #include "mozilla/ReflowOutput.h"
 #include "ImageContainer.h"
 #include "gfx2DGlue.h"
-
+#include "nsStyleConsts.h"
 #include <limits>
 #include <algorithm>
 
@@ -152,6 +152,7 @@ public:
   typedef mozilla::CSSRect CSSRect;
   typedef mozilla::ScreenMargin ScreenMargin;
   typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
+  typedef mozilla::StyleClipPathGeometryBox StyleClipPathGeometryBox;
 
   /**
    * Finds previously assigned ViewID for the given content element, if any.
@@ -2868,6 +2869,9 @@ public:
    *                          next line exists, null otherwise.
    */
   static bool IsInvisibleBreak(nsINode* aNode, nsIFrame** aNextLineFrame = nullptr);
+
+  static nsRect ComputeGeometryBox(nsIFrame* aFrame,
+                                   StyleClipPathGeometryBox aGeometryBox);
 
 private:
   static uint32_t sFontSizeInflationEmPerLine;

@@ -118,6 +118,7 @@
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "RegionBuilder.h"
+#include "SVGSVGElement.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -9174,4 +9175,128 @@ nsLayoutUtils::IsInvisibleBreak(nsINode* aNode, nsIFrame** aNextLineFrame)
   }
 
   return lineNonEmpty;
+}
+
+static nsRect
+ComputeSVGReferenceRect(nsIFrame* aFrame,
+                        StyleClipPathGeometryBox aGeometryBox)
+{
+  MOZ_ASSERT(aFrame->GetContent()->IsSVGElement());
+  nsRect r;
+
+  // For SVG elements without associated CSS layout box, the used value for
+  // content-box, padding-box, border-box and margin-box is fill-box.
+  switch (aGeometryBox) {
+    case StyleClipPathGeometryBox::Stroke: {
+      // XXX Bug 1299876
+      // The size of srtoke-box is not correct if this graphic element has
+      // specific stroke-linejoin or stroke-linecap.
+      gfxRect bbox = nsSVGUtils::GetBBox(aFrame,
+                nsSVGUtils::eBBoxIncludeFill | nsSVGUtils::eBBoxIncludeStroke);
+      r = nsLayoutUtils::RoundGfxRectToAppRect(bbox,
+                                         nsPresContext::AppUnitsPerCSSPixel());
+      break;
+    }
+    case StyleClipPathGeometryBox::View: {
+      nsIContent* content = aFrame->GetContent();
+      nsSVGElement* element = static_cast<nsSVGElement*>(content);
+      SVGSVGElement* svgElement = element->GetCtx();
+      MOZ_ASSERT(svgElement);
+
+      if (svgElement && svgElement->HasViewBoxRect()) {
+        // If a ‘viewBox‘ attribute is specified for the SVG viewport creating
+        // element:
+        // 1. The reference box is positioned at the origin of the coordinate
+        //    system established by the ‘viewBox‘ attribute.
+        // 2. The dimension of the reference box is set to the width and height
+        //    values of the ‘viewBox‘ attribute.
+        nsSVGViewBox* viewBox = svgElement->GetViewBox();
+        const nsSVGViewBoxRect& value = viewBox->GetAnimValue();
+        r = nsRect(nsPresContext::CSSPixelsToAppUnits(value.x),
+                   nsPresContext::CSSPixelsToAppUnits(value.y),
+                   nsPresContext::CSSPixelsToAppUnits(value.width),
+                   nsPresContext::CSSPixelsToAppUnits(value.height));
+      } else {
+        // No viewBox is specified, uses the nearest SVG viewport as reference
+        // box.
+        svgFloatSize viewportSize = svgElement->GetViewportSize();
+        r = nsRect(0, 0,
+                   nsPresContext::CSSPixelsToAppUnits(viewportSize.width),
+                   nsPresContext::CSSPixelsToAppUnits(viewportSize.height));
+      }
+
+      break;
+    }
+    case StyleClipPathGeometryBox::NoBox:
+    case StyleClipPathGeometryBox::Border:
+    case StyleClipPathGeometryBox::Content:
+    case StyleClipPathGeometryBox::Padding:
+    case StyleClipPathGeometryBox::Margin:
+    case StyleClipPathGeometryBox::Fill: {
+      gfxRect bbox = nsSVGUtils::GetBBox(aFrame,
+                                         nsSVGUtils::eBBoxIncludeFill);
+      r = nsLayoutUtils::RoundGfxRectToAppRect(bbox,
+                                         nsPresContext::AppUnitsPerCSSPixel());
+      break;
+    }
+    default:{
+      MOZ_ASSERT_UNREACHABLE("unknown StyleClipPathGeometryBox type");
+      gfxRect bbox = nsSVGUtils::GetBBox(aFrame,
+                                         nsSVGUtils::eBBoxIncludeFill);
+      r = nsLayoutUtils::RoundGfxRectToAppRect(bbox,
+                                         nsPresContext::AppUnitsPerCSSPixel());
+      break;
+    }
+  }
+
+  return r;
+}
+
+static nsRect
+ComputeHTMLReferenceRect(nsIFrame* aFrame,
+                         StyleClipPathGeometryBox aGeometryBox)
+{
+  nsRect r;
+
+  // For elements with associated CSS layout box, the used value for fill-box,
+  // stroke-box and view-box is border-box.
+  switch (aGeometryBox) {
+    case StyleClipPathGeometryBox::Content:
+      r = aFrame->GetContentRectRelativeToSelf();
+      break;
+    case StyleClipPathGeometryBox::Padding:
+      r = aFrame->GetPaddingRectRelativeToSelf();
+      break;
+    case StyleClipPathGeometryBox::Margin:
+      r = aFrame->GetMarginRectRelativeToSelf();
+      break;
+    case StyleClipPathGeometryBox::NoBox:
+    case StyleClipPathGeometryBox::Border:
+    case StyleClipPathGeometryBox::Fill:
+    case StyleClipPathGeometryBox::Stroke:
+    case StyleClipPathGeometryBox::View:
+      r = aFrame->GetRectRelativeToSelf();
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown StyleClipPathGeometryBox type");
+      r = aFrame->GetRectRelativeToSelf();
+      break;
+  }
+
+  return r;
+}
+
+/* static */ nsRect
+nsLayoutUtils::ComputeGeometryBox(nsIFrame* aFrame,
+                                  StyleClipPathGeometryBox aGeometryBox)
+{
+  // We use ComputeSVGReferenceRect for all SVG elements, except <svg>
+  // element, which does have an associated CSS layout box. In this case we
+  // should still use ComputeHTMLReferenceRect for region computing.
+  nsRect r = aFrame->IsFrameOfType(nsIFrame::eSVG) &&
+             (aFrame->GetType() != nsGkAtoms::svgOuterSVGFrame)
+             ? ComputeSVGReferenceRect(aFrame, aGeometryBox)
+             : ComputeHTMLReferenceRect(aFrame, aGeometryBox);
+
+  return r;
 }
