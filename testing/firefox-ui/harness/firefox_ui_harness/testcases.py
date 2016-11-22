@@ -63,11 +63,6 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
 
         self.set_preferences_defaults()
 
-        # Bug 1142805 - Until we don't modify the channel-prefs.js and update-settings.ini
-        # files before Firefox gets started, a restart of Firefox is necessary to
-        # accept the new update channel.
-        self.restart()
-
         # Dictionary which holds the information for each update
         self.updates = [{
             'build_pre': self.software_update.build_info,
