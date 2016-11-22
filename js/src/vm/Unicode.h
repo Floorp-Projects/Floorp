@@ -143,11 +143,15 @@ IsIdentifierStart(char16_t ch)
     return CharInfo(ch).isUnicodeIDStart();
 }
 
+bool
+IsIdentifierStartNonBMP(uint32_t codePoint);
+
 inline bool
 IsIdentifierStart(uint32_t codePoint)
 {
-    // TODO: Supplemental code points not yet supported (bug 1197230).
-    return codePoint <= UTF16Max && IsIdentifierStart(char16_t(codePoint));
+    if (MOZ_UNLIKELY(codePoint > UTF16Max))
+        return IsIdentifierStartNonBMP(codePoint);
+    return IsIdentifierStart(char16_t(codePoint));
 }
 
 inline bool
@@ -170,17 +174,32 @@ IsIdentifierPart(char16_t ch)
     return CharInfo(ch).isUnicodeIDContinue();
 }
 
+bool
+IsIdentifierPartNonBMP(uint32_t codePoint);
+
 inline bool
 IsIdentifierPart(uint32_t codePoint)
 {
-    // TODO: Supplemental code points not yet supported (bug 1197230).
-    return codePoint <= UTF16Max && IsIdentifierPart(char16_t(codePoint));
+    if (MOZ_UNLIKELY(codePoint > UTF16Max))
+        return IsIdentifierPartNonBMP(codePoint);
+    return IsIdentifierPart(char16_t(codePoint));
 }
 
 inline bool
 IsUnicodeIDStart(char16_t ch)
 {
     return CharInfo(ch).isUnicodeIDStart();
+}
+
+bool
+IsUnicodeIDStartNonBMP(uint32_t codePoint);
+
+inline bool
+IsUnicodeIDStart(uint32_t codePoint)
+{
+    if (MOZ_UNLIKELY(codePoint > UTF16Max))
+        return IsIdentifierStartNonBMP(codePoint);
+    return IsUnicodeIDStart(char16_t(codePoint));
 }
 
 inline bool
