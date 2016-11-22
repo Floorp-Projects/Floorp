@@ -51,7 +51,7 @@ if (!gl) {
     testPassed("WebGL context exists");
 
     bufferDataTest();
-    bufferDataSizesTest();    
+    bufferDataSizesTest();
 
     bufferSubDataTest();
 }
@@ -163,12 +163,6 @@ function bufferSubDataTest() {
     wtu.glErrorShouldBe(gl, gl.NO_ERROR,
         "calling bufferSubData with ArrayBuffer should succeed");
 
-    gl.bufferSubData(gl.ARRAY_BUFFER, 10, null);
-    wtu.glErrorShouldBe(gl, gl.INVALID_VALUE,
-        "calling bufferSubData when BufferDataSource is null should generate INVALID_VALUE");
-
-    wtu.shouldGenerateGLError(gl, gl.INVALID_VALUE, "gl.bufferSubData(gl.ARRAY_BUFFER, 10, undefined)");
-
     gl.bufferSubData(gl.ARRAY_BUFFER, 10, new Float32Array(0));
     wtu.glErrorShouldBe(gl, gl.NO_ERROR,
         "calling bufferSubData with zero-sized ArrayBufferView should succeed");
@@ -179,6 +173,9 @@ function bufferSubDataTest() {
     shouldThrow("gl.bufferSubData(gl.ARRAY_BUFFER, 0, \"5.5\");");
     shouldThrow("gl.bufferSubData(gl.ARRAY_BUFFER, 0, [4]);");
     shouldThrow("gl.bufferSubData(gl.ARRAY_BUFFER, 0, { mynumber: 42});");
+    shouldThrow("gl.bufferSubData(gl.ARRAY_BUFFER, 10, null)");
+    shouldThrow("gl.bufferSubData(gl.ARRAY_BUFFER, 10, undefined)");
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "should generate no GL error");
 
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 }
