@@ -37,39 +37,31 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
         super(UpdateTestCase, self).__init__(*args, **kwargs)
 
         self.update_channel = kwargs.pop('update_channel')
+        self.update_mar_channels = set(kwargs.pop('update_mar_channels'))
         self.update_url = kwargs.pop('update_url')
 
         self.target_buildid = kwargs.pop('update_target_buildid')
         self.target_version = kwargs.pop('update_target_version')
 
-        self.update_mar_channels = set(kwargs.pop('update_mar_channels'))
-        self.default_mar_channels = None
+        # Bug 604364 - Preparation to test multiple update steps
+        self.current_update_index = 0
 
+        self.download_duration = None
         self.updates = []
 
     def setUp(self, is_fallback=False):
         super(UpdateTestCase, self).setUp()
 
         self.software_update = SoftwareUpdate(self.marionette)
-        self.download_duration = None
 
-        # Bug 604364 - Preparation to test multiple update steps
-        self.current_update_index = 0
+        # If requested modify the list of allowed MAR channels
+        if self.update_mar_channels:
+            self.software_update.mar_channels.add_channels(self.update_mar_channels)
 
         # Ensure that there exists no already partially downloaded update
         self.remove_downloaded_update()
 
         self.set_preferences_defaults()
-
-        # If requested modify the list of allowed MAR channels
-        # Bug 1142805 - Modify file via Python directly
-        if self.update_mar_channels:
-            # Backup the original content and the path of the update-settings.ini file
-            self.default_mar_channels = {
-                'content': self.software_update.mar_channels.config_file_contents,
-                'path': self.software_update.mar_channels.config_file_path,
-            }
-            self.software_update.mar_channels.add_channels(self.update_mar_channels)
 
         # Bug 1142805 - Until we don't modify the channel-prefs.js and update-settings.ini
         # files before Firefox gets started, a restart of Firefox is necessary to
@@ -110,8 +102,6 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
 
             # Ensure that no trace of an partially downloaded update remain
             self.remove_downloaded_update()
-
-            self.restore_config_files()
 
     @property
     def patch_info(self):
@@ -364,18 +354,6 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
         # After a restart default preference values as set in the former session are lost.
         # Make sure that any of those are getting restored.
         self.set_preferences_defaults()
-
-    def restore_config_files(self):
-        # Reset update-settings.ini file if modified
-        try:
-            if self.default_mar_channels:
-                path = self.default_mar_channels['path']
-                self.logger.info('Restoring mar channel defaults for: {}'.format(path))
-                with open(path, 'w') as f:
-                    f.write(self.default_mar_channels['content'])
-        except IOError:
-            self.logger.error('Failed to reset the default mar channels.',
-                              exc_info=True)
 
     def set_preferences_defaults(self):
         """Set the default value for specific preferences to force its usage."""
