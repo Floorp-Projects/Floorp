@@ -428,9 +428,7 @@ impl Frame {
             }
         };
 
-        let root_scroll_layer_id =
-            root_stacking_context.scroll_layer_id
-                                 .expect("root layer must be a scroll layer!");
+        let root_scroll_layer_id = ScrollLayerId::root(root_pipeline_id);
         self.root_scroll_layer_id = Some(root_scroll_layer_id);
 
         // Insert global position: fixed elements layer
@@ -481,41 +479,70 @@ impl Frame {
         }
     }
 
-    fn flatten_stacking_context<'a>(&mut self,
-                                    traversal: &mut DisplayListTraversal<'a>,
-                                    pipeline_id: PipelineId,
-                                    context: &mut FlattenContext,
-                                    current_fixed_layer_id: ScrollLayerId,
-                                    mut current_scroll_layer_id: ScrollLayerId,
-                                    mut layer_relative_transform: Matrix4D<f32>,
-                                    level: i32,
-                                    stacking_context: &StackingContext) {
+    fn flatten_scroll_layer<'a>(&mut self,
+                                traversal: &mut DisplayListTraversal<'a>,
+                                pipeline_id: PipelineId,
+                                context: &mut FlattenContext,
+                                current_fixed_layer_id: ScrollLayerId,
+                                mut current_scroll_layer_id: ScrollLayerId,
+                                layer_relative_transform: Matrix4D<f32>,
+                                level: i32,
+                                clip: &Rect<f32>,
+                                content_size: &Size2D<f32>,
+                                new_scroll_layer_id: ScrollLayerId) {
         // Avoid doing unnecessary work for empty stacking contexts.
         if traversal.current_stacking_context_empty() {
             traversal.skip_current_stacking_context();
             return;
         }
 
-        match (stacking_context.scroll_policy, stacking_context.scroll_layer_id) {
-            (ScrollPolicy::Scrollable, Some(inner_scroll_layer_id)) if level != 0 => {
-                debug_assert!(!self.layers.contains_key(&inner_scroll_layer_id));
+        debug_assert!(!self.layers.contains_key(&new_scroll_layer_id));
 
-                let layer = Layer::new(&stacking_context.bounds,
-                                       stacking_context.overflow.size,
-                                       &layer_relative_transform,
-                                       pipeline_id);
+        let layer = Layer::new(&clip, *content_size, &layer_relative_transform, pipeline_id);
+        debug_assert!(current_scroll_layer_id != new_scroll_layer_id);
 
-                debug_assert!(current_scroll_layer_id != inner_scroll_layer_id);
-                self.layers
-                    .get_mut(&current_scroll_layer_id)
-                    .unwrap()
-                    .add_child(inner_scroll_layer_id);
+        self.layers
+            .get_mut(&current_scroll_layer_id)
+            .unwrap()
+            .add_child(new_scroll_layer_id);
 
-                self.layers.insert(inner_scroll_layer_id, layer);
-                current_scroll_layer_id = inner_scroll_layer_id;
-                layer_relative_transform = Matrix4D::identity();
-            }
-            _ => {}
+        self.layers.insert(new_scroll_layer_id, layer);
+        current_scroll_layer_id = new_scroll_layer_id;
+
+        let layer_rect = Rect::new(Point2D::zero(),
+                                   Size2D::new(content_size.width + clip.origin.x,
+                                               content_size.height + clip.origin.y));
+        context.builder.push_layer(layer_rect,
+                                   layer_rect,
+                                   Matrix4D::identity(),
+                                   pipeline_id,
+                                   current_scroll_layer_id,
+                                   &[]);
+
+        self.flatten_items(traversal,
+                           pipeline_id,
+                           context,
+                           current_fixed_layer_id,
+                           current_scroll_layer_id,
+                           Matrix4D::identity(),
+                           level);
+
+        context.builder.pop_layer();
+    }
+
+    fn flatten_stacking_context<'a>(&mut self,
+                                    traversal: &mut DisplayListTraversal<'a>,
+                                    pipeline_id: PipelineId,
+                                    context: &mut FlattenContext,
+                                    current_fixed_layer_id: ScrollLayerId,
+                                    current_scroll_layer_id: ScrollLayerId,
+                                    layer_relative_transform: Matrix4D<f32>,
+                                    level: i32,
+                                    stacking_context: &StackingContext) {
+        // Avoid doing unnecessary work for empty stacking contexts.
+        if traversal.current_stacking_context_empty() {
+            traversal.skip_current_stacking_context();
+            return;
         }
 
         let composition_operations = {
@@ -536,38 +563,21 @@ impl Frame {
             }
         }
 
-        // Stacking contexts with scroll roots are currently not "real" stacking contexts,
-        // but are currently represented as stacking contexts in the display list until they
-        // can get their own display item to represent them. Thus we do not adjust the transform
-        // to account for them and we expand the overflow region to include the area above
-        // their origin in the parent context.
-        let (transform, overflow) = if stacking_context.scroll_layer_id.is_none() {
-            (layer_relative_transform.pre_translated(stacking_context.bounds.origin.x,
-                                                     stacking_context.bounds.origin.y,
-                                                     0.0)
-                                     .pre_mul(&stacking_context.transform)
-                                     .pre_mul(&stacking_context.perspective),
-             stacking_context.overflow)
-        } else {
-            let mut overflow = stacking_context.overflow;
-            overflow.size.width += stacking_context.bounds.origin.x;
-            overflow.size.height += stacking_context.bounds.origin.y;
-            (layer_relative_transform, overflow)
-        };
+        let transform = layer_relative_transform.pre_translated(stacking_context.bounds.origin.x,
+                                                                stacking_context.bounds.origin.y,
+                                                                0.0)
+                                                .pre_mul(&stacking_context.transform)
+                                                .pre_mul(&stacking_context.perspective);
 
         // Build world space transform
-        let scroll_layer_id = match (stacking_context.scroll_policy,
-                                     stacking_context.scroll_layer_id) {
-            (ScrollPolicy::Fixed, _scroll_layer_id) => {
-                debug_assert!(_scroll_layer_id.is_none());
-                current_fixed_layer_id
-            }
-            (ScrollPolicy::Scrollable, _) => current_scroll_layer_id
+        let scroll_layer_id = match stacking_context.scroll_policy {
+            ScrollPolicy::Fixed => current_fixed_layer_id,
+            ScrollPolicy::Scrollable => current_scroll_layer_id,
         };
 
         // TODO(gw): Int with overflow etc
-        context.builder.push_layer(overflow,
-                                   overflow,
+        context.builder.push_layer(stacking_context.overflow,
+                                   stacking_context.overflow,
                                    transform,
                                    pipeline_id,
                                    scroll_layer_id,
@@ -653,7 +663,7 @@ impl Frame {
                                                                 0.0);
 
         let iframe_fixed_layer_id = ScrollLayerId::create_fixed(pipeline_id);
-        let iframe_scroll_layer_id = iframe_stacking_context.scroll_layer_id.unwrap();
+        let iframe_scroll_layer_id = ScrollLayerId::root(pipeline_id);
 
         let layer = Layer::new(&iframe_rect,
                                iframe_stacking_context.overflow.size,
@@ -741,6 +751,18 @@ impl Frame {
                                                   level + 1,
                                                   &info.stacking_context);
                 }
+                SpecificDisplayItem::PushScrollLayer(ref info) => {
+                    self.flatten_scroll_layer(traversal,
+                                              pipeline_id,
+                                              context,
+                                              current_fixed_layer_id,
+                                              current_scroll_layer_id,
+                                              layer_relative_transform,
+                                              level,
+                                              &item.rect,
+                                              &info.content_size,
+                                              info.id);
+                }
                 SpecificDisplayItem::Iframe(ref info) => {
                     self.flatten_iframe(info.pipeline_id,
                                         &item.rect,
@@ -748,7 +770,8 @@ impl Frame {
                                         current_scroll_layer_id,
                                         layer_relative_transform);
                 }
-                SpecificDisplayItem::PopStackingContext => return,
+                SpecificDisplayItem::PopStackingContext |
+                SpecificDisplayItem::PopScrollLayer => return,
             }
         }
     }
