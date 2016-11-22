@@ -78,6 +78,25 @@ public:
   explicit DrawEventRecorderFile(const char *aFilename);
   ~DrawEventRecorderFile();
 
+  /**
+   * Returns whether a recording file is currently open.
+   */
+  bool IsOpen();
+
+  /**
+   * Opens new file with the provided name. The recorder does NOT forget which
+   * objects it has recorded. This can be used with Close, so that a recording
+   * can be processed in chunks. The file must not already be open.
+   */
+  void OpenNew(const char *aFilename);
+
+  /**
+   * Closes the file so that it can be processed. The recorder does NOT forget
+   * which objects it has recorded. This can be used with OpenNew, so that a
+   * recording can be processed in chunks. The file must be open.
+   */
+  void Close();
+
 private:
   virtual void Flush();
 
