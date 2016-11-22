@@ -146,6 +146,9 @@ ClientLayerManager::Destroy()
     });
     NS_DispatchToMainThread(task.forget());
   }
+
+  // Forget the widget pointer in case we outlive our owning widget.
+  mWidget = nullptr;
 }
 
 int32_t
