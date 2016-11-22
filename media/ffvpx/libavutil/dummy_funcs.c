@@ -79,3 +79,5 @@ int av_opt_is_set_to_default(void *obj, const AVOption *o) { return 0; }
 int av_opt_is_set_to_default_by_name(void *obj, const char *name, int search_flags) { return 0; }
 int av_opt_serialize(void *obj, int opt_flags, int flags, char **buffer,
                      const char key_val_sep, const char pairs_sep) { return 0; }
+
+int av_hwframe_get_buffer(struct AVBufferRef* hwframe_ref, struct AVFrame* frame, int flags) { return 0; }
