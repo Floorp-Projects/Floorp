@@ -41,9 +41,7 @@ function sync_httpd_setup() {
 }
 
 async function setUp(server) {
-  await configureIdentity({username: "johndoe"});
-  Service.serverURL = server.baseURI + "/";
-  Service.clusterURL = server.baseURI + "/";
+  await configureIdentity({username: "johndoe"}, server);
   generateNewKeys(Service.collectionKeys);
   let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Service.identity.syncKeyBundle);

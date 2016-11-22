@@ -58,9 +58,7 @@ function sync_httpd_setup() {
 }
 
 async function setUp(server) {
-  await configureIdentity({username: "johndoe"});
-
-  Service.clusterURL = server.baseURI + "/";
+  await configureIdentity({username: "johndoe"}, server);
 
   generateNewKeys(Service.collectionKeys);
   let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
@@ -692,13 +690,18 @@ add_identity_test(this, async function test_no_sync_node() {
   let server = sync_httpd_setup();
   await setUp(server);
 
-  Service.serverURL = server.baseURI + "/";
+  oldfc = Service._clusterManager._findCluster;
+  Service._clusterManager._findCluster = () => null;
+  Service.clusterURL = "";
+  try {
+    Service.sync();
+    do_check_eq(Status.sync, NO_SYNC_NODE_FOUND);
+    do_check_eq(scheduler.syncTimer.delay, NO_SYNC_NODE_INTERVAL);
 
-  Service.sync();
-  do_check_eq(Status.sync, NO_SYNC_NODE_FOUND);
-  do_check_eq(scheduler.syncTimer.delay, NO_SYNC_NODE_INTERVAL);
-
-  await cleanUpAndGo(server);
+    await cleanUpAndGo(server);
+  } finally {
+    Service._clusterManager._findCluster = oldfc;
+  }
 });
 
 add_identity_test(this, async function test_sync_failed_partial_500s() {

@@ -260,6 +260,8 @@ this.configureIdentity = async function(identityOverrides, server) {
     ns.Service.serverURL = server.baseURI;
   }
 
+  ns.Service._clusterManager = ns.Service.identity.createClusterManager(ns.Service);
+
   if (ns.Service.identity instanceof BrowserIDManager) {
     // do the FxAccounts thang...
 
@@ -275,42 +277,34 @@ this.configureIdentity = async function(identityOverrides, server) {
 
     configureFxAccountIdentity(ns.Service.identity, config);
     await ns.Service.identity.initializeWithCurrentIdentity();
-    // need to wait until this identity manager is readyToAuthenticate.
-    await ns.Service.identity.whenReadyToAuthenticate.promise;
+    // and cheat to avoid requiring each test do an explicit login - give it
+    // a cluster URL.
+    if (config.fxaccount.token.endpoint) {
+      ns.Service.clusterURL = config.fxaccount.token.endpoint;
+    }
     return;
   }
   // old style identity provider.
+  if (server) {
+    ns.Service.clusterURL = server.baseURI + "/";
+  }
+  ns.Service.identity.username = config.username;
+  ns.Service._updateCachedURLs();
   setBasicCredentials(config.username, config.sync.password, config.sync.syncKey);
 }
 
-this.SyncTestingInfrastructure = function (server, username, password, syncKey) {
+this.SyncTestingInfrastructure = async function (server, username, password) {
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
 
-  ensureLegacyIdentityManager();
-  let config = makeIdentityConfig();
-  // XXX - hacks for the sync identity provider.
-  if (username)
-    config.username = username;
-  if (password)
-    config.sync.password = password;
-  if (syncKey)
-    config.sync.syncKey = syncKey;
-  let cb = Async.makeSpinningCallback();
-  configureIdentity(config).then(cb, cb);
-  cb.wait();
-
-  let i = server.identity;
-  let uri = i.primaryScheme + "://" + i.primaryHost + ":" +
-            i.primaryPort + "/";
-
-  ns.Service.serverURL = uri;
-  ns.Service.clusterURL = uri;
-
-  this.logStats = initTestLogging();
-  this.fakeFilesystem = new FakeFilesystemService({});
-  this.fakeGUIDService = new FakeGUIDService();
-  this.fakeCryptoService = new FakeCryptoService();
+  let config = makeIdentityConfig({ username, password });
+  await configureIdentity(config, server);
+  return {
+    logStats: initTestLogging(),
+    fakeFilesystem: new FakeFilesystemService({}),
+    fakeGUIDService: new FakeGUIDService(),
+    fakeCryptoService: new FakeCryptoService(),
+  }
 }
 
 /**
