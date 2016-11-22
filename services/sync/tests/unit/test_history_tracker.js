@@ -9,17 +9,6 @@ Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-function onScoreUpdated(callback) {
-  Svc.Obs.add("weave:engine:score:updated", function observer() {
-    Svc.Obs.remove("weave:engine:score:updated", observer);
-    try {
-      callback();
-    } catch (ex) {
-      do_throw(ex);
-    }
-  });
-}
-
 Service.engineManager.clear();
 Service.engineManager.register(HistoryEngine);
 var engine = Service.engineManager.get("history");
@@ -28,37 +17,17 @@ var tracker = engine._tracker;
 // Don't write out by default.
 tracker.persistChangedIDs = false;
 
-var _counter = 0;
-function addVisit() {
-  let uriString = "http://getfirefox.com/" + _counter++;
+async function addVisit(suffix) {
+  let uriString = "http://getfirefox.com/" + suffix;
   let uri = Utils.makeURI(uriString);
   _("Adding visit for URI " + uriString);
-  let place = {
-    uri: uri,
-    visits: [ {
-      visitDate: Date.now() * 1000,
-      transitionType: PlacesUtils.history.TRANSITION_LINK
-    } ]
-  };
 
-  let cb = Async.makeSpinningCallback();
-  PlacesUtils.asyncHistory.updatePlaces(place, {
-    handleError: function () {
-      _("Error adding visit for " + uriString);
-      cb(new Error("Error adding history entry"));
-    },
-
-    handleResult: function () {
-    },
-
-    handleCompletion: function () {
-      _("Added visit for " + uriString);
-      cb();
-    }
+  await PlacesTestUtils.addVisits({
+    uri,
+    visitDate: Date.now() * 1000,
+    transition: PlacesUtils.history.TRANSITION_LINK,
   });
 
-  // Spin the event loop to embed this async call in a sync API.
-  cb.wait();
   return uri;
 }
 
@@ -68,99 +37,145 @@ function run_test() {
   run_next_test();
 }
 
-add_test(function test_empty() {
+async function verifyTrackerEmpty() {
+  let changes = engine.pullNewChanges();
+  equal(changes.count(), 0);
+  equal(tracker.score, 0);
+}
+
+async function verifyTrackedCount(expected) {
+  let changes = engine.pullNewChanges();
+  equal(changes.count(), expected);
+}
+
+async function verifyTrackedItems(tracked) {
+  let changes = engine.pullNewChanges();
+  let trackedIDs = new Set(changes.ids());
+  for (let guid of tracked) {
+    ok(changes.has(guid), `${guid} should be tracked`);
+    ok(changes.getModifiedTimestamp(guid) > 0,
+      `${guid} should have a modified time`);
+    trackedIDs.delete(guid);
+  }
+  equal(trackedIDs.size, 0, `Unhandled tracked IDs: ${
+    JSON.stringify(Array.from(trackedIDs))}`);
+}
+
+async function startTracking() {
+  Svc.Obs.notify("weave:engine:start-tracking");
+}
+
+async function stopTracking() {
+  Svc.Obs.notify("weave:engine:stop-tracking");
+}
+
+async function resetTracker() {
+  tracker.clearChangedIDs();
+  tracker.resetScore();
+}
+
+async function cleanup() {
+  await PlacesTestUtils.clearHistory();
+  await resetTracker();
+  await stopTracking();
+}
+
+add_task(async function test_empty() {
   _("Verify we've got an empty, disabled tracker to work with.");
-  do_check_empty(tracker.changedIDs);
-  do_check_eq(tracker.score, 0);
+  await verifyTrackerEmpty();
   do_check_false(tracker._isTracking);
-  run_next_test();
+
+  await cleanup();
 });
 
-add_test(function test_not_tracking(next) {
+add_task(async function test_not_tracking() {
   _("Create history item. Won't show because we haven't started tracking yet");
-  addVisit();
-  Utils.nextTick(function() {
-    do_check_empty(tracker.changedIDs);
-    do_check_eq(tracker.score, 0);
-    run_next_test();
-  });
+  await addVisit("not_tracking");
+  await verifyTrackerEmpty();
+
+  await cleanup();
 });
 
-add_test(function test_start_tracking() {
+add_task(async function test_start_tracking() {
   _("Add hook for save completion.");
-  tracker.persistChangedIDs = true;
-  tracker.onSavedChangedIDs = function () {
-    _("changedIDs written to disk. Proceeding.");
-    // Turn this back off.
-    tracker.persistChangedIDs = false;
-    delete tracker.onSavedChangedIDs;
-    run_next_test();
-  };
+  let savePromise = new Promise(resolve => {
+    tracker.persistChangedIDs = true;
+    tracker.onSavedChangedIDs = function () {
+      // Turn this back off.
+      tracker.persistChangedIDs = false;
+      delete tracker.onSavedChangedIDs;
+      resolve();
+    };
+  });
 
   _("Tell the tracker to start tracking changes.");
-  onScoreUpdated(function() {
-    _("Score updated in test_start_tracking.");
-    do_check_attribute_count(tracker.changedIDs, 1);
-    do_check_eq(tracker.score, SCORE_INCREMENT_SMALL);
-  });
+  await startTracking();
+  let scorePromise = promiseOneObserver("weave:engine:score:updated");
+  await addVisit("start_tracking");
+  await scorePromise;
 
-  Svc.Obs.notify("weave:engine:start-tracking");
-  addVisit();
+  _("Score updated in test_start_tracking.");
+  await verifyTrackedCount(1);
+  do_check_eq(tracker.score, SCORE_INCREMENT_SMALL);
+
+  await savePromise;
+
+  _("changedIDs written to disk. Proceeding.");
+  await cleanup();
 });
 
-add_test(function test_start_tracking_twice() {
-  _("Verifying preconditions from test_start_tracking.");
-  do_check_attribute_count(tracker.changedIDs, 1);
+add_task(async function test_start_tracking_twice() {
+  _("Verifying preconditions.");
+  await startTracking();
+  await addVisit("start_tracking_twice1");
+  await verifyTrackedCount(1);
   do_check_eq(tracker.score, SCORE_INCREMENT_SMALL);
 
   _("Notifying twice won't do any harm.");
-  onScoreUpdated(function() {
-    _("Score updated in test_start_tracking_twice.");
-    do_check_attribute_count(tracker.changedIDs, 2);
-    do_check_eq(tracker.score, 2 * SCORE_INCREMENT_SMALL);
-    run_next_test();
-  });
+  await startTracking();
+  let scorePromise = promiseOneObserver("weave:engine:score:updated");
+  await addVisit("start_tracking_twice2");
+  await scorePromise;
 
-  Svc.Obs.notify("weave:engine:start-tracking");
-  addVisit();
+  _("Score updated in test_start_tracking_twice.");
+  await verifyTrackedCount(2);
+  do_check_eq(tracker.score, 2 * SCORE_INCREMENT_SMALL);
+
+  await cleanup();
 });
 
-add_test(function test_track_delete() {
+add_task(async function test_track_delete() {
   _("Deletions are tracked.");
 
   // This isn't present because we weren't tracking when it was visited.
-  let uri = Utils.makeURI("http://getfirefox.com/0");
+  await addVisit("track_delete");
+  let uri = Utils.makeURI("http://getfirefox.com/track_delete");
   let guid = engine._store.GUIDForUri(uri);
-  do_check_false(guid in tracker.changedIDs);
+  await verifyTrackerEmpty();
 
-  onScoreUpdated(function() {
-    do_check_true(guid in tracker.changedIDs);
-    do_check_attribute_count(tracker.changedIDs, 3);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE + 2 * SCORE_INCREMENT_SMALL);
-    run_next_test();
-  });
-
-  do_check_eq(tracker.score, 2 * SCORE_INCREMENT_SMALL);
+  await startTracking();
+  let scorePromise = promiseOneObserver("weave:engine:score:updated");
   PlacesUtils.history.removePage(uri);
+  await scorePromise;
+
+  await verifyTrackedItems([guid]);
+  do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+
+  await cleanup();
 });
 
-add_test(function test_dont_track_expiration() {
+add_task(async function test_dont_track_expiration() {
   _("Expirations are not tracked.");
-  let uriToExpire = addVisit();
+  let uriToExpire = await addVisit("to_expire");
   let guidToExpire = engine._store.GUIDForUri(uriToExpire);
-  let uriToRemove = addVisit();
+  let uriToRemove = await addVisit("to_remove");
   let guidToRemove = engine._store.GUIDForUri(uriToRemove);
 
-  tracker.clearChangedIDs();
-  do_check_false(guidToExpire in tracker.changedIDs);
-  do_check_false(guidToRemove in tracker.changedIDs);
+  await resetTracker();
+  await verifyTrackerEmpty();
 
-  onScoreUpdated(function() {
-    do_check_false(guidToExpire in tracker.changedIDs);
-    do_check_true(guidToRemove in tracker.changedIDs);
-    do_check_attribute_count(tracker.changedIDs, 1);
-    run_next_test();
-  });
+  await startTracking();
+  let scorePromise = promiseOneObserver("weave:engine:score:updated");
 
   // Observe expiration.
   Services.obs.addObserver(function onExpiration(aSubject, aTopic, aData) {
@@ -174,30 +189,30 @@ add_test(function test_dont_track_expiration() {
   Cc["@mozilla.org/places/expiration;1"]
     .getService(Ci.nsIObserver)
     .observe(null, "places-debug-start-expiration", 1);
+
+  await scorePromise;
+  await verifyTrackedItems([guidToRemove]);
+
+  await cleanup();
 });
 
-add_test(function test_stop_tracking() {
+add_task(async function test_stop_tracking() {
   _("Let's stop tracking again.");
-  tracker.clearChangedIDs();
-  Svc.Obs.notify("weave:engine:stop-tracking");
-  addVisit();
-  Utils.nextTick(function() {
-    do_check_empty(tracker.changedIDs);
-    run_next_test();
-  });
+  await stopTracking();
+  await addVisit("stop_tracking");
+  await verifyTrackerEmpty();
+
+  await cleanup();
 });
 
-add_test(function test_stop_tracking_twice() {
+add_task(async function test_stop_tracking_twice() {
+  await stopTracking();
+  await addVisit("stop_tracking_twice1");
+
   _("Notifying twice won't do any harm.");
-  Svc.Obs.notify("weave:engine:stop-tracking");
-  addVisit();
-  Utils.nextTick(function() {
-    do_check_empty(tracker.changedIDs);
-    run_next_test();
-  });
-});
+  await stopTracking();
+  await addVisit("stop_tracking_twice2");
+  await verifyTrackerEmpty();
 
-add_test(function cleanup() {
-   _("Clean up.");
-  PlacesTestUtils.clearHistory().then(run_next_test);
+  await cleanup();
 });
