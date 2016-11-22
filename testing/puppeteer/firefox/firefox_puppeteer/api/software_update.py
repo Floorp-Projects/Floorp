@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import ConfigParser
 import os
 
 import mozinfo
@@ -81,10 +82,34 @@ class MARChannels(BaseLib):
     INI_SECTION = 'Settings'
     INI_OPTION = 'ACCEPTED_MAR_CHANNEL_IDS'
 
+    class MARConfigParser(ConfigParser.ConfigParser):
+        """INI parser which allows to read and write MAR config files.
+
+        Virtually identical to the original method, but delimit keys and values
+        with '=' instead of ' = '
+        """
+
+        def write(self, fp):
+            """Write an .ini-format representation of the configuration state."""
+            if self._defaults:
+                fp.write("[%s]\n" % ConfigParser.DEFAULTSECT)
+                for (key, value) in self._defaults.items():
+                    fp.write("%s=%s\n" % (key, str(value).replace('\n', '\n\t')))
+                fp.write("\n")
+            for section in self._sections:
+                fp.write("[%s]\n" % section)
+                for (key, value) in self._sections[section].items():
+                    if key == "__name__":
+                        continue
+                    if (value is not None) or (self._optcre == self.OPTCRE):
+                        key = "=".join((key, str(value).replace('\n', '\n\t')))
+                    fp.write("%s\n" % (key))
+                fp.write("\n")
+
     def __init__(self, marionette):
         BaseLib.__init__(self, marionette)
 
-        self._ini_file_path = self.marionette.execute_script("""
+        self.config_file_path = self.marionette.execute_script("""
           Components.utils.import('resource://gre/modules/Services.jsm');
 
           let file = Services.dirsvc.get('GreD', Components.interfaces.nsIFile);
@@ -93,66 +118,39 @@ class MARChannels(BaseLib):
           return file.path;
         """)
 
-    @property
-    def config_file_path(self):
-        """The path to the update-settings.ini file."""
-        return self._ini_file_path
-
-    @property
-    def config_file_contents(self):
-        """The contents of the update-settings.ini file."""
-        with open(self.config_file_path) as f:
-            return f.read()
+        self.config = self.MARConfigParser()
+        self.config.optionxform = str
 
     @property
     def channels(self):
-        """The channels as found in the ACCEPTED_MAR_CHANNEL_IDS option
-        of the update-settings.ini file.
+        """The currently accepted MAR channels.
 
         :returns: A set of channel names
         """
-        channels = self.marionette.execute_script("""
-          Components.utils.import("resource://gre/modules/FileUtils.jsm");
-          let iniFactory = Components.classes['@mozilla.org/xpcom/ini-processor-factory;1']
-                           .getService(Components.interfaces.nsIINIParserFactory);
+        # Make sure to always read the current file contents
+        self.config.read(self.config_file_path)
 
-          let file = new FileUtils.File(arguments[0]);
-          let parser = iniFactory.createINIParser(file);
-
-          return parser.getString(arguments[1], arguments[2]);
-        """, script_args=[self.config_file_path, self.INI_SECTION, self.INI_OPTION])
-        return set(channels.split(','))
+        return set(self.config.get(self.INI_SECTION, self.INI_OPTION).split(','))
 
     @channels.setter
     def channels(self, channels):
-        """Set the channels in the update-settings.ini file.
+        """Set the accepted MAR channels.
 
         :param channels: A set of channel names
         """
-        new_channels = ','.join(channels)
-        self.marionette.execute_script("""
-          Components.utils.import("resource://gre/modules/FileUtils.jsm");
-          let iniFactory = Components.classes['@mozilla.org/xpcom/ini-processor-factory;1']
-                           .getService(Components.interfaces.nsIINIParserFactory);
-
-          let file = new FileUtils.File(arguments[0]);
-
-          let writer = iniFactory.createINIParser(file)
-                       .QueryInterface(Components.interfaces.nsIINIParserWriter);
-
-          writer.setString(arguments[1], arguments[2], arguments[3]);
-          writer.writeFile(null, Components.interfaces.nsIINIParserWriter.WRITE_UTF16);
-        """, script_args=[self.config_file_path, self.INI_SECTION, self.INI_OPTION, new_channels])
+        self.config.set(self.INI_SECTION, self.INI_OPTION, ','.join(channels))
+        with open(self.config_file_path, 'wb') as configfile:
+            self.config.write(configfile)
 
     def add_channels(self, channels):
-        """Add channels to the update-settings.ini file.
+        """Add additional MAR channels.
 
         :param channels: A set of channel names to add
         """
         self.channels = self.channels | set(channels)
 
     def remove_channels(self, channels):
-        """Remove channels from the update-settings.ini file.
+        """Remove MAR channels.
 
         :param channels: A set of channel names to remove
         """
