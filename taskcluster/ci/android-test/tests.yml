@@ -129,9 +129,13 @@ mochitest-chrome:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
-            - android/androidarm_4_3.py
-            - remove_executables.py
-            - android/androidarm_4_3-tc.py
+            by-test-platform:
+                default:
+                    - android/androidarm_4_3.py
+                    - remove_executables.py
+                    - android/androidarm_4_3-tc.py
+                android-4.2-x86/opt:
+                    - android/androidx86-tc.py
         extra-options:
             - --test-suite=mochitest-chrome
 
