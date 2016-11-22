@@ -11,6 +11,7 @@
 #include "mozilla/UniquePtr.h"
 
 struct ServoComputedValues;
+struct ServoCssRules;
 struct RawServoStyleSheet;
 struct RawServoStyleSet;
 struct RawServoDeclarationBlock;
@@ -72,6 +73,7 @@ typedef nsIDocument RawGeckoDocument;
   DECL_NULLABLE_BORROWED_MUT_REF_TYPE_FOR(type_)
 
 DECL_ARC_REF_TYPE_FOR(ServoComputedValues)
+DECL_ARC_REF_TYPE_FOR(ServoCssRules)
 DECL_ARC_REF_TYPE_FOR(RawServoStyleSheet)
 DECL_ARC_REF_TYPE_FOR(RawServoDeclarationBlock)
 // This is a reference to a reference of RawServoDeclarationBlock, which
@@ -121,6 +123,7 @@ DECL_BORROWED_MUT_REF_TYPE_FOR(nsCSSValue)
   };                                                 \
   }
 
+DEFINE_REFPTR_TRAITS(CssRules, ServoCssRules)
 DEFINE_REFPTR_TRAITS(StyleSheet, RawServoStyleSheet)
 DEFINE_REFPTR_TRAITS(ComputedValues, ServoComputedValues)
 DEFINE_REFPTR_TRAITS(DeclarationBlock, RawServoDeclarationBlock)
