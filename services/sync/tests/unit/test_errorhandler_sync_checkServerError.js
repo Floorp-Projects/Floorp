@@ -54,9 +54,7 @@ function sync_httpd_setup() {
 }
 
 async function setUp(server) {
-  await configureIdentity({username: "johndoe"});
-  Service.serverURL = server.baseURI + "/";
-  Service.clusterURL = server.baseURI + "/";
+  await configureIdentity({username: "johndoe"}, server);
   new FakeCryptoService();
 }
 

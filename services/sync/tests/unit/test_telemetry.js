@@ -101,7 +101,7 @@ add_task(async function test_processIncoming_error() {
                                            syncID: engine.syncID}}}},
     bookmarks: {}
   });
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   let collection = server.user("foo").collection("bookmarks");
   try {
     // Create a bogus record that when synced down will provoke a
@@ -124,7 +124,7 @@ add_task(async function test_processIncoming_error() {
     }
     ok(!!error);
     ok(!!ping);
-    equal(ping.uid, "0".repeat(32));
+    equal(ping.uid, "f".repeat(32)); // as setup by SyncTestingInfrastructure
     deepEqual(ping.failureReason, {
       name: "othererror",
       error: "error.engine.reason.record_download_fail"
@@ -151,7 +151,7 @@ add_task(async function test_uploading() {
                                            syncID: engine.syncID}}}},
     bookmarks: {}
   });
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   let parent = PlacesUtils.toolbarFolderId;
   let uri = Utils.makeURI("http://getfirefox.com/");
@@ -200,7 +200,7 @@ add_task(async function test_upload_failed() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = new SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let engine = new RotaryEngine(Service);
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
@@ -248,7 +248,7 @@ add_task(async function test_sync_partialUpload() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  let syncTesting = new SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   let engine = new RotaryEngine(Service);
@@ -331,7 +331,7 @@ add_task(async function test_generic_engine_fail() {
                                       syncID: engine.syncID}}}},
     steam: {}
   });
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   let e = new Error("generic failure message")
   engine._errToThrow = e;
 
@@ -358,7 +358,7 @@ add_task(async function test_engine_fail_ioerror() {
                                       syncID: engine.syncID}}}},
     steam: {}
   });
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   // create an IOError to re-throw as part of Sync.
   try {
     // (Note that fakeservices.js has replaced Utils.jsonMove etc, but for
@@ -398,7 +398,7 @@ add_task(async function test_initial_sync_engines() {
     conf[e] = {};
   }
   let server = serverForUsers({"foo": "password"}, conf);
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   try {
     let ping = await wait_for_ping(() => Service.sync(), true);
 
@@ -431,7 +431,7 @@ add_task(async function test_nserror() {
                                       syncID: engine.syncID}}}},
     steam: {}
   });
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   engine._errToThrow = Components.Exception("NS_ERROR_UNKNOWN_HOST", Cr.NS_ERROR_UNKNOWN_HOST);
   try {
     let ping = await sync_and_validate_telem(true);
@@ -461,7 +461,6 @@ add_identity_test(this, async function test_discarding() {
   let server;
   try {
 
-    await configureIdentity({ username: "johndoe" });
     let handlers = {
       "/1.1/johndoe/info/collections": helper.handler,
       "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
@@ -475,7 +474,7 @@ add_identity_test(this, async function test_discarding() {
     }
 
     server = httpd_setup(handlers);
-    Service.serverURL = server.baseURI;
+    await configureIdentity({ username: "johndoe" }, server);
     telem.submit = () => ok(false, "Submitted telemetry ping when we should not have");
 
     for (let i = 0; i < 5; ++i) {
@@ -506,7 +505,7 @@ add_task(async function test_no_foreign_engines_in_error_ping() {
     steam: {}
   });
   engine._errToThrow = new Error("Oh no!");
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   try {
     let ping = await sync_and_validate_telem(true);
     equal(ping.status.service, SYNC_FAILED_PARTIAL);
@@ -527,7 +526,7 @@ add_task(async function test_sql_error() {
                                       syncID: engine.syncID}}}},
     steam: {}
   });
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   engine._sync = function() {
     // Just grab a DB connection and issue a bogus SQL statement synchronously.
     let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
@@ -553,7 +552,7 @@ add_task(async function test_no_foreign_engines_in_success_ping() {
     steam: {}
   });
 
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   try {
     let ping = await sync_and_validate_telem();
     ok(ping.engines.every(e => e.name !== "bogus"));

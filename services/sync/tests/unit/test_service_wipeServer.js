@@ -60,7 +60,7 @@ add_identity_test(this, async function test_wipeServer_list_success() {
 
   try {
     await setUpTestFixtures(server);
-    new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
+    await SyncTestingInfrastructure(server, "johndoe", "irrelevant");
 
     _("Confirm initial environment.");
     do_check_false(steam_coll.deleted);
@@ -94,7 +94,7 @@ add_identity_test(this, async function test_wipeServer_list_503() {
 
   try {
     await setUpTestFixtures(server);
-    new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
+    await SyncTestingInfrastructure(server, "johndoe", "irrelevant");
 
     _("Confirm initial environment.");
     do_check_false(steam_coll.deleted);
@@ -142,7 +142,7 @@ add_identity_test(this, async function test_wipeServer_all_success() {
   await setUpTestFixtures(server);
 
   _("Try deletion.");
-  new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
+  await SyncTestingInfrastructure(server, "johndoe", "irrelevant");
   let returnedTimestamp = Service.wipeServer();
   do_check_true(deleted);
   do_check_eq(returnedTimestamp, serverTimestamp);
@@ -174,7 +174,7 @@ add_identity_test(this, async function test_wipeServer_all_404() {
   await setUpTestFixtures(server);
 
   _("Try deletion.");
-  new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
+  await SyncTestingInfrastructure(server, "johndoe", "irrelevant");
   let returnedTimestamp = Service.wipeServer();
   do_check_true(deleted);
   do_check_eq(returnedTimestamp, serverTimestamp);
@@ -203,7 +203,7 @@ add_identity_test(this, async function test_wipeServer_all_503() {
   _("Try deletion.");
   let error;
   try {
-    new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
+    await SyncTestingInfrastructure(server, "johndoe", "irrelevant");
     Service.wipeServer();
     do_throw("Should have thrown!");
   } catch (ex) {
