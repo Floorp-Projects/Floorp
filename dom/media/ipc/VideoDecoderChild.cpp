@@ -22,6 +22,7 @@ using namespace gfx;
 
 VideoDecoderChild::VideoDecoderChild()
   : mThread(VideoDecoderManagerChild::GetManagerThread())
+  , mFlushTask(nullptr)
   , mCanSend(false)
   , mInitialized(false)
   , mIsHardwareAccelerated(false)
