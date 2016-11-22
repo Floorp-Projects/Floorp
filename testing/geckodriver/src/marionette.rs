@@ -32,7 +32,7 @@ use webdriver::command::WebDriverCommand::{
     GetElementText, GetElementTagName, GetElementRect, IsEnabled,
     ElementClick, ElementTap, ElementClear, ElementSendKeys,
     ExecuteScript, ExecuteAsyncScript, GetCookies, GetCookie, AddCookie,
-    DeleteCookies, DeleteCookie, SetTimeouts, DismissAlert,
+    DeleteCookies, DeleteCookie, GetTimeouts, SetTimeouts, DismissAlert,
     AcceptAlert, GetAlertText, SendAlertText, TakeScreenshot, TakeElementScreenshot,
     Extension, SetWindowPosition, GetWindowPosition};
 use webdriver::command::{
@@ -575,6 +575,10 @@ impl MarionetteSession {
                 //TODO: Convert webelement keys
                 WebDriverResponse::Generic(ValueResponse::new(value.clone()))
             },
+            GetTimeouts => {
+                return Err(WebDriverError::new(ErrorStatus::UnsupportedOperation,
+                                               "Getting timeouts not yet supported"));
+            },
             GetWindowHandles => {
                 WebDriverResponse::Generic(ValueResponse::new(resp.result.clone()))
             },
@@ -848,6 +852,7 @@ impl MarionetteCommand {
             GetWindowHandle => (Some("getWindowHandle"), None),
             GetWindowHandles => (Some("getWindowHandles"), None),
             CloseWindow => (Some("close"), None),
+            GetTimeouts => (None, None),
             SetTimeouts(ref x) => (Some("timeouts"), Some(x.to_marionette())),
             SetWindowSize(ref x) => (Some("setWindowSize"), Some(x.to_marionette())),
             GetWindowSize => (Some("getWindowSize"), None),
