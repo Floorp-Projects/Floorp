@@ -68,122 +68,12 @@ nsCSSClipPathInstance::HitTestBasicShapeClip(nsIFrame* aFrame,
   return path->ContainsPoint(ToPoint(aPoint) * pixelRatio, Matrix());
 }
 
-nsRect
-nsCSSClipPathInstance::ComputeSVGReferenceRect()
-{
-  MOZ_ASSERT(mTargetFrame->GetContent()->IsSVGElement());
-  nsRect r;
-
-  // For SVG elements without associated CSS layout box, the used value for
-  // content-box, padding-box, border-box and margin-box is fill-box.
-  switch (mClipPathStyle.GetReferenceBox()) {
-    case StyleClipPathGeometryBox::Stroke: {
-      // XXX Bug 1299876
-      // The size of srtoke-box is not correct if this graphic element has
-      // specific stroke-linejoin or stroke-linecap.
-      gfxRect bbox = nsSVGUtils::GetBBox(mTargetFrame,
-                nsSVGUtils::eBBoxIncludeFill | nsSVGUtils::eBBoxIncludeStroke);
-      r = nsLayoutUtils::RoundGfxRectToAppRect(bbox,
-                                         nsPresContext::AppUnitsPerCSSPixel());
-      break;
-    }
-    case StyleClipPathGeometryBox::View: {
-      nsIContent* content = mTargetFrame->GetContent();
-      nsSVGElement* element = static_cast<nsSVGElement*>(content);
-      SVGSVGElement* svgElement = element->GetCtx();
-      MOZ_ASSERT(svgElement);
-
-      if (svgElement && svgElement->HasViewBoxRect()) {
-        // If a ‘viewBox‘ attribute is specified for the SVG viewport creating
-        // element:
-        // 1. The reference box is positioned at the origin of the coordinate
-        //    system established by the ‘viewBox‘ attribute.
-        // 2. The dimension of the reference box is set to the width and height
-        //    values of the ‘viewBox‘ attribute.
-        nsSVGViewBox* viewBox = svgElement->GetViewBox();
-        const nsSVGViewBoxRect& value = viewBox->GetAnimValue();
-        r = nsRect(nsPresContext::CSSPixelsToAppUnits(value.x),
-                   nsPresContext::CSSPixelsToAppUnits(value.y),
-                   nsPresContext::CSSPixelsToAppUnits(value.width),
-                   nsPresContext::CSSPixelsToAppUnits(value.height));
-      } else {
-        // No viewBox is specified, uses the nearest SVG viewport as reference
-        // box.
-        svgFloatSize viewportSize = svgElement->GetViewportSize();
-        r = nsRect(0, 0,
-                   nsPresContext::CSSPixelsToAppUnits(viewportSize.width),
-                   nsPresContext::CSSPixelsToAppUnits(viewportSize.height));
-      }
-
-      break;
-    }
-    case StyleClipPathGeometryBox::NoBox:
-    case StyleClipPathGeometryBox::Border:
-    case StyleClipPathGeometryBox::Content:
-    case StyleClipPathGeometryBox::Padding:
-    case StyleClipPathGeometryBox::Margin:
-    case StyleClipPathGeometryBox::Fill: {
-      gfxRect bbox = nsSVGUtils::GetBBox(mTargetFrame,
-                                         nsSVGUtils::eBBoxIncludeFill);
-      r = nsLayoutUtils::RoundGfxRectToAppRect(bbox,
-                                         nsPresContext::AppUnitsPerCSSPixel());
-      break;
-    }
-    default:{
-      MOZ_ASSERT_UNREACHABLE("unknown StyleClipPathGeometryBox type");
-      gfxRect bbox = nsSVGUtils::GetBBox(mTargetFrame,
-                                         nsSVGUtils::eBBoxIncludeFill);
-      r = nsLayoutUtils::RoundGfxRectToAppRect(bbox,
-                                         nsPresContext::AppUnitsPerCSSPixel());
-      break;
-    }
-  }
-
-  return r;
-}
-
-nsRect
-nsCSSClipPathInstance::ComputeHTMLReferenceRect()
-{
-  nsRect r;
-
-  // For elements with associated CSS layout box, the used value for fill-box,
-  // stroke-box and view-box is border-box.
-  switch (mClipPathStyle.GetReferenceBox()) {
-    case StyleClipPathGeometryBox::Content:
-      r = mTargetFrame->GetContentRectRelativeToSelf();
-      break;
-    case StyleClipPathGeometryBox::Padding:
-      r = mTargetFrame->GetPaddingRectRelativeToSelf();
-      break;
-    case StyleClipPathGeometryBox::Margin:
-      r = mTargetFrame->GetMarginRectRelativeToSelf();
-      break;
-    case StyleClipPathGeometryBox::NoBox:
-    case StyleClipPathGeometryBox::Border:
-    case StyleClipPathGeometryBox::Fill:
-    case StyleClipPathGeometryBox::Stroke:
-    case StyleClipPathGeometryBox::View:
-      r = mTargetFrame->GetRectRelativeToSelf();
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unknown StyleClipPathGeometryBox type");
-      r = mTargetFrame->GetRectRelativeToSelf();
-      break;
-  }
-
-  return r;
-}
-
 already_AddRefed<Path>
 nsCSSClipPathInstance::CreateClipPath(DrawTarget* aDrawTarget)
 {
-  // We use ComputeSVGReferenceRect for all SVG elements, except <svg>
-  // element, which does have an associated CSS layout box. In this case we
-  // should still use ComputeHTMLReferenceRect for region computing.
-  nsRect r = mTargetFrame->IsFrameOfType(nsIFrame::eSVG) &&
-             (mTargetFrame->GetType() != nsGkAtoms::svgOuterSVGFrame)
-             ? ComputeSVGReferenceRect() : ComputeHTMLReferenceRect();
+  nsRect r =
+    nsLayoutUtils::ComputeGeometryBox(mTargetFrame,
+                                      mClipPathStyle.GetReferenceBox());
 
   if (mClipPathStyle.GetType() != StyleShapeSourceType::Shape) {
     // TODO Clip to border-radius/reference box if no shape
