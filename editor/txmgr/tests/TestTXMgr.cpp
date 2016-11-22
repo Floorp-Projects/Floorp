@@ -288,9 +288,9 @@ public:
     : mVal(++sConstructorCount), mFlags(aFlags)
   {}
 
-  virtual ~SimpleTransaction() = default;
+  ~SimpleTransaction() override = default;
 
-  NS_IMETHOD DoTransaction()
+  NS_IMETHOD DoTransaction() override
   {
     //
     // Make sure DoTransaction() is called in the order we expect!
@@ -307,7 +307,7 @@ public:
     return (mFlags & THROWS_DO_ERROR_FLAG) ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  NS_IMETHOD UndoTransaction()
+  NS_IMETHOD UndoTransaction() override
   {
     //
     // Make sure UndoTransaction() is called in the order we expect!
@@ -324,7 +324,7 @@ public:
     return (mFlags & THROWS_UNDO_ERROR_FLAG) ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  NS_IMETHOD RedoTransaction()
+  NS_IMETHOD RedoTransaction() override
   {
     //
     // Make sure RedoTransaction() is called in the order we expect!
@@ -341,7 +341,7 @@ public:
     return (mFlags & THROWS_REDO_ERROR_FLAG) ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  NS_IMETHOD GetIsTransient(bool *aIsTransient)
+  NS_IMETHOD GetIsTransient(bool *aIsTransient) override
   {
     if (aIsTransient) {
       *aIsTransient = (mFlags & TRANSIENT_FLAG) ? true : false;
@@ -349,7 +349,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Merge(nsITransaction *aTransaction, bool *aDidMerge)
+  NS_IMETHOD Merge(nsITransaction *aTransaction, bool *aDidMerge) override
   {
     if (aDidMerge) {
       *aDidMerge = (mFlags & MERGE_FLAG) ? true : false;
@@ -401,9 +401,9 @@ public:
     mNumChildrenPerNode = aNumChildrenPerNode;
   }
 
-  virtual ~AggregateTransaction() = default;
+  ~AggregateTransaction() override = default;
 
-  NS_IMETHOD DoTransaction()
+  NS_IMETHOD DoTransaction() override
   {
     if (mLevel >= mMaxLevel) {
       // Only leaf nodes can throw errors!
@@ -475,7 +475,7 @@ class SimpleTransactionFactory : public TestTransactionFactory
 {
 public:
 
-  TestTransaction *create(nsITransactionManager *txmgr, int32_t flags)
+  TestTransaction *create(nsITransactionManager *txmgr, int32_t flags) override
   {
     return (TestTransaction *)new SimpleTransaction(flags);
   }
@@ -498,7 +498,7 @@ public:
   {
   }
 
-  virtual TestTransaction *create(nsITransactionManager *txmgr, int32_t flags)
+  TestTransaction *create(nsITransactionManager *txmgr, int32_t flags) override
   {
     return (TestTransaction *)new AggregateTransaction(txmgr, mMaxLevel,
                                                        mNumChildrenPerNode,
