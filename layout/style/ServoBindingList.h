@@ -37,6 +37,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_Release, void,
                    RawServoStyleSheetBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,
                    RawServoStyleSheetBorrowed sheet)
+SERVO_BINDING_FUNC(Servo_StyleSheet_GetRules, ServoCssRulesStrong,
+                   RawServoStyleSheetBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSet_Init, RawServoStyleSetOwned)
 SERVO_BINDING_FUNC(Servo_StyleSet_Drop, void, RawServoStyleSetOwned set)
 SERVO_BINDING_FUNC(Servo_StyleSet_AppendStyleSheet, void,
@@ -48,6 +50,32 @@ SERVO_BINDING_FUNC(Servo_StyleSet_RemoveStyleSheet, void,
 SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
                    RawServoStyleSetBorrowed set, RawServoStyleSheetBorrowed sheet,
                    RawServoStyleSheetBorrowed reference)
+
+// CSSRuleList
+SERVO_BINDING_FUNC(Servo_CssRules_AddRef, void, ServoCssRulesBorrowed rules)
+SERVO_BINDING_FUNC(Servo_CssRules_Release, void, ServoCssRulesBorrowed rules)
+SERVO_BINDING_FUNC(Servo_CssRules_ListTypes, void,
+                   ServoCssRulesBorrowed rules,
+                   nsTArrayBorrowed_uintptr_t result)
+SERVO_BINDING_FUNC(Servo_CssRules_GetStyleRuleAt, RawServoStyleRuleStrong,
+                   ServoCssRulesBorrowed rules, uint32_t index)
+
+// CSS Rules
+SERVO_BINDING_FUNC(Servo_StyleRule_AddRef, void,
+                   RawServoStyleRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_StyleRule_Release, void,
+                   RawServoStyleRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_StyleRule_Debug, void,
+                   RawServoStyleRuleBorrowed rule, nsACString* result)
+SERVO_BINDING_FUNC(Servo_StyleRule_GetStyle, RawServoDeclarationBlockStrong,
+                   RawServoStyleRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_StyleRule_SetStyle, void,
+                   RawServoStyleRuleBorrowed rule,
+                   RawServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_StyleRule_GetCssText, void,
+                   RawServoStyleRuleBorrowed rule, nsAString* result)
+SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorText, void,
+                   RawServoStyleRuleBorrowed rule, nsAString* result)
 
 // Animations API
 SERVO_BINDING_FUNC(Servo_ParseProperty,

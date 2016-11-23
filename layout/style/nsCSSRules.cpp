@@ -56,7 +56,7 @@ namespace mozilla {
 namespace css {
 
 /* virtual */ void
-Rule::SetStyleSheet(CSSStyleSheet* aSheet)
+Rule::SetStyleSheet(StyleSheet* aSheet)
 {
   // We don't reference count this up reference. The style sheet
   // will tell us when it's going away or when we're detached from
@@ -132,8 +132,8 @@ GroupRuleRuleList::GetParentObject()
   if (!mGroupRule) {
     return nullptr;
   }
-
-  return mGroupRule->GetStyleSheet();
+  StyleSheet* sheet = mGroupRule->GetStyleSheet();
+  return sheet ? sheet->AsGecko() : nullptr;
 }
 
 uint32_t
@@ -389,8 +389,7 @@ NS_INTERFACE_MAP_END
 static bool
 SetStyleSheetReference(Rule* aRule, void* aSheet)
 {
-  CSSStyleSheet* sheet = (CSSStyleSheet*)aSheet;
-  aRule->SetStyleSheet(sheet);
+  aRule->SetStyleSheet(reinterpret_cast<StyleSheet*>(aSheet));
   return true;
 }
 
@@ -424,7 +423,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(GroupRule)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 /* virtual */ void
-GroupRule::SetStyleSheet(CSSStyleSheet* aSheet)
+GroupRule::SetStyleSheet(StyleSheet* aSheet)
 {
   // Don't set the sheet on the kids if it's already the same as the sheet we
   // already have.  This is needed to avoid O(N^2) behavior in group nesting
@@ -450,11 +449,11 @@ void
 GroupRule::AppendStyleRule(Rule* aRule)
 {
   mRules.AppendObject(aRule);
-  CSSStyleSheet* sheet = GetStyleSheet();
+  StyleSheet* sheet = GetStyleSheet();
   aRule->SetStyleSheet(sheet);
   aRule->SetParentRule(this);
   if (sheet) {
-    sheet->SetModifiedByChildRule();
+    sheet->AsGecko()->SetModifiedByChildRule();
   }
 }
 
@@ -535,7 +534,7 @@ GroupRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
 nsresult
 GroupRule::InsertRule(const nsAString & aRule, uint32_t aIndex, uint32_t* _retval)
 {
-  CSSStyleSheet* sheet = GetStyleSheet();
+  StyleSheet* sheet = GetStyleSheet();
   NS_ENSURE_TRUE(sheet, NS_ERROR_FAILURE);
   
   if (aIndex > uint32_t(mRules.Count()))
@@ -544,13 +543,13 @@ GroupRule::InsertRule(const nsAString & aRule, uint32_t aIndex, uint32_t* _retva
   NS_ASSERTION(uint32_t(mRules.Count()) <= INT32_MAX,
                "Too many style rules!");
 
-  return sheet->InsertRuleIntoGroup(aRule, this, aIndex, _retval);
+  return sheet->AsGecko()->InsertRuleIntoGroup(aRule, this, aIndex, _retval);
 }
 
 nsresult
 GroupRule::DeleteRule(uint32_t aIndex)
 {
-  CSSStyleSheet* sheet = GetStyleSheet();
+  StyleSheet* sheet = GetStyleSheet();
   NS_ENSURE_TRUE(sheet, NS_ERROR_FAILURE);
 
   if (aIndex >= uint32_t(mRules.Count()))
@@ -559,7 +558,7 @@ GroupRule::DeleteRule(uint32_t aIndex)
   NS_ASSERTION(uint32_t(mRules.Count()) <= INT32_MAX,
                "Too many style rules!");
 
-  return sheet->DeleteRuleFromGroup(this, aIndex);
+  return sheet->AsGecko()->DeleteRuleFromGroup(this, aIndex);
 }
 
 /* virtual */ size_t
@@ -616,12 +615,14 @@ NS_INTERFACE_MAP_BEGIN(MediaRule)
 NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
 /* virtual */ void
-MediaRule::SetStyleSheet(CSSStyleSheet* aSheet)
+MediaRule::SetStyleSheet(StyleSheet* aSheet)
 {
   if (mMedia) {
     // Set to null so it knows it's leaving one sheet and joining another.
     mMedia->SetStyleSheet(nullptr);
-    mMedia->SetStyleSheet(aSheet);
+    if (aSheet) {
+      mMedia->SetStyleSheet(aSheet->AsGecko());
+    }
   }
 
   GroupRule::SetStyleSheet(aSheet);
@@ -2131,10 +2132,8 @@ nsCSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
 
   newSelectors.SwapElements(mKeys);
 
-  CSSStyleSheet* sheet = GetStyleSheet();
-  if (sheet) {
-    sheet->SetModifiedByChildRule();
-
+  if (StyleSheet* sheet = GetStyleSheet()) {
+    sheet->AsGecko()->SetModifiedByChildRule();
     if (doc) {
       doc->StyleRuleChanged(sheet, this);
     }
@@ -2168,10 +2167,8 @@ nsCSSKeyframeRule::ChangeDeclaration(css::Declaration* aDeclaration)
     mDeclaration->SetOwningRule(this);
   }
 
-  CSSStyleSheet* sheet = GetStyleSheet();
-  if (sheet) {
-    sheet->SetModifiedByChildRule();
-
+  if (StyleSheet* sheet = GetStyleSheet()) {
+    sheet->AsGecko()->SetModifiedByChildRule();
     if (doc) {
       doc->StyleRuleChanged(sheet, this);
     }
@@ -2317,10 +2314,8 @@ nsCSSKeyframesRule::SetName(const nsAString& aName)
 
   mName = aName;
 
-  CSSStyleSheet* sheet = GetStyleSheet();
-  if (sheet) {
-    sheet->SetModifiedByChildRule();
-
+  if (StyleSheet* sheet = GetStyleSheet()) {
+    sheet->AsGecko()->SetModifiedByChildRule();
     if (doc) {
       doc->StyleRuleChanged(sheet, this);
     }
@@ -2352,10 +2347,8 @@ nsCSSKeyframesRule::AppendRule(const nsAString& aRule)
 
     AppendStyleRule(rule);
 
-    CSSStyleSheet* sheet = GetStyleSheet();
-    if (sheet) {
-      sheet->SetModifiedByChildRule();
-
+    if (StyleSheet* sheet = GetStyleSheet()) {
+      sheet->AsGecko()->SetModifiedByChildRule();
       if (doc) {
         doc->StyleRuleChanged(sheet, this);
       }
@@ -2400,9 +2393,8 @@ nsCSSKeyframesRule::DeleteRule(const nsAString& aKey)
 
     mRules.RemoveObjectAt(index);
 
-    CSSStyleSheet* sheet = GetStyleSheet();
-    if (sheet) {
-      sheet->SetModifiedByChildRule();
+    if (StyleSheet* sheet = GetStyleSheet()) {
+      sheet->AsGecko()->SetModifiedByChildRule();
 
       if (doc) {
         doc->StyleRuleChanged(sheet, this);
@@ -2653,9 +2645,8 @@ nsCSSPageRule::ChangeDeclaration(css::Declaration* aDeclaration)
     mDeclaration->SetOwningRule(this);
   }
 
-  CSSStyleSheet* sheet = GetStyleSheet();
-  if (sheet) {
-    sheet->SetModifiedByChildRule();
+  if (StyleSheet* sheet = GetStyleSheet()) {
+    sheet->AsGecko()->SetModifiedByChildRule();
   }
 }
 
@@ -2969,9 +2960,8 @@ nsCSSCounterStyleRule::SetName(const nsAString& aName)
 
     mName = name;
 
-    CSSStyleSheet* sheet = GetStyleSheet();
-    if (sheet) {
-      sheet->SetModifiedByChildRule();
+    if (StyleSheet* sheet = GetStyleSheet()) {
+      sheet->AsGecko()->SetModifiedByChildRule();
       if (doc) {
         doc->StyleRuleChanged(sheet, this);
       }
@@ -3015,9 +3005,8 @@ nsCSSCounterStyleRule::SetDesc(nsCSSCounterDesc aDescID, const nsCSSValue& aValu
   mValues[aDescID] = aValue;
   mGeneration++;
 
-  CSSStyleSheet* sheet = GetStyleSheet();
-  if (sheet) {
-    sheet->SetModifiedByChildRule();
+  if (StyleSheet* sheet = GetStyleSheet()) {
+    sheet->AsGecko()->SetModifiedByChildRule();
     if (doc) {
       doc->StyleRuleChanged(sheet, this);
     }
@@ -3245,10 +3234,9 @@ nsCSSCounterStyleRule::SetDescriptor(nsCSSCounterDesc aDescID,
 {
   nsCSSParser parser;
   nsCSSValue value;
-  CSSStyleSheet* sheet = GetStyleSheet();
   nsIURI* baseURL = nullptr;
   nsIPrincipal* principal = nullptr;
-  if (sheet) {
+  if (StyleSheet* sheet = GetStyleSheet()) {
     baseURL = sheet->GetBaseURI();
     principal = sheet->Principal();
   }

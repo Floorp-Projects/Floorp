@@ -652,7 +652,7 @@ ArrayMetaTypeDescr::create(JSContext* cx,
     if (!CreateTraceList(cx, obj))
         return nullptr;
 
-    if (!cx->zone()->typeDescrObjects.put(obj)) {
+    if (!cx->zone()->addTypeDescrObject(cx, obj)) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
@@ -993,8 +993,8 @@ StructMetaTypeDescr::create(JSContext* cx,
     if (!CreateTraceList(cx, descr))
         return nullptr;
 
-    if (!cx->zone()->typeDescrObjects.put(descr) ||
-        !cx->zone()->typeDescrObjects.put(fieldTypeVec))
+    if (!cx->zone()->addTypeDescrObject(cx, descr) ||
+        !cx->zone()->addTypeDescrObject(cx, fieldTypeVec))
     {
         ReportOutOfMemory(cx);
         return nullptr;
@@ -1165,10 +1165,8 @@ DefineSimpleTypeDescr(JSContext* cx,
     if (!CreateTraceList(cx, descr))
         return false;
 
-    if (!cx->zone()->typeDescrObjects.put(descr)) {
-        ReportOutOfMemory(cx);
+    if (!cx->zone()->addTypeDescrObject(cx, descr))
         return false;
-    }
 
     return true;
 }

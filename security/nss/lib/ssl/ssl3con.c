@@ -1254,7 +1254,7 @@ ssl3_VerifySignedHashes(sslSocket *ss, SSLSignatureScheme scheme, SSL3Hashes *ha
 {
     SECKEYPublicKey *key;
     SECItem *signature = NULL;
-    SECStatus rv;
+    SECStatus rv = SECFailure;
     SECItem hashItem;
     SECOidTag encAlg;
     SECOidTag hashAlg;
@@ -1297,7 +1297,7 @@ ssl3_VerifySignedHashes(sslSocket *ss, SSLSignatureScheme scheme, SSL3Hashes *ha
                 signature = DSAU_DecodeDerSigToLen(buf, SECKEY_SignatureLen(key));
                 if (!signature) {
                     PORT_SetError(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
-                    return SECFailure;
+                    goto loser;
                 }
                 buf = signature;
             }
@@ -1328,9 +1328,8 @@ ssl3_VerifySignedHashes(sslSocket *ss, SSLSignatureScheme scheme, SSL3Hashes *ha
             break;
 
         default:
-            SECKEY_DestroyPublicKey(key);
             PORT_SetError(SEC_ERROR_UNSUPPORTED_KEYALG);
-            return SECFailure;
+            goto loser;
     }
 
     PRINT_BUF(60, (NULL, "hash(es) to be verified",
@@ -1365,20 +1364,22 @@ ssl3_VerifySignedHashes(sslSocket *ss, SSLSignatureScheme scheme, SSL3Hashes *ha
         rv = VFY_VerifyDigestDirect(&hashItem, key, buf, encAlg, hashAlg,
                                     pwArg);
     }
-    SECKEY_DestroyPublicKey(key);
     if (signature) {
         SECITEM_FreeItem(signature, PR_TRUE);
     }
-#ifdef UNSAFE_FUZZER_MODE
-    rv = SECSuccess;
-    PORT_SetError(0);
-#endif
     if (rv != SECSuccess) {
         ssl_MapLowLevelError(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
     }
     if (!ss->sec.isServer) {
         ss->sec.signatureScheme = scheme;
     }
+
+loser:
+    SECKEY_DestroyPublicKey(key);
+#ifdef UNSAFE_FUZZER_MODE
+    rv = SECSuccess;
+    PORT_SetError(0);
+#endif
     return rv;
 }
 
@@ -6504,14 +6505,13 @@ ssl3_SendCertificateVerify(sslSocket *ss, SECKEYPrivateKey *privKey)
                                        hashAlg, &hashes);
         if (rv != SECSuccess) {
             ssl_MapLowLevelError(SSL_ERROR_DIGEST_FAILURE);
-            goto done;
         }
     } else {
         rv = ssl3_ComputeHandshakeHashes(ss, ss->ssl3.pwSpec, &hashes, 0);
     }
     ssl_ReleaseSpecReadLock(ss);
     if (rv != SECSuccess) {
-        goto done; /* err code was set by ssl3_ComputeHandshakeHashes */
+        goto done; /* err code was set by ssl3_ComputeHandshakeHash(es) */
     }
 
     isTLS12 = (PRBool)(ss->version == SSL_LIBRARY_VERSION_TLS_1_2);
@@ -9453,10 +9453,7 @@ ssl3_SendDHServerKeyExchange(sslSocket *ss)
     if (rv != SECSuccess) {
         goto loser; /* ssl3_SignHashes has set err. */
     }
-    if (signed_hash.data == NULL) {
-        PORT_SetError(SSL_ERROR_SERVER_KEY_EXCHANGE_FAILURE);
-        goto loser;
-    }
+
     length = 2 + pubKey->u.dh.prime.len +
              2 + pubKey->u.dh.base.len +
              2 + pubKey->u.dh.prime.len +
@@ -13193,6 +13190,9 @@ ssl3_DestroySSL3Info(sslSocket *ss)
     if (ss->ssl3.clientCertChain != NULL) {
         CERT_DestroyCertificateList(ss->ssl3.clientCertChain);
         ss->ssl3.clientCertChain = NULL;
+    }
+    if (ss->ssl3.ca_list) {
+        CERT_FreeDistNames(ss->ssl3.ca_list);
     }
 
     /* clean up handshake */

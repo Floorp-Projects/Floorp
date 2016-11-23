@@ -127,7 +127,7 @@ public:
     explicit WebGLExtensionDebugShaders(WebGLContext*);
     virtual ~WebGLExtensionDebugShaders();
 
-    void GetTranslatedShaderSource(WebGLShader* shader, nsAString& retval);
+    void GetTranslatedShaderSource(const WebGLShader& shader, nsAString& retval) const;
 
     DECL_WEBGL_EXTENSION_GOOP
 };
@@ -372,12 +372,12 @@ public:
     already_AddRefed<WebGLQuery> CreateQueryEXT() const;
     void DeleteQueryEXT(WebGLQuery* query) const;
     bool IsQueryEXT(const WebGLQuery* query) const;
-    void BeginQueryEXT(GLenum target, WebGLQuery* query) const;
+    void BeginQueryEXT(GLenum target, WebGLQuery& query) const;
     void EndQueryEXT(GLenum target) const;
-    void QueryCounterEXT(WebGLQuery* query, GLenum target) const;
+    void QueryCounterEXT(WebGLQuery& query, GLenum target) const;
     void GetQueryEXT(JSContext* cx, GLenum target, GLenum pname,
                      JS::MutableHandleValue retval) const;
-    void GetQueryObjectEXT(JSContext* cx, const WebGLQuery* query,
+    void GetQueryObjectEXT(JSContext* cx, const WebGLQuery& query,
                            GLenum pname, JS::MutableHandleValue retval) const;
 
     static bool IsSupported(const WebGLContext*);

@@ -425,7 +425,7 @@ class Dumper:
             self.archs = ['']
         else:
             self.archs = ['-a %s' % a for a in archs.split()]
-        self.srcdirs = [os.path.normpath(a) for a in srcdirs]
+        self.srcdirs = [os.path.normpath(self.FixFilenameCase(a)) for a in srcdirs]
         self.copy_debug = copy_debug
         self.vcsinfo = vcsinfo
         self.srcsrv = srcsrv
@@ -763,7 +763,10 @@ class Dumper_Win32(Dumper):
                                                     None,
                                                     # OPEN_EXISTING
                                                     3,
-                                                    0,
+                                                    # FILE_FLAG_BACKUP_SEMANTICS
+                                                    # This is necessary to open
+                                                    # directory handles.
+                                                    0x02000000,
                                                     None)
         if handle != -1:
             size = ctypes.windll.kernel32.GetFinalPathNameByHandleW(handle,

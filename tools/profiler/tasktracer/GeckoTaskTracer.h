@@ -39,16 +39,22 @@ enum {
 };
 
 enum SourceEventType {
-  Unknown = 0,
-  Touch,
-  Mouse,
-  Key,
-  Bluetooth,
-  Unixsocket,
-  Wifi
+#define SOURCE_EVENT_NAME(x) x,
+#include "SourceEventTypeMap.h"
+#undef SOURCE_EVENT_NAME
 };
 
-class AutoSourceEvent
+class AutoSaveCurTraceInfo
+{
+  uint64_t mSavedTaskId;
+  uint64_t mSavedSourceEventId;
+  SourceEventType mSavedSourceEventType;
+public:
+  AutoSaveCurTraceInfo();
+  ~AutoSaveCurTraceInfo();
+};
+
+class AutoSourceEvent : public AutoSaveCurTraceInfo
 {
 public:
   AutoSourceEvent(SourceEventType aType);
@@ -82,6 +88,9 @@ CreateTracedRunnable(already_AddRefed<nsIRunnable>&& aRunnable);
 void FreeTraceInfo();
 
 const char* GetJSLabelPrefix();
+
+void GetCurTraceInfo(uint64_t* aOutSourceEventId, uint64_t* aOutParentTaskId,
+                     SourceEventType* aOutSourceEventType);
 
 } // namespace tasktracer
 } // namespace mozilla.
