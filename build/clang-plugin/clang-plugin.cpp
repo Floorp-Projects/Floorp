@@ -423,6 +423,8 @@ const Stmt *IgnoreImplicit(const Stmt *s) {
       s = bte->getSubExpr();
     } else if (auto *ice = dyn_cast<ImplicitCastExpr>(s)) {
       s = ice->getSubExpr();
+    } else if (auto *pe = dyn_cast<ParenExpr>(s)) {
+      s = pe->getSubExpr();
     } else {
       break;
     }
