@@ -47,9 +47,6 @@ nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel(),
 #if (MOZ_WIDGET_GTK == 2)
       mStyle(nullptr),
-#else
-      mBackgroundStyle(nullptr),
-      mButtonStyle(nullptr),
 #endif
       mDefaultFontCached(false), mButtonFontCached(false),
       mFieldFontCached(false), mMenuFontCached(false)
@@ -61,9 +58,6 @@ nsLookAndFeel::~nsLookAndFeel()
 {
 #if (MOZ_WIDGET_GTK == 2)
     g_object_unref(mStyle);
-#else
-    g_object_unref(mBackgroundStyle);
-    g_object_unref(mButtonStyle);
 #endif
 }
 
@@ -377,30 +371,39 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
         break;
 #else
         // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
-    case eColorID_activeborder:
+    case eColorID_activeborder: {
         // active window border
-        gtk_style_context_get_border_color(mBackgroundStyle, 
+        GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_WINDOW);
+        gtk_style_context_get_border_color(style,
                                            GTK_STATE_FLAG_NORMAL, &gdk_color);
         aColor = GDK_RGBA_TO_NS_RGBA(gdk_color);
+        ReleaseStyleContext(style);
         break;
-    case eColorID_inactiveborder:
+    }
+    case eColorID_inactiveborder: {
         // inactive window border
-        gtk_style_context_get_border_color(mBackgroundStyle, 
-                                           GTK_STATE_FLAG_INSENSITIVE, 
+        GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_WINDOW);
+        gtk_style_context_get_border_color(style,
+                                           GTK_STATE_FLAG_INSENSITIVE,
                                            &gdk_color);
         aColor = GDK_RGBA_TO_NS_RGBA(gdk_color);
+        ReleaseStyleContext(style);
         break;
+    }
     case eColorID_graytext: // disabled text in windows, menus, etc.
     case eColorID_inactivecaptiontext: // text in inactive window caption
         aColor = sMenuTextInactive;
         break;
-    case eColorID_inactivecaption:
+    case eColorID_inactivecaption: {
         // inactive window caption
-        gtk_style_context_get_background_color(mBackgroundStyle, 
+        GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_WINDOW);
+        gtk_style_context_get_background_color(style,
                                                GTK_STATE_FLAG_INSENSITIVE, 
                                                &gdk_color);
         aColor = GDK_RGBA_TO_NS_RGBA(gdk_color);
+        ReleaseStyleContext(style);
         break;
+    }
 #endif
     case eColorID_infobackground:
         // tooltip background color
@@ -521,18 +524,24 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
     case eColorID__moz_fieldtext:
         aColor = sMozFieldText;
         break;
-    case eColorID__moz_buttondefault:
-      // default button border color
-        gtk_style_context_get_border_color(mButtonStyle, 
+    case eColorID__moz_buttondefault: {
+        // default button border color
+        GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_BUTTON);
+        gtk_style_context_get_border_color(style,
                                            GTK_STATE_FLAG_NORMAL, &gdk_color);
         aColor = GDK_RGBA_TO_NS_RGBA(gdk_color);
+        ReleaseStyleContext(style);
         break;
-    case eColorID__moz_buttonhoverface:
-        gtk_style_context_get_background_color(mButtonStyle, 
+    }
+    case eColorID__moz_buttonhoverface: {
+        GtkStyleContext *style = ClaimStyleContext(MOZ_GTK_BUTTON);
+        gtk_style_context_get_background_color(style,
                                                GTK_STATE_FLAG_PRELIGHT, 
                                                &gdk_color);
         aColor = GDK_RGBA_TO_NS_RGBA(gdk_color);
+        ReleaseStyleContext(style);
         break;
+    }
     case eColorID__moz_buttonhovertext:
         aColor = sButtonHoverText;
         break;
@@ -1029,16 +1038,6 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
   return true;
 }
 
-#if (MOZ_WIDGET_GTK == 3)
-static GtkStyleContext*
-create_context(GtkWidgetPath *path)
-{
-    GtkStyleContext *style = gtk_style_context_new();
-    gtk_style_context_set_path(style, path);
-    return(style);
-}
-#endif
-
 void
 nsLookAndFeel::Init()
 {
@@ -1129,33 +1128,19 @@ nsLookAndFeel::Init()
         g_object_set(settings, dark_setting, FALSE, nullptr);
     }
 
-    GtkWidgetPath *path = gtk_widget_path_new();
-    gtk_widget_path_append_type(path, GTK_TYPE_WINDOW);
-
-    mBackgroundStyle = create_context(path);
-    gtk_style_context_add_class(mBackgroundStyle, GTK_STYLE_CLASS_BACKGROUND);
-
-    mButtonStyle = create_context(path);
-    gtk_style_context_add_class(mButtonStyle, GTK_STYLE_CLASS_BUTTON); 
-
     // Scrollbar colors
-    style = create_context(path);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_SCROLLBAR);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_TROUGH);
+    style = ClaimStyleContext(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sMozScrollbar = GDK_RGBA_TO_NS_RGBA(color);
-    g_object_unref(style);
+    ReleaseStyleContext(style);
 
     // Window colors
-    style = create_context(path);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_BACKGROUND);
+    style = ClaimStyleContext(MOZ_GTK_WINDOW);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sMozWindowBackground = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sMozWindowText = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_restore(style);
-    g_object_unref(style);
+    ReleaseStyleContext(style);
 
     // tooltip foreground and background
     style = ClaimStyleContext(MOZ_GTK_TOOLTIP);
@@ -1357,8 +1342,6 @@ nsLookAndFeel::Init()
     sOddCellBackground = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_restore(style);
 
-    gtk_widget_path_free(path);
-
     // GtkFrame has a "border" subnode on which Adwaita draws the border.
     // Some themes do not draw on this node but draw a border on the widget
     // root node, so check the root node if no border is found on the border
@@ -1442,12 +1425,6 @@ nsLookAndFeel::RefreshImpl()
 #if (MOZ_WIDGET_GTK == 2)
     g_object_unref(mStyle);
     mStyle = nullptr;
-#else
-    g_object_unref(mBackgroundStyle);
-    g_object_unref(mButtonStyle);
-
-    mBackgroundStyle = nullptr;
-    mButtonStyle = nullptr;
 #endif
 
     Init();
