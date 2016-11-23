@@ -30,4 +30,21 @@ const actionTypes = {
   WATERFALL_RESIZE: "WATERFALL_RESIZE",
 };
 
-module.exports = Object.assign({}, general, actionTypes);
+// Descriptions for what this frontend is currently doing.
+const ACTIVITY_TYPE = {
+  // Standing by and handling requests normally.
+  NONE: 0,
+
+  // Forcing the target to reload with cache enabled or disabled.
+  RELOAD: {
+    WITH_CACHE_ENABLED: 1,
+    WITH_CACHE_DISABLED: 2,
+    WITH_CACHE_DEFAULT: 3
+  },
+
+  // Enabling or disabling the cache without triggering a reload.
+  ENABLE_CACHE: 3,
+  DISABLE_CACHE: 4
+};
+
+module.exports = Object.assign({ ACTIVITY_TYPE }, general, actionTypes);
