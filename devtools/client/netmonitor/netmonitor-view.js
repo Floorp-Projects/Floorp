@@ -2,26 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* import-globals-from ./netmonitor-controller.js */
 /* eslint-disable mozilla/reject-some-requires */
-/* globals Prefs, setInterval, setTimeout, clearInterval, clearTimeout, btoa */
-/* exported $, $all */
+/* globals $, gStore, NetMonitorController, dumpn */
 
 "use strict";
 
 const { testing: isTesting } = require("devtools/shared/flags");
+const promise = require("promise");
+const Editor = require("devtools/client/sourceeditor/editor");
+const { Task } = require("devtools/shared/task");
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
-const { configureStore } = require("./store");
 const { RequestsMenuView } = require("./requests-menu-view");
 const { CustomRequestView } = require("./custom-request-view");
 const { ToolbarView } = require("./toolbar-view");
 const { SidebarView } = require("./sidebar-view");
 const { DetailsView } = require("./details-view");
 const { PerformanceStatisticsView } = require("./performance-statistics-view");
-var {Prefs} = require("./prefs");
-
-// Initialize the global redux variables
-var gStore = configureStore();
+const { ACTIVITY_TYPE } = require("./constants");
+const Actions = require("./actions/index");
+const { Prefs } = require("./prefs");
 
 // ms
 const WDA_DEFAULT_VERIFY_INTERVAL = 50;
@@ -237,13 +236,6 @@ var NetMonitorView = {
 };
 
 /**
- * DOM query helper.
- * TODO: Move it into "dom-utils.js" module and "require" it when needed.
- */
-var $ = (selector, target = document) => target.querySelector(selector);
-var $all = (selector, target = document) => target.querySelectorAll(selector);
-
-/**
  * Makes sure certain properties are available on all objects in a data store.
  *
  * @param Store dataStore
@@ -287,3 +279,5 @@ NetMonitorView.NetworkDetails = new DetailsView();
 NetMonitorView.RequestsMenu = new RequestsMenuView();
 NetMonitorView.CustomRequest = new CustomRequestView();
 NetMonitorView.PerformanceStatistics = new PerformanceStatisticsView();
+
+exports.NetMonitorView = NetMonitorView;

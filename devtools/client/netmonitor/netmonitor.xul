@@ -12,8 +12,7 @@
 
   <script type="application/javascript;version=1.8"
           src="chrome://devtools/content/shared/theme-switching.js"/>
-  <script type="text/javascript" src="netmonitor-controller.js"/>
-  <script type="text/javascript" src="netmonitor-view.js"/>
+  <script type="text/javascript" src="netmonitor.js"/>
 
   <deck id="body"
         class="theme-sidebar"
