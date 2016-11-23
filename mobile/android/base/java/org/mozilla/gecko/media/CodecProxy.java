@@ -68,7 +68,7 @@ public final class CodecProxy {
         @Override
         public void onOutput(Sample sample) throws RemoteException {
             mCallbacks.onOutput(sample);
-            mRemote.releaseOutput(sample);
+            mRemote.releaseOutput(sample, true);
             sample.dispose();
         }
 

@@ -206,14 +206,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
             }
         }
 
-        private synchronized void onRelease(Sample sample) {
+        private synchronized void onRelease(Sample sample, boolean render) {
             Integer i = mSentIndices.poll();
             Sample output = mSentOutputs.poll();
             if (i == null || output == null) {
                 Log.d(LOGTAG, "output buffer#" + i + "(" + output + ")" + ": " + sample + " already released");
                 return;
             }
-            mCodec.releaseOutputBuffer(i, true);
+            mCodec.releaseOutputBuffer(i, render);
             mSamplePool.recycleOutput(output);
 
             sample.dispose();
@@ -426,8 +426,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     }
 
     @Override
-    public synchronized void releaseOutput(Sample sample) {
-        mOutputProcessor.onRelease(sample);
+    public synchronized void releaseOutput(Sample sample, boolean render) {
+        mOutputProcessor.onRelease(sample, render);
     }
 
     @Override
