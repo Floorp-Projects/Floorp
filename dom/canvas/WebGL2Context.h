@@ -121,7 +121,7 @@ public:
     {
         const char funcName[] = "compressedTexImage3D";
         const uint8_t funcDims = 3;
-        const TexImageSourceAdapter src(anySrc, viewElemOffset, viewElemLengthOverride);
+        const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
                            height, depth, border, src);
     }
@@ -135,7 +135,7 @@ public:
     {
         const char funcName[] = "compressedTexSubImage3D";
         const uint8_t funcDims = 3;
-        const TexImageSourceAdapter src(anySrc, viewElemOffset, viewElemLengthOverride);
+        const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
                               zOffset, width, height, depth, unpackFormat, src);
     }
@@ -159,7 +159,7 @@ public:
                     GLsizei height, GLsizei depth, GLint border, GLenum unpackFormat,
                     GLenum unpackType, const T& anySrc, ErrorResult& out_error)
     {
-        const TexImageSourceAdapter src(anySrc, &out_error);
+        const TexImageSourceAdapter src(&anySrc, &out_error);
         TexImage3D(target, level, internalFormat, width, height, depth, border,
                    unpackFormat, unpackType, src);
     }
@@ -169,7 +169,7 @@ public:
                     GLenum unpackType, const dom::ArrayBufferView& view,
                     GLuint viewElemOffset, ErrorResult&)
     {
-        const TexImageSourceAdapter src(view, viewElemOffset);
+        const TexImageSourceAdapter src(&view, viewElemOffset);
         TexImage3D(target, level, internalFormat, width, height, depth, border,
                    unpackFormat, unpackType, src);
     }
@@ -194,7 +194,7 @@ public:
                        GLenum unpackFormat, GLenum unpackType, const T& anySrc,
                        ErrorResult& out_error)
     {
-        const TexImageSourceAdapter src(anySrc, &out_error);
+        const TexImageSourceAdapter src(&anySrc, &out_error);
         TexSubImage3D(target, level, xOffset, yOffset, zOffset, width, height, depth,
                       unpackFormat, unpackType, src);
     }
@@ -212,7 +212,7 @@ public:
             return;
         const auto& srcView = maybeSrcView.Value();
 
-        const TexImageSourceAdapter src(srcView, srcElemOffset);
+        const TexImageSourceAdapter src(&srcView, srcElemOffset);
         TexSubImage3D(target, level, xOffset, yOffset, zOffset, width, height, depth,
                       unpackFormat, unpackType, src);
     }
