@@ -12,6 +12,9 @@
 
 #include <set>
 
+namespace sh
+{
+
 class RegenerateStructNames : public TIntermTraverser
 {
   public:
@@ -24,7 +27,7 @@ class RegenerateStructNames : public TIntermTraverser
 
   protected:
     void visitSymbol(TIntermSymbol *) override;
-    bool visitAggregate(Visit, TIntermAggregate *) override;
+    bool visitBlock(Visit, TIntermBlock *block) override;
 
   private:
     const TSymbolTable &mSymbolTable;
@@ -37,5 +40,7 @@ class RegenerateStructNames : public TIntermTraverser
     // If a struct's declared globally, push its ID in this set.
     std::set<int> mDeclaredGlobalStructs;
 };
+
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_REGENERATESTRUCTNAMES_H_

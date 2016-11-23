@@ -9,6 +9,9 @@
 
 #include "compiler/translator/Compiler.h"
 
+namespace sh
+{
+
 class TranslatorESSL : public TCompiler
 {
   public:
@@ -21,5 +24,7 @@ class TranslatorESSL : public TCompiler
   private:
     void writeExtensionBehavior();
 };
+
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_TRANSLATORESSL_H_

@@ -1250,7 +1250,7 @@
                 {
                     'target_name': 'angle_zlib',
                     'type': 'static_library',
-                    'includes': [ '../../build/common_defines.gypi', ],
+                    'includes': [ '../../gyp/common_defines.gypi', ],
                     'include_dirs':
                     [
                         '<(zlib_path)',
@@ -1326,7 +1326,7 @@
                 {
                     'target_name': 'angle_libpng',
                     'type': 'static_library',
-                    'includes': [ '../../build/common_defines.gypi', ],
+                    'includes': [ '../../gyp/common_defines.gypi', ],
                     'dependencies':
                     [
                         'angle_zlib'
@@ -1842,7 +1842,7 @@
                 {
                     'target_name': 'angle_deqp_gtest_gles2_tests',
                     'type': 'executable',
-                    'includes': [ '../../build/common_defines.gypi', ],
+                    'includes': [ '../../gyp/common_defines.gypi', ],
                     'dependencies':
                     [
                         'angle_deqp_gtest_support',
@@ -1857,7 +1857,7 @@
                 {
                     'target_name': 'angle_deqp_gtest_gles3_tests',
                     'type': 'executable',
-                    'includes': [ '../../build/common_defines.gypi', ],
+                    'includes': [ '../../gyp/common_defines.gypi', ],
                     'dependencies':
                     [
                         'angle_deqp_gtest_support',
@@ -1872,7 +1872,7 @@
                 {
                     'target_name': 'angle_deqp_gtest_gles31_tests',
                     'type': 'executable',
-                    'includes': [ '../../build/common_defines.gypi', ],
+                    'includes': [ '../../gyp/common_defines.gypi', ],
                     'dependencies':
                     [
                         'angle_deqp_gtest_support',
@@ -1887,7 +1887,7 @@
                 {
                     'target_name': 'angle_deqp_gtest_egl_tests',
                     'type': 'executable',
-                    'includes': [ '../../build/common_defines.gypi', ],
+                    'includes': [ '../../gyp/common_defines.gypi', ],
                     'dependencies':
                     [
                         'angle_deqp_gtest_support',

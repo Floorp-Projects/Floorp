@@ -117,8 +117,8 @@ void WriteArrayString(std::stringstream &strstr, unsigned int i)
     strstr << "]";
 }
 
-const std::string VERTEX_ATTRIBUTE_STUB_STRING = "@@ VERTEX ATTRIBUTES @@";
-const std::string PIXEL_OUTPUT_STUB_STRING     = "@@ PIXEL OUTPUT @@";
+constexpr const char *VERTEX_ATTRIBUTE_STUB_STRING = "@@ VERTEX ATTRIBUTES @@";
+constexpr const char *PIXEL_OUTPUT_STUB_STRING     = "@@ PIXEL OUTPUT @@";
 }  // anonymous namespace
 
 std::string GetVaryingSemantic(int majorShaderModel, bool programUsesPointSize)
@@ -295,7 +295,7 @@ std::string DynamicHLSL::generateVertexShaderForInputLayout(
     std::string vertexHLSL(sourceShader);
 
     size_t copyInsertionPos = vertexHLSL.find(VERTEX_ATTRIBUTE_STUB_STRING);
-    vertexHLSL.replace(copyInsertionPos, VERTEX_ATTRIBUTE_STUB_STRING.length(), structStream.str());
+    vertexHLSL.replace(copyInsertionPos, strlen(VERTEX_ATTRIBUTE_STUB_STRING), structStream.str());
 
     return vertexHLSL;
 }
@@ -360,7 +360,7 @@ std::string DynamicHLSL::generatePixelShaderForOutputSignature(
     std::string pixelHLSL(sourceShader);
 
     size_t outputInsertionPos = pixelHLSL.find(PIXEL_OUTPUT_STUB_STRING);
-    pixelHLSL.replace(outputInsertionPos, PIXEL_OUTPUT_STUB_STRING.length(),
+    pixelHLSL.replace(outputInsertionPos, strlen(PIXEL_OUTPUT_STUB_STRING),
                       declarationStream.str());
 
     return pixelHLSL;
@@ -440,7 +440,7 @@ bool DynamicHLSL::generateShaderLinkHLSL(const gl::ContextState &data,
     }
 
     // Add stub string to be replaced when shader is dynamically defined by its layout
-    vertexStream << "\n" << VERTEX_ATTRIBUTE_STUB_STRING + "\n";
+    vertexStream << "\n" << std::string(VERTEX_ATTRIBUTE_STUB_STRING) << "\n";
 
     // Write the HLSL input/output declarations
     vertexStream << "struct VS_OUTPUT\n";
@@ -597,7 +597,7 @@ bool DynamicHLSL::generateShaderLinkHLSL(const gl::ContextState &data,
     generateVaryingLinkHLSL(SHADER_PIXEL, varyingPacking, pixelStream);
     pixelStream << "\n";
 
-    pixelStream << PIXEL_OUTPUT_STUB_STRING + "\n";
+    pixelStream << std::string(PIXEL_OUTPUT_STUB_STRING) << "\n";
 
     if (fragmentShader->usesFrontFacing())
     {

@@ -156,6 +156,14 @@ size_t FormatStringIntoVector(const char *fmt, va_list vararg, std::vector<char>
 std::string FormatString(const char *fmt, va_list vararg);
 std::string FormatString(const char *fmt, ...);
 
+template <typename T>
+std::string ToString(const T &value)
+{
+    std::ostringstream o;
+    o << value;
+    return o.str();
+}
+
 // snprintf is not defined with MSVC prior to to msvc14
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf

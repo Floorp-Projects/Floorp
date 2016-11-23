@@ -11,6 +11,9 @@
 #ifndef COMPILER_TRANSLATOR_INTERMNODEPATTERNMATCHER_H_
 #define COMPILER_TRANSLATOR_INTERMNODEPATTERNMATCHER_H_
 
+namespace sh
+{
+
 class TIntermAggregate;
 class TIntermBinary;
 class TIntermNode;
@@ -49,5 +52,7 @@ class IntermNodePatternMatcher
 
     bool matchInternal(TIntermBinary *node, TIntermNode *parentNode);
 };
+
+}  // namespace sh
 
 #endif

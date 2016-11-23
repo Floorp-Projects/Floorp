@@ -154,11 +154,12 @@
           mContext(context),
           mFunctions(functions),
           mStateManager(renderer->getStateManager()),
+          mRenderer(renderer),
           mWorkarounds(renderer->getWorkarounds()),
           mFramebuffer(0),
           mDSRenderbuffer(0)
-{
-    pthread_mutex_init(&mSwapState.mutex, nullptr);
+    {
+        pthread_mutex_init(&mSwapState.mutex, nullptr);
 }
 
 WindowSurfaceCGL::~WindowSurfaceCGL()
@@ -324,7 +325,8 @@ EGLint WindowSurfaceCGL::getSwapBehavior() const
 FramebufferImpl *WindowSurfaceCGL::createDefaultFramebuffer(const gl::FramebufferState &state)
 {
     // TODO(cwallez) assert it happens only once?
-    return new FramebufferGL(mFramebuffer, state, mFunctions, mWorkarounds, mStateManager);
+    return new FramebufferGL(mFramebuffer, state, mFunctions, mWorkarounds, mRenderer->getBlitter(),
+                             mStateManager);
 }
 
 }

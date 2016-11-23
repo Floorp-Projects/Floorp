@@ -8,6 +8,9 @@
 
 #include "compiler/translator/ParseContext.h"
 
+namespace sh
+{
+
 namespace
 {
 
@@ -110,3 +113,4 @@ bool ValidateGlobalInitializer(TIntermTyped *initializer, const TParseContext *c
     return validate.isValid();
 }
 
+}  // namespace sh

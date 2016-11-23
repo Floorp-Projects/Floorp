@@ -61,7 +61,7 @@ gl::Error Image9::generateMip(IDirect3DSurface9 *destSurface, IDirect3DSurface9 
     ASSERT(sourceDesc.Height == 1 || sourceDesc.Height / 2 == destDesc.Height);
 
     const d3d9::D3DFormat &d3dFormatInfo = d3d9::GetD3DFormatInfo(sourceDesc.Format);
-    ASSERT(d3dFormatInfo.info->mipGenerationFunction != NULL);
+    ASSERT(d3dFormatInfo.info().mipGenerationFunction != NULL);
 
     D3DLOCKED_RECT sourceLocked = {0};
     result = sourceSurface->LockRect(&sourceLocked, NULL, D3DLOCK_READONLY);
@@ -85,8 +85,9 @@ gl::Error Image9::generateMip(IDirect3DSurface9 *destSurface, IDirect3DSurface9 
 
     ASSERT(sourceData && destData);
 
-    d3dFormatInfo.info->mipGenerationFunction(sourceDesc.Width, sourceDesc.Height, 1, sourceData,
-                                              sourceLocked.Pitch, 0, destData, destLocked.Pitch, 0);
+    d3dFormatInfo.info().mipGenerationFunction(sourceDesc.Width, sourceDesc.Height, 1, sourceData,
+                                               sourceLocked.Pitch, 0, destData, destLocked.Pitch,
+                                               0);
 
     destSurface->UnlockRect();
     sourceSurface->UnlockRect();
@@ -294,7 +295,6 @@ void Image9::unlock()
     if (mSurface)
     {
         HRESULT result = mSurface->UnlockRect();
-        UNUSED_ASSERTION_VARIABLE(result);
         ASSERT(SUCCEEDED(result));
     }
 }
@@ -525,9 +525,8 @@ gl::Error Image9::loadCompressedData(const gl::Box &area, const void *input)
     GLsizei inputRowPitch                = 0;
     ANGLE_TRY_RESULT(formatInfo.computeRowPitch(GL_UNSIGNED_BYTE, area.width, 1, 0), inputRowPitch);
     GLsizei inputDepthPitch = 0;
-    ANGLE_TRY_RESULT(
-        formatInfo.computeDepthPitch(GL_UNSIGNED_BYTE, area.width, area.height, 1, 0, 0),
-        inputDepthPitch);
+    ANGLE_TRY_RESULT(formatInfo.computeDepthPitch(area.height, 0, inputDepthPitch),
+                     inputDepthPitch);
 
     const d3d9::TextureFormat &d3d9FormatInfo = d3d9::GetTextureFormatInfo(mInternalFormat);
 

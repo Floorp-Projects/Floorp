@@ -2283,9 +2283,19 @@ bool FunctionsGL::isAtLeastGL(const gl::Version &glVersion) const
     return standard == STANDARD_GL_DESKTOP && version >= glVersion;
 }
 
+bool FunctionsGL::isAtMostGL(const gl::Version &glVersion) const
+{
+    return standard == STANDARD_GL_DESKTOP && glVersion >= version;
+}
+
 bool FunctionsGL::isAtLeastGLES(const gl::Version &glesVersion) const
 {
     return standard == STANDARD_GL_ES && version >= glesVersion;
+}
+
+bool FunctionsGL::isAtMostGLES(const gl::Version &glesVersion) const
+{
+    return standard == STANDARD_GL_ES && glesVersion >= version;
 }
 
 bool FunctionsGL::hasExtension(const std::string &ext) const

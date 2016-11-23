@@ -11,6 +11,9 @@
 #include "compiler/translator/OutputESSL.h"
 #include "angle_gl.h"
 
+namespace sh
+{
+
 TranslatorESSL::TranslatorESSL(sh::GLenum type, ShShaderSpec spec)
     : TCompiler(type, spec, SH_ESSL_OUTPUT)
 {
@@ -78,7 +81,8 @@ void TranslatorESSL::translate(TIntermNode *root, ShCompileOptions compileOption
 
     // Write translated shader.
     TOutputESSL outputESSL(sink, getArrayIndexClampingStrategy(), getHashFunction(), getNameMap(),
-                           getSymbolTable(), shaderVer, precisionEmulation);
+                           getSymbolTable(), getShaderType(), shaderVer, precisionEmulation,
+                           compileOptions);
     root->traverse(&outputESSL);
 }
 
@@ -107,3 +111,5 @@ void TranslatorESSL::writeExtensionBehavior() {
         }
     }
 }
+
+}  // namespace sh
