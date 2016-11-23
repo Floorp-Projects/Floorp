@@ -22,11 +22,7 @@
 }
 
 *|*::-moz-table-wrapper {
-  /* The inherited properties here need to be safe to have on both the
-   * table and the table wrapper, generally because code ignores them
-   * for the table. */
   display: inherit !important; /* table or inline-table */
-  -moz-top-layer: inherit !important;
   margin: inherit ! important;
   padding: 0 ! important;
   border: none ! important;
