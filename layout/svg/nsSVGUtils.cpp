@@ -785,11 +785,13 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
 
     if (maskUsage.shouldGenerateClipMaskLayer) {
       Matrix clippedMaskTransform;
-      RefPtr<SourceSurface> clipMaskSurface =
+      DrawResult clipMaskResult;
+      RefPtr<SourceSurface> clipMaskSurface;
+      Tie(clipMaskResult, clipMaskSurface) =
         clipPathFrame->GetClipMask(aContext, aFrame, aTransform,
                                    &clippedMaskTransform, maskSurface,
-                                   maskTransform, &result);
-
+                                   maskTransform);
+      result &= clipMaskResult;
       if (clipMaskSurface) {
         maskSurface = clipMaskSurface;
         maskTransform = clippedMaskTransform;
