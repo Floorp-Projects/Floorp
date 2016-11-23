@@ -13,14 +13,13 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
-  let { $, NetMonitorView, gStore } = monitor.panelWin;
+  let { $, NetMonitorView, gStore, windowRequire } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
-  let winRequire = monitor.panelWin.require;
   let { getDisplayedRequestsSummary } =
-    winRequire("devtools/client/netmonitor/selectors/index");
-  let { L10N } = winRequire("devtools/client/netmonitor/l10n");
-  let { PluralForm } = winRequire("devtools/shared/plural-form");
+    windowRequire("devtools/client/netmonitor/selectors/index");
+  let { L10N } = windowRequire("devtools/client/netmonitor/l10n");
+  let { PluralForm } = windowRequire("devtools/shared/plural-form");
 
   RequestsMenu.lazyUpdate = false;
   testStatus();
