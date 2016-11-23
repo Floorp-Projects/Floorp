@@ -962,7 +962,7 @@ LoginManagerPrompter.prototype = {
 
     let usernamePlaceholder = this._getLocalizedString("noUsernamePlaceholder");
     let togglePasswordLabel = this._getLocalizedString("togglePasswordLabel");
-    let togglePasswordAccessKey = this._getLocalizedString("togglePasswordAccessKey");
+    let togglePasswordAccessKey = this._getLocalizedString("togglePasswordAccessKey2");
 
     this._getPopupNote().show(
       browser,
