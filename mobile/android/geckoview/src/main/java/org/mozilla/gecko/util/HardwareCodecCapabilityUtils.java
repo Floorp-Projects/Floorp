@@ -9,6 +9,7 @@ package org.mozilla.gecko.util;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants.Versions;
 
+import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecInfo.CodecCapabilities;
 import android.media.MediaCodecList;
@@ -51,6 +52,25 @@ public final class HardwareCodecCapabilityUtils {
       }
     }
     return false;
+  }
+
+  @WrapForJNI
+  public static boolean checkSupportsAdaptivePlayback(MediaCodec aCodec, String aMimeType) {
+      // isFeatureSupported supported on API level >= 19.
+      if (!Versions.feature19Plus) {
+          return false;
+      }
+
+      try {
+          MediaCodecInfo info = aCodec.getCodecInfo();
+          MediaCodecInfo.CodecCapabilities capabilities = info.getCapabilitiesForType(aMimeType);
+          return capabilities != null &&
+                 capabilities.isFeatureSupported(
+                     MediaCodecInfo.CodecCapabilities.FEATURE_AdaptivePlayback);
+      } catch (IllegalArgumentException e) {
+            Log.e(LOGTAG, "Retrieve codec information failed", e);
+      }
+      return false;
   }
 
   public static boolean getHWEncoderCapability() {
