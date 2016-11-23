@@ -109,21 +109,8 @@ struct SimpleLinearSum
     {}
 };
 
-// Math done in a Linear sum can either be in a modulo space, in which case
-// overflow are wrapped around, or they can be computed in the integer-space in
-// which case we have to check that no overflow can happen when summing
-// constants.
-//
-// When the caller ignores which space it is, the definition would be used to
-// deduce it.
-enum class MathSpace {
-    Modulo,
-    Infinite,
-    Unknown
-};
-
 SimpleLinearSum
-ExtractLinearSum(MDefinition* ins, MathSpace space = MathSpace::Unknown);
+ExtractLinearSum(MDefinition* ins);
 
 MOZ_MUST_USE bool
 ExtractLinearInequality(MTest* test, BranchDirection direction,
