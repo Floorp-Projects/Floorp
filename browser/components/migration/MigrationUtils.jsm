@@ -261,7 +261,7 @@ this.MigratorPrototype = {
         for (let resourceType of Object.keys(MigrationUtils._importQuantities)) {
           let histogramId =
             "FX_MIGRATION_" + resourceType.toUpperCase() + "_QUANTITY";
-          let histogram = Services.telemetry.getKeyedHistogram(histogramId);
+          let histogram = Services.telemetry.getKeyedHistogramById(histogramId);
           histogram.add(this.getKey(), MigrationUtils._importQuantities[resourceType]);
         }
       } catch (ex) { /* Telemetry is exception-happy */ }
