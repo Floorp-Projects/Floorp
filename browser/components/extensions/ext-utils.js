@@ -924,6 +924,9 @@ extensions.on("shutdown", (type, extension) => {
 
 // Manages mapping between XUL windows and extension window IDs.
 global.WindowManager = {
+  _windows: new WeakMap(),
+  _nextId: 0,
+
   // Note: These must match the values in windows.json.
   WINDOW_ID_NONE: -1,
   WINDOW_ID_CURRENT: -2,
@@ -962,8 +965,12 @@ global.WindowManager = {
   },
 
   getId(window) {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+    if (this._windows.has(window)) {
+      return this._windows.get(window);
+    }
+    let id = this._nextId++;
+    this._windows.set(window, id);
+    return id;
   },
 
   getWindow(id, context) {
