@@ -100,12 +100,12 @@ bool
 LoadOpenVRRuntime()
 {
   static PRLibrary *openvrLib = nullptr;
+  std::string openvrPath = gfxPrefs::VROpenVRRuntime();
 
-  nsAdoptingCString openvrPath = Preferences::GetCString("gfx.vr.openvr-runtime");
-  if (!openvrPath)
+  if (!openvrPath.c_str())
     return false;
 
-  openvrLib = PR_LoadLibrary(openvrPath.BeginReading());
+  openvrLib = PR_LoadLibrary(openvrPath.c_str());
   if (!openvrLib)
     return false;
 
