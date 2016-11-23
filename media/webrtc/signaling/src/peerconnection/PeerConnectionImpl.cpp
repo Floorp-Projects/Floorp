@@ -336,6 +336,8 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mAllowIceLinkLocal(false)
   , mMedia(nullptr)
   , mUuidGen(MakeUnique<PCUuidGenerator>())
+  , mIceRestartCount(0)
+  , mIceRollbackCount(0)
   , mNumAudioStreams(0)
   , mNumVideoStreams(0)
   , mHaveConfiguredCodecs(false)
@@ -1737,6 +1739,7 @@ PeerConnectionImpl::RollbackIceRestart()
   }
   mPreviousIceUfrag = "";
   mPreviousIcePwd = "";
+  ++mIceRollbackCount;
 
   return NS_OK;
 }
@@ -1748,6 +1751,7 @@ PeerConnectionImpl::FinalizeIceRestart()
   // clear the previous ice creds since they are no longer needed
   mPreviousIceUfrag = "";
   mPreviousIcePwd = "";
+  ++mIceRestartCount;
 }
 
 NS_IMETHODIMP
@@ -3608,6 +3612,8 @@ PeerConnectionImpl::BuildStatsQuery_m(
 
   query->iceStartTime = mIceStartTime;
   query->failed = isFailed(mIceConnectionState);
+  query->report->mIceRestarts.Construct(mIceRestartCount);
+  query->report->mIceRollbacks.Construct(mIceRollbackCount);
 
   // Populate SDP on main
   if (query->internalStats) {
