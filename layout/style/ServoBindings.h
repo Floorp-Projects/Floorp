@@ -154,11 +154,6 @@ const uint16_t* Gecko_GetAtomAsUTF16(nsIAtom* aAtom, uint32_t* aLength);
 bool Gecko_AtomEqualsUTF8(nsIAtom* aAtom, const char* aString, uint32_t aLength);
 bool Gecko_AtomEqualsUTF8IgnoreCase(nsIAtom* aAtom, const char* aString, uint32_t aLength);
 
-// Strings (temporary until bug 1294742)
-void Gecko_Utf8SliceToString(nsString* aString,
-                             const uint8_t* aBuffer,
-                             size_t aBufferLen);
-
 // Font style
 void Gecko_FontFamilyList_Clear(FontFamilyList* aList);
 void Gecko_FontFamilyList_AppendNamed(FontFamilyList* aList, nsIAtom* aName);
