@@ -1227,42 +1227,42 @@ GatherSuccessfulValidationTelemetry(const UniqueCERTCertList& certList)
 }
 
 void
-GatherTelemetryForSingleSCT(const ct::SignedCertificateTimestamp& sct)
+GatherTelemetryForSingleSCT(const ct::VerifiedSCT& verifiedSct)
 {
   // See SSL_SCTS_ORIGIN in Histograms.json.
   uint32_t origin = 0;
-  switch (sct.origin) {
-    case ct::SignedCertificateTimestamp::Origin::Embedded:
+  switch (verifiedSct.origin) {
+    case ct::VerifiedSCT::Origin::Embedded:
       origin = 1;
       break;
-    case ct::SignedCertificateTimestamp::Origin::TLSExtension:
+    case ct::VerifiedSCT::Origin::TLSExtension:
       origin = 2;
       break;
-    case ct::SignedCertificateTimestamp::Origin::OCSPResponse:
+    case ct::VerifiedSCT::Origin::OCSPResponse:
       origin = 3;
       break;
     default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected SCT::Origin type");
+      MOZ_ASSERT_UNREACHABLE("Unexpected VerifiedSCT::Origin type");
   }
   Telemetry::Accumulate(Telemetry::SSL_SCTS_ORIGIN, origin);
 
   // See SSL_SCTS_VERIFICATION_STATUS in Histograms.json.
   uint32_t verificationStatus = 0;
-  switch (sct.verificationStatus) {
-    case ct::SignedCertificateTimestamp::VerificationStatus::OK:
+  switch (verifiedSct.status) {
+    case ct::VerifiedSCT::Status::Valid:
       verificationStatus = 1;
       break;
-    case ct::SignedCertificateTimestamp::VerificationStatus::UnknownLog:
+    case ct::VerifiedSCT::Status::UnknownLog:
       verificationStatus = 2;
       break;
-    case ct::SignedCertificateTimestamp::VerificationStatus::InvalidSignature:
+    case ct::VerifiedSCT::Status::InvalidSignature:
       verificationStatus = 3;
       break;
-    case ct::SignedCertificateTimestamp::VerificationStatus::InvalidTimestamp:
+    case ct::VerifiedSCT::Status::InvalidTimestamp:
       verificationStatus = 4;
       break;
     default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected SCT::VerificationStatus type");
+      MOZ_ASSERT_UNREACHABLE("Unexpected VerifiedSCT::Status type");
   }
   Telemetry::Accumulate(Telemetry::SSL_SCTS_VERIFICATION_STATUS,
                         verificationStatus);
@@ -1283,7 +1283,7 @@ GatherCertificateTransparencyTelemetry(const UniqueCERTCertList& certList,
     return;
   }
 
-  for (const ct::SignedCertificateTimestamp& sct : info.verifyResult.scts) {
+  for (const ct::VerifiedSCT& sct : info.verifyResult.verifiedScts) {
     GatherTelemetryForSingleSCT(sct);
   }
 
@@ -1294,7 +1294,8 @@ GatherCertificateTransparencyTelemetry(const UniqueCERTCertList& certList,
   }
 
   // Handle the histogram of SCTs counts.
-  uint32_t sctsCount = static_cast<uint32_t>(info.verifyResult.scts.length());
+  uint32_t sctsCount =
+    static_cast<uint32_t>(info.verifyResult.verifiedScts.length());
   // Note that sctsCount can be 0 in case we've received SCT binary data,
   // but it failed to parse (e.g. due to unsupported CT protocol version).
   Telemetry::Accumulate(Telemetry::SSL_SCTS_PER_CONNECTION, sctsCount);
