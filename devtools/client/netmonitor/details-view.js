@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* import-globals-from ./netmonitor-controller.js */
 /* eslint-disable mozilla/reject-some-requires */
-/* globals dumpn, $, NetMonitorView, gNetwork */
+/* globals window, dumpn, $, NetMonitorView, gNetwork */
 
 "use strict";
 
 const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
+const Editor = require("devtools/client/sourceeditor/editor");
 const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
 const { Task } = require("devtools/shared/task");
 const { ToolSidebar } = require("devtools/client/framework/sidebar");
