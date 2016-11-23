@@ -24,14 +24,7 @@ struct BlockMemberInfo;
 
 namespace rx
 {
-
-struct LinkResult
-{
-    LinkResult(bool linkSuccess, const gl::Error &error) : linkSuccess(linkSuccess), error(error) {}
-
-    bool linkSuccess;
-    gl::Error error;
-};
+using LinkResult = gl::ErrorOrResult<bool>;
 
 class ProgramImpl : angle::NonCopyable
 {

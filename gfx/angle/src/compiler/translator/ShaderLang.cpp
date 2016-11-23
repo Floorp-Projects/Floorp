@@ -20,6 +20,8 @@
 #include "compiler/translator/VariablePacker.h"
 #include "angle_gl.h"
 
+using namespace sh;
+
 namespace
 {
 
@@ -34,31 +36,31 @@ template <typename VarT>
 const std::vector<VarT> *GetVariableList(const TCompiler *compiler);
 
 template <>
-const std::vector<sh::Uniform> *GetVariableList(const TCompiler *compiler)
+const std::vector<Uniform> *GetVariableList(const TCompiler *compiler)
 {
     return &compiler->getUniforms();
 }
 
 template <>
-const std::vector<sh::Varying> *GetVariableList(const TCompiler *compiler)
+const std::vector<Varying> *GetVariableList(const TCompiler *compiler)
 {
     return &compiler->getVaryings();
 }
 
 template <>
-const std::vector<sh::Attribute> *GetVariableList(const TCompiler *compiler)
+const std::vector<Attribute> *GetVariableList(const TCompiler *compiler)
 {
     return &compiler->getAttributes();
 }
 
 template <>
-const std::vector<sh::OutputVariable> *GetVariableList(const TCompiler *compiler)
+const std::vector<OutputVariable> *GetVariableList(const TCompiler *compiler)
 {
     return &compiler->getOutputVariables();
 }
 
 template <>
-const std::vector<sh::InterfaceBlock> *GetVariableList(const TCompiler *compiler)
+const std::vector<InterfaceBlock> *GetVariableList(const TCompiler *compiler)
 {
     return &compiler->getInterfaceBlocks();
 }
@@ -235,8 +237,9 @@ ShHandle ShConstructCompiler(sh::GLenum type, ShShaderSpec spec,
     }
 
     // Generate built-in symbol table.
-    if (!compiler->Init(*resources)) {
-        ShDestruct(base);
+    if (!compiler->Init(*resources))
+    {
+        sh::Destruct(base);
         return 0;
     }
 
@@ -332,32 +335,32 @@ const std::map<std::string, std::string> *ShGetNameHashingMap(
     return &(compiler->getNameMap());
 }
 
-const std::vector<sh::Uniform> *ShGetUniforms(const ShHandle handle)
+const std::vector<Uniform> *ShGetUniforms(const ShHandle handle)
 {
-    return GetShaderVariables<sh::Uniform>(handle);
+    return GetShaderVariables<Uniform>(handle);
 }
 
-const std::vector<sh::Varying> *ShGetVaryings(const ShHandle handle)
+const std::vector<Varying> *ShGetVaryings(const ShHandle handle)
 {
-    return GetShaderVariables<sh::Varying>(handle);
+    return GetShaderVariables<Varying>(handle);
 }
 
-const std::vector<sh::Attribute> *ShGetAttributes(const ShHandle handle)
+const std::vector<Attribute> *ShGetAttributes(const ShHandle handle)
 {
-    return GetShaderVariables<sh::Attribute>(handle);
+    return GetShaderVariables<Attribute>(handle);
 }
 
-const std::vector<sh::OutputVariable> *ShGetOutputVariables(const ShHandle handle)
+const std::vector<OutputVariable> *ShGetOutputVariables(const ShHandle handle)
 {
-    return GetShaderVariables<sh::OutputVariable>(handle);
+    return GetShaderVariables<OutputVariable>(handle);
 }
 
-const std::vector<sh::InterfaceBlock> *ShGetInterfaceBlocks(const ShHandle handle)
+const std::vector<InterfaceBlock> *ShGetInterfaceBlocks(const ShHandle handle)
 {
-    return GetShaderVariables<sh::InterfaceBlock>(handle);
+    return GetShaderVariables<InterfaceBlock>(handle);
 }
 
-sh::WorkGroupSize ShGetComputeShaderLocalGroupSize(const ShHandle handle)
+WorkGroupSize ShGetComputeShaderLocalGroupSize(const ShHandle handle)
 {
     ASSERT(handle);
 
@@ -369,7 +372,7 @@ sh::WorkGroupSize ShGetComputeShaderLocalGroupSize(const ShHandle handle)
 }
 
 bool ShCheckVariablesWithinPackingLimits(int maxVectors,
-                                         const std::vector<sh::ShaderVariable> &variables)
+                                         const std::vector<ShaderVariable> &variables)
 {
     VariablePacker packer;
     return packer.CheckVariablesWithinPackingLimits(maxVectors, variables);
@@ -405,7 +408,126 @@ const std::map<std::string, unsigned int> *ShGetUniformRegisterMap(const ShHandl
 
     return translator->getUniformRegisterMap();
 #else
-    static std::map<std::string, unsigned int> map;
-    return &map;
+    return nullptr;
 #endif  // ANGLE_ENABLE_HLSL
 }
+
+namespace sh
+{
+bool Initialize()
+{
+    return ShInitialize();
+}
+
+bool Finalize()
+{
+    return ShFinalize();
+}
+
+void InitBuiltInResources(ShBuiltInResources *resources)
+{
+    ShInitBuiltInResources(resources);
+}
+
+const std::string &GetBuiltInResourcesString(const ShHandle handle)
+{
+    return ShGetBuiltInResourcesString(handle);
+}
+
+ShHandle ConstructCompiler(sh::GLenum type,
+                           ShShaderSpec spec,
+                           ShShaderOutput output,
+                           const ShBuiltInResources *resources)
+{
+    return ShConstructCompiler(type, spec, output, resources);
+}
+
+void Destruct(ShHandle handle)
+{
+    return ShDestruct(handle);
+}
+
+bool Compile(const ShHandle handle,
+             const char *const shaderStrings[],
+             size_t numStrings,
+             ShCompileOptions compileOptions)
+{
+    return ShCompile(handle, shaderStrings, numStrings, compileOptions);
+}
+
+void ClearResults(const ShHandle handle)
+{
+    return ShClearResults(handle);
+}
+
+int GetShaderVersion(const ShHandle handle)
+{
+    return ShGetShaderVersion(handle);
+}
+
+ShShaderOutput GetShaderOutputType(const ShHandle handle)
+{
+    return ShGetShaderOutputType(handle);
+}
+
+const std::string &GetInfoLog(const ShHandle handle)
+{
+    return ShGetInfoLog(handle);
+}
+
+const std::string &GetObjectCode(const ShHandle handle)
+{
+    return ShGetObjectCode(handle);
+}
+
+const std::map<std::string, std::string> *GetNameHashingMap(const ShHandle handle)
+{
+    return ShGetNameHashingMap(handle);
+}
+
+const std::vector<sh::Uniform> *GetUniforms(const ShHandle handle)
+{
+    return ShGetUniforms(handle);
+}
+const std::vector<sh::Varying> *GetVaryings(const ShHandle handle)
+{
+    return ShGetVaryings(handle);
+}
+const std::vector<sh::Attribute> *GetAttributes(const ShHandle handle)
+{
+    return ShGetAttributes(handle);
+}
+
+const std::vector<sh::OutputVariable> *GetOutputVariables(const ShHandle handle)
+{
+    return ShGetOutputVariables(handle);
+}
+const std::vector<sh::InterfaceBlock> *GetInterfaceBlocks(const ShHandle handle)
+{
+    return ShGetInterfaceBlocks(handle);
+}
+
+sh::WorkGroupSize GetComputeShaderLocalGroupSize(const ShHandle handle)
+{
+    return ShGetComputeShaderLocalGroupSize(handle);
+}
+
+bool CheckVariablesWithinPackingLimits(int maxVectors,
+                                       const std::vector<sh::ShaderVariable> &variables)
+{
+    return ShCheckVariablesWithinPackingLimits(maxVectors, variables);
+}
+
+bool GetInterfaceBlockRegister(const ShHandle handle,
+                               const std::string &interfaceBlockName,
+                               unsigned int *indexOut)
+{
+    return ShGetInterfaceBlockRegister(handle, interfaceBlockName, indexOut);
+}
+
+const std::map<std::string, unsigned int> *GetUniformRegisterMap(const ShHandle handle)
+{
+    return ShGetUniformRegisterMap(handle);
+}
+
+}  // namespace sh

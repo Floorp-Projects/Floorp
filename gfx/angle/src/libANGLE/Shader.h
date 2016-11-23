@@ -36,6 +36,7 @@ class Compiler;
 class ContextState;
 struct Limitations;
 class ResourceManager;
+class Context;
 
 class ShaderState final : angle::NonCopyable
 {
@@ -96,7 +97,7 @@ class Shader final : angle::NonCopyable, public LabeledObject
     GLenum getType() const { return mType; }
     GLuint getHandle() const;
 
-    const rx::ShaderImpl *getImplementation() const { return mImplementation; }
+    rx::ShaderImpl *getImplementation() const { return mImplementation; }
 
     void deleteSource();
     void setSource(GLsizei count, const char *const *string, const GLint *length);
@@ -110,7 +111,7 @@ class Shader final : angle::NonCopyable, public LabeledObject
     void getTranslatedSource(GLsizei bufSize, GLsizei *length, char *buffer) const;
     void getTranslatedSourceWithDebugInfo(GLsizei bufSize, GLsizei *length, char *buffer) const;
 
-    void compile(Compiler *compiler);
+    void compile(const Context *context);
     bool isCompiled() const { return mCompiled; }
 
     void addRef();

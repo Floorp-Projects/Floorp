@@ -18,8 +18,11 @@
 #ifndef COMPILER_TRANSLATOR_SEPARATEARRAYINITIALIZATION_H_
 #define COMPILER_TRANSLATOR_SEPARATEARRAYINITIALIZATION_H_
 
+namespace sh
+{
 class TIntermNode;
 
 void SeparateArrayInitialization(TIntermNode *root);
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_SEPARATEARRAYINITIALIZATION_H_

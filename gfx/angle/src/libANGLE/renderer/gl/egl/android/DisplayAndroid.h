@@ -36,7 +36,8 @@ class DisplayAndroid : public DisplayEGL
                                       const egl::AttributeMap &attribs) override;
     SurfaceImpl *createPbufferFromClientBuffer(const egl::SurfaceState &state,
                                                const egl::Config *configuration,
-                                               EGLClientBuffer shareHandle,
+                                               EGLenum buftype,
+                                               EGLClientBuffer clientBuffer,
                                                const egl::AttributeMap &attribs) override;
     SurfaceImpl *createPixmapSurface(const egl::SurfaceState &state,
                                      const egl::Config *configuration,

@@ -891,10 +891,10 @@ struct ETC2Block
             std::swap(dxEnd, dyEnd);
         }
 
-        for (size_t j = dyBegin; j < dyEnd && (y + j) < h; j++)
+        for (size_t j = dyBegin; j < dyEnd; j++)
         {
             int *row = &pixelIndices[j * 4];
-            for (size_t i = dxBegin; i < dxEnd && (x + i) < w; i++)
+            for (size_t i = dxBegin; i < dxEnd; i++)
             {
                 const size_t pixelIndex = subblockIdx * 4 + getIndex(i, j);
                 row[i]                  = static_cast<int>(pixelIndex);

@@ -16,8 +16,12 @@
 #include "compiler/translator/IntermNode.h"
 #include "angle_gl.h"
 
+namespace sh
+{
+
 void InsertBuiltInFunctions(sh::GLenum type, ShShaderSpec spec, const ShBuiltInResources &resources, TSymbolTable &symbolTable)
 {
+    const TType *voidType = TCache::getType(EbtVoid);
     const TType *float1 = TCache::getType(EbtFloat);
     const TType *float2 = TCache::getType(EbtFloat, 2);
     const TType *float3 = TCache::getType(EbtFloat, 3);
@@ -469,6 +473,26 @@ void InsertBuiltInFunctions(sh::GLenum type, ShShaderSpec spec, const ShBuiltInR
     symbolTable.insertBuiltIn(ESSL3_BUILTINS, gvec4, "textureProjGradOffset", gsampler3D, float4, float3, float3, int3);
     symbolTable.insertBuiltIn(ESSL3_BUILTINS, float1, "textureProjGradOffset", sampler2DShadow, float4, float2, float2, int2);
 
+    const TType *gimage2D      = TCache::getType(EbtGImage2D);
+    const TType *gimage3D      = TCache::getType(EbtGImage3D);
+    const TType *gimage2DArray = TCache::getType(EbtGImage2DArray);
+    const TType *gimageCube    = TCache::getType(EbtGImageCube);
+
+    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, voidType, "imageStore", gimage2D, int2, gvec4);
+    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, voidType, "imageStore", gimage3D, int3, gvec4);
+    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, voidType, "imageStore", gimage2DArray, int3, gvec4);
+    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, voidType, "imageStore", gimageCube, int3, gvec4);
+
+    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, gvec4, "imageLoad", gimage2D, int2);
+    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, gvec4, "imageLoad", gimage3D, int3);
+    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, gvec4, "imageLoad", gimage2DArray, int3);
+    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, gvec4, "imageLoad", gimageCube, int3);
+
+    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, int2, "imageSize", gimage2D);
+    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, int3, "imageSize", gimage3D);
+    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, int3, "imageSize", gimage2DArray);
+    symbolTable.insertBuiltIn(ESSL3_1_BUILTINS, int3, "imageSize", gimageCube);
+
     //
     // Depth range in window coordinates
     //
@@ -734,3 +758,5 @@ void ResetExtensionBehavior(TExtensionBehavior &extBehavior)
         ext_iter->second = EBhUndefined;
     }
 }
+
+}  // namespace sh

@@ -13,6 +13,9 @@
 
 #include <assert.h>
 
+namespace sh
+{
+
 bool InitProcess()
 {
     if (!InitializePoolIndex()) {
@@ -36,3 +39,5 @@ void DetachProcess()
     FreePoolIndex();
     TCache::destroy();
 }
+
+}  // namespace sh

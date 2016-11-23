@@ -10,6 +10,9 @@
 #include "compiler/translator/InfoSink.h"
 #include "compiler/translator/IntermNode.h"
 
+namespace sh
+{
+
 //
 // This class decides which built-in functions need to be replaced with the
 // emulated ones.
@@ -81,5 +84,7 @@ class BuiltInFunctionEmulator
     // Called function ids
     std::vector<FunctionId> mFunctions;
 };
+
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_BUILTINFUNCTIONEMULATOR_H_

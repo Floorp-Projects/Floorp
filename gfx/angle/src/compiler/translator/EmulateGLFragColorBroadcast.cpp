@@ -14,6 +14,9 @@
 #include "compiler/translator/EmulateGLFragColorBroadcast.h"
 #include "compiler/translator/IntermNode.h"
 
+namespace sh
+{
+
 namespace
 {
 
@@ -34,7 +37,7 @@ class GLFragColorBroadcastTraverser : public TIntermTraverser
 
   protected:
     void visitSymbol(TIntermSymbol *node) override;
-    bool visitAggregate(Visit visit, TIntermAggregate *node) override;
+    bool visitFunctionDefinition(Visit visit, TIntermFunctionDefinition *node) override;
 
     TIntermBinary *constructGLFragDataNode(int index) const;
     TIntermBinary *constructGLFragDataAssignNode(int index) const;
@@ -74,27 +77,15 @@ void GLFragColorBroadcastTraverser::visitSymbol(TIntermSymbol *node)
     }
 }
 
-bool GLFragColorBroadcastTraverser::visitAggregate(Visit visit, TIntermAggregate *node)
+bool GLFragColorBroadcastTraverser::visitFunctionDefinition(Visit visit,
+                                                            TIntermFunctionDefinition *node)
 {
-    switch (node->getOp())
+    ASSERT(visit == PreVisit);
+    if (node->getFunctionSymbolInfo()->isMain())
     {
-        case EOpFunction:
-            // Function definition.
-            ASSERT(visit == PreVisit);
-            if (node->getName() == "main(")
-            {
-                TIntermSequence *sequence = node->getSequence();
-                ASSERT((sequence->size() == 1) || (sequence->size() == 2));
-                if (sequence->size() == 2)
-                {
-                    TIntermAggregate *body = (*sequence)[1]->getAsAggregate();
-                    ASSERT(body);
-                    mMainSequence = body->getSequence();
-                }
-            }
-            break;
-        default:
-            break;
+        TIntermBlock *body = node->getBody();
+        ASSERT(body);
+        mMainSequence = body->getSequence();
     }
     return true;
 }
@@ -142,3 +133,5 @@ void EmulateGLFragColorBroadcast(TIntermNode *root,
         }
     }
 }
+
+}  // namespace sh

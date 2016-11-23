@@ -30,7 +30,7 @@ enum class D3DBufferUsage
 class BufferD3D : public BufferImpl
 {
   public:
-    BufferD3D(BufferFactoryD3D *factory);
+    BufferD3D(const gl::BufferState &state, BufferFactoryD3D *factory);
     virtual ~BufferD3D();
 
     unsigned int getSerial() const { return mSerial; }

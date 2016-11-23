@@ -7,11 +7,15 @@
 #ifndef COMPILER_TRANSLATOR_INITIALIZEPARSECONTEXT_H_
 #define COMPILER_TRANSLATOR_INITIALIZEPARSECONTEXT_H_
 
+namespace sh
+{
+
 bool InitializeParseContextIndex();
 void FreeParseContextIndex();
 
 class TParseContext;
 extern void SetGlobalParseContext(TParseContext* context);
 extern TParseContext* GetGlobalParseContext();
+}  // namespace sh
 
 #endif // COMPILER_TRANSLATOR_INITIALIZEPARSECONTEXT_H_

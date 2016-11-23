@@ -8,12 +8,17 @@
 
 #include <gtest/gtest.h>
 
-#include "angle_deqp_libtester.h"
+// Defined in angle_deqp_gtest.cpp. Declared here so we don't need to make a header that we import
+// in Chromium.
+namespace angle
+{
+void InitTestHarness(int *argc, char **argv);
+}  // namespace angle
 
 int main(int argc, char **argv)
 {
+    angle::InitTestHarness(&argc, argv);
     testing::InitGoogleTest(&argc, argv);
     int rt = RUN_ALL_TESTS();
-    deqp_libtester_shutdown_platform();
     return rt;
 }

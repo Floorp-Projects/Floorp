@@ -87,16 +87,12 @@ class TextureGL : public TextureImpl
 
     gl::Error setEGLImageTarget(GLenum target, egl::Image *image) override;
 
-    void syncState(size_t textureUnit) const;
     GLuint getTextureID() const;
 
-    gl::Error getAttachmentRenderTarget(const gl::FramebufferAttachment::Target &target,
-                                        FramebufferAttachmentRenderTarget **rtOut) override
-    {
-        return gl::Error(GL_OUT_OF_MEMORY, "Not supported on OpenGL");
-    }
-
     void setBaseLevel(GLuint) override {}
+
+    void syncState(const gl::Texture::DirtyBits &dirtyBits) override;
+    bool hasAnyDirtyBit() const;
 
   private:
     void setImageHelper(GLenum target,
@@ -120,12 +116,25 @@ class TextureGL : public TextureImpl
                                             const gl::PixelUnpackState &unpack,
                                             const uint8_t *pixels);
 
+    gl::Error setSubImagePaddingWorkaround(GLenum target,
+                                           size_t level,
+                                           const gl::Box &area,
+                                           GLenum format,
+                                           GLenum type,
+                                           const gl::PixelUnpackState &unpack,
+                                           const uint8_t *pixels);
+
+    void syncTextureStateSwizzle(const FunctionsGL *functions, GLenum name, GLenum value);
+
+    void setLevelInfo(size_t level, size_t levelCount, const LevelInfoGL &levelInfo);
+
     const FunctionsGL *mFunctions;
     const WorkaroundsGL &mWorkarounds;
     StateManagerGL *mStateManager;
     BlitGL *mBlitter;
 
     std::vector<LevelInfoGL> mLevelInfo;
+    gl::Texture::DirtyBits mLocalDirtyBits;
 
     mutable gl::TextureState mAppliedTextureState;
     GLuint mTextureID;

@@ -16,6 +16,12 @@ namespace gl
 class Context;
 
 bool ValidateGetBooleani_v(Context *context, GLenum target, GLuint index, GLboolean *data);
+bool ValidateGetBooleani_vRobustANGLE(Context *context,
+                                      GLenum target,
+                                      GLuint index,
+                                      GLsizei bufSize,
+                                      GLsizei *length,
+                                      GLboolean *data);
 
 }  // namespace gl
 

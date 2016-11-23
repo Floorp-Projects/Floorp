@@ -11,6 +11,9 @@
 #include "angle_gl.h"
 #include "compiler/translator/Compiler.h"
 
+namespace sh
+{
+
 namespace
 {
 
@@ -42,6 +45,33 @@ class ShaderVariableFinder : public TIntermTraverser
     TBasicType mBasicType;
 };
 
+class FunctionCallFinder : public TIntermTraverser
+{
+  public:
+    FunctionCallFinder(const TString &functionName)
+        : TIntermTraverser(true, false, false), mFunctionName(functionName), mNodeFound(nullptr)
+    {
+    }
+
+    bool visitAggregate(Visit visit, TIntermAggregate *node) override
+    {
+        if (node->getOp() == EOpFunctionCall &&
+            node->getFunctionSymbolInfo()->getName() == mFunctionName)
+        {
+            mNodeFound = node;
+            return false;
+        }
+        return true;
+    }
+
+    bool isFound() const { return mNodeFound != nullptr; }
+    const TIntermAggregate *getNode() const { return mNodeFound; }
+
+  private:
+    TString mFunctionName;
+    TIntermAggregate *mNodeFound;
+};
+
 }  // anonymous namespace
 
 bool compileTestShader(GLenum type,
@@ -53,7 +83,7 @@ bool compileTestShader(GLenum type,
                        std::string *translatedCode,
                        std::string *infoLog)
 {
-    TCompiler *translator = ConstructCompiler(type, spec, output);
+    sh::TCompiler *translator = sh::ConstructCompiler(type, spec, output);
     if (!translator->Init(*resources))
     {
         SafeDelete(translator);
@@ -81,7 +111,7 @@ bool compileTestShader(GLenum type,
                        std::string *infoLog)
 {
     ShBuiltInResources resources;
-    ShInitBuiltInResources(&resources);
+    sh::InitBuiltInResources(&resources);
     return compileTestShader(type, spec, output, shaderString, &resources, compileOptions, translatedCode, infoLog);
 }
 
@@ -90,7 +120,7 @@ MatchOutputCodeTest::MatchOutputCodeTest(GLenum shaderType,
                                          ShShaderOutput outputType)
     : mShaderType(shaderType), mDefaultCompileOptions(defaultCompileOptions)
 {
-    ShInitBuiltInResources(&mResources);
+    sh::InitBuiltInResources(&mResources);
     mOutputCode[outputType] = std::string();
 }
 
@@ -215,3 +245,12 @@ const TIntermSymbol *FindSymbolNode(TIntermNode *root,
     root->traverse(&finder);
     return finder.getNode();
 }
+
+const TIntermAggregate *FindFunctionCallNode(TIntermNode *root, const TString &functionName)
+{
+    FunctionCallFinder finder(functionName);
+    root->traverse(&finder);
+    return finder.getNode();
+}
+
+}  // namespace sh

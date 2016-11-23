@@ -14,6 +14,9 @@
 #include "compiler/translator/IntermNode.h"
 #include "compiler/translator/IntermNodePatternMatcher.h"
 
+namespace sh
+{
+
 namespace
 {
 
@@ -59,12 +62,11 @@ TIntermAggregate *CopyAggregateNode(TIntermAggregate *node)
     TIntermSequence *copySeq = copyNode->getSequence();
     copySeq->insert(copySeq->begin(), node->getSequence()->begin(), node->getSequence()->end());
     copyNode->setType(node->getType());
-    copyNode->setFunctionId(node->getFunctionId());
+    *copyNode->getFunctionSymbolInfo() = *node->getFunctionSymbolInfo();
     if (node->isUserDefined())
     {
         copyNode->setUserDefined();
     }
-    copyNode->setNameObj(node->getNameObj());
     return copyNode;
 }
 
@@ -138,3 +140,5 @@ void SeparateExpressionsReturningArrays(TIntermNode *root, unsigned int *tempora
     }
     while (traverser.foundArrayExpression());
 }
+
+}  // namespace sh

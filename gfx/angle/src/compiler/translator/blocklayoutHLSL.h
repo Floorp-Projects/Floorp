@@ -24,7 +24,7 @@ namespace sh
 // The strategy should be ENCODE_LOOSE for D3D9 constant blocks, and ENCODE_PACKED
 // for everything else (D3D10+ constant blocks and all attributes/varyings).
 
-class COMPILER_EXPORT HLSLBlockEncoder : public BlockLayoutEncoder
+class HLSLBlockEncoder : public BlockLayoutEncoder
 {
   public:
     enum HLSLBlockEncoderStrategy
@@ -54,9 +54,8 @@ class COMPILER_EXPORT HLSLBlockEncoder : public BlockLayoutEncoder
 
 // This method returns the number of used registers for a ShaderVariable. It is dependent on the HLSLBlockEncoder
 // class to count the number of used registers in a struct (which are individually packed according to the same rules).
-COMPILER_EXPORT unsigned int HLSLVariableRegisterCount(const Varying &variable, bool transposeMatrices);
-COMPILER_EXPORT unsigned int HLSLVariableRegisterCount(const Uniform &variable, ShShaderOutput outputType);
-
+unsigned int HLSLVariableRegisterCount(const Varying &variable, bool transposeMatrices);
+unsigned int HLSLVariableRegisterCount(const Uniform &variable, ShShaderOutput outputType);
 }
 
 #endif // COMMON_BLOCKLAYOUTHLSL_H_

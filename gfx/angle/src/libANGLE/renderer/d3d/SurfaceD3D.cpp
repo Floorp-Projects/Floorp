@@ -26,7 +26,8 @@ SurfaceD3D::SurfaceD3D(const egl::SurfaceState &state,
                        egl::Display *display,
                        const egl::Config *config,
                        EGLNativeWindowType window,
-                       EGLClientBuffer shareHandle,
+                       EGLenum buftype,
+                       EGLClientBuffer clientBuffer,
                        const egl::AttributeMap &attribs)
     : SurfaceImpl(state),
       mRenderer(renderer),
@@ -41,12 +42,31 @@ SurfaceD3D::SurfaceD3D(const egl::SurfaceState &state,
       mWidth(static_cast<EGLint>(attribs.get(EGL_WIDTH, 0))),
       mHeight(static_cast<EGLint>(attribs.get(EGL_HEIGHT, 0))),
       mSwapInterval(1),
-      mShareHandle(reinterpret_cast<HANDLE *>(shareHandle))
+      mShareHandle(0),
+      mD3DTexture(nullptr)
 {
     if (window != nullptr && !mFixedSize)
     {
         mWidth  = -1;
         mHeight = -1;
+    }
+
+    switch (buftype)
+    {
+        case EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE:
+            mShareHandle = static_cast<HANDLE>(clientBuffer);
+            break;
+
+        case EGL_D3D_TEXTURE_ANGLE:
+            mD3DTexture = static_cast<IUnknown *>(clientBuffer);
+            ASSERT(mD3DTexture != nullptr);
+            mD3DTexture->AddRef();
+            mRenderer->getD3DTextureInfo(mD3DTexture, &mWidth, &mHeight, &mRenderTargetFormat);
+            mDepthStencilFormat = GL_NONE;
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -54,6 +74,7 @@ SurfaceD3D::~SurfaceD3D()
 {
     releaseSwapChain();
     SafeDelete(mNativeWindow);
+    SafeRelease(mD3DTexture);
 }
 
 void SurfaceD3D::releaseSwapChain()
@@ -122,8 +143,8 @@ egl::Error SurfaceD3D::resetSwapChain()
         height = mHeight;
     }
 
-    mSwapChain = mRenderer->createSwapChain(mNativeWindow, mShareHandle, mRenderTargetFormat,
-                                            mDepthStencilFormat, mOrientation);
+    mSwapChain = mRenderer->createSwapChain(mNativeWindow, mShareHandle, mD3DTexture,
+                                            mRenderTargetFormat, mDepthStencilFormat, mOrientation);
     if (!mSwapChain)
     {
         return egl::Error(EGL_BAD_ALLOC);
@@ -341,7 +362,14 @@ WindowSurfaceD3D::WindowSurfaceD3D(const egl::SurfaceState &state,
                                    const egl::Config *config,
                                    EGLNativeWindowType window,
                                    const egl::AttributeMap &attribs)
-    : SurfaceD3D(state, renderer, display, config, window, static_cast<EGLClientBuffer>(0), attribs)
+    : SurfaceD3D(state,
+                 renderer,
+                 display,
+                 config,
+                 window,
+                 0,
+                 static_cast<EGLClientBuffer>(0),
+                 attribs)
 {
 }
 
@@ -353,14 +381,16 @@ PbufferSurfaceD3D::PbufferSurfaceD3D(const egl::SurfaceState &state,
                                      RendererD3D *renderer,
                                      egl::Display *display,
                                      const egl::Config *config,
-                                     EGLClientBuffer shareHandle,
+                                     EGLenum buftype,
+                                     EGLClientBuffer clientBuffer,
                                      const egl::AttributeMap &attribs)
     : SurfaceD3D(state,
                  renderer,
                  display,
                  config,
                  static_cast<EGLNativeWindowType>(0),
-                 shareHandle,
+                 buftype,
+                 clientBuffer,
                  attribs)
 {
 }

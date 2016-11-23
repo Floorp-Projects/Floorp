@@ -4,19 +4,19 @@
 // found in the LICENSE file.
 //
 
-#include "DirectiveParser.h"
+#include "compiler/preprocessor/DirectiveParser.h"
 
 #include <algorithm>
-#include <cassert>
 #include <cstdlib>
 #include <sstream>
 
-#include "DiagnosticsBase.h"
-#include "DirectiveHandlerBase.h"
-#include "ExpressionParser.h"
-#include "MacroExpander.h"
-#include "Token.h"
-#include "Tokenizer.h"
+#include "common/debug.h"
+#include "compiler/preprocessor/DiagnosticsBase.h"
+#include "compiler/preprocessor/DirectiveHandlerBase.h"
+#include "compiler/preprocessor/ExpressionParser.h"
+#include "compiler/preprocessor/MacroExpander.h"
+#include "compiler/preprocessor/Token.h"
+#include "compiler/preprocessor/Tokenizer.h"
 
 namespace {
 enum DirectiveType
@@ -248,7 +248,7 @@ void DirectiveParser::lex(Token *token)
 
 void DirectiveParser::parseDirective(Token *token)
 {
-    assert(token->type == Token::PP_HASH);
+    ASSERT(token->type == Token::PP_HASH);
 
     mTokenizer->lex(token);
     if (isEOD(token))
@@ -314,8 +314,8 @@ void DirectiveParser::parseDirective(Token *token)
         parseLine(token);
         break;
       default:
-        assert(false);
-        break;
+          UNREACHABLE();
+          break;
     }
 
     skipUntilEOD(mTokenizer, token);
@@ -328,7 +328,7 @@ void DirectiveParser::parseDirective(Token *token)
 
 void DirectiveParser::parseDefine(Token *token)
 {
-    assert(getDirective(token) == DIRECTIVE_DEFINE);
+    ASSERT(getDirective(token) == DIRECTIVE_DEFINE);
 
     mTokenizer->lex(token);
     if (token->type != Token::IDENTIFIER)
@@ -428,7 +428,7 @@ void DirectiveParser::parseDefine(Token *token)
 
 void DirectiveParser::parseUndef(Token *token)
 {
-    assert(getDirective(token) == DIRECTIVE_UNDEF);
+    ASSERT(getDirective(token) == DIRECTIVE_UNDEF);
 
     mTokenizer->lex(token);
     if (token->type != Token::IDENTIFIER)
@@ -445,6 +445,13 @@ void DirectiveParser::parseUndef(Token *token)
         {
             mDiagnostics->report(Diagnostics::PP_MACRO_PREDEFINED_UNDEFINED,
                                  token->location, token->text);
+            return;
+        }
+        else if (iter->second.expansionCount > 0)
+        {
+            mDiagnostics->report(Diagnostics::PP_MACRO_UNDEFINED_WHILE_INVOKED, token->location,
+                                 token->text);
+            return;
         }
         else
         {
@@ -463,25 +470,25 @@ void DirectiveParser::parseUndef(Token *token)
 
 void DirectiveParser::parseIf(Token *token)
 {
-    assert(getDirective(token) == DIRECTIVE_IF);
+    ASSERT(getDirective(token) == DIRECTIVE_IF);
     parseConditionalIf(token);
 }
 
 void DirectiveParser::parseIfdef(Token *token)
 {
-    assert(getDirective(token) == DIRECTIVE_IFDEF);
+    ASSERT(getDirective(token) == DIRECTIVE_IFDEF);
     parseConditionalIf(token);
 }
 
 void DirectiveParser::parseIfndef(Token *token)
 {
-    assert(getDirective(token) == DIRECTIVE_IFNDEF);
+    ASSERT(getDirective(token) == DIRECTIVE_IFNDEF);
     parseConditionalIf(token);
 }
 
 void DirectiveParser::parseElse(Token *token)
 {
-    assert(getDirective(token) == DIRECTIVE_ELSE);
+    ASSERT(getDirective(token) == DIRECTIVE_ELSE);
 
     if (mConditionalStack.empty())
     {
@@ -522,7 +529,7 @@ void DirectiveParser::parseElse(Token *token)
 
 void DirectiveParser::parseElif(Token *token)
 {
-    assert(getDirective(token) == DIRECTIVE_ELIF);
+    ASSERT(getDirective(token) == DIRECTIVE_ELIF);
 
     if (mConditionalStack.empty())
     {
@@ -562,7 +569,7 @@ void DirectiveParser::parseElif(Token *token)
 
 void DirectiveParser::parseEndif(Token *token)
 {
-    assert(getDirective(token) == DIRECTIVE_ENDIF);
+    ASSERT(getDirective(token) == DIRECTIVE_ENDIF);
 
     if (mConditionalStack.empty())
     {
@@ -586,7 +593,7 @@ void DirectiveParser::parseEndif(Token *token)
 
 void DirectiveParser::parseError(Token *token)
 {
-    assert(getDirective(token) == DIRECTIVE_ERROR);
+    ASSERT(getDirective(token) == DIRECTIVE_ERROR);
 
     std::ostringstream stream;
     mTokenizer->lex(token);
@@ -601,7 +608,7 @@ void DirectiveParser::parseError(Token *token)
 // Parses pragma of form: #pragma name[(value)].
 void DirectiveParser::parsePragma(Token *token)
 {
-    assert(getDirective(token) == DIRECTIVE_PRAGMA);
+    ASSERT(getDirective(token) == DIRECTIVE_PRAGMA);
 
     enum State
     {
@@ -662,7 +669,7 @@ void DirectiveParser::parsePragma(Token *token)
 
 void DirectiveParser::parseExtension(Token *token)
 {
-    assert(getDirective(token) == DIRECTIVE_EXTENSION);
+    ASSERT(getDirective(token) == DIRECTIVE_EXTENSION);
 
     enum State
     {
@@ -743,7 +750,7 @@ void DirectiveParser::parseExtension(Token *token)
 
 void DirectiveParser::parseVersion(Token *token)
 {
-    assert(getDirective(token) == DIRECTIVE_VERSION);
+    ASSERT(getDirective(token) == DIRECTIVE_VERSION);
 
     if (mPastFirstStatement)
     {
@@ -830,7 +837,7 @@ void DirectiveParser::parseVersion(Token *token)
 
 void DirectiveParser::parseLine(Token *token)
 {
-    assert(getDirective(token) == DIRECTIVE_LINE);
+    ASSERT(getDirective(token) == DIRECTIVE_LINE);
 
     bool valid = true;
     bool parsedFileNumber = false;
@@ -931,8 +938,8 @@ void DirectiveParser::parseConditionalIf(Token *token)
             expression = parseExpressionIfdef(token) == 0 ? 1 : 0;
             break;
           default:
-            assert(false);
-            break;
+              UNREACHABLE();
+              break;
         }
         block.skipGroup = expression == 0;
         block.foundValidGroup = expression != 0;
@@ -942,8 +949,7 @@ void DirectiveParser::parseConditionalIf(Token *token)
 
 int DirectiveParser::parseExpressionIf(Token *token)
 {
-    assert((getDirective(token) == DIRECTIVE_IF) ||
-           (getDirective(token) == DIRECTIVE_ELIF));
+    ASSERT((getDirective(token) == DIRECTIVE_IF) || (getDirective(token) == DIRECTIVE_ELIF));
 
     DefinedParser definedParser(mTokenizer, mMacroSet, mDiagnostics);
     MacroExpander macroExpander(&definedParser, mMacroSet, mDiagnostics);
@@ -970,8 +976,7 @@ int DirectiveParser::parseExpressionIf(Token *token)
 
 int DirectiveParser::parseExpressionIfdef(Token *token)
 {
-    assert((getDirective(token) == DIRECTIVE_IFDEF) ||
-           (getDirective(token) == DIRECTIVE_IFNDEF));
+    ASSERT((getDirective(token) == DIRECTIVE_IFDEF) || (getDirective(token) == DIRECTIVE_IFNDEF));
 
     mTokenizer->lex(token);
     if (token->type != Token::IDENTIFIER)

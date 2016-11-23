@@ -40,4 +40,11 @@ gl::Error TextureImpl::copySubTexture(const gl::Offset &destOffset,
     UNREACHABLE();
     return gl::Error(GL_INVALID_OPERATION, "CHROMIUM_copy_texture exposed but not implemented.");
 }
+
+gl::Error TextureImpl::copyCompressedTexture(const gl::Texture *source)
+{
+    UNREACHABLE();
+    return gl::Error(GL_INVALID_OPERATION,
+                     "CHROMIUM_copy_compressed_texture exposed but not implemented.");
+}
 }
