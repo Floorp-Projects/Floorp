@@ -725,49 +725,6 @@ RTCPeerConnection.prototype = {
       options = optionsOrOnSuccess;
     }
     return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
-      // TODO: Remove error on constraint-like RTCOptions next cycle (1197021).
-      // Note that webidl bindings make o.mandatory implicit but not o.optional.
-      function convertLegacyOptions(o) {
-        // Detect (mandatory OR optional) AND no other top-level members.
-        let lcy = ((o.mandatory && Object.keys(o.mandatory).length) || o.optional) &&
-            Object.keys(o).length == (o.mandatory? 1 : 0) + (o.optional? 1 : 0);
-        if (!lcy) {
-          return false;
-        }
-        let old = o.mandatory || {};
-        if (o.mandatory) {
-          delete o.mandatory;
-        }
-        if (o.optional) {
-          o.optional.forEach(one => {
-            // The old spec had optional as an array of objects w/1 attribute each.
-            // Assumes our JS-webidl bindings only populate passed-in properties.
-            let key = Object.keys(one)[0];
-            if (key && old[key] === undefined) {
-              old[key] = one[key];
-            }
-          });
-          delete o.optional;
-        }
-        o.offerToReceiveAudio = old.OfferToReceiveAudio;
-        o.offerToReceiveVideo = old.OfferToReceiveVideo;
-        o.mozDontOfferDataChannel = old.MozDontOfferDataChannel;
-        o.mozBundleOnly = old.MozBundleOnly;
-        Object.keys(o).forEach(k => {
-          if (o[k] === undefined) {
-            delete o[k];
-          }
-        });
-        return true;
-      }
-
-      if (options && convertLegacyOptions(options)) {
-        this.logError(
-          "Mandatory/optional in createOffer options no longer works! Use " +
-            JSON.stringify(options) + " instead (note the case difference)!");
-        options = {};
-      }
-
       let origin = Cu.getWebIDLCallerPrincipal().origin;
       return this._chain(() => {
         let p = Promise.all([this.getPermission(), this._certificateReady])

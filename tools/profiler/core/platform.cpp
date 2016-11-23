@@ -624,6 +624,20 @@ void mozilla_sampler_get_profile_data_async(double aSinceTime,
   t->ToJSObjectAsync(aSinceTime, aPromise);
 }
 
+void mozilla_sampler_save_profile_to_file_async(double aSinceTime,
+						const char* aFileName)
+{
+  nsCString filename(aFileName);
+  NS_DispatchToMainThread(NS_NewRunnableFunction([=] () {
+	GeckoSampler *t = tlsTicker.get();
+	if (NS_WARN_IF(!t)) {
+	  return;
+	}
+
+	t->ToFileAsync(filename, aSinceTime);
+      }));
+}
+
 void mozilla_sampler_get_profiler_start_params(int* aEntrySize,
                                                double* aInterval,
                                                mozilla::Vector<const char*>* aFilters,

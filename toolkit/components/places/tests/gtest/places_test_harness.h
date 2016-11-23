@@ -115,52 +115,52 @@ NS_IMPL_ISUPPORTS(
 /**
  * Spins current thread until an async statement is executed.
  */
-class AsyncStatementSpinner final : public mozIStorageStatementCallback
+class PlacesAsyncStatementSpinner final : public mozIStorageStatementCallback
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGESTATEMENTCALLBACK
 
-  AsyncStatementSpinner();
+  PlacesAsyncStatementSpinner();
   void SpinUntilCompleted();
   uint16_t completionReason;
 
 protected:
-  ~AsyncStatementSpinner() {}
+  ~PlacesAsyncStatementSpinner() {}
 
   volatile bool mCompleted;
 };
 
-NS_IMPL_ISUPPORTS(AsyncStatementSpinner,
+NS_IMPL_ISUPPORTS(PlacesAsyncStatementSpinner,
                   mozIStorageStatementCallback)
 
-AsyncStatementSpinner::AsyncStatementSpinner()
+PlacesAsyncStatementSpinner::PlacesAsyncStatementSpinner()
 : completionReason(0)
 , mCompleted(false)
 {
 }
 
 NS_IMETHODIMP
-AsyncStatementSpinner::HandleResult(mozIStorageResultSet *aResultSet)
+PlacesAsyncStatementSpinner::HandleResult(mozIStorageResultSet *aResultSet)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AsyncStatementSpinner::HandleError(mozIStorageError *aError)
+PlacesAsyncStatementSpinner::HandleError(mozIStorageError *aError)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AsyncStatementSpinner::HandleCompletion(uint16_t aReason)
+PlacesAsyncStatementSpinner::HandleCompletion(uint16_t aReason)
 {
   completionReason = aReason;
   mCompleted = true;
   return NS_OK;
 }
 
-void AsyncStatementSpinner::SpinUntilCompleted()
+void PlacesAsyncStatementSpinner::SpinUntilCompleted()
 {
   nsCOMPtr<nsIThread> thread(::do_GetCurrentThread());
   nsresult rv = NS_OK;
@@ -312,7 +312,8 @@ do_wait_async_updates() {
 
   db->CreateAsyncStatement(NS_LITERAL_CSTRING("COMMIT"),
                            getter_AddRefs(stmt));
-  RefPtr<AsyncStatementSpinner> spinner = new AsyncStatementSpinner();
+  RefPtr<PlacesAsyncStatementSpinner> spinner =
+    new PlacesAsyncStatementSpinner();
   (void)stmt->ExecuteAsync(spinner, getter_AddRefs(pending));
 
   spinner->SpinUntilCompleted();

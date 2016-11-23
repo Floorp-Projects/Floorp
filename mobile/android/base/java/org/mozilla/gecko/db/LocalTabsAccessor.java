@@ -64,22 +64,22 @@ public class LocalTabsAccessor implements TabsAccessor {
 
     private static final Pattern FILTERED_URL_PATTERN = Pattern.compile("^(about|chrome|wyciwyg|file):");
 
-    private final Uri clientsRecencyUriWithProfile;
+    private final Uri clientsNoStaleSortedUriWithProfile;
     private final Uri tabsUriWithProfile;
     private final Uri clientsUriWithProfile;
 
     public LocalTabsAccessor(String profileName) {
         tabsUriWithProfile = DBUtils.appendProfileWithDefault(profileName, BrowserContract.Tabs.CONTENT_URI);
         clientsUriWithProfile = DBUtils.appendProfileWithDefault(profileName, BrowserContract.Clients.CONTENT_URI);
-        clientsRecencyUriWithProfile = DBUtils.appendProfileWithDefault(profileName, BrowserContract.Clients.CONTENT_RECENCY_URI);
+        clientsNoStaleSortedUriWithProfile = DBUtils.appendProfileWithDefault(profileName, BrowserContract.Clients.CONTENT_NO_STALE_SORTED_URI);
     }
 
     /**
      * Extracts a List of just RemoteClients from a cursor.
-     * The supplied cursor should be grouped by guid and sorted by most recently used.
+     * The supplied cursor should be grouped by guid and sorted by name alphabetically.
      */
     @Override
-    public List<RemoteClient> getClientsWithoutTabsByRecencyFromCursor(Cursor cursor) {
+    public List<RemoteClient> getClientsWithoutTabsNoStaleSortedFromCursor(Cursor cursor) {
         final ArrayList<RemoteClient> clients = new ArrayList<>(cursor.getCount());
 
         final int originalPosition = cursor.getPosition();
@@ -168,8 +168,8 @@ public class LocalTabsAccessor implements TabsAccessor {
     }
 
     @Override
-    public Cursor getRemoteClientsByRecencyCursor(Context context) {
-        final Uri uri = clientsRecencyUriWithProfile;
+    public Cursor getRemoteClientsNoStaleSorted(Context context) {
+        final Uri uri = clientsNoStaleSortedUriWithProfile;
         return context.getContentResolver().query(uri, CLIENTS_PROJECTION_COLUMNS,
                 REMOTE_CLIENTS_SELECTION, null, null);
     }

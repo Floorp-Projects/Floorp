@@ -13,15 +13,15 @@
 
 linux64/debug:
     build-platform: linux64/debug
-    test-set: all-tests
+    test-set: all-tests-debug
 linux64/opt:
     build-platform: linux64/opt
-    test-set: all-tests
+    test-set: all-tests-opt
 
 # TODO: use 'pgo' and 'asan' labels here, instead of -pgo/opt
 linux64-pgo/opt:
     build-platform: linux64-pgo/opt
-    test-set: all-tests
+    test-set: all-tests-debug
 linux64-asan/opt:
     build-platform: linux64-asan/opt
     test-set: asan-tests

@@ -144,6 +144,13 @@ sm_promise
 
    Always defined.
 
+stylo
+   Whether the Stylo styling system is being used.
+
+   Values are ``true`` and ``false``.
+
+   Always defined.
+
 tests_enabled
    Whether tests are enabled for this build.
 

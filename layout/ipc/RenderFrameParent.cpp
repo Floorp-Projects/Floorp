@@ -121,19 +121,13 @@ RenderFrameParent::Init(nsFrameLoader* aFrameLoader)
     // and we'll keep an indirect reference to that tree.
     browser->Manager()->AsContentParent()->AllocateLayerTreeId(browser, &mLayersId);
     if (lm && lm->AsClientLayerManager()) {
-      if (!lm->AsClientLayerManager()->GetRemoteRenderer()->SendNotifyChildCreated(mLayersId)) {
-        return false;
-      }
+      lm->AsClientLayerManager()->GetRemoteRenderer()->SendNotifyChildCreated(mLayersId);
     } else if (lm && lm->AsWebRenderLayerManager()) {
-      if (!lm->AsWebRenderLayerManager()->GetCompositorBridgeChild()->SendNotifyChildCreated(mLayersId)) {
-        return false;
-      }
+      lm->AsWebRenderLayerManager()->GetCompositorBridgeChild()->SendNotifyChildCreated(mLayersId);
     }
   } else if (XRE_IsContentProcess()) {
     ContentChild::GetSingleton()->SendAllocateLayerTreeId(browser->Manager()->ChildID(), browser->GetTabId(), &mLayersId);
-    if (!CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId)) {
-      return false;
-    }
+    CompositorBridgeChild::Get()->SendNotifyChildCreated(mLayersId);
   }
 
   mInitted = true;

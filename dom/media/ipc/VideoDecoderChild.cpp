@@ -94,7 +94,7 @@ mozilla::ipc::IPCResult
 VideoDecoderChild::RecvInitComplete(const bool& aHardware, const nsCString& aHardwareReason)
 {
   AssertOnManagerThread();
-  mInitPromise.Resolve(TrackInfo::kVideoTrack, __func__);
+  mInitPromise.ResolveIfExists(TrackInfo::kVideoTrack, __func__);
   mInitialized = true;
   mIsHardwareAccelerated = aHardware;
   mHardwareAcceleratedReason = aHardwareReason;
@@ -105,7 +105,7 @@ mozilla::ipc::IPCResult
 VideoDecoderChild::RecvInitFailed(const nsresult& aReason)
 {
   AssertOnManagerThread();
-  mInitPromise.Reject(aReason, __func__);
+  mInitPromise.RejectIfExists(aReason, __func__);
   return IPC_OK();
 }
 

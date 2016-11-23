@@ -140,6 +140,9 @@ task_description_schema = Schema({
     #  {level} -- the scm level of this push
     'worker-type': basestring,
 
+    # Whether the job should use sccache compiler caching.
+    Required('needs-sccache', default=False): bool,
+
     # information specific to the worker implementation that will run this task
     'worker': Any({
         Required('implementation'): Any('docker-worker', 'docker-engine'),
@@ -296,6 +299,7 @@ GROUP_NAMES = {
     'tc-Fxfn-r-e10s': 'Firefox functional tests (remote) executed by TaskCluster with e10s',
     'tc-M': 'Mochitests executed by TaskCluster',
     'tc-M-e10s': 'Mochitests executed by TaskCluster with e10s',
+    'tc-M-V': 'Mochitests on Valgrind executed by TaskCluster',
     'tc-R': 'Reftests executed by TaskCluster',
     'tc-R-e10s': 'Reftests executed by TaskCluster with e10s',
     'tc-VP': 'VideoPuppeteer tests executed by TaskCluster',
@@ -368,6 +372,14 @@ def build_docker_worker_payload(config, task, task_def):
 
     if worker.get('chain-of-trust'):
         features['chainOfTrust'] = True
+
+    if task.get('needs-sccache'):
+        features['taskclusterProxy'] = True
+        task_def['scopes'].append(
+            'assume:project:taskcluster:level-{level}-sccache-buckets'.format(
+                level=config.params['level'])
+        )
+        worker['env']['USE_SCCACHE'] = '1'
 
     capabilities = {}
 
@@ -450,6 +462,8 @@ def build_generic_worker_payload(config, task, task_def):
         'osGroups': worker.get('os-groups', []),
     }
 
+    # needs-sccache is handled in mozharness_on_windows
+
     if 'retry-exit-status' in worker:
         raise Exception("retry-exit-status not supported in generic-worker")
 
@@ -470,6 +484,9 @@ def build_macosx_engine_payload(config, task, task_def):
         'env': worker['env'],
         'artifacts': artifacts,
     }
+
+    if task.get('needs-sccache'):
+        raise Exception('needs-sccache not supported in macosx-engine')
 
 
 @payload_builder('buildbot-bridge')

@@ -57,6 +57,7 @@ nsContextMenu.prototype = {
         onAudio: this.onAudio,
         onCanvas: this.onCanvas,
         onEditableArea: this.onEditableArea,
+        onPassword: this.onPassword,
         srcUrl: this.mediaURL,
         frameUrl: gContextMenuContentData ? gContextMenuContentData.docLocation : undefined,
         pageUrl: this.browser ? this.browser.currentURI.spec : undefined,
@@ -566,28 +567,10 @@ nsContextMenu.prototype = {
   },
 
   inspectNode: function() {
-    let {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
     let gBrowser = this.browser.ownerGlobal.gBrowser;
-    let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
-
-    return gDevTools.showToolbox(target, "inspector").then(toolbox => {
-      let inspector = toolbox.getCurrentPanel();
-
-      // new-node-front tells us when the node has been selected, whether the
-      // browser is remote or not.
-      let onNewNode = inspector.selection.once("new-node-front");
-
-      this.browser.messageManager.sendAsyncMessage("debug:inspect", {}, {node: this.target});
-      inspector.walker.findInspectingNode().then(nodeFront => {
-        inspector.selection.setNodeFront(nodeFront, "browser-context-menu");
-      });
-
-      return onNewNode.then(() => {
-        // Now that the node has been selected, wait until the inspector is
-        // fully updated.
-        return inspector.once("inspector-updated");
-      });
-    });
+    let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    let { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
+    return gDevToolsBrowser.inspectNode(gBrowser.selectedTab, this.target);
   },
 
   // Set various context menu attributes based on the state of the world.

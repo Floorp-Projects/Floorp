@@ -2079,8 +2079,14 @@ if (privileged) {
                           (uint32_t) GetUserMediaSecurityState::Other);
   }
 
-  nsCString origin;
-  rv = nsPrincipal::GetOriginForURI(docURI, origin);
+  nsCOMPtr<nsIPrincipal> principal =
+    nsGlobalWindow::Cast(aWindow)->GetPrincipal();
+  if (NS_WARN_IF(!principal)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString origin;
+  rv = principal->GetOrigin(origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2236,7 +2242,6 @@ if (privileged) {
   StreamListeners* listeners = AddWindowID(windowID);
 
   // Create a disabled listener to act as a placeholder
-  nsIPrincipal* principal = aWindow->GetExtantDoc()->NodePrincipal();
   RefPtr<GetUserMediaCallbackMediaStreamListener> listener =
     new GetUserMediaCallbackMediaStreamListener(mMediaThread, windowID,
                                                 MakePrincipalHandle(principal));
@@ -2492,8 +2497,12 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
   // 3. Anonymize the raw list with the origin-key.
 
   bool privateBrowsing = IsPrivateBrowsing(window);
-  nsCString origin;
-  nsPrincipal::GetOriginForURI(window->GetDocumentURI(), origin);
+  nsCOMPtr<nsIPrincipal> principal =
+    nsGlobalWindow::Cast(window)->GetPrincipal();
+  MOZ_ASSERT(principal);
+
+  nsAutoCString origin;
+  principal->GetOrigin(origin);
 
   bool persist = IsActivelyCapturingOrHasAPermission(aWindowId);
 
