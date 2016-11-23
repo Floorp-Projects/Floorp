@@ -11,6 +11,7 @@ child:
     intr Exit();
     async __delete__();
 
+/*
 state START:
     send Start goto START_DEATH;
 
@@ -28,6 +29,7 @@ state QUITTING2:
 
 state DEAD:
     send __delete__;
+*/
 };
 
 } // namespace _ipdltest
