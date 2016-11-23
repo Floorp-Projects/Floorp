@@ -569,8 +569,7 @@ StartupCache::GetDebugObjectOutputStream(nsIObjectOutputStream* aStream,
 {
   NS_ENSURE_ARG_POINTER(aStream);
 #ifdef DEBUG
-  StartupCacheDebugOutputStream* stream
-    = new StartupCacheDebugOutputStream(aStream, &mWriteObjectMap);
+  auto* stream = new StartupCacheDebugOutputStream(aStream, &mWriteObjectMap);
   NS_ADDREF(*aOutStream = stream);
 #else
   NS_ADDREF(*aOutStream = aStream);
