@@ -595,10 +595,11 @@ ShadowRoot::IsPooledNode(nsIContent* aContent, nsIContent* aContainer,
     return true;
   }
 
-  if (aContainer && aContainer->IsHTMLElement(nsGkAtoms::content)) {
+  if (aContainer) {
     // Fallback content will end up in pool if its parent is a child of the host.
-    HTMLContentElement* content = static_cast<HTMLContentElement*>(aContainer);
-    return content->IsInsertionPoint() && content->MatchedNodes().IsEmpty() &&
+    HTMLContentElement* content = HTMLContentElement::FromContent(aContainer);
+    return content && content->IsInsertionPoint() &&
+           content->MatchedNodes().IsEmpty() &&
            aContainer->GetParentNode() == aHost;
   }
 
@@ -640,7 +641,7 @@ ShadowRoot::ContentAppended(nsIDocument* aDocument,
   while (currentChild) {
     // Add insertion point to destination insertion points of fallback content.
     if (nsContentUtils::IsContentInsertionPoint(aContainer)) {
-      HTMLContentElement* content = static_cast<HTMLContentElement*>(aContainer);
+      HTMLContentElement* content = HTMLContentElement::FromContent(aContainer);
       if (content->MatchedNodes().IsEmpty()) {
         currentChild->DestInsertionPoints().AppendElement(aContainer);
       }
@@ -671,7 +672,7 @@ ShadowRoot::ContentInserted(nsIDocument* aDocument,
   if (IsPooledNode(aChild, aContainer, mPoolHost)) {
     // Add insertion point to destination insertion points of fallback content.
     if (nsContentUtils::IsContentInsertionPoint(aContainer)) {
-      HTMLContentElement* content = static_cast<HTMLContentElement*>(aContainer);
+      HTMLContentElement* content = HTMLContentElement::FromContent(aContainer);
       if (content->MatchedNodes().IsEmpty()) {
         aChild->DestInsertionPoints().AppendElement(aContainer);
       }
@@ -697,7 +698,7 @@ ShadowRoot::ContentRemoved(nsIDocument* aDocument,
   // Clear destination insertion points for removed
   // fallback content.
   if (nsContentUtils::IsContentInsertionPoint(aContainer)) {
-    HTMLContentElement* content = static_cast<HTMLContentElement*>(aContainer);
+    HTMLContentElement* content = HTMLContentElement::FromContent(aContainer);
     if (content->MatchedNodes().IsEmpty()) {
       aChild->DestInsertionPoints().Clear();
     }
