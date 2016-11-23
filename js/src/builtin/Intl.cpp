@@ -104,6 +104,12 @@ Char16ToUChar(char16_t* chars)
     MOZ_CRASH("Char16ToUChar: Intl API disabled");
 }
 
+int32_t
+u_strlen(const UChar* s)
+{
+    MOZ_CRASH("u_strlen: Intl API disabled");
+}
+
 struct UEnumeration;
 
 int32_t
@@ -1518,10 +1524,12 @@ NewUNumberFormat(JSContext* cx, HandleObject numberFormat)
         currency = value.toString();
         MOZ_ASSERT(currency->length() == 3,
                    "IsWellFormedCurrencyCode permits only length-3 strings");
-        if (!stableChars.initTwoByte(cx, currency))
+        if (!currency->ensureFlat(cx) || !stableChars.initTwoByte(cx, currency))
             return nullptr;
         // uCurrency remains owned by stableChars.
         uCurrency = Char16ToUChar(stableChars.twoByteRange().begin().get());
+        if (!uCurrency)
+            return nullptr;
 
         if (!GetProperty(cx, internals, internals, cx->names().currencyDisplay, &value))
             return nullptr;
@@ -1626,10 +1634,9 @@ intl_FormatNumber(JSContext* cx, UNumberFormat* nf, double x, MutableHandleValue
     if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
         return false;
     UErrorCode status = U_ZERO_ERROR;
-    int32_t size = unum_formatDouble(nf, x, Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
-                                     nullptr, &status);
+    int size = unum_formatDouble(nf, x, Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
+                                 nullptr, &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
         if (!chars.resize(size))
             return false;
         status = U_ZERO_ERROR;
@@ -1640,7 +1647,6 @@ intl_FormatNumber(JSContext* cx, UNumberFormat* nf, double x, MutableHandleValue
         return false;
     }
 
-    MOZ_ASSERT(size >= 0);
     JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size);
     if (!str)
         return false;
@@ -2042,7 +2048,7 @@ HashStringIgnoreCaseASCII(const Char* s, size_t length)
     return hash;
 }
 
-js::SharedIntlData::TimeZoneHasher::Lookup::Lookup(JSLinearString* timeZone)
+js::SharedIntlData::TimeZoneHasher::Lookup::Lookup(JSFlatString* timeZone)
   : isLatin1(timeZone->hasLatin1Chars()), length(timeZone->length())
 {
     if (isLatin1) {
@@ -2208,11 +2214,11 @@ js::SharedIntlData::validateTimeZoneName(JSContext* cx, HandleString timeZone,
     if (!ensureTimeZones(cx))
         return false;
 
-    RootedLinearString timeZoneLinear(cx, timeZone->ensureLinear(cx));
-    if (!timeZoneLinear)
+    Rooted<JSFlatString*> timeZoneFlat(cx, timeZone->ensureFlat(cx));
+    if (!timeZoneFlat)
         return false;
 
-    TimeZoneHasher::Lookup lookup(timeZoneLinear);
+    TimeZoneHasher::Lookup lookup(timeZoneFlat);
     if (TimeZoneSet::Ptr p = availableTimeZones.lookup(lookup))
         result.set(*p);
 
@@ -2226,11 +2232,11 @@ js::SharedIntlData::tryCanonicalizeTimeZoneConsistentWithIANA(JSContext* cx, Han
     if (!ensureTimeZones(cx))
         return false;
 
-    RootedLinearString timeZoneLinear(cx, timeZone->ensureLinear(cx));
-    if (!timeZoneLinear)
+    Rooted<JSFlatString*> timeZoneFlat(cx, timeZone->ensureFlat(cx));
+    if (!timeZoneFlat)
         return false;
 
-    TimeZoneHasher::Lookup lookup(timeZoneLinear);
+    TimeZoneHasher::Lookup lookup(timeZoneFlat);
     MOZ_ASSERT(availableTimeZones.has(lookup), "Invalid time zone name");
 
     if (TimeZoneMap::Ptr p = ianaLinksCanonicalizedDifferentlyByICU.lookup(lookup)) {
@@ -2434,11 +2440,16 @@ js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp)
     if (!locale)
         return false;
 
-    AutoStableStringChars skeleton(cx);
-    if (!skeleton.initTwoByte(cx, args[1].toString()))
+    JSFlatString* skeletonFlat = args[1].toString()->ensureFlat(cx);
+    if (!skeletonFlat)
         return false;
 
-    mozilla::Range<const char16_t> skeletonChars = skeleton.twoByteRange();
+    AutoStableStringChars stableChars(cx);
+    if (!stableChars.initTwoByte(cx, skeletonFlat))
+        return false;
+
+    mozilla::Range<const char16_t> skeletonChars = stableChars.twoByteRange();
+    uint32_t skeletonLen = u_strlen(Char16ToUChar(skeletonChars.begin().get()));
 
     UErrorCode status = U_ZERO_ERROR;
     UDateTimePatternGenerator* gen = udatpg_open(icuLocale(locale.ptr()), &status);
@@ -2448,28 +2459,25 @@ js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp)
     }
     ScopedICUObject<UDateTimePatternGenerator, udatpg_close> toClose(gen);
 
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
-        return false;
-
     int32_t size = udatpg_getBestPattern(gen, Char16ToUChar(skeletonChars.begin().get()),
-                                         skeletonChars.length(), Char16ToUChar(chars.begin()),
-                                         INITIAL_CHAR_BUFFER_SIZE, &status);
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
-        if (!chars.resize(size))
-            return false;
-        status = U_ZERO_ERROR;
-        udatpg_getBestPattern(gen, Char16ToUChar(skeletonChars.begin().get()),
-                              skeletonChars.length(), Char16ToUChar(chars.begin()), size, &status);
+                                         skeletonLen, nullptr, 0, &status);
+    if (U_FAILURE(status) && status != U_BUFFER_OVERFLOW_ERROR) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
     }
+    ScopedJSFreePtr<UChar> pattern(cx->pod_malloc<UChar>(size + 1));
+    if (!pattern)
+        return false;
+    pattern[size] = '\0';
+    status = U_ZERO_ERROR;
+    udatpg_getBestPattern(gen, Char16ToUChar(skeletonChars.begin().get()),
+                          skeletonLen, pattern, size, &status);
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
 
-    MOZ_ASSERT(size >= 0);
-    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size);
+    RootedString str(cx, JS_NewUCStringCopyZ(cx, reinterpret_cast<char16_t*>(pattern.get())));
     if (!str)
         return false;
     args.rval().setString(str);
@@ -2502,26 +2510,29 @@ NewUDateFormat(JSContext* cx, HandleObject dateTimeFormat)
     if (!GetProperty(cx, internals, internals, cx->names().timeZone, &value))
         return nullptr;
 
-    AutoStableStringChars timeZone(cx);
-    if (!timeZone.initTwoByte(cx, value.toString()))
+    AutoStableStringChars timeZoneChars(cx);
+    Rooted<JSFlatString*> timeZoneFlat(cx, value.toString()->ensureFlat(cx));
+    if (!timeZoneFlat || !timeZoneChars.initTwoByte(cx, timeZoneFlat))
         return nullptr;
 
-    mozilla::Range<const char16_t> timeZoneChars = timeZone.twoByteRange();
+    const UChar* uTimeZone = Char16ToUChar(timeZoneChars.twoByteRange().begin().get());
+    uint32_t uTimeZoneLength = u_strlen(uTimeZone);
 
     if (!GetProperty(cx, internals, internals, cx->names().pattern, &value))
         return nullptr;
 
-    AutoStableStringChars pattern(cx);
-    if (!pattern.initTwoByte(cx, value.toString()))
+    AutoStableStringChars patternChars(cx);
+    Rooted<JSFlatString*> patternFlat(cx, value.toString()->ensureFlat(cx));
+    if (!patternFlat || !patternChars.initTwoByte(cx, patternFlat))
         return nullptr;
 
-    mozilla::Range<const char16_t> patternChars = pattern.twoByteRange();
+    const UChar* uPattern = Char16ToUChar(patternChars.twoByteRange().begin().get());
+    uint32_t uPatternLength = u_strlen(uPattern);
 
     UErrorCode status = U_ZERO_ERROR;
     UDateFormat* df =
-        udat_open(UDAT_PATTERN, UDAT_PATTERN, icuLocale(locale.ptr()),
-                  Char16ToUChar(timeZoneChars.begin().get()), timeZoneChars.length(),
-                  Char16ToUChar(patternChars.begin().get()), patternChars.length(), &status);
+        udat_open(UDAT_PATTERN, UDAT_PATTERN, icuLocale(locale.ptr()), uTimeZone, uTimeZoneLength,
+                  uPattern, uPatternLength, &status);
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return nullptr;
@@ -2549,10 +2560,9 @@ intl_FormatDateTime(JSContext* cx, UDateFormat* df, double x, MutableHandleValue
     if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
         return false;
     UErrorCode status = U_ZERO_ERROR;
-    int32_t size = udat_format(df, x, Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
-                               nullptr, &status);
+    int size = udat_format(df, x, Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
+                           nullptr, &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
         if (!chars.resize(size))
             return false;
         status = U_ZERO_ERROR;
@@ -2563,7 +2573,6 @@ intl_FormatDateTime(JSContext* cx, UDateFormat* df, double x, MutableHandleValue
         return false;
     }
 
-    MOZ_ASSERT(size >= 0);
     JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size);
     if (!str)
         return false;
@@ -2681,11 +2690,10 @@ intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHand
     }
     auto closeFieldPosIter = MakeScopeExit([&]() { ufieldpositer_close(fpositer); });
 
-    int32_t resultSize =
+    int resultSize =
         udat_formatForFields(df, x, Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
                              fpositer, &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(resultSize >= 0);
         if (!chars.resize(resultSize))
             return false;
         status = U_ZERO_ERROR;
@@ -2699,8 +2707,6 @@ intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHand
     RootedArrayObject partsArray(cx, NewDenseEmptyArray(cx));
     if (!partsArray)
         return false;
-
-    MOZ_ASSERT(resultSize >= 0);
     if (resultSize == 0) {
         // An empty string contains no parts, so avoid extra work below.
         result.setObject(*partsArray);
