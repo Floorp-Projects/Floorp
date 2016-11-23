@@ -150,6 +150,10 @@ bool TlsAgent::EnsureTlsSetup(PRFileDesc* modelSocket) {
     rv = SSL_SNISocketConfigHook(ssl_fd_, SniHook, this);
     EXPECT_EQ(SECSuccess, rv);
     if (rv != SECSuccess) return false;
+
+    ScopedCERTCertList anchors(CERT_NewCertList());
+    rv = SSL_SetTrustAnchors(ssl_fd_, anchors.get());
+    if (rv != SECSuccess) return false;
   } else {
     rv = SSL_SetURL(ssl_fd_, "server");
     EXPECT_EQ(SECSuccess, rv);
