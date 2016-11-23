@@ -358,4 +358,12 @@ EGLBoolean EGLAPIENTRY eglStreamPostD3DTextureNV12ANGLE(EGLDisplay dpy,
 {
     return egl::StreamPostD3DTextureNV12ANGLE(dpy, stream, texture, attrib_list);
 }
+
+EGLBoolean EGLAPIENTRY eglSwapBuffersWithDamageEXT(EGLDisplay dpy,
+                                                   EGLSurface surface,
+                                                   EGLint *rects,
+                                                   EGLint n_rects)
+{
+    return egl::SwapBuffersWithDamageEXT(dpy, surface, rects, n_rects);
+}
 }

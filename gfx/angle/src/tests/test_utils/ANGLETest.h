@@ -59,14 +59,11 @@ struct GLColorRGB
     static const GLColorRGB yellow;
 };
 
-struct GLColor16;
-
 struct GLColor
 {
     GLColor();
     GLColor(GLubyte r, GLubyte g, GLubyte b, GLubyte a);
     GLColor(const Vector4 &floatColor);
-    GLColor(const GLColor16 &color16);
     GLColor(GLuint colorValue);
 
     Vector4 toNormalizedVector() const;
@@ -95,28 +92,6 @@ bool operator==(const GLColor &a, const GLColor &b);
 std::ostream &operator<<(std::ostream &ostream, const GLColor &color);
 GLColor ReadColor(GLint x, GLint y);
 
-struct GLColor16
-{
-    GLColor16();
-    GLColor16(GLushort r, GLushort g, GLushort b, GLushort a);
-
-    GLushort R, G, B, A;
-
-    static const GLColor16 white;
-};
-
-// Useful to cast any type to GLushort.
-template <typename TR, typename TG, typename TB, typename TA>
-GLColor16 MakeGLColor16(TR r, TG g, TB b, TA a)
-{
-    return GLColor16(static_cast<GLushort>(r), static_cast<GLushort>(g), static_cast<GLushort>(b),
-                     static_cast<GLushort>(a));
-}
-
-bool operator==(const GLColor16 &a, const GLColor16 &b);
-std::ostream &operator<<(std::ostream &ostream, const GLColor16 &color);
-GLColor16 ReadColor16(GLint x, GLint y);
-
 }  // namespace angle
 
 #define EXPECT_PIXEL_EQ(x, y, r, g, b, a) \
@@ -140,8 +115,6 @@ GLColor16 ReadColor16(GLint x, GLint y);
 // TODO(jmadill): Figure out how we can use GLColor's nice printing with EXPECT_NEAR.
 #define EXPECT_PIXEL_COLOR_NEAR(x, y, angleColor, abs_error) \
     EXPECT_PIXEL_NEAR(x, y, angleColor.R, angleColor.G, angleColor.B, angleColor.A, abs_error)
-
-#define EXPECT_PIXEL_COLOR16_EQ(x, y, angleColor) EXPECT_EQ(angleColor, angle::ReadColor16(x, y))
 
 #define EXPECT_COLOR_NEAR(expected, actual, abs_error) \
     \
@@ -199,6 +172,7 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
     static GLuint compileShader(GLenum type, const std::string &source);
     static bool extensionEnabled(const std::string &extName);
     static bool eglClientExtensionEnabled(const std::string &extName);
+    static bool eglDeviceExtensionEnabled(EGLDeviceEXT device, const std::string &extName);
 
     void setWindowWidth(int width);
     void setWindowHeight(int height);
@@ -211,6 +185,8 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
     void setMultisampleEnabled(bool enabled);
     void setDebugEnabled(bool enabled);
     void setNoErrorEnabled(bool enabled);
+    void setWebGLCompatibilityEnabled(bool webglCompatibility);
+    void setBindGeneratesResource(bool bindGeneratesResource);
 
     int getClientMajorVersion() const;
     int getClientMinorVersion() const;
@@ -276,6 +252,10 @@ bool IsAndroid();
 bool IsLinux();
 bool IsOSX();
 bool IsWindows();
+
+// Debug/Release
+bool IsDebug();
+bool IsRelease();
 
 // Negative tests may trigger expected errors/warnings in the ANGLE Platform.
 void IgnoreANGLEPlatformMessages();

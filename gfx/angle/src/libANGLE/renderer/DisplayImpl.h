@@ -59,6 +59,10 @@ class DisplayImpl : public EGLImplFactory
     virtual egl::Error restoreLostDevice() = 0;
 
     virtual bool isValidNativeWindow(EGLNativeWindowType window) const = 0;
+    virtual egl::Error validateClientBuffer(const egl::Config *configuration,
+                                            EGLenum buftype,
+                                            EGLClientBuffer clientBuffer,
+                                            const egl::AttributeMap &attribs) const;
 
     virtual std::string getVendorString() const = 0;
 

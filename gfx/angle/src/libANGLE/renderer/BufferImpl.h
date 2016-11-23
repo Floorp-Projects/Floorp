@@ -15,12 +15,18 @@
 
 #include <stdint.h>
 
+namespace gl
+{
+class BufferState;
+}
+
 namespace rx
 {
 
 class BufferImpl : angle::NonCopyable
 {
   public:
+    BufferImpl(const gl::BufferState &state) : mState(state) {}
     virtual ~BufferImpl() { }
 
     virtual gl::Error setData(GLenum target, const void *data, size_t size, GLenum usage)     = 0;
@@ -38,6 +44,9 @@ class BufferImpl : angle::NonCopyable
                                     size_t count,
                                     bool primitiveRestartEnabled,
                                     gl::IndexRange *outRange) = 0;
+
+  protected:
+    const gl::BufferState &mState;
 };
 
 }

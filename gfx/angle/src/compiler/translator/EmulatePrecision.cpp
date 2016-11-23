@@ -8,6 +8,9 @@
 
 #include <memory>
 
+namespace sh
+{
+
 namespace
 {
 
@@ -91,6 +94,7 @@ class RoundingHelperWriterHLSL : public RoundingHelperWriter
 
 RoundingHelperWriter *RoundingHelperWriter::createHelperWriter(const ShShaderOutput outputLanguage)
 {
+    ASSERT(EmulatePrecision::SupportedInLanguage(outputLanguage));
     switch (outputLanguage)
     {
         case SH_HLSL_4_1_OUTPUT:
@@ -98,9 +102,6 @@ RoundingHelperWriter *RoundingHelperWriter::createHelperWriter(const ShShaderOut
         case SH_ESSL_OUTPUT:
             return new RoundingHelperWriterESSL(outputLanguage);
         default:
-            // Other languages not yet supported
-            ASSERT(outputLanguage == SH_GLSL_COMPATIBILITY_OUTPUT ||
-                   IsGLSL130OrNewer(outputLanguage));
             return new RoundingHelperWriterGLSL(outputLanguage);
     }
 }
@@ -432,7 +433,7 @@ TIntermAggregate *createInternalFunctionCallNode(TString name, TIntermNode *chil
     callNode->setOp(EOpFunctionCall);
     TName nameObj(TFunction::mangleName(name));
     nameObj.setInternal(true);
-    callNode->setNameObj(nameObj);
+    callNode->getFunctionSymbolInfo()->setNameObj(nameObj);
     callNode->getSequence()->push_back(child);
     return callNode;
 }
@@ -469,15 +470,16 @@ bool parentUsesResult(TIntermNode* parent, TIntermNode* node)
         return false;
     }
 
-    TIntermAggregate *aggParent = parent->getAsAggregate();
-    // If the parent's op is EOpSequence, the result is not assigned anywhere,
+    TIntermBlock *blockParent = parent->getAsBlock();
+    // If the parent is a block, the result is not assigned anywhere,
     // so rounding it is not needed. In particular, this can avoid a lot of
     // unnecessary rounding of unused return values of assignment.
-    if (aggParent && aggParent->getOp() == EOpSequence)
+    if (blockParent)
     {
         return false;
     }
-    if (aggParent && aggParent->getOp() == EOpComma && (aggParent->getSequence()->back() != node))
+    TIntermBinary *binaryParent = parent->getAsBinaryNode();
+    if (binaryParent && binaryParent->getOp() == EOpComma && (binaryParent->getRight() != node))
     {
         return false;
     }
@@ -511,7 +513,7 @@ bool EmulatePrecision::visitBinary(Visit visit, TIntermBinary *node)
     if (op == EOpInitialize && visit == InVisit)
         mDeclaringVariables = false;
 
-    if ((op == EOpIndexDirectStruct || op == EOpVectorSwizzle) && visit == InVisit)
+    if ((op == EOpIndexDirectStruct) && visit == InVisit)
         visitChildren = false;
 
     if (visit != PreVisit)
@@ -599,14 +601,30 @@ bool EmulatePrecision::visitBinary(Visit visit, TIntermBinary *node)
     return visitChildren;
 }
 
+bool EmulatePrecision::visitDeclaration(Visit visit, TIntermDeclaration *node)
+{
+    // Variable or interface block declaration.
+    if (visit == PreVisit)
+    {
+        mDeclaringVariables = true;
+    }
+    else if (visit == InVisit)
+    {
+        mDeclaringVariables = true;
+    }
+    else
+    {
+        mDeclaringVariables = false;
+    }
+    return true;
+}
+
 bool EmulatePrecision::visitAggregate(Visit visit, TIntermAggregate *node)
 {
     bool visitChildren = true;
     switch (node->getOp())
     {
-      case EOpSequence:
       case EOpConstructStruct:
-      case EOpFunction:
         break;
       case EOpPrototype:
         visitChildren = false;
@@ -616,21 +634,6 @@ bool EmulatePrecision::visitAggregate(Visit visit, TIntermAggregate *node)
         break;
       case EOpInvariantDeclaration:
         visitChildren = false;
-        break;
-      case EOpDeclaration:
-        // Variable declaration.
-        if (visit == PreVisit)
-        {
-            mDeclaringVariables = true;
-        }
-        else if (visit == InVisit)
-        {
-            mDeclaringVariables = true;
-        }
-        else
-        {
-            mDeclaringVariables = false;
-        }
         break;
       case EOpFunctionCall:
       {
@@ -705,3 +708,19 @@ void EmulatePrecision::writeEmulationHelpers(TInfoSinkBase &sink,
         roundingHelperWriter->writeCompoundAssignmentHelper(sink, it->lType, it->rType, "*", "mul");
 }
 
+// static
+bool EmulatePrecision::SupportedInLanguage(const ShShaderOutput outputLanguage)
+{
+    switch (outputLanguage)
+    {
+        case SH_HLSL_4_1_OUTPUT:
+        case SH_ESSL_OUTPUT:
+            return true;
+        default:
+            // Other languages not yet supported
+            return (outputLanguage == SH_GLSL_COMPATIBILITY_OUTPUT ||
+                    sh::IsGLSL130OrNewer(outputLanguage));
+    }
+}
+
+}  // namespace sh

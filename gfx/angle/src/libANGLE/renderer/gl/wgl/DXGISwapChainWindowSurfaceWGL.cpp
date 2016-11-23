@@ -36,6 +36,7 @@ DXGISwapChainWindowSurfaceWGL::DXGISwapChainWindowSurfaceWGL(const egl::SurfaceS
       mWindow(window),
       mStateManager(renderer->getStateManager()),
       mWorkarounds(renderer->getWorkarounds()),
+      mRenderer(renderer),
       mFunctionsGL(functionsGL),
       mFunctionsWGL(functionsWGL),
       mDevice(device),
@@ -292,7 +293,8 @@ EGLint DXGISwapChainWindowSurfaceWGL::getSwapBehavior() const
 FramebufferImpl *DXGISwapChainWindowSurfaceWGL::createDefaultFramebuffer(
     const gl::FramebufferState &data)
 {
-    return new FramebufferGL(mFramebufferID, data, mFunctionsGL, mWorkarounds, mStateManager);
+    return new FramebufferGL(mFramebufferID, data, mFunctionsGL, mWorkarounds,
+                             mRenderer->getBlitter(), mStateManager);
 }
 
 egl::Error DXGISwapChainWindowSurfaceWGL::setObjectsLocked(bool locked)

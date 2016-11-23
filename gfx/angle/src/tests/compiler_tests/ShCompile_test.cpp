@@ -4,7 +4,7 @@
 // found in the LICENSE file.
 //
 // ShCompile_test.cpp
-//   Test the ShCompile interface with different parameters.
+//   Test the sh::Compile interface with different parameters.
 //
 
 #include "angle_gl.h"
@@ -19,9 +19,9 @@ class ShCompileTest : public testing::Test
   protected:
     void SetUp() override
     {
-        ShInitBuiltInResources(&mResources);
-        mCompiler = ShConstructCompiler(GL_FRAGMENT_SHADER, SH_WEBGL_SPEC,
-                                        SH_GLSL_COMPATIBILITY_OUTPUT, &mResources);
+        sh::InitBuiltInResources(&mResources);
+        mCompiler = sh::ConstructCompiler(GL_FRAGMENT_SHADER, SH_WEBGL_SPEC,
+                                          SH_GLSL_COMPATIBILITY_OUTPUT, &mResources);
         ASSERT_TRUE(mCompiler != nullptr) << "Compiler could not be constructed.";
     }
 
@@ -29,15 +29,15 @@ class ShCompileTest : public testing::Test
     {
         if (mCompiler)
         {
-            ShDestruct(mCompiler);
+            sh::Destruct(mCompiler);
             mCompiler = nullptr;
         }
     }
 
     void testCompile(const char **shaderStrings, int stringCount, bool expectation)
     {
-        bool success                  = ShCompile(mCompiler, shaderStrings, stringCount, 0);
-        const std::string &compileLog = ShGetInfoLog(mCompiler);
+        bool success                  = sh::Compile(mCompiler, shaderStrings, stringCount, 0);
+        const std::string &compileLog = sh::GetInfoLog(mCompiler);
         EXPECT_EQ(expectation, success) << compileLog;
     }
 
@@ -46,7 +46,7 @@ class ShCompileTest : public testing::Test
     ShHandle mCompiler;
 };
 
-// Test calling ShCompile with more than one shader source string.
+// Test calling sh::Compile with more than one shader source string.
 TEST_F(ShCompileTest, MultipleShaderStrings)
 {
     const std::string &shaderString1 =
@@ -61,7 +61,7 @@ TEST_F(ShCompileTest, MultipleShaderStrings)
     testCompile(shaderStrings, 2, true);
 }
 
-// Test calling ShCompile with a tokens split into different shader source strings.
+// Test calling sh::Compile with a tokens split into different shader source strings.
 TEST_F(ShCompileTest, TokensSplitInShaderStrings)
 {
     const std::string &shaderString1 =

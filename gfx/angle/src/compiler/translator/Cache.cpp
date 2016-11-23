@@ -12,6 +12,9 @@
 #include "common/debug.h"
 #include "compiler/translator/Cache.h"
 
+namespace sh
+{
+
 namespace
 {
 
@@ -44,7 +47,6 @@ TCache::TypeKey::TypeKey(TBasicType basicType,
                   "TypeKey::value is too small");
 
     const size_t MaxEnumValue = std::numeric_limits<EnumComponentType>::max();
-    UNUSED_ASSERTION_VARIABLE(MaxEnumValue);
 
     // TODO: change to static_assert() once we deprecate MSVC 2013 support
     ASSERT(MaxEnumValue >= EbtLast &&
@@ -98,3 +100,5 @@ const TType *TCache::getType(TBasicType basicType,
 
     return type;
 }
+
+}  // namespace sh

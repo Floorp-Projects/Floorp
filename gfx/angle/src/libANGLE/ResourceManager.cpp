@@ -309,7 +309,7 @@ Buffer *ResourceManager::getBuffer(unsigned int handle)
     }
 }
 
-Shader *ResourceManager::getShader(unsigned int handle)
+Shader *ResourceManager::getShader(unsigned int handle) const
 {
     auto shader = mShaderMap.find(handle);
 
@@ -438,7 +438,7 @@ Buffer *ResourceManager::checkBufferAllocation(rx::GLImplFactory *factory, GLuin
         return bufferMapIt->second;
     }
 
-    Buffer *buffer = new Buffer(factory->createBuffer(), handle);
+    Buffer *buffer = new Buffer(factory, handle);
     buffer->addRef();
 
     if (handleAllocated)
@@ -542,6 +542,21 @@ Sampler *ResourceManager::checkSamplerAllocation(rx::GLImplFactory *factory, GLu
 bool ResourceManager::isSampler(GLuint sampler)
 {
     return mSamplerMap.find(sampler) != mSamplerMap.end();
+}
+
+bool ResourceManager::isTextureGenerated(GLuint texture) const
+{
+    return texture == 0 || mTextureMap.find(texture) != mTextureMap.end();
+}
+
+bool ResourceManager::isBufferGenerated(GLuint buffer) const
+{
+    return buffer == 0 || mBufferMap.find(buffer) != mBufferMap.end();
+}
+
+bool ResourceManager::isRenderbufferGenerated(GLuint renderbuffer) const
+{
+    return renderbuffer == 0 || mRenderbufferMap.find(renderbuffer) != mRenderbufferMap.end();
 }
 
 }  // namespace gl

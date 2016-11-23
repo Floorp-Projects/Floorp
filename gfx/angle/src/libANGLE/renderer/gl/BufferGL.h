@@ -21,7 +21,9 @@ class StateManagerGL;
 class BufferGL : public BufferImpl
 {
   public:
-    BufferGL(const FunctionsGL *functions, StateManagerGL *stateManager);
+    BufferGL(const gl::BufferState &state,
+             const FunctionsGL *functions,
+             StateManagerGL *stateManager);
     ~BufferGL() override;
 
     gl::Error setData(GLenum target, const void *data, size_t size, GLenum usage) override;

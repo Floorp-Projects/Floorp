@@ -20,6 +20,9 @@
 #include "compiler/translator/IntermNode.h"
 #include "compiler/translator/OutputHLSL.h"
 
+namespace sh
+{
+
 namespace
 {
 
@@ -29,7 +32,7 @@ class SeparateArrayInitTraverser : private TIntermTraverser
     static void apply(TIntermNode *root);
   private:
     SeparateArrayInitTraverser();
-    bool visitAggregate(Visit, TIntermAggregate *node) override;
+    bool visitDeclaration(Visit, TIntermDeclaration *node) override;
 };
 
 void SeparateArrayInitTraverser::apply(TIntermNode *root)
@@ -44,42 +47,38 @@ SeparateArrayInitTraverser::SeparateArrayInitTraverser()
 {
 }
 
-bool SeparateArrayInitTraverser::visitAggregate(Visit, TIntermAggregate *node)
+bool SeparateArrayInitTraverser::visitDeclaration(Visit, TIntermDeclaration *node)
 {
-    if (node->getOp() == EOpDeclaration)
+    TIntermSequence *sequence = node->getSequence();
+    TIntermBinary *initNode   = sequence->back()->getAsBinaryNode();
+    if (initNode != nullptr && initNode->getOp() == EOpInitialize)
     {
-        TIntermSequence *sequence = node->getSequence();
-        TIntermBinary *initNode = sequence->back()->getAsBinaryNode();
-        if (initNode != nullptr && initNode->getOp() == EOpInitialize)
+        TIntermTyped *initializer = initNode->getRight();
+        if (initializer->isArray() && !sh::OutputHLSL::canWriteAsHLSLLiteral(initializer))
         {
-            TIntermTyped *initializer = initNode->getRight();
-            if (initializer->isArray() && !sh::OutputHLSL::canWriteAsHLSLLiteral(initializer))
-            {
-                // We rely on that array declarations have been isolated to single declarations.
-                ASSERT(sequence->size() == 1);
-                TIntermTyped *symbol = initNode->getLeft();
-                TIntermAggregate *parentAgg = getParentNode()->getAsAggregate();
-                ASSERT(parentAgg != nullptr);
+            // We rely on that array declarations have been isolated to single declarations.
+            ASSERT(sequence->size() == 1);
+            TIntermTyped *symbol      = initNode->getLeft();
+            TIntermBlock *parentBlock = getParentNode()->getAsBlock();
+            ASSERT(parentBlock != nullptr);
 
-                TIntermSequence replacements;
+            TIntermSequence replacements;
 
-                TIntermAggregate *replacementDeclaration = new TIntermAggregate;
-                replacementDeclaration->setOp(EOpDeclaration);
-                replacementDeclaration->getSequence()->push_back(symbol);
-                replacementDeclaration->setLine(symbol->getLine());
-                replacements.push_back(replacementDeclaration);
+            TIntermDeclaration *replacementDeclaration = new TIntermDeclaration();
+            replacementDeclaration->appendDeclarator(symbol);
+            replacementDeclaration->setLine(symbol->getLine());
+            replacements.push_back(replacementDeclaration);
 
-                TIntermBinary *replacementAssignment =
-                    new TIntermBinary(EOpAssign, symbol, initializer);
-                replacementAssignment->setLine(symbol->getLine());
-                replacements.push_back(replacementAssignment);
+            TIntermBinary *replacementAssignment =
+                new TIntermBinary(EOpAssign, symbol, initializer);
+            replacementAssignment->setLine(symbol->getLine());
+            replacements.push_back(replacementAssignment);
 
-                mMultiReplacements.push_back(NodeReplaceWithMultipleEntry(parentAgg, node, replacements));
-            }
+            mMultiReplacements.push_back(
+                NodeReplaceWithMultipleEntry(parentBlock, node, replacements));
         }
-        return false;
     }
-    return true;
+    return false;
 }
 
 } // namespace
@@ -88,3 +87,5 @@ void SeparateArrayInitialization(TIntermNode *root)
 {
     SeparateArrayInitTraverser::apply(root);
 }
+
+}  // namespace sh

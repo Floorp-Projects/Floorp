@@ -438,6 +438,32 @@ static GLenum GetNativeType(const FunctionsGL *functions,
     return result;
 }
 
+static GLenum GetNativeReadType(const FunctionsGL *functions,
+                                const WorkaroundsGL &workarounds,
+                                GLenum type)
+{
+    GLenum result = type;
+
+    if (functions->standard == STANDARD_GL_DESKTOP)
+    {
+        if (type == GL_HALF_FLOAT_OES)
+        {
+            // The enums differ for the OES half float extensions and desktop GL spec. Update it.
+            result = GL_HALF_FLOAT;
+        }
+    }
+
+    return result;
+}
+
+static GLenum GetNativeReadFormat(const FunctionsGL *functions,
+                                  const WorkaroundsGL &workarounds,
+                                  GLenum format)
+{
+    GLenum result = format;
+    return result;
+}
+
 TexImageFormat GetTexImageFormat(const FunctionsGL *functions,
                                  const WorkaroundsGL &workarounds,
                                  GLenum internalFormat,
@@ -510,6 +536,16 @@ RenderbufferFormat GetRenderbufferFormat(const FunctionsGL *functions,
     RenderbufferFormat result;
     result.internalFormat =
         GetNativeInternalFormat(functions, workarounds, internalFormat, internalFormat);
+    return result;
+}
+ReadPixelsFormat GetReadPixelsFormat(const FunctionsGL *functions,
+                                     const WorkaroundsGL &workarounds,
+                                     GLenum format,
+                                     GLenum type)
+{
+    ReadPixelsFormat result;
+    result.format = GetNativeReadFormat(functions, workarounds, format);
+    result.type   = GetNativeReadType(functions, workarounds, type);
     return result;
 }
 }

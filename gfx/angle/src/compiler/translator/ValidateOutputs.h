@@ -12,6 +12,9 @@
 
 #include <set>
 
+namespace sh
+{
+
 class TInfoSinkBase;
 
 class ValidateOutputs : public TIntermTraverser
@@ -32,5 +35,7 @@ class ValidateOutputs : public TIntermTraverser
     OutputVector mUnspecifiedLocationOutputs;
     std::set<std::string> mVisitedSymbols;
 };
+
+}  // namespace sh
 
 #endif // COMPILER_TRANSLATOR_VALIDATEOUTPUTS_H_

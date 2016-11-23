@@ -10,6 +10,9 @@
 #include "common/angleutils.h"
 #include "compiler/preprocessor/DiagnosticsBase.h"
 
+namespace sh
+{
+
 class TInfoSink;
 struct TSourceLoc;
 
@@ -44,5 +47,7 @@ class TDiagnostics : public pp::Diagnostics, angle::NonCopyable
     int mNumErrors;
     int mNumWarnings;
 };
+
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_DIAGNOSTICS_H_

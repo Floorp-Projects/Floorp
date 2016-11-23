@@ -101,8 +101,15 @@ TEST_F(TransformFeedbackTest, SideEffectsOfPauseAndResume)
 TEST_F(TransformFeedbackTest, BufferBinding)
 {
     rx::MockBufferImpl *bufferImpl = new rx::MockBufferImpl;
-    gl::Buffer *buffer = new gl::Buffer(bufferImpl, 1);
     EXPECT_CALL(*bufferImpl, destructor()).Times(1).RetiresOnSaturation();
+
+    rx::MockGLFactory mockGLFactory;
+    EXPECT_CALL(mockGLFactory, createBuffer(_))
+        .Times(1)
+        .WillOnce(Return(bufferImpl))
+        .RetiresOnSaturation();
+
+    gl::Buffer *buffer = new gl::Buffer(&mockGLFactory, 1);
 
     static const size_t bindIndex = 0;
 

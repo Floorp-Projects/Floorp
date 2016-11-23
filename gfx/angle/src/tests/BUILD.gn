@@ -4,7 +4,7 @@
 
 import("//testing/test.gni")
 import("//build/config/chromecast_build.gni")
-import("//third_party/angle/build/angle_common.gni")
+import("//third_party/angle/gni/angle.gni")
 
 unittests_gypi = exec_script("//build/gypi_to_gn.py",
                              [
@@ -37,7 +37,7 @@ test("angle_unittests") {
     "//testing/gtest",
     "//third_party/angle:libANGLE",
     "//third_party/angle:preprocessor",
-    "//third_party/angle:translator_static",
+    "//third_party/angle:translator",
   ]
 }
 
@@ -97,7 +97,7 @@ if (is_win || is_linux || is_mac || is_android) {
       "//third_party/angle:libEGL",
       "//third_party/angle:libGLESv2",
       "//third_party/angle:preprocessor",
-      "//third_party/angle:translator_static",
+      "//third_party/angle:translator",
     ]
   }
 }

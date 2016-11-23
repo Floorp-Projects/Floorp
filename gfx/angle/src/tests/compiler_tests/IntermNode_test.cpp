@@ -13,6 +13,8 @@
 #include "compiler/translator/IntermNode.h"
 #include "compiler/translator/PoolAlloc.h"
 
+using namespace sh;
+
 class IntermNodeTest : public testing::Test
 {
   public:

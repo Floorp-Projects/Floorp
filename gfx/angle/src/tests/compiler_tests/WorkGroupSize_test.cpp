@@ -13,6 +13,8 @@
 #include "compiler/translator/TranslatorESSL.h"
 #include "tests/test_utils/compiler_test.h"
 
+using namespace sh;
+
 class WorkGroupSizeTest : public testing::Test
 {
   public:
@@ -22,7 +24,7 @@ class WorkGroupSizeTest : public testing::Test
     void SetUp() override
     {
         ShBuiltInResources resources;
-        ShInitBuiltInResources(&resources);
+        InitBuiltInResources(&resources);
 
         mTranslator = new TranslatorESSL(GL_COMPUTE_SHADER, SH_GLES3_1_SPEC);
         ASSERT_TRUE(mTranslator->Init(resources));
@@ -56,7 +58,7 @@ TEST_F(WorkGroupSizeTest, OnlyLocalSizeXSpecified)
 
     compile(shaderString);
 
-    const sh::WorkGroupSize &localSize = mTranslator->getComputeShaderLocalSize();
+    const WorkGroupSize &localSize = mTranslator->getComputeShaderLocalSize();
     ASSERT_EQ(5, localSize[0]);
     ASSERT_EQ(1, localSize[1]);
     ASSERT_EQ(1, localSize[2]);
@@ -73,7 +75,7 @@ TEST_F(WorkGroupSizeTest, LocalSizeXandZ)
 
     compile(shaderString);
 
-    const sh::WorkGroupSize &localSize = mTranslator->getComputeShaderLocalSize();
+    const WorkGroupSize &localSize = mTranslator->getComputeShaderLocalSize();
     ASSERT_EQ(5, localSize[0]);
     ASSERT_EQ(1, localSize[1]);
     ASSERT_EQ(10, localSize[2]);
@@ -90,7 +92,7 @@ TEST_F(WorkGroupSizeTest, LocalSizeAll)
 
     compile(shaderString);
 
-    const sh::WorkGroupSize &localSize = mTranslator->getComputeShaderLocalSize();
+    const WorkGroupSize &localSize = mTranslator->getComputeShaderLocalSize();
     ASSERT_EQ(5, localSize[0]);
     ASSERT_EQ(15, localSize[1]);
     ASSERT_EQ(10, localSize[2]);

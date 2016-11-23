@@ -57,7 +57,20 @@ void InitializeDebugAnnotations(DebugAnnotator *debugAnnotator);
 void UninitializeDebugAnnotations();
 bool DebugAnnotationsActive();
 
-}
+// This class is used to explicitly ignore values in the conditional logging macros. This avoids
+// compiler warnings like "value computed is not used" and "statement has no effect".
+class LogMessageVoidify
+{
+  public:
+    LogMessageVoidify() {}
+    // This has to be an operator with a precedence lower than << but higher than ?:
+    void operator&(std::ostream &) {}
+};
+
+// This can be any ostream, it is unused, but needs to be a valid reference.
+std::ostream &DummyStream();
+
+}  // namespace gl
 
 #if defined(ANGLE_ENABLE_DEBUG_TRACE) || defined(ANGLE_ENABLE_DEBUG_ANNOTATIONS)
 #define ANGLE_TRACE_ENABLED
@@ -104,61 +117,58 @@ bool DebugAnnotationsActive();
 #undef ANGLE_TRACE_ENABLED
 #endif
 
+#if defined(COMPILER_GCC) || defined(__clang__)
+#define ANGLE_CRASH() __builtin_trap()
+#else
+#define ANGLE_CRASH() ((void)(*(volatile char *)0 = 0))
+#endif
+
 #if !defined(NDEBUG)
 #define ANGLE_ASSERT_IMPL(expression) assert(expression)
 #else
 // TODO(jmadill): Detect if debugger is attached and break.
-#define ANGLE_ASSERT_IMPL(expression) abort()
+#define ANGLE_ASSERT_IMPL(expression) ANGLE_CRASH()
 #endif  // !defined(NDEBUG)
 
-// A macro asserting a condition and outputting failures to the debug log
-#if defined(ANGLE_ENABLE_ASSERTS)
-#define ASSERT(expression)                                                                 \
-    {                                                                                      \
-        if (!(expression))                                                                 \
-        {                                                                                  \
-            ERR("\t! Assert failed in %s(%d): %s\n", __FUNCTION__, __LINE__, #expression); \
-            ANGLE_ASSERT_IMPL(expression);                                                 \
-        }                                                                                  \
-    }                                                                                      \
-    ANGLE_EMPTY_STATEMENT
-#define UNUSED_ASSERTION_VARIABLE(variable)
+// Helper macro which avoids evaluating the arguments to a stream if the condition doesn't hold.
+// Condition is evaluated once and only once.
+#define ANGLE_LAZY_STREAM(stream, condition) \
+    !(condition) ? static_cast<void>(0) : ::gl::LogMessageVoidify() & (stream)
+
+#if defined(NDEBUG) && !defined(ANGLE_ENABLE_ASSERTS)
+#define ANGLE_ASSERTS_ON 0
 #else
-#define ASSERT(expression) (void(0))
-#define UNUSED_ASSERTION_VARIABLE(variable) ((void)variable)
+#define ANGLE_ASSERTS_ON 1
 #endif
+
+// A macro asserting a condition and outputting failures to the debug log
+#if ANGLE_ASSERTS_ON
+#define ASSERT(expression)                                                                        \
+    (expression ? static_cast<void>(0)                                                            \
+                : (ERR("\t! Assert failed in %s(%d): %s\n", __FUNCTION__, __LINE__, #expression), \
+                   ANGLE_ASSERT_IMPL(expression)))
+#else
+#define ASSERT(condition)                                                           \
+    ANGLE_LAZY_STREAM(::gl::DummyStream(), ANGLE_ASSERTS_ON ? !(condition) : false) \
+        << "Check failed: " #condition ". "
+#endif  // ANGLE_ASSERTS_ON
 
 #define UNUSED_VARIABLE(variable) ((void)variable)
 
 // A macro to indicate unimplemented functionality
-
-#if defined (ANGLE_TEST_CONFIG)
+#ifndef NOASSERT_UNIMPLEMENTED
 #define NOASSERT_UNIMPLEMENTED 1
 #endif
 
-// Define NOASSERT_UNIMPLEMENTED to non zero to skip the assert fail in the unimplemented checks
-// This will allow us to test with some automated test suites (eg dEQP) without crashing
-#ifndef NOASSERT_UNIMPLEMENTED
-#define NOASSERT_UNIMPLEMENTED 0
-#endif
-
-#if !defined(NDEBUG)
-#define UNIMPLEMENTED() { \
-    FIXME("\t! Unimplemented: %s(%d)\n", __FUNCTION__, __LINE__); \
-    assert(NOASSERT_UNIMPLEMENTED); \
-    } ANGLE_EMPTY_STATEMENT
-#else
-    #define UNIMPLEMENTED() FIXME("\t! Unimplemented: %s(%d)\n", __FUNCTION__, __LINE__)
-#endif
+#define UNIMPLEMENTED()                                             \
+    {                                                               \
+        ERR("\t! Unimplemented: %s(%d)\n", __FUNCTION__, __LINE__); \
+        ASSERT(NOASSERT_UNIMPLEMENTED);                             \
+    }                                                               \
+    ANGLE_EMPTY_STATEMENT
 
 // A macro for code which is not expected to be reached under valid assumptions
-#if !defined(NDEBUG)
-#define UNREACHABLE() { \
-    ERR("\t! Unreachable reached: %s(%d)\n", __FUNCTION__, __LINE__); \
-    assert(false); \
-    } ANGLE_EMPTY_STATEMENT
-#else
-    #define UNREACHABLE() ERR("\t! Unreachable reached: %s(%d)\n", __FUNCTION__, __LINE__)
-#endif
+#define UNREACHABLE() \
+    (ERR("\t! Unreachable reached: %s(%d)\n", __FUNCTION__, __LINE__), ASSERT(false))
 
 #endif   // COMMON_DEBUG_H_

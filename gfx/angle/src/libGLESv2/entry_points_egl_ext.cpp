@@ -14,6 +14,7 @@
 #include "libANGLE/Device.h"
 #include "libANGLE/Surface.h"
 #include "libANGLE/Stream.h"
+#include "libANGLE/Thread.h"
 #include "libANGLE/validationEGL.h"
 
 #include "common/debug.h"
@@ -26,6 +27,7 @@ EGLBoolean EGLAPIENTRY QuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surfa
 {
     EVENT("(EGLDisplay dpy = 0x%0.8p, EGLSurface surface = 0x%0.8p, EGLint attribute = %d, void **value = 0x%0.8p)",
           dpy, surface, attribute, value);
+    Thread *thread = GetCurrentThread();
 
     Display *display = static_cast<Display*>(dpy);
     Surface *eglSurface = static_cast<Surface*>(surface);
@@ -33,19 +35,19 @@ EGLBoolean EGLAPIENTRY QuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surfa
     Error error = ValidateSurface(display, eglSurface);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
     if (!display->getExtensions().querySurfacePointer)
     {
-        SetGlobalError(Error(EGL_SUCCESS));
+        thread->setError(Error(EGL_SUCCESS));
         return EGL_FALSE;
     }
 
     if (surface == EGL_NO_SURFACE)
     {
-        SetGlobalError(Error(EGL_BAD_SURFACE));
+        thread->setError(Error(EGL_BAD_SURFACE));
         return EGL_FALSE;
     }
 
@@ -55,24 +57,24 @@ EGLBoolean EGLAPIENTRY QuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surfa
       case EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE:
         if (!display->getExtensions().surfaceD3DTexture2DShareHandle)
         {
-            SetGlobalError(Error(EGL_BAD_ATTRIBUTE));
+            thread->setError(Error(EGL_BAD_ATTRIBUTE));
             return EGL_FALSE;
         }
         break;
       case EGL_DXGI_KEYED_MUTEX_ANGLE:
         if (!display->getExtensions().keyedMutex)
         {
-            SetGlobalError(Error(EGL_BAD_ATTRIBUTE));
+            thread->setError(Error(EGL_BAD_ATTRIBUTE));
             return EGL_FALSE;
         }
         break;
       default:
-        SetGlobalError(Error(EGL_BAD_ATTRIBUTE));
-        return EGL_FALSE;
+          thread->setError(Error(EGL_BAD_ATTRIBUTE));
+          return EGL_FALSE;
     }
 
     error = eglSurface->querySurfacePointerANGLE(attribute, value);
-    SetGlobalError(error);
+    thread->setError(error);
     return (error.isError() ? EGL_FALSE : EGL_TRUE);
 }
 
@@ -81,10 +83,11 @@ EGLBoolean EGLAPIENTRY QuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surfa
 EGLBoolean EGLAPIENTRY PostSubBufferNV(EGLDisplay dpy, EGLSurface surface, EGLint x, EGLint y, EGLint width, EGLint height)
 {
     EVENT("(EGLDisplay dpy = 0x%0.8p, EGLSurface surface = 0x%0.8p, EGLint x = %d, EGLint y = %d, EGLint width = %d, EGLint height = %d)", dpy, surface, x, y, width, height);
+    Thread *thread = GetCurrentThread();
 
     if (x < 0 || y < 0 || width < 0 || height < 0)
     {
-        SetGlobalError(Error(EGL_BAD_PARAMETER));
+        thread->setError(Error(EGL_BAD_PARAMETER));
         return EGL_FALSE;
     }
 
@@ -94,37 +97,37 @@ EGLBoolean EGLAPIENTRY PostSubBufferNV(EGLDisplay dpy, EGLSurface surface, EGLin
     Error error = ValidateSurface(display, eglSurface);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
     if (display->testDeviceLost())
     {
-        SetGlobalError(Error(EGL_CONTEXT_LOST));
+        thread->setError(Error(EGL_CONTEXT_LOST));
         return EGL_FALSE;
     }
 
     if (surface == EGL_NO_SURFACE)
     {
-        SetGlobalError(Error(EGL_BAD_SURFACE));
+        thread->setError(Error(EGL_BAD_SURFACE));
         return EGL_FALSE;
     }
 
     if (!display->getExtensions().postSubBuffer)
     {
         // Spec is not clear about how this should be handled.
-        SetGlobalError(Error(EGL_SUCCESS));
+        thread->setError(Error(EGL_SUCCESS));
         return EGL_TRUE;
     }
 
     error = eglSurface->postSubBuffer(x, y, width, height);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
-    SetGlobalError(Error(EGL_SUCCESS));
+    thread->setError(Error(EGL_SUCCESS));
     return EGL_TRUE;
 }
 
@@ -133,6 +136,7 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
 {
     EVENT("(EGLenum platform = %d, void* native_display = 0x%0.8p, const EGLint* attrib_list = 0x%0.8p)",
           platform, native_display, attrib_list);
+    Thread *thread = GetCurrentThread();
 
     const ClientExtensions &clientExtensions = Display::getClientExtensions();
 
@@ -141,20 +145,20 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
       case EGL_PLATFORM_ANGLE_ANGLE:
         if (!clientExtensions.platformANGLE)
         {
-            SetGlobalError(Error(EGL_BAD_PARAMETER));
+            thread->setError(Error(EGL_BAD_PARAMETER));
             return EGL_NO_DISPLAY;
         }
         break;
       case EGL_PLATFORM_DEVICE_EXT:
           if (!clientExtensions.platformDevice)
           {
-              SetGlobalError(Error(EGL_BAD_PARAMETER, "Platform Device extension is not active"));
+              thread->setError(Error(EGL_BAD_PARAMETER, "Platform Device extension is not active"));
               return EGL_NO_DISPLAY;
           }
           break;
       default:
-        SetGlobalError(Error(EGL_BAD_CONFIG));
-        return EGL_NO_DISPLAY;
+          thread->setError(Error(EGL_BAD_CONFIG));
+          return EGL_NO_DISPLAY;
     }
 
     if (platform == EGL_PLATFORM_ANGLE_ANGLE)
@@ -183,7 +187,7 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
                         case EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE:
                             if (!clientExtensions.platformANGLED3D)
                             {
-                                SetGlobalError(Error(EGL_BAD_ATTRIBUTE));
+                                thread->setError(Error(EGL_BAD_ATTRIBUTE));
                                 return EGL_NO_DISPLAY;
                             }
                             break;
@@ -192,14 +196,25 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
                         case EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE:
                             if (!clientExtensions.platformANGLEOpenGL)
                             {
-                                SetGlobalError(Error(EGL_BAD_ATTRIBUTE));
+                                thread->setError(Error(EGL_BAD_ATTRIBUTE));
+                                return EGL_NO_DISPLAY;
+                            }
+                            break;
+
+                        case EGL_PLATFORM_ANGLE_TYPE_NULL_ANGLE:
+                            if (!clientExtensions.platformANGLENULL)
+                            {
+                                thread->setError(Error(EGL_BAD_ATTRIBUTE,
+                                                       "Display type "
+                                                       "EGL_PLATFORM_ANGLE_TYPE_NULL_ANGLE "
+                                                       "requires EGL_ANGLE_platform_angle_null."));
                                 return EGL_NO_DISPLAY;
                             }
                             break;
 
                         default:
-                        SetGlobalError(Error(EGL_BAD_ATTRIBUTE));
-                        return EGL_NO_DISPLAY;
+                            thread->setError(Error(EGL_BAD_ATTRIBUTE));
+                            return EGL_NO_DISPLAY;
                     }
                     platformType = curAttrib[1];
                     break;
@@ -225,8 +240,8 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
                         case EGL_FALSE:
                             break;
                         default:
-                        SetGlobalError(Error(EGL_BAD_ATTRIBUTE));
-                        return EGL_NO_DISPLAY;
+                            thread->setError(Error(EGL_BAD_ATTRIBUTE));
+                            return EGL_NO_DISPLAY;
                     }
                     enableAutoTrimSpecified = true;
                     break;
@@ -234,7 +249,7 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
                     case EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE:
                         if (!clientExtensions.experimentalPresentPath)
                         {
-                            SetGlobalError(
+                            thread->setError(
                                 Error(EGL_BAD_ATTRIBUTE,
                                       "EGL_ANGLE_experimental_present_path extension not active"));
                             return EGL_NO_DISPLAY;
@@ -246,7 +261,7 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
                             case EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE:
                                 break;
                             default:
-                                SetGlobalError(
+                                thread->setError(
                                     Error(EGL_BAD_ATTRIBUTE,
                                           "Invalid value for EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE"));
                                 return EGL_NO_DISPLAY;
@@ -268,10 +283,10 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
                                 break;
 
                             default:
-                                SetGlobalError(Error(EGL_BAD_ATTRIBUTE,
-                                                     "Invalid value for "
-                                                     "EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE "
-                                                     "attrib"));
+                                thread->setError(Error(EGL_BAD_ATTRIBUTE,
+                                                       "Invalid value for "
+                                                       "EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE "
+                                                       "attrib"));
                                 return EGL_NO_DISPLAY;
                         }
                         deviceType = curAttrib[1];
@@ -285,14 +300,14 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
 
         if (!majorVersionSpecified && minorVersionSpecified)
         {
-            SetGlobalError(Error(EGL_BAD_ATTRIBUTE));
+            thread->setError(Error(EGL_BAD_ATTRIBUTE));
             return EGL_NO_DISPLAY;
         }
 
         if (deviceType == EGL_PLATFORM_ANGLE_DEVICE_TYPE_WARP_ANGLE &&
             platformType != EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
         {
-            SetGlobalError(
+            thread->setError(
                 Error(EGL_BAD_ATTRIBUTE,
                       "EGL_PLATFORM_ANGLE_DEVICE_TYPE_WARP_ANGLE requires a device type of "
                       "EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE."));
@@ -301,7 +316,7 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
 
         if (enableAutoTrimSpecified && platformType != EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
         {
-            SetGlobalError(
+            thread->setError(
                 Error(EGL_BAD_ATTRIBUTE,
                       "EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE requires a device type of "
                       "EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE."));
@@ -310,23 +325,23 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
 
         if (presentPathSpecified && platformType != EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
         {
-            SetGlobalError(Error(EGL_BAD_ATTRIBUTE,
-                                 "EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE requires a device type of "
-                                 "EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE."));
+            thread->setError(Error(EGL_BAD_ATTRIBUTE,
+                                   "EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE requires a device type of "
+                                   "EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE."));
             return EGL_NO_DISPLAY;
         }
 
         if (deviceTypeSpecified && platformType != EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE &&
             platformType != EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
         {
-            SetGlobalError(
+            thread->setError(
                 Error(EGL_BAD_ATTRIBUTE,
                       "EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE requires a device type of "
                       "EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE or EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE."));
             return EGL_NO_DISPLAY;
         }
 
-        SetGlobalError(Error(EGL_SUCCESS));
+        thread->setError(Error(EGL_SUCCESS));
         return Display::GetDisplayFromAttribs(native_display,
                                               AttributeMap::CreateFromIntArray(attrib_list));
     }
@@ -335,13 +350,13 @@ EGLDisplay EGLAPIENTRY GetPlatformDisplayEXT(EGLenum platform, void *native_disp
         Device *eglDevice = reinterpret_cast<Device *>(native_display);
         if (eglDevice == nullptr || !Device::IsValidDevice(eglDevice))
         {
-            SetGlobalError(Error(EGL_BAD_ATTRIBUTE,
-                                 "native_display should be a valid EGL device if platform equals "
-                                 "EGL_PLATFORM_DEVICE_EXT"));
+            thread->setError(Error(EGL_BAD_ATTRIBUTE,
+                                   "native_display should be a valid EGL device if platform equals "
+                                   "EGL_PLATFORM_DEVICE_EXT"));
             return EGL_NO_DISPLAY;
         }
 
-        SetGlobalError(Error(EGL_SUCCESS));
+        thread->setError(Error(EGL_SUCCESS));
         return Display::GetDisplayFromDevice(native_display);
     }
     else
@@ -356,11 +371,12 @@ EGLBoolean EGLAPIENTRY QueryDeviceAttribEXT(EGLDeviceEXT device, EGLint attribut
 {
     EVENT("(EGLDeviceEXT device = 0x%0.8p, EGLint attribute = %d, EGLAttrib *value = 0x%0.8p)",
           device, attribute, value);
+    Thread *thread = GetCurrentThread();
 
     Device *dev = static_cast<Device*>(device);
     if (dev == EGL_NO_DEVICE_EXT || !Device::IsValidDevice(dev))
     {
-        SetGlobalError(Error(EGL_BAD_ACCESS));
+        thread->setError(Error(EGL_BAD_ACCESS));
         return EGL_FALSE;
     }
 
@@ -369,9 +385,9 @@ EGLBoolean EGLAPIENTRY QueryDeviceAttribEXT(EGLDeviceEXT device, EGLint attribut
     Display *owningDisplay = dev->getOwningDisplay();
     if (owningDisplay != nullptr && !owningDisplay->getExtensions().deviceQuery)
     {
-        SetGlobalError(Error(EGL_BAD_ACCESS,
-                             "Device wasn't created using eglCreateDeviceANGLE, and the Display "
-                             "that created it doesn't support device querying"));
+        thread->setError(Error(EGL_BAD_ACCESS,
+                               "Device wasn't created using eglCreateDeviceANGLE, and the Display "
+                               "that created it doesn't support device querying"));
         return EGL_FALSE;
     }
 
@@ -384,17 +400,17 @@ EGLBoolean EGLAPIENTRY QueryDeviceAttribEXT(EGLDeviceEXT device, EGLint attribut
       case EGL_D3D9_DEVICE_ANGLE:
         if (!dev->getExtensions().deviceD3D || dev->getType() != attribute)
         {
-            SetGlobalError(Error(EGL_BAD_ATTRIBUTE));
+            thread->setError(Error(EGL_BAD_ATTRIBUTE));
             return EGL_FALSE;
         }
         error = dev->getDevice(value);
         break;
       default:
-        SetGlobalError(Error(EGL_BAD_ATTRIBUTE));
-        return EGL_FALSE;
+          thread->setError(Error(EGL_BAD_ATTRIBUTE));
+          return EGL_FALSE;
     }
 
-    SetGlobalError(error);
+    thread->setError(error);
     return (error.isError() ? EGL_FALSE : EGL_TRUE);
 }
 
@@ -403,11 +419,12 @@ const char * EGLAPIENTRY QueryDeviceStringEXT(EGLDeviceEXT device, EGLint name)
 {
     EVENT("(EGLDeviceEXT device = 0x%0.8p, EGLint name = %d)",
           device, name);
+    Thread *thread = GetCurrentThread();
 
     Device *dev = static_cast<Device*>(device);
     if (dev == EGL_NO_DEVICE_EXT || !Device::IsValidDevice(dev))
     {
-        SetGlobalError(Error(EGL_BAD_DEVICE_EXT));
+        thread->setError(Error(EGL_BAD_DEVICE_EXT));
         return nullptr;
     }
 
@@ -418,11 +435,11 @@ const char * EGLAPIENTRY QueryDeviceStringEXT(EGLDeviceEXT device, EGLint name)
         result = dev->getExtensionString().c_str();
         break;
       default:
-        SetGlobalError(Error(EGL_BAD_DEVICE_EXT));
-        return nullptr;
+          thread->setError(Error(EGL_BAD_DEVICE_EXT));
+          return nullptr;
     }
 
-    SetGlobalError(Error(EGL_SUCCESS));
+    thread->setError(Error(EGL_SUCCESS));
     return result;
 }
 
@@ -431,19 +448,20 @@ EGLBoolean EGLAPIENTRY QueryDisplayAttribEXT(EGLDisplay dpy, EGLint attribute, E
 {
     EVENT("(EGLDisplay dpy = 0x%0.8p, EGLint attribute = %d, EGLAttrib *value = 0x%0.8p)",
           dpy, attribute, value);
+    Thread *thread = GetCurrentThread();
 
     Display *display = static_cast<Display*>(dpy);
 
     Error error = ValidateDisplay(display);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
     if (!display->getExtensions().deviceQuery)
     {
-        SetGlobalError(Error(EGL_BAD_ACCESS));
+        thread->setError(Error(EGL_BAD_ACCESS));
         return EGL_FALSE;
     }
 
@@ -455,11 +473,11 @@ EGLBoolean EGLAPIENTRY QueryDisplayAttribEXT(EGLDisplay dpy, EGLint attribute, E
         break;
 
       default:
-        SetGlobalError(Error(EGL_BAD_ATTRIBUTE));
-        return EGL_FALSE;
+          thread->setError(Error(EGL_BAD_ATTRIBUTE));
+          return EGL_FALSE;
     }
 
-    SetGlobalError(error);
+    thread->setError(error);
     return (error.isError() ? EGL_FALSE : EGL_TRUE);
 }
 
@@ -473,6 +491,7 @@ ANGLE_EXPORT EGLImageKHR EGLAPIENTRY CreateImageKHR(EGLDisplay dpy,
         "(EGLDisplay dpy = 0x%0.8p, EGLContext ctx = 0x%0.8p, EGLenum target = 0x%X, "
         "EGLClientBuffer buffer = 0x%0.8p, const EGLAttrib *attrib_list = 0x%0.8p)",
         dpy, ctx, target, buffer, attrib_list);
+    Thread *thread = GetCurrentThread();
 
     Display *display     = static_cast<Display *>(dpy);
     gl::Context *context = static_cast<gl::Context *>(ctx);
@@ -481,7 +500,7 @@ ANGLE_EXPORT EGLImageKHR EGLAPIENTRY CreateImageKHR(EGLDisplay dpy,
     Error error = ValidateCreateImageKHR(display, context, target, buffer, attributes);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_NO_IMAGE;
     }
 
@@ -489,7 +508,7 @@ ANGLE_EXPORT EGLImageKHR EGLAPIENTRY CreateImageKHR(EGLDisplay dpy,
     error = display->createImage(context, target, buffer, attributes, &image);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_NO_IMAGE;
     }
 
@@ -499,6 +518,7 @@ ANGLE_EXPORT EGLImageKHR EGLAPIENTRY CreateImageKHR(EGLDisplay dpy,
 ANGLE_EXPORT EGLBoolean EGLAPIENTRY DestroyImageKHR(EGLDisplay dpy, EGLImageKHR image)
 {
     EVENT("(EGLDisplay dpy = 0x%0.8p, EGLImage image = 0x%0.8p)", dpy, image);
+    Thread *thread = GetCurrentThread();
 
     Display *display = static_cast<Display *>(dpy);
     Image *img       = static_cast<Image *>(image);
@@ -506,7 +526,7 @@ ANGLE_EXPORT EGLBoolean EGLAPIENTRY DestroyImageKHR(EGLDisplay dpy, EGLImageKHR 
     Error error = ValidateDestroyImageKHR(display, img);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
@@ -523,11 +543,12 @@ ANGLE_EXPORT EGLDeviceEXT EGLAPIENTRY CreateDeviceANGLE(EGLint device_type,
         "(EGLint device_type = %d, void* native_device = 0x%0.8p, const EGLAttrib* attrib_list = "
         "0x%0.8p)",
         device_type, native_device, attrib_list);
+    Thread *thread = GetCurrentThread();
 
     Error error = ValidateCreateDeviceANGLE(device_type, native_device, attrib_list);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_NO_DEVICE_EXT;
     }
 
@@ -536,7 +557,7 @@ ANGLE_EXPORT EGLDeviceEXT EGLAPIENTRY CreateDeviceANGLE(EGLint device_type,
     if (error.isError())
     {
         ASSERT(device == nullptr);
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_NO_DEVICE_EXT;
     }
 
@@ -546,13 +567,14 @@ ANGLE_EXPORT EGLDeviceEXT EGLAPIENTRY CreateDeviceANGLE(EGLint device_type,
 ANGLE_EXPORT EGLBoolean EGLAPIENTRY ReleaseDeviceANGLE(EGLDeviceEXT device)
 {
     EVENT("(EGLDeviceEXT device = 0x%0.8p)", device);
+    Thread *thread = GetCurrentThread();
 
     Device *dev = static_cast<Device *>(device);
 
     Error error = ValidateReleaseDeviceANGLE(dev);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
@@ -565,6 +587,7 @@ ANGLE_EXPORT EGLBoolean EGLAPIENTRY ReleaseDeviceANGLE(EGLDeviceEXT device)
 EGLStreamKHR EGLAPIENTRY CreateStreamKHR(EGLDisplay dpy, const EGLint *attrib_list)
 {
     EVENT("(EGLDisplay dpy = 0x%0.8p, const EGLAttrib* attrib_list = 0x%0.8p)", dpy, attrib_list);
+    Thread *thread = GetCurrentThread();
 
     Display *display = static_cast<Display *>(dpy);
     AttributeMap attributes = AttributeMap::CreateFromIntArray(attrib_list);
@@ -572,7 +595,7 @@ EGLStreamKHR EGLAPIENTRY CreateStreamKHR(EGLDisplay dpy, const EGLint *attrib_li
     Error error = ValidateCreateStreamKHR(display, attributes);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_NO_STREAM_KHR;
     }
 
@@ -580,17 +603,18 @@ EGLStreamKHR EGLAPIENTRY CreateStreamKHR(EGLDisplay dpy, const EGLint *attrib_li
     error = display->createStream(attributes, &stream);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_NO_STREAM_KHR;
     }
 
-    SetGlobalError(error);
+    thread->setError(error);
     return static_cast<EGLStreamKHR>(stream);
 }
 
 EGLBoolean EGLAPIENTRY DestroyStreamKHR(EGLDisplay dpy, EGLStreamKHR stream)
 {
     EVENT("(EGLDisplay dpy = 0x%0.8p, EGLStreamKHR = 0x%0.8p)", dpy, stream);
+    Thread *thread = GetCurrentThread();
 
     Display *display     = static_cast<Display *>(dpy);
     Stream *streamObject = static_cast<Stream *>(stream);
@@ -598,12 +622,12 @@ EGLBoolean EGLAPIENTRY DestroyStreamKHR(EGLDisplay dpy, EGLStreamKHR stream)
     Error error = ValidateDestroyStreamKHR(display, streamObject);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
     display->destroyStream(streamObject);
-    SetGlobalError(error);
+    thread->setError(error);
     return EGL_TRUE;
 }
 
@@ -616,6 +640,7 @@ EGLBoolean EGLAPIENTRY StreamAttribKHR(EGLDisplay dpy,
         "(EGLDisplay dpy = 0x%0.8p, EGLStreamKHR stream = 0x%0.8p, EGLenum attribute = 0x%X, "
         "EGLint value = 0x%X)",
         dpy, stream, attribute, value);
+    Thread *thread = GetCurrentThread();
 
     Display *display     = static_cast<Display *>(dpy);
     Stream *streamObject = static_cast<Stream *>(stream);
@@ -623,7 +648,7 @@ EGLBoolean EGLAPIENTRY StreamAttribKHR(EGLDisplay dpy,
     Error error = ValidateStreamAttribKHR(display, streamObject, attribute, value);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
@@ -639,7 +664,7 @@ EGLBoolean EGLAPIENTRY StreamAttribKHR(EGLDisplay dpy,
             UNREACHABLE();
     }
 
-    SetGlobalError(error);
+    thread->setError(error);
     return EGL_TRUE;
 }
 
@@ -652,6 +677,7 @@ EGLBoolean EGLAPIENTRY QueryStreamKHR(EGLDisplay dpy,
         "(EGLDisplay dpy = 0x%0.8p, EGLStreamKHR stream = 0x%0.8p, EGLenum attribute = 0x%X, "
         "EGLint value = 0x%0.8p)",
         dpy, stream, attribute, value);
+    Thread *thread = GetCurrentThread();
 
     Display *display     = static_cast<Display *>(dpy);
     Stream *streamObject = static_cast<Stream *>(stream);
@@ -659,7 +685,7 @@ EGLBoolean EGLAPIENTRY QueryStreamKHR(EGLDisplay dpy,
     Error error = ValidateQueryStreamKHR(display, streamObject, attribute, value);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
@@ -678,7 +704,7 @@ EGLBoolean EGLAPIENTRY QueryStreamKHR(EGLDisplay dpy,
             UNREACHABLE();
     }
 
-    SetGlobalError(error);
+    thread->setError(error);
     return EGL_TRUE;
 }
 
@@ -691,6 +717,7 @@ EGLBoolean EGLAPIENTRY QueryStreamu64KHR(EGLDisplay dpy,
         "(EGLDisplay dpy = 0x%0.8p, EGLStreamKHR stream = 0x%0.8p, EGLenum attribute = 0x%X, "
         "EGLuint64KHR value = 0x%0.8p)",
         dpy, stream, attribute, value);
+    Thread *thread = GetCurrentThread();
 
     Display *display     = static_cast<Display *>(dpy);
     Stream *streamObject = static_cast<Stream *>(stream);
@@ -698,7 +725,7 @@ EGLBoolean EGLAPIENTRY QueryStreamu64KHR(EGLDisplay dpy,
     Error error = ValidateQueryStreamu64KHR(display, streamObject, attribute, value);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
@@ -714,13 +741,15 @@ EGLBoolean EGLAPIENTRY QueryStreamu64KHR(EGLDisplay dpy,
             UNREACHABLE();
     }
 
-    SetGlobalError(error);
+    thread->setError(error);
     return EGL_TRUE;
 }
 
 EGLBoolean EGLAPIENTRY StreamConsumerGLTextureExternalKHR(EGLDisplay dpy, EGLStreamKHR stream)
 {
     EVENT("(EGLDisplay dpy = 0x%0.8p, EGLStreamKHR = 0x%0.8p)", dpy, stream);
+    Thread *thread = GetCurrentThread();
+
     Display *display     = static_cast<Display *>(dpy);
     Stream *streamObject = static_cast<Stream *>(stream);
     gl::Context *context = gl::GetValidGlobalContext();
@@ -728,24 +757,26 @@ EGLBoolean EGLAPIENTRY StreamConsumerGLTextureExternalKHR(EGLDisplay dpy, EGLStr
     Error error = ValidateStreamConsumerGLTextureExternalKHR(display, context, streamObject);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
     error = streamObject->createConsumerGLTextureExternal(AttributeMap(), context);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
-    SetGlobalError(error);
+    thread->setError(error);
     return EGL_TRUE;
 }
 
 EGLBoolean EGLAPIENTRY StreamConsumerAcquireKHR(EGLDisplay dpy, EGLStreamKHR stream)
 {
     EVENT("(EGLDisplay dpy = 0x%0.8p, EGLStreamKHR = 0x%0.8p)", dpy, stream);
+    Thread *thread = GetCurrentThread();
+
     Display *display     = static_cast<Display *>(dpy);
     Stream *streamObject = static_cast<Stream *>(stream);
     gl::Context *context = gl::GetValidGlobalContext();
@@ -753,24 +784,26 @@ EGLBoolean EGLAPIENTRY StreamConsumerAcquireKHR(EGLDisplay dpy, EGLStreamKHR str
     Error error = ValidateStreamConsumerAcquireKHR(display, context, streamObject);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
     error = streamObject->consumerAcquire();
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
-    SetGlobalError(error);
+    thread->setError(error);
     return EGL_TRUE;
 }
 
 EGLBoolean EGLAPIENTRY StreamConsumerReleaseKHR(EGLDisplay dpy, EGLStreamKHR stream)
 {
     EVENT("(EGLDisplay dpy = 0x%0.8p, EGLStreamKHR = 0x%0.8p)", dpy, stream);
+    Thread *thread = GetCurrentThread();
+
     Display *display     = static_cast<Display *>(dpy);
     Stream *streamObject = static_cast<Stream *>(stream);
     gl::Context *context = gl::GetValidGlobalContext();
@@ -778,18 +811,18 @@ EGLBoolean EGLAPIENTRY StreamConsumerReleaseKHR(EGLDisplay dpy, EGLStreamKHR str
     Error error = ValidateStreamConsumerReleaseKHR(display, context, streamObject);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
     error = streamObject->consumerRelease();
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
-    SetGlobalError(error);
+    thread->setError(error);
     return EGL_TRUE;
 }
 
@@ -800,6 +833,8 @@ EGLBoolean EGLAPIENTRY StreamConsumerGLTextureExternalAttribsNV(EGLDisplay dpy,
     EVENT(
         "(EGLDisplay dpy = 0x%0.8p, EGLStreamKHR stream = 0x%0.8p, EGLAttrib attrib_list = 0x%0.8p",
         dpy, stream, attrib_list);
+    Thread *thread = GetCurrentThread();
+
     Display *display        = static_cast<Display *>(dpy);
     Stream *streamObject    = static_cast<Stream *>(stream);
     gl::Context *context    = gl::GetValidGlobalContext();
@@ -809,18 +844,18 @@ EGLBoolean EGLAPIENTRY StreamConsumerGLTextureExternalAttribsNV(EGLDisplay dpy,
                                                                    attributes);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
     error = streamObject->createConsumerGLTextureExternal(attributes, context);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
-    SetGlobalError(error);
+    thread->setError(error);
     return EGL_TRUE;
 }
 
@@ -831,6 +866,8 @@ EGLBoolean EGLAPIENTRY CreateStreamProducerD3DTextureNV12ANGLE(EGLDisplay dpy,
     EVENT(
         "(EGLDisplay dpy = 0x%0.8p, EGLStreamKHR stream = 0x%0.8p, EGLAttrib attrib_list = 0x%0.8p",
         dpy, stream, attrib_list);
+    Thread *thread = GetCurrentThread();
+
     Display *display        = static_cast<Display *>(dpy);
     Stream *streamObject    = static_cast<Stream *>(stream);
     AttributeMap attributes = AttributeMap::CreateFromAttribArray(attrib_list);
@@ -839,18 +876,18 @@ EGLBoolean EGLAPIENTRY CreateStreamProducerD3DTextureNV12ANGLE(EGLDisplay dpy,
         ValidateCreateStreamProducerD3DTextureNV12ANGLE(display, streamObject, attributes);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
     error = streamObject->createProducerD3D11TextureNV12(attributes);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
-    SetGlobalError(error);
+    thread->setError(error);
     return EGL_TRUE;
 }
 
@@ -863,6 +900,8 @@ EGLBoolean EGLAPIENTRY StreamPostD3DTextureNV12ANGLE(EGLDisplay dpy,
         "(EGLDisplay dpy = 0x%0.8p, EGLStreamKHR stream = 0x%0.8p, void* texture = 0x%0.8p, "
         "EGLAttrib attrib_list = 0x%0.8p",
         dpy, stream, texture, attrib_list);
+    Thread *thread = GetCurrentThread();
+
     Display *display        = static_cast<Display *>(dpy);
     Stream *streamObject    = static_cast<Stream *>(stream);
     AttributeMap attributes = AttributeMap::CreateFromAttribArray(attrib_list);
@@ -870,18 +909,49 @@ EGLBoolean EGLAPIENTRY StreamPostD3DTextureNV12ANGLE(EGLDisplay dpy,
     Error error = ValidateStreamPostD3DTextureNV12ANGLE(display, streamObject, texture, attributes);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
     error = streamObject->postD3D11NV12Texture(texture, attributes);
     if (error.isError())
     {
-        SetGlobalError(error);
+        thread->setError(error);
         return EGL_FALSE;
     }
 
-    SetGlobalError(error);
+    thread->setError(error);
+    return EGL_TRUE;
+}
+
+ANGLE_EXPORT EGLBoolean SwapBuffersWithDamageEXT(EGLDisplay dpy,
+                                                 EGLSurface surface,
+                                                 EGLint *rects,
+                                                 EGLint n_rects)
+{
+    EVENT(
+        "(EGLDisplay dpy = 0x%0.8p, EGLSurface surface = 0x%0.8p, EGLint *rects = 0x%0.8p, EGLint "
+        "n_rects = %d)",
+        dpy, surface, rects, n_rects);
+    Thread *thread = GetCurrentThread();
+
+    Display *display    = static_cast<Display *>(dpy);
+    Surface *eglSurface = static_cast<Surface *>(surface);
+
+    Error error = ValidateSwapBuffersWithDamageEXT(display, eglSurface, rects, n_rects);
+    if (error.isError())
+    {
+        thread->setError(error);
+        return EGL_FALSE;
+    }
+
+    error = eglSurface->swapWithDamage(rects, n_rects);
+    if (error.isError())
+    {
+        thread->setError(error);
+        return EGL_FALSE;
+    }
+
     return EGL_TRUE;
 }
 }

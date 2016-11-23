@@ -29,10 +29,6 @@
 #   include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
 #endif // ANGLE_ENABLE_D3D11
 
-#if defined (ANGLE_TEST_CONFIG)
-#   define ANGLE_DEFAULT_D3D11 1
-#endif
-
 #if !defined(ANGLE_DEFAULT_D3D11)
 // Enables use of the Direct3D 11 API for a default display, when available
 #   define ANGLE_DEFAULT_D3D11 1
@@ -176,16 +172,18 @@ SurfaceImpl *DisplayD3D::createPbufferSurface(const egl::SurfaceState &state,
                                               const egl::AttributeMap &attribs)
 {
     ASSERT(mRenderer != nullptr);
-    return new PbufferSurfaceD3D(state, mRenderer, mDisplay, configuration, nullptr, attribs);
+    return new PbufferSurfaceD3D(state, mRenderer, mDisplay, configuration, 0, nullptr, attribs);
 }
 
 SurfaceImpl *DisplayD3D::createPbufferFromClientBuffer(const egl::SurfaceState &state,
                                                        const egl::Config *configuration,
-                                                       EGLClientBuffer shareHandle,
+                                                       EGLenum buftype,
+                                                       EGLClientBuffer clientBuffer,
                                                        const egl::AttributeMap &attribs)
 {
     ASSERT(mRenderer != nullptr);
-    return new PbufferSurfaceD3D(state, mRenderer, mDisplay, configuration, shareHandle, attribs);
+    return new PbufferSurfaceD3D(state, mRenderer, mDisplay, configuration, buftype, clientBuffer,
+                                 attribs);
 }
 
 SurfaceImpl *DisplayD3D::createPixmapSurface(const egl::SurfaceState &state,
@@ -289,6 +287,26 @@ egl::Error DisplayD3D::restoreLostDevice()
 bool DisplayD3D::isValidNativeWindow(EGLNativeWindowType window) const
 {
     return mRenderer->isValidNativeWindow(window);
+}
+
+egl::Error DisplayD3D::validateClientBuffer(const egl::Config *configuration,
+                                            EGLenum buftype,
+                                            EGLClientBuffer clientBuffer,
+                                            const egl::AttributeMap &attribs) const
+{
+    switch (buftype)
+    {
+        case EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE:
+            return mRenderer->validateShareHandle(configuration, static_cast<HANDLE>(clientBuffer),
+                                                  attribs);
+
+        case EGL_D3D_TEXTURE_ANGLE:
+            return mRenderer->getD3DTextureInfo(static_cast<IUnknown *>(clientBuffer), nullptr,
+                                                nullptr, nullptr);
+
+        default:
+            return DisplayImpl::validateClientBuffer(configuration, buftype, clientBuffer, attribs);
+    }
 }
 
 void DisplayD3D::generateExtensions(egl::DisplayExtensions *outExtensions) const

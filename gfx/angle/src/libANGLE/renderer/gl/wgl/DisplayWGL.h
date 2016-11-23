@@ -37,7 +37,8 @@ class DisplayWGL : public DisplayGL
                                       const egl::AttributeMap &attribs) override;
     SurfaceImpl *createPbufferFromClientBuffer(const egl::SurfaceState &state,
                                                const egl::Config *configuration,
-                                               EGLClientBuffer shareHandle,
+                                               EGLenum buftype,
+                                               EGLClientBuffer clientBuffer,
                                                const egl::AttributeMap &attribs) override;
     SurfaceImpl *createPixmapSurface(const egl::SurfaceState &state,
                                      const egl::Config *configuration,
@@ -50,6 +51,10 @@ class DisplayWGL : public DisplayGL
     egl::Error restoreLostDevice() override;
 
     bool isValidNativeWindow(EGLNativeWindowType window) const override;
+    egl::Error validateClientBuffer(const egl::Config *configuration,
+                                    EGLenum buftype,
+                                    EGLClientBuffer clientBuffer,
+                                    const egl::AttributeMap &attribs) const override;
 
     egl::Error getDevice(DeviceImpl **device) override;
 
@@ -78,7 +83,7 @@ class DisplayWGL : public DisplayGL
     FunctionsWGL *mFunctionsWGL;
     FunctionsGL *mFunctionsGL;
 
-    bool mHasARBCreateContextRobustness;
+    bool mHasRobustness;
 
     ATOM mWindowClass;
     HWND mWindow;

@@ -5,6 +5,7 @@
 //
 
 #include "test_utils/ANGLETest.h"
+#include "test_utils/gl_raii.h"
 
 using namespace angle;
 
@@ -24,7 +25,7 @@ class UniformBufferTest : public ANGLETest
         setConfigAlphaBits(8);
     }
 
-    virtual void SetUp()
+    void SetUp() override
     {
         ANGLETest::SetUp();
 
@@ -62,7 +63,7 @@ class UniformBufferTest : public ANGLETest
         ASSERT_GL_NO_ERROR();
     }
 
-    virtual void TearDown()
+    void TearDown() override
     {
         glDeleteBuffers(1, &mUniformBuffer);
         glDeleteProgram(mProgram);
@@ -97,13 +98,6 @@ TEST_P(UniformBufferTest, Simple)
 // The second step renders a color from a UBO with a non-zero offset.
 TEST_P(UniformBufferTest, UniformBufferRange)
 {
-    // TODO(jmadill): Figure out why this fails on Intel.
-    if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
-    {
-        std::cout << "Test skipped on Intel." << std::endl;
-        return;
-    }
-
     int px = getWindowWidth() / 2;
     int py = getWindowHeight() / 2;
 
@@ -271,12 +265,6 @@ TEST_P(UniformBufferTest, UniformBufferManyUpdates)
 // Use a large number of buffer ranges (compared to the actual size of the UBO)
 TEST_P(UniformBufferTest, ManyUniformBufferRange)
 {
-    // TODO(jmadill): Figure out why this fails on Intel.
-    if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
-    {
-        std::cout << "Test skipped on Intel." << std::endl;
-        return;
-    }
     int px = getWindowWidth() / 2;
     int py = getWindowHeight() / 2;
 
@@ -357,12 +345,116 @@ TEST_P(UniformBufferTest, ActiveUniformNames)
     const std::string &vertexShaderSource =
         "#version 300 es\n"
         "in vec2 position;\n"
-        "out float v;\n"
-        "uniform blockName {\n"
-        "  float f;\n"
-        "} instanceName;\n"
+        "out vec2 v;\n"
+        "uniform blockName1 {\n"
+        "  float f1;\n"
+        "} instanceName1;\n"
+        "uniform blockName2 {\n"
+        "  float f2;\n"
+        "} instanceName2[1];\n"
         "void main() {\n"
-        "  v = instanceName.f;\n"
+        "  v = vec2(instanceName1.f1, instanceName2[0].f2);\n"
+        "  gl_Position = vec4(position, 0, 1);\n"
+        "}";
+
+    const std::string &fragmentShaderSource =
+        "#version 300 es\n"
+        "precision highp float;\n"
+        "in vec2 v;\n"
+        "out vec4 color;\n"
+        "void main() {\n"
+        "  color = vec4(v, 0, 1);\n"
+        "}";
+
+    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    ASSERT_NE(0u, program);
+
+    GLint activeUniformBlocks;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &activeUniformBlocks);
+    ASSERT_EQ(2, activeUniformBlocks);
+
+    GLint maxLength;
+    GLsizei length;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &maxLength);
+    std::vector<GLchar> strBlockNameBuffer(maxLength + 1, 0);
+    glGetActiveUniformBlockName(program, 0, maxLength, &length, &strBlockNameBuffer[0]);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ("blockName1", std::string(&strBlockNameBuffer[0]));
+
+    glGetActiveUniformBlockName(program, 1, maxLength, &length, &strBlockNameBuffer[0]);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ("blockName2[0]", std::string(&strBlockNameBuffer[0]));
+
+    GLint activeUniforms;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &activeUniforms);
+
+    ASSERT_EQ(2, activeUniforms);
+
+    GLint size;
+    GLenum type;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxLength);
+    std::vector<GLchar> strUniformNameBuffer(maxLength + 1, 0);
+    glGetActiveUniform(program, 0, maxLength, &length, &size, &type, &strUniformNameBuffer[0]);
+
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ(1, size);
+    EXPECT_GLENUM_EQ(GL_FLOAT, type);
+    EXPECT_EQ("blockName1.f1", std::string(&strUniformNameBuffer[0]));
+
+    glGetActiveUniform(program, 1, maxLength, &length, &size, &type, &strUniformNameBuffer[0]);
+
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ(1, size);
+    EXPECT_GLENUM_EQ(GL_FLOAT, type);
+    EXPECT_EQ("blockName2.f2", std::string(&strUniformNameBuffer[0]));
+}
+
+// Tests active uniforms and blocks when the layout is std140, shared and packed.
+TEST_P(UniformBufferTest, ActiveUniformNumberAndName)
+{
+    // TODO(Jiajia): Figure out why this fails on Intel on Mac.
+    // This case can pass on Intel Mac-10.11/10.12. But it fails on Intel Mac-10.10.
+    if (IsIntel() && IsOSX())
+    {
+        std::cout << "Test skipped on Intel on Mac." << std::endl;
+        return;
+    }
+
+    // This case fails on all AMD platforms (Mac, Linux, Win).
+    // TODO(zmo): This actually passes on certain AMD cards, but we don't have
+    // a way to do device specific handling yet.
+    if (IsAMD())
+    {
+        std::cout << "Test skipped on AMD." << std::endl;
+        return;
+    }
+
+    const std::string &vertexShaderSource =
+        "#version 300 es\n"
+        "in vec2 position;\n"
+        "out float v;\n"
+        "struct S {\n"
+        "  highp ivec3 a;\n"
+        "  mediump ivec2 b[4];\n"
+        "};\n"
+        "layout(std140) uniform blockName0 {\n"
+        "  S s0;\n"
+        "  lowp vec2 v0;\n"
+        "  S s1[2];\n"
+        "  highp uint u0;\n"
+        "};\n"
+        "layout(std140) uniform blockName1 {\n"
+        "  float f1;\n"
+        "  bool b1;\n"
+        "} instanceName1;\n"
+        "layout(shared) uniform blockName2 {\n"
+        "  float f2;\n"
+        "};\n"
+        "layout(packed) uniform blockName3 {\n"
+        "  float f3;\n"
+        "};\n"
+        "void main() {\n"
+        "  v = instanceName1.f1;\n"
         "  gl_Position = vec4(position, 0, 1);\n"
         "}";
 
@@ -375,25 +467,99 @@ TEST_P(UniformBufferTest, ActiveUniformNames)
         "  color = vec4(v, 0, 0, 1);\n"
         "}";
 
-    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
-    ASSERT_NE(0u, program);
+    ANGLE_GL_PROGRAM(program, vertexShaderSource, fragmentShaderSource);
 
+    // Note that the packed |blockName3| might (or might not) be optimized out.
     GLint activeUniforms;
-    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &activeUniforms);
+    glGetProgramiv(program.get(), GL_ACTIVE_UNIFORMS, &activeUniforms);
+    EXPECT_GE(activeUniforms, 11);
 
-    ASSERT_EQ(1, activeUniforms);
+    GLint activeUniformBlocks;
+    glGetProgramiv(program.get(), GL_ACTIVE_UNIFORM_BLOCKS, &activeUniformBlocks);
+    EXPECT_GE(activeUniformBlocks, 3);
 
     GLint maxLength, size;
     GLenum type;
     GLsizei length;
-    glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxLength);
+    glGetProgramiv(program.get(), GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxLength);
     std::vector<GLchar> strBuffer(maxLength + 1, 0);
-    glGetActiveUniform(program, 0, maxLength, &length, &size, &type, &strBuffer[0]);
 
+    glGetActiveUniform(program.get(), 0, maxLength, &length, &size, &type, &strBuffer[0]);
     ASSERT_GL_NO_ERROR();
     EXPECT_EQ(1, size);
-    EXPECT_GLENUM_EQ(GL_FLOAT, type);
-    EXPECT_EQ("blockName.f", std::string(&strBuffer[0]));
+    EXPECT_EQ("s0.a", std::string(&strBuffer[0]));
+
+    glGetActiveUniform(program.get(), 1, maxLength, &length, &size, &type, &strBuffer[0]);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ(4, size);
+    EXPECT_EQ("s0.b[0]", std::string(&strBuffer[0]));
+
+    glGetActiveUniform(program.get(), 2, maxLength, &length, &size, &type, &strBuffer[0]);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ(1, size);
+    EXPECT_EQ("v0", std::string(&strBuffer[0]));
+
+    glGetActiveUniform(program.get(), 3, maxLength, &length, &size, &type, &strBuffer[0]);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ(1, size);
+    EXPECT_EQ("s1[0].a", std::string(&strBuffer[0]));
+
+    glGetActiveUniform(program.get(), 4, maxLength, &length, &size, &type, &strBuffer[0]);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ(4, size);
+    EXPECT_EQ("s1[0].b[0]", std::string(&strBuffer[0]));
+
+    glGetActiveUniform(program.get(), 5, maxLength, &length, &size, &type, &strBuffer[0]);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ(1, size);
+    EXPECT_EQ("s1[1].a", std::string(&strBuffer[0]));
+
+    glGetActiveUniform(program.get(), 6, maxLength, &length, &size, &type, &strBuffer[0]);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ(4, size);
+    EXPECT_EQ("s1[1].b[0]", std::string(&strBuffer[0]));
+
+    glGetActiveUniform(program.get(), 7, maxLength, &length, &size, &type, &strBuffer[0]);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ(1, size);
+    EXPECT_EQ("u0", std::string(&strBuffer[0]));
+
+    glGetActiveUniform(program.get(), 8, maxLength, &length, &size, &type, &strBuffer[0]);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ(1, size);
+    EXPECT_EQ("blockName1.f1", std::string(&strBuffer[0]));
+
+    glGetActiveUniform(program.get(), 9, maxLength, &length, &size, &type, &strBuffer[0]);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ(1, size);
+    EXPECT_EQ("blockName1.b1", std::string(&strBuffer[0]));
+
+    glGetActiveUniform(program.get(), 10, maxLength, &length, &size, &type, &strBuffer[0]);
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ(1, size);
+    EXPECT_EQ("f2", std::string(&strBuffer[0]));
+}
+
+// Test that using a very large buffer to back a small uniform block works OK.
+TEST_P(UniformBufferTest, VeryLarge)
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+    float floatData[4] = {0.5f, 0.75f, 0.25f, 1.0f};
+
+    GLsizei bigSize = 4096 * 64;
+    std::vector<GLubyte> zero(bigSize, 0);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, mUniformBuffer);
+    glBufferData(GL_UNIFORM_BUFFER, bigSize, zero.data(), GL_STATIC_DRAW);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(float) * 4, floatData);
+
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, mUniformBuffer);
+
+    glUniformBlockBinding(mProgram, mUniformBufferIndex, 0);
+    drawQuad(mProgram, "position", 0.5f);
+
+    ASSERT_GL_NO_ERROR();
+    EXPECT_PIXEL_NEAR(0, 0, 128, 191, 64, 255, 1);
 }
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.

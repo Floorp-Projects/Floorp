@@ -10,19 +10,19 @@
 
 #include <cstdint>
 
-#include "libANGLE/validationES.h"
-#include "libANGLE/validationES3.h"
-#include "libANGLE/Context.h"
-#include "libANGLE/Texture.h"
-#include "libANGLE/Framebuffer.h"
-#include "libANGLE/Renderbuffer.h"
-#include "libANGLE/formatutils.h"
-#include "libANGLE/FramebufferAttachment.h"
-#include "libANGLE/Uniform.h"
-
 #include "common/mathutil.h"
 #include "common/string_utils.h"
 #include "common/utilities.h"
+#include "libANGLE/Context.h"
+#include "libANGLE/Texture.h"
+#include "libANGLE/Framebuffer.h"
+#include "libANGLE/FramebufferAttachment.h"
+#include "libANGLE/Renderbuffer.h"
+#include "libANGLE/Shader.h"
+#include "libANGLE/Uniform.h"
+#include "libANGLE/formatutils.h"
+#include "libANGLE/validationES.h"
+#include "libANGLE/validationES3.h"
 
 namespace gl
 {
@@ -285,9 +285,21 @@ bool IsValidCopyTextureSourceTarget(Context *context, GLenum target)
 
 }  // anonymous namespace
 
-bool ValidateES2TexImageParameters(Context *context, GLenum target, GLint level, GLenum internalformat, bool isCompressed, bool isSubImage,
-                                   GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-                                   GLint border, GLenum format, GLenum type, const GLvoid *pixels)
+bool ValidateES2TexImageParameters(Context *context,
+                                   GLenum target,
+                                   GLint level,
+                                   GLenum internalformat,
+                                   bool isCompressed,
+                                   bool isSubImage,
+                                   GLint xoffset,
+                                   GLint yoffset,
+                                   GLsizei width,
+                                   GLsizei height,
+                                   GLint border,
+                                   GLenum format,
+                                   GLenum type,
+                                   GLsizei imageSize,
+                                   const GLvoid *pixels)
 {
     if (!ValidTexture2DDestinationTarget(context, target))
     {
@@ -356,10 +368,16 @@ bool ValidateES2TexImageParameters(Context *context, GLenum target, GLint level,
 
     if (isSubImage)
     {
+        GLenum textureFormat = texture->getFormat(target, level).asSized();
+        if (textureFormat == GL_NONE)
+        {
+            context->handleError(Error(GL_INVALID_OPERATION, "Texture level does not exist."));
+            return false;
+        }
+
         if (format != GL_NONE)
         {
-            if (gl::GetSizedInternalFormat(format, type) !=
-                texture->getFormat(target, level).asSized())
+            if (gl::GetSizedInternalFormat(format, type) != textureFormat)
             {
                 context->handleError(Error(GL_INVALID_OPERATION));
                 return false;
@@ -690,6 +708,12 @@ bool ValidateES2TexImageParameters(Context *context, GLenum target, GLint level,
                 return false;
             }
         }
+    }
+
+    if (!ValidImageDataSize(context, target, width, height, 1, internalformat, type, pixels,
+                            imageSize))
+    {
+        return false;
     }
 
     return true;
@@ -1190,52 +1214,6 @@ bool ValidateES2TexStorageParameters(Context *context, GLenum target, GLsizei le
         return false;
     }
 
-    return true;
-}
-
-// check for combinations of format and type that are valid for ReadPixels
-bool ValidES2ReadFormatType(ValidationContext *context, GLenum format, GLenum type)
-{
-    switch (format)
-    {
-      case GL_RGBA:
-        switch (type)
-        {
-          case GL_UNSIGNED_BYTE:
-            break;
-          default:
-            return false;
-        }
-        break;
-      case GL_BGRA_EXT:
-        switch (type)
-        {
-          case GL_UNSIGNED_BYTE:
-          case GL_UNSIGNED_SHORT_4_4_4_4_REV_EXT:
-          case GL_UNSIGNED_SHORT_1_5_5_5_REV_EXT:
-            break;
-          default:
-            return false;
-        }
-        break;
-      case GL_RG_EXT:
-      case GL_RED_EXT:
-        if (!context->getExtensions().textureRG)
-        {
-            return false;
-        }
-        switch (type)
-        {
-          case GL_UNSIGNED_BYTE:
-            break;
-          default:
-            return false;
-        }
-        break;
-
-      default:
-        return false;
-    }
     return true;
 }
 
@@ -2014,12 +1992,43 @@ bool ValidateTexImage2D(Context *context,
     if (context->getClientMajorVersion() < 3)
     {
         return ValidateES2TexImageParameters(context, target, level, internalformat, false, false,
-                                             0, 0, width, height, border, format, type, pixels);
+                                             0, 0, width, height, border, format, type, -1, pixels);
     }
 
     ASSERT(context->getClientMajorVersion() >= 3);
     return ValidateES3TexImage2DParameters(context, target, level, internalformat, false, false, 0,
-                                           0, 0, width, height, 1, border, format, type, pixels);
+                                           0, 0, width, height, 1, border, format, type, -1,
+                                           pixels);
+}
+
+bool ValidateTexImage2DRobust(Context *context,
+                              GLenum target,
+                              GLint level,
+                              GLint internalformat,
+                              GLsizei width,
+                              GLsizei height,
+                              GLint border,
+                              GLenum format,
+                              GLenum type,
+                              GLsizei bufSize,
+                              const GLvoid *pixels)
+{
+    if (!ValidateRobustEntryPoint(context, bufSize))
+    {
+        return false;
+    }
+
+    if (context->getClientMajorVersion() < 3)
+    {
+        return ValidateES2TexImageParameters(context, target, level, internalformat, false, false,
+                                             0, 0, width, height, border, format, type, bufSize,
+                                             pixels);
+    }
+
+    ASSERT(context->getClientMajorVersion() >= 3);
+    return ValidateES3TexImage2DParameters(context, target, level, internalformat, false, false, 0,
+                                           0, 0, width, height, 1, border, format, type, bufSize,
+                                           pixels);
 }
 
 bool ValidateTexSubImage2D(Context *context,
@@ -2037,12 +2046,43 @@ bool ValidateTexSubImage2D(Context *context,
     if (context->getClientMajorVersion() < 3)
     {
         return ValidateES2TexImageParameters(context, target, level, GL_NONE, false, true, xoffset,
-                                             yoffset, width, height, 0, format, type, pixels);
+                                             yoffset, width, height, 0, format, type, -1, pixels);
     }
 
     ASSERT(context->getClientMajorVersion() >= 3);
     return ValidateES3TexImage2DParameters(context, target, level, GL_NONE, false, true, xoffset,
-                                           yoffset, 0, width, height, 1, 0, format, type, pixels);
+                                           yoffset, 0, width, height, 1, 0, format, type, -1,
+                                           pixels);
+}
+
+bool ValidateTexSubImage2DRobustANGLE(Context *context,
+                                      GLenum target,
+                                      GLint level,
+                                      GLint xoffset,
+                                      GLint yoffset,
+                                      GLsizei width,
+                                      GLsizei height,
+                                      GLenum format,
+                                      GLenum type,
+                                      GLsizei bufSize,
+                                      const GLvoid *pixels)
+{
+    if (!ValidateRobustEntryPoint(context, bufSize))
+    {
+        return false;
+    }
+
+    if (context->getClientMajorVersion() < 3)
+    {
+        return ValidateES2TexImageParameters(context, target, level, GL_NONE, false, true, xoffset,
+                                             yoffset, width, height, 0, format, type, bufSize,
+                                             pixels);
+    }
+
+    ASSERT(context->getClientMajorVersion() >= 3);
+    return ValidateES3TexImage2DParameters(context, target, level, GL_NONE, false, true, xoffset,
+                                           yoffset, 0, width, height, 1, 0, format, type, bufSize,
+                                           pixels);
 }
 
 bool ValidateCompressedTexImage2D(Context *context,
@@ -2058,7 +2098,7 @@ bool ValidateCompressedTexImage2D(Context *context,
     if (context->getClientMajorVersion() < 3)
     {
         if (!ValidateES2TexImageParameters(context, target, level, internalformat, true, false, 0,
-                                           0, width, height, border, GL_NONE, GL_NONE, data))
+                                           0, width, height, border, GL_NONE, GL_NONE, -1, data))
         {
             return false;
         }
@@ -2067,7 +2107,7 @@ bool ValidateCompressedTexImage2D(Context *context,
     {
         ASSERT(context->getClientMajorVersion() >= 3);
         if (!ValidateES3TexImage2DParameters(context, target, level, internalformat, true, false, 0,
-                                             0, 0, width, height, 1, border, GL_NONE, GL_NONE,
+                                             0, 0, width, height, 1, border, GL_NONE, GL_NONE, -1,
                                              data))
         {
             return false;
@@ -2106,7 +2146,7 @@ bool ValidateCompressedTexSubImage2D(Context *context,
     if (context->getClientMajorVersion() < 3)
     {
         if (!ValidateES2TexImageParameters(context, target, level, GL_NONE, true, true, xoffset,
-                                           yoffset, width, height, 0, GL_NONE, GL_NONE, data))
+                                           yoffset, width, height, 0, GL_NONE, GL_NONE, -1, data))
         {
             return false;
         }
@@ -2115,7 +2155,7 @@ bool ValidateCompressedTexSubImage2D(Context *context,
     {
         ASSERT(context->getClientMajorVersion() >= 3);
         if (!ValidateES3TexImage2DParameters(context, target, level, GL_NONE, true, true, xoffset,
-                                             yoffset, 0, width, height, 1, 0, GL_NONE, GL_NONE,
+                                             yoffset, 0, width, height, 1, 0, GL_NONE, GL_NONE, -1,
                                              data))
         {
             return false;
@@ -2142,13 +2182,7 @@ bool ValidateCompressedTexSubImage2D(Context *context,
 
 bool ValidateGetBufferPointervOES(Context *context, GLenum target, GLenum pname, void **params)
 {
-    if (!context->getExtensions().mapBuffer)
-    {
-        context->handleError(Error(GL_INVALID_OPERATION, "Map buffer extension not available."));
-        return false;
-    }
-
-    return ValidateGetBufferPointervBase(context, target, pname, params);
+    return ValidateGetBufferPointervBase(context, target, pname, nullptr, params);
 }
 
 bool ValidateMapBufferOES(Context *context, GLenum target, GLenum access)
@@ -2236,6 +2270,13 @@ bool ValidateBindTexture(Context *context, GLenum target, GLuint texture)
     if (textureObject && textureObject->getTarget() != target && texture != 0)
     {
         context->handleError(Error(GL_INVALID_OPERATION, "Invalid texture"));
+        return false;
+    }
+
+    if (!context->getGLState().isBindGeneratesResourceEnabled() &&
+        !context->isTextureGenerated(texture))
+    {
+        context->handleError(Error(GL_INVALID_OPERATION, "Texture was not generated"));
         return false;
     }
 
@@ -3315,6 +3356,68 @@ bool ValidateCopySubTextureCHROMIUM(Context *context,
     return true;
 }
 
+bool ValidateCompressedCopyTextureCHROMIUM(Context *context, GLuint sourceId, GLuint destId)
+{
+    if (!context->getExtensions().copyCompressedTexture)
+    {
+        context->handleError(Error(GL_INVALID_OPERATION,
+                                   "GL_CHROMIUM_copy_compressed_texture extension not available."));
+        return false;
+    }
+
+    const gl::Texture *source = context->getTexture(sourceId);
+    if (source == nullptr)
+    {
+        context->handleError(
+            Error(GL_INVALID_VALUE, "Source texture is not a valid texture object."));
+        return false;
+    }
+
+    if (source->getTarget() != GL_TEXTURE_2D)
+    {
+        context->handleError(
+            Error(GL_INVALID_VALUE, "Source texture must be of type GL_TEXTURE_2D."));
+        return false;
+    }
+
+    if (source->getWidth(GL_TEXTURE_2D, 0) == 0 || source->getHeight(GL_TEXTURE_2D, 0) == 0)
+    {
+        context->handleError(Error(GL_INVALID_VALUE, "Source texture must level 0 defined."));
+        return false;
+    }
+
+    const gl::Format &sourceFormat = source->getFormat(GL_TEXTURE_2D, 0);
+    if (!sourceFormat.info->compressed)
+    {
+        context->handleError(
+            Error(GL_INVALID_OPERATION, "Source texture must have a compressed internal format."));
+        return false;
+    }
+
+    const gl::Texture *dest = context->getTexture(destId);
+    if (dest == nullptr)
+    {
+        context->handleError(
+            Error(GL_INVALID_VALUE, "Destination texture is not a valid texture object."));
+        return false;
+    }
+
+    if (dest->getTarget() != GL_TEXTURE_2D)
+    {
+        context->handleError(
+            Error(GL_INVALID_VALUE, "Destination texture must be of type GL_TEXTURE_2D."));
+        return false;
+    }
+
+    if (dest->getImmutableFormat())
+    {
+        context->handleError(Error(GL_INVALID_OPERATION, "Destination cannot be immutable."));
+        return false;
+    }
+
+    return true;
+}
+
 bool ValidateCreateShader(Context *context, GLenum type)
 {
     switch (type)
@@ -3322,13 +3425,18 @@ bool ValidateCreateShader(Context *context, GLenum type)
         case GL_VERTEX_SHADER:
         case GL_FRAGMENT_SHADER:
             break;
+
         case GL_COMPUTE_SHADER:
-            if (context->getGLVersion().isES31())
+            if (context->getClientVersion() < Version(3, 1))
             {
-                break;
+                context->handleError(
+                    Error(GL_INVALID_ENUM, "GL_COMPUTE_SHADER requires OpenGL ES 3.1."));
+                return false;
             }
+            break;
+
         default:
-            context->handleError(Error(GL_INVALID_ENUM));
+            context->handleError(Error(GL_INVALID_ENUM, "Unknown shader type."));
             return false;
     }
 
@@ -3434,6 +3542,323 @@ bool ValidateBufferSubData(ValidationContext *context,
     {
         context->handleError(Error(GL_INVALID_VALUE));
         return false;
+    }
+
+    return true;
+}
+
+bool ValidateEnableExtensionANGLE(ValidationContext *context, const GLchar *name)
+{
+    if (!context->getExtensions().webglCompatibility)
+    {
+        context->handleError(
+            Error(GL_INVALID_OPERATION, "GL_ANGLE_webgl_compatibility is not available."));
+        return false;
+    }
+
+    const ExtensionInfoMap &extensionInfos = GetExtensionInfoMap();
+    auto extension                         = extensionInfos.find(name);
+    if (extension == extensionInfos.end() || !extension->second.Enableable)
+    {
+        context->handleError(Error(GL_INVALID_OPERATION, "Extension %s is not enableable.", name));
+        return false;
+    }
+
+    return true;
+}
+
+bool ValidateActiveTexture(ValidationContext *context, GLenum texture)
+{
+    if (texture < GL_TEXTURE0 ||
+        texture > GL_TEXTURE0 + context->getCaps().maxCombinedTextureImageUnits - 1)
+    {
+        context->handleError(Error(GL_INVALID_ENUM));
+        return false;
+    }
+
+    return true;
+}
+
+bool ValidateAttachShader(ValidationContext *context, GLuint program, GLuint shader)
+{
+    Program *programObject = GetValidProgram(context, program);
+    if (!programObject)
+    {
+        return false;
+    }
+
+    Shader *shaderObject = GetValidShader(context, shader);
+    if (!shaderObject)
+    {
+        return false;
+    }
+
+    switch (shaderObject->getType())
+    {
+        case GL_VERTEX_SHADER:
+        {
+            if (programObject->getAttachedVertexShader())
+            {
+                context->handleError(Error(GL_INVALID_OPERATION));
+                return false;
+            }
+            break;
+        }
+        case GL_FRAGMENT_SHADER:
+        {
+            if (programObject->getAttachedFragmentShader())
+            {
+                context->handleError(Error(GL_INVALID_OPERATION));
+                return false;
+            }
+            break;
+        }
+        case GL_COMPUTE_SHADER:
+        {
+            if (programObject->getAttachedComputeShader())
+            {
+                context->handleError(Error(GL_INVALID_OPERATION));
+                return false;
+            }
+            break;
+        }
+        default:
+            UNREACHABLE();
+            break;
+    }
+
+    return true;
+}
+
+bool ValidateBindAttribLocation(ValidationContext *context,
+                                GLuint program,
+                                GLuint index,
+                                const GLchar *name)
+{
+    if (index >= MAX_VERTEX_ATTRIBS)
+    {
+        context->handleError(Error(GL_INVALID_VALUE, "Index exceeds MAX_VERTEX_ATTRIBS"));
+        return false;
+    }
+
+    if (strncmp(name, "gl_", 3) == 0)
+    {
+        context->handleError(Error(GL_INVALID_OPERATION, "Cannot Bind built-in attributes"));
+        return false;
+    }
+
+    return GetValidProgram(context, program) != nullptr;
+}
+
+bool ValidateBindBuffer(ValidationContext *context, GLenum target, GLuint buffer)
+{
+    if (!ValidBufferTarget(context, target))
+    {
+        context->handleError(Error(GL_INVALID_ENUM, "Invalid Buffer target"));
+        return false;
+    }
+
+    if (!context->getGLState().isBindGeneratesResourceEnabled() &&
+        !context->isBufferGenerated(buffer))
+    {
+        context->handleError(Error(GL_INVALID_OPERATION, "Buffer was not generated"));
+        return false;
+    }
+
+    return true;
+}
+
+bool ValidateBindFramebuffer(ValidationContext *context, GLenum target, GLuint framebuffer)
+{
+    if (!ValidFramebufferTarget(target))
+    {
+        context->handleError(Error(GL_INVALID_ENUM, "Invalid Framebuffer target"));
+        return false;
+    }
+
+    if (!context->getGLState().isBindGeneratesResourceEnabled() &&
+        !context->isFramebufferGenerated(framebuffer))
+    {
+        context->handleError(Error(GL_INVALID_OPERATION, "Framebuffer was not generated"));
+        return false;
+    }
+
+    return true;
+}
+
+bool ValidateBindRenderbuffer(ValidationContext *context, GLenum target, GLuint renderbuffer)
+{
+    if (target != GL_RENDERBUFFER)
+    {
+        context->handleError(Error(GL_INVALID_ENUM, "Invalid Renderbuffer target"));
+        return false;
+    }
+
+    if (!context->getGLState().isBindGeneratesResourceEnabled() &&
+        !context->isRenderbufferGenerated(renderbuffer))
+    {
+        context->handleError(Error(GL_INVALID_OPERATION, "Renderbuffer was not generated"));
+        return false;
+    }
+
+    return true;
+}
+
+static bool ValidBlendEquationMode(GLenum mode)
+{
+    switch (mode)
+    {
+        case GL_FUNC_ADD:
+        case GL_FUNC_SUBTRACT:
+        case GL_FUNC_REVERSE_SUBTRACT:
+        case GL_MIN:
+        case GL_MAX:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool ValidateBlendEquation(ValidationContext *context, GLenum mode)
+{
+    if (!ValidBlendEquationMode(mode))
+    {
+        context->handleError(Error(GL_INVALID_ENUM, "Invalid blend equation"));
+        return false;
+    }
+
+    return true;
+}
+
+bool ValidateBlendEquationSeparate(ValidationContext *context, GLenum modeRGB, GLenum modeAlpha)
+{
+    if (!ValidBlendEquationMode(modeRGB))
+    {
+        context->handleError(Error(GL_INVALID_ENUM, "Invalid RGB blend equation"));
+        return false;
+    }
+
+    if (!ValidBlendEquationMode(modeAlpha))
+    {
+        context->handleError(Error(GL_INVALID_ENUM, "Invalid alpha blend equation"));
+        return false;
+    }
+
+    return true;
+}
+
+bool ValidateBlendFunc(ValidationContext *context, GLenum sfactor, GLenum dfactor)
+{
+    return ValidateBlendFuncSeparate(context, sfactor, dfactor, sfactor, dfactor);
+}
+
+static bool ValidSrcBlendFunc(GLenum srcBlend)
+{
+    switch (srcBlend)
+    {
+        case GL_ZERO:
+        case GL_ONE:
+        case GL_SRC_COLOR:
+        case GL_ONE_MINUS_SRC_COLOR:
+        case GL_DST_COLOR:
+        case GL_ONE_MINUS_DST_COLOR:
+        case GL_SRC_ALPHA:
+        case GL_ONE_MINUS_SRC_ALPHA:
+        case GL_DST_ALPHA:
+        case GL_ONE_MINUS_DST_ALPHA:
+        case GL_CONSTANT_COLOR:
+        case GL_ONE_MINUS_CONSTANT_COLOR:
+        case GL_CONSTANT_ALPHA:
+        case GL_ONE_MINUS_CONSTANT_ALPHA:
+        case GL_SRC_ALPHA_SATURATE:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+static bool ValidDstBlendFunc(GLenum dstBlend, GLint contextMajorVersion)
+{
+    switch (dstBlend)
+    {
+        case GL_ZERO:
+        case GL_ONE:
+        case GL_SRC_COLOR:
+        case GL_ONE_MINUS_SRC_COLOR:
+        case GL_DST_COLOR:
+        case GL_ONE_MINUS_DST_COLOR:
+        case GL_SRC_ALPHA:
+        case GL_ONE_MINUS_SRC_ALPHA:
+        case GL_DST_ALPHA:
+        case GL_ONE_MINUS_DST_ALPHA:
+        case GL_CONSTANT_COLOR:
+        case GL_ONE_MINUS_CONSTANT_COLOR:
+        case GL_CONSTANT_ALPHA:
+        case GL_ONE_MINUS_CONSTANT_ALPHA:
+            return true;
+
+        case GL_SRC_ALPHA_SATURATE:
+            return (contextMajorVersion >= 3);
+
+        default:
+            return false;
+    }
+}
+
+bool ValidateBlendFuncSeparate(ValidationContext *context,
+                               GLenum srcRGB,
+                               GLenum dstRGB,
+                               GLenum srcAlpha,
+                               GLenum dstAlpha)
+{
+    if (!ValidSrcBlendFunc(srcRGB))
+    {
+        context->handleError(Error(GL_INVALID_ENUM, "Invalid blend function"));
+        return false;
+    }
+
+    if (!ValidDstBlendFunc(dstRGB, context->getClientMajorVersion()))
+    {
+        context->handleError(Error(GL_INVALID_ENUM, "Invalid blend function"));
+        return false;
+    }
+
+    if (!ValidSrcBlendFunc(srcAlpha))
+    {
+        context->handleError(Error(GL_INVALID_ENUM, "Invalid blend function"));
+        return false;
+    }
+
+    if (!ValidDstBlendFunc(dstAlpha, context->getClientMajorVersion()))
+    {
+        context->handleError(Error(GL_INVALID_ENUM, "Invalid blend function"));
+        return false;
+    }
+
+    if (context->getLimitations().noSimultaneousConstantColorAndAlphaBlendFunc)
+    {
+        bool constantColorUsed =
+            (srcRGB == GL_CONSTANT_COLOR || srcRGB == GL_ONE_MINUS_CONSTANT_COLOR ||
+             dstRGB == GL_CONSTANT_COLOR || dstRGB == GL_ONE_MINUS_CONSTANT_COLOR);
+
+        bool constantAlphaUsed =
+            (srcRGB == GL_CONSTANT_ALPHA || srcRGB == GL_ONE_MINUS_CONSTANT_ALPHA ||
+             dstRGB == GL_CONSTANT_ALPHA || dstRGB == GL_ONE_MINUS_CONSTANT_ALPHA);
+
+        if (constantColorUsed && constantAlphaUsed)
+        {
+            ERR("Simultaneous use of GL_CONSTANT_ALPHA/GL_ONE_MINUS_CONSTANT_ALPHA and "
+                "GL_CONSTANT_COLOR/GL_ONE_MINUS_CONSTANT_COLOR not supported by this "
+                "implementation.");
+            context->handleError(Error(GL_INVALID_OPERATION,
+                                       "Simultaneous use of "
+                                       "GL_CONSTANT_ALPHA/GL_ONE_MINUS_CONSTANT_ALPHA and "
+                                       "GL_CONSTANT_COLOR/GL_ONE_MINUS_CONSTANT_COLOR not "
+                                       "supported by this implementation."));
+            return false;
+        }
     }
 
     return true;

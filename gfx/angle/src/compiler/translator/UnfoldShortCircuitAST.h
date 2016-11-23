@@ -13,6 +13,9 @@
 #include "common/angleutils.h"
 #include "compiler/translator/IntermNode.h"
 
+namespace sh
+{
+
 // This traverser identifies all the short circuit binary  nodes that need to
 // be replaced, and creates the corresponding replacement nodes. However,
 // the actual replacements happen after the traverse through updateTree().
@@ -27,5 +30,7 @@ class UnfoldShortCircuitAST : public TIntermTraverser
 
     bool visitBinary(Visit visit, TIntermBinary *) override;
 };
+
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_UNFOLDSHORTCIRCUITAST_H_
