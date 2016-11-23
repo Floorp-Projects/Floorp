@@ -488,6 +488,7 @@ def build_macosx_engine_payload(config, task, task_def):
     if task.get('needs-sccache'):
         raise Exception('needs-sccache not supported in macosx-engine')
 
+
 @payload_builder('buildbot-bridge')
 def build_buildbot_bridge_payload(config, task, task_def):
     worker = task['worker']
