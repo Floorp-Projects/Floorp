@@ -2406,7 +2406,7 @@ GCRuntime::updateTypeDescrObjects(MovingTracer* trc, Zone* zone)
 {
     zone->typeDescrObjects.sweep();
     for (auto r = zone->typeDescrObjects.all(); !r.empty(); r.popFront())
-        UpdateCellPointers(trc, r.front().get());
+        UpdateCellPointers(trc, r.front());
 }
 
 void
