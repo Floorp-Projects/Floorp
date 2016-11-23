@@ -18,12 +18,12 @@ interface nsIViewSourceChannel : nsIChannel
      * However, callers interested in finding out or setting the
      * actual content type can utilize this attribute.
      */
-    attribute ACString originalContentType;
+    [must_use] attribute ACString originalContentType;
 
     /**
      * Whether the channel was created to view the source of a srcdoc document.
      */
-    readonly attribute boolean isSrcdocChannel;
+    [must_use] readonly attribute boolean isSrcdocChannel;
 
     /**
      * Set to indicate the base URI.  If this channel is a srcdoc channel, it
@@ -32,7 +32,7 @@ interface nsIViewSourceChannel : nsIChannel
      * otherwise recoverable.  Returns null when it isn't set and isn't a
      * srcdoc channel.
      */
-    attribute nsIURI baseURI;
+    [must_use] attribute nsIURI baseURI;
 };
 
 
