@@ -162,6 +162,7 @@ av_get_token
 av_gettime
 av_gettime_relative
 av_gettime_relative_is_monotonic
+av_hwframe_get_buffer
 av_image_alloc
 av_image_check_sar
 av_image_check_size

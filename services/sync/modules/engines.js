@@ -1586,6 +1586,8 @@ SyncEngine.prototype = {
             if (!this.allowSkippedRecord) {
               throw error;
             }
+            this._modified.delete(id);
+            this._log.warn(`Failed to enqueue record "${id}" (skipping)`, error);
           }
         }
         this._store._sleep(0);

@@ -431,7 +431,7 @@ public class BrowserContract {
 
     public static final class Clients implements CommonColumns {
         private Clients() {}
-        public static final Uri CONTENT_RECENCY_URI = Uri.withAppendedPath(TABS_AUTHORITY_URI, "clients_recency");
+        public static final Uri CONTENT_NO_STALE_SORTED_URI = Uri.withAppendedPath(TABS_AUTHORITY_URI, "clients_no_stale_sorted");
         public static final Uri CONTENT_URI = Uri.withAppendedPath(TABS_AUTHORITY_URI, "clients");
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/client";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/client";

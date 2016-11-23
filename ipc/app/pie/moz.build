@@ -16,15 +16,4 @@ LOCAL_INCLUDES += [
     '/xpcom/base',
 ]
 
-if CONFIG['MOZ_SANDBOX']:
-    USE_LIBS += [
-        'mozsandbox',
-    ]
-
-    # gcc lto likes to put the top level asm in syscall.cc in a different partition
-    # from the function using it which breaks the build.  Work around that by
-    # forcing there to be only one partition.
-    if '-flto' in CONFIG['OS_CXXFLAGS'] and not CONFIG['CLANG_CXX']:
-	LDFLAGS += ['--param lto-partitions=1']
-
 LDFLAGS += ['-pie']

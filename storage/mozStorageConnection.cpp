@@ -415,7 +415,7 @@ public:
     return NS_OK;
   }
 
-  ~AsyncCloseConnection() {
+  ~AsyncCloseConnection() override {
     NS_ReleaseOnMainThread(mConnection.forget());
     NS_ReleaseOnMainThread(mCallbackEvent.forget());
   }
@@ -473,7 +473,7 @@ private:
     return mClone->threadOpenedOn->Dispatch(event, NS_DISPATCH_NORMAL);
   }
 
-  ~AsyncInitializeClone() {
+  ~AsyncInitializeClone() override {
     nsCOMPtr<nsIThread> thread;
     DebugOnly<nsresult> rv = NS_GetMainThread(getter_AddRefs(thread));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -1419,15 +1419,15 @@ Connection::initializeClone(Connection* aClone, bool aReadOnly)
     "wal_autocheckpoint",
     "busy_timeout"
   };
-  for (uint32_t i = 0; i < ArrayLength(pragmas); ++i) {
+  for (auto& pragma : pragmas) {
     // Read-only connections just need cache_size and temp_store pragmas.
-    if (aReadOnly && ::strcmp(pragmas[i], "cache_size") != 0 &&
-                     ::strcmp(pragmas[i], "temp_store") != 0) {
+    if (aReadOnly && ::strcmp(pragma, "cache_size") != 0 &&
+                     ::strcmp(pragma, "temp_store") != 0) {
       continue;
     }
 
     nsAutoCString pragmaQuery("PRAGMA ");
-    pragmaQuery.Append(pragmas[i]);
+    pragmaQuery.Append(pragma);
     nsCOMPtr<mozIStorageStatement> stmt;
     rv = CreateStatement(pragmaQuery, getter_AddRefs(stmt));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -1981,8 +1981,8 @@ Connection::EnableModule(const nsACString& aModuleName)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
-  for (size_t i = 0; i < ArrayLength(gModules); i++) {
-    struct Module* m = &gModules[i];
+  for (auto& gModule : gModules) {
+    struct Module* m = &gModule;
     if (aModuleName.Equals(m->name)) {
       int srv = m->registerFunc(mDBConn, m->name);
       if (srv != SQLITE_OK)

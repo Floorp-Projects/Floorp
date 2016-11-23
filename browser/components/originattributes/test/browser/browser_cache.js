@@ -157,12 +157,6 @@ function* doTest(aBrowser) {
     let audioSource = content.document.createElement('source');
     let audioTrack = content.document.createElement('track');
 
-    // Assign attributes for the audio element.
-    audioSource.setAttribute("src", audioURL + URLSuffix);
-    audioSource.setAttribute("type", "audio/ogg");
-    audioTrack.setAttribute("src", trackURL);
-    audioTrack.setAttribute("kind", "subtitles");
-
     // Append the audio and track element into the body, and wait until they're finished.
     yield new Promise(resolve => {
       let audioLoaded = false;
@@ -186,12 +180,20 @@ function* doTest(aBrowser) {
         }
       };
 
+      // Add the event listeners before everything in case we lose events.
+      audioTrack.addEventListener("load", trackListener, false);
+      audio.addEventListener("canplaythrough", audioListener, false);
+
+      // Assign attributes for the audio element.
+      audioSource.setAttribute("src", audioURL + URLSuffix);
+      audioSource.setAttribute("type", "audio/ogg");
+      audioTrack.setAttribute("src", trackURL);
+      audioTrack.setAttribute("kind", "subtitles");
+
       audio.appendChild(audioSource);
       audio.appendChild(audioTrack);
       audio.autoplay = true;
 
-      audioTrack.addEventListener("load", trackListener, false);
-      audio.addEventListener("canplaythrough", audioListener, false);
       content.document.body.appendChild(audio);
     });
 
@@ -202,11 +204,13 @@ function* doTest(aBrowser) {
         resolve();
       };
 
+      // Add the event listener before everything in case we lose the event.
+      video.addEventListener("canplaythrough", listener, false);
+
       // Assign attributes for the video element.
       video.setAttribute("src", videoURL + URLSuffix);
       video.setAttribute("type", "video/ogg");
 
-      video.addEventListener("canplaythrough", listener, false);
       content.document.body.appendChild(video);
     });
   });
