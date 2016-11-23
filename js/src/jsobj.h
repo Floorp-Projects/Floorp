@@ -182,11 +182,9 @@ class JSObject : public js::gc::Cell
      * Make a non-array object with the specified initial state. This method
      * takes ownership of any extantSlots it is passed.
      */
-    static inline JSObject* create(js::ExclusiveContext* cx,
-                                   js::gc::AllocKind kind,
-                                   js::gc::InitialHeap heap,
-                                   js::HandleShape shape,
-                                   js::HandleObjectGroup group);
+    static inline JS::Result<JSObject*, JS::OOM&>
+    create(js::ExclusiveContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
+           js::HandleShape shape, js::HandleObjectGroup group);
 
     // Set the initial slots and elements of an object. These pointers are only
     // valid for native objects, but during initialization are set for all
@@ -1196,7 +1194,7 @@ ToPropertyDescriptor(JSContext* cx, HandleValue descval, bool checkAccessors,
  * callable. This performs exactly the checks omitted by ToPropertyDescriptor
  * when checkAccessors is false.
  */
-bool
+Result<>
 CheckPropertyDescriptorAccessors(JSContext* cx, Handle<JS::PropertyDescriptor> desc);
 
 void
