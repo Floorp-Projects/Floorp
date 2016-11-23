@@ -153,12 +153,16 @@ WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild, uint64_t aLa
 void
 WebRenderLayerManager::Destroy()
 {
-  DiscardImages();
+  if (!IsDestroyed()) {
+    LayerManager::Destroy();
+    DiscardImages();
+    WRBridge()->SendDestroy();
+  }
 }
 
 WebRenderLayerManager::~WebRenderLayerManager()
 {
-  WRBridge()->SendDestroy();
+  Destroy();
 }
 
 CompositorBridgeChild*
