@@ -283,19 +283,21 @@ _ContextualIdentityService.prototype = {
     tab.setAttribute("data-identity-color", identity ? identity.color : "");
   },
 
-  countContainerTabs() {
+  countContainerTabs(userContextId = 0) {
     let count = 0;
-    this._forEachContainerTab(function() { ++count; });
+    this._forEachContainerTab(function() {
+      ++count;
+    }, userContextId);
     return count;
   },
 
-  closeAllContainerTabs() {
+  closeContainerTabs(userContextId = 0) {
     this._forEachContainerTab(function(tab, tabbrowser) {
       tabbrowser.removeTab(tab);
-    });
+    }, userContextId);
   },
 
-  _forEachContainerTab(callback) {
+  _forEachContainerTab(callback, userContextId = 0) {
     let windowList = Services.wm.getEnumerator("navigator:browser");
     while (windowList.hasMoreElements()) {
       let win = windowList.getNext();
@@ -307,7 +309,9 @@ _ContextualIdentityService.prototype = {
       let tabbrowser = win.gBrowser;
       for (let i = tabbrowser.tabContainer.childNodes.length - 1; i >= 0; --i) {
         let tab = tabbrowser.tabContainer.childNodes[i];
-	if (tab.hasAttribute("usercontextid")) {
+	if (tab.hasAttribute("usercontextid") &&
+            (!userContextId ||
+             parseInt(tab.getAttribute("usercontextid"), 10) == userContextId)) {
 	  callback(tab, tabbrowser);
 	}
       }
