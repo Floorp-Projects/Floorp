@@ -16,7 +16,6 @@ import android.util.Log;
 import com.google.android.gms.cast.CastMediaControlIntent;
 
 import org.json.JSONObject;
-import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.util.EventCallback;
@@ -77,8 +76,8 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
     protected final Map<String, GeckoPresentationDisplay> displays = new HashMap<String, GeckoPresentationDisplay>(); // used for Presentation API
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onStart() {
+        super.onStart();
         GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
                                                                   "MediaPlayer:Load",
                                                                   "MediaPlayer:Start",
@@ -94,9 +93,7 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
     }
 
     @Override
-    @JNITarget
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStop() {
         GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
                                                                     "MediaPlayer:Load",
                                                                     "MediaPlayer:Start",
@@ -109,6 +106,7 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
                                                                     "AndroidCastDevice:Start",
                                                                     "AndroidCastDevice:Stop",
                                                                     "AndroidCastDevice:SyncDevice");
+        super.onStop();
     }
 
     // GeckoEventListener implementation

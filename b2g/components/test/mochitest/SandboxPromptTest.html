@@ -4,27 +4,6 @@
 
 var actions = [
   {
-    permissions: ["video-capture"],
-    action: function() {
-      // invoke video-capture permission prompt
-      navigator.mozGetUserMedia({video: true}, function () {}, function () {});
-    }
-  },
-  {
-    permissions: ["audio-capture", "video-capture"],
-    action: function() {
-      // invoke audio-capture + video-capture permission prompt
-      navigator.mozGetUserMedia({audio: true, video: true}, function () {}, function () {});
-    }
-  },
-  {
-    permissions: ["audio-capture"],
-    action: function() {
-      // invoke audio-capture permission prompt
-      navigator.mozGetUserMedia({audio: true}, function () {}, function () {});
-    }
-  },
-  {
     permissions: ["geolocation"],
     action: function() {
       // invoke geolocation permission prompt

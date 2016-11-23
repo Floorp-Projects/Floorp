@@ -224,11 +224,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   // There is no TypedArray constructor, looks like.
   is(window.TypedArray, undefined, "If this ever changes, add to this test!");
   for (var c of errorObjectClasses) {
-      gPrototypeProperties[c] = ["constructor", "name",
-                                 // We don't actually resolve these empty data properties
-                                 // onto the Xray prototypes, but we list them here to make
-                                 // the test happy.
-                                 "lineNumber", "columnNumber", "fileName", "message", "stack"];
+      gPrototypeProperties[c] = ["constructor", "name", "message", "stack"];
       gConstructorProperties[c] = constructorProps([]);
   }
   // toString and toSource only live on the parent proto (Error.prototype).
@@ -809,8 +805,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     // We only invoke testXray with Error, because that function isn't set up
     // to deal with dependent classes and fixing it up is more trouble than
     // it's worth.
-    testXray('Error', new iwin.Error('some error message'), new iwin.Error(),
-             ['fileName', 'lineNumber', 'columnNumber', 'message']);
+    testXray('Error', new iwin.Error('some error message'), new iwin.Error());
 
     // Make sure that the dependent classes have their prototypes set up correctly.
     for (let c of errorObjectClasses.filter(x => x != "Error")) {
@@ -824,7 +819,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
         e.wrappedJSObject[name] = goodReplacement;
         is(e[name], goodReplacement, name + " property ok after replacement: " + goodReplacement);
         e.wrappedJSObject[name] = faultyReplacement;
-        is(e[name], undefined, name + " property censored after suspicious replacement");
+        is(e[name], name == 'message' ? "" : undefined, name + " property skipped after suspicious replacement");
       }
       testProperty('message', x => x == 'some message', 'some other message', 42);
       testProperty('fileName', x => x == '', 'otherFilename.html', new iwin.Object());

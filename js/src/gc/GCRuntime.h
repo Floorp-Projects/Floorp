@@ -947,7 +947,8 @@ class GCRuntime
 
     void requestMajorGC(JS::gcreason::Reason reason);
     SliceBudget defaultBudget(JS::gcreason::Reason reason, int64_t millis);
-    void budgetIncrementalGC(SliceBudget& budget, AutoLockForExclusiveAccess& lock);
+    void budgetIncrementalGC(JS::gcreason::Reason reason, SliceBudget& budget,
+                             AutoLockForExclusiveAccess& lock);
     void resetIncrementalGC(AbortReason reason, AutoLockForExclusiveAccess& lock);
 
     // Assert if the system state is such that we should never
@@ -962,6 +963,7 @@ class GCRuntime
     void collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::Reason reason) JS_HAZ_GC_CALL;
     MOZ_MUST_USE bool gcCycle(bool nonincrementalByAPI, SliceBudget& budget,
                               JS::gcreason::Reason reason);
+    bool shouldRepeatForDeadZone(JS::gcreason::Reason reason);
     void incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason reason,
                                  AutoLockForExclusiveAccess& lock);
 

@@ -72,7 +72,7 @@ add_task(function* () {
         type: "separator",
       });
 
-      let contexts = ["page", "selection", "image", "editable"];
+      let contexts = ["page", "selection", "image", "editable", "password"];
       for (let i = 0; i < contexts.length; i++) {
         let context = contexts[i];
         let title = context;
@@ -204,6 +204,21 @@ add_task(function* () {
   result = yield extension.awaitMessage("browser.contextMenus.onClicked");
   checkClickInfo(result);
 
+  extensionMenuRoot = yield openExtensionContextMenu("#password");
+  items = extensionMenuRoot.getElementsByAttribute("label", "password");
+  is(items.length, 1, "contextMenu item for password input element was found (context=password)");
+  let password = items[0];
+  yield closeExtensionContextMenu(password);
+  expectedClickInfo = {
+    menuItemId: "ext-password",
+    pageUrl: PAGE,
+    editable: true,
+  };
+
+  result = yield extension.awaitMessage("onclick");
+  checkClickInfo(result);
+  result = yield extension.awaitMessage("browser.contextMenus.onClicked");
+  checkClickInfo(result);
 
   // Select some text
   yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* (arg) {
