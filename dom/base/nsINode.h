@@ -1325,6 +1325,10 @@ public:
    */
   virtual bool IsNodeApzAwareInternal() const;
 
+  // HTML elements named <shadow> may or may not be HTMLShadowElement.  This is
+  // a way to ask an element whether it's an HTMLShadowElement.
+  virtual bool IsHTMLShadowElement() const { return false; }
+
 protected:
   nsIURI* GetExplicitBaseURI() const {
     if (HasExplicitBaseURI()) {
