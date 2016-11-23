@@ -46,6 +46,7 @@ include protocol PRemoteSpellcheckEngine;
 include protocol PWebBrowserPersistDocument;
 include protocol PWebrtcGlobal;
 include protocol PPresentation;
+include protocol PURLClassifier;
 include protocol PVRManager;
 include protocol PVideoDecoderManager;
 include protocol PFlyWebPublishedServer;
@@ -264,22 +265,6 @@ struct DataStorageItem {
   DataStorageType type;
 };
 
-// Note: Any changes to this structure should also be changed in
-// FileSystemUpdate below.
-struct VolumeInfo {
-  nsString name;
-  nsString mountPoint;
-  int32_t volState;
-  int32_t mountGeneration;
-  bool isMediaPresent;
-  bool isSharing;
-  bool isFormatting;
-  bool isFake;
-  bool isUnmounting;
-  bool isRemovable;
-  bool isHotSwappable;
-};
-
 struct ClipboardCapabilities {
   bool supportsSelectionClipboard;
   bool supportsFindClipboard;
@@ -394,6 +379,7 @@ nested(upto inside_cpow) sync protocol PContent
     manages PWebrtcGlobal;
     manages PPresentation;
     manages PFlyWebPublishedServer;
+    manages PURLClassifier;
 
 both:
     // Depending on exactly how the new browser is being created, it might be
@@ -508,8 +494,6 @@ child:
     // nsIPermissionManager messages
     async AddPermission(Permission permission);
 
-    async Volumes(VolumeInfo[] volumes);
-
     async FlushMemory(nsString reason);
 
     async GarbageCollect();
@@ -547,16 +531,6 @@ child:
     async FilePathUpdate(nsString storageType, nsString storageName, nsString filepath,
                          nsCString reasons);
 
-    // Note: Any changes to this structure should also be changed in
-    // VolumeInfo above.
-    async FileSystemUpdate(nsString fsName, nsString mountPoint, int32_t fsState,
-                           int32_t mountGeneration, bool isMediaPresent,
-                           bool isSharing, bool isFormatting, bool isFake,
-                           bool isUnmounting, bool isRemovable, bool isHotSwappable);
-
-    // Notify volume is removed.
-    async VolumeRemoved(nsString fsName);
-
     async NotifyProcessPriorityChanged(ProcessPriority priority);
     async MinimizeMemoryUsage();
 
@@ -565,8 +539,6 @@ child:
      */
     async LoadAndRegisterSheet(URIParams uri, uint32_t type);
     async UnregisterSheet(URIParams uri, uint32_t type);
-
-    async NotifyPhoneStateChange(nsString newState);
 
     /**
      * Notify idle observers in the child
@@ -826,6 +798,11 @@ parent:
 
     async PFlyWebPublishedServer(nsString name, FlyWebPublishOptions params);
 
+    sync PURLClassifier(Principal principal, bool useTrackingProtection)
+        returns (bool success);
+    sync ClassifyLocal(URIParams uri, nsCString tables)
+        returns (nsCString results);
+
     // Services remoting
 
     async StartVisitedQuery(URIParams uri);
@@ -926,11 +903,6 @@ parent:
                                nsString aStorageName,
                                nsString aFilepath,
                                nsCString aReason);
-
-    // called by the child (test code only) to propagate volume changes to the parent
-    async CreateFakeVolume(nsString fsName, nsString mountPoint);
-    async SetFakeVolumeState(nsString fsName, int32_t fsState);
-    async RemoveFakeVolume(nsString fsName);
 
     sync KeywordToURI(nsCString keyword)
         returns (nsString providerName, OptionalInputStreamParams postData, OptionalURIParams uri);

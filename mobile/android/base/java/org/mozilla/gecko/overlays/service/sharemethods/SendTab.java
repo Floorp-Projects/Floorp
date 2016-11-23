@@ -230,7 +230,7 @@ public class SendTab extends ShareMethod {
     }
 
     /**
-     * @return A collection of unique remote clients sorted by most recently used.
+     * @return A collection of unique remote clients sorted by name alphabetically.
      */
     protected Collection<RemoteClient> getOtherClients(final TabSender sender) {
         if (sender == null) {
@@ -240,12 +240,12 @@ public class SendTab extends ShareMethod {
 
         final BrowserDB browserDB = BrowserDB.from(context);
         final TabsAccessor tabsAccessor = browserDB.getTabsAccessor();
-        final Cursor remoteTabsCursor = tabsAccessor.getRemoteClientsByRecencyCursor(context);
+        final Cursor remoteTabsCursor = tabsAccessor.getRemoteClientsNoStaleSorted(context);
         try {
             if (remoteTabsCursor.getCount() == 0) {
                 return Collections.emptyList();
             }
-            return tabsAccessor.getClientsWithoutTabsByRecencyFromCursor(remoteTabsCursor);
+            return tabsAccessor.getClientsWithoutTabsNoStaleSortedFromCursor(remoteTabsCursor);
         } finally {
             remoteTabsCursor.close();
         }

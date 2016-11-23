@@ -261,7 +261,7 @@ nsDOMCSSDeclaration::RemoveProperty(const nsAString& aPropertyName,
 nsDOMCSSDeclaration::GetCSSParsingEnvironmentForRule(css::Rule* aRule,
                                                      CSSParsingEnvironment& aCSSParseEnv)
 {
-  CSSStyleSheet* sheet = aRule ? aRule->GetStyleSheet() : nullptr;
+  StyleSheet* sheet = aRule ? aRule->GetStyleSheet() : nullptr;
   if (!sheet) {
     aCSSParseEnv.mPrincipal = nullptr;
     return;

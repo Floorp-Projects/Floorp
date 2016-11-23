@@ -518,6 +518,32 @@ mochitest-other:
         extra-options:
             - --mochitest-suite=chrome,a11y
 
+mochitest-valgrind:
+    description: "Mochitest plain Valgrind run"
+    suite: mochitest/valgrind-plain
+    treeherder-symbol: tc-M-V()
+    run-on-projects: []
+    loopback-video: true
+    chunks: 40
+    max-run-time: 14400
+    # We could re-enable e10s later.
+    # There's no intrinsic reason not to use it.
+    e10s: false
+    mozharness:
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        chunked: true
+        config:
+            by-test-platform:
+                win.*:
+                    - unittests/win_taskcluster_unittest.py
+                default:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --mochitest-suite=valgrind-plain
+    allow-software-gl-layers: false
+
 mochitest-webgl:
     description: "Mochitest webgl run"
     suite: mochitest/mochitest-gl

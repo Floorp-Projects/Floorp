@@ -6,6 +6,7 @@
 #define MOZ_PROFILE_GATHERER_H
 
 #include "mozilla/dom/Promise.h"
+#include "nsIFile.h"
 
 class GeckoSampler;
 
@@ -21,6 +22,8 @@ public:
   void WillGatherOOPProfile();
   void GatheredOOPProfile();
   void Start(double aSinceTime, mozilla::dom::Promise* aPromise);
+  void Start(double aSinceTime, nsIFile* aFile);
+  void Start(double aSinceTime, const nsACString& aFileName);
   void Cancel();
   void OOPExitProfile(const nsCString& aProfile);
 
@@ -31,6 +34,7 @@ private:
 
   nsTArray<nsCString> mExitProfiles;
   RefPtr<mozilla::dom::Promise> mPromise;
+  nsCOMPtr<nsIFile> mFile;
   GeckoSampler* mTicker;
   double mSinceTime;
   uint32_t mPendingProfiles;

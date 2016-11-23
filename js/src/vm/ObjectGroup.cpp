@@ -6,6 +6,7 @@
 
 #include "vm/ObjectGroup.h"
 
+#include "jsexn.h"
 #include "jshashutil.h"
 #include "jsobj.h"
 
@@ -582,11 +583,10 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
         if (obj->is<StringObject>())
             AddTypePropertyId(cx, group, nullptr, NameToId(names.length), TypeSet::Int32Type());
 
-        if (obj->is<ErrorObject>()) {
+        if (IsErrorProtoKey(StandardProtoKeyOrNull(obj))) {
             AddTypePropertyId(cx, group, nullptr, NameToId(names.fileName), TypeSet::StringType());
             AddTypePropertyId(cx, group, nullptr, NameToId(names.lineNumber), TypeSet::Int32Type());
             AddTypePropertyId(cx, group, nullptr, NameToId(names.columnNumber), TypeSet::Int32Type());
-            AddTypePropertyId(cx, group, nullptr, NameToId(names.stack), TypeSet::StringType());
         }
     }
 

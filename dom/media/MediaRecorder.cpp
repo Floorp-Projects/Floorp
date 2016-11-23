@@ -714,35 +714,6 @@ private:
     return PrincipalSubsumes(principal);
   }
 
-  bool CheckPermission(const char* aType)
-  {
-    if (!mRecorder || !mRecorder->GetOwner()) {
-      return false;
-    }
-
-    nsCOMPtr<nsIDocument> doc = mRecorder->GetOwner()->GetExtantDoc();
-    if (!doc) {
-      return false;
-    }
-
-    // Certified applications can always assign AUDIO_3GPP
-    if (doc->NodePrincipal()->GetAppStatus() ==
-        nsIPrincipal::APP_STATUS_CERTIFIED) {
-      return true;
-    }
-
-    nsCOMPtr<nsIPermissionManager> pm =
-       do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-
-    if (!pm) {
-      return false;
-    }
-
-    uint32_t perm = nsIPermissionManager::DENY_ACTION;
-    pm->TestExactPermissionFromPrincipal(doc->NodePrincipal(), aType, &perm);
-    return perm == nsIPermissionManager::ALLOW_ACTION;
-  }
-
   void InitEncoder(uint8_t aTrackTypes, TrackRate aTrackRate)
   {
     LOG(LogLevel::Debug, ("Session.InitEncoder %p", this));
@@ -755,26 +726,11 @@ private:
     // Allocate encoder and bind with union stream.
     // At this stage, the API doesn't allow UA to choose the output mimeType format.
 
-    // Make sure the application has permission to assign AUDIO_3GPP
-    if (mRecorder->mMimeType.EqualsLiteral(AUDIO_3GPP) && CheckPermission("audio-capture:3gpp")) {
-      mEncoder = MediaEncoder::CreateEncoder(NS_LITERAL_STRING(AUDIO_3GPP),
-                                             mRecorder->GetAudioBitrate(),
-                                             mRecorder->GetVideoBitrate(),
-                                             mRecorder->GetBitrate(),
-                                             aTrackTypes, aTrackRate);
-    } else if (mRecorder->mMimeType.EqualsLiteral(AUDIO_3GPP2) && CheckPermission("audio-capture:3gpp2")) {
-      mEncoder = MediaEncoder::CreateEncoder(NS_LITERAL_STRING(AUDIO_3GPP2),
-                                             mRecorder->GetAudioBitrate(),
-                                             mRecorder->GetVideoBitrate(),
-                                             mRecorder->GetBitrate(),
-                                             aTrackTypes, aTrackRate);
-    } else {
-      mEncoder = MediaEncoder::CreateEncoder(NS_LITERAL_STRING(""),
-                                             mRecorder->GetAudioBitrate(),
-                                             mRecorder->GetVideoBitrate(),
-                                             mRecorder->GetBitrate(),
-                                             aTrackTypes, aTrackRate);
-    }
+    mEncoder = MediaEncoder::CreateEncoder(NS_LITERAL_STRING(""),
+                                           mRecorder->GetAudioBitrate(),
+                                           mRecorder->GetVideoBitrate(),
+                                           mRecorder->GetBitrate(),
+                                           aTrackTypes, aTrackRate);
 
     if (!mEncoder) {
       LOG(LogLevel::Debug, ("Session.InitEncoder !mEncoder %p", this));

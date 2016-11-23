@@ -86,6 +86,7 @@ def build_dict(config, env=os.environ):
     d['datareporting'] = bool(substs.get('MOZ_DATA_REPORTING'))
     d['healthreport'] = substs.get('MOZ_SERVICES_HEALTHREPORT') == '1'
     d['sync'] = substs.get('MOZ_SERVICES_SYNC') == '1'
+    d['stylo'] = substs.get('MOZ_STYLO') == '1'
     d['asan'] = substs.get('MOZ_ASAN') == '1'
     d['tsan'] = substs.get('MOZ_TSAN') == '1'
     d['telemetry'] = substs.get('MOZ_TELEMETRY_REPORTING') == '1'

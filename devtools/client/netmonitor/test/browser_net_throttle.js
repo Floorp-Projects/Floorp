@@ -24,8 +24,8 @@ function* throttleTest(actuallyThrottle) {
 
   const request = {
     "NetworkMonitor.throttleData": {
-      roundTripTimeMean: 0,
-      roundTripTimeMax: 0,
+      latencyMean: 0,
+      latencyMax: 0,
       downloadBPSMean: size,
       downloadBPSMax: size,
       uploadBPSMean: 10000,

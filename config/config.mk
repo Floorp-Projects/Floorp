@@ -361,7 +361,12 @@ color_flags_vars := \
 
 ifdef MACH_STDOUT_ISATTY
 ifdef COLOR_CFLAGS
+# TODO Bug 1319166 - iTerm2 interprets some bytes  sequences as a
+# request to show a print dialog. Don't enable color on iTerm2 until
+# a workaround is in place.
+ifneq ($(TERM_PROGRAM),iTerm.app)
 $(foreach var,$(color_flags_vars),$(eval $(call colorize_flags,$(var))))
+endif
 endif
 endif
 

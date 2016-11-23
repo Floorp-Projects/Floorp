@@ -1264,7 +1264,7 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
   if (rule) {
     rv = rule->GetCssText(text);
     NS_ENSURE_SUCCESS(rv, rv);
-    CSSStyleSheet* sheet = rule->GetStyleSheet();
+    StyleSheet* sheet = rule->GetStyleSheet();
     // if the style sheet is removed while the font is loading can be null
     if (sheet) {
       nsCString spec = sheet->GetSheetURI()->GetSpecOrDefault();

@@ -378,6 +378,12 @@ interface nsIAnnotationService : nsISupports
      * Removes an annotaton observer previously registered by addObserver.
      */
     void removeObserver(in nsIAnnotationObserver aObserver);
+
+    /**
+     * Gets an array of registered nsIAnnotationObserver objects.
+     */
+    void getObservers([optional] out unsigned long count,
+                      [retval, array, size_is(count)] out nsIAnnotationObserver observers);
 };
 
 /**

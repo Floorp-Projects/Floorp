@@ -220,7 +220,20 @@ def mozharness_on_windows(config, job, taskdesc):
     hg_command.append(env['GECKO_HEAD_REPOSITORY'])
     hg_command.append('.\\build\\src')
 
-    worker['command'] = [
+    worker['command'] = []
+    # sccache currently uses the full compiler commandline as input to the
+    # cache hash key, so create a symlink to the task dir and build from
+    # the symlink dir to get consistent paths.
+    if taskdesc.get('needs-sccache'):
+        worker['command'].extend([
+            r'if exist z:\build rmdir z:\build',
+            r'mklink /d z:\build %cd%',
+            # Grant delete permission on the link to everyone.
+            r'icacls z:\build /grant *S-1-1-0:D /L',
+            r'cd /d z:\build',
+        ])
+
+    worker['command'].extend([
         ' '.join(hg_command),
         ' '.join(mh_command)
-    ]
+    ])

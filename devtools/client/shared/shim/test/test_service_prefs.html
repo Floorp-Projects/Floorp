@@ -225,6 +225,14 @@ function do_tests() {
   pref("devtools.hud.loglimit", 1000);
   pref("devtools.hud.loglimit.network", 1000);
 
+  // Regression test for bug 1319150.
+  let seen = false;
+  let fnObserver = () => { seen = true; };
+  branch0.addObserver("devtools.branch1.somestring", fnObserver, false);
+  Services.prefs.setCharPref("devtools.branch1.somestring", "common merganser");
+  ok(seen, "function-style observer was called");
+  branch0.removeObserver("devtools.branch1.somestring", fnObserver);
+
   // Clean up.
   localStorage.clear();
 

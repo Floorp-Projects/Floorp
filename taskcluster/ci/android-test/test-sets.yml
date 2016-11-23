@@ -44,3 +44,4 @@ gradle-tests:
 
 x86-tests:
     - xpcshell
+    - mochitest-chrome
