@@ -412,8 +412,8 @@ bool typeIsRefPtr(QualType Q) {
 
 // The method defined in clang for ignoring implicit nodes doesn't work with
 // some AST trees. To get around this, we define our own implementation of
-// IgnoreImplicit.
-const Stmt *IgnoreImplicit(const Stmt *s) {
+// IgnoreTrivials.
+const Stmt *IgnoreTrivials(const Stmt *s) {
   while (true) {
     if (auto *ewc = dyn_cast<ExprWithCleanups>(s)) {
       s = ewc->getSubExpr();
@@ -433,8 +433,8 @@ const Stmt *IgnoreImplicit(const Stmt *s) {
   return s;
 }
 
-const Expr *IgnoreImplicit(const Expr *e) {
-  return cast<Expr>(IgnoreImplicit(static_cast<const Stmt *>(e)));
+const Expr *IgnoreTrivials(const Expr *e) {
+  return cast<Expr>(IgnoreTrivials(static_cast<const Stmt *>(e)));
 }
 }
 
@@ -564,7 +564,7 @@ public:
   void handleUnusedExprResult(const Stmt *Statement) {
     const Expr *E = dyn_cast_or_null<Expr>(Statement);
     if (E) {
-      E = E->IgnoreImplicit(); // Ignore ExprWithCleanup etc. implicit wrappers
+      E = E->IgnoreTrivials(); // Ignore ExprWithCleanup etc. implicit wrappers
       QualType T = E->getType();
       if (MustUse.hasEffectiveAnnotation(T) && !isIgnoredExprForMustUse(E)) {
         unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
@@ -1922,7 +1922,7 @@ void DiagnosticsMatcher::KungFuDeathGripChecker::run(
     return;
   }
 
-  const Expr *E = IgnoreImplicit(D->getInit());
+  const Expr *E = IgnoreTrivials(D->getInit());
   const CXXConstructExpr *CE = dyn_cast<CXXConstructExpr>(E);
   if (CE && CE->getNumArgs() == 0) {
     // We don't report an error when we construct and don't use a nsCOMPtr /
@@ -1935,10 +1935,10 @@ void DiagnosticsMatcher::KungFuDeathGripChecker::run(
   // We don't want to look at the single argument conversion constructors
   // which are inbetween the declaration and the actual object which we are
   // assigning into the nsCOMPtr/RefPtr. To do this, we repeatedly
-  // IgnoreImplicit, then look at the expression. If it is one of these
+  // IgnoreTrivials, then look at the expression. If it is one of these
   // conversion constructors, we ignore it and continue to dig.
   while ((CE = dyn_cast<CXXConstructExpr>(E)) && CE->getNumArgs() == 1) {
-    E = IgnoreImplicit(CE->getArg(0));
+    E = IgnoreTrivials(CE->getArg(0));
   }
 
   // We allow taking a kungFuDeathGrip of `this` because it cannot change
