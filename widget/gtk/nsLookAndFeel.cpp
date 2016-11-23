@@ -1168,18 +1168,19 @@ nsLookAndFeel::Init()
     sMenuText = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_INSENSITIVE, &color);
     sMenuTextInactive = GDK_RGBA_TO_NS_RGBA(color);
+    g_object_unref(menu);
 
-    style = gtk_widget_get_style_context(menu);
+    style = ClaimStyleContext(MOZ_GTK_MENUPOPUP);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sMenuBackground = GDK_RGBA_TO_NS_RGBA(color);
+    ReleaseStyleContext(style);
 
-    style = gtk_widget_get_style_context(menuitem);
+    style = ClaimStyleContext(MOZ_GTK_MENUITEM);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
     sMenuHover = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
     sMenuHoverText = GDK_RGBA_TO_NS_RGBA(color);
-
-    g_object_unref(menu);
+    ReleaseStyleContext(style);
 #endif
 
     // button styles
@@ -1289,9 +1290,7 @@ nsLookAndFeel::Init()
     }
 #else
     // Text colors
-    style = gtk_widget_get_style_context(textView);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_VIEW);
+    style = ClaimStyleContext(MOZ_GTK_TEXT_VIEW);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sMozFieldBackground = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
@@ -1306,7 +1305,7 @@ nsLookAndFeel::Init()
         static_cast<GtkStateFlags>(GTK_STATE_FLAG_FOCUSED|GTK_STATE_FLAG_SELECTED),
         &color);
     sTextSelectedText = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_restore(style);
+    ReleaseStyleContext(style);
 
     // Button text, background, border
     style = gtk_widget_get_style_context(label);
@@ -1321,11 +1320,12 @@ nsLookAndFeel::Init()
     sComboBoxText = GDK_RGBA_TO_NS_RGBA(color);
 
     // Menubar text and hover text colors    
-    style = gtk_widget_get_style_context(menuBarItem);
+    style = ClaimStyleContext(MOZ_GTK_MENUBARITEM);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sMenuBarText = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
     sMenuBarHoverText = GDK_RGBA_TO_NS_RGBA(color);
+    ReleaseStyleContext(style);
 
     // GTK's guide to fancy odd row background colors:
     // 1) Check if a theme explicitly defines an odd row color
@@ -1333,7 +1333,7 @@ nsLookAndFeel::Init()
     //    slightly by a hardcoded value (gtkstyle.c)
     // 3) If neither are defined, take the base background color and
     //    darken that by a hardcoded value
-    style = gtk_widget_get_style_context(treeView);
+    style = ClaimStyleContext(MOZ_GTK_TREEVIEW);
 
     // Get odd row background color
     gtk_style_context_save(style);
@@ -1341,6 +1341,7 @@ nsLookAndFeel::Init()
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sOddCellBackground = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_restore(style);
+    ReleaseStyleContext(style);
 
     // GtkFrame has a "border" subnode on which Adwaita draws the border.
     // Some themes do not draw on this node but draw a border on the widget
