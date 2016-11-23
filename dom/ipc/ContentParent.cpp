@@ -107,7 +107,6 @@
 #include "nsConsoleService.h"
 #include "nsContentUtils.h"
 #include "nsDebugImpl.h"
-#include "nsFrameLoader.h"
 #include "nsFrameMessageManager.h"
 #include "nsHashPropertyBag.h"
 #include "nsIAlertsService.h"
@@ -4158,130 +4157,6 @@ ContentParent::DeallocPWebBrowserPersistDocumentParent(PWebBrowserPersistDocumen
 }
 
 mozilla::ipc::IPCResult
-ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
-                                  bool aSetOpener,
-                                  const uint32_t& aChromeFlags,
-                                  const bool& aCalledFromJS,
-                                  const bool& aPositionSpecified,
-                                  const bool& aSizeSpecified,
-                                  nsIURI* aURIToLoad,
-                                  const nsCString& aFeatures,
-                                  const nsCString& aBaseURI,
-                                  const DocShellOriginAttributes& aOpenerOriginAttributes,
-                                  const float& aFullZoom,
-                                  nsresult& aResult,
-                                  nsCOMPtr<nsITabParent>& aNewTabParent,
-                                  bool* aWindowIsNew)
-
-{
-  // The content process should never be in charge of computing whether or
-  // not a window should be private or remote - the parent will do that.
-  const uint32_t badFlags = nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW |
-                            nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW |
-                            nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME |
-                            nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
-  if (!!(aChromeFlags & badFlags)) {
-    return IPC_FAIL(this, "Forbidden aChromeFlags passed");
-  }
-
-  TabParent* thisTabParent = TabParent::GetFrom(aThisTab);
-  nsCOMPtr<nsIContent> frame;
-  if (thisTabParent) {
-    frame = do_QueryInterface(thisTabParent->GetOwnerElement());
-
-    if (NS_WARN_IF(thisTabParent->IsMozBrowser())) {
-      return IPC_FAIL(this, "aThisTab is not a MozBrowser");
-    }
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> outerWin;
-  if (frame) {
-    outerWin = frame->OwnerDoc()->GetWindow();
-
-    // If our chrome window is in the process of closing, don't try to open a
-    // new tab in it.
-    if (outerWin && outerWin->Closed()) {
-      outerWin = nullptr;
-    }
-  }
-
-  nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
-  if (thisTabParent) {
-    browserDOMWin = thisTabParent->GetBrowserDOMWindow();
-  }
-
-  // If we haven't found a chrome window to open in, just use the most recently
-  // opened one.
-  if (!outerWin) {
-    outerWin = nsContentUtils::GetMostRecentNonPBWindow();
-    if (NS_WARN_IF(!outerWin)) {
-      aResult = NS_ERROR_FAILURE;
-      return IPC_OK();
-    }
-
-    nsCOMPtr<nsIDOMChromeWindow> rootChromeWin = do_QueryInterface(outerWin);
-    if (rootChromeWin) {
-      rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
-    }
-  }
-
-  int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
-    outerWin, aChromeFlags, aCalledFromJS, aPositionSpecified, aSizeSpecified);
-
-  MOZ_ASSERT(openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB ||
-             openLocation == nsIBrowserDOMWindow::OPEN_NEWWINDOW);
-
-  if (openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB) {
-    if (NS_WARN_IF(!browserDOMWin)) {
-      aResult = NS_ERROR_ABORT;
-      return IPC_OK();
-    }
-
-    bool isPrivate = false;
-    if (thisTabParent) {
-      nsCOMPtr<nsILoadContext> loadContext = thisTabParent->GetLoadContext();
-      loadContext->GetUsePrivateBrowsing(&isPrivate);
-    }
-
-    nsCOMPtr<nsIOpenURIInFrameParams> params =
-      new nsOpenURIInFrameParams(aOpenerOriginAttributes);
-    params->SetReferrer(NS_ConvertUTF8toUTF16(aBaseURI));
-    params->SetIsPrivate(isPrivate);
-
-    nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner;
-    aResult = browserDOMWin->OpenURIInFrame(aURIToLoad, params, openLocation,
-                                            nsIBrowserDOMWindow::OPEN_NEW,
-                                            getter_AddRefs(frameLoaderOwner));
-    if (NS_SUCCEEDED(aResult) && frameLoaderOwner) {
-      RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
-      if (frameLoader) {
-        frameLoader->GetTabParent(getter_AddRefs(aNewTabParent));
-      }
-    } else {
-      *aWindowIsNew = false;
-    }
-
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsPIWindowWatcher> pwwatch =
-    do_GetService(NS_WINDOWWATCHER_CONTRACTID, &aResult);
-  if (NS_WARN_IF(NS_FAILED(aResult))) {
-    return IPC_OK();
-  }
-
-  if (aSetOpener && thisTabParent) {
-    aResult = pwwatch->OpenWindowWithTabParent(thisTabParent, aFeatures,
-                                               aCalledFromJS, aFullZoom,
-                                               getter_AddRefs(aNewTabParent));
-  } else {
-    aResult = pwwatch->OpenWindowWithoutParent(getter_AddRefs(aNewTabParent));
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 PBrowserParent* aNewTab,
                                 PRenderFrameParent* aRenderFrame,
@@ -4304,6 +4179,26 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
   *aWindowIsNew = true;
   *aResult = NS_OK;
 
+  // The content process should never be in charge of computing whether or
+  // not a window should be private or remote - the parent will do that.
+  const uint32_t badFlags =
+        nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW
+      | nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW
+      | nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME
+      | nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
+  if (!!(aChromeFlags & badFlags)) {
+      return IPC_FAIL_NO_REASON(this);
+  }
+
+  TabParent* thisTabParent = nullptr;
+  if (aThisTab) {
+    thisTabParent = TabParent::GetFrom(aThisTab);
+  }
+
+  if (NS_WARN_IF(thisTabParent && thisTabParent->IsMozBrowser())) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   TabParent* newTab = TabParent::GetFrom(aNewTab);
   MOZ_ASSERT(newTab);
 
@@ -4319,16 +4214,106 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
   // we must have an opener.
   newTab->SetHasContentOpener(true);
 
+  nsCOMPtr<nsIContent> frame;
+  if (thisTabParent) {
+    frame = do_QueryInterface(thisTabParent->GetOwnerElement());
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> parent;
+  if (frame) {
+    parent = frame->OwnerDoc()->GetWindow();
+
+    // If our chrome window is in the process of closing, don't try to open a
+    // new tab in it.
+    if (parent && parent->Closed()) {
+      parent = nullptr;
+    }
+  }
+
+  nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
+  if (thisTabParent) {
+    browserDOMWin = thisTabParent->GetBrowserDOMWindow();
+  }
+
+  // If we haven't found a chrome window to open in, just use the most recently
+  // opened one.
+  if (!parent) {
+    parent = nsContentUtils::GetMostRecentNonPBWindow();
+    if (NS_WARN_IF(!parent)) {
+      *aResult = NS_ERROR_FAILURE;
+      return IPC_OK();
+    }
+
+    nsCOMPtr<nsIDOMChromeWindow> rootChromeWin = do_QueryInterface(parent);
+    if (rootChromeWin) {
+      rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
+    }
+  }
+
+  int32_t openLocation =
+    nsWindowWatcher::GetWindowOpenLocation(parent, aChromeFlags, aCalledFromJS,
+                                           aPositionSpecified, aSizeSpecified);
+
+  MOZ_ASSERT(openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB ||
+             openLocation == nsIBrowserDOMWindow::OPEN_NEWWINDOW);
+
+  // Opening new tabs is the easy case...
+  if (openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB) {
+    if (NS_WARN_IF(!browserDOMWin)) {
+      *aResult = NS_ERROR_ABORT;
+      return IPC_OK();
+    }
+
+    bool isPrivate = false;
+    if (thisTabParent) {
+      nsCOMPtr<nsILoadContext> loadContext = thisTabParent->GetLoadContext();
+      loadContext->GetUsePrivateBrowsing(&isPrivate);
+    }
+
+    nsCOMPtr<nsIOpenURIInFrameParams> params =
+      new nsOpenURIInFrameParams(aOpenerOriginAttributes);
+    params->SetReferrer(NS_ConvertUTF8toUTF16(aBaseURI));
+    params->SetIsPrivate(isPrivate);
+
+    TabParent::AutoUseNewTab aunt(newTab, aWindowIsNew, aURLToLoad);
+
+    nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner;
+    browserDOMWin->OpenURIInFrame(nullptr, params,
+                                  openLocation,
+                                  nsIBrowserDOMWindow::OPEN_NEW,
+                                  getter_AddRefs(frameLoaderOwner));
+    if (!frameLoaderOwner) {
+      *aWindowIsNew = false;
+    }
+
+    newTab->SwapFrameScriptsFrom(*aFrameScripts);
+
+    RenderFrameParent* rfp = static_cast<RenderFrameParent*>(aRenderFrame);
+    if (!newTab->SetRenderFrame(rfp) ||
+        !newTab->GetRenderFrameInfo(aTextureFactoryIdentifier, aLayersId)) {
+      *aResult = NS_ERROR_FAILURE;
+    }
+
+    return IPC_OK();
+  }
+
   TabParent::AutoUseNewTab aunt(newTab, aWindowIsNew, aURLToLoad);
 
+  nsCOMPtr<nsPIWindowWatcher> pwwatch =
+    do_GetService(NS_WINDOWWATCHER_CONTRACTID, aResult);
+
+  if (NS_WARN_IF(NS_FAILED(*aResult))) {
+    return IPC_OK();
+  }
+
   nsCOMPtr<nsITabParent> newRemoteTab;
-  mozilla::ipc::IPCResult ipcResult =
-    CommonCreateWindow(aThisTab, /* aSetOpener = */ true, aChromeFlags,
-                       aCalledFromJS, aPositionSpecified, aSizeSpecified,
-                       nullptr, aFeatures, aBaseURI, aOpenerOriginAttributes,
-                       aFullZoom, *aResult, newRemoteTab, aWindowIsNew);
-  if (!ipcResult) {
-    return ipcResult;
+  if (!thisTabParent) {
+    // Because we weren't passed an opener tab, the content process has asked us
+    // to open a new window that is unrelated to a pre-existing tab.
+    *aResult = pwwatch->OpenWindowWithoutParent(getter_AddRefs(newRemoteTab));
+  } else {
+    *aResult = pwwatch->OpenWindowWithTabParent(thisTabParent, aFeatures, aCalledFromJS,
+                                                aFullZoom, getter_AddRefs(newRemoteTab));
   }
 
   if (NS_WARN_IF(NS_FAILED(*aResult))) {
@@ -4343,39 +4328,6 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
   if (!newTab->SetRenderFrame(rfp) ||
       !newTab->GetRenderFrameInfo(aTextureFactoryIdentifier, aLayersId)) {
     *aResult = NS_ERROR_FAILURE;
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvCreateWindowInDifferentProcess(
-  PBrowserParent* aThisTab,
-  const uint32_t& aChromeFlags,
-  const bool& aCalledFromJS,
-  const bool& aPositionSpecified,
-  const bool& aSizeSpecified,
-  const URIParams& aURIToLoad,
-  const nsCString& aFeatures,
-  const nsCString& aBaseURI,
-  const DocShellOriginAttributes& aOpenerOriginAttributes,
-  const float& aFullZoom)
-{
-  nsCOMPtr<nsITabParent> newRemoteTab;
-  bool windowIsNew;
-  nsCOMPtr<nsIURI> uriToLoad = DeserializeURI(aURIToLoad);
-  nsresult rv;
-  mozilla::ipc::IPCResult ipcResult =
-    CommonCreateWindow(aThisTab, /* aSetOpener = */ false, aChromeFlags,
-                       aCalledFromJS, aPositionSpecified, aSizeSpecified,
-                       uriToLoad, aFeatures, aBaseURI, aOpenerOriginAttributes,
-                       aFullZoom, rv, newRemoteTab, &windowIsNew);
-  if (!ipcResult) {
-    return ipcResult;
-  }
-
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Call to CommonCreateWindow failed.");
   }
 
   return IPC_OK();
