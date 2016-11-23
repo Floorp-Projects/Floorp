@@ -172,7 +172,7 @@ const AutoMigrate = {
 
     let migrator = MigrationUtils.getMigrator(migratorKey);
     if (!migrator) {
-      throw new Error("Migrator specified or a default was found, but the migrator object is not available.");
+      throw new Error("Migrator specified or a default was found, but the migrator object is not available (or has no data).");
     }
     return {migrator, pickedKey: migratorKey};
   },
