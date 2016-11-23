@@ -32,8 +32,6 @@ public:
     mRemote(true) {}
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(xpcAccessibleDocument,
-                                           xpcAccessibleGeneric)
 
   // nsIAccessibleDocument
   NS_IMETHOD GetURL(nsAString& aURL) final override;
@@ -75,33 +73,43 @@ private:
   void NotifyOfShutdown(Accessible* aAccessible)
   {
     MOZ_ASSERT(!mRemote);
-    xpcAccessibleGeneric* xpcAcc = mCache.GetWeak(aAccessible);
-    if (xpcAcc)
+    xpcAccessibleGeneric* xpcAcc = mCache.Get(aAccessible);
+    if (xpcAcc) {
       xpcAcc->Shutdown();
+    }
 
     mCache.Remove(aAccessible);
+    if (mCache.Count() == 0 && mRefCnt == 1) {
+      GetAccService()->RemoveFromXPCDocumentCache(
+        mIntl.AsAccessible()->AsDoc());
+    }
   }
 
   void NotifyOfShutdown(ProxyAccessible* aProxy)
   {
     MOZ_ASSERT(mRemote);
-    xpcAccessibleGeneric* acc = mCache.GetWeak(aProxy);
-    if (acc) {
-      acc->Shutdown();
+    xpcAccessibleGeneric* xpcAcc = mCache.Get(aProxy);
+    if (xpcAcc) {
+      xpcAcc->Shutdown();
     }
 
     mCache.Remove(aProxy);
+    if (mCache.Count() == 0 && mRefCnt == 1) {
+      GetAccService()->RemoveFromRemoteXPCDocumentCache(
+        mIntl.AsProxy()->AsDoc());
+    }
   }
 
   friend class DocManager;
   friend class DocAccessible;
   friend class ProxyAccessible;
   friend class ProxyAccessibleBase<ProxyAccessible>;
+  friend class xpcAccessibleGeneric;
 
   xpcAccessibleDocument(const xpcAccessibleDocument&) = delete;
   xpcAccessibleDocument& operator =(const xpcAccessibleDocument&) = delete;
 
-  nsRefPtrHashtable<nsPtrHashKey<const void>, xpcAccessibleGeneric> mCache;
+  nsDataHashtable<nsPtrHashKey<const void>, xpcAccessibleGeneric*> mCache;
   bool mRemote;
 };
 

@@ -1,0 +1,13 @@
+# Checks run by clang-tidy over Mozilla code.
+# NOTE: please request review from ehsan when changing this file.
+
+# The following checks are currently enabled:
+# * misc-use-override
+#   Adds missing override keywords, and removes override keywords if the final
+#   keyword is present as well.
+Checks:          '-*,misc-use-override'
+CheckOptions:
+  # Don't touch the virtual keyword!
+  - key:             misc-use-override.KeepVirtual
+    value:           '1'
+
