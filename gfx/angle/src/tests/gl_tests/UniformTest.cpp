@@ -459,6 +459,54 @@ TEST_P(UniformTestES3, TranposedMatrixArrayUniformStateQuery)
     }
 }
 
+// Check that trying setting too many elements of an array doesn't overflow
+TEST_P(UniformTestES3, OverflowArray)
+{
+    const std::string &vertexShader =
+        "#version 300 es\n"
+        "void main() { gl_Position = vec4(1); }";
+    const std::string &fragShader =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "uniform float uniF[5];\n"
+        "uniform mat3x2 uniMat3x2[5];\n"
+        "out vec4 color;\n"
+        "void main() {\n"
+        "  color = vec4(uniMat3x2[0][0][0] + uniF[0]);\n"
+        "}";
+
+    mProgram = CompileProgram(vertexShader, fragShader);
+    ASSERT_NE(mProgram, 0u);
+
+    glUseProgram(mProgram);
+
+    const size_t kOverflowSize = 10000;
+    std::vector<GLfloat> values(10000 * 6);
+
+    // Setting as a clump
+    GLint floatLocation = glGetUniformLocation(mProgram, "uniF");
+    ASSERT_NE(-1, floatLocation);
+    GLint matLocation = glGetUniformLocation(mProgram, "uniMat3x2");
+    ASSERT_NE(-1, matLocation);
+
+    // Set too many float uniforms
+    glUniform1fv(floatLocation, kOverflowSize, &values[0]);
+
+    // Set too many matrix uniforms, transposed or not
+    glUniformMatrix3x2fv(matLocation, kOverflowSize, GL_FALSE, &values[0]);
+    glUniformMatrix3x2fv(matLocation, kOverflowSize, GL_TRUE, &values[0]);
+
+    // Same checks but with offsets
+    GLint floatLocationOffset = glGetUniformLocation(mProgram, "uniF[3]");
+    ASSERT_NE(-1, floatLocationOffset);
+    GLint matLocationOffset = glGetUniformLocation(mProgram, "uniMat3x2[3]");
+    ASSERT_NE(-1, matLocationOffset);
+
+    glUniform1fv(floatLocationOffset, kOverflowSize, &values[0]);
+    glUniformMatrix3x2fv(matLocationOffset, kOverflowSize, GL_FALSE, &values[0]);
+    glUniformMatrix3x2fv(matLocationOffset, kOverflowSize, GL_TRUE, &values[0]);
+}
+
 // Check that sampler uniforms only show up one time in the list
 TEST_P(UniformTest, SamplerUniformsAppearOnce)
 {
@@ -564,7 +612,7 @@ TEST_P(UniformTestES3, ReturnsOnlyOneArrayElement)
     for (const auto &array : uniformArrays)
     {
         uniformStream << "uniform " << array.type << " " << array.name << "["
-                      << std::to_string(kArraySize) << "];\n";
+                      << ToString(kArraySize) << "];\n";
 
         // We need to make use of the uniforms or they get compiled out.
         for (int i = 0; i < 4; i++)
@@ -610,7 +658,7 @@ TEST_P(UniformTestES3, ReturnsOnlyOneArrayElement)
     {
         for (size_t index = 0; index < kArraySize; index++)
         {
-            std::string strIndex = "[" + std::to_string(index) + "]";
+            std::string strIndex = "[" + ToString(index) + "]";
             // Check all the different glGetUniformv functions
             CheckOneElement<float>(glGetUniformfv, mProgram, uniformArray.name + strIndex,
                                    uniformArray.components, 42.4242f);

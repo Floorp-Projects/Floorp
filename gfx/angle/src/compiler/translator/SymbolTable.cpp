@@ -19,15 +19,38 @@
 #include <stdio.h>
 #include <algorithm>
 
+namespace sh
+{
+
 int TSymbolTable::uniqueIdCounter = 0;
+
+TSymbol::TSymbol(const TString *n) : uniqueId(TSymbolTable::nextUniqueId()), name(n)
+{
+}
 
 //
 // Functions have buried pointers to delete.
 //
 TFunction::~TFunction()
 {
+    clearParameters();
+}
+
+void TFunction::clearParameters()
+{
     for (TParamList::iterator i = parameters.begin(); i != parameters.end(); ++i)
         delete (*i).type;
+    parameters.clear();
+    mangledName = nullptr;
+}
+
+void TFunction::swapParameters(const TFunction &parametersSource)
+{
+    clearParameters();
+    for (auto parameter : parametersSource.parameters)
+    {
+        addParameter(parameter);
+    }
 }
 
 const TString *TFunction::buildMangledName() const
@@ -53,8 +76,6 @@ TSymbolTableLevel::~TSymbolTableLevel()
 
 bool TSymbolTableLevel::insert(TSymbol *symbol)
 {
-    symbol->setUniqueId(TSymbolTable::nextUniqueId());
-
     // returning true means symbol was added to the table
     tInsertResult result = level.insert(tLevelPair(symbol->getMangledName(), symbol));
 
@@ -63,8 +84,6 @@ bool TSymbolTableLevel::insert(TSymbol *symbol)
 
 bool TSymbolTableLevel::insertUnmangled(TFunction *function)
 {
-    function->setUniqueId(TSymbolTable::nextUniqueId());
-
     // returning true means symbol was added to the table
     tInsertResult result = level.insert(tLevelPair(function->getName(), function));
 
@@ -105,6 +124,12 @@ TSymbol *TSymbolTable::find(const TString &name, int shaderVersion,
         *sameScope = (level == currentLevel());
 
     return symbol;
+}
+
+TSymbol *TSymbolTable::findGlobal(const TString &name) const
+{
+    ASSERT(table.size() > GLOBAL_LEVEL);
+    return table[GLOBAL_LEVEL]->find(name);
 }
 
 TSymbol *TSymbolTable::findBuiltIn(
@@ -233,6 +258,43 @@ void TSymbolTable::insertBuiltIn(ESymbolLevel level, TOperator op, const char *e
         insertBuiltIn(level, gvec4 ? TCache::getType(EbtInt, 4) : rvalue, name, TCache::getType(EbtISampler2DArray), ptype2, ptype3, ptype4, ptype5);
         insertBuiltIn(level, gvec4 ? TCache::getType(EbtUInt, 4) : rvalue, name, TCache::getType(EbtUSampler2DArray), ptype2, ptype3, ptype4, ptype5);
     }
+    else if (IsGImage(ptype1->getBasicType()))
+    {
+        insertUnmangledBuiltIn(name);
+
+        const TType *floatType    = TCache::getType(EbtFloat, 4);
+        const TType *intType      = TCache::getType(EbtInt, 4);
+        const TType *unsignedType = TCache::getType(EbtUInt, 4);
+
+        const TType *floatImage =
+            TCache::getType(convertGImageToFloatImage(ptype1->getBasicType()));
+        const TType *intImage = TCache::getType(convertGImageToIntImage(ptype1->getBasicType()));
+        const TType *unsignedImage =
+            TCache::getType(convertGImageToUnsignedImage(ptype1->getBasicType()));
+
+        // GLSL ES 3.10, Revision 4, 8.12 Image Functions
+        if (rvalue->getBasicType() == EbtGVec4)
+        {
+            // imageLoad
+            insertBuiltIn(level, floatType, name, floatImage, ptype2, ptype3, ptype4, ptype5);
+            insertBuiltIn(level, intType, name, intImage, ptype2, ptype3, ptype4, ptype5);
+            insertBuiltIn(level, unsignedType, name, unsignedImage, ptype2, ptype3, ptype4, ptype5);
+        }
+        else if (rvalue->getBasicType() == EbtVoid)
+        {
+            // imageStore
+            insertBuiltIn(level, rvalue, name, floatImage, ptype2, floatType, ptype4, ptype5);
+            insertBuiltIn(level, rvalue, name, intImage, ptype2, intType, ptype4, ptype5);
+            insertBuiltIn(level, rvalue, name, unsignedImage, ptype2, unsignedType, ptype4, ptype5);
+        }
+        else
+        {
+            // imageSize
+            insertBuiltIn(level, rvalue, name, floatImage, ptype2, ptype3, ptype4, ptype5);
+            insertBuiltIn(level, rvalue, name, intImage, ptype2, ptype3, ptype4, ptype5);
+            insertBuiltIn(level, rvalue, name, unsignedImage, ptype2, ptype3, ptype4, ptype5);
+        }
+    }
     else if (IsGenType(rvalue) || IsGenType(ptype1) || IsGenType(ptype2) || IsGenType(ptype3))
     {
         ASSERT(!ptype4 && !ptype5);
@@ -305,3 +367,5 @@ TPrecision TSymbolTable::getDefaultPrecision(TBasicType type) const
     }
     return prec;
 }
+
+}  // namespace sh

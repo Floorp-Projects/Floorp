@@ -23,7 +23,7 @@ class FragDepthTest : public testing::TestWithParam<bool>
   protected:
     void SetUp() override
     {
-        ShInitBuiltInResources(&mResources);
+        sh::InitBuiltInResources(&mResources);
         mCompiler                 = nullptr;
         mResources.EXT_frag_depth = GetParam();
     }
@@ -33,7 +33,7 @@ class FragDepthTest : public testing::TestWithParam<bool>
     {
         if (mCompiler)
         {
-            ShDestruct(mCompiler);
+            sh::Destruct(mCompiler);
             mCompiler = nullptr;
         }
     }
@@ -41,8 +41,8 @@ class FragDepthTest : public testing::TestWithParam<bool>
     void InitializeCompiler()
     {
         DestroyCompiler();
-        mCompiler = ShConstructCompiler(GL_FRAGMENT_SHADER, SH_GLES3_SPEC,
-                                        SH_GLSL_COMPATIBILITY_OUTPUT, &mResources);
+        mCompiler = sh::ConstructCompiler(GL_FRAGMENT_SHADER, SH_GLES3_SPEC,
+                                          SH_GLSL_COMPATIBILITY_OUTPUT, &mResources);
         ASSERT_TRUE(mCompiler != nullptr) << "Compiler could not be constructed.";
     }
 
@@ -51,12 +51,12 @@ class FragDepthTest : public testing::TestWithParam<bool>
                                                const char *shader)
     {
         const char *shaderStrings[] = {version, pragma, shader};
-        bool success = ShCompile(mCompiler, shaderStrings, 3, 0);
+        bool success                = sh::Compile(mCompiler, shaderStrings, 3, 0);
         if (success)
         {
             return ::testing::AssertionSuccess() << "Compilation success";
         }
-        return ::testing::AssertionFailure() << ShGetInfoLog(mCompiler);
+        return ::testing::AssertionFailure() << sh::GetInfoLog(mCompiler);
     }
 
   protected:

@@ -50,6 +50,7 @@ State::State()
       mLineWidth(0),
       mGenerateMipmapHint(GL_NONE),
       mFragmentShaderDerivativeHint(GL_NONE),
+      mBindGeneratesResource(true),
       mNearZ(0),
       mFarZ(0),
       mReadFramebuffer(nullptr),
@@ -59,7 +60,8 @@ State::State()
       mActiveSampler(0),
       mPrimitiveRestart(false),
       mMultiSampling(false),
-      mSampleAlphaToOne(false)
+      mSampleAlphaToOne(false),
+      mFramebufferSRGB(true)
 {
 }
 
@@ -70,8 +72,9 @@ State::~State()
 
 void State::initialize(const Caps &caps,
                        const Extensions &extensions,
-                       GLuint clientVersion,
-                       bool debug)
+                       const Version &clientVersion,
+                       bool debug,
+                       bool bindGeneratesResource)
 {
     mMaxDrawBuffers = caps.maxDrawBuffers;
     mMaxCombinedTextureImageUnits = caps.maxCombinedTextureImageUnits;
@@ -137,6 +140,8 @@ void State::initialize(const Caps &caps,
     mGenerateMipmapHint = GL_DONT_CARE;
     mFragmentShaderDerivativeHint = GL_DONT_CARE;
 
+    mBindGeneratesResource = bindGeneratesResource;
+
     mLineWidth = 1.0f;
 
     mViewport.x = 0;
@@ -159,7 +164,7 @@ void State::initialize(const Caps &caps,
 
     mSamplerTextures[GL_TEXTURE_2D].resize(caps.maxCombinedTextureImageUnits);
     mSamplerTextures[GL_TEXTURE_CUBE_MAP].resize(caps.maxCombinedTextureImageUnits);
-    if (clientVersion >= 3)
+    if (clientVersion >= Version(3, 0))
     {
         // TODO: These could also be enabled via extension
         mSamplerTextures[GL_TEXTURE_2D_ARRAY].resize(caps.maxCombinedTextureImageUnits);
@@ -633,6 +638,9 @@ void State::setEnableFeature(GLenum feature, bool enabled)
       case GL_DEBUG_OUTPUT:
           mDebug.setOutputEnabled(enabled);
           break;
+      case GL_FRAMEBUFFER_SRGB_EXT:
+          setFramebufferSRGB(enabled);
+          break;
       default:                               UNREACHABLE();
     }
 }
@@ -658,6 +666,10 @@ bool State::getEnableFeature(GLenum feature) const
           return mDebug.isOutputSynchronous();
       case GL_DEBUG_OUTPUT:
           return mDebug.isOutputEnabled();
+      case GL_BIND_GENERATES_RESOURCE_CHROMIUM:
+          return isBindGeneratesResourceEnabled();
+      case GL_FRAMEBUFFER_SRGB_EXT:
+          return getFramebufferSRGB();
       default:                               UNREACHABLE(); return false;
     }
 }
@@ -686,6 +698,11 @@ void State::setFragmentShaderDerivativeHint(GLenum hint)
     // TODO: Propagate the hint to shader translator so we can write
     // ddx, ddx_coarse, or ddx_fine depending on the hint.
     // Ignore for now. It is valid for implementations to ignore hint.
+}
+
+bool State::isBindGeneratesResourceEnabled() const
+{
+    return mBindGeneratesResource;
 }
 
 void State::setViewportParams(GLint x, GLint y, GLsizei width, GLsizei height)
@@ -1445,6 +1462,17 @@ GLuint State::getPathStencilMask() const
     return mPathStencilMask;
 }
 
+void State::setFramebufferSRGB(bool sRGB)
+{
+    mFramebufferSRGB = sRGB;
+    mDirtyBits.set(DIRTY_BIT_FRAMEBUFFER_SRGB);
+}
+
+bool State::getFramebufferSRGB() const
+{
+    return mFramebufferSRGB;
+}
+
 void State::getBooleanv(GLenum pname, GLboolean *params)
 {
     switch (pname)
@@ -1485,6 +1513,12 @@ void State::getBooleanv(GLenum pname, GLboolean *params)
           break;
       case GL_SAMPLE_ALPHA_TO_ONE_EXT:
           *params = mSampleAlphaToOne;
+          break;
+      case GL_BIND_GENERATES_RESOURCE_CHROMIUM:
+          *params = isBindGeneratesResourceEnabled() ? GL_TRUE : GL_FALSE;
+          break;
+      case GL_FRAMEBUFFER_SRGB_EXT:
+          *params = getFramebufferSRGB() ? GL_TRUE : GL_FALSE;
           break;
       default:
         UNREACHABLE();
@@ -1730,6 +1764,11 @@ void State::getIntegerv(const ContextState &data, GLenum pname, GLint *params)
         *params =
             getSamplerTextureId(static_cast<unsigned int>(mActiveSampler), GL_TEXTURE_2D_ARRAY);
         break;
+      case GL_TEXTURE_BINDING_EXTERNAL_OES:
+          ASSERT(mActiveSampler < mMaxCombinedTextureImageUnits);
+          *params = getSamplerTextureId(static_cast<unsigned int>(mActiveSampler),
+                                        GL_TEXTURE_EXTERNAL_OES);
+          break;
       case GL_UNIFORM_BUFFER_BINDING:
         *params = mGenericUniformBuffer.id();
         break;

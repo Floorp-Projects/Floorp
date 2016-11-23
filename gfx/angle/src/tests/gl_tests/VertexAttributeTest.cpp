@@ -102,7 +102,7 @@ class VertexAttributeTest : public ANGLETest
 
         if (test.source == Source::BUFFER)
         {
-            GLsizei dataSize = mVertexCount * TypeStride(test.type) * typeSize;
+            GLsizei dataSize = mVertexCount * TypeStride(test.type);
             glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
             glBufferData(GL_ARRAY_BUFFER, dataSize, test.inputData, GL_STATIC_DRAW);
             glVertexAttribPointer(mTestAttrib, typeSize, test.type, test.normalized, 0,

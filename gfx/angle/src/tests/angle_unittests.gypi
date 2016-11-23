@@ -61,6 +61,7 @@
             '<(angle_path)/src/tests/compiler_tests/RecordConstantPrecision_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/RemovePow_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/ShaderExtension_test.cpp',
+            '<(angle_path)/src/tests/compiler_tests/ShaderImage_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/ShaderVariable_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/ShCompile_test.cpp',
             '<(angle_path)/src/tests/compiler_tests/TypeTracking_test.cpp',
@@ -100,7 +101,7 @@
     [
         '<(angle_path)/src/angle.gyp:libANGLE',
         '<(angle_path)/src/angle.gyp:preprocessor',
-        '<(angle_path)/src/angle.gyp:translator_static',
+        '<(angle_path)/src/angle.gyp:translator',
         '<(angle_path)/src/tests/tests.gyp:angle_test_support',
     ],
     'include_dirs':

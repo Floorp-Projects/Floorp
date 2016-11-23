@@ -10,6 +10,9 @@
 #include "compiler/translator/IntermNode.h"
 #include "compiler/translator/LoopInfo.h"
 
+namespace sh
+{
+
 class TInfoSinkBase;
 
 // Traverses intermediate tree to ensure that the shader does not exceed the
@@ -59,5 +62,7 @@ class ValidateLimitations : public TIntermTraverser
     bool mValidateIndexing;
     bool mValidateInnerLoops;
 };
+
+}  // namespace sh
 
 #endif // COMPILER_TRANSLATOR_VALIDATELIMITATIONS_H_

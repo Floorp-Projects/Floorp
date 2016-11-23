@@ -27,6 +27,7 @@ class State;
 namespace rx
 {
 
+class FramebufferGL;
 class FunctionsGL;
 class TransformFeedbackGL;
 class QueryGL;
@@ -123,6 +124,7 @@ class StateManagerGL final : angle::NonCopyable
                            GLuint packBuffer);
 
     void setFramebufferSRGBEnabled(bool enabled);
+    void setFramebufferSRGBEnabledForFramebuffer(bool enabled, const FramebufferGL *framebuffer);
 
     void setDitherEnabled(bool enabled);
 

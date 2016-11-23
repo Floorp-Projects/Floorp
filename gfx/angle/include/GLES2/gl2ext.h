@@ -821,6 +821,14 @@ GL_APICALL void GL_APIENTRY glBlitFramebufferANGLE (GLint srcX0, GLint srcY0, GL
 #endif
 #endif /* GL_ANGLE_framebuffer_blit */
 
+#ifndef GL_ANGLE_webgl_compatibility
+#define GL_ANGLE_webgl_compatibility 1
+typedef GLboolean(GL_APIENTRYP PFNGLENABLEEXTENSIONANGLEPROC) (const GLchar *name);
+#ifdef GL_GLEXT_PROTOTYPES
+GL_APICALL GLboolean GL_APIENTRY glEnableExtensionANGLE (const GLchar *name);
+#endif
+#endif /* GL_ANGLE_webgl_compatibility */
+
 #ifndef GL_CHROMIUM_framebuffer_mixed_samples
 #define GL_CHROMIUM_frambuffer_mixed_samples 1
 #define GL_COVERAGE_MODULATION_CHROMIUM 0x9332
@@ -829,6 +837,11 @@ typedef void (GL_APIENTRYP PFNGLCOVERAGEMODULATIONCHROMIUMPROC) (GLenum componen
 GL_APICALL void GL_APIENTRY glCoverageModulationCHROMIUM(GLenum components);
 #endif
 #endif /* GL_CHROMIUM_framebuffer_mixed_samples */
+
+#ifndef GL_CHROMIUM_bind_generates_resource
+#define GL_CHROMIUM_bind_generates_resource 1
+#define GL_BIND_GENERATES_RESOURCE_CHROMIUM 0x9244
+#endif /* GL_CHROMIUM_bind_generates_resource */
 
 // needed by NV_path_rendering (and thus CHROMIUM_path_rendering)
 // but CHROMIUM_path_rendering only needs MatrixLoadfEXT, MatrixLoadIdentityEXT
@@ -1302,6 +1315,14 @@ GL_APICALL void GL_APIENTRY glCopySubTextureCHROMIUM(GLuint sourceId,
                                                      GLboolean unpackUnmultiplyAlpha);
 #endif
 #endif /* GL_CHROMIUM_copy_texture */
+
+#ifndef GL_CHROMIUM_compressed_copy_texture
+#define GL_CHROMIUM_compressed_copy_texture 1
+typedef void(GL_APIENTRYP PFNGLCOMPRESSEDCOPYTEXTURECHROMIUMPROC)(GLuint sourceId, GLuint destId);
+#ifdef GL_GLEXT_PROTOTYPES
+GL_APICALL void GL_APIENTRY glCompressedCopyTextureCHROMIUM(GLuint sourceId, GLuint destId);
+#endif
+#endif /* GL_CHROMIUM_compressed_copy_texture */
 
 #ifndef GL_CHROMIUM_sync_query
 #define GL_CHROMIUM_sync_query 1
@@ -3233,6 +3254,132 @@ GL_APICALL void GL_APIENTRY glEndTilingQCOM (GLbitfield preserveMask);
 #define GL_COMPRESSED_RGBA8_LOSSY_DECODE_ETC2_EAC_ANGLE                  0x9699
 #define GL_COMPRESSED_SRGB8_ALPHA8_LOSSY_DECODE_ETC2_EAC_ANGLE           0x969A
 #endif /* GL_ANGLE_lossy_etc_decode */
+
+#ifndef GL_ANGLE_robust_client_memory
+#define GL_ANGLE_robust_client_memory 1
+typedef void (GL_APIENTRYP PFNGLGETBOOLEANVROBUSTANGLE) (GLenum pname, GLsizei bufSize, GLsizei *length, GLboolean *data);
+typedef void (GL_APIENTRYP PFNGLGETBUFFERPARAMETERIVROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETFLOATVROBUSTANGLE) (GLenum pname, GLsizei bufSize, GLsizei *length, GLfloat *data);
+typedef void (GL_APIENTRYP PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVROBUSTANGLE) (GLenum target, GLenum attachment, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETINTEGERVROBUSTANGLE) (GLenum pname, GLsizei bufSize, GLsizei *length, GLint *data);
+typedef void (GL_APIENTRYP PFNGLGETPROGRAMIVROBUSTANGLE) (GLuint program, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETRENDERBUFFERPARAMETERIVROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETSHADERIVROBUSTANGLE) (GLuint shader, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETTEXPARAMETERFVROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLGETTEXPARAMETERIVROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETUNIFORMFVROBUSTANGLE) (GLuint program, GLint location, GLsizei bufSize, GLsizei *length, GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLGETUNIFORMIVROBUSTANGLE) (GLuint program, GLint location, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETVERTEXATTRIBFVROBUSTANGLE) (GLuint index, GLenum pname, GLsizei bufSize, GLsizei *length, GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLGETVERTEXATTRIBIVROBUSTANGLE) (GLuint index, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETVERTEXATTRIBPOINTERVROBUSTANGLE) (GLuint index, GLenum pname, GLsizei bufSize, GLsizei *length, void **pointer);
+typedef void (GL_APIENTRYP PFNGLREADPIXELSROBUSTANGLE) (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLsizei *length, void *pixels);
+typedef void (GL_APIENTRYP PFNGLTEXIMAGE2DROBUSTANGLE) (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLsizei bufSize, const void *pixels);
+typedef void (GL_APIENTRYP PFNGLTEXPARAMETERFVROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, const GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLTEXPARAMETERIVROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, const GLint *params);
+typedef void (GL_APIENTRYP PFNGLTEXSUBIMAGE2DROBUSTANGLE) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, const void *pixels);
+typedef void (GL_APIENTRYP PFNGLTEXIMAGE3DROBUSTANGLE) (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, GLsizei bufSize, const void *pixels);
+typedef void (GL_APIENTRYP PFNGLTEXSUBIMAGE3DROBUSTANGLE) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, GLsizei bufSize, const void *pixels);
+typedef void (GL_APIENTRYP PFNGLGETQUERYIVROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETQUERYOBJECTUIVROBUSTANGLE) (GLuint id, GLenum pname, GLsizei bufSize, GLsizei *length, GLuint *params);
+typedef void (GL_APIENTRYP PFNGLGETBUFFERPOINTERVROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, void **params);
+typedef void (GL_APIENTRYP PFNGLGETINTEGERI_VROBUSTANGLE) (GLenum target, GLuint index, GLsizei bufSize, GLsizei *length, GLint *data);
+typedef void (GL_APIENTRYP PFNGETINTERNALFORMATIVROBUSTANGLE) (GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETVERTEXATTRIBIIVROBUSTANGLE) (GLuint index, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETVERTEXATTRIBIUIVROBUSTANGLE) (GLuint index, GLenum pname, GLsizei bufSize, GLsizei *length, GLuint *params);
+typedef void (GL_APIENTRYP PFNGLGETUNIFORMUIVROBUSTANGLE) (GLuint program, GLint location, GLsizei bufSize, GLsizei *length, GLuint *params);
+typedef void (GL_APIENTRYP PFNGLGETACTIVEUNIFORMBLOCKIVROBUSTANGLE) (GLuint program, GLuint uniformBlockIndex, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETINTEGER64VROBUSTANGLE) (GLenum pname, GLsizei bufSize, GLsizei *length, GLint64 *data);
+typedef void (GL_APIENTRYP PFNGLGETINTEGER64I_VROBUSTANGLE) (GLenum target, GLuint index, GLsizei bufSize, GLsizei *length, GLint64 *data);
+typedef void (GL_APIENTRYP PFNGLGETBUFFERPARAMETERI64VROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint64 *params);
+typedef void (GL_APIENTRYP PFNGLSAMPLERPARAMETERIVROBUSTANGLE) (GLuint sampler, GLenum pname, GLsizei bufSize, const GLint *param);
+typedef void (GL_APIENTRYP PFNGLSAMPLERPARAMETERFVROBUSTANGLE) (GLuint sampler, GLenum pname, GLsizei bufSize, const GLfloat *param);
+typedef void (GL_APIENTRYP PFNGLGETSAMPLERPARAMETERIVROBUSTANGLE) (GLuint sampler, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETSAMPLERPARAMETERFVROBUSTANGLE) (GLuint sampler, GLenum pname, GLsizei bufSize, GLsizei *length, GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLGETFRAMEBUFFERPARAMETERIVROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETPROGRAMINTERFACEIVROBUSTANGLE) (GLuint program, GLenum programInterface, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETBOOLEANI_VROBUSTANGLE) (GLenum target, GLuint index, GLsizei bufSize, GLsizei *length, GLboolean *data);
+typedef void (GL_APIENTRYP PFNGLGETMULTISAMPLEFVROBUSTANGLE) (GLenum pname, GLuint index, GLsizei bufSize, GLsizei *length, GLfloat *val);
+typedef void (GL_APIENTRYP PFNGLGETTEXLEVELPARAMETERIVROBUSTANGLE) (GLenum target, GLint level, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETTEXLEVELPARAMETERFVROBUSTANGLE) (GLenum target, GLint level, GLenum pname, GLsizei bufSize, GLsizei *length, GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLGETPOINTERVROBUSTANGLEROBUSTANGLE) (GLenum pname, GLsizei bufSize, GLsizei *length, void **params);
+typedef void (GL_APIENTRYP PFNGLREADNPIXELSROBUSTANGLE) (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLsizei *length, void *data);
+typedef void (GL_APIENTRYP PFNGLGETNUNIFORMFVROBUSTANGLE) (GLuint program, GLint location, GLsizei bufSize, GLsizei *length, GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLGETNUNIFORMIVROBUSTANGLE) (GLuint program, GLint location, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETNUNIFORMUIVROBUSTANGLE) (GLuint program, GLint location, GLsizei bufSize, GLsizei *length, GLuint *params);
+typedef void (GL_APIENTRYP PFNGLTEXPARAMETERIIVROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, const GLint *params);
+typedef void (GL_APIENTRYP PFNGLTEXPARAMETERIUIVROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, const GLuint *params);
+typedef void (GL_APIENTRYP PFNGLGETTEXPARAMETERIIVROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETTEXPARAMETERIUIVROBUSTANGLE) (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLuint *params);
+typedef void (GL_APIENTRYP PFNGLSAMPLERPARAMETERIIVROBUSTANGLE) (GLuint sampler, GLenum pname, GLsizei bufSize, const GLint *param);
+typedef void (GL_APIENTRYP PFNGLSAMPLERPARAMETERIUIVROBUSTANGLE) (GLuint sampler, GLenum pname, GLsizei bufSize, const GLuint *param);
+typedef void (GL_APIENTRYP PFNGLGETSAMPLERPARAMETERIIVROBUSTANGLE) (GLuint sampler, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETSAMPLERPARAMETERIUIVROBUSTANGLE) (GLuint sampler, GLenum pname, GLsizei bufSize, GLsizei *length, GLuint *params);
+typedef void (GL_APIENTRYP PFNGLGETQUERYOBJECTIVROBUSTANGLE)(GLuint id, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETQUERYOBJECTI64VROBUSTANGLE)(GLuint id, GLenum pname, GLsizei bufSize, GLsizei *length, GLint64 *params);
+typedef void (GL_APIENTRYP PFNGLGETQUERYOBJECTUI64VROBUSTANGLE)(GLuint id, GLenum pname, GLsizei bufSize, GLsizei *length, GLuint64 *params);
+#ifdef GL_GLEXT_PROTOTYPES
+GL_APICALL void GL_APIENTRY glGetBooleanvRobustANGLE (GLenum pname, GLsizei bufSize, GLsizei *length, GLboolean *data);
+GL_APICALL void GL_APIENTRY glGetBufferParameterivRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetFloatvRobustANGLE (GLenum pname, GLsizei bufSize, GLsizei *length, GLfloat *data);
+GL_APICALL void GL_APIENTRY glGetFramebufferAttachmentParameterivRobustANGLE (GLenum target, GLenum attachment, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetIntegervRobustANGLE (GLenum pname, GLsizei bufSize, GLsizei *length, GLint *data);
+GL_APICALL void GL_APIENTRY glGetProgramivRobustANGLE (GLuint program, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetRenderbufferParameterivRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetShaderivRobustANGLE (GLuint shader, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetTexParameterfvRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLfloat *params);
+GL_APICALL void GL_APIENTRY glGetTexParameterivRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetUniformfvRobustANGLE (GLuint program, GLint location, GLsizei bufSize, GLsizei *length, GLfloat *params);
+GL_APICALL void GL_APIENTRY glGetUniformivRobustANGLE (GLuint program, GLint location, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetVertexAttribfvRobustANGLE (GLuint index, GLenum pname, GLsizei bufSize, GLsizei *length, GLfloat *params);
+GL_APICALL void GL_APIENTRY glGetVertexAttribivRobustANGLE (GLuint index, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetVertexAttribPointervRobustANGLE (GLuint index, GLenum pname, GLsizei bufSize, GLsizei *length, void **pointer);
+GL_APICALL void GL_APIENTRY glReadPixelsRobustANGLE (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLsizei *length, void *pixels);
+GL_APICALL void GL_APIENTRY glTexImage2DRobustANGLE (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLsizei bufSize, const void *pixels);
+GL_APICALL void GL_APIENTRY glTexParameterfvRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, const GLfloat *params);
+GL_APICALL void GL_APIENTRY glTexParameterivRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, const GLint *params);
+GL_APICALL void GL_APIENTRY glTexSubImage2DRobustANGLE (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, const void *pixels);
+GL_APICALL void GL_APIENTRY glTexImage3DRobustANGLE (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, GLsizei bufSize, const void *pixels);
+GL_APICALL void GL_APIENTRY glTexSubImage3DRobustANGLE (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, GLsizei bufSize, const void *pixels);
+GL_APICALL void GL_APIENTRY glGetQueryivRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetQueryObjectuivRobustANGLE (GLuint id, GLenum pname, GLsizei bufSize, GLsizei *length, GLuint *params);
+GL_APICALL void GL_APIENTRY glGetBufferPointervRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, void **params);
+GL_APICALL void GL_APIENTRY glGetIntegeri_vRobustANGLE (GLenum target, GLuint index, GLsizei bufSize, GLsizei *length, GLint *data);
+GL_APICALL void GL_APIENTRY glGetInternalformativRobustANGLE (GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetVertexAttribIivRobustANGLE (GLuint index, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetVertexAttribIuivRobustANGLE (GLuint index, GLenum pname, GLsizei bufSize, GLsizei *length, GLuint *params);
+GL_APICALL void GL_APIENTRY glGetUniformuivRobustANGLE (GLuint program, GLint location, GLsizei bufSize, GLsizei *length, GLuint *params);
+GL_APICALL void GL_APIENTRY glGetActiveUniformBlockivRobustANGLE (GLuint program, GLuint uniformBlockIndex, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetInteger64vRobustANGLE (GLenum pname, GLsizei bufSize, GLsizei *length, GLint64 *data);
+GL_APICALL void GL_APIENTRY glGetInteger64i_vRobustANGLE (GLenum target, GLuint index, GLsizei bufSize, GLsizei *length, GLint64 *data);
+GL_APICALL void GL_APIENTRY glGetBufferParameteri64vRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint64 *params);
+GL_APICALL void GL_APIENTRY glSamplerParameterivRobustANGLE (GLuint sampler, GLenum pname, GLsizei bufSize, const GLint *param);
+GL_APICALL void GL_APIENTRY glSamplerParameterfvRobustANGLE (GLuint sampler, GLenum pname, GLsizei bufSize, const GLfloat *param);
+GL_APICALL void GL_APIENTRY glGetSamplerParameterivRobustANGLE (GLuint sampler, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetSamplerParameterfvRobustANGLE (GLuint sampler, GLenum pname, GLsizei bufSize, GLsizei *length, GLfloat *params);
+GL_APICALL void GL_APIENTRY glGetFramebufferParameterivRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetProgramInterfaceivRobustANGLE (GLuint program, GLenum programInterface, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetBooleani_vRobustANGLE (GLenum target, GLuint index, GLsizei bufSize, GLsizei *length, GLboolean *data);
+GL_APICALL void GL_APIENTRY glGetMultisamplefvRobustANGLE (GLenum pname, GLuint index, GLsizei bufSize, GLsizei *length, GLfloat *val);
+GL_APICALL void GL_APIENTRY glGetTexLevelParameterivRobustANGLE (GLenum target, GLint level, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetTexLevelParameterfvRobustANGLE (GLenum target, GLint level, GLenum pname, GLsizei bufSize, GLsizei *length, GLfloat *params);
+GL_APICALL void GL_APIENTRY glGetPointervRobustANGLERobustANGLE (GLenum pname, GLsizei bufSize, GLsizei *length, void **params);
+GL_APICALL void GL_APIENTRY glReadnPixelsRobustANGLE (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLsizei *length, void *data);
+GL_APICALL void GL_APIENTRY glGetnUniformfvRobustANGLE (GLuint program, GLint location, GLsizei bufSize, GLsizei *length, GLfloat *params);
+GL_APICALL void GL_APIENTRY glGetnUniformivRobustANGLE (GLuint program, GLint location, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetnUniformuivRobustANGLE (GLuint program, GLint location, GLsizei bufSize, GLsizei *length, GLuint *params);
+GL_APICALL void GL_APIENTRY glTexParameterIivRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, const GLint *params);
+GL_APICALL void GL_APIENTRY glTexParameterIuivRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, const GLuint *params);
+GL_APICALL void GL_APIENTRY glGetTexParameterIivRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetTexParameterIuivRobustANGLE (GLenum target, GLenum pname, GLsizei bufSize, GLsizei *length, GLuint *params);
+GL_APICALL void GL_APIENTRY glSamplerParameterIivRobustANGLE (GLuint sampler, GLenum pname, GLsizei bufSize, const GLint *param);
+GL_APICALL void GL_APIENTRY glSamplerParameterIuivRobustANGLE (GLuint sampler, GLenum pname, GLsizei bufSize, const GLuint *param);
+GL_APICALL void GL_APIENTRY glGetSamplerParameterIivRobustANGLE (GLuint sampler, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetSamplerParameterIuivRobustANGLE (GLuint sampler, GLenum pname, GLsizei bufSize, GLsizei *length, GLuint *params);
+GL_APICALL void GL_APIENTRY glGetQueryObjectivRobustANGLE(GLuint id, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *params);
+GL_APICALL void GL_APIENTRY glGetQueryObjecti64vRobustANGLE(GLuint id, GLenum pname, GLsizei bufSize, GLsizei *length, GLint64 *params);
+GL_APICALL void GL_APIENTRY glGetQueryObjectui64vRobustANGLE(GLuint id, GLenum pname, GLsizei bufSize, GLsizei *length, GLuint64 *params);
+#endif
+#endif /* GL_ANGLE_robust_client_memory */
 
 #ifdef __cplusplus
 }

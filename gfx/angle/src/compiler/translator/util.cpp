@@ -159,6 +159,30 @@ GLenum GLVariableType(const TType &type)
       case EbtSampler2DShadow:      return GL_SAMPLER_2D_SHADOW;
       case EbtSamplerCubeShadow:    return GL_SAMPLER_CUBE_SHADOW;
       case EbtSampler2DArrayShadow: return GL_SAMPLER_2D_ARRAY_SHADOW;
+      case EbtImage2D:
+          return GL_IMAGE_2D;
+      case EbtIImage2D:
+          return GL_INT_IMAGE_2D;
+      case EbtUImage2D:
+          return GL_UNSIGNED_INT_IMAGE_2D;
+      case EbtImage2DArray:
+          return GL_IMAGE_2D_ARRAY;
+      case EbtIImage2DArray:
+          return GL_INT_IMAGE_2D_ARRAY;
+      case EbtUImage2DArray:
+          return GL_UNSIGNED_INT_IMAGE_2D_ARRAY;
+      case EbtImage3D:
+          return GL_IMAGE_3D;
+      case EbtIImage3D:
+          return GL_INT_IMAGE_3D;
+      case EbtUImage3D:
+          return GL_UNSIGNED_INT_IMAGE_3D;
+      case EbtImageCube:
+          return GL_IMAGE_CUBE;
+      case EbtIImageCube:
+          return GL_INT_IMAGE_CUBE;
+      case EbtUImageCube:
+          return GL_UNSIGNED_INT_IMAGE_CUBE;
       default: UNREACHABLE();
     }
 
@@ -282,6 +306,14 @@ TType GetShaderVariableBasicType(const sh::ShaderVariable &var)
 {
     switch (var.type)
     {
+        case GL_BOOL:
+            return TType(EbtBool);
+        case GL_BOOL_VEC2:
+            return TType(EbtBool, 2);
+        case GL_BOOL_VEC3:
+            return TType(EbtBool, 3);
+        case GL_BOOL_VEC4:
+            return TType(EbtBool, 4);
         case GL_FLOAT:
             return TType(EbtFloat);
         case GL_FLOAT_VEC2:
@@ -328,35 +360,6 @@ TType GetShaderVariableBasicType(const sh::ShaderVariable &var)
             UNREACHABLE();
             return TType();
     }
-}
-
-TType GetShaderVariableType(const sh::ShaderVariable &var)
-{
-    TType type;
-    if (var.isStruct())
-    {
-        TFieldList *fields = new TFieldList;
-        TSourceLoc loc;
-        for (const auto &field : var.fields)
-        {
-            TType *fieldType = new TType(GetShaderVariableType(field));
-            fields->push_back(new TField(fieldType, new TString(field.name.c_str()), loc));
-        }
-        TStructure *structure = new TStructure(new TString(var.structName.c_str()), fields);
-
-        type.setBasicType(EbtStruct);
-        type.setStruct(structure);
-    }
-    else
-    {
-        type = GetShaderVariableBasicType(var);
-    }
-
-    if (var.isArray())
-    {
-        type.setArraySize(var.elementCount());
-    }
-    return type;
 }
 
 TOperator TypeToConstructorOperator(const TType &type)
