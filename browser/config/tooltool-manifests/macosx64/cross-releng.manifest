@@ -8,18 +8,18 @@
 "unpack": true
 },
 {
-"size": 3008804, 
-"visibility": "public", 
-"digest": "ba6937f14f3d8b26dcb2d39490dee6b0a8afb60f672f5debb71d7b62c1ec52103201b4b1a3d258f945567de531384b36ddb2ce4aa73dc63d72305b11c146847c", 
-"algorithm": "sha512", 
+"size": 3008804,
+"visibility": "public",
+"digest": "ba6937f14f3d8b26dcb2d39490dee6b0a8afb60f672f5debb71d7b62c1ec52103201b4b1a3d258f945567de531384b36ddb2ce4aa73dc63d72305b11c146847c",
+"algorithm": "sha512",
 "unpack": true,
 "filename": "cctools.tar.gz"
 },
 {
-"size": 35215976, 
-"visibility": "internal", 
-"digest": "8be736545ddab25ebded188458ce974d5c9a7e29f3c50d2ebfbcb878f6aff853dd2ff5a3528bdefc64396a10101a1b50fd2fe52000140df33643cebe1ea759da", 
-"algorithm": "sha512", 
+"size": 35215976,
+"visibility": "internal",
+"digest": "8be736545ddab25ebded188458ce974d5c9a7e29f3c50d2ebfbcb878f6aff853dd2ff5a3528bdefc64396a10101a1b50fd2fe52000140df33643cebe1ea759da",
+"algorithm": "sha512",
 "unpack": true,
 "filename": "MacOSX10.7.sdk.tar.bz2"
 },
@@ -33,18 +33,18 @@
 "size": 1020700
 },
 {
-"size": 57060, 
-"visibility": "public", 
-"digest": "9649ca595f4cf088d118da26201f92cc94cda7af49c7c48112ee31cd13c83b2935b3e145de9dd78060cff2480b4c2e7ff5fb24235876956fed13c87852071998", 
-"algorithm": "sha512", 
+"size": 57060,
+"visibility": "public",
+"digest": "9649ca595f4cf088d118da26201f92cc94cda7af49c7c48112ee31cd13c83b2935b3e145de9dd78060cff2480b4c2e7ff5fb24235876956fed13c87852071998",
+"algorithm": "sha512",
 "unpack": true,
 "filename": "dmg.tar.xz"
 },
 {
-"size": 188880, 
-"visibility": "public", 
-"digest": "1ffddd43efb03aed897ee42035d9d8d758a8d66ab6c867599ef755e1a586768fc22011ce03698af61454920b00fe8bed08c9a681e7bd324d7f8f78c026c83943", 
-"algorithm": "sha512", 
+"size": 188880,
+"visibility": "public",
+"digest": "1ffddd43efb03aed897ee42035d9d8d758a8d66ab6c867599ef755e1a586768fc22011ce03698af61454920b00fe8bed08c9a681e7bd324d7f8f78c026c83943",
+"algorithm": "sha512",
 "unpack": true,
 "filename": "genisoimage.tar.xz"
 },
