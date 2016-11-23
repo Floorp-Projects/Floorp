@@ -37,7 +37,8 @@ function doTest() {
 }
 
 function runOverflowTests(aEvent) {
-  if (aEvent.detail != 1)
+  if (aEvent.detail != 1 ||
+      aEvent.target != tabstrip)
     return;
 
   tabstrip.removeEventListener("overflow", runOverflowTests, false);
