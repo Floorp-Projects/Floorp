@@ -252,12 +252,18 @@ ifeq ($(MOZ_PKG_FORMAT),DMG)
     mkdir -p $(ABS_DIST)/unpack.tmp; \
     $(_ABS_MOZSRCDIR)/build/package/mac_osx/unpack-diskimage $(UNPACKAGE) /tmp/$(MOZ_PKG_APPNAME)-unpack $(ABS_DIST)/unpack.tmp; \
     rsync -a '$(ABS_DIST)/unpack.tmp/$(_APPNAME)' $(MOZ_PKG_DIR); \
-    test -n '$(MOZ_PKG_MAC_DSSTORE)' && \
+    if test -n '$(MOZ_PKG_MAC_DSSTORE)' ; then \
+      mkdir -p '$(dir $(MOZ_PKG_MAC_DSSTORE))'; \
       rsync -a '$(ABS_DIST)/unpack.tmp/.DS_Store' '$(MOZ_PKG_MAC_DSSTORE)'; \
-    test -n '$(MOZ_PKG_MAC_BACKGROUND)' && \
+    fi; \
+    if test -n '$(MOZ_PKG_MAC_BACKGROUND)' ; then \
+      mkdir -p '$(dir $(MOZ_PKG_MAC_BACKGROUND))'; \
       rsync -a '$(ABS_DIST)/unpack.tmp/.background/$(notdir $(MOZ_PKG_MAC_BACKGROUND))' '$(MOZ_PKG_MAC_BACKGROUND)'; \
-    test -n '$(MOZ_PKG_MAC_ICON)' && \
+    fi; \
+    if test -n '$(MOZ_PKG_MAC_ICON)' ; then \
+      mkdir -p '$(dir $(MOZ_PKG_MAC_ICON))'; \
       rsync -a '$(ABS_DIST)/unpack.tmp/.VolumeIcon.icns' '$(MOZ_PKG_MAC_ICON)'; \
+    fi; \
     rm -rf $(ABS_DIST)/unpack.tmp; \
     if test -n '$(MOZ_PKG_MAC_RSRC)' ; then \
       cp $(UNPACKAGE) $(MOZ_PKG_APPNAME).tmp.dmg && \
