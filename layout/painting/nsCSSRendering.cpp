@@ -1899,6 +1899,44 @@ SetupDirtyRects(const nsRect& aBGClipArea, const nsRect& aCallerDirtyRect,
              "second should be empty if first is");
 }
 
+static bool
+IsSVGStyleGeometryBox(StyleGeometryBox aBox)
+{
+  return (aBox == StyleGeometryBox::Fill || aBox == StyleGeometryBox::Stroke ||
+          aBox == StyleGeometryBox::View);
+}
+
+static bool
+IsHTMLStyleGeometryBox(StyleGeometryBox aBox)
+{
+  return (aBox == StyleGeometryBox::Content ||
+          aBox == StyleGeometryBox::Padding ||
+          aBox == StyleGeometryBox::Border ||
+          aBox == StyleGeometryBox::Margin);
+}
+
+static StyleGeometryBox
+ComputeBoxValue(nsIFrame* aForFrame, StyleGeometryBox aBox)
+{
+  // Except <svg>, all svg elements are not associate with CSS layout box.
+  if (aForFrame->IsFrameOfType(nsIFrame::eSVG) &&
+      (aForFrame->GetType() != nsGkAtoms::svgOuterSVGFrame)) {
+    // For SVG elements without associated CSS layout box, the values
+    // content-box, padding-box, border-box and margin-box compute to fill-box.
+    if (IsHTMLStyleGeometryBox(aBox)) {
+      return StyleGeometryBox::Fill;
+    }
+  } else {
+    // For elements with associated CSS layout box, the values fill-box,
+    // stroke-box and view-box compute to the initial value of mask-clip.
+    if (IsSVGStyleGeometryBox(aBox)) {
+      return StyleGeometryBox::Border;
+    }
+  }
+
+  return aBox;
+}
+
 /* static */ void
 nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
                                   nsIFrame* aForFrame, const nsStyleBorder& aBorder,
@@ -1906,7 +1944,40 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
                                   bool aWillPaintBorder, nscoord aAppUnitsPerPixel,
                                   /* out */ ImageLayerClipState* aClipState)
 {
-  StyleGeometryBox backgroundClip = aLayer.mClip;
+  StyleGeometryBox backgroundClip = ComputeBoxValue(aForFrame, aLayer.mClip);
+
+  if (IsSVGStyleGeometryBox(backgroundClip)) {
+    MOZ_ASSERT(aForFrame->IsFrameOfType(nsIFrame::eSVG) &&
+               (aForFrame->GetType() != nsGkAtoms::svgOuterSVGFrame));
+
+    aClipState->mHasAdditionalBGClipArea = false;
+    aClipState->mCustomClip = false;
+
+    // The coordinate space of clipArea is svg user space.
+    nsRect clipArea =
+      nsLayoutUtils::ComputeGeometryBox(aForFrame, backgroundClip);
+
+    nsRect strokeBox = (backgroundClip == StyleGeometryBox::Stroke)
+      ? clipArea
+      : nsLayoutUtils::ComputeGeometryBox(aForFrame, StyleGeometryBox::Stroke);
+    nsRect clipAreaRelativeToStrokeBox = clipArea - strokeBox.TopLeft();
+
+    // aBorderArea is the stroke-box area in a coordinate space defined by
+    // the caller. This coordinate space can be svg user space of aForFrame,
+    // the space of aForFrame's reference-frame, or anything else.
+    //
+    // Which coordinate space chosen for aBorderArea is not matter. What
+    // matter is to ensure returning aClipState->mBGClipArea in the consistent
+    // coordiante space with aBorderArea. So we evaluate the position of clip
+    // area base on the position of aBorderArea here.
+    aClipState->mBGClipArea =
+      clipAreaRelativeToStrokeBox + aBorderArea.TopLeft();
+
+    SetupDirtyRects(aClipState->mBGClipArea, aCallerDirtyRect,
+                    aAppUnitsPerPixel, &aClipState->mDirtyRect,
+                    &aClipState->mDirtyRectGfx);
+    return;
+  }
 
   if (backgroundClip == StyleGeometryBox::NoClip) {
     aClipState->mBGClipArea = aCallerDirtyRect;
@@ -1919,6 +1990,9 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
     return;
   }
 
+  MOZ_ASSERT(!aForFrame->IsFrameOfType(nsIFrame::eSVG) ||
+             aForFrame->GetType() == nsGkAtoms::svgOuterSVGFrame);
+
   // Compute the outermost boundary of the area that might be painted.
   // Same coordinate space as aBorderArea.
   Sides skipSides = aForFrame->GetSkipSides();
@@ -1927,15 +2001,6 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
 
   bool haveRoundedCorners = GetRadii(aForFrame, aBorder, aBorderArea,
                                      clipBorderArea, aClipState->mRadii);
-
-  // XXX TODO: bug 1303623 only implements the parser of fill-box|stroke-box|view-box|no-clip.
-  // So we need to fallback to default value when rendering. We should remove this
-  // in bug 1311270.
-  if (backgroundClip == StyleGeometryBox::Fill ||
-      backgroundClip == StyleGeometryBox::Stroke ||
-      backgroundClip == StyleGeometryBox::View) {
-    backgroundClip = StyleGeometryBox::Border;
-  }
 
   bool isSolidBorder =
       aWillPaintBorder && IsOpaqueBorder(aBorder);
