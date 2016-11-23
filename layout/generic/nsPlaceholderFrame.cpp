@@ -206,25 +206,10 @@ nsPlaceholderFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
     }
   }
 
-  nsIFrame* parentFrame = GetParent();
-  // Placeholder of backdrop frame is a child of the corresponding top
-  // layer frame, and its style context inherits from that frame. In
-  // case of table, the top layer frame is the table wrapper frame.
-  // However, it will be skipped in CorrectStyleParentFrame below, so
-  // we need to handle it specially here.
-  if ((GetStateBits() & PLACEHOLDER_FOR_TOPLAYER) &&
-      parentFrame->GetType() == nsGkAtoms::tableWrapperFrame) {
-    MOZ_ASSERT(mOutOfFlowFrame->GetType() == nsGkAtoms::backdropFrame,
-               "Only placeholder of backdrop frame can be put inside "
-               "a table wrapper frame");
-    return parentFrame->StyleContext();
-  }
-
   // Lie about our pseudo so we can step out of all anon boxes and
   // pseudo-elements.  The other option would be to reimplement the
   // {ib} split gunk here.
-  *aProviderFrame = CorrectStyleParentFrame(parentFrame,
-                                            nsGkAtoms::placeholderFrame);
+  *aProviderFrame = CorrectStyleParentFrame(GetParent(), nsGkAtoms::placeholderFrame);
   return *aProviderFrame ? (*aProviderFrame)->StyleContext() : nullptr;
 }
 
