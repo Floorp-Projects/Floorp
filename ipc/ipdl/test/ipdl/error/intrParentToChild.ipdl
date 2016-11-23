@@ -1,6 +1,0 @@
-intr protocol intrParentToChild {
-
-    // can't declare interrupt parent-to-child messages
-child: intr Msg();
-
-};
