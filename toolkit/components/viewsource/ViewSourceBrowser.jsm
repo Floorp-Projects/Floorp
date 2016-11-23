@@ -190,7 +190,7 @@ ViewSourceBrowser.prototype = {
 
       // If we're dealing with a remote browser, then the browser
       // for view source needs to be remote as well.
-      this.updateBrowserRemoteness(browser.isRemoteBrowser, browser.remoteType);
+      this.updateBrowserRemoteness(browser.isRemoteBrowser);
     } else if (outerWindowID) {
       throw new Error("Must supply the browser if passing the outerWindowID");
     }
@@ -221,12 +221,9 @@ ViewSourceBrowser.prototype = {
    *        True if the browser should be made remote. If the browsers
    *        remoteness already matches this value, this function does
    *        nothing.
-   * @param remoteType
-   *        The type of remote browser process.
    */
-  updateBrowserRemoteness(shouldBeRemote, remoteType) {
-    if (this.browser.isRemoteBrowser != shouldBeRemote ||
-        this.browser.remoteType != remoteType) {
+  updateBrowserRemoteness(shouldBeRemote) {
+    if (this.browser.isRemoteBrowser != shouldBeRemote) {
       // In this base case, where we are handed a <browser> someone else is
       // managing, we don't know for sure that it's safe to toggle remoteness.
       // For view source in a window, this is overridden to actually do the
