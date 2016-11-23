@@ -888,6 +888,19 @@ nsXULAppInfo::GetUniqueProcessID(uint64_t* aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULAppInfo::GetRemoteType(nsAString& aRemoteType)
+{
+  if (XRE_IsContentProcess()) {
+    ContentChild* cc = ContentChild::GetSingleton();
+    aRemoteType.Assign(cc->GetRemoteType());
+  } else {
+    SetDOMStringToNull(aRemoteType);
+  }
+
+  return NS_OK;
+}
+
 static bool gBrowserTabsRemoteAutostart = false;
 static uint64_t gBrowserTabsRemoteStatus = 0;
 static bool gBrowserTabsRemoteAutostartInitialized = false;

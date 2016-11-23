@@ -30,6 +30,7 @@ function getAboutModule(aURL) {
 
 const NOT_REMOTE = null;
 const WEB_REMOTE_TYPE = "web";
+// This must match the one in ContentParent.h.
 const DEFAULT_REMOTE_TYPE = WEB_REMOTE_TYPE;
 
 this.E10SUtils = {
@@ -129,13 +130,18 @@ this.E10SUtils = {
     return WEB_REMOTE_TYPE;
   },
 
+  shouldLoadURIInThisProcess: function(aURI) {
+    let remoteType = Services.appinfo.remoteType;
+    return remoteType == this.getRemoteTypeForURI(aURI.spec, true, remoteType);
+  },
+
   shouldLoadURI: function(aDocShell, aURI, aReferrer) {
     // Inner frames should always load in the current process
     if (aDocShell.QueryInterface(Ci.nsIDocShellTreeItem).sameTypeParent)
       return true;
 
     // If the URI can be loaded in the current process then continue
-    return this.canLoadURIInProcess(aURI.spec, Services.appinfo.processType);
+    return this.shouldLoadURIInThisProcess(aURI);
   },
 
   redirectLoad: function(aDocShell, aURI, aReferrer, aFreshProcess) {
