@@ -150,7 +150,8 @@ loader.lazyGetter(this, "eventListenerService", function () {
            .getService(Ci.nsIEventListenerService);
 });
 
-loader.lazyGetter(this, "CssLogic", () => require("devtools/server/css-logic").CssLogic);
+loader.lazyRequireGetter(this, "CssLogic", "devtools/server/css-logic", true);
+loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
 
 /**
  * We only send nodeValue up to a certain size by default.  This stuff
@@ -165,20 +166,6 @@ exports.getValueSummaryLength = function () {
 
 exports.setValueSummaryLength = function (val) {
   gValueSummaryLength = val;
-};
-
-// When the user selects a node to inspect in e10s, the parent process
-// has a CPOW that wraps the node being inspected.  It uses the
-// message manager to send this node to the child, which stores the
-// node in gInspectingNode. Then a findInspectingNode request is sent
-// over the remote debugging protocol, and gInspectingNode is returned
-// to the parent as a NodeFront.
-var gInspectingNode = null;
-
-// We expect this function to be called from the child.js frame script
-// when it receives the node to be inspected over the message manager.
-exports.setInspectingNode = function (val) {
-  gInspectingNode = val;
 };
 
 /**
@@ -622,7 +609,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     if (Cu.isDeadWrapper(this.rawNode)) {
       return "";
     }
-    return CssLogic.findCssSelector(this.rawNode);
+    return findCssSelector(this.rawNode);
   },
 
   /**
@@ -1476,22 +1463,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     } while (node && --count);
     ret.reverse();
     return ret;
-  },
-
-  /**
-   * Return the node that the parent process has asked to
-   * inspect. This node is expected to be stored in gInspectingNode
-   * (which is set by a message manager message to the child.js frame
-   * script). The node is returned over the remote debugging protocol
-   * as a NodeFront.
-   */
-  findInspectingNode: function () {
-    let node = gInspectingNode;
-    if (!node) {
-      return {};
-    }
-
-    return this.attachElement(node);
   },
 
   /**
