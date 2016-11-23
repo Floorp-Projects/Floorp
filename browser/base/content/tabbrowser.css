@@ -39,24 +39,12 @@
   display: -moz-box;
 }
 
-.tab-label {
-  white-space: nowrap;
-}
-
-.tab-label-container {
-  overflow: hidden;
-}
-
-.tab-label-container[pinned] {
+.tab-label[pinned] {
   width: 0;
-}
-
-.tab-label-container[textoverflow]:not([pinned]) {
-  mask-image: linear-gradient(to left, transparent, black 1em);
-}
-
-.tab-label-container[textoverflow]:not([pinned]):-moz-locale-dir(rtl) {
-  mask-image: linear-gradient(to right, transparent, black 1em);
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 .tab-stack {
