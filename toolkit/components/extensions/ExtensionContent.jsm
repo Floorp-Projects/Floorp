@@ -143,6 +143,7 @@ Script.prototype = {
 
   matches(window) {
     let uri = window.document.documentURIObject;
+    let principal = window.document.nodePrincipal;
 
     // If mozAddonManager is present on this page, don't allow
     // content scripts.
@@ -150,16 +151,25 @@ Script.prototype = {
       return false;
     }
 
-    if (this.match_about_blank && ["about:blank", "about:srcdoc"].includes(uri.spec)) {
-      const principal = window.document.nodePrincipal;
-
+    if (this.match_about_blank) {
       // When matching top-level about:blank documents,
       // allow loading into any with a NullPrincipal.
-      if (window === window.top && principal.isNullPrincipal) {
+      if (uri.spec === "about:blank" && window === window.top && principal.isNullPrincipal) {
         return true;
       }
+
       // When matching about:blank/srcdoc iframes, the checks below
       // need to be performed against the "owner" document's URI.
+      if (["about:blank", "about:srcdoc"].includes(uri.spec)) {
+        uri = principal.URI;
+      }
+    }
+
+    // Documents from data: URIs also inherit the principal.
+    if (Services.netUtils.URIChainHasFlags(uri, Ci.nsIProtocolHandler.URI_INHERITS_SECURITY_CONTEXT)) {
+      if (!this.match_about_blank) {
+        return false;
+      }
       uri = principal.URI;
     }
 
