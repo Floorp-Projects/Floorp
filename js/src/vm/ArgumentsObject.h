@@ -389,6 +389,7 @@ class ArgumentsObject : public NativeObject
 class MappedArgumentsObject : public ArgumentsObject
 {
     static const ClassOps classOps_;
+    static const ObjectOps objectOps_;
 
   public:
     static const Class class_;
@@ -410,6 +411,8 @@ class MappedArgumentsObject : public ArgumentsObject
   private:
     static bool obj_enumerate(JSContext* cx, HandleObject obj);
     static bool obj_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp);
+    static bool obj_defineProperty(JSContext* cx, HandleObject obj, HandleId id,
+                                   Handle<JS::PropertyDescriptor> desc, ObjectOpResult& result);
 };
 
 class UnmappedArgumentsObject : public ArgumentsObject

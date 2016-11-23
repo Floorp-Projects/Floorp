@@ -522,6 +522,23 @@ public:
 
   virtual int32_t Pid() const override;
 
+  virtual PURLClassifierParent*
+  AllocPURLClassifierParent(const Principal& aPrincipal,
+                            const bool& aUseTrackingProtection,
+                            bool* aSuccess) override;
+  virtual mozilla::ipc::IPCResult
+  RecvPURLClassifierConstructor(PURLClassifierParent* aActor,
+                                const Principal& aPrincipal,
+                                const bool& aUseTrackingProtection,
+                                bool* aSuccess) override;
+  virtual bool
+  DeallocPURLClassifierParent(PURLClassifierParent* aActor) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvClassifyLocal(const URIParams& aURI,
+                    const nsCString& aTables,
+                    nsCString* aResults) override;
+
   // Use the PHangMonitor channel to ask the child to repaint a tab.
   void ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch);
 
@@ -913,14 +930,6 @@ private:
 
   virtual mozilla::ipc::IPCResult RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>* aLookAndFeelIntCache) override;
 
-  virtual mozilla::ipc::IPCResult RecvCreateFakeVolume(const nsString& aFsName,
-                                                       const nsString& aMountPoint) override;
-
-  virtual mozilla::ipc::IPCResult RecvSetFakeVolumeState(const nsString& aFsName,
-                                                         const int32_t& aFsState) override;
-
-  virtual mozilla::ipc::IPCResult RecvRemoveFakeVolume(const nsString& fsName) override;
-
   virtual mozilla::ipc::IPCResult RecvKeywordToURI(const nsCString& aKeyword,
                                                    nsString* aProviderName,
                                                    OptionalInputStreamParams* aPostData,
@@ -1064,10 +1073,6 @@ private:
   // false, but some previously scheduled IPC traffic may still pass
   // through.
   bool mIsAlive;
-
-  // True only the if process is already a browser or has
-  // been transformed into one.
-  bool mMetamorphosed;
 
   bool mSendPermissionUpdates;
   bool mIsForBrowser;

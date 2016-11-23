@@ -37,6 +37,7 @@
 #include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/nsIContentChild.h"
+#include "mozilla/dom/URLClassifierChild.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/psm/PSMContentListener.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
@@ -2410,18 +2411,6 @@ ContentChild::RecvLastPrivateDocShellDestroyed()
 }
 
 mozilla::ipc::IPCResult
-ContentChild::RecvVolumes(nsTArray<VolumeInfo>&& aVolumes)
-{
-#ifdef MOZ_WIDGET_GONK
-  RefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
-  if (vs) {
-    vs->RecvVolumesFromParent(aVolumes);
-  }
-#endif
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 ContentChild::RecvFilePathUpdate(const nsString& aStorageType,
                                  const nsString& aStorageName,
                                  const nsString& aPath,
@@ -2440,61 +2429,6 @@ ContentChild::RecvFilePathUpdate(const nsString& aStorageType,
   CopyASCIItoUTF16(aReason, reason);
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   obs->NotifyObservers(dsf, "file-watcher-update", reason.get());
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentChild::RecvFileSystemUpdate(const nsString& aFsName,
-                                   const nsString& aVolumeName,
-                                   const int32_t& aState,
-                                   const int32_t& aMountGeneration,
-                                   const bool& aIsMediaPresent,
-                                   const bool& aIsSharing,
-                                   const bool& aIsFormatting,
-                                   const bool& aIsFake,
-                                   const bool& aIsUnmounting,
-                                   const bool& aIsRemovable,
-                                   const bool& aIsHotSwappable)
-{
-#ifdef MOZ_WIDGET_GONK
-  RefPtr<nsVolume> volume = new nsVolume(aFsName, aVolumeName, aState,
-                                         aMountGeneration, aIsMediaPresent,
-                                         aIsSharing, aIsFormatting, aIsFake,
-                                         aIsUnmounting, aIsRemovable, aIsHotSwappable);
-
-  RefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
-  if (vs) {
-    vs->UpdateVolume(volume);
-  }
-#else
-  // Remove warnings about unused arguments
-  Unused << aFsName;
-  Unused << aVolumeName;
-  Unused << aState;
-  Unused << aMountGeneration;
-  Unused << aIsMediaPresent;
-  Unused << aIsSharing;
-  Unused << aIsFormatting;
-  Unused << aIsFake;
-  Unused << aIsUnmounting;
-  Unused << aIsRemovable;
-  Unused << aIsHotSwappable;
-#endif
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentChild::RecvVolumeRemoved(const nsString& aFsName)
-{
-#ifdef MOZ_WIDGET_GONK
-  RefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
-  if (vs) {
-    vs->RemoveVolumeByName(aFsName);
-  }
-#else
-  // Remove warnings about unused arguments
-  Unused << aFsName;
-#endif
   return IPC_OK();
 }
 
@@ -2522,16 +2456,6 @@ ContentChild::RecvMinimizeMemoryUsage()
   NS_ENSURE_TRUE(mgr, IPC_OK());
 
   Unused << mgr->MinimizeMemoryUsage(/* callback = */ nullptr);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentChild::RecvNotifyPhoneStateChange(const nsString& aState)
-{
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    os->NotifyObservers(nullptr, "phone-state-changed", aState.get());
-  }
   return IPC_OK();
 }
 
@@ -3230,6 +3154,23 @@ ContentChild::FatalErrorIfNotUsingGPUProcess(const char* const aProtocolName,
     formattedMessage.AppendLiteral(R"(".)");
     NS_WARNING(formattedMessage.get());
   }
+}
+
+PURLClassifierChild*
+ContentChild::AllocPURLClassifierChild(const Principal& aPrincipal,
+                                       const bool& aUseTrackingProtection,
+                                       bool* aSuccess)
+{
+  *aSuccess = true;
+  return new URLClassifierChild();
+}
+
+bool
+ContentChild::DeallocPURLClassifierChild(PURLClassifierChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+  delete aActor;
+  return true;
 }
 
 } // namespace dom

@@ -17,12 +17,89 @@
 var firstLoad = true;
 
 // Add some URLs to the malware database.
+// Note that we intentionally don't touch test-phish-simple, and will
+// use the URL registered by addMozEntries().  Otherwise, classifierHelper.resetDB()
+// will reset this table, and waitForInit() can't find the known phishing
+// URL in test-phish-simple, breaking the tests following this one.
 var testData = [
   { url: "malware.example.com/",
     db: "test-malware-simple"
   },
   { url: "unwanted.example.com/",
     db: "test-unwanted-simple"
+  },
+  { url: "tracking.example.com/",
+    db: "test-track-simple"
+  },
+  { url: "blocked.example.com/",
+    db: "test-block-simple"
+  }
+];
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+const Cr = SpecialPowers.Cr;
+
+var testURLs = [
+  { url: "http://example.com",
+    trackingProtection: false,
+    table: "",
+    result: Cr.NS_OK
+  },
+  { url: "http://example.com",
+    trackingProtection: true,
+    table: "",
+    result: Cr.NS_OK
+  },
+  { url: "http://malware.example.com",
+    trackingProtection: false,
+    table: "test-malware-simple",
+    result: Cr.NS_ERROR_MALWARE_URI,
+  },
+  { url: "http://malware.example.com",
+    trackingProtection: true,
+    table: "test-malware-simple",
+    result: Cr.NS_ERROR_MALWARE_URI,
+  },
+  { url: "http://unwanted.example.com",
+    trackingProtection: false,
+    table: "test-unwanted-simple",
+    result: Cr.NS_ERROR_UNWANTED_URI
+  },
+  { url: "http://unwanted.example.com",
+    trackingProtection: true,
+    table: "test-unwanted-simple",
+    result: Cr.NS_ERROR_UNWANTED_URI
+  },
+  { url: "http://itisatrap.org/firefox/its-a-trap.html",
+    trackingProtection: false,
+    table: "test-phish-simple",
+    result: Cr.NS_ERROR_PHISHING_URI
+  },
+  { url: "http://itisatrap.org/firefox/its-a-trap.html",
+    trackingProtection: true,
+    table: "test-phish-simple",
+    result: Cr.NS_ERROR_PHISHING_URI
+  },
+  { url: "http://tracking.example.com",
+    trackingProtection: false,
+    table: "test-track-simple",
+    result: Cr.NS_OK
+  },
+  { url: "http://tracking.example.com",
+    trackingProtection: true,
+    table: "test-track-simple",
+    result: Cr.NS_ERROR_TRACKING_URI
+  },
+  { url: "http://blocked.example.com",
+    trackingProtection: false,
+    table: "test-block-simple",
+    result: Cr.NS_ERROR_BLOCKED_URI
+  },
+  { url: "http://blocked.example.com",
+    trackingProtection: true,
+    table: "test-block-simple",
+    result: Cr.NS_ERROR_BLOCKED_URI
   }
 ];
 
@@ -34,9 +111,8 @@ function loadTestFrame() {
 SimpleTest.waitForExplicitFinish();
 
 function updateSuccess() {
-  SpecialPowers.pushPrefEnv(
-    {"set" : [["browser.safebrowsing.malware.enabled", true]]},
-    loadTestFrame);
+  return SpecialPowers.pushPrefEnv(
+    {"set" : [["browser.safebrowsing.malware.enabled", true]]});
 }
 
 function updateError(errorCode) {
@@ -45,16 +121,49 @@ function updateError(errorCode) {
   SimpleTest.finish();
 }
 
+function testService() {
+  return new Promise(resolve => {
+    let service = Cc["@mozilla.org/url-classifier/dbservice;1"].
+                    getService(Ci.nsIURIClassifier);
+    let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].
+                getService(Ci.nsIScriptSecurityManager);
+    let ios = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService);
+    function runNextTest() {
+      if (!testURLs.length) {
+        resolve();
+        return;
+      }
+      let test = testURLs.shift();
+      let tables = "test-malware-simple,test-unwanted-simple,test-phish-simple,test-track-simple,test-block-simple";
+      let uri = ios.newURI(test.url, null, null);
+      let prin = ssm.createCodebasePrincipal(uri, {});
+      is(service.classifyLocalWithTables(uri, tables), test.table,
+         `Successful synchronous classification of ${test.url} with TP=${test.trackingProtection}`);
+      let result = service.classify(prin, test.trackingProtection, function(errorCode) {
+        is(errorCode, test.result,
+           `Successful asynchronous classification of ${test.url} with TP=${test.trackingProtection}`);
+        runNextTest();
+      });
+    }
+    runNextTest(resolve);
+  });
+}
+
 SpecialPowers.pushPrefEnv(
   {"set" : [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
-            ["urlclassifier.phishTable", "test-phish-simple"]]},
+            ["urlclassifier.phishTable", "test-phish-simple"],
+            ["urlclassifier.downloadBlockTable", "test-block-simple"],
+            ["urlclassifier.trackingTable", "test-track-simple"]]},
   function() {
     classifierHelper.waitForInit()
       .then(() => classifierHelper.addUrlToDB(testData))
       .then(updateSuccess)
       .catch(err => {
         updateError(err);
-      });
+      })
+      .then(testService)
+      .then(loadTestFrame);
   });
 
 </script>

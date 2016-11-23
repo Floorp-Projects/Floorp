@@ -9,7 +9,7 @@
 #
 # Test names given here reference tests.yml.
 
-all-tests:
+all-tests-debug:
     - cppunit
     - crashtest
     - external-media-tests
@@ -35,6 +35,36 @@ all-tests:
     - web-platform-tests-reftests
     - web-platform-tests-wdspec
     - xpcshell
+
+# This is the same as all-tests-debug,
+# with the addition of "mochitest-valgrind".
+all-tests-opt:
+    - cppunit
+    - crashtest
+    - external-media-tests
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
+    - gtest
+    - jittest
+    - jsreftest
+    - marionette
+    - mochitest
+    - mochitest-a11y
+    - mochitest-browser-chrome
+    - mochitest-chrome
+    - mochitest-clipboard
+    - mochitest-devtools-chrome
+    - mochitest-gpu
+    - mochitest-jetpack
+    - mochitest-media
+    - mochitest-webgl
+    - reftest
+    - reftest-no-accel
+    - web-platform-tests
+    - web-platform-tests-reftests
+    - web-platform-tests-wdspec
+    - xpcshell
+    - mochitest-valgrind
 
 stylo-tests:
     - cppunit

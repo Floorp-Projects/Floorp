@@ -128,7 +128,8 @@ test_wait_checkpoint()
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
   db->CreateAsyncStatement(NS_LITERAL_CSTRING("SELECT 1"),
                            getter_AddRefs(stmt));
-  RefPtr<AsyncStatementSpinner> spinner = new AsyncStatementSpinner();
+  RefPtr<PlacesAsyncStatementSpinner> spinner =
+    new PlacesAsyncStatementSpinner();
   nsCOMPtr<mozIStoragePendingStatement> pending;
   (void)stmt->ExecuteAsync(spinner, getter_AddRefs(pending));
   spinner->SpinUntilCompleted();
