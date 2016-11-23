@@ -338,25 +338,6 @@
                 onget="return (this.getAttribute('remote') == 'true');"
                 readonly="true"/>
 
-      <property name="remoteType"
-                readonly="true">
-        <getter>
-          <![CDATA[
-            if (!this.isRemoteBrowser) {
-              return null;
-            }
-
-            let remoteType = this.getAttribute("remoteType");
-            if (remoteType) {
-              return remoteType;
-            }
-
-            let E10SUtils = Components.utils.import("resource://gre/modules/E10SUtils.jsm", {}).E10SUtils;
-            return E10SUtils.DEFAULT_REMOTE_TYPE;
-          ]]>
-        </getter>
-      </property>
-
       <property name="messageManager"
                 readonly="true">
         <getter>
