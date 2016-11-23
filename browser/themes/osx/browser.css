@@ -2465,7 +2465,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .tab-label {
   margin-top: 1px;
   margin-bottom: 0;
-  -moz-box-flex: 1;
   text-align: center;
 }
 
@@ -2565,7 +2564,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   opacity: 0.9999;
 }
 
-.tab-label-container:not([selected="true"]) {
+.tab-label:not([selected="true"]) {
   opacity: .7;
 }
 
@@ -2591,7 +2590,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   border-width: 0 11px;
 }
 
-.tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-label-container:not([pinned]),
+.tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-label:not([pinned]),
 .tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-icon-image[pinned],
 .tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-throbber[pinned] {
   box-shadow: @focusRingShadow@;
