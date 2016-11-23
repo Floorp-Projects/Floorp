@@ -30,10 +30,10 @@ import os.path
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 WORKER_TYPE = {
     # default worker types keyed by instance-size
-    'large': 'aws-provisioner-v1/desktop-test-large',
-    'xlarge': 'aws-provisioner-v1/desktop-test-xlarge',
-    'legacy': 'aws-provisioner-v1/desktop-test',
-    'default': 'aws-provisioner-v1/desktop-test-large',
+    'large': 'aws-provisioner-v1/gecko-t-linux-large',
+    'xlarge': 'aws-provisioner-v1/gecko-t-linux-xlarge',
+    'legacy': 'aws-provisioner-v1/gecko-t-linux-medium',
+    'default': 'aws-provisioner-v1/gecko-t-linux-large',
     # windows worker types keyed by test-platform
     'windows7-32-vm': 'aws-provisioner-v1/gecko-t-win7-32',
     'windows7-32': 'aws-provisioner-v1/gecko-t-win7-32-gpu',

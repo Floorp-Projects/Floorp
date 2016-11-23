@@ -18,7 +18,6 @@ const ErrorDocs = {
   JSMSG_RESULTING_STRING_TOO_LARGE: "Resulting_string_too_large",
   JSMSG_BAD_RADIX: "Bad_radix",
   JSMSG_PRECISION_RANGE: "Precision_range",
-  JSMSG_BAD_FORMAL: "Malformed_formal_parameter",
   JSMSG_STMT_AFTER_RETURN: "Stmt_after_return",
   JSMSG_NOT_A_CODEPOINT: "Not_a_codepoint",
   JSMSG_BAD_SORT_ARG: "Array_sort_argument",

@@ -57,6 +57,7 @@ nsContextMenu.prototype = {
         onAudio: this.onAudio,
         onCanvas: this.onCanvas,
         onEditableArea: this.onEditableArea,
+        onPassword: this.onPassword,
         srcUrl: this.mediaURL,
         frameUrl: gContextMenuContentData ? gContextMenuContentData.docLocation : undefined,
         pageUrl: this.browser ? this.browser.currentURI.spec : undefined,

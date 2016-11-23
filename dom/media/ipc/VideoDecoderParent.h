@@ -53,6 +53,8 @@ public:
   bool OnReaderTaskQueue() override;
 
 private:
+  bool OnManagerThread();
+
   ~VideoDecoderParent();
 
   RefPtr<VideoDecoderManagerParent> mParent;

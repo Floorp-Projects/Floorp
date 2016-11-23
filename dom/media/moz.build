@@ -166,11 +166,6 @@ IPDL_SOURCES += [
     'webrtc/PWebrtcGlobal.ipdl'
 ]
 
-if CONFIG['MOZ_B2G']:
-    EXPORTS.mozilla += [
-        'MediaPermissionGonk.h',
-    ]
-
 EXPORTS.mozilla.dom += [
     'AudioStreamTrack.h',
     'AudioTrack.h',
@@ -266,11 +261,6 @@ UNIFIED_SOURCES += [
 
 if CONFIG['OS_TARGET'] == 'WINNT':
   SOURCES += [ 'ThreadPoolCOMListener.cpp' ]
-
-if CONFIG['MOZ_B2G']:
-    SOURCES += [
-        'MediaPermissionGonk.cpp',
-    ]
 
 # DecoderTraits.cpp needs to be built separately because of Mac OS X headers.
 SOURCES += [

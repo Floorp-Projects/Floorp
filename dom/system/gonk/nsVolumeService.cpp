@@ -416,67 +416,6 @@ nsVolumeService::UpdateVolume(nsVolume* aVolume, bool aNotifyObservers)
   obs->NotifyObservers(aVolume, NS_VOLUME_STATE_CHANGED, stateStr.get());
 }
 
-NS_IMETHODIMP
-nsVolumeService::CreateFakeVolume(const nsAString& name, const nsAString& path)
-{
-  if (XRE_IsParentProcess()) {
-    RefPtr<nsVolume> vol = new nsVolume(name, path, nsIVolume::STATE_INIT,
-                                          -1    /* mountGeneration */,
-                                          true  /* isMediaPresent */,
-                                          false /* isSharing */,
-                                          false /* isFormatting */,
-                                          true  /* isFake */,
-                                          false /* isUnmounting */,
-                                          false /* isRemovable */,
-                                          false /* isHotSwappable */);
-    vol->SetState(nsIVolume::STATE_MOUNTED);
-    vol->LogState();
-    UpdateVolume(vol.get());
-    return NS_OK;
-  }
-
-  ContentChild::GetSingleton()->SendCreateFakeVolume(nsString(name), nsString(path));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsVolumeService::SetFakeVolumeState(const nsAString& name, int32_t state)
-{
-  if (XRE_IsParentProcess()) {
-    RefPtr<nsVolume> vol;
-    {
-      MonitorAutoLock autoLock(mArrayMonitor);
-      vol = FindVolumeByName(name);
-    }
-    if (!vol || !vol->IsFake()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    // Clone the existing volume so we can replace it
-    RefPtr<nsVolume> volume = new nsVolume(vol);
-    volume->SetState(state);
-    volume->LogState();
-    UpdateVolume(volume.get());
-    return NS_OK;
-  }
-
-  ContentChild::GetSingleton()->SendSetFakeVolumeState(nsString(name), state);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsVolumeService::RemoveFakeVolume(const nsAString& name)
-{
-  if (XRE_IsParentProcess()) {
-    SetFakeVolumeState(name, nsIVolume::STATE_NOMEDIA);
-    RemoveVolumeByName(name);
-    return NS_OK;
-  }
-
-  ContentChild::GetSingleton()->SendRemoveFakeVolume(nsString(name));
-  return NS_OK;
-}
-
 void
 nsVolumeService::RemoveVolumeByName(const nsAString& aName)
 {

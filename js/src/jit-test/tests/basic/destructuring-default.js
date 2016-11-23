@@ -84,10 +84,7 @@ function testArgumentFunction(pattern, input) {
     'return [a, b, c, d, e, f];'
   )(input);
 }
-// XXX: ES6 requires the `Function` constructor to accept arbitrary
-// `BindingElement`s as formal parameters. See Bug 1037939.
-// Once fixed, please update the assertions below.
-assertThrowsInstanceOf(() => testAll(testArgumentFunction), SyntaxError);
+testAll(testArgumentFunction);
 
 function testThrow(pattern, input) {
   return new Function('input',

@@ -50,12 +50,12 @@ struct jArray {
   L length;
   static jArray<T,L> newJArray(L const len) {
     MOZ_ASSERT(len >= 0, "Negative length.");
-    jArray<T,L> newArray = { new T[len], len };
+    jArray<T,L> newArray = { new T[size_t(len)], len };
     return newArray;
   }
   static jArray<T,L> newFallibleJArray(L const len) {
     MOZ_ASSERT(len >= 0, "Negative length.");
-    T* a = new (mozilla::fallible) T[len];
+    T* a = new (mozilla::fallible) T[size_t(len)];
     jArray<T,L> newArray = { a, a ? len : 0 };
     return newArray;
   }

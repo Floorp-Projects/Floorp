@@ -638,14 +638,6 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
         return true;
     }
 
-    // Handle the 'name' property for error prototypes.
-    if (IsErrorObjectKey(key) && id == GetJSIDByIndex(cx, XPCJSContext::IDX_NAME)) {
-        RootedId className(cx);
-        ProtoKeyToId(cx, key, &className);
-        FillPropertyDescriptor(desc, wrapper, 0, UndefinedValue());
-        return JS_IdToValue(cx, className, desc.value());
-    }
-
     // Handle the 'lastIndex' property for RegExp prototypes.
     if (key == JSProto_RegExp && id == GetJSIDByIndex(cx, XPCJSContext::IDX_LASTINDEX))
         return getOwnPropertyFromWrapperIfSafe(cx, wrapper, id, desc);
@@ -889,10 +881,6 @@ JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flags
 
     // Add the 'constructor' property.
     if (!props.append(GetJSIDByIndex(cx, XPCJSContext::IDX_CONSTRUCTOR)))
-        return false;
-
-    // For Error protoypes, add the 'name' property.
-    if (IsErrorObjectKey(key) && !props.append(GetJSIDByIndex(cx, XPCJSContext::IDX_NAME)))
         return false;
 
     // For RegExp protoypes, add the 'lastIndex' property.

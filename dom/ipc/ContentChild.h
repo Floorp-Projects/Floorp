@@ -30,6 +30,7 @@ class nsIObserver;
 struct SubstitutionMapping;
 struct OverrideMapping;
 class nsIDomainPolicy;
+class nsIURIClassifierCallback;
 
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
@@ -431,26 +432,10 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvLastPrivateDocShellDestroyed() override;
 
-  virtual mozilla::ipc::IPCResult RecvVolumes(InfallibleTArray<VolumeInfo>&& aVolumes) override;
-
   virtual mozilla::ipc::IPCResult RecvFilePathUpdate(const nsString& aStorageType,
                                                      const nsString& aStorageName,
                                                      const nsString& aPath,
                                                      const nsCString& aReason) override;
-
-  virtual mozilla::ipc::IPCResult RecvFileSystemUpdate(const nsString& aFsName,
-                                                       const nsString& aVolumeName,
-                                                       const int32_t& aState,
-                                                       const int32_t& aMountGeneration,
-                                                       const bool& aIsMediaPresent,
-                                                       const bool& aIsSharing,
-                                                       const bool& aIsFormatting,
-                                                       const bool& aIsFake,
-                                                       const bool& aIsUnmounting,
-                                                       const bool& aIsRemovable,
-                                                       const bool& aIsHotSwappable) override;
-
-  virtual mozilla::ipc::IPCResult RecvVolumeRemoved(const nsString& aFsName) override;
 
   virtual mozilla::ipc::IPCResult
   RecvNotifyProcessPriorityChanged(const hal::ProcessPriority& aPriority) override;
@@ -462,8 +447,6 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvUnregisterSheet(const URIParams& aURI,
                                                       const uint32_t& aType) override;
-
-  virtual mozilla::ipc::IPCResult RecvNotifyPhoneStateChange(const nsString& aState) override;
 
   void AddIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS);
 
@@ -630,6 +613,13 @@ public:
   SystemFontFamilyList() {
     return mFontFamilies;
   }
+
+  virtual PURLClassifierChild*
+  AllocPURLClassifierChild(const Principal& aPrincipal,
+                           const bool& aUseTrackingProtection,
+                           bool* aSuccess) override;
+  virtual bool
+  DeallocPURLClassifierChild(PURLClassifierChild* aActor) override;
 
   /**
    * Helper function for protocols that use the GPU process when available.
