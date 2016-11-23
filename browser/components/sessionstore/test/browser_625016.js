@@ -35,8 +35,8 @@ add_task(function* new_window() {
     newWin = null;
 
     let state = JSON.parse((yield promiseRecoveryFileContents()));
-    is(state.windows.length, 1,
-      "observe1: 1 window in data written to disk");
+    is(state.windows.length, 2,
+      "observe1: 2 windows in data written to disk");
     is(state._closedWindows.length, 0,
       "observe1: no closed windows in data written to disk");
 
@@ -57,8 +57,6 @@ add_task(function* new_tab() {
   let newTab;
   try {
     newTab = gBrowser.addTab("about:mozilla");
-    yield promiseBrowserLoaded(newTab.linkedBrowser);
-    yield TabStateFlusher.flush(newTab.linkedBrowser);
 
     let state = JSON.parse((yield promiseRecoveryFileContents()));
     is(state.windows.length, 1,
@@ -70,9 +68,7 @@ add_task(function* new_tab() {
     is(ss.getClosedWindowCount(), 1,
       "observe2: 1 closed window according to API");
   } finally {
-    if (newTab) {
-      gBrowser.removeTab(newTab);
-    }
+    gBrowser.removeTab(newTab);
   }
 });
 
@@ -81,7 +77,6 @@ add_task(function* done() {
   // The API still represents the closed window as closed, so we can clear it
   // with the API, but just to make sure...
 //  is(ss.getClosedWindowCount(), 1, "1 closed window according to API");
-  yield promiseAllButPrimaryWindowClosed();
   forgetClosedWindows();
   Services.prefs.clearUserPref("browser.sessionstore.interval");
 });
