@@ -350,7 +350,7 @@ impl MarionetteHandler {
 
     fn start_browser(&mut self, port: u16, mut options: FirefoxOptions) -> WebDriverResult<()> {
         let binary = try!(self.binary_path(&mut options)
-            .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
+            .ok_or(WebDriverError::new(ErrorStatus::SessionNotCreated,
                                        "Expected browser binary location, but unable to find \
                                         binary in default location, no \
                                         'moz:firefoxOptions.binary' capability provided, and \
@@ -359,7 +359,7 @@ impl MarionetteHandler {
         let custom_profile = options.profile.is_some();
 
         let mut runner = try!(FirefoxRunner::new(&binary, options.profile.take())
-                              .map_err(|e| WebDriverError::new(ErrorStatus::UnknownError,
+                              .map_err(|e| WebDriverError::new(ErrorStatus::SessionNotCreated,
                                                                e.description().to_owned())));
         if let Some(args) = options.args.take() {
             runner.args().extend(args);
@@ -367,14 +367,14 @@ impl MarionetteHandler {
 
         try!(self.set_prefs(port, &mut runner.profile, custom_profile, options.prefs)
             .map_err(|e| {
-                WebDriverError::new(ErrorStatus::UnknownError,
+                WebDriverError::new(ErrorStatus::SessionNotCreated,
                                     format!("Failed to set preferences: {}", e))
             }));
 
         info!("Starting browser {}", binary.display());
         try!(runner.start()
             .map_err(|e| {
-                WebDriverError::new(ErrorStatus::UnknownError,
+                WebDriverError::new(ErrorStatus::SessionNotCreated,
                                     format!("Failed to start browser {}: {}",
                                             binary.display(), e))
             }));
