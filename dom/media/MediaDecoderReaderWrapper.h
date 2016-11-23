@@ -122,7 +122,6 @@ private:
   MediaCallbackExc<WaitCallbackData>& WaitCallbackRef(MediaData::Type aType);
   MozPromiseRequestHolder<WaitForDataPromise>& WaitRequestRef(MediaData::Type aType);
 
-  const bool mForceZeroStartTime;
   const RefPtr<AbstractThread> mOwnerThread;
   const RefPtr<MediaDecoderReader> mReader;
 
