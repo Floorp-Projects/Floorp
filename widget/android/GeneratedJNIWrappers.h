@@ -5395,6 +5395,27 @@ public:
 
     static auto HasHWVP9() -> bool;
 
+    struct CheckSupportsAdaptivePlayback_t {
+        typedef HardwareCodecCapabilityUtils Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "checkSupportsAdaptivePlayback";
+        static constexpr char signature[] =
+                "(Landroid/media/MediaCodec;Ljava/lang/String;)Z";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto CheckSupportsAdaptivePlayback(mozilla::jni::Object::Param, mozilla::jni::String::Param) -> bool;
+
     struct FindDecoderCodecInfoForMimeType_t {
         typedef HardwareCodecCapabilityUtils Owner;
         typedef bool ReturnType;
