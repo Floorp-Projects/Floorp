@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Bug 1141814 - Lower priority of HTTP requests for resources on the Tracking Protection list</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
+
+var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindow);
+var contentPage = "http://www.itisatrap.org/tests/toolkit/components/url-classifier/tests/mochitest/classifiedAnnotatedPBFrame.html";
+
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      setTimeout(aCallback, 0);
+    }
+  }, "browser-delayed-startup-finished", false);
+}
+
+var defaultPriority = {value:Ci.nsISupportsPriority.PRIORITY_NORMAL};
+var lowestPriority = {value:Ci.nsISupportsPriority.PRIORITY_LOWEST};
+
+var normalPriorityMap = {
+  "evil.js": defaultPriority,
+  "evil.css": defaultPriority,
+  "good.js": defaultPriority,
+};
+
+var lowPriorityMap = {
+  "evil.js": lowestPriority,
+  "evil.css": lowestPriority,
+  "good.js": defaultPriority,
+};
+
+function testChannelPriority(aPrivate ,aCallback, aPriorityMap) {
+  var win = mainWindow.OpenBrowserWindow({private: aPrivate});
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    var channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+    var fileName = channel.URI.QueryInterface(Ci.nsIURL).fileName;
+    var priority = channel.QueryInterface(Ci.nsISupportsPriority).priority;
+    if (fileName in aPriorityMap) {
+      is(priority, aPriorityMap[fileName].value, "Channel's priority should be matched.");
+      delete aPriorityMap[fileName];
+    }
+    if (Object.keys(aPriorityMap).length === 0) {
+      Services.obs.removeObserver(observer, aTopic);
+      SimpleTest.executeSoon(function() { aCallback(win); });
+    }
+  }, "http-on-examine-response", false);
+  win.addEventListener("load", function onLoad() {
+    // Update the defaultPriority here base on the document's visibility.
+    defaultPriority.value = document.hasFocus() ? Ci.nsISupportsPriority.PRIORITY_HIGH :
+                                                  Ci.nsISupportsPriority.PRIORITY_NORMAL;
+    win.removeEventListener("load", onLoad, false);
+    whenDelayedStartupFinished(win, function() {
+      win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+        if (win.content.location.href != contentPage) {
+          win.gBrowser.loadURI(contentPage);
+          return;
+        }
+        win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+      }, true);
+      SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
+    });
+  }, true);
+}
+
+SpecialPowers.pushPrefEnv(
+  {"set" : [["urlclassifier.trackingTable", "test-track-simple"],
+            ["privacy.trackingprotection.enabled", false],
+            ["privacy.trackingprotection.pbmode.enabled", false],
+            ["channelclassifier.allowlist_example", true],
+            ["privacy.trackingprotection.annotate_channels", false]]},
+  test);
+
+function test() {
+  SimpleTest.registerCleanupFunction(UrlClassifierTestUtils.cleanupTestTrackers);
+  UrlClassifierTestUtils.addTestTrackers().then(() => {
+    testChannelPriority(false, function(aWindow) {
+      aWindow.close();
+
+      SpecialPowers.pushPrefEnv(
+        {"set" : [["privacy.trackingprotection.annotate_channels", true]]},
+        function() {
+          testChannelPriority(true, function(aWindow) {
+          aWindow.close();
+          SimpleTest.finish();
+        }, lowPriorityMap);
+      });
+
+    }, normalPriorityMap);
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</pre>
+</body>
+</html>
