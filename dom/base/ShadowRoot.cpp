@@ -562,11 +562,12 @@ ShadowRoot::ChangePoolHost(nsIContent* aNewHost)
 bool
 ShadowRoot::IsShadowInsertionPoint(nsIContent* aContent)
 {
-  if (aContent && aContent->IsHTMLElement(nsGkAtoms::shadow)) {
-    HTMLShadowElement* shadowElem = static_cast<HTMLShadowElement*>(aContent);
-    return shadowElem->IsInsertionPoint();
+  if (!aContent) {
+    return false;
   }
-  return false;
+
+  HTMLShadowElement* shadowElem = HTMLShadowElement::FromContent(aContent);
+  return shadowElem && shadowElem->IsInsertionPoint();
 }
 
 /**

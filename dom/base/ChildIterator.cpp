@@ -115,7 +115,7 @@ ExplicitChildIterator::GetNextChild()
     if (ShadowRoot::IsShadowInsertionPoint(mChild)) {
       // Look for the next child in the projected ShadowRoot for the <shadow>
       // element.
-      HTMLShadowElement* shadowElem = static_cast<HTMLShadowElement*>(mChild);
+      HTMLShadowElement* shadowElem = HTMLShadowElement::FromContent(mChild);
       ShadowRoot* projectedShadow = shadowElem->GetOlderShadowRoot();
       if (projectedShadow) {
         mShadowIterator = new ExplicitChildIterator(projectedShadow);
@@ -270,7 +270,7 @@ ExplicitChildIterator::GetPreviousChild()
     if (ShadowRoot::IsShadowInsertionPoint(mChild)) {
       // If the current child being iterated is a shadow insertion point then
       // the iterator needs to go into the projected ShadowRoot.
-      HTMLShadowElement* shadowElem = static_cast<HTMLShadowElement*>(mChild);
+      HTMLShadowElement* shadowElem = HTMLShadowElement::FromContent(mChild);
       ShadowRoot* projectedShadow = shadowElem->GetOlderShadowRoot();
       if (projectedShadow) {
         // Create a ExplicitChildIterator that begins iterating from the end.
