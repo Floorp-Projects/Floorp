@@ -1438,8 +1438,7 @@
         <body>
           <![CDATA[
             aTab.label = this.mStringBundle.getString("tabs.connecting");
-            aTab.crop = "end";
-            this._tabAttrModified(aTab, ["label", "crop"]);
+            this._tabAttrModified(aTab, ["label"]);
           ]]>
         </body>
       </method>
@@ -1449,7 +1448,6 @@
         <body>
           <![CDATA[
             var browser = this.getBrowserForTab(aTab);
-            var crop = "end";
             var title = browser.contentTitle;
 
             if (!title) {
@@ -1471,9 +1469,6 @@
                                                  .getService(Components.interfaces.nsITextToSubURI);
                   title = textToSubURI.unEscapeNonAsciiURI(characterSet, title);
                 } catch (ex) { /* Do nothing. */ }
-
-                crop = "center";
-
               } else if (aTab.hasAttribute("customizemode")) {
                 let brandBundle = document.getElementById("bundle_brand");
                 let brandShortName = brandBundle.getString("brandShortName");
@@ -1483,13 +1478,11 @@
                 title = this.mStringBundle.getString("tabs.emptyTabTitle");
             }
 
-            if (aTab.label == title &&
-                aTab.crop == crop)
+            if (aTab.label == title)
               return false;
 
             aTab.label = title;
-            aTab.crop = crop;
-            this._tabAttrModified(aTab, ["label", "crop"]);
+            this._tabAttrModified(aTab, ["label"]);
 
             if (aTab.selected)
               this.updateTitlebar();
@@ -2176,7 +2169,6 @@
               ContextualIdentityService.setTabStyle(t);
             }
 
-            t.setAttribute("crop", "end");
             t.setAttribute("onerror", "this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
 
@@ -5251,6 +5243,9 @@
 
     <handlers>
       <handler event="underflow" phase="capturing"><![CDATA[
+        if (event.target != this)
+          return;
+
         if (event.detail == 0)
           return; // Ignore vertical events
 
@@ -5266,6 +5261,9 @@
         tabs._positionPinnedTabs();
       ]]></handler>
       <handler event="overflow"><![CDATA[
+        if (event.target != this)
+          return;
+
         if (event.detail == 0)
           return; // Ignore vertical events
 
@@ -5319,7 +5317,6 @@
 
           var tab = this.firstChild;
           tab.label = this.tabbrowser.mStringBundle.getString("tabs.emptyTabTitle");
-          tab.setAttribute("crop", "end");
           tab.setAttribute("onerror", "this.removeAttribute('image');");
 
           window.addEventListener("resize", this, false);
@@ -6693,10 +6690,15 @@
                      anonid="overlay-icon"
                      class="tab-icon-overlay"
                      role="presentation"/>
-          <xul:label flex="1"
-                     xbl:inherits="value=label,crop,accesskey,fadein,pinned,selected=visuallyselected,attention"
-                     class="tab-text tab-label"
-                     role="presentation"/>
+          <xul:hbox class="tab-label-container"
+                    xbl:inherits="pinned,selected=visuallyselected"
+                    onoverflow="this.setAttribute('textoverflow', 'true');"
+                    onunderflow="this.removeAttribute('textoverflow');"
+                    flex="1">
+            <xul:label class="tab-text tab-label"
+                       xbl:inherits="xbl:text=label,accesskey,fadein,pinned,selected=visuallyselected,attention"
+                       role="presentation"/>
+          </xul:hbox>
           <xul:image xbl:inherits="soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected"
                      anonid="soundplaying-icon"
                      class="tab-icon-sound"
@@ -7075,7 +7077,7 @@
         <parameter name="aTab"/>
         <body><![CDATA[
           aMenuitem.setAttribute("label", aTab.label);
-          aMenuitem.setAttribute("crop", aTab.getAttribute("crop"));
+          aMenuitem.setAttribute("crop", "end");
 
           if (aTab.hasAttribute("busy")) {
             aMenuitem.setAttribute("busy", aTab.getAttribute("busy"));
