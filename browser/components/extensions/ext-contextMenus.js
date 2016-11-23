@@ -239,6 +239,10 @@ function getContexts(contextData) {
     contexts.add("editable");
   }
 
+  if (contextData.onPassword) {
+    contexts.add("password");
+  }
+
   if (contextData.onImage) {
     contexts.add("image");
   }
@@ -412,7 +416,7 @@ MenuItem.prototype = {
 
     let info = {
       menuItemId: this.id,
-      editable: contextData.onEditableArea,
+      editable: contextData.onEditableArea || contextData.onPassword,
     };
 
     function setIfDefined(argName, value) {

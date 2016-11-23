@@ -48,24 +48,127 @@ using mozilla::PodArrayZero;
 static void
 exn_finalize(FreeOp* fop, JSObject* obj);
 
-bool
-Error(JSContext* cx, unsigned argc, Value* vp);
-
 static bool
 exn_toSource(JSContext* cx, unsigned argc, Value* vp);
 
-static const JSPropertySpec exception_properties[] = {
-    JS_PSGS("stack", ErrorObject::getStack, ErrorObject::setStack, 0),
-    JS_PS_END
+#define IMPLEMENT_ERROR_PROTO_CLASS(name) \
+    { \
+        js_Object_str, \
+        JSCLASS_HAS_CACHED_PROTO(JSProto_##name), \
+        JS_NULL_CLASS_OPS, \
+        &ErrorObject::classSpecs[JSProto_##name - JSProto_Error] \
+    }
+
+const Class
+ErrorObject::protoClasses[JSEXN_ERROR_LIMIT] = {
+    IMPLEMENT_ERROR_PROTO_CLASS(Error),
+
+    IMPLEMENT_ERROR_PROTO_CLASS(InternalError),
+    IMPLEMENT_ERROR_PROTO_CLASS(EvalError),
+    IMPLEMENT_ERROR_PROTO_CLASS(RangeError),
+    IMPLEMENT_ERROR_PROTO_CLASS(ReferenceError),
+    IMPLEMENT_ERROR_PROTO_CLASS(SyntaxError),
+    IMPLEMENT_ERROR_PROTO_CLASS(TypeError),
+    IMPLEMENT_ERROR_PROTO_CLASS(URIError),
+
+    IMPLEMENT_ERROR_PROTO_CLASS(DebuggeeWouldRun),
+    IMPLEMENT_ERROR_PROTO_CLASS(CompileError),
+    IMPLEMENT_ERROR_PROTO_CLASS(RuntimeError)
 };
 
-static const JSFunctionSpec exception_methods[] = {
+static const JSFunctionSpec error_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, exn_toSource, 0, 0),
 #endif
     JS_SELF_HOSTED_FN(js_toString_str, "ErrorToString", 0,0),
     JS_FS_END
 };
+
+static const JSPropertySpec error_properties[] = {
+    JS_STRING_PS("message", "", 0),
+    JS_STRING_PS("name", "Error", 0),
+    // Only Error.prototype has .stack!
+    JS_PSGS("stack", ErrorObject::getStack, ErrorObject::setStack, 0),
+    JS_PS_END
+};
+
+#define IMPLEMENT_ERROR_PROPERTIES(name) \
+    { \
+        JS_STRING_PS("message", "", 0), \
+        JS_STRING_PS("name", #name, 0), \
+        JS_PS_END \
+    }
+
+static const JSPropertySpec other_error_properties[JSEXN_ERROR_LIMIT - 1][3] = {
+    IMPLEMENT_ERROR_PROPERTIES(InternalError),
+    IMPLEMENT_ERROR_PROPERTIES(EvalError),
+    IMPLEMENT_ERROR_PROPERTIES(RangeError),
+    IMPLEMENT_ERROR_PROPERTIES(ReferenceError),
+    IMPLEMENT_ERROR_PROPERTIES(SyntaxError),
+    IMPLEMENT_ERROR_PROPERTIES(TypeError),
+    IMPLEMENT_ERROR_PROPERTIES(URIError),
+    IMPLEMENT_ERROR_PROPERTIES(DebuggeeWouldRun),
+    IMPLEMENT_ERROR_PROPERTIES(CompileError),
+    IMPLEMENT_ERROR_PROPERTIES(RuntimeError)
+};
+
+#define IMPLEMENT_NATIVE_ERROR_SPEC(name) \
+    { \
+        ErrorObject::createConstructor, \
+        ErrorObject::createProto, \
+        nullptr, \
+        nullptr, \
+        nullptr, \
+        other_error_properties[JSProto_##name - JSProto_Error - 1], \
+        nullptr, \
+        JSProto_Error \
+    }
+
+#define IMPLEMENT_NONGLOBAL_ERROR_SPEC(name) \
+    { \
+        ErrorObject::createConstructor, \
+        ErrorObject::createProto, \
+        nullptr, \
+        nullptr, \
+        nullptr, \
+        other_error_properties[JSProto_##name - JSProto_Error - 1], \
+        nullptr, \
+        JSProto_Error | ClassSpec::DontDefineConstructor \
+    }
+
+const ClassSpec
+ErrorObject::classSpecs[JSEXN_ERROR_LIMIT] = {
+    {
+        ErrorObject::createConstructor,
+        ErrorObject::createProto,
+        nullptr,
+        nullptr,
+        error_methods,
+        error_properties
+    },
+
+    IMPLEMENT_NATIVE_ERROR_SPEC(InternalError),
+    IMPLEMENT_NATIVE_ERROR_SPEC(EvalError),
+    IMPLEMENT_NATIVE_ERROR_SPEC(RangeError),
+    IMPLEMENT_NATIVE_ERROR_SPEC(ReferenceError),
+    IMPLEMENT_NATIVE_ERROR_SPEC(SyntaxError),
+    IMPLEMENT_NATIVE_ERROR_SPEC(TypeError),
+    IMPLEMENT_NATIVE_ERROR_SPEC(URIError),
+
+    IMPLEMENT_NONGLOBAL_ERROR_SPEC(DebuggeeWouldRun),
+    IMPLEMENT_NONGLOBAL_ERROR_SPEC(CompileError),
+    IMPLEMENT_NONGLOBAL_ERROR_SPEC(RuntimeError)
+};
+
+#define IMPLEMENT_ERROR_CLASS(name) \
+    { \
+        js_Error_str, /* yes, really */ \
+        JSCLASS_HAS_CACHED_PROTO(JSProto_##name) | \
+        JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS) | \
+        JSCLASS_BACKGROUND_FINALIZE, \
+        &ErrorObjectClassOps, \
+        &ErrorObject::classSpecs[JSProto_##name - JSProto_Error ] \
+    }
 
 static const ClassOps ErrorObjectClassOps = {
     nullptr,                 /* addProperty */
@@ -82,67 +185,20 @@ static const ClassOps ErrorObjectClassOps = {
     nullptr,                 /* trace       */
 };
 
-#define IMPLEMENT_ERROR_CLASS(name, classSpecPtr) \
-    { \
-        js_Error_str, /* yes, really */ \
-        JSCLASS_HAS_CACHED_PROTO(JSProto_##name) | \
-        JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS) | \
-        JSCLASS_BACKGROUND_FINALIZE, \
-        &ErrorObjectClassOps, \
-        classSpecPtr \
-    }
-
-const ClassSpec
-ErrorObject::errorClassSpec_ = {
-    ErrorObject::createConstructor,
-    ErrorObject::createProto,
-    nullptr,
-    nullptr,
-    exception_methods,
-    exception_properties,
-    nullptr,
-    0
-};
-
-const ClassSpec
-ErrorObject::subErrorClassSpec_ = {
-    ErrorObject::createConstructor,
-    ErrorObject::createProto,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    JSProto_Error
-};
-
-const ClassSpec
-ErrorObject::nonGlobalErrorClassSpec_ = {
-    ErrorObject::createConstructor,
-    ErrorObject::createProto,
-    nullptr,
-    nullptr,
-    exception_methods,
-    exception_properties,
-    nullptr,
-    JSProto_Error | ClassSpec::DontDefineConstructor
-};
-
 const Class
-ErrorObject::classes[JSEXN_LIMIT] = {
-    IMPLEMENT_ERROR_CLASS(Error,          &ErrorObject::errorClassSpec_),
-    IMPLEMENT_ERROR_CLASS(InternalError,  &ErrorObject::subErrorClassSpec_),
-    IMPLEMENT_ERROR_CLASS(EvalError,      &ErrorObject::subErrorClassSpec_),
-    IMPLEMENT_ERROR_CLASS(RangeError,     &ErrorObject::subErrorClassSpec_),
-    IMPLEMENT_ERROR_CLASS(ReferenceError, &ErrorObject::subErrorClassSpec_),
-    IMPLEMENT_ERROR_CLASS(SyntaxError,    &ErrorObject::subErrorClassSpec_),
-    IMPLEMENT_ERROR_CLASS(TypeError,      &ErrorObject::subErrorClassSpec_),
-    IMPLEMENT_ERROR_CLASS(URIError,       &ErrorObject::subErrorClassSpec_),
-
+ErrorObject::classes[JSEXN_ERROR_LIMIT] = {
+    IMPLEMENT_ERROR_CLASS(Error),
+    IMPLEMENT_ERROR_CLASS(InternalError),
+    IMPLEMENT_ERROR_CLASS(EvalError),
+    IMPLEMENT_ERROR_CLASS(RangeError),
+    IMPLEMENT_ERROR_CLASS(ReferenceError),
+    IMPLEMENT_ERROR_CLASS(SyntaxError),
+    IMPLEMENT_ERROR_CLASS(TypeError),
+    IMPLEMENT_ERROR_CLASS(URIError),
     // These Error subclasses are not accessible via the global object:
-    IMPLEMENT_ERROR_CLASS(DebuggeeWouldRun, &ErrorObject::nonGlobalErrorClassSpec_),
-    IMPLEMENT_ERROR_CLASS(CompileError,   &ErrorObject::nonGlobalErrorClassSpec_),
-    IMPLEMENT_ERROR_CLASS(RuntimeError,   &ErrorObject::nonGlobalErrorClassSpec_)
+    IMPLEMENT_ERROR_CLASS(DebuggeeWouldRun),
+    IMPLEMENT_ERROR_CLASS(CompileError),
+    IMPLEMENT_ERROR_CLASS(RuntimeError)
 };
 
 JSErrorReport*
@@ -454,35 +510,40 @@ exn_toSource(JSContext* cx, unsigned argc, Value* vp)
 /* static */ JSObject*
 ErrorObject::createProto(JSContext* cx, JSProtoKey key)
 {
-    RootedObject errorProto(cx, GenericCreatePrototype(cx, key));
-    if (!errorProto)
-        return nullptr;
-
-    Rooted<ErrorObject*> err(cx, &errorProto->as<ErrorObject>());
-    RootedString emptyStr(cx, cx->names().empty);
     JSExnType type = ExnTypeFromProtoKey(key);
-    if (!ErrorObject::init(cx, err, type, nullptr, emptyStr, nullptr, 0, 0, emptyStr))
+
+    if (type == JSEXN_ERR)
+        return cx->global()->createBlankPrototype(cx, &ErrorObject::protoClasses[JSEXN_ERR]);
+
+    RootedObject protoProto(cx, GlobalObject::getOrCreateErrorPrototype(cx, cx->global()));
+    if (!protoProto)
         return nullptr;
 
-    // The various prototypes also have .name in addition to the normal error
-    // instance properties.
-    RootedPropertyName name(cx, ClassName(key, cx));
-    RootedValue nameValue(cx, StringValue(name));
-    if (!DefineProperty(cx, err, cx->names().name, nameValue, nullptr, nullptr, 0))
-        return nullptr;
-
-    return errorProto;
+    return cx->global()->createBlankPrototypeInheriting(cx, &ErrorObject::protoClasses[type],
+                                                        protoProto);
 }
 
 /* static */ JSObject*
 ErrorObject::createConstructor(JSContext* cx, JSProtoKey key)
 {
+    JSExnType type = ExnTypeFromProtoKey(key);
     RootedObject ctor(cx);
-    ctor = GenericCreateConstructor<Error, 1, gc::AllocKind::FUNCTION_EXTENDED>(cx, key);
+
+    if (type == JSEXN_ERR) {
+        ctor = GenericCreateConstructor<Error, 1, gc::AllocKind::FUNCTION_EXTENDED>(cx, key);
+    } else {
+        RootedFunction proto(cx, GlobalObject::getOrCreateErrorConstructor(cx, cx->global()));
+        if (!proto)
+            return nullptr;
+
+        ctor = NewFunctionWithProto(cx, Error, 1, JSFunction::NATIVE_CTOR, nullptr,
+                                    ClassName(key, cx), proto, gc::AllocKind::FUNCTION_EXTENDED);
+    }
+
     if (!ctor)
         return nullptr;
 
-    ctor->as<JSFunction>().setExtendedSlot(0, Int32Value(ExnTypeFromProtoKey(key)));
+    ctor->as<JSFunction>().setExtendedSlot(0, Int32Value(type));
     return ctor;
 }
 

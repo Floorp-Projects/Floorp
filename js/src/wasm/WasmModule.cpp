@@ -549,6 +549,19 @@ Module::initSegments(JSContext* cx,
     return true;
 }
 
+static const Import&
+FindImportForFuncImport(const ImportVector& imports, uint32_t funcImportIndex)
+{
+    for (const Import& import : imports) {
+        if (import.kind != DefinitionKind::Function)
+            continue;
+        if (funcImportIndex == 0)
+            return import;
+        funcImportIndex--;
+    }
+    MOZ_CRASH("ran out of imports");
+}
+
 bool
 Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) const
 {
@@ -567,7 +580,9 @@ Module::instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) 
         const FuncExport& funcExport = instance.metadata().lookupFuncExport(funcIndex);
 
         if (funcExport.sig() != metadata_->funcImports[i].sig()) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG);
+            const Import& import = FindImportForFuncImport(imports_, i);
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_SIG,
+                                      import.module.get(), import.field.get());
             return false;
         }
     }
