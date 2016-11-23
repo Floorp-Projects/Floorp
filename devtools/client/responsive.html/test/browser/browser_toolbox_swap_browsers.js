@@ -7,9 +7,6 @@
 
 const TEST_URL = "http://example.com/";
 
-// Bug 1297575: Too slow for debug runs
-requestLongerTimeout(2);
-
 function getServerConnections(browser) {
   ok(browser.isRemoteBrowser, "Content browser is remote");
   return ContentTask.spawn(browser, {}, function* () {
