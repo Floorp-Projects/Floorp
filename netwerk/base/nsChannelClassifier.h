@@ -8,6 +8,7 @@
 #include "nsIURIClassifier.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 
 class nsIChannel;
 class nsIHttpChannelInternal;
@@ -19,16 +20,16 @@ namespace net {
 class nsChannelClassifier final : public nsIURIClassifierCallback
 {
 public:
-    nsChannelClassifier();
+    explicit nsChannelClassifier(nsIChannel* aChannel);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURICLASSIFIERCALLBACK
 
     // Calls nsIURIClassifier.Classify with the principal of the given channel,
     // and cancels the channel on a bad verdict.
-    void Start(nsIChannel *aChannel);
+    void Start();
     // Whether or not tracking protection should be enabled on this channel.
-    nsresult ShouldEnableTrackingProtection(nsIChannel *aChannel, bool *result);
+    nsresult ShouldEnableTrackingProtection(bool *result);
 
 private:
     // True if the channel is on the allow list.
@@ -36,6 +37,7 @@ private:
     // True if the channel has been suspended.
     bool mSuspendedChannel;
     nsCOMPtr<nsIChannel> mChannel;
+    Maybe<bool> mTrackingProtectionEnabled;
 
     ~nsChannelClassifier() {}
     // Caches good classifications for the channel principal.
@@ -51,6 +53,9 @@ private:
     bool IsHostnameWhitelisted(nsIURI *aUri, const nsACString &aWhitelisted);
     // Checks that the channel was loaded by the URI currently loaded in aDoc
     static bool SameLoadingURI(nsIDocument *aDoc, nsIChannel *aChannel);
+
+    nsresult ShouldEnableTrackingProtectionInternal(nsIChannel *aChannel,
+                                                    bool *result);
 
 public:
     // If we are blocking tracking content, update the corresponding flag in
