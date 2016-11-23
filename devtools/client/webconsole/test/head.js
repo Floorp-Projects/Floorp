@@ -46,10 +46,10 @@ const DOCS_GA_PARAMS = "?utm_source=mozilla" +
 
 flags.testing = true;
 
-function loadTab(url, preferredRemoteType) {
+function loadTab(url) {
   let deferred = promise.defer();
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab(url, { preferredRemoteType });
+  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
   let browser = gBrowser.getBrowserForTab(tab);
 
   browser.addEventListener("load", function onLoad() {
