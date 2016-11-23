@@ -104,6 +104,8 @@ class TopSitesCard extends RecyclerView.ViewHolder
                     title.getText().toString(), url,
                     onUrlOpenListener, onUrlOpenInBackgroundListener,
                     faviconView.getWidth(), faviconView.getHeight());
+
+            Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.CONTEXT_MENU, "as_top_sites");
         }
     }
 }
