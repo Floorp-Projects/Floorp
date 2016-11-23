@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1287912
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1287912</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1287912">Mozilla Bug 1287912</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="t" src="http://example.org/tests/dom/bindings/test/"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+function test()
+{
+  var win = document.getElementById("t").contentWindow;
+  is(Object.getPrototypeOf(win.Image), win.Function.prototype, "The __proto__ of a named constructor is Function.prototype");
+  is(win.Image.prototype, win.HTMLImageElement.prototype, "The prototype property of a named constructor is the interface prototype object");
+  is(win.HTMLImageElement['foo'], undefined, "Should not have a property named foo on the HTMLImageElement interface object");
+  is(win.Image['foo'], undefined, "Should not have a property named foo on the Image named constructor");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(test);
+
+</script>
+</pre>
+</body>
+</html>
