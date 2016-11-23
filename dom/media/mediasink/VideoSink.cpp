@@ -259,7 +259,7 @@ VideoSink::OnVideoQueuePushed(RefPtr<MediaData>&& aSample)
   // Listen to push event, VideoSink should try rendering ASAP if first frame
   // arrives but update scheduler is not triggered yet.
   VideoData* v = aSample->As<VideoData>();
-  if (!v->mSentToCompositor) {
+  if (!v->IsSentToCompositor()) {
     // Since we push rendered frames back to the queue, we will receive
     // push events for them. We only need to trigger render loop
     // when this frame is not rendered yet.
@@ -359,7 +359,7 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
   for (uint32_t i = 0; i < frames.Length(); ++i) {
     VideoData* frame = frames[i]->As<VideoData>();
 
-    frame->mSentToCompositor = true;
+    frame->MarkSentToCompositor();
 
     if (!frame->mImage || !frame->mImage->IsValid() ||
         !frame->mImage->GetSize().width || !frame->mImage->GetSize().height) {
@@ -417,7 +417,7 @@ VideoSink::UpdateRenderedVideoFrames()
          clockTime >= VideoQueue().PeekFront()->GetEndTime()) {
     RefPtr<MediaData> frame = VideoQueue().PopFront();
     lastFrameEndTime = frame->GetEndTime();
-    if (frame->As<VideoData>()->mSentToCompositor) {
+    if (frame->As<VideoData>()->IsSentToCompositor()) {
       mFrameStats.NotifyPresentedFrame();
     } else {
       mFrameStats.NotifyDecodedFrames({ 0, 0, 1 });
