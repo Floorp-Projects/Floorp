@@ -95,14 +95,9 @@ Error Renderbuffer::setStorageEGLImageTarget(egl::Image *image)
     return NoError();
 }
 
-rx::RenderbufferImpl *Renderbuffer::getImplementation()
+rx::RenderbufferImpl *Renderbuffer::getImplementation() const
 {
     ASSERT(mRenderbuffer);
-    return mRenderbuffer;
-}
-
-const rx::RenderbufferImpl *Renderbuffer::getImplementation() const
-{
     return mRenderbuffer;
 }
 

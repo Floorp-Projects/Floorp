@@ -17,6 +17,9 @@
 #include "compiler/translator/TranslatorESSL.h"
 #include "GLSLANG/ShaderLang.h"
 
+namespace sh
+{
+
 bool compileTestShader(GLenum type,
                        ShShaderSpec spec,
                        ShShaderOutput output,
@@ -92,5 +95,9 @@ class MatchOutputCodeTest : public testing::Test
 const TIntermSymbol *FindSymbolNode(TIntermNode *root,
                                     const TString &symbolName,
                                     TBasicType basicType);
+
+// Returns a pointer to a function call node with a mangled name functionName.
+const TIntermAggregate *FindFunctionCallNode(TIntermNode *root, const TString &functionName);
+}
 
 #endif // TESTS_TEST_UTILS_COMPILER_TEST_H_

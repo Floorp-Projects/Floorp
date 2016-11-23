@@ -64,7 +64,7 @@ class ResourceManager : angle::NonCopyable
     void deletePaths(GLuint first, GLsizei range);
 
     Buffer *getBuffer(GLuint handle);
-    Shader *getShader(GLuint handle);
+    Shader *getShader(GLuint handle) const;
     Program *getProgram(GLuint handle) const;
     Texture *getTexture(GLuint handle);
     Renderbuffer *getRenderbuffer(GLuint handle);
@@ -84,6 +84,11 @@ class ResourceManager : angle::NonCopyable
     Sampler *checkSamplerAllocation(rx::GLImplFactory *factory, GLuint samplerHandle);
 
     bool isSampler(GLuint sampler);
+
+    // GL_CHROMIUM_bind_generates_resource
+    bool isTextureGenerated(GLuint texture) const;
+    bool isBufferGenerated(GLuint buffer) const;
+    bool isRenderbufferGenerated(GLuint renderbuffer) const;
 
   private:
     void createTextureInternal(GLuint handle);

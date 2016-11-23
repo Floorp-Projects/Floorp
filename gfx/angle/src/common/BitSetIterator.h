@@ -104,7 +104,6 @@ inline unsigned long ScanForward(unsigned long bits)
     unsigned long firstBitIndex = 0ul;
     unsigned char ret = _BitScanForward(&firstBitIndex, bits);
     ASSERT(ret != 0);
-    UNUSED_ASSERTION_VARIABLE(ret);
     return firstBitIndex;
 #elif defined(ANGLE_PLATFORM_POSIX)
     return static_cast<unsigned long>(__builtin_ctzl(bits));

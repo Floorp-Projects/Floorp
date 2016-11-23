@@ -431,7 +431,6 @@ gl::Error VertexDataManager::reserveSpaceForAttrib(const TranslatedAttribute &tr
     gl::Buffer *buffer   = attrib.buffer.get();
     BufferD3D *bufferD3D = buffer ? GetImplAs<BufferD3D>(buffer) : nullptr;
     ASSERT(!bufferD3D || bufferD3D->getStaticVertexBuffer(attrib) == nullptr);
-    UNUSED_ASSERTION_VARIABLE(bufferD3D);
 
     size_t totalCount = ComputeVertexAttributeElementCount(attrib, count, instances);
     ASSERT(!bufferD3D ||

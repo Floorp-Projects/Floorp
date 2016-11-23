@@ -23,7 +23,11 @@ struct WorkaroundsGL
           alwaysCallUseProgramAfterLink(false),
           unpackOverlappingRowsSeparatelyUnpackBuffer(false),
           emulateAbsIntFunction(false),
-          addAndTrueToLoopCondition(false)
+          addAndTrueToLoopCondition(false),
+          emulateIsnanFloat(false),
+          useUnusedBlocksWithStandardOrSharedLayout(false),
+          dontRemoveInvariantForFragmentInput(false),
+          removeInvariantAndCentroidForESSL3(false)
     {
     }
 
@@ -69,6 +73,8 @@ struct WorkaroundsGL
 
     // In the case of unpacking from a pixel unpack buffer, unpack overlapping rows row by row.
     bool unpackOverlappingRowsSeparatelyUnpackBuffer;
+    // In the case of packing to a pixel pack buffer, pack overlapping rows row by row.
+    bool packOverlappingRowsSeparatelyPackBuffer;
 
     // During initialization, assign the current vertex attributes to the spec-mandated defaults.
     bool initializeCurrentVertexAttributes;
@@ -80,6 +86,40 @@ struct WorkaroundsGL
     // On Intel Mac, calculation of loop conditions in for and while loop has bug.
     // Add "&& true" to the end of the condition expression to work around the bug.
     bool addAndTrueToLoopCondition;
+
+    // When uploading textures from an unpack buffer, some drivers count an extra row padding when
+    // checking if the pixel unpack buffer is big enough. Tracking bug: http://anglebug.com/1512
+    // For example considering the pixel buffer below where in memory, each row data (D) of the
+    // texture is followed by some unused data (the dots):
+    //     +-------+--+
+    //     |DDDDDDD|..|
+    //     |DDDDDDD|..|
+    //     |DDDDDDD|..|
+    //     |DDDDDDD|..|
+    //     +-------A--B
+    // The last pixel read will be A, but the driver will think it is B, causing it to generate an
+    // error when the pixel buffer is just big enough.
+    bool unpackLastRowSeparatelyForPaddingInclusion;
+
+    // Equivalent workaround when uploading data from a pixel pack buffer.
+    bool packLastRowSeparatelyForPaddingInclusion;
+
+    // On some Intel drivers, using isnan() on highp float will get wrong answer. To work around
+    // this bug, we use an expression to emulate function isnan().
+    // Tracking bug: http://crbug.com/650547
+    bool emulateIsnanFloat;
+
+    // On Mac with OpenGL version 4.1, unused std140 or shared uniform blocks will be
+    // treated as inactive which is not consistent with WebGL2.0 spec. Reference all members in a
+    // unused std140 or shared uniform block at the beginning of main to work around it.
+    bool useUnusedBlocksWithStandardOrSharedLayout;
+
+    // This flag will keep invariant declaration for input in fragment shader for GLSL >=4.20
+    // on AMD.
+    bool dontRemoveInvariantForFragmentInput;
+
+    // This flag is used to fix spec difference between GLSL 4.1 or lower and ESSL3.
+    bool removeInvariantAndCentroidForESSL3;
 };
 }
 
