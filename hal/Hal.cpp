@@ -264,7 +264,7 @@ public:
 protected:
   virtual void GetCurrentInformationInternal(InfoType*) = 0;
 
-  virtual void OnNotificationsDisabled() {
+  void OnNotificationsDisabled() override {
     mHasValidCache = false;
   }
 
@@ -276,15 +276,15 @@ private:
 class BatteryObserversManager : public CachingObserversManager<BatteryInformation>
 {
 protected:
-  void EnableNotifications() {
+  void EnableNotifications() override {
     PROXY_IF_SANDBOXED(EnableBatteryNotifications());
   }
 
-  void DisableNotifications() {
+  void DisableNotifications() override {
     PROXY_IF_SANDBOXED(DisableBatteryNotifications());
   }
 
-  void GetCurrentInformationInternal(BatteryInformation* aInfo) {
+  void GetCurrentInformationInternal(BatteryInformation* aInfo) override {
     PROXY_IF_SANDBOXED(GetCurrentBatteryInformation(aInfo));
   }
 };
@@ -300,15 +300,15 @@ BatteryObservers()
 class NetworkObserversManager : public CachingObserversManager<NetworkInformation>
 {
 protected:
-  void EnableNotifications() {
+  void EnableNotifications() override {
     PROXY_IF_SANDBOXED(EnableNetworkNotifications());
   }
 
-  void DisableNotifications() {
+  void DisableNotifications() override {
     PROXY_IF_SANDBOXED(DisableNetworkNotifications());
   }
 
-  void GetCurrentInformationInternal(NetworkInformation* aInfo) {
+  void GetCurrentInformationInternal(NetworkInformation* aInfo) override {
     PROXY_IF_SANDBOXED(GetCurrentNetworkInformation(aInfo));
   }
 };
@@ -324,11 +324,11 @@ NetworkObservers()
 class WakeLockObserversManager : public ObserversManager<WakeLockInformation>
 {
 protected:
-  void EnableNotifications() {
+  void EnableNotifications() override {
     PROXY_IF_SANDBOXED(EnableWakeLockNotifications());
   }
 
-  void DisableNotifications() {
+  void DisableNotifications() override {
     PROXY_IF_SANDBOXED(DisableWakeLockNotifications());
   }
 };
@@ -344,15 +344,15 @@ WakeLockObservers()
 class ScreenConfigurationObserversManager : public CachingObserversManager<ScreenConfiguration>
 {
 protected:
-  void EnableNotifications() {
+  void EnableNotifications() override {
     PROXY_IF_SANDBOXED(EnableScreenConfigurationNotifications());
   }
 
-  void DisableNotifications() {
+  void DisableNotifications() override {
     PROXY_IF_SANDBOXED(DisableScreenConfigurationNotifications());
   }
 
-  void GetCurrentInformationInternal(ScreenConfiguration* aInfo) {
+  void GetCurrentInformationInternal(ScreenConfiguration* aInfo) override {
     PROXY_IF_SANDBOXED(GetCurrentScreenConfiguration(aInfo));
   }
 };
@@ -449,11 +449,11 @@ void SetScreenBrightness(double aBrightness)
 class SystemClockChangeObserversManager : public ObserversManager<int64_t>
 {
 protected:
-  void EnableNotifications() {
+  void EnableNotifications() override {
     PROXY_IF_SANDBOXED(EnableSystemClockChangeNotifications());
   }
 
-  void DisableNotifications() {
+  void DisableNotifications() override {
     PROXY_IF_SANDBOXED(DisableSystemClockChangeNotifications());
   }
 };
@@ -489,11 +489,11 @@ NotifySystemClockChange(const int64_t& aClockDeltaMS)
 class SystemTimezoneChangeObserversManager : public ObserversManager<SystemTimezoneChangeInformation>
 {
 protected:
-  void EnableNotifications() {
+  void EnableNotifications() override {
     PROXY_IF_SANDBOXED(EnableSystemTimezoneChangeNotifications());
   }
 
-  void DisableNotifications() {
+  void DisableNotifications() override {
     PROXY_IF_SANDBOXED(DisableSystemTimezoneChangeNotifications());
   }
 };
