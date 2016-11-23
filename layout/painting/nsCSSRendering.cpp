@@ -3468,16 +3468,31 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
   // it to compute the effective image size for a CSS gradient.
   nsRect bgPositioningArea;
 
-  StyleGeometryBox backgroundOrigin = aLayer.mOrigin;
+  StyleGeometryBox backgroundOrigin =
+    ComputeBoxValue(aForFrame, aLayer.mOrigin);
 
-  // XXX TODO: bug 1303623 only implements the parser of fill-box|stroke-box|view-box|no-clip.
-  // So we need to fallback to default value when rendering. We should remove this
-  // in bug 1311270.
-  if (backgroundOrigin == StyleGeometryBox::Fill ||
-      backgroundOrigin == StyleGeometryBox::Stroke ||
-      backgroundOrigin == StyleGeometryBox::View) {
-    backgroundOrigin = StyleGeometryBox::Border;
+  if (IsSVGStyleGeometryBox(backgroundOrigin)) {
+    MOZ_ASSERT(aForFrame->IsFrameOfType(nsIFrame::eSVG) &&
+               (aForFrame->GetType() != nsGkAtoms::svgOuterSVGFrame));
+    *aAttachedToFrame = aForFrame;
+
+    bgPositioningArea =
+      nsLayoutUtils::ComputeGeometryBox(aForFrame, backgroundOrigin);
+
+    nsPoint toStrokeBoxOffset = nsPoint(0, 0);
+    if (backgroundOrigin != StyleGeometryBox::Stroke) {
+      nsRect strokeBox =
+        nsLayoutUtils::ComputeGeometryBox(aForFrame,
+                                          StyleGeometryBox::Stroke);
+      toStrokeBoxOffset = bgPositioningArea.TopLeft() - strokeBox.TopLeft();
+    }
+
+    // For SVG frames, the return value is relative to the stroke box
+    return nsRect(toStrokeBoxOffset, bgPositioningArea.Size());
   }
+
+  MOZ_ASSERT(!aForFrame->IsFrameOfType(nsIFrame::eSVG) ||
+             aForFrame->GetType() == nsGkAtoms::svgOuterSVGFrame);
 
   nsIAtom* frameType = aForFrame->GetType();
   nsIFrame* geometryFrame = aForFrame;
@@ -3523,9 +3538,6 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
 
   // Background images are tiled over the 'background-clip' area
   // but the origin of the tiling is based on the 'background-origin' area
-  // XXX: Bug 1303623 will bring in new origin value, we should iterate from
-  // StyleGeometryBox::Margin instead of
-  // StyleGeometryBox::Border.
   if (backgroundOrigin != StyleGeometryBox::Border && geometryFrame) {
     nsMargin border = geometryFrame->GetUsedBorder();
     if (backgroundOrigin != StyleGeometryBox::Padding) {
