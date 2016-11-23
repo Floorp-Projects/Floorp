@@ -350,11 +350,11 @@ impl MarionetteHandler {
 
     fn start_browser(&mut self, port: u16, mut options: FirefoxOptions) -> WebDriverResult<()> {
         let binary = try!(self.binary_path(&mut options)
-                          .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
-                                                     "Expected browser binary location, \
-                                                      but unable to find binary in default location, \
-                                                      no 'moz:firefoxOptions.binary' capability provided, \
-                                                      and no binary flag set on the command line")));
+            .ok_or(WebDriverError::new(ErrorStatus::UnknownError,
+                                       "Expected browser binary location, but unable to find \
+                                        binary in default location, no \
+                                        'moz:firefoxOptions.binary' capability provided, and \
+                                        no binary flag set on the command line")));
 
         let custom_profile = options.profile.is_some();
 
@@ -366,16 +366,18 @@ impl MarionetteHandler {
         };
 
         try!(self.set_prefs(port, &mut runner.profile, custom_profile, options.prefs)
-             .map_err(|e| WebDriverError::new(ErrorStatus::UnknownError,
-                                              format!("Failed to set preferences:\n{}",
-                                                      e.description()))));
+            .map_err(|e| {
+                WebDriverError::new(ErrorStatus::UnknownError,
+                                    format!("Failed to set preferences: {}", e))
+            }));
 
-        info!("Starting browser {}", binary.to_string_lossy());
+        info!("Starting browser {}", binary.display());
         try!(runner.start()
-             .map_err(|e| WebDriverError::new(ErrorStatus::UnknownError,
-                                              format!("Failed to start browser:\n{}",
-                                                      e.description()))));
-
+            .map_err(|e| {
+                WebDriverError::new(ErrorStatus::UnknownError,
+                                    format!("Failed to start browser {}: {}",
+                                            binary.display(), e))
+            }));
         self.browser = Some(runner);
 
         Ok(())
