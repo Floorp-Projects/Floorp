@@ -6228,7 +6228,8 @@ nsDisplayTransform::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
 
 /* static */ auto
 nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
-                                                      nsIFrame* aFrame) -> PrerenderDecision
+                                                      nsIFrame* aFrame,
+                                                      nsRect* aDirtyRect) -> PrerenderDecision
 {
   // Elements whose transform has been modified recently, or which
   // have a compositor-animated transform, can be prerendered. An element
@@ -6251,13 +6252,14 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
   // for shadows, borders, etc.
   refSize += nsSize(refSize.width / 8, refSize.height / 8);
   gfxSize scale = nsLayoutUtils::GetTransformToAncestorScale(aFrame);
-  nsSize frameSize = nsSize(
-    aFrame->GetVisualOverflowRectRelativeToSelf().Size().width * scale.width,
-    aFrame->GetVisualOverflowRectRelativeToSelf().Size().height * scale.height);
+  nsRect overflow = aFrame->GetVisualOverflowRectRelativeToSelf();
+  nsSize frameSize = nsSize(overflow.Size().width * scale.width,
+                            overflow.Size().height * scale.height);
   nscoord maxInAppUnits = nscoord_MAX;
   if (frameSize <= refSize) {
     maxInAppUnits = aFrame->PresContext()->DevPixelsToAppUnits(4096);
     if (frameSize <= nsSize(maxInAppUnits, maxInAppUnits)) {
+      *aDirtyRect = overflow;
       return FullPrerender;
     }
   }
