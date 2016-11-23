@@ -2412,7 +2412,7 @@ public:
    *
    * @param aContent The content to test for being an insertion point.
    */
-  static bool IsContentInsertionPoint(const nsIContent* aContent);
+  static bool IsContentInsertionPoint(nsIContent* aContent);
 
 
   /**

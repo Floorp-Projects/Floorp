@@ -6,6 +6,9 @@
 
 #include "mozilla/ServoStyleSheet.h"
 #include "mozilla/StyleBackendType.h"
+#include "mozilla/ServoBindings.h"
+#include "mozilla/ServoCSSRuleList.h"
+#include "mozilla/dom/CSSRuleList.h"
 
 namespace mozilla {
 
@@ -21,6 +24,9 @@ ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
 ServoStyleSheet::~ServoStyleSheet()
 {
   DropSheet();
+  if (mRuleList) {
+    mRuleList->DropReference();
+  }
 }
 
 bool
@@ -122,8 +128,11 @@ ServoStyleSheet::GetDOMOwnerRule() const
 CSSRuleList*
 ServoStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  if (!mRuleList) {
+    RefPtr<ServoCssRules> rawRules = Servo_StyleSheet_GetRules(mSheet).Consume();
+    mRuleList = new ServoCSSRuleList(this, rawRules.forget());
+  }
+  return mRuleList;
 }
 
 uint32_t
