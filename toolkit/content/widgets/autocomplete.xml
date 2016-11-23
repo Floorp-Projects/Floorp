@@ -1474,7 +1474,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                            class="ac-title-text"
                            xbl:inherits="selected"/>
         </xul:description>
-        <xul:label id="learnMoreLink" align="left" class="text-link"/>
       </xul:vbox>
       <xul:hbox anonid="tags"
                 class="ac-tags"
@@ -1511,22 +1510,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </xul:description>
       </xul:hbox>
     </content>
-    <implementation>
-      <constructor><![CDATA[
-        let learnMoreLink = document.getElementById("learnMoreLink");
-        learnMoreLink.setAttribute("value", this._stringBundle.GetStringFromName("insecureFieldWarningLearnMore"));
-        learnMoreLink.setAttribute("href", Services.urlFormatter.formatURLPref("app.support.baseURL") + "insecure-form-field-warning");
-      ]]></constructor>
-
-      <property name="_stringBundle">
-        <getter><![CDATA[
-          if (!this.__stringBundle) {
-            this.__stringBundle = Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
-          }
-          return this.__stringBundle;
-        ]]></getter>
-      </property>
-    </implementation>
   </binding>
 
   <binding id="autocomplete-richlistitem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
