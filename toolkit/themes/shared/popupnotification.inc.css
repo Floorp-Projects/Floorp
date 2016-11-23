@@ -44,7 +44,6 @@
   background-color: var(--arrowpanel-dimmed);
   border-top: 1px solid var(--panel-separator-color);
   display: flex;
-  justify-content: flex-end;
 }
 
 .popup-notification-button-container > toolbarseparator {
@@ -102,6 +101,10 @@
 
 .popup-notification-button[default]:hover:active:not([disabled]) {
   background-color: #0568ba;
+}
+
+.popup-notification-button[anonid="secondarybutton"][hidden="true"] ~ .popup-notification-button[default] {
+  flex: 1;
 }
 
 .popup-notification-button > .button-box {
