@@ -34,6 +34,10 @@ extensions.registerSchemaAPI("extension", "addon_child", context => {
           if (!view.active) {
             continue;
           }
+          if (!context.principal.subsumes(view.principal)) {
+            continue;
+          }
+
           if (fetchProperties !== null) {
             if (fetchProperties.type !== null && view.viewType != fetchProperties.type) {
               continue;

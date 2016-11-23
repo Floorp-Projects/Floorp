@@ -110,7 +110,7 @@ WebGLContext::IsQuery(const WebGLQuery* query, const char* funcName)
 }
 
 void
-WebGLContext::BeginQuery(GLenum target, WebGLQuery* query, const char* funcName)
+WebGLContext::BeginQuery(GLenum target, WebGLQuery& query, const char* funcName)
 {
     if (!funcName) {
         funcName = "beginQuery";
@@ -119,10 +119,10 @@ WebGLContext::BeginQuery(GLenum target, WebGLQuery* query, const char* funcName)
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectAllowDeleted(funcName, query))
+    if (!ValidateObjectAllowDeleted(funcName, &query))
         return;
 
-    if (query->IsDeleted())
+    if (query.IsDeleted())
         return ErrorInvalidOperation("%s: Cannot begin a deleted query.", funcName);
 
     const auto& slot = ValidateQuerySlotByTarget(funcName, target);
@@ -134,7 +134,7 @@ WebGLContext::BeginQuery(GLenum target, WebGLQuery* query, const char* funcName)
 
     ////
 
-    query->BeginQuery(target, *slot);
+    query.BeginQuery(target, *slot);
 }
 
 void
@@ -227,7 +227,7 @@ WebGLContext::GetQuery(JSContext* cx, GLenum target, GLenum pname,
 }
 
 void
-WebGLContext::GetQueryParameter(JSContext*, const WebGLQuery* query, GLenum pname,
+WebGLContext::GetQueryParameter(JSContext*, const WebGLQuery& query, GLenum pname,
                                 JS::MutableHandleValue retval, const char* funcName)
 {
     if (!funcName) {
@@ -238,13 +238,13 @@ WebGLContext::GetQueryParameter(JSContext*, const WebGLQuery* query, GLenum pnam
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectAllowDeleted(funcName, query))
+    if (!ValidateObjectAllowDeleted(funcName, &query))
         return;
 
-    if (query->IsDeleted())
+    if (query.IsDeleted())
         return ErrorInvalidOperation("%s: Query must not be deleted.", funcName);
 
-    query->GetQueryParameter(pname, retval);
+    query.GetQueryParameter(pname, retval);
 }
 
 } // namespace mozilla

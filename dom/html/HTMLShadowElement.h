@@ -18,8 +18,6 @@ class HTMLShadowElement final : public nsGenericHTMLElement,
 public:
   explicit HTMLShadowElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLShadowElement, shadow)
-
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -29,6 +27,17 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLShadowElement,
                                            nsGenericHTMLElement)
+
+  static HTMLShadowElement* FromContent(nsIContent* aContent)
+  {
+    if (aContent->IsHTMLShadowElement()) {
+      return static_cast<HTMLShadowElement*>(aContent);
+    }
+
+    return nullptr;
+  }
+
+  virtual bool IsHTMLShadowElement() const override { return true; }
 
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 

@@ -7,6 +7,9 @@
 #include "vm/ProxyObject.h"
 
 #include "jscompartment.h"
+
+#include "proxy/DeadObjectProxy.h"
+
 #include "jsobjinlines.h"
 
 using namespace js;
@@ -112,14 +115,20 @@ ProxyObject::setSameCompartmentPrivate(const Value& priv)
 }
 
 void
-ProxyObject::nuke(const BaseProxyHandler* handler)
+ProxyObject::nuke()
 {
+    // Clear the target reference.
     setSameCompartmentPrivate(NullValue());
-    for (size_t i = 0; i < detail::PROXY_EXTRA_SLOTS; i++)
-        SetProxyExtra(this, i, NullValue());
 
-    /* Restore the handler as requested after nuking. */
-    setHandler(handler);
+    // Update the handler to make this a DeadObjectProxy.
+    setHandler(&DeadObjectProxy::singleton);
+
+    // The proxy's extra slots are not cleared and will continue to be
+    // traced. This avoids the possibility of triggering write barriers while
+    // nuking proxies in dead compartments which could otherwise cause those
+    // compartments to be kept alive. Note that these are slots cannot hold
+    // cross compartment pointers, so this cannot cause the target compartment
+    // to leak.
 }
 
 JS_FRIEND_API(void)
