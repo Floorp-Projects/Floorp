@@ -1067,12 +1067,12 @@ JSContext::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 }
 
 void
-JSContext::mark(JSTracer* trc)
+JSContext::trace(JSTracer* trc)
 {
     if (cycleDetectorSet.initialized())
         TraceCycleDetectionSet(trc, cycleDetectorSet);
 
-    if (compartment_)
+    if (trc->isMarkingTracer() && compartment_)
         compartment_->mark();
 }
 

@@ -245,15 +245,6 @@ bool
 IsMarkedBlack(NativeObject* obj);
 #endif
 
-namespace gc {
-
-// Marking.h depends on these barrier definitions, so we need a separate
-// entry point for marking to implement the pre-barrier.
-void MarkValueForBarrier(JSTracer* trc, Value* v, const char* name);
-void MarkIdForBarrier(JSTracer* trc, jsid* idp, const char* name);
-
-} // namespace gc
-
 template <typename T>
 struct InternalBarrierMethods {};
 

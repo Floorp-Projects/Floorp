@@ -543,7 +543,7 @@ struct JSContext : public js::ExclusiveContext,
 
     JS_FRIEND_API(size_t) sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-    void mark(JSTracer* trc);
+    void trace(JSTracer* trc);
 
   private:
     /*
