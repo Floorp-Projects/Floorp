@@ -3099,9 +3099,30 @@ FindDominatingBoundsCheck(BoundsCheckMap& checks, MBoundsCheck* check, size_t in
     return p->value().check;
 }
 
+static MathSpace
+ExtractMathSpace(MDefinition* ins)
+{
+    MOZ_ASSERT(ins->isAdd() || ins->isSub());
+    MBinaryArithInstruction* arith = nullptr;
+    if (ins->isAdd())
+        arith = ins->toAdd();
+    else
+        arith = ins->toSub();
+    switch (arith->truncateKind()) {
+      case MDefinition::NoTruncate:
+      case MDefinition::TruncateAfterBailouts:
+        // TruncateAfterBailouts is considered as infinite space because the
+        // LinearSum will effectively remove the bailout check.
+        return MathSpace::Infinite;
+      case MDefinition::IndirectTruncate:
+      case MDefinition::Truncate:
+        return MathSpace::Modulo;
+    }
+}
+
 // Extract a linear sum from ins, if possible (otherwise giving the sum 'ins + 0').
 SimpleLinearSum
-jit::ExtractLinearSum(MDefinition* ins)
+jit::ExtractLinearSum(MDefinition* ins, MathSpace space)
 {
     if (ins->isBeta())
         ins = ins->getOperand(0);
@@ -3112,32 +3133,53 @@ jit::ExtractLinearSum(MDefinition* ins)
     if (ins->isConstant())
         return SimpleLinearSum(nullptr, ins->toConstant()->toInt32());
 
-    if (ins->isAdd() || ins->isSub()) {
-        MDefinition* lhs = ins->getOperand(0);
-        MDefinition* rhs = ins->getOperand(1);
-        if (lhs->type() == MIRType::Int32 && rhs->type() == MIRType::Int32) {
-            SimpleLinearSum lsum = ExtractLinearSum(lhs);
-            SimpleLinearSum rsum = ExtractLinearSum(rhs);
+    if (!ins->isAdd() && !ins->isSub())
+        return SimpleLinearSum(ins, 0);
 
-            if (lsum.term && rsum.term)
-                return SimpleLinearSum(ins, 0);
+    // Only allow math which are in the same space.
+    MathSpace insSpace = ExtractMathSpace(ins);
+    if (space == MathSpace::Unknown)
+        space = insSpace;
+    else if (space != insSpace)
+        return SimpleLinearSum(ins, 0);
+    MOZ_ASSERT(space == MathSpace::Modulo || space == MathSpace::Infinite);
 
-            // Check if this is of the form <SUM> + n, n + <SUM> or <SUM> - n.
-            if (ins->isAdd()) {
-                int32_t constant;
-                if (!SafeAdd(lsum.constant, rsum.constant, &constant))
-                    return SimpleLinearSum(ins, 0);
-                return SimpleLinearSum(lsum.term ? lsum.term : rsum.term, constant);
-            }
-            if (lsum.term) {
-                int32_t constant;
-                if (!SafeSub(lsum.constant, rsum.constant, &constant))
-                    return SimpleLinearSum(ins, 0);
-                return SimpleLinearSum(lsum.term, constant);
-            }
-        }
+    MDefinition* lhs = ins->getOperand(0);
+    MDefinition* rhs = ins->getOperand(1);
+    if (lhs->type() != MIRType::Int32 || rhs->type() != MIRType::Int32)
+        return SimpleLinearSum(ins, 0);
+
+    // Extract linear sums of each operand.
+    SimpleLinearSum lsum = ExtractLinearSum(lhs, space);
+    SimpleLinearSum rsum = ExtractLinearSum(rhs, space);
+
+    // LinearSum only considers a single term operand, if both sides have
+    // terms, then ignore extracted linear sums.
+    if (lsum.term && rsum.term)
+        return SimpleLinearSum(ins, 0);
+
+    // Check if this is of the form <SUM> + n or n + <SUM>.
+    if (ins->isAdd()) {
+        int32_t constant;
+        if (space == MathSpace::Modulo)
+            constant = lsum.constant + rsum.constant;
+        else if (!SafeAdd(lsum.constant, rsum.constant, &constant))
+            return SimpleLinearSum(ins, 0);
+        return SimpleLinearSum(lsum.term ? lsum.term : rsum.term, constant);
     }
 
+    MOZ_ASSERT(ins->isSub());
+    // Check if this is of the form <SUM> - n.
+    if (lsum.term) {
+        int32_t constant;
+        if (space == MathSpace::Modulo)
+            constant = lsum.constant - rsum.constant;
+        else if (!SafeSub(lsum.constant, rsum.constant, &constant))
+            return SimpleLinearSum(ins, 0);
+        return SimpleLinearSum(lsum.term, constant);
+    }
+
+    // Ignore any of the form n - <SUM>.
     return SimpleLinearSum(ins, 0);
 }
 
