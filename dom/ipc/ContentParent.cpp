@@ -1817,7 +1817,9 @@ ContentParent::ContentParent(ContentParent* aOpener,
 #endif
 
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  ChildPrivileges privs = base::PRIVILEGES_DEFAULT;
+  ChildPrivileges privs = mRemoteType.EqualsLiteral("file")
+                          ? base::PRIVILEGES_FILEREAD
+                          : base::PRIVILEGES_DEFAULT;
   mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, privs);
 }
 
