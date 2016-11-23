@@ -43,6 +43,11 @@ const { addDevice, removeDevice } = require("devtools/client/shared/devices");
 SimpleTest.requestCompleteLog();
 SimpleTest.waitForExplicitFinish();
 
+// Toggling the RDM UI involves several docShell swap operations, which are somewhat slow
+// on debug builds. Usually we are just barely over the limit, so a blanket factor of 2
+// should be enough.
+requestLongerTimeout(2);
+
 flags.testing = true;
 Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
 Services.prefs.setCharPref("devtools.devices.url",

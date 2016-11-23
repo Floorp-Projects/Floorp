@@ -478,6 +478,7 @@ js::gc::GCRuntime::bufferGrayRoots()
     for (GCZonesIter zone(rt); !zone.done(); zone.next())
         MOZ_ASSERT(zone->gcGrayRoots.empty());
 
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_BUFFER_GRAY_ROOTS);
 
     BufferGrayRootsTracer grayBufferer(rt);
     if (JSTraceDataOp op = grayRootTracer.op)

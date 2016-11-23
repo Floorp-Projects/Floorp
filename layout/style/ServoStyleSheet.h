@@ -16,6 +16,8 @@
 
 namespace mozilla {
 
+class ServoCSSRuleList;
+
 /**
  * CSS style sheet object that is a wrapper for a Servo Stylesheet.
  */
@@ -80,6 +82,7 @@ private:
   void DropSheet();
 
   RefPtr<RawServoStyleSheet> mSheet;
+  RefPtr<ServoCSSRuleList> mRuleList;
   StyleSheetInfo mSheetInfo;
 
   friend class StyleSheet;

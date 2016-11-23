@@ -537,7 +537,7 @@ WebGLProgram::BindAttribLocation(GLuint loc, const nsAString& name)
 }
 
 void
-WebGLProgram::DetachShader(WebGLShader* shader)
+WebGLProgram::DetachShader(const WebGLShader* shader)
 {
     MOZ_ASSERT(shader);
 

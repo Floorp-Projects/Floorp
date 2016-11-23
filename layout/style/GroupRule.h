@@ -22,7 +22,7 @@ class nsMediaQueryResultCacheKey;
 
 namespace mozilla {
 
-class CSSStyleSheet;
+class StyleSheet;
 
 namespace css {
 
@@ -46,7 +46,7 @@ public:
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-  virtual void SetStyleSheet(CSSStyleSheet* aSheet) override;
+  virtual void SetStyleSheet(StyleSheet* aSheet) override;
 
 public:
   void AppendStyleRule(Rule* aRule);

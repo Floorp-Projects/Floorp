@@ -7,7 +7,6 @@
 #ifndef TRACED_TASK_COMMON_H
 #define TRACED_TASK_COMMON_H
 
-#include "base/task.h"
 #include "GeckoTaskTracer.h"
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
@@ -19,6 +18,12 @@ class TracedTaskCommon
 {
 public:
   TracedTaskCommon();
+  TracedTaskCommon(const TracedTaskCommon& aSrc)
+    : mSourceEventType(aSrc.mSourceEventType)
+    , mSourceEventId(aSrc.mSourceEventId)
+    , mParentTaskId(aSrc.mParentTaskId)
+    , mTaskId(aSrc.mTaskId)
+    , mIsTraceInfoInit(aSrc.mIsTraceInfoInit) {}
   virtual ~TracedTaskCommon();
 
   void DispatchTask(int aDelayTimeMs = 0);
@@ -52,6 +57,47 @@ private:
   virtual ~TracedRunnable();
 
   nsCOMPtr<nsIRunnable> mOriginalObj;
+};
+
+/**
+ * This class is used to create a logical task, without a real
+ * runnable.
+ */
+class VirtualTask : public TracedTaskCommon {
+public:
+  VirtualTask() : TracedTaskCommon() {}
+
+  VirtualTask(const VirtualTask& aSrc) : TracedTaskCommon(aSrc) {}
+
+  /**
+   * Initialize the task to create an unique ID, and store other
+   * information.
+   *
+   * This method may be called for one or more times.
+   */
+  void Init(uintptr_t* aVPtr = nullptr) {
+    TracedTaskCommon::Init();
+    if (aVPtr) {
+      extern void LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, uintptr_t* aVptr);
+      LogVirtualTablePtr(mTaskId, mSourceEventId, aVPtr);
+    }
+    DispatchTask();
+  }
+
+  /**
+   * Define the life-span of a VirtualTask.
+   *
+   * VirtualTask is not a real task, goes without a runnable, it's
+   * instances are never dispatched and ran by event loops.  This
+   * class used to define running time as the life-span of it's
+   * instance.
+   */
+  class AutoRunTask : public AutoSaveCurTraceInfo {
+    VirtualTask* mTask;
+  public:
+    AutoRunTask(VirtualTask *aTask);
+    ~AutoRunTask();
+  };
 };
 
 } // namespace tasktracer

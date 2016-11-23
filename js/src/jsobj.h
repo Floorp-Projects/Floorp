@@ -1336,8 +1336,6 @@ NonNullObject(JSContext* cx, const Value& v)
     return nullptr;
 }
 
-extern const char*
-InformalValueTypeName(const Value& v);
 
 extern bool
 GetFirstArgumentAsObject(JSContext* cx, const CallArgs& args, const char* method,

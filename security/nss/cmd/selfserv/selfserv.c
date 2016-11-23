@@ -1256,7 +1256,7 @@ handle_connection(
     PRSocketOptionData opt;
     PRIOVec iovs[16];
     char msgBuf[160];
-    char buf[10240];
+    char buf[10240] = { 0 };
     char fileName[513];
     char proto[128];
     PRDescIdentity aboveLayer = PR_INVALID_IO_LAYER;
