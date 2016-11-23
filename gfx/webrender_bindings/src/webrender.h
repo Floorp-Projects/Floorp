@@ -60,7 +60,7 @@ struct wrstate;
 #endif
 
 WR_INLINE wrwindowstate*
-wr_init_window(uint64_t root_pipeline_id)
+wr_init_window(uint64_t root_pipeline_id, bool enable_profiler)
 WR_FUNC;
 
 WR_INLINE wrstate*
@@ -134,6 +134,10 @@ WR_FUNC;
 WR_INLINE void
 wr_free_buffer(const uint8_t* pointer, uint32_t length, uint32_t capacity)
 
+WR_FUNC;
+
+WR_INLINE void
+wr_profiler_set_enabled(wrwindowstate* wrWindow, bool enabled)
 WR_FUNC;
 
 #undef WR_FUNC
