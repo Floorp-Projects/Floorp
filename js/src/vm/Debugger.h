@@ -140,7 +140,7 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
 
   public:
     template <void (traceValueEdges)(JSTracer*, JSObject*)>
-    void markCrossCompartmentEdges(JSTracer* tracer) {
+    void traceCrossCompartmentEdges(JSTracer* tracer) {
         for (Enum e(*static_cast<Base*>(this)); !e.empty(); e.popFront()) {
             traceValueEdges(tracer, e.front().value());
             Key key = e.front().key();
@@ -582,7 +582,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static void traceObject(JSTracer* trc, JSObject* obj);
     void trace(JSTracer* trc);
     static void finalize(FreeOp* fop, JSObject* obj);
-    void markCrossCompartmentEdges(JSTracer* tracer);
+    void traceCrossCompartmentEdges(JSTracer* tracer);
 
     static const ClassOps classOps_;
 
@@ -815,13 +815,13 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      *       - it has a breakpoint set on a live script
      *       - it has a watchpoint set on a live object.
      *
-     * Debugger::markAllIteratively handles the last case. If it finds any
-     * Debugger objects that are definitely live but not yet marked, it marks
-     * them and returns true. If not, it returns false.
+     * Debugger::markIteratively handles the last case. If it finds any Debugger
+     * objects that are definitely live but not yet marked, it marks them and
+     * returns true. If not, it returns false.
      */
-    static void markIncomingCrossCompartmentEdges(JSTracer* tracer);
-    static MOZ_MUST_USE bool markAllIteratively(GCMarker* trc);
-    static void markAll(JSTracer* trc);
+    static void traceIncomingCrossCompartmentEdges(JSTracer* tracer);
+    static MOZ_MUST_USE bool markIteratively(GCMarker* marker);
+    static void traceAll(JSTracer* trc);
     static void sweepAll(FreeOp* fop);
     static void detachAllDebuggersFromGlobal(FreeOp* fop, GlobalObject* global);
     static void findZoneEdges(JS::Zone* v, gc::ZoneComponentFinder& finder);
@@ -1526,7 +1526,7 @@ class BreakpointSite {
  *   - script is live, breakpoint exists, and debugger is live
  *      ==> retain the breakpoint and the handler object is live
  *
- * Debugger::markAllIteratively implements these two rules. It uses
+ * Debugger::markIteratively implements these two rules. It uses
  * Debugger::hasAnyLiveHooks to check for rule 1.
  *
  * Nothing else causes a breakpoint to be retained, so if its script or

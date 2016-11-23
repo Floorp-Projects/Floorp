@@ -779,7 +779,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     bool initSelfHosting(JSContext* cx);
     void finishSelfHosting();
-    void markSelfHostingGlobal(JSTracer* trc);
+    void traceSelfHostingGlobal(JSTracer* trc);
     bool isSelfHostingGlobal(JSObject* global) {
         return global == selfHostingGlobal_;
     }

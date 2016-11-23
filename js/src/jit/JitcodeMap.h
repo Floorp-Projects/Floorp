@@ -207,7 +207,7 @@ class JitcodeGlobalEntry
             return startsBelowPointer(ptr) && endsAbovePointer(ptr);
         }
 
-        template <class ShouldMarkProvider> bool markJitcode(JSTracer* trc);
+        template <class ShouldTraceProvider> bool traceJitcode(JSTracer* trc);
         bool isJitcodeMarkedFromAnyThread();
         bool isJitcodeAboutToBeFinalized();
     };
@@ -368,7 +368,7 @@ class JitcodeGlobalEntry
         void forEachOptimizationTypeInfo(JSRuntime* rt, uint8_t index,
                                          IonTrackedOptimizationsTypeInfo::ForEachOpAdapter& op);
 
-        template <class ShouldMarkProvider> bool mark(JSTracer* trc);
+        template <class ShouldTraceProvider> bool trace(JSTracer* trc);
         void sweepChildren();
         bool isMarkedFromAnyThread();
     };
@@ -426,7 +426,7 @@ class JitcodeGlobalEntry
         void youngestFrameLocationAtAddr(JSRuntime* rt, void* ptr,
                                          JSScript** script, jsbytecode** pc) const;
 
-        template <class ShouldMarkProvider> bool mark(JSTracer* trc);
+        template <class ShouldTraceProvider> bool trace(JSTracer* trc);
         void sweepChildren();
         bool isMarkedFromAnyThread();
     };
@@ -475,7 +475,7 @@ class JitcodeGlobalEntry
         void forEachOptimizationTypeInfo(JSRuntime* rt, uint8_t index,
                                          IonTrackedOptimizationsTypeInfo::ForEachOpAdapter& op);
 
-        template <class ShouldMarkProvider> bool mark(JSTracer* trc);
+        template <class ShouldTraceProvider> bool trace(JSTracer* trc);
         void sweepChildren(JSRuntime* rt);
         bool isMarkedFromAnyThread(JSRuntime* rt);
     };
@@ -911,25 +911,25 @@ class JitcodeGlobalEntry
         return baseEntry().jitcode()->zone();
     }
 
-    template <class ShouldMarkProvider>
-    bool mark(JSTracer* trc) {
-        bool markedAny = baseEntry().markJitcode<ShouldMarkProvider>(trc);
+    template <class ShouldTraceProvider>
+    bool trace(JSTracer* trc) {
+        bool tracedAny = baseEntry().traceJitcode<ShouldTraceProvider>(trc);
         switch (kind()) {
           case Ion:
-            markedAny |= ionEntry().mark<ShouldMarkProvider>(trc);
+            tracedAny |= ionEntry().trace<ShouldTraceProvider>(trc);
             break;
           case Baseline:
-            markedAny |= baselineEntry().mark<ShouldMarkProvider>(trc);
+            tracedAny |= baselineEntry().trace<ShouldTraceProvider>(trc);
             break;
           case IonCache:
-            markedAny |= ionCacheEntry().mark<ShouldMarkProvider>(trc);
+            tracedAny |= ionCacheEntry().trace<ShouldTraceProvider>(trc);
             break;
           case Dummy:
             break;
           default:
             MOZ_CRASH("Invalid JitcodeGlobalEntry kind.");
         }
-        return markedAny;
+        return tracedAny;
     }
 
     void sweepChildren(JSRuntime* rt) {
@@ -1059,8 +1059,8 @@ class JitcodeGlobalTable
     void releaseEntry(JitcodeGlobalEntry& entry, JitcodeGlobalEntry** prevTower, JSRuntime* rt);
 
     void setAllEntriesAsExpired(JSRuntime* rt);
-    void markUnconditionally(JSTracer* trc);
-    MOZ_MUST_USE bool markIteratively(JSTracer* trc);
+    void trace(JSTracer* trc);
+    MOZ_MUST_USE bool markIteratively(GCMarker* marker);
     void sweep(JSRuntime* rt);
 
   private:

@@ -43,7 +43,7 @@ WeakMapBase::unmarkZone(JS::Zone* zone)
 }
 
 void
-WeakMapBase::markAll(JS::Zone* zone, JSTracer* tracer)
+WeakMapBase::traceZone(JS::Zone* zone, JSTracer* tracer)
 {
     MOZ_ASSERT(tracer->weakMapAction() != DoNotTraceWeakMaps);
     for (WeakMapBase* m : zone->gcWeakMapList) {
@@ -53,11 +53,11 @@ WeakMapBase::markAll(JS::Zone* zone, JSTracer* tracer)
 }
 
 bool
-WeakMapBase::markZoneIteratively(JS::Zone* zone, JSTracer* tracer)
+WeakMapBase::markZoneIteratively(JS::Zone* zone, GCMarker* marker)
 {
     bool markedAny = false;
     for (WeakMapBase* m : zone->gcWeakMapList) {
-        if (m->marked && m->traceEntries(tracer))
+        if (m->marked && m->markIteratively(marker))
             markedAny = true;
     }
     return markedAny;
