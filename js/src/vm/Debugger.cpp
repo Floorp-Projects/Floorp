@@ -10021,8 +10021,7 @@ DebuggerObject::defineProperty(JSContext* cx, HandleDebuggerObject object, Handl
     Rooted<PropertyDescriptor> desc(cx, desc_);
     if (!dbg->unwrapPropertyDescriptor(cx, referent, &desc))
         return false;
-    if (!CheckPropertyDescriptorAccessors(cx, desc))
-        return false;
+    JS_TRY_OR_RETURN_FALSE(cx, CheckPropertyDescriptorAccessors(cx, desc));
 
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, referent);
@@ -10050,8 +10049,7 @@ DebuggerObject::defineProperties(JSContext* cx, HandleDebuggerObject object,
     for (size_t i = 0; i < descs.length(); i++) {
         if (!dbg->unwrapPropertyDescriptor(cx, referent, descs[i]))
             return false;
-        if (!CheckPropertyDescriptorAccessors(cx, descs[i]))
-            return false;
+        JS_TRY_OR_RETURN_FALSE(cx, CheckPropertyDescriptorAccessors(cx, descs[i]));
     }
 
     Maybe<AutoCompartment> ac;

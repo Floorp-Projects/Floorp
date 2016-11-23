@@ -246,6 +246,13 @@ js::ReportOutOfMemory(ExclusiveContext* cxArg)
     cx->setPendingException(StringValue(cx->names().outOfMemory));
 }
 
+mozilla::GenericErrorResult<OOM&>
+js::ReportOutOfMemoryResult(ExclusiveContext* cx)
+{
+    ReportOutOfMemory(cx);
+    return cx->alreadyReportedOOM();
+}
+
 void
 js::ReportOverRecursed(JSContext* maybecx, unsigned errorNumber)
 {
@@ -873,6 +880,34 @@ ExclusiveContext::recoverFromOutOfMemory()
     // Keep in sync with addPendingOutOfMemory.
     if (ParseTask* task = helperThread()->parseTask())
         task->outOfMemory = false;
+}
+
+JS::Error ExclusiveContext::reportedError;
+JS::OOM ExclusiveContext::reportedOOM;
+
+mozilla::GenericErrorResult<OOM&>
+ExclusiveContext::alreadyReportedOOM()
+{
+#ifdef DEBUG
+    if (JSContext* maybecx = maybeJSContext()) {
+        MOZ_ASSERT(maybecx->isThrowingOutOfMemory());
+    } else {
+        // Keep in sync with addPendingOutOfMemory.
+        if (ParseTask* task = helperThread()->parseTask())
+            MOZ_ASSERT(task->outOfMemory);
+    }
+#endif
+    return mozilla::MakeGenericErrorResult(reportedOOM);
+}
+
+mozilla::GenericErrorResult<JS::Error&>
+ExclusiveContext::alreadyReportedError()
+{
+#ifdef DEBUG
+    if (JSContext* maybecx = maybeJSContext())
+        MOZ_ASSERT(maybecx->isExceptionPending());
+#endif
+    return mozilla::MakeGenericErrorResult(reportedError);
 }
 
 JSContext::JSContext(JSRuntime* parentRuntime)
