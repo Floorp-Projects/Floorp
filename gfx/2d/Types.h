@@ -407,9 +407,9 @@ enum SideBits {
   for (mozilla::Side var_;                                               \
        MOZ_CONCAT(var_,__LINE__) <= mozilla::eSideLeft &&                \
          ((var_ = mozilla::Side(MOZ_CONCAT(var_,__LINE__))), true);      \
-       MOZ_CONCAT(var_,__LINE__)++)
+       ++MOZ_CONCAT(var_,__LINE__))
 
-static inline Side operator++(Side& side, int) {
+static inline Side& operator++(Side& side) {
   MOZ_ASSERT(side >= eSideTop && side <= eSideLeft,
              "Out of range side");
   side = Side(side + 1);
