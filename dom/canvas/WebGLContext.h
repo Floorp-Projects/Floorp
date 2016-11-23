@@ -220,40 +220,40 @@ protected:
 
 struct TexImageSourceAdapter final : public TexImageSource
 {
-    TexImageSourceAdapter(const dom::Nullable<dom::ArrayBufferView>& maybeView,
+    TexImageSourceAdapter(const dom::Nullable<dom::ArrayBufferView>* maybeView,
                           ErrorResult*)
     {
-        if (!maybeView.IsNull()) {
-            mView = &(maybeView.Value());
+        if (!maybeView->IsNull()) {
+            mView = &(maybeView->Value());
         }
     }
 
-    TexImageSourceAdapter(const dom::ArrayBufferView& view, ErrorResult*) {
-        mView = &view;
+    TexImageSourceAdapter(const dom::ArrayBufferView* view, ErrorResult*) {
+        mView = view;
     }
 
-    TexImageSourceAdapter(const dom::ArrayBufferView& view, GLuint viewElemOffset,
+    TexImageSourceAdapter(const dom::ArrayBufferView* view, GLuint viewElemOffset,
                           GLuint viewElemLengthOverride = 0)
     {
-        mView = &view;
+        mView = view;
         mViewElemOffset = viewElemOffset;
         mViewElemLengthOverride = viewElemLengthOverride;
     }
 
-    TexImageSourceAdapter(WebGLsizeiptr pboOffset, GLuint ignored1, GLuint ignored2 = 0) {
-        mPboOffset = &pboOffset;
+    TexImageSourceAdapter(const WebGLsizeiptr* pboOffset, GLuint ignored1, GLuint ignored2 = 0) {
+        mPboOffset = pboOffset;
     }
 
-    TexImageSourceAdapter(WebGLsizeiptr pboOffset, ErrorResult* ignored) {
-        mPboOffset = &pboOffset;
+    TexImageSourceAdapter(const WebGLsizeiptr* pboOffset, ErrorResult* ignored) {
+        mPboOffset = pboOffset;
     }
 
-    TexImageSourceAdapter(const dom::ImageData& imageData, ErrorResult*) {
-        mImageData = &imageData;
+    TexImageSourceAdapter(const dom::ImageData* imageData, ErrorResult*) {
+        mImageData = imageData;
     }
 
-    TexImageSourceAdapter(const dom::Element& domElem, ErrorResult* const out_error) {
-        mDomElem = &domElem;
+    TexImageSourceAdapter(const dom::Element* domElem, ErrorResult* const out_error) {
+        mDomElem = domElem;
         mOut_error = out_error;
     }
 };
@@ -1026,7 +1026,7 @@ public:
         const char funcName[] = "compressedTexImage2D";
         const uint8_t funcDims = 2;
         const GLsizei depth = 1;
-        const TexImageSourceAdapter src(anySrc, viewElemOffset, viewElemLengthOverride);
+        const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
                            height, depth, border, src);
     }
@@ -1041,7 +1041,7 @@ public:
         const uint8_t funcDims = 2;
         const GLint zOffset = 0;
         const GLsizei depth = 1;
-        const TexImageSourceAdapter src(anySrc, viewElemOffset, viewElemLengthOverride);
+        const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
                               zOffset, width, height, depth, unpackFormat, src);
     }
@@ -1115,7 +1115,7 @@ public:
                     GLsizei height, GLint border, GLenum unpackFormat, GLenum unpackType,
                     const T& anySrc, ErrorResult& out_error)
     {
-        const TexImageSourceAdapter src(anySrc, &out_error);
+        const TexImageSourceAdapter src(&anySrc, &out_error);
         TexImage2D(target, level, internalFormat, width, height, border, unpackFormat,
                    unpackType, src);
     }
@@ -1125,7 +1125,7 @@ public:
                     const dom::ArrayBufferView& view, GLuint viewElemOffset,
                     ErrorResult&)
     {
-        const TexImageSourceAdapter src(view, viewElemOffset);
+        const TexImageSourceAdapter src(&view, viewElemOffset);
         TexImage2D(target, level, internalFormat, width, height, border, unpackFormat,
                    unpackType, src);
     }
@@ -1155,7 +1155,7 @@ public:
                        GLsizei width, GLsizei height, GLenum unpackFormat,
                        GLenum unpackType, const T& anySrc, ErrorResult& out_error)
     {
-        const TexImageSourceAdapter src(anySrc, &out_error);
+        const TexImageSourceAdapter src(&anySrc, &out_error);
         TexSubImage2D(target, level, xOffset, yOffset, width, height, unpackFormat,
                       unpackType, src);
     }
@@ -1165,7 +1165,7 @@ public:
                        GLenum unpackType, const dom::ArrayBufferView& view,
                        GLuint viewElemOffset, ErrorResult&)
     {
-        const TexImageSourceAdapter src(view, viewElemOffset);
+        const TexImageSourceAdapter src(&view, viewElemOffset);
         TexSubImage2D(target, level, xOffset, yOffset, width, height, unpackFormat,
                       unpackType, src);
     }
