@@ -1,9 +1,9 @@
 [
 {
-"size": 862324, 
-"visibility": "public", 
-"digest": "681cf3906b294c05bdc3271e3fad0f964372a3208dc42e0fea032d194cb480239e32a5cb898d2297614c9a55afe9aa9e06797e52c8c775c67b6c4e09396b957b", 
-"algorithm": "sha512", 
+"size": 862324,
+"visibility": "public",
+"digest": "681cf3906b294c05bdc3271e3fad0f964372a3208dc42e0fea032d194cb480239e32a5cb898d2297614c9a55afe9aa9e06797e52c8c775c67b6c4e09396b957b",
+"algorithm": "sha512",
 "filename": "macosx64-minidump_stackwalk"
 }
 ]
