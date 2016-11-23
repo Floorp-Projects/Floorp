@@ -12,6 +12,4 @@ sync protocol content {
 child:
     async __delete__();
 
-state DEAD:
-    send __delete__;
 };

@@ -6,7 +6,5 @@ sync protocol DeleteSub {
 parent:
     sync __delete__(int x) returns (double d);
 
-state START:
-    recv __delete__;
 };
 
