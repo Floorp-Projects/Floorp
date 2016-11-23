@@ -228,13 +228,7 @@ CrossProcessCompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBrid
   MOZ_RELEASE_ASSERT(false);
 #endif
   WebRenderBridgeParent* parent = static_cast<WebRenderBridgeParent*>(aActor);
-  {
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    auto it = sIndirectLayerTrees.find(parent->PipelineId());
-    if (it != sIndirectLayerTrees.end()) {
-      it->second.mWRBridge = nullptr;
-    }
-  }
+  EraseLayerState(parent->PipelineId());
   parent->Release(); // IPDL reference
   return true;
 }
