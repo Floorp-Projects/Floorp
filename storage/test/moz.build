@@ -6,32 +6,5 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
-GeckoCppUnitTests([
-    'test_AsXXX_helpers',
-    'test_async_callbacks_with_spun_event_loops',
-    'test_asyncStatementExecution_transaction',
-    'test_binding_params',
-    'test_file_perms',
-    'test_mutex',
-    'test_service_init_background_thread',
-    'test_statement_scoper',
-    'test_StatementCache',
-    'test_transaction_helper',
-    'test_true_async',
-    'test_unlock_notify',
-])
+TEST_DIRS += ['gtest']
 
-if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT', 'Darwin'):
-    # FIXME bug 523392: test_deadlock_detector doesn't like Windows
-    # FIXME bug 523378: also fails on OS X
-    GeckoCppUnitTests([
-        'test_deadlock_detector',
-    ])
-
-LOCAL_INCLUDES += [
-    '..',
-]
-
-USE_LIBS += [
-    'sqlite',
-]

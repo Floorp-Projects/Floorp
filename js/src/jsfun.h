@@ -28,6 +28,9 @@ static const uint32_t JSSLOT_BOUND_FUNCTION_TARGET     = 2;
 static const uint32_t JSSLOT_BOUND_FUNCTION_THIS       = 3;
 static const uint32_t JSSLOT_BOUND_FUNCTION_ARGS       = 4;
 
+static const char FunctionConstructorMedialSigils[] = ") {\n";
+static const char FunctionConstructorFinalBrace[] = "\n}";
+
 class JSFunction : public js::NativeObject
 {
   public:
@@ -812,7 +815,7 @@ JSFunction::getExtendedSlot(size_t which) const
 
 namespace js {
 
-JSString* FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen);
+JSString* FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPring);
 
 template<XDRMode mode>
 bool

@@ -38,11 +38,6 @@ public:
   void SetURI(nsIURI* aURI);
 
   /**
-   * Computes the puny-encoded origin of aURI.
-   */
-  static nsresult GetOriginForURI(nsIURI* aURI, nsACString& aOrigin);
-
-  /**
    * Called at startup to setup static data, e.g. about:config pref-observers.
    */
   static void InitializeStatics();

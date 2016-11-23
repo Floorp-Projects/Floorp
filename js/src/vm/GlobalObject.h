@@ -427,6 +427,18 @@ class GlobalObject : public NativeObject
         return &global->getPrototype(key).toObject();
     }
 
+    static JSFunction*
+    getOrCreateErrorConstructor(JSContext* cx, Handle<GlobalObject*> global) {
+        if (!ensureConstructor(cx, global, JSProto_Error))
+            return nullptr;
+        return &global->getConstructor(JSProto_Error).toObject().as<JSFunction>();
+    }
+
+    static JSObject*
+    getOrCreateErrorPrototype(JSContext* cx, Handle<GlobalObject*> global) {
+        return getOrCreateCustomErrorPrototype(cx, global, JSEXN_ERR);
+    }
+
     static NativeObject* getOrCreateSetPrototype(JSContext* cx, Handle<GlobalObject*> global) {
         if (!ensureConstructor(cx, global, JSProto_Set))
             return nullptr;
@@ -1005,10 +1017,7 @@ GenericCreatePrototype(JSContext* cx, JSProtoKey key)
 inline JSProtoKey
 StandardProtoKeyOrNull(const JSObject* obj)
 {
-    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(obj->getClass());
-    if (key == JSProto_Error)
-        return GetExceptionProtoKey(obj->as<ErrorObject>().type());
-    return key;
+    return JSCLASS_CACHED_PROTO_KEY(obj->getClass());
 }
 
 JSObject*

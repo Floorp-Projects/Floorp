@@ -102,16 +102,6 @@ function doPageErrors()
       warning: false,
       exception: true,
     },
-    "var f = Function('x y', 'return x + y;');": {
-      errorMessage: /malformed formal/,
-      errorMessageName: "JSMSG_BAD_FORMAL",
-      sourceName: /test_page_errors/,
-      category: "chrome javascript",
-      timeStamp: /^\d+$/,
-      error: false,
-      warning: false,
-      exception: true,
-    },
     "function a() { return; 1 + 1; }": {
       errorMessage: /unreachable code/,
       errorMessageName: "JSMSG_STMT_AFTER_RETURN",

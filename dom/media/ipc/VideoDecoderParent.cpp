@@ -54,6 +54,7 @@ VideoDecoderParent::VideoDecoderParent(VideoDecoderManagerParent* aParent,
   , mDestroyed(false)
 {
   MOZ_COUNT_CTOR(VideoDecoderParent);
+  MOZ_ASSERT(OnManagerThread());
   // We hold a reference to ourselves to keep us alive until IPDL
   // explictly destroys us. There may still be refs held by
   // tasks, but no new ones should be added after we're
@@ -91,6 +92,7 @@ VideoDecoderParent::~VideoDecoderParent()
 void
 VideoDecoderParent::Destroy()
 {
+  MOZ_ASSERT(OnManagerThread());
   mDecodeTaskQueue->AwaitShutdownAndIdle();
   mDestroyed = true;
   mIPDLSelfRef = nullptr;
@@ -99,10 +101,11 @@ VideoDecoderParent::Destroy()
 mozilla::ipc::IPCResult
 VideoDecoderParent::RecvInit()
 {
+  MOZ_ASSERT(OnManagerThread());
   RefPtr<VideoDecoderParent> self = this;
   mDecoder->Init()->Then(mManagerTaskQueue, __func__,
     [self] (TrackInfo::TrackType aTrack) {
-      if (!self->mDestroyed) {
+      if (self->mDecoder) {
         nsCString hardwareReason;
         bool hardwareAccelerated = self->mDecoder->IsHardwareAccelerated(hardwareReason);
         Unused << self->SendInitComplete(hardwareAccelerated, hardwareReason);
@@ -119,6 +122,7 @@ VideoDecoderParent::RecvInit()
 mozilla::ipc::IPCResult
 VideoDecoderParent::RecvInput(const MediaRawDataIPDL& aData)
 {
+  MOZ_ASSERT(OnManagerThread());
   // XXX: This copies the data into a buffer owned by the MediaRawData. Ideally we'd just take ownership
   // of the shmem.
   RefPtr<MediaRawData> data = new MediaRawData(aData.buffer().get<uint8_t>(), aData.buffer().Size<uint8_t>());
@@ -138,6 +142,7 @@ mozilla::ipc::IPCResult
 VideoDecoderParent::RecvFlush()
 {
   MOZ_ASSERT(!mDestroyed);
+  MOZ_ASSERT(OnManagerThread());
   if (mDecoder) {
     mDecoder->Flush();
   }
@@ -158,6 +163,7 @@ mozilla::ipc::IPCResult
 VideoDecoderParent::RecvDrain()
 {
   MOZ_ASSERT(!mDestroyed);
+  MOZ_ASSERT(OnManagerThread());
   mDecoder->Drain();
   return IPC_OK();
 }
@@ -166,6 +172,7 @@ mozilla::ipc::IPCResult
 VideoDecoderParent::RecvShutdown()
 {
   MOZ_ASSERT(!mDestroyed);
+  MOZ_ASSERT(OnManagerThread());
   if (mDecoder) {
     mDecoder->Shutdown();
   }
@@ -177,6 +184,7 @@ mozilla::ipc::IPCResult
 VideoDecoderParent::RecvSetSeekThreshold(const int64_t& aTime)
 {
   MOZ_ASSERT(!mDestroyed);
+  MOZ_ASSERT(OnManagerThread());
   mDecoder->SetSeekThreshold(media::TimeUnit::FromMicroseconds(aTime));
   return IPC_OK();
 }
@@ -185,6 +193,7 @@ void
 VideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   MOZ_ASSERT(!mDestroyed);
+  MOZ_ASSERT(OnManagerThread());
   if (mDecoder) {
     mDecoder->Shutdown();
     mDecoder = nullptr;
@@ -278,6 +287,12 @@ VideoDecoderParent::OnReaderTaskQueue()
   // Most of our calls into mDecoder come directly from IPDL so are on
   // the right thread, but not actually on the task queue. We only ever
   // run a single thread, not a pool, so this should work fine.
+  return OnManagerThread();
+}
+
+bool
+VideoDecoderParent::OnManagerThread()
+{
   return mParent->OnManagerThread();
 }
 

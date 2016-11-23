@@ -41,7 +41,6 @@ function setup_fs() {
 function setup_sdcard() {
   let volName = "sdcard";
   let mountPoint = "/data/local/tmp/sdcard";
-  volumeService.createFakeVolume(volName, mountPoint);
 
   let vol = volumeService.getVolumeByName(volName);
   ok(vol, "volume shouldn't be null");
