@@ -444,6 +444,15 @@ void GeckoSampler::ToJSObjectAsync(double aSinceTime,
   mGatherer->Start(aSinceTime, aPromise);
 }
 
+void GeckoSampler::ToFileAsync(const nsACString& aFileName, double aSinceTime)
+{
+  if (NS_WARN_IF(!mGatherer)) {
+    return;
+  }
+
+  mGatherer->Start(aSinceTime, aFileName);
+}
+
 struct SubprocessClosure {
   explicit SubprocessClosure(SpliceableJSONWriter* aWriter)
     : mWriter(aWriter)

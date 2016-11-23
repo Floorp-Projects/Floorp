@@ -1,6 +1,6 @@
 This directory contains files used in gecko builds from FFmpeg
 (http://ffmpeg.org). The current files are from FFmpeg as of
-revision n3.1.1-6-g86f9228
+revision n3.2-65-gee56777
 All source files match their path from the library's source archive.
 
 Currently, we only use the vp8 and vp9 portion of the library, and only on x86

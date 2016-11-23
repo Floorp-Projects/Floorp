@@ -13,14 +13,8 @@ const Cr = Components.results;
 const Cu = Components.utils;
 const Cc = Components.classes;
 
-const PROMPT_FOR_UNKNOWN = ["audio-capture",
-                            "desktop-notification",
-                            "geolocation",
-                            "video-capture"];
-// Due to privary issue, permission requests like GetUserMedia should prompt
-// every time instead of providing session persistence.
-const PERMISSION_NO_SESSION = ["audio-capture", "video-capture"];
-const ALLOW_MULTIPLE_REQUESTS = ["audio-capture", "video-capture"];
+const PROMPT_FOR_UNKNOWN = ["desktop-notification",
+                            "geolocation"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -113,23 +107,6 @@ ContentPermissionPrompt.prototype = {
     return false;
   },
 
-  // multiple requests should be audio and video
-  checkMultipleRequest: function checkMultipleRequest(typesInfo) {
-    if (typesInfo.length == 1) {
-      return true;
-    } else if (typesInfo.length > 1) {
-      let checkIfAllowMultiRequest = function(type) {
-        return (ALLOW_MULTIPLE_REQUESTS.indexOf(type.access) !== -1);
-      }
-      if (typesInfo.every(checkIfAllowMultiRequest)) {
-        debug("legal multiple requests");
-        return true;
-      }
-    }
-
-    return false;
-  },
-
   handledByPermissionType: function handledByPermissionType(request, typesInfo) {
     for (let i in typesInfo) {
       if (permissionSpecificChecker.hasOwnProperty(typesInfo[i].permission) &&
@@ -172,11 +149,6 @@ ContentPermissionPrompt.prototype = {
 
 
     if (typesInfo.length == 0) {
-      request.cancel();
-      return;
-    }
-
-    if(!this.checkMultipleRequest(typesInfo)) {
       request.cancel();
       return;
     }
@@ -258,11 +230,6 @@ ContentPermissionPrompt.prototype = {
         if (remember) {
           Services.perms.addFromPrincipal(request.principal, type.access,
                                           Ci.nsIPermissionManager.DENY_ACTION);
-        } else if (PERMISSION_NO_SESSION.indexOf(type.access) < 0) {
-          Services.perms.addFromPrincipal(request.principal, type.access,
-                                          Ci.nsIPermissionManager.DENY_ACTION,
-                                          Ci.nsIPermissionManager.EXPIRE_SESSION,
-                                          0);
         }
       }
       try {
@@ -297,11 +264,7 @@ ContentPermissionPrompt.prototype = {
     }
 
     let principal = request.principal;
-    let isApp = principal.appStatus != Ci.nsIPrincipal.APP_STATUS_NOT_INSTALLED;
-    let remember = (principal.appStatus == Ci.nsIPrincipal.APP_STATUS_PRIVILEGED ||
-                    principal.appStatus == Ci.nsIPrincipal.APP_STATUS_CERTIFIED)
-                    ? true
-                    : request.remember;
+    let remember = request.remember;
     let isGranted = typesInfo.every(function(type) {
       return type.action == Ci.nsIPermissionManager.ALLOW_ACTION;
     });
@@ -319,14 +282,10 @@ ContentPermissionPrompt.prototype = {
       // compare against the mozApp.origin of app windows, so we
       // are not concerned with origin suffixes here (appId, etc).
       origin: principal.originNoSuffix,
-      isApp: isApp,
+      isApp: false,
       remember: remember,
       isGranted: isGranted,
     };
-
-    if (isApp) {
-      details.manifestURL = DOMApplicationRegistry.getManifestURLByLocalId(principal.appId);
-    }
 
     // request.element is defined for OOP content, while request.window
     // is defined for In-Process content.
@@ -351,19 +310,6 @@ ContentPermissionPrompt.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt])
 };
-
-(function() {
-  // Do not allow GetUserMedia while in call.
-  permissionSpecificChecker["audio-capture"] = function(request) {
-    let forbid = false;
-
-    if (forbid) {
-      request.cancel();
-    }
-
-    return forbid;
-  };
-})();
 
 //module initialization
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ContentPermissionPrompt]);

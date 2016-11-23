@@ -212,6 +212,10 @@ CssRuleView.prototype = {
    * @return {Promise} Resolves to the instance of the highlighter.
    */
   getSelectorHighlighter: Task.async(function* () {
+    if (!this.inspector) {
+      return null;
+    }
+
     let utils = this.inspector.toolbox.highlighterUtils;
     if (!utils.supportsCustomHighlighters()) {
       return null;
@@ -270,12 +274,12 @@ CssRuleView.prototype = {
   },
 
   highlightSelector: Task.async(function* (selector) {
-    let node = this.inspector.selection.nodeFront;
-
     let highlighter = yield this.getSelectorHighlighter();
     if (!highlighter) {
       return;
     }
+
+    let node = this.inspector.selection.nodeFront;
 
     yield highlighter.show(node, {
       hideInfoBar: true,

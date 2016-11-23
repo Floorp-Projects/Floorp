@@ -1369,6 +1369,53 @@ add_test(function test_uploadOutgoing_toEmptyServer() {
 });
 
 
+add_test(function test_uploadOutgoing_huge() {
+  Service.identity.username = "foo";
+  let collection = new ServerCollection();
+  collection._wbos.flying = new ServerWBO('flying');
+  collection._wbos.scotsman = new ServerWBO('scotsman');
+
+  let server = sync_httpd_setup({
+      "/1.1/foo/storage/rotary": collection.handler(),
+      "/1.1/foo/storage/rotary/flying": collection.wbo("flying").handler(),
+  });
+
+  let syncTesting = new SyncTestingInfrastructure(server);
+  generateNewKeys(Service.collectionKeys);
+
+  let engine = makeRotaryEngine();
+  engine.allowSkippedRecord = true;
+  engine.lastSync = 1;
+  engine._store.items = { flying: "a".repeat(1024 * 1024) };
+
+  engine._tracker.addChangedID("flying", 1000);
+
+  let meta_global = Service.recordManager.set(engine.metaURL,
+                                              new WBORecord(engine.metaURL));
+  meta_global.payload.engines = {rotary: {version: engine.version,
+                                         syncID: engine.syncID}};
+
+  try {
+
+    // Confirm initial environment
+    do_check_eq(engine.lastSyncLocal, 0);
+    do_check_eq(collection.payload("flying"), undefined);
+
+    engine._syncStartup();
+    engine._uploadOutgoing();
+    engine.trackRemainingChanges();
+
+    // Check we didn't upload to the server
+    do_check_eq(collection.payload("flying"), undefined);
+    // And that we won't try to upload it again next time.
+    do_check_eq(engine._tracker.changedIDs["flying"], undefined);
+
+  } finally {
+    cleanAndGo(server);
+  }
+});
+
+
 add_task(function *test_uploadOutgoing_failed() {
   _("SyncEngine._uploadOutgoing doesn't clear the tracker of objects that failed to upload.");
 

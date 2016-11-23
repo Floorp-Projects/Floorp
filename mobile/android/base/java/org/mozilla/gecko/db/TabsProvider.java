@@ -32,7 +32,7 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
     static final int TABS_ID = 601;
     static final int CLIENTS = 602;
     static final int CLIENTS_ID = 603;
-    static final int CLIENTS_RECENCY = 604;
+    static final int CLIENTS_NO_STALE_SORTED = 604;
 
     // Exclude clients that are more than three weeks old and also any duplicates that are older than one week old.
     static final String EXCLUDE_STALE_CLIENTS_SUBQUERY =
@@ -61,7 +61,7 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
 
     static final String DEFAULT_TABS_SORT_ORDER = Clients.LAST_MODIFIED + " DESC, " + Tabs.LAST_USED + " DESC";
     static final String DEFAULT_CLIENTS_SORT_ORDER = Clients.LAST_MODIFIED + " DESC";
-    static final String DEFAULT_CLIENTS_RECENCY_SORT_ORDER = "COALESCE(MAX(" + Tabs.LAST_USED + "), " + Clients.LAST_MODIFIED + ") DESC";
+    static final String DEFAULT_CLIENTS_NAME_ORDER = Clients.NAME + " COLLATE NOCASE ASC";
 
     static final String INDEX_TABS_GUID = "tabs_guid_index";
     static final String INDEX_TABS_POSITION = "tabs_position_index";
@@ -77,7 +77,7 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
         URI_MATCHER.addURI(BrowserContract.TABS_AUTHORITY, "tabs/#", TABS_ID);
         URI_MATCHER.addURI(BrowserContract.TABS_AUTHORITY, "clients", CLIENTS);
         URI_MATCHER.addURI(BrowserContract.TABS_AUTHORITY, "clients/#", CLIENTS_ID);
-        URI_MATCHER.addURI(BrowserContract.TABS_AUTHORITY, "clients_recency", CLIENTS_RECENCY);
+        URI_MATCHER.addURI(BrowserContract.TABS_AUTHORITY, "clients_no_stale_sorted", CLIENTS_NO_STALE_SORTED);
 
         HashMap<String, String> map;
 
@@ -310,10 +310,10 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
                 qb.setTables(TABLE_CLIENTS);
                 break;
 
-            case CLIENTS_RECENCY:
-                trace("Query is on CLIENTS_RECENCY: " + uri);
+            case CLIENTS_NO_STALE_SORTED:
+                trace("Query is on CLIENTS_NO_STALE_SORTED: " + uri);
                 if (TextUtils.isEmpty(sortOrder)) {
-                    sortOrder = DEFAULT_CLIENTS_RECENCY_SORT_ORDER;
+                    sortOrder = DEFAULT_CLIENTS_NAME_ORDER;
                 } else {
                     debug("Using sort order " + sortOrder + ".");
                 }

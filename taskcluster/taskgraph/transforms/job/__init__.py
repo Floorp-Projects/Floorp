@@ -53,6 +53,7 @@ job_description_schema = Schema({
     Optional('run-on-projects'): task_description_schema['run-on-projects'],
     Optional('coalesce-name'): task_description_schema['coalesce-name'],
     Optional('worker-type'): task_description_schema['worker-type'],
+    Optional('needs-sccache'): task_description_schema['needs-sccache'],
     Required('worker'): task_description_schema['worker'],
     Optional('when'): task_description_schema['when'],
 

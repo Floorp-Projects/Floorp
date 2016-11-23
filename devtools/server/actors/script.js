@@ -33,6 +33,7 @@ loader.lazyGetter(this, "Debugger", () => {
   return Debugger;
 });
 loader.lazyRequireGetter(this, "CssLogic", "devtools/server/css-logic", true);
+loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
 
@@ -1435,7 +1436,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         }
 
         // There will be no tagName if the event listener is set on the window.
-        let selector = node.tagName ? CssLogic.findCssSelector(node) : "window";
+        let selector = node.tagName ? findCssSelector(node) : "window";
         let nodeDO = this.globalDebugObject.makeDebuggeeValue(node);
         listenerForm.node = {
           selector: selector,

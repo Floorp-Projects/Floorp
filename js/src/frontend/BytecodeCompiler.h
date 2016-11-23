@@ -7,6 +7,8 @@
 #ifndef frontend_BytecodeCompiler_h
 #define frontend_BytecodeCompiler_h
 
+#include "mozilla/Maybe.h"
+
 #include "NamespaceImports.h"
 
 #include "vm/Scope.h"
@@ -51,22 +53,36 @@ CompileModule(ExclusiveContext* cx, const ReadOnlyCompileOptions& options,
 MOZ_MUST_USE bool
 CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const char16_t* chars, size_t length);
 
+//
+// Compile a single function. The source in srcBuf must match the ECMA-262
+// FunctionExpression production.
+//
+// If nonzero, parameterListEnd is the offset within srcBuf where the parameter
+// list is expected to end. During parsing, if we find that it ends anywhere
+// else, it's a SyntaxError. This is used to implement the Function constructor;
+// it's how we detect that these weird cases are SyntaxErrors:
+//
+//     Function("/*", "*/x) {")
+//     Function("x){ if (3", "return x;}")
+//
 MOZ_MUST_USE bool
-CompileFunctionBody(JSContext* cx, MutableHandleFunction fun,
-                    const ReadOnlyCompileOptions& options,
-                    Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf,
-                    HandleScope enclosingScope);
+CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
+                          const ReadOnlyCompileOptions& options,
+                          JS::SourceBufferHolder& srcBuf,
+                          mozilla::Maybe<uint32_t> parameterListEnd,
+                          HandleScope enclosingScope = nullptr);
 
-// As above, but defaults to the global lexical scope as the enclosing scope.
 MOZ_MUST_USE bool
-CompileFunctionBody(JSContext* cx, MutableHandleFunction fun,
-                    const ReadOnlyCompileOptions& options,
-                    Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf);
+CompileStandaloneGenerator(JSContext* cx, MutableHandleFunction fun,
+                           const ReadOnlyCompileOptions& options,
+                           JS::SourceBufferHolder& srcBuf,
+                           mozilla::Maybe<uint32_t> parameterListEnd);
 
 MOZ_MUST_USE bool
-CompileStarGeneratorBody(JSContext* cx, MutableHandleFunction fun,
-                         const ReadOnlyCompileOptions& options,
-                         Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf);
+CompileStandaloneAsyncFunction(JSContext* cx, MutableHandleFunction fun,
+                               const ReadOnlyCompileOptions& options,
+                               JS::SourceBufferHolder& srcBuf,
+                               mozilla::Maybe<uint32_t> parameterListEnd);
 
 MOZ_MUST_USE bool
 CompileAsyncFunctionBody(JSContext* cx, MutableHandleFunction fun,
@@ -74,7 +90,8 @@ CompileAsyncFunctionBody(JSContext* cx, MutableHandleFunction fun,
                          Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf);
 
 ScriptSourceObject*
-CreateScriptSourceObject(ExclusiveContext* cx, const ReadOnlyCompileOptions& options);
+CreateScriptSourceObject(ExclusiveContext* cx, const ReadOnlyCompileOptions& options,
+                         mozilla::Maybe<uint32_t> parameterListEnd = mozilla::Nothing());
 
 /*
  * True if str consists of an IdentifierStart character, followed by one or

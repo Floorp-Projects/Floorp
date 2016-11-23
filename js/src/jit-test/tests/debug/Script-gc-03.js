@@ -10,6 +10,6 @@ assertEq(arr.length, 100);
 gc(g);
 
 for (var i = 0; i < arr.length; i++)
-    assertEq(arr[i].lineCount, 1);
+    assertEq(arr[i].lineCount, 3);
 
 gc();

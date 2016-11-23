@@ -5754,6 +5754,8 @@ nsDocShell::Destroy()
   NS_ASSERTION(mItemType == typeContent || mItemType == typeChrome,
                "Unexpected item type in docshell");
 
+  AssertOriginAttributesMatchPrivateBrowsing();
+
   if (!mIsBeingDestroyed) {
     nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
     if (serv) {
@@ -9511,6 +9513,8 @@ public:
     , mLoadingPrincipal(aLoadingPrincipal)
     , mInPrivateBrowsing(aInPrivateBrowsing)
   {
+    MOZ_DIAGNOSTIC_ASSERT(
+      (BasePrincipal::Cast(aLoadingPrincipal)->OriginAttributesRef().mPrivateBrowsingId > 0) == aInPrivateBrowsing);
   }
 
   NS_IMETHOD
@@ -9553,6 +9557,9 @@ nsDocShell::CopyFavicon(nsIURI* aOldURI,
                         nsIPrincipal* aLoadingPrincipal,
                         bool aInPrivateBrowsing)
 {
+  MOZ_DIAGNOSTIC_ASSERT(
+    (BasePrincipal::Cast(aLoadingPrincipal)->OriginAttributesRef().mPrivateBrowsingId > 0) == aInPrivateBrowsing);
+
   if (XRE_IsContentProcess()) {
     dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
     if (contentChild) {
@@ -14347,6 +14354,7 @@ nsDocShell::SetOriginAttributes(const DocShellOriginAttributes& aAttrs)
   }
 
   SetPrivateBrowsing(isPrivate);
+  AssertOriginAttributesMatchPrivateBrowsing();
 
   return NS_OK;
 }

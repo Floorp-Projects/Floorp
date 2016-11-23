@@ -701,8 +701,8 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY updater_downloading_select2 "Touch to apply update once downloaded">
 <!ENTITY updater_downloading_retry2 "Touch to retry">
 
-<!ENTITY updater_apply_title2 "Update available for &brandShortName;">
-<!ENTITY updater_apply_select2 "Touch to update">
+<!ENTITY updater_apply_title3 "Update downloaded for &brandShortName;">
+<!ENTITY updater_apply_select3 "Touch to install">
 
 <!-- Localization note (updater_permission_text): This text is shown in a notification and as a snackbar
      if the app requires a runtime permission to download updates. Currently, the updater only sees

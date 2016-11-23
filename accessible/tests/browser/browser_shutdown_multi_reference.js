@@ -21,7 +21,7 @@ add_task(function* () {
 
   info('Removing all service references');
   let canShutdown = false;
-  // This promise will resolve only if canShutdonw flag is set to true. If
+  // This promise will resolve only if canShutdown flag is set to true. If
   // 'a11y-init-or-shutdown' event with '0' flag comes before it can be shut
   // down, the promise will reject.
   let a11yShutdown = new Promise((resolve, reject) =>

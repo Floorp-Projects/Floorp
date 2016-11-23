@@ -41,15 +41,20 @@ if test -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$MOZ_PGO_IS_SET" -a -z 
         ;;
     esac
 fi
+fi
 
-# builds without buildprops (eg: taskcluster or non-buildbot) and without ccache env config and without sccache disabled:
-elif test -z "$CCACHE_DIR" -a -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$MOZ_PGO_IS_SET" -a -z "$MOZ_PGO"; then
+# builds where buildprops didn't have the data (eg: taskcluster or non-buildbot) and without sccache disabled:
+if test -z "$bucket" -a -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$MOZ_PGO_IS_SET" -a -z "$MOZ_PGO"; then
 
     # prevent rerun if az is set, or wget is not available
     if test -z "$availability_zone" -a -x "$(command -v wget)"; then
-        # timeout after 1 second, and don't retry (failure indicates instance is not in ec2 or network issue)
-        # availability_zone is of the form <region><letter> where region is e.g. us-west-2, and az is us-west-2a
-        availability_zone=$(wget -T 1 -t 1 -q -O - http://169.254.169.254/latest/meta-data/placement/availability-zone || true)
+        if test -n "${TASKCLUSTER_WORKER_GROUP}"; then
+            availability_zone="${TASKCLUSTER_WORKER_GROUP}"
+        else
+            # timeout after 1 second, and don't retry (failure indicates instance is not in ec2 or network issue)
+            # availability_zone is of the form <region><letter> where region is e.g. us-west-2, and az is us-west-2a
+            availability_zone=$(wget -T 1 -t 1 -q -O - http://169.254.169.254/latest/meta-data/placement/availability-zone || true)
+        fi
         if test -z "$availability_zone" -o "$availability_zone" = "not-ec2"; then
             availability_zone=not-ec2
         else

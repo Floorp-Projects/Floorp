@@ -129,7 +129,9 @@ PrepareScript(nsIURI* uri,
               MutableHandleFunction function)
 {
     JS::CompileOptions options(cx);
-    options.setFileAndLine(uriStr, 1)
+    // Use line 0 to make the function body starts from line 1 when
+    // |reuseGlobal == true|.
+    options.setFileAndLine(uriStr, reuseGlobal ? 0 : 1)
            .setVersion(JSVERSION_LATEST);
     if (!charset.IsVoid()) {
         char16_t* scriptBuf = nullptr;
