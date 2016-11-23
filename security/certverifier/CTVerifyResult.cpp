@@ -6,12 +6,20 @@
 
 #include "CTVerifyResult.h"
 
+#include <stdint.h>
+
 namespace mozilla { namespace ct {
+
+VerifiedSCT::VerifiedSCT()
+  : status(Status::None)
+  , origin(Origin::Unknown)
+{
+}
 
 void
 CTVerifyResult::Reset()
 {
-  scts.clear();
+  verifiedScts.clear();
   decodingErrors = 0;
 }
 

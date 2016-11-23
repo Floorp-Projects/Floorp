@@ -12,15 +12,49 @@
 
 namespace mozilla { namespace ct {
 
-typedef Vector<SignedCertificateTimestamp> SCTList;
+// Holds a verified Signed Certificate Timestamp along with the verification
+// status (e.g. valid/invalid) and additional information related to the
+// verification.
+struct VerifiedSCT
+{
+  VerifiedSCT();
+
+  // The original SCT.
+  SignedCertificateTimestamp sct;
+
+  enum class Status {
+    None,
+    // The SCT is from a known log, and the signature is valid.
+    Valid,
+    // The SCT is from an unknown log and can not be verified.
+    UnknownLog,
+    // The SCT is from a known log, but the signature is invalid.
+    InvalidSignature,
+    // The SCT signature is valid, but the timestamp is in the future.
+    // Such SCTs are considered invalid (see RFC 6962, Section 5.2).
+    InvalidTimestamp,
+  };
+
+  enum class Origin {
+    Unknown,
+    Embedded,
+    TLSExtension,
+    OCSPResponse,
+  };
+
+  Status status;
+  Origin origin;
+};
+
+typedef Vector<VerifiedSCT> VerifiedSCTList;
 
 // Holds Signed Certificate Timestamps verification results.
 class CTVerifyResult
 {
 public:
-  // SCTs that were processed during the verification. For each SCT,
-  // the verification result is stored in its |verificationStatus| field.
-  SCTList scts;
+  // SCTs that were processed during the verification along with their
+  // verification results.
+  VerifiedSCTList verifiedScts;
 
   // The verifier makes the best effort to extract the available SCTs
   // from the binary sources provided to it.
