@@ -83,6 +83,8 @@ class TextureVk : public TextureImpl
 
     gl::Error getAttachmentRenderTarget(const gl::FramebufferAttachment::Target &target,
                                         FramebufferAttachmentRenderTarget **rtOut) override;
+
+    void syncState(const gl::Texture::DirtyBits &dirtyBits) override;
 };
 
 }  // namespace rx

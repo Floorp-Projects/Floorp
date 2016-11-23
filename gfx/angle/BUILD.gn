@@ -6,7 +6,8 @@
 import("//build/config/dcheck_always_on.gni")
 import("//build/config/linux/pkg_config.gni")
 import("//build/config/ui.gni")
-import("//third_party/angle/build/angle_common.gni")
+import("//testing/libfuzzer/fuzzer_test.gni")
+import("//third_party/angle/gni/angle.gni")
 import("//ui/ozone/ozone.gni")
 
 if (ozone_platform_gbm) {
@@ -54,6 +55,7 @@ config("extra_warnings") {
     cflags = [
       "/we4244",  # Conversion: possible loss of data.
       "/we4456",  # Variable shadowing.
+      "/we4458",  # declaration hides class member.
     ]
   }
 }
@@ -70,22 +72,6 @@ if (is_win) {
 }
 
 angle_undefine_configs = [ "//build/config/compiler:default_include_dirs" ]
-
-component("translator") {
-  sources = [
-    "src/compiler/translator/ShaderLang.cpp",
-    "src/compiler/translator/ShaderVars.cpp",
-  ]
-
-  defines = [ "ANGLE_TRANSLATOR_IMPLEMENTATION" ]
-
-  configs -= angle_undefine_configs
-  configs += [ ":internal_config" ]
-
-  public_deps = [
-    ":translator_lib",
-  ]
-}
 
 # Holds the shared includes so we only need to list them once.
 source_set("includes") {
@@ -110,10 +96,14 @@ static_library("preprocessor") {
 
   configs -= angle_undefine_configs
   configs += [ ":internal_config" ]
+
+  public_deps = [
+    ":angle_common",
+  ]
 }
 
-config("translator_static_config") {
-  defines = [ "ANGLE_TRANSLATOR_STATIC" ]
+config("translator_disable_pool_alloc") {
+  defines = [ "ANGLE_TRANSLATOR_DISABLE_POOL_ALLOC" ]
 }
 
 config("debug_annotations_config") {
@@ -172,33 +162,33 @@ static_library("angle_image_util") {
   ]
 }
 
-static_library("translator_lib") {
-  sources = rebase_path(compiler_gypi.angle_translator_lib_sources, ".", "src")
+static_library("translator") {
+  sources = rebase_path(compiler_gypi.angle_translator_sources, ".", "src")
   defines = []
 
-  if (angle_enable_essl) {
+  if (angle_enable_essl || use_libfuzzer) {
     sources +=
-        rebase_path(compiler_gypi.angle_translator_lib_essl_sources, ".", "src")
+        rebase_path(compiler_gypi.angle_translator_essl_sources, ".", "src")
     defines += [ "ANGLE_ENABLE_ESSL" ]
   }
 
-  if (angle_enable_glsl) {
+  if (angle_enable_glsl || use_libfuzzer) {
     sources +=
-        rebase_path(compiler_gypi.angle_translator_lib_glsl_sources, ".", "src")
+        rebase_path(compiler_gypi.angle_translator_glsl_sources, ".", "src")
     defines += [ "ANGLE_ENABLE_GLSL" ]
   }
 
-  if (angle_enable_hlsl) {
+  if (angle_enable_hlsl || use_libfuzzer) {
     sources +=
-        rebase_path(compiler_gypi.angle_translator_lib_hlsl_sources, ".", "src")
+        rebase_path(compiler_gypi.angle_translator_hlsl_sources, ".", "src")
     defines += [ "ANGLE_ENABLE_HLSL" ]
   }
   configs -= angle_undefine_configs
-  configs += [
-    ":internal_config",
-    ":translator_static_config",
-  ]
+  configs += [ ":internal_config" ]
   public_configs = [ ":external_config" ]
+  if (use_libfuzzer) {
+    all_dependent_configs = [ ":translator_disable_pool_alloc" ]
+  }
 
   deps = [
     ":includes",
@@ -216,22 +206,18 @@ static_library("translator_lib") {
   }
 }
 
-static_library("translator_static") {
+source_set("translator_fuzzer") {
   sources = [
-    "src/compiler/translator/ShaderLang.cpp",
-    "src/compiler/translator/ShaderVars.cpp",
+    "src/compiler/fuzz/translator_fuzzer.cpp",
   ]
 
-  if (angle_enable_hlsl) {
-    defines = [ "ANGLE_ENABLE_HLSL" ]
-  }
+  include_dirs = [
+    "include",
+    "src",
+  ]
 
-  configs -= angle_undefine_configs
-  configs += [ ":internal_config" ]
-  public_configs = [ ":translator_static_config" ]
-
-  public_deps = [
-    ":translator_lib",
+  deps = [
+    ":translator",
   ]
 }
 
@@ -285,9 +271,13 @@ config("libANGLE_config") {
   if (angle_enable_vulkan) {
     defines += [ "ANGLE_ENABLE_VULKAN" ]
   }
+  if (angle_enable_null) {
+    defines += [ "ANGLE_ENABLE_NULL" ]
+  }
   defines += [
     "GL_GLEXT_PROTOTYPES",
     "EGL_EGLEXT_PROTOTYPES",
+    "LIBANGLE_IMPLEMENTATION",
   ]
 
   if (is_win) {
@@ -311,7 +301,7 @@ static_library("libANGLE") {
 
   include_dirs = []
   libs = []
-  defines = [ "LIBANGLE_IMPLEMENTATION" ]
+  defines = []
   public_deps = [
     ":angle_common",
   ]
@@ -319,7 +309,7 @@ static_library("libANGLE") {
     ":angle_image_util",
     ":commit_id",
     ":includes",
-    ":translator_static",
+    ":translator",
   ]
 
   # Shared D3D sources.
@@ -387,6 +377,10 @@ static_library("libANGLE") {
 
   if (angle_enable_vulkan) {
     sources += rebase_path(gles_gypi.libangle_vulkan_sources, ".", "src")
+  }
+
+  if (angle_enable_null) {
+    sources += rebase_path(gles_gypi.libangle_null_sources, ".", "src")
   }
 
   if (is_debug) {

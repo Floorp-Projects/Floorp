@@ -123,9 +123,17 @@ class Renderer11 : public RendererD3D
 
     SwapChainD3D *createSwapChain(NativeWindowD3D *nativeWindow,
                                   HANDLE shareHandle,
+                                  IUnknown *d3dTexture,
                                   GLenum backBufferFormat,
                                   GLenum depthBufferFormat,
                                   EGLint orientation) override;
+    egl::Error getD3DTextureInfo(IUnknown *d3dTexture,
+                                 EGLint *width,
+                                 EGLint *height,
+                                 GLenum *fboFormat) const override;
+    egl::Error validateShareHandle(const egl::Config *config,
+                                   HANDLE shareHandle,
+                                   const egl::AttributeMap &attribs) const override;
 
     gl::Error setSamplerState(gl::SamplerType type,
                               int index,
@@ -162,7 +170,6 @@ class Renderer11 : public RendererD3D
     bool testDeviceLost() override;
     bool testDeviceResettable() override;
 
-    VendorID getVendorId() const;
     SIZE_T getMaxResourceSize() const;
     std::string getRendererDescription() const;
     DeviceIdentifier getAdapterIdentifier() const override;
@@ -217,6 +224,10 @@ class Renderer11 : public RendererD3D
                           bool unpackFlipY,
                           bool unpackPremultiplyAlpha,
                           bool unpackUnmultiplyAlpha) override;
+    gl::Error copyCompressedTexture(const gl::Texture *source,
+                                    GLint sourceLevel,
+                                    TextureStorage *storage,
+                                    GLint destLevel) override;
 
     // RenderTarget creation
     gl::Error createRenderTarget(int width,
@@ -332,7 +343,7 @@ class Renderer11 : public RendererD3D
                                    bool colorBlit, bool depthBlit, bool stencilBlit);
 
     bool isES3Capable() const;
-    const Renderer11DeviceCaps &getRenderer11DeviceCaps() { return mRenderer11DeviceCaps; };
+    const Renderer11DeviceCaps &getRenderer11DeviceCaps() const { return mRenderer11DeviceCaps; };
 
     RendererClass getRendererClass() const override { return RENDERER_D3D11; }
     InputLayoutCache *getInputLayoutCache() { return &mInputLayoutCache; }

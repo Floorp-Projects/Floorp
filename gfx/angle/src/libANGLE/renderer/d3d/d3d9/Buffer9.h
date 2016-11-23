@@ -20,7 +20,7 @@ class Renderer9;
 class Buffer9 : public BufferD3D
 {
   public:
-    Buffer9(Renderer9 *renderer);
+    Buffer9(const gl::BufferState &state, Renderer9 *renderer);
     virtual ~Buffer9();
 
     // BufferD3D implementation
