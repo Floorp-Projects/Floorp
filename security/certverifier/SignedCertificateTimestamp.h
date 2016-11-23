@@ -85,32 +85,6 @@ struct SignedCertificateTimestamp
   uint64_t timestamp;
   Buffer extensions;
   DigitallySigned signature;
-
-  // Supplementary fields, not defined in CT RFC. Set during the various
-  // stages of processing the received SCTs.
-
-  enum class Origin {
-    Unknown,
-    Embedded,
-    TLSExtension,
-    OCSPResponse
-  };
-
-  enum class VerificationStatus {
-    None,
-    // The SCT is from a known log, and the signature is valid.
-    OK,
-    // The SCT is from an unknown log and can not be verified.
-    UnknownLog,
-    // The SCT is from a known log, but the signature is invalid.
-    InvalidSignature,
-    // The SCT signature is valid, but the timestamp is in the future.
-    // Such SCT are considered invalid (see RFC 6962, Section 5.2).
-    InvalidTimestamp
-  };
-
-  Origin origin;
-  VerificationStatus verificationStatus;
 };
 
 

@@ -33,7 +33,9 @@ public:
     // Does nothing if NSS is already initialized.
     MOZ_RELEASE_ASSERT(NSS_NoDB_Init(nullptr) == SECSuccess);
 
-    ASSERT_EQ(Success, mVerifier.AddLog(InputForBuffer(GetTestPublicKey())));
+    CTLogVerifier log;
+    ASSERT_EQ(Success, log.Init(InputForBuffer(GetTestPublicKey())));
+    ASSERT_EQ(Success, mVerifier.AddLog(Move(log)));
 
     mTestCert = GetDEREncodedX509Cert();
     mEmbeddedCert = GetDEREncodedTestEmbeddedCert();
@@ -46,14 +48,13 @@ public:
     mNow = TimeFromEpochInSeconds(1451606400u); // Date.parse("2016-01-01")/1000
   }
 
-  void CheckForSingleVerifiedSCTInResult(const CTVerifyResult& result,
-    SignedCertificateTimestamp::Origin origin)
+  void CheckForSingleValidSCTInResult(const CTVerifyResult& result,
+                                      VerifiedSCT::Origin origin)
   {
     EXPECT_EQ(0U, result.decodingErrors);
-    ASSERT_EQ(1U, result.scts.length());
-    EXPECT_EQ(SignedCertificateTimestamp::VerificationStatus::OK,
-              result.scts[0].verificationStatus);
-    EXPECT_EQ(origin, result.scts[0].origin);
+    ASSERT_EQ(1U, result.verifiedScts.length());
+    EXPECT_EQ(VerifiedSCT::Status::Valid, result.verifiedScts[0].status);
+    EXPECT_EQ(origin, result.verifiedScts[0].origin);
   }
 
   // Writes an SCTList containing a single |sct| into |output|.
@@ -85,8 +86,7 @@ public:
               mVerifier.Verify(InputForBuffer(cert), InputForBuffer(issuerSPKI),
                                InputForBuffer(sctList), Input(), Input(),
                                mNow, result));
-    CheckForSingleVerifiedSCTInResult(result,
-      SignedCertificateTimestamp::Origin::Embedded);
+    CheckForSingleValidSCTInResult(result, VerifiedSCT::Origin::Embedded);
   }
 
 protected:
@@ -166,8 +166,7 @@ TEST_F(MultiLogCTVerifierTest, VerifiesSCTFromOCSP)
                              Input(), InputForBuffer(sctList), Input(),
                              mNow, result));
 
-  CheckForSingleVerifiedSCTInResult(result,
-    SignedCertificateTimestamp::Origin::OCSPResponse);
+  CheckForSingleValidSCTInResult(result, VerifiedSCT::Origin::OCSPResponse);
 }
 
 TEST_F(MultiLogCTVerifierTest, VerifiesSCTFromTLS)
@@ -182,8 +181,7 @@ TEST_F(MultiLogCTVerifierTest, VerifiesSCTFromTLS)
                              Input(), Input(), InputForBuffer(sctList),
                              mNow, result));
 
-  CheckForSingleVerifiedSCTInResult(result,
-    SignedCertificateTimestamp::Origin::TLSExtension);
+  CheckForSingleValidSCTInResult(result, VerifiedSCT::Origin::TLSExtension);
 }
 
 TEST_F(MultiLogCTVerifierTest, VerifiesSCTFromMultipleSources)
@@ -199,18 +197,14 @@ TEST_F(MultiLogCTVerifierTest, VerifiesSCTFromMultipleSources)
                              mNow, result));
 
   // The result should contain verified SCTs from TLS and OCSP origins.
-  EnumSet<SignedCertificateTimestamp::Origin> origins;
-  for (const SignedCertificateTimestamp& sct : result.scts) {
-    EXPECT_EQ(SignedCertificateTimestamp::VerificationStatus::OK,
-              sct.verificationStatus);
-    origins += sct.origin;
+  EnumSet<VerifiedSCT::Origin> origins;
+  for (const VerifiedSCT& verifiedSct : result.verifiedScts) {
+    EXPECT_EQ(VerifiedSCT::Status::Valid, verifiedSct.status);
+    origins += verifiedSct.origin;
   }
-  EXPECT_FALSE(
-    origins.contains(SignedCertificateTimestamp::Origin::Embedded));
-  EXPECT_TRUE(
-    origins.contains(SignedCertificateTimestamp::Origin::OCSPResponse));
-  EXPECT_TRUE(
-    origins.contains(SignedCertificateTimestamp::Origin::TLSExtension));
+  EXPECT_FALSE(origins.contains(VerifiedSCT::Origin::Embedded));
+  EXPECT_TRUE(origins.contains(VerifiedSCT::Origin::OCSPResponse));
+  EXPECT_TRUE(origins.contains(VerifiedSCT::Origin::TLSExtension));
 }
 
 TEST_F(MultiLogCTVerifierTest, IdentifiesSCTFromUnknownLog)
@@ -225,9 +219,8 @@ TEST_F(MultiLogCTVerifierTest, IdentifiesSCTFromUnknownLog)
                              mNow, result));
 
   EXPECT_EQ(0U, result.decodingErrors);
-  ASSERT_EQ(1U, result.scts.length());
-  EXPECT_EQ(SignedCertificateTimestamp::VerificationStatus::UnknownLog,
-            result.scts[0].verificationStatus);
+  ASSERT_EQ(1U, result.verifiedScts.length());
+  EXPECT_EQ(VerifiedSCT::Status::UnknownLog, result.verifiedScts[0].status);
 }
 
 } } // namespace mozilla::ct
