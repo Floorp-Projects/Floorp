@@ -595,12 +595,17 @@ public:
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
     if (mListenerMT) {
+      nsresult rv;
       if (mLen < 0) {
-        mListenerMT->mListener->OnMessageAvailable(mListenerMT->mContext,
-                                                   mData);
+        rv = mListenerMT->mListener->OnMessageAvailable(mListenerMT->mContext,
+                                                        mData);
       } else {
-        mListenerMT->mListener->OnBinaryMessageAvailable(mListenerMT->mContext,
-                                                         mData);
+        rv = mListenerMT->mListener->OnBinaryMessageAvailable(mListenerMT->mContext,
+                                                              mData);
+      }
+      if (NS_FAILED(rv)) {
+        LOG(("OnMessageAvailable or OnBinaryMessageAvailable "
+             "failed with 0x%08x", rv));
       }
     }
 
@@ -638,7 +643,11 @@ public:
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
     if (mListenerMT) {
-      mListenerMT->mListener->OnStop(mListenerMT->mContext, mReason);
+      nsresult rv = mListenerMT->mListener->OnStop(mListenerMT->mContext, mReason);
+      if (NS_FAILED(rv)) {
+        LOG(("WebSocketChannel::CallOnStop "
+             "OnStop failed (%08x)\n", rv));
+      }
       mChannel->mListenerMT = nullptr;
     }
 
@@ -676,8 +685,13 @@ public:
     MOZ_ASSERT(mChannel->IsOnTargetThread());
 
     if (mListenerMT) {
-      mListenerMT->mListener->OnServerClose(mListenerMT->mContext, mCode,
-                                            mReason);
+      nsresult rv =
+        mListenerMT->mListener->OnServerClose(mListenerMT->mContext, mCode,
+                                              mReason);
+      if (NS_FAILED(rv)) {
+        LOG(("WebSocketChannel::CallOnServerClose "
+             "OnServerClose failed (%08x)\n", rv));
+      }
     }
     return NS_OK;
   }
@@ -711,7 +725,10 @@ public:
 
     LOG(("WebSocketChannel::CallAcknowledge: Size %u\n", mSize));
     if (mListenerMT) {
-      mListenerMT->mListener->OnAcknowledge(mListenerMT->mContext, mSize);
+      nsresult rv = mListenerMT->mListener->OnAcknowledge(mListenerMT->mContext, mSize);
+      if (NS_FAILED(rv)) {
+        LOG(("WebSocketChannel::CallAcknowledge: Acknowledge failed (%08x)\n", rv));
+      }
     }
     return NS_OK;
   }
@@ -1252,7 +1269,10 @@ WebSocketChannel::Observe(nsISupports *subject,
             NewRunnableMethod(this, &WebSocketChannel::OnNetworkChanged),
             NS_DISPATCH_NORMAL);
         } else {
-          OnNetworkChanged();
+          nsresult rv = OnNetworkChanged();
+          if (NS_FAILED(rv)) {
+            LOG(("WebSocket: OnNetworkChanged failed (%08x)", rv));
+          }
         }
       }
     }
@@ -2930,7 +2950,11 @@ WebSocketChannel::StartWebsocketData()
        mListenerMT ? mListenerMT->mListener.get() : nullptr));
 
   if (mListenerMT) {
-    mListenerMT->mListener->OnStart(mListenerMT->mContext);
+    rv = mListenerMT->mListener->OnStart(mListenerMT->mContext);
+    if (NS_FAILED(rv)) {
+      LOG(("WebSocketChannel::StartWebsocketData "
+           "mListenerMT->mListener->OnStart() failed with error 0x%08x", rv));
+    }
   }
 
   return NS_OK;
@@ -3375,7 +3399,8 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
     //IncrementSessionCount();
     mWasOpened = 1;
     mListenerMT = new ListenerAndContextContainer(aListener, aContext);
-    mServerTransportProvider->SetListener(this);
+    rv = mServerTransportProvider->SetListener(this);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     mServerTransportProvider = nullptr;
 
     return NS_OK;

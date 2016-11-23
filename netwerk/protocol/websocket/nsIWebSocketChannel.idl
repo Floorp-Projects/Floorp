@@ -32,43 +32,43 @@ interface nsIWebSocketChannel : nsISupports
      * resource: URI to a file: URI) so that the original pre-redirect
      * URI can still be obtained.  This is never null.
      */
-    readonly attribute nsIURI originalURI;
+    [must_use] readonly attribute nsIURI originalURI;
 
     /**
      * The readonly URI corresponding to the protocol connection after any
      * redirections are completed.
      */
-    readonly attribute nsIURI URI;
+    [must_use] readonly attribute nsIURI URI;
 
     /**
      * The notification callbacks for authorization, etc..
      */
-    attribute nsIInterfaceRequestor notificationCallbacks;
+    [must_use] attribute nsIInterfaceRequestor notificationCallbacks;
 
     /**
      * Transport-level security information (if any)
      */
-    readonly attribute nsISupports securityInfo;
+    [must_use] readonly attribute nsISupports securityInfo;
 
     /**
      * The load group of of the websocket
      */
-    attribute nsILoadGroup loadGroup;
+    [must_use] attribute nsILoadGroup loadGroup;
 
     /**
      * The load info of the websocket
      */
-    attribute nsILoadInfo loadInfo;
+    [must_use] attribute nsILoadInfo loadInfo;
 
     /**
      * Sec-Websocket-Protocol value
      */
-    attribute ACString protocol;
+    [must_use] attribute ACString protocol;
 
     /**
      * Sec-Websocket-Extensions response header value
      */
-    readonly attribute ACString extensions;
+    [must_use] readonly attribute ACString extensions;
 
     /**
      * Init the WebSocketChannel with LoadInfo arguments.
@@ -88,11 +88,11 @@ interface nsIWebSocketChannel : nsISupports
      * then loadingPrincipal must be equal to loadingNode->NodePrincipal().
      * But less error prone is to just supply a loadingNode.
      */
-     void initLoadInfo(in nsIDOMNode aLoadingNode,
-                       in nsIPrincipal aLoadingPrincipal,
-                       in nsIPrincipal aTriggeringPrincipal,
-                       in unsigned long aSecurityFlags,
-                       in unsigned long aContentPolicyType);
+     [must_use] void initLoadInfo(in nsIDOMNode aLoadingNode,
+                                  in nsIPrincipal aLoadingPrincipal,
+                                  in nsIPrincipal aTriggeringPrincipal,
+                                  in unsigned long aSecurityFlags,
+                                  in unsigned long aContentPolicyType);
 
     /**
      * Asynchronously open the websocket connection.  Received messages are fed
@@ -110,11 +110,11 @@ interface nsIWebSocketChannel : nsISupports
      * @param aListener the nsIWebSocketListener implementation
      * @param aContext an opaque parameter forwarded to aListener's methods
      */
-    void asyncOpen(in nsIURI aURI,
-                   in ACString aOrigin,
-                   in unsigned long long aInnerWindowID,
-                   in nsIWebSocketListener aListener,
-                   in nsISupports aContext);
+    [must_use] void asyncOpen(in nsIURI aURI,
+                              in ACString aOrigin,
+                              in unsigned long long aInnerWindowID,
+                              in nsIWebSocketListener aListener,
+                              in nsISupports aContext);
 
     /*
      * Close the websocket connection for writing - no more calls to sendMsg
@@ -125,7 +125,7 @@ interface nsIWebSocketChannel : nsISupports
      *        you are not providing a code.
      * @param aReason the websocket closing handshake close reason
      */
-    void close(in unsigned short aCode, in AUTF8String aReason);
+    [must_use] void close(in unsigned short aCode, in AUTF8String aReason);
     
     // section 7.4.1 defines these close codes
     const unsigned short CLOSE_NORMAL               = 1000;
@@ -152,22 +152,22 @@ interface nsIWebSocketChannel : nsISupports
      *
      * @param aMsg the utf8 string to send
      */
-    void sendMsg(in AUTF8String aMsg);
+    [must_use] void sendMsg(in AUTF8String aMsg);
 
     /**
      * Use to send binary message down the connection to WebSocket peer.
      *
      * @param aMsg the data to send
      */
-    void sendBinaryMsg(in ACString aMsg);
+    [must_use] void sendBinaryMsg(in ACString aMsg);
 
     /** 
      * Use to send a binary stream (Blob) to Websocket peer.
      *
      * @param aStream The input stream to be sent.  
      */
-    void sendBinaryStream(in nsIInputStream aStream, 
-                          in unsigned long length);
+    [must_use] void sendBinaryStream(in nsIInputStream aStream, 
+                                     in unsigned long length);
 
     /**
      * This value determines how often (in seconds) websocket keepalive
@@ -179,7 +179,7 @@ interface nsIWebSocketChannel : nsISupports
      * Be careful using this setting: ping traffic can consume lots of power and
      * bandwidth over time.
      */
-    attribute unsigned long pingInterval;
+    [must_use] attribute unsigned long pingInterval;
 
     /**
      * This value determines how long (in seconds) the websocket waits for
@@ -189,13 +189,13 @@ interface nsIWebSocketChannel : nsISupports
      * This value can currently only be set before asyncOpen is called, else 
      * NS_ERROR_IN_PROGRESS is thrown.
      */
-    attribute unsigned long pingTimeout;
+    [must_use] attribute unsigned long pingTimeout;
 
     /**
      * Unique ID for this channel. It's not readonly because when the channel is
      * created via IPC, the serial number is received from the child process.
      */
-    attribute unsigned long serial;
+    [must_use] attribute unsigned long serial;
 
     /**
      * Set a nsITransportProvider and negotated extensions to be used by this
@@ -203,8 +203,8 @@ interface nsIWebSocketChannel : nsISupports
      * implement the server-side part of a websocket connection rather than the
      * client-side part.
      */
-    void setServerParameters(in nsITransportProvider aProvider,
-                             in ACString aNegotiatedExtensions);
+    [must_use] void setServerParameters(in nsITransportProvider aProvider,
+                                        in ACString aNegotiatedExtensions);
 
 %{C++
     inline uint32_t Serial()
