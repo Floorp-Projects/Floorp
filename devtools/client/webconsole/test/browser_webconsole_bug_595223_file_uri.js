@@ -23,7 +23,7 @@ add_task(function* () {
 
   // We need a file remote type to make sure we don't switch processes when we
   // load the file:// URI.
-  let { browser } = yield loadTab("about:blank", E10SUtils.FILE_REMOTE_TYPE);
+  let { browser } = yield loadTab("about:blank", "file");
 
   hud = yield openConsole();
   hud.jsterm.clearOutput();
