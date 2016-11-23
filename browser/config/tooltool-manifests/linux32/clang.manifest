@@ -3,7 +3,7 @@
 "version": "clang 3.8.0, libgcc 4.8.5",
 "size": 140319580,
 "digest": "34e219d7e8eaffa81710631c34d21355563d06335b3c00851e94c1f42f9098788fded8463dd0f67dd699f77b47a0245dd7aff754943a7a03fb5fd145a808254f",
-"algorithm": "sha512", 
+"algorithm": "sha512",
 "filename": "clang.tar.xz",
 "unpack": true
 }

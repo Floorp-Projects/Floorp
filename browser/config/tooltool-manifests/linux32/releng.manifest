@@ -3,7 +3,7 @@
 "version": "gcc 4.8.5 + PR64905",
 "size": 80160264,
 "digest": "c1a9dc9da289b8528874d16300b9d13a997cec99195bb0bc46ff665216d8535d6d6cb5af6b4b1f2749af6815dab12e703fdb3849014e5c23a70eff351a0baf4e",
-"algorithm": "sha512", 
+"algorithm": "sha512",
 "filename": "gcc.tar.xz",
 "unpack": true
 },
