@@ -14998,7 +14998,7 @@ nsPIDOMWindow<T>::TabGroup()
 
 template<typename T>
 mozilla::dom::DocGroup*
-nsPIDOMWindow<T>::GetDocGroup()
+nsPIDOMWindow<T>::GetDocGroup() const
 {
   nsIDocument* doc = GetExtantDoc();
   if (doc) {
@@ -15020,14 +15020,13 @@ nsGlobalWindow::Dispatch(const char* aName,
 }
 
 already_AddRefed<nsIEventTarget>
-nsGlobalWindow::CreateEventTarget(const char* aName,
-                                  TaskCategory aCategory)
+nsGlobalWindow::EventTargetFor(TaskCategory aCategory) const
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   if (GetDocGroup()) {
-    return GetDocGroup()->CreateEventTarget(aName, aCategory);
+    return GetDocGroup()->EventTargetFor(aCategory);
   }
-  return DispatcherTrait::CreateEventTarget(aName, aCategory);
+  return DispatcherTrait::EventTargetFor(aCategory);
 }
 
 nsGlobalWindow::TemporarilyDisableDialogs::TemporarilyDisableDialogs(
