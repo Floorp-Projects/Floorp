@@ -183,15 +183,6 @@ MediaDecoderReaderWrapper::ReleaseResources()
 }
 
 void
-MediaDecoderReaderWrapper::SetIdle()
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod(mReader, &MediaDecoderReader::SetIdle);
-  mReader->OwnerThread()->Dispatch(r.forget());
-}
-
-void
 MediaDecoderReaderWrapper::ResetDecode(TrackSet aTracks)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
