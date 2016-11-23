@@ -229,6 +229,7 @@ class Bootstrapper(object):
 
         hg_installed, hg_modern = self.instance.ensure_mercurial_modern()
         self.instance.ensure_python_modern()
+        self.instance.ensure_rust_modern()
 
         # The state directory code is largely duplicated from mach_bootstrap.py.
         # We can't easily import mach_bootstrap.py because the bootstrapper may

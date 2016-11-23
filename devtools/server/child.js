@@ -112,15 +112,6 @@ try {
       }
       connections.clear();
     });
-
-    let onInspect = DevToolsUtils.makeInfallible(function (msg) {
-      // Store the node to be inspected in a global variable (gInspectingNode). Later
-      // we'll fetch this variable again using the findInspectingNode request over the
-      // remote debugging protocol.
-      let inspector = require("devtools/server/actors/inspector");
-      inspector.setInspectingNode(msg.objects.node);
-    });
-    addMessageListener("debug:inspect", onInspect);
   })();
 } catch (e) {
   dump(`Exception in app child process: ${e}\n`);

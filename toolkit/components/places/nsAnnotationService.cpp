@@ -1673,6 +1673,27 @@ nsAnnotationService::RemoveObserver(nsIAnnotationObserver* aObserver)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAnnotationService::GetObservers(uint32_t* _count,
+                                  nsIAnnotationObserver*** _observers)
+{
+  NS_ENSURE_ARG_POINTER(_count);
+  NS_ENSURE_ARG_POINTER(_observers);
+
+  *_count = 0;
+  *_observers = nullptr;
+
+  nsCOMArray<nsIAnnotationObserver> observers(mObservers);
+
+  if (observers.Count() == 0)
+    return NS_OK;
+
+  *_count = observers.Count();
+  observers.Forget(_observers);
+
+  return NS_OK;
+}
+
 nsresult
 nsAnnotationService::HasAnnotationInternal(nsIURI* aURI,
                                            int64_t aItemId,

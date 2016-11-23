@@ -182,7 +182,7 @@ button {
 
 .addons-debugging-label {
   display: inline-block;
-  margin: 0 5px 5px 0;
+  margin-inline-end: 1ch;
 }
 
 .error-page {

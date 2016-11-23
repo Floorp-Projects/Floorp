@@ -139,7 +139,8 @@ int av_grow_packet(AVPacket *pkt, int grow_by)
         pkt->buf = av_buffer_alloc(new_size);
         if (!pkt->buf)
             return AVERROR(ENOMEM);
-        memcpy(pkt->buf->data, pkt->data, pkt->size);
+        if (pkt->size > 0)
+            memcpy(pkt->buf->data, pkt->data, pkt->size);
         pkt->data = pkt->buf->data;
     }
     pkt->size += grow_by;
@@ -198,6 +199,7 @@ static int copy_packet_data(AVPacket *pkt, const AVPacket *src, int dup)
 {
     pkt->data      = NULL;
     pkt->side_data = NULL;
+    pkt->side_data_elems = 0;
     if (pkt->buf) {
         AVBufferRef *ref = av_buffer_ref(src->buf);
         if (!ref)
@@ -207,9 +209,11 @@ static int copy_packet_data(AVPacket *pkt, const AVPacket *src, int dup)
     } else {
         DUP_DATA(pkt->data, src->data, pkt->size, 1, ALLOC_BUF);
     }
-    if (pkt->side_data_elems && dup)
+    if (src->side_data_elems && dup) {
         pkt->side_data = src->side_data;
-    if (pkt->side_data_elems && !dup) {
+        pkt->side_data_elems = src->side_data_elems;
+    }
+    if (src->side_data_elems && !dup) {
         return av_copy_packet_side_data(pkt, src);
     }
     return 0;
@@ -291,16 +295,17 @@ FF_ENABLE_DEPRECATION_WARNINGS
 int av_packet_add_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
                             uint8_t *data, size_t size)
 {
+    AVPacketSideData *tmp;
     int elems = pkt->side_data_elems;
 
     if ((unsigned)elems + 1 > INT_MAX / sizeof(*pkt->side_data))
         return AVERROR(ERANGE);
 
-    pkt->side_data = av_realloc(pkt->side_data,
-                                (elems + 1) * sizeof(*pkt->side_data));
-    if (!pkt->side_data)
+    tmp = av_realloc(pkt->side_data, (elems + 1) * sizeof(*tmp));
+    if (!tmp)
         return AVERROR(ENOMEM);
 
+    pkt->side_data = tmp;
     pkt->side_data[elems].data = data;
     pkt->side_data[elems].size = size;
     pkt->side_data[elems].type = type;
@@ -581,7 +586,8 @@ int av_packet_ref(AVPacket *dst, const AVPacket *src)
         ret = packet_alloc(&dst->buf, src->size);
         if (ret < 0)
             goto fail;
-        memcpy(dst->buf->data, src->data, src->size);
+        if (src->size)
+            memcpy(dst->buf->data, src->data, src->size);
 
         dst->data = dst->buf->data;
     } else {
