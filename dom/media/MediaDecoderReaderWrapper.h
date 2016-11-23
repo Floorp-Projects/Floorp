@@ -73,7 +73,6 @@ public:
   RefPtr<ShutdownPromise> Shutdown();
 
   void ReleaseResources();
-  void SetIdle();
   void ResetDecode(TrackSet aTracks);
 
   nsresult Init() { return mReader->Init(); }
