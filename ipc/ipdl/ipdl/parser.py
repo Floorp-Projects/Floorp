@@ -105,12 +105,10 @@ def locFromTok(p, num):
 ##-----------------------------------------------------------------------------
 
 reserved = set((
-        'answer',
         'as',
         'async',
         'both',
         'bridges',
-        'call',
         'child',
         'class',
         'compress',
@@ -118,7 +116,6 @@ reserved = set((
         '__delete__',
         'delete',                       # reserve 'delete' to prevent its use
         'from',
-        'goto',
         'include',
         'intr',
         'manager',
@@ -131,12 +128,8 @@ reserved = set((
         'parent',
         'prio',
         'protocol',
-        'recv',
         'returns',
-        'send',
         'spawns',
-        'start',
-        'state',
         'struct',
         'sync',
         'union',
@@ -460,9 +453,10 @@ def p_ManagesStmt(p):
 
 def p_MessageDeclsOpt(p):
     """MessageDeclsOpt : MessageDeclThing MessageDeclsOpt
-                       | TransitionStmtsOpt"""
-    if 2 == len(p):
-        p[0] = p[1]
+                       | """
+    if 1 == len(p):
+        # we fill in |loc| in the Protocol rule
+        p[0] = Protocol(None)
     else:
         p[2].messageDecls.insert(0, p[1])
         p[0] = p[2]
@@ -560,71 +554,6 @@ def p_MessageCompress(p):
                        | COMPRESSALL"""
     p[0] = p[1]
 
-##--------------------
-## State machine
-
-def p_TransitionStmtsOpt(p):
-    """TransitionStmtsOpt : TransitionStmt TransitionStmtsOpt
-                          |"""
-    if 1 == len(p):
-        # we fill in |loc| in the Protocol rule
-        p[0] = Protocol(None)
-    else:
-        p[2].transitionStmts.insert(0, p[1])
-        p[0] = p[2]
-
-def p_TransitionStmt(p):
-    """TransitionStmt : OptionalStart STATE State ':' Transitions"""
-    p[3].start = p[1]
-    p[0] = TransitionStmt(locFromTok(p, 2), p[3], p[5])
-
-def p_OptionalStart(p):
-    """OptionalStart : START
-                     | """
-    p[0] = (len(p) == 2)                # True iff 'start' specified
-
-def p_Transitions(p):
-    """Transitions : Transitions Transition
-                   | Transition"""
-    if 3 == len(p):
-        p[1].append(p[2])
-        p[0] = p[1]
-    else:
-        p[0] = [ p[1] ]
-
-def p_Transition(p):
-    """Transition : Trigger ID GOTO StateList ';'
-                  | Trigger __DELETE__ ';'
-                  | Trigger DELETE ';'"""
-    if 'delete' == p[2]:
-        _error(locFromTok(p, 1), "`delete' is a reserved identifier")
-
-    loc, trigger = p[1]
-    if 6 == len(p):
-        nextstates = p[4]
-    else:
-        nextstates = [ State.DEAD ]
-    p[0] = Transition(loc, trigger, p[2], nextstates)
-
-def p_Trigger(p):
-    """Trigger : SEND
-               | RECV
-               | CALL
-               | ANSWER"""
-    p[0] = [ locFromTok(p, 1), Transition.nameToTrigger(p[1]) ]
-
-def p_StateList(p):
-    """StateList : StateList OR State
-                 | State"""
-    if 2 == len(p):
-        p[0] = [ p[1] ]
-    else:
-        p[1].append(p[3])
-        p[0] = p[1]
-
-def p_State(p):
-    """State : ID"""
-    p[0] = State(locFromTok(p, 1), p[1])
 
 ##--------------------
 ## Minor stuff
