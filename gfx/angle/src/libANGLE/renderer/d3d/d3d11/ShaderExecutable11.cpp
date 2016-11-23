@@ -85,7 +85,6 @@ UniformStorage11::UniformStorage11(Renderer11 *renderer, size_t initialSize)
         constantBufferDescription.StructureByteStride = 0;
 
         HRESULT result = d3d11Device->CreateBuffer(&constantBufferDescription, NULL, &mConstantBuffer);
-        UNUSED_ASSERTION_VARIABLE(result);
         ASSERT(SUCCEEDED(result));
     }
 }

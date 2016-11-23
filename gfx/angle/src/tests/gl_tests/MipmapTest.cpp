@@ -919,6 +919,8 @@ TEST_P(MipmapTestES3, GenerateMipmapBaseLevel)
 
     glBindTexture(GL_TEXTURE_2D, mTexture);
 
+    ASSERT(getWindowWidth() == getWindowHeight());
+
     // Fill level 0 with blue
     std::vector<GLColor> pixelsBlue(getWindowWidth() * getWindowHeight(), GLColor::blue);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, getWindowWidth(), getWindowHeight(), 0, GL_RGBA,
@@ -948,14 +950,6 @@ TEST_P(MipmapTestES3, GenerateMipmapBaseLevel)
     // Draw using level 2. It should be set to red by GenerateMipmap.
     clearAndDrawQuad(m2DProgram, getWindowWidth() / 4, getWindowHeight() / 4);
     EXPECT_PIXEL_COLOR_EQ(getWindowWidth() / 8, getWindowHeight() / 8, GLColor::red);
-
-    if (IsNVIDIA() && IsOpenGL())
-    {
-        // Observed incorrect rendering on NVIDIA, level zero seems to be incorrectly affected by
-        // GenerateMipmap.
-        std::cout << "Test partially skipped on NVIDIA OpenGL." << std::endl;
-        return;
-    }
 
     // Draw using level 0. It should still be blue.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);

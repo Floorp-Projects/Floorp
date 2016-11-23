@@ -16,12 +16,16 @@
 #include "compiler/translator/RemoveDynamicIndexing.h"
 #include "compiler/translator/RewriteElseBlocks.h"
 #include "compiler/translator/RewriteTexelFetchOffset.h"
+#include "compiler/translator/RewriteUnaryMinusOperatorInt.h"
 #include "compiler/translator/SeparateArrayInitialization.h"
 #include "compiler/translator/SeparateDeclarations.h"
 #include "compiler/translator/SeparateExpressionsReturningArrays.h"
 #include "compiler/translator/SimplifyLoopConditions.h"
 #include "compiler/translator/SplitSequenceOperator.h"
 #include "compiler/translator/UnfoldShortCircuitToIf.h"
+
+namespace sh
+{
 
 TranslatorHLSL::TranslatorHLSL(sh::GLenum type, ShShaderSpec spec, ShShaderOutput output)
     : TCompiler(type, spec, output)
@@ -101,8 +105,13 @@ void TranslatorHLSL::translate(TIntermNode *root, ShCompileOptions compileOption
 
     if ((compileOptions & SH_REWRITE_TEXELFETCHOFFSET_TO_TEXELFETCH) != 0)
     {
-        sh::RewriteTexelFetchOffset(root, getTemporaryIndex(), getSymbolTable(),
-                                    getShaderVersion());
+        sh::RewriteTexelFetchOffset(root, getSymbolTable(), getShaderVersion());
+    }
+
+    if (((compileOptions & SH_REWRITE_INTEGER_UNARY_MINUS_OPERATOR) != 0) &&
+        getShaderType() == GL_VERTEX_SHADER)
+    {
+        sh::RewriteUnaryMinusOperatorInt(root);
     }
 
     sh::OutputHLSL outputHLSL(getShaderType(), getShaderVersion(), getExtensionBehavior(),
@@ -135,3 +144,5 @@ const std::map<std::string, unsigned int> *TranslatorHLSL::getUniformRegisterMap
 {
     return &mUniformRegisterMap;
 }
+
+}  // namespace sh

@@ -14,7 +14,7 @@
 namespace rx
 {
 
-BufferVk::BufferVk() : BufferImpl()
+BufferVk::BufferVk(const gl::BufferState &state) : BufferImpl(state)
 {
 }
 
