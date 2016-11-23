@@ -348,6 +348,7 @@ private:
  * Purpose: wait for the CDM to start decoding.
  *
  * Transition to other states when CDM is ready:
+ *   SEEKING if any pending seek request.
  *   DECODING_FIRSTFRAME otherwise.
  */
 class MediaDecoderStateMachine::WaitForCDMState
@@ -471,7 +472,7 @@ class MediaDecoderStateMachine::DecodingFirstFrameState
 public:
   explicit DecodingFirstFrameState(Master* aPtr) : StateObject(aPtr) {}
 
-  void Enter(SeekJob aPendingSeek);
+  void Enter();
 
   State GetState() const override
   {
@@ -1271,7 +1272,7 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder* aMetadata)
     // to become available so that we can build the correct decryptor/decoder.
     SetState<WaitForCDMState>();
   } else {
-    SetState<DecodingFirstFrameState>(SeekJob{});
+    SetState<DecodingFirstFrameState>();
   }
 }
 
@@ -1291,19 +1292,17 @@ void
 MediaDecoderStateMachine::
 WaitForCDMState::HandleCDMProxyReady()
 {
-  SetState<DecodingFirstFrameState>(Move(mPendingSeek));
+  if (mPendingSeek.Exists()) {
+    SetState<SeekingState>(Move(mPendingSeek), EventVisibility::Observable);
+  } else {
+    SetState<DecodingFirstFrameState>();
+  }
 }
 
 void
 MediaDecoderStateMachine::
-DecodingFirstFrameState::Enter(SeekJob aPendingSeek)
+DecodingFirstFrameState::Enter()
 {
-  // Handle pending seek.
-  if (aPendingSeek.Exists()) {
-    SetState<SeekingState>(Move(aPendingSeek), EventVisibility::Observable);
-    return;
-  }
-
   // Transition to DECODING if we've decoded first frames.
   if (mMaster->mSentFirstFrameLoadedEvent) {
     SetState<DecodingState>();
