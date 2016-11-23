@@ -11,10 +11,9 @@
       'target_name': 'nssfuzz',
       'type': 'executable',
       'sources': [
-        'cert_target.cc',
-        'pkcs8_target.cc',
-        'spki_target.cc',
         'nssfuzz.cc',
+        'pkcs8_target.cc',
+        'quickder_targets.cc',
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',

@@ -385,6 +385,7 @@ SECStatus
 tls13_SetupClientHello(sslSocket *ss)
 {
     unsigned int i;
+    SSL3Statistics *ssl3stats = SSL_GetStatistics();
     NewSessionTicket *session_ticket = NULL;
     sslSessionID *sid = ss->sec.ci.sid;
     unsigned int numShares = 0;
@@ -435,15 +436,22 @@ tls13_SetupClientHello(sslSocket *ss)
     if (ss->statelessResume) {
         SECStatus rv;
 
+        PORT_Assert(ss->sec.ci.sid);
         rv = tls13_RecoverWrappedSharedSecret(ss, ss->sec.ci.sid);
         if (rv != SECSuccess) {
             FATAL_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE, internal_error);
+            SSL_AtomicIncrementLong(&ssl3stats->sch_sid_cache_not_ok);
+            ss->sec.uncache(ss->sec.ci.sid);
+            ssl_FreeSID(ss->sec.ci.sid);
+            ss->sec.ci.sid = NULL;
             return SECFailure;
         }
 
         rv = ssl3_SetCipherSuite(ss, ss->sec.ci.sid->u.ssl3.cipherSuite, PR_FALSE);
-        if (rv != SECSuccess)
+        if (rv != SECSuccess) {
+            FATAL_ERROR(ss, PORT_GetError(), internal_error);
             return SECFailure;
+        }
 
         rv = tls13_ComputeEarlySecrets(ss);
         if (rv != SECSuccess) {
@@ -1334,6 +1342,7 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
 
         rv = tls13_RecoverWrappedSharedSecret(ss, sid);
         if (rv != SECSuccess) {
+            SSL_AtomicIncrementLong(&ssl3stats->hch_sid_cache_not_ok);
             FATAL_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE, internal_error);
             goto loser;
         }
@@ -1999,19 +2008,7 @@ tls13_HandleServerHelloPart2(sslSocket *ss)
 
     if (ss->statelessResume) {
         /* PSK */
-        PRBool cacheOK = PR_FALSE;
-        do {
-            ss->ssl3.hs.kea_def_mutable.authKeyType = ssl_auth_psk;
-
-            cacheOK = PR_TRUE;
-        } while (0);
-
-        if (!cacheOK) {
-            SSL_AtomicIncrementLong(&ssl3stats->hsh_sid_cache_not_ok);
-            ss->sec.uncache(sid);
-            return SECFailure;
-        }
-
+        ss->ssl3.hs.kea_def_mutable.authKeyType = ssl_auth_psk;
         tls13_RestoreCipherInfo(ss, sid);
         if (sid->peerCert) {
             ss->sec.peerCert = CERT_DupCertificate(sid->peerCert);
