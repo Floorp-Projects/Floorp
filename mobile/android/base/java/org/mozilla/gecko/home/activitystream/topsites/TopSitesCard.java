@@ -12,6 +12,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
@@ -93,6 +95,8 @@ class TopSitesCard extends RecyclerView.ViewHolder
     public void onClick(View clickedView) {
         if (clickedView == itemView) {
             onUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(HomePager.OnUrlOpenListener.Flags.class));
+
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "as_top_sites");
         } else if (clickedView == menuButton) {
             ActivityStreamContextMenu.show(clickedView.getContext(),
                     menuButton,
