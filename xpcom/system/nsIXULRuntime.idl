@@ -92,12 +92,6 @@ interface nsIXULRuntime : nsISupports
   readonly attribute uint64_t uniqueProcessID;
 
   /**
-   * The type of remote content process we're running in.
-   * null if we're in the parent/chrome process.
-   */
-  readonly attribute DOMString remoteType;
-
-  /**
    * If true, browser tabs may be opened by default in a different process
    * from the main browser UI.
    */

@@ -2377,21 +2377,6 @@ ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID,
 }
 
 mozilla::ipc::IPCResult
-ContentChild::RecvRemoteType(const nsString& aRemoteType)
-{
-  MOZ_ASSERT(DOMStringIsNull(mRemoteType));
-
-  mRemoteType.Assign(aRemoteType);
-  return IPC_OK();
-}
-
-const nsAString&
-ContentChild::GetRemoteType() const
-{
-  return mRemoteType;
-}
-
-mozilla::ipc::IPCResult
 ContentChild::RecvInitServiceWorkers(const ServiceWorkerConfiguration& aConfig)
 {
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
