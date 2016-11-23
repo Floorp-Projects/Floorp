@@ -115,11 +115,12 @@ this.SafeBrowsing = {
   },
 
 
-  initialized:      false,
-  phishingEnabled:  false,
-  malwareEnabled:   false,
-  trackingEnabled:  false,
-  blockedEnabled:   false,
+  initialized:          false,
+  phishingEnabled:      false,
+  malwareEnabled:       false,
+  trackingEnabled:      false,
+  blockedEnabled:       false,
+  trackingAnnotations:  false,
 
   phishingLists:                [],
   malwareLists:                 [],
@@ -181,6 +182,7 @@ this.SafeBrowsing = {
     this.malwareEnabled = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
     this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
     this.blockedEnabled = Services.prefs.getBoolPref("browser.safebrowsing.blockedURIs.enabled");
+    this.trackingAnnotations = Services.prefs.getBoolPref("privacy.trackingprotection.annotate_channels");
 
     [this.phishingLists,
      this.malwareLists,
@@ -266,7 +268,8 @@ this.SafeBrowsing = {
   controlUpdateChecking: function() {
     log("phishingEnabled:", this.phishingEnabled, "malwareEnabled:",
         this.malwareEnabled, "trackingEnabled:", this.trackingEnabled,
-        "blockedEnabled:", this.blockedEnabled);
+        "blockedEnabled:", this.blockedEnabled, "trackingAnnotations",
+        this.trackingAnnotations);
 
     let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
                       getService(Ci.nsIUrlListManager);
@@ -300,14 +303,14 @@ this.SafeBrowsing = {
       }
     }
     for (let i = 0; i < this.trackingProtectionLists.length; ++i) {
-      if (this.trackingEnabled) {
+      if (this.trackingEnabled || this.trackingAnnotations) {
         listManager.enableUpdate(this.trackingProtectionLists[i]);
       } else {
         listManager.disableUpdate(this.trackingProtectionLists[i]);
       }
     }
     for (let i = 0; i < this.trackingProtectionWhitelists.length; ++i) {
-      if (this.trackingEnabled) {
+      if (this.trackingEnabled || this.trackingAnnotations) {
         listManager.enableUpdate(this.trackingProtectionWhitelists[i]);
       } else {
         listManager.disableUpdate(this.trackingProtectionWhitelists[i]);
