@@ -88,6 +88,10 @@ namespace js {
 extern MOZ_COLD void
 ReportOutOfMemory(ExclusiveContext* cx);
 
+/* Different signature because the return type has MOZ_MUST_USE_TYPE. */
+extern MOZ_COLD mozilla::GenericErrorResult<OOM&>
+ReportOutOfMemoryResult(ExclusiveContext* cx);
+
 extern MOZ_COLD void
 ReportAllocationOverflow(ExclusiveContext* maybecx);
 
