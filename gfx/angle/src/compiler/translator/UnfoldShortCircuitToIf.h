@@ -11,8 +11,11 @@
 #ifndef COMPILER_TRANSLATOR_UNFOLDSHORTCIRCUIT_H_
 #define COMPILER_TRANSLATOR_UNFOLDSHORTCIRCUIT_H_
 
+namespace sh
+{
 class TIntermNode;
 
 void UnfoldShortCircuitToIf(TIntermNode *root, unsigned int *temporaryIndex);
+}  // namespace sh
 
 #endif   // COMPILER_TRANSLATOR_UNFOLDSHORTCIRCUIT_H_

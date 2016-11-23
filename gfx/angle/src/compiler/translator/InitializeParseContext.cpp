@@ -10,6 +10,9 @@
 
 #include <assert.h>
 
+namespace sh
+{
+
 TLSIndex GlobalParseContextIndex = TLS_INVALID_INDEX;
 
 bool InitializeParseContextIndex()
@@ -40,3 +43,4 @@ TParseContext* GetGlobalParseContext()
     return static_cast<TParseContext*>(GetTLSValue(GlobalParseContextIndex));
 }
 
+}  // namespace sh

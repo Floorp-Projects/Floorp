@@ -18,7 +18,7 @@ namespace rx
 class BufferVk : public BufferImpl
 {
   public:
-    BufferVk();
+    BufferVk(const gl::BufferState &state);
     ~BufferVk() override;
 
     gl::Error setData(GLenum target, const void *data, size_t size, GLenum usage) override;

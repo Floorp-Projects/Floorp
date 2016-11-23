@@ -52,6 +52,7 @@ D3D11_STENCIL_OP ConvertStencilOp(GLenum stencilOp);
 
 D3D11_FILTER ConvertFilter(GLenum minFilter, GLenum magFilter, float maxAnisotropy, GLenum comparisonMode);
 D3D11_TEXTURE_ADDRESS_MODE ConvertTextureWrap(GLenum wrap);
+UINT ConvertMaxAnisotropy(float maxAnisotropy, D3D_FEATURE_LEVEL featureLevel);
 
 D3D11_QUERY ConvertQueryType(GLenum queryType);
 

@@ -6,6 +6,9 @@
 
 #include "compiler/translator/UnfoldShortCircuitAST.h"
 
+namespace sh
+{
+
 namespace
 {
 
@@ -52,3 +55,5 @@ bool UnfoldShortCircuitAST::visitBinary(Visit visit, TIntermBinary *node)
     }
     return true;
 }
+
+}  // namespace sh

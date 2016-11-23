@@ -14,6 +14,8 @@
 #include "GLSLANG/ShaderLang.h"
 #include "tests/test_utils/compiler_test.h"
 
+using namespace sh;
+
 class QualificationVertexShaderTestESSL31 : public testing::Test
 {
   public:
@@ -22,7 +24,7 @@ class QualificationVertexShaderTestESSL31 : public testing::Test
     virtual void SetUp()
     {
         ShBuiltInResources resources;
-        ShInitBuiltInResources(&resources);
+        InitBuiltInResources(&resources);
 
         mTranslator = new TranslatorESSL(GL_VERTEX_SHADER, SH_GLES3_1_SPEC);
         ASSERT_TRUE(mTranslator->Init(resources));

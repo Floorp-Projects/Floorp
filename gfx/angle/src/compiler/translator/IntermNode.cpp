@@ -23,6 +23,9 @@
 #include "compiler/translator/SymbolTable.h"
 #include "compiler/translator/util.h"
 
+namespace sh
+{
+
 namespace
 {
 
@@ -170,7 +173,7 @@ bool TIntermLoop::replaceChildNode(
     REPLACE_IF_IS(mInit, TIntermNode, original, replacement);
     REPLACE_IF_IS(mCond, TIntermTyped, original, replacement);
     REPLACE_IF_IS(mExpr, TIntermTyped, original, replacement);
-    REPLACE_IF_IS(mBody, TIntermAggregate, original, replacement);
+    REPLACE_IF_IS(mBody, TIntermBlock, original, replacement);
     return false;
 }
 
@@ -178,6 +181,13 @@ bool TIntermBranch::replaceChildNode(
     TIntermNode *original, TIntermNode *replacement)
 {
     REPLACE_IF_IS(mExpression, TIntermTyped, original, replacement);
+    return false;
+}
+
+bool TIntermSwizzle::replaceChildNode(TIntermNode *original, TIntermNode *replacement)
+{
+    ASSERT(original->getAsTyped()->getType() == replacement->getAsTyped()->getType());
+    REPLACE_IF_IS(mOperand, TIntermTyped, original, replacement);
     return false;
 }
 
@@ -197,38 +207,62 @@ bool TIntermUnary::replaceChildNode(
     return false;
 }
 
+bool TIntermFunctionDefinition::replaceChildNode(TIntermNode *original, TIntermNode *replacement)
+{
+    REPLACE_IF_IS(mParameters, TIntermAggregate, original, replacement);
+    REPLACE_IF_IS(mBody, TIntermBlock, original, replacement);
+    return false;
+}
+
 bool TIntermAggregate::replaceChildNode(
     TIntermNode *original, TIntermNode *replacement)
 {
-    for (size_t ii = 0; ii < mSequence.size(); ++ii)
+    return replaceChildNodeInternal(original, replacement);
+}
+
+bool TIntermBlock::replaceChildNode(TIntermNode *original, TIntermNode *replacement)
+{
+    return replaceChildNodeInternal(original, replacement);
+}
+
+bool TIntermDeclaration::replaceChildNode(TIntermNode *original, TIntermNode *replacement)
+{
+    return replaceChildNodeInternal(original, replacement);
+}
+
+bool TIntermAggregateBase::replaceChildNodeInternal(TIntermNode *original, TIntermNode *replacement)
+{
+    for (size_t ii = 0; ii < getSequence()->size(); ++ii)
     {
-        REPLACE_IF_IS(mSequence[ii], TIntermNode, original, replacement);
+        REPLACE_IF_IS((*getSequence())[ii], TIntermNode, original, replacement);
     }
     return false;
 }
 
-bool TIntermAggregate::replaceChildNodeWithMultiple(TIntermNode *original, TIntermSequence replacements)
+bool TIntermAggregateBase::replaceChildNodeWithMultiple(TIntermNode *original,
+                                                        const TIntermSequence &replacements)
 {
-    for (auto it = mSequence.begin(); it < mSequence.end(); ++it)
+    for (auto it = getSequence()->begin(); it < getSequence()->end(); ++it)
     {
         if (*it == original)
         {
-            it = mSequence.erase(it);
-            mSequence.insert(it, replacements.begin(), replacements.end());
+            it = getSequence()->erase(it);
+            getSequence()->insert(it, replacements.begin(), replacements.end());
             return true;
         }
     }
     return false;
 }
 
-bool TIntermAggregate::insertChildNodes(TIntermSequence::size_type position, TIntermSequence insertions)
+bool TIntermAggregateBase::insertChildNodes(TIntermSequence::size_type position,
+                                            const TIntermSequence &insertions)
 {
-    if (position > mSequence.size())
+    if (position > getSequence()->size())
     {
         return false;
     }
-    auto it = mSequence.begin() + position;
-    mSequence.insert(it, insertions.begin(), insertions.end());
+    auto it = getSequence()->begin() + position;
+    getSequence()->insert(it, insertions.begin(), insertions.end());
     return true;
 }
 
@@ -286,10 +320,32 @@ void TIntermAggregate::setBuiltInFunctionPrecision()
     }
     // ESSL 3.0 spec section 8: textureSize always gets highp precision.
     // All other functions that take a sampler are assumed to be texture functions.
-    if (mName.getString().find("textureSize") == 0)
+    if (mFunctionInfo.getName().find("textureSize") == 0)
         mType.setPrecision(EbpHigh);
     else
         mType.setPrecision(precision);
+}
+
+void TIntermBlock::appendStatement(TIntermNode *statement)
+{
+    // Declaration nodes with no children can appear if all the declarators just added constants to
+    // the symbol table instead of generating code. They're no-ops so they aren't added to blocks.
+    if (statement != nullptr && (statement->getAsDeclarationNode() == nullptr ||
+                                 !statement->getAsDeclarationNode()->getSequence()->empty()))
+    {
+        mStatements.push_back(statement);
+    }
+}
+
+void TIntermDeclaration::appendDeclarator(TIntermTyped *declarator)
+{
+    ASSERT(declarator != nullptr);
+    ASSERT(declarator->getAsSymbolNode() != nullptr ||
+           (declarator->getAsBinaryNode() != nullptr &&
+            declarator->getAsBinaryNode()->getOp() == EOpInitialize));
+    ASSERT(mDeclarators.empty() ||
+           declarator->getType().sameElementType(mDeclarators.back()->getAsTyped()->getType()));
+    mDeclarators.push_back(declarator);
 }
 
 bool TIntermTernary::replaceChildNode(TIntermNode *original, TIntermNode *replacement)
@@ -300,12 +356,11 @@ bool TIntermTernary::replaceChildNode(TIntermNode *original, TIntermNode *replac
     return false;
 }
 
-bool TIntermSelection::replaceChildNode(
-    TIntermNode *original, TIntermNode *replacement)
+bool TIntermIfElse::replaceChildNode(TIntermNode *original, TIntermNode *replacement)
 {
     REPLACE_IF_IS(mCondition, TIntermTyped, original, replacement);
-    REPLACE_IF_IS(mTrueBlock, TIntermNode, original, replacement);
-    REPLACE_IF_IS(mFalseBlock, TIntermNode, original, replacement);
+    REPLACE_IF_IS(mTrueBlock, TIntermBlock, original, replacement);
+    REPLACE_IF_IS(mFalseBlock, TIntermBlock, original, replacement);
     return false;
 }
 
@@ -313,7 +368,7 @@ bool TIntermSwitch::replaceChildNode(
     TIntermNode *original, TIntermNode *replacement)
 {
     REPLACE_IF_IS(mInit, TIntermTyped, original, replacement);
-    REPLACE_IF_IS(mStatementList, TIntermAggregate, original, replacement);
+    REPLACE_IF_IS(mStatementList, TIntermBlock, original, replacement);
     return false;
 }
 
@@ -429,13 +484,18 @@ TIntermConstantUnion::TIntermConstantUnion(const TIntermConstantUnion &node) : T
     mUnionArrayPointer = node.mUnionArrayPointer;
 }
 
+void TFunctionSymbolInfo::setFromFunction(const TFunction &function)
+{
+    setName(function.getMangledName());
+    setId(function.getUniqueId());
+}
+
 TIntermAggregate::TIntermAggregate(const TIntermAggregate &node)
     : TIntermOperator(node),
-      mName(node.mName),
       mUserDefined(node.mUserDefined),
-      mFunctionId(node.mFunctionId),
       mUseEmulatedFunction(node.mUseEmulatedFunction),
-      mGotPrecisionFromChildren(node.mGotPrecisionFromChildren)
+      mGotPrecisionFromChildren(node.mGotPrecisionFromChildren),
+      mFunctionInfo(node.mFunctionInfo)
 {
     for (TIntermNode *child : node.mSequence)
     {
@@ -444,6 +504,13 @@ TIntermAggregate::TIntermAggregate(const TIntermAggregate &node)
         TIntermTyped *childCopy = typedChild->deepCopy();
         mSequence.push_back(childCopy);
     }
+}
+
+TIntermSwizzle::TIntermSwizzle(const TIntermSwizzle &node) : TIntermTyped(node)
+{
+    TIntermTyped *operandCopy = node.mOperand->deepCopy();
+    ASSERT(operandCopy != nullptr);
+    mOperand = operandCopy;
 }
 
 TIntermBinary::TIntermBinary(const TIntermBinary &node)
@@ -683,6 +750,15 @@ void TIntermUnary::promote()
     }
 }
 
+TIntermSwizzle::TIntermSwizzle(TIntermTyped *operand, const TVector<int> &swizzleOffsets)
+    : TIntermTyped(TType(EbtFloat, EbpUndefined)),
+      mOperand(operand),
+      mSwizzleOffsets(swizzleOffsets)
+{
+    ASSERT(mSwizzleOffsets.size() <= 4);
+    promote();
+}
+
 TIntermUnary::TIntermUnary(TOperator op, TIntermTyped *operand)
     : TIntermOperator(op), mOperand(operand), mUseEmulatedFunction(false)
 {
@@ -720,17 +796,80 @@ TQualifier TIntermTernary::DetermineQualifier(TIntermTyped *cond,
     return EvqTemporary;
 }
 
-//
-// Establishes the type of the resultant operation, as well as
-// makes the operator the correct one for the operands.
-//
-// For lots of operations it should already be established that the operand
-// combination is valid, but returns false if operator can't work on operands.
-//
+void TIntermSwizzle::promote()
+{
+    TQualifier resultQualifier = EvqTemporary;
+    if (mOperand->getQualifier() == EvqConst)
+        resultQualifier = EvqConst;
+
+    auto numFields = mSwizzleOffsets.size();
+    setType(TType(mOperand->getBasicType(), mOperand->getPrecision(), resultQualifier,
+                  static_cast<unsigned char>(numFields)));
+}
+
+bool TIntermSwizzle::hasDuplicateOffsets() const
+{
+    int offsetCount[4] = {0u, 0u, 0u, 0u};
+    for (const auto offset : mSwizzleOffsets)
+    {
+        offsetCount[offset]++;
+        if (offsetCount[offset] > 1)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void TIntermSwizzle::writeOffsetsAsXYZW(TInfoSinkBase *out) const
+{
+    for (const int offset : mSwizzleOffsets)
+    {
+        switch (offset)
+        {
+        case 0:
+            *out << "x";
+            break;
+        case 1:
+            *out << "y";
+            break;
+        case 2:
+            *out << "z";
+            break;
+        case 3:
+            *out << "w";
+            break;
+        default:
+            UNREACHABLE();
+        }
+    }
+}
+
+TQualifier TIntermBinary::GetCommaQualifier(int shaderVersion,
+                                            const TIntermTyped *left,
+                                            const TIntermTyped *right)
+{
+    // ESSL3.00 section 12.43: The result of a sequence operator is not a constant-expression.
+    if (shaderVersion >= 300 || left->getQualifier() != EvqConst ||
+        right->getQualifier() != EvqConst)
+    {
+        return EvqTemporary;
+    }
+    return EvqConst;
+}
+
+// Establishes the type of the result of the binary operation.
 void TIntermBinary::promote()
 {
     ASSERT(!isMultiplication() ||
            mOp == GetMulOpBasedOnOperands(mLeft->getType(), mRight->getType()));
+
+    // Comma is handled as a special case.
+    if (mOp == EOpComma)
+    {
+        setType(mRight->getType());
+        return;
+    }
 
     // Base assumption:  just make the type the same as the left
     // operand.  Then only deviations from this need be coded.
@@ -782,13 +921,6 @@ void TIntermBinary::promote()
             const int i              = mRight->getAsConstantUnion()->getIConst(0);
             setType(*fields[i]->type());
             getTypePointer()->setQualifier(resultQualifier);
-            return;
-        }
-        case EOpVectorSwizzle:
-        {
-            auto numFields = mRight->getAsAggregate()->getSequence()->size();
-            setType(TType(mLeft->getBasicType(), mLeft->getPrecision(), resultQualifier,
-                          static_cast<unsigned char>(numFields)));
             return;
         }
         default:
@@ -926,7 +1058,6 @@ void TIntermBinary::promote()
         case EOpIndexIndirect:
         case EOpIndexDirectInterfaceBlock:
         case EOpIndexDirectStruct:
-        case EOpVectorSwizzle:
             // These ops should be already fully handled.
             UNREACHABLE();
             break;
@@ -962,6 +1093,22 @@ const TConstantUnion *TIntermConstantUnion::foldIndexing(int index)
         UNREACHABLE();
         return nullptr;
     }
+}
+
+TIntermTyped *TIntermSwizzle::fold()
+{
+    TIntermConstantUnion *operandConstant = mOperand->getAsConstantUnion();
+    if (operandConstant == nullptr)
+    {
+        return nullptr;
+    }
+
+    TConstantUnion *constArray = new TConstantUnion[mSwizzleOffsets.size()];
+    for (size_t i = 0; i < mSwizzleOffsets.size(); ++i)
+    {
+        constArray[i] = *operandConstant->foldIndexing(mSwizzleOffsets.at(i));
+    }
+    return CreateFoldedNode(constArray, this, mType.getQualifier());
 }
 
 TIntermTyped *TIntermBinary::fold(TDiagnostics *diagnostics)
@@ -1003,31 +1150,14 @@ TIntermTyped *TIntermBinary::fold(TDiagnostics *diagnostics)
         case EOpIndexDirectInterfaceBlock:
             // Can never be constant folded.
             return nullptr;
-        case EOpVectorSwizzle:
-        {
-            if (leftConstant == nullptr)
-            {
-                return nullptr;
-            }
-            TIntermAggregate *fieldsAgg     = mRight->getAsAggregate();
-            TIntermSequence *fieldsSequence = fieldsAgg->getSequence();
-            size_t numFields                = fieldsSequence->size();
-
-            TConstantUnion *constArray = new TConstantUnion[numFields];
-            for (size_t i = 0; i < numFields; i++)
-            {
-                int fieldOffset = fieldsSequence->at(i)->getAsConstantUnion()->getIConst(0);
-                constArray[i]   = *leftConstant->foldIndexing(fieldOffset);
-            }
-            return CreateFoldedNode(constArray, this, mType.getQualifier());
-        }
         default:
         {
             if (leftConstant == nullptr || rightConstant == nullptr)
             {
                 return nullptr;
             }
-            TConstantUnion *constArray = leftConstant->foldBinary(mOp, rightConstant, diagnostics);
+            TConstantUnion *constArray =
+                leftConstant->foldBinary(mOp, rightConstant, diagnostics, mLeft->getLine());
 
             // Nodes may be constant folded without being qualified as constant.
             return CreateFoldedNode(constArray, this, mType.getQualifier());
@@ -1098,7 +1228,8 @@ TIntermTyped *TIntermAggregate::fold(TDiagnostics *diagnostics)
 //
 TConstantUnion *TIntermConstantUnion::foldBinary(TOperator op,
                                                  TIntermConstantUnion *rightNode,
-                                                 TDiagnostics *diagnostics)
+                                                 TDiagnostics *diagnostics,
+                                                 const TSourceLoc &line)
 {
     const TConstantUnion *leftArray  = getUnionArrayPointer();
     const TConstantUnion *rightArray = rightNode->getUnionArrayPointer();
@@ -1126,12 +1257,12 @@ TConstantUnion *TIntermConstantUnion::foldBinary(TOperator op,
       case EOpAdd:
         resultArray = new TConstantUnion[objectSize];
         for (size_t i = 0; i < objectSize; i++)
-            resultArray[i] = TConstantUnion::add(leftArray[i], rightArray[i], diagnostics);
+            resultArray[i] = TConstantUnion::add(leftArray[i], rightArray[i], diagnostics, line);
         break;
       case EOpSub:
         resultArray = new TConstantUnion[objectSize];
         for (size_t i = 0; i < objectSize; i++)
-            resultArray[i] = TConstantUnion::sub(leftArray[i], rightArray[i], diagnostics);
+            resultArray[i] = TConstantUnion::sub(leftArray[i], rightArray[i], diagnostics, line);
         break;
 
       case EOpMul:
@@ -1139,11 +1270,12 @@ TConstantUnion *TIntermConstantUnion::foldBinary(TOperator op,
       case EOpMatrixTimesScalar:
         resultArray = new TConstantUnion[objectSize];
         for (size_t i = 0; i < objectSize; i++)
-            resultArray[i] = TConstantUnion::mul(leftArray[i], rightArray[i], diagnostics);
+            resultArray[i] = TConstantUnion::mul(leftArray[i], rightArray[i], diagnostics, line);
         break;
 
       case EOpMatrixTimesMatrix:
         {
+            // TODO(jmadll): This code should check for overflows.
             ASSERT(getType().getBasicType() == EbtFloat && rightNode->getBasicType() == EbtFloat);
 
             const int leftCols = getCols();
@@ -1194,23 +1326,50 @@ TConstantUnion *TIntermConstantUnion::foldBinary(TOperator op,
                     break;
 
                   case EbtInt:
-                    if (rightArray[i] == 0 ||
-                        (leftArray[i].getIConst() == INT_MIN && rightArray[i].getIConst() == -1))
+                    if (rightArray[i] == 0)
                     {
                         diagnostics->warning(
-                            getLine(), "Divide by zero or overflow error during constant folding", "/", "");
+                            getLine(), "Divide by zero error during constant folding", "/", "");
                         resultArray[i].setIConst(INT_MAX);
                     }
                     else
                     {
+                        int lhs     = leftArray[i].getIConst();
+                        int divisor = rightArray[i].getIConst();
                         if (op == EOpDiv)
                         {
-                            resultArray[i].setIConst(leftArray[i].getIConst() / rightArray[i].getIConst());
+                            // Check for the special case where the minimum representable number is
+                            // divided by -1. If left alone this leads to integer overflow in C++.
+                            // ESSL 3.00.6 section 4.1.3 Integers:
+                            // "However, for the case where the minimum representable value is
+                            // divided by -1, it is allowed to return either the minimum
+                            // representable value or the maximum representable value."
+                            if (lhs == -0x7fffffff - 1 && divisor == -1)
+                            {
+                                resultArray[i].setIConst(0x7fffffff);
+                            }
+                            else
+                            {
+                                resultArray[i].setIConst(lhs / divisor);
+                            }
                         }
                         else
                         {
                             ASSERT(op == EOpIMod);
-                            resultArray[i].setIConst(leftArray[i].getIConst() % rightArray[i].getIConst());
+                            if (lhs < 0 || divisor < 0)
+                            {
+                                // ESSL 3.00.6 section 5.9: Results of modulus are undefined when
+                                // either one of the operands is negative.
+                                diagnostics->warning(getLine(),
+                                                     "Negative modulus operator operand "
+                                                     "encountered during constant folding",
+                                                     "%", "");
+                                resultArray[i].setIConst(0);
+                            }
+                            else
+                            {
+                                resultArray[i].setIConst(lhs % divisor);
+                            }
                         }
                     }
                     break;
@@ -1246,6 +1405,7 @@ TConstantUnion *TIntermConstantUnion::foldBinary(TOperator op,
 
       case EOpMatrixTimesVector:
         {
+            // TODO(jmadll): This code should check for overflows.
             ASSERT(rightNode->getBasicType() == EbtFloat);
 
             const int matrixCols = getCols();
@@ -1268,6 +1428,7 @@ TConstantUnion *TIntermConstantUnion::foldBinary(TOperator op,
 
       case EOpVectorTimesMatrix:
         {
+            // TODO(jmadll): This code should check for overflows.
             ASSERT(getType().getBasicType() == EbtFloat);
 
             const int matrixCols = rightNode->getType().getCols();
@@ -1337,12 +1498,12 @@ TConstantUnion *TIntermConstantUnion::foldBinary(TOperator op,
       case EOpBitShiftLeft:
         resultArray = new TConstantUnion[objectSize];
         for (size_t i = 0; i < objectSize; i++)
-            resultArray[i] = leftArray[i] << rightArray[i];
+            resultArray[i] = TConstantUnion::lshift(leftArray[i], rightArray[i], diagnostics, line);
         break;
       case EOpBitShiftRight:
         resultArray = new TConstantUnion[objectSize];
         for (size_t i = 0; i < objectSize; i++)
-            resultArray[i] = leftArray[i] >> rightArray[i];
+            resultArray[i] = TConstantUnion::rshift(leftArray[i], rightArray[i], diagnostics, line);
         break;
 
       case EOpLessThan:
@@ -1568,11 +1729,30 @@ TConstantUnion *TIntermConstantUnion::foldUnaryComponentWise(TOperator op,
                         resultArray[i].setFConst(-operandArray[i].getFConst());
                         break;
                     case EbtInt:
-                        resultArray[i].setIConst(-operandArray[i].getIConst());
+                        if (operandArray[i] == std::numeric_limits<int>::min())
+                        {
+                            // The minimum representable integer doesn't have a positive
+                            // counterpart, rather the negation overflows and in ESSL is supposed to
+                            // wrap back to the minimum representable integer. Make sure that we
+                            // don't actually let the negation overflow, which has undefined
+                            // behavior in C++.
+                            resultArray[i].setIConst(std::numeric_limits<int>::min());
+                        }
+                        else
+                        {
+                            resultArray[i].setIConst(-operandArray[i].getIConst());
+                        }
                         break;
                     case EbtUInt:
-                        resultArray[i].setUConst(static_cast<unsigned int>(
-                            -static_cast<int>(operandArray[i].getUConst())));
+                        if (operandArray[i] == 0x80000000u)
+                        {
+                            resultArray[i].setUConst(0x80000000u);
+                        }
+                        else
+                        {
+                            resultArray[i].setUConst(static_cast<unsigned int>(
+                                -static_cast<int>(operandArray[i].getUConst())));
+                        }
                         break;
                     default:
                         UNREACHABLE();
@@ -2635,14 +2815,12 @@ void TIntermTraverser::updateTree()
             bool inserted = insertion.parent->insertChildNodes(insertion.position + 1,
                                                                insertion.insertionsAfter);
             ASSERT(inserted);
-            UNUSED_ASSERTION_VARIABLE(inserted);
         }
         if (!insertion.insertionsBefore.empty())
         {
             bool inserted =
                 insertion.parent->insertChildNodes(insertion.position, insertion.insertionsBefore);
             ASSERT(inserted);
-            UNUSED_ASSERTION_VARIABLE(inserted);
         }
     }
     for (size_t ii = 0; ii < mReplacements.size(); ++ii)
@@ -2652,7 +2830,6 @@ void TIntermTraverser::updateTree()
         bool replaced = replacement.parent->replaceChildNode(
             replacement.original, replacement.replacement);
         ASSERT(replaced);
-        UNUSED_ASSERTION_VARIABLE(replaced);
 
         if (!replacement.originalBecomesChildOfReplacement)
         {
@@ -2675,7 +2852,6 @@ void TIntermTraverser::updateTree()
         bool replaced = replacement.parent->replaceChildNodeWithMultiple(
             replacement.original, replacement.replacements);
         ASSERT(replaced);
-        UNUSED_ASSERTION_VARIABLE(replaced);
     }
 
     clearReplacementQueue();
@@ -2703,3 +2879,5 @@ void TIntermTraverser::queueReplacementWithParent(TIntermNode *parent,
     bool originalBecomesChild = (originalStatus == OriginalNode::BECOMES_CHILD);
     mReplacements.push_back(NodeUpdateEntry(parent, original, replacement, originalBecomesChild));
 }
+
+}  // namespace sh
