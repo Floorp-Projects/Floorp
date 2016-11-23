@@ -2208,11 +2208,14 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   bool allowAsyncAnimation = false;
   if (isTransformed) {
     const nsRect overflow = GetVisualOverflowRectRelativeToSelf();
-    if (nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder,
-                                                              this)) {
+    nsDisplayTransform::PrerenderDecision decision =
+        nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder, this);
+    switch (decision) {
+    case nsDisplayTransform::FullPrerender:
       dirtyRect = overflow;
       allowAsyncAnimation = true;
-    } else {
+      break;
+    case nsDisplayTransform::NoPrerender:
       if (overflow.IsEmpty() && !extend3DContext) {
         return;
       }
