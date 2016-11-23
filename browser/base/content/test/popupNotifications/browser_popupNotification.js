@@ -203,23 +203,46 @@ var tests = [
       ok(!this.testNotif2.dismissalCallbackTriggered, "dismissal callback #2 wasn't called");
     }
   },
-  // Test notification without mainAction
+  // Test notification without mainAction or secondaryActions, it should fall back
+  // to a default button that dismisses the notification in place of the main action.
   { id: "Test#9",
+    run: function() {
+      this.notifyObj = new BasicNotification(this.id);
+      this.notifyObj.mainAction = null;
+      this.notifyObj.secondaryActions = null;
+      this.notification = showNotification(this.notifyObj);
+    },
+    onShown: function(popup) {
+      triggerMainCommand(popup);
+    },
+    onHidden: function(popup) {
+      ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked");
+      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
+      ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
+    }
+  },
+  // Test notification without mainAction but with secondaryActions, it should fall back
+  // to a default button that dismisses the notification in place of the main action
+  // and ignore the passed secondaryActions.
+  { id: "Test#10",
     run: function() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.mainAction = null;
       this.notification = showNotification(this.notifyObj);
     },
     onShown: function(popup) {
-      checkPopup(popup, this.notifyObj);
-      dismissNotification(popup);
+      let notification = popup.childNodes[0];
+      is(notification.getAttribute("secondarybuttonhidden"), "true", "secondary button is hidden");
+      triggerMainCommand(popup);
     },
     onHidden: function(popup) {
-      this.notification.remove();
+      ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked");
+      ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
+      ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
     }
   },
   // Test two notifications with different anchors
-  { id: "Test#10",
+  { id: "Test#11",
     run: function() {
       this.notifyObj = new BasicNotification(this.id);
       this.firstNotification = showNotification(this.notifyObj);

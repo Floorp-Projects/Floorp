@@ -236,6 +236,7 @@ const gXPInstallObserver = {
     var options = {
       displayURI: installInfo.originatingURI,
       persistent: true,
+      hideClose: true,
       timeout: Date.now() + 30000,
     };
 
@@ -449,6 +450,7 @@ const gXPInstallObserver = {
       // install through the addons manager UI, making the "restart" prompt
       // irrelevant.
       options.removeOnDismissal = true;
+      options.persistent = false;
 
       PopupNotifications.show(browser, notificationID, messageString, anchorID,
                               action, null, options);

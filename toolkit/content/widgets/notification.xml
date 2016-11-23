@@ -531,6 +531,8 @@
         <xul:button anonid="button"
                     class="popup-notification-button"
                     default="true"
+                    label="&defaultButton.label;"
+                    accesskey="&defaultButton.accesskey;"
                     xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,disabled=mainactiondisabled"/>
       </xul:hbox>
     </content>
