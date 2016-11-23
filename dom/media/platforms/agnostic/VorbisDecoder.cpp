@@ -154,7 +154,7 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
   const unsigned char* aData = aSample->Data();
   size_t aLength = aSample->Size();
   int64_t aOffset = aSample->mOffset;
-  uint64_t aTstampUsecs = aSample->mTime;
+  int64_t aTstampUsecs = aSample->mTime;
   int64_t aTotalFrames = 0;
 
   MOZ_ASSERT(mPacketCount >= 3);
