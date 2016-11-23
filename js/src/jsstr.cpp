@@ -37,7 +37,7 @@
 #include "js/Conversions.h"
 #include "js/UniquePtr.h"
 #if ENABLE_INTL_API
-#include "unicode/unorm2.h"
+#include "unicode/unorm.h"
 #endif
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
@@ -931,141 +931,79 @@ js::str_localeCompare(JSContext* cx, unsigned argc, Value* vp)
 #endif
 
 #if EXPOSE_INTL_API
-// ES2017 draft rev 45e890512fd77add72cc0ee742785f9f6f6482de
-// 21.1.3.12 String.prototype.normalize ( [ form ] )
+/* ES6 20140210 draft 21.1.3.12. */
 bool
 js::str_normalize(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    // Steps 1-2.
+    // Steps 1-3.
     RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
     if (!str)
         return false;
 
-    enum NormalizationForm {
-        NFC, NFD, NFKC, NFKD
-    };
-
-    NormalizationForm form;
+    // Step 4.
+    UNormalizationMode form;
     if (!args.hasDefined(0)) {
-        // Step 3.
-        form = NFC;
+        form = UNORM_NFC;
     } else {
-        // Step 4.
+        // Steps 5-6.
         RootedLinearString formStr(cx, ArgToRootedString(cx, args, 0));
         if (!formStr)
             return false;
 
-        // Step 5.
+        // Step 7.
         if (EqualStrings(formStr, cx->names().NFC)) {
-            form = NFC;
+            form = UNORM_NFC;
         } else if (EqualStrings(formStr, cx->names().NFD)) {
-            form = NFD;
+            form = UNORM_NFD;
         } else if (EqualStrings(formStr, cx->names().NFKC)) {
-            form = NFKC;
+            form = UNORM_NFKC;
         } else if (EqualStrings(formStr, cx->names().NFKD)) {
-            form = NFKD;
+            form = UNORM_NFKD;
         } else {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_NORMALIZE_FORM);
             return false;
         }
     }
 
-    JSLinearString* linear = str->ensureLinear(cx);
-    if (!linear)
-        return false;
-
-    // Latin1 strings are already in Normalization Form C.
-    if (form == NFC && linear->hasLatin1Chars()) {
-        // Step 7.
-        args.rval().setString(str);
-        return true;
-    }
-
-    // Step 6.
+    // Step 8.
     AutoStableStringChars stableChars(cx);
-    if (!stableChars.initTwoByte(cx, linear))
+    if (!str->ensureFlat(cx) || !stableChars.initTwoByte(cx, str))
         return false;
-
-    mozilla::Range<const char16_t> srcChars = stableChars.twoByteRange();
-
-    // The unorm2_getXXXInstance() methods return a shared instance which must
-    // not be deleted.
-    UErrorCode status = U_ZERO_ERROR;
-    const UNormalizer2* normalizer;
-    if (form == NFC) {
-        normalizer = unorm2_getNFCInstance(&status);
-    } else if (form == NFD) {
-        normalizer = unorm2_getNFDInstance(&status);
-    } else if (form == NFKC) {
-        normalizer = unorm2_getNFKCInstance(&status);
-    } else {
-        MOZ_ASSERT(form == NFKD);
-        normalizer = unorm2_getNFKDInstance(&status);
-    }
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-
-    int32_t spanLength = unorm2_spanQuickCheckYes(normalizer,
-                                                  Char16ToUChar(srcChars.begin().get()),
-                                                  srcChars.length(), &status);
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-    MOZ_ASSERT(0 <= spanLength && size_t(spanLength) <= srcChars.length());
-
-    // Return if the input string is already normalized.
-    if (size_t(spanLength) == srcChars.length()) {
-        // Step 7.
-        args.rval().setString(str);
-        return true;
-    }
 
     static const size_t INLINE_CAPACITY = 32;
 
+    const UChar* srcChars = Char16ToUChar(stableChars.twoByteRange().begin().get());
+    int32_t srcLen = AssertedCast<int32_t>(str->length());
     Vector<char16_t, INLINE_CAPACITY> chars(cx);
-    if (!chars.resize(Max(INLINE_CAPACITY, srcChars.length())))
+    if (!chars.resize(INLINE_CAPACITY))
         return false;
 
-    // Copy the already normalized prefix.
-    if (spanLength > 0)
-        PodCopy(chars.begin(), srcChars.begin().get(), size_t(spanLength));
-
-    mozilla::RangedPtr<const char16_t> remainingStart = srcChars.begin() + spanLength;
-    size_t remainingLength = srcChars.length() - size_t(spanLength);
-
-    int32_t size = unorm2_normalizeSecondAndAppend(normalizer, Char16ToUChar(chars.begin()),
-                                                   spanLength, chars.length(),
-                                                   Char16ToUChar(remainingStart.get()),
-                                                   remainingLength, &status);
+    UErrorCode status = U_ZERO_ERROR;
+    int32_t size = unorm_normalize(srcChars, srcLen, form, 0,
+                                   Char16ToUChar(chars.begin()), INLINE_CAPACITY,
+                                   &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
         if (!chars.resize(size))
             return false;
         status = U_ZERO_ERROR;
 #ifdef DEBUG
         int32_t finalSize =
 #endif
-        unorm2_normalizeSecondAndAppend(normalizer, Char16ToUChar(chars.begin()), spanLength,
-                                        chars.length(), Char16ToUChar(remainingStart.get()),
-                                        remainingLength, &status);
-        MOZ_ASSERT_IF(!U_FAILURE(status), size == finalSize);
+        unorm_normalize(srcChars, srcLen, form, 0,
+                        Char16ToUChar(chars.begin()), size,
+                        &status);
+        MOZ_ASSERT(size == finalSize || U_FAILURE(status), "unorm_normalize behaved inconsistently");
     }
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+    if (U_FAILURE(status))
         return false;
-    }
 
-    MOZ_ASSERT(size >= 0);
     JSString* ns = NewStringCopyN<CanGC>(cx, chars.begin(), size);
     if (!ns)
         return false;
 
-    // Step 7.
+    // Step 9.
     args.rval().setString(ns);
     return true;
 }
