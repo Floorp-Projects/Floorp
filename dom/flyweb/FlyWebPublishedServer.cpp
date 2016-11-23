@@ -637,7 +637,8 @@ FlyWebPublishedServerParent::RecvWebSocketAccept(const nsString& aProtocol,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  providerServer->SetListener(providerIPC);
+  DebugOnly<nsresult> rv = providerServer->SetListener(providerIPC);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   return IPC_OK();
 }
