@@ -52,6 +52,8 @@ SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
                    RawServoStyleSheetBorrowed reference)
 
 // CSSRuleList
+SERVO_BINDING_FUNC(Servo_CssRules_AddRef, void, ServoCssRulesBorrowed rules)
+SERVO_BINDING_FUNC(Servo_CssRules_Release, void, ServoCssRulesBorrowed rules)
 SERVO_BINDING_FUNC(Servo_CssRules_ListTypes, void,
                    ServoCssRulesBorrowed rules,
                    nsTArrayBorrowed_uintptr_t result)
@@ -59,6 +61,10 @@ SERVO_BINDING_FUNC(Servo_CssRules_GetStyleRuleAt, RawServoStyleRuleStrong,
                    ServoCssRulesBorrowed rules, uint32_t index)
 
 // CSS Rules
+SERVO_BINDING_FUNC(Servo_StyleRule_AddRef, void,
+                   RawServoStyleRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_StyleRule_Release, void,
+                   RawServoStyleRuleBorrowed rule)
 SERVO_BINDING_FUNC(Servo_StyleRule_Debug, void,
                    RawServoStyleRuleBorrowed rule, nsACString* result)
 SERVO_BINDING_FUNC(Servo_StyleRule_GetStyle, RawServoDeclarationBlockStrong,
