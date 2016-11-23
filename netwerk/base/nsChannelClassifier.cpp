@@ -25,6 +25,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsISecureBrowserUI.h"
 #include "nsISecurityEventSink.h"
+#include "nsISupportsPriority.h"
 #include "nsIURL.h"
 #include "nsIWebProgressListener.h"
 #include "nsNetUtil.h"
@@ -50,15 +51,26 @@ static LazyLogModule gChannelClassifierLog("nsChannelClassifier");
 NS_IMPL_ISUPPORTS(nsChannelClassifier,
                   nsIURIClassifierCallback)
 
-nsChannelClassifier::nsChannelClassifier()
+nsChannelClassifier::nsChannelClassifier(nsIChannel *aChannel)
   : mIsAllowListed(false),
-    mSuspendedChannel(false)
+    mSuspendedChannel(false),
+    mChannel(aChannel),
+    mTrackingProtectionEnabled(Nothing())
 {
+  MOZ_ASSERT(mChannel);
 }
 
 nsresult
-nsChannelClassifier::ShouldEnableTrackingProtection(nsIChannel *aChannel,
-                                                    bool *result)
+nsChannelClassifier::ShouldEnableTrackingProtection(bool *result)
+{
+  nsresult rv = ShouldEnableTrackingProtectionInternal(mChannel, result);
+  mTrackingProtectionEnabled = Some(*result);
+  return rv;
+}
+
+nsresult
+nsChannelClassifier::ShouldEnableTrackingProtectionInternal(nsIChannel *aChannel,
+                                                            bool *result)
 {
     // Should only be called in the parent process.
     MOZ_ASSERT(XRE_IsParentProcess());
@@ -252,10 +264,8 @@ nsChannelClassifier::NotifyTrackingProtectionDisabled(nsIChannel *aChannel)
 }
 
 void
-nsChannelClassifier::Start(nsIChannel *aChannel)
+nsChannelClassifier::Start()
 {
-  mChannel = aChannel;
-
   nsresult rv = StartInternal();
   if (NS_FAILED(rv)) {
     // If we aren't getting a callback for any reason, assume a good verdict and
@@ -344,7 +354,19 @@ nsChannelClassifier::StartInternal()
 
     bool expectCallback;
     bool trackingProtectionEnabled = false;
-    (void)ShouldEnableTrackingProtection(mChannel, &trackingProtectionEnabled);
+    if (mTrackingProtectionEnabled.isNothing()) {
+      (void)ShouldEnableTrackingProtection(&trackingProtectionEnabled);
+    } else {
+      trackingProtectionEnabled = mTrackingProtectionEnabled.value();
+    }
+
+    static bool sAnnotateChannelEnabled = false;
+    static bool sIsInited = false;
+    if (!sIsInited) {
+      sIsInited = true;
+      Preferences::AddBoolVarCache(&sAnnotateChannelEnabled,
+                                   "privacy.trackingprotection.annotate_channels");
+    }
 
     if (LOG_ENABLED()) {
       nsCOMPtr<nsIURI> principalURI;
@@ -353,8 +375,8 @@ nsChannelClassifier::StartInternal()
            "uri %s", this, principalURI->GetSpecOrDefault().get(),
            uri->GetSpecOrDefault().get()));
     }
-    rv = uriClassifier->Classify(principal, trackingProtectionEnabled, this,
-                                 &expectCallback);
+    rv = uriClassifier->Classify(principal, sAnnotateChannelEnabled | trackingProtectionEnabled,
+                                 this, &expectCallback);
     if (NS_FAILED(rv)) {
         return rv;
     }
@@ -666,6 +688,26 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode)
              this, errorName.get()));
       }
       MarkEntryClassified(aErrorCode);
+
+      // The value of |mTrackingProtectionEnabled| should be assigned at
+      // |ShouldEnableTrackingProtection| before.
+      MOZ_ASSERT(mTrackingProtectionEnabled, "Should contain a value.");
+
+      if (aErrorCode == NS_ERROR_TRACKING_URI &&
+          !mTrackingProtectionEnabled.valueOr(false)) {
+        if (LOG_ENABLED()) {
+          nsCOMPtr<nsIURI> uri;
+          mChannel->GetURI(getter_AddRefs(uri));
+          LOG(("nsChannelClassifier[%p]: lower the priority of channel %p"
+               ", since %s is a tracker", this, mChannel.get(),
+               uri->GetSpecOrDefault().get()));
+        }
+        nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
+        if (p) {
+          p->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);
+        }
+        aErrorCode = NS_OK;
+      }
 
       if (NS_FAILED(aErrorCode)) {
         if (LOG_ENABLED()) {
