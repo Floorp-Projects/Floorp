@@ -62,12 +62,12 @@ LinkResult ProgramGL::load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream)
     // Verify that the program linked
     if (!checkLinkStatus(infoLog))
     {
-        return LinkResult(false, gl::Error(GL_NO_ERROR));
+        return false;
     }
 
     postLink();
 
-    return LinkResult(true, gl::Error(GL_NO_ERROR));
+    return true;
 }
 
 gl::Error ProgramGL::save(gl::BinaryOutputStream *stream)
@@ -167,7 +167,7 @@ LinkResult ProgramGL::link(const gl::ContextState &data, gl::InfoLog &infoLog)
     // Verify the link
     if (!checkLinkStatus(infoLog))
     {
-        return LinkResult(false, gl::Error(GL_NO_ERROR));
+        return false;
     }
 
     if (mWorkarounds.alwaysCallUseProgramAfterLink)
@@ -177,7 +177,7 @@ LinkResult ProgramGL::link(const gl::ContextState &data, gl::InfoLog &infoLog)
 
     postLink();
 
-    return LinkResult(true, gl::Error(GL_NO_ERROR));
+    return true;
 }
 
 GLboolean ProgramGL::validate(const gl::Caps & /*caps*/, gl::InfoLog * /*infoLog*/)
@@ -223,7 +223,7 @@ void ProgramGL::setUniform1iv(GLint location, GLsizei count, const GLint *v)
         std::vector<GLuint> &boundTextureUnits = mSamplerBindings[samplerIndex].boundTextureUnits;
 
         size_t copyCount =
-            std::max<size_t>(count, boundTextureUnits.size() - locationEntry.element);
+            std::min<size_t>(count, boundTextureUnits.size() - locationEntry.element);
         std::copy(v, v + copyCount, boundTextureUnits.begin() + locationEntry.element);
     }
 }
@@ -577,7 +577,7 @@ void ProgramGL::postLink()
             for (GLint arrayIndex = 1; arrayIndex < arraySize; ++arrayIndex)
             {
                 PathRenderingFragmentInput arrayElementInput;
-                arrayElementInput.name     = name + "[" + std::to_string(arrayIndex) + "]";
+                arrayElementInput.name     = name + "[" + ToString(arrayIndex) + "]";
                 arrayElementInput.location = baseLocation + arrayIndex;
                 mPathRenderingFragmentInputs.push_back(std::move(arrayElementInput));
             }

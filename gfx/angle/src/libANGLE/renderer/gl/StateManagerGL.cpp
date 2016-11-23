@@ -743,18 +743,21 @@ gl::Error StateManagerGL::setGenericDrawState(const gl::ContextState &data)
         GLenum textureType = samplerUniform.textureType;
         for (GLuint textureUnitIndex : samplerUniform.boundTextureUnits)
         {
-            const gl::Texture *texture = state.getSamplerTexture(textureUnitIndex, textureType);
+            gl::Texture *texture = state.getSamplerTexture(textureUnitIndex, textureType);
             if (texture != nullptr)
             {
                 const TextureGL *textureGL = GetImplAs<TextureGL>(texture);
 
-                if (mTextures[textureType][textureUnitIndex] != textureGL->getTextureID())
+                if (mTextures[textureType][textureUnitIndex] != textureGL->getTextureID() ||
+                    texture->hasAnyDirtyBit() || textureGL->hasAnyDirtyBit())
                 {
                     activeTexture(textureUnitIndex);
                     bindTexture(textureType, textureGL->getTextureID());
-                }
 
-                textureGL->syncState(textureUnitIndex);
+                    // TODO: Call this from the gl:: layer once other backends use dirty bits for
+                    // texture state.
+                    texture->syncImplState();
+                }
             }
             else
             {
@@ -782,7 +785,6 @@ gl::Error StateManagerGL::setGenericDrawState(const gl::ContextState &data)
     const gl::Framebuffer *framebuffer = state.getDrawFramebuffer();
     const FramebufferGL *framebufferGL = GetImplAs<FramebufferGL>(framebuffer);
     bindFramebuffer(GL_DRAW_FRAMEBUFFER, framebufferGL->getFramebufferID());
-    framebufferGL->syncDrawState();
 
     // Seamless cubemaps are required for ES3 and higher contexts.
     setTextureCubemapSeamlessEnabled(data.getClientMajorVersion() >= 3);
@@ -1317,6 +1319,13 @@ void StateManagerGL::setClearStencil(GLint clearStencil)
 
 void StateManagerGL::syncState(const gl::State &state, const gl::State::DirtyBits &glDirtyBits)
 {
+    // The the current framebuffer binding sometimes requires resetting the srgb blending
+    if (glDirtyBits[gl::State::DIRTY_BIT_DRAW_FRAMEBUFFER_BINDING] &&
+        mFunctions->standard == STANDARD_GL_DESKTOP)
+    {
+        mLocalDirtyBits.set(gl::State::DIRTY_BIT_FRAMEBUFFER_SRGB);
+    }
+
     const auto &glAndLocalDirtyBits = (glDirtyBits | mLocalDirtyBits);
 
     if (!glAndLocalDirtyBits.any())
@@ -1557,6 +1566,11 @@ void StateManagerGL::syncState(const gl::State &state, const gl::State::DirtyBit
                 setPathRenderingStencilState(state.getPathStencilFunc(), state.getPathStencilRef(),
                                              state.getPathStencilMask());
                 break;
+            case gl::State::DIRTY_BIT_FRAMEBUFFER_SRGB:
+                setFramebufferSRGBEnabledForFramebuffer(
+                    state.getFramebufferSRGB(),
+                    GetImplAs<FramebufferGL>(state.getDrawFramebuffer()));
+                break;
             default:
             {
                 ASSERT(dirtyBit >= gl::State::DIRTY_BIT_CURRENT_VALUE_0 &&
@@ -1586,6 +1600,25 @@ void StateManagerGL::setFramebufferSRGBEnabled(bool enabled)
         {
             mFunctions->disable(GL_FRAMEBUFFER_SRGB);
         }
+        mLocalDirtyBits.set(gl::State::DIRTY_BIT_FRAMEBUFFER_SRGB);
+    }
+}
+
+void StateManagerGL::setFramebufferSRGBEnabledForFramebuffer(bool enabled,
+                                                             const FramebufferGL *framebuffer)
+{
+    if (mFunctions->standard == STANDARD_GL_DESKTOP && framebuffer->isDefault())
+    {
+        // Obey the framebuffer sRGB state for blending on all framebuffers except the default
+        // framebuffer on Desktop OpenGL.
+        // When SRGB blending is enabled, only SRGB capable formats will use it but the default
+        // framebuffer will always use it if it is enabled.
+        // TODO(geofflang): Update this when the framebuffer binding dirty changes, when it exists.
+        setFramebufferSRGBEnabled(false);
+    }
+    else
+    {
+        setFramebufferSRGBEnabled(enabled);
     }
 }
 

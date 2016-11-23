@@ -14,6 +14,9 @@
 #include "compiler/translator/QualifierTypes.h"
 #include "compiler/preprocessor/Preprocessor.h"
 
+namespace sh
+{
+
 struct TMatrixFields
 {
     bool wholeRow;
@@ -36,42 +39,7 @@ class TParseContext : angle::NonCopyable
                   ShCompileOptions options,
                   bool checksPrecErrors,
                   TInfoSink &is,
-                  const ShBuiltInResources &resources)
-        : intermediate(),
-          symbolTable(symt),
-          mDeferredSingleDeclarationErrorCheck(false),
-          mShaderType(type),
-          mShaderSpec(spec),
-          mCompileOptions(options),
-          mShaderVersion(100),
-          mTreeRoot(nullptr),
-          mLoopNestingLevel(0),
-          mStructNestingLevel(0),
-          mSwitchNestingLevel(0),
-          mCurrentFunctionType(nullptr),
-          mFunctionReturnsValue(false),
-          mChecksPrecisionErrors(checksPrecErrors),
-          mFragmentPrecisionHighOnESSL1(false),
-          mDefaultMatrixPacking(EmpColumnMajor),
-          mDefaultBlockStorage(EbsShared),
-          mDiagnostics(is),
-          mDirectiveHandler(ext,
-                            mDiagnostics,
-                            mShaderVersion,
-                            mShaderType,
-                            resources.WEBGL_debug_shader_precision == 1),
-          mPreprocessor(&mDiagnostics, &mDirectiveHandler),
-          mScanner(nullptr),
-          mUsesFragData(false),
-          mUsesFragColor(false),
-          mUsesSecondaryOutputs(false),
-          mMinProgramTexelOffset(resources.MinProgramTexelOffset),
-          mMaxProgramTexelOffset(resources.MaxProgramTexelOffset),
-          mComputeShaderLocalSizeDeclared(false),
-          mDeclaringFunction(false)
-    {
-        mComputeShaderLocalSize.fill(-1);
-    }
+                  const ShBuiltInResources &resources);
 
     const pp::Preprocessor &getPreprocessor() const { return mPreprocessor; }
     pp::Preprocessor &getPreprocessor() { return mPreprocessor; }
@@ -94,8 +62,8 @@ class TParseContext : angle::NonCopyable
                          const char *token,
                          const char *extraInfo = "");
 
-    TIntermNode *getTreeRoot() const { return mTreeRoot; }
-    void setTreeRoot(TIntermNode *treeRoot) { mTreeRoot = treeRoot; }
+    TIntermBlock *getTreeRoot() const { return mTreeRoot; }
+    void setTreeRoot(TIntermBlock *treeRoot) { mTreeRoot = treeRoot; }
 
     bool getFragmentPrecisionHigh() const
     {
@@ -162,12 +130,12 @@ class TParseContext : angle::NonCopyable
     bool checkIsNotSampler(const TSourceLoc &line,
                            const TTypeSpecifierNonArray &pType,
                            const char *reason);
+    bool checkIsNotImage(const TSourceLoc &line,
+                         const TTypeSpecifierNonArray &pType,
+                         const char *reason);
     void checkDeclaratorLocationIsNotSpecified(const TSourceLoc &line, const TPublicType &pType);
     void checkLocationIsNotSpecified(const TSourceLoc &location,
                                      const TLayoutQualifier &layoutQualifier);
-    void checkOutParameterIsNotSampler(const TSourceLoc &line,
-                                       TQualifier qualifier,
-                                       const TType &type);
     void checkIsParameterQualifierValid(const TSourceLoc &line,
                                         const TTypeQualifierBuilder &typeQualifierBuilder,
                                         TType *type);
@@ -179,7 +147,8 @@ class TParseContext : angle::NonCopyable
                                        int versionRequired);
     bool checkWorkGroupSizeIsNotSpecified(const TSourceLoc &location,
                                           const TLayoutQualifier &layoutQualifier);
-
+    bool checkInternalFormatIsNotSpecified(const TSourceLoc &location,
+                                           TLayoutImageInternalFormat internalFormat);
     void functionCallLValueErrorCheck(const TFunction *fnCandidate, TIntermAggregate *fnCall);
     void checkInvariantVariableQualifier(bool invariant,
                                          const TQualifier qualifier,
@@ -187,7 +156,7 @@ class TParseContext : angle::NonCopyable
     void checkInputOutputTypeIsValidES3(const TQualifier qualifier,
                                         const TPublicType &type,
                                         const TSourceLoc &qualifierLocation);
-
+    void checkLocalVariableConstStorageQualifier(const TQualifierWrapperBase &qualifier);
     const TPragma &pragma() const { return mDirectiveHandler.pragma(); }
     const TExtensionBehavior &extensionBehavior() const { return mDirectiveHandler.extensionBehavior(); }
     bool supportsExtension(const char *extension);
@@ -195,84 +164,84 @@ class TParseContext : angle::NonCopyable
     void handleExtensionDirective(const TSourceLoc &loc, const char *extName, const char *behavior);
     void handlePragmaDirective(const TSourceLoc &loc, const char *name, const char *value, bool stdgl);
 
-    bool containsSampler(const TType &type);
     const TFunction* findFunction(
         const TSourceLoc &line, TFunction *pfnCall, int inputShaderVersion, bool *builtIn = 0);
     bool executeInitializer(const TSourceLoc &line,
                             const TString &identifier,
                             const TPublicType &pType,
                             TIntermTyped *initializer,
-                            TIntermNode **intermNode);
+                            TIntermBinary **initNode);
 
+    void addFullySpecifiedType(TPublicType *typeSpecifier);
     TPublicType addFullySpecifiedType(const TTypeQualifierBuilder &typeQualifierBuilder,
                                       const TPublicType &typeSpecifier);
 
-    TIntermAggregate *parseSingleDeclaration(TPublicType &publicType,
-                                             const TSourceLoc &identifierOrTypeLocation,
-                                             const TString &identifier);
-    TIntermAggregate *parseSingleArrayDeclaration(TPublicType &publicType,
-                                                  const TSourceLoc &identifierLocation,
-                                                  const TString &identifier,
-                                                  const TSourceLoc &indexLocation,
-                                                  TIntermTyped *indexExpression);
-    TIntermAggregate *parseSingleInitDeclaration(const TPublicType &publicType,
-                                                 const TSourceLoc &identifierLocation,
-                                                 const TString &identifier,
-                                                 const TSourceLoc &initLocation,
-                                                 TIntermTyped *initializer);
+    TIntermDeclaration *parseSingleDeclaration(TPublicType &publicType,
+                                               const TSourceLoc &identifierOrTypeLocation,
+                                               const TString &identifier);
+    TIntermDeclaration *parseSingleArrayDeclaration(TPublicType &publicType,
+                                                    const TSourceLoc &identifierLocation,
+                                                    const TString &identifier,
+                                                    const TSourceLoc &indexLocation,
+                                                    TIntermTyped *indexExpression);
+    TIntermDeclaration *parseSingleInitDeclaration(const TPublicType &publicType,
+                                                   const TSourceLoc &identifierLocation,
+                                                   const TString &identifier,
+                                                   const TSourceLoc &initLocation,
+                                                   TIntermTyped *initializer);
 
     // Parse a declaration like "type a[n] = initializer"
     // Note that this does not apply to declarations like "type[n] a = initializer"
-    TIntermAggregate *parseSingleArrayInitDeclaration(TPublicType &publicType,
-                                                      const TSourceLoc &identifierLocation,
-                                                      const TString &identifier,
-                                                      const TSourceLoc &indexLocation,
-                                                      TIntermTyped *indexExpression,
-                                                      const TSourceLoc &initLocation,
-                                                      TIntermTyped *initializer);
+    TIntermDeclaration *parseSingleArrayInitDeclaration(TPublicType &publicType,
+                                                        const TSourceLoc &identifierLocation,
+                                                        const TString &identifier,
+                                                        const TSourceLoc &indexLocation,
+                                                        TIntermTyped *indexExpression,
+                                                        const TSourceLoc &initLocation,
+                                                        TIntermTyped *initializer);
 
     TIntermAggregate *parseInvariantDeclaration(const TTypeQualifierBuilder &typeQualifierBuilder,
                                                 const TSourceLoc &identifierLoc,
                                                 const TString *identifier,
                                                 const TSymbol *symbol);
 
-    TIntermAggregate *parseDeclarator(TPublicType &publicType,
-                                      TIntermAggregate *aggregateDeclaration,
-                                      const TSourceLoc &identifierLocation,
-                                      const TString &identifier);
-    TIntermAggregate *parseArrayDeclarator(TPublicType &publicType,
-                                           TIntermAggregate *aggregateDeclaration,
-                                           const TSourceLoc &identifierLocation,
-                                           const TString &identifier,
-                                           const TSourceLoc &arrayLocation,
-                                           TIntermTyped *indexExpression);
-    TIntermAggregate *parseInitDeclarator(const TPublicType &publicType,
-                                          TIntermAggregate *aggregateDeclaration,
-                                          const TSourceLoc &identifierLocation,
-                                          const TString &identifier,
-                                          const TSourceLoc &initLocation,
-                                          TIntermTyped *initializer);
+    void parseDeclarator(TPublicType &publicType,
+                         const TSourceLoc &identifierLocation,
+                         const TString &identifier,
+                         TIntermDeclaration *declarationOut);
+    void parseArrayDeclarator(TPublicType &publicType,
+                              const TSourceLoc &identifierLocation,
+                              const TString &identifier,
+                              const TSourceLoc &arrayLocation,
+                              TIntermTyped *indexExpression,
+                              TIntermDeclaration *declarationOut);
+    void parseInitDeclarator(const TPublicType &publicType,
+                             const TSourceLoc &identifierLocation,
+                             const TString &identifier,
+                             const TSourceLoc &initLocation,
+                             TIntermTyped *initializer,
+                             TIntermDeclaration *declarationOut);
 
     // Parse a declarator like "a[n] = initializer"
-    TIntermAggregate *parseArrayInitDeclarator(const TPublicType &publicType,
-                                               TIntermAggregate *aggregateDeclaration,
-                                               const TSourceLoc &identifierLocation,
-                                               const TString &identifier,
-                                               const TSourceLoc &indexLocation,
-                                               TIntermTyped *indexExpression,
-                                               const TSourceLoc &initLocation,
-                                               TIntermTyped *initializer);
+    void parseArrayInitDeclarator(const TPublicType &publicType,
+                                  const TSourceLoc &identifierLocation,
+                                  const TString &identifier,
+                                  const TSourceLoc &indexLocation,
+                                  TIntermTyped *indexExpression,
+                                  const TSourceLoc &initLocation,
+                                  TIntermTyped *initializer,
+                                  TIntermDeclaration *declarationOut);
 
     void parseGlobalLayoutQualifier(const TTypeQualifierBuilder &typeQualifierBuilder);
-    TIntermAggregate *addFunctionPrototypeDeclaration(const TFunction &function,
+    TIntermAggregate *addFunctionPrototypeDeclaration(const TFunction &parsedFunction,
                                                       const TSourceLoc &location);
-    TIntermAggregate *addFunctionDefinition(const TFunction &function,
-                                            TIntermAggregate *functionPrototype,
-                                            TIntermAggregate *functionBody,
-                                            const TSourceLoc &location);
-    void parseFunctionPrototype(const TSourceLoc &location,
-                                TFunction *function,
-                                TIntermAggregate **aggregateOut);
+    TIntermFunctionDefinition *addFunctionDefinition(const TFunction &function,
+                                                     TIntermAggregate *functionParameters,
+                                                     TIntermBlock *functionBody,
+                                                     const TSourceLoc &location);
+    void parseFunctionDefinitionHeader(const TSourceLoc &location,
+                                       TFunction **function,
+                                       TIntermAggregate **aggregateOut);
     TFunction *parseFunctionDeclarator(const TSourceLoc &location,
                                        TFunction *function);
     TFunction *parseFunctionHeader(const TPublicType &type,
@@ -302,14 +271,14 @@ class TParseContext : angle::NonCopyable
                                         const TString *structName,
                                         TFieldList *fieldList);
 
-    TIntermAggregate *addInterfaceBlock(const TTypeQualifierBuilder &typeQualifierBuilder,
-                                        const TSourceLoc &nameLine,
-                                        const TString &blockName,
-                                        TFieldList *fieldList,
-                                        const TString *instanceName,
-                                        const TSourceLoc &instanceLine,
-                                        TIntermTyped *arrayIndex,
-                                        const TSourceLoc &arrayIndexLine);
+    TIntermDeclaration *addInterfaceBlock(const TTypeQualifierBuilder &typeQualifierBuilder,
+                                          const TSourceLoc &nameLine,
+                                          const TString &blockName,
+                                          TFieldList *fieldList,
+                                          const TString *instanceName,
+                                          const TSourceLoc &instanceLine,
+                                          TIntermTyped *arrayIndex,
+                                          const TSourceLoc &arrayIndexLine);
 
     void parseLocalSize(const TString &qualifierType,
                         const TSourceLoc &qualifierTypeLine,
@@ -335,7 +304,9 @@ class TParseContext : angle::NonCopyable
 
     void checkIsBelowStructNestingLimit(const TSourceLoc &line, const TField &field);
 
-    TIntermSwitch *addSwitch(TIntermTyped *init, TIntermAggregate *statementList, const TSourceLoc &loc);
+    TIntermSwitch *addSwitch(TIntermTyped *init,
+                             TIntermBlock *statementList,
+                             const TSourceLoc &loc);
     TIntermCase *addCase(TIntermTyped *condition, const TSourceLoc &loc);
     TIntermCase *addDefault(const TSourceLoc &loc);
 
@@ -354,6 +325,9 @@ class TParseContext : angle::NonCopyable
     TIntermBranch *addBranch(TOperator op, TIntermTyped *returnValue, const TSourceLoc &loc);
 
     void checkTextureOffsetConst(TIntermAggregate *functionCall);
+    void checkImageMemoryAccessForBuiltinFunctions(TIntermAggregate *functionCall);
+    void checkImageMemoryAccessForUserDefinedFunctions(const TFunction *functionDefinition,
+                                                       const TIntermAggregate *functionCall);
     TIntermTyped *addFunctionCallOrMethod(TFunction *fnCall,
                                           TIntermNode *paramNode,
                                           TIntermNode *thisNode,
@@ -390,10 +364,24 @@ class TParseContext : angle::NonCopyable
     // Assumes that multiplication op has already been set based on the types.
     bool isMultiplicationTypeCombinationValid(TOperator op, const TType &left, const TType &right);
 
+    bool checkIsMemoryQualifierNotSpecified(const TMemoryQualifier &memoryQualifier,
+                                            const TSourceLoc &location);
+    void checkOutParameterIsNotImage(const TSourceLoc &line,
+                                     TQualifier qualifier,
+                                     const TType &type);
+    void checkOutParameterIsNotOpaqueType(const TSourceLoc &line,
+                                          TQualifier qualifier,
+                                          const TType &type);
+    void checkOutParameterIsNotSampler(const TSourceLoc &line,
+                                       TQualifier qualifier,
+                                       const TType &type);
+
     TIntermTyped *addBinaryMathInternal(
         TOperator op, TIntermTyped *left, TIntermTyped *right, const TSourceLoc &loc);
-    TIntermTyped *createAssign(
-        TOperator op, TIntermTyped *left, TIntermTyped *right, const TSourceLoc &loc);
+    TIntermBinary *createAssign(TOperator op,
+                                TIntermTyped *left,
+                                TIntermTyped *right,
+                                const TSourceLoc &loc);
     // The funcReturnType parameter is expected to be non-null when the operation is a built-in function.
     // It is expected to be null for other unary operators.
     TIntermTyped *createUnaryMath(
@@ -410,7 +398,7 @@ class TParseContext : angle::NonCopyable
     ShShaderSpec mShaderSpec;  // The language specification compiler conforms to - GLES2 or WebGL.
     ShCompileOptions mCompileOptions;  // Options passed to TCompiler
     int mShaderVersion;
-    TIntermNode *mTreeRoot;      // root of parse tree being created
+    TIntermBlock *mTreeRoot;     // root of parse tree being created
     int mLoopNestingLevel;       // 0 if outside all loops
     int mStructNestingLevel;     // incremented while parsing a struct declaration
     int mSwitchNestingLevel;     // 0 if outside all switch statements
@@ -444,5 +432,7 @@ class TParseContext : angle::NonCopyable
 
 int PaParseStrings(
     size_t count, const char *const string[], const int length[], TParseContext *context);
+
+}  // namespace sh
 
 #endif // COMPILER_TRANSLATOR_PARSECONTEXT_H_

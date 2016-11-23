@@ -13,6 +13,9 @@
 #include "compiler/translator/InfoSink.h"
 #include "compiler/translator/IntermNode.h"
 
+namespace sh
+{
+
 namespace
 {
 
@@ -92,3 +95,5 @@ void RemovePow(TIntermNode *root)
     }
     while (traverser.needAnotherIteration());
 }
+
+}  // namespace sh

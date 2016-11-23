@@ -42,8 +42,7 @@ class Renderbuffer final : public egl::ImageSibling,
     Error setStorageMultisample(size_t samples, GLenum internalformat, size_t width, size_t height);
     Error setStorageEGLImageTarget(egl::Image *imageTarget);
 
-    rx::RenderbufferImpl *getImplementation();
-    const rx::RenderbufferImpl *getImplementation() const;
+    rx::RenderbufferImpl *getImplementation() const;
 
     GLsizei getWidth() const;
     GLsizei getHeight() const;

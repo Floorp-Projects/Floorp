@@ -11,6 +11,9 @@
 #include "compiler/translator/SymbolTable.h"
 #include "compiler/translator/VersionGLSL.h"
 
+namespace sh
+{
+
 void InitBuiltInAbsFunctionEmulatorForGLSLWorkarounds(BuiltInFunctionEmulator *emu,
                                                       sh::GLenum shaderType)
 {
@@ -19,6 +22,57 @@ void InitBuiltInAbsFunctionEmulatorForGLSLWorkarounds(BuiltInFunctionEmulator *e
         const TType *int1 = TCache::getType(EbtInt);
         emu->addEmulatedFunction(EOpAbs, int1, "int webgl_abs_emu(int x) { return x * sign(x); }");
     }
+}
+
+void InitBuiltInIsnanFunctionEmulatorForGLSLWorkarounds(BuiltInFunctionEmulator *emu,
+                                                        int targetGLSLVersion)
+{
+    // isnan() is supported since GLSL 1.3.
+    if (targetGLSLVersion < GLSL_VERSION_130)
+        return;
+
+    const TType *float1 = TCache::getType(EbtFloat);
+    const TType *float2 = TCache::getType(EbtFloat, 2);
+    const TType *float3 = TCache::getType(EbtFloat, 3);
+    const TType *float4 = TCache::getType(EbtFloat, 4);
+
+    // !(x > 0.0 || x < 0.0 || x == 0.0) will be optimized and always equal to false.
+    emu->addEmulatedFunction(
+        EOpIsNan, float1,
+        "bool webgl_isnan_emu(float x) { return (x > 0.0 || x < 0.0) ? false : x != 0.0; }");
+    emu->addEmulatedFunction(
+        EOpIsNan, float2,
+        "bvec2 webgl_isnan_emu(vec2 x)\n"
+        "{\n"
+        "    bvec2 isnan;\n"
+        "    for (int i = 0; i < 2; i++)\n"
+        "    {\n"
+        "        isnan[i] = (x[i] > 0.0 || x[i] < 0.0) ? false : x[i] != 0.0;\n"
+        "    }\n"
+        "    return isnan;\n"
+        "}\n");
+    emu->addEmulatedFunction(
+        EOpIsNan, float3,
+        "bvec3 webgl_isnan_emu(vec3 x)\n"
+        "{\n"
+        "    bvec3 isnan;\n"
+        "    for (int i = 0; i < 3; i++)\n"
+        "    {\n"
+        "        isnan[i] = (x[i] > 0.0 || x[i] < 0.0) ? false : x[i] != 0.0;\n"
+        "    }\n"
+        "    return isnan;\n"
+        "}\n");
+    emu->addEmulatedFunction(
+        EOpIsNan, float4,
+        "bvec4 webgl_isnan_emu(vec4 x)\n"
+        "{\n"
+        "    bvec4 isnan;\n"
+        "    for (int i = 0; i < 4; i++)\n"
+        "    {\n"
+        "        isnan[i] = (x[i] > 0.0 || x[i] < 0.0) ? false : x[i] != 0.0;\n"
+        "    }\n"
+        "    return isnan;\n"
+        "}\n");
 }
 
 // Emulate built-in functions missing from GLSL 1.30 and higher
@@ -197,3 +251,5 @@ void InitBuiltInFunctionEmulatorForGLSLMissingFunctions(BuiltInFunctionEmulator 
         // clang-format on
     }
 }
+
+}  // namespace sh

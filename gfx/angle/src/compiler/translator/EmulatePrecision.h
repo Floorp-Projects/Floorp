@@ -18,6 +18,9 @@
 // need to write a huge number of variations of the emulated compound assignment
 // to every translated shader with emulation enabled.
 
+namespace sh
+{
+
 class EmulatePrecision : public TLValueTrackingTraverser
 {
   public:
@@ -27,10 +30,13 @@ class EmulatePrecision : public TLValueTrackingTraverser
     bool visitBinary(Visit visit, TIntermBinary *node) override;
     bool visitUnary(Visit visit, TIntermUnary *node) override;
     bool visitAggregate(Visit visit, TIntermAggregate *node) override;
+    bool visitDeclaration(Visit visit, TIntermDeclaration *node) override;
 
     void writeEmulationHelpers(TInfoSinkBase &sink,
                                const int shaderVersion,
                                const ShShaderOutput outputLanguage);
+
+    static bool SupportedInLanguage(const ShShaderOutput outputLanguage);
 
   private:
     struct TypePair
@@ -60,5 +66,7 @@ class EmulatePrecision : public TLValueTrackingTraverser
 
     bool mDeclaringVariables;
 };
+
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_EMULATE_PRECISION_H_

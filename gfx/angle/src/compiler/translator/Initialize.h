@@ -11,6 +11,9 @@
 #include "compiler/translator/Compiler.h"
 #include "compiler/translator/SymbolTable.h"
 
+namespace sh
+{
+
 void InsertBuiltInFunctions(sh::GLenum type, ShShaderSpec spec, const ShBuiltInResources &resources, TSymbolTable &table);
 
 void IdentifyBuiltIns(sh::GLenum type, ShShaderSpec spec,
@@ -25,5 +28,7 @@ void InitExtensionBehavior(const ShBuiltInResources& resources,
 // the ShBuiltInResources object for this compiler instance. All other
 // extensions will remain unsupported.
 void ResetExtensionBehavior(TExtensionBehavior &extensionBehavior);
+
+}  // namespace sh
 
 #endif // COMPILER_TRANSLATOR_INITIALIZE_H_

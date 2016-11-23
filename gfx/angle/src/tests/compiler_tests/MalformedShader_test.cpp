@@ -12,6 +12,8 @@
 #include "GLSLANG/ShaderLang.h"
 #include "compiler/translator/TranslatorESSL.h"
 
+using namespace sh;
+
 class MalformedShaderTest : public testing::Test
 {
   public:
@@ -21,7 +23,7 @@ class MalformedShaderTest : public testing::Test
     virtual void SetUp()
     {
         ShBuiltInResources resources;
-        ShInitBuiltInResources(&resources);
+        sh::InitBuiltInResources(&resources);
 
         mTranslator = new TranslatorESSL(GL_FRAGMENT_SHADER, SH_GLES3_SPEC);
         ASSERT_TRUE(mTranslator->Init(resources));
@@ -63,7 +65,7 @@ class MalformedVertexShaderTest : public MalformedShaderTest
     void SetUp() override
     {
         ShBuiltInResources resources;
-        ShInitBuiltInResources(&resources);
+        sh::InitBuiltInResources(&resources);
 
         mTranslator = new TranslatorESSL(GL_VERTEX_SHADER, SH_GLES3_SPEC);
         ASSERT_TRUE(mTranslator->Init(resources));
@@ -79,7 +81,7 @@ class MalformedWebGL2ShaderTest : public MalformedShaderTest
     void SetUp() override
     {
         ShBuiltInResources resources;
-        ShInitBuiltInResources(&resources);
+        sh::InitBuiltInResources(&resources);
 
         mTranslator = new TranslatorESSL(GL_FRAGMENT_SHADER, SH_WEBGL2_SPEC);
         ASSERT_TRUE(mTranslator->Init(resources));
@@ -95,7 +97,7 @@ class MalformedWebGL1ShaderTest : public MalformedShaderTest
     void SetUp() override
     {
         ShBuiltInResources resources;
-        ShInitBuiltInResources(&resources);
+        sh::InitBuiltInResources(&resources);
 
         mTranslator = new TranslatorESSL(GL_FRAGMENT_SHADER, SH_WEBGL_SPEC);
         ASSERT_TRUE(mTranslator->Init(resources));
@@ -111,7 +113,7 @@ class MalformedVertexShaderGLES31Test : public MalformedShaderTest
     void SetUp() override
     {
         ShBuiltInResources resources;
-        ShInitBuiltInResources(&resources);
+        sh::InitBuiltInResources(&resources);
         mTranslator = new TranslatorESSL(GL_VERTEX_SHADER, SH_GLES3_1_SPEC);
         ASSERT_TRUE(mTranslator->Init(resources));
     }
@@ -126,7 +128,7 @@ class MalformedFragmentShaderGLES31Test : public MalformedShaderTest
     void SetUp() override
     {
         ShBuiltInResources resources;
-        ShInitBuiltInResources(&resources);
+        sh::InitBuiltInResources(&resources);
         mTranslator = new TranslatorESSL(GL_FRAGMENT_SHADER, SH_GLES3_1_SPEC);
         ASSERT_TRUE(mTranslator->Init(resources));
     }
@@ -141,7 +143,7 @@ class MalformedComputeShaderTest : public MalformedShaderTest
     void SetUp() override
     {
         ShBuiltInResources resources;
-        ShInitBuiltInResources(&resources);
+        sh::InitBuiltInResources(&resources);
         mTranslator = new TranslatorESSL(GL_COMPUTE_SHADER, SH_GLES3_1_SPEC);
         ASSERT_TRUE(mTranslator->Init(resources));
     }
@@ -2514,5 +2516,643 @@ TEST_F(MalformedShaderTest, InvariantDeclarationWithLayoutQualifier)
     if (compile(shaderString))
     {
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Variable declaration with both invariant and layout qualifiers is not valid in the formal grammar
+// provided in the ESSL 3.00 spec. ESSL 3.10 starts allowing this combination, but ESSL 3.00 should
+// still disallow it.
+TEST_F(MalformedShaderTest, VariableDeclarationWithInvariantAndLayoutQualifierESSL300)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "invariant layout(location = 0) out vec4 my_FragColor;\n"
+        "void main() {\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Bit shift with a rhs value > 31 has an undefined result in the GLSL spec. We disallow it.
+// ESSL 3.00.6 section 5.9.
+TEST_F(MalformedShaderTest, ShiftBy32)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "void main() {\n"
+        "   uint u = 1u << 32u;\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that deferring global variable init works with an empty main().
+TEST_F(MalformedShaderTest, DeferGlobalVariableInitWithEmptyMain)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "uniform float u;\n"
+        "float foo = u;\n"
+        "void main() {}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Test that pruning empty declarations from loop init expression works.
+TEST_F(MalformedShaderTest, EmptyDeclarationAsLoopInit)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    int i = 0;\n"
+        "    for (int; i < 3; i++)\n"
+        "    {\n"
+        "        my_FragColor = vec4(i);\n"
+        "    }\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+// r32f, r32i, r32ui do not require either the writeonly or readonly memory qualifiers.
+// GLSL ES 3.10, Revision 4, 4.9 Memory Access Qualifiers
+TEST_F(MalformedFragmentShaderGLES31Test, ImageR32FNoMemoryQualifier)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "in vec4 myInput;\n"
+        "layout(r32f) uniform image2D myImage;\n"
+        "void main() {\n"
+        "}\n";
+
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Images which do not have r32f, r32i or r32ui as internal format, must have readonly or writeonly
+// specified.
+// GLSL ES 3.10, Revision 4, 4.9 Memory Access Qualifiers
+TEST_F(MalformedFragmentShaderGLES31Test, ImageR32FWithCorrectMemoryQualifier)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "in vec4 myInput;\n"
+        "layout(rgba32f) uniform image2D myImage;\n"
+        "void main() {\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// It is a compile-time error to call imageStore when the image is qualified as readonly.
+// GLSL ES 3.10 Revision 4, 4.9 Memory Access Qualifiers
+TEST_F(MalformedFragmentShaderGLES31Test, StoreInReadOnlyImage)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "in vec4 myInput;\n"
+        "layout(r32f) uniform readonly image2D myImage;\n"
+        "void main() {\n"
+        "   imageStore(myImage, ivec2(0), vec4(1.0));\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// It is a compile-time error to call imageLoad when the image is qualified as writeonly.
+// GLSL ES 3.10 Revision 4, 4.9 Memory Access Qualifiers
+TEST_F(MalformedFragmentShaderGLES31Test, LoadFromWriteOnlyImage)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "in vec4 myInput;\n"
+        "layout(r32f) uniform writeonly image2D myImage;\n"
+        "void main() {\n"
+        "   imageLoad(myImage, ivec2(0));\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// A valid declaration and usage of an image3D.
+TEST_F(MalformedFragmentShaderGLES31Test, ValidImage3D)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image3D;\n"
+        "in vec4 myInput;\n"
+        "layout(rgba32f) uniform readonly image3D myImage;\n"
+        "void main() {\n"
+        "   imageLoad(myImage, ivec3(0));\n"
+        "}\n";
+
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// A valid declaration and usage of an imageCube.
+TEST_F(MalformedFragmentShaderGLES31Test, ValidImageCube)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump imageCube;\n"
+        "in vec4 myInput;\n"
+        "layout(rgba32f) uniform readonly imageCube myImage;\n"
+        "void main() {\n"
+        "   imageLoad(myImage, ivec3(0));\n"
+        "}\n";
+
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// A valid declaration and usage of an image2DArray.
+TEST_F(MalformedFragmentShaderGLES31Test, ValidImage2DArray)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2DArray;\n"
+        "in vec4 myInput;\n"
+        "layout(rgba32f) uniform readonly image2DArray myImage;\n"
+        "void main() {\n"
+        "   imageLoad(myImage, ivec3(0));\n"
+        "}\n";
+
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Images cannot be l-values.
+// GLSL ES 3.10 Revision 4, 4.1.7 Opaque Types
+TEST_F(MalformedFragmentShaderGLES31Test, ImageLValueFunctionDefinitionInOut)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "void myFunc(inout image2D someImage) {}\n"
+        "void main() {\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Cannot assign to images.
+// GLSL ES 3.10 Revision 4, 4.1.7 Opaque Types
+TEST_F(MalformedFragmentShaderGLES31Test, ImageAssignment)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "layout(rgba32f) uniform readonly image2D myImage;\n"
+        "layout(rgba32f) uniform readonly image2D myImage2;\n"
+        "void main() {\n"
+        "   myImage = myImage2;\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Passing an image qualifier to a function should not be able to discard the readonly qualifier.
+// GLSL ES 3.10 Revision 4, 4.9 Memory Access Qualifiers
+TEST_F(MalformedFragmentShaderGLES31Test, ReadOnlyQualifierMissingInFunctionArgument)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "layout(rgba32f) uniform readonly image2D myImage;\n"
+        "void myFunc(in image2D someImage) {}\n"
+        "void main() {\n"
+        "   myFunc(myImage);\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Passing an image qualifier to a function should not be able to discard the writeonly qualifier.
+// GLSL ES 3.10 Revision 4, 4.9 Memory Access Qualifiers
+TEST_F(MalformedFragmentShaderGLES31Test, WriteOnlyQualifierMissingInFunctionArgument)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "layout(rgba32f) uniform writeonly image2D myImage;\n"
+        "void myFunc(in image2D someImage) {}\n"
+        "void main() {\n"
+        "   myFunc(myImage);\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Passing an image parameter as an argument to another function should not be able to discard the
+// writeonly qualifier.
+// GLSL ES 3.10 Revision 4, 4.9 Memory Access Qualifiers
+TEST_F(MalformedFragmentShaderGLES31Test, DiscardWriteonlyInFunctionBody)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "layout(rgba32f) uniform writeonly image2D myImage;\n"
+        "void myFunc1(in image2D someImage) {}\n"
+        "void myFunc2(in writeonly image2D someImage) { myFunc1(someImage); }\n"
+        "void main() {\n"
+        "   myFunc2(myImage);\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// The memory qualifiers for the image declaration and function argument match and the test should
+// pass.
+TEST_F(MalformedFragmentShaderGLES31Test, CorrectImageMemoryQualifierSpecified)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "layout(r32f) uniform image2D myImage;\n"
+        "void myFunc(in image2D someImage) {}\n"
+        "void main() {\n"
+        "   myFunc(myImage);\n"
+        "}\n";
+
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// The test adds additional qualifiers to the argument in the function header.
+// This is correct since no memory qualifiers are discarded upon the function call.
+// GLSL ES 3.10 Revision 4, 4.9 Memory Access Qualifiers
+TEST_F(MalformedFragmentShaderGLES31Test, CorrectImageMemoryQualifierSpecified2)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "layout(r32f) uniform image2D myImage;\n"
+        "void myFunc(in readonly writeonly image2D someImage) {}\n"
+        "void main() {\n"
+        "   myFunc(myImage);\n"
+        "}\n";
+
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Images are not allowed in structs.
+// GLSL ES 3.10 Revision 4, 4.1.8 Structures
+TEST_F(MalformedFragmentShaderGLES31Test, ImageInStruct)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "struct myStruct { layout(r32f) image2D myImage; };\n"
+        "void main() {\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Images are not allowed in interface blocks.
+// GLSL ES 3.10 Revision 4, 4.3.9 Interface Blocks
+TEST_F(MalformedFragmentShaderGLES31Test, ImageInInterfaceBlock)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "uniform myBlock { layout(r32f) image2D myImage; };\n"
+        "void main() {\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Readonly used with an interface block.
+TEST_F(MalformedFragmentShaderGLES31Test, ReadonlyWithInterfaceBlock)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "uniform readonly myBlock { float something; };\n"
+        "void main() {\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Readonly used with an invariant.
+TEST_F(MalformedFragmentShaderGLES31Test, ReadonlyWithInvariant)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "out vec4 something;\n"
+        "invariant readonly something;\n"
+        "void main() {\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Readonly used with a member of a structure.
+TEST_F(MalformedFragmentShaderGLES31Test, ReadonlyWithStructMember)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "out vec4 something;\n"
+        "struct MyStruct { readonly float myMember; };\n"
+        "void main() {\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// It should not be possible to use an internal format layout qualifier with an interface block.
+TEST_F(MalformedFragmentShaderGLES31Test, ImageInternalFormatWithInterfaceBlock)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "out vec4 something;\n"
+        "layout(rgba32f) uniform MyStruct { float myMember; };\n"
+        "void main() {\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// It should not be possible to use an internal format layout qualifier with a uniform without a
+// type.
+TEST_F(MalformedFragmentShaderGLES31Test, ImageInternalFormatInGlobalLayoutQualifier)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "out vec4 something;\n"
+        "layout(rgba32f) uniform;\n"
+        "void main() {\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// ESSL 1.00 section 4.1.7.
+// Samplers are not allowed as operands for most operations. Test this for ternary operator.
+TEST_F(MalformedShaderTest, SamplerAsTernaryOperand)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "uniform bool u;\n"
+        "uniform sampler2D s1;\n"
+        "uniform sampler2D s2;\n"
+        "void main() {\n"
+        "    gl_FragColor = texture2D(u ? s1 : s2, vec2(0, 0));\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// ESSL 1.00.17 section 4.5.2.
+// ESSL 3.00.6 section 4.5.3.
+// Precision must be specified for floats. Test this with a declaration with no qualifiers.
+TEST_F(MalformedShaderTest, FloatDeclarationNoQualifiersNoPrecision)
+{
+    const std::string &shaderString =
+        "vec4 foo = vec4(0.0);\n"
+        "void main()\n"
+        "{\n"
+        "    gl_FragColor = foo;\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Check compiler doesn't crash on incorrect unsized array declarations.
+TEST_F(MalformedShaderTest, IncorrectUnsizedArray)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "float foo[] = 0.0;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "    foo[0] = 1.0;\n"
+        "    my_FragColor = vec4(foo[0]);\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Check compiler doesn't crash when a bvec is on the right hand side of a logical operator.
+// ESSL 3.00.6 section 5.9.
+TEST_F(MalformedShaderTest, LogicalOpRHSIsBVec)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "void main()\n"
+        "{\n"
+        "    bool b;\n"
+        "    bvec3 b3;\n"
+        "    b && b3;\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Check compiler doesn't crash when there's an unsized array constructor with no parameters.
+// ESSL 3.00.6 section 4.1.9: Array size must be greater than zero.
+TEST_F(MalformedShaderTest, UnsizedArrayConstructorNoParameters)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "void main()\n"
+        "{\n"
+        "    int[]();\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Passing an image parameter as an argument to another function should not be able to discard the
+// coherent qualifier.
+TEST_F(MalformedFragmentShaderGLES31Test, CoherentQualifierMissingInFunctionArgument)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "layout(r32f) uniform coherent image2D myImage;\n"
+        "void myFunc(in image2D someImage) {}\n"
+        "void main() {\n"
+        "   myFunc(myImage);\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Passing an image parameter as an argument to another function should not be able to discard the
+// volatile qualifier.
+TEST_F(MalformedFragmentShaderGLES31Test, VolatileQualifierMissingInFunctionArgument)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "layout(r32f) uniform volatile image2D myImage;\n"
+        "void myFunc(in image2D someImage) {}\n"
+        "void main() {\n"
+        "   myFunc(myImage);\n"
+        "}\n";
+
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// The restrict qualifier can be discarded from a function argument.
+// GLSL ES 3.10 Revision 4, 4.9 Memory Access Qualifiers
+TEST_F(MalformedFragmentShaderGLES31Test, RestrictQualifierDiscardedInFunctionArgument)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "layout(r32f) uniform restrict image2D myImage;\n"
+        "void myFunc(in image2D someImage) {}\n"
+        "void main() {\n"
+        "   myFunc(myImage);\n"
+        "}\n";
+
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Function image arguments can be overqualified.
+// GLSL ES 3.10 Revision 4, 4.9 Memory Access Qualifiers
+TEST_F(MalformedFragmentShaderGLES31Test, OverqualifyingImageParameter)
+{
+    const std::string &shaderString =
+        "#version 310 es\n"
+        "precision mediump float;\n"
+        "precision mediump image2D;\n"
+        "layout(r32f) uniform image2D myImage;\n"
+        "void myFunc(in coherent volatile image2D someImage) {}\n"
+        "void main() {\n"
+        "   myFunc(myImage);\n"
+        "}\n";
+
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
     }
 }
