@@ -22,7 +22,7 @@ public:
 
     void Main();
 
-protected:    
+protected:
     virtual mozilla::ipc::IPCResult RecvAsync() override {
         if (!mOnStack)
             fail("not on C++ stack?!");
@@ -46,7 +46,7 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
-            fail("unexpected destruction!");  
+            fail("unexpected destruction!");
         passed("ok");
         QuitParent();
     }
@@ -120,6 +120,7 @@ private:
     int mEntered;
     int mExited;
     int mIncallDepth;
+    int32_t mNumAnswerStackFrame;
 };
 
 
