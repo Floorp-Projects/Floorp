@@ -6,9 +6,6 @@
 /* global ResponsiveUIManager */
 /* eslint key-spacing: 0 */
 
-// This test is too slow for debug builds (bug 1297205)
-requestLongerTimeout(2);
-
 add_task(function* () {
   let manager = ResponsiveUIManager;
   let done;
