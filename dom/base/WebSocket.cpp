@@ -409,7 +409,10 @@ public:
 
   NS_IMETHOD Run() override
   {
-    mChannel->Close(mReasonCode, mReasonString);
+    nsresult rv = mChannel->Close(mReasonCode, mReasonString);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to dispatch the close message");
+    }
     return NS_OK;
   }
 
@@ -758,10 +761,12 @@ WebSocketImpl::OnStart(nsISupports* aContext)
   }
 
   if (!mRequestedProtocolList.IsEmpty()) {
-    mChannel->GetProtocol(mWebSocket->mEstablishedProtocol);
+    rv = mChannel->GetProtocol(mWebSocket->mEstablishedProtocol);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  mChannel->GetExtensions(mWebSocket->mEstablishedExtensions);
+  rv = mChannel->GetExtensions(mWebSocket->mEstablishedExtensions);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   UpdateURI();
 
   mWebSocket->SetReadyState(WebSocket::OPEN);
@@ -1856,11 +1861,12 @@ WebSocketImpl::InitializeConnection(nsIPrincipal* aPrincipal)
   // and aPrincipal are same origin.
   MOZ_ASSERT(!doc || doc->NodePrincipal()->Equals(aPrincipal));
 
-  wsChannel->InitLoadInfo(doc ? doc->AsDOMNode() : nullptr,
-                          doc ? doc->NodePrincipal() : aPrincipal,
-                          aPrincipal,
-                          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                          nsIContentPolicy::TYPE_WEBSOCKET);
+  rv = wsChannel->InitLoadInfo(doc ? doc->AsDOMNode() : nullptr,
+                               doc ? doc->NodePrincipal() : aPrincipal,
+                               aPrincipal,
+                               nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                               nsIContentPolicy::TYPE_WEBSOCKET);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (!mRequestedProtocolList.IsEmpty()) {
     rv = wsChannel->SetProtocol(mRequestedProtocolList);

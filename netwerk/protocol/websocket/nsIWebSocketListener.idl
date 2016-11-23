@@ -24,7 +24,7 @@ interface nsIWebSocketListener : nsISupports
      *
      * @param aContext user defined context
      */
-    void onStart(in nsISupports aContext);
+    [must_use] void onStart(in nsISupports aContext);
 
     /**
      * Called to signify the completion of the message stream.
@@ -38,8 +38,8 @@ interface nsIWebSocketListener : nsISupports
      * @param aContext user defined context
      * @param aStatusCode reason for stopping (NS_OK if completed successfully)
      */
-    void onStop(in nsISupports aContext,
-                in nsresult aStatusCode);
+    [must_use] void onStop(in nsISupports aContext,
+                           in nsresult aStatusCode);
 
     /**
      * Called to deliver text message.
@@ -47,8 +47,8 @@ interface nsIWebSocketListener : nsISupports
      * @param aContext user defined context
      * @param aMsg the message data
      */
-    void onMessageAvailable(in nsISupports aContext,
-                            in AUTF8String aMsg);
+    [must_use] void onMessageAvailable(in nsISupports aContext,
+                                       in AUTF8String aMsg);
 
     /**
      * Called to deliver binary message.
@@ -56,8 +56,8 @@ interface nsIWebSocketListener : nsISupports
      * @param aContext user defined context
      * @param aMsg the message data
      */
-    void onBinaryMessageAvailable(in nsISupports aContext,
-                                  in ACString aMsg);
+    [must_use] void onBinaryMessageAvailable(in nsISupports aContext,
+                                             in ACString aMsg);
 
     /**
      * Called to acknowledge message sent via sendMsg() or sendBinaryMsg.
@@ -65,7 +65,7 @@ interface nsIWebSocketListener : nsISupports
      * @param aContext user defined context
      * @param aSize number of bytes placed in OS send buffer
      */
-    void onAcknowledge(in nsISupports aContext, in uint32_t aSize);
+    [must_use] void onAcknowledge(in nsISupports aContext, in uint32_t aSize);
 
     /**
      * Called to inform receipt of WebSocket Close message from server.
@@ -80,10 +80,10 @@ interface nsIWebSocketListener : nsISupports
      * @param aContext user defined context
      * @param aCode the websocket closing handshake close code.
      * @param aReason the websocket closing handshake close reason
-
      */
-    void onServerClose(in nsISupports aContext, in unsigned short aCode,
-                       in AUTF8String aReason);
+    [must_use] void onServerClose(in nsISupports aContext,
+                                  in unsigned short aCode,
+                                  in AUTF8String aReason);
     
 };
 

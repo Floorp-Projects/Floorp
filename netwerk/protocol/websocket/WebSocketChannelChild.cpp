@@ -236,7 +236,11 @@ WebSocketChannelChild::OnStart(const nsCString& aProtocol,
 
   if (mListenerMT) {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-    mListenerMT->mListener->OnStart(mListenerMT->mContext);
+    nsresult rv = mListenerMT->mListener->OnStart(mListenerMT->mContext);
+    if (NS_FAILED(rv)) {
+      LOG(("WebSocketChannelChild::OnStart "
+           "mListenerMT->mListener->OnStart() failed with error 0x%08x", rv));
+    }
   }
 }
 
@@ -274,7 +278,12 @@ WebSocketChannelChild::OnStop(const nsresult& aStatusCode)
   LOG(("WebSocketChannelChild::RecvOnStop() %p\n", this));
   if (mListenerMT) {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-    mListenerMT->mListener->OnStop(mListenerMT->mContext, aStatusCode);
+    nsresult rv =
+      mListenerMT->mListener->OnStop(mListenerMT->mContext, aStatusCode);
+    if (NS_FAILED(rv)) {
+      LOG(("WebSocketChannel::OnStop "
+           "mListenerMT->mListener->OnStop() failed with error 0x%08x", rv));
+    }
   }
 }
 
@@ -319,7 +328,13 @@ WebSocketChannelChild::OnMessageAvailable(const nsCString& aMsg)
   LOG(("WebSocketChannelChild::RecvOnMessageAvailable() %p\n", this));
   if (mListenerMT) {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-    mListenerMT->mListener->OnMessageAvailable(mListenerMT->mContext, aMsg);
+    nsresult rv =
+      mListenerMT->mListener->OnMessageAvailable(mListenerMT->mContext, aMsg);
+    if (NS_FAILED(rv)) {
+      LOG(("WebSocketChannelChild::OnMessageAvailable "
+           "mListenerMT->mListener->OnMessageAvailable() "
+           "failed with error 0x%08x", rv));
+    }
   }
 }
 
@@ -339,8 +354,14 @@ WebSocketChannelChild::OnBinaryMessageAvailable(const nsCString& aMsg)
   LOG(("WebSocketChannelChild::RecvOnBinaryMessageAvailable() %p\n", this));
   if (mListenerMT) {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-    mListenerMT->mListener->OnBinaryMessageAvailable(mListenerMT->mContext,
-                                                     aMsg);
+    nsresult rv =
+      mListenerMT->mListener->OnBinaryMessageAvailable(mListenerMT->mContext,
+                                                       aMsg);
+    if (NS_FAILED(rv)) {
+      LOG(("WebSocketChannelChild::OnBinaryMessageAvailable "
+           "mListenerMT->mListener->OnBinaryMessageAvailable() "
+           "failed with error 0x%08x", rv));
+    }
   }
 }
 
@@ -378,7 +399,13 @@ WebSocketChannelChild::OnAcknowledge(const uint32_t& aSize)
   LOG(("WebSocketChannelChild::RecvOnAcknowledge() %p\n", this));
   if (mListenerMT) {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-    mListenerMT->mListener->OnAcknowledge(mListenerMT->mContext, aSize);
+    nsresult rv =
+      mListenerMT->mListener->OnAcknowledge(mListenerMT->mContext, aSize);
+    if (NS_FAILED(rv)) {
+      LOG(("WebSocketChannel::OnAcknowledge "
+           "mListenerMT->mListener->OnAcknowledge() "
+           "failed with error 0x%08x", rv));
+    }
   }
 }
 
@@ -421,8 +448,10 @@ WebSocketChannelChild::OnServerClose(const uint16_t& aCode,
   LOG(("WebSocketChannelChild::RecvOnServerClose() %p\n", this));
   if (mListenerMT) {
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-    mListenerMT->mListener->OnServerClose(mListenerMT->mContext, aCode,
-                                          aReason);
+    DebugOnly<nsresult> rv =
+      mListenerMT->mListener->OnServerClose(mListenerMT->mContext, aCode,
+                                            aReason);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 }
 
@@ -641,7 +670,11 @@ public:
   NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    mChild->SendBinaryStream(mStream, mLength);
+    nsresult rv = mChild->SendBinaryStream(mStream, mLength);
+    if (NS_FAILED(rv)) {
+      LOG(("WebSocketChannelChild::BinaryStreamEvent %p "
+           "SendBinaryStream failed (%08x)\n", this, rv));
+    }
     return NS_OK;
   }
 private:
