@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.media;
 
+import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
+
 import android.media.MediaCodec;
 import android.media.MediaCrypto;
 import android.media.MediaFormat;
@@ -298,6 +300,15 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
     public void configure(MediaFormat format, Surface surface, MediaCrypto crypto, int flags) {
         assertCallbacks();
 
+        // Video decoder should config with adaptive playback capability.
+        if (surface != null) {
+            if (HardwareCodecCapabilityUtils.checkSupportsAdaptivePlayback(
+                    mCodec, format.getString(MediaFormat.KEY_MIME))) {
+                // TODO: may need to find a way to not use hard code to decide the max w/h.
+                format.setInteger(MediaFormat.KEY_MAX_WIDTH, 1920);
+                format.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1080);
+            }
+        }
         mCodec.configure(format, surface, crypto, flags);
     }
 
