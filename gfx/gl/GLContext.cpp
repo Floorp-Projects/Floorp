@@ -157,6 +157,8 @@ static const char* const sExtensionNames[] = {
     "GL_IMG_texture_compression_pvrtc",
     "GL_IMG_texture_npot",
     "GL_KHR_debug",
+    "GL_KHR_texture_compression_astc_hdr",
+    "GL_KHR_texture_compression_astc_ldr",
     "GL_NV_draw_instanced",
     "GL_NV_fence",
     "GL_NV_framebuffer_blit",

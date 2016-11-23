@@ -7,6 +7,8 @@
 #define WEBGL_EXTENSIONS_H_
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "nsString.h"
+#include "nsTArray.h"
 #include "nsWrapperCache.h"
 #include "WebGLObjectModel.h"
 #include "WebGLTypes.h"
@@ -14,8 +16,8 @@
 namespace mozilla {
 
 namespace dom {
-template<typename T>
-class Sequence;
+template<typename> struct Nullable;
+template<typename> class Sequence;
 } // namespace dom
 
 namespace webgl {
@@ -59,6 +61,22 @@ protected:
     WebGLExtensionType::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) {              \
         return dom::WebGLBindingType##Binding::Wrap(cx, this, givenProto); \
     }
+
+////
+
+class WebGLExtensionCompressedTextureASTC
+    : public WebGLExtensionBase
+{
+public:
+    explicit WebGLExtensionCompressedTextureASTC(WebGLContext* webgl);
+    virtual ~WebGLExtensionCompressedTextureASTC();
+
+    void GetSupportedProfiles(dom::Nullable< nsTArray<nsString> >& retval) const;
+
+    static bool IsSupported(const WebGLContext* webgl);
+
+    DECL_WEBGL_EXTENSION_GOOP
+};
 
 class WebGLExtensionCompressedTextureATC
     : public WebGLExtensionBase

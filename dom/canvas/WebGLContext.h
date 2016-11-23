@@ -273,6 +273,7 @@ class WebGLContext
     friend class ScopedFBRebinder;
     friend class WebGL2Context;
     friend class WebGLContextUserData;
+    friend class WebGLExtensionCompressedTextureASTC;
     friend class WebGLExtensionCompressedTextureATC;
     friend class WebGLExtensionCompressedTextureES3;
     friend class WebGLExtensionCompressedTextureETC1;
