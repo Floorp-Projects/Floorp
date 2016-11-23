@@ -59,7 +59,12 @@ public:
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-  virtual void SetStyleSheet(mozilla::CSSStyleSheet* aSheet) override; //override GroupRule
+  virtual void SetStyleSheet(mozilla::StyleSheet* aSheet) override; //override GroupRule
+  mozilla::CSSStyleSheet* GetStyleSheet() const
+  {
+    mozilla::StyleSheet* sheet = GroupRule::GetStyleSheet();
+    return sheet ? sheet->AsGecko() : nullptr;
+  }
   virtual int32_t GetType() const override;
   virtual already_AddRefed<Rule> Clone() const override;
   virtual nsIDOMCSSRule* GetDOMRule() override

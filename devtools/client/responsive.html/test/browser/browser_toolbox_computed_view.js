@@ -3,10 +3,6 @@
 
 "use strict";
 
-// On debug builds in particular, this test file seems to time out fairly
-// frequently.
-requestLongerTimeout(2);
-
 // Check that when the viewport is resized, the computed-view refreshes.
 
 const TEST_URI = "data:text/html;charset=utf-8,<html><style>" +

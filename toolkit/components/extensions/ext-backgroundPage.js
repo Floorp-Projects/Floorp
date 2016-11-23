@@ -7,6 +7,8 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 const {
@@ -92,6 +94,12 @@ class BackgroundPageBase {
   }
 
   initParentWindow(chromeShell) {
+    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      let attrs = chromeShell.getOriginAttributes();
+      attrs.privateBrowsingId = 1;
+      chromeShell.setOriginAttributes(attrs);
+    }
+
     let system = Services.scriptSecurityManager.getSystemPrincipal();
     chromeShell.createAboutBlankContentViewer(system);
     chromeShell.useGlobalHistory = false;

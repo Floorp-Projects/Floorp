@@ -683,7 +683,7 @@ ssl3_SendECDHServerKeyExchange(sslSocket *ss)
     int length;
     PRBool isTLS12;
     SECItem signed_hash = { siBuffer, NULL, 0 };
-    SSLHashType hashAlg = ssl_hash_none;
+    SSLHashType hashAlg;
     SSL3Hashes hashes;
 
     SECItem ec_params = { siBuffer, NULL, 0 };
@@ -750,11 +750,6 @@ ssl3_SendECDHServerKeyExchange(sslSocket *ss)
                          ss->sec.serverCert->serverKeyPair->privKey, &signed_hash);
     if (rv != SECSuccess) {
         goto loser; /* ssl3_SignHashes has set err. */
-    }
-    if (signed_hash.data == NULL) {
-        /* how can this happen and rv == SECSuccess ?? */
-        PORT_SetError(SSL_ERROR_SERVER_KEY_EXCHANGE_FAILURE);
-        goto loser;
     }
 
     length = ec_params.len +

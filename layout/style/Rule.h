@@ -80,16 +80,16 @@ public:
 
   virtual int32_t GetType() const = 0;
 
-  CSSStyleSheet* GetStyleSheet() const { return mSheet; }
+  StyleSheet* GetStyleSheet() const { return mSheet; }
 
   // Return the document the rule lives in, if any
   nsIDocument* GetDocument() const
   {
-    CSSStyleSheet* sheet = GetStyleSheet();
+    StyleSheet* sheet = GetStyleSheet();
     return sheet ? sheet->GetDocument() : nullptr;
   }
 
-  virtual void SetStyleSheet(CSSStyleSheet* aSheet);
+  virtual void SetStyleSheet(StyleSheet* aSheet);
 
   void SetParentRule(GroupRule* aRule) {
     // We don't reference count this up reference. The group rule
@@ -125,7 +125,7 @@ public:
 
 protected:
   // This is sometimes null (e.g., for style attributes).
-  CSSStyleSheet*    mSheet;
+  StyleSheet* mSheet;
   // When the parent GroupRule is destroyed, it will call SetParentRule(nullptr)
   // on this object. (Through SetParentRuleReference);
   GroupRule* MOZ_NON_OWNING_REF mParentRule;

@@ -707,7 +707,7 @@ main(int argc, char **argv)
     PLOptState *optstate;
     char *program_name;
     char *libname = NULL;
-    PRLibrary *lib;
+    PRLibrary *lib = NULL;
     PRFileDesc *fd;
     PRStatus rv = PR_SUCCESS;
     const char *input_file = NULL; /* read/create encrypted data from here */
@@ -870,8 +870,16 @@ main(int argc, char **argv)
      */
     libname = PR_GetLibraryName(NULL, "softokn3");
     assert(libname != NULL);
+    if (!libname) {
+        PR_fprintf(PR_STDERR, "getting softokn3 failed");
+        goto cleanup;
+    }
     lib = PR_LoadLibrary(libname);
     assert(lib != NULL);
+    if (!lib) {
+        PR_fprintf(PR_STDERR, "loading softokn3 failed");
+        goto cleanup;
+    }
     PR_FreeLibraryName(libname);
 
     if (FIPSMODE) {
@@ -885,9 +893,17 @@ main(int argc, char **argv)
             PR_FindFunctionSymbol(lib, "C_GetFunctionList");
     }
     assert(pC_GetFunctionList != NULL);
+    if (!pC_GetFunctionList) {
+        PR_fprintf(PR_STDERR, "getting function list failed");
+        goto cleanup;
+    }
 
     crv = (*pC_GetFunctionList)(&pFunctionList);
     assert(crv == CKR_OK);
+    if (crv != CKR_OK) {
+        PR_fprintf(PR_STDERR, "loading function list failed");
+        goto cleanup;
+    }
 
     if (configDir) {
         if (!dbPrefix) {
@@ -1304,7 +1320,7 @@ cleanup:
 #endif
 
     disableUnload = PR_GetEnvSecure("NSS_DISABLE_UNLOAD");
-    if (!disableUnload) {
+    if (!disableUnload && lib) {
         PR_UnloadLibrary(lib);
     }
     PR_Cleanup();

@@ -57,7 +57,7 @@ WebGLExtensionDisjointTimerQuery::IsQueryEXT(const WebGLQuery* query) const
 }
 
 void
-WebGLExtensionDisjointTimerQuery::BeginQueryEXT(GLenum target, WebGLQuery* query) const
+WebGLExtensionDisjointTimerQuery::BeginQueryEXT(GLenum target, WebGLQuery& query) const
 {
     const char funcName[] = "beginQueryEXT";
     if (mIsLost)
@@ -77,16 +77,16 @@ WebGLExtensionDisjointTimerQuery::EndQueryEXT(GLenum target) const
 }
 
 void
-WebGLExtensionDisjointTimerQuery::QueryCounterEXT(WebGLQuery* query, GLenum target) const
+WebGLExtensionDisjointTimerQuery::QueryCounterEXT(WebGLQuery& query, GLenum target) const
 {
     const char funcName[] = "queryCounterEXT";
     if (mIsLost)
         return;
 
-    if (!mContext->ValidateObject(funcName, query))
+    if (!mContext->ValidateObjectRef(funcName, query))
         return;
 
-    query->QueryCounter(funcName, target);
+    query.QueryCounter(funcName, target);
 }
 
 void
@@ -103,7 +103,7 @@ WebGLExtensionDisjointTimerQuery::GetQueryEXT(JSContext* cx, GLenum target, GLen
 
 void
 WebGLExtensionDisjointTimerQuery::GetQueryObjectEXT(JSContext* cx,
-                                                    const WebGLQuery* query, GLenum pname,
+                                                    const WebGLQuery& query, GLenum pname,
                                                     JS::MutableHandleValue retval) const
 {
     const char funcName[] = "getQueryObjectEXT";

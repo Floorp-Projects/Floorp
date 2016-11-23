@@ -14,6 +14,7 @@ cat << EOF
 
 Usage: ${0##*/} [-hcgv] [-j <n>] [--test] [--fuzz] [--scan-build[=output]]
                 [-m32] [--opt|-o] [--asan] [--ubsan] [--sancov[=edge|bb|func]]
+                [--pprof] [--msan]
 
 This script builds NSS with gyp and ninja.
 
@@ -35,8 +36,10 @@ NSS build tool options:
     --opt|-o      do an opt build
     --asan        do an asan build
     --ubsan       do an ubsan build
+    --msan        do an msan build
     --sancov      do sanitize coverage builds
                   --sancov=func sets coverage to function level for example
+    --pprof       build with gperftool support
 EOF
 }
 
@@ -53,7 +56,7 @@ verbose=0
 fuzz=0
 
 # parse parameters to store in config
-params=$(echo "$*" | perl -pe 's/-c|-v|-g|-j [0-9]*|-h//g' | perl -pe 's/^[ \t]*//')
+params=$(echo "$*" | perl -pe 's/-c|-v|-g|-j [0-9]*|-h//g' | perl -pe 's/^\s*(.*?)\s*$/\1/')
 params=$(echo "$params $CC $CCC" | tr " " "\n" | perl -pe '/^\s*$/d')
 params=$(echo "${params[*]}" | sort)
 
@@ -101,6 +104,8 @@ while [ $# -gt 0 ]; do
         --ubsan) gyp_params+=(-Duse_ubsan=1); nspr_sanitizer ubsan ;;
         --sancov) gyp_params+=(-Duse_sancov=edge); nspr_sanitizer sancov edge ;;
         --sancov=?*) gyp_params+=(-Duse_sancov="${1#*=}"); nspr_sanitizer sancov "${1#*=}" ;;
+        --pprof) gyp_params+=(-Duse_pprof=1) ;;
+        --msan) gyp_params+=(-Duse_msan=1); nspr_sanitizer msan ;;
         *) show_help; exit ;;
     esac
     shift
