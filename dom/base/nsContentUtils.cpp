@@ -7063,7 +7063,7 @@ nsContentUtils::GetHTMLEditor(nsPresContext* aPresContext)
 }
 
 bool
-nsContentUtils::IsContentInsertionPoint(const nsIContent* aContent)
+nsContentUtils::IsContentInsertionPoint(nsIContent* aContent)
 {
   // Check if the content is a XBL insertion point.
   if (aContent->IsActiveChildrenElement()) {
@@ -7071,11 +7071,9 @@ nsContentUtils::IsContentInsertionPoint(const nsIContent* aContent)
   }
 
   // Check if the content is a web components content insertion point.
-  if (aContent->IsHTMLElement(nsGkAtoms::content)) {
-    return static_cast<const HTMLContentElement*>(aContent)->IsInsertionPoint();
-  }
-
-  return false;
+  HTMLContentElement* contentElement =
+    HTMLContentElement::FromContent(aContent);
+  return contentElement && contentElement->IsInsertionPoint();
 }
 
 // static
