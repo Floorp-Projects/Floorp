@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/HTMLContentElement.h"
 #include "mozilla/dom/HTMLContentElementBinding.h"
+#include "mozilla/dom/HTMLUnknownElement.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/css/StyleRule.h"
@@ -17,8 +18,28 @@
 #include "nsRuleProcessorData.h"
 #include "nsRuleWalker.h"
 #include "nsCSSParser.h"
+#include "nsDocument.h"
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(Content)
+// Expand NS_IMPL_NS_NEW_HTML_ELEMENT(Content) to add check for web components
+// being enabled.
+nsGenericHTMLElement*
+NS_NewHTMLContentElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+                         mozilla::dom::FromParser aFromParser)
+{
+  // When this check is removed, remove the nsDocument.h and
+  // HTMLUnknownElement.h includes.  Also remove nsINode::IsHTMLContentElement.
+  //
+  // We have to jump through some hoops to be able to produce both NodeInfo* and
+  // already_AddRefed<NodeInfo>& for our callees.
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
+  if (!nsDocument::IsWebComponentsEnabled(nodeInfo)) {
+    already_AddRefed<mozilla::dom::NodeInfo> nodeInfoArg(nodeInfo.forget());
+    return new mozilla::dom::HTMLUnknownElement(nodeInfoArg);
+  }
+
+  already_AddRefed<mozilla::dom::NodeInfo> nodeInfoArg(nodeInfo.forget());
+  return new mozilla::dom::HTMLContentElement(nodeInfoArg);
+}
 
 using namespace mozilla::dom;
 
