@@ -21,6 +21,11 @@
       clip-path: url(#clip);
     }
 
+    #login-highlighted {
+      fill: HighlightText;
+      fill-opacity: 1;
+    }
+
     #plugin-blocked,
     #plugin-blocked:target ~ #strikeout {
       fill: #d92215;
@@ -73,6 +78,7 @@
   <use id="indexedDB" xlink:href="#indexedDB-icon" />
   <use id="indexedDB-blocked" class="blocked" xlink:href="#indexedDB-icon" />
   <use id="login" xlink:href="#login-icon" />
+  <use id="login-highlighted" class="highlighted" xlink:href="#login-icon" />
   <use id="login-detailed" xlink:href="#login-detailed-icon" />
   <use id="microphone" xlink:href="#microphone-icon" />
   <use id="microphone-sharing" xlink:href="#microphone-icon"/>
