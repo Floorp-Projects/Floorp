@@ -14,6 +14,10 @@ namespace mozilla {
 class ServoDeclarationBlock final : public DeclarationBlock
 {
 public:
+  explicit ServoDeclarationBlock(
+    already_AddRefed<RawServoDeclarationBlock> aRaw)
+    : DeclarationBlock(StyleBackendType::Servo), mRaw(aRaw) {}
+
   ServoDeclarationBlock()
     : ServoDeclarationBlock(Servo_DeclarationBlock_CreateEmpty().Consume()) {}
 
@@ -55,11 +59,6 @@ public:
   bool GetPropertyIsImportant(const nsAString& aProperty) const;
   void RemoveProperty(const nsAString& aProperty);
   void RemovePropertyByID(nsCSSPropertyID aPropID);
-
-protected:
-  explicit ServoDeclarationBlock(
-    already_AddRefed<RawServoDeclarationBlock> aRaw)
-    : DeclarationBlock(StyleBackendType::Servo), mRaw(aRaw) {}
 
 private:
   ~ServoDeclarationBlock() {}

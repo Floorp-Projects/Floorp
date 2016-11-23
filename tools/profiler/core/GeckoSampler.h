@@ -112,6 +112,7 @@ class GeckoSampler: public Sampler {
 #endif
   mozilla::UniquePtr<char[]> ToJSON(double aSinceTime = 0);
   virtual void ToJSObjectAsync(double aSinceTime = 0, mozilla::dom::Promise* aPromise = 0);
+  void ToFileAsync(const nsACString& aFileName, double aSinceTime = 0);
   void StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter);
   void StreamTaskTracer(SpliceableJSONWriter& aWriter);
   void FlushOnJSShutdown(JSContext* aContext);

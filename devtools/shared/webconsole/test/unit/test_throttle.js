@@ -76,8 +76,8 @@ TestChannel.prototype = {
 
 add_task(function*() {
   let throttler = new NetworkThrottleManager({
-    roundTripTimeMean: 1,
-    roundTripTimeMax: 1,
+    latencyMean: 1,
+    latencyMax: 1,
     downloadBPSMean: 500,
     downloadBPSMax: 500,
     uploadBPSMean: 500,

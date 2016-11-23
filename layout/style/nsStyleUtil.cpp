@@ -8,6 +8,7 @@
 
 #include "nsIContent.h"
 #include "nsCSSProps.h"
+#include "nsContentUtils.h"
 #include "nsRuleNode.h"
 #include "nsROCSSPrimitiveValue.h"
 #include "nsStyleStruct.h"

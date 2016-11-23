@@ -5,7 +5,7 @@ import sys
 
 def main():
     if len(sys.argv) < 2:
-        raise Exception('Specify either "ld", asan", "sancov" or "ubsan" as argument.')
+        raise Exception('Specify either "ld", asan", "msan", "sancov" or "ubsan" as argument.')
 
     sanitizer = sys.argv[1]
     if sanitizer == "ubsan":
@@ -13,6 +13,10 @@ def main():
         return
     if sanitizer == "asan":
         print('-fsanitize=address ', end='')
+        print('-fno-omit-frame-pointer -fno-optimize-sibling-calls ', end='')
+        return
+    if sanitizer == "msan":
+        print('-fsanitize=memory -fsanitize-memory-track-origins ', end='')
         print('-fno-omit-frame-pointer -fno-optimize-sibling-calls ', end='')
         return
     if sanitizer == "sancov":
@@ -26,7 +30,7 @@ def main():
         print('-Wl,-z,defs ', end='')
         return
 
-    raise Exception('Specify either "ld", asan", "sancov" or "ubsan" as argument.')
+    raise Exception('Specify either "ld", asan", "msan", "sancov" or "ubsan" as argument.')
 
 if __name__ == '__main__':
     main()
