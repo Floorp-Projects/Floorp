@@ -533,10 +533,8 @@ tls13_ClientSendPreSharedKeyXtn(const sslSocket *ss, TLSExtensionData *xtnData,
         PRINT_BUF(50, (ss, "Sending PreSharedKey value",
                        session_ticket->ticket.data,
                        session_ticket->ticket.len));
-        xtnData->sentSessionTicketInClientHello = PR_TRUE;
-        if (rv != SECSuccess)
-            goto loser;
 
+        xtnData->sentSessionTicketInClientHello = PR_TRUE;
         xtnData->advertised[xtnData->numAdvertised++] =
             ssl_tls13_pre_shared_key_xtn;
     }

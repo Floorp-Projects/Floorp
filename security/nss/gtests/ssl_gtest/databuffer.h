@@ -136,7 +136,7 @@ class DataBuffer {
       Write(0, old_value, std::min(old_len, index));
     }
     // Maybe a gap.
-    if (index > old_len) {
+    if (old_value && index > old_len) {
       memset(old_value + index, 0, index - old_len);
     }
     // The new.

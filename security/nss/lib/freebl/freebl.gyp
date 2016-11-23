@@ -373,6 +373,10 @@
               'MPI_AMD64',
               'MP_ASSEMBLY_MULTIPLY',
               'NSS_USE_COMBA',
+            ],
+          }],
+          [ 'target_arch=="x64" and use_msan==0', {
+            'defines': [
               'USE_HW_AES',
               'INTEL_GCM',
             ],
