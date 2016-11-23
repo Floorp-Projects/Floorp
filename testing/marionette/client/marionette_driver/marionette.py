@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import ConfigParser
 import base64
 import datetime
 import json
@@ -592,7 +593,18 @@ class Marionette(object):
                 raise NotImplementedError(
                     msg.format(app, geckoinstance.apps.keys()))
         else:
-            instance_class = geckoinstance.GeckoInstance
+            try:
+                if not isinstance(self.bin, basestring):
+                    raise TypeError("bin must be a string if app is not specified")
+                config = ConfigParser.RawConfigParser()
+                config.read(os.path.join(os.path.dirname(self.bin),
+                                         'application.ini'))
+                app = config.get('App', 'Name')
+                instance_class = geckoinstance.apps[app.lower()]
+            except (ConfigParser.NoOptionError,
+                    ConfigParser.NoSectionError,
+                    KeyError):
+                instance_class = geckoinstance.GeckoInstance
         return instance_class(host=self.host, port=self.port, bin=self.bin,
                               **instance_args)
 

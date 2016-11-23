@@ -22,7 +22,6 @@ import mozprofile
 
 from manifestparser import TestManifest
 from manifestparser.filters import tags
-from marionette_driver.geckoinstance import app_ids
 from marionette_driver.marionette import Marionette
 from moztest.adapters.unit import StructuredTestRunner, StructuredTestResult
 from moztest.results import TestResultCollection, TestResult, relevant_line
@@ -433,9 +432,6 @@ class BaseMarionetteArguments(ArgumentParser):
         if not args.address and not args.binary and not args.emulator:
             self.error('You must specify --binary, or --address, or --emulator')
 
-        if not os.path.isfile(args.binary):
-            self.error('You must specify an existing binary.')
-
         if args.total_chunks is not None and args.this_chunk is None:
             self.error('You must specify which chunk to run.')
 
@@ -516,13 +512,6 @@ class BaseMarionetteTestRunner(object):
                  socket_timeout=BaseMarionetteArguments.socket_timeout_default,
                  startup_timeout=None, addons=None, workspace=None,
                  verbose=0, e10s=True, emulator=False, **kwargs):
-
-        self._appinfo = None
-        self._appName = None
-        self._capabilities = None
-        self._filename_pattern = None
-        self._version_info = {}
-
         self.extra_kwargs = kwargs
         self.test_kwargs = deepcopy(kwargs)
         self.address = address
@@ -540,6 +529,9 @@ class BaseMarionetteTestRunner(object):
         self.symbols_path = symbols_path
         self.timeout = timeout
         self.socket_timeout = socket_timeout
+        self._capabilities = None
+        self._appinfo = None
+        self._appName = None
         self.shuffle = shuffle
         self.shuffle_seed = shuffle_seed
         self.server_root = server_root
@@ -558,14 +550,7 @@ class BaseMarionetteTestRunner(object):
         self.workspace_path = workspace or os.getcwd()
         self.verbose = verbose
         self.e10s = e10s
-
-        # If no application type has been specified try to auto-detect it
-        if not self.app:
-            try:
-                app_id = self.version_info['application_id']
-                self.app = app_ids[app_id]
-            except KeyError:
-                self.logger.warning('Failed to detect the type of application.')
+        self._filename_pattern = None
 
         def gather_debug(test, status):
             rv = {}
@@ -683,17 +668,6 @@ class BaseMarionetteTestRunner(object):
 
         self._appName = self.capabilities.get('browserName')
         return self._appName
-
-    @property
-    def version_info(self):
-        if not self._version_info:
-            try:
-                # TODO: Get version_info in Fennec case
-                self._version_info = mozversion.get_version(binary=self.bin)
-            except Exception:
-                self.logger.warning("Failed to retrieve version information for {}".format(
-                    self.bin))
-        return self._version_info
 
     @property
     def bin(self):
@@ -859,10 +833,15 @@ class BaseMarionetteTestRunner(object):
             except Exception:
                 self.logger.warning('Could not get device info.')
 
+        # TODO: Get version_info in Fennec case
+        version_info = None
+        if self.bin:
+            version_info = mozversion.get_version(binary=self.bin)
+
         self.logger.info("running with e10s: {}".format(self.e10s))
 
         self.logger.suite_start(self.tests,
-                                version_info=self.version_info,
+                                version_info=version_info,
                                 device_info=device_info)
 
         self._log_skipped_tests()
