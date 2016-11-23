@@ -5960,11 +5960,6 @@ HTMLMediaElement::UpdateAudioChannelPlayingState(bool aForcePlaying)
 void
 HTMLMediaElement::NotifyAudioChannelAgent(bool aPlaying)
 {
-  // This is needed to pass nsContentUtils::IsCallerChrome().
-  // AudioChannel API should not called from content but it can happen that
-  // this method has some content JS in its stack.
-  AutoNoJSAPI nojsapi;
-
   if (aPlaying) {
     // The reason we don't call NotifyStartedPlaying after the media element
     // really becomes audible is because there is another case needs to block
