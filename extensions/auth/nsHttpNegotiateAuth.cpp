@@ -321,7 +321,7 @@ NS_IMPL_ISUPPORTS(GetNextTokenCompleteEvent, nsIRunnable, nsICancelable)
 //
 class GetNextTokenRunnable final : public mozilla::Runnable
 {
-    virtual ~GetNextTokenRunnable() = default;
+    ~GetNextTokenRunnable() override = default;
     public:
         GetNextTokenRunnable(nsIHttpAuthenticableChannel *authChannel,
                              const char *challenge,
