@@ -530,7 +530,7 @@ class ICStub
         Updated             = 0x4
     };
 
-    void markCode(JSTracer* trc, const char* name);
+    void traceCode(JSTracer* trc, const char* name);
     void updateCode(JitCode* stubCode);
     void trace(JSTracer* trc);
 

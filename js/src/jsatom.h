@@ -197,13 +197,13 @@ class AutoLockForExclusiveAccess;
  * Atom tracing and garbage collection hooks.
  */
 void
-MarkAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock);
+TraceAtoms(JSTracer* trc, AutoLockForExclusiveAccess& lock);
 
 void
-MarkPermanentAtoms(JSTracer* trc);
+TracePermanentAtoms(JSTracer* trc);
 
 void
-MarkWellKnownSymbols(JSTracer* trc);
+TraceWellKnownSymbols(JSTracer* trc);
 
 /* N.B. must correspond to boolean tagging behavior. */
 enum PinningBehavior

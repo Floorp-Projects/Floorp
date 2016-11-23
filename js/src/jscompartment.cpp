@@ -604,7 +604,7 @@ JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc)
         if (!c->zone()->isCollecting())
             c->traceOutgoingCrossCompartmentWrappers(trc);
     }
-    Debugger::markIncomingCrossCompartmentEdges(trc);
+    Debugger::traceIncomingCrossCompartmentEdges(trc);
 }
 
 void
@@ -631,7 +631,7 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
         // to trace them when not doing a minor collection.
 
         if (jitCompartment_)
-            jitCompartment_->mark(trc, this);
+            jitCompartment_->trace(trc, this);
 
         // If a compartment is on-stack, we mark its global so that
         // JSContext::global() remains valid.
@@ -647,12 +647,12 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
     // During a GC, these are treated as weak pointers.
     if (traceOrMark == js::gc::GCRuntime::TraceRuntime) {
         if (watchpointMap)
-            watchpointMap->markAll(trc);
+            watchpointMap->trace(trc);
     }
 
     /* Mark debug scopes, if present */
     if (debugEnvs)
-        debugEnvs->mark(trc);
+        debugEnvs->trace(trc);
 
     if (lazyArrayBuffers)
         lazyArrayBuffers->trace(trc);
