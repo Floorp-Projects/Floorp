@@ -1081,6 +1081,18 @@ parent:
                TextureFactoryIdentifier textureFactoryIdentifier,
                uint64_t layersId);
 
+    async CreateWindowInDifferentProcess(
+      PBrowser aThisTab,
+      uint32_t aChromeFlags,
+      bool aCalledFromJS,
+      bool aPositionSpecified,
+      bool aSizeSpecified,
+      URIParams aURIToLoad,
+      nsCString aFeatures,
+      nsCString aBaseURI,
+      DocShellOriginAttributes aOpenerOriginAttributes,
+      float aFullZoom);
+
     sync GetDeviceStorageLocation(nsString type)
         returns (nsString path);
 
