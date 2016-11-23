@@ -564,7 +564,7 @@ public:
   void handleUnusedExprResult(const Stmt *Statement) {
     const Expr *E = dyn_cast_or_null<Expr>(Statement);
     if (E) {
-      E = E->IgnoreTrivials(); // Ignore ExprWithCleanup etc. implicit wrappers
+      E = E->IgnoreImplicit(); // Ignore ExprWithCleanup etc. implicit wrappers
       QualType T = E->getType();
       if (MustUse.hasEffectiveAnnotation(T) && !isIgnoredExprForMustUse(E)) {
         unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
