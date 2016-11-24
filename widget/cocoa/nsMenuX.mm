@@ -450,13 +450,8 @@ void nsMenuX::MenuConstruct()
 
 void nsMenuX::SetRebuild(bool aNeedsRebuild)
 {
-  if (!gConstructingMenu) {
+  if (!gConstructingMenu)
     mNeedsRebuild = aNeedsRebuild;
-    if (mParent->MenuObjectType() == eMenuBarObjectType) {
-      nsMenuBarX* mb = static_cast<nsMenuBarX*>(mParent);
-      mb->SetNeedsRebuild();
-    }
-  }
 }
 
 nsresult nsMenuX::SetEnabled(bool aIsEnabled)
