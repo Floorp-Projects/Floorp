@@ -421,10 +421,7 @@ public:
 
   // WebIDL
 
-  MediaError* GetError() const
-  {
-    return mError;
-  }
+  MediaError* GetError() const;
 
   // XPCOM GetSrc() is OK
   void SetSrc(const nsAString& aSrc, ErrorResult& aRv)
@@ -761,6 +758,7 @@ protected:
   virtual ~HTMLMediaElement();
 
   class ChannelLoader;
+  class ErrorSink;
   class MediaLoadListener;
   class MediaStreamTracksAvailableCallback;
   class MediaStreamTrackListener;
@@ -1357,9 +1355,6 @@ protected:
 
   RefPtr<ChannelLoader> mChannelLoader;
 
-  // Error attribute
-  RefPtr<MediaError> mError;
-
   // The current media load ID. This is incremented every time we start a
   // new load. Async events note the ID when they're first sent, and only fire
   // if the ID is unchanged when they come to fire.
@@ -1745,6 +1740,8 @@ private:
   bool mAudible;
 
   Visibility mVisibilityState;
+
+  UniquePtr<ErrorSink> mErrorSink;
 };
 
 } // namespace dom

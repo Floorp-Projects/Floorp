@@ -691,6 +691,66 @@ private:
   bool mCancelled = false;
 };
 
+class HTMLMediaElement::ErrorSink
+{
+public:
+  explicit ErrorSink(HTMLMediaElement* aOwner)
+    : mOwner(aOwner)
+  {
+    MOZ_ASSERT(mOwner);
+  }
+
+  void SetError(uint16_t aErrorCode, const nsACString& aErrorDetails)
+  {
+    // Since we have multiple paths calling into DecodeError, e.g.
+    // MediaKeys::Terminated and EMEH264Decoder::Error. We should take the 1st
+    // one only in order not to fire multiple 'error' events.
+    if (mError) {
+      return;
+    }
+
+    if (!IsValidErrorCode(aErrorCode)) {
+      NS_ASSERTION(false, "Undefined MediaError codes!");
+      return;
+    }
+
+    mError = new MediaError(mOwner, aErrorCode, aErrorDetails);
+    mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("error"));
+    if (mOwner->ReadyState() == HAVE_NOTHING &&
+        aErrorCode == MEDIA_ERR_ABORTED) {
+      // https://html.spec.whatwg.org/multipage/embedded-content.html#media-data-processing-steps-list
+      // "If the media data fetching process is aborted by the user"
+      mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
+      mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
+      mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
+    } else if (aErrorCode == MEDIA_ERR_SRC_NOT_SUPPORTED) {
+      mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
+    } else {
+      mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+    }
+  }
+
+  void ResetError()
+  {
+    mError = nullptr;
+  }
+
+  RefPtr<MediaError> mError;
+
+private:
+  bool IsValidErrorCode(const uint16_t& aErrorCode) const
+  {
+    return (aErrorCode == MEDIA_ERR_DECODE  ||
+            aErrorCode == MEDIA_ERR_NETWORK ||
+            aErrorCode == MEDIA_ERR_ABORTED ||
+            aErrorCode == MEDIA_ERR_SRC_NOT_SUPPORTED);
+  }
+
+  // Media elememt's life cycle would be longer than error sink, so we use the
+  // raw pointer and this class would only be referenced by media element.
+  HTMLMediaElement* mOwner;
+};
+
 NS_IMPL_ADDREF_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
 NS_IMPL_RELEASE_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
 
@@ -705,7 +765,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTM
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoadBlockedDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSourceLoadCandidate)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioChannelAgent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mErrorSink->mError)
   for (uint32_t i = 0; i < tmp->mOutputStreams.Length(); ++i) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputStreams[i].mStream);
   }
@@ -730,7 +790,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLE
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoadBlockedDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSourceLoadCandidate)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioChannelAgent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mErrorSink->mError)
   for (uint32_t i = 0; i < tmp->mOutputStreams.Length(); ++i) {
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputStreams[i].mStream)
   }
@@ -965,7 +1025,7 @@ void HTMLMediaElement::AbortExistingLoads()
     DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
   }
 
-  mError = nullptr;
+  mErrorSink->ResetError();
   mCurrentPlayRangeStart = -1.0;
   mLoadedDataFired = false;
   mAutoplaying = true;
@@ -1026,12 +1086,9 @@ void HTMLMediaElement::NoSupportedMediaSourceError(const nsACString& aErrorDetai
   if (mDecoder) {
     ShutdownDecoder();
   }
-  mError = new MediaError(this, MEDIA_ERR_SRC_NOT_SUPPORTED, aErrorDetails);
-  ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
-  DispatchAsyncEvent(NS_LITERAL_STRING("error"));
+  mErrorSink->SetError(MEDIA_ERR_SRC_NOT_SUPPORTED, aErrorDetails);
   ChangeDelayLoadStatus(false);
   UpdateAudioChannelPlayingState();
-  OpenUnsupportedMediaWithExtenalAppIfNeeded();
 }
 
 typedef void (HTMLMediaElement::*SyncSectionFn)();
@@ -2930,7 +2987,8 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mDefaultPlaybackStartPosition(0.0),
     mIsAudioTrackAudible(false),
     mAudible(IsAudible()),
-    mVisibilityState(Visibility::APPROXIMATELY_NONVISIBLE)
+    mVisibilityState(Visibility::APPROXIMATELY_NONVISIBLE),
+    mErrorSink(new ErrorSink(this))
 {
   ErrorResult rv;
 
@@ -4429,7 +4487,7 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError)
   AudioTracks()->EmptyTracks();
   VideoTracks()->EmptyTracks();
   if (mIsLoadingFromSourceChildren) {
-    mError = nullptr;
+    mErrorSink->ResetError();
     if (mSourceLoadCandidate) {
       DispatchAsyncSourceError(mSourceLoadCandidate);
       QueueLoadFromSourceTask();
@@ -4456,29 +4514,7 @@ void HTMLMediaElement::LoadAborted()
 void HTMLMediaElement::Error(uint16_t aErrorCode,
                              const nsACString& aErrorDetails)
 {
-  NS_ASSERTION(aErrorCode == MEDIA_ERR_DECODE ||
-               aErrorCode == MEDIA_ERR_NETWORK ||
-               aErrorCode == MEDIA_ERR_ABORTED,
-               "Only use MediaError codes!");
-
-  // Since we have multiple paths calling into DecodeError, e.g.
-  // MediaKeys::Terminated and EMEH264Decoder::Error. We should take the 1st
-  // one only in order not to fire multiple 'error' events.
-  if (mError) {
-    return;
-  }
-  mError = new MediaError(this, aErrorCode, aErrorDetails);
-
-  DispatchAsyncEvent(NS_LITERAL_STRING("error"));
-  if (mReadyState == HAVE_NOTHING && aErrorCode == MEDIA_ERR_ABORTED) {
-    // https://html.spec.whatwg.org/multipage/embedded-content.html#media-data-processing-steps-list
-    // "If the media data fetching process is aborted by the user"
-    DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
-    ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
-    DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
-  } else {
-    ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
-  }
+  mErrorSink->SetError(aErrorCode, aErrorDetails);
   ChangeDelayLoadStatus(false);
   UpdateAudioChannelPlayingState();
 }
@@ -4885,7 +4921,7 @@ void HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
     DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
   } else if (oldState >= nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
              mReadyState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA &&
-             !Paused() && !Ended() && !mError) {
+             !Paused() && !Ended() && !mErrorSink->mError) {
     FireTimeUpdate(false);
     DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
   }
@@ -4946,7 +4982,8 @@ void HTMLMediaElement::ChangeNetworkState(nsMediaNetworkState aState)
     mBegun = true;
     // Start progress notification when entering NETWORK_LOADING.
     StartProgress();
-  } else if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_IDLE && !mError) {
+  } else if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_IDLE &&
+             !mErrorSink->mError) {
     // Fire 'suspend' event when entering NETWORK_IDLE and no error presented.
     DispatchAsyncEvent(NS_LITERAL_STRING("suspend"));
   }
@@ -5646,6 +5683,12 @@ MediaStream* HTMLMediaElement::GetSrcMediaStream() const
   return mSrcStream->GetPlaybackStream();
 }
 
+MediaError*
+HTMLMediaElement::GetError() const
+{
+  return mErrorSink->mError;
+}
+
 void HTMLMediaElement::GetCurrentSpec(nsCString& aString)
 {
   if (mLoadingSrc) {
@@ -5796,7 +5839,7 @@ bool
 HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
 {
   // If we have an error, we are not playing.
-  if (mError) {
+  if (mErrorSink->mError) {
     return false;
   }
 
@@ -6558,11 +6601,12 @@ HTMLMediaElement::MaybeNotifyMediaResumed(SuspendTypes aSuspend)
 bool
 HTMLMediaElement::HaveFailedWithSourceNotSupportedError() const
 {
-  if (!mError) {
+  const MediaError* error = mErrorSink->mError;
+  if (!error) {
     return false;
   }
 
-  uint16_t errorCode = mError->Code();
+  uint16_t errorCode = error->Code();
   return (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE &&
           errorCode == MEDIA_ERR_SRC_NOT_SUPPORTED);
 }
