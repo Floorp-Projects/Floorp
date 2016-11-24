@@ -33,8 +33,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeParent)
 
 public:
-  WebRenderBridgeParent(WebRenderBridgeParent* aParent,
-                        const uint64_t& aPipelineId,
+  WebRenderBridgeParent(const uint64_t& aPipelineId,
                         widget::CompositorWidget* aWidget,
                         gl::GLContext* aGlContext,
                         wrwindowstate* aWrWindowState,
@@ -68,6 +67,10 @@ public:
                                             const uint32_t& aHeight,
                                             InfallibleTArray<uint8_t>* aOutImageSnapshot) override;
 
+  mozilla::ipc::IPCResult RecvAddExternalImageId(const uint64_t& aImageId,
+                                                 const uint64_t& aAsyncContainerId) override;
+  mozilla::ipc::IPCResult RecvRemoveExternalImageId(const uint64_t& aImageId) override;
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   // CompositorVsyncSchedulerOwner
@@ -83,8 +86,6 @@ protected:
   void ClearResources();
 
 private:
-  // XXX remove mParent in Bug 1317935
-  RefPtr<WebRenderBridgeParent> mParent;
   uint64_t mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
   wrstate* mWRState;
@@ -93,6 +94,7 @@ private:
   RefPtr<layers::Compositor> mCompositor;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   std::vector<WRImageKey> mKeysToDelete;
+  nsDataHashtable<nsUint64HashKey, uint64_t> mExternalImageIds;
 };
 
 } // namespace layers

@@ -6,23 +6,23 @@
 
 #include "mozilla/layers/WebRenderBridgeParent.h"
 
+#include "CompositableHost.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorVsyncScheduler.h"
 #include "mozilla/widget/CompositorWidget.h"
+#include "mozilla/layers/WebRenderCompositorOGL.h"
 
 namespace mozilla {
 namespace layers {
 
-WebRenderBridgeParent::WebRenderBridgeParent(WebRenderBridgeParent* aParent,
-                                             const uint64_t& aPipelineId,
+WebRenderBridgeParent::WebRenderBridgeParent(const uint64_t& aPipelineId,
                                              widget::CompositorWidget* aWidget,
                                              gl::GLContext* aGlContext,
                                              wrwindowstate* aWrWindowState,
                                              layers::Compositor* aCompositor)
-  : mParent(aParent)
-  , mPipelineId(aPipelineId)
+  : mPipelineId(aPipelineId)
   , mWidget(aWidget)
   , mWRState(nullptr)
   , mGLContext(aGlContext)
@@ -40,6 +40,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(WebRenderBridgeParent* aParent,
   }
   if (mWidget) {
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
+    mCompositor->AsWebRenderCompositorOGL()->SetVsyncScheduler(mCompositorScheduler);
   }
 }
 
@@ -186,9 +187,48 @@ WebRenderBridgeParent::RecvDPGetSnapshot(const uint32_t& aWidth,
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
+                                              const uint64_t& aAsyncContainerId)
+{
+  MOZ_ASSERT(!mExternalImageIds.Get(aImageId));
+
+  PCompositableParent* compositableParent = CompositableMap::Get(aAsyncContainerId);
+  if (!compositableParent) {
+    NS_ERROR("CompositableParent not found in the map");
+    return IPC_OK();
+  }
+
+  CompositableHost* host = CompositableHost::FromIPDLActor(compositableParent);
+  if (host->GetType() != CompositableType::IMAGE) {
+    NS_ERROR("Incompatible CompositableHost");
+    return IPC_OK();
+  }
+
+  host->SetCompositor(mCompositor);
+  mCompositor->AsWebRenderCompositorOGL()->AddExternalImageId(aImageId, host);
+  mExternalImageIds.Put(aImageId, aImageId);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvRemoveExternalImageId(const uint64_t& aImageId)
+{
+  MOZ_ASSERT(mExternalImageIds.Get(aImageId));
+  mExternalImageIds.Remove(aImageId);
+  mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(aImageId);
+  return IPC_OK();
+}
+
 void
 WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
+    uint64_t externalImageId = iter.Data();
+    mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(externalImageId);
+  }
+  mExternalImageIds.Clear();
+
   ClearResources();
 }
 
@@ -204,6 +244,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   }
 
   mCompositor->SetCompositionTime(TimeStamp::Now());
+  mCompositor->AsWebRenderCompositorOGL()->UpdateExternalImages();
 
   MOZ_ASSERT(mWRState);
   mozilla::widget::WidgetRenderingContext widgetContext;
@@ -235,11 +276,7 @@ WebRenderBridgeParent::DeleteOldImages()
 void
 WebRenderBridgeParent::ScheduleComposition()
 {
-  if (mCompositorScheduler) {
-    mCompositorScheduler->ScheduleComposition();
-  } else if (mParent) {
-    mParent->ScheduleComposition();
-  }
+  mCompositor->AsWebRenderCompositorOGL()->ScheduleComposition();
 }
 
 void
@@ -259,7 +296,6 @@ WebRenderBridgeParent::ClearResources()
     mCompositorScheduler = nullptr;
   }
   mGLContext = nullptr;
-  mParent = nullptr;
 }
 
 } // namespace layers

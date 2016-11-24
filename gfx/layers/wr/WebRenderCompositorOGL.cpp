@@ -5,8 +5,10 @@
 
 #include "WebRenderCompositorOGL.h"
 
+#include "CompositableHost.h"
 #include "GLContext.h"                  // for GLContext
 #include "GLUploadHelpers.h"
+#include "mozilla/layers/CompositorVsyncScheduler.h"
 #include "mozilla/layers/TextureHost.h"  // for TextureSource, etc
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureSourceOGL, etc
 
@@ -34,6 +36,9 @@ void
 WebRenderCompositorOGL::Destroy()
 {
   Compositor::Destroy();
+
+  mCompositableHosts.Clear();
+  mCompositorScheduler = nullptr;
 
   if (!mDestroyed) {
     mDestroyed = true;
@@ -78,6 +83,54 @@ WebRenderCompositorOGL::MakeCurrent(MakeCurrentFlags aFlags) {
     return;
   }
   mGLContext->MakeCurrent(aFlags & ForceMakeCurrent);
+}
+
+void
+WebRenderCompositorOGL::CompositeUntil(TimeStamp aTimeStamp)
+{
+  Compositor::CompositeUntil(aTimeStamp);
+  // We're not really taking advantage of the stored composite-again-time here.
+  // We might be able to skip the next few composites altogether. However,
+  // that's a bit complex to implement and we'll get most of the advantage
+  // by skipping compositing when we detect there's nothing invalid. This is why
+  // we do "composite until" rather than "composite again at".
+  ScheduleComposition();
+}
+
+void
+WebRenderCompositorOGL::AddExternalImageId(uint64_t aExternalImageId, CompositableHost* aHost)
+{
+  MOZ_ASSERT(!mCompositableHosts.Get(aExternalImageId));
+  mCompositableHosts.Put(aExternalImageId, aHost);
+}
+
+void
+WebRenderCompositorOGL::RemoveExternalImageId(uint64_t aExternalImageId)
+{
+  MOZ_ASSERT(mCompositableHosts.Get(aExternalImageId));
+  mCompositableHosts.Remove(aExternalImageId);
+}
+
+void
+WebRenderCompositorOGL::UpdateExternalImages()
+{
+  for (auto iter = mCompositableHosts.Iter(); !iter.Done(); iter.Next()) {
+    RefPtr<CompositableHost>& host = iter.Data();
+    // XXX Change to correct TextrueSource handling here.
+    host->BindTextureSource();
+  }
+}
+
+void
+WebRenderCompositorOGL::ScheduleComposition()
+{
+  mCompositorScheduler->ScheduleComposition();
+}
+
+void
+WebRenderCompositorOGL::SetVsyncScheduler(CompositorVsyncScheduler* aScheduler)
+{
+  mCompositorScheduler = aScheduler;
 }
 
 } // namespace layers

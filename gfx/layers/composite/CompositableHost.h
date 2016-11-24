@@ -239,6 +239,8 @@ public:
   /// is is destroyed.
   virtual void CleanupResources() {}
 
+  virtual void BindTextureSource() {}
+
 protected:
   TextureInfo mTextureInfo;
   uint64_t mAsyncID;
