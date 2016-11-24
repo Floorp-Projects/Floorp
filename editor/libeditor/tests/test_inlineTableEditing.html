@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div id="editable1" contenteditable="true">
+<table id="table1">
+<tr id="tr1"><td>ABCDEFG</td><td>HIJKLMN</td></tr>
+<tr id="tr2"><td>ABCDEFG</td><td>HIJKLMN</td></tr>
+<tr id="tr3"><td>ABCDEFG</td><td>HIJKLMN</td></tr>
+</table>
+</div>
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  document.execCommand("enableObjectResizing", false, "false");
+  document.execCommand("enableInlineTableEditing", false, "true");
+
+  let tableNode = document.getElementById("table1");
+  synthesizeMouseAtCenter(tableNode, {});
+  isnot(tableNode.getAttribute("_moz_resizing"), "true",
+         "_moz_resizing attribute shouldn't be true without object resizing");
+
+  ok(document.getElementById("tr2"), "id=tr2 should exist");
+  synthesizeMouse(tr2, 0, tr2.clientHeight / 2, {});
+  ok(!document.getElementById("tr2"),
+     "id=tr2 should be removed by a click in the row");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
