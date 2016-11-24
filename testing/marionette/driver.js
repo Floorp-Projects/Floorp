@@ -155,6 +155,7 @@ this.GeckoDriver = function(appName, server) {
     // supported features
     "raisesAccessibilityExceptions": false,
     "rotatable": this.appName == "B2G",
+    "acceptSslCerts": false,
     "proxy": {},
 
     // proprietary extensions
