@@ -134,17 +134,11 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         self.register_virtualenv_module(requirements=[requirements], two_pass=True)
 
     def download_and_extract(self):
-        """Overriding method from TestingMixin for more specific behavior.
-
-        We use the test_packages_url command line argument to check where to get the
-        harness, puppeteer, and tests from and how to set them up.
-
-        """
+        """Override method from TestingMixin for more specific behavior."""
         extract_dirs = ['config/*',
                         'firefox-ui/*',
                         'marionette/*',
                         'mozbase/*',
-                        'puppeteer/*',
                         'tools/wptserve/*',
                         ]
         super(FirefoxUITests, self).download_and_extract(extract_dirs=extract_dirs)

@@ -4,7 +4,7 @@
 
 FIREFOX_UI_FUNCTIONAL_MANIFESTS += ["tests/functional/manifest.ini"]
 FIREFOX_UI_UPDATE_MANIFESTS += ["tests/update/manifest.ini"]
-# Bug 1272145: Move to testing/puppeteer/firefox
+# TODO: Move to testing/marionette/puppeteer/firefox
 PUPPETEER_FIREFOX_MANIFESTS += ["tests/puppeteer/manifest.ini"]
 
 with Files("**"):
