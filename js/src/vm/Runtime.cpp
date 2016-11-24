@@ -316,6 +316,7 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
         return false;
 
     atomsCompartment->setIsSystem(true);
+    atomsCompartment->setIsAtomsCompartment();
 
     atomsZone.forget();
     this->atomsCompartment_ = atomsCompartment.forget();
