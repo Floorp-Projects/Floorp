@@ -16,9 +16,15 @@
 
 #include "nsString.h"
 #include "nsThreadUtils.h"
+#include "platform.h"
 #include "prtime.h"
 
 #include <stdarg.h>
+
+#ifdef XP_WIN
+#include <windows.h>
+#define getpid GetCurrentProcessId
+#endif
 
 #define MAX_SIZE_LOG (1024 * 128)
 
@@ -181,7 +187,11 @@ InitTaskTracer(uint32_t aFlags)
 
   MOZ_ASSERT(!sTraceInfos);
 
-  sTraceInfoTLS.init();
+  bool success = sTraceInfoTLS.init();
+  if (!success) {
+    MOZ_CRASH();
+  }
+
   // A memory barrier is necessary here.
   sTraceInfos = new nsTArray<UniquePtr<TraceInfo>>();
 }
@@ -225,7 +235,7 @@ GetOrCreateTraceInfo()
   }
 
   if (!info) {
-    info = AllocTraceInfo(gettid());
+    info = AllocTraceInfo(Thread::GetCurrentId());
     sTraceInfoTLS.set(info);
   }
 
@@ -238,7 +248,7 @@ GenNewUniqueTaskId()
   TraceInfo* info = GetOrCreateTraceInfo();
   ENSURE_TRUE(info, 0);
 
-  pid_t tid = gettid();
+  Thread::tid_t tid = Thread::GetCurrentId();
   uint64_t taskid = ((uint64_t)tid << 32) | ++info->mLastUniqueTaskId;
   return taskid;
 }
@@ -325,7 +335,7 @@ LogBegin(uint64_t aTaskId, uint64_t aSourceEventId)
     log->mBegin.mTaskId = aTaskId;
     log->mBegin.mTime = GetTimestamp();
     log->mBegin.mPid = getpid();
-    log->mBegin.mTid = gettid();
+    log->mBegin.mTid = Thread::GetCurrentId();
   }
 }
 
@@ -479,7 +489,7 @@ GetLoggedData(TimeStamp aTimeStamp)
   return result;
 }
 
-const PRTime
+PRTime
 GetStartTime()
 {
   return sStartTime;
