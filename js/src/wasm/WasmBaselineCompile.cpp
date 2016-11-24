@@ -3684,10 +3684,10 @@ class BaseCompiler
     void doReturn(ExprType returnType, bool popStack);
     void pushReturned(const FunctionCall& call, ExprType type);
 
-    void emitCompareI32(JSOp compareOp, MCompare::CompareType compareType);
-    void emitCompareI64(JSOp compareOp, MCompare::CompareType compareType);
-    void emitCompareF32(JSOp compareOp, MCompare::CompareType compareType);
-    void emitCompareF64(JSOp compareOp, MCompare::CompareType compareType);
+    void emitCompareI32(Assembler::Condition compareOp, ValType compareType);
+    void emitCompareI64(Assembler::Condition compareOp, ValType compareType);
+    void emitCompareF32(Assembler::DoubleCondition compareOp, ValType compareType);
+    void emitCompareF64(Assembler::DoubleCondition compareOp, ValType compareType);
 
     void emitAddI32();
     void emitAddI64();
@@ -6193,7 +6193,7 @@ BaseCompiler::emitSelect()
 }
 
 void
-BaseCompiler::emitCompareI32(JSOp compareOp, MCompare::CompareType compareType)
+BaseCompiler::emitCompareI32(Assembler::Condition compareOp, ValType compareType)
 {
     // TODO / OPTIMIZE (bug 1286816): if we want to generate good code for
     // boolean operators for control it is possible to delay generating code
@@ -6204,102 +6204,37 @@ BaseCompiler::emitCompareI32(JSOp compareOp, MCompare::CompareType compareType)
     // TODO / OPTIMIZE (bug 1286816): Comparisons against constants using the
     // same popConstant pattern as for add().
 
-    MOZ_ASSERT(compareType == MCompare::Compare_Int32 || compareType == MCompare::Compare_UInt32);
+    MOZ_ASSERT(compareType == ValType::I32);
     RegI32 r0, r1;
     pop2xI32(&r0, &r1);
-    bool u = compareType == MCompare::Compare_UInt32;
-    switch (compareOp) {
-      case JSOP_EQ:
-        masm.cmp32Set(Assembler::Equal, r0, r1, r0);
-        break;
-      case JSOP_NE:
-        masm.cmp32Set(Assembler::NotEqual, r0, r1, r0);
-        break;
-      case JSOP_LE:
-        masm.cmp32Set(u ? Assembler::BelowOrEqual : Assembler::LessThanOrEqual, r0, r1, r0);
-        break;
-      case JSOP_LT:
-        masm.cmp32Set(u ? Assembler::Below : Assembler::LessThan, r0, r1, r0);
-        break;
-      case JSOP_GE:
-        masm.cmp32Set(u ? Assembler::AboveOrEqual : Assembler::GreaterThanOrEqual, r0, r1, r0);
-        break;
-      case JSOP_GT:
-        masm.cmp32Set(u ? Assembler::Above : Assembler::GreaterThan, r0, r1, r0);
-        break;
-      default:
-        MOZ_CRASH("Compiler bug: Unexpected compare opcode");
-    }
+    masm.cmp32Set(compareOp, r0, r1, r0);
     freeI32(r1);
     pushI32(r0);
 }
 
 void
-BaseCompiler::emitCompareI64(JSOp compareOp, MCompare::CompareType compareType)
+BaseCompiler::emitCompareI64(Assembler::Condition compareOp, ValType compareType)
 {
-    MOZ_ASSERT(compareType == MCompare::Compare_Int64 || compareType == MCompare::Compare_UInt64);
+    MOZ_ASSERT(compareType == ValType::I64);
     RegI64 r0, r1;
     pop2xI64(&r0, &r1);
     RegI32 i0(fromI64(r0));
-    bool u = compareType == MCompare::Compare_UInt64;
-    switch (compareOp) {
-      case JSOP_EQ:
-        cmp64Set(Assembler::Equal, r0, r1, i0);
-        break;
-      case JSOP_NE:
-        cmp64Set(Assembler::NotEqual, r0, r1, i0);
-        break;
-      case JSOP_LE:
-        cmp64Set(u ? Assembler::BelowOrEqual : Assembler::LessThanOrEqual, r0, r1, i0);
-        break;
-      case JSOP_LT:
-        cmp64Set(u ? Assembler::Below : Assembler::LessThan, r0, r1, i0);
-        break;
-      case JSOP_GE:
-        cmp64Set(u ? Assembler::AboveOrEqual : Assembler::GreaterThanOrEqual, r0, r1, i0);
-        break;
-      case JSOP_GT:
-        cmp64Set(u ? Assembler::Above : Assembler::GreaterThan, r0, r1, i0);
-        break;
-      default:
-        MOZ_CRASH("Compiler bug: Unexpected compare opcode");
-    }
+    cmp64Set(compareOp, r0, r1, i0);
     freeI64(r1);
     freeI64Except(r0, i0);
     pushI32(i0);
 }
 
 void
-BaseCompiler::emitCompareF32(JSOp compareOp, MCompare::CompareType compareType)
+BaseCompiler::emitCompareF32(Assembler::DoubleCondition compareOp, ValType compareType)
 {
-    MOZ_ASSERT(compareType == MCompare::Compare_Float32);
+    MOZ_ASSERT(compareType == ValType::F32);
     Label across;
     RegF32 r0, r1;
     pop2xF32(&r0, &r1);
     RegI32 i0 = needI32();
     masm.mov(ImmWord(1), i0);
-    switch (compareOp) {
-      case JSOP_EQ:
-        masm.branchFloat(Assembler::DoubleEqual, r0, r1, &across);
-        break;
-      case JSOP_NE:
-        masm.branchFloat(Assembler::DoubleNotEqualOrUnordered, r0, r1, &across);
-        break;
-      case JSOP_LE:
-        masm.branchFloat(Assembler::DoubleLessThanOrEqual, r0, r1, &across);
-        break;
-      case JSOP_LT:
-        masm.branchFloat(Assembler::DoubleLessThan, r0, r1, &across);
-        break;
-      case JSOP_GE:
-        masm.branchFloat(Assembler::DoubleGreaterThanOrEqual, r0, r1, &across);
-        break;
-      case JSOP_GT:
-        masm.branchFloat(Assembler::DoubleGreaterThan, r0, r1, &across);
-        break;
-      default:
-        MOZ_CRASH("Compiler bug: Unexpected compare opcode");
-    }
+    masm.branchFloat(compareOp, r0, r1, &across);
     masm.mov(ImmWord(0), i0);
     masm.bind(&across);
     freeF32(r0);
@@ -6308,36 +6243,15 @@ BaseCompiler::emitCompareF32(JSOp compareOp, MCompare::CompareType compareType)
 }
 
 void
-BaseCompiler::emitCompareF64(JSOp compareOp, MCompare::CompareType compareType)
+BaseCompiler::emitCompareF64(Assembler::DoubleCondition compareOp, ValType compareType)
 {
-    MOZ_ASSERT(compareType == MCompare::Compare_Double);
+    MOZ_ASSERT(compareType == ValType::F64);
     Label across;
     RegF64 r0, r1;
     pop2xF64(&r0, &r1);
     RegI32 i0 = needI32();
     masm.mov(ImmWord(1), i0);
-    switch (compareOp) {
-      case JSOP_EQ:
-        masm.branchDouble(Assembler::DoubleEqual, r0, r1, &across);
-        break;
-      case JSOP_NE:
-        masm.branchDouble(Assembler::DoubleNotEqualOrUnordered, r0, r1, &across);
-        break;
-      case JSOP_LE:
-        masm.branchDouble(Assembler::DoubleLessThanOrEqual, r0, r1, &across);
-        break;
-      case JSOP_LT:
-        masm.branchDouble(Assembler::DoubleLessThan, r0, r1, &across);
-        break;
-      case JSOP_GE:
-        masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, r0, r1, &across);
-        break;
-      case JSOP_GT:
-        masm.branchDouble(Assembler::DoubleGreaterThan, r0, r1, &across);
-        break;
-      default:
-        MOZ_CRASH("Compiler bug: Unexpected compare opcode");
-    }
+    masm.branchDouble(compareOp, r0, r1, &across);
     masm.mov(ImmWord(0), i0);
     masm.bind(&across);
     freeF64(r0);
@@ -6475,9 +6389,9 @@ BaseCompiler::emitBody()
 #define emitUnary(doEmit, type) \
         iter_.readUnary(type, &unused_a) && (deadCode_ || (doEmit(), true))
 
-#define emitComparison(doEmit, operandType, compareOp, compareType) \
+#define emitComparison(doEmit, operandType, compareOp) \
         iter_.readComparison(operandType, &unused_a, &unused_b) && \
-            (deadCode_ || (doEmit(compareOp, compareType), true))
+            (deadCode_ || (doEmit(compareOp, operandType), true))
 
 #define emitConversion(doEmit, inType, outType) \
         iter_.readConversion(inType, outType, &unused_a) && (deadCode_ || (doEmit(), true))
@@ -6962,69 +6876,69 @@ BaseCompiler::emitBody()
 
           // Comparisons
           case uint16_t(Op::I32Eq):
-            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_EQ, MCompare::Compare_Int32));
+            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, Assembler::Equal));
           case uint16_t(Op::I32Ne):
-            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_NE, MCompare::Compare_Int32));
+            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, Assembler::NotEqual));
           case uint16_t(Op::I32LtS):
-            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_LT, MCompare::Compare_Int32));
+            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, Assembler::LessThan));
           case uint16_t(Op::I32LeS):
-            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_LE, MCompare::Compare_Int32));
+            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, Assembler::LessThanOrEqual));
           case uint16_t(Op::I32GtS):
-            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_GT, MCompare::Compare_Int32));
+            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, Assembler::GreaterThan));
           case uint16_t(Op::I32GeS):
-            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_GE, MCompare::Compare_Int32));
+            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, Assembler::GreaterThanOrEqual));
           case uint16_t(Op::I32LtU):
-            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_LT, MCompare::Compare_UInt32));
+            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, Assembler::Below));
           case uint16_t(Op::I32LeU):
-            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_LE, MCompare::Compare_UInt32));
+            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, Assembler::BelowOrEqual));
           case uint16_t(Op::I32GtU):
-            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_GT, MCompare::Compare_UInt32));
+            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, Assembler::Above));
           case uint16_t(Op::I32GeU):
-            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, JSOP_GE, MCompare::Compare_UInt32));
+            CHECK_NEXT(emitComparison(emitCompareI32, ValType::I32, Assembler::AboveOrEqual));
           case uint16_t(Op::I64Eq):
-            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_EQ, MCompare::Compare_Int64));
+            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, Assembler::Equal));
           case uint16_t(Op::I64Ne):
-            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_NE, MCompare::Compare_Int64));
+            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, Assembler::NotEqual));
           case uint16_t(Op::I64LtS):
-            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_LT, MCompare::Compare_Int64));
+            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, Assembler::LessThan));
           case uint16_t(Op::I64LeS):
-            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_LE, MCompare::Compare_Int64));
+            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, Assembler::LessThanOrEqual));
           case uint16_t(Op::I64GtS):
-            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_GT, MCompare::Compare_Int64));
+            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, Assembler::GreaterThan));
           case uint16_t(Op::I64GeS):
-            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_GE, MCompare::Compare_Int64));
+            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, Assembler::GreaterThanOrEqual));
           case uint16_t(Op::I64LtU):
-            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_LT, MCompare::Compare_UInt64));
+            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, Assembler::Below));
           case uint16_t(Op::I64LeU):
-            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_LE, MCompare::Compare_UInt64));
+            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, Assembler::BelowOrEqual));
           case uint16_t(Op::I64GtU):
-            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_GT, MCompare::Compare_UInt64));
+            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, Assembler::Above));
           case uint16_t(Op::I64GeU):
-            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, JSOP_GE, MCompare::Compare_UInt64));
+            CHECK_NEXT(emitComparison(emitCompareI64, ValType::I64, Assembler::AboveOrEqual));
           case uint16_t(Op::F32Eq):
-            CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, JSOP_EQ, MCompare::Compare_Float32));
+            CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, Assembler::DoubleEqual));
           case uint16_t(Op::F32Ne):
-            CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, JSOP_NE, MCompare::Compare_Float32));
+            CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, Assembler::DoubleNotEqualOrUnordered));
           case uint16_t(Op::F32Lt):
-            CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, JSOP_LT, MCompare::Compare_Float32));
+            CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, Assembler::DoubleLessThan));
           case uint16_t(Op::F32Le):
-            CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, JSOP_LE, MCompare::Compare_Float32));
+            CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, Assembler::DoubleLessThanOrEqual));
           case uint16_t(Op::F32Gt):
-            CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, JSOP_GT, MCompare::Compare_Float32));
+            CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, Assembler::DoubleGreaterThan));
           case uint16_t(Op::F32Ge):
-            CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, JSOP_GE, MCompare::Compare_Float32));
+            CHECK_NEXT(emitComparison(emitCompareF32, ValType::F32, Assembler::DoubleGreaterThanOrEqual));
           case uint16_t(Op::F64Eq):
-            CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, JSOP_EQ, MCompare::Compare_Double));
+            CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, Assembler::DoubleEqual));
           case uint16_t(Op::F64Ne):
-            CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, JSOP_NE, MCompare::Compare_Double));
+            CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, Assembler::DoubleNotEqualOrUnordered));
           case uint16_t(Op::F64Lt):
-            CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, JSOP_LT, MCompare::Compare_Double));
+            CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, Assembler::DoubleLessThan));
           case uint16_t(Op::F64Le):
-            CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, JSOP_LE, MCompare::Compare_Double));
+            CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, Assembler::DoubleLessThanOrEqual));
           case uint16_t(Op::F64Gt):
-            CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, JSOP_GT, MCompare::Compare_Double));
+            CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, Assembler::DoubleGreaterThan));
           case uint16_t(Op::F64Ge):
-            CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, JSOP_GE, MCompare::Compare_Double));
+            CHECK_NEXT(emitComparison(emitCompareF64, ValType::F64, Assembler::DoubleGreaterThanOrEqual));
 
           // SIMD
 #define CASE(TYPE, OP, SIGN) \
