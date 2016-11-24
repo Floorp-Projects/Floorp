@@ -21,3 +21,10 @@ function waitForCondition(condition, nextTest, errorMsg) {
   }, 100);
   var moveOn = function() { clearInterval(interval); nextTest(); };
 }
+
+function getAnonElementWithinVideoByAttribute(video, aName, aValue) {
+  const videoControl = domUtils.getChildrenForNode(video, true)[1];
+
+  return SpecialPowers.wrap(videoControl.ownerDocument)
+    .getAnonymousElementByAttribute(videoControl, aName, aValue);
+}
