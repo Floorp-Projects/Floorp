@@ -15,7 +15,6 @@ marionette.jar:
   content/element.js (element.js)
   content/simpletest.js (simpletest.js)
   content/frame.js (frame.js)
-  content/cert.js (cert.js)
   content/event.js  (event.js)
   content/error.js (error.js)
   content/message.js (message.js)
