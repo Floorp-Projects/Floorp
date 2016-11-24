@@ -236,50 +236,10 @@ UnwrapObject(JSObject* obj, U& value)
                          PrototypeTraits<PrototypeID>::Depth);
 }
 
-inline bool
-IsNotDateOrRegExp(JSContext* cx, JS::Handle<JSObject*> obj,
-                  bool* notDateOrRegExp)
-{
-  MOZ_ASSERT(obj);
-
-  js::ESClass cls;
-  if (!js::GetBuiltinClass(cx, obj, &cls)) {
-    return false;
-  }
-
-  *notDateOrRegExp = cls != js::ESClass::Date && cls != js::ESClass::RegExp;
-  return true;
-}
-
 MOZ_ALWAYS_INLINE bool
-IsObjectValueConvertibleToDictionary(JSContext* cx,
-                                     JS::Handle<JS::Value> objVal,
-                                     bool* convertible)
+IsConvertibleToDictionary(JS::Handle<JS::Value> val)
 {
-  JS::Rooted<JSObject*> obj(cx, &objVal.toObject());
-  return IsNotDateOrRegExp(cx, obj, convertible);
-}
-
-MOZ_ALWAYS_INLINE bool
-IsConvertibleToDictionary(JSContext* cx, JS::Handle<JS::Value> val,
-                          bool* convertible)
-{
-  if (val.isNullOrUndefined()) {
-    *convertible = true;
-    return true;
-  }
-  if (!val.isObject()) {
-    *convertible = false;
-    return true;
-  }
-  return IsObjectValueConvertibleToDictionary(cx, val, convertible);
-}
-
-MOZ_ALWAYS_INLINE bool
-IsConvertibleToCallbackInterface(JSContext* cx, JS::Handle<JSObject*> obj,
-                                 bool* convertible)
-{
-  return IsNotDateOrRegExp(cx, obj, convertible);
+  return val.isNullOrUndefined() || val.isObject();
 }
 
 // The items in the protoAndIfaceCache are indexed by the prototypes::id::ID,
