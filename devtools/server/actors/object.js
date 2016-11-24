@@ -1164,7 +1164,10 @@ DebuggerServer.ObjectActorPreviewers = {
   }],
 
   Date: [function ({obj, hooks}, grip) {
-    let time = Date.prototype.getTime.call(obj.unsafeDereference());
+    let time = DevToolsUtils.callPropertyOnObject(obj, "getTime");
+    if (typeof time != "number") {
+      return false;
+    }
 
     grip.preview = {
       timestamp: hooks.createValueGrip(time),
