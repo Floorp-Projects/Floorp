@@ -43,7 +43,6 @@ public:
   ColorLayer* AsColorLayer() const;
   TextLayer* AsTextLayer() const;
   ImageLayer* AsImageLayer() const;
-  BorderLayer* AsBorderLayer() const;
   RefLayer* AsRefLayer() const;
   PaintedLayer* AsPaintedLayer() const;
 

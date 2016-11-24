@@ -12,6 +12,7 @@ namespace layers {
 
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
+using namespace mozilla::media;
 
 
 static VideoBridgeParent* sVideoBridgeSingleton;
