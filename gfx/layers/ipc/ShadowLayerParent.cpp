@@ -104,6 +104,14 @@ ShadowLayerParent::AsPaintedLayer() const
          : nullptr;
 }
 
+TextLayer*
+ShadowLayerParent::AsTextLayer() const
+{
+  return mLayer && mLayer->GetType() == Layer::TYPE_TEXT
+         ? static_cast<TextLayer*>(mLayer.get())
+         : nullptr;
+}
+
 void
 ShadowLayerParent::ActorDestroy(ActorDestroyReason why)
 {

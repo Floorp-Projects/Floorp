@@ -286,7 +286,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
   bool updateHitTestingTree = false;
 
   for (EditArray::index_type i = 0; i < cset.Length(); ++i) {
-    const Edit& edit = cset[i];
+    Edit& edit = cset[i];
 
     switch (edit.type()) {
     // Create* ops
@@ -328,6 +328,15 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       updateHitTestingTree = true;
       break;
     }
+    case Edit::TOpCreateTextLayer: {
+      MOZ_LAYERS_LOG(("[ParentSide] CreateTextLayer"));
+
+      RefPtr<TextLayer> layer = layer_manager()->CreateTextLayer();
+      AsLayerComposite(edit.get_OpCreateTextLayer())->Bind(layer);
+
+      updateHitTestingTree = true;
+      break;
+    }
     case Edit::TOpCreateCanvasLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateCanvasLayer"));
 
@@ -353,13 +362,13 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     case Edit::TOpSetLayerAttributes: {
       MOZ_LAYERS_LOG(("[ParentSide] SetLayerAttributes"));
 
-      const OpSetLayerAttributes& osla = edit.get_OpSetLayerAttributes();
+      OpSetLayerAttributes& osla = edit.get_OpSetLayerAttributes();
       ShadowLayerParent* layerParent = AsLayerComposite(osla);
       Layer* layer = layerParent->AsLayer();
       if (!layer) {
         return IPC_FAIL_NO_REASON(this);
       }
-      const LayerAttributes& attrs = osla.attrs();
+      LayerAttributes& attrs = osla.attrs();
 
       const CommonLayerAttributes& common = attrs.common();
       layer->SetLayerBounds(common.layerBounds());
@@ -412,7 +421,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       layer->SetAncestorMaskLayers(maskLayers);
 
       typedef SpecificLayerAttributes Specific;
-      const SpecificLayerAttributes& specific = attrs.specific();
+      SpecificLayerAttributes& specific = attrs.specific();
       switch (specific.type()) {
       case Specific::Tnull_t:
         break;
@@ -457,6 +466,18 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
         }
         colorLayer->SetColor(specific.get_ColorLayerAttributes().color().value());
         colorLayer->SetBounds(specific.get_ColorLayerAttributes().bounds());
+        break;
+      }
+      case Specific::TTextLayerAttributes: {
+        MOZ_LAYERS_LOG(("[ParentSide]   text layer"));
+
+        TextLayer* textLayer = layerParent->AsTextLayer();
+        if (!textLayer) {
+          return IPC_FAIL_NO_REASON(this);
+        }
+        textLayer->SetBounds(specific.get_TextLayerAttributes().bounds());
+        textLayer->SetGlyphs(Move(specific.get_TextLayerAttributes().glyphs()));
+        textLayer->SetScaledFont(reinterpret_cast<gfx::ScaledFont*>(specific.get_TextLayerAttributes().scaledFont()));
         break;
       }
       case Specific::TCanvasLayerAttributes: {

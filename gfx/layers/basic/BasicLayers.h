@@ -114,6 +114,7 @@ public:
   virtual already_AddRefed<ImageLayer> CreateImageLayer() override;
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() override;
   virtual already_AddRefed<ColorLayer> CreateColorLayer() override;
+  virtual already_AddRefed<TextLayer> CreateTextLayer() override;
   virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer() override;
   virtual ImageFactory *GetImageFactory();
 
