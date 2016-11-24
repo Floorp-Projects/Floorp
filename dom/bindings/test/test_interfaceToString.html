@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=742156
 
 /** Test for Bug 742156 **/
 
-var nativeToString = ("" + String.replace).replace("replace", "EventTarget");
+var nativeToString = ("" + String).replace("String", "EventTarget");
 try {
     var eventTargetToString = "" + EventTarget;
     is(eventTargetToString, nativeToString,
