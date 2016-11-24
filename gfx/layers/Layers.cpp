@@ -2200,6 +2200,23 @@ ColorLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
   layer->set_color(mColor.ToABGR());
 }
 
+void
+TextLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
+{
+  Layer::PrintInfo(aStream, aPrefix);
+  AppendToString(aStream, mBounds, " [bounds=", "]");
+}
+
+void
+TextLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
+{
+  Layer::DumpPacket(aPacket, aParent);
+  // Get this layer data
+  using namespace layerscope;
+  LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
+  layer->set_type(LayersPacket::Layer::TextLayer);
+}
+
 CanvasLayer::CanvasLayer(LayerManager* aManager, void* aImplData)
   : Layer(aManager, aImplData)
   , mPreTransCallback(nullptr)
@@ -2498,6 +2515,21 @@ IntRect
 ToOutsideIntRect(const gfxRect &aRect)
 {
   return IntRect::RoundOut(aRect.x, aRect.y, aRect.width, aRect.height);
+}
+
+TextLayer::TextLayer(LayerManager* aManager, void* aImplData)
+  : Layer(aManager, aImplData)
+{}
+
+TextLayer::~TextLayer()
+{}
+
+void
+TextLayer::SetGlyphs(nsTArray<GlyphArray>&& aGlyphs)
+{
+  MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Glyphs", this));
+  mGlyphs = Move(aGlyphs);
+  Mutated();
 }
 
 } // namespace layers
