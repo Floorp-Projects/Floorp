@@ -12,6 +12,7 @@ interface IGeckoCustom : IUnknown
 {
   [propget] HRESULT ID([out, retval] unsigned __int64* aID);
   [propget] HRESULT anchorCount([out, retval] long* aCount);
+  [propget] HRESULT DOMNodeID([out, retval] BSTR* aID);
 }
 
 
