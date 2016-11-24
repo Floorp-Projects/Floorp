@@ -12,6 +12,7 @@
 #include "Matrix.h"
 #include "Quaternion.h"
 #include "UserData.h"
+#include <vector>
 
 // GenericRefCountedBase allows us to hold on to refcounted objects of any type
 // (contrary to RefCounted<T> which requires knowing the type T) and, in particular,
@@ -782,6 +783,7 @@ public:
   virtual BackendType GetBackendType() const = 0;
 
   virtual bool IsRecording() const { return false; }
+  virtual bool IsCaptureDT() const { return false; }
 
   /**
    * Returns a SourceSurface which is a snapshot of the current contents of the DrawTarget.
@@ -1276,6 +1278,17 @@ protected:
 
 class DrawTargetCapture : public DrawTarget
 {
+public:
+  virtual bool IsCaptureDT() const { return true; }
+
+  /**
+   * Returns true if the recording only contains FillGlyph calls with
+   * a single font and color. Returns the list of Glyphs along with
+   * the font and color as outparams if so.
+   */
+  virtual bool ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont,
+                                         Color& aColor,
+                                         std::vector<Glyph>& aGlyphs) = 0;
 };
 
 class DrawEventRecorder : public RefCounted<DrawEventRecorder>
