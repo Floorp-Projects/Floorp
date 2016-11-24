@@ -140,7 +140,7 @@ GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp)
     if (!JS_SetProperty(cx, info, "has-ctypes", value))
         return false;
 
-#ifdef JS_CPU_X86
+#if defined(_M_IX86) || defined(__i386__)
     value = BooleanValue(true);
 #else
     value = BooleanValue(false);
@@ -148,7 +148,7 @@ GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp)
     if (!JS_SetProperty(cx, info, "x86", value))
         return false;
 
-#ifdef JS_CPU_X64
+#if defined(_M_X64) || defined(__x86_64__)
     value = BooleanValue(true);
 #else
     value = BooleanValue(false);
