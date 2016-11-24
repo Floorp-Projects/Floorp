@@ -1440,8 +1440,6 @@ SeekingState::SeekCompleted()
   // Notify FirstFrameLoaded now if we haven't since we've decoded some data
   // for readyState to transition to HAVE_CURRENT_DATA and fire 'loadeddata'.
   if (!mMaster->mSentFirstFrameLoadedEvent) {
-    // Only MSE can start seeking before finishing decoding first frames.
-    MOZ_ASSERT(Reader()->ForceZeroStartTime());
     mMaster->FinishDecodeFirstFrame();
   }
 
