@@ -9,6 +9,7 @@
     android:layout_height="wrap_content"
     android:background="@drawable/search_row_background"
     android:drawableLeft="@drawable/search_history"
+    android:drawableStart="@drawable/search_history"
     android:drawablePadding="@dimen/search_history_drawable_padding"
     android:padding="@dimen/search_row_padding"
     android:textSize="@dimen/query_text_size"/>

@@ -10,6 +10,7 @@ import org.mozilla.gecko.widget.themed.ThemedImageButton;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.util.AttributeSet;
 
 public class MenuItemActionBar extends ThemedImageButton
@@ -45,6 +46,10 @@ public class MenuItemActionBar extends ThemedImageButton
         } else {
             setVisibility(VISIBLE);
             setImageDrawable(icon);
+        }
+        icon = getDrawable();
+        if (icon != null) {
+            DrawableCompat.setAutoMirrored(icon, true);
         }
     }
 

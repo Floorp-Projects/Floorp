@@ -31,6 +31,7 @@ import org.mozilla.gecko.widget.themed.ThemedTextView;
 import android.content.Context;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.v4.view.ViewCompat;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -469,16 +470,20 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mSiteIdentityPopup.setAnchor(view);
     }
 
+    private boolean isLayoutRtl() {
+        return ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL;
+    }
+
     void prepareForwardAnimation(PropertyAnimator anim, ForwardButtonAnimation animation, int width) {
         if (animation == ForwardButtonAnimation.HIDE) {
             // We animate these items individually, rather than this entire view,
             // so that we don't animate certain views, e.g. the stop button.
             anim.attach(mTitle,
                         PropertyAnimator.Property.TRANSLATION_X,
-                        0);
+                        isLayoutRtl() ? width : 0);
             anim.attach(mSiteSecurity,
                         PropertyAnimator.Property.TRANSLATION_X,
-                        0);
+                        isLayoutRtl() ? width : 0);
 
             // We're hiding the forward button. We're going to reset the margin before
             // the animation starts, so we shift these items to the right so that they don't
@@ -488,10 +493,10 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         } else {
             anim.attach(mTitle,
                         PropertyAnimator.Property.TRANSLATION_X,
-                        width);
+                        isLayoutRtl() ? 0 : width);
             anim.attach(mSiteSecurity,
                         PropertyAnimator.Property.TRANSLATION_X,
-                        width);
+                        isLayoutRtl() ? 0 : width);
         }
     }
 

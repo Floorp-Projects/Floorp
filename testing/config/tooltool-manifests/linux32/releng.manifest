@@ -1,9 +1,9 @@
 [
 {
-"size": 1845800, 
-"visibility": "public", 
-"digest": "70cf423b4cc04c2a7bdb50b802e2528d517c5c5192cd94b729e7b07fc5e943c709bed2357287b5388a5332b7be31b13a0d334fded6ae7c36c12ceda1710b901a", 
-"algorithm": "sha512", 
+"size": 1845800,
+"visibility": "public",
+"digest": "70cf423b4cc04c2a7bdb50b802e2528d517c5c5192cd94b729e7b07fc5e943c709bed2357287b5388a5332b7be31b13a0d334fded6ae7c36c12ceda1710b901a",
+"algorithm": "sha512",
 "filename": "linux32-minidump_stackwalk"
 }
 ]

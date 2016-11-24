@@ -921,7 +921,7 @@ protected:
                                   Element* aElement,
                                   nsIContent* aParentContent,
                                   nsIPresShell* aShell);
-  void DeleteRefToAnonymousNode(nsIDOMElement* aElement,
+  void DeleteRefToAnonymousNode(nsIContent* aContent,
                                 nsIContent* aParentContent,
                                 nsIPresShell* aShell);
 
@@ -1007,7 +1007,7 @@ protected:
   already_AddRefed<Element> CreateResizer(int16_t aLocation,
                                           nsIDOMNode* aParentNode);
   void SetAnonymousElementPosition(int32_t aX, int32_t aY,
-                                   nsIDOMElement* aResizer);
+                                   Element* aResizer);
 
   already_AddRefed<Element> CreateShadow(nsIDOMNode* aParentNode,
                                          nsIDOMElement* aOriginalObject);
@@ -1062,16 +1062,16 @@ protected:
   // inline table editing
   nsCOMPtr<nsIDOMElement> mInlineEditedCell;
 
-  nsCOMPtr<nsIDOMElement> mAddColumnBeforeButton;
-  nsCOMPtr<nsIDOMElement> mRemoveColumnButton;
-  nsCOMPtr<nsIDOMElement> mAddColumnAfterButton;
+  RefPtr<Element> mAddColumnBeforeButton;
+  RefPtr<Element> mRemoveColumnButton;
+  RefPtr<Element> mAddColumnAfterButton;
 
-  nsCOMPtr<nsIDOMElement> mAddRowBeforeButton;
-  nsCOMPtr<nsIDOMElement> mRemoveRowButton;
-  nsCOMPtr<nsIDOMElement> mAddRowAfterButton;
+  RefPtr<Element> mAddRowBeforeButton;
+  RefPtr<Element> mRemoveRowButton;
+  RefPtr<Element> mAddRowAfterButton;
 
-  void AddMouseClickListener(nsIDOMElement* aElement);
-  void RemoveMouseClickListener(nsIDOMElement* aElement);
+  void AddMouseClickListener(Element* aElement);
+  void RemoveMouseClickListener(Element* aElement);
 
   nsCOMPtr<nsILinkHandler> mLinkHandler;
 
@@ -1098,6 +1098,25 @@ private:
                               const nsAString& aTagName, nsINode* aNode);
   already_AddRefed<Element> CreateElementWithDefaults(
                               const nsAString& aTagName);
+  /**
+   * Returns an anonymous Element of type aTag,
+   * child of aParentNode. If aIsCreatedHidden is true, the class
+   * "hidden" is added to the created element. If aAnonClass is not
+   * the empty string, it becomes the value of the attribute "_moz_anonclass"
+   * @return a Element
+   * @param aTag             [IN] desired type of the element to create
+   * @param aParentNode      [IN] the parent node of the created anonymous
+   *                              element
+   * @param aAnonClass       [IN] contents of the _moz_anonclass attribute
+   * @param aIsCreatedHidden [IN] a boolean specifying if the class "hidden"
+   *                              is to be added to the created anonymous
+   *                              element
+   */
+  already_AddRefed<Element> CreateAnonymousElement(
+                              nsIAtom* aTag,
+                              nsIDOMNode* aParentNode,
+                              const nsAString& aAnonClass,
+                              bool aIsCreatedHidden);
 };
 
 } // namespace mozilla

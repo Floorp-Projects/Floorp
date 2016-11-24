@@ -332,10 +332,10 @@ void nsStyleCorners::Reset()
 #define CASE(side, result)                                                    \
   static_assert(NS_SIDE_IS_VERTICAL(side) == result,                      \
                 "NS_SIDE_IS_VERTICAL is wrong")
-CASE(NS_SIDE_TOP,    false);
-CASE(NS_SIDE_RIGHT,  true);
-CASE(NS_SIDE_BOTTOM, false);
-CASE(NS_SIDE_LEFT,   true);
+CASE(eSideTop,    false);
+CASE(eSideRight,  true);
+CASE(eSideBottom, false);
+CASE(eSideLeft,   true);
 #undef CASE
 
 #define CASE(corner, result)                                                  \
@@ -383,39 +383,39 @@ CASE(NS_CORNER_BOTTOM_LEFT,  true,  NS_CORNER_BOTTOM_LEFT_Y);
 #define CASE(side, second, result)                                            \
   static_assert(NS_SIDE_TO_FULL_CORNER(side, second) == result,           \
                 "NS_SIDE_TO_FULL_CORNER is wrong")
-CASE(NS_SIDE_TOP,    false, NS_CORNER_TOP_LEFT);
-CASE(NS_SIDE_TOP,    true,  NS_CORNER_TOP_RIGHT);
+CASE(eSideTop,    false, NS_CORNER_TOP_LEFT);
+CASE(eSideTop,    true,  NS_CORNER_TOP_RIGHT);
 
-CASE(NS_SIDE_RIGHT,  false, NS_CORNER_TOP_RIGHT);
-CASE(NS_SIDE_RIGHT,  true,  NS_CORNER_BOTTOM_RIGHT);
+CASE(eSideRight,  false, NS_CORNER_TOP_RIGHT);
+CASE(eSideRight,  true,  NS_CORNER_BOTTOM_RIGHT);
 
-CASE(NS_SIDE_BOTTOM, false, NS_CORNER_BOTTOM_RIGHT);
-CASE(NS_SIDE_BOTTOM, true,  NS_CORNER_BOTTOM_LEFT);
+CASE(eSideBottom, false, NS_CORNER_BOTTOM_RIGHT);
+CASE(eSideBottom, true,  NS_CORNER_BOTTOM_LEFT);
 
-CASE(NS_SIDE_LEFT,   false, NS_CORNER_BOTTOM_LEFT);
-CASE(NS_SIDE_LEFT,   true,  NS_CORNER_TOP_LEFT);
+CASE(eSideLeft,   false, NS_CORNER_BOTTOM_LEFT);
+CASE(eSideLeft,   true,  NS_CORNER_TOP_LEFT);
 #undef CASE
 
 #define CASE(side, second, parallel, result)                                  \
   static_assert(NS_SIDE_TO_HALF_CORNER(side, second, parallel) == result, \
                 "NS_SIDE_TO_HALF_CORNER is wrong")
-CASE(NS_SIDE_TOP,    false, true,  NS_CORNER_TOP_LEFT_X);
-CASE(NS_SIDE_TOP,    false, false, NS_CORNER_TOP_LEFT_Y);
-CASE(NS_SIDE_TOP,    true,  true,  NS_CORNER_TOP_RIGHT_X);
-CASE(NS_SIDE_TOP,    true,  false, NS_CORNER_TOP_RIGHT_Y);
+CASE(eSideTop,    false, true,  NS_CORNER_TOP_LEFT_X);
+CASE(eSideTop,    false, false, NS_CORNER_TOP_LEFT_Y);
+CASE(eSideTop,    true,  true,  NS_CORNER_TOP_RIGHT_X);
+CASE(eSideTop,    true,  false, NS_CORNER_TOP_RIGHT_Y);
 
-CASE(NS_SIDE_RIGHT,  false, false, NS_CORNER_TOP_RIGHT_X);
-CASE(NS_SIDE_RIGHT,  false, true,  NS_CORNER_TOP_RIGHT_Y);
-CASE(NS_SIDE_RIGHT,  true,  false, NS_CORNER_BOTTOM_RIGHT_X);
-CASE(NS_SIDE_RIGHT,  true,  true,  NS_CORNER_BOTTOM_RIGHT_Y);
+CASE(eSideRight,  false, false, NS_CORNER_TOP_RIGHT_X);
+CASE(eSideRight,  false, true,  NS_CORNER_TOP_RIGHT_Y);
+CASE(eSideRight,  true,  false, NS_CORNER_BOTTOM_RIGHT_X);
+CASE(eSideRight,  true,  true,  NS_CORNER_BOTTOM_RIGHT_Y);
 
-CASE(NS_SIDE_BOTTOM, false, true,  NS_CORNER_BOTTOM_RIGHT_X);
-CASE(NS_SIDE_BOTTOM, false, false, NS_CORNER_BOTTOM_RIGHT_Y);
-CASE(NS_SIDE_BOTTOM, true,  true,  NS_CORNER_BOTTOM_LEFT_X);
-CASE(NS_SIDE_BOTTOM, true,  false, NS_CORNER_BOTTOM_LEFT_Y);
+CASE(eSideBottom, false, true,  NS_CORNER_BOTTOM_RIGHT_X);
+CASE(eSideBottom, false, false, NS_CORNER_BOTTOM_RIGHT_Y);
+CASE(eSideBottom, true,  true,  NS_CORNER_BOTTOM_LEFT_X);
+CASE(eSideBottom, true,  false, NS_CORNER_BOTTOM_LEFT_Y);
 
-CASE(NS_SIDE_LEFT,   false, false, NS_CORNER_BOTTOM_LEFT_X);
-CASE(NS_SIDE_LEFT,   false, true,  NS_CORNER_BOTTOM_LEFT_Y);
-CASE(NS_SIDE_LEFT,   true,  false, NS_CORNER_TOP_LEFT_X);
-CASE(NS_SIDE_LEFT,   true,  true,  NS_CORNER_TOP_LEFT_Y);
+CASE(eSideLeft,   false, false, NS_CORNER_BOTTOM_LEFT_X);
+CASE(eSideLeft,   false, true,  NS_CORNER_BOTTOM_LEFT_Y);
+CASE(eSideLeft,   true,  false, NS_CORNER_TOP_LEFT_X);
+CASE(eSideLeft,   true,  true,  NS_CORNER_TOP_LEFT_Y);
 #undef CASE

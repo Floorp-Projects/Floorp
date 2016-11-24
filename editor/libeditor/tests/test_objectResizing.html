@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div id="editable1" contenteditable="true">
+<table id="table1">
+<tr><td>ABCDEFG</td><td>HIJKLMN</td></tr>
+<tr><td>ABCDEFG</td><td>HIJKLMN</td></tr>
+</table>
+</div>
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  document.execCommand("enableObjectResizing", false, "true");
+
+  let tableNode = document.getElementById("table1");
+  synthesizeMouseAtCenter(tableNode, {});
+  is(tableNode.getAttribute("_moz_resizing"), "true",
+     "_moz_resizing attribute should be true with object resizing");
+
+  let originalHeight = tableNode.clientHeight;
+  synthesizeMouse(tableNode, 0, originalHeight, { type: "mousedown" });
+  synthesizeMouse(tableNode, 0, originalHeight + 100, { type: "mousemove" });
+  synthesizeMouse(tableNode, 0, originalHeight + 100, { type: "mouseup" });
+  isnot(originalHeight, tableNode.clientHeight,
+        "table height should be changed by dragging a resizer grip");
+
+  let originalWidth = tableNode.clientWidth;
+  synthesizeMouse(tableNode, originalWidth, 0, { type: "mousedown" });
+  synthesizeMouse(tableNode, originalWidth + 100, 0, { type: "mousemove" });
+  synthesizeMouse(tableNode, originalWidth + 100, 0, { type: "mouseup" });
+  isnot(originalWidth, tableNode.clientWidth,
+        "table width should be changed by dragging a resizer grip");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

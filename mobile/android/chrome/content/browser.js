@@ -4520,17 +4520,12 @@ var BrowserEventHandler = {
         this._handleRetargetedTouchStart(aEvent);
         break;
       case 'OpenMediaWithExternalApp': {
-        if (aEvent.target.moz_video_uuid) {
-          return;
-        }
         let mediaSrc = aEvent.target.currentSrc || aEvent.target.src;
-        if (!aEvent.target.moz_video_uuid) {
-          aEvent.target.moz_video_uuid = uuidgen.generateUUID().toString();
-        }
+        let uuid = uuidgen.generateUUID().toString();
         Services.androidBridge.handleGeckoMessage({
           type: "Video:Play",
           uri: mediaSrc,
-          uuid: aEvent.target.moz_video_uuid
+          uuid: uuid
         });
         break;
       }
