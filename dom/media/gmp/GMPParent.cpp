@@ -1053,32 +1053,17 @@ GMPParent::RecvAsyncShutdownComplete()
   return IPC_OK();
 }
 
-class RunCreateContentParentCallbacks : public Runnable
+void
+GMPParent::ResolveGetContentParentPromises()
 {
-public:
-  explicit RunCreateContentParentCallbacks(GMPContentParent* aGMPContentParent)
-    : mGMPContentParent(aGMPContentParent)
-  {
+  nsTArray<UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>> promises;
+  promises.SwapElements(mGetContentParentPromises);
+  MOZ_ASSERT(mGetContentParentPromises.IsEmpty());
+  RefPtr<GMPContentParent::CloseBlocker> blocker(new GMPContentParent::CloseBlocker(mGMPContentParent));
+  for (auto& holder : promises) {
+    holder->Resolve(blocker, __func__);
   }
-
-  void TakeCallbacks(nsTArray<UniquePtr<GetGMPContentParentCallback>>& aCallbacks)
-  {
-    mCallbacks.SwapElements(aCallbacks);
-  }
-
-  NS_IMETHOD
-  Run() override
-  {
-    for (uint32_t i = 0, length = mCallbacks.Length(); i < length; ++i) {
-      mCallbacks[i]->Done(mGMPContentParent);
-    }
-    return NS_OK;
-  }
-
-private:
-  RefPtr<GMPContentParent> mGMPContentParent;
-  nsTArray<UniquePtr<GetGMPContentParentCallback>> mCallbacks;
-};
+}
 
 PGMPContentParent*
 GMPParent::AllocPGMPContentParent(Transport* aTransport, ProcessId aOtherPid)
@@ -1090,33 +1075,42 @@ GMPParent::AllocPGMPContentParent(Transport* aTransport, ProcessId aOtherPid)
   mGMPContentParent->Open(aTransport, aOtherPid, XRE_GetIOMessageLoop(),
                           ipc::ParentSide);
 
-  RefPtr<RunCreateContentParentCallbacks> runCallbacks =
-    new RunCreateContentParentCallbacks(mGMPContentParent);
-  runCallbacks->TakeCallbacks(mCallbacks);
-  NS_DispatchToCurrentThread(runCallbacks);
-  MOZ_ASSERT(mCallbacks.IsEmpty());
+  ResolveGetContentParentPromises();
 
   return mGMPContentParent;
 }
 
-bool
-GMPParent::GetGMPContentParent(UniquePtr<GetGMPContentParentCallback>&& aCallback)
+void
+GMPParent::RejectGetContentParentPromises()
+{
+  nsTArray<UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>> promises;
+  promises.SwapElements(mGetContentParentPromises);
+  MOZ_ASSERT(mGetContentParentPromises.IsEmpty());
+  for (auto& holder : promises) {
+    holder->Reject(NS_ERROR_FAILURE, __func__);
+  }
+}
+
+void
+GMPParent::GetGMPContentParent(UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>&& aPromiseHolder)
 {
   LOGD("%s %p", __FUNCTION__, this);
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
 
   if (mGMPContentParent) {
-    aCallback->Done(mGMPContentParent);
+    RefPtr<GMPContentParent::CloseBlocker> blocker(new GMPContentParent::CloseBlocker(mGMPContentParent));
+    aPromiseHolder->Resolve(blocker, __func__);
   } else {
-    mCallbacks.AppendElement(Move(aCallback));
+    mGetContentParentPromises.AppendElement(Move(aPromiseHolder));
     // If we don't have a GMPContentParent and we try to get one for the first
-    // time (mCallbacks.Length() == 1) then call PGMPContent::Open. If more
+    // time (mGetContentParentPromises.Length() == 1) then call PGMPContent::Open. If more
     // calls to GetGMPContentParent happen before mGMPContentParent has been
     // set then we should just store them, so that they get called when we set
     // mGMPContentParent as a result of the PGMPContent::Open call.
-    if (mCallbacks.Length() == 1) {
+    if (mGetContentParentPromises.Length() == 1) {
       if (!EnsureProcessLoaded() || !PGMPContent::Open(this)) {
-        return false;
+        RejectGetContentParentPromises();
+        return;
       }
       // We want to increment this as soon as possible, to avoid that we'd try
       // to shut down the GMP process while we're still trying to get a
@@ -1124,13 +1118,12 @@ GMPParent::GetGMPContentParent(UniquePtr<GetGMPContentParentCallback>&& aCallbac
       ++mGMPContentChildCount;
     }
   }
-  return true;
 }
 
 already_AddRefed<GMPContentParent>
 GMPParent::ForgetGMPContentParent()
 {
-  MOZ_ASSERT(mCallbacks.IsEmpty());
+  MOZ_ASSERT(mGetContentParentPromises.IsEmpty());
   return Move(mGMPContentParent.forget());
 }
 

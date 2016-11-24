@@ -98,7 +98,9 @@
                 android:textSize="16sp"
 
                 android:layout_marginLeft="32dp"
+                android:layout_marginStart="32dp"
                 android:layout_marginRight="32dp"
+                android:layout_marginEnd="32dp"
                 tools:text="Got it"/>
 
     </LinearLayout>

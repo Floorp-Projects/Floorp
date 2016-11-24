@@ -290,7 +290,7 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
 
   nsMargin rootMargin;
   NS_FOR_CSS_SIDES(side) {
-    nscoord basis = side == NS_SIDE_TOP || side == NS_SIDE_BOTTOM ?
+    nscoord basis = side == eSideTop || side == eSideBottom ?
       rootRect.height : rootRect.width;
     nsCSSValue value = mRootMargin.*nsCSSRect::sides[side];
     nsStyleCoord coord;

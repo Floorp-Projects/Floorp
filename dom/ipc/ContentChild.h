@@ -31,6 +31,7 @@ struct SubstitutionMapping;
 struct OverrideMapping;
 class nsIDomainPolicy;
 class nsIURIClassifierCallback;
+struct LookAndFeelInt;
 
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
@@ -621,6 +622,11 @@ public:
   virtual bool
   DeallocPURLClassifierChild(PURLClassifierChild* aActor) override;
 
+  nsTArray<LookAndFeelInt>&
+  LookAndFeelCache() {
+    return mLookAndFeelCache;
+  }
+
   /**
    * Helper function for protocols that use the GPU process when available.
    * Overrides FatalError to just be a warning when communicating with the
@@ -650,6 +656,8 @@ private:
   // parent process and used to initialize gfx in the child. Currently used
   // only on MacOSX.
   InfallibleTArray<mozilla::dom::FontFamilyListEntry> mFontFamilies;
+  // Temporary storage for nsXPLookAndFeel flags.
+  nsTArray<LookAndFeelInt> mLookAndFeelCache;
 
   /**
    * An ID unique to the process containing our corresponding

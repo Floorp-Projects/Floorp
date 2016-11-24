@@ -133,7 +133,6 @@ fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 
 == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html
 fuzzy(2,83) == fixed-bg-border-radius.html fixed-bg-border-radius-ref.html
-== fixed-bg-inside-transform.html fixed-bg-inside-transform-ref.html
 
 HTTP == root-background-1.html root-background-ref.html
 HTTP != root-background-1.html about:blank

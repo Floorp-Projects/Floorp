@@ -158,6 +158,14 @@ void gfxPrefs::PrefAddVarCache(float* aVariable,
   Preferences::AddFloatVarCache(aVariable, aPref, aDefault);
 }
 
+void gfxPrefs::PrefAddVarCache(std::string* aVariable,
+                               const char* aPref,
+                               std::string aDefault)
+{
+  MOZ_ASSERT(IsPrefsServiceAvailable());
+  Preferences::SetCString(aPref, aVariable->c_str());
+}
+
 bool gfxPrefs::PrefGet(const char* aPref, bool aDefault)
 {
   MOZ_ASSERT(IsPrefsServiceAvailable());
@@ -182,6 +190,16 @@ float gfxPrefs::PrefGet(const char* aPref, float aDefault)
   return Preferences::GetFloat(aPref, aDefault);
 }
 
+
+std::string gfxPrefs::PrefGet(const char* aPref, std::string aDefault)
+{
+  MOZ_ASSERT(IsPrefsServiceAvailable());
+
+  nsAdoptingCString result;
+  Preferences::GetCString(aPref, &result);
+  return result.get();
+}
+
 void gfxPrefs::PrefSet(const char* aPref, bool aValue)
 {
   MOZ_ASSERT(IsPrefsServiceAvailable());
@@ -204,6 +222,12 @@ void gfxPrefs::PrefSet(const char* aPref, float aValue)
 {
   MOZ_ASSERT(IsPrefsServiceAvailable());
   Preferences::SetFloat(aPref, aValue);
+}
+
+void gfxPrefs::PrefSet(const char* aPref, std::string aValue)
+{
+  MOZ_ASSERT(IsPrefsServiceAvailable());
+  Preferences::SetCString(aPref, aValue.c_str());
 }
 
 static void
@@ -246,6 +270,11 @@ void gfxPrefs::CopyPrefValue(const float* aValue, GfxPrefValue* aOutValue)
   *aOutValue = *aValue;
 }
 
+void gfxPrefs::CopyPrefValue(const std::string* aValue, GfxPrefValue* aOutValue)
+{
+  *aOutValue = nsCString(aValue->c_str());
+}
+
 void gfxPrefs::CopyPrefValue(const GfxPrefValue* aValue, bool* aOutValue)
 {
   *aOutValue = aValue->get_bool();
@@ -264,4 +293,9 @@ void gfxPrefs::CopyPrefValue(const GfxPrefValue* aValue, uint32_t* aOutValue)
 void gfxPrefs::CopyPrefValue(const GfxPrefValue* aValue, float* aOutValue)
 {
   *aOutValue = aValue->get_float();
+}
+
+void gfxPrefs::CopyPrefValue(const GfxPrefValue* aValue, std::string* aOutValue)
+{
+  *aOutValue = aValue->get_nsCString().get();
 }

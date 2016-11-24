@@ -50,7 +50,7 @@
         android:background="@android:color/transparent"
         android:padding="15dp"
         android:src="@drawable/ic_action_settings"
-        android:layout_gravity="bottom|right"
+        android:layout_gravity="bottom|right|end"
         android:contentDescription="@string/search_pref_button_content_description"/>
 
     <View

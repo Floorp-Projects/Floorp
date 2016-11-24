@@ -132,7 +132,7 @@ add_task(function* test_mobile_root() {
   equal(tbBmk.index, 1,
     "Thunderbird bookmark should be second child of new root");
 
-  let mobileRootId = PlacesUtils.promiseItemId(
+  let mobileRootId = yield PlacesUtils.promiseItemId(
     PlacesUtils.bookmarks.mobileGuid);
   let annoItemIds = PlacesUtils.annotations.getItemsWithAnnotation(
     PlacesUtils.MOBILE_ROOT_ANNO, {});

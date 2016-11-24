@@ -12,6 +12,10 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v4.view.ViewCompat;
+import android.support.v4.widget.TextViewCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -81,9 +85,10 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
         return VIEW_TYPE_COUNT;
     }
 
-    private Drawable getMoreDrawable(Resources res) {
+    private Drawable getMoreDrawable(Context context) {
         if (mMoreDrawable == null) {
-            mMoreDrawable = res.getDrawable(R.drawable.menu_item_more);
+            mMoreDrawable = ContextCompat.getDrawable(context, R.drawable.menu_item_more);
+            DrawableCompat.setAutoMirrored(mMoreDrawable, true);
         }
         return mMoreDrawable;
     }
@@ -102,7 +107,7 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
 
     private void maybeUpdateIcon(PromptListItem item, TextView t) {
         if (item.getIcon() == null && !item.inGroup && !item.isParent) {
-            t.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
+            TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(t, null, null, null, null);
             return;
         }
 
@@ -122,11 +127,11 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
 
         Drawable moreDrawable = null;
         if (item.isParent) {
-            moreDrawable = getMoreDrawable(res);
+            moreDrawable = getMoreDrawable(getContext());
         }
 
         if (d != null || moreDrawable != null) {
-            t.setCompoundDrawablesWithIntrinsicBounds(d, null, moreDrawable, null);
+            TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(t, d, null, moreDrawable, null);
         }
     }
 
@@ -243,7 +248,7 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
 
                 TextView tv = (TextView) convertView.findViewById(android.R.id.text1);
                 tv.setTextSize(TypedValue.COMPLEX_UNIT_PX, mTextSize);
-                viewHolder = new ViewHolder(tv, tv.getPaddingLeft(), tv.getPaddingRight(),
+                viewHolder = new ViewHolder(tv, ViewCompat.getPaddingStart(tv), ViewCompat.getPaddingEnd(tv),
                                             tv.getPaddingTop(), tv.getPaddingBottom());
 
                 convertView.setTag(viewHolder);

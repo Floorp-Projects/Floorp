@@ -1,9 +1,9 @@
 [
 {
-"size": 1516544, 
-"visibility": "public", 
-"digest": "cf84f9592059f1e0756370f44e0ad289b71569c235d2ec8c5958695cc57352d3b99b584fd119e73fc9593d1c4cca414985e71f567f777162471b6040ebc59d13", 
-"algorithm": "sha512", 
+"size": 1516544,
+"visibility": "public",
+"digest": "cf84f9592059f1e0756370f44e0ad289b71569c235d2ec8c5958695cc57352d3b99b584fd119e73fc9593d1c4cca414985e71f567f777162471b6040ebc59d13",
+"algorithm": "sha512",
 "filename": "win32-minidump_stackwalk.exe"
 }
 ]

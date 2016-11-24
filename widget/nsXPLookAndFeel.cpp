@@ -474,9 +474,9 @@ nsXPLookAndFeel::Init()
     mozilla::dom::ContentChild* cc =
       mozilla::dom::ContentChild::GetSingleton();
 
-    nsTArray<LookAndFeelInt> lookAndFeelIntCache;
-    cc->SendGetLookAndFeelCache(&lookAndFeelIntCache);
-    LookAndFeel::SetIntCache(lookAndFeelIntCache);
+    LookAndFeel::SetIntCache(cc->LookAndFeelCache());
+    // This is only ever used once during initialization, and can be cleared now.
+    cc->LookAndFeelCache().Clear();
   }
 }
 
