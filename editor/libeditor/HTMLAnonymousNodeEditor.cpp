@@ -165,47 +165,78 @@ ElementDeletionObserver::NodeWillBeDestroyed(const nsINode* aNode)
 // child of aParentNode. If aIsCreatedHidden is true, the class
 // "hidden" is added to the created element. If aAnonClass is not
 // the empty string, it becomes the value of the attribute "_moz_anonclass"
-nsresult
+NS_IMETHODIMP
 HTMLEditor::CreateAnonymousElement(const nsAString& aTag,
                                    nsIDOMNode* aParentNode,
                                    const nsAString& aAnonClass,
                                    bool aIsCreatedHidden,
                                    nsIDOMElement** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aParentNode);
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nullptr;
 
-  nsCOMPtr<nsIContent> parentContent( do_QueryInterface(aParentNode) );
-  NS_ENSURE_TRUE(parentContent, NS_OK);
+  nsCOMPtr<nsIAtom> atom = NS_Atomize(aTag);
+  RefPtr<Element> element =
+    CreateAnonymousElement(atom, aParentNode, aAnonClass, aIsCreatedHidden);
+  if (NS_WARN_IF(!element)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIDOMElement> newElement =
+    static_cast<nsIDOMElement*>(GetAsDOMNode(element));
+  newElement.forget(aReturn);
+  return NS_OK;
+}
+
+already_AddRefed<Element>
+HTMLEditor::CreateAnonymousElement(nsIAtom* aTag,
+                                   nsIDOMNode* aParentNode,
+                                   const nsAString& aAnonClass,
+                                   bool aIsCreatedHidden)
+{
+  if (NS_WARN_IF(!aParentNode)) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIContent> parentContent = do_QueryInterface(aParentNode);
+  if (NS_WARN_IF(!parentContent)) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!doc)) {
+    return nullptr;
+  }
 
   // Get the pres shell
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
-  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
+  if (NS_WARN_IF(!ps)) {
+    return nullptr;
+  }
 
   // Create a new node through the element factory
-  nsCOMPtr<nsIAtom> tagAtom = NS_Atomize(aTag);
-  nsCOMPtr<Element> newContent = CreateHTMLContent(tagAtom);
-  NS_ENSURE_STATE(newContent);
-
-  nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newContent);
-  NS_ENSURE_TRUE(newElement, NS_ERROR_FAILURE);
+  RefPtr<Element> newContent = CreateHTMLContent(aTag);
+  if (NS_WARN_IF(!newContent)) {
+    return nullptr;
+  }
 
   // add the "hidden" class if needed
   if (aIsCreatedHidden) {
-    nsresult rv = newElement->SetAttribute(NS_LITERAL_STRING("class"),
-                                           NS_LITERAL_STRING("hidden"));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv =
+      newContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                          NS_LITERAL_STRING("hidden"), true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
   }
 
   // add an _moz_anonclass attribute if needed
   if (!aAnonClass.IsEmpty()) {
-    nsresult rv = newElement->SetAttribute(NS_LITERAL_STRING("_moz_anonclass"),
-                                           aAnonClass);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv =
+      newContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_anonclass,
+                          aAnonClass, true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
   }
 
   {
@@ -217,7 +248,7 @@ HTMLEditor::CreateAnonymousElement(const nsAString& aTag,
       newContent->BindToTree(doc, parentContent, parentContent, true);
     if (NS_FAILED(rv)) {
       newContent->UnbindFromTree();
-      return rv;
+      return nullptr;
     }
   }
 
@@ -239,8 +270,7 @@ HTMLEditor::CreateAnonymousElement(const nsAString& aTag,
   // display the element
   ps->RecreateFramesFor(newContent);
 
-  newElement.forget(aReturn);
-  return NS_OK;
+  return newContent.forget();
 }
 
 // Removes event listener and calls DeleteRefToAnonymousNode.
