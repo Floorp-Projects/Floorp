@@ -12,24 +12,6 @@ const { l10n } = require("devtools/client/webconsole/new-console-output/utils/me
 
 add_task(function* () {
   let hud = yield openNewTabAndConsole(TEST_URI);
-
-  const store = hud.ui.newConsoleOutput.getStore();
-  // Adding loggin each time the store is modified in order to check
-  // the store state in case of failure.
-  store.subscribe(() => {
-    const messages = store.getState().messages.messagesById.toJS()
-      .map(message => {
-        return {
-          id: message.id,
-          type: message.type,
-          parameters: message.parameters,
-          messageText: message.messageText
-        };
-      }
-    );
-    info("messages : " + JSON.stringify(messages));
-  });
-
   const messageNumber = 100;
   yield testSimpleBatchLogging(hud, messageNumber);
   yield testBatchLoggingAndClear(hud, messageNumber);
