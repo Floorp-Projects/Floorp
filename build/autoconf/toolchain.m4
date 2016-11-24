@@ -15,7 +15,6 @@ define([AC_HEADER_STDC], [])
 AC_DEFUN([MOZ_TOOL_VARIABLES],
 [
 GNU_AS=
-GNU_LD=
 
 GNU_CC=
 GNU_CXX=
@@ -28,9 +27,6 @@ if test "`echo | $AS -o conftest.out -v 2>&1 | grep -c GNU`" != "0"; then
     GNU_AS=1
 fi
 rm -f conftest.out
-if test "`echo | $LD -v 2>&1 | grep -c GNU`" != "0"; then
-    GNU_LD=1
-fi
 
 CLANG_CC=
 CLANG_CXX=
