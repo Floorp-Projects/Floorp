@@ -23,7 +23,6 @@ Cu.import("chrome://marionette/content/addon.js");
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/browser.js");
-Cu.import("chrome://marionette/content/cert.js");
 Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/evaluate.js");
@@ -497,16 +496,6 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
 
   this.newSessionCommandId = cmd.id;
   this.setSessionCapabilities(cmd.parameters.capabilities);
-
-  this.scriptTimeout = 10000;
-
-  this.secureTLS = !this.sessionCapabilities.acceptInsecureCerts;
-  if (!this.secureTLS) {
-    logger.warn("TLS certificate errors will be ignored for this session");
-    let acceptAllCerts = new cert.InsecureSweepingOverride();
-    cert.installOverride(acceptAllCerts);
-  }
-
   // If we are testing accessibility with marionette, start a11y service in
   // chrome first. This will ensure that we do not have any content-only
   // services hanging around.
@@ -514,6 +503,8 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
       accessibility.service) {
     logger.info("Preemptively starting accessibility service in Chrome");
   }
+
+  this.scriptTimeout = 10000;
 
   let registerBrowsers = this.registerPromise();
   let browserListening = this.listeningPromise();
@@ -662,6 +653,13 @@ GeckoDriver.prototype.setSessionCapabilities = function(newCaps) {
   let caps = copy(this.sessionCapabilities);
   caps = copy(newCaps, caps);
   logger.config("Changing capabilities: " + JSON.stringify(caps));
+
+  // update session state
+  this.secureTLS = !caps.acceptInsecureCerts;
+  if (!this.secureTLS) {
+    logger.warn("Invalid or self-signed TLS certificates " +
+        "will be discarded for this session");
+  }
 
   this.sessionCapabilities = caps;
 };
@@ -2314,9 +2312,7 @@ GeckoDriver.prototype.sessionTearDown = function(cmd, resp) {
     }
     this.observing = null;
   }
-
   this.sandboxes.clear();
-  cert.uninstallOverride();
 };
 
 /**
