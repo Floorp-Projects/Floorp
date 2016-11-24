@@ -1147,7 +1147,7 @@ var gBrowserInit = {
           // we are swapping in.
           gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser,
                                            tabToOpen.linkedBrowser.isRemoteBrowser,
-                                           tabToOpen.linkedBrowser.remoteType);
+                                           { remoteType: tabToOpen.linkedBrowser.remoteType });
           gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, tabToOpen);
         } catch (e) {
           Cu.reportError(e);
@@ -4254,13 +4254,13 @@ var XULBrowserWindow = {
   forceInitialBrowserRemote: function(aRemoteType) {
     let initBrowser =
       document.getAnonymousElementByAttribute(gBrowser, "anonid", "initialBrowser");
-    gBrowser.updateBrowserRemoteness(initBrowser, true, aRemoteType, null);
+    gBrowser.updateBrowserRemoteness(initBrowser, true, { remoteType: aRemoteType });
   },
 
   forceInitialBrowserNonRemote: function(aOpener) {
     let initBrowser =
       document.getAnonymousElementByAttribute(gBrowser, "anonid", "initialBrowser");
-    gBrowser.updateBrowserRemoteness(initBrowser, false, E10SUtils.NOT_REMOTE, aOpener);
+    gBrowser.updateBrowserRemoteness(initBrowser, false, { opener: aOpener });
   },
 
   setDefaultStatus: function(status) {
