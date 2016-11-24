@@ -10,6 +10,12 @@
 <body>
 <iframe id="target-iframe"></iframe>
 <script type="application/javascript">
+
+add_task(function*() {
+  yield SpecialPowers.pushPrefEnv(
+    { "set": [["network.disable.ipc.security", true]] });
+});
+
 add_task(function*() {
   let iframe = document.querySelector("#target-iframe");
 
