@@ -27,6 +27,7 @@ from mozharness.base.log import FATAL
 from mozharness.base.script import BaseScript, PreScriptAction, PostScriptAction
 from mozharness.base.vcs.vcsbase import VCSMixin
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
+from mozharness.mozilla.buildbot import TBPL_RETRY, EXIT_STATUS_DICT
 from mozharness.mozilla.mozbase import MozbaseMixin
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.mozilla.testing.unittest import EmulatorMixin
@@ -625,7 +626,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         max_restarts = 5
         emulator_ok = self._retry(max_restarts, 10, self._verify_emulator_and_restart_on_fail, "Check emulator")
         if not emulator_ok:
-            self.fatal('INFRA-ERROR: Unable to start emulator after %d attempts' % max_restarts)
+            self.fatal('INFRA-ERROR: Unable to start emulator after %d attempts' % max_restarts,
+                EXIT_STATUS_DICT[TBPL_RETRY])
         # Start logcat for the emulator. The adb process runs until the
         # corresponding emulator is killed. Output is written directly to
         # the blobber upload directory so that it is uploaded automatically
@@ -681,13 +683,15 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         # Install Fennec
         install_ok = self._retry(3, 30, self._install_fennec_apk, "Install Fennec APK")
         if not install_ok:
-            self.fatal('INFRA-ERROR: Failed to install %s on %s' % (self.installer_path, self.emulator["name"]))
+            self.fatal('INFRA-ERROR: Failed to install %s on %s' %
+                (self.installer_path, self.emulator["name"]), EXIT_STATUS_DICT[TBPL_RETRY])
 
         # Install Robocop if required
         if self.test_suite.startswith('robocop'):
             install_ok = self._retry(3, 30, self._install_robocop_apk, "Install Robocop APK")
             if not install_ok:
-                self.fatal('INFRA-ERROR: Failed to install %s on %s' % (self.robocop_path, self.emulator["name"]))
+                self.fatal('INFRA-ERROR: Failed to install %s on %s' %
+                    (self.robocop_path, self.emulator["name"]), EXIT_STATUS_DICT[TBPL_RETRY])
 
         self.info("Finished installing apps for %s" % self.emulator["name"])
 
