@@ -109,6 +109,8 @@ enum class AllocKind {
     FAT_INLINE_STRING,
     STRING,
     EXTERNAL_STRING,
+    FAT_INLINE_ATOM,
+    ATOM,
     SYMBOL,
     JITCODE,
     LIMIT,
@@ -145,6 +147,8 @@ enum class AllocKind {
     D(FAT_INLINE_STRING,   String,      JSFatInlineString, JSFatInlineString) \
     D(STRING,              String,      JSString,          JSString) \
     D(EXTERNAL_STRING,     String,      JSExternalString,  JSExternalString) \
+    D(FAT_INLINE_ATOM,     String,      js::FatInlineAtom, js::FatInlineAtom) \
+    D(ATOM,                String,      js::NormalAtom,    js::NormalAtom) \
     D(SYMBOL,              Symbol,      JS::Symbol,        JS::Symbol) \
     D(JITCODE,             JitCode,     js::jit::JitCode,  js::jit::JitCode)
 

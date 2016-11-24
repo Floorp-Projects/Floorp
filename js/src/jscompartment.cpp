@@ -50,6 +50,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     runtime_(zone->runtimeFromMainThread()),
     principals_(nullptr),
     isSystem_(false),
+    isAtomsCompartment_(false),
     isSelfHosting(false),
     marked(true),
     warnedAboutExprClosure(false),
