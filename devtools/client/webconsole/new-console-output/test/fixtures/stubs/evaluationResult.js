@@ -52,9 +52,13 @@ stubPreparedMessages.set("asdf()", new ConsoleMessage({
 		"type": "undefined"
 	},
 	"repeat": 1,
-	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":1479159921377,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":{\"type\":\"undefined\"},\"repeatId\":null,\"stacktrace\":null,\"frame\":null,\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\",\"userProvidedStyles\":null}",
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":1479159921377,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":{\"type\":\"undefined\"},\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":1},\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\",\"userProvidedStyles\":null}",
 	"stacktrace": null,
-	"frame": null,
+	"frame": {
+		"source": "debugger eval code",
+		"line": 1,
+		"column": 1
+	},
 	"groupId": null,
 	"exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
 	"userProvidedStyles": null
@@ -72,9 +76,13 @@ stubPreparedMessages.set("1 + @", new ConsoleMessage({
 		"type": "undefined"
 	},
 	"repeat": 1,
-	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":1479159921399,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":{\"type\":\"undefined\"},\"repeatId\":null,\"stacktrace\":null,\"frame\":null,\"groupId\":null,\"userProvidedStyles\":null}",
+	"repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":1479159921399,\"type\":\"result\",\"level\":\"error\",\"messageText\":\"SyntaxError: illegal character\",\"parameters\":{\"type\":\"undefined\"},\"repeatId\":null,\"stacktrace\":null,\"frame\":{\"source\":\"debugger eval code\",\"line\":1,\"column\":4},\"groupId\":null,\"userProvidedStyles\":null}",
 	"stacktrace": null,
-	"frame": null,
+	"frame": {
+		"source": "debugger eval code",
+		"line": 1,
+		"column": 4
+	},
 	"groupId": null,
 	"userProvidedStyles": null
 }));
@@ -128,7 +136,11 @@ stubPackets.set("asdf()", {
 	},
 	"exceptionMessage": "ReferenceError: asdf is not defined",
 	"exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
-	"frame": null,
+	"frame": {
+		"source": "debugger eval code",
+		"line": 1,
+		"column": 1
+	},
 	"helperResult": null
 });
 
@@ -158,7 +170,11 @@ stubPackets.set("1 + @", {
 		}
 	},
 	"exceptionMessage": "SyntaxError: illegal character",
-	"frame": null,
+	"frame": {
+		"source": "debugger eval code",
+		"line": 1,
+		"column": 4
+	},
 	"helperResult": null
 });
 
