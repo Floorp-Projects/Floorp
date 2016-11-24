@@ -14,6 +14,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsNetUtil.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace net {
@@ -71,10 +72,20 @@ public:
           return;
       }
 
+      auto channel = static_cast<Channel*>(this);
+
       nsCOMPtr<nsILoadContext> loadContext;
-      NS_QueryNotificationCallbacks(static_cast<Channel*>(this), loadContext);
+      NS_QueryNotificationCallbacks(channel, loadContext);
       if (loadContext) {
           mPrivateBrowsing = loadContext->UsePrivateBrowsing();
+          return;
+      }
+
+      nsCOMPtr<nsILoadInfo> loadInfo;
+      Unused << channel->GetLoadInfo(getter_AddRefs(loadInfo));
+      if (loadInfo) {
+          NeckoOriginAttributes attrs = loadInfo->GetOriginAttributes();
+          mPrivateBrowsing = attrs.mPrivateBrowsingId > 0;
       }
   }
 
