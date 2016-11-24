@@ -95,7 +95,7 @@ function waitForMessages({ hud, messages }) {
  * @return object
  *         A promise that is resolved with the result of the condition.
  */
-function* waitFor(condition, message = "waitFor", interval = 100, maxTries = 50) {
+function* waitFor(condition, message = "waitFor", interval = 10, maxTries = 500) {
   return new Promise(resolve => {
     BrowserTestUtils.waitForCondition(condition, message, interval, maxTries)
       .then(() => resolve(condition()));
