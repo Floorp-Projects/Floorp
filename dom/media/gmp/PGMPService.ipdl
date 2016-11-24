@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PGMPContent;
+include GMPTypes;
 
 using base::ProcessId from "base/process.h";
 
@@ -17,6 +18,16 @@ parent:
                  nsCString api,
                  nsCString[] tags,
                  ProcessId[] alreadyBridgedTo)
+    returns (uint32_t pluginId,
+             ProcessId id,
+             nsCString displayName,
+             Endpoint<PGMPContentParent> endpoint,
+             nsresult aResult);
+
+  sync LaunchGMPForNodeId(NodeIdData nodeId,
+                          nsCString api,
+                          nsCString[] tags,
+                          ProcessId[] alreadyBridgedTo)
     returns (uint32_t pluginId,
              ProcessId id,
              nsCString displayName,
