@@ -7,6 +7,9 @@
 // Test that increasing/decreasing values in rule view using
 // arrow keys works correctly.
 
+// Bug 1275446 - This test happen to hit the default timeout on linux32
+requestLongerTimeout(2);
+
 const TEST_URI = `
   <style>
     #test {
