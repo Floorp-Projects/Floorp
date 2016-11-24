@@ -3,40 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-disable mozilla/reject-some-requires */
-/* globals window, dumpn, $, gNetwork */
+/* globals window, dumpn, $ */
 
 "use strict";
 
 const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
 const { Task } = require("devtools/shared/task");
 const { ToolSidebar } = require("devtools/client/framework/sidebar");
-const { VariablesView } = require("resource://devtools/client/shared/widgets/VariablesView.jsm");
 const { EVENTS } = require("./events");
-const { L10N } = require("./l10n");
 const { Filters } = require("./filter-predicates");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+const CookiesPanel = createFactory(require("./shared/components/cookies-panel"));
 const HeadersPanel = createFactory(require("./shared/components/headers-panel"));
 const ParamsPanel = createFactory(require("./shared/components/params-panel"));
 const PreviewPanel = createFactory(require("./shared/components/preview-panel"));
 const ResponsePanel = createFactory(require("./shared/components/response-panel"));
 const SecurityPanel = createFactory(require("./shared/components/security-panel"));
 const TimingsPanel = createFactory(require("./shared/components/timings-panel"));
-
-const GENERIC_VARIABLES_VIEW_SETTINGS = {
-  lazyEmpty: true,
-  // ms
-  lazyEmptyDelay: 10,
-  searchEnabled: true,
-  editableValueTooltip: "",
-  editableNameTooltip: "",
-  preventDisableOnChange: true,
-  preventDescriptorModifiers: true,
-  eval: () => {}
-};
 
 /**
  * Functions handling the requests details view.
@@ -69,6 +55,13 @@ DetailsView.prototype = {
    */
   initialize: function (store) {
     dumpn("Initializing the DetailsView");
+
+    this._cookiesPanelNode = $("#react-cookies-tabpanel-hook");
+
+    ReactDOM.render(Provider(
+      { store },
+      CookiesPanel()
+    ), this._cookiesPanelNode);
 
     this._headersPanelNode = $("#react-headers-tabpanel-hook");
 
@@ -117,16 +110,6 @@ DetailsView.prototype = {
       disableTelemetry: true,
       showAllTabsMenu: true
     });
-
-    this._cookies = new VariablesView($("#all-cookies"),
-      Heritage.extend(GENERIC_VARIABLES_VIEW_SETTINGS, {
-        emptyText: L10N.getStr("cookiesEmptyText"),
-        searchPlaceholder: L10N.getStr("cookiesFilterText")
-      }));
-
-    this._requestCookies = L10N.getStr("requestCookies");
-    this._responseCookies = L10N.getStr("responseCookies");
-
     $("tabpanels", this.widget).addEventListener("select", this._onTabSelect);
   },
 
@@ -135,8 +118,9 @@ DetailsView.prototype = {
    */
   destroy: function () {
     dumpn("Destroying the DetailsView");
-    ReactDOM.unmountComponentAtNode(this._paramsPanelNode);
+    ReactDOM.unmountComponentAtNode(this._cookiesPanelNode);
     ReactDOM.unmountComponentAtNode(this._headersPanelNode);
+    ReactDOM.unmountComponentAtNode(this._paramsPanelNode);
     ReactDOM.unmountComponentAtNode(this._previewPanelNode);
     ReactDOM.unmountComponentAtNode(this._responsePanelNode);
     ReactDOM.unmountComponentAtNode(this._securityPanelNode);
@@ -177,8 +161,6 @@ DetailsView.prototype = {
       this.widget.selectedIndex = 0;
     }
 
-    this._cookies.empty();
-
     this._dataSrc = { src: data, populated: [] };
     this._onTabSelect();
     window.emit(EVENTS.NETWORKDETAILSVIEW_POPULATED);
@@ -211,14 +193,6 @@ DetailsView.prototype = {
     }
 
     Task.spawn(function* () {
-      viewState.updating[tab] = true;
-      switch (tab) {
-        // "Cookies"
-        case 1:
-          yield view._setResponseCookies(src.responseCookies);
-          yield view._setRequestCookies(src.requestCookies);
-          break;
-      }
       viewState.updating[tab] = false;
     }).then(() => {
       if (tab == this.widget.selectedIndex) {
@@ -239,78 +213,7 @@ DetailsView.prototype = {
     }, e => console.error(e));
   },
 
-  /**
-   * Sets the network request cookies shown in this view.
-   *
-   * @param object response
-   *        The message received from the server.
-   * @return object
-   *        A promise that is resolved when the request cookies are set.
-   */
-  _setRequestCookies: Task.async(function* (response) {
-    if (response && response.cookies.length) {
-      response.cookies.sort((a, b) => a.name > b.name);
-      yield this._addCookies(this._requestCookies, response);
-    }
-  }),
-
-  /**
-   * Sets the network response cookies shown in this view.
-   *
-   * @param object response
-   *        The message received from the server.
-   * @return object
-   *        A promise that is resolved when the response cookies are set.
-   */
-  _setResponseCookies: Task.async(function* (response) {
-    if (response && response.cookies.length) {
-      yield this._addCookies(this._responseCookies, response);
-    }
-  }),
-
-  /**
-   * Populates the cookies container in this view with the specified data.
-   *
-   * @param string name
-   *        The type of cookies to populate (request or response).
-   * @param object response
-   *        The message received from the server.
-   * @return object
-   *        Returns a promise that resolves upon the adding of cookies.
-   */
-  _addCookies: Task.async(function* (name, response) {
-    let cookiesScope = this._cookies.addScope(name);
-    cookiesScope.expanded = true;
-
-    for (let cookie of response.cookies) {
-      let cookieVar = cookiesScope.addItem(cookie.name, {}, {relaxed: true});
-      let cookieValue = yield gNetwork.getString(cookie.value);
-      cookieVar.setGrip(cookieValue);
-
-      // By default the cookie name and value are shown. If this is the only
-      // information available, then nothing else is to be displayed.
-      let cookieProps = Object.keys(cookie);
-      if (cookieProps.length == 2) {
-        continue;
-      }
-
-      // Display any other information other than the cookie name and value
-      // which may be available.
-      let rawObject = Object.create(null);
-      let otherProps = cookieProps.filter(e => e != "name" && e != "value");
-      for (let prop of otherProps) {
-        rawObject[prop] = cookie[prop];
-      }
-      cookieVar.populate(rawObject);
-      cookieVar.twisty = true;
-      cookieVar.expanded = true;
-    }
-  }),
-
   _dataSrc: null,
-  _cookies: null,
-  _requestCookies: "",
-  _responseCookies: ""
 };
 
 exports.DetailsView = DetailsView;

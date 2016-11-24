@@ -10,7 +10,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const ClearButton = createFactory(require("./clear-button"));
 const FilterButtons = createFactory(require("./filter-buttons"));
-const SearchBox = createFactory(require("./search-box"));
+const ToolbarSearchBox = createFactory(require("./search-box"));
 const SummaryButton = createFactory(require("./summary-button"));
 const ToggleButton = createFactory(require("./toggle-button"));
 
@@ -28,7 +28,7 @@ function Toolbar() {
     ),
     span({ className: "devtools-toolbar-group" },
       SummaryButton(),
-      SearchBox(),
+      ToolbarSearchBox(),
       ToggleButton()
     )
   );

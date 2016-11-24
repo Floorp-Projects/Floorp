@@ -28,10 +28,10 @@ const {
 
 const {
   getActiveFilters,
-  getSortedRequests,
   getDisplayedRequests,
   getRequestById,
   getSelectedRequest,
+  getSortedRequests,
 } = require("./selectors/index");
 
 // ms
@@ -224,7 +224,7 @@ RequestsMenuView.prototype = {
         isXHR,
         cause,
         fromCache,
-        fromServiceWorker
+        fromServiceWorker,
       },
       true
     );
@@ -235,13 +235,15 @@ RequestsMenuView.prototype = {
   updateRequest: Task.async(function* (id, data) {
     const action = Actions.updateRequest(id, data, true);
     yield this.store.dispatch(action);
-
     let {
+      responseContent,
+      responseCookies,
+      responseHeaders,
+      requestCookies,
       requestHeaders,
       requestPostData,
-      responseContent,
-      responseHeaders,
     } = action.data;
+    let request = getRequestById(this.store.getState(), action.id);
 
     if (requestHeaders && requestHeaders.headers && requestHeaders.headers.length) {
       let headers = yield fetchHeaders(
@@ -267,26 +269,23 @@ RequestsMenuView.prototype = {
       }
     }
 
-    if (responseContent && responseContent.content) {
-      let request = getRequestById(this.store.getState(), action.id);
-      if (request) {
-        let { mimeType } = request;
-        let { text, encoding } = responseContent.content;
-        let response = yield gNetwork.getString(text);
-        let payload = {};
+    if (request && responseContent && responseContent.content) {
+      let { mimeType } = request;
+      let { text, encoding } = responseContent.content;
+      let response = yield gNetwork.getString(text);
+      let payload = {};
 
-        if (mimeType.includes("image/")) {
-          payload.responseContentDataUri = formDataURI(mimeType, encoding, response);
-        }
+      if (mimeType.includes("image/")) {
+        payload.responseContentDataUri = formDataURI(mimeType, encoding, response);
+      }
 
-        responseContent.content.text = response;
-        payload.responseContent = responseContent;
+      responseContent.content.text = response;
+      payload.responseContent = responseContent;
 
-        yield this.store.dispatch(Actions.updateRequest(action.id, payload, true));
+      yield this.store.dispatch(Actions.updateRequest(action.id, payload, true));
 
-        if (mimeType.includes("image/")) {
-          window.emit(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
-        }
+      if (mimeType.includes("image/")) {
+        window.emit(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
       }
     }
 
@@ -305,6 +304,51 @@ RequestsMenuView.prototype = {
       payload.requestHeadersFromUploadStream = { headers, headersSize };
 
       yield this.store.dispatch(Actions.updateRequest(action.id, payload, true));
+    }
+
+    // Fetch request and response cookies long value.
+    // Actor does not provide full sized cookie value when the value is too long
+    // To display values correctly, we need fetch them in each request.
+    if (requestCookies) {
+      let reqCookies = [];
+      // request store cookies in requestCookies or requestCookies.cookies
+      let cookies = requestCookies.cookies ?
+        requestCookies.cookies : requestCookies;
+      // make sure cookies is iterable
+      if (typeof cookies[Symbol.iterator] === "function") {
+        for (let cookie of cookies) {
+          reqCookies.push(Object.assign({}, cookie, {
+            value: yield gNetwork.getString(cookie.value),
+          }));
+        }
+        if (reqCookies.length) {
+          yield this.store.dispatch(Actions.updateRequest(
+            action.id,
+            { requestCookies: reqCookies },
+            true));
+        }
+      }
+    }
+
+    if (responseCookies) {
+      let resCookies = [];
+      // response store cookies in responseCookies or responseCookies.cookies
+      let cookies = responseCookies.cookies ?
+        responseCookies.cookies : responseCookies;
+      // make sure cookies is iterable
+      if (typeof cookies[Symbol.iterator] === "function") {
+        for (let cookie of cookies) {
+          resCookies.push(Object.assign({}, cookie, {
+            value: yield gNetwork.getString(cookie.value),
+          }));
+        }
+        if (resCookies.length) {
+          yield this.store.dispatch(Actions.updateRequest(
+            action.id,
+            { responseCookies: resCookies },
+            true));
+        }
+      }
     }
   }),
 
