@@ -766,7 +766,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void add64(Register64 src, Register64 dest) PER_ARCH;
     inline void add64(Imm32 imm, Register64 dest) PER_ARCH;
-    inline void add64(Imm64 imm, Register64 dest) DEFINED_ON(x86, x64, arm, mips32, mips64);
+    inline void add64(Imm64 imm, Register64 dest) PER_ARCH;
     inline void add64(const Operand& src, Register64 dest) DEFINED_ON(x64, mips64);
 
     inline void addFloat32(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
@@ -785,7 +785,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void subPtr(const Address& addr, Register dest) DEFINED_ON(mips_shared, arm, arm64, x86, x64);
 
     inline void sub64(Register64 src, Register64 dest) PER_ARCH;
-    inline void sub64(Imm64 imm, Register64 dest) DEFINED_ON(x86, x64, arm, mips32, mips64);
+    inline void sub64(Imm64 imm, Register64 dest) PER_ARCH;
     inline void sub64(const Operand& src, Register64 dest) DEFINED_ON(x64, mips64);
 
     inline void subFloat32(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
@@ -900,7 +900,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void rotateLeft64(Imm32 count, Register64 input, Register64 dest) DEFINED_ON(x64);
     inline void rotateLeft64(Register count, Register64 input, Register64 dest) DEFINED_ON(x64);
     inline void rotateLeft64(Imm32 count, Register64 input, Register64 dest, Register temp)
-        DEFINED_ON(x86, x64, arm, mips32, mips64);
+        PER_ARCH;
     inline void rotateLeft64(Register count, Register64 input, Register64 dest, Register temp)
         PER_ARCH;
 
@@ -909,7 +909,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void rotateRight64(Imm32 count, Register64 input, Register64 dest) DEFINED_ON(x64);
     inline void rotateRight64(Register count, Register64 input, Register64 dest) DEFINED_ON(x64);
     inline void rotateRight64(Imm32 count, Register64 input, Register64 dest, Register temp)
-        DEFINED_ON(x86, x64, arm, mips32, mips64);
+        PER_ARCH;
     inline void rotateRight64(Register count, Register64 input, Register64 dest, Register temp)
         PER_ARCH;
 
