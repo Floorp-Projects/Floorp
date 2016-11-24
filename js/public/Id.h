@@ -176,18 +176,6 @@ struct GCPolicy<jsid>
 namespace js {
 
 template <>
-struct DefaultHasher<jsid>
-{
-    typedef jsid Lookup;
-    static HashNumber hash(jsid id) {
-        return JSID_BITS(id);
-    }
-    static bool match(jsid id1, jsid id2) {
-        return id1 == id2;
-    }
-};
-
-template <>
 struct BarrierMethods<jsid>
 {
     static void postBarrier(jsid* idp, jsid prev, jsid next) {}
