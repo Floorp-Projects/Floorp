@@ -7,6 +7,8 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 const {
@@ -63,6 +65,12 @@ BackgroundPage.prototype = {
                                        .getInterface(Ci.nsIDocShell)
                                        .QueryInterface(Ci.nsIWebNavigation);
 
+    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      let attrs = chromeShell.getOriginAttributes();
+      attrs.privateBrowsingId = 1;
+      chromeShell.setOriginAttributes(attrs);
+    }
+
     chromeShell.useGlobalHistory = false;
     chromeShell.createAboutBlankContentViewer(system);
     chromeShell.loadURI(XUL_URL, 0, null, null, null);
@@ -80,6 +88,11 @@ BackgroundPage.prototype = {
     browser.setAttribute("src", url);
     chromeDoc.documentElement.appendChild(browser);
 
+    this.webNav = browser.docShell.QueryInterface(Ci.nsIWebNavigation);
+
+    let window = this.webNav.document.defaultView;
+    this.contentWindow = window;
+
 
     yield new Promise(resolve => {
       browser.addEventListener("load", function onLoad(event) {
@@ -89,11 +102,6 @@ BackgroundPage.prototype = {
         }
       }, true);
     });
-
-    this.webNav = browser.docShell.QueryInterface(Ci.nsIWebNavigation);
-
-    let window = this.webNav.document.defaultView;
-    this.contentWindow = window;
 
 
     // Set the add-on's main debugger global, for use in the debugger
