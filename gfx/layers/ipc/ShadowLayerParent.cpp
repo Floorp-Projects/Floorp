@@ -112,14 +112,6 @@ ShadowLayerParent::AsTextLayer() const
          : nullptr;
 }
 
-BorderLayer*
-ShadowLayerParent::AsBorderLayer() const
-{
-  return mLayer && mLayer->GetType() == Layer::TYPE_BORDER
-         ? static_cast<BorderLayer*>(mLayer.get())
-         : nullptr;
-}
-
 void
 ShadowLayerParent::ActorDestroy(ActorDestroyReason why)
 {

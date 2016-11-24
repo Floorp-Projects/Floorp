@@ -17,7 +17,6 @@
 #include "nsLayoutUtils.h"
 #include "nsStyleStruct.h"
 #include "nsIFrame.h"
-#include "nsCSSRenderingBorders.h"
 
 class gfxDrawable;
 class nsStyleContext;
@@ -416,25 +415,6 @@ struct nsCSSRendering {
                                                nsStyleContext* aStyleContext,
                                                mozilla::PaintBorderFlags aFlags,
                                                Sides aSkipSides = Sides());
-
-  static mozilla::Maybe<nsCSSBorderRenderer>
-  CreateBorderRenderer(nsPresContext* aPresContext,
-                       DrawTarget* aDrawTarget,
-                       nsIFrame* aForFrame,
-                       const nsRect& aDirtyRect,
-                       const nsRect& aBorderArea,
-                       nsStyleContext* aStyleContext,
-                       Sides aSkipSides = Sides());
-
-  static mozilla::Maybe<nsCSSBorderRenderer>
-  CreateBorderRendererWithStyleBorder(nsPresContext* aPresContext,
-                                      DrawTarget* aDrawTarget,
-                                      nsIFrame* aForFrame,
-                                      const nsRect& aDirtyRect,
-                                      const nsRect& aBorderArea,
-                                      const nsStyleBorder& aBorderStyle,
-                                      nsStyleContext* aStyleContext,
-                                      Sides aSkipSides = Sides());
 
 
   /**

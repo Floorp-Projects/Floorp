@@ -16,11 +16,9 @@
 #include "nsColor.h"
 #include "nsCOMPtr.h"
 #include "nsStyleConsts.h"
-#include "nsStyleStruct.h"
 #include "nsPresContext.h"
 
 struct nsBorderColors;
-class nsDisplayBorder;
 
 namespace mozilla {
 namespace gfx {
@@ -77,8 +75,6 @@ class nsCSSBorderRenderer final
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
 
-  friend class nsDisplayBorder;
-
 public:
 
   nsCSSBorderRenderer(nsPresContext* aPresContext,
@@ -109,8 +105,6 @@ public:
                                 const Float* aBorderSizes,
                                 RectCornerRadii* aOuterRadiiRet);
 
-  static bool AllCornersZeroSize(const RectCornerRadii& corners);
-
 private:
 
   RectCornerRadii mBorderCornerDimensions;
@@ -121,20 +115,20 @@ private:
 
   // destination DrawTarget and dirty rect
   DrawTarget* mDrawTarget;
-  const Rect mDirtyRect;
+  const Rect& mDirtyRect;
 
   // the rectangle of the outside and the inside of the border
   Rect mOuterRect;
   Rect mInnerRect;
 
   // the style and size of the border
-  uint8_t mBorderStyles[4];
-  Float mBorderWidths[4];
+  const uint8_t* mBorderStyles;
+  const Float* mBorderWidths;
   RectCornerRadii mBorderRadii;
 
   // colors
-  nscolor mBorderColors[4];
-  nsBorderColors* mCompositeColors[4];
+  const nscolor* mBorderColors;
+  nsBorderColors* const* mCompositeColors;
 
   // the background color
   nscolor mBackgroundColor;
