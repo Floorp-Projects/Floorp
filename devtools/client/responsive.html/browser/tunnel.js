@@ -143,6 +143,7 @@ function tunnelToInnerBrowser(outer, inner) {
       // down to the inner browser by this tunnel, the tab's remoteness effectively is the
       // remoteness of the inner browser.
       outer.setAttribute("remote", "true");
+      outer.setAttribute("remoteType", inner.remoteType);
 
       // Clear out any cached state that references the current non-remote XBL binding,
       // such as form fill controllers.  Otherwise they will remain in place and leak the
@@ -269,6 +270,7 @@ function tunnelToInnerBrowser(outer, inner) {
 
       // Reset @remote since this is now back to a regular, non-remote browser
       outer.setAttribute("remote", "false");
+      outer.removeAttribute("remoteType");
 
       // Delete browser window properties exposed on content's owner global
       delete inner.ownerGlobal.PopupNotifications;
