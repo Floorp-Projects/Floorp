@@ -45,6 +45,7 @@ using struct mozilla::layers::ScrollMetadata from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::MaybeLayerClip from "FrameMetrics.h";
+using mozilla::gfx::Glyph from "Layers.h";
 
 namespace mozilla {
 namespace layers {
@@ -61,6 +62,7 @@ struct OpCreatePaintedLayer    { PLayer layer; };
 struct OpCreateContainerLayer  { PLayer layer; };
 struct OpCreateImageLayer      { PLayer layer; };
 struct OpCreateColorLayer      { PLayer layer; };
+struct OpCreateTextLayer       { PLayer layer; };
 struct OpCreateCanvasLayer     { PLayer layer; };
 struct OpCreateRefLayer        { PLayer layer; };
 
@@ -255,6 +257,16 @@ struct ContainerLayerAttributes {
   bool scaleToResolution;
   EventRegionsOverride eventRegionsOverride;
 };
+
+struct GlyphArray
+{
+  LayerColor color;
+  Glyph[] glyphs;
+};
+
+// XXX - Bas - Hack warning! This is using a raw pointer to a ScaledFont*
+// and won't work with e10s.
+struct TextLayerAttributes      { IntRect bounds; GlyphArray[] glyphs; uintptr_t scaledFont; };
 struct ColorLayerAttributes     { LayerColor color; IntRect bounds; };
 struct CanvasLayerAttributes    { SamplingFilter samplingFilter; IntRect bounds; };
 struct RefLayerAttributes {
@@ -271,6 +283,7 @@ union SpecificLayerAttributes {
   ContainerLayerAttributes;
   ColorLayerAttributes;
   CanvasLayerAttributes;
+  TextLayerAttributes;
   RefLayerAttributes;
   ImageLayerAttributes;
 };
@@ -439,6 +452,7 @@ union Edit {
   OpCreateContainerLayer;
   OpCreateImageLayer;
   OpCreateColorLayer;
+  OpCreateTextLayer;
   OpCreateCanvasLayer;
   OpCreateRefLayer;
 

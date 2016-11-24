@@ -20,6 +20,7 @@ class Layer;
 
 class CanvasLayer;
 class ColorLayer;
+class TextLayer;
 class ContainerLayer;
 class ImageLayer;
 class RefLayer;
@@ -40,6 +41,7 @@ public:
   ContainerLayer* AsContainerLayer() const;
   CanvasLayer* AsCanvasLayer() const;
   ColorLayer* AsColorLayer() const;
+  TextLayer* AsTextLayer() const;
   ImageLayer* AsImageLayer() const;
   RefLayer* AsRefLayer() const;
   PaintedLayer* AsPaintedLayer() const;

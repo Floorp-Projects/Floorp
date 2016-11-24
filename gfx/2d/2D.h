@@ -630,6 +630,10 @@ struct Glyph
   Point mPosition;
 };
 
+static inline bool operator==(const Glyph& aOne, const Glyph& aOther) {
+  return aOne.mIndex == aOther.mIndex && aOne.mPosition == aOther.mPosition;
+}
+
 /** This class functions as a glyph buffer that can be drawn to a DrawTarget.
  * @todo XXX - This should probably contain the guts of gfxTextRun in the future as
  * roc suggested. But for now it's a simple container for a glyph vector.
@@ -664,7 +668,7 @@ struct GlyphMetrics
  * at a particular size. It is passed into text drawing calls to describe
  * the font used for the drawing call.
  */
-class ScaledFont : public RefCounted<ScaledFont>
+class ScaledFont : public external::AtomicRefCounted<ScaledFont>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFont)

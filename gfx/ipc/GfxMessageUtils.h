@@ -1268,6 +1268,22 @@ struct ParamTraits<mozilla::layers::AsyncDragMetrics>
   }
 };
 
+template <>
+struct ParamTraits<mozilla::gfx::Glyph>
+{
+  typedef mozilla::gfx::Glyph paramType;
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mIndex);
+    WriteParam(aMsg, aParam.mPosition);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+    return (ReadParam(aMsg, aIter, &aResult->mIndex) &&
+            ReadParam(aMsg, aIter, &aResult->mPosition)
+      );
+  }
+};
+
 } /* namespace IPC */
 
 #endif /* __GFXMESSAGEUTILS_H__ */
