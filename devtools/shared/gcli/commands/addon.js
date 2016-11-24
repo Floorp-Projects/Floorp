@@ -176,7 +176,7 @@ var items = [
         });
 
         function compareAddonNames(nameA, nameB) {
-          return String.localeCompare(nameA.name, nameB.name);
+          return String(nameA.name).localeCompare(nameB.name);
         }
         enabledAddons.sort(compareAddonNames);
         disabledAddons.sort(compareAddonNames);
