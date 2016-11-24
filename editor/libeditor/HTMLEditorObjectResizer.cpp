@@ -241,16 +241,16 @@ HTMLEditor::SetAllResizersPosition()
   int32_t rw  = (int32_t)((resizerWidth + 1) / 2);
   int32_t rh =  (int32_t)((resizerHeight+ 1) / 2);
 
-  SetAnonymousElementPosition(x-rw,     y-rh, static_cast<nsIDOMElement*>(GetAsDOMNode(mTopLeftHandle)));
-  SetAnonymousElementPosition(x+w/2-rw, y-rh, static_cast<nsIDOMElement*>(GetAsDOMNode(mTopHandle)));
-  SetAnonymousElementPosition(x+w-rw-1, y-rh, static_cast<nsIDOMElement*>(GetAsDOMNode(mTopRightHandle)));
+  SetAnonymousElementPosition(x-rw,     y-rh, mTopLeftHandle);
+  SetAnonymousElementPosition(x+w/2-rw, y-rh, mTopHandle);
+  SetAnonymousElementPosition(x+w-rw-1, y-rh, mTopRightHandle);
 
-  SetAnonymousElementPosition(x-rw,     y+h/2-rh, static_cast<nsIDOMElement*>(GetAsDOMNode(mLeftHandle)));
-  SetAnonymousElementPosition(x+w-rw-1, y+h/2-rh, static_cast<nsIDOMElement*>(GetAsDOMNode(mRightHandle)));
+  SetAnonymousElementPosition(x-rw,     y+h/2-rh, mLeftHandle);
+  SetAnonymousElementPosition(x+w-rw-1, y+h/2-rh, mRightHandle);
 
-  SetAnonymousElementPosition(x-rw,     y+h-rh-1, static_cast<nsIDOMElement*>(GetAsDOMNode(mBottomLeftHandle)));
-  SetAnonymousElementPosition(x+w/2-rw, y+h-rh-1, static_cast<nsIDOMElement*>(GetAsDOMNode(mBottomHandle)));
-  SetAnonymousElementPosition(x+w-rw-1, y+h-rh-1, static_cast<nsIDOMElement*>(GetAsDOMNode(mBottomRightHandle)));
+  SetAnonymousElementPosition(x-rw,     y+h-rh-1, mBottomLeftHandle);
+  SetAnonymousElementPosition(x+w/2-rw, y+h-rh-1, mBottomHandle);
+  SetAnonymousElementPosition(x+w-rw-1, y+h-rh-1, mBottomRightHandle);
 
   return NS_OK;
 }
@@ -718,7 +718,7 @@ HTMLEditor::SetShadowPosition(Element* aShadow,
                               int32_t aOriginalObjectX,
                               int32_t aOriginalObjectY)
 {
-  SetAnonymousElementPosition(aOriginalObjectX, aOriginalObjectY, static_cast<nsIDOMElement*>(GetAsDOMNode(aShadow)));
+  SetAnonymousElementPosition(aOriginalObjectX, aOriginalObjectY, aShadow);
 
   if (HTMLEditUtils::IsImage(aOriginalObject)) {
     nsAutoString imageSource;

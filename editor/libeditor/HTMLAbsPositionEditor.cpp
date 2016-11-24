@@ -270,7 +270,7 @@ HTMLEditor::RefreshGrabber()
 
   SetAnonymousElementPosition(mPositionedObjectX+12,
                               mPositionedObjectY-14,
-                              static_cast<nsIDOMElement*>(GetAsDOMNode(mGrabber)));
+                              mGrabber);
   return NS_OK;
 }
 
@@ -294,9 +294,9 @@ HTMLEditor::HideGrabber()
   nsCOMPtr<nsIContent> parentContent = mGrabber->GetParent();
   NS_ENSURE_TRUE(parentContent, NS_ERROR_NULL_POINTER);
 
-  DeleteRefToAnonymousNode(static_cast<nsIDOMElement*>(GetAsDOMNode(mGrabber)), parentContent, ps);
+  DeleteRefToAnonymousNode(mGrabber, parentContent, ps);
   mGrabber = nullptr;
-  DeleteRefToAnonymousNode(static_cast<nsIDOMElement*>(GetAsDOMNode(mPositioningShadow)), parentContent, ps);
+  DeleteRefToAnonymousNode(mPositioningShadow, parentContent, ps);
   mPositioningShadow = nullptr;
 
   return NS_OK;
@@ -399,8 +399,7 @@ HTMLEditor::EndMoving()
     nsCOMPtr<nsIContent> parentContent = mGrabber->GetParent();
     NS_ENSURE_TRUE(parentContent, NS_ERROR_FAILURE);
 
-    DeleteRefToAnonymousNode(static_cast<nsIDOMElement*>(GetAsDOMNode(mPositioningShadow)),
-                             parentContent, ps);
+    DeleteRefToAnonymousNode(mPositioningShadow, parentContent, ps);
 
     mPositioningShadow = nullptr;
   }

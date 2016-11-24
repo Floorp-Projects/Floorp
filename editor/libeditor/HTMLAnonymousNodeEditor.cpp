@@ -286,12 +286,12 @@ HTMLEditor::RemoveListenerAndDeleteRef(const nsAString& aEvent,
   if (evtTarget) {
     evtTarget->RemoveEventListener(aEvent, aListener, aUseCapture);
   }
-  DeleteRefToAnonymousNode(static_cast<nsIDOMElement*>(GetAsDOMNode(aElement)), aParentContent, aShell);
+  DeleteRefToAnonymousNode(aElement, aParentContent, aShell);
 }
 
 // Deletes all references to an anonymous element
 void
-HTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
+HTMLEditor::DeleteRefToAnonymousNode(nsIContent* aContent,
                                      nsIContent* aParentContent,
                                      nsIPresShell* aShell)
 {
@@ -299,38 +299,37 @@ HTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
   // node so its references get removed from the frame manager's
   // undisplay map, and its layout frames get destroyed!
 
-  if (aElement) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-    if (content) {
-      nsAutoScriptBlocker scriptBlocker;
-      // Need to check whether aShell has been destroyed (but not yet deleted).
-      // In that case presContext->GetPresShell() returns nullptr.
-      // See bug 338129.
-      if (content->IsInComposedDoc() && aShell && aShell->GetPresContext() &&
-          aShell->GetPresContext()->GetPresShell() == aShell) {
-        nsCOMPtr<nsIDocumentObserver> docObserver = do_QueryInterface(aShell);
-        if (docObserver) {
-          // Call BeginUpdate() so that the nsCSSFrameConstructor/PresShell
-          // knows we're messing with the frame tree.
-          nsCOMPtr<nsIDocument> document = GetDocument();
-          if (document) {
-            docObserver->BeginUpdate(document, UPDATE_CONTENT_MODEL);
-          }
+  if (NS_WARN_IF(!aContent)) {
+    return;
+  }
 
-          // XXX This is wrong (bug 439258).  Once it's fixed, the NS_WARNING
-          // in RestyleManager::RestyleForRemove should be changed back
-          // to an assertion.
-          docObserver->ContentRemoved(content->GetComposedDoc(),
-                                      aParentContent, content, -1,
-                                      content->GetPreviousSibling());
-          if (document) {
-            docObserver->EndUpdate(document, UPDATE_CONTENT_MODEL);
-          }
-        }
+  nsAutoScriptBlocker scriptBlocker;
+  // Need to check whether aShell has been destroyed (but not yet deleted).
+  // In that case presContext->GetPresShell() returns nullptr.
+  // See bug 338129.
+  if (aContent->IsInComposedDoc() && aShell && aShell->GetPresContext() &&
+      aShell->GetPresContext()->GetPresShell() == aShell) {
+    nsCOMPtr<nsIDocumentObserver> docObserver = do_QueryInterface(aShell);
+    if (docObserver) {
+      // Call BeginUpdate() so that the nsCSSFrameConstructor/PresShell
+      // knows we're messing with the frame tree.
+      nsCOMPtr<nsIDocument> document = GetDocument();
+      if (document) {
+        docObserver->BeginUpdate(document, UPDATE_CONTENT_MODEL);
       }
-      content->UnbindFromTree();
+
+      // XXX This is wrong (bug 439258).  Once it's fixed, the NS_WARNING
+      // in RestyleManager::RestyleForRemove should be changed back
+      // to an assertion.
+      docObserver->ContentRemoved(aContent->GetComposedDoc(),
+                                  aParentContent, aContent, -1,
+                                  aContent->GetPreviousSibling());
+      if (document) {
+        docObserver->EndUpdate(document, UPDATE_CONTENT_MODEL);
+      }
     }
   }
+  aContent->UnbindFromTree();
 }
 
 // The following method is mostly called by a selection listener. When a
@@ -569,10 +568,10 @@ HTMLEditor::GetPositionAndDimensions(nsIDOMElement* aElement,
 void
 HTMLEditor::SetAnonymousElementPosition(int32_t aX,
                                         int32_t aY,
-                                        nsIDOMElement* aElement)
+                                        Element* aElement)
 {
-  mCSSEditUtils->SetCSSPropertyPixels(aElement, NS_LITERAL_STRING("left"), aX);
-  mCSSEditUtils->SetCSSPropertyPixels(aElement, NS_LITERAL_STRING("top"), aY);
+  mCSSEditUtils->SetCSSPropertyPixels(*aElement, *nsGkAtoms::left, aX);
+  mCSSEditUtils->SetCSSPropertyPixels(*aElement, *nsGkAtoms::top, aY);
 }
 
 } // namespace mozilla
