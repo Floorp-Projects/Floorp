@@ -336,7 +336,7 @@ var isValidURI = exports.isValidURI = function (uri) {
 }
 
 function isLocalURL(url) {
-  if (String.indexOf(url, './') === 0)
+  if (String(url).indexOf('./') === 0)
     return true;
 
   try {
