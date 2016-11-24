@@ -2741,8 +2741,8 @@ static const nsCSSPropertyID gBorderBottomSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static_assert(NS_SIDE_TOP == 0 && NS_SIDE_RIGHT == 1 &&
-              NS_SIDE_BOTTOM == 2 && NS_SIDE_LEFT == 3,
+static_assert(eSideTop == 0 && eSideRight == 1 &&
+              eSideBottom == 2 && eSideLeft == 3,
               "box side constants not top/right/bottom/left == 0/1/2/3");
 static const nsCSSPropertyID gBorderColorSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.

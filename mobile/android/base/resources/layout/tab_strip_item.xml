@@ -10,4 +10,7 @@
     android:layout_width="@dimen/tablet_tab_strip_item_width"
     android:layout_height="match_parent"
     android:paddingLeft="28dp"
-    android:paddingRight="12dp"/>
+    android:paddingStart="28dp"
+    android:paddingRight="12dp"
+    android:paddingEnd="12dp"
+    />

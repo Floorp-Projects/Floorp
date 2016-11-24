@@ -91,6 +91,7 @@ BrowserAction.prototype = {
         view.setAttribute("flex", "1");
 
         document.getElementById("PanelUI-multiView").appendChild(view);
+        document.addEventListener("popupshowing", this);
       },
 
       onDestroyed: document => {
@@ -100,6 +101,7 @@ BrowserAction.prototype = {
           CustomizableUI.hidePanelForNode(view);
           view.remove();
         }
+        document.removeEventListener("popupshowing", this);
       },
 
       onCreated: node => {
@@ -225,6 +227,20 @@ BrowserAction.prototype = {
               this.clearPopup();
             }
           }
+        }
+        break;
+
+      case "popupshowing":
+        const menu = event.target;
+        const trigger = menu.triggerNode;
+        const node = window.document.getElementById(this.id);
+
+        if (menu.localName === "menupopup" && node && isAncestorOrSelf(node, trigger)) {
+          global.actionContextMenu({
+            extension: this.extension,
+            onBrowserAction: true,
+            menu: menu,
+          });
         }
         break;
     }

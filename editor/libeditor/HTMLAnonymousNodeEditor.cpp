@@ -161,51 +161,56 @@ ElementDeletionObserver::NodeWillBeDestroyed(const nsINode* aNode)
   NS_RELEASE_THIS();
 }
 
-// Returns in *aReturn an anonymous nsDOMElement of type aTag,
-// child of aParentNode. If aIsCreatedHidden is true, the class
-// "hidden" is added to the created element. If aAnonClass is not
-// the empty string, it becomes the value of the attribute "_moz_anonclass"
-nsresult
-HTMLEditor::CreateAnonymousElement(const nsAString& aTag,
+already_AddRefed<Element>
+HTMLEditor::CreateAnonymousElement(nsIAtom* aTag,
                                    nsIDOMNode* aParentNode,
                                    const nsAString& aAnonClass,
-                                   bool aIsCreatedHidden,
-                                   nsIDOMElement** aReturn)
+                                   bool aIsCreatedHidden)
 {
-  NS_ENSURE_ARG_POINTER(aParentNode);
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nullptr;
+  if (NS_WARN_IF(!aParentNode)) {
+    return nullptr;
+  }
 
-  nsCOMPtr<nsIContent> parentContent( do_QueryInterface(aParentNode) );
-  NS_ENSURE_TRUE(parentContent, NS_OK);
+  nsCOMPtr<nsIContent> parentContent = do_QueryInterface(aParentNode);
+  if (NS_WARN_IF(!parentContent)) {
+    return nullptr;
+  }
 
   nsCOMPtr<nsIDocument> doc = GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!doc)) {
+    return nullptr;
+  }
 
   // Get the pres shell
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
-  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
+  if (NS_WARN_IF(!ps)) {
+    return nullptr;
+  }
 
   // Create a new node through the element factory
-  nsCOMPtr<nsIAtom> tagAtom = NS_Atomize(aTag);
-  nsCOMPtr<Element> newContent = CreateHTMLContent(tagAtom);
-  NS_ENSURE_STATE(newContent);
-
-  nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newContent);
-  NS_ENSURE_TRUE(newElement, NS_ERROR_FAILURE);
+  RefPtr<Element> newContent = CreateHTMLContent(aTag);
+  if (NS_WARN_IF(!newContent)) {
+    return nullptr;
+  }
 
   // add the "hidden" class if needed
   if (aIsCreatedHidden) {
-    nsresult rv = newElement->SetAttribute(NS_LITERAL_STRING("class"),
-                                           NS_LITERAL_STRING("hidden"));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv =
+      newContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                          NS_LITERAL_STRING("hidden"), true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
   }
 
   // add an _moz_anonclass attribute if needed
   if (!aAnonClass.IsEmpty()) {
-    nsresult rv = newElement->SetAttribute(NS_LITERAL_STRING("_moz_anonclass"),
-                                           aAnonClass);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv =
+      newContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_anonclass,
+                          aAnonClass, true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
   }
 
   {
@@ -217,7 +222,7 @@ HTMLEditor::CreateAnonymousElement(const nsAString& aTag,
       newContent->BindToTree(doc, parentContent, parentContent, true);
     if (NS_FAILED(rv)) {
       newContent->UnbindFromTree();
-      return rv;
+      return nullptr;
     }
   }
 
@@ -239,8 +244,7 @@ HTMLEditor::CreateAnonymousElement(const nsAString& aTag,
   // display the element
   ps->RecreateFramesFor(newContent);
 
-  newElement.forget(aReturn);
-  return NS_OK;
+  return newContent.forget();
 }
 
 // Removes event listener and calls DeleteRefToAnonymousNode.
@@ -256,12 +260,12 @@ HTMLEditor::RemoveListenerAndDeleteRef(const nsAString& aEvent,
   if (evtTarget) {
     evtTarget->RemoveEventListener(aEvent, aListener, aUseCapture);
   }
-  DeleteRefToAnonymousNode(static_cast<nsIDOMElement*>(GetAsDOMNode(aElement)), aParentContent, aShell);
+  DeleteRefToAnonymousNode(aElement, aParentContent, aShell);
 }
 
 // Deletes all references to an anonymous element
 void
-HTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
+HTMLEditor::DeleteRefToAnonymousNode(nsIContent* aContent,
                                      nsIContent* aParentContent,
                                      nsIPresShell* aShell)
 {
@@ -269,38 +273,37 @@ HTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
   // node so its references get removed from the frame manager's
   // undisplay map, and its layout frames get destroyed!
 
-  if (aElement) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-    if (content) {
-      nsAutoScriptBlocker scriptBlocker;
-      // Need to check whether aShell has been destroyed (but not yet deleted).
-      // In that case presContext->GetPresShell() returns nullptr.
-      // See bug 338129.
-      if (content->IsInComposedDoc() && aShell && aShell->GetPresContext() &&
-          aShell->GetPresContext()->GetPresShell() == aShell) {
-        nsCOMPtr<nsIDocumentObserver> docObserver = do_QueryInterface(aShell);
-        if (docObserver) {
-          // Call BeginUpdate() so that the nsCSSFrameConstructor/PresShell
-          // knows we're messing with the frame tree.
-          nsCOMPtr<nsIDocument> document = GetDocument();
-          if (document) {
-            docObserver->BeginUpdate(document, UPDATE_CONTENT_MODEL);
-          }
+  if (NS_WARN_IF(!aContent)) {
+    return;
+  }
 
-          // XXX This is wrong (bug 439258).  Once it's fixed, the NS_WARNING
-          // in RestyleManager::RestyleForRemove should be changed back
-          // to an assertion.
-          docObserver->ContentRemoved(content->GetComposedDoc(),
-                                      aParentContent, content, -1,
-                                      content->GetPreviousSibling());
-          if (document) {
-            docObserver->EndUpdate(document, UPDATE_CONTENT_MODEL);
-          }
-        }
+  nsAutoScriptBlocker scriptBlocker;
+  // Need to check whether aShell has been destroyed (but not yet deleted).
+  // In that case presContext->GetPresShell() returns nullptr.
+  // See bug 338129.
+  if (aContent->IsInComposedDoc() && aShell && aShell->GetPresContext() &&
+      aShell->GetPresContext()->GetPresShell() == aShell) {
+    nsCOMPtr<nsIDocumentObserver> docObserver = do_QueryInterface(aShell);
+    if (docObserver) {
+      // Call BeginUpdate() so that the nsCSSFrameConstructor/PresShell
+      // knows we're messing with the frame tree.
+      nsCOMPtr<nsIDocument> document = GetDocument();
+      if (document) {
+        docObserver->BeginUpdate(document, UPDATE_CONTENT_MODEL);
       }
-      content->UnbindFromTree();
+
+      // XXX This is wrong (bug 439258).  Once it's fixed, the NS_WARNING
+      // in RestyleManager::RestyleForRemove should be changed back
+      // to an assertion.
+      docObserver->ContentRemoved(aContent->GetComposedDoc(),
+                                  aParentContent, aContent, -1,
+                                  aContent->GetPreviousSibling());
+      if (document) {
+        docObserver->EndUpdate(document, UPDATE_CONTENT_MODEL);
+      }
     }
   }
+  aContent->UnbindFromTree();
 }
 
 // The following method is mostly called by a selection listener. When a
@@ -539,10 +542,10 @@ HTMLEditor::GetPositionAndDimensions(nsIDOMElement* aElement,
 void
 HTMLEditor::SetAnonymousElementPosition(int32_t aX,
                                         int32_t aY,
-                                        nsIDOMElement* aElement)
+                                        Element* aElement)
 {
-  mCSSEditUtils->SetCSSPropertyPixels(aElement, NS_LITERAL_STRING("left"), aX);
-  mCSSEditUtils->SetCSSPropertyPixels(aElement, NS_LITERAL_STRING("top"), aY);
+  mCSSEditUtils->SetCSSPropertyPixels(*aElement, *nsGkAtoms::left, aX);
+  mCSSEditUtils->SetCSSPropertyPixels(*aElement, *nsGkAtoms::top, aY);
 }
 
 } // namespace mozilla

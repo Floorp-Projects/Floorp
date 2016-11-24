@@ -11,8 +11,7 @@ namespace mozilla {
 
 MediaDecoderReaderWrapper::MediaDecoderReaderWrapper(AbstractThread* aOwnerThread,
                                                      MediaDecoderReader* aReader)
-  : mForceZeroStartTime(aReader->ForceZeroStartTime())
-  , mOwnerThread(aOwnerThread)
+  : mOwnerThread(aOwnerThread)
   , mReader(aReader)
 {}
 
@@ -180,15 +179,6 @@ MediaDecoderReaderWrapper::ReleaseResources()
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseResources);
-  mReader->OwnerThread()->Dispatch(r.forget());
-}
-
-void
-MediaDecoderReaderWrapper::SetIdle()
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod(mReader, &MediaDecoderReader::SetIdle);
   mReader->OwnerThread()->Dispatch(r.forget());
 }
 
