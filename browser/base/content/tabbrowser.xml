@@ -4612,7 +4612,11 @@
           } else {
             label = tab.getAttribute("label") +
                       (this.AppConstants.E10S_TESTING_ONLY && tab.linkedBrowser && tab.linkedBrowser.isRemoteBrowser ? " - e10s" : "");
+            if (tab.userContextId) {
+              label = this.mStringBundle.getFormattedString("tabs.containers.tooltip", [label, ContextualIdentityService.getUserContextLabel(tab.userContextId)]);
+            }
           }
+
           event.target.setAttribute("label", label);
         ]]></body>
       </method>
