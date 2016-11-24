@@ -33,6 +33,8 @@ using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientatio
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::LayerMargin from "Units.h";
 using mozilla::LayerPoint from "Units.h";
+using mozilla::LayerCoord from "Units.h";
+using mozilla::LayerSize from "Units.h";
 using mozilla::LayerRect from "Units.h";
 using mozilla::LayerIntRegion from "Units.h";
 using mozilla::ParentLayerIntRect from "Units.h";
@@ -46,6 +48,9 @@ using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::MaybeLayerClip from "FrameMetrics.h";
 using mozilla::gfx::Glyph from "Layers.h";
+using mozilla::layers::BorderColors from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::BorderCorners from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::BorderWidths from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -63,6 +68,7 @@ struct OpCreateContainerLayer  { PLayer layer; };
 struct OpCreateImageLayer      { PLayer layer; };
 struct OpCreateColorLayer      { PLayer layer; };
 struct OpCreateTextLayer       { PLayer layer; };
+struct OpCreateBorderLayer       { PLayer layer; };
 struct OpCreateCanvasLayer     { PLayer layer; };
 struct OpCreateRefLayer        { PLayer layer; };
 
@@ -276,6 +282,12 @@ struct RefLayerAttributes {
   EventRegionsOverride eventRegionsOverride;
 };
 struct ImageLayerAttributes     { SamplingFilter samplingFilter; IntSize scaleToSize; ScaleMode scaleMode; };
+struct BorderLayerAttributes {
+  LayerRect rect;
+  BorderColors colors;
+  BorderCorners corners;
+  BorderWidths widths;
+};
 
 union SpecificLayerAttributes {
   null_t;
@@ -286,6 +298,7 @@ union SpecificLayerAttributes {
   TextLayerAttributes;
   RefLayerAttributes;
   ImageLayerAttributes;
+  BorderLayerAttributes;
 };
 
 struct LayerAttributes {
@@ -453,6 +466,7 @@ union Edit {
   OpCreateImageLayer;
   OpCreateColorLayer;
   OpCreateTextLayer;
+  OpCreateBorderLayer;
   OpCreateCanvasLayer;
   OpCreateRefLayer;
 
