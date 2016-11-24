@@ -1010,6 +1010,14 @@ Assembler::ConditionWithoutEqual(Condition cond)
         MOZ_CRASH("unexpected condition");
     }
 }
+
+Assembler::DoubleCondition
+Assembler::InvertCondition(DoubleCondition cond)
+{
+    const uint32_t ConditionInversionBit = 0x10000000;
+    return DoubleCondition(ConditionInversionBit ^ cond);
+}
+
 Imm8::TwoImm8mData
 Imm8::EncodeTwoImms(uint32_t imm)
 {
