@@ -34,8 +34,12 @@
 
 #define NO_REMOTE_TYPE ""
 
-// This must match the one in E10SUtils.jsm.
+// These must match the similar ones in E10SUtils.jsm.
 #define DEFAULT_REMOTE_TYPE "web"
+#define FILE_REMOTE_TYPE "file"
+
+// This must start with the DEFAULT_REMOTE_TYPE above.
+#define LARGE_ALLOCATION_REMOTE_TYPE "webLargeAllocation"
 
 class nsConsoleService;
 class nsICycleCollectorLogSink;
@@ -572,8 +576,7 @@ protected:
   void OnCompositorUnexpectedShutdown() override;
 
 private:
-  static nsTArray<ContentParent*>* sBrowserContentParents;
-  static nsTArray<ContentParent*>* sLargeAllocationContentParents;
+  static nsClassHashtable<nsStringHashKey, nsTArray<ContentParent*>>* sBrowserContentParents;
   static nsTArray<ContentParent*>* sPrivateContent;
   static StaticAutoPtr<LinkedList<ContentParent> > sContentParents;
 
@@ -645,6 +648,12 @@ private:
   // otherwise.  If you pass a FOREGROUND* priority here, it's (hopefully)
   // unlikely that the process will be killed after this point.
   bool SetPriorityAndCheckIsAlive(hal::ProcessPriority aPriority);
+
+  /**
+   * Decide whether the process should be kept alive even when it would normally
+   * be shut down, for example when all its tabs are closed.
+   */
+  bool ShouldKeepProcessAlive() const;
 
   /**
    * Mark this ContentParent as dead for the purposes of Get*().
@@ -1159,7 +1168,6 @@ private:
   nsRefPtrHashtable<nsIDHashKey, GetFilesHelper> mGetFilesPendingRequests;
 
   nsTArray<nsCString> mBlobURLs;
-  bool mLargeAllocationProcess;
 };
 
 } // namespace dom
