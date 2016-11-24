@@ -88,17 +88,17 @@ function checkSelectElement(aElement)
   checkPseudoClass(aElement, false);
 
   aElement.blur();
-  checkPseudoClass(aElement, true);
+  checkPseudoClass(aElement, !aElement.multiple);
 
   // Focusing while :-moz-ui-invalid applies,
   // the pseudo-class should apply while changing selection if appropriate.
   aElement.focus();
-  checkPseudoClass(aElement, true);
+  checkPseudoClass(aElement, !aElement.multiple);
 
   aElement.selectedIndex = 1;
   checkPseudoClass(aElement, false);
   aElement.selectedIndex = 0;
-  checkPseudoClass(aElement, true);
+  checkPseudoClass(aElement, !aElement.multiple);
 }
 
 checkElement(document.getElementsByTagName('input')[0]);

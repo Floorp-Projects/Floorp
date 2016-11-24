@@ -121,6 +121,10 @@ function checkSelectElement(aElement)
 
   aElement.blur();
   aElement.required = true;
+  // select set with multiple is only invalid if no option is selected
+  if (aElement.multiple) {
+    aElement.selectedIndex = -1;
+  }
   checkPseudoClass(aElement, false);
 
   // Focusing while :-moz-ui-invalid applies,
@@ -131,7 +135,7 @@ function checkSelectElement(aElement)
   aElement.selectedIndex = 1;
   checkPseudoClass(aElement, true);
   aElement.selectedIndex = 0;
-  checkPseudoClass(aElement, false);
+  checkPseudoClass(aElement, aElement.multiple);
 }
 
 checkElement(document.getElementsByTagName('input')[0]);
