@@ -14,6 +14,7 @@ EXPORTS += [
 ]
 
 LOCAL_INCLUDES += [
+    '/dom/base',
     '/gfx/thebes',
 ]
 
