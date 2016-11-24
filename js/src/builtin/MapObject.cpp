@@ -64,13 +64,21 @@ HashableValue::setValue(JSContext* cx, HandleValue v)
     return true;
 }
 
-HashNumber
-HashableValue::hash() const
+static HashNumber
+HashValue(const Value& v)
 {
     // HashableValue::setValue normalizes values so that the SameValue relation
     // on HashableValues is the same as the == relationship on
     // value.data.asBits.
-    return value.asRawBits();
+    if (v.isString())
+        return v.toString()->asAtom().hash();
+    return v.asRawBits();
+}
+
+HashNumber
+HashableValue::hash() const
+{
+    return HashValue(value);
 }
 
 bool
@@ -357,7 +365,7 @@ MapObject::trace(JSTracer* trc, JSObject* obj)
 
 struct js::UnbarrieredHashPolicy {
     typedef Value Lookup;
-    static HashNumber hash(const Lookup& v) { return v.asRawBits(); }
+    static HashNumber hash(const Lookup& v) { return HashValue(v); }
     static bool match(const Value& k, const Lookup& l) { return k == l; }
     static bool isEmpty(const Value& v) { return v.isMagic(JS_HASH_KEY_EMPTY); }
     static void makeEmpty(Value* vp) { vp->setMagic(JS_HASH_KEY_EMPTY); }
