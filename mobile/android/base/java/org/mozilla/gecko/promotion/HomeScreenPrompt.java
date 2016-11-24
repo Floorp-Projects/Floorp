@@ -125,6 +125,8 @@ public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements Ico
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, TELEMETRY_EXTRA);
 
                 ActivityUtils.goToHomeScreen(HomeScreenPrompt.this);
+
+                finish();
             }
         });
     }
