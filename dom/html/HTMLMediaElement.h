@@ -1281,9 +1281,6 @@ protected:
   bool IsTabActivated() const;
 
   bool IsAudible() const;
-  bool HaveFailedWithSourceNotSupportedError() const;
-
-  void OpenUnsupportedMediaWithExtenalAppIfNeeded();
 
   // It's used for fennec only, send the notification when the user resumes the
   // media which was paused by media control.
@@ -1293,6 +1290,10 @@ protected:
   using nsGenericHTMLElement::DispatchEvent;
   // For nsAsyncEventRunner.
   nsresult DispatchEvent(const nsAString& aName);
+
+  // Open unsupported types media with the external app when the media element
+  // triggers play() after loaded fail. eg. preload the data before start play.
+  void OpenUnsupportedMediaWithExternalAppIfNeeded() const;
 
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.

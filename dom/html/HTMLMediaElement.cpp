@@ -715,24 +715,36 @@ public:
     }
 
     mError = new MediaError(mOwner, aErrorCode, aErrorDetails);
-    mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("error"));
-    if (mOwner->ReadyState() == HAVE_NOTHING &&
-        aErrorCode == MEDIA_ERR_ABORTED) {
-      // https://html.spec.whatwg.org/multipage/embedded-content.html#media-data-processing-steps-list
-      // "If the media data fetching process is aborted by the user"
-      mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
-      mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
-      mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
-    } else if (aErrorCode == MEDIA_ERR_SRC_NOT_SUPPORTED) {
+    if (CanOwnerPlayUnsupportedTypeMedia()) {
       mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
+      OpenUnsupportedMediaForOwner();
     } else {
-      mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+      mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("error"));
+      if (mOwner->ReadyState() == HAVE_NOTHING &&
+          aErrorCode == MEDIA_ERR_ABORTED) {
+        // https://html.spec.whatwg.org/multipage/embedded-content.html#media-data-processing-steps-list
+        // "If the media data fetching process is aborted by the user"
+        mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("abort"));
+        mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
+        mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("emptied"));
+      } else if (aErrorCode == MEDIA_ERR_SRC_NOT_SUPPORTED) {
+        mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE);
+      } else {
+        mOwner->ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
+      }
     }
   }
 
   void ResetError()
   {
     mError = nullptr;
+  }
+
+  void NotifyPlayStarted()
+  {
+    if (CanOwnerPlayUnsupportedTypeMedia()) {
+      OpenUnsupportedMediaForOwner();
+    }
   }
 
   RefPtr<MediaError> mError;
@@ -744,6 +756,42 @@ private:
             aErrorCode == MEDIA_ERR_NETWORK ||
             aErrorCode == MEDIA_ERR_ABORTED ||
             aErrorCode == MEDIA_ERR_SRC_NOT_SUPPORTED);
+  }
+
+  bool CanOwnerPlayUnsupportedTypeMedia() const
+  {
+#if defined(MOZ_WIDGET_ANDROID)
+    // On Fennec, we will user an external app to open unsupported media types.
+    if (!Preferences::GetBool("media.openUnsupportedTypeWithExternalApp")) {
+      return false;
+    }
+
+    if (!mError) {
+      return false;
+    }
+
+    uint16_t errorCode = mError->Code();
+    if (errorCode != MEDIA_ERR_SRC_NOT_SUPPORTED) {
+      return false;
+    }
+
+    // If media doesn't start playing, we don't need to open it.
+    if (mOwner->Paused()) {
+      return false;
+    }
+
+    return true;
+#endif
+    return false;
+  }
+
+  void OpenUnsupportedMediaForOwner() const
+  {
+    nsContentUtils::DispatchTrustedEvent(mOwner->OwnerDoc(),
+                                         static_cast<nsIContent*>(mOwner),
+                                         NS_LITERAL_STRING("OpenMediaWithExternalApp"),
+                                         true,
+                                         true);
   }
 
   // Media elememt's life cycle would be longer than error sink, so we use the
@@ -3100,6 +3148,8 @@ HTMLMediaElement::Play(ErrorResult& aRv)
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
+
+  OpenUnsupportedMediaWithExternalAppIfNeeded();
 }
 
 nsresult
@@ -3146,10 +3196,6 @@ HTMLMediaElement::PlayInternal()
   UpdateSrcMediaStreamPlaying();
   UpdateAudioChannelPlayingState();
 
-  // The check here is to handle the case that the media element starts playing
-  // after it loaded fail. eg. preload the data before playing.
-  OpenUnsupportedMediaWithExtenalAppIfNeeded();
-
   // We should check audio channel playing state before dispatching any events,
   // because we don't want to dispatch events for blocked media. For blocked
   // media, the event would be pending until media is resumed.
@@ -3192,7 +3238,13 @@ NS_IMETHODIMP HTMLMediaElement::Play()
     return NS_OK;
   }
 
-  return PlayInternal();
+  nsresult rv = PlayInternal();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  OpenUnsupportedMediaWithExternalAppIfNeeded();
+  return NS_OK;
 }
 
 HTMLMediaElement::WakeLockBoolWrapper&
@@ -5689,6 +5741,14 @@ HTMLMediaElement::GetError() const
   return mErrorSink->mError;
 }
 
+void
+HTMLMediaElement::OpenUnsupportedMediaWithExternalAppIfNeeded() const
+{
+  // Error sink would check the error state and other conditions to decide
+  // whether we can open unsupported type media with an external app.
+  mErrorSink->NotifyPlayStarted();
+}
+
 void HTMLMediaElement::GetCurrentSpec(nsCString& aString)
 {
   if (mLoadingSrc) {
@@ -6596,41 +6656,6 @@ HTMLMediaElement::MaybeNotifyMediaResumed(SuspendTypes aSuspend)
                                      "media-playback-resumed",
                                      u"active");
   }));
-}
-
-bool
-HTMLMediaElement::HaveFailedWithSourceNotSupportedError() const
-{
-  const MediaError* error = mErrorSink->mError;
-  if (!error) {
-    return false;
-  }
-
-  uint16_t errorCode = error->Code();
-  return (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE &&
-          errorCode == MEDIA_ERR_SRC_NOT_SUPPORTED);
-}
-
-void
-HTMLMediaElement::OpenUnsupportedMediaWithExtenalAppIfNeeded()
-{
-  if (!Preferences::GetBool("media.openUnsupportedTypeWithExternalApp")) {
-    return;
-  }
-
-  if (!HaveFailedWithSourceNotSupportedError()) {
-    return;
-  }
-
-  // If media doesn't start playing, we don't need to open it.
-  if (mPaused) {
-    return;
-  }
-
-  nsContentUtils::DispatchTrustedEvent(OwnerDoc(), static_cast<nsIContent*>(this),
-                                       NS_LITERAL_STRING("OpenMediaWithExternalApp"),
-                                       true,
-                                       true);
 }
 
 bool
