@@ -4059,14 +4059,16 @@
     "n_buckets": 10,
     "description": "Time spent per classifier lookup (ms)"
   },
-  "URLCLASSIFIER_CL_UPDATE_TIME": {
+  "URLCLASSIFIER_CL_KEYED_UPDATE_TIME": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
+    "keyed": true,
     "kind": "exponential",
     "low": 20,
-    "high": 15000,
-    "n_buckets": 15,
-    "description": "Time spent per classifier update (ms)"
+    "high": 120000,
+    "n_buckets": 30,
+    "bug_numbers": [1315893],
+    "description": "Time spent per classifier update (ms), keyed by the name of the provider."
   },
   "URLCLASSIFIER_PS_FILELOAD_TIME": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],

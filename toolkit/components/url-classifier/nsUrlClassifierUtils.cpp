@@ -288,6 +288,22 @@ nsUrlClassifierUtils::GetProvider(const nsACString& aTableName,
 }
 
 NS_IMETHODIMP
+nsUrlClassifierUtils::GetTelemetryProvider(const nsACString& aTableName,
+                                  nsACString& aProvider)
+{
+  GetProvider(aTableName, aProvider);
+  // Filter out build-in providers: mozilla, google, google4
+  // Empty provider is filtered as "other"
+  if (!NS_LITERAL_CSTRING("mozilla").Equals(aProvider) &&
+      !NS_LITERAL_CSTRING("google").Equals(aProvider) &&
+      !NS_LITERAL_CSTRING("google4").Equals(aProvider)) {
+    aProvider.Assign(NS_LITERAL_CSTRING("other"));
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsUrlClassifierUtils::GetProtocolVersion(const nsACString& aProvider,
                                          nsACString& aVersion)
 {
