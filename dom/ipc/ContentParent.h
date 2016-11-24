@@ -40,6 +40,7 @@
 class nsConsoleService;
 class nsICycleCollectorLogSink;
 class nsIDumpGCAndCCLogsCallback;
+class nsITabParent;
 class nsITimer;
 class ParentIdleListener;
 class nsIWidget;
@@ -484,23 +485,36 @@ public:
 
   void ForkNewProcess(bool aBlocking);
 
-  virtual mozilla::ipc::IPCResult RecvCreateWindow(PBrowserParent* aThisTabParent,
-                                                   PBrowserParent* aOpener,
-                                                   layout::PRenderFrameParent* aRenderFrame,
-                                                   const uint32_t& aChromeFlags,
-                                                   const bool& aCalledFromJS,
-                                                   const bool& aPositionSpecified,
-                                                   const bool& aSizeSpecified,
-                                                   const nsCString& aFeatures,
-                                                   const nsCString& aBaseURI,
-                                                   const DocShellOriginAttributes& aOpenerOriginAttributes,
-                                                   const float& aFullZoom,
-                                                   nsresult* aResult,
-                                                   bool* aWindowIsNew,
-                                                   InfallibleTArray<FrameScriptInfo>* aFrameScripts,
-                                                   nsCString* aURLToLoad,
-                                                   layers::TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                                   uint64_t* aLayersId) override;
+  virtual mozilla::ipc::IPCResult
+  RecvCreateWindow(PBrowserParent* aThisTabParent,
+                   PBrowserParent* aNewTab,
+                   layout::PRenderFrameParent* aRenderFrame,
+                   const uint32_t& aChromeFlags,
+                   const bool& aCalledFromJS,
+                   const bool& aPositionSpecified,
+                   const bool& aSizeSpecified,
+                   const nsCString& aFeatures,
+                   const nsCString& aBaseURI,
+                   const DocShellOriginAttributes& aOpenerOriginAttributes,
+                   const float& aFullZoom,
+                   nsresult* aResult,
+                   bool* aWindowIsNew,
+                   InfallibleTArray<FrameScriptInfo>* aFrameScripts,
+                   nsCString* aURLToLoad,
+                   layers::TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                   uint64_t* aLayersId) override;
+
+  virtual mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
+    PBrowserParent* aThisTab,
+    const uint32_t& aChromeFlags,
+    const bool& aCalledFromJS,
+    const bool& aPositionSpecified,
+    const bool& aSizeSpecified,
+    const URIParams& aURIToLoad,
+    const nsCString& aFeatures,
+    const nsCString& aBaseURI,
+    const DocShellOriginAttributes& aOpenerOriginAttributes,
+    const float& aFullZoom) override;
 
   static bool AllocateLayerTreeId(TabParent* aTabParent, uint64_t* aId);
 
@@ -583,6 +597,22 @@ private:
       const ContentParentId& aCpId,
       const bool& aIsForBrowser) override;
   using PContentParent::SendPTestShellConstructor;
+
+  mozilla::ipc::IPCResult
+  CommonCreateWindow(PBrowserParent* aThisTab,
+                     bool aSetOpener,
+                     const uint32_t& aChromeFlags,
+                     const bool& aCalledFromJS,
+                     const bool& aPositionSpecified,
+                     const bool& aSizeSpecified,
+                     nsIURI* aURIToLoad,
+                     const nsCString& aFeatures,
+                     const nsCString& aBaseURI,
+                     const DocShellOriginAttributes& aOpenerOriginAttributes,
+                     const float& aFullZoom,
+                     nsresult& aResult,
+                     nsCOMPtr<nsITabParent>& aNewTabParent,
+                     bool* aWindowIsNew);
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
 
