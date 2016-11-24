@@ -295,7 +295,7 @@ typedef IntSizeTyped<UnknownUnits> IntSize;
 
 template<class units, class F = Float>
 struct SizeTyped :
-  public BaseSize< F, SizeTyped<units> >,
+  public BaseSize< F, SizeTyped<units, F> >,
   public units {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
