@@ -6,6 +6,7 @@
 package org.mozilla.gecko.util;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -55,5 +56,18 @@ public class ActivityUtils {
 
         final int flags = window.getAttributes().flags;
         return ((flags & WindowManager.LayoutParams.FLAG_FULLSCREEN) != 0);
+    }
+
+    /**
+     * Finish this activity and launch the default home screen activity.
+     */
+    public static void goToHomeScreen(Activity activity) {
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+
+        intent.addCategory(Intent.CATEGORY_HOME);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        activity.startActivity(intent);
+
+        activity.finish();
     }
 }
