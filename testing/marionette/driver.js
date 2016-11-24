@@ -108,37 +108,29 @@ this.GeckoDriver = function(appName, server) {
   this.browsers = {};
   // points to current browser
   this.curBrowser = null;
+  this.context = Context.CONTENT;
+
+  this.scriptTimeout = 30000;  // 30 seconds
+  this.searchTimeout = 0;
+  this.pageTimeout = 300000;  // five minutes
+
+  this.timer = null;
+  this.inactivityTimer = null;
+  this.marionetteLog = new logging.ContentLogger();
   // topmost chrome frame
   this.mainFrame = null;
   // chrome iframe that currently has focus
   this.curFrame = null;
   this.mainContentFrameId = null;
-  this.mozBrowserClose = null;
+  this.importedScripts = new evaluate.ScriptStorageService([Context.CHROME, Context.CONTENT]);
   this.currentFrameElement = null;
+  this.testName = null;
+  this.mozBrowserClose = null;
+  this.sandboxes = new Sandboxes(() => this.getCurrentWindow());
   // frame ID of the current remote frame, used for mozbrowserclose events
   this.oopFrameId = null;
   this.observing = null;
   this._browserIds = new WeakMap();
-
-  // user-defined timeouts
-  this.scriptTimeout = 30000;  // 30 seconds
-  this.searchTimeout = null;
-  this.pageTimeout = 300000;  // five minutes
-
-  // The curent context decides if commands should affect chrome- or
-  // content space.
-  this.context = Context.CONTENT;
-
-  this.importedScripts = new evaluate.ScriptStorageService(
-      [Context.CHROME, Context.CONTENT]);
-  this.sandboxes = new Sandboxes(() => this.getCurrentWindow());
-  this.actions = new action.Chain();
-
-  this.timer = null;
-  this.inactivityTimer = null;
-
-  this.marionetteLog = new logging.ContentLogger();
-  this.testName = null;
 
   this.sessionCapabilities = {
     // mandated capabilities
