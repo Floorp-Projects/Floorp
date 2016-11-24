@@ -25,7 +25,7 @@ def mock_runner(runner, mock_marionette, monkeypatch):
     to enable testing runner.run_tests().
     """
     runner.driverclass = mock_marionette
-    for attr in ['run_test_set', '_capabilities']:
+    for attr in ['_set_baseurl', 'run_test_set', '_capabilities']:
         setattr(runner, attr, Mock())
     runner._appName = 'fake_app'
     monkeypatch.setattr('marionette.runner.base.mozversion', Mock())
@@ -352,7 +352,7 @@ def test_cleanup_with_manifest(mock_runner, manifest_with_tests, monkeypatch):
     with context:
         mock_runner.run_tests([manifest_with_tests.filepath])
     assert mock_runner.marionette is None
-    assert mock_runner.fixture_servers == {}
+    assert mock_runner.httpd is None
 
 
 def test_reset_test_stats(mock_runner):
