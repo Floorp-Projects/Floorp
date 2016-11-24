@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* import-globals-from head.js */
+
 // Basic test to assert that the storage tree and table corresponding to each
 // item in the storage tree is correctly displayed
 
@@ -21,10 +23,23 @@
 "use strict";
 
 const testCases = [
-  [["cookies", "test1.example.org"],
-   ["c1", "cs2", "c3", "uc1"]],
-  [["cookies", "sectest1.example.org"],
-   ["uc1", "cs2", "sc1"]],
+  [
+    ["cookies", "test1.example.org"],
+    [
+      getCookieId("c1", "test1.example.org", "/browser"),
+      getCookieId("cs2", ".example.org", "/"),
+      getCookieId("c3", "test1.example.org", "/"),
+      getCookieId("uc1", ".example.org", "/")
+    ]
+  ],
+  [
+    ["cookies", "sectest1.example.org"],
+    [
+      getCookieId("uc1", ".example.org", "/"),
+      getCookieId("cs2", ".example.org", "/"),
+      getCookieId("sc1", "sectest1.example.org", "/browser/devtools/client/storage/test/")
+    ]
+  ],
   [["localStorage", "http://test1.example.org"],
    ["ls1", "ls2"]],
   [["localStorage", "http://sectest1.example.org"],

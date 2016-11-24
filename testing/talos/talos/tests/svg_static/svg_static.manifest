@@ -1,0 +1,8 @@
+# gearflowers image
+http://localhost/tests/svg_static/gearflowers.svg
+
+# some generic image compositing tests
+http://localhost/tests/svg_static/composite-scale.svg
+http://localhost/tests/svg_static/composite-scale-opacity.svg
+http://localhost/tests/svg_static/composite-scale-rotate.svg
+http://localhost/tests/svg_static/composite-scale-rotate-opacity.svg

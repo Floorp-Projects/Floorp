@@ -753,9 +753,6 @@ GetWidgetRootStyle(WidgetNodeType aNodeType)
     case MOZ_GTK_MENUITEM:
       style = CreateStyleForWidget(gtk_menu_item_new(), MOZ_GTK_MENUPOPUP);
       break;
-    case MOZ_GTK_IMAGEMENUITEM:
-      style = CreateStyleForWidget(gtk_image_menu_item_new(), MOZ_GTK_MENUPOPUP);
-      break;
     case MOZ_GTK_CHECKMENUITEM:
       style = CreateStyleForWidget(gtk_check_menu_item_new(), MOZ_GTK_MENUPOPUP);
       break;

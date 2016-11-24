@@ -18,18 +18,18 @@ from contextlib import contextmanager
 from decorators import do_process_check
 from keys import Keys
 
-import geckoinstance
 import errors
+import geckoinstance
 import transport
+from timeout import Timeouts
+
 
 WEBELEMENT_KEY = "ELEMENT"
 W3C_WEBELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
 
 
 class HTMLElement(object):
-    """
-    Represents a DOM Element.
-    """
+    """Represents a DOM Element."""
 
     def __init__(self, marionette, id):
         self.marionette = marionette
@@ -538,27 +538,36 @@ class Alert(object):
 class Marionette(object):
     """Represents a Marionette connection to a browser or device."""
 
-    CONTEXT_CHROME = 'chrome'  # non-browser content: windows, dialogs, etc.
-    CONTEXT_CONTENT = 'content'  # browser content: iframes, divs, etc.
+    CONTEXT_CHROME = "chrome"  # non-browser content: windows, dialogs, etc.
+    CONTEXT_CONTENT = "content"  # browser content: iframes, divs, etc.
     DEFAULT_SOCKET_TIMEOUT = 60
     DEFAULT_STARTUP_TIMEOUT = 120
     DEFAULT_SHUTDOWN_TIMEOUT = 65  # Firefox will kill hanging threads after 60s
 
-    def __init__(self, host='localhost', port=2828, app=None, bin=None,
-                 baseurl=None, timeout=None, socket_timeout=DEFAULT_SOCKET_TIMEOUT,
+    def __init__(self, host="localhost", port=2828, app=None, bin=None,
+                 baseurl=None, socket_timeout=DEFAULT_SOCKET_TIMEOUT,
                  startup_timeout=None, **instance_args):
-        """
-        :param host: address for Marionette connection
-        :param port: integer port for Marionette connection
-        :param baseurl: where to look for files served from Marionette's www directory
-        :param startup_timeout: seconds to wait for a connection with binary
-        :param timeout: time to wait for page load, scripts, search
-        :param socket_timeout: timeout for Marionette socket operations
-        :param bin: path to app binary; if any truthy value is given this will
-            attempt to start a gecko instance with the specified `app`
-        :param app: type of instance_class to use for managing app instance.
-            See marionette_driver.geckoinstance
-        :param instance_args: args to pass to instance_class
+        """Construct a holder for the Marionette connection.
+
+        Remember to call ``start_session`` in order to initiate the
+        connection and start a Marionette session.
+
+        :param host: Host where the Marionette server listens.
+            Defaults to localhost.
+        :param port: Port where the Marionette server listens.
+            Defaults to port 2828.
+        :param baseurl: Where to look for files served from Marionette's
+            www directory.
+        :param socket_timeout: Timeout for Marionette socket operations.
+        :param startup_timeout: Seconds to wait for a connection with
+            binary.
+        :param bin: Path to browser binary.  If any truthy value is given
+            this will attempt to start a Gecko instance with the specified
+            `app`.
+        :param app: Type of ``instance_class`` to use for managing app
+            instance. See ``marionette_driver.geckoinstance``.
+        :param instance_args: Arguments to pass to ``instance_class``.
+
         """
         self.host = host
         self.port = self.local_port = int(port)
@@ -570,7 +579,6 @@ class Marionette(object):
         self.chrome_window = None
         self.baseurl = baseurl
         self._test_name = None
-        self.timeout = timeout
         self.socket_timeout = socket_timeout
         self.crashed = 0
 
@@ -579,6 +587,8 @@ class Marionette(object):
             self.instance = self._create_instance(app, instance_args)
             self.instance.start()
             self.raise_for_port(timeout=startup_timeout)
+
+        self.timeout = Timeouts(self)
 
     def _create_instance(self, app, instance_args):
         if not Marionette.is_port_available(self.port, host=self.host):
@@ -761,23 +771,6 @@ class Marionette(object):
             stacktrace = obj["stacktrace"]
 
         raise errors.lookup(error)(message, stacktrace=stacktrace)
-
-    def reset_timeouts(self):
-        """Resets timeouts to their defaults to the `self.timeout`
-        attribute. If unset, only the page load timeout is reset to
-        30 seconds.
-
-        """
-
-        timeout_types = {"search": self.set_search_timeout,
-                         "script": self.set_script_timeout,
-                         "page load": self.set_page_load_timeout}
-
-        if self.timeout is not None:
-            for typ, ms in self.timeout:
-                timeout_types[typ](ms)
-        else:
-            self.set_page_load_timeout(30000)
 
     def check_for_crash(self):
         """Check if the process crashed.
@@ -1127,7 +1120,7 @@ class Marionette(object):
             self.instance.restart(prefs)
             self.raise_for_port()
             self.start_session()
-            self.reset_timeouts()
+            self.timeout.reset()
 
             # Restore the context as used before the restart
             self.set_context(context)
@@ -1176,7 +1169,7 @@ class Marionette(object):
             raise errors.MarionetteException("quit() can only be called "
                                              "on Gecko instances launched by Marionette")
 
-        self.reset_timeouts()
+        self.timeout.reset()
 
         if in_app:
             if callable(callback):
@@ -1243,7 +1236,7 @@ class Marionette(object):
             self.raise_for_port()
 
         self.start_session(session_id=session_id)
-        self.reset_timeouts()
+        self.timeout.reset()
 
         # Restore the context as used before the restart
         self.set_context(context)
@@ -1351,15 +1344,14 @@ class Marionette(object):
             script can run without causing an ScriptTimeoutException to
             be raised
 
+        .. note:: `set_script_timeout` is deprecated, please use
+            `timeout.script` setter.
+
         """
-        try:
-            self._send_message("timeouts", {"script": timeout})
-        except errors.MarionetteException as e:
-            # remove when 52.0a is stable
-            if "Not a Number" in e.message:
-                self._send_message("timeouts", {"type": "script", "ms": timeout})
-            else:
-                raise e
+        warnings.warn(
+            "set_script_timeout is deprecated, please use timeout.script setter",
+            DeprecationWarning)
+        self.timeout.script = timeout / 1000
 
     def set_search_timeout(self, timeout):
         """Sets a timeout for the find methods.
@@ -1374,15 +1366,14 @@ class Marionette(object):
 
         :param timeout: Timeout in milliseconds.
 
+        .. note:: `set_search_timeout` is deprecated, please use
+            `timeout.implicit` setter.
+
         """
-        try:
-            self._send_message("timeouts", {"implicit": timeout})
-        except errors.MarionetteException as e:
-            # remove when 52.0a is stable
-            if "Not a Number" in e.message:
-                self._send_message("timeouts", {"type": "implicit", "ms": timeout})
-            else:
-                raise e
+        warnings.warn(
+            "set_search_timeout is deprecated, please use timeout.implicit setter",
+            DeprecationWarning)
+        self.timeout.implicit = timeout / 1000
 
     def set_page_load_timeout(self, timeout):
         """Sets a timeout for loading pages.
@@ -1393,15 +1384,14 @@ class Marionette(object):
 
         :param timeout: Timeout in milliseconds.
 
+        .. note:: `set_page_load_timeout` is deprecated, please use
+            `timeout.page_load` setter.
+
         """
-        try:
-            self._send_message("timeouts", {"page load": timeout})
-        except errors.MarionetteException as e:
-            # remove when 52.0a is stable
-            if "Not a Number" in e.message:
-                self._send_message("timeouts", {"type": "page load", "ms": timeout})
-            else:
-                raise e
+        warnings.warn(
+            "set_page_load_timeout is deprecated, please use timeout.page_load setter",
+            DeprecationWarning)
+        self.timeout.page_load = timeout / 1000
 
     @property
     def current_window_handle(self):
@@ -1825,7 +1815,7 @@ class Marionette(object):
 
         ::
 
-            marionette.set_script_timeout(10000) # set timeout period of 10 seconds
+            marionette.timeout.script = 10
             result = self.marionette.execute_async_script('''
               // this script waits 5 seconds, and then returns the number 1
               setTimeout(function() {
@@ -1855,7 +1845,7 @@ class Marionette(object):
         An HTMLElement instance may be used to call other methods on the
         element, such as click().  If no element is immediately found, the
         attempt to locate an element will be repeated for up to the amount of
-        time set by set_search_timeout(). If multiple elements match the given
+        time set by ``timeout.implicit``. If multiple elements match the given
         criteria, only the first is returned. If no element matches, a
         NoSuchElementException will be raised.
 
@@ -1882,7 +1872,7 @@ class Marionette(object):
         An HTMLElement instance may be used to call other methods on the
         element, such as click().  If no element is immediately found,
         the attempt to locate an element will be repeated for up to the
-        amount of time set by set_search_timeout().
+        amount of time set by ``timeout.implicit``.
 
         :param method: The method to use to locate the elements; one
             of: "id", "name", "class name", "tag name", "css selector",

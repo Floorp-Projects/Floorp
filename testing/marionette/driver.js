@@ -109,9 +109,11 @@ this.GeckoDriver = function(appName, server) {
   // points to current browser
   this.curBrowser = null;
   this.context = Context.CONTENT;
+
   this.scriptTimeout = 30000;  // 30 seconds
-  this.searchTimeout = null;
+  this.searchTimeout = 0;
   this.pageTimeout = 300000;  // five minutes
+
   this.timer = null;
   this.inactivityTimer = null;
   this.marionetteLog = new logging.ContentLogger();
@@ -129,7 +131,6 @@ this.GeckoDriver = function(appName, server) {
   this.oopFrameId = null;
   this.observing = null;
   this._browserIds = new WeakMap();
-  this.actions = new action.Chain();
 
   this.sessionCapabilities = {
     // mandated capabilities
@@ -162,6 +163,8 @@ this.GeckoDriver = function(appName, server) {
     this.dialog = new modal.Dialog(() => this.curBrowser, winr);
   };
   modal.addHandler(handleDialog);
+
+  this.actions = new action.Chain();
 };
 
 GeckoDriver.prototype.QueryInterface = XPCOMUtils.generateQI([
@@ -1539,6 +1542,14 @@ GeckoDriver.prototype.switchToFrame = function*(cmd, resp) {
   }
 };
 
+GeckoDriver.prototype.getTimeouts = function(cmd, resp) {
+  return {
+    "implicit": this.searchTimeout,
+    "script": this.scriptTimeout,
+    "page load": this.pageTimeout,
+  };
+};
+
 /**
  * Set timeout for page loading, searching, and scripts.
  *
@@ -1550,7 +1561,7 @@ GeckoDriver.prototype.switchToFrame = function*(cmd, resp) {
  *     If timeout type key is unknown, or the value provided with it is
  *     not an integer.
  */
-GeckoDriver.prototype.timeouts = function(cmd, resp) {
+GeckoDriver.prototype.setTimeouts = function(cmd, resp) {
   // backwards compatibility with old API
   // that accepted a dictionary {type: <string>, ms: <number>}
   let timeouts = {};
@@ -2805,7 +2816,9 @@ GeckoDriver.prototype.commands = {
   "setContext": GeckoDriver.prototype.setContext,
   "getContext": GeckoDriver.prototype.getContext,
   "executeScript": GeckoDriver.prototype.executeScript,
-  "timeouts": GeckoDriver.prototype.timeouts,
+  "getTimeouts": GeckoDriver.prototype.getTimeouts,
+  "timeouts": GeckoDriver.prototype.setTimeouts,  // deprecated until Firefox 55
+  "setTimeouts": GeckoDriver.prototype.setTimeouts,
   "singleTap": GeckoDriver.prototype.singleTap,
   "actionChain": GeckoDriver.prototype.actionChain,
   "multiAction": GeckoDriver.prototype.multiAction,

@@ -38,8 +38,10 @@ window.removeCookie = function(name, path) {
  * can be tested.
  */
 window.clear = function*() {
-  sessionStorage.clear();
+  localStorage.clear();
+  dump("removed localStorage from " + document.location + "\n");
 
+  sessionStorage.clear();
   dump("removed sessionStorage from " + document.location + "\n");
 };
 

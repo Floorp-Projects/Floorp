@@ -21,14 +21,4 @@
         <item name="android:verticalSpacing">20dp</item>
     </style>
 
-    <!-- Tabs panel -->
-    <style name="TabsPanelSection" parent="TabsPanelSectionBase">
-        <item name="android:layout_marginLeft">20dp</item>
-        <item name="android:layout_marginRight">20dp</item>
-    </style>
-
-    <style name="TabsPanelItem" parent="TabsPanelItemBase">
-        <!-- To override the values-land style. -->
-    </style>
-
 </resources>
