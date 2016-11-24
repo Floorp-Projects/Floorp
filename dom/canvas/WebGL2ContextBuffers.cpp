@@ -31,15 +31,6 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
     if (!writeBuffer)
         return;
 
-    if (readBuffer->mNumActiveTFOs ||
-        writeBuffer->mNumActiveTFOs)
-    {
-        ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
-                              " object.",
-                              funcName);
-        return;
-    }
-
     if (!ValidateNonNegative(funcName, "readOffset", readOffset) ||
         !ValidateNonNegative(funcName, "writeOffset", writeOffset) ||
         !ValidateNonNegative(funcName, "size", size))
@@ -128,21 +119,6 @@ WebGL2Context::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
         return;
 
     ////
-
-    if (buffer->mNumActiveTFOs) {
-        ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
-                              " object.",
-                              funcName);
-        return;
-    }
-
-    if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER &&
-        mBoundTransformFeedback->mIsActive)
-    {
-        ErrorInvalidOperation("%s: Currently bound transform feedback is active.",
-                              funcName);
-        return;
-    }
 
     if (!CheckedInt<GLsizeiptr>(byteLen).isValid()) {
         ErrorOutOfMemory("%s: Size too large.", funcName);

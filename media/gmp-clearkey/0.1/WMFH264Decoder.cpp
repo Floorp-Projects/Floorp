@@ -37,13 +37,13 @@ WMFH264Decoder::Init(int32_t aCoreCount)
   HRESULT hr;
 
   hr = CreateMFT(__uuidof(CMSH264DecoderMFT),
-                 WMFDecoderDllNameFor(H264),
+                 WMFDecoderDllName(),
                  mDecoder);
   if (FAILED(hr)) {
     // Windows 7 Enterprise Server N (which is what Mozilla's mochitests run
     // on) need a different CLSID to instantiate the H.264 decoder.
     hr = CreateMFT(CLSID_CMSH264DecMFT,
-                   WMFDecoderDllNameFor(H264),
+                   WMFDecoderDllName(),
                    mDecoder);
   }
   ENSURE(SUCCEEDED(hr), hr);

@@ -104,7 +104,7 @@ var gPrivacyPane = {
     let rv = Services.prompt.confirmEx(window, title, message, buttonFlags,
                                        okButton, cancelButton, null, null, {});
     if (rv == 0) {
-      ContextualIdentityService.closeAllContainerTabs();
+      ContextualIdentityService.closeContainerTabs();
       Services.prefs.setBoolPref("privacy.userContext.enabled", false);
       return;
     }

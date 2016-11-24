@@ -1367,7 +1367,8 @@ UserAutoCompleteResult.prototype = {
     if (index == 0 && this._showInsecureFieldWarning) {
       return "insecureWarning";
     }
-    return "";
+
+    return "login";
   },
 
   getImageAt(index) {

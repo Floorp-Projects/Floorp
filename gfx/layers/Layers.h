@@ -18,6 +18,7 @@
 #include "gfxRect.h"                    // for gfxRect
 #include "gfx2DGlue.h"
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2, etc
+#include "mozilla/Array.h"
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 #include "mozilla/EventForwards.h"      // for nsPaintEvent
 #include "mozilla/Maybe.h"              // for Maybe
@@ -85,11 +86,13 @@ class PaintedLayer;
 class ContainerLayer;
 class ImageLayer;
 class ColorLayer;
+class TextLayer;
 class CanvasLayer;
+class BorderLayer;
 class ReadbackLayer;
 class ReadbackProcessor;
 class RefLayer;
-class LayerComposite;
+class HostLayer;
 class ShadowableLayer;
 class ShadowLayerForwarder;
 class LayerManagerComposite;
@@ -97,6 +100,7 @@ class SpecificLayerAttributes;
 class Compositor;
 class FrameUniformityData;
 class PersistentBufferProvider;
+class GlyphArray;
 
 namespace layerscope {
 class LayersPacket;
@@ -400,6 +404,16 @@ public:
    * Create a ColorLayer for this manager's layer tree.
    */
   virtual already_AddRefed<ColorLayer> CreateColorLayer() = 0;
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Create a TextLayer for this manager's layer tree.
+   */
+  virtual already_AddRefed<TextLayer> CreateTextLayer() = 0;
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Create a BorderLayer for this manager's layer tree.
+   */
+  virtual already_AddRefed<BorderLayer> CreateBorderLayer() { return nullptr; }
   /**
    * CONSTRUCTION PHASE ONLY
    * Create a CanvasLayer for this manager's layer tree.
@@ -744,6 +758,8 @@ public:
     TYPE_COLOR,
     TYPE_CONTAINER,
     TYPE_IMAGE,
+    TYPE_TEXT,
+    TYPE_BORDER,
     TYPE_READBACK,
     TYPE_REF,
     TYPE_SHADOW,
@@ -1523,10 +1539,22 @@ public:
   virtual ColorLayer* AsColorLayer() { return nullptr; }
 
   /**
+    * Dynamic cast to a TextLayer. Returns null if this is not a
+    * TextLayer.
+    */
+  virtual TextLayer* AsTextLayer() { return nullptr; }
+
+  /**
+    * Dynamic cast to a Border. Returns null if this is not a
+    * ColorLayer.
+    */
+  virtual BorderLayer* AsBorderLayer() { return nullptr; }
+
+  /**
    * Dynamic cast to a LayerComposite.  Return null if this is not a
    * LayerComposite.  Can be used anytime.
    */
-  virtual LayerComposite* AsLayerComposite() { return nullptr; }
+  virtual HostLayer* AsHostLayer() { return nullptr; }
 
   /**
    * Dynamic cast to a ShadowableLayer.  Return null if this is not a
@@ -1946,6 +1974,13 @@ public:
    */
   void SetAllowResidualTranslation(bool aAllow) { mAllowResidualTranslation = aAllow; }
 
+  void SetValidRegion(const nsIntRegion& aRegion)
+  {
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ValidRegion", this));
+    mValidRegion = aRegion;
+    Mutated();
+  }
+
   /**
    * Can be used anytime
    */
@@ -2316,6 +2351,128 @@ protected:
 };
 
 /**
+ * A Layer which renders Glyphs.
+ */
+class TextLayer : public Layer {
+public:
+  virtual TextLayer* AsTextLayer() override { return this; }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   */
+  void SetBounds(const gfx::IntRect& aBounds)
+  {
+    if (!mBounds.IsEqualEdges(aBounds)) {
+      mBounds = aBounds;
+      Mutated();
+    }
+  }
+
+  const gfx::IntRect& GetBounds()
+  {
+    return mBounds;
+  }
+
+  void SetScaledFont(gfx::ScaledFont* aScaledFont) {
+    if (aScaledFont != mFont) {
+      mFont = aScaledFont;
+      Mutated();
+    }
+  }
+
+  gfx::ScaledFont* GetScaledFont() { return mFont; }
+
+  MOZ_LAYER_DECL_NAME("TextLayer", TYPE_TEXT)
+
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
+  {
+    gfx::Matrix4x4 idealTransform = GetLocalTransform() * aTransformToSurface;
+    mEffectiveTransform = SnapTransformTranslation(idealTransform, nullptr);
+    ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
+  }
+
+  virtual void SetGlyphs(nsTArray<GlyphArray>&& aGlyphs);
+protected:
+  TextLayer(LayerManager* aManager, void* aImplData);
+  ~TextLayer();
+
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
+
+  virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) override;
+
+  gfx::IntRect mBounds;
+  nsTArray<GlyphArray> mGlyphs;
+  RefPtr<gfx::ScaledFont> mFont;
+};
+
+/**
+ * A Layer which renders a rounded rect.
+ */
+class BorderLayer : public Layer {
+public:
+  virtual BorderLayer* AsBorderLayer() override { return this; }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Set the color of the layer.
+   */
+
+  // Colors of each side as in css::Side
+  virtual void SetColors(const BorderColors& aColors)
+  {
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Colors", this));
+    PodCopy(&mColors[0], &aColors[0], 4);
+    Mutated();
+  }
+
+  virtual void SetRect(const LayerRect& aRect)
+  {
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Rect", this));
+    mRect = aRect;
+    Mutated();
+  }
+
+  // Size of each rounded corner as in css::Corner, 0.0 means a
+  // rectangular corner.
+  virtual void SetCornerRadii(const BorderCorners& aCorners)
+  {
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Corners", this));
+    PodCopy(&mCorners[0], &aCorners[0], 4);
+    Mutated();
+  }
+
+  virtual void SetWidths(const BorderWidths& aWidths)
+  {
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Widths", this));
+    PodCopy(&mWidths[0], &aWidths[0], 4);
+    Mutated();
+  }
+
+  MOZ_LAYER_DECL_NAME("BorderLayer", TYPE_BORDER)
+
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
+  {
+    gfx::Matrix4x4 idealTransform = GetLocalTransform() * aTransformToSurface;
+    mEffectiveTransform = SnapTransformTranslation(idealTransform, nullptr);
+    ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
+  }
+
+protected:
+  BorderLayer(LayerManager* aManager, void* aImplData)
+    : Layer(aManager, aImplData)
+  {}
+
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
+
+  virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) override;
+
+  BorderColors mColors;
+  LayerRect mRect;
+  BorderCorners mCorners;
+  BorderWidths mWidths;
+};
+
+/**
  * A Layer for HTML Canvas elements.  It's backed by either a
  * gfxASurface or a GLContext (for WebGL layers), and has some control
  * for intelligent updating from the source if necessary (for example,
@@ -2370,6 +2527,8 @@ public:
    * This must only be called once.
    */
   virtual void Initialize(const Data& aData) = 0;
+
+  void SetBounds(gfx::IntRect aBounds) { mBounds = aBounds; }
 
   /**
    * Check the data is owned by this layer is still valid for rendering

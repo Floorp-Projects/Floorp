@@ -69,7 +69,7 @@ ContentMightReflowOnOrientationChange(const IntRect& rect)
   return rect.width != rect.height;
 }
 
-AsyncCompositionManager::AsyncCompositionManager(LayerManagerComposite* aManager)
+AsyncCompositionManager::AsyncCompositionManager(HostLayerManager* aManager)
   : mLayerManager(aManager)
   , mIsFirstPaint(true)
   , mLayersUpdated(false)
@@ -205,7 +205,7 @@ GetBaseTransform(Layer* aLayer, Matrix4x4* aTransform)
 {
   // Start with the animated transform if there is one
   *aTransform =
-    (aLayer->AsLayerComposite()->GetShadowTransformSetByAnimation()
+    (aLayer->AsHostLayer()->GetShadowTransformSetByAnimation()
         ? aLayer->GetLocalTransform()
         : aLayer->GetTransform());
 }
@@ -216,10 +216,10 @@ TransformClipRect(Layer* aLayer,
                   const ParentLayerToParentLayerMatrix4x4& aTransform)
 {
   MOZ_ASSERT(aTransform.Is2D());
-  const Maybe<ParentLayerIntRect>& clipRect = aLayer->AsLayerComposite()->GetShadowClipRect();
+  const Maybe<ParentLayerIntRect>& clipRect = aLayer->AsHostLayer()->GetShadowClipRect();
   if (clipRect) {
     ParentLayerIntRect transformed = TransformBy(aTransform, *clipRect);
-    aLayer->AsLayerComposite()->SetShadowClipRect(Some(transformed));
+    aLayer->AsHostLayer()->SetShadowClipRect(Some(transformed));
   }
 }
 
@@ -233,7 +233,7 @@ TransformFixedClip(Layer* aLayer,
   MOZ_ASSERT(aTransform.Is2D());
   if (aClipParts.mFixedClip) {
     *aClipParts.mFixedClip = TransformBy(aTransform, *aClipParts.mFixedClip);
-    aLayer->AsLayerComposite()->SetShadowClipRect(aClipParts.Intersect());
+    aLayer->AsHostLayer()->SetShadowClipRect(aClipParts.Intersect());
   }
 }
 
@@ -256,7 +256,7 @@ SetShadowTransform(Layer* aLayer, LayerToParentLayerMatrix4x4 aTransform)
   aTransform.PostScale(1.0f / aLayer->GetPostXScale(),
                        1.0f / aLayer->GetPostYScale(),
                        1);
-  aLayer->AsLayerComposite()->SetShadowBaseTransform(aTransform.ToUnknownMatrix());
+  aLayer->AsHostLayer()->SetShadowBaseTransform(aTransform.ToUnknownMatrix());
 }
 
 static void
@@ -277,7 +277,7 @@ TranslateShadowLayer(Layer* aLayer,
   layerTransform.PostTranslate(aTranslation);
 
   SetShadowTransform(aLayer, layerTransform);
-  aLayer->AsLayerComposite()->SetShadowTransformSetByAnimation(false);
+  aLayer->AsHostLayer()->SetShadowTransformSetByAnimation(false);
 
   if (aAdjustClipRect) {
     auto transform = ParentLayerToParentLayerMatrix4x4::Translation(aTranslation);
@@ -720,12 +720,12 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
                       animData.mEndValues.LastElement(),
                       computedTiming.mCurrentIteration,
                       &interpolatedValue, layer);
-          LayerComposite* layerComposite = layer->AsLayerComposite();
+          HostLayer* layerCompositor = layer->AsHostLayer();
           switch (animation.property()) {
           case eCSSProperty_opacity:
           {
-            layerComposite->SetShadowOpacity(interpolatedValue.get_float());
-            layerComposite->SetShadowOpacitySetByAnimation(true);
+            layerCompositor->SetShadowOpacity(interpolatedValue.get_float());
+            layerCompositor->SetShadowOpacitySetByAnimation(true);
             break;
           }
           case eCSSProperty_transform:
@@ -734,8 +734,8 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
             if (ContainerLayer* c = layer->AsContainerLayer()) {
               matrix.PostScale(c->GetInheritedXScale(), c->GetInheritedYScale(), 1);
             }
-            layerComposite->SetShadowBaseTransform(matrix);
-            layerComposite->SetShadowTransformSetByAnimation(true);
+            layerCompositor->SetShadowBaseTransform(matrix);
+            layerCompositor->SetShadowTransformSetByAnimation(true);
             break;
           }
           default:
@@ -779,7 +779,7 @@ AsyncCompositionManager::RecordShadowTransforms(Layer* aLayer)
           if (!apzc) {
             continue;
           }
-          gfx::Matrix4x4 shadowTransform = layer->AsLayerComposite()->GetShadowBaseTransform();
+          gfx::Matrix4x4 shadowTransform = layer->AsHostLayer()->GetShadowBaseTransform();
           if (!shadowTransform.Is2D()) {
             continue;
           }
@@ -805,7 +805,7 @@ AdjustForClip(const AsyncTransformComponentMatrix& asyncTransform, Layer* aLayer
   // then applying it to container as-is will produce incorrect results. To
   // avoid this, translate the layer so that the clip rect starts at the origin,
   // apply the tree transform, and translate back.
-  if (const Maybe<ParentLayerIntRect>& shadowClipRect = aLayer->AsLayerComposite()->GetShadowClipRect()) {
+  if (const Maybe<ParentLayerIntRect>& shadowClipRect = aLayer->AsHostLayer()->GetShadowClipRect()) {
     if (shadowClipRect->TopLeft() != ParentLayerIntPoint()) {  // avoid a gratuitous change of basis
       result.ChangeBasis(shadowClipRect->x, shadowClipRect->y, 0);
     }
@@ -822,7 +822,7 @@ ExpandRootClipRect(Layer* aLayer, const ScreenMargin& aFixedLayerMargins)
   // LayerView visible to the user is larger than the viewport size that Gecko
   // knows about (and therefore larger than the clip rect). We could also just
   // clear the clip rect on aLayer entirely but this seems more precise.
-  Maybe<ParentLayerIntRect> rootClipRect = aLayer->AsLayerComposite()->GetShadowClipRect();
+  Maybe<ParentLayerIntRect> rootClipRect = aLayer->AsHostLayer()->GetShadowClipRect();
   if (rootClipRect && aFixedLayerMargins != ScreenMargin()) {
 #ifndef MOZ_WIDGET_ANDROID
     // We should never enter here on anything other than Fennec, since
@@ -832,7 +832,7 @@ ExpandRootClipRect(Layer* aLayer, const ScreenMargin& aFixedLayerMargins)
     ParentLayerRect rect(rootClipRect.value());
     rect.Deflate(ViewAs<ParentLayerPixel>(aFixedLayerMargins,
       PixelCastJustification::ScreenIsParentLayerForRoot));
-    aLayer->AsLayerComposite()->SetShadowClipRect(Some(RoundedOut(rect)));
+    aLayer->AsHostLayer()->SetShadowClipRect(Some(RoundedOut(rect)));
   }
 }
 
@@ -1103,7 +1103,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
           // AlignFixedAndStickyLayers may overwrite this with a new clip it
           // computes from the clip parts, but if that doesn't happen, this
           // is the layer's final clip rect.
-          layer->AsLayerComposite()->SetShadowClipRect(clipParts.Intersect());
+          layer->AsHostLayer()->SetShadowClipRect(clipParts.Intersect());
         }
 
         if (hasAsyncTransform) {
@@ -1439,7 +1439,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
     wantNextFrame |= SampleAPZAnimations(LayerMetricsWrapper(root), nextFrame);
   }
 
-  LayerComposite* rootComposite = root->AsLayerComposite();
+  HostLayer* rootComposite = root->AsHostLayer();
 
   gfx::Matrix4x4 trans = rootComposite->GetShadowBaseTransform();
   trans *= gfx::Matrix4x4::From2D(mWorldTransform);

@@ -284,7 +284,7 @@ void HandleException(ResumeFromException* rfe);
 
 void EnsureBareExitFrame(JSContext* cx, JitFrameLayout* frame);
 
-void MarkJitActivations(JSRuntime* rt, JSTracer* trc);
+void TraceJitActivations(JSRuntime* rt, JSTracer* trc);
 
 JSCompartment*
 TopmostIonActivationCompartment(JSRuntime* rt);
@@ -529,7 +529,7 @@ class ExitFrameLayout : public CommonFrameLayout
 
   public:
     // Pushed for "bare" fake exit frames that have no GC things on stack to be
-    // marked.
+    // traced.
     static JitCode* BareToken() { return (JitCode*)ExitFrameLayoutBareToken; }
 
     static inline size_t Size() {
@@ -1033,7 +1033,7 @@ void
 GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes);
 
 CalleeToken
-MarkCalleeToken(JSTracer* trc, CalleeToken token);
+TraceCalleeToken(JSTracer* trc, CalleeToken token);
 
 // The minimum stack size is two. Two slots are needed because INITGLEXICAL
 // (stack depth 1) is compiled as a SETPROP (stack depth 2) on the global

@@ -213,7 +213,7 @@ ICStub::makesGCCalls() const
 }
 
 void
-ICStub::markCode(JSTracer* trc, const char* name)
+ICStub::traceCode(JSTracer* trc, const char* name)
 {
     JitCode* stubJitCode = jitCode();
     TraceManuallyBarrieredEdge(trc, &stubJitCode, name);
@@ -230,9 +230,9 @@ ICStub::updateCode(JitCode* code)
 /* static */ void
 ICStub::trace(JSTracer* trc)
 {
-    markCode(trc, "shared-stub-jitcode");
+    traceCode(trc, "shared-stub-jitcode");
 
-    // If the stub is a monitored fallback stub, then mark the monitor ICs hanging
+    // If the stub is a monitored fallback stub, then trace the monitor ICs hanging
     // off of that stub.  We don't need to worry about the regular monitored stubs,
     // because the regular monitored stubs will always have a monitored fallback stub
     // that references the same stub chain.
@@ -625,10 +625,10 @@ ICFallbackStub::unlinkStub(Zone* zone, ICStub* prev, ICStub* stub)
     }
 
 #ifdef DEBUG
-    // Poison stub code to ensure we don't call this stub again. However, if this
-    // stub can make calls, a pointer to it may be stored in a stub frame on the
-    // stack, so we can't touch the stubCode_ or GC will crash when marking this
-    // pointer.
+    // Poison stub code to ensure we don't call this stub again. However, if
+    // this stub can make calls, a pointer to it may be stored in a stub frame
+    // on the stack, so we can't touch the stubCode_ or GC will crash when
+    // tracing this pointer.
     if (!stub->makesGCCalls())
         stub->stubCode_ = (uint8_t*)0xbad;
 #endif
