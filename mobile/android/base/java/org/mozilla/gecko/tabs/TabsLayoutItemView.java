@@ -14,6 +14,7 @@ import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
 import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.support.v4.widget.TextViewCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
@@ -144,12 +145,12 @@ public class TabsLayoutItemView extends LinearLayout
         mCloseButton.setTag(this);
 
         if (tab.isAudioPlaying()) {
-            mTitle.setCompoundDrawablesWithIntrinsicBounds(R.drawable.tab_audio_playing, 0, 0, 0);
+            TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(mTitle, R.drawable.tab_audio_playing, 0, 0, 0);
             final String tabTitleWithAudio =
                     getResources().getString(R.string.tab_title_prefix_is_playing_audio, tabTitle);
             mTitle.setContentDescription(tabTitleWithAudio);
         } else {
-            mTitle.setCompoundDrawables(null, null, null, null);
+            TextViewCompat.setCompoundDrawablesRelative(mTitle, null, null, null, null);
             mTitle.setContentDescription(tabTitle);
         }
     }

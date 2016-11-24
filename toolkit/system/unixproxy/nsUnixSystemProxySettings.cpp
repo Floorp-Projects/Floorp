@@ -33,7 +33,7 @@ public:
   nsresult Init();
 
 private:
-  ~nsUnixSystemProxySettings() {}
+  ~nsUnixSystemProxySettings() = default;
   
   nsCOMPtr<nsIGConfService> mGConf;
   nsCOMPtr<nsIGSettingsService> mGSettings;

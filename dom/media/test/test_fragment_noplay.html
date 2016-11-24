@@ -119,9 +119,7 @@ function startTest(test, token) {
     ok(a, name + ": " + msg);
   }}(name);
   var localFinish = function(v, manager) { return function() {
-    if (v.parentNode) {
-      v.parentNode.removeChild(v);
-    }
+    removeNodeAndSource(v);
     manager.finished(v.token);
   }}(v, manager);
   window['test_fragment_noplay'](v, test.start, test.end, localIs, localOk, localFinish);

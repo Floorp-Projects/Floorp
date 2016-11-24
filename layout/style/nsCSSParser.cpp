@@ -6336,7 +6336,6 @@ CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
   // only 'ltr' and 'rtl' (case-insensitively) will match anything, any
   // other identifier is still valid.
   if (aType == CSSPseudoClassType::mozLocaleDir ||
-      aType == CSSPseudoClassType::mozDir ||
       aType == CSSPseudoClassType::dir) {
     nsContentUtils::ASCIIToLower(mToken.mIdent); // case insensitive
   }

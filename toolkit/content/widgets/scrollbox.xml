@@ -156,6 +156,23 @@
                  this._scrollbox.scrollWidth;
         ]]></getter>
       </property>
+
+      <property name="lineScrollAmount" readonly="true">
+        <getter><![CDATA[
+          // If inherited element wants to customize line scroll amount by
+          // wheel events, it should override this.
+          var px = document.defaultView
+                           .getComputedStyle(this._scrollbox, "")
+                           .getPropertyValue("font-size");
+          if (px.endsWith("px")) {
+            return parseInt(px);
+          }
+          // XXX Is this possible case?  For the last resote, let's return
+          //     default font-size of web contents.
+          return 16;
+        ]]></getter>
+      </property>
+
       <property name="scrollPaddingRect" readonly="true">
         <getter><![CDATA[
           // This assumes that this._scrollbox doesn't have any border.
@@ -567,9 +584,9 @@
           if (event.deltaMode == event.DOM_DELTA_PIXEL)
             this.scrollByPixels(event.deltaY);
           else if (event.deltaMode == event.DOM_DELTA_PAGE)
-            this.scrollByPage(event.deltaY);
+            this.scrollByPixels(event.deltaY * this.scrollClientSize);
           else
-            this.scrollByIndex(event.deltaY);
+            this.scrollByPixels(event.deltaY * this.lineScrollAmount);
         }
         // We allow vertical scrolling to scroll a horizontal scrollbox
         // because many users have a vertical scroll wheel but no
@@ -588,9 +605,9 @@
             if (event.deltaMode == event.DOM_DELTA_PIXEL)
               this.scrollByPixels(scrollByDelta);
             else if (event.deltaMode == event.DOM_DELTA_PAGE)
-              this.scrollByPage(scrollByDelta);
+              this.scrollByPixels(scrollByDelta * this.scrollClientSize);
             else
-              this.scrollByIndex(scrollByDelta);
+              this.scrollByPixels(scrollByDelta * this.lineScrollAmount);
           }
 
           if (this._prevMouseScrolls.length > 1)

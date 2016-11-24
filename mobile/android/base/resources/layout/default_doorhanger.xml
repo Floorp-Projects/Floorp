@@ -19,7 +19,7 @@
               android:layout_height="wrap_content"
               android:orientation="vertical"
               android:layout_marginTop="@dimen/doorhanger_section_padding_medium"
-              android:gravity="right"
+              android:gravity="right|end"
               android:visibility="gone"/>
 
     <android.support.v7.widget.AppCompatCheckBox

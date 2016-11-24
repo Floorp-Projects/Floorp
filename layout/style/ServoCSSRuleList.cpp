@@ -47,7 +47,8 @@ ServoCSSRuleList::IndexedGetter(uint32_t aIndex, bool& aFound)
       case nsIDOMCSSRule::NAMESPACE_RULE:
         // XXX create corresponding rules
       default:
-        MOZ_CRASH("stylo: not implemented yet");
+        NS_ERROR("stylo: not implemented yet");
+        return nullptr;
     }
     ruleObj->SetStyleSheet(mStyleSheet);
     rule = CastToUint(ruleObj.forget().take());

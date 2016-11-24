@@ -63,20 +63,10 @@ dnl ========================================================
 USE_PTHREADS=
 _PTHREAD_LDFLAGS=""
 
-dnl Do not allow objdir == srcdir builds
-dnl ==============================================================
-_topsrcdir=`cd $srcdir; pwd -W 2>/dev/null || pwd -P`
-_objdir=`pwd -P`
-
-MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd -P`
-
 MOZ_DEFAULT_COMPILER
 
 if test -z "$JS_STANDALONE"; then
   autoconfmk=autoconf-js.mk
-  #DIST is exported from top-level configure
-else
-  DIST="$MOZ_BUILD_ROOT/dist"
 fi
 AC_SUBST(autoconfmk)
 

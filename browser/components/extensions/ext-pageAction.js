@@ -119,11 +119,8 @@ PageAction.prototype = {
     button.id = this.id;
     button.setAttribute("class", "urlbar-icon");
 
-    button.addEventListener("click", event => { // eslint-disable-line mozilla/balanced-listeners
-      if (event.button == 0) {
-        this.handleClick(window);
-      }
-    });
+    button.addEventListener("click", this); // eslint-disable-line mozilla/balanced-listeners
+    document.addEventListener("popupshowing", this);
 
     document.getElementById("urlbar-icons").appendChild(button);
 
@@ -153,6 +150,31 @@ PageAction.prototype = {
     let pageAction = pageActionMap.get(this.extension);
     if (pageAction.getProperty(window.gBrowser.selectedTab, "show")) {
       pageAction.handleClick(window);
+    }
+  },
+
+  handleEvent(event) {
+    const window = event.target.ownerDocument.defaultView;
+
+    switch (event.type) {
+      case "click":
+        if (event.button === 0) {
+          this.handleClick(window);
+        }
+        break;
+
+      case "popupshowing":
+        const menu = event.target;
+        const trigger = menu.triggerNode;
+
+        if (menu.localName === "menupopup" && trigger && trigger.id === this.id) {
+          global.actionContextMenu({
+            extension: this.extension,
+            onPageAction: true,
+            menu: menu,
+          });
+        }
+        break;
     }
   },
 
@@ -192,6 +214,7 @@ PageAction.prototype = {
     for (let window of WindowListManager.browserWindows()) {
       if (this.buttons.has(window)) {
         this.buttons.get(window).remove();
+        window.removeEventListener("popupshowing", this);
       }
     }
   },

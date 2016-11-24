@@ -2748,18 +2748,18 @@ static struct SavedVar {
 
 static void SaveStateForAppInitiatedRestart()
 {
-  for (size_t i = 0; i < ArrayLength(gSavedVars); ++i) {
-    const char *s = PR_GetEnv(gSavedVars[i].name);
+  for (auto & savedVar : gSavedVars) {
+    const char *s = PR_GetEnv(savedVar.name);
     if (s)
-      gSavedVars[i].value = PR_smprintf("%s=%s", gSavedVars[i].name, s);
+      savedVar.value = PR_smprintf("%s=%s", savedVar.name, s);
   }
 }
 
 static void RestoreStateForAppInitiatedRestart()
 {
-  for (size_t i = 0; i < ArrayLength(gSavedVars); ++i) {
-    if (gSavedVars[i].value)
-      PR_SetEnv(gSavedVars[i].value);
+  for (auto & savedVar : gSavedVars) {
+    if (savedVar.value)
+      PR_SetEnv(savedVar.value);
   }
 }
 

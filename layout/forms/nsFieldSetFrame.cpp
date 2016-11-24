@@ -52,7 +52,7 @@ nsRect
 nsFieldSetFrame::VisualBorderRectRelativeToSelf() const
 {
   WritingMode wm = GetWritingMode();
-  css::Side legendSide = wm.PhysicalSide(eLogicalSideBStart);
+  Side legendSide = wm.PhysicalSide(eLogicalSideBStart);
   nscoord legendBorder = StyleBorder()->GetComputedBorderWidth(legendSide);
   LogicalRect r(wm, LogicalPoint(wm, 0, 0), GetLogicalSize(wm));
   nsSize containerSize = r.Size(wm).GetPhysicalSize(wm);
@@ -237,7 +237,7 @@ nsFieldSetFrame::PaintBorder(
                                       this, rect);
 
   if (nsIFrame* legend = GetLegend()) {
-    css::Side legendSide = wm.PhysicalSide(eLogicalSideBStart);
+    Side legendSide = wm.PhysicalSide(eLogicalSideBStart);
     nscoord legendBorderWidth =
       StyleBorder()->GetComputedBorderWidth(legendSide);
 
