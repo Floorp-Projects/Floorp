@@ -64,6 +64,76 @@ add_task(function* test_suspend() {
   yield extension.unload();
 });
 
+
+// Test that requests that were canceled while suspended for a blocking
+// listener are correctly resumed.
+add_task(function* test_error_resume() {
+  let chromeScript = SpecialPowers.loadChromeScript(() => {
+    const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+    Cu.import("resource://gre/modules/Services.jsm");
+
+    let observer = channel => {
+      if (channel instanceof Ci.nsIHttpChannel && channel.URI.spec === "http://example.com/") {
+        Services.obs.removeObserver(observer, "http-on-modify-request");
+
+        // Wait until the next tick to make sure this runs after WebRequest observers.
+        Promise.resolve().then(() => {
+          channel.cancel(Cr.NS_BINDING_ABORTED);
+        });
+      }
+    };
+
+    Services.obs.addObserver(observer, "http-on-modify-request", false);
+  });
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+      ],
+    },
+
+    background() {
+      browser.webRequest.onBeforeSendHeaders.addListener(
+        details => {
+          browser.test.log(`onBeforeSendHeaders({url: ${details.url}})`);
+
+          if (details.url === "http://example.com/") {
+            browser.test.sendMessage("got-before-send-headers");
+          }
+        },
+        {urls: ["<all_urls>"]},
+        ["blocking"]);
+
+      browser.webRequest.onErrorOccurred.addListener(
+        details => {
+          browser.test.log(`onErrorOccurred({url: ${details.url}})`);
+
+          if (details.url === "http://example.com/") {
+            browser.test.sendMessage("got-error-occurred");
+          }
+        },
+        {urls: ["<all_urls>"]});
+    },
+  });
+
+  yield extension.startup();
+
+  try {
+    yield fetch("http://example.com/");
+    ok(false, "Fetch should have failed.");
+  } catch (e) {
+    ok(true, "Got expected error.");
+  }
+
+  yield extension.awaitMessage("got-before-send-headers");
+  yield extension.awaitMessage("got-error-occurred");
+
+  yield extension.unload();
+  chromeScript.destroy();
+});
+
 </script>
 </body>
 </html>
