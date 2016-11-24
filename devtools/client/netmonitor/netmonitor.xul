@@ -129,7 +129,8 @@
               <tabpanel id="cookies-tabpanel"
                         class="tabpanel-content">
                 <vbox flex="1">
-                  <vbox id="all-cookies" flex="1"/>
+                  <html:div xmlns="http://www.w3.org/1999/xhtml"
+                      id="react-cookies-tabpanel-hook"/>
                 </vbox>
               </tabpanel>
               <tabpanel id="params-tabpanel"
