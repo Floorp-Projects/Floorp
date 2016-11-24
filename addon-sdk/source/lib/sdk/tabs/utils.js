@@ -207,7 +207,7 @@ function getTabId(tab) {
   if (tab.browser) // fennec
     return tab.id
 
-  return String.split(tab.linkedPanel, 'panel').pop();
+  return String(tab.linkedPanel).split('panel').pop();
 }
 exports.getTabId = getTabId;
 
