@@ -33,14 +33,9 @@ add_task(function* () {
   info("Waiting for security tab to be updated.");
   yield monitor.panelWin.once(EVENTS.TAB_UPDATED);
 
-  let errorbox = $("#security-error");
-  let errormsg = $("#security-error-message");
-  let infobox = $("#security-information");
+  let errormsg = $(".security-info-value");
 
-  is(errorbox.hidden, false, "Error box is visble.");
-  is(infobox.hidden, true, "Information box is hidden.");
-
-  isnot(errormsg.value, "", "Error message is not empty.");
+  isnot(errormsg.textContent, "", "Error message is not empty.");
 
   return teardown(monitor);
 
