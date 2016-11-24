@@ -44,36 +44,38 @@ function tByteSize(obj) {
 // JSExtensibleString          - limited by available memory -        X
 // JSUndependedString          - same as JSExtensibleString -
 
+// Note that atoms are 8 bytes larger than non-atoms, to store the atom's hash code.
+
 // Latin-1
-assertEq(tByteSize(""),                                                 s(16, 24)); // T, T
-assertEq(tByteSize("1"),                                                s(16, 24)); // T, T
-assertEq(tByteSize("1234567"),                                          s(16, 24)); // T, T
-assertEq(tByteSize("12345678"),                                         s(32, 24)); // F, T
-assertEq(tByteSize("123456789.12345"),                                  s(32, 24)); // F, T
-assertEq(tByteSize("123456789.123456"),                                 s(32, 32)); // F, F
-assertEq(tByteSize("123456789.123456789.123"),                          s(32, 32)); // F, F
-assertEq(tByteSize("123456789.123456789.1234"),                         s(48, 56)); // X, X
-assertEq(tByteSize("123456789.123456789.123456789.1"),                  s(48, 56)); // X, X
-assertEq(tByteSize("123456789.123456789.123456789.12"),                 s(64, 72)); // X, X
+assertEq(tByteSize(""),                                                 s(24, 32)); // T, T
+assertEq(tByteSize("1"),                                                s(24, 32)); // T, T
+assertEq(tByteSize("1234567"),                                          s(24, 32)); // T, T
+assertEq(tByteSize("12345678"),                                         s(40, 32)); // F, T
+assertEq(tByteSize("123456789.12345"),                                  s(40, 32)); // F, T
+assertEq(tByteSize("123456789.123456"),                                 s(40, 40)); // F, F
+assertEq(tByteSize("123456789.123456789.123"),                          s(40, 40)); // F, F
+assertEq(tByteSize("123456789.123456789.1234"),                         s(56, 64)); // X, X
+assertEq(tByteSize("123456789.123456789.123456789.1"),                  s(56, 64)); // X, X
+assertEq(tByteSize("123456789.123456789.123456789.12"),                 s(72, 80)); // X, X
 
 // Inline char16_t atoms.
 // "Impassionate gods have never seen the red that is the Tatsuta River."
 //   - Ariwara no Narihira
-assertEq(tByteSize("千"),						s(16, 24)); // T, T
-assertEq(tByteSize("千早"),    						s(16, 24)); // T, T
-assertEq(tByteSize("千早ぶ"),    					s(16, 24)); // T, T
-assertEq(tByteSize("千早ぶる"),    					s(32, 24)); // F, T
-assertEq(tByteSize("千早ぶる神"),    					s(32, 24)); // F, T
-assertEq(tByteSize("千早ぶる神代"),					s(32, 24)); // F, T
-assertEq(tByteSize("千早ぶる神代も"),					s(32, 24)); // F, T
-assertEq(tByteSize("千早ぶる神代もき"),					s(32, 32)); // F, F
-assertEq(tByteSize("千早ぶる神代もきかず龍"),				s(32, 32)); // F, F
-assertEq(tByteSize("千早ぶる神代もきかず龍田"),    			s(48, 56)); // X, X
-assertEq(tByteSize("千早ぶる神代もきかず龍田川 か"),    			s(48, 56)); // X, X
-assertEq(tByteSize("千早ぶる神代もきかず龍田川 から"),    			s(64, 72)); // X, X
-assertEq(tByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水く"),    	s(64, 72)); // X, X
-assertEq(tByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水くく"),    	s(80, 88)); // X, X
-assertEq(tByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水くくるとは"),	s(80, 88)); // X, X
+assertEq(tByteSize("千"),						s(24, 32)); // T, T
+assertEq(tByteSize("千早"),    						s(24, 32)); // T, T
+assertEq(tByteSize("千早ぶ"),    					s(24, 32)); // T, T
+assertEq(tByteSize("千早ぶる"),    					s(40, 32)); // F, T
+assertEq(tByteSize("千早ぶる神"),    					s(40, 32)); // F, T
+assertEq(tByteSize("千早ぶる神代"),					s(40, 32)); // F, T
+assertEq(tByteSize("千早ぶる神代も"),					s(40, 32)); // F, T
+assertEq(tByteSize("千早ぶる神代もき"),					s(40, 40)); // F, F
+assertEq(tByteSize("千早ぶる神代もきかず龍"),				s(40, 40)); // F, F
+assertEq(tByteSize("千早ぶる神代もきかず龍田"),    			s(56, 64)); // X, X
+assertEq(tByteSize("千早ぶる神代もきかず龍田川 か"),    			s(56, 64)); // X, X
+assertEq(tByteSize("千早ぶる神代もきかず龍田川 から"),    			s(72, 80)); // X, X
+assertEq(tByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水く"),    	s(72, 80)); // X, X
+assertEq(tByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水くく"),    	s(88, 96)); // X, X
+assertEq(tByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水くくるとは"),	s(88, 96)); // X, X
 
 // A Latin-1 rope. This changes size when flattened.
 // "In a village of La Mancha, the name of which I have no desire to call to mind"
