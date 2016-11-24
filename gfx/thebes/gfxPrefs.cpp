@@ -52,8 +52,8 @@ void
 gfxPrefs::Init()
 {
   // Set up Moz2D prefs.
-  mPrefGfxLoggingLevel.SetChangeCallback([](const GfxPrefValue& aValue) -> void {
-    mozilla::gfx::LoggingPrefs::sGfxLogLevel = aValue.get_int32_t();
+  mPrefGfxLoggingLevel.SetChangeCallback([]() -> void {
+    mozilla::gfx::LoggingPrefs::sGfxLogLevel = GetSingleton().mPrefGfxLoggingLevel.GetLiveValue();
   });
 }
 
@@ -87,9 +87,7 @@ void
 gfxPrefs::Pref::FireChangeCallback()
 {
   if (mChangeCallback) {
-    GfxPrefValue value;
-    GetLiveValue(&value);
-    mChangeCallback(value);
+    mChangeCallback();
   }
 }
 
