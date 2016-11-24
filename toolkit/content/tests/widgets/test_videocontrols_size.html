@@ -4,6 +4,7 @@
   <title>Video controls test - Size</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -74,15 +75,15 @@
     const videoWidth = video.clientWidth;
 
     const videoSizeMsg = `size:${videoRect.width}x${videoRect.height} -`;
-    const controlBar = getElementWithinVideoByAttribute(video, "anonid", "controlBar");
-    const playBtn = getElementWithinVideoByAttribute(video, "anonid", "playButton");
-    const scrubber = getElementWithinVideoByAttribute(video, "anonid", "scrubberStack");
-    const positionDurationBox = getElementWithinVideoByAttribute(video, "anonid", "positionDurationBox");
+    const controlBar = getAnonElementWithinVideoByAttribute(video, "anonid", "controlBar");
+    const playBtn = getAnonElementWithinVideoByAttribute(video, "anonid", "playButton");
+    const scrubber = getAnonElementWithinVideoByAttribute(video, "anonid", "scrubberStack");
+    const positionDurationBox = getAnonElementWithinVideoByAttribute(video, "anonid", "positionDurationBox");
     const durationLabel = positionDurationBox.getElementsByTagName("span")[0];
-    const muteBtn = getElementWithinVideoByAttribute(video, "anonid", "muteButton");
-    const volumeStack = getElementWithinVideoByAttribute(video, "anonid", "volumeStack");
-    const fullscreenBtn = getElementWithinVideoByAttribute(video, "anonid", "fullscreenButton");
-    const clickToPlay = getElementWithinVideoByAttribute(video, "anonid", "clickToPlay");
+    const muteBtn = getAnonElementWithinVideoByAttribute(video, "anonid", "muteButton");
+    const volumeStack = getAnonElementWithinVideoByAttribute(video, "anonid", "volumeStack");
+    const fullscreenBtn = getAnonElementWithinVideoByAttribute(video, "anonid", "fullscreenButton");
+    const clickToPlay = getAnonElementWithinVideoByAttribute(video, "anonid", "clickToPlay");
 
 
     // Controls should show/hide according to the priority
@@ -161,13 +162,6 @@
 
   function executeTasks(tasks) {
     return tasks.reduce((promise, task) => promise.then(task), Promise.resolve());
-  }
-
-  function getElementWithinVideoByAttribute(video, aName, aValue) {
-    const videoControl = domUtils.getChildrenForNode(video, true)[1];
-
-    return SpecialPowers.wrap(videoControl.ownerDocument)
-      .getAnonymousElementByAttribute(videoControl, aName, aValue);
   }
 
   function start() {
