@@ -191,12 +191,15 @@ GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind)
     }
 
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
-    MOZ_ASSERT_IF(rt->isAtomsCompartment(cx->compartment()),
-                  kind == AllocKind::STRING ||
-                  kind == AllocKind::FAT_INLINE_STRING ||
+    MOZ_ASSERT_IF(cx->compartment()->isAtomsCompartment(),
+                  kind == AllocKind::ATOM ||
+                  kind == AllocKind::FAT_INLINE_ATOM ||
                   kind == AllocKind::SYMBOL ||
                   kind == AllocKind::JITCODE ||
                   kind == AllocKind::SCOPE);
+    MOZ_ASSERT_IF(!cx->compartment()->isAtomsCompartment(),
+                  kind != AllocKind::ATOM &&
+                  kind != AllocKind::FAT_INLINE_ATOM);
     MOZ_ASSERT(!rt->isHeapBusy());
     MOZ_ASSERT(isAllocAllowed());
 #endif
