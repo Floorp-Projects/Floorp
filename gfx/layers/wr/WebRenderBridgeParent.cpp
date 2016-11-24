@@ -36,7 +36,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(WebRenderBridgeParent* aParent,
     // i.e. the one created by the CompositorBridgeParent as opposed to the
     // CrossProcessCompositorBridgeParent
     MOZ_ASSERT(mWidget);
-    mWRWindowState = wr_init_window(mPipelineId, gfxPrefs::WebRenderProfilerEnabled());
+    mWRWindowState = wr_init_window(mPipelineId);
   }
   if (mWidget) {
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
@@ -260,12 +260,6 @@ WebRenderBridgeParent::ClearResources()
   }
   mGLContext = nullptr;
   mParent = nullptr;
-}
-
-void
-WebRenderBridgeParent::SetWebRenderProfilerEnabled(bool aEnabled)
-{
-  wr_profiler_set_enabled(mWRWindowState, aEnabled);
 }
 
 } // namespace layers
