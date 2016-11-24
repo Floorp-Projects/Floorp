@@ -68,6 +68,5 @@ public class ActivityUtils {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         activity.startActivity(intent);
 
-        activity.finish();
     }
 }
