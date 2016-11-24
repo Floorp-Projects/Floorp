@@ -106,8 +106,8 @@ IsZeroSize(const Size& sz) {
   return sz.width == 0.0 || sz.height == 0.0;
 }
 
-/* static */ bool
-nsCSSBorderRenderer::AllCornersZeroSize(const RectCornerRadii& corners) {
+static bool
+AllCornersZeroSize(const RectCornerRadii& corners) {
   return IsZeroSize(corners[NS_CORNER_TOP_LEFT]) &&
     IsZeroSize(corners[NS_CORNER_TOP_RIGHT]) &&
     IsZeroSize(corners[NS_CORNER_BOTTOM_RIGHT]) &&
@@ -182,17 +182,16 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext* aPresContext,
     mDrawTarget(aDrawTarget),
     mDirtyRect(aDirtyRect),
     mOuterRect(aOuterRect),
+    mBorderStyles(aBorderStyles),
+    mBorderWidths(aBorderWidths),
     mBorderRadii(aBorderRadii),
+    mBorderColors(aBorderColors),
+    mCompositeColors(aCompositeColors),
     mBackgroundColor(aBackgroundColor)
 {
-  PodCopy(mBorderStyles, aBorderStyles, 4);
-  PodCopy(mBorderWidths, aBorderWidths, 4);
-  PodCopy(mBorderColors, aBorderColors, 4);
-  if (aCompositeColors) {
-    PodCopy(mCompositeColors, aCompositeColors, 4);
-  } else {
+  if (!mCompositeColors) {
     static nsBorderColors * const noColors[4] = { nullptr };
-    PodCopy(mCompositeColors, noColors, 4);
+    mCompositeColors = &noColors[0];
   }
 
   mInnerRect = mOuterRect;
@@ -272,7 +271,7 @@ ComputeBorderCornerDimensions(const Float* aBorderWidths,
   Float rightWidth = aBorderWidths[eSideRight];
   Float bottomWidth = aBorderWidths[eSideBottom];
 
-  if (nsCSSBorderRenderer::AllCornersZeroSize(aRadii)) {
+  if (AllCornersZeroSize(aRadii)) {
     // These will always be in pixel units from CSS
     (*aDimsRet)[C_TL] = Size(leftWidth, topWidth);
     (*aDimsRet)[C_TR] = Size(rightWidth, topWidth);

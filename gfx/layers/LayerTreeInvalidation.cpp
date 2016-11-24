@@ -610,7 +610,6 @@ CloneLayerTreePropertiesInternal(Layer* aRoot, bool aIsMask /* = false */)
     case Layer::TYPE_SHADOW:
     case Layer::TYPE_PAINTED:
     case Layer::TYPE_TEXT:
-    case Layer::TYPE_BORDER:
       return MakeUnique<LayerPropertiesBase>(aRoot);
   }
 
