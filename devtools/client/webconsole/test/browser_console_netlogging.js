@@ -23,8 +23,9 @@ add_task(function* () {
   ok(request, "Page load was logged");
 
   let client = hud.ui.webConsoleClient;
-  const postData = yield client.getRequestPostData(request.actor);
-  const responseContent = yield client.getResponseContent(request.actor);
+  let args = [request.actor];
+  const postData = yield getPacket(client, "getRequestPostData", args);
+  const responseContent = yield getPacket(client, "getResponseContent", args);
 
   is(request.request.url, TEST_NETWORK_REQUEST_URI,
     "Logged network entry is page load");
