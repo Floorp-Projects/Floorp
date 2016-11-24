@@ -1098,6 +1098,25 @@ private:
                               const nsAString& aTagName, nsINode* aNode);
   already_AddRefed<Element> CreateElementWithDefaults(
                               const nsAString& aTagName);
+  /**
+   * Returns an anonymous Element of type aTag,
+   * child of aParentNode. If aIsCreatedHidden is true, the class
+   * "hidden" is added to the created element. If aAnonClass is not
+   * the empty string, it becomes the value of the attribute "_moz_anonclass"
+   * @return a Element
+   * @param aTag             [IN] desired type of the element to create
+   * @param aParentNode      [IN] the parent node of the created anonymous
+   *                              element
+   * @param aAnonClass       [IN] contents of the _moz_anonclass attribute
+   * @param aIsCreatedHidden [IN] a boolean specifying if the class "hidden"
+   *                              is to be added to the created anonymous
+   *                              element
+   */
+  already_AddRefed<Element> CreateAnonymousElement(
+                              nsIAtom* aTag,
+                              nsIDOMNode* aParentNode,
+                              const nsAString& aAnonClass,
+                              bool aIsCreatedHidden);
 };
 
 } // namespace mozilla
