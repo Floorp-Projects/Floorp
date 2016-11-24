@@ -1413,22 +1413,17 @@ GeckoDriver.prototype.switchToParentFrame = function*(cmd, resp) {
 GeckoDriver.prototype.switchToFrame = function*(cmd, resp) {
   let {id, element, focus} = cmd.parameters;
 
-  const otherErrorsExpr = /about:.+(error)|(blocked)\?/;
-  const checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-
+  let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   let curWindow = this.getCurrentWindow();
 
   let checkLoad = function() {
-    let win = this.getCurrentWindow();
-    if (win.document.readyState == "complete") {
+    let errorRegex = /about:.+(error)|(blocked)\?/;
+    let curWindow = this.getCurrentWindow();
+    if (curWindow.document.readyState == "complete") {
       return;
-    } else if (win.document.readyState == "interactive") {
-      let baseURI = win.document.baseURI;
-      if (baseURI.startsWith("about:certerror")) {
-        throw new InsecureCertificateError();
-      } else if (otherErrorsExpr.exec(win.document.baseURI)) {
-        throw new UnknownError("Error loading page");
-      }
+    } else if (curWindow.document.readyState == "interactive" &&
+        errorRegex.exec(curWindow.document.baseURI)) {
+      throw new UnknownError("Error loading page");
     }
 
     checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
