@@ -71,9 +71,9 @@ Preferences._get = function(prefName, defaultValue, valueType) {
 
     default:
       // This should never happen.
-      throw "Error getting pref " + prefName + "; its value's type is " +
-            this._prefBranch.getPrefType(prefName) + ", which I don't " +
-            "know how to handle.";
+      throw new Error(`Error getting pref ${prefName}; its value's type is ` +
+                      `${this._prefBranch.getPrefType(prefName)}, which I don't ` +
+                      `know how to handle.`);
   }
 };
 
@@ -130,10 +130,11 @@ Preferences._set = function(prefName, prefValue) {
       // if the number is non-integer, since the consumer might not mind
       // the loss of precision.
       if (prefValue > MAX_INT || prefValue < MIN_INT)
-        throw ("you cannot set the " + prefName + " pref to the number " +
-              prefValue + ", as number pref values must be in the signed " +
-              "32-bit integer range -(2^31-1) to 2^31-1.  To store numbers " +
-              "outside that range, store them as strings.");
+        throw new Error(
+              `you cannot set the ${prefName} pref to the number ` +
+              `${prefValue}, as number pref values must be in the signed ` +
+              `32-bit integer range -(2^31-1) to 2^31-1.  To store numbers ` +
+              `outside that range, store them as strings.`);
       this._prefBranch.setIntPref(prefName, prefValue);
       if (prefValue % 1 != 0)
         Cu.reportError("Warning: setting the " + prefName + " pref to the " +
@@ -148,8 +149,8 @@ Preferences._set = function(prefName, prefValue) {
       break;
 
     default:
-      throw "can't set pref " + prefName + " to value '" + prefValue +
-            "'; it isn't a String, Number, or Boolean";
+      throw new Error(`can't set pref ${prefName} to value '${prefValue}'; ` +
+                      `it isn't a String, Number, or Boolean`);
   }
 };
 
