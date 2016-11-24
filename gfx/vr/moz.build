@@ -16,6 +16,7 @@ EXPORTS += [
 ]
 
 LOCAL_INCLUDES += [
+    '/dom/base',
     '/gfx/layers/d3d11',
     '/gfx/thebes',
 ]
