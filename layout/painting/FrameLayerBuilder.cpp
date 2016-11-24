@@ -1117,14 +1117,6 @@ public:
     return aRect.ScaleToOutsidePixels(mParameters.mXScale, mParameters.mYScale,
                                       mAppUnitsPerDevPixel);
   }
-  nsIntRegion ScaleToOutsidePixels(const nsRegion& aRegion, bool aSnap = false) const
-  {
-    if (aSnap && mSnappingEnabled) {
-      return ScaleRegionToNearestPixels(aRegion);
-    }
-    return aRegion.ScaleToOutsidePixels(mParameters.mXScale, mParameters.mYScale,
-                                        mAppUnitsPerDevPixel);
-  }
   nsIntRect ScaleToInsidePixels(const nsRect& aRect, bool aSnap = false) const
   {
     if (aSnap && mSnappingEnabled) {
@@ -4341,14 +4333,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         SetupMaskLayerForCSSMask(ownLayer, maskItem);
       }
 
-      // Convert the visible rect to a region and give the item
-      // a chance to try restrict it further.
-      nsIntRegion itemVisibleRegion = itemVisibleRect;
-      nsRegion tightBounds = item->GetTightBounds(mBuilder, &snap);
-      if (!tightBounds.IsEmpty()) {
-        itemVisibleRegion.AndWith(ScaleToOutsidePixels(tightBounds, snap));
-      }
-
       ContainerLayer* oldContainer = ownLayer->GetParent();
       if (oldContainer && oldContainer != mContainerLayer) {
         oldContainer->RemoveChild(ownLayer);
@@ -4387,7 +4371,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           newLayerEntry->mVisibleRegion =
             item->GetVisibleRectForChildren().ToOutsidePixels(mAppUnitsPerDevPixel);
         } else {
-          newLayerEntry->mVisibleRegion = itemVisibleRegion;
+          newLayerEntry->mVisibleRegion = itemVisibleRect;
         }
         newLayerEntry->mOpaqueRegion = ComputeOpaqueRect(item,
           animatedGeometryRoot, layerClip, aList,
@@ -4400,7 +4384,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
            item->Frame()->HasPerspective());
         const nsIntRegion &visible = useChildrenVisible ?
           item->GetVisibleRectForChildren().ToOutsidePixels(mAppUnitsPerDevPixel):
-          itemVisibleRegion;
+          itemVisibleRect;
 
         SetOuterVisibleRegionForLayer(ownLayer, visible,
             layerContentsVisibleRect.width >= 0 ? &layerContentsVisibleRect : nullptr,
@@ -4701,13 +4685,6 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       nsRect visibleRect =
         aItem->GetVisibleRect().Intersect(aItem->GetBounds(mDisplayListBuilder, &snap));
       nsIntRegion rgn = visibleRect.ToOutsidePixels(paintedData->mAppUnitsPerDevPixel);
-
-      // Convert the visible rect to a region and give the item
-      // a chance to try restrict it further.
-      nsRegion tightBounds = aItem->GetTightBounds(mDisplayListBuilder, &snap);
-      if (!tightBounds.IsEmpty()) {
-        rgn.AndWith(tightBounds.ToOutsidePixels(paintedData->mAppUnitsPerDevPixel));
-      }
       SetOuterVisibleRegion(tmpLayer, &rgn);
 
       // If BuildLayer didn't call BuildContainerLayerFor, then our new layer won't have been
