@@ -361,6 +361,7 @@ struct JSCompartment
     bool                         marked;
     bool                         warnedAboutExprClosure;
     bool                         warnedAboutForEach;
+    uint32_t                     warnedAboutStringGenericsMethods;
 
 #ifdef DEBUG
     bool                         firedOnNewGlobalObject;
