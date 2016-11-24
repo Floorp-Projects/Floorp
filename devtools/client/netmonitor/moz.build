@@ -9,6 +9,7 @@ DIRS += [
     'middleware',
     'reducers',
     'selectors',
+    'shared',
     'utils',
 ]
 
