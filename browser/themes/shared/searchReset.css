@@ -17,6 +17,6 @@ body {
   background-size: 16px, 16px;
 }
 
-#defaultEngine:-moz-dir(rtl) {
+#defaultEngine:dir(rtl) {
   background-position: calc(100% - 5px) center;
 }

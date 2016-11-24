@@ -10,21 +10,26 @@
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:orientation="horizontal"
-      android:paddingRight="?android:attr/scrollbarSize">
+      android:paddingRight="?android:attr/scrollbarSize"
+      android:paddingEnd="?android:attr/scrollbarSize"
+    >
 
     <RelativeLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="right"
+        android:gravity="right|end"
         android:layout_marginLeft="15dip"
+        android:layout_marginStart="15dip"
         android:layout_marginRight="6dip"
+        android:layout_marginEnd="6dip"
         android:layout_marginTop="6dip"
         android:layout_marginBottom="6dip"
         android:paddingRight="6dip"
+        android:paddingEnd="6dip"
         android:layout_weight="1">
 
         <TextView android:id="@+android:id/title"
-            android:layout_gravity="right"
+            android:layout_gravity="right|end"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:singleLine="true"
@@ -34,10 +39,13 @@
 
     </RelativeLayout>
 
-    <ImageView android:src="@drawable/menu_item_more"
+    <ImageView
+               android:id="@+id/menu_icon_more"
+               android:src="@drawable/menu_item_more"
                android:layout_width="wrap_content"
                android:layout_height="wrap_content"
                android:layout_gravity="center_vertical"
-               android:paddingRight="16dp" />
+               android:paddingRight="16dp"
+               android:paddingEnd="16dp" />
 
 </LinearLayout>

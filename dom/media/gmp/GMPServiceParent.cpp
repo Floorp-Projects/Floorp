@@ -529,43 +529,45 @@ GeckoMediaPluginServiceParent::EnsureInitialized() {
   return mInitPromise.Ensure(__func__);
 }
 
-bool
-GeckoMediaPluginServiceParent::GetContentParentFrom(GMPCrashHelper* aHelper,
-                                                    const nsACString& aNodeId,
-                                                    const nsCString& aAPI,
-                                                    const nsTArray<nsCString>& aTags,
-                                                    UniquePtr<GetGMPContentParentCallback>&& aCallback)
+RefPtr<GetGMPContentParentPromise>
+GeckoMediaPluginServiceParent::GetContentParent(GMPCrashHelper* aHelper,
+                                               const nsACString& aNodeId,
+                                               const nsCString& aAPI,
+                                               const nsTArray<nsCString>& aTags)
 {
   RefPtr<AbstractThread> thread(GetAbstractGMPThread());
   if (!thread) {
-    return false;
+    return GetGMPContentParentPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
+  typedef MozPromiseHolder<GetGMPContentParentPromise> PromiseHolder;
+  PromiseHolder* rawHolder = new PromiseHolder();
   RefPtr<GeckoMediaPluginServiceParent> self(this);
+  RefPtr<GetGMPContentParentPromise> promise = rawHolder->Ensure(__func__);
   nsCString nodeId(aNodeId);
   nsTArray<nsCString> tags(aTags);
   nsCString api(aAPI);
-  GetGMPContentParentCallback* rawCallback = aCallback.release();
   RefPtr<GMPCrashHelper> helper(aHelper);
   EnsureInitialized()->Then(thread, __func__,
-    [self, tags, api, nodeId, rawCallback, helper]() -> void {
-      UniquePtr<GetGMPContentParentCallback> callback(rawCallback);
+    [self, tags, api, nodeId, helper, rawHolder]() -> void {
+      UniquePtr<PromiseHolder> holder(rawHolder);
       RefPtr<GMPParent> gmp = self->SelectPluginForAPI(nodeId, api, tags);
       LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)self, (void *)gmp, api.get()));
       if (!gmp) {
         NS_WARNING("GeckoMediaPluginServiceParent::GetContentParentFrom failed");
-        callback->Done(nullptr);
+        holder->Reject(NS_ERROR_FAILURE, __func__);
         return;
       }
       self->ConnectCrashHelper(gmp->GetPluginId(), helper);
-      gmp->GetGMPContentParent(Move(callback));
+      gmp->GetGMPContentParent(Move(holder));
     },
-    [rawCallback]() -> void {
-      UniquePtr<GetGMPContentParentCallback> callback(rawCallback);
+    [rawHolder]() -> void {
+      UniquePtr<PromiseHolder> holder(rawHolder);
       NS_WARNING("GMPService::EnsureInitialized failed.");
-      callback->Done(nullptr);
+      holder->Reject(NS_ERROR_FAILURE, __func__);
     });
-  return true;
+
+  return promise;
 }
 
 void
@@ -1965,10 +1967,13 @@ GMPServiceParent::~GMPServiceParent()
 }
 
 mozilla::ipc::IPCResult
-GMPServiceParent::RecvSelectGMP(const nsCString& aNodeId,
+GMPServiceParent::RecvLaunchGMP(const nsCString& aNodeId,
                                 const nsCString& aAPI,
                                 nsTArray<nsCString>&& aTags,
+                                nsTArray<ProcessId>&& aAlreadyBridgedTo,
                                 uint32_t* aOutPluginId,
+                                ProcessId* aOutProcessId,
+                                nsCString* aOutDisplayName,
                                 nsresult* aOutRv)
 {
   if (mService->IsShuttingDown()) {
@@ -1979,45 +1984,25 @@ GMPServiceParent::RecvSelectGMP(const nsCString& aNodeId,
   RefPtr<GMPParent> gmp = mService->SelectPluginForAPI(aNodeId, aAPI, aTags);
   if (gmp) {
     *aOutPluginId = gmp->GetPluginId();
-    *aOutRv = NS_OK;
   } else {
     *aOutRv = NS_ERROR_FAILURE;
-  }
-
-  nsCString api = aTags[0];
-  LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)this, (void *)gmp, api.get()));
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-GMPServiceParent::RecvLaunchGMP(const uint32_t& aPluginId,
-                                nsTArray<ProcessId>&& aAlreadyBridgedTo,
-                                ProcessId* aOutProcessId,
-                                nsCString* aOutDisplayName,
-                                nsresult* aOutRv)
-{
-  *aOutRv = NS_OK;
-  if (mService->IsShuttingDown()) {
-    *aOutRv = NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-    return IPC_OK();
-  }
-
-  RefPtr<GMPParent> gmp(mService->GetById(aPluginId));
-  if (!gmp) {
-    *aOutRv = NS_ERROR_FAILURE;
+    *aOutPluginId = 0;
     return IPC_OK();
   }
 
   if (!gmp->EnsureProcessLoaded(aOutProcessId)) {
-    return IPC_FAIL_NO_REASON(this);
+    *aOutRv = NS_ERROR_FAILURE;
+    return IPC_OK();
   }
 
   *aOutDisplayName = gmp->GetDisplayName();
 
   if (!(aAlreadyBridgedTo.Contains(*aOutProcessId) || gmp->Bridge(this))) {
-    return IPC_FAIL_NO_REASON(this);
+    *aOutRv = NS_ERROR_FAILURE;
+    return IPC_OK();
   }
+
+  *aOutRv = NS_OK;
   return IPC_OK();
 }
 

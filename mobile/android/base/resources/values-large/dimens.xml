@@ -19,7 +19,7 @@
 
     <dimen name="browser_toolbar_site_security_height">60dp</dimen>
     <dimen name="browser_toolbar_site_security_width">34dp</dimen>
-    <dimen name="browser_toolbar_site_security_margin_right">1dp</dimen>
+    <dimen name="browser_toolbar_site_security_margin_end">1dp</dimen>
     <!-- We primarily use padding (instead of margins) to increase the hit area. -->
     <dimen name="browser_toolbar_site_security_padding_vertical">21dp</dimen>
     <dimen name="browser_toolbar_site_security_padding_horizontal">8dp</dimen>
