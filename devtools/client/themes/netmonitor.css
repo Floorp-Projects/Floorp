@@ -1,7 +1,8 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import "resource://devtools/client/shared/components/tree/tree-view.css";
 
 #toolbar-labels {
   overflow: hidden;
@@ -786,6 +787,7 @@
 
 #security-tabpanel {
   overflow: auto;
+  -moz-user-select: text;
 }
 
 .security-warning-icon {
@@ -1084,10 +1086,59 @@
   }
 }
 
+/* Overwrite tree-view cell colon and use l10n string instead */
+.treeTable .treeLabelCell::after {
+  content: "";
+}
+
+/* Layout additional warning icon in tree value cell  */
+.security-info-value {
+  display: flex;
+}
+
+.security-info-value .textbox-input {
+  text-overflow: ellipsis;
+  border: none;
+  background: none;
+  color: inherit;
+  width: 100%;
+  margin-inline-end: 2px;
+}
+
+.security-info-value .textbox-input:focus {
+  outline: 0;
+  box-shadow: var(--theme-focus-box-shadow-textbox);
+}
+
+.treeTable .treeLabel {
+  font-weight: 600;
+}
+
+/* Customize default tree table style to align with devtools theme  */
+.theme-light .treeTable .treeLabel,
+.theme-light .treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
+  color: var(--theme-highlight-red);
+}
+
+.theme-dark .treeTable .treeLabel,
+.theme-dark .treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
+  color: var(--theme-highlight-purple);
+}
+
+.theme-firebug .treeTable .treeLabel {
+  color: var(--theme-body-color);
+}
+
+.treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
+  cursor: default;
+  text-decoration: none;
+}
+
 /*
  * FIXME: normal html block element cannot fill outer XUL element
  * This workaround should be removed after sidebar is migrated to react
  */
+#react-security-tabpanel-hook,
 #react-timings-tabpanel-hook {
   display: -moz-box;
   -moz-box-orient: vertical;
