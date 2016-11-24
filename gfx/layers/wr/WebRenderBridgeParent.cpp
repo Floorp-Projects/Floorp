@@ -223,12 +223,6 @@ WebRenderBridgeParent::RecvRemoveExternalImageId(const uint64_t& aImageId)
 void
 WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
-    uint64_t externalImageId = iter.Data();
-    mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(externalImageId);
-  }
-  mExternalImageIds.Clear();
-
   ClearResources();
 }
 
@@ -282,6 +276,12 @@ WebRenderBridgeParent::ScheduleComposition()
 void
 WebRenderBridgeParent::ClearResources()
 {
+  for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
+    uint64_t externalImageId = iter.Data();
+    mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(externalImageId);
+  }
+  mExternalImageIds.Clear();
+
   if (mWRState) {
     wr_destroy(mWRState);
     mWRState = nullptr;
