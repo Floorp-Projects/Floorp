@@ -457,7 +457,6 @@ public:
 
   PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const uint64_t& aPipelineId) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
-  static void SetWebRenderProfilerEnabled(bool aEnabled);
 
 private:
 
