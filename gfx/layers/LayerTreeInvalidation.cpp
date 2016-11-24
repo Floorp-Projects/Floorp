@@ -479,9 +479,9 @@ public:
 
 static ImageHost* GetImageHost(Layer* aLayer)
 {
-  LayerComposite* composite = aLayer->AsLayerComposite();
-  if (composite) {
-    return static_cast<ImageHost*>(composite->GetCompositableHost());
+  HostLayer* compositor = aLayer->AsHostLayer();
+  if (compositor) {
+    return static_cast<ImageHost*>(compositor->GetCompositableHost());
   }
   return nullptr;
 }
@@ -609,6 +609,8 @@ CloneLayerTreePropertiesInternal(Layer* aRoot, bool aIsMask /* = false */)
     case Layer::TYPE_READBACK:
     case Layer::TYPE_SHADOW:
     case Layer::TYPE_PAINTED:
+    case Layer::TYPE_TEXT:
+    case Layer::TYPE_BORDER:
       return MakeUnique<LayerPropertiesBase>(aRoot);
   }
 

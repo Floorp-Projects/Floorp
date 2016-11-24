@@ -78,6 +78,10 @@ public:
     NS_RUNTIMEABORT("Not implemented.");
     return nullptr;
   }
+  virtual already_AddRefed<TextLayer> CreateTextLayer() {
+    NS_RUNTIMEABORT("Not implemented.");
+    return nullptr;
+  }
   virtual void SetRoot(Layer* aLayer) {}
   virtual bool BeginTransactionWithTarget(gfxContext* aTarget) { return true; }
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() {
@@ -238,7 +242,7 @@ already_AddRefed<Layer> CreateLayerTree(
   if (rootLayer) {
     rootLayer->ComputeEffectiveTransforms(Matrix4x4());
     manager->SetRoot(rootLayer);
-    if (rootLayer->AsLayerComposite()) {
+    if (rootLayer->AsHostLayer()) {
       // Only perform this for LayerManagerComposite
       CompositorBridgeParent::SetShadowProperties(rootLayer);
     }

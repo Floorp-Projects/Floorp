@@ -1462,41 +1462,33 @@ void
 WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
                          GLenum type, WebGLsizeiptr offset, ErrorResult& out_error)
 {
+    const char funcName[] = "readPixels";
     if (!ReadPixels_SharedPrecheck(&out_error))
         return;
 
-    if (!mBoundPixelPackBuffer) {
-        ErrorInvalidOperation("readPixels: PIXEL_PACK_BUFFER must not be null.");
+    const auto& buffer = ValidateBufferSelection(funcName, LOCAL_GL_PIXEL_PACK_BUFFER);
+    if (!buffer)
         return;
-    }
-
-    if (mBoundPixelPackBuffer->mNumActiveTFOs) {
-        ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
-                              " object.",
-                              "readPixels");
-        return;
-    }
 
     //////
 
-    if (offset < 0) {
-        ErrorInvalidValue("readPixels: offset must not be negative.");
+    if (!ValidateNonNegative(funcName, "offset", offset))
         return;
-    }
 
     {
         const auto bytesPerType = webgl::BytesPerPixel({LOCAL_GL_RED, type});
 
         if (offset % bytesPerType != 0) {
-            ErrorInvalidOperation("readPixels: `offset` must be divisible by the size"
-                                  " a `type` in bytes.");
+            ErrorInvalidOperation("%s: `offset` must be divisible by the size of `type`"
+                                  " in bytes.",
+                                  funcName);
             return;
         }
     }
 
     //////
 
-    const auto bytesAvailable = mBoundPixelPackBuffer->ByteLength();
+    const auto bytesAvailable = buffer->ByteLength();
     const auto checkedBytesAfterOffset = CheckedUint32(bytesAvailable) - offset;
 
     uint32_t bytesAfterOffset = 0;
@@ -1505,7 +1497,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
     }
 
     gl->MakeCurrent();
-    const ScopedLazyBind lazyBind(gl, LOCAL_GL_PIXEL_PACK_BUFFER, mBoundPixelPackBuffer);
+    const ScopedLazyBind lazyBind(gl, LOCAL_GL_PIXEL_PACK_BUFFER, buffer);
 
     ReadPixelsImpl(x, y, width, height, format, type, (void*)offset, bytesAfterOffset);
 }

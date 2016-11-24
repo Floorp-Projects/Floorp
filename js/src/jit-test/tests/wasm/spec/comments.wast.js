@@ -1,1 +1,1 @@
-var importedArgs = ['comments.wast']; load(scriptdir + '../spec.js');
+var importedArgs = ['comments.wast']; load(scriptdir + '../wast.js');

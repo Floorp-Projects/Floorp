@@ -13785,6 +13785,7 @@ public:
                    const nsAString& aFileName,
                    nsIInputStream* aPostDataStream,
                    nsIInputStream* aHeadersDataStream,
+                   bool aNoOpenerImplied,
                    bool aIsTrusted);
 
   NS_IMETHOD Run() override
@@ -13801,6 +13802,7 @@ public:
       mHandler->OnLinkClickSync(mContent, mURI,
                                 mTargetSpec.get(), mFileName,
                                 mPostDataStream, mHeadersDataStream,
+                                mNoOpenerImplied,
                                 nullptr, nullptr);
     }
     return NS_OK;
@@ -13815,6 +13817,7 @@ private:
   nsCOMPtr<nsIInputStream> mHeadersDataStream;
   nsCOMPtr<nsIContent> mContent;
   PopupControlState mPopupState;
+  bool mNoOpenerImplied;
   bool mIsTrusted;
 };
 
@@ -13825,6 +13828,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
                                    const nsAString& aFileName,
                                    nsIInputStream* aPostDataStream,
                                    nsIInputStream* aHeadersDataStream,
+                                   bool aNoOpenerImplied,
                                    bool aIsTrusted)
   : mHandler(aHandler)
   , mURI(aURI)
@@ -13834,6 +13838,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
   , mHeadersDataStream(aHeadersDataStream)
   , mContent(aContent)
   , mPopupState(mHandler->mScriptGlobal->GetPopupControlState())
+  , mNoOpenerImplied(aNoOpenerImplied)
   , mIsTrusted(aIsTrusted)
 {
 }
@@ -13871,11 +13876,15 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
   nsAutoString target;
 
   nsCOMPtr<nsIWebBrowserChrome3> browserChrome3 = do_GetInterface(mTreeOwner);
+  bool noOpenerImplied = false;
   if (browserChrome3) {
     nsCOMPtr<nsIDOMNode> linkNode = do_QueryInterface(aContent);
     nsAutoString oldTarget(aTargetSpec);
     rv = browserChrome3->OnBeforeLinkTraversal(oldTarget, aURI,
                                                linkNode, mIsAppTab, target);
+    if (!oldTarget.Equals(target)) {
+      noOpenerImplied = true;
+    }
   }
 
   if (NS_FAILED(rv)) {
@@ -13884,7 +13893,8 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
 
   nsCOMPtr<nsIRunnable> ev =
     new OnLinkClickEvent(this, aContent, aURI, target.get(), aFileName,
-                         aPostDataStream, aHeadersDataStream, aIsTrusted);
+                         aPostDataStream, aHeadersDataStream, noOpenerImplied,
+                         aIsTrusted);
   return NS_DispatchToCurrentThread(ev);
 }
 
@@ -13895,6 +13905,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                             const nsAString& aFileName,
                             nsIInputStream* aPostDataStream,
                             nsIInputStream* aHeadersDataStream,
+                            bool aNoOpenerImplied,
                             nsIDocShell** aDocShell,
                             nsIRequest** aRequest)
 {
@@ -13959,6 +13970,9 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
       if (token.LowerCaseEqualsLiteral("noopener")) {
         flags |= INTERNAL_LOAD_FLAGS_NO_OPENER;
       }
+    }
+    if (aNoOpenerImplied) {
+      flags |= INTERNAL_LOAD_FLAGS_NO_OPENER;
     }
   }
 
