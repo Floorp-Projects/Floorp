@@ -44,10 +44,4 @@ interface nsIGroupedSHistory : nsISupports
    *                            partial session history.
    */
   void gotoIndex(in unsigned long aGlobalIndex, out nsIFrameLoader aTargetLoaderToSwap);
-
-  /**
-   * Close the FrameLoaderOwners of the inactive PartialSHistories in this GlobalSHistory.
-   * This does not remove the PartialSHistories from the GroupedSHistory.
-   */
-  void closeInactiveFrameLoaderOwners();
 };
