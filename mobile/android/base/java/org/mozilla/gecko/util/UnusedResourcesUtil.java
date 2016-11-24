@@ -94,32 +94,6 @@ final class UnusedResourcesUtil {
             R.xml.preferences_default_browser_tablet
     };
 
-    // We are migrating to Gradle 2.10 and the Android Gradle plugin 2.0. The new plugin does find
-    // more unused resources but we are not ready to remove them yet. Some of the resources are going
-    // to be reused soon. This is a temporary solution so that the gradle migration is not blocked.
-    // See bug 1263390 / bug 1268414.
-    public static final int[] TEMPORARY_UNUSED_WHILE_MIGRATING_GRADLE = {
-            R.color.remote_tabs_setup_button_background_hit,
-
-            R.drawable.remote_tabs_setup_button_background,
-
-            R.style.TabsPanelSectionBase,
-            R.style.TabsPanelSection,
-            R.style.TabsPanelItemBase,
-            R.style.TabsPanelItem,
-            R.style.TabsPanelItem_TextAppearance,
-            R.style.TabsPanelItem_TextAppearance_Header,
-            R.style.TabsPanelItem_TextAppearance_Linkified,
-            R.style.TabWidget,
-            R.style.GeckoDialogTitle,
-            R.style.GeckoDialogTitle_SubTitle,
-            R.style.RemoteTabsPanelItem,
-            R.style.RemoteTabsPanelItem_TextAppearance,
-            R.style.RemoteTabsPanelItem_TextAppearance_Header,
-            R.style.RemoteTabsPanelItem_TextAppearance_Linkified,
-            R.style.RemoteTabsPanelItem_Button,
-    };
-
     // String resources that are used in the full-pane Activity Stream that are temporarily
     // not needed while Activity Stream is part of the HomePager
     public static final int[] TEMPORARY_UNUSED_ACTIVITY_STREAM = {

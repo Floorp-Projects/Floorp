@@ -35,15 +35,6 @@ const storeMap = {
         path: "/",
         host: "test1.example.org",
         isDomain: false,
-        isSecure: false,
-      },
-      {
-        name: "uc1",
-        value: "foobar",
-        host: ".example.org",
-        path: "/",
-        expires: 0,
-        isDomain: true,
         isSecure: true,
       }
     ],
@@ -337,7 +328,8 @@ function* testStores(data) {
 }
 
 function testCookies(cookiesActor) {
-  is(Object.keys(cookiesActor.hosts).length, 2, "Correct number of host entries for cookies");
+  is(Object.keys(cookiesActor.hosts).length, 2,
+                 "Correct number of host entries for cookies");
   return testCookiesObjects(0, cookiesActor.hosts, cookiesActor);
 }
 
@@ -346,9 +338,9 @@ var testCookiesObjects = Task.async(function* (index, hosts, cookiesActor) {
   let matchItems = data => {
     let cookiesLength = 0;
     for (let secureCookie of storeMap.cookies[host]) {
-       if (secureCookie.isSecure) {
-          ++cookiesLength;
-       }
+      if (secureCookie.isSecure) {
+        ++cookiesLength;
+      }
     }
     // Any secure cookies did not get stored in the database.
     is(data.total, storeMap.cookies[host].length - cookiesLength,

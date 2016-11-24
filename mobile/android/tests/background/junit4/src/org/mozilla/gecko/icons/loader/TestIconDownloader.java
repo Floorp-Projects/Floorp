@@ -16,11 +16,13 @@ import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.icons.storage.FailureCache;
 import org.robolectric.RuntimeEnvironment;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -108,5 +110,33 @@ public class TestIconDownloader {
         Assert.assertNull(response);
 
         Assert.assertTrue(FailureCache.get().isKnownFailure(faviconUrl));
+    }
+
+    /**
+     * Scenario: Connected to successfully to server but reading the response code throws an exception.
+     *
+     * Verify that:
+     *  * disconnect() is called on HttpUrlConnection
+     */
+    @Test
+    public void testConnectionIsClosedWhenReadingResponseCodeThrows() throws Exception {
+        final IconRequest request = Icons.with(RuntimeEnvironment.application)
+                .pageUrl("http://www.mozilla.org")
+                .icon(IconDescriptor.createFavicon(
+                        "https://www.mozilla.org/media/img/favicon.52506929be4c.ico",
+                        32,
+                        "image/x-icon"))
+                .build();
+
+        HttpURLConnection mockedConnection = mock(HttpURLConnection.class);
+        doThrow(new IOException()).when(mockedConnection).getResponseCode();
+
+        final IconDownloader downloader = spy(new IconDownloader());
+        doReturn(mockedConnection).when(downloader).connectTo(anyString());
+        IconResponse response = downloader.load(request);
+
+        Assert.assertNull(response);
+
+        verify(mockedConnection).disconnect();
     }
 }

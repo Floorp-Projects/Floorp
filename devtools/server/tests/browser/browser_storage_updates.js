@@ -27,7 +27,12 @@ const TESTS = [
     expected: {
       added: {
         cookies: {
-          "test1.example.org": ["c1", "c2"]
+          "test1.example.org": [
+            getCookieId("c1", "test1.example.org",
+                        "/browser/devtools/server/tests/browser/"),
+            getCookieId("c2", "test1.example.org",
+                        "/browser/devtools/server/tests/browser/")
+          ]
         },
         localStorage: {
           "http://test1.example.org": ["l1"]
@@ -48,7 +53,10 @@ const TESTS = [
     expected: {
       changed: {
         cookies: {
-          "test1.example.org": ["c1"]
+          "test1.example.org": [
+            getCookieId("c1", "test1.example.org",
+                        "/browser/devtools/server/tests/browser/"),
+          ]
         }
       },
       added: {
@@ -74,7 +82,10 @@ const TESTS = [
     expected: {
       deleted: {
         cookies: {
-          "test1.example.org": ["c2"]
+          "test1.example.org": [
+            getCookieId("c2", "test1.example.org",
+                        "/browser/devtools/server/tests/browser/"),
+          ]
         },
         localStorage: {
           "http://test1.example.org": ["l1"]
@@ -112,7 +123,10 @@ const TESTS = [
     expected: {
       added: {
         cookies: {
-          "test1.example.org": ["c3"]
+          "test1.example.org": [
+            getCookieId("c3", "test1.example.org",
+                        "/browser/devtools/server/tests/browser/"),
+          ]
         },
         sessionStorage: {
           "http://test1.example.org": ["s1", "s2"]
@@ -125,7 +139,10 @@ const TESTS = [
       },
       deleted: {
         cookies: {
-          "test1.example.org": ["c1"]
+          "test1.example.org": [
+            getCookieId("c1", "test1.example.org",
+                        "/browser/devtools/server/tests/browser/"),
+          ]
         },
         localStorage: {
           "http://test1.example.org": ["l2"]
@@ -158,7 +175,10 @@ const TESTS = [
     expected: {
       deleted: {
         cookies: {
-          "test1.example.org": ["c3"]
+          "test1.example.org": [
+            getCookieId("c3", "test1.example.org",
+                        "/browser/devtools/server/tests/browser/"),
+          ]
         }
       }
     }

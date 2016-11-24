@@ -7,6 +7,8 @@ package org.mozilla.gecko.icons.loader;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
@@ -82,13 +84,10 @@ public class IconDownloader implements IconLoader {
      * @param targetFaviconURL URL of the favicon to download.
      * @return A LoadFaviconResult containing the bitmap(s) extracted from the downloaded file, or
      *         null if no or corrupt data was received.
-     * @throws IOException If attempts to fully read the stream result in such an exception, such as
-     *                     in the event of a transient connection failure.
-     * @throws URISyntaxException If the underlying call to tryDownload retries and raises such an
-     *                            exception trying a fallback URL.
      */
     @VisibleForTesting
-    LoadFaviconResult downloadAndDecodeImage(Context context, String targetFaviconURL) throws IOException, URISyntaxException {
+    @Nullable
+    LoadFaviconResult downloadAndDecodeImage(Context context, String targetFaviconURL) {
         // Try the URL we were given.
         final HttpURLConnection connection = tryDownload(targetFaviconURL);
         if (connection == null) {
@@ -101,6 +100,9 @@ public class IconDownloader implements IconLoader {
         try {
             stream = connection.getInputStream();
             return decodeImageFromResponse(context, stream, connection.getHeaderFieldInt("Content-Length", -1));
+        } catch (IOException e) {
+            Log.d(LOGTAG, "IOException while reading and decoding ixon", e);
+            return null;
         } finally {
             // Close the stream and free related resources.
             IOUtils.safeStreamClose(stream);
@@ -114,7 +116,8 @@ public class IconDownloader implements IconLoader {
      * @param faviconURI URL of Favicon to try and download
      * @return The HttpResponse containing the downloaded Favicon if successful, null otherwise.
      */
-    private HttpURLConnection tryDownload(String faviconURI) throws URISyntaxException, IOException {
+    @Nullable
+    private HttpURLConnection tryDownload(String faviconURI) {
         final HashSet<String> visitedLinkSet = new HashSet<>();
         visitedLinkSet.add(faviconURI);
         return tryDownloadRecurse(faviconURI, visitedLinkSet);
@@ -123,44 +126,54 @@ public class IconDownloader implements IconLoader {
     /**
      * Try to download from the favicon URL and recursively follow redirects.
      */
-    private HttpURLConnection tryDownloadRecurse(String faviconURI, HashSet<String> visited) throws URISyntaxException, IOException {
+    @Nullable
+    private HttpURLConnection tryDownloadRecurse(String faviconURI, HashSet<String> visited) {
         if (visited.size() == MAX_REDIRECTS_TO_FOLLOW) {
             return null;
         }
 
-        final HttpURLConnection connection = connectTo(faviconURI);
+        HttpURLConnection connection = null;
 
-        // Was the response a failure?
-        final int status = connection.getResponseCode();
+        try {
+            connection = connectTo(faviconURI);
 
-        // Handle HTTP status codes requesting a redirect.
-        if (status >= 300 && status < 400) {
-            final String newURI = connection.getHeaderField("Location");
+            // Was the response a failure?
+            final int status = connection.getResponseCode();
 
-            // Handle mad web servers.
-            try {
-                if (newURI == null || newURI.equals(faviconURI)) {
-                    return null;
+            // Handle HTTP status codes requesting a redirect.
+            if (status >= 300 && status < 400) {
+                final String newURI = connection.getHeaderField("Location");
+
+                // Handle mad web servers.
+                try {
+                    if (newURI == null || newURI.equals(faviconURI)) {
+                        return null;
+                    }
+
+                    if (visited.contains(newURI)) {
+                        // Already been redirected here - abort.
+                        return null;
+                    }
+
+                    visited.add(newURI);
+                } finally {
+                    connection.disconnect();
                 }
 
-                if (visited.contains(newURI)) {
-                    // Already been redirected here - abort.
-                    return null;
-                }
-
-                visited.add(newURI);
-            } finally {
-                connection.disconnect();
+                return tryDownloadRecurse(newURI, visited);
             }
 
-            return tryDownloadRecurse(newURI, visited);
-        }
+            if (status >= 400) {
+                // Client or Server error. Let's not retry loading from this URL again for some time.
+                FailureCache.get().rememberFailure(faviconURI);
 
-        if (status >= 400) {
-            // Client or Server error. Let's not retry loading from this URL again for some time.
-            FailureCache.get().rememberFailure(faviconURI);
-
-            connection.disconnect();
+                connection.disconnect();
+                return null;
+            }
+        } catch (IOException | URISyntaxException e) {
+            if (connection != null) {
+                connection.disconnect();
+            }
             return null;
         }
 
@@ -168,9 +181,10 @@ public class IconDownloader implements IconLoader {
     }
 
     @VisibleForTesting
-    HttpURLConnection connectTo(String faviconURI) throws URISyntaxException, IOException {
+    @NonNull
+    HttpURLConnection connectTo(String uri) throws URISyntaxException, IOException {
         final HttpURLConnection connection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(
-                new URI(faviconURI));
+                new URI(uri));
 
         connection.setRequestProperty("User-Agent", GeckoAppShell.getGeckoInterface().getDefaultUAString());
 
@@ -178,8 +192,6 @@ public class IconDownloader implements IconLoader {
         // Nowadays we should let HttpUrlConnection do the work - assuming that it doesn't follow
         // redirects in loops forever.
         connection.setInstanceFollowRedirects(false);
-
-        connection.connect();
 
         return connection;
     }
@@ -195,6 +207,7 @@ public class IconDownloader implements IconLoader {
      * @throws IOException If attempts to fully read the stream result in such an exception, such as
      *                     in the event of a transient connection failure.
      */
+    @Nullable
     private LoadFaviconResult decodeImageFromResponse(Context context, InputStream stream, int contentLength) throws IOException {
         // This may not be provided, but if it is, it's useful.
         final int bufferSize;

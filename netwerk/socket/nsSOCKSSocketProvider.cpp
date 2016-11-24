@@ -11,6 +11,8 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 
+using mozilla::NeckoOriginAttributes;
+
 //////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_ISUPPORTS(nsSOCKSSocketProvider, nsISocketProvider)
@@ -46,7 +48,7 @@ nsSOCKSSocketProvider::NewSocket(int32_t family,
                                  const char *host, 
                                  int32_t port,
                                  nsIProxyInfo *proxy,
-                                 const nsACString &firstPartyDomain,
+                                 const NeckoOriginAttributes &originAttributes,
                                  uint32_t flags,
                                  PRFileDesc **result,
                                  nsISupports **socksInfo)
@@ -88,7 +90,7 @@ nsSOCKSSocketProvider::AddToSocket(int32_t family,
                                    const char *host,
                                    int32_t port,
                                    nsIProxyInfo *proxy,
-                                   const nsACString &firstPartyDomain,
+                                   const NeckoOriginAttributes &originAttributes,
                                    uint32_t flags,
                                    PRFileDesc *sock,
                                    nsISupports **socksInfo)
