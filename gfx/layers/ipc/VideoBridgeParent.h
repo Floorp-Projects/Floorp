@@ -7,6 +7,7 @@
 #define gfx_layers_ipc_VideoBridgeParent_h_
 
 #include "mozilla/layers/PVideoBridgeParent.h"
+#include "mozilla/layers/ISurfaceAllocator.h"
 
 namespace mozilla {
 namespace layers {

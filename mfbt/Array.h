@@ -46,6 +46,16 @@ public:
     return mArr[aIndex];
   }
 
+  bool operator==(const Array<T, Length>& aOther) const
+  {
+    for (size_t i = 0; i < Length; i++) {
+      if (mArr[i] != aOther[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   typedef T*                        iterator;
   typedef const T*                  const_iterator;
   typedef ReverseIterator<T*>       reverse_iterator;

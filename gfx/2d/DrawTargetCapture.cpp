@@ -197,5 +197,63 @@ DrawTargetCaptureImpl::ReplayToDrawTarget(DrawTarget* aDT, const Matrix& aTransf
   }
 }
 
+bool
+DrawTargetCaptureImpl::ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont,
+                                                 Color& aColor,
+                                                 std::vector<Glyph>& aGlyphs)
+{
+  uint8_t* start = &mDrawCommandStorage.front();
+  uint8_t* current = start;
+
+  while (current < start + mDrawCommandStorage.size()) {
+    DrawingCommand* command =
+      reinterpret_cast<DrawingCommand*>(current + sizeof(uint32_t));
+    current += *(uint32_t*)current;
+
+    if (command->GetType() != CommandType::FILLGLYPHS &&
+        command->GetType() != CommandType::SETTRANSFORM) {
+      return false;
+    }
+
+    if (command->GetType() == CommandType::SETTRANSFORM) {
+      SetTransformCommand* transform = static_cast<SetTransformCommand*>(command);
+      if (transform->mTransform != Matrix()) {
+        return false;
+      }
+      continue;
+    }
+
+    FillGlyphsCommand* fillGlyphs = static_cast<FillGlyphsCommand*>(command);
+    if (aScaledFont && fillGlyphs->mFont != aScaledFont) {
+      return false;
+    }
+    aScaledFont = fillGlyphs->mFont;
+
+    Pattern& pat = fillGlyphs->mPattern;
+
+    if (pat.GetType() != PatternType::COLOR) {
+      return false;
+    }
+
+    ColorPattern* colorPat = static_cast<ColorPattern*>(&pat);
+    if (aColor != Color() && colorPat->mColor != aColor) {
+      return false;
+    }
+    aColor = colorPat->mColor;
+
+    if (fillGlyphs->mOptions.mCompositionOp != CompositionOp::OP_OVER ||
+        fillGlyphs->mOptions.mAlpha != 1.0f) {
+      return false;
+    }
+
+    //TODO: Deal with AA on the DrawOptions, and the GlyphRenderingOptions
+
+    aGlyphs.insert(aGlyphs.end(),
+                   fillGlyphs->mGlyphs.begin(),
+                   fillGlyphs->mGlyphs.end());
+  }
+  return true;
+}
+
 } // namespace gfx
 } // namespace mozilla

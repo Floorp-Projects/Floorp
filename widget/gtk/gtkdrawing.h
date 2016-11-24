@@ -160,6 +160,10 @@ typedef enum {
   MOZ_GTK_TOOLBAR_SEPARATOR,
   /* Paints a GtkToolTip */
   MOZ_GTK_TOOLTIP,
+  /* Paints a GtkBox from GtkToolTip  */
+  MOZ_GTK_TOOLTIP_BOX,
+  /* Paints a GtkLabel of GtkToolTip */
+  MOZ_GTK_TOOLTIP_BOX_LABEL,
   /* Paints a GtkFrame (e.g. a status bar panel). */
   MOZ_GTK_FRAME,
   /* Paints the border of a GtkFrame */

@@ -629,6 +629,11 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readSimdCtorArgsEnd(uint32_t numElements);
     MOZ_MUST_USE bool readSimdCtorReturn(ValType simdType);
 
+    // At a location where readOp is allowed, peek at the next opcode
+    // without consuming it or updating any internal state.
+    // Never fails: returns uint16_t(Op::Limit) if it can't read.
+    uint16_t peekOp();
+
     // ------------------------------------------------------------------------
     // Stack management.
 
@@ -856,6 +861,25 @@ OpIter<Policy>::readOp(uint16_t* op)
     op_ = Op(*op);  // debug-only
 
     return true;
+}
+
+template <typename Policy>
+inline uint16_t
+OpIter<Policy>::peekOp()
+{
+    const uint8_t* pos = d_.currentPosition();
+    uint16_t op;
+
+    if (Validate) {
+        if (MOZ_UNLIKELY(!d_.readOp(&op)))
+            op = uint16_t(Op::Limit);
+    } else {
+        op = uint16_t(d_.uncheckedReadOp());
+    }
+
+    d_.rollbackPosition(pos);
+
+    return op;
 }
 
 template <typename Policy>

@@ -38,13 +38,6 @@ static inline bool IS_TABLE_CELL(nsIAtom* frameType) {
     nsGkAtoms::bcTableCellFrame == frameType;
 }
 
-static inline bool FrameHasBorderOrBackground(nsIFrame* f) {
-  return (f->StyleVisibility()->IsVisible() &&
-          (!f->StyleBackground()->IsTransparent() ||
-           f->StyleDisplay()->mAppearance ||
-           f->StyleBorder()->HasBorder()));
-}
-
 class nsDisplayTableItem : public nsDisplayItem
 {
 public:

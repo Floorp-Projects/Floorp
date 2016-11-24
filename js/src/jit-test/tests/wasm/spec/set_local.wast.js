@@ -1,1 +1,1 @@
-var importedArgs = ['set_local.wast']; load(scriptdir + '../spec.js');
+var importedArgs = ['set_local.wast']; load(scriptdir + '../wast.js');
