@@ -600,10 +600,6 @@ GMPCapability::Supports(const nsTArray<GMPCapability>& aCapabilities,
             if (!WMFDecoderModule::HasH264()) {
               continue;
             }
-          } else if (capabilities.mAPIName.EqualsLiteral(GMP_API_AUDIO_DECODER)) {
-            if (!WMFDecoderModule::HasAAC()) {
-              continue;
-            }
           }
         }
 #endif

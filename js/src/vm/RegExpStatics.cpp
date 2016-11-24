@@ -32,7 +32,7 @@ resc_trace(JSTracer* trc, JSObject* obj)
 {
     void* pdata = obj->as<RegExpStaticsObject>().getPrivate();
     if (pdata)
-        static_cast<RegExpStatics*>(pdata)->mark(trc);
+        static_cast<RegExpStatics*>(pdata)->trace(trc);
 }
 
 static const ClassOps RegExpStaticsObjectClassOps = {

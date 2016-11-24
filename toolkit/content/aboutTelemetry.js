@@ -1108,6 +1108,28 @@ var ChromeHangs = {
   }
 };
 
+var CapturedStacks = {
+  symbolRequest: null,
+
+  render: function CapturedStacks_render(payload) {
+    // Retrieve captured stacks from telemetry payload.
+    let capturedStacks = "processes" in payload && "parent" in payload.processes
+      ? payload.processes.parent.capturedStacks
+      : false;
+    let hasData = capturedStacks && capturedStacks.stacks &&
+                  capturedStacks.stacks.length > 0;
+    setHasData("captured-stacks-section", hasData);
+    if (!hasData) {
+      return;
+    }
+
+    let stacks = capturedStacks.stacks;
+    let memoryMap = capturedStacks.memoryMap;
+
+    StackRenderer.renderStacks("captured-stacks", stacks, memoryMap, () => {});
+  },
+};
+
 var ThreadHangStats = {
 
   /**
@@ -1797,6 +1819,29 @@ function setupListeners() {
       ChromeHangs.render(gPingData);
   }, false);
 
+  document.getElementById("captured-stacks-fetch-symbols").addEventListener("click",
+    function() {
+      if (!gPingData) {
+        return;
+      }
+      let capturedStacks = gPingData.payload.processes.parent.capturedStacks;
+      let req = new SymbolicationRequest("captured-stacks",
+                                         CapturedStacks.render,
+                                         capturedStacks.memoryMap,
+                                         capturedStacks.stacks,
+                                         null);
+      req.fetchSymbols();
+  }, false);
+
+  document.getElementById("captured-stacks-hide-symbols").addEventListener("click",
+    function() {
+      if (!gPingData) {
+        return;
+      }
+
+      CapturedStacks.render(gPingData);
+  }, false);
+
   document.getElementById("late-writes-fetch-symbols").addEventListener("click",
     function() {
       if (!gPingData) {
@@ -2062,6 +2107,9 @@ function displayPingData(ping, updatePayloadList = false) {
 
   // Show thread hang stats
   ThreadHangStats.render(payload);
+
+  // Show captured stacks.
+  CapturedStacks.render(payload);
 
   // Show simple measurements
   let simpleMeasurements = sortStartupMilestones(payload.simpleMeasurements);

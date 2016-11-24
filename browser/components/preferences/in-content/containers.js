@@ -39,10 +39,34 @@ let gContainersPane = {
   },
 
   onRemoveClick(button) {
-    let userContextId = button.getAttribute("value");
+    let userContextId = parseInt(button.getAttribute("value"), 10);
+
+    let count = ContextualIdentityService.countContainerTabs(userContextId);
+    if (count > 0) {
+      let bundlePreferences = document.getElementById("bundlePreferences");
+
+      let title = bundlePreferences.getString("removeContainerAlertTitle");
+      let message = PluralForm.get(count, bundlePreferences.getString("removeContainerMsg"))
+                              .replace("#S", count)
+      let okButton = bundlePreferences.getString("removeContainerOkButton");
+      let cancelButton = bundlePreferences.getString("removeContainerButton2");
+
+      let buttonFlags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
+                        (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
+
+      let rv = Services.prompt.confirmEx(window, title, message, buttonFlags,
+                                         okButton, cancelButton, null, null, {});
+      if (rv != 0) {
+        return;
+      }
+
+      ContextualIdentityService.closeContainerTabs(userContextId);
+    }
+
     ContextualIdentityService.remove(userContextId);
     this._rebuildView();
   },
+
   onPeferenceClick(button) {
     this.openPreferenceDialog(button.getAttribute("value"));
   },

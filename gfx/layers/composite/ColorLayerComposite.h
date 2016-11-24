@@ -39,7 +39,7 @@ public:
   // LayerComposite Implementation
   virtual Layer* GetLayer() override { return this; }
 
-  virtual void SetLayerManager(LayerManagerComposite* aManager) override
+  virtual void SetLayerManager(HostLayerManager* aManager) override
   {
     LayerComposite::SetLayerManager(aManager);
     mManager = aManager;
@@ -54,7 +54,7 @@ public:
 
   CompositableHost* GetCompositableHost() override { return nullptr; }
 
-  virtual LayerComposite* AsLayerComposite() override { return this; }
+  virtual HostLayer* AsHostLayer() override { return this; }
 
   virtual const char* Name() const override { return "ColorLayerComposite"; }
 };

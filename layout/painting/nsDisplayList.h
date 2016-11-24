@@ -14,6 +14,7 @@
 #define NSDISPLAYLIST_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Array.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
@@ -1426,6 +1427,13 @@ public:
     *aSnap = false;
     return nsRect(ToReferenceFrame(), Frame()->GetSize());
   }
+
+  virtual nsRegion GetTightBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
+  {
+    *aSnap = false;
+    return nsRegion();
+  }
+
   /**
    * Returns true if nothing will be rendered inside aRect, false if uncertain.
    * aRect is assumed to be contained in this item's bounds.
@@ -2557,6 +2565,13 @@ public:
 
   virtual bool IsInvisibleInRect(const nsRect& aRect) override;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override;
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) override;
+
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aContainerParameters) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("Border", TYPE_BORDER)
   
@@ -2566,8 +2581,18 @@ public:
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) override;
 
+  virtual nsRegion GetTightBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override
+  {
+    *aSnap = true;
+    return CalculateBounds(*mFrame->StyleBorder());
+  }
+
 protected:
-  nsRect CalculateBounds(const nsStyleBorder& aStyleBorder);
+  nsRegion CalculateBounds(const nsStyleBorder& aStyleBorder);
+
+  mozilla::Array<mozilla::gfx::Color, 4> mColors;
+  mozilla::Array<mozilla::LayerCoord, 4> mWidths;
+  mozilla::LayerRect mRect;
 
   nsRect mBounds;
 };
@@ -2907,7 +2932,13 @@ public:
     , mColor(Color::FromABGR(aColor))
   { }
 
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override;
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aContainerParameters) override;
 
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) override;

@@ -97,7 +97,7 @@ static void PrintUniformityInfo(Layer* aLayer)
     return;
   }
 
-  Matrix4x4 transform = aLayer->AsLayerComposite()->GetShadowBaseTransform();
+  Matrix4x4 transform = aLayer->AsHostLayer()->GetShadowBaseTransform();
   if (!transform.Is2D()) {
     return;
   }
@@ -141,7 +141,7 @@ ContainerPrepare(ContainerT* aContainer,
   aContainer->SortChildrenBy3DZOrder(children);
 
   for (uint32_t i = 0; i < children.Length(); i++) {
-    LayerComposite* layerToRender = static_cast<LayerComposite*>(children.ElementAt(i)->ImplData());
+    LayerComposite* layerToRender = static_cast<LayerComposite*>(children.ElementAt(i)->AsHostLayer());
 
     RenderTargetIntRect clipRect = layerToRender->GetLayer()->
         CalculateScissorRect(aClipRect);
@@ -606,7 +606,7 @@ ContainerLayerComposite::Destroy()
 {
   if (!mDestroyed) {
     while (mFirstChild) {
-      static_cast<LayerComposite*>(GetFirstChild()->ImplData())->Destroy();
+      GetFirstChildComposite()->Destroy();
       RemoveChild(mFirstChild);
     }
     mDestroyed = true;
@@ -619,7 +619,7 @@ ContainerLayerComposite::GetFirstChildComposite()
   if (!mFirstChild) {
     return nullptr;
    }
-  return static_cast<LayerComposite*>(mFirstChild->ImplData());
+  return static_cast<LayerComposite*>(mFirstChild->AsHostLayer());
 }
 
 void
@@ -641,8 +641,7 @@ ContainerLayerComposite::CleanupResources()
   mPrepared = nullptr;
 
   for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
-    LayerComposite* layerToCleanup = static_cast<LayerComposite*>(l->ImplData());
-    layerToCleanup->CleanupResources();
+    static_cast<LayerComposite*>(l->AsHostLayer())->CleanupResources();
   }
 }
 
@@ -671,7 +670,7 @@ RefLayerComposite::GetFirstChildComposite()
   if (!mFirstChild) {
     return nullptr;
    }
-  return static_cast<LayerComposite*>(mFirstChild->ImplData());
+  return static_cast<LayerComposite*>(mFirstChild->AsHostLayer());
 }
 
 void

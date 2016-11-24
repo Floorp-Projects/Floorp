@@ -27,6 +27,7 @@
   X(pa_context_get_server_info)                 \
   X(pa_context_get_sink_info_by_name)           \
   X(pa_context_get_sink_info_list)              \
+  X(pa_context_get_sink_input_info)             \
   X(pa_context_get_source_info_list)            \
   X(pa_context_get_state)                       \
   X(pa_context_new)                             \
@@ -999,23 +1000,64 @@ pulse_stream_set_volume(cubeb_stream * stm, float volume)
   return CUBEB_OK;
 }
 
+struct sink_input_info_result {
+  pa_cvolume * cvol;
+  pa_threaded_mainloop * mainloop;
+};
+
+static void
+sink_input_info_cb(pa_context * c, pa_sink_input_info const * i, int eol, void * u)
+{
+  struct sink_input_info_result * r = u;
+  if (!eol) {
+    *r->cvol = i->volume;
+  }
+  WRAP(pa_threaded_mainloop_signal)(r->mainloop, 0);
+}
+
 static int
-pulse_stream_set_panning(cubeb_stream * stream, float panning)
+pulse_stream_set_panning(cubeb_stream * stm, float panning)
 {
   const pa_channel_map * map;
-  pa_cvolume vol;
+  pa_cvolume cvol;
+  uint32_t index;
+  pa_operation * op;
 
-  if (!stream->output_stream) {
+  if (!stm->output_stream) {
     return CUBEB_ERROR;
   }
 
-  map = WRAP(pa_stream_get_channel_map)(stream->output_stream);
+  WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
 
+  map = WRAP(pa_stream_get_channel_map)(stm->output_stream);
   if (!WRAP(pa_channel_map_can_balance)(map)) {
+    WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
     return CUBEB_ERROR;
   }
 
-  WRAP(pa_cvolume_set_balance)(&vol, map, panning);
+  index = WRAP(pa_stream_get_index)(stm->output_stream);
+
+  struct sink_input_info_result r = { &cvol, stm->context->mainloop };
+  op = WRAP(pa_context_get_sink_input_info)(stm->context->context,
+                                            index,
+                                            sink_input_info_cb,
+                                            &r);
+  if (op) {
+    operation_wait(stm->context, stm->output_stream, op);
+    WRAP(pa_operation_unref)(op);
+  }
+
+  WRAP(pa_cvolume_set_balance)(&cvol, map, panning);
+
+  op = WRAP(pa_context_set_sink_input_volume)(stm->context->context,
+                                              index, &cvol, volume_success,
+                                              stm);
+  if (op) {
+    operation_wait(stm->context, stm->output_stream, op);
+    WRAP(pa_operation_unref)(op);
+  }
+
+  WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
 
   return CUBEB_OK;
 }

@@ -1277,20 +1277,46 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
   aFrame->DisplayOutline(aBuilder, aLists);
 }
 
+static inline bool FrameHasBorderOrBackground(nsTableFrame* tableFrame, nsIFrame* f)
+{
+  if (!f->StyleVisibility()->IsVisible()) {
+    return false;
+  }
+  if (f->StyleBorder()->HasBorder()) {
+    return true;
+  }
+  if (!f->StyleBackground()->IsTransparent() ||
+      f->StyleDisplay()->mAppearance) {
+    
+    nsTableCellFrame *cellFrame = do_QueryFrame(f);
+    // We could also return false here if the current frame is the root
+    // of a pseudo stacking context
+    if (cellFrame && !tableFrame->IsBorderCollapse()) {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
 static bool
-AnyTablePartHasBorderOrBackground(nsIFrame* aStart, nsIFrame* aEnd)
+AnyTablePartHasBorderOrBackground(nsTableFrame* aTableFrame,
+                                  nsIFrame* aStart,
+                                  nsIFrame* aEnd)
 {
   for (nsIFrame* f = aStart; f != aEnd; f = f->GetNextSibling()) {
     NS_ASSERTION(IsFrameAllowedInTable(f->GetType()), "unexpected frame type");
 
-    if (FrameHasBorderOrBackground(f))
+    if (FrameHasBorderOrBackground(aTableFrame, f))
       return true;
 
     nsTableCellFrame *cellFrame = do_QueryFrame(f);
     if (cellFrame)
       continue;
 
-    if (AnyTablePartHasBorderOrBackground(f->PrincipalChildList().FirstChild(), nullptr))
+    if (AnyTablePartHasBorderOrBackground(aTableFrame,
+                                          f->PrincipalChildList().FirstChild(),
+                                          nullptr))
       return true;
   }
 
@@ -1337,8 +1363,8 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // Specific visibility decisions are delegated to the table background
     // painter, which handles borders and backgrounds for the table.
     if (aBuilder->IsForEventDelivery() ||
-        AnyTablePartHasBorderOrBackground(this, GetNextSibling()) ||
-        AnyTablePartHasBorderOrBackground(mColGroups.FirstChild(), nullptr)) {
+        AnyTablePartHasBorderOrBackground(this, this, GetNextSibling()) ||
+        AnyTablePartHasBorderOrBackground(this, mColGroups.FirstChild(), nullptr)) {
       item = new (aBuilder) nsDisplayTableBorderBackground(aBuilder, this,
           deflate != nsMargin(0, 0, 0, 0));
       aLists.BorderBackground()->AppendNewToTop(item);

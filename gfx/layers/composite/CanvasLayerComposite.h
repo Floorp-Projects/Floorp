@@ -48,7 +48,7 @@ public:
     Destroy();
   }
 
-  virtual void SetLayerManager(LayerManagerComposite* aManager) override;
+  virtual void SetLayerManager(HostLayerManager* aManager) override;
 
   virtual Layer* GetLayer() override;
   virtual void RenderLayer(const gfx::IntRect& aClipRect) override;
@@ -59,9 +59,7 @@ public:
 
   CompositableHost* GetCompositableHost() override;
 
-  virtual LayerComposite* AsLayerComposite() override { return this; }
-
-  void SetBounds(gfx::IntRect aBounds) { mBounds = aBounds; }
+  virtual HostLayer* AsHostLayer() override { return this; }
 
   virtual const char* Name() const override { return "CanvasLayerComposite"; }
 

@@ -116,6 +116,8 @@ IsNurseryAllocable(AllocKind kind)
         false,     /* AllocKind::FAT_INLINE_STRING */
         false,     /* AllocKind::STRING */
         false,     /* AllocKind::EXTERNAL_STRING */
+        false,     /* AllocKind::FAT_INLINE_ATOM */
+        false,     /* AllocKind::ATOM */
         false,     /* AllocKind::SYMBOL */
         false,     /* AllocKind::JITCODE */
         false,     /* AllocKind::SCOPE */
@@ -152,6 +154,8 @@ IsBackgroundFinalized(AllocKind kind)
         true,      /* AllocKind::FAT_INLINE_STRING */
         true,      /* AllocKind::STRING */
         false,     /* AllocKind::EXTERNAL_STRING */
+        true,      /* AllocKind::FAT_INLINE_ATOM */
+        true,      /* AllocKind::ATOM */
         true,      /* AllocKind::SYMBOL */
         false,     /* AllocKind::JITCODE */
         true,      /* AllocKind::SCOPE */

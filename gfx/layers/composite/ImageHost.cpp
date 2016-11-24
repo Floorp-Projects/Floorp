@@ -349,7 +349,7 @@ ImageHost::Composite(LayerComposite* aLayer,
 
     if (mLastFrameID != img->mFrameID || mLastProducerID != img->mProducerID) {
       if (mImageContainer) {
-        aLayer->GetLayerManager()->
+        static_cast<LayerManagerComposite*>(aLayer->GetLayerManager())->
             AppendImageCompositeNotification(ImageCompositeNotification(
                 mImageContainer, nullptr,
                 img->mTimeStamp, GetCompositor()->GetCompositionTime(),

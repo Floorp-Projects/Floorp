@@ -27,6 +27,8 @@ public:
   virtual BackendType GetBackendType() const { return mRefDT->GetBackendType(); }
   virtual DrawTargetType GetType() const { return mRefDT->GetType(); }
 
+  virtual bool IsCaptureDT() const { return true; }
+
   virtual already_AddRefed<SourceSurface> Snapshot();
 
   virtual void DetachAllSnapshots();
@@ -135,6 +137,8 @@ public:
   }
 
   void ReplayToDrawTarget(DrawTarget* aDT, const Matrix& aTransform);
+
+  bool ContainsOnlyColoredGlyphs(RefPtr<ScaledFont>& aScaledFont, Color& aColor, std::vector<Glyph>& aGlyphs);
 
 protected:
   ~DrawTargetCaptureImpl();

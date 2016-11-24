@@ -102,6 +102,11 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
     case eColorID_TextSelectBackground:
       aColor = GetColorFromNSColor([NSColor selectedTextBackgroundColor]);
       break;
+    // This is used to gray out the selection when it's not focused. Used with
+    // nsISelectionController::SELECTION_DISABLED.
+    case eColorID_TextSelectBackgroundDisabled:
+      aColor = GetColorFromNSColor([NSColor secondarySelectedControlColor]);
+      break;
     case eColorID_highlight: // CSS2 color
       aColor = GetColorFromNSColor([NSColor alternateSelectedControlColor]);
       break;

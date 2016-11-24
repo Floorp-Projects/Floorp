@@ -207,6 +207,7 @@ public:
                              const nsAString& aFileName,
                              nsIInputStream* aPostDataStream = 0,
                              nsIInputStream* aHeadersDataStream = 0,
+                             bool aNoOpenerImplied = false,
                              nsIDocShell** aDocShell = 0,
                              nsIRequest** aRequest = 0) override;
   NS_IMETHOD OnOverLink(nsIContent* aContent,

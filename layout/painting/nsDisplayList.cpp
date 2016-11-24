@@ -36,6 +36,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsThemeConstants.h"
+#include "BorderConsts.h"
 #include "LayerTreeInvalidation.h"
 
 #include "imgIContainer.h"
@@ -2906,6 +2907,10 @@ nsDisplayBackgroundImage::ImageLayerization
 nsDisplayBackgroundImage::ShouldCreateOwnLayer(nsDisplayListBuilder* aBuilder,
                                                LayerManager* aManager)
 {
+  if (ForceActiveLayers()) {
+    return WHENEVER_POSSIBLE;
+  }
+
   nsIFrame* backgroundStyleFrame = nsCSSRendering::FindBackgroundStyleFrame(mFrame);
   if (ActiveLayerTracker::IsBackgroundPositionAnimated(aBuilder,
                                                        backgroundStyleFrame)) {
@@ -3561,6 +3566,44 @@ nsDisplayBackgroundColor::CanApplyOpacity() const
   return true;
 }
 
+LayerState
+nsDisplayBackgroundColor::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                        LayerManager* aManager,
+                                        const ContainerLayerParameters& aParameters)
+{
+  uint8_t clip = mBackgroundStyle->mImage.mLayers[0].mClip;
+  if (!ForceActiveLayers() || clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
+    return LAYER_NONE;
+  }
+  return LAYER_ACTIVE;
+}
+
+already_AddRefed<Layer>
+nsDisplayBackgroundColor::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                     LayerManager* aManager,
+                                     const ContainerLayerParameters& aContainerParameters)
+{
+  if (mColor == Color()) {
+    return nullptr;
+  }
+
+  RefPtr<ColorLayer> layer = static_cast<ColorLayer*>
+    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+  if (!layer) {
+    layer = aManager->CreateColorLayer();
+    if (!layer)
+      return nullptr;
+  }
+  layer->SetColor(mColor);
+
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  layer->SetBounds(mBackgroundRect.ToNearestPixels(appUnitsPerDevPixel));
+  layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
+                                                      aContainerParameters.mOffset.y, 0));
+
+  return layer.forget();
+}
+
 void
 nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
                                 nsRenderingContext* aCtx)
@@ -3963,7 +4006,7 @@ nsDisplayBorder::nsDisplayBorder(nsDisplayListBuilder* aBuilder, nsIFrame* aFram
 {
   MOZ_COUNT_CTOR(nsDisplayBorder);
 
-  mBounds = CalculateBounds(*mFrame->StyleBorder());
+  mBounds = CalculateBounds(*mFrame->StyleBorder()).GetBounds();
 }
 
 bool
@@ -4015,6 +4058,80 @@ nsDisplayBorder::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
   }
 }
 
+LayerState
+nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
+                               LayerManager* aManager,
+                               const ContainerLayerParameters& aParameters)
+{
+  if (!gfxPrefs::LayersAllowBorderLayers()) {
+    return LAYER_NONE;
+  }
+
+  nsPoint offset = ToReferenceFrame();
+  Maybe<nsCSSBorderRenderer> br =
+    nsCSSRendering::CreateBorderRenderer(mFrame->PresContext(),
+                                         nullptr,
+                                         mFrame,
+                                         nsRect(),
+                                         nsRect(offset, mFrame->GetSize()),
+                                         mFrame->StyleContext(),
+                                         mFrame->GetSkipSides());
+  if (!br) {
+    return LAYER_NONE;
+  }
+
+  bool hasCompositeColors;
+  if (!br->AllBordersSolid(&hasCompositeColors) || hasCompositeColors) {
+    return LAYER_NONE;
+  }
+
+  // We don't support this yet as we don't copy the values to
+  // the layer, and BasicBorderLayer doesn't support it yet.
+  if (!br->mNoBorderRadius) {
+    return LAYER_NONE;
+  }
+
+  // We copy these values correctly to the layer, but BasicBorderLayer
+  // won't render them
+  if (!br->AreBorderSideFinalStylesSame(SIDE_BITS_ALL) ||
+      !br->AllBordersSameWidth()) {
+    return LAYER_NONE;
+  }
+
+  NS_FOR_CSS_SIDES(i) {
+    if (br->mBorderStyles[i] == NS_STYLE_BORDER_STYLE_SOLID) {
+      mColors[i] = ToDeviceColor(br->mBorderColors[i]);
+      mWidths[i] = br->mBorderWidths[i];
+    } else {
+      mWidths[i] = 0;
+    }
+  }
+
+  mRect = ViewAs<LayerPixel>(br->mOuterRect);
+  return LAYER_INACTIVE;
+}
+
+already_AddRefed<Layer>
+nsDisplayBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
+                            LayerManager* aManager,
+                            const ContainerLayerParameters& aContainerParameters)
+{
+  RefPtr<BorderLayer> layer = static_cast<BorderLayer*>
+    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+  if (!layer) {
+    layer = aManager->CreateBorderLayer();
+    if (!layer)
+      return nullptr;
+  }
+  layer->SetRect(mRect);
+  layer->SetCornerRadii({ LayerSize(), LayerSize(), LayerSize(), LayerSize() });
+  layer->SetColors(mColors);
+  layer->SetWidths(mWidths);
+  layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
+                                                      aContainerParameters.mOffset.y, 0));
+  return layer.forget();
+}
+
 void
 nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
                        nsRenderingContext* aCtx) {
@@ -4042,7 +4159,7 @@ nsDisplayBorder::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
   return mBounds;
 }
 
-nsRect
+nsRegion
 nsDisplayBorder::CalculateBounds(const nsStyleBorder& aStyleBorder)
 {
   nsRect borderBounds(ToReferenceFrame(), mFrame->GetSize());
@@ -4051,37 +4168,37 @@ nsDisplayBorder::CalculateBounds(const nsStyleBorder& aStyleBorder)
     return borderBounds;
   } else {
     nsMargin border = aStyleBorder.GetComputedBorder();
-    nsRect result;
+    nsRegion result;
     if (border.top > 0) {
       result = nsRect(borderBounds.X(), borderBounds.Y(), borderBounds.Width(), border.top);
     }
     if (border.right > 0) {
-      result.UnionRect(result, nsRect(borderBounds.XMost() - border.right, borderBounds.Y(), border.right, borderBounds.Height()));
+      result.OrWith(nsRect(borderBounds.XMost() - border.right, borderBounds.Y(), border.right, borderBounds.Height()));
     }
     if (border.bottom > 0) {
-      result.UnionRect(result, nsRect(borderBounds.X(), borderBounds.YMost() - border.bottom, borderBounds.Width(), border.bottom));
+      result.OrWith(nsRect(borderBounds.X(), borderBounds.YMost() - border.bottom, borderBounds.Width(), border.bottom));
     }
     if (border.left > 0) {
-      result.UnionRect(result, nsRect(borderBounds.X(), borderBounds.Y(), border.left, borderBounds.Height()));
+      result.OrWith(nsRect(borderBounds.X(), borderBounds.Y(), border.left, borderBounds.Height()));
     }
 
     nscoord radii[8];
     if (mFrame->GetBorderRadii(radii)) {
       if (border.left > 0 || border.top > 0) {
         nsSize cornerSize(radii[NS_CORNER_TOP_LEFT_X], radii[NS_CORNER_TOP_LEFT_Y]);
-        result.UnionRect(result, nsRect(borderBounds.TopLeft(), cornerSize));
+        result.OrWith(nsRect(borderBounds.TopLeft(), cornerSize));
       }
       if (border.top > 0 || border.right > 0) {
         nsSize cornerSize(radii[NS_CORNER_TOP_RIGHT_X], radii[NS_CORNER_TOP_RIGHT_Y]);
-        result.UnionRect(result, nsRect(borderBounds.TopRight() - nsPoint(cornerSize.width, 0), cornerSize));
+        result.OrWith(nsRect(borderBounds.TopRight() - nsPoint(cornerSize.width, 0), cornerSize));
       }
       if (border.right > 0 || border.bottom > 0) {
         nsSize cornerSize(radii[NS_CORNER_BOTTOM_RIGHT_X], radii[NS_CORNER_BOTTOM_RIGHT_Y]);
-        result.UnionRect(result, nsRect(borderBounds.BottomRight() - nsPoint(cornerSize.width, cornerSize.height), cornerSize));
+        result.OrWith(nsRect(borderBounds.BottomRight() - nsPoint(cornerSize.width, cornerSize.height), cornerSize));
       }
       if (border.bottom > 0 || border.left > 0) {
         nsSize cornerSize(radii[NS_CORNER_BOTTOM_LEFT_X], radii[NS_CORNER_BOTTOM_LEFT_Y]);
-        result.UnionRect(result, nsRect(borderBounds.BottomLeft() - nsPoint(0, cornerSize.height), cornerSize));
+        result.OrWith(nsRect(borderBounds.BottomLeft() - nsPoint(0, cornerSize.height), cornerSize));
       }
     }
 

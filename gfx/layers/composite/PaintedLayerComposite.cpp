@@ -79,7 +79,7 @@ PaintedLayerComposite::GetLayer()
 }
 
 void
-PaintedLayerComposite::SetLayerManager(LayerManagerComposite* aManager)
+PaintedLayerComposite::SetLayerManager(HostLayerManager* aManager)
 {
   LayerComposite::SetLayerManager(aManager);
   mManager = aManager;

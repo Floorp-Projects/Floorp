@@ -163,7 +163,8 @@ def WebIDLTest(parser, harness):
                  "Promise<any>", "Promise<any>?",
                  "USVString", "ArrayBuffer", "ArrayBufferView", "SharedArrayBuffer",
                  "Uint8Array", "Uint16Array" ]
-    # When we can parse Date and RegExp, we need to add them here.
+    # When we can parse Date, we need to add it here.
+    # XXXbz we can, and should really do that...
 
     # Try to categorize things a bit to keep list lengths down
     def allBut(list1, list2):

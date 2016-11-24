@@ -335,8 +335,11 @@ def lib_path(target, vc_path, windows_sdk_dir, ucrt_sdk_dir, dia_sdk_dir):
 
     atlmfc_dir = os.path.join(vc_path, 'atlmfc', 'lib', *vc_target)
     if not os.path.isdir(atlmfc_dir):
-        die('Cannot find the ATL/MFC libraries in the Visual C++ directory (%s). '
-            'Please install them.' % vc_path)
+        # For Visual Studio 2017
+        atlmfc_dir = os.path.join(vc_path, 'atlmfc', 'lib', sdk_target)
+        if not os.path.isdir(atlmfc_dir):
+            die('Cannot find the ATL/MFC libraries in the Visual C++ directory '
+                '(%s). Please install them.' % vc_path)
 
 
     libs = []

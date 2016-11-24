@@ -185,14 +185,19 @@ FromView(WebGLContext* webgl, const char* funcName, TexImageTarget target,
 
 static UniquePtr<webgl::TexUnpackBytes>
 FromPboOffset(WebGLContext* webgl, const char* funcName, TexImageTarget target,
-              uint32_t width, uint32_t height, uint32_t depth, WebGLsizeiptr pboOffset,
-              size_t availBufferBytes)
+              uint32_t width, uint32_t height, uint32_t depth, WebGLsizeiptr pboOffset)
 {
     if (pboOffset < 0) {
         webgl->ErrorInvalidValue("%s: offset cannot be negative.", funcName);
         return nullptr;
     }
 
+    const auto& buffer = webgl->ValidateBufferSelection(funcName,
+                                                        LOCAL_GL_PIXEL_UNPACK_BUFFER);
+    if (!buffer)
+        return nullptr;
+
+    size_t availBufferBytes = buffer->ByteLength();
     if (size_t(pboOffset) > availBufferBytes) {
         webgl->ErrorInvalidOperation("%s: Offset is passed end of buffer.", funcName);
         return nullptr;
@@ -366,25 +371,12 @@ WebGLContext::From(const char* funcName, TexImageTarget target, GLsizei rawWidth
     }
 
     if (src.mPboOffset) {
-        if (!mBoundPixelUnpackBuffer) {
-            ErrorInvalidOperation("%s: PACK_BUFFER must be non-null.", funcName);
-            return nullptr;
-        }
-
-        if (mBoundPixelUnpackBuffer->mNumActiveTFOs) {
-            ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
-                                  " object.",
-                                  funcName);
-            return nullptr;
-        }
-
-        const auto& availBytes = mBoundPixelUnpackBuffer->ByteLength();
         return FromPboOffset(this, funcName, target, width, height, depth,
-                             *(src.mPboOffset), availBytes);
+                             *(src.mPboOffset));
     }
 
     if (mBoundPixelUnpackBuffer) {
-        ErrorInvalidOperation("%s: PACK_BUFFER must be null.", funcName);
+        ErrorInvalidOperation("%s: PIXEL_UNPACK_BUFFER must be null.", funcName);
         return nullptr;
     }
 
@@ -1370,25 +1362,12 @@ WebGLContext::FromCompressed(const char* funcName, TexImageTarget target,
     }
 
     if (src.mPboOffset) {
-        if (!mBoundPixelUnpackBuffer) {
-            ErrorInvalidOperation("%s: PACK_BUFFER must be non-null.", funcName);
-            return nullptr;
-        }
-
-        if (mBoundPixelUnpackBuffer->mNumActiveTFOs) {
-            ErrorInvalidOperation("%s: Buffer is bound to an active transform feedback"
-                                  " object.",
-                                  funcName);
-            return nullptr;
-        }
-
-        const auto& availBytes = mBoundPixelUnpackBuffer->ByteLength();
         return FromPboOffset(this, funcName, target, width, height, depth,
-                             *(src.mPboOffset), availBytes);
+                             *(src.mPboOffset));
     }
 
     if (mBoundPixelUnpackBuffer) {
-        ErrorInvalidOperation("%s: PACK_BUFFER must be null.", funcName);
+        ErrorInvalidOperation("%s: PIXEL_UNPACK_BUFFER must be null.", funcName);
         return nullptr;
     }
 

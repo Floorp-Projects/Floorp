@@ -250,14 +250,9 @@ CreateMFT(const CLSID& clsid,
           const char* aDllName,
           CComPtr<IMFTransform>& aOutMFT);
 
-enum CodecType {
-  H264,
-  AAC,
-};
-
-// Returns the name of the DLL that is needed to decode H.264 or AAC on
+// Returns the name of the DLL that is needed to decode H.264 on
 // the given windows version we're running on.
-const char* WMFDecoderDllNameFor(CodecType aCodec);
+const char* WMFDecoderDllName();
 
 // Returns the maximum number of threads we want WMF to use for decoding
 // given the number of logical processors available.

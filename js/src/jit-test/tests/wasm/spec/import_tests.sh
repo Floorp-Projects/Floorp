@@ -11,5 +11,5 @@ rm -f *.fail.wast
 
 for i in $(ls *.wast);
 do
-    echo "var importedArgs = ['$i']; load(scriptdir + '../spec.js');" > $i.js
+    echo "var importedArgs = ['$i']; load(scriptdir + '../wast.js');" > $i.js
 done;

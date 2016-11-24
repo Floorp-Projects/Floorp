@@ -140,7 +140,7 @@ ShadowChild(const OpRaiseToTopChild& op)
 
 //--------------------------------------------------
 // LayerTransactionParent
-LayerTransactionParent::LayerTransactionParent(LayerManagerComposite* aManager,
+LayerTransactionParent::LayerTransactionParent(HostLayerManager* aManager,
                                                CompositorBridgeParentBase* aBridge,
                                                uint64_t aId)
   : mLayerManager(aManager)
@@ -286,15 +286,15 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
   bool updateHitTestingTree = false;
 
   for (EditArray::index_type i = 0; i < cset.Length(); ++i) {
-    const Edit& edit = cset[i];
+    Edit& edit = cset[i];
 
     switch (edit.type()) {
     // Create* ops
     case Edit::TOpCreatePaintedLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreatePaintedLayer"));
 
-      RefPtr<PaintedLayerComposite> layer =
-        layer_manager()->CreatePaintedLayerComposite();
+      RefPtr<PaintedLayer> layer =
+        layer_manager()->CreatePaintedLayer();
       AsLayerComposite(edit.get_OpCreatePaintedLayer())->Bind(layer);
 
       updateHitTestingTree = true;
@@ -303,7 +303,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     case Edit::TOpCreateContainerLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateContainerLayer"));
 
-      RefPtr<ContainerLayer> layer = layer_manager()->CreateContainerLayerComposite();
+      RefPtr<ContainerLayer> layer = layer_manager()->CreateContainerLayer();
       AsLayerComposite(edit.get_OpCreateContainerLayer())->Bind(layer);
 
       updateHitTestingTree = true;
@@ -312,8 +312,8 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     case Edit::TOpCreateImageLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateImageLayer"));
 
-      RefPtr<ImageLayerComposite> layer =
-        layer_manager()->CreateImageLayerComposite();
+      RefPtr<ImageLayer> layer =
+        layer_manager()->CreateImageLayer();
       AsLayerComposite(edit.get_OpCreateImageLayer())->Bind(layer);
 
       updateHitTestingTree = true;
@@ -322,8 +322,26 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     case Edit::TOpCreateColorLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateColorLayer"));
 
-      RefPtr<ColorLayerComposite> layer = layer_manager()->CreateColorLayerComposite();
+      RefPtr<ColorLayer> layer = layer_manager()->CreateColorLayer();
       AsLayerComposite(edit.get_OpCreateColorLayer())->Bind(layer);
+
+      updateHitTestingTree = true;
+      break;
+    }
+    case Edit::TOpCreateTextLayer: {
+      MOZ_LAYERS_LOG(("[ParentSide] CreateTextLayer"));
+
+      RefPtr<TextLayer> layer = layer_manager()->CreateTextLayer();
+      AsLayerComposite(edit.get_OpCreateTextLayer())->Bind(layer);
+
+      updateHitTestingTree = true;
+      break;
+    }
+    case Edit::TOpCreateBorderLayer: {
+      MOZ_LAYERS_LOG(("[ParentSide] CreateTextLayer"));
+
+      RefPtr<BorderLayer> layer = layer_manager()->CreateBorderLayer();
+      AsLayerComposite(edit.get_OpCreateBorderLayer())->Bind(layer);
 
       updateHitTestingTree = true;
       break;
@@ -331,8 +349,8 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     case Edit::TOpCreateCanvasLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateCanvasLayer"));
 
-      RefPtr<CanvasLayerComposite> layer =
-        layer_manager()->CreateCanvasLayerComposite();
+      RefPtr<CanvasLayer> layer =
+        layer_manager()->CreateCanvasLayer();
       AsLayerComposite(edit.get_OpCreateCanvasLayer())->Bind(layer);
 
       updateHitTestingTree = true;
@@ -341,8 +359,8 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     case Edit::TOpCreateRefLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateRefLayer"));
 
-      RefPtr<RefLayerComposite> layer =
-        layer_manager()->CreateRefLayerComposite();
+      RefPtr<RefLayer> layer =
+        layer_manager()->CreateRefLayer();
       AsLayerComposite(edit.get_OpCreateRefLayer())->Bind(layer);
 
       updateHitTestingTree = true;
@@ -353,13 +371,13 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     case Edit::TOpSetLayerAttributes: {
       MOZ_LAYERS_LOG(("[ParentSide] SetLayerAttributes"));
 
-      const OpSetLayerAttributes& osla = edit.get_OpSetLayerAttributes();
+      OpSetLayerAttributes& osla = edit.get_OpSetLayerAttributes();
       ShadowLayerParent* layerParent = AsLayerComposite(osla);
       Layer* layer = layerParent->AsLayer();
       if (!layer) {
         return IPC_FAIL_NO_REASON(this);
       }
-      const LayerAttributes& attrs = osla.attrs();
+      LayerAttributes& attrs = osla.attrs();
 
       const CommonLayerAttributes& common = attrs.common();
       layer->SetLayerBounds(common.layerBounds());
@@ -412,7 +430,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       layer->SetAncestorMaskLayers(maskLayers);
 
       typedef SpecificLayerAttributes Specific;
-      const SpecificLayerAttributes& specific = attrs.specific();
+      SpecificLayerAttributes& specific = attrs.specific();
       switch (specific.type()) {
       case Specific::Tnull_t:
         break;
@@ -420,7 +438,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       case Specific::TPaintedLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   painted layer"));
 
-        PaintedLayerComposite* paintedLayer = layerParent->AsPaintedLayerComposite();
+        PaintedLayer* paintedLayer = layerParent->AsPaintedLayer();
         if (!paintedLayer) {
           return IPC_FAIL_NO_REASON(this);
         }
@@ -434,7 +452,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       case Specific::TContainerLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   container layer"));
 
-        ContainerLayerComposite* containerLayer = layerParent->AsContainerLayerComposite();
+        ContainerLayer* containerLayer = layerParent->AsContainerLayer();
         if (!containerLayer) {
           return IPC_FAIL_NO_REASON(this);
         }
@@ -451,7 +469,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       case Specific::TColorLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   color layer"));
 
-        ColorLayerComposite* colorLayer = layerParent->AsColorLayerComposite();
+        ColorLayer* colorLayer = layerParent->AsColorLayer();
         if (!colorLayer) {
           return IPC_FAIL_NO_REASON(this);
         }
@@ -459,10 +477,35 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
         colorLayer->SetBounds(specific.get_ColorLayerAttributes().bounds());
         break;
       }
+      case Specific::TTextLayerAttributes: {
+        MOZ_LAYERS_LOG(("[ParentSide]   text layer"));
+
+        TextLayer* textLayer = layerParent->AsTextLayer();
+        if (!textLayer) {
+          return IPC_FAIL_NO_REASON(this);
+        }
+        textLayer->SetBounds(specific.get_TextLayerAttributes().bounds());
+        textLayer->SetGlyphs(Move(specific.get_TextLayerAttributes().glyphs()));
+        textLayer->SetScaledFont(reinterpret_cast<gfx::ScaledFont*>(specific.get_TextLayerAttributes().scaledFont()));
+        break;
+      }
+      case Specific::TBorderLayerAttributes: {
+        MOZ_LAYERS_LOG(("[ParentSide]   border layer"));
+
+        BorderLayer* borderLayer = layerParent->AsBorderLayer();
+        if (!borderLayer) {
+          return IPC_FAIL_NO_REASON(this);
+        }
+        borderLayer->SetRect(specific.get_BorderLayerAttributes().rect());
+        borderLayer->SetColors(specific.get_BorderLayerAttributes().colors());
+        borderLayer->SetCornerRadii(specific.get_BorderLayerAttributes().corners());
+        borderLayer->SetWidths(specific.get_BorderLayerAttributes().widths());
+        break;
+      }
       case Specific::TCanvasLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   canvas layer"));
 
-        CanvasLayerComposite* canvasLayer = layerParent->AsCanvasLayerComposite();
+        CanvasLayer* canvasLayer = layerParent->AsCanvasLayer();
         if (!canvasLayer) {
           return IPC_FAIL_NO_REASON(this);
         }
@@ -473,7 +516,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       case Specific::TRefLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   ref layer"));
 
-        RefLayerComposite* refLayer = layerParent->AsRefLayerComposite();
+        RefLayer* refLayer = layerParent->AsRefLayer();
         if (!refLayer) {
           return IPC_FAIL_NO_REASON(this);
         }
@@ -484,7 +527,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       case Specific::TImageLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   image layer"));
 
-        ImageLayerComposite* imageLayer = layerParent->AsImageLayerComposite();
+        ImageLayer* imageLayer = layerParent->AsImageLayer();
         if (!imageLayer) {
           return IPC_FAIL_NO_REASON(this);
         }
@@ -534,7 +577,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       if (!child) {
         return IPC_FAIL_NO_REASON(this);
       }
-      ContainerLayerComposite* container = ShadowContainer(oia)->AsContainerLayerComposite();
+      ContainerLayer* container = ShadowContainer(oia)->AsContainerLayer();
       if (!container ||
           !container->InsertAfter(child, ShadowAfter(oia)->AsLayer()))
       {
@@ -552,7 +595,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       if (!child) {
         return IPC_FAIL_NO_REASON(this);
       }
-      ContainerLayerComposite* container = ShadowContainer(oac)->AsContainerLayerComposite();
+      ContainerLayer* container = ShadowContainer(oac)->AsContainerLayer();
       if (!container ||
           !container->InsertAfter(child, nullptr))
       {
@@ -570,7 +613,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       if (!childLayer) {
         return IPC_FAIL_NO_REASON(this);
       }
-      ContainerLayerComposite* container = ShadowContainer(orc)->AsContainerLayerComposite();
+      ContainerLayer* container = ShadowContainer(orc)->AsContainerLayer();
       if (!container ||
           !container->RemoveChild(childLayer))
       {
@@ -588,7 +631,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       if (!child) {
         return IPC_FAIL_NO_REASON(this);
       }
-      ContainerLayerComposite* container = ShadowContainer(orc)->AsContainerLayerComposite();
+      ContainerLayer* container = ShadowContainer(orc)->AsContainerLayer();
       if (!container ||
           !container->RepositionChild(child, ShadowAfter(orc)->AsLayer()))
       {
@@ -606,7 +649,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       if (!child) {
         return IPC_FAIL_NO_REASON(this);
       }
-      ContainerLayerComposite* container = ShadowContainer(rtc)->AsContainerLayerComposite();
+      ContainerLayer* container = ShadowContainer(rtc)->AsContainerLayer();
       if (!container ||
           !container->RepositionChild(child, nullptr))
       {
@@ -634,7 +677,9 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       if (!Attach(cast(op.layerParent()), host, false)) {
         return IPC_FAIL_NO_REASON(this);
       }
-      host->SetCompositorID(mLayerManager->GetCompositor()->GetCompositorID());
+      if (mLayerManager->GetCompositor()) {
+        host->SetCompositorID(mLayerManager->GetCompositor()->GetCompositorID());
+      }
       break;
     }
     case Edit::TOpAttachAsyncCompositable: {
@@ -653,7 +698,9 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       if (!Attach(cast(op.layerParent()), host, true)) {
         return IPC_FAIL_NO_REASON(this);
       }
-      host->SetCompositorID(mLayerManager->GetCompositor()->GetCompositorID());
+      if (mLayerManager->GetCompositor()) {
+        host->SetCompositorID(mLayerManager->GetCompositor()->GetCompositorID());
+      }
       break;
     }
     default:
@@ -766,7 +813,7 @@ LayerTransactionParent::RecvGetAnimationOpacity(PLayerParent* aParent,
 
   mCompositorBridge->ApplyAsyncProperties(this);
 
-  if (!layer->AsLayerComposite()->GetShadowOpacitySetByAnimation()) {
+  if (!layer->AsHostLayer()->GetShadowOpacitySetByAnimation()) {
     return IPC_OK();
   }
 
@@ -800,7 +847,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
   // recover the untranslated transform from the shadow transform. For
   // transforms that are not set by animation we don't have this information
   // available.
-  if (!layer->AsLayerComposite()->GetShadowTransformSetByAnimation()) {
+  if (!layer->AsHostLayer()->GetShadowTransformSetByAnimation()) {
     *aTransform = mozilla::void_t();
     return IPC_OK();
   }
@@ -809,7 +856,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
   // from the shadow transform by undoing the translations in
   // AsyncCompositionManager::SampleValue.
 
-  Matrix4x4 transform = layer->AsLayerComposite()->GetShadowBaseTransform();
+  Matrix4x4 transform = layer->AsHostLayer()->GetShadowBaseTransform();
   if (ContainerLayer* c = layer->AsContainerLayer()) {
     // Undo the scale transform applied by AsyncCompositionManager::SampleValue
     transform.PostScale(1.0f/c->GetInheritedXScale(),
@@ -953,13 +1000,13 @@ LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent,
   if (!baselayer) {
     return false;
   }
-  LayerComposite* layer = baselayer->AsLayerComposite();
+  HostLayer* layer = baselayer->AsHostLayer();
   if (!layer) {
     return false;
   }
 
   Compositor* compositor
-    = static_cast<LayerManagerComposite*>(aLayerParent->AsLayer()->Manager())->GetCompositor();
+    = static_cast<HostLayerManager*>(aLayerParent->AsLayer()->Manager())->GetCompositor();
 
   if (!layer->SetCompositableHost(aCompositable)) {
     // not all layer types accept a compositable, see bug 967824
