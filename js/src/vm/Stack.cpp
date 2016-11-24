@@ -372,7 +372,7 @@ InterpreterFrame::trace(JSTracer* trc, Value* sp, jsbytecode* pc)
         unsigned argc = Max(numActualArgs(), numFormalArgs());
         TraceRootRange(trc, argc + isConstructing(), argv_, "fp argv");
     } else {
-        // Mark newTarget.
+        // Trace newTarget.
         TraceRoot(trc, ((Value*)this) - 1, "stack newTarget");
     }
 
@@ -384,19 +384,19 @@ InterpreterFrame::trace(JSTracer* trc, Value* sp, jsbytecode* pc)
         // All locals are live.
         traceValues(trc, 0, sp - slots());
     } else {
-        // Mark operand stack.
+        // Trace operand stack.
         traceValues(trc, nfixed, sp - slots());
 
         // Clear dead block-scoped locals.
         while (nfixed > nlivefixed)
             unaliasedLocal(--nfixed).setUndefined();
 
-        // Mark live locals.
+        // Trace live locals.
         traceValues(trc, 0, nlivefixed);
     }
 
     if (script->compartment()->debugEnvs)
-        script->compartment()->debugEnvs->markLiveFrame(trc, this);
+        script->compartment()->debugEnvs->traceLiveFrame(trc, this);
 
     if (trc->isMarkingTracer())
         script->compartment()->zone()->active = true;
@@ -410,7 +410,7 @@ InterpreterFrame::traceValues(JSTracer* trc, unsigned start, unsigned end)
 }
 
 static void
-MarkInterpreterActivation(JSTracer* trc, InterpreterActivation* act)
+TraceInterpreterActivation(JSTracer* trc, InterpreterActivation* act)
 {
     for (InterpreterFrameIterator frames(act); !frames.done(); ++frames) {
         InterpreterFrame* fp = frames.frame();
@@ -419,12 +419,12 @@ MarkInterpreterActivation(JSTracer* trc, InterpreterActivation* act)
 }
 
 void
-js::MarkInterpreterActivations(JSRuntime* rt, JSTracer* trc)
+js::TraceInterpreterActivations(JSRuntime* rt, JSTracer* trc)
 {
     for (ActivationIterator iter(rt); !iter.done(); ++iter) {
         Activation* act = iter.activation();
         if (act->isInterpreter())
-            MarkInterpreterActivation(trc, act->asInterpreter());
+            TraceInterpreterActivation(trc, act->asInterpreter());
     }
 }
 
@@ -1574,7 +1574,7 @@ jit::JitActivation::removeRematerializedFramesFromDebugger(JSContext* cx, uint8_
 }
 
 void
-jit::JitActivation::markRematerializedFrames(JSTracer* trc)
+jit::JitActivation::traceRematerializedFrames(JSTracer* trc)
 {
     if (!rematerializedFrames_)
         return;
@@ -1615,7 +1615,7 @@ jit::JitActivation::removeIonFrameRecovery(JitFrameLayout* fp)
 }
 
 void
-jit::JitActivation::markIonRecovery(JSTracer* trc)
+jit::JitActivation::traceIonRecovery(JSTracer* trc)
 {
     for (RInstructionResults* it = ionRecovery_.begin(); it != ionRecovery_.end(); it++)
         it->trace(trc);

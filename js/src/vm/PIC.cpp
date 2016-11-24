@@ -242,7 +242,7 @@ js::ForOfPIC::Chain::eraseChain()
 
 // Trace the pointers stored directly on the stub.
 void
-js::ForOfPIC::Chain::mark(JSTracer* trc)
+js::ForOfPIC::Chain::trace(JSTracer* trc)
 {
     if (!initialized_ || disabled_)
         return;
@@ -285,7 +285,7 @@ static void
 ForOfPIC_traceObject(JSTracer* trc, JSObject* obj)
 {
     if (ForOfPIC::Chain* chain = ForOfPIC::fromJSObject(&obj->as<NativeObject>()))
-        chain->mark(trc);
+        chain->trace(trc);
 }
 
 static const ClassOps ForOfPICClassOps = {

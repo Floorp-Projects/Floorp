@@ -1162,7 +1162,7 @@ int wasapi_init(cubeb ** context, char const * context_name)
       (revert_mm_thread_characteristics_function) GetProcAddress(
           ctx->mmcss_module, "AvRevertMmThreadCharacteristics");
     if (!(ctx->set_mm_thread_characteristics && ctx->revert_mm_thread_characteristics)) {
-      LOG("Could not load AvSetMmThreadCharacteristics or AvRevertMmThreadCharacteristics: %x", GetLastError());
+      LOG("Could not load AvSetMmThreadCharacteristics or AvRevertMmThreadCharacteristics: %lx", GetLastError());
       FreeLibrary(ctx->mmcss_module);
     }
   } else {
@@ -1789,7 +1789,7 @@ void wasapi_stream_destroy(cubeb_stream * stm)
 {
   XASSERT(stm);
 
-  // Only free stm->emergency_bailout if we could not join the thread.
+  // Only free stm->emergency_bailout if we could join the thread.
   // If we could not join the thread, stm->emergency_bailout is true
   // and is still alive until the thread wakes up and exits cleanly.
   if (stop_and_join_render_thread(stm)) {

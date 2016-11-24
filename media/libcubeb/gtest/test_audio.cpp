@@ -230,7 +230,7 @@ int run_panning_volume_test(int is_float)
   fprintf(stderr, "Testing: panning\n");
   for(int i=-4;i <= 4; ++i)
   {
-    fprintf(stderr, "Panning: %.2f%%\n", i/4.0f);
+    fprintf(stderr, "Panning: %.2f\n", i/4.0f);
 
     cubeb_stream_set_panning(stream, i/4.0f);
     cubeb_stream_start(stream);

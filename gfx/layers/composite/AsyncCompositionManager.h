@@ -70,7 +70,7 @@ class AsyncCompositionManager final
 public:
   NS_INLINE_DECL_REFCOUNTING(AsyncCompositionManager)
 
-  explicit AsyncCompositionManager(LayerManagerComposite* aManager);
+  explicit AsyncCompositionManager(HostLayerManager* aManager);
 
   /**
    * This forces the is-first-paint flag to true. This is intended to
@@ -218,7 +218,7 @@ private:
   TargetConfig mTargetConfig;
   CSSRect mContentRect;
 
-  RefPtr<LayerManagerComposite> mLayerManager;
+  RefPtr<HostLayerManager> mLayerManager;
   // When this flag is set, the next composition will be the first for a
   // particular document (i.e. the document displayed on the screen will change).
   // This happens when loading a new page or switching tabs. We notify the

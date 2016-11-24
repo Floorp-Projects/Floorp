@@ -5783,30 +5783,24 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             exceptionCode=exceptionCode)
 
         if failureCode is not None:
-            if isDefinitelyObject:
-                dictionaryTest = "IsObjectValueConvertibleToDictionary"
+            # This means we're part of an overload or union conversion, and
+            # should simply skip stuff if our value is not convertible to
+            # dictionary, instead of trying and throwing.  If we're either
+            # isDefinitelyObject or isNullOrUndefined then we're convertible to
+            # dictionary and don't need to check here.
+            if isDefinitelyObject or isNullOrUndefined:
+                template = conversionCode
             else:
-                dictionaryTest = "IsConvertibleToDictionary"
-
-            template = fill("""
-                { // scope for isConvertible
-                  bool isConvertible;
-                  if (!${testConvertible}(cx, ${val}, &isConvertible)) {
-                    $*{exceptionCode}
-                  }
-                  if (!isConvertible) {
-                    $*{failureCode}
-                  }
-
-                  $*{conversionCode}
-                }
-
-                """,
-                testConvertible=dictionaryTest,
-                val=val,
-                exceptionCode=exceptionCode,
-                failureCode=failureCode,
-                conversionCode=conversionCode)
+                template = fill(
+                    """
+                    if (!IsConvertibleToDictionary(${val})) {
+                      $*{failureCode}
+                    }
+                    $*{conversionCode}
+                    """,
+                    val=val,
+                    failureCode=failureCode,
+                    conversionCode=conversionCode)
         else:
             template = conversionCode
 
@@ -8030,12 +8024,12 @@ class CGMethodCall(CGThing):
             # 1)  A platform object that's not a platform array object, being
             #     passed to an interface or "object" arg.
             # 2)  A Date object being passed to a Date or "object" arg.
-            # 3)  A RegExp object being passed to a RegExp or "object" arg.
-            # 4)  A callable object being passed to a callback or "object" arg.
-            # 5)  An iterable object being passed to a sequence arg.
-            # 6)  Any non-Date and non-RegExp object being passed to a
-            #     array or callback interface or dictionary or
-            #     "object" arg.
+            #     XXXbz This is actually gone from the spec now, but we still
+            #     have some APIs using Date.
+            # 3)  A callable object being passed to a callback or "object" arg.
+            # 4)  An iterable object being passed to a sequence arg.
+            # 5)  Any object being passed to a array or callback interface or
+            #     dictionary or "object" arg.
 
             # First grab all the overloads that have a non-callback interface
             # (which includes typed arrays and arraybuffers) at the
@@ -12591,14 +12585,8 @@ class CGDictionary(CGThing):
         else:
             body += dedent(
                 """
-                { // scope for isConvertible
-                  bool isConvertible;
-                  if (!IsConvertibleToDictionary(cx, val, &isConvertible)) {
-                    return false;
-                  }
-                  if (!isConvertible) {
-                    return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY, sourceDescription);
-                  }
+                if (!IsConvertibleToDictionary(val)) {
+                  return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY, sourceDescription);
                 }
 
                 """)

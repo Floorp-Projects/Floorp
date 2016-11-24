@@ -769,12 +769,14 @@ nsXPLookAndFeel::GetColorImpl(ColorID aID, bool aUseStandinsForNativeColors,
   }
 
   // There are no system color settings for these, so set them manually
+#ifndef XP_MACOSX
   if (aID == eColorID_TextSelectBackgroundDisabled) {
     // This is used to gray out the selection when it's not focused
     // Used with nsISelectionController::SELECTION_DISABLED
     aResult = NS_RGB(0xb0, 0xb0, 0xb0);
     return NS_OK;
   }
+#endif
 
   if (aID == eColorID_TextSelectBackgroundAttention) {
     if (sFindbarModalHighlight) {

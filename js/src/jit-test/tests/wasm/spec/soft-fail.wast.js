@@ -1,1 +1,1 @@
-var importedArgs = ['soft-fail.wast']; load(scriptdir + '../spec.js');
+var importedArgs = ['soft-fail.wast']; load(scriptdir + '../wast.js');

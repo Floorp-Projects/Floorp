@@ -396,10 +396,6 @@ public class PushService implements BundleEventListener {
                 return;
             }
             if ("History:GetPrePathLastVisitedTimeMilliseconds".equals(event)) {
-                if (callback == null) {
-                    Log.e(LOG_TAG, "callback must not be null in " + event);
-                    return;
-                }
                 final String prePath = message.getString("prePath");
                 if (prePath == null) {
                     callback.sendError("prePath must not be null in " + event);

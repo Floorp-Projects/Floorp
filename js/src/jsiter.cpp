@@ -68,17 +68,7 @@ NativeIterator::trace(JSTracer* trc)
         TraceManuallyBarrieredEdge(trc, &iterObj_, "iterObj");
 }
 
-struct IdHashPolicy {
-    typedef jsid Lookup;
-    static HashNumber hash(jsid id) {
-        return JSID_BITS(id);
-    }
-    static bool match(jsid id1, jsid id2) {
-        return id1 == id2;
-    }
-};
-
-typedef HashSet<jsid, IdHashPolicy> IdSet;
+typedef HashSet<jsid, DefaultHasher<jsid>> IdSet;
 
 static inline bool
 NewKeyValuePair(JSContext* cx, jsid id, const Value& val, MutableHandleValue rval)
@@ -560,10 +550,10 @@ NewPropertyIteratorObject(JSContext* cx, unsigned flags)
         if (!shape)
             return nullptr;
 
-        JSObject* obj = JSObject::create(cx, ITERATOR_FINALIZE_KIND,
-                                         GetInitialHeap(GenericObject, clasp), shape, group);
-        if (!obj)
-            return nullptr;
+        JSObject* obj;
+        JS_TRY_VAR_OR_RETURN_NULL(cx, obj, JSObject::create(cx, ITERATOR_FINALIZE_KIND,
+                                                            GetInitialHeap(GenericObject, clasp),
+                                                            shape, group));
 
         PropertyIteratorObject* res = &obj->as<PropertyIteratorObject>();
 
