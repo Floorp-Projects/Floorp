@@ -271,11 +271,6 @@ ShadowLayerForwarder::CreatedTextLayer(ShadowableLayer* aColor)
   CreatedLayer<OpCreateTextLayer>(mTxn, aColor);
 }
 void
-ShadowLayerForwarder::CreatedBorderLayer(ShadowableLayer* aBorder)
-{
-  CreatedLayer<OpCreateBorderLayer>(mTxn, aBorder);
-}
-void
 ShadowLayerForwarder::CreatedCanvasLayer(ShadowableLayer* aCanvas)
 {
   CreatedLayer<OpCreateCanvasLayer>(mTxn, aCanvas);
