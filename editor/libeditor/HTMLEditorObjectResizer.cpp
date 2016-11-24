@@ -138,18 +138,17 @@ already_AddRefed<Element>
 HTMLEditor::CreateResizer(int16_t aLocation,
                           nsIDOMNode* aParentNode)
 {
-  nsCOMPtr<nsIDOMElement> retDOM;
-  nsresult rv = CreateAnonymousElement(NS_LITERAL_STRING("span"),
-                                       aParentNode,
-                                       NS_LITERAL_STRING("mozResizer"),
-                                       false,
-                                       getter_AddRefs(retDOM));
-
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  NS_ENSURE_TRUE(retDOM, nullptr);
+  RefPtr<Element> ret =
+    CreateAnonymousElement(nsGkAtoms::span,
+                           aParentNode,
+                           NS_LITERAL_STRING("mozResizer"),
+                           false);
+  if (NS_WARN_IF(!ret)) {
+    return nullptr;
+  }
 
   // add the mouse listener so we can detect a click on a resizer
-  nsCOMPtr<nsIDOMEventTarget> evtTarget = do_QueryInterface(retDOM);
+  nsCOMPtr<nsIDOMEventTarget> evtTarget = do_QueryInterface(ret);
   evtTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), mEventListener,
                               true);
 
@@ -183,9 +182,8 @@ HTMLEditor::CreateResizer(int16_t aLocation,
       break;
   }
 
-  nsCOMPtr<Element> ret = do_QueryInterface(retDOM);
-  rv = ret->SetAttr(kNameSpaceID_None, nsGkAtoms::anonlocation, locationStr,
-                    true);
+  nsresult rv =
+    ret->SetAttr(kNameSpaceID_None, nsGkAtoms::anonlocation, locationStr, true);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return ret.forget();
 }
@@ -195,20 +193,15 @@ HTMLEditor::CreateShadow(nsIDOMNode* aParentNode,
                          nsIDOMElement* aOriginalObject)
 {
   // let's create an image through the element factory
-  nsAutoString name;
+  nsCOMPtr<nsIAtom> name;
   if (HTMLEditUtils::IsImage(aOriginalObject)) {
-    name.AssignLiteral("img");
+    name = nsGkAtoms::img;
   } else {
-    name.AssignLiteral("span");
+    name = nsGkAtoms::span;
   }
-  nsCOMPtr<nsIDOMElement> retDOM;
-  CreateAnonymousElement(name, aParentNode,
-                         NS_LITERAL_STRING("mozResizingShadow"), true,
-                         getter_AddRefs(retDOM));
-
-  NS_ENSURE_TRUE(retDOM, nullptr);
-
-  nsCOMPtr<Element> ret = do_QueryInterface(retDOM);
+  RefPtr<Element> ret =
+    CreateAnonymousElement(name, aParentNode,
+                           NS_LITERAL_STRING("mozResizingShadow"), true);
   return ret.forget();
 }
 
@@ -216,12 +209,9 @@ already_AddRefed<Element>
 HTMLEditor::CreateResizingInfo(nsIDOMNode* aParentNode)
 {
   // let's create an info box through the element factory
-  nsCOMPtr<nsIDOMElement> retDOM;
-  CreateAnonymousElement(NS_LITERAL_STRING("span"), aParentNode,
-                         NS_LITERAL_STRING("mozResizingInfo"), true,
-                         getter_AddRefs(retDOM));
-
-  nsCOMPtr<Element> ret = do_QueryInterface(retDOM);
+  RefPtr<Element> ret =
+    CreateAnonymousElement(nsGkAtoms::span, aParentNode,
+                           NS_LITERAL_STRING("mozResizingInfo"), true);
   return ret.forget();
 }
 
