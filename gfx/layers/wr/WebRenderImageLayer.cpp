@@ -13,6 +13,14 @@ namespace layers {
 
 using namespace gfx;
 
+WebRenderImageLayer::~WebRenderImageLayer()
+{
+  MOZ_COUNT_DTOR(WebRenderImageLayer);
+  if (mImageId) {
+    WRBridge()->DeallocExternalImageId(mImageId);
+  }
+}
+
 already_AddRefed<gfx::SourceSurface>
 WebRenderImageLayer::GetAsSourceSurface()
 {
@@ -31,6 +39,12 @@ WebRenderImageLayer::GetAsSourceSurface()
 void
 WebRenderImageLayer::RenderLayer()
 {
+  // XXX update async ImageContainer rendering path
+  if (mContainer->IsAsync() && !mImageId) {
+    mImageId = WRBridge()->AllocExternalImageId(mContainer->GetAsyncContainerID());
+    MOZ_ASSERT(mImageId);
+  }
+
   RefPtr<gfx::SourceSurface> surface = GetAsSourceSurface();
   if (!surface)
     return;

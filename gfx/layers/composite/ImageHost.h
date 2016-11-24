@@ -89,6 +89,8 @@ public:
 
   virtual void CleanupResources() override;
 
+  virtual void BindTextureSource() override;
+
   int32_t GetFrameID()
   {
     const TimedImage* img = ChooseImage();

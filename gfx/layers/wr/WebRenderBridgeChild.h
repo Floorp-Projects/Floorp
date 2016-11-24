@@ -30,6 +30,9 @@ public:
 
   bool DPBegin(uint32_t aWidth, uint32_t aHeight);
   void DPEnd(bool aIsSync = false);
+
+  uint64_t AllocExternalImageId(uint64_t aAsyncContainerID);
+  void DeallocExternalImageId(uint64_t aImageId);
 protected:
   ~WebRenderBridgeChild() {}
 
