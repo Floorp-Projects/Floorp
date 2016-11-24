@@ -17,11 +17,14 @@ class TestSoftwareUpdate(PuppeteerMixin, MarionetteTestCase):
         self.software_update = SoftwareUpdate(self.marionette)
 
         self.saved_mar_channels = self.software_update.mar_channels.channels
+        self.saved_update_channel = self.software_update.update_channel
+
         self.software_update.mar_channels.channels = set(['expected', 'channels'])
 
     def tearDown(self):
         try:
             self.software_update.mar_channels.channels = self.saved_mar_channels
+            self.software_update.update_channel = self.saved_update_channel
         finally:
             super(TestSoftwareUpdate, self).tearDown()
 
@@ -41,7 +44,7 @@ class TestSoftwareUpdate(PuppeteerMixin, MarionetteTestCase):
         self.assertTrue(build_info['locale'])
         self.assertIn('force=1', build_info['update_url'])
         self.assertIn('xml', build_info['update_snippet'])
-        self.assertEqual(build_info['channel'], self.software_update.update_channel.channel)
+        self.assertEqual(build_info['channel'], self.software_update.update_channel)
 
     def test_force_fallback(self):
         status_file = os.path.join(self.software_update.staging_directory, 'update.status')
@@ -55,10 +58,10 @@ class TestSoftwareUpdate(PuppeteerMixin, MarionetteTestCase):
             os.remove(status_file)
 
     def test_get_update_url(self):
-        update_url = self.software_update.get_update_url()
+        update_url = self.software_update.get_formatted_update_url()
         self.assertIn('Firefox', update_url)
         self.assertNotIn('force=1', update_url)
-        update_url = self.software_update.get_update_url(True)
+        update_url = self.software_update.get_formatted_update_url(True)
         self.assertIn('Firefox', update_url)
         self.assertIn('force=1', update_url)
 
@@ -68,32 +71,10 @@ class TestSoftwareUpdate(PuppeteerMixin, MarionetteTestCase):
     def test_staging_directory(self):
         self.assertTrue(self.software_update.staging_directory)
 
-
-class TestUpdateChannel(PuppeteerMixin, MarionetteTestCase):
-
-    def setUp(self):
-        super(TestUpdateChannel, self).setUp()
-
-        self.software_update = SoftwareUpdate(self.marionette)
-
-        self.saved_channel = self.software_update.update_channel.default_channel
-        self.software_update.update_channel.default_channel = 'expected_channel'
-
-    def tearDown(self):
-        try:
-            self.software_update.update_channel.default_channel = self.saved_channel
-        finally:
-            super(TestUpdateChannel, self).tearDown()
-
-    def test_update_channel_channel(self):
-        self.assertEqual(self.software_update.update_channel.channel, self.saved_channel)
-
-    def test_update_channel_default_channel(self):
-        self.assertEqual(self.software_update.update_channel.default_channel, 'expected_channel')
-
-    def test_update_channel_set_default_channel(self):
-        self.software_update.update_channel.default_channel = 'new_channel'
-        self.assertEqual(self.software_update.update_channel.default_channel, 'new_channel')
+    def test_set_update_channel(self):
+        self.software_update.update_channel = 'new_channel'
+        self.assertEqual(self.puppeteer.prefs.get_pref('app.update.channel', default_branch=True),
+                         'new_channel')
 
 
 class TestMARChannels(PuppeteerMixin, MarionetteTestCase):

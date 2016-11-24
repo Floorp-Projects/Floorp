@@ -5,6 +5,7 @@
 package org.mozilla.gecko.toolbar;
 
 import android.content.Context;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 
 public class ForwardButton extends NavButton {
@@ -16,8 +17,15 @@ public class ForwardButton extends NavButton {
     protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
 
+        boolean isLayoutRtl = ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL;
         mBorderPath.reset();
-        mBorderPath.moveTo(width - mBorderWidth, 0);
-        mBorderPath.lineTo(width - mBorderWidth, height);
+        final float startX;
+        if (isLayoutRtl) {
+            startX = 0 + mBorderWidth;
+        } else {
+            startX = width - mBorderWidth;
+        }
+        mBorderPath.moveTo(startX, 0);
+        mBorderPath.lineTo(startX, height);
     }
 }

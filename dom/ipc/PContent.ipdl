@@ -672,7 +672,8 @@ parent:
                  DomainPolicyClone domainPolicy,
                  StructuredCloneData initialData,
                  FontFamilyListEntry[] fontFamilies /* used on MacOSX only */,
-                 OptionalURIParams userContentSheetURL);
+                 OptionalURIParams userContentSheetURL,
+                 LookAndFeelInt[] lookAndFeelIntCache);
 
     sync CreateChildProcess(IPCTabContext context,
                             ProcessPriority priority,
@@ -772,9 +773,6 @@ parent:
         returns (bool isSecureURI);
 
     async AccumulateMixedContentHSTS(URIParams uri, bool active, bool hasHSTSPriming);
-
-    sync GetLookAndFeelCache()
-        returns (LookAndFeelInt[] lookAndFeelIntCache);
 
     nested(inside_cpow) async PHal();
 

@@ -2506,7 +2506,8 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
                                              DomainPolicyClone* domainPolicy,
                                              StructuredCloneData* aInitialData,
                                              InfallibleTArray<FontFamilyListEntry>* fontFamilies,
-                                             OptionalURIParams* aUserContentCSSURL)
+                                             OptionalURIParams* aUserContentCSSURL,
+                                             nsTArray<LookAndFeelInt>* aLookAndFeelIntCache)
 {
   nsCOMPtr<nsIIOService> io(do_GetIOService());
   MOZ_ASSERT(io, "No IO service?");
@@ -2571,6 +2572,7 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
 
   // This is only implemented (returns a non-empty list) by MacOSX at present.
   gfxPlatform::GetPlatform()->GetSystemFontFamilyList(fontFamilies);
+  *aLookAndFeelIntCache = LookAndFeel::GetIntCache();
 
   // Content processes have no permission to access profile directory, so we
   // send the file URL instead.
@@ -3259,13 +3261,6 @@ ContentParent::RecvNSSU2FTokenSign(nsTArray<uint8_t>&& aApplication,
   if (NS_FAILED(rv)) {
     return IPC_FAIL_NO_REASON(this);
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>* aLookAndFeelIntCache)
-{
-  *aLookAndFeelIntCache = LookAndFeel::GetIntCache();
   return IPC_OK();
 }
 

@@ -19,6 +19,7 @@
                   android:layout_weight="1"
                   android:layout_gravity="center_vertical"
                   android:paddingRight="10dp"
+                  android:paddingEnd="10dp"
                   android:orientation="vertical">
 
         <org.mozilla.gecko.widget.FadedSingleColorTextView
@@ -37,7 +38,9 @@
                   android:maxLength="1024"
                   gecko:fadeWidth="90dp"
                   tools:text="http://test.com/test"
-                  tools:drawableLeft="@drawable/ic_url_bar_tab"/>
+                  tools:drawableLeft="@drawable/ic_url_bar_tab"
+                  tools:drawableStart="@drawable/ic_url_bar_tab"
+            />
 
     </LinearLayout>
 

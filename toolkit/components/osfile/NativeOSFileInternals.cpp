@@ -741,7 +741,7 @@ public:
     , mResult(new TypedArrayResult(TimeStamp::Now()))
   { }
 
-  ~DoReadToTypedArrayEvent() {
+  ~DoReadToTypedArrayEvent() override {
     // If AbstractReadEvent::Run() has bailed out, we may need to cleanup
     // mResult, which is main-thread only data
     if (!mResult) {
@@ -778,7 +778,7 @@ public:
     , mResult(new StringResult(TimeStamp::Now()))
   { }
 
-  ~DoReadToStringEvent() {
+  ~DoReadToStringEvent() override {
     // If AbstraactReadEvent::Run() has bailed out, we may need to cleanup
     // mResult, which is main-thread only data
     if (!mResult) {

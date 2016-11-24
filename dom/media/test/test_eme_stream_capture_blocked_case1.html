@@ -20,10 +20,11 @@ function startTest(test, token)
   // 3. capturing a media element with mozCaptureStream that has a MediaKeys should fail.
 
   // Case 1. setting MediaKeys on an element captured by MediaElementSource should fail.
+  var p1 = new EMEPromise;
   var case1token = token + "_case1";
   var setKeysFailed = function() {
     ok(true, TimeStamp(case1token) + " setMediaKeys failed as expected.");
-    manager.finished(case1token);
+    p1.resolve();
   };
   var v1 = SetupEME(test, case1token,  { onSetKeysFail: setKeysFailed });
   var context = new AudioContext();
@@ -32,8 +33,8 @@ function startTest(test, token)
     ok(false, TimeStamp(case1token) + " should never reach loadeddata, as setMediaKeys should fail");
   });
   manager.started(case1token);
-  LoadTestWithManagedLoadToken(test, v1, manager, case1token,
-                               { onlyLoadFirstFragments:2, noEndOfStream:false });
+  var p2 = LoadTest(test, v1, case1token, { onlyLoadFirstFragments:2, noEndOfStream:false });
+  EMEPromiseAll(v1, case1token, [p1.promise, p2]);
 }
 
 function beginTest() {

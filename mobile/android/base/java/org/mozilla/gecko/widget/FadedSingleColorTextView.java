@@ -9,7 +9,9 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.LinearGradient;
 import android.graphics.Shader;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
+import android.view.View;
 
 /**
  * Fades the end of the text by gecko:fadeWidth amount,
@@ -37,7 +39,8 @@ public class FadedSingleColorTextView extends FadedTextView {
 
         final boolean needsEllipsis = needsEllipsis();
         if (needsEllipsis && needsNewGradient) {
-            mTextGradient = new FadedTextGradient(width, fadeWidth, color);
+            final boolean isRTL = ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL;
+            mTextGradient = new FadedTextGradient(width, fadeWidth, color, isRTL);
         }
 
         getPaint().setShader(needsEllipsis ? mTextGradient : null);
@@ -53,10 +56,11 @@ public class FadedSingleColorTextView extends FadedTextView {
         private final int mWidth;
         private final int mColor;
 
-        public FadedTextGradient(int width, int fadeWidth, int color) {
-            super(0, 0, width, 0,
-                  new int[] { color, color, 0x0 },
-                  new float[] { 0,  ((float) (width - fadeWidth) / width), 1.0f },
+        public FadedTextGradient(int width, int fadeWidth, int color, boolean isRTL) {
+            super(isRTL ? width : 0, 0,
+                  isRTL ? 0 : width, 0,
+                  new int[]{color, color, 0x0},
+                  new float[]{0, ((float) (width - fadeWidth) / width), 1.0f},
                   Shader.TileMode.CLAMP);
 
             mWidth = width;
