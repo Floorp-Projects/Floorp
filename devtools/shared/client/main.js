@@ -736,6 +736,7 @@ DebuggerClient.prototype = {
     request.on("json-reply", listenerJson);
     request.on("bulk-reply", listenerBulk);
     request.then = deferred.promise.then.bind(deferred.promise);
+    request.catch = deferred.promise.catch.bind(deferred.promise);
 
     return request;
   },

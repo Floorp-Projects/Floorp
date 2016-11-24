@@ -1791,21 +1791,6 @@ function getSourceActor(sources, URL) {
 }
 
 /**
- * Make a request against an actor and resolve with the packet.
- * @param object client
- *   The client to use when making the request.
- * @param function requestType
- *   The client request function to run.
- * @param array args
- *   The arguments to pass into the function.
- */
-function getPacket(client, requestType, args) {
-  return new Promise(resolve => {
-    client[requestType](...args, packet => resolve(packet));
-  });
-}
-
-/**
  * Verify that clicking on a link from a popup notification message tries to
  * open the expected URL.
  */
