@@ -2,7 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from argparse import ArgumentParser
+
+from copy import deepcopy
 import json
+import mozinfo
+import moznetwork
 import os
 import random
 import re
@@ -11,20 +16,19 @@ import sys
 import time
 import traceback
 import unittest
-from argparse import ArgumentParser
-from copy import deepcopy
-
-import mozinfo
+import warnings
 import mozprofile
-from marionette_driver.marionette import Marionette
 
-import mozversion
-import serve
+
 from manifestparser import TestManifest
 from manifestparser.filters import tags
-from moztest.adapters.unit import StructuredTestResult, StructuredTestRunner
-from moztest.results import TestResult, TestResultCollection, relevant_line
-from serve import iter_proc, iter_url
+from marionette_driver.marionette import Marionette
+from moztest.adapters.unit import StructuredTestRunner, StructuredTestResult
+from moztest.results import TestResultCollection, TestResult, relevant_line
+import mozversion
+
+import httpd
+
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -485,11 +489,6 @@ class RemoteMarionetteArguments(object):
     ]
 
 
-class Fixtures(object):
-    def where_is(self, uri, on="http"):
-        return serve.where_is(uri, on)
-
-
 class BaseMarionetteTestRunner(object):
 
     textrunnerclass = MarionetteTextTestRunner
@@ -507,8 +506,6 @@ class BaseMarionetteTestRunner(object):
                  socket_timeout=BaseMarionetteArguments.socket_timeout_default,
                  startup_timeout=None, addons=None, workspace=None,
                  verbose=0, e10s=True, emulator=False, **kwargs):
-        self.fixture_servers = {}
-        self.fixtures = Fixtures()
         self.extra_kwargs = kwargs
         self.test_kwargs = deepcopy(kwargs)
         self.address = address
@@ -519,6 +516,7 @@ class BaseMarionetteTestRunner(object):
         self.profile = profile
         self.addons = addons
         self.logger = logger
+        self.httpd = None
         self.marionette = None
         self.logdir = logdir
         self.repeat = repeat
@@ -671,6 +669,7 @@ class BaseMarionetteTestRunner(object):
     @bin.setter
     def bin(self, path):
         """Set binary and reset parts of runner accordingly.
+
         Intended use: to change binary between calls to run_tests
         """
         self._bin = path
@@ -762,6 +761,30 @@ class BaseMarionetteTestRunner(object):
         assert len(self.test_handlers) > 0
         self.reset_test_stats()
 
+    def _start_marionette(self):
+        need_external_ip = True
+        if not self.marionette:
+            self.marionette = self.driverclass(**self._build_kwargs())
+            # if we're working against a desktop version, we usually don't need
+            # an external ip
+            if self.appName != 'fennec':
+                need_external_ip = False
+        self.logger.info('Initial Profile Destination is '
+                         '"{}"'.format(self.marionette.profile_path))
+        return need_external_ip
+
+    def _set_baseurl(self, need_external_ip):
+        # Gaia sets server_root and that means we shouldn't spin up our own httpd
+        if not self.httpd:
+            if self.server_root is None or os.path.isdir(self.server_root):
+                self.logger.info("starting httpd")
+                self.start_httpd(need_external_ip)
+                self.marionette.baseurl = self.httpd.get_url()
+                self.logger.info("running httpd on {}".format(self.marionette.baseurl))
+            else:
+                self.marionette.baseurl = self.server_root
+                self.logger.info("using remote content from {}".format(self.marionette.baseurl))
+
     def _add_tests(self, tests):
         for test in tests:
             self.add_test(test)
@@ -790,19 +813,8 @@ class BaseMarionetteTestRunner(object):
         start_time = time.time()
         self._initialize_test_run(tests)
 
-        if self.marionette is None:
-            self.marionette = self.driverclass(**self._build_kwargs())
-            self.logger.info("Profile path is %s" % self.marionette.profile_path)
-
-        if len(self.fixture_servers) == 0 or \
-                any(not server.is_alive for _, server in self.fixture_servers):
-            self.logger.info("Starting fixture servers")
-            self.fixture_servers = self.start_fixture_servers()
-            for url in iter_url(self.fixture_servers):
-                self.logger.info("Fixture server listening on %s" % url)
-
-            # backwards compatibility
-            self.marionette.baseurl = serve.where_is("/")
+        need_external_ip = self._start_marionette()
+        self._set_baseurl(need_external_ip)
 
         self._add_tests(tests)
 
@@ -811,17 +823,14 @@ class BaseMarionetteTestRunner(object):
             try:
                 device_info = self.marionette.instance.runner.device.dm.getInfo()
             except Exception:
-                self.logger.warning('Could not get device info', exc_info=True)
+                self.logger.warning('Could not get device info.')
 
         # TODO: Get version_info in Fennec case
         version_info = None
         if self.bin:
             version_info = mozversion.get_version(binary=self.bin)
 
-        if self.e10s:
-            self.logger.info("e10s is enabled")
-        else:
-            self.logger.info("e10s is disabled")
+        self.logger.info("running with e10s: {}".format(self.e10s))
 
         self.logger.suite_start(self.tests,
                                 version_info=version_info,
@@ -857,8 +866,9 @@ class BaseMarionetteTestRunner(object):
             for run_tests in self.mixin_run_tests:
                 run_tests(tests)
             if self.shuffle:
-                self.logger.info("Using shuffle seed: %d" % self.shuffle_seed)
+                self.logger.info("Using seed where seed is:{}".format(self.shuffle_seed))
 
+            self.logger.info('mode: {}'.format('e10s' if self.e10s else 'non-e10s'))
             self.logger.suite_end()
         except:
             # raise only the exception if we were not interrupted
@@ -890,9 +900,19 @@ class BaseMarionetteTestRunner(object):
             for failed_test in self.failures:
                 self.logger.info('{}'.format(failed_test[0]))
 
-    def start_fixture_servers(self):
+    def start_httpd(self, need_external_ip):
+        warnings.warn("start_httpd has been deprecated in favour of create_httpd",
+                      DeprecationWarning)
+        self.httpd = self.create_httpd(need_external_ip)
+
+    def create_httpd(self, need_external_ip):
+        host = "127.0.0.1"
+        if need_external_ip:
+            host = moznetwork.get_ip()
         root = self.server_root or os.path.join(os.path.dirname(here), "www")
-        return serve.start(root)
+        rv = httpd.FixtureServer(root, host=host)
+        rv.start()
+        return rv
 
     def add_test(self, test, expected='pass'):
         filepath = os.path.abspath(test)
@@ -952,6 +972,7 @@ class BaseMarionetteTestRunner(object):
         self.tests.append({'filepath': filepath, 'expected': expected})
 
     def run_test(self, filepath, expected):
+
         testloader = unittest.TestLoader()
         suite = unittest.TestSuite()
         self.test_kwargs['expected'] = expected
@@ -963,7 +984,7 @@ class BaseMarionetteTestRunner(object):
                                            suite,
                                            testloader,
                                            self.marionette,
-                                           self.fixtures,
+                                           self.httpd,
                                            self.testvars,
                                            **self.test_kwargs)
                 break
@@ -1029,13 +1050,12 @@ class BaseMarionetteTestRunner(object):
         self.run_test_set(self.tests)
 
     def cleanup(self):
-        for proc in iter_proc(self.fixture_servers):
-            proc.stop()
-            proc.kill()
-        self.fixture_servers = {}
+        if hasattr(self, 'httpd') and self.httpd:
+            self.httpd.stop()
+            self.httpd = None
 
         if hasattr(self, 'marionette') and self.marionette:
-            if self.marionette.instance is not None:
+            if self.marionette.instance:
                 self.marionette.instance.close()
                 self.marionette.instance = None
 
