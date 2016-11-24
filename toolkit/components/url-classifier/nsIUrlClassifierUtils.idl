@@ -32,6 +32,18 @@ interface nsIUrlClassifierUtils : nsISupports
   ACString getProvider(in ACString tableName);
 
   /**
+   * Get the provider used for Telemetry.
+   * Because recording Telemetry will leak user-controlled strings,
+   * only built-in providers should be recorded.
+   *
+   * @param tableName The table name that we want to lookup
+   *
+   * @returns the filtered provider for telemetry.
+   *
+   */
+  ACString getTelemetryProvider(in ACString tableName);
+
+  /**
    * Get the protocol version for the given provider.
    *
    * @param provider String the provider name. e.g. "google"
