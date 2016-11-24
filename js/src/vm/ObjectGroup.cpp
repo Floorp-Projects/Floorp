@@ -1123,7 +1123,7 @@ struct ObjectGroupCompartment::PlainObjectKey
     };
 
     static inline HashNumber hash(const Lookup& lookup) {
-        return (HashNumber) (JSID_BITS(lookup.properties[lookup.nproperties - 1].id) ^
+        return (HashNumber) (HashId(lookup.properties[lookup.nproperties - 1].id) ^
                              lookup.nproperties);
     }
 
