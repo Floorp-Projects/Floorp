@@ -2779,8 +2779,17 @@ PaintedLayerDataNode::FindPaintedLayerFor(const nsIntRect& aVisibleRect,
            data.mScaledMaybeHitRegionBounds.Intersects(aVisibleRect))) {
         break;
       }
+      // If the visible region intersects with the current layer then we
+      // can't possibly use any of the layers below it, so stop the search
+      // now.
+      //
+      // If we're trying to minimize painted layer size and we don't
+      // intersect the current visible region, then make sure we don't
+      // use this painted layer.
       if (visibleRegion.Intersects(aVisibleRect)) {
         break;
+      } else if (gfxPrefs::LayoutSmallerPaintedLayers()) {
+        lowestUsableLayer = nullptr;
       }
     }
     if (lowestUsableLayer) {
