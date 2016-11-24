@@ -1283,6 +1283,28 @@ NewStringCopyZ(js::ExclusiveContext* cx, const char* s)
     return NewStringCopyN<allowGC>(cx, s, strlen(s));
 }
 
+JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
+
+static MOZ_ALWAYS_INLINE js::HashNumber
+HashId(jsid id)
+{
+    if (MOZ_LIKELY(JSID_IS_ATOM(id)))
+        return JSID_TO_ATOM(id)->hash();
+    return mozilla::HashGeneric(JSID_BITS(id));
+}
+
+template <>
+struct DefaultHasher<jsid>
+{
+    typedef jsid Lookup;
+    static HashNumber hash(jsid id) {
+        return HashId(id);
+    }
+    static bool match(jsid id1, jsid id2) {
+        return id1 == id2;
+    }
+};
+
 } /* namespace js */
 
 // Addon IDs are interned atoms which are never destroyed. This detail is
