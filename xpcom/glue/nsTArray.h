@@ -1521,12 +1521,6 @@ protected:
   template<class Item, typename ActualAlloc = Alloc>
   elem_type* AppendElements(const Item* aArray, size_type aArrayLen);
 
-  template<class Item, size_t Length, typename ActualAlloc = Alloc>
-  elem_type* AppendElements(const mozilla::Array<Item, Length>& aArray)
-  {
-    return AppendElements<Item, ActualAlloc>(&aArray[0], Length);
-  }
-
 public:
 
   template<class Item>
