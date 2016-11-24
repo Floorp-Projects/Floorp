@@ -36,6 +36,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsThemeConstants.h"
+#include "BorderConsts.h"
 #include "LayerTreeInvalidation.h"
 
 #include "imgIContainer.h"
@@ -4055,6 +4056,80 @@ nsDisplayBorder::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
       geometry->ShouldInvalidateToSyncDecodeImages()) {
     aInvalidRegion->Or(*aInvalidRegion, GetBounds(aBuilder, &snap));
   }
+}
+
+LayerState
+nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
+                               LayerManager* aManager,
+                               const ContainerLayerParameters& aParameters)
+{
+  if (!gfxPrefs::LayersAllowBorderLayers()) {
+    return LAYER_NONE;
+  }
+
+  nsPoint offset = ToReferenceFrame();
+  Maybe<nsCSSBorderRenderer> br =
+    nsCSSRendering::CreateBorderRenderer(mFrame->PresContext(),
+                                         nullptr,
+                                         mFrame,
+                                         nsRect(),
+                                         nsRect(offset, mFrame->GetSize()),
+                                         mFrame->StyleContext(),
+                                         mFrame->GetSkipSides());
+  if (!br) {
+    return LAYER_NONE;
+  }
+
+  bool hasCompositeColors;
+  if (!br->AllBordersSolid(&hasCompositeColors) || hasCompositeColors) {
+    return LAYER_NONE;
+  }
+
+  // We don't support this yet as we don't copy the values to
+  // the layer, and BasicBorderLayer doesn't support it yet.
+  if (!br->mNoBorderRadius) {
+    return LAYER_NONE;
+  }
+
+  // We copy these values correctly to the layer, but BasicBorderLayer
+  // won't render them
+  if (!br->AreBorderSideFinalStylesSame(SIDE_BITS_ALL) ||
+      !br->AllBordersSameWidth()) {
+    return LAYER_NONE;
+  }
+
+  NS_FOR_CSS_SIDES(i) {
+    if (br->mBorderStyles[i] == NS_STYLE_BORDER_STYLE_SOLID) {
+      mColors[i] = ToDeviceColor(br->mBorderColors[i]);
+      mWidths[i] = br->mBorderWidths[i];
+    } else {
+      mWidths[i] = 0;
+    }
+  }
+
+  mRect = ViewAs<LayerPixel>(br->mOuterRect);
+  return LAYER_INACTIVE;
+}
+
+already_AddRefed<Layer>
+nsDisplayBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
+                            LayerManager* aManager,
+                            const ContainerLayerParameters& aContainerParameters)
+{
+  RefPtr<BorderLayer> layer = static_cast<BorderLayer*>
+    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+  if (!layer) {
+    layer = aManager->CreateBorderLayer();
+    if (!layer)
+      return nullptr;
+  }
+  layer->SetRect(mRect);
+  layer->SetCornerRadii({ LayerSize(), LayerSize(), LayerSize(), LayerSize() });
+  layer->SetColors(mColors);
+  layer->SetWidths(mWidths);
+  layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
+                                                      aContainerParameters.mOffset.y, 0));
+  return layer.forget();
 }
 
 void
