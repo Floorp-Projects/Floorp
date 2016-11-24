@@ -9,6 +9,7 @@
 #include "VRManagerParent.h"
 #include "VRDeviceProxy.h"
 #include "VRDeviceProxyOrientationFallBack.h"
+#include "nsGlobalWindow.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorThread.h" // for CompositorThread
 #include "mozilla/dom/Navigator.h"
@@ -149,7 +150,16 @@ VRManagerChild::RecvUpdateDeviceInfo(nsTArray<VRDeviceUpdate>&& aDeviceUpdates)
   mDevices = devices;
 
 
-  for (auto& nav: mNavigatorCallbacks) {
+  for (auto& windowId : mNavigatorCallbacks) {
+    nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(windowId);
+    if (!window) {
+      continue;
+    }
+    ErrorResult result;
+    dom::Navigator* nav = window->GetNavigator(result);
+    if (NS_WARN_IF(result.Failed())) {
+      continue;
+    }
     nav->NotifyVRDevicesUpdated();
   }
   mNavigatorCallbacks.Clear();
@@ -183,11 +193,11 @@ VRManagerChild::GetVRDevices(nsTArray<RefPtr<VRDeviceProxy> >& aDevices)
 }
 
 bool
-VRManagerChild::RefreshVRDevicesWithCallback(dom::Navigator* aNavigator)
+VRManagerChild::RefreshVRDevicesWithCallback(uint64_t aWindowId)
 {
   bool success = SendRefreshDevices();
   if (success) {
-    mNavigatorCallbacks.AppendElement(aNavigator);
+    mNavigatorCallbacks.AppendElement(aWindowId);
   }
   return success;
 }
