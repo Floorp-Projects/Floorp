@@ -17,16 +17,14 @@ class WebRenderImageLayer : public WebRenderLayer,
 public:
   explicit WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
     : ImageLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
+    , mImageId(0)
   {
     MOZ_COUNT_CTOR(WebRenderImageLayer);
   }
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 protected:
-  virtual ~WebRenderImageLayer()
-  {
-    MOZ_COUNT_DTOR(WebRenderImageLayer);
-  }
+  virtual ~WebRenderImageLayer();
 
   WebRenderLayerManager* Manager()
   {
@@ -36,6 +34,9 @@ protected:
 public:
   Layer* GetLayer() override { return this; }
   void RenderLayer() override;
+
+protected:
+  uint64_t mImageId;
 };
 
 } // namespace layers

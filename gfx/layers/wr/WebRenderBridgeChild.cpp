@@ -51,5 +51,29 @@ WebRenderBridgeChild::DPEnd(bool aIsSync)
   mIsInTransaction = false;
 }
 
+uint64_t
+WebRenderBridgeChild::AllocExternalImageId(uint64_t aAsyncContainerID)
+{
+  static uint32_t sNextID = 1;
+  ++sNextID;
+  MOZ_RELEASE_ASSERT(sNextID != UINT32_MAX);
+
+  // XXX replace external image id allocation with webrender's id allocation.
+  // Use proc id as IdNamespace for now.
+  uint32_t procId = static_cast<uint32_t>(base::GetCurrentProcId());
+  uint64_t imageId = procId;
+  imageId = imageId << 32 | sNextID;
+
+  SendAddExternalImageId(imageId, aAsyncContainerID);
+  return imageId;
+}
+
+void
+WebRenderBridgeChild::DeallocExternalImageId(uint64_t aImageId)
+{
+  MOZ_ASSERT(aImageId);
+  SendRemoveExternalImageId(aImageId);
+}
+
 } // namespace layers
 } // namespace mozilla

@@ -434,6 +434,31 @@ ImageHost::Composite(LayerComposite* aLayer,
 }
 
 void
+ImageHost::BindTextureSource()
+{
+  int imageIndex = ChooseImageIndex();
+  if (imageIndex < 0) {
+    return;
+  }
+
+  if (uint32_t(imageIndex) + 1 < mImages.Length()) {
+    GetCompositor()->CompositeUntil(mImages[imageIndex + 1].mTimeStamp + TimeDuration::FromMilliseconds(BIAS_TIME_MS));
+  }
+
+  TimedImage* img = &mImages[imageIndex];
+  img->mTextureHost->SetCompositor(GetCompositor());
+  SetCurrentTextureHost(img->mTextureHost);
+
+  // XXX Add TextureSource binding
+
+  mBias = UpdateBias(
+      GetCompositor()->GetCompositionTime(), mImages[imageIndex].mTimeStamp,
+      uint32_t(imageIndex + 1) < mImages.Length() ?
+          mImages[imageIndex + 1].mTimeStamp : TimeStamp(),
+      mBias);
+}
+
+void
 ImageHost::SetCompositor(Compositor* aCompositor)
 {
   if (mCompositor != aCompositor) {
