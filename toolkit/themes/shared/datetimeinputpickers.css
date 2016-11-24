@@ -16,6 +16,7 @@
 
   --border: 0.1rem solid #D6D6D6;
   --border-radius: 0.3rem;
+  --border-active-color: #B1B1B1;
 
   --font-color: #191919;
   --fill-color: #EBEBEB;
@@ -26,6 +27,7 @@
   --button-font-color: #858585;
   --button-font-color-hover: #4D4D4D;
   --button-font-color-active: #191919;
+  --button-fill-color-active: #D4D4D4;
 
   --weekday-font-color: #6C6C6C;
   --weekday-outside-font-color: #6C6C6C;
@@ -46,6 +48,12 @@ body {
   font-size: var(--font-size-default);
 }
 
+button {
+  -moz-appearance: none;
+  background: none;
+  border: none;
+}
+
 .nav {
   display: flex;
   width: var(--calendar-width);
@@ -54,15 +62,30 @@ body {
   justify-content: space-between;
 }
 
-.nav button {
-  -moz-appearance: none;
-  background: none;
-  border: none;
+.nav > button {
   width: 3rem;
   height: var(--date-picker-item-height);
+  filter: url("chrome://global/skin/filters.svg#fill");
+  fill: var(--button-font-color);
 }
 
-.month-year {
+.nav > button:hover {
+  fill: var(--button-font-color-hover);
+}
+
+.nav > button.active {
+  fill: var(--button-font-color-active);
+}
+
+.nav > button.left {
+  background: url("chrome://global/skin/icons/calendar-arrows.svg#left") no-repeat 50% 50%;
+}
+
+.nav > button.right {
+  background: url("chrome://global/skin/icons/calendar-arrows.svg#right") no-repeat 50% 50%;
+}
+
+.month-year-container {
   position: absolute;
   display: flex;
   justify-content: center;
@@ -72,6 +95,36 @@ body {
   width: 17.1rem;
   height: var(--date-picker-item-height);
   z-index: 10;
+}
+
+button.month-year {
+  font-size: 1.3rem;
+  border: var(--border);
+  border-radius: 0.3rem;
+  padding: 0.2rem 2.6rem 0.2rem 1.2rem;
+}
+
+button.month-year:hover {
+  background: var(--fill-color);
+}
+
+button.month-year.active {
+  border-color: var(--border-active-color);
+  background: var(--button-fill-color-active);
+}
+
+button.month-year::after {
+  position: absolute;
+  content: "";
+  width: 2.6rem;
+  height: 1.6rem;
+  background: url("chrome://global/skin/icons/spinner-arrows.svg#down") no-repeat 50% 50%;
+  filter: url("chrome://global/skin/filters.svg#fill");
+  fill: var(--button-font-color);
+}
+
+button.month-year.active::after {
+  background: url("chrome://global/skin/icons/spinner-arrows.svg#up") no-repeat 50% 50%;
 }
 
 .month-year-view {
@@ -187,9 +240,6 @@ body {
 }
 
 .spinner-container > button {
-  -moz-appearance: none;
-  border: none;
-  background: none;
   height: var(--spinner-button-height);
   filter: url("chrome://global/skin/filters.svg#fill");
   fill: var(--button-font-color);
