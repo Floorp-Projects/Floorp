@@ -18,9 +18,6 @@ use std::mem;
 use std::str;
 use std::ptr;
 
-#[allow(non_camel_case_types)]
-pub type rusturl_ptr = *const libc::c_void;
-
 mod error_mapping;
 use error_mapping::*;
 
@@ -44,53 +41,58 @@ fn default_port(scheme: &str) -> Option<u32> {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_new(spec: &nsACString) -> rusturl_ptr {
+pub extern "C" fn rusturl_new(spec: &nsACString) -> *mut Url {
   let url_spec = match str::from_utf8(spec) {
     Ok(spec) => spec,
-    Err(_) => return ptr::null(),
+    Err(_) => return ptr::null_mut(),
   };
 
   match parser().parse(url_spec) {
-    Ok(url) => Box::into_raw(Box::new(url)) as rusturl_ptr,
-    Err(_) => return ptr::null(),
+    Ok(url) => Box::into_raw(Box::new(url)),
+    Err(_) => return ptr::null_mut(),
   }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_free(urlptr: rusturl_ptr) {
+pub unsafe extern "C" fn rusturl_free(urlptr: *mut Url) {
   if urlptr.is_null() {
-    return ();
+    return;
   }
-  let url: Box<Url> = Box::from_raw(urlptr as *mut url::Url);
-  drop(url);
+  Box::from_raw(urlptr);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_spec(urlptr: rusturl_ptr, cont: &mut nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_get_spec(urlptr: Option<&Url>, cont: &mut nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let url = &*(urlptr as *const Url);
+  };
+
   cont.assign(url.as_ref());
   NSError::OK.error_code()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_scheme(urlptr: rusturl_ptr, cont: &mut nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_get_scheme(urlptr: Option<&Url>, cont: &mut nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let url: &Url = mem::transmute(urlptr);
+  };
+
   cont.assign(&url.scheme());
   NSError::OK.error_code()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_username(urlptr: rusturl_ptr, cont: &mut nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_get_username(urlptr: Option<&Url>, cont: &mut nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let url: &Url = mem::transmute(urlptr);
+  };
+
   if url.cannot_be_a_base() {
       cont.assign("");
   } else {
@@ -100,32 +102,36 @@ pub unsafe extern "C" fn rusturl_get_username(urlptr: rusturl_ptr, cont: &mut ns
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_password(urlptr: rusturl_ptr, cont: &mut nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_get_password(urlptr: Option<&Url>, cont: &mut nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let url: &Url = mem::transmute(urlptr);
+  };
+
   cont.assign(url.password().unwrap_or(""));
   NSError::OK.error_code()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_host(urlptr: rusturl_ptr, cont: &mut nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_get_host(urlptr: Option<&Url>, cont: &mut nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let url: &Url = mem::transmute(urlptr);
+  };
 
   cont.assign(url.host_str().unwrap_or(""));
   NSError::OK.error_code()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_port(urlptr: rusturl_ptr) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_get_port(urlptr: Option<&Url>) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let url: &Url = mem::transmute(urlptr);
+  };
 
   match url.port() {
     Some(port) => port as i32,
@@ -134,11 +140,13 @@ pub unsafe extern "C" fn rusturl_get_port(urlptr: rusturl_ptr) -> i32 {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_path(urlptr: rusturl_ptr, cont: &mut nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_get_path(urlptr: Option<&Url>, cont: &mut nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let url: &Url = mem::transmute(urlptr);
+  };
+
   if url.cannot_be_a_base() {
       cont.assign("");
   } else {
@@ -148,43 +156,47 @@ pub unsafe extern "C" fn rusturl_get_path(urlptr: rusturl_ptr, cont: &mut nsACSt
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_query(urlptr: rusturl_ptr, cont: &mut nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_get_query(urlptr: Option<&Url>, cont: &mut nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let url: &Url = mem::transmute(urlptr);
+  };
 
   cont.assign(url.query().unwrap_or(""));
   NSError::OK.error_code()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_get_fragment(urlptr: rusturl_ptr, cont: &mut nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_get_fragment(urlptr: Option<&Url>, cont: &mut nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let url: &Url = mem::transmute(urlptr);
+  };
 
   cont.assign(url.fragment().unwrap_or(""));
   NSError::OK.error_code()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_has_fragment(urlptr: rusturl_ptr) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_has_fragment(urlptr: Option<&Url>) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let url: &Url = mem::transmute(urlptr);
+  };
 
   url.fragment().is_some() as i32
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_set_scheme(urlptr: rusturl_ptr, scheme: &nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_set_scheme(urlptr: Option<&mut Url>, scheme: &nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let mut url: &mut Url = mem::transmute(urlptr);
+  };
 
   let scheme_ = match str::from_utf8(scheme) {
     Ok(p) => p,
@@ -196,11 +208,12 @@ pub unsafe extern "C" fn rusturl_set_scheme(urlptr: rusturl_ptr, scheme: &nsACSt
 
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_set_username(urlptr: rusturl_ptr, username: &nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_set_username(urlptr: Option<&mut Url>, username: &nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let mut url: &mut Url = mem::transmute(urlptr);
+  };
 
   let username_ = match str::from_utf8(username) {
     Ok(p) => p,
@@ -211,11 +224,12 @@ pub unsafe extern "C" fn rusturl_set_username(urlptr: rusturl_ptr, username: &ns
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_set_password(urlptr: rusturl_ptr, password: &nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_set_password(urlptr: Option<&mut Url>, password: &nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let mut url: &mut Url = mem::transmute(urlptr);
+  };
 
   let password_ = match str::from_utf8(password) {
     Ok(p) => p,
@@ -226,11 +240,12 @@ pub unsafe extern "C" fn rusturl_set_password(urlptr: rusturl_ptr, password: &ns
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_set_host_port(urlptr: rusturl_ptr, host_port: &nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_set_host_port(urlptr: Option<&mut Url>, host_port: &nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let mut url: &mut Url = mem::transmute(urlptr);
+  };
 
   let host_port_ = match str::from_utf8(host_port) {
     Ok(p) => p,
@@ -241,13 +256,14 @@ pub unsafe extern "C" fn rusturl_set_host_port(urlptr: rusturl_ptr, host_port: &
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_set_host_and_port(urlptr: rusturl_ptr, host_and_port: &nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_set_host_and_port(urlptr: Option<&mut Url>, host_and_port: &nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let mut url: &mut Url = mem::transmute(urlptr);
-  let _ = url.set_port(None);
+  };
 
+  let _ = url.set_port(None);
   let host_and_port_ = match str::from_utf8(host_and_port) {
     Ok(p) => p,
     Err(_) => return ParseError::InvalidDomainCharacter.error_code() // utf-8 failed
@@ -257,11 +273,12 @@ pub unsafe extern "C" fn rusturl_set_host_and_port(urlptr: rusturl_ptr, host_and
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_set_host(urlptr: rusturl_ptr, host: &nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_set_host(urlptr: Option<&mut Url>, host: &nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let mut url: &mut Url = mem::transmute(urlptr);
+  };
 
   let hostname = match str::from_utf8(host) {
     Ok(h) => h,
@@ -272,11 +289,12 @@ pub unsafe extern "C" fn rusturl_set_host(urlptr: rusturl_ptr, host: &nsACString
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_set_port(urlptr: rusturl_ptr, port: &nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_set_port(urlptr: Option<&mut Url>, port: &nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let mut url: &mut Url = mem::transmute(urlptr);
+  };
 
   let port_ = match str::from_utf8(port) {
     Ok(p) => p,
@@ -287,11 +305,13 @@ pub unsafe extern "C" fn rusturl_set_port(urlptr: rusturl_ptr, port: &nsACString
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_set_port_no(urlptr: rusturl_ptr, new_port: i32) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_set_port_no(urlptr: Option<&mut Url>, new_port: i32) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let mut url: &mut Url = mem::transmute(urlptr);
+  };
+
   if url.cannot_be_a_base() {
       -100
   } else {
@@ -315,11 +335,12 @@ pub unsafe extern "C" fn rusturl_set_port_no(urlptr: rusturl_ptr, new_port: i32)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_set_path(urlptr: rusturl_ptr, path: &nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_set_path(urlptr: Option<&mut Url>, path: &nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let mut url: &mut Url = mem::transmute(urlptr);
+  };
 
   let path_ = match str::from_utf8(path) {
     Ok(p) => p,
@@ -331,11 +352,12 @@ pub unsafe extern "C" fn rusturl_set_path(urlptr: rusturl_ptr, path: &nsACString
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_set_query(urlptr: rusturl_ptr, query: &nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_set_query(urlptr: Option<&mut Url>, query: &nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let mut url: &mut Url = mem::transmute(urlptr);
+  };
 
   let query_ = match str::from_utf8(query) {
     Ok(p) => p,
@@ -347,11 +369,12 @@ pub unsafe extern "C" fn rusturl_set_query(urlptr: rusturl_ptr, query: &nsACStri
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_set_fragment(urlptr: rusturl_ptr, fragment: &nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_set_fragment(urlptr: Option<&mut Url>, fragment: &nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let mut url: &mut Url = mem::transmute(urlptr);
+  };
 
   let fragment_ = match str::from_utf8(fragment) {
     Ok(p) => p,
@@ -363,11 +386,12 @@ pub unsafe extern "C" fn rusturl_set_fragment(urlptr: rusturl_ptr, fragment: &ns
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_resolve(urlptr: rusturl_ptr, resolve: &nsACString, cont: &mut nsACString) -> i32 {
-  if urlptr.is_null() {
+pub extern "C" fn rusturl_resolve(urlptr: Option<&Url>, resolve: &nsACString, cont: &mut nsACString) -> i32 {
+  let url = if let Some(url) = urlptr {
+    url
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let url: &Url = mem::transmute(urlptr);
+  };
 
   let resolve_ = match str::from_utf8(resolve) {
     Ok(p) => p,
@@ -383,12 +407,12 @@ pub unsafe extern "C" fn rusturl_resolve(urlptr: rusturl_ptr, resolve: &nsACStri
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_common_base_spec(urlptr1: rusturl_ptr, urlptr2: rusturl_ptr, cont: &mut nsACString) -> i32 {
-  if urlptr1.is_null() || urlptr2.is_null() {
+pub extern "C" fn rusturl_common_base_spec(urlptr1: Option<&Url>, urlptr2: Option<&Url>, cont: &mut nsACString) -> i32 {
+  let (url1, url2) = if let (Some(url1), Some(url2)) = (urlptr1, urlptr2) {
+    (url1, url2)
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let url1: &Url = mem::transmute(urlptr1);
-  let url2: &Url = mem::transmute(urlptr2);
+  };
 
   cont.assign("");
 
@@ -438,12 +462,12 @@ pub unsafe extern "C" fn rusturl_common_base_spec(urlptr1: rusturl_ptr, urlptr2:
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rusturl_relative_spec(urlptr1: rusturl_ptr, urlptr2: rusturl_ptr, cont: &mut nsACString) -> i32 {
-  if urlptr1.is_null() || urlptr2.is_null() {
+pub extern "C" fn rusturl_relative_spec(urlptr1: Option<&Url>, urlptr2: Option<&Url>, cont: &mut nsACString) -> i32 {
+  let (url1, url2) = if let (Some(url1), Some(url2)) = (urlptr1, urlptr2) {
+    (url1, url2)
+  } else {
     return NSError::InvalidArg.error_code();
-  }
-  let url1: &Url = mem::transmute(urlptr1);
-  let url2: &Url = mem::transmute(urlptr2);
+  };
 
   cont.assign("");
 
@@ -498,6 +522,6 @@ pub unsafe extern "C" fn rusturl_relative_spec(urlptr1: rusturl_ptr, urlptr2: ru
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sizeof_rusturl() -> size_t {
+pub extern "C" fn sizeof_rusturl() -> size_t {
   mem::size_of::<Url>()
 }
