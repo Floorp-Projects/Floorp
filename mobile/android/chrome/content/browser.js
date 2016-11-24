@@ -2040,7 +2040,7 @@ var BrowserApp = {
       // intl.accept_languages is a comma-separated list, with no q-value params. Those
       // are added when the header is generated.
       chosen = defaultAccept.split(",")
-                            .map(String.trim)
+                            .map((x) => x.trim())
                             .filter((x) => (x != appLocale && x != osLocale));
     } else {
       chosen = [];
