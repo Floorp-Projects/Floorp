@@ -71,6 +71,14 @@ set_config('MOZ_BUILD_ROOT', delayed_getattr(check_build_environment,
                                              'topobjdir'))
 set_config('DIST', delayed_getattr(check_build_environment, 'dist'))
 
+add_old_configure_assignment(
+    '_topsrcdir', delayed_getattr(check_build_environment, 'topsrcdir'))
+add_old_configure_assignment(
+    '_objdir', delayed_getattr(check_build_environment, 'topobjdir'))
+add_old_configure_assignment(
+    'MOZ_BUILD_ROOT', delayed_getattr(check_build_environment, 'topobjdir'))
+add_old_configure_assignment(
+    'DIST', delayed_getattr(check_build_environment, 'dist'))
 
 option(env='MOZ_AUTOMATION', help='Enable options for automated builds')
 set_config('MOZ_AUTOMATION', depends_if('MOZ_AUTOMATION')(lambda x: True))
