@@ -9,6 +9,12 @@ using GMPMediaKeyStatus from "gmp-decryption.h";
 namespace mozilla {
 namespace gmp {
 
+struct NodeIdData {
+  nsString mOrigin;
+  nsString mTopLevelOrigin;
+  nsString mGMPName;
+};
+
 struct GMPDecryptionData {
   uint8_t[] mKeyId;
   uint8_t[] mIV;
