@@ -36,10 +36,12 @@ enum JSTrapStatus {
     JSTRAP_LIMIT
 };
 
+
 namespace js {
 
 class Breakpoint;
 class DebuggerMemory;
+class ScriptedOnStepHandler;
 class WasmInstanceObject;
 
 typedef HashSet<ReadBarrieredGlobalObject,
@@ -138,7 +140,7 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
 
   public:
     template <void (traceValueEdges)(JSTracer*, JSObject*)>
-    void markCrossCompartmentEdges(JSTracer* tracer) {
+    void traceCrossCompartmentEdges(JSTracer* tracer) {
         for (Enum e(*static_cast<Base*>(this)); !e.empty(); e.popFront()) {
             traceValueEdges(tracer, e.front().value());
             Key key = e.front().key();
@@ -250,6 +252,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 {
     friend class Breakpoint;
     friend class DebuggerMemory;
+    friend class ScriptedOnStepHandler;
     friend class SavedStacks;
     friend class mozilla::LinkedListElement<Debugger>;
     friend class mozilla::LinkedList<Debugger>;
@@ -579,7 +582,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static void traceObject(JSTracer* trc, JSObject* obj);
     void trace(JSTracer* trc);
     static void finalize(FreeOp* fop, JSObject* obj);
-    void markCrossCompartmentEdges(JSTracer* tracer);
+    void traceCrossCompartmentEdges(JSTracer* tracer);
 
     static const ClassOps classOps_;
 
@@ -812,13 +815,13 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      *       - it has a breakpoint set on a live script
      *       - it has a watchpoint set on a live object.
      *
-     * Debugger::markAllIteratively handles the last case. If it finds any
-     * Debugger objects that are definitely live but not yet marked, it marks
-     * them and returns true. If not, it returns false.
+     * Debugger::markIteratively handles the last case. If it finds any Debugger
+     * objects that are definitely live but not yet marked, it marks them and
+     * returns true. If not, it returns false.
      */
-    static void markIncomingCrossCompartmentEdges(JSTracer* tracer);
-    static MOZ_MUST_USE bool markAllIteratively(GCMarker* trc);
-    static void markAll(JSTracer* trc);
+    static void traceIncomingCrossCompartmentEdges(JSTracer* tracer);
+    static MOZ_MUST_USE bool markIteratively(GCMarker* marker);
+    static void traceAll(JSTracer* trc);
     static void sweepAll(FreeOp* fop);
     static void detachAllDebuggersFromGlobal(FreeOp* fop, GlobalObject* global);
     static void findZoneEdges(JS::Zone* v, gc::ZoneComponentFinder& finder);
@@ -1154,8 +1157,75 @@ enum class DebuggerFrameImplementation {
     Ion
 };
 
+/*
+ * A Handler represents a reference to a handler function. These handler
+ * functions are called by the Debugger API to notify the user of certain
+ * events. For each event type, we define a separate subclass of Handler. This
+ * allows users to define a single reference to an object that implements
+ * multiple handlers, by inheriting from the appropriate subclasses.
+ *
+ * A Handler can be stored on a reflection object, in which case the reflection
+ * object becomes responsible for managing the lifetime of the Handler. To aid
+ * with this, the Handler base class defines several methods, which are to be
+ * called by the reflection object at the appropriate time (see below).
+ */
+struct Handler {
+    virtual ~Handler() {}
+
+    /*
+     * If the Handler is a reference to a callable JSObject, this method returns
+     * the latter. This allows the Handler to be used from JS. Otherwise, this
+     * method returns nullptr.
+     */
+    virtual JSObject* object() const = 0;
+
+    /*
+     * Drops the reference to the handler. This method will be called by the
+     * reflection object on which the reference is stored when the former is
+     * finalized, or the latter replaced.
+     */
+    virtual void drop() = 0;
+
+    /*
+     * Traces the reference to the handler. This method will be called
+     * by the reflection object on which the reference is stored whenever the
+     * former is traced.
+     */
+    virtual void trace(JSTracer* tracer) = 0;
+};
+
+/*
+ * An OnStepHandler represents a handler function that is called when a small
+ * amount of progress is made in a frame.
+ */
+struct OnStepHandler : Handler {
+    /*
+     * If we have made a small amount of progress in a frame, this method is
+     * called with the frame as argument. If succesful, this method should
+     * return true, with `statusp` and `vp` set to a resumption value
+     * specifiying how execution should continue.
+     */
+    virtual bool onStep(JSContext* cx, HandleDebuggerFrame frame, JSTrapStatus& statusp,
+                        MutableHandleValue vp) = 0;
+};
+
+class ScriptedOnStepHandler final : public OnStepHandler {
+  public:
+    explicit ScriptedOnStepHandler(JSObject* object);
+    virtual JSObject* object() const override;
+    virtual void drop() override;
+    virtual void trace(JSTracer* tracer) override;
+    virtual bool onStep(JSContext* cx, HandleDebuggerFrame frame, JSTrapStatus& statusp,
+                        MutableHandleValue vp) override;
+
+  private:
+    HeapPtr<JSObject*> object_;
+};
+
 class DebuggerFrame : public NativeObject
 {
+    friend class ScriptedOnStepHandler;
+
   public:
     enum {
         OWNER_SLOT
@@ -1183,6 +1253,8 @@ class DebuggerFrame : public NativeObject
                                      MutableHandleValue result);
     static DebuggerFrameType getType(HandleDebuggerFrame frame);
     static DebuggerFrameImplementation getImplementation(HandleDebuggerFrame frame);
+    static MOZ_MUST_USE bool setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
+                                              OnStepHandler* handler);
 
     static MOZ_MUST_USE bool eval(JSContext* cx, HandleDebuggerFrame frame,
                                   mozilla::Range<const char16_t> chars, HandleObject bindings,
@@ -1190,6 +1262,7 @@ class DebuggerFrame : public NativeObject
                                   MutableHandleValue value);
 
     bool isLive() const;
+    OnStepHandler* onStepHandler() const;
 
   private:
     static const ClassOps classOps_;
@@ -1213,6 +1286,8 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool thisGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool typeGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool implementationGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool onStepGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool onStepSetter(JSContext* cx, unsigned argc, Value* vp);
 
     static MOZ_MUST_USE bool evalMethod(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool evalWithBindingsMethod(JSContext* cx, unsigned argc, Value* vp);
@@ -1451,7 +1526,7 @@ class BreakpointSite {
  *   - script is live, breakpoint exists, and debugger is live
  *      ==> retain the breakpoint and the handler object is live
  *
- * Debugger::markAllIteratively implements these two rules. It uses
+ * Debugger::markIteratively implements these two rules. It uses
  * Debugger::hasAnyLiveHooks to check for rule 1.
  *
  * Nothing else causes a breakpoint to be retained, so if its script or

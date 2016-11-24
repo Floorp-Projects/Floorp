@@ -63,14 +63,14 @@ public:
   // LayerComposite Implementation
   virtual Layer* GetLayer() override { return this; }
 
-  virtual void SetLayerManager(LayerManagerComposite* aManager) override
+  virtual void SetLayerManager(HostLayerManager* aManager) override
   {
     LayerComposite::SetLayerManager(aManager);
     mManager = aManager;
     mLastIntermediateSurface = nullptr;
 
     for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
-      LayerComposite* child = l->AsLayerComposite();
+      HostLayer* child = l->AsHostLayer();
       child->SetLayerManager(aManager);
     }
   }
@@ -89,7 +89,7 @@ public:
 
   virtual void CleanupResources() override;
 
-  virtual LayerComposite* AsLayerComposite() override { return this; }
+  virtual HostLayer* AsHostLayer() override { return this; }
 
   // container layers don't use a compositable
   CompositableHost* GetCompositableHost() override { return nullptr; }
@@ -173,7 +173,7 @@ public:
 
   virtual void CleanupResources() override;
 
-  virtual LayerComposite* AsLayerComposite() override { return this; }
+  virtual HostLayer* AsHostLayer() override { return this; }
 
   // ref layers don't use a compositable
   CompositableHost* GetCompositableHost() override { return nullptr; }

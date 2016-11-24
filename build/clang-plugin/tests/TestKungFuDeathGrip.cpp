@@ -35,6 +35,7 @@ public:
     nsCOMPtr<Type> never_referenced;
     nsCOMPtr<Type> kfdg_t1(this);
     nsCOMPtr<Type> kfdg_t2 = this;
+    nsCOMPtr<Type> kfdg_t3 = (this);
 
     nsCOMPtr<Type> kfdg_m1(p); // expected-error {{Unused "kungFuDeathGrip" 'nsCOMPtr<Type>' objects constructed from members are prohibited}} expected-note {{Please switch all accesses to this member to go through 'kfdg_m1', or explicitly pass 'kfdg_m1' to `mozilla::Unused`}}
     nsCOMPtr<Type> kfdg_m2 = p; // expected-error {{Unused "kungFuDeathGrip" 'nsCOMPtr<Type>' objects constructed from members are prohibited}} expected-note {{Please switch all accesses to this member to go through 'kfdg_m2', or explicitly pass 'kfdg_m2' to `mozilla::Unused`}}
@@ -51,8 +52,9 @@ public:
 
 
     RefPtr<Type> never_referenced2;
-    RefPtr<Type> kfdg_t3(this);
-    RefPtr<Type> kfdg_t4 = this;
+    RefPtr<Type> kfdg_t4(this);
+    RefPtr<Type> kfdg_t5 = this;
+    RefPtr<Type> kfdg_t6 = (this);
 
     RefPtr<Type> kfdg_m5(p); // expected-error {{Unused "kungFuDeathGrip" 'RefPtr<Type>' objects constructed from members are prohibited}} expected-note {{Please switch all accesses to this member to go through 'kfdg_m5', or explicitly pass 'kfdg_m5' to `mozilla::Unused`}}
     RefPtr<Type> kfdg_m6 = p; // expected-error {{Unused "kungFuDeathGrip" 'RefPtr<Type>' objects constructed from members are prohibited}} expected-note {{Please switch all accesses to this member to go through 'kfdg_m6', or explicitly pass 'kfdg_m6' to `mozilla::Unused`}}

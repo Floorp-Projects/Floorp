@@ -80,7 +80,7 @@ CrossProcessCompositorBridgeParent::AllocPLayerTransactionParent(
 
   if (state && state->mLayerManager) {
     state->mCrossProcessParent = this;
-    LayerManagerComposite* lm = state->mLayerManager;
+    HostLayerManager* lm = state->mLayerManager;
     *aTextureFactoryIdentifier = lm->GetCompositor()->GetTextureFactoryIdentifier();
     *aSuccess = true;
     LayerTransactionParent* p = new LayerTransactionParent(lm, this, aId);

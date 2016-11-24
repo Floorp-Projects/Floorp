@@ -365,6 +365,8 @@ static const FinalizePhase BackgroundFinalizePhases[] = {
         gcstats::PHASE_SWEEP_STRING, {
             AllocKind::FAT_INLINE_STRING,
             AllocKind::STRING,
+            AllocKind::FAT_INLINE_ATOM,
+            AllocKind::ATOM,
             AllocKind::SYMBOL
         }
     },
@@ -1771,7 +1773,9 @@ static const AllocKind AllocKindsToRelocate[] = {
     AllocKind::BASE_SHAPE,
     AllocKind::FAT_INLINE_STRING,
     AllocKind::STRING,
-    AllocKind::EXTERNAL_STRING
+    AllocKind::EXTERNAL_STRING,
+    AllocKind::FAT_INLINE_ATOM,
+    AllocKind::ATOM
 };
 
 Arena*
@@ -2546,14 +2550,14 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAccess
         traceRuntimeForMajorGC(&trc, lock);
 
         gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
-        Debugger::markAll(&trc);
-        Debugger::markIncomingCrossCompartmentEdges(&trc);
+        Debugger::traceAll(&trc);
+        Debugger::traceIncomingCrossCompartmentEdges(&trc);
 
-        WeakMapBase::markAll(zone, &trc);
+        WeakMapBase::traceZone(zone, &trc);
         for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
             c->trace(&trc);
             if (c->watchpointMap)
-                c->watchpointMap->markAll(&trc);
+                c->watchpointMap->trace(&trc);
         }
 
         // Mark all gray roots, making sure we call the trace callback to get the
@@ -4030,7 +4034,7 @@ GCRuntime::markWeakReferences(gcstats::Phase phase)
             if (c->watchpointMap)
                 markedAny |= c->watchpointMap->markIteratively(&marker);
         }
-        markedAny |= Debugger::markAllIteratively(&marker);
+        markedAny |= Debugger::markIteratively(&marker);
         markedAny |= jit::JitRuntime::MarkJitcodeGlobalTableIteratively(&marker);
 
         if (!markedAny)

@@ -19,6 +19,8 @@
 #include "WebGLVertexArray.h"
 #include "WebGLVertexAttribData.h"
 
+#include <algorithm>
+
 namespace mozilla {
 
 // For a Tegra workaround.
@@ -300,6 +302,16 @@ WebGLContext::DrawArrays_check(const char* funcName, GLenum mode, GLint first,
 
 ////////////////////////////////////////
 
+template<typename T>
+static bool
+DoSetsIntersect(const std::set<T>& a, const std::set<T>& b)
+{
+    std::vector<T> intersection;
+    std::set_intersection(a.begin(), a.end(), b.begin(), b.end(),
+                          std::back_inserter(intersection));
+    return bool(intersection.size());
+}
+
 class ScopedDrawHelper final
 {
     WebGLContext* const mWebGL;
@@ -343,7 +355,7 @@ public:
         ////
         // Check UBO sizes.
 
-        const auto& linkInfo = webgl->mActiveProgramLinkInfo;
+        const auto& linkInfo = mWebGL->mActiveProgramLinkInfo;
         for (const auto& cur : linkInfo->uniformBlocks) {
             const auto& dataSize = cur->mDataSize;
             const auto& binding = cur->mBinding;
@@ -358,6 +370,22 @@ public:
             if (dataSize > availByteCount) {
                 mWebGL->ErrorInvalidOperation("%s: Buffer for uniform block is smaller"
                                               " than UNIFORM_BLOCK_DATA_SIZE.",
+                                              funcName);
+                *out_error = true;
+                return;
+            }
+        }
+
+        ////
+
+        const auto& tfo = mWebGL->mBoundTransformFeedback;
+        if (tfo) {
+            const auto& buffersForTF = tfo->BuffersForTF();
+            const auto& buffersForUB = mWebGL->BuffersForUB();
+            if (DoSetsIntersect(buffersForTF, buffersForUB)) {
+                mWebGL->ErrorInvalidOperation("%s: At least one WebGLBuffer is bound for"
+                                              " both transform feedback and as a uniform"
+                                              " buffer.",
                                               funcName);
                 *out_error = true;
                 return;
