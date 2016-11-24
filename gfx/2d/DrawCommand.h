@@ -46,13 +46,13 @@ public:
 
   virtual bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const { return false; }
 
+  CommandType GetType() { return mType; }
+
 protected:
   explicit DrawingCommand(CommandType aType)
     : mType(aType)
   {
   }
-
-  CommandType GetType() { return mType; }
 
 private:
   CommandType mType;
@@ -418,6 +418,7 @@ private:
 
 class FillGlyphsCommand : public DrawingCommand
 {
+  friend class DrawTargetCaptureImpl;
 public:
   FillGlyphsCommand(ScaledFont* aFont,
                     const GlyphBuffer& aBuffer,
@@ -553,6 +554,7 @@ public:
 
 class SetTransformCommand : public DrawingCommand
 {
+  friend class DrawTargetCaptureImpl;
 public:
   explicit SetTransformCommand(const Matrix& aTransform)
     : DrawingCommand(CommandType::SETTRANSFORM)
