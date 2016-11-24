@@ -35,6 +35,13 @@ extern LogModule* GetGMPLog();
 
 namespace gmp {
 
+struct NodeId
+{
+  nsString mOrigin;
+  nsString mTopLevelOrigin;
+  nsString mGMPName;
+};
+
 typedef MozPromise<RefPtr<GMPContentParent::CloseBlocker>, nsresult, /* IsExclusive = */ true> GetGMPContentParentPromise;
 
 class GeckoMediaPluginService : public mozIGeckoMediaPluginService
@@ -90,11 +97,17 @@ protected:
 
   virtual void InitializePlugins(AbstractThread* aAbstractGMPThread) = 0;
 
-  virtual RefPtr<GetGMPContentParentPromise>
-  GetContentParent(GMPCrashHelper* aHelper,
-                   const nsACString& aNodeId,
-                   const nsCString& aAPI,
-                   const nsTArray<nsCString>& aTags) = 0;
+  virtual RefPtr<GetGMPContentParentPromise> GetContentParent(
+    GMPCrashHelper* aHelper,
+    const nsACString& aNodeIdString,
+    const nsCString& aAPI,
+    const nsTArray<nsCString>& aTags) = 0;
+
+  virtual RefPtr<GetGMPContentParentPromise> GetContentParent(
+    GMPCrashHelper* aHelper,
+    const NodeId& aNodeId,
+    const nsCString& aAPI,
+    const nsTArray<nsCString>& aTags) = 0;
 
   nsresult GMPDispatch(nsIRunnable* event, uint32_t flags = NS_DISPATCH_NORMAL);
   nsresult GMPDispatch(already_AddRefed<nsIRunnable> event, uint32_t flags = NS_DISPATCH_NORMAL);
