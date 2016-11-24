@@ -159,14 +159,6 @@ private:
   uint32_t mHashKey;
   // Stores the last time a given table was updated (seconds).
   nsDataHashtable<nsCStringHashKey, int64_t> mTableFreshness;
-
-  // In-memory cache for the result of TableRequest. See
-  // nsIUrlClassifierDBService.getTables for the format.
-  nsCString mTableRequestResult;
-
-  // Whether mTableRequestResult is outdated and needs to
-  // be reloaded from disk.
-  bool mIsTableRequestResultOutdated;
 };
 
 } // namespace safebrowsing
