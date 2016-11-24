@@ -32,6 +32,11 @@
 
 #define CHILD_PROCESS_SHUTDOWN_MESSAGE NS_LITERAL_STRING("child-process-shutdown")
 
+#define NO_REMOTE_TYPE ""
+
+// This must match the one in E10SUtils.jsm.
+#define DEFAULT_REMOTE_TYPE "web"
+
 class nsConsoleService;
 class nsICycleCollectorLogSink;
 class nsIDumpGCAndCCLogsCallback;
@@ -129,7 +134,7 @@ public:
    * 3. normal iframe
    */
   static already_AddRefed<ContentParent>
-  GetNewOrUsedBrowserProcess(bool aForBrowserElement = false,
+  GetNewOrUsedBrowserProcess(const nsAString& aRemoteType = NS_LITERAL_STRING(NO_REMOTE_TYPE),
                              hal::ProcessPriority aPriority =
                              hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
                              ContentParent* aOpener = nullptr,
@@ -582,7 +587,7 @@ private:
   FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
 
   ContentParent(ContentParent* aOpener,
-                bool aIsForBrowser);
+                const nsAString& aRemoteType);
 
   // The common initialization for the constructors.
   void InitializeMembers();
@@ -1053,6 +1058,8 @@ private:
 
   GeckoChildProcessHost* mSubprocess;
   ContentParent* mOpener;
+
+  nsString mRemoteType;
 
   ContentParentId mChildID;
   int32_t mGeolocationWatchID;
