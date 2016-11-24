@@ -2050,9 +2050,10 @@ Navigator::GetVRDevices(ErrorResult& aRv)
     return nullptr;
   }
 
-  // We pass ourself to RefreshVRDevices, so NotifyVRDevicesUpdated will
+  // We pass mWindow's id to RefreshVRDevices, so NotifyVRDevicesUpdated will
   // be called asynchronously, resolving the promises in mVRGetDevicesPromises.
-  if (!VRDevice::RefreshVRDevices(this)) {
+  nsGlobalWindow* win = nsGlobalWindow::Cast(mWindow);
+  if (!VRDevice::RefreshVRDevices(win->WindowID())) {
     p->MaybeReject(NS_ERROR_FAILURE);
     return p.forget();
   }

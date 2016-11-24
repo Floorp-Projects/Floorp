@@ -201,7 +201,7 @@ public:
 
   VRDeviceType GetType() const { return mType; }
 
-  static bool RefreshVRDevices(dom::Navigator* aNavigator);
+  static bool RefreshVRDevices(uint64_t aWindowId);
   static void UpdateVRDevices(nsTArray<RefPtr<VRDevice> >& aDevices,
                               nsISupports* aParent);
 

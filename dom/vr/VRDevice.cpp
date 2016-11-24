@@ -22,10 +22,10 @@ namespace mozilla {
 namespace dom {
 
 /*static*/ bool
-VRDevice::RefreshVRDevices(dom::Navigator* aNavigator)
+VRDevice::RefreshVRDevices(uint64_t aWindowId)
 {
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-  return vm && vm->RefreshVRDevicesWithCallback(aNavigator);
+  return vm && vm->RefreshVRDevicesWithCallback(aWindowId);
 }
 
 /*static*/ void
