@@ -9,7 +9,6 @@ const {interfaces: Ci, utils: Cu} = Components;
 const ERRORS = new Set([
   "ElementNotAccessibleError",
   "ElementNotVisibleError",
-  "InsecureCertificateError",
   "InvalidArgumentError",
   "InvalidElementStateError",
   "InvalidSelectorError",
@@ -229,13 +228,6 @@ this.ElementNotVisibleError = function(msg) {
   this.status = "element not visible";
 };
 ElementNotVisibleError.prototype = Object.create(WebDriverError.prototype);
-
-this.InsecureCertificateError = function(msg) {
-  WebDriverError.call(this, msg);
-  this.name = "InsecureCertificateError";
-  this.status = "insecure certificate";
-};
-InsecureCertificateError.prototype = Object.create(WebDriverError.prototype);
 
 this.InvalidArgumentError = function(msg) {
   WebDriverError.call(this, msg);
