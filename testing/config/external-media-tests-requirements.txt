@@ -1,3 +1,2 @@
 -r marionette_requirements.txt
-../puppeteer/firefox/
 ../external-media-tests/
