@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=622597
   <form>
     <input required>
     <textarea required></textarea>
-    <select required><option>foo</option><option value="">bar</option></select>
+    <select required><option value="">foo</option><option selected>bar</option></select>
     <button>submit</button>
   </form>
 </div>
@@ -65,7 +65,7 @@ textarea.addEventListener("focus", function() {
     SimpleTest.executeSoon(function() {
       checkPseudoClasses(textarea, false, true);
       form.noValidate = true;
-      select.selectedIndex = 1;
+      select.selectedIndex = 0;
       select.focus();
     });
   });
