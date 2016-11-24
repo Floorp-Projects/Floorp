@@ -548,7 +548,7 @@ def write_interface(iface, fd):
 
 
 def main(outputfile):
-    cachedir = '.'
+    cachedir = os.path.dirname(outputfile.name if outputfile else '') or '.'
     if not os.path.isdir(cachedir):
         os.mkdir(cachedir)
     sys.path.append(cachedir)

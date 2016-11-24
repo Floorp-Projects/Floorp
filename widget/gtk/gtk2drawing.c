@@ -54,7 +54,6 @@ static GtkWidget* gMenuBarWidget;
 static GtkWidget* gMenuBarItemWidget;
 static GtkWidget* gMenuPopupWidget;
 static GtkWidget* gMenuItemWidget;
-static GtkWidget* gImageMenuItemWidget;
 static GtkWidget* gCheckMenuItemWidget;
 static GtkWidget* gTreeViewWidget;
 static GtkTreeViewColumn* gMiddleTreeViewColumn;
@@ -586,21 +585,6 @@ ensure_menu_item_widget()
                               gMenuItemWidget);
         gtk_widget_realize(gMenuItemWidget);
         g_object_set_data(G_OBJECT(gMenuItemWidget),
-                          "transparent-bg-hint", GINT_TO_POINTER(TRUE));
-    }
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_image_menu_item_widget()
-{
-    if (!gImageMenuItemWidget) {
-        ensure_menu_popup_widget();
-        gImageMenuItemWidget = gtk_image_menu_item_new();
-        gtk_menu_shell_append(GTK_MENU_SHELL(gMenuPopupWidget),
-                              gImageMenuItemWidget);
-        gtk_widget_realize(gImageMenuItemWidget);
-        g_object_set_data(G_OBJECT(gImageMenuItemWidget),
                           "transparent-bg-hint", GINT_TO_POINTER(TRUE));
     }
     return MOZ_GTK_SUCCESS;
@@ -3474,7 +3458,6 @@ moz_gtk_shutdown()
     gMenuBarItemWidget = NULL;
     gMenuPopupWidget = NULL;
     gMenuItemWidget = NULL;
-    gImageMenuItemWidget = NULL;
     gCheckMenuItemWidget = NULL;
     gTreeViewWidget = NULL;
     gMiddleTreeViewColumn = NULL;

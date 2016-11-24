@@ -255,7 +255,7 @@ class CommonTestCase(unittest.TestCase):
         self.httpd = self._httpd_weakref()
         if self.marionette.session is None:
             self.marionette.start_session()
-        self.marionette.reset_timeouts()
+        self.marionette.timeout.reset()
 
         super(CommonTestCase, self).setUp()
 
@@ -354,8 +354,8 @@ if (!testUtils.hasOwnProperty("specialPowersObserver")) {
 
         timeout = JSTest.timeout_re.search(js)
         if timeout:
-            timeout = timeout.group(3)
-            marionette.set_script_timeout(int(timeout))
+            ms = timeout.group(3)
+            marionette.timeout.script = int(ms) / 1000.0
 
         inactivity_timeout = JSTest.inactivity_timeout_re.search(js)
         if inactivity_timeout:

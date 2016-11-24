@@ -18,24 +18,7 @@ else:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DIRS += ['annotationProcessors']
 
-for var in ('GRE_MILESTONE', 'MOZ_APP_VERSION', 'MOZ_APP_BASENAME',
-            'MOZ_APP_VENDOR', 'MOZ_APP_ID', 'MAR_CHANNEL_ID',
-            'ACCEPTED_MAR_CHANNEL_IDS', 'MOZ_APP_REMOTINGNAME'):
-    DEFINES[var] = CONFIG[var]
-
-if CONFIG['MOZ_APP_DISPLAYNAME'] != CONFIG['MOZ_APP_BASENAME']:
-    DEFINES['MOZ_APP_DISPLAYNAME'] = CONFIG['MOZ_APP_DISPLAYNAME']
-
-if CONFIG['MOZ_BUILD_APP'] == 'browser':
-    DEFINES['MOZ_BUILD_APP_IS_BROWSER'] = True
-
-if CONFIG['MOZ_APP_PROFILE']:
-    DEFINES['MOZ_APP_PROFILE'] = CONFIG['MOZ_APP_PROFILE']
-
-for var in ('MOZ_CRASHREPORTER', 'MOZ_PROFILE_MIGRATOR',
-            'MOZ_APP_STATIC_INI'):
-    if CONFIG[var]:
-        DEFINES[var] = True
+DEFINES['ACCEPTED_MAR_CHANNEL_IDS'] = CONFIG['ACCEPTED_MAR_CHANNEL_IDS']
 
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
     PYTHON_UNITTEST_MANIFESTS += [
@@ -63,7 +46,37 @@ if CONFIG['MOZ_ASAN'] and CONFIG['CLANG_CL']:
     FINAL_TARGET_FILES += ['%' + CONFIG['MOZ_CLANG_RT_ASAN_LIB_PATH']]
 
 if CONFIG['MOZ_APP_BASENAME']:
-    FINAL_TARGET_PP_FILES += ['application.ini']
+    appini_defines = {
+        'TOPOBJDIR': TOPOBJDIR,
+    }
+
+    for var in ('GRE_MILESTONE', 'MOZ_APP_VERSION', 'MOZ_APP_BASENAME',
+                'MOZ_APP_VENDOR', 'MOZ_APP_ID', 'MAR_CHANNEL_ID',
+                'MOZ_APP_REMOTINGNAME'):
+        appini_defines[var] = CONFIG[var]
+
+    if CONFIG['MOZ_APP_DISPLAYNAME'] != CONFIG['MOZ_APP_BASENAME']:
+        appini_defines['MOZ_APP_DISPLAYNAME'] = CONFIG['MOZ_APP_DISPLAYNAME']
+
+    if CONFIG['MOZ_BUILD_APP'] == 'browser':
+        appini_defines['MOZ_BUILD_APP_IS_BROWSER'] = True
+
+    if CONFIG['MOZ_APP_PROFILE']:
+        appini_defines['MOZ_APP_PROFILE'] = CONFIG['MOZ_APP_PROFILE']
+
+    for var in ('MOZ_CRASHREPORTER', 'MOZ_PROFILE_MIGRATOR',
+                'MOZ_APP_STATIC_INI'):
+        if CONFIG[var]:
+            appini_defines[var] = True
+
+    GENERATED_FILES += ['application.ini']
+
+    appini = GENERATED_FILES['application.ini']
+    appini.script = '../python/mozbuild/mozbuild/action/preprocessor.py:generate'
+    appini.inputs = ['application.ini.in']
+    appini.flags = ['-D%s=%s' % (k, '1' if v is True else v)
+                    for k, v in appini_defines.iteritems()]
+    FINAL_TARGET_FILES += ['!application.ini']
     if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' and CONFIG['MOZ_UPDATER']:
         FINAL_TARGET_PP_FILES += ['update-settings.ini']
 
@@ -71,9 +84,7 @@ if CONFIG['MOZ_APP_BASENAME']:
         GENERATED_FILES += ['application.ini.h']
         appini = GENERATED_FILES['application.ini.h']
         appini.script = 'appini_header.py'
-        appini.inputs = ['!/dist/bin/application.ini']
-
-DEFINES['TOPOBJDIR'] = TOPOBJDIR
+        appini.inputs = ['!application.ini']
 
 # NOTE: Keep .gdbinit in the topsrcdir for people who run gdb from the topsrcdir.
 OBJDIR_FILES += ['/.gdbinit']

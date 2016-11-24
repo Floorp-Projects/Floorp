@@ -223,6 +223,6 @@ def gen_files(fd, conf_file, xpidllex, xpidlyacc):
     deps = set()
     conf, inc_dir = get_conf(conf_file)
     deps.update(print_header_file(fd, conf, inc_dir))
-    with open('xpcAccEvents.cpp', 'w') as cpp_fd:
+    with open(os.path.join(os.path.dirname(fd.name), 'xpcAccEvents.cpp'), 'w') as cpp_fd:
         deps.update(print_cpp_file(cpp_fd, conf, inc_dir))
     return deps

@@ -1525,6 +1525,7 @@ function NetworkMonitorChild(outerWindowID, messageManager, conn, owner) {
   this._onNewEvent = this._onNewEvent.bind(this);
   this._onUpdateEvent = this._onUpdateEvent.bind(this);
   this._netEvents = new Map();
+  this._msgName = `debug:${this.conn.prefix}netmonitor`;
 }
 
 exports.NetworkMonitorChild = NetworkMonitorChild;
@@ -1542,7 +1543,7 @@ NetworkMonitorChild.prototype = {
   set saveRequestAndResponseBodies(val) {
     this._saveRequestAndResponseBodies = val;
 
-    this._messageManager.sendAsyncMessage("debug:netmonitor", {
+    this._messageManager.sendAsyncMessage(this._msgName, {
       action: "setPreferences",
       preferences: {
         saveRequestAndResponseBodies: this._saveRequestAndResponseBodies,
@@ -1557,7 +1558,7 @@ NetworkMonitorChild.prototype = {
   set throttleData(val) {
     this._throttleData = val;
 
-    this._messageManager.sendAsyncMessage("debug:netmonitor", {
+    this._messageManager.sendAsyncMessage(this._msgName, {
       action: "setPreferences",
       preferences: {
         throttleData: this._throttleData,
@@ -1572,11 +1573,9 @@ NetworkMonitorChild.prototype = {
     });
 
     let mm = this._messageManager;
-    mm.addMessageListener("debug:netmonitor:newEvent",
-                          this._onNewEvent);
-    mm.addMessageListener("debug:netmonitor:updateEvent",
-                          this._onUpdateEvent);
-    mm.sendAsyncMessage("debug:netmonitor", {
+    mm.addMessageListener(`${this._msgName}:newEvent`, this._onNewEvent);
+    mm.addMessageListener(`${this._msgName}:updateEvent`, this._onUpdateEvent);
+    mm.sendAsyncMessage(this._msgName, {
       outerWindowID: this.outerWindowID,
       action: "start",
     });
@@ -1600,13 +1599,12 @@ NetworkMonitorChild.prototype = {
     let weakActor = this._netEvents.get(id);
     let actor = weakActor ? weakActor.get() : null;
     if (!actor) {
-      console.error("Received debug:netmonitor:updateEvent for unknown " +
-                    "event ID: " + id);
+      console.error(`Received ${this._msgName}:updateEvent for unknown event ID: ${id}`);
       return;
     }
     if (!(method in actor)) {
-      console.error("Received debug:netmonitor:updateEvent unsupported " +
-                    "method: " + method);
+      console.error(`Received ${this._msgName}:updateEvent unsupported ` +
+                    `method: ${method}`);
       return;
     }
     actor[method].apply(actor, args);
@@ -1615,10 +1613,8 @@ NetworkMonitorChild.prototype = {
   destroy: function () {
     let mm = this._messageManager;
     try {
-      mm.removeMessageListener("debug:netmonitor:newEvent",
-                               this._onNewEvent);
-      mm.removeMessageListener("debug:netmonitor:updateEvent",
-                               this._onUpdateEvent);
+      mm.removeMessageListener(`${this._msgName}:newEvent`, this._onNewEvent);
+      mm.removeMessageListener(`${this._msgName}:updateEvent`, this._onUpdateEvent);
     } catch (e) {
       // On b2g, when registered to a new root docshell,
       // all message manager functions throw when trying to call them during
@@ -1647,10 +1643,13 @@ NetworkMonitorChild.prototype = {
  * @param nsIMessageManager messageManager
  *        The message manager for the child app process. This is used for
  *        communication with the NetworkMonitorChild instance of the process.
+ * @param string msgName
+ *        The message name to be used for this connection.
  */
-function NetworkEventActorProxy(messageManager) {
+function NetworkEventActorProxy(messageManager, msgName) {
   this.id = gSequenceId();
   this.messageManager = messageManager;
+  this._msgName = msgName;
 }
 exports.NetworkEventActorProxy = NetworkEventActorProxy;
 
@@ -1658,7 +1657,7 @@ NetworkEventActorProxy.methodFactory = function (method) {
   return DevToolsUtils.makeInfallible(function () {
     let args = Array.slice(arguments);
     let mm = this.messageManager;
-    mm.sendAsyncMessage("debug:netmonitor:updateEvent", {
+    mm.sendAsyncMessage(`${this._msgName}:updateEvent`, {
       id: this.id,
       method: method,
       args: args,
@@ -1678,7 +1677,7 @@ NetworkEventActorProxy.prototype = {
    */
   init: DevToolsUtils.makeInfallible(function (event) {
     let mm = this.messageManager;
-    mm.sendAsyncMessage("debug:netmonitor:newEvent", {
+    mm.sendAsyncMessage(`${this._msgName}:newEvent`, {
       id: this.id,
       event: event,
     });
@@ -1726,6 +1725,7 @@ exports.setupParentProcess = setupParentProcess;
  *        The RDP connection prefix that uniquely identifies the connection.
  */
 function NetworkMonitorParent(mm, prefix) {
+  this._msgName = `debug:${prefix}netmonitor`;
   this.onNetMonitorMessage = this.onNetMonitorMessage.bind(this);
   this.onNetworkEvent = this.onNetworkEvent.bind(this);
   this.setMessageManager(mm);
@@ -1738,16 +1738,16 @@ NetworkMonitorParent.prototype = {
   setMessageManager(mm) {
     if (this.messageManager) {
       let oldMM = this.messageManager;
-      oldMM.removeMessageListener("debug:netmonitor", this.onNetMonitorMessage);
+      oldMM.removeMessageListener(this._msgName, this.onNetMonitorMessage);
     }
     this.messageManager = mm;
     if (mm) {
-      mm.addMessageListener("debug:netmonitor", this.onNetMonitorMessage);
+      mm.addMessageListener(this._msgName, this.onNetMonitorMessage);
     }
   },
 
   /**
-   * Handler for "debug:netmonitor" messages received through the message manager
+   * Handler for `debug:${prefix}netmonitor` messages received through the message manager
    * from the content process.
    *
    * @param object msg
@@ -1802,7 +1802,7 @@ NetworkMonitorParent.prototype = {
    *         data about the request is available.
    */
   onNetworkEvent: DevToolsUtils.makeInfallible(function (event) {
-    return new NetworkEventActorProxy(this.messageManager).init(event);
+    return new NetworkEventActorProxy(this.messageManager, this._msgName).init(event);
   }),
 
   destroy: function () {
