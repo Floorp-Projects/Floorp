@@ -364,6 +364,8 @@ static const FinalizePhase BackgroundFinalizePhases[] = {
         gcstats::PHASE_SWEEP_STRING, {
             AllocKind::FAT_INLINE_STRING,
             AllocKind::STRING,
+            AllocKind::FAT_INLINE_ATOM,
+            AllocKind::ATOM,
             AllocKind::SYMBOL
         }
     },
@@ -1775,7 +1777,9 @@ static const AllocKind AllocKindsToRelocate[] = {
     AllocKind::BASE_SHAPE,
     AllocKind::FAT_INLINE_STRING,
     AllocKind::STRING,
-    AllocKind::EXTERNAL_STRING
+    AllocKind::EXTERNAL_STRING,
+    AllocKind::FAT_INLINE_ATOM,
+    AllocKind::ATOM
 };
 
 Arena*
