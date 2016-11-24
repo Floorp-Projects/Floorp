@@ -106,6 +106,11 @@ private:
   bool                       mTopLevelMutation;
   /** true if it is known that the option list must be recreated. */
   bool                       mNeedsRebuild;
+  /** Whether we should be notifying when we make various method calls on
+      mSelect */
+  const bool                 mNotify;
+  /** The selected index at mutation start. */
+  int32_t                    mInitialSelectedIndex;
   /** Option list must be recreated if more than one mutation is detected. */
   nsMutationGuard            mGuard;
 };

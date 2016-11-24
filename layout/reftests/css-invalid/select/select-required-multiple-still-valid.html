@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
-  <!-- Test: if select is required and has all selected option value set to the
-             string string, :valid should not apply. -->
+  <!-- Test: if select is required and has all selected option values set to the
+             empty string, :invalid should still not apply. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <body>
-    <select class='notvalid' required multiple>
+    <select class='notinvalid' required multiple>
       <option selected></option>
       <option selected value="">foo</option>
     </select>

@@ -39540,6 +39540,12 @@
             "url": "/html/semantics/embedded-content/the-img-element/update-src-complete.html"
           }
         ],
+        "html/semantics/forms/the-select-element/select-validity.html": [
+          {
+            "path": "html/semantics/forms/the-select-element/select-validity.html",
+            "url": "/html/semantics/forms/the-select-element/select-validity.html"
+          }
+        ],
         "uievents/order-of-events/focus-events/focus-automated-blink-webkit.html": [
           {
             "path": "uievents/order-of-events/focus-events/focus-automated-blink-webkit.html",
