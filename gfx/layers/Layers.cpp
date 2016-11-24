@@ -576,7 +576,7 @@ Layer::CanUseOpaqueSurface()
 const Maybe<ParentLayerIntRect>&
 Layer::GetLocalClipRect()
 {
-  if (LayerComposite* shadow = AsLayerComposite()) {
+  if (HostLayer* shadow = AsHostLayer()) {
     return shadow->GetShadowClipRect();
   }
   return GetClipRect();
@@ -585,7 +585,7 @@ Layer::GetLocalClipRect()
 const LayerIntRegion&
 Layer::GetLocalVisibleRegion()
 {
-  if (LayerComposite* shadow = AsLayerComposite()) {
+  if (HostLayer* shadow = AsHostLayer()) {
     return shadow->GetShadowVisibleRegion();
   }
   return GetVisibleRegion();
@@ -782,7 +782,7 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
   }
 
   if (GetLocalVisibleRegion().IsEmpty() &&
-      !(AsLayerComposite() && AsLayerComposite()->NeedToDrawCheckerboarding())) {
+      !(AsHostLayer() && AsHostLayer()->NeedToDrawCheckerboarding())) {
     // When our visible region is empty, our parent may not have created the
     // intermediate surface that we would require for correct clipping; however,
     // this does not matter since we are invisible.
@@ -887,7 +887,7 @@ Layer::GetTransformTyped() const
 Matrix4x4
 Layer::GetLocalTransform()
 {
-  if (LayerComposite* shadow = AsLayerComposite())
+  if (HostLayer* shadow = AsHostLayer())
     return shadow->GetShadowTransform();
   else
     return GetTransform();
@@ -941,7 +941,7 @@ float
 Layer::GetLocalOpacity()
 {
   float opacity = mOpacity;
-  if (LayerComposite* shadow = AsLayerComposite())
+  if (HostLayer* shadow = AsHostLayer())
     opacity = shadow->GetShadowOpacity();
   return std::min(std::max(opacity, 0.0f), 1.0f);
 }
@@ -1661,7 +1661,7 @@ LayerManager::BeginTabSwitch()
   mTabSwitchStart = TimeStamp::Now();
 }
 
-static void PrintInfo(std::stringstream& aStream, LayerComposite* aLayerComposite);
+static void PrintInfo(std::stringstream& aStream, HostLayer* aLayerComposite);
 
 #ifdef MOZ_DUMP_PAINTING
 template <typename T>
@@ -1702,8 +1702,8 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix,
             bool aDumpHtml, bool aSorted)
 {
 #ifdef MOZ_DUMP_PAINTING
-  bool dumpCompositorTexture = gfxEnv::DumpCompositorTextures() && AsLayerComposite() &&
-                               AsLayerComposite()->GetCompositableHost();
+  bool dumpCompositorTexture = gfxEnv::DumpCompositorTextures() && AsHostLayer() &&
+                               AsHostLayer()->GetCompositableHost();
   bool dumpClientTexture = gfxEnv::DumpPaint() && AsShadowableLayer() &&
                            AsShadowableLayer()->GetCompositableClient();
   nsCString layerId(Name());
@@ -1723,7 +1723,7 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix,
 
 #ifdef MOZ_DUMP_PAINTING
   if (dumpCompositorTexture) {
-    AsLayerComposite()->GetCompositableHost()->Dump(aStream, aPrefix, aDumpHtml);
+    AsHostLayer()->GetCompositableHost()->Dump(aStream, aPrefix, aDumpHtml);
   } else if (dumpClientTexture) {
     if (aDumpHtml) {
       aStream << nsPrintfCString(R"(<script>array["%s"]=")", layerId.BeginReading()).get();
@@ -1886,7 +1886,7 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   aStream << aPrefix;
   aStream << nsPrintfCString("%s%s (0x%p)", mManager->Name(), Name(), this).get();
 
-  layers::PrintInfo(aStream, AsLayerComposite());
+  layers::PrintInfo(aStream, AsHostLayer());
 
   if (mClipRect) {
     AppendToString(aStream, *mClipRect, " [clip=", "]");
@@ -2030,7 +2030,7 @@ Layer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
   layer->set_ptr(reinterpret_cast<uint64_t>(this));
   layer->set_parentptr(reinterpret_cast<uint64_t>(aParent));
   // Shadow
-  if (LayerComposite* lc = AsLayerComposite()) {
+  if (HostLayer* lc = AsHostLayer()) {
     LayersPacket::Layer::Shadow* s = layer->mutable_shadow();
     if (const Maybe<ParentLayerIntRect>& clipRect = lc->GetShadowClipRect()) {
       DumpRect(s->mutable_clip(), *clipRect);
@@ -2458,7 +2458,7 @@ LayerManager::ClearPendingScrollInfoUpdate()
 }
 
 void
-PrintInfo(std::stringstream& aStream, LayerComposite* aLayerComposite)
+PrintInfo(std::stringstream& aStream, HostLayer* aLayerComposite)
 {
   if (!aLayerComposite) {
     return;

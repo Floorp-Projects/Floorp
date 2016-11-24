@@ -18,12 +18,12 @@ namespace layers {
 class ContainerLayer;
 class Layer;
 
-class CanvasLayerComposite;
-class ColorLayerComposite;
-class ContainerLayerComposite;
-class ImageLayerComposite;
-class RefLayerComposite;
-class PaintedLayerComposite;
+class CanvasLayer;
+class ColorLayer;
+class ContainerLayer;
+class ImageLayer;
+class RefLayer;
+class PaintedLayer;
 
 class ShadowLayerParent : public PLayerParent
 {
@@ -37,12 +37,12 @@ public:
 
   Layer* AsLayer() const { return mLayer; }
 
-  ContainerLayerComposite* AsContainerLayerComposite() const;
-  CanvasLayerComposite* AsCanvasLayerComposite() const;
-  ColorLayerComposite* AsColorLayerComposite() const;
-  ImageLayerComposite* AsImageLayerComposite() const;
-  RefLayerComposite* AsRefLayerComposite() const;
-  PaintedLayerComposite* AsPaintedLayerComposite() const;
+  ContainerLayer* AsContainerLayer() const;
+  CanvasLayer* AsCanvasLayer() const;
+  ColorLayer* AsColorLayer() const;
+  ImageLayer* AsImageLayer() const;
+  RefLayer* AsRefLayer() const;
+  PaintedLayer* AsPaintedLayer() const;
 
 private:
   virtual void ActorDestroy(ActorDestroyReason why) override;

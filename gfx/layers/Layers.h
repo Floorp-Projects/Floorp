@@ -89,7 +89,7 @@ class CanvasLayer;
 class ReadbackLayer;
 class ReadbackProcessor;
 class RefLayer;
-class LayerComposite;
+class HostLayer;
 class ShadowableLayer;
 class ShadowLayerForwarder;
 class LayerManagerComposite;
@@ -1526,7 +1526,7 @@ public:
    * Dynamic cast to a LayerComposite.  Return null if this is not a
    * LayerComposite.  Can be used anytime.
    */
-  virtual LayerComposite* AsLayerComposite() { return nullptr; }
+  virtual HostLayer* AsHostLayer() { return nullptr; }
 
   /**
    * Dynamic cast to a ShadowableLayer.  Return null if this is not a
@@ -1945,6 +1945,13 @@ public:
    * performance.
    */
   void SetAllowResidualTranslation(bool aAllow) { mAllowResidualTranslation = aAllow; }
+
+  void SetValidRegion(const nsIntRegion& aRegion)
+  {
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ValidRegion", this));
+    mValidRegion = aRegion;
+    Mutated();
+  }
 
   /**
    * Can be used anytime
@@ -2370,6 +2377,8 @@ public:
    * This must only be called once.
    */
   virtual void Initialize(const Data& aData) = 0;
+
+  void SetBounds(gfx::IntRect aBounds) { mBounds = aBounds; }
 
   /**
    * Check the data is owned by this layer is still valid for rendering
