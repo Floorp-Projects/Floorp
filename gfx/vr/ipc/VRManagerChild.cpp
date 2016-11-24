@@ -8,6 +8,7 @@
 #include "VRManagerChild.h"
 #include "VRManagerParent.h"
 #include "VRDisplayClient.h"
+#include "nsGlobalWindow.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorThread.h" // for CompositorThread
 #include "mozilla/dom/Navigator.h"
@@ -252,13 +253,22 @@ bool
 VRManagerChild::RecvUpdateDisplayInfo(nsTArray<VRDisplayInfo>&& aDisplayUpdates)
 {
   UpdateDisplayInfo(aDisplayUpdates);
-  for (auto& nav : mNavigatorCallbacks) {
+  for (auto& windowId : mNavigatorCallbacks) {
     /** We must call NotifyVRDisplaysUpdated for every
-     * Navigator in mNavigatorCallbacks to ensure that
+     * window's Navigator in mNavigatorCallbacks to ensure that
      * the promise returned by Navigator.GetVRDevices
      * can resolve.  This must happen even if no changes
      * to VRDisplays have been detected here.
      */
+    nsGlobalWindow* window = nsGlobalWindow::GetInnerWindowWithId(windowId);
+    if (!window) {
+      continue;
+    }
+    ErrorResult result;
+    dom::Navigator* nav = window->GetNavigator(result);
+    if (NS_WARN_IF(result.Failed())) {
+      continue;
+    }
     nav->NotifyVRDisplaysUpdated();
   }
   mNavigatorCallbacks.Clear();
@@ -283,11 +293,11 @@ VRManagerChild::GetVRDisplays(nsTArray<RefPtr<VRDisplayClient>>& aDisplays)
 }
 
 bool
-VRManagerChild::RefreshVRDisplaysWithCallback(dom::Navigator* aNavigator)
+VRManagerChild::RefreshVRDisplaysWithCallback(uint64_t aWindowId)
 {
   bool success = SendRefreshDisplays();
   if (success) {
-    mNavigatorCallbacks.AppendElement(aNavigator);
+    mNavigatorCallbacks.AppendElement(aWindowId);
   }
   return success;
 }
