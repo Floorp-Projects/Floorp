@@ -413,7 +413,7 @@ set_config('MSMANIFEST_TOOL', depends(valid_mt)(lambda x: bool(x)))
 link = check_prog('LINK', depends_win()(lambda: ('link.exe',)),
                   paths=vc_compiler_path)
 
-add_old_configure_assignment('LD', depends_win(link)(lambda x: x))
+add_old_configure_assignment('LINK', depends_win(link)(lambda x: x))
 
 
 # Normally, we'd just have CC, etc. set to absolute paths, but the build system
