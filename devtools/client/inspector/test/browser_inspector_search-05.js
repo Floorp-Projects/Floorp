@@ -6,6 +6,8 @@
 // Testing that when search results contain suggestions for nodes in other
 // frames, selecting these suggestions actually selects the right nodes.
 
+requestLongerTimeout(2);
+
 const IFRAME_SRC = "doc_inspector_search.html";
 const NESTED_IFRAME_SRC = `
   <button id="b1">Nested button</button>
