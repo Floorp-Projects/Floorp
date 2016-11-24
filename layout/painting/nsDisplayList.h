@@ -2907,7 +2907,13 @@ public:
     , mColor(Color::FromABGR(aColor))
   { }
 
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override;
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aContainerParameters) override;
 
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) override;

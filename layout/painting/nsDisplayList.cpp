@@ -3561,6 +3561,44 @@ nsDisplayBackgroundColor::CanApplyOpacity() const
   return true;
 }
 
+LayerState
+nsDisplayBackgroundColor::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                        LayerManager* aManager,
+                                        const ContainerLayerParameters& aParameters)
+{
+  uint8_t clip = mBackgroundStyle->mImage.mLayers[0].mClip;
+  if (!ForceActiveLayers() || clip == NS_STYLE_IMAGELAYER_CLIP_TEXT) {
+    return LAYER_NONE;
+  }
+  return LAYER_ACTIVE;
+}
+
+already_AddRefed<Layer>
+nsDisplayBackgroundColor::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                     LayerManager* aManager,
+                                     const ContainerLayerParameters& aContainerParameters)
+{
+  if (mColor == Color()) {
+    return nullptr;
+  }
+
+  RefPtr<ColorLayer> layer = static_cast<ColorLayer*>
+    (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
+  if (!layer) {
+    layer = aManager->CreateColorLayer();
+    if (!layer)
+      return nullptr;
+  }
+  layer->SetColor(mColor);
+
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  layer->SetBounds(mBackgroundRect.ToNearestPixels(appUnitsPerDevPixel));
+  layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
+                                                      aContainerParameters.mOffset.y, 0));
+
+  return layer.forget();
+}
+
 void
 nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
                                 nsRenderingContext* aCtx)
