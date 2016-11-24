@@ -1,8 +1,8 @@
 /**
- * Provides infrastructure for automated login components tests.
+ * Provides infrastructure for automated formautofill components tests.
  */
 
- /* exported importAutofillModule, getTempFile */
+/* exported importAutofillModule, getTempFile */
 
 "use strict";
 
@@ -10,27 +10,19 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://testing-common/MockDocument.jsm");
-
-// Redirect the path of the resouce in addon to the exact file path.
-let defineLazyModuleGetter = XPCOMUtils.defineLazyModuleGetter;
-XPCOMUtils.defineLazyModuleGetter = function() {
-  let result = /^resource\:\/\/formautofill\/(.+)$/.exec(arguments[2]);
-  if (result) {
-    arguments[2] = Services.io.newFileURI(do_get_file(result[1])).spec;
-  }
-  return defineLazyModuleGetter.apply(this, arguments);
-};
-
-// Load the module by Service newFileURI API for running extension's XPCShell test
-function importAutofillModule(module) {
-  return Cu.import(Services.io.newFileURI(do_get_file(module)).spec);
-}
 
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
                                   "resource://gre/modules/DownloadPaths.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
+
+// Register the resource path of formautofill
+let resHandler = Services.io.getProtocolHandler("resource")
+                            .QueryInterface(Ci.nsISubstitutingProtocolHandler);
+let dataURI = NetUtil.newURI(do_get_file(".", true));
+resHandler.setSubstitution("formautofill", dataURI);
 
 // While the previous test file should have deleted all the temporary files it
 // used, on Windows these might still be pending deletion on the physical file

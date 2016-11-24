@@ -6,7 +6,7 @@
 
 "use strict";
 
-importAutofillModule("FormAutofillParent.jsm");
+Cu.import("resource://formautofill/FormAutofillParent.jsm");
 
 do_get_profile();
 
