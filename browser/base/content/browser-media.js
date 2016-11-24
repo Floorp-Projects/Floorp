@@ -303,9 +303,9 @@ let gDecoderDoctorHandler = {
         histogram.add(decoderDoctorReportId, TELEMETRY_DDSTAT_SHOWN_FIRST);
       } else {
         // Split existing formats into an array of strings.
-        let existing = formatsInPref.split(",").map(String.trim);
+        let existing = formatsInPref.split(",").map(x => x.trim());
         // Keep given formats that were not already recorded.
-        let newbies = formats.split(",").map(String.trim)
+        let newbies = formats.split(",").map(x => x.trim())
                       .filter(x => !existing.includes(x));
         // And rewrite pref with the added new formats (if any).
         if (newbies.length) {
