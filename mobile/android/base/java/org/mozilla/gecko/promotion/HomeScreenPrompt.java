@@ -30,6 +30,7 @@ import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.Experiments;
+import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 /**
@@ -123,23 +124,12 @@ public class HomeScreenPrompt extends Locales.LocaleAwareActivity implements Ico
 
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, TELEMETRY_EXTRA);
 
-                goToHomeScreen();
+                ActivityUtils.goToHomeScreen(HomeScreenPrompt.this);
             }
         });
     }
 
-    /**
-     * Finish this activity and launch the default home screen activity.
-     */
-    private void goToHomeScreen() {
-        Intent intent = new Intent(Intent.ACTION_MAIN);
 
-        intent.addCategory(Intent.CATEGORY_HOME);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
-
-        finish();
-    }
 
     private void loadShortcutIcon() {
         Icons.with(this)
