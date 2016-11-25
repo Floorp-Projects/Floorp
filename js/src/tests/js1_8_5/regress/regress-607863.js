@@ -6,7 +6,7 @@
  */
 
 var sandbox = evalcx('');
-var foreign = evalcx('({ get f() this, set x(v) { result = this } })', sandbox);
+var foreign = evalcx('({ get f() { return this; }, set x(v) { result = this } })', sandbox);
 var local = Object.create(foreign);
 
 reportCompare(local, local.f, "this should be set correctly in getters");
