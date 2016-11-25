@@ -42,8 +42,18 @@ add_task(function* setup() {
   let oldInternal = SyncedTabs._internal;
   SyncedTabs._internal = mockedInternal;
 
+  // This test hacks some observer states to simulate a user being signed
+  // in to Sync - restore them when the test completes.
+  let initialObserverStates = {};
+  for (let id of ["sync-reauth-state", "sync-setup-state", "sync-syncnow-state"]) {
+    initialObserverStates[id] = document.getElementById(id).hidden;
+  }
+
   registerCleanupFunction(() => {
     SyncedTabs._internal = oldInternal;
+    for (let [id, initial] of Object.entries(initialObserverStates)) {
+      document.getElementById(id).hidden = initial;
+    }
   });
 });
 
