@@ -673,17 +673,7 @@ BaselineInspector::templateCallObject()
 static Shape*
 GlobalShapeForGetPropFunction(ICStub* stub)
 {
-    if (stub->isGetProp_CallNative()) {
-        ICGetProp_CallNative* nstub = stub->toGetProp_CallNative();
-        if (nstub->isOwnGetter())
-            return nullptr;
-
-        const HeapReceiverGuard& guard = nstub->receiverGuard();
-        if (Shape* shape = guard.shape()) {
-            if (shape->getObjectClass()->flags & JSCLASS_IS_GLOBAL)
-                return shape;
-        }
-    } else if (stub->isGetProp_CallNativeGlobal()) {
+    if (stub->isGetProp_CallNativeGlobal()) {
         ICGetProp_CallNativeGlobal* nstub = stub->toGetProp_CallNativeGlobal();
         if (nstub->isOwnGetter())
             return nullptr;
@@ -745,7 +735,8 @@ MatchCacheIRReceiverGuard(CacheIRReader& reader, ICCacheIR_Monitored* stub, ObjO
 }
 
 static bool
-AddCacheIRGetPropFunction(ICCacheIR_Monitored* stub, JSObject** holder, Shape** holderShape,
+AddCacheIRGetPropFunction(ICCacheIR_Monitored* stub, bool innerized,
+                          JSObject** holder, Shape** holderShape,
                           JSFunction** commonGetter, Shape** globalShape, bool* isOwnProperty,
                           BaselineInspector::ReceiverVector& receivers,
                           BaselineInspector::ObjectGroupVector& convertUnboxedGroups)
@@ -753,16 +744,26 @@ AddCacheIRGetPropFunction(ICCacheIR_Monitored* stub, JSObject** holder, Shape** 
     // We match either an own getter:
     //
     //   GuardIsObject objId
+    //   [..WindowProxy innerization..]
     //   <GuardReceiver objId>
-    //   CallScriptedGetterResult objId
+    //   Call(Scripted|Native)GetterResult objId
     //
     // Or a getter on the prototype:
     //
     //   GuardIsObject objId
+    //   [..WindowProxy innerization..]
     //   <GuardReceiver objId>
     //   LoadObject holderId
     //   GuardShape holderId
-    //   CallScriptedGetterResult objId
+    //   Call(Scripted|Native)GetterResult objId
+    //
+    // If |innerized| is true, we replaced a WindowProxy with the Window
+    // object and we're only interested in Baseline getter stubs that performed
+    // the same optimization. This means we expect the following ops for the
+    // [..WindowProxy innerization..] above:
+    //
+    //   GuardClass objId WindowProxy
+    //   objId = LoadObject <global>
 
     CacheIRReader reader(stub->stubInfo());
 
@@ -770,11 +771,27 @@ AddCacheIRGetPropFunction(ICCacheIR_Monitored* stub, JSObject** holder, Shape** 
     if (!reader.matchOp(CacheOp::GuardIsObject, objId))
         return false;
 
+    if (innerized) {
+        if (!reader.matchOp(CacheOp::GuardClass, objId) ||
+            reader.guardClassKind() != GuardClassKind::WindowProxy)
+        {
+            return false;
+        }
+        if (!reader.matchOp(CacheOp::LoadObject))
+            return false;
+        objId = reader.objOperandId();
+        DebugOnly<JSObject*> obj =
+            stub->stubInfo()->getStubField<JSObject*>(stub, reader.stubOffset()).get();
+        MOZ_ASSERT(obj->is<GlobalObject>());
+    }
+
     ReceiverGuard receiver;
     if (!MatchCacheIRReceiverGuard(reader, stub, objId, &receiver))
         return false;
 
-    if (reader.matchOp(CacheOp::CallScriptedGetterResult, objId)) {
+    if (reader.matchOp(CacheOp::CallScriptedGetterResult, objId) ||
+        reader.matchOp(CacheOp::CallNativeGetterResult, objId))
+    {
         // This is an own property getter, the first case.
         MOZ_ASSERT(receiver.shape);
         MOZ_ASSERT(!receiver.group);
@@ -803,16 +820,29 @@ AddCacheIRGetPropFunction(ICCacheIR_Monitored* stub, JSObject** holder, Shape** 
         return false;
     Shape* objShape = stub->stubInfo()->getStubField<Shape*>(stub, reader.stubOffset());
 
-    if (!reader.matchOp(CacheOp::CallScriptedGetterResult, objId))
+    if (!reader.matchOp(CacheOp::CallScriptedGetterResult, objId) &&
+        !reader.matchOp(CacheOp::CallNativeGetterResult, objId))
+    {
         return false;
+    }
 
     // A getter on the prototype.
     size_t offset = reader.stubOffset();
     JSFunction* getter =
         &stub->stubInfo()->getStubField<JSObject*>(stub, offset)->as<JSFunction>();
 
-    if (*commonGetter && (*isOwnProperty || *globalShape || *holderShape != objShape))
+    Shape* thisGlobalShape = nullptr;
+    if (getter->isNative() && receiver.shape &&
+        (receiver.shape->getObjectClass()->flags & JSCLASS_IS_GLOBAL))
+    {
+        thisGlobalShape = receiver.shape;
+    }
+
+    if (*commonGetter &&
+        (*isOwnProperty || *globalShape != thisGlobalShape || *holderShape != objShape))
+    {
         return false;
+    }
 
     MOZ_ASSERT_IF(*commonGetter, *commonGetter == getter);
 
@@ -832,7 +862,8 @@ AddCacheIRGetPropFunction(ICCacheIR_Monitored* stub, JSObject** holder, Shape** 
 }
 
 bool
-BaselineInspector::commonGetPropFunction(jsbytecode* pc, JSObject** holder, Shape** holderShape,
+BaselineInspector::commonGetPropFunction(jsbytecode* pc, bool innerized,
+                                         JSObject** holder, Shape** holderShape,
                                          JSFunction** commonGetter, Shape** globalShape,
                                          bool* isOwnProperty,
                                          ReceiverVector& receivers,
@@ -849,9 +880,7 @@ BaselineInspector::commonGetPropFunction(jsbytecode* pc, JSObject** holder, Shap
     const ICEntry& entry = icEntryFromPC(pc);
 
     for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
-        if (stub->isGetProp_CallNative() ||
-            stub->isGetProp_CallNativeGlobal())
-        {
+        if (stub->isGetProp_CallNativeGlobal()) {
             ICGetPropCallGetter* nstub = static_cast<ICGetPropCallGetter*>(stub);
             bool isOwn = nstub->isOwnGetter();
             if (!isOwn && !AddReceiver(nstub->receiverGuard(), receivers, convertUnboxedGroups))
@@ -872,7 +901,8 @@ BaselineInspector::commonGetPropFunction(jsbytecode* pc, JSObject** holder, Shap
                 MOZ_ASSERT(*commonGetter == nstub->getter());
             }
         } else if (stub->isCacheIR_Monitored()) {
-            if (!AddCacheIRGetPropFunction(stub->toCacheIR_Monitored(), holder, holderShape,
+            if (!AddCacheIRGetPropFunction(stub->toCacheIR_Monitored(), innerized,
+                                           holder, holderShape,
                                            commonGetter, globalShape, isOwnProperty, receivers,
                                            convertUnboxedGroups))
             {
@@ -989,7 +1019,6 @@ BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
             // Either an object or magic arguments.
             return MIRType::Value;
 
-          case ICStub::GetProp_CallNative:
           case ICStub::GetProp_CallDOMProxyNative:
           case ICStub::GetProp_CallDOMProxyWithGenerationNative:
           case ICStub::GetProp_DOMProxyShadowed:
