@@ -34,10 +34,17 @@ add_task(function* test_url_of_generated_background_page() {
   yield extension.startup();
   const EXPECTED_URL = yield extension.awaitMessage("script done");
 
-  let win = window.open(EXPECTED_URL);
-  ok(win, "Should open new tab at URL: " + EXPECTED_URL);
+  // We are opening a window in a different process which will return null, so
+  // using a try catch to test whether the window.open worked.
+  let succeeded;
+  try {
+    window.open(EXPECTED_URL);
+    succeeded = true;
+  } catch (e) {
+    succeeded = false;
+  }
+  ok(succeeded, "Should open new tab at URL: " + EXPECTED_URL);
   yield extension.awaitMessage("script done");
-  win.close();
 
   yield extension.unload();
 });

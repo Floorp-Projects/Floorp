@@ -102,7 +102,7 @@ public:
 
   virtual void Clear() override
   {
-    mBackBuffer = mFrontBuffer = nullptr;
+    mBackBuffer = mFrontBuffer = mBufferProviderTexture = nullptr;
   }
 
   virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) override;

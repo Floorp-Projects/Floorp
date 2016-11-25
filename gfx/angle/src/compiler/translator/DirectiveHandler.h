@@ -13,6 +13,8 @@
 #include "compiler/preprocessor/DirectiveHandlerBase.h"
 #include "GLSLANG/ShaderLang.h"
 
+namespace sh
+{
 class TDiagnostics;
 
 class TDirectiveHandler : public pp::DirectiveHandler, angle::NonCopyable
@@ -49,5 +51,7 @@ class TDirectiveHandler : public pp::DirectiveHandler, angle::NonCopyable
     sh::GLenum mShaderType;
     bool mDebugShaderPrecisionSupported;
 };
+
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_DIRECTIVEHANDLER_H_

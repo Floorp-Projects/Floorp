@@ -49,7 +49,6 @@ After changing into the NSS directory a typical build of 32-bit NSS is done as f
 The following environment variables might be useful:
 * `BUILD_OPT=1` to get an optimised build
 * `USE_64=1` to get a 64-bit build (recommended)
-* `NSS_ENABLE_TLS_1_3=1` to enable TLS 1.3 support
 
 The complete list of environment variables can be found [here](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/Reference/NSS_environment_variables).
 

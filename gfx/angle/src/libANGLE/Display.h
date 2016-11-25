@@ -57,7 +57,10 @@ class Display final : angle::NonCopyable
     Error createWindowSurface(const Config *configuration, EGLNativeWindowType window, const AttributeMap &attribs,
                               Surface **outSurface);
     Error createPbufferSurface(const Config *configuration, const AttributeMap &attribs, Surface **outSurface);
-    Error createPbufferFromClientBuffer(const Config *configuration, EGLClientBuffer shareHandle, const AttributeMap &attribs,
+    Error createPbufferFromClientBuffer(const Config *configuration,
+                                        EGLenum buftype,
+                                        EGLClientBuffer clientBuffer,
+                                        const AttributeMap &attribs,
                                         Surface **outSurface);
     Error createPixmapSurface(const Config *configuration, NativePixmapType nativePixmap, const AttributeMap &attribs,
                               Surface **outSurface);
@@ -82,11 +85,16 @@ class Display final : angle::NonCopyable
 
     bool isInitialized() const;
     bool isValidConfig(const Config *config) const;
-    bool isValidContext(gl::Context *context) const;
-    bool isValidSurface(egl::Surface *surface) const;
+    bool isValidContext(const gl::Context *context) const;
+    bool isValidSurface(const egl::Surface *surface) const;
     bool isValidImage(const Image *image) const;
     bool isValidStream(const Stream *stream) const;
     bool isValidNativeWindow(EGLNativeWindowType window) const;
+
+    Error validateClientBuffer(const Config *configuration,
+                               EGLenum buftype,
+                               EGLClientBuffer clientBuffer,
+                               const AttributeMap &attribs);
 
     static bool isValidDisplay(const egl::Display *display);
     static bool isValidNativeDisplay(EGLNativeDisplayType display);

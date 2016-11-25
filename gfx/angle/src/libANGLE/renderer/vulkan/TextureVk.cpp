@@ -142,4 +142,9 @@ gl::Error TextureVk::getAttachmentRenderTarget(const gl::FramebufferAttachment::
     return gl::Error(GL_INVALID_OPERATION);
 }
 
+void TextureVk::syncState(const gl::Texture::DirtyBits &dirtyBits)
+{
+    UNIMPLEMENTED();
+}
+
 }  // namespace rx

@@ -1647,9 +1647,9 @@ Navigator::GetVRDisplays(ErrorResult& aRv)
     return nullptr;
   }
 
-  // We pass ourself to RefreshVRDisplays, so NotifyVRDisplaysUpdated will
+  // We pass mWindow's id to RefreshVRDisplays, so NotifyVRDisplaysUpdated will
   // be called asynchronously, resolving the promises in mVRGetDisplaysPromises.
-  if (!VRDisplay::RefreshVRDisplays(this)) {
+  if (!VRDisplay::RefreshVRDisplays(win->WindowID())) {
     p->MaybeReject(NS_ERROR_FAILURE);
     return p.forget();
   }

@@ -52,6 +52,7 @@ class TextureCapsMap
 
     void insert(GLenum internalFormat, const TextureCaps &caps);
     void remove(GLenum internalFormat);
+    void clear();
 
     const TextureCaps &get(GLenum internalFormat) const;
 
@@ -292,6 +293,24 @@ struct Extensions
     // GL_CHROMIUM_copy_texture
     bool copyTexture;
 
+    // GL_CHROMIUM_copy_compressed_texture
+    bool copyCompressedTexture;
+
+    // GL_ANGLE_webgl_compatibility
+    bool webglCompatibility;
+
+    // GL_CHROMIUM_bind_generates_resource
+    bool bindGeneratesResource;
+
+    // GL_ANGLE_robust_client_memory
+    bool robustClientMemory;
+
+    // GL_EXT_texture_sRGB_decode
+    bool textureSRGBDecode;
+
+    // GL_EXT_sRGB_write_control
+    bool sRGBWriteControl;
+
     // ES3 Extension support
 
     // GL_EXT_color_buffer_float
@@ -311,6 +330,19 @@ struct Extensions
     // GL_CHROMIUM_path_rendering
     bool pathRendering;
 };
+
+struct ExtensionInfo
+{
+    // If this extension can be enabled with glEnableExtension (GL_ANGLE_webgl_compatibility)
+    bool Enableable = false;
+
+    // Pointer to a boolean member of the Extensions struct
+    typedef bool(Extensions::*ExtensionBool);
+    ExtensionBool ExtensionsMember = nullptr;
+};
+
+using ExtensionInfoMap = std::map<std::string, ExtensionInfo>;
+const ExtensionInfoMap &GetExtensionInfoMap();
 
 struct Limitations
 {
@@ -504,6 +536,9 @@ struct DisplayExtensions
     // EGL_ANGLE_d3d_share_handle_client_buffer
     bool d3dShareHandleClientBuffer;
 
+    // EGL_ANGLE_d3d_texture_client_buffer
+    bool d3dTextureClientBuffer;
+
     // EGL_ANGLE_surface_d3d_texture_2d_share_handle
     bool surfaceD3DTexture2DShareHandle;
 
@@ -572,6 +607,15 @@ struct DisplayExtensions
 
     // EGL_ANGLE_stream_producer_d3d_texture_nv12
     bool streamProducerD3DTextureNV12;
+
+    // EGL_ANGLE_create_context_webgl_compatibility
+    bool createContextWebGLCompatibility;
+
+    // EGL_CHROMIUM_create_context_bind_generates_resource
+    bool createContextBindGeneratesResource;
+
+    // EGL_EXT_swap_buffers_with_damage
+    bool swapBuffersWithDamage;
 };
 
 struct DeviceExtensions
@@ -609,6 +653,9 @@ struct ClientExtensions
 
     // EGL_ANGLE_platform_angle_opengl
     bool platformANGLEOpenGL;
+
+    // EGL_ANGLE_platform_angle_null
+    bool platformANGLENULL;
 
     // EGL_ANGLE_device_creation
     bool deviceCreation;

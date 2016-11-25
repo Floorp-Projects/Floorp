@@ -32,9 +32,9 @@ class Surface;
 
 // Object validation
 Error ValidateDisplay(const Display *display);
-Error ValidateSurface(const Display *display, Surface *surface);
+Error ValidateSurface(const Display *display, const Surface *surface);
 Error ValidateConfig(const Display *display, const Config *config);
-Error ValidateContext(const Display *display, gl::Context *context);
+Error ValidateContext(const Display *display, const gl::Context *context);
 Error ValidateImage(const Display *display, const Image *image);
 
 // Entry point validation
@@ -94,6 +94,11 @@ Error ValidateStreamPostD3DTextureNV12ANGLE(const Display *display,
                                             const Stream *stream,
                                             void *texture,
                                             const AttributeMap &attribs);
+
+Error ValidateSwapBuffersWithDamageEXT(const Display *display,
+                                       const Surface *surface,
+                                       EGLint *rects,
+                                       EGLint n_rects);
 
 // Other validation
 Error ValidateCompatibleConfigs(const Display *display,

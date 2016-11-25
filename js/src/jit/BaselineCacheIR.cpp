@@ -459,7 +459,9 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
     bool makesGCCalls_;
 
     void enterStubFrame(MacroAssembler& masm, Register scratch);
-    void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon);
+    void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false);
+
+    MOZ_MUST_USE bool callVM(MacroAssembler& masm, const VMFunction& fun);
 
   public:
     BaselineCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, ICStubEngine engine,
@@ -554,6 +556,23 @@ BaselineCacheIRCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon
     } else {
         EmitIonLeaveStubFrame(masm);
     }
+}
+
+bool
+BaselineCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun)
+{
+    MOZ_ASSERT(inStubFrame_);
+
+    JitCode* code = cx_->jitRuntime()->getVMWrapper(fun);
+    if (!code)
+        return false;
+
+    MOZ_ASSERT(fun.expectTailCall == NonTailCall);
+    if (engine_ == ICStubEngine::Baseline)
+        EmitBaselineCallVM(code, masm);
+    else
+        EmitIonCallVM(code, fun.explicitStackSlots(), masm);
+    return true;
 }
 
 JitCode*
@@ -976,6 +995,9 @@ BaselineCacheIRCompiler::emitGuardClass()
       case GuardClassKind::UnmappedArguments:
         clasp = &UnmappedArgumentsObject::class_;
         break;
+      case GuardClassKind::WindowProxy:
+        clasp = cx_->maybeWindowProxyClass();
+        break;
     }
 
     MOZ_ASSERT(clasp);
@@ -1120,6 +1142,44 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
     masm.callJit(code);
 
     leaveStubFrame(masm, true);
+
+    emitEnterTypeMonitorIC();
+    return true;
+}
+
+typedef bool (*DoCallNativeGetterFn)(JSContext*, HandleFunction, HandleObject, MutableHandleValue);
+static const VMFunction DoCallNativeGetterInfo =
+    FunctionInfo<DoCallNativeGetterFn>(DoCallNativeGetter, "DoCallNativeGetter");
+
+bool
+BaselineCacheIRCompiler::emitCallNativeGetterResult()
+{
+    // We use ICTailCallReg when entering the stub frame, so ensure it's not
+    // used for something else.
+    Maybe<AutoScratchRegister> tail;
+    if (allocator.isAllocatable(ICTailCallReg))
+        tail.emplace(allocator, masm, ICTailCallReg);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Address getterAddr(stubAddress(reader.stubOffset()));
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    allocator.discardStack(masm);
+
+    // Push a stub frame so that we can perform a non-tail call.
+    enterStubFrame(masm, scratch);
+
+    // Load the callee in the scratch register.
+    masm.loadPtr(getterAddr, scratch);
+
+    masm.Push(obj);
+    masm.Push(scratch);
+
+    if (!callVM(masm, DoCallNativeGetterInfo))
+        return false;
+
+    leaveStubFrame(masm);
 
     emitEnterTypeMonitorIC();
     return true;

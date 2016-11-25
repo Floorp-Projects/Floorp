@@ -92,7 +92,8 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
 
 #if defined(MOZ_CONTENT_SANDBOX)
 void
-SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel)
+SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
+                                                 base::ChildPrivileges aPrivs)
 {
   MOZ_RELEASE_ASSERT(mPolicy, "mPolicy must be set before this call.");
 
@@ -125,6 +126,16 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel)
     accessTokenLevel = sandbox::USER_NON_ADMIN;
     initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
     delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
+  }
+
+  // If PRIVILEGES_FILEREAD required, don't allow settings that block reads.
+  if (aPrivs == base::ChildPrivileges::PRIVILEGES_FILEREAD) {
+    if (accessTokenLevel < sandbox::USER_NON_ADMIN) {
+      accessTokenLevel = sandbox::USER_NON_ADMIN;
+    }
+    if (delayedIntegrityLevel > sandbox::INTEGRITY_LEVEL_LOW) {
+      delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
+    }
   }
 
   sandbox::ResultCode result = mPolicy->SetJobLevel(jobLevel,

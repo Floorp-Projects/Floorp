@@ -14,24 +14,24 @@ namespace
 {
 
 // Take a pixel, and reset the components not covered by the format to default
-// values. In particular, the default value for the alpha component is 65535
+// values. In particular, the default value for the alpha component is 255
 // (1.0 as unsigned normalized fixed point value).
-GLColor16 SliceFormatColor16(GLenum format, GLColor16 full)
+GLColor SliceFormatColor(GLenum format, GLColor full)
 {
     switch (format)
     {
         case GL_RED:
-            return GLColor16(full.R, 0, 0, 65535u);
+            return GLColor(full.R, 0, 0, 255u);
         case GL_RG:
-            return GLColor16(full.R, full.G, 0, 65535u);
+            return GLColor(full.R, full.G, 0, 255u);
         case GL_RGB:
-            return GLColor16(full.R, full.G, full.B, 65535u);
+            return GLColor(full.R, full.G, full.B, 255u);
         case GL_RGBA:
             return full;
         default:
             UNREACHABLE();
+            return GLColor::white;
     }
-    return GLColor16::white;
 }
 
 class TexCoordDrawTest : public ANGLETest
@@ -1194,6 +1194,40 @@ TEST_P(Texture2DTest, NegativeAPISubImage)
     const GLubyte *pixels[20] = { 0 };
     glTexSubImage2D(GL_TEXTURE_2D, 0, 1, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
     EXPECT_GL_ERROR(GL_INVALID_VALUE);
+
+    if (extensionEnabled("GL_EXT_texture_storage"))
+    {
+        // Create a 1-level immutable texture.
+        glTexStorage2DEXT(GL_TEXTURE_2D, 1, GL_RGBA8, 2, 2);
+
+        // Try calling sub image on the second level.
+        glTexSubImage2D(GL_TEXTURE_2D, 1, 1, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        EXPECT_GL_ERROR(GL_INVALID_OPERATION);
+    }
+}
+
+// Test that querying GL_TEXTURE_BINDING* doesn't cause an unexpected error.
+TEST_P(Texture2DTest, QueryBinding)
+{
+    glBindTexture(GL_TEXTURE_2D, 0);
+    EXPECT_GL_ERROR(GL_NO_ERROR);
+
+    GLint textureBinding;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &textureBinding);
+    EXPECT_GL_NO_ERROR();
+    EXPECT_EQ(0, textureBinding);
+
+    glGetIntegerv(GL_TEXTURE_BINDING_EXTERNAL_OES, &textureBinding);
+    if (extensionEnabled("GL_OES_EGL_image_external") ||
+        extensionEnabled("GL_NV_EGL_stream_consumer_external"))
+    {
+        EXPECT_GL_NO_ERROR();
+        EXPECT_EQ(0, textureBinding);
+    }
+    else
+    {
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+    }
 }
 
 TEST_P(Texture2DTest, ZeroSizedUploads)
@@ -2763,6 +2797,13 @@ TEST_P(SamplerInStructAsFunctionParameterTest, SamplerInStructAsFunctionParamete
         std::cout << "Test skipped on Adreno OpenGLES on Android." << std::endl;
         return;
     }
+
+    if (IsWindows() && IsIntel() && IsOpenGL())
+    {
+        std::cout << "Test skipped on Windows OpenGL on Intel." << std::endl;
+        return;
+    }
+
     runSamplerInStructTest();
 }
 
@@ -3241,8 +3282,8 @@ class Texture2DNorm16TestES3 : public Texture2DTestES3
 
     void testNorm16Texture(GLint internalformat, GLenum format, GLenum type)
     {
-        GLushort pixelValue = type == GL_SHORT ? 0x7FFF : 0x6A35;
-        GLColor16 imageData(pixelValue, pixelValue, pixelValue, pixelValue);
+        GLushort pixelValue  = (type == GL_SHORT) ? 0x7FFF : 0x6A35;
+        GLushort imageData[] = {pixelValue, pixelValue, pixelValue, pixelValue};
 
         setUpProgram();
 
@@ -3254,20 +3295,17 @@ class Texture2DNorm16TestES3 : public Texture2DTestES3
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16_EXT, 1, 1, 0, GL_RGBA, GL_UNSIGNED_SHORT, nullptr);
 
         glBindTexture(GL_TEXTURE_2D, mTextures[1]);
-        glTexImage2D(GL_TEXTURE_2D, 0, internalformat, 1, 1, 0, format, type, &imageData.R);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalformat, 1, 1, 0, format, type, imageData);
 
         EXPECT_GL_NO_ERROR();
 
         drawQuad(mProgram, "position", 0.5f);
 
-        GLColor16 expectedValue = imageData;
-        if (type == GL_SHORT)
-        {
-            // sampled as signed value; then stored as unsigned value
-            expectedValue = GLColor16::white;
-        }
+        GLubyte expectedValue = (type == GL_SHORT) ? 0xFF : static_cast<GLubyte>(pixelValue >> 8);
 
-        EXPECT_PIXEL_COLOR16_EQ(0, 0, SliceFormatColor16(format, expectedValue));
+        EXPECT_PIXEL_COLOR_EQ(
+            0, 0, SliceFormatColor(
+                      format, GLColor(expectedValue, expectedValue, expectedValue, expectedValue)));
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -3277,7 +3315,7 @@ class Texture2DNorm16TestES3 : public Texture2DTestES3
     void testNorm16Render(GLint internalformat, GLenum format, GLenum type)
     {
         GLushort pixelValue = 0x6A35;
-        GLColor16 imageData(pixelValue, pixelValue, pixelValue, pixelValue);
+        GLushort imageData[] = {pixelValue, pixelValue, pixelValue, pixelValue};
 
         setUpProgram();
 
@@ -3289,13 +3327,16 @@ class Texture2DNorm16TestES3 : public Texture2DTestES3
                                0);
 
         glBindTexture(GL_TEXTURE_2D, mTextures[2]);
-        glTexImage2D(GL_TEXTURE_2D, 0, internalformat, 1, 1, 0, format, type, &imageData.R);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalformat, 1, 1, 0, format, type, imageData);
 
         EXPECT_GL_NO_ERROR();
 
         drawQuad(mProgram, "position", 0.5f);
 
-        EXPECT_PIXEL_COLOR16_EQ(0, 0, SliceFormatColor16(format, imageData));
+        GLubyte expectedValue = static_cast<GLubyte>(pixelValue >> 8);
+        EXPECT_PIXEL_COLOR_EQ(
+            0, 0, SliceFormatColor(
+                      format, GLColor(expectedValue, expectedValue, expectedValue, expectedValue)));
 
         glBindRenderbuffer(GL_RENDERBUFFER, mRenderbuffer);
         glRenderbufferStorage(GL_RENDERBUFFER, internalformat, 1, 1);
@@ -3309,8 +3350,7 @@ class Texture2DNorm16TestES3 : public Texture2DTestES3
 
         glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, 1, 1);
 
-        GLColor16 expectedValue = GLColor16::white;
-        EXPECT_PIXEL_COLOR16_EQ(0, 0, SliceFormatColor16(format, expectedValue));
+        EXPECT_PIXEL_COLOR_EQ(0, 0, SliceFormatColor(format, GLColor::white));
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -3559,7 +3599,7 @@ TEST_P(Texture2DTestES3, UnsizedAlphaUnpackBuffer)
     std::vector<GLubyte> bufferData(getWindowWidth() * getWindowHeight(), 127);
 
     // Pull in the color data from the unpack buffer.
-    angle::GLBuffer unpackBuffer;
+    GLBuffer unpackBuffer;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, unpackBuffer.get());
     glBufferData(GL_PIXEL_UNPACK_BUFFER, getWindowWidth() * getWindowHeight(), bufferData.data(),
@@ -3574,10 +3614,74 @@ TEST_P(Texture2DTestES3, UnsizedAlphaUnpackBuffer)
 
     // Draw with the alpha texture and verify.
     drawQuad(mProgram, "position", 0.5f);
-    swapBuffers();
 
     ASSERT_GL_NO_ERROR();
     EXPECT_PIXEL_NEAR(0, 0, 0, 0, 0, 127, 1);
+}
+
+// Ensure stale unpack data doesn't propagate in D3D11.
+TEST_P(Texture2DTestES3, StaleUnpackData)
+{
+    // Init unpack buffer.
+    GLsizei pixelCount = getWindowWidth() * getWindowHeight() / 2;
+    std::vector<GLColor> pixels(pixelCount, GLColor::red);
+
+    GLBuffer unpackBuffer;
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, unpackBuffer.get());
+    GLsizei bufferSize = pixelCount * sizeof(GLColor);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, bufferSize, pixels.data(), GL_STATIC_DRAW);
+
+    // Create from unpack buffer.
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, getWindowWidth() / 2, getWindowHeight() / 2, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    ASSERT_GL_NO_ERROR();
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::red);
+
+    // Fill unpack with green, recreating buffer.
+    pixels.assign(getWindowWidth() * getWindowHeight(), GLColor::green);
+    GLsizei size2 = getWindowWidth() * getWindowHeight() * sizeof(GLColor);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, size2, pixels.data(), GL_STATIC_DRAW);
+
+    // Reinit texture with green.
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, getWindowWidth() / 2, getWindowHeight() / 2, GL_RGBA,
+                    GL_UNSIGNED_BYTE, nullptr);
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    ASSERT_GL_NO_ERROR();
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// This test covers a D3D format redefinition bug for 3D textures. The base level format was not
+// being properly checked, and the texture storage of the previous texture format was persisting.
+// This would result in an ASSERT in debug and incorrect rendering in release.
+// See http://anglebug.com/1609 and WebGL 2 test conformance2/misc/views-with-offsets.html.
+TEST_P(Texture3DTestES3, FormatRedefinitionBug)
+{
+    GLTexture tex;
+    glBindTexture(GL_TEXTURE_3D, tex.get());
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, 1, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+    GLFramebuffer framebuffer;
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.get());
+    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex.get(), 0, 0);
+
+    glCheckFramebufferStatus(GL_FRAMEBUFFER);
+
+    std::vector<uint8_t> pixelData(100, 0);
+
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB565, 1, 1, 1, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, nullptr);
+    glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, 1, 1, 1, GL_RGB, GL_UNSIGNED_SHORT_5_6_5,
+                    pixelData.data());
+
+    ASSERT_GL_NO_ERROR();
 }
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
