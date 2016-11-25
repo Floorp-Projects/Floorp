@@ -70,6 +70,9 @@ pref("devtools.fontinspector.enabled", true);
 // Enable the Layout View
 pref("devtools.layoutview.enabled", false);
 
+// Grid highlighter preferences
+pref("devtools.gridinspector.showInfiniteLines", false);
+
 // By how many times eyedropper will magnify pixels
 pref("devtools.eyedropper.zoom", 6);
 
