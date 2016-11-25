@@ -1,12 +1,15 @@
 use std::ffi::CStr;
 use std::{mem, slice};
 use std::os::raw::c_uchar;
+use std::os::raw::c_void;
 use gleam::gl;
 use euclid::{Size2D, Point2D, Rect, Matrix4D};
 use webrender_traits::{PipelineId, AuxiliaryListsBuilder};
 use webrender_traits::{Epoch, ColorF};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
+use webrender_traits::{ExternalImageId};
 use webrender::renderer::{Renderer, RendererOptions};
+use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use std::sync::{Arc, Mutex, Condvar};
 extern crate webrender_traits;
 
@@ -225,8 +228,65 @@ pub struct WrState {
     frame_builder: WebRenderFrameBuilder,
 }
 
+#[repr(C)]
+enum WrExternalImageType {
+    TEXTURE_HANDLE,
+
+    // TODO(Jerry): handle shmem or cpu raw buffers.
+    //// MEM_OR_SHMEM,
+}
+
+#[repr(C)]
+struct WrExternalImageStruct {
+    image_type: WrExternalImageType,
+
+    // Texture coordinate
+    u0: f32,
+    v0: f32,
+    u1: f32,
+    v1: f32,
+
+    // external buffer handle
+    handle: u32,
+
+    // TODO(Jerry): handle shmem or cpu raw buffers.
+    //// buff: *const u8,
+    //// size: usize,
+}
+
+type GetExternalImageCallback = fn(*mut c_void, ExternalImageId) -> WrExternalImageStruct;
+type ReleaseExternalImageCallback = fn(*mut c_void, ExternalImageId);
+
+#[repr(C)]
+pub struct WrExternalImageHandler {
+    external_image_obj: *mut c_void,
+    get_func: GetExternalImageCallback,
+    release_func: ReleaseExternalImageCallback,
+}
+
+impl ExternalImageHandler for WrExternalImageHandler {
+    fn get(&mut self, id: ExternalImageId) -> ExternalImage {
+        let image = (self.get_func)(self.external_image_obj, id);
+
+        match image.image_type {
+            WrExternalImageType::TEXTURE_HANDLE =>
+                ExternalImage {
+                    u0: image.u0,
+                    v0: image.v0,
+                    u1: image.u1,
+                    v1: image.v1,
+                    source: ExternalImageSource::NativeTexture(image.handle)
+                },
+        }
+    }
+
+    fn release(&mut self, id: ExternalImageId) {
+        (self.release_func)(self.external_image_obj, id);
+    }
+}
+
 #[no_mangle]
-pub extern fn wr_init_window(root_pipeline_id: u64) -> *mut WrWindowState {
+pub extern fn wr_init_window(root_pipeline_id: u64, external_image_handler: *mut WrExternalImageHandler) -> *mut WrWindowState {
     let library = GlLibrary::new();
     gl::load_with(|symbol| library.query(symbol));
     gl::clear_color(0.3, 0.0, 0.0, 1.0);
@@ -252,7 +312,7 @@ pub extern fn wr_init_window(root_pipeline_id: u64) -> *mut WrWindowState {
         debug: false,
     };
 
-    let (renderer, sender) = Renderer::new(opts);
+    let (mut renderer, sender) = Renderer::new(opts);
     let api = sender.create_api();
 
     let notifier = Box::new(Notifier{});
@@ -262,6 +322,17 @@ pub extern fn wr_init_window(root_pipeline_id: u64) -> *mut WrWindowState {
     let flush_notifier_lock_clone = flush_notification_lock.clone();
     let flush_notifier = Box::new(FlushNotifier{render_thread_notifier: flush_notification_lock});
     renderer.set_flush_notifier(flush_notifier);
+
+    if !external_image_handler.is_null() {
+        renderer.set_external_image_handler(Box::new(
+            unsafe {
+                WrExternalImageHandler {
+                    external_image_obj: (*external_image_handler).external_image_obj,
+                    get_func: (*external_image_handler).get_func,
+                    release_func: (*external_image_handler).release_func,
+                }
+            }));
+    }
 
     let pipeline_id = PipelineId((root_pipeline_id >> 32) as u32, root_pipeline_id as u32);
     api.set_root_pipeline(pipeline_id);
