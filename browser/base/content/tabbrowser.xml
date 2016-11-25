@@ -2924,11 +2924,29 @@
 
       <method name="swapBrowsers">
         <parameter name="aOurTab"/>
-        <parameter name="aOtherBrowser"/>
+        <parameter name="aOtherTab"/>
         <parameter name="aFlags"/>
         <body>
           <![CDATA[
-            this._swapBrowserDocShells(aOurTab, aOtherBrowser, aFlags);
+            let otherBrowser = aOtherTab.linkedBrowser;
+            let otherTabBrowser = otherBrowser.getTabBrowser();
+
+            // We aren't closing the other tab so, we also need to swap its tablisteners.
+            let filter = otherTabBrowser._tabFilters.get(aOtherTab);
+            let tabListener = otherTabBrowser._tabListeners.get(aOtherTab);
+            otherBrowser.webProgress.removeProgressListener(filter);
+            filter.removeProgressListener(tabListener);
+
+            // Perform the docshell swap through the common mechanism.
+            this._swapBrowserDocShells(aOurTab, otherBrowser, aFlags);
+
+            // Restore the listeners for the swapped in tab.
+            tabListener = otherTabBrowser.mTabProgressListener(aOtherTab, otherBrowser, false, false);
+            otherTabBrowser._tabListeners.set(aOtherTab, tabListener);
+
+            const notifyAll = Ci.nsIWebProgress.NOTIFY_ALL;
+            filter.addProgressListener(tabListener, notifyAll);
+            otherBrowser.webProgress.addProgressListener(filter, notifyAll);
           ]]>
         </body>
       </method>
