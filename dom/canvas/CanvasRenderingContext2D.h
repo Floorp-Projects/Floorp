@@ -552,6 +552,10 @@ protected:
                                  bool aHasDirtyRect, int32_t aDirtyX, int32_t aDirtyY,
                                  int32_t aDirtyWidth, int32_t aDirtyHeight);
 
+  bool CopyBufferProvider(layers::PersistentBufferProvider& aOld,
+                          gfx::DrawTarget& aTarget,
+                          gfx::IntRect aCopyRect);
+
   /**
    * Internal method to complete initialisation, expects mTarget to have been set
    */
@@ -682,7 +686,7 @@ protected:
    * Check if the target is valid after calling EnsureTarget.
    */
   bool IsTargetValid() const {
-    return (sErrorTarget == nullptr || mTarget != sErrorTarget) && (mBufferProvider != nullptr || mTarget);
+    return mTarget && mTarget != sErrorTarget;
   }
 
   /**

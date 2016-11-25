@@ -107,6 +107,7 @@
 #include "nsConsoleService.h"
 #include "nsContentUtils.h"
 #include "nsDebugImpl.h"
+#include "nsFrameLoader.h"
 #include "nsFrameMessageManager.h"
 #include "nsHashPropertyBag.h"
 #include "nsIAlertsService.h"
@@ -497,8 +498,7 @@ ContentParentsMemoryReporter::CollectReports(
   return NS_OK;
 }
 
-nsTArray<ContentParent*>* ContentParent::sBrowserContentParents;
-nsTArray<ContentParent*>* ContentParent::sLargeAllocationContentParents;
+nsClassHashtable<nsStringHashKey, nsTArray<ContentParent*>>* ContentParent::sBrowserContentParents;
 nsTArray<ContentParent*>* ContentParent::sPrivateContent;
 StaticAutoPtr<LinkedList<ContentParent> > ContentParent::sContentParents;
 #if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
@@ -642,29 +642,28 @@ ContentParent::JoinAllSubprocesses()
 }
 
 /*static*/ already_AddRefed<ContentParent>
-ContentParent::GetNewOrUsedBrowserProcess(bool aForBrowserElement,
+ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
                                           ProcessPriority aPriority,
                                           ContentParent* aOpener,
                                           bool aLargeAllocationProcess)
 {
-  nsTArray<ContentParent*>* contentParents;
-  int32_t maxContentParents;
+  if (!sBrowserContentParents) {
+    sBrowserContentParents =
+      new nsClassHashtable<nsStringHashKey, nsTArray<ContentParent*>>;
+  }
 
   // Decide which pool of content parents we are going to be pulling from based
-  // on the aLargeAllocationProcess flag.
-  if (aLargeAllocationProcess) {
-    if (!sLargeAllocationContentParents) {
-      sLargeAllocationContentParents = new nsTArray<ContentParent*>();
-    }
-    contentParents = sLargeAllocationContentParents;
+  // on the aRemoteType and aLargeAllocationProcess flag.
+  nsAutoString contentProcessType(aLargeAllocationProcess
+                                  ? NS_LITERAL_STRING(LARGE_ALLOCATION_REMOTE_TYPE)
+                                  : aRemoteType);
+  nsTArray<ContentParent*>* contentParents =
+    sBrowserContentParents->LookupOrAdd(contentProcessType);
 
-    maxContentParents = Preferences::GetInt("dom.ipc.dedicatedProcessCount", 2);
-  } else {
-    if (!sBrowserContentParents) {
-      sBrowserContentParents = new nsTArray<ContentParent*>();
-    }
-    contentParents = sBrowserContentParents;
-
+  int32_t maxContentParents;
+  nsAutoCString processCountPref("dom.ipc.processCount.");
+  processCountPref.Append(NS_ConvertUTF16toUTF8(contentProcessType));
+  if (NS_FAILED(Preferences::GetInt(processCountPref.get(), &maxContentParents))) {
     maxContentParents = Preferences::GetInt("dom.ipc.processCount", 1);
   }
 
@@ -687,16 +686,13 @@ ContentParent::GetNewOrUsedBrowserProcess(bool aForBrowserElement,
     } while (currIdx != startIdx);
   }
 
-  RefPtr<ContentParent> p = new ContentParent(aOpener,
-                                              aForBrowserElement);
+  RefPtr<ContentParent> p = new ContentParent(aOpener, contentProcessType);
 
   if (!p->LaunchSubprocess(aPriority)) {
     return nullptr;
   }
 
   p->Init();
-
-  p->mLargeAllocationProcess = aLargeAllocationProcess;
 
   contentParents->AppendElement(p);
   return p.forget();
@@ -770,7 +766,7 @@ ContentParent::RecvCreateChildProcess(const IPCTabContext& aContext,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  cp = GetNewOrUsedBrowserProcess(/* isBrowserElement = */ true,
+  cp = GetNewOrUsedBrowserProcess(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
                                   aPriority, this);
 
   if (!cp) {
@@ -963,9 +959,15 @@ ContentParent::CreateBrowser(const TabContext& aContext,
     if (aOpenerContentParent) {
       constructorSender = aOpenerContentParent;
     } else {
+      nsAutoString remoteType;
+      if (!aFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType,
+                                  remoteType)) {
+        remoteType.AssignLiteral(DEFAULT_REMOTE_TYPE);
+      }
+
       constructorSender =
-        GetNewOrUsedBrowserProcess(aContext.IsMozBrowserElement(),
-                                   initialPriority, nullptr, aFreshProcess);
+        GetNewOrUsedBrowserProcess(remoteType, initialPriority, nullptr,
+                                   aFreshProcess);
       if (!constructorSender) {
         return nullptr;
       }
@@ -1092,6 +1094,8 @@ ContentParent::Init()
     cpId.AppendInt(static_cast<uint64_t>(this->ChildID()));
     obs->NotifyObservers(static_cast<nsIObserver*>(this), "ipc:content-created", cpId.get());
   }
+
+  Unused << SendRemoteType(mRemoteType);
 
 #ifdef ACCESSIBILITY
   // If accessibility is running in chrome process then start it in content
@@ -1281,18 +1285,17 @@ void
 ContentParent::MarkAsDead()
 {
   if (sBrowserContentParents) {
-    sBrowserContentParents->RemoveElement(this);
-    if (!sBrowserContentParents->Length()) {
-      delete sBrowserContentParents;
-      sBrowserContentParents = nullptr;
-    }
-  }
-
-  if (sLargeAllocationContentParents) {
-    sLargeAllocationContentParents->RemoveElement(this);
-    if (!sLargeAllocationContentParents->Length()) {
-      delete sLargeAllocationContentParents;
-      sLargeAllocationContentParents = nullptr;
+    nsTArray<ContentParent*>* contentParents =
+      sBrowserContentParents->Get(mRemoteType);
+    if (contentParents) {
+      contentParents->RemoveElement(this);
+      if (contentParents->IsEmpty()) {
+        sBrowserContentParents->Remove(mRemoteType);
+        if (sBrowserContentParents->IsEmpty()) {
+          delete sBrowserContentParents;
+          sBrowserContentParents = nullptr;
+        }
+      }
     }
   }
 
@@ -1600,6 +1603,38 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 #endif
 }
 
+bool
+ContentParent::ShouldKeepProcessAlive() const
+{
+  if (!sBrowserContentParents) {
+    return false;
+  }
+
+  // If we have already been marked as dead, don't prevent shutdown.
+  if (!IsAlive()) {
+    return false;
+  }
+
+  // Only keep processes for the default remote type alive.
+  if (!mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE)) {
+    return false;
+  }
+
+  auto contentParents = sBrowserContentParents->Get(mRemoteType);
+  if (!contentParents) {
+    return false;
+  }
+
+  // We might want to keep alive some content processes for testing, because of
+  // performance reasons.
+  // We don't want to alter behavior if the pref is not set, so default to 0.
+  int32_t processesToKeepAlive =
+    Preferences::GetInt("dom.ipc.keepProcessesAlive", 0);
+  int32_t numberOfAliveProcesses = contentParents->Length();
+
+  return numberOfAliveProcesses <= processesToKeepAlive;
+}
+
 void
 ContentParent::NotifyTabDestroying(const TabId& aTabId,
                                    const ContentParentId& aCpId)
@@ -1621,9 +1656,7 @@ ContentParent::NotifyTabDestroying(const TabId& aTabId,
         return;
     }
 
-    uint32_t numberOfParents = sBrowserContentParents ? sBrowserContentParents->Length() : 0;
-    int32_t processesToKeepAlive = Preferences::GetInt("dom.ipc.keepProcessesAlive", 0);
-    if (!cp->mLargeAllocationProcess && static_cast<int32_t>(numberOfParents) <= processesToKeepAlive) {
+    if (cp->ShouldKeepProcessAlive()) {
       return;
     }
 
@@ -1676,14 +1709,7 @@ ContentParent::NotifyTabDestroyed(const TabId& aTabId,
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   nsTArray<TabId> tabIds = cpm->GetTabParentsByProcessId(this->ChildID());
 
-  // We might want to keep alive some content processes for testing, because of performance
-  // reasons, but we don't want to alter behavior if the pref is not set.
-  uint32_t numberOfParents = sBrowserContentParents ? sBrowserContentParents->Length() : 0;
-  int32_t processesToKeepAlive = Preferences::GetInt("dom.ipc.keepProcessesAlive", 0);
-  bool shouldKeepAliveAny = !mLargeAllocationProcess && processesToKeepAlive > 0;
-  bool shouldKeepAliveThis = shouldKeepAliveAny && static_cast<int32_t>(numberOfParents) <= processesToKeepAlive;
-
-  if (tabIds.Length() == 1 && !shouldKeepAliveThis) {
+  if (tabIds.Length() == 1 && !ShouldKeepProcessAlive()) {
     // In the case of normal shutdown, send a shutdown message to child to
     // allow it to perform shutdown tasks.
     MessageLoop::current()->PostTask(NewRunnableMethod
@@ -1767,11 +1793,11 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
 }
 
 ContentParent::ContentParent(ContentParent* aOpener,
-                             bool aIsForBrowser)
+                             const nsAString& aRemoteType)
   : nsIContentParent()
   , mOpener(aOpener)
-  , mIsForBrowser(aIsForBrowser)
-  , mLargeAllocationProcess(false)
+  , mRemoteType(aRemoteType)
+  , mIsForBrowser(!mRemoteType.IsEmpty())
 {
   InitializeMembers();  // Perform common initialization.
 
@@ -1793,7 +1819,9 @@ ContentParent::ContentParent(ContentParent* aOpener,
 #endif
 
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  ChildPrivileges privs = base::PRIVILEGES_DEFAULT;
+  ChildPrivileges privs = mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE)
+                          ? base::PRIVILEGES_FILEREAD
+                          : base::PRIVILEGES_DEFAULT;
   mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, privs);
 }
 
@@ -1807,10 +1835,9 @@ ContentParent::~ContentParent()
 
   // We should be removed from all these lists in ActorDestroy.
   MOZ_ASSERT(!sPrivateContent || !sPrivateContent->Contains(this));
-  MOZ_ASSERT((!sBrowserContentParents ||
-              !sBrowserContentParents->Contains(this)) &&
-             (!sLargeAllocationContentParents ||
-              !sLargeAllocationContentParents->Contains(this)));
+  MOZ_ASSERT(!sBrowserContentParents ||
+             !sBrowserContentParents->Contains(mRemoteType) ||
+             !sBrowserContentParents->Get(mRemoteType)->Contains(this));
 }
 
 void
@@ -4145,6 +4172,130 @@ ContentParent::DeallocPWebBrowserPersistDocumentParent(PWebBrowserPersistDocumen
 }
 
 mozilla::ipc::IPCResult
+ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
+                                  bool aSetOpener,
+                                  const uint32_t& aChromeFlags,
+                                  const bool& aCalledFromJS,
+                                  const bool& aPositionSpecified,
+                                  const bool& aSizeSpecified,
+                                  nsIURI* aURIToLoad,
+                                  const nsCString& aFeatures,
+                                  const nsCString& aBaseURI,
+                                  const DocShellOriginAttributes& aOpenerOriginAttributes,
+                                  const float& aFullZoom,
+                                  nsresult& aResult,
+                                  nsCOMPtr<nsITabParent>& aNewTabParent,
+                                  bool* aWindowIsNew)
+
+{
+  // The content process should never be in charge of computing whether or
+  // not a window should be private or remote - the parent will do that.
+  const uint32_t badFlags = nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW |
+                            nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW |
+                            nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME |
+                            nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
+  if (!!(aChromeFlags & badFlags)) {
+    return IPC_FAIL(this, "Forbidden aChromeFlags passed");
+  }
+
+  TabParent* thisTabParent = TabParent::GetFrom(aThisTab);
+  nsCOMPtr<nsIContent> frame;
+  if (thisTabParent) {
+    frame = do_QueryInterface(thisTabParent->GetOwnerElement());
+
+    if (NS_WARN_IF(thisTabParent->IsMozBrowser())) {
+      return IPC_FAIL(this, "aThisTab is not a MozBrowser");
+    }
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> outerWin;
+  if (frame) {
+    outerWin = frame->OwnerDoc()->GetWindow();
+
+    // If our chrome window is in the process of closing, don't try to open a
+    // new tab in it.
+    if (outerWin && outerWin->Closed()) {
+      outerWin = nullptr;
+    }
+  }
+
+  nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
+  if (thisTabParent) {
+    browserDOMWin = thisTabParent->GetBrowserDOMWindow();
+  }
+
+  // If we haven't found a chrome window to open in, just use the most recently
+  // opened one.
+  if (!outerWin) {
+    outerWin = nsContentUtils::GetMostRecentNonPBWindow();
+    if (NS_WARN_IF(!outerWin)) {
+      aResult = NS_ERROR_FAILURE;
+      return IPC_OK();
+    }
+
+    nsCOMPtr<nsIDOMChromeWindow> rootChromeWin = do_QueryInterface(outerWin);
+    if (rootChromeWin) {
+      rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
+    }
+  }
+
+  int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
+    outerWin, aChromeFlags, aCalledFromJS, aPositionSpecified, aSizeSpecified);
+
+  MOZ_ASSERT(openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB ||
+             openLocation == nsIBrowserDOMWindow::OPEN_NEWWINDOW);
+
+  if (openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB) {
+    if (NS_WARN_IF(!browserDOMWin)) {
+      aResult = NS_ERROR_ABORT;
+      return IPC_OK();
+    }
+
+    bool isPrivate = false;
+    if (thisTabParent) {
+      nsCOMPtr<nsILoadContext> loadContext = thisTabParent->GetLoadContext();
+      loadContext->GetUsePrivateBrowsing(&isPrivate);
+    }
+
+    nsCOMPtr<nsIOpenURIInFrameParams> params =
+      new nsOpenURIInFrameParams(aOpenerOriginAttributes);
+    params->SetReferrer(NS_ConvertUTF8toUTF16(aBaseURI));
+    params->SetIsPrivate(isPrivate);
+
+    nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner;
+    aResult = browserDOMWin->OpenURIInFrame(aURIToLoad, params, openLocation,
+                                            nsIBrowserDOMWindow::OPEN_NEW,
+                                            getter_AddRefs(frameLoaderOwner));
+    if (NS_SUCCEEDED(aResult) && frameLoaderOwner) {
+      RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
+      if (frameLoader) {
+        frameLoader->GetTabParent(getter_AddRefs(aNewTabParent));
+      }
+    } else {
+      *aWindowIsNew = false;
+    }
+
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsPIWindowWatcher> pwwatch =
+    do_GetService(NS_WINDOWWATCHER_CONTRACTID, &aResult);
+  if (NS_WARN_IF(NS_FAILED(aResult))) {
+    return IPC_OK();
+  }
+
+  if (aSetOpener && thisTabParent) {
+    aResult = pwwatch->OpenWindowWithTabParent(thisTabParent, aFeatures,
+                                               aCalledFromJS, aFullZoom,
+                                               getter_AddRefs(aNewTabParent));
+  } else {
+    aResult = pwwatch->OpenWindowWithoutParent(getter_AddRefs(aNewTabParent));
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
                                 PBrowserParent* aNewTab,
                                 PRenderFrameParent* aRenderFrame,
@@ -4167,26 +4318,6 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
   *aWindowIsNew = true;
   *aResult = NS_OK;
 
-  // The content process should never be in charge of computing whether or
-  // not a window should be private or remote - the parent will do that.
-  const uint32_t badFlags =
-        nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW
-      | nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW
-      | nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME
-      | nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
-  if (!!(aChromeFlags & badFlags)) {
-      return IPC_FAIL_NO_REASON(this);
-  }
-
-  TabParent* thisTabParent = nullptr;
-  if (aThisTab) {
-    thisTabParent = TabParent::GetFrom(aThisTab);
-  }
-
-  if (NS_WARN_IF(thisTabParent && thisTabParent->IsMozBrowser())) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
   TabParent* newTab = TabParent::GetFrom(aNewTab);
   MOZ_ASSERT(newTab);
 
@@ -4202,106 +4333,16 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
   // we must have an opener.
   newTab->SetHasContentOpener(true);
 
-  nsCOMPtr<nsIContent> frame;
-  if (thisTabParent) {
-    frame = do_QueryInterface(thisTabParent->GetOwnerElement());
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> parent;
-  if (frame) {
-    parent = frame->OwnerDoc()->GetWindow();
-
-    // If our chrome window is in the process of closing, don't try to open a
-    // new tab in it.
-    if (parent && parent->Closed()) {
-      parent = nullptr;
-    }
-  }
-
-  nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
-  if (thisTabParent) {
-    browserDOMWin = thisTabParent->GetBrowserDOMWindow();
-  }
-
-  // If we haven't found a chrome window to open in, just use the most recently
-  // opened one.
-  if (!parent) {
-    parent = nsContentUtils::GetMostRecentNonPBWindow();
-    if (NS_WARN_IF(!parent)) {
-      *aResult = NS_ERROR_FAILURE;
-      return IPC_OK();
-    }
-
-    nsCOMPtr<nsIDOMChromeWindow> rootChromeWin = do_QueryInterface(parent);
-    if (rootChromeWin) {
-      rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
-    }
-  }
-
-  int32_t openLocation =
-    nsWindowWatcher::GetWindowOpenLocation(parent, aChromeFlags, aCalledFromJS,
-                                           aPositionSpecified, aSizeSpecified);
-
-  MOZ_ASSERT(openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB ||
-             openLocation == nsIBrowserDOMWindow::OPEN_NEWWINDOW);
-
-  // Opening new tabs is the easy case...
-  if (openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB) {
-    if (NS_WARN_IF(!browserDOMWin)) {
-      *aResult = NS_ERROR_ABORT;
-      return IPC_OK();
-    }
-
-    bool isPrivate = false;
-    if (thisTabParent) {
-      nsCOMPtr<nsILoadContext> loadContext = thisTabParent->GetLoadContext();
-      loadContext->GetUsePrivateBrowsing(&isPrivate);
-    }
-
-    nsCOMPtr<nsIOpenURIInFrameParams> params =
-      new nsOpenURIInFrameParams(aOpenerOriginAttributes);
-    params->SetReferrer(NS_ConvertUTF8toUTF16(aBaseURI));
-    params->SetIsPrivate(isPrivate);
-
-    TabParent::AutoUseNewTab aunt(newTab, aWindowIsNew, aURLToLoad);
-
-    nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner;
-    browserDOMWin->OpenURIInFrame(nullptr, params,
-                                  openLocation,
-                                  nsIBrowserDOMWindow::OPEN_NEW,
-                                  getter_AddRefs(frameLoaderOwner));
-    if (!frameLoaderOwner) {
-      *aWindowIsNew = false;
-    }
-
-    newTab->SwapFrameScriptsFrom(*aFrameScripts);
-
-    RenderFrameParent* rfp = static_cast<RenderFrameParent*>(aRenderFrame);
-    if (!newTab->SetRenderFrame(rfp) ||
-        !newTab->GetRenderFrameInfo(aTextureFactoryIdentifier, aLayersId)) {
-      *aResult = NS_ERROR_FAILURE;
-    }
-
-    return IPC_OK();
-  }
-
   TabParent::AutoUseNewTab aunt(newTab, aWindowIsNew, aURLToLoad);
 
-  nsCOMPtr<nsPIWindowWatcher> pwwatch =
-    do_GetService(NS_WINDOWWATCHER_CONTRACTID, aResult);
-
-  if (NS_WARN_IF(NS_FAILED(*aResult))) {
-    return IPC_OK();
-  }
-
   nsCOMPtr<nsITabParent> newRemoteTab;
-  if (!thisTabParent) {
-    // Because we weren't passed an opener tab, the content process has asked us
-    // to open a new window that is unrelated to a pre-existing tab.
-    *aResult = pwwatch->OpenWindowWithoutParent(getter_AddRefs(newRemoteTab));
-  } else {
-    *aResult = pwwatch->OpenWindowWithTabParent(thisTabParent, aFeatures, aCalledFromJS,
-                                                aFullZoom, getter_AddRefs(newRemoteTab));
+  mozilla::ipc::IPCResult ipcResult =
+    CommonCreateWindow(aThisTab, /* aSetOpener = */ true, aChromeFlags,
+                       aCalledFromJS, aPositionSpecified, aSizeSpecified,
+                       nullptr, aFeatures, aBaseURI, aOpenerOriginAttributes,
+                       aFullZoom, *aResult, newRemoteTab, aWindowIsNew);
+  if (!ipcResult) {
+    return ipcResult;
   }
 
   if (NS_WARN_IF(NS_FAILED(*aResult))) {
@@ -4316,6 +4357,39 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
   if (!newTab->SetRenderFrame(rfp) ||
       !newTab->GetRenderFrameInfo(aTextureFactoryIdentifier, aLayersId)) {
     *aResult = NS_ERROR_FAILURE;
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvCreateWindowInDifferentProcess(
+  PBrowserParent* aThisTab,
+  const uint32_t& aChromeFlags,
+  const bool& aCalledFromJS,
+  const bool& aPositionSpecified,
+  const bool& aSizeSpecified,
+  const URIParams& aURIToLoad,
+  const nsCString& aFeatures,
+  const nsCString& aBaseURI,
+  const DocShellOriginAttributes& aOpenerOriginAttributes,
+  const float& aFullZoom)
+{
+  nsCOMPtr<nsITabParent> newRemoteTab;
+  bool windowIsNew;
+  nsCOMPtr<nsIURI> uriToLoad = DeserializeURI(aURIToLoad);
+  nsresult rv;
+  mozilla::ipc::IPCResult ipcResult =
+    CommonCreateWindow(aThisTab, /* aSetOpener = */ false, aChromeFlags,
+                       aCalledFromJS, aPositionSpecified, aSizeSpecified,
+                       uriToLoad, aFeatures, aBaseURI, aOpenerOriginAttributes,
+                       aFullZoom, rv, newRemoteTab, &windowIsNew);
+  if (!ipcResult) {
+    return ipcResult;
+  }
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Call to CommonCreateWindow failed.");
   }
 
   return IPC_OK();

@@ -70,7 +70,7 @@ StateManager9::~StateManager9()
 
 void StateManager9::initialize()
 {
-    mUsingZeroColorMaskWorkaround = mRenderer9->getVendorId() == VENDOR_ID_AMD;
+    mUsingZeroColorMaskWorkaround = IsAMD(mRenderer9->getVendorId());
 }
 
 void StateManager9::forceSetBlendState()

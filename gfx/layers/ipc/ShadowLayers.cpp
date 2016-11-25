@@ -271,6 +271,11 @@ ShadowLayerForwarder::CreatedTextLayer(ShadowableLayer* aColor)
   CreatedLayer<OpCreateTextLayer>(mTxn, aColor);
 }
 void
+ShadowLayerForwarder::CreatedBorderLayer(ShadowableLayer* aBorder)
+{
+  CreatedLayer<OpCreateBorderLayer>(mTxn, aBorder);
+}
+void
 ShadowLayerForwarder::CreatedCanvasLayer(ShadowableLayer* aCanvas)
 {
   CreatedLayer<OpCreateCanvasLayer>(mTxn, aCanvas);
@@ -1043,6 +1048,15 @@ ShadowLayerForwarder::GetCompositorBridgeChild()
   }
   mCompositorBridgeChild = static_cast<CompositorBridgeChild*>(mShadowManager->Manager());
   return mCompositorBridgeChild;
+}
+
+void
+ShadowLayerForwarder::SyncWithCompositor()
+{
+  auto compositorBridge = GetCompositorBridgeChild();
+  if (compositorBridge && compositorBridge->IPCOpen()) {
+    compositorBridge->SendSyncWithCompositor();
+  }
 }
 
 } // namespace layers

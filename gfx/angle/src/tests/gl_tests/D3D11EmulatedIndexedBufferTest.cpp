@@ -35,7 +35,7 @@ class D3D11EmulatedIndexedBufferTest : public ANGLETest
         rx::Context11 *context11 = rx::GetImplAs<rx::Context11>(context);
         mRenderer                = context11->getRenderer();
 
-        mSourceBuffer = new rx::Buffer11(mRenderer);
+        mSourceBuffer      = new rx::Buffer11(mBufferState, mRenderer);
         GLfloat testData[] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f };
         gl::Error error =
             mSourceBuffer->setData(GL_ARRAY_BUFFER, testData, sizeof(testData), GL_STATIC_DRAW);
@@ -127,6 +127,7 @@ class D3D11EmulatedIndexedBufferTest : public ANGLETest
     std::vector<GLubyte> mubyteIndices;
     std::vector<GLuint> muintIndices;
     std::vector<GLushort> mushortIndices;
+    gl::BufferState mBufferState;
 };
 
 // This tests that a GL_UNSIGNED_BYTE indices list can be successfully expanded
@@ -163,7 +164,8 @@ TEST_P(D3D11EmulatedIndexedBufferTest, TestNativeToExpandedUsingGLuintIndices)
 TEST_P(D3D11EmulatedIndexedBufferTest, TestSourceBufferRemainsUntouchedAfterExpandOperation)
 {
     // Copy the original source buffer before any expand calls have been made
-    rx::Buffer11 *cleanSourceBuffer = new rx::Buffer11(mRenderer);
+    gl::BufferState cleanSourceState;
+    rx::Buffer11 *cleanSourceBuffer = new rx::Buffer11(cleanSourceState, mRenderer);
     cleanSourceBuffer->copySubData(mSourceBuffer, 0, 0, mSourceBuffer->getSize());
 
     // Do a basic exanded and compare test.

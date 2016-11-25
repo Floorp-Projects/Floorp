@@ -3824,7 +3824,6 @@ TryAttachGlobalNameAccessorStub(JSContext* cx, HandleScript script, jsbytecode* 
                                              ICStubCompiler::Engine::Baseline,
                                              monitorStub, globalLexical, current,
                                              getter, script->pcToOffset(pc),
-                                             /* outerClass = */ nullptr,
                                              /* inputDefinitelyObject = */ true);
 
         ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));

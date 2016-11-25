@@ -337,6 +337,15 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       updateHitTestingTree = true;
       break;
     }
+    case Edit::TOpCreateBorderLayer: {
+      MOZ_LAYERS_LOG(("[ParentSide] CreateTextLayer"));
+
+      RefPtr<BorderLayer> layer = layer_manager()->CreateBorderLayer();
+      AsLayerComposite(edit.get_OpCreateBorderLayer())->Bind(layer);
+
+      updateHitTestingTree = true;
+      break;
+    }
     case Edit::TOpCreateCanvasLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateCanvasLayer"));
 
@@ -478,6 +487,19 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
         textLayer->SetBounds(specific.get_TextLayerAttributes().bounds());
         textLayer->SetGlyphs(Move(specific.get_TextLayerAttributes().glyphs()));
         textLayer->SetScaledFont(reinterpret_cast<gfx::ScaledFont*>(specific.get_TextLayerAttributes().scaledFont()));
+        break;
+      }
+      case Specific::TBorderLayerAttributes: {
+        MOZ_LAYERS_LOG(("[ParentSide]   border layer"));
+
+        BorderLayer* borderLayer = layerParent->AsBorderLayer();
+        if (!borderLayer) {
+          return IPC_FAIL_NO_REASON(this);
+        }
+        borderLayer->SetRect(specific.get_BorderLayerAttributes().rect());
+        borderLayer->SetColors(specific.get_BorderLayerAttributes().colors());
+        borderLayer->SetCornerRadii(specific.get_BorderLayerAttributes().corners());
+        borderLayer->SetWidths(specific.get_BorderLayerAttributes().widths());
         break;
       }
       case Specific::TCanvasLayerAttributes: {
