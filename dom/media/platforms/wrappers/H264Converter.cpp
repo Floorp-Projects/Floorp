@@ -285,6 +285,13 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
                                             mCurrentConfig.mExtraData)) {
         return NS_OK;
       }
+
+   if (mDecoder->SupportDecoderRecycling()) {
+    // Do not recreate the decoder, reuse it.
+    UpdateConfigFromExtraData(extra_data);
+    mNeedKeyframe = true;
+    return NS_OK;
+  }
   // The SPS has changed, signal to flush the current decoder and create a
   // new one.
   mDecoder->Flush();
