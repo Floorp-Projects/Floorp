@@ -4,6 +4,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OfflineAppCacheHelper",
                                   "resource:///modules/offlineAppCache.jsm");
@@ -177,5 +178,28 @@ this.SiteDataManager = {
     Services.cookies.removeAll();
     OfflineAppCacheHelper.clear();
     this.updateSites();
+  },
+
+  getSites() {
+    return Promise.all([this._updateQuotaPromise, this._updateDiskCachePromise])
+                  .then(() => {
+                    let list = [];
+                    for (let [origin, site] of this._sites) {
+                      let cache = null;
+                      let usage = site.quotaUsage;
+                      for (cache of site.appCacheList) {
+                        usage += cache.usage;
+                      }
+                      for (cache of site.diskCacheList) {
+                        usage += cache.dataSize;
+                      }
+                      list.push({
+                        usage,
+                        status: site.status,
+                        uri: NetUtil.newURI(origin)
+                      });
+                    }
+                    return list;
+                  });
   }
 };
