@@ -9,6 +9,6 @@ evaluate("\
 function TestCase(n, d, e, a) {}\
 test_negation(-2147483648, 2147483648);\
 test_negation(2147483647, -2147483647);\
-function test_negation(value, expected)\
+function test_negation(value, expected) {\
     reportCompare(expected, '', '-(' + value + ') == ' + expected);\
-");
+}");

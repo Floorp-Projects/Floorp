@@ -47,7 +47,7 @@ function check(b, desc) {
         assertEq(Object.getPrototypeOf(a), ca == "[object Object]" ? Object.prototype : Array.prototype, path)
         pb = ownProperties(b).filter(isCloneable)
         pa = ownProperties(a)
-        function byName(a, b) 0
+        function byName(a, b) { return 0; }
         byName
         (pa.length, pb.length, "should see the same number of properties " + path)
         for (var i = 0; i < pa.length; i++) {

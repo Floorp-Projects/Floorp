@@ -1,4 +1,4 @@
-function reportCompare(actual) - ++actual + "'";
+function reportCompare(actual) { return - ++actual + "'"; }
 var UBound = 0;
 var actualvalues = [];
 for (var li = 0; li < 6; ++li) addThis();

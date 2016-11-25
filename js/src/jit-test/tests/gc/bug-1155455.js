@@ -5,8 +5,9 @@ var g = newGlobal();
 gczeal(10, 2)
 var dbg = Debugger(g);
 dbg.onDebuggerStatement = function (frame1) {
-    function hit(frame2)
-      hit[0] = "mutated";
+    function hit(frame2) {
+      return hit[0] = "mutated";
+    }
     var s = frame1.script;
     var offs = s.getLineOffsets(g.line0 + 2);
     for (var i = 0; i < offs.length; i++)

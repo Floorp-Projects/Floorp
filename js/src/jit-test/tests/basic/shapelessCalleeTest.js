@@ -43,17 +43,17 @@ function shapelessCalleeTest()
 {
   var a = [];
 
-  var helper = function (i, a) a[i] = i;
-  shapelessArgCalleeLoop(helper, helper, function (i, a) a[i] = -i, a);
+  var helper = function (i, a) { a[i] = i; };
+  shapelessArgCalleeLoop(helper, helper, function (i, a) { a[i] = -i; }, a);
 
-  helper = function (i, a) a[10 + i] = i;
-  shapelessVarCalleeLoop(helper, helper, function (i, a) a[10 + i] = -i, a);
+  helper = function (i, a) { a[10 + i] = i; };
+  shapelessVarCalleeLoop(helper, helper, function (i, a) { a[10 + i] = -i; }, a);
 
-  helper = function (i, a) a[20 + i] = i;
-  shapelessLetCalleeLoop(helper, helper, function (i, a) a[20 + i] = -i, a);
+  helper = function (i, a) { a[20 + i] = i; };
+  shapelessLetCalleeLoop(helper, helper, function (i, a) { a[20 + i] = -i; }, a);
 
-  helper = function (i, a) a[30 + i] = i;
-  shapelessUnknownCalleeLoop(null, helper, helper, function (i, a) a[30 + i] = -i, a);
+  helper = function (i, a) { a[30 + i] = i; };
+  shapelessUnknownCalleeLoop(null, helper, helper, function (i, a) { a[30 + i] = -i; }, a);
 
   try {
     helper = {hack: 42};

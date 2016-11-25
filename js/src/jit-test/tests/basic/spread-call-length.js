@@ -44,8 +44,8 @@ function checkLength(f, makeFn) {
   assertEq(makeFn("...arg")(f, gen()), 3);
 }
 
-checkLength(function(x) arguments.length, makeCall);
-checkLength(function(x) arguments.length, makeFunCall);
+checkLength(function(x) { return arguments.length; }, makeCall);
+checkLength(function(x) { return arguments.length; }, makeFunCall);
 function lengthClass(x) {
   this.length = arguments.length;
 }
