@@ -8,6 +8,7 @@
 
 #include "libANGLE/renderer/gl/TextureGL.h"
 
+#include "common/BitSetIterator.h"
 #include "common/debug.h"
 #include "common/utilities.h"
 #include "libANGLE/State.h"
@@ -20,21 +21,27 @@
 #include "libANGLE/renderer/gl/StateManagerGL.h"
 #include "libANGLE/renderer/gl/WorkaroundsGL.h"
 #include "libANGLE/renderer/gl/formatutilsgl.h"
+#include "libANGLE/renderer/gl/renderergl_utils.h"
+
+using angle::CheckedNumeric;
 
 namespace rx
 {
 
-static bool UseTexImage2D(GLenum textureType)
+namespace
+{
+
+bool UseTexImage2D(GLenum textureType)
 {
     return textureType == GL_TEXTURE_2D || textureType == GL_TEXTURE_CUBE_MAP;
 }
 
-static bool UseTexImage3D(GLenum textureType)
+bool UseTexImage3D(GLenum textureType)
 {
     return textureType == GL_TEXTURE_2D_ARRAY || textureType == GL_TEXTURE_3D;
 }
 
-static bool CompatibleTextureTarget(GLenum textureType, GLenum textureTarget)
+bool CompatibleTextureTarget(GLenum textureType, GLenum textureTarget)
 {
     if (textureType != GL_TEXTURE_CUBE_MAP)
     {
@@ -46,13 +53,13 @@ static bool CompatibleTextureTarget(GLenum textureType, GLenum textureTarget)
     }
 }
 
-static bool IsLUMAFormat(GLenum format)
+bool IsLUMAFormat(GLenum format)
 {
     return format == GL_LUMINANCE || format == GL_ALPHA || format == GL_LUMINANCE_ALPHA;
 }
 
-static LUMAWorkaroundGL GetLUMAWorkaroundInfo(const gl::InternalFormat &originalFormatInfo,
-                                              GLenum destinationFormat)
+LUMAWorkaroundGL GetLUMAWorkaroundInfo(const gl::InternalFormat &originalFormatInfo,
+                                       GLenum destinationFormat)
 {
     if (IsLUMAFormat(originalFormatInfo.format))
     {
@@ -67,22 +74,34 @@ static LUMAWorkaroundGL GetLUMAWorkaroundInfo(const gl::InternalFormat &original
     }
 }
 
-static bool IsDepthStencilFormat(GLenum format)
+bool IsDepthStencilFormat(GLenum format)
 {
     return format == GL_DEPTH_COMPONENT || format == GL_DEPTH_STENCIL;
 }
 
-static bool GetDepthStencilWorkaround(const gl::InternalFormat &originalFormatInfo)
+bool GetDepthStencilWorkaround(const gl::InternalFormat &originalFormatInfo)
 {
     return IsDepthStencilFormat(originalFormatInfo.format);
 }
 
-static LevelInfoGL GetLevelInfo(GLenum originalFormat, GLenum destinationFormat)
+LevelInfoGL GetLevelInfo(GLenum originalFormat, GLenum destinationFormat)
 {
     const gl::InternalFormat &originalFormatInfo = gl::GetInternalFormatInfo(originalFormat);
     return LevelInfoGL(originalFormat, GetDepthStencilWorkaround(originalFormatInfo),
                        GetLUMAWorkaroundInfo(originalFormatInfo, destinationFormat));
 }
+
+gl::Texture::DirtyBits GetLevelWorkaroundDirtyBits()
+{
+    gl::Texture::DirtyBits bits;
+    bits.set(gl::Texture::DIRTY_BIT_SWIZZLE_RED);
+    bits.set(gl::Texture::DIRTY_BIT_SWIZZLE_GREEN);
+    bits.set(gl::Texture::DIRTY_BIT_SWIZZLE_BLUE);
+    bits.set(gl::Texture::DIRTY_BIT_SWIZZLE_ALPHA);
+    return bits;
+}
+
+}  // anonymous namespace
 
 LUMAWorkaroundGL::LUMAWorkaroundGL() : LUMAWorkaroundGL(false, GL_NONE)
 {
@@ -134,8 +153,14 @@ TextureGL::~TextureGL()
     mTextureID = 0;
 }
 
-gl::Error TextureGL::setImage(GLenum target, size_t level, GLenum internalFormat, const gl::Extents &size, GLenum format, GLenum type,
-                              const gl::PixelUnpackState &unpack, const uint8_t *pixels)
+gl::Error TextureGL::setImage(GLenum target,
+                              size_t level,
+                              GLenum internalFormat,
+                              const gl::Extents &size,
+                              GLenum format,
+                              GLenum type,
+                              const gl::PixelUnpackState &unpack,
+                              const uint8_t *pixels)
 {
     if (mWorkarounds.unpackOverlappingRowsSeparatelyUnpackBuffer && unpack.pixelBuffer.get() &&
         unpack.rowLength != 0 && unpack.rowLength < size.width)
@@ -143,13 +168,41 @@ gl::Error TextureGL::setImage(GLenum target, size_t level, GLenum internalFormat
         // The rows overlap in unpack memory. Upload the texture row by row to work around
         // driver bug.
         reserveTexImageToBeFilled(target, level, internalFormat, size, format, type);
+
+        if (size.width == 0 || size.height == 0 || size.depth == 0)
+        {
+            return gl::NoError();
+        }
+
         gl::Box area(0, 0, 0, size.width, size.height, size.depth);
-        ANGLE_TRY(setSubImageRowByRowWorkaround(target, level, area, format, type, unpack, pixels));
+        return setSubImageRowByRowWorkaround(target, level, area, format, type, unpack, pixels);
     }
-    else
+
+    if (mWorkarounds.unpackLastRowSeparatelyForPaddingInclusion)
     {
-        setImageHelper(target, level, internalFormat, size, format, type, pixels);
+        bool apply;
+        ANGLE_TRY_RESULT(ShouldApplyLastRowPaddingWorkaround(size, unpack, format, type,
+                                                             UseTexImage3D(mState.mTarget), pixels),
+                         apply);
+
+        // The driver will think the pixel buffer doesn't have enough data, work around this bug
+        // by uploading the last row (and last level if 3D) separately.
+        if (apply)
+        {
+            reserveTexImageToBeFilled(target, level, internalFormat, size, format, type);
+
+            if (size.width == 0 || size.height == 0 || size.depth == 0)
+            {
+                return gl::NoError();
+            }
+
+            gl::Box area(0, 0, 0, size.width, size.height, size.depth);
+            return setSubImagePaddingWorkaround(target, level, area, format, type, unpack, pixels);
+        }
     }
+
+    setImageHelper(target, level, internalFormat, size, format, type, pixels);
+
     return gl::NoError();
 }
 
@@ -161,7 +214,6 @@ void TextureGL::setImageHelper(GLenum target,
                                GLenum type,
                                const uint8_t *pixels)
 {
-    UNUSED_ASSERTION_VARIABLE(&CompatibleTextureTarget); // Reference this function to avoid warnings.
     ASSERT(CompatibleTextureTarget(mState.mTarget, target));
 
     nativegl::TexImageFormat texImageFormat =
@@ -187,7 +239,7 @@ void TextureGL::setImageHelper(GLenum target,
         UNREACHABLE();
     }
 
-    mLevelInfo[level] = GetLevelInfo(internalFormat, texImageFormat.internalFormat);
+    setLevelInfo(level, 1, GetLevelInfo(internalFormat, texImageFormat.internalFormat));
 }
 
 void TextureGL::reserveTexImageToBeFilled(GLenum target,
@@ -212,32 +264,47 @@ gl::Error TextureGL::setSubImage(GLenum target, size_t level, const gl::Box &are
     nativegl::TexSubImageFormat texSubImageFormat =
         nativegl::GetTexSubImageFormat(mFunctions, mWorkarounds, format, type);
 
+    ASSERT(mLevelInfo[level].lumaWorkaround.enabled ==
+           GetLevelInfo(format, texSubImageFormat.format).lumaWorkaround.enabled);
+
     mStateManager->bindTexture(mState.mTarget, mTextureID);
     if (mWorkarounds.unpackOverlappingRowsSeparatelyUnpackBuffer && unpack.pixelBuffer.get() &&
         unpack.rowLength != 0 && unpack.rowLength < area.width)
     {
-        ANGLE_TRY(setSubImageRowByRowWorkaround(target, level, area, format, type, unpack, pixels));
+        return setSubImageRowByRowWorkaround(target, level, area, format, type, unpack, pixels);
     }
-    else if (UseTexImage2D(mState.mTarget))
+
+    if (mWorkarounds.unpackLastRowSeparatelyForPaddingInclusion)
+    {
+        gl::Extents size(area.width, area.height, area.depth);
+
+        bool apply;
+        ANGLE_TRY_RESULT(ShouldApplyLastRowPaddingWorkaround(size, unpack, format, type,
+                                                             UseTexImage3D(mState.mTarget), pixels),
+                         apply);
+
+        // The driver will think the pixel buffer doesn't have enough data, work around this bug
+        // by uploading the last row (and last level if 3D) separately.
+        if (apply)
+        {
+            return setSubImagePaddingWorkaround(target, level, area, format, type, unpack, pixels);
+        }
+    }
+
+    if (UseTexImage2D(mState.mTarget))
     {
         ASSERT(area.z == 0 && area.depth == 1);
         mFunctions->texSubImage2D(target, static_cast<GLint>(level), area.x, area.y, area.width,
                                   area.height, texSubImageFormat.format, texSubImageFormat.type,
                                   pixels);
     }
-    else if (UseTexImage3D(mState.mTarget))
+    else
     {
+        ASSERT(UseTexImage3D(mState.mTarget));
         mFunctions->texSubImage3D(target, static_cast<GLint>(level), area.x, area.y, area.z,
                                   area.width, area.height, area.depth, texSubImageFormat.format,
                                   texSubImageFormat.type, pixels);
     }
-    else
-    {
-        UNREACHABLE();
-    }
-
-    ASSERT(mLevelInfo[level].lumaWorkaround.enabled ==
-           GetLevelInfo(format, texSubImageFormat.format).lumaWorkaround.enabled);
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -250,26 +317,24 @@ gl::Error TextureGL::setSubImageRowByRowWorkaround(GLenum target,
                                                    const gl::PixelUnpackState &unpack,
                                                    const uint8_t *pixels)
 {
-    gl::PixelUnpackState unpackToUse;
-    unpackToUse.pixelBuffer = unpack.pixelBuffer;
-    mStateManager->setPixelUnpackState(unpackToUse);
-    unpackToUse.pixelBuffer.set(nullptr);
-    const gl::Format &glFormat           = mState.getImageDesc(mState.mTarget, level).format;
+    gl::PixelUnpackState directUnpack;
+    directUnpack.pixelBuffer = unpack.pixelBuffer;
+    directUnpack.alignment   = 1;
+    mStateManager->setPixelUnpackState(directUnpack);
+    directUnpack.pixelBuffer.set(nullptr);
+
+    const gl::InternalFormat &glFormat =
+        gl::GetInternalFormatInfo(gl::GetSizedInternalFormat(format, type));
     GLuint rowBytes                      = 0;
-    ANGLE_TRY_RESULT(
-        glFormat.info->computeRowPitch(GL_NONE, area.width, unpack.alignment, unpack.rowLength),
-        rowBytes);
+    ANGLE_TRY_RESULT(glFormat.computeRowPitch(type, area.width, unpack.alignment, unpack.rowLength),
+                     rowBytes);
     GLuint imageBytes = 0;
-    ANGLE_TRY_RESULT(
-        glFormat.info->computeDepthPitch(GL_NONE, area.width, area.height, unpack.alignment,
-                                         unpack.rowLength, unpack.imageHeight),
-        imageBytes);
+    ANGLE_TRY_RESULT(glFormat.computeDepthPitch(area.height, unpack.imageHeight, rowBytes),
+                     imageBytes);
     bool useTexImage3D = UseTexImage3D(mState.mTarget);
     GLuint skipBytes   = 0;
-    ANGLE_TRY_RESULT(
-        glFormat.info->computeSkipBytes(rowBytes, imageBytes, unpack.skipImages, unpack.skipRows,
-                                        unpack.skipPixels, useTexImage3D),
-        skipBytes);
+    ANGLE_TRY_RESULT(glFormat.computeSkipBytes(rowBytes, imageBytes, unpack, useTexImage3D),
+                     skipBytes);
 
     const uint8_t *pixelsWithSkip = pixels + skipBytes;
     if (useTexImage3D)
@@ -287,8 +352,9 @@ gl::Error TextureGL::setSubImageRowByRowWorkaround(GLenum target,
             }
         }
     }
-    else if (UseTexImage2D(mState.mTarget))
+    else
     {
+        ASSERT(UseTexImage2D(mState.mTarget));
         for (GLint row = 0; row < area.height; ++row)
         {
             GLint byteOffset         = row * rowBytes;
@@ -297,10 +363,89 @@ gl::Error TextureGL::setSubImageRowByRowWorkaround(GLenum target,
                                       area.width, 1, format, type, rowPixels);
         }
     }
+    return gl::NoError();
+}
+
+gl::Error TextureGL::setSubImagePaddingWorkaround(GLenum target,
+                                                  size_t level,
+                                                  const gl::Box &area,
+                                                  GLenum format,
+                                                  GLenum type,
+                                                  const gl::PixelUnpackState &unpack,
+                                                  const uint8_t *pixels)
+{
+    const gl::InternalFormat &glFormat =
+        gl::GetInternalFormatInfo(gl::GetSizedInternalFormat(format, type));
+    GLuint rowBytes = 0;
+    ANGLE_TRY_RESULT(glFormat.computeRowPitch(type, area.width, unpack.alignment, unpack.rowLength),
+                     rowBytes);
+    GLuint imageBytes = 0;
+    ANGLE_TRY_RESULT(glFormat.computeDepthPitch(area.height, unpack.imageHeight, rowBytes),
+                     imageBytes);
+    bool useTexImage3D = UseTexImage3D(mState.mTarget);
+    GLuint skipBytes   = 0;
+    ANGLE_TRY_RESULT(glFormat.computeSkipBytes(rowBytes, imageBytes, unpack, useTexImage3D),
+                     skipBytes);
+
+    gl::PixelUnpackState directUnpack;
+    directUnpack.pixelBuffer = unpack.pixelBuffer;
+    directUnpack.alignment   = 1;
+
+    if (useTexImage3D)
+    {
+        // Upload all but the last slice
+        if (area.depth > 1)
+        {
+            mFunctions->texSubImage3D(target, static_cast<GLint>(level), area.x, area.y, area.z,
+                                      area.width, area.height, area.depth - 1, format, type,
+                                      pixels);
+        }
+
+        // Upload the last slice but its last row
+        if (area.height > 1)
+        {
+            // Do not include skipBytes in the last image pixel start offset as it will be done by
+            // the driver
+            GLint lastImageOffset          = (area.depth - 1) * imageBytes;
+            const GLubyte *lastImagePixels = pixels + lastImageOffset;
+            mFunctions->texSubImage3D(target, static_cast<GLint>(level), area.x, area.y,
+                                      area.z + area.depth - 1, area.width, area.height - 1, 1,
+                                      format, type, lastImagePixels);
+        }
+
+        // Upload the last row of the last slice "manually"
+        mStateManager->setPixelUnpackState(directUnpack);
+
+        GLint lastRowOffset =
+            skipBytes + (area.depth - 1) * imageBytes + (area.height - 1) * rowBytes;
+        const GLubyte *lastRowPixels = pixels + lastRowOffset;
+        mFunctions->texSubImage3D(target, static_cast<GLint>(level), area.x,
+                                  area.y + area.height - 1, area.z + area.depth - 1, area.width, 1,
+                                  1, format, type, lastRowPixels);
+    }
     else
     {
-        UNREACHABLE();
+        ASSERT(UseTexImage2D(mState.mTarget));
+
+        // Upload all but the last row
+        if (area.height > 1)
+        {
+            mFunctions->texSubImage2D(target, static_cast<GLint>(level), area.x, area.y, area.width,
+                                      area.height - 1, format, type, pixels);
+        }
+
+        // Upload the last row "manually"
+        mStateManager->setPixelUnpackState(directUnpack);
+
+        GLint lastRowOffset          = skipBytes + (area.height - 1) * rowBytes;
+        const GLubyte *lastRowPixels = pixels + lastRowOffset;
+        mFunctions->texSubImage2D(target, static_cast<GLint>(level), area.x,
+                                  area.y + area.height - 1, area.width, 1, format, type,
+                                  lastRowPixels);
     }
+
+    directUnpack.pixelBuffer.set(nullptr);
+
     return gl::NoError();
 }
 
@@ -331,7 +476,7 @@ gl::Error TextureGL::setCompressedImage(GLenum target, size_t level, GLenum inte
         UNREACHABLE();
     }
 
-    mLevelInfo[level] = GetLevelInfo(internalFormat, compressedTexImageFormat.internalFormat);
+    setLevelInfo(level, 1, GetLevelInfo(internalFormat, compressedTexImageFormat.internalFormat));
     ASSERT(!mLevelInfo[level].lumaWorkaround.enabled);
 
     return gl::Error(GL_NO_ERROR);
@@ -408,7 +553,7 @@ gl::Error TextureGL::copyImage(GLenum target, size_t level, const gl::Rectangle 
         }
     }
 
-    mLevelInfo[level] = levelInfo;
+    setLevelInfo(level, 1, levelInfo);
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -591,11 +736,7 @@ gl::Error TextureGL::setStorage(GLenum target, size_t levels, GLenum internalFor
         UNREACHABLE();
     }
 
-    LevelInfoGL levelInfo = GetLevelInfo(internalFormat, texStorageFormat.internalFormat);
-    for (size_t level = 0; level < mLevelInfo.size(); level++)
-    {
-        mLevelInfo[level] = levelInfo;
-    }
+    setLevelInfo(0, levels, GetLevelInfo(internalFormat, texStorageFormat.internalFormat));
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -610,8 +751,6 @@ gl::Error TextureGL::setImageExternal(GLenum target,
 
 gl::Error TextureGL::generateMipmap()
 {
-    // Need to sync base level and max level to driver before calling GenerateMipmap.
-    syncState(0);
     mStateManager->bindTexture(mState.mTarget, mTextureID);
     mFunctions->generateMipmap(mState.mTarget);
 
@@ -620,10 +759,7 @@ gl::Error TextureGL::generateMipmap()
 
     ASSERT(maxLevel < mLevelInfo.size());
 
-    for (GLuint level = effectiveBaseLevel; level <= maxLevel; level++)
-    {
-        mLevelInfo[level] = mLevelInfo[effectiveBaseLevel];
-    }
+    setLevelInfo(effectiveBaseLevel, maxLevel - effectiveBaseLevel, mLevelInfo[effectiveBaseLevel]);
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -635,7 +771,7 @@ void TextureGL::bindTexImage(egl::Surface *surface)
     // Make sure this texture is bound
     mStateManager->bindTexture(mState.mTarget, mTextureID);
 
-    mLevelInfo[0] = LevelInfoGL();
+    setLevelInfo(0, 1, LevelInfoGL());
 }
 
 void TextureGL::releaseTexImage()
@@ -661,58 +797,121 @@ gl::Error TextureGL::setEGLImageTarget(GLenum target, egl::Image *image)
     return gl::Error(GL_INVALID_OPERATION);
 }
 
-template <typename T, typename ApplyTextureFuncType>
-static inline void SyncSamplerStateMember(const FunctionsGL *functions,
-                                          ApplyTextureFuncType applyTextureFunc,
-                                          const gl::SamplerState &newState,
-                                          gl::SamplerState &curState,
-                                          GLenum textureType,
-                                          GLenum name,
-                                          T(gl::SamplerState::*samplerMember))
+void TextureGL::syncState(const gl::Texture::DirtyBits &dirtyBits)
 {
-    if (curState.*samplerMember != newState.*samplerMember)
+    if (dirtyBits.none() && mLocalDirtyBits.none())
     {
-        applyTextureFunc();
-        curState.*samplerMember = newState.*samplerMember;
-        functions->texParameterf(textureType, name, static_cast<GLfloat>(curState.*samplerMember));
+        return;
     }
+
+    mStateManager->bindTexture(mState.mTarget, mTextureID);
+
+    if (dirtyBits[gl::Texture::DIRTY_BIT_BASE_LEVEL] || dirtyBits[gl::Texture::DIRTY_BIT_MAX_LEVEL])
+    {
+        // Don't know if the previous base level was using any workarounds, always re-sync the
+        // workaround dirty bits
+        mLocalDirtyBits |= GetLevelWorkaroundDirtyBits();
+    }
+
+    for (auto dirtyBit : angle::IterateBitSet(dirtyBits | mLocalDirtyBits))
+    {
+        switch (dirtyBit)
+        {
+            case gl::Texture::DIRTY_BIT_MIN_FILTER:
+                mFunctions->texParameteri(mState.mTarget, GL_TEXTURE_MIN_FILTER,
+                                          mState.getSamplerState().minFilter);
+                break;
+            case gl::Texture::DIRTY_BIT_MAG_FILTER:
+                mFunctions->texParameteri(mState.mTarget, GL_TEXTURE_MAG_FILTER,
+                                          mState.getSamplerState().magFilter);
+                break;
+            case gl::Texture::DIRTY_BIT_WRAP_S:
+                mFunctions->texParameteri(mState.mTarget, GL_TEXTURE_WRAP_S,
+                                          mState.getSamplerState().wrapS);
+                break;
+            case gl::Texture::DIRTY_BIT_WRAP_T:
+                mFunctions->texParameteri(mState.mTarget, GL_TEXTURE_WRAP_T,
+                                          mState.getSamplerState().wrapT);
+                break;
+            case gl::Texture::DIRTY_BIT_WRAP_R:
+                mFunctions->texParameteri(mState.mTarget, GL_TEXTURE_WRAP_R,
+                                          mState.getSamplerState().wrapR);
+                break;
+            case gl::Texture::DIRTY_BIT_MAX_ANISOTROPY:
+                mFunctions->texParameterf(mState.mTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+                                          mState.getSamplerState().maxAnisotropy);
+                break;
+            case gl::Texture::DIRTY_BIT_MIN_LOD:
+                mFunctions->texParameterf(mState.mTarget, GL_TEXTURE_MIN_LOD,
+                                          mState.getSamplerState().minLod);
+                break;
+            case gl::Texture::DIRTY_BIT_MAX_LOD:
+                mFunctions->texParameterf(mState.mTarget, GL_TEXTURE_MAX_LOD,
+                                          mState.getSamplerState().maxLod);
+                break;
+            case gl::Texture::DIRTY_BIT_COMPARE_MODE:
+                mFunctions->texParameteri(mState.mTarget, GL_TEXTURE_COMPARE_MODE,
+                                          mState.getSamplerState().compareMode);
+                break;
+            case gl::Texture::DIRTY_BIT_COMPARE_FUNC:
+                mFunctions->texParameteri(mState.mTarget, GL_TEXTURE_COMPARE_FUNC,
+                                          mState.getSamplerState().compareFunc);
+                break;
+            case gl::Texture::DIRTY_BIT_SRGB_DECODE:
+                mFunctions->texParameteri(mState.mTarget, GL_TEXTURE_SRGB_DECODE_EXT,
+                                          mState.getSamplerState().sRGBDecode);
+                break;
+
+            // Texture state
+            case gl::Texture::DIRTY_BIT_SWIZZLE_RED:
+                syncTextureStateSwizzle(mFunctions, GL_TEXTURE_SWIZZLE_R,
+                                        mState.getSwizzleState().swizzleRed);
+                break;
+            case gl::Texture::DIRTY_BIT_SWIZZLE_GREEN:
+                syncTextureStateSwizzle(mFunctions, GL_TEXTURE_SWIZZLE_G,
+                                        mState.getSwizzleState().swizzleGreen);
+                break;
+            case gl::Texture::DIRTY_BIT_SWIZZLE_BLUE:
+                syncTextureStateSwizzle(mFunctions, GL_TEXTURE_SWIZZLE_B,
+                                        mState.getSwizzleState().swizzleBlue);
+                break;
+            case gl::Texture::DIRTY_BIT_SWIZZLE_ALPHA:
+                syncTextureStateSwizzle(mFunctions, GL_TEXTURE_SWIZZLE_A,
+                                        mState.getSwizzleState().swizzleAlpha);
+                break;
+            case gl::Texture::DIRTY_BIT_BASE_LEVEL:
+                mFunctions->texParameteri(mState.mTarget, GL_TEXTURE_BASE_LEVEL,
+                                          mState.getEffectiveBaseLevel());
+                break;
+            case gl::Texture::DIRTY_BIT_MAX_LEVEL:
+                mFunctions->texParameteri(mState.mTarget, GL_TEXTURE_MAX_LEVEL,
+                                          mState.getEffectiveMaxLevel());
+                break;
+            case gl::Texture::DIRTY_BIT_USAGE:
+                break;
+
+            default:
+                UNREACHABLE();
+        }
+    }
+
+    mLocalDirtyBits.reset();
 }
 
-template <typename T, typename ApplyTextureFuncType>
-static inline void SyncTextureStateMember(const FunctionsGL *functions,
-                                          ApplyTextureFuncType applyTextureFunc,
-                                          const gl::TextureState &newState,
-                                          gl::TextureState &curState,
-                                          GLenum textureType,
-                                          GLenum name,
-                                          T(gl::TextureState::*stateMember))
+bool TextureGL::hasAnyDirtyBit() const
 {
-    if (curState.*stateMember != newState.*stateMember)
-    {
-        applyTextureFunc();
-        curState.*stateMember = newState.*stateMember;
-        functions->texParameterf(textureType, name, static_cast<GLfloat>(curState.*stateMember));
-    }
+    return mLocalDirtyBits.any();
 }
 
-template <typename T, typename ApplyTextureFuncType>
-static inline void SyncTextureStateSwizzle(const FunctionsGL *functions,
-                                           ApplyTextureFuncType applyTextureFunc,
-                                           const LevelInfoGL &levelInfo,
-                                           const gl::SwizzleState &newState,
-                                           gl::SwizzleState &curState,
-                                           GLenum textureType,
-                                           GLenum name,
-                                           T(gl::SwizzleState::*stateMember))
+void TextureGL::syncTextureStateSwizzle(const FunctionsGL *functions, GLenum name, GLenum value)
 {
-    GLenum resultSwizzle = newState.*stateMember;
+    const LevelInfoGL &levelInfo = mLevelInfo[mState.getEffectiveBaseLevel()];
+    GLenum resultSwizzle         = value;
     if (levelInfo.lumaWorkaround.enabled || levelInfo.depthStencilWorkaround)
     {
         if (levelInfo.lumaWorkaround.enabled)
         {
-            UNUSED_ASSERTION_VARIABLE(levelInfo.lumaWorkaround.workaroundFormat);
-
-            switch (newState.*stateMember)
+            switch (value)
             {
             case GL_RED:
             case GL_GREEN:
@@ -766,7 +965,7 @@ static inline void SyncTextureStateSwizzle(const FunctionsGL *functions,
             case GL_ZERO:
             case GL_ONE:
                 // Don't modify the swizzle state when requesting ZERO or ONE.
-                resultSwizzle = newState.*stateMember;
+                resultSwizzle = value;
                 break;
 
             default:
@@ -776,11 +975,11 @@ static inline void SyncTextureStateSwizzle(const FunctionsGL *functions,
         }
         else if (levelInfo.depthStencilWorkaround)
         {
-            switch (newState.*stateMember)
+            switch (value)
             {
                 case GL_RED:
                     // Don't modify the swizzle state when requesting the red channel.
-                    resultSwizzle = newState.*stateMember;
+                    resultSwizzle = value;
                     break;
 
                 case GL_GREEN:
@@ -797,7 +996,7 @@ static inline void SyncTextureStateSwizzle(const FunctionsGL *functions,
                 case GL_ZERO:
                 case GL_ONE:
                     // Don't modify the swizzle state when requesting ZERO or ONE.
-                    resultSwizzle = newState.*stateMember;
+                    resultSwizzle = value;
                     break;
 
                 default:
@@ -812,65 +1011,25 @@ static inline void SyncTextureStateSwizzle(const FunctionsGL *functions,
 
     }
 
-    if (curState.*stateMember != resultSwizzle)
-    {
-        applyTextureFunc();
-        curState.*stateMember = resultSwizzle;
-        functions->texParameterf(textureType, name, static_cast<GLfloat>(resultSwizzle));
-    }
+    functions->texParameteri(mState.mTarget, name, resultSwizzle);
 }
 
-void TextureGL::syncState(size_t textureUnit) const
+void TextureGL::setLevelInfo(size_t level, size_t levelCount, const LevelInfoGL &levelInfo)
 {
-    // Callback lamdba to bind this texture only if needed.
-    bool textureApplied   = false;
-    auto applyTextureFunc = [&]()
-    {
-        if (!textureApplied)
-        {
-            mStateManager->activeTexture(textureUnit);
-            mStateManager->bindTexture(mState.mTarget, mTextureID);
-            textureApplied = true;
-        }
-    };
+    ASSERT(levelCount > 0 && level + levelCount < mLevelInfo.size());
 
-    // Sync texture state
-    // Apply the effective base level and max level instead of the base level and max level set from
-    // the API. This can help with buggy drivers.
-    if (mAppliedTextureState.getEffectiveBaseLevel() != mState.getEffectiveBaseLevel())
+    GLuint baseLevel              = mState.getEffectiveBaseLevel();
+    bool needsResync              = level <= baseLevel && level + levelCount >= baseLevel &&
+                       (levelInfo.depthStencilWorkaround || levelInfo.lumaWorkaround.enabled);
+    if (needsResync)
     {
-        applyTextureFunc();
-        mFunctions->texParameteri(mState.mTarget, GL_TEXTURE_BASE_LEVEL,
-                                  mState.getEffectiveBaseLevel());
+        mLocalDirtyBits |= GetLevelWorkaroundDirtyBits();
     }
-    mAppliedTextureState.mBaseLevel = mState.mBaseLevel;
-    if (mAppliedTextureState.getEffectiveMaxLevel() != mState.getEffectiveMaxLevel())
+
+    for (size_t i = level; i < level + levelCount; i++)
     {
-        applyTextureFunc();
-        mFunctions->texParameteri(mState.mTarget, GL_TEXTURE_MAX_LEVEL,
-                                  mState.getEffectiveMaxLevel());
+        mLevelInfo[i] = levelInfo;
     }
-    mAppliedTextureState.mMaxLevel = mState.mMaxLevel;
-
-    // clang-format off
-    const LevelInfoGL &levelInfo = mLevelInfo[mState.getEffectiveBaseLevel()];
-    SyncTextureStateSwizzle(mFunctions, applyTextureFunc, levelInfo, mState.mSwizzleState, mAppliedTextureState.mSwizzleState, mState.mTarget, GL_TEXTURE_SWIZZLE_R, &gl::SwizzleState::swizzleRed);
-    SyncTextureStateSwizzle(mFunctions, applyTextureFunc, levelInfo, mState.mSwizzleState, mAppliedTextureState.mSwizzleState, mState.mTarget, GL_TEXTURE_SWIZZLE_G, &gl::SwizzleState::swizzleGreen);
-    SyncTextureStateSwizzle(mFunctions, applyTextureFunc, levelInfo, mState.mSwizzleState, mAppliedTextureState.mSwizzleState, mState.mTarget, GL_TEXTURE_SWIZZLE_B, &gl::SwizzleState::swizzleBlue);
-    SyncTextureStateSwizzle(mFunctions, applyTextureFunc, levelInfo, mState.mSwizzleState, mAppliedTextureState.mSwizzleState, mState.mTarget, GL_TEXTURE_SWIZZLE_A, &gl::SwizzleState::swizzleAlpha);
-
-    // Sync sampler state
-    SyncSamplerStateMember(mFunctions, applyTextureFunc, mState.mSamplerState, mAppliedTextureState.mSamplerState, mState.mTarget, GL_TEXTURE_MIN_FILTER, &gl::SamplerState::minFilter);
-    SyncSamplerStateMember(mFunctions, applyTextureFunc, mState.mSamplerState, mAppliedTextureState.mSamplerState, mState.mTarget, GL_TEXTURE_MAG_FILTER, &gl::SamplerState::magFilter);
-    SyncSamplerStateMember(mFunctions, applyTextureFunc, mState.mSamplerState, mAppliedTextureState.mSamplerState, mState.mTarget, GL_TEXTURE_WRAP_S, &gl::SamplerState::wrapS);
-    SyncSamplerStateMember(mFunctions, applyTextureFunc, mState.mSamplerState, mAppliedTextureState.mSamplerState, mState.mTarget, GL_TEXTURE_WRAP_T, &gl::SamplerState::wrapT);
-    SyncSamplerStateMember(mFunctions, applyTextureFunc, mState.mSamplerState, mAppliedTextureState.mSamplerState, mState.mTarget, GL_TEXTURE_WRAP_R, &gl::SamplerState::wrapR);
-    SyncSamplerStateMember(mFunctions, applyTextureFunc, mState.mSamplerState, mAppliedTextureState.mSamplerState, mState.mTarget, GL_TEXTURE_MAX_ANISOTROPY_EXT, &gl::SamplerState::maxAnisotropy);
-    SyncSamplerStateMember(mFunctions, applyTextureFunc, mState.mSamplerState, mAppliedTextureState.mSamplerState, mState.mTarget, GL_TEXTURE_MIN_LOD, &gl::SamplerState::minLod);
-    SyncSamplerStateMember(mFunctions, applyTextureFunc, mState.mSamplerState, mAppliedTextureState.mSamplerState, mState.mTarget, GL_TEXTURE_MAX_LOD, &gl::SamplerState::maxLod);
-    SyncSamplerStateMember(mFunctions, applyTextureFunc, mState.mSamplerState, mAppliedTextureState.mSamplerState, mState.mTarget, GL_TEXTURE_COMPARE_MODE, &gl::SamplerState::compareMode);
-    SyncSamplerStateMember(mFunctions, applyTextureFunc, mState.mSamplerState, mAppliedTextureState.mSamplerState, mState.mTarget, GL_TEXTURE_COMPARE_FUNC, &gl::SamplerState::compareFunc);
-    // clang-format on
 }
 
 GLuint TextureGL::getTextureID() const

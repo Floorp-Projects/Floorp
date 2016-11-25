@@ -66,6 +66,8 @@ public:
 
   virtual bool SetForwarder(ShadowLayerForwarder* aFwd) { return true; }
 
+  virtual void ClearCachedResources() {}
+
   /**
    * Return true if this provider preserves the drawing state (clips, transforms,
    * etc.) across frames. In practice this means users of the provider can skip
@@ -136,6 +138,8 @@ public:
   virtual void OnShutdown() override { Destroy(); }
 
   virtual bool SetForwarder(ShadowLayerForwarder* aFwd) override;
+
+  virtual void ClearCachedResources() override;
 
   virtual bool PreservesDrawingState() const override { return false; }
 protected:

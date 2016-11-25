@@ -116,7 +116,7 @@ bool Traverser::visitAggregate(Visit visit, TIntermAggregate *node)
     TIntermTyped *lhs = sequence->at(0)->getAsTyped();
     ASSERT(lhs);
 
-    TIntermAggregate *init = createTempInitDeclaration(lhs);
+    TIntermDeclaration *init = createTempInitDeclaration(lhs);
     TIntermTyped *current  = createTempSymbol(lhs->getType());
 
     insertStatementInParentBlock(init);

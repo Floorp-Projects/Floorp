@@ -12,6 +12,8 @@
 #include "GLSLANG/ShaderLang.h"
 #include "compiler/translator/TranslatorESSL.h"
 
+using namespace sh;
+
 class QualificationOrderShaderTest : public testing::Test
 {
   public:
@@ -23,10 +25,10 @@ class QualificationOrderShaderTest : public testing::Test
     virtual void TearDown() {}
 
     // Return true when compilation succeeds
-    bool compile(const std::string &shaderString, GLenum shaderType, ShShaderSpec spec)
+    bool compile(const std::string &shaderString, ::GLenum shaderType, ShShaderSpec spec)
     {
         ShBuiltInResources resources;
-        ShInitBuiltInResources(&resources);
+        InitBuiltInResources(&resources);
         resources.MaxDrawBuffers = (spec == SH_GLES2_SPEC) ? 1 : 8;
 
         TranslatorESSL *translator = new TranslatorESSL(shaderType, spec);

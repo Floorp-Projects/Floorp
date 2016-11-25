@@ -45,10 +45,11 @@ bool NeedsOffscreenTexture(Renderer11 *renderer, NativeWindow11 *nativeWindow, E
 SwapChain11::SwapChain11(Renderer11 *renderer,
                          NativeWindow11 *nativeWindow,
                          HANDLE shareHandle,
+                         IUnknown *d3dTexture,
                          GLenum backBufferFormat,
                          GLenum depthBufferFormat,
                          EGLint orientation)
-    : SwapChainD3D(shareHandle, backBufferFormat, depthBufferFormat),
+    : SwapChainD3D(shareHandle, d3dTexture, backBufferFormat, depthBufferFormat),
       mRenderer(renderer),
       mWidth(-1),
       mHeight(-1),
@@ -180,43 +181,29 @@ EGLint SwapChain11::resetOffscreenColorBuffer(int backbufferWidth, int backbuffe
     const d3d11::Format &backbufferFormatInfo =
         d3d11::Format::Get(mOffscreenRenderTargetFormat, mRenderer->getRenderer11DeviceCaps());
 
-    // If the app passed in a share handle, open the resource
-    // See EGL_ANGLE_d3d_share_handle_client_buffer
-    if (mAppCreatedShareHandle)
+    // If the app passed in a share handle or D3D texture, open the resource
+    // See EGL_ANGLE_d3d_share_handle_client_buffer and EGL_ANGLE_d3d_texture_client_buffer
+    if (mAppCreatedShareHandle || mD3DTexture != nullptr)
     {
-        ID3D11Resource *tempResource11;
-        HRESULT result = device->OpenSharedResource(mShareHandle, __uuidof(ID3D11Resource), (void**)&tempResource11);
-
-        if (FAILED(result))
+        if (mAppCreatedShareHandle)
         {
-            ERR("Failed to open the swap chain pbuffer share handle: %08lX", result);
-            release();
-            return EGL_BAD_PARAMETER;
+            ID3D11Resource *tempResource11;
+            HRESULT result = device->OpenSharedResource(mShareHandle, __uuidof(ID3D11Resource),
+                                                        (void **)&tempResource11);
+            ASSERT(SUCCEEDED(result));
+
+            mOffscreenTexture = d3d11::DynamicCastComObject<ID3D11Texture2D>(tempResource11);
+            SafeRelease(tempResource11);
         }
-
-        result = tempResource11->QueryInterface(__uuidof(ID3D11Texture2D), (void**)&mOffscreenTexture);
-        SafeRelease(tempResource11);
-
-        if (FAILED(result))
+        else if (mD3DTexture != nullptr)
         {
-            ERR("Failed to query texture2d interface in pbuffer share handle: %08lX", result);
-            release();
-            return EGL_BAD_PARAMETER;
+            mOffscreenTexture = d3d11::DynamicCastComObject<ID3D11Texture2D>(mD3DTexture);
         }
-
-        // Validate offscreen texture parameters
-        D3D11_TEXTURE2D_DESC offscreenTextureDesc = {0};
-        mOffscreenTexture->GetDesc(&offscreenTextureDesc);
-
-        if (offscreenTextureDesc.Width != (UINT)backbufferWidth ||
-            offscreenTextureDesc.Height != (UINT)backbufferHeight ||
-            offscreenTextureDesc.Format != backbufferFormatInfo.texFormat ||
-            offscreenTextureDesc.MipLevels != 1 || offscreenTextureDesc.ArraySize != 1)
+        else
         {
-            ERR("Invalid texture parameters in the shared offscreen texture pbuffer");
-            release();
-            return EGL_BAD_PARAMETER;
+            UNREACHABLE();
         }
+        ASSERT(mOffscreenTexture != nullptr);
     }
     else
     {

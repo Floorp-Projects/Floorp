@@ -9,6 +9,9 @@
 
 #include "compiler/translator/Compiler.h"
 
+namespace sh
+{
+
 class TranslatorHLSL : public TCompiler
 {
   public:
@@ -30,5 +33,7 @@ class TranslatorHLSL : public TCompiler
     std::map<std::string, unsigned int> mInterfaceBlockRegisterMap;
     std::map<std::string, unsigned int> mUniformRegisterMap;
 };
+
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_TRANSLATORHLSL_H_

@@ -63,6 +63,7 @@ name = "rust_url_capi"
 version = "0.0.1"
 dependencies = [
  "libc 0.2.16 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nsstring 0.1.0",
  "url 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

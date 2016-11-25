@@ -555,8 +555,8 @@ IsOptimizableArgumentsObjectForGetElem(JSObject* obj, const Value& idval)
     return true;
 }
 
-static bool
-IsCacheableGetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape)
+bool
+jit::IsCacheableGetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape)
 {
     if (!shape || !IsCacheableProtoChainForIonOrCacheIR(obj, holder))
         return false;

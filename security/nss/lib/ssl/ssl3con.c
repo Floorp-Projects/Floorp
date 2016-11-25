@@ -1624,10 +1624,6 @@ ssl3_SetupPendingCipherSpec(sslSocket *ss)
     pwSpec->compressContext = NULL;
     pwSpec->decompressContext = NULL;
 
-    if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
-        PORT_Assert(ss->ssl3.hs.kea_def->ephemeral);
-        PORT_Assert(pwSpec->cipher_def->type == type_aead);
-    }
     ssl_ReleaseSpecWriteLock(ss); /*******************************/
     return SECSuccess;
 }
@@ -11021,13 +11017,10 @@ ssl3_ComputeTLSFinished(sslSocket *ss, ssl3CipherSpec *spec,
     PK11Context *prf_context;
     unsigned int retLen;
 
+    PORT_Assert(spec->master_secret);
     if (!spec->master_secret) {
-        const char *label = isServer ? "server finished" : "client finished";
-        unsigned int len = 15;
-        HASH_HashType hashType = ssl3_GetTls12HashType(ss);
-        return ssl3_TLSPRFWithMasterSecret(spec, label, len, hashes->u.raw,
-                                           hashes->len, tlsFinished->verify_data,
-                                           sizeof tlsFinished->verify_data, hashType);
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SECFailure;
     }
 
     if (spec->version < SSL_LIBRARY_VERSION_TLS_1_2) {
@@ -11060,9 +11053,10 @@ ssl3_ComputeTLSFinished(sslSocket *ss, ssl3CipherSpec *spec,
  * ss->ssl3.crSpec).
  */
 SECStatus
-ssl3_TLSPRFWithMasterSecret(ssl3CipherSpec *spec, const char *label,
-                            unsigned int labelLen, const unsigned char *val, unsigned int valLen,
-                            unsigned char *out, unsigned int outLen, HASH_HashType tls12HashType)
+ssl3_TLSPRFWithMasterSecret(sslSocket *ss, ssl3CipherSpec *spec,
+                            const char *label, unsigned int labelLen,
+                            const unsigned char *val, unsigned int valLen,
+                            unsigned char *out, unsigned int outLen)
 {
     SECStatus rv = SECSuccess;
 
@@ -11073,6 +11067,12 @@ ssl3_TLSPRFWithMasterSecret(ssl3CipherSpec *spec, const char *label,
         unsigned int retLen;
 
         if (spec->version >= SSL_LIBRARY_VERSION_TLS_1_2) {
+            /* Bug 1312976 non-SHA256 exporters are broken. */
+            if (ssl3_GetPrfHashMechanism(ss) != CKM_SHA256) {
+                PORT_Assert(0);
+                PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+                return SECFailure;
+            }
             mech = CKM_NSS_TLS_PRF_GENERAL_SHA256;
         }
         prf_context = PK11_CreateContextBySymKey(mech, CKA_SIGN,

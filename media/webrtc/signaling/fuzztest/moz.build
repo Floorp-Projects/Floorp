@@ -3,9 +3,9 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit':
+if CONFIG['OS_TARGET'] == 'Linux' or CONFIG['OS_TARGET'] == 'Darwin':
     DISABLE_STL_WRAPPING = True
+    DEFINES['CPR_STRING_USE_FALLIBLE_MALLOC'] = True
     DEFINES['MOZ_NO_MOZALLOC'] = True
 
     if CONFIG['OS_TARGET'] == 'Darwin':
@@ -21,7 +21,7 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and
 
     USE_LIBS += [
         '/media/webrtc/trunk/testing/gtest_gtest/gtest',
-        'nspr'
+        'nspr',
     ]
 
     SOURCES = [
@@ -45,4 +45,4 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and
       'sdp_file_parser.cpp',
     ]
 
-    GeckoProgram('sdp_file_parser')
+    Program('sdp_file_parser')

@@ -427,6 +427,8 @@ public:
    */
   virtual void EndFrame();
 
+  virtual void CancelFrame() { ReadUnlockTextures(); }
+
   virtual void SetDispAcquireFence(Layer* aLayer);
 
   /**

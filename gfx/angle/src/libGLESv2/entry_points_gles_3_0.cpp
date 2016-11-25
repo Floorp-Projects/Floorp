@@ -22,6 +22,7 @@
 #include "libANGLE/validationES.h"
 #include "libANGLE/validationES3.h"
 #include "libANGLE/queryconversions.h"
+#include "libANGLE/queryutils.h"
 
 #include "common/debug.h"
 
@@ -309,12 +310,7 @@ void GL_APIENTRY GetQueryObjectuiv(GLuint id, GLenum pname, GLuint* params)
             return;
         }
 
-        Error error = context->getQueryObjectuiv(id, pname, params);
-        if (error.isError())
-        {
-            context->handleError(error);
-            return;
-        }
+        context->getQueryObjectuiv(id, pname, params);
     }
 }
 
@@ -759,6 +755,13 @@ void GL_APIENTRY BindBufferRange(GLenum target, GLuint index, GLuint buffer, GLi
             return;
         }
 
+        if (!context->getGLState().isBindGeneratesResourceEnabled() &&
+            !context->isBufferGenerated(buffer))
+        {
+            context->handleError(Error(GL_INVALID_OPERATION, "Buffer was not generated"));
+            return;
+        }
+
         switch (target)
         {
           case GL_TRANSFORM_FEEDBACK_BUFFER:
@@ -838,6 +841,13 @@ void GL_APIENTRY BindBufferBase(GLenum target, GLuint index, GLuint buffer)
 
           default:
               context->handleError(Error(GL_INVALID_ENUM));
+            return;
+        }
+
+        if (!context->getGLState().isBindGeneratesResourceEnabled() &&
+            !context->isBufferGenerated(buffer))
+        {
+            context->handleError(Error(GL_INVALID_OPERATION, "Buffer was not generated"));
             return;
         }
 
@@ -1023,38 +1033,17 @@ void GL_APIENTRY GetVertexAttribIiv(GLuint index, GLenum pname, GLint* params)
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (context->getClientMajorVersion() < 3)
-        {
-            context->handleError(Error(GL_INVALID_OPERATION));
-            return;
-        }
-
-        if (index >= MAX_VERTEX_ATTRIBS)
-        {
-            context->handleError(Error(GL_INVALID_VALUE));
-            return;
-        }
-
-        if (!ValidateGetVertexAttribParameters(context, pname))
+        if (!context->skipValidation() &&
+            !ValidateGetVertexAttribIiv(context, index, pname, params))
         {
             return;
         }
 
-        if (pname == GL_CURRENT_VERTEX_ATTRIB)
-        {
-            const VertexAttribCurrentValueData &currentValueData =
-                context->getGLState().getVertexAttribCurrentValue(index);
-            for (int i = 0; i < 4; ++i)
-            {
-                params[i] = currentValueData.IntValues[i];
-            }
-        }
-        else
-        {
-            const VertexAttribute &attribState =
-                context->getGLState().getVertexArray()->getVertexAttribute(index);
-            *params = QuerySingleVertexAttributeParameter<GLint>(attribState, pname);
-        }
+        const VertexAttribCurrentValueData &currentValues =
+            context->getGLState().getVertexAttribCurrentValue(index);
+        const VertexAttribute &attrib =
+            context->getGLState().getVertexArray()->getVertexAttribute(index);
+        QueryVertexAttribIiv(attrib, currentValues, pname, params);
     }
 }
 
@@ -1066,38 +1055,17 @@ void GL_APIENTRY GetVertexAttribIuiv(GLuint index, GLenum pname, GLuint* params)
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (context->getClientMajorVersion() < 3)
-        {
-            context->handleError(Error(GL_INVALID_OPERATION));
-            return;
-        }
-
-        if (index >= MAX_VERTEX_ATTRIBS)
-        {
-            context->handleError(Error(GL_INVALID_VALUE));
-            return;
-        }
-
-        if (!ValidateGetVertexAttribParameters(context, pname))
+        if (!context->skipValidation() &&
+            !ValidateGetVertexAttribIuiv(context, index, pname, params))
         {
             return;
         }
 
-        if (pname == GL_CURRENT_VERTEX_ATTRIB)
-        {
-            const VertexAttribCurrentValueData &currentValueData =
-                context->getGLState().getVertexAttribCurrentValue(index);
-            for (int i = 0; i < 4; ++i)
-            {
-                params[i] = currentValueData.UnsignedIntValues[i];
-            }
-        }
-        else
-        {
-            const VertexAttribute &attribState =
-                context->getGLState().getVertexArray()->getVertexAttribute(index);
-            *params = QuerySingleVertexAttributeParameter<GLuint>(attribState, pname);
-        }
+        const VertexAttribCurrentValueData &currentValues =
+            context->getGLState().getVertexAttribCurrentValue(index);
+        const VertexAttribute &attrib =
+            context->getGLState().getVertexArray()->getVertexAttribute(index);
+        QueryVertexAttribIuiv(attrib, currentValues, pname, params);
     }
 }
 
@@ -1441,7 +1409,7 @@ const GLubyte *GL_APIENTRY GetStringi(GLenum name, GLuint index)
             return NULL;
         }
 
-        return reinterpret_cast<const GLubyte*>(context->getExtensionString(index).c_str());
+        return reinterpret_cast<const GLubyte *>(context->getExtensionString(index));
     }
 
     return NULL;
@@ -1455,58 +1423,14 @@ void GL_APIENTRY CopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintp
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (context->getClientMajorVersion() < 3)
+        if (!context->skipValidation() &&
+            !ValidateCopyBufferSubData(context, readTarget, writeTarget, readOffset, writeOffset,
+                                       size))
         {
-            context->handleError(Error(GL_INVALID_OPERATION));
             return;
         }
 
-        if (!ValidBufferTarget(context, readTarget) || !ValidBufferTarget(context, writeTarget))
-        {
-            context->handleError(Error(GL_INVALID_ENUM));
-            return;
-        }
-
-        Buffer *readBuffer  = context->getGLState().getTargetBuffer(readTarget);
-        Buffer *writeBuffer = context->getGLState().getTargetBuffer(writeTarget);
-
-        if (!readBuffer || !writeBuffer)
-        {
-            context->handleError(Error(GL_INVALID_OPERATION));
-            return;
-        }
-
-        // Verify that readBuffer and writeBuffer are not currently mapped
-        if (readBuffer->isMapped() || writeBuffer->isMapped())
-        {
-            context->handleError(Error(GL_INVALID_OPERATION));
-            return;
-        }
-
-        if (readOffset < 0 || writeOffset < 0 || size < 0 ||
-            static_cast<unsigned int>(readOffset + size) > readBuffer->getSize() ||
-            static_cast<unsigned int>(writeOffset + size) > writeBuffer->getSize())
-        {
-            context->handleError(Error(GL_INVALID_VALUE));
-            return;
-        }
-
-        if (readBuffer == writeBuffer && std::abs(readOffset - writeOffset) < size)
-        {
-            context->handleError(Error(GL_INVALID_VALUE));
-            return;
-        }
-
-        // if size is zero, the copy is a successful no-op
-        if (size > 0)
-        {
-            Error error = writeBuffer->copyBufferSubData(readBuffer, readOffset, writeOffset, size);
-            if (error.isError())
-            {
-                context->handleError(error);
-                return;
-            }
-        }
+        context->copyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size);
     }
 }
 
@@ -1656,43 +1580,14 @@ void GL_APIENTRY GetActiveUniformBlockiv(GLuint program, GLuint uniformBlockInde
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (context->getClientMajorVersion() < 3)
-        {
-            context->handleError(Error(GL_INVALID_OPERATION));
-            return;
-        }
-        Program *programObject = GetValidProgram(context, program);
-
-        if (!programObject)
+        if (!context->skipValidation() &&
+            !ValidateGetActiveUniformBlockiv(context, program, uniformBlockIndex, pname, params))
         {
             return;
         }
 
-        if (uniformBlockIndex >= programObject->getActiveUniformBlockCount())
-        {
-            context->handleError(Error(GL_INVALID_VALUE));
-            return;
-        }
-
-        switch (pname)
-        {
-          case GL_UNIFORM_BLOCK_BINDING:
-            *params = static_cast<GLint>(programObject->getUniformBlockBinding(uniformBlockIndex));
-            break;
-
-          case GL_UNIFORM_BLOCK_DATA_SIZE:
-          case GL_UNIFORM_BLOCK_NAME_LENGTH:
-          case GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS:
-          case GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES:
-          case GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER:
-          case GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER:
-            programObject->getActiveUniformBlockiv(uniformBlockIndex, pname, params);
-            break;
-
-          default:
-              context->handleError(Error(GL_INVALID_ENUM));
-            return;
-        }
+        const Program *programObject = context->getProgram(program);
+        QueryActiveUniformBlockiv(programObject, uniformBlockIndex, pname, params);
     }
 }
 
@@ -2099,55 +1994,14 @@ void GL_APIENTRY GetBufferParameteri64v(GLenum target, GLenum pname, GLint64* pa
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (context->getClientMajorVersion() < 3)
+        if (!context->skipValidation() &&
+            !ValidateGetBufferParameteri64v(context, target, pname, params))
         {
-            context->handleError(Error(GL_INVALID_OPERATION));
-            return;
-        }
-
-        if (!ValidBufferTarget(context, target))
-        {
-            context->handleError(Error(GL_INVALID_ENUM));
-            return;
-        }
-
-        if (!ValidBufferParameter(context, pname))
-        {
-            context->handleError(Error(GL_INVALID_ENUM));
             return;
         }
 
         Buffer *buffer = context->getGLState().getTargetBuffer(target);
-
-        if (!buffer)
-        {
-            // A null buffer means that "0" is bound to the requested buffer target
-            context->handleError(Error(GL_INVALID_OPERATION));
-            return;
-        }
-
-        switch (pname)
-        {
-          case GL_BUFFER_USAGE:
-            *params = static_cast<GLint64>(buffer->getUsage());
-            break;
-          case GL_BUFFER_SIZE:
-            *params = buffer->getSize();
-            break;
-          case GL_BUFFER_ACCESS_FLAGS:
-            *params = static_cast<GLint64>(buffer->getAccessFlags());
-            break;
-          case GL_BUFFER_MAPPED:
-            *params = static_cast<GLint64>(buffer->isMapped());
-            break;
-          case GL_BUFFER_MAP_OFFSET:
-            *params = buffer->getMapOffset();
-            break;
-          case GL_BUFFER_MAP_LENGTH:
-            *params = buffer->getMapLength();
-            break;
-          default: UNREACHABLE(); break;
-        }
+        QueryBufferParameteri64v(buffer, pname, params);
     }
 }
 
@@ -2256,7 +2110,20 @@ void GL_APIENTRY SamplerParameteri(GLuint sampler, GLenum pname, GLint param)
 
 void GL_APIENTRY SamplerParameteriv(GLuint sampler, GLenum pname, const GLint* param)
 {
-    SamplerParameteri(sampler, pname, *param);
+    EVENT("(GLuint sampler = %u, GLenum pname = 0x%X, const GLint* params = 0x%0.8p)", sampler,
+          pname, param);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        if (!context->skipValidation() &&
+            !ValidateSamplerParameteriv(context, sampler, pname, param))
+        {
+            return;
+        }
+
+        context->samplerParameteriv(sampler, pname, param);
+    }
 }
 
 void GL_APIENTRY SamplerParameterf(GLuint sampler, GLenum pname, GLfloat param)
@@ -2278,34 +2145,37 @@ void GL_APIENTRY SamplerParameterf(GLuint sampler, GLenum pname, GLfloat param)
 
 void GL_APIENTRY SamplerParameterfv(GLuint sampler, GLenum pname, const GLfloat* param)
 {
-    SamplerParameterf(sampler, pname, *param);
-}
-
-void GL_APIENTRY GetSamplerParameteriv(GLuint sampler, GLenum pname, GLint* params)
-{
-    EVENT("(GLuint sampler = %u, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", sampler, pname, params);
+    EVENT("(GLuint sampler = %u, GLenum pname = 0x%X, const GLfloat* params = 0x%0.8p)", sampler,
+          pname, param);
 
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (context->getClientMajorVersion() < 3)
-        {
-            context->handleError(Error(GL_INVALID_OPERATION));
-            return;
-        }
-
-        if (!ValidateSamplerObjectParameter(context, pname))
+        if (!context->skipValidation() &&
+            !ValidateSamplerParameterfv(context, sampler, pname, param))
         {
             return;
         }
 
-        if (!context->isSampler(sampler))
+        context->samplerParameterfv(sampler, pname, param);
+    }
+}
+
+void GL_APIENTRY GetSamplerParameteriv(GLuint sampler, GLenum pname, GLint *params)
+{
+    EVENT("(GLuint sampler = %u, GLenum pname = 0x%X, GLint* params = 0x%0.8p)", sampler, pname,
+          params);
+
+    Context *context = GetValidGlobalContext();
+    if (context)
+    {
+        if (!context->skipValidation() &&
+            !ValidateGetSamplerParameteriv(context, sampler, pname, params))
         {
-            context->handleError(Error(GL_INVALID_OPERATION));
             return;
         }
 
-        *params = context->getSamplerParameteri(sampler, pname);
+        context->getSamplerParameteriv(sampler, pname, params);
     }
 }
 
@@ -2316,24 +2186,13 @@ void GL_APIENTRY GetSamplerParameterfv(GLuint sampler, GLenum pname, GLfloat* pa
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (context->getClientMajorVersion() < 3)
-        {
-            context->handleError(Error(GL_INVALID_OPERATION));
-            return;
-        }
-
-        if (!ValidateSamplerObjectParameter(context, pname))
+        if (!context->skipValidation() &&
+            !ValidateGetSamplerParameterfv(context, sampler, pname, params))
         {
             return;
         }
 
-        if (!context->isSampler(sampler))
-        {
-            context->handleError(Error(GL_INVALID_OPERATION));
-            return;
-        }
-
-        *params = context->getSamplerParameterf(sampler, pname);
+        context->getSamplerParameterfv(sampler, pname, params);
     }
 }
 
@@ -2702,55 +2561,14 @@ void GL_APIENTRY GetInternalformativ(GLenum target, GLenum internalformat, GLenu
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (context->getClientMajorVersion() < 3)
+        if (!context->skipValidation() &&
+            !ValidateGetInternalFormativ(context, target, internalformat, pname, bufSize, params))
         {
-            context->handleError(Error(GL_INVALID_OPERATION));
             return;
         }
 
         const TextureCaps &formatCaps = context->getTextureCaps().get(internalformat);
-        if (!formatCaps.renderable)
-        {
-            context->handleError(Error(GL_INVALID_ENUM));
-            return;
-        }
-
-        if (target != GL_RENDERBUFFER)
-        {
-            context->handleError(Error(GL_INVALID_ENUM));
-            return;
-        }
-
-        if (bufSize < 0)
-        {
-            context->handleError(Error(GL_INVALID_VALUE));
-            return;
-        }
-
-        switch (pname)
-        {
-          case GL_NUM_SAMPLE_COUNTS:
-            if (bufSize != 0)
-            {
-                *params = static_cast<GLint>(formatCaps.sampleCounts.size());
-            }
-            break;
-
-          case GL_SAMPLES:
-            {
-                size_t returnCount = std::min<size_t>(bufSize, formatCaps.sampleCounts.size());
-                auto sampleReverseIt = formatCaps.sampleCounts.rbegin();
-                for (size_t sampleIndex = 0; sampleIndex < returnCount; ++sampleIndex)
-                {
-                    params[sampleIndex] = *sampleReverseIt++;;
-                }
-            }
-            break;
-
-          default:
-              context->handleError(Error(GL_INVALID_ENUM));
-            return;
-        }
+        QueryInternalFormativ(formatCaps, pname, bufSize, params);
     }
 }
 
