@@ -99,7 +99,7 @@ this.evaluate = {};
  *   If the script was interrupted due to script timeout.
  */
 evaluate.sandbox = function(sb, script, args = [], opts = {}) {
-  let timeoutId, timeoutHandler, unloadHandler;
+  let scriptTimeoutID, timeoutHandler, unloadHandler;
 
   let promise = new Promise((resolve, reject) => {
     let src = "";
@@ -144,7 +144,7 @@ evaluate.sandbox = function(sb, script, args = [], opts = {}) {
     }
 
     // timeout and unload handlers
-    timeoutId = setTimeout(
+    scriptTimeoutID = setTimeout(
         timeoutHandler, opts.timeout || DEFAULT_TIMEOUT);
     sb.window.addEventListener("unload", unloadHandler);
 
@@ -168,7 +168,7 @@ evaluate.sandbox = function(sb, script, args = [], opts = {}) {
   });
 
   return promise.then(res => {
-    sb.window.clearTimeout(timeoutId);
+    clearTimeout(scriptTimeoutID);
     sb.window.removeEventListener("unload", unloadHandler);
     return res;
   });

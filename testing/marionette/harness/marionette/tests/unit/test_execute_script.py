@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import time
 import urllib
 
 from marionette import MarionetteTestCase, WindowManagerMixin
@@ -237,6 +238,29 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertTrue(self.marionette.execute_script(
             "return typeof arguments[0] == 'undefined'"))
 
+    def test_window_set_timeout_is_not_cancelled(self):
+        self.marionette.navigate(inline("""
+            <script>
+            window.contentTimeoutTriggered = 0;
+            window.contentTimeoutID = setTimeout(
+                () => window.contentTimeoutTriggered++, 1000);
+            </script>"""))
+
+        # first execute script call should not cancel event
+        self.assertEqual(0, self.marionette.execute_script(
+            "return window.contentTimeoutTriggered", sandbox=None))
+
+        # test that event was not cancelled
+        time.sleep(1)
+        self.assertEqual(1, self.marionette.execute_script(
+            "return window.contentTimeoutTriggered", sandbox=None))
+
+        # ../../../../evaluate.js:/scriptTimeoutID/
+        # sets the script timeout handler using the content frame script
+        # so the in-content setTimeout should always return 2
+        self.assertEqual(2, self.marionette.execute_script(
+            "return window.contentTimeoutID", sandbox=None))
+
 
 class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
 
@@ -294,6 +318,9 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
         pass
 
     def test_return_web_element_nodelist(self):
+        pass
+
+    def test_window_set_timeout_is_not_cancelled(self):
         pass
 
 
