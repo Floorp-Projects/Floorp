@@ -2251,8 +2251,9 @@ ClientAuthDataRunnable::RunOnTargetThread()
     nsCString rememberedDBKey;
     if (cars) {
       bool found;
-      rv = cars->HasRememberedDecision(hostname, mServerCert,
-        rememberedDBKey, &found);
+      rv = cars->HasRememberedDecision(hostname,
+                                       mSocketInfo->GetOriginAttributes(),
+                                       mServerCert, rememberedDBKey, &found);
       if (NS_SUCCEEDED(rv) && found) {
         hasRemembered = true;
       }
@@ -2366,8 +2367,8 @@ ClientAuthDataRunnable::RunOnTargetThread()
       }
 
       if (cars && wantRemember) {
-        cars->RememberDecision(hostname, mServerCert,
-                               certChosen ? cert.get() : nullptr);
+        cars->RememberDecision(hostname, mSocketInfo->GetOriginAttributes(),
+                               mServerCert, certChosen ? cert.get() : nullptr);
       }
     }
 
