@@ -1376,17 +1376,8 @@ moz_gtk_progress_chunk_paint(cairo_t *cr, GdkRectangle* rect,
                              GtkTextDirection direction,
                              WidgetNodeType widget)
 {
-    GtkStyleContext* style;
-
-    if (gtk_check_version(3, 20, 0) != nullptr) {
-      /* Ask for MOZ_GTK_PROGRESS_TROUGH instead of MOZ_GTK_PROGRESSBAR
-       * because ClaimStyleContext() saves/restores that style */
-      style = ClaimStyleContext(MOZ_GTK_PROGRESS_TROUGH, direction);
-      gtk_style_context_remove_class(style, GTK_STYLE_CLASS_TROUGH);
-      gtk_style_context_add_class(style, GTK_STYLE_CLASS_PROGRESSBAR);
-    } else {
-      style = ClaimStyleContext(MOZ_GTK_PROGRESS_CHUNK, direction);
-    }
+    GtkStyleContext* style =
+        ClaimStyleContext(MOZ_GTK_PROGRESS_CHUNK, direction);
 
     if (widget == MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE ||
         widget == MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE) {
