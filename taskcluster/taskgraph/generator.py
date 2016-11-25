@@ -12,6 +12,7 @@ from .graph import Graph
 from .taskgraph import TaskGraph
 from .optimize import optimize_task_graph
 from .util.python_path import find_object
+from .util.verifydoc import verify_docs
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +158,8 @@ class TaskGraphGenerator(object):
         # put the kinds into a graph and sort topologically so that kinds are loaded
         # in post-order
         kinds = {kind.name: kind for kind in self._load_kinds()}
+        self.verify_kinds(kinds)
+
         edges = set()
         for kind in kinds.itervalues():
             for dep in kind.config.get('kind-dependencies', []):
@@ -175,6 +178,8 @@ class TaskGraphGenerator(object):
                 all_tasks[task.label] = task
             logger.info("Generated {} tasks for kind {}".format(len(new_tasks), kind_name))
         full_task_set = TaskGraph(all_tasks, Graph(set(all_tasks), set()))
+        self.verify_attributes(all_tasks)
+        self.verify_run_using()
         yield 'full_task_set', full_task_set
 
         logger.info("Generating full task graph")
@@ -214,6 +219,7 @@ class TaskGraphGenerator(object):
 
         logger.info("Generating optimized task graph")
         do_not_optimize = set()
+
         if not self.parameters.get('optimize_target_tasks', True):
             do_not_optimize = target_task_set.graph.nodes
         optimized_task_graph, label_to_taskid = optimize_task_graph(target_task_graph,
@@ -230,3 +236,28 @@ class TaskGraphGenerator(object):
                 raise AttributeError("No such run result {}".format(name))
             self._run_results[k] = v
         return self._run_results[name]
+
+    def verify_kinds(self, kinds):
+        verify_docs(
+            filename="kinds.rst",
+            identifiers=kinds.keys(),
+            appearing_as="heading"
+         )
+
+    def verify_attributes(self, all_tasks):
+        attribute_set = set()
+        for label, task in all_tasks.iteritems():
+            attribute_set.update(task.attributes.keys())
+        verify_docs(
+            filename="attributes.rst",
+            identifiers=list(attribute_set),
+            appearing_as="heading"
+         )
+
+    def verify_run_using(self):
+        from .transforms.job import registry
+        verify_docs(
+            filename="transforms.rst",
+            identifiers=registry.keys(),
+            appearing_as="inline-literal"
+         )
