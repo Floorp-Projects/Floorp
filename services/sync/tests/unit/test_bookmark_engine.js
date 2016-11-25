@@ -51,7 +51,7 @@ add_task(async function test_delete_invalid_roots_from_server() {
   let store   = engine._store;
   let tracker = engine._tracker;
   let server = serverForFoo(engine);
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   let collection = server.user("foo").collection("bookmarks");
 
@@ -108,7 +108,7 @@ add_task(async function test_change_during_sync() {
   let store   = engine._store;
   let tracker = engine._tracker;
   let server = serverForFoo(engine);
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   let collection = server.user("foo").collection("bookmarks");
 
@@ -256,7 +256,7 @@ add_task(async function test_change_during_sync() {
 add_task(async function bad_record_allIDs() {
   let server = new SyncServer();
   server.start();
-  let syncTesting = new SyncTestingInfrastructure(server.server);
+  let syncTesting = await SyncTestingInfrastructure(server);
 
   _("Ensure that bad Places queries don't cause an error in getAllIDs.");
   let engine = new BookmarksEngine(Service);
@@ -285,6 +285,12 @@ add_task(async function bad_record_allIDs() {
 });
 
 function serverForFoo(engine) {
+  // The bookmarks engine *always* tracks changes, meaning we might try
+  // and sync due to the bookmarks we ourselves create! Worse, because we
+  // do an engine sync only, there's no locking - so we end up with multiple
+  // syncs running. Neuter that by making the threshold very large.
+  Service.scheduler.syncThreshold = 10000000;
+
   return serverForUsers({"foo": "password"}, {
     meta: {global: {engines: {bookmarks: {version: engine.version,
                                           syncID: engine.syncID}}}},
@@ -298,7 +304,7 @@ add_task(async function test_processIncoming_error_orderChildren() {
   let engine = new BookmarksEngine(Service);
   let store  = engine._store;
   let server = serverForFoo(engine);
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   let collection = server.user("foo").collection("bookmarks");
 
@@ -368,7 +374,7 @@ add_task(async function test_restorePromptsReupload() {
   let engine = new BookmarksEngine(Service);
   let store  = engine._store;
   let server = serverForFoo(engine);
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   let collection = server.user("foo").collection("bookmarks");
 
@@ -538,7 +544,7 @@ add_task(async function test_mismatched_types() {
   let engine = new BookmarksEngine(Service);
   let store  = engine._store;
   let server = serverForFoo(engine);
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   _("GUID: " + store.GUIDForId(6, true));
 
@@ -583,7 +589,7 @@ add_task(async function test_bookmark_guidMap_fail() {
 
   let server = serverForFoo(engine);
   let coll   = server.user("foo").collection("bookmarks");
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   // Add one item to the server.
   let itemID = PlacesUtils.bookmarks.createFolder(

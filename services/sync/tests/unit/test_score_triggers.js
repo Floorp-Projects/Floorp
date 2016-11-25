@@ -43,8 +43,8 @@ function sync_httpd_setup() {
   return httpd_setup(handlers);
 }
 
-function setUp(server) {
-  new SyncTestingInfrastructure(server, "johndoe", "ilovejane", "sekrit");
+async function setUp(server) {
+  await SyncTestingInfrastructure(server, "johndoe", "ilovejane");
 }
 
 function run_test() {
@@ -78,24 +78,23 @@ add_test(function test_tracker_score_updated() {
   }
 });
 
-add_test(function test_sync_triggered() {
+add_task(async function test_sync_triggered() {
   let server = sync_httpd_setup();
-  setUp(server);
+  await setUp(server);
 
   Service.login();
 
   Service.scheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
-  Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
-    Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
-    _("Sync completed!");
-    server.stop(run_next_test);
-  });
+
 
   do_check_eq(Status.login, LOGIN_SUCCEEDED);
   tracker.score += SCORE_INCREMENT_XLARGE;
+
+  await promiseOneObserver("weave:service:sync:finish")
+  await promiseStopServer(server);
 });
 
-add_test(function test_clients_engine_sync_triggered() {
+add_task(async function test_clients_engine_sync_triggered() {
   _("Ensure that client engine score changes trigger a sync.");
 
   // The clients engine is not registered like other engines. Therefore,
@@ -103,25 +102,22 @@ add_test(function test_clients_engine_sync_triggered() {
   // global score tracker gives it that treatment. See bug 676042 for more.
 
   let server = sync_httpd_setup();
-  setUp(server);
+  await setUp(server);
   Service.login();
-
-  const TOPIC = "weave:service:sync:finish";
-  Svc.Obs.add(TOPIC, function onSyncFinish() {
-    Svc.Obs.remove(TOPIC, onSyncFinish);
-    _("Sync due to clients engine change completed.");
-    server.stop(run_next_test);
-  });
 
   Service.scheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
   do_check_eq(Status.login, LOGIN_SUCCEEDED);
   Service.clientsEngine._tracker.score += SCORE_INCREMENT_XLARGE;
+
+  await promiseOneObserver("weave:service:sync:finish");
+  _("Sync due to clients engine change completed.");
+  await promiseStopServer(server);
 });
 
-add_test(function test_incorrect_credentials_sync_not_triggered() {
+add_task(async function test_incorrect_credentials_sync_not_triggered() {
   _("Ensure that score changes don't trigger a sync if Status.login != LOGIN_SUCCEEDED.");
   let server = sync_httpd_setup();
-  setUp(server);
+  await setUp(server);
 
   // Ensure we don't actually try to sync.
   function onSyncStart() {
@@ -129,21 +125,20 @@ add_test(function test_incorrect_credentials_sync_not_triggered() {
   }
   Svc.Obs.add("weave:service:sync:start", onSyncStart);
 
-  // First wait >100ms (nsITimers can take up to that much time to fire, so
-  // we can account for the timer in delayedAutoconnect) and then one event
-  // loop tick (to account for a possible call to weave:service:sync:start).
-  Utils.namedTimer(function() {
-    Utils.nextTick(function() {
-      Svc.Obs.remove("weave:service:sync:start", onSyncStart);
-
-      do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
-
-      Service.startOver();
-      server.stop(run_next_test);
-    });
-  }, 150, {}, "timer");
-
   // Faking incorrect credentials to prevent score update.
   Status.login = LOGIN_FAILED_LOGIN_REJECTED;
   tracker.score += SCORE_INCREMENT_XLARGE;
+
+  // First wait >100ms (nsITimers can take up to that much time to fire, so
+  // we can account for the timer in delayedAutoconnect) and then one event
+  // loop tick (to account for a possible call to weave:service:sync:start).
+  await promiseNamedTimer(150, {}, "timer");
+  await promiseNextTick();
+
+  Svc.Obs.remove("weave:service:sync:start", onSyncStart);
+
+  do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
+
+  Service.startOver();
+  await promiseStopServer(server);
 });

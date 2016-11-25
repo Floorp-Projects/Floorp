@@ -43,25 +43,25 @@ const EHTestsCommon = {
       "/1.1/janedoe/info/collections": handler_401,
 
       // Maintenance or overloaded (503 + Retry-After) at info/collections.
-      "/maintenance/1.1/broken.info/info/collections": EHTestsCommon.service_unavailable,
+      "/1.1/broken.info/info/collections": EHTestsCommon.service_unavailable,
 
       // Maintenance or overloaded (503 + Retry-After) at meta/global.
-      "/maintenance/1.1/broken.meta/storage/meta/global": EHTestsCommon.service_unavailable,
-      "/maintenance/1.1/broken.meta/info/collections": collectionsHelper.handler,
+      "/1.1/broken.meta/storage/meta/global": EHTestsCommon.service_unavailable,
+      "/1.1/broken.meta/info/collections": collectionsHelper.handler,
 
       // Maintenance or overloaded (503 + Retry-After) at crypto/keys.
-      "/maintenance/1.1/broken.keys/storage/meta/global": upd("meta", global.handler()),
-      "/maintenance/1.1/broken.keys/info/collections": collectionsHelper.handler,
-      "/maintenance/1.1/broken.keys/storage/crypto/keys": EHTestsCommon.service_unavailable,
+      "/1.1/broken.keys/storage/meta/global": upd("meta", global.handler()),
+      "/1.1/broken.keys/info/collections": collectionsHelper.handler,
+      "/1.1/broken.keys/storage/crypto/keys": EHTestsCommon.service_unavailable,
 
       // Maintenance or overloaded (503 + Retry-After) at wiping collection.
-      "/maintenance/1.1/broken.wipe/info/collections": collectionsHelper.handler,
-      "/maintenance/1.1/broken.wipe/storage/meta/global": upd("meta", global.handler()),
-      "/maintenance/1.1/broken.wipe/storage/crypto/keys":
+      "/1.1/broken.wipe/info/collections": collectionsHelper.handler,
+      "/1.1/broken.wipe/storage/meta/global": upd("meta", global.handler()),
+      "/1.1/broken.wipe/storage/crypto/keys":
         upd("crypto", (new ServerWBO("keys")).handler()),
-      "/maintenance/1.1/broken.wipe/storage": EHTestsCommon.service_unavailable,
-      "/maintenance/1.1/broken.wipe/storage/clients": upd("clients", clientsColl.handler()),
-      "/maintenance/1.1/broken.wipe/storage/catapult": EHTestsCommon.service_unavailable
+      "/1.1/broken.wipe/storage": EHTestsCommon.service_unavailable,
+      "/1.1/broken.wipe/storage/clients": upd("clients", clientsColl.handler()),
+      "/1.1/broken.wipe/storage/catapult": EHTestsCommon.service_unavailable
     });
   },
 
@@ -93,9 +93,7 @@ const EHTestsCommon = {
   },
 
   async setUp(server) {
-    await configureIdentity({ username: "johndoe" });
-    Service.serverURL  = server.baseURI + "/";
-    Service.clusterURL = server.baseURI + "/";
+    await configureIdentity({ username: "johndoe" }, server);
     return EHTestsCommon.generateAndUploadKeys()
   },
 

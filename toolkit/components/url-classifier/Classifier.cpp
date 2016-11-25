@@ -520,7 +520,19 @@ Classifier::Check(const nsACString& aSpec,
 nsresult
 Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
 {
-  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CL_UPDATE_TIME> timer;
+  if (!aUpdates || aUpdates->Length() == 0) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
+    do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+
+  nsCString provider;
+  // Assume all TableUpdate objects should have the same provider.
+  urlUtil->GetTelemetryProvider((*aUpdates)[0]->TableName(), provider);
+
+  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CL_KEYED_UPDATE_TIME>
+    keyedTimer(provider);
 
   PRIntervalTime clockStart = 0;
   if (LOG_ENABLED()) {

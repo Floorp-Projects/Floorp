@@ -192,6 +192,8 @@ MIN_PASS_LENGTH:                       8,
 DEVICE_TYPE_DESKTOP:                   "desktop",
 DEVICE_TYPE_MOBILE:                    "mobile",
 
+SQLITE_MAX_VARIABLE_NUMBER:            999,
+
 })) {
   this[key] = val;
   this.EXPORTED_SYMBOLS.push(key);
