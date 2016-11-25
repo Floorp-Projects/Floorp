@@ -1133,7 +1133,7 @@ void
 WebrtcVideoConduit::SelectBitrates(unsigned short width,
                                    unsigned short height,
                                    unsigned int cap,
-                                   mozilla::Atomic<int32_t, mozilla::Relaxed>& aLastFramerateTenths,
+                                   int32_t aLastFramerateTenths,
                                    unsigned int& out_min,
                                    unsigned int& out_start,
                                    unsigned int& out_max)
@@ -1155,7 +1155,7 @@ WebrtcVideoConduit::SelectBitrates(unsigned short width,
     }
   }
 
-  // mLastFramerateTenths is an atomic, and scaled by *10
+  // mLastFramerateTenths is scaled by *10
   double framerate = std::min((aLastFramerateTenths/10.),60.0);
   MOZ_ASSERT(framerate > 0);
   // Now linear reduction/increase based on fps (max 60fps i.e. doubling)
