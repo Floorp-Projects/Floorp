@@ -867,7 +867,7 @@ GlobalHelperThreadState::maxUnpausedIonCompilationThreads() const
 size_t
 GlobalHelperThreadState::maxWasmCompilationThreads() const
 {
-    if (IsHelperThreadSimulatingOOM(js::oom::THREAD_TYPE_ASMJS))
+    if (IsHelperThreadSimulatingOOM(js::oom::THREAD_TYPE_WASM))
         return 1;
     if (cpuCount < 2)
         return 2;
@@ -1872,7 +1872,7 @@ HelperThread::threadLoop()
             js::oom::SetThreadType(js::oom::THREAD_TYPE_ION);
             handleIonWorkload(lock);
         } else if (HelperThreadState().canStartWasmCompile(lock)) {
-            js::oom::SetThreadType(js::oom::THREAD_TYPE_ASMJS);
+            js::oom::SetThreadType(js::oom::THREAD_TYPE_WASM);
             handleWasmWorkload(lock);
         } else if (HelperThreadState().canStartPromiseTask(lock)) {
             js::oom::SetThreadType(js::oom::THREAD_TYPE_PROMISE_TASK);
