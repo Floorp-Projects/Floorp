@@ -70,10 +70,6 @@ queue.map(task => {
     task.maxRunTime = 7200;
   }
 
-  // Enable TLS 1.3 for every task.
-  task.env = task.env || {};
-  task.env.NSS_ENABLE_TLS_1_3 = "1";
-
   return task;
 });
 

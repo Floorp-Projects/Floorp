@@ -1842,11 +1842,10 @@ extern HASH_HashType
 ssl3_GetTls12HashType(sslSocket *ss);
 
 extern SECStatus
-ssl3_TLSPRFWithMasterSecret(ssl3CipherSpec *spec,
+ssl3_TLSPRFWithMasterSecret(sslSocket *ss, ssl3CipherSpec *spec,
                             const char *label, unsigned int labelLen,
                             const unsigned char *val, unsigned int valLen,
-                            unsigned char *out, unsigned int outLen,
-                            HASH_HashType tls12HashType);
+                            unsigned char *out, unsigned int outLen);
 
 #ifdef TRACE
 #define SSL_TRACE(msg) ssl_Trace msg
