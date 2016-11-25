@@ -36,6 +36,12 @@
       case "object":
         test_object();
         break;
+      case "error_thrown":
+        test_error_thrown();
+        break;
+      case "error_invalid_channel":
+        test_error_invalid_channel();
+        break;
       default:
         throw new Error(`INVALID TEST NAME ${testName}`);
     }
@@ -170,6 +176,44 @@
     // when we should stop listening for objectMessage
     window.dispatchEvent(objectMessage);
     window.dispatchEvent(stringMessage);
+  }
+
+  function test_error_thrown() {
+   var event = new window.CustomEvent("WebChannelMessageToChrome", {
+     detail: JSON.stringify({
+       id: "error",
+       message: {
+         command: "oops"
+       }
+     })
+   });
+
+   // echo the response back to chrome - chrome will check it is the
+   // expected error.
+   window.addEventListener("WebChannelMessageToContent", function(e) {
+     echoEventToChannel(e, "echo");
+   }, true);
+
+   window.dispatchEvent(event);
+  }
+
+  function test_error_invalid_channel() {
+   var event = new window.CustomEvent("WebChannelMessageToChrome", {
+     detail: JSON.stringify({
+       id: "invalid-channel",
+       message: {
+         command: "oops"
+       }
+     })
+   });
+
+   // echo the response back to chrome - chrome will check it is the
+   // expected error.
+   window.addEventListener("WebChannelMessageToContent", function(e) {
+     echoEventToChannel(e, "echo");
+   }, true);
+
+   window.dispatchEvent(event);
   }
 
   function echoEventToChannel(e, channelId) {
