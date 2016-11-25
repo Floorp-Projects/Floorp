@@ -516,6 +516,11 @@ child:
                   nsCString ID, nsCString vendor);
 
     /**
+     * Send the remote type associated with the content process.
+     */
+    async RemoteType(nsString aRemoteType);
+
+    /**
      * Send ServiceWorkerRegistrationData to child process.
      */
     async InitServiceWorkers(ServiceWorkerConfiguration aConfig);
@@ -1073,6 +1078,18 @@ parent:
                nsCString urlToLoad,
                TextureFactoryIdentifier textureFactoryIdentifier,
                uint64_t layersId);
+
+    async CreateWindowInDifferentProcess(
+      PBrowser aThisTab,
+      uint32_t aChromeFlags,
+      bool aCalledFromJS,
+      bool aPositionSpecified,
+      bool aSizeSpecified,
+      URIParams aURIToLoad,
+      nsCString aFeatures,
+      nsCString aBaseURI,
+      DocShellOriginAttributes aOpenerOriginAttributes,
+      float aFullZoom);
 
     sync GetDeviceStorageLocation(nsString type)
         returns (nsString path);
