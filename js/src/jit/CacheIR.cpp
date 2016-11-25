@@ -246,6 +246,21 @@ EmitReadSlotResult(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
 }
 
 static void
+EmitReadSlotReturn(CacheIRWriter& writer, JSObject*, JSObject* holder, Shape* shape)
+{
+    // Slot access.
+    if (holder) {
+        MOZ_ASSERT(shape);
+        writer.typeMonitorResult();
+    } else {
+        // Normally for this op, the result would have to be monitored by TI.
+        // However, since this stub ALWAYS returns UndefinedValue(), and we can be sure
+        // that undefined is already registered with the type-set, this can be avoided.
+        writer.returnFromIC();
+    }
+}
+
+static void
 EmitCallGetterResult(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
                      Shape* shape, ObjOperandId objId)
 {
@@ -264,6 +279,7 @@ EmitCallGetterResult(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
         JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
         MOZ_ASSERT(target->isNative());
         writer.callNativeGetterResult(objId, target);
+        writer.typeMonitorResult();
         return;
     }
 
@@ -272,6 +288,7 @@ EmitCallGetterResult(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
     JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
     MOZ_ASSERT(target->hasJITCode());
     writer.callScriptedGetterResult(objId, target);
+    writer.typeMonitorResult();
 }
 
 bool
@@ -303,6 +320,7 @@ GetPropIRGenerator::tryAttachNative(CacheIRWriter& writer, HandleObject obj, Obj
             }
         }
         EmitReadSlotResult(writer, obj, holder, shape, objId);
+        EmitReadSlotReturn(writer, obj, holder, shape);
         break;
       case CanAttachCallGetter:
         EmitCallGetterResult(writer, obj, holder, shape, objId);
@@ -381,6 +399,11 @@ GetPropIRGenerator::tryAttachUnboxed(CacheIRWriter& writer, HandleObject obj, Ob
     writer.guardGroup(objId, obj->group());
     writer.loadUnboxedPropertyResult(objId, property->type,
                                      UnboxedPlainObject::offsetOfData() + property->offset);
+    if (property->type == JSVAL_TYPE_OBJECT)
+        writer.typeMonitorResult();
+    else
+        writer.returnFromIC();
+
     emitted_ = true;
     preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
     return true;
@@ -405,6 +428,7 @@ GetPropIRGenerator::tryAttachUnboxedExpando(CacheIRWriter& writer, HandleObject 
     emitted_ = true;
 
     EmitReadSlotResult(writer, obj, obj, shape, objId);
+    EmitReadSlotReturn(writer, obj, obj, shape);
     return true;
 }
 
@@ -442,6 +466,22 @@ GetPropIRGenerator::tryAttachTypedObject(CacheIRWriter& writer, HandleObject obj
     writer.guardNoDetachedTypedObjects();
     writer.guardShape(objId, shape);
     writer.loadTypedObjectResult(objId, fieldOffset, layout, typeDescr);
+
+    // Only monitor the result if the type produced by this stub might vary.
+    bool monitorLoad = false;
+    if (SimpleTypeDescrKeyIsScalar(typeDescr)) {
+        Scalar::Type type = ScalarTypeFromSimpleTypeDescrKey(typeDescr);
+        monitorLoad = type == Scalar::Uint32;
+    } else {
+        ReferenceTypeDescr::Type type = ReferenceTypeFromSimpleTypeDescrKey(typeDescr);
+        monitorLoad = type != ReferenceTypeDescr::TYPE_STRING;
+    }
+
+    if (monitorLoad)
+        writer.typeMonitorResult();
+    else
+        writer.returnFromIC();
+
     emitted_ = true;
     return true;
 }
@@ -462,6 +502,7 @@ GetPropIRGenerator::tryAttachObjectLength(CacheIRWriter& writer, HandleObject ob
 
         writer.guardClass(objId, GuardClassKind::Array);
         writer.loadInt32ArrayLengthResult(objId);
+        writer.returnFromIC();
         emitted_ = true;
         return true;
     }
@@ -469,6 +510,7 @@ GetPropIRGenerator::tryAttachObjectLength(CacheIRWriter& writer, HandleObject ob
     if (obj->is<UnboxedArrayObject>()) {
         writer.guardClass(objId, GuardClassKind::UnboxedArray);
         writer.loadUnboxedArrayLengthResult(objId);
+        writer.returnFromIC();
         emitted_ = true;
         return true;
     }
@@ -481,6 +523,7 @@ GetPropIRGenerator::tryAttachObjectLength(CacheIRWriter& writer, HandleObject ob
             writer.guardClass(objId, GuardClassKind::UnmappedArguments);
         }
         writer.loadArgumentsObjectLengthResult(objId);
+        writer.returnFromIC();
         emitted_ = true;
         return true;
     }
@@ -517,6 +560,7 @@ GetPropIRGenerator::tryAttachModuleNamespace(CacheIRWriter& writer, HandleObject
 
     ObjOperandId envId = writer.loadObject(env);
     EmitLoadSlotResult(writer, envId, env, shape);
+    writer.typeMonitorResult();
     return true;
 }
 
@@ -565,6 +609,7 @@ GetPropIRGenerator::tryAttachPrimitive(CacheIRWriter& writer, ValOperandId valId
     ObjOperandId protoId = writer.loadObject(proto);
     writer.guardShape(protoId, proto->lastProperty());
     EmitLoadSlotResult(writer, protoId, proto, shape);
+    writer.typeMonitorResult();
 
     emitted_ = true;
     return true;
