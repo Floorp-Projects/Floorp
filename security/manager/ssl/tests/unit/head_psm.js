@@ -209,7 +209,8 @@ function checkEVStatus(certDB, cert, usage, isEVExpected) {
                "Actual and expected EV status should match");
 }
 
-function _getLibraryFunctionWithNoArguments(functionName, libraryName) {
+function _getLibraryFunctionWithNoArguments(functionName, libraryName,
+                                            returnType) {
   // Open the NSS library. copied from services/crypto/modules/WeaveCrypto.js
   let path = ctypes.libraryName(libraryName);
 
@@ -226,7 +227,8 @@ function _getLibraryFunctionWithNoArguments(functionName, libraryName) {
   }
 
   let SECStatus = ctypes.int;
-  let func = nsslib.declare(functionName, ctypes.default_abi, SECStatus);
+  let func = nsslib.declare(functionName, ctypes.default_abi,
+                            returnType || SECStatus);
   return func;
 }
 
@@ -249,6 +251,39 @@ function clearSessionCache() {
   if (!SSL_ClearSessionCache || SSL_ClearSessionCache() != 0) {
     throw new Error("Failed to clear SSL session cache");
   }
+}
+
+function getSSLStatistics() {
+  let SSL3Statistics = new ctypes.StructType("SSL3Statistics",
+                           [ { "sch_sid_cache_hits": ctypes.long },
+                             { "sch_sid_cache_misses": ctypes.long },
+                             { "sch_sid_cache_not_ok": ctypes.long },
+                             { "hsh_sid_cache_hits": ctypes.long },
+                             { "hsh_sid_cache_misses": ctypes.long },
+                             { "hsh_sid_cache_not_ok": ctypes.long },
+                             { "hch_sid_cache_hits": ctypes.long },
+                             { "hch_sid_cache_misses": ctypes.long },
+                             { "hch_sid_cache_not_ok": ctypes.long },
+                             { "sch_sid_stateless_resumes": ctypes.long },
+                             { "hsh_sid_stateless_resumes": ctypes.long },
+                             { "hch_sid_stateless_resumes": ctypes.long },
+                             { "hch_sid_ticket_parse_failures": ctypes.long }]);
+  let SSL3StatisticsPtr = new ctypes.PointerType(SSL3Statistics);
+  let SSL_GetStatistics = null;
+  try {
+    SSL_GetStatistics = _getLibraryFunctionWithNoArguments("SSL_GetStatistics",
+                                                           "ssl3",
+                                                           SSL3StatisticsPtr);
+  } catch(e) {
+    // On Windows, this is actually in the nss3 library.
+    SSL_GetStatistics = _getLibraryFunctionWithNoArguments("SSL_GetStatistics",
+                                                           "nss3",
+                                                           SSL3StatisticsPtr);
+  }
+  if (!SSL_GetStatistics) {
+    throw new Error("Failed to get SSL statistics");
+  }
+  return SSL_GetStatistics();
 }
 
 // Set up a TLS testing environment that has a TLS server running and
