@@ -222,20 +222,6 @@ public:
     return &mBuffered;
   }
 
-  void DispatchSetStartTime(int64_t aStartTime)
-  {
-    RefPtr<MediaDecoderReader> self = this;
-    nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction([self, aStartTime] () -> void
-    {
-      MOZ_ASSERT(self->OnTaskQueue());
-      MOZ_ASSERT(!self->HaveStartTime());
-      self->mStartTime.emplace(aStartTime);
-      self->UpdateBuffered();
-    });
-    OwnerThread()->Dispatch(r.forget());
-  }
-
   TaskQueue* OwnerThread() const
   {
     return mTaskQueue;
@@ -300,14 +286,6 @@ protected:
 
   RefPtr<MediaDataPromise> DecodeToFirstVideoData();
 
-  bool HaveStartTime()
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return mStartTime.isSome();
-  }
-
-  int64_t StartTime() { MOZ_ASSERT(HaveStartTime()); return mStartTime.ref(); }
-
   // Queue of audio frames. This queue is threadsafe, and is accessed from
   // the audio, decoder, state machine, and main threads.
   MediaQueue<AudioData> mAudioQueue;
@@ -344,18 +322,6 @@ protected:
   // directly, because they have a number of channel higher than
   // what we support.
   bool mIgnoreAudioOutputFormat;
-
-  // The start time of the media, in microseconds. This is the presentation
-  // time of the first frame decoded from the media. This is initialized to -1,
-  // and then set to a value >= by MediaDecoderStateMachine::SetStartTime(),
-  // after which point it never changes (though SetStartTime may be called
-  // multiple times with the same value).
-  //
-  // This is an ugly breach of abstractions - it's currently necessary for the
-  // readers to return the correct value of GetBuffered. We should refactor
-  // things such that all GetBuffered calls go through the MDSM, which would
-  // offset the range accordingly.
-  Maybe<int64_t> mStartTime;
 
   // This is a quick-and-dirty way for DecodeAudioData implementations to
   // communicate the presence of a decoding error to RequestAudioData. We should
