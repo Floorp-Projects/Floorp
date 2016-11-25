@@ -112,3 +112,11 @@ WinPointerEvents::GetPointerPenInfo(uint32_t aPointerId,
   }
   return getPointerPenInfo(aPointerId, aPenInfo);
 }
+
+bool
+WinPointerEvents::ShouldEnableInkCollector()
+{
+  // We need InkCollector on Win7. For Win8 or later, we handle WM_POINTER* for
+  // pen.
+  return !IsWin8OrLater();
+}
