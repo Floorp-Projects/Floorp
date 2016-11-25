@@ -182,7 +182,7 @@ Error ValidateDisplay(const Display *display)
     return Error(EGL_SUCCESS);
 }
 
-Error ValidateSurface(const Display *display, Surface *surface)
+Error ValidateSurface(const Display *display, const Surface *surface)
 {
     ANGLE_TRY(ValidateDisplay(display));
 
@@ -206,7 +206,7 @@ Error ValidateConfig(const Display *display, const Config *config)
     return Error(EGL_SUCCESS);
 }
 
-Error ValidateContext(const Display *display, gl::Context *context)
+Error ValidateContext(const Display *display, const gl::Context *context)
 {
     ANGLE_TRY(ValidateDisplay(display));
 
@@ -258,7 +258,6 @@ Error ValidateCreateContext(Display *display, Config *configuration, gl::Context
     EGLAttrib clientMinorVersion = 0;
     EGLAttrib contextFlags       = 0;
     bool resetNotification = false;
-    bool robustAccess = false;
     for (AttributeMap::const_iterator attributeIter = attributes.begin(); attributeIter != attributes.end(); attributeIter++)
     {
         EGLAttrib attribute = attributeIter->first;
@@ -294,7 +293,6 @@ Error ValidateCreateContext(Display *display, Config *configuration, gl::Context
             {
                 return Error(EGL_BAD_ATTRIBUTE);
             }
-            robustAccess = (value == EGL_TRUE);
             break;
 
           case EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR:
@@ -324,6 +322,36 @@ Error ValidateCreateContext(Display *display, Config *configuration, gl::Context
               if (value != EGL_TRUE && value != EGL_FALSE)
               {
                   return Error(EGL_BAD_ATTRIBUTE, "Attribute must be EGL_TRUE or EGL_FALSE.");
+              }
+              break;
+
+          case EGL_CONTEXT_WEBGL_COMPATIBILITY_ANGLE:
+              if (!display->getExtensions().createContextWebGLCompatibility)
+              {
+                  return Error(EGL_BAD_ATTRIBUTE,
+                               "Attribute EGL_CONTEXT_WEBGL_COMPATIBILITY_ANGLE requires "
+                               "EGL_ANGLE_create_context_webgl_compatibility.");
+              }
+              if (value != EGL_TRUE && value != EGL_FALSE)
+              {
+                  return Error(
+                      EGL_BAD_ATTRIBUTE,
+                      "EGL_CONTEXT_WEBGL_COMPATIBILITY_ANGLE must be EGL_TRUE or EGL_FALSE.");
+              }
+              break;
+
+          case EGL_CONTEXT_BIND_GENERATES_RESOURCE_CHROMIUM:
+              if (!display->getExtensions().createContextBindGeneratesResource)
+              {
+                  return Error(EGL_BAD_ATTRIBUTE,
+                               "Attribute EGL_CONTEXT_BIND_GENERATES_RESOURCE_CHROMIUM requires "
+                               "EGL_CHROMIUM_create_context_bind_generates_resource.");
+              }
+              if (value != EGL_TRUE && value != EGL_FALSE)
+              {
+                  return Error(EGL_BAD_ATTRIBUTE,
+                               "EGL_CONTEXT_BIND_GENERATES_RESOURCE_CHROMIUM must be EGL_TRUE or "
+                               "EGL_FALSE.");
               }
               break;
 
@@ -367,17 +395,6 @@ Error ValidateCreateContext(Display *display, Config *configuration, gl::Context
     if ((contextFlags & ~validContextFlags) != 0)
     {
         return Error(EGL_BAD_ATTRIBUTE);
-    }
-
-    if ((contextFlags & EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR) > 0)
-    {
-        robustAccess = true;
-    }
-
-    if (robustAccess)
-    {
-        // Unimplemented
-        return Error(EGL_BAD_CONFIG);
     }
 
     if (shareContext)
@@ -623,6 +640,17 @@ Error ValidateCreatePbufferFromClientBuffer(Display *display, EGLenum buftype, E
         }
         break;
 
+      case EGL_D3D_TEXTURE_ANGLE:
+          if (!displayExtensions.d3dTextureClientBuffer)
+          {
+              return Error(EGL_BAD_PARAMETER);
+          }
+          if (buffer == nullptr)
+          {
+              return Error(EGL_BAD_PARAMETER);
+          }
+          break;
+
       default:
         return Error(EGL_BAD_PARAMETER);
     }
@@ -722,6 +750,8 @@ Error ValidateCreatePbufferFromClientBuffer(Display *display, EGLenum buftype, E
             return Error(EGL_BAD_MATCH);
         }
     }
+
+    ANGLE_TRY(display->validateClientBuffer(config, buftype, buffer, attributes));
 
     return Error(EGL_SUCCESS);
 }
@@ -1546,4 +1576,41 @@ Error ValidateStreamPostD3DTextureNV12ANGLE(const Display *display,
 
     return stream->validateD3D11NV12Texture(texture);
 }
+
+Error ValidateSwapBuffersWithDamageEXT(const Display *display,
+                                       const Surface *surface,
+                                       EGLint *rects,
+                                       EGLint n_rects)
+{
+    Error error = ValidateSurface(display, surface);
+    if (error.isError())
+    {
+        return error;
+    }
+
+    if (!display->getExtensions().swapBuffersWithDamage)
+    {
+        // It is out of spec what happens when calling an extension function when the extension is
+        // not available. EGL_BAD_DISPLAY seems like a reasonable error.
+        return Error(EGL_BAD_DISPLAY, "EGL_EXT_swap_buffers_with_damage is not available.");
+    }
+
+    if (surface == EGL_NO_SURFACE)
+    {
+        return Error(EGL_BAD_SURFACE, "Swap surface cannot be EGL_NO_SURFACE.");
+    }
+
+    if (n_rects < 0)
+    {
+        return Error(EGL_BAD_PARAMETER, "n_rects cannot be negative.");
+    }
+
+    if (n_rects > 0 && rects == nullptr)
+    {
+        return Error(EGL_BAD_PARAMETER, "n_rects cannot be greater than zero when rects is NULL.");
+    }
+
+    return Error(EGL_SUCCESS);
+}
+
 }  // namespace gl

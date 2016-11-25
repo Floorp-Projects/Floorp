@@ -26,6 +26,11 @@ SurfaceGL::~SurfaceGL()
 FramebufferImpl *SurfaceGL::createDefaultFramebuffer(const gl::FramebufferState &data)
 {
     return new FramebufferGL(data, mRenderer->getFunctions(), mRenderer->getStateManager(),
-                             mRenderer->getWorkarounds(), true);
+                             mRenderer->getWorkarounds(), mRenderer->getBlitter(), true);
+}
+
+egl::Error SurfaceGL::unMakeCurrent()
+{
+    return egl::Error(EGL_SUCCESS);
 }
 }

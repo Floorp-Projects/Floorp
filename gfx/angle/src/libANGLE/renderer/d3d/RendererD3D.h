@@ -127,9 +127,17 @@ class RendererD3D : public BufferFactoryD3D
 
     virtual SwapChainD3D *createSwapChain(NativeWindowD3D *nativeWindow,
                                           HANDLE shareHandle,
+                                          IUnknown *d3dTexture,
                                           GLenum backBufferFormat,
                                           GLenum depthBufferFormat,
                                           EGLint orientation) = 0;
+    virtual egl::Error getD3DTextureInfo(IUnknown *d3dTexture,
+                                         EGLint *width,
+                                         EGLint *height,
+                                         GLenum *fboFormat) const = 0;
+    virtual egl::Error validateShareHandle(const egl::Config *config,
+                                           HANDLE shareHandle,
+                                           const egl::AttributeMap &attribs) const = 0;
 
     virtual gl::Error setSamplerState(gl::SamplerType type, int index, gl::Texture *texture, const gl::SamplerState &sampler) = 0;
     virtual gl::Error setTexture(gl::SamplerType type, int index, gl::Texture *texture) = 0;
@@ -169,6 +177,10 @@ class RendererD3D : public BufferFactoryD3D
                                   bool unpackFlipY,
                                   bool unpackPremultiplyAlpha,
                                   bool unpackUnmultiplyAlpha) = 0;
+    virtual gl::Error copyCompressedTexture(const gl::Texture *source,
+                                            GLint sourceLevel,
+                                            TextureStorage *storage,
+                                            GLint destLevel) = 0;
 
     // RenderTarget creation
     virtual gl::Error createRenderTarget(int width, int height, GLenum format, GLsizei samples, RenderTargetD3D **outRT) = 0;

@@ -32,13 +32,12 @@ class BlendMinMaxTest : public ANGLETest
         float values[4];
     };
 
-    static GLubyte getExpected(bool blendMin, float curColor, GLubyte prevColor)
+    static float getExpected(bool blendMin, float curColor, float prevColor)
     {
-        GLubyte curAsUbyte = static_cast<GLubyte>((curColor * std::numeric_limits<GLubyte>::max()) + 0.5f);
-        return blendMin ? std::min<GLubyte>(curAsUbyte, prevColor) : std::max<GLubyte>(curAsUbyte, prevColor);
+        return blendMin ? std::min(curColor, prevColor) : std::max(curColor, prevColor);
     }
 
-    void runTest(GLenum colorFormat)
+    void runTest(GLenum colorFormat, GLenum type)
     {
         if (getClientMajorVersion() < 3 && !extensionEnabled("GL_EXT_blend_minmax"))
         {
@@ -55,17 +54,26 @@ class BlendMinMaxTest : public ANGLETest
 
         SetUpFramebuffer(colorFormat);
 
-        const size_t colorCount = 1024;
+        int minValue = 0;
+        int maxValue = 1;
+        if (type == GL_FLOAT)
+        {
+            minValue = -1024;
+            maxValue = 1024;
+        }
+
+        const size_t colorCount = 128;
         Color colors[colorCount];
         for (size_t i = 0; i < colorCount; i++)
         {
             for (size_t j = 0; j < 4; j++)
             {
-                colors[i].values[j] = (rand() % 255) / 255.0f;
+                colors[i].values[j] =
+                    static_cast<float>(minValue + (rand() % (maxValue - minValue)));
             }
         }
 
-        GLubyte prevColor[4];
+        float prevColor[4];
         for (size_t i = 0; i < colorCount; i++)
         {
             const Color &color = colors[i];
@@ -77,16 +85,37 @@ class BlendMinMaxTest : public ANGLETest
 
             drawQuad(mProgram, "aPosition", 0.5f);
 
-            if (i > 0)
+            float pixel[4];
+            if (type == GL_UNSIGNED_BYTE)
             {
-                EXPECT_PIXEL_EQ(0, 0,
-                                getExpected(blendMin, color.values[0], prevColor[0]),
-                                getExpected(blendMin, color.values[1], prevColor[1]),
-                                getExpected(blendMin, color.values[2], prevColor[2]),
-                                getExpected(blendMin, color.values[3], prevColor[3]));
+                GLubyte ubytePixel[4];
+                glReadPixels(0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, ubytePixel);
+                for (size_t componentIdx = 0; componentIdx < ArraySize(pixel); componentIdx++)
+                {
+                    pixel[componentIdx] = ubytePixel[componentIdx] / 255.0f;
+                }
+            }
+            else if (type == GL_FLOAT)
+            {
+                glReadPixels(0, 0, 1, 1, GL_RGBA, GL_FLOAT, pixel);
+            }
+            else
+            {
+                FAIL() << "Unexpected pixel type";
             }
 
-            glReadPixels(0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, prevColor);
+            if (i > 0)
+            {
+                const float errorRange = 1.0f / 255.0f;
+                for (size_t componentIdx = 0; componentIdx < ArraySize(pixel); componentIdx++)
+                {
+                    EXPECT_NEAR(
+                        getExpected(blendMin, color.values[componentIdx], prevColor[componentIdx]),
+                        pixel[componentIdx], errorRange);
+                }
+            }
+
+            memcpy(prevColor, pixel, sizeof(pixel));
         }
     }
 
@@ -142,6 +171,9 @@ class BlendMinMaxTest : public ANGLETest
         glRenderbufferStorage(GL_RENDERBUFFER, colorFormat, getWindowWidth(), getWindowHeight());
         glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, mColorRenderbuffer);
 
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
         ASSERT_GL_NO_ERROR();
     }
 
@@ -163,10 +195,10 @@ class BlendMinMaxTest : public ANGLETest
 
 TEST_P(BlendMinMaxTest, RGBA8)
 {
-    runTest(GL_RGBA8);
+    runTest(GL_RGBA8, GL_UNSIGNED_BYTE);
 }
 
-TEST_P(BlendMinMaxTest, RGBA32f)
+TEST_P(BlendMinMaxTest, RGBA32F)
 {
     if (getClientMajorVersion() < 3 || !extensionEnabled("GL_EXT_color_buffer_float"))
     {
@@ -189,7 +221,7 @@ TEST_P(BlendMinMaxTest, RGBA32f)
         return;
     }
 
-    runTest(GL_RGBA32F);
+    runTest(GL_RGBA32F, GL_FLOAT);
 }
 
 TEST_P(BlendMinMaxTest, RGBA16F)
@@ -208,21 +240,16 @@ TEST_P(BlendMinMaxTest, RGBA16F)
         return;
     }
 
-    // TODO(geofflang): This fails because readpixels with UNSIGNED_BYTE/RGBA does not work with
-    // half float buffers (http://anglebug.com/1288)
-    if (GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE)
-    {
-        std::cout << "Test skipped on OpenGL ES targets." << std::endl;
-        return;
-    }
-
-    runTest(GL_RGBA16F);
+    runTest(GL_RGBA16F, GL_FLOAT);
 }
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 ANGLE_INSTANTIATE_TEST(BlendMinMaxTest,
                        ES2_D3D9(),
                        ES2_D3D11(),
+                       ES3_D3D11(),
                        ES2_D3D11_FL9_3(),
                        ES2_OPENGL(),
-                       ES2_OPENGLES());
+                       ES3_OPENGL(),
+                       ES2_OPENGLES(),
+                       ES3_OPENGLES());

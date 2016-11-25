@@ -36,6 +36,7 @@ struct LinkedUniform : public sh::Uniform
     bool isInDefaultBlock() const;
     bool isField() const;
     size_t getElementSize() const;
+    size_t getElementComponents() const;
     uint8_t *getDataPtrToElement(size_t elementIndex);
     const uint8_t *getDataPtrToElement(size_t elementIndex) const;
 

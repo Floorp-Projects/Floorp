@@ -444,7 +444,7 @@ class IonBuilder
     MOZ_MUST_USE bool getPropTryUnboxed(bool* emitted, MDefinition* obj, PropertyName* name,
                                         BarrierKind barrier, TemporaryTypeSet* types);
     MOZ_MUST_USE bool getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName* name,
-                                             TemporaryTypeSet* types);
+                                             TemporaryTypeSet* types, bool innerized = false);
     MOZ_MUST_USE bool getPropTryInlineAccess(bool* emitted, MDefinition* obj, PropertyName* name,
                                              BarrierKind barrier, TemporaryTypeSet* types);
     MOZ_MUST_USE bool getPropTryTypedObject(bool* emitted, MDefinition* obj, PropertyName* name);

@@ -22,7 +22,6 @@ namespace sh
 {
 
 void RewriteTexelFetchOffset(TIntermNode *root,
-                             unsigned int *tempIndex,
                              const TSymbolTable &symbolTable,
                              int shaderVersion);
 

@@ -45,11 +45,6 @@
 
 // Windows only failures
 
-// These tests crash for unknown reason under a newer D3DCompiler_47.dll
-// TODO(jmadill): Figure out if we can solve these crashes
-1252 WIN : dEQP-GLES2.functional.shaders.random.trigonometric.vertex.63 = SKIP
-1252 WIN : dEQP-GLES2.functional.shaders.random.trigonometric.fragment.63 = SKIP
-
 // TODO(jmadill): triage these into temporary and permanent suppressions
 
 1027 WIN : dEQP-GLES2.functional.fbo.render.color_clear.rbo_rgb5_a1 = FAIL
@@ -128,29 +123,10 @@
 1143 LINUX : dEQP-GLES2.functional.texture.mipmap.cube.projected.linear_nearest = FAIL
 
 // Mac specific failures
-1143 MAC : dEQP-GLES2.functional.shaders.invariance.mediump.common_subexpression_1 = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.invariance.highp.common_subexpression_1 = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.preprocessor.pragmas.pragma_* = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.linkage.varying_4 = FAIL
 1143 MAC : dEQP-GLES2.functional.shaders.scoping.valid.local_int_variable_hides_struct_type_* = FAIL
 1143 MAC : dEQP-GLES2.functional.shaders.scoping.valid.local_struct_variable_hides_struct_type_* = FAIL
 1143 MAC : dEQP-GLES2.functional.shaders.scoping.valid.function_parameter_hides_struct_type_* = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.invariance.highp.common_subexpression_3 = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.invariance.highp.loop_0 = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.invariance.highp.loop_1 = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.invariance.mediump.common_subexpression_3 = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.invariance.mediump.loop_0 = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.invariance.mediump.loop_1 = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.invariance.lowp.common_subexpression_1 = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.invariance.lowp.common_subexpression_3 = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.invariance.lowp.loop_0 = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.invariance.lowp.loop_1 = FAIL
-1143 MAC : dEQP-GLES2.functional.shaders.random.trigonometric.vertex.43 = FAIL
 1143 MAC : dEQP-GLES2.functional.shaders.random.trigonometric.vertex.65 = FAIL
-1143 MAC : dEQP-GLES2.functional.texture.size.cube.256x256_rgba4444 = FAIL
-1143 MAC : dEQP-GLES2.functional.texture.size.cube.512x512_rgba4444 = FAIL
-1143 MAC : dEQP-GLES2.functional.texture.mipmap.cube.projected.linear_linear = FAIL
-1143 MAC : dEQP-GLES2.functional.texture.specification.basic_copyteximage2d.cube_* = FAIL
 
 // Android only failures
 1484 ANDROID : dEQP-GLES2.functional.vertex_arrays.* = SKIP
@@ -217,9 +193,11 @@
 1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.texture.color0.rgba_half_float_oes = FAIL
 1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.texture.color0.srgb8 = FAIL
 1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.texture.stencil.srgb8 = FAIL
+1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.texture.stencil.srgb8_alpha8 = FAIL
 1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.texture.depth.depth_component_unsigned_short = FAIL
 1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.texture.depth.depth_component_unsigned_int = FAIL
 1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.texture.depth.srgb8 = FAIL
+1028 WIN LINUX MAC : dEQP-GLES2.functional.fbo.completeness.renderable.texture.depth.srgb8_alpha8 = FAIL
 1128 WIN LINUX MAC : dEQP-GLES2.functional.negative_api.texture.compressedtexsubimage2d_invalid_size = FAIL
 1029 WIN LINUX MAC : dEQP-GLES2.functional.negative_api.texture.teximage2d_invalid_format = FAIL
 1029 WIN LINUX MAC : dEQP-GLES2.functional.negative_api.texture.teximage2d_invalid_internalformat = FAIL

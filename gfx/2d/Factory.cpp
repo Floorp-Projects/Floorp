@@ -264,15 +264,6 @@ Factory::CheckSurfaceSize(const IntSize &sz,
     return false;
   }
 
-#if defined(XP_MACOSX)
-  // CoreGraphics is limited to images < 32K in *height*,
-  // so clamp all surfaces on the Mac to that height
-  if (sz.height > SHRT_MAX) {
-    gfxDebug() << "Surface size too large (exceeds CoreGraphics limit)!";
-    return false;
-  }
-#endif
-
   // assuming 4 bytes per pixel, make sure the allocation size
   // doesn't overflow a int32_t either
   CheckedInt<int32_t> stride = GetAlignedStride<16>(sz.width, 4);
