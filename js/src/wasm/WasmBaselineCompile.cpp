@@ -7602,9 +7602,9 @@ js::wasm::BaselineCanCompile(const FunctionGenerator* fg)
 }
 
 bool
-js::wasm::BaselineCompileFunction(IonCompileTask* task)
+js::wasm::BaselineCompileFunction(CompileTask* task)
 {
-    MOZ_ASSERT(task->mode() == IonCompileTask::CompileMode::Baseline);
+    MOZ_ASSERT(task->mode() == CompileTask::CompileMode::Baseline);
 
     const FuncBytes& func = task->func();
     FuncCompileResults& results = task->results();

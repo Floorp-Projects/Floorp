@@ -20,7 +20,6 @@
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
-#include "wasm/WasmIonCompile.h"
 
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
@@ -84,7 +83,7 @@ js::SetFakeCPUCount(size_t count)
 }
 
 bool
-js::StartOffThreadWasmCompile(wasm::IonCompileTask* task)
+js::StartOffThreadWasmCompile(wasm::CompileTask* task)
 {
     AutoLockHelperThreadState lock;
 
@@ -920,7 +919,7 @@ GlobalHelperThreadState::canStartWasmCompile(const AutoLockHelperThreadState& lo
 
     // Honor the maximum allowed threads to compile wasm jobs at once,
     // to avoid oversaturating the machine.
-    if (!checkTaskThreadLimit<wasm::IonCompileTask*>(maxWasmCompilationThreads()))
+    if (!checkTaskThreadLimit<wasm::CompileTask*>(maxWasmCompilationThreads()))
         return false;
 
     return true;
@@ -1419,7 +1418,7 @@ HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked)
     currentTask.emplace(HelperThreadState().wasmWorklist(locked).popCopy());
     bool success = false;
 
-    wasm::IonCompileTask* task = wasmTask();
+    wasm::CompileTask* task = wasmTask();
     {
         AutoUnlockHelperThreadState unlock(locked);
         success = wasm::CompileFunction(task);
