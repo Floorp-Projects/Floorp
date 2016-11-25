@@ -2213,20 +2213,6 @@ MediaFormatReader::GetBuffered()
   return intervals.Shift(media::TimeUnit() - mInfo.mStartTime);
 }
 
-// For the MediaFormatReader override we need to force an update to the
-// buffered ranges, so we call NotifyDataArrive
-RefPtr<MediaDecoderReader::BufferedUpdatePromise>
-MediaFormatReader::UpdateBufferedWithPromise() {
-  MOZ_ASSERT(OnTaskQueue());
-  // Call NotifyDataArrive to force a recalculation of the buffered
-  // ranges. UpdateBuffered alone will not force a recalculation, so we
-  // use NotifyDataArrived which sets flags to force this recalculation.
-  // See MediaFormatReader::UpdateReceivedNewData for an example of where
-  // the new data flag is used.
-  NotifyDataArrived();
-  return BufferedUpdatePromise::CreateAndResolve(true, __func__);
-}
-
 void MediaFormatReader::ReleaseResources()
 {
   mVideo.ShutdownDecoder();
