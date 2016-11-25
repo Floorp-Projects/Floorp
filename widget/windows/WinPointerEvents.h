@@ -133,7 +133,7 @@ public:
   bool GetPointerType(uint32_t aPointerId, POINTER_INPUT_TYPE *aPointerType);
   bool GetPointerInfo(uint32_t aPointerId, POINTER_INFO *aPointerInfo);
   bool GetPointerPenInfo(uint32_t aPointerId, POINTER_PEN_INFO *aPenInfo);
-
+  bool ShouldEnableInkCollector();
 private:
   // Function prototypes
   typedef BOOL (WINAPI* GetPointerTypePtr)(uint32_t aPointerId,
