@@ -13,7 +13,28 @@ namespace layers {
 
 WebRenderBridgeChild::WebRenderBridgeChild(const uint64_t& aPipelineId)
   : mIsInTransaction(false)
+  , mIPCOpen(false)
+  , mDestroyed(false)
 {
+}
+
+void
+WebRenderBridgeChild::Destroy()
+{
+  if (!IPCOpen()) {
+    return;
+  }
+  // mDestroyed is used to prevent calling Send__delete__() twice.
+  // When this function is called from CompositorBridgeChild::Destroy().
+  mDestroyed = true;
+
+  SendShutdown();
+}
+
+void
+WebRenderBridgeChild::ActorDestroy(ActorDestroyReason why)
+{
+  mDestroyed = true;
 }
 
 void
@@ -26,6 +47,7 @@ WebRenderBridgeChild::AddWebRenderCommand(const WebRenderCommand& aCmd)
 bool
 WebRenderBridgeChild::DPBegin(uint32_t aWidth, uint32_t aHeight)
 {
+  MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(!mIsInTransaction);
   bool success = false;
   this->SendDPBegin(aWidth, aHeight, &success);
@@ -40,6 +62,7 @@ WebRenderBridgeChild::DPBegin(uint32_t aWidth, uint32_t aHeight)
 void
 WebRenderBridgeChild::DPEnd(bool aIsSync)
 {
+  MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
   if (aIsSync) {
     this->SendDPSyncEnd(mCommands);
@@ -54,6 +77,8 @@ WebRenderBridgeChild::DPEnd(bool aIsSync)
 uint64_t
 WebRenderBridgeChild::AllocExternalImageId(uint64_t aAsyncContainerID)
 {
+  MOZ_ASSERT(!mDestroyed);
+
   static uint32_t sNextID = 1;
   ++sNextID;
   MOZ_RELEASE_ASSERT(sNextID != UINT32_MAX);
@@ -71,6 +96,7 @@ WebRenderBridgeChild::AllocExternalImageId(uint64_t aAsyncContainerID)
 void
 WebRenderBridgeChild::DeallocExternalImageId(uint64_t aImageId)
 {
+  MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aImageId);
   SendRemoveExternalImageId(aImageId);
 }

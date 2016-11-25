@@ -58,11 +58,14 @@ WebRenderBridgeParent::RecvCreate(const uint32_t& aWidth,
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDestroy()
+WebRenderBridgeParent::RecvShutdown()
 {
   MOZ_ASSERT(mWRState);
   MOZ_ASSERT(mCompositor);
   ClearResources();
+  if (!Send__delete__(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
   return IPC_OK();
 }
 

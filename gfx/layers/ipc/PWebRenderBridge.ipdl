@@ -22,7 +22,6 @@ sync protocol PWebRenderBridge
 
 parent:
   sync Create(uint32_t aWidth, uint32_t aHeight);
-  sync Destroy();
   sync AddImage(uint32_t aWidth, uint32_t aHeight, uint32_t aStride,
                 WRImageFormat aFormat, ByteBuffer aBytes)
     returns (WRImageKey aOutImageKey);
@@ -38,6 +37,8 @@ parent:
   async AddExternalImageId(uint64_t aImageId, uint64_t aAsyncContainerId);
   async RemoveExternalImageId(uint64_t aImageId);
 
+  async Shutdown();
+child:
   async __delete__();
 };
 

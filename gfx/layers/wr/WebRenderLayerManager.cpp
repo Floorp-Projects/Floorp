@@ -156,7 +156,7 @@ WebRenderLayerManager::Destroy()
   if (!IsDestroyed()) {
     LayerManager::Destroy();
     DiscardImages();
-    WRBridge()->SendDestroy();
+    WRBridge()->Destroy();
   }
 }
 

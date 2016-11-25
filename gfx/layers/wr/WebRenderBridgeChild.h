@@ -17,8 +17,6 @@ class CompositorWidget;
 
 namespace layers {
 
-class WebRenderBridgeParent;
-
 class WebRenderBridgeChild final : public PWebRenderBridgeChild
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeChild)
@@ -33,11 +31,36 @@ public:
 
   uint64_t AllocExternalImageId(uint64_t aAsyncContainerID);
   void DeallocExternalImageId(uint64_t aImageId);
+
+  /**
+   * Clean this up, finishing with SendShutDown() which will cause __delete__
+   * to be sent from the parent side.
+   */
+  void Destroy();
+  bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
+  bool IsDestroyed() const { return mDestroyed; }
 protected:
+  friend class CompositorBridgeChild;
+
   ~WebRenderBridgeChild() {}
+
+  virtual void ActorDestroy(ActorDestroyReason why) override;
+
+  void AddIPDLReference() {
+    MOZ_ASSERT(mIPCOpen == false);
+    mIPCOpen = true;
+    AddRef();
+  }
+  void ReleaseIPDLReference() {
+    MOZ_ASSERT(mIPCOpen == true);
+    mIPCOpen = false;
+    Release();
+  }
 
   nsTArray<WebRenderCommand> mCommands;
   bool mIsInTransaction;
+  bool mIPCOpen;
+  bool mDestroyed;
 };
 
 } // namespace layers
