@@ -45,7 +45,7 @@ public:
 
   mozilla::ipc::IPCResult RecvCreate(const uint32_t& aWidth,
                                      const uint32_t& aHeight) override;
-  mozilla::ipc::IPCResult RecvDestroy() override;
+  mozilla::ipc::IPCResult RecvShutdown() override;
   mozilla::ipc::IPCResult RecvAddImage(const uint32_t& aWidth,
                                        const uint32_t& aHeight,
                                        const uint32_t& aStride,
