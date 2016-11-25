@@ -260,7 +260,7 @@ richlistitem[type="download"] > .downloadMainArea {
   border: none;
   background: transparent;
   padding: 8px;
-  color: graytext;
+  color: inherit;
 }
 
 .downloadButton > .button-box > .button-icon {
@@ -305,10 +305,6 @@ richlistitem[type="download"] > .downloadMainArea {
 @item@[verdict="Malware"][showingsubview] {
   background-color: #aa1b08;
   color: white;
-}
-
-@item@[verdict="Malware"]:hover > .downloadButtonArea > .downloadButton {
-  color: inherit;
 }
 
 /*** Button icons ***/
