@@ -32,7 +32,8 @@ namespace mozilla {
 #define AC_LOGV(message, ...)                                                  \
   AC_LOGV_BASE("AccessibleCaretEventHub (%p): " message, this, ##__VA_ARGS__);
 
-NS_IMPL_ISUPPORTS(AccessibleCaretEventHub, nsIReflowObserver, nsIScrollObserver,
+NS_IMPL_ISUPPORTS(AccessibleCaretEventHub,
+                  nsIDocumentActivity, nsIReflowObserver, nsIScrollObserver,
                   nsISelectionListener, nsISupportsWeakReference);
 
 // -----------------------------------------------------------------------------
@@ -433,6 +434,12 @@ AccessibleCaretEventHub::Init()
 
   mDocShell = static_cast<nsDocShell*>(docShell);
 
+  nsIDocument* doc = mPresShell->GetDocument();
+  if (doc) {
+    doc->RegisterActivityObserver(
+      NS_ISUPPORTS_CAST(nsIDocumentActivity*, this));
+  }
+
   if (sUseLongTapInjector) {
     mLongTapInjectorTimer = do_CreateInstance("@mozilla.org/timer;1");
   }
@@ -455,6 +462,12 @@ AccessibleCaretEventHub::Terminate()
   if (docShell) {
     docShell->RemoveWeakReflowObserver(this);
     docShell->RemoveWeakScrollObserver(this);
+  }
+
+  nsIDocument* doc = mPresShell->GetDocument();
+  if (doc) {
+    doc->UnregisterActivityObserver(
+      NS_ISUPPORTS_CAST(nsIDocumentActivity*, this));
   }
 
   if (mLongTapInjectorTimer) {
@@ -699,6 +712,25 @@ AccessibleCaretEventHub::ReflowInterruptible(DOMHighResTimeStamp aStart,
 {
   // Defer the error checking to Reflow().
   return Reflow(aStart, aEnd);
+}
+
+void
+AccessibleCaretEventHub::NotifyOwnerDocumentActivityChanged()
+{
+  if (!mInitialized) {
+    return;
+  }
+
+  MOZ_ASSERT(mRefCnt.get() > 1, "Expect caller holds us as well!");
+
+  nsIDocument* doc = mPresShell->GetDocument();
+  if (!doc) {
+    return;
+  }
+
+  if (!doc->Hidden()) {
+    mManager->OnDocumentVisible();
+  }
 }
 
 void

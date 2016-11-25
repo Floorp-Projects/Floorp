@@ -11,6 +11,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "nsCOMPtr.h"
+#include "nsIDocumentActivity.h"
 #include "nsIFrame.h"
 #include "nsIReflowObserver.h"
 #include "nsIScrollObserver.h"
@@ -60,10 +61,12 @@ class WidgetTouchEvent;
 // Please see the wiki page for more information.
 // https://wiki.mozilla.org/AccessibleCaret
 //
-class AccessibleCaretEventHub : public nsIReflowObserver,
-                                public nsIScrollObserver,
-                                public nsISelectionListener,
-                                public nsSupportsWeakReference
+class AccessibleCaretEventHub
+  : public nsIDocumentActivity
+  , public nsIReflowObserver
+  , public nsIScrollObserver
+  , public nsISelectionListener
+  , public nsSupportsWeakReference
 {
 public:
   explicit AccessibleCaretEventHub(nsIPresShell* aPresShell);
@@ -76,6 +79,7 @@ public:
   void NotifyBlur(bool aIsLeavingDocument);
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOCUMENTACTIVITY
   NS_DECL_NSIREFLOWOBSERVER
   NS_DECL_NSISELECTIONLISTENER
 
