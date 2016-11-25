@@ -229,10 +229,6 @@ MediaDecoderReaderWrapper::OnMetadataRead(MetadataHolder* aMetadata)
 
   if (mStartTime.isNothing()) {
     mStartTime.emplace(aMetadata->mInfo.mStartTime);
-    // Note: MFR should be able to setup its start time by itself without going
-    // through here. MediaDecoderReader::DispatchSetStartTime() will be removed
-    // once we remove all the legacy readers' code in the following bugs.
-    mReader->DispatchSetStartTime(StartTime().ToMicroseconds());
   }
 }
 
