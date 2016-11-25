@@ -24,13 +24,11 @@ let {MAX_AUTOCOMPLETE_ATTEMPTS,MAX_AUTOCOMPLETIONS} = require("devtools/shared/w
 // evaluateJS and once with evaluateJSAsync.
 let evaluatingSync = true;
 function evaluateJS(input, options = {}) {
-  return new Promise((resolve, reject) => {
-    if (evaluatingSync) {
-      gState.client.evaluateJS(input, resolve, options);
-    } else {
-      gState.client.evaluateJSAsync(input, resolve, options);
-    }
-  });
+  if (evaluatingSync) {
+    return gState.client.evaluateJS(input, null, options);
+  } else {
+    return gState.client.evaluateJSAsync(input, null, options);
+  }
 }
 
 function startTest()

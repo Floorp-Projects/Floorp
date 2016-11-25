@@ -309,6 +309,10 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
       VideoInfo *videoRust = infoRust->GetAsVideoInfo(), *video = info->GetAsVideoInfo();
       MOZ_DIAGNOSTIC_ASSERT(videoRust->mDisplay == video->mDisplay);
       MOZ_DIAGNOSTIC_ASSERT(videoRust->mImage == video->mImage);
+      MOZ_DIAGNOSTIC_ASSERT(*videoRust->mExtraData == *video->mExtraData);
+      // mCodecSpecificConfig is for video/mp4-es, not video/avc. Since video/mp4-es
+      // is supported on b2g only, it could be removed from TrackInfo.
+      MOZ_DIAGNOSTIC_ASSERT(*videoRust->mCodecSpecificConfig == *video->mCodecSpecificConfig);
       break;
     }
     default:

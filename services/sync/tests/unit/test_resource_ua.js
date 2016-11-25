@@ -26,7 +26,8 @@ function uaHandler(f) {
   };
 }
 
-function run_test() {
+add_task(async function setup() {
+
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
   meta_global = new ServerWBO('global');
   server = httpd_setup({
@@ -34,10 +35,7 @@ function run_test() {
     "/1.1/johndoe/storage/meta/global": uaHandler(meta_global.handler()),
   });
 
-  ensureLegacyIdentityManager();
-  setBasicCredentials("johndoe", "ilovejane");
-  Service.serverURL = server.baseURI + "/";
-  Service.clusterURL = server.baseURI + "/";
+  await configureIdentity({ username: "johndoe" }, server);
   _("Server URL: " + server.baseURI);
 
   // Note this string is missing the trailing ".destkop" as the test
@@ -47,11 +45,11 @@ function run_test() {
                " FxSync/" + WEAVE_VERSION + "." +
                Services.appinfo.appBuildID;
 
-  run_next_test();
-}
+})
 
 add_test(function test_fetchInfo() {
   _("Testing _fetchInfo.");
+  Service.login();
   Service._fetchInfo();
   _("User-Agent: " + ua);
   do_check_eq(ua, expectedUA + ".desktop");

@@ -363,6 +363,14 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
             mSecurityState.setText(R.string.identity_connection_insecure);
             mSecurityState.setTextColor(ContextCompat.getColor(mContext, R.color.placeholder_active_grey));
+
+        } else if (siteIdentity.isSecurityException()) {
+
+            mIcon.setImageResource(R.drawable.lock_inactive);
+            setSecurityStateIcon(R.drawable.warning_major, 1);
+            mSecurityState.setText(R.string.identity_connection_insecure);
+            mSecurityState.setTextColor(ContextCompat.getColor(mContext, R.color.placeholder_active_grey));
+
         } else {
             // Connection is secure.
             mIcon.setImageResource(R.drawable.lock_secure);

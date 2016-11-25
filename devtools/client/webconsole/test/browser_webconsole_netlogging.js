@@ -39,9 +39,8 @@ add_task(function* testPageLoad() {
   ok(request, "Page load was logged");
 
   let client = hud.ui.webConsoleClient;
-  let args = [request.actor];
-  const postData = yield getPacket(client, "getRequestPostData", args);
-  const responseContent = yield getPacket(client, "getResponseContent", args);
+  const postData = yield client.getRequestPostData(request.actor);
+  const responseContent = yield client.getResponseContent(request.actor);
 
   is(request.request.url, TEST_NETWORK_REQUEST_URI,
     "Logged network entry is page load");
@@ -65,9 +64,8 @@ add_task(function* testXhrGet() {
   ok(request, "testXhrGet() was logged");
 
   let client = hud.ui.webConsoleClient;
-  let args = [request.actor];
-  const postData = yield getPacket(client, "getRequestPostData", args);
-  const responseContent = yield getPacket(client, "getResponseContent", args);
+  const postData = yield client.getRequestPostData(request.actor);
+  const responseContent = yield client.getResponseContent(request.actor);
 
   is(request.request.method, "GET", "Method is correct");
   ok(!postData.postData.text, "No request body was sent");
@@ -89,9 +87,8 @@ add_task(function* testXhrPost() {
   ok(request, "testXhrPost() was logged");
 
   let client = hud.ui.webConsoleClient;
-  let args = [request.actor];
-  const postData = yield getPacket(client, "getRequestPostData", args);
-  const responseContent = yield getPacket(client, "getResponseContent", args);
+  const postData = yield client.getRequestPostData(request.actor);
+  const responseContent = yield client.getResponseContent(request.actor);
 
   is(request.request.method, "POST", "Method is correct");
   is(postData.postData.text, "Hello world!", "Request body was logged");
@@ -120,9 +117,8 @@ add_task(function* testFormSubmission() {
   ok(request, "testFormSubmission() was logged");
 
   let client = hud.ui.webConsoleClient;
-  let args = [request.actor];
-  const postData = yield getPacket(client, "getRequestPostData", args);
-  const responseContent = yield getPacket(client, "getResponseContent", args);
+  const postData = yield client.getRequestPostData(request.actor);
+  const responseContent = yield client.getResponseContent(request.actor);
 
   is(request.request.method, "POST", "Method is correct");
   isnot(postData.postData.text

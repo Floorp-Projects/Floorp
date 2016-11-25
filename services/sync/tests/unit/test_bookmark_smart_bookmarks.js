@@ -59,7 +59,7 @@ function serverForFoo(engine) {
 // handled locally.
 add_task(async function test_annotation_uploaded() {
   let server = serverForFoo(engine);
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   let startCount = smartBookmarkCount();
 
@@ -168,13 +168,13 @@ add_task(async function test_annotation_uploaded() {
     store.wipe();
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
-    server.stop(run_next_test);
+    await promiseStopServer(server);
   }
 });
 
-add_test(function test_smart_bookmarks_duped() {
+add_task(async function test_smart_bookmarks_duped() {
   let server = serverForFoo(engine);
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   let parent = PlacesUtils.toolbarFolderId;
   let uri =
@@ -219,7 +219,7 @@ add_test(function test_smart_bookmarks_duped() {
   } finally {
     // Clean up.
     store.wipe();
-    server.stop(do_test_finished);
+    await promiseStopServer(server);
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
   }

@@ -14,8 +14,6 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
 add_task(async function test_locally_changed_keys() {
-  let passphrase = "abcdeabcdeabcdeabcdeabcdea";
-
   let hmacErrorCount = 0;
   function counting(f) {
     return function() {
@@ -53,9 +51,9 @@ add_task(async function test_locally_changed_keys() {
       getBrowserState: () => JSON.stringify(myTabs)
     };
 
-    setBasicCredentials("johndoe", "password", passphrase);
-    Service.serverURL = server.baseURI;
-    Service.clusterURL = server.baseURI;
+    await configureIdentity({ username: "johndoe" }, server);
+    // We aren't doing a .login yet, so fudge the cluster URL.
+    Service.clusterURL = Service.identity._token.endpoint;
 
     Service.engineManager.register(HistoryEngine);
     Service.engineManager.unregister("addons");
@@ -82,7 +80,7 @@ add_task(async function test_locally_changed_keys() {
     do_check_true(serverKeys.upload(Service.resource(Service.cryptoKeysURL)).success);
 
     // Check that login works.
-    do_check_true(Service.login("johndoe", "ilovejane", passphrase));
+    do_check_true(Service.login("johndoe"));
     do_check_true(Service.isLoggedIn);
 
     // Sync should upload records.
@@ -207,8 +205,6 @@ function run_test() {
   let logger = Log.repository.rootLogger;
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
   validate_all_future_pings();
-
-  ensureLegacyIdentityManager();
 
   run_next_test();
 }

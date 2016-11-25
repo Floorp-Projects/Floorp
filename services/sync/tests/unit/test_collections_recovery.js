@@ -24,8 +24,6 @@ add_identity_test(this, async function test_missing_crypto_collection() {
     };
   }
 
-  await configureIdentity({username: "johndoe"});
-
   let handlers = {
     "/1.1/johndoe/info/collections": maybe_empty(johnHelper.handler),
     "/1.1/johndoe/storage/crypto/keys": johnU("crypto", new ServerWBO("keys").handler()),
@@ -41,7 +39,7 @@ add_identity_test(this, async function test_missing_crypto_collection() {
       johnU(coll, new ServerCollection({}, true).handler());
   }
   let server = httpd_setup(handlers);
-  Service.serverURL = server.baseURI;
+  await configureIdentity({username: "johndoe"}, server);
 
   try {
     let fresh = 0;
