@@ -168,14 +168,6 @@ MediaDecoderReaderWrapper::WaitRequestRef(MediaData::Type aType)
   return aType == MediaData::AUDIO_DATA ? mAudioWaitRequest : mVideoWaitRequest;
 }
 
-RefPtr<MediaDecoderReaderWrapper::BufferedUpdatePromise>
-MediaDecoderReaderWrapper::UpdateBufferedWithPromise()
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                     &MediaDecoderReader::UpdateBufferedWithPromise);
-}
-
 void
 MediaDecoderReaderWrapper::ReleaseResources()
 {
