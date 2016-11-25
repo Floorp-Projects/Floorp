@@ -3,7 +3,7 @@
 Marionette Python Client
 ========================
 
-The Marionette python client library allows you to remotely control a
+The Marionette Python client library allows you to remotely control a
 Gecko-based browser or device which is running a Marionette_
 server. This includes Firefox Desktop and Firefox for Android.
 
@@ -21,11 +21,11 @@ This is the official Python client for Marionette. There also exists a
 Getting the Client
 ------------------
 
-The python client is officially supported. To install it, first make sure you
+The Python client is officially supported. To install it, first make sure you
 have `pip installed`_ then run:
 
 .. parsed-literal::
-   pip install marionette_client
+   pip install marionette_driver
 
 It's highly recommended to use virtualenv_ when installing Marionette to avoid
 package conflicts and other general nastiness.
@@ -54,6 +54,8 @@ server. Before you can start executing commands, you need to start a session
 with :func:`start_session() <Marionette.start_session>`:
 
 .. parsed-literal::
+   from marionette_driver.marionette import Marionette
+
    client = Marionette('localhost', port=2828)
    client.start_session()
 
