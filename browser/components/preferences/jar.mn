@@ -27,5 +27,9 @@ browser.jar:
     content/browser/preferences/sanitize.js
     content/browser/preferences/selectBookmark.xul
     content/browser/preferences/selectBookmark.js
+    content/browser/preferences/siteDataSettings.xul
+    content/browser/preferences/siteDataSettings.js
+    content/browser/preferences/siteDataSettings.css
+    content/browser/preferences/siteListItem.xml
     content/browser/preferences/translation.xul
     content/browser/preferences/translation.js
