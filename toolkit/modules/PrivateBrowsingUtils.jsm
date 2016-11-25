@@ -4,7 +4,9 @@
 
 this.EXPORTED_SYMBOLS = ["PrivateBrowsingUtils"];
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
 
 const kAutoStartPref = "browser.privatebrowsing.autostart";
 
@@ -12,14 +14,11 @@ const kAutoStartPref = "browser.privatebrowsing.autostart";
 // line for the current session.
 var gTemporaryAutoStartMode = false;
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 this.PrivateBrowsingUtils = {
   // Rather than passing content windows to this function, please use
   // isBrowserPrivate since it works with e10s.
   isWindowPrivate: function pbu_isWindowPrivate(aWindow) {
-    if (!(aWindow instanceof Components.interfaces.nsIDOMChromeWindow)) {
+    if (!(aWindow instanceof Ci.nsIDOMChromeWindow)) {
       dump("WARNING: content window passed to PrivateBrowsingUtils.isWindowPrivate. " +
            "Use isContentWindowPrivate instead (but only for frame scripts).\n"
            + new Error().stack);
@@ -45,9 +44,15 @@ this.PrivateBrowsingUtils = {
   },
 
   privacyContextFromWindow: function pbu_privacyContextFromWindow(aWindow) {
-    return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIWebNavigation)
-                  .QueryInterface(Ci.nsILoadContext);
+    let context = { usePrivateBrowsing: false };
+    try {
+      context = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIWebNavigation)
+                       .QueryInterface(Ci.nsILoadContext);
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+    return context;
   },
 
   addToTrackingAllowlist(aURI) {
@@ -81,7 +86,7 @@ this.PrivateBrowsingUtils = {
   },
 
   whenHiddenPrivateWindowReady: function pbu_whenHiddenPrivateWindowReady(cb) {
-    Components.utils.import("resource://gre/modules/Timer.jsm");
+    Cu.import("resource://gre/modules/Timer.jsm");
 
     let win = Services.appShell.hiddenPrivateDOMWindow;
     function isNotLoaded() {
