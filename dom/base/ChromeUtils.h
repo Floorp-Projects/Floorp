@@ -89,10 +89,6 @@ public:
                           const dom::OriginAttributesDictionary& aB);
 
   static bool
-  IsOriginAttributesEqual(const dom::OriginAttributesDictionary& aA,
-                          const dom::OriginAttributesDictionary& aB);
-
-  static bool
   IsOriginAttributesEqualIgnoringAddonId(const dom::OriginAttributesDictionary& aA,
                                          const dom::OriginAttributesDictionary& aB);
 };
