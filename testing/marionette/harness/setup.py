@@ -1,5 +1,6 @@
 import os
 import re
+
 from setuptools import setup, find_packages
 
 
@@ -19,14 +20,27 @@ def get_version():
 setup(name='marionette_client',
       version=get_version(),
       description="Marionette test automation client",
-      long_description='See http://marionette-client.readthedocs.org/',
-      classifiers=[],  # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+      long_description=open('README.rst').read(),
+      # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+      classifiers=[
+          'Development Status :: 7 - Inactive',
+          'Intended Audience :: Developers',
+          'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
+          'Operating System :: MacOS :: MacOS X',
+          'Operating System :: Microsoft :: Windows',
+          'Operating System :: POSIX',
+          'Topic :: Software Development :: Quality Assurance',
+          'Topic :: Software Development :: Testing',
+          'Topic :: Utilities',
+          'Programming Language :: Python',
+          'Programming Language :: Python :: 2.7',
+      ],
       keywords='mozilla',
-      author='Jonathan Griffin',
-      author_email='jgriffin@mozilla.com',
+      author='Auto-tools',
+      author_email='tools-marionette@lists.mozilla.org',
       url='https://wiki.mozilla.org/Auto-tools/Projects/Marionette',
-      license='MPL',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+      license='Mozilla Public License 2.0 (MPL 2.0)',
+      packages=['marionette_client'],
       package_data={'marionette': ['touch/*.js']},
       include_package_data=True,
       zip_safe=False,
