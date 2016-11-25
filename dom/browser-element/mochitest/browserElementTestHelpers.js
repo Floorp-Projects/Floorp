@@ -62,8 +62,7 @@ const browserElementTestHelpers = {
   },
 
   setEnabledPref: function(value) {
-    this._setPrefs(['dom.mozBrowserFramesEnabled', value],
-                   ['network.disable.ipc.security', value]);
+    this._setPref('dom.mozBrowserFramesEnabled', value);
   },
 
   setupAccessibleCaretPref: function() {

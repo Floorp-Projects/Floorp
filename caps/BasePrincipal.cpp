@@ -192,18 +192,6 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
 #endif
 }
 
-void
-OriginAttributes::CreateAnonymizedSuffix(nsACString& aStr) const
-{
-  OriginAttributes attrs = *this;
-
-  if (!attrs.mFirstPartyDomain.IsEmpty()) {
-    attrs.mFirstPartyDomain.AssignLiteral("_anonymizedFirstPartyDomain_");
-  }
-
-  attrs.CreateSuffix(aStr);
-}
-
 namespace {
 
 class MOZ_STACK_CLASS PopulateFromSuffixIterator final
