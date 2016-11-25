@@ -184,7 +184,6 @@ ICStub::NonCacheIRStubMakesGCCalls(Kind kind)
       case GetElem_NativePrototypeCallScriptedName:
       case GetElem_NativePrototypeCallScriptedSymbol:
       case GetElem_UnboxedPropertyName:
-      case GetProp_CallNative:
       case GetProp_CallNativeGlobal:
       case GetProp_CallDOMProxyNative:
       case GetProp_CallDOMProxyWithGenerationNative:
@@ -485,14 +484,6 @@ ICStub::trace(JSTracer* trc)
         ICGetProp_DOMProxyShadowed* propStub = toGetProp_DOMProxyShadowed();
         TraceEdge(trc, &propStub->shape(), "baseline-getproplistbaseshadowed-stub-shape");
         TraceEdge(trc, &propStub->name(), "baseline-getproplistbaseshadowed-stub-name");
-        break;
-      }
-      case ICStub::GetProp_CallNative: {
-        ICGetProp_CallNative* callStub = toGetProp_CallNative();
-        callStub->receiverGuard().trace(trc);
-        TraceEdge(trc, &callStub->holder(), "baseline-getpropcallnative-stub-holder");
-        TraceEdge(trc, &callStub->holderShape(), "baseline-getpropcallnative-stub-holdershape");
-        TraceEdge(trc, &callStub->getter(), "baseline-getpropcallnative-stub-getter");
         break;
       }
       case ICStub::GetProp_CallNativeGlobal: {
@@ -2390,8 +2381,7 @@ UpdateExistingGetPropCallStubs(ICFallbackStub* fallbackStub,
                                HandleObject receiver,
                                HandleFunction getter)
 {
-    MOZ_ASSERT(kind == ICStub::GetProp_CallNative ||
-               kind == ICStub::GetProp_CallNativeGlobal);
+    MOZ_ASSERT(kind == ICStub::GetProp_CallNativeGlobal);
     MOZ_ASSERT(fallbackStub->isGetName_Fallback() ||
                fallbackStub->isGetProp_Fallback());
     MOZ_ASSERT(holder);
@@ -2490,27 +2480,6 @@ TryAttachNativeGetAccessorPropStub(JSContext* cx, SharedStubInfo* info,
         return true;
     }
 
-    const Class* outerClass = nullptr;
-    if (!isDOMProxy && !obj->isNative()) {
-        outerClass = obj->getClass();
-        if (!IsWindowProxy(obj))
-            return true;
-
-        // This must be a WindowProxy for the current Window/global. Else it'd
-        // be a cross-compartment wrapper and IsWindowProxy returns false for
-        // those.
-        MOZ_ASSERT(ToWindowIfWindowProxy(obj) == cx->global());
-        obj = cx->global();
-
-        if (!EffectlesslyLookupProperty(cx, obj, id, &holder, &shape, &isDOMProxy,
-                                        &domProxyShadowsResult, &domProxyHasGeneration))
-        {
-            return false;
-        }
-        cacheableCall = IsCacheableGetPropCall(cx, obj, holder, shape, &isScripted,
-                                               isTemporarilyUnoptimizable, isDOMProxy);
-    }
-
     // Try handling JSNative getters.
     if (!cacheableCall || isScripted)
         return true;
@@ -2523,9 +2492,6 @@ TryAttachNativeGetAccessorPropStub(JSContext* cx, SharedStubInfo* info,
 
     RootedFunction callee(cx, &shape->getterObject()->as<JSFunction>());
     MOZ_ASSERT(callee->isNative());
-
-    if (outerClass && (!callee->jitInfo() || callee->jitInfo()->needsOuterizedThisObject()))
-        return true;
 
     JitSpew(JitSpew_BaselineIC, "  Generating GetProp(%s%s/NativeGetter %p) stub",
             isDOMProxy ? "DOMProxyObj" : "NativeObj",
@@ -2550,17 +2516,7 @@ TryAttachNativeGetAccessorPropStub(JSContext* cx, SharedStubInfo* info,
                                                      callee, info->pcOffset());
         newStub = compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
     } else {
-        if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNative,
-                                           holder.as<NativeObject>(), obj, callee))
-        {
-            *attached = true;
-            return true;
-        }
-
-        ICGetPropCallNativeCompiler compiler(cx, ICStub::GetProp_CallNative, info->engine(),
-                                             monitorStub, obj, holder, callee,
-                                             info->pcOffset(), outerClass);
-        newStub = compiler.getStub(compiler.getStubSpace(info->outerScript(cx)));
+        return true;
     }
     if (!newStub)
         return false;
@@ -3014,19 +2970,12 @@ ICGetPropCallNativeCompiler::generateStubCode(MacroAssembler& masm)
     AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
     Register objReg = InvalidReg;
 
-    MOZ_ASSERT(!(inputDefinitelyObject_ && outerClass_));
     if (inputDefinitelyObject_) {
         objReg = R0.scratchReg();
     } else {
         // Guard input is an object and unbox.
         masm.branchTestObject(Assembler::NotEqual, R0, &failure);
         objReg = masm.extractObject(R0, ExtractTemp0);
-        if (outerClass_) {
-            Register tmp = regs.takeAny();
-            masm.branchTestObjClass(Assembler::NotEqual, objReg, tmp, outerClass_, &failure);
-            masm.movePtr(ImmGCPtr(cx->global()), objReg);
-            regs.add(tmp);
-        }
     }
 
     Register scratch = regs.takeAnyExcluding(ICTailCallReg);
@@ -3104,11 +3053,6 @@ ICGetPropCallNativeCompiler::getStub(ICStubSpace* space)
     Shape* holderShape = holder_->as<NativeObject>().lastProperty();
 
     switch (kind) {
-      case ICStub::GetProp_CallNative:
-        return newStub<ICGetProp_CallNative>(space, getStubCode(), firstMonitorStub_,
-                                             guard, holder_, holderShape,
-                                             getter_, pcOffset_);
-
       case ICStub::GetProp_CallNativeGlobal: {
         Shape* globalShape = receiver_->as<LexicalEnvironmentObject>().global().lastProperty();
         return newStub<ICGetProp_CallNativeGlobal>(space, getStubCode(), firstMonitorStub_,
@@ -3557,19 +3501,9 @@ ICGetPropCallGetter::ICGetPropCallGetter(Kind kind, JitCode* stubCode, ICStub* f
     getter_(getter),
     pcOffset_(pcOffset)
 {
-    MOZ_ASSERT(kind == ICStub::GetProp_CallNative    ||
-               kind == ICStub::GetProp_CallNativeGlobal ||
+    MOZ_ASSERT(kind == ICStub::GetProp_CallNativeGlobal ||
                kind == ICStub::GetProp_CallDOMProxyNative ||
                kind == ICStub::GetProp_CallDOMProxyWithGenerationNative);
-}
-
-/* static */ ICGetProp_CallNative*
-ICGetProp_CallNative::Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                            ICGetProp_CallNative& other)
-{
-    return New<ICGetProp_CallNative>(cx, space, other.jitCode(), firstMonitorStub,
-                                     other.receiverGuard(), other.holder_,
-                                     other.holderShape_, other.getter_, other.pcOffset_);
 }
 
 /* static */ ICGetProp_CallNativeGlobal*

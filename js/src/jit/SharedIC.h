@@ -2605,7 +2605,6 @@ class ICGetPropCallGetter : public ICMonitoredStub
         RootedObject holder_;
         RootedFunction getter_;
         uint32_t pcOffset_;
-        const Class* outerClass_;
 
         virtual int32_t getKey() const {
             // ICGetPropCallNativeCompiler::getKey adds more bits to our
@@ -2613,47 +2612,23 @@ class ICGetPropCallGetter : public ICMonitoredStub
             return static_cast<int32_t>(engine_) |
                   (static_cast<int32_t>(kind) << 1) |
                   (HeapReceiverGuard::keyBits(receiver_) << 17) |
-                  (static_cast<int32_t>(!!outerClass_) << 19) |
-                  (static_cast<int32_t>(receiver_ != holder_) << 20);
+                  (static_cast<int32_t>(receiver_ != holder_) << 19);
         }
 
       public:
         Compiler(JSContext* cx, ICStub::Kind kind, Engine engine, ICStub* firstMonitorStub,
                  HandleObject receiver, HandleObject holder, HandleFunction getter,
-                 uint32_t pcOffset, const Class* outerClass)
+                 uint32_t pcOffset)
           : ICStubCompiler(cx, kind, engine),
             firstMonitorStub_(firstMonitorStub),
             receiver_(cx, receiver),
             holder_(cx, holder),
             getter_(cx, getter),
-            pcOffset_(pcOffset),
-            outerClass_(outerClass)
+            pcOffset_(pcOffset)
         {
-            MOZ_ASSERT(kind == ICStub::GetProp_CallNative ||
-                       kind == ICStub::GetProp_CallNativeGlobal);
+            MOZ_ASSERT(kind == ICStub::GetProp_CallNativeGlobal);
         }
     };
-};
-
-// Stub for calling a native getter on a native object.
-class ICGetProp_CallNative : public ICGetPropCallGetter
-{
-    friend class ICStubSpace;
-
-  protected:
-
-    ICGetProp_CallNative(JitCode* stubCode, ICStub* firstMonitorStub,
-                         ReceiverGuard receiverGuard,
-                         JSObject* holder, Shape* holderShape,
-                         JSFunction* getter, uint32_t pcOffset)
-      : ICGetPropCallGetter(GetProp_CallNative, stubCode, firstMonitorStub,
-                            receiverGuard, holder, holderShape, getter, pcOffset)
-    {}
-
-  public:
-    static ICGetProp_CallNative* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-                                       ICGetProp_CallNative& other);
-
 };
 
 // Stub for calling a native getter on the GlobalObject.
@@ -2702,9 +2677,9 @@ class ICGetPropCallNativeCompiler : public ICGetPropCallGetter::Compiler
     ICGetPropCallNativeCompiler(JSContext* cx, ICStub::Kind kind, ICStubCompiler::Engine engine,
                                 ICStub* firstMonitorStub, HandleObject receiver,
                                 HandleObject holder, HandleFunction getter, uint32_t pcOffset,
-                                const Class* outerClass, bool inputDefinitelyObject = false)
+                                bool inputDefinitelyObject = false)
       : ICGetPropCallGetter::Compiler(cx, kind, engine, firstMonitorStub, receiver, holder,
-                                      getter, pcOffset, outerClass),
+                                      getter, pcOffset),
         inputDefinitelyObject_(inputDefinitelyObject)
     {}
 
@@ -2866,7 +2841,7 @@ class ICGetProp_DOMProxyShadowed : public ICMonitoredStub
       public:
         Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub, Handle<ProxyObject*> proxy,
                  HandlePropertyName name, uint32_t pcOffset)
-          : ICStubCompiler(cx, ICStub::GetProp_CallNative, engine),
+          : ICStubCompiler(cx, ICStub::GetProp_DOMProxyShadowed, engine),
             firstMonitorStub_(firstMonitorStub),
             proxy_(cx, proxy),
             name_(cx, name),
