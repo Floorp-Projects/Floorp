@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -17,6 +16,7 @@ from .generator import TaskGraphGenerator
 from .create import create_tasks
 from .parameters import Parameters
 from .taskgraph import TaskGraph
+from .util.verifydoc import verify_docs
 
 from taskgraph.util.templates import Templates
 from taskgraph.util.time import (
@@ -76,7 +76,7 @@ def taskgraph_decision(options):
     """
 
     parameters = get_decision_parameters(options)
-
+    verify_parameters(parameters)
     # create a TaskGraphGenerator instance
     tgg = TaskGraphGenerator(
         root_dir=options['root'],
@@ -187,3 +187,12 @@ def get_action_yml(parameters):
         "now": current_json_time()
     })
     return templates.load('action.yml', action_parameters)
+
+
+def verify_parameters(parameters):
+        parameters_dict = dict(**parameters)
+        verify_docs(
+            filename="parameters.rst",
+            identifiers=parameters_dict.keys(),
+            appearing_as="inline-literal"
+         )
