@@ -24,6 +24,34 @@ class Variant;
 
 namespace detail {
 
+template <typename...>
+struct FirstTypeIsInRest;
+
+template <typename First>
+struct FirstTypeIsInRest<First> : FalseType {};
+
+template <typename First, typename Second, typename... Rest>
+struct FirstTypeIsInRest<First, Second, Rest...>
+{
+  static constexpr bool value =
+    IsSame<First, Second>::value ||
+    FirstTypeIsInRest<First, Rest...>::value;
+};
+
+template <typename...>
+struct TypesAreDistinct;
+
+template <>
+struct TypesAreDistinct<> : TrueType { };
+
+template<typename First, typename... Rest>
+struct TypesAreDistinct<First, Rest...>
+{
+  static constexpr bool value =
+    !FirstTypeIsInRest<First, Rest...>::value &&
+    TypesAreDistinct<Rest...>::value;
+};
+
 // MaxSizeOf computes the maximum sizeof(T) for each T in Ts.
 
 template<typename T, typename... Ts>
@@ -428,6 +456,7 @@ struct AsVariantTemporary
 template<typename... Ts>
 class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Variant
 {
+  static_assert(detail::TypesAreDistinct<Ts...>::value, "Variant with duplicate types is not supported");
   using Tag = typename detail::VariantTag<Ts...>::Type;
   using Impl = detail::VariantImplementation<Tag, 0, Ts...>;
   using RawData = AlignedStorage<detail::MaxSizeOf<Ts...>::size>;

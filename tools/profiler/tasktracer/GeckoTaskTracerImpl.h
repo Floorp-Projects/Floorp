@@ -66,7 +66,7 @@ struct TraceInfoLogNode {
 
 struct TraceInfo
 {
-  TraceInfo(uint32_t aThreadId)
+  explicit TraceInfo(uint32_t aThreadId)
     : mCurTraceSourceId(0)
     , mCurTaskId(0)
     , mCurTraceSourceType(Unknown)

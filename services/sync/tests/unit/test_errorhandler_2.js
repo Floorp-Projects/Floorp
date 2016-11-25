@@ -52,8 +52,6 @@ function run_test() {
   Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.ErrorHandler").level = Log.Level.Trace;
 
-  ensureLegacyIdentityManager();
-
   run_next_test();
 }
 
@@ -71,9 +69,7 @@ add_identity_test(this, async function test_crypto_keys_login_server_maintenance
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.keys"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.keys"}, server);
 
   // Force re-download of keys
   Service.collectionKeys.clear();
@@ -144,9 +140,7 @@ add_identity_test(this, async function test_info_collections_login_prolonged_ser
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.info"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.info"}, server);
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -178,9 +172,7 @@ add_identity_test(this, async function test_meta_global_login_prolonged_server_m
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.meta"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.meta"}, server);
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -212,9 +204,7 @@ add_identity_test(this, async function test_download_crypto_keys_login_prolonged
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.keys"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.keys"}, server);
   // Force re-download of keys
   Service.collectionKeys.clear();
 
@@ -247,9 +237,7 @@ add_identity_test(this, async function test_upload_crypto_keys_login_prolonged_s
   let server = EHTestsCommon.sync_httpd_setup();
 
   // Start off with an empty account, do not upload a key.
-  await configureIdentity({username: "broken.keys"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.keys"}, server);
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -282,9 +270,7 @@ add_identity_test(this, async function test_wipeServer_login_prolonged_server_ma
   let server = EHTestsCommon.sync_httpd_setup();
 
   // Start off with an empty account, do not upload a key.
-  await configureIdentity({username: "broken.wipe"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.wipe"}, server);
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -317,9 +303,7 @@ add_identity_test(this, async function test_wipeRemote_prolonged_server_maintena
   let server = EHTestsCommon.sync_httpd_setup();
 
   server.registerPathHandler("/1.1/broken.wipe/storage/catapult", EHTestsCommon.service_unavailable);
-  await configureIdentity({username: "broken.wipe"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.wipe"}, server);
   EHTestsCommon.generateAndUploadKeys();
 
   let engine = engineManager.get("catapult");
@@ -387,9 +371,7 @@ add_identity_test(this, async function test_info_collections_login_syncAndReport
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.info"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.info"}, server);
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -422,9 +404,7 @@ add_identity_test(this, async function test_meta_global_login_syncAndReportError
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.meta"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.meta"}, server);
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -457,9 +437,7 @@ add_identity_test(this, async function test_download_crypto_keys_login_syncAndRe
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.keys"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.keys"}, server);
   // Force re-download of keys
   Service.collectionKeys.clear();
 
@@ -494,9 +472,7 @@ add_identity_test(this, async function test_upload_crypto_keys_login_syncAndRepo
   let server = EHTestsCommon.sync_httpd_setup();
 
   // Start off with an empty account, do not upload a key.
-  await configureIdentity({username: "broken.keys"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.keys"}, server);
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -529,9 +505,7 @@ add_identity_test(this, async function test_wipeServer_login_syncAndReportErrors
   let server = EHTestsCommon.sync_httpd_setup();
 
   // Start off with an empty account, do not upload a key.
-  await configureIdentity({username: "broken.wipe"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.wipe"}, server);
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -563,9 +537,7 @@ add_identity_test(this, async function test_wipeRemote_syncAndReportErrors_serve
   // wiping all remote devices.
   let server = EHTestsCommon.sync_httpd_setup();
 
-  await configureIdentity({username: "broken.wipe"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.wipe"}, server);
   EHTestsCommon.generateAndUploadKeys();
 
   let engine = engineManager.get("catapult");
@@ -635,9 +607,7 @@ add_identity_test(this, async function test_info_collections_login_syncAndReport
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.info"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.info"}, server);
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -672,9 +642,7 @@ add_identity_test(this, async function test_meta_global_login_syncAndReportError
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.meta"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.meta"}, server);
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -709,9 +677,7 @@ add_identity_test(this, async function test_download_crypto_keys_login_syncAndRe
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
-  await configureIdentity({username: "broken.keys"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.keys"}, server);
   // Force re-download of keys
   Service.collectionKeys.clear();
 
@@ -748,9 +714,7 @@ add_identity_test(this, async function test_upload_crypto_keys_login_syncAndRepo
   let server = EHTestsCommon.sync_httpd_setup();
 
   // Start off with an empty account, do not upload a key.
-  await configureIdentity({username: "broken.keys"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.keys"}, server);
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {
@@ -785,9 +749,7 @@ add_identity_test(this, async function test_wipeServer_login_syncAndReportErrors
   let server = EHTestsCommon.sync_httpd_setup();
 
   // Start off with an empty account, do not upload a key.
-  await configureIdentity({username: "broken.wipe"});
-  Service.serverURL = server.baseURI + "/maintenance/";
-  Service.clusterURL = server.baseURI + "/maintenance/";
+  await configureIdentity({username: "broken.wipe"}, server);
 
   let backoffInterval;
   Svc.Obs.add("weave:service:backoff:interval", function observe(subject, data) {

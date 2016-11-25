@@ -64,6 +64,50 @@ HistoryEngine.prototype = {
       notifyHistoryObservers("onEndUpdateBatch");
     }
   },
+
+  pullNewChanges() {
+    let modifiedGUIDs = Object.keys(this._tracker.changedIDs);
+    if (!modifiedGUIDs.length) {
+      return new Changeset();
+    }
+
+    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
+                        .DBConnection;
+
+    // Filter out hidden pages and `TRANSITION_FRAMED_LINK` visits. These are
+    // excluded when rendering the history menu, so we use the same constraints
+    // for Sync. We also don't want to sync `TRANSITION_EMBED` visits, but those
+    // aren't stored in the database.
+    for (let startIndex = 0;
+         startIndex < modifiedGUIDs.length;
+         startIndex += SQLITE_MAX_VARIABLE_NUMBER) {
+
+      let chunkLength = Math.min(SQLITE_MAX_VARIABLE_NUMBER,
+                                 modifiedGUIDs.length - startIndex);
+
+      let query = `
+        SELECT DISTINCT p.guid FROM moz_places p
+        JOIN moz_historyvisits v ON p.id = v.place_id
+        WHERE p.guid IN (${new Array(chunkLength).fill("?").join(",")}) AND
+              (p.hidden = 1 OR v.visit_type IN (0,
+                ${PlacesUtils.history.TRANSITION_FRAMED_LINK}))
+      `;
+
+      let statement = db.createAsyncStatement(query);
+      try {
+        for (let i = 0; i < chunkLength; i++) {
+          statement.bindByIndex(i, modifiedGUIDs[startIndex + i]);
+        }
+        let results = Async.querySpinningly(statement, ["guid"]);
+        let guids = results.map(result => result.guid);
+        this._tracker.removeChangedID(...guids);
+      } finally {
+        statement.finalize();
+      }
+    }
+
+    return new Changeset(this._tracker.changedIDs);
+  },
 };
 
 function HistoryStore(name, engine) {
@@ -72,7 +116,7 @@ function HistoryStore(name, engine) {
   // Explicitly nullify our references to our cached services so we don't leak
   Svc.Obs.add("places-shutdown", function() {
     for (let query in this._stmts) {
-      let stmt = this._stmts;
+      let stmt = this._stmts[query];
       stmt.finalize();
     }
     this._stmts = {};
@@ -165,12 +209,18 @@ HistoryStore.prototype = {
   _urlCols: ["url", "title", "frecency"],
 
   get _allUrlStm() {
-    return this._getStmt(
-      "SELECT url " +
-      "FROM moz_places " +
-      "WHERE last_visit_date > :cutoff_date " +
-      "ORDER BY frecency DESC " +
-      "LIMIT :max_results");
+    // Filter out hidden pages and framed link visits. See `pullNewChanges`
+    // for more info.
+    return this._getStmt(`
+      SELECT DISTINCT p.url
+      FROM moz_places p
+      JOIN moz_historyvisits v ON p.id = v.place_id
+      WHERE p.last_visit_date > :cutoff_date AND
+            p.hidden = 0 AND
+            v.visit_type NOT IN (0,
+              ${PlacesUtils.history.TRANSITION_FRAMED_LINK})
+      ORDER BY frecency DESC
+      LIMIT :max_results`);
   },
   _allUrlCols: ["url"],
 

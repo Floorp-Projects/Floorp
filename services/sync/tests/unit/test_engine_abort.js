@@ -8,7 +8,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/rotaryengine.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-add_test(function test_processIncoming_abort() {
+add_task(async function test_processIncoming_abort() {
   _("An abort exception, raised in applyIncoming, will abort _processIncoming.");
   let engine = new RotaryEngine(Service);
 
@@ -21,7 +21,7 @@ add_test(function test_processIncoming_abort() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  new SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   _("Create some server data.");
@@ -59,7 +59,7 @@ add_test(function test_processIncoming_abort() {
 
   do_check_eq(err, undefined);
 
-  server.stop(run_next_test);
+  await promiseStopServer(server);
   Svc.Prefs.resetBranch("");
   Service.recordManager.clearCache();
 });

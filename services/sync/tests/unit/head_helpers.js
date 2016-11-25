@@ -295,7 +295,7 @@ function assert_success_ping(ping) {
   ok(!!ping);
   assert_valid_ping(ping);
   ping.syncs.forEach(record => {
-    ok(!record.failureReason);
+    ok(!record.failureReason, JSON.stringify(record.failureReason));
     equal(undefined, record.status);
     greater(record.engines.length, 0);
     for (let e of record.engines) {

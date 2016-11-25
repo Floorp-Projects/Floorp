@@ -148,8 +148,8 @@ fn read_truncated_ftyp() {
     let mut context = MediaContext::new();
     match read_mp4(&mut stream, &mut context) {
         Err(Error::UnexpectedEOF) => (),
-        Ok(_) => assert!(false, "expected an error result"),
-        _ => assert!(false, "expected a different error result"),
+        Ok(_) => panic!("expected an error result"),
+        _ => panic!("expected a different error result"),
     }
 }
 
@@ -593,8 +593,8 @@ fn serialize_opus_header() {
     };
     let mut v = Vec::<u8>::new();
     super::serialize_opus_header(&opus, &mut v).unwrap();
-    assert!(v.len() == 19);
-    assert!(v == vec![
+    assert_eq!(v.len(), 19);
+    assert_eq!(v, vec![
             0x4f, 0x70, 0x75, 0x73, 0x48,0x65, 0x61, 0x64,
             0x01, 0x01, 0x56, 0x01,
             0xc0, 0x5d, 0x00, 0x00,
@@ -615,8 +615,8 @@ fn serialize_opus_header() {
     };
     let mut v = Vec::<u8>::new();
     super::serialize_opus_header(&opus, &mut v).unwrap();
-    assert!(v.len() == 27);
-    assert!(v == vec![
+    assert_eq!(v.len(), 27);
+    assert_eq!(v, vec![
             0x4f, 0x70, 0x75, 0x73, 0x48,0x65, 0x61, 0x64,
             0x01, 0x06, 0x98, 0x00,
             0x80, 0xbb, 0x00, 0x00,
@@ -645,8 +645,8 @@ fn avcc_limit() {
     let mut track = super::Track::new(0);
     match super::read_video_sample_entry(&mut stream, &mut track) {
         Err(Error::InvalidData(s)) => assert_eq!(s, "avcC box exceeds BUF_SIZE_LIMIT"),
-        Ok(_) => assert!(false, "expected an error result"),
-        _ => assert!(false, "expected a different error result"),
+        Ok(_) => panic!("expected an error result"),
+        _ => panic!("expected a different error result"),
     }
 }
 
@@ -671,8 +671,8 @@ fn esds_limit() {
     let mut track = super::Track::new(0);
     match super::read_audio_sample_entry(&mut stream, &mut track) {
         Err(Error::InvalidData(s)) => assert_eq!(s, "esds box exceeds BUF_SIZE_LIMIT"),
-        Ok(_) => assert!(false, "expected an error result"),
-        _ => assert!(false, "expected a different error result"),
+        Ok(_) => panic!("expected an error result"),
+        _ => panic!("expected a different error result"),
     }
 }
 
@@ -697,8 +697,8 @@ fn esds_limit_2() {
     let mut track = super::Track::new(0);
     match super::read_audio_sample_entry(&mut stream, &mut track) {
         Err(Error::UnexpectedEOF) => (),
-        Ok(_) => assert!(false, "expected an error result"),
-        _ => assert!(false, "expected a different error result"),
+        Ok(_) => panic!("expected an error result"),
+        _ => panic!("expected a different error result"),
     }
 }
 
@@ -713,8 +713,8 @@ fn read_elst_zero_entries() {
     let mut stream = iter.next_box().unwrap().unwrap();
     match super::read_elst(&mut stream) {
         Err(Error::InvalidData(s)) => assert_eq!(s, "invalid edit count"),
-        Ok(_) => assert!(false, "expected an error result"),
-        _ => assert!(false, "expected a different error result"),
+        Ok(_) => panic!("expected an error result"),
+        _ => panic!("expected a different error result"),
     }
 }
 
@@ -741,8 +741,8 @@ fn read_edts_bogus() {
     let mut track = super::Track::new(0);
     match super::read_edts(&mut stream, &mut track) {
         Err(Error::InvalidData(s)) => assert_eq!(s, "expected additional edit"),
-        Ok(_) => assert!(false, "expected an error result"),
-        _ => assert!(false, "expected a different error result"),
+        Ok(_) => panic!("expected an error result"),
+        _ => panic!("expected a different error result"),
     }
 }
 
@@ -827,7 +827,7 @@ fn skip_padding_in_stsd() {
 fn read_qt_wave_atom() {
     let esds = make_fullbox(BoxSize::Auto, b"esds", 0, |s| {
         s.B8(0x03)  // elementary stream descriptor tag
-         .B8(0x0b)  // esds length
+         .B8(0x12)  // esds length
          .append_repeated(0, 2)
          .B8(0x00)  // flags
          .B8(0x04)  // decoder config descriptor tag
