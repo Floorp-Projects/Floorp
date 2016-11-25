@@ -702,7 +702,6 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
     _(GetElem_NativePrototypeCallNativeSymbol)  \
     _(GetElem_NativePrototypeCallScriptedName)  \
     _(GetElem_NativePrototypeCallScriptedSymbol) \
-    _(GetProp_CallNative)                       \
     _(GetProp_CallNativeGlobal)                 \
     _(GetProp_CallDOMProxyNative)               \
     _(GetProp_CallDOMProxyWithGenerationNative) \
