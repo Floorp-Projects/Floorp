@@ -586,6 +586,9 @@ private:
   void MaybeResolveMetadataPromise();
 
   UniquePtr<MetadataTags> mTags;
+
+  // A flag indicating if the start time is known or not.
+  bool mHasStartTime = false;
 };
 
 } // namespace mozilla

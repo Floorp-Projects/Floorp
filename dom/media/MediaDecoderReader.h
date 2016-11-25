@@ -277,6 +277,9 @@ public:
 protected:
   virtual ~MediaDecoderReader();
 
+  // Recomputes mBuffered.
+  virtual void UpdateBuffered();
+
   // Populates aBuffered with the time ranges which are buffered. This may only
   // be called on the decode task queue, and should only be used internally by
   // UpdateBuffered - mBuffered (or mirrors of it) should be used for everything
@@ -382,9 +385,6 @@ private:
   {
     MOZ_CRASH();
   }
-
-  // Recomputes mBuffered.
-  virtual void UpdateBuffered();
 
   virtual void VisibilityChanged();
 
