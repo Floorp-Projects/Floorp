@@ -16,6 +16,12 @@
 #include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
 
+namespace mozilla {
+  class NeckoOriginAttributes;
+}
+
+using mozilla::NeckoOriginAttributes;
+
 class nsClientAuthRemember
 {
 public:
@@ -115,14 +121,20 @@ public:
 
   nsresult Init();
 
-  static void GetHostWithCert(const nsACString & aHostName, 
-                              const nsACString & nickname, nsACString& _retval);
+  static void GetEntryKey(const nsACString& aHostName,
+                          const NeckoOriginAttributes& aOriginAttributes,
+                          const nsACString& aFingerprint,
+                          /* out */ nsACString& aEntryKey);
 
-  nsresult RememberDecision(const nsACString & aHostName, 
-                            CERTCertificate *aServerCert, CERTCertificate *aClientCert);
-  nsresult HasRememberedDecision(const nsACString & aHostName, 
-                                 CERTCertificate *aServerCert, 
-                                 nsACString & aCertDBKey, bool *_retval);
+  nsresult RememberDecision(const nsACString& aHostName,
+                            const NeckoOriginAttributes& aOriginAttributes,
+                            CERTCertificate* aServerCert,
+                            CERTCertificate* aClientCert);
+
+  nsresult HasRememberedDecision(const nsACString& aHostName,
+                                 const NeckoOriginAttributes& aOriginAttributes,
+                                 CERTCertificate* aServerCert,
+                                 nsACString& aCertDBKey, bool* aRetVal);
 
   void ClearRememberedDecisions();
   static void ClearAllRememberedDecisions();
@@ -134,9 +146,10 @@ protected:
     nsTHashtable<nsClientAuthRememberEntry> mSettingsTable;
 
     void RemoveAllFromMemory();
-    nsresult AddEntryToList(const nsACString &host, 
-                            const nsACString &server_fingerprint,
-                            const nsACString &db_key);
+    nsresult AddEntryToList(const nsACString& aHost,
+                            const NeckoOriginAttributes& aOriginAttributes,
+                            const nsACString& aServerFingerprint,
+                            const nsACString& aDBKey);
 };
 
 #endif
