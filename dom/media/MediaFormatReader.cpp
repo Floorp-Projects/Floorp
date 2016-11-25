@@ -790,6 +790,9 @@ MediaFormatReader::MaybeResolveMetadataPromise()
     mInfo.mStartTime = startTime; // mInfo.mStartTime is initialized to 0.
   }
 
+  mHasStartTime = true;
+  UpdateBuffered();
+
   RefPtr<MetadataHolder> metadata = new MetadataHolder();
   metadata->mInfo = mInfo;
   metadata->mTags = mTags->Count() ? mTags.release() : nullptr;
@@ -2177,16 +2180,10 @@ MediaFormatReader::GetBuffered()
   media::TimeIntervals audioti;
   media::TimeIntervals intervals;
 
-  if (!mInitDone) {
+  if (!mInitDone || !mHasStartTime) {
     return intervals;
   }
-  int64_t startTime = 0;
-  if (!ForceZeroStartTime()) {
-    if (!HaveStartTime()) {
-      return intervals;
-    }
-    startTime = StartTime();
-  }
+
   // Ensure we have up to date buffered time range.
   if (HasVideo()) {
     UpdateReceivedNewData(TrackType::kVideoTrack);
@@ -2213,7 +2210,7 @@ MediaFormatReader::GetBuffered()
     // IntervalSet already starts at 0 or is empty, nothing to shift.
     return intervals;
   }
-  return intervals.Shift(media::TimeUnit::FromMicroseconds(-startTime));
+  return intervals.Shift(media::TimeUnit() - mInfo.mStartTime);
 }
 
 // For the MediaFormatReader override we need to force an update to the
