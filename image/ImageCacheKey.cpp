@@ -141,21 +141,8 @@ ImageCacheKey::ComputeHash(ImageURL* aURI,
   nsAutoCString suffix;
   aAttrs.CreateSuffix(suffix);
 
-  if (aBlobSerial) {
-    // For blob URIs, we hash the serial number of the underlying blob, so that
-    // different blob URIs which point to the same blob share a cache entry. We
-    // also include the ref portion of the URI to support media fragments which
-    // requires us to create different Image objects even if the source data is
-    // the same.
-    nsAutoCString ref;
-    aURI->GetRef(ref);
-    return HashGeneric(*aBlobSerial, HashString(ref + suffix + ptr));
-  }
-
-  // For non-blob URIs, we hash the URI spec.
-  nsAutoCString spec;
-  aURI->GetSpec(spec);
-  return HashString(spec + suffix + ptr);
+  return AddToHash(0, aURI->ComputeHash(aBlobSerial),
+                   HashString(suffix), HashString(ptr));
 }
 
 /* static */ void*
