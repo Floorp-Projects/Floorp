@@ -72,7 +72,7 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
         return false;
 
     if (sectionStart == Decoder::NotStarted) {
-        if (mg.numFuncDefs() != 0)
+        if (mg.env().numFuncDefs() != 0)
             return d.fail("expected function bodies");
 
         return mg.finishFuncDefs();
@@ -82,11 +82,11 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
     if (!d.readVarU32(&numFuncDefs))
         return d.fail("expected function body count");
 
-    if (numFuncDefs != mg.numFuncDefs())
+    if (numFuncDefs != mg.env().numFuncDefs())
         return d.fail("function body count does not match function signature count");
 
     for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
-        if (!DecodeFunctionBody(d, mg, mg.numFuncImports() + funcDefIndex))
+        if (!DecodeFunctionBody(d, mg, mg.env().numFuncImports() + funcDefIndex))
             return false;
     }
 
