@@ -80,6 +80,8 @@ public:
 
   static nsIThread* BackgroundThread();
 
+  static bool ShutdownHasStarted();
+
 private:
   // No subclassing
   ~nsUrlClassifierDBService();
