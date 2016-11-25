@@ -47,6 +47,41 @@ struct WRImageMask
     }
 };
 
+typedef uint64_t WRImageIdType;
+struct WRExternalImageId {
+  WRImageIdType id;
+};
+
+enum WRExternalImageType {
+    TEXTURE_HANDLE, // Currently, we only support gl texture handle.
+    // TODO(Jerry): handle shmem or cpu raw buffers.
+    //// MEM_OR_SHMEM,
+};
+
+struct WRExternalImage {
+  WRExternalImageType type;
+
+  // Texture coordinate
+  float u0, v0;
+  float u1, v1;
+
+  // external buffer handle
+  uint32_t handle;
+
+  // TODO(Jerry): handle shmem or cpu raw buffers.
+  //// shmem or memory buffer
+  //// uint8_t* buff;
+  //// size_t size;
+};
+
+typedef WRExternalImage (*GetExternalImageCallback)(void*, WRExternalImageId);
+typedef void (*ReleaseExternalImageCallback)(void*, WRExternalImageId);
+
+struct WRExternalImageHandler {
+  void* ExternalImageObj;
+  GetExternalImageCallback get_func;
+  ReleaseExternalImageCallback release_func;
+};
 
 struct wrwindowstate;
 struct wrstate;
@@ -60,7 +95,7 @@ struct wrstate;
 #endif
 
 WR_INLINE wrwindowstate*
-wr_init_window(uint64_t root_pipeline_id)
+wr_init_window(uint64_t root_pipeline_id, WRExternalImageHandler* handler = nullptr)
 WR_FUNC;
 
 WR_INLINE wrstate*
