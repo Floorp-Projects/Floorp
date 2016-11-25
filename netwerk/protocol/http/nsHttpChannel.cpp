@@ -5512,6 +5512,42 @@ NS_IMETHODIMP nsHttpChannel::OnAuthCancelled(bool userCancel)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsHttpChannel::CloseStickyConnection()
+{
+    LOG(("nsHttpChannel::CloseStickyConnection this=%p", this));
+
+    // Require we are between OnStartRequest and OnStopRequest, because
+    // what we do here takes effect in OnStopRequest (not reusing the
+    // connection for next authentication round).
+    if (!mIsPending) {
+        LOG(("  channel not pending"));
+        NS_ERROR("CloseStickyConnection not called before OnStopRequest, won't have any effect");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    MOZ_ASSERT(mTransaction);
+    if (!mTransaction) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    if (!(mCaps & NS_HTTP_STICKY_CONNECTION ||
+          mTransaction->Caps() & NS_HTTP_STICKY_CONNECTION)) {
+        LOG(("  not sticky"));
+        return NS_OK;
+    }
+
+    RefPtr<nsAHttpConnection> conn = mTransaction->GetConnectionReference();
+    if (!conn) {
+        LOG(("  no connection"));
+        return NS_OK;
+    }
+
+    // This turns the IsPersistent() indicator on the connection to false,
+    // and makes us throw it away in OnStopRequest.
+    conn->DontReuse();
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsISupports
 //-----------------------------------------------------------------------------
