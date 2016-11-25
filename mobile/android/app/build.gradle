@@ -436,6 +436,8 @@ android.applicationVariants.all { variant ->
         source = variant.javaCompile.source
         classpath = variant.javaCompile.classpath
 
+        excludeFilter = file("findbugs-exclude.xml")
+
         reports {
             html.enabled = true // We only care about HTML reports for humans
             xml.enabled = false
