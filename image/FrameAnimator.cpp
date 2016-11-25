@@ -423,10 +423,13 @@ FrameAnimator::DoBlend(IntRect* aDirtyRect,
     prevFrameData.mDisposalMethod = DisposalMethod::CLEAR;
   }
 
-  bool isFullPrevFrame = prevFrameData.mRect.x == 0 &&
-                         prevFrameData.mRect.y == 0 &&
-                         prevFrameData.mRect.width == mSize.width &&
-                         prevFrameData.mRect.height == mSize.height;
+  IntRect prevRect = prevFrameData.mBlendRect
+                   ? prevFrameData.mRect.Intersect(*prevFrameData.mBlendRect)
+                   : prevFrameData.mRect;
+
+  bool isFullPrevFrame = prevRect.x == 0 && prevRect.y == 0 &&
+                         prevRect.width == mSize.width &&
+                         prevRect.height == mSize.height;
 
   // Optimization: DisposeClearAll if the previous frame is the same size as
   //               container and it's clearing itself
@@ -436,10 +439,14 @@ FrameAnimator::DoBlend(IntRect* aDirtyRect,
   }
 
   AnimationData nextFrameData = nextFrame->GetAnimationData();
-  bool isFullNextFrame = nextFrameData.mRect.x == 0 &&
-                         nextFrameData.mRect.y == 0 &&
-                         nextFrameData.mRect.width == mSize.width &&
-                         nextFrameData.mRect.height == mSize.height;
+
+  IntRect nextRect = nextFrameData.mBlendRect
+                   ? nextFrameData.mRect.Intersect(*nextFrameData.mBlendRect)
+                   : nextFrameData.mRect;
+
+  bool isFullNextFrame = nextRect.x == 0 && nextRect.y == 0 &&
+                         nextRect.width == mSize.width &&
+                         nextRect.height == mSize.height;
 
   if (!nextFrame->GetIsPaletted()) {
     // Optimization: Skip compositing if the previous frame wants to clear the
@@ -465,7 +472,7 @@ FrameAnimator::DoBlend(IntRect* aDirtyRect,
       MOZ_FALLTHROUGH_ASSERT("Unexpected DisposalMethod");
     case DisposalMethod::NOT_SPECIFIED:
     case DisposalMethod::KEEP:
-      *aDirtyRect = nextFrameData.mRect;
+      *aDirtyRect = nextRect;
       break;
 
     case DisposalMethod::CLEAR_ALL:
@@ -481,7 +488,7 @@ FrameAnimator::DoBlend(IntRect* aDirtyRect,
       //       way at the bottom, and both frames being small, we'd be
       //       telling framechanged to refresh the whole image when only two
       //       small areas are needed.
-      aDirtyRect->UnionRect(nextFrameData.mRect, prevFrameData.mRect);
+      aDirtyRect->UnionRect(nextRect, prevRect);
       break;
 
     case DisposalMethod::RESTORE_PREVIOUS:
@@ -537,12 +544,9 @@ FrameAnimator::DoBlend(IntRect* aDirtyRect,
       // No need to blank the composite frame
       needToBlankComposite = false;
     } else {
-      if ((prevFrameData.mRect.x >= nextFrameData.mRect.x) &&
-          (prevFrameData.mRect.y >= nextFrameData.mRect.y) &&
-          (prevFrameData.mRect.x + prevFrameData.mRect.width <=
-              nextFrameData.mRect.x + nextFrameData.mRect.width) &&
-          (prevFrameData.mRect.y + prevFrameData.mRect.height <=
-              nextFrameData.mRect.y + nextFrameData.mRect.height)) {
+      if ((prevRect.x >= nextRect.x) && (prevRect.y >= nextRect.y) &&
+          (prevRect.x + prevRect.width <= nextRect.x + nextRect.width) &&
+          (prevRect.y + prevRect.height <= nextRect.y + nextRect.height)) {
         // Optimization: No need to dispose prev.frame when
         // next frame fully overlaps previous frame.
         doDisposal = false;
@@ -563,7 +567,7 @@ FrameAnimator::DoBlend(IntRect* aDirtyRect,
           // Only blank out previous frame area (both color & Mask/Alpha)
           ClearFrame(compositingFrameData.mRawData,
                      compositingFrameData.mRect,
-                     prevFrameData.mRect);
+                     prevRect);
         }
         break;
 
@@ -610,7 +614,7 @@ FrameAnimator::DoBlend(IntRect* aDirtyRect,
           if (isFullPrevFrame && !prevFrame->GetIsPaletted()) {
             // Just copy the bits
             CopyFrameImage(prevFrameData.mRawData,
-                           prevFrameData.mRect,
+                           prevRect,
                            compositingFrameData.mRawData,
                            compositingFrameData.mRect);
           } else {
