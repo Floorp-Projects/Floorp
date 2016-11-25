@@ -4638,6 +4638,9 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
     }
 
     SetCapturedOutputStreamsEnabled(true); // Unmute
+    // If the input is a media stream, we don't check its data and always regard
+    // it as audible when it's playing.
+    SetAudibleState(true);
   } else {
     if (stream) {
       mSrcStreamPausedCurrentTime = CurrentTime();
@@ -4661,10 +4664,6 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
     mMediaStreamListener->Forget();
     mMediaStreamListener = nullptr;
   }
-
-  // If the input is a media stream, we don't check its data and always regard
-  // it as audible when it's playing.
-  SetAudibleState(shouldPlay);
 }
 
 void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
