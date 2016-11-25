@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import ConfigParser
 import base64
 import datetime
 import json
@@ -15,14 +14,13 @@ import warnings
 
 from contextlib import contextmanager
 
-from decorators import do_process_check
-from keys import Keys
-
 import errors
-import geckoinstance
 import transport
-from timeout import Timeouts
 
+from .decorators import do_process_check
+from .geckoinstance import GeckoInstance
+from .keys import Keys
+from .timeout import Timeouts
 
 WEBELEMENT_KEY = "ELEMENT"
 W3C_WEBELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
@@ -584,39 +582,16 @@ class Marionette(object):
 
         startup_timeout = startup_timeout or self.DEFAULT_STARTUP_TIMEOUT
         if self.bin:
-            self.instance = self._create_instance(app, instance_args)
+            if not Marionette.is_port_available(self.port, host=self.host):
+                ex_msg = "{0}:{1} is unavailable.".format(self.host, self.port)
+                raise errors.MarionetteException(message=ex_msg)
+
+            self.instance = GeckoInstance.create(
+                app, host=self.host, port=self.port, bin=self.bin, **instance_args)
             self.instance.start()
             self.raise_for_port(timeout=startup_timeout)
 
         self.timeout = Timeouts(self)
-
-    def _create_instance(self, app, instance_args):
-        if not Marionette.is_port_available(self.port, host=self.host):
-            ex_msg = "{0}:{1} is unavailable.".format(self.host, self.port)
-            raise errors.MarionetteException(message=ex_msg)
-        if app:
-            # select instance class for the given app
-            try:
-                instance_class = geckoinstance.apps[app]
-            except KeyError:
-                msg = 'Application "{0}" unknown (should be one of {1})'
-                raise NotImplementedError(
-                    msg.format(app, geckoinstance.apps.keys()))
-        else:
-            try:
-                if not isinstance(self.bin, basestring):
-                    raise TypeError("bin must be a string if app is not specified")
-                config = ConfigParser.RawConfigParser()
-                config.read(os.path.join(os.path.dirname(self.bin),
-                                         'application.ini'))
-                app = config.get('App', 'Name')
-                instance_class = geckoinstance.apps[app.lower()]
-            except (ConfigParser.NoOptionError,
-                    ConfigParser.NoSectionError,
-                    KeyError):
-                instance_class = geckoinstance.GeckoInstance
-        return instance_class(host=self.host, port=self.port, bin=self.bin,
-                              **instance_args)
 
     @property
     def profile_path(self):

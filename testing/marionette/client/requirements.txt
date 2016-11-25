@@ -1,1 +1,2 @@
 mozrunner >= 6.13
+mozversion >= 1.1

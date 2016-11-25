@@ -9,6 +9,8 @@ import time
 
 from copy import deepcopy
 
+import mozversion
+
 from mozprofile import Profile
 from mozrunner import Runner, FennecEmulatorRunner
 
@@ -47,7 +49,7 @@ class GeckoInstance(object):
         "dom.ipc.cpows.forbid-unsafe-from-browser": False,
     }
 
-    def __init__(self, host, port, bin, profile=None, addons=None,
+    def __init__(self, host=None, port=None, bin=None, profile=None, addons=None,
                  app_args=None, symbols_path=None, gecko_log=None, prefs=None,
                  workspace=None, verbose=0):
         self.runner_class = Runner
@@ -132,6 +134,20 @@ class GeckoInstance(object):
                     profile_args["path_to"] = os.path.join(self.workspace,
                                                            profile_name)
                 self.profile = Profile.clone(**profile_args)
+
+    @classmethod
+    def create(cls, app=None, *args, **kwargs):
+        try:
+            if not app:
+                app_id = mozversion.get_version(binary=kwargs.get('bin'))['application_id']
+                app = app_ids[app_id]
+
+            instance_class = apps[app]
+        except KeyError:
+            msg = 'Application "{0}" unknown (should be one of {1})'
+            raise NotImplementedError(msg.format(app, apps.keys()))
+
+        return instance_class(*args, **kwargs)
 
     def start(self):
         self._update_profile()
@@ -318,6 +334,11 @@ class NullOutput(object):
 
 
 apps = {
-    'fxdesktop': DesktopInstance,
     'fennec': FennecInstance,
+    'fxdesktop': DesktopInstance,
+}
+
+app_ids = {
+    '{aa3c5121-dab2-40e2-81ca-7ea25febc110}': 'fennec',
+    '{ec8030f7-c20a-464f-9b0e-13a3a9e97384}': 'fxdesktop',
 }
