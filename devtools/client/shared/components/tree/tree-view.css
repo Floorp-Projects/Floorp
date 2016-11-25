@@ -39,6 +39,7 @@
   overflow: hidden;
   padding-inline-start: 4px;
   white-space: nowrap;
+  unicode-bidi: -moz-plaintext;
 }
 
 /* No paddding if there is actually no label */
