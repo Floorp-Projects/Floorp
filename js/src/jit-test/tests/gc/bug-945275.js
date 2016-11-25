@@ -4,7 +4,7 @@ function TestCase(n) {
 }
 gczeal(7,1);
 eval("\
-function reportCompare() new TestCase;\
+function reportCompare() { return new TestCase; };\
 reportCompare();\
 Object.defineProperty(Object.prototype, 'name', {});\
 reportCompare();\

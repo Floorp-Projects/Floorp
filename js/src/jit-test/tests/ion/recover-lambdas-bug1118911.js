@@ -1,7 +1,8 @@
 
 function test() {
-  function f()
-    k.apply(this, arguments);
+  function f() {
+    return k.apply(this, arguments);
+  }
   if (undefined >> undefined !== 0) {}
   for (var [ v , c ] in this.tracemonkey) {  }
 }

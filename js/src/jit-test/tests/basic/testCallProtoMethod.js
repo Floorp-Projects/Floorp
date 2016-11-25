@@ -3,7 +3,7 @@ function testCallProtoMethod() {
     X.prototype.getName = function () { return "X"; }
 
     function Y() { this.x = 2; }
-    Y.prototype.getName = function() "Y";
+    Y.prototype.getName = function() { return "Y"; };
 
     var a = [new X, new X, new X, new X, new Y];
     var s = '';

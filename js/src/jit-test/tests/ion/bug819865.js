@@ -1,2 +1,2 @@
-(function x() (x == x))();
+(function x() { return (x == x); })();
 

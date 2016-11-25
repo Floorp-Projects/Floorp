@@ -15,8 +15,8 @@ evalcx("\
     g.h = function() {\
         g.oomAfterAllocations(1);\
     };\
-    g.eval(\"\" + function f() g());\
-    g.eval(\"\" + function g() h());\
+    g.eval(\"\" + function f() { return g(); });\
+    g.eval(\"\" + function g() { return h(); });\
     g.eval(\"(\" + function() {\
         f();\
     } + \")()\");\

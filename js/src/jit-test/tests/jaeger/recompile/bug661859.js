@@ -1,4 +1,4 @@
-function TestCase(n, d, e, a) this.expect = e;
+function TestCase(n, d, e, a) { return this.expect = e; }
 function reportCompare(expected, actual, description) {
     typeof actual
 }
@@ -15,7 +15,7 @@ function notInlined(f) {
 }
 function test(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z) {
     try {
-        p = [1].some(notInlined(function (y) test())) ? 4 : 0x0041;
+        p = [1].some(notInlined(function (y) { return test(); })) ? 4 : 0x0041;
     } catch (ex) {}
     reportCompare(expect, actual, summary)
 }

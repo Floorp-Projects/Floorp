@@ -1,6 +1,7 @@
 
-function TestCase(n, d, e, a)
-  TestCase.prototype.dump = function () {}
+function TestCase(n, d, e, a) {
+  return TestCase.prototype.dump = function () {};
+}
 enableSPSProfiling();
 new TestCase(typeof Number(new Number()));
 new TestCase(typeof Number(new Number(Number.NaN)));

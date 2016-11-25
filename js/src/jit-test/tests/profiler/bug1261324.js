@@ -18,7 +18,7 @@ function assertThrowsInstanceOf(f) {
 function testThrow(thunk) {
     for (i = 0; i < 20; i++) {
         iter = thunk()
-        assertThrowsInstanceOf(function() iter.throw())
+        assertThrowsInstanceOf(function() { return iter.throw(); })
     }
 }
 testThrow(function*() {})

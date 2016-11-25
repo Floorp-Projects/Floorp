@@ -58,7 +58,7 @@ assertThrowsInstanceOf(rec, InternalError);
 var rec = asmLink(asmCompile(USE_ASM+"function rec(i) { i=i|0; if (!i) return 0; return ((rec((i-1)|0)|0)+1)|0 } return rec"));
 assertEq(rec(100), 100);
 assertEq(rec(1000), 1000);
-assertThrowsInstanceOf(function() rec(100000000000), InternalError);
+assertThrowsInstanceOf(() => rec(100000000000), InternalError);
 assertEq(rec(2000), 2000);
 
 assertAsmTypeFail(USE_ASM+"function f(){return 0} function g() { var i=0; i=f() } return g");

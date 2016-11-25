@@ -3,8 +3,9 @@
 let m = parseModule(`
 var i = 0;
 addThis();
-function addThis()
-  statusmessages[i] = Number;
+function addThis() {
+  return statusmessages[i] = Number;
+}
 `);
 m.declarationInstantiation();
 m.evaluation();

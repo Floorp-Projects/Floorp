@@ -2,8 +2,9 @@ g = newGlobal();
 g.parent = this;
 g.eval("(" + function() {
     Debugger(parent)
-        .onExceptionUnwind = function(frame)
-    frame.eval("")
+        .onExceptionUnwind = function(frame) {
+        return frame.eval("");
+    };
 } + ")()");
 m = parseModule(` s1 `);
 m.declarationInstantiation();

@@ -1,12 +1,12 @@
 const C = function (a, b, c) {
     return function C() {
-        this.m1 = function () a;
-        this.m2 = function () b;
-        this.m3 = function () c;
+        this.m1 = function () { return a; };
+        this.m2 = function () { return b; };
+        this.m3 = function () { return c; };
     }
 }(2,3,4);
 var c = new C();
-var d = function (e) {return {m0: function () e}}(5);
+var d = function (e) {return {m0: function () { return e; }}}(5);
 for (var i = 0; i < 5; i++)
     d.m0();
 C.call(d);
