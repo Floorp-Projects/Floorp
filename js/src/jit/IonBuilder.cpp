@@ -5255,8 +5255,13 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
         // the inlining was aborted for a non-exception reason.
         if (inlineBuilder.abortReason_ == AbortReason_Disable) {
             calleeScript->setUninlineable();
-            current = backup.restore();
-            return InliningStatus_NotInlined;
+            if (!JitOptions.disableInlineBacktracking) {
+                current = backup.restore();
+                return InliningStatus_NotInlined;
+            }
+            abortReason_ = AbortReason_Inlining;
+        } else if (inlineBuilder.abortReason_ == AbortReason_Inlining) {
+            abortReason_ = AbortReason_Inlining;
         } else if (inlineBuilder.abortReason_ == AbortReason_Alloc) {
             abortReason_ = AbortReason_Alloc;
         } else if (inlineBuilder.abortReason_ == AbortReason_PreliminaryObjects) {
@@ -5285,8 +5290,12 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
     if (returns.empty()) {
         // Inlining of functions that have no exit is not supported.
         calleeScript->setUninlineable();
-        current = backup.restore();
-        return InliningStatus_NotInlined;
+        if (!JitOptions.disableInlineBacktracking) {
+            current = backup.restore();
+            return InliningStatus_NotInlined;
+        }
+        abortReason_ = AbortReason_Inlining;
+        return InliningStatus_Error;
     }
     MDefinition* retvalDefn = patchInlinedReturns(callInfo, returns, returnBlock);
     if (!retvalDefn)
