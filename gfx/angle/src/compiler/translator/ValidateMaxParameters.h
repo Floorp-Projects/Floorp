@@ -10,6 +10,9 @@
 
 #include "compiler/translator/IntermNode.h"
 
+namespace sh
+{
+
 class ValidateMaxParameters : public TIntermTraverser
 {
   public:
@@ -25,5 +28,7 @@ class ValidateMaxParameters : public TIntermTraverser
     unsigned int mMaxParameters;
     bool mValid;
 };
+
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_VALIDATEMAXPARAMETERS_H_

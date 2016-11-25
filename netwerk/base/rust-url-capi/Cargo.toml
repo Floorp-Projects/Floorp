@@ -17,3 +17,4 @@ name = "rust_url_capi"
 [dependencies]
 libc = "0.2.0"
 url = "1.2.1"
+nsstring = { path = "../../../xpcom/rust/nsstring" }

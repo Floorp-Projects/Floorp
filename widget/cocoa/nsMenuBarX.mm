@@ -55,43 +55,12 @@ NS_IMETHODIMP nsNativeMenuServiceX::CreateNativeMenuBar(nsIWidget* aParent, nsIC
   return mb->Create(aParent, aMenuBarNode);
 }
 
-//
-// ApplicationMenuDelegate Objective-C class
-//
-
-@implementation ApplicationMenuDelegate
-
-- (id)initWithApplicationMenu:(nsMenuBarX*)aApplicationMenu
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  if ((self = [super init])) {
-    mApplicationMenu = aApplicationMenu;
-  }
-  return self;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-- (void)menuWillOpen:(NSMenu*)menu
-{
-  mApplicationMenu->ApplicationMenuOpened();
-}
-
-- (void)menuDidClose:(NSMenu*)menu
-{
-}
-
-@end
-
 nsMenuBarX::nsMenuBarX()
-: nsMenuGroupOwnerX(), mParentWindow(nullptr), mNeedsRebuild(false)
+: nsMenuGroupOwnerX(), mParentWindow(nullptr)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mNativeMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
-  mApplicationMenuDelegate =
-    [[ApplicationMenuDelegate alloc] initWithApplicationMenu:this];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -122,11 +91,6 @@ nsMenuBarX::~nsMenuBarX()
   // depend on member variable ordering to ensure that the array gets cleared
   // before the registration hash table is destroyed.
   mMenuArray.Clear();
-
-  if (sApplicationMenu) {
-    ResetNativeApplicationMenu();
-  }
-  [mApplicationMenuDelegate release];
 
   [mNativeMenu release];
 
@@ -214,7 +178,6 @@ void nsMenuBarX::ConstructFallbackNativeMenus()
   }
 
   sApplicationMenu = [[[[NSApp mainMenu] itemAtIndex:0] submenu] retain];
-  [sApplicationMenu setDelegate:mApplicationMenuDelegate];
   NSMenuItem* quitMenuItem = [[[NSMenuItem alloc] initWithTitle:labelStr
                                                   action:@selector(menuItemHit:)
                                                   keyEquivalent:keyStr] autorelease];
@@ -509,22 +472,6 @@ void nsMenuBarX::ResetNativeApplicationMenu()
   sApplicationMenuIsFallback = NO;
 }
 
-void nsMenuBarX::SetNeedsRebuild()
-{
-  mNeedsRebuild = true;
-}
-
-void nsMenuBarX::ApplicationMenuOpened()
-{
-  if (mNeedsRebuild) {
-    if (!mMenuArray.IsEmpty()) {
-      ResetNativeApplicationMenu();
-      CreateApplicationMenu(mMenuArray[0].get());
-    }
-    mNeedsRebuild = false;
-  }
-}
-
 // Hide the item in the menu by setting the 'hidden' attribute. Returns it in |outHiddenNode| so
 // the caller can hang onto it if they so choose. It is acceptable to pass nsull
 // for |outHiddenNode| if the caller doesn't care about the hidden node.
@@ -697,8 +644,6 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
 */
 
   if (sApplicationMenu) {
-    [sApplicationMenu setDelegate:mApplicationMenuDelegate];
-
     // This code reads attributes we are going to care about from the DOM elements
 
     NSMenuItem *itemBeingAdded = nil;
