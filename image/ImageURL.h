@@ -9,9 +9,13 @@
 #include "nsIURI.h"
 #include "MainThreadUtils.h"
 #include "nsNetUtil.h"
+#include "mozilla/HashFunctions.h"
+#include "nsHashKeys.h"
 
 namespace mozilla {
 namespace image {
+
+class ImageCacheKey;
 
 /** ImageURL
  *
@@ -113,6 +117,22 @@ public:
   }
 
 private:
+  friend class ImageCacheKey;
+
+  uint32_t ComputeHash(const Maybe<uint64_t>& aBlobSerial) const
+  {
+    if (aBlobSerial) {
+      // For blob URIs, we hash the serial number of the underlying blob, so that
+      // different blob URIs which point to the same blob share a cache entry. We
+      // also include the ref portion of the URI to support media fragments which
+      // requires us to create different Image objects even if the source data is
+      // the same.
+      return HashGeneric(*aBlobSerial, HashString(mRef));
+    }
+    // For non-blob URIs, we hash the URI spec.
+    return HashString(mSpec);
+  }
+
   // Since this is a basic storage class, no duplication of spec parsing is
   // included in the functionality. Instead, the class depends upon the
   // parsing implementation in the nsIURI class used in object construction.
