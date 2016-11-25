@@ -105,7 +105,7 @@ notification[type="info"]:not([value="translation"]) .close-icon:not(:hover) {
 
 %include ../../shared/popupnotification.inc.css
 
-.popup-notification-button:focus {
+.popup-notification-button:-moz-focusring {
   outline: 2px -moz-mac-focusring solid;
   outline-offset: -2px;
 }
