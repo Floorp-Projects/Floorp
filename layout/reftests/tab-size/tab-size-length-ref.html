@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+    <title>CSS Test: Testing the layout of TAB characters with various 'tab-size' length values</title>
+    <link rel="author" title="Mats Palmgren" href="mailto:mats@mozilla.com">
+
+    <meta charset="utf-8">
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px;
+        }
+
+tab { display:inline-block; }
+#t1 tab { width:20px; }
+#t2 tab { width:30px; }
+#t3 tab { width:2ch; }
+#t4 tab { width:3em; }
+#t5 tab { width:calc(10px + 2em); }
+#t6 tab { width:2em; }
+#t7 tab { width:2.5ch; }
+#t8 tab { width:1.6ch; }
+#t9 tab { width:1ch; }
+#t10 tab { width:1ch; }
+#t11 tab { width:1ch; }
+#t12 tab { width:1ch; }
+#t13 tab { width:1ch; }
+#t14 tab { width:1ch; }
+#t15 tab { width:2ch; }
+#t16 tab { width:3ch; }
+#t17 tab { width:3.5ch; }
+
+    </style>
+</head>
+<body>
+
+<pre id="t1"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t2"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t3"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t4"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t5"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t6"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t7"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t8"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t9"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t10"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t11"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t12"><tab>A</tab><tab>B</tab>C</pre>
+<pre>A&#9;B&#9;C</pre>
+<pre>A&#9;B&#9;C</pre>
+<pre>A&#9;B&#9;C</pre>
+<pre id="t13"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t14"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t15"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t16"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t17"><tab>A</tab><tab>B</tab>C</pre>
+<pre>A&#9;B&#9;C</pre>
+
+</body>
+</html>
