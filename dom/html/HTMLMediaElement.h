@@ -82,7 +82,6 @@ class VideoTrackList;
 class HTMLMediaElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLMediaElement,
                          public MediaDecoderOwner,
-                         public nsIAudioChannelAgentCallback,
                          public PrincipalChangeObserver<DOMMediaStream>,
                          public SupportsWeakPtr<HTMLMediaElement>
 {
@@ -117,8 +116,6 @@ public:
 
   // nsIDOMHTMLMediaElement
   NS_DECL_NSIDOMHTMLMEDIAELEMENT
-
-  NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -757,6 +754,7 @@ public:
 protected:
   virtual ~HTMLMediaElement();
 
+  class AudioChannelAgentCallback;
   class ChannelLoader;
   class ErrorSink;
   class MediaLoadListener;
@@ -1236,8 +1234,8 @@ protected:
   // Determine if the element should be paused because of suspend conditions.
   bool ShouldElementBePaused();
 
-  // Create or destroy the captured stream depend on mAudioCapturedByWindow.
-  void AudioCaptureStreamChangeIfNeeded();
+  // Create or destroy the captured stream.
+  void AudioCaptureStreamChange(bool aCapture);
 
   /**
    * We have different kinds of suspended cases,
@@ -1743,6 +1741,11 @@ private:
   Visibility mVisibilityState;
 
   UniquePtr<ErrorSink> mErrorSink;
+
+  // This wrapper will handle all audio channel related stuffs, eg. the operations
+  // of tab audio indicator, Fennec's media control.
+  // Note: mAudioChannelWrapper might be null after GC happened.
+  RefPtr<AudioChannelAgentCallback> mAudioChannelWrapper;
 };
 
 } // namespace dom
