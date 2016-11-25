@@ -7,5 +7,5 @@ function check(f) {
   assertEqArray(f.call(...[null, 1, ...[2, 3], 4, ...[5, 6]]), [1, 2, 3, 4, 5, 6]);
 }
 
-check(function(...x) x);
+check(function(...x) { return x; });
 check((...x) => x);

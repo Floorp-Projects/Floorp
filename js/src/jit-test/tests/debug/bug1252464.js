@@ -3,7 +3,7 @@
 g = newGlobal();
 dbg = Debugger(g);
 hits = 0;
-dbg.onNewScript = function () hits++;
+dbg.onNewScript = function () { return hits++; };
 assertEq(g.eval("eval('2 + 3')"), 5);
 this.gczeal(hits,1);
 dbg = Debugger(g);

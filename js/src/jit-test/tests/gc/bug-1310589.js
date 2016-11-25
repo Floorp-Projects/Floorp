@@ -12,7 +12,7 @@ for (var i = 0; i < 4; ++i) {
     function f1() {}
 }
 Object.defineProperty(a, 12, {}).push(1);
-toString = (function() a.reverse())
+toString = (function() { return a.reverse(); })
 oomTest(Date.prototype.toJSON)
 function f1000(){}
 function f1001(){}

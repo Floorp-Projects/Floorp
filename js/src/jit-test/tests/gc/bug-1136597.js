@@ -8,8 +8,9 @@ var evalInFrame = (function (global) {
 })(this);
 var gTestcases = new Array();
 var gTc = gTestcases.length;
-function TestCase()
-  gTestcases[gTc++] = this;
+function TestCase() {
+  return gTestcases[gTc++] = this;
+}
 function checkCollation(extensionCoValue, usageValue) {
     var collator = new Intl.Collator(["de-DE"]);
     collator.resolvedOptions().collation;

@@ -1,5 +1,6 @@
-function TestCase(n, d, e, a)
-  this.reason = '';
+function TestCase(n, d, e, a) {
+  return this.reason = '';
+}
 function reportCompare (expected, actual, description) {
   var output = "";
   var testcase = new TestCase("unknown-test-name", description, expected, actual);

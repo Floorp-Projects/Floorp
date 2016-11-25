@@ -7,7 +7,7 @@ function TestCase(n) {
   this.reason = '';
   this.passed = '';
 }
-function test() new TestCase;
+function test() { return new TestCase; }
 test();
 Object.defineProperty(Object.prototype, "name", {});
 test();

@@ -13,7 +13,7 @@ file = lfcode.shift();
 loadFile(file);
 function loadFile(lfVarx) {
     try {
-        function newFunc(x) Function(x)();
+        function newFunc(x) { return Function(x)(); }
         newFunc(lfVarx)();
     } catch (lfVare) {
         print(lfVare)
