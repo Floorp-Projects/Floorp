@@ -3497,9 +3497,10 @@ nsDisplayImageContainer::GetContainer(LayerManager* aManager,
     return nullptr;
   }
 
-  uint32_t flags = aBuilder->ShouldSyncDecodeImages()
-                 ? imgIContainer::FLAG_SYNC_DECODE
-                 : imgIContainer::FLAG_NONE;
+  uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
+  if (aBuilder->ShouldSyncDecodeImages()) {
+    flags |= imgIContainer::FLAG_SYNC_DECODE;
+  }
 
   return image->GetImageContainer(aManager, flags);
 }
