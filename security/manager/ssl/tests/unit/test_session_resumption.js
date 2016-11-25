@@ -109,9 +109,51 @@ function add_resume_ev_test() {
   });
 }
 
+const statsPtr = getSSLStatistics();
+const toInt32 = ctypes.Int64.lo;
+const GOOD_DOMAIN = "good.include-subdomains.pinning.example.com";
+
+// Connect to the same domain with two origin attributes and check if any ssl
+// session is resumed.
+function add_origin_attributes_test(originAttributes1, originAttributes2,
+                                    resumeExpected) {
+  add_connection_test(GOOD_DOMAIN, PRErrorCodeSuccess, clearSessionCache, null,
+                      null, originAttributes1);
+
+  let hitsBeforeConnect;
+  let missesBeforeConnect;
+  let expectedHits = resumeExpected ? 1 : 0;
+  let expectedMisses = 1 - expectedHits;
+
+  add_connection_test(GOOD_DOMAIN, PRErrorCodeSuccess,
+                      function() {
+                        // Add the hits and misses before connection.
+                        let stats = statsPtr.contents;
+                        hitsBeforeConnect = toInt32(stats.sch_sid_cache_hits);
+                        missesBeforeConnect =
+                          toInt32(stats.sch_sid_cache_misses);
+                      },
+                      function() {
+                        let stats = statsPtr.contents;
+                        equal(toInt32(stats.sch_sid_cache_hits),
+                              hitsBeforeConnect + expectedHits,
+                              "Unexpected cache hits");
+                        equal(toInt32(stats.sch_sid_cache_misses),
+                              missesBeforeConnect + expectedMisses,
+                              "Unexpected cache misses");
+                      }, null, originAttributes2);
+}
+
 function run_test() {
   add_tls_server_setup("BadCertServer", "bad_certs");
   add_resume_non_ev_with_override_test();
   add_resume_ev_test();
+  add_origin_attributes_test({}, {}, true);
+  add_origin_attributes_test({ userContextId: 1 }, { userContextId: 2 }, false);
+  add_origin_attributes_test({ userContextId: 3 }, { userContextId: 3 }, true);
+  add_origin_attributes_test({ firstPartyDomain: "foo.com" },
+                             { firstPartyDomain: "bar.com" }, false);
+  add_origin_attributes_test({ firstPartyDomain: "baz.com" },
+                             { firstPartyDomain: "baz.com" }, true);
   run_next_test();
 }
