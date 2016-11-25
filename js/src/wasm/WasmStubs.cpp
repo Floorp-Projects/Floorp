@@ -21,7 +21,7 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "wasm/WasmCode.h"
-#include "wasm/WasmIonCompile.h"
+#include "wasm/WasmGenerator.h"
 
 #include "jit/MacroAssembler-inl.h"
 

@@ -3697,9 +3697,9 @@ EmitExpr(FunctionCompiler& f)
 }
 
 bool
-wasm::IonCompileFunction(IonCompileTask* task)
+wasm::IonCompileFunction(CompileTask* task)
 {
-    MOZ_ASSERT(task->mode() == IonCompileTask::CompileMode::Ion);
+    MOZ_ASSERT(task->mode() == CompileTask::CompileMode::Ion);
 
     const FuncBytes& func = task->func();
     FuncCompileResults& results = task->results();
@@ -3778,22 +3778,4 @@ wasm::IonCompileFunction(IonCompileTask* task)
     }
 
     return true;
-}
-
-bool
-wasm::CompileFunction(IonCompileTask* task)
-{
-    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-    AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
-
-    switch (task->mode()) {
-      case wasm::IonCompileTask::CompileMode::Ion:
-        return wasm::IonCompileFunction(task);
-      case wasm::IonCompileTask::CompileMode::Baseline:
-        return wasm::BaselineCompileFunction(task);
-      case wasm::IonCompileTask::CompileMode::None:
-        break;
-    }
-
-    MOZ_CRASH("Uninitialized task");
 }

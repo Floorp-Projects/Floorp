@@ -70,12 +70,12 @@ ModuleGenerator::~ModuleGenerator()
         if (outstanding_) {
             AutoLockHelperThreadState lock;
             while (true) {
-                IonCompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist(lock);
+                CompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist(lock);
                 MOZ_ASSERT(outstanding_ >= worklist.length());
                 outstanding_ -= worklist.length();
                 worklist.clear();
 
-                IonCompileTaskPtrVector& finished = HelperThreadState().wasmFinishedList(lock);
+                CompileTaskPtrVector& finished = HelperThreadState().wasmFinishedList(lock);
                 MOZ_ASSERT(outstanding_ >= finished.length());
                 outstanding_ -= finished.length();
                 finished.clear();
@@ -224,7 +224,7 @@ ModuleGenerator::finishOutstandingTask()
 {
     MOZ_ASSERT(parallel_);
 
-    IonCompileTask* task = nullptr;
+    CompileTask* task = nullptr;
     {
         AutoLockHelperThreadState lock;
         while (true) {
@@ -385,7 +385,7 @@ ModuleGenerator::patchFarJumps(const TrapExitOffsetArray& trapExits)
 }
 
 bool
-ModuleGenerator::finishTask(IonCompileTask* task)
+ModuleGenerator::finishTask(CompileTask* task)
 {
     const FuncBytes& func = task->func();
     FuncCompileResults& results = task->results();
@@ -901,13 +901,13 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
         return false;
 
     auto mode = alwaysBaseline_ && BaselineCanCompile(fg)
-                ? IonCompileTask::CompileMode::Baseline
-                : IonCompileTask::CompileMode::Ion;
+                ? CompileTask::CompileMode::Baseline
+                : CompileTask::CompileMode::Ion;
 
     if (freeTasks_.empty() && !finishOutstandingTask())
         return false;
 
-    IonCompileTask* task = freeTasks_.popCopy();
+    CompileTask* task = freeTasks_.popCopy();
     task->init(Move(func), mode);
 
     if (parallel_) {
@@ -1126,4 +1126,22 @@ ModuleGenerator::finish(const ShareableBytes& bytecode, DataSegmentVector&& data
                                        Move(env_->elemSegments),
                                        *metadata_,
                                        bytecode));
+}
+
+bool
+wasm::CompileFunction(CompileTask* task)
+{
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
+    AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
+
+    switch (task->mode()) {
+      case wasm::CompileTask::CompileMode::Ion:
+        return wasm::IonCompileFunction(task);
+      case wasm::CompileTask::CompileMode::Baseline:
+        return wasm::BaselineCompileFunction(task);
+      case wasm::CompileTask::CompileMode::None:
+        break;
+    }
+
+    MOZ_CRASH("Uninitialized task");
 }
