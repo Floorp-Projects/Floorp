@@ -1975,7 +1975,7 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
   cinst.minBitrate = mMinBitrate ? mMinBitrate : 200;
   cinst.startBitrate = mStartBitrate ? mStartBitrate : 300;
   cinst.targetBitrate = cinst.startBitrate;
-  cinst.maxBitrate = MinIgnoreZero(2000U, codecInfo->mEncodingConstraints.maxBr)/1000;
+  cinst.maxBitrate = MinIgnoreZero(2000U, codecInfo->mEncodingConstraints.maxBr/1000);
   // not mNegotiatedMaxBitrate! cinst.maxBitrate is the max for the codec, which will be overridden
   cinst.maxBitrate = MinIgnoreZero(cinst.maxBitrate, mPrefMaxBitrate);
 
