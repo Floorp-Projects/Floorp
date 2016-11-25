@@ -105,4 +105,11 @@ interface nsIHttpAuthenticableChannel : nsIProxiedChannel
      *        If the user was cancelled has cancelled the authentication prompt.
      */
     void onAuthCancelled(in boolean userCancel);
+
+    /**
+     * Tells the channel to drop and close any sticky connection, since this
+     * connection oriented schema cannot be negotiated second time on
+     * the same connection.
+     */
+    void closeStickyConnection();
 };
