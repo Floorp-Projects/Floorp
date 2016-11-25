@@ -79,6 +79,7 @@ nsHttpChannelAuthProvider::nsHttpChannelAuthProvider()
     , mTriedHostAuth(false)
     , mSuppressDefensiveAuth(false)
     , mCrossOrigin(false)
+    , mConnectionBased(false)
     , mHttpHandler(gHttpHandler)
 {
 }
@@ -792,6 +793,18 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
 
     LOG(("  identity invalid = %d\n", identityInvalid));
 
+    if (mConnectionBased && identityInvalid) {
+        // If the flag is set and identity is invalid, it means we received the first
+        // challange for a new negotiation round after negotiating a connection based
+        // auth failed (invalid password).
+        // The mConnectionBased flag is set later for the newly received challenge,
+        // so here it reflects the previous 401/7 response schema.
+        mAuthChannel->CloseStickyConnection();
+        mConnectionBased = false;
+    }
+
+    mConnectionBased = !!(authFlags & nsIHttpAuthenticator::CONNECTION_BASED);
+
     if (identityInvalid) {
         if (entry) {
             if (ident->Equals(entry->Identity())) {
@@ -1304,6 +1317,14 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnAuthCancelled(nsISupports *aContext,
     mAsyncPromptAuthCancelable = nullptr;
     if (!mAuthChannel)
         return NS_OK;
+
+    // When user cancels or auth fails we want to close the connection for
+    // connection based schemes like NTLM.  Some servers don't like re-negotiation
+    // on the same connection.
+    if (mConnectionBased) {
+        mAuthChannel->CloseStickyConnection();
+        mConnectionBased = false;
+    }
 
     if (userCancel) {
         if (!mRemainingChallenges.IsEmpty()) {
