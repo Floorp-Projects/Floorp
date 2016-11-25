@@ -312,8 +312,7 @@ function copyPermanentKey(outer, inner) {
   // what SessionStore uses to identify each browser.
   let outerMM = outer[FRAME_LOADER].messageManager;
   let onHistoryEntry = message => {
-    let data = message.data.data;
-    let history = data.history || data.historychange;
+    let history = message.data.data.history;
     if (!history || !history.entries) {
       // Wait for a message that contains history data
       return;
