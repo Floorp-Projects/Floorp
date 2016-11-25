@@ -198,7 +198,7 @@ NS_IMETHODIMP_(size_t)
 nsStringInputStream::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
-  n += mData.SizeOfIncludingThisIfUnshared(aMallocSizeOf);
+  n += mData.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   return n;
 }
 
