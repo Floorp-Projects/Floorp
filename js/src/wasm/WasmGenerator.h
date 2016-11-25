@@ -92,6 +92,9 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool initAsmJS(Metadata* asmJSMetadata);
     MOZ_MUST_USE bool initWasm();
 
+    // Functions declarations:
+    uint32_t numFuncImports() const;
+
   public:
     explicit ModuleGenerator();
     ~ModuleGenerator();
@@ -120,10 +123,6 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Globals:
     const GlobalDescVector& globals() const { return env_->globals; }
-
-    // Functions declarations:
-    uint32_t numFuncImports() const;
-    uint32_t numFuncDefs() const;
 
     // Function definitions:
     MOZ_MUST_USE bool startFuncDefs();
