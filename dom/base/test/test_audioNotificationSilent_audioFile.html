@@ -12,7 +12,6 @@ SimpleTest.waitForExplicitFinish();
 
 var generator = runTest();
 var expectedPlaybackActive = null;
-var expectedPlaying = null;
 
 var audio = new Audio();
 audio.src = "audioEndedDuringPlaying.webm";
@@ -24,7 +23,6 @@ var observer = {
   observe: function(subject, topic, data) {
     is(topic, "audio-playback", "audio-playback received");
     is(data, expectedPlaybackActive, "Corrrect audible state");
-    is(!audio.ended, expectedPlaying, "Corrrect playing state");
     continueTest();
   }
 };
@@ -42,7 +40,6 @@ function audioPlayingStart() {
   ok(true, "Observer set");
 
   expectedPlaybackActive = 'active';
-  expectedPlaying = true;
 
   info("Audio playing start");
   audio.play();
@@ -52,7 +49,6 @@ function audioBecomeSilentDuringPlaying() {
   info("Audio would become silent during playing");
 
   expectedPlaybackActive = 'inactive-nonaudible';
-  expectedPlaying = true;
 }
 
 function finish() {

@@ -825,7 +825,7 @@ function test_urlBar() {
     let panel = yield notificationPromise;
 
     let notification = panel.childNodes[0];
-    is(notification.button.label, "", "Button to allow install should be hidden.");
+    ok(!notification.hasAttribute("buttonlabel"), "Button to allow install should be hidden.");
     yield removeTab();
   });
 },

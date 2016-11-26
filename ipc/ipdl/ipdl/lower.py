@@ -4151,15 +4151,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         msgvar, stmts = self.makeMessage(md, errfnSendDtor, actorvar)
         sendok, sendstmts = self.sendAsync(md, msgvar, actorvar)
-        failif = StmtIf(ExprNot(sendok))
-        failif.addifstmt(StmtReturn.FALSE)
-
         method.addstmts(
             stmts
             + self.genVerifyMessage(md.decl.type.verify, md.params,
                                     errfnSendDtor, ExprVar('msg__'))
             + sendstmts
-            + [ failif, Whitespace.NL ]
+            + [ Whitespace.NL ]
             + self.dtorEpilogue(md, actor.var())
             + [ StmtReturn(sendok) ])
 
@@ -4183,9 +4180,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         replyvar = self.replyvar
         sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar, actorvar)
-        failif = StmtIf(ExprNot(sendok))
-        failif.addifstmt(StmtReturn.FALSE)
-
         method.addstmts(
             stmts
             + self.genVerifyMessage(md.decl.type.verify, md.params,
@@ -4207,8 +4201,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             method.addstmts(self.transition(md, 'in', actor.var(), reply=True))
 
         method.addstmts(
-            [ failif, Whitespace.NL ]
-            + self.dtorEpilogue(md, actor.var())
+            self.dtorEpilogue(md, actor.var())
             + [ Whitespace.NL, StmtReturn(sendok) ])
 
         return method
