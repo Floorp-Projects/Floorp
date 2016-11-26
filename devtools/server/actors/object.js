@@ -1158,11 +1158,6 @@ DebuggerServer.ObjectActorPreviewers = {
   }],
 
   RegExp: [function ({obj, hooks}, grip) {
-    // Avoid having any special preview for the RegExp.prototype itself.
-    if (!obj.proto || obj.proto.class != "RegExp") {
-      return false;
-    }
-
     let str = RegExp.prototype.toString.call(obj.unsafeDereference());
     grip.displayString = hooks.createValueGrip(str);
     return true;
