@@ -74,6 +74,8 @@ GetPropIRGenerator::tryAttachStub(Maybe<CacheIRWriter>& writer)
             return false;
         if (!emitted_ && !tryAttachWindowProxy(*writer, obj, objId))
             return false;
+        if (!emitted_ && !tryAttachProxy(*writer, obj, objId))
+            return false;
         return true;
     }
 
@@ -379,6 +381,37 @@ GetPropIRGenerator::tryAttachWindowProxy(CacheIRWriter& writer, HandleObject obj
     ObjOperandId windowObjId = writer.loadObject(windowObj);
     EmitCallGetterResult(writer, windowObj, holder, shape, windowObjId);
     return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachGenericProxy(CacheIRWriter& writer, HandleObject obj,
+                                          ObjOperandId objId)
+{
+    MOZ_ASSERT(!emitted_);
+    MOZ_ASSERT(obj->is<ProxyObject>());
+
+    emitted_ = true;
+
+    writer.guardIsProxy(objId);
+
+    // Ensure that the incoming object is not a DOM proxy, so that we can get to
+    // the specialized stubs
+    writer.guardNotDOMProxy(objId);
+
+    writer.callProxyGetResult(objId, NameToId(name_));
+    writer.typeMonitorResult();
+    return true;
+}
+
+bool
+GetPropIRGenerator::tryAttachProxy(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId)
+{
+    MOZ_ASSERT(!emitted_);
+
+    if (!obj->is<ProxyObject>())
+        return true;
+
+    return tryAttachGenericProxy(writer, obj, objId);
 }
 
 bool
