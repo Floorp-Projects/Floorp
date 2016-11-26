@@ -95,7 +95,8 @@ VRManager::VRManager()
   }
 #endif
   // Enable gamepad extensions while VR is enabled.
-  if (gfxPrefs::VREnabled()) {
+  // Preference only can be set at the Parent process.
+  if (XRE_IsParentProcess() && gfxPrefs::VREnabled()) {
     Preferences::SetBool("dom.gamepad.extensions.enabled", true);
   }
 }
