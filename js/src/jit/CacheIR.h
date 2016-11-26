@@ -65,6 +65,7 @@ class OperandId
 class ValOperandId : public OperandId
 {
   public:
+    ValOperandId() = default;
     explicit ValOperandId(uint16_t id) : OperandId(id) {}
 };
 
@@ -93,6 +94,10 @@ class ObjOperandId : public OperandId
     _(GuardAndLoadUnboxedExpando)         \
     _(LoadObject)                         \
     _(LoadProto)                          \
+                                          \
+    _(LoadDOMExpandoValue)                \
+    _(GuardDOMExpandoObject)              \
+    _(GuardDOMExpandoGeneration)          \
                                           \
     /* The *Result ops load a value into the cache's result register. */ \
     _(LoadFixedSlotResult)                \
@@ -362,6 +367,28 @@ class MOZ_RAII CacheIRWriter
         return res;
     }
 
+    ValOperandId loadDOMExpandoValue(ObjOperandId obj) {
+        ValOperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::LoadDOMExpandoValue, obj);
+        writeOperandId(res);
+        return res;
+    }
+    void guardDOMExpandoObject(ValOperandId expando, Shape* shape) {
+        writeOpWithOperandId(CacheOp::GuardDOMExpandoObject, expando);
+        addStubField(uintptr_t(shape), StubField::Type::Shape);
+    }
+    ValOperandId guardDOMExpandoGeneration(ObjOperandId obj,
+                                           ExpandoAndGeneration* expandoAndGeneration,
+                                           uint64_t generation)
+    {
+        ValOperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::GuardDOMExpandoGeneration, obj);
+        addStubField(uintptr_t(expandoAndGeneration), StubField::Type::RawWord);
+        addStubField(generation, StubField::Type::RawInt64);
+        writeOperandId(res);
+        return res;
+    }
+
     void loadUndefinedResult() {
         writeOp(CacheOp::LoadUndefinedResult);
     }
@@ -511,6 +538,8 @@ class MOZ_RAII GetPropIRGenerator
                                             ObjOperandId objId);
     MOZ_MUST_USE bool tryAttachDOMProxyShadowed(CacheIRWriter& writer, HandleObject obj,
                                                 ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachDOMProxyUnshadowed(CacheIRWriter& writer, HandleObject obj,
+                                                  ObjOperandId objId);
     MOZ_MUST_USE bool tryAttachProxy(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
 
     MOZ_MUST_USE bool tryAttachPrimitive(CacheIRWriter& writer, ValOperandId valId);

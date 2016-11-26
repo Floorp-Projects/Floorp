@@ -2213,10 +2213,7 @@ StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub);
 
 MOZ_MUST_USE bool
 EffectlesslyLookupProperty(JSContext* cx, HandleObject obj, HandleId name,
-                           MutableHandleObject holder, MutableHandleShape shape,
-                           bool* checkDOMProxy=nullptr,
-                           DOMProxyShadowsResult* shadowsResult=nullptr,
-                           bool* domProxyHasGeneration=nullptr);
+                           MutableHandleObject holder, MutableHandleShape shape);
 
 JSObject*
 GetDOMProxyProto(JSObject* obj);
@@ -2251,15 +2248,6 @@ GuardReceiverObject(MacroAssembler& masm, ReceiverGuard guard,
 
 MOZ_MUST_USE bool
 GetProtoShapes(JSObject* obj, size_t protoChainDepth, MutableHandle<ShapeVector> shapes);
-
-void
-CheckDOMProxyExpandoDoesNotShadow(JSContext* cx, MacroAssembler& masm, Register object,
-                                  const Address& checkExpandoShapeAddr,
-                                  Address* expandoAndGenerationAddr,
-                                  Address* generationAddr,
-                                  Register scratch,
-                                  AllocatableGeneralRegisterSet& domProxyRegSet,
-                                  Label* checkFailed);
 
 void
 CheckForTypedObjectWithDetachedStorage(JSContext* cx, MacroAssembler& masm, Label* failure);
@@ -2682,112 +2670,6 @@ class ICGetPropCallNativeCompiler : public ICGetPropCallGetter::Compiler
                                       getter, pcOffset),
         inputDefinitelyObject_(inputDefinitelyObject)
     {}
-
-    ICStub* getStub(ICStubSpace* space);
-};
-
-class ICGetPropCallDOMProxyNativeStub : public ICGetPropCallGetter
-{
-  friend class ICStubSpace;
-  protected:
-    // Object shape of expected expando object. (nullptr if no expando object should be there)
-    GCPtrShape expandoShape_;
-
-    ICGetPropCallDOMProxyNativeStub(ICStub::Kind kind, JitCode* stubCode,
-                                    ICStub* firstMonitorStub, Shape* shape,
-                                    Shape* expandoShape,
-                                    JSObject* holder, Shape* holderShape,
-                                    JSFunction* getter, uint32_t pcOffset);
-
-  public:
-    GCPtrShape& expandoShape() {
-        return expandoShape_;
-    }
-    static size_t offsetOfExpandoShape() {
-        return offsetof(ICGetPropCallDOMProxyNativeStub, expandoShape_);
-    }
-};
-
-class ICGetProp_CallDOMProxyNative : public ICGetPropCallDOMProxyNativeStub
-{
-    friend class ICStubSpace;
-    ICGetProp_CallDOMProxyNative(JitCode* stubCode, ICStub* firstMonitorStub, Shape* shape,
-                                 Shape* expandoShape,
-                                 JSObject* holder, Shape* holderShape,
-                                 JSFunction* getter, uint32_t pcOffset)
-      : ICGetPropCallDOMProxyNativeStub(ICStub::GetProp_CallDOMProxyNative, stubCode,
-                                        firstMonitorStub, shape, expandoShape,
-                                        holder, holderShape, getter, pcOffset)
-    {}
-
-  public:
-    static ICGetProp_CallDOMProxyNative* Clone(JSContext* cx,
-                                               ICStubSpace* space,
-                                               ICStub* firstMonitorStub,
-                                               ICGetProp_CallDOMProxyNative& other);
-};
-
-class ICGetProp_CallDOMProxyWithGenerationNative : public ICGetPropCallDOMProxyNativeStub
-{
-  protected:
-    ExpandoAndGeneration* expandoAndGeneration_;
-    uint64_t generation_;
-
-  public:
-    ICGetProp_CallDOMProxyWithGenerationNative(JitCode* stubCode, ICStub* firstMonitorStub,
-                                               Shape* shape,
-                                               ExpandoAndGeneration* expandoAndGeneration,
-                                               uint64_t generation, Shape* expandoShape,
-                                               JSObject* holder, Shape* holderShape,
-                                               JSFunction* getter, uint32_t pcOffset)
-      : ICGetPropCallDOMProxyNativeStub(ICStub::GetProp_CallDOMProxyWithGenerationNative,
-                                        stubCode, firstMonitorStub, shape,
-                                        expandoShape, holder, holderShape, getter, pcOffset),
-        expandoAndGeneration_(expandoAndGeneration),
-        generation_(generation)
-    {
-    }
-
-    static ICGetProp_CallDOMProxyWithGenerationNative*
-    Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
-          ICGetProp_CallDOMProxyWithGenerationNative& other);
-
-    void* expandoAndGeneration() const {
-        return expandoAndGeneration_;
-    }
-    uint64_t generation() const {
-        return generation_;
-    }
-
-    void setGeneration(uint64_t value) {
-        generation_ = value;
-    }
-
-    static size_t offsetOfInternalStruct() {
-        return offsetof(ICGetProp_CallDOMProxyWithGenerationNative, expandoAndGeneration_);
-    }
-    static size_t offsetOfGeneration() {
-        return offsetof(ICGetProp_CallDOMProxyWithGenerationNative, generation_);
-    }
-};
-
-class ICGetPropCallDOMProxyNativeCompiler : public ICStubCompiler {
-    ICStub* firstMonitorStub_;
-    Rooted<ProxyObject*> proxy_;
-    RootedObject holder_;
-    RootedFunction getter_;
-    uint32_t pcOffset_;
-
-    MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm, Address* internalStructAddr,
-                                       Address* generationAddr);
-    MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-  public:
-    ICGetPropCallDOMProxyNativeCompiler(JSContext* cx, ICStub::Kind kind,
-                                        ICStubCompiler::Engine engine,
-                                        ICStub* firstMonitorStub, Handle<ProxyObject*> proxy,
-                                        HandleObject holder, HandleFunction getter,
-                                        uint32_t pcOffset);
 
     ICStub* getStub(ICStubSpace* space);
 };
