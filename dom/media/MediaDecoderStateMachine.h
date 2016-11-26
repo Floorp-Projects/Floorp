@@ -329,6 +329,9 @@ private:
   void OnAudioDecoded(MediaData* aAudio);
   void OnVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStartTime);
   void OnNotDecoded(MediaData::Type aType, const MediaResult& aError);
+  void OnAudioWaited(MediaData::Type aType);
+  void OnVideoWaited(MediaData::Type aType);
+  void OnNotWaited(const WaitForDataRejectValue& aRejection);
 
   // Resets all state related to decoding and playback, emptying all buffers
   // and aborting all pending operations on the decode task queue.
