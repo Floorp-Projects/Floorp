@@ -847,12 +847,32 @@ public:
 
   void HandleAudioDecoded(MediaData* aAudio) override
   {
-    MOZ_ASSERT(false);
+    mSeekTask->HandleAudioDecoded(aAudio);
   }
 
   void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override
   {
-    MOZ_ASSERT(false);
+    mSeekTask->HandleVideoDecoded(aVideo, aDecodeStart);
+  }
+
+  void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override
+  {
+    mSeekTask->HandleNotDecoded(aType, aError);
+  }
+
+  void HandleAudioWaited(MediaData::Type aType) override
+  {
+    mSeekTask->HandleAudioWaited(aType);
+  }
+
+  void HandleVideoWaited(MediaData::Type aType) override
+  {
+    mSeekTask->HandleVideoWaited(aType);
+  }
+
+  void HandleNotWaited(const WaitForDataRejectValue& aRejection) override
+  {
+    mSeekTask->HandleNotWaited(aRejection);
   }
 
   void HandleVideoSuspendTimeout() override
