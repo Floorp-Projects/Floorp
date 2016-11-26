@@ -268,17 +268,14 @@ class TelemetryRecord {
     // We don't bother including the "devices" field if we can't come up with a
     // UID or device ID for *this* device -- If that's the case, any data we'd
     // put there would be likely to be full of garbage anyway.
+    // Note that we currently use the "sync device GUID" rather than the "FxA
+    // device ID" as the latter isn't stable enough for our purposes - see bug
+    // 1316535.
     let includeDeviceInfo = false;
     try {
       this.uid = Weave.Service.identity.hashedUID();
-      let deviceID = Weave.Service.identity.deviceID();
-      if (deviceID) {
-        // Combine the raw device id with the metrics uid to create a stable
-        // unique identifier that can't be mapped back to the user's FxA
-        // identity without knowing the metrics HMAC key.
-        this.deviceID = Utils.sha256(deviceID + this.uid);
-        includeDeviceInfo = true;
-      }
+      this.deviceID = Weave.Service.identity.hashedDeviceID(Weave.Service.clientsEngine.localID);
+      includeDeviceInfo = true;
     } catch (e) {
       this.uid = "0".repeat(32);
       this.deviceID = undefined;
@@ -290,7 +287,7 @@ class TelemetryRecord {
         return {
           os: device.os,
           version: device.version,
-          id: Utils.sha256(device.id + this.uid)
+          id: Weave.Service.identity.hashedDeviceID(device.id),
         };
       });
     }
