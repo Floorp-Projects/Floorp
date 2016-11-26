@@ -48,6 +48,12 @@ public:
 
   void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override;
 
+  void HandleAudioWaited(MediaData::Type aType) override;
+
+  void HandleVideoWaited(MediaData::Type aType) override;
+
+  void HandleNotWaited(const WaitForDataRejectValue& aRejection) override;
+
 private:
   ~NextFrameSeekTask();
 
