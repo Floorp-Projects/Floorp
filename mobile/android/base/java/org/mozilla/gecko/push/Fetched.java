@@ -33,7 +33,7 @@ public class Fetched {
     public static @NonNull Fetched fromJSONObject(@NonNull JSONObject json) {
         final String value = json.optString("value", null);
         final String timestampString = json.optString("timestamp", null);
-        final long timestamp = timestampString != null ? Long.valueOf(timestampString) : 0L;
+        final long timestamp = timestampString != null ? Long.parseLong(timestampString) : 0L;
         return new Fetched(value, timestamp);
     }
 
