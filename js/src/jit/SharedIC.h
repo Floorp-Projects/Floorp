@@ -2792,66 +2792,6 @@ class ICGetPropCallDOMProxyNativeCompiler : public ICStubCompiler {
     ICStub* getStub(ICStubSpace* space);
 };
 
-class ICGetProp_DOMProxyShadowed : public ICMonitoredStub
-{
-  friend class ICStubSpace;
-  protected:
-    GCPtrShape shape_;
-    const BaseProxyHandler* proxyHandler_;
-    GCPtrPropertyName name_;
-    uint32_t pcOffset_;
-
-    ICGetProp_DOMProxyShadowed(JitCode* stubCode, ICStub* firstMonitorStub, Shape* shape,
-                               const BaseProxyHandler* proxyHandler, PropertyName* name,
-                               uint32_t pcOffset);
-
-  public:
-    static ICGetProp_DOMProxyShadowed* Clone(JSContext* cx, ICStubSpace* space,
-                                             ICStub* firstMonitorStub,
-                                             ICGetProp_DOMProxyShadowed& other);
-
-    GCPtrShape& shape() {
-        return shape_;
-    }
-    GCPtrPropertyName& name() {
-        return name_;
-    }
-
-    static size_t offsetOfShape() {
-        return offsetof(ICGetProp_DOMProxyShadowed, shape_);
-    }
-    static size_t offsetOfProxyHandler() {
-        return offsetof(ICGetProp_DOMProxyShadowed, proxyHandler_);
-    }
-    static size_t offsetOfName() {
-        return offsetof(ICGetProp_DOMProxyShadowed, name_);
-    }
-    static size_t offsetOfPCOffset() {
-        return offsetof(ICGetProp_DOMProxyShadowed, pcOffset_);
-    }
-
-    class Compiler : public ICStubCompiler {
-        ICStub* firstMonitorStub_;
-        Rooted<ProxyObject*> proxy_;
-        RootedPropertyName name_;
-        uint32_t pcOffset_;
-
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub, Handle<ProxyObject*> proxy,
-                 HandlePropertyName name, uint32_t pcOffset)
-          : ICStubCompiler(cx, ICStub::GetProp_DOMProxyShadowed, engine),
-            firstMonitorStub_(firstMonitorStub),
-            proxy_(cx, proxy),
-            name_(cx, name),
-            pcOffset_(pcOffset)
-        {}
-
-        ICStub* getStub(ICStubSpace* space);
-    };
-};
-
 class ICGetProp_ArgumentsLength : public ICStub
 {
   friend class ICStubSpace;
