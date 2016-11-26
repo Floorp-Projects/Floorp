@@ -116,22 +116,61 @@ enum class CacheOp {
 #undef DEFINE_OP
 };
 
-struct StubField {
-    enum class GCType {
-        NoGCThing,
+class StubField
+{
+  public:
+    enum class Type : uint8_t {
+        // These fields take up a single word.
+        RawWord,
         Shape,
         ObjectGroup,
         JSObject,
         Id,
+
+        // These fields take up 64 bits on all platforms.
+        RawInt64,
+        First64BitType = RawInt64,
+        Value,
+
         Limit
     };
 
-    uintptr_t word;
-    GCType gcType;
+    static bool sizeIsWord(Type type) {
+        MOZ_ASSERT(type != Type::Limit);
+        return type < Type::First64BitType;
+    }
+    static bool sizeIsInt64(Type type) {
+        MOZ_ASSERT(type != Type::Limit);
+        return type >= Type::First64BitType;
+    }
+    static size_t sizeInBytes(Type type) {
+        if (sizeIsWord(type))
+            return sizeof(uintptr_t);
+        MOZ_ASSERT(sizeIsInt64(type));
+        return sizeof(int64_t);
+    }
 
-    StubField(uintptr_t word, GCType gcType)
-      : word(word), gcType(gcType)
-    {}
+  private:
+    union {
+        uintptr_t dataWord_;
+        uint64_t dataInt64_;
+    };
+    Type type_;
+
+    bool sizeIsWord() const { return sizeIsWord(type_); }
+    bool sizeIsInt64() const { return sizeIsInt64(type_); }
+
+  public:
+    StubField(uint64_t data, Type type)
+      : dataInt64_(data), type_(type)
+    {
+        MOZ_ASSERT_IF(sizeIsWord(), data <= UINTPTR_MAX);
+    }
+
+    Type type() const { return type_; }
+
+    uintptr_t asWord() const { MOZ_ASSERT(sizeIsWord()); return dataWord_; }
+    uint64_t asInt64() const { MOZ_ASSERT(sizeIsInt64()); return dataInt64_; }
 };
 
 // We use this enum as GuardClass operand, instead of storing Class* pointers
@@ -156,6 +195,7 @@ class MOZ_RAII CacheIRWriter
 
     // The data (shapes, slot offsets, etc.) that will be stored in the ICStub.
     Vector<StubField, 8, SystemAllocPolicy> stubFields_;
+    size_t stubDataSize_;
 
     // For each operand id, record which instruction accessed it last. This
     // information greatly improves register allocation.
@@ -164,7 +204,7 @@ class MOZ_RAII CacheIRWriter
     // OperandId and stub offsets are stored in a single byte, so make sure
     // this doesn't overflow. We use a very conservative limit for now.
     static const size_t MaxOperandIds = 20;
-    static const size_t MaxStubFields = 20;
+    static const size_t MaxStubDataSizeInBytes = 20 * sizeof(uintptr_t);
     bool tooLarge_;
 
     // stubFields_ contains unrooted pointers, so ensure we cannot GC in
@@ -199,13 +239,16 @@ class MOZ_RAII CacheIRWriter
         writeOperandId(opId);
     }
 
-    void addStubWord(uintptr_t word, StubField::GCType gcType) {
-        uint32_t pos = stubFields_.length();
-        buffer_.propagateOOM(stubFields_.append(StubField(word, gcType)));
-        if (pos < MaxStubFields)
-            buffer_.writeByte(pos);
-        else
+    void addStubField(uint64_t value, StubField::Type fieldType) {
+        size_t newStubDataSize = stubDataSize_ + StubField::sizeInBytes(fieldType);
+        if (newStubDataSize < MaxStubDataSizeInBytes) {
+            buffer_.propagateOOM(stubFields_.append(StubField(value, fieldType)));
+            MOZ_ASSERT((stubDataSize_ % sizeof(uintptr_t)) == 0);
+            buffer_.writeByte(stubDataSize_ / sizeof(uintptr_t));
+            stubDataSize_ = newStubDataSize;
+        } else {
             tooLarge_ = true;
+        }
     }
 
     CacheIRWriter(const CacheIRWriter&) = delete;
@@ -216,6 +259,7 @@ class MOZ_RAII CacheIRWriter
       : nextOperandId_(0),
         nextInstructionId_(0),
         numInputOperands_(0),
+        stubDataSize_(0),
         tooLarge_(false)
     {}
 
@@ -226,7 +270,7 @@ class MOZ_RAII CacheIRWriter
     uint32_t numInstructions() const { return nextInstructionId_; }
 
     size_t numStubFields() const { return stubFields_.length(); }
-    StubField::GCType stubFieldGCType(uint32_t i) const { return stubFields_[i].gcType; }
+    StubField::Type stubFieldType(uint32_t i) const { return stubFields_[i].type(); }
 
     uint32_t setInputOperandId(uint32_t op) {
         MOZ_ASSERT(op == nextOperandId_);
@@ -236,7 +280,7 @@ class MOZ_RAII CacheIRWriter
     }
 
     size_t stubDataSize() const {
-        return stubFields_.length() * sizeof(uintptr_t);
+        return stubDataSize_;
     }
     void copyStubData(uint8_t* dest) const;
 
@@ -266,15 +310,15 @@ class MOZ_RAII CacheIRWriter
     }
     void guardShape(ObjOperandId obj, Shape* shape) {
         writeOpWithOperandId(CacheOp::GuardShape, obj);
-        addStubWord(uintptr_t(shape), StubField::GCType::Shape);
+        addStubField(uintptr_t(shape), StubField::Type::Shape);
     }
     void guardGroup(ObjOperandId obj, ObjectGroup* group) {
         writeOpWithOperandId(CacheOp::GuardGroup, obj);
-        addStubWord(uintptr_t(group), StubField::GCType::ObjectGroup);
+        addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
     }
     void guardProto(ObjOperandId obj, JSObject* proto) {
         writeOpWithOperandId(CacheOp::GuardProto, obj);
-        addStubWord(uintptr_t(proto), StubField::GCType::JSObject);
+        addStubField(uintptr_t(proto), StubField::Type::JSObject);
     }
     void guardClass(ObjOperandId obj, GuardClassKind kind) {
         static_assert(sizeof(GuardClassKind) == sizeof(uint8_t),
@@ -290,7 +334,7 @@ class MOZ_RAII CacheIRWriter
     }
     void guardSpecificObject(ObjOperandId obj, JSObject* expected) {
         writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
-        addStubWord(uintptr_t(expected), StubField::GCType::JSObject);
+        addStubField(uintptr_t(expected), StubField::Type::JSObject);
     }
     void guardNoDetachedTypedObjects() {
         writeOp(CacheOp::GuardNoDetachedTypedObjects);
@@ -308,7 +352,7 @@ class MOZ_RAII CacheIRWriter
     ObjOperandId loadObject(JSObject* obj) {
         ObjOperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::LoadObject, res);
-        addStubWord(uintptr_t(obj), StubField::GCType::JSObject);
+        addStubField(uintptr_t(obj), StubField::Type::JSObject);
         return res;
     }
     ObjOperandId loadProto(ObjOperandId obj) {
@@ -323,16 +367,16 @@ class MOZ_RAII CacheIRWriter
     }
     void loadFixedSlotResult(ObjOperandId obj, size_t offset) {
         writeOpWithOperandId(CacheOp::LoadFixedSlotResult, obj);
-        addStubWord(offset, StubField::GCType::NoGCThing);
+        addStubField(offset, StubField::Type::RawWord);
     }
     void loadDynamicSlotResult(ObjOperandId obj, size_t offset) {
         writeOpWithOperandId(CacheOp::LoadDynamicSlotResult, obj);
-        addStubWord(offset, StubField::GCType::NoGCThing);
+        addStubField(offset, StubField::Type::RawWord);
     }
     void loadUnboxedPropertyResult(ObjOperandId obj, JSValueType type, size_t offset) {
         writeOpWithOperandId(CacheOp::LoadUnboxedPropertyResult, obj);
         buffer_.writeByte(uint32_t(type));
-        addStubWord(offset, StubField::GCType::NoGCThing);
+        addStubField(offset, StubField::Type::RawWord);
     }
     void loadTypedObjectResult(ObjOperandId obj, uint32_t offset, TypedThingLayout layout,
                                uint32_t typeDescr) {
@@ -341,7 +385,7 @@ class MOZ_RAII CacheIRWriter
         writeOpWithOperandId(CacheOp::LoadTypedObjectResult, obj);
         buffer_.writeByte(uint32_t(layout));
         buffer_.writeByte(typeDescr);
-        addStubWord(offset, StubField::GCType::NoGCThing);
+        addStubField(offset, StubField::Type::RawWord);
     }
     void loadInt32ArrayLengthResult(ObjOperandId obj) {
         writeOpWithOperandId(CacheOp::LoadInt32ArrayLengthResult, obj);
@@ -354,15 +398,15 @@ class MOZ_RAII CacheIRWriter
     }
     void callScriptedGetterResult(ObjOperandId obj, JSFunction* getter) {
         writeOpWithOperandId(CacheOp::CallScriptedGetterResult, obj);
-        addStubWord(uintptr_t(getter), StubField::GCType::JSObject);
+        addStubField(uintptr_t(getter), StubField::Type::JSObject);
     }
     void callNativeGetterResult(ObjOperandId obj, JSFunction* getter) {
         writeOpWithOperandId(CacheOp::CallNativeGetterResult, obj);
-        addStubWord(uintptr_t(getter), StubField::GCType::JSObject);
+        addStubField(uintptr_t(getter), StubField::Type::JSObject);
     }
     void callProxyGetResult(ObjOperandId obj, jsid id) {
         writeOpWithOperandId(CacheOp::CallProxyGetResult, obj);
-        addStubWord(uintptr_t(JSID_BITS(id)), StubField::GCType::Id);
+        addStubField(uintptr_t(JSID_BITS(id)), StubField::Type::Id);
     }
 
     void typeMonitorResult() {
@@ -405,7 +449,7 @@ class MOZ_RAII CacheIRReader
         return ObjOperandId(buffer_.readByte());
     }
 
-    uint32_t stubOffset() { return buffer_.readByte(); }
+    uint32_t stubOffset() { return buffer_.readByte() * sizeof(uintptr_t); }
     GuardClassKind guardClassKind() { return GuardClassKind(buffer_.readByte()); }
     JSValueType valueType() { return JSValueType(buffer_.readByte()); }
     TypedThingLayout typedThingLayout() { return TypedThingLayout(buffer_.readByte()); }
