@@ -216,9 +216,9 @@ ImageWrapper::Draw(gfxContext* aContext,
 }
 
 NS_IMETHODIMP
-ImageWrapper::StartDecoding()
+ImageWrapper::StartDecoding(uint32_t aFlags)
 {
-  return mInnerImage->StartDecoding();
+  return mInnerImage->StartDecoding(aFlags);
 }
 
 NS_IMETHODIMP

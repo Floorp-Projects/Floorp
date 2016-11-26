@@ -1038,7 +1038,7 @@ imgRequest::FinishPreparingForNewPart(const NewPartResult& aResult)
   }
 
   if (IsDecodeRequested()) {
-    aResult.mImage->StartDecoding();
+    aResult.mImage->StartDecoding(imgIContainer::FLAG_NONE);
   }
 }
 
