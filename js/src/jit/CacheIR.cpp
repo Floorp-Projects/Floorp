@@ -404,12 +404,45 @@ GetPropIRGenerator::tryAttachGenericProxy(CacheIRWriter& writer, HandleObject ob
 }
 
 bool
+GetPropIRGenerator::tryAttachDOMProxyShadowed(CacheIRWriter& writer, HandleObject obj,
+                                              ObjOperandId objId)
+{
+    MOZ_ASSERT(!emitted_);
+    MOZ_ASSERT(IsCacheableDOMProxy(obj));
+
+    emitted_ = true;
+
+    writer.guardShape(objId, obj->maybeShape());
+
+    // No need for more guards: we know this is a DOM proxy, since the shape
+    // guard enforces a given JSClass, so just go ahead and emit the call to
+    // ProxyGet.
+    writer.callProxyGetResult(objId, NameToId(name_));
+    writer.typeMonitorResult();
+    return true;
+}
+
+bool
 GetPropIRGenerator::tryAttachProxy(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId)
 {
     MOZ_ASSERT(!emitted_);
 
     if (!obj->is<ProxyObject>())
         return true;
+
+    // Skim off DOM proxies.
+    if (IsCacheableDOMProxy(obj)) {
+        RootedId id(cx_, NameToId(name_));
+        DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx_, obj, id);
+        if (shadows == ShadowCheckFailed) {
+            cx_->clearPendingException();
+            return false;
+        }
+        if (DOMProxyIsShadowing(shadows))
+            return tryAttachDOMProxyShadowed(writer, obj, objId);
+
+        MOZ_ASSERT(shadows == DoesntShadow || shadows == DoesntShadowUnique);
+    }
 
     return tryAttachGenericProxy(writer, obj, objId);
 }

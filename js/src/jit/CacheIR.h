@@ -465,6 +465,8 @@ class MOZ_RAII GetPropIRGenerator
 
     MOZ_MUST_USE bool tryAttachGenericProxy(CacheIRWriter& writer, HandleObject obj,
                                             ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachDOMProxyShadowed(CacheIRWriter& writer, HandleObject obj,
+                                                ObjOperandId objId);
     MOZ_MUST_USE bool tryAttachProxy(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
 
     MOZ_MUST_USE bool tryAttachPrimitive(CacheIRWriter& writer, ValOperandId valId);
