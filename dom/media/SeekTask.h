@@ -68,6 +68,12 @@ public:
 
   virtual void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) = 0;
 
+  virtual void HandleAudioWaited(MediaData::Type aType) = 0;
+
+  virtual void HandleVideoWaited(MediaData::Type aType) = 0;
+
+  virtual void HandleNotWaited(const WaitForDataRejectValue& aRejection) = 0;
+
 protected:
   SeekTask(const void* aDecoderID,
            AbstractThread* aThread,
