@@ -577,7 +577,7 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
 
         const JSAtomState& names = cx->names();
 
-        if (obj->is<RegExpObject>())
+        if (StandardProtoKeyOrNull(obj) == JSProto_RegExp)
             AddTypePropertyId(cx, group, nullptr, NameToId(names.lastIndex), TypeSet::Int32Type());
 
         if (obj->is<StringObject>())
