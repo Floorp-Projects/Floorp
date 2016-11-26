@@ -12,6 +12,7 @@ const prototypes = [
     SyntaxError.prototype,
     TypeError.prototype,
     URIError.prototype,
+    RegExp.prototype,
 ];
 
 for (const prototype of prototypes) {
