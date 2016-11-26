@@ -12,7 +12,7 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
  
-(this.__defineGetter__("x", function (x)'foo'.replace(/o/g, [1].push)));
+(this.__defineGetter__("x", function (x) { return 'foo'.replace(/o/g, [1].push); }));
 for(let y in [,,,]) for(let y in [,,,]) x = x;
 
 reportCompare(expect, actual, summary);

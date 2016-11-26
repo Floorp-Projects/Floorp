@@ -26,7 +26,7 @@ function f2() {
         x
     } = x, (x._)
     function
-    x()({})
+    x(){ return ({}); }
 }
 try { f2(); } catch (e) {}
 

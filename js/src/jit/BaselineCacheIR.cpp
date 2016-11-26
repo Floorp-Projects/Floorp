@@ -512,14 +512,6 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
         *failure = &failurePaths.back();
         return true;
     }
-    void emitEnterTypeMonitorIC() {
-        allocator.discardStack(masm);
-        EmitEnterTypeMonitorIC(masm);
-    }
-    void emitReturnFromIC() {
-        allocator.discardStack(masm);
-        EmitReturnFromIC(masm);
-    }
 };
 
 void
@@ -603,6 +595,8 @@ BaselineCacheIRCompiler::compile()
 
         allocator.nextOp();
     } while (reader.more());
+
+    masm.assumeUnreachable("Should have returned from IC");
 
     // Done emitting the main IC code. Now emit the failure paths.
     for (size_t i = 0; i < failurePaths.length(); i++) {
@@ -1057,7 +1051,6 @@ BaselineCacheIRCompiler::emitLoadFixedSlotResult()
 
     masm.load32(stubAddress(reader.stubOffset()), scratch);
     masm.loadValue(BaseIndex(obj, scratch, TimesOne), R0);
-    emitEnterTypeMonitorIC();
     return true;
 }
 
@@ -1071,7 +1064,6 @@ BaselineCacheIRCompiler::emitLoadDynamicSlotResult()
     masm.load32(stubAddress(reader.stubOffset()), scratch);
     masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), obj);
     masm.loadValue(BaseIndex(obj, scratch, TimesOne), R0);
-    emitEnterTypeMonitorIC();
     return true;
 }
 
@@ -1142,8 +1134,6 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
     masm.callJit(code);
 
     leaveStubFrame(masm, true);
-
-    emitEnterTypeMonitorIC();
     return true;
 }
 
@@ -1180,8 +1170,6 @@ BaselineCacheIRCompiler::emitCallNativeGetterResult()
         return false;
 
     leaveStubFrame(masm);
-
-    emitEnterTypeMonitorIC();
     return true;
 }
 
@@ -1192,16 +1180,9 @@ BaselineCacheIRCompiler::emitLoadUnboxedPropertyResult()
     AutoScratchRegister scratch(allocator, masm);
 
     JSValueType fieldType = reader.valueType();
-
     Address fieldOffset(stubAddress(reader.stubOffset()));
     masm.load32(fieldOffset, scratch);
     masm.loadUnboxedProperty(BaseIndex(obj, scratch, TimesOne), fieldType, R0);
-
-    if (fieldType == JSVAL_TYPE_OBJECT)
-        emitEnterTypeMonitorIC();
-    else
-        emitReturnFromIC();
-
     return true;
 }
 
@@ -1234,18 +1215,12 @@ BaselineCacheIRCompiler::emitLoadTypedObjectResult()
     masm.load32(fieldOffset, scratch2);
     masm.addPtr(scratch2, scratch1);
 
-    // Only monitor the result if the type produced by this stub might vary.
-    bool monitorLoad;
     if (SimpleTypeDescrKeyIsScalar(typeDescr)) {
         Scalar::Type type = ScalarTypeFromSimpleTypeDescrKey(typeDescr);
-        monitorLoad = type == Scalar::Uint32;
-
         masm.loadFromTypedArray(type, Address(scratch1, 0), R0, /* allowDouble = */ true,
                                 scratch2, nullptr);
     } else {
         ReferenceTypeDescr::Type type = ReferenceTypeFromSimpleTypeDescrKey(typeDescr);
-        monitorLoad = type != ReferenceTypeDescr::TYPE_STRING;
-
         switch (type) {
           case ReferenceTypeDescr::TYPE_ANY:
             masm.loadValue(Address(scratch1, 0), R0);
@@ -1273,10 +1248,6 @@ BaselineCacheIRCompiler::emitLoadTypedObjectResult()
         }
     }
 
-    if (monitorLoad)
-        emitEnterTypeMonitorIC();
-    else
-        emitReturnFromIC();
     return true;
 }
 
@@ -1284,11 +1255,6 @@ bool
 BaselineCacheIRCompiler::emitLoadUndefinedResult()
 {
     masm.moveValue(UndefinedValue(), R0);
-
-    // Normally for this op, the result would have to be monitored by TI.
-    // However, since this stub ALWAYS returns UndefinedValue(), and we can be sure
-    // that undefined is already registered with the type-set, this can be avoided.
-    emitReturnFromIC();
     return true;
 }
 
@@ -1308,10 +1274,6 @@ BaselineCacheIRCompiler::emitLoadInt32ArrayLengthResult()
     // Guard length fits in an int32.
     masm.branchTest32(Assembler::Signed, scratch, scratch, failure->label());
     masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
-
-    // The int32 type was monitored when attaching the stub, so we can
-    // just return.
-    emitReturnFromIC();
     return true;
 }
 
@@ -1321,10 +1283,6 @@ BaselineCacheIRCompiler::emitLoadUnboxedArrayLengthResult()
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     masm.load32(Address(obj, UnboxedArrayObject::offsetOfLength()), R0.scratchReg());
     masm.tagValue(JSVAL_TYPE_INT32, R0.scratchReg(), R0);
-
-    // The int32 type was monitored when attaching the stub, so we can
-    // just return.
-    emitReturnFromIC();
     return true;
 }
 
@@ -1351,7 +1309,22 @@ BaselineCacheIRCompiler::emitLoadArgumentsObjectLengthResult()
     // because this stub always returns int32.
     masm.rshiftPtr(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratch);
     masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
-    emitReturnFromIC();
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitTypeMonitorResult()
+{
+    allocator.discardStack(masm);
+    EmitEnterTypeMonitorIC(masm);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitReturnFromIC()
+{
+    allocator.discardStack(masm);
+    EmitReturnFromIC(masm);
     return true;
 }
 

@@ -81,6 +81,8 @@ public:
   // itself.
   nsresult ProcessRestyledFrames(nsStyleChangeList& aChangeList);
 
+  bool IsInStyleRefresh() const { return mInStyleRefresh; }
+
 protected:
   void ContentStateChangedInternal(Element* aElement,
                                    EventStates aStateMask,

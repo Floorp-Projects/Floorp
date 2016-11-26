@@ -20,7 +20,7 @@ function test()
   printStatus (summary);
 
 
-  for (var j=0;j<5;++j) (new (function(q) q)).a;
+  for (var j=0;j<5;++j) (new (function(q) { return q; })).a;
 
 
   reportCompare(expect, actual, summary);

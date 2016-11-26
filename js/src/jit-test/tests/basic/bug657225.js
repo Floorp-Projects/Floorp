@@ -1,5 +1,5 @@
 
-function reportCompare(expected, actual, description) + ++actual + "'";
+function reportCompare(expected, actual, description) { return  + ++actual + "'"; }
 var summary = 'Object.prototype.toLocaleString() should track Object.prototype.toString() ';
 var o = {
     toString: function () {}

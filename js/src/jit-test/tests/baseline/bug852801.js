@@ -14,8 +14,9 @@ function printStatus (msg) {
 	print (STATUS + lines[i]);
 }
 function printBugNumber (num) {}
-function toPrinted(value)
-function escapeString (str) {}
+function toPrinted(value) {
+    return function escapeString (str) {};
+}
 function reportCompare (expected, actual, description) {
     var actual_t = typeof actual;
     var output = "";
@@ -32,9 +33,10 @@ function reportCompare (expected, actual, description) {
     return testcase.passed;
 }
 function reportMatch (expectedRegExp, actual, description) {}
-function enterFunc (funcName)
-function BigO(data) {
-    function LinearRegression(data)   {  }
+function enterFunc (funcName) {
+    return function BigO(data) {
+        function LinearRegression(data)   {  }
+    };
 }
 function compareSource(expect, actual, summary) {}
 function optionsInit() {
@@ -44,9 +46,10 @@ function optionsClear() {}
 function optionsPush() {}
 optionsInit();
 optionsClear();
-function getTestCaseResult(expected, actual)
-function test() {
-    for ( gTc=0; gTc < gTestcases.length; gTc++ ) {}
+function getTestCaseResult(expected, actual) {
+    return function test() {
+        for ( gTc=0; gTc < gTestcases.length; gTc++ ) {}
+    };
 }
 var lfcode = new Array();
 lfcode.push("4");
@@ -62,7 +65,7 @@ addThis();\n\
 addThis();\n\
 tryThis(1);\n\
 function tryThis(x)\n\
-addThis();\n\
+{ return addThis(); }\n\
 test();\n\
 function addThis() {\n\
 actualvalues[UBound] = actual;\n\

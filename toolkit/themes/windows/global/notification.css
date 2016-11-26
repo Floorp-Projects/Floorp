@@ -68,7 +68,7 @@ notification[type="critical"] {
 
 %include ../../shared/popupnotification.inc.css
 
-.popup-notification-button:focus {
+.popup-notification-button:-moz-focusring {
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
 }

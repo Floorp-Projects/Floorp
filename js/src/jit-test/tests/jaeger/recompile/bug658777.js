@@ -1,4 +1,4 @@
-function Employee(name, dept) this.name = name || "";
+function Employee(name, dept) { return this.name = name || ""; }
 function WorkerBee(name, dept, projs) {
     this.base = Employee
     this.base(name, dept)

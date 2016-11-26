@@ -37,8 +37,8 @@ function promiseNewChannelResponse(uri) {
 add_task(function*() {
   // We haven't set a permission yet - so even the "good" URI should fail.
   let got = yield promiseNewChannelResponse(TEST_URI_GOOD);
-  // Should have no data.
-  Assert.ok(got.message === undefined, "should have failed to get any data");
+  // Should return an error.
+  Assert.ok(got.message.errno === 2, "should have failed with errno 2, no such channel");
 
   // Add a permission manager entry for our URI.
   Services.perms.add(TEST_URI_GOOD,
@@ -76,9 +76,9 @@ add_task(function*() {
   Assert.ok(!got.message.modifiedPreferences, "should not have a modifiedPreferences key");
   Assert.ok(!got.message.crashes, "should not have crash info");
 
-  // Now a http:// URI - should get nothing even with the permission setup.
+  // Now a http:// URI - should receive an error
   got = yield promiseNewChannelResponse(TEST_URI_BAD);
-  Assert.ok(got.message === undefined, "should have failed to get any data");
+  Assert.ok(got.message.errno === 2, "should have failed with errno 2, no such channel");
 
   // Check that the page can send an object as well if it's in the whitelist
   let webchannelWhitelistPref = "webchannel.allowObject.urlWhitelist";

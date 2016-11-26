@@ -9,6 +9,8 @@
 
 this.EXPORTED_SYMBOLS = ["WebChannel", "WebChannelBroker"];
 
+const ERRNO_MISSING_PRINCIPAL          = 1;
+const ERRNO_NO_SUCH_CHANNEL            = 2;
 const ERRNO_UNKNOWN_ERROR              = 999;
 const ERROR_UNKNOWN                    = "UNKNOWN_ERROR";
 
@@ -83,7 +85,7 @@ var WebChannelBroker = Object.create({
 
     if (data && data.id) {
       if (!event.principal) {
-        this._sendErrorEventToContent(data.id, sendingContext, "Message principal missing");
+        this._sendErrorEventToContent(data.id, sendingContext, ERRNO_MISSING_PRINCIPAL, "Message principal missing");
       } else {
         let validChannelFound = false;
         data.message = data.message || {};
@@ -98,7 +100,7 @@ var WebChannelBroker = Object.create({
 
         // if no valid origins send an event that there is no such valid channel
         if (!validChannelFound) {
-          this._sendErrorEventToContent(data.id, sendingContext, "No Such Channel");
+          this._sendErrorEventToContent(data.id, sendingContext, ERRNO_NO_SUCH_CHANNEL, "No Such Channel");
         }
       }
     } else {
@@ -127,7 +129,7 @@ var WebChannelBroker = Object.create({
    *        Error message
    * @private
    */
-  _sendErrorEventToContent: function(id, sendingContext, errorMsg) {
+  _sendErrorEventToContent: function(id, sendingContext, errorNo, errorMsg) {
     let { browser: targetBrowser, eventTarget, principal: targetPrincipal } = sendingContext;
 
     errorMsg = errorMsg || "Web Channel Broker error";
@@ -135,7 +137,10 @@ var WebChannelBroker = Object.create({
     if (targetBrowser && targetBrowser.messageManager) {
       targetBrowser.messageManager.sendAsyncMessage("WebChannelMessageToContent", {
         id: id,
-        error: errorMsg,
+        message: {
+          errno: errorNo,
+          error: errorMsg,
+        },
       }, { eventTarget: eventTarget }, targetPrincipal);
     } else {
       Cu.reportError("Failed to send a WebChannel error. Target invalid.");

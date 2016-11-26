@@ -22,7 +22,7 @@ function test()
 
   try
   {
-    this.__defineGetter__('x', function() 2); for (var j=0;j<4;++j) { x=1; }
+    this.__defineGetter__('x', function() { return 2; }); for (var j=0;j<4;++j) { x=1; }
   }
   catch(ex)
   {

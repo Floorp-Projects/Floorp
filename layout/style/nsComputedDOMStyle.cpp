@@ -495,7 +495,8 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
     sc = styleSet->ResolvePseudoElementStyle(aElement, type, parentContext,
                                              pseudoElement);
   } else {
-    sc = styleSet->ResolveStyleFor(aElement, parentContext);
+    sc = styleSet->ResolveStyleFor(aElement, parentContext, ConsumeStyleBehavior::DontConsume,
+                                   LazyComputeBehavior::Allow);
   }
 
   if (aStyleType == eDefaultOnly) {

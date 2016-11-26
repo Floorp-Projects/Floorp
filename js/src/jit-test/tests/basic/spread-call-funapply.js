@@ -53,7 +53,7 @@ function checkNormal(f) {
   assertEqArray(f.apply(null, ...[[undefined]]), [undefined, undefined, undefined]);
 }
 
-checkNormal(function(a, b, c) [a, b, c]);
+checkNormal(function(a, b, c) { return [a, b, c]; });
 checkNormal((a, b, c) => [a, b, c]);
 
 function checkDefault(f) {
@@ -67,7 +67,7 @@ function checkDefault(f) {
   assertEqArray(f.apply(null, ...[[undefined]]), [-1, -2, -3]);
 }
 
-checkDefault(function(a = -1, b = -2, c = -3) [a, b, c]);
+checkDefault(function(a = -1, b = -2, c = -3) { return [a, b, c]; });
 checkDefault((a = -1, b = -2, c = -3) => [a, b, c]);
 
 function checkRest(f) {
@@ -84,5 +84,5 @@ function checkRest(f) {
   assertEqArray(f.apply(null, ...new Map([[["a", "A"], ["b", "B"]]])).map(([k, v]) => k + v), ["aA", "bB"]);
 }
 
-checkRest(function(...x) x);
+checkRest(function(...x) { return x; });
 checkRest((...x) => x);

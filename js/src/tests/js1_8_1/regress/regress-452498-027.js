@@ -24,7 +24,7 @@ function test()
 
 // ------- Comment #27 From Brendan Eich
 
-  function f(x){function g(y)x+y;return g}
+  function f(x){function g(y) { return x+y; } return g}
   g = f(2);
 
   actual = String(g(3));
