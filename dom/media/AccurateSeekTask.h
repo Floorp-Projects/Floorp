@@ -60,12 +60,6 @@ private:
 
   void OnSeekRejected(nsresult aResult);
 
-  void OnAudioDecoded(MediaData* aAudioSample);
-
-  void OnVideoDecoded(MediaData* aVideoSample);
-
-  void OnNotDecoded(MediaData::Type, const MediaResult&);
-
   void AdjustFastSeekIfNeeded(MediaData* aSample);
 
   /*
