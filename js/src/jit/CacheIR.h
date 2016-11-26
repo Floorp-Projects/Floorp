@@ -85,6 +85,8 @@ class ObjOperandId : public OperandId
     _(GuardGroup)                         \
     _(GuardProto)                         \
     _(GuardClass)                         \
+    _(GuardIsProxy)                       \
+    _(GuardNotDOMProxy)                   \
     _(GuardSpecificObject)                \
     _(GuardNoDetachedTypedObjects)        \
     _(GuardNoUnboxedExpando)              \
@@ -102,6 +104,7 @@ class ObjOperandId : public OperandId
     _(LoadArgumentsObjectLengthResult)    \
     _(CallScriptedGetterResult)           \
     _(CallNativeGetterResult)             \
+    _(CallProxyGetResult)                 \
     _(LoadUndefinedResult)                \
                                           \
     _(TypeMonitorResult)                  \
@@ -119,6 +122,7 @@ struct StubField {
         Shape,
         ObjectGroup,
         JSObject,
+        Id,
         Limit
     };
 
@@ -278,6 +282,12 @@ class MOZ_RAII CacheIRWriter
         writeOpWithOperandId(CacheOp::GuardClass, obj);
         buffer_.writeByte(uint32_t(kind));
     }
+    void guardIsProxy(ObjOperandId obj) {
+        writeOpWithOperandId(CacheOp::GuardIsProxy, obj);
+    }
+    void guardNotDOMProxy(ObjOperandId obj) {
+        writeOpWithOperandId(CacheOp::GuardNotDOMProxy, obj);
+    }
     void guardSpecificObject(ObjOperandId obj, JSObject* expected) {
         writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
         addStubWord(uintptr_t(expected), StubField::GCType::JSObject);
@@ -349,6 +359,10 @@ class MOZ_RAII CacheIRWriter
     void callNativeGetterResult(ObjOperandId obj, JSFunction* getter) {
         writeOpWithOperandId(CacheOp::CallNativeGetterResult, obj);
         addStubWord(uintptr_t(getter), StubField::GCType::JSObject);
+    }
+    void callProxyGetResult(ObjOperandId obj, jsid id) {
+        writeOpWithOperandId(CacheOp::CallProxyGetResult, obj);
+        addStubWord(uintptr_t(JSID_BITS(id)), StubField::GCType::Id);
     }
 
     void typeMonitorResult() {
@@ -448,6 +462,10 @@ class MOZ_RAII GetPropIRGenerator
                                                ObjOperandId objId);
     MOZ_MUST_USE bool tryAttachWindowProxy(CacheIRWriter& writer, HandleObject obj,
                                            ObjOperandId objId);
+
+    MOZ_MUST_USE bool tryAttachGenericProxy(CacheIRWriter& writer, HandleObject obj,
+                                            ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachProxy(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
 
     MOZ_MUST_USE bool tryAttachPrimitive(CacheIRWriter& writer, ValOperandId valId);
 
