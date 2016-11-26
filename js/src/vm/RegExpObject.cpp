@@ -194,6 +194,12 @@ RegExpObject::trace(JSTracer* trc, JSObject* obj)
     }
 }
 
+static JSObject*
+CreateRegExpPrototype(JSContext* cx, JSProtoKey key)
+{
+    return cx->global()->createBlankPrototype(cx, &RegExpObject::protoClass_);
+}
+
 static const ClassOps RegExpObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
@@ -224,6 +230,13 @@ const Class RegExpObject::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(RegExpObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     &RegExpObjectClassOps,
+    &RegExpObjectClassSpec
+};
+
+const Class RegExpObject::protoClass_ = {
+    js_Object_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
+    JS_NULL_CLASS_OPS,
     &RegExpObjectClassSpec
 };
 
