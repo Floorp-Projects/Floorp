@@ -78,6 +78,36 @@ NextFrameSeekTask::CalculateNewCurrentTime() const
   return mTarget.GetTime().ToMicroseconds();
 }
 
+void
+NextFrameSeekTask::HandleAudioDecoded(MediaData* aAudio)
+{
+  AssertOwnerThread();
+  OnAudioDecoded(aAudio);
+}
+
+void
+NextFrameSeekTask::HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart)
+{
+  AssertOwnerThread();
+  OnVideoDecoded(aVideo);
+}
+
+void
+NextFrameSeekTask::HandleNotDecoded(MediaData::Type aType, const MediaResult& aError)
+{
+  AssertOwnerThread();
+  switch (aType) {
+  case MediaData::AUDIO_DATA:
+    OnAudioNotDecoded(aError);
+    break;
+  case MediaData::VIDEO_DATA:
+    OnVideoNotDecoded(aError);
+    break;
+  default:
+    MOZ_ASSERT_UNREACHABLE("We cannot handle RAW_DATA or NULL_DATA here.");
+  }
+}
+
 /*
  * Remove samples from the queue until aCompare() returns false.
  * aCompare A function object with the signature bool(int64_t) which returns
