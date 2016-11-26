@@ -638,10 +638,6 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
         return true;
     }
 
-    // Handle the 'lastIndex' property for RegExp prototypes.
-    if (key == JSProto_RegExp && id == GetJSIDByIndex(cx, XPCJSContext::IDX_LASTINDEX))
-        return getOwnPropertyFromWrapperIfSafe(cx, wrapper, id, desc);
-
     // Grab the JSClass. We require all Xrayable classes to have a ClassSpec.
     const js::Class* clasp = js::GetObjectClass(target);
     MOZ_ASSERT(clasp->specDefined());
@@ -881,10 +877,6 @@ JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flags
 
     // Add the 'constructor' property.
     if (!props.append(GetJSIDByIndex(cx, XPCJSContext::IDX_CONSTRUCTOR)))
-        return false;
-
-    // For RegExp protoypes, add the 'lastIndex' property.
-    if (key == JSProto_RegExp && !props.append(GetJSIDByIndex(cx, XPCJSContext::IDX_LASTINDEX)))
         return false;
 
     // Grab the JSClass. We require all Xrayable classes to have a ClassSpec.
