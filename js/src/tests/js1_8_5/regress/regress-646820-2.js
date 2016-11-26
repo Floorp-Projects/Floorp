@@ -3,7 +3,7 @@
 
 (function () {
     var obj = {prop: 1};
-    var [x, {prop: y}] = [function () y, obj];
+    var [x, {prop: y}] = [function () { return y; }, obj];
     assertEq(y, 1);
     assertEq(x(), 1);
 })();

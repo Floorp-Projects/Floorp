@@ -16,8 +16,8 @@ function h() {
     evalInFrame(0, "a.push")
     evalInFrame(1, "a.pushy")
 }
-function g() h()
-function f() g()
+function g() { return h(); }
+function f() { return g(); }
 f()
 evaluate(`
 g()

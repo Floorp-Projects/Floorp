@@ -24,7 +24,7 @@ function test()
 
 // ------- Comment #79 From Jason Orendorff
 
-  x; var x; function x() 0
+  x; var x; function x() { return 0; }
 
 // Assertion failure: !(pn->pn_dflags & flag), at ../jsparse.h:635
 

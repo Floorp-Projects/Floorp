@@ -91,12 +91,6 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   , mCachedResetData(nullptr)
   , mBits(((uint64_t)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT)
   , mRefCnt(0)
-#ifdef MOZ_STYLO
-  , mStoredChangeHint(nsChangeHint(0))
-#ifdef DEBUG
-  , mConsumedChangeHint(false)
-#endif
-#endif
 #ifdef DEBUG
   , mFrameRefCnt(0)
   , mComputingStruct(nsStyleStructID_None)
@@ -796,7 +790,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
     mozilla::dom::Element* docElement = presContext->Document()->GetRootElement();
     if (docElement) {
       RefPtr<nsStyleContext> rootStyle =
-        presContext->StyleSet()->ResolveStyleFor(docElement, nullptr);
+        presContext->StyleSet()->AsGecko()->ResolveStyleFor(docElement, nullptr);
       auto dir = rootStyle->StyleVisibility()->mDirection;
       if (dir != StyleVisibility()->mDirection) {
         nsStyleVisibility* uniqueVisibility = GET_UNIQUE_STYLE_DATA(Visibility);

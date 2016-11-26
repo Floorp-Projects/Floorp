@@ -3,10 +3,13 @@ function TestCase(n, d, e, a) {
     this.description = d
     gTestcases[gTc] = this
 }
-TestCase.prototype.dump=function ()  +  +  +
+TestCase.prototype.dump=function () { return +  +  +
           + this.description +  +
-               +  + '\n';function printStatus (msg)
-function toPrinted(value) {
+               +  + '\n';
+};
+function printStatus (msg) {
+  return function toPrinted(value) {
+  };
 }
 function reportCompare(expected, actual, description) {
     new TestCase("unknown-test-name", description, expected, actual)

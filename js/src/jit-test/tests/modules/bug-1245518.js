@@ -8,7 +8,7 @@ evalInFrame = function(global) {
   }
 }(this);
 m = parseModule(`
-  function g() this.hours = 0;
+  function g() { return this.hours = 0; }
   evalInFrame.call(0, 0, "g()")
 `);
 m.declarationInstantiation();

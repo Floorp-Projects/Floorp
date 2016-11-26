@@ -15,7 +15,7 @@ function foo() {
     LineType = new TO.StructType({
         PointType
     })
-    function testBasic() new LineType;
+    function testBasic() { return new LineType; }
     testBasic();
 }
 evaluate("foo()");
