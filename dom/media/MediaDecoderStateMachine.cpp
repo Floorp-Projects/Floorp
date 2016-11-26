@@ -196,6 +196,7 @@ public:
   virtual void HandleCDMProxyReady() {}
   virtual void HandleAudioDecoded(MediaData* aAudio) {}
   virtual void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) {}
+  virtual void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError);
   virtual void HandleEndOfStream() {}
   virtual void HandleWaitingForData() {}
   virtual void HandleAudioCaptured() {}
@@ -1117,6 +1118,11 @@ public:
     return DECODER_STATE_SHUTDOWN;
   }
 
+  void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override
+  {
+    return;
+  }
+
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
   {
     MOZ_DIAGNOSTIC_ASSERT(false, "Can't seek in shutdown state.");
@@ -1139,6 +1145,49 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(false, "Already shutting down.");
   }
 };
+
+void
+MediaDecoderStateMachine::
+StateObject::HandleNotDecoded(MediaData::Type aType, const MediaResult& aError)
+{
+  bool isAudio = aType == MediaData::AUDIO_DATA;
+  MOZ_ASSERT_IF(!isAudio, aType == MediaData::VIDEO_DATA);
+
+  // If the decoder is waiting for data, we tell it to call us back when the
+  // data arrives.
+  if (aError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
+    MOZ_ASSERT(Reader()->IsWaitForDataSupported(),
+               "Readers that send WAITING_FOR_DATA need to implement WaitForData");
+    Reader()->WaitForData(aType);
+    HandleWaitingForData();
+    return;
+  }
+
+  if (aError == NS_ERROR_DOM_MEDIA_CANCELED) {
+    if (isAudio) {
+      mMaster->EnsureAudioDecodeTaskQueued();
+    } else {
+      mMaster->EnsureVideoDecodeTaskQueued();
+    }
+    return;
+  }
+
+  // If this is a decode error, delegate to the generic error path.
+  if (aError != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
+    mMaster->DecodeError(aError);
+    return;
+  }
+
+  // This is an EOS. Finish off the queue, and then handle things based on our
+  // state.
+  if (isAudio) {
+    AudioQueue().Finish();
+  } else {
+    VideoQueue().Finish();
+  }
+
+  HandleEndOfStream();
+}
 
 RefPtr<MediaDecoder::SeekPromise>
 MediaDecoderStateMachine::
@@ -1930,48 +1979,8 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
   MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
 
   SAMPLE_LOG("OnNotDecoded (aType=%u, aError=%u)", aType, aError.Code());
-  bool isAudio = aType == MediaData::AUDIO_DATA;
-  MOZ_ASSERT_IF(!isAudio, aType == MediaData::VIDEO_DATA);
 
-  if (IsShutdown()) {
-    // Already shutdown;
-    return;
-  }
-
-  // If the decoder is waiting for data, we tell it to call us back when the
-  // data arrives.
-  if (aError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
-    MOZ_ASSERT(mReader->IsWaitForDataSupported(),
-               "Readers that send WAITING_FOR_DATA need to implement WaitForData");
-    mReader->WaitForData(aType);
-    mStateObj->HandleWaitingForData();
-    return;
-  }
-
-  if (aError == NS_ERROR_DOM_MEDIA_CANCELED) {
-    if (isAudio) {
-      EnsureAudioDecodeTaskQueued();
-    } else {
-      EnsureVideoDecodeTaskQueued();
-    }
-    return;
-  }
-
-  // If this is a decode error, delegate to the generic error path.
-  if (aError != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-    DecodeError(aError);
-    return;
-  }
-
-  // This is an EOS. Finish off the queue, and then handle things based on our
-  // state.
-  if (isAudio) {
-    AudioQueue().Finish();
-  } else {
-    VideoQueue().Finish();
-  }
-
-  mStateObj->HandleEndOfStream();
+  mStateObj->HandleNotDecoded(aType, aError);
 }
 
 void
