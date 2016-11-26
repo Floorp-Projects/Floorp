@@ -31,6 +31,12 @@ public:
 
   int64_t CalculateNewCurrentTime() const override;
 
+  void HandleAudioDecoded(MediaData* aAudio) override;
+
+  void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override;
+
+  void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override;
+
 private:
   ~AccurateSeekTask();
 
