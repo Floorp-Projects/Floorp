@@ -4,6 +4,7 @@ apply plugin: 'android-sdk-manager' // Must come before 'com.android.*'.
 apply plugin: 'com.android.application'
 apply plugin: 'checkstyle'
 apply plugin: 'com.getkeepsafe.dexcount'
+apply plugin: 'findbugs'
 
 dexcount {
     format = "tree"
@@ -413,4 +414,30 @@ def makeTaskExecutionListener(artifactRootUrl) {
 if (System.env.TASK_ID && System.env.RUN_ID) {
     def artifactRootUrl = "https://queue.taskcluster.net/v1/task/${System.env.TASK_ID}/runs/${System.env.RUN_ID}/artifacts"
     gradle.addListener(makeTaskExecutionListener(artifactRootUrl))
+}
+
+// Bug 1320035: Gradle configuration for running findbugs
+android.applicationVariants.all { variant ->
+    task("findbugs${variant.name.capitalize()}", type: FindBugs) {
+        description "Analyze ${variant.name} code with findbugs"
+        group "Verification"
+
+        ignoreFailures = false // We want builds to fail when running this task and issues are found
+        effort = "max"         // Using more memory and time to find issues is acceptable in automation
+        reportLevel = "high"   // For now we only care about high priority bugs. After we have fixed
+                               // the issues with medium/low priority we can lower the report level here.
+
+        classes = files("$project.buildDir/intermediates/classes")
+        source = variant.javaCompile.source
+        classpath = variant.javaCompile.classpath
+
+        reports {
+            html.enabled = true // We only care about HTML reports for humans
+            xml.enabled = false
+
+            html.destination = "$project.buildDir/outputs/findbugs/findbugs-${variant.name}-output.html"
+        }
+
+        dependsOn "assemble${variant.name.capitalize()}"
+    }
 }
