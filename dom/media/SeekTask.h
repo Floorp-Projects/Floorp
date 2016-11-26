@@ -62,6 +62,12 @@ public:
 
   const SeekTarget& GetSeekTarget();
 
+  virtual void HandleAudioDecoded(MediaData* aAudio) = 0;
+
+  virtual void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) = 0;
+
+  virtual void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) = 0;
+
 protected:
   SeekTask(const void* aDecoderID,
            AbstractThread* aThread,

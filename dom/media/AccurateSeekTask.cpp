@@ -112,6 +112,27 @@ AccurateSeekTask::CalculateNewCurrentTime() const
   return 0;
 }
 
+void
+AccurateSeekTask::HandleAudioDecoded(MediaData* aAudio)
+{
+  AssertOwnerThread();
+  OnAudioDecoded(aAudio);
+}
+
+void
+AccurateSeekTask::HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart)
+{
+  AssertOwnerThread();
+  OnVideoDecoded(aVideo);
+}
+
+void
+AccurateSeekTask::HandleNotDecoded(MediaData::Type aType, const MediaResult& aError)
+{
+  AssertOwnerThread();
+  OnNotDecoded(aType, aError);
+}
+
 RefPtr<AccurateSeekTask::SeekTaskPromise>
 AccurateSeekTask::Seek(const media::TimeUnit& aDuration)
 {
