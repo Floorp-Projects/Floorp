@@ -77,10 +77,6 @@ private:
 
   void OnVideoNotDecoded(const MediaResult& aError);
 
-  void SetCallbacks();
-
-  void CancelCallbacks();
-
   // Update the seek target's time before resolving this seek task, the updated
   // time will be used in the MDSM::SeekCompleted() to update the MDSM's position.
   void UpdateSeekTargetTime();
@@ -96,11 +92,6 @@ private:
    */
   const int64_t mCurrentTime;
   media::TimeUnit mDuration;
-
-  MediaEventListener mAudioCallback;
-  MediaEventListener mVideoCallback;
-  MediaEventListener mAudioWaitCallback;
-  MediaEventListener mVideoWaitCallback;
 };
 
 } // namespace media

@@ -771,9 +771,6 @@ public:
       Reader()->SetVideoBlankDecode(false);
     }
 
-    // SeekTask will register its callbacks to MediaDecoderReaderWrapper.
-    mMaster->CancelMediaDecoderReaderWrapperCallback();
-
     // Create a new SeekTask instance for the incoming seek task.
     if (mSeekJob.mTarget.IsAccurate() ||
         mSeekJob.mTarget.IsFast()) {
@@ -835,9 +832,6 @@ public:
     mSeekTaskRequest.DisconnectIfExists();
     mSeekJob.RejectIfExists(__func__);
     mSeekTask->Discard();
-
-    // Reset the MediaDecoderReaderWrapper's callbask.
-    mMaster->SetMediaDecoderReaderWrapperCallback();
   }
 
   State GetState() const override
@@ -2020,7 +2014,6 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
                                        const MediaResult& aError)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
 
   SAMPLE_LOG("OnNotDecoded (aType=%u, aError=%u)", aType, aError.Code());
 
