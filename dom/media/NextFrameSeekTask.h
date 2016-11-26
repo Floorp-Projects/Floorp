@@ -69,14 +69,6 @@ private:
 
   void MaybeFinishSeek();
 
-  void OnAudioDecoded(MediaData* aAudioSample);
-
-  void OnAudioNotDecoded(const MediaResult& aError);
-
-  void OnVideoDecoded(MediaData* aVideoSample);
-
-  void OnVideoNotDecoded(const MediaResult& aError);
-
   // Update the seek target's time before resolving this seek task, the updated
   // time will be used in the MDSM::SeekCompleted() to update the MDSM's position.
   void UpdateSeekTargetTime();
