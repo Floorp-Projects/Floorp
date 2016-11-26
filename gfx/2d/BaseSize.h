@@ -7,6 +7,8 @@
 #define MOZILLA_GFX_BASESIZE_H_
 
 #include <algorithm>
+#include <ostream>
+
 #include "mozilla/Attributes.h"
 
 namespace mozilla {
@@ -102,6 +104,11 @@ struct BaseSize {
   friend Sub Max(const Sub& aA, const Sub& aB) {
     return Sub(std::max(aA.width, aB.width),
                std::max(aA.height, aB.height));
+  }
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+      const BaseSize<T, Sub>& aSize) {
+    return aStream << aSize.width << " x " << aSize.height;
   }
 };
 
