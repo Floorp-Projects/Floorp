@@ -108,6 +108,57 @@ NextFrameSeekTask::HandleNotDecoded(MediaData::Type aType, const MediaResult& aE
   }
 }
 
+void
+NextFrameSeekTask::HandleAudioWaited(MediaData::Type aType)
+{
+  AssertOwnerThread();
+
+  // We don't make an audio decode request here, instead, let MDSM to
+  // trigger further audio decode tasks if MDSM itself needs to play audio.
+  MaybeFinishSeek();
+}
+
+void
+NextFrameSeekTask::HandleVideoWaited(MediaData::Type aType)
+{
+  AssertOwnerThread();
+
+  if (NeedMoreVideo()) {
+    RequestVideoData();
+    return;
+  }
+  MaybeFinishSeek();
+}
+
+void
+NextFrameSeekTask::HandleNotWaited(const WaitForDataRejectValue& aRejection)
+{
+  AssertOwnerThread();
+
+  switch(aRejection.mType) {
+  case MediaData::AUDIO_DATA:
+  {
+    // We don't make an audio decode request here, instead, let MDSM to
+    // trigger further audio decode tasks if MDSM itself needs to play audio.
+    MaybeFinishSeek();
+    break;
+  }
+  case MediaData::VIDEO_DATA:
+  {
+    if (NeedMoreVideo()) {
+      // Reject if we can't finish video seeking.
+      CancelCallbacks();
+      RejectIfExist(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+      return;
+    }
+    MaybeFinishSeek();
+    break;
+  }
+  default:
+    MOZ_ASSERT_UNREACHABLE("We cannot handle RAW_DATA or NULL_DATA here.");
+  }
+}
+
 /*
  * Remove samples from the queue until aCompare() returns false.
  * aCompare A function object with the signature bool(int64_t) which returns
@@ -330,24 +381,20 @@ NextFrameSeekTask::SetCallbacks()
 
   mAudioWaitCallback = mReader->AudioWaitCallback().Connect(
     OwnerThread(), [this] (WaitCallbackData aData) {
-    // We don't make an audio decode request here, instead, let MDSM to
-    // trigger further audio decode tasks if MDSM itself needs to play audio.
-    MaybeFinishSeek();
+    if (aData.is<MediaData::Type>()) {
+      HandleAudioWaited(aData.as<MediaData::Type>());
+    } else {
+      HandleNotWaited(aData.as<WaitForDataRejectValue>());
+    }
   });
 
   mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
     OwnerThread(), [this] (WaitCallbackData aData) {
-    if (NeedMoreVideo()) {
-      if (aData.is<MediaData::Type>()) {
-        RequestVideoData();
-      } else {
-        // Reject if we can't finish video seeking.
-        CancelCallbacks();
-        RejectIfExist(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-      }
-      return;
+    if (aData.is<MediaData::Type>()) {
+      HandleVideoWaited(aData.as<MediaData::Type>());
+    } else {
+      HandleNotWaited(aData.as<WaitForDataRejectValue>());
     }
-    MaybeFinishSeek();
   });
 }
 
