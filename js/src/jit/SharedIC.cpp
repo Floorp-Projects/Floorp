@@ -2471,12 +2471,11 @@ DoGetPropFallback(JSContext* cx, void* payload, ICGetProp_Fallback* stub_,
     }
 
     if (!attached && !JitOptions.disableCacheIR) {
-        mozilla::Maybe<CacheIRWriter> writer;
         GetPropIRGenerator gen(cx, pc, engine, &isTemporarilyUnoptimizable, val, name, res);
-        if (!gen.tryAttachStub(writer))
+        if (!gen.tryAttachStub())
             return false;
         if (gen.emitted()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, writer.ref(), CacheKind::GetProp,
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), CacheKind::GetProp,
                                                         engine, info.outerScript(cx), stub);
             if (newStub) {
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");

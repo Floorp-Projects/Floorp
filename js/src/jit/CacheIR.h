@@ -176,7 +176,7 @@ class StubField
 
     uintptr_t asWord() const { MOZ_ASSERT(sizeIsWord()); return dataWord_; }
     uint64_t asInt64() const { MOZ_ASSERT(sizeIsInt64()); return dataInt64_; }
-};
+} JS_HAZ_GC_POINTER;
 
 // We use this enum as GuardClass operand, instead of storing Class* pointers
 // in the IR, to keep the IR compact and the same size on all platforms.
@@ -190,7 +190,7 @@ enum class GuardClassKind : uint8_t
 };
 
 // Class to record CacheIR + some additional metadata for code generation.
-class MOZ_RAII CacheIRWriter
+class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
 {
     CompactBufferWriter buffer_;
 
@@ -211,10 +211,6 @@ class MOZ_RAII CacheIRWriter
     static const size_t MaxOperandIds = 20;
     static const size_t MaxStubDataSizeInBytes = 20 * sizeof(uintptr_t);
     bool tooLarge_;
-
-    // stubFields_ contains unrooted pointers, so ensure we cannot GC in
-    // our scope.
-    JS::AutoCheckCannotGC nogc;
 
     void writeOp(CacheOp op) {
         MOZ_ASSERT(uint32_t(op) <= UINT8_MAX);
@@ -260,8 +256,9 @@ class MOZ_RAII CacheIRWriter
     CacheIRWriter& operator=(const CacheIRWriter&) = delete;
 
   public:
-    CacheIRWriter()
-      : nextOperandId_(0),
+    explicit CacheIRWriter(JSContext* cx)
+      : CustomAutoRooter(cx),
+        nextOperandId_(0),
         nextInstructionId_(0),
         numInputOperands_(0),
         stubDataSize_(0),
@@ -282,6 +279,11 @@ class MOZ_RAII CacheIRWriter
         nextOperandId_++;
         numInputOperands_++;
         return op;
+    }
+
+    void trace(JSTracer* trc) override {
+        // For now, assert we only GC before we append stub fields.
+        MOZ_RELEASE_ASSERT(stubFields_.empty());
     }
 
     size_t stubDataSize() const {
@@ -509,6 +511,7 @@ class MOZ_RAII CacheIRReader
 // GetPropIRGenerator generates CacheIR for a GetProp IC.
 class MOZ_RAII GetPropIRGenerator
 {
+    CacheIRWriter writer;
     JSContext* cx_;
     jsbytecode* pc_;
     HandleValue val_;
@@ -521,28 +524,20 @@ class MOZ_RAII GetPropIRGenerator
     enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
     PreliminaryObjectAction preliminaryObjectAction_;
 
-    MOZ_MUST_USE bool tryAttachNative(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
-    MOZ_MUST_USE bool tryAttachUnboxed(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
-    MOZ_MUST_USE bool tryAttachUnboxedExpando(CacheIRWriter& writer, HandleObject obj,
-                                              ObjOperandId objId);
-    MOZ_MUST_USE bool tryAttachTypedObject(CacheIRWriter& writer, HandleObject obj,
-                                           ObjOperandId objId);
-    MOZ_MUST_USE bool tryAttachObjectLength(CacheIRWriter& writer, HandleObject obj,
-                                            ObjOperandId objId);
-    MOZ_MUST_USE bool tryAttachModuleNamespace(CacheIRWriter& writer, HandleObject obj,
-                                               ObjOperandId objId);
-    MOZ_MUST_USE bool tryAttachWindowProxy(CacheIRWriter& writer, HandleObject obj,
-                                           ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachNative(HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachUnboxed(HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachUnboxedExpando(HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachTypedObject(HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachObjectLength(HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachModuleNamespace(HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachWindowProxy(HandleObject obj, ObjOperandId objId);
 
-    MOZ_MUST_USE bool tryAttachGenericProxy(CacheIRWriter& writer, HandleObject obj,
-                                            ObjOperandId objId);
-    MOZ_MUST_USE bool tryAttachDOMProxyShadowed(CacheIRWriter& writer, HandleObject obj,
-                                                ObjOperandId objId);
-    MOZ_MUST_USE bool tryAttachDOMProxyUnshadowed(CacheIRWriter& writer, HandleObject obj,
-                                                  ObjOperandId objId);
-    MOZ_MUST_USE bool tryAttachProxy(CacheIRWriter& writer, HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId objId);
+    MOZ_MUST_USE bool tryAttachProxy(HandleObject obj, ObjOperandId objId);
 
-    MOZ_MUST_USE bool tryAttachPrimitive(CacheIRWriter& writer, ValOperandId valId);
+    MOZ_MUST_USE bool tryAttachPrimitive(ValOperandId valId);
 
     GetPropIRGenerator(const GetPropIRGenerator&) = delete;
     GetPropIRGenerator& operator=(const GetPropIRGenerator&) = delete;
@@ -554,13 +549,16 @@ class MOZ_RAII GetPropIRGenerator
 
     bool emitted() const { return emitted_; }
 
-    MOZ_MUST_USE bool tryAttachStub(mozilla::Maybe<CacheIRWriter>& writer);
+    MOZ_MUST_USE bool tryAttachStub();
 
     bool shouldUnlinkPreliminaryObjectStubs() const {
         return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;
     }
     bool shouldNotePreliminaryObjectStub() const {
         return preliminaryObjectAction_ == PreliminaryObjectAction::NotePreliminary;
+    }
+    const CacheIRWriter& writerRef() const {
+        return writer;
     }
 };
 
