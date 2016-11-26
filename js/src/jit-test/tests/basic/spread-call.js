@@ -57,8 +57,8 @@ function checkNormal(f, makeFn) {
   assertEqArray(makeFn("...[undefined]")(f), [undefined, undefined, undefined]);
 }
 
-checkNormal(function(a, b, c) [a, b, c], makeCall);
-checkNormal(function(a, b, c) [a, b, c], makeFunCall);
+checkNormal(function(a, b, c) { return [a, b, c]; }, makeCall);
+checkNormal(function(a, b, c) { return [a, b, c]; }, makeFunCall);
 checkNormal((a, b, c) => [a, b, c], makeCall);
 checkNormal((a, b, c) => [a, b, c], makeFunCall);
 function normalClass(a, b, c) {
@@ -78,8 +78,8 @@ function checkDefault(f, makeFn) {
   assertEqArray(makeFn("...[undefined]")(f), [-1, -2, -3]);
 }
 
-checkDefault(function(a = -1, b = -2, c = -3) [a, b, c], makeCall);
-checkDefault(function(a = -1, b = -2, c = -3) [a, b, c], makeFunCall);
+checkDefault(function(a = -1, b = -2, c = -3) { return [a, b, c]; }, makeCall);
+checkDefault(function(a = -1, b = -2, c = -3) { return [a, b, c]; }, makeFunCall);
 checkDefault((a = -1, b = -2, c = -3) => [a, b, c], makeCall);
 checkDefault((a = -1, b = -2, c = -3) => [a, b, c], makeFunCall);
 function defaultClass(a = -1, b = -2, c = -3) {
@@ -99,8 +99,8 @@ function checkRest(f, makeFn) {
   assertEqArray(makeFn("...[undefined]")(f), [undefined]);
 }
 
-checkRest(function(...x) x, makeCall);
-checkRest(function(...x) x, makeFunCall);
+checkRest(function(...x) { return x; }, makeCall);
+checkRest(function(...x) { return x; }, makeFunCall);
 checkRest((...x) => x, makeCall);
 checkRest((...x) => x, makeFunCall);
 function restClass(...x) {

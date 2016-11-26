@@ -6,6 +6,6 @@ function test(str, f) {\
     var x = f(eval(str));\
     assertEq(x, f(g1.eval(str)));\
 }\
-test('new RegExp(\"1\")', function(r) assertEq('a1'.search(r), 1));\
+test('new RegExp(\"1\")', function(r) { return assertEq('a1'.search(r), 1); });\
 " + " })();");
 eval("(function() { " + "" + " })();");

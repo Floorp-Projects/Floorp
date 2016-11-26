@@ -1736,18 +1736,6 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     }
   }
 
-  // It would be cleanest to mark nodes as dirty when (a) they're created and
-  // (b) they're unbound from a tree. However, we can't easily do (a) right now,
-  // because IsStyledByServo() is not always easy to check at node creation time,
-  // and the bits have different meaning in the non-IsStyledByServo case.
-  //
-  // So for now, we just mark nodes as dirty when they're inserted into a
-  // document or shadow tree.
-  if (IsStyledByServo() && IsInComposedDoc()) {
-    MOZ_ASSERT(!HasServoData());
-    SetIsDirtyForServo();
-  }
-
   // XXXbz script execution during binding can trigger some of these
   // postcondition asserts....  But we do want that, since things will
   // generally be quite broken when that happens.
@@ -3921,4 +3909,13 @@ Element::UpdateIntersectionObservation(DOMIntersectionObserver* aObserver, int32
     }
   }
   return false;
+}
+
+void
+Element::ClearServoData() {
+#ifdef MOZ_STYLO
+  Servo_Element_ClearData(this);
+#else
+  MOZ_CRASH("Accessing servo node data in non-stylo build");
+#endif
 }

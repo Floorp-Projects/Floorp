@@ -40,7 +40,7 @@ try {
 try {
     var f = function() {
         {
-            print(new function(q)("", s))
+            print(new function(q) { return ("", s); })
             let u
         }
     };

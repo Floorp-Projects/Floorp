@@ -552,18 +552,6 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   UpdateEditableState(false);
 
-  // It would be cleanest to mark nodes as dirty when (a) they're created and
-  // (b) they're unbound from a tree. However, we can't easily do (a) right now,
-  // because IsStyledByServo() is not always easy to check at node creation time,
-  // and the bits have different meaning in the non-IsStyledByServo case.
-  //
-  // So for now, we just mark nodes as dirty when they're inserted into a
-  // document or shadow tree.
-  if (IsStyledByServo() && IsInComposedDoc()) {
-    MOZ_ASSERT(!HasServoData());
-    SetIsDirtyForServo();
-  }
-
   NS_POSTCONDITION(aDocument == GetUncomposedDoc(), "Bound to wrong document");
   NS_POSTCONDITION(aParent == GetParent(), "Bound to wrong parent");
   NS_POSTCONDITION(aBindingParent == GetBindingParent(),
@@ -594,16 +582,6 @@ nsGenericDOMDataNode::UnbindFromTree(bool aDeep, bool aNullParent)
     SetParentIsContent(false);
   }
   ClearInDocument();
-
-  // Computed styled data isn't useful for detached nodes, and we'll need to
-  // recomputed it anyway if we ever insert the nodes back into a document.
-  if (IsStyledByServo()) {
-    ClearServoData();
-  } else {
-#ifdef MOZ_STYLO
-    MOZ_ASSERT(!HasServoData());
-#endif
-  }
 
   if (aNullParent || !mParent->IsInShadowTree()) {
     UnsetFlags(NODE_IS_IN_SHADOW_TREE);

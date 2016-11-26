@@ -24,7 +24,7 @@ function test()
 
 // =====
 
-  (function(){function x(){} function x()y})();
+  (function(){function x(){} function x() { return y; }})();
 
 // Assertion failure: JOF_OPTYPE(op) == JOF_ATOM, at ../jsemit.cpp:1710
 

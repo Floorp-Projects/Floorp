@@ -1,6 +1,6 @@
 function f(a) {
    function g() {
-       yield function () a;
+       yield function () { return a; };
    }
    if (a == 8)
        return g();

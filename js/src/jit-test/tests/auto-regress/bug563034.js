@@ -3,7 +3,7 @@
 //
 function f(a) {
    function g() {
-       yield function () a;
+       yield function () { return a; };
    }
    return g();
 }

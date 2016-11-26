@@ -20,8 +20,9 @@ var dbg = new Debugger(g1, g2, g3);
 function script(func) {
     var gw = dbg.addDebuggee(func.global);
     var script = gw.makeDebuggeeValue(func).script;
-    script.toString = function ()
-        "[Debugger.Script for " + func.name + " in " + uneval(func.global) + "]";
+    script.toString = function () {
+        return "[Debugger.Script for " + func.name + " in " + uneval(func.global) + "]";
+    };
     return script;
 }
 

@@ -15,7 +15,7 @@ if (!('oomAfterAllocations' in this))
             setBreakpoint;
         }
     }
-    g.eval("" + function f(d) toggle(d))
+    g.eval("" + function f(d) { return toggle(d); })
     g.eval("(" + function() {
         f(false);
         f(true);

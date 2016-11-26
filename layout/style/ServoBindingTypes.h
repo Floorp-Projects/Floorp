@@ -18,6 +18,7 @@ struct RawServoDeclarationBlock;
 struct RawServoStyleRule;
 
 namespace mozilla {
+  class ServoElementSnapshot;
 namespace dom {
 class Element;
 class StyleChildrenIterator;
@@ -29,6 +30,7 @@ class nsIDocument;
 class nsINode;
 
 using mozilla::dom::StyleChildrenIterator;
+using mozilla::ServoElementSnapshot;
 
 typedef nsINode RawGeckoNode;
 typedef mozilla::dom::Element RawGeckoElement;
@@ -85,6 +87,7 @@ DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawServoDeclarationBlockStrong)
 DECL_OWNED_REF_TYPE_FOR(RawServoStyleSet)
 DECL_NULLABLE_OWNED_REF_TYPE_FOR(StyleChildrenIterator)
 DECL_OWNED_REF_TYPE_FOR(StyleChildrenIterator)
+DECL_OWNED_REF_TYPE_FOR(ServoElementSnapshot)
 
 // We don't use BorrowedMut because the nodes may alias
 // Servo itself doesn't directly read or mutate these;
@@ -98,6 +101,7 @@ DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawGeckoElement)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoDocument)
 DECL_NULLABLE_BORROWED_REF_TYPE_FOR(RawGeckoDocument)
 DECL_BORROWED_MUT_REF_TYPE_FOR(StyleChildrenIterator)
+DECL_BORROWED_MUT_REF_TYPE_FOR(ServoElementSnapshot)
 DECL_BORROWED_REF_TYPE_FOR(nsCSSValue)
 DECL_BORROWED_MUT_REF_TYPE_FOR(nsCSSValue)
 

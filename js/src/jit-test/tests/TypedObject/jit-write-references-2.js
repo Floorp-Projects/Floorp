@@ -10,7 +10,8 @@ var ValueStruct = new T.StructType({
 })
 var v = new ValueStruct;
 new class get extends Number {};
-function writeValue(o, v)
-  o.f = v
+function writeValue(o, v) {
+  return o.f = v;
+}
 for (var i = 0; i < 5; i++)
   writeValue(v, {}, "helo")

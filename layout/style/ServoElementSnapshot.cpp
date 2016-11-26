@@ -11,16 +11,20 @@
 
 namespace mozilla {
 
-ServoElementSnapshot::ServoElementSnapshot(Element* aElement)
+ServoElementSnapshot::ServoElementSnapshot(const Element* aElement)
   : mContains(Flags(0))
   , mState(0)
-  , mExplicitRestyleHint(nsRestyleHint(0))
-  , mExplicitChangeHint(nsChangeHint(0))
 {
+  MOZ_COUNT_CTOR(ServoElementSnapshot);
   mIsHTMLElementInHTMLDocument =
     aElement->IsHTMLElement() && aElement->IsInHTMLDocument();
   mIsInChromeDocument =
     nsContentUtils::IsChromeDoc(aElement->OwnerDoc());
+}
+
+ServoElementSnapshot::~ServoElementSnapshot()
+{
+  MOZ_COUNT_DTOR(ServoElementSnapshot);
 }
 
 void

@@ -102,7 +102,10 @@ class ObjOperandId : public OperandId
     _(LoadArgumentsObjectLengthResult)    \
     _(CallScriptedGetterResult)           \
     _(CallNativeGetterResult)             \
-    _(LoadUndefinedResult)
+    _(LoadUndefinedResult)                \
+                                          \
+    _(TypeMonitorResult)                  \
+    _(ReturnFromIC)
 
 enum class CacheOp {
 #define DEFINE_OP(op) op,
@@ -346,6 +349,13 @@ class MOZ_RAII CacheIRWriter
     void callNativeGetterResult(ObjOperandId obj, JSFunction* getter) {
         writeOpWithOperandId(CacheOp::CallNativeGetterResult, obj);
         addStubWord(uintptr_t(getter), StubField::GCType::JSObject);
+    }
+
+    void typeMonitorResult() {
+        writeOp(CacheOp::TypeMonitorResult);
+    }
+    void returnFromIC() {
+        writeOp(CacheOp::ReturnFromIC);
     }
 };
 

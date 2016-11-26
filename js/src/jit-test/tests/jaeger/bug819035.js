@@ -8,7 +8,7 @@
   (function () {
     (function r(t) {
        t !== u,
-         sum(t, function (v)  r(v) );
+         sum(t, function (v) { return r(v); } );
     })(arguments);
   })(a);
 }) (

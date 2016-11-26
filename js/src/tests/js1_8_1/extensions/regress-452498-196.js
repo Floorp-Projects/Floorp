@@ -34,7 +34,7 @@ function test()
 
   (function (){
     var x;
-    eval("var x; (function ()x)");
+    eval("var x; (function () { return x; })");
   }
     )();
 

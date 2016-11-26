@@ -17,6 +17,7 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ServoTypes.h"
 #include "mozilla/SheetType.h"
 
 #include "nsIStyleRuleProcessor.h"
@@ -115,7 +116,26 @@ class nsStyleSet final
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(mozilla::dom::Element* aElement,
                   nsStyleContext* aParentContext,
+                  mozilla::ConsumeStyleBehavior,
+                  mozilla::LazyComputeBehavior)
+  {
+    return ResolveStyleFor(aElement, aParentContext);
+  }
+
+  already_AddRefed<nsStyleContext>
+  ResolveStyleFor(mozilla::dom::Element* aElement,
+                  nsStyleContext* aParentContext,
                   TreeMatchContext& aTreeMatchContext);
+
+  already_AddRefed<nsStyleContext>
+  ResolveStyleFor(mozilla::dom::Element* aElement,
+                  nsStyleContext* aParentContext,
+                  mozilla::ConsumeStyleBehavior aConsume,
+                  mozilla::LazyComputeBehavior aMayCompute,
+                  TreeMatchContext& aTreeMatchContext)
+  {
+    return ResolveStyleFor(aElement, aParentContext, aTreeMatchContext);
+  }
 
   // Get a style context (with the given parent) for the
   // sequence of style rules in the |aRules| array.
