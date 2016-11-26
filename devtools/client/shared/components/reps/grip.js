@@ -50,7 +50,7 @@ define(function (require, exports, module) {
     },
 
     propIterator: function (object, max) {
-      if (Object.keys(object.preview).includes("wrappedValue")) {
+      if (object.preview && Object.keys(object.preview).includes("wrappedValue")) {
         const { Rep } = createFactories(require("./rep"));
 
         return [Rep({
