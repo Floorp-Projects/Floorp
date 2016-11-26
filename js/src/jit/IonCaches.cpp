@@ -1686,13 +1686,6 @@ PushObjectOpResult(MacroAssembler& masm)
 }
 
 static bool
-ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp)
-{
-    RootedValue receiver(cx, ObjectValue(*proxy));
-    return Proxy::get(cx, proxy, receiver, id, vp);
-}
-
-static bool
 EmitCallProxyGet(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& attacher,
                  jsid id, LiveRegisterSet liveRegs, Register object, TypedOrValueRegister output,
                  jsbytecode* pc, void* returnAddr)
