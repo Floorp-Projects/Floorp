@@ -414,8 +414,11 @@ interface imgIContainer : nsISupports
    * the image will at some point fire off decode notifications. Images that
    * can be decoded "quickly" according to some heuristic will be decoded
    * synchronously.
+   *
+   * @param aFlags Flags of the FLAG_* variety. Only FLAG_ASYNC_NOTIFY
+   *               is accepted; all others are ignored.
    */
-  [noscript] void startDecoding();
+  [noscript] void startDecoding(in uint32_t aFlags);
 
   /*
    * This method triggers decoding for an image, but unlike startDecoding() it

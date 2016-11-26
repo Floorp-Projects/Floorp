@@ -351,7 +351,7 @@ SVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect*
     nsCOMPtr<imgIContainer> container;
     aRequest->GetImage(getter_AddRefs(container));
     MOZ_ASSERT(container, "who sent the notification then?");
-    container->StartDecoding();
+    container->StartDecoding(imgIContainer::FLAG_NONE);
   }
 
   if (aType == imgINotificationObserver::LOAD_COMPLETE ||

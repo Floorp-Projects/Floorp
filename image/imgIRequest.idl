@@ -153,7 +153,7 @@ interface imgIRequest : nsIRequest
    * container already exists, or calls it once the container becomes available
    * if it does not yet exist.
    */
-  void startDecoding();
+  void startDecoding(in uint32_t aFlags);
 
   /**
    * Locks an image. If the image does not exist yet, locks it once it becomes
