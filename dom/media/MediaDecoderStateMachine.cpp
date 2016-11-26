@@ -1998,6 +1998,28 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideo,
   mStateObj->HandleVideoDecoded(aVideo, aDecodeStartTime);
 }
 
+void
+MediaDecoderStateMachine::OnAudioWaited(MediaData::Type aType)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(aType == MediaData::AUDIO_DATA);
+  EnsureAudioDecodeTaskQueued();
+}
+
+void
+MediaDecoderStateMachine::OnVideoWaited(MediaData::Type aType)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(aType == MediaData::VIDEO_DATA);
+  EnsureVideoDecodeTaskQueued();
+}
+
+void
+MediaDecoderStateMachine::OnNotWaited(const WaitForDataRejectValue& aRejection)
+{
+  MOZ_ASSERT(OnTaskQueue());
+}
+
 bool
 MediaDecoderStateMachine::IsAudioDecoding()
 {
@@ -2100,14 +2122,18 @@ MediaDecoderStateMachine::SetMediaDecoderReaderWrapperCallback()
   mAudioWaitCallback = mReader->AudioWaitCallback().Connect(
     mTaskQueue, [this] (WaitCallbackData aData) {
     if (aData.is<MediaData::Type>()) {
-      EnsureAudioDecodeTaskQueued();
+      OnAudioWaited(aData.as<MediaData::Type>());
+    } else {
+      OnNotWaited(aData.as<WaitForDataRejectValue>());
     }
   });
 
   mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
     mTaskQueue, [this] (WaitCallbackData aData) {
     if (aData.is<MediaData::Type>()) {
-      EnsureVideoDecodeTaskQueued();
+      OnVideoWaited(aData.as<MediaData::Type>());
+    } else {
+      OnNotWaited(aData.as<WaitForDataRejectValue>());
     }
   });
 }
