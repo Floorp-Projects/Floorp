@@ -229,7 +229,7 @@ imgRequestProxy::ChangeOwner(imgRequest* aNewOwner)
   // If we'd previously requested a synchronous decode, request a decode on the
   // new image.
   if (mDecodeRequested) {
-    StartDecoding();
+    StartDecoding(imgIContainer::FLAG_NONE);
   }
 
   return NS_OK;
@@ -358,14 +358,14 @@ imgRequestProxy::CancelAndForgetObserver(nsresult aStatus)
 }
 
 NS_IMETHODIMP
-imgRequestProxy::StartDecoding()
+imgRequestProxy::StartDecoding(uint32_t aFlags)
 {
   // Flag this, so we know to transfer the request if our owner changes
   mDecodeRequested = true;
 
   RefPtr<Image> image = GetImage();
   if (image) {
-    return image->StartDecoding();
+    return image->StartDecoding(aFlags);
   }
 
   if (GetOwner()) {
