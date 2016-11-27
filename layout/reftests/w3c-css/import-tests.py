@@ -50,6 +50,9 @@ gPrefixedProperties = [
     "column-width"
 ]
 
+gPrefixRegexp = re.compile(
+    r"([^-#]|^)(" + r"|".join(gPrefixedProperties) + r")\b")
+
 # Map of about:config prefs that need toggling, for a given test subdirectory.
 # Entries should look like:
 #  "$SUBDIR_NAME": "pref($PREF_NAME, $PREF_VALUE)"
@@ -134,7 +137,7 @@ def copy_file(test, srcfile, destname, isSupportFile=False):
         os.makedirs(destdir)
     if os.path.exists(destfile):
         raise StandardError("file " + destfile + " already exists")
-    copy_and_prefix(test, srcfile, destfile, gPrefixedProperties, isSupportFile)
+    copy_and_prefix(test, srcfile, destfile, isSupportFile)
 
 def copy_support_files(test, dirname):
     global gSrcPath
@@ -242,8 +245,8 @@ AHEM_DECL_XML = """<style type="text/css"><![CDATA[
 ]]></style>
 """
 
-def copy_and_prefix(test, aSourceFileName, aDestFileName, aProps, isSupportFile=False):
-    global gTestFlags
+def copy_and_prefix(test, aSourceFileName, aDestFileName, isSupportFile=False):
+    global gTestFlags, gPrefixRegexp
     newFile = open(aDestFileName, 'wb')
     unPrefixedFile = open(aSourceFileName, 'rb')
     testName = aDestFileName[len(gDestPath)+1:]
@@ -260,9 +263,7 @@ def copy_and_prefix(test, aSourceFileName, aDestFileName, aProps, isSupportFile=
             newFile.write(template.format(to_unix_path_sep(ahemPath)))
             ahemFontAdded = True
 
-        for prop in aProps:
-            replacementLine = re.sub(r"([^-#]|^)" + prop + r"\b", r"\1-moz-" + prop, replacementLine)
-
+        replacementLine = gPrefixRegexp.sub(r"\1-moz-\2", replacementLine)
         newFile.write(replacementLine)
 
     newFile.close()
