@@ -29,6 +29,9 @@ enum class TaskCategory {
   // setTimeout, setInterval
   Timer,
 
+  // Runnables posted from a worker to the main thread
+  Worker,
+
   // requestIdleCallback
   IdleCallback,
 
