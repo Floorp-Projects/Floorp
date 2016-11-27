@@ -29,18 +29,18 @@ class CacheIRStubInfo
 
     const uint8_t* code_;
     uint32_t length_;
-    const uint8_t* gcTypes_;
+    const uint8_t* fieldTypes_;
 
     CacheIRStubInfo(CacheKind kind, ICStubEngine engine, bool makesGCCalls,
                     uint32_t stubDataOffset, const uint8_t* code, uint32_t codeLength,
-                    const uint8_t* gcTypes)
+                    const uint8_t* fieldTypes)
       : kind_(kind),
         engine_(engine),
         makesGCCalls_(makesGCCalls),
         stubDataOffset_(stubDataOffset),
         code_(code),
         length_(codeLength),
-        gcTypes_(gcTypes)
+        fieldTypes_(fieldTypes)
     {
         MOZ_ASSERT(kind_ == kind, "Kind must fit in bitfield");
         MOZ_ASSERT(engine_ == engine, "Engine must fit in bitfield");
@@ -61,7 +61,7 @@ class CacheIRStubInfo
 
     size_t stubDataSize() const;
 
-    StubField::GCType gcType(uint32_t i) const { return (StubField::GCType)gcTypes_[i]; }
+    StubField::Type fieldType(uint32_t i) const { return (StubField::Type)fieldTypes_[i]; }
 
     static CacheIRStubInfo* New(CacheKind kind, ICStubEngine engine, bool canMakeCalls,
                                 uint32_t stubDataOffset, const CacheIRWriter& writer);

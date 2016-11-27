@@ -1338,7 +1338,6 @@ TraceJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
             break;
           }
           case VMFunction::RootString:
-          case VMFunction::RootPropertyName:
             TraceRoot(trc, reinterpret_cast<JSString**>(argBase), "ion-vm-args");
             break;
           case VMFunction::RootFunction:
@@ -1346,6 +1345,9 @@ TraceJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
             break;
           case VMFunction::RootValue:
             TraceRoot(trc, reinterpret_cast<Value*>(argBase), "ion-vm-args");
+            break;
+          case VMFunction::RootId:
+            TraceRoot(trc, reinterpret_cast<jsid*>(argBase), "ion-vm-args");
             break;
           case VMFunction::RootCell:
             TraceGenericPointerRoot(trc, reinterpret_cast<gc::Cell**>(argBase), "ion-vm-args");
@@ -1372,7 +1374,6 @@ TraceJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
             TraceRoot(trc, footer->outParam<JSObject*>(), "ion-vm-out");
             break;
           case VMFunction::RootString:
-          case VMFunction::RootPropertyName:
             TraceRoot(trc, footer->outParam<JSString*>(), "ion-vm-out");
             break;
           case VMFunction::RootFunction:
@@ -1380,6 +1381,9 @@ TraceJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
             break;
           case VMFunction::RootValue:
             TraceRoot(trc, footer->outParam<Value>(), "ion-vm-outvp");
+            break;
+          case VMFunction::RootId:
+            TraceRoot(trc, footer->outParam<jsid>(), "ion-vm-outvp");
             break;
           case VMFunction::RootCell:
             TraceGenericPointerRoot(trc, footer->outParam<gc::Cell*>(), "ion-vm-out");
