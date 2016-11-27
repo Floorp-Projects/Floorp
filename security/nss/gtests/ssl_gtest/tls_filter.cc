@@ -431,8 +431,9 @@ PacketFilter::Action TlsExtensionFilter::FilterExtensions(
 
 PacketFilter::Action TlsExtensionCapture::FilterExtension(
     uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
-  if (extension_type == extension_ && data_.len() == 0) {
+  if (extension_type == extension_ && (last_ || !captured_)) {
     data_.Assign(input);
+    captured_ = true;
   }
   return KEEP;
 }

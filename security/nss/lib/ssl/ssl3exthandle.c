@@ -2426,18 +2426,17 @@ ssl3_ServerSendSignedCertTimestampXtn(const sslSocket *ss, TLSExtensionData *xtn
         rv = ssl3_ExtAppendHandshakeNumber(ss,
                                            ssl_signed_cert_timestamp_xtn,
                                            2);
-        if (rv != SECSuccess)
-            goto loser;
+        if (rv != SECSuccess) {
+            return -1;
+        }
         /* extension_data */
         rv = ssl3_ExtAppendHandshakeVariable(ss, scts->data, scts->len, 2);
-        if (rv != SECSuccess)
-            goto loser;
+        if (rv != SECSuccess) {
+            return -1;
+        }
     }
 
     return extension_length;
-
-loser:
-    return -1;
 }
 
 SECStatus

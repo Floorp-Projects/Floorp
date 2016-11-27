@@ -15,7 +15,7 @@ let tasks = new Map();
 let image_tasks = new Map();
 
 let queue = new taskcluster.Queue({
-  baseUrl: "http://taskcluster/queue/v1/"
+  baseUrl: "http://taskcluster/queue/v1"
 });
 
 function fromNow(hours) {

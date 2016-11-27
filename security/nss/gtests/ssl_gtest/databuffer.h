@@ -28,7 +28,7 @@ class DataBuffer {
   DataBuffer(const uint8_t* data, size_t len) : data_(nullptr), len_(0) {
     Assign(data, len);
   }
-  explicit DataBuffer(const DataBuffer& other) : data_(nullptr), len_(0) {
+  DataBuffer(const DataBuffer& other) : data_(nullptr), len_(0) {
     Assign(other);
   }
   ~DataBuffer() { delete[] data_; }
@@ -136,7 +136,7 @@ class DataBuffer {
       Write(0, old_value, std::min(old_len, index));
     }
     // Maybe a gap.
-    if (index > old_len) {
+    if (old_value && index > old_len) {
       memset(old_value + index, 0, index - old_len);
     }
     // The new.

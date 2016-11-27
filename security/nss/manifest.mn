@@ -11,7 +11,3 @@ IMPORTS =	nspr20/v4.8 \
 RELEASE = nss
 
 DIRS = coreconf lib cmd gtests
-
-ifdef FUZZ
-DIRS += fuzz
-endif

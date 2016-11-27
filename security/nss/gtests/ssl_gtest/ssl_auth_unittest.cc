@@ -28,6 +28,15 @@ TEST_P(TlsConnectGeneric, ServerAuthBigRsa) {
   CheckKeys();
 }
 
+TEST_P(TlsConnectGeneric, ServerAuthRsaChain) {
+  Reset(TlsAgent::kServerRsaChain);
+  Connect();
+  CheckKeys();
+  size_t chain_length;
+  EXPECT_TRUE(client_->GetPeerChainLength(&chain_length));
+  EXPECT_EQ(2UL, chain_length);
+}
+
 TEST_P(TlsConnectGeneric, ClientAuth) {
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);

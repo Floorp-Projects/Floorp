@@ -9,6 +9,7 @@
 #include "basicutil.h"
 #include "pkcs11.h"
 #include "nspr.h"
+#include "secutil.h"
 #include <stdio.h>
 
 #define __PASTE(x, y) x##y
@@ -92,8 +93,6 @@ static SECOidTag ecCurve_oid_map[] = {
 
 typedef SECStatus (*op_func)(void *, void *, void *);
 typedef SECStatus (*pk11_op_func)(CK_SESSION_HANDLE, void *, void *, void *);
-
-typedef SECItem SECKEYECParams;
 
 typedef struct ThreadDataStr {
     op_func op;
@@ -291,60 +290,6 @@ M_TimeOperation(void (*threadFunc)(void *),
             goto cleanup;                                                         \
         printf("... okay.\n");                                                    \
     }
-
-/*
- * Initializes a SECItem from a hexadecimal string
- *
- * Warning: This function ignores leading 00's, so any leading 00's
- * in the hexadecimal string must be optional.
- */
-static SECItem *
-hexString2SECItem(PLArenaPool *arena, SECItem *item, const char *str)
-{
-    int i = 0;
-    int byteval = 0;
-    int tmp = PORT_Strlen(str);
-
-    PORT_Assert(arena);
-    PORT_Assert(item);
-
-    if ((tmp % 2) != 0) {
-        return NULL;
-    }
-
-    /* skip leading 00's unless the hex string is "00" */
-    while ((tmp > 2) && (str[0] == '0') && (str[1] == '0')) {
-        str += 2;
-        tmp -= 2;
-    }
-
-    item = SECITEM_AllocItem(arena, item, tmp / 2);
-    if (item == NULL) {
-        return NULL;
-    }
-
-    while (str[i]) {
-        if ((str[i] >= '0') && (str[i] <= '9')) {
-            tmp = str[i] - '0';
-        } else if ((str[i] >= 'a') && (str[i] <= 'f')) {
-            tmp = str[i] - 'a' + 10;
-        } else if ((str[i] >= 'A') && (str[i] <= 'F')) {
-            tmp = str[i] - 'A' + 10;
-        } else {
-            /* item is in arena and gets freed by the caller */
-            return NULL;
-        }
-
-        byteval = byteval * 16 + tmp;
-        if ((i % 2) != 0) {
-            item->data[i / 2] = byteval;
-            byteval = 0;
-        }
-        i++;
-    }
-
-    return item;
-}
 
 #define PK11_SETATTRS(x, id, v, l) \
     (x)->type = (id);              \
@@ -622,16 +567,16 @@ ectest_curve_freebl(ECCurveName curve, int iterations, int numThreads,
 
     ecParams.fieldID.size = ecCurve_map[curve]->size;
     ecParams.fieldID.type = fieldType;
-    hexString2SECItem(arena, &ecParams.fieldID.u.prime, ecCurve_map[curve]->irr);
-    hexString2SECItem(arena, &ecParams.curve.a, ecCurve_map[curve]->curvea);
-    hexString2SECItem(arena, &ecParams.curve.b, ecCurve_map[curve]->curveb);
+    SECU_HexString2SECItem(arena, &ecParams.fieldID.u.prime, ecCurve_map[curve]->irr);
+    SECU_HexString2SECItem(arena, &ecParams.curve.a, ecCurve_map[curve]->curvea);
+    SECU_HexString2SECItem(arena, &ecParams.curve.b, ecCurve_map[curve]->curveb);
     genenc[0] = '0';
     genenc[1] = '4';
     genenc[2] = '\0';
     strcat(genenc, ecCurve_map[curve]->genx);
     strcat(genenc, ecCurve_map[curve]->geny);
-    hexString2SECItem(arena, &ecParams.base, genenc);
-    hexString2SECItem(arena, &ecParams.order, ecCurve_map[curve]->order);
+    SECU_HexString2SECItem(arena, &ecParams.base, genenc);
+    SECU_HexString2SECItem(arena, &ecParams.order, ecCurve_map[curve]->order);
     ecParams.cofactor = ecCurve_map[curve]->cofactor;
 
     PORT_Memset(digestData, 0xa5, sizeof(digestData));
