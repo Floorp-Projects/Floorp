@@ -11,6 +11,10 @@
 
 #include "nsIEventTarget.h"
 
+#define NS_THROTTLEDEVENTQUEUE_IID \
+{ 0x8f3cf7dc, 0xfc14, 0x4ad5, \
+  { 0x9f, 0xd5, 0xdb, 0x79, 0xbc, 0xe6, 0xd5, 0x08 } }
+
 namespace mozilla {
 
 // A ThrottledEventQueue is an event target that can be used to throttle
@@ -87,7 +91,11 @@ public:
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_THROTTLEDEVENTQUEUE_IID);
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(ThrottledEventQueue, NS_THROTTLEDEVENTQUEUE_IID);
 
 } // namespace mozilla
 

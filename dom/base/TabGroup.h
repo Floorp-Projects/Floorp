@@ -110,11 +110,6 @@ public:
 
   nsTArray<nsPIDOMWindowOuter*> GetTopLevelWindows();
 
-  // Get the event queue that associated windows can use to issue runnables to
-  // the main thread.  This may return nullptr during browser shutdown.
-  ThrottledEventQueue*
-  GetThrottledEventQueue() const;
-
   // This method is always safe to call off the main thread.
   virtual nsresult Dispatch(const char* aName,
                             TaskCategory aCategory,
@@ -133,8 +128,7 @@ private:
   DocGroupMap mDocGroups;
   Atomic<bool> mLastWindowLeft;
   nsTArray<nsPIDOMWindowOuter*> mWindows;
-  bool mThrottledQueuesInitialized;
-  RefPtr<ThrottledEventQueue> mThrottledEventQueue;
+  Atomic<bool> mThrottledQueuesInitialized;
   nsCOMPtr<nsIEventTarget> mEventTargets[size_t(TaskCategory::Count)];
 };
 
