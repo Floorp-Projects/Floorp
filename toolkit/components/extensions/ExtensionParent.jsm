@@ -392,6 +392,13 @@ ParentAPIManager = {
           this.closeProxyContext(childId);
         }
       }
+
+      // Reset extension message managers when their child processes shut down.
+      for (let extension of GlobalManager.extensionMap.values()) {
+        if (extension.parentMessageManager === mm) {
+          extension.parentMessageManager = null;
+        }
+      }
     }
   },
 
@@ -405,26 +412,30 @@ ParentAPIManager = {
   },
 
   receiveMessage({name, data, target}) {
-    switch (name) {
-      case "API:CreateProxyContext":
-        this.createProxyContext(data, target);
-        break;
+    try {
+      switch (name) {
+        case "API:CreateProxyContext":
+          this.createProxyContext(data, target);
+          break;
 
-      case "API:CloseProxyContext":
-        this.closeProxyContext(data.childId);
-        break;
+        case "API:CloseProxyContext":
+          this.closeProxyContext(data.childId);
+          break;
 
-      case "API:Call":
-        this.call(data, target);
-        break;
+        case "API:Call":
+          this.call(data, target);
+          break;
 
-      case "API:AddListener":
-        this.addListener(data, target);
-        break;
+        case "API:AddListener":
+          this.addListener(data, target);
+          break;
 
-      case "API:RemoveListener":
-        this.removeListener(data);
-        break;
+        case "API:RemoveListener":
+          this.removeListener(data);
+          break;
+      }
+    } catch (e) {
+      Cu.reportError(e);
     }
   },
 
@@ -441,6 +452,17 @@ ParentAPIManager = {
 
     let context;
     if (envType == "addon_parent" || envType == "devtools_parent") {
+      let processMessageManager = (target.messageManager.processMessageManager ||
+                                   Services.ppmm.getChildAt(0));
+
+      if (!extension.parentMessageManager) {
+        extension.parentMessageManager = processMessageManager;
+      }
+
+      if (processMessageManager !== extension.parentMessageManager) {
+        throw new Error("Attempt to create privileged extension parent from incorrect child process");
+      }
+
       context = new ExtensionPageContextParent(envType, extension, data, target);
     } else if (envType == "content_parent") {
       context = new ContentScriptContextParent(envType, extension, data, target, principal);
