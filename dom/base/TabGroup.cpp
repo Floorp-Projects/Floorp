@@ -62,13 +62,17 @@ TabGroup::EnsureThrottledEventQueues()
 
   mThrottledQueuesInitialized = true;
 
-  nsCOMPtr<nsIThread> mainThread;
-  NS_GetMainThread(getter_AddRefs(mainThread));
-  MOZ_DIAGNOSTIC_ASSERT(mainThread);
-
-  // This may return nullptr during xpcom shutdown.  This is ok as we
-  // do not guarantee a ThrottledEventQueue will be present.
-  mThrottledEventQueue = ThrottledEventQueue::Create(mainThread);
+  for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
+    TaskCategory category = static_cast<TaskCategory>(i);
+    if (category == TaskCategory::Worker || category == TaskCategory::Timer) {
+      nsCOMPtr<nsIEventTarget> target = ThrottledEventQueue::Create(mEventTargets[i]);
+      if (target) {
+        // This may return nullptr during xpcom shutdown.  This is ok as we
+        // do not guarantee a ThrottledEventQueue will be present.
+        mEventTargets[i] = target;
+      }
+    }
+  }
 }
 
 TabGroup*
@@ -223,14 +227,6 @@ TabGroup::GetTopLevelWindows()
   return array;
 }
 
-ThrottledEventQueue*
-TabGroup::GetThrottledEventQueue() const
-{
-  MOZ_RELEASE_ASSERT(mThrottledQueuesInitialized || this == GetChromeTabGroup());
-  MOZ_RELEASE_ASSERT(!mLastWindowLeft);
-  return mThrottledEventQueue;
-}
-
 NS_IMPL_ISUPPORTS(TabGroup, nsISupports)
 
 TabGroup::HashEntry::HashEntry(const nsACString* aKey)
@@ -258,6 +254,10 @@ TabGroup::Dispatch(const char* aName,
 nsIEventTarget*
 TabGroup::EventTargetFor(TaskCategory aCategory) const
 {
+  if (aCategory == TaskCategory::Worker || aCategory == TaskCategory::Timer) {
+    MOZ_RELEASE_ASSERT(mThrottledQueuesInitialized || this == sChromeTabGroup);
+  }
+
   MOZ_RELEASE_ASSERT(!mLastWindowLeft);
   return mEventTargets[size_t(aCategory)];
 }
