@@ -86,7 +86,6 @@ function startup() {
         if (i == keyNames.length - 1) {
           // The registry key name's value was not successfully queried.
           cpuRevMatch = null;
-          Cu.reportError("Error getting CPU revision. Exception: " + e);
           TelemetryLog.log("AUSHELPER_CPU_REV_ERROR", [e]);
         }
       }
