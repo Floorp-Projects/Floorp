@@ -63,9 +63,9 @@ class Registry {
   std::map<std::string, TargetData> targets_;
 };
 
-#define REGISTER_FUZZING_TARGET(name, func, max_len, desc)           \
-  static void __attribute__((constructor)) RegisterFuzzingTarget() { \
-    Registry::Add(name, func, max_len, desc);                        \
+#define REGISTER_FUZZING_TARGET(name, func, max_len, desc)     \
+  static void __attribute__((constructor)) Register_##func() { \
+    Registry::Add(name, func, max_len, desc);                  \
   }
 
 #endif  // registry_h__

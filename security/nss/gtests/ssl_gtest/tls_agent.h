@@ -62,6 +62,7 @@ class TlsAgent : public PollTarget {
   static const std::string kServerRsaSign;
   static const std::string kServerRsaPss;
   static const std::string kServerRsaDecrypt;
+  static const std::string kServerRsaChain;  // A cert that requires a chain.
   static const std::string kServerEcdsa256;
   static const std::string kServerEcdsa384;
   static const std::string kServerEcdsa521;
@@ -108,6 +109,7 @@ class TlsAgent : public PollTarget {
   void StartRenegotiate();
   bool ConfigServerCert(const std::string& name, bool updateKeyBits = false,
                         const SSLExtraServerCertData* serverCertData = nullptr);
+  bool ConfigServerCertWithChain(const std::string& name);
   bool EnsureTlsSetup(PRFileDesc* modelSocket = nullptr);
 
   void SetupClientAuth();
@@ -138,6 +140,7 @@ class TlsAgent : public PollTarget {
   void WaitForErrorCode(int32_t expected, uint32_t delay) const;
   // Send data on the socket, encrypting it.
   void SendData(size_t bytes, size_t blocksize = 1024);
+  void SendBuffer(const DataBuffer& buf);
   // Send data directly to the underlying socket, skipping the TLS layer.
   void SendDirect(const DataBuffer& buf);
   void ReadBytes();
@@ -151,6 +154,7 @@ class TlsAgent : public PollTarget {
   void CheckSecretsDestroyed();
   void ConfigNamedGroups(const std::vector<SSLNamedGroup>& groups);
   void DisableECDHEServerKeyReuse();
+  bool GetPeerChainLength(size_t* count);
 
   const std::string& name() const { return name_; }
 

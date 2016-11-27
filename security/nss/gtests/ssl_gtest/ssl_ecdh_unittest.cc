@@ -287,7 +287,7 @@ TEST_P(TlsKeyExchangeTest13, Curve25519P256EqualPriorityClient13) {
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
             ssl_sig_rsa_pss_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_secp256r1};
-  CheckKEXDetails(client_groups, shares, false);
+  CheckKEXDetails(client_groups, shares);
 }
 
 TEST_P(TlsKeyExchangeTest13, Curve25519P256EqualPriorityServer13) {
@@ -307,7 +307,7 @@ TEST_P(TlsKeyExchangeTest13, Curve25519P256EqualPriorityServer13) {
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_rsa_sign,
             ssl_sig_rsa_pss_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519};
-  CheckKEXDetails(client_groups, shares, false);
+  CheckKEXDetails(client_groups, shares);
 }
 
 TEST_P(TlsKeyExchangeTest13, EqualPriorityTestRetryECServer13) {
@@ -329,7 +329,7 @@ TEST_P(TlsKeyExchangeTest13, EqualPriorityTestRetryECServer13) {
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
             ssl_sig_rsa_pss_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519};
-  CheckKEXDetails(client_groups, shares, true);
+  CheckKEXDetails(client_groups, shares, ssl_grp_ec_secp256r1);
 }
 
 TEST_P(TlsKeyExchangeTest13, NotEqualPriorityWithIntermediateGroup13) {
@@ -351,7 +351,7 @@ TEST_P(TlsKeyExchangeTest13, NotEqualPriorityWithIntermediateGroup13) {
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
             ssl_sig_rsa_pss_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519};
-  CheckKEXDetails(client_groups, shares, true);
+  CheckKEXDetails(client_groups, shares, ssl_grp_ec_secp256r1);
 }
 
 TEST_P(TlsKeyExchangeTest13,
@@ -373,7 +373,7 @@ TEST_P(TlsKeyExchangeTest13,
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
             ssl_sig_rsa_pss_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519};
-  CheckKEXDetails(client_groups, shares, true);
+  CheckKEXDetails(client_groups, shares, ssl_grp_ec_secp256r1);
 }
 
 TEST_P(TlsKeyExchangeTest13,
@@ -395,7 +395,7 @@ TEST_P(TlsKeyExchangeTest13,
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
             ssl_sig_rsa_pss_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519};
-  CheckKEXDetails(client_groups, shares, true);
+  CheckKEXDetails(client_groups, shares, ssl_grp_ec_secp256r1);
 }
 
 TEST_P(TlsKeyExchangeTest13, EqualPriority13) {
@@ -415,7 +415,7 @@ TEST_P(TlsKeyExchangeTest13, EqualPriority13) {
 
   CheckKeys();
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519};
-  CheckKEXDetails(client_groups, shares, false);
+  CheckKEXDetails(client_groups, shares);
 }
 #endif
 
@@ -458,7 +458,7 @@ TEST_P(TlsKeyExchangeTest13, MultipleClientShares) {
             ssl_sig_rsa_pss_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519,
                                              ssl_grp_ec_secp256r1};
-  CheckKEXDetails(client_groups, shares, false);
+  CheckKEXDetails(client_groups, shares);
 }
 
 // Replace the point in the client key exchange message with an empty one

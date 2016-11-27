@@ -37,6 +37,8 @@ static const ssl3ExtensionHandler clientHelloHandlers[] = {
     { ssl_tls13_key_share_xtn, &tls13_ServerHandleKeyShareXtn },
     { ssl_tls13_pre_shared_key_xtn, &tls13_ServerHandlePreSharedKeyXtn },
     { ssl_tls13_early_data_xtn, &tls13_ServerHandleEarlyDataXtn },
+    { ssl_tls13_psk_key_exchange_modes_xtn,
+      &tls13_ServerHandlePskKeyExchangeModesXtn },
     { -1, NULL }
 };
 
@@ -56,7 +58,6 @@ static const ssl3ExtensionHandler serverHelloHandlersTLS[] = {
     { ssl_tls13_key_share_xtn, &tls13_ClientHandleKeyShareXtn },
     { ssl_tls13_pre_shared_key_xtn, &tls13_ClientHandlePreSharedKeyXtn },
     { ssl_tls13_early_data_xtn, &tls13_ClientHandleEarlyDataXtn },
-    { ssl_signature_algorithms_xtn, &tls13_ClientHandleSigAlgsXtn },
     { -1, NULL }
 };
 
@@ -74,6 +75,13 @@ static const ssl3ExtensionHandler serverHelloHandlersSSL3[] = {
 static const ssl3ExtensionHandler newSessionTicketHandlers[] = {
     { ssl_tls13_ticket_early_data_info_xtn,
       &tls13_ClientHandleTicketEarlyDataInfoXtn },
+    { -1, NULL }
+};
+
+/* This table is used by the client to handle server certificates in TLS 1.3 */
+static const ssl3ExtensionHandler serverCertificateHandlers[] = {
+    { ssl_signed_cert_timestamp_xtn, &ssl3_ClientHandleSignedCertTimestampXtn },
+    { ssl_cert_status_xtn, &ssl3_ClientHandleStatusRequestXtn },
     { -1, NULL }
 };
 
@@ -101,7 +109,6 @@ static const ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] 
       { ssl_cert_status_xtn, &ssl3_ClientSendStatusRequestXtn },
       { ssl_signed_cert_timestamp_xtn, &ssl3_ClientSendSignedCertTimestampXtn },
       { ssl_tls13_key_share_xtn, &tls13_ClientSendKeyShareXtn },
-      { ssl_tls13_pre_shared_key_xtn, &tls13_ClientSendPreSharedKeyXtn },
       { ssl_tls13_early_data_xtn, &tls13_ClientSendEarlyDataXtn },
       /* Some servers (e.g. WebSphere Application Server 7.0 and Tomcat) will
        * time out or terminate the connection if the last extension in the
@@ -109,7 +116,11 @@ static const ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] 
        * signature_algorithms at the end. See bug 1243641. */
       { ssl_tls13_supported_versions_xtn, &tls13_ClientSendSupportedVersionsXtn },
       { ssl_signature_algorithms_xtn, &ssl3_ClientSendSigAlgsXtn },
-      { ssl_tls13_cookie_xtn, &tls13_ClientSendHrrCookieXtn }
+      { ssl_tls13_cookie_xtn, &tls13_ClientSendHrrCookieXtn },
+      { ssl_tls13_psk_key_exchange_modes_xtn,
+        &tls13_ClientSendPskKeyExchangeModesXtn },
+      /* The pre_shared_key extension MUST be last. */
+      { ssl_tls13_pre_shared_key_xtn, &tls13_ClientSendPreSharedKeyXtn },
       /* any extra entries will appear as { 0, NULL }    */
     };
 
@@ -171,6 +182,8 @@ ssl3_ParseExtensions(sslSocket *ss, SSL3Opaque **b, PRUint32 *length)
             return SECFailure;    /* alert already sent */
         }
 
+        SSL_TRC(10, ("%d: SSL3[%d]: parsing extension %d",
+                     SSL_GETPID(), ss->fd, extension_type));
         /* Check whether an extension has been sent multiple times. */
         for (cursor = PR_NEXT_LINK(&ss->ssl3.hs.remoteExtensions);
              cursor != &ss->ssl3.hs.remoteExtensions;
@@ -257,6 +270,10 @@ ssl3_HandleParsedExtensions(sslSocket *ss,
                 handlers = serverHelloHandlersSSL3;
             }
             break;
+        case certificate:
+            PORT_Assert(!ss->sec.isServer);
+            handlers = serverCertificateHandlers;
+            break;
         default:
             PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
             PORT_Assert(0);
@@ -288,6 +305,17 @@ ssl3_HandleParsedExtensions(sslSocket *ss,
             }
             tls13_FatalError(ss, SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION,
                              unsupported_extension);
+            return SECFailure;
+        }
+
+        /* Special check for this being the last extension if it's
+         * PreSharedKey */
+        if (ss->sec.isServer && isTLS13 &&
+            (extension->type == ssl_tls13_pre_shared_key_xtn) &&
+            (PR_NEXT_LINK(cursor) != &ss->ssl3.hs.remoteExtensions)) {
+            tls13_FatalError(ss,
+                             SSL_ERROR_RX_MALFORMED_CLIENT_HELLO,
+                             illegal_parameter);
             return SECFailure;
         }
 
@@ -350,12 +378,13 @@ ssl3_RegisterExtensionSender(const sslSocket *ss,
         if (tls13_ExtensionAllowed(ex_type, server_hello)) {
             PORT_Assert(!tls13_ExtensionAllowed(ex_type, encrypted_extensions));
             sender = &xtnData->serverHelloSenders[0];
+        } else if (tls13_ExtensionAllowed(ex_type, certificate)) {
+            sender = &xtnData->certificateSenders[0];
         } else {
             PORT_Assert(tls13_ExtensionAllowed(ex_type, encrypted_extensions));
             sender = &xtnData->encryptedExtensionsSenders[0];
         }
     }
-
     for (i = 0; i < SSL_MAX_EXTENSIONS; ++i, ++sender) {
         if (!sender->ex_sender) {
             sender->ex_type = ex_type;

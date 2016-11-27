@@ -35,6 +35,7 @@ const std::string TlsAgent::kServerRsa = "rsa";    // both sign and encrypt
 const std::string TlsAgent::kServerRsaSign = "rsa_sign";
 const std::string TlsAgent::kServerRsaPss = "rsa_pss";
 const std::string TlsAgent::kServerRsaDecrypt = "rsa_decrypt";
+const std::string TlsAgent::kServerRsaChain = "rsa_chain";
 const std::string TlsAgent::kServerEcdsa256 = "ecdsa256";
 const std::string TlsAgent::kServerEcdsa384 = "ecdsa384";
 const std::string TlsAgent::kServerEcdsa521 = "ecdsa521";
@@ -149,6 +150,10 @@ bool TlsAgent::EnsureTlsSetup(PRFileDesc* modelSocket) {
     rv = SSL_SNISocketConfigHook(ssl_fd_, SniHook, this);
     EXPECT_EQ(SECSuccess, rv);
     if (rv != SECSuccess) return false;
+
+    ScopedCERTCertList anchors(CERT_NewCertList());
+    rv = SSL_SetTrustAnchors(ssl_fd_, anchors.get());
+    if (rv != SECSuccess) return false;
   } else {
     rv = SSL_SetURL(ssl_fd_, "server");
     EXPECT_EQ(SECSuccess, rv);
@@ -199,6 +204,23 @@ SECStatus TlsAgent::GetClientAuthDataHook(void* self, PRFileDesc* fd,
     return SECSuccess;
   }
   return SECFailure;
+}
+
+bool TlsAgent::GetPeerChainLength(size_t* count) {
+  CERTCertList* chain = SSL_PeerCertificateChain(ssl_fd_);
+  if (!chain) return false;
+  *count = 0;
+
+  for (PRCList* cursor = PR_NEXT_LINK(&chain->list); cursor != &chain->list;
+       cursor = PR_NEXT_LINK(cursor)) {
+    CERTCertListNode* node = (CERTCertListNode*)cursor;
+    std::cerr << node->cert->subjectName << std::endl;
+    ++(*count);
+  }
+
+  CERT_DestroyCertList(chain);
+
+  return true;
 }
 
 void TlsAgent::RequestClientAuth(bool requireAuth) {
@@ -629,7 +651,11 @@ void TlsAgent::Connected() {
     PRInt32 cipherSuites = SSLInt_CountTls13CipherSpecs(ssl_fd_);
     // We use one ciphersuite in each direction, plus one that's kept around
     // by DTLS for retransmission.
-    EXPECT_EQ(((mode_ == DGRAM) && (role_ == CLIENT)) ? 3 : 2, cipherSuites);
+    PRInt32 expected = ((mode_ == DGRAM) && (role_ == CLIENT)) ? 3 : 2;
+    EXPECT_EQ(expected, cipherSuites);
+    if (expected != cipherSuites) {
+      SSLInt_PrintTls13CipherSpecs(ssl_fd_);
+    }
   }
 
   SetState(STATE_CONNECTED);
@@ -759,18 +785,21 @@ void TlsAgent::SendData(size_t bytes, size_t blocksize) {
       ++send_ctr_;
     }
 
-    LOGV("Writing " << tosend << " bytes");
-    int32_t rv = PR_Write(ssl_fd_, block, tosend);
-    if (expect_readwrite_error_) {
-      EXPECT_GT(0, rv);
-      EXPECT_NE(PR_WOULD_BLOCK_ERROR, error_code_);
-      error_code_ = PR_GetError();
-      expect_readwrite_error_ = false;
-    } else {
-      ASSERT_EQ(tosend, static_cast<size_t>(rv));
-    }
-
+    SendBuffer(DataBuffer(block, tosend));
     bytes -= tosend;
+  }
+}
+
+void TlsAgent::SendBuffer(const DataBuffer& buf) {
+  LOGV("Writing " << buf.len() << " bytes");
+  int32_t rv = PR_Write(ssl_fd_, buf.data(), buf.len());
+  if (expect_readwrite_error_) {
+    EXPECT_GT(0, rv);
+    EXPECT_NE(PR_WOULD_BLOCK_ERROR, error_code_);
+    error_code_ = PR_GetError();
+    expect_readwrite_error_ = false;
+  } else {
+    ASSERT_EQ(buf.len(), static_cast<size_t>(rv));
   }
 }
 
@@ -859,7 +888,8 @@ void TlsAgentTestBase::EnsureInit() {
     Init();
   }
   const std::vector<SSLNamedGroup> groups = {
-      ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1, ssl_grp_ffdhe_2048};
+      ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1,
+      ssl_grp_ffdhe_2048};
   agent_->ConfigNamedGroups(groups);
 }
 

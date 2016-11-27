@@ -234,9 +234,11 @@ class TlsExtensionFilter : public TlsHandshakeFilter {
 
 class TlsExtensionCapture : public TlsExtensionFilter {
  public:
-  TlsExtensionCapture(uint16_t ext) : extension_(ext), data_() {}
+  TlsExtensionCapture(uint16_t ext, bool last = false)
+      : extension_(ext), captured_(false), last_(last), data_() {}
 
   const DataBuffer& extension() const { return data_; }
+  bool captured() const { return captured_; }
 
  protected:
   PacketFilter::Action FilterExtension(uint16_t extension_type,
@@ -245,6 +247,8 @@ class TlsExtensionCapture : public TlsExtensionFilter {
 
  private:
   const uint16_t extension_;
+  bool captured_;
+  bool last_;
   DataBuffer data_;
 };
 

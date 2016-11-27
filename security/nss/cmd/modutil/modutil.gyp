@@ -29,8 +29,8 @@
   ],
   'target_defaults': {
     'include_dirs': [
-      '<(nss_dist_dir)/private/nss',
-      '<(nss_dist_dir)/private/dbm'
+      '<(nss_private_dist_dir)/nss',
+      '<(nss_private_dist_dir)/dbm'
     ],
     'defines': [
       'NSPR20',
