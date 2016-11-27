@@ -1222,16 +1222,6 @@ nsHttpChannelAuthProvider::PromptForIdentity(uint32_t            level,
     if (!proxyAuth)
         mSuppressDefensiveAuth = true;
 
-    if (mConnectionBased) {
-        // Connection can be reset by the server in the meantime user is entering
-        // the credentials.  Result would be just a "Connection was reset" error.
-        // Hence, we drop the current regardless if the user would make it on time
-        // to provide credentials.
-        // It's OK to send the NTLM type 1 message (response to the plain "NTLM"
-        // challenge) on a new connection.
-        mAuthChannel->CloseStickyConnection();
-    }
-
     return rv;
 }
 
