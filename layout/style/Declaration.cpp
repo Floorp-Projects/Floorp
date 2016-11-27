@@ -1454,6 +1454,39 @@ Declaration::GetPropertyValueInternal(
       }
       break;
     }
+    case eCSSProperty_place_content:
+    case eCSSProperty_place_items:
+    case eCSSProperty_place_self: {
+      const nsCSSPropertyID* subprops =
+        nsCSSProps::SubpropertyEntryFor(aProperty);
+      MOZ_ASSERT(subprops[2] == eCSSProperty_UNKNOWN,
+                 "must have exactly two subproperties");
+      auto IsSingleValue = [] (const nsCSSValue& aValue) {
+        switch (aValue.GetUnit()) {
+          case eCSSUnit_Auto:
+          case eCSSUnit_Inherit:
+          case eCSSUnit_Initial:
+          case eCSSUnit_Unset:
+            return true;
+          case eCSSUnit_Enumerated:
+            // return false if there is a fallback value or <overflow-position>
+            return aValue.GetIntValue() <= NS_STYLE_JUSTIFY_SPACE_EVENLY;
+          default:
+            MOZ_ASSERT_UNREACHABLE("Unexpected unit for CSS Align property val");
+            return false;
+        }
+      };
+      // Each value must be a single value (i.e. no fallback value and no
+      // <overflow-position>), otherwise it can't be represented as a shorthand
+      // value. ('first|last baseline' counts as a single value)
+      const nsCSSValue* align = data->ValueFor(subprops[0]);
+      const nsCSSValue* justify = data->ValueFor(subprops[1]);
+      if (!align || !IsSingleValue(*align) ||
+          !justify || !IsSingleValue(*justify)) {
+        return; // Not serializable, bail.
+      }
+      MOZ_FALLTHROUGH;
+    }
     case eCSSProperty_grid_gap: {
       const nsCSSPropertyID* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);

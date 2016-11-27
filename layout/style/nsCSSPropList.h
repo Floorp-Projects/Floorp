@@ -3457,6 +3457,24 @@ CSS_PROP_DISPLAY(
     kImageLayerPositionKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
+CSS_PROP_SHORTHAND(
+    place-content,
+    place_content,
+    PlaceContent,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "")
+CSS_PROP_SHORTHAND(
+    place-items,
+    place_items,
+    PlaceItems,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "")
+CSS_PROP_SHORTHAND(
+    place-self,
+    place_self,
+    PlaceSelf,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "")
 CSS_PROP_USERINTERFACE(
     pointer-events,
     pointer_events,
