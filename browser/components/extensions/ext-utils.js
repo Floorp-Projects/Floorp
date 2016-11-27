@@ -320,7 +320,9 @@ class BasePopup {
       this.viewNode.style.maxHeight = `${height}px`;
     } else {
       this.browser.style.width = `${width}px`;
+      this.browser.style.minWidth = `${width}px`;
       this.browser.style.height = `${height}px`;
+      this.browser.style.minHeight = `${height}px`;
     }
 
     let event = new this.window.CustomEvent("WebExtPopupResized", {detail});
