@@ -17,7 +17,7 @@
             'pkix_logger.h',
             'pkix_tools.h'
           ],
-          'destination': '<(nss_dist_dir)/private/<(module)'
+          'destination': '<(nss_private_dist_dir)/<(module)'
         }
       ]
     }

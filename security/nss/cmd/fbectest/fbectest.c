@@ -9,6 +9,7 @@
 #include "basicutil.h"
 #include "secder.h"
 #include "secitem.h"
+#include "secutil.h"
 #include "nspr.h"
 #include <stdio.h>
 
@@ -31,52 +32,6 @@ typedef struct {
 } ECDH_BAD;
 
 #include "testvecs.h"
-
-/*
- * Initializes a SECItem from a hexadecimal string
- *
- */
-static SECItem *
-hexString2SECItem(PLArenaPool *arena, SECItem *item, const char *str)
-{
-    int i = 0;
-    int byteval = 0;
-    int tmp = PORT_Strlen(str);
-
-    PORT_Assert(arena);
-    PORT_Assert(item);
-
-    if ((tmp % 2) != 0) {
-        return NULL;
-    }
-
-    item = SECITEM_AllocItem(arena, item, tmp / 2);
-    if (item == NULL) {
-        return NULL;
-    }
-
-    while (str[i]) {
-        if ((str[i] >= '0') && (str[i] <= '9')) {
-            tmp = str[i] - '0';
-        } else if ((str[i] >= 'a') && (str[i] <= 'f')) {
-            tmp = str[i] - 'a' + 10;
-        } else if ((str[i] >= 'A') && (str[i] <= 'F')) {
-            tmp = str[i] - 'A' + 10;
-        } else {
-            /* item is in arena and gets freed by the caller */
-            return NULL;
-        }
-
-        byteval = byteval * 16 + tmp;
-        if ((i % 2) != 0) {
-            item->data[i / 2] = byteval;
-            byteval = 0;
-        }
-        i++;
-    }
-
-    return item;
-}
 
 void
 printBuf(const SECItem *item)
@@ -143,9 +98,9 @@ ectest_ecdh_kat(ECDH_KAT *kat)
         return rv;
     }
 
-    hexString2SECItem(arena, &ecParams.fieldID.u.prime, ecCurve_map[curve]->irr);
-    hexString2SECItem(arena, &ecParams.curve.a, ecCurve_map[curve]->curvea);
-    hexString2SECItem(arena, &ecParams.curve.b, ecCurve_map[curve]->curveb);
+    SECU_HexString2SECItem(arena, &ecParams.fieldID.u.prime, ecCurve_map[curve]->irr);
+    SECU_HexString2SECItem(arena, &ecParams.curve.a, ecCurve_map[curve]->curvea);
+    SECU_HexString2SECItem(arena, &ecParams.curve.b, ecCurve_map[curve]->curveb);
     genenc[0] = '0';
     genenc[1] = '4';
     genenc[2] = '\0';
@@ -153,13 +108,13 @@ ectest_ecdh_kat(ECDH_KAT *kat)
     PORT_Assert(PR_ARRAY_SIZE(genenc) >= PORT_Strlen(ecCurve_map[curve]->geny));
     strcat(genenc, ecCurve_map[curve]->genx);
     strcat(genenc, ecCurve_map[curve]->geny);
-    hexString2SECItem(arena, &ecParams.base, genenc);
-    hexString2SECItem(arena, &ecParams.order, ecCurve_map[curve]->order);
+    SECU_HexString2SECItem(arena, &ecParams.base, genenc);
+    SECU_HexString2SECItem(arena, &ecParams.order, ecCurve_map[curve]->order);
 
     if (kat->our_pubhex) {
-        hexString2SECItem(arena, &answer, kat->our_pubhex);
+        SECU_HexString2SECItem(arena, &answer, kat->our_pubhex);
     }
-    hexString2SECItem(arena, &seed, kat->privhex);
+    SECU_HexString2SECItem(arena, &seed, kat->privhex);
     rv = EC_NewKeyFromSeed(&ecParams, &ecPriv, seed.data, seed.len);
     if (rv != SECSuccess) {
         rv = SECFailure;
@@ -172,8 +127,8 @@ ectest_ecdh_kat(ECDH_KAT *kat)
         }
     }
 
-    hexString2SECItem(arena, &theirKey, kat->their_pubhex);
-    hexString2SECItem(arena, &answer2, kat->common_key);
+    SECU_HexString2SECItem(arena, &theirKey, kat->their_pubhex);
+    SECU_HexString2SECItem(arena, &answer2, kat->common_key);
 
     rv = EC_ValidatePublicKey(&ecParams, &theirKey);
     if (rv != SECSuccess) {
@@ -231,7 +186,7 @@ ectest_validate_point(ECDH_BAD *bad)
         return rv;
     }
 
-    hexString2SECItem(arena, &point, bad->point);
+    SECU_HexString2SECItem(arena, &point, bad->point);
     rv = EC_ValidatePublicKey(&ecParams, &point);
 
     PORT_FreeArena(arena, PR_FALSE);

@@ -282,7 +282,11 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     fi
 
     if [ "${OBJDIR}" = "" ]; then
-        OBJDIR=`(cd $COMMON; $MAKE objdir_name)`
+        if [ -f ${DIST}/latest ]; then
+            OBJDIR=$(cat ${DIST}/latest)
+        else
+            OBJDIR=`($MAKE -s -C $COMMON objdir_name)`
+        fi
     fi
     if [ "${OS_ARCH}" = "" ]; then
         OS_ARCH=`(cd $COMMON; $MAKE os_arch)`

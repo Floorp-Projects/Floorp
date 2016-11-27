@@ -333,7 +333,7 @@ static uint16_t ChooseOneCipher(uint16_t version) {
 
 static uint16_t ChooseAnotherCipher(uint16_t version) {
   if (version >= SSL_LIBRARY_VERSION_TLS_1_3) {
-    return TLS_CHACHA20_POLY1305_SHA256;
+    return TLS_AES_256_GCM_SHA384;
   }
   return TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA;
 }

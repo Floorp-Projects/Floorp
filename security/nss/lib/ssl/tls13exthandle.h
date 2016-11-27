@@ -50,11 +50,6 @@ PRInt32 tls13_ServerSendEarlyDataXtn(const sslSocket *ss, TLSExtensionData *xtnD
 SECStatus tls13_ClientHandleTicketEarlyDataInfoXtn(
     const sslSocket *ss, TLSExtensionData *xtnData, PRUint16 ex_type,
     SECItem *data);
-SECStatus tls13_ClientHandleSigAlgsXtn(const sslSocket *ss, TLSExtensionData *xtnData, PRUint16 ex_type,
-                                       SECItem *data);
-PRInt32 tls13_ServerSendSigAlgsXtn(const sslSocket *ss, TLSExtensionData *xtnData,
-                                   PRBool append,
-                                   PRUint32 maxBytes);
 PRInt32 tls13_ClientSendSupportedVersionsXtn(const sslSocket *ss, TLSExtensionData *xtnData,
                                              PRBool append,
                                              PRUint32 maxBytes);
@@ -63,5 +58,11 @@ SECStatus tls13_ClientHandleHrrCookie(const sslSocket *ss, TLSExtensionData *xtn
 PRInt32 tls13_ClientSendHrrCookieXtn(const sslSocket *ss, TLSExtensionData *xtnData,
                                      PRBool append,
                                      PRUint32 maxBytes);
+PRInt32 tls13_ClientSendPskKeyExchangeModesXtn(const sslSocket *ss,
+                                               TLSExtensionData *xtnData,
+                                               PRBool append, PRUint32 maxBytes);
+SECStatus tls13_ServerHandlePskKeyExchangeModesXtn(const sslSocket *ss,
+                                                   TLSExtensionData *xtnData,
+                                                   PRUint16 ex_type, SECItem *data);
 
 #endif

@@ -1216,6 +1216,16 @@ SSL_IMPORT SECStatus SSL_ExportKeyingMaterial(PRFileDesc *fd,
                                               unsigned char *out,
                                               unsigned int outLen);
 
+/* Early exporters are used if 0-RTT is enabled.  This is TLS 1.3 only.  Note
+ * that in TLS 1.3, an empty context is equivalent to an absent context. */
+SSL_IMPORT SECStatus SSL_ExportEarlyKeyingMaterial(PRFileDesc *fd,
+                                                   const char *label,
+                                                   unsigned int labelLen,
+                                                   const unsigned char *context,
+                                                   unsigned int contextLen,
+                                                   unsigned char *out,
+                                                   unsigned int outLen);
+
 /*
 ** Return a new reference to the certificate that was most recently sent
 ** to the peer on this SSL/TLS connection, or NULL if none has been sent.

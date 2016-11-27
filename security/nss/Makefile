@@ -46,7 +46,7 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-nss_build_all: build_nspr all
+nss_build_all: build_nspr all latest
 
 nss_clean_all: clobber_nspr clobber
 
@@ -162,4 +162,7 @@ nss_RelEng_bld: import all
 
 package:
 	$(MAKE) -C pkg publish
+
+latest:
+	echo $(OBJDIR_NAME) > $(CORE_DEPTH)/../dist/latest
 

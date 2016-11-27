@@ -6,7 +6,11 @@ import subprocess
 def main():
     cc = os.environ.get('CC', 'cc')
     sink = open(os.devnull, 'wb')
-    cc_is_clang = 'clang' in subprocess.check_output([cc, '--version'], stderr=sink)
+    try:
+        cc_is_clang = 'clang' in subprocess.check_output([cc, '--version'], stderr=sink)
+    except OSError:
+        # We probably just don't have CC/cc.
+        return
 
     def warning_supported(warning):
         return subprocess.call([cc, '-x', 'c', '-E', '-Werror',

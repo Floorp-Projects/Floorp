@@ -18,7 +18,6 @@
         '<(DEPTH)/lib/nss/nss.gyp:nss3',
         '<(DEPTH)/lib/util/util.gyp:nssutil3',
         '<(DEPTH)/lib/smime/smime.gyp:smime3',
-        '<(DEPTH)/lib/ssl/ssl.gyp:ssl3',
         '<(DEPTH)/gtests/google_test/google_test.gyp:gtest',
         '<(DEPTH)/cmd/lib/lib.gyp:sectool'
       ]

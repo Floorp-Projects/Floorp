@@ -546,4 +546,64 @@ TEST_P(TlsConnectTls13, ResumeFfdhe) {
   ASSERT_LT(0UL, serverCapture->extension().len());
 }
 
+class TlsDheSkeChangeSignature : public TlsHandshakeFilter {
+ public:
+  TlsDheSkeChangeSignature(uint16_t version, const uint8_t* data, size_t len)
+      : version_(version), data_(data), len_(len) {}
+
+ protected:
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output) {
+    if (header.handshake_type() != kTlsHandshakeServerKeyExchange) {
+      return KEEP;
+    }
+
+    TlsParser parser(input);
+    EXPECT_TRUE(parser.SkipVariable(2));  // dh_p
+    EXPECT_TRUE(parser.SkipVariable(2));  // dh_g
+    EXPECT_TRUE(parser.SkipVariable(2));  // dh_Ys
+
+    // Copy DH params to output.
+    size_t offset = output->Write(0, input.data(), parser.consumed());
+
+    if (version_ == SSL_LIBRARY_VERSION_TLS_1_2) {
+      // Write signature algorithm.
+      offset = output->Write(offset, ssl_sig_dsa_sha256, 2);
+    }
+
+    // Write new signature.
+    offset = output->Write(offset, len_, 2);
+    offset = output->Write(offset, data_, len_);
+
+    return CHANGE;
+  }
+
+ private:
+  uint16_t version_;
+  const uint8_t* data_;
+  size_t len_;
+};
+
+TEST_P(TlsConnectGenericPre13, InvalidDERSignatureFfdhe) {
+  const uint8_t kBogusDheSignature[] = {
+      0x30, 0x69, 0x3c, 0x02, 0x1c, 0x7d, 0x0b, 0x2f, 0x64, 0x00, 0x27,
+      0xae, 0xcf, 0x1e, 0x28, 0x08, 0x6a, 0x7f, 0xb1, 0xbd, 0x78, 0xb5,
+      0x3b, 0x8c, 0x8f, 0x59, 0xed, 0x8f, 0xee, 0x78, 0xeb, 0x2c, 0xe9,
+      0x02, 0x1c, 0x6d, 0x7f, 0x3c, 0x0f, 0xf4, 0x44, 0x35, 0x0b, 0xb2,
+      0x6d, 0xdc, 0xb8, 0x21, 0x87, 0xdd, 0x0d, 0xb9, 0x46, 0x09, 0x3e,
+      0xef, 0x81, 0x5b, 0x37, 0x09, 0x39, 0xeb};
+
+  Reset(TlsAgent::kServerDsa);
+
+  const std::vector<SSLNamedGroup> client_groups = {ssl_grp_ffdhe_2048};
+  client_->ConfigNamedGroups(client_groups);
+
+  server_->SetPacketFilter(new TlsDheSkeChangeSignature(
+      version_, kBogusDheSignature, sizeof(kBogusDheSignature)));
+
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
+}
+
 }  // namespace nss_test

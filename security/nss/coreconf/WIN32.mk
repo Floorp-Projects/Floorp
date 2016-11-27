@@ -264,7 +264,7 @@ ifdef USE_64
 	ASFLAGS = -nologo -Cp -Sn -Zi $(INCLUDES)
 else
 	AS	= ml.exe
-	ASFLAGS = -nologo -Cp -Sn -Zi -coff $(INCLUDES)
+	ASFLAGS = -nologo -Cp -Sn -Zi -coff -safeseh $(INCLUDES)
 endif
 endif
 

@@ -50,13 +50,14 @@ make_cert() {
     p384) type_args='-q secp384r1';type=ec ;;
     p521) type_args='-q secp521r1';type=ec ;;
     rsa_ca) type_args='-g 1024';trust='CT,CT,CT';ca=y;type=rsa ;;
+    rsa_chain) type_args='-g 1024';sign='-c rsa_ca';type=rsa;;
     ecdh_rsa) type_args='-q nistp256';sign='-c rsa_ca';type=ec ;;
   esac
   shift 2
   counter=$(($counter + 1))
   certscript $@ | ${BINDIR}/certutil -S \
     -z ${R_NOISE_FILE} -d "${PROFILEDIR}" \
-    -n $name -s "CN=$name" -t ${trust:-C,C,C} ${sign:--x} -m $counter \
+    -n $name -s "CN=$name" -t ${trust:-,,} ${sign:--x} -m $counter \
     -w -2 -v 120 -k $type $type_args -Z SHA256 -1 -2
   html_msg $? 0 "create certificate: $@"
 }
@@ -85,6 +86,7 @@ ssl_gtest_certs() {
   make_cert ecdsa521 p521 sign
   make_cert ecdh_ecdsa p256 kex
   make_cert rsa_ca rsa_ca ca
+  make_cert rsa_chain rsa_chain sign
   make_cert ecdh_rsa ecdh_rsa kex
   make_cert dsa dsa sign
 }

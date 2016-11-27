@@ -124,37 +124,6 @@
         }],
       ],
     },
-    {
-      'target_name': 'nss_sign_shared_libs',
-      'type': 'none',
-      'dependencies': [
-        'cmd/shlibsign/shlibsign.gyp:shlibsign',
-      ],
-      'actions': [
-        {
-          'action_name': 'shlibsign',
-          'inputs': [
-            '<(nss_dist_obj_dir)/lib/<(dll_prefix)freebl3.<(dll_suffix)',
-            '<(nss_dist_obj_dir)/lib/<(dll_prefix)freeblpriv3.<(dll_suffix)',
-            '<(nss_dist_obj_dir)/lib/<(dll_prefix)nssdbm3.<(dll_suffix)',
-            '<(nss_dist_obj_dir)/lib/<(dll_prefix)softokn3.<(dll_suffix)',
-          ],
-          'outputs': [
-            '<(nss_dist_obj_dir)/lib/<(dll_prefix)freebl3.chk',
-            '<(nss_dist_obj_dir)/lib/<(dll_prefix)freeblpriv3.chk',
-            '<(nss_dist_obj_dir)/lib/<(dll_prefix)nssdbm3.chk',
-            '<(nss_dist_obj_dir)/lib/<(dll_prefix)softokn3.chk'
-          ],
-          'conditions': [
-            ['OS!="linux"', {
-              'inputs/': [['exclude', 'freeblpriv']],
-              'outputs/': [['exclude', 'freeblpriv']]
-            }],
-          ],
-          'action': ['<(python)', '<(DEPTH)/coreconf/shlibsign.py', '<@(_inputs)']
-        }
-      ],
-    },
   ],
   'conditions': [
     [ 'disable_tests==0', {
@@ -226,6 +195,48 @@
                 'cmd/pkix-errcodes/pkix-errcodes.gyp:pkix-errcodes',
               ],
             }],
+            [ 'test_build==1', {
+              'dependencies': [
+                'cmd/mpitests/mpitests.gyp:mpi_tests',
+                'gtests/freebl_gtest/freebl_gtest.gyp:freebl_gtest',
+              ],
+            }],
+          ],
+        },
+      ],
+    }],
+    [ 'sign_libs==1', {
+      'targets': [
+        {
+        'target_name': 'nss_sign_shared_libs',
+          'type': 'none',
+          'dependencies': [
+            'cmd/shlibsign/shlibsign.gyp:shlibsign',
+          ],
+          'actions': [
+            {
+          'action_name': 'shlibsign',
+              'msvs_cygwin_shell': 0,
+              'inputs': [
+                '<(nss_dist_obj_dir)/lib/<(dll_prefix)freebl3.<(dll_suffix)',
+                '<(nss_dist_obj_dir)/lib/<(dll_prefix)freeblpriv3.<(dll_suffix)',
+                '<(nss_dist_obj_dir)/lib/<(dll_prefix)nssdbm3.<(dll_suffix)',
+                '<(nss_dist_obj_dir)/lib/<(dll_prefix)softokn3.<(dll_suffix)',
+              ],
+              'outputs': [
+                '<(nss_dist_obj_dir)/lib/<(dll_prefix)freebl3.chk',
+                '<(nss_dist_obj_dir)/lib/<(dll_prefix)freeblpriv3.chk',
+                '<(nss_dist_obj_dir)/lib/<(dll_prefix)nssdbm3.chk',
+                '<(nss_dist_obj_dir)/lib/<(dll_prefix)softokn3.chk'
+              ],
+              'conditions': [
+                ['OS!="linux"', {
+                  'inputs/': [['exclude', 'freeblpriv']],
+                  'outputs/': [['exclude', 'freeblpriv']]
+                }],
+              ],
+              'action': ['<(python)', '<(DEPTH)/coreconf/shlibsign.py', '<@(_inputs)']
+            }
           ],
         },
       ],
@@ -233,17 +244,24 @@
     [ 'fuzz==1', {
       'targets': [
         {
-          'target_name': 'fuzz',
+          'target_name': 'fuzz_warning',
           'type': 'none',
           'actions': [
             {
-              'action_name': 'warn_fuzz',
+              'action_name': 'fuzz_warning',
               'action': ['cat', 'fuzz/warning.txt'],
               'inputs': ['fuzz/warning.txt'],
               'ninja_use_console': 1,
               'outputs': ['dummy'],
             }
           ],
+        },
+        {
+          'target_name': 'fuzz',
+          'type': 'none',
+          'dependencies': [
+            'fuzz/fuzz.gyp:nssfuzz',
+          ]
         },
       ],
     }],

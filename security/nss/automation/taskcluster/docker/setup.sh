@@ -25,6 +25,9 @@ apt_packages+=('lib32z1-dev')
 apt_packages+=('gcc-multilib')
 apt_packages+=('g++-multilib')
 
+# ct-verif and sanitizers
+apt_packages+=('valgrind')
+
 # Latest Mercurial.
 apt_packages+=('mercurial')
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 41BD8711B1F0EC2B0D85B91CF59CE3A8323293EE

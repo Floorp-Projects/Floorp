@@ -200,17 +200,4 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttAlpnChangeBoth) {
   CheckAlpn("b");
 }
 
-TEST_F(TlsConnectTest, DamageSecretHandleZeroRttClientFinished) {
-  SetupForZeroRtt();
-  client_->Set0RttEnabled(true);
-  server_->Set0RttEnabled(true);
-  client_->SetPacketFilter(new AfterRecordN(
-      client_, server_,
-      0,  // ClientHello.
-      [this]() { SSLInt_DamageEarlyTrafficSecret(server_->ssl_fd()); }));
-  ConnectExpectFail();
-  client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
-  server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
-}
-
 }  // namespace nss_test

@@ -17,9 +17,43 @@
 
 using namespace std;
 
-void printUsage(const vector<string> &args) {
-  size_t sep = args.at(0).rfind("/") + 1;
-  string progName = args.at(0).substr(sep);
+class Args {
+ public:
+  Args(int argc, char **argv) : args_(argv, argv + argc) {}
+
+  string &operator[](const int idx) { return args_[idx]; }
+
+  bool Has(const string &arg) {
+    return any_of(args_.begin(), args_.end(),
+                  [&arg](string &a) { return a.find(arg) == 0; });
+  }
+
+  void Append(const string &arg) { args_.push_back(arg); }
+
+  void Remove(const int index) {
+    assert(index < count());
+    args_.erase(args_.begin() + index);
+  }
+
+  vector<char *> argv() {
+    vector<char *> out;
+    out.resize(count());
+
+    transform(args_.begin(), args_.end(), out.begin(),
+              [](string &a) { return const_cast<char *>(a.c_str()); });
+
+    return out;
+  }
+
+  size_t count() { return args_.size(); }
+
+ private:
+  vector<string> args_;
+};
+
+void printUsage(Args &args) {
+  size_t sep = args[0].rfind("/") + 1;
+  string progName = args[0].substr(sep);
 
   cerr << progName << " - Various libFuzzer targets for NSS" << endl << endl;
   cerr << "Usage: " << progName << " <target> <libFuzzer options>" << endl
@@ -84,31 +118,31 @@ void printUsage(const vector<string> &args) {
 }
 
 int main(int argc, char **argv) {
-  vector<string> args(argv, argv + argc);
+  Args args(argc, argv);
 
-  if (args.size() < 2 || !Registry::Has(args[1])) {
+  if (args.count() < 2 || !Registry::Has(args[1])) {
     printUsage(args);
     return 1;
   }
 
-  string targetName = args.at(1);
-  uint16_t maxLen = Registry::MaxLen(targetName);
-  string maxLenArg = "-max_len=" + to_string(maxLen);
+  string targetName(args[1]);
 
-  auto find = [](string &a) {
-    return a.find("-max_len=") == 0 || a.find("-merge=1") == 0;
-  };
+  // Remove the target argument when -workers=x or -jobs=y is NOT given.
+  // If both are given, libFuzzer will spawn multiple processes for the target.
+  if (!args.Has("-workers=") || !args.Has("-jobs=")) {
+    args.Remove(1);
+  }
 
-  if (any_of(args.begin(), args.end(), find)) {
-    // Remove the 2nd argument.
-    argv[1] = argv[0];
-    argv++;
-    argc--;
-  } else {
-    // Set default max_len arg, if none given and we're not merging.
-    argv[1] = const_cast<char *>(maxLenArg.c_str());
+  // Set default max_len arg, if none given and we're not merging.
+  if (!args.Has("-max_len=") && !args.Has("-merge=1")) {
+    uint16_t maxLen = Registry::MaxLen(targetName);
+    args.Append("-max_len=" + to_string(maxLen));
   }
 
   // Hand control to the libFuzzer driver.
+  vector<char *> args_new(args.argv());
+  argc = args_new.size();
+  argv = args_new.data();
+
   return fuzzer::FuzzerDriver(&argc, &argv, Registry::Func(targetName));
 }
