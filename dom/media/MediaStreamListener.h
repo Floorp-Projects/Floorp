@@ -9,6 +9,8 @@
 
 #include "StreamTracks.h"
 
+#include "MediaStreamGraph.h"
+
 namespace mozilla {
 
 class AudioSegment;
