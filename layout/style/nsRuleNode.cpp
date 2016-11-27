@@ -4442,22 +4442,22 @@ TruncateStringToSingleGrapheme(nsAString& aStr)
   }
 }
 
-struct LengthNumberCalcObj
+struct LineHeightCalcObj
 {
-  float mValue;
+  float mLineHeight;
   bool mIsNumber;
 };
 
-struct LengthNumberCalcOps : public css::FloatCoeffsAlreadyNormalizedOps
+struct SetLineHeightCalcOps : public css::FloatCoeffsAlreadyNormalizedOps
 {
-  typedef LengthNumberCalcObj result_type;
+  typedef LineHeightCalcObj result_type;
   nsStyleContext* const mStyleContext;
   nsPresContext* const mPresContext;
   RuleNodeCacheConditions& mConditions;
 
-  LengthNumberCalcOps(nsStyleContext* aStyleContext,
-                      nsPresContext* aPresContext,
-                      RuleNodeCacheConditions& aConditions)
+  SetLineHeightCalcOps(nsStyleContext* aStyleContext,
+                       nsPresContext* aPresContext,
+                       RuleNodeCacheConditions& aConditions)
     : mStyleContext(aStyleContext),
       mPresContext(aPresContext),
       mConditions(aConditions)
@@ -4470,15 +4470,15 @@ struct LengthNumberCalcOps : public css::FloatCoeffsAlreadyNormalizedOps
   {
     MOZ_ASSERT(aValue1.mIsNumber == aValue2.mIsNumber);
 
-    LengthNumberCalcObj result;
+    LineHeightCalcObj result;
     result.mIsNumber = aValue1.mIsNumber;
     if (aCalcFunction == eCSSUnit_Calc_Plus) {
-      result.mValue = aValue1.mValue + aValue2.mValue;
+      result.mLineHeight = aValue1.mLineHeight + aValue2.mLineHeight;
       return result;
     }
     MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Minus,
                "unexpected unit");
-    result.mValue = aValue1.mValue - aValue2.mValue;
+    result.mLineHeight = aValue1.mLineHeight - aValue2.mLineHeight;
     return result;
   }
 
@@ -4488,9 +4488,9 @@ struct LengthNumberCalcOps : public css::FloatCoeffsAlreadyNormalizedOps
   {
     MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Times_L,
                "unexpected unit");
-    LengthNumberCalcObj result;
+    LineHeightCalcObj result;
     result.mIsNumber = aValue2.mIsNumber;
-    result.mValue = aValue1 * aValue2.mValue;
+    result.mLineHeight = aValue1 * aValue2.mLineHeight;
     return result;
   }
 
@@ -4498,69 +4498,39 @@ struct LengthNumberCalcOps : public css::FloatCoeffsAlreadyNormalizedOps
   MergeMultiplicativeR(nsCSSUnit aCalcFunction,
                        result_type aValue1, float aValue2)
   {
-    LengthNumberCalcObj result;
+    LineHeightCalcObj result;
     result.mIsNumber = aValue1.mIsNumber;
     if (aCalcFunction == eCSSUnit_Calc_Times_R) {
-      result.mValue = aValue1.mValue * aValue2;
+      result.mLineHeight = aValue1.mLineHeight * aValue2;
       return result;
     }
     MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Divided,
                "unexpected unit");
-    result.mValue = aValue1.mValue / aValue2;
+    result.mLineHeight = aValue1.mLineHeight / aValue2;
     return result;
   }
 
   result_type ComputeLeafValue(const nsCSSValue& aValue)
   {
-    LengthNumberCalcObj result;
+    LineHeightCalcObj result;
     if (aValue.IsLengthUnit()) {
       result.mIsNumber = false;
-      result.mValue = CalcLength(aValue, mStyleContext,
-                                      mPresContext, mConditions);
-    }
-    else if (eCSSUnit_Number == aValue.GetUnit()) {
-      result.mIsNumber = true;
-      result.mValue = aValue.GetFloatValue();
-    } else {
-      MOZ_ASSERT(false, "unexpected value");
-      result.mIsNumber = true;
-      result.mValue = 1.0f;
-    }
-
-    return result;
-  }
-};
-
-struct SetLineHeightCalcOps : public LengthNumberCalcOps
-{
-  SetLineHeightCalcOps(nsStyleContext* aStyleContext,
-                       nsPresContext* aPresContext,
-                       RuleNodeCacheConditions& aConditions)
-    : LengthNumberCalcOps(aStyleContext, aPresContext, aConditions)
-  {
-  }
-
-  result_type ComputeLeafValue(const nsCSSValue& aValue)
-  {
-    LengthNumberCalcObj result;
-    if (aValue.IsLengthUnit()) {
-      result.mIsNumber = false;
-      result.mValue = CalcLength(aValue, mStyleContext,
+      result.mLineHeight = CalcLength(aValue, mStyleContext,
                                       mPresContext, mConditions);
     }
     else if (eCSSUnit_Percent == aValue.GetUnit()) {
       mConditions.SetUncacheable();
       result.mIsNumber = false;
       nscoord fontSize = mStyleContext->StyleFont()->mFont.size;
-      result.mValue = fontSize * aValue.GetPercentValue();
+      result.mLineHeight = fontSize * aValue.GetPercentValue();
     }
     else if (eCSSUnit_Number == aValue.GetUnit()) {
       result.mIsNumber = true;
-      result.mValue = aValue.GetFloatValue();
+      result.mLineHeight = aValue.GetFloatValue();
     } else {
       MOZ_ASSERT(false, "unexpected value");
       result.mIsNumber = true;
-      result.mValue = 1.0f;
+      result.mLineHeight = 1.0f;
     }
 
     return result;
@@ -4584,25 +4554,11 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                                    mPresContext, text->*aField, conditions);
   };
 
-  // tab-size: number, length, calc, inherit
-  const nsCSSValue* tabSizeValue = aRuleData->ValueForTabSize();
-  if (tabSizeValue->GetUnit() == eCSSUnit_Initial) {
-    text->mTabSize = nsStyleCoord(float(NS_STYLE_TABSIZE_INITIAL), eStyleUnit_Factor);
-  } else if (eCSSUnit_Calc == tabSizeValue->GetUnit()) {
-    LengthNumberCalcOps ops(aContext, mPresContext, conditions);
-    LengthNumberCalcObj obj = css::ComputeCalc(*tabSizeValue, ops);
-    float value = obj.mValue < 0 ? 0 : obj.mValue;
-    if (obj.mIsNumber) {
-      text->mTabSize.SetFactorValue(value);
-    } else {
-      text->mTabSize.SetCoordValue(
-        NSToCoordRoundWithClamp(value));
-    }
-  } else {
-    SetCoord(*tabSizeValue, text->mTabSize, parentText->mTabSize,
-             SETCOORD_LH | SETCOORD_FACTOR | SETCOORD_UNSET_INHERIT,
-             aContext, mPresContext, conditions);
-  }
+  // tab-size: integer, inherit
+  SetValue(*aRuleData->ValueForTabSize(),
+           text->mTabSize, conditions,
+           SETVAL_INTEGER | SETVAL_UNSET_INHERIT, parentText->mTabSize,
+           NS_STYLE_TABSIZE_INITIAL);
 
   // letter-spacing: normal, length, inherit
   SetCoord(*aRuleData->ValueForLetterSpacing(),
@@ -4645,12 +4601,12 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
   }
   else if (eCSSUnit_Calc == lineHeightValue->GetUnit()) {
     SetLineHeightCalcOps ops(aContext, mPresContext, conditions);
-    LengthNumberCalcObj obj = css::ComputeCalc(*lineHeightValue, ops);
+    LineHeightCalcObj obj = css::ComputeCalc(*lineHeightValue, ops);
     if (obj.mIsNumber) {
-      text->mLineHeight.SetFactorValue(obj.mValue);
+      text->mLineHeight.SetFactorValue(obj.mLineHeight);
     } else {
       text->mLineHeight.SetCoordValue(
-        NSToCoordRoundWithClamp(obj.mValue));
+        NSToCoordRoundWithClamp(obj.mLineHeight));
     }
   }
   else {
