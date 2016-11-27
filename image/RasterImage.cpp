@@ -1035,7 +1035,7 @@ RasterImage::CanDiscard() {
 }
 
 NS_IMETHODIMP
-RasterImage::StartDecoding()
+RasterImage::StartDecoding(uint32_t aFlags)
 {
   if (mError) {
     return NS_ERROR_FAILURE;
@@ -1046,7 +1046,8 @@ RasterImage::StartDecoding()
     return NS_OK;
   }
 
-  return RequestDecodeForSize(mSize, FLAG_SYNC_DECODE_IF_FAST);
+  uint32_t flags = (aFlags & FLAG_ASYNC_NOTIFY) | FLAG_SYNC_DECODE_IF_FAST;
+  return RequestDecodeForSize(mSize, flags);
 }
 
 NS_IMETHODIMP

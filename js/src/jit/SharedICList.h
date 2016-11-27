@@ -37,9 +37,6 @@ namespace jit {
     _(GetProp_Fallback)                          \
     _(GetProp_StringLength)                      \
     _(GetProp_CallNativeGlobal)                  \
-    _(GetProp_CallDOMProxyNative)                \
-    _(GetProp_CallDOMProxyWithGenerationNative)  \
-    _(GetProp_DOMProxyShadowed)                  \
     _(GetProp_ArgumentsLength)                   \
     _(GetProp_ArgumentsCallee)                   \
     _(GetProp_Generic)                           \
