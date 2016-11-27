@@ -274,7 +274,7 @@ GMPCDMProxy::OnCDMCreated(uint32_t aPromiseId)
   }
   MOZ_ASSERT(!GetNodeId().IsEmpty());
   if (mCDM) {
-    mKeys->OnCDMCreated(aPromiseId, GetNodeId(), mCDM->GetPluginId());
+    mKeys->OnCDMCreated(aPromiseId, mCDM->GetPluginId());
   } else {
     // No CDM? Just reject the promise.
     mKeys->RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR,
