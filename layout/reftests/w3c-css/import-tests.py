@@ -350,8 +350,6 @@ def main():
         test[key] = to_unix_path_sep(test[key])
         test[key + 1] = to_unix_path_sep(test[key + 1])
         testKey = test[key]
-        if 'ahem' in testFlags:
-            test = ["HTTP(../../..)"] + test
         fail = []
         for pattern, failureType in gFailList:
             if pattern.match(testKey):
