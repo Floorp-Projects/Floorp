@@ -630,6 +630,8 @@ this.Extension = class extends ExtensionData {
     if (this.remote && processCount !== 1) {
       throw new Error("Out-of-process WebExtensions are not supported with multiple child processes");
     }
+    // This is filled in the first time an extension child is created.
+    this.parentMessageManager = null;
 
     this.id = addonData.id;
     this.baseURI = NetUtil.newURI(this.getURL("")).QueryInterface(Ci.nsIURL);
@@ -647,17 +649,6 @@ this.Extension = class extends ExtensionData {
     this.webAccessibleResources = null;
 
     this.emitter = new EventEmitter();
-  }
-
-  get parentMessageManager() {
-    if (this.remote) {
-      // We currently run extensions in the normal web content process. Since
-      // we currently only support remote extensions in single-child e10s,
-      // child 0 is always the current process, and child 1 is always the
-      // remote extension process.
-      return Services.ppmm.getChildAt(1);
-    }
-    return Services.ppmm.getChildAt(0);
   }
 
   static set browserUpdated(updated) {
@@ -956,7 +947,7 @@ this.Extension = class extends ExtensionData {
   }
 
   observe(subject, topic, data) {
-    if (topic == "xpcom-shutdown") {
+    if (topic === "xpcom-shutdown") {
       this.cleanupGeneratedFile();
     }
   }
