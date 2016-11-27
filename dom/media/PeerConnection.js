@@ -529,41 +529,56 @@ RTCPeerConnection.prototype = {
     return await p;
   },
 
-  // This wrapper helps implement legacy callbacks in a manner that produces
+  // These wrappers help implement legacy callbacks in a manner that produces
   // correct line-numbers in errors, provided that methods validate their inputs
   // before putting themselves on the pc's operations chain.
   //
   // It also serves as guard against settling promises past close().
 
-  _legacyCatchAndCloseGuard: function(onSuccess, onError, func) {
-    let operation = () => {
-      this._checkClosed();
-      return func();
-    };
+  _async: function(func) {
+    return this._win.Promise.resolve(this._closeWrapper(func));
+  },
 
-    if (!onSuccess) {
-      return this._win.Promise.resolve(operation())
-        .then(v => (this._closed ? new Promise(() => {}) : v),
-              e => (this._closed ? new Promise(() => {}) : Promise.reject(e)));
-    }
+  _legacy: function(...args) {
+    return this._win.Promise.resolve(this._legacyCloseWrapper(...args));
+  },
+
+  _auto: function(onSucc, onErr, func) {
+    return (typeof onSucc == "function") ? this._legacy(onSucc, onErr, func)
+                                         : this._async(func);
+  },
+
+  _closeWrapper: async function(func) {
+    let closed = this._closed;
     try {
-      return this._win.Promise.resolve(operation())
-        .then(this._wrapLegacyCallback(onSuccess),
-              this._wrapLegacyCallback(onError));
+      let result = await func();
+      if (!closed && this._closed) {
+        await new Promise(() => {});
+      }
+      return result;
     } catch (e) {
-      this._wrapLegacyCallback(onError)(e);
-      return this._win.Promise.resolve(); // avoid webidl TypeError
+      if (!closed && this._closed) {
+        await new Promise(() => {});
+      }
+      throw e;
     }
   },
 
-  _wrapLegacyCallback: function(func) {
-    return result => {
+  _legacyCloseWrapper: async function(onSucc, onErr, func) {
+
+    let wrapCallback = cb => result => {
       try {
-        func && func(result);
+        cb && cb(result);
       } catch (e) {
         this.logErrorAndCallOnError(e);
       }
     };
+
+    try {
+      wrapCallback(onSucc)(await func());
+    } catch (e) {
+      wrapCallback(onErr)(e);
+    }
   },
 
   /**
@@ -725,76 +740,76 @@ RTCPeerConnection.prototype = {
                           });
   },
 
-  createOffer: function(optionsOrOnSuccess, onError, options) {
+  createOffer: function(optionsOrOnSucc, onErr, options) {
     // This entry-point handles both new and legacy call sig. Decipher which one
-    let onSuccess;
-    if (typeof optionsOrOnSuccess == "function") {
-      onSuccess = optionsOrOnSuccess;
-    } else {
-      options = optionsOrOnSuccess;
+    if (typeof optionsOrOnSucc == "function") {
+      return this._legacy(optionsOrOnSucc, onErr, () => this._createOffer(options));
     }
-    return this._legacyCatchAndCloseGuard(onSuccess, onError, async () => {
-      let origin = Cu.getWebIDLCallerPrincipal().origin;
-      return await this._chain(async () => {
-        let haveAssertion;
-        if (this._localIdp.enabled) {
-          haveAssertion = this._getIdentityAssertion(origin);
-        }
-        await this._getPermission();
-        await this._certificateReady;
-        let sdp = await new Promise((resolve, reject) => {
-          this._onCreateOfferSuccess = resolve;
-          this._onCreateOfferFailure = reject;
-          this._impl.createOffer(options);
-        });
-        if (haveAssertion) {
-          await haveAssertion;
-          sdp = this._localIdp.addIdentityAttribute(sdp);
-        }
-        return Cu.cloneInto({ type: "offer", sdp }, this._win);
+    return this._async(() => this._createOffer(optionsOrOnSucc));
+  },
+
+  _createOffer: async function(options) {
+    this._checkClosed();
+    let origin = Cu.getWebIDLCallerPrincipal().origin;
+    return await this._chain(async () => {
+      let haveAssertion;
+      if (this._localIdp.enabled) {
+        haveAssertion = this._getIdentityAssertion(origin);
+      }
+      await this._getPermission();
+      await this._certificateReady;
+      let sdp = await new Promise((resolve, reject) => {
+        this._onCreateOfferSuccess = resolve;
+        this._onCreateOfferFailure = reject;
+        this._impl.createOffer(options);
       });
+      if (haveAssertion) {
+        await haveAssertion;
+        sdp = this._localIdp.addIdentityAttribute(sdp);
+      }
+      return Cu.cloneInto({ type: "offer", sdp }, this._win);
     });
   },
 
-  createAnswer: function(optionsOrOnSuccess, onError) {
+  createAnswer: function(optionsOrOnSucc, onErr) {
     // This entry-point handles both new and legacy call sig. Decipher which one
-    let onSuccess, options;
-    if (typeof optionsOrOnSuccess == "function") {
-      onSuccess = optionsOrOnSuccess;
-    } else {
-      options = optionsOrOnSuccess;
+    if (typeof optionsOrOnSucc == "function") {
+      return this._legacy(optionsOrOnSucc, onErr, () => this._createAnswer({}));
     }
-    return this._legacyCatchAndCloseGuard(onSuccess, onError, async () => {
-      let origin = Cu.getWebIDLCallerPrincipal().origin;
-      return await this._chain(async () => {
-        // We give up line-numbers in errors by doing this here, but do all
-        // state-checks inside the chain, to support the legacy feature that
-        // callers don't have to wait for setRemoteDescription to finish.
-        if (!this.remoteDescription) {
-          throw new this._win.DOMException("setRemoteDescription not called",
-                                           "InvalidStateError");
-        }
-        if (this.remoteDescription.type != "offer") {
-          throw new this._win.DOMException("No outstanding offer",
-                                           "InvalidStateError");
-        }
-        let haveAssertion;
-        if (this._localIdp.enabled) {
-          haveAssertion = this._getIdentityAssertion(origin);
-        }
-        await this._getPermission();
-        await this._certificateReady;
-        let sdp = await new Promise((resolve, reject) => {
-          this._onCreateAnswerSuccess = resolve;
-          this._onCreateAnswerFailure = reject;
-          this._impl.createAnswer();
-        });
-        if (haveAssertion) {
-          await haveAssertion;
-          sdp = this._localIdp.addIdentityAttribute(sdp);
-        }
-        return Cu.cloneInto({ type: "answer", sdp }, this._win);
+    return this._async(() => this._createAnswer(optionsOrOnSucc));
+  },
+
+  _createAnswer: async function(options) {
+    this._checkClosed();
+    let origin = Cu.getWebIDLCallerPrincipal().origin;
+    return await this._chain(async () => {
+      // We give up line-numbers in errors by doing this here, but do all
+      // state-checks inside the chain, to support the legacy feature that
+      // callers don't have to wait for setRemoteDescription to finish.
+      if (!this.remoteDescription) {
+        throw new this._win.DOMException("setRemoteDescription not called",
+                                         "InvalidStateError");
+      }
+      if (this.remoteDescription.type != "offer") {
+        throw new this._win.DOMException("No outstanding offer",
+                                         "InvalidStateError");
+      }
+      let haveAssertion;
+      if (this._localIdp.enabled) {
+        haveAssertion = this._getIdentityAssertion(origin);
+      }
+      await this._getPermission();
+      await this._certificateReady;
+      let sdp = await new Promise((resolve, reject) => {
+        this._onCreateAnswerSuccess = resolve;
+        this._onCreateAnswerFailure = reject;
+        this._impl.createAnswer();
       });
+      if (haveAssertion) {
+        await haveAssertion;
+        sdp = this._localIdp.addIdentityAttribute(sdp);
+      }
+      return Cu.cloneInto({ type: "answer", sdp }, this._win);
     });
   },
 
@@ -829,34 +844,38 @@ RTCPeerConnection.prototype = {
     answer: Ci.IPeerConnection.kActionAnswer,
   },
 
-  setLocalDescription: function({ type, sdp }, onSuccess, onError) {
-    return this._legacyCatchAndCloseGuard(onSuccess, onError, async () => {
-      this._localType = type;
+  setLocalDescription: function(desc, onSucc, onErr) {
+    return this._auto(onSucc, onErr, () => this._setLocalDescription(desc));
+  },
 
-      let action = this._actions[type];
-      if (action === undefined) {
-        throw new this._win.DOMException(
-            "Invalid type " + type + " provided to setLocalDescription",
-            "InvalidParameterError");
-      }
-      if (action == Ci.IPeerConnection.kActionPRAnswer) {
-        throw new this._win.DOMException("pranswer not yet implemented",
-                                         "NotSupportedError");
-      }
+  _setLocalDescription: async function({ type, sdp }) {
+    this._checkClosed();
 
-      if (!sdp && action != Ci.IPeerConnection.kActionRollback) {
-        throw new this._win.DOMException(
-            "Empty or null SDP provided to setLocalDescription",
-            "InvalidParameterError");
-      }
+    this._localType = type;
 
-      return await this._chain(async () => {
-        await this._getPermission();
-        await new Promise((resolve, reject) => {
-          this._onSetLocalDescriptionSuccess = resolve;
-          this._onSetLocalDescriptionFailure = reject;
-          this._impl.setLocalDescription(action, sdp);
-        });
+    let action = this._actions[type];
+    if (action === undefined) {
+      throw new this._win.DOMException(
+          "Invalid type " + type + " provided to setLocalDescription",
+          "InvalidParameterError");
+    }
+    if (action == Ci.IPeerConnection.kActionPRAnswer) {
+      throw new this._win.DOMException("pranswer not yet implemented",
+                                       "NotSupportedError");
+    }
+
+    if (!sdp && action != Ci.IPeerConnection.kActionRollback) {
+      throw new this._win.DOMException(
+          "Empty or null SDP provided to setLocalDescription",
+          "InvalidParameterError");
+    }
+
+    return await this._chain(async () => {
+      await this._getPermission();
+      await new Promise((resolve, reject) => {
+        this._onSetLocalDescriptionSuccess = resolve;
+        this._onSetLocalDescriptionFailure = reject;
+        this._impl.setLocalDescription(action, sdp);
       });
     });
   },
@@ -906,47 +925,50 @@ RTCPeerConnection.prototype = {
     }
   },
 
-  setRemoteDescription: function({ type, sdp }, onSuccess, onError) {
-    return this._legacyCatchAndCloseGuard(onSuccess, onError, async () => {
-      this._remoteType = type;
+  setRemoteDescription: function(desc, onSucc, onErr) {
+    return this._auto(onSucc, onErr, () => this._setRemoteDescription(desc));
+  },
 
-      let action = this._actions[type];
-      if (action === undefined) {
-        throw new this._win.DOMException(
-            "Invalid type " + type + " provided to setRemoteDescription",
-            "InvalidParameterError");
+  _setRemoteDescription: async function({ type, sdp }) {
+    this._checkClosed();
+    this._remoteType = type;
+
+    let action = this._actions[type];
+    if (action === undefined) {
+      throw new this._win.DOMException(
+          "Invalid type " + type + " provided to setRemoteDescription",
+          "InvalidParameterError");
+    }
+    if (action == Ci.IPeerConnection.kActionPRAnswer) {
+      throw new this._win.DOMException("pranswer not yet implemented",
+                                       "NotSupportedError");
+    }
+
+    if (!sdp && type != "rollback") {
+      throw new this._win.DOMException(
+          "Empty or null SDP provided to setRemoteDescription",
+          "InvalidParameterError");
+    }
+
+    // Get caller's origin before hitting the promise chain
+    let origin = Cu.getWebIDLCallerPrincipal().origin;
+
+    return await this._chain(async () => {
+      let haveSetRemote = (async () => {
+        await this._getPermission();
+        await new Promise((resolve, reject) => {
+          this._onSetRemoteDescriptionSuccess = resolve;
+          this._onSetRemoteDescriptionFailure = reject;
+          this._impl.setRemoteDescription(action, sdp);
+        });
+        this._updateCanTrickle();
+      })();
+
+      if (action != Ci.IPeerConnection.kActionRollback) {
+        // Do setRemoteDescription and identity validation in parallel
+        await this._validateIdentity(sdp, origin);
       }
-      if (action == Ci.IPeerConnection.kActionPRAnswer) {
-        throw new this._win.DOMException("pranswer not yet implemented",
-                                         "NotSupportedError");
-      }
-
-      if (!sdp && action != Ci.IPeerConnection.kActionRollback) {
-        throw new this._win.DOMException(
-            "Empty or null SDP provided to setRemoteDescription",
-            "InvalidParameterError");
-      }
-
-      // Get caller's origin before hitting the promise chain
-      let origin = Cu.getWebIDLCallerPrincipal().origin;
-
-      return await this._chain(async () => {
-        let haveSetRemote = (async () => {
-          await this._getPermission();
-          await new Promise((resolve, reject) => {
-            this._onSetRemoteDescriptionSuccess = resolve;
-            this._onSetRemoteDescriptionFailure = reject;
-            this._impl.setRemoteDescription(action, sdp);
-          });
-          this._updateCanTrickle();
-        })();
-
-        if (action != Ci.IPeerConnection.kActionRollback) {
-          // Do setRemoteDescription and identity validation in parallel
-          await this._validateIdentity(sdp, origin);
-        }
-        await haveSetRemote;
-      });
+      await haveSetRemote;
     });
   },
 
@@ -1001,21 +1023,22 @@ RTCPeerConnection.prototype = {
   },
 
   // TODO: Implement processing for end-of-candidates (bug 1318167)
-  addIceCandidate: function(candidate, onSuccess, onError) {
-    let add = async ({ candidate, sdpMid, sdpMLineIndex }) => {
-      if (sdpMid === null && sdpMLineIndex === null) {
-        throw new this._win.DOMException(
-            "Invalid candidate (both sdpMid and sdpMLineIndex are null).",
-            "TypeError");
-      }
-      return await this._chain(() => new Promise((resolve, reject) => {
-        this._onAddIceCandidateSuccess = resolve;
-        this._onAddIceCandidateError = reject;
-        this._impl.addIceCandidate(candidate, sdpMid || "", sdpMLineIndex);
-      }));
-    };
-    return this._legacyCatchAndCloseGuard(onSuccess, onError,
-        () => candidate ? add(candidate) : Promise.resolve());
+  addIceCandidate: function(cand, onSucc, onErr) {
+    return this._auto(onSucc, onErr, () => cand && this._addIceCandidate(cand));
+  },
+
+  _addIceCandidate: async function({ candidate, sdpMid, sdpMLineIndex }) {
+    this._checkClosed();
+    if (sdpMid === null && sdpMLineIndex === null) {
+      throw new this._win.DOMException(
+          "Invalid candidate (both sdpMid and sdpMLineIndex are null).",
+          "TypeError");
+    }
+    return await this._chain(() => new Promise((resolve, reject) => {
+      this._onAddIceCandidateSuccess = resolve;
+      this._onAddIceCandidateError = reject;
+      this._impl.addIceCandidate(candidate, sdpMid || "", sdpMLineIndex);
+    }));
   },
 
   addStream: function(stream) {
@@ -1058,14 +1081,15 @@ RTCPeerConnection.prototype = {
     return this._impl.getDTMFToneBuffer(sender.__DOM_IMPL__);
   },
 
-  _replaceTrack: function(sender, withTrack) {
-    return new this._win.Promise((resolve, reject) => {
+  _replaceTrack: async function(sender, withTrack) {
+    this._checkClosed();
+    return await this._chain(() => new Promise((resolve, reject) => {
       this._onReplaceTrackSender = sender;
       this._onReplaceTrackWithTrack = withTrack;
       this._onReplaceTrackSuccess = resolve;
       this._onReplaceTrackFailure = reject;
       this._impl.replaceTrack(sender.track, withTrack);
-    });
+    }));
   },
 
   _setParameters: function({ track }, parameters) {
@@ -1188,14 +1212,17 @@ RTCPeerConnection.prototype = {
     this.dispatchEvent(new this._win.Event("iceconnectionstatechange"));
   },
 
-  getStats: function(selector, onSuccess, onError) {
-    return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
-      return this._chain(() => new Promise((resolve, reject) => {
-        this._onGetStatsSuccess = resolve;
-        this._onGetStatsFailure = reject;
-        this._impl.getStats(selector);
-      }));
-    });
+  getStats: function(selector, onSucc, onErr) {
+    return this._auto(onSucc, onErr, () => this._getStats(selector));
+  },
+
+  _getStats: async function(selector) {
+    // getStats is allowed even in closed state.
+    return await this._chain(() => new Promise((resolve, reject) => {
+      this._onGetStatsSuccess = resolve;
+      this._onGetStatsFailure = reject;
+      this._impl.getStats(selector);
+    }));
   },
 
   createDataChannel: function(label, {
@@ -1605,8 +1632,7 @@ RTCRtpSender.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
   replaceTrack: function(withTrack) {
-    this._pc._checkClosed();
-    return this._pc._chain(() => this._pc._replaceTrack(this, withTrack));
+    return this._pc._async(() => this._pc._replaceTrack(this, withTrack));
   },
 
   setParameters: function(parameters) {
