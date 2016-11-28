@@ -7142,7 +7142,7 @@
       <handler event="popupshowing">
       <![CDATA[
         if (event.target.getAttribute("id") == "alltabs_containersMenuTab") {
-          createUserContextMenu(event, {useAccessKeys: false});
+          createUserContextMenu(event);
           return;
         }
 
@@ -7150,7 +7150,7 @@
 
         if (event.target.getAttribute("anonid") == "newtab-popup" ||
             event.target.id == "newtab-popup") {
-          createUserContextMenu(event, {useAccessKeys: false});
+          createUserContextMenu(event);
         } else {
           document.getElementById("alltabs-popup-separator-1").hidden = !containersEnabled;
           let containersTab = document.getElementById("alltabs_containersTab");
