@@ -1850,10 +1850,7 @@ nsContextMenu.prototype = {
   },
 
   createContainerMenu: function(aEvent) {
-    let createMenuOptions = {
-      iscontextMenu: true,
-      excludeUserContextId: gContextMenuContentData.userContextId,
-    };
-    return createUserContextMenu(aEvent, createMenuOptions);
+    return createUserContextMenu(aEvent, true,
+                                 gContextMenuContentData.userContextId);
   },
 };
