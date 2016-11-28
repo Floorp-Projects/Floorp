@@ -1012,6 +1012,8 @@ class JSScript : public js::gc::TenuredCell
 
     bool isAsync_:1;
 
+    bool hasRest_:1;
+
     // Add padding so JSScript is gc::Cell aligned. Make padding protected
     // instead of private to suppress -Wunused-private-field compiler warnings.
   protected:
@@ -1306,6 +1308,13 @@ class JSScript : public js::gc::TenuredCell
 
     void setAsyncKind(js::FunctionAsyncKind kind) {
         isAsync_ = kind == js::AsyncFunction;
+    }
+
+    bool hasRest() const {
+        return hasRest_;
+    }
+    void setHasRest() {
+        hasRest_ = true;
     }
 
     void setNeedsHomeObject() {
@@ -1940,6 +1949,7 @@ class LazyScript : public gc::TenuredCell
         uint32_t treatAsRunOnce : 1;
         uint32_t isDerivedClassConstructor : 1;
         uint32_t needsHomeObject : 1;
+        uint32_t hasRest : 1;
     };
 
     union {
@@ -2066,6 +2076,13 @@ class LazyScript : public gc::TenuredCell
 
     void setAsyncKind(FunctionAsyncKind kind) {
         p_.isAsync = kind == AsyncFunction;
+    }
+
+    bool hasRest() const {
+        return p_.hasRest;
+    }
+    void setHasRest() {
+        p_.hasRest = true;
     }
 
     bool strict() const {

@@ -2139,6 +2139,7 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
             return false;
 
         RootedScript script(cx);
+        RootedFunction fun(cx);
         do {
             script = queue.popCopy();
             compCover.collectCodeCoverageInfo(comp, script->sourceObject(), script);
@@ -2156,15 +2157,15 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
                 // Only continue on JSFunction objects.
                 if (!obj->is<JSFunction>())
                     continue;
-                JSFunction& fun = obj->as<JSFunction>();
+                fun = &obj->as<JSFunction>();
 
                 // Let's skip wasm for now.
-                if (!fun.isInterpreted())
+                if (!fun->isInterpreted())
                     continue;
 
                 // Queue the script in the list of script associated to the
                 // current source.
-                JSScript* childScript = fun.getOrCreateScript(cx);
+                JSScript* childScript = JSFunction::getOrCreateScript(cx, fun);
                 if (!childScript || !queue.append(childScript))
                     return false;
             }

@@ -646,7 +646,7 @@ BEGIN_TEST(test_JS_ubi_Node_scriptFilename)
     CHECK(obj->is<JSFunction>());
     JS::RootedFunction func(cx, &obj->as<JSFunction>());
 
-    JS::RootedScript script(cx, func->getOrCreateScript(cx));
+    JS::RootedScript script(cx, JSFunction::getOrCreateScript(cx, func));
     CHECK(script);
     CHECK(script->filename());
 

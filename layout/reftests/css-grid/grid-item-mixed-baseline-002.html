@@ -21,13 +21,11 @@ html,body {
   grid: 100px / repeat(10, auto);
   border: 2px solid;
   margin: 1px;
-  align-content: start;
-  justify-content: end;
+  place-content: start end;
 }
 .c {
   grid: repeat(4, auto) / 100px;
-  align-content: end;
-  justify-content: start;
+  place-content: end start;
 }
 .t2 { grid: 100px / repeat(3, auto);}
 
@@ -45,9 +43,9 @@ span:nth-child(4) { font-size:24px; }
 .pbs { padding-block-start: 15px; margin-block-start: 5px; }
 .pbe { padding-block-end: 7px; margin-block-end: 3px; }
 
-.fb { align-content:baseline; align-self:self-start; justify-self:self-start; }
-.lb { align-content:last baseline; align-self:self-end; justify-self:self-end; }
-.s  { align-self:stretch; justify-self:stretch; }
+.fb { align-content:baseline; place-self:self-start; }
+.lb { align-content:last baseline; place-self:self-end; }
+.s  { place-self:stretch; }
 
 .sfb { align-self:baseline; }
 .slb { align-self:last baseline; align-content:self-end;}
