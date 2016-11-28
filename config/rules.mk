@@ -547,9 +547,9 @@ OBJ_TARGETS = $(OBJS) $(PROGOBJS) $(HOST_OBJS) $(HOST_PROGOBJS)
 
 compile:: host target
 
-host:: $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS)
+host:: $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(HOST_RUST_PROGRAMS)
 
-target:: $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(RUST_LIBRARY_FILE)
+target:: $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(RUST_LIBRARY_FILE) $(RUST_PROGRAMS)
 
 include $(MOZILLA_DIR)/config/makefiles/target_binaries.mk
 endif
@@ -906,6 +906,9 @@ $(ASOBJS):
 endif
 
 ifdef MOZ_RUST
+cargo_host_flag := --target=$(RUST_HOST_TARGET)
+cargo_target_flag := --target=$(RUST_TARGET)
+
 # Permit users to pass flags to cargo from their mozconfigs (e.g. --color=always).
 cargo_build_flags = $(CARGOFLAGS)
 ifndef MOZ_DEBUG
@@ -916,7 +919,6 @@ cargo_build_flags += --frozen
 endif
 
 cargo_build_flags += --manifest-path $(CARGO_FILE)
-cargo_build_flags += --target=$(RUST_TARGET)
 cargo_build_flags += --verbose
 
 # Enable color output if original stdout was a TTY and color settings
@@ -949,10 +951,25 @@ ifdef RUST_LIBRARY_FILE
 # build.
 force-cargo-library-build:
 	$(REPORT_BUILD)
-	env $(rustflags_override) CARGO_TARGET_DIR=. RUSTC=$(RUSTC) $(CARGO) build --lib $(cargo_build_flags) --
+	env $(rustflags_override) CARGO_TARGET_DIR=. RUSTC=$(RUSTC) $(CARGO) build --lib $(cargo_build_flags) $(cargo_target_flag) --
 
 $(RUST_LIBRARY_FILE): force-cargo-library-build
 endif # RUST_LIBRARY_FILE
+
+ifdef RUST_PROGRAMS
+force-cargo-program-build:
+	$(REPORT_BUILD)
+	env $(rustflags_override) CARGO_TARGET_DIR=. RUSTC=$(RUSTC) $(CARGO) build $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_build_flags) $(cargo_target_flag) --
+
+$(RUST_PROGRAMS): force-cargo-program-build
+endif # RUST_PROGRAMS
+ifdef HOST_RUST_PROGRAMS
+force-cargo-host-program-build:
+	$(REPORT_BUILD)
+	env $(rustflags_override) CARGO_TARGET_DIR=. RUSTC=$(RUSTC) $(CARGO) build $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_build_flags) $(cargo_host_flag) --
+
+$(HOST_RUST_PROGRAMS): force-cargo-host-program-build
+endif # HOST_RUST_PROGRAMS
 endif # MOZ_RUST
 
 $(SOBJS):
