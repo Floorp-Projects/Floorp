@@ -284,4 +284,22 @@ cache_test(function(cache) {
       'TypeError.');
   }, 'Cache.put with an embedded VARY:* Response');
 
+cache_test(function(cache) {
+    var url = 'foo.html';
+    var redirectURL = 'http://example.com/foo-bar.html';
+    var redirectResponse = Response.redirect(redirectURL);
+    assert_equals(redirectResponse.headers.get('Location'), redirectURL,
+                  'Response.redirect() should set Location header.');
+    return cache.put(url, redirectResponse.clone())
+      .then(function() {
+          return cache.match(url);
+        })
+      .then(function(response) {
+          assert_response_equals(response, redirectResponse,
+                                 'Redirect response is reproduced by the Cache API');
+          assert_equals(response.headers.get('Location'), redirectURL,
+                        'Location header is preserved by Cache API.');
+        });
+  }, 'Cache.put should store Response.redirect() correctly');
+
 done();
