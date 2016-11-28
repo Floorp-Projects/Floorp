@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+@keyframes anim {
+  /*
+   * We need to use different transform functions to produce
+   * UpdatePostTransformOverflow change hint, also these functions have to be
+   * the same matrix to being the same position while running reftest.
+   */
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+</style>
+<table id="test" style="width: 100px; height: 100px; animation: anim 1s infinite;">
+  <td style="transform: rotateZ(45deg); background-color: rgb(212, 61, 188);">
+  </td>
+</table>
+<script>
+document.getElementById("test").addEventListener("animationstart", () => {
+  requestAnimationFrame(() => {
+    document.documentElement.classList.remove("reftest-wait");
+  });
+}, false);
+</script>
+</html>
