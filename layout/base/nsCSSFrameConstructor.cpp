@@ -4084,7 +4084,8 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   // the frame bit, because by this point mIsGeneratedContent has been cleared
   // on aItem.
   if ((!aState.mCreatingExtraFrames ||
-       ((primaryFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT) &&
+       (primaryFrame->HasAnyStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT |
+                                      NS_FRAME_GENERATED_CONTENT) &&
         !aItem.mContent->GetPrimaryFrame())) &&
        !(bits & FCDATA_SKIP_FRAMESET)) {
     aItem.mContent->SetPrimaryFrame(primaryFrame);
