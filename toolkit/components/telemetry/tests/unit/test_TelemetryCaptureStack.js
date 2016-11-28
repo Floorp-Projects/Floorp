@@ -4,6 +4,10 @@
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/AppConstants.jsm", this);
 
+// We need both in order to capture stacks.
+const ENABLE_TESTS = AppConstants.MOZ_ENABLE_PROFILER_SPS &&
+                     AppConstants.MOZ_STACKWALKING;
+
 /**
  * Ensures that the sctucture of the javascript object used for capturing stacks
  * is as intended. The structure is expected to be as in this example:
@@ -66,7 +70,7 @@ const TEST_STACK_KEYS = ["TEST-KEY1", "TEST-KEY2"];
  * Ensures that captured stacks appear in pings, if any were captured.
  */
 add_task({
-  skip_if: () => !AppConstants.MOZ_ENABLE_PROFILER_SPS
+  skip_if: () => !ENABLE_TESTS
 }, function* test_capturedStacksAppearInPings() {
   yield TelemetryController.testSetup();
   captureStacks("DOES-NOT-MATTER", false);
@@ -83,7 +87,7 @@ add_task({
  * of captured stacks and adds a new entry to captures.
  */
 add_task({
-  skip_if: () => !AppConstants.MOZ_ENABLE_PROFILER_SPS
+  skip_if: () => !ENABLE_TESTS
 }, function* test_CaptureStacksIncreasesNumberOfCapturedStacks() {
   // Construct a unique key for this test.
   let key = TEST_STACK_KEYS[0] + "-UNIQUE-KEY-1";
@@ -111,7 +115,7 @@ add_task({
  * more than once for the key, the length of stacks does not increase.
  */
  add_task({
-   skip_if: () => !AppConstants.MOZ_ENABLE_PROFILER_SPS
+   skip_if: () => !ENABLE_TESTS
  }, function* test_CaptureStacksGroupsDuplicateStacks() {
   // Make sure that there are initial captures for TEST_STACK_KEYS[0].
   let stacks = captureStacks(TEST_STACK_KEYS[0], false);
@@ -142,7 +146,7 @@ add_task({
  * for other keys.
  */
 add_task({
-  skip_if: () => !AppConstants.MOZ_ENABLE_PROFILER_SPS
+  skip_if: () => !ENABLE_TESTS
 }, function* test_CaptureStacksSeparatesInformationByKeys() {
   // Make sure that there are initial captures for TEST_STACK_KEYS[0].
   let stacks = captureStacks(TEST_STACK_KEYS[0], false);
@@ -169,7 +173,7 @@ add_task({
  * Ensure that Telemetry does not allow weird keys.
  */
 add_task({
-  skip_if: () => !AppConstants.MOZ_ENABLE_PROFILER_SPS
+  skip_if: () => !ENABLE_TESTS
 }, function* test_CaptureStacksDoesNotAllowBadKey() {
   for (let badKey of [null, "KEY-!@\"#$%^&*()_"]) {
     let stacks = captureStacks(badKey);
