@@ -48,6 +48,7 @@ from ..frontend.data import (
     HostDefines,
     HostLibrary,
     HostProgram,
+    HostRustProgram,
     HostSimpleProgram,
     HostSources,
     InstallationTarget,
@@ -60,6 +61,7 @@ from ..frontend.data import (
     PerSourceFlag,
     Program,
     RustLibrary,
+    RustProgram,
     SharedLibrary,
     SimpleProgram,
     Sources,
@@ -534,6 +536,15 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, JARManifest):
             self._no_skip['libs'].add(backend_file.relobjdir)
             backend_file.write('JAR_MANIFEST := %s\n' % obj.path.full_path)
+
+        elif isinstance(obj, RustProgram):
+            # Note that for these and host Rust programs, we don't need to
+            # bother with linked libraries, because Cargo will take care of
+            # all of that for us.
+            self._process_rust_program(obj, backend_file)
+
+        elif isinstance(obj, HostRustProgram):
+            self._process_host_rust_program(obj, backend_file)
 
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
@@ -1033,6 +1044,23 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _process_host_program(self, program, backend_file):
         backend_file.write('HOST_PROGRAM = %s\n' % program)
+
+    def _process_rust_program_base(self, obj, backend_file,
+                                   target_variable,
+                                   target_cargo_variable):
+        backend_file.write_once('CARGO_FILE := %s\n' % obj.cargo_file)
+        backend_file.write('%s += %s\n' % (target_variable, obj.location))
+        backend_file.write('%s += %s\n' % (target_cargo_variable, obj.name))
+
+    def _process_rust_program(self, obj, backend_file):
+        self._process_rust_program_base(obj, backend_file,
+                                        'RUST_PROGRAMS',
+                                        'RUST_CARGO_PROGRAMS')
+
+    def _process_host_rust_program(self, obj, backend_file):
+        self._process_rust_program_base(obj, backend_file,
+                                        'HOST_RUST_PROGRAMS',
+                                        'HOST_RUST_CARGO_PROGRAMS')
 
     def _process_simple_program(self, obj, backend_file):
         if obj.is_unit_test:
