@@ -233,10 +233,6 @@ user_pref("general.useragent.updates.enabled", false);
 // Disable webapp updates.  Yes, it is supposed to be an integer.
 user_pref("browser.webapps.checkForUpdates", 0);
 
-// Enable debug logging in the tcp presentation server.
-user_pref("dom.presentation.tcp_server.debug", true);
-// Enable debug logging in the presentation core service.
-user_pref("logging.Presentation", "debug");
 user_pref("dom.presentation.testing.simulate-receiver", false);
 
 // Don't connect to Yahoo! for RSS feed tests.
