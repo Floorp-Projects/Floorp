@@ -345,9 +345,12 @@ private:
    */
   void CreateFBOWithTexture(const gfx::IntRect& aRect, bool aCopyFromSource,
                             GLuint aSourceFrameBuffer,
-                            GLuint *aFBO, GLuint *aTexture);
+                            GLuint *aFBO, GLuint *aTexture,
+                            gfx::IntSize* aAllocSize = nullptr);
 
-  GLuint CreateTexture(const gfx::IntRect& aRect, bool aCopyFromSource, GLuint aSourceFrameBuffer);
+  GLuint CreateTexture(const gfx::IntRect& aRect, bool aCopyFromSource,
+                       GLuint aSourceFrameBuffer,
+                       gfx::IntSize* aAllocSize = nullptr);
 
   gfx::Point3D GetLineCoefficients(const gfx::Point& aPoint1,
                                    const gfx::Point& aPoint2);
