@@ -100,13 +100,11 @@ TestStackHooksChild::AnswerStackFrame()
         fail("missed EnteredCall or ExitedCall hook");
 
     if (mNumAnswerStackFrame == 1) {
-        // XXX This assertion will be deleted as part of bug 1316757.
-        MOZ_ASSERT(PTestStackHooks::TEST4_3 == state());
+        // MOZ_ASSERT(PTestStackHooks::TEST4_3 == state());
         if (!SendAsync())
             fail("sending Async()");
     } else if (mNumAnswerStackFrame == 2) {
-        // XXX This assertion will be deleted as part of bug 1316757.
-        MOZ_ASSERT(PTestStackHooks::TEST5_3 == state());
+        // MOZ_ASSERT(PTestStackHooks::TEST5_3 == state());
         if (!SendSync())
             fail("sending Sync()");
     } else {
