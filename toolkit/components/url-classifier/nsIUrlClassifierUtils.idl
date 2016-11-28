@@ -9,6 +9,29 @@
 
 interface nsIURI;
 
+/**
+ * Interface for parseFindFullHashResponseV4 callback
+ *
+ * @param aCompleteHash A 32-byte complete hash string.
+ * @param aTableNames The table names that this complete hash is associated with.
+ *                    Since the server responded with a threat type, multiple
+ *                    list names can be returned. The caller is reponsible
+ *                    for filtering out the unrequested table names.
+ *                    See |convertThreatTypeToListNames| for the format.
+ * @param aMinWaitDuration See "FindFullHashesResponse" in safebrowsing.proto.
+ * @param aNegCacheDuration See "FindFullHashesResponse" in safebrowsing.proto.
+ * @param aPerHashCacheDuration See "FindFullHashesResponse" in safebrowsing.proto.
+ *
+ */
+[scriptable, function, uuid(fbb9684a-a0aa-11e6-88b0-08606e456b8a)]
+interface nsIUrlClassifierParseFindFullHashCallback : nsISupports {
+  void onCompleteHashFound(in ACString aCompleteHash,
+                           in ACString aTableNames,
+                           in unsigned long aMinWaitDuration,
+                           in unsigned long aNegCacheDuration,
+                           in unsigned long aPerHashCacheDuration);
+};
+
 [scriptable, uuid(e4f0e59c-b922-48b0-a7b6-1735c1f96fed)]
 interface nsIUrlClassifierUtils : nsISupports
 {
@@ -100,4 +123,14 @@ interface nsIUrlClassifierUtils : nsISupports
                                      [array, size_is(aPrefixCount)] in string aPrefixes,
                                      in uint32_t aListCount,
                                      in uint32_t aPrefixCount);
+
+  /**
+   * Parse V4 FindFullHash response.
+   *
+   * @param aResponse Byte stream from the server.
+   * @param aCallback The callback function on each complete hash parsed.
+   *                  Can be called multiple times in one parsing.
+   */
+  void parseFindFullHashResponseV4(in ACString aResponse,
+                                   in nsIUrlClassifierParseFindFullHashCallback aCallback);
 };

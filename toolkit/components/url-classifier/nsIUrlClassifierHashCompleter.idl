@@ -56,10 +56,13 @@ interface nsIUrlClassifierHashCompleter : nsISupports
    *        The 32-bit hash encountered by the url-classifier.
    * @param gethashUrl
    *        The gethash url to use.
+   * @param tableName
+   *        The table where we matched the partial hash.
    * @param callback
    *        An nsIUrlClassifierCompleterCallback instance.
    */
   void complete(in ACString partialHash,
                 in ACString gethashUrl,
+                in ACString tableName,
                 in nsIUrlClassifierHashCompleterCallback callback);
 };
