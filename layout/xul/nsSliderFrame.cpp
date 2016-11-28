@@ -936,13 +936,18 @@ nsSliderFrame::StartAPZDrag()
     return false;
   }
 
-  nsContainerFrame* cf = GetScrollbar()->GetParent();
-  if (!cf) {
+  nsContainerFrame* scrollFrame = GetScrollbar()->GetParent();
+  if (!scrollFrame) {
     return false;
   }
 
-  nsIContent* scrollableContent = cf->GetContent();
+  nsIContent* scrollableContent = scrollFrame->GetContent();
   if (!scrollableContent) {
+    return false;
+  }
+
+  nsIScrollableFrame* scrollFrameAsScrollable = do_QueryFrame(scrollFrame);
+  if (!scrollFrameAsScrollable) {
     return false;
   }
 
@@ -957,14 +962,18 @@ nsSliderFrame::StartAPZDrag()
   nsIFrame* scrollbarBox = GetScrollbar();
   nsCOMPtr<nsIContent> scrollbar = GetContentOfBox(scrollbarBox);
 
+  nsRect sliderTrack;
+  GetXULClientRect(sliderTrack);
+
   // This rect is the range in which the scroll thumb can slide in.
-  nsRect sliderTrack = GetRect() - scrollbarBox->GetPosition();
-  CSSIntRect sliderTrackCSS = CSSIntRect::FromAppUnitsRounded(sliderTrack);
+  sliderTrack = sliderTrack + GetRect().TopLeft() + scrollbarBox->GetPosition() -
+                scrollFrameAsScrollable->GetScrollPortRect().TopLeft();
+  CSSRect sliderTrackCSS = CSSRect::FromAppUnits(sliderTrack);
 
   uint64_t inputblockId = InputAPZContext::GetInputBlockId();
   uint32_t presShellId = PresContext()->PresShell()->GetPresShellId();
   AsyncDragMetrics dragMetrics(scrollTargetId, presShellId, inputblockId,
-                               NSAppUnitsToIntPixels(mDragStart,
+                               NSAppUnitsToFloatPixels(mDragStart,
                                  float(AppUnitsPerCSSPixel())),
                                sliderTrackCSS,
                                IsXULHorizontal() ? AsyncDragMetrics::HORIZONTAL :

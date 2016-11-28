@@ -93,10 +93,10 @@ public:
 
   void SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
                         Layer::ScrollDirection aDir,
-                        int32_t aScrollSize,
+                        int32_t aScrollThumbLength,
                         bool aIsScrollContainer);
   bool MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const;
-  int32_t GetScrollSize() const;
+  LayerIntCoord GetScrollThumbLength() const;
   bool IsScrollbarNode() const;
 
   /* Fixed pos info */
@@ -130,7 +130,7 @@ private:
 
   FrameMetrics::ViewID mScrollViewId;
   Layer::ScrollDirection mScrollDir;
-  int32_t mScrollSize;
+  int32_t mScrollThumbLength;
   bool mIsScrollbarContainer;
 
   FrameMetrics::ViewID mFixedPosTarget;
