@@ -52,7 +52,7 @@ interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
    * Loads a given URI.  This will give priority to loading the requested URI
-   * in the object implementing	this interface.  If it can't be loaded here
+   * in the object implementing this interface.  If it can't be loaded here
    * however, the URL dispatcher will go through its normal process of content
    * loading.
    *
