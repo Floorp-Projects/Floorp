@@ -92,8 +92,7 @@ TestLatencyParent::RecvPong5()
 {
     ++mWhichPong5;
 
-    // XXX This assertion will be deleted as part of bug 1316757.
-    MOZ_ASSERT((PTestLatency::PING5 != state()) == (mWhichPong5 < 5));
+    // MOZ_ASSERT((PTestLatency::PING5 != state()) == (mWhichPong5 < 5));
 
     if (mWhichPong5 < 5) {
         return IPC_OK();
@@ -214,8 +213,7 @@ TestLatencyChild::RecvPing5()
 {
     ++mWhichPing5;
 
-    // XXX This assertion will be deleted as part of bug 1316757.
-    MOZ_ASSERT((PTestLatency::PONG1 != state()) == (mWhichPing5 < 5));
+    // MOZ_ASSERT((PTestLatency::PONG1 != state()) == (mWhichPing5 < 5));
 
     if (mWhichPing5 < 5) {
         return IPC_OK();
