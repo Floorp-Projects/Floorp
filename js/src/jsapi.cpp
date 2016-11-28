@@ -3529,7 +3529,7 @@ CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject env, Handle
     RootedFunction fun(cx, &funobj->as<JSFunction>());
     if (fun->isInterpretedLazy()) {
         AutoCompartment ac(cx, funobj);
-        if (!fun->getOrCreateScript(cx))
+        if (!JSFunction::getOrCreateScript(cx, fun))
             return nullptr;
     }
 
@@ -3561,7 +3561,7 @@ CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject env, Handle
         // Fail here if we OOM during debug asserting.
         // CloneFunctionReuseScript will delazify the script anyways, so we
         // are not creating an extra failure condition for DEBUG builds.
-        if (!fun->getOrCreateScript(cx))
+        if (!JSFunction::getOrCreateScript(cx, fun))
             return nullptr;
         MOZ_ASSERT(scope->as<GlobalScope>().isSyntactic() ||
                    fun->nonLazyScript()->hasNonSyntacticScope());
@@ -4216,7 +4216,7 @@ JS_GetFunctionScript(JSContext* cx, HandleFunction fun)
         return nullptr;
     if (fun->isInterpretedLazy()) {
         AutoCompartment funCompartment(cx, fun);
-        JSScript* script = fun->getOrCreateScript(cx);
+        JSScript* script = JSFunction::getOrCreateScript(cx, fun);
         if (!script)
             MOZ_CRASH();
         return script;
