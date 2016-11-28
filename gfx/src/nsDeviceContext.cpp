@@ -240,7 +240,11 @@ nsDeviceContext::FontMetricsDeleted(const nsFontMetrics* aFontMetrics)
 bool
 nsDeviceContext::IsPrinterContext()
 {
-  return mPrintTarget != nullptr;
+  return mPrintTarget != nullptr
+#ifdef XP_MACOSX
+         || mCachedPrintTarget != nullptr
+#endif
+         ;
 }
 
 void
@@ -343,31 +347,39 @@ nsDeviceContext::CreateRenderingContextCommon(bool aWantReferenceContext)
     MOZ_ASSERT(IsPrinterContext());
     MOZ_ASSERT(mWidth > 0 && mHeight > 0);
 
+    RefPtr<PrintTarget> printingTarget = mPrintTarget;
+#ifdef XP_MACOSX
+    // CreateRenderingContext() can be called (on reflow) after EndPage()
+    // but before BeginPage().  On OS X (and only there) mPrintTarget
+    // will in this case be null, because OS X printing surfaces are
+    // per-page, and therefore only truly valid between calls to BeginPage()
+    // and EndPage().  But we can get away with fudging things here, if need
+    // be, by using a cached copy.
+    if (!printingTarget) {
+      printingTarget = mCachedPrintTarget;
+    }
+#endif
+
     // This will usually be null, depending on the pref print.print_via_parent.
     RefPtr<DrawEventRecorder> recorder;
     mDeviceContextSpec->GetDrawEventRecorder(getter_AddRefs(recorder));
 
     RefPtr<gfx::DrawTarget> dt;
     if (aWantReferenceContext) {
-      dt = mPrintTarget->GetReferenceDrawTarget(recorder);
+      dt = printingTarget->GetReferenceDrawTarget(recorder);
     } else {
-      dt = mPrintTarget->MakeDrawTarget(gfx::IntSize(mWidth, mHeight), recorder);
+      dt = printingTarget->MakeDrawTarget(gfx::IntSize(mWidth, mHeight), recorder);
     }
 
     if (!dt || !dt->IsValid()) {
       gfxCriticalNote
         << "Failed to create draw target in device context sized "
-        << mWidth << "x" << mHeight << " and pointer "
-        << hexa(mPrintTarget);
+        << mWidth << "x" << mHeight << " and pointers "
+        << hexa(mPrintTarget) << " and " << hexa(printingTarget);
       return nullptr;
     }
 
 #ifdef XP_MACOSX
-    // The CGContextRef provided by PMSessionGetCGGraphicsContext is
-    // write-only, so we need to prevent gfxContext::PushGroupAndCopyBackground
-    // trying to read from it or else we'll crash.
-    // XXXjwatt Consider adding a MakeDrawTarget override to PrintTargetCG and
-    // moving this AddUserData call there.
     dt->AddUserData(&gfxContext::sDontUseAsSourceKey, dt, nullptr);
 #endif
     dt->AddUserData(&sDisablePixelSnapping, (void*)0x1, nullptr);
@@ -376,9 +388,9 @@ nsDeviceContext::CreateRenderingContextCommon(bool aWantReferenceContext)
     MOZ_ASSERT(pContext); // already checked draw target above
 
     gfxMatrix transform;
-    if (mPrintTarget->RotateNeededForLandscape()) {
+    if (printingTarget->RotateNeededForLandscape()) {
       // Rotate page 90 degrees to draw landscape page on portrait paper
-      IntSize size = mPrintTarget->GetSize();
+      IntSize size = printingTarget->GetSize();
       transform.Translate(gfxPoint(0, size.width));
       gfxMatrix rotate(0, -1,
                        1,  0,
@@ -481,8 +493,7 @@ nsDeviceContext::BeginDocument(const nsAString& aTitle,
                                int32_t          aStartPage,
                                int32_t          aEndPage)
 {
-    nsresult rv = mPrintTarget->BeginPrinting(aTitle, aPrintToFileName,
-                                              aStartPage, aEndPage);
+    nsresult rv = mPrintTarget->BeginPrinting(aTitle, aPrintToFileName);
 
     if (NS_SUCCEEDED(rv) && mDeviceContextSpec) {
       rv = mDeviceContextSpec->BeginDocument(aTitle, aPrintToFileName,
@@ -498,15 +509,14 @@ nsDeviceContext::EndDocument(void)
 {
     nsresult rv = NS_OK;
 
-    rv = mPrintTarget->EndPrinting();
-    if (NS_SUCCEEDED(rv)) {
-        mPrintTarget->Finish();
+    if (mPrintTarget) {
+        rv = mPrintTarget->EndPrinting();
+        if (NS_SUCCEEDED(rv))
+            mPrintTarget->Finish();
     }
 
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndDocument();
-
-    mPrintTarget = nullptr;
 
     return rv;
 }
@@ -519,8 +529,6 @@ nsDeviceContext::AbortDocument(void)
 
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndDocument();
-
-    mPrintTarget = nullptr;
 
     return rv;
 }
@@ -536,13 +544,33 @@ nsDeviceContext::BeginPage(void)
 
     if (NS_FAILED(rv)) return rv;
 
-    return mPrintTarget->BeginPage();
+#ifdef XP_MACOSX
+    // We need to get a new surface for each page on the Mac, as the
+    // CGContextRefs are only good for one page.
+    mPrintTarget = mDeviceContextSpec->MakePrintTarget();
+#endif
+
+    rv = mPrintTarget->BeginPage();
+
+    return rv;
 }
 
 nsresult
 nsDeviceContext::EndPage(void)
 {
     nsresult rv = mPrintTarget->EndPage();
+
+#ifdef XP_MACOSX
+    // We need to release the CGContextRef in the surface here, plus it's
+    // not something you would want anyway, as these CGContextRefs are only
+    // good for one page.  But we need to keep a cached reference to it, since
+    // CreateRenderingContext() may try to access it when mPrintTarget
+    // would normally be null.  See bug 665218.  If we just stop nulling out
+    // mPrintTarget here (and thereby make that our cached copy), we'll
+    // break all our null checks on mPrintTarget.  See bug 684622.
+    mCachedPrintTarget = mPrintTarget;
+    mPrintTarget = nullptr;
+#endif
 
     if (mDeviceContextSpec)
         mDeviceContextSpec->EndPage();
@@ -633,6 +661,10 @@ nsDeviceContext::FindScreen(nsIScreen** outScreen)
 bool
 nsDeviceContext::CalcPrintingSize()
 {
+    if (!mPrintTarget) {
+        return (mWidth > 0 && mHeight > 0);
+    }
+
     gfxSize size = mPrintTarget->GetSize();
     // For printing, CSS inches and physical inches are identical
     // so it doesn't matter which we use here

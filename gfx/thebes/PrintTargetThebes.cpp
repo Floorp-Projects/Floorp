@@ -78,9 +78,7 @@ PrintTargetThebes::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
 
 nsresult
 PrintTargetThebes::BeginPrinting(const nsAString& aTitle,
-                                 const nsAString& aPrintToFileName,
-                                 int32_t aStartPage,
-                                 int32_t aEndPage)
+                                 const nsAString& aPrintToFileName)
 {
   return mGfxSurface->BeginPrinting(aTitle, aPrintToFileName);
 }
