@@ -455,9 +455,13 @@ CompositorBridgeParent::StopAndClearResources()
   if (mWRBridge) {
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
     ForEachIndirectLayerTree([this] (LayerTreeState* lts, uint64_t) -> void {
-      lts->mWRBridge = nullptr;
+      if (lts->mWRBridge) {
+        lts->mWRBridge->Destroy();
+        lts->mWRBridge = nullptr;
+      }
       lts->mParent = nullptr;
     });
+    mWRBridge->Destroy();
     mWRBridge = nullptr;
   }
 #endif
@@ -1561,11 +1565,12 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId)
 #endif
   MOZ_ASSERT(aPipelineId == mRootLayerTreeID);
   MOZ_ASSERT(!mWRBridge);
+  MOZ_ASSERT(!mCompositor);
 
   RefPtr<gl::GLContext> glc(gl::GLContextProvider::CreateForCompositorWidget(mWidget, true));
-  RefPtr<Compositor> compositor = new WebRenderCompositorOGL(glc.get());
+  mCompositor = new WebRenderCompositorOGL(glc.get());
   mWRBridge = new WebRenderBridgeParent(aPipelineId,
-        mWidget, glc.get(), nullptr, compositor.get());
+        mWidget, glc.get(), nullptr, mCompositor.get());
   mWRBridge->AddRef(); // IPDL reference
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   MOZ_ASSERT(sIndirectLayerTrees[aPipelineId].mWRBridge == nullptr);

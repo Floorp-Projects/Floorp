@@ -73,6 +73,8 @@ public:
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
+  void Destroy();
+
   // CompositorVsyncSchedulerOwner
   bool IsPendingComposite() override { return false; }
   void FinishPendingComposite() override { }
@@ -95,6 +97,8 @@ private:
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   std::vector<WRImageKey> mKeysToDelete;
   nsDataHashtable<nsUint64HashKey, uint64_t> mExternalImageIds;
+
+  bool mDestroyed;
 };
 
 } // namespace layers
