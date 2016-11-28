@@ -59,9 +59,7 @@ payload:
     - >
         cd /home/worker/checkouts/gecko &&
         ln -s /home/worker/artifacts artifacts &&
-        ./mach --log-no-times taskgraph action-task
-        --decision-id='{{decision_task_id}}'
-        --task-label='{{task_labels}}'
+        ./mach --log-no-times taskgraph action-task {{action_args}}
 
   artifacts:
     'public':
