@@ -906,8 +906,6 @@ $(ASOBJS):
 endif
 
 ifdef MOZ_RUST
-ifdef RUST_LIBRARY_FILE
-
 # Permit users to pass flags to cargo from their mozconfigs (e.g. --color=always).
 cargo_build_flags = $(CARGOFLAGS)
 ifndef MOZ_DEBUG
@@ -941,6 +939,8 @@ endif
 ifndef MOZ_OPTIMIZE
 rustflags_override = RUSTFLAGS='-C opt-level=0'
 endif
+
+ifdef RUST_LIBRARY_FILE
 
 # Assume any system libraries rustc links against are already in the target's LIBS.
 #
