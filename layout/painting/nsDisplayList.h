@@ -4065,7 +4065,8 @@ class nsDisplayTransform: public nsDisplayItem
 public:
   enum PrerenderDecision {
     NoPrerender,
-    FullPrerender
+    FullPrerender,
+    PartialPrerender
   };
 
   /**
@@ -4281,8 +4282,11 @@ public:
                                                uint32_t aFlags,
                                                const nsRect* aBoundsOverride = nullptr);
   /**
-   * Return FullPrerender when we should try to prerender the entire contents of the
+   * Decide whether we should prerender some or all of the contents of the
    * transformed frame even when it's not completely visible (yet).
+   * Return FullPrerender if the entire contents should be prerendered,
+   * PartialPrerender if some but not all of the contents should be prerendered,
+   * or NoPrerender if only the visible area should be rendered.
    * |aDirtyRect| is updated to the area that should be prerendered.
    */
   static PrerenderDecision ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
