@@ -2119,15 +2119,6 @@ static void ReplaceChar(nsCString& str, const nsACString& character,
   }
 }
 
-static bool DoFindInReadable(const nsACString& str, const nsACString& value)
-{
-  nsACString::const_iterator start, end;
-  str.BeginReading(start);
-  str.EndReading(end);
-
-  return FindInReadable(value, start, end);
-}
-
 static bool
 IsInWhitelist(const nsACString& key)
 {
@@ -2146,11 +2137,11 @@ IsInWhitelist(const nsACString& key)
 static nsresult
 EscapeAnnotation(const nsACString& key, const nsACString& data, nsCString& escapedData)
 {
-  if (DoFindInReadable(key, NS_LITERAL_CSTRING("=")) ||
-      DoFindInReadable(key, NS_LITERAL_CSTRING("\n")))
+  if (FindInReadable(NS_LITERAL_CSTRING("="), key) ||
+      FindInReadable(NS_LITERAL_CSTRING("\n"), key))
     return NS_ERROR_INVALID_ARG;
 
-  if (DoFindInReadable(data, NS_LITERAL_CSTRING("\0")))
+  if (FindInReadable(NS_LITERAL_CSTRING("\0"), data))
     return NS_ERROR_INVALID_ARG;
 
   escapedData = data;
@@ -2309,7 +2300,7 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
   if (!GetEnabled())
     return NS_ERROR_NOT_INITIALIZED;
 
-  if (DoFindInReadable(data, NS_LITERAL_CSTRING("\0")))
+  if (FindInReadable(NS_LITERAL_CSTRING("\0"), data))
     return NS_ERROR_INVALID_ARG;
 
   if (!XRE_IsParentProcess()) {
