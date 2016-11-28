@@ -455,7 +455,7 @@ var gTests = [
     ok(gIdentityHandler._identityPopup.hidden, "control center should be hidden");
     if ("nsISystemStatusBar" in Ci) {
       let activeStreams = webrtcUI.getActiveStreams(true, false, false);
-      webrtcUI.showSharingDoorhanger(activeStreams[0]);
+      webrtcUI.showSharingDoorhanger(activeStreams[0], "Devices");
     }
     else {
       let win =
