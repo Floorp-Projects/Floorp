@@ -2738,6 +2738,7 @@ pref("dom.animations.offscreen-throttling", true);
 
 // Prefs to control the maximum area to pre-render when animating a large
 // element on the compositor.
+pref("layout.animation.prerender.partial", false);
 pref("layout.animation.prerender.viewport-ratio-limit-x", "1.125");
 pref("layout.animation.prerender.viewport-ratio-limit-y", "1.125");
 pref("layout.animation.prerender.absolute-limit-x", 4096);
