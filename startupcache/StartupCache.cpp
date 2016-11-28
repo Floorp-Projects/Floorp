@@ -440,8 +440,8 @@ StartupCache::WriteToDisk()
   holder.writer = zipW;
   holder.time = now;
 
-  for (auto key = mPendingWrites.begin(); key != mPendingWrites.end(); key++) {
-    CacheCloseHelper(*key, mTable.Get(*key), &holder);
+  for (auto& key : mPendingWrites) {
+    CacheCloseHelper(key, mTable.Get(key), &holder);
   }
   mPendingWrites.Clear();
   mTable.Clear();
@@ -569,8 +569,7 @@ StartupCache::GetDebugObjectOutputStream(nsIObjectOutputStream* aStream,
 {
   NS_ENSURE_ARG_POINTER(aStream);
 #ifdef DEBUG
-  StartupCacheDebugOutputStream* stream
-    = new StartupCacheDebugOutputStream(aStream, &mWriteObjectMap);
+  auto* stream = new StartupCacheDebugOutputStream(aStream, &mWriteObjectMap);
   NS_ADDREF(*aOutStream = stream);
 #else
   NS_ADDREF(*aOutStream = aStream);

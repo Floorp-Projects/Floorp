@@ -47,7 +47,7 @@ public:
   nsString mSearchString;
   uint16_t mSearchResult;
 private:
-  ~nsFileResult() {}
+  ~nsFileResult() = default;
 };
 
 NS_IMPL_ISUPPORTS(nsFileResult, nsIAutoCompleteResult)
@@ -179,7 +179,7 @@ NS_IMETHODIMP nsFileResult::RemoveValueAt(int32_t rowIndex, bool removeFromDb)
 
 class nsFileComplete final : public nsIAutoCompleteSearch
 {
-  ~nsFileComplete() {}
+  ~nsFileComplete() = default;
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAUTOCOMPLETESEARCH

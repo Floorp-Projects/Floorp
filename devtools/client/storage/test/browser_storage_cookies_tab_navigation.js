@@ -10,7 +10,8 @@ add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
   showAllColumns(true);
 
-  yield startCellEdit("test1", "name");
+  let id = getCookieId("test1", ".test1.example.org", "/browser");
+  yield startCellEdit(id, "name");
 
   PressKeyXTimes("VK_TAB", 18);
   is(getCurrentEditorValue(), "value3",

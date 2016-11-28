@@ -1,7 +1,9 @@
-[{
+[
+{
 "size": 276089293,
 "digest": "a5aca63869d9ca9770b2f760923e65c08a36e4235f4bf9c422c9fd005c78b24bd7d8c74e9b8d11a4606d1d7081bd7181866f1ec50d1d87ad8de93521090d2d36",
 "algorithm": "sha512",
 "filename": "AVDs-armv7a-android-6.0-build-2016-08-12.tar.gz",
 "unpack": true
-}]
+}
+]

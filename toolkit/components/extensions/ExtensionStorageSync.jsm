@@ -395,7 +395,7 @@ this.ExtensionStorageSync = {
   syncAll: Task.async(function* () {
     const extensions = extensionContexts.keys();
     const extIds = Array.from(extensions, extension => extension.id);
-    log.debug(`Syncing extension settings for ${JSON.stringify(extIds)}\n`);
+    log.debug(`Syncing extension settings for ${JSON.stringify(extIds)}`);
     if (extIds.length == 0) {
       // No extensions to sync. Get out.
       return;

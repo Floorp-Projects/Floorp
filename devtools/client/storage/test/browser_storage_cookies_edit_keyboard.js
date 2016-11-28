@@ -10,10 +10,11 @@ add_task(function* () {
   yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-cookies.html");
   showAllColumns(true);
 
-  yield startCellEdit("test4", "name");
+  let id = getCookieId("test4", "test1.example.org", "/browser");
+  yield startCellEdit(id, "name");
   yield typeWithTerminator("test6", "VK_TAB");
-  yield typeWithTerminator("/", "VK_TAB");
   yield typeWithTerminator(".example.org", "VK_TAB");
+  yield typeWithTerminator("/", "VK_TAB");
   yield typeWithTerminator("Tue, 25 Dec 2040 12:00:00 GMT", "VK_TAB");
   yield typeWithTerminator("test6value", "VK_TAB");
   yield typeWithTerminator("false", "VK_TAB");

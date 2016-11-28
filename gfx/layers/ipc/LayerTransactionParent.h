@@ -29,7 +29,7 @@ class RenderFrameParent;
 namespace layers {
 
 class Layer;
-class LayerManagerComposite;
+class HostLayerManager;
 class ShadowLayerParent;
 class CompositableParent;
 class CompositorBridgeParentBase;
@@ -45,7 +45,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
   typedef InfallibleTArray<PluginWindowData> PluginsArray;
 
 public:
-  LayerTransactionParent(LayerManagerComposite* aManager,
+  LayerTransactionParent(HostLayerManager* aManager,
                          CompositorBridgeParentBase* aBridge,
                          uint64_t aId);
 
@@ -55,7 +55,7 @@ protected:
 public:
   void Destroy();
 
-  LayerManagerComposite* layer_manager() const { return mLayerManager; }
+  HostLayerManager* layer_manager() const { return mLayerManager; }
 
   uint64_t GetId() const { return mId; }
   Layer* GetRoot() const { return mRoot; }
@@ -189,7 +189,7 @@ protected:
   friend class layout::RenderFrameParent;
 
 private:
-  RefPtr<LayerManagerComposite> mLayerManager;
+  RefPtr<HostLayerManager> mLayerManager;
   CompositorBridgeParentBase* mCompositorBridge;
   // Hold the root because it might be grafted under various
   // containers in the "real" layer tree

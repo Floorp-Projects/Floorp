@@ -1,1 +1,1 @@
-var importedArgs = ['memory_redundancy.wast']; load(scriptdir + '../spec.js');
+var importedArgs = ['memory_redundancy.wast']; load(scriptdir + '../wast.js');

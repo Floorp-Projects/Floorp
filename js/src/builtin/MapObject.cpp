@@ -64,13 +64,21 @@ HashableValue::setValue(JSContext* cx, HandleValue v)
     return true;
 }
 
-HashNumber
-HashableValue::hash() const
+static HashNumber
+HashValue(const Value& v)
 {
     // HashableValue::setValue normalizes values so that the SameValue relation
     // on HashableValues is the same as the == relationship on
     // value.data.asBits.
-    return value.asRawBits();
+    if (v.isString())
+        return v.toString()->asAtom().hash();
+    return v.asRawBits();
+}
+
+HashNumber
+HashableValue::hash() const
+{
+    return HashValue(value);
 }
 
 bool
@@ -91,7 +99,7 @@ HashableValue::operator==(const HashableValue& other) const
 }
 
 HashableValue
-HashableValue::mark(JSTracer* trc) const
+HashableValue::trace(JSTracer* trc) const
 {
     HashableValue hv(*this);
     TraceEdge(trc, &hv.value, "key");
@@ -275,7 +283,7 @@ const ClassOps MapObject::classOps_ = {
     nullptr, // call
     nullptr, // hasInstance
     nullptr, // construct
-    mark
+    trace
 };
 
 const ClassSpec MapObject::classSpec_ = {
@@ -333,9 +341,9 @@ const JSPropertySpec MapObject::staticProperties[] = {
 
 template <class Range>
 static void
-MarkKey(Range& r, const HashableValue& key, JSTracer* trc)
+TraceKey(Range& r, const HashableValue& key, JSTracer* trc)
 {
-    HashableValue newKey = key.mark(trc);
+    HashableValue newKey = key.trace(trc);
 
     if (newKey.get() != key.get()) {
         // The hash function only uses the bits of the Value, so it is safe to
@@ -345,11 +353,11 @@ MarkKey(Range& r, const HashableValue& key, JSTracer* trc)
 }
 
 void
-MapObject::mark(JSTracer* trc, JSObject* obj)
+MapObject::trace(JSTracer* trc, JSObject* obj)
 {
     if (ValueMap* map = obj->as<MapObject>().getData()) {
         for (ValueMap::Range r = map->all(); !r.empty(); r.popFront()) {
-            MarkKey(r, r.front().key, trc);
+            TraceKey(r, r.front().key, trc);
             TraceEdge(trc, &r.front().value, "value");
         }
     }
@@ -357,7 +365,7 @@ MapObject::mark(JSTracer* trc, JSObject* obj)
 
 struct js::UnbarrieredHashPolicy {
     typedef Value Lookup;
-    static HashNumber hash(const Lookup& v) { return v.asRawBits(); }
+    static HashNumber hash(const Lookup& v) { return HashValue(v); }
     static bool match(const Value& k, const Lookup& l) { return k == l; }
     static bool isEmpty(const Value& v) { return v.isMagic(JS_HASH_KEY_EMPTY); }
     static void makeEmpty(Value* vp) { vp->setMagic(JS_HASH_KEY_EMPTY); }
@@ -723,7 +731,7 @@ MapObject::delete_(JSContext *cx, HandleObject obj, HandleValue key, bool *rval)
 bool
 MapObject::delete_impl(JSContext *cx, const CallArgs& args)
 {
-    // MapObject::mark does not mark deleted entries. Incremental GC therefore
+    // MapObject::trace does not trace deleted entries. Incremental GC therefore
     // requires that no HeapPtr<Value> objects pointing to heap values be left
     // alive in the ValueMap.
     //
@@ -993,7 +1001,7 @@ const ClassOps SetObject::classOps_ = {
     nullptr, // call
     nullptr, // hasInstance
     nullptr, // construct
-    mark
+    trace
 };
 
 const ClassSpec SetObject::classSpec_ = {
@@ -1102,12 +1110,12 @@ SetObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
 }
 
 void
-SetObject::mark(JSTracer* trc, JSObject* obj)
+SetObject::trace(JSTracer* trc, JSObject* obj)
 {
     SetObject* setobj = static_cast<SetObject*>(obj);
     if (ValueSet* set = setobj->getData()) {
         for (ValueSet::Range r = set->all(); !r.empty(); r.popFront())
-            MarkKey(r, r.front(), trc);
+            TraceKey(r, r.front(), trc);
     }
 }
 

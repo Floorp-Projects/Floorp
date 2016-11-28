@@ -17,6 +17,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.support.v4.widget.TextViewCompat;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -131,7 +132,7 @@ public class BasicColorPicker extends ListView {
                 check = getCheckDrawable();
             }
 
-            checked.setCompoundDrawables(check, null, null, null);
+            TextViewCompat.setCompoundDrawablesRelative(checked, check, null, null, null);
             checked.setText("");
 
             return v;

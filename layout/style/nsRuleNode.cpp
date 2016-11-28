@@ -563,8 +563,8 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
           if (rootFrame) {
             rootStyle = rootFrame->StyleContext();
           } else {
-            rootStyle = aPresContext->StyleSet()->ResolveStyleFor(docElement,
-                                                                  nullptr);
+            rootStyle = aPresContext->StyleSet()->AsGecko()->ResolveStyleFor(docElement,
+                                                                             nullptr);
           }
           rootStyleFont = rootStyle->StyleFont();
         }

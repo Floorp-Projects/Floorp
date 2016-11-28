@@ -11,12 +11,12 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_startover() {
+add_task(async function test_startover() {
   let oldValue = Services.prefs.getBoolPref("services.sync-testing.startOverKeepIdentity", true);
   Services.prefs.setBoolPref("services.sync-testing.startOverKeepIdentity", false);
 
   ensureLegacyIdentityManager();
-  yield configureIdentity({username: "johndoe"});
+  await configureIdentity({username: "johndoe"});
 
   // The boolean flag on the xpcom service should reflect a legacy provider.
   let xps = Cc["@mozilla.org/weave/service;1"]
@@ -38,14 +38,15 @@ add_task(function* test_startover() {
   // remember some stuff so we can reset it after.
   let oldIdentity = Service.identity;
   let oldClusterManager = Service._clusterManager;
-  let deferred = Promise.defer();
-  Services.obs.addObserver(function observeStartOverFinished() {
-    Services.obs.removeObserver(observeStartOverFinished, "weave:service:start-over:finish");
-    deferred.resolve();
-  }, "weave:service:start-over:finish", false);
+  let promiseStartOver = new Promise(resolve => {
+    Services.obs.addObserver(function observeStartOverFinished() {
+      Services.obs.removeObserver(observeStartOverFinished, "weave:service:start-over:finish");
+      resolve();
+    }, "weave:service:start-over:finish", false);
+  });
 
   Service.startOver();
-  yield deferred.promise; // wait for the observer to fire.
+  await promiseStartOver; // wait for the observer to fire.
 
   // the xpcom service should indicate FxA is enabled.
   do_check_true(xps.fxAccountsEnabled);

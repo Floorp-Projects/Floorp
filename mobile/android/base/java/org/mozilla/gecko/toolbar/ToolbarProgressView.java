@@ -30,6 +30,8 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.animation.Animation;
@@ -50,7 +52,7 @@ public class ToolbarProgressView extends ThemedImageView {
 
     private int mTargetProgress;
     private int mIncrement;
-    private Rect mBounds;
+    private ProgressBounds mBounds;
     private Handler mHandler;
     private int mCurrentProgress;
 
@@ -67,7 +69,8 @@ public class ToolbarProgressView extends ThemedImageView {
     }
 
     private void init(Context ctx) {
-        mBounds = new Rect(0, 0, 0, 0);
+        mBounds = new ProgressBounds();
+
         mTargetProgress = 0;
 
         mPrivateBrowsingColorFilter = new PorterDuffColorFilter(
@@ -78,23 +81,22 @@ public class ToolbarProgressView extends ThemedImageView {
 
     @Override
     public void onLayout(boolean f, int l, int t, int r, int b) {
-        mBounds.left = 0;
-        mBounds.right = (r - l) * mCurrentProgress / MAX_PROGRESS;
-        mBounds.top = 0;
-        mBounds.bottom = b - t;
+        mBounds.setLayoutRtl(ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL);
+        mBounds.onLayout(f, l, t, r, b);
     }
 
     @Override
     public void onDraw(Canvas canvas) {
         final Drawable d = getDrawable();
-        d.setBounds(mBounds);
+        DrawableCompat.setAutoMirrored(d, true);
+        d.setBounds(mBounds.getBounds());
         d.draw(canvas);
     }
 
     /**
      * Immediately sets the progress bar to the given progress percentage.
      *
-     * @param progress Percentage (0-100) to which progress bar should be set
+     * @param progressPercentage Percentage (0-100) to which progress bar should be set
      */
     void setProgress(int progressPercentage) {
         mCurrentProgress = mTargetProgress = getAbsoluteProgress(progressPercentage);
@@ -107,7 +109,7 @@ public class ToolbarProgressView extends ThemedImageView {
      * Animates the progress bar from the current progress value to the given
      * progress percentage.
      *
-     * @param progress Percentage (0-100) to which progress bar should be animated
+     * @param progressPercentage Percentage (0-100) to which progress bar should be animated
      */
     void animateProgress(int progressPercentage) {
         final int absoluteProgress = getAbsoluteProgress(progressPercentage);
@@ -144,7 +146,7 @@ public class ToolbarProgressView extends ThemedImageView {
     }
 
     private void updateBounds() {
-        mBounds.right = getWidth() * mCurrentProgress / MAX_PROGRESS;
+        mBounds.updateBounds();
         invalidate();
     }
 
@@ -192,4 +194,45 @@ public class ToolbarProgressView extends ThemedImageView {
             }
         }
     };
+
+    private final class ProgressBounds {
+
+        final Rect bounds;
+        boolean isLayoutRtl = false;
+
+        ProgressBounds() {
+            bounds = new Rect();
+        }
+
+        public Rect getBounds() {
+            return bounds;
+        }
+
+        void setLayoutRtl(boolean isLayoutRtl) {
+            this.isLayoutRtl = isLayoutRtl;
+        }
+
+        void updateBounds() {
+            int progressWidth = getWidth() * mCurrentProgress / MAX_PROGRESS;
+            if (isLayoutRtl) {
+                bounds.left = getWidth() - progressWidth;
+            } else {
+                bounds.right = progressWidth;
+            }
+        }
+
+        void onLayout(boolean f, int l, int t, int r, int b) {
+            bounds.top = 0;
+            bounds.bottom = b - t;
+            int progressWidth = (r - l) * mCurrentProgress / MAX_PROGRESS;
+            ;
+            if (isLayoutRtl) {
+                bounds.left = r - progressWidth;
+                bounds.right = r;
+            } else {
+                bounds.left = 0;
+                bounds.right = progressWidth;
+            }
+        }
+    }
 }

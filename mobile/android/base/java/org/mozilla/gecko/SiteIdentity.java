@@ -16,6 +16,7 @@ public class SiteIdentity {
     private MixedMode mMixedModeActive;
     private MixedMode mMixedModeDisplay;
     private TrackingMode mTrackingMode;
+    private boolean mSecurityException;
     private String mHost;
     private String mOwner;
     private String mSupplemental;
@@ -129,6 +130,7 @@ public class SiteIdentity {
 
     public void resetIdentity() {
         mSecurityMode = SecurityMode.UNKNOWN;
+        mSecurityException = false;
         mOrigin = null;
         mHost = null;
         mOwner = null;
@@ -143,6 +145,7 @@ public class SiteIdentity {
         mMixedModeActive = MixedMode.UNKNOWN;
         mMixedModeDisplay = MixedMode.UNKNOWN;
         mTrackingMode = TrackingMode.UNKNOWN;
+        mSecurityException = false;
     }
 
     void update(JSONObject identityData) {
@@ -187,6 +190,8 @@ public class SiteIdentity {
                 mCountry = identityData.optString("country", null);
                 mVerifier = identityData.optString("verifier", null);
                 mSecure = identityData.optBoolean("secure", false);
+                mSecurityException = identityData.optBoolean("securityException", false);
+
             } catch (Exception e) {
                 resetIdentity();
             }
@@ -241,6 +246,10 @@ public class SiteIdentity {
 
     public MixedMode getMixedModeDisplay() {
         return mMixedModeDisplay;
+    }
+
+    public boolean isSecurityException() {
+        return mSecurityException;
     }
 
     public TrackingMode getTrackingMode() {

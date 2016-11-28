@@ -1931,6 +1931,9 @@ public abstract class GeckoApp
         // Remember interaction
         final UrlAnnotations urlAnnotations = BrowserDB.from(getApplicationContext()).getUrlAnnotations();
         urlAnnotations.insertHomeScreenShortcut(getContentResolver(), aURI, true);
+
+        // After shortcut is created, show the mobile desktop.
+        ActivityUtils.goToHomeScreen(this);
     }
 
     private Bitmap getLauncherIcon(Bitmap aSource, int size) {

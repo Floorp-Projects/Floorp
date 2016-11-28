@@ -75,6 +75,9 @@ DefaultJitOptions::DefaultJitOptions()
     // RangeAnalysis results.
     SET_DEFAULT(checkRangeAnalysis, false);
 
+    // Toggles whether IonBuilder fallbacks to a call if we fail to inline.
+    SET_DEFAULT(disableInlineBacktracking, true);
+
     // Toggles whether Alignment Mask Analysis is globally disabled.
     SET_DEFAULT(disableAma, false);
 

@@ -10,6 +10,7 @@
                android:layout_height="44dp"
                android:layout_marginTop="10dip"
                android:layout_marginLeft="10dip"
+               android:layout_marginStart="10dip"
                android:scaleType="centerCrop"/>
 
     <TextView android:id="@+id/title"

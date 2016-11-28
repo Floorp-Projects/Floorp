@@ -8,18 +8,18 @@
 "unpack": true
 },
 {
-"size": 3008804, 
-"visibility": "public", 
-"digest": "ba6937f14f3d8b26dcb2d39490dee6b0a8afb60f672f5debb71d7b62c1ec52103201b4b1a3d258f945567de531384b36ddb2ce4aa73dc63d72305b11c146847c", 
-"algorithm": "sha512", 
+"size": 3008804,
+"visibility": "public",
+"digest": "ba6937f14f3d8b26dcb2d39490dee6b0a8afb60f672f5debb71d7b62c1ec52103201b4b1a3d258f945567de531384b36ddb2ce4aa73dc63d72305b11c146847c",
+"algorithm": "sha512",
 "unpack": true,
 "filename": "cctools.tar.gz"
 },
 {
-"size": 35215976, 
-"visibility": "internal", 
-"digest": "8be736545ddab25ebded188458ce974d5c9a7e29f3c50d2ebfbcb878f6aff853dd2ff5a3528bdefc64396a10101a1b50fd2fe52000140df33643cebe1ea759da", 
-"algorithm": "sha512", 
+"size": 35215976,
+"visibility": "internal",
+"digest": "8be736545ddab25ebded188458ce974d5c9a7e29f3c50d2ebfbcb878f6aff853dd2ff5a3528bdefc64396a10101a1b50fd2fe52000140df33643cebe1ea759da",
+"algorithm": "sha512",
 "unpack": true,
 "filename": "MacOSX10.7.sdk.tar.bz2"
 },
@@ -33,25 +33,25 @@
 "size": 1020700
 },
 {
-"size": 57060, 
-"visibility": "public", 
-"digest": "9649ca595f4cf088d118da26201f92cc94cda7af49c7c48112ee31cd13c83b2935b3e145de9dd78060cff2480b4c2e7ff5fb24235876956fed13c87852071998", 
-"algorithm": "sha512", 
+"size": 57060,
+"visibility": "public",
+"digest": "9649ca595f4cf088d118da26201f92cc94cda7af49c7c48112ee31cd13c83b2935b3e145de9dd78060cff2480b4c2e7ff5fb24235876956fed13c87852071998",
+"algorithm": "sha512",
 "unpack": true,
 "filename": "dmg.tar.xz"
 },
 {
-"size": 188880, 
-"visibility": "public", 
-"digest": "1ffddd43efb03aed897ee42035d9d8d758a8d66ab6c867599ef755e1a586768fc22011ce03698af61454920b00fe8bed08c9a681e7bd324d7f8f78c026c83943", 
-"algorithm": "sha512", 
+"size": 188880,
+"visibility": "public",
+"digest": "1ffddd43efb03aed897ee42035d9d8d758a8d66ab6c867599ef755e1a586768fc22011ce03698af61454920b00fe8bed08c9a681e7bd324d7f8f78c026c83943",
+"algorithm": "sha512",
 "unpack": true,
 "filename": "genisoimage.tar.xz"
 },
 {
-"version": "rustc 1.13.0 (2c6933acc 2016-11-07) repack",
-"size": 119642844,
-"digest": "b219c07d78819b9ea930024205ac905f89b958948fbfb3146864724bf4994401911fdb1636d6f32e46de1f587f4ee9ae7975a886bfacc5f0bde8ea5955b4e42a",
+"version": "rustc 1.14.0-beta.2 (e627a2e6e 2016-11-16) repack",
+"size": 152410204,
+"digest": "951653b08e68f89c1f9ebc236f1f91dee18d30bdc53e374bd55beacd5a67cc545e95bd1655d3c8d9a473513aaaec2281952f16585e8ed34a734ee6517ac17e49",
 "algorithm": "sha512",
 "filename": "rustc.tar.xz",
 "unpack": true

@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
+/* eslint no-unused-vars: [2, {"vars": "local"}] */
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
@@ -18,6 +22,11 @@ const PATH = "browser/devtools/server/tests/browser/";
 const MAIN_DOMAIN = "http://test1.example.org/" + PATH;
 const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
 const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
+
+// GUID to be used as a separator in compound keys. This must match the same
+// constant in devtools/server/actors/storage.js,
+// devtools/client/storage/ui.js and devtools/client/storage/test/head.js
+const SEPARATOR_GUID = "{9d414cc5-8319-0a04-0586-c0a6ae01670a}";
 
 // All tests are asynchronous.
 waitForExplicitFinish();
@@ -94,7 +103,6 @@ function once(target, eventName, useCapture = false) {
   info("Waiting for event: '" + eventName + "' on " + target + ".");
 
   return new Promise(resolve => {
-
     for (let [add, remove] of [
       ["addEventListener", "removeEventListener"],
       ["addListener", "removeListener"],
@@ -137,6 +145,8 @@ function getMockTabActor(win) {
 }
 
 registerCleanupFunction(function tearDown() {
+  Services.cookies.removeAll();
+
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }
@@ -148,8 +158,11 @@ function idleWait(time) {
 
 function busyWait(time) {
   let start = Date.now();
+  // eslint-disable-next-line
   let stack;
-  while (Date.now() - start < time) { stack = Components.stack; }
+  while (Date.now() - start < time) {
+    stack = Components.stack;
+  }
 }
 
 /**
@@ -172,11 +185,12 @@ function waitUntil(predicate, interval = 10) {
 }
 
 function waitForMarkerType(front, types, predicate,
-  unpackFun = (name, data) => data.markers,
-  eventName = "timeline-data")
-{
+                           unpackFun = (name, data) => data.markers,
+                           eventName = "timeline-data") {
   types = [].concat(types);
-  predicate = predicate || function () { return true; };
+  predicate = predicate || function () {
+    return true;
+  };
   let filteredMarkers = [];
   let { promise, resolve } = defer();
 
@@ -190,9 +204,11 @@ function waitForMarkerType(front, types, predicate,
     let markers = unpackFun(name, data);
     info("Got markers: " + JSON.stringify(markers, null, 2));
 
-    filteredMarkers = filteredMarkers.concat(markers.filter(m => types.indexOf(m.name) !== -1));
+    filteredMarkers = filteredMarkers.concat(
+      markers.filter(m => types.indexOf(m.name) !== -1));
 
-    if (types.every(t => filteredMarkers.some(m => m.name === t)) && predicate(filteredMarkers)) {
+    if (types.every(t => filteredMarkers.some(m => m.name === t)) &&
+        predicate(filteredMarkers)) {
       front.off(eventName, handler);
       resolve(filteredMarkers);
     }
@@ -200,4 +216,8 @@ function waitForMarkerType(front, types, predicate,
   front.on(eventName, handler);
 
   return promise;
+}
+
+function getCookieId(name, domain, path) {
+  return `${name}${SEPARATOR_GUID}${domain}${SEPARATOR_GUID}${path}`;
 }

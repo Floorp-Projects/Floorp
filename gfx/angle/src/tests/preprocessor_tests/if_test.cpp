@@ -952,3 +952,97 @@ TEST_F(IfTest, UnterminatedDefinedInMacro2)
     pp::Token token;
     mPreprocessor.lex(&token);
 }
+
+// Undefined shift: negative shift offset.
+TEST_F(IfTest, BitShiftLeftOperatorNegativeOffset)
+{
+    const char *str =
+        "#if 2 << -1 == 1\n"
+        "foo\n"
+        "#endif\n";
+    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
+
+    EXPECT_CALL(mDiagnostics,
+                print(pp::Diagnostics::PP_UNDEFINED_SHIFT, pp::SourceLocation(0, 1), "2 << -1"));
+
+    pp::Token token;
+    mPreprocessor.lex(&token);
+}
+
+// Undefined shift: shift offset is out of range.
+TEST_F(IfTest, BitShiftLeftOperatorOffset32)
+{
+    const char *str =
+        "#if 2 << 32 == 1\n"
+        "foo\n"
+        "#endif\n";
+    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
+
+    EXPECT_CALL(mDiagnostics,
+                print(pp::Diagnostics::PP_UNDEFINED_SHIFT, pp::SourceLocation(0, 1), "2 << 32"));
+
+    pp::Token token;
+    mPreprocessor.lex(&token);
+}
+
+// Left hand side of shift is negative.
+TEST_F(IfTest, BitShiftLeftOperatorNegativeLHS)
+{
+    const char *str =
+        "#if (-2) << 1 == -4\n"
+        "pass\n"
+        "#endif\n";
+    const char *expected =
+        "\n"
+        "pass\n"
+        "\n";
+
+    preprocess(str, expected);
+}
+
+// Undefined shift: shift offset is out of range.
+TEST_F(IfTest, BitShiftRightOperatorNegativeOffset)
+{
+    const char *str =
+        "#if 2 >> -1 == 4\n"
+        "foo\n"
+        "#endif\n";
+    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
+
+    EXPECT_CALL(mDiagnostics,
+                print(pp::Diagnostics::PP_UNDEFINED_SHIFT, pp::SourceLocation(0, 1), "2 >> -1"));
+
+    pp::Token token;
+    mPreprocessor.lex(&token);
+}
+
+// Undefined shift: shift offset is out of range.
+TEST_F(IfTest, BitShiftRightOperatorOffset32)
+{
+    const char *str =
+        "#if 2 >> 32 == 0\n"
+        "foo\n"
+        "#endif\n";
+    ASSERT_TRUE(mPreprocessor.init(1, &str, 0));
+
+    EXPECT_CALL(mDiagnostics,
+                print(pp::Diagnostics::PP_UNDEFINED_SHIFT, pp::SourceLocation(0, 1), "2 >> 32"));
+
+    pp::Token token;
+    mPreprocessor.lex(&token);
+}
+
+// Left hand side of shift is negative.
+TEST_F(IfTest, BitShiftRightOperatorNegativeLHS)
+{
+    const char *str =
+        "#if (-2) >> 1 == 0x7fffffff\n"
+        "pass\n"
+        "#endif\n";
+    const char *expected =
+        "\n"
+        "pass\n"
+        "\n";
+
+    preprocess(str, expected);
+}

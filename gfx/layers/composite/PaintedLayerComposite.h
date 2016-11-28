@@ -49,7 +49,7 @@ public:
 
   virtual Layer* GetLayer() override;
 
-  virtual void SetLayerManager(LayerManagerComposite* aManager) override;
+  virtual void SetLayerManager(HostLayerManager* aManager) override;
 
   virtual void RenderLayer(const gfx::IntRect& aClipRect) override;
 
@@ -59,18 +59,11 @@ public:
 
   virtual bool SetCompositableHost(CompositableHost* aHost) override;
 
-  virtual LayerComposite* AsLayerComposite() override { return this; }
+  virtual HostLayer* AsHostLayer() override { return this; }
 
   virtual void InvalidateRegion(const nsIntRegion& aRegion) override
   {
     NS_RUNTIMEABORT("PaintedLayerComposites can't fill invalidated regions");
-  }
-
-  void SetValidRegion(const nsIntRegion& aRegion)
-  {
-    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ValidRegion", this));
-    mValidRegion = aRegion;
-    Mutated();
   }
 
   const virtual gfx::TiledIntRegion& GetInvalidRegion() override;

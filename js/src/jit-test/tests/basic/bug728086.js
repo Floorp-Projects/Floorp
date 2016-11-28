@@ -13,8 +13,9 @@ function reportCompare (expected, actual, description) {
   var testcase = new TestCase("unknown-test-name", description, expected, actual);
       reportFailure (description + " : " + output);
 }
-function enterFunc (funcName)
-  callStack.push(funcName);
+function enterFunc (funcName) {
+  return callStack.push(funcName);
+}
   try  {
     reportCompare(expectCompile, actualCompile,
                   summary + ': compile actual');

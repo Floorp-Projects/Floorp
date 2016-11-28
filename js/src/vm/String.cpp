@@ -73,8 +73,12 @@ JSString::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 JS::ubi::Node::Size
 JS::ubi::Concrete<JSString>::size(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    JSString &str = get();
-    size_t size = str.isFatInline() ? sizeof(JSFatInlineString) : sizeof(JSString);
+    JSString& str = get();
+    size_t size;
+    if (str.isAtom())
+        size = str.isFatInline() ? sizeof(js::FatInlineAtom) : sizeof(js::NormalAtom);
+    else
+        size = str.isFatInline() ? sizeof(JSFatInlineString) : sizeof(JSString);
 
     // We can't use mallocSizeof on things in the nursery. At the moment,
     // strings are never in the nursery, but that may change.
@@ -819,7 +823,8 @@ StaticStrings::init(JSContext* cx)
         JSFlatString* s = NewInlineString<NoGC>(cx, Latin1Range(buffer, 1));
         if (!s)
             return false;
-        unitStaticTable[i] = s->morphAtomizedStringIntoPermanentAtom();
+        HashNumber hash = mozilla::HashString(buffer, 1);
+        unitStaticTable[i] = s->morphAtomizedStringIntoPermanentAtom(hash);
     }
 
     for (uint32_t i = 0; i < NUM_SMALL_CHARS * NUM_SMALL_CHARS; i++) {
@@ -827,7 +832,8 @@ StaticStrings::init(JSContext* cx)
         JSFlatString* s = NewInlineString<NoGC>(cx, Latin1Range(buffer, 2));
         if (!s)
             return false;
-        length2StaticTable[i] = s->morphAtomizedStringIntoPermanentAtom();
+        HashNumber hash = mozilla::HashString(buffer, 2);
+        length2StaticTable[i] = s->morphAtomizedStringIntoPermanentAtom(hash);
     }
 
     for (uint32_t i = 0; i < INT_STATIC_LIMIT; i++) {
@@ -845,7 +851,8 @@ StaticStrings::init(JSContext* cx)
             JSFlatString* s = NewInlineString<NoGC>(cx, Latin1Range(buffer, 3));
             if (!s)
                 return false;
-            intStaticTable[i] = s->morphAtomizedStringIntoPermanentAtom();
+            HashNumber hash = mozilla::HashString(buffer, 3);
+            intStaticTable[i] = s->morphAtomizedStringIntoPermanentAtom(hash);
         }
     }
 
@@ -1318,7 +1325,6 @@ NewStringCopyN<CanGC>(ExclusiveContext* cx, const Latin1Char* s, size_t n);
 
 template JSFlatString*
 NewStringCopyN<NoGC>(ExclusiveContext* cx, const Latin1Char* s, size_t n);
-
 
 template <js::AllowGC allowGC>
 JSFlatString*

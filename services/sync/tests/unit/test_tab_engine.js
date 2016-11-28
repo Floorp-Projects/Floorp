@@ -49,7 +49,7 @@ add_test(function test_getOpenURLs() {
   run_next_test();
 });
 
-add_test(function test_tab_engine_skips_incoming_local_record() {
+add_task(async function test_tab_engine_skips_incoming_local_record() {
   _("Ensure incoming records that match local client ID are never applied.");
   let [engine, store] = getMocks();
   let localID = engine.service.clientsEngine.localID;
@@ -78,7 +78,7 @@ add_test(function test_tab_engine_skips_incoming_local_record() {
       "/1.1/foo/storage/tabs": collection.handler()
   });
 
-  let syncTesting = new SyncTestingInfrastructure(server);
+  let syncTesting = await SyncTestingInfrastructure(server);
   Service.identity.username = "foo";
 
   let meta_global = Service.recordManager.set(engine.metaURL,
@@ -88,17 +88,20 @@ add_test(function test_tab_engine_skips_incoming_local_record() {
 
   generateNewKeys(Service.collectionKeys);
 
-  let syncFinish = engine._syncFinish;
-  engine._syncFinish = function () {
-    equal(applied.length, 1, "Remote client record was applied");
-    equal(applied[0].id, remoteID, "Remote client ID matches");
+  let promiseFinished = new Promise(resolve => {
+    let syncFinish = engine._syncFinish;
+    engine._syncFinish = function () {
+      equal(applied.length, 1, "Remote client record was applied");
+      equal(applied[0].id, remoteID, "Remote client ID matches");
 
-    syncFinish.call(engine);
-    run_next_test();
-  }
+      syncFinish.call(engine);
+      resolve();
+    }
+  });
 
   _("Start sync");
   engine._sync();
+  await promiseFinished;
 });
 
 add_test(function test_reconcile() {

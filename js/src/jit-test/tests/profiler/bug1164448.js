@@ -2,8 +2,9 @@
 
 print = function(s) { return s.toString(); }
 var gTestcases = new Array();
-function TestCase(n, d, e, a)
-  gTestcases[gTc++] = this;
+function TestCase(n, d, e, a) {
+  return gTestcases[gTc++] = this;
+}
     dump = print;
   for ( gTc=0; gTc < gTestcases.length; gTc++ ) {}
 function jsTestDriverEnd() {

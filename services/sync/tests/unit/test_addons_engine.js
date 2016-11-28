@@ -143,7 +143,7 @@ add_test(function test_get_changed_ids() {
   advance_test();
 });
 
-add_test(function test_disabled_install_semantics() {
+add_task(async function test_disabled_install_semantics() {
   _("Ensure that syncing a disabled add-on preserves proper state.");
 
   // This is essentially a test for bug 712542, which snuck into the original
@@ -151,12 +151,11 @@ add_test(function test_disabled_install_semantics() {
   // disabled state and incoming syncGUID is preserved, even on the next sync.
   const USER       = "foo";
   const PASSWORD   = "password";
-  const PASSPHRASE = "abcdeabcdeabcdeabcdeabcdea";
   const ADDON_ID   = "addon1@tests.mozilla.org";
 
   let server = new SyncServer();
   server.start();
-  new SyncTestingInfrastructure(server.server, USER, PASSWORD, PASSPHRASE);
+  await SyncTestingInfrastructure(server, USER, PASSWORD);
 
   generateNewKeys(Service.collectionKeys);
 
@@ -199,9 +198,7 @@ add_test(function test_disabled_install_semantics() {
   // At this point the non-restartless extension should be staged for install.
 
   // Don't need this server any more.
-  let cb = Async.makeSpinningCallback();
-  amoServer.stop(cb);
-  cb.wait();
+  await promiseStopServer(amoServer);
 
   // We ensure the reconciler has recorded the proper ID and enabled state.
   let addon = reconciler.getAddonStateFromSyncGUID(id);
@@ -224,7 +221,7 @@ add_test(function test_disabled_install_semantics() {
   do_check_eq(ADDON_ID, payload.addonID);
   do_check_false(payload.enabled);
 
-  server.stop(advance_test);
+  promiseStopServer(server);
 });
 
 add_test(function cleanup() {

@@ -18,6 +18,6 @@ function g(arg) {
     return r;
 }
 
-assertEq(g((function () arguments).call(null, 1, 2, 3)), 3);
+assertEq(g((function () { return arguments; }).call(null, 1, 2, 3)), 3);
 assertEq(g(new Float32Array(3)), 0.0);
 assertEq(g([1, 2, 3, 4]), 4);

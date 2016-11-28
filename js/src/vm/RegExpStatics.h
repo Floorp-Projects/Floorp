@@ -87,7 +87,7 @@ class RegExpStatics
 
     JSString* getPendingInput() const { return pendingInput; }
 
-    void mark(JSTracer* trc) {
+    void trace(JSTracer* trc) {
         /*
          * Changes to this function must also be reflected in
          * RegExpStatics::AutoRooter::trace().

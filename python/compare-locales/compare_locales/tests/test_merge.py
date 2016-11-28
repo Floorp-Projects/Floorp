@@ -13,7 +13,6 @@ from compare_locales.compare import ContentComparer
 
 
 class ContentMixin(object):
-    maxDiff = None  # we got big dictionaries to compare
     extension = None  # OVERLOAD
 
     def reference(self, content):
@@ -29,6 +28,7 @@ class TestProperties(unittest.TestCase, ContentMixin):
     extension = '.properties'
 
     def setUp(self):
+        self.maxDiff = None
         self.tmp = mkdtemp()
         os.mkdir(os.path.join(self.tmp, "merge"))
 
@@ -98,7 +98,8 @@ eff = effVal""")
         self.reference("""foo = fooVal
 bar = %d barVal
 eff = effVal""")
-        self.localized("""bar = %S lBar
+        self.localized("""\
+bar = %S lBar
 eff = leffVal
 """)
         cc = ContentComparer()
@@ -116,7 +117,7 @@ eff = leffVal
                      ('l10n.properties',
                          {'value': {
                           'error': [u'argument 1 `S` should be `d` '
-                                    u'at line 1, column 6 for bar'],
+                                    u'at line 1, column 7 for bar'],
                           'missingEntity': [u'foo']}}
                       )
                  ]}
@@ -160,6 +161,7 @@ class TestDTD(unittest.TestCase, ContentMixin):
     extension = '.dtd'
 
     def setUp(self):
+        self.maxDiff = None
         self.tmp = mkdtemp()
         os.mkdir(os.path.join(self.tmp, "merge"))
 
@@ -248,7 +250,9 @@ class TestDTD(unittest.TestCase, ContentMixin):
                      ('l10n.dtd',
                          {'value': {
                              'error': [u'Unparsed content "<!ENTY bar '
-                                       u'\'gimmick\'>" at 23-44'],
+                                       u'\'gimmick\'>" '
+                                       u'from line 2 colum 1 to '
+                                       u'line 2 column 22'],
                              'missingEntity': [u'bar']}}
                       )
                  ]}

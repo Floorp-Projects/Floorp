@@ -31,7 +31,7 @@
                   android:inputType="textUri|textNoSuggestions"
                   android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
                   android:singleLine="true"
-                  android:gravity="center_vertical|left"/>
+                  android:gravity="center_vertical|left|start"/>
 
     </LinearLayout>
 

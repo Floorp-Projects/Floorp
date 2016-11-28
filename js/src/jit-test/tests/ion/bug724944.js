@@ -1,5 +1,6 @@
-function TestCase(n, d, e, a)
-function writeHeaderToLog( string ) {}
+function TestCase(n, d, e, a) {
+  return function writeHeaderToLog( string ) {};
+}
 var SECTION = "15.1.2.5-2";
 for ( var CHARCODE = 0; CHARCODE < 256; CHARCODE += 16 ) {
   new TestCase( SECTION, unescape( "%" + (ToHexString(CHARCODE)).substring(0,1) )  );

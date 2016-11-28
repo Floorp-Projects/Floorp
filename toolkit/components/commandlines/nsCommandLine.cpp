@@ -55,7 +55,7 @@ public:
   nsCommandLine();
 
 protected:
-  ~nsCommandLine() { }
+  ~nsCommandLine() = default;
 
   typedef nsresult (*EnumerateHandlersCallback)(nsICommandLineHandler* aHandler,
 					nsICommandLine* aThis,

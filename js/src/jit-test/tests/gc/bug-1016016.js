@@ -1,7 +1,8 @@
 // |jit-test| error:ReferenceError
 toPrinted(this.reason);
-function toPrinted(value)
-  value = String(value);
+function toPrinted(value) {
+  return value = String(value);
+}
 var lfcode = new Array();
 lfcode.push = loadFile;
 lfcode.push("enableTrackAllocations();");

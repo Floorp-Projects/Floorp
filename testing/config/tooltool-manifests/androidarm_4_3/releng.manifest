@@ -1,7 +1,9 @@
-[{
+[
+{
 "size": 130236026,
 "digest": "2f98a293895134c02c137c052bec5d9e5e2aab5051b218278b9c6f849aaf82a0a91e2302ec6d7c98e6cc27133c58436b4b2431c35c8eb7c4db03584fc7c18bd2",
 "algorithm": "sha512",
 "filename": "AVDs-armv7a-android-4.3.1_r1-build-2016-08-02.tar.gz",
 "unpack": true
-}]
+}
+]

@@ -8,8 +8,8 @@
           android:layout_height="match_parent"
           android:minWidth="@dimen/tabs_strip_button_width"
           android:background="@drawable/tabs_strip_indicator"
-          android:paddingLeft="@dimen/tabs_strip_button_padding"
-          android:paddingRight="@dimen/tabs_strip_button_padding"
+          android:paddingStart="@dimen/tabs_strip_button_padding"
+          android:paddingEnd="@dimen/tabs_strip_button_padding"
           android:gravity="center"
           android:focusable="true"
           style="@style/TextAppearance.Widget.HomePagerTabMenuStrip"/>

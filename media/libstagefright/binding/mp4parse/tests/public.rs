@@ -78,8 +78,8 @@ fn public_api() {
                     mp4::AudioCodecSpecific::FLACSpecificBox(flac) => {
                         // STREAMINFO block must be present and first.
                         assert!(flac.blocks.len() > 0);
-                        assert!(flac.blocks[0].block_type == 0);
-                        assert!(flac.blocks[0].data.len() == 34);
+                        assert_eq!(flac.blocks[0].block_type, 0);
+                        assert_eq!(flac.blocks[0].data.len(), 34);
                         "FLAC"
                     }
                     mp4::AudioCodecSpecific::OpusSpecificBox(opus) => {

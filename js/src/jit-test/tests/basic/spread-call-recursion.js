@@ -9,9 +9,9 @@ function check(f) {
   }
 }
 
-let f = function() f(...a) + 1;
+let f = function() { return f(...a) + 1; };
 let g = () => g(...a) + 1;
-let h = function() new h(...a) + 1;
+let h = function() { return new h(...a) + 1; };
 
 check(f);
 check(g);

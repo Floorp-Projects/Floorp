@@ -2,6 +2,6 @@
 // Flags:
 //
 x = Set;
-eval("function y()(Iterator)", this);
+eval("function y() { return Iterator; }", this);
 x.__iterator__ = y;
 new Iterator(x)

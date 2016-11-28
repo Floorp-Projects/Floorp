@@ -22,7 +22,7 @@ function test()
 
 
   for (let f in [1,1]);
-  Object.prototype.__defineGetter__('x', function() gc());
+  Object.prototype.__defineGetter__('x', function() { return gc(); });
   (function() { for each (let j in [1,1,1,1,1]) { var y = .2; } })();
 
 

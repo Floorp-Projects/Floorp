@@ -123,11 +123,11 @@ ALLOWED_XPCOM_GLUE = {
     ('testcrasher', 'toolkit/crashreporter/test'),
     ('mediaconduit_unittests', 'media/webrtc/signaling/test'),
     ('mediapipeline_unittest', 'media/webrtc/signaling/test'),
-    ('sdp_file_parser', 'media/webrtc/signaling/fuzztest'),
     ('signaling_unittests', 'media/webrtc/signaling/test'),
     ('TestMailCookie', 'mailnews/base/test'),
     ('calbasecomps', 'calendar/base/backend/libical/build'),
     ('purplexpcom', 'extensions/purple/purplexpcom/src'),
+    ('ipdlunittest', 'ipc/ipdl/test/cxx/app'),
 }
 
 
@@ -1228,7 +1228,8 @@ class TreeMetadataEmitter(LoggingMixin):
             else:
                 script = None
                 method = None
-            yield GeneratedFile(context, script, method, outputs, inputs)
+            yield GeneratedFile(context, script, method, outputs, inputs,
+                                flags.flags)
 
     def _process_test_manifests(self, context):
         for prefix, info in TEST_MANIFESTS.items():
@@ -1253,6 +1254,8 @@ class TreeMetadataEmitter(LoggingMixin):
         manifest_dir = mozpath.dirname(path)
         manifest_reldir = mozpath.dirname(mozpath.relpath(path,
             context.config.topsrcdir))
+        manifest_sources = [mozpath.relpath(pth, context.config.topsrcdir)
+                            for pth in mpmanifest.source_files]
         install_prefix = mozpath.join(install_root, install_subdir)
 
         try:
@@ -1264,6 +1267,7 @@ class TreeMetadataEmitter(LoggingMixin):
             obj = TestManifest(context, path, mpmanifest, flavor=flavor,
                 install_prefix=install_prefix,
                 relpath=mozpath.join(manifest_reldir, mozpath.basename(path)),
+                sources=manifest_sources,
                 dupe_manifest='dupe-manifest' in defaults)
 
             filtered = mpmanifest.tests

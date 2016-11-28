@@ -1,1 +1,1 @@
-assertEq((function(x, y, x) { return (function() x+y)(); })(1,2,5), 7);
+assertEq((function(x, y, x) { return (function() { return x+y; })(); })(1,2,5), 7);

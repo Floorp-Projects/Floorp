@@ -3,7 +3,7 @@
 "version": "clang 3.8.0",
 "size": 133060926,
 "digest": "aff5ad3ac2d41db19d1ba0df5f97b189a7d7e1b6af8c56e22c2b0cced84d75fa98394ded6a4ba5713652e6684a0a46f47aeccf87991f9e849bf8d7d82e564f6f",
-"algorithm": "sha512", 
+"algorithm": "sha512",
 "filename": "clang.tar.bz2",
 "unpack": true
 }

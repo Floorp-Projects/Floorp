@@ -1,1 +1,1 @@
-var importedArgs = ['float_exprs.wast']; load(scriptdir + '../spec.js');
+var importedArgs = ['float_exprs.wast']; load(scriptdir + '../wast.js');

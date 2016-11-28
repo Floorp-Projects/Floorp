@@ -93,10 +93,10 @@ nsPackageKitService::Init()
       return NS_ERROR_FAILURE;
   }
 
-  for (uint32_t i = 0; i < ArrayLength(kGDBusSymbols); i++) {
-    *kGDBusSymbols[i].function =
-      PR_FindFunctionSymbol(gioLib, kGDBusSymbols[i].functionName);
-    if (!*kGDBusSymbols[i].function) {
+  for (auto GDBusSymbol : kGDBusSymbols) {
+    *GDBusSymbol.function =
+      PR_FindFunctionSymbol(gioLib, GDBusSymbol.functionName);
+    if (!*GDBusSymbol.function) {
       return NS_ERROR_FAILURE;
     }
   }

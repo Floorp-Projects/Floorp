@@ -1,6 +1,7 @@
 // |jit-test| error: ReferenceError
-function TestCase(e, a)
-  this.passed = (e == a);
+function TestCase(e, a) {
+  return this.passed = (e == a);
+}
 function reportCompare (expected, actual) {
   var expected_t = typeof expected;
   var actual_t = typeof actual;

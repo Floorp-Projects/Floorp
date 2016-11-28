@@ -235,7 +235,7 @@ struct ForOfPIC
                 (arrayIteratorProto_->getSlot(arrayIteratorProtoNextSlot_) == canonicalNextFunc_);
         }
 
-        void mark(JSTracer* trc);
+        void trace(JSTracer* trc);
         void sweep(FreeOp* fop);
 
       private:

@@ -141,7 +141,7 @@ pub struct mp4parse_track_audio_info {
     // TODO(kinetik):
     // int32_t profile;
     // int32_t extended_profile; // check types
-    codec_specific_config: mp4parse_byte_data,
+    pub codec_specific_config: mp4parse_byte_data,
 }
 
 #[repr(C)]
@@ -150,9 +150,7 @@ pub struct mp4parse_track_video_info {
     pub display_height: u32,
     pub image_width: u16,
     pub image_height: u16,
-    // TODO(kinetik):
-    // extra_data
-    // codec_specific_config
+    pub extra_data: mp4parse_byte_data,
 }
 
 #[repr(C)]
@@ -336,7 +334,7 @@ fn media_time_to_us(time: MediaScaledTime, scale: MediaTimeScale) -> Option<u64>
 }
 
 fn track_time_to_us(time: TrackScaledTime, scale: TrackTimeScale) -> Option<u64> {
-    assert!(time.1 == scale.1);
+    assert_eq!(time.1, scale.1);
     let microseconds_per_second = 1000000;
     rational_scale(time.0, scale.0, microseconds_per_second)
 }
@@ -460,11 +458,11 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
 
     match audio.codec_specific {
         AudioCodecSpecific::ES_Descriptor(ref v) => {
-            if v.codec_specific_config.len() > std::u32::MAX as usize {
+            if v.codec_esds.len() > std::u32::MAX as usize {
                 return MP4PARSE_ERROR_INVALID;
             }
-            (*info).codec_specific_config.length = v.codec_specific_config.len() as u32;
-            (*info).codec_specific_config.data = v.codec_specific_config.as_ptr();
+            (*info).codec_specific_config.length = v.codec_esds.len() as u32;
+            (*info).codec_specific_config.data = v.codec_esds.as_ptr();
             if let Some(rate) = v.audio_sample_rate {
                 (*info).sample_rate = rate;
             }
@@ -546,6 +544,13 @@ pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut mp4parse_parser,
     }
     (*info).image_width = video.width;
     (*info).image_height = video.height;
+
+    match video.codec_specific {
+        VideoCodecSpecific::AVCConfig(ref avc) => {
+            (*info).extra_data.set_data(avc);
+        },
+        _ => {},
+    }
 
     MP4PARSE_OK
 }
@@ -686,9 +691,9 @@ fn get_track_count_null_parser() {
     unsafe {
         let mut count: u32 = 0;
         let rv = mp4parse_get_track_count(std::ptr::null(), std::ptr::null_mut());
-        assert!(rv == MP4PARSE_ERROR_BADARG);
+        assert_eq!(rv, MP4PARSE_ERROR_BADARG);
         let rv = mp4parse_get_track_count(std::ptr::null(), &mut count);
-        assert!(rv == MP4PARSE_ERROR_BADARG);
+        assert_eq!(rv, MP4PARSE_ERROR_BADARG);
     }
 }
 
@@ -737,6 +742,7 @@ fn arg_validation() {
             display_height: 0,
             image_width: 0,
             image_height: 0,
+            extra_data: mp4parse_byte_data::default(),
         };
         assert_eq!(MP4PARSE_ERROR_BADARG, mp4parse_get_track_video_info(std::ptr::null_mut(), 0, &mut dummy_video));
 
@@ -781,6 +787,7 @@ fn arg_validation_with_parser() {
             display_height: 0,
             image_width: 0,
             image_height: 0,
+            extra_data: mp4parse_byte_data::default(),
         };
         assert_eq!(MP4PARSE_ERROR_BADARG, mp4parse_get_track_video_info(parser, 0, &mut dummy_video));
 
@@ -807,7 +814,7 @@ fn get_track_count_poisoned_parser() {
 
         let mut count: u32 = 0;
         let rv = mp4parse_get_track_count(parser, &mut count);
-        assert!(rv == MP4PARSE_ERROR_BADARG);
+        assert_eq!(rv, MP4PARSE_ERROR_BADARG);
     }
 }
 
@@ -852,6 +859,7 @@ fn arg_validation_with_data() {
             display_height: 0,
             image_width: 0,
             image_height: 0,
+            extra_data: mp4parse_byte_data::default(),
         };
         assert_eq!(MP4PARSE_OK, mp4parse_get_track_video_info(parser, 0, &mut video));
         assert_eq!(video.display_width, 320);
@@ -883,7 +891,8 @@ fn arg_validation_with_data() {
         let mut video = mp4parse_track_video_info { display_width: 0,
                                                     display_height: 0,
                                                     image_width: 0,
-                                                    image_height: 0 };
+                                                    image_height: 0,
+                                                    extra_data: mp4parse_byte_data::default(),};
         assert_eq!(MP4PARSE_ERROR_BADARG, mp4parse_get_track_video_info(parser, 3, &mut video));
         assert_eq!(video.display_width, 0);
         assert_eq!(video.display_height, 0);

@@ -472,6 +472,11 @@ EGLAPI EGLint EGLAPIENTRY eglDupNativeFenceFDANDROID (EGLDisplay dpy, EGLSyncKHR
 #define EGL_DXGI_KEYED_MUTEX_ANGLE        0x33A2
 #endif /* EGL_ANGLE_keyed_mutex */
 
+#ifndef EGL_ANGLE_d3d_texture_client_buffer
+#define EGL_ANGLE_d3d_texture_client_buffer 1
+#define EGL_D3D_TEXTURE_ANGLE             0x33A3
+#endif /* EGL_ANGLE_d3d_texture_client_buffer */
+
 #ifndef EGL_ANGLE_query_surface_pointer
 #define EGL_ANGLE_query_surface_pointer 1
 typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYSURFACEPOINTERANGLEPROC) (EGLDisplay dpy, EGLSurface surface, EGLint attribute, void **value);
@@ -526,6 +531,11 @@ EGLAPI EGLBoolean EGLAPIENTRY eglQuerySurfacePointerANGLE (EGLDisplay dpy, EGLSu
 #define EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE 0x320E
 #endif /* EGL_ANGLE_platform_angle_opengl */
 
+#ifndef EGL_ANGLE_platform_angle_null
+#define EGL_ANGLE_platform_angle_null 1
+#define EGL_PLATFORM_ANGLE_TYPE_NULL_ANGLE 0x33AE
+#endif /* EGL_ANGLE_platform_angle_null */
+
 #ifndef EGL_ANGLE_window_fixed_size
 #define EGL_ANGLE_window_fixed_size 1
 #define EGL_FIXED_SIZE_ANGLE              0x3201
@@ -558,7 +568,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglQuerySurfacePointerANGLE (EGLDisplay dpy, EGLSu
 
 #ifndef EGL_ANGLE_stream_producer_d3d_texture_nv12
 #define EGL_ANGLE_stream_producer_d3d_texture_nv12
-#define EGL_D3D_TEXTURE_SUBRESOURCE_ID_ANGLE 0x3AAB
+#define EGL_D3D_TEXTURE_SUBRESOURCE_ID_ANGLE 0x33AB
 typedef EGLBoolean(EGLAPIENTRYP PFNEGLCREATESTREAMPRODUCERD3DTEXTURENV12ANGLEPROC)(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib *attrib_list);
 typedef EGLBoolean(EGLAPIENTRYP PFNEGLSTREAMPOSTD3DTEXTURENV12ANGLEPROC)(EGLDisplay dpy, EGLStreamKHR stream, void *texture, const EGLAttrib *attrib_list);
 #ifdef EGL_EGLEXT_PROTOTYPES
@@ -566,6 +576,16 @@ EGLAPI EGLBoolean EGLAPIENTRY eglCreateStreamProducerD3DTextureNV12ANGLE(EGLDisp
 EGLAPI EGLBoolean EGLAPIENTRY eglStreamPostD3DTextureNV12ANGLE(EGLDisplay dpy, EGLStreamKHR stream, void *texture, const EGLAttrib *attrib_list);
 #endif
 #endif /* EGL_ANGLE_stream_producer_d3d_texture_nv12 */
+
+#ifndef EGL_ANGLE_create_context_webgl_compatibility
+#define EGL_ANGLE_create_context_webgl_compatibility 1
+#define EGL_CONTEXT_WEBGL_COMPATIBILITY_ANGLE 0x3AAC
+#endif /* EGL_ANGLE_create_context_webgl_compatibility */
+
+#ifndef EGL_CHROMIUM_create_context_bind_generates_resource
+#define EGL_CHROMIUM_create_context_bind_generates_resource 1
+#define EGL_CONTEXT_BIND_GENERATES_RESOURCE_CHROMIUM 0x3AAD
+#endif /* EGL_CHROMIUM_create_context_bind_generates_resource */
 
 #ifndef EGL_ARM_pixmap_multisample_discard
 #define EGL_ARM_pixmap_multisample_discard 1

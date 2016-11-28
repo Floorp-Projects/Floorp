@@ -1,4 +1,4 @@
 if (!('oomTest' in this))
     quit();
 
-oomTest(function() 1e300)
+oomTest(function() { return 1e300; })

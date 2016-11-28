@@ -321,7 +321,7 @@ SetNewObjectMetadata(ExclusiveContext* cxArg, JSObject* obj)
 
 } // namespace js
 
-/* static */ inline JSObject*
+/* static */ inline JS::Result<JSObject*, JS::OOM&>
 JSObject::create(js::ExclusiveContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
                  js::HandleShape shape, js::HandleObjectGroup group)
 {
@@ -377,7 +377,7 @@ JSObject::create(js::ExclusiveContext* cx, js::gc::AllocKind kind, js::gc::Initi
 
     JSObject* obj = js::Allocate<JSObject>(cx, kind, nDynamicSlots, heap, clasp);
     if (!obj)
-        return nullptr;
+        return cx->alreadyReportedOOM();
 
     obj->group_.init(group);
 

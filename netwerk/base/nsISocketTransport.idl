@@ -9,6 +9,7 @@ interface nsIInterfaceRequestor;
 interface nsINetAddr;
 
 %{ C++
+#include "mozilla/BasePrincipal.h"
 namespace mozilla {
 namespace net {
 union NetAddr;
@@ -17,6 +18,8 @@ union NetAddr;
 %}
 native NetAddr(mozilla::net::NetAddr);
 [ptr] native NetAddrPtr(mozilla::net::NetAddr);
+native NeckoOriginAttributes(mozilla::NeckoOriginAttributes);
+[ref] native const_OriginAttributesRef(const mozilla::NeckoOriginAttributes);
 
 /**
  * nsISocketTransport
@@ -45,12 +48,20 @@ interface nsISocketTransport : nsITransport
     readonly attribute long port;
 
     /**
-     * This is only non-empty when "privacy.firstparty.isolate" is enabled.
-     * It is used to create sockets, and will eventually be used to isolate
-     * OCSP cache. It's the only way to carry it down to NSPR layers which are
-     * final consumers.  It must be set before the socket transport is built.
+     * The origin attributes are used to create sockets.  The first party domain
+     * will eventually be used to isolate OCSP cache and is only non-empty when
+     * "privacy.firstparty.isolate" is enabled.  Setting this is the only way to
+     * carry origin attributes down to NSPR layers which are final consumers.
+     * It must be set before the socket transport is built.
      */
-    attribute AUTF8String firstPartyDomain;
+    [implicit_jscontext, binaryname(ScriptableOriginAttributes)]
+    attribute jsval originAttributes;
+
+    [noscript, nostdcall, binaryname(GetOriginAttributes)]
+    NeckoOriginAttributes binaryGetOriginAttributes();
+
+    [noscript, nostdcall, binaryname(SetOriginAttributes)]
+    void binarySetOriginAttributes(in const_OriginAttributesRef aOriginAttrs);
 
     /**
      * The platform-specific network interface id that this socket

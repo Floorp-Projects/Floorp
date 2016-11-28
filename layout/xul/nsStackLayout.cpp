@@ -23,10 +23,10 @@ using namespace mozilla;
 
 nsBoxLayout* nsStackLayout::gInstance = nullptr;
 
-#define SPECIFIED_LEFT (1 << NS_SIDE_LEFT)
-#define SPECIFIED_RIGHT (1 << NS_SIDE_RIGHT)
-#define SPECIFIED_TOP (1 << NS_SIDE_TOP)
-#define SPECIFIED_BOTTOM (1 << NS_SIDE_BOTTOM)
+#define SPECIFIED_LEFT (1 << eSideLeft)
+#define SPECIFIED_RIGHT (1 << eSideRight)
+#define SPECIFIED_TOP (1 << eSideTop)
+#define SPECIFIED_BOTTOM (1 << eSideBottom)
 
 nsresult
 NS_NewStackLayout(nsCOMPtr<nsBoxLayout>& aNewLayout)

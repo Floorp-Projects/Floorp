@@ -1,48 +1,48 @@
 [
 {
-"size" : 102421980,
-"digest" : "f25292aa93dc449e0472eee511c0ac15b5f1a4272ab76cf53ce5d20dc57f29e83da49ae1a9d9e994192647f75e13ae60f75ba2ac3cb9d26d5f5d6cabf88de921",
-"version" : "gcc 4.9.3",
-"unpack" : true,
-"filename" : "gcc.tar.xz",
-"algorithm" : "sha512"
+"size": 102421980,
+"digest": "f25292aa93dc449e0472eee511c0ac15b5f1a4272ab76cf53ce5d20dc57f29e83da49ae1a9d9e994192647f75e13ae60f75ba2ac3cb9d26d5f5d6cabf88de921",
+"version": "gcc 4.9.3",
+"unpack": true,
+"filename": "gcc.tar.xz",
+"algorithm": "sha512"
 },
 {
-"unpack" : true,
-"algorithm" : "sha512",
-"filename" : "sixgill.tar.xz",
-"hg_id" : "8cb9c3fb039a+ tip",
-"digest" : "36dc644e24c0aa824975ad8f5c15714445d5cb064d823000c3cb637e885199414d7df551e6b99233f0656dcf5760918192ef04113c486af37f3c489bb93ad029",
-"size" : 2631908
+"unpack": true,
+"algorithm": "sha512",
+"filename": "sixgill.tar.xz",
+"hg_id": "8cb9c3fb039a+ tip",
+"digest": "36dc644e24c0aa824975ad8f5c15714445d5cb064d823000c3cb637e885199414d7df551e6b99233f0656dcf5760918192ef04113c486af37f3c489bb93ad029",
+"size": 2631908
 },
 {
-"algorithm" : "sha512",
-"filename" : "gtk3.tar.xz",
-"setup" : "setup.sh",
-"unpack" : true,
-"digest" : "3915f8ec396c56a8a92e6f9695b70f09ce9d1582359d1258e37e3fd43a143bc974410e4cfc27f500e095f34a8956206e0ebf799b7287f0f38def0d5e34ed71c9",
-"size" : 12072532
+"algorithm": "sha512",
+"filename": "gtk3.tar.xz",
+"setup": "setup.sh",
+"unpack": true,
+"digest": "3915f8ec396c56a8a92e6f9695b70f09ce9d1582359d1258e37e3fd43a143bc974410e4cfc27f500e095f34a8956206e0ebf799b7287f0f38def0d5e34ed71c9",
+"size": 12072532
 },
 {
-"version": "rustc 1.13.0 (2c6933acc 2016-11-07) repack",
-"size": 68921028,
-"digest": "9a9ceccc02d4be445ffa64617683419a4f47990b1f2689980ac8db13d6369435ef4af1a3714d77377fb7b3b0ec213856ab7144ff22cbe0881d49aed44d82c0fc",
+"version": "rustc 1.14.0-beta.2 (e627a2e6e 2016-11-16) repack",
+"size": 96275316,
+"digest": "26c11e34df81f5d7ffafc3492df9c6821f644a2e2eda5cfbbcdb1ac23e4ee196007b417c862c60a97bbf66e4be9c801400990938cd3aefec19b1cf9eaf1a9b54",
 "algorithm": "sha512",
 "filename": "rustc.tar.xz",
 "unpack": true
 },
 {
-"algorithm" : "sha512",
-"filename" : "sccache.tar.bz2",
-"unpack" : true,
-"digest" : "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
-"size" : 167175
+"algorithm": "sha512",
+"filename": "sccache.tar.bz2",
+"unpack": true,
+"digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
+"size": 167175
 },
 {
-"filename" : "moz-tt.tar.bz2",
-"algorithm" : "sha512",
-"unpack" : true,
-"digest" : "2dffe4e5419a0c0c9908dc52b01cc07379a42e2aa8481be7a26bb8750b586b95bbac3fe57e64f5d37b43e206516ea70ad938a2e45858fdcf1e28258e70ae8d8c",
-"size" : 31078810
+"filename": "moz-tt.tar.bz2",
+"algorithm": "sha512",
+"unpack": true,
+"digest": "2dffe4e5419a0c0c9908dc52b01cc07379a42e2aa8481be7a26bb8750b586b95bbac3fe57e64f5d37b43e206516ea70ad938a2e45858fdcf1e28258e70ae8d8c",
+"size": 31078810
 }
 ]

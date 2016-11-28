@@ -22,7 +22,6 @@ function testRegExp(b, c=b) {
 testRegExp(RegExp(""));
 testRegExp(/(?:)/);
 testRegExp(/^(.*)$/gimy);
-testRegExp(RegExp.prototype);
 
 var re = /\bx\b/gi;
 re.expando = true;

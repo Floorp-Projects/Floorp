@@ -25,10 +25,9 @@ bool strtof_clamp(const std::string &str, float *value);
 // Return false if overflow happens.
 bool atoi_clamp(const char *str, unsigned int *value);
 
-class TSymbolTable;
-
 namespace sh
 {
+class TSymbolTable;
 
 GLenum GLVariableType(const TType &type);
 GLenum GLVariablePrecision(const TType &type);
@@ -39,7 +38,6 @@ InterpolationType GetInterpolationType(TQualifier qualifier);
 TString ArrayString(const TType &type);
 
 TType GetShaderVariableBasicType(const sh::ShaderVariable &var);
-TType GetShaderVariableType(const sh::ShaderVariable &var);
 
 TOperator TypeToConstructorOperator(const TType &type);
 
@@ -70,6 +68,6 @@ bool IsBuiltinOutputVariable(TQualifier qualifier);
 bool IsBuiltinFragmentInputVariable(TQualifier qualifier);
 bool CanBeInvariantESSL1(TQualifier qualifier);
 bool CanBeInvariantESSL3OrGreater(TQualifier qualifier);
-}
+}  // namespace sh
 
 #endif // COMPILER_TRANSLATOR_UTIL_H_

@@ -21,6 +21,7 @@ function startTest(test, token)
   var v = SetupEME(test, token);
   v.preload = "auto"; // Required due to "canplay" not firing for MSE unless we do this.
 
+  var p1 = new EMEPromise;
   v.addEventListener("loadeddata", function(ev) {
     var video = ev.target;
     var canvas = document.createElement("canvas");
@@ -35,11 +36,11 @@ function startTest(test, token)
       threwError = true;
     }
     ok(threwError, TimeStamp(token) + " - Should throw an error when trying to draw EME video to canvas.");
-    manager.finished(token);
+    p1.resolve();
   });
 
-  LoadTestWithManagedLoadToken(test, v, manager, token,
-                               { onlyLoadFirstFragments:2, noEndOfStream:false });
+  var p2 = LoadTest(test, v, token, { onlyLoadFirstFragments:2, noEndOfStream:false });
+  EMEPromiseAll(v, token, [p1.promise, p2]);
 }
 
 function beginTest() {

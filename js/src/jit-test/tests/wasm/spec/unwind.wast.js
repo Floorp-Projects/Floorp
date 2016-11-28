@@ -1,1 +1,1 @@
-var importedArgs = ['unwind.wast']; load(scriptdir + '../spec.js');
+var importedArgs = ['unwind.wast']; load(scriptdir + '../wast.js');

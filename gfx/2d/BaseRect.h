@@ -330,19 +330,19 @@ struct BaseRect {
   }
   Point CCWCorner(mozilla::Side side) const {
     switch (side) {
-      case NS_SIDE_TOP: return TopLeft();
-      case NS_SIDE_RIGHT: return TopRight();
-      case NS_SIDE_BOTTOM: return BottomRight();
-      case NS_SIDE_LEFT: return BottomLeft();
+      case eSideTop: return TopLeft();
+      case eSideRight: return TopRight();
+      case eSideBottom: return BottomRight();
+      case eSideLeft: return BottomLeft();
     }
     MOZ_CRASH("GFX: Incomplete switch");
   }
   Point CWCorner(mozilla::Side side) const {
     switch (side) {
-      case NS_SIDE_TOP: return TopRight();
-      case NS_SIDE_RIGHT: return BottomRight();
-      case NS_SIDE_BOTTOM: return BottomLeft();
-      case NS_SIDE_LEFT: return TopLeft();
+      case eSideTop: return TopRight();
+      case eSideRight: return BottomRight();
+      case eSideBottom: return BottomLeft();
+      case eSideLeft: return TopLeft();
     }
     MOZ_CRASH("GFX: Incomplete switch");
   }
@@ -363,10 +363,10 @@ struct BaseRect {
   T Edge(mozilla::Side aSide) const
   {
     switch (aSide) {
-      case NS_SIDE_TOP: return Y();
-      case NS_SIDE_RIGHT: return XMost();
-      case NS_SIDE_BOTTOM: return YMost();
-      case NS_SIDE_LEFT: return X();
+      case eSideTop: return Y();
+      case eSideRight: return XMost();
+      case eSideBottom: return YMost();
+      case eSideLeft: return X();
     }
     MOZ_CRASH("GFX: Incomplete switch");
   }

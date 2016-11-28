@@ -1,1 +1,1 @@
-var importedArgs = ['f32.wast']; load(scriptdir + '../spec.js');
+var importedArgs = ['f32.wast']; load(scriptdir + '../wast.js');

@@ -11,5 +11,5 @@ loadFile(`
   SwitchTest();
 `)
 function loadFile(lfVarx) {
-  oomTest(function() eval(lfVarx))
+  oomTest(function() { return eval(lfVarx); })
 }

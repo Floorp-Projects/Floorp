@@ -1938,7 +1938,7 @@ public:
    * given side.
    */
   static bool HasNonZeroCornerOnSide(const nsStyleCorners& aCorners,
-                                       mozilla::css::Side aSide);
+                                       mozilla::Side aSide);
 
   /**
    * Determine if a widget is likely to require transparency or translucency.
