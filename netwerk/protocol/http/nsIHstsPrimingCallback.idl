@@ -33,7 +33,6 @@ interface nsIHstsPrimingCallback : nsISupports
    */
   [noscript, nostdcall]
   void onHSTSPrimingSucceeded(in bool aCached);
-
   /**
    * HSTS priming has seen no STS header, the request itself has failed,
    * or some other failure which does not constitute a positive signal that the
