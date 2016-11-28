@@ -9,6 +9,7 @@
 #include "LayersLogging.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
+#include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsThreadUtils.h"
@@ -143,11 +144,14 @@ WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild, uint64_t aLa
 {
   MOZ_ASSERT(mWRChild == nullptr);
 
-  PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(aLayersId);
+  TextureFactoryIdentifier textureFactoryIdentifier;
+  PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(aLayersId,
+                                                                            &textureFactoryIdentifier);
   MOZ_ASSERT(bridge);
   mWRChild = static_cast<WebRenderBridgeChild*>(bridge);
   LayoutDeviceIntSize size = mWidget->GetClientSize();
   WRBridge()->SendCreate(size.width, size.height);
+  WRBridge()->IdentifyTextureHost(textureFactoryIdentifier);
 }
 
 void
@@ -174,7 +178,7 @@ WebRenderLayerManager::GetCompositorBridgeChild()
 int32_t
 WebRenderLayerManager::GetMaxTextureSize() const
 {
-  return 4096;
+  return WRBridge()->GetMaxTextureSize();
 }
 
 bool
@@ -228,20 +232,43 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
 void
 WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
 {
-  if (!mTarget) {
+  if (!mTarget || aSize.IsEmpty()) {
     return;
   }
 
-  nsTArray<uint8_t> data;
-  WRBridge()->SendDPGetSnapshot(aSize.width, aSize.height, &data);
+  // XXX Add other TextureData supports.
+  // Only BufferTexture is supported now.
 
   // TODO: fixup for proper surface format.
-  RefPtr<DataSourceSurface> snapshot =
-                                   Factory::CreateWrappingDataSourceSurface(data.Elements(),
-                                                                            aSize.width * 4,
-                                                                            IntSize(aSize.width, aSize.height),
-                                                                            SurfaceFormat::B8G8R8A8);
+  RefPtr<TextureClient> texture =
+    TextureClient::CreateForRawBufferAccess(WRBridge(),
+                                            SurfaceFormat::B8G8R8A8,
+                                            aSize.ToUnknownSize(),
+                                            BackendType::CAIRO,
+                                            TextureFlags::DEFAULT);
+  if (!texture) {
+    return;
+  }
 
+  texture->InitIPDLActor(WRBridge());
+  if (!texture->GetIPDLActor()) {
+    return;
+  }
+
+  IntRect bounds = ToOutsideIntRect(mTarget->GetClipExtents());
+  if (!WRBridge()->SendDPGetSnapshot(texture->GetIPDLActor(), bounds)) {
+    return;
+  }
+
+  TextureClientAutoLock autoLock(texture, OpenMode::OPEN_READ_ONLY);
+  if (!autoLock.Succeeded()) {
+    return;
+  }
+  RefPtr<DrawTarget> drawTarget = texture->BorrowDrawTarget();
+  if (!drawTarget || !drawTarget->IsValid()) {
+    return;
+  }
+  RefPtr<SourceSurface> snapshot = drawTarget->Snapshot();
 /*
   static int count = 0;
   char filename[100];
@@ -250,7 +277,6 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
   gfxUtils::WriteAsPNG(snapshot, filename);
   */
 
-  IntRect bounds = ToOutsideIntRect(mTarget->GetClipExtents());
   Rect dst(bounds.x, bounds.y, bounds.width, bounds.height);
   Rect src(0, 0, bounds.width, bounds.height);
 

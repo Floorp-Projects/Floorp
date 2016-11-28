@@ -231,7 +231,8 @@ parent:
   sync SyncWithCompositor();
 
   // The pipelineId is the same as the layersId
-  async PWebRenderBridge(uint64_t pipelineId);
+  sync PWebRenderBridge(uint64_t pipelineId)
+    returns (TextureFactoryIdentifier textureFactoryIdentifier);
 
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can
