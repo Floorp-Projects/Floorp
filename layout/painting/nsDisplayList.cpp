@@ -2218,6 +2218,13 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
           writeFrames->AppendElement(f);
         }
       }
+
+      if (aBuilder->HitTestShouldStopAtFirstOpaque() &&
+          item->GetOpaqueRegion(aBuilder, &snap).Contains(aRect)) {
+        // We're exiting early, so pop the remaining items off the buffer.
+        aState->mItemBuffer.SetLength(itemBufferStart);
+        break;
+      }
     }
   }
   // Clear any remaining preserve-3d transforms.
