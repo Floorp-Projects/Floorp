@@ -123,6 +123,8 @@ public:
   void ScheduleComposition();
   void SetVsyncScheduler(CompositorVsyncScheduler* aScheduler);
 private:
+  void CleanupResources();
+
   RefPtr<GLContext> mGLContext;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   // Holds CompositableHosts that are bound to external image ids.

@@ -28,6 +28,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(const uint64_t& aPipelineId,
   , mGLContext(aGlContext)
   , mWRWindowState(aWrWindowState)
   , mCompositor(aCompositor)
+  , mDestroyed(false)
 {
   MOZ_ASSERT(mGLContext);
   MOZ_ASSERT(mCompositor);
@@ -48,6 +49,10 @@ mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvCreate(const uint32_t& aWidth,
                                   const uint32_t& aHeight)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+
   if (mWRState) {
     return IPC_OK();
   }
@@ -60,13 +65,25 @@ WebRenderBridgeParent::RecvCreate(const uint32_t& aWidth,
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvShutdown()
 {
-  MOZ_ASSERT(mWRState);
-  MOZ_ASSERT(mCompositor);
-  ClearResources();
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+  Destroy();
   if (!Send__delete__(this)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
+}
+
+void
+WebRenderBridgeParent::Destroy()
+{
+  if (mDestroyed) {
+    return;
+  }
+  MOZ_ASSERT(mWRState);
+  mDestroyed = true;
+  ClearResources();
 }
 
 mozilla::ipc::IPCResult
@@ -77,6 +94,9 @@ WebRenderBridgeParent::RecvAddImage(const uint32_t& aWidth,
                                     const ByteBuffer& aBuffer,
                                     WRImageKey* aOutImageKey)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   MOZ_ASSERT(mWRWindowState);
   *aOutImageKey = wr_add_image(mWRWindowState, aWidth, aHeight, aStride, aFormat,
                                aBuffer.mData, aBuffer.mLength);
@@ -90,6 +110,9 @@ WebRenderBridgeParent::RecvUpdateImage(const WRImageKey& aImageKey,
                                        const WRImageFormat& aFormat,
                                        const ByteBuffer& aBuffer)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   MOZ_ASSERT(mWRWindowState);
   wr_update_image(mWRWindowState, aImageKey, aWidth, aHeight, aFormat,
                   aBuffer.mData, aBuffer.mLength);
@@ -99,6 +122,9 @@ WebRenderBridgeParent::RecvUpdateImage(const WRImageKey& aImageKey,
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvDeleteImage(const WRImageKey& aImageKey)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   MOZ_ASSERT(mWRWindowState);
   mKeysToDelete.push_back(aImageKey);
   return IPC_OK();
@@ -109,6 +135,9 @@ WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
                                    const uint32_t& aHeight,
                                    bool* aOutSuccess)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   MOZ_ASSERT(mWRState);
   wr_dp_begin(mWRWindowState, mWRState, aWidth, aHeight);
   *aOutSuccess = true;
@@ -119,6 +148,9 @@ WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& commands)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   ProcessWebrenderCommands(commands);
   return IPC_OK();
 }
@@ -126,6 +158,9 @@ WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& commands)
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& commands)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   ProcessWebrenderCommands(commands);
   return IPC_OK();
 }
@@ -176,6 +211,9 @@ WebRenderBridgeParent::RecvDPGetSnapshot(const uint32_t& aWidth,
                                          const uint32_t& aHeight,
                                          InfallibleTArray<uint8_t>* aOutImageSnapshot)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   MOZ_ASSERT(mWRState);
   mGLContext->MakeCurrent();
 
@@ -194,6 +232,9 @@ mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
                                               const uint64_t& aAsyncContainerId)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   MOZ_ASSERT(!mExternalImageIds.Get(aImageId));
 
   PCompositableParent* compositableParent = CompositableMap::Get(aAsyncContainerId);
@@ -217,6 +258,9 @@ WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvRemoveExternalImageId(const uint64_t& aImageId)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
   MOZ_ASSERT(mExternalImageIds.Get(aImageId));
   mExternalImageIds.Remove(aImageId);
   mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(aImageId);
@@ -226,7 +270,7 @@ WebRenderBridgeParent::RecvRemoveExternalImageId(const uint64_t& aImageId)
 void
 WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  ClearResources();
+  Destroy();
 }
 
 void
@@ -279,6 +323,7 @@ WebRenderBridgeParent::ScheduleComposition()
 void
 WebRenderBridgeParent::ClearResources()
 {
+  DeleteOldImages();
   for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
     uint64_t externalImageId = iter.Data();
     mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(externalImageId);
@@ -288,11 +333,6 @@ WebRenderBridgeParent::ClearResources()
   if (mWRState) {
     wr_destroy(mWRState);
     mWRState = nullptr;
-  }
-  if (mWidget) {
-    // Only the "root" WebRenderBridgeParent (the one with the widget ptr) owns
-    // the compositor ref and needs to destroy it.
-    mCompositor->Destroy();
   }
   if (mCompositorScheduler) {
     mCompositorScheduler->Destroy();
