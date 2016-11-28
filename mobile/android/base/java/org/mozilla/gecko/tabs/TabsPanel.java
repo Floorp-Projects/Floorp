@@ -25,8 +25,11 @@ import org.mozilla.gecko.widget.GeckoPopupMenu;
 import org.mozilla.gecko.widget.IconTabWidget;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.support.annotation.UiThread;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -43,7 +46,8 @@ import org.mozilla.gecko.widget.themed.ThemedImageButton;
 public class TabsPanel extends LinearLayout
                        implements GeckoPopupMenu.OnMenuItemClickListener,
                                   LightweightTheme.OnChangeListener,
-                                  IconTabWidget.OnTabChangedListener {
+                                  IconTabWidget.OnTabChangedListener,
+                                  SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String LOGTAG = "Gecko" + TabsPanel.class.getSimpleName();
 
     public enum Panel {
@@ -70,10 +74,13 @@ public class TabsPanel extends LinearLayout
         void onTabsLayoutChange(int width, int height);
     }
 
-    public static View createTabsLayout(final Context context, final AttributeSet attrs) {
-        final boolean isLandscape = context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+    private static boolean tabletOrLandscapeMode(Context context) {
+        return HardwareUtils.isTablet() ||
+                context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+    }
 
-        if (HardwareUtils.isTablet() || isLandscape) {
+    public static View createTabsLayout(final Context context, final AttributeSet attrs) {
+        if (tabletOrLandscapeMode(context)) {
             return new AutoFitTabsGridLayout(context, attrs);
         } else {
             // Phone in portrait mode.
@@ -259,12 +266,18 @@ public class TabsPanel extends LinearLayout
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
         mTheme.addListener(this);
+        if (!HardwareUtils.isTablet()) {
+            GeckoSharedPrefs.forApp(getContext()).registerOnSharedPreferenceChangeListener(this);
+        }
     }
 
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         mTheme.removeListener(this);
+        if (!HardwareUtils.isTablet()) {
+            GeckoSharedPrefs.forApp(getContext()).unregisterOnSharedPreferenceChangeListener(this);
+        }
     }
 
     @Override
@@ -459,5 +472,15 @@ public class TabsPanel extends LinearLayout
     private void dispatchLayoutChange(int width, int height) {
         if (mLayoutChangeListener != null)
             mLayoutChangeListener.onTabsLayoutChange(width, height);
+    }
+
+    @UiThread // according to the docs.
+    @Override
+    public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
+        if (!TextUtils.equals(GeckoPreferences.PREFS_COMPACT_TABS, key)) {
+            return;
+        }
+
+        refresh();
     }
 }
