@@ -43,7 +43,7 @@ add_task(function* () {
   });
 
   yield waitForSourceCount(dbg, 9);
-  is(findElement(dbg, "sourceNode", 7).querySelector("span").innerText,
+  is(findElement(dbg, "sourceNode", 7).textContent,
      "math.min.js",
      "The dynamic script exists");
 
@@ -52,7 +52,7 @@ add_task(function* () {
     content.eval("window.evaledFunc = function() {} //# sourceURL=evaled.js");
   });
   yield waitForSourceCount(dbg, 11);
-  is(findElement(dbg, "sourceNode", 2).querySelector("span").innerText,
+  is(findElement(dbg, "sourceNode", 2).textContent,
      "evaled.js",
      "The eval script exists");
 });
