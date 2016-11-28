@@ -185,7 +185,7 @@ button {
 
 input[type="radio"],
 input[type="checkbox"] {
-  border: 1px solid var(--form_border) !important;
+  border: 1px solid var(--form_border);
 }
 
 select > button {
