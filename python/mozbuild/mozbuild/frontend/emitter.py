@@ -47,6 +47,7 @@ from .data import (
     HostDefines,
     HostLibrary,
     HostProgram,
+    HostRustProgram,
     HostSimpleProgram,
     HostSources,
     InstallationTarget,
@@ -62,6 +63,7 @@ from .data import (
     PreprocessedWebIDLFile,
     Program,
     RustLibrary,
+    RustProgram,
     SdkFiles,
     SharedLibrary,
     SimpleProgram,
@@ -554,6 +556,36 @@ class TreeMetadataEmitter(LoggingMixin):
                 self._linkage.append((context, self._binaries[program],
                     kind.replace('PROGRAM', 'USE_LIBS')))
                 add_program(self._binaries[program], kind)
+
+        all_rust_programs = []
+        for kind, cls in [('RUST_PROGRAMS', RustProgram),
+                          ('HOST_RUST_PROGRAMS', HostRustProgram)]:
+            programs = context[kind]
+            if not programs:
+                continue
+
+            all_rust_programs.append((programs, kind, cls))
+
+        # Verify Rust program definitions.
+        if all_rust_programs:
+            config, cargo_file = self._parse_cargo_file(context);
+            bin_section = config.get('bin', None)
+            if not bin_section:
+                raise SandboxValidationError(
+                    'Cargo.toml in %s has no [bin] section' % context.srcdir,
+                    context)
+
+            defined_binaries = {b['name'] for b in bin_section}
+
+            for programs, kind, cls in all_rust_programs:
+                for program in programs:
+                    if program not in defined_binaries:
+                        raise SandboxValidationError(
+                            'Cannot find Cargo.toml definition for %s' % program,
+                            context)
+
+                    check_unique_binary(program, kind)
+                    self._binaries[program] = cls(context, program, cargo_file)
 
         for kind, cls in [
                 ('SIMPLE_PROGRAMS', SimpleProgram),
