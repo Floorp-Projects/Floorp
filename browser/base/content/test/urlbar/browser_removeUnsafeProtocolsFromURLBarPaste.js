@@ -7,6 +7,9 @@ var pairs = [
   ["javascript:", ""],
   ["javascript:1+1", "1+1"],
   ["javascript:document.domain", "document.domain"],
+  ["java\nscript:foo", "foo"],
+  ["http://\nexample.com", "http://example.com"],
+  ["http://\nexample.com\n", "http://example.com"],
   ["data:text/html,<body>hi</body>", "data:text/html,<body>hi</body>"],
   // Nested things get confusing because some things don't parse as URIs:
   ["javascript:javascript:alert('hi!')", "alert('hi!')"],
