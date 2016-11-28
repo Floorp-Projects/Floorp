@@ -239,7 +239,7 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture,
   MOZ_ASSERT(bufferTexture->GetBufferDescriptor().type() == BufferDescriptor::TRGBDescriptor);
   uint32_t stride = ImageDataSerializer::GetRGBStride(bufferTexture->GetBufferDescriptor().get_RGBDescriptor());
   RefPtr<DrawTarget> target =
-    Factory::CreateDrawTargetForData(gfx::BackendType::CAIRO,
+    Factory::CreateDrawTargetForData(gfx::BackendType::SKIA,
                                      bufferTexture->GetBuffer(),
                                      bufferTexture->GetSize(),
                                      stride,
