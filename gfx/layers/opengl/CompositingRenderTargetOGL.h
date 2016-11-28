@@ -46,10 +46,12 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget
   {
     InitParams() : mStatus(NO_PARAMS) {}
     InitParams(const gfx::IntSize& aSize,
+               const gfx::IntSize& aPhySize,
                GLenum aFBOTextureTarget,
                SurfaceInitMode aInit)
       : mStatus(READY)
       , mSize(aSize)
+      , mPhySize(aPhySize)
       , mFBOTextureTarget(aFBOTextureTarget)
       , mInit(aInit)
     {}
@@ -59,7 +61,15 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget
       READY,
       INITIALIZED
     } mStatus;
-    gfx::IntSize mSize;
+    /*
+     * Users of render target would draw in logical size, but it is
+     * actually drawn to a surface in physical size.  GL surfaces have
+     * a limitation on their size, a smaller surface would be
+     * allocated for the render target if the caller requests in a
+     * size too big.
+     */
+    gfx::IntSize mSize; // Logical size, the expected by callers.
+    gfx::IntSize mPhySize; // Physical size, the real size of the surface.
     GLenum mFBOTextureTarget;
     SurfaceInitMode mInit;
   };
@@ -91,7 +101,7 @@ public:
   {
     RefPtr<CompositingRenderTargetOGL> result
       = new CompositingRenderTargetOGL(aCompositor, gfx::IntPoint(), 0, 0);
-    result->mInitParams = InitParams(aSize, 0, INIT_MODE_NONE);
+    result->mInitParams = InitParams(aSize, aSize, 0, INIT_MODE_NONE);
     result->mInitParams.mStatus = InitParams::INITIALIZED;
     return result.forget();
   }
@@ -103,12 +113,13 @@ public:
    * alternatively leave the FBO bound after creation.
    */
   void Initialize(const gfx::IntSize& aSize,
+                  const gfx::IntSize& aPhySize,
                   GLenum aFBOTextureTarget,
                   SurfaceInitMode aInit)
   {
     MOZ_ASSERT(mInitParams.mStatus == InitParams::NO_PARAMS, "Initialized twice?");
     // postpone initialization until we actually want to use this render target
-    mInitParams = InitParams(aSize, aFBOTextureTarget, aInit);
+    mInitParams = InitParams(aSize, aPhySize, aFBOTextureTarget, aInit);
   }
 
   void BindTexture(GLenum aTextureUnit, GLenum aTextureTarget);
