@@ -192,7 +192,8 @@ CrossProcessCompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor)
 }
 
 PWebRenderBridgeParent*
-CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId)
+CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId,
+                                                                TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
 #ifndef MOZ_ENABLE_WEBRENDER
   // Extra guard since this in the parent process and we don't want a malicious
@@ -215,7 +216,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& 
     aPipelineId, nullptr, root->GLContext(), root->WindowState(), root->Compositor());
   parent->AddRef(); // IPDL reference
   sIndirectLayerTrees[aPipelineId].mWRBridge = parent;
-
+  *aTextureFactoryIdentifier = parent->Compositor()->GetTextureFactoryIdentifier();
   return parent;
 }
 

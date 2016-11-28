@@ -228,7 +228,7 @@ public:
 
   void WillEndTransaction();
 
-  PWebRenderBridgeChild* AllocPWebRenderBridgeChild(const uint64_t& aPipelineId) override;
+  PWebRenderBridgeChild* AllocPWebRenderBridgeChild(const uint64_t& aPipelineId, TextureFactoryIdentifier*) override;
   bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor) override;
 
 private:

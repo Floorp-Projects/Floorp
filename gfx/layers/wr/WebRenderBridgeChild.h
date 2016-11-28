@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_WebRenderBridgeChild_h
 #define mozilla_layers_WebRenderBridgeChild_h
 
+#include "mozilla/layers/KnowsCompositor.h"
 #include "mozilla/layers/PWebRenderBridgeChild.h"
 
 namespace mozilla {
@@ -17,7 +18,11 @@ class CompositorWidget;
 
 namespace layers {
 
+class CompositorBridgeChild;
+class TextureForwarder;
+
 class WebRenderBridgeChild final : public PWebRenderBridgeChild
+                                 , public KnowsCompositor
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeChild)
 
@@ -28,6 +33,11 @@ public:
 
   bool DPBegin(uint32_t aWidth, uint32_t aHeight);
   void DPEnd(bool aIsSync = false);
+
+  CompositorBridgeChild* GetCompositorBridgeChild();
+  // KnowsCompositor
+  TextureForwarder* GetTextureForwarder();
+  LayersIPCActor* GetLayersIPCActor();
 
   uint64_t AllocExternalImageId(uint64_t aAsyncContainerID);
   void DeallocExternalImageId(uint64_t aImageId);
