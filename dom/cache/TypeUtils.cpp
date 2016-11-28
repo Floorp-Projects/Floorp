@@ -263,9 +263,12 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
   RefPtr<InternalHeaders> internalHeaders =
     ToInternalHeaders(aIn.headers(), aIn.headersGuard());
   ErrorResult result;
-  ir->Headers()->SetGuard(aIn.headersGuard(), result);
-  MOZ_ASSERT(!result.Failed());
+
+  // Be careful to fill the headers before setting the guard in order to
+  // correctly re-create the original headers.
   ir->Headers()->Fill(*internalHeaders, result);
+  MOZ_ASSERT(!result.Failed());
+  ir->Headers()->SetGuard(aIn.headersGuard(), result);
   MOZ_ASSERT(!result.Failed());
 
   ir->InitChannelInfo(aIn.channelInfo());
