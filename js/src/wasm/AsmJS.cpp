@@ -3251,7 +3251,7 @@ static bool
 CheckFunctionHead(ModuleValidator& m, ParseNode* fn)
 {
     JSFunction* fun = FunctionObject(fn);
-    if (fun->hasRest())
+    if (fn->pn_funbox->hasRest())
         return m.fail(fn, "rest args not allowed");
     if (fun->isExprBody())
         return m.fail(fn, "expression closures not allowed");

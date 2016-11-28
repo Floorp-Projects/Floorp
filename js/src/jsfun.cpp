@@ -1276,8 +1276,7 @@ JSFunction::getLength(JSContext* cx, HandleFunction fun, uint16_t* length)
     if (fun->isInterpretedLazy() && !getOrCreateScript(cx, fun))
         return false;
 
-    *length = fun->hasScript() ? fun->nonLazyScript()->funLength()
-                               : (fun->nargs() - fun->hasRest());
+    *length = fun->isNative() ? fun->nargs() : fun->nonLazyScript()->funLength();
     return true;
 }
 
@@ -1564,7 +1563,7 @@ const JSFunctionSpec js::function_methods[] = {
     JS_FN(js_apply_str,      fun_apply,      2,0),
     JS_FN(js_call_str,       fun_call,       1,0),
     JS_FN("isGenerator",     fun_isGenerator,0,0),
-    JS_SELF_HOSTED_FN("bind", "FunctionBind", 2, JSFUN_HAS_REST),
+    JS_SELF_HOSTED_FN("bind", "FunctionBind", 2, 0),
     JS_SYM_FN(hasInstance, fun_symbolHasInstance, 1, JSPROP_READONLY | JSPROP_PERMANENT),
     JS_FS_END
 };

@@ -471,6 +471,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool            usesApply:1;            /* contains an f.apply() call */
     bool            usesThis:1;             /* contains 'this' */
     bool            usesReturn:1;           /* contains a 'return' statement */
+    bool            hasRest_:1;             /* has rest parameter */
 
     FunctionContextFlags funCxFlags;
 
@@ -539,6 +540,11 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool isAsync() const { return asyncKind() == AsyncFunction; }
     bool isArrow() const { return function()->isArrow(); }
 
+    bool hasRest() const { return hasRest_; }
+    void setHasRest() {
+        hasRest_ = true;
+    }
+
     void setGeneratorKind(GeneratorKind kind) {
         // A generator kind can be set at initialization, or when "yield" is
         // first seen.  In both cases the transition can only happen from
@@ -567,7 +573,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     void setHasInnerFunctions()            { funCxFlags.hasInnerFunctions         = true; }
 
     bool hasSimpleParameterList() const {
-        return !function()->hasRest() && !hasParameterExprs && !hasDestructuringArgs;
+        return !hasRest() && !hasParameterExprs && !hasDestructuringArgs;
     }
 
     bool hasMappedArgsObj() const {
