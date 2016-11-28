@@ -438,10 +438,16 @@ class TreeMetadataEmitter(LoggingMixin):
         else:
             return ExternalSharedLibrary(context, name)
 
-    def _parse_cargo_file(self, toml_file):
-        """Parse toml_file and return a Python object representation of it."""
-        with open(toml_file, 'r') as f:
-            return pytoml.load(f)
+    def _parse_cargo_file(self, context):
+        """Parse the Cargo.toml file in context and return a Python object
+        representation of it.  Raise a SandboxValidationError if the Cargo.toml
+        file does not exist.  Return a tuple of (config, cargo_file)."""
+        cargo_file = mozpath.join(context.srcdir, 'Cargo.toml')
+        if not os.path.exists(cargo_file):
+            raise SandboxValidationError(
+                'No Cargo.toml file found in %s' % cargo_file, context)
+        with open(cargo_file, 'r') as f:
+            return pytoml.load(f), cargo_file
 
     def _verify_deps(self, context, crate_dir, crate_name, dependencies, description='Dependency'):
         """Verify that a crate's dependencies all specify local paths."""
@@ -472,12 +478,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
     def _rust_library(self, context, libname, static_args):
         # We need to note any Rust library for linking purposes.
-        cargo_file = mozpath.join(context.srcdir, 'Cargo.toml')
-        if not os.path.exists(cargo_file):
-            raise SandboxValidationError(
-                'No Cargo.toml file found in %s' % cargo_file, context)
-
-        config = self._parse_cargo_file(cargo_file)
+        config, cargo_file = self._parse_cargo_file(context)
         crate_name = config['package']['name']
 
         if crate_name != libname:
