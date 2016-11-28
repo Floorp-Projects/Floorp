@@ -34,6 +34,7 @@
 #include "SVGImageContext.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Unused.h"
 #include "nsFrameLoader.h"
@@ -405,6 +406,13 @@ nsBaseDragService::EndDragSession(bool aDoneDrag)
   }
   mChildProcesses.Clear();
 
+  // mDataTransfer and the items it owns are going to die anyway, but we
+  // explicitly deref the contained data here so that we don't have to wait for
+  // CC to reclaim the memory.
+  if (XRE_IsParentProcess()) {
+    DiscardInternalTransferData();
+  }
+
   mDoingDrag = false;
   mCanDrop = false;
 
@@ -423,6 +431,32 @@ nsBaseDragService::EndDragSession(bool aDoneDrag)
   mInputSource = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
 
   return NS_OK;
+}
+
+void
+nsBaseDragService::DiscardInternalTransferData()
+{
+  if (mDataTransfer && mSourceNode) {
+    MOZ_ASSERT(!!DataTransfer::Cast(mDataTransfer));
+
+    DataTransferItemList* items = DataTransfer::Cast(mDataTransfer)->Items();
+    for (size_t i = 0; i < items->Length(); i++) {
+      bool found;
+      DataTransferItem* item = items->IndexedGetter(i, found);
+
+      // Non-OTHER items may still be needed by JS. Skip them.
+      if (!found || item->Kind() != DataTransferItem::KIND_OTHER) {
+        continue;
+      }
+
+      nsCOMPtr<nsIVariant> variant = item->DataNoSecurityCheck();
+      nsCOMPtr<nsIWritableVariant> writable = do_QueryInterface(variant);
+
+      if (writable) {
+        writable->SetAsEmpty();
+      }
+    }
+  }
 }
 
 NS_IMETHODIMP
