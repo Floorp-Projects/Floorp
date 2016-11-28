@@ -53,7 +53,8 @@ function build_test(multiprocessCompatible, bootstrap, updateMultiprocessCompati
 
     let xpifile = createTempXPIFile(addonData);
     let install = yield new Promise(resolve => AddonManager.getInstallForFile(xpifile, resolve));
-    do_check_eq(install.addon.multiprocessCompatible, multiprocessCompatible);
+    do_check_eq(install.addon.multiprocessCompatible, !!multiprocessCompatible);
+    do_check_eq(install.addon.mpcOptedOut, multiprocessCompatible === false)
     yield promiseCompleteAllInstalls([install]);
 
     if (!bootstrap) {
@@ -64,17 +65,18 @@ function build_test(multiprocessCompatible, bootstrap, updateMultiprocessCompati
 
     let addon = yield promiseAddonByID(addonData.id);
     do_check_neq(addon, null);
-    do_check_eq(addon.multiprocessCompatible, multiprocessCompatible);
+    do_check_eq(addon.multiprocessCompatible, !!multiprocessCompatible);
+    do_check_eq(addon.mpcOptedOut, multiprocessCompatible === false);
 
     yield promiseFindAddonUpdates(addon);
 
     // Should have applied the compatibility change
-    do_check_eq(addon.multiprocessCompatible, expectedMPC);
+    do_check_eq(addon.multiprocessCompatible, !!expectedMPC);
     yield promiseRestartManager();
 
     addon = yield promiseAddonByID(addonData.id);
     // Should have persisted the compatibility change
-    do_check_eq(addon.multiprocessCompatible, expectedMPC);
+    do_check_eq(addon.multiprocessCompatible, !!expectedMPC);
     if (!bootstrap) {
       do_check_true(isExtensionInAddonsList(profileDir, addonData.id));
       do_check_eq(isItemMarkedMPIncompatible(addonData.id), !multiprocessCompatible);
@@ -93,7 +95,7 @@ function build_test(multiprocessCompatible, bootstrap, updateMultiprocessCompati
  *   The update saying the add-on should or should not support multiprocess (or not say anything at all)
  */
 for (let bootstrap of [false, true]) {
-  for (let multiprocessCompatible of [false, true]) {
+  for (let multiprocessCompatible of [undefined, false, true]) {
     for (let updateMultiprocessCompatible of [undefined, false, true]) {
       add_task(build_test(multiprocessCompatible, bootstrap, updateMultiprocessCompatible));
     }
