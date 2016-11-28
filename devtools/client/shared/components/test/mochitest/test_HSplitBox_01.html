@@ -39,14 +39,20 @@ window.onload = Task.async(function* () {
     ok(HSplitBox, "Should get HSplitBox");
 
     const newSizes = [];
-    const box = ReactDOM.render(HSplitBox({
-      start: "hello!",
-      end: "world!",
-      startWidth: .5,
-      onResize(newSize) {
-        newSizes.push(newSize);
-      },
-    }), window.document.body);
+
+    function renderBox(props) {
+      const boxProps = Object.assign({
+        start: "hello!",
+        end: "world!",
+        startWidth: .5,
+        onResize(newSize) {
+          newSizes.push(newSize);
+        }
+      }, props);
+      return ReactDOM.render(HSplitBox(boxProps), window.document.body);
+    }
+
+    const box = renderBox();
 
     // Test that we properly rendered our two panes.
 
@@ -59,7 +65,7 @@ window.onload = Task.async(function* () {
 
     // Now change the left width and assert that the changes are reflected.
 
-    yield setProps(box, { startWidth: .25 });
+    renderBox({ startWidth: .25 });
     panes = document.querySelectorAll(".h-split-box-pane");
     is(panes.length, 2, "Should still have two panes");
     is(panes[0].style.flexGrow, "0.25", "First pane's width should be .25");
