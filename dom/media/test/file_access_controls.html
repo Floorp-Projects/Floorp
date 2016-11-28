@@ -120,8 +120,11 @@ function nextTest() {
     }
   }
 
-  if (gVideo && gVideo.parentNode)
-    gVideo.parentNode.removeChild(gVideo);
+  if (gVideo) {
+    gVideo.remove();
+    gVideo.preload = "none"; // Don't trigger load algorithm.
+    gVideo.src = null;
+  }
 
   gVideo = null;
   SpecialPowers.forceGC();  

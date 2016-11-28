@@ -8,6 +8,7 @@
 
 #include <cmath>                 // for M_PI
 #include <stdint.h>
+#include <string>
 #include "mozilla/Assertions.h"
 #include "mozilla/Function.h"
 #include "mozilla/gfx/LoggingConstants.h"
@@ -69,6 +70,9 @@ static void Set##Name(Type aVal) { MOZ_ASSERT(SingletonExists());             \
     GetSingleton().mPref##Name.Set(UpdatePolicy::Update, Get##Name##PrefName(), aVal); } \
 static const char* Get##Name##PrefName() { return Prefname; }                 \
 static Type Get##Name##PrefDefault() { return Default; }                      \
+static void Set##Name##ChangeCallback(Pref::ChangeCallback aCallback) {       \
+    MOZ_ASSERT(SingletonExists());                                            \
+    GetSingleton().mPref##Name.SetChangeCallback(aCallback); }                \
 private:                                                                      \
 PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
 
@@ -104,7 +108,7 @@ public:
     size_t Index() const { return mIndex; }
     void OnChange();
 
-    typedef void (*ChangeCallback)();
+    typedef void (*ChangeCallback)(const GfxPrefValue&);
     void SetChangeCallback(ChangeCallback aCallback);
 
     virtual const char* Name() const = 0;
@@ -447,6 +451,8 @@ private:
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps.print-histogram",  FPSPrintHistogram, bool, false);
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps.write-to-file", WriteFPSToFile, bool, false);
   DECL_GFX_PREF(Once, "layers.acceleration.force-enabled",     LayersAccelerationForceEnabledDoNotUseDirectly, bool, false);
+  DECL_GFX_PREF(Live, "layers.advanced.border-layers",         LayersAllowBorderLayers, bool, false);
+  DECL_GFX_PREF(Live, "layers.advanced.text-layers",           LayersAllowTextLayers, bool, false);
   DECL_GFX_PREF(Once, "layers.allow-d3d9-fallback",            LayersAllowD3D9Fallback, bool, false);
   DECL_GFX_PREF(Once, "layers.amd-switchable-gfx.enabled",     LayersAMDSwitchableGfxEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.async-pan-zoom.enabled",         AsyncPanZoomEnabledDoNotUseDirectly, bool, true);
@@ -538,6 +544,7 @@ private:
 
   // This and code dependent on it should be removed once containerless scrolling looks stable.
   DECL_GFX_PREF(Once, "layout.scroll.root-frame-containers",   LayoutUseContainersForRootFrames, bool, true);
+  DECL_GFX_PREF(Live, "layout.smaller-painted-layers",         LayoutSmallerPaintedLayers, bool, false);
 
   DECL_GFX_PREF(Once, "media.hardware-video-decoding.force-enabled",
                                                                HardwareVideoDecodingForceEnabled, bool, false);
@@ -643,14 +650,17 @@ private:
   static void PrefAddVarCache(int32_t*, const char*, int32_t);
   static void PrefAddVarCache(uint32_t*, const char*, uint32_t);
   static void PrefAddVarCache(float*, const char*, float);
+  static void PrefAddVarCache(std::string*, const char*, std::string);
   static bool PrefGet(const char*, bool);
   static int32_t PrefGet(const char*, int32_t);
   static uint32_t PrefGet(const char*, uint32_t);
   static float PrefGet(const char*, float);
+  static std::string PrefGet(const char*, std::string);
   static void PrefSet(const char* aPref, bool aValue);
   static void PrefSet(const char* aPref, int32_t aValue);
   static void PrefSet(const char* aPref, uint32_t aValue);
   static void PrefSet(const char* aPref, float aValue);
+  static void PrefSet(const char* aPref, std::string aValue);
   static void WatchChanges(const char* aPrefname, Pref* aPref);
   static void UnwatchChanges(const char* aPrefname, Pref* aPref);
   // Creating these to avoid having to include PGPU.h in the .h
@@ -658,10 +668,12 @@ private:
   static void CopyPrefValue(const int32_t* aValue, GfxPrefValue* aOutValue);
   static void CopyPrefValue(const uint32_t* aValue, GfxPrefValue* aOutValue);
   static void CopyPrefValue(const float* aValue, GfxPrefValue* aOutValue);
+  static void CopyPrefValue(const std::string* aValue, GfxPrefValue* aOutValue);
   static void CopyPrefValue(const GfxPrefValue* aValue, bool* aOutValue);
   static void CopyPrefValue(const GfxPrefValue* aValue, int32_t* aOutValue);
   static void CopyPrefValue(const GfxPrefValue* aValue, uint32_t* aOutValue);
   static void CopyPrefValue(const GfxPrefValue* aValue, float* aOutValue);
+  static void CopyPrefValue(const GfxPrefValue* aValue, std::string* aOutValue);
 
   static void AssertMainThread();
 

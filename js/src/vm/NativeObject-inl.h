@@ -251,9 +251,9 @@ NativeObject::copy(ExclusiveContext* cx, gc::AllocKind kind, gc::InitialHeap hea
     RootedObjectGroup group(cx, templateObject->group());
     MOZ_ASSERT(!templateObject->denseElementsAreCopyOnWrite());
 
-    JSObject* baseObj = create(cx, kind, heap, shape, group);
-    if (!baseObj)
-        return nullptr;
+    JSObject* baseObj;
+    JS_TRY_VAR_OR_RETURN_NULL(cx, baseObj, create(cx, kind, heap, shape, group));
+
     NativeObject* obj = &baseObj->as<NativeObject>();
 
     size_t span = shape->slotSpan();

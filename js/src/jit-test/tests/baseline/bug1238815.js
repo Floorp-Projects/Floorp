@@ -4,7 +4,9 @@
 // Baseline should not attempt to compile the script.
 
 i = 1;
-function test(s) eval("line0 = Error.lineNumber\ndebugger\n" + s);
+function test(s) {
+    return eval("line0 = Error.lineNumber\ndebugger\n" + s);
+}
 function repeat(s) {
         return Array(65 << 13).join(s)
 }

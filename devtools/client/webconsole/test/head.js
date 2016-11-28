@@ -46,10 +46,10 @@ const DOCS_GA_PARAMS = "?utm_source=mozilla" +
 
 flags.testing = true;
 
-function loadTab(url) {
+function loadTab(url, preferredRemoteType) {
   let deferred = promise.defer();
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
+  let tab = gBrowser.selectedTab = gBrowser.addTab(url, { preferredRemoteType });
   let browser = gBrowser.getBrowserForTab(tab);
 
   browser.addEventListener("load", function onLoad() {
@@ -1788,21 +1788,6 @@ function checkLinkToInspector(hasLinkToInspector, msg) {
 function getSourceActor(sources, URL) {
   let item = sources.getItemForAttachment(a => a.source.url === URL);
   return item && item.value;
-}
-
-/**
- * Make a request against an actor and resolve with the packet.
- * @param object client
- *   The client to use when making the request.
- * @param function requestType
- *   The client request function to run.
- * @param array args
- *   The arguments to pass into the function.
- */
-function getPacket(client, requestType, args) {
-  return new Promise(resolve => {
-    client[requestType](...args, packet => resolve(packet));
-  });
 }
 
 /**

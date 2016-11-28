@@ -7,7 +7,9 @@
                                            style="@style/Widget.FolderView"
                                            android:layout_width="match_parent"
                                            android:paddingLeft="0dp"
+                                           android:paddingStart="0dp"
+                                           android:paddingRight="16dp"
+                                           android:paddingEnd="16dp"
                                            android:paddingTop="0dp"
                                            android:paddingBottom="0dp"
-                                           android:paddingRight="16dp"
                                            android:gravity="center_vertical"/>

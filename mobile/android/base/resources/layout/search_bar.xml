@@ -12,6 +12,9 @@
         android:imeOptions="actionSearch"
         android:inputType="textNoSuggestions"
         android:drawableLeft="@drawable/search_icon_inactive"
+        android:drawableStart="@drawable/search_icon_inactive"
+        android:paddingRight="30dp"
+        android:paddingEnd="30dp"
         android:drawablePadding="5dp"
         android:textSize="@dimen/query_text_size"
         android:focusable="false"
@@ -19,14 +22,16 @@
         android:textColorHighlight="@color/fennec_ui_orange"
         android:textSelectHandle="@drawable/handle_middle"
         android:textSelectHandleLeft="@drawable/handle_start"
-        android:textSelectHandleRight="@drawable/handle_end" />
+        android:textSelectHandleRight="@drawable/handle_end"
+        />
 
     <ImageButton
         android:id="@+id/clear_button"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:paddingLeft="10dp"
-        android:layout_gravity="right|center_vertical"
+        android:paddingStart="10dp"
+        android:layout_gravity="right|end|center_vertical"
         android:background="@android:color/transparent"
         android:src="@drawable/search_clear"
         android:scaleType="centerInside"
@@ -36,7 +41,7 @@
         android:id="@+id/engine_icon"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:layout_gravity="right|center_vertical"
+        android:layout_gravity="right|end|center_vertical"
         android:background="@android:color/transparent"
         android:visibility="gone"/>
 

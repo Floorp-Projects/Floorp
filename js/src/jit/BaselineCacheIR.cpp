@@ -227,11 +227,12 @@ class MOZ_RAII CacheRegisterAllocator
 
     // Returns the register for the given operand. If the operand is currently
     // not in a register, it will load it into one.
-    ValueOperand useRegister(MacroAssembler& masm, ValOperandId val);
+    ValueOperand useValueRegister(MacroAssembler& masm, ValOperandId val);
     Register useRegister(MacroAssembler& masm, ObjOperandId obj);
 
     // Allocates an output register for the given operand.
     Register defineRegister(MacroAssembler& masm, ObjOperandId obj);
+    ValueOperand defineValueRegister(MacroAssembler& masm, ValOperandId val);
 };
 
 // RAII class to allocate a scratch register and release it when we're done
@@ -459,7 +460,9 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
     bool makesGCCalls_;
 
     void enterStubFrame(MacroAssembler& masm, Register scratch);
-    void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon);
+    void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false);
+
+    MOZ_MUST_USE bool callVM(MacroAssembler& masm, const VMFunction& fun);
 
   public:
     BaselineCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, ICStubEngine engine,
@@ -486,7 +489,7 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
 #undef DEFINE_OP
 
     Address stubAddress(uint32_t offset) const {
-        return Address(ICStubReg, stubDataOffset_ + offset * sizeof(uintptr_t));
+        return Address(ICStubReg, stubDataOffset_ + offset);
     }
 
     bool addFailurePath(FailurePath** failure) {
@@ -509,14 +512,6 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
 
         *failure = &failurePaths.back();
         return true;
-    }
-    void emitEnterTypeMonitorIC() {
-        allocator.discardStack(masm);
-        EmitEnterTypeMonitorIC(masm);
-    }
-    void emitReturnFromIC() {
-        allocator.discardStack(masm);
-        EmitReturnFromIC(masm);
     }
 };
 
@@ -556,6 +551,23 @@ BaselineCacheIRCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon
     }
 }
 
+bool
+BaselineCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun)
+{
+    MOZ_ASSERT(inStubFrame_);
+
+    JitCode* code = cx_->jitRuntime()->getVMWrapper(fun);
+    if (!code)
+        return false;
+
+    MOZ_ASSERT(fun.expectTailCall == NonTailCall);
+    if (engine_ == ICStubEngine::Baseline)
+        EmitBaselineCallVM(code, masm);
+    else
+        EmitIonCallVM(code, fun.explicitStackSlots(), masm);
+    return true;
+}
+
 JitCode*
 BaselineCacheIRCompiler::compile()
 {
@@ -585,6 +597,8 @@ BaselineCacheIRCompiler::compile()
         allocator.nextOp();
     } while (reader.more());
 
+    masm.assumeUnreachable("Should have returned from IC");
+
     // Done emitting the main IC code. Now emit the failure paths.
     for (size_t i = 0; i < failurePaths.length(); i++) {
         emitFailurePath(i);
@@ -607,7 +621,7 @@ BaselineCacheIRCompiler::compile()
 }
 
 ValueOperand
-CacheRegisterAllocator::useRegister(MacroAssembler& masm, ValOperandId op)
+CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
 {
     OperandLocation& loc = operandLocations_[op.id()];
 
@@ -714,6 +728,17 @@ CacheRegisterAllocator::defineRegister(MacroAssembler& masm, ObjOperandId op)
 
     Register reg = allocateRegister(masm);
     loc.setPayloadReg(reg, JSVAL_TYPE_OBJECT);
+    return reg;
+}
+
+ValueOperand
+CacheRegisterAllocator::defineValueRegister(MacroAssembler& masm, ValOperandId val)
+{
+    OperandLocation& loc = operandLocations_[val.id()];
+    MOZ_ASSERT(loc.kind() == OperandLocation::Uninitialized);
+
+    ValueOperand reg = allocateValueRegister(masm);
+    loc.setValueReg(reg);
     return reg;
 }
 
@@ -866,7 +891,7 @@ CacheRegisterAllocator::allocateValueRegister(MacroAssembler& masm)
 bool
 BaselineCacheIRCompiler::emitGuardIsObject()
 {
-    ValueOperand input = allocator.useRegister(masm, reader.valOperandId());
+    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
@@ -877,7 +902,7 @@ BaselineCacheIRCompiler::emitGuardIsObject()
 bool
 BaselineCacheIRCompiler::emitGuardType()
 {
-    ValueOperand input = allocator.useRegister(masm, reader.valOperandId());
+    ValueOperand input = allocator.useValueRegister(masm, reader.valOperandId());
     JSValueType type = reader.valueType();
 
     FailurePath* failure;
@@ -896,6 +921,9 @@ BaselineCacheIRCompiler::emitGuardType()
         break;
       case JSVAL_TYPE_BOOLEAN:
         masm.branchTestBoolean(Assembler::NotEqual, input, failure->label());
+        break;
+      case JSVAL_TYPE_UNDEFINED:
+        masm.branchTestUndefined(Assembler::NotEqual, input, failure->label());
         break;
       default:
         MOZ_CRASH("Unexpected type");
@@ -976,10 +1004,42 @@ BaselineCacheIRCompiler::emitGuardClass()
       case GuardClassKind::UnmappedArguments:
         clasp = &UnmappedArgumentsObject::class_;
         break;
+      case GuardClassKind::WindowProxy:
+        clasp = cx_->maybeWindowProxyClass();
+        break;
     }
 
     MOZ_ASSERT(clasp);
     masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, clasp, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardIsProxy()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTestObjectIsProxy(false, obj, scratch, failure->label());
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardNotDOMProxy()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTestProxyHandlerFamily(Assembler::Equal, obj, scratch,
+                                      GetDOMProxyHandlerFamily(), failure->label());
     return true;
 }
 
@@ -1035,7 +1095,6 @@ BaselineCacheIRCompiler::emitLoadFixedSlotResult()
 
     masm.load32(stubAddress(reader.stubOffset()), scratch);
     masm.loadValue(BaseIndex(obj, scratch, TimesOne), R0);
-    emitEnterTypeMonitorIC();
     return true;
 }
 
@@ -1049,7 +1108,6 @@ BaselineCacheIRCompiler::emitLoadDynamicSlotResult()
     masm.load32(stubAddress(reader.stubOffset()), scratch);
     masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), obj);
     masm.loadValue(BaseIndex(obj, scratch, TimesOne), R0);
-    emitEnterTypeMonitorIC();
     return true;
 }
 
@@ -1120,8 +1178,78 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
     masm.callJit(code);
 
     leaveStubFrame(masm, true);
+    return true;
+}
 
-    emitEnterTypeMonitorIC();
+typedef bool (*DoCallNativeGetterFn)(JSContext*, HandleFunction, HandleObject, MutableHandleValue);
+static const VMFunction DoCallNativeGetterInfo =
+    FunctionInfo<DoCallNativeGetterFn>(DoCallNativeGetter, "DoCallNativeGetter");
+
+bool
+BaselineCacheIRCompiler::emitCallNativeGetterResult()
+{
+    // We use ICTailCallReg when entering the stub frame, so ensure it's not
+    // used for something else.
+    Maybe<AutoScratchRegister> tail;
+    if (allocator.isAllocatable(ICTailCallReg))
+        tail.emplace(allocator, masm, ICTailCallReg);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Address getterAddr(stubAddress(reader.stubOffset()));
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    allocator.discardStack(masm);
+
+    // Push a stub frame so that we can perform a non-tail call.
+    enterStubFrame(masm, scratch);
+
+    // Load the callee in the scratch register.
+    masm.loadPtr(getterAddr, scratch);
+
+    masm.Push(obj);
+    masm.Push(scratch);
+
+    if (!callVM(masm, DoCallNativeGetterInfo))
+        return false;
+
+    leaveStubFrame(masm);
+    return true;
+}
+
+typedef bool (*ProxyGetPropertyFn)(JSContext*, HandleObject, HandleId, MutableHandleValue);
+static const VMFunction ProxyGetPropertyInfo =
+    FunctionInfo<ProxyGetPropertyFn>(ProxyGetProperty, "ProxyGetProperty");
+
+bool
+BaselineCacheIRCompiler::emitCallProxyGetResult()
+{
+    // We use ICTailCallReg when entering the stub frame, so ensure it's not
+    // used for something else.
+    Maybe<AutoScratchRegister> tail;
+    if (allocator.isAllocatable(ICTailCallReg))
+        tail.emplace(allocator, masm, ICTailCallReg);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Address idAddr(stubAddress(reader.stubOffset()));
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    allocator.discardStack(masm);
+
+    // Push a stub frame so that we can perform a non-tail call.
+    enterStubFrame(masm, scratch);
+
+    // Load the jsid in the scratch register.
+    masm.loadPtr(idAddr, scratch);
+
+    masm.Push(scratch);
+    masm.Push(obj);
+
+    if (!callVM(masm, ProxyGetPropertyInfo))
+        return false;
+
+    leaveStubFrame(masm);
     return true;
 }
 
@@ -1132,16 +1260,9 @@ BaselineCacheIRCompiler::emitLoadUnboxedPropertyResult()
     AutoScratchRegister scratch(allocator, masm);
 
     JSValueType fieldType = reader.valueType();
-
     Address fieldOffset(stubAddress(reader.stubOffset()));
     masm.load32(fieldOffset, scratch);
     masm.loadUnboxedProperty(BaseIndex(obj, scratch, TimesOne), fieldType, R0);
-
-    if (fieldType == JSVAL_TYPE_OBJECT)
-        emitEnterTypeMonitorIC();
-    else
-        emitReturnFromIC();
-
     return true;
 }
 
@@ -1174,18 +1295,12 @@ BaselineCacheIRCompiler::emitLoadTypedObjectResult()
     masm.load32(fieldOffset, scratch2);
     masm.addPtr(scratch2, scratch1);
 
-    // Only monitor the result if the type produced by this stub might vary.
-    bool monitorLoad;
     if (SimpleTypeDescrKeyIsScalar(typeDescr)) {
         Scalar::Type type = ScalarTypeFromSimpleTypeDescrKey(typeDescr);
-        monitorLoad = type == Scalar::Uint32;
-
         masm.loadFromTypedArray(type, Address(scratch1, 0), R0, /* allowDouble = */ true,
                                 scratch2, nullptr);
     } else {
         ReferenceTypeDescr::Type type = ReferenceTypeFromSimpleTypeDescrKey(typeDescr);
-        monitorLoad = type != ReferenceTypeDescr::TYPE_STRING;
-
         switch (type) {
           case ReferenceTypeDescr::TYPE_ANY:
             masm.loadValue(Address(scratch1, 0), R0);
@@ -1213,10 +1328,6 @@ BaselineCacheIRCompiler::emitLoadTypedObjectResult()
         }
     }
 
-    if (monitorLoad)
-        emitEnterTypeMonitorIC();
-    else
-        emitReturnFromIC();
     return true;
 }
 
@@ -1224,11 +1335,6 @@ bool
 BaselineCacheIRCompiler::emitLoadUndefinedResult()
 {
     masm.moveValue(UndefinedValue(), R0);
-
-    // Normally for this op, the result would have to be monitored by TI.
-    // However, since this stub ALWAYS returns UndefinedValue(), and we can be sure
-    // that undefined is already registered with the type-set, this can be avoided.
-    emitReturnFromIC();
     return true;
 }
 
@@ -1248,10 +1354,6 @@ BaselineCacheIRCompiler::emitLoadInt32ArrayLengthResult()
     // Guard length fits in an int32.
     masm.branchTest32(Assembler::Signed, scratch, scratch, failure->label());
     masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
-
-    // The int32 type was monitored when attaching the stub, so we can
-    // just return.
-    emitReturnFromIC();
     return true;
 }
 
@@ -1261,10 +1363,6 @@ BaselineCacheIRCompiler::emitLoadUnboxedArrayLengthResult()
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     masm.load32(Address(obj, UnboxedArrayObject::offsetOfLength()), R0.scratchReg());
     masm.tagValue(JSVAL_TYPE_INT32, R0.scratchReg(), R0);
-
-    // The int32 type was monitored when attaching the stub, so we can
-    // just return.
-    emitReturnFromIC();
     return true;
 }
 
@@ -1291,7 +1389,22 @@ BaselineCacheIRCompiler::emitLoadArgumentsObjectLengthResult()
     // because this stub always returns int32.
     masm.rshiftPtr(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratch);
     masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
-    emitReturnFromIC();
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitTypeMonitorResult()
+{
+    allocator.discardStack(masm);
+    EmitEnterTypeMonitorIC(masm);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitReturnFromIC()
+{
+    allocator.discardStack(masm);
+    EmitReturnFromIC(masm);
     return true;
 }
 
@@ -1309,6 +1422,75 @@ BaselineCacheIRCompiler::emitLoadProto()
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Register reg = allocator.defineRegister(masm, reader.objOperandId());
     masm.loadObjProto(obj, reg);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitLoadDOMExpandoValue()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ValueOperand val = allocator.defineValueRegister(masm, reader.valOperandId());
+
+    masm.loadPtr(Address(obj, ProxyObject::offsetOfValues()), val.scratchReg());
+    masm.loadValue(Address(val.scratchReg(),
+                           ProxyObject::offsetOfExtraSlotInValues(GetDOMProxyExpandoSlot())),
+                   val);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardDOMExpandoObject()
+{
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    AutoScratchRegister shapeScratch(allocator, masm);
+    AutoScratchRegister objScratch(allocator, masm);
+    Address shapeAddr(stubAddress(reader.stubOffset()));
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label done;
+    masm.branchTestUndefined(Assembler::Equal, val, &done);
+
+    masm.loadPtr(shapeAddr, shapeScratch);
+    masm.unboxObject(val, objScratch);
+    masm.branchTestObjShape(Assembler::NotEqual, objScratch, shapeScratch, failure->label());
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitGuardDOMExpandoGeneration()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Address expandoAndGenerationAddr(stubAddress(reader.stubOffset()));
+    Address generationAddr(stubAddress(reader.stubOffset()));
+
+    AutoScratchRegister scratch(allocator, masm);
+    ValueOperand output = allocator.defineValueRegister(masm, reader.valOperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.loadPtr(Address(obj, ProxyObject::offsetOfValues()), scratch);
+    Address expandoAddr(scratch, ProxyObject::offsetOfExtraSlotInValues(GetDOMProxyExpandoSlot()));
+
+    // Load the ExpandoAndGeneration* in the output scratch register and guard
+    // it matches the proxy's ExpandoAndGeneration.
+    masm.loadPtr(expandoAndGenerationAddr, output.scratchReg());
+    masm.branchPrivatePtr(Assembler::NotEqual, expandoAddr, output.scratchReg(), failure->label());
+
+    // Guard expandoAndGeneration->generation matches the expected generation.
+    masm.branch64(Assembler::NotEqual,
+                  Address(output.scratchReg(), ExpandoAndGeneration::offsetOfGeneration()),
+                  generationAddr,
+                  scratch, failure->label());
+
+    // Load expandoAndGeneration->expando into the output Value register.
+    masm.loadValue(Address(output.scratchReg(), ExpandoAndGeneration::offsetOfExpando()), output);
     return true;
 }
 
@@ -1334,23 +1516,23 @@ AsGCPtr(uintptr_t* ptr)
 
 template<class T>
 GCPtr<T>&
-CacheIRStubInfo::getStubField(ICStub* stub, uint32_t field) const
+CacheIRStubInfo::getStubField(ICStub* stub, uint32_t offset) const
 {
     uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
     MOZ_ASSERT(uintptr_t(stubData) % sizeof(uintptr_t) == 0);
 
-    return *AsGCPtr<T>((uintptr_t*)stubData + field);
+    return *AsGCPtr<T>((uintptr_t*)(stubData + offset));
 }
 
 template GCPtr<Shape*>& CacheIRStubInfo::getStubField(ICStub* stub, uint32_t offset) const;
 template GCPtr<ObjectGroup*>& CacheIRStubInfo::getStubField(ICStub* stub, uint32_t offset) const;
 template GCPtr<JSObject*>& CacheIRStubInfo::getStubField(ICStub* stub, uint32_t offset) const;
 
-template <typename T>
+template <typename T, typename V>
 static void
-InitGCPtr(uintptr_t* ptr, uintptr_t val)
+InitGCPtr(uintptr_t* ptr, V val)
 {
-    AsGCPtr<T*>(ptr)->init((T*)val);
+    AsGCPtr<T>(ptr)->init(mozilla::BitwiseCast<T>(val));
 }
 
 void
@@ -1359,23 +1541,33 @@ CacheIRWriter::copyStubData(uint8_t* dest) const
     uintptr_t* destWords = reinterpret_cast<uintptr_t*>(dest);
 
     for (size_t i = 0; i < stubFields_.length(); i++) {
-        switch (stubFields_[i].gcType) {
-          case StubField::GCType::NoGCThing:
-            destWords[i] = stubFields_[i].word;
-            continue;
-          case StubField::GCType::Shape:
-            InitGCPtr<Shape>(destWords + i, stubFields_[i].word);
-            continue;
-          case StubField::GCType::JSObject:
-            InitGCPtr<JSObject>(destWords + i, stubFields_[i].word);
-            continue;
-          case StubField::GCType::ObjectGroup:
-            InitGCPtr<ObjectGroup>(destWords + i, stubFields_[i].word);
-            continue;
-          case StubField::GCType::Limit:
+        StubField::Type type = stubFields_[i].type();
+        switch (type) {
+          case StubField::Type::RawWord:
+            *destWords = stubFields_[i].asWord();
             break;
+          case StubField::Type::Shape:
+            InitGCPtr<Shape*>(destWords, stubFields_[i].asWord());
+            break;
+          case StubField::Type::JSObject:
+            InitGCPtr<JSObject*>(destWords, stubFields_[i].asWord());
+            break;
+          case StubField::Type::ObjectGroup:
+            InitGCPtr<ObjectGroup*>(destWords, stubFields_[i].asWord());
+            break;
+          case StubField::Type::Id:
+            InitGCPtr<jsid>(destWords, stubFields_[i].asWord());
+            break;
+          case StubField::Type::RawInt64:
+            *reinterpret_cast<uint64_t*>(destWords) = stubFields_[i].asInt64();
+            break;
+          case StubField::Type::Value:
+            InitGCPtr<JS::Value>(destWords, stubFields_[i].asInt64());
+            break;
+          case StubField::Type::Limit:
+            MOZ_CRASH("Invalid type");
         }
-        MOZ_CRASH();
+        destWords += StubField::sizeInBytes(type) / sizeof(uintptr_t);
     }
 }
 
@@ -1426,17 +1618,17 @@ CacheIRStubInfo::New(CacheKind kind, ICStubEngine engine, bool makesGCCalls,
     uint8_t* codeStart = p + sizeof(CacheIRStubInfo);
     mozilla::PodCopy(codeStart, writer.codeStart(), writer.codeLength());
 
-    static_assert(uint32_t(StubField::GCType::Limit) <= UINT8_MAX,
-                  "All StubField::GCTypes must fit in uint8_t");
+    static_assert(sizeof(StubField::Type) == sizeof(uint8_t),
+                  "StubField::Type must fit in uint8_t");
 
-    // Copy the GC types of the stub fields.
-    uint8_t* gcTypes = codeStart + writer.codeLength();
+    // Copy the stub field types.
+    uint8_t* fieldTypes = codeStart + writer.codeLength();
     for (size_t i = 0; i < numStubFields; i++)
-        gcTypes[i] = uint8_t(writer.stubFieldGCType(i));
-    gcTypes[numStubFields] = uint8_t(StubField::GCType::Limit);
+        fieldTypes[i] = uint8_t(writer.stubFieldType(i));
+    fieldTypes[numStubFields] = uint8_t(StubField::Type::Limit);
 
     return new(p) CacheIRStubInfo(kind, engine, makesGCCalls, stubDataOffset, codeStart,
-                                  writer.codeLength(), gcTypes);
+                                  writer.codeLength(), fieldTypes);
 }
 
 static const size_t MaxOptimizedCacheIRStubs = 16;
@@ -1518,28 +1710,37 @@ void
 jit::TraceBaselineCacheIRStub(JSTracer* trc, ICStub* stub, const CacheIRStubInfo* stubInfo)
 {
     uint32_t field = 0;
+    size_t offset = 0;
     while (true) {
-        switch (stubInfo->gcType(field)) {
-          case StubField::GCType::NoGCThing:
+        StubField::Type fieldType = stubInfo->fieldType(field);
+        switch (fieldType) {
+          case StubField::Type::RawWord:
+          case StubField::Type::RawInt64:
             break;
-          case StubField::GCType::Shape:
-            TraceNullableEdge(trc, &stubInfo->getStubField<Shape*>(stub, field),
+          case StubField::Type::Shape:
+            TraceNullableEdge(trc, &stubInfo->getStubField<Shape*>(stub, offset),
                               "baseline-cacheir-shape");
             break;
-          case StubField::GCType::ObjectGroup:
-            TraceNullableEdge(trc, &stubInfo->getStubField<ObjectGroup*>(stub, field),
+          case StubField::Type::ObjectGroup:
+            TraceNullableEdge(trc, &stubInfo->getStubField<ObjectGroup*>(stub, offset),
                               "baseline-cacheir-group");
             break;
-          case StubField::GCType::JSObject:
-            TraceNullableEdge(trc, &stubInfo->getStubField<JSObject*>(stub, field),
+          case StubField::Type::JSObject:
+            TraceNullableEdge(trc, &stubInfo->getStubField<JSObject*>(stub, offset),
                               "baseline-cacheir-object");
             break;
-          case StubField::GCType::Limit:
+          case StubField::Type::Id:
+            TraceEdge(trc, &stubInfo->getStubField<jsid>(stub, offset), "baseline-cacheir-id");
+            break;
+          case StubField::Type::Value:
+            TraceEdge(trc, &stubInfo->getStubField<JS::Value>(stub, offset),
+                      "baseline-cacheir-value");
+            break;
+          case StubField::Type::Limit:
             return; // Done.
-          default:
-            MOZ_CRASH();
         }
         field++;
+        offset += StubField::sizeInBytes(fieldType);
     }
 }
 
@@ -1549,45 +1750,52 @@ CacheIRStubInfo::stubDataSize() const
     size_t field = 0;
     size_t size = 0;
     while (true) {
-        switch (gcType(field++)) {
-          case StubField::GCType::NoGCThing:
-          case StubField::GCType::Shape:
-          case StubField::GCType::ObjectGroup:
-          case StubField::GCType::JSObject:
-            size += sizeof(uintptr_t);
-            continue;
-          case StubField::GCType::Limit:
+        StubField::Type type = fieldType(field++);
+        if (type == StubField::Type::Limit)
             return size;
-        }
-        MOZ_CRASH("unreachable");
+        size += StubField::sizeInBytes(type);
     }
 }
 
 void
 CacheIRStubInfo::copyStubData(ICStub* src, ICStub* dest) const
 {
-    uintptr_t* srcWords = reinterpret_cast<uintptr_t*>(src);
-    uintptr_t* destWords = reinterpret_cast<uintptr_t*>(dest);
+    uint8_t* srcBytes = reinterpret_cast<uint8_t*>(src);
+    uint8_t* destBytes = reinterpret_cast<uint8_t*>(dest);
 
     size_t field = 0;
+    size_t offset = 0;
     while (true) {
-        switch (gcType(field)) {
-          case StubField::GCType::NoGCThing:
-            destWords[field] = srcWords[field];
+        StubField::Type type = fieldType(field);
+        switch (type) {
+          case StubField::Type::RawWord:
+            *reinterpret_cast<uintptr_t*>(destBytes + offset) =
+                *reinterpret_cast<uintptr_t*>(srcBytes + offset);
             break;
-          case StubField::GCType::Shape:
-            getStubField<Shape*>(dest, field).init(getStubField<Shape*>(src, field));
+          case StubField::Type::RawInt64:
+            *reinterpret_cast<uint64_t*>(destBytes + offset) =
+                *reinterpret_cast<uint64_t*>(srcBytes + offset);
             break;
-          case StubField::GCType::JSObject:
-            getStubField<JSObject*>(dest, field).init(getStubField<JSObject*>(src, field));
+          case StubField::Type::Shape:
+            getStubField<Shape*>(dest, offset).init(getStubField<Shape*>(src, offset));
             break;
-          case StubField::GCType::ObjectGroup:
-            getStubField<ObjectGroup*>(dest, field).init(getStubField<ObjectGroup*>(src, field));
+          case StubField::Type::JSObject:
+            getStubField<JSObject*>(dest, offset).init(getStubField<JSObject*>(src, offset));
             break;
-          case StubField::GCType::Limit:
+          case StubField::Type::ObjectGroup:
+            getStubField<ObjectGroup*>(dest, offset).init(getStubField<ObjectGroup*>(src, offset));
+            break;
+          case StubField::Type::Id:
+            getStubField<jsid>(dest, offset).init(getStubField<jsid>(src, offset));
+            break;
+          case StubField::Type::Value:
+            getStubField<Value>(dest, offset).init(getStubField<Value>(src, offset));
+            break;
+          case StubField::Type::Limit:
             return; // Done.
         }
         field++;
+        offset += StubField::sizeInBytes(type);
     }
 }
 

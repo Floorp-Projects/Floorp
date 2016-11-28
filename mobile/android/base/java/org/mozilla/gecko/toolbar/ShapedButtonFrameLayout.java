@@ -12,6 +12,7 @@ import org.mozilla.gecko.widget.themed.ThemedFrameLayout;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 
 /** A FrameLayout with lightweight theme support. Note that {@link ShapedButton}'s lwt support is basically the same so
@@ -56,15 +57,15 @@ public class ShapedButtonFrameLayout extends ThemedFrameLayout {
             return;
         }
 
-        int[] padding =  new int[] { getPaddingLeft(),
+        int[] padding =  new int[] { ViewCompat.getPaddingStart(this),
                                      getPaddingTop(),
-                                     getPaddingRight(),
+                                     ViewCompat.getPaddingEnd(this),
                                      getPaddingBottom()
                                    };
         drawable.setLevel(getBackground().getLevel());
         super.setBackgroundDrawable(drawable);
 
-        setPadding(padding[0], padding[1], padding[2], padding[3]);
+        ViewCompat.setPaddingRelative(this, padding[0], padding[1], padding[2], padding[3]);
     }
 
     @Override

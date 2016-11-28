@@ -86,7 +86,7 @@ nsGIOMimeApp::Launch(const nsACString& aUri)
 
 class GIOUTF8StringEnumerator final : public nsIUTF8StringEnumerator
 {
-  ~GIOUTF8StringEnumerator() { }
+  ~GIOUTF8StringEnumerator() = default;
 
 public:
   GIOUTF8StringEnumerator() : mIndex(0) { }

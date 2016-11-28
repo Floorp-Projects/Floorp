@@ -328,6 +328,17 @@ void RecordChromeHang(uint32_t aDuration,
                       int32_t aFirefoxUptime,
                       mozilla::UniquePtr<mozilla::HangMonitor::HangAnnotations>
                               aAnnotations);
+
+/**
+ * Record the current thread's call stack on demand. Note that, the stack is
+ * only captured once. Subsequent calls result in incrementing the capture
+ * counter.
+ *
+ * @param aKey - A user defined key associated with the captured stack.
+ *
+ * NOTE: Unwinding call stacks is an expensive operation performance-wise.
+ */
+void CaptureStack(const nsCString& aKey);
 #endif
 
 class ThreadHangStats;

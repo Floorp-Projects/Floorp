@@ -1,10 +1,11 @@
 // Binary: cache/js-opt-32-2dc40eb83023-linux
 // Flags: -m -n -a
 //
-function toPrinted(value)
-  value = value.replace(/\\n/g, 'NL')
-               .replace(/\\r/g, 'CR')
-               .replace(/[^\x20-\x7E]+/g, escapeString);
+function toPrinted(value) {
+  return value = value.replace(/\\n/g, 'NL')
+                      .replace(/\\r/g, 'CR')
+                      .replace(/[^\x20-\x7E]+/g, escapeString);
+}
 function escapeString (str)
 {
   var a, b, c, d;

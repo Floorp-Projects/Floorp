@@ -17,7 +17,7 @@
 const LONG_WORD = "a".repeat(1000);
 
 const testCases = [
-  ["cs2", [
+  [getCookieId("cs2", ".example.org", "/"), [
     {name: "cs2", value: "sessionCookie"},
     {name: "cs2.Path", value: "/"},
     {name: "cs2.HostOnly", value: "false"},
@@ -26,7 +26,7 @@ const testCases = [
     {name: "cs2.Expires", value: "Session"},
     {name: "cs2.Secure", value: "false"},
   ]],
-  ["c1", [
+  [getCookieId("c1", "test1.example.org", "/browser"), [
     {name: "c1", value: JSON.stringify(["foo", "Bar", {foo: "Bar"}])},
     {name: "c1.Path", value: "/browser"},
     {name: "c1.HostOnly", value: "true"},
@@ -42,9 +42,13 @@ const testCases = [
     {name: "c1.2", value: "Object"},
     {name: "c1.2.foo", value: "Bar"},
   ], true],
-  ["c_encoded", [
-    {name: "c_encoded", value: encodeURIComponent(JSON.stringify({foo: {foo1: "bar"}}))}
-  ]],
+  [
+    getCookieId("c_encoded", "test1.example.org",
+                "/browser/devtools/client/storage/test/"),
+    [
+      {name: "c_encoded", value: encodeURIComponent(JSON.stringify({foo: {foo1: "bar"}}))}
+    ]
+  ],
   [null, [
     {name: "c_encoded", value: "Object"},
     {name: "c_encoded.foo", value: "Object"},

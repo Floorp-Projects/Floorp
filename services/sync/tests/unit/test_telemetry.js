@@ -58,21 +58,21 @@ function BogusEngine(service) {
 
 BogusEngine.prototype = Object.create(SteamEngine.prototype);
 
-function cleanAndGo(server) {
+async function cleanAndGo(server) {
   Svc.Prefs.resetBranch("");
   Svc.Prefs.set("log.logger.engine.rotary", "Trace");
   Service.recordManager.clearCache();
-  return new Promise(resolve => server.stop(resolve));
+  await promiseStopServer(server);
 }
 
 // Avoid addon manager complaining about not being initialized
 Service.engineManager.unregister("addons");
 
-add_identity_test(this, function *test_basic() {
+add_identity_test(this, async function test_basic() {
   let helper = track_collections_helper();
   let upd = helper.with_updated_collection;
 
-  yield configureIdentity({ username: "johndoe" });
+  await configureIdentity({ username: "johndoe" });
   let handlers = {
     "/1.1/johndoe/info/collections": helper.handler,
     "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
@@ -88,12 +88,12 @@ add_identity_test(this, function *test_basic() {
   let server = httpd_setup(handlers);
   Service.serverURL = server.baseURI;
 
-  yield sync_and_validate_telem(true);
+  await sync_and_validate_telem(true);
 
-  yield new Promise(resolve => server.stop(resolve));
+  await promiseStopServer(server);
 });
 
-add_task(function* test_processIncoming_error() {
+add_task(async function test_processIncoming_error() {
   let engine = new BookmarksEngine(Service);
   let store  = engine._store;
   let server = serverForUsers({"foo": "password"}, {
@@ -101,7 +101,7 @@ add_task(function* test_processIncoming_error() {
                                            syncID: engine.syncID}}}},
     bookmarks: {}
   });
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   let collection = server.user("foo").collection("bookmarks");
   try {
     // Create a bogus record that when synced down will provoke a
@@ -118,13 +118,13 @@ add_task(function* test_processIncoming_error() {
 
     let error, ping;
     try {
-      yield sync_engine_and_validate_telem(engine, true, errPing => ping = errPing);
+      await sync_engine_and_validate_telem(engine, true, errPing => ping = errPing);
     } catch(ex) {
       error = ex;
     }
     ok(!!error);
     ok(!!ping);
-    equal(ping.uid, "0".repeat(32));
+    equal(ping.uid, "f".repeat(32)); // as setup by SyncTestingInfrastructure
     deepEqual(ping.failureReason, {
       name: "othererror",
       error: "error.engine.reason.record_download_fail"
@@ -139,11 +139,11 @@ add_task(function* test_processIncoming_error() {
 
   } finally {
     store.wipe();
-    yield cleanAndGo(server);
+    await cleanAndGo(server);
   }
 });
 
-add_task(function *test_uploading() {
+add_task(async function test_uploading() {
   let engine = new BookmarksEngine(Service);
   let store  = engine._store;
   let server = serverForUsers({"foo": "password"}, {
@@ -151,7 +151,7 @@ add_task(function *test_uploading() {
                                            syncID: engine.syncID}}}},
     bookmarks: {}
   });
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   let parent = PlacesUtils.toolbarFolderId;
   let uri = Utils.makeURI("http://getfirefox.com/");
@@ -165,7 +165,7 @@ add_task(function *test_uploading() {
 
   let collection = server.user("foo").collection("bookmarks");
   try {
-    let ping = yield sync_engine_and_validate_telem(engine, false);
+    let ping = await sync_engine_and_validate_telem(engine, false);
     ok(!!ping);
     equal(ping.engines.length, 1);
     equal(ping.engines[0].name, "bookmarks");
@@ -178,7 +178,7 @@ add_task(function *test_uploading() {
     store.wipe();
     engine.resetClient();
 
-    ping = yield sync_engine_and_validate_telem(engine, false);
+    ping = await sync_engine_and_validate_telem(engine, false);
     equal(ping.engines.length, 1);
     equal(ping.engines[0].name, "bookmarks");
     equal(ping.engines[0].outgoing.length, 1);
@@ -187,11 +187,11 @@ add_task(function *test_uploading() {
   } finally {
     // Clean up.
     store.wipe();
-    yield cleanAndGo(server);
+    await cleanAndGo(server);
   }
 });
 
-add_task(function *test_upload_failed() {
+add_task(async function test_upload_failed() {
   Service.identity.username = "foo";
   let collection = new ServerCollection();
   collection._wbos.flying = new ServerWBO('flying');
@@ -200,7 +200,7 @@ add_task(function *test_upload_failed() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = new SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let engine = new RotaryEngine(Service);
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
@@ -222,7 +222,7 @@ add_task(function *test_upload_failed() {
 
   try {
     engine.enabled = true;
-    let ping = yield sync_engine_and_validate_telem(engine, true);
+    let ping = await sync_engine_and_validate_telem(engine, true);
     ok(!!ping);
     equal(ping.engines.length, 1);
     equal(ping.engines[0].incoming, null);
@@ -230,25 +230,25 @@ add_task(function *test_upload_failed() {
     engine.lastSync = 123;
     engine.lastSyncLocal = 456;
 
-    ping = yield sync_engine_and_validate_telem(engine, true);
+    ping = await sync_engine_and_validate_telem(engine, true);
     ok(!!ping);
     equal(ping.engines.length, 1);
     equal(ping.engines[0].incoming.reconciled, 1);
     deepEqual(ping.engines[0].outgoing, [{ sent: 2, failed: 2 }]);
 
   } finally {
-    yield cleanAndGo(server);
+    await cleanAndGo(server);
   }
 });
 
-add_task(function *test_sync_partialUpload() {
+add_task(async function test_sync_partialUpload() {
   Service.identity.username = "foo";
 
   let collection = new ServerCollection();
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  let syncTesting = new SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   let engine = new RotaryEngine(Service);
@@ -274,7 +274,7 @@ add_task(function *test_sync_partialUpload() {
 
   try {
     engine.enabled = true;
-    let ping = yield sync_engine_and_validate_telem(engine, true);
+    let ping = await sync_engine_and_validate_telem(engine, true);
 
     ok(!!ping);
     ok(!ping.failureReason);
@@ -296,7 +296,7 @@ add_task(function *test_sync_partialUpload() {
 
     try {
       // should throw
-      yield sync_engine_and_validate_telem(engine, true, errPing => ping = errPing);
+      await sync_engine_and_validate_telem(engine, true, errPing => ping = errPing);
     } catch (e) {}
     // It would be nice if we had a more descriptive error for this...
     let uploadFailureError = {
@@ -317,11 +317,11 @@ add_task(function *test_sync_partialUpload() {
     deepEqual(ping.engines[0].failureReason, uploadFailureError);
 
   } finally {
-    yield cleanAndGo(server);
+    await cleanAndGo(server);
   }
 });
 
-add_task(function* test_generic_engine_fail() {
+add_task(async function test_generic_engine_fail() {
   Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
@@ -331,12 +331,12 @@ add_task(function* test_generic_engine_fail() {
                                       syncID: engine.syncID}}}},
     steam: {}
   });
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   let e = new Error("generic failure message")
   engine._errToThrow = e;
 
   try {
-    let ping = yield sync_and_validate_telem(true);
+    let ping = await sync_and_validate_telem(true);
     equal(ping.status.service, SYNC_FAILED_PARTIAL);
     deepEqual(ping.engines.find(e => e.name === "steam").failureReason, {
       name: "unexpectederror",
@@ -344,11 +344,11 @@ add_task(function* test_generic_engine_fail() {
     });
   } finally {
     Service.engineManager.unregister(engine);
-    yield cleanAndGo(server);
+    await cleanAndGo(server);
   }
 });
 
-add_task(function* test_engine_fail_ioerror() {
+add_task(async function test_engine_fail_ioerror() {
   Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
@@ -358,20 +358,20 @@ add_task(function* test_engine_fail_ioerror() {
                                       syncID: engine.syncID}}}},
     steam: {}
   });
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   // create an IOError to re-throw as part of Sync.
   try {
     // (Note that fakeservices.js has replaced Utils.jsonMove etc, but for
     // this test we need the real one so we get real exceptions from the
     // filesystem.)
-    yield Utils._real_jsonMove("file-does-not-exist", "anything", {});
+    await Utils._real_jsonMove("file-does-not-exist", "anything", {});
   } catch (ex) {
     engine._errToThrow = ex;
   }
   ok(engine._errToThrow, "expecting exception");
 
   try {
-    let ping = yield sync_and_validate_telem(true);
+    let ping = await sync_and_validate_telem(true);
     equal(ping.status.service, SYNC_FAILED_PARTIAL);
     let failureReason = ping.engines.find(e => e.name === "steam").failureReason;
     equal(failureReason.name, "unexpectederror");
@@ -380,11 +380,11 @@ add_task(function* test_engine_fail_ioerror() {
     ok(failureReason.error.includes("[profileDir]"), failureReason.error);
   } finally {
     Service.engineManager.unregister(engine);
-    yield cleanAndGo(server);
+    await cleanAndGo(server);
   }
 });
 
-add_task(function* test_initial_sync_engines() {
+add_task(async function test_initial_sync_engines() {
   Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
@@ -398,9 +398,9 @@ add_task(function* test_initial_sync_engines() {
     conf[e] = {};
   }
   let server = serverForUsers({"foo": "password"}, conf);
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   try {
-    let ping = yield wait_for_ping(() => Service.sync(), true);
+    let ping = await wait_for_ping(() => Service.sync(), true);
 
     equal(ping.engines.find(e => e.name === "clients").outgoing[0].sent, 1);
     equal(ping.engines.find(e => e.name === "tabs").outgoing[0].sent, 1);
@@ -417,11 +417,11 @@ add_task(function* test_initial_sync_engines() {
       equal(e.outgoing[0].failed, undefined);
     }
   } finally {
-    yield cleanAndGo(server);
+    await cleanAndGo(server);
   }
 });
 
-add_task(function* test_nserror() {
+add_task(async function test_nserror() {
   Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
@@ -431,10 +431,10 @@ add_task(function* test_nserror() {
                                       syncID: engine.syncID}}}},
     steam: {}
   });
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   engine._errToThrow = Components.Exception("NS_ERROR_UNKNOWN_HOST", Cr.NS_ERROR_UNKNOWN_HOST);
   try {
-    let ping = yield sync_and_validate_telem(true);
+    let ping = await sync_and_validate_telem(true);
     deepEqual(ping.status, {
       service: SYNC_FAILED_PARTIAL,
       sync: LOGIN_FAILED_NETWORK_ERROR
@@ -446,11 +446,11 @@ add_task(function* test_nserror() {
     });
   } finally {
     Service.engineManager.unregister(engine);
-    yield cleanAndGo(server);
+    await cleanAndGo(server);
   }
 });
 
-add_identity_test(this, function *test_discarding() {
+add_identity_test(this, async function test_discarding() {
   let helper = track_collections_helper();
   let upd = helper.with_updated_collection;
   let telem = get_sync_test_telemetry();
@@ -461,7 +461,6 @@ add_identity_test(this, function *test_discarding() {
   let server;
   try {
 
-    yield configureIdentity({ username: "johndoe" });
     let handlers = {
       "/1.1/johndoe/info/collections": helper.handler,
       "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
@@ -475,7 +474,7 @@ add_identity_test(this, function *test_discarding() {
     }
 
     server = httpd_setup(handlers);
-    Service.serverURL = server.baseURI;
+    await configureIdentity({ username: "johndoe" }, server);
     telem.submit = () => ok(false, "Submitted telemetry ping when we should not have");
 
     for (let i = 0; i < 5; ++i) {
@@ -483,7 +482,7 @@ add_identity_test(this, function *test_discarding() {
     }
     telem.submit = oldSubmit;
     telem.submissionInterval = -1;
-    let ping = yield sync_and_validate_telem(true, true); // with this we've synced 6 times
+    let ping = await sync_and_validate_telem(true, true); // with this we've synced 6 times
     equal(ping.syncs.length, 2);
     equal(ping.discarded, 4);
   } finally {
@@ -491,12 +490,12 @@ add_identity_test(this, function *test_discarding() {
     telem.submissionInterval = -1;
     telem.submit = oldSubmit;
     if (server) {
-      yield new Promise(resolve => server.stop(resolve));
+      await promiseStopServer(server);
     }
   }
 })
 
-add_task(function* test_no_foreign_engines_in_error_ping() {
+add_task(async function test_no_foreign_engines_in_error_ping() {
   Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
@@ -506,18 +505,18 @@ add_task(function* test_no_foreign_engines_in_error_ping() {
     steam: {}
   });
   engine._errToThrow = new Error("Oh no!");
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   try {
-    let ping = yield sync_and_validate_telem(true);
+    let ping = await sync_and_validate_telem(true);
     equal(ping.status.service, SYNC_FAILED_PARTIAL);
     ok(ping.engines.every(e => e.name !== "bogus"));
   } finally {
     Service.engineManager.unregister(engine);
-    yield cleanAndGo(server);
+    await cleanAndGo(server);
   }
 });
 
-add_task(function* test_sql_error() {
+add_task(async function test_sql_error() {
   Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
@@ -527,23 +526,23 @@ add_task(function* test_sql_error() {
                                       syncID: engine.syncID}}}},
     steam: {}
   });
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   engine._sync = function() {
     // Just grab a DB connection and issue a bogus SQL statement synchronously.
     let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
     Async.querySpinningly(db.createAsyncStatement("select bar from foo"));
   };
   try {
-    let ping = yield sync_and_validate_telem(true);
+    let ping = await sync_and_validate_telem(true);
     let enginePing = ping.engines.find(e => e.name === "steam");
     deepEqual(enginePing.failureReason, { name: "sqlerror", code: 1 });
   } finally {
     Service.engineManager.unregister(engine);
-    yield cleanAndGo(server);
+    await cleanAndGo(server);
   }
 });
 
-add_task(function* test_no_foreign_engines_in_success_ping() {
+add_task(async function test_no_foreign_engines_in_success_ping() {
   Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
@@ -553,12 +552,12 @@ add_task(function* test_no_foreign_engines_in_success_ping() {
     steam: {}
   });
 
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
   try {
-    let ping = yield sync_and_validate_telem();
+    let ping = await sync_and_validate_telem();
     ok(ping.engines.every(e => e.name !== "bogus"));
   } finally {
     Service.engineManager.unregister(engine);
-    yield cleanAndGo(server);
+    await cleanAndGo(server);
   }
 });

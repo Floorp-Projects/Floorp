@@ -16,7 +16,8 @@ this.EXPORTED_SYMBOLS = [
   "configureIdentity",
   "SyncTestingInfrastructure",
   "waitForZeroTimer",
-  "Promise", // from a module import
+  "promiseZeroTimer",
+  "promiseNamedTimer",
   "add_identity_test",
   "MockFxaStorageManager",
   "AccountState", // from a module import
@@ -36,7 +37,6 @@ Cu.import("resource://testing-common/services/sync/fakeservices.js");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 // and grab non-exported stuff via a backstage pass.
@@ -96,6 +96,18 @@ this.waitForZeroTimer = function waitForZeroTimer(callback) {
   CommonUtils.namedTimer(wait, 150, {}, "timer");
 }
 
+this.promiseZeroTimer = function() {
+  return new Promise(resolve => {
+    waitForZeroTimer(resolve);
+  });
+}
+
+this.promiseNamedTimer = function(wait, thisObj, name) {
+  return new Promise(resolve => {
+    Utils.namedTimer(resolve, wait, thisObj, name);
+  });
+}
+
 /**
  * Return true if Sync is configured with the "legacy" identity provider.
  */
@@ -132,6 +144,8 @@ this.setBasicCredentials =
 
 // Return an identity configuration suitable for testing with our identity
 // providers.  |overrides| can specify overrides for any default values.
+// |server| is optional, but if specified, will be used to form the cluster
+// URL for the FxA identity.
 this.makeIdentityConfig = function(overrides) {
   // first setup the defaults.
   let result = {
@@ -237,54 +251,60 @@ this.configureFxAccountIdentity = function(authService,
   authService._account = config.fxaccount.user.email;
 }
 
-this.configureIdentity = function(identityOverrides) {
-  let config = makeIdentityConfig(identityOverrides);
+this.configureIdentity = async function(identityOverrides, server) {
+  let config = makeIdentityConfig(identityOverrides, server);
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
+
+  if (server) {
+    ns.Service.serverURL = server.baseURI;
+  }
+
+  ns.Service._clusterManager = ns.Service.identity.createClusterManager(ns.Service);
 
   if (ns.Service.identity instanceof BrowserIDManager) {
     // do the FxAccounts thang...
+
+    // If a server was specified, ensure FxA has a correct cluster URL available.
+    if (server && !config.fxaccount.token.endpoint) {
+      let ep = server.baseURI;
+      if (!ep.endsWith("/")) {
+        ep += "/";
+      }
+      ep += "1.1/" + config.username + "/";
+      config.fxaccount.token.endpoint = ep;
+    }
+
     configureFxAccountIdentity(ns.Service.identity, config);
-    return ns.Service.identity.initializeWithCurrentIdentity().then(() => {
-      // need to wait until this identity manager is readyToAuthenticate.
-      return ns.Service.identity.whenReadyToAuthenticate.promise;
-    });
+    await ns.Service.identity.initializeWithCurrentIdentity();
+    // and cheat to avoid requiring each test do an explicit login - give it
+    // a cluster URL.
+    if (config.fxaccount.token.endpoint) {
+      ns.Service.clusterURL = config.fxaccount.token.endpoint;
+    }
+    return;
   }
   // old style identity provider.
+  if (server) {
+    ns.Service.clusterURL = server.baseURI + "/";
+  }
+  ns.Service.identity.username = config.username;
+  ns.Service._updateCachedURLs();
   setBasicCredentials(config.username, config.sync.password, config.sync.syncKey);
-  let deferred = Promise.defer();
-  deferred.resolve();
-  return deferred.promise;
 }
 
-this.SyncTestingInfrastructure = function (server, username, password, syncKey) {
+this.SyncTestingInfrastructure = async function (server, username, password) {
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
 
-  ensureLegacyIdentityManager();
-  let config = makeIdentityConfig();
-  // XXX - hacks for the sync identity provider.
-  if (username)
-    config.username = username;
-  if (password)
-    config.sync.password = password;
-  if (syncKey)
-    config.sync.syncKey = syncKey;
-  let cb = Async.makeSpinningCallback();
-  configureIdentity(config).then(cb, cb);
-  cb.wait();
-
-  let i = server.identity;
-  let uri = i.primaryScheme + "://" + i.primaryHost + ":" +
-            i.primaryPort + "/";
-
-  ns.Service.serverURL = uri;
-  ns.Service.clusterURL = uri;
-
-  this.logStats = initTestLogging();
-  this.fakeFilesystem = new FakeFilesystemService({});
-  this.fakeGUIDService = new FakeGUIDService();
-  this.fakeCryptoService = new FakeCryptoService();
+  let config = makeIdentityConfig({ username, password });
+  await configureIdentity(config, server);
+  return {
+    logStats: initTestLogging(),
+    fakeFilesystem: new FakeFilesystemService({}),
+    fakeGUIDService: new FakeGUIDService(),
+    fakeCryptoService: new FakeCryptoService(),
+  }
 }
 
 /**
@@ -320,19 +340,19 @@ this.add_identity_test = function(test, testFunction) {
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
   // one task for the "old" identity manager.
-  test.add_task(function* () {
+  test.add_task(async function() {
     note("sync");
     let oldIdentity = Status._authManager;
     ensureLegacyIdentityManager();
-    yield testFunction();
+    await testFunction();
     Status.__authManager = ns.Service.identity = oldIdentity;
   });
   // another task for the FxAccounts identity manager.
-  test.add_task(function* () {
+  test.add_task(async function() {
     note("FxAccounts");
     let oldIdentity = Status._authManager;
     Status.__authManager = ns.Service.identity = new BrowserIDManager();
-    yield testFunction();
+    await testFunction();
     Status.__authManager = ns.Service.identity = oldIdentity;
   });
 }

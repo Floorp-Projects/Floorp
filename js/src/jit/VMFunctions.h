@@ -112,7 +112,7 @@ struct VMFunction
         RootNone = 0,
         RootObject,
         RootString,
-        RootPropertyName,
+        RootId,
         RootFunction,
         RootValue,
         RootCell
@@ -284,6 +284,7 @@ template <> struct TypeToDataType<Handle<Scope*> > { static const DataType resul
 template <> struct TypeToDataType<HandleScript> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleValue> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<MutableHandleValue> { static const DataType result = Type_Handle; };
+template <> struct TypeToDataType<HandleId> { static const DataType result = Type_Handle; };
 
 // Convert argument types to properties of the argument known by the jit.
 template <class T> struct TypeToArgProperties {
@@ -338,6 +339,9 @@ template <> struct TypeToArgProperties<HandleValue> {
 template <> struct TypeToArgProperties<MutableHandleValue> {
     static const uint32_t result = TypeToArgProperties<Value>::result | VMFunction::ByRef;
 };
+template <> struct TypeToArgProperties<HandleId> {
+    static const uint32_t result = TypeToArgProperties<jsid>::result | VMFunction::ByRef;
+};
 template <> struct TypeToArgProperties<HandleShape> {
     static const uint32_t result = TypeToArgProperties<Shape*>::result | VMFunction::ByRef;
 };
@@ -365,7 +369,7 @@ template <> struct TypeToRootType<HandleString> {
     static const uint32_t result = VMFunction::RootString;
 };
 template <> struct TypeToRootType<HandlePropertyName> {
-    static const uint32_t result = VMFunction::RootPropertyName;
+    static const uint32_t result = VMFunction::RootString;
 };
 template <> struct TypeToRootType<HandleFunction> {
     static const uint32_t result = VMFunction::RootFunction;
@@ -375,6 +379,9 @@ template <> struct TypeToRootType<HandleValue> {
 };
 template <> struct TypeToRootType<MutableHandleValue> {
     static const uint32_t result = VMFunction::RootValue;
+};
+template <> struct TypeToRootType<HandleId> {
+    static const uint32_t result = VMFunction::RootId;
 };
 template <> struct TypeToRootType<HandleShape> {
     static const uint32_t result = VMFunction::RootCell;
@@ -801,6 +808,9 @@ ThrowObjectCoercible(JSContext* cx, HandleValue v);
 
 MOZ_MUST_USE bool
 BaselineGetFunctionThis(JSContext* cx, BaselineFrame* frame, MutableHandleValue res);
+
+MOZ_MUST_USE bool
+ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp);
 
 } // namespace jit
 } // namespace js

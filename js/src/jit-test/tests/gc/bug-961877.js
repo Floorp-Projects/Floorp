@@ -4,7 +4,7 @@ gczeal(2,300);
 evaluate("\
 var toFloat32 = (function() {\
     var f32 = new Float32Array(1);\
-    function f(x) f32[0] = x;\
+    function f(x) { return f32[0] = x; }\
     return f;\
 })();\
 for (var i = 0; i < 64; ++i) {\

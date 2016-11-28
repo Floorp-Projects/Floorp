@@ -57,7 +57,7 @@ function sync_httpd_setup(handlers) {
   return httpd_setup(handlers);
 }
 
-function setUp() {
+async function setUp() {
   syncedEngines = [];
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
@@ -70,8 +70,7 @@ function setUp() {
   let server = sync_httpd_setup({
     "/1.1/johndoe/storage/meta/global": new ServerWBO("global", {}).handler(),
   });
-  new SyncTestingInfrastructure(server, "johndoe", "ilovejane",
-                                "abcdeabcdeabcdeabcdeabcdea");
+  await SyncTestingInfrastructure(server, "johndoe", "ilovejane");
   return server;
 }
 
@@ -84,9 +83,9 @@ function run_test() {
   run_next_test();
 }
 
-add_test(function test_noEngines() {
+add_task(async function test_noEngines() {
   _("Test: An empty array of engines to sync does nothing.");
-  let server = setUp();
+  let server = await setUp();
 
   try {
     _("Sync with no engines specified.");
@@ -95,13 +94,13 @@ add_test(function test_noEngines() {
 
   } finally {
     Service.startOver();
-    server.stop(run_next_test);
+    await promiseStopServer(server);
   }
 });
 
-add_test(function test_oneEngine() {
+add_task(async function test_oneEngine() {
   _("Test: Only one engine is synced.");
-  let server = setUp();
+  let server = await setUp();
 
   try {
 
@@ -111,13 +110,13 @@ add_test(function test_oneEngine() {
 
   } finally {
     Service.startOver();
-    server.stop(run_next_test);
+    await promiseStopServer(server);
   }
 });
 
-add_test(function test_bothEnginesSpecified() {
+add_task(async function test_bothEnginesSpecified() {
   _("Test: All engines are synced when specified in the correct order (1).");
-  let server = setUp();
+  let server = await setUp();
 
   try {
     _("Sync with both engines specified.");
@@ -126,13 +125,13 @@ add_test(function test_bothEnginesSpecified() {
 
   } finally {
     Service.startOver();
-    server.stop(run_next_test);
+    await promiseStopServer(server);
   }
 });
 
-add_test(function test_bothEnginesSpecified() {
+add_task(async function test_bothEnginesSpecified() {
   _("Test: All engines are synced when specified in the correct order (2).");
-  let server = setUp();
+  let server = await setUp();
 
   try {
     _("Sync with both engines specified.");
@@ -141,13 +140,13 @@ add_test(function test_bothEnginesSpecified() {
 
   } finally {
     Service.startOver();
-    server.stop(run_next_test);
+    await promiseStopServer(server);
   }
 });
 
-add_test(function test_bothEnginesDefault() {
+add_task(async function test_bothEnginesDefault() {
   _("Test: All engines are synced when nothing is specified.");
-  let server = setUp();
+  let server = await setUp();
 
   try {
     Service.sync();
@@ -155,6 +154,6 @@ add_test(function test_bothEnginesDefault() {
 
   } finally {
     Service.startOver();
-    server.stop(run_next_test);
+    await promiseStopServer(server);
   }
 });

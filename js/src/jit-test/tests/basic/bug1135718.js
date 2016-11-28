@@ -1,7 +1,8 @@
 
 setJitCompilerOption("ion.warmup.trigger", 30);
-function ArrayCallback(state)
-  this.state = state;
+function ArrayCallback(state) {
+  return this.state = state;
+}
 ArrayCallback.prototype.isUpperCase = function(v, index, array) {
     return this.state ? true : (v == v.toUpperCase());
 };

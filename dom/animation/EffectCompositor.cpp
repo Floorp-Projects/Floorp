@@ -86,6 +86,11 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     return false;
   }
 
+  if (aFrame->StyleContext()->StyleSource().IsServoComputedValues()) {
+    NS_ERROR("stylo: cannot handle compositor-driven animations yet");
+    return false;
+  }
+
   // The animation cascade will almost always be up-to-date by this point
   // but there are some cases such as when we are restoring the refresh driver
   // from test control after seeking where it might not be the case.
@@ -203,9 +208,11 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
 
   if (aRestyleType == RestyleType::Layer) {
     // Prompt layers to re-sync their animations.
-    MOZ_ASSERT(mPresContext->RestyleManager()->IsGecko(),
-               "stylo: Servo-backed style system should not be using "
+    if (mPresContext->RestyleManager()->IsServo()) {
+      NS_ERROR("stylo: Servo-backed style system should not be using "
                "EffectCompositor");
+      return;
+    }
     mPresContext->RestyleManager()->AsGecko()->IncrementAnimationGeneration();
     EffectSet* effectSet =
       EffectSet::GetEffectSet(aElement, aPseudoType);

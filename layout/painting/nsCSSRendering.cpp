@@ -437,7 +437,7 @@ static DrawResult DrawBorderImage(nsPresContext* aPresContext,
                                   Sides aSkipSides,
                                   PaintBorderFlags aFlags);
 
-static nscolor MakeBevelColor(mozilla::css::Side whichSide, uint8_t style,
+static nscolor MakeBevelColor(mozilla::Side whichSide, uint8_t style,
                               nscolor aBackgroundColor,
                               nscolor aBorderColor);
 
@@ -461,7 +461,7 @@ void nsCSSRendering::Shutdown()
  * Make a bevel color
  */
 static nscolor
-MakeBevelColor(mozilla::css::Side whichSide, uint8_t style,
+MakeBevelColor(mozilla::Side whichSide, uint8_t style,
                nscolor aBackgroundColor, nscolor aBorderColor)
 {
 
@@ -476,24 +476,24 @@ MakeBevelColor(mozilla::css::Side whichSide, uint8_t style,
       (style == NS_STYLE_BORDER_STYLE_RIDGE)) {
     // Flip colors for these two border styles
     switch (whichSide) {
-    case NS_SIDE_BOTTOM: whichSide = NS_SIDE_TOP;    break;
-    case NS_SIDE_RIGHT:  whichSide = NS_SIDE_LEFT;   break;
-    case NS_SIDE_TOP:    whichSide = NS_SIDE_BOTTOM; break;
-    case NS_SIDE_LEFT:   whichSide = NS_SIDE_RIGHT;  break;
+    case eSideBottom: whichSide = eSideTop;    break;
+    case eSideRight:  whichSide = eSideLeft;   break;
+    case eSideTop:    whichSide = eSideBottom; break;
+    case eSideLeft:   whichSide = eSideRight;  break;
     }
   }
 
   switch (whichSide) {
-  case NS_SIDE_BOTTOM:
+  case eSideBottom:
     theColor = colors[1];
     break;
-  case NS_SIDE_RIGHT:
+  case eSideRight:
     theColor = colors[1];
     break;
-  case NS_SIDE_TOP:
+  case eSideTop:
     theColor = colors[0];
     break;
-  case NS_SIDE_LEFT:
+  case eSideLeft:
   default:
     theColor = colors[0];
     break;
@@ -673,13 +673,141 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
       nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color)[side]);
     newStyleBorder.mBorderColor[side] = StyleComplexColor::FromColor(color);
   }
-  DrawResult result =
-    PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
-                               aDirtyRect, aBorderArea, newStyleBorder,
-                               aStyleContext, aFlags, aSkipSides);
-
-  return result;
+  return PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
+                                    aDirtyRect, aBorderArea, newStyleBorder,
+                                    aStyleContext, aFlags, aSkipSides);
 }
+
+Maybe<nsCSSBorderRenderer>
+nsCSSRendering::CreateBorderRenderer(nsPresContext* aPresContext,
+                                     DrawTarget* aDrawTarget,
+                                     nsIFrame* aForFrame,
+                                     const nsRect& aDirtyRect,
+                                     const nsRect& aBorderArea,
+                                     nsStyleContext* aStyleContext,
+                                     Sides aSkipSides)
+{
+  nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
+  const nsStyleBorder *styleBorder = aStyleContext->StyleBorder();
+  // Don't check RelevantLinkVisited here, since we want to take the
+  // same amount of time whether or not it's true.
+  if (!styleIfVisited) {
+    return CreateBorderRendererWithStyleBorder(aPresContext, aDrawTarget,
+                                               aForFrame, aDirtyRect,
+                                               aBorderArea, *styleBorder,
+                                               aStyleContext, aSkipSides);
+  }
+
+  nsStyleBorder newStyleBorder(*styleBorder);
+
+  NS_FOR_CSS_SIDES(side) {
+    nscolor color = aStyleContext->GetVisitedDependentColor(
+      nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color)[side]);
+    newStyleBorder.mBorderColor[side] = StyleComplexColor::FromColor(color);
+  }
+  return CreateBorderRendererWithStyleBorder(aPresContext, aDrawTarget,
+                                             aForFrame, aDirtyRect, aBorderArea,
+                                             newStyleBorder, aStyleContext,
+                                             aSkipSides);
+}
+
+nsCSSBorderRenderer
+ConstructBorderRenderer(nsPresContext* aPresContext,
+                        nsStyleContext* aStyleContext,
+                        DrawTarget* aDrawTarget,
+                        nsIFrame* aForFrame,
+                        const nsRect& aDirtyRect,
+                        const nsRect& aBorderArea,
+                        const nsStyleBorder& aStyleBorder,
+                        Sides aSkipSides,
+                        bool* aNeedsClip)
+{
+  nsMargin border = aStyleBorder.GetComputedBorder();
+
+  // Get our style context's color struct.
+  const nsStyleColor* ourColor = aStyleContext->StyleColor();
+
+  // In NavQuirks mode we want to use the parent's context as a starting point
+  // for determining the background color.
+  bool quirks = aPresContext->CompatibilityMode() == eCompatibility_NavQuirks;
+  nsIFrame* bgFrame = nsCSSRendering::FindNonTransparentBackgroundFrame(aForFrame, quirks);
+  nsStyleContext* bgContext = bgFrame->StyleContext();
+  nscolor bgColor =
+    bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
+
+  // Compute the outermost boundary of the area that might be painted.
+  // Same coordinate space as aBorderArea & aBGClipRect.
+  nsRect joinedBorderArea =
+    ::BoxDecorationRectForBorder(aForFrame, aBorderArea, aSkipSides, &aStyleBorder);
+  RectCornerRadii bgRadii;
+  ::GetRadii(aForFrame, aStyleBorder, aBorderArea, joinedBorderArea, &bgRadii);
+
+  PrintAsFormatString(" joinedBorderArea: %d %d %d %d\n", joinedBorderArea.x, joinedBorderArea.y,
+     joinedBorderArea.width, joinedBorderArea.height);
+
+  // start drawing
+  if (::IsBoxDecorationSlice(aStyleBorder)) {
+    if (joinedBorderArea.IsEqualEdges(aBorderArea)) {
+      // No need for a clip, just skip the sides we don't want.
+      border.ApplySkipSides(aSkipSides);
+    } else {
+      // We're drawing borders around the joined continuation boxes so we need
+      // to clip that to the slice that we want for this frame.
+      *aNeedsClip = true;
+    }
+  } else {
+    MOZ_ASSERT(joinedBorderArea.IsEqualEdges(aBorderArea),
+               "Should use aBorderArea for box-decoration-break:clone");
+    MOZ_ASSERT(aForFrame->GetSkipSides().IsEmpty() ||
+               IS_TRUE_OVERFLOW_CONTAINER(aForFrame),
+               "Should not skip sides for box-decoration-break:clone except "
+               "::first-letter/line continuations or other frame types that "
+               "don't have borders but those shouldn't reach this point. "
+               "Overflow containers do reach this point though.");
+    border.ApplySkipSides(aSkipSides);
+  }
+
+  // Convert to dev pixels.
+  nscoord twipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
+  Rect joinedBorderAreaPx = NSRectToRect(joinedBorderArea, twipsPerPixel);
+  Float borderWidths[4] = { Float(border.top / twipsPerPixel),
+                                   Float(border.right / twipsPerPixel),
+                                   Float(border.bottom / twipsPerPixel),
+                                   Float(border.left / twipsPerPixel) };
+  Rect dirtyRect = NSRectToRect(aDirtyRect, twipsPerPixel);
+
+  uint8_t borderStyles[4];
+  nscolor borderColors[4];
+  nsBorderColors* compositeColors[4];
+
+  // pull out styles, colors, composite colors
+  NS_FOR_CSS_SIDES (i) {
+    borderStyles[i] = aStyleBorder.GetBorderStyle(i);
+    borderColors[i] = ourColor->CalcComplexColor(aStyleBorder.mBorderColor[i]);
+    aStyleBorder.GetCompositeColors(i, &compositeColors[i]);
+  }
+
+  PrintAsFormatString(" borderStyles: %d %d %d %d\n", borderStyles[0], borderStyles[1], borderStyles[2], borderStyles[3]);
+
+  nsIDocument* document = nullptr;
+  nsIContent* content = aForFrame->GetContent();
+  if (content) {
+    document = content->OwnerDoc();
+  }
+
+  return nsCSSBorderRenderer(aPresContext,
+                             document,
+                             aDrawTarget,
+                             dirtyRect,
+                             joinedBorderAreaPx,
+                             borderStyles,
+                             borderWidths,
+                             bgRadii,
+                             borderColors,
+                             compositeColors,
+                             bgColor);
+}
+
 
 DrawResult
 nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
@@ -724,17 +852,6 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
     result = DrawResult::NOT_READY;
   }
 
-  // Get our style context's color struct.
-  const nsStyleColor* ourColor = aStyleContext->StyleColor();
-
-  // In NavQuirks mode we want to use the parent's context as a starting point
-  // for determining the background color.
-  bool quirks = aPresContext->CompatibilityMode() == eCompatibility_NavQuirks;
-  nsIFrame* bgFrame = FindNonTransparentBackgroundFrame(aForFrame, quirks);
-  nsStyleContext* bgContext = bgFrame->StyleContext();
-  nscolor bgColor =
-    bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
-
   nsMargin border = aStyleBorder.GetComputedBorder();
   if (0 == border.left && 0 == border.right &&
       0 == border.top  && 0 == border.bottom) {
@@ -742,99 +859,80 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
     return result;
   }
 
-  // Compute the outermost boundary of the area that might be painted.
-  // Same coordinate space as aBorderArea & aBGClipRect.
-  nsRect joinedBorderArea =
-    ::BoxDecorationRectForBorder(aForFrame, aBorderArea, aSkipSides, &aStyleBorder);
-  RectCornerRadii bgRadii;
-  ::GetRadii(aForFrame, aStyleBorder, aBorderArea, joinedBorderArea, &bgRadii);
+  bool needsClip = false;
+  nsCSSBorderRenderer br = ConstructBorderRenderer(aPresContext,
+                                                   aStyleContext,
+                                                   &aDrawTarget,
+                                                   aForFrame,
+                                                   aDirtyRect,
+                                                   aBorderArea,
+                                                   aStyleBorder,
+                                                   aSkipSides,
+                                                   &needsClip);
 
-  PrintAsFormatString(" joinedBorderArea: %d %d %d %d\n", joinedBorderArea.x, joinedBorderArea.y,
-     joinedBorderArea.width, joinedBorderArea.height);
-
-  // start drawing
-  bool needToPopClip = false;
-
-  if (::IsBoxDecorationSlice(aStyleBorder)) {
-    if (joinedBorderArea.IsEqualEdges(aBorderArea)) {
-      // No need for a clip, just skip the sides we don't want.
-      border.ApplySkipSides(aSkipSides);
-    } else {
-      // We're drawing borders around the joined continuation boxes so we need
-      // to clip that to the slice that we want for this frame.
-      aDrawTarget.PushClipRect(
+  if (needsClip) {
+    aDrawTarget.PushClipRect(
         NSRectToSnappedRect(aBorderArea,
                             aForFrame->PresContext()->AppUnitsPerDevPixel(),
                             aDrawTarget));
-      needToPopClip = true;
-    }
-  } else {
-    MOZ_ASSERT(joinedBorderArea.IsEqualEdges(aBorderArea),
-               "Should use aBorderArea for box-decoration-break:clone");
-    MOZ_ASSERT(aForFrame->GetSkipSides().IsEmpty() ||
-               IS_TRUE_OVERFLOW_CONTAINER(aForFrame),
-               "Should not skip sides for box-decoration-break:clone except "
-               "::first-letter/line continuations or other frame types that "
-               "don't have borders but those shouldn't reach this point. "
-               "Overflow containers do reach this point though.");
-    border.ApplySkipSides(aSkipSides);
   }
 
-  // Convert to dev pixels.
-  nscoord twipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
-  Rect joinedBorderAreaPx = NSRectToRect(joinedBorderArea, twipsPerPixel);
-  Float borderWidths[4] = { Float(border.top / twipsPerPixel),
-                            Float(border.right / twipsPerPixel),
-                            Float(border.bottom / twipsPerPixel),
-                            Float(border.left / twipsPerPixel) };
-  Rect dirtyRect = NSRectToRect(aDirtyRect, twipsPerPixel);
-
-  uint8_t borderStyles[4];
-  nscolor borderColors[4];
-  nsBorderColors *compositeColors[4];
-
-  // pull out styles, colors, composite colors
-  NS_FOR_CSS_SIDES (i) {
-    borderStyles[i] = aStyleBorder.GetBorderStyle(i);
-    borderColors[i] = ourColor->CalcComplexColor(aStyleBorder.mBorderColor[i]);
-    aStyleBorder.GetCompositeColors(i, &compositeColors[i]);
-  }
-
-  PrintAsFormatString(" borderStyles: %d %d %d %d\n", borderStyles[0], borderStyles[1], borderStyles[2], borderStyles[3]);
-  //PrintAsFormatString ("bgRadii: %f %f %f %f\n", bgRadii[0], bgRadii[1], bgRadii[2], bgRadii[3]);
-
-#if 0
-  // this will draw a transparent red backround underneath the border area
-  ColorPattern color(ToDeviceColor(Color(1.f, 0.f, 0.f, 0.5f)));
-  aDrawTarget.FillRect(joinedBorderAreaPx, color);
-#endif
-
-  nsIDocument* document = nullptr;
-  nsIContent* content = aForFrame->GetContent();
-  if (content) {
-    document = content->OwnerDoc();
-  }
-
-  nsCSSBorderRenderer br(aPresContext,
-                         document,
-                         &aDrawTarget,
-                         dirtyRect,
-                         joinedBorderAreaPx,
-                         borderStyles,
-                         borderWidths,
-                         bgRadii,
-                         borderColors,
-                         compositeColors,
-                         bgColor);
   br.DrawBorders();
 
-  if (needToPopClip) {
+  if (needsClip) {
     aDrawTarget.PopClip();
   }
 
   PrintAsStringNewline();
 
   return result;
+}
+
+Maybe<nsCSSBorderRenderer>
+nsCSSRendering::CreateBorderRendererWithStyleBorder(nsPresContext* aPresContext,
+                                                    DrawTarget* aDrawTarget,
+                                                    nsIFrame* aForFrame,
+                                                    const nsRect& aDirtyRect,
+                                                    const nsRect& aBorderArea,
+                                                    const nsStyleBorder& aStyleBorder,
+                                                    nsStyleContext* aStyleContext,
+                                                    Sides aSkipSides)
+{
+  const nsStyleDisplay* displayData = aStyleContext->StyleDisplay();
+  if (displayData->mAppearance) {
+    nsITheme *theme = aPresContext->GetTheme();
+    if (theme &&
+        theme->ThemeSupportsWidget(aPresContext, aForFrame,
+                                   displayData->mAppearance)) {
+      return Nothing();
+    }
+  }
+
+  if (aStyleBorder.mBorderImageSource.GetType() != eStyleImageType_Null) {
+    return Nothing();
+  }
+
+  nsMargin border = aStyleBorder.GetComputedBorder();
+  if (0 == border.left && 0 == border.right &&
+      0 == border.top  && 0 == border.bottom) {
+    // Empty border area
+    return Nothing();
+  }
+
+  bool needsClip = false;
+  nsCSSBorderRenderer br = ConstructBorderRenderer(aPresContext,
+                                                   aStyleContext,
+                                                   aDrawTarget,
+                                                   aForFrame,
+                                                   aDirtyRect,
+                                                   aBorderArea,
+                                                   aStyleBorder,
+                                                   aSkipSides,
+                                                   &needsClip);
+  if (needsClip) {
+    return Nothing();
+  }
+  return Some(br);
 }
 
 static nsRect
@@ -1484,10 +1582,10 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
 
         Float borderSizes[4];
 
-        borderSizes[NS_SIDE_LEFT] = spreadDistance;
-        borderSizes[NS_SIDE_TOP] = spreadDistance;
-        borderSizes[NS_SIDE_RIGHT] = spreadDistance;
-        borderSizes[NS_SIDE_BOTTOM] = spreadDistance;
+        borderSizes[eSideLeft] = spreadDistance;
+        borderSizes[eSideTop] = spreadDistance;
+        borderSizes[eSideRight] = spreadDistance;
+        borderSizes[eSideBottom] = spreadDistance;
 
         nsCSSBorderRenderer::ComputeOuterRadii(borderRadii, borderSizes,
             &clipRectRadii);
@@ -1596,19 +1694,19 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
 
       // See PaintBoxShadowOuter and bug 514670
       if (innerRadii[C_TL].width > 0 || innerRadii[C_BL].width > 0) {
-        borderSizes[NS_SIDE_LEFT] = spreadDistance;
+        borderSizes[eSideLeft] = spreadDistance;
       }
 
       if (innerRadii[C_TL].height > 0 || innerRadii[C_TR].height > 0) {
-        borderSizes[NS_SIDE_TOP] = spreadDistance;
+        borderSizes[eSideTop] = spreadDistance;
       }
 
       if (innerRadii[C_TR].width > 0 || innerRadii[C_BR].width > 0) {
-        borderSizes[NS_SIDE_RIGHT] = spreadDistance;
+        borderSizes[eSideRight] = spreadDistance;
       }
 
       if (innerRadii[C_BL].height > 0 || innerRadii[C_BR].height > 0) {
-        borderSizes[NS_SIDE_BOTTOM] = spreadDistance;
+        borderSizes[eSideBottom] = spreadDistance;
       }
 
       nsCSSBorderRenderer::ComputeInnerRadii(innerRadii, borderSizes,
@@ -1739,7 +1837,7 @@ nsCSSRendering::PaintBackground(const PaintBGParams& aParams)
 }
 
 static bool
-IsOpaqueBorderEdge(const nsStyleBorder& aBorder, mozilla::css::Side aSide)
+IsOpaqueBorderEdge(const nsStyleBorder& aBorder, mozilla::Side aSide)
 {
   if (aBorder.GetComputedBorder().Side(aSide) == 0)
     return true;
@@ -4175,32 +4273,32 @@ DrawSolidBorderSegment(DrawTarget&          aDrawTarget,
     Float startBevelOffset =
       NSAppUnitsToFloatPixels(aStartBevelOffset, aAppUnitsPerDevPixel);
     switch(aStartBevelSide) {
-    case NS_SIDE_TOP:
+    case eSideTop:
       poly[0].x += startBevelOffset;
       break;
-    case NS_SIDE_BOTTOM:
+    case eSideBottom:
       poly[3].x += startBevelOffset;
       break;
-    case NS_SIDE_RIGHT:
+    case eSideRight:
       poly[1].y += startBevelOffset;
       break;
-    case NS_SIDE_LEFT:
+    case eSideLeft:
       poly[0].y += startBevelOffset;
     }
 
     Float endBevelOffset =
       NSAppUnitsToFloatPixels(aEndBevelOffset, aAppUnitsPerDevPixel);
     switch(aEndBevelSide) {
-    case NS_SIDE_TOP:
+    case eSideTop:
       poly[1].x -= endBevelOffset;
       break;
-    case NS_SIDE_BOTTOM:
+    case eSideBottom:
       poly[2].x -= endBevelOffset;
       break;
-    case NS_SIDE_RIGHT:
+    case eSideRight:
       poly[2].y -= endBevelOffset;
       break;
-    case NS_SIDE_LEFT:
+    case eSideLeft:
       poly[3].y -= endBevelOffset;
     }
 
@@ -4252,7 +4350,7 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
                                        uint8_t                  aEndBevelSide,
                                        nscoord                  aEndBevelOffset)
 {
-  bool horizontal = ((NS_SIDE_TOP == aStartBevelSide) || (NS_SIDE_BOTTOM == aStartBevelSide));
+  bool horizontal = ((eSideTop == aStartBevelSide) || (eSideBottom == aStartBevelSide));
   nscoord twipsPerPixel = NSIntPixelsToAppUnits(1, aAppUnitsPerCSSPixel);
   uint8_t ridgeGroove = NS_STYLE_BORDER_STYLE_RIDGE;
 
@@ -4336,7 +4434,7 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
                             ? RoundFloatToPixel(0.5f * (float)aStartBevelOffset, twipsPerPixel, true) : 0;
       nscoord endBevel =   (aEndBevelOffset > 0)
                             ? RoundFloatToPixel(0.5f * (float)aEndBevelOffset, twipsPerPixel, true) : 0;
-      mozilla::css::Side ridgeGrooveSide = (horizontal) ? NS_SIDE_TOP : NS_SIDE_LEFT;
+      mozilla::Side ridgeGrooveSide = (horizontal) ? eSideTop : eSideLeft;
       // FIXME: In theory, this should use the visited-dependent
       // background color, but I don't care.
       nscolor bevelColor = MakeBevelColor(ridgeGrooveSide, ridgeGroove,
@@ -4347,11 +4445,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
       if (horizontal) { // top, bottom
         half = RoundFloatToPixel(0.5f * (float)aBorder.height, twipsPerPixel);
         rect.height = half;
-        if (NS_SIDE_TOP == aStartBevelSide) {
+        if (eSideTop == aStartBevelSide) {
           rect.x += startBevel;
           rect.width -= startBevel;
         }
-        if (NS_SIDE_TOP == aEndBevelSide) {
+        if (eSideTop == aEndBevelSide) {
           rect.width -= endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rect, bevelColor,
@@ -4362,11 +4460,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
       else { // left, right
         half = RoundFloatToPixel(0.5f * (float)aBorder.width, twipsPerPixel);
         rect.width = half;
-        if (NS_SIDE_LEFT == aStartBevelSide) {
+        if (eSideLeft == aStartBevelSide) {
           rect.y += startBevel;
           rect.height -= startBevel;
         }
-        if (NS_SIDE_LEFT == aEndBevelSide) {
+        if (eSideLeft == aEndBevelSide) {
           rect.height -= endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rect, bevelColor,
@@ -4376,7 +4474,7 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
       }
 
       rect = aBorder;
-      ridgeGrooveSide = (NS_SIDE_TOP == ridgeGrooveSide) ? NS_SIDE_BOTTOM : NS_SIDE_RIGHT;
+      ridgeGrooveSide = (eSideTop == ridgeGrooveSide) ? eSideBottom : eSideRight;
       // FIXME: In theory, this should use the visited-dependent
       // background color, but I don't care.
       bevelColor = MakeBevelColor(ridgeGrooveSide, ridgeGroove,
@@ -4384,11 +4482,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
       if (horizontal) {
         rect.y = rect.y + half;
         rect.height = aBorder.height - half;
-        if (NS_SIDE_BOTTOM == aStartBevelSide) {
+        if (eSideBottom == aStartBevelSide) {
           rect.x += startBevel;
           rect.width -= startBevel;
         }
-        if (NS_SIDE_BOTTOM == aEndBevelSide) {
+        if (eSideBottom == aEndBevelSide) {
           rect.width -= endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rect, bevelColor,
@@ -4399,11 +4497,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
       else {
         rect.x = rect.x + half;
         rect.width = aBorder.width - half;
-        if (NS_SIDE_RIGHT == aStartBevelSide) {
+        if (eSideRight == aStartBevelSide) {
           rect.y += aStartBevelOffset - startBevel;
           rect.height -= startBevel;
         }
-        if (NS_SIDE_RIGHT == aEndBevelSide) {
+        if (eSideRight == aEndBevelSide) {
           rect.height -= endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rect, bevelColor,
@@ -4428,11 +4526,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
 
         // draw the top line or rect
         nsRect topRect(aBorder.x, aBorder.y, aBorder.width, thirdHeight);
-        if (NS_SIDE_TOP == aStartBevelSide) {
+        if (eSideTop == aStartBevelSide) {
           topRect.x += aStartBevelOffset - startBevel;
           topRect.width -= aStartBevelOffset - startBevel;
         }
-        if (NS_SIDE_TOP == aEndBevelSide) {
+        if (eSideTop == aEndBevelSide) {
           topRect.width -= aEndBevelOffset - endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, topRect, aBorderColor,
@@ -4443,11 +4541,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
         // draw the botom line or rect
         nscoord heightOffset = aBorder.height - thirdHeight;
         nsRect bottomRect(aBorder.x, aBorder.y + heightOffset, aBorder.width, aBorder.height - heightOffset);
-        if (NS_SIDE_BOTTOM == aStartBevelSide) {
+        if (eSideBottom == aStartBevelSide) {
           bottomRect.x += aStartBevelOffset - startBevel;
           bottomRect.width -= aStartBevelOffset - startBevel;
         }
-        if (NS_SIDE_BOTTOM == aEndBevelSide) {
+        if (eSideBottom == aEndBevelSide) {
           bottomRect.width -= aEndBevelOffset - endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, bottomRect, aBorderColor,
@@ -4459,11 +4557,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
         nscoord thirdWidth = RoundFloatToPixel(0.333333f * (float)aBorder.width, twipsPerPixel);
 
         nsRect leftRect(aBorder.x, aBorder.y, thirdWidth, aBorder.height);
-        if (NS_SIDE_LEFT == aStartBevelSide) {
+        if (eSideLeft == aStartBevelSide) {
           leftRect.y += aStartBevelOffset - startBevel;
           leftRect.height -= aStartBevelOffset - startBevel;
         }
-        if (NS_SIDE_LEFT == aEndBevelSide) {
+        if (eSideLeft == aEndBevelSide) {
           leftRect.height -= aEndBevelOffset - endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, leftRect, aBorderColor,
@@ -4473,11 +4571,11 @@ nsCSSRendering::DrawTableBorderSegment(DrawTarget&              aDrawTarget,
 
         nscoord widthOffset = aBorder.width - thirdWidth;
         nsRect rightRect(aBorder.x + widthOffset, aBorder.y, aBorder.width - widthOffset, aBorder.height);
-        if (NS_SIDE_RIGHT == aStartBevelSide) {
+        if (eSideRight == aStartBevelSide) {
           rightRect.y += aStartBevelOffset - startBevel;
           rightRect.height -= aStartBevelOffset - startBevel;
         }
-        if (NS_SIDE_RIGHT == aEndBevelSide) {
+        if (eSideRight == aEndBevelSide) {
           rightRect.height -= aEndBevelOffset - endBevel;
         }
         DrawSolidBorderSegment(aDrawTarget, rightRect, aBorderColor,

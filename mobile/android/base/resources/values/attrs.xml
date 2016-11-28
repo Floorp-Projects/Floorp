@@ -34,9 +34,6 @@
         <!-- Styles for dynamic panel grid views -->
         <attr name="panelIconViewStyle" format="reference" />
 
-        <!-- Style for the TabsGridLayout -->
-        <attr name="tabGridLayoutViewStyle" format="reference" />
-
         <!-- Default style for the TopSitesGridView -->
         <attr name="topSitesGridViewStyle" format="reference" />
 

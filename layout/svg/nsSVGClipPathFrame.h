@@ -77,14 +77,12 @@ public:
    *   surface should be masked with.
    * @param [in, optional] aExtraMasksTransform The transform to use with
    *   aExtraMask. Should be passed when aExtraMask is passed.
-   * @param [out, optional] aResult returns the result of drawing action.
    */
-  already_AddRefed<SourceSurface>
-    GetClipMask(gfxContext& aReferenceContext, nsIFrame* aClippedFrame,
-                const gfxMatrix& aMatrix, Matrix* aMaskTransform,
-                SourceSurface* aExtraMask = nullptr,
-                const Matrix& aExtraMasksTransform = Matrix(),
-                DrawResult* aResult = nullptr);
+  mozilla::Pair<DrawResult, RefPtr<SourceSurface>>
+  GetClipMask(gfxContext& aReferenceContext, nsIFrame* aClippedFrame,
+              const gfxMatrix& aMatrix, Matrix* aMaskTransform,
+              SourceSurface* aExtraMask = nullptr,
+              const Matrix& aExtraMasksTransform = Matrix());
 
   /**
    * Paint mask directly onto a given context(aMaskContext).

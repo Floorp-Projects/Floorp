@@ -37,6 +37,26 @@ var gTests = [
     }
   },
   {
+    desc: "WebChannel generic message in a private window.",
+    run: function* () {
+      let promiseTestDone = new Promise(function(resolve, reject) {
+        let channel = new WebChannel("generic", Services.io.newURI(HTTP_PATH, null, null));
+        channel.listen(function(id, message, target) {
+          is(id, "generic");
+          is(message.something.nested, "hello");
+          channel.stopListening();
+          resolve();
+        });
+      });
+
+      const url = HTTP_PATH + HTTP_ENDPOINT + "?generic";
+      let privateWindow = yield BrowserTestUtils.openNewBrowserWindow({private: true});
+      yield BrowserTestUtils.openNewForegroundTab(privateWindow.gBrowser, url);
+      yield promiseTestDone;
+      yield BrowserTestUtils.closeWindow(privateWindow);
+    }
+  },
+  {
     desc: "WebChannel two way communication",
     run: function* () {
       return new Promise(function(resolve, reject) {
@@ -396,7 +416,68 @@ var gTests = [
         channel.stopListening();
       });
     }
-  }
+  },
+  {
+    desc: "WebChannel errors handling the message are delivered back to content",
+    run: function* () {
+      const ERRNO_UNKNOWN_ERROR              = 999; // WebChannel.jsm doesn't export this.
+
+      // The channel where we purposely fail responding to a command.
+      let channel = new WebChannel("error", Services.io.newURI(HTTP_PATH, null, null));
+      // The channel where we see the response when the content sees the error
+      let echoChannel = new WebChannel("echo", Services.io.newURI(HTTP_PATH, null, null));
+
+      let testDonePromise = new Promise((resolve, reject) => {
+        // listen for the confirmation that content saw the error.
+        echoChannel.listen((id, message, sender) => {
+          is(id, "echo");
+          is(message.error, "oh no");
+          is(message.errno, ERRNO_UNKNOWN_ERROR);
+          resolve();
+        });
+
+        // listen for a message telling us to simulate an error.
+        channel.listen((id, message, sender) => {
+          is(id, "error");
+          is(message.command, "oops");
+          throw new Error("oh no");
+        });
+      });
+      yield BrowserTestUtils.withNewTab({
+        gBrowser,
+        url: HTTP_PATH + HTTP_ENDPOINT + "?error_thrown"
+      }, function* () {
+        yield testDonePromise;
+        channel.stopListening();
+        echoChannel.stopListening();
+      });
+    }
+  },
+  {
+    desc: "WebChannel errors due to an invalid channel are delivered back to content",
+    run: function* () {
+      const ERRNO_NO_SUCH_CHANNEL            = 2; // WebChannel.jsm doesn't export this.
+      // The channel where we see the response when the content sees the error
+      let echoChannel = new WebChannel("echo", Services.io.newURI(HTTP_PATH, null, null));
+
+      let testDonePromise = new Promise((resolve, reject) => {
+        // listen for the confirmation that content saw the error.
+        echoChannel.listen((id, message, sender) => {
+          is(id, "echo");
+          is(message.error, "No Such Channel");
+          is(message.errno, ERRNO_NO_SUCH_CHANNEL);
+          resolve();
+        });
+      });
+      yield BrowserTestUtils.withNewTab({
+        gBrowser,
+        url: HTTP_PATH + HTTP_ENDPOINT + "?error_invalid_channel"
+      }, function* () {
+        yield testDonePromise;
+        echoChannel.stopListening();
+      });
+    }
+  },
 ]; // gTests
 
 function test() {

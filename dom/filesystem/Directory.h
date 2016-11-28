@@ -144,6 +144,12 @@ public:
   bool
   ClonableToDifferentThreadOrProcess() const;
 
+  nsIFile*
+  GetInternalNsIFile() const
+  {
+    return mFile;
+  }
+
 private:
   Directory(nsISupports* aParent,
             nsIFile* aFile,

@@ -23,7 +23,7 @@ function test()
 // ------- Comment #121 From Gary Kwong [:nth10sd]
 
 // without -j
-  x = function()x;
+  x = function() { return x; };
 
 // Assertion failure: !(pn->pn_dflags & flag), at ../jsparse.h:651
 

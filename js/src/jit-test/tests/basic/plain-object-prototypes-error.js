@@ -14,3 +14,4 @@ assertThrowsObjectError(() => Set.prototype.has(0));
 assertThrowsObjectError(() => WeakMap.prototype.has({}));
 assertThrowsObjectError(() => WeakSet.prototype.has({}));
 assertThrowsObjectError(() => Date.prototype.getSeconds());
+assertThrowsObjectError(() => RegExp.prototype.compile());

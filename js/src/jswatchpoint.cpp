@@ -145,7 +145,7 @@ WatchpointMap::triggerWatchpoint(JSContext* cx, HandleObject obj, HandleId id, M
 }
 
 bool
-WatchpointMap::markIteratively(JSTracer* trc)
+WatchpointMap::markIteratively(GCMarker* marker)
 {
     bool marked = false;
     for (Map::Enum e(map); !e.empty(); e.popFront()) {
@@ -156,7 +156,7 @@ WatchpointMap::markIteratively(JSTracer* trc)
             IsMarked(const_cast<PreBarrieredObject*>(&entry.key().object));
         if (objectIsLive || entry.value().held) {
             if (!objectIsLive) {
-                TraceEdge(trc, const_cast<PreBarrieredObject*>(&entry.key().object),
+                TraceEdge(marker, const_cast<PreBarrieredObject*>(&entry.key().object),
                            "held Watchpoint object");
                 marked = true;
             }
@@ -164,10 +164,10 @@ WatchpointMap::markIteratively(JSTracer* trc)
             MOZ_ASSERT(JSID_IS_STRING(priorKeyId) ||
                        JSID_IS_INT(priorKeyId) ||
                        JSID_IS_SYMBOL(priorKeyId));
-            TraceEdge(trc, const_cast<PreBarrieredId*>(&entry.key().id), "WatchKey::id");
+            TraceEdge(marker, const_cast<PreBarrieredId*>(&entry.key().id), "WatchKey::id");
 
             if (entry.value().closure && !IsMarked(&entry.value().closure)) {
-                TraceEdge(trc, &entry.value().closure, "Watchpoint::closure");
+                TraceEdge(marker, &entry.value().closure, "Watchpoint::closure");
                 marked = true;
             }
 
@@ -180,7 +180,7 @@ WatchpointMap::markIteratively(JSTracer* trc)
 }
 
 void
-WatchpointMap::markAll(JSTracer* trc)
+WatchpointMap::trace(JSTracer* trc)
 {
     for (Map::Enum e(map); !e.empty(); e.popFront()) {
         Map::Entry& entry = e.front();
@@ -199,7 +199,7 @@ WatchpointMap::markAll(JSTracer* trc)
     }
 }
 
-void
+/* static */ void
 WatchpointMap::sweepAll(JSRuntime* rt)
 {
     for (GCCompartmentsIter c(rt); !c.done(); c.next()) {

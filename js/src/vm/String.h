@@ -123,7 +123,11 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  *  |      |
  *  |      +-- JSFatInlineString        - / header is fat
  *  |
- * JSAtom                       - / string equality === pointer equality
+ * JSAtom (abstract)            - / string equality === pointer equality
+ *  |  |
+ *  |  +-- js::NormalAtom       - JSFlatString + atom hash code
+ *  |  |
+ *  |  +-- js::FatInlineAtom    - JSFatInlineString + atom hash code
  *  |
  * js::PropertyName             - / chars don't contain an index (uint32_t)
  *
@@ -135,10 +139,9 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  * Atoms can additionally be permanent, i.e. unable to be collected, and can
  * be combined with other string types to create additional most-derived types
  * that satisfy the invariants of more than one of the abovementioned
- * most-derived types:
- *  - InlineAtom     = JSInlineString     + JSAtom (atom with inline chars, abstract)
- *  - ThinInlineAtom = JSThinInlineString + JSAtom (atom with inline chars)
- *  - FatInlineAtom  = JSFatInlineString  + JSAtom (atom with (more) inline chars)
+ * most-derived types. Furthermore, each atom stores a hash number (based on its
+ * chars). This hash number is used as key in the atoms table and when the atom
+ * is used as key in a JS Map/Set.
  *
  * Derived string types can be queried from ancestor types via isX() and
  * retrieved with asX() debug-only-checked casts.
@@ -769,14 +772,8 @@ class JSFlatString : public JSLinearString
      * Once a JSFlatString sub-class has been added to the atom state, this
      * operation changes the string to the JSAtom type, in place.
      */
-    MOZ_ALWAYS_INLINE JSAtom* morphAtomizedStringIntoAtom() {
-        d.u1.flags |= ATOM_BIT;
-        return &asAtom();
-    }
-    MOZ_ALWAYS_INLINE JSAtom* morphAtomizedStringIntoPermanentAtom() {
-        d.u1.flags |= PERMANENT_ATOM_MASK;
-        return &asAtom();
-    }
+    MOZ_ALWAYS_INLINE JSAtom* morphAtomizedStringIntoAtom(js::HashNumber hash);
+    MOZ_ALWAYS_INLINE JSAtom* morphAtomizedStringIntoPermanentAtom(js::HashNumber hash);
 
     inline void finalize(js::FreeOp* fop);
 
@@ -988,6 +985,9 @@ class JSAtom : public JSFlatString
         d.u1.flags |= PERMANENT_ATOM_MASK;
     }
 
+    inline js::HashNumber hash() const;
+    inline void initHash(js::HashNumber hash);
+
 #ifdef DEBUG
     void dump(FILE* fp);
     void dump();
@@ -996,6 +996,83 @@ class JSAtom : public JSFlatString
 
 static_assert(sizeof(JSAtom) == sizeof(JSString),
               "string subclasses must be binary-compatible with JSString");
+
+namespace js {
+
+class NormalAtom : public JSAtom
+{
+  protected: // Silence Clang unused-field warning.
+    HashNumber hash_;
+    uint32_t padding_; // Ensure the size is a multiple of gc::CellSize.
+
+  public:
+    HashNumber hash() const {
+        return hash_;
+    }
+    void initHash(HashNumber hash) {
+        hash_ = hash;
+    }
+};
+
+static_assert(sizeof(NormalAtom) == sizeof(JSString) + sizeof(uint64_t),
+              "NormalAtom must have size of a string + HashNumber, "
+              "aligned to gc::CellSize");
+
+class FatInlineAtom : public JSAtom
+{
+  protected: // Silence Clang unused-field warning.
+    char inlineStorage_[sizeof(JSFatInlineString) - sizeof(JSString)];
+    HashNumber hash_;
+    uint32_t padding_; // Ensure the size is a multiple of gc::CellSize.
+
+  public:
+    HashNumber hash() const {
+        return hash_;
+    }
+    void initHash(HashNumber hash) {
+        hash_ = hash;
+    }
+};
+
+static_assert(sizeof(FatInlineAtom) == sizeof(JSFatInlineString) + sizeof(uint64_t),
+              "FatInlineAtom must have size of a fat inline string + HashNumber, "
+              "aligned to gc::CellSize");
+
+} // namespace js
+
+inline js::HashNumber
+JSAtom::hash() const
+{
+    if (isFatInline())
+        return static_cast<const js::FatInlineAtom*>(this)->hash();
+    return static_cast<const js::NormalAtom*>(this)->hash();
+}
+
+inline void
+JSAtom::initHash(js::HashNumber hash)
+{
+    if (isFatInline())
+        return static_cast<js::FatInlineAtom*>(this)->initHash(hash);
+    return static_cast<js::NormalAtom*>(this)->initHash(hash);
+}
+
+MOZ_ALWAYS_INLINE JSAtom*
+JSFlatString::morphAtomizedStringIntoAtom(js::HashNumber hash)
+{
+    d.u1.flags |= ATOM_BIT;
+    JSAtom* atom = &asAtom();
+    atom->initHash(hash);
+    return atom;
+}
+
+MOZ_ALWAYS_INLINE JSAtom*
+JSFlatString::morphAtomizedStringIntoPermanentAtom(js::HashNumber hash)
+{
+    d.u1.flags |= PERMANENT_ATOM_MASK;
+    JSAtom* atom = &asAtom();
+    atom->initHash(hash);
+    return atom;
+}
 
 namespace js {
 
@@ -1220,6 +1297,28 @@ NewStringCopyUTF8Z(JSContext* cx, const JS::ConstUTF8CharsZ utf8)
 {
     return NewStringCopyUTF8N<allowGC>(cx, JS::UTF8Chars(utf8.c_str(), strlen(utf8.c_str())));
 }
+
+JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
+
+static MOZ_ALWAYS_INLINE js::HashNumber
+HashId(jsid id)
+{
+    if (MOZ_LIKELY(JSID_IS_ATOM(id)))
+        return JSID_TO_ATOM(id)->hash();
+    return mozilla::HashGeneric(JSID_BITS(id));
+}
+
+template <>
+struct DefaultHasher<jsid>
+{
+    typedef jsid Lookup;
+    static HashNumber hash(jsid id) {
+        return HashId(id);
+    }
+    static bool match(jsid id1, jsid id2) {
+        return id1 == id2;
+    }
+};
 
 } /* namespace js */
 

@@ -20,6 +20,7 @@
                   android:layout_weight="1"
                   android:layout_gravity="center_vertical"
                   android:paddingRight="10dp"
+                  android:paddingEnd="10dp"
                   android:orientation="vertical">
 
         <org.mozilla.gecko.widget.FadedSingleColorTextView

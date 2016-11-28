@@ -17,7 +17,15 @@ add_task(function* () {
 
   info("test state before delete");
   yield checkState([
-    [["cookies", "test1.example.org"], ["c1", "c3", "cs2", "uc1"]],
+    [
+      ["cookies", "test1.example.org"],
+      [
+        getCookieId("c1", "test1.example.org", "/browser"),
+        getCookieId("cs2", ".example.org", "/"),
+        getCookieId("c3", "test1.example.org", "/"),
+        getCookieId("uc1", ".example.org", "/")
+      ]
+    ],
     [["localStorage", "http://test1.example.org"], ["ls1", "ls2"]],
     [["sessionStorage", "http://test1.example.org"], ["ss1"]],
     [["indexedDB", "http://test1.example.org", "idb1", "obj1"], [1, 2, 3]],

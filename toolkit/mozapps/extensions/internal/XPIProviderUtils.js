@@ -38,6 +38,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "Blocklist",
 Cu.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.xpi-utils";
 
+const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile");
+
 // Create a new logger for use by the Addons XPI Provider Utils
 // (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
@@ -1820,10 +1822,13 @@ this.XPIDatabaseReconcile = {
    * @param  aOldPlatformVersion
    *         The version of the platform last run with this profile or null
    *         if it is a new profile or the version is unknown
-   * @return a boolean indicating if flushing caches is required to complete
-   *         changing this add-on
+   * @param  aReloadMetadata
+   *         A boolean which indicates whether metadata should be reloaded from
+   *         the addon manifests. Default to false.
+   * @return the new addon.
    */
-  updateCompatibility(aInstallLocation, aOldAddon, aAddonState, aOldAppVersion, aOldPlatformVersion) {
+  updateCompatibility(aInstallLocation, aOldAddon, aAddonState, aOldAppVersion,
+                      aOldPlatformVersion, aReloadMetadata) {
     logger.debug("Updating compatibility for add-on " + aOldAddon.id + " in " + aInstallLocation.name);
 
     // If updating from a version of the app that didn't support signedState
@@ -1835,6 +1840,25 @@ this.XPIDatabaseReconcile = {
       let manifest = syncLoadManifestFromFile(file, aInstallLocation);
       aOldAddon.signedState = manifest.signedState;
     }
+
+    // May be updating from a version of the app that didn't support all the
+    // properties of the currently-installed add-ons.
+    if (aReloadMetadata) {
+      let file = new nsIFile()
+      file.persistentDescriptor = aAddonState.descriptor;
+      let manifest = syncLoadManifestFromFile(file, aInstallLocation);
+
+      // Avoid re-reading these properties from manifest,
+      // use existing addon instead.
+      // TODO - consider re-scanning for targetApplications.
+      let remove = ["syncGUID", "foreignInstall", "visible", "active",
+                    "userDisabled", "applyBackgroundUpdates", "sourceURI",
+                    "releaseNotesURI", "targetApplications"];
+
+      let props = PROP_JSON_FIELDS.filter(a => !remove.includes(a));
+      copyProperties(manifest, props, aOldAddon);
+    }
+
     // This updates the addon's JSON cached data in place
     applyBlocklistChanges(aOldAddon, aOldAddon, aOldAppVersion,
                           aOldPlatformVersion);
@@ -1862,10 +1886,13 @@ this.XPIDatabaseReconcile = {
    * @param  aOldPlatformVersion
    *         The version of the platform last run with this profile or null
    *         if it is a new profile or the version is unknown
+   * @param  aSchemaChange
+   *         The schema has changed and all add-on manifests should be re-read.
    * @return a boolean indicating if a change requiring flushing the caches was
    *         detected
    */
-  processFileChanges(aManifests, aUpdateCompatibility, aOldAppVersion, aOldPlatformVersion) {
+  processFileChanges(aManifests, aUpdateCompatibility, aOldAppVersion, aOldPlatformVersion,
+                     aSchemaChange) {
     let loadedManifest = (aInstallLocation, aId) => {
       if (!(aInstallLocation.name in aManifests))
         return null;
@@ -1936,10 +1963,12 @@ this.XPIDatabaseReconcile = {
               }
             }
 
-            // The add-on has changed if the modification time has changed, or
-            // we have an updated manifest for it. Also reload the metadata for
-            // add-ons in the application directory when the application version
-            // has changed
+            // The add-on has changed if the modification time has changed, if
+            // we have an updated manifest for it, or if the schema version has
+            // changed.
+            //
+            // Also reload the metadata for add-ons in the application directory
+            // when the application version has changed.
             let newAddon = loadedManifest(installLocation, id);
             if (newAddon || oldAddon.updateDate != xpiState.mtime ||
                 (aUpdateCompatibility && (installLocation.name == KEY_APP_GLOBAL ||
@@ -1949,9 +1978,13 @@ this.XPIDatabaseReconcile = {
             else if (oldAddon.descriptor != xpiState.descriptor) {
               newAddon = this.updateDescriptor(installLocation, oldAddon, xpiState);
             }
-            else if (aUpdateCompatibility) {
+            // Check compatility when the application version and/or schema
+            // version has changed. A schema change also reloads metadata from
+            // the manifests.
+            else if (aUpdateCompatibility || aSchemaChange) {
               newAddon = this.updateCompatibility(installLocation, oldAddon, xpiState,
-                                                  aOldAppVersion, aOldPlatformVersion);
+                                                  aOldAppVersion, aOldPlatformVersion,
+                                                  aSchemaChange);
             }
             else {
               // No change

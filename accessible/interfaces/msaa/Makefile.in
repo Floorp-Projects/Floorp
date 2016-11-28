@@ -47,4 +47,6 @@ midl_exports := \
 INSTALL_TARGETS += midl_exports
 midl_exports_FILES := $(midl_exports)
 midl_exports_DEST = $(DIST)/include
-midl_exports_TARGET := export
+midl_exports_TARGET := midl
+
+export:: midl

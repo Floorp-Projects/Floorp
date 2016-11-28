@@ -43,7 +43,7 @@ class HashableValue
     MOZ_MUST_USE bool setValue(JSContext* cx, HandleValue v);
     HashNumber hash() const;
     bool operator==(const HashableValue& other) const;
-    HashableValue mark(JSTracer* trc) const;
+    HashableValue trace(JSTracer* trc) const;
     Value get() const { return value.get(); }
 
     void trace(JSTracer* trc) {
@@ -133,7 +133,7 @@ class MapObject : public NativeObject {
     ValueMap* getData() { return static_cast<ValueMap*>(getPrivate()); }
     static ValueMap& extract(HandleObject o);
     static ValueMap& extract(const CallArgs& args);
-    static void mark(JSTracer* trc, JSObject* obj);
+    static void trace(JSTracer* trc, JSObject* obj);
     static void finalize(FreeOp* fop, JSObject* obj);
     static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
@@ -235,7 +235,7 @@ class SetObject : public NativeObject {
     ValueSet* getData() { return static_cast<ValueSet*>(getPrivate()); }
     static ValueSet& extract(HandleObject o);
     static ValueSet& extract(const CallArgs& args);
-    static void mark(JSTracer* trc, JSObject* obj);
+    static void trace(JSTracer* trc, JSObject* obj);
     static void finalize(FreeOp* fop, JSObject* obj);
     static bool construct(JSContext* cx, unsigned argc, Value* vp);
 

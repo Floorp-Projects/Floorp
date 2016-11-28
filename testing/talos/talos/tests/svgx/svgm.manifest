@@ -1,12 +1,3 @@
-# gearflowers image
-http://localhost/tests/svgx/gearflowers.svg
-
-# some generic image compositing tests
-http://localhost/tests/svgx/composite-scale.svg
-http://localhost/tests/svgx/composite-scale-opacity.svg
-http://localhost/tests/svgx/composite-scale-rotate.svg
-http://localhost/tests/svgx/composite-scale-rotate-opacity.svg
-
 # Painting multiple complex paths
 % http://localhost/tests/svgx/hixie-001.xml
 # Painting text

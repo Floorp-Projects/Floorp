@@ -12,7 +12,7 @@ function loadFile(lfVarx) {
         if (lfVarx.length != 1)
             switch (lfRunTypeId) {
                 case 3:
-                    function newFunc(x) Function(x)()
+                    function newFunc(x) { return Function(x)(); }
                     newFunc(lfVarx)
                 case 5:
                     for (lfLocal in this);

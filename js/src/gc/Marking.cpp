@@ -223,7 +223,7 @@ js::CheckTracedThing(JSTracer* trc, T* thing)
     MOZ_ASSERT_IF(zone->requireGCTracer(), isGcMarkingTracer || IsBufferGrayRootsTracer(trc));
 
     if (isGcMarkingTracer) {
-        GCMarker* gcMarker = static_cast<GCMarker*>(trc);
+        GCMarker* gcMarker = GCMarker::fromTracer(trc);
         MOZ_ASSERT_IF(gcMarker->shouldCheckCompartments(),
                       zone->isCollecting() || zone->isAtomsZone());
 
@@ -271,12 +271,12 @@ JS_FOR_EACH_TRACEKIND(IMPL_CHECK_TRACED_THING);
 } // namespace js
 
 static bool
-ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell)
+ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell)
 {
     if (!trc->isMarkingTracer())
         return true;
 
-    uint32_t color = static_cast<GCMarker*>(trc)->markColor();
+    uint32_t color = GCMarker::fromTracer(trc)->markColor();
     MOZ_ASSERT(color == BLACK || color == GRAY);
 
     if (!cell->isTenured()) {
@@ -315,9 +315,9 @@ ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell)
 }
 
 static bool
-ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, const Value& val)
+ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src, const Value& val)
 {
-    return val.isMarkable() && ShouldMarkCrossCompartment(trc, src, (Cell*)val.toGCThing());
+    return val.isMarkable() && ShouldTraceCrossCompartment(trc, src, (Cell*)val.toGCThing());
 }
 
 static void
@@ -467,7 +467,7 @@ js::TraceWeakEdge(JSTracer* trc, WeakRef<T>* thingp, const char* name)
     if (!trc->isMarkingTracer())
         return DispatchToTracer(trc, ConvertToBase(thingp->unsafeUnbarrieredForTracing()), name);
 
-    NoteWeakEdge(static_cast<GCMarker*>(trc),
+    NoteWeakEdge(GCMarker::fromTracer(trc),
                  ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
 
@@ -565,7 +565,7 @@ void
 js::TraceManuallyBarrieredCrossCompartmentEdge(JSTracer* trc, JSObject* src, T* dst,
                                                const char* name)
 {
-    if (ShouldMarkCrossCompartment(trc, src, *dst))
+    if (ShouldTraceCrossCompartment(trc, src, *dst))
         DispatchToTracer(trc, dst, name);
 }
 template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSObject*>(JSTracer*, JSObject*,
@@ -578,7 +578,7 @@ void
 js::TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src, WriteBarrieredBase<T>* dst,
                               const char* name)
 {
-    if (ShouldMarkCrossCompartment(trc, src, dst->get()))
+    if (ShouldTraceCrossCompartment(trc, src, dst->get()))
         DispatchToTracer(trc, dst->unsafeUnbarrieredForTracing(), name);
 }
 template void js::TraceCrossCompartmentEdge<Value>(JSTracer*, JSObject*,
@@ -658,7 +658,7 @@ DispatchToTracer(JSTracer* trc, T* thingp, const char* name)
             "Only the base cell layout types are allowed into marking/tracing internals");
 #undef IS_SAME_TYPE_OR
     if (trc->isMarkingTracer())
-        return DoMarking(static_cast<GCMarker*>(trc), *thingp);
+        return DoMarking(GCMarker::fromTracer(trc), *thingp);
     if (trc->isTenuringTracer())
         return static_cast<TenuringTracer*>(trc)->traverse(thingp);
     MOZ_ASSERT(trc->isCallbackTracer());
@@ -695,7 +695,7 @@ GCMarker::markEphemeronValues(gc::Cell* markedCell, WeakEntryVector& values)
 {
     size_t initialLen = values.length();
     for (size_t i = 0; i < initialLen; i++)
-        values[i].weakmap->traceEntry(this, markedCell, values[i].key);
+        values[i].weakmap->markEntry(this, markedCell, values[i].key);
 
     // The vector should not be appended to during iteration because the key is
     // already marked, and even in cases where we have a multipart key, we
@@ -2089,7 +2089,7 @@ GCMarker::enterWeakMarkingMode()
         for (GCZoneGroupIter zone(runtime()); !zone.done(); zone.next()) {
             for (WeakMapBase* m : zone->gcWeakMapList) {
                 if (m->marked)
-                    (void) m->traceEntries(this);
+                    (void) m->markIteratively(this);
             }
         }
     }

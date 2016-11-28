@@ -4,8 +4,9 @@
 
 gczeal(4);
 function startTest() {}
-function TestCase(n, d, e, a)
-    dump = (function () {});
+function TestCase(n, d, e, a) {
+    return dump = (function () {});
+}
   if (typeof document != "object" || !document.location.href.match(/jsreftest.html/)) {}
 function writeHeaderToLog( string ) {}
 var SECTION = "11.4.5";

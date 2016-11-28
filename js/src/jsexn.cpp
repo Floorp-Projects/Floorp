@@ -537,7 +537,8 @@ ErrorObject::createConstructor(JSContext* cx, JSProtoKey key)
             return nullptr;
 
         ctor = NewFunctionWithProto(cx, Error, 1, JSFunction::NATIVE_CTOR, nullptr,
-                                    ClassName(key, cx), proto, gc::AllocKind::FUNCTION_EXTENDED);
+                                    ClassName(key, cx), proto, gc::AllocKind::FUNCTION_EXTENDED,
+                                    SingletonObject);
     }
 
     if (!ctor)

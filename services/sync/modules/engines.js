@@ -161,19 +161,25 @@ Tracker.prototype = {
     return true;
   },
 
-  removeChangedID: function (id) {
-    if (!id) {
-      this._log.warn("Attempted to remove undefined ID to tracker");
+  removeChangedID: function (...ids) {
+    if (!ids.length || this.ignoreAll) {
       return false;
     }
-    if (this.ignoreAll || this._ignored.includes(id)) {
-      return false;
+    for (let id of ids) {
+      if (!id) {
+        this._log.warn("Attempted to remove undefined ID from tracker");
+        continue;
+      }
+      if (this._ignored.includes(id)) {
+        this._log.debug(`Not removing ignored ID ${id} from tracker`);
+        continue;
+      }
+      if (this.changedIDs[id] != null) {
+        this._log.trace("Removing changed ID " + id);
+        delete this.changedIDs[id];
+      }
     }
-    if (this.changedIDs[id] != null) {
-      this._log.trace("Removing changed ID " + id);
-      delete this.changedIDs[id];
-      this.saveChangedIDs();
-    }
+    this.saveChangedIDs();
     return true;
   },
 

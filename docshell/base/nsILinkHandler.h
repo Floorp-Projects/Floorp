@@ -59,6 +59,7 @@ public:
    * @param aFileName non-null when the link should be downloaded as the given file
    * @param aPostDataStream the POST data to send
    * @param aHeadersDataStream ???
+   * @param aNoOpenerImplied if the link implies "noopener"
    * @param aDocShell (out-param) the DocShell that the request was opened on
    * @param aRequest the request that was opened
    */
@@ -68,6 +69,7 @@ public:
                              const nsAString& aFileName,
                              nsIInputStream* aPostDataStream = 0,
                              nsIInputStream* aHeadersDataStream = 0,
+                             bool aNoOpenerImplied = false,
                              nsIDocShell** aDocShell = 0,
                              nsIRequest** aRequest = 0) = 0;
 

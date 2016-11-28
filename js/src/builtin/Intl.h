@@ -20,6 +20,8 @@
 #include "unicode/utypes.h"
 #endif
 
+class JSLinearString;
+
 /*
  * The Intl module specified by standard ECMA-402,
  * ECMAScript Internationalization API Specification.
@@ -82,7 +84,7 @@ class SharedIntlData
             JS::AutoCheckCannotGC nogc;
             HashNumber hash;
 
-            explicit Lookup(JSFlatString* timeZone);
+            explicit Lookup(JSLinearString* timeZone);
         };
 
         static js::HashNumber hash(const Lookup& lookup) { return lookup.hash; }

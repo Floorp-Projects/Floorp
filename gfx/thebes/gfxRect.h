@@ -90,20 +90,20 @@ struct gfxRect :
 
     gfxPoint CCWCorner(mozilla::Side side) const {
         switch (side) {
-            case NS_SIDE_TOP: return TopLeft();
-            case NS_SIDE_RIGHT: return TopRight();
-            case NS_SIDE_BOTTOM: return BottomRight();
-            case NS_SIDE_LEFT: return BottomLeft();
+            case mozilla::eSideTop: return TopLeft();
+            case mozilla::eSideRight: return TopRight();
+            case mozilla::eSideBottom: return BottomRight();
+            case mozilla::eSideLeft: return BottomLeft();
         }
         MOZ_CRASH("Incomplete switch");
     }
 
     gfxPoint CWCorner(mozilla::Side side) const {
         switch (side) {
-            case NS_SIDE_TOP: return TopRight();
-            case NS_SIDE_RIGHT: return BottomRight();
-            case NS_SIDE_BOTTOM: return BottomLeft();
-            case NS_SIDE_LEFT: return TopLeft();
+            case mozilla::eSideTop: return TopRight();
+            case mozilla::eSideRight: return BottomRight();
+            case mozilla::eSideBottom: return BottomLeft();
+            case mozilla::eSideLeft: return TopLeft();
         }
         MOZ_CRASH("Incomplete switch");
     }

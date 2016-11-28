@@ -16,6 +16,7 @@
 #include "mozilla/dom/FragmentOrElement.h" // for base class
 #include "nsChangeHint.h"                  // for enum
 #include "mozilla/EventStates.h"           // for member
+#include "mozilla/ServoTypes.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "nsIDOMElement.h"
 #include "nsILinkHandler.h"
@@ -164,6 +165,14 @@ public:
                "Bad NodeType in aNodeInfo");
     SetIsElement();
   }
+
+  ~Element()
+  {
+#ifdef MOZ_STYLO
+    NS_ASSERTION(!HasServoData(), "expected ServoData to be cleared earlier");
+#endif
+  }
+
 #endif // MOZILLA_INTERNAL_API
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ELEMENT_IID)
@@ -390,6 +399,40 @@ public:
   }
 
   Directionality GetComputedDirectionality() const;
+
+  inline Element* GetFlattenedTreeParentElement() const;
+
+  bool HasDirtyDescendantsForServo() const
+  {
+    MOZ_ASSERT(IsStyledByServo());
+    return HasFlag(NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+  }
+
+  void SetHasDirtyDescendantsForServo() {
+    MOZ_ASSERT(IsStyledByServo());
+    SetFlags(NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+  }
+
+  void UnsetHasDirtyDescendantsForServo() {
+    MOZ_ASSERT(IsStyledByServo());
+    UnsetFlags(NODE_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
+  }
+
+  inline void NoteDirtyDescendantsForServo();
+
+#ifdef DEBUG
+  inline bool DirtyDescendantsBitIsPropagatedForServo();
+#endif
+
+  bool HasServoData() {
+#ifdef MOZ_STYLO
+    return !!mServoData.Get();
+#else
+    MOZ_CRASH("Accessing servo node data in non-stylo build");
+#endif
+  }
+
+  void ClearServoData();
 
 protected:
   /**
@@ -1391,6 +1434,10 @@ private:
 
   // Data members
   EventStates mState;
+#ifdef MOZ_STYLO
+  // Per-node data managed by Servo.
+  mozilla::ServoCell<ServoNodeData*> mServoData;
+#endif
 };
 
 class RemoveFromBindingManagerRunnable : public mozilla::Runnable
@@ -1488,7 +1535,7 @@ inline const mozilla::dom::Element* nsINode::AsElement() const
 
 inline void nsINode::UnsetRestyleFlagsIfGecko()
 {
-  if (IsElement() && !IsStyledByServo()) {
+  if (IsElement() && !AsElement()->IsStyledByServo()) {
     UnsetFlags(ELEMENT_ALL_RESTYLE_FLAGS);
   }
 }

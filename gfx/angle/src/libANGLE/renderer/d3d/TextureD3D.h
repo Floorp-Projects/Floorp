@@ -69,6 +69,8 @@ class TextureD3D : public TextureImpl
 
     void setBaseLevel(GLuint baseLevel) override;
 
+    void syncState(const gl::Texture::DirtyBits &dirtyBits) override;
+
   protected:
     gl::Error setImageImpl(const gl::ImageIndex &index,
                            GLenum type,
@@ -170,6 +172,7 @@ class TextureD3D_2D : public TextureD3D
                              bool unpackPremultiplyAlpha,
                              bool unpackUnmultiplyAlpha,
                              const gl::Texture *source) override;
+    gl::Error copyCompressedTexture(const gl::Texture *source) override;
 
     gl::Error setStorage(GLenum target, size_t levels, GLenum internalFormat, const gl::Extents &size) override;
 
