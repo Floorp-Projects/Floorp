@@ -145,7 +145,7 @@ Object.defineProperty(this, "isAddonPartOfE10SRollout", {
     let policy = RolloutPolicy[policyId];
 
     if (policy.alladdons) {
-      if (aAddon.multiprocessCompatible === false) {
+      if (aAddon.mpcOptedOut == true) {
         return false;
       }
 
