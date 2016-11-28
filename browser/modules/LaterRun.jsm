@@ -10,6 +10,10 @@ this.EXPORTED_SYMBOLS = ["LaterRun"];
 
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "setInterval", "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "clearInterval", "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow", "resource://gre/modules/RecentWindow.jsm");
 
 const kEnabledPref = "browser.laterrun.enabled";
 const kPagePrefRoot = "browser.laterrun.pages.";

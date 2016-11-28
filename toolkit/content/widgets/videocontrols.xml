@@ -2071,7 +2071,7 @@
 
   </binding>
 
-  <binding id="touchControlsGonk" extends="chrome://global/content/bindings/videocontrols.xml#touchControls">
+  <binding id="touchControlsGonk" extends="chrome://global/content/bindings/videoControls.xml#touchControls">
     <implementation>
       <constructor>
           this.isGonk = true;
