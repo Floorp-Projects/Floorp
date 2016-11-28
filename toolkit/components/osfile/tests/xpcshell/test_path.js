@@ -5,6 +5,16 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Services.jsm", this);
+Services.prefs.setBoolPref("toolkit.osfile.test.syslib_necessary", false);
+  // We don't need libc/kernel32.dll for this test
+
+var ImportWin = {};
+var ImportUnix = {};
+Components.utils.import("resource://gre/modules/osfile/ospath_win.jsm", ImportWin);
+Components.utils.import("resource://gre/modules/osfile/ospath_unix.jsm", ImportUnix);
+
+var Win = ImportWin;
+var Unix = ImportUnix;
 
 function do_check_fail(f)
 {
@@ -17,12 +27,9 @@ function do_check_fail(f)
   }
 };
 
-function test_windows()
+function run_test()
 {
   do_print("Testing Windows paths");
-
-  let Win = {};
-  Components.utils.import("resource://gre/modules/osfile/ospath_win.jsm", Win);
 
   do_print("Backslash-separated, no drive");
   do_check_eq(Win.basename("a\\b"), "b");
@@ -121,15 +128,8 @@ function test_windows()
   do_check_eq(Win.winGetDrive("\\\\"), null);
   do_check_eq(Win.winGetDrive("\\\\c"), "\\\\c");
   do_check_eq(Win.winGetDrive("\\\\c\\abc"), "\\\\c");
-}
 
-function test_unix()
-{
   do_print("Testing unix paths");
-
-  let Unix = {};
-  Components.utils.import("resource://gre/modules/osfile/ospath_unix.jsm", Unix);
-
   do_check_eq(Unix.basename("a/b"), "b");
   do_check_eq(Unix.basename("a/b/"), "");
   do_check_eq(Unix.basename("abc"), "abc");
@@ -147,16 +147,6 @@ function test_unix()
 
   do_check_eq(Unix.join("/tmp", "foo", "bar"), "/tmp/foo/bar", "join /tmp,foo,bar");
   do_check_eq(Unix.join("/tmp", "/foo", "bar"), "/foo/bar", "join /tmp,/foo,bar");
-}
-
-function run_test()
-{
-  let isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
-  if (isWindows) {
-    test_windows();
-  } else {
-    test_unix();
-  }
 
   do_print("Testing the presence of ospath.jsm");
   let Scope = {};
