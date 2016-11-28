@@ -130,6 +130,11 @@ protected:
    */
   void OpenDragPopup();
 
+  /**
+   * Free resources contained in DataTransferItems that aren't needed by JS.
+   */
+  void DiscardInternalTransferData();
+
   // Returns true if a drag event was dispatched to a child process after
   // the previous TakeDragEventDispatchedToChildProcess() call.
   bool TakeDragEventDispatchedToChildProcess()
