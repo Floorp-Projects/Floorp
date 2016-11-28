@@ -383,13 +383,13 @@ class ContentComparer:
         self.merge_stage = merge_stage
 
     def merge(self, ref_entities, ref_map, ref_file, l10n_file, missing,
-              skips, ctx, canMerge, encoding):
+              skips, p):
         outfile = os.path.join(self.merge_stage, l10n_file.module,
                                l10n_file.file)
         outdir = os.path.dirname(outfile)
         if not os.path.isdir(outdir):
             os.makedirs(outdir)
-        if not canMerge:
+        if not p.canMerge:
             shutil.copyfile(ref_file.fullpath, outfile)
             print "copied reference to " + outfile
             return
@@ -402,16 +402,16 @@ class ContentComparer:
                      if not isinstance(skip, parser.Junk)])
         if skips:
             # we need to skip a few errornous blocks in the input, copy by hand
-            f = codecs.open(outfile, 'wb', encoding)
+            f = codecs.open(outfile, 'wb', p.encoding)
             offset = 0
             for skip in skips:
                 chunk = skip.span
-                f.write(ctx.contents[offset:chunk[0]])
+                f.write(p.contents[offset:chunk[0]])
                 offset = chunk[1]
-            f.write(ctx.contents[offset:])
+            f.write(p.contents[offset:])
         else:
             shutil.copyfile(l10n_file.fullpath, outfile)
-            f = codecs.open(outfile, 'ab', encoding)
+            f = codecs.open(outfile, 'ab', p.encoding)
         print "adding to " + outfile
 
         def ensureNewline(s):
@@ -458,10 +458,20 @@ class ContentComparer:
         try:
             p.readContents(l10n.getContents())
             l10n_entities, l10n_map = p.parse()
-            l10n_ctx = p.ctx
         except Exception, e:
             self.notify('error', l10n, str(e))
             return
+        lines = []
+
+        def _getLine(offset):
+            if not lines:
+                lines.append(0)
+                for m in self.nl.finditer(p.contents):
+                    lines.append(m.end())
+            for i in xrange(len(lines), 0, -1):
+                if offset >= lines[i - 1]:
+                    return (i, offset - lines[i - 1])
+            return (1, offset)
 
         l10n_list = l10n_map.keys()
         l10n_list.sort()
@@ -491,10 +501,9 @@ class ContentComparer:
                 if isinstance(l10n_entities[l10n_map[item_or_pair]],
                               parser.Junk):
                     junk = l10n_entities[l10n_map[item_or_pair]]
-                    params = (junk.val,) + junk.position() + junk.position(-1)
+                    params = (junk.val,) + junk.span
                     self.notify('error', l10n,
-                                'Unparsed content "%s" from line %d colum %d'
-                                ' to line %d column %d' % params)
+                                'Unparsed content "%s" at %d-%d' % params)
                     if self.merge_stage is not None:
                         skips.append(junk)
                 elif self.notify('obsoleteEntity', l10n,
@@ -519,17 +528,17 @@ class ContentComparer:
                     for tp, pos, msg, cat in checker.check(refent, l10nent):
                         # compute real src position, if first line,
                         # col needs adjustment
+                        _l, _offset = _getLine(l10nent.val_span[0])
                         if isinstance(pos, tuple):
-                            _l, col = l10nent.value_position()
                             # line, column
                             if pos[0] == 1:
-                                col = col + pos[1]
+                                col = pos[1] + _offset
                             else:
                                 col = pos[1]
-                                _l += pos[0] - 1
+                            _l += pos[0] - 1
                         else:
-                            _l, col = l10nent.value_position(pos)
-                        # skip error entities when merging
+                            _l, col = _getLine(l10nent.val_span[0] + pos)
+                            # skip error entities when merging
                         if tp == 'error' and self.merge_stage is not None:
                             skips.append(l10nent)
                         self.notify(tp, l10n,
@@ -539,10 +548,7 @@ class ContentComparer:
         if missing:
             self.notify('missing', l10n, missing)
         if self.merge_stage is not None and (missings or skips):
-            self.merge(
-                ref[0], ref[1], ref_file,
-                l10n, missings, skips, l10n_ctx,
-                p.canMerge, p.encoding)
+            self.merge(ref[0], ref[1], ref_file, l10n, missings, skips, p)
         if report:
             self.notify('report', l10n, report)
         if obsolete:
