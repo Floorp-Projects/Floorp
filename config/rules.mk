@@ -947,12 +947,12 @@ endif
 # We need to run cargo unconditionally, because cargo is the only thing that
 # has full visibility into how changes in Rust sources might affect the final
 # build.
-force-cargo-build:
+force-cargo-library-build:
 	$(REPORT_BUILD)
-	env $(rustflags_override) CARGO_TARGET_DIR=. RUSTC=$(RUSTC) $(CARGO) build $(cargo_build_flags) --
+	env $(rustflags_override) CARGO_TARGET_DIR=. RUSTC=$(RUSTC) $(CARGO) build --lib $(cargo_build_flags) --
 
-$(RUST_LIBRARY_FILE): force-cargo-build
-endif # CARGO_FILE
+$(RUST_LIBRARY_FILE): force-cargo-library-build
+endif # RUST_LIBRARY_FILE
 endif # MOZ_RUST
 
 $(SOBJS):
