@@ -9,9 +9,6 @@ browser.jar:
   skin/classic/browser/aboutSessionRestore-window-icon.png
   skin/classic/browser/aboutSyncTabs.css
 * skin/classic/browser/syncedtabs/sidebar.css     (syncedtabs/sidebar.css)
-  skin/classic/browser/actionicon-tab.png
-  skin/classic/browser/actionicon-tab@2x.png
-  skin/classic/browser/actionicon-tab-XPVista7.png
 * skin/classic/browser/browser.css
 * skin/classic/browser/devedition.css
 * skin/classic/browser/browser-lightweightTheme.css
@@ -229,7 +226,6 @@ browser.jar:
 % override chrome://browser/skin/preferences/application.png          chrome://browser/skin/preferences/application-XP.png              os=WINNT osversion<6
 % override chrome://browser/skin/preferences/saveFile.png             chrome://browser/skin/preferences/saveFile-XP.png                 os=WINNT osversion<6
 
-% override chrome://browser/skin/actionicon-tab.png                   chrome://browser/skin/actionicon-tab-XPVista7.png                 os=WINNT osversion<=6.1
 % override chrome://browser/skin/privatebrowsing-mask-tabstrip.png    chrome://browser/skin/privatebrowsing-mask-tabstrip-XPVista7.png  os=WINNT osversion<=6.1
 % override chrome://browser/skin/privatebrowsing-mask-titlebar.png    chrome://browser/skin/privatebrowsing-mask-titlebar-XPVista7.png  os=WINNT osversion<=6.1
 % override chrome://browser/skin/reload-stop-go.png                   chrome://browser/skin/reload-stop-go-XPVista7.png                 os=WINNT osversion<=6.1
