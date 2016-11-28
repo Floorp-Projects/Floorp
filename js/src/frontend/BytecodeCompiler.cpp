@@ -286,7 +286,8 @@ BytecodeCompiler::deoptimizeArgumentsInEnclosingScripts(JSContext* cx, HandleObj
     RootedObject env(cx, environment);
     while (env->is<EnvironmentObject>() || env->is<DebugEnvironmentProxy>()) {
         if (env->is<CallObject>()) {
-            RootedScript script(cx, env->as<CallObject>().callee().getOrCreateScript(cx));
+            RootedFunction fun(cx, &env->as<CallObject>().callee());
+            RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
             if (!script)
                 return false;
             if (script->argumentsHasVarBinding()) {
