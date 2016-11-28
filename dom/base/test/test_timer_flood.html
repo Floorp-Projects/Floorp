@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test Behavior During Timer Flood</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function onLoad() {
+  return new Promise(resolve => {
+    addEventListener('load', resolve, { once: true });
+  });
+}
+
+// Create a frame that executes a timer flood.  The frame signals
+// that is ready once the flood has had a chance to warm up.
+function withFloodFrame() {
+  return new Promise(resolve => {
+    let frame = document.createElement('iframe');
+    addEventListener('message', function onMsg(evt) {
+      if (evt.data === 'STARTED') {
+        removeEventListener('message', onMsg);
+        resolve(frame);
+      }
+    });
+    frame.src = 'file_timer_flood.html';
+    document.body.appendChild(frame);
+  });
+}
+
+// Test that we can load documents during a timer flood.
+function testFrameLoad() {
+  return new Promise(resolve => {
+    let frame = document.createElement('iframe');
+    frame.addEventListener('load', _ => {
+      frame.remove();
+      resolve();
+    }, { once: true });
+    document.body.appendChild(frame);
+  });
+}
+
+// Test that we can perform network requests while a timer flood
+// is occuring.
+function testFetch(url) {
+  return fetch(url).then(response => {
+    return response.text();
+  });
+}
+
+// Test that we can run animations for 5 seconds while a timer
+// flood is occuring.
+function testRequestAnimationFrame() {
+  return new Promise(resolve => {
+    let remainingFrames = 5 * 60;
+    function nextFrame() {
+      remainingFrames -= 1;
+      if (remainingFrames > 0) {
+        requestAnimationFrame(nextFrame);
+      } else {
+        resolve();
+      }
+    };
+    requestAnimationFrame(nextFrame);
+  });
+}
+
+let floodFrame;
+
+onLoad().then(_ => {
+  // Start a timer flood in a frame.
+  return withFloodFrame();
+}).then(frame => {
+  floodFrame = frame;
+
+  // Next we are going to start a bunch of asynchronous work that we
+  // expect to complete in spite of the timer flood.  The type of work
+  // is a bit arbitrary, but is chosen to reflect the kinds of things
+  // we would like the browser to be able to do even when pages are
+  // abusing timers.  Feel free to add more types of work here, but
+  // think carefully before removing anything.
+  let tests = [];
+
+  // Verify we can perform a variety of work while the timer flood
+  // is running.
+  for (let i = 0; i < 20; ++i) {
+    tests.push(testFrameLoad());
+    tests.push(testFetch('file_timer_flood.html'));
+  }
+  // Verify that animations still work while the timer flood is running.
+  // Note that we do one long run of animations instead of parallel runs
+  // like the other activities because of the way requestAnimationFrame()
+  // is scheduled.  Parallel animations would not result in any additional
+  // runnables be placed on the event queue.
+  tests.push(testRequestAnimationFrame());
+
+  // Wait for all tests to finish.  If we do not handle the timer flood
+  // well then this will likely time out.
+  return Promise.all(tests);
+}).then(_ => {
+  ok(true, 'completed tests without timing out');
+  floodFrame.remove();
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
