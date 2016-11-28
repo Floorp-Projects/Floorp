@@ -42,6 +42,7 @@ namespace js {
 class Breakpoint;
 class DebuggerMemory;
 class ScriptedOnStepHandler;
+class ScriptedOnPopHandler;
 class WasmInstanceObject;
 
 typedef HashSet<ReadBarrieredGlobalObject,
@@ -252,8 +253,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 {
     friend class Breakpoint;
     friend class DebuggerMemory;
-    friend class ScriptedOnStepHandler;
     friend class SavedStacks;
+    friend class ScriptedOnStepHandler;
+    friend class ScriptedOnPopHandler;
     friend class mozilla::LinkedListElement<Debugger>;
     friend class mozilla::LinkedList<Debugger>;
     friend bool (::JS_DefineDebuggerObject)(JSContext* cx, JS::HandleObject obj);
@@ -1222,9 +1224,39 @@ class ScriptedOnStepHandler final : public OnStepHandler {
     HeapPtr<JSObject*> object_;
 };
 
+/*
+ * An OnPopHandler represents a handler function that is called just before a
+ * frame is popped.
+ */
+struct OnPopHandler : Handler {
+    /*
+     * If a frame is about the be popped, this method is called with the frame
+     * as argument, and `statusp` and `vp` set to a completion value specifying
+     * how this frame's execution completed. If successful, this method should
+     * return true, with `statusp` and `vp` set to a resumption value specifying
+     * how execution should continue.
+     */
+    virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame, JSTrapStatus& statusp,
+                       MutableHandleValue vp) = 0;
+};
+
+class ScriptedOnPopHandler final : public OnPopHandler {
+  public:
+    explicit ScriptedOnPopHandler(JSObject* object);
+    virtual JSObject* object() const override;
+    virtual void drop() override;
+    virtual void trace(JSTracer* tracer) override;
+    virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame, JSTrapStatus& statusp,
+                       MutableHandleValue vp) override;
+
+  private:
+    HeapPtr<JSObject*> object_;
+};
+
 class DebuggerFrame : public NativeObject
 {
     friend class ScriptedOnStepHandler;
+    friend class ScriptedOnPopHandler;
 
   public:
     enum {
@@ -1263,6 +1295,8 @@ class DebuggerFrame : public NativeObject
 
     bool isLive() const;
     OnStepHandler* onStepHandler() const;
+    OnPopHandler* onPopHandler() const;
+    void setOnPopHandler(OnPopHandler* handler);
 
   private:
     static const ClassOps classOps_;
@@ -1288,6 +1322,8 @@ class DebuggerFrame : public NativeObject
     static MOZ_MUST_USE bool implementationGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool onStepGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool onStepSetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool onPopGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool onPopSetter(JSContext* cx, unsigned argc, Value* vp);
 
     static MOZ_MUST_USE bool evalMethod(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool evalWithBindingsMethod(JSContext* cx, unsigned argc, Value* vp);
