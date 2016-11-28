@@ -17,6 +17,8 @@ struct nsCSSSelector;
 // Defines for various style related constants
 
 enum nsChangeHint {
+  nsChangeHint_Empty = 0,
+
   // change was visual only (e.g., COLOR=)
   // Invalidates all descendant frames (including following
   // placeholders to out-of-flow frames).

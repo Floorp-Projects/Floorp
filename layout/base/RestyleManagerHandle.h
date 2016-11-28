@@ -17,6 +17,7 @@
 namespace mozilla {
 class RestyleManager;
 class ServoRestyleManager;
+class RestyleManagerBase;
 namespace dom {
 class Element;
 } // namespace dom
@@ -94,6 +95,14 @@ public:
 
     const RestyleManager* GetAsGecko() const { return IsGecko() ? AsGecko() : nullptr; }
     const ServoRestyleManager* GetAsServo() const { return IsServo() ? AsServo() : nullptr; }
+
+    const mozilla::RestyleManagerBase* AsBase() const {
+      return reinterpret_cast<const RestyleManagerBase*>(mValue & ~SERVO_BIT);
+    }
+
+    mozilla::RestyleManagerBase* AsBase() {
+      return reinterpret_cast<RestyleManagerBase*>(mValue & ~SERVO_BIT);
+    }
 
     // These inline methods are defined in RestyleManagerHandleInlines.h.
     inline MozExternalRefCountType AddRef();

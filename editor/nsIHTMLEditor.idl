@@ -510,24 +510,6 @@ interface nsIHTMLEditor : nsISupports
   void removeInsertionListener(in nsIContentFilter inFilter);
 
   /**
-   * Returns an anonymous nsDOMElement of type aTag,
-   * child of aParentNode. If aIsCreatedHidden is true, the class
-   * "hidden" is added to the created element. If aAnonClass is not
-   * the empty string, it becomes the value of the attribute "_moz_anonclass"
-   * @return a DOM Element
-   * @param aTag             [IN] a string representing the desired type of
-   *                              the element to create
-   * @param aParentNode      [IN] the parent node of the created anonymous
-   *                              element
-   * @param aAnonClass       [IN] contents of the _moz_anonclass attribute
-   * @param aIsCreatedHidden [IN] a boolean specifying if the class "hidden"
-   *                              is to be added to the created anonymous
-   *                              element
-   */
-  nsIDOMElement createAnonymousElement(in AString aTag, in nsIDOMNode aParentNode,
-                                       in AString aAnonClass, in boolean aIsCreatedHidden);
-
-  /**
    * returns the deepest container of the selection
    * @return a DOM Element
    */

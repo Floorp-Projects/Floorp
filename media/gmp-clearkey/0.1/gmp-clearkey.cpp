@@ -26,7 +26,6 @@
 
 #if defined(ENABLE_WMF)
 #include "WMFUtils.h"
-#include "AudioDecoder.h"
 #include "VideoDecoder.h"
 #endif
 
@@ -62,10 +61,7 @@ GMPGetAPI(const char* aApiName, void* aHostAPI, void** aPluginAPI)
     *aPluginAPI = new ClearKeySessionManager();
   }
 #if defined(ENABLE_WMF)
-  else if (!strcmp(aApiName, GMP_API_AUDIO_DECODER) &&
-           wmf::EnsureLibs()) {
-    *aPluginAPI = new AudioDecoder(static_cast<GMPAudioHost*>(aHostAPI));
-  } else if (!strcmp(aApiName, GMP_API_VIDEO_DECODER) &&
+ else if (!strcmp(aApiName, GMP_API_VIDEO_DECODER) &&
              wmf::EnsureLibs()) {
     *aPluginAPI = new VideoDecoder(static_cast<GMPVideoHost*>(aHostAPI));
   }

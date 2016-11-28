@@ -33,3 +33,6 @@
 == border-image-repeat-space-6.html border-image-repeat-space-6-ref.html
 == border-image-repeat-space-7.html border-image-repeat-space-7-ref.html
 == border-image-repeat-1.html border-image-repeat-1-ref.html
+
+# background-attachment test cases
+== background-attachment-fixed-inside-transform-1.html background-attachment-fixed-inside-transform-1-ref.html

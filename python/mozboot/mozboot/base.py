@@ -75,8 +75,9 @@ We recommend the following tools for installing Python:
 
 RUST_NOT_IN_PATH = '''
 You have some rust files in %(cargo_bin)s, but they're not part of the
-standard PATH.
+standard PATH.'''
 
+RUST_PATH_ADVICE = '''
 To make these available, please add this directory to the PATH variable
 in your shell initialization script, which may be called ~/.bashrc or
 ~/.bash_profile or ~/.profile. Edit this and add the following line:
@@ -514,6 +515,12 @@ class BaseBootstrapper(object):
 
         return our >= MODERN_RUST_VERSION, our
 
+    def cargo_home(self):
+        cargo_home = os.environ.get('CARGO_HOME',
+                os.path.expanduser(os.path.join('~', '.cargo')))
+        cargo_bin = os.path.join(cargo_home, 'bin')
+        return cargo_home, cargo_bin
+
     def ensure_rust_modern(self):
         modern, version = self.is_rust_modern()
 
@@ -523,16 +530,14 @@ class BaseBootstrapper(object):
 
         if not version:
             # Rust wasn't in PATH. Try the standard path.
-            cargo_home = os.environ.get('CARGO_HOME',
-                    os.path.expanduser(os.path.join('~', '.cargo')))
-            cargo_bin = os.path.join(cargo_home, 'bin')
+            cargo_home, cargo_bin = self.cargo_home()
             try_rustc = os.path.join(cargo_bin, 'rustc' + rust.exe_suffix())
             try_cargo = os.path.join(cargo_bin, 'cargo' + rust.exe_suffix())
             have_rustc = os.path.exists(try_rustc)
             have_cargo = os.path.exists(try_cargo)
             if have_rustc or have_cargo:
-                print(RUST_NOT_IN_PATH % { 'cargo_bin': cargo_bin,
-                                           'cargo_home': cargo_home })
+                print(RUST_NOT_IN_PATH % { 'cargo_bin': cargo_bin })
+                print(RUST_PATH_ADVICE % { 'cargo_home': cargo_home })
                 sys.exit(1)
 
         rustup = self.which('rustup')
@@ -550,16 +555,15 @@ class BaseBootstrapper(object):
                 print('Your version of Rust (%s) is too old. Will try to upgrade.' %
                   version)
             self.upgrade_rust(rustup)
+
+            modern, after = self.is_rust_modern()
+            if not modern:
+                print(RUST_UPGRADE_FAILED % (MODERN_RUST_VERSION, after))
+                sys.exit(1)
         else:
             # No rustc or rustup.
             print('Will try to install Rust.')
             self.install_rust()
-
-        modern, after = self.is_rust_modern()
-
-        if not modern:
-            print(RUST_UPGRADE_FAILED % (MODERN_RUST_VERSION, after))
-            sys.exit(1)
 
     def upgrade_rust(self, rustup):
         """Upgrade Rust.
@@ -591,7 +595,10 @@ class BaseBootstrapper(object):
                 '--default-toolchain', 'stable',
                 '--default-host', platform,
             ])
+            cargo_home, cargo_bin = self.cargo_home()
             print('Rust installation complete.')
+            print('You should now have rustc and cargo in %s' % cargo_bin)
+            print(RUST_PATH_ADVICE % { 'cargo_home': cargo_home })
         finally:
             try:
                 os.remove(rustup_init)

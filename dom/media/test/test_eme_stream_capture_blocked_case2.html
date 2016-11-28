@@ -20,6 +20,7 @@ function startTest(test, token)
   // 3. capturing a media element with mozCaptureStream that has a MediaKeys should fail.
 
   // Case 2. creating a MediaElementSource on a media element with a MediaKeys should fail.
+  var p1 = new EMEPromise;
   var case2token = token + "_case2";
   var v2 = SetupEME(test, case2token);
   v2.addEventListener("loadeddata", function(ev) {
@@ -32,11 +33,11 @@ function startTest(test, token)
       threw = true;
     }
     ok(threw, "Should throw an error creating a MediaElementSource on an EME video.");
-    manager.finished(case2token);
+    p1.resolve();
   });
   manager.started(case2token);
-  LoadTestWithManagedLoadToken(test, v2, manager, case2token,
-                               { onlyLoadFirstFragments:2, noEndOfStream:false });
+  var p2 = LoadTest(test, v2, case2token, { onlyLoadFirstFragments:2, noEndOfStream:false });
+  EMEPromiseAll(v2, case2token, [p1.promise, p2]);
 }
 
 function beginTest() {

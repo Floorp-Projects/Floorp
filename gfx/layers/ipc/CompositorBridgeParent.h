@@ -64,7 +64,7 @@ class AsyncCompositionManager;
 class Compositor;
 class CompositorBridgeParent;
 class CompositorVsyncScheduler;
-class LayerManagerComposite;
+class HostLayerManager;
 class LayerTransactionParent;
 class PAPZParent;
 class CrossProcessCompositorBridgeParent;
@@ -359,8 +359,8 @@ public:
     RefPtr<Layer> mRoot;
     RefPtr<GeckoContentController> mController;
     APZCTreeManagerParent* mApzcTreeManagerParent;
-    CompositorBridgeParent* mParent;
-    LayerManagerComposite* mLayerManager;
+    RefPtr<CompositorBridgeParent> mParent;
+    HostLayerManager* mLayerManager;
     RefPtr<WebRenderBridgeParent> mWRBridge;
     // Pointer to the CrossProcessCompositorBridgeParent. Used by APZCs to share
     // their FrameMetrics with the corresponding child process that holds
@@ -553,7 +553,7 @@ protected:
   template <typename Lambda>
   inline void ForEachIndirectLayerTree(const Lambda& aCallback);
 
-  RefPtr<LayerManagerComposite> mLayerManager;
+  RefPtr<HostLayerManager> mLayerManager;
   RefPtr<Compositor> mCompositor;
   RefPtr<AsyncCompositionManager> mCompositionManager;
   RefPtr<WebRenderBridgeParent> mWRBridge;

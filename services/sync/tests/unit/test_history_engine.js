@@ -16,7 +16,7 @@ add_test(function test_setup() {
   PlacesTestUtils.clearHistory().then(run_next_test);
 });
 
-add_test(function test_processIncoming_mobile_history_batched() {
+add_task(async function test_processIncoming_mobile_history_batched() {
   _("SyncEngine._processIncoming works on history engine.");
 
   let FAKE_DOWNLOAD_LIMIT = 100;
@@ -37,7 +37,7 @@ add_test(function test_processIncoming_mobile_history_batched() {
     "/1.1/foo/storage/history": collection.handler()
   });
 
-  new SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   // Let's create some 234 server side history records. They're all at least
   // 10 minutes old.
@@ -132,11 +132,10 @@ add_test(function test_processIncoming_mobile_history_batched() {
     }
 
   } finally {
-    PlacesTestUtils.clearHistory().then(() => {
-      server.stop(do_test_finished);
-      Svc.Prefs.resetBranch("");
-      Service.recordManager.clearCache();
-    });
+    await PlacesTestUtils.clearHistory();
+    await promiseStopServer(server);
+    Svc.Prefs.resetBranch("");
+    Service.recordManager.clearCache();
   }
 });
 

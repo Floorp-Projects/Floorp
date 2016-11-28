@@ -1706,23 +1706,23 @@ void nsMenuPopupFrame::CanAdjustEdges(int8_t aHorizontalSide,
     popupAlign = -popupAlign;
   }
 
-  if (aHorizontalSide == (mHFlip ? NS_SIDE_RIGHT : NS_SIDE_LEFT)) {
+  if (aHorizontalSide == (mHFlip ? eSideRight : eSideLeft)) {
     if (popupAlign == POPUPALIGNMENT_TOPLEFT || popupAlign == POPUPALIGNMENT_BOTTOMLEFT) {
       aChange.x = 0;
     }
   }
-  else if (aHorizontalSide == (mHFlip ? NS_SIDE_LEFT : NS_SIDE_RIGHT)) {
+  else if (aHorizontalSide == (mHFlip ? eSideLeft : eSideRight)) {
     if (popupAlign == POPUPALIGNMENT_TOPRIGHT || popupAlign == POPUPALIGNMENT_BOTTOMRIGHT) {
       aChange.x = 0;
     }
   }
 
-  if (aVerticalSide == (mVFlip ? NS_SIDE_BOTTOM : NS_SIDE_TOP)) {
+  if (aVerticalSide == (mVFlip ? eSideBottom : eSideTop)) {
     if (popupAlign == POPUPALIGNMENT_TOPLEFT || popupAlign == POPUPALIGNMENT_TOPRIGHT) {
       aChange.y = 0;
     }
   }
-  else if (aVerticalSide == (mVFlip ? NS_SIDE_TOP : NS_SIDE_BOTTOM)) {
+  else if (aVerticalSide == (mVFlip ? eSideTop : eSideBottom)) {
     if (popupAlign == POPUPALIGNMENT_BOTTOMLEFT || popupAlign == POPUPALIGNMENT_BOTTOMRIGHT) {
       aChange.y = 0;
     }

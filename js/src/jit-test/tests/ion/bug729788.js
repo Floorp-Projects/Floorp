@@ -8,7 +8,7 @@ function YearFromTime(t) {
 }
 function MonthFromTime(t) {
     DayWithinYear(t)
-    function DayWithinYear(t) Day(t) - YearFromTime()
+    function DayWithinYear(t) { return Day(t) - YearFromTime(); }
     function WeekDay(t) {
         weekday = Day(t) + 4
         return (weekday < 0 ? weekday : weekday);

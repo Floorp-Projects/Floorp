@@ -25,13 +25,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(Module)
 
 NS_IMPL_ISUPPORTS(Module, nsIXPCScriptable)
 
-Module::Module()
-{
-}
+Module::Module() = default;
 
-Module::~Module()
-{
-}
+Module::~Module() = default;
 
 #define XPC_MAP_CLASSNAME Module
 #define XPC_MAP_QUOTED_CLASSNAME "Module"

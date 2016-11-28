@@ -40,9 +40,7 @@ function checkDataProperty(obj, p, expect, msg)
 
 // Check a bunch of "empty" regular expressions first.
 
-var choices = [{ msg: "RegExp.prototype",
-                 get: function() { return RegExp.prototype; } },
-               { msg: "new RegExp()",
+var choices = [{ msg: "new RegExp()",
                  get: function() { return new RegExp(); } },
                { msg: "/(?:)/",
                  get: Function("return /(?:)/;") }];
@@ -55,7 +53,6 @@ function checkRegExp(r, msg, lastIndex)
   checkDataProperty(r, "lastIndex", expect, msg);
 }
 
-checkRegExp(RegExp.prototype, "RegExp.prototype", 0);
 checkRegExp(new RegExp(), "new RegExp()", 0);
 checkRegExp(/(?:)/, "/(?:)/", 0);
 checkRegExp(Function("return /(?:)/;")(), 'Function("return /(?:)/;")()', 0);

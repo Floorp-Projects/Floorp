@@ -35,11 +35,10 @@ Var LabelDownloading
 Var LabelInstalling
 Var LabelFreeSpace
 Var CheckboxSetAsDefault
-Var CheckboxShortcutOnBar ; Used for Quicklaunch or Taskbar as appropriate
-Var CheckboxShortcutInStartMenu
-Var CheckboxShortcutOnDesktop
+Var CheckboxShortcuts
 Var CheckboxSendPing
 Var CheckboxInstallMaintSvc
+Var DroplistArch
 Var DirRequest
 Var ButtonBrowse
 Var LabelBlurb1
@@ -73,7 +72,6 @@ Var InstallStepSize
 Var InstallTotalSteps
 Var ProgressCompleted
 Var ProgressTotal
-Var TmpVal
 
 Var ExitCode
 Var FirefoxLaunchCode
@@ -108,6 +106,8 @@ Var DownloadRetryCount
 Var OpenedDownloadPage
 Var DownloadServerIP
 Var PostSigningData
+Var PreviousInstallDir
+Var PreviousInstallArch
 
 Var ControlHeightPX
 Var ControlRightPX
@@ -218,6 +218,9 @@ Var ControlRightPX
   !define INVALID_HANDLE_VALUE -1
 !endif
 
+!define DefaultInstDir32bit "$PROGRAMFILES32\${BrandFullName}"
+!define DefaultInstDir64bit "$PROGRAMFILES64\${BrandFullName}"
+
 !include "nsDialogs.nsh"
 !include "LogicLib.nsh"
 !include "FileFunc.nsh"
@@ -229,6 +232,9 @@ Var ControlRightPX
 !insertmacro GetOptions
 !insertmacro LineFind
 !insertmacro StrFilter
+
+!include "StrFunc.nsh"
+${StrTok}
 
 !include "locales.nsi"
 !include "branding.nsi"
@@ -243,8 +249,10 @@ Var ControlRightPX
 ; set the update channel to beta.
 !ifdef OFFICIAL
 !ifdef BETA_UPDATE_CHANNEL
-!undef URLStubDownload
-!define URLStubDownload "http://download.mozilla.org/?os=win&lang=${AB_CD}&product=firefox-beta-latest"
+!undef URLStubDownload32
+!undef URLStubDownload64
+!define URLStubDownload32 "http://download.mozilla.org/?os=win&lang=${AB_CD}&product=firefox-beta-latest"
+!define URLStubDownload64 "http://download.mozilla.org/?os=win64&lang=${AB_CD}&product=firefox-beta-latest"
 !undef URLManualDownload
 !define URLManualDownload "https://www.mozilla.org/${AB_CD}/firefox/installer-help/?channel=beta&installer_lang=${AB_CD}"
 !undef Channel
@@ -275,11 +283,6 @@ icon "setup.ico"
 XPStyle on
 BrandingText " "
 ChangeUI all "nsisui.exe"
-!ifdef HAVE_64BIT_BUILD
-  InstallDir "$PROGRAMFILES64\${BrandFullName}\"
-!else
-  InstallDir "$PROGRAMFILES32\${BrandFullName}\"
-!endif
 
 !ifdef ${AB_CD}_rtl
   LoadLanguageFile "locale-rtl.nlf"
@@ -340,9 +343,11 @@ Function .onInit
     Quit
   ${EndIf}
 
-!ifdef HAVE_64BIT_BUILD
-  SetRegView 64
-!endif
+  ${If} ${RunningX64}
+    StrCpy $INSTDIR "${DefaultInstDir64bit}"
+  ${Else}
+    StrCpy $INSTDIR "${DefaultInstDir32bit}"
+  ${EndIf}
 
   ; Require elevation if the user can elevate
   ${ElevateUAC}
@@ -355,8 +360,17 @@ Function .onInit
   ${EndIf}
 !endif
 
+  ; If we have any existing installation, use its location as the default
+  ; path for this install, even if it's not the same architecture.
+  SetRegView 32
   SetShellVarContext all ; Set SHCTX to HKLM
   ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+
+  ${If} "$R9" == "false"
+  ${AndIf} ${RunningX64}
+    SetRegView 64
+    ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+  ${EndIf}
 
   ${If} "$R9" == "false"
     SetShellVarContext current ; Set SHCTX to HKCU
@@ -364,7 +378,7 @@ Function .onInit
 
     ${If} ${RunningX64}
       ; In HKCU there is no WOW64 redirection, which means we may have gotten
-      ; the path to a 32-bit install even though we're 64-bit, or vice-versa.
+      ; the path to a 32-bit install even though we're 64-bit.
       ; In that case, just use the default path instead of offering an upgrade.
       ; But only do that override if the existing install is in Program Files,
       ; because that's the only place we can be sure is specific
@@ -372,20 +386,36 @@ Function .onInit
       ; The WordFind syntax below searches for the first occurence of the
       ; "delimiter" (the Program Files path) in the install path and returns
       ; anything that appears before that. If nothing appears before that,
-      ; then the install is under Program Files (32 or 64).
-!ifdef HAVE_64BIT_BUILD
+      ; then the install is under Program Files.
       ${WordFind} $R9 $PROGRAMFILES32 "+1{" $0
-!else
-      ${WordFind} $R9 $PROGRAMFILES64 "+1{" $0
-!endif
       ${If} $0 == ""
         StrCpy $R9 "false"
       ${EndIf}
     ${EndIf}
   ${EndIf}
 
+  StrCpy $PreviousInstallDir ""
+  StrCpy $PreviousInstallArch ""
   ${If} "$R9" != "false"
-    StrCpy $INSTDIR "$R9"
+    ; Don't override the default install path with an existing installation
+    ; of a different architecture.
+    System::Call "*(i)p.r0"
+    StrCpy $1 "$R9\${FileMainEXE}"
+    System::Call "Kernel32::GetBinaryTypeW(w r1, p r0)i"
+    System::Call "*$0(i.r2)"
+    System::Free $0
+
+    ${If} $2 == "6" ; 6 == SCS_64BIT_BINARY
+    ${AndIf} ${RunningX64}
+      StrCpy $PreviousInstallDir "$R9"
+      StrCpy $PreviousInstallArch "64"
+      StrCpy $INSTDIR "$PreviousInstallDir"
+    ${ElseIf} $2 == "0" ; 0 == SCS_32BIT_BINARY
+    ${AndIfNot} ${RunningX64}
+      StrCpy $PreviousInstallDir "$R9"
+      StrCpy $PreviousInstallArch "32"
+      StrCpy $INSTDIR "$PreviousInstallDir"
+    ${EndIf}
   ${EndIf}
 
   ; Used to determine if the default installation directory was used.
@@ -422,9 +452,7 @@ Function .onInit
   StrCpy $InitialInstallRequirementsCode ""
   StrCpy $IsDownloadFinished ""
   StrCpy $FirefoxLaunchCode "0"
-  StrCpy $CheckboxShortcutOnBar "1"
-  StrCpy $CheckboxShortcutInStartMenu "1"
-  StrCpy $CheckboxShortcutOnDesktop "1"
+  StrCpy $CheckboxShortcuts "1"
   StrCpy $CheckboxSendPing "1"
 !ifdef MOZ_MAINTENANCE_SERVICE
   StrCpy $CheckboxInstallMaintSvc "1"
@@ -432,6 +460,11 @@ Function .onInit
   StrCpy $CheckboxInstallMaintSvc "0"
 !endif
   StrCpy $WasOptionsButtonClicked "0"
+  ${If} ${RunningX64}
+    StrCpy $DroplistArch "$(VERSION_64BIT)"
+  ${Else}
+    StrCpy $DroplistArch "$(VERSION_32BIT)"
+  ${EndIf}
 
   StrCpy $0 ""
 !ifdef FONT_FILE1
@@ -575,11 +608,11 @@ Function SendPing
     ; completion of all phases.
     ${GetSecondsElapsed} "$EndInstallPhaseTickCount" "$EndFinishPhaseTickCount" $4
 
-!ifdef HAVE_64BIT_BUILD
-    StrCpy $R0 "1"
-!else
-    StrCpy $R0 "0"
-!endif
+    ${If} $DroplistArch == "$(VERSION_64BIT)"
+      StrCpy $R0 "1"
+    ${Else}
+      StrCpy $R0 "0"
+    ${EndIf}
 
     ${If} ${RunningX64}
       StrCpy $R1 "1"
@@ -903,54 +936,13 @@ Function createOptions
   ; background colors of the Dialog must also be hardcoded.
   SetCtlColors $Dialog ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
 
-  ${NSD_CreateLabel} ${OPTIONS_ITEM_EDGE_DU} 18u ${OPTIONS_ITEM_WIDTH_DU} \
-                     12u "$(CREATE_SHORTCUTS)"
-  Pop $0
-  SetCtlColors $0 ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
-  SendMessage $0 ${WM_SETFONT} $FontNormal 0
-
-  ${If} ${AtLeastWin7}
-    StrCpy $0 "$(ADD_SC_TASKBAR)"
-  ${Else}
-    StrCpy $0 "$(ADD_SC_QUICKLAUNCHBAR)"
-  ${EndIf}
-  ${NSD_CreateCheckbox} ${OPTIONS_SUBITEM_EDGE_DU} 38u \
-                        ${OPTIONS_SUBITEM_WIDTH_DU} 12u "$0"
-  Pop $CheckboxShortcutOnBar
-  ; The uxtheme must be disabled on checkboxes in order to override the system
-  ; font color.
-  System::Call 'uxtheme::SetWindowTheme(i $CheckboxShortcutOnBar, w " ", w " ")'
-  SetCtlColors $CheckboxShortcutOnBar ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
-  SendMessage $CheckboxShortcutOnBar ${WM_SETFONT} $FontNormal 0
-  ${NSD_Check} $CheckboxShortcutOnBar
-
-  ${NSD_CreateCheckbox} ${OPTIONS_SUBITEM_EDGE_DU} 54u ${OPTIONS_SUBITEM_WIDTH_DU} \
-                        12u "$(ADD_CheckboxShortcutInStartMenu)"
-  Pop $CheckboxShortcutInStartMenu
-  ; The uxtheme must be disabled on checkboxes in order to override the system
-  ; font color.
-  System::Call 'uxtheme::SetWindowTheme(i $CheckboxShortcutInStartMenu, w " ", w " ")'
-  SetCtlColors $CheckboxShortcutInStartMenu ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
-  SendMessage $CheckboxShortcutInStartMenu ${WM_SETFONT} $FontNormal 0
-  ${NSD_Check} $CheckboxShortcutInStartMenu
-
-  ${NSD_CreateCheckbox} ${OPTIONS_SUBITEM_EDGE_DU} 70u ${OPTIONS_SUBITEM_WIDTH_DU} \
-                        12u "$(ADD_CheckboxShortcutOnDesktop)"
-  Pop $CheckboxShortcutOnDesktop
-  ; The uxtheme must be disabled on checkboxes in order to override the system
-  ; font color.
-  System::Call 'uxtheme::SetWindowTheme(i $CheckboxShortcutOnDesktop, w " ", w " ")'
-  SetCtlColors $CheckboxShortcutOnDesktop ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
-  SendMessage $CheckboxShortcutOnDesktop ${WM_SETFONT} $FontNormal 0
-  ${NSD_Check} $CheckboxShortcutOnDesktop
-
-  ${NSD_CreateLabel} ${OPTIONS_ITEM_EDGE_DU} 100u ${OPTIONS_ITEM_WIDTH_DU} \
+  ${NSD_CreateLabel} ${OPTIONS_ITEM_EDGE_DU} 25u ${OPTIONS_ITEM_WIDTH_DU} \
                      12u "$(DEST_FOLDER)"
   Pop $0
   SetCtlColors $0 ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
   SendMessage $0 ${WM_SETFONT} $FontNormal 0
 
-  ${NSD_CreateDirRequest} ${OPTIONS_SUBITEM_EDGE_DU} 116u 159u 14u "$INSTDIR"
+  ${NSD_CreateDirRequest} ${OPTIONS_SUBITEM_EDGE_DU} 41u 159u 14u "$INSTDIR"
   Pop $DirRequest
   SetCtlColors $DirRequest ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
   SendMessage $DirRequest ${WM_SETFONT} $FontNormal 0
@@ -966,7 +958,7 @@ Function createOptions
   ${NSD_AddExStyle} $DirRequest ${WS_EX_LTRREADING}|${WS_EX_LEFT}
 !endif
 
-  ${NSD_CreateBrowseButton} 280u 116u 50u 14u "$(BROWSE_BUTTON)"
+  ${NSD_CreateBrowseButton} 280u 41u 50u 14u "$(BROWSE_BUTTON)"
   Pop $ButtonBrowse
   SetCtlColors $ButtonBrowse "" ${COMMON_BKGRD_COLOR}
   ${NSD_OnClick} $ButtonBrowse OnClick_ButtonBrowse
@@ -987,13 +979,13 @@ Function createOptions
 
   IntOp $0 $0 + 8 ; Add padding to the control's width
   ; Make both controls the same width as the widest control
-  ${NSD_CreateLabelCenter} ${OPTIONS_SUBITEM_EDGE_DU} 134u $0 $ControlHeightPX "$(SPACE_REQUIRED)"
+  ${NSD_CreateLabelCenter} ${OPTIONS_SUBITEM_EDGE_DU} 59u $0 $ControlHeightPX "$(SPACE_REQUIRED)"
   Pop $5
   SetCtlColors $5 ${COMMON_TEXT_COLOR_FADED} ${COMMON_BKGRD_COLOR}
   SendMessage $5 ${WM_SETFONT} $FontItalic 0
 
   IntOp $2 $2 + 8 ; Add padding to the control's width
-  ${NSD_CreateLabelCenter} ${OPTIONS_SUBITEM_EDGE_DU} 145u $2 $ControlHeightPX "$(SPACE_AVAILABLE)"
+  ${NSD_CreateLabelCenter} ${OPTIONS_SUBITEM_EDGE_DU} 70u $2 $ControlHeightPX "$(SPACE_AVAILABLE)"
   Pop $6
   SetCtlColors $6 ${COMMON_TEXT_COLOR_FADED} ${COMMON_BKGRD_COLOR}
   SendMessage $6 ${WM_SETFONT} $FontItalic 0
@@ -1007,7 +999,7 @@ Function createOptions
 
   IntOp $ControlRightPX $ControlRightPX + 6
 
-  ${NSD_CreateLabel} $ControlRightPX 134u 100% $ControlHeightPX \
+  ${NSD_CreateLabel} $ControlRightPX 59u 100% $ControlHeightPX \
                      "${APPROXIMATE_REQUIRED_SPACE_MB} $(MEGA)$(BYTE)"
   Pop $7
   SetCtlColors $7 ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
@@ -1015,14 +1007,29 @@ Function createOptions
 
   ; Create the free space label with an empty string and update it by calling
   ; UpdateFreeSpaceLabel
-  ${NSD_CreateLabel} $ControlRightPX 145u 100% $ControlHeightPX " "
+  ${NSD_CreateLabel} $ControlRightPX 70u 100% $ControlHeightPX " "
   Pop $LabelFreeSpace
   SetCtlColors $LabelFreeSpace ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
   SendMessage $LabelFreeSpace ${WM_SETFONT} $FontNormal 0
 
   Call UpdateFreeSpaceLabel
 
-  ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} 168u ${OPTIONS_SUBITEM_WIDTH_DU} \
+  ${If} ${AtLeastWin7}
+    StrCpy $0 "$(ADD_SC_DESKTOP_TASKBAR)"
+  ${Else}
+    StrCpy $0 "$(ADD_SC_DESKTOP_QUICKLAUNCHBAR)"
+  ${EndIf}
+  ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} 100u \
+                        ${OPTIONS_ITEM_WIDTH_DU} 12u "$0"
+  Pop $CheckboxShortcuts
+  ; The uxtheme must be disabled on checkboxes in order to override the system
+  ; font color.
+  System::Call 'uxtheme::SetWindowTheme(i $CheckboxShortcuts, w " ", w " ")'
+  SetCtlColors $CheckboxShortcuts ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
+  SendMessage $CheckboxShortcuts ${WM_SETFONT} $FontNormal 0
+  ${NSD_Check} $CheckboxShortcuts
+
+  ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} 116u ${OPTIONS_SUBITEM_WIDTH_DU} \
                         12u "$(SEND_PING)"
   Pop $CheckboxSendPing
   ; The uxtheme must be disabled on checkboxes in order to override the system
@@ -1033,6 +1040,7 @@ Function createOptions
   ${NSD_Check} $CheckboxSendPing
 
 !ifdef MOZ_MAINTENANCE_SERVICE
+  StrCpy $CheckboxInstallMaintSvc "0"
   ; We can only install the maintenance service if the user is an admin.
   Call IsUserAdmin
   Pop $0
@@ -1045,30 +1053,99 @@ Function createOptions
     StrCpy $0 "false"
   ${EndIf}
 
-  ; Only show the maintenance service checkbox if we have write access to HKLM
-  ClearErrors
-  WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" \
-                   "Write Test"
-  ${If} ${Errors}
-  ${OrIf} $0 != "true"
-    StrCpy $CheckboxInstallMaintSvc "0"
-  ${Else}
+  ${If} $0 == "true"
+    ; Only show the maintenance service checkbox if we have write access to HKLM
     DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
-    ; Read the registry instead of using ServicesHelper::IsInstalled so the
-    ; plugin isn't included in the stub installer to lessen its size.
     ClearErrors
-    ReadRegStr $0 HKLM "SYSTEM\CurrentControlSet\services\MozillaMaintenance" "ImagePath"
-    ${If} ${Errors}
-      ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} 184u ${OPTIONS_ITEM_WIDTH_DU} \
-                            12u "$(INSTALL_MAINT_SERVICE)"
-      Pop $CheckboxInstallMaintSvc
-      System::Call 'uxtheme::SetWindowTheme(i $CheckboxInstallMaintSvc, w " ", w " ")'
-      SetCtlColors $CheckboxInstallMaintSvc ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
-      SendMessage $CheckboxInstallMaintSvc ${WM_SETFONT} $FontNormal 0
-      ${NSD_Check} $CheckboxInstallMaintSvc
+    WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" \
+                     "Write Test"
+    ${IfNot} ${Errors}
+      DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+      ; Read the registry instead of using ServicesHelper::IsInstalled so the
+      ; plugin isn't included in the stub installer to lessen its size.
+      ClearErrors
+      ReadRegStr $0 HKLM "SYSTEM\CurrentControlSet\services\MozillaMaintenance" "ImagePath"
+      ${If} ${Errors}
+        ${NSD_CreateCheckbox} ${OPTIONS_ITEM_EDGE_DU} 132u ${OPTIONS_ITEM_WIDTH_DU} \
+                              12u "$(INSTALL_MAINT_SERVICE)"
+        Pop $CheckboxInstallMaintSvc
+        System::Call 'uxtheme::SetWindowTheme(i $CheckboxInstallMaintSvc, w " ", w " ")'
+        SetCtlColors $CheckboxInstallMaintSvc ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
+        SendMessage $CheckboxInstallMaintSvc ${WM_SETFONT} $FontNormal 0
+        ${NSD_Check} $CheckboxInstallMaintSvc
+      ${EndIf}
     ${EndIf}
   ${EndIf}
 !endif
+
+  ${If} ${RunningX64}
+    ; Get the exact pixel width we're going to need for this label.
+    ; The label string has a keyboard accelerator, which is an '&' that's in
+    ; the string but is not rendered, and GetTextExtent doesn't account for
+    ; those, so remove them first. Also handle any escaped &'s ("&&").
+    StrCpy $R0 "$(ARCH_DROPLIST_LABEL)"
+    StrCpy $R1 ""
+    ${Do}
+      ${StrTok} $R2 $R0 "&" 0 0
+      StrCpy $R1 "$R1$R2"
+      StrLen $R3 $R2
+      IntOp $R3 $R3 + 1
+      StrCpy $R0 $R0 "" $R3
+      StrCpy $R4 $R0 1
+      ${If} $R4 == "&"
+        StrCpy $R1 "$R1&"
+        StrCpy $R0 $R0 "" 1
+      ${EndIf}
+    ${LoopUntil} $R0 == ""
+
+    ${GetTextExtent} $R1 $FontNormal $R0 $R1
+    ${If} $CheckboxInstallMaintSvc == "0"
+      ${NSD_CreateLabel} ${OPTIONS_ITEM_EDGE_DU} 134u $R0 $R1 "$(ARCH_DROPLIST_LABEL)"
+    ${Else}
+      ${NSD_CreateLabel} ${OPTIONS_ITEM_EDGE_DU} 154u $R0 $R1 "$(ARCH_DROPLIST_LABEL)"
+    ${EndIf}
+    Pop $0
+    SetCtlColors $0 ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
+    SendMessage $0 ${WM_SETFONT} $FontNormal 0
+
+    ; Set the dropdown list size to the same as the larger of the two options.
+    ${GetTextExtent} "$(VERSION_32BIT)" $FontNormal $R0 $R1
+    ${GetTextExtent} "$(VERSION_64BIT)" $FontNormal $R2 $R3
+    ${If} $R0 < $R2
+      StrCpy $R0 $R2
+    ${EndIf}
+    ${If} $R1 < $R3
+      StrCpy $R3 $R1
+    ${EndIf}
+    ; Add enough width for the dropdown button. How wide the button is depends
+    ; on he system display scaling setting, which we cannot easily determine,
+    ; so just use a value that works fine for a setting of 200% and adds a
+    ; little too much padding for settings below that.
+    IntOp $R0 $R0 + 56
+
+    ; Put the droplist right after the label, with some padding.
+    ${GetDlgItemEndPX} $0 $ControlRightPX
+    IntOp $ControlRightPX $ControlRightPX + 4
+    ${If} $CheckboxInstallMaintSvc == "0"
+      ${NSD_CreateDropList} $ControlRightPX 132u $R0 $R3 ""
+    ${Else}
+      ${NSD_CreateDropList} $ControlRightPX 152u $R0 $R3 ""
+    ${EndIf}
+    Pop $DroplistArch
+    ${NSD_CB_AddString} $DroplistArch "$(VERSION_32BIT)"
+    ${NSD_CB_AddString} $DroplistArch "$(VERSION_64BIT)"
+    ${NSD_OnChange} $DroplistArch OnChange_DroplistArch
+    ; The uxtheme must be disabled in order to override the system colors.
+    System::Call 'uxtheme::SetWindowTheme(i $DroplistArch, w " ", w " ")'
+    SetCtlColors $DroplistArch ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
+    SendMessage $DroplistArch ${WM_SETFONT} $FontNormal 0
+
+    ${If} ${RunningX64}
+      ${NSD_CB_SelectString} $DroplistArch "$(VERSION_64BIT)"
+    ${Else}
+      ${NSD_CB_SelectString} $DroplistArch "$(VERSION_32BIT)"
+    ${EndIf}
+  ${EndIf}
 
   GetDlgItem $0 $HWNDPARENT 1 ; Install button
   ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
@@ -1137,9 +1214,8 @@ Function leaveOptions
     IntOp $OptionsPhaseSeconds $OptionsPhaseSeconds + 1
   ${EndIf}
 
-  ${NSD_GetState} $CheckboxShortcutOnBar $CheckboxShortcutOnBar
-  ${NSD_GetState} $CheckboxShortcutInStartMenu $CheckboxShortcutInStartMenu
-  ${NSD_GetState} $CheckboxShortcutOnDesktop $CheckboxShortcutOnDesktop
+  ${NSD_GetState} $CheckboxShortcuts $CheckboxShortcuts
+  ${NSD_GetText} $DroplistArch $DroplistArch
   ${NSD_GetState} $CheckboxSendPing $CheckboxSendPing
 !ifdef MOZ_MAINTENANCE_SERVICE
   ${NSD_GetState} $CheckboxInstallMaintSvc $CheckboxInstallMaintSvc
@@ -1334,8 +1410,15 @@ FunctionEnd
 
 Function StartDownload
   ${NSD_KillTimer} StartDownload
-  InetBgDL::Get "${URLStubDownload}${URLStubDownloadAppend}" "$PLUGINSDIR\download.exe" \
-                /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
+  ${If} $DroplistArch == "$(VERSION_64BIT)"
+    InetBgDL::Get "${URLStubDownload64}${URLStubDownloadAppend}" \
+                  "$PLUGINSDIR\download.exe" \
+                  /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
+  ${Else}
+    InetBgDL::Get "${URLStubDownload32}${URLStubDownloadAppend}" \
+                  "$PLUGINSDIR\download.exe" \
+                  /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
+  ${EndIf}
   StrCpy $4 ""
   ${NSD_CreateTimer} OnDownload ${DownloadIntervalMS}
   ${If} ${FileExists} "$INSTDIR\${TO_BE_DELETED}"
@@ -1556,23 +1639,18 @@ Function OnDownload
       ; Don't create the QuickLaunch or Taskbar shortcut from the launched installer
       WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "QuickLaunchShortcut" "false"
 
-      ; Either avoid or force adding a taskbar pin based on the checkbox value:
-      ${If} $CheckboxShortcutOnBar == 0
+      ; Always create a start menu shortcut, so the user always has some way
+      ; to access the application.
+      WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "StartMenuShortcuts" "true"
+
+      ; Either avoid or force adding a taskbar pin and desktop shortcut
+      ; based on the checkbox value.
+      ${If} $CheckboxShortcuts == 0
         WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "TaskbarShortcut" "false"
+        WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "DesktopShortcut" "false"
       ${Else}
         WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "TaskbarShortcut" "true"
-      ${EndIf}
-
-      ${If} $CheckboxShortcutOnDesktop == 1
         WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "DesktopShortcut" "true"
-      ${Else}
-        WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "DesktopShortcut" "false"
-      ${EndIf}
-
-      ${If} $CheckboxShortcutInStartMenu == 1
-        WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "StartMenuShortcuts" "true"
-      ${Else}
-        WriteINIStr "$PLUGINSDIR\${CONFIG_INI}" "Install" "StartMenuShortcuts" "false"
       ${EndIf}
 
 !ifdef MOZ_MAINTENANCE_SERVICE
@@ -1749,7 +1827,7 @@ Function FinishInstall
     ${EndIf}
   ${EndIf}
 
-  ${If} $CheckboxShortcutOnBar == 1
+  ${If} $CheckboxShortcuts == 1
     ${If} ${AtMostWinVista}
       ClearErrors
       ${GetParameters} $0
@@ -1885,6 +1963,30 @@ Function OnClick_ButtonBrowse
   ${EndIf}
 FunctionEnd
 
+Function OnChange_DroplistArch
+  ; When the user changes the 32/64-bit setting, change the default install path
+  ; to use the correct version of Program Files. But only do that if the user
+  ; hasn't selected their own install path yet, and if we didn't select our
+  ; default as the location of an existing install.
+  ${If} $INSTDIR == $InitialInstallDir
+    ${NSD_GetText} $DroplistArch $0
+    ${If} $0 == "$(VERSION_32BIT)"
+      ${If} $PreviousInstallArch == 32
+        StrCpy $InitialInstallDir $PreviousInstallDir
+      ${Else}
+        StrCpy $InitialInstallDir "${DefaultInstDir32bit}"
+      ${EndIf}
+    ${Else}
+      ${If} $PreviousInstallArch == 64
+        StrCpy $InitialInstallDir $PreviousInstallDir
+      ${Else}
+        StrCpy $InitialInstallDir "${DefaultInstDir64bit}"
+      ${EndIf}
+    ${EndIf}
+    ${NSD_SetText} $DirRequest $InitialInstallDir
+  ${EndIf}
+FunctionEnd
+
 Function CheckSpace
   ${If} "$ExistingTopDir" != ""
     StrLen $0 "$ExistingTopDir"
@@ -1949,6 +2051,7 @@ Function CanWrite
   GetTempFileName $2 "$0"
   Delete $2
   CreateDirectory "$2"
+
   ${If} ${FileExists} "$2"
     ${If} ${FileExists} "$INSTDIR"
       GetTempFileName $3 "$INSTDIR"

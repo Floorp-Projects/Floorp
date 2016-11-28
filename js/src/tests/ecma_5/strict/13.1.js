@@ -86,11 +86,11 @@ assertEq(testLenientAndStrict('Function("x","y","\'use strict\'")',
  * The parameter lists of function expressions should not contain
  * duplicate identifiers.
  */
-assertEq(testLenientAndStrict('(function (x,x) 2)',
+assertEq(testLenientAndStrict('(function (x,x) {})',
                                parsesSuccessfully,
                                parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('(function (x,y) 2)',
+assertEq(testLenientAndStrict('(function (x,y) {})',
                               parsesSuccessfully,
                               parsesSuccessfully),
          true);
@@ -173,19 +173,19 @@ assertEq(testLenientAndStrict('(function eval(){"use strict";})',
                               parseRaisesException(SyntaxError),
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('(function f(eval) 2)',
+assertEq(testLenientAndStrict('(function f(eval) {})',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('(function f([eval]) 2)',
+assertEq(testLenientAndStrict('(function f([eval]) {})',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('(function f({x:eval}) 2)',
+assertEq(testLenientAndStrict('(function f({x:eval}) {})',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('(function eval() 2)',
+assertEq(testLenientAndStrict('(function eval() {})',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
@@ -277,19 +277,19 @@ assertEq(testLenientAndStrict('(function arguments(){"use strict";})',
                               parseRaisesException(SyntaxError),
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('(function f(arguments) 2)',
+assertEq(testLenientAndStrict('(function f(arguments) {})',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('(function f([arguments]) 2)',
+assertEq(testLenientAndStrict('(function f([arguments]) {})',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('(function f({x:arguments}) 2)',
+assertEq(testLenientAndStrict('(function f({x:arguments}) {})',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('(function arguments() 2)',
+assertEq(testLenientAndStrict('(function arguments() {})',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);

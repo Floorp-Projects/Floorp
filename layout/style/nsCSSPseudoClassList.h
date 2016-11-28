@@ -138,9 +138,6 @@ CSS_PSEUDO_CLASS(negation, ":not", 0, "")
 // directionality in the markup language is ltr or rtl respectively.
 CSS_STATE_DEPENDENT_PSEUDO_CLASS(dir, ":dir", 0, "",
                                  NS_EVENT_STATE_LTR | NS_EVENT_STATE_RTL)
-// prefix version is deprecated and will be removed per bug 1270406.
-CSS_STATE_DEPENDENT_PSEUDO_CLASS(mozDir, ":-moz-dir", 0, "",
-                                 NS_EVENT_STATE_LTR | NS_EVENT_STATE_RTL)
 
 CSS_STATE_PSEUDO_CLASS(link, ":link", 0, "", NS_EVENT_STATE_UNVISITED)
 // what matches :link or :visited

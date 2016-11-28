@@ -342,8 +342,8 @@ nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect)
   if (parent &&
       parent->StylePosition()->mBoxSizing != StyleBoxSizing::Border) {
     const nsStyleBorder* border = parent->StyleBorder();
-    origin.x -= border->GetComputedBorderWidth(NS_SIDE_LEFT);
-    origin.y -= border->GetComputedBorderWidth(NS_SIDE_TOP);
+    origin.x -= border->GetComputedBorderWidth(eSideLeft);
+    origin.y -= border->GetComputedBorderWidth(eSideTop);
   }
 
   // XXX We should really consider subtracting out padding for
@@ -2942,11 +2942,14 @@ IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
     return false;
   }
 
+  // XXXbholley: This could be done more directly with Servo's style system.
   StyleSetHandle styleSet = aPresShell->StyleSet();
   RefPtr<nsStyleContext> sc;
   for (int32_t i = elementsToCheck.Length() - 1; i >= 0; --i) {
     if (sc) {
-      sc = styleSet->ResolveStyleFor(elementsToCheck[i], sc);
+      sc = styleSet->ResolveStyleFor(elementsToCheck[i], sc,
+                                     ConsumeStyleBehavior::DontConsume,
+                                     LazyComputeBehavior::Assert);
     } else {
       sc = nsComputedDOMStyle::GetStyleContextForElementNoFlush(elementsToCheck[i],
                                                                 nullptr, aPresShell);

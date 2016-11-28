@@ -97,8 +97,7 @@ Gecko_GetNextSibling(RawGeckoNodeBorrowed aNode)
 RawGeckoElementBorrowedOrNull
 Gecko_GetParentElement(RawGeckoElementBorrowed aElement)
 {
-  nsINode* parentNode = aElement->GetFlattenedTreeParentNode();
-  return parentNode->IsElement() ? parentNode->AsElement() : nullptr;
+  return aElement->GetFlattenedTreeParentElement();
 }
 
 RawGeckoElementBorrowedOrNull
@@ -275,45 +274,18 @@ Gecko_CalcStyleDifference(nsStyleContext* aOldStyleContext,
   return result;
 }
 
-void
-Gecko_StoreStyleDifference(RawGeckoNodeBorrowed aNode, nsChangeHint aChangeHintToStore)
+ServoElementSnapshotOwned
+Gecko_CreateElementSnapshot(RawGeckoElementBorrowed aElement)
 {
-#ifdef MOZ_STYLO
-  MOZ_ASSERT(aNode->IsElement());
-  MOZ_ASSERT(aNode->IsDirtyForServo(),
-             "Change hint stored in a not-dirty node");
+  return new ServoElementSnapshot(aElement);
+}
 
-  const Element* aElement = aNode->AsElement();
-  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
-  if (!primaryFrame) {
-    // If there's no primary frame, that means that either this content is
-    // undisplayed (so we only need to check at the restyling phase for the
-    // display value on the element), or is a display: contents element.
-    //
-    // In this second case, we should store it in the frame constructor display
-    // contents map. Note that while this operation looks hairy, this would be
-    // thread-safe because the content should be there already (we'd only need
-    // to read the map and modify our entry).
-    //
-    // That being said, we still don't support display: contents anyway, so it's
-    // probably not worth it to do all the roundtrip just yet until we have a
-    // more concrete plan.
-    return;
-  }
-
-  if ((aChangeHintToStore & nsChangeHint_ReconstructFrame) &&
-      aNode->IsInNativeAnonymousSubtree())
-  {
-    NS_WARNING("stylo: Removing forbidden frame reconstruction hint on native "
-               "anonymous content. Fix this in bug 1297857!");
-    aChangeHintToStore &= ~nsChangeHint_ReconstructFrame;
-  }
-
-  primaryFrame->StyleContext()->StoreChangeHint(aChangeHintToStore);
-#else
-  MOZ_CRASH("stylo: Shouldn't call Gecko_StoreStyleDifference in "
-            "non-stylo build");
-#endif
+void
+Gecko_DropElementSnapshot(ServoElementSnapshotOwned aSnapshot)
+{
+  MOZ_ASSERT(NS_IsMainThread(),
+             "ServoAttrSnapshots can only be dropped on the main thread");
+  delete aSnapshot;
 }
 
 RawServoDeclarationBlockStrongBorrowedOrNull
@@ -581,7 +553,7 @@ ClassOrClassList(Implementor* aElement, nsIAtom** aClass, nsIAtom*** aClassList)
   }
 
 SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_, RawGeckoElementBorrowed)
-SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot, ServoElementSnapshot*)
+SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot, const ServoElementSnapshot*)
 
 #undef SERVO_IMPL_ELEMENT_ATTR_MATCHING_FUNCTIONS
 
@@ -1097,16 +1069,4 @@ Gecko_Destroy_nsStyle##name(nsStyle##name* ptr)                               \
   }
 #include "ServoBindingList.h"
 #undef SERVO_BINDING_FUNC
-#endif
-
-#ifdef MOZ_STYLO
-const nsStyleVariables*
-Servo_GetStyleVariables(ServoComputedValuesBorrowed aComputedValues)
-{
-  // Servo can't provide us with Variables structs yet, so instead of linking
-  // to a Servo_GetStyleVariables defined in Servo we define one here that
-  // always returns the same, empty struct.
-  static nsStyleVariables variables(StyleStructContext::ServoContext());
-  return &variables;
-}
 #endif

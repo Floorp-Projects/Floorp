@@ -2447,29 +2447,15 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
   MOZ_ASSERT(mState != DECODER_STATE_COMPLETED ||
              (!needToDecodeAudio && !needToDecodeVideo));
 
-  bool needIdle = !IsLogicallyPlaying() &&
-                  mState != DECODER_STATE_SEEKING &&
-                  !needToDecodeAudio &&
-                  !needToDecodeVideo &&
-                  !IsPlaying();
-
-  SAMPLE_LOG("DispatchDecodeTasksIfNeeded needAudio=%d audioStatus=%s needVideo=%d videoStatus=%s needIdle=%d",
+  SAMPLE_LOG("DispatchDecodeTasksIfNeeded needAudio=%d audioStatus=%s needVideo=%d videoStatus=%s",
              needToDecodeAudio, AudioRequestStatus(),
-             needToDecodeVideo, VideoRequestStatus(),
-             needIdle);
+             needToDecodeVideo, VideoRequestStatus());
 
   if (needToDecodeAudio) {
     EnsureAudioDecodeTaskQueued();
   }
   if (needToDecodeVideo) {
     EnsureVideoDecodeTaskQueued();
-  }
-
-  if (needIdle) {
-    DECODER_LOG("Dispatching SetIdle() audioQueue=%lld videoQueue=%lld",
-                GetDecodedAudioDuration(),
-                VideoQueue().Duration());
-    mReader->SetIdle();
   }
 }
 

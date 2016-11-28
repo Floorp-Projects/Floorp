@@ -166,18 +166,6 @@ public:
   // probably be removed somehow.
   virtual RefPtr<SeekPromise> Seek(SeekTarget aTarget, int64_t aEndTime) = 0;
 
-  // Called to move the reader into idle state. When the reader is
-  // created it is assumed to be active (i.e. not idle). When the media
-  // element is paused and we don't need to decode any more data, the state
-  // machine calls SetIdle() to inform the reader that its decoder won't be
-  // needed for a while. The reader can use these notifications to enter
-  // a low power state when the decoder isn't needed, if desired.
-  // This is most useful on mobile.
-  // Note: DecodeVideoFrame, DecodeAudioData, ReadMetadata and Seek should
-  // activate the decoder if necessary. The state machine only needs to know
-  // when to call SetIdle().
-  virtual void SetIdle() {}
-
   virtual void SetCDMProxy(CDMProxy* aProxy) {}
 
   // Tell the reader that the data decoded are not for direct playback, so it

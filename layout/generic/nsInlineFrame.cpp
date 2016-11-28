@@ -116,20 +116,20 @@ nsInlineFrame::IsSelfEmpty()
   // get logical start and end flags.
   if (wm.IsVertical()) {
     haveStart =
-      border->GetComputedBorderWidth(NS_SIDE_TOP) != 0 ||
+      border->GetComputedBorderWidth(eSideTop) != 0 ||
       !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetTop()) ||
       !IsMarginZero(margin->mMargin.GetTop());
     haveEnd =
-      border->GetComputedBorderWidth(NS_SIDE_BOTTOM) != 0 ||
+      border->GetComputedBorderWidth(eSideBottom) != 0 ||
       !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetBottom()) ||
       !IsMarginZero(margin->mMargin.GetBottom());
   } else {
     haveStart =
-      border->GetComputedBorderWidth(NS_SIDE_LEFT) != 0 ||
+      border->GetComputedBorderWidth(eSideLeft) != 0 ||
       !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetLeft()) ||
       !IsMarginZero(margin->mMargin.GetLeft());
     haveEnd =
-      border->GetComputedBorderWidth(NS_SIDE_RIGHT) != 0 ||
+      border->GetComputedBorderWidth(eSideRight) != 0 ||
       !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetRight()) ||
       !IsMarginZero(margin->mMargin.GetRight());
   }

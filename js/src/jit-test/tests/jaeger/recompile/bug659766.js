@@ -5,8 +5,8 @@ function TestCase(n, d, e, a) {
   this.reason=''
   gTestcases[gTc++]=this
 }
-TestCase.prototype.dump=function () + toPrinted(this.description) + toPrinted(this.reason) + '\n';
-function toPrinted(value) value=value.replace(/\\n/g, 'NL').replace(/[^\x20-\x7E]+/g, escapeString);
+TestCase.prototype.dump=function () { return + toPrinted(this.description) + toPrinted(this.reason) + '\n'; };
+function toPrinted(value) { return value=value.replace(/\\n/g, 'NL').replace(/[^\x20-\x7E]+/g, escapeString); }
 function escapeString (str) {
   try {
      err
@@ -18,7 +18,7 @@ function jsTestDriverEnd() {
 }
 var SECTION = "dowhile-007";
 DoWhile();
-function DoWhile( object ) result1=false;
+function DoWhile( object ) { return result1=false; }
 new TestCase(
     SECTION,
     "break one: ",

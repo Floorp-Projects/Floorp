@@ -52,7 +52,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
-            android:layout_gravity="right|top"
+            android:layout_gravity="right|end|top"
             android:padding="6dp"
             android:contentDescription="@string/menu"
             android:src="@drawable/menu" />

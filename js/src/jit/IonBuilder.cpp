@@ -5256,8 +5256,13 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
         // the inlining was aborted for a non-exception reason.
         if (inlineBuilder.abortReason_ == AbortReason_Disable) {
             calleeScript->setUninlineable();
-            current = backup.restore();
-            return InliningStatus_NotInlined;
+            if (!JitOptions.disableInlineBacktracking) {
+                current = backup.restore();
+                return InliningStatus_NotInlined;
+            }
+            abortReason_ = AbortReason_Inlining;
+        } else if (inlineBuilder.abortReason_ == AbortReason_Inlining) {
+            abortReason_ = AbortReason_Inlining;
         } else if (inlineBuilder.abortReason_ == AbortReason_Alloc) {
             abortReason_ = AbortReason_Alloc;
         } else if (inlineBuilder.abortReason_ == AbortReason_PreliminaryObjects) {
@@ -5286,8 +5291,12 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
     if (returns.empty()) {
         // Inlining of functions that have no exit is not supported.
         calleeScript->setUninlineable();
-        current = backup.restore();
-        return InliningStatus_NotInlined;
+        if (!JitOptions.disableInlineBacktracking) {
+            current = backup.restore();
+            return InliningStatus_NotInlined;
+        }
+        abortReason_ = AbortReason_Inlining;
+        return InliningStatus_Error;
     }
     MDefinition* retvalDefn = patchInlinedReturns(callInfo, returns, returnBlock);
     if (!retvalDefn)
@@ -12160,7 +12169,7 @@ IonBuilder::addShapeGuardsForGetterSetter(MDefinition* obj, JSObject* holder, Sh
 
 bool
 IonBuilder::getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName* name,
-                                   TemporaryTypeSet* types)
+                                   TemporaryTypeSet* types, bool innerized)
 {
     MOZ_ASSERT(*emitted == false);
 
@@ -12171,7 +12180,7 @@ IonBuilder::getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName
     bool isOwnProperty = false;
     BaselineInspector::ReceiverVector receivers(alloc());
     BaselineInspector::ObjectGroupVector convertUnboxedGroups(alloc());
-    if (!inspector->commonGetPropFunction(pc, &foundProto, &lastProperty, &commonGetter,
+    if (!inspector->commonGetPropFunction(pc, innerized, &foundProto, &lastProperty, &commonGetter,
                                           &globalShape, &isOwnProperty,
                                           receivers, convertUnboxedGroups))
     {
@@ -12652,8 +12661,11 @@ IonBuilder::getPropTryInnerize(bool* emitted, MDefinition* obj, PropertyName* na
             return *emitted;
 
         trackOptimizationAttempt(TrackedStrategy::GetProp_CommonGetter);
-        if (!getPropTryCommonGetter(emitted, inner, name, types) || *emitted)
+        if (!getPropTryCommonGetter(emitted, inner, name, types, /* innerized = */true) ||
+            *emitted)
+        {
             return *emitted;
+        }
     }
 
     // Passing the inner object to GetProperty IC is safe, see the

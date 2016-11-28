@@ -350,7 +350,7 @@ egl::Error DisplayGLX::initialize(egl::Display *display)
     bool isOpenGLES =
         eglAttributes.get(EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE) ==
         EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE;
-    if (isOpenGLES && (vendor == VENDOR_ID_INTEL || vendor == VENDOR_ID_NVIDIA))
+    if (isOpenGLES && (IsIntel(vendor) || IsNvidia(vendor)))
     {
         return egl::Error(EGL_NOT_INITIALIZED, "Intel or NVIDIA OpenGL ES drivers are not supported.");
     }
@@ -410,7 +410,8 @@ SurfaceImpl *DisplayGLX::createPbufferSurface(const egl::SurfaceState &state,
 
 SurfaceImpl *DisplayGLX::createPbufferFromClientBuffer(const egl::SurfaceState &state,
                                                        const egl::Config *configuration,
-                                                       EGLClientBuffer shareHandle,
+                                                       EGLenum buftype,
+                                                       EGLClientBuffer clientBuffer,
                                                        const egl::AttributeMap &attribs)
 {
     UNIMPLEMENTED();

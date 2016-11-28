@@ -61,13 +61,29 @@ def load_parameters_file(options):
     """
     Load parameters from the --parameters option
     """
+    import urllib
+
+    url_prefix = "https://queue.taskcluster.net/v1/task/"
+    url_postfix = "/artifacts/public/parameters.yml"
+
     filename = options['parameters']
+
     if not filename:
         return Parameters()
-    with open(filename) as f:
-        if filename.endswith('.yml'):
-            return Parameters(**yaml.safe_load(f))
-        elif filename.endswith('.json'):
-            return Parameters(**json.load(f))
-        else:
-            raise TypeError("Parameters file `{}` is not JSON or YAML".format(filename))
+
+    try:
+        # reading parameters from a local parameters.yml file
+        f = open(filename)
+    except IOError:
+        # fetching parameters.yml using task task-id or supplied url
+        if filename.startswith("task-id="):
+            task_id = filename.split("=")[1]
+            filename = url_prefix + task_id + url_postfix
+        f = urllib.urlopen(filename)
+
+    if filename.endswith('.yml'):
+        return Parameters(**yaml.safe_load(f))
+    elif filename.endswith('.json'):
+        return Parameters(**json.load(f))
+    else:
+        raise TypeError("Parameters file `{}` is not JSON or YAML".format(filename))

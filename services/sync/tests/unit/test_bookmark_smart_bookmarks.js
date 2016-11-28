@@ -57,9 +57,9 @@ function serverForFoo(engine) {
 
 // Verify that Places smart bookmarks have their annotation uploaded and
 // handled locally.
-add_task(function *test_annotation_uploaded() {
+add_task(async function test_annotation_uploaded() {
   let server = serverForFoo(engine);
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   let startCount = smartBookmarkCount();
 
@@ -110,7 +110,7 @@ add_task(function *test_annotation_uploaded() {
   let collection = server.user("foo").collection("bookmarks");
 
   try {
-    yield sync_engine_and_validate_telem(engine, false);
+    await sync_engine_and_validate_telem(engine, false);
     let wbos = collection.keys(function (id) {
                  return ["menu", "toolbar", "mobile", "unfiled"].indexOf(id) == -1;
                });
@@ -141,7 +141,7 @@ add_task(function *test_annotation_uploaded() {
     do_check_eq(smartBookmarkCount(), startCount);
 
     _("Sync. Verify that the downloaded record carries the annotation.");
-    yield sync_engine_and_validate_telem(engine, false);
+    await sync_engine_and_validate_telem(engine, false);
 
     _("Verify that the Places DB now has an annotated bookmark.");
     _("Our count has increased again.");
@@ -168,13 +168,13 @@ add_task(function *test_annotation_uploaded() {
     store.wipe();
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
-    server.stop(run_next_test);
+    await promiseStopServer(server);
   }
 });
 
-add_test(function test_smart_bookmarks_duped() {
+add_task(async function test_smart_bookmarks_duped() {
   let server = serverForFoo(engine);
-  new SyncTestingInfrastructure(server.server);
+  await SyncTestingInfrastructure(server);
 
   let parent = PlacesUtils.toolbarFolderId;
   let uri =
@@ -219,7 +219,7 @@ add_test(function test_smart_bookmarks_duped() {
   } finally {
     // Clean up.
     store.wipe();
-    server.stop(do_test_finished);
+    await promiseStopServer(server);
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
   }

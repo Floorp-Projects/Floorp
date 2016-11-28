@@ -14,7 +14,7 @@
   cursor: default;
 }
 
-.contentSearchSuggestionTable:-moz-dir(rtl) {
+.contentSearchSuggestionTable:dir(rtl) {
   left: auto;
   right: 0;
 }
@@ -115,7 +115,7 @@
   background-position: right center;
 }
 
-.contentSearchOneOffItem:-moz-dir(rtl) {
+.contentSearchOneOffItem:dir(rtl) {
   background-position: left center;
 }
 

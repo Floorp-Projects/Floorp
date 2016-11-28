@@ -10,7 +10,7 @@ assertThrowsInstanceOf(() => eval('new.target'), SyntaxError);
 // new.target is invalid inside indirect eval.
 let ieval = eval;
 try {
-    (function () ieval('new.target'))();
+    (function () { return ieval('new.target'); })();
     assertEq(false, true);
 } catch (e if e instanceof SyntaxError) { }
 

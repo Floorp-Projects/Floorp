@@ -2,9 +2,9 @@ if (!('oomTest' in this))
     quit();
 
 print = function() {}
-function k() dissrc(print);
-function j() k();
-function h() j();
-function f() h();
+function k() { return dissrc(print); }
+function j() { return k(); }
+function h() { return j(); }
+function f() { return h(); }
 f();
 oomTest(() => f())

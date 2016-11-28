@@ -27,6 +27,7 @@ fuzzy-if(skiaContent||winWidget,1,43) == mask-image-3d.html mask-image-3-ref.htm
 fuzzy-if(skiaContent,50,50) == mask-image-3f.html mask-image-3-ref.html
 == mask-image-3g.html mask-image-3-ref.html
 pref(layout.css.clip-path-shapes.enabled,true) == mask-image-3h.html mask-image-3-ref.html
+fuzzy-if(skiaContent,71,203) == mask-image-3i.html mask-image-3-ref.html
 == mask-image-4a.html blank.html
 == mask-image-4b.html blank.html
 == mask-image-5.html mask-image-5-ref.html

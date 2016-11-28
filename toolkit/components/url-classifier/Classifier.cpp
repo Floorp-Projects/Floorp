@@ -22,6 +22,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsIUrlClassifierUtils.h"
+#include "nsUrlClassifierDBService.h"
 
 // MOZ_LOG=UrlClassifierDbService:5
 extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
@@ -144,6 +145,7 @@ Classifier::GetPrivateStoreDirectory(nsIFile* aRootStoreDirectory,
 }
 
 Classifier::Classifier()
+  : mIsTableRequestResultOutdated(true)
 {
 }
 
@@ -348,6 +350,16 @@ Classifier::AbortUpdateAndReset(const nsCString& aTable)
 void
 Classifier::TableRequest(nsACString& aResult)
 {
+  MOZ_ASSERT(!NS_IsMainThread(),
+             "TableRequest must be called on the classifier worker thread.");
+
+  // This function and all disk I/O are guaranteed to occur
+  // on the same thread so we don't need to add a lock around.
+  if (!mIsTableRequestResultOutdated) {
+    aResult = mTableRequestResult;
+    return;
+  }
+
   // Generating v2 table info.
   nsTArray<nsCString> tables;
   ActiveTables(tables);
@@ -387,8 +399,13 @@ Classifier::TableRequest(nsACString& aResult)
   // Specifically for v4 tables.
   nsCString metadata;
   nsresult rv = LoadMetadata(mRootStoreDirectory, metadata);
-  NS_ENSURE_SUCCESS_VOID(rv);
-  aResult.Append(metadata);
+  if (NS_SUCCEEDED(rv)) {
+    aResult.Append(metadata);
+  }
+
+  // Update the TableRequest result in-memory cache.
+  mTableRequestResult = aResult;
+  mIsTableRequestResultOutdated = false;
 }
 
 // This is used to record the matching statistics for v2 and v4.
@@ -503,7 +520,19 @@ Classifier::Check(const nsACString& aSpec,
 nsresult
 Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
 {
-  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CL_UPDATE_TIME> timer;
+  if (!aUpdates || aUpdates->Length() == 0) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
+    do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+
+  nsCString provider;
+  // Assume all TableUpdate objects should have the same provider.
+  urlUtil->GetTelemetryProvider((*aUpdates)[0]->TableName(), provider);
+
+  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_CL_KEYED_UPDATE_TIME>
+    keyedTimer(provider);
 
   PRIntervalTime clockStart = 0;
   if (LOG_ENABLED()) {
@@ -533,6 +562,10 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
         } else {
           rv = UpdateTableV4(aUpdates, updateTable);
         }
+
+        // We mark the table associated info outdated no matter the
+        // update is successful to avoid any possibile non-atomic update.
+        mIsTableRequestResultOutdated = true;
 
         if (NS_FAILED(rv)) {
           if (rv != NS_ERROR_OUT_OF_MEMORY) {
@@ -1009,6 +1042,9 @@ nsresult
 Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
                           const nsACString& aTable)
 {
+  MOZ_ASSERT(!NS_IsMainThread(),
+             "UpdateTableV4 must be called on the classifier worker thread.");
+
   LOG(("Classifier::UpdateTableV4(%s)", PromiseFlatCString(aTable).get()));
 
   if (!CheckValidUpdate(aUpdates, aTable)) {

@@ -268,13 +268,24 @@ TEST(Layers, TextureYCbCrSerialization) {
   clientData.mPicX = 0;
 
   ImageBridgeChild::InitSameProcess();
-  // wait until IPDL connection
-#ifdef XP_WIN
-  Sleep(1);
-#else
-  sleep(1);
-#endif
+
   RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton();
+  static int retry = 5;
+  while(!imageBridge->IPCOpen() && retry) {
+    // IPDL connection takes time especially in slow testing environment, like
+    // VM machines. Here we added retry mechanism to wait for IPDL connnection.
+#ifdef XP_WIN
+    Sleep(1);
+#else
+    sleep(1);
+#endif
+    retry--;
+  }
+
+  // Skip this testing if IPDL connection is not ready
+  if (!retry && !imageBridge->IPCOpen()) {
+    return;
+  }
 
   RefPtr<TextureClient> client = TextureClient::CreateForYCbCr(imageBridge, clientData.mYSize, clientData.mCbCrSize,
                                                                StereoMode::MONO, YUVColorSpace::BT601,

@@ -79,7 +79,6 @@ function test_fetch() {
 
 function run_test() {
   initTestLogging("Trace");
-  ensureLegacyIdentityManager();
 
   test_toJSON();
   test_fetch();

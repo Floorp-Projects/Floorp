@@ -2285,7 +2285,7 @@ nsStyleImage::StartDecoding() const
     if (!req) {
       return NS_ERROR_FAILURE;
     }
-    return req->StartDecoding();
+    return req->StartDecoding(imgIContainer::FLAG_NONE);
   }
   return NS_OK;
 }

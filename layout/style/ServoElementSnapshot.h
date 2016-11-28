@@ -67,7 +67,8 @@ class ServoElementSnapshot
 public:
   typedef ServoElementSnapshotFlags Flags;
 
-  explicit ServoElementSnapshot(Element* aElement);
+  explicit ServoElementSnapshot(const Element* aElement);
+  ~ServoElementSnapshot();
 
   bool HasAttrs() { return HasAny(Flags::Attributes); }
 
@@ -88,20 +89,6 @@ public:
    * Captures the given element attributes (if not previously captured).
    */
   void AddAttrs(Element* aElement);
-
-  void AddExplicitChangeHint(nsChangeHint aMinChangeHint)
-  {
-    mExplicitChangeHint |= aMinChangeHint;
-  }
-
-  void AddExplicitRestyleHint(nsRestyleHint aRestyleHint)
-  {
-    mExplicitRestyleHint |= aRestyleHint;
-  }
-
-  nsRestyleHint ExplicitRestyleHint() { return mExplicitRestyleHint; }
-
-  nsChangeHint ExplicitChangeHint() { return mExplicitChangeHint; }
 
   /**
    * Needed methods for attribute matching.
@@ -158,8 +145,6 @@ private:
   Flags mContains;
   nsTArray<ServoAttrSnapshot> mAttrs;
   ServoStateType mState;
-  nsRestyleHint mExplicitRestyleHint;
-  nsChangeHint mExplicitChangeHint;
   bool mIsHTMLElementInHTMLDocument;
   bool mIsInChromeDocument;
 };

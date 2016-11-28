@@ -24,6 +24,11 @@ const MAIN_DOMAIN = "http://test1.example.org/" + PATH;
 const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
 const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
 
+// GUID to be used as a separator in compound keys. This must match the same
+// constant in devtools/server/actors/storage.js,
+// devtools/client/storage/ui.js and devtools/server/tests/browser/head.js
+const SEPARATOR_GUID = "{9d414cc5-8319-0a04-0586-c0a6ae01670a}";
+
 var gToolbox, gPanelWindow, gWindow, gUI;
 
 // Services.prefs.setBoolPref(DUMPEMIT_PREF, true);
@@ -505,9 +510,16 @@ function* selectTreeItem(ids) {
  *        The id of the row in the table widget
  */
 function* selectTableItem(id) {
-  let selector = ".table-widget-cell[data-id='" + id + "']";
+  let table = gUI.table;
+  let selector = ".table-widget-column#" + table.uniqueId +
+                 " .table-widget-cell[value='" + id + "']";
   let target = gPanelWindow.document.querySelector(selector);
+
   ok(target, "table item found with ids " + id);
+
+  if (!target) {
+    showAvailableIds();
+  }
 
   yield click(target);
   yield gUI.once("sidebar-updated");
@@ -586,19 +598,36 @@ function getRowCells(id, includeHidden = false) {
 
   if (!item) {
     ok(false, "Row id '" + id + "' exists");
+
+    showAvailableIds();
   }
 
-  let index = table.columns.get(table.uniqueId).visibleCellNodes.indexOf(item);
+  let index = table.columns.get(table.uniqueId).cellNodes.indexOf(item);
   let cells = {};
 
   for (let [name, column] of [...table.columns]) {
     if (!includeHidden && column.column.parentNode.hidden) {
       continue;
     }
-    cells[name] = column.visibleCellNodes[index];
+    cells[name] = column.cellNodes[index];
   }
 
   return cells;
+}
+
+/**
+ * Show available ids.
+ */
+function showAvailableIds() {
+  let doc = gPanelWindow.document;
+  let table = gUI.table;
+
+  info("Available ids:");
+  let cells = doc.querySelectorAll(".table-widget-column#" + table.uniqueId +
+                                   " .table-widget-cell");
+  for (let cell of cells) {
+    info("  - " + cell.getAttribute("value"));
+  }
 }
 
 /**
@@ -798,9 +827,18 @@ function* checkState(state) {
 
     is(items.size, names.length,
       `There is correct number of rows in ${storeName}`);
+
+    if (names.length === 0) {
+      showAvailableIds();
+    }
+
     for (let name of names) {
       ok(items.has(name),
         `There is item with name '${name}' in ${storeName}`);
+
+      if (!items.has(name)) {
+        showAvailableIds();
+      }
     }
   }
 }
@@ -838,3 +876,7 @@ var focusSearchBoxUsingShortcut = Task.async(function* (panelWin, callback) {
     callback();
   }
 });
+
+function getCookieId(name, domain, path) {
+  return `${name}${SEPARATOR_GUID}${domain}${SEPARATOR_GUID}${path}`;
+}

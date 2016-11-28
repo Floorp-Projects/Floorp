@@ -117,10 +117,13 @@ DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CXX']:
     CXXFLAGS += [
-        '-Wno-null-conversion',
         '-Wno-return-type',
         '-Wno-sign-compare',
     ]
+    if CONFIG['CLANG_CXX']:
+        CXXFLAGS += [
+            '-Wno-null-conversion',
+        ]
 elif CONFIG['_MSC_VER']:
     CXXFLAGS += [
         '-wd4005', # 'WIN32_LEAN_AND_MEAN' : macro redefinition

@@ -59,7 +59,7 @@ CanvasLayerComposite::GetLayer()
 }
 
 void
-CanvasLayerComposite::SetLayerManager(LayerManagerComposite* aManager)
+CanvasLayerComposite::SetLayerManager(HostLayerManager* aManager)
 {
   LayerComposite::SetLayerManager(aManager);
   mManager = aManager;

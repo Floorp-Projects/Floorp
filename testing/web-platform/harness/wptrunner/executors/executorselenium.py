@@ -135,7 +135,7 @@ class SeleniumRun(object):
         try:
             self.webdriver.set_script_timeout((timeout + extra_timeout) * 1000)
         except exceptions.ErrorInResponseException:
-            self.logger.error("Lost webdriver connection")
+            self.logger.error("Lost WebDriver connection")
             return Stop
 
         executor = threading.Thread(target=self._run)

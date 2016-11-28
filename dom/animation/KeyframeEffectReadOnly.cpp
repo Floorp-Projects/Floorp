@@ -915,26 +915,27 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
 
     JS::Rooted<JSObject*> keyframeObject(aCx, &keyframeJSValue.toObject());
     for (const PropertyValuePair& propertyValue : keyframe.mPropertyValues) {
-
-      const char* name = nsCSSProps::PropertyIDLName(propertyValue.mProperty);
-
-      // nsCSSValue::AppendToString does not accept shorthands properties but
-      // works with token stream values if we pass eCSSProperty_UNKNOWN as
-      // the property.
-      nsCSSPropertyID propertyForSerializing =
-        nsCSSProps::IsShorthand(propertyValue.mProperty)
-        ? eCSSProperty_UNKNOWN
-        : propertyValue.mProperty;
-
       nsAutoString stringValue;
       if (propertyValue.mServoDeclarationBlock) {
+        // FIXME: When we support animations for custom properties on servo, we
+        // should pass the flag to Servo_DeclarationBlock_SerializeOneValue.
+        // Now, we pass false to simplify it.
+        nsIAtom* atom = nsCSSProps::AtomForProperty(propertyValue.mProperty);
         Servo_DeclarationBlock_SerializeOneValue(
-          propertyValue.mServoDeclarationBlock, &stringValue);
+          propertyValue.mServoDeclarationBlock, atom, false, &stringValue);
       } else {
+        // nsCSSValue::AppendToString does not accept shorthands properties but
+        // works with token stream values if we pass eCSSProperty_UNKNOWN as
+        // the property.
+        nsCSSPropertyID propertyForSerializing =
+          nsCSSProps::IsShorthand(propertyValue.mProperty)
+          ? eCSSProperty_UNKNOWN
+          : propertyValue.mProperty;
         propertyValue.mValue.AppendToString(
           propertyForSerializing, stringValue, nsCSSValue::eNormalized);
       }
 
+      const char* name = nsCSSProps::PropertyIDLName(propertyValue.mProperty);
       JS::Rooted<JS::Value> value(aCx);
       if (!ToJSValue(aCx, stringValue, &value) ||
           !JS_DefineProperty(aCx, keyframeObject, name, value,

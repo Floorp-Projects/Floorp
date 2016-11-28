@@ -80,7 +80,7 @@ ImageLayerComposite::GetLayer()
 }
 
 void
-ImageLayerComposite::SetLayerManager(LayerManagerComposite* aManager)
+ImageLayerComposite::SetLayerManager(HostLayerManager* aManager)
 {
   LayerComposite::SetLayerManager(aManager);
   mManager = aManager;

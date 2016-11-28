@@ -12,14 +12,31 @@
   padding: 0px 1px 0px 1px;
 }
 
+#PopupAutoComplete > richlistbox > richlistitem > .ac-site-icon {
+  margin-inline-start: 4px;
+  margin-inline-end: 0;
+}
+
 #PopupAutoComplete > richlistbox > richlistitem > .ac-title {
   font: icon;
-  margin-inline-start: 6px;
+  margin-inline-start: 4px;
 }
 
 #PopupAutoComplete > richlistbox {
   padding: 0;
 }
+
+
+/* Login form autocompletion */
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon {
+  display: initial;
+  list-style-image: url(chrome://browser/skin/notification-icons.svg#login);
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon[selected] {
+  list-style-image: url(chrome://browser/skin/notification-icons.svg#login-highlighted);
+}
+
 
 /* Insecure field warning */
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {

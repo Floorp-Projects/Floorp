@@ -318,6 +318,10 @@ struct LayoutDevicePixel {
     return LayoutDeviceIntRect::FromUnknownRect(aRect.ToInsidePixels(aAppUnitsPerDevPixel));
   }
 
+  static LayoutDeviceIntRect FromAppUnitsToOutside(const nsRect& aRect, nscoord aAppUnitsPerDevPixel) {
+    return LayoutDeviceIntRect::FromUnknownRect(aRect.ToOutsidePixels(aAppUnitsPerDevPixel));
+  }
+
   static LayoutDeviceIntSize FromAppUnitsRounded(const nsSize& aSize, nscoord aAppUnitsPerDevPixel) {
     return LayoutDeviceIntSize(
       NSAppUnitsToIntPixels(aSize.width, aAppUnitsPerDevPixel),

@@ -121,6 +121,15 @@ this.BrowserIDManager.prototype = {
     return this._hashedUID;
   },
 
+  // Return a hashed version of a deviceID, suitable for telemetry.
+  hashedDeviceID(deviceID) {
+    let uid = this.hashedUID();
+    // Combine the raw device id with the metrics uid to create a stable
+    // unique identifier that can't be mapped back to the user's FxA
+    // identity without knowing the metrics HMAC key.
+    return Utils.sha256(deviceID + uid);
+  },
+
   deviceID() {
     return this._signedInUser && this._signedInUser.deviceId;
   },
@@ -377,7 +386,7 @@ this.BrowserIDManager.prototype = {
    * Changes will not persist unless persistSyncCredentials() is called.
    */
   set basicPassword(value) {
-    throw "basicPassword setter should be not used in BrowserIDManager";
+    throw new Error("basicPassword setter should be not used in BrowserIDManager");
   },
 
   /**

@@ -1,1 +1,1 @@
-var importedArgs = ['typecheck.wast']; load(scriptdir + '../spec.js');
+var importedArgs = ['typecheck.wast']; load(scriptdir + '../wast.js');

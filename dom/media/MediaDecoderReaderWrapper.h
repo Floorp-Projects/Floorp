@@ -73,7 +73,6 @@ public:
   RefPtr<ShutdownPromise> Shutdown();
 
   void ReleaseResources();
-  void SetIdle();
   void ResetDecode(TrackSet aTracks);
 
   nsresult Init() { return mReader->Init(); }
@@ -122,7 +121,6 @@ private:
   MediaCallbackExc<WaitCallbackData>& WaitCallbackRef(MediaData::Type aType);
   MozPromiseRequestHolder<WaitForDataPromise>& WaitRequestRef(MediaData::Type aType);
 
-  const bool mForceZeroStartTime;
   const RefPtr<AbstractThread> mOwnerThread;
   const RefPtr<MediaDecoderReader> mReader;
 

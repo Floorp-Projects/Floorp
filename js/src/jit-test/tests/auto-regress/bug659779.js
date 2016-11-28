@@ -7,8 +7,8 @@ function TestCase(n, d, e, a) {
   this.description=d
   gTestcases[gTc++]=this
 }
-TestCase.prototype.dump=function () + toPrinted(this.description)
-function toPrinted(value) value=value;
+TestCase.prototype.dump=function () { return + toPrinted(this.description); };
+function toPrinted(value) { return value=value; }
 function reportCompare (expected, actual, description) {
   new TestCase("unknown-test-name", description, expected, actual)
 }

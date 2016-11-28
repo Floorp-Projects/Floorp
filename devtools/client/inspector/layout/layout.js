@@ -10,7 +10,7 @@ const { createFactory, createElement } = require("devtools/client/shared/vendor/
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 const { updateGrids } = require("./actions/grids");
-const App = createFactory(require("./components/app"));
+const App = createFactory(require("./components/App"));
 const Store = require("./store");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");

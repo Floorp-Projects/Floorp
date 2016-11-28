@@ -1221,14 +1221,18 @@ AssertValidStringPtr(JSContext* cx, JSString* str)
     MOZ_ASSERT(str->length() <= JSString::MAX_LENGTH);
 
     gc::AllocKind kind = str->getAllocKind();
-    if (str->isFatInline())
-        MOZ_ASSERT(kind == gc::AllocKind::FAT_INLINE_STRING);
-    else if (str->isExternal())
+    if (str->isFatInline()) {
+        MOZ_ASSERT(kind == gc::AllocKind::FAT_INLINE_STRING ||
+                   kind == gc::AllocKind::FAT_INLINE_ATOM);
+    } else if (str->isExternal()) {
         MOZ_ASSERT(kind == gc::AllocKind::EXTERNAL_STRING);
-    else if (str->isAtom() || str->isFlat())
+    } else if (str->isAtom()) {
+        MOZ_ASSERT(kind == gc::AllocKind::ATOM);
+    } else if (str->isFlat()) {
         MOZ_ASSERT(kind == gc::AllocKind::STRING || kind == gc::AllocKind::FAT_INLINE_STRING);
-    else
+    } else {
         MOZ_ASSERT(kind == gc::AllocKind::STRING);
+    }
 #endif
 }
 
@@ -1349,6 +1353,13 @@ bool
 BaselineGetFunctionThis(JSContext* cx, BaselineFrame* frame, MutableHandleValue res)
 {
     return GetFunctionThis(cx, frame, res);
+}
+
+bool
+ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp)
+{
+    RootedValue receiver(cx, ObjectValue(*proxy));
+    return Proxy::get(cx, proxy, receiver, id, vp);
 }
 
 } // namespace jit

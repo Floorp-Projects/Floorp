@@ -32,7 +32,8 @@ Hacking Task Graphs
 The recommended process for changing task graphs is this:
 
 1. Find a recent decision task on the project or branch you are working on,
-   and download its ``parameters.yml`` from the Task Inspector.  This file
+   and download its ``parameters.yml`` from the Task Inspector or you can 
+   simply take note of the ``URL`` of the file or the ``task-id``.  This file
    contains all of the inputs to the task-graph generation process.  Its
    contents are simple enough if you would like to modify it, and it is
    documented in :doc:`parameters`.
@@ -43,6 +44,8 @@ The recommended process for changing task graphs is this:
    .. code-block:: none
 
        ./mach taskgraph tasks --json -p parameters.yml > old-tasks.json
+       ./mach taskgraph tasks --json -p url/to/parameters.yml > old-tasks.json
+       ./mach taskgraph tasks --json -p task-id=<task-id> > old-tasks.json
 
 3. Make your modifications under ``taskcluster/``.
 

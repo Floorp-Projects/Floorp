@@ -13,6 +13,7 @@ import android.util.Log;
 
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoService;
+import org.mozilla.gecko.GeckoThread;
 
 import java.util.List;
 
@@ -22,6 +23,7 @@ import java.util.List;
 public class GeckoCustomTabsService extends CustomTabsService {
     private static final String LOGTAG = "GeckoCustomTabsService";
     private static final boolean DEBUG = false;
+    private static final int MAX_SPECULATIVE_URLS = 50;
 
     @Override
     protected boolean updateVisuals(CustomTabsSessionToken sessionToken, Bundle bundle) {
@@ -51,9 +53,35 @@ public class GeckoCustomTabsService extends CustomTabsService {
 
     @Override
     protected boolean mayLaunchUrl(CustomTabsSessionToken sessionToken, Uri uri, Bundle bundle, List<Bundle> list) {
-        Log.v(LOGTAG, "mayLaunchUrl()");
+        if (DEBUG) {
+            Log.v(LOGTAG, "opening speculative connections...");
+        }
 
-        return false;
+        if (uri == null) {
+            return false;
+        }
+
+        GeckoThread.speculativeConnect(uri.toString());
+
+        if (list == null) {
+            return true;
+        }
+
+        for (int i = 0; i < list.size() && i < MAX_SPECULATIVE_URLS; i++) {
+            Bundle listItem = list.get(i);
+            if (listItem == null) {
+                continue;
+            }
+
+            Uri listUri = listItem.getParcelable(KEY_URL);
+            if (listUri == null) {
+                continue;
+            }
+
+            GeckoThread.speculativeConnect(listUri.toString());
+        }
+
+        return true;
     }
 
     @Override

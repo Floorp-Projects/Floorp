@@ -18,11 +18,10 @@ NS_INTERFACE_MAP_BEGIN(nsSystemAlertsService)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsSystemAlertsService::nsSystemAlertsService()
-{
-}
+= default;
 
 nsSystemAlertsService::~nsSystemAlertsService()
-{}
+= default;
 
 nsresult
 nsSystemAlertsService::Init()

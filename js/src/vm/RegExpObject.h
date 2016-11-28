@@ -79,9 +79,6 @@ RegExpAlloc(ExclusiveContext* cx, HandleObject proto = nullptr);
 extern JSObject*
 CloneRegExpObject(JSContext* cx, JSObject* regexp);
 
-extern JSObject*
-CreateRegExpPrototype(JSContext* cx, JSProtoKey key);
-
 /*
  * A RegExpShared is the compiled representation of a regexp. A RegExpShared is
  * potentially pointed to by multiple RegExpObjects. Additionally, C++ code may
@@ -407,6 +404,7 @@ class RegExpObject : public NativeObject
     static const unsigned PRIVATE_SLOT = 3;
 
     static const Class class_;
+    static const Class protoClass_;
 
     // The maximum number of pairs a MatchResult can have, without having to
     // allocate a bigger MatchResult.

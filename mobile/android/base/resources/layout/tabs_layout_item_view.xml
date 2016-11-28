@@ -7,12 +7,12 @@
                                            xmlns:gecko="http://schemas.android.com/apk/res-auto"
                                            style="@style/TabsItem"
                                            android:id="@+id/info"
-                                           android:layout_width="wrap_content"
+                                           android:layout_width="match_parent"
                                            android:layout_height="wrap_content"
                                            android:gravity="center"
                                            android:orientation="vertical">
 
-    <LinearLayout android:layout_width="fill_parent"
+    <LinearLayout android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:orientation="horizontal"
                   android:duplicateParentState="true"
@@ -60,8 +60,8 @@
             android:clipToPadding="false">
 
         <org.mozilla.gecko.tabs.TabsPanelThumbnailView android:id="@+id/thumbnail"
-                                                       android:layout_width="@dimen/tab_thumbnail_width"
-                                                       android:layout_height="@dimen/tab_thumbnail_height"
+                                                       android:layout_width="match_parent"
+                                                       android:layout_height="wrap_content"
                                                        android:elevation="2dp"
                                                        android:outlineProvider="bounds"
                                                 />

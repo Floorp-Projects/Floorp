@@ -7,6 +7,7 @@ package org.mozilla.gecko.home;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.support.v4.widget.TextViewCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -277,7 +278,7 @@ public class TopSitesGridItemView extends RelativeLayout implements IconCallback
         refreshDrawableState();
 
         int pinResourceId = (type == TopSites.TYPE_PINNED ? R.drawable.pin : 0);
-        mTitleView.setCompoundDrawablesWithIntrinsicBounds(pinResourceId, 0, 0, 0);
+        TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(mTitleView, pinResourceId, 0, 0, 0);
 
         return true;
     }

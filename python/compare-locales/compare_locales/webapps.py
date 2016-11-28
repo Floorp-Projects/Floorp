@@ -83,7 +83,7 @@ class Manifest(object):
         except (ValueError, IOError), e:
             if self.watcher:
                 self.watcher.notify('error', self.file, str(e))
-            return False
+            return {}
         return self.extract_manifest_strings(manifest)
 
     def extract_manifest_strings(self, manifest_fragment):

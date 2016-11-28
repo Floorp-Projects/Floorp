@@ -27,7 +27,7 @@ function run_test() {
 
         var timer = new Timer;
         var next = query.slice(1);
-        timer.initWithCallback({ notify: function() doSearch(next) });
+        timer.initWithCallback({ notify: function() { return doSearch(next); } });
       }
     });
   })("title");

@@ -291,8 +291,8 @@ PopupNotifications.prototype = {
    *              - checkboxChecked: (boolean) If the optional checkbox is checked.
    *          - [optional] dismiss (boolean): If this is true, the notification
    *            will be dismissed instead of removed after running the callback.
-   *        If null, the notification will not have a button, and
-   *        secondaryActions will be ignored.
+   *        If null, the notification will have a default "OK" action button
+   *        that can be used to dismiss the popup and secondaryActions will be ignored.
    * @param secondaryActions
    *        An optional JavaScript array describing the notification's alternate
    *        actions. The array should contain objects with the same properties
@@ -682,9 +682,10 @@ PopupNotifications.prototype = {
         popupnotification.setAttribute("learnmoreclick", "PopupNotifications._onButtonEvent(event, 'learnmoreclick');");
         popupnotification.setAttribute("menucommand", "PopupNotifications._onMenuCommand(event);");
       } else {
+        // Enable the default button to let the user close the popup if the close button is hidden
+        popupnotification.setAttribute("buttoncommand", "PopupNotifications._onButtonEvent(event, 'buttoncommand');");
         popupnotification.removeAttribute("buttonlabel");
         popupnotification.removeAttribute("buttonaccesskey");
-        popupnotification.removeAttribute("buttoncommand");
         popupnotification.removeAttribute("dropmarkerpopupshown");
         popupnotification.removeAttribute("learnmoreclick");
         popupnotification.removeAttribute("menucommand");
@@ -723,7 +724,7 @@ PopupNotifications.prototype = {
 
       popupnotification.notification = n;
 
-      if (n.secondaryActions && n.secondaryActions.length > 0) {
+      if (n.mainAction && n.secondaryActions && n.secondaryActions.length > 0) {
         let telemetryStatId = TELEMETRY_STAT_ACTION_2;
 
         let secondaryAction = n.secondaryActions[0];
@@ -1318,17 +1319,19 @@ PopupNotifications.prototype = {
 
     notification._recordTelemetryStat(telemetryStatId);
 
-    try {
-      action.callback.call(undefined, {
-        checkboxChecked: notificationEl.checkbox.checked
-      });
-    } catch (error) {
-      Cu.reportError(error);
-    }
+    if (action) {
+      try {
+        action.callback.call(undefined, {
+          checkboxChecked: notificationEl.checkbox.checked
+        });
+      } catch (error) {
+        Cu.reportError(error);
+      }
 
-    if (action.dismiss) {
-      this._dismiss();
-      return;
+      if (action.dismiss) {
+        this._dismiss();
+        return;
+      }
     }
 
     this._remove(notification);

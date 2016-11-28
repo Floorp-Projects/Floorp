@@ -906,10 +906,10 @@ ReflowInput::ComputeRelativeOffsets(WritingMode aWM,
                                           nsMargin& aComputedOffsets)
 {
   LogicalMargin offsets(aWM);
-  mozilla::css::Side inlineStart = aWM.PhysicalSide(eLogicalSideIStart);
-  mozilla::css::Side inlineEnd   = aWM.PhysicalSide(eLogicalSideIEnd);
-  mozilla::css::Side blockStart  = aWM.PhysicalSide(eLogicalSideBStart);
-  mozilla::css::Side blockEnd    = aWM.PhysicalSide(eLogicalSideBEnd);
+  mozilla::Side inlineStart = aWM.PhysicalSide(eLogicalSideIStart);
+  mozilla::Side inlineEnd   = aWM.PhysicalSide(eLogicalSideIEnd);
+  mozilla::Side blockStart  = aWM.PhysicalSide(eLogicalSideBStart);
+  mozilla::Side blockEnd    = aWM.PhysicalSide(eLogicalSideBEnd);
 
   const nsStylePosition* position = aFrame->StylePosition();
 
@@ -1144,9 +1144,9 @@ ReflowInput::CalculateBorderPaddingMargin(
                        nscoord* aOutsideBoxSizing) const
 {
   WritingMode wm = GetWritingMode();
-  mozilla::css::Side startSide =
+  mozilla::Side startSide =
     wm.PhysicalSide(MakeLogicalSide(aAxis, eLogicalEdgeStart));
-  mozilla::css::Side endSide =
+  mozilla::Side endSide =
     wm.PhysicalSide(MakeLogicalSide(aAxis, eLogicalEdgeEnd));
 
   nsMargin styleBorder = mStyleBorder->GetComputedBorder();

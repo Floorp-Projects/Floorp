@@ -22,7 +22,7 @@ class IPDLTestCase(unittest.TestCase):
 
     def shortDescription(self):
         return '%s test of "%s"'% (self.__class__.__name__, self.filename)
-    
+
 
 class OkTestCase(IPDLTestCase):
     '''An invocation of the IPDL compiler on a valid specification.
@@ -34,7 +34,7 @@ The IPDL compiler should not produce errors or exceptions.'''
     def checkPassed(self):
         self.assertTrue(self.compile.ok(), self.mkFailMsg())
 
-  
+
 class ErrorTestCase(IPDLTestCase):
     '''An invocation of the IPDL compiler on an *invalid* specification.
 The IPDL compiler *should* produce errors but not exceptions.'''

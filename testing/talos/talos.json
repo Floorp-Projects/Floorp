@@ -75,11 +75,11 @@
             "tests": ["basic_compositor_video"]
         },
         "svgr": {
-            "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"],
+            "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart", "tsvg_static"],
             "talos_options": ["--disable-e10s"]
         },
         "svgr-e10s": {
-            "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"]
+            "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart", "tsvg_static"]
         },
         "tp5o": {
             "tests": ["tp5o"],

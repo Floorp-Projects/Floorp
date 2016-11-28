@@ -4520,17 +4520,12 @@ var BrowserEventHandler = {
         this._handleRetargetedTouchStart(aEvent);
         break;
       case 'OpenMediaWithExternalApp': {
-        if (aEvent.target.moz_video_uuid) {
-          return;
-        }
         let mediaSrc = aEvent.target.currentSrc || aEvent.target.src;
-        if (!aEvent.target.moz_video_uuid) {
-          aEvent.target.moz_video_uuid = uuidgen.generateUUID().toString();
-        }
+        let uuid = uuidgen.generateUUID().toString();
         Services.androidBridge.handleGeckoMessage({
           type: "Video:Play",
           uri: mediaSrc,
-          uuid: aEvent.target.moz_video_uuid
+          uuid: uuid
         });
         break;
       }
@@ -5923,9 +5918,10 @@ var IdentityHandler = {
     if (this._lastLocation.hostname &&
         this._overrideService.hasMatchingOverride(this._lastLocation.hostname,
                                                   (this._lastLocation.port || 443),
-                                                  iData.cert, {}, {}))
+                                                  iData.cert, {}, {})) {
       result.verifier = Strings.browser.GetStringFromName("identity.identified.verified_by_you");
-
+      result.securityException = true;
+    }
     return result;
   },
 

@@ -3642,7 +3642,7 @@ JSScript::traceChildren(JSTracer* trc)
     // fullyInitFromEmitter() or fullyInitTrivial().
 
     MOZ_ASSERT_IF(trc->isMarkingTracer() &&
-                  static_cast<GCMarker*>(trc)->shouldCheckCompartments(),
+                  GCMarker::fromTracer(trc)->shouldCheckCompartments(),
                   zone()->isCollecting());
 
     if (scriptData())

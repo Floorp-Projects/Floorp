@@ -14,13 +14,13 @@ var foo = {}
 foo[Symbol.iterator] = 10;
 assertThrowsInstanceOf(() => Math.sin(...foo), TypeError);
 
-foo[Symbol.iterator] = function() undefined;
+foo[Symbol.iterator] = function() { return undefined; };
 assertThrowsInstanceOf(() => Math.sin(...foo), TypeError);
 
-foo[Symbol.iterator] = function() this;
+foo[Symbol.iterator] = function() { return this; };
 assertThrowsInstanceOf(() => Math.sin(...foo), TypeError);
 
-foo[Symbol.iterator] = function() this;
+foo[Symbol.iterator] = function() { return this; };
 foo.next = function() { throw 10; };
 assertThrowsValue(() => Math.sin(...foo), 10);
 

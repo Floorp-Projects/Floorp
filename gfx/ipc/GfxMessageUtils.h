@@ -25,6 +25,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "nsRect.h"
 #include "nsRegion.h"
+#include "mozilla/Array.h"
 
 #include <stdint.h>
 
@@ -1265,6 +1266,42 @@ struct ParamTraits<mozilla::layers::AsyncDragMetrics>
             ReadParam(aMsg, aIter, &aResult->mScrollbarDragOffset) &&
             ReadParam(aMsg, aIter, &aResult->mScrollTrack) &&
             ReadParam(aMsg, aIter, &aResult->mDirection));
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::gfx::Glyph>
+{
+  typedef mozilla::gfx::Glyph paramType;
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mIndex);
+    WriteParam(aMsg, aParam.mPosition);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+    return (ReadParam(aMsg, aIter, &aResult->mIndex) &&
+            ReadParam(aMsg, aIter, &aResult->mPosition)
+      );
+  }
+};
+
+template<typename T, size_t Length>
+struct ParamTraits<mozilla::Array<T, Length>>
+{
+  typedef mozilla::Array<T, Length> paramType;
+  static void Write(Message* aMsg, const paramType& aParam) {
+    for (size_t i = 0; i < Length; i++) {
+      WriteParam(aMsg, aParam[i]);
+    }
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+    for (size_t i = 0; i < Length; i++) {
+      if (!ReadParam(aMsg, aIter, &aResult[i])) {
+        return false;
+      }
+    }
+    return true;
   }
 };
 

@@ -15,11 +15,11 @@ TEST(APITest, CompareShBuiltInResources)
 {
     ShBuiltInResources a_resources;
     memset(&a_resources, 88, sizeof(a_resources));
-    ShInitBuiltInResources(&a_resources);
+    sh::InitBuiltInResources(&a_resources);
 
     ShBuiltInResources b_resources;
     memset(&b_resources, 77, sizeof(b_resources));
-    ShInitBuiltInResources(&b_resources);
+    sh::InitBuiltInResources(&b_resources);
 
     EXPECT_TRUE(memcmp(&a_resources, &b_resources, sizeof(a_resources)) == 0);
 }

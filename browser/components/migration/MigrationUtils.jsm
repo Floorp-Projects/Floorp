@@ -36,6 +36,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
 var gMigrators = null;
 var gProfileStartup = null;
 var gMigrationBundle = null;
+var gPreviousDefaultBrowserKey = "";
 
 XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
   if (AppConstants.platform == "win") {
@@ -261,7 +262,7 @@ this.MigratorPrototype = {
         for (let resourceType of Object.keys(MigrationUtils._importQuantities)) {
           let histogramId =
             "FX_MIGRATION_" + resourceType.toUpperCase() + "_QUANTITY";
-          let histogram = Services.telemetry.getKeyedHistogram(histogramId);
+          let histogram = Services.telemetry.getKeyedHistogramById(histogramId);
           histogram.add(this.getKey(), MigrationUtils._importQuantities[resourceType]);
         }
       } catch (ex) { /* Telemetry is exception-happy */ }
@@ -719,19 +720,29 @@ this.MigrationUtils = Object.freeze({
     // ourselves as the default (on Windows 7 and below). In that case, check if we
     // have a registry key that tells us where to go:
     if (key == "firefox" && AppConstants.isPlatformAndVersionAtMost("win", "6.2")) {
-      const kRegPath = "Software\\Mozilla\\Firefox";
-      let oldDefault = WindowsRegistry.readRegKey(
-          Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER, kRegPath, "OldDefaultBrowserCommand");
-      if (oldDefault) {
-        // Remove the key:
-        WindowsRegistry.removeRegKey(
-          Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER, kRegPath, "OldDefaultBrowserCommand");
-        try {
-          let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFileWin);
-          file.initWithCommandLine(oldDefault);
-          key = APP_DESC_TO_KEY[file.getVersionInfoField("FileDescription")] || key;
-        } catch (ex) {
-          Cu.reportError("Could not convert old default browser value to description.");
+      // Because we remove the registry key, reading the registry key only works once.
+      // We save the value for subsequent calls to avoid hard-to-trace bugs when multiple
+      // consumers ask for this key.
+      if (gPreviousDefaultBrowserKey) {
+        key = gPreviousDefaultBrowserKey;
+      } else {
+        // We didn't have a saved value, so check the registry.
+        const kRegPath = "Software\\Mozilla\\Firefox";
+        let oldDefault = WindowsRegistry.readRegKey(
+            Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER, kRegPath, "OldDefaultBrowserCommand");
+        if (oldDefault) {
+          // Remove the key:
+          WindowsRegistry.removeRegKey(
+            Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER, kRegPath, "OldDefaultBrowserCommand");
+          try {
+            let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFileWin);
+            file.initWithCommandLine(oldDefault);
+            key = APP_DESC_TO_KEY[file.getVersionInfoField("FileDescription")] || key;
+            // Save the value for future callers.
+            gPreviousDefaultBrowserKey = key;
+          } catch (ex) {
+            Cu.reportError("Could not convert old default browser value to description.");
+          }
         }
       }
     }
@@ -905,7 +916,7 @@ this.MigrationUtils = Object.freeze({
 
     if (!isRefresh && AutoMigrate.enabled) {
       try {
-        AutoMigrate.migrate(aProfileStartup, aMigratorKey, aProfileToMigrate);
+        AutoMigrate.migrate(aProfileStartup, migratorKey, aProfileToMigrate);
         return;
       } catch (ex) {
         // If automigration failed, continue and show the dialog.

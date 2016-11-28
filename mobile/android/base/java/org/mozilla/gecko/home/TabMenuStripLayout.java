@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.home;
 
+import android.support.v4.view.ViewCompat;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
@@ -79,10 +80,13 @@ class TabMenuStripLayout extends LinearLayout
         }
 
         if (getChildCount() == 0) {
-            button.setPadding(button.getPaddingLeft() + tabContentStart,
-                              button.getPaddingTop(),
-                              button.getPaddingRight(),
-                              button.getPaddingBottom());
+
+            ViewCompat.setPaddingRelative(button,
+                    ViewCompat.getPaddingStart(button) + tabContentStart,
+                    button.getPaddingTop(),
+                    ViewCompat.getPaddingEnd(button),
+                    button.getPaddingBottom()
+            );
         }
 
         addView(button);
@@ -107,9 +111,25 @@ class TabMenuStripLayout extends LinearLayout
                     selectedView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
 
                     if (strip != null) {
-                        strip.setBounds(selectedView.getLeft() + (position == 0 ? tabContentStart : 0),
+                        boolean isLayoutRtl = ViewCompat.getLayoutDirection(selectedView) == ViewCompat.LAYOUT_DIRECTION_RTL;
+                        final int startPaddingOffset;
+                        final int endPaddingOffset;
+                        if (position != 0) {
+                            startPaddingOffset = 0;
+                            endPaddingOffset = 0;
+                        } else {
+                            if (isLayoutRtl) {
+                                startPaddingOffset = 0;
+                                endPaddingOffset = -tabContentStart;
+                            } else {
+                                startPaddingOffset = tabContentStart;
+                                endPaddingOffset = 0;
+                            }
+                        }
+
+                        strip.setBounds(selectedView.getLeft() + startPaddingOffset,
                                         selectedView.getTop(),
-                                        selectedView.getRight(),
+                                        selectedView.getRight() + endPaddingOffset,
                                         selectedView.getBottom());
                     }
 
@@ -152,9 +172,11 @@ class TabMenuStripLayout extends LinearLayout
             modifier = 0;
         }
 
-        strip.setBounds((int) (fromTabLeft + ((toTabLeft - fromTabLeft) * progress)) + modifier,
+        boolean isLayoutRtl = ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL;
+        strip.setBounds(
+                (int) (fromTabLeft + ((toTabLeft - fromTabLeft) * progress)) + (isLayoutRtl ? 0 : modifier),
                 0,
-                (int) (fromTabRight + ((toTabRight - fromTabRight) * progress)),
+                (int) (fromTabRight + ((toTabRight - fromTabRight) * progress)) + (isLayoutRtl ? -modifier : 0),
                 getHeight());
         invalidate();
     }

@@ -1,5 +1,6 @@
-function TestCase(n, d, e, a)
-function writeHeaderToLog( string ) {}
+function TestCase(n, d, e, a) {
+  return function writeHeaderToLog( string ) {};
+}
 var SECTION = "11.7.2";
 for ( power = 0; power <= 32; power++ ) {
   shiftexp = Math.pow( 2, power );
