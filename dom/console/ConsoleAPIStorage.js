@@ -31,7 +31,8 @@ const CONSOLEAPISTORAGE_CID = Components.ID('{96cf7855-dfa9-4c6d-8276-f9705b4890
  * ID.
  *
  * Usage:
- *    Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm");
+ *    let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
+ *                              .getService(Ci.nsIConsoleAPIStorage);
  *
  *    // Get the cached events array for the window you want (use the inner
  *    // window ID).
