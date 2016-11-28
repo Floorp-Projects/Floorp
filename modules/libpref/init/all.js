@@ -2607,11 +2607,7 @@ pref("layout.css.variables.enabled", true);
 pref("layout.css.overflow-clip-box.enabled", false);
 
 // Is support for CSS grid enabled?
-#ifdef RELEASE_OR_BETA
-pref("layout.css.grid.enabled", false);
-#else
 pref("layout.css.grid.enabled", true);
-#endif
 
 // Is support for CSS "grid-template-{columns,rows}: subgrid X" enabled?
 pref("layout.css.grid-template-subgrid-value.enabled", false);

@@ -161,8 +161,7 @@ user_pref("datareporting.healthreport.about.reportUrl", "http://%(server)s/about
 // Make sure CSS error reporting is enabled for tests
 user_pref("layout.css.report_errors", true);
 
-// Enable CSS Grid for testing
-user_pref("layout.css.grid.enabled", true);
+// Enable CSS Grid 'subgrid' feature for testing
 user_pref("layout.css.grid-template-subgrid-value.enabled", true);
 
 // Enable CSS 'contain' for testing
