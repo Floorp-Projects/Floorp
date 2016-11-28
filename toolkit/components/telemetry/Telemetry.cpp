@@ -73,11 +73,15 @@
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/HangMonitor.h"
+
 #if defined(MOZ_ENABLE_PROFILER_SPS)
 #include "shared-libraries.h"
+#if defined(MOZ_STACKWALKING)
+#define ENABLE_STACK_CAPTURE
 #include "mozilla/StackWalk.h"
 #include "nsPrintfCString.h"
-#endif
+#endif // MOZ_STACKWALKING
+#endif // MOZ_ENABLE_PROFILER_SPS
 
 namespace {
 
@@ -395,7 +399,7 @@ HangReports::GetAnnotationInfo() const {
   return mAnnotationInfo;
 }
 
-#if defined(MOZ_ENABLE_PROFILER_SPS)
+#if defined(ENABLE_STACK_CAPTURE)
 
 const uint8_t kMaxKeyLength = 50;
 
@@ -883,6 +887,8 @@ public:
                                int32_t aSystemUptime,
                                int32_t aFirefoxUptime,
                                HangAnnotationsPtr aAnnotations);
+#endif
+#if defined(ENABLE_STACK_CAPTURE)
   static void DoStackCapture(const nsACString& aKey);
 #endif
   static void RecordThreadHangStats(Telemetry::ThreadHangStats& aStats);
@@ -931,7 +937,7 @@ private:
   HangReports mHangReports;
   Mutex mHangReportsMutex;
 
-#if defined(MOZ_ENABLE_PROFILER_SPS)
+#if defined(ENABLE_STACK_CAPTURE)
   // Stores data about stacks captured on demand.
   KeyedStackCapturer mStackCapturer;
 #endif
@@ -1528,7 +1534,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 NS_IMETHODIMP
 TelemetryImpl::SnapshotCapturedStacks(bool clear, JSContext *cx, JS::MutableHandle<JS::Value> ret)
 {
-#if defined(MOZ_ENABLE_PROFILER_SPS)
+#if defined(ENABLE_STACK_CAPTURE)
   nsresult rv = mStackCapturer.ReflectCapturedStacks(cx, ret);
   if (clear) {
     mStackCapturer.Clear();
@@ -2461,6 +2467,7 @@ TelemetryImpl::RecordChromeHang(uint32_t aDuration,
                                    Move(annotations));
 }
 
+#if defined(ENABLE_STACK_CAPTURE)
 void
 TelemetryImpl::DoStackCapture(const nsACString& aKey) {
   if (Telemetry::CanRecordExtended() && XRE_IsParentProcess()) {
@@ -2468,10 +2475,11 @@ TelemetryImpl::DoStackCapture(const nsACString& aKey) {
   }
 }
 #endif
+#endif
 
 nsresult
 TelemetryImpl::CaptureStack(const nsACString& aKey) {
-#if defined(MOZ_ENABLE_PROFILER_SPS)
+#if defined(ENABLE_STACK_CAPTURE)
   TelemetryImpl::DoStackCapture(aKey);
 #endif
   return NS_OK;
@@ -3148,7 +3156,9 @@ void RecordChromeHang(uint32_t duration,
 
 void CaptureStack(const nsACString& aKey)
 {
+#if defined(ENABLE_STACK_CAPTURE)
   TelemetryImpl::DoStackCapture(aKey);
+#endif
 }
 #endif
 
