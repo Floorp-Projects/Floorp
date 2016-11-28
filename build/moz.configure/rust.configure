@@ -71,14 +71,21 @@ def rust_compiler(value, rustc, rustc_info):
 
 set_config('MOZ_RUST', rust_compiler)
 
-@depends(rust_compiler, rustc, target)
-@imports('os')
-@imports('subprocess')
-@imports(_from='mozbuild.configure.util', _import='LineIO')
-@imports(_from='mozbuild.shellutil', _import='quote')
-@imports(_from='tempfile', _import='mkstemp')
-def rust_target(rust_compiler, rustc, target):
-    if rust_compiler:
+@template
+def rust_triple_alias(host_or_target):
+    """Template defining the alias used for rustc's --target flag.
+    `host_or_target` is either `host` or `target` (the @depends functions
+    from init.configure).
+    """
+    assert host_or_target in (host, target)
+
+    @depends(rustc, host_or_target, when=rust_compiler)
+    @imports('os')
+    @imports('subprocess')
+    @imports(_from='mozbuild.configure.util', _import='LineIO')
+    @imports(_from='mozbuild.shellutil', _import='quote')
+    @imports(_from='tempfile', _import='mkstemp')
+    def rust_target(rustc, host_or_target):
         # Rust's --target options are similar to, but not exactly the same
         # as, the autoconf-derived targets we use.  An example would be that
         # Rust uses distinct target triples for targetting the GNU C++ ABI
@@ -93,7 +100,7 @@ def rust_target(rust_compiler, rustc, target):
 
         # Avoid having to write out os+kernel for all the platforms where
         # they don't differ.
-        os_or_kernel = target.kernel if target.kernel == 'Linux' and target.os != 'Android' else target.os
+        os_or_kernel = host_or_target.kernel if host_or_target.kernel == 'Linux' and host_or_target.os != 'Android' else host_or_target.os
         rustc_target = {
             # DragonFly
             ('x86_64', 'DragonFly'): 'x86_64-unknown-dragonfly',
@@ -120,10 +127,10 @@ def rust_target(rust_compiler, rustc, target):
             # we need i686-pc-windows-gnu instead, since mingw32 builds work.
             ('x86', 'WINNT'): 'i686-pc-windows-msvc',
             ('x86_64', 'WINNT'): 'x86_64-pc-windows-msvc',
-        }.get((target.cpu, os_or_kernel), None)
+        }.get((host_or_target.cpu, os_or_kernel), None)
 
         if rustc_target is None:
-            die("Don't know how to translate {} for rustc".format(target.alias))
+            die("Don't know how to translate {} for rustc".format(host_or_target.alias))
 
         # Check to see whether our rustc has a reasonably functional stdlib
         # for our chosen target.
@@ -148,19 +155,26 @@ def rust_target(rust_compiler, rustc, target):
                 in_path,
             ]
             def failed():
-                die('Cannot compile for {} with {}'.format(target.alias, rustc))
+                die('Cannot compile for {} with {}'.format(host_or_target.alias, rustc))
             check_cmd_output(*cmd, onerror=failed)
             if not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
                 failed()
         finally:
             os.remove(in_path)
             os.remove(out_path)
+
         # This target is usable.
         return rustc_target
 
-set_config('RUST_TARGET', rust_target)
+    return rust_target
+
+rust_target_triple = rust_triple_alias(target)
+rust_host_triple = rust_triple_alias(host)
+
+set_config('RUST_TARGET', rust_target_triple)
+set_config('RUST_HOST_TARGET', rust_host_triple)
 
 # Until we remove all the other Rust checks in old-configure.
 add_old_configure_assignment('MOZ_RUST', rust_compiler)
 add_old_configure_assignment('RUSTC', rustc)
-add_old_configure_assignment('RUST_TARGET', rust_target)
+add_old_configure_assignment('RUST_TARGET', rust_target_triple)
