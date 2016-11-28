@@ -1,0 +1,1 @@
+HOST_RUST_PROGRAMS += ['some']
