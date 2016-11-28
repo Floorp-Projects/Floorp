@@ -339,6 +339,8 @@ VRManager::RefreshVRControllers()
 {
   nsTArray<RefPtr<gfx::VRControllerHost>> controllers;
 
+  ScanForDevices();
+
   for (uint32_t i = 0; i < mControllerManagers.Length()
       && controllers.Length() == 0; ++i) {
     mControllerManagers[i]->GetControllers(controllers);
