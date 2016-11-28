@@ -2371,7 +2371,7 @@ void MediaDecoderStateMachine::BufferedRangeUpdated()
 }
 
 RefPtr<MediaDecoder::SeekPromise>
-MediaDecoderStateMachine::Seek(SeekTarget aTarget)
+MediaDecoderStateMachine::Seek(const SeekTarget& aTarget)
 {
   MOZ_ASSERT(OnTaskQueue());
 
@@ -2396,10 +2396,11 @@ MediaDecoderStateMachine::Seek(SeekTarget aTarget)
 }
 
 RefPtr<MediaDecoder::SeekPromise>
-MediaDecoderStateMachine::InvokeSeek(SeekTarget aTarget)
+MediaDecoderStateMachine::InvokeSeek(const SeekTarget& aTarget)
 {
-  return InvokeAsync(OwnerThread(), this, __func__,
-                     &MediaDecoderStateMachine::Seek, aTarget);
+  return InvokeAsync<SeekTarget&&>(
+           OwnerThread(), this, __func__,
+           &MediaDecoderStateMachine::Seek, aTarget);
 }
 
 void MediaDecoderStateMachine::StopMediaSink()
