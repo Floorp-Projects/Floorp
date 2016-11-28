@@ -91,14 +91,6 @@ LOCAL_INCLUDES += [
     '/widget',
 ]
 
-if CONFIG['MOZ_ENABLE_SKIA_PDF']:
-    LOCAL_INCLUDES += [
-        # Skia includes because widget code includes PrintTargetSkPDF.h, and that
-        # includes skia headers.
-        '/gfx/skia/skia/include/config',
-        '/gfx/skia/skia/include/core',
-    ]
-
 RESOURCE_FILES.cursors += [
     'cursors/arrowN.png',
     'cursors/arrowN@2x.png',

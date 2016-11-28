@@ -55,9 +55,7 @@ PrintTargetWindows::CreateOrNull(HDC aDC)
 
 nsresult
 PrintTargetWindows::BeginPrinting(const nsAString& aTitle,
-                                  const nsAString& aPrintToFileName,
-                                  int32_t aStartPage,
-                                  int32_t aEndPage)
+                                  const nsAString& aPrintToFileName)
 {
   const uint32_t DOC_TITLE_LENGTH = MAX_PATH - 1;
 
