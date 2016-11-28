@@ -101,7 +101,7 @@ public:
    * (Tab spacing must be performed by textframe later.) Certain other
    * characters are discarded.
    * 
-   * @param aCompressWhitespace control what is compressed to a
+   * @param aCompression control what is compressed to a
    * single space character: no compression, compress spaces (not followed
    * by combining mark) and tabs, compress those plus newlines, or
    * no compression except newlines are discarded.
