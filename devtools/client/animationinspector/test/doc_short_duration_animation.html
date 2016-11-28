@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    div {
+      display: inline-block;
+      width: 100px;
+      height: 100px;
+      background-color: lime;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="onetime"></div>
+    <div id="twotimes"></div>
+    <div id="infinite"></div>
+    <script>
+    "use strict";
+    let target = document.querySelector("#onetime");
+    target.animate({ opacity: [0, 1] },
+                   { duration: 1, iterations: 1 }).pause();
+    target = document.querySelector("#twotimes");
+    target.animate({ opacity: [0, 1] },
+                   { duration: 1, iterations: 2 }).pause();
+    target = document.querySelector("#infinite");
+    target.animate({ opacity: [0, 1] },
+                   { duration: 1, iterations: Infinity }).pause();
+    </script>
+  </body>
+</html>
