@@ -64,7 +64,6 @@ private:
   friend class MediaSourceTrackDemuxer;
   // Scan source buffers and update information.
   bool ScanSourceBuffersForContent();
-  RefPtr<InitPromise> AttemptInit();
   TrackBuffersManager* GetManager(TrackInfo::TrackType aType);
   TrackInfo* GetTrackInfo(TrackInfo::TrackType);
   void DoAttachSourceBuffer(TrackBuffersManager* aSourceBuffer);
@@ -97,7 +96,7 @@ public:
 
   UniquePtr<TrackInfo> GetInfo() const override;
 
-  RefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
+  RefPtr<SeekPromise> Seek(const media::TimeUnit& aTime) override;
 
   RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
 
@@ -105,7 +104,7 @@ public:
 
   nsresult GetNextRandomAccessPoint(media::TimeUnit* aTime) override;
 
-  RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) override;
+  RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreshold) override;
 
   media::TimeIntervals GetBuffered() override;
 
@@ -117,9 +116,9 @@ public:
   }
 
 private:
-  RefPtr<SeekPromise> DoSeek(media::TimeUnit aTime);
+  RefPtr<SeekPromise> DoSeek(const media::TimeUnit& aTime);
   RefPtr<SamplesPromise> DoGetSamples(int32_t aNumSamples);
-  RefPtr<SkipAccessPointPromise> DoSkipToNextRandomAccessPoint(media::TimeUnit aTimeThreadshold);
+  RefPtr<SkipAccessPointPromise> DoSkipToNextRandomAccessPoint(const media::TimeUnit& aTimeThreadshold);
   already_AddRefed<MediaRawData> GetSample(MediaResult& aError);
   // Return the timestamp of the next keyframe after mLastSampleIndex.
   media::TimeUnit GetNextRandomAccessPoint();

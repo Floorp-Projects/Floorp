@@ -173,8 +173,8 @@ private:
   friend class MediaSourceDemuxer;
   ~TrackBuffersManager();
   // All following functions run on the taskqueue.
-  RefPtr<AppendPromise> DoAppendData(RefPtr<MediaByteBuffer> aData,
-                                     SourceBufferAttributes aAttributes);
+  RefPtr<AppendPromise> DoAppendData(MediaByteBuffer* aData,
+                                     const SourceBufferAttributes& aAttributes);
   void ScheduleSegmentParserLoop();
   void SegmentParserLoop();
   void InitializationSegmentReceived();

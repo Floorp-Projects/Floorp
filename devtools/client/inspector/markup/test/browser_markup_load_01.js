@@ -28,12 +28,13 @@ const TEST_URL = "data:text/html," +
   "<head><meta charset='utf-8' /></head>" +
   "<body>" +
   "<p>Slow script</p>" +
-  "<img src='http://localhost:" + server.identity.primaryPort + "/slow.gif' /></script>" +
+  "<img src='http://localhost:" + server.identity.primaryPort + "/slow.gif' />" +
   "</body>" +
   "</html>";
 
 add_task(function* () {
   let {inspector, testActor, tab} = yield openInspectorForURL(TEST_URL);
+
   let domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");
   let pageLoaded = waitForLinkedBrowserEvent(tab, "load");
 
@@ -41,22 +42,32 @@ add_task(function* () {
 
   // Select an element while the tab is in the middle of a slow reload.
   testActor.eval("location.reload()");
+
+  info("Wait for DOMContentLoaded");
   yield domContentLoaded;
-  yield chooseWithInspectElementContextMenu("img", testActor);
+
+  info("Inspect element via context menu");
+  let markupLoaded = inspector.once("markuploaded");
+  let multipleChildrenUpdates = waitForMultipleChildrenUpdates(inspector);
+  yield chooseWithInspectElementContextMenu("img", tab);
+
+  info("Wait for load");
   yield pageLoaded;
 
-  yield inspector.once("markuploaded");
-  yield waitForMultipleChildrenUpdates(inspector);
+  info("Wait for markup-loaded after element inspection");
+  yield markupLoaded;
+  info("Wait for multiple children updates after element inspection");
+  yield multipleChildrenUpdates;
 
   ok(inspector.markup, "There is a markup view");
   is(inspector.markup._elt.children.length, 1, "The markup view is rendering");
 });
 
-function* chooseWithInspectElementContextMenu(selector, testActor) {
+function* chooseWithInspectElementContextMenu(selector, tab) {
   yield BrowserTestUtils.synthesizeMouseAtCenter(selector, {
     type: "contextmenu",
     button: 2
-  }, gBrowser.selectedBrowser);
+  }, tab.linkedBrowser);
 
   yield EventUtils.synthesizeKey("Q", {});
 }

@@ -1928,7 +1928,7 @@ MediaFormatReader::OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailu
 }
 
 RefPtr<MediaDecoderReader::SeekPromise>
-MediaFormatReader::Seek(SeekTarget aTarget, int64_t aUnused)
+MediaFormatReader::Seek(const SeekTarget& aTarget, int64_t aUnused)
 {
   MOZ_ASSERT(OnTaskQueue());
 
@@ -1950,7 +1950,7 @@ MediaFormatReader::Seek(SeekTarget aTarget, int64_t aUnused)
     return SeekPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  SetSeekTarget(Move(aTarget));
+  SetSeekTarget(aTarget);
 
   RefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
 

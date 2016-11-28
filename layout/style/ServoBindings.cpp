@@ -36,21 +36,15 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-#define IMPL_STRONG_REF_TYPE_FOR(type_) \
-  already_AddRefed<type_>               \
-  type_##Strong::Consume() {            \
-    RefPtr<type_> result;               \
-    result.swap(mPtr);                  \
-    return result.forget();             \
+#define SERVO_ARC_TYPE(name_, type_) \
+  already_AddRefed<type_>            \
+  type_##Strong::Consume() {         \
+    RefPtr<type_> result;            \
+    result.swap(mPtr);               \
+    return result.forget();          \
   }
-
-IMPL_STRONG_REF_TYPE_FOR(ServoComputedValues)
-IMPL_STRONG_REF_TYPE_FOR(ServoCssRules)
-IMPL_STRONG_REF_TYPE_FOR(RawServoStyleSheet)
-IMPL_STRONG_REF_TYPE_FOR(RawServoDeclarationBlock)
-IMPL_STRONG_REF_TYPE_FOR(RawServoStyleRule)
-
-#undef IMPL_STRONG_REF_TYPE_FOR
+#include "mozilla/ServoArcTypeList.h"
+#undef SERVO_ARC_TYPE
 
 uint32_t
 Gecko_ChildrenCount(RawGeckoNodeBorrowed aNode)

@@ -931,12 +931,13 @@ GMPParent::ReadChromiumManifestFile(nsIFile* aFile)
   }
 
   // DOM JSON parsing needs to run on the main thread.
-  return InvokeAsync(AbstractThread::MainThread(), this, __func__,
+  return InvokeAsync<nsString&&>(
+    AbstractThread::MainThread(), this, __func__,
     &GMPParent::ParseChromiumManifest, NS_ConvertUTF8toUTF16(json));
 }
 
 RefPtr<GenericPromise>
-GMPParent::ParseChromiumManifest(nsString aJSON)
+GMPParent::ParseChromiumManifest(const nsAString& aJSON)
 {
   LOGD("%s: for '%s'", __FUNCTION__, NS_LossyConvertUTF16toASCII(aJSON).get());
 

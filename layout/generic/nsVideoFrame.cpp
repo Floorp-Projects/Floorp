@@ -310,7 +310,7 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
       aReflowInput.ComputedLogicalBorderPadding().BStartEnd(myWM);
   }
 
-  mBorderPadding   = aReflowInput.ComputedPhysicalBorderPadding();
+  nsMargin borderPadding = aReflowInput.ComputedPhysicalBorderPadding();
 
   // Reflow the child frames. We may have up to three: an image
   // frame (for the poster image), a container frame for the controls,
@@ -335,7 +335,7 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
       nsRect posterRenderRect;
       if (ShouldDisplayPoster()) {
         posterRenderRect =
-          nsRect(nsPoint(mBorderPadding.left, mBorderPadding.top),
+          nsRect(nsPoint(borderPadding.left, borderPadding.top),
                  nsSize(aReflowInput.ComputedWidth(),
                         aReflowInput.ComputedHeight()));
       }
@@ -355,8 +355,8 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
       nsBoxLayoutState boxState(PresContext(), aReflowInput.mRenderingContext);
       nsBoxFrame::LayoutChildAt(boxState,
                                 child,
-                                nsRect(mBorderPadding.left,
-                                       mBorderPadding.top,
+                                nsRect(borderPadding.left,
+                                       borderPadding.top,
                                        aReflowInput.ComputedWidth(),
                                        aReflowInput.ComputedHeight()));
 
@@ -374,7 +374,7 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
                                        availableSize);
       ReflowOutput kidDesiredSize(kidReflowInput);
       ReflowChild(child, aPresContext, kidDesiredSize, kidReflowInput,
-                  mBorderPadding.left, mBorderPadding.top, 0, aStatus);
+                  borderPadding.left, borderPadding.top, 0, aStatus);
 
       if (child->GetContent() == mVideoControls && isBSizeShrinkWrapping) {
         contentBoxBSize = kidDesiredSize.BSize(myWM);
@@ -382,7 +382,7 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
 
       FinishReflowChild(child, aPresContext,
                         kidDesiredSize, &kidReflowInput,
-                        mBorderPadding.left, mBorderPadding.top, 0);
+                        borderPadding.left, borderPadding.top, 0);
     }
 
     if (child->GetContent() == mVideoControls && child->GetSize() != oldChildSize) {
