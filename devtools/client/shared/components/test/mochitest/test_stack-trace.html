@@ -50,12 +50,12 @@ window.onload = function () {
     let trace = ReactDOM.render(StackTrace(props), window.document.body);
     yield forceRender(trace);
 
-    let traceEl = trace.getDOMNode();
+    let traceEl = ReactDOM.findDOMNode(trace);
     ok(traceEl, "Rendered StackTrace has an element");
 
     // Get the child nodes and filter out the text-only whitespace ones
     let frameEls = Array.from(traceEl.childNodes)
-      .filter(n => n.className.includes("frame"));
+      .filter(n => n.className && n.className.includes("frame"));
     ok(frameEls, "Rendered StackTrace has frames");
     is(frameEls.length, 3, "StackTrace has 3 frames");
 
