@@ -27,6 +27,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
     state.snapshots[0].census.state === censusState.SAVED);
 
   info("Check coarse type heap view");
+
   ["Function", "js::Shape", "Object", "strings"].forEach(findNameCell);
 
   yield setCensusDisplay(panel.panelWin, censusDisplays.allocationStack);
@@ -34,7 +35,7 @@ this.test = makeMemoryTest(TEST_URL, function* ({ tab, panel }) {
   [L10N.getStr("tree-item.nostack")].forEach(findNameCell);
 
   function findNameCell(name) {
-    const el = $$(".tree .heap-tree-item-name span")
+    const el = $$(".tree .heap-tree-item-name")
       .find(e => e.textContent === name);
     ok(el, `Found heap tree item cell for ${name}.`);
   }
