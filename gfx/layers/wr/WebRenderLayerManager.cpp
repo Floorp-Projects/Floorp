@@ -244,7 +244,7 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
     TextureClient::CreateForRawBufferAccess(WRBridge(),
                                             SurfaceFormat::B8G8R8A8,
                                             aSize.ToUnknownSize(),
-                                            BackendType::CAIRO,
+                                            BackendType::SKIA,
                                             TextureFlags::DEFAULT);
   if (!texture) {
     return;
