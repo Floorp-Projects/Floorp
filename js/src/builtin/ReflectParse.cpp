@@ -3423,7 +3423,7 @@ ASTSerializer::function(ParseNode* pn, ASTType type, MutableHandleValue dst)
     NodeVector defaults(cx);
 
     RootedValue body(cx), rest(cx);
-    if (func->hasRest())
+    if (pn->pn_funbox->hasRest())
         rest.setUndefined();
     else
         rest.setNull();

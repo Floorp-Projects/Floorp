@@ -388,7 +388,7 @@ MediaDrmCDMProxy::OnCDMCreated(uint32_t aPromiseId)
   }
 
   if (mCDM) {
-    mKeys->OnCDMCreated(aPromiseId, GetNodeId(), 0);
+    mKeys->OnCDMCreated(aPromiseId, 0);
     return;
   }
 

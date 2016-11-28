@@ -855,6 +855,12 @@ MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* succe
 }
 
 void
+MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* success, Label* fail)
+{
+    MOZ_CRASH("NYI: branch64 reg-reg");
+}
+
+void
 MacroAssembler::branch64(Condition cond, const Address& lhs, Imm64 val, Label* label)
 {
     MOZ_ASSERT(cond == Assembler::NotEqual,

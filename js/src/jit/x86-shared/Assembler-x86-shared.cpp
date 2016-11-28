@@ -221,6 +221,39 @@ AssemblerX86Shared::ConditionWithoutEqual(Condition cond)
     }
 }
 
+AssemblerX86Shared::DoubleCondition
+AssemblerX86Shared::InvertCondition(DoubleCondition cond)
+{
+    switch (cond) {
+      case DoubleEqual:
+        return DoubleNotEqualOrUnordered;
+      case DoubleEqualOrUnordered:
+        return DoubleNotEqual;
+      case DoubleNotEqualOrUnordered:
+        return DoubleEqual;
+      case DoubleNotEqual:
+        return DoubleEqualOrUnordered;
+      case DoubleLessThan:
+        return DoubleGreaterThanOrEqualOrUnordered;
+      case DoubleLessThanOrUnordered:
+        return DoubleGreaterThanOrEqual;
+      case DoubleLessThanOrEqual:
+        return DoubleGreaterThanOrUnordered;
+      case DoubleLessThanOrEqualOrUnordered:
+        return DoubleGreaterThan;
+      case DoubleGreaterThan:
+        return DoubleLessThanOrEqualOrUnordered;
+      case DoubleGreaterThanOrUnordered:
+        return DoubleLessThanOrEqual;
+      case DoubleGreaterThanOrEqual:
+        return DoubleLessThanOrUnordered;
+      case DoubleGreaterThanOrEqualOrUnordered:
+        return DoubleLessThan;
+      default:
+        MOZ_CRASH("unexpected condition");
+    }
+}
+
 void
 AssemblerX86Shared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end,
                                                 const Disassembler::HeapAccess& heapAccess)

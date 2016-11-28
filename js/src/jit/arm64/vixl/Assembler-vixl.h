@@ -941,6 +941,10 @@ class Assembler : public MozBaseAssembler {
     return static_cast<Condition>(cond ^ 1);
   }
 
+  static inline DoubleCondition InvertCondition(DoubleCondition cond) {
+    MOZ_CRASH("Not yet implemented: InvertCondition(DoubleCondition)");
+  }
+
   static inline Condition ConditionFromDoubleCondition(DoubleCondition cond) {
     VIXL_ASSERT(!(cond & DoubleConditionBitSpecial));
     return static_cast<Condition>(cond);
