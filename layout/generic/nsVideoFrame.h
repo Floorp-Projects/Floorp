@@ -130,8 +130,6 @@ protected:
 
   virtual ~nsVideoFrame();
 
-  nsMargin mBorderPadding;
-
   // Anonymous child which is bound via XBL to the video controls.
   nsCOMPtr<nsIContent> mVideoControls;
 

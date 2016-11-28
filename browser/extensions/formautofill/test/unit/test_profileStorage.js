@@ -7,7 +7,7 @@
 "use strict";
 
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import(Services.io.newFileURI(do_get_file("ProfileStorage.jsm")).spec);
+Cu.import("resource://formautofill/ProfileStorage.jsm");
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
 

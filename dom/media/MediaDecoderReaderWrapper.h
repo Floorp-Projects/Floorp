@@ -68,7 +68,8 @@ public:
   bool IsWaitingAudioData() const;
   bool IsWaitingVideoData() const;
 
-  RefPtr<SeekPromise> Seek(SeekTarget aTarget, media::TimeUnit aEndTime);
+  RefPtr<SeekPromise> Seek(const SeekTarget& aTarget,
+                           const media::TimeUnit& aEndTime);
   RefPtr<BufferedUpdatePromise> UpdateBufferedWithPromise();
   RefPtr<ShutdownPromise> Shutdown();
 

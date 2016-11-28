@@ -6,7 +6,7 @@
 import unittest
 
 from compare_locales.checks import getChecker
-from compare_locales.parser import getParser, Parser, Entity
+from compare_locales.parser import getParser, Entity
 from compare_locales.paths import File
 
 
@@ -239,16 +239,14 @@ class TestAndroid(unittest.TestCase):
                u"\\u0022, or put string in apostrophes."
 
     def getEntity(self, v):
-        ctx = Parser.Context(v)
-        return Entity(ctx, lambda s: s, '', (0, len(v)), (), (), (),
+        return Entity(v, lambda s: s, (0, len(v)), (), (0, 0), (), (),
                       (0, len(v)), ())
 
     def getDTDEntity(self, v):
         v = v.replace('"', '&quot;')
-        ctx = Parser.Context('<!ENTITY foo "%s">' % v)
-        return Entity(ctx,
-                      lambda s: s, '',
-                      (0, len(v) + 16), (), (), (9, 12),
+        return Entity('<!ENTITY foo "%s">' % v,
+                      lambda s: s,
+                      (0, len(v) + 16), (), (0, 0), (), (9, 12),
                       (14, len(v) + 14), ())
 
     def test_android_dtd(self):
