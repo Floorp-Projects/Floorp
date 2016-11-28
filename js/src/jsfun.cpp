@@ -497,7 +497,7 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
             if (fun->hasResolvedLength())
                 return true;
 
-            if (!fun->getUnresolvedLength(cx, &v))
+            if (!JSFunction::getUnresolvedLength(cx, fun, &v))
                 return false;
         } else {
             if (fun->hasResolvedName())
@@ -1269,35 +1269,34 @@ JSFunction::isDerivedClassConstructor()
     return derived;
 }
 
-bool
-JSFunction::getLength(JSContext* cx, uint16_t* length)
+/* static */ bool
+JSFunction::getLength(JSContext* cx, HandleFunction fun, uint16_t* length)
 {
-    JS::RootedFunction self(cx, this);
-    MOZ_ASSERT(!self->isBoundFunction());
-    if (self->isInterpretedLazy() && !self->getOrCreateScript(cx))
+    MOZ_ASSERT(!fun->isBoundFunction());
+    if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
         return false;
 
-    *length = self->hasScript() ? self->nonLazyScript()->funLength()
-                                : (self->nargs() - self->hasRest());
+    *length = fun->hasScript() ? fun->nonLazyScript()->funLength()
+                               : (fun->nargs() - fun->hasRest());
     return true;
 }
 
-bool
-JSFunction::getUnresolvedLength(JSContext* cx, MutableHandleValue v)
+/* static */ bool
+JSFunction::getUnresolvedLength(JSContext* cx, HandleFunction fun, MutableHandleValue v)
 {
-    MOZ_ASSERT(!IsInternalFunctionObject(*this));
-    MOZ_ASSERT(!hasResolvedLength());
+    MOZ_ASSERT(!IsInternalFunctionObject(*fun));
+    MOZ_ASSERT(!fun->hasResolvedLength());
 
     // Bound functions' length can have values up to MAX_SAFE_INTEGER, so
     // they're handled differently from other functions.
-    if (isBoundFunction()) {
-        MOZ_ASSERT(getExtendedSlot(BOUND_FUN_LENGTH_SLOT).isNumber());
-        v.set(getExtendedSlot(BOUND_FUN_LENGTH_SLOT));
+    if (fun->isBoundFunction()) {
+        MOZ_ASSERT(fun->getExtendedSlot(BOUND_FUN_LENGTH_SLOT).isNumber());
+        v.set(fun->getExtendedSlot(BOUND_FUN_LENGTH_SLOT));
         return true;
     }
 
     uint16_t length;
-    if (!getLength(cx, &length))
+    if (!JSFunction::getLength(cx, fun, &length))
         return false;
 
     v.setInt32(length);
