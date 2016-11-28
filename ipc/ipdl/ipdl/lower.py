@@ -143,11 +143,6 @@ def _nullState(proto=None):
     if proto is not None:  pfx = proto.name() +'::'
     return ExprVar(pfx +'__Null')
 
-def _errorState(proto=None):
-    pfx = ''
-    if proto is not None:  pfx = proto.name() +'::'
-    return ExprVar(pfx +'__Error')
-
 def _deadState(proto=None):
     pfx = ''
     if proto is not None:  pfx = proto.name() +'::'
@@ -1543,7 +1538,6 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         # value '0'
         stateenum.addId(_deadState().name)
         stateenum.addId(_nullState().name)
-        stateenum.addId(_errorState().name)
         if self.protocol.decl.type.hasReentrantDelete:
             stateenum.addId(_dyingState().name)
         stateenum.addId(_startState().name, _nullState().name)
@@ -1694,14 +1688,12 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 nextState = _dyingState()
             else:
                 nextState = _deadState()
-            ifdelete.addifstmts([
-                StmtExpr(ExprAssn(ExprDeref(nextvar), nextState)),
-                StmtReturn(ExprLiteral.TRUE) ])
+            ifdelete.addifstmt(
+                StmtExpr(ExprAssn(ExprDeref(nextvar), nextState)))
             nullerrorblock.addstmt(ifdelete)
         nullerrorblock.addstmt(
-            StmtReturn(ExprBinary(_nullState(), '==', fromvar)))
-        fromswitch.addfallthrough(CaseLabel(_nullState().name))
-        fromswitch.addcase(CaseLabel(_errorState().name), nullerrorblock)
+            StmtReturn(ExprLiteral.TRUE))
+        fromswitch.addcase(CaseLabel(_nullState().name), nullerrorblock)
 
         # special case for Dead
         deadblock = Block()
