@@ -11,12 +11,13 @@
 #include "FrameMetrics.h"     // for ScrollableLayerGuid
 #include "Units.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/Function.h"
 #include "mozilla/layers/GeckoContentController.h"  // for APZStateChange
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"  // for NS_INLINE_DECL_REFCOUNTING
 #include "nsIWeakReferenceUtils.h"  // for nsWeakPtr
+
+#include <functional>
 
 template <class> class nsCOMPtr;
 class nsIDocument;
@@ -28,9 +29,9 @@ namespace layers {
 
 class ActiveElementManager;
 
-typedef function<void(const ScrollableLayerGuid&,
-                      uint64_t /* input block id */,
-                      bool /* prevent default */)>
+typedef std::function<void(const ScrollableLayerGuid&,
+                           uint64_t /* input block id */,
+                           bool /* prevent default */)>
         ContentReceivedInputBlockCallback;
 
 /**
