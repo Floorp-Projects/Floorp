@@ -121,7 +121,7 @@ public:
   void AddImageKeyForDiscard(WRImageKey);
   void DiscardImages();
 
-  WebRenderBridgeChild* WRBridge() { return mWRChild; }
+  WebRenderBridgeChild* WRBridge() const { return mWRChild; }
 
 private:
  /**

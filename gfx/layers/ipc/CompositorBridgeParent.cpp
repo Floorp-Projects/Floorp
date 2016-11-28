@@ -1556,7 +1556,8 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
 }
 
 PWebRenderBridgeParent*
-CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId)
+CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId,
+                                                    TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
 #ifndef MOZ_ENABLE_WEBRENDER
   // Extra guard since this in the parent process and we don't want a malicious
@@ -1575,6 +1576,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId)
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   MOZ_ASSERT(sIndirectLayerTrees[aPipelineId].mWRBridge == nullptr);
   sIndirectLayerTrees[aPipelineId].mWRBridge = mWRBridge;
+  *aTextureFactoryIdentifier = mCompositor->GetTextureFactoryIdentifier();
   return mWRBridge;
 }
 

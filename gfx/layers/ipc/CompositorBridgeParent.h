@@ -455,7 +455,8 @@ public:
     return !!mApzcTreeManager;
   }
 
-  PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const uint64_t& aPipelineId) override;
+  PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const uint64_t& aPipelineId,
+                                                      TextureFactoryIdentifier* aTextureFactoryIdentifier) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
 
 private:

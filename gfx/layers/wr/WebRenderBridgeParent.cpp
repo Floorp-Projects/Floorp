@@ -11,11 +11,15 @@
 #include "GLContextProvider.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorVsyncScheduler.h"
-#include "mozilla/widget/CompositorWidget.h"
+#include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/WebRenderCompositorOGL.h"
+#include "mozilla/widget/CompositorWidget.h"
 
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 WebRenderBridgeParent::WebRenderBridgeParent(const uint64_t& aPipelineId,
                                              widget::CompositorWidget* aWidget,
@@ -207,21 +211,64 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPGetSnapshot(const uint32_t& aWidth,
-                                         const uint32_t& aHeight,
-                                         InfallibleTArray<uint8_t>* aOutImageSnapshot)
+WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture,
+                                         const IntRect& aRect)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
+
+  RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
+  if (!texture) {
+    // We kill the content process rather than have it continue with an invalid
+    // snapshot, that may be too harsh and we could decide to return some sort
+    // of error to the child process and let it deal with it...
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  // XXX Add other TextureHost supports.
+  // Only BufferTextureHost is supported now.
+  BufferTextureHost* bufferTexture = texture->AsBufferTextureHost();
+  if (!bufferTexture) {
+    // We kill the content process rather than have it continue with an invalid
+    // snapshot, that may be too harsh and we could decide to return some sort
+    // of error to the child process and let it deal with it...
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  MOZ_ASSERT(bufferTexture->GetBufferDescriptor().type() == BufferDescriptor::TRGBDescriptor);
+  uint32_t stride = ImageDataSerializer::GetRGBStride(bufferTexture->GetBufferDescriptor().get_RGBDescriptor());
+  RefPtr<DrawTarget> target =
+    Factory::CreateDrawTargetForData(gfx::BackendType::CAIRO,
+                                     bufferTexture->GetBuffer(),
+                                     bufferTexture->GetSize(),
+                                     stride,
+                                     bufferTexture->GetFormat());
+  MOZ_ASSERT(target);
+  if (!target) {
+    // We kill the content process rather than have it continue with an invalid
+    // snapshot, that may be too harsh and we could decide to return some sort
+    // of error to the child process and let it deal with it...
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   MOZ_ASSERT(mWRState);
   mGLContext->MakeCurrent();
 
   uint32_t length = 0;
   uint32_t capacity = 0;
-  const uint8_t* webrenderSnapshot = wr_readback_buffer(mWRWindowState, aWidth, aHeight, &length, &capacity);
+  const uint8_t* webrenderSnapshot = wr_readback_buffer(mWRWindowState, aRect.width, aRect.height, &length, &capacity);
 
-  aOutImageSnapshot->ReplaceElementsAt(0, aOutImageSnapshot->Length(), webrenderSnapshot, length);
+  // TODO: fixup for proper surface format.
+  RefPtr<DataSourceSurface> snapshot =
+    Factory::CreateWrappingDataSourceSurface(const_cast<uint8_t*>(webrenderSnapshot),
+                                             aRect.width * 4,
+                                             IntSize(aRect.width, aRect.height),
+                                             SurfaceFormat::B8G8R8A8);
+
+  Rect floatRect = Rect(0, 0, aRect.width, aRect.height);
+  target->DrawSurface(snapshot, floatRect, floatRect, DrawSurfaceOptions(), DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+  target->Flush();
 
   wr_free_buffer(webrenderSnapshot, length, capacity);
 

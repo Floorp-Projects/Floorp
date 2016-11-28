@@ -6,6 +6,9 @@
 
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
+#include "gfxPlatform.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
 
 namespace mozilla {
@@ -99,6 +102,24 @@ WebRenderBridgeChild::DeallocExternalImageId(uint64_t aImageId)
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aImageId);
   SendRemoveExternalImageId(aImageId);
+}
+
+CompositorBridgeChild*
+WebRenderBridgeChild::GetCompositorBridgeChild()
+{
+  return static_cast<CompositorBridgeChild*>(Manager());
+}
+
+TextureForwarder*
+WebRenderBridgeChild::GetTextureForwarder()
+{
+  return static_cast<TextureForwarder*>(GetCompositorBridgeChild());
+}
+
+LayersIPCActor*
+WebRenderBridgeChild::GetLayersIPCActor()
+{
+  return static_cast<LayersIPCActor*>(GetCompositorBridgeChild());
 }
 
 } // namespace layers

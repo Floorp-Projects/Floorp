@@ -63,9 +63,8 @@ public:
                                       bool* aOutSuccess) override;
   mozilla::ipc::IPCResult RecvDPEnd(InfallibleTArray<WebRenderCommand>&& commands) override;
   mozilla::ipc::IPCResult RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& commands) override;
-  mozilla::ipc::IPCResult RecvDPGetSnapshot(const uint32_t& aWidth,
-                                            const uint32_t& aHeight,
-                                            InfallibleTArray<uint8_t>* aOutImageSnapshot) override;
+  mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture,
+                                            const gfx::IntRect& aRect) override;
 
   mozilla::ipc::IPCResult RecvAddExternalImageId(const uint64_t& aImageId,
                                                  const uint64_t& aAsyncContainerId) override;
