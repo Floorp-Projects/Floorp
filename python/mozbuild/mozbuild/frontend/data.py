@@ -422,14 +422,47 @@ class HostSimpleProgram(HostMixin, BaseProgram):
     KIND = 'host'
 
 
-def cargo_target_directory(context):
+def cargo_target_directory(context, target_var='RUST_TARGET'):
     # cargo creates several directories and places its build artifacts
     # in those directories.  The directory structure depends not only
     # on the target, but also what sort of build we are doing.
     rust_build_kind = 'release'
     if context.config.substs.get('MOZ_DEBUG'):
         rust_build_kind = 'debug'
-    return mozpath.join(context.config.substs['RUST_TARGET'], rust_build_kind)
+    return mozpath.join(context.config.substs[target_var], rust_build_kind)
+
+
+# Rust programs aren't really Linkable, since Cargo handles all the details
+# of linking things.
+class BaseRustProgram(ContextDerived):
+    __slots__ = (
+        'name',
+        'cargo_file',
+        'location',
+        'SUFFIX_VAR',
+        'KIND',
+        'TARGET_SUBST_VAR',
+    )
+
+    def __init__(self, context, name, cargo_file):
+        ContextDerived.__init__(self, context)
+        self.name = name
+        self.cargo_file = cargo_file
+        cargo_dir = cargo_target_directory(context, self.TARGET_SUBST_VAR)
+        exe_file = '%s%s' % (name, context.config.substs.get(self.SUFFIX_VAR, ''))
+        self.location = mozpath.join(cargo_dir, exe_file)
+
+
+class RustProgram(BaseRustProgram):
+    SUFFIX_VAR = 'BIN_SUFFIX'
+    KIND = 'target'
+    TARGET_SUBST_VAR = 'RUST_TARGET'
+
+
+class HostRustProgram(BaseRustProgram):
+    SUFFIX_VAR = 'HOST_BIN_SUFFIX'
+    KIND = 'host'
+    TARGET_SUBST_VAR = 'RUST_HOST_TARGET'
 
 
 class BaseLibrary(Linkable):
