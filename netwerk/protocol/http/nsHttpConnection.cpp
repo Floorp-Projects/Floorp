@@ -1714,6 +1714,9 @@ nsHttpConnection::OnSocketWritable()
                 NS_SUCCEEDED(mSocketOutCondition)) {
                 mSocketOutCondition = NS_BASE_STREAM_WOULD_BLOCK;
             }
+        } else if (!mTransaction) {
+            rv = NS_ERROR_FAILURE;
+            LOG(("  No Transaction In OnSocketWritable\n"));
         } else {
 
             // for non spdy sessions let the connection manager know
