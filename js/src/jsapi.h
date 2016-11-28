@@ -875,11 +875,7 @@ class MOZ_STACK_CLASS SourceBufferHolder final
 
 #define JSFUN_CONSTRUCTOR      0x400    /* native that can be called as a ctor */
 
-//                             0x800    /* Unused */
-
-#define JSFUN_HAS_REST        0x1000    /* function has ...rest parameter. */
-
-#define JSFUN_FLAGS_MASK      0x1e00    /* | of all the JSFUN_* flags */
+#define JSFUN_FLAGS_MASK       0x600    /* | of all the JSFUN_* flags */
 
 /*
  * If set, will allow redefining a non-configurable property, but only on a

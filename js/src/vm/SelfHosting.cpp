@@ -3022,7 +3022,7 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx, HandlePropertyName name,
     MOZ_ASSERT(!targetFun->isInterpretedLazy());
 
     MOZ_ASSERT(sourceFun->nargs() == targetFun->nargs());
-    MOZ_ASSERT(sourceFun->hasRest() == targetFun->hasRest());
+    MOZ_ASSERT(sourceScript->hasRest() == targetFun->nonLazyScript()->hasRest());
 
     // The target function might have been relazified after its flags changed.
     targetFun->setFlags(targetFun->flags() | sourceFun->flags());
