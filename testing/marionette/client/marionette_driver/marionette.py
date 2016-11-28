@@ -1095,7 +1095,6 @@ class Marionette(object):
             self.instance.restart(prefs)
             self.raise_for_port()
             self.start_session()
-            self.timeout.reset()
 
             # Restore the context as used before the restart
             self.set_context(context)
@@ -1143,8 +1142,6 @@ class Marionette(object):
         if not self.instance:
             raise errors.MarionetteException("quit() can only be called "
                                              "on Gecko instances launched by Marionette")
-
-        self.timeout.reset()
 
         if in_app:
             if callable(callback):
@@ -1211,7 +1208,6 @@ class Marionette(object):
             self.raise_for_port()
 
         self.start_session(session_id=session_id)
-        self.timeout.reset()
 
         # Restore the context as used before the restart
         self.set_context(context)
