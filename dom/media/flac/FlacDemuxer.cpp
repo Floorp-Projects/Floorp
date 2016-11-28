@@ -722,7 +722,7 @@ FlacTrackDemuxer::IsSeekable() const
 }
 
 RefPtr<FlacTrackDemuxer::SeekPromise>
-FlacTrackDemuxer::Seek(TimeUnit aTime)
+FlacTrackDemuxer::Seek(const TimeUnit& aTime)
 {
   // Efficiently seek to the position.
   FastSeek(aTime);
@@ -895,7 +895,7 @@ FlacTrackDemuxer::Reset()
 }
 
 RefPtr<FlacTrackDemuxer::SkipAccessPointPromise>
-FlacTrackDemuxer::SkipToNextRandomAccessPoint(TimeUnit aTimeThreshold)
+FlacTrackDemuxer::SkipToNextRandomAccessPoint(const TimeUnit& aTimeThreshold)
 {
   // Will not be called for audio-only resources.
   return SkipAccessPointPromise::CreateAndReject(

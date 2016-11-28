@@ -301,7 +301,7 @@ WAVTrackDemuxer::GetInfo() const
 }
 
 RefPtr<WAVTrackDemuxer::SeekPromise>
-WAVTrackDemuxer::Seek(TimeUnit aTime)
+WAVTrackDemuxer::Seek(const TimeUnit& aTime)
 {
   FastSeek(aTime);
   const TimeUnit seekTime = ScanUntil(aTime);
@@ -374,7 +374,7 @@ WAVTrackDemuxer::Reset()
 }
 
 RefPtr<WAVTrackDemuxer::SkipAccessPointPromise>
-WAVTrackDemuxer::SkipToNextRandomAccessPoint(TimeUnit aTimeThreshold)
+WAVTrackDemuxer::SkipToNextRandomAccessPoint(const TimeUnit& aTimeThreshold)
 {
   return SkipAccessPointPromise::CreateAndReject(
     SkipFailureHolder(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, 0), __func__);
