@@ -29,7 +29,7 @@ window {
 }
 
 #screenShareButton {
-  background-image: url("chrome://browser/skin/notification-icons.svg#screen-indicator");
+  background-image: url("webRTC-screen-white-16.png");
   background-position: center center;
   background-repeat: no-repeat;
   background-size: 16px;
@@ -61,17 +61,17 @@ window[sharingaudio] > #audioVideoButton {
 }
 
 window[sharingvideo] > #audioVideoButton {
-  background-image: url("chrome://browser/skin/notification-icons.svg#camera-indicator");
+  background-image: url("webRTC-camera-white-16.png");
 }
 
 window[sharingaudio] > #audioVideoButton {
-  background-image: url("chrome://browser/skin/notification-icons.svg#microphone-indicator");
+  background-image: url("webRTC-microphone-white-16.png");
 }
 
 /* Multi-icon button: */
 window[sharingaudio][sharingvideo] > #audioVideoButton {
-  background-image: url("chrome://browser/skin/notification-icons.svg#camera-indicator"),
-                    url("chrome://browser/skin/notification-icons.svg#microphone-indicator");
+  background-image: url("webRTC-camera-white-16.png"),
+                    url("webRTC-microphone-white-16.png");
   background-position: 6px center, 26px center;
   background-size: 16px, 16px;
   min-width: 46px;
