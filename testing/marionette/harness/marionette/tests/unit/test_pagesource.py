@@ -10,18 +10,24 @@ class TestPageSource(MarionetteTestCase):
         test_html = self.marionette.absolute_url("testPageSource.html")
         self.marionette.navigate(test_html)
         source = self.marionette.page_source
+        from_web_api = self.marionette.execute_script("return document.documentElement.outerHTML")
         self.assertTrue("<html" in source)
         self.assertTrue("PageSource" in source)
+        self.assertEqual(source, from_web_api)
 
     def testShouldReturnTheSourceOfAPageWhenThereAreUnicodeChars(self):
         test_html = self.marionette.absolute_url("testPageSourceWithUnicodeChars.html")
         self.marionette.navigate(test_html)
         # if we don't throw on the next line we are good!
-        self.marionette.page_source
+        source = self.marionette.page_source
+        from_web_api = self.marionette.execute_script("return document.documentElement.outerHTML")
+        self.assertEqual(source, from_web_api)
 
     def testShouldReturnAXMLDocumentSource(self):
         test_xml = self.marionette.absolute_url("testPageSource.xml")
         self.marionette.navigate(test_xml)
         source = self.marionette.page_source
+        from_web_api = self.marionette.execute_script("return document.documentElement.outerHTML")
         import re
         self.assertEqual(re.sub("\s", "", source), "<xml><foo><bar>baz</bar></foo></xml>")
+        self.assertEqual(source, from_web_api)
