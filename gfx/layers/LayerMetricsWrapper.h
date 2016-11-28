@@ -423,7 +423,7 @@ public:
     return mLayer->GetScrollbarTargetContainerId();
   }
 
-  int32_t GetScrollbarSize() const
+  int32_t GetScrollThumbLength() const
   {
     if (GetScrollbarDirection() == Layer::VERTICAL) {
       return mLayer->GetVisibleRegion().GetBounds().height;
