@@ -88,15 +88,16 @@ function updateWindowAttr(attr, value) {
 
 function onPopupMenuShowing(event) {
   let popup = event.target;
+  let type = popup.getAttribute("type");
 
   let activeStreams;
-  if (popup.getAttribute("type") == "Devices")
+  if (type == "Devices")
     activeStreams = webrtcUI.getActiveStreams(true, true, false);
   else
     activeStreams = webrtcUI.getActiveStreams(false, false, true);
 
   if (activeStreams.length == 1) {
-    webrtcUI.showSharingDoorhanger(activeStreams[0]);
+    webrtcUI.showSharingDoorhanger(activeStreams[0], type);
     event.preventDefault();
     return;
   }
@@ -117,7 +118,9 @@ function onPopupMenuHiding(event) {
 }
 
 function onPopupMenuCommand(event) {
-  webrtcUI.showSharingDoorhanger(event.target.stream);
+  let item = event.target;
+  webrtcUI.showSharingDoorhanger(item.stream,
+                                 item.parentNode.getAttribute("type"));
 }
 
 function onFirefoxButtonClick(event) {
