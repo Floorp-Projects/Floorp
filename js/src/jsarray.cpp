@@ -1712,11 +1712,11 @@ MatchNumericComparator(JSContext* cx, const Value& v)
     if (!obj.is<JSFunction>())
         return Match_None;
 
-    JSFunction* fun = &obj.as<JSFunction>();
+    RootedFunction fun(cx, &obj.as<JSFunction>());
     if (!fun->isInterpreted() || fun->isClassConstructor())
         return Match_None;
 
-    JSScript* script = fun->getOrCreateScript(cx);
+    JSScript* script = JSFunction::getOrCreateScript(cx, fun);
     if (!script)
         return Match_Failure;
 

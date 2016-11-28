@@ -3006,6 +3006,24 @@ static const nsCSSPropertyID gMarkerSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
+static const nsCSSPropertyID gPlaceContentSubpropTable[] = {
+  eCSSProperty_align_content,
+  eCSSProperty_justify_content,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSPropertyID gPlaceItemsSubpropTable[] = {
+  eCSSProperty_align_items,
+  eCSSProperty_justify_items,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSPropertyID gPlaceSelfSubpropTable[] = {
+  eCSSProperty_align_self,
+  eCSSProperty_justify_self,
+  eCSSProperty_UNKNOWN
+};
+
 // Subproperty tables for shorthands that are just aliases with
 // different parsing rules.
 static const nsCSSPropertyID gMozTransformSubpropTable[] = {
