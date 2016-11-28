@@ -2313,7 +2313,7 @@ ValueToScript(JSContext* cx, HandleValue v, JSFunction** funp = nullptr)
         return nullptr;
     }
 
-    JSScript* script = fun->getOrCreateScript(cx);
+    JSScript* script = JSFunction::getOrCreateScript(cx, fun);
     if (!script)
         return nullptr;
 
@@ -2713,7 +2713,7 @@ DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun,
 
                 RootedFunction fun(cx, &obj->as<JSFunction>());
                 if (fun->isInterpreted()) {
-                    RootedScript script(cx, fun->getOrCreateScript(cx));
+                    RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
                     if (script) {
                         if (!DisassembleScript(cx, script, fun, lines, recursive, sourceNotes, sp))
                             return false;
@@ -5367,7 +5367,7 @@ DumpScopeChain(JSContext* cx, unsigned argc, Value* vp)
             ReportUsageErrorASCII(cx, callee, "Argument must be an interpreted function");
             return false;
         }
-        script = fun->getOrCreateScript(cx);
+        script = JSFunction::getOrCreateScript(cx, fun);
     } else {
         script = obj->as<ModuleObject>().script();
     }

@@ -439,13 +439,12 @@ MediaKeys::Init(ErrorResult& aRv)
 }
 
 void
-MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t aPluginId)
+MediaKeys::OnCDMCreated(PromiseId aId, const uint32_t aPluginId)
 {
   RefPtr<DetailedPromise> promise(RetrievePromise(aId));
   if (!promise) {
     return;
   }
-  mNodeId = aNodeId;
   RefPtr<MediaKeys> keys(this);
   EME_LOG("MediaKeys[%p]::OnCDMCreated() resolve promise id=%d", this, aId);
   promise->MaybeResolve(keys);
@@ -553,13 +552,6 @@ MediaKeys::GetPendingSession(uint32_t aToken)
   mPendingSessions.Get(aToken, getter_AddRefs(session));
   mPendingSessions.Remove(aToken);
   return session.forget();
-}
-
-const nsCString&
-MediaKeys::GetNodeId() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return mNodeId;
 }
 
 bool

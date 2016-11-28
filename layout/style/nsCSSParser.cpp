@@ -1028,6 +1028,9 @@ protected:
   bool ParseAlignJustifySelf(nsCSSPropertyID aPropID);
   // parsing 'align/justify-content' from the css-align spec
   bool ParseAlignJustifyContent(nsCSSPropertyID aPropID);
+  bool ParsePlaceContent();
+  bool ParsePlaceItems();
+  bool ParsePlaceSelf();
 
   // for 'clip' and '-moz-image-region'
   bool ParseRect(nsCSSPropertyID aPropID);
@@ -10205,6 +10208,87 @@ CSSParserImpl::ParseAlignJustifyContent(nsCSSPropertyID aPropID)
   return true;
 }
 
+// place-content: [ normal | <baseline-position> | <content-distribution> |
+//                  <content-position> ]{1,2}
+bool
+CSSParserImpl::ParsePlaceContent()
+{
+  nsCSSValue first;
+  if (ParseSingleTokenVariant(first, VARIANT_INHERIT, nullptr)) {
+    AppendValue(eCSSProperty_align_content, first);
+    AppendValue(eCSSProperty_justify_content, first);
+    return true;
+  }
+  if (!ParseAlignEnum(first, nsCSSProps::kAlignNormalBaseline) &&
+      !ParseEnum(first, nsCSSProps::kAlignContentDistribution) &&
+      !ParseEnum(first, nsCSSProps::kAlignContentPosition)) {
+    return false;
+  }
+  AppendValue(eCSSProperty_align_content, first);
+  nsCSSValue second;
+  if (!ParseAlignEnum(second, nsCSSProps::kAlignNormalBaseline) &&
+      !ParseEnum(second, nsCSSProps::kAlignContentDistribution) &&
+      !ParseEnum(second, nsCSSProps::kAlignContentPosition)) {
+    AppendValue(eCSSProperty_justify_content, first);
+  } else {
+    AppendValue(eCSSProperty_justify_content, second);
+  }
+  return true;
+}
+
+// place-items:  <x> [ auto | <x> ]?
+// <x> = [ normal | stretch | <baseline-position> | <self-position> ]
+bool
+CSSParserImpl::ParsePlaceItems()
+{
+  nsCSSValue first;
+  if (ParseSingleTokenVariant(first, VARIANT_INHERIT, nullptr)) {
+    AppendValue(eCSSProperty_align_items, first);
+    AppendValue(eCSSProperty_justify_items, first);
+    return true;
+  }
+  if (!ParseAlignEnum(first, nsCSSProps::kAlignNormalStretchBaseline) &&
+      !ParseEnum(first, nsCSSProps::kAlignSelfPosition)) {
+    return false;
+  }
+  AppendValue(eCSSProperty_align_items, first);
+  nsCSSValue second;
+  // Note: 'auto' is valid for justify-items, but not align-items.
+  if (!ParseAlignEnum(second, nsCSSProps::kAlignAutoNormalStretchBaseline) &&
+      !ParseEnum(second, nsCSSProps::kAlignSelfPosition)) {
+    AppendValue(eCSSProperty_justify_items, first);
+  } else {
+    AppendValue(eCSSProperty_justify_items, second);
+  }
+  return true;
+}
+
+// place-self: [ auto | normal | stretch | <baseline-position> |
+//               <self-position> ]{1,2}
+bool
+CSSParserImpl::ParsePlaceSelf()
+{
+  nsCSSValue first;
+  if (ParseSingleTokenVariant(first, VARIANT_INHERIT, nullptr)) {
+    AppendValue(eCSSProperty_align_self, first);
+    AppendValue(eCSSProperty_justify_self, first);
+    return true;
+  }
+  if (!ParseAlignEnum(first, nsCSSProps::kAlignAutoNormalStretchBaseline) &&
+      !ParseEnum(first, nsCSSProps::kAlignSelfPosition)) {
+    return false;
+  }
+  AppendValue(eCSSProperty_align_self, first);
+  nsCSSValue second;
+  if (!ParseAlignEnum(second, nsCSSProps::kAlignAutoNormalStretchBaseline) &&
+      !ParseEnum(second, nsCSSProps::kAlignSelfPosition)) {
+    AppendValue(eCSSProperty_justify_self, first);
+  } else {
+    AppendValue(eCSSProperty_justify_self, second);
+  }
+  return true;
+}
+
 // <color-stop> : <color> [ <percentage> | <length> ]?
 bool
 CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
@@ -11721,6 +11805,12 @@ bool
 CSSParserImpl::ParsePropertyByFunction(nsCSSPropertyID aPropID)
 {
   switch (aPropID) {  // handle shorthand or multiple properties
+  case eCSSProperty_place_content:
+    return ParsePlaceContent();
+  case eCSSProperty_place_items:
+    return ParsePlaceItems();
+  case eCSSProperty_place_self:
+    return ParsePlaceSelf();
   case eCSSProperty_background:
     return ParseImageLayers(nsStyleImageLayers::kBackgroundLayerTable);
   case eCSSProperty_background_repeat:

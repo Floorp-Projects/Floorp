@@ -1420,7 +1420,8 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler
         /* Handle unaliased formals, vars, lets, and consts at function scope. */
         if (env->is<CallObject>()) {
             CallObject& callobj = env->as<CallObject>();
-            RootedScript script(cx, callobj.callee().getOrCreateScript(cx));
+            RootedFunction fun(cx, &callobj.callee());
+            RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
             if (!script->ensureHasTypes(cx) || !script->ensureHasAnalyzedArgsUsage(cx))
                 return false;
 
@@ -2955,7 +2956,7 @@ js::GetDebugEnvironmentForFunction(JSContext* cx, HandleFunction fun)
     MOZ_ASSERT(CanUseDebugEnvironmentMaps(cx));
     if (!DebugEnvironments::updateLiveEnvironments(cx))
         return nullptr;
-    JSScript* script = fun->getOrCreateScript(cx);
+    JSScript* script = JSFunction::getOrCreateScript(cx, fun);
     if (!script)
         return nullptr;
     EnvironmentIter ei(cx, fun->environment(), script->enclosingScope());
@@ -3463,11 +3464,13 @@ RemoveReferencedNames(JSContext* cx, HandleScript script, PropertyNameSet& remai
 
     if (script->hasObjects()) {
         ObjectArray* objects = script->objects();
+        RootedFunction fun(cx);
+        RootedScript innerScript(cx);
         for (size_t i = 0; i < objects->length; i++) {
             JSObject* obj = objects->vector[i];
             if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted()) {
-                JSFunction* fun = &obj->as<JSFunction>();
-                RootedScript innerScript(cx, fun->getOrCreateScript(cx));
+                fun = &obj->as<JSFunction>();
+                innerScript = JSFunction::getOrCreateScript(cx, fun);
                 if (!innerScript)
                     return false;
 
@@ -3530,11 +3533,13 @@ AnalyzeEntrainedVariablesInScript(JSContext* cx, HandleScript script, HandleScri
 
     if (innerScript->hasObjects()) {
         ObjectArray* objects = innerScript->objects();
+        RootedFunction fun(cx);
+        RootedScript innerInnerScript(cx);
         for (size_t i = 0; i < objects->length; i++) {
             JSObject* obj = objects->vector[i];
             if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted()) {
-                JSFunction* fun = &obj->as<JSFunction>();
-                RootedScript innerInnerScript(cx, fun->getOrCreateScript(cx));
+                fun = &obj->as<JSFunction>();
+                innerInnerScript = JSFunction::getOrCreateScript(cx, fun);
                 if (!innerInnerScript ||
                     !AnalyzeEntrainedVariablesInScript(cx, script, innerInnerScript))
                 {
@@ -3565,11 +3570,13 @@ js::AnalyzeEntrainedVariables(JSContext* cx, HandleScript script)
         return true;
 
     ObjectArray* objects = script->objects();
+    RootedFunction fun(cx);
+    RootedScript innerScript(cx);
     for (size_t i = 0; i < objects->length; i++) {
         JSObject* obj = objects->vector[i];
         if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted()) {
-            JSFunction* fun = &obj->as<JSFunction>();
-            RootedScript innerScript(cx, fun->getOrCreateScript(cx));
+            fun = &obj->as<JSFunction>();
+            innerScript = JSFunction::getOrCreateScript(cx, fun);
             if (!innerScript)
                 return false;
 

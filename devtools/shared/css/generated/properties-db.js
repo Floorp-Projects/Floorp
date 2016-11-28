@@ -8138,6 +8138,87 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "place-content": {
+    "isInherited": false,
+    "subproperties": [
+      "align-content",
+      "justify-content"
+    ],
+    "supports": [],
+    "values": [
+      "baseline",
+      "center",
+      "end",
+      "flex-end",
+      "flex-start",
+      "inherit",
+      "initial",
+      "last baseline",
+      "left",
+      "normal",
+      "right",
+      "space-around",
+      "space-between",
+      "space-evenly",
+      "start",
+      "stretch",
+      "unset"
+    ]
+  },
+  "place-items": {
+    "isInherited": false,
+    "subproperties": [
+      "align-items",
+      "justify-items"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "baseline",
+      "center",
+      "end",
+      "flex-end",
+      "flex-start",
+      "inherit",
+      "initial",
+      "last baseline",
+      "left",
+      "normal",
+      "right",
+      "self-end",
+      "self-start",
+      "start",
+      "stretch",
+      "unset"
+    ]
+  },
+  "place-self": {
+    "isInherited": false,
+    "subproperties": [
+      "align-self",
+      "justify-self"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "baseline",
+      "center",
+      "end",
+      "flex-end",
+      "flex-start",
+      "inherit",
+      "initial",
+      "last baseline",
+      "left",
+      "normal",
+      "right",
+      "self-end",
+      "self-start",
+      "start",
+      "stretch",
+      "unset"
+    ]
+  },
   "pointer-events": {
     "isInherited": true,
     "subproperties": [

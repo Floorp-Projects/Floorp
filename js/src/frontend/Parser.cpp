@@ -465,6 +465,7 @@ FunctionBox::FunctionBox(ExclusiveContext* cx, LifoAlloc& alloc, ObjectBox* trac
     usesApply(false),
     usesThis(false),
     usesReturn(false),
+    hasRest_(false),
     funCxFlags()
 {
     // Functions created at parse time may be set singleton after parsing and
@@ -477,7 +478,6 @@ void
 FunctionBox::initFromLazyFunction()
 {
     JSFunction* fun = function();
-    length = fun->nargs() - fun->hasRest();
     if (fun->lazyScript()->isDerivedClassConstructor())
         setDerivedClassConstructor();
     if (fun->lazyScript()->needsHomeObject())
@@ -492,8 +492,6 @@ FunctionBox::initStandaloneFunction(Scope* enclosingScope)
     // Standalone functions are Function or Generator constructors and are
     // always scoped to the global.
     MOZ_ASSERT(enclosingScope->is<GlobalScope>());
-    JSFunction* fun = function();
-    length = fun->nargs() - fun->hasRest();
     enclosingScope_ = enclosingScope;
     allowNewTarget_ = true;
     thisBinding_ = ThisBinding::Function;
@@ -2248,6 +2246,8 @@ Parser<SyntaxParseHandler>::finishFunction()
         lazy->setStrict();
     lazy->setGeneratorKind(funbox->generatorKind());
     lazy->setAsyncKind(funbox->asyncKind());
+    if (funbox->hasRest())
+        lazy->setHasRest();
     if (funbox->isLikelyConstructorWrapper())
         lazy->setLikelyConstructorWrapper();
     if (funbox->isDerivedClassConstructor())
@@ -2811,7 +2811,7 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                 }
 
                 hasRest = true;
-                funbox->function()->setHasRest();
+                funbox->setHasRest();
 
                 if (!tokenStream.getToken(&tt))
                     return false;

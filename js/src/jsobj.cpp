@@ -951,7 +951,7 @@ js::CreateThisForFunctionWithProto(JSContext* cx, HandleObject callee, HandleObj
     }
 
     if (res) {
-        JSScript* script = callee->as<JSFunction>().getOrCreateScript(cx);
+        JSScript* script = JSFunction::getOrCreateScript(cx, callee.as<JSFunction>());
         if (!script)
             return nullptr;
         TypeScript::SetThis(cx, script, TypeSet::ObjectType(res));

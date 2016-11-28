@@ -282,8 +282,6 @@ MakeDefaultConstructor(JSContext* cx, JSOp op, JSAtom* atom, HandleObject proto)
 
     ctor->setIsConstructor();
     ctor->setIsClassConstructor();
-    if (derived)
-        ctor->setHasRest();
 
     MOZ_ASSERT(ctor->infallibleIsDefaultClassConstructor(cx));
 
@@ -448,7 +446,7 @@ js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args, MaybeConstruct 
     }
 
     /* Invoke native functions. */
-    JSFunction* fun = &args.callee().as<JSFunction>();
+    RootedFunction fun(cx, &args.callee().as<JSFunction>());
     if (construct != CONSTRUCT && fun->isClassConstructor()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CALL_CLASS_CONSTRUCTOR);
         return false;
@@ -459,7 +457,7 @@ js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args, MaybeConstruct 
         return CallJSNative(cx, fun->native(), args);
     }
 
-    if (!fun->getOrCreateScript(cx))
+    if (!JSFunction::getOrCreateScript(cx, fun))
         return false;
 
     /* Run function until JSOP_RETRVAL, JSOP_RETURN or error. */
@@ -2931,7 +2929,7 @@ CASE(JSOP_FUNCALL)
     {
         MOZ_ASSERT(maybeFun);
         ReservedRooted<JSFunction*> fun(&rootFunction0, maybeFun);
-        ReservedRooted<JSScript*> funScript(&rootScript0, fun->getOrCreateScript(cx));
+        ReservedRooted<JSScript*> funScript(&rootScript0, JSFunction::getOrCreateScript(cx, fun));
         if (!funScript)
             goto error;
 

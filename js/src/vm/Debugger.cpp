@@ -225,7 +225,7 @@ EnsureFunctionHasScript(JSContext* cx, HandleFunction fun)
 {
     if (fun->isInterpretedLazy()) {
         AutoCompartment ac(cx, fun);
-        return !!fun->getOrCreateScript(cx);
+        return !!JSFunction::getOrCreateScript(cx, fun);
     }
     return true;
 }
@@ -9695,7 +9695,7 @@ DebuggerObject::getBoundArguments(JSContext* cx, HandleDebuggerObject object,
     if (!result.resize(length))
         return false;
     for (size_t i = 0; i < length; i++) {
-        result[i].set(referent->getBoundFunctionArgument(cx, i));
+        result[i].set(referent->getBoundFunctionArgument(i));
         if (!dbg->wrapDebuggeeValue(cx, result[i]))
             return false;
     }

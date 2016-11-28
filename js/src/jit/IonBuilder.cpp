@@ -467,7 +467,8 @@ IonBuilder::canInlineTarget(JSFunction* target, CallInfo& callInfo)
     // Allow constructing lazy scripts when performing the definite properties
     // analysis, as baseline has not been used to warm the caller up yet.
     if (target->isInterpreted() && info().analysisMode() == Analysis_DefiniteProperties) {
-        RootedScript script(analysisContext, target->getOrCreateScript(analysisContext));
+        RootedFunction fun(analysisContext, target);
+        RootedScript script(analysisContext, JSFunction::getOrCreateScript(analysisContext, fun));
         if (!script)
             return InliningDecision_Error;
 
