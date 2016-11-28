@@ -23,6 +23,7 @@ var gFxAccounts = {
       "weave:service:ready",
       "weave:service:login:change",
       "weave:service:setup-complete",
+      "weave:service:sync:error",
       "weave:ui:login:error",
       "fxa-migration:state-changed",
       this.FxAccountsCommon.ONLOGIN_NOTIFICATION,
