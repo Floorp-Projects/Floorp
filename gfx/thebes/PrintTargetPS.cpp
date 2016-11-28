@@ -79,9 +79,7 @@ PrintTargetPS::CreateOrNull(nsIOutputStream *aStream,
 
 nsresult
 PrintTargetPS::BeginPrinting(const nsAString& aTitle,
-                             const nsAString& aPrintToFileName,
-                             int32_t aStartPage,
-                             int32_t aEndPage)
+                             const nsAString& aPrintToFileName)
 {
   if (mOrientation == PORTRAIT) {
     cairo_ps_surface_dsc_comment(mCairoSurface, "%%Orientation: Portrait");

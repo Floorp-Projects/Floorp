@@ -89,7 +89,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'gfxPlatformMac.cpp',
         'gfxQuartzNativeDrawing.cpp',
         'gfxQuartzSurface.cpp',
-        'PrintTargetCG.mm',
+        'PrintTargetCG.cpp',
     ]
 elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     EXPORTS += [
@@ -221,14 +221,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     UNIFIED_SOURCES += [
         'D3D11Checks.cpp',
         'DeviceManagerDx.cpp',
-    ]
-
-if CONFIG['MOZ_ENABLE_SKIA_PDF']:
-    EXPORTS.mozilla.gfx += [
-        'PrintTargetSkPDF.h',
-    ]
-    SOURCES += [
-        'PrintTargetSkPDF.cpp',
     ]
 
 # We prefer to use ICU for normalization functions, but currently it is only

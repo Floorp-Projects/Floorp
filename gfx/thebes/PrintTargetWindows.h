@@ -24,9 +24,7 @@ public:
   CreateOrNull(HDC aDC);
 
   virtual nsresult BeginPrinting(const nsAString& aTitle,
-                                 const nsAString& aPrintToFileName,
-                                 int32_t aStartPage,
-                                 int32_t aEndPage) override;
+                                 const nsAString& aPrintToFileName) override;
   virtual nsresult EndPrinting() override;
   virtual nsresult AbortPrinting() override;
   virtual nsresult BeginPage() override;
