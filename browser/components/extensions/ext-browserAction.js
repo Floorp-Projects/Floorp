@@ -234,8 +234,9 @@ BrowserAction.prototype = {
         const menu = event.target;
         const trigger = menu.triggerNode;
         const node = window.document.getElementById(this.id);
+        const contexts = ["toolbar-context-menu", "customizationPanelItemContextMenu"];
 
-        if (menu.localName === "menupopup" && node && isAncestorOrSelf(node, trigger)) {
+        if (contexts.includes(menu.id) && node && isAncestorOrSelf(node, trigger)) {
           global.actionContextMenu({
             extension: this.extension,
             onBrowserAction: true,
