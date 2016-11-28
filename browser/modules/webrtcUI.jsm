@@ -312,7 +312,7 @@ function prompt(aBrowser, aRequest) {
           if (audioDevices.length)
             perms.add(uri, "microphone", perms.DENY_ACTION);
           if (videoDevices.length)
-            perms.add(uri, "camera", perms.DENY_ACTION);
+            perms.add(uri, sharingScreen ? "screen" : "camera", perms.DENY_ACTION);
         }
       }
     }
