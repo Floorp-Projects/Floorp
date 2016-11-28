@@ -7,6 +7,7 @@ function run_test() {
 
   test_this_global(mozIntl);
   test_cross_global(mozIntl);
+  test_methods_presence(mozIntl);
 
   ok(true);
 }
@@ -29,4 +30,17 @@ function test_cross_global(mozIntl) {
   equal(waivedX.getCalendarInfo instanceof global.Function, true);
   equal(waivedX.getCalendarInfo() instanceof Object, false);
   equal(waivedX.getCalendarInfo() instanceof global.Object, true);
+}
+
+function test_methods_presence(mozIntl) {
+  equal(mozIntl.addGetCalendarInfo instanceof Function, true);
+  equal(mozIntl.addGetDisplayNames instanceof Function, true);
+
+  let x = {};
+
+  mozIntl.addGetCalendarInfo(x);
+  equal(x.getCalendarInfo instanceof Function, true);
+
+  mozIntl.addGetDisplayNames(x);
+  equal(x.getDisplayNames instanceof Function, true);
 }
