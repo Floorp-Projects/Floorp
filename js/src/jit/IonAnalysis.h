@@ -196,7 +196,7 @@ MCompare*
 ConvertLinearInequality(TempAllocator& alloc, MBasicBlock* block, const LinearSum& sum);
 
 MOZ_MUST_USE bool
-AnalyzeNewScriptDefiniteProperties(JSContext* cx, JSFunction* fun,
+AnalyzeNewScriptDefiniteProperties(JSContext* cx, HandleFunction fun,
                                    ObjectGroup* group, HandlePlainObject baseobj,
                                    Vector<TypeNewScript::Initializer>* initializerList);
 
