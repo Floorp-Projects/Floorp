@@ -55,7 +55,6 @@ browser.jar:
   skin/classic/browser/feeds/feedIcon16.png           (feeds/feedIcon16.png)
   skin/classic/browser/feeds/subscribe.css            (feeds/subscribe.css)
 * skin/classic/browser/newtab/newTab.css              (newtab/newTab.css)
-  skin/classic/browser/places/autocomplete-star.png   (places/autocomplete-star.png)
   skin/classic/browser/places/bookmarksMenu.png       (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png    (places/bookmarksToolbar.png)
   skin/classic/browser/places/bookmarksToolbar-menuPanel.png (places/bookmarksToolbar-menuPanel.png)
