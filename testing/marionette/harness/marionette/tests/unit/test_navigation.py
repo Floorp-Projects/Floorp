@@ -5,7 +5,7 @@
 import time
 import urllib
 
-from marionette import MarionetteTestCase
+from marionette import MarionetteTestCase, WindowManagerMixin
 from marionette_driver.errors import MarionetteException, TimeoutException
 from marionette_driver import By, Wait
 
@@ -14,12 +14,18 @@ def inline(doc):
     return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
 
 
-class TestNavigate(MarionetteTestCase):
+class TestNavigate(WindowManagerMixin, MarionetteTestCase):
     def setUp(self):
-        MarionetteTestCase.setUp(self)
+        super(TestNavigate, self).setUp()
+
         self.marionette.navigate("about:")
         self.test_doc = self.marionette.absolute_url("test.html")
         self.iframe_doc = self.marionette.absolute_url("test_iframe.html")
+
+    def tearDown(self):
+        self.close_all_windows()
+
+        super(TestNavigate, self).tearDown()
 
     def test_set_location_through_execute_script(self):
         self.marionette.execute_script("window.location.href = '%s'" % self.test_doc)
@@ -139,6 +145,17 @@ class TestNavigate(MarionetteTestCase):
         self.marionette.execute_script("window.visited = true", sandbox=None)
         self.marionette.navigate("%s#foo" % doc)
         self.assertTrue(self.marionette.execute_script("return window.visited", sandbox=None))
+
+    def test_about_blank_for_new_docshell(self):
+        """ Bug 1312674 - Hang when loading about:blank for a new docshell."""
+        # Open a window to get a new docshell created for the first tab
+        with self.marionette.using_context("chrome"):
+            tab = self.open_tab(lambda: self.marionette.execute_script(" window.open() "))
+            self.marionette.switch_to_window(tab)
+
+        self.marionette.navigate('about:blank')
+        self.marionette.close()
+        self.marionette.switch_to_window(self.start_window)
 
     @property
     def location_href(self):
