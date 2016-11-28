@@ -422,6 +422,16 @@ class HostSimpleProgram(HostMixin, BaseProgram):
     KIND = 'host'
 
 
+def cargo_target_directory(context):
+    # cargo creates several directories and places its build artifacts
+    # in those directories.  The directory structure depends not only
+    # on the target, but also what sort of build we are doing.
+    rust_build_kind = 'release'
+    if context.config.substs.get('MOZ_DEBUG'):
+        rust_build_kind = 'debug'
+    return mozpath.join(context.config.substs['RUST_TARGET'], rust_build_kind)
+
+
 class BaseLibrary(Linkable):
     """Generic context derived container object for libraries."""
     __slots__ = (
@@ -498,14 +508,7 @@ class RustLibrary(StaticLibrary):
                                      basename.replace('-', '_'),
                                      context.config.lib_suffix)
         self.dependencies = dependencies
-        # cargo creates several directories and places its build artifacts
-        # in those directories.  The directory structure depends not only
-        # on the target, but also what sort of build we are doing.
-        rust_build_kind = 'release'
-        if context.config.substs.get('MOZ_DEBUG'):
-            rust_build_kind = 'debug'
-        build_dir = mozpath.join(context.config.substs['RUST_TARGET'],
-                                 rust_build_kind)
+        build_dir = cargo_target_directory(context)
         self.import_name = mozpath.join(build_dir, self.lib_name)
         self.deps_path = mozpath.join(build_dir, 'deps')
 
