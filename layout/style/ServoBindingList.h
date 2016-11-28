@@ -31,10 +31,6 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetStrong,
                    ThreadSafeURIHolder* base,
                    ThreadSafeURIHolder* referrer,
                    ThreadSafePrincipalHolder* principal)
-SERVO_BINDING_FUNC(Servo_StyleSheet_AddRef, void,
-                   RawServoStyleSheetBorrowed sheet)
-SERVO_BINDING_FUNC(Servo_StyleSheet_Release, void,
-                   RawServoStyleSheetBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,
                    RawServoStyleSheetBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSheet_GetRules, ServoCssRulesStrong,
@@ -52,8 +48,6 @@ SERVO_BINDING_FUNC(Servo_StyleSet_InsertStyleSheetBefore, void,
                    RawServoStyleSheetBorrowed reference)
 
 // CSSRuleList
-SERVO_BINDING_FUNC(Servo_CssRules_AddRef, void, ServoCssRulesBorrowed rules)
-SERVO_BINDING_FUNC(Servo_CssRules_Release, void, ServoCssRulesBorrowed rules)
 SERVO_BINDING_FUNC(Servo_CssRules_ListTypes, void,
                    ServoCssRulesBorrowed rules,
                    nsTArrayBorrowed_uintptr_t result)
@@ -61,10 +55,6 @@ SERVO_BINDING_FUNC(Servo_CssRules_GetStyleRuleAt, RawServoStyleRuleStrong,
                    ServoCssRulesBorrowed rules, uint32_t index)
 
 // CSS Rules
-SERVO_BINDING_FUNC(Servo_StyleRule_AddRef, void,
-                   RawServoStyleRuleBorrowed rule)
-SERVO_BINDING_FUNC(Servo_StyleRule_Release, void,
-                   RawServoStyleRuleBorrowed rule)
 SERVO_BINDING_FUNC(Servo_StyleRule_Debug, void,
                    RawServoStyleRuleBorrowed rule, nsACString* result)
 SERVO_BINDING_FUNC(Servo_StyleRule_GetStyle, RawServoDeclarationBlockStrong,
@@ -95,10 +85,6 @@ SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, RawServoDeclarationBlockStrong,
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_CreateEmpty,
                    RawServoDeclarationBlockStrong)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Clone, RawServoDeclarationBlockStrong,
-                   RawServoDeclarationBlockBorrowed declarations)
-SERVO_BINDING_FUNC(Servo_DeclarationBlock_AddRef, void,
-                   RawServoDeclarationBlockBorrowed declarations)
-SERVO_BINDING_FUNC(Servo_DeclarationBlock_Release, void,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Equals, bool,
                    RawServoDeclarationBlockBorrowed a,
@@ -144,10 +130,6 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_GetForPseudoElement,
                    RawServoStyleSetBorrowed set, bool is_probe)
 SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
                    ServoComputedValuesBorrowedOrNull parent_style)
-SERVO_BINDING_FUNC(Servo_ComputedValues_AddRef, void,
-                   ServoComputedValuesBorrowed computed_values)
-SERVO_BINDING_FUNC(Servo_ComputedValues_Release, void,
-                   ServoComputedValuesBorrowed computed_values)
 
 // Initialize Servo components. Should be called exactly once at startup.
 SERVO_BINDING_FUNC(Servo_Initialize, void)
@@ -182,3 +164,10 @@ SERVO_BINDING_FUNC(Servo_AssertTreeIsClean, void, RawGeckoElementBorrowed root)
                      ServoComputedValuesBorrowedOrNull computed_values)
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
+
+// AddRef / Release functions
+#define SERVO_ARC_TYPE(name_, type_)                                \
+  SERVO_BINDING_FUNC(Servo_##name_##_AddRef, void, type_##Borrowed) \
+  SERVO_BINDING_FUNC(Servo_##name_##_Release, void, type_##Borrowed)
+#include "mozilla/ServoArcTypeList.h"
+#undef SERVO_ARC_TYPE
