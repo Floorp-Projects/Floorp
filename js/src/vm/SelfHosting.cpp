@@ -3006,7 +3006,7 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx, HandlePropertyName name,
     MOZ_ASSERT(targetFun->isInterpretedLazy());
     MOZ_ASSERT(targetFun->isSelfHostedBuiltin());
 
-    RootedScript sourceScript(cx, sourceFun->getOrCreateScript(cx));
+    RootedScript sourceScript(cx, JSFunction::getOrCreateScript(cx, sourceFun));
     if (!sourceScript)
         return false;
 

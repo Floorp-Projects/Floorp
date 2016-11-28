@@ -1052,18 +1052,18 @@ CreateLazyScriptsForCompartment(JSContext* cx)
     // Create scripts for each lazy function, updating the list of functions to
     // process with any newly exposed inner functions in created scripts.
     // A function cannot be delazified until its outer script exists.
+    RootedFunction fun(cx);
     for (size_t i = 0; i < lazyFunctions.length(); i++) {
-        JSFunction* fun = &lazyFunctions[i]->as<JSFunction>();
+        fun = &lazyFunctions[i]->as<JSFunction>();
 
         // lazyFunctions may have been populated with multiple functions for
         // a lazy script.
         if (!fun->isInterpretedLazy())
             continue;
 
-        LazyScript* lazy = fun->lazyScript();
-        bool lazyScriptHadNoScript = !lazy->maybeScript();
+        bool lazyScriptHadNoScript = !fun->lazyScript()->maybeScript();
 
-        JSScript* script = fun->getOrCreateScript(cx);
+        JSScript* script = JSFunction::getOrCreateScript(cx, fun);
         if (!script)
             return false;
         if (lazyScriptHadNoScript && !AddInnerLazyFunctionsFromScript(script, lazyFunctions))

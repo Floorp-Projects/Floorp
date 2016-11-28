@@ -3225,7 +3225,7 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
                 } else {
                     if (innerFun->isInterpretedLazy()) {
                         AutoCompartment ac(cx, innerFun);
-                        if (!innerFun->getOrCreateScript(cx))
+                        if (!JSFunction::getOrCreateScript(cx, innerFun))
                             return false;
                     }
 
@@ -4242,7 +4242,7 @@ JSScript::AutoDelazify::holdScript(JS::HandleFunction fun)
             script_ = fun->nonLazyScript();
         } else {
             JSAutoCompartment ac(cx_, fun);
-            script_ = fun->getOrCreateScript(cx_);
+            script_ = JSFunction::getOrCreateScript(cx_, fun);
             if (script_) {
                 oldDoNotRelazify_ = script_->doNotRelazify_;
                 script_->setDoNotRelazify(true);
