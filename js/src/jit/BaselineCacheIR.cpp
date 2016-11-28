@@ -451,27 +451,19 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
     // we're compiling for Baseline or Ion.
     ICStubEngine engine_;
 
-#ifdef DEBUG
-    uint32_t framePushedAtEnterStubFrame_;
-#endif
-
     uint32_t stubDataOffset_;
     bool inStubFrame_;
     bool makesGCCalls_;
 
-    void enterStubFrame(MacroAssembler& masm, Register scratch);
-    void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false);
-
     MOZ_MUST_USE bool callVM(MacroAssembler& masm, const VMFunction& fun);
 
   public:
+    friend class AutoStubFrame;
+
     BaselineCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, ICStubEngine engine,
                             uint32_t stubDataOffset)
       : CacheIRCompiler(cx, writer),
         engine_(engine),
-#ifdef DEBUG
-        framePushedAtEnterStubFrame_(0),
-#endif
         stubDataOffset_(stubDataOffset),
         inStubFrame_(false),
         makesGCCalls_(false)
@@ -515,41 +507,71 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
     }
 };
 
-void
-BaselineCacheIRCompiler::enterStubFrame(MacroAssembler& masm, Register scratch)
+// Instructions that have to perform a callVM require a stub frame. Use
+// AutoStubFrame before allocating any registers, then call its enter() and
+// leave() methods to enter/leave the stub frame.
+class MOZ_RAII AutoStubFrame
 {
-    if (engine_ == ICStubEngine::Baseline) {
-        EmitBaselineEnterStubFrame(masm, scratch);
+    BaselineCacheIRCompiler& compiler;
 #ifdef DEBUG
-        framePushedAtEnterStubFrame_ = masm.framePushed();
+    uint32_t framePushedAtEnterStubFrame_;
 #endif
-    } else {
-        EmitIonEnterStubFrame(masm, scratch);
+    Maybe<AutoScratchRegister> tail;
+
+    AutoStubFrame(const AutoStubFrame&) = delete;
+    void operator=(const AutoStubFrame&) = delete;
+
+  public:
+    explicit AutoStubFrame(BaselineCacheIRCompiler& compiler)
+      : compiler(compiler),
+#ifdef DEBUG
+        framePushedAtEnterStubFrame_(0),
+#endif
+        tail()
+    {
+        // We use ICTailCallReg when entering the stub frame, so ensure it's not
+        // used for something else.
+        if (compiler.allocator.isAllocatable(ICTailCallReg))
+            tail.emplace(compiler.allocator, compiler.masm, ICTailCallReg);
     }
 
-    MOZ_ASSERT(!inStubFrame_);
-    inStubFrame_ = true;
-    makesGCCalls_ = true;
-}
-
-void
-BaselineCacheIRCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon)
-{
-    MOZ_ASSERT(inStubFrame_);
-    inStubFrame_ = false;
-
-    if (engine_ == ICStubEngine::Baseline) {
+    void enter(MacroAssembler& masm, Register scratch) {
+        if (compiler.engine_ == ICStubEngine::Baseline) {
+            EmitBaselineEnterStubFrame(masm, scratch);
 #ifdef DEBUG
-        masm.setFramePushed(framePushedAtEnterStubFrame_);
-        if (calledIntoIon)
-            masm.adjustFrame(sizeof(intptr_t)); // Calls into ion have this extra.
+            framePushedAtEnterStubFrame_ = masm.framePushed();
+#endif
+        } else {
+            EmitIonEnterStubFrame(masm, scratch);
+        }
+
+        MOZ_ASSERT(!compiler.inStubFrame_);
+        compiler.inStubFrame_ = true;
+        compiler.makesGCCalls_ = true;
+    }
+    void leave(MacroAssembler& masm, bool calledIntoIon = false) {
+        MOZ_ASSERT(compiler.inStubFrame_);
+        compiler.inStubFrame_ = false;
+
+        if (compiler.engine_ == ICStubEngine::Baseline) {
+#ifdef DEBUG
+            masm.setFramePushed(framePushedAtEnterStubFrame_);
+            if (calledIntoIon)
+                masm.adjustFrame(sizeof(intptr_t)); // Calls into ion have this extra.
 #endif
 
-        EmitBaselineLeaveStubFrame(masm, calledIntoIon);
-    } else {
-        EmitIonLeaveStubFrame(masm);
+            EmitBaselineLeaveStubFrame(masm, calledIntoIon);
+        } else {
+            EmitIonLeaveStubFrame(masm);
+        }
     }
-}
+
+#ifdef DEBUG
+    ~AutoStubFrame() {
+        MOZ_ASSERT(!compiler.inStubFrame_);
+    }
+#endif
+};
 
 bool
 BaselineCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun)
@@ -597,6 +619,7 @@ BaselineCacheIRCompiler::compile()
         allocator.nextOp();
     } while (reader.more());
 
+    MOZ_ASSERT(!inStubFrame_);
     masm.assumeUnreachable("Should have returned from IC");
 
     // Done emitting the main IC code. Now emit the failure paths.
@@ -1116,11 +1139,7 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
 {
     MOZ_ASSERT(engine_ == ICStubEngine::Baseline);
 
-    // We use ICTailCallReg when entering the stub frame, so ensure it's not
-    // used for something else.
-    Maybe<AutoScratchRegister> tail;
-    if (allocator.isAllocatable(ICTailCallReg))
-        tail.emplace(allocator, masm, ICTailCallReg);
+    AutoStubFrame stubFrame(*this);
 
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Address getterAddr(stubAddress(reader.stubOffset()));
@@ -1143,8 +1162,7 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
 
     allocator.discardStack(masm);
 
-    // Push a stub frame so that we can perform a non-tail call.
-    enterStubFrame(masm, scratch);
+    stubFrame.enter(masm, scratch);
 
     // Align the stack such that the JitFrameLayout is aligned on
     // JitStackAlignment.
@@ -1177,7 +1195,7 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
     masm.bind(&noUnderflow);
     masm.callJit(code);
 
-    leaveStubFrame(masm, true);
+    stubFrame.leave(masm, true);
     return true;
 }
 
@@ -1188,11 +1206,7 @@ static const VMFunction DoCallNativeGetterInfo =
 bool
 BaselineCacheIRCompiler::emitCallNativeGetterResult()
 {
-    // We use ICTailCallReg when entering the stub frame, so ensure it's not
-    // used for something else.
-    Maybe<AutoScratchRegister> tail;
-    if (allocator.isAllocatable(ICTailCallReg))
-        tail.emplace(allocator, masm, ICTailCallReg);
+    AutoStubFrame stubFrame(*this);
 
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Address getterAddr(stubAddress(reader.stubOffset()));
@@ -1201,8 +1215,7 @@ BaselineCacheIRCompiler::emitCallNativeGetterResult()
 
     allocator.discardStack(masm);
 
-    // Push a stub frame so that we can perform a non-tail call.
-    enterStubFrame(masm, scratch);
+    stubFrame.enter(masm, scratch);
 
     // Load the callee in the scratch register.
     masm.loadPtr(getterAddr, scratch);
@@ -1213,7 +1226,7 @@ BaselineCacheIRCompiler::emitCallNativeGetterResult()
     if (!callVM(masm, DoCallNativeGetterInfo))
         return false;
 
-    leaveStubFrame(masm);
+    stubFrame.leave(masm);
     return true;
 }
 
@@ -1224,11 +1237,7 @@ static const VMFunction ProxyGetPropertyInfo =
 bool
 BaselineCacheIRCompiler::emitCallProxyGetResult()
 {
-    // We use ICTailCallReg when entering the stub frame, so ensure it's not
-    // used for something else.
-    Maybe<AutoScratchRegister> tail;
-    if (allocator.isAllocatable(ICTailCallReg))
-        tail.emplace(allocator, masm, ICTailCallReg);
+    AutoStubFrame stubFrame(*this);
 
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Address idAddr(stubAddress(reader.stubOffset()));
@@ -1237,8 +1246,7 @@ BaselineCacheIRCompiler::emitCallProxyGetResult()
 
     allocator.discardStack(masm);
 
-    // Push a stub frame so that we can perform a non-tail call.
-    enterStubFrame(masm, scratch);
+    stubFrame.enter(masm, scratch);
 
     // Load the jsid in the scratch register.
     masm.loadPtr(idAddr, scratch);
@@ -1249,7 +1257,7 @@ BaselineCacheIRCompiler::emitCallProxyGetResult()
     if (!callVM(masm, ProxyGetPropertyInfo))
         return false;
 
-    leaveStubFrame(masm);
+    stubFrame.leave(masm);
     return true;
 }
 
