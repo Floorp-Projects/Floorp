@@ -88,7 +88,7 @@ CloneFunctionObjectIfNotSingleton(JSContext* cx, HandleFunction fun, HandleObjec
     if (CanReuseScriptForClone(cx->compartment(), fun, parent))
         return CloneFunctionReuseScript(cx, fun, parent, kind, newKind, proto);
 
-    RootedScript script(cx, fun->getOrCreateScript(cx));
+    RootedScript script(cx, JSFunction::getOrCreateScript(cx, fun));
     if (!script)
         return nullptr;
     RootedScope enclosingScope(cx, script->enclosingScope());

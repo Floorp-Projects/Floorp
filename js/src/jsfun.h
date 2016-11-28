@@ -404,16 +404,15 @@ class JSFunction : public js::NativeObject
     //
     // - For functions known to have a JSScript, nonLazyScript() will get it.
 
-    JSScript* getOrCreateScript(JSContext* cx) {
-        MOZ_ASSERT(isInterpreted());
+    static JSScript* getOrCreateScript(JSContext* cx, js::HandleFunction fun) {
+        MOZ_ASSERT(fun->isInterpreted());
         MOZ_ASSERT(cx);
-        if (isInterpretedLazy()) {
-            JS::RootedFunction self(cx, this);
-            if (!createScriptForLazilyInterpretedFunction(cx, self))
+        if (fun->isInterpretedLazy()) {
+            if (!createScriptForLazilyInterpretedFunction(cx, fun))
                 return nullptr;
-            return self->nonLazyScript();
+            return fun->nonLazyScript();
         }
-        return nonLazyScript();
+        return fun->nonLazyScript();
     }
 
     JSScript* existingScriptNonDelazifying() const {
