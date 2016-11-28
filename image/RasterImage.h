@@ -323,7 +323,6 @@ private:
     return (mLockCount == 0 || (mAnimationState && mAnimationConsumers == 0));
   }
 
-
   //////////////////////////////////////////////////////////////////////////////
   // Decoding.
   //////////////////////////////////////////////////////////////////////////////
@@ -423,11 +422,12 @@ private: // data
   NotNull<RefPtr<SourceBuffer>>  mSourceBuffer;
 
   // Boolean flags (clustered together to conserve space):
-  bool                       mHasSize:1;       // Has SetSize() been called?
-  bool                       mTransient:1;     // Is the image short-lived?
-  bool                       mSyncLoad:1;      // Are we loading synchronously?
-  bool                       mDiscardable:1;   // Is container discardable?
-  bool                       mHasSourceData:1; // Do we have source data?
+  bool                       mHasSize:1;        // Has SetSize() been called?
+  bool                       mTransient:1;      // Is the image short-lived?
+  bool                       mSyncLoad:1;       // Are we loading synchronously?
+  bool                       mDiscardable:1;    // Is container discardable?
+  bool                       mSomeSourceData:1; // Do we have some source data?
+  bool                       mAllSourceData:1;  // Do we have all the source data?
   bool                       mHasBeenDecoded:1; // Decoded at least once?
 
   // Whether we're waiting to start animation. If we get a StartAnimation() call
