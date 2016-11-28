@@ -421,13 +421,9 @@ public:
   void RegisterTexture(ID3D11Texture2D* aTexture);
 
 private:
-  bool Init();
-
-private:
-  SyncHandle mSyncHandle;
   RefPtr<ID3D11Texture2D> mD3D11Texture;
-  RefPtr<IDXGIKeyedMutex> mKeyedMutex;
   std::vector<ID3D11Texture2D*> mD3D11SyncedTextures;
+  SyncHandle mHandle;
 };
 
 inline uint32_t GetMaxTextureSizeForFeatureLevel(D3D_FEATURE_LEVEL aFeatureLevel)
