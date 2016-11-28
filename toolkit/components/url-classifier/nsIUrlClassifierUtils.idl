@@ -83,4 +83,21 @@ interface nsIUrlClassifierUtils : nsISupports
   ACString makeUpdateRequestV4([array, size_is(aCount)] in string aListNames,
                                [array, size_is(aCount)] in string aStatesBase64,
                                in uint32_t aCount);
+
+    /**
+   * Make "find full hash" request by for the given prefixes.
+   *
+   * @param aListNames An array of list names represented in string.
+   * @param aListStatesBase64 An array of list states represented in base64.
+   * @param aPrefixes An array of prefixes for which we'd like to find full hashes..
+   * @param aListCount The array length of aListNames
+   * @param aPrefixCount The array length of aPrefixes
+   *
+   * @returns A base64url encoded string.
+   */
+  ACString makeFindFullHashRequestV4([array, size_is(aListCount)] in string aListNames,
+                                     [array, size_is(aListCount)] in string aListStatesBase64,
+                                     [array, size_is(aPrefixCount)] in string aPrefixes,
+                                     in uint32_t aListCount,
+                                     in uint32_t aPrefixCount);
 };

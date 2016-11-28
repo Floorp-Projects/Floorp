@@ -360,6 +360,71 @@ nsUrlClassifierUtils::MakeUpdateRequestV4(const char** aListNames,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsUrlClassifierUtils::MakeFindFullHashRequestV4(const char** aListNames,
+                                                const char** aListStatesBase64,
+                                                const char** aPrefixesBase64,
+                                                uint32_t aListCount,
+                                                uint32_t aPrefixCount,
+                                                nsACString &aRequest)
+{
+  FindFullHashesRequest r;
+  r.set_allocated_client(CreateClientInfo());
+
+  nsresult rv;
+
+  // Set up FindFullHashesRequest.client_states.
+  for (uint32_t i = 0; i < aListCount; i++) {
+    nsCString stateBinary;
+    rv = Base64Decode(nsCString(aListStatesBase64[i]), stateBinary);
+    NS_ENSURE_SUCCESS(rv, rv);
+    r.add_client_states(stateBinary.get(), stateBinary.Length());
+  }
+
+  //-------------------------------------------------------------------
+  // Set up FindFullHashesRequest.threat_info.
+  auto threatInfo = r.mutable_threat_info();
+
+  // 1) Set threat types.
+  for (uint32_t i = 0; i < aListCount; i++) {
+    uint32_t threatType;
+    rv = ConvertListNameToThreatType(nsCString(aListNames[i]), &threatType);
+    NS_ENSURE_SUCCESS(rv, rv);
+    threatInfo->add_threat_types((ThreatType)threatType);
+  }
+
+  // 2) Set platform type.
+  threatInfo->add_platform_types(GetPlatformType());
+
+  // 3) Set threat entry type.
+  threatInfo->add_threat_entry_types(URL);
+
+  // 4) Set threat entries.
+  for (uint32_t i = 0; i < aPrefixCount; i++) {
+    nsCString prefixBinary;
+    rv = Base64Decode(nsCString(aPrefixesBase64[i]), prefixBinary);
+    threatInfo->add_threat_entries()->set_hash(prefixBinary.get(),
+                                               prefixBinary.Length());
+  }
+  //-------------------------------------------------------------------
+
+  // Then serialize.
+  std::string s;
+  r.SerializeToString(&s);
+
+  nsCString out;
+  rv = Base64URLEncode(s.size(),
+                       (const uint8_t*)s.c_str(),
+                       Base64URLEncodePaddingPolicy::Include,
+                       out);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aRequest = out;
+
+  return NS_OK;
+}
+
+
 //////////////////////////////////////////////////////////
 // nsIObserver
 
