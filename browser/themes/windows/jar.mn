@@ -66,7 +66,7 @@ browser.jar:
   skin/classic/browser/urlbar-history-dropmarker@2x.png
   skin/classic/browser/urlbar-history-dropmarker-XPVista7.png
   skin/classic/browser/urlbar-history-dropmarker-XPVista7@2x.png
-  skin/classic/browser/webRTC-indicator.css  (../shared/webRTC-indicator.css)
+  skin/classic/browser/webRTC-indicator.css
 * skin/classic/browser/controlcenter/panel.css                 (controlcenter/panel.css)
   skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
   skin/classic/browser/customizableui/customize-titleBar-toggle.png  (customizableui/customize-titleBar-toggle.png)
