@@ -468,10 +468,13 @@ void
 CompositorOGL::PrepareViewport(CompositingRenderTargetOGL* aRenderTarget)
 {
   MOZ_ASSERT(aRenderTarget);
+  // Logical surface size.
   const gfx::IntSize& size = aRenderTarget->mInitParams.mSize;
+  // Physical surface size.
+  const gfx::IntSize& phySize = aRenderTarget->mInitParams.mPhySize;
 
   // Set the viewport correctly.
-  mGLContext->fViewport(0, 0, size.width, size.height);
+  mGLContext->fViewport(0, 0, phySize.width, phySize.height);
 
   mViewportSize = size;
 
@@ -531,10 +534,12 @@ CompositorOGL::CreateRenderTarget(const IntRect &aRect, SurfaceInitMode aInit)
 
   GLuint tex = 0;
   GLuint fbo = 0;
-  CreateFBOWithTexture(aRect, false, 0, &fbo, &tex);
+  IntRect rect = aRect;
+  IntSize FBOSize;
+  CreateFBOWithTexture(rect, false, 0, &fbo, &tex, &FBOSize);
   RefPtr<CompositingRenderTargetOGL> surface
     = new CompositingRenderTargetOGL(this, aRect.TopLeft(), tex, fbo);
-  surface->Initialize(aRect.Size(), mFBOTextureTarget, aInit);
+  surface->Initialize(aRect.Size(), FBOSize, mFBOTextureTarget, aInit);
   return surface.forget();
 }
 
@@ -569,6 +574,7 @@ CompositorOGL::CreateRenderTargetFromSource(const IntRect &aRect,
   RefPtr<CompositingRenderTargetOGL> surface
     = new CompositingRenderTargetOGL(this, aRect.TopLeft(), tex, fbo);
   surface->Initialize(aRect.Size(),
+                      sourceRect.Size(),
                       mFBOTextureTarget,
                       INIT_MODE_NONE);
   return surface.forget();
@@ -699,16 +705,20 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 }
 
 void
-CompositorOGL::CreateFBOWithTexture(const gfx::IntRect& aRect, bool aCopyFromSource,
+CompositorOGL::CreateFBOWithTexture(const gfx::IntRect& aRect,
+                                    bool aCopyFromSource,
                                     GLuint aSourceFrameBuffer,
-                                    GLuint *aFBO, GLuint *aTexture)
+                                    GLuint *aFBO, GLuint *aTexture,
+                                    gfx::IntSize* aAllocSize)
 {
-  *aTexture = CreateTexture(aRect, aCopyFromSource, aSourceFrameBuffer);
+  *aTexture = CreateTexture(aRect, aCopyFromSource, aSourceFrameBuffer,
+                            aAllocSize);
   mGLContext->fGenFramebuffers(1, aFBO);
 }
 
 GLuint
-CompositorOGL::CreateTexture(const IntRect& aRect, bool aCopyFromSource, GLuint aSourceFrameBuffer)
+CompositorOGL::CreateTexture(const IntRect& aRect, bool aCopyFromSource,
+                             GLuint aSourceFrameBuffer, IntSize* aAllocSize)
 {
   // we're about to create a framebuffer backed by textures to use as an intermediate
   // surface. What to do if its size (as given by aRect) would exceed the
@@ -800,6 +810,11 @@ CompositorOGL::CreateTexture(const IntRect& aRect, bool aCopyFromSource, GLuint 
   mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_WRAP_T,
                              LOCAL_GL_CLAMP_TO_EDGE);
   mGLContext->fBindTexture(mFBOTextureTarget, 0);
+
+  if (aAllocSize) {
+    aAllocSize->width = clampedRect.width;
+    aAllocSize->height = clampedRect.height;
+  }
 
   return tex;
 }
