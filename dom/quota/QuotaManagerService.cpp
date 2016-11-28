@@ -441,7 +441,11 @@ QuotaManagerService::PerformIdleMaintenance()
   if (!QuotaManager::kRunningXPCShellTests)
 #endif
   {
+    // In order to give the correct battery level, hal must have registered
+    // battery observers.
+    RegisterBatteryObserver(this);
     GetCurrentBatteryInformation(&batteryInfo);
+    UnregisterBatteryObserver(this);
   }
 
   // If we're running XPCShell because we always want to be able to test this
@@ -705,6 +709,13 @@ QuotaManagerService::Observe(nsISupports* aSubject,
 
   MOZ_ASSERT_UNREACHABLE("Should never get here!");
   return NS_OK;
+}
+
+void
+QuotaManagerService::Notify(const hal::BatteryInformation& aBatteryInfo)
+{
+  // This notification is received when battery data changes. We don't need to
+  // deal with this notification.
 }
 
 NS_IMETHODIMP
