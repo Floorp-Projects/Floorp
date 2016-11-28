@@ -24,6 +24,9 @@ const L10N =
 const DURATION_RESOLUTION = 4;
 // MIN_PROGRESS_THRESHOLD shoud be between more than 0 to 1.
 const MIN_PROGRESS_THRESHOLD = 0.1;
+// BOUND_EXCLUDING_TIME should be less than 1ms and is used to exclude start
+// and end bounds when dividing  duration in createPathSegments.
+const BOUND_EXCLUDING_TIME = 0.001;
 // Show max 10 iterations for infinite animations
 // to give users a clue that the animation does repeat.
 const MAX_INFINITE_ANIMATIONS_ITERATIONS = 10;
@@ -676,9 +679,10 @@ function createPathSegments(startTime, endTime, minSegmentDuration,
     // in the graph.
     if (Math.abs(currentSegment.y - previousSegment.y) > minProgressThreshold) {
       // Divide the current interval (excluding start and end bounds
-      // by adding/subtracting 1ms).
+      // by adding/subtracting BOUND_EXCLUDING_TIME).
       pathSegments = pathSegments.concat(
-        createPathSegments(previousSegment.x + 1, currentSegment.x - 1,
+        createPathSegments(previousSegment.x + BOUND_EXCLUDING_TIME,
+                           currentSegment.x - BOUND_EXCLUDING_TIME,
                            minSegmentDuration, minProgressThreshold,
                            segmentHelper));
     }
