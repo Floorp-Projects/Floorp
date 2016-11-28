@@ -13,7 +13,7 @@ using mozilla::TimeStamp;
 
 namespace mozilla {
 void GTestBench(const char* aSuite, const char* aName,
-                const mozilla::function<void()>& aTest)
+                const std::function<void()>& aTest)
 {
 #ifdef DEBUG
   // Run the test to make sure that it doesn't fail but don't log

@@ -8,7 +8,6 @@
 #define PDMFactory_h_
 
 #include "PlatformDecoderModule.h"
-#include "mozilla/Function.h"
 #include "mozilla/StaticMutex.h"
 
 class CDMProxy;

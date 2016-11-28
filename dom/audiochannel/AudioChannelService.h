@@ -16,7 +16,8 @@
 #include "AudioChannelAgent.h"
 #include "nsAttrValue.h"
 #include "mozilla/dom/AudioChannelBinding.h"
-#include "mozilla/Function.h"
+
+#include <functional>
 
 class nsIRunnable;
 class nsPIDOMWindowOuter;
@@ -195,7 +196,7 @@ private:
   ~AudioChannelService();
 
   void RefreshAgents(nsPIDOMWindowOuter* aWindow,
-                     mozilla::function<void(AudioChannelAgent*)> aFunc);
+                     std::function<void(AudioChannelAgent*)> aFunc);
 
   static void CreateServiceIfNeeded();
 

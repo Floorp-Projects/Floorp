@@ -6,11 +6,11 @@
 #ifndef GTEST_MOZGTESTBENCH_H
 #define GTEST_MOZGTESTBENCH_H
 
-#include "mozilla/Function.h"
+#include <functional>
 
 namespace mozilla {
 
-void GTestBench(const char* aSuite, const char* aName, const mozilla::function<void()>& aTest);
+void GTestBench(const char* aSuite, const char* aName, const std::function<void()>& aTest);
 
 } //mozilla
 
