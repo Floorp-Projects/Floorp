@@ -447,6 +447,9 @@ nsresult
 LookupCacheV4::WriteMetadata(TableUpdateV4* aTableUpdate)
 {
   NS_ENSURE_ARG_POINTER(aTableUpdate);
+  if (nsUrlClassifierDBService::ShutdownHasStarted()) {
+    return NS_ERROR_ABORT;
+  }
 
   nsCOMPtr<nsIFile> metaFile;
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(metaFile));

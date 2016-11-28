@@ -122,13 +122,16 @@ MediaDecoderReaderWrapper::IsWaitingVideoData() const
 }
 
 RefPtr<MediaDecoderReader::SeekPromise>
-MediaDecoderReaderWrapper::Seek(SeekTarget aTarget, media::TimeUnit aEndTime)
+MediaDecoderReaderWrapper::Seek(const SeekTarget& aTarget,
+                                const media::TimeUnit& aEndTime)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  aTarget.SetTime(aTarget.GetTime() + StartTime());
-  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                     &MediaDecoderReader::Seek, aTarget,
-                     aEndTime.ToMicroseconds());
+  SeekTarget adjustedTarget = aTarget;
+  adjustedTarget.SetTime(adjustedTarget.GetTime() + StartTime());
+  return InvokeAsync<SeekTarget&&, int64_t>(
+           mReader->OwnerThread(), mReader.get(), __func__,
+           &MediaDecoderReader::Seek,
+           Move(adjustedTarget), aEndTime.ToMicroseconds());
 }
 
 void

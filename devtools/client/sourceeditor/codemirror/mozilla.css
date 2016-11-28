@@ -16,6 +16,11 @@
   --breakpoint-conditional-background: url("chrome://devtools/skin/images/breakpoint.svg#dark-conditional");
 }
 
+.CodeMirror {
+  height: 100%;
+  cursor: text;
+}
+
 .CodeMirror .errors {
   width: 16px;
 }
@@ -90,10 +95,6 @@
    is already highlighted */
 .debug-line .CodeMirror-activeline-background {
   display: none;
-}
-
-.CodeMirror {
-  cursor: text;
 }
 
 .CodeMirror-gutters {
