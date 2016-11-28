@@ -85,9 +85,6 @@ browser.jar:
   skin/classic/browser/feeds/feedIcon16-XP.png                 (feeds/feedIcon16-XP.png)
   skin/classic/browser/feeds/subscribe.css                     (feeds/subscribe.css)
 * skin/classic/browser/newtab/newTab.css                       (newtab/newTab.css)
-  skin/classic/browser/places/autocomplete-star.png            (places/autocomplete-star.png)
-  skin/classic/browser/places/autocomplete-star@2x.png         (places/autocomplete-star@2x.png)
-  skin/classic/browser/places/autocomplete-star-XPVista7.png   (places/autocomplete-star-XPVista7.png)
   skin/classic/browser/places/places.css                       (places/places.css)
 * skin/classic/browser/places/organizer.css                    (places/organizer.css)
   skin/classic/browser/places/query.png                        (places/query.png)
@@ -240,7 +237,6 @@ browser.jar:
 % override chrome://browser/skin/urlbar-history-dropmarker.png        chrome://browser/skin/urlbar-history-dropmarker-XPVista7.png      os=WINNT osversion<=6.1
 % override chrome://browser/skin/urlbar-history-dropmarker@2x.png     chrome://browser/skin/urlbar-history-dropmarker-XPVista7@2x.png   os=WINNT osversion<=6.1
 % override chrome://browser/skin/downloads/download-glow-menuPanel.png  chrome://browser/skin/downloads/download-glow-menuPanel-XPVista7.png os=WINNT osversion<=6.1
-% override chrome://browser/skin/places/autocomplete-star.png         chrome://browser/skin/places/autocomplete-star-XPVista7.png       os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab.svg                chrome://browser/skin/tabbrowser/newtab-XPVista7.svg              os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab-inverted.svg       chrome://browser/skin/tabbrowser/newtab-inverted-XPVista7.svg     os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/tab-arrow-left.svg        chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7.svg      os=WINNT osversion<=6.1
