@@ -105,6 +105,141 @@ TEST(FindFullHash, Request)
 }
 
 /////////////////////////////////////////////////////////////
+// Following is to test parsing the gethash response.
+
+namespace {
+
+// safebrowsing::Duration manipulation.
+struct MyDuration {
+  uint32_t mSecs;
+  uint32_t mNanos;
+};
+void PopulateDuration(Duration& aDest, const MyDuration& aSrc)
+{
+  aDest.set_seconds(aSrc.mSecs);
+  aDest.set_nanos(aSrc.mNanos);
+}
+
+// The expected match data.
+static MyDuration EXPECTED_MIN_WAIT_DURATION = { 12, 10 };
+static MyDuration EXPECTED_NEG_CACHE_DURATION = { 120, 9 };
+static const struct {
+  nsCString mCompleteHash;
+  ThreatType mThreatType;
+  MyDuration mPerHashCacheDuration;
+} EXPECTED_MATCH[] = {
+  { nsCString("01234567890123456789012345678901"), SOCIAL_ENGINEERING_PUBLIC, { 8, 500 } },
+  { nsCString("12345678901234567890123456789012"), SOCIAL_ENGINEERING_PUBLIC, { 7, 100} },
+  { nsCString("23456789012345678901234567890123"), SOCIAL_ENGINEERING_PUBLIC, { 1, 20 } },
+};
+
+class MyParseCallback final :
+  public nsIUrlClassifierParseFindFullHashCallback {
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit MyParseCallback(uint32_t& aCallbackCount)
+    : mCallbackCount(aCallbackCount)
+  {
+  }
+
+  NS_IMETHOD
+  OnCompleteHashFound(const nsACString& aCompleteHash,
+                      const nsACString& aTableNames,
+                      uint32_t aMinWaitDuration,
+                      uint32_t aNegCacheDuration,
+                      uint32_t aPerHashCacheDuration) override
+  {
+    Verify(aCompleteHash,
+           aTableNames,
+           aMinWaitDuration,
+           aNegCacheDuration,
+           aPerHashCacheDuration);
+
+    return NS_OK;
+  }
+
+private:
+  void
+  Verify(const nsACString& aCompleteHash,
+         const nsACString& aTableNames,
+         uint32_t aMinWaitDuration,
+         uint32_t aNegCacheDuration,
+         uint32_t aPerHashCacheDuration)
+  {
+    auto expected = EXPECTED_MATCH[mCallbackCount];
+
+    ASSERT_TRUE(aCompleteHash.Equals(expected.mCompleteHash));
+
+    // Verify aTableNames
+    nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
+      do_GetService("@mozilla.org/url-classifier/utils;1");
+    nsCString tableNames;
+    nsresult rv = urlUtil->ConvertThreatTypeToListNames(expected.mThreatType, tableNames);
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_TRUE(aTableNames.Equals(tableNames));
+
+    VerifyDuration(aMinWaitDuration, EXPECTED_MIN_WAIT_DURATION);
+    VerifyDuration(aNegCacheDuration, EXPECTED_NEG_CACHE_DURATION);
+    VerifyDuration(aPerHashCacheDuration, expected.mPerHashCacheDuration);
+
+    mCallbackCount++;
+  }
+
+  void
+  VerifyDuration(uint32_t aToVerify, const MyDuration& aExpected)
+  {
+    ASSERT_TRUE(aToVerify == (aExpected.mSecs * 1000 + aExpected.mNanos / 1000));
+  }
+
+  ~MyParseCallback() {}
+
+  uint32_t& mCallbackCount;
+};
+
+NS_IMPL_ISUPPORTS(MyParseCallback, nsIUrlClassifierParseFindFullHashCallback)
+
+} // end of unnamed namespace.
+
+TEST(FindFullHash, ParseRequest)
+{
+  // Build response.
+  FindFullHashesResponse r;
+
+  // Init response-wise durations.
+  auto minWaitDuration = r.mutable_minimum_wait_duration();
+  PopulateDuration(*minWaitDuration, EXPECTED_MIN_WAIT_DURATION);
+  auto negCacheDuration = r.mutable_negative_cache_duration();
+  PopulateDuration(*negCacheDuration, EXPECTED_NEG_CACHE_DURATION);
+
+  // Init matches.
+  for (uint32_t i = 0; i < ArrayLength(EXPECTED_MATCH); i++) {
+    auto expected = EXPECTED_MATCH[i];
+    auto match = r.mutable_matches()->Add();
+    match->set_threat_type(expected.mThreatType);
+    match->mutable_threat()->set_hash(expected.mCompleteHash.BeginReading(),
+                                      expected.mCompleteHash.Length());
+    auto perHashCacheDuration = match->mutable_cache_duration();
+    PopulateDuration(*perHashCacheDuration, expected.mPerHashCacheDuration);
+  }
+  std::string s;
+  r.SerializeToString(&s);
+
+  uint32_t callbackCount = 0;
+  nsCOMPtr<nsIUrlClassifierParseFindFullHashCallback> callback
+    = new MyParseCallback(callbackCount);
+
+  nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
+    do_GetService("@mozilla.org/url-classifier/utils;1");
+  nsresult rv = urlUtil->ParseFindFullHashResponseV4(nsCString(s.c_str(), s.size()),
+                                                     callback);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  ASSERT_EQ(callbackCount, ArrayLength(EXPECTED_MATCH));
+}
+
+
+/////////////////////////////////////////////////////////////
 namespace {
 
 Base64EncodedStringArray::Base64EncodedStringArray(nsCString aArray[],

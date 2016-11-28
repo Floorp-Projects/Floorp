@@ -424,6 +424,53 @@ nsUrlClassifierUtils::MakeFindFullHashRequestV4(const char** aListNames,
   return NS_OK;
 }
 
+static uint32_t
+DurationToMs(const Duration& aDuration)
+{
+  return aDuration.seconds() * 1000 + aDuration.nanos() / 1000;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierUtils::ParseFindFullHashResponseV4(const nsACString& aResponse,
+                                                  nsIUrlClassifierParseFindFullHashCallback *aCallback)
+{
+  enum CompletionErrorType {
+    SUCCESS = 0,
+    PARSING_FAILURE = 1,
+    UNKNOWN_THREAT_TYPE = 2,
+  };
+
+  FindFullHashesResponse r;
+  if (!r.ParseFromArray(aResponse.BeginReading(), aResponse.Length())) {
+    NS_WARNING("Invalid response");
+    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_COMPLETION_ERROR,
+                          PARSING_FAILURE);
+    return NS_ERROR_FAILURE;
+  }
+
+  bool hasUnknownThreatType = false;
+  auto minWaitDuration = DurationToMs(r.minimum_wait_duration());
+  auto negCacheDuration = DurationToMs(r.negative_cache_duration());
+  for (auto& m : r.matches()) {
+    nsCString tableNames;
+    nsresult rv = ConvertThreatTypeToListNames(m.threat_type(), tableNames);
+    if (NS_FAILED(rv)) {
+      hasUnknownThreatType = true;
+      continue; // Ignore un-convertable threat type.
+    }
+    auto& hash = m.threat().hash();
+    aCallback->OnCompleteHashFound(nsCString(hash.c_str(), hash.length()),
+                                   tableNames,
+                                   minWaitDuration,
+                                   negCacheDuration,
+                                   DurationToMs(m.cache_duration()));
+  }
+
+  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_COMPLETION_ERROR,
+                        hasUnknownThreatType ? UNKNOWN_THREAT_TYPE : SUCCESS);
+
+  return NS_OK;
+}
 
 //////////////////////////////////////////////////////////
 // nsIObserver
