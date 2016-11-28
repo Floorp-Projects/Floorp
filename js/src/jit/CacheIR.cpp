@@ -305,10 +305,9 @@ GetPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId)
     RootedId id(cx_, NameToId(name_));
     NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, obj, id, &holder, &shape, pc_,
                                                             engine_, isTemporarilyUnoptimizable_);
-    if (type == CanAttachNone)
-        return false;
-
     switch (type) {
+      case CanAttachNone:
+        return false;
       case CanAttachReadSlot:
         if (holder) {
             EnsureTrackPropertyTypes(cx_, holder, NameToId(name_));
@@ -322,15 +321,13 @@ GetPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId)
         }
         EmitReadSlotResult(writer, obj, holder, shape, objId);
         EmitReadSlotReturn(writer, obj, holder, shape);
-        break;
+        return true;
       case CanAttachCallGetter:
         EmitCallGetterResult(writer, obj, holder, shape, objId);
-        break;
-      default:
-        MOZ_CRASH("Bad NativeGetPropCacheability");
+        return true;
     }
 
-    return true;
+    MOZ_CRASH("Bad NativeGetPropCacheability");
 }
 
 bool
