@@ -540,14 +540,16 @@ class TreeMetadataEmitter(LoggingMixin):
             else:
                 linkables.append(prog)
 
+        def check_unique_binary(program, kind):
+            if program in self._binaries:
+                raise SandboxValidationError(
+                    'Cannot use "%s" as %s name, '
+                    'because it is already used in %s' % (program, kind,
+                    self._binaries[program].relativedir), context)
         for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
             program = context.get(kind)
             if program:
-                if program in self._binaries:
-                    raise SandboxValidationError(
-                        'Cannot use "%s" as %s name, '
-                        'because it is already used in %s' % (program, kind,
-                        self._binaries[program].relativedir), context)
+                check_unique_binary(program, kind)
                 self._binaries[program] = cls(context, program)
                 self._linkage.append((context, self._binaries[program],
                     kind.replace('PROGRAM', 'USE_LIBS')))
