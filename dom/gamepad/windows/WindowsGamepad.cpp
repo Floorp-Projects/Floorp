@@ -46,9 +46,10 @@ const unsigned kButtonUsagePage = 0x9;
 // Therefore, we wait a bit after receiving one before looking for
 // device changes.
 const uint32_t kDevicesChangedStableDelay = 200;
-// XInput is a purely polling-driven API, so we need to
-// poll it periodically. 50ms is arbitrarily chosen.
-const uint32_t kXInputPollInterval = 50;
+// Both DirectInput and XInput are polling-driven here,
+// so we need to poll it periodically.
+// 50ms is arbitrarily chosen.
+const uint32_t kWindowsGamepadPollInterval = 50;
 
 const UINT kRawInputError = (UINT)-1;
 
@@ -414,7 +415,7 @@ WindowsGamepadService::XInputMessageLoopOnceCallback(nsITimer *aTimer,
   if (self->mIsXInputMonitoring) {
     aTimer->Cancel();
     aTimer->InitWithFuncCallback(XInputMessageLoopOnceCallback, self,
-                                 kXInputPollInterval, nsITimer::TYPE_ONE_SHOT);
+                                 kWindowsGamepadPollInterval, nsITimer::TYPE_ONE_SHOT);
   }
 }
 
@@ -501,7 +502,7 @@ WindowsGamepadService::ScanForDevices()
     if (ScanForXInputDevices()) {
       mIsXInputMonitoring = true;
       mXInputTimer->InitWithFuncCallback(XInputMessageLoopOnceCallback, this,
-                                         kXInputPollInterval,
+                                         kWindowsGamepadPollInterval,
                                          nsITimer::TYPE_ONE_SHOT);
     } else {
       mIsXInputMonitoring = false;
@@ -976,7 +977,9 @@ public:
       DispatchMessage(&msg);
     }
     if (!sIsShutdown) {
-      NS_DispatchToCurrentThread(new WindowGamepadMessageLoopOnceRunnable());
+      nsCOMPtr<nsIRunnable> runnable = new WindowGamepadMessageLoopOnceRunnable();
+      NS_DelayedDispatchToCurrentThread(runnable.forget(),
+                                        kWindowsGamepadPollInterval);
     }
     return NS_OK;
   }
