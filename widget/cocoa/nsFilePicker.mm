@@ -472,6 +472,8 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
       thePanel.allowedFileTypes = @[extension];
     }
   }
+  // Allow users to change the extension.
+  thePanel.allowsOtherFileTypes = YES;
 
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
