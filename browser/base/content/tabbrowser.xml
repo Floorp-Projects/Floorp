@@ -1772,7 +1772,7 @@
             // Create a new tab progress listener for the new browser we just injected,
             // since tab progress listeners have logic for handling the initial about:blank
             // load
-            listener = this.mTabProgressListener(tab, aBrowser, false, false);
+            listener = this.mTabProgressListener(tab, aBrowser, true, false);
             this._tabListeners.set(tab, listener);
             filter.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_ALL);
 
