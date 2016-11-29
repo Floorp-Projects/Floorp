@@ -470,17 +470,17 @@ var testIndexedDBs = Task.async(function* (index, hosts, indexedDBActor) {
     for (let item of data.data) {
       let found = false;
       for (let toMatch of IDBValues.dbDetails[host]) {
-        if (item.db == toMatch.db) {
+        if (item.uniqueKey == toMatch.db) {
           found = true;
-          ok(true, "Found indexed db " + item.db + " in response");
+          ok(true, "Found indexed db " + item.uniqueKey + " in response");
           is(item.origin, toMatch.origin, "The origin matches.");
           is(item.version, toMatch.version, "The version matches.");
           is(item.objectStores, toMatch.objectStores,
-             "The numebr of object stores matches.");
+             "The number of object stores matches.");
           break;
         }
       }
-      ok(found, "indexed db " + item.name + " should exist in response");
+      ok(found, "indexed db " + item.uniqueKey + " should exist in response");
     }
   };
 
