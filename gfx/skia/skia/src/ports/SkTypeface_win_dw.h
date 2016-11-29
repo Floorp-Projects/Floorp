@@ -53,6 +53,7 @@ private:
         , fDWriteFontFamily(SkSafeRefComPtr(fontFamily))
         , fDWriteFont(SkSafeRefComPtr(font))
         , fDWriteFontFace(SkRefComPtr(fontFace))
+        , fForceGDI(false)
     {
 #if SK_HAS_DWRITE_1_H
         if (!SUCCEEDED(fDWriteFontFace->QueryInterface(&fDWriteFontFace1))) {
@@ -76,10 +77,14 @@ public:
 
     static DWriteFontTypeface* Create(IDWriteFactory* factory,
                                       IDWriteFontFace* fontFace,
-                                      SkFontStyle aStyle) {
-        return new DWriteFontTypeface(aStyle, factory, fontFace,
-                                      nullptr, nullptr,
-                                      nullptr, nullptr);
+                                      SkFontStyle aStyle,
+                                      bool aForceGDI) {
+        DWriteFontTypeface* typeface =
+                new DWriteFontTypeface(aStyle, factory, fontFace,
+                                       nullptr, nullptr,
+                                       nullptr, nullptr);
+        typeface->fForceGDI = aForceGDI;
+        return typeface;
     }
 
     static DWriteFontTypeface* Create(IDWriteFactory* factory,
@@ -91,6 +96,8 @@ public:
         return new DWriteFontTypeface(get_style(font), factory, fontFace, font, fontFamily,
                                       fontFileLoader, fontCollectionLoader);
     }
+
+    bool ForceGDI() { return fForceGDI; }
 
 protected:
     void weak_dispose() const override {
@@ -124,6 +131,7 @@ protected:
 
 private:
     typedef SkTypeface INHERITED;
+    bool fForceGDI;
 };
 
 #endif

@@ -288,7 +288,7 @@ SkScalerContext_DW::SkScalerContext_DW(DWriteFontTypeface* typeface,
 
     // If we can use a bitmap, use gdi classic rendering and measurement.
     // This will not always provide a bitmap, but matches expected behavior.
-    } else if (treatLikeBitmap && axisAlignedBitmap) {
+    } else if ((treatLikeBitmap && axisAlignedBitmap) || typeface->ForceGDI()) {
         fTextSizeRender = gdiTextSize;
         fRenderingMode = DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC;
         fTextureType = DWRITE_TEXTURE_CLEARTYPE_3x1;
