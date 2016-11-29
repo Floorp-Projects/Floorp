@@ -8,6 +8,7 @@
 
 #include "frontend/TokenStream.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/PodOperations.h"
 
@@ -33,6 +34,7 @@
 using namespace js;
 using namespace js::frontend;
 
+using mozilla::ArrayLength;
 using mozilla::Maybe;
 using mozilla::PodAssign;
 using mozilla::PodCopy;
@@ -956,7 +958,7 @@ TokenStream::getDirectives(bool isMultiline, bool shouldWarnDeprecated)
 
 bool
 TokenStream::getDirective(bool isMultiline, bool shouldWarnDeprecated,
-                          const char* directive, int directiveLength,
+                          const char* directive, uint8_t directiveLength,
                           const char* errorMsgPragma,
                           UniqueTwoByteChars* destination)
 {
@@ -1030,7 +1032,10 @@ TokenStream::getDisplayURL(bool isMultiline, bool shouldWarnDeprecated)
     // developer would like to refer to the source as from the source's actual
     // URL.
 
-    return getDirective(isMultiline, shouldWarnDeprecated, " sourceURL=", 11,
+    static const char sourceURLDirective[] = " sourceURL=";
+    constexpr uint8_t sourceURLDirectiveLength = ArrayLength(sourceURLDirective) - 1;
+    return getDirective(isMultiline, shouldWarnDeprecated,
+                        sourceURLDirective, sourceURLDirectiveLength,
                         "sourceURL", &displayURL_);
 }
 
@@ -1040,7 +1045,10 @@ TokenStream::getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated)
     // Match comments of the form "//# sourceMappingURL=<url>" or
     // "/\* //# sourceMappingURL=<url> *\/"
 
-    return getDirective(isMultiline, shouldWarnDeprecated, " sourceMappingURL=", 18,
+    static const char sourceMappingURLDirective[] = " sourceMappingURL=";
+    constexpr uint8_t sourceMappingURLDirectiveLength = ArrayLength(sourceMappingURLDirective) - 1;
+    return getDirective(isMultiline, shouldWarnDeprecated,
+                        sourceMappingURLDirective, sourceMappingURLDirectiveLength,
                         "sourceMappingURL", &sourceMapURL_);
 }
 
