@@ -46,8 +46,7 @@ public:
 
   void ReadUpdatedMetadata(MediaInfo* aInfo) override;
 
-  RefPtr<SeekPromise>
-  Seek(const SeekTarget& aTarget, int64_t aUnused) override;
+  RefPtr<SeekPromise> Seek(const SeekTarget& aTarget) override;
 
 protected:
   void NotifyDataArrived() override;
