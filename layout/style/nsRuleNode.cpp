@@ -7572,35 +7572,13 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
                    "method, the "
                    "nsLineLayout::IsPercentageAwareReplacedElement method "
                    "and probably some other places");
-      if (eCSSUnit_Enumerated == value.GetUnit()) {
-        NS_ASSERTION(value.GetIntValue() == NS_STYLE_BORDER_WIDTH_THIN ||
-                     value.GetIntValue() == NS_STYLE_BORDER_WIDTH_MEDIUM ||
-                     value.GetIntValue() == NS_STYLE_BORDER_WIDTH_THICK,
-                     "Unexpected enum value");
-        border->SetBorderWidth(side,
-          nsPresContext::GetBorderWidthForKeyword(value.GetIntValue()));
-      }
-      // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
-      else if (SetCoord(value, coord, nsStyleCoord(),
-                        SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
-                        aContext, mPresContext, conditions)) {
-        NS_ASSERTION(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
-        // clamp negative calc() to 0.
-        border->SetBorderWidth(side, std::max(coord.GetCoordValue(), 0));
-      }
-      else if (eCSSUnit_Inherit == value.GetUnit()) {
-        conditions.SetUncacheable();
-        border->SetBorderWidth(side,
-                               parentBorder->GetComputedBorder().Side(side));
-      }
-      else if (eCSSUnit_Initial == value.GetUnit() ||
-               eCSSUnit_Unset == value.GetUnit()) {
-        border->SetBorderWidth(side,
-          nsPresContext::GetBorderWidthForKeyword(NS_STYLE_BORDER_WIDTH_MEDIUM));
-      }
-      else {
-        NS_ASSERTION(eCSSUnit_Null == value.GetUnit(),
-                     "missing case handling border width");
+      Maybe<nscoord> coord =
+        ComputeLineWidthValue<eUnsetInitial>(
+          value, parentBorder->GetComputedBorder().Side(side),
+          nsPresContext::GetBorderWidthForKeyword(NS_STYLE_BORDER_WIDTH_MEDIUM),
+          aContext, mPresContext, conditions);
+      if (coord.isSome()) {
+        border->SetBorderWidth(side, *coord);
       }
     }
   }
