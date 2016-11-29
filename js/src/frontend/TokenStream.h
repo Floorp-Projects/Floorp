@@ -972,7 +972,7 @@ class MOZ_STACK_CLASS TokenStream
 
     MOZ_MUST_USE bool getDirectives(bool isMultiline, bool shouldWarnDeprecated);
     MOZ_MUST_USE bool getDirective(bool isMultiline, bool shouldWarnDeprecated,
-                                   const char* directive, int directiveLength,
+                                   const char* directive, uint8_t directiveLength,
                                    const char* errorMsgPragma,
                                    UniquePtr<char16_t[], JS::FreePolicy>* destination);
     MOZ_MUST_USE bool getDisplayURL(bool isMultiline, bool shouldWarnDeprecated);
@@ -996,13 +996,13 @@ class MOZ_STACK_CLASS TokenStream
         return true;
     }
 
-    void skipChars(int n) {
-        while (--n >= 0)
+    void skipChars(uint8_t n) {
+        while (n-- > 0)
             getChar();
     }
 
-    void skipCharsIgnoreEOL(int n) {
-        while (--n >= 0)
+    void skipCharsIgnoreEOL(uint8_t n) {
+        while (n-- > 0)
             getCharIgnoreEOL();
     }
 
