@@ -40,6 +40,10 @@ protected:
     PMPrintSession    mPrintSession;              // printing context.
     PMPageFormat      mPageFormat;                // page format.
     PMPrintSettings   mPrintSettings;             // print settings.
+#ifdef MOZ_ENABLE_SKIA_PDF
+    nsCOMPtr<nsIFile> mTempFile;                  // file "print" output is generated to if printing via PDF
+    bool              mPrintViaSkPDF;
+#endif
 };
 
 #endif //nsDeviceContextSpecX_h_
