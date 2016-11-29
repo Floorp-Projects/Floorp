@@ -1227,6 +1227,9 @@ protected:
   // If the network state is empty and then we would trigger DoLoad().
   void MaybeDoLoad();
 
+  // Anything we need to check after played success and not related with spec.
+  void UpdateCustomPolicyAfterPlayed();
+
   class nsAsyncEventRunner;
   using nsGenericHTMLElement::DispatchEvent;
   // For nsAsyncEventRunner.
