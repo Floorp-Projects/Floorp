@@ -633,7 +633,7 @@ nsChannelClassifier::IsTrackerWhitelisted()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Check whether or not the tracker is in the entity whitelist
-  nsAutoCString results;
+  nsTArray<nsCString> results;
   rv = uriClassifier->ClassifyLocalWithTables(whitelistURI, tables, results);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!results.IsEmpty()) {
