@@ -98,9 +98,11 @@ import org.mozilla.gecko.updater.PostUpdateHandler;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GamepadUtils;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.IntentUtils;
@@ -200,7 +202,8 @@ public class BrowserApp extends GeckoApp
                                    OnUrlOpenInBackgroundListener,
                                    AnchoredPopup.OnVisibilityChangeListener,
                                    ActionModeCompat.Presenter,
-                                   LayoutInflater.Factory {
+                                   LayoutInflater.Factory,
+                                   BundleEventListener {
     private static final String LOGTAG = "GeckoBrowserApp";
 
     private static final int TABS_ANIMATION_DURATION = 450;
@@ -729,7 +732,6 @@ public class BrowserApp extends GeckoApp
             "Menu:Update",
             "LightweightTheme:Update",
             "Search:Keyword",
-            "Prompt:ShowTop",
             "Tab:Added",
             "Video:Play");
 
@@ -750,6 +752,8 @@ public class BrowserApp extends GeckoApp
             "Telemetry:Gather",
             "Updater:Launch",
             "Website:Metadata");
+
+        getAppEventDispatcher().registerUiThreadListener(this, "Prompt:ShowTop");
 
         final GeckoProfile profile = getProfile();
 
@@ -1060,8 +1064,7 @@ public class BrowserApp extends GeckoApp
         }
 
         if (!mHasResumed) {
-            EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
-                    "Prompt:ShowTop");
+            getAppEventDispatcher().unregisterUiThreadListener(this, "Prompt:ShowTop");
             mHasResumed = true;
         }
 
@@ -1081,8 +1084,7 @@ public class BrowserApp extends GeckoApp
 
         if (mHasResumed) {
             // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
-            EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
-                "Prompt:ShowTop");
+            getAppEventDispatcher().registerUiThreadListener(this, "Prompt:ShowTop");
             mHasResumed = false;
         }
 
@@ -1434,7 +1436,6 @@ public class BrowserApp extends GeckoApp
             "Menu:Update",
             "LightweightTheme:Update",
             "Search:Keyword",
-            "Prompt:ShowTop",
             "Tab:Added",
             "Video:Play");
 
@@ -1455,6 +1456,8 @@ public class BrowserApp extends GeckoApp
             "Telemetry:Gather",
             "Updater:Launch",
             "Website:Metadata");
+
+        getAppEventDispatcher().unregisterUiThreadListener(this, "Prompt:ShowTop");
 
         if (AppConstants.MOZ_ANDROID_BEAM) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -1698,6 +1701,21 @@ public class BrowserApp extends GeckoApp
         }
 
         mBrowserToolbar.refresh();
+    }
+
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        switch (event) {
+            case "Prompt:ShowTop":
+                // Bring this activity to front so the prompt is visible..
+                Intent bringToFrontIntent = new Intent();
+                bringToFrontIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
+                                                AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
+                bringToFrontIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(bringToFrontIntent);
+                break;
+        }
     }
 
     @Override
@@ -2109,14 +2127,6 @@ public class BrowserApp extends GeckoApp
                             }
                         });
                     }
-                    break;
-
-                case "Prompt:ShowTop":
-                    // Bring this activity to front so the prompt is visible..
-                    Intent bringToFrontIntent = new Intent();
-                    bringToFrontIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
-                    bringToFrontIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                    startActivity(bringToFrontIntent);
                     break;
 
                 case "Tab:Added":
