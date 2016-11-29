@@ -21,6 +21,7 @@ import org.mozilla.gecko.db.BrowserContract.DeletedLogins;
 import org.mozilla.gecko.db.BrowserContract.Logins;
 import org.mozilla.gecko.db.BrowserContract.LoginsDisabledHosts;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
@@ -507,7 +508,8 @@ public class LoginsProvider extends SharedBrowserDatabaseProvider {
     private String decrypt(@NonNull String initialValue) {
         try {
             final Cipher cipher = getCipher(Cipher.DECRYPT_MODE);
-            return new String(cipher.doFinal(Base64.decode(initialValue.getBytes("UTF-8"), Base64.URL_SAFE)));
+            return new String(cipher.doFinal(Base64.decode(
+                    initialValue.getBytes("UTF-8"), Base64.URL_SAFE)), StringUtils.UTF_8);
         } catch (Exception e) {
             debug("Decryption failed : " + e);
             throw new IllegalStateException("Logins decryption failed", e);

@@ -6,7 +6,9 @@ package org.mozilla.mozstumbler.service.stumblerthread.datahandling;
 
 import android.content.Context;
 import android.util.Log;
+
 import org.mozilla.mozstumbler.service.AppGlobals;
+import org.mozilla.mozstumbler.service.utils.StringUtils;
 import org.mozilla.mozstumbler.service.utils.Zipper;
 import java.io.File;
 import java.io.FileInputStream;
@@ -101,7 +103,7 @@ public class DataStorageManager {
 
         if (mCurrentReports.reports.size() > 0) {
             try {
-                bytes = Zipper.zipData(finalizeReports(mCurrentReports.reports).getBytes()).length;
+                bytes = Zipper.zipData(finalizeReports(mCurrentReports.reports).getBytes(StringUtils.UTF_8)).length;
             } catch (IOException ex) {
                 Log.e(LOG_TAG, "Zip error in getQueuedCounts()", ex);
             }
@@ -301,7 +303,7 @@ public class DataStorageManager {
 
         if (currentReportsCount > 0) {
             final String filename = MEMORY_BUFFER_NAME;
-            final byte[] data = Zipper.zipData(finalizeReports(mCurrentReports.reports).getBytes());
+            final byte[] data = Zipper.zipData(finalizeReports(mCurrentReports.reports).getBytes(StringUtils.UTF_8));
             final int wifiCount = mCurrentReports.wifiCount;
             final int cellCount = mCurrentReports.cellCount;
             clearCurrentReports();
@@ -412,7 +414,7 @@ public class DataStorageManager {
         if (mCurrentReports.reports.size() < 1) {
             return;
         }
-        final byte[] bytes = Zipper.zipData(finalizeReports(mCurrentReports.reports).getBytes());
+        final byte[] bytes = Zipper.zipData(finalizeReports(mCurrentReports.reports).getBytes(StringUtils.UTF_8));
         saveToDisk(bytes, mCurrentReports.reports.size(), mCurrentReports.wifiCount, mCurrentReports.cellCount);
         clearCurrentReports();
     }
