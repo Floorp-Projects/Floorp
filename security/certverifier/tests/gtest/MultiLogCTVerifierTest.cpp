@@ -26,6 +26,7 @@ class MultiLogCTVerifierTest : public ::testing::Test
 public:
   MultiLogCTVerifierTest()
     : mNow(Time::uninitialized)
+    , mLogOperatorID(123)
   {}
 
   void SetUp() override
@@ -34,7 +35,10 @@ public:
     MOZ_RELEASE_ASSERT(NSS_NoDB_Init(nullptr) == SECSuccess);
 
     CTLogVerifier log;
-    ASSERT_EQ(Success, log.Init(InputForBuffer(GetTestPublicKey())));
+    ASSERT_EQ(Success, log.Init(InputForBuffer(GetTestPublicKey()),
+                                mLogOperatorID,
+                                CTLogStatus::Included,
+                                0 /*disqualification time*/));
     ASSERT_EQ(Success, mVerifier.AddLog(Move(log)));
 
     mTestCert = GetDEREncodedX509Cert();
@@ -55,6 +59,7 @@ public:
     ASSERT_EQ(1U, result.verifiedScts.length());
     EXPECT_EQ(VerifiedSCT::Status::Valid, result.verifiedScts[0].status);
     EXPECT_EQ(origin, result.verifiedScts[0].origin);
+    EXPECT_EQ(mLogOperatorID, result.verifiedScts[0].logOperatorId);
   }
 
   // Writes an SCTList containing a single |sct| into |output|.
@@ -98,6 +103,7 @@ protected:
   Buffer mIntermediateCert;
   Buffer mIntermediateCertSPKI;
   Time mNow;
+  CTLogOperatorId mLogOperatorID;
 };
 
 // Test that an embedded SCT can be extracted and the extracted SCT contains
@@ -221,6 +227,34 @@ TEST_F(MultiLogCTVerifierTest, IdentifiesSCTFromUnknownLog)
   EXPECT_EQ(0U, result.decodingErrors);
   ASSERT_EQ(1U, result.verifiedScts.length());
   EXPECT_EQ(VerifiedSCT::Status::UnknownLog, result.verifiedScts[0].status);
+}
+
+TEST_F(MultiLogCTVerifierTest, IdentifiesSCTFromDisqualifiedLog)
+{
+  MultiLogCTVerifier verifier;
+  CTLogVerifier log;
+  const uint64_t disqualificationTime = 12345u;
+  ASSERT_EQ(Success, log.Init(InputForBuffer(GetTestPublicKey()),
+    mLogOperatorID, CTLogStatus::Disqualified, disqualificationTime));
+  ASSERT_EQ(Success, verifier.AddLog(Move(log)));
+
+  Buffer sct(GetTestSignedCertificateTimestamp());
+  Buffer sctList;
+  EncodeSCTListForTesting(InputForBuffer(sct), sctList);
+
+  CTVerifyResult result;
+  ASSERT_EQ(Success,
+            verifier.Verify(InputForBuffer(mTestCert), Input(),
+                            Input(), Input(), InputForBuffer(sctList),
+                            mNow, result));
+
+  EXPECT_EQ(0U, result.decodingErrors);
+  ASSERT_EQ(1U, result.verifiedScts.length());
+  EXPECT_EQ(VerifiedSCT::Status::ValidFromDisqualifiedLog,
+            result.verifiedScts[0].status);
+  EXPECT_EQ(disqualificationTime,
+            result.verifiedScts[0].logDisqualificationTime);
+  EXPECT_EQ(mLogOperatorID, result.verifiedScts[0].logOperatorId);
 }
 
 } } // namespace mozilla::ct

@@ -87,7 +87,6 @@ struct SignedCertificateTimestamp
   DigitallySigned signature;
 };
 
-
 inline pkix::Result BufferToInput(const Buffer& buffer, pkix::Input& input)
 {
   return input.Init(buffer.begin(), buffer.length());

@@ -7,6 +7,7 @@
 #ifndef CTVerifyResult_h
 #define CTVerifyResult_h
 
+#include "CTLog.h"
 #include "mozilla/Vector.h"
 #include "SignedCertificateTimestamp.h"
 
@@ -22,10 +23,14 @@ struct VerifiedSCT
   // The original SCT.
   SignedCertificateTimestamp sct;
 
-  enum class Status {
+  enum class Status
+  {
     None,
     // The SCT is from a known log, and the signature is valid.
     Valid,
+    // The SCT is from a known disqualified log, and the signature is valid.
+    // For the disqualification time of the log see |logDisqualificationTime|.
+    ValidFromDisqualifiedLog,
     // The SCT is from an unknown log and can not be verified.
     UnknownLog,
     // The SCT is from a known log, but the signature is invalid.
@@ -35,7 +40,8 @@ struct VerifiedSCT
     InvalidTimestamp,
   };
 
-  enum class Origin {
+  enum class Origin
+  {
     Unknown,
     Embedded,
     TLSExtension,
@@ -44,6 +50,8 @@ struct VerifiedSCT
 
   Status status;
   Origin origin;
+  CTLogOperatorId logOperatorId;
+  uint64_t logDisqualificationTime;
 };
 
 typedef Vector<VerifiedSCT> VerifiedSCTList;
