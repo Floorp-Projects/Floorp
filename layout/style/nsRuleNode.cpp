@@ -4965,22 +4965,13 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
                   &nsStyleText::mWebkitTextStrokeColor);
 
   // -webkit-text-stroke-width: length, inherit, initial, enum
-  const nsCSSValue*
-    webkitTextStrokeWidthValue = aRuleData->ValueForWebkitTextStrokeWidth();
-  if (webkitTextStrokeWidthValue->GetUnit() == eCSSUnit_Enumerated) {
-    NS_ASSERTION(webkitTextStrokeWidthValue->GetIntValue() == NS_STYLE_BORDER_WIDTH_THIN ||
-                 webkitTextStrokeWidthValue->GetIntValue() == NS_STYLE_BORDER_WIDTH_MEDIUM ||
-                 webkitTextStrokeWidthValue->GetIntValue() == NS_STYLE_BORDER_WIDTH_THICK,
-                 "Unexpected enum value");
-    text->mWebkitTextStrokeWidth.SetCoordValue(
-      nsPresContext::GetBorderWidthForKeyword(webkitTextStrokeWidthValue->GetIntValue()));
-  } else {
-    SetCoord(*webkitTextStrokeWidthValue, text->mWebkitTextStrokeWidth,
-             parentText->mWebkitTextStrokeWidth,
-             SETCOORD_LH | SETCOORD_CALC_LENGTH_ONLY |
-               SETCOORD_CALC_CLAMP_NONNEGATIVE |
-               SETCOORD_INITIAL_ZERO | SETCOORD_UNSET_INHERIT,
-             aContext, mPresContext, conditions);
+  Maybe<nscoord> coord =
+    ComputeLineWidthValue<eUnsetInherit>(
+      *aRuleData->ValueForWebkitTextStrokeWidth(),
+      parentText->mWebkitTextStrokeWidth, 0,
+      aContext, mPresContext, conditions);
+  if (coord.isSome()) {
+    text->mWebkitTextStrokeWidth = *coord;
   }
 
   // -moz-control-character-visibility: enum, inherit, initial

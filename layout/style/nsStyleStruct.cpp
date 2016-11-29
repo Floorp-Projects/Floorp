@@ -3791,7 +3791,7 @@ nsStyleText::nsStyleText(StyleStructContext aContext)
   , mLetterSpacing(eStyleUnit_Normal)
   , mLineHeight(eStyleUnit_Normal)
   , mTextIndent(0, nsStyleCoord::CoordConstructor)
-  , mWebkitTextStrokeWidth(0, nsStyleCoord::CoordConstructor)
+  , mWebkitTextStrokeWidth(0)
   , mTextShadow(nullptr)
 {
   MOZ_COUNT_CTOR(nsStyleText);
