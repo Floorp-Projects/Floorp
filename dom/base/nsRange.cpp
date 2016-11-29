@@ -3260,7 +3260,7 @@ nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges)
             frame = p->GetPrimaryFrame();
           }
           if (frame) {
-            frame->IsSelectable(&selectable, nullptr);
+            selectable = frame->IsSelectable(nullptr);
           }
         }
       }

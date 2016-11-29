@@ -100,7 +100,7 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetCssText, void,
                    nsAString* result)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SerializeOneValue, void,
                    RawServoDeclarationBlockBorrowed declarations,
-                   const nsIAtom* property, bool is_custom, nsString* buffer)
+                   const nsIAtom* property, bool is_custom, nsAString* buffer)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Count, uint32_t,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetNthProperty, bool,

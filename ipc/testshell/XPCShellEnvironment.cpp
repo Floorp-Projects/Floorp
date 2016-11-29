@@ -378,7 +378,7 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
 XPCShellEnvironment*
 XPCShellEnvironment::CreateEnvironment()
 {
-    XPCShellEnvironment* env = new XPCShellEnvironment();
+    auto* env = new XPCShellEnvironment();
     if (env && !env->Init()) {
         delete env;
         env = nullptr;

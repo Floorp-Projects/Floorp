@@ -4,7 +4,7 @@ protocol cyclecheck_Parent {
     manages cyclecheck_Child;
 
 child:
-    cyclecheck_Child();
+    async cyclecheck_Child();
     async __delete__();
 };
 

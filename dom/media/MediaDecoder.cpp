@@ -985,8 +985,13 @@ MediaDecoder::PlaybackEnded()
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
   if (mLogicallySeeking || mPlayState == PLAY_STATE_LOADING) {
+    DECODER_LOG("MediaDecoder::PlaybackEnded bailed out, "
+                "mLogicallySeeking=%d mPlayState=%s",
+                mLogicallySeeking.Ref(), ToPlayStateStr(mPlayState));
     return;
   }
+
+  DECODER_LOG("MediaDecoder::PlaybackEnded");
 
   ChangeState(PLAY_STATE_ENDED);
   InvalidateWithFlags(VideoFrameContainer::INVALIDATE_FORCE);

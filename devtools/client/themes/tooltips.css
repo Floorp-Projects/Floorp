@@ -292,7 +292,8 @@
   direction: rtl;
 }
 
-.event-tooltip-debugger-icon {
+.event-tooltip-debugger-icon,
+.event-tooltip-debugger-spacer {
   width: 16px;
   height: 16px;
   margin-inline-end: 4px;

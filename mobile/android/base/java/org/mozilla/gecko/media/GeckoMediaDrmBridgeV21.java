@@ -212,11 +212,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                     Log.d(LOGTAG, "InfoMap : key(" + strKey + ")/value(" + strValue + ")");
                 }
             }
-            SessionKeyInfo[] keyInfos = new SessionKeyInfo[1];
-            keyInfos[0] = new SessionKeyInfo(DUMMY_KEY_ID,
-                                             MediaDrm.KeyStatus.STATUS_USABLE);
-            onSessionBatchedKeyChanged(session.array(), keyInfos);
-            if (DEBUG) Log.d(LOGTAG, "Key successfully added for session " + sessionId);
+            HandleKeyStatusChangeByDummyKey(sessionId);
             onSessionUpdated(promiseId, session.array());
             return;
         } catch (final NotProvisionedException | DeniedByServerException | IllegalStateException e) {
@@ -283,6 +279,15 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     public MediaCrypto getMediaCrypto() {
         if (DEBUG) Log.d(LOGTAG, "getMediaCrypto()");
         return mCrypto;
+    }
+
+    protected void HandleKeyStatusChangeByDummyKey(String sessionId)
+    {
+        SessionKeyInfo[] keyInfos = new SessionKeyInfo[1];
+        keyInfos[0] = new SessionKeyInfo(DUMMY_KEY_ID,
+                                         MediaDrm.KeyStatus.STATUS_USABLE);
+        onSessionBatchedKeyChanged(sessionId.getBytes(), keyInfos);
+        if (DEBUG) Log.d(LOGTAG, "Key successfully added for session " + sessionId);
     }
 
     protected void onSessionCreated(int createSessionToken,

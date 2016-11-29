@@ -23,9 +23,7 @@ WebBrowserPersistSerializeChild::WebBrowserPersistSerializeChild(const WebBrowse
 {
 }
 
-WebBrowserPersistSerializeChild::~WebBrowserPersistSerializeChild()
-{
-}
+WebBrowserPersistSerializeChild::~WebBrowserPersistSerializeChild() = default;
 
 NS_IMETHODIMP
 WebBrowserPersistSerializeChild::OnFinish(nsIWebBrowserPersistDocument* aDocument,

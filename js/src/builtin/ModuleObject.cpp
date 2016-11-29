@@ -1159,7 +1159,7 @@ bool
 ModuleBuilder::processExport(frontend::ParseNode* pn)
 {
     MOZ_ASSERT(pn->isKind(PNK_EXPORT) || pn->isKind(PNK_EXPORT_DEFAULT));
-    MOZ_ASSERT(pn->getArity() == pn->isKind(PNK_EXPORT) ? PN_UNARY : PN_BINARY);
+    MOZ_ASSERT(pn->getArity() == (pn->isKind(PNK_EXPORT) ? PN_UNARY : PN_BINARY));
 
     bool isDefault = pn->getKind() == PNK_EXPORT_DEFAULT;
     ParseNode* kid = isDefault ? pn->pn_left : pn->pn_kid;
