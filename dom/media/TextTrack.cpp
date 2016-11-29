@@ -136,6 +136,11 @@ TextTrack::GetId(nsAString& aId) const
 void
 TextTrack::AddCue(TextTrackCue& aCue)
 {
+  TextTrack* oldTextTrack = aCue.GetTrack();
+  if (oldTextTrack) {
+    ErrorResult dummy;
+    oldTextTrack->RemoveCue(aCue, dummy);
+  }
   mCueList->AddCue(aCue);
   aCue.SetTrack(this);
   if (mTextTrackList) {
