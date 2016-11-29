@@ -211,7 +211,7 @@ class RegExpParser
     bool ParseBackReferenceIndex(int* index_out);
 
     bool ParseClassAtom(char16_t* char_class, widechar *value);
-    RegExpTree* ReportError(unsigned errorNumber);
+    RegExpTree* ReportError(unsigned errorNumber, const char* param = nullptr);
     void Advance();
     void Advance(int dist) {
         next_pos_ += dist - 1;

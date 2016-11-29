@@ -368,6 +368,9 @@ class MOZ_STACK_CLASS TokenStream
     // Report the given error at the current offset.
     void error(unsigned errorNumber, ...);
 
+    // Report the given error at the given offset.
+    void errorAt(uint32_t offset, unsigned errorNumber, ...);
+
     // Warn at the current offset.
     MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
 
@@ -952,7 +955,7 @@ class MOZ_STACK_CLASS TokenStream
 
     MOZ_MUST_USE bool getTokenInternal(TokenKind* ttp, Modifier modifier);
 
-    MOZ_MUST_USE bool getBracedUnicode(uint32_t* code);
+    MOZ_MUST_USE bool matchBracedUnicode(bool* matched, uint32_t* code);
     MOZ_MUST_USE bool getStringOrTemplateToken(int untilChar, Token** tp);
 
     int32_t getChar();
