@@ -16,6 +16,7 @@ import org.mozilla.gecko.sync.crypto.MissingCryptoInputException;
 import org.mozilla.gecko.sync.crypto.NoKeyBundleException;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.repositories.domain.RecordParseException;
+import org.mozilla.gecko.util.StringUtils;
 
 /**
  * A Sync crypto record has:
@@ -204,7 +205,7 @@ public class CryptoRecord extends Record {
       throw new NoKeyBundleException();
     }
     String cleartext = payload.toJSONString();
-    byte[] cleartextBytes = cleartext.getBytes("UTF-8");
+    byte[] cleartextBytes = cleartext.getBytes(StringUtils.UTF_8);
     CryptoInfo info = CryptoInfo.encrypt(cleartextBytes, keyBundle);
     String message = new String(Base64.encodeBase64(info.getMessage()));
     String iv      = new String(Base64.encodeBase64(info.getIV()));

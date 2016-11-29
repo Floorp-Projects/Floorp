@@ -31,6 +31,7 @@ stumbler_sources = [
     'java/org/mozilla/mozstumbler/service/utils/AbstractCommunicator.java',
     'java/org/mozilla/mozstumbler/service/utils/NetworkUtils.java',
     'java/org/mozilla/mozstumbler/service/utils/PersistentIntentService.java',
+    'java/org/mozilla/mozstumbler/service/utils/StringUtils.java',
     'java/org/mozilla/mozstumbler/service/utils/TelemetryWrapper.java',
     'java/org/mozilla/mozstumbler/service/utils/Zipper.java',
 ]
