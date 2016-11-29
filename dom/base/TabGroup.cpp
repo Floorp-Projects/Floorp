@@ -146,7 +146,8 @@ TabGroup::GetTopLevelWindows()
   nsTArray<nsPIDOMWindowOuter*> array;
 
   for (nsPIDOMWindowOuter* outerWindow : mWindows) {
-    if (!outerWindow->GetScriptableParentOrNull()) {
+    if (outerWindow->GetDocShell() &&
+        !outerWindow->GetScriptableParentOrNull()) {
       array.AppendElement(outerWindow);
     }
   }
