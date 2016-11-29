@@ -301,6 +301,9 @@ bool nsContentUtils::sGetBoxQuadsEnabled = false;
 bool nsContentUtils::sSkipCursorMoveForSameValueSet = false;
 bool nsContentUtils::sRequestIdleCallbackEnabled = false;
 bool nsContentUtils::sLowerNetworkPriority = false;
+#ifndef RELEASE_OR_BETA
+bool nsContentUtils::sBypassCSSOMOriginCheck = false;
+#endif
 
 int32_t nsContentUtils::sPrivacyMaxInnerWidth = 1000;
 int32_t nsContentUtils::sPrivacyMaxInnerHeight = 1000;
@@ -714,6 +717,10 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sRequestIdleCallbackEnabled,
                                "dom.requestIdleCallback.enabled", false);
+
+#ifndef RELEASE_OR_BETA
+  sBypassCSSOMOriginCheck = getenv("MOZ_BYPASS_CSSOM_ORIGIN_CHECK");
+#endif
 
   Preferences::AddBoolVarCache(&sLowerNetworkPriority,
                                "privacy.trackingprotection.lower_network_priority", false);
