@@ -761,17 +761,25 @@ class Marionette(object):
 
         return crash_count > 0
 
-    def handle_socket_failure(self):
-        """Handle socket failures for the currently running application instance.
+    def _handle_socket_failure(self):
+        """Handle socket failures for the currently connected application.
 
         If the application crashed then clean-up internal states, or in case of a content
         crash also kill the process. If there are other reasons for a socket failure,
         wait for the process to shutdown itself, or force kill it.
 
-        """
-        if self.instance:
-            exc, val, tb = sys.exc_info()
+        Please note that the method expects an exception to be handled on the current stack
+        frame, and is only called via the `@do_process_check` decorator.
 
+        """
+        exc, val, tb = sys.exc_info()
+
+        # If the application hasn't been launched by Marionette no further action can be done.
+        # In such cases we simply re-throw the exception.
+        if not self.instance:
+            raise exc, val, tb
+
+        else:
             # Somehow the socket disconnected. Give the application some time to shutdown
             # itself before killing the process.
             returncode = self.instance.runner.wait(timeout=self.DEFAULT_SHUTDOWN_TIMEOUT)
@@ -795,8 +803,7 @@ class Marionette(object):
 
                 self.delete_session(send_request=False, reset_session_id=True)
 
-            if exc:
-                message += ' (Reason: {reason})'
+            message += ' (Reason: {reason})'
 
             raise IOError, message.format(returncode=returncode, reason=val), tb
 
