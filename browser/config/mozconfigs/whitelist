@@ -52,6 +52,7 @@ whitelist['nightly']['macosx-universal'] += [
     'ac_add_options --disable-install-strip',
     'ac_add_options --enable-instruments',
     'ac_add_options --enable-dtrace',
+    'if test `uname -s` != Linux; then',
 ]
 
 whitelist['nightly']['win32'] += [
@@ -87,12 +88,14 @@ whitelist['release']['linux32'] += [
     'export MOZ_TELEMETRY_REPORTING=1',
     'mk_add_options MOZ_PGO=1',
     "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+    'MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-1}',
 ]
 whitelist['release']['linux64'] += [
     'export MOZILLA_OFFICIAL=1',
     'export MOZ_TELEMETRY_REPORTING=1',
     'mk_add_options MOZ_PGO=1',
     "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+    'MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-1}',
 ]
 
 if __name__ == '__main__':
