@@ -20,7 +20,9 @@ const App = createClass({
 
   propTypes: {
     grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
+    highlighterSettings: PropTypes.shape(Types.highlighterSettings).isRequired,
     onToggleGridHighlighter: PropTypes.func.isRequired,
+    onToggleShowInfiniteLines: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],

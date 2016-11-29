@@ -37,16 +37,14 @@ module.exports = createClass({
 
     return dom.div(
       {
-        className: "layout-grid-list-container",
+        className: "grid-container",
       },
       dom.span(
         {},
         getStr("layout.overlayMultipleGrids")
       ),
       dom.ul(
-        {
-          id: "layout-grid-list",
-        },
+        {},
         grids.map(grid => {
           let { nodeFront } = grid;
           let { displayName, attributes } = nodeFront;
