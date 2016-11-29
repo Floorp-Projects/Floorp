@@ -501,14 +501,6 @@ WindowIsDeferredWindow(HWND hWnd)
     return true;
   }
 
-  // Google Earth bridging msg window between the plugin instance and a separate
-  // earth process. The earth process can trigger a plugin incall on the browser
-  // at any time, which is badness if the instance is already making an incall.
-  if (className.EqualsLiteral("__geplugin_bridge_window__")) {
-    SetPropW(hWnd, k3rdPartyWindowProp, (HANDLE)1);
-    return true;
-  }
-
   // nsNativeAppSupport makes a window like "FirefoxMessageWindow" based on the
   // toolkit app's name. It's pretty expensive to calculate this so we only try
   // once.
