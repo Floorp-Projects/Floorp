@@ -472,6 +472,9 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool            usesThis:1;             /* contains 'this' */
     bool            usesReturn:1;           /* contains a 'return' statement */
     bool            hasRest_:1;             /* has rest parameter */
+    bool            isExprBody_:1;          /* arrow function with expression
+                                             * body or expression closure:
+                                             * function(x) x*x */
 
     FunctionContextFlags funCxFlags;
 
@@ -543,6 +546,11 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool hasRest() const { return hasRest_; }
     void setHasRest() {
         hasRest_ = true;
+    }
+
+    bool isExprBody() const { return isExprBody_; }
+    void setIsExprBody() {
+        isExprBody_ = true;
     }
 
     void setGeneratorKind(GeneratorKind kind) {

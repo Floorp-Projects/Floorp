@@ -1343,6 +1343,20 @@ VARIABLES = {
         ``HOST_BIN_SUFFIX``, the name will remain unchanged.
         """),
 
+    'RUST_PROGRAMS': (StrictOrderingOnAppendList, list,
+        """Compile a list of Rust host executable names.
+
+        Each name in this variable corresponds to an executable built from
+        the Cargo.toml in the same directory.
+        """),
+
+    'HOST_RUST_PROGRAMS': (StrictOrderingOnAppendList, list,
+        """Compile a list of Rust executable names.
+
+        Each name in this variable corresponds to an executable built from
+        the Cargo.toml in the same directory.
+        """),
+
     'CONFIGURE_SUBST_FILES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Output files that will be generated using configure-like substitution.
 

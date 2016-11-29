@@ -53,6 +53,7 @@
 #include "gfxPrefs.h"
 
 #include <algorithm>
+#include <functional>
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
@@ -1268,7 +1269,7 @@ protected:
   struct MaskLayerKey;
   already_AddRefed<ImageLayer>
   CreateOrRecycleMaskImageLayerFor(const MaskLayerKey& aKey,
-                                   mozilla::function<void(Layer* aLayer)> aSetUserData);
+                                   std::function<void(Layer* aLayer)> aSetUserData);
   /**
    * Grabs all PaintedLayers and ColorLayers from the ContainerLayer and makes them
    * available for recycling.
@@ -2216,7 +2217,7 @@ ContainerState::CreateOrRecycleImageLayer(PaintedLayer *aPainted)
 
 already_AddRefed<ImageLayer>
 ContainerState::CreateOrRecycleMaskImageLayerFor(const MaskLayerKey& aKey,
-                                                 mozilla::function<void(Layer* aLayer)> aSetUserData)
+                                                 std::function<void(Layer* aLayer)> aSetUserData)
 {
   RefPtr<ImageLayer> result = mRecycledMaskImageLayers.Get(aKey);
   if (result) {

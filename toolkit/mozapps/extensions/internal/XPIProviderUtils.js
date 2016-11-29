@@ -89,7 +89,7 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
                           "softDisabled", "foreignInstall", "hasBinaryComponents",
                           "strictCompatibility", "locales", "targetApplications",
                           "targetPlatforms", "multiprocessCompatible", "signedState",
-                          "seen", "dependencies", "hasEmbeddedWebExtension"];
+                          "seen", "dependencies", "hasEmbeddedWebExtension", "mpcOptedOut"];
 
 // Properties that should be migrated where possible from an old database. These
 // shouldn't include properties that can be read directly from install.rdf files

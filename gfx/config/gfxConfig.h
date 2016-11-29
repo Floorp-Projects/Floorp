@@ -6,10 +6,10 @@
 #ifndef mozilla_gfx_config_gfxConfig_h
 #define mozilla_gfx_config_gfxConfig_h
 
+#include <functional>
 #include "gfxFeature.h"
 #include "gfxFallback.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Function.h"
 
 namespace mozilla {
 namespace gfx {
@@ -168,13 +168,13 @@ public:
   static void EnableFallback(Fallback aFallback, const char* aMessage);
 
   // Run a callback for each initialized FeatureState.
-  typedef mozilla::function<void(const char* aName,
-                                 const char* aDescription,
-                                 FeatureState& aFeature)> FeatureIterCallback;
+  typedef std::function<void(const char* aName,
+                             const char* aDescription,
+                             FeatureState& aFeature)> FeatureIterCallback;
   static void ForEachFeature(const FeatureIterCallback& aCallback);
 
   // Run a callback for each enabled fallback.
-  typedef mozilla::function<void(const char* aName, const char* aMsg)> 
+  typedef std::function<void(const char* aName, const char* aMsg)> 
     FallbackIterCallback;
   static void ForEachFallback(const FallbackIterCallback& aCallback);
 

@@ -406,6 +406,8 @@
 @RESPATH@/components/NetworkGeolocationProvider.manifest
 @RESPATH@/components/NetworkGeolocationProvider.js
 @RESPATH@/components/extensions.manifest
+@RESPATH@/components/EditorUtils.manifest
+@RESPATH@/components/EditorUtils.js
 @RESPATH@/components/addonManager.js
 @RESPATH@/components/amContentHandler.js
 @RESPATH@/components/amInstallTrigger.js

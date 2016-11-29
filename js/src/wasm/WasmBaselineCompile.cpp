@@ -3022,6 +3022,19 @@ class BaseCompiler
 #endif
     }
 
+    void eqz64(RegI64 src, RegI32 dest) {
+#if defined(JS_CODEGEN_X64)
+        masm.cmpq(Imm32(0), src.reg);
+        masm.emitSet(Assembler::Equal, dest);
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
+        masm.or32(src.high, src.low);
+        masm.cmp32(src.low, Imm32(0));
+        masm.emitSet(Assembler::Equal, dest);
+#else
+        MOZ_CRASH("BaseCompiler platform hook: eqz64");
+#endif
+    }
+
     void unreachableTrap()
     {
         masm.jump(trap(Trap::Unreachable));
@@ -4584,13 +4597,9 @@ BaseCompiler::emitEqzI64()
     if (sniffConditionalControlEqz(ValType::I64))
         return;
 
-    // TODO / OPTIMIZE: Avoid the temp register (Bug 1316848)
     RegI64 r0 = popI64();
-    RegI64 r1 = needI64();
-    setI64(0, r1);
     RegI32 i0 = fromI64(r0);
-    cmp64Set(Assembler::Equal, r0, r1, i0);
-    freeI64(r1);
+    eqz64(r0, i0);
     freeI64Except(r0, i0);
     pushI32(i0);
 }

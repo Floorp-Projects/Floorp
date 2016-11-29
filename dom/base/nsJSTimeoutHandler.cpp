@@ -7,7 +7,6 @@
 #include <algorithm>
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Function.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/FunctionBinding.h"

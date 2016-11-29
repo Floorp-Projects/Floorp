@@ -22,13 +22,14 @@
 #include "wasm/WasmTypes.h"
 
 using namespace js;
-using namespace js::jit;
+using namespace jit;
+using namespace wasm;
 
 using mozilla::IsNaN;
 
 template<size_t base>
 bool
-js::wasm::RenderInBase(StringBuffer& sb, uint64_t num)
+wasm::RenderInBase(StringBuffer& sb, uint64_t num)
 {
     uint64_t n = num;
     uint64_t pow = 1;
@@ -49,11 +50,11 @@ js::wasm::RenderInBase(StringBuffer& sb, uint64_t num)
     return true;
 }
 
-template bool js::wasm::RenderInBase<10>(StringBuffer& sb, uint64_t num);
+template bool wasm::RenderInBase<10>(StringBuffer& sb, uint64_t num);
 
 template<class T>
 bool
-js::wasm::RenderNaN(StringBuffer& sb, Raw<T> num)
+wasm::RenderNaN(StringBuffer& sb, Raw<T> num)
 {
     typedef typename mozilla::SelectTrait<T> Traits;
 
@@ -73,5 +74,5 @@ js::wasm::RenderNaN(StringBuffer& sb, Raw<T> num)
            RenderInBase<16>(sb, payload);
 }
 
-template MOZ_MUST_USE bool js::wasm::RenderNaN(StringBuffer& b, Raw<float> num);
-template MOZ_MUST_USE bool js::wasm::RenderNaN(StringBuffer& b, Raw<double> num);
+template MOZ_MUST_USE bool wasm::RenderNaN(StringBuffer& b, Raw<float> num);
+template MOZ_MUST_USE bool wasm::RenderNaN(StringBuffer& b, Raw<double> num);

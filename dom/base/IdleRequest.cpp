@@ -6,7 +6,6 @@
 
 #include "IdleRequest.h"
 
-#include "mozilla/Function.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/IdleDeadline.h"
 #include "mozilla/dom/Performance.h"
