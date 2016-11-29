@@ -93,11 +93,6 @@ public:
 
   int32_t RangeOffset() const;
 
-  bool CancelBubble() const
-  {
-    return mEvent->PropagationStopped();
-  }
-
   bool IsChar() const;
 
 protected:
