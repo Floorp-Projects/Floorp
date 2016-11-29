@@ -16,10 +16,20 @@ module.exports = createClass({
 
   propTypes: {
     highlighterSettings: PropTypes.shape(Types.highlighterSettings).isRequired,
+    onToggleShowGridLineNumbers: PropTypes.func.isRequired,
     onToggleShowInfiniteLines: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
+
+  onShowGridLineNumbersCheckboxClick() {
+    let {
+      highlighterSettings,
+      onToggleShowGridLineNumbers,
+    } = this.props;
+
+    onToggleShowGridLineNumbers(!highlighterSettings.showGridLineNumbers);
+  },
 
   onShowInfiniteLinesCheckboxClick() {
     let {
@@ -57,6 +67,20 @@ module.exports = createClass({
               }
             ),
             getStr("layout.extendGridLinesInfinitely")
+          )
+        ),
+        dom.li(
+          {},
+          dom.label(
+            {},
+            dom.input(
+              {
+                type: "checkbox",
+                checked: highlighterSettings.showGridLineNumbers,
+                onChange: this.onShowGridLineNumbersCheckboxClick,
+              }
+            ),
+            getStr("layout.displayNumbersOnLines")
           )
         )
       )

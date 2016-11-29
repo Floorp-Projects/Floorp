@@ -21,6 +21,7 @@ module.exports = createClass({
     grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
     highlighterSettings: PropTypes.shape(Types.highlighterSettings).isRequired,
     onToggleGridHighlighter: PropTypes.func.isRequired,
+    onToggleShowGridLineNumbers: PropTypes.func.isRequired,
     onToggleShowInfiniteLines: PropTypes.func.isRequired,
   },
 
@@ -31,6 +32,7 @@ module.exports = createClass({
       grids,
       highlighterSettings,
       onToggleGridHighlighter,
+      onToggleShowGridLineNumbers,
       onToggleShowInfiniteLines,
     } = this.props;
 
@@ -45,6 +47,7 @@ module.exports = createClass({
         }),
         GridDisplaySettings({
           highlighterSettings,
+          onToggleShowGridLineNumbers,
           onToggleShowInfiniteLines,
         })
       )
