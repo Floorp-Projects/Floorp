@@ -1306,7 +1306,8 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
         return;
       }
 
-      bool supportRecycling = decoder.mDecoder->SupportDecoderRecycling();
+      bool supportRecycling = MediaPrefs::MediaDecoderCheckRecycling() &&
+                              decoder.mDecoder->SupportDecoderRecycling();
       if (decoder.mNextStreamSourceID.isNothing() ||
           decoder.mNextStreamSourceID.ref() != info->GetID()) {
         if (!supportRecycling) {
