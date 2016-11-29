@@ -419,8 +419,10 @@ ModuleGenerator::finishTask(IonCompileTask* task)
         return false;
     MOZ_ASSERT(masm_.size() == offsetInWhole + results.masm().size());
 
+    UniqueBytes recycled;
+    task->reset(&recycled);
     freeTasks_.infallibleAppend(task);
-    return true;
+    return freeBytes_.emplaceBack(Move(recycled));
 }
 
 bool
@@ -855,6 +857,11 @@ ModuleGenerator::startFuncDefs()
     for (size_t i = 0; i < numTasks; i++)
         freeTasks_.infallibleAppend(&tasks_[i]);
 
+    if (!freeBytes_.reserve(numTasks))
+        return false;
+    for (size_t i = 0; i < numTasks; i++)
+        freeBytes_.infallibleAppend(js::MakeUnique<Bytes>());
+
     startedFuncDefs_ = true;
     MOZ_ASSERT(!finishedFuncDefs_);
     return true;
@@ -867,16 +874,15 @@ ModuleGenerator::startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg)
     MOZ_ASSERT(!activeFuncDef_);
     MOZ_ASSERT(!finishedFuncDefs_);
 
-    if (freeTasks_.empty() && !finishOutstandingTask())
-        return false;
+    if (!freeBytes_.empty()) {
+        fg->bytes_ = Move(freeBytes_.back());
+        freeBytes_.popBack();
+    } else {
+        fg->bytes_ = js::MakeUnique<Bytes>();
+    }
 
-    IonCompileTask* task = freeTasks_.popCopy();
-
-    task->reset(&fg->bytes_);
-    fg->bytes_.clear();
     fg->lineOrBytecode_ = lineOrBytecode;
     fg->m_ = this;
-    fg->task_ = task;
     activeFuncDef_ = fg;
     return true;
 }
@@ -898,21 +904,24 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
                 ? IonCompileTask::CompileMode::Baseline
                 : IonCompileTask::CompileMode::Ion;
 
-    fg->task_->init(Move(func), mode);
+    if (freeTasks_.empty() && !finishOutstandingTask())
+        return false;
+
+    IonCompileTask* task = freeTasks_.popCopy();
+    task->init(Move(func), mode);
 
     if (parallel_) {
-        if (!StartOffThreadWasmCompile(fg->task_))
+        if (!StartOffThreadWasmCompile(task))
             return false;
         outstanding_++;
     } else {
-        if (!CompileFunction(fg->task_))
+        if (!CompileFunction(task))
             return false;
-        if (!finishTask(fg->task_))
+        if (!finishTask(task))
             return false;
     }
 
     fg->m_ = nullptr;
-    fg->task_ = nullptr;
     activeFuncDef_ = nullptr;
     numFinishedFuncDefs_++;
     return true;
