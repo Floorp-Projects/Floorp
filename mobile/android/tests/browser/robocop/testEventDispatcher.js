@@ -21,10 +21,15 @@ function get_test_message() {
     nullString: null,
     emptyString: "",
     stringArray: ["bar", "baz"],
+    stringArrayOfNull: [null, null],
     emptyBooleanArray: [],
     emptyIntArray: [],
     emptyDoubleArray: [],
     emptyStringArray: [],
+    nullBooleanArray: null,
+    nullIntArray: null,
+    nullDoubleArray: null,
+    nullStringArray: null,
     // XXX enable when we remove NativeJSObject
     // mixedArray: [1, 1.5],
   };
@@ -35,7 +40,9 @@ function get_test_message() {
   outerObject.object = innerObject;
   outerObject.nullObject = null;
   outerObject.objectArray = [null, innerObject];
+  outerObject.objectArrayOfNull = [null, null];
   outerObject.emptyObjectArray = [];
+  outerObject.nullObjectArray = null;
   return outerObject;
 }
 
@@ -104,10 +111,19 @@ let listener = {
     do_check_eq(obj.stringArray[0], "bar");
     do_check_eq(obj.stringArray[1], "baz");
 
+    do_check_eq(obj.stringArrayOfNull.length, 2);
+    do_check_eq(obj.stringArrayOfNull[0], null);
+    do_check_eq(obj.stringArrayOfNull[1], null);
+
     do_check_eq(obj.emptyBooleanArray.length, 0);
     do_check_eq(obj.emptyIntArray.length, 0);
     do_check_eq(obj.emptyDoubleArray.length, 0);
     do_check_eq(obj.emptyStringArray.length, 0);
+
+    do_check_eq(obj.nullBooleanArray, null);
+    do_check_eq(obj.nullIntArray, null);
+    do_check_eq(obj.nullDoubleArray, null);
+    do_check_eq(obj.nullStringArray, null);
   },
 
   onEvent: function (event, data, callback) {
@@ -122,7 +138,13 @@ let listener = {
     do_check_eq(data.objectArray.length, 2);
     do_check_eq(data.objectArray[0], null);
     this._checkObject(data.objectArray[1]);
+
+    do_check_eq(data.objectArrayOfNull.length, 2);
+    do_check_eq(data.objectArrayOfNull[0], null);
+    do_check_eq(data.objectArrayOfNull[1], null);
+
     do_check_eq(data.emptyObjectArray.length, 0);
+    do_check_eq(data.nullObjectArray, null);
   }
 };
 
