@@ -736,7 +736,7 @@ TextPropertyEditor.prototype = {
     }
 
     if (this.isDisplayGrid()) {
-      this.ruleView.highlighters._hideGridHighlighter();
+      this.ruleView.highlighters.hideGridHighlighter();
     }
 
     // First, set this property value (common case, only modified a property)
