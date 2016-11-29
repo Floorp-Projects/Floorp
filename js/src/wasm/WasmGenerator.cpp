@@ -859,8 +859,12 @@ ModuleGenerator::startFuncDefs()
 
     if (!freeBytes_.reserve(numTasks))
         return false;
-    for (size_t i = 0; i < numTasks; i++)
-        freeBytes_.infallibleAppend(js::MakeUnique<Bytes>());
+    for (size_t i = 0; i < numTasks; i++) {
+        auto bytes = js::MakeUnique<Bytes>();
+        if (!bytes)
+            return false;
+        freeBytes_.infallibleAppend(Move(bytes));
+    }
 
     startedFuncDefs_ = true;
     MOZ_ASSERT(!finishedFuncDefs_);
@@ -879,6 +883,8 @@ ModuleGenerator::startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg)
         freeBytes_.popBack();
     } else {
         fg->bytes_ = js::MakeUnique<Bytes>();
+        if (!fg->bytes_)
+            return false;
     }
 
     fg->lineOrBytecode_ = lineOrBytecode;
