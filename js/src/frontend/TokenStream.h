@@ -959,8 +959,13 @@ class MOZ_STACK_CLASS TokenStream
 
     MOZ_MUST_USE bool getStringOrTemplateToken(int untilChar, Token** tp);
 
-    int32_t getChar();
+    // Try to get the next character, normalizing '\r', '\r\n', and '\n' into
+    // '\n'.  Also updates internal line-counter state.  Return true on success
+    // and store the character in |*c|.  Return false and leave |*c| undefined
+    // on failure.
+    MOZ_MUST_USE bool getChar(int32_t* cp);
     int32_t getCharIgnoreEOL();
+
     void ungetChar(int32_t c);
     void ungetCharIgnoreEOL(int32_t c);
     Token* newToken(ptrdiff_t adjust);
@@ -987,12 +992,14 @@ class MOZ_STACK_CLASS TokenStream
     }
 
     void consumeKnownChar(int32_t expect) {
-        mozilla::DebugOnly<int32_t> c = getChar();
+        int32_t c;
+        MOZ_ALWAYS_TRUE(getChar(&c));
         MOZ_ASSERT(c == expect);
     }
 
     MOZ_MUST_USE bool peekChar(int32_t* c) {
-        *c = getChar();
+        if (!getChar(c))
+            return false;
         ungetChar(*c);
         return true;
     }
