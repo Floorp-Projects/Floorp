@@ -471,6 +471,11 @@ pub extern fn wr_add_image(window: &mut WrWindowState, width: u32, height: u32, 
 }
 
 #[no_mangle]
+pub extern fn wr_add_external_image_texture(window: &mut WrWindowState, width: u32, height: u32, format: ImageFormat, external_image_id: u64) -> ImageKey {
+    window.api.add_image(width, height, None, format, ImageData::External(ExternalImageId(external_image_id)))
+}
+
+#[no_mangle]
 pub extern fn wr_update_image(window: &mut WrWindowState, key: ImageKey, width: u32, height: u32, format: ImageFormat, bytes: * const u8, size: usize) {
     let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
     window.api.update_image(key, width, height, format, bytes);
