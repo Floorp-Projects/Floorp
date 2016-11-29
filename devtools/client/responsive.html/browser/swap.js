@@ -107,6 +107,17 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       tunnel = tunnelToInnerBrowser(tab.linkedBrowser, innerBrowser);
       yield tunnel.start();
 
+      // Swapping browsers disconnects the find bar UI from the browser.
+      // If the find bar has been initialized, reconnect it.
+      if (gBrowser.isFindBarInitialized(tab)) {
+        let findBar = gBrowser.getFindBar(tab);
+        findBar.browser = tab.linkedBrowser;
+        if (!findBar.hidden) {
+          // Force the find bar to activate again, restoring the search string.
+          findBar.onFindCommand();
+        }
+      }
+
       // Force the browser UI to match the new state of the tab and browser.
       thawNavigationState(tab);
       gBrowser.setTabTitle(tab);
@@ -147,6 +158,18 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       //    `swapBrowsersAndCloseOther`.
       dispatchDevToolsBrowserSwap(contentBrowser, tab.linkedBrowser);
       gBrowser.swapBrowsersAndCloseOther(tab, contentTab);
+
+      // Swapping browsers disconnects the find bar UI from the browser.
+      // If the find bar has been initialized, reconnect it.
+      if (gBrowser.isFindBarInitialized(tab)) {
+        let findBar = gBrowser.getFindBar(tab);
+        findBar.browser = tab.linkedBrowser;
+        if (!findBar.hidden) {
+          // Force the find bar to activate again, restoring the search string.
+          findBar.onFindCommand();
+        }
+      }
+
       gBrowser = null;
 
       // The focus manager seems to get a little dizzy after all this swapping.  If a
