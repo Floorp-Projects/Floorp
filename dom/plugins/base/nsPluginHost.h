@@ -202,8 +202,6 @@ public:
                      // Binds to the <applet> tag, has various special
                      // rules around opening channels, codebase, ...
                      eSpecialType_Java,
-                     // Some IPC quirks
-                     eSpecialType_Silverlight,
                      // Native widget quirks
                      eSpecialType_Unity };
   static SpecialType GetSpecialType(const nsACString & aMIMEType);
