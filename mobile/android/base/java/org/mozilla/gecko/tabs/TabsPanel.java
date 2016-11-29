@@ -9,6 +9,7 @@ import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoApplication;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -16,6 +17,7 @@ import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.lwt.LightweightThemeDrawable;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -72,9 +74,14 @@ public class TabsPanel extends LinearLayout
         final boolean isLandscape = context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
 
         if (HardwareUtils.isTablet() || isLandscape) {
-            return new TabsGridLayout(context, attrs);
+            return new AutoFitTabsGridLayout(context, attrs);
         } else {
-            return new TabsListLayout(context, attrs);
+            // Phone in portrait mode.
+            if (GeckoSharedPrefs.forApp(context).getBoolean(GeckoPreferences.PREFS_COMPACT_TABS, false)) {
+                return new CompactTabsGridLayout(context, attrs);
+            } else {
+                return new TabsListLayout(context, attrs);
+            }
         }
     }
 
