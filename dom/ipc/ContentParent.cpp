@@ -4811,7 +4811,7 @@ ContentParent::DeallocPURLClassifierParent(PURLClassifierParent* aActor)
 
 mozilla::ipc::IPCResult
 ContentParent::RecvClassifyLocal(const URIParams& aURI, const nsCString& aTables,
-                                 nsCString* aResults)
+                                 nsTArray<nsCString>* aResults)
 {
   MOZ_ASSERT(aResults);
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
