@@ -8,6 +8,8 @@ const { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector",
+  "resource:///modules/translation/LanguageDetector.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
@@ -22,13 +24,29 @@ const kTextStylesRules = ["font-family", "font-kerning", "font-size",
   "line-height", "letter-spacing", "text-orientation",
   "text-transform", "word-spacing"];
 
-function Narrator(win, languagePromise) {
+function Narrator(win) {
   this._winRef = Cu.getWeakReference(win);
-  this._languagePromise = languagePromise;
   this._inTest = Services.prefs.getBoolPref("narrate.test");
   this._speechOptions = {};
   this._startTime = 0;
   this._stopped = false;
+
+  this.languagePromise = new Promise(resolve => {
+    let detect = () => {
+      win.document.removeEventListener("AboutReaderContentReady", detect);
+      let sampleText = this._doc.getElementById(
+        "moz-reader-content").textContent.substring(0, 60 * 1024);
+      LanguageDetector.detectLanguage(sampleText).then(result => {
+        resolve(result.confident ? result.language : null);
+      });
+    };
+
+    if (win.document.body.classList.contains("loaded")) {
+      detect();
+    } else {
+      win.document.addEventListener("AboutReaderContentReady", detect);
+    }
+  });
 }
 
 Narrator.prototype = {
@@ -248,7 +266,7 @@ Narrator.prototype = {
     };
 
     this._stopped = false;
-    return this._languagePromise.then(language => {
+    return this.languagePromise.then(language => {
       if (!this._speechOptions.voice) {
         this._speechOptions.lang = language;
       }
