@@ -2,6 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+// The no-cpows-in-tests check isn't very smart, simply warning if it finds
+// a variable named `content`. For Chrome compatibility, the Omnibox API uses
+// that name for setting the text of a suggestion, and that's all this test uses
+// it for, so we can disable it for this test.
+/* eslint-disable mozilla/no-cpows-in-tests */
+
 function* setup() {
   const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
