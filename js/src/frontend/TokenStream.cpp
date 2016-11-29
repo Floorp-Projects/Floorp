@@ -815,6 +815,19 @@ TokenStream::error(unsigned errorNumber, ...)
     va_end(args);
 }
 
+void
+TokenStream::errorAt(uint32_t offset, unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+#ifdef DEBUG
+    bool result =
+#endif
+        reportCompileErrorNumberVA(offset, JSREPORT_ERROR, errorNumber, args);
+    MOZ_ASSERT(!result, "reporting an error returned true?");
+    va_end(args);
+}
+
 // We have encountered a '\': check for a Unicode escape sequence after it.
 // Return the length of the escape sequence and the character code point (by
 // value) if we found a Unicode escape sequence.  Otherwise, return 0.  In both
@@ -1863,32 +1876,48 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
 }
 
 bool
-TokenStream::getBracedUnicode(uint32_t* cp)
+TokenStream::matchBracedUnicode(bool* matched, uint32_t* cp)
 {
+    if (peekChar() != '{') {
+        *matched = false;
+        return true;
+    }
+
     consumeKnownChar('{');
 
+    uint32_t start = userbuf.offset();
+
     bool first = true;
-    int32_t c;
     uint32_t code = 0;
-    while (true) {
-        c = getCharIgnoreEOL();
-        if (c == EOF)
+    do {
+        int32_t c = getCharIgnoreEOL();
+        if (c == EOF) {
+            error(JSMSG_MALFORMED_ESCAPE, "Unicode");
             return false;
+        }
         if (c == '}') {
-            if (first)
+            if (first) {
+                error(JSMSG_MALFORMED_ESCAPE, "Unicode");
                 return false;
+            }
             break;
         }
 
-        if (!JS7_ISHEX(c))
+        if (!JS7_ISHEX(c)) {
+            error(JSMSG_MALFORMED_ESCAPE, "Unicode");
             return false;
+        }
 
         code = (code << 4) | JS7_UNHEX(c);
-        if (code > unicode::NonBMPMax)
+        if (code > unicode::NonBMPMax) {
+            errorAt(start, JSMSG_UNICODE_OVERFLOW, "escape sequence");
             return false;
-        first = false;
-    }
+        }
 
+        first = false;
+    } while (true);
+
+    *matched = true;
     *cp = code;
     return true;
 }
@@ -1930,13 +1959,11 @@ TokenStream::getStringOrTemplateToken(int untilChar, Token** tp)
 
               // Unicode character specification.
               case 'u': {
-                if (peekChar() == '{') {
-                    uint32_t code;
-                    if (!getBracedUnicode(&code)) {
-                        error(JSMSG_MALFORMED_ESCAPE, "Unicode");
-                        return false;
-                    }
-
+                bool matched;
+                uint32_t code;
+                if (!matchBracedUnicode(&matched, &code))
+                    return false;
+                if (matched) {
                     MOZ_ASSERT(code <= unicode::NonBMPMax);
                     if (code < unicode::NonBMPMin) {
                         c = code;
