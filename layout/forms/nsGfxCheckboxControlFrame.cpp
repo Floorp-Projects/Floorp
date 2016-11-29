@@ -47,3 +47,22 @@ nsGfxCheckboxControlFrame::AccessibleType()
   return a11y::eHTMLCheckboxType;
 }
 #endif
+
+//------------------------------------------------------------
+bool
+nsGfxCheckboxControlFrame::IsChecked()
+{
+  nsCOMPtr<nsIDOMHTMLInputElement> elem(do_QueryInterface(mContent));
+  bool retval = false;
+  elem->GetChecked(&retval);
+  return retval;
+}
+
+bool
+nsGfxCheckboxControlFrame::IsIndeterminate()
+{
+  nsCOMPtr<nsIDOMHTMLInputElement> elem(do_QueryInterface(mContent));
+  bool retval = false;
+  elem->GetIndeterminate(&retval);
+  return retval;
+}
