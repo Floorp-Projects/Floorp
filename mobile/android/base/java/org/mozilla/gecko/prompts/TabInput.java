@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
@@ -33,19 +34,15 @@ public class TabInput extends PromptInput implements AdapterView.OnItemClickList
     private TabHost mHost;
     private int mPosition;
 
-    public TabInput(JSONObject obj) {
+    public TabInput(GeckoBundle obj) {
         super(obj);
         mTabs = new LinkedHashMap<String, PromptListItem[]>();
-        try {
-            JSONArray tabs = obj.getJSONArray("items");
-            for (int i = 0; i < tabs.length(); i++) {
-                JSONObject tab = tabs.getJSONObject(i);
-                String title = tab.getString("label");
-                JSONArray items = tab.getJSONArray("items");
-                mTabs.put(title, PromptListItem.getArray(items));
-            }
-        } catch (JSONException ex) {
-            Log.e(LOGTAG, "Exception", ex);
+        GeckoBundle[] tabs = obj.getBundleArray("items");
+        for (int i = 0; i < (tabs != null ? tabs.length : 0); i++) {
+            GeckoBundle tab = tabs[i];
+            String title = tab.getString("label");
+            GeckoBundle[] items = tab.getBundleArray("items");
+            mTabs.put(title, PromptListItem.getArray(items));
         }
     }
 

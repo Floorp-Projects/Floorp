@@ -8,10 +8,15 @@ package org.mozilla.gecko.util;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.support.v4.util.SimpleArrayMap;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -617,5 +622,69 @@ public final class GeckoBundle {
      */
     public int size() {
         return mMap.size();
+    }
+
+    private static Object fromJSONValue(Object value) throws JSONException {
+        if (value instanceof JSONObject || value == JSONObject.NULL) {
+            return fromJSONObject((JSONObject) value);
+        }
+        if (value instanceof JSONArray) {
+            final JSONArray array = (JSONArray) value;
+            final int len = array.length();
+            if (len == 0) {
+                return EMPTY_BOOLEAN_ARRAY;
+            }
+            Object out = null;
+            for (int i = 0; i < len; i++) {
+                final Object element = fromJSONValue(array.opt(0));
+                if (element == null) {
+                    continue;
+                }
+                if (out == null) {
+                    Class<?> type = element.getClass();
+                    if (type == Boolean.class) {
+                        type = boolean.class;
+                    } else if (type == Integer.class) {
+                        type = int.class;
+                    } else if (type == Double.class) {
+                        type = double.class;
+                    }
+                    out = Array.newInstance(type, len);
+                }
+                Array.set(out, i, element);
+            }
+            if (out == null) {
+                // Treat all-null arrays as String arrays.
+                return new String[len];
+            }
+            return out;
+        }
+        if (value instanceof Boolean) {
+            return value;
+        }
+        if (value instanceof Byte || value instanceof Short || value instanceof Integer) {
+            return ((Number) value).intValue();
+        }
+        if (value instanceof Float || value instanceof Double || value instanceof Long) {
+            return ((Number) value).doubleValue();
+        }
+        return value != null ? value.toString() : null;
+    }
+
+    public static GeckoBundle fromJSONObject(final JSONObject obj) throws JSONException {
+        if (obj == null || obj == JSONObject.NULL) {
+            return null;
+        }
+
+        final String[] keys = new String[obj.length()];
+        final Object[] values = new String[obj.length()];
+
+        final Iterator<String> iter = obj.keys();
+        for (int i = 0; iter.hasNext(); i++) {
+            final String key = iter.next();
+            keys[i] = key;
+            values[i] = fromJSONValue(obj.opt(key));
+        }
+        return new GeckoBundle(keys, values);
     }
 }
