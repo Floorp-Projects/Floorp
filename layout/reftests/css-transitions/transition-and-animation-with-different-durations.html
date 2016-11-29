@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>
+Transform animation and opacity transition with different durations
+</title>
+<style>
+div {
+  width: 100px; height: 100px;
+  background: blue;
+}
+@keyframes translate {
+  from { transform: translateY(0px); }
+  to { transform: translateY(0px); }
+}
+</style>
+<div id="target"></div>
+<script>
+window.addEventListener("load", () => {
+  var target = document.getElementById("target");
+  target.style = "opacity: 0;";
+
+  getComputedStyle(target).transform;
+
+  target.style = "transition: opacity 0.2s; opacity: 1; " +
+                 "animation: translate 0.1s;";
+
+  target.addEventListener("transitionend", () => {
+    document.documentElement.classList.remove("reftest-wait");
+  }, false);
+});
+</script>
