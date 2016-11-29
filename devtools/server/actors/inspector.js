@@ -87,8 +87,6 @@ const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const IMAGE_FETCHING_TIMEOUT = 500;
-const RX_FUNC_NAME =
-  /((var|const|let)\s+)?([\w$.]+\s*[:=]\s*)*(function)?\s*\*?\s*([\w$]+)?\s*$/;
 
 // The possible completions to a ':' with added score to give certain values
 // some preference.
@@ -433,22 +431,22 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   getEventListeners: function (node) {
     let parsers = this._eventParsers;
     let dbg = this.parent().tabActor.makeDebugger();
-    let listeners = [];
+    let listenerArray = [];
 
-    for (let [, {getListeners, normalizeHandler}] of parsers) {
+    for (let [, {getListeners, normalizeListener}] of parsers) {
       try {
-        let eventInfos = getListeners(node);
+        let listeners = getListeners(node);
 
-        if (!eventInfos) {
+        if (!listeners) {
           continue;
         }
 
-        for (let eventInfo of eventInfos) {
-          if (normalizeHandler) {
-            eventInfo.normalizeHandler = normalizeHandler;
+        for (let listener of listeners) {
+          if (normalizeListener) {
+            listener.normalizeListener = normalizeListener;
           }
 
-          this.processHandlerForEvent(node, listeners, dbg, eventInfo);
+          this.processHandlerForEvent(node, listenerArray, dbg, listener);
         }
       } catch (e) {
         // An object attached to the node looked like a listener but wasn't...
@@ -456,11 +454,11 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       }
     }
 
-    listeners.sort((a, b) => {
+    listenerArray.sort((a, b) => {
       return a.type.localeCompare(b.type);
     });
 
-    return listeners;
+    return listenerArray;
   },
 
   /**
@@ -468,8 +466,8 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    *
    * @param  {Node} node
    *         The node for which we want information.
-   * @param  {Array} events
-   *         The events array contains all event objects that we have gathered
+   * @param  {Array} listenerArray
+   *         listenerArray contains all event objects that we have gathered
    *         so far.
    * @param  {Debugger} dbg
    *         JSDebugger instance.
@@ -488,22 +486,28 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    *             DOM0: true,
    *             capturing: true,
    *             hide: {
-   *               dom0: true
-   *             }
+   *               DOM0: true
+   *             },
+   *             native: false
    *           }
    */
-  processHandlerForEvent: function (node, listeners, dbg, eventInfo) {
-    let type = eventInfo.type || "";
-    let handler = eventInfo.handler;
-    let tags = eventInfo.tags || "";
-    let hide = eventInfo.hide || {};
-    let override = eventInfo.override || {};
+  processHandlerForEvent: function (node, listenerArray, dbg, listener) {
+    let { capturing, handler, normalizeListener } = listener;
+    let dom0 = false;
+    let functionSource = handler.toString();
     let global = Cu.getGlobalForObject(handler);
     let globalDO = dbg.addDebuggee(global);
+    let hide = listener.hide || {};
+    let line = 0;
     let listenerDO = globalDO.makeDebuggeeValue(handler);
+    let native = false;
+    let override = listener.override || {};
+    let tags = listener.tags || "";
+    let type = listener.type || "";
+    let url = "";
 
-    if (eventInfo.normalizeHandler) {
-      listenerDO = eventInfo.normalizeHandler(listenerDO);
+    if (normalizeListener) {
+      listenerDO = normalizeListener(listenerDO);
     }
 
     // If the listener is an object with a 'handleEvent' method, use that.
@@ -520,70 +524,94 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       }
     }
 
+    // If the listener is bound to a different context then we need to switch
+    // to the bound function.
     if (listenerDO.isBoundFunction) {
       listenerDO = listenerDO.boundTargetFunction;
     }
 
-    let script = listenerDO.script;
-    let scriptSource = script.source.text;
-    let functionSource =
-      scriptSource.substr(script.sourceStart, script.sourceLength);
+    let { isArrowFunction, name, script, parameterNames } = listenerDO;
 
-    /*
-    The script returned is the whole script and
-    scriptSource.substr(script.sourceStart, script.sourceLength) returns
-    something like this:
-      () { doSomething(); }
+    if (script) {
+      let scriptSource = script.source.text;
 
-    So we need to use some regex magic to get the appropriate function info
-    e.g.:
-      () => { ... }
-      function doit() { ... }
-      doit: function() { ... }
-      es6func() { ... }
-      var|let|const foo = function () { ... }
-      function generator*() { ... }
-    */
-    let scriptBeforeFunc = scriptSource.substr(0, script.sourceStart);
-    let matches = scriptBeforeFunc.match(RX_FUNC_NAME);
-    if (matches && matches.length > 0) {
-      functionSource = matches[0].trim() + functionSource;
+      // Scripts are provided via script tags. If it wasn't provided by a
+      // script tag it must be a DOM0 event.
+      if (script.source.element) {
+        dom0 = script.source.element.class !== "HTMLScriptElement";
+      } else {
+        dom0 = false;
+      }
+
+      line = script.startLine;
+      url = script.url;
+
+      // Checking for the string "[native code]" is the only way at this point
+      // to check for native code. Even if this provides a false positive then
+      // grabbing the source code a second time is harmless.
+      if (functionSource === "[object Object]" ||
+          functionSource === "[object XULElement]" ||
+          functionSource.includes("[native code]")) {
+        functionSource =
+          scriptSource.substr(script.sourceStart, script.sourceLength);
+
+        // At this point the script looks like this:
+        // () { ... }
+        // We prefix this with "function" if it is not a fat arrow function.
+        if (!isArrowFunction) {
+          functionSource = "function " + functionSource;
+        }
+      }
+    } else {
+      // If the listener is a native one (provided by C++ code) then we have no
+      // access to the script. We use the native flag to prevent showing the
+      // debugger button because the script is not available.
+      native = true;
     }
 
-    let dom0 = false;
+    // Fat arrow function text always contains the parameters. Function
+    // parameters are often missing e.g. if Array.sort is used as a handler.
+    // If they are missing we provide the parameters ourselves.
+    if (parameterNames && parameterNames.length > 0) {
+      let prefix = "function " + name + "()";
+      let paramString = parameterNames.join(", ");
 
-    if (typeof node.hasAttribute !== "undefined") {
-      dom0 = !!node.hasAttribute("on" + type);
-    } else {
-      dom0 = !!node["on" + type];
+      if (functionSource.startsWith(prefix)) {
+        functionSource = functionSource.substr(prefix.length);
+
+        functionSource = `function ${name} (${paramString})${functionSource}`;
+      }
     }
 
-    let line = script.startLine;
-    let url = script.url;
-    let origin = url + (dom0 ? "" : ":" + line);
-    let searchString;
-
-    if (dom0) {
-      searchString = "on" + type + "=\"" + script.source.text + "\"";
+    // If the listener is native code we display the filename "[native code]."
+    // This is the official string and should *not* be translated.
+    let origin;
+    if (native) {
+      origin = "[native code]";
     } else {
-      scriptSource = "    " + scriptSource;
+      origin = url + ((dom0 || line === 0) ? "" : ":" + line);
     }
 
     let eventObj = {
-      type: typeof override.type !== "undefined" ? override.type : type,
-      handler: functionSource.trim(),
-      origin: typeof override.origin !== "undefined" ?
-                     override.origin : origin,
-      searchString: typeof override.searchString !== "undefined" ?
-                           override.searchString : searchString,
-      tags: tags,
+      type: override.type || type,
+      handler: override.handler || functionSource.trim(),
+      origin: override.origin || origin,
+      tags: override.tags || tags,
       DOM0: typeof override.dom0 !== "undefined" ? override.dom0 : dom0,
       capturing: typeof override.capturing !== "undefined" ?
-                        override.capturing : eventInfo.capturing,
-      hide: hide
+                 override.capturing : capturing,
+      hide: typeof override.hide !== "undefined" ? override.hide : hide,
+      native
     };
 
-    listeners.push(eventObj);
+    // Hide the debugger icon for DOM0 and native listeners. DOM0 listeners are
+    // generated dynamically from e.g. an onclick="" attribute so the script
+    // doesn't actually exist.
+    if (native || dom0) {
+      eventObj.hide.debugger = true;
+    }
+
+    listenerArray.push(eventObj);
 
     dbg.removeDebuggee(globalDO);
   },
@@ -643,10 +671,16 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * Get all event listeners that are listening on this node.
    */
   getEventListenerInfo: function () {
+    let node = this.rawNode;
+
     if (this.rawNode.nodeName.toLowerCase() === "html") {
-      return this.getEventListeners(this.rawNode.ownerGlobal);
+      let winListeners = this.getEventListeners(node.ownerGlobal) || [];
+      let docElementListeners = this.getEventListeners(node) || [];
+      let docListeners = this.getEventListeners(node.parentNode) || [];
+
+      return [...winListeners, ...docElementListeners, ...docListeners];
     }
-    return this.getEventListeners(this.rawNode);
+    return this.getEventListeners(node);
   },
 
   /**

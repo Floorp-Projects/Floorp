@@ -361,6 +361,7 @@ WebMDemuxer::ReadMetadata()
       mInfo.mVideo.mDisplay = displaySize;
       mInfo.mVideo.mImage = frameSize;
       mInfo.mVideo.SetImageRect(pictureRect);
+      mInfo.mVideo.SetAlpha(params.alpha_mode);
 
       switch (params.stereo_mode) {
         case NESTEGG_VIDEO_MONO:
@@ -626,6 +627,21 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
       WEBM_DEBUG("nestegg_packet_data failed r=%d", r);
       return false;
     }
+    unsigned char* alphaData;
+    size_t alphaLength = 0;
+    // Check packets for alpha information if file has declared alpha frames
+    // may be present.
+    if (mInfo.mVideo.HasAlpha()) {
+      r = nestegg_packet_additional_data(holder->Packet(),
+                                         1,
+                                         &alphaData,
+                                         &alphaLength);
+      if (r == -1) {
+        WEBM_DEBUG(
+          "nestegg_packet_additional_data failed to retrieve alpha data r=%d",
+          r);
+      }
+    }
     bool isKeyframe = false;
     if (aType == TrackInfo::kAudioTrack) {
       isKeyframe = true;
@@ -663,7 +679,12 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
 
     WEBM_DEBUG("push sample tstamp: %ld next_tstamp: %ld length: %ld kf: %d",
                tstamp, next_tstamp, length, isKeyframe);
-    RefPtr<MediaRawData> sample = new MediaRawData(data, length);
+    RefPtr<MediaRawData> sample;
+    if (mInfo.mVideo.HasAlpha() && alphaLength != 0) {
+      sample = new MediaRawData(data, length, alphaData, alphaLength);
+    } else {
+      sample = new MediaRawData(data, length);
+    }
     sample->mTimecode = tstamp;
     sample->mTime = tstamp;
     sample->mDuration = next_tstamp - tstamp;

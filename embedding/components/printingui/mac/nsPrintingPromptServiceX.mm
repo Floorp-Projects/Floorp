@@ -24,9 +24,7 @@ nsPrintingPromptService::nsPrintingPromptService()
 {
 }
 
-nsPrintingPromptService::~nsPrintingPromptService()
-{
-}
+nsPrintingPromptService::~nsPrintingPromptService() = default;
 
 nsresult nsPrintingPromptService::Init()
 {

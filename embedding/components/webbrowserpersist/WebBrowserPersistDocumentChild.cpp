@@ -19,9 +19,7 @@ WebBrowserPersistDocumentChild::WebBrowserPersistDocumentChild()
 {
 }
 
-WebBrowserPersistDocumentChild::~WebBrowserPersistDocumentChild()
-{
-}
+WebBrowserPersistDocumentChild::~WebBrowserPersistDocumentChild() = default;
 
 void
 WebBrowserPersistDocumentChild::Start(nsIDocument* aDocument)
