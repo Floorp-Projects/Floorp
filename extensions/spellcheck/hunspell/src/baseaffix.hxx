@@ -38,17 +38,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef BASEAFF_HXX_
-#define BASEAFF_HXX_
+#ifndef _BASEAFF_HXX_
+#define _BASEAFF_HXX_
 
+#include "hunvisapi.h"
 #include <string>
 
-class AffEntry {
+class LIBHUNSPELL_DLL_EXPORTED AffEntry {
  private:
   AffEntry(const AffEntry&);
   AffEntry& operator=(const AffEntry&);
 
- public:
+ protected:
   AffEntry()
       : numconds(0),
         opts(0),
@@ -56,7 +57,6 @@ class AffEntry {
         morphcode(0),
         contclass(NULL),
         contclasslen(0) {}
-  virtual ~AffEntry();
   std::string appnd;
   std::string strip;
   unsigned char numconds;

@@ -565,7 +565,7 @@ public:
   explicit AdjustedTarget(CanvasRenderingContext2D* aCtx,
                           const gfx::Rect *aBounds = nullptr)
   {
-    mTarget = aCtx->mTarget;
+    mTarget = (DrawTarget*)aCtx->mTarget;
 
     // All rects in this function are in the device space of ctx->mTarget.
 
@@ -1720,7 +1720,7 @@ CanvasRenderingContext2D::SetErrorState()
     gCanvasAzureMemoryUsed -= mWidth * mHeight * 4;
   }
 
-  mTarget = sErrorTarget;
+  mTarget = (DrawTarget*)sErrorTarget;
   mBufferProvider = nullptr;
 
   // clear transforms, clips, etc.
@@ -1975,7 +1975,7 @@ CanvasRenderingContext2D::InitializeWithDrawTarget(nsIDocShell* aShell,
   IntSize size = aTarget->GetSize();
   SetDimensions(size.width, size.height);
 
-  mTarget = aTarget;
+  mTarget = (DrawTarget*)aTarget;
   mBufferProvider = new PersistentBufferProviderBasic(aTarget);
 
   if (mTarget->GetBackendType() == gfx::BackendType::CAIRO) {
@@ -3154,6 +3154,8 @@ CanvasRenderingContext2D::BeginPath()
 void
 CanvasRenderingContext2D::Fill(const CanvasWindingRule& aWinding)
 {
+  auto autoNotNull = mTarget.MakeAuto();
+
   EnsureUserSpacePath(aWinding);
 
   if (!mPath) {
@@ -4758,6 +4760,8 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
                                     uint8_t aOptional_argc,
                                     ErrorResult& aError)
 {
+  auto autoNotNull = mTarget.MakeAuto();
+
   if (mDrawObserver) {
     mDrawObserver->DidDrawCall(CanvasDrawObserver::DrawCallType::DrawImage);
   }
@@ -5019,7 +5023,7 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
 
     AdjustedTarget tempTarget(this, bounds.IsEmpty() ? nullptr : &bounds);
     if (!tempTarget) {
-      gfxDevCrash(LogReason::InvalidDrawTarget) << "Invalid adjusted target in Canvas2D " << gfx::hexa(mTarget) << ", " << NeedToDrawShadow() << NeedToApplyFilter();
+      gfxDevCrash(LogReason::InvalidDrawTarget) << "Invalid adjusted target in Canvas2D " << gfx::hexa((DrawTarget*)mTarget) << ", " << NeedToDrawShadow() << NeedToApplyFilter();
       return;
     }
     tempTarget->DrawSurface(srcSurf,

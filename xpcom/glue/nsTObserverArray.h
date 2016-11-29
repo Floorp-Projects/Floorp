@@ -11,6 +11,8 @@
 #include "nsTArray.h"
 #include "nsCycleCollectionNoteChild.h"
 
+#include <functional>
+
 /**
  * An array of observers. Like a normal array, but supports iterators that are
  * stable even if the array is modified during iteration.
@@ -249,7 +251,7 @@ public:
   }
 
   // See nsTArray::RemoveElementsBy.
-  void RemoveElementsBy(mozilla::function<bool(const elem_type&)> aPredicate)
+  void RemoveElementsBy(std::function<bool(const elem_type&)> aPredicate)
   {
     index_type i = 0;
     mArray.RemoveElementsBy([&](const elem_type& aItem) {

@@ -19,7 +19,6 @@
 #ifndef wasm_code_h
 #define wasm_code_h
 
-#include "wasm/WasmGeneratedSourceMap.h"
 #include "wasm/WasmTypes.h"
 
 namespace js {
@@ -482,6 +481,64 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 
 typedef RefPtr<Metadata> MutableMetadata;
 typedef RefPtr<const Metadata> SharedMetadata;
+
+// The generated source location for the AST node/expression. The offset field refers
+// an offset in an binary format file.
+
+struct ExprLoc
+{
+    uint32_t lineno;
+    uint32_t column;
+    uint32_t offset;
+    ExprLoc() : lineno(0), column(0), offset(0) {}
+    ExprLoc(uint32_t lineno_, uint32_t column_, uint32_t offset_)
+      : lineno(lineno_), column(column_), offset(offset_)
+    {}
+};
+
+typedef Vector<ExprLoc, 0, TempAllocPolicy> ExprLocVector;
+
+// The generated source WebAssembly function lines and expressions ranges.
+
+struct FunctionLoc
+{
+    size_t startExprsIndex;
+    size_t endExprsIndex;
+    uint32_t startLineno;
+    uint32_t endLineno;
+    FunctionLoc(size_t startExprsIndex_, size_t endExprsIndex_, uint32_t startLineno_, uint32_t endLineno_)
+      : startExprsIndex(startExprsIndex_),
+        endExprsIndex(endExprsIndex_),
+        startLineno(startLineno_),
+        endLineno(endLineno_)
+    {}
+};
+
+typedef Vector<FunctionLoc, 0, TempAllocPolicy> FunctionLocVector;
+
+// The generated source map for WebAssembly binary file. This map is generated during
+// building the text buffer (see BinaryToExperimentalText).
+
+class GeneratedSourceMap
+{
+    ExprLocVector exprlocs_;
+    FunctionLocVector functionlocs_;
+    uint32_t totalLines_;
+
+  public:
+    explicit GeneratedSourceMap(JSContext* cx)
+     : exprlocs_(cx),
+       functionlocs_(cx),
+       totalLines_(0)
+    {}
+    ExprLocVector& exprlocs() { return exprlocs_; }
+    FunctionLocVector& functionlocs() { return functionlocs_; }
+
+    uint32_t totalLines() { return totalLines_; }
+    void setTotalLines(uint32_t val) { totalLines_ = val; }
+};
+
+typedef UniquePtr<GeneratedSourceMap> UniqueGeneratedSourceMap;
 
 // Code objects own executable code and the metadata that describes it. At the
 // moment, Code objects are owned uniquely by instances since CodeSegments are

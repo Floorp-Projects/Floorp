@@ -101,7 +101,7 @@ public:
    * (Tab spacing must be performed by textframe later.) Certain other
    * characters are discarded.
    * 
-   * @param aCompressWhitespace control what is compressed to a
+   * @param aCompression control what is compressed to a
    * single space character: no compression, compress spaces (not followed
    * by combining mark) and tabs, compress those plus newlines, or
    * no compression except newlines are discarded.
@@ -110,16 +110,16 @@ public:
    * there's an Arabic character or whitespace preceding the end of this text.
    */
   static char16_t* TransformText(const char16_t* aText, uint32_t aLength,
-                                  char16_t* aOutput,
-                                  CompressionMode aCompression,
-                                  uint8_t * aIncomingFlags,
-                                  gfxSkipChars* aSkipChars,
-                                  uint32_t* aAnalysisFlags);
+                                 char16_t* aOutput,
+                                 CompressionMode aCompression,
+                                 uint8_t* aIncomingFlags,
+                                 gfxSkipChars* aSkipChars,
+                                 uint32_t* aAnalysisFlags);
 
   static uint8_t* TransformText(const uint8_t* aText, uint32_t aLength,
                                 uint8_t* aOutput,
                                 CompressionMode aCompression,
-                                uint8_t * aIncomingFlags,
+                                uint8_t* aIncomingFlags,
                                 gfxSkipChars* aSkipChars,
                                 uint32_t* aAnalysisFlags);
 
@@ -133,8 +133,8 @@ public:
 
   static uint32_t
   ComputeApproximateLengthWithWhitespaceCompression(nsIContent *aContent,
-                                                    const nsStyleText
-                                                      *aStyleText);
+                                                    const nsStyleText*
+                                                      aStyleText);
 };
 
 class nsSkipCharsRunIterator {

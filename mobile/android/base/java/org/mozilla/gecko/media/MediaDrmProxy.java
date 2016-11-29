@@ -39,7 +39,7 @@ public final class MediaDrmProxy {
     @WrapForJNI
     private static final String OPUS = "audio/opus";
 
-    public static ArrayList<MediaDrmProxy> sProxyList = new ArrayList<MediaDrmProxy>();
+    public static final ArrayList<MediaDrmProxy> sProxyList = new ArrayList<MediaDrmProxy>();
 
     // A flag to avoid using the native object that has been destroyed.
     private boolean mDestroyed;

@@ -105,9 +105,9 @@ public class LocalBrowserDB extends BrowserDB {
     private volatile SuggestedSites mSuggestedSites;
 
     // Constants used when importing history data from legacy browser.
-    public static String HISTORY_VISITS_DATE = "date";
-    public static String HISTORY_VISITS_COUNT = "visits";
-    public static String HISTORY_VISITS_URL = "url";
+    public static final String HISTORY_VISITS_DATE = "date";
+    public static final String HISTORY_VISITS_COUNT = "visits";
+    public static final String HISTORY_VISITS_URL = "url";
 
     private static final String TELEMETRY_HISTOGRAM_ACITIVITY_STREAM_TOPSITES = "FENNEC_ACTIVITY_STREAM_TOPSITES_LOADER_TIME_MS";
 

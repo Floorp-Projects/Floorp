@@ -139,27 +139,11 @@ void nsDeviceContextSpecX::GetPaperRect(double* aTop, double* aLeft, double* aBo
 
 already_AddRefed<PrintTarget> nsDeviceContextSpecX::MakePrintTarget()
 {
-    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
     double top, left, bottom, right;
     GetPaperRect(&top, &left, &bottom, &right);
     const double width = right - left;
     const double height = bottom - top;
     IntSize size = IntSize::Floor(width, height);
 
-    CGContextRef context;
-    ::PMSessionGetCGGraphicsContext(mPrintSession, &context);
-
-    if (context) {
-        // Initially, origin is at bottom-left corner of the paper.
-        // Here, we translate it to top-left corner of the paper.
-        CGContextTranslateCTM(context, 0, height);
-        CGContextScaleCTM(context, 1.0, -1.0);
-        return PrintTargetCG::CreateOrNull(context, size);
-    }
-
-    // Apparently we do need this branch - bug 368933.
-    return PrintTargetCG::CreateOrNull(size, SurfaceFormat::A8R8G8B8_UINT32);
-
-    NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
+    return PrintTargetCG::CreateOrNull(mPrintSession, size);
 }

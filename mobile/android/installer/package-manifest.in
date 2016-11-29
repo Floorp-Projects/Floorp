@@ -294,6 +294,8 @@
 @BINPATH@/components/TooltipTextProvider.manifest
 @BINPATH@/components/NetworkGeolocationProvider.manifest
 @BINPATH@/components/NetworkGeolocationProvider.js
+@BINPATH@/components/EditorUtils.manifest
+@BINPATH@/components/EditorUtils.js
 @BINPATH@/components/extensions.manifest
 @BINPATH@/components/utils.manifest
 @BINPATH@/components/simpleServices.js

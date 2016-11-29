@@ -4,7 +4,8 @@
 
 "use strict";
 
-// Test that the css transform highlighter is created only when asked
+// Test that the css transform highlighter is created only when asked and only one
+// instance exists across the inspector
 
 const TEST_URI = `
   <style type="text/css">
@@ -37,12 +38,8 @@ add_task(function* () {
   yield onComputedViewReady;
   overlay = cView.highlighters;
 
-  ok(!overlay.highlighters[TYPE], "No highlighter exists in the computed-view");
-  h = yield overlay._getHighlighter(TYPE);
-  ok(overlay.highlighters[TYPE],
-    "The highlighter has been created in the computed-view");
-  is(h, overlay.highlighters[TYPE], "The right highlighter has been created");
-  h2 = yield overlay._getHighlighter(TYPE);
-  is(h, h2, "The same instance of highlighter is returned everytime " +
+  ok(overlay.highlighters[TYPE], "The highlighter exists in the computed-view");
+  let h3 = yield overlay._getHighlighter(TYPE);
+  is(h, h3, "The same instance of highlighter is returned everytime " +
     "in the computed-view");
 });

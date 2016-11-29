@@ -19,7 +19,6 @@ const {Rule} = require("devtools/client/inspector/rules/models/rule");
 const {RuleEditor} = require("devtools/client/inspector/rules/views/rule-editor");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
-const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
 const {
   VIEW_NODE_SELECTOR_TYPE,
   VIEW_NODE_PROPERTY_TYPE,
@@ -100,6 +99,7 @@ const FILTER_STRICT_RE = /\s*`(.*?)`\s*$/;
  */
 function CssRuleView(inspector, document, store, pageStyle) {
   this.inspector = inspector;
+  this.highlighters = inspector.highlighters;
   this.styleDocument = document;
   this.styleWindow = this.styleDocument.defaultView;
   this.store = store || {};
@@ -177,8 +177,8 @@ function CssRuleView(inspector, document, store, pageStyle) {
   // Add the tooltips and highlighters to the view
   this.tooltips = new TooltipsOverlay(this);
   this.tooltips.addToView();
-  this.highlighters = new HighlightersOverlay(this);
-  this.highlighters.addToView();
+
+  this.highlighters.addToView(this);
 
   EventEmitter.decorate(this);
 }
@@ -252,49 +252,37 @@ CssRuleView.prototype = {
    * @param {String} selector
    *        The selector used to find nodes in the page.
    */
-  toggleSelectorHighlighter: function (selectorIcon, selector) {
+  toggleSelectorHighlighter: Task.async(function* (selectorIcon, selector) {
     if (this.lastSelectorIcon) {
       this.lastSelectorIcon.classList.remove("highlighted");
     }
     selectorIcon.classList.remove("highlighted");
 
-    this.unhighlightSelector().then(() => {
-      if (selector !== this.highlighters.selectorHighlighterShown) {
-        this.highlighters.selectorHighlighterShown = selector;
-        selectorIcon.classList.add("highlighted");
-        this.lastSelectorIcon = selectorIcon;
-        this.highlightSelector(selector).then(() => {
-          this.emit("ruleview-selectorhighlighter-toggled", true);
-        }, e => console.error(e));
-      } else {
-        this.highlighters.selectorHighlighterShown = null;
-        this.emit("ruleview-selectorhighlighter-toggled", false);
-      }
-    }, e => console.error(e));
-  },
-
-  highlightSelector: Task.async(function* (selector) {
-    let highlighter = yield this.getSelectorHighlighter();
-    if (!highlighter) {
-      return;
-    }
-
-    let node = this.inspector.selection.nodeFront;
-
-    yield highlighter.show(node, {
-      hideInfoBar: true,
-      hideGuides: true,
-      selector
-    });
-  }),
-
-  unhighlightSelector: Task.async(function* () {
     let highlighter = yield this.getSelectorHighlighter();
     if (!highlighter) {
       return;
     }
 
     yield highlighter.hide();
+
+    if (selector !== this.highlighters.selectorHighlighterShown) {
+      this.highlighters.selectorHighlighterShown = selector;
+      selectorIcon.classList.add("highlighted");
+      this.lastSelectorIcon = selectorIcon;
+
+      let node = this.inspector.selection.nodeFront;
+
+      yield highlighter.show(node, {
+        hideInfoBar: true,
+        hideGuides: true,
+        selector
+      });
+
+      this.emit("ruleview-selectorhighlighter-toggled", true);
+    } else {
+      this.highlighters.selectorHighlighterShown = null;
+      this.emit("ruleview-selectorhighlighter-toggled", false);
+    }
   }),
 
   /**
@@ -683,7 +671,7 @@ CssRuleView.prototype = {
     }
 
     this.tooltips.destroy();
-    this.highlighters.destroy();
+    this.highlighters.removeFromView(this);
 
     // Remove bound listeners
     this.shortcuts.destroy();
@@ -709,6 +697,7 @@ CssRuleView.prototype = {
     this.focusCheckbox = null;
 
     this.inspector = null;
+    this.highlighters = null;
     this.styleDocument = null;
     this.styleWindow = null;
 

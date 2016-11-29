@@ -13,7 +13,7 @@ public class PasswordRecord extends Record {
   private static final String LOG_TAG = "PasswordRecord";
 
   public static final String COLLECTION_NAME = "passwords";
-  public static long PASSWORDS_TTL = -1; // Never expire passwords.
+  public static final long PASSWORDS_TTL = -1; // Never expire passwords.
 
   // Payload strings.
   public static final String PAYLOAD_HOSTNAME = "hostname";

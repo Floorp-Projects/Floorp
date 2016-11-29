@@ -8,61 +8,44 @@
 #include "cairo.h"
 #include "cairo-quartz.h"
 #include "mozilla/gfx/HelpersCairo.h"
+#include "nsObjCExceptions.h"
 
 namespace mozilla {
 namespace gfx {
 
-PrintTargetCG::PrintTargetCG(cairo_surface_t* aCairoSurface,
+PrintTargetCG::PrintTargetCG(PMPrintSession aPrintSession,
                              const IntSize& aSize)
-  : PrintTarget(aCairoSurface, aSize)
+  : PrintTarget(/* aCairoSurface */ nullptr, aSize)
+  , mPrintSession(aPrintSession)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  ::PMRetain(mPrintSession);
+
   // TODO: Add memory reporting like gfxQuartzSurface.
   //RecordMemoryUsed(mSize.height * 4 + sizeof(gfxQuartzSurface));
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+PrintTargetCG::~PrintTargetCG()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (mPrintSession)
+    ::PMRelease(mPrintSession);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 /* static */ already_AddRefed<PrintTargetCG>
-PrintTargetCG::CreateOrNull(const IntSize& aSize, gfxImageFormat aFormat)
+PrintTargetCG::CreateOrNull(PMPrintSession aPrintSession, const IntSize& aSize)
 {
   if (!Factory::CheckSurfaceSize(aSize)) {
     return nullptr;
   }
 
-  unsigned int width = static_cast<unsigned int>(aSize.width);
-  unsigned int height = static_cast<unsigned int>(aSize.height);
-
-  cairo_format_t cformat = GfxFormatToCairoFormat(aFormat);
-  cairo_surface_t* surface =
-    cairo_quartz_surface_create(cformat, width, height);
-
-  if (cairo_surface_status(surface)) {
-    return nullptr;
-  }
-
-  // The new object takes ownership of our surface reference.
-  RefPtr<PrintTargetCG> target = new PrintTargetCG(surface, aSize);
-
-  return target.forget();
-}
-
-/* static */ already_AddRefed<PrintTargetCG>
-PrintTargetCG::CreateOrNull(CGContextRef aContext, const IntSize& aSize)
-{
-  if (!Factory::CheckSurfaceSize(aSize)) {
-    return nullptr;
-  }
-
-  unsigned int width = static_cast<unsigned int>(aSize.width);
-  unsigned int height = static_cast<unsigned int>(aSize.height);
-
-  cairo_surface_t* surface =
-    cairo_quartz_surface_create_for_cg_context(aContext, width, height);
-
-  if (cairo_surface_status(surface)) {
-    return nullptr;
-  }
-
-  // The new object takes ownership of our surface reference.
-  RefPtr<PrintTargetCG> target = new PrintTargetCG(surface, aSize);
+  RefPtr<PrintTargetCG> target = new PrintTargetCG(aPrintSession, aSize);
 
   return target.forget();
 }
@@ -114,6 +97,50 @@ PrintTargetCG::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
     mRefDT = dt.forget();
   }
   return do_AddRef(mRefDT);
+}
+
+nsresult
+PrintTargetCG::BeginPage()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  CGContextRef context;
+  // This call will fail if we are not called between the PMSessionBeginPage/
+  // PMSessionEndPage calls:
+  ::PMSessionGetCGGraphicsContext(mPrintSession, &context);
+
+  if (!context) {
+    return NS_ERROR_FAILURE;
+  }
+
+  unsigned int width = static_cast<unsigned int>(mSize.width);
+  unsigned int height = static_cast<unsigned int>(mSize.height);
+
+  // Initially, origin is at bottom-left corner of the paper.
+  // Here, we translate it to top-left corner of the paper.
+  CGContextTranslateCTM(context, 0, height);
+  CGContextScaleCTM(context, 1.0, -1.0);
+
+  cairo_surface_t* surface =
+    cairo_quartz_surface_create_for_cg_context(context, width, height);
+
+  if (cairo_surface_status(surface)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mCairoSurface = surface;
+
+  return PrintTarget::BeginPage();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+nsresult
+PrintTargetCG::EndPage()
+{
+  cairo_surface_finish(mCairoSurface);
+  mCairoSurface = nullptr;
+  return PrintTarget::EndPage();
 }
 
 } // namespace gfx
