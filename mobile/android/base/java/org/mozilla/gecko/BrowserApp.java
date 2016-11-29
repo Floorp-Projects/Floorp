@@ -3833,24 +3833,22 @@ public class BrowserApp extends GeckoApp
 
         final Prompt ps = new Prompt(this, new Prompt.PromptCallback() {
             @Override
-            public void onPromptFinished(String result) {
-                try {
-                    int itemId = new JSONObject(result).getInt("button");
-                    if (itemId == 0) {
-                        final Context context = GeckoAppShell.getApplicationContext();
-                        if (type == GuestModeDialog.ENTERING) {
-                            GeckoProfile.enterGuestMode(context);
-                        } else {
-                            GeckoProfile.leaveGuestMode(context);
-                            // Now's a good time to make sure we're not displaying the
-                            // Guest Browsing notification.
-                            GuestSession.hideNotification(context);
-                        }
-                        doRestart();
-                    }
-                } catch (JSONException ex) {
-                    Log.e(LOGTAG, "Exception reading guest mode prompt result", ex);
+            public void onPromptFinished(final GeckoBundle result) {
+                final int itemId = result.getInt("button", -1);
+                if (itemId != 0) {
+                    return;
                 }
+
+                final Context context = GeckoAppShell.getApplicationContext();
+                if (type == GuestModeDialog.ENTERING) {
+                    GeckoProfile.enterGuestMode(context);
+                } else {
+                    GeckoProfile.leaveGuestMode(context);
+                    // Now's a good time to make sure we're not displaying the
+                    // Guest Browsing notification.
+                    GuestSession.hideNotification(context);
+                }
+                doRestart();
             }
         });
 
