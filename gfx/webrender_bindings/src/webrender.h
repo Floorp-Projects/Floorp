@@ -111,6 +111,17 @@ wr_add_image(wrwindowstate* wrWindow, uint32_t width, uint32_t height,
              uint32_t stride, WRImageFormat format, uint8_t *bytes, size_t size)
 WR_FUNC;
 
+WR_INLINE WRImageKey
+wr_add_external_image_texture(wrwindowstate* wrWindow, uint32_t width, uint32_t height,
+                              WRImageFormat format, uint64_t external_image_id)
+WR_FUNC;
+
+//TODO(Jerry): handle shmem in WR
+//// WR_INLINE WRImageKey
+//// wr_add_external_image_buffer(wrwindowstate* wrWindow, uint32_t width, uint32_t height,
+////                              uint32_t stride, WRImageFormat format, uint8_t *bytes, size_t size)
+//// WR_FUNC;
+
 WR_INLINE void
 wr_update_image(wrwindowstate* wrWindow, WRImageKey key,
                 uint32_t width, uint32_t height,
