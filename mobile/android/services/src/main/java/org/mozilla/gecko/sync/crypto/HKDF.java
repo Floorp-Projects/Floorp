@@ -19,7 +19,7 @@ import org.mozilla.gecko.sync.Utils;
  * HMAC uses HMAC SHA256 standard.
  */
 public class HKDF {
-  public static String HMAC_ALGORITHM = "hmacSHA256";
+  public static final String HMAC_ALGORITHM = "hmacSHA256";
 
   /**
    * Used for conversion in cases in which you *know* the encoding exists.

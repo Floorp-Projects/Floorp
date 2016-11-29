@@ -65,14 +65,6 @@ public:
   Create(nsISupports* aParent, BlobImpl* aImpl);
 
   static already_AddRefed<Blob>
-  Create(nsISupports* aParent, const nsAString& aContentType,
-         uint64_t aLength);
-
-  static already_AddRefed<Blob>
-  Create(nsISupports* aParent, const nsAString& aContentType, uint64_t aStart,
-         uint64_t aLength);
-
-  static already_AddRefed<Blob>
   CreateStringBlob(nsISupports* aParent, const nsACString& aData,
                    const nsAString& aContentType);
 
