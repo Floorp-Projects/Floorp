@@ -348,7 +348,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   mWidget->PostRender(&widgetContext);
 
   // Calls for TextureHosts recycling
-  mCompositor->EndFrame()
+  mCompositor->EndFrame();
   mCompositor->FlushPendingNotifyNotUsed();
 }
 
