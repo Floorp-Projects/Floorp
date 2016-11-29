@@ -930,11 +930,6 @@ private:
       return true;
     }
 
-    // If we are seeking, we consider it as playing
-    if (mOwner->mPlayingBeforeSeek) {
-      return true;
-    }
-
     // If we are playing an external stream.
     if (mOwner->mSrcAttrStream) {
       return true;
