@@ -122,7 +122,7 @@ function* testCookies(options) {
     while (enum_.hasMoreElements()) {
       cookies.push(enum_.getNext().QueryInterface(SpecialPowers.Ci.nsICookie2));
     }
-    return cookies.sort((a, b) => String.localeCompare(a.name, b.name));
+    return cookies.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   let cookies = getCookies(options.domain);
