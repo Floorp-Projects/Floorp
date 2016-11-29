@@ -791,15 +791,7 @@ public:
 
     ResetMDSM();
 
-    // Do the seek.
-    mSeekTaskRequest.Begin(mSeekTask->Seek(mMaster->Duration())
-      ->Then(OwnerThread(), __func__,
-             [this] (const SeekTaskResolveValue& aValue) {
-               OnSeekTaskResolved(aValue);
-             },
-             [this] (const SeekTaskRejectValue& aValue) {
-               OnSeekTaskRejected(aValue);
-             }));
+    DoSeek();
 
     return mSeekJob.mPromise.Ensure(__func__);
   }
@@ -860,8 +852,10 @@ public:
 protected:
   SeekJob mSeekJob;
   RefPtr<SeekTask> mSeekTask;
+  MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
 
-private:
+  void SeekCompleted();
+
   void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
   {
     mSeekTaskRequest.Complete();
@@ -904,13 +898,12 @@ private:
     mMaster->DecodeError(aValue.mError);
   }
 
-  void SeekCompleted();
-
+private:
   virtual void CreateSeekTask() = 0;
 
   virtual void ResetMDSM() = 0;
 
-  MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
+  virtual void DoSeek() = 0;
 };
 
 class MediaDecoderStateMachine::AccurateSeekingState
@@ -944,6 +937,18 @@ private:
       mMaster->Reset();
     }
   }
+
+  void DoSeek() override
+  {
+    mSeekTaskRequest.Begin(mSeekTask->Seek(mMaster->Duration())
+      ->Then(OwnerThread(), __func__,
+             [this] (const SeekTaskResolveValue& aValue) {
+               OnSeekTaskResolved(aValue);
+             },
+             [this] (const SeekTaskRejectValue& aValue) {
+               OnSeekTaskRejected(aValue);
+             }));
+  }
 };
 
 class MediaDecoderStateMachine::NextFrameSeekingState
@@ -974,9 +979,19 @@ private:
   {
     // Do nothing.
   }
+
+  void DoSeek() override
+  {
+    mSeekTaskRequest.Begin(mSeekTask->Seek(mMaster->Duration())
+      ->Then(OwnerThread(), __func__,
+             [this] (const SeekTaskResolveValue& aValue) {
+               OnSeekTaskResolved(aValue);
+             },
+             [this] (const SeekTaskRejectValue& aValue) {
+               OnSeekTaskRejected(aValue);
+             }));
+  }
 };
-
-
 
 /**
  * Purpose: stop playback until enough data is decoded to continue playback.
