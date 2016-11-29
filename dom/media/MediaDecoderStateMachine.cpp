@@ -760,7 +760,6 @@ public:
                                           EventVisibility aVisibility)
   {
     mSeekJob = Move(aSeekJob);
-    mVisibility = aVisibility;
 
     // Always switch off the blank decoder otherwise we might become visible
     // in the middle of seeking and won't have a valid video frame to show
@@ -793,7 +792,7 @@ public:
 
     mMaster->UpdatePlaybackPositionInternal(mSeekJob.mTarget.GetTime().ToMicroseconds());
 
-    if (mVisibility == EventVisibility::Observable) {
+    if (aVisibility == EventVisibility::Observable) {
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::SeekStarted);
       // We want dormant actions to be transparent to the user.
       // So we only notify the change when the seek request is from the user.
@@ -921,7 +920,6 @@ private:
   void SeekCompleted();
 
   SeekJob mSeekJob;
-  EventVisibility mVisibility = EventVisibility::Observable;
   MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
   RefPtr<SeekTask> mSeekTask;
 };
