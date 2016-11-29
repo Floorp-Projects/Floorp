@@ -62,13 +62,6 @@ AccurateSeekTask::Discard()
   mIsDiscarded = true;
 }
 
-bool
-AccurateSeekTask::NeedToResetMDSM() const
-{
-  AssertOwnerThread();
-  return true;
-}
-
 int64_t
 AccurateSeekTask::CalculateNewCurrentTime() const
 {

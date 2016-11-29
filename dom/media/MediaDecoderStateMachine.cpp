@@ -789,14 +789,7 @@ public:
       mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING);
     }
 
-    // Reset our state machine and decoding pipeline before seeking.
-    if (mSeekTask->NeedToResetMDSM()) {
-      if (mSeekJob.mTarget.IsVideoOnly()) {
-        mMaster->Reset(TrackInfo::kVideoTrack);
-      } else {
-        mMaster->Reset();
-      }
-    }
+    ResetMDSM();
 
     // Do the seek.
     mSeekTaskRequest.Begin(mSeekTask->Seek(mMaster->Duration())
@@ -915,6 +908,8 @@ private:
 
   virtual void CreateSeekTask() = 0;
 
+  virtual void ResetMDSM() = 0;
+
   MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
 };
 
@@ -940,6 +935,15 @@ private:
       mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
       Info(), mMaster->Duration(), mMaster->GetMediaTime());
   }
+
+  void ResetMDSM() override
+  {
+    if (mSeekJob.mTarget.IsVideoOnly()) {
+      mMaster->Reset(TrackInfo::kVideoTrack);
+    } else {
+      mMaster->Reset();
+    }
+  }
 };
 
 class MediaDecoderStateMachine::NextFrameSeekingState
@@ -964,6 +968,11 @@ private:
       mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
       Info(), mMaster->Duration(),mMaster->GetMediaTime(),
       AudioQueue(), VideoQueue());
+  }
+
+  void ResetMDSM() override
+  {
+    // Do nothing.
   }
 };
 
