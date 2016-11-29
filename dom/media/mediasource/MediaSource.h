@@ -27,6 +27,7 @@ class nsPIDOMWindowInner;
 
 namespace mozilla {
 
+class AbstractThread;
 class ErrorResult;
 template <typename T> class AsyncEventRunner;
 class MediaResult;
@@ -113,6 +114,11 @@ public:
     return mLiveSeekableRange.value();
   }
 
+  AbstractThread* AbstractMainThread() const
+  {
+    return mAbstractMainThread;
+  }
+
 private:
   // SourceBuffer uses SetDuration and SourceBufferIsActive
   friend class mozilla::dom::SourceBuffer;
@@ -142,6 +148,8 @@ private:
   RefPtr<HTMLMediaElement> mMediaElement;
 
   RefPtr<nsIPrincipal> mPrincipal;
+
+  const RefPtr<AbstractThread> mAbstractMainThread;
 
   MediaSourceReadyState mReadyState;
 

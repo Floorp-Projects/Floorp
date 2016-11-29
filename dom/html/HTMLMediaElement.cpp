@@ -3573,7 +3573,8 @@ NS_IMPL_ISUPPORTS(HTMLMediaElement::ShutdownObserver, nsIObserver)
 
 HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
-    mWatchManager(this, AbstractThread::MainThread()),
+    mAbstractMainThread(OwnerDoc()->AbstractMainThreadFor(TaskCategory::Other)),
+    mWatchManager(this, mAbstractMainThread),
     mSrcStreamTracksAvailable(false),
     mSrcStreamPausedCurrentTime(-1),
     mShutdownObserver(new ShutdownObserver),
@@ -4637,7 +4638,7 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // Not every decoder will produce waitingForKey events, only add ones that can
   if (waitingForKeyProducer) {
     mWaitingForKeyListener = waitingForKeyProducer->Connect(
-      AbstractThread::MainThread(), this, &HTMLMediaElement::CannotDecryptWaitingForKey);
+      mAbstractMainThread, this, &HTMLMediaElement::CannotDecryptWaitingForKey);
   }
 
   if (mChannelLoader) {
@@ -7134,6 +7135,14 @@ HTMLMediaElement::UpdateCustomPolicyAfterPlayed()
   if (mAudioChannelWrapper) {
     mAudioChannelWrapper->NotifyPlayStarted();
   }
+}
+
+AbstractThread*
+HTMLMediaElement::AbstractMainThread() const
+{
+  MOZ_ASSERT(mAbstractMainThread);
+
+  return mAbstractMainThread;
 }
 
 nsTArray<RefPtr<Promise>>

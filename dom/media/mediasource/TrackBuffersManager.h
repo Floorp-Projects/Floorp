@@ -26,6 +26,7 @@
 
 namespace mozilla {
 
+class AbstractThread;
 class ContainerParser;
 class MediaByteBuffer;
 class MediaRawData;
@@ -466,6 +467,8 @@ private:
 
   // Strong references to external objects.
   nsMainThreadPtrHandle<MediaSourceDecoder> mParentDecoder;
+
+  const RefPtr<AbstractThread> mAbstractMainThread;
 
   // Return public highest end time across all aTracks.
   // Monitor must be held.
