@@ -45,7 +45,7 @@ add_task(function* () {
   ok(!highlighters.gridHighlighterShown, "No CSS grid highlighter is shown.");
 
   info("Toggling ON the CSS grid highlighter from the overridden rule in the rule-view.");
-  let onHighlighterShown = highlighters.once("highlighter-shown");
+  let onHighlighterShown = highlighters.once("grid-highlighter-shown");
   overriddenGridToggle.click();
   yield onHighlighterShown;
 
@@ -60,7 +60,7 @@ add_task(function* () {
 
   info("Toggling off the CSS grid highlighter from the normal grid declaration in the " +
     "rule-view.");
-  let onHighlighterHidden = highlighters.once("highlighter-hidden");
+  let onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
   gridToggle.click();
   yield onHighlighterHidden;
 

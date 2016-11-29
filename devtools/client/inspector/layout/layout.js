@@ -9,7 +9,10 @@ const { Task } = require("devtools/shared/task");
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
-const { updateGrids } = require("./actions/grids");
+const {
+  updateGridHighlighted,
+  updateGrids,
+} = require("./actions/grids");
 const App = createFactory(require("./components/App"));
 const Store = require("./store");
 
@@ -19,13 +22,17 @@ const INSPECTOR_L10N =
 
 function LayoutView(inspector, window) {
   this.document = window.document;
+  this.highlighters = inspector.highlighters;
   this.inspector = inspector;
   this.store = null;
   this.walker = this.inspector.walker;
 
   this.onGridLayoutChange = this.onGridLayoutChange.bind(this);
+  this.onHighlighterChange = this.onHighlighterChange.bind(this);
   this.onSidebarSelect = this.onSidebarSelect.bind(this);
 
+  this.highlighters.on("grid-highlighter-hidden", this.onHighlighterChange);
+  this.highlighters.on("grid-highlighter-shown", this.onHighlighterChange);
   this.inspector.sidebar.on("select", this.onSidebarSelect);
 
   this.init();
@@ -67,6 +74,8 @@ LayoutView.prototype = {
    * and cleans up references.
    */
   destroy() {
+    this.highlighters.off("grid-highlighter-hidden", this.onHighlighterChange);
+    this.highlighters.off("grid-highlighter-shown", this.onHighlighterChange);
     this.inspector.sidebar.off("select", this.onSidebarSelect);
     this.layoutInspector.off("grid-layout-changed", this.onGridLayoutChange);
 
@@ -111,8 +120,9 @@ LayoutView.prototype = {
 
       grids.push({
         id: i,
+        gridFragments: grid.gridFragments,
+        highlighted: nodeFront == this.highlighters.gridHighlighterShown,
         nodeFront,
-        gridFragments: grid.gridFragments
       });
     }
 
@@ -120,7 +130,7 @@ LayoutView.prototype = {
   }),
 
   /**
-   * Handler for 'grid-layout-changed' events emitted from the LayoutActor.
+   * Handler for "grid-layout-changed" events emitted from the LayoutActor.
    *
    * @param  {Array} grids
    *         Array of all GridFront in the current page.
@@ -129,6 +139,21 @@ LayoutView.prototype = {
     if (this.isPanelVisible()) {
       this.refresh(grids);
     }
+  },
+
+  /**
+   * Handler for "grid-highlighter-shown" and "grid-highlighter-hidden" events emitted
+   * from the HighlightersOverlay. Updates the NodeFront's grid highlighted state.
+   *
+   * @param  {Event} event
+   *         Event that was triggered.
+   * @param  {NodeFront} nodeFront
+   *         The NodeFront of the grid container element for which the grid highlighter
+   *         is shown for.
+   */
+  onHighlighterChange(event, nodeFront) {
+    let highlighted = event === "grid-highlighter-shown";
+    this.store.dispatch(updateGridHighlighted(nodeFront, highlighted));
   },
 
   /**

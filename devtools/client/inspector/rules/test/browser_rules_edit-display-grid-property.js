@@ -29,13 +29,13 @@ add_task(function* () {
   let gridToggle = container.querySelector(".ruleview-grid");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
-  let onHighlighterShown = highlighters.once("highlighter-shown");
+  let onHighlighterShown = highlighters.once("grid-highlighter-shown");
   gridToggle.click();
   yield onHighlighterShown;
 
   info("Edit the 'grid' property value to 'block'.");
   let editor = yield focusEditableField(view, container);
-  let onHighlighterHidden = highlighters.once("highlighter-hidden");
+  let onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
   let onDone = view.once("ruleview-changed");
   editor.input.value = "block;";
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
