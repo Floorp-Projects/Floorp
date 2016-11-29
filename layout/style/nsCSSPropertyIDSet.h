@@ -67,6 +67,15 @@ public:
       return mozilla::PodEqual(mProperties, aOther.mProperties);
     }
 
+    // Return a new nsCSSPropertyIDSet which is the inverse of this set.
+    nsCSSPropertyIDSet Invert() const {
+      nsCSSPropertyIDSet result;
+      for (size_t i = 0; i < mozilla::ArrayLength(mProperties); ++i) {
+        result.mProperties[i] = ~mProperties[i];
+      }
+      return result;
+    }
+
 private:
     typedef unsigned long property_set_type;
 public:
