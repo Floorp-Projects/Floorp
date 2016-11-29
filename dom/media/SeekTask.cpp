@@ -71,11 +71,4 @@ SeekTask::OwnerThread() const
   return mOwnerThread;
 }
 
-const SeekTarget&
-SeekTask::GetSeekTarget()
-{
-  AssertOwnerThread();
-  return mTarget;
-}
-
 } // namespace mozilla

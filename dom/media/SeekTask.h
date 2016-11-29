@@ -60,8 +60,6 @@ public:
 
   virtual int64_t CalculateNewCurrentTime() const = 0;
 
-  const SeekTarget& GetSeekTarget();
-
   virtual void HandleAudioDecoded(MediaData* aAudio) = 0;
 
   virtual void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) = 0;
