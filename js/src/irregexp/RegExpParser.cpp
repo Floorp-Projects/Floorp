@@ -243,10 +243,10 @@ RegExpParser<CharT>::RegExpParser(frontend::TokenStream& ts, LifoAlloc* alloc,
 
 template <typename CharT>
 RegExpTree*
-RegExpParser<CharT>::ReportError(unsigned errorNumber)
+RegExpParser<CharT>::ReportError(unsigned errorNumber, const char* param /* = nullptr */)
 {
     gc::AutoSuppressGC suppressGC(ts.context());
-    ts.reportError(errorNumber);
+    ts.reportError(errorNumber, param);
     return nullptr;
 }
 
@@ -350,7 +350,7 @@ RegExpParser<CharT>::ParseBracedHexEscape(widechar* value)
         }
         code = (code << 4) | d;
         if (code > unicode::NonBMPMax) {
-            ReportError(JSMSG_UNICODE_OVERFLOW);
+            ReportError(JSMSG_UNICODE_OVERFLOW, "regular expression");
             return false;
         }
         Advance();
