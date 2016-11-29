@@ -1805,14 +1805,3 @@ add_task(async function test_migrate_existing_tracker() {
 
   await cleanup();
 });
-
-function run_test() {
-  initTestLogging("Trace");
-
-  Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.Store.Bookmarks").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.Tracker.Bookmarks").level = Log.Level.Trace;
-
-  run_next_test();
-}
-
