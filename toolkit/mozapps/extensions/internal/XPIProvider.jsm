@@ -3821,8 +3821,7 @@ this.XPIProvider = {
           extensionListChanged = XPIDatabaseReconcile.processFileChanges(manifests,
                                                                          aAppChanged,
                                                                          aOldAppVersion,
-                                                                         aOldPlatformVersion,
-                                                                         updateReasons.includes("schemaChanged"));
+                                                                         aOldPlatformVersion);
         }
         catch (e) {
           logger.error("Failed to process extension changes at startup", e);
