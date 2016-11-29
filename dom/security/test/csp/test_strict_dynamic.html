@@ -84,7 +84,13 @@ var tests = [
     result: "blocked",
     file: "file_strict_dynamic_script_events_xbl.html",
     policy: "script-src 'strict-dynamic' 'nonce-foo'"
-  }
+  },
+  {
+    desc: "strict-dynamic with JS URLs should be blocked",
+    result: "blocked",
+    file: "file_strict_dynamic_js_url.html",
+    policy: "script-src 'strict-dynamic' 'nonce-foo'"
+  },
 ];
 
 var counter = 0;
