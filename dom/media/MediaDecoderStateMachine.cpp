@@ -773,20 +773,7 @@ public:
       Reader()->SetVideoBlankDecode(false);
     }
 
-    // Create a new SeekTask instance for the incoming seek task.
-    if (mSeekJob.mTarget.IsAccurate() ||
-        mSeekJob.mTarget.IsFast()) {
-      mSeekTask = new AccurateSeekTask(
-        mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
-        Info(), mMaster->Duration(), mMaster->GetMediaTime());
-    } else if (mSeekJob.mTarget.IsNextFrame()) {
-      mSeekTask = new NextFrameSeekTask(
-        mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
-        Info(), mMaster->Duration(),mMaster->GetMediaTime(),
-        AudioQueue(), VideoQueue());
-    } else {
-      MOZ_DIAGNOSTIC_ASSERT(false, "Cannot handle this seek task.");
-    }
+    CreateSeekTask();
 
     // Don't stop playback for a video-only seek since audio is playing.
     if (!mSeekJob.mTarget.IsVideoOnly()) {
@@ -879,6 +866,7 @@ public:
 
 protected:
   SeekJob mSeekJob;
+  RefPtr<SeekTask> mSeekTask;
 
 private:
   void OnSeekTaskResolved(const SeekTaskResolveValue& aValue)
@@ -925,8 +913,9 @@ private:
 
   void SeekCompleted();
 
+  virtual void CreateSeekTask() = 0;
+
   MozPromiseRequestHolder<SeekTask::SeekTaskPromise> mSeekTaskRequest;
-  RefPtr<SeekTask> mSeekTask;
 };
 
 class MediaDecoderStateMachine::AccurateSeekingState
@@ -943,6 +932,14 @@ public:
     MOZ_ASSERT(aSeekJob.mTarget.IsAccurate() || aSeekJob.mTarget.IsFast());
     return SeekingState::Enter(Move(aSeekJob), aVisibility);
   }
+
+private:
+  void CreateSeekTask() override
+  {
+    mSeekTask = new AccurateSeekTask(
+      mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
+      Info(), mMaster->Duration(), mMaster->GetMediaTime());
+  }
 };
 
 class MediaDecoderStateMachine::NextFrameSeekingState
@@ -958,6 +955,15 @@ public:
   {
     MOZ_ASSERT(aSeekJob.mTarget.IsNextFrame());
     return SeekingState::Enter(Move(aSeekJob), aVisibility);
+  }
+
+private:
+  void CreateSeekTask() override
+  {
+    mSeekTask = new NextFrameSeekTask(
+      mMaster->mDecoderID, OwnerThread(), Reader(), mSeekJob.mTarget,
+      Info(), mMaster->Duration(),mMaster->GetMediaTime(),
+      AudioQueue(), VideoQueue());
   }
 };
 
