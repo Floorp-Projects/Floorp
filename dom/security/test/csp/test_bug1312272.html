@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+
+  <title>Test for bug 1312272</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe id="cspframe" style="width:100%"></iframe>
+
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+function handler(evt) {
+  console.log(evt);
+  if (evt.data === "finish") {
+    ok(true, 'Other events continue to work fine.')
+    SimpleTest.finish();
+    //removeEventListener('message', handler);
+  } else {
+    ok(false, "Should not get any other message")
+  }
+}
+var cspframe = document.getElementById("cspframe");
+cspframe.src = "file_bug1312272.html";
+addEventListener("message", handler);
+console.log("assignign frame");
+</script>
+
+</body>
+</html>
