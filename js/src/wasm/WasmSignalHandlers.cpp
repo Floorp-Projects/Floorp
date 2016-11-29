@@ -222,7 +222,7 @@ class AutoSetHandlingSegFault
 # include <sys/ucontext.h> // for ucontext_t, mcontext_t
 #endif
 
-#if defined(JS_CPU_X64)
+#if defined(__x86_64__)
 # if defined(__DragonFly__)
 #  include <machine/npx.h> // for union savefpu
 # elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || \
@@ -320,19 +320,19 @@ enum { REG_EIP = 14 };
 // into the emulator code from a Mach exception handler rather than a
 // sigaction-style signal handler.
 #if defined(XP_DARWIN)
-# if defined(JS_CPU_X64)
+# if defined(__x86_64__)
 struct macos_x64_context {
     x86_thread_state64_t thread;
     x86_float_state64_t float_;
 };
 #  define EMULATOR_CONTEXT macos_x64_context
-# elif defined(JS_CPU_X86)
+# elif defined(__i386__)
 struct macos_x86_context {
     x86_thread_state_t thread;
     x86_float_state_t float_;
 };
 #  define EMULATOR_CONTEXT macos_x86_context
-# elif defined(JS_CPU_ARM)
+# elif defined(__arm__)
 struct macos_arm_context {
     arm_thread_state_t thread;
     arm_neon_state_t float_;
@@ -345,15 +345,15 @@ struct macos_arm_context {
 # define EMULATOR_CONTEXT CONTEXT
 #endif
 
-#if defined(JS_CPU_X64)
+#if defined(_M_X64) || defined(__x86_64__)
 # define PC_sig(p) RIP_sig(p)
-#elif defined(JS_CPU_X86)
+#elif defined(_M_IX86) || defined(__i386__)
 # define PC_sig(p) EIP_sig(p)
-#elif defined(JS_CPU_ARM)
+#elif defined(__arm__)
 # define PC_sig(p) R15_sig(p)
 #elif defined(__aarch64__)
 # define PC_sig(p) EPC_sig(p)
-#elif defined(JS_CPU_MIPS)
+#elif defined(__mips__)
 # define PC_sig(p) EPC_sig(p)
 #endif
 
@@ -847,15 +847,15 @@ WasmFaultHandler(LPEXCEPTION_POINTERS exception)
 static uint8_t**
 ContextToPC(EMULATOR_CONTEXT* context)
 {
-# if defined(JS_CPU_X64)
+# if defined(__x86_64__)
     static_assert(sizeof(context->thread.__rip) == sizeof(void*),
                   "stored IP should be compile-time pointer-sized");
     return reinterpret_cast<uint8_t**>(&context->thread.__rip);
-# elif defined(JS_CPU_X86)
+# elif defined(__i386__)
     static_assert(sizeof(context->thread.uts.ts32.__eip) == sizeof(void*),
                   "stored IP should be compile-time pointer-sized");
     return reinterpret_cast<uint8_t**>(&context->thread.uts.ts32.__eip);
-# elif defined(JS_CPU_ARM)
+# elif defined(__arm__)
     static_assert(sizeof(context->thread.__pc) == sizeof(void*),
                   "stored IP should be compile-time pointer-sized");
     return reinterpret_cast<uint8_t**>(&context->thread.__pc);
@@ -901,17 +901,17 @@ HandleMachException(JSRuntime* rt, const ExceptionRequest& request)
 
     // Read out the JSRuntime thread's register state.
     EMULATOR_CONTEXT context;
-# if defined(JS_CPU_X64)
+# if defined(__x86_64__)
     unsigned int thread_state_count = x86_THREAD_STATE64_COUNT;
     unsigned int float_state_count = x86_FLOAT_STATE64_COUNT;
     int thread_state = x86_THREAD_STATE64;
     int float_state = x86_FLOAT_STATE64;
-# elif defined(JS_CPU_X86)
+# elif defined(__i386__)
     unsigned int thread_state_count = x86_THREAD_STATE_COUNT;
     unsigned int float_state_count = x86_FLOAT_STATE_COUNT;
     int thread_state = x86_THREAD_STATE;
     int float_state = x86_FLOAT_STATE;
-# elif defined(JS_CPU_ARM)
+# elif defined(__arm__)
     unsigned int thread_state_count = ARM_THREAD_STATE_COUNT;
     unsigned int float_state_count = ARM_NEON_STATE_COUNT;
     int thread_state = ARM_THREAD_STATE;

@@ -23,7 +23,7 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "ready: function() {\n" +
+        handler: "function() {\n" +
                  "  if (!n.isReady) {\n" +
                  "    n.isReady = true;\n" +
                  "    if (n.readyList) {\n" +
@@ -98,17 +98,6 @@ const TEST_DATA = [
                  "}"
       },
       {
-        type: "load",
-        filename: URL_ROOT + TEST_LIB + ":19",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: "function() {\n" +
-                 "  return typeof n !== \"undefined\" && !n.event.triggered ? n.event.handle.apply(arguments.callee.elem, arguments) : g\n" +
-                 "}"
-      },
-      {
         type: "unload",
         filename: URL_ROOT + TEST_LIB + ":19",
         attributes: [
@@ -120,14 +109,93 @@ const TEST_DATA = [
                  "}"
       },
       {
-        type: "unload",
+        type: "dblclick",
+        filename: URL_ROOT + TEST_LIB + ":19",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "function c(G) {\n" +
+                 "  var D = RegExp(\"(^|\\\\.)\" + G.type + \"(\\\\.|$)\"),\n" +
+                 "    F = true,\n" +
+                 "    E = [];\n" +
+                 "  n.each(n.data(this, \"events\").live || [], function(H, I) {\n" +
+                 "    if (D.test(I.type)) {\n" +
+                 "      var J = n(G.target).closest(I.data)[0];\n" +
+                 "      if (J) {\n" +
+                 "        E.push({\n" +
+                 "          elem: J,\n" +
+                 "          fn: I\n" +
+                 "        })\n" +
+                 "      }\n" +
+                 "    }\n" +
+                 "  });\n" +
+                 "  n.each(E, function() {\n" +
+                 "    if (!G.isImmediatePropagationStopped() && " + "this.fn.call(this.elem, G, this.fn.data) === false) {\n" +
+                 "      F = false\n" +
+                 "    }\n" +
+                 "  });\n" +
+                 "  return F\n" +
+                 "}"
+      },
+      {
+        type: "DOMContentLoaded",
         filename: URL_ROOT + TEST_LIB + ":19",
         attributes: [
           "Bubbling",
           "DOM2"
         ],
         handler: "function() {\n" +
-                 "  return typeof n !== \"undefined\" && !n.event.triggered ? n.event.handle.apply(arguments.callee.elem, arguments) : g\n" +
+                 "  document.removeEventListener(\"DOMContentLoaded\", arguments.callee, false);\n" +
+                 "  n.ready()\n" +
+                 "}"
+      },
+      {
+        type: "dragstart",
+        filename: URL_ROOT + TEST_LIB + ":19",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "function c(G) {\n" +
+                 "  var D = RegExp(\"(^|\\\\.)\" + G.type + \"(\\\\.|$)\"),\n" +
+                 "    F = true,\n" +
+                 "    E = [];\n" +
+                 "  n.each(n.data(this, \"events\").live || [], function(H, I) {\n" +
+                 "    if (D.test(I.type)) {\n" +
+                 "      var J = n(G.target).closest(I.data)[0];\n" +
+                 "      if (J) {\n" +
+                 "        E.push({\n" +
+                 "          elem: J,\n" +
+                 "          fn: I\n" +
+                 "        })\n" +
+                 "      }\n" +
+                 "    }\n" +
+                 "  });\n" +
+                 "  n.each(E, function() {\n" +
+                 "    if (!G.isImmediatePropagationStopped() && " + "this.fn.call(this.elem, G, this.fn.data) === false) {\n" +
+                 "      F = false\n" +
+                 "    }\n" +
+                 "  });\n" +
+                 "  return F\n" +
+                 "}"
+      },
+      {
+        type: "live",
+        filename: URL_ROOT + TEST_LIB + ":19",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "function() {\n" +
+                 "  return E.apply(this, arguments)\n" +
+                 "}"
+      },
+      {
+        type: "live",
+        filename: URL_ROOT + TEST_LIB + ":19",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "function() {\n" +
+                 "  return E.apply(this, arguments)\n" +
                  "}"
       }
     ]
@@ -141,7 +209,7 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler7 = function divClick1() {\n" +
+        handler: "function divClick1() {\n" +
                  "  alert(7);\n" +
                  "}"
       },
@@ -151,19 +219,8 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler8 = function divClick2() {\n" +
+        handler: "function divClick2() {\n" +
                  "  alert(8);\n" +
-                 "}"
-      },
-      {
-        type: "click",
-        filename: URL_ROOT + TEST_LIB + ":19",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: "function() {\n" +
-                 "  return typeof n !== \"undefined\" && !n.event.triggered ? n.event.handle.apply(arguments.callee.elem, arguments) : g\n" +
                  "}"
       },
       {
@@ -172,19 +229,8 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler9 = function divKeyDown() {\n" +
+        handler: "function divKeyDown() {\n" +
                  "  alert(9);\n" +
-                 "}"
-      },
-      {
-        type: "keydown",
-        filename: URL_ROOT + TEST_LIB + ":19",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: "function() {\n" +
-                 "  return typeof n !== \"undefined\" && !n.event.triggered ? n.event.handle.apply(arguments.callee.elem, arguments) : g\n" +
                  "}"
       }
     ]
@@ -199,8 +245,8 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "var handler1 = function liveDivDblClick() {\n" +
-                 "  alert(1);\n" +
+        handler: "function() {\n" +
+                 "  return E.apply(this, arguments)\n" +
                  "}"
       },
       {
@@ -210,8 +256,8 @@ const TEST_DATA = [
           "jQuery",
           "Live"
         ],
-        handler: "var handler2 = function liveDivDragStart() {\n" +
-                 "  alert(2);\n" +
+        handler: "function() {\n" +
+                 "  return E.apply(this, arguments)\n" +
                  "}"
       }
     ]

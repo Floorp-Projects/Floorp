@@ -450,9 +450,7 @@ nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
     if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
       nsIFrame* frame = static_cast<nsIContent*>(aNode)->GetPrimaryFrame();
       if (frame) {
-        bool isSelectable;
-        frame->IsSelectable(&isSelectable, nullptr);
-        if (!isSelectable){
+        if (!frame->IsSelectable(nullptr)) {
           aDontSerializeRoot = true;
         }
       }

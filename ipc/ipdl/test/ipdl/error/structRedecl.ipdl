@@ -4,5 +4,5 @@ struct Redecl {
 };
 
 protocol structRedecl {
-child: __delete__();
+child: async __delete__();
 };

@@ -35,10 +35,12 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown == why)
-            fail("should have died from error!");  
+            fail("should have died from error!");
         passed("ok");
         QuitParent();
     }
+
+    virtual void HandleFatalError(const char* aProtocolName, const char* aErrorMsg) const override;
 };
 
 class TestActorPunningPunnedParent :

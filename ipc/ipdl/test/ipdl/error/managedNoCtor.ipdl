@@ -3,5 +3,5 @@ include protocol managerNoCtor;
 protocol managedNoCtor {
     manager managerNoCtor;
     // empty
-child: __delete__();
+child: async __delete__();
 };

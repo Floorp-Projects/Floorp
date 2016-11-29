@@ -2566,6 +2566,9 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   peerId.Append(host);
   peerId.Append(':');
   peerId.AppendInt(port);
+  nsAutoCString suffix;
+  infoObject->GetOriginAttributes().CreateSuffix(suffix);
+  peerId.Append(suffix);
   if (SECSuccess != SSL_SetSockPeerID(fd, peerId.get())) {
     return NS_ERROR_FAILURE;
   }

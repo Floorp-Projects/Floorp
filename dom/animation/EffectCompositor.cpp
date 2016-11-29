@@ -626,7 +626,7 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
   // priority except properties in propertiesToSkip.
   const nsCSSPropertyIDSet& propertiesToSkip =
     aCascadeLevel == CascadeLevel::Animations
-    ? nsCSSPropertyIDSet()
+    ? effects->PropertiesForAnimationsLevel().Invert()
     : effects->PropertiesForAnimationsLevel();
   for (KeyframeEffectReadOnly* effect : sortedEffectList) {
     effect->GetAnimation()->ComposeStyle(animationRule, propertiesToSkip);

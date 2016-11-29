@@ -19,7 +19,8 @@ TestLatencyParent::TestLatencyParent() :
     mRpcTimeTotal(),
     mPPTrialsToGo(NR_TRIALS),
     mPP5TrialsToGo(NR_TRIALS),
-    mNumChildProcessedCompressedSpams(0)
+    mNumChildProcessedCompressedSpams(0),
+    mWhichPong5(0)
 {
     MOZ_COUNT_CTOR(TestLatencyParent);
 }
@@ -89,8 +90,16 @@ TestLatencyParent::RecvPong()
 mozilla::ipc::IPCResult
 TestLatencyParent::RecvPong5()
 {
-    if (PTestLatency::PING5 != state())
+    ++mWhichPong5;
+
+    // XXX This assertion will be deleted as part of bug 1316757.
+    MOZ_ASSERT((PTestLatency::PING5 != state()) == (mWhichPong5 < 5));
+
+    if (mWhichPong5 < 5) {
         return IPC_OK();
+    }
+
+    mWhichPong5 = 0;
 
     TimeDuration thisTrial = (TimeStamp::Now() - mStart);
     mPP5TimeTotal += thisTrial;
@@ -183,6 +192,7 @@ TestLatencyParent::Exit()
 TestLatencyChild::TestLatencyChild()
     : mLastSeqno(0)
     , mNumProcessedCompressedSpams(0)
+    , mWhichPing5(0)
 {
     MOZ_COUNT_CTOR(TestLatencyChild);
 }
@@ -202,8 +212,16 @@ TestLatencyChild::RecvPing()
 mozilla::ipc::IPCResult
 TestLatencyChild::RecvPing5()
 {
-    if (PTestLatency::PONG1 != state())
+    ++mWhichPing5;
+
+    // XXX This assertion will be deleted as part of bug 1316757.
+    MOZ_ASSERT((PTestLatency::PONG1 != state()) == (mWhichPing5 < 5));
+
+    if (mWhichPing5 < 5) {
         return IPC_OK();
+    }
+
+    mWhichPing5 = 0;
 
     if (!SendPong5() ||
         !SendPong5() ||

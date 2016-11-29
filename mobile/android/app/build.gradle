@@ -404,6 +404,11 @@ def makeTaskExecutionListener(artifactRootUrl) {
                 def url = "${artifactRootUrl}/public/android/unittest/automationDebug/index.html"
                 println "TEST-UNEXPECTED-FAIL | android-test | There were failing tests. See the report at: $url"
                 break
+
+            case ':app:findbugsAutomationDebug':
+                def url = "${artifactRootUrl}/public/android/findbugs/findbugs-report.html"
+                println "TEST-UNEXPECTED-FAIL | android-findbugs | Findbugs found issues in the project. See the report at: $url"
+                break
             }
         }
     }
@@ -430,6 +435,8 @@ android.applicationVariants.all { variant ->
         classes = files("$project.buildDir/intermediates/classes")
         source = variant.javaCompile.source
         classpath = variant.javaCompile.classpath
+
+        excludeFilter = file("findbugs-exclude.xml")
 
         reports {
             html.enabled = true // We only care about HTML reports for humans

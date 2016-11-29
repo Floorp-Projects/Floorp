@@ -1,9 +1,9 @@
 // it's an error to define two protocols in the same file
 
 protocol p1 {
-child: Msg();
+child: async Msg();
 };
 
 protocol p2 {
-child: Msg();
+child: async Msg();
 };

@@ -55,7 +55,8 @@ TestStackHooksChild::TestStackHooksChild() :
     mOnStack(false),
     mEntered(0),
     mExited(0),
-    mIncallDepth(0)
+    mIncallDepth(0),
+    mNumAnswerStackFrame(0)
 {
     MOZ_COUNT_CTOR(TestStackHooksChild);
 }
@@ -90,21 +91,25 @@ TestStackHooksChild::RecvStart()
 mozilla::ipc::IPCResult
 TestStackHooksChild::AnswerStackFrame()
 {
+    ++mNumAnswerStackFrame;
+
     if (!mOnStack)
         fail("missed stack notification");
 
     if (1 != mIncallDepth)
         fail("missed EnteredCall or ExitedCall hook");
 
-    if (PTestStackHooks::TEST4_3 == state()) {
+    if (mNumAnswerStackFrame == 1) {
+        // XXX This assertion will be deleted as part of bug 1316757.
+        MOZ_ASSERT(PTestStackHooks::TEST4_3 == state());
         if (!SendAsync())
             fail("sending Async()");
-    }
-    else if (PTestStackHooks::TEST5_3 == state()) {
+    } else if (mNumAnswerStackFrame == 2) {
+        // XXX This assertion will be deleted as part of bug 1316757.
+        MOZ_ASSERT(PTestStackHooks::TEST5_3 == state());
         if (!SendSync())
             fail("sending Sync()");
-    }
-    else {
+    } else {
         fail("unexpected state");
     }
 

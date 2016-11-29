@@ -1807,6 +1807,7 @@ nsTextEditorState::InitializeRootNode()
         disp->mOverflowX != NS_STYLE_OVERFLOW_CLIP) {
       classValue.AppendLiteral(" inherit-overflow");
     }
+    classValue.AppendLiteral(" inherit-scroll-behavior");
   }
   nsresult rv = mRootNode->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                                    classValue, false);

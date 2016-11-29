@@ -310,8 +310,8 @@ AnimationTimeBlock.prototype = {
       text += "\n";
     }
 
-    // Adding the direction mode.
-    if (state.direction) {
+    // Adding the direction mode if it is not "normal".
+    if (state.direction && state.direction !== "normal") {
       text += L10N.getStr("player.animationDirectionLabel") + " ";
       text += state.direction;
       text += "\n";

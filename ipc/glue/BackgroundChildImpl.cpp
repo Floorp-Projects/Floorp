@@ -52,13 +52,13 @@ class TestChild final : public mozilla::ipc::PBackgroundTestChild
   }
 
 protected:
-  ~TestChild()
+  ~TestChild() override
   {
     MOZ_COUNT_DTOR(TestChild);
   }
 
 public:
-  virtual mozilla::ipc::IPCResult
+  mozilla::ipc::IPCResult
   Recv__delete__(const nsCString& aTestArg) override;
 };
 

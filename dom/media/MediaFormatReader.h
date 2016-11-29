@@ -56,8 +56,6 @@ protected:
 public:
   media::TimeIntervals GetBuffered() override;
 
-  RefPtr<BufferedUpdatePromise> UpdateBufferedWithPromise() override;
-
   bool ForceZeroStartTime() const override;
 
   // For Media Resource Management
@@ -586,6 +584,9 @@ private:
   void MaybeResolveMetadataPromise();
 
   UniquePtr<MetadataTags> mTags;
+
+  // A flag indicating if the start time is known or not.
+  bool mHasStartTime = false;
 };
 
 } // namespace mozilla

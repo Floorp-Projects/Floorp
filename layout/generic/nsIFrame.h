@@ -2781,14 +2781,14 @@ public:
   /**
    *  called to discover where this frame, or a parent frame has user-select style
    *  applied, which affects that way that it is selected.
-   *    
-   *  @param aIsSelectable out param. Set to true if the frame can be selected
-   *                       (i.e. is not affected by user-select: none)
+   *
    *  @param aSelectStyle  out param. Returns the type of selection style found
    *                        (using values defined in nsStyleConsts.h).
+   *
+   *  @return Whether the frame can be selected (i.e. is not affected by
+   *          user-select: none)
    */
-  virtual nsresult IsSelectable(bool* aIsSelectable,
-                            mozilla::StyleUserSelect* aSelectStyle) const = 0;
+  bool IsSelectable(mozilla::StyleUserSelect* aSelectStyle) const;
 
   /** 
    *  Called to retrieve the SelectionController associated with the frame.

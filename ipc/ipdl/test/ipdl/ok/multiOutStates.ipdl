@@ -1,5 +1,5 @@
 protocol multiOutStates {
-child: Msg();
+child: async Msg();
 
     // sanity check that multi-out-states are being processed correctly
 

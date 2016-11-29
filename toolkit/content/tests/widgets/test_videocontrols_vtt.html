@@ -4,6 +4,7 @@
   <title>Video controls test - VTT</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -20,7 +21,7 @@
   const domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
     getService(SpecialPowers.Ci.inIDOMUtils);
   const video = document.getElementById("video");
-  const ccBtn = getElementByAttribute("anonid", "closedCaptionButton");
+  const ccBtn = getAnonElementWithinVideoByAttribute(video, "anonid", "closedCaptionButton");
   const testCases = [];
 
   testCases.push(() => new Promise(resolve => {
@@ -80,13 +81,6 @@
 
   function executeTestCases(tasks) {
     return tasks.reduce((promise, task) => promise.then(task), Promise.resolve());
-  }
-
-  function getElementByAttribute(aName, aValue) {
-    const videoControl = domUtils.getChildrenForNode(video, true)[1];
-
-    return SpecialPowers.wrap(document)
-      .getAnonymousElementByAttribute(videoControl, aName, aValue);
   }
 
   function loadedmetadata() {

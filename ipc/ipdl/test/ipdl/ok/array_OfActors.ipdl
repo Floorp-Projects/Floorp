@@ -6,5 +6,5 @@ protocol array_OfActors {
 child:
     async Msg(array_OfActorsSub[] p);
 
-    array_OfActorsSub();
+    async array_OfActorsSub();
 };

@@ -3,5 +3,5 @@ include protocol array_OfActors;
 protocol array_OfActorsSub {
     manager array_OfActors;
 
-child: __delete__();
+child: async __delete__();
 };

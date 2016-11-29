@@ -1,6 +1,6 @@
 protocol multiStartState {
 
-child: Msg(); __delete__();
+child: async Msg(); async __delete__();
 
 start state S1:
     send Msg goto S1; send __delete__;

@@ -25,6 +25,30 @@ TestActorPunningParent::RecvPun(PTestActorPunningSubParent* a, const Bad& bad)
     return IPC_OK();
 }
 
+// By default, fatal errors kill the parent process, but this makes it
+// hard to test, so instead we use the previous behavior and kill the
+// child process.
+void
+TestActorPunningParent::HandleFatalError(const char* aProtocolName, const char* aErrorMsg) const
+{
+  if (!!strcmp(aProtocolName, "PTestActorPunningParent")) {
+    fail("wrong protocol hit a fatal error");
+  }
+
+  if (!!strcmp(aErrorMsg, "Error deserializing 'PTestActorPunningSubParent'")) {
+    fail("wrong fatal error");
+  }
+
+  ipc::ScopedProcessHandle otherProcessHandle;
+  if (!base::OpenProcessHandle(OtherPid(), &otherProcessHandle.rwget())) {
+    fail("couldn't open child process");
+  } else {
+    if (!base::KillProcess(otherProcessHandle, 0, false)) {
+      fail("terminating child process");
+    }
+  }
+}
+
 PTestActorPunningPunnedParent*
 TestActorPunningParent::AllocPTestActorPunningPunnedParent()
 {

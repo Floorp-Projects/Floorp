@@ -602,19 +602,6 @@ Gecko_AtomEqualsUTF8IgnoreCase(nsIAtom* aAtom, const char* aString, uint32_t aLe
 }
 
 void
-Gecko_Utf8SliceToString(nsString* aString,
-                        const uint8_t* aBuffer,
-                        size_t aBufferLen)
-{
-  MOZ_ASSERT(aString);
-  MOZ_ASSERT(aBuffer);
-
-  aString->Truncate();
-  AppendUTF8toUTF16(Substring(reinterpret_cast<const char*>(aBuffer),
-                              aBufferLen), *aString);
-}
-
-void
 Gecko_FontFamilyList_Clear(FontFamilyList* aList) {
   aList->Clear();
 }

@@ -1,6 +1,0 @@
-intr protocol rpcParentToChild {
-
-    // can't declare rpc parent-to-child messages
-child: rpc Msg();
-
-};

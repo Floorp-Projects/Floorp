@@ -97,6 +97,7 @@ private:
 
   void DispatchSpeechSynthesisEvent(const nsAString& aEventType,
                                     uint32_t aCharIndex,
+                                    Nullable<uint32_t> aCharLength,
                                     float aElapsedTime, const nsAString& aName);
 
   nsString mText;

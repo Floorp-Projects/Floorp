@@ -10,7 +10,7 @@
  *          promisePopupShown promisePopupHidden
  *          openContextMenu closeContextMenu
  *          openExtensionContextMenu closeExtensionContextMenu
- *          openActionContextMenu closeActionContextMenu
+ *          openActionContextMenu openActionSubmenu closeActionContextMenu
  *          imageBuffer getListStyleImage getPanelForNode
  *          awaitExtensionPanel awaitPopupResize
  *          promiseContentDimensions alterContent
@@ -252,6 +252,14 @@ function* openActionContextMenu(extension, kind, win = window) {
   yield shown;
 
   return menu;
+}
+
+function* openActionSubmenu(submenuItem, win = window) {
+  const submenu = submenuItem.firstChild;
+  const shown = BrowserTestUtils.waitForEvent(submenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(submenuItem, {}, win);
+  yield shown;
+  return submenu;
 }
 
 function closeActionContextMenu(itemToSelect, win = window) {

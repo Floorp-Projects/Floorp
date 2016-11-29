@@ -191,11 +191,13 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "-moz-gtk-info-bar",
+      "-moz-mac-active-source-list-selection",
       "-moz-mac-disclosure-button-closed",
       "-moz-mac-disclosure-button-open",
       "-moz-mac-fullscreen-button",
       "-moz-mac-help-button",
       "-moz-mac-source-list",
+      "-moz-mac-source-list-selection",
       "-moz-mac-vibrancy-dark",
       "-moz-mac-vibrancy-light",
       "-moz-win-borderless-glass",
@@ -1240,25 +1242,6 @@ exports.CSS_PROPERTIES = {
     "values": [
       "inherit",
       "initial",
-      "unset"
-    ]
-  },
-  "-moz-text-align-last": {
-    "isInherited": true,
-    "subproperties": [
-      "text-align-last"
-    ],
-    "supports": [],
-    "values": [
-      "auto",
-      "center",
-      "end",
-      "inherit",
-      "initial",
-      "justify",
-      "left",
-      "right",
-      "start",
       "unset"
     ]
   },
@@ -3137,11 +3120,13 @@ exports.CSS_PROPERTIES = {
       "-moz-inline-stack",
       "-moz-left",
       "-moz-linear-gradient",
+      "-moz-mac-active-source-list-selection",
       "-moz-mac-disclosure-button-closed",
       "-moz-mac-disclosure-button-open",
       "-moz-mac-fullscreen-button",
       "-moz-mac-help-button",
       "-moz-mac-source-list",
+      "-moz-mac-source-list-selection",
       "-moz-mac-vibrancy-dark",
       "-moz-mac-vibrancy-light",
       "-moz-max-content",
