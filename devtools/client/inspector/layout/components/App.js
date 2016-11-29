@@ -20,6 +20,7 @@ const App = createClass({
 
   propTypes: {
     grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
+    onToggleGridHighlighter: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
