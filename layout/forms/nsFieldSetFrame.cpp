@@ -341,42 +341,6 @@ nsFieldSetFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 }
 
 /* virtual */
-LogicalSize
-nsFieldSetFrame::ComputeSize(nsRenderingContext *aRenderingContext,
-                             WritingMode aWM,
-                             const LogicalSize& aCBSize,
-                             nscoord aAvailableISize,
-                             const LogicalSize& aMargin,
-                             const LogicalSize& aBorder,
-                             const LogicalSize& aPadding,
-                             ComputeSizeFlags aFlags)
-{
-  LogicalSize result =
-    nsContainerFrame::ComputeSize(aRenderingContext, aWM,
-                                  aCBSize, aAvailableISize,
-                                  aMargin, aBorder, aPadding, aFlags);
-
-  // XXX The code below doesn't make sense if the caller's writing mode
-  // is orthogonal to this frame's. Not sure yet what should happen then;
-  // for now, just bail out.
-  if (aWM.IsVertical() != GetWritingMode().IsVertical()) {
-    return result;
-  }
-
-  // Fieldsets never shrink below their min width.
-
-  // If we're a container for font size inflation, then shrink
-  // wrapping inside of us should not apply font size inflation.
-  AutoMaybeDisableFontInflation an(this);
-
-  nscoord minISize = GetMinISize(aRenderingContext);
-  if (minISize > result.ISize(aWM)) {
-    result.ISize(aWM) = minISize;
-  }
-
-  return result;
-}
-
 void
 nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
                         ReflowOutput&     aDesiredSize,
@@ -424,18 +388,6 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   LogicalSize legendAvailSize = aReflowInput.ComputedSizeWithPadding(legendWM);
   innerAvailSize.BSize(innerWM) = legendAvailSize.BSize(legendWM) =
     NS_UNCONSTRAINEDSIZE;
-  NS_ASSERTION(!inner ||
-      nsLayoutUtils::IntrinsicForContainer(aReflowInput.mRenderingContext,
-                                           inner,
-                                           nsLayoutUtils::MIN_ISIZE) <=
-               innerAvailSize.ISize(innerWM),
-               "Bogus availSize.ISize; should be bigger");
-  NS_ASSERTION(!legend ||
-      nsLayoutUtils::IntrinsicForContainer(aReflowInput.mRenderingContext,
-                                           legend,
-                                           nsLayoutUtils::MIN_ISIZE) <=
-               legendAvailSize.ISize(legendWM),
-               "Bogus availSize.ISize; should be bigger");
 
   // get our border and padding
   LogicalMargin border = aReflowInput.ComputedLogicalBorderPadding() -
@@ -599,11 +551,8 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
           MOZ_ASSERT_UNREACHABLE("unexpected GetLogicalAlign value");
       }
     } else {
-      // otherwise make place for the legend
+      // otherwise just start-align it.
       mLegendRect.IStart(wm) = innerContentRect.IStart(wm);
-      innerContentRect.ISize(wm) = mLegendRect.ISize(wm);
-      contentRect.ISize(wm) = mLegendRect.ISize(wm) +
-        aReflowInput.ComputedLogicalPadding().IStartEnd(wm);
     }
 
     // place the legend
