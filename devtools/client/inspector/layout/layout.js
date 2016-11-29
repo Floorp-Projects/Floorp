@@ -50,14 +50,30 @@ LayoutView.prototype = {
     }
 
     this.layoutInspector = yield this.inspector.walker.getLayoutInspector();
-
     let store = this.store = Store();
+
+    let app = App({
+
+      /**
+       * Handler for a change in the input checkboxes in the GridList component.
+       * Toggles on/off the grid highlighter for the provided grid container element.
+       *
+       * @param  {NodeFront} node
+       *         The NodeFront of the grid container element for which the grid
+       *         highlighter is toggled on/off for.
+       */
+      onToggleGridHighlighter: node => {
+        this.highlighters.toggleGridHighlighter(node);
+      },
+
+    });
+
     let provider = createElement(Provider, {
       store,
       id: "layoutview",
       title: INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle"),
       key: "layoutview",
-    }, App());
+    }, app);
 
     let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
 

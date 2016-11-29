@@ -15,7 +15,7 @@ exports.grid = {
   id: PropTypes.number,
 
   // The grid fragment object of the grid container
-  gridFragments: PropTypes.object,
+  gridFragments: PropTypes.array,
 
   // Whether or not the grid highlighter is highlighting the grid
   highlighted: PropTypes.bool,
