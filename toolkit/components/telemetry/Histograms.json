@@ -8570,7 +8570,7 @@
     "n_values": 10,
     "bug_numbers": [1293231],
     "releaseChannelCollection": "opt-out",
-    "description": "Verification status of Signed Certificate Timestamps received (0=Decoding error, 1=SCT verified, 2=SCT from unknown log, 3=Invalid SCT signature, 4=SCT timestamp is in the future)"
+    "description": "Verification status of Signed Certificate Timestamps received (0=Decoding error, 1=Valid SCT, 2=SCT from unknown log, 3=Invalid SCT signature, 4=SCT timestamp is in the future, 5=Valid SCT from a disqualified log)"
   },
   "SSL_SERVER_AUTH_EKU": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],

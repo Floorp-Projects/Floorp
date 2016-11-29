@@ -13,6 +13,8 @@ namespace mozilla { namespace ct {
 VerifiedSCT::VerifiedSCT()
   : status(Status::None)
   , origin(Origin::Unknown)
+  , logOperatorId(-1)
+  , logDisqualificationTime(UINT64_MAX)
 {
 }
 

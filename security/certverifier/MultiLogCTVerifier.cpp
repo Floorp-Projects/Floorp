@@ -155,6 +155,8 @@ MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
                             VerifiedSCT::Status::UnknownLog);
   }
 
+  verifiedSct.logOperatorId = matchingLog->operatorId();
+
   if (!matchingLog->SignatureParametersMatch(verifiedSct.sct.signature)) {
     // SCT signature parameters do not match the log's.
     return StoreVerifiedSct(result, Move(verifiedSct),
@@ -183,7 +185,15 @@ MultiLogCTVerifier::VerifySingleSCT(SignedCertificateTimestamp&& sct,
                             VerifiedSCT::Status::InvalidTimestamp);
   }
 
-  // SCT verified ok.
+  // SCT verified ok, see if the log is qualified. Since SCTs from
+  // disqualified logs are treated as valid under certain circumstances (see
+  // the CT Policy), the log qualification check must be the last one we do.
+  if (matchingLog->isDisqualified()) {
+    verifiedSct.logDisqualificationTime = matchingLog->disqualificationTime();
+    return StoreVerifiedSct(result, Move(verifiedSct),
+                            VerifiedSCT::Status::ValidFromDisqualifiedLog);
+  }
+
   return StoreVerifiedSct(result, Move(verifiedSct),
                           VerifiedSCT::Status::Valid);
 }

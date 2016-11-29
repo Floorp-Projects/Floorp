@@ -1261,6 +1261,9 @@ GatherTelemetryForSingleSCT(const ct::VerifiedSCT& verifiedSct)
     case ct::VerifiedSCT::Status::InvalidTimestamp:
       verificationStatus = 4;
       break;
+    case ct::VerifiedSCT::Status::ValidFromDisqualifiedLog:
+      verificationStatus = 5;
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected VerifiedSCT::Status type");
   }
