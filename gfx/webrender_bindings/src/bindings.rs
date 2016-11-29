@@ -435,8 +435,9 @@ pub fn wr_composite_window(window: &mut WrWindowState) {
 }
 
 #[no_mangle]
-pub extern fn wr_dp_end(window: &mut WrWindowState, state: &mut WrState) {
-    let epoch = Epoch(0);
+pub extern fn wr_dp_end(window: &mut WrWindowState,
+                        state: &mut WrState,
+                        epoch: Epoch) {
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
     let pipeline_id = state.pipeline_id;
     let (width, height) = state.size;
