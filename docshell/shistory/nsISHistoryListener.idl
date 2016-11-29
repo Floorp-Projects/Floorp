@@ -39,6 +39,9 @@ interface nsISHistoryListener : nsISupports
    * due to a nsIWebNavigation::goBack() call.
    *
    * @param aBackURI    The URI of the session history entry being navigated to.
+   *                    It could be null in case of a grouped session history
+   *                    navigation since we have no URI information of entries
+   *                    existing in other partial histories.
    * @return            Whether the operation can proceed.
    */
    boolean OnHistoryGoBack(in nsIURI aBackURI);
@@ -48,6 +51,9 @@ interface nsISHistoryListener : nsISupports
    * due to a nsIWebNavigation::goForward() call.
    *
    * @param aForwardURI   The URI of the session history entry being navigated to.
+   *                      It could be null in case of a grouped session history
+   *                      navigation since we have no URI information of entries
+   *                      existing in other partial histories.
    * @return              Whether the operation can proceed.
    */
    boolean OnHistoryGoForward(in nsIURI aForwardURI);
@@ -72,6 +78,9 @@ interface nsISHistoryListener : nsISupports
    *
    * @param aIndex        The index in session history of the entry to be loaded.
    * @param aGotoURI      The URI of the session history entry to be loaded.
+   *                      It could be null in case of a grouped session history
+   *                      navigation since we have no URI information of entries
+   *                      existing in other partial histories.
    * @return              Whether the operation can proceed.
    */
    boolean OnHistoryGotoIndex(in long aIndex, in nsIURI aGotoURI);

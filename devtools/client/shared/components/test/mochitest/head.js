@@ -54,12 +54,6 @@ function setState(component, newState) {
   });
 }
 
-function setProps(component, newProps) {
-  return new Promise(resolve => {
-    component.setProps(newProps, onNextAnimationFrame(resolve));
-  });
-}
-
 function dumpn(msg) {
   dump(`SHARED-COMPONENTS-TEST: ${msg}\n`);
 }

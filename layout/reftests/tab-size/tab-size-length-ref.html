@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+    <title>CSS Test: Testing the layout of TAB characters with various 'tab-size' length values</title>
+    <link rel="author" title="Mats Palmgren" href="mailto:mats@mozilla.com">
+    <link rel="help" href="https://drafts.csswg.org/css-text-3/#tab-size-property">
+
+    <meta charset="utf-8">
+    <style type="text/css">
+
+        @font-face {
+            font-family:Ahem; src:url(../fonts/Ahem.ttf);
+        }
+        * {
+            font:20px/20px Ahem;
+        }
+        html,body {
+            color:black; background-color:white;
+        }
+
+        tab { display:inline-block; }
+        #t1 tab { width:40px; } /* tab-size:20px (valid) */
+        #t2 tab { width:50px; } /* tab-size:50px (valid) */
+        #t3 tab { width:40px; } /* tab-size:2ch (valid) */
+        #t4 tab { width:60px; } /* tab-size:3em (valid) */
+        #t5 tab { width:50px; } /* tab-size:calc(10px + 2em) (valid) */
+        #t6 tab { width:40px; } /* tab-size:calc(2em) (valid) */
+        #t7 tab { width:50px; } /* tab-size:calc(3.5 - 1) (valid) */
+        #t8 tab { width:32px; } /* tab-size:0.8ch (valid) */
+        #t9 tab { width:20px; } /* tab-size:0px (valid) */
+        #t10 tab { width:20px; } /* tab-size:calc(-2em) (valid, but clamped to zero) */
+        #t11 tab { width:20px; } /* tab-size:calc(1px - 2px) (valid, but clamped to zero) */
+        #t12 tab { width:20px; } /* tab-size:calc(-2.5) (valid, but clamped to zero) */
+        #t13 tab { width:160px; } /* tab-size:-2em (invalid, rule ignored, falls back to initial value 8) */
+        #t14 tab { width:160px; } /* tab-size:100% (invalid, rule ignored, falls back to initial value 8) */
+        #t15 tab { width:160px; } /* tab-size:calc(10% + 2em) (invalid, rule ignored, falls back to initial value 8) */
+        #t16 tab { width:20px; } /* tab-size:0 (valid) */
+        #t17 tab { width:20px; } /* tab-size:0.0 (valid) */
+        #t18 tab { width:40px; } /* tab-size:1 (valid) */
+        #t19 tab { width:60px; } /* tab-size:3 (valid) */
+        #t20 tab { width:68px; } /* tab-size:3.4 (valid) */
+        #t21 tab { width:160px; } /* tab-size:-1.5 (invalid, rule ignored, falls back to initial value 8) */
+
+    </style>
+</head>
+<body>
+
+<pre id="t1"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t2"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t3"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t4"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t5"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t6"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t7"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t8"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t9"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t10"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t11"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t12"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t13"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t14"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t15"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t16"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t17"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t18"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t19"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t20"><tab>A</tab><tab>B</tab>C</pre>
+<pre id="t21"><tab>A</tab><tab>B</tab>C</pre>
+
+</body>
+</html>

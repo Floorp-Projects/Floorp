@@ -106,10 +106,10 @@ var StorageActors = {};
  *
  * @param {string} typeName
  *        The typeName of the actor.
- * @param {string} observationTopic
- *        The topic which this actor listens to via Notification Observers.
+ * @param {array} observationTopics
+ *        An array of topics which this actor listens to via Notification Observers.
  */
-StorageActors.defaults = function (typeName, observationTopic) {
+StorageActors.defaults = function (typeName, observationTopics) {
   return {
     typeName: typeName,
 
@@ -150,8 +150,10 @@ StorageActors.defaults = function (typeName, observationTopic) {
       this.storageActor = storageActor;
 
       this.populateStoresForHosts();
-      if (observationTopic) {
-        Services.obs.addObserver(this, observationTopic, false);
+      if (observationTopics) {
+        observationTopics.forEach((observationTopic) => {
+          Services.obs.addObserver(this, observationTopic, false);
+        });
       }
       this.onWindowReady = this.onWindowReady.bind(this);
       this.onWindowDestroyed = this.onWindowDestroyed.bind(this);
@@ -160,8 +162,10 @@ StorageActors.defaults = function (typeName, observationTopic) {
     },
 
     destroy() {
-      if (observationTopic) {
-        Services.obs.removeObserver(this, observationTopic, false);
+      if (observationTopics) {
+        observationTopics.forEach((observationTopic) => {
+          Services.obs.removeObserver(this, observationTopic, false);
+        });
       }
       events.off(this.storageActor, "window-ready", this.onWindowReady);
       events.off(this.storageActor, "window-destroyed", this.onWindowDestroyed);
@@ -369,8 +373,8 @@ StorageActors.defaults = function (typeName, observationTopic) {
  *        Options required by StorageActors.defaults method which are :
  *         - typeName {string}
  *                    The typeName of the actor.
- *         - observationTopic {string}
- *                            The topic which this actor listens to via
+ *         - observationTopics {array}
+ *                            The topics which this actor listens to via
  *                            Notification Observers.
  * @param {object} overrides
  *        All the methods which you want to be different from the ones in
@@ -379,7 +383,7 @@ StorageActors.defaults = function (typeName, observationTopic) {
 StorageActors.createActor = function (options = {}, overrides = {}) {
   let actorObject = StorageActors.defaults(
     options.typeName,
-    options.observationTopic || null
+    options.observationTopics || null
   );
   for (let key in overrides) {
     actorObject[key] = overrides[key];
@@ -1109,7 +1113,9 @@ function getObjectForLocalOrSessionStorage(type) {
     }),
 
     observe(subject, topic, data) {
-      if (topic != "dom-storage2-changed" || data != type) {
+      if ((topic != "dom-storage2-changed" &&
+           topic != "dom-private-storage2-changed") ||
+          data != type) {
         return null;
       }
 
@@ -1161,7 +1167,7 @@ function getObjectForLocalOrSessionStorage(type) {
  */
 StorageActors.createActor({
   typeName: "localStorage",
-  observationTopic: "dom-storage2-changed"
+  observationTopics: ["dom-storage2-changed", "dom-private-storage2-changed"]
 }, getObjectForLocalOrSessionStorage("localStorage"));
 
 /**
@@ -1169,7 +1175,7 @@ StorageActors.createActor({
  */
 StorageActors.createActor({
   typeName: "sessionStorage",
-  observationTopic: "dom-storage2-changed"
+  observationTopics: ["dom-storage2-changed", "dom-private-storage2-changed"]
 }, getObjectForLocalOrSessionStorage("sessionStorage"));
 
 StorageActors.createActor({

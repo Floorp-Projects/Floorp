@@ -1308,9 +1308,10 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
         os->AddObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                         false);
 
-        // Watch for dom-storage2-changed so we can fire storage
-        // events. Use a strong reference.
+        // Watch for dom-storage2-changed and dom-private-storage2-changed so we
+        // can fire storage events. Use a strong reference.
         os->AddObserver(mObserver, "dom-storage2-changed", false);
+        os->AddObserver(mObserver, "dom-private-storage2-changed", false);
       }
 
       Preferences::AddStrongObserver(mObserver, "intl.accept_languages");
@@ -1611,6 +1612,7 @@ nsGlobalWindow::CleanUp()
     if (os) {
       os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
       os->RemoveObserver(mObserver, "dom-storage2-changed");
+      os->RemoveObserver(mObserver, "dom-private-storage2-changed");
     }
 
 #ifdef MOZ_B2G
@@ -11675,7 +11677,9 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  if (!nsCRT::strcmp(aTopic, "dom-storage2-changed")) {
+  bool isPrivateBrowsing = IsPrivateBrowsing();
+  if ((!nsCRT::strcmp(aTopic, "dom-storage2-changed") && !isPrivateBrowsing) ||
+      (!nsCRT::strcmp(aTopic, "dom-private-storage2-changed") && isPrivateBrowsing)) {
     if (!IsInnerWindow() || !AsInner()->IsCurrentInnerWindow()) {
       return NS_OK;
     }
@@ -11710,9 +11714,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       return rv;
     }
 
-    if ((privateBrowsingId > 0) != IsPrivateBrowsing()) {
-      return NS_OK;
-    }
+    MOZ_ASSERT((privateBrowsingId > 0) == isPrivateBrowsing);
 
     switch (changingStorage->GetType())
     {
@@ -12279,6 +12281,7 @@ nsGlobalWindow::FireDelayedDOMEvents()
 
   for (uint32_t i = 0, len = mPendingStorageEvents.Length(); i < len; ++i) {
     Observe(mPendingStorageEvents[i], "dom-storage2-changed", nullptr);
+    Observe(mPendingStorageEvents[i], "dom-private-storage2-changed", nullptr);
   }
 
   if (mApplicationCache) {
