@@ -536,6 +536,11 @@ size. -->
 <!ENTITY pref_tab_queue_title3 "Tab queue">
 <!ENTITY pref_tab_queue_summary4 "Save links until the next time you open &brandShortName;">
 
+<!-- Localization note (pref_compact_tabs): Label for setting that controls whether 1 wide column or
+     2 narrower (compact) columns are used for tabs in the tabs tray in portrait mode on phones. -->
+<!ENTITY pref_compact_tabs "Compact tabs">
+<!ENTITY pref_compact_tabs_summary "Display two columns of tabs in the tabs tray in portrait mode">
+
 <!-- Localization note (page_removed): This string appears in a toast message when
      any page is removed frome about:home. This includes pages that are in history,
      bookmarks, or reading list. -->
