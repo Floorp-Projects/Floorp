@@ -5,10 +5,24 @@
 "use strict";
 
 const {
+  UPDATE_SHOW_GRID_LINE_NUMBERS,
   UPDATE_SHOW_INFINITE_LINES,
 } = require("./index");
 
 module.exports = {
+
+  /**
+   * Update the grid highlighter's show grid line numbers preference.
+   *
+   * @param  {Boolean} enabled
+   *         Whether or not the grid highlighter should show the grid line numbers.
+   */
+  updateShowGridLineNumbers(enabled) {
+    return {
+      type: UPDATE_SHOW_GRID_LINE_NUMBERS,
+      enabled,
+    };
+  },
 
   /**
    * Update the grid highlighter's show infinite lines preference.
