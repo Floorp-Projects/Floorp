@@ -144,7 +144,7 @@ ScaledFontDWrite::GetSkTypeface()
       return nullptr;
     }
 
-    mTypeface = SkCreateTypefaceFromDWriteFont(factory, mFontFace, mStyle);
+    mTypeface = SkCreateTypefaceFromDWriteFont(factory, mFontFace, mStyle, mForceGDIMode);
   }
   return mTypeface;
 }
