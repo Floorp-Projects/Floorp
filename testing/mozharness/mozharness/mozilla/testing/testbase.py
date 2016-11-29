@@ -13,6 +13,7 @@ import re
 import urllib2
 import json
 import socket
+from urlparse import urlparse, ParseResult
 
 from mozharness.base.errors import BaseErrorList
 from mozharness.base.log import FATAL, WARNING
@@ -161,10 +162,15 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
             self.fatal("Can't figure out build directory urls without an installer_url "
                        "or test_packages_url!")
 
-        last_slash = reference_url.rfind('/')
-        base_url = reference_url[:last_slash]
+        reference_url = urllib2.unquote(reference_url)
+        parts = list(urlparse(reference_url))
 
-        return '%s/%s' % (base_url, file_name)
+        last_slash = parts[2].rfind('/')
+        parts[2] = '/'.join([parts[2][:last_slash], file_name])
+
+        url = ParseResult(*parts).geturl()
+
+        return url
 
     def query_prefixed_build_dir_url(self, suffix):
         """Resolve a file name prefixed with platform and build details to a potential url
