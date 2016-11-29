@@ -5,7 +5,45 @@
 #layout-container {
   height: 100%;
   width: 100%;
+  overflow: auto;
 }
+
+/**
+ * Grid Container
+ */
+
+#layout-grid-container {
+  margin: 5px;
+}
+
+/**
+ * Grid List
+ */
+
+.layout-grid-list-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.layout-grid-list-container > span {
+  font-weight: bold;
+  margin-bottom: 3px;
+}
+
+#layout-grid-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#layout-grid-list li {
+  padding: 4px 0;
+}
+
+/**
+ * Container when no grids are present
+ */
 
 .layout-no-grids {
   font-style: italic;
