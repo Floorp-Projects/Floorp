@@ -71,6 +71,7 @@ public:
   mozilla::ipc::IPCResult RecvRemoveExternalImageId(const uint64_t& aImageId) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
+  void SetWebRenderProfilerEnabled(bool aEnabled);
 
   void Destroy();
 
