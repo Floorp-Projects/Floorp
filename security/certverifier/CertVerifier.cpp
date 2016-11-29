@@ -160,14 +160,17 @@ CertVerifier::LoadKnownCTLogs()
   for (const CTLogInfo& log : kCTLogList) {
     Input publicKey;
     Result rv = publicKey.Init(
-      BitwiseCast<const uint8_t*, const char*>(log.logKey), log.logKeyLength);
+      BitwiseCast<const uint8_t*, const char*>(log.key), log.keyLength);
     if (rv != Success) {
       MOZ_ASSERT_UNREACHABLE("Failed reading a log key for a known CT Log");
       continue;
     }
 
     CTLogVerifier logVerifier;
-    rv = logVerifier.Init(publicKey);
+    const CTLogOperatorInfo& logOperator =
+      kCTLogOperatorList[log.operatorIndex];
+    rv = logVerifier.Init(publicKey, logOperator.id, log.status,
+                          log.disqualificationTime);
     if (rv != Success) {
       MOZ_ASSERT_UNREACHABLE("Failed initializing a known CT Log");
       continue;
@@ -269,12 +272,16 @@ CertVerifier::VerifySignedCertificateTimestamps(
   if (MOZ_LOG_TEST(gCertVerifierLog, LogLevel::Debug)) {
     size_t validCount = 0;
     size_t unknownLogCount = 0;
+    size_t disqualifiedLogCount = 0;
     size_t invalidSignatureCount = 0;
     size_t invalidTimestampCount = 0;
     for (const VerifiedSCT& verifiedSct : result.verifiedScts) {
       switch (verifiedSct.status) {
         case VerifiedSCT::Status::Valid:
           validCount++;
+          break;
+        case VerifiedSCT::Status::ValidFromDisqualifiedLog:
+          disqualifiedLogCount++;
           break;
         case VerifiedSCT::Status::UnknownLog:
           unknownLogCount++;
@@ -292,10 +299,10 @@ CertVerifier::VerifySignedCertificateTimestamps(
     }
     MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
             ("SCT verification result: "
-             "valid=%zu unknownLog=%zu "
+             "valid=%zu unknownLog=%zu disqualifiedLog=%zu "
              "invalidSignature=%zu invalidTimestamp=%zu "
              "decodingErrors=%zu\n",
-             validCount, unknownLogCount,
+             validCount, unknownLogCount, disqualifiedLogCount,
              invalidSignatureCount, invalidTimestampCount,
              result.decodingErrors));
   }

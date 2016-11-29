@@ -22,7 +22,10 @@ public:
     // Does nothing if NSS is already initialized.
     MOZ_RELEASE_ASSERT(NSS_NoDB_Init(nullptr) == SECSuccess);
 
-    ASSERT_EQ(Success, mLog.Init(InputForBuffer(GetTestPublicKey())));
+    ASSERT_EQ(Success, mLog.Init(InputForBuffer(GetTestPublicKey()),
+                                 -1 /*operator id*/,
+                                 CTLogStatus::Included,
+                                 0 /*disqualification time*/));
     ASSERT_EQ(GetTestPublicKeyId(), mLog.keyId());
   }
 
@@ -123,7 +126,10 @@ TEST_F(CTLogVerifierTest, ExcessDataInPublicKey)
   MOZ_RELEASE_ASSERT(key.append("extra", 5));
 
   CTLogVerifier log;
-  EXPECT_NE(Success, log.Init(InputForBuffer(key)));
+  EXPECT_NE(Success, log.Init(InputForBuffer(key),
+                              -1 /*operator id*/,
+                              CTLogStatus::Included,
+                              0 /*disqualification time*/));
 }
 
 } }  // namespace mozilla::ct
