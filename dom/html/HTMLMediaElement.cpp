@@ -3621,9 +3621,6 @@ HTMLMediaElement::PlayInternal()
   UpdatePreloadAction();
   UpdateSrcMediaStreamPlaying();
 
-  // We should check audio channel playing state before dispatching any events,
-  // because we don't want to dispatch events for blocked media. For blocked
-  // media, the event would be pending until media is resumed.
   // TODO: If the playback has ended, then the user agent must set
   // seek to the effective start.
   if (oldPaused) {
