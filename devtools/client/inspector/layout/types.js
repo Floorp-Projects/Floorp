@@ -30,6 +30,9 @@ exports.grid = {
  */
 exports.highlighterSettings = {
 
+  // Whether or not the grid highlighter should show the grid line numbers
+  showGridLineNumbers: PropTypes.bool,
+
   // Whether or not the grid highlighter extends the grid lines infinitely
   showInfiniteLines: PropTypes.bool,
 

@@ -14,6 +14,7 @@ const {
   updateGrids,
 } = require("./actions/grids");
 const {
+  updateShowGridLineNumbers,
   updateShowInfiniteLines,
 } = require("./actions/highlighter-settings");
 
@@ -24,6 +25,7 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
 
+const SHOW_GRID_LINE_NUMBERS = "devtools.gridinspector.showGridLineNumbers";
 const SHOW_INFINITE_LINES_PREF = "devtools.gridinspector.showInfiniteLines";
 
 function LayoutView(inspector, window) {
@@ -73,6 +75,28 @@ LayoutView.prototype = {
       onToggleGridHighlighter: node => {
         let { highlighterSettings } = this.store.getState();
         this.highlighters.toggleGridHighlighter(node, highlighterSettings);
+      },
+
+      /**
+       * Handler for a change in the show grid line numbers checkbox in the
+       * GridDisplaySettings component. TOggles on/off the option to show the grid line
+       * numbers in the grid highlighter. Refreshes the shown grid highlighter for the
+       * grids currently highlighted.
+       *
+       * @param  {Boolean} enabled
+       *         Whether or not the grid highlighter should show the grid line numbers.
+       */
+      onToggleShowGridLineNumbers: enabled => {
+        this.store.dispatch(updateShowGridLineNumbers(enabled));
+        Services.prefs.setBoolPref(SHOW_GRID_LINE_NUMBERS, enabled);
+
+        let { grids, highlighterSettings } = this.store.getState();
+
+        for (let grid of grids) {
+          if (grid.highlighted) {
+            this.highlighters.showGridHighlighter(grid.nodeFront, highlighterSettings);
+          }
+        }
       },
 
       /**
@@ -148,7 +172,10 @@ LayoutView.prototype = {
   loadHighlighterSettings() {
     let { dispatch } = this.store;
 
+    let showGridLineNumbers = Services.prefs.getBoolPref(SHOW_GRID_LINE_NUMBERS);
     let showInfinteLines = Services.prefs.getBoolPref(SHOW_INFINITE_LINES_PREF);
+
+    dispatch(updateShowGridLineNumbers(showGridLineNumbers));
     dispatch(updateShowInfiniteLines(showInfinteLines));
   },
 
