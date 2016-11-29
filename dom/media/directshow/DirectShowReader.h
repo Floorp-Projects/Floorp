@@ -57,8 +57,7 @@ public:
   nsresult ReadMetadata(MediaInfo* aInfo,
                         MetadataTags** aTags) override;
 
-  RefPtr<SeekPromise>
-  Seek(const SeekTarget& aTarget, int64_t aEndTime) override;
+  RefPtr<SeekPromise> Seek(const SeekTarget& aTarget) override;
 
   static const GUID CLSID_MPEG_LAYER_3_DECODER_FILTER;
 
