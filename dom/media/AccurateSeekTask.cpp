@@ -40,10 +40,6 @@ AccurateSeekTask::AccurateSeekTask(const void* aDecoderID,
   , mDoneVideoSeeking(!aInfo.HasVideo())
 {
   AssertOwnerThread();
-
-  // Bound the seek time to be inside the media range.
-  NS_ASSERTION(aEnd.ToMicroseconds() != -1, "Should know end time by now");
-  mTarget.SetTime(std::max(media::TimeUnit(), std::min(mTarget.GetTime(), aEnd)));
 }
 
 AccurateSeekTask::~AccurateSeekTask()

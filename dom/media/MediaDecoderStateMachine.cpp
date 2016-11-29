@@ -791,12 +791,7 @@ public:
       mMaster->StopPlayback();
     }
 
-    // mSeekJob.mTarget.mTime might be different from
-    // mSeekTask->GetSeekTarget().mTime because the seek task might clamp the
-    // seek target to [0, duration]. We want to update the playback position to
-    // the clamped value.
-    mMaster->UpdatePlaybackPositionInternal(
-      mSeekTask->GetSeekTarget().GetTime().ToMicroseconds());
+    mMaster->UpdatePlaybackPositionInternal(mSeekJob.mTarget.GetTime().ToMicroseconds());
 
     if (mVisibility == EventVisibility::Observable) {
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::SeekStarted);
