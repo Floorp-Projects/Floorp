@@ -2019,7 +2019,6 @@ template<class ObjectType>
 inline bool
 WebGLContext::ValidateObjectRef(const char* info, const ObjectType& object)
 {
-    MOZ_ASSERT(bool(&object));
     return ValidateObjectAssumeNonNull(info, &object);
 }
 
