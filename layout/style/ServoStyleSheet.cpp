@@ -10,6 +10,8 @@
 #include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/dom/CSSRuleList.h"
 
+#include "mozAutoDocUpdate.h"
+
 namespace mozilla {
 
 ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
@@ -139,14 +141,45 @@ uint32_t
 ServoStyleSheet::InsertRuleInternal(const nsAString& aRule,
                                     uint32_t aIndex, ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return 0;
+  // Ensure mRuleList is constructed.
+  GetCssRulesInternal(aRv);
+
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
+  aRv = mRuleList->InsertRule(aRule, aIndex);
+  if (aRv.Failed()) {
+    return 0;
+  }
+  if (mDocument) {
+    // XXX When we support @import rules, we should not notify here,
+    // but rather when the sheet the rule is importing is loaded.
+    // XXX We may not want to get the rule when stylesheet change event
+    // is not enabled.
+    mDocument->StyleRuleAdded(this, mRuleList->GetRule(aIndex));
+  }
+  return aIndex;
 }
 
 void
 ServoStyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  // Ensure mRuleList is constructed.
+  GetCssRulesInternal(aRv);
+  if (aIndex > mRuleList->Length()) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
+  // Hold a strong ref to the rule so it doesn't die when we remove it
+  // from the list. XXX We may not want to hold it if stylesheet change
+  // event is not enabled.
+  RefPtr<css::Rule> rule = mRuleList->GetRule(aIndex);
+  aRv = mRuleList->DeleteRule(aIndex);
+  MOZ_ASSERT(!aRv.ErrorCodeIs(NS_ERROR_DOM_INDEX_SIZE_ERR),
+             "IndexSizeError should have been handled earlier");
+  if (!aRv.Failed() && mDocument) {
+    mDocument->StyleRuleRemoved(this, rule);
+  }
 }
 
 } // namespace mozilla
