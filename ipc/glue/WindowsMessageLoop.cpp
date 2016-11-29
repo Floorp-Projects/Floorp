@@ -494,9 +494,7 @@ WindowIsDeferredWindow(HWND hWnd)
 
   // Plugin windows that can trigger ipc calls in child:
   // 'ShockwaveFlashFullScreen' - flash fullscreen window
-  // 'AGFullScreenWinClass' - silverlight fullscreen window
-  if (className.EqualsLiteral("ShockwaveFlashFullScreen") ||
-      className.EqualsLiteral("AGFullScreenWinClass")) {
+  if (className.EqualsLiteral("ShockwaveFlashFullScreen")) {
     SetPropW(hWnd, k3rdPartyWindowProp, (HANDLE)1);
     return true;
   }

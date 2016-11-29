@@ -18,14 +18,6 @@ int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,
 
     nsPluginHost::SpecialType specialType = nsPluginHost::GetSpecialType(aMimeType);
 
-    if (specialType == nsPluginHost::eSpecialType_Silverlight) {
-        quirks |= QUIRK_SILVERLIGHT_DEFAULT_TRANSPARENT;
-#ifdef OS_WIN
-        quirks |= QUIRK_WINLESS_TRACKPOPUP_HOOK;
-        quirks |= QUIRK_SILVERLIGHT_FOCUS_CHECK_PARENT;
-#endif
-    }
-
     if (specialType == nsPluginHost::eSpecialType_Flash) {
         quirks |= QUIRK_FLASH_RETURN_EMPTY_DOCUMENT_ORIGIN;
 #ifdef OS_WIN
