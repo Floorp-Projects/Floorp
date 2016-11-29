@@ -139,4 +139,3 @@ pref(svg.transform-box.enabled,true) == transform-box-svg-2b.svg transform-box-s
 == animate-layer-scale-inherit-3.html animate-layer-scale-inherit-1-ref.html
 # Bug 1301500
 == dynamic-add-without-change-cb-1.html dynamic-add-without-change-cb-1-ref.html
-== table-overflowed-by-animation.html table-overflowed-by-animation-ref.html
