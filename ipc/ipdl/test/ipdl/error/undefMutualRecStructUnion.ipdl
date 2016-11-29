@@ -3,5 +3,5 @@ union Y { Z; };
 struct Z { X x; };
 
 protocol undefMutualRecStructUnion {
-child: __delete__(X x);
+child: async __delete__(X x);
 };

@@ -16,6 +16,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 
+@TargetApi(M)
 public class GeckoMediaDrmBridgeV23 extends GeckoMediaDrmBridgeV21 {
     private static final boolean DEBUG = false;
 
@@ -25,7 +26,6 @@ public class GeckoMediaDrmBridgeV23 extends GeckoMediaDrmBridgeV21 {
         mDrm.setOnKeyStatusChangeListener(new KeyStatusChangeListener(), null);
     }
 
-    @TargetApi(M)
     private class KeyStatusChangeListener implements MediaDrm.OnKeyStatusChangeListener {
         @Override
         public void onKeyStatusChange(MediaDrm mediaDrm,
@@ -48,38 +48,9 @@ public class GeckoMediaDrmBridgeV23 extends GeckoMediaDrmBridgeV21 {
     }
 
     @Override
-    public void updateSession(int promiseId,
-                              String sessionId,
-                              byte[] response) {
-        if (DEBUG) Log.d(LOGTAG, "updateSession(), sessionId = " + sessionId);
-        if (mDrm == null) {
-            onRejectPromise(promiseId, "MediaDrm instance doesn't exist !!");
-            return;
-        }
-
-        ByteBuffer session = ByteBuffer.wrap(sessionId.getBytes());
-        if (!sessionExists(session)) {
-            onRejectPromise(promiseId, "Invalid session during updateSession.");
-            return;
-        }
-
-        try {
-            final byte [] keySetId = mDrm.provideKeyResponse(session.array(), response);
-            if (DEBUG) {
-                HashMap<String, String> infoMap = mDrm.queryKeyStatus(session.array());
-                for (String strKey : infoMap.keySet()) {
-                    String strValue = infoMap.get(strKey);
-                    Log.d(LOGTAG, "InfoMap : key(" + strKey + ")/value(" + strValue + ")");
-                }
-            }
-            onSessionUpdated(promiseId, session.array());
-            return;
-        } catch (final NotProvisionedException | DeniedByServerException | IllegalStateException e) {
-            if (DEBUG) Log.d(LOGTAG, "Failed to provide key response:", e);
-            onSessionError(session.array(), "Got exception during updateSession.");
-            onRejectPromise(promiseId, "Got exception during updateSession.");
-        }
-        release();
-        return;
+    protected void HandleKeyStatusChangeByDummyKey(String sessionId)
+    {
+        // MediaDrm.KeyStatus information listener is supported on M+, there is no need to use
+        // dummy key id to report key status anymore.
     }
 }

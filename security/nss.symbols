@@ -669,6 +669,7 @@ SSL_GetImplementedCiphers
 SSL_GetNextProto
 SSL_GetNumImplementedCiphers
 SSL_GetSRTPCipher
+SSL_GetStatistics
 SSL_HandshakeCallback
 SSL_HandshakeNegotiatedExtension
 SSL_ImplementedCiphers @DATA@

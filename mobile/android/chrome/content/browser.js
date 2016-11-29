@@ -1250,27 +1250,29 @@ var BrowserApp = {
       let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
       let closedTabData = ss.getClosedTabs(window)[0];
 
-      let message;
-      let title = closedTabData.entries[closedTabData.index - 1].title;
-      let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(aTab.browser);
+      if (closedTabData) {
+        let message;
+        let title = closedTabData.entries[closedTabData.index - 1].title;
+        let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(aTab.browser);
 
-      if (isPrivate) {
-        message = Strings.browser.GetStringFromName("privateClosedMessage.message");
-      } else if (title) {
-        message = Strings.browser.formatStringFromName("undoCloseToast.message", [title], 1);
-      } else {
-        message = Strings.browser.GetStringFromName("undoCloseToast.messageDefault");
-      }
-
-      Snackbars.show(message, Snackbars.LENGTH_LONG, {
-        action: {
-          label: Strings.browser.GetStringFromName("undoCloseToast.action2"),
-          callback: function() {
-            UITelemetry.addEvent("undo.1", "toast", null, "closetab");
-            ss.undoCloseTab(window, closedTabData);
-          }
+        if (isPrivate) {
+          message = Strings.browser.GetStringFromName("privateClosedMessage.message");
+        } else if (title) {
+          message = Strings.browser.formatStringFromName("undoCloseToast.message", [title], 1);
+        } else {
+          message = Strings.browser.GetStringFromName("undoCloseToast.messageDefault");
         }
-      });
+
+        Snackbars.show(message, Snackbars.LENGTH_LONG, {
+          action: {
+            label: Strings.browser.GetStringFromName("undoCloseToast.action2"),
+            callback: function() {
+              UITelemetry.addEvent("undo.1", "toast", null, "closetab");
+              ss.undoCloseTab(window, closedTabData);
+            }
+          }
+        });
+      }
     }
 
     aTab.destroy();
@@ -3493,7 +3495,8 @@ Tab.prototype = {
         parentId: ("parentId" in aParams) ? aParams.parentId : -1,
         tabIndex: ("tabIndex" in aParams) ? aParams.tabIndex : -1,
         external: ("external" in aParams) ? aParams.external : false,
-        selected: ("selected" in aParams || aParams.cancelEditMode === true) ? aParams.selected : true,
+        selected: ("selected" in aParams || aParams.cancelEditMode === true)
+                  ? aParams.selected !== false || aParams.cancelEditMode === true : true,
         cancelEditMode: aParams.cancelEditMode === true,
         title: truncate(title, MAX_TITLE_LENGTH),
         delayLoad: aParams.delayLoad || false,

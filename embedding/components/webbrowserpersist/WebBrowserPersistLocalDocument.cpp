@@ -78,9 +78,7 @@ WebBrowserPersistLocalDocument::WebBrowserPersistLocalDocument(nsIDocument* aDoc
     MOZ_ASSERT(mDocument);
 }
 
-WebBrowserPersistLocalDocument::~WebBrowserPersistLocalDocument()
-{
-}
+WebBrowserPersistLocalDocument::~WebBrowserPersistLocalDocument() = default;
 
 NS_IMETHODIMP
 WebBrowserPersistLocalDocument::SetPersistFlags(uint32_t aFlags)
@@ -652,7 +650,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOCUMENTENCODERNODEFIXUP
 private:
-    virtual ~PersistNodeFixup() { }
+    virtual ~PersistNodeFixup() = default;
     RefPtr<WebBrowserPersistLocalDocument> mParent;
     nsClassHashtable<nsCStringHashKey, nsCString> mMap;
     nsCOMPtr<nsIURI> mCurrentBaseURI;
@@ -690,7 +688,7 @@ PersistNodeFixup::PersistNodeFixup(WebBrowserPersistLocalDocument* aParent,
         NS_ENSURE_SUCCESS_VOID(rv);
         for (uint32_t i = 0; i < mapSize; ++i) {
             nsAutoCString urlFrom;
-            nsCString* urlTo = new nsCString();
+            auto* urlTo = new nsCString();
 
             rv = aMap->GetURIMapping(i, urlFrom, *urlTo);
             MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -844,7 +842,7 @@ AppendXMLAttr(const nsAString& key, const nsAString& aValue, nsAString& aBuffer)
         aBuffer.Append(' ');
     }
     aBuffer.Append(key);
-    aBuffer.AppendLiteral("=\"");
+    aBuffer.AppendLiteral(R"(=")");
     for (size_t i = 0; i < aValue.Length(); ++i) {
         switch (aValue[i]) {
             case '&':

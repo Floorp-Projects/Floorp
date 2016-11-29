@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<FindBugsFilter>
+
+  <!-- Bug 1315982 -->
+  <Match>
+    <Bug pattern="DE_MIGHT_IGNORE" />
+  </Match>
+
+  <!-- Bug 1316006 -->
+  <Match>
+    <Bug pattern="DMI_INVOKING_TOSTRING_ON_ARRAY" />
+  </Match>
+
+  <!-- Bug 1316005 -->
+  <Match>
+    <Bug pattern="UMAC_UNCALLABLE_METHOD_OF_ANONYMOUS_CLASS" />
+  </Match>
+
+  <!-- Bug 1316008 -->
+  <Match>
+    <Bug pattern="DM_DEFAULT_ENCODING" />
+  </Match>
+
+  <!-- Bug 1320298 -->
+  <Match>
+    <Bug pattern="MS_MUTABLE_ARRAY" />
+  </Match>
+
+  <!-- Bug 1316009 -->
+  <Match>
+    <Bug pattern="MS_SHOULD_BE_FINAL" />
+  </Match>
+
+  <!-- Bug 1316010 -->
+  <Match>
+    <Bug pattern="UL_UNRELEASED_LOCK" />
+  </Match>
+
+  <!-- Bug 1316011 -->
+  <Match>
+    <Bug pattern="VO_VOLATILE_INCREMENT" />
+  </Match>
+
+  <!-- Bug 1316012 -->
+  <Match>
+    <Bug pattern="DM_BOXED_PRIMITIVE_FOR_PARSING" />
+  </Match>
+
+  <!-- Bug 1316021 -->
+  <Match>
+    <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" />
+  </Match>
+
+  <!-- Bug 1316023 -->
+  <Match>
+    <Bug pattern="UC_USELESS_CONDITION" />
+  </Match>
+
+  <!-- Bug 1320316 -->
+  <Match>
+    <Bug pattern="DM_BOXED_PRIMITIVE_TOSTRING" />
+  </Match>
+    <Match>
+    <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" />
+  </Match>
+    <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH" />
+  </Match>
+    <Match>
+    <Bug pattern="NP_NULL_PARAM_DEREF_NONVIRTUAL" />
+  </Match>
+
+</FindBugsFilter>
