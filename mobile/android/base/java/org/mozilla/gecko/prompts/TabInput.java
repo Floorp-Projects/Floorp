@@ -7,9 +7,6 @@ package org.mozilla.gecko.prompts;
 
 import java.util.LinkedHashMap;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -28,7 +25,7 @@ public class TabInput extends PromptInput implements AdapterView.OnItemClickList
     public static final String INPUT_TYPE = "tabs";
     public static final String LOGTAG = "GeckoTabInput";
 
-    /* Keeping the order of this in sync with the JSON is important. */
+    /* Keeping the order of this in sync with the input is important. */
     final private LinkedHashMap<String, PromptListItem[]> mTabs;
 
     private TabHost mHost;
@@ -75,12 +72,9 @@ public class TabInput extends PromptInput implements AdapterView.OnItemClickList
 
     @Override
     public Object getValue() {
-        JSONObject obj = new JSONObject();
-        try {
-            obj.put("tab", mHost.getCurrentTab());
-            obj.put("item", mPosition);
-        } catch (JSONException ex) { }
-
+        final GeckoBundle obj = new GeckoBundle(2);
+        obj.putInt("tab", mHost.getCurrentTab());
+        obj.putInt("item", mPosition);
         return obj;
     }
 

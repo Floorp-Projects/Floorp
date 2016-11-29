@@ -41,8 +41,8 @@ public class PromptService implements BundleEventListener {
         Prompt p;
         p = new Prompt(mContext, new Prompt.PromptCallback() {
             @Override
-            public void onPromptFinished(String jsonResult) {
-                callback.sendSuccess(jsonResult);
+            public void onPromptFinished(final GeckoBundle result) {
+                callback.sendSuccess(result);
             }
         });
         p.show(message);
