@@ -32,7 +32,7 @@ Open `build/react-with-addons.js` and search for all
 `document.createElement` calls and replace them with
 `document.createElementNS('http://www.w3.org/1999/xhtml', ...)`. Note
 that some code is `ownerDocument.createElement` so don't do a blind
-search/replace. There is only about ~12 places to change.
+search/replace. There is only about ~14 places to change.
 
 Now move  into our repo (note the naming of `react-dev.js`, it's the dev version):
 

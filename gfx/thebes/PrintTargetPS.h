@@ -29,7 +29,9 @@ public:
                PageOrientation aOrientation);
 
   virtual nsresult BeginPrinting(const nsAString& aTitle,
-                                 const nsAString& aPrintToFileName) override;
+                                 const nsAString& aPrintToFileName,
+                                 int32_t aStartPage,
+                                 int32_t aEndPage) override;
   virtual nsresult EndPage() override;
   virtual void Finish() override;
 

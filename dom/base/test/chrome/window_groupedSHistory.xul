@@ -3,9 +3,15 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
 <!--
+The test case creates 3 <xul:browser>s, load entries into them, modify the
+documents, and then check if grouped history merge / back / forward all work
+with bfcache preserved.
+
+Related bugs:
 https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
+https://bugzilla.mozilla.org/show_bug.cgi?id=1310768
 -->
-<window title="Mozilla Bug 1276553"
+<window title="Test GroupedSHistory"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="run();">
 
   <!-- test code goes here -->
@@ -24,11 +30,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
     window[name] = window.opener.wrappedJSObject[name];
   }
 
-  /** Test for Bug 1276553 **/
   function run() {
     SpecialPowers.pushPrefEnv(
       {'set' : [[ 'browser.groupedhistory.enabled', true ]]})
-    .then(() => test(false))
+    // Since we're not going to use GroupedSHistory in non-10s or
+    // chrome-only URLs, we don't test for non-remote browsers anymore.
+    //
+    // As a note, there are 2 known issues in non-10s:
+    // 1. nsDocShell::InternalLoad could start before nsFrameLoader calls
+    // EvictAllContentViewers, and causes RestoreFromHistory fails.
+    // 2. If using sendAsyncMessage, messages may be queued in
+    // SameProcessMessageQueue, and cause "pagehide" being delivered to the
+    // message manager of background <xul:browser> after swap.
     .then(() => test(true))
     .then(() => {
       window.close();
@@ -40,19 +53,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
     let act, bg1, bg2;
     return Promise.resolve()
 
-    // create first browser with 1 entry (which will always be the active one)
-    .then(() => info('TEST-INFO | test create active browser, remote=' + remote))
-    .then(() => createBrowser('pen', remote))
-    .then(b => act = b)
-    .then(() => verifyBrowser(act, 'pen'       /* title */,
-                                    0          /* index */,
-                                    1          /* length */,
-                                    false      /* canGoBack */,
-                                    false      /* canGoForward */,
-                                    false      /* partial */ ))
-
     // create background browser 1 with 1 entry
-    .then(() => info('TEST-INFO | test create background browser 1, remote=' + remote))
+    .then(() => info('TEST-INFO | test create browser #1, remote=' + remote))
     .then(() => createBrowser('pineapple', remote))
     .then(b => bg1 = b)
     .then(() => verifyBrowser(bg1, 'pineapple' /* title */,
@@ -61,9 +63,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     false      /* canGoBack */,
                                     false      /* canGoForward */,
                                     false      /* partial */ ))
+    .then(() => addBfcachedText(bg1))
 
      // create background browser 2 with 2 entries
-    .then(() => info('TEST-INFO | test create background browser 2, remote=' + remote))
+    .then(() => info('TEST-INFO | test create browser #2, remote=' + remote))
     .then(() => createBrowser('apple', remote))
     .then(b => bg2 = b)
     .then(() => verifyBrowser(bg2, 'apple'     /* title */,
@@ -72,6 +75,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     false      /* canGoBack */,
                                     false      /* canGoForward */,
                                     false      /* partial */ ))
+    .then(() => addBfcachedText(bg2))
     .then(() => loadURI(bg2, getDummyHtml('pencil')))
     .then(() => verifyBrowser(bg2, 'pencil'    /* title */,
                                     1          /* index */,
@@ -79,10 +83,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     true       /* canGoBack */,
                                     false      /* canGoForward */,
                                     false      /* partial */ ))
+    .then(() => addBfcachedText(bg2))
+
+    // create active browser with 1 entry
+    .then(() => info('TEST-INFO | test create browser #3, remote=' + remote))
+    .then(() => createBrowser('pen', remote, true))
+    .then(b => act = b)
+    .then(() => verifyBrowser(act, 'pen'       /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    false      /* canGoBack */,
+                                    false      /* canGoForward */,
+                                    false      /* partial */ ))
+    .then(() => addBfcachedText(act))
 
     // merge to 2 entries pen-pineapple
-    .then(() => info('TEST-INFO | test merge history, remote=' + remote))
-    .then(() => mergeHistory(act, bg1))
+    // act: pineapple
+    // bg1: pen
+    .then(() => info('TEST-INFO | test merge history #1, remote=' + remote))
+    .then(() => mergeHistory(act, bg1, 'pineapple'))
     .then(() => verifyBrowser(act, 'pineapple' /* title */,
                                     0          /* index */,
                                     1          /* length */,
@@ -90,10 +109,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     false      /* canGoForward */,
                                     true       /* partial */,
                                     1          /* offset */,
-                                    2          /* globalLength */ ))
+                                    2          /* globalLength */,
+                                    true       /* bfcached */ ))
 
     // merge to 4 entries pen-pineapple-apple-pencil
-    .then(() => mergeHistory(act, bg2))
+    // act: apple-pencil
+    // bg1: pen
+    // bg2: pineapple
+    .then(() => info('TEST-INFO | test merge history #2, remote=' + remote))
+    .then(() => mergeHistory(act, bg2, 'pencil'))
     .then(() => verifyBrowser(act, 'pencil'    /* title */,
                                     1          /* index */,
                                     2          /* length */,
@@ -101,11 +125,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     false      /* canGoForward */,
                                     true       /* partial */,
                                     2          /* offset */,
-                                    4          /* globalLength */ ))
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
 
     // test go back
-    .then(() => info('TEST-INFO | test history go back, remote=' + remote))
-    .then(() => wrapHistoryNavFn(act, act.goBack.bind(act)))
+    // act: apple-pencil
+    // bg1: pen
+    // bg2: pineapple
+    .then(() => info('TEST-INFO | test history go back #1, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.goBack.bind(act), 'pencil', 'apple'))
     .then(() => verifyBrowser(act, 'apple'     /* title */,
                                     0          /* index */,
                                     2          /* length */,
@@ -113,10 +141,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     true       /* canGoForward */,
                                     true       /* partial */,
                                     2          /* offset */,
-                                    4          /* globalLength */ ))
-    // XXX The 2nd pageshow comes from reload as current index of the active
-    // partial history remains the same
-    .then(() => wrapHistoryNavFn(act, act.goBack.bind(act), true))
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+    // test go back
+    // act: pineapple
+    // bg1: pen
+    // bg2: apple-pencil
+    .then(() => info('TEST-INFO | test history go back #2, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.goBack.bind(act), 'apple', 'pineapple', bg2))
     .then(() => verifyBrowser(act, 'pineapple' /* title */,
                                     0          /* index */,
                                     1          /* length */,
@@ -124,8 +156,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     true       /* canGoForward */,
                                     true       /* partial */,
                                     1          /* offset */,
-                                    4          /* globalLength */ ))
-    .then(() => wrapHistoryNavFn(act, act.goBack.bind(act), true))
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+    // test go back
+    // act: pen
+    // bg1: pineapple
+    // bg2: apple-pencil
+    .then(() => info('TEST-INFO | test history go back #3, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.goBack.bind(act), 'pineapple', 'pen', bg1))
     .then(() => verifyBrowser(act, 'pen'       /* title */,
                                     0          /* index */,
                                     1          /* length */,
@@ -133,11 +171,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     true       /* canGoForward */,
                                     true       /* partial */,
                                     0          /* offset */,
-                                    4          /* globalLength */ ))
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
 
     // test go forward
-    .then(() => info('TEST-INFO | test history go forward, remote=' + remote))
-    .then(() => wrapHistoryNavFn(act, act.goForward.bind(act), true))
+    // act: pineapple
+    // bg1: pen
+    // bg2: apple-pencil
+    .then(() => info('TEST-INFO | test history go forward #1, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.goForward.bind(act), 'pen', 'pineapple', bg1))
     .then(() => verifyBrowser(act, 'pineapple' /* title */,
                                     0          /* index */,
                                     1          /* length */,
@@ -145,8 +187,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     true       /* canGoForward */,
                                     true       /* partial */,
                                     1          /* offset */,
-                                    4          /* globalLength */ ))
-    .then(() => wrapHistoryNavFn(act, act.goForward.bind(act), true))
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+    // test go forward
+    // act: apple-pencil
+    // bg1: pen
+    // bg2: pineapple
+    .then(() => info('TEST-INFO | test history go forward #2, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.goForward.bind(act), 'pineapple', 'apple', bg2))
     .then(() => verifyBrowser(act, 'apple'     /* title */,
                                     0          /* index */,
                                     2          /* length */,
@@ -154,8 +202,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     true       /* canGoForward */,
                                     true       /* partial */,
                                     2          /* offset */,
-                                    4          /* globalLength */ ))
-    .then(() => wrapHistoryNavFn(act, act.goForward.bind(act)))
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+
+    // test go forward
+    // act: apple-pencil
+    // bg1: pen
+    // bg2: pineapple
+    .then(() => info('TEST-INFO | test history go forward #3, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.goForward.bind(act), 'apple', 'pencil'))
     .then(() => verifyBrowser(act, 'pencil'    /* title */,
                                     1          /* index */,
                                     2          /* length */,
@@ -163,11 +218,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     false      /* canGoForward */,
                                     true       /* partial */,
                                     2          /* offset */,
-                                    4          /* globalLength */ ))
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
 
     // test goto index
-    .then(() => info('TEST-INFO | test history goto index, remote=' + remote))
-    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 0), true))
+    // act: pen
+    // bg1: apple-pencil
+    // bg2: pineapple
+    .then(() => info('TEST-INFO | test history goto index #1, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 0), 'pencil', 'pen', bg1))
     .then(() => verifyBrowser(act, 'pen'       /* title */,
                                     0          /* index */,
                                     1          /* length */,
@@ -175,9 +234,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     true       /* canGoForward */,
                                     true       /* partial */,
                                     0          /* offset */,
-                                    4          /* globalLength */ ))
-    // expect 2 pageshow since we're also changing mIndex of the partial history
-    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 2), true, 2))
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+    // test goto index
+    // act: apple-pencil
+    // bg1: pen
+    // bg2: pineapple
+    .then(() => info('TEST-INFO | test history goto index #2, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 2), 'pen', 'apple', bg1))
     .then(() => verifyBrowser(act, 'apple'     /* title */,
                                     0          /* index */,
                                     2          /* length */,
@@ -185,8 +249,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     true       /* canGoForward */,
                                     true       /* partial */,
                                     2          /* offset */,
-                                    4          /* globalLength */ ))
-    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 1), true))
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+    // test goto index
+    // act: pineapple
+    // bg1: pen
+    // bg2: apple-pencil
+    .then(() => info('TEST-INFO | test history goto index #3, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 1), 'apple', 'pineapple', bg2))
     .then(() => verifyBrowser(act, 'pineapple' /* title */,
                                     0          /* index */,
                                     1          /* length */,
@@ -194,9 +264,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     true       /* canGoForward */,
                                     true       /* partial */,
                                     1          /* offset */,
-                                    4          /* globalLength */ ))
-    // expect 2 pageshow since we're also changing mIndex of the partial history
-    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 3), true, 2))
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+    // test goto index
+    // act: apple-pencil
+    // bg1: pen
+    // bg2: pineapple
+    .then(() => info('TEST-INFO | test history goto index #4, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 3), 'pineapple', 'pencil', bg2))
     .then(() => verifyBrowser(act, 'pencil'    /* title */,
                                     1          /* index */,
                                     2          /* length */,
@@ -204,11 +279,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     false      /* canGoForward */,
                                     true       /* partial */,
                                     2          /* offset */,
-                                    4          /* globalLength */ ))
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
 
-    // test history change to 3 entries pen-pineapple-banana
-    .then(() => info('TEST-INFO | test history change, remote=' + remote))
-    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 1), true))
+    // test content go back
+    // act: apple-pencil
+    // bg1: pen
+    // bg2: pineapple
+    .then(() => info('TEST-INFO | test content history go back #1, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, contentGoBack.bind(null, act), 'pencil', 'apple'))
+    .then(() => verifyBrowser(act, 'apple'     /* title */,
+                                    0          /* index */,
+                                    2          /* length */,
+                                    true       /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    2          /* offset */,
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+    // test content go back
+    // act: pineapple
+    // bg1: pen
+    // bg2: apple-pencil
+    .then(() => info('TEST-INFO | test content history go back #2, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, contentGoBack.bind(null, act), 'apple', 'pineapple', bg2))
     .then(() => verifyBrowser(act, 'pineapple' /* title */,
                                     0          /* index */,
                                     1          /* length */,
@@ -216,7 +310,151 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
                                     true       /* canGoForward */,
                                     true       /* partial */,
                                     1          /* offset */,
-                                    4          /* globalLength */ ))
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+    // test content go back
+    // act: pen
+    // bg1: pineapple
+    // bg2: apple-pencil
+    .then(() => info('TEST-INFO | test content history go back #3, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, contentGoBack.bind(null, act), 'pineapple', 'pen', bg1))
+    .then(() => verifyBrowser(act, 'pen'       /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    false      /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    0          /* offset */,
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+
+    // test content go forward
+    // act: pineapple
+    // bg1: pen
+    // bg2: apple-pencil
+    .then(() => info('TEST-INFO | test content history go forward #1, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, contentGoForward.bind(null, act), 'pen', 'pineapple', bg1))
+    .then(() => verifyBrowser(act, 'pineapple' /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    true       /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    1          /* offset */,
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+    // test content go forward
+    // act: apple-pencil
+    // bg1: pen
+    // bg2: pineapple
+    .then(() => info('TEST-INFO | test content history go forward #2, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, contentGoForward.bind(null, act), 'pineapple', 'apple', bg2))
+    .then(() => verifyBrowser(act, 'apple'     /* title */,
+                                    0          /* index */,
+                                    2          /* length */,
+                                    true       /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    2          /* offset */,
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+
+    // test content go forward
+    // act: apple-pencil
+    // bg1: pen
+    // bg2: pineapple
+    .then(() => info('TEST-INFO | test content history go forward #3, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, contentGoForward.bind(null, act), 'apple', 'pencil'))
+    .then(() => verifyBrowser(act, 'pencil'    /* title */,
+                                    1          /* index */,
+                                    2          /* length */,
+                                    true       /* canGoBack */,
+                                    false      /* canGoForward */,
+                                    true       /* partial */,
+                                    2          /* offset */,
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+
+    // test content go
+    // act: pen
+    // bg1: apple-pencil
+    // bg2: pineapple
+    .then(() => info('TEST-INFO | test content history go #1, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, contentGo.bind(null, act, -3), 'pencil', 'pen', bg1))
+    .then(() => verifyBrowser(act, 'pen'       /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    false      /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    0          /* offset */,
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+    // test content go
+    // act: apple-pencil
+    // bg1: pen
+    // bg2: pineapple
+    .then(() => info('TEST-INFO | test content history go #2, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, contentGo.bind(null, act, 2), 'pen', 'apple', bg1))
+    .then(() => verifyBrowser(act, 'apple'     /* title */,
+                                    0          /* index */,
+                                    2          /* length */,
+                                    true       /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    2          /* offset */,
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+    // test content go
+    // act: pineapple
+    // bg1: pen
+    // bg2: apple-pencil
+    .then(() => info('TEST-INFO | test content history go #3, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, contentGo.bind(null, act, -1), 'apple', 'pineapple', bg2))
+    .then(() => verifyBrowser(act, 'pineapple' /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    true       /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    1          /* offset */,
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+    // test content go
+    // act: apple-pencil
+    // bg1: pen
+    // bg2: pineapple
+    .then(() => info('TEST-INFO | test content history go #4, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, contentGo.bind(null, act, 2), 'pineapple', 'pencil', bg2))
+    .then(() => verifyBrowser(act, 'pencil'    /* title */,
+                                    1          /* index */,
+                                    2          /* length */,
+                                    true       /* canGoBack */,
+                                    false      /* canGoForward */,
+                                    true       /* partial */,
+                                    2          /* offset */,
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+
+    // test history change to 3 entries pen-pineapple-banana
+    // act: pineapple
+    // bg1: pen
+    // bg2: apple-pencil
+    .then(() => info('TEST-INFO | test history change, remote=' + remote))
+    .then(() => wrapHistoryNavFn(act, act.gotoIndex.bind(act, 1), 'pencil', 'pineapple', bg2))
+    .then(() => verifyBrowser(act, 'pineapple' /* title */,
+                                    0          /* index */,
+                                    1          /* length */,
+                                    true       /* canGoBack */,
+                                    true       /* canGoForward */,
+                                    true       /* partial */,
+                                    1          /* offset */,
+                                    4          /* globalLength */,
+                                    true       /* bfcached */ ))
+
+    // act: pineapple-banana
+    // bg1: pen
+    // bg2: (removed from group)
     .then(() => loadURI(act, getDummyHtml('banana')))
     .then(() => verifyBrowser(act, 'banana'    /* title */,
                                     1          /* index */,
@@ -230,90 +468,145 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
 
   function getDummyHtml(title) {
     return 'data:text/html;charset=UTF-8,' +
-     '<html><head><title>' + title + '</title></head></html>'
+     '<html><head><title>' + title + '</title><script>' +
+     'window.addEventListener("pageshow", e => document.dispatchEvent(' +
+     '  new CustomEvent("test:content-pageshow", {detail: document.title})));' +
+     'window.addEventListener("pagehide", e => document.dispatchEvent(' +
+     '  new CustomEvent("test:content-pagehide", {detail: document.title})));' +
+     'window.addEventListener("visibilitychange", e => document.dispatchEvent(' +
+     '  new CustomEvent("test:content-visibilitychange", {detail: ' +
+     '    {title: document.title, visibility: document.visibilityState}})));' +
+     '</script></head><body><h1>' + title + '</h1><p id="p1"></p></body></html>';
   }
 
-  function createBrowser(title, remote) {
+  let gBrowserCount = 0;
+  function createBrowser(title, remote, active = false) {
     let browser = document.createElement('browser');
+    browser.testId = ++gBrowserCount; // for debugging
     browser.setAttribute('type', 'content');
     browser.setAttribute('remote', remote);
     browser.setAttribute('src', getDummyHtml(title));
+    browser.docShellIsActive = active;
     document.getElementById('stack').appendChild(browser);
     return BrowserTestUtils.browserLoaded(browser)
            .then(() => {
+             // Register our own event listeners.
+             //
+             // We don't use BrowserTestUtils.waitForContentEvents, because when
+             // swapping frameloaders, the event listeners at content side are
+             // also swapped to another browser. The message listener registered
+             // by waitForContentEvents will never receive messages consequently.
              browser.messageManager.loadFrameScript('data:,' +
-               'addEventListener("pageshow", () => sendAsyncMessage("test:pageshow", null), false);' +
-               'addEventListener("pagehide", () => sendAsyncMessage("test:pagehide", null), false);',
+               'addEventListener("test:content-pageshow", e => {' +
+                 'if (e.target == content.document) {' +
+                   'sendAsyncMessage("test:content-pageshow", { title: e.detail });' +
+                 '}' +
+               '}, true, true);' +
+               'addEventListener("test:content-pagehide", e => {' +
+                 'if (e.target == content.document) {' +
+                   'sendAsyncMessage("test:content-pagehide", { title: e.detail });' +
+                 '}' +
+               '}, true, true);' +
+               'addEventListener("test:content-visibilitychange", e => {' +
+                 'sendAsyncMessage("test:content-visibilitychange", e.detail);' +
+               '}, true, true);',
                true);
+
+             // Log for debugging purpose.
+             browser.messageManager.addMessageListener('test:content-pageshow',
+               msg => info('TEST-INFO | pageshow#' + browser.testId + ' ' + JSON.stringify(msg.data)));
+             browser.messageManager.addMessageListener('test:content-pagehide',
+               msg => info('TEST-INFO | pagehide#' + browser.testId + ' ' + JSON.stringify(msg.data)));
+             browser.messageManager.addMessageListener('test:content-visibilitychange',
+               msg => info('TEST-INFO | visibilitychange#' + browser.testId + ' ' + JSON.stringify(msg.data)));
            })
            .then(() => {
-             // a trick to ensure webProgress object is created for e10s case
+             // A trick to ensure webProgress object is created for e10s case.
+             // Otherwise canGoBack / canGoForward won't be updated.
              ok(browser.webProgress, 'check browser.webProgress exists');
              return browser;
            });
   }
 
+  function addBfcachedText(browser) {
+    return ContentTask.spawn(browser, null, () => {
+      content.document.getElementById('p1').textContent = 'modified';
+    });
+  }
+
   function loadURI(browser, uri) {
-    let promise = BrowserTestUtils.browserLoaded(browser, false, uri);
+    let promise = BrowserTestUtils.browserLoaded(browser, false);
     browser.loadURI(uri);
     return promise;
   }
 
-  function mergeHistory(b1, b2) {
+  function mergeHistory(b1, b2, title) {
     let promises = [];
     let pagehide1, pagehide2;
 
-    // For swapping there should be a pagehide followed by a pageshow.
-    promises.push(BrowserTestUtils.waitForMessage(b1.messageManager, 'test:pagehide', msg => pagehide1 = true));
-    promises.push(BrowserTestUtils.waitForMessage(b2.messageManager, 'test:pagehide', msg => pagehide2 = true));
-    promises.push(BrowserTestUtils.waitForMessage(b1.messageManager, 'test:pageshow', msg => pagehide1));
-    promises.push(BrowserTestUtils.waitForMessage(b2.messageManager, 'test:pageshow', msg => pagehide2));
+    promises.push(BrowserTestUtils.waitForMessage(b1.messageManager,
+      'test:content-visibilitychange', msg => msg.data &&
+        (msg.data.title == title) && (msg.data.visibility == 'visible')));
 
     // For swapping remote browsers, we'll also receive Content:LocationChange
     if (b1.isRemoteBrowser) {
+      // It's guaranteed location change can be delivered to b1's message
+      // manager, since frameloader is synchronously swapping on main thread
+      // after calling PartialSHistory::OnActive(). Therefore the message could
+      // only be handled after swapping.
       promises.push(BrowserTestUtils.waitForMessage(b1.messageManager, 'Content:LocationChange'));
     }
 
     promises.push(Promise.resolve().then(() => {
       let f1 = b1.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
       let f2 = b2.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
-      f1.appendPartialSessionHistoryAndSwap(f2);
+      return f1.appendPartialSessionHistoryAndSwap(f2);
     }));
 
     return Promise.all(promises);
   }
 
-  function wrapHistoryNavFn(browser, navFn, expectSwap = false, expectPageshowCount = 1) {
+  function wrapHistoryNavFn(browser, navFn, prevTitle, nextTitle, browserToSwap) {
     let promises = [];
-    let pagehide = false;
-    let pageshowCount = 0;
 
-    if (expectSwap) {
-      // For swapping there should be a pagehide followed by a pageshow.
-      promises.push(BrowserTestUtils.waitForMessage(browser.messageManager,
-        'test:pagehide', msg => pagehide = true));
-
-      // For swapping remote browsers, we'll also receive Content:LocationChange
-      if (browser.isRemoteBrowser) {
-        promises.push(BrowserTestUtils.waitForMessage(browser.messageManager,
-          'Content:LocationChange'));
-      }
-    }
+    // Expecting pagehide from previous page, and a pageshow from next page.
+    //
+    // "Pagehide" is sent before calling OnRequestCrossBrowserNavigation(),
+    // so it should be handled before swapping. "Pageshow" on the other hand
+    // should be handled after swapping cause frameloader is synchronously
+    // swapping on main thread after calling PartialSHistory::OnActive().
+    //
+    // Therefore both messages should be delivered to browser.messageManager.
     promises.push(BrowserTestUtils.waitForMessage(browser.messageManager,
-      'test:pageshow', msg => {
-        // Only count events after pagehide for swapping case.
-        if (!expectSwap || pagehide) {
-          return !--expectPageshowCount;
-        }
-        return false;
-      }));
+      'test:content-pagehide', msg => msg.data && (msg.data.title == prevTitle)));
+    promises.push(BrowserTestUtils.waitForMessage(browser.messageManager,
+      'test:content-pageshow', msg => msg.data && (msg.data.title == nextTitle)));
     promises.push(Task.spawn(navFn));
+
+    // For swapping remote browsers, we'll also receive Content:LocationChange
+    if (browserToSwap && browser.isRemoteBrowser) {
+      promises.push(BrowserTestUtils.waitForMessage(browser.messageManager,
+        'Content:LocationChange'));
+    }
 
     return Promise.all(promises);
   }
 
+  function contentGoBack(browser) {
+    ContentTask.spawn(browser, null, () => content.history.back());
+  }
+
+  function contentGoForward(browser) {
+    ContentTask.spawn(browser, null, () => content.history.forward());
+  }
+
+  function contentGo(browser, offset) {
+    ContentTask.spawn(browser, { offset },
+      ({ offset }) => content.history.go(offset));
+  }
+
   function verifyBrowser(browser, title, index, length, canGoBack, canGoForward,
-                         partial, offset = 0, globalLength = length) {
+                         partial, offset = 0, globalLength = length, bfcached = false) {
     is(browser.canGoBack, canGoBack, 'check browser.canGoBack');
     is(browser.canGoForward, canGoForward, 'check browser.canGoForward');
     if (partial) {
@@ -322,11 +615,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
     }
 
     return ContentTask.spawn(browser,
-                             { title, index, length, canGoBack, canGoForward, partial, offset, globalLength },
-                             ({ title, index, length, canGoBack, canGoForward, partial, offset, globalLength }) => {
+        { title, index, length, canGoBack, canGoForward, partial, offset, globalLength, bfcached },
+        ({ title, index, length, canGoBack, canGoForward, partial, offset, globalLength, bfcached }) => {
       let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
       let shistory = webNav.sessionHistory;
-      is(content.document.title, title, 'check title');
       is(webNav.canGoBack, canGoBack, 'check webNav.canGoBack');
       is(webNav.canGoForward, canGoForward, 'check webNav.canGoForward');
       is(shistory.index, index, 'check shistory.index');
@@ -334,6 +626,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1276553
       is(shistory.isPartial, partial, 'check shistory.isPartial');
       is(shistory.globalIndexOffset, offset, 'check shistory.globalIndexOffset');
       is(shistory.globalCount, globalLength, 'check shistory.globalCount');
+      is(content.document.title, title, 'check title');
+      is(content.document.getElementById('p1').textContent, bfcached ? 'modified' : '', 'check bfcached content');
+      is(content.history.length, globalLength, 'check history.legnth');
     });
   }
 

@@ -481,7 +481,8 @@ nsDeviceContext::BeginDocument(const nsAString& aTitle,
                                int32_t          aStartPage,
                                int32_t          aEndPage)
 {
-    nsresult rv = mPrintTarget->BeginPrinting(aTitle, aPrintToFileName);
+    nsresult rv = mPrintTarget->BeginPrinting(aTitle, aPrintToFileName,
+                                              aStartPage, aEndPage);
 
     if (NS_SUCCEEDED(rv) && mDeviceContextSpec) {
       rv = mDeviceContextSpec->BeginDocument(aTitle, aPrintToFileName,
