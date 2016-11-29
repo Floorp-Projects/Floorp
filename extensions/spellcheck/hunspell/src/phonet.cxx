@@ -36,13 +36,15 @@
 #include "phonet.hxx"
 
 void init_phonet_hash(phonetable& parms) {
-  for (int i = 0; i < HASHSIZE; i++) {
+  int i, k;
+
+  for (i = 0; i < HASHSIZE; i++) {
     parms.hash[i] = -1;
   }
 
-  for (int i = 0; parms.rules[i][0] != '\0'; i += 2) {
+  for (i = 0; parms.rules[i][0] != '\0'; i += 2) {
     /**  set hash value  **/
-    int k = (unsigned char)parms.rules[i][0];
+    k = (unsigned char)parms.rules[i][0];
 
     if (parms.hash[k] < 0) {
       parms.hash[k] = i;
@@ -71,8 +73,9 @@ static int myisalpha(char ch) {
 std::string phonet(const std::string& inword, phonetable& parms) {
 
   int i, k = 0, p, z;
-  int k0, n0, p0 = -333;
+  int k0, n0, p0 = -333, z0;
   char c;
+  const char* s;
   typedef unsigned char uchar;
 
   size_t len = inword.size();
@@ -87,15 +90,15 @@ std::string phonet(const std::string& inword, phonetable& parms) {
   i = z = 0;
   while ((c = word[i]) != '\0') {
     int n = parms.hash[(uchar)c];
-    int z0 = 0;
+    z0 = 0;
 
-    if (n >= 0 && !parms.rules[n].empty()) {
+    if (n >= 0) {
       /**  check all rules for the same letter  **/
       while (parms.rules[n][0] == c) {
         /**  check whole string  **/
         k = 1; /** number of found letters  **/
         p = 5; /** default priority  **/
-        const char*s = parms.rules[n].c_str();
+        s = parms.rules[n];
         s++; /**  important for (see below)  "*(s-1)"  **/
 
         while (*s != '\0' && word[i + k] == *s && !isdigit((unsigned char)*s) &&
@@ -139,13 +142,13 @@ std::string phonet(const std::string& inword, phonetable& parms) {
           n0 = parms.hash[(uchar)c0];
 
           //            if (parms.followup  &&  k > 1  &&  n0 >= 0
-          if (k > 1 && n0 >= 0 && p0 != (int)'-' && word[i + k] != '\0' && !parms.rules[n0].empty()) {
+          if (k > 1 && n0 >= 0 && p0 != (int)'-' && word[i + k] != '\0') {
             /**  test follow-up rule for "word[i+k]"  **/
             while (parms.rules[n0][0] == c0) {
               /**  check whole string  **/
               k0 = k;
               p0 = 5;
-              s = parms.rules[n0].c_str();
+              s = parms.rules[n0];
               s++;
               while (*s != '\0' && word[i + k0] == *s &&
                      !isdigit((unsigned char)*s) &&
@@ -203,9 +206,9 @@ std::string phonet(const std::string& inword, phonetable& parms) {
           } /** end of follow-up stuff **/
 
           /**  replace string  **/
-          s = parms.rules[n + 1].c_str();
-          p0 = (!parms.rules[n].empty() &&
-                strchr(parms.rules[n].c_str() + 1, '<') != NULL)
+          s = parms.rules[n + 1];
+          p0 = (parms.rules[n][0] != '\0' &&
+                strchr(parms.rules[n] + 1, '<') != NULL)
                    ? 1
                    : 0;
           if (p0 == 1 && z == 0) {
@@ -238,8 +241,8 @@ std::string phonet(const std::string& inword, phonetable& parms) {
             }
             /**  new "actual letter"  **/
             c = *s;
-            if (!parms.rules[n].empty() &&
-                strstr(parms.rules[n].c_str() + 1, "^^") != NULL) {
+            if (parms.rules[n][0] != '\0' &&
+                strstr(parms.rules[n] + 1, "^^") != NULL) {
               if (c != '\0') {
                 target.push_back(c);
               }
