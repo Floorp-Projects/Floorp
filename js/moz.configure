@@ -142,7 +142,6 @@ set_define('MOZ_CALLGRIND', callgrind)
 imply_option('--enable-profiling', callgrind)
 
 js_option('--enable-profiling', env='MOZ_PROFILING',
-          default=delayed_getattr(milestone, 'is_nightly'),
           help='Set compile flags necessary for using sampling profilers '
                '(e.g. shark, perf)')
 
