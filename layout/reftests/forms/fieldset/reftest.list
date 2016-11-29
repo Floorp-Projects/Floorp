@@ -16,6 +16,11 @@ fuzzy-if(skiaContent,1,40768) == abs-pos-child-sizing.html abs-pos-child-sizing-
 == legend-rtl.html legend-rtl-ref.html
 == fieldset-grid-001.html fieldset-grid-001-ref.html
 == fieldset-flexbox-001.html fieldset-flexbox-001-ref.html
+== fieldset-min-width-1a.html fieldset-min-width-1-ref.html
+== fieldset-min-width-1b.html fieldset-min-width-1-ref.html
+== fieldset-min-width-2a.html fieldset-min-width-2-ref.html
+== fieldset-min-width-2b.html fieldset-min-width-2-ref.html
+== legend-overlapping-right-border-1.html legend-overlapping-right-border-1-ref.html
 == fieldset-border-image-1a.html fieldset-border-image-1-ref.html
 == fieldset-border-image-1b.html fieldset-border-image-1-ref.html
 == fieldset-border-image-2a.html fieldset-border-image-2-ref.html
