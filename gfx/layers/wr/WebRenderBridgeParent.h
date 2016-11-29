@@ -98,6 +98,7 @@ private:
   nsDataHashtable<nsUint64HashKey, uint64_t> mExternalImageIds;
 
   bool mDestroyed;
+  uint32_t mEpoch;
 };
 
 } // namespace layers
