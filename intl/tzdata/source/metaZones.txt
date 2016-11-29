@@ -2689,6 +2689,13 @@ metaZones:table(nofallback){
                 "9999-12-31 23:59",
             }
         }
+        "Asia:Atyrau"{
+            {
+                "Kazakhstan_Western",
+                "2004-10-30 22:00",
+                "9999-12-31 23:59",
+            }
+        }
         "Asia:Baghdad"{
             {
                 "Arabian",
@@ -3805,6 +3812,13 @@ metaZones:table(nofallback){
         "Europe:Sarajevo"{
             {
                 "Europe_Central",
+            }
+        }
+        "Europe:Saratov"{
+            {
+                "Moscow",
+                "1992-03-28 22:00",
+                "2016-12-03 23:00",
             }
         }
         "Europe:Simferopol"{

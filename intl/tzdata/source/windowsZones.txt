@@ -58,7 +58,7 @@ windowsZones:table(nofallback){
         }
         "Astrakhan Standard Time"{
             001{"Europe/Astrakhan"}
-            RU{"Europe/Astrakhan Europe/Ulyanovsk"}
+            RU{"Europe/Astrakhan Europe/Saratov Europe/Ulyanovsk"}
         }
         "Atlantic Standard Time"{
             001{"America/Halifax"}
@@ -717,7 +717,6 @@ windowsZones:table(nofallback){
         }
         "W. Australia Standard Time"{
             001{"Australia/Perth"}
-            AQ{"Antarctica/Casey"}
             AU{"Australia/Perth"}
         }
         "W. Central Africa Standard Time"{
@@ -763,7 +762,7 @@ windowsZones:table(nofallback){
         "West Asia Standard Time"{
             001{"Asia/Tashkent"}
             AQ{"Antarctica/Mawson"}
-            KZ{"Asia/Oral Asia/Aqtau Asia/Aqtobe"}
+            KZ{"Asia/Oral Asia/Aqtau Asia/Aqtobe Asia/Atyrau"}
             MV{"Indian/Maldives"}
             TF{"Indian/Kerguelen"}
             TJ{"Asia/Dushanbe"}
