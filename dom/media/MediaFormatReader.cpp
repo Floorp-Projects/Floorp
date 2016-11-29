@@ -19,7 +19,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/SyncRunnable.h"
 #include "nsContentUtils.h"
@@ -415,7 +414,7 @@ MediaFormatReader::DecoderFactory::DoInitDecoder(TrackType aTrack)
     [this, &data, &ownerData] (TrackType aTrack) {
       data.mInitPromise.Complete();
       data.mStage = Stage::None;
-      MonitorAutoLock mon(ownerData.mMonitor);
+      MutexAutoLock lock(ownerData.mMutex);
       ownerData.mDecoder = data.mDecoder.forget();
       ownerData.mDescription = ownerData.mDecoder->GetDescriptionName();
       mOwner->SetVideoDecodeThreshold();
@@ -2656,11 +2655,11 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
   const char* videoName = audioName;
 
   if (HasAudio()) {
-    MonitorAutoLock mon(mAudio.mMonitor);
+    MutexAutoLock lock(mAudio.mMutex);
     audioName = mAudio.mDescription;
   }
   if (HasVideo()) {
-    MonitorAutoLock mon(mVideo.mMonitor);
+    MutexAutoLock mon(mVideo.mMutex);
     videoName = mVideo.mDescription;
   }
 
