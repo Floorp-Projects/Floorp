@@ -378,4 +378,3 @@ class SoftwareUpdate(BaseLib):
             url += 'force=1'
 
         return url
-
