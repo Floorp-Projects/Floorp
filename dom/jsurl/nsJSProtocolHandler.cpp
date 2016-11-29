@@ -183,7 +183,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         bool allowsInlineScript = true;
         rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
                                   EmptyString(), // aNonce
-                                  false,         // aParserCreated
+                                  true,         // aParserCreated
                                   EmptyString(), // aContent
                                   0,             // aLineNumber
                                   &allowsInlineScript);
