@@ -286,7 +286,9 @@ impl ExternalImageHandler for WrExternalImageHandler {
 }
 
 #[no_mangle]
-pub extern fn wr_init_window(root_pipeline_id: u64, external_image_handler: *mut WrExternalImageHandler) -> *mut WrWindowState {
+pub extern fn wr_init_window(root_pipeline_id: u64,
+                             enable_profiler: bool,
+                             external_image_handler: *mut WrExternalImageHandler) -> *mut WrWindowState {
     let library = GlLibrary::new();
     gl::load_with(|symbol| library.query(symbol));
     gl::clear_color(0.3, 0.0, 0.0, 1.0);
@@ -304,7 +306,7 @@ pub extern fn wr_init_window(root_pipeline_id: u64, external_image_handler: *mut
         enable_aa: false,
         enable_subpixel_aa: false,
         enable_msaa: false,
-        enable_profiler: false,
+        enable_profiler: enable_profiler,
         enable_recording: false,
         enable_scrollbars: false,
         precache_shaders: false,
@@ -613,4 +615,10 @@ pub extern fn wr_free_buffer(vec_ptr: *mut c_uchar, length: u32, capacity: u32)
     unsafe {
         let rebuilt = Vec::from_raw_parts(vec_ptr, length as usize, capacity as usize);
     }
+}
+
+#[no_mangle]
+pub extern fn wr_profiler_set_enabled(window: &mut WrWindowState, enabled: bool)
+{
+    window.renderer.set_profiler_enabled(enabled);
 }
