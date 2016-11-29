@@ -14,10 +14,13 @@ exports.grid = {
   // The id of the grid
   id: PropTypes.number,
 
+  // The grid fragment object of the grid container
+  gridFragments: PropTypes.object,
+
+  // Whether or not the grid highlighter is highlighting the grid
+  highlighted: PropTypes.bool,
+
   // The node front of the grid container
   nodeFront: PropTypes.object,
-
-  // The grid fragment object of the grid container
-  gridFragments: PropTypes.object
 
 };

@@ -24,9 +24,17 @@ window.onload = Task.async(function* () {
     const React = browserRequire("devtools/client/shared/vendor/react");
     const { Simulate } = React.addons.TestUtils;
     const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
-    const tree = ReactDOM.render(Tree(Object.assign({}, TEST_TREE_INTERFACE, {
-      onFocus: x => setProps(tree, { focused: x }),
-    })), window.document.body);
+
+    function renderTree(props) {
+      const treeProps = Object.assign({},
+        TEST_TREE_INTERFACE,
+        { onFocus: x => renderTree({ focused: x }) },
+        props
+      );
+      return ReactDOM.render(Tree(treeProps), window.document.body);
+    }
+
+    const tree = renderTree();
 
     const input = document.createElement("input");
     document.body.appendChild(input);

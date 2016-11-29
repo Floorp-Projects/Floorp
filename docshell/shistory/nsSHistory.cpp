@@ -30,6 +30,7 @@
 #include "nsISHTransaction.h"
 #include "nsISHistoryListener.h"
 #include "nsComponentManagerUtils.h"
+#include "nsNetUtil.h"
 
 // For calculating max history entries and max cachable contentviewers
 #include "prsystem.h"
@@ -485,7 +486,7 @@ nsSHistory::GetGlobalIndexOffset(int32_t* aResult)
 NS_IMETHODIMP
 nsSHistory::OnPartialSessionHistoryActive(int32_t aGlobalLength, int32_t aTargetIndex)
 {
-  NS_ENSURE_TRUE(mIsPartial, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(mRootDocShell && mIsPartial, NS_ERROR_UNEXPECTED);
 
   int32_t extraLength = aGlobalLength - mLength - mGlobalIndexOffset;
   NS_ENSURE_TRUE(extraLength >= 0, NS_ERROR_UNEXPECTED);
@@ -494,27 +495,26 @@ nsSHistory::OnPartialSessionHistoryActive(int32_t aGlobalLength, int32_t aTarget
     mEntriesInFollowingPartialHistories = extraLength;
   }
 
-  if (mIndex == aTargetIndex) {
-    // TODO When we finish OnPartialSessionHistoryDeactive, we'll need to active
-    // the suspended document here.
-
-    // Fire location change to update canGoBack / canGoForward.
-    NS_DispatchToCurrentThread(NewRunnableMethod(static_cast<nsDocShell*>(mRootDocShell),
-                                                 &nsDocShell::FireDummyOnLocationChange));
-    return NS_OK;
-  }
-
-  return LoadEntry(aTargetIndex, nsIDocShellLoadInfo::loadHistory,
-                   HIST_CMD_GOTOINDEX);
+  return RestoreToEntryAtIndex(aTargetIndex);
 }
 
 NS_IMETHODIMP
 nsSHistory::OnPartialSessionHistoryDeactive()
 {
-  NS_ENSURE_TRUE(mIsPartial, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(mRootDocShell && mIsPartial, NS_ERROR_UNEXPECTED);
 
-  // TODO We need to suspend current document first. Much like what happens when
-  // loading a new page. Move the ownership of the document to nsISHEntry or so.
+  // Ensure the deactive docshell loads about:blank.
+  nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mRootDocShell);
+  nsCOMPtr<nsIURI> currentURI;
+  webNav->GetCurrentURI(getter_AddRefs(currentURI));
+  if (NS_IsAboutBlank(currentURI)) {
+    return NS_OK;
+  }
+
+  if (NS_FAILED(mRootDocShell->CreateAboutBlankContentViewer(nullptr))) {
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
@@ -524,6 +524,14 @@ nsSHistory::GetIndex(int32_t* aResult)
 {
   NS_PRECONDITION(aResult, "null out param?");
   *aResult = mIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHistory::GetGlobalIndex(int32_t* aResult)
+{
+  NS_PRECONDITION(aResult, "null out param?");
+  *aResult = mIndex + mGlobalIndexOffset;
   return NS_OK;
 }
 
@@ -1008,6 +1016,22 @@ nsSHistory::ReloadCurrentEntry()
   }
 
   return LoadEntry(mIndex, nsIDocShellLoadInfo::loadHistory, HIST_CMD_RELOAD);
+}
+
+NS_IMETHODIMP
+nsSHistory::RestoreToEntryAtIndex(int32_t aIndex)
+{
+  mRequestedIndex = aIndex;
+
+  nsCOMPtr<nsISHEntry> nextEntry;
+  GetEntryAtIndex(mRequestedIndex, false, getter_AddRefs(nextEntry));
+  if (!nextEntry) {
+    mRequestedIndex = -1;
+    return NS_ERROR_FAILURE;
+  }
+
+  // XXX We may want to ensure docshell is currently holding about:blank
+  return InitiateLoad(nextEntry, mRootDocShell, nsIDocShellLoadInfo::loadHistory);
 }
 
 void
@@ -1638,6 +1662,10 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
     return NS_ERROR_FAILURE;
   }
 
+  nsCOMPtr<nsIURI> nextURI;
+  nsCOMPtr<nsISHEntry> prevEntry;
+  nsCOMPtr<nsISHEntry> nextEntry;
+  bool isCrossBrowserNavigation = false;
   if (aIndex < 0 || aIndex >= mLength) {
     if (aIndex + mGlobalIndexOffset < 0) {
       // The global index is negative.
@@ -1649,41 +1677,39 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
       return NS_ERROR_FAILURE;
     }
 
-    // The global index is valid. trigger cross browser navigation.
-    nsCOMPtr<nsIPartialSHistoryListener> listener =
-      do_QueryReferent(mPartialHistoryListener);
-    if (!listener) {
+    // The global index is valid. Mark that we're going to navigate to another
+    // partial history, but wait until we've notified all listeners before
+    // actually do so.
+    isCrossBrowserNavigation = true;
+  } else {
+    // This is a normal local history navigation.
+    // Keep note of requested history index in mRequestedIndex.
+    mRequestedIndex = aIndex;
+
+    GetEntryAtIndex(mIndex, false, getter_AddRefs(prevEntry));
+    GetEntryAtIndex(mRequestedIndex, false, getter_AddRefs(nextEntry));
+    if (!nextEntry || !prevEntry) {
+      mRequestedIndex = -1;
       return NS_ERROR_FAILURE;
     }
-    return listener->OnRequestCrossBrowserNavigation(aIndex + mGlobalIndexOffset);
+
+    // Remember that this entry is getting loaded at this point in the sequence
+    nsCOMPtr<nsISHEntryInternal> entryInternal = do_QueryInterface(nextEntry);
+
+    if (entryInternal) {
+      entryInternal->SetLastTouched(++gTouchCounter);
+    }
+
+    // Get the uri for the entry we are about to visit
+    nextEntry->GetURI(getter_AddRefs(nextURI));
   }
 
-  // Keep note of requested history index in mRequestedIndex.
-  mRequestedIndex = aIndex;
+  MOZ_ASSERT(isCrossBrowserNavigation || (prevEntry && nextEntry && nextURI),
+    "prevEntry, nextEntry and nextURI can be null only if isCrossBrowserNavigation is set");
 
-  nsCOMPtr<nsISHEntry> prevEntry;
-  GetEntryAtIndex(mIndex, false, getter_AddRefs(prevEntry));
-
-  nsCOMPtr<nsISHEntry> nextEntry;
-  GetEntryAtIndex(mRequestedIndex, false, getter_AddRefs(nextEntry));
-  if (!nextEntry || !prevEntry) {
-    mRequestedIndex = -1;
-    return NS_ERROR_FAILURE;
-  }
-
-  // Remember that this entry is getting loaded at this point in the sequence
-  nsCOMPtr<nsISHEntryInternal> entryInternal = do_QueryInterface(nextEntry);
-
-  if (entryInternal) {
-    entryInternal->SetLastTouched(++gTouchCounter);
-  }
-
-  // Send appropriate listener notifications
+  // Send appropriate listener notifications. Note nextURI could be null in case
+  // of grouped session history navigation.
   bool canNavigate = true;
-  // Get the uri for the entry we are about to visit
-  nsCOMPtr<nsIURI> nextURI;
-  nextEntry->GetURI(getter_AddRefs(nextURI));
-
   if (aHistCmd == HIST_CMD_BACK) {
     // We are going back one entry. Send GoBack notifications
     NOTIFY_LISTENERS_CANCELABLE(OnHistoryGoBack, canNavigate,
@@ -1703,6 +1729,23 @@ nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
     // the operation, simply return.
     mRequestedIndex = -1;
     return NS_OK;  // XXX Maybe I can return some other error code?
+  }
+
+  if (isCrossBrowserNavigation) {
+    nsCOMPtr<nsIPartialSHistoryListener> listener =
+      do_QueryReferent(mPartialHistoryListener);
+    if (!listener) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // CreateAboutBlankContentViewer would check for permit unload, fire proper
+    // pagehide / unload events and transfer content viewer ownership to SHEntry.
+    if (NS_FAILED(mRootDocShell->CreateAboutBlankContentViewer(nullptr))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    return listener->OnRequestCrossBrowserNavigation(aIndex +
+                                                     mGlobalIndexOffset);
   }
 
   if (mRequestedIndex == mIndex) {
@@ -1873,7 +1916,7 @@ nsSHistory::GetSHistoryEnumerator(nsISimpleEnumerator** aEnumerator)
 NS_IMETHODIMP
 nsSHistory::OnAttachGroupedSessionHistory(int32_t aOffset)
 {
-  NS_ENSURE_TRUE(!mIsPartial, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(!mIsPartial && mRootDocShell, NS_ERROR_UNEXPECTED);
   NS_ENSURE_TRUE(aOffset >= 0, NS_ERROR_ILLEGAL_VALUE);
 
   mIsPartial = true;

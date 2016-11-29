@@ -40,7 +40,7 @@ protected:
 
 private:
 #if defined(XP_WIN)
-    /* Drag-and-drop and Silverlight depend on the host initializing COM.
+    /* Drag-and-drop depends on the host initializing COM.
      * This object initializes and configures COM. */
     mozilla::mscom::MainThreadRuntime mCOMRuntime;
 #endif

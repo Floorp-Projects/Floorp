@@ -163,8 +163,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mWinlessPopupSurrogateHWND(0)
     , mWinlessThrottleOldWndProc(0)
     , mWinlessHiddenMsgHWND(0)
-    , mUnityGetMessageHook(NULL)
-    , mUnitySendMessageHook(NULL)
 #endif // OS_WIN
     , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
 #if defined(MOZ_WIDGET_COCOA)
@@ -210,9 +208,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
 #endif // MOZ_X11 && XP_UNIX && !XP_MACOSX
 #if defined(OS_WIN)
     InitPopupMenuHook();
-    if (GetQuirks() & QUIRK_UNITY_FIXUP_MOUSE_CAPTURE) {
-        SetUnityHooks();
-    }
     InitImm32Hook();
 #endif // OS_WIN
 }
@@ -221,9 +216,6 @@ PluginInstanceChild::~PluginInstanceChild()
 {
 #if defined(OS_WIN)
     NS_ASSERTION(!mPluginWindowHWND, "Destroying PluginInstanceChild without NPP_Destroy?");
-    if (GetQuirks() & QUIRK_UNITY_FIXUP_MOUSE_CAPTURE) {
-        ClearUnityHooks();
-    }
     // In the event that we registered for audio device changes, stop.
     PluginModuleChild* chromeInstance = PluginModuleChild::GetChrome();
     if (chromeInstance) {
@@ -2095,139 +2087,6 @@ PluginInstanceChild::HookSetWindowLongPtr()
 #endif
 }
 
-class SetCaptureHookData
-{
-public:
-    explicit SetCaptureHookData(HWND aHwnd)
-        : mHwnd(aHwnd)
-        , mHaveRect(false)
-    {
-        MOZ_ASSERT(aHwnd);
-        mHaveRect = !!GetClientRect(aHwnd, &mCaptureRect);
-    }
-
-    /**
-     * @return true if capture was released
-     */
-    bool HandleMouseMsg(const MSG& aMsg)
-    {
-        // If the window belongs to Unity, the mouse button is up, and the mouse
-        // has moved outside the client rect of the Unity window, release capture.
-        if (aMsg.hwnd != mHwnd || !mHaveRect) {
-            return false;
-        }
-        if (aMsg.message != WM_MOUSEMOVE && aMsg.message != WM_LBUTTONUP) {
-            return false;
-        }
-        if ((aMsg.message == WM_MOUSEMOVE && (aMsg.wParam & MK_LBUTTON))) {
-            return false;
-        }
-        POINT pt = { GET_X_LPARAM(aMsg.lParam), GET_Y_LPARAM(aMsg.lParam) };
-        if (PtInRect(&mCaptureRect, pt)) {
-            return false;
-        }
-        return !!ReleaseCapture();
-    }
-
-    bool IsUnityLosingCapture(const CWPSTRUCT& aInfo) const
-    {
-        return aInfo.message == WM_CAPTURECHANGED &&
-               aInfo.hwnd == mHwnd;
-    }
-
-private:
-    HWND mHwnd;
-    bool mHaveRect;
-    RECT mCaptureRect;
-};
-
-static StaticAutoPtr<SetCaptureHookData> sSetCaptureHookData;
-typedef HWND (WINAPI* User32SetCapture)(HWND);
-static User32SetCapture sUser32SetCaptureHookStub = nullptr;
-
-HWND WINAPI
-PluginInstanceChild::SetCaptureHook(HWND aHwnd)
-{
-    // Don't do anything unless aHwnd belongs to Unity
-    wchar_t className[256] = {0};
-    int numChars = GetClassNameW(aHwnd, className, ArrayLength(className));
-    NS_NAMED_LITERAL_STRING(unityClassName, "Unity.WebPlayer");
-    if (numChars == unityClassName.Length() && unityClassName == wwc(className)) {
-        sSetCaptureHookData = new SetCaptureHookData(aHwnd);
-    }
-    return sUser32SetCaptureHookStub(aHwnd);
-}
-
-void
-PluginInstanceChild::SetUnityHooks()
-{
-    if (!(GetQuirks() & QUIRK_UNITY_FIXUP_MOUSE_CAPTURE)) {
-        return;
-    }
-
-    sUser32Intercept.Init("user32.dll");
-    if (!sUser32SetCaptureHookStub) {
-        sUser32Intercept.AddHook("SetCapture",
-                                 reinterpret_cast<intptr_t>(SetCaptureHook),
-                                 (void**) &sUser32SetCaptureHookStub);
-    }
-    if (!mUnityGetMessageHook) {
-        mUnityGetMessageHook = SetWindowsHookEx(WH_GETMESSAGE,
-                                                &UnityGetMessageHookProc, NULL,
-                                                GetCurrentThreadId());
-    }
-    if (!mUnitySendMessageHook) {
-        mUnitySendMessageHook = SetWindowsHookEx(WH_CALLWNDPROC,
-                                                 &UnitySendMessageHookProc,
-                                                 NULL, GetCurrentThreadId());
-    }
-}
-
-void
-PluginInstanceChild::ClearUnityHooks()
-{
-    if (mUnityGetMessageHook) {
-        UnhookWindowsHookEx(mUnityGetMessageHook);
-        mUnityGetMessageHook = NULL;
-    }
-    if (mUnitySendMessageHook) {
-        UnhookWindowsHookEx(mUnitySendMessageHook);
-        mUnitySendMessageHook = NULL;
-    }
-    sSetCaptureHookData = nullptr;
-}
-
-LRESULT CALLBACK
-PluginInstanceChild::UnityGetMessageHookProc(int aCode, WPARAM aWparam,
-                                             LPARAM aLParam)
-{
-    if (aCode >= 0) {
-        MSG* info = reinterpret_cast<MSG*>(aLParam);
-        MOZ_ASSERT(info);
-        if (sSetCaptureHookData && sSetCaptureHookData->HandleMouseMsg(*info)) {
-            sSetCaptureHookData = nullptr;
-        }
-    }
-
-    return CallNextHookEx(0, aCode, aWparam, aLParam);
-}
-
-LRESULT CALLBACK
-PluginInstanceChild::UnitySendMessageHookProc(int aCode, WPARAM aWparam,
-                                              LPARAM aLParam)
-{
-    if (aCode >= 0) {
-        CWPSTRUCT* info = reinterpret_cast<CWPSTRUCT*>(aLParam);
-        MOZ_ASSERT(info);
-        if (sSetCaptureHookData &&
-            sSetCaptureHookData->IsUnityLosingCapture(*info)) {
-            sSetCaptureHookData = nullptr;
-        }
-    }
-
-    return CallNextHookEx(0, aCode, aWparam, aLParam);
-}
-
 /* windowless track popup menu helpers */
 
 BOOL
@@ -2696,9 +2555,7 @@ PluginInstanceChild::AnswerSetPluginFocus()
     // when a button click brings up a full screen window. Since we send
     // this in response to a WM_SETFOCUS event on our parent, the parent
     // should have focus when we receive this. If not, ignore the call.
-    if (::GetFocus() == mPluginWindowHWND ||
-        ((GetQuirks() & QUIRK_SILVERLIGHT_FOCUS_CHECK_PARENT) &&
-         (::GetFocus() != mPluginParentHWND)))
+    if (::GetFocus() == mPluginWindowHWND)
         return IPC_OK();
     ::SetFocus(mPluginWindowHWND);
     return IPC_OK();
@@ -3369,9 +3226,6 @@ PluginInstanceChild::DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
 #if defined(XP_MACOSX) || defined(XP_WIN)
     mContentsScaleFactor = aWindow.contentsScaleFactor;
 #endif
-
-    if (GetQuirks() & QUIRK_SILVERLIGHT_DEFAULT_TRANSPARENT)
-        mIsTransparent = true;
 
     mLayersRendering = true;
     mSurfaceType = aSurfaceType;

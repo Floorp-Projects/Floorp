@@ -37,17 +37,21 @@ window.onload = Task.async(function* () {
 
     TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
 
-    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
+    function renderTree(props) {
+      const treeProps = Object.assign({},
+        TEST_TREE_INTERFACE,
+        {
+          itemHeight: 10,
+          onFocus: item => renderTree({ focused: item })
+        },
+        props
+      );
+      return ReactDOM.render(Tree(treeProps), window.document.body);
+    }
 
-    yield setProps(tree, {
-      itemHeight: 10,
-      onFocus: item => setProps(tree, { focused: item }),
-      focused: "K",
-    });
-    yield setState(tree, {
-      scroll: 10,
-    });
-    yield forceRender(tree);
+    const tree = renderTree({ focused: "K" });
+
+    tree.setState({ scroll: 10 });
 
     isRenderedTree(document.body.textContent, [
       "A:false",
