@@ -100,12 +100,12 @@ bool
 LoadOpenVRRuntime()
 {
   static PRLibrary *openvrLib = nullptr;
+  std::string openvrPath = gfxPrefs::VROpenVRRuntime();
 
-  nsAdoptingCString openvrPath = Preferences::GetCString("gfx.vr.openvr-runtime");
-  if (!openvrPath)
+  if (!openvrPath.c_str())
     return false;
 
-  openvrLib = PR_LoadLibrary(openvrPath.BeginReading());
+  openvrLib = PR_LoadLibrary(openvrPath.c_str());
   if (!openvrLib)
     return false;
 
@@ -713,38 +713,51 @@ VRControllerManagerOpenVR::GetControllers(nsTArray<RefPtr<VRControllerHost>>& aC
 void
 VRControllerManagerOpenVR::ScanForDevices()
 {
-  // Remove the existing gamepads
-  for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
-    RemoveGamepad(mOpenVRController[i]->GetIndex());
-  }
-  mControllerCount = 0;
-  mOpenVRController.Clear();
-
   if (!mVRSystem)
     return;
 
-  // Basically, we would have HMDs in the tracked devices, but we are just interested in the controllers.
-  for ( vr::TrackedDeviceIndex_t trackedDevice = vr::k_unTrackedDeviceIndex_Hmd + 1;
-        trackedDevice < vr::k_unMaxTrackedDeviceCount; ++trackedDevice ) {
+  vr::TrackedDeviceIndex_t trackedIndexArray[vr::k_unMaxTrackedDeviceCount];
+  uint32_t newControllerCount = 0;
+  // Basically, we would have HMDs in the tracked devices,
+  // but we are just interested in the controllers.
+  for (vr::TrackedDeviceIndex_t trackedDevice = vr::k_unTrackedDeviceIndex_Hmd + 1;
+       trackedDevice < vr::k_unMaxTrackedDeviceCount; ++trackedDevice) {
+
     if (!mVRSystem->IsTrackedDeviceConnected(trackedDevice)) {
       continue;
     }
-
-    if (mVRSystem->GetTrackedDeviceClass(trackedDevice) != vr::TrackedDeviceClass_Controller) {
+    if (mVRSystem->GetTrackedDeviceClass(trackedDevice)
+        != vr::TrackedDeviceClass_Controller) {
       continue;
     }
 
-    RefPtr<VRControllerOpenVR> openVRController = new VRControllerOpenVR();
-    openVRController->SetIndex(mControllerCount);
-    openVRController->SetTrackedIndex(trackedDevice);
-    mOpenVRController.AppendElement(openVRController);
+    trackedIndexArray[newControllerCount] = trackedDevice;
+    ++newControllerCount;
+  }
 
-// Only in MOZ_GAMEPAD platform, We add gamepads.
-#ifdef MOZ_GAMEPAD
-    // Not already present, add it.
-    AddGamepad("OpenVR Gamepad", static_cast<uint32_t>(GamepadMappingType::_empty),
-               gNumOpenVRButtonMask, gNumOpenVRAxis);
-    ++mControllerCount;
-#endif
+  if (newControllerCount != mControllerCount) {
+    // controller count is changed, removing the existing gamepads first.
+    for (uint32_t i = 0; i < mOpenVRController.Length(); ++i) {
+      RemoveGamepad(mOpenVRController[i]->GetIndex());
+    }
+    mControllerCount = 0;
+    mOpenVRController.Clear();
+
+    // Re-adding controllers to VRControllerManager.
+    for (vr::TrackedDeviceIndex_t i = 0; i < newControllerCount; ++i) {
+      vr::TrackedDeviceIndex_t trackedDevice = trackedIndexArray[i];
+      RefPtr<VRControllerOpenVR> openVRController = new VRControllerOpenVR();
+      openVRController->SetIndex(mControllerCount);
+      openVRController->SetTrackedIndex(trackedDevice);
+      mOpenVRController.AppendElement(openVRController);
+
+  // Only in MOZ_GAMEPAD platform, We add gamepads.
+  #ifdef MOZ_GAMEPAD
+      // Not already present, add it.
+      AddGamepad("OpenVR Gamepad", static_cast<uint32_t>(GamepadMappingType::_empty),
+                 gNumOpenVRButtonMask, gNumOpenVRAxis);
+      ++mControllerCount;
+  #endif
+    }
   }
 }

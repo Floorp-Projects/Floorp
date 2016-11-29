@@ -79,8 +79,6 @@ public:
   using WaitForDataPromise =
     MozPromise<MediaData::Type, WaitForDataRejectValue, IsExclusive>;
 
-  using BufferedUpdatePromise = MozPromise<bool, bool, IsExclusive>;
-
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)
 
   // The caller must ensure that Shutdown() is called before aDecoder is
@@ -204,36 +202,12 @@ public:
     UpdateBuffered();
   }
 
-  // Update the buffered ranges and upon doing so return a promise
-  // to indicate success. Overrides may need to do extra work to ensure
-  // buffered is up to date.
-  virtual RefPtr<BufferedUpdatePromise> UpdateBufferedWithPromise()
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    UpdateBuffered();
-    return BufferedUpdatePromise::CreateAndResolve(true, __func__);
-  }
-
   virtual MediaQueue<AudioData>& AudioQueue() { return mAudioQueue; }
   virtual MediaQueue<VideoData>& VideoQueue() { return mVideoQueue; }
 
   AbstractCanonical<media::TimeIntervals>* CanonicalBuffered()
   {
     return &mBuffered;
-  }
-
-  void DispatchSetStartTime(int64_t aStartTime)
-  {
-    RefPtr<MediaDecoderReader> self = this;
-    nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction([self, aStartTime] () -> void
-    {
-      MOZ_ASSERT(self->OnTaskQueue());
-      MOZ_ASSERT(!self->HaveStartTime());
-      self->mStartTime.emplace(aStartTime);
-      self->UpdateBuffered();
-    });
-    OwnerThread()->Dispatch(r.forget());
   }
 
   TaskQueue* OwnerThread() const
@@ -277,6 +251,9 @@ public:
 protected:
   virtual ~MediaDecoderReader();
 
+  // Recomputes mBuffered.
+  virtual void UpdateBuffered();
+
   // Populates aBuffered with the time ranges which are buffered. This may only
   // be called on the decode task queue, and should only be used internally by
   // UpdateBuffered - mBuffered (or mirrors of it) should be used for everything
@@ -296,14 +273,6 @@ protected:
   virtual media::TimeIntervals GetBuffered();
 
   RefPtr<MediaDataPromise> DecodeToFirstVideoData();
-
-  bool HaveStartTime()
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return mStartTime.isSome();
-  }
-
-  int64_t StartTime() { MOZ_ASSERT(HaveStartTime()); return mStartTime.ref(); }
 
   // Queue of audio frames. This queue is threadsafe, and is accessed from
   // the audio, decoder, state machine, and main threads.
@@ -342,18 +311,6 @@ protected:
   // what we support.
   bool mIgnoreAudioOutputFormat;
 
-  // The start time of the media, in microseconds. This is the presentation
-  // time of the first frame decoded from the media. This is initialized to -1,
-  // and then set to a value >= by MediaDecoderStateMachine::SetStartTime(),
-  // after which point it never changes (though SetStartTime may be called
-  // multiple times with the same value).
-  //
-  // This is an ugly breach of abstractions - it's currently necessary for the
-  // readers to return the correct value of GetBuffered. We should refactor
-  // things such that all GetBuffered calls go through the MDSM, which would
-  // offset the range accordingly.
-  Maybe<int64_t> mStartTime;
-
   // This is a quick-and-dirty way for DecodeAudioData implementations to
   // communicate the presence of a decoding error to RequestAudioData. We should
   // replace this with a promise-y mechanism as we make this stuff properly
@@ -382,9 +339,6 @@ private:
   {
     MOZ_CRASH();
   }
-
-  // Recomputes mBuffered.
-  virtual void UpdateBuffered();
 
   virtual void VisibilityChanged();
 

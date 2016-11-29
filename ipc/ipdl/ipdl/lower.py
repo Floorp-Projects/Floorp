@@ -1391,8 +1391,10 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         typesToIncludes = {}
         for using in tu.using:
             typestr = str(using.type.spec)
-            assert typestr not in typesToIncludes
-            typesToIncludes[typestr] = using.header
+            if typestr not in typesToIncludes:
+                typesToIncludes[typestr] = using.header
+            else:
+                assert typesToIncludes[typestr] == using.header
 
         aggregateTypeIncludes = set()
         for su in tu.structsAndUnions:

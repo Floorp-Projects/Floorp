@@ -3,6 +3,6 @@ protocol manageSelfToplevel {
     manages manageSelfToplevel;
 
 child:
-    manageSelfToplevel();
+    async manageSelfToplevel();
     async __delete__();
 };

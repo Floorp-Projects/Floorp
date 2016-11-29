@@ -996,11 +996,13 @@ function get(msg) {
       sawLoad = true;
     }
 
-    // We also need to make sure that the DOMContentLoaded we saw isn't
-    // for the initial about:blank of a newly created docShell.
-    let loadedNonAboutBlank = docShell.hasLoadedNonBlankURI;
+    // We also need to make sure that if the requested URL is not about:blank
+    // the DOMContentLoaded we saw isn't for the initial about:blank of a newly
+    // created docShell.
+    let loadedRequestedURI = (requestedURL == "about:blank") ||
+        docShell.hasLoadedNonBlankURI;
 
-    if (correctFrame && sawLoad && loadedNonAboutBlank) {
+    if (correctFrame && sawLoad && loadedRequestedURI) {
       webProgress.removeProgressListener(loadListener);
       pollForReadyState(msg, start, () => {
         removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);

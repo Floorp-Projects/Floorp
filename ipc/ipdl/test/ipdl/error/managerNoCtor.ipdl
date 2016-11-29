@@ -5,4 +5,6 @@ protocol managerNoCtor {
 
 parent:
     // error: no ctor defined
+    async __delete__();
+    // We need at least one message declared so we don't just hit a syntax error.
 };

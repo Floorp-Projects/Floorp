@@ -231,3 +231,54 @@ jobs:
               - "mobile/android/**/checkstyle.xml"
               - "mobile/android/**/*.gradle"
               - "mobile/android/**/*.java"
+
+    android-findbugs:
+        description: "Android findbugs"
+        attributes:
+            build_platform: android-findbugs
+            build_type: opt
+        treeherder:
+            platform: android-4-0-armv7-api15/opt
+            kind: build
+            tier: 2
+            symbol: tc(findbugs)
+        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker:
+            implementation: docker-worker
+            docker-image: {in-tree: desktop-build}
+            env:
+                GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+                MH_BUILD_POOL: "taskcluster"
+                MH_CUSTOM_BUILD_VARIANT_CFG: "android-findbugs"
+                MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
+                MOZHARNESS_CONFIG: >
+                    builds/releng_base_android_64_builds.py
+                    disable_signing.py
+                    platform_supports_post_upload_to_latest.py
+                MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
+                TOOLTOOL_REPO: "https://github.com/mozilla/build-tooltool"
+                TOOLTOOL_REV: "master"
+            artifacts:
+              - name: public/android/findbugs/findbugs-report.html
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-automationDebug-output.html
+                type: file
+              - name: public/build
+                path: /home/worker/artifacts/
+                type: directory
+            caches:
+              - name: tooltool-cache
+                mount-point: /home/worker/tooltool-cache
+                type: persistent
+            relengapi-proxy: true
+            command:
+              # NOTE: this could probably be a job description with run.using = 'mozharness'
+              - "/bin/bash"
+              - "bin/build.sh"
+            max-run-time: 36000
+        scopes:
+          - docker-worker:relengapi-proxy:tooltool.download.internal
+          - docker-worker:relengapi-proxy:tooltool.download.public
+        when:
+            files-changed:
+              - "mobile/android/**/*.gradle"
+              - "mobile/android/**/*.java"

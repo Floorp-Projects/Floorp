@@ -48,7 +48,6 @@ class MediaResource;
 class MediaDecoder;
 class VideoFrameContainer;
 namespace dom {
-class AudioChannelAgent;
 class MediaKeys;
 class TextTrack;
 class TimeRanges;
@@ -59,7 +58,6 @@ class VideoStreamTrack;
 } // namespace dom
 } // namespace mozilla
 
-class AutoNotifyAudioChannelAgent;
 class nsIChannel;
 class nsIHttpChannel;
 class nsILoadGroup;
@@ -82,12 +80,9 @@ class VideoTrackList;
 class HTMLMediaElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLMediaElement,
                          public MediaDecoderOwner,
-                         public nsIAudioChannelAgentCallback,
                          public PrincipalChangeObserver<DOMMediaStream>,
                          public SupportsWeakPtr<HTMLMediaElement>
 {
-  friend AutoNotifyAudioChannelAgent;
-
 public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::layers::ImageContainer ImageContainer;
@@ -117,8 +112,6 @@ public:
 
   // nsIDOMHTMLMediaElement
   NS_DECL_NSIDOMHTMLMEDIAELEMENT
-
-  NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -757,6 +750,7 @@ public:
 protected:
   virtual ~HTMLMediaElement();
 
+  class AudioChannelAgentCallback;
   class ChannelLoader;
   class ErrorSink;
   class MediaLoadListener;
@@ -1206,9 +1200,6 @@ protected:
   // next block of audio samples) preceeding seek target.
   already_AddRefed<Promise> Seek(double aTime, SeekTarget::Type aSeekType, ErrorResult& aRv);
 
-  // A method to check if we are playing through the AudioChannel.
-  bool IsPlayingThroughTheAudioChannel() const;
-
   // Update the audio channel playing state
   void UpdateAudioChannelPlayingState(bool aForcePlaying = false);
 
@@ -1224,67 +1215,20 @@ protected:
   // Recomputes ready state and fires events as necessary based on current state.
   void UpdateReadyStateInternal();
 
-  // Notifies the audio channel agent when the element starts or stops playing.
-  void NotifyAudioChannelAgent(bool aPlaying);
-
-  // True if we create the audio channel agent successfully or we already have
-  // one. The agent is used to communicate with the AudioChannelService. eg.
-  // notify we are playing/audible and receive muted/unmuted/suspend/resume
-  // commands from AudioChannelService.
-  bool MaybeCreateAudioChannelAgent();
-
   // Determine if the element should be paused because of suspend conditions.
   bool ShouldElementBePaused();
 
-  // Create or destroy the captured stream depend on mAudioCapturedByWindow.
-  void AudioCaptureStreamChangeIfNeeded();
-
-  /**
-   * We have different kinds of suspended cases,
-   * - SUSPENDED_PAUSE
-   * It's used when we temporary lost platform audio focus. MediaElement can
-   * only be resumed when we gain the audio focus again.
-   *
-   * - SUSPENDED_PAUSE_DISPOSABLE
-   * It's used when user press the pause botton on the remote media-control.
-   * MediaElement can be resumed by reomte media-control or via play().
-   *
-   * - SUSPENDED_BLOCK
-   * It's used to reduce the power comsuption, we won't play the auto-play
-   * audio/video in the page we have never visited before. MediaElement would
-   * be resumed when the page is active. See bug647429 for more details.
-   *
-   * - SUSPENDED_STOP_DISPOSABLE
-   * When we permanently lost platform audio focus, we shuold stop playing
-   * and stop the audio channel agent. MediaElement can only be restarted by
-   * play().
-   */
-  void PauseByAudioChannel(SuspendTypes aSuspend);
-  void BlockByAudioChannel();
-
-  void ResumeFromAudioChannel();
-  void ResumeFromAudioChannelPaused(SuspendTypes aSuspend);
-  void ResumeFromAudioChannelBlocked();
-
-  bool IsSuspendedByAudioChannel() const;
-  void SetAudioChannelSuspended(SuspendTypes aSuspend);
+  // Create or destroy the captured stream.
+  void AudioCaptureStreamChange(bool aCapture);
 
   // A method to check whether the media element is allowed to start playback.
   bool IsAllowedToPlay();
-  bool IsAllowedToPlayByAudioChannel();
 
   // If the network state is empty and then we would trigger DoLoad().
   void MaybeDoLoad();
 
-  // True if the tab which media element belongs to has been to foreground at
-  // least once or activated by manually clicking the unblocking tab icon.
-  bool IsTabActivated() const;
-
-  bool IsAudible() const;
-
-  // It's used for fennec only, send the notification when the user resumes the
-  // media which was paused by media control.
-  void MaybeNotifyMediaResumed(SuspendTypes aSuspend);
+  // Anything we need to check after played success and not related with spec.
+  void UpdateCustomPolicyAfterPlayed();
 
   class nsAsyncEventRunner;
   using nsGenericHTMLElement::DispatchEvent;
@@ -1506,7 +1450,6 @@ protected:
   };
 
   uint32_t mMuted;
-  SuspendTypes mAudioChannelSuspended;
 
   // True if the media statistics are currently being shown by the builtin
   // video controls
@@ -1523,18 +1466,11 @@ protected:
   // True if the sound is being captured.
   bool mAudioCaptured;
 
-  // True if the sound is being captured by the window.
-  bool mAudioCapturedByWindow;
-
   // If TRUE then the media element was actively playing before the currently
   // in progress seeking. If FALSE then the media element is either not seeking
   // or was not actively playing before the current seek. Used to decide whether
   // to raise the 'waiting' event as per 4.7.1.8 in HTML 5 specification.
   bool mPlayingBeforeSeek;
-
-  // if TRUE then the seek started while content was in active playing state
-  // if FALSE then the seek started while the content was not playing.
-  bool mPlayingThroughTheAudioChannelBeforeSeek;
 
   // True iff this element is paused because the document is inactive or has
   // been suspended by the audio channel service.
@@ -1631,20 +1567,10 @@ protected:
   // Audio Channel.
   AudioChannel mAudioChannel;
 
-  // The audio channel volume
-  float mAudioChannelVolume;
-
-  // Is this media element playing?
-  bool mPlayingThroughTheAudioChannel;
-
   // Disable the video playback by track selection. This flag might not be
   // enough if we ever expand the ability of supporting multi-tracks video
   // playback.
   bool mDisableVideo;
-
-  // An agent used to join audio channel service and its life cycle would equal
-  // to media element.
-  RefPtr<AudioChannelAgent> mAudioChannelAgent;
 
   RefPtr<TextTrackManager> mTextTrackManager;
 
@@ -1737,12 +1663,14 @@ private:
   // True if the audio track is not silent.
   bool mIsAudioTrackAudible;
 
-  // True if media element is audible for users.
-  bool mAudible;
-
   Visibility mVisibilityState;
 
   UniquePtr<ErrorSink> mErrorSink;
+
+  // This wrapper will handle all audio channel related stuffs, eg. the operations
+  // of tab audio indicator, Fennec's media control.
+  // Note: mAudioChannelWrapper might be null after GC happened.
+  RefPtr<AudioChannelAgentCallback> mAudioChannelWrapper;
 };
 
 } // namespace dom

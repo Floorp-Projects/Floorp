@@ -15,9 +15,7 @@ FileDescriptorSetParent::FileDescriptorSetParent(
   mFileDescriptors.AppendElement(aFileDescriptor);
 }
 
-FileDescriptorSetParent::~FileDescriptorSetParent()
-{
-}
+FileDescriptorSetParent::~FileDescriptorSetParent() = default;
 
 void
 FileDescriptorSetParent::ForgetFileDescriptors(

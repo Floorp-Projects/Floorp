@@ -63,7 +63,9 @@ protected:
   mozilla::ipc::IPCResult RecvOnResume(const float& aElapsedTime, const uint32_t& aCharIndex) override;
 
   mozilla::ipc::IPCResult RecvOnBoundary(const nsString& aName, const float& aElapsedTime,
-                                         const uint32_t& aCharIndex) override;
+                                         const uint32_t& aCharIndex,
+                                         const uint32_t& aCharLength,
+                                         const uint8_t& argc) override;
 
   mozilla::ipc::IPCResult RecvOnMark(const nsString& aName, const float& aElapsedTime,
                                      const uint32_t& aCharIndex) override;

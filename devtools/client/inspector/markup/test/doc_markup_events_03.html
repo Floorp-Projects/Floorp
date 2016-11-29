@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+    #es6-method,
+    #generator,
+    #anon-generator,
+    #named-function-expression,
+    #anon-function-expression,
+    #returned-function {
+      border: 1px solid #000;
+      width: 200px;
+      min-height: 1em;
+      cursor: pointer;
+    }
+    </style>
+    <script type="application/javascript;version=1.8">
+      let namedFunctionExpression =
+      function foo() {
+        alert("namedFunctionExpression");
+      }
+
+      let anonFunctionExpression = function() {
+        alert("anonFunctionExpression");
+      };
+
+      let returnedFunction = (function() {
+        return function bar() {
+          alert("returnedFunction");
+        }
+      })();
+
+      function init() {
+        let em = new Es6Method();
+        let es6Method = document.getElementById("es6-method");
+        es6Method.addEventListener("click", em.es6Method);
+
+        let generatorNode = document.getElementById("generator");
+        generatorNode.addEventListener("click", generator);
+
+        let anonGenerator = document.getElementById("anon-generator");
+        anonGenerator.addEventListener("click", function* () {
+          alert("anonGenerator");
+        });
+
+        let namedFunctionExpressionNode =
+          document.getElementById("named-function-expression");
+        namedFunctionExpressionNode.addEventListener("click",
+                                                     namedFunctionExpression);
+
+        let anonFunctionExpressionNode =
+          document.getElementById("anon-function-expression");
+        anonFunctionExpressionNode.addEventListener("click",
+                                                     anonFunctionExpression);
+
+        let returnedFunctionNode = document.getElementById("returned-function");
+        returnedFunctionNode.addEventListener("click", returnedFunction);
+      }
+
+      function Es6Method(hehe) {
+
+      }
+
+      Es6Method.prototype = {
+        es6Method(foo, bar) {
+          alert("obj.es6Method");
+        }
+      };
+
+      function HandleEvent() {
+        let handleEventNode = document.getElementById("handleEvent");
+        handleEventNode.addEventListener("click", this);
+      }
+
+      HandleEvent.prototype = {
+        handleEvent: function(event) {
+          switch (event.type) {
+            case "click":
+              alert("handleEvent click");
+          }
+        }
+      };
+
+      function* generator() {
+        alert("generator");
+      }
+    </script>
+  </head>
+  <body onload="init();">
+    <h1>Events test 3</h1>
+    <div id="es6-method">ES6 method</div>
+    <div id="generator">Generator</div>
+    <div id="anon-generator">Anonymous Generator</div>
+    <div id="named-function-expression">Named Function Expression</div>
+    <div id="anon-function-expression">Anonymous Function Expression</div>
+    <div id="returned-function">Returned Function</div>
+  </body>
+</html>

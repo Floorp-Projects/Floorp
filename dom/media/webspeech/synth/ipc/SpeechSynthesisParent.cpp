@@ -208,10 +208,12 @@ SpeechTaskParent::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex)
 
 nsresult
 SpeechTaskParent::DispatchBoundaryImpl(const nsAString& aName,
-                                       float aElapsedTime, uint32_t aCharIndex)
+                                       float aElapsedTime, uint32_t aCharIndex,
+                                       uint32_t aCharLength, uint8_t argc)
 {
   MOZ_ASSERT(mActor);
-  if(NS_WARN_IF(!(mActor->SendOnBoundary(nsString(aName), aElapsedTime, aCharIndex)))) {
+  if(NS_WARN_IF(!(mActor->SendOnBoundary(nsString(aName), aElapsedTime,
+                                         aCharIndex, aCharLength, argc)))) {
     return NS_ERROR_FAILURE;
   }
 
