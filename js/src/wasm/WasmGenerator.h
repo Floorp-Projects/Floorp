@@ -30,6 +30,8 @@ struct CompileArgs;
 
 class FunctionGenerator;
 
+typedef Vector<UniqueBytes, 0, SystemAllocPolicy> UniqueBytesVector;
+
 // A ModuleGenerator encapsulates the creation of a wasm module. During the
 // lifetime of a ModuleGenerator, a sequence of FunctionGenerators are created
 // and destroyed to compile the individual function bodies. After generating all
@@ -69,6 +71,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t                        outstanding_;
     IonCompileTaskVector            tasks_;
     IonCompileTaskPtrVector         freeTasks_;
+    UniqueBytesVector               freeBytes_;
 
     // Assertions
     DebugOnly<FunctionGenerator*>   activeFuncDef_;
@@ -159,20 +162,19 @@ class MOZ_STACK_CLASS FunctionGenerator
     friend class ModuleGenerator;
 
     ModuleGenerator* m_;
-    IonCompileTask*  task_;
     bool             usesSimd_;
     bool             usesAtomics_;
 
     // Data created during function generation, then handed over to the
     // FuncBytes in ModuleGenerator::finishFunc().
-    Bytes            bytes_;
+    UniqueBytes      bytes_;
     Uint32Vector     callSiteLineNums_;
 
     uint32_t lineOrBytecode_;
 
   public:
     FunctionGenerator()
-      : m_(nullptr), task_(nullptr), usesSimd_(false), usesAtomics_(false), lineOrBytecode_(0)
+      : m_(nullptr), usesSimd_(false), usesAtomics_(false), bytes_(nullptr), lineOrBytecode_(0)
     {}
 
     bool usesSimd() const {
@@ -190,7 +192,7 @@ class MOZ_STACK_CLASS FunctionGenerator
     }
 
     Bytes& bytes() {
-        return bytes_;
+        return *bytes_;
     }
     MOZ_MUST_USE bool addCallSiteLineNum(uint32_t lineno) {
         return callSiteLineNums_.append(lineno);

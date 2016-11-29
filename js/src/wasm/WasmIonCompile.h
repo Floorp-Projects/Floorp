@@ -37,14 +37,14 @@ typedef jit::ABIArgIter<ValTypeVector> ABIArgValTypeIter;
 
 class FuncBytes
 {
-    Bytes            bytes_;
+    UniqueBytes      bytes_;
     uint32_t         index_;
     const SigWithId& sig_;
     uint32_t         lineOrBytecode_;
     Uint32Vector     callSiteLineNums_;
 
   public:
-    FuncBytes(Bytes&& bytes,
+    FuncBytes(UniqueBytes bytes,
               uint32_t index,
               const SigWithId& sig,
               uint32_t lineOrBytecode,
@@ -56,8 +56,9 @@ class FuncBytes
         callSiteLineNums_(Move(callSiteLineNums))
     {}
 
-    Bytes& bytes() { return bytes_; }
-    const Bytes& bytes() const { return bytes_; }
+    Bytes& bytes() { return *bytes_; }
+    const Bytes& bytes() const { return *bytes_; }
+    UniqueBytes recycle() { return Move(bytes_); }
     uint32_t index() const { return index_; }
     const SigWithId& sig() const { return sig_; }
     uint32_t lineOrBytecode() const { return lineOrBytecode_; }
@@ -137,9 +138,11 @@ class IonCompileTask
     FuncCompileResults& results() {
         return *results_;
     }
-    void reset(Bytes* recycled) {
-        if (func_)
-            *recycled = Move(func_->bytes());
+    void reset(UniqueBytes* recycled) {
+        if (func_) {
+            *recycled = Move(func_->recycle());
+            (*recycled)->clear();
+        }
         func_.reset(nullptr);
         results_.reset();
         lifo_.releaseAll();
