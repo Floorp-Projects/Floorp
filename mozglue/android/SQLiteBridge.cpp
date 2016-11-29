@@ -136,7 +136,7 @@ JNI_Setup(JNIEnv* jenv)
     initialized = true;
 }
 
-extern "C" NS_EXPORT jobject MOZ_JNICALL
+extern "C" APKOPEN_EXPORT jobject MOZ_JNICALL
 Java_org_mozilla_gecko_sqlite_SQLiteBridge_sqliteCall(JNIEnv* jenv, jclass,
                                                       jstring jDb,
                                                       jstring jQuery,
@@ -164,7 +164,7 @@ Java_org_mozilla_gecko_sqlite_SQLiteBridge_sqliteCall(JNIEnv* jenv, jclass,
     return jCursor;
 }
 
-extern "C" NS_EXPORT jobject MOZ_JNICALL
+extern "C" APKOPEN_EXPORT jobject MOZ_JNICALL
 Java_org_mozilla_gecko_sqlite_SQLiteBridge_sqliteCallWithDb(JNIEnv* jenv, jclass,
                                                             jlong jDb,
                                                             jstring jQuery,
@@ -179,7 +179,7 @@ Java_org_mozilla_gecko_sqlite_SQLiteBridge_sqliteCallWithDb(JNIEnv* jenv, jclass
     return jCursor;
 }
 
-extern "C" NS_EXPORT jlong MOZ_JNICALL
+extern "C" APKOPEN_EXPORT jlong MOZ_JNICALL
 Java_org_mozilla_gecko_sqlite_SQLiteBridge_openDatabase(JNIEnv* jenv, jclass,
                                                         jstring jDb)
 {
@@ -201,7 +201,7 @@ Java_org_mozilla_gecko_sqlite_SQLiteBridge_openDatabase(JNIEnv* jenv, jclass,
     return (jlong)db;
 }
 
-extern "C" NS_EXPORT void MOZ_JNICALL
+extern "C" APKOPEN_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_sqlite_SQLiteBridge_closeDatabase(JNIEnv* jenv, jclass,
                                                         jlong jDb)
 {
