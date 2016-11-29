@@ -36,4 +36,4 @@ exports.highlighterSettings = {
   // Whether or not the grid highlighter extends the grid lines infinitely
   showInfiniteLines: PropTypes.bool,
 
- };
+};
