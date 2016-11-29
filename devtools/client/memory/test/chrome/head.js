@@ -318,18 +318,6 @@ function renderComponent(element, container) {
   });
 }
 
-function setState(component, newState) {
-  return new Promise(resolve => {
-    component.setState(newState, onNextAnimationFrame(resolve));
-  });
-}
-
-function setProps(component, newProps) {
-  return new Promise(resolve => {
-    component.setProps(newProps, onNextAnimationFrame(resolve));
-  });
-}
-
 function dumpn(msg) {
   dump(`MEMORY-TEST: ${msg}\n`);
 }

@@ -711,18 +711,27 @@ GetBufferSource(JSContext* cx, JSObject* obj, unsigned errorNumber, MutableBytes
 
     JSObject* unwrapped = CheckedUnwrap(obj);
 
+    size_t byteLength = 0;
+    uint8_t* ptr = nullptr;
     if (unwrapped && unwrapped->is<TypedArrayObject>()) {
         TypedArrayObject& view = unwrapped->as<TypedArrayObject>();
-        return (*bytecode)->append((uint8_t*)view.viewDataEither().unwrap(), view.byteLength());
-    }
-
-    if (unwrapped && unwrapped->is<ArrayBufferObject>()) {
+        byteLength = view.byteLength();
+        ptr = (uint8_t*)view.viewDataEither().unwrap();
+    } else if (unwrapped && unwrapped->is<ArrayBufferObject>()) {
         ArrayBufferObject& buffer = unwrapped->as<ArrayBufferObject>();
-        return (*bytecode)->append(buffer.dataPointer(), buffer.byteLength());
+        byteLength = buffer.byteLength();
+        ptr = buffer.dataPointer();
+    } else {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNumber);
+        return false;
     }
 
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNumber);
-    return false;
+    if (!(*bytecode)->append(ptr, byteLength)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
 }
 
 static bool

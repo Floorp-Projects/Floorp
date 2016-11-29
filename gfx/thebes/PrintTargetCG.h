@@ -19,8 +19,17 @@ class PrintTargetCG final : public PrintTarget
 {
 public:
   static already_AddRefed<PrintTargetCG>
-  CreateOrNull(PMPrintSession aPrintSession, const IntSize& aSize);
+  CreateOrNull(PMPrintSession aPrintSession,
+               PMPageFormat aPageFormat,
+               PMPrintSettings aPrintSettings,
+               const IntSize& aSize);
 
+  virtual nsresult BeginPrinting(const nsAString& aTitle,
+                                 const nsAString& aPrintToFileName,
+                                 int32_t aStartPage,
+                                 int32_t aEndPage) final;
+  virtual nsresult EndPrinting() final;
+  virtual nsresult AbortPrinting() final;
   virtual nsresult BeginPage() final;
   virtual nsresult EndPage() final;
 
@@ -29,10 +38,14 @@ public:
 
 private:
   PrintTargetCG(PMPrintSession aPrintSession,
+                PMPageFormat aPageFormat,
+                PMPrintSettings aPrintSettings,
                 const IntSize& aSize);
   ~PrintTargetCG();
 
   PMPrintSession mPrintSession;
+  PMPageFormat mPageFormat;
+  PMPrintSettings mPrintSettings;
 };
 
 } // namespace gfx

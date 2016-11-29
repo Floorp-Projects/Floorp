@@ -8,6 +8,9 @@ const { createEnum } = require("devtools/client/shared/enum");
 
 createEnum([
 
+  // Update the grid highlighted state.
+  "UPDATE_GRID_HIGHLIGHTED",
+
   // Update the entire grids state with the new list of grids.
   "UPDATE_GRIDS",
 

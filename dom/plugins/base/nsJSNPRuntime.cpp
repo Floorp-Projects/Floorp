@@ -1188,6 +1188,8 @@ GetNPObjectWrapper(JSContext *cx, JSObject *aObj, bool wrapResult = true)
       }
       return obj;
     }
+
+    JSAutoCompartment ac(cx, obj);
     if (!::JS_GetPrototype(cx, obj, &obj)) {
       return nullptr;
     }

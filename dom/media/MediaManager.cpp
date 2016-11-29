@@ -2265,7 +2265,8 @@ if (privileged) {
     uint32_t videoPerm = nsIPermissionManager::UNKNOWN_ACTION;
     if (IsOn(c.mVideo)) {
       rv = permManager->TestExactPermissionFromPrincipal(
-        principal, "camera", &videoPerm);
+        principal, videoType == MediaSourceEnum::Camera ? "camera" : "screen",
+        &videoPerm);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 

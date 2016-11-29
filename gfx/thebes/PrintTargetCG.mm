@@ -14,9 +14,13 @@ namespace mozilla {
 namespace gfx {
 
 PrintTargetCG::PrintTargetCG(PMPrintSession aPrintSession,
+                             PMPageFormat aPageFormat,
+                             PMPrintSettings aPrintSettings,
                              const IntSize& aSize)
   : PrintTarget(/* aCairoSurface */ nullptr, aSize)
   , mPrintSession(aPrintSession)
+  , mPageFormat(aPageFormat)
+  , mPrintSettings(aPrintSettings)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -39,13 +43,17 @@ PrintTargetCG::~PrintTargetCG()
 }
 
 /* static */ already_AddRefed<PrintTargetCG>
-PrintTargetCG::CreateOrNull(PMPrintSession aPrintSession, const IntSize& aSize)
+PrintTargetCG::CreateOrNull(PMPrintSession aPrintSession,
+                            PMPageFormat aPageFormat,
+                            PMPrintSettings aPrintSettings,
+                            const IntSize& aSize)
 {
   if (!Factory::CheckSurfaceSize(aSize)) {
     return nullptr;
   }
 
-  RefPtr<PrintTargetCG> target = new PrintTargetCG(aPrintSession, aSize);
+  RefPtr<PrintTargetCG> target = new PrintTargetCG(aPrintSession, aPageFormat,
+                                                   aPrintSettings, aSize);
 
   return target.forget();
 }
@@ -100,12 +108,59 @@ PrintTargetCG::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
 }
 
 nsresult
+PrintTargetCG::BeginPrinting(const nsAString& aTitle,
+                             const nsAString& aPrintToFileName,
+                             int32_t aStartPage,
+                             int32_t aEndPage)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  OSStatus status;
+  status = ::PMSetFirstPage(mPrintSettings, aStartPage, false);
+  NS_ASSERTION(status == noErr, "PMSetFirstPage failed");
+  status = ::PMSetLastPage(mPrintSettings, aEndPage, false);
+  NS_ASSERTION(status == noErr, "PMSetLastPage failed");
+
+  status = ::PMSessionBeginCGDocumentNoDialog(mPrintSession, mPrintSettings, mPageFormat);
+
+  return status == noErr ? NS_OK : NS_ERROR_ABORT;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+nsresult
+PrintTargetCG::EndPrinting()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  ::PMSessionEndDocumentNoDialog(mPrintSession);
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+nsresult
+PrintTargetCG::AbortPrinting()
+{
+#ifdef DEBUG
+  mHasActivePage = false;
+#endif
+  return EndPrinting();
+}
+
+nsresult
 PrintTargetCG::BeginPage()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
+  PMSessionError(mPrintSession);
+  OSStatus status = ::PMSessionBeginPageNoDialog(mPrintSession, mPageFormat, NULL);
+  if (status != noErr) {
+    return NS_ERROR_ABORT;
+  }
+
   CGContextRef context;
-  // This call will fail if we are not called between the PMSessionBeginPage/
+  // This call will fail if it wasn't called between the PMSessionBeginPage/
   // PMSessionEndPage calls:
   ::PMSessionGetCGGraphicsContext(mPrintSession, &context);
 
@@ -138,9 +193,19 @@ PrintTargetCG::BeginPage()
 nsresult
 PrintTargetCG::EndPage()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   cairo_surface_finish(mCairoSurface);
   mCairoSurface = nullptr;
+
+  OSStatus status = ::PMSessionEndPageNoDialog(mPrintSession);
+  if (status != noErr) {
+    return NS_ERROR_ABORT;
+  }
+
   return PrintTarget::EndPage();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 } // namespace gfx

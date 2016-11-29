@@ -4,9 +4,28 @@
 
 "use strict";
 
-const { UPDATE_GRIDS } = require("./index");
+const {
+  UPDATE_GRID_HIGHLIGHTED,
+  UPDATE_GRIDS,
+} = require("./index");
 
 module.exports = {
+
+  /**
+   * Update the grid highlighted state.
+   *
+   * @param  {NodeFront} nodeFront
+   *         The NodeFront of the DOM node to toggle the grid highlighter.
+   * @param  {Boolean} highlighted
+   *         Whether or not the grid highlighter is highlighting the grid.
+   */
+  updateGridHighlighted(nodeFront, highlighted) {
+    return {
+      type: UPDATE_GRID_HIGHLIGHTED,
+      nodeFront,
+      highlighted,
+    };
+  },
 
   /**
    * Update the grid state with the new list of grids.

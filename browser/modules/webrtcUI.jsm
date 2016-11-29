@@ -136,7 +136,7 @@ this.webrtcUI = {
     this._streams = this._streams.filter(stream => stream.browser != aBrowser);
   },
 
-  showSharingDoorhanger: function(aActiveStream, aType) {
+  showSharingDoorhanger: function(aActiveStream) {
     let browserWindow = aActiveStream.browser.ownerGlobal;
     if (aActiveStream.tab) {
       browserWindow.gBrowser.selectedTab = aActiveStream.tab;
@@ -312,7 +312,7 @@ function prompt(aBrowser, aRequest) {
           if (audioDevices.length)
             perms.add(uri, "microphone", perms.DENY_ACTION);
           if (videoDevices.length)
-            perms.add(uri, "camera", perms.DENY_ACTION);
+            perms.add(uri, sharingScreen ? "screen" : "camera", perms.DENY_ACTION);
         }
       }
     }
@@ -697,12 +697,7 @@ function getGlobalIndicator() {
                   .getService(Ci.nsISystemStatusBar),
 
     _command: function(aEvent) {
-      let type = this.getAttribute("type");
-      if (type == "Camera" || type == "Microphone")
-        type = "Devices";
-      else if (type == "Window" || type == "Application" || type == "Browser")
-        type = "Screen";
-      webrtcUI.showSharingDoorhanger(aEvent.target.stream, type);
+      webrtcUI.showSharingDoorhanger(aEvent.target.stream);
     },
 
     _popupShowing: function(aEvent) {
@@ -735,7 +730,6 @@ function getGlobalIndicator() {
         menuitem = this.ownerDocument.createElement("menuitem");
         menuitem.setAttribute("label",
                               bundle.GetStringFromName("webrtcIndicator.controlSharing.menuitem"));
-        menuitem.setAttribute("type", type);
         menuitem.stream = stream;
         menuitem.addEventListener("command", indicator._command);
 
@@ -757,7 +751,6 @@ function getGlobalIndicator() {
         labelId = "webrtcIndicator.controlSharingOn.menuitem";
         label = stream.browser.contentTitle || stream.uri;
         item.setAttribute("label", bundle.formatStringFromName(labelId, [label], 1));
-        item.setAttribute("type", type);
         item.stream = stream;
         item.addEventListener("command", indicator._command);
         this.appendChild(item);
@@ -832,17 +825,6 @@ function onTabSharingMenuPopupShowing(e) {
     let menuitem = doc.createElement("menuitem");
     menuitem.setAttribute("label", bundle.getFormattedString(stringName, [origin]));
     menuitem.stream = streamInfo;
-
-    // We can only open 1 doorhanger at a time. Guessing that users would be
-    // most eager to control screen/window/app sharing, and only then
-    // camera/microphone sharing, in that (decreasing) order of priority.
-    let doorhangerType;
-    if ((/Screen|Window|Application/).test(stringName)) {
-      doorhangerType = "Screen";
-    } else {
-      doorhangerType = "Devices";
-    }
-    menuitem.setAttribute("doorhangertype", doorhangerType);
     menuitem.addEventListener("command", onTabSharingMenuPopupCommand);
     e.target.appendChild(menuitem);
   }
@@ -854,8 +836,7 @@ function onTabSharingMenuPopupHiding(e) {
 }
 
 function onTabSharingMenuPopupCommand(e) {
-  let type = e.target.getAttribute("doorhangertype");
-  webrtcUI.showSharingDoorhanger(e.target.stream, type);
+  webrtcUI.showSharingDoorhanger(e.target.stream);
 }
 
 function showOrCreateMenuForWindow(aWindow) {
