@@ -9,36 +9,38 @@
 }
 
 /**
- * Grid Container
+ * Common styles for shared components
  */
 
-#layout-grid-container {
-  margin: 5px;
-}
-
-/**
- * Grid List
- */
-
-.layout-grid-list-container {
+.grid-container {
   display: flex;
   flex-direction: column;
+  flex: 1;
   align-items: center;
 }
 
-.layout-grid-list-container > span {
+.grid-container > span {
   font-weight: bold;
   margin-bottom: 3px;
 }
 
-#layout-grid-list {
+.grid-container > ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-#layout-grid-list li {
+.grid-container li {
   padding: 4px 0;
+}
+
+/**
+ * Grid Container
+ */
+
+#layout-grid-container {
+  display: flex;
+  margin: 5px;
 }
 
 /**
