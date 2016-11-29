@@ -33,6 +33,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(const uint64_t& aPipelineId,
   , mWRWindowState(aWrWindowState)
   , mCompositor(aCompositor)
   , mDestroyed(false)
+  , mEpoch(0)
 {
   MOZ_ASSERT(mGLContext);
   MOZ_ASSERT(mCompositor);
@@ -205,7 +206,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         NS_RUNTIMEABORT("not reached");
     }
   }
-  wr_dp_end(mWRWindowState, mWRState);
+  wr_dp_end(mWRWindowState, mWRState, mEpoch++);
   ScheduleComposition();
   DeleteOldImages();
 }
