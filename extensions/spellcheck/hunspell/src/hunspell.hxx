@@ -70,29 +70,26 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#ifndef MYSPELLMGR_HXX_
-#define MYSPELLMGR_HXX_
 
 #include "hunvisapi.h"
-#include "w_char.hxx"
-#include <string>
+
+#include "hashmgr.hxx"
+#include "affixmgr.hxx"
+#include "suggestmgr.hxx"
+#include "langnum.hxx"
 #include <vector>
 
 #define SPELL_XML "<?xml?>"
 
+#define MAXDIC 20
 #define MAXSUGGESTION 15
 #define MAXSHARPS 5
-#define MAXWORDLEN 176
 
-#if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1)
-#  define H_DEPRECATED __attribute__((__deprecated__))
-#elif defined(_MSC_VER) && (_MSC_VER >= 1300)
-#  define H_DEPRECATED __declspec(deprecated)
-#else
-#  define H_DEPRECATED
-#endif
+#define HUNSPELL_OK (1 << 0)
+#define HUNSPELL_OK_WARN (1 << 1)
 
-class HunspellImpl;
+#ifndef _MYSPELLMGR_HXX_
+#define _MYSPELLMGR_HXX_
 
 class LIBHUNSPELL_DLL_EXPORTED Hunspell {
  private:
@@ -100,7 +97,17 @@ class LIBHUNSPELL_DLL_EXPORTED Hunspell {
   Hunspell& operator=(const Hunspell&);
 
  private:
-  HunspellImpl* m_Impl;
+  AffixMgr* pAMgr;
+  HashMgr* pHMgr[MAXDIC];
+  int maxdic;
+  SuggestMgr* pSMgr;
+  char* affixpath;
+  char* encoding;
+  struct cs_info* csconv;
+  int langnum;
+  int utf8;
+  int complexprefixes;
+  char** wordbreak;
 
  public:
   /* Hunspell(aff, dic) - constructor of Hunspell class
@@ -111,6 +118,7 @@ class LIBHUNSPELL_DLL_EXPORTED Hunspell {
    * long path names (without the long path prefix Hunspell will use fopen()
    * with system-dependent character encoding instead of _wfopen()).
    */
+
   Hunspell(const char* affpath, const char* dpath, const char* key = NULL);
   ~Hunspell();
 
@@ -118,7 +126,7 @@ class LIBHUNSPELL_DLL_EXPORTED Hunspell {
   int add_dic(const char* dpath, const char* key = NULL);
 
   /* spell(word) - spellcheck word
-   * output: false = bad word, true = good word
+   * output: 0 = bad word, not 0 = good word
    *
    * plus output:
    *   info: information bit array, fields:
@@ -126,8 +134,8 @@ class LIBHUNSPELL_DLL_EXPORTED Hunspell {
    *     SPELL_FORBIDDEN = an explicit forbidden word
    *   root: root (stem), when input is a word with affix(es)
    */
-  bool spell(const std::string& word, int* info = NULL, std::string* root = NULL);
-  H_DEPRECATED int spell(const char* word, int* info = NULL, char** root = NULL);
+
+  int spell(const char* word, int* info = NULL, char** root = NULL);
 
   /* suggest(suggestions, word) - search suggestions
    * input: pointer to an array of strings pointer and the (bad) word
@@ -136,8 +144,8 @@ class LIBHUNSPELL_DLL_EXPORTED Hunspell {
    *   a newly allocated array of strings (*slts will be NULL when number
    *   of suggestion equals 0.)
    */
-  std::vector<std::string> suggest(const std::string& word);
-  H_DEPRECATED int suggest(char*** slst, const char* word);
+
+  int suggest(char*** slst, const char* word);
 
   /* Suggest words from suffix rules
    * suffix_suggest(suggestions, root_word)
@@ -147,37 +155,36 @@ class LIBHUNSPELL_DLL_EXPORTED Hunspell {
    *   a newly allocated array of strings (*slts will be NULL when number
    *   of suggestion equals 0.)
    */
-  std::vector<std::string> suffix_suggest(const std::string& root_word);
-  H_DEPRECATED int suffix_suggest(char*** slst, const char* root_word);
+  int suffix_suggest(char*** slst, const char* root_word);
 
   /* deallocate suggestion lists */
-  H_DEPRECATED void free_list(char*** slst, int n);
 
-  const std::string& get_dict_encoding() const;
-  H_DEPRECATED const char* get_dic_encoding() const;
+  void free_list(char*** slst, int n);
+
+  char* get_dic_encoding();
 
   /* morphological functions */
 
   /* analyze(result, word) - morphological analysis of the word */
-  std::vector<std::string> analyze(const std::string& word);
-  H_DEPRECATED int analyze(char*** slst, const char* word);
 
-  /* stem(word) - stemmer function */
-  std::vector<std::string> stem(const std::string& word);
-  H_DEPRECATED int stem(char*** slst, const char* word);
+  int analyze(char*** slst, const char* word);
 
-  /* stem(analysis, n) - get stems from a morph. analysis
+  /* stem(result, word) - stemmer function */
+
+  int stem(char*** slst, const char* word);
+
+  /* stem(result, analysis, n) - get stems from a morph. analysis
    * example:
    * char ** result, result2;
    * int n1 = analyze(&result, "words");
    * int n2 = stem(&result2, result, n1);
    */
-  std::vector<std::string> stem(const std::vector<std::string>& morph);
-  H_DEPRECATED int stem(char*** slst, char** morph, int n);
+
+  int stem(char*** slst, char** morph, int n);
 
   /* generate(result, word, word2) - morphological generation by example(s) */
-  std::vector<std::string> generate(const std::string& word, const std::string& word2);
-  H_DEPRECATED int generate(char*** slst, const char* word, const char* word2);
+
+  int generate(char*** slst, const char* word, const char* word2);
 
   /* generate(result, word, desc, n) - generation by morph. description(s)
    * example:
@@ -186,38 +193,66 @@ class LIBHUNSPELL_DLL_EXPORTED Hunspell {
    * int n = generate(&result, "word", &affix, 1);
    * for (int i = 0; i < n; i++) printf("%s\n", result[i]);
    */
-  std::vector<std::string> generate(const std::string& word, const std::vector<std::string>& pl);
-  H_DEPRECATED int generate(char*** slst, const char* word, char** desc, int n);
+
+  int generate(char*** slst, const char* word, char** desc, int n);
 
   /* functions for run-time modification of the dictionary */
 
   /* add word to the run-time dictionary */
 
-  int add(const std::string& word);
+  int add(const char* word);
 
   /* add word to the run-time dictionary with affix flags of
    * the example (a dictionary word): Hunspell will recognize
    * affixed forms of the new word, too.
    */
 
-  int add_with_affix(const std::string& word, const std::string& example);
+  int add_with_affix(const char* word, const char* example);
 
   /* remove word from the run-time dictionary */
 
-  int remove(const std::string& word);
+  int remove(const char* word);
 
   /* other */
 
   /* get extra word characters definied in affix file for tokenization */
-  const std::string& get_wordchars() const;
-  const std::vector<w_char>& get_wordchars_utf16() const;
+  const char* get_wordchars();
+  const std::vector<w_char>& get_wordchars_utf16();
 
-  const std::string& get_version() const;
+  struct cs_info* get_csconv();
+  const char* get_version();
 
   int get_langnum() const;
 
   /* need for putdic */
-  bool input_conv(const std::string& word, std::string& dest);
+  int input_conv(const char* word, char* dest, size_t destsize);
+
+ private:
+  void cleanword(std::string& dest, const char*, int* pcaptype, int* pabbrev);
+  size_t cleanword2(std::string& dest,
+                    std::vector<w_char>& dest_u,
+                    const char*,
+                    int* w_len,
+                    int* pcaptype,
+                    size_t* pabbrev);
+  void mkinitcap(std::string& u8);
+  int mkinitcap2(std::string& u8, std::vector<w_char>& u16);
+  int mkinitsmall2(std::string& u8, std::vector<w_char>& u16);
+  void mkallcap(std::string& u8);
+  int mkallsmall2(std::string& u8, std::vector<w_char>& u16);
+  struct hentry* checkword(const char*, int* info, char** root);
+  std::string sharps_u8_l1(const std::string& source);
+  hentry*
+  spellsharps(std::string& base, size_t start_pos, int, int, int* info, char** root);
+  int is_keepcase(const hentry* rv);
+  int insert_sug(char*** slst, const char* word, int ns);
+  void cat_result(std::string& result, char* st);
+  char* stem_description(const char* desc);
+  int spellml(char*** slst, const char* word);
+  std::string get_xml_par(const char* par);
+  const char* get_xml_pos(const char* s, const char* attr);
+  int get_xml_list(char*** slst, const char* list, const char* tag);
+  int check_xml_par(const char* q, const char* attr, const char* value);
 };
 
 #endif
