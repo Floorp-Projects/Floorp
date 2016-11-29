@@ -24,3 +24,13 @@ exports.grid = {
   nodeFront: PropTypes.object,
 
 };
+
+/**
+ * The grid highlighter settings on what to display in its grid overlay in the document.
+ */
+exports.highlighterSettings = {
+
+  // Whether or not the grid highlighter extends the grid lines infinitely
+  showInfiniteLines: PropTypes.bool,
+
+ };
