@@ -866,6 +866,12 @@ with only_when('--enable-compile-environment'):
     set_config('LIBFUZZER', enable_libfuzzer)
     set_define('LIBFUZZER', enable_libfuzzer)
 
+# Mortar
+# ==============================================================
+option('--enable-mortar', help='Enable mortar extension')
+
+set_config('MOZ_MORTAR', True, when='--enable-mortar')
+
 # Marionette is a Web Driver / Selenium comamnd server and client automation
 # driver for Mozilla's Gecko engine.  For more, see
 # https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette.
