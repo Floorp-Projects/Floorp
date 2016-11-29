@@ -28,7 +28,7 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
   /**
    * The number of records to queue for insertion before writing to databases.
    */
-  public static final int INSERT_RECORD_THRESHOLD = 50;
+  public static final int INSERT_RECORD_THRESHOLD = 5000;
   public static final int RECENT_VISITS_LIMIT = 20;
 
   public AndroidBrowserHistoryRepositorySession(Repository repository, Context context) {
@@ -162,11 +162,8 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
     final ArrayList<HistoryRecord> outgoing = recordsBuffer;
     recordsBuffer = new ArrayList<HistoryRecord>();
     Logger.debug(LOG_TAG, "Flushing " + outgoing.size() + " records to database.");
-    // TODO: move bulkInsert to AndroidBrowserDataAccessor?
-    int inserted = ((AndroidBrowserHistoryDataAccessor) dbHelper).bulkInsert(outgoing);
-    if (inserted != outgoing.size()) {
-      // Something failed; most pessimistic action is to declare that all insertions failed.
-      // TODO: perform the bulkInsert in a transaction and rollback unless all insertions succeed?
+    boolean transactionSuccess = ((AndroidBrowserHistoryDataAccessor) dbHelper).bulkInsert(outgoing);
+    if (!transactionSuccess) {
       for (HistoryRecord failed : outgoing) {
         storeDelegate.onRecordStoreFailed(new RuntimeException("Failed to insert history item with guid " + failed.guid + "."), failed.guid);
       }

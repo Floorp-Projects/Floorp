@@ -11,6 +11,8 @@ import android.content.ContentValues;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
+import android.support.annotation.Nullable;
 
 import org.mozilla.gecko.db.BrowserContract;
 
@@ -78,6 +80,12 @@ public class DelegatingTestContentProvider extends ContentProvider {
     @Override
     public int bulkInsert(Uri uri, ContentValues[] values) {
         return mTargetProvider.bulkInsert(appendTestParam(uri), values);
+    }
+
+    @Nullable
+    @Override
+    public Bundle call(String method, String arg, Bundle extras) {
+        return mTargetProvider.call(method, arg, extras);
     }
 
     public ContentProvider getTargetProvider() {

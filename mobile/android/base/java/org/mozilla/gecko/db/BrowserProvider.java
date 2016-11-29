@@ -32,6 +32,7 @@ import org.mozilla.gecko.db.BrowserContract.PageMetadata;
 import org.mozilla.gecko.db.DBUtils.UpdateOperation;
 import org.mozilla.gecko.icons.IconsHelper;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.BroadcastReceiver;
@@ -49,10 +50,15 @@ import android.database.DatabaseUtils;
 import android.database.MatrixCursor;
 import android.database.MergeCursor;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
+import android.database.sqlite.SQLiteStatement;
 import android.net.Uri;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -2205,6 +2211,230 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return deleteFavicons(uri, faviconSelection, null) +
                deleteThumbnails(uri, thumbnailSelection, null) +
                getURLImageDataTable().deleteUnused(getWritableDatabase(uri));
+    }
+
+    @Nullable
+    @Override
+    public Bundle call(@NonNull String method, String uriArg, Bundle extras) {
+        if (uriArg == null) {
+            throw new IllegalArgumentException("Missing required Uri argument.");
+        }
+        final Bundle result = new Bundle();
+        switch (method) {
+            case BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC:
+                try {
+                    final Uri uri = Uri.parse(uriArg);
+                    final SQLiteDatabase db = getWritableDatabase(uri);
+                    bulkInsertHistoryWithVisits(db, extras);
+                    result.putSerializable(BrowserContract.METHOD_RESULT, null);
+
+                // If anything went wrong during insertion, we know that changes were rolled back.
+                // Inform our caller that we have failed.
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "Unexpected error while bulk inserting history", e);
+                    result.putSerializable(BrowserContract.METHOD_RESULT, e);
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown method call: " + method);
+        }
+
+        return result;
+    }
+
+    private void bulkInsertHistoryWithVisits(final SQLiteDatabase db, @NonNull Bundle dataBundle) {
+        // NB: dataBundle structure:
+        // Key METHOD_PARAM_DATA=[Bundle,...]
+        // Each Bundle has keys METHOD_PARAM_OBJECT=ContentValues{HistoryRecord}, VISITS=ContentValues[]{visits}
+        final Bundle[] recordBundles = (Bundle[]) dataBundle.getSerializable(BrowserContract.METHOD_PARAM_DATA);
+
+        if (recordBundles == null) {
+            throw new IllegalArgumentException("Received null recordBundle while bulk inserting history.");
+        }
+
+        if (recordBundles.length == 0) {
+            return;
+        }
+
+        final ContentValues[][] visitsValueSet = new ContentValues[recordBundles.length][];
+        final ContentValues[] historyValueSet = new ContentValues[recordBundles.length];
+        for (int i = 0; i < recordBundles.length; i++) {
+            historyValueSet[i] = recordBundles[i].getParcelable(BrowserContract.METHOD_PARAM_OBJECT);
+            visitsValueSet[i] = (ContentValues[]) recordBundles[i].getSerializable(History.VISITS);
+        }
+
+        // Wrap the whole operation in a transaction.
+        beginBatch(db);
+
+        final int historyInserted;
+        try {
+            // First, insert history records.
+            historyInserted = bulkInsertHistory(db, historyValueSet);
+            if (historyInserted != recordBundles.length) {
+                Log.w(LOGTAG, "Expected to insert " + recordBundles.length + " history records, " +
+                        "but actually inserted " + historyInserted);
+            }
+
+            // Second, insert visit records.
+            bulkInsertVisits(db, visitsValueSet);
+
+            // Finally, commit all of the insertions we just made.
+            markBatchSuccessful(db);
+
+        // We're done with our database operations.
+        } finally {
+            endBatch(db);
+        }
+
+        // Notify listeners that we've just inserted new history records.
+        if (historyInserted > 0) {
+            getContext().getContentResolver().notifyChange(
+                    BrowserContractHelpers.HISTORY_CONTENT_URI, null,
+                    // Do not sync these changes.
+                    false
+            );
+        }
+    }
+
+    private int bulkInsertHistory(final SQLiteDatabase db, ContentValues[] values) {
+        int inserted = 0;
+        final String fullInsertSqlStatement = "INSERT INTO " + History.TABLE_NAME + " (" +
+                History.GUID + "," +
+                History.TITLE + "," +
+                History.URL + "," +
+                History.DATE_LAST_VISITED + "," +
+                History.REMOTE_DATE_LAST_VISITED + "," +
+                History.VISITS + "," +
+                History.REMOTE_VISITS + ") VALUES (?, ?, ?, ?, ?, ?, ?)";
+        final String shortInsertSqlStatement = "INSERT INTO " + History.TABLE_NAME + " (" +
+                History.GUID + "," +
+                History.TITLE + "," +
+                History.URL + ") VALUES (?, ?, ?)";
+        final SQLiteStatement compiledFullStatement = db.compileStatement(fullInsertSqlStatement);
+        final SQLiteStatement compiledShortStatement = db.compileStatement(shortInsertSqlStatement);
+        SQLiteStatement statementToExec;
+
+        beginWrite(db);
+        try {
+            for (ContentValues cv : values) {
+                final String guid = cv.getAsString(History.GUID);
+                final String title = cv.getAsString(History.TITLE);
+                final String url = cv.getAsString(History.URL);
+                final Long dateLastVisited = cv.getAsLong(History.DATE_LAST_VISITED);
+                final Long remoteDateLastVisited = cv.getAsLong(History.REMOTE_DATE_LAST_VISITED);
+                final Integer visits = cv.getAsInteger(History.VISITS);
+
+                // If dateLastVisited is null, so will be remoteDateLastVisited and visits.
+                // We will use the short compiled statement in this case.
+                // See implementation in AndroidBrowserHistoryDataAccessor@getContentValues.
+                if (dateLastVisited == null) {
+                    statementToExec = compiledShortStatement;
+                } else {
+                    statementToExec = compiledFullStatement;
+                }
+
+                statementToExec.clearBindings();
+                statementToExec.bindString(1, guid);
+                // Title is allowed to be null.
+                if (title != null) {
+                    statementToExec.bindString(2, title);
+                } else {
+                    statementToExec.bindNull(2);
+                }
+                statementToExec.bindString(3, url);
+                if (dateLastVisited != null) {
+                    statementToExec.bindLong(4, dateLastVisited);
+                    statementToExec.bindLong(5, remoteDateLastVisited);
+
+                    // NB:
+                    // Both of these count values might be slightly off unless we recalculate them
+                    // from data in the visits table at some point.
+                    // See note about visit insertion failures below in the bulkInsertVisits method.
+
+                    // Visit count
+                    statementToExec.bindLong(6, visits);
+                    // Remote visit count.
+                    statementToExec.bindLong(7, visits);
+                }
+
+                try {
+                    if (statementToExec.executeInsert() != -1) {
+                        inserted += 1;
+                    }
+
+                // NB: Constraint violation might occur if we're trying to insert a duplicate GUID.
+                // This should not happen but it does in practice, possibly due to reconciliation bugs.
+                // For now we catch and log the error without failing the whole bulk insert.
+                } catch (SQLiteConstraintException e) {
+                    Log.w(LOGTAG, "Unexpected constraint violation while inserting history with GUID " + guid, e);
+                }
+            }
+            markWriteSuccessful(db);
+        } finally {
+            endWrite(db);
+        }
+
+        if (inserted != values.length) {
+            Log.w(LOGTAG, "Failed to insert some of the history. " +
+                    "Expected: " + values.length + ", actual: " + inserted);
+        }
+
+        return inserted;
+    }
+
+    private int bulkInsertVisits(SQLiteDatabase db, ContentValues[][] valueSets) {
+        final String insertSqlStatement = "INSERT INTO " + Visits.TABLE_NAME + " (" +
+                Visits.DATE_VISITED + "," +
+                Visits.VISIT_TYPE + "," +
+                Visits.HISTORY_GUID + "," +
+                Visits.IS_LOCAL + ") VALUES (?, ?, ?, ?)";
+        final SQLiteStatement compiledInsertStatement = db.compileStatement(insertSqlStatement);
+
+        int totalInserted = 0;
+        beginWrite(db);
+        try {
+            for (ContentValues[] valueSet : valueSets) {
+                int inserted = 0;
+                for (ContentValues values : valueSet) {
+                    final long date = values.getAsLong(Visits.DATE_VISITED);
+                    final long visitType = values.getAsLong(Visits.VISIT_TYPE);
+                    final String guid = values.getAsString(Visits.HISTORY_GUID);
+                    final Integer isLocal = values.getAsInteger(Visits.IS_LOCAL);
+
+                    // Bind parameters use a 1-based index.
+                    compiledInsertStatement.clearBindings();
+                    compiledInsertStatement.bindLong(1, date);
+                    compiledInsertStatement.bindLong(2, visitType);
+                    compiledInsertStatement.bindString(3, guid);
+                    compiledInsertStatement.bindLong(4, isLocal);
+
+                    try {
+                        if (compiledInsertStatement.executeInsert() != -1) {
+                            inserted++;
+                        }
+
+                    // NB:
+                    // Constraint exception will be thrown if we try to insert a visit violating
+                    // unique(guid, date) constraint. We don't expect to do that, but our incoming
+                    // data might not be clean - either due to duplicate entries in the sync data,
+                    // or, less likely, due to record reconciliation bugs at the RepositorySession
+                    // level.
+                    } catch (SQLiteConstraintException e) {
+                        Log.w(LOGTAG, "Unexpected constraint exception while inserting a visit", e);
+                    }
+                }
+                if (inserted != valueSet.length) {
+                    Log.w(LOGTAG, "Failed to insert some of the visits. " +
+                            "Expected: " + valueSet.length + ", actual: " + inserted);
+                }
+                totalInserted += inserted;
+            }
+            markWriteSuccessful(db);
+        } finally {
+            endWrite(db);
+        }
+
+        return totalInserted;
     }
 
     @Override
