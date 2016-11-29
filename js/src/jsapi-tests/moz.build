@@ -37,6 +37,7 @@ UNIFIED_SOURCES += [
     'testForOfIterator.cpp',
     'testForwardSetProperty.cpp',
     'testFreshGlobalEvalRedefinition.cpp',
+    'testFunctionBinding.cpp',
     'testFunctionProperties.cpp',
     'testGCAllocator.cpp',
     'testGCCellPtr.cpp',
