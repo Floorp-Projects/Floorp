@@ -6,17 +6,16 @@
 
 "use strict";
 
-const {Cc, Ci, Cu, Cm, Cr, components} = require("chrome");
-const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+const {Cu, Cc, Ci, components} = require("chrome");
 const Services = require("Services");
+const {Class} = require("sdk/core/heritage");
+const {Unknown} = require("sdk/platform/xpcom");
+const xpcom = require("sdk/platform/xpcom");
+const Events = require("sdk/dom/events");
+const Clipboard = require("sdk/clipboard");
 
 loader.lazyRequireGetter(this, "NetworkHelper",
                                "devtools/shared/webconsole/network-helper");
-loader.lazyRequireGetter(this, "Events",
-                               "sdk/dom/events");
-loader.lazyRequireGetter(this, "Clipboard",
-                               "sdk/clipboard");
 loader.lazyRequireGetter(this, "JsonViewUtils",
                                "devtools/client/jsonview/utils");
 
@@ -31,14 +30,11 @@ const SEGMENT_SIZE = Math.pow(2, 17);
 const JSON_VIEW_MIME_TYPE = "application/vnd.mozilla.json.view";
 const CONTRACT_ID = "@mozilla.org/streamconv;1?from=" +
   JSON_VIEW_MIME_TYPE + "&to=*/*";
-const CLASS_ID = components.ID("{d8c9acee-dec5-11e4-8c75-1681e6b88ec1}");
-const CLASS_DESCRIPTION = "JSONView converter";
+const CLASS_ID = "{d8c9acee-dec5-11e4-8c75-1681e6b88ec1}";
 
 // Localization
-loader.lazyGetter(this, "jsonViewStrings", () => {
-  return Services.strings.createBundle(
-    "chrome://devtools/locale/jsonview.properties");
-});
+let jsonViewStrings = Services.strings.createBundle(
+  "chrome://devtools/locale/jsonview.properties");
 
 /**
  * This object detects 'application/vnd.mozilla.json.view' content type
@@ -47,14 +43,14 @@ loader.lazyGetter(this, "jsonViewStrings", () => {
  *
  * Inspired by JSON View: https://github.com/bhollis/jsonview/
  */
-function Converter() {}
+let Converter = Class({
+  extends: Unknown,
 
-Converter.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIStreamConverter,
-    Ci.nsIStreamListener,
-    Ci.nsIRequestObserver
-  ]),
+  interfaces: [
+    "nsIStreamConverter",
+    "nsIStreamListener",
+    "nsIRequestObserver"
+  ],
 
   get wrappedJSObject() {
     return this;
@@ -305,32 +301,28 @@ Converter.prototype = {
 
     Clipboard.set(value, "text");
   }
-};
+});
 
-const Factory = {
-  createInstance: function (outer, iid) {
-    if (outer) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    }
-    return new Converter();
-  }
-};
+// Stream converter component definition
+let service = xpcom.Service({
+  id: components.ID(CLASS_ID),
+  contract: CONTRACT_ID,
+  Component: Converter,
+  register: false,
+  unregister: false
+});
 
 function register() {
-  if (!registrar.isCIDRegistered(CLASS_ID)) {
-    registrar.registerFactory(CLASS_ID,
-      CLASS_DESCRIPTION,
-      CONTRACT_ID,
-      Factory);
+  if (!xpcom.isRegistered(service)) {
+    xpcom.register(service);
     return true;
   }
-
   return false;
 }
 
 function unregister() {
-  if (registrar.isCIDRegistered(CLASS_ID)) {
-    registrar.unregisterFactory(CLASS_ID, Factory);
+  if (xpcom.isRegistered(service)) {
+    xpcom.unregister(service);
     return true;
   }
   return false;
