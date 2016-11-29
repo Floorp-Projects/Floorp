@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -78,27 +79,25 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         return view;
     }
 
-    public void show(JSONObject message) {
-        String title = message.optString("title");
-        String text = message.optString("text");
-        mGuid = message.optString("guid");
+    public void show(GeckoBundle message) {
+        String title = message.getString("title");
+        String text = message.getString("text");
+        mGuid = message.getString("guid");
 
-        mButtons = getStringArray(message, "buttons");
+        mButtons = message.getStringArray("buttons");
         final int buttonCount = mButtons == null ? 0 : mButtons.length;
-        mDoubleTapButtonType = convertIndexToButtonType(message.optInt("doubleTapButton", -1), buttonCount);
+        mDoubleTapButtonType = convertIndexToButtonType(message.getInt("doubleTapButton", -1), buttonCount);
         mPreviousInputValue = null;
 
-        JSONArray inputs = getSafeArray(message, "inputs");
-        mInputs = new PromptInput[inputs.length()];
+        GeckoBundle[] inputs = message.getBundleArray("inputs");
+        mInputs = new PromptInput[inputs != null ? inputs.length : 0];
         for (int i = 0; i < mInputs.length; i++) {
-            try {
-                mInputs[i] = PromptInput.getInput(inputs.getJSONObject(i));
-                mInputs[i].setListener(this);
-            } catch (Exception ex) { }
+            mInputs[i] = PromptInput.getInput(inputs[i]);
+            mInputs[i].setListener(this);
         }
 
-        PromptListItem[] menuitems = PromptListItem.getArray(message.optJSONArray("listitems"));
-        String selected = message.optString("choiceMode");
+        PromptListItem[] menuitems = PromptListItem.getArray(message.getBundleArray("listitems"));
+        String selected = message.getString("choiceMode");
 
         int choiceMode = ListView.CHOICE_MODE_NONE;
         if ("single".equals(selected)) {
@@ -107,9 +106,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             choiceMode = ListView.CHOICE_MODE_MULTIPLE;
         }
 
-        if (message.has("tabId")) {
-            mTabId = message.optInt("tabId", Tabs.INVALID_TAB_ID);
-        }
+        mTabId = message.getInt("tabId", Tabs.INVALID_TAB_ID);
 
         show(title, text, menuitems, choiceMode);
     }
@@ -538,41 +535,6 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         }
         mPreviousInputValue = inputValue;
         return false;
-    }
-
-    private static JSONArray getSafeArray(JSONObject json, String key) {
-        try {
-            return json.getJSONArray(key);
-        } catch (Exception e) {
-            return new JSONArray();
-        }
-    }
-
-    public static String[] getStringArray(JSONObject aObject, String aName) {
-        JSONArray items = getSafeArray(aObject, aName);
-        int length = items.length();
-        String[] list = new String[length];
-        for (int i = 0; i < length; i++) {
-            try {
-                list[i] = items.getString(i);
-            } catch (Exception ex) { }
-        }
-        return list;
-    }
-
-    private static boolean[] getBooleanArray(JSONObject aObject, String aName) {
-        JSONArray items = new JSONArray();
-        try {
-            items = aObject.getJSONArray(aName);
-        } catch (Exception ex) { return null; }
-        int length = items.length();
-        boolean[] list = new boolean[length];
-        for (int i = 0; i < length; i++) {
-            try {
-                list[i] = items.getBoolean(i);
-            } catch (Exception ex) { }
-        }
-        return list;
     }
 
     public interface PromptCallback {
