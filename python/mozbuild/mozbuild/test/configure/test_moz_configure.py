@@ -31,15 +31,15 @@ class TestMozConfigure(BaseConfigureTest):
                           get_value_for(['--enable-application=browser']))
 
         self.assertEquals('--enable-application=browser '
-                          'MOZ_PROFILING=1',
+                          'MOZ_VTUNE=1',
                           get_value_for(['--enable-application=browser',
-                                         'MOZ_PROFILING=1']))
+                                         'MOZ_VTUNE=1']))
 
         value = get_value_for(
-            environ={'MOZ_PROFILING': '1'},
+            environ={'MOZ_VTUNE': '1'},
             mozconfig='ac_add_options --enable-project=js')
 
-        self.assertEquals('--enable-project=js MOZ_PROFILING=1',
+        self.assertEquals('--enable-project=js MOZ_VTUNE=1',
                           value)
 
         # --disable-js-shell is the default, so it's filtered out.
