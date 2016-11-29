@@ -679,20 +679,6 @@ nsresult nsNPAPIPluginInstance::GetNPP(NPP* aNPP)
 NPError nsNPAPIPluginInstance::SetWindowless(bool aWindowless)
 {
   mWindowless = aWindowless;
-
-  if (mMIMEType) {
-    // bug 558434 - Prior to 3.6.4, we assumed windowless was transparent.
-    // Silverlight apparently relied on this quirk, so we default to
-    // transparent unless they specify otherwise after setting the windowless
-    // property. (Last tested version: sl 4.0).
-    // Changes to this code should be matched with changes in
-    // PluginInstanceChild::InitQuirksMode.
-    if (nsPluginHost::GetSpecialType(nsDependentCString(mMIMEType)) ==
-        nsPluginHost::eSpecialType_Silverlight) {
-      mTransparent = true;
-    }
-  }
-
   return NPERR_NO_ERROR;
 }
 
