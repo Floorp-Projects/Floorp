@@ -14,4 +14,7 @@ createEnum([
   // Update the entire grids state with the new list of grids.
   "UPDATE_GRIDS",
 
+  // Update the grid highlighter's show infinite lines state.
+  "UPDATE_SHOW_INFINITE_LINES",
+
 ], module.exports);
