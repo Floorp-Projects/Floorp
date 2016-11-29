@@ -3946,7 +3946,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetTabSize()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetNumber(StyleText()->mTabSize);
+  SetValueToCoord(val, StyleText()->mTabSize, true);
   return val.forget();
 }
 

@@ -44,7 +44,7 @@ function Tests()
     observe: function(subject, topic, type) {
       if (topic == "dom-storage2-changed") {
         ok(expectedTypes.length > 0, "Not more then expected events encountered");
-        is(type, expectedTypes.shift(), "Expected type of the storage notificaiton");
+        is(type, expectedTypes.shift(), "Expected type of the storage notification");
         tests.next();
       }
     }

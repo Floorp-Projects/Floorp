@@ -200,11 +200,11 @@ public:
   RefreshResult RequestRefresh(AnimationState& aState, const TimeStamp& aTime);
 
   /**
-   * If we have a composited frame for @aFrameNum, returns it. Otherwise,
-   * returns an empty LookupResult. It is an error to call this method with
-   * aFrameNum == 0, because the first frame is never composited.
+   * Get the full frame for the current frame of the animation (it may or may
+   * not have required compositing). It may not be available because it hasn't
+   * been decoded yet, in which case we return an empty LookupResult.
    */
-  LookupResult GetCompositedFrame(uint32_t aFrameNum);
+  LookupResult GetCompositedFrame(AnimationState& aState);
 
   /**
    * Collect an accounting of the memory occupied by the compositing surfaces we
