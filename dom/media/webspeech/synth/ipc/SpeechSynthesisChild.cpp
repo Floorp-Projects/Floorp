@@ -131,9 +131,11 @@ SpeechSynthesisRequestChild::RecvOnResume(const float& aElapsedTime,
 mozilla::ipc::IPCResult
 SpeechSynthesisRequestChild::RecvOnBoundary(const nsString& aName,
                                             const float& aElapsedTime,
-                                            const uint32_t& aCharIndex)
+                                            const uint32_t& aCharIndex,
+                                            const uint32_t& aCharLength,
+                                            const uint8_t& argc)
 {
-  mTask->DispatchBoundaryImpl(aName, aElapsedTime, aCharIndex);
+  mTask->DispatchBoundaryImpl(aName, aElapsedTime, aCharIndex, aCharLength, argc);
   return IPC_OK();
 }
 

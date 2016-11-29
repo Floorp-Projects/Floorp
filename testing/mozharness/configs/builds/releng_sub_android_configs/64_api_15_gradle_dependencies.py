@@ -11,6 +11,7 @@ config = {
          'assembleAutomationDebug',
          'assembleAutomationDebugAndroidTest',
          'checkstyle',
+         'findbugsAutomationDebug',
          # Does not include Gecko binaries -- see mobile/android/gradle/with_gecko_binaries.gradle.
          'geckoview:assembleWithoutGeckoBinaries',
          # So that we pick up the test dependencies for the builders.

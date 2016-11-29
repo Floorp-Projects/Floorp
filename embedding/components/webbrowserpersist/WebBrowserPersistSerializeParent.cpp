@@ -25,9 +25,7 @@ WebBrowserPersistSerializeParent::WebBrowserPersistSerializeParent(
     MOZ_ASSERT(aFinish);
 }
 
-WebBrowserPersistSerializeParent::~WebBrowserPersistSerializeParent()
-{
-}
+WebBrowserPersistSerializeParent::~WebBrowserPersistSerializeParent() = default;
 
 mozilla::ipc::IPCResult
 WebBrowserPersistSerializeParent::RecvWriteData(nsTArray<uint8_t>&& aData)

@@ -2140,7 +2140,7 @@ ASTSerializer::exportDeclaration(ParseNode* pn, MutableHandleValue dst)
     MOZ_ASSERT(pn->isKind(PNK_EXPORT) ||
                pn->isKind(PNK_EXPORT_FROM) ||
                pn->isKind(PNK_EXPORT_DEFAULT));
-    MOZ_ASSERT(pn->getArity() == pn->isKind(PNK_EXPORT) ? PN_UNARY : PN_BINARY);
+    MOZ_ASSERT(pn->getArity() == (pn->isKind(PNK_EXPORT) ? PN_UNARY : PN_BINARY));
     MOZ_ASSERT_IF(pn->isKind(PNK_EXPORT_FROM), pn->pn_right->isKind(PNK_STRING));
 
     RootedValue decl(cx, NullValue());

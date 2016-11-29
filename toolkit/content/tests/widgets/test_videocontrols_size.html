@@ -1,0 +1,179 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test - Size</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <video controls preload="auto" width="480" height="320"></video>
+  <video controls preload="auto" width="320" height="320"></video>
+  <video controls preload="auto" width="280" height="320"></video>
+  <video controls preload="auto" width="240" height="320"></video>
+  <video controls preload="auto" width="180" height="320"></video>
+  <video controls preload="auto" width="120" height="320"></video>
+  <video controls preload="auto" width="60" height="320"></video>
+  <video controls preload="auto" width="48" height="320"></video>
+  <video controls preload="auto" width="20" height="320"></video>
+
+  <video controls preload="auto" width="480" height="240"></video>
+  <video controls preload="auto" width="480" height="120"></video>
+  <video controls preload="auto" width="480" height="39"></video>
+</div>
+
+<pre id="test">
+<script clas="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  const domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
+    getService(SpecialPowers.Ci.inIDOMUtils);
+  const videoElems = [...document.getElementsByTagName("video")];
+  const testCases = [];
+
+  const buttonWidth = 30;
+  const minSrubberWidth = 48;
+  const minControlBarHeight = 40;
+  const minControlBarWidth = 48;
+  const minClickToPlaySize = 48;
+
+  function getElementName(elem) {
+    return elem.getAttribute("anonid") || elem.getAttribute("class");
+  }
+
+  function testButton(btn) {
+    if (btn.hidden) return;
+
+    const rect = btn.getBoundingClientRect();
+    const name = getElementName(btn);
+
+    is(rect.width, buttonWidth, `${name} should have correct width`);
+    is(rect.height, minControlBarHeight, `${name} should have correct height`);
+  }
+
+  function testScrubber(scrubber) {
+    if (scrubber.hidden) return;
+
+    const rect = scrubber.getBoundingClientRect();
+    const name = getElementName(scrubber);
+
+    ok(rect.width >= minSrubberWidth, `${name} should longer than ${minSrubberWidth}`);
+  }
+
+  function testUI(video) {
+    video.style.display = "block";
+    video.getBoundingClientRect();
+    video.style.display = "";
+
+    const videoRect = video.getBoundingClientRect();
+
+    const videoHeight = video.clientHeight;
+    const videoWidth = video.clientWidth;
+
+    const videoSizeMsg = `size:${videoRect.width}x${videoRect.height} -`;
+    const controlBar = getAnonElementWithinVideoByAttribute(video, "anonid", "controlBar");
+    const playBtn = getAnonElementWithinVideoByAttribute(video, "anonid", "playButton");
+    const scrubber = getAnonElementWithinVideoByAttribute(video, "anonid", "scrubberStack");
+    const positionDurationBox = getAnonElementWithinVideoByAttribute(video, "anonid", "positionDurationBox");
+    const durationLabel = positionDurationBox.getElementsByTagName("span")[0];
+    const muteBtn = getAnonElementWithinVideoByAttribute(video, "anonid", "muteButton");
+    const volumeStack = getAnonElementWithinVideoByAttribute(video, "anonid", "volumeStack");
+    const fullscreenBtn = getAnonElementWithinVideoByAttribute(video, "anonid", "fullscreenButton");
+    const clickToPlay = getAnonElementWithinVideoByAttribute(video, "anonid", "clickToPlay");
+
+
+    // Controls should show/hide according to the priority
+    const prioritizedControls = [
+      playBtn,
+      muteBtn,
+      fullscreenBtn,
+      positionDurationBox,
+      scrubber,
+      durationLabel,
+      volumeStack
+    ];
+
+    let stopAppend = false;
+    prioritizedControls.forEach(control => {
+      is(control.hidden, stopAppend = stopAppend || control.hidden,
+        `${videoSizeMsg} ${getElementName(control)} should ${stopAppend ? "hide" : "show"}`);
+    });
+
+
+    // All controls should fit in control bar container
+    const controls = [
+      playBtn,
+      scrubber,
+      positionDurationBox,
+      muteBtn,
+      volumeStack,
+      fullscreenBtn
+    ];
+
+    let widthSum = 0;
+    controls.forEach(control => {
+      widthSum += control.clientWidth;
+    });
+    ok(videoWidth >= widthSum,
+      `${videoSizeMsg} controlBar fit in video's width`);
+
+
+    // Control bar should show/hide according to video's dimensions
+    const shouldHideControlBar = videoHeight <= minControlBarHeight ||
+      videoWidth < minControlBarWidth;
+    is(controlBar.hidden, shouldHideControlBar, `${videoSizeMsg} controlBar show/hide`);
+
+    if (!shouldHideControlBar) {
+      is(controlBar.clientWidth, videoWidth, `control bar width should equal to video width`);
+
+      // Check all controls' dimensions
+      testButton(playBtn);
+      testButton(muteBtn);
+      testButton(fullscreenBtn);
+      testScrubber(scrubber);
+      testScrubber(volumeStack);
+    }
+
+
+    // ClickToPlay button should show if min size can fit in
+    const shouldHideClickToPlay = videoWidth <= minClickToPlaySize ||
+      (videoHeight - minClickToPlaySize) / 2 <= minControlBarHeight;
+    is(clickToPlay.hidden, shouldHideClickToPlay, `${videoSizeMsg} clickToPlay show/hide`);
+  }
+
+
+  testCases.push(() => Promise.all(videoElems.map(video => new Promise(resolve => {
+    video.addEventListener("loadedmetadata", resolve, false);
+    video.src = "seek_with_sound.ogg";
+  }))));
+
+  videoElems.forEach(video => {
+    testCases.push(() => new Promise(resolve => {
+      SimpleTest.executeSoon(() => {
+        testUI(video);
+        resolve();
+      });
+    }));
+  });
+
+  function executeTasks(tasks) {
+    return tasks.reduce((promise, task) => promise.then(task), Promise.resolve());
+  }
+
+  function start() {
+    executeTasks(testCases).then(SimpleTest.finish);
+  }
+
+  function loadevent() {
+    SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, start);
+  }
+
+  window.addEventListener("load", loadevent, false);
+</script>
+</pre>
+</body>
+</html>

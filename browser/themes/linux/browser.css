@@ -991,28 +991,14 @@ html|span.ac-emphasize-text-url {
   list-style-image: url("chrome://browser/skin/urlbar-star.svg#star-inverted");
 }
 
-.autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
-  list-style-image: url("chrome://browser/skin/places/autocomplete-star.png");
-  width: 16px;
-  height: 16px;
-}
-
 .ac-type-icon[type=keyword],
-.ac-site-icon[type=searchengine],
-.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage) {
+.ac-site-icon[type=searchengine] {
   list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon);
 }
 
 .ac-type-icon[type=keyword][selected],
-.ac-site-icon[type=searchengine][selected],
-.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage, selected) {
+.ac-site-icon[type=searchengine][selected] {
   list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon-inverted);
-}
-
-.autocomplete-treebody::-moz-tree-image(tag, treecolAutoCompleteImage) {
-  list-style-image: url("chrome://browser/skin/places/tag.png");
-  width: 16px;
-  height: 16px;
 }
 
 .ac-type-icon[type=switchtab],

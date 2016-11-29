@@ -19,9 +19,7 @@ nsAppStartupNotifier::nsAppStartupNotifier()
 {
 }
 
-nsAppStartupNotifier::~nsAppStartupNotifier()
-{
-}
+nsAppStartupNotifier::~nsAppStartupNotifier() = default;
 
 NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *someData)
 {

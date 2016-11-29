@@ -476,7 +476,8 @@ class VirtualenvManager(object):
         from pip.req import InstallRequirement
 
         req = InstallRequirement.from_line(package)
-        if req.check_if_exists():
+        req.check_if_exists()
+        if req.satisfied_by is not None:
             return
 
         args = [

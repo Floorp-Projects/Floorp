@@ -4,6 +4,7 @@
   <title>Video controls test - Error</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -21,8 +22,8 @@
     getService(SpecialPowers.Ci.inIDOMUtils);
 
   const video = document.getElementById("video");
-  const statusOverlay = getElementByAttribute("anonid", "statusOverlay");
-  const statusIcon = getElementByAttribute("anonid", "statusIcon");
+  const statusOverlay = getAnonElementWithinVideoByAttribute(video, "anonid", "statusOverlay");
+  const statusIcon = getAnonElementWithinVideoByAttribute(video, "anonid", "statusIcon");
 
   const testCases = [];
 
@@ -51,13 +52,6 @@
 
   function executeTestCases(tasks) {
     return tasks.reduce((promise, task) => promise.then(task), Promise.resolve());
-  }
-
-  function getElementByAttribute(aName, aValue) {
-    const videoControl = domUtils.getChildrenForNode(video, true)[1];
-
-    return SpecialPowers.wrap(document)
-      .getAnonymousElementByAttribute(videoControl, aName, aValue);
   }
 
   function startTest() {

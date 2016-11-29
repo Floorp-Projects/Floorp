@@ -231,6 +231,10 @@ public interface TelemetryContract {
      * Please keep this list sorted.
      */
     public enum Session {
+        // Started whenever the activity stream panel is visible. Stopped as soon as the panel is
+        // not visible anymore.
+        ACTIVITY_STREAM("activitystream.1"),
+
         // Awesomescreen (including frecency search) is active.
         AWESOMESCREEN("awesomescreen.1"),
 

@@ -86,9 +86,9 @@ final class LocalMediaDrmBridge implements GeckoMediaDrm {
 
     LocalMediaDrmBridge(String keySystem) throws Exception {
         if (AppConstants.Versions.preLollipop) {
+            Log.e(LOGTAG, "Pre-Lollipop should never enter here!!");
             mBridge = null;
-        } else if (AppConstants.Versions.feature21Plus &&
-                   AppConstants.Versions.preMarshmallow) {
+        } else if (AppConstants.Versions.preMarshmallow) {
             mBridge = new GeckoMediaDrmBridgeV21(keySystem);
         } else {
             mBridge = new GeckoMediaDrmBridgeV23(keySystem);

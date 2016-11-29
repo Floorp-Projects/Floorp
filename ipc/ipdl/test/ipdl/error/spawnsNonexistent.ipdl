@@ -1,6 +1,0 @@
-protocol spawnsNonexistent {
-    parent spawns Nonexistent;
-
-child: __delete__();
-state DEAD: send __delete__;
-};

@@ -37,7 +37,7 @@ protected:
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
-            fail("unexpected destruction!");  
+            fail("unexpected destruction!");
 
         passed("\n"
                "  average #ping-pong/sec:        %g\n"
@@ -72,6 +72,7 @@ private:
     int mPPTrialsToGo;
     int mPP5TrialsToGo;
     uint32_t mNumChildProcessedCompressedSpams;
+    uint32_t mWhichPong5;
 };
 
 
@@ -101,6 +102,7 @@ protected:
 
     uint32_t mLastSeqno;
     uint32_t mNumProcessedCompressedSpams;
+    uint32_t mWhichPing5;
 };
 
 

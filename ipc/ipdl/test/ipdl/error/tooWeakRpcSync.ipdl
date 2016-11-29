@@ -1,6 +1,0 @@
-sync protocol tooWeakRpcSync {
-
-    // it's an error to declare a sync protocol with an rpc message
-parent:
-  rpc Msg();
-};

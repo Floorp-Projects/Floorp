@@ -691,9 +691,6 @@ private:
 
   mozilla::MediaMetadataManager mMetadataManager;
 
-  // Track our request to update the buffered ranges
-  MozPromiseRequestHolder<MediaDecoderReader::BufferedUpdatePromise> mBufferedUpdateRequest;
-
   // True if we are back from DECODER_STATE_DORMANT state and
   // LoadedMetadataEvent was already sent.
   bool mSentLoadedMetadataEvent;

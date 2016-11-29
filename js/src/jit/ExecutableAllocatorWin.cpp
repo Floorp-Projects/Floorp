@@ -61,10 +61,10 @@ ExecutableAllocator::computeRandomAllocationAddress()
      * bits of randomness in our selection.
      * x64: [2GiB, 4TiB), with 25 bits of randomness.
      */
-#ifdef JS_CPU_X64
+#ifdef HAVE_64BIT_BUILD
     static const uintptr_t base = 0x0000000080000000;
     static const uintptr_t mask = 0x000003ffffff0000;
-#elif defined(JS_CPU_X86)
+#elif defined(_M_IX86) || defined(__i386__)
     static const uintptr_t base = 0x04000000;
     static const uintptr_t mask = 0x3fff0000;
 #else
@@ -81,7 +81,7 @@ ExecutableAllocator::computeRandomAllocationAddress()
     return (void*) (base | (rand & mask));
 }
 
-#ifdef JS_CPU_X64
+#ifdef HAVE_64BIT_BUILD
 static js::JitExceptionHandler sJitExceptionHandler;
 
 JS_FRIEND_API(void)
@@ -209,7 +209,7 @@ js::jit::AllocateExecutableMemory(void* addr, size_t bytes, unsigned permissions
 {
     MOZ_ASSERT(bytes % pageSize == 0);
 
-#ifdef JS_CPU_X64
+#ifdef HAVE_64BIT_BUILD
     if (sJitExceptionHandler)
         bytes += pageSize;
 #endif
@@ -218,7 +218,7 @@ js::jit::AllocateExecutableMemory(void* addr, size_t bytes, unsigned permissions
     if (!p)
         return nullptr;
 
-#ifdef JS_CPU_X64
+#ifdef HAVE_64BIT_BUILD
     if (sJitExceptionHandler) {
         if (!RegisterExecutableMemory(p, bytes, pageSize)) {
             VirtualFree(p, 0, MEM_RELEASE);
@@ -237,7 +237,7 @@ js::jit::DeallocateExecutableMemory(void* addr, size_t bytes, size_t pageSize)
 {
     MOZ_ASSERT(bytes % pageSize == 0);
 
-#ifdef JS_CPU_X64
+#ifdef HAVE_64BIT_BUILD
     if (sJitExceptionHandler) {
         addr = (uint8_t*)addr - pageSize;
         UnregisterExecutableMemory(addr, bytes, pageSize);

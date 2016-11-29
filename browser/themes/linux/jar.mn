@@ -10,7 +10,6 @@ browser.jar:
   skin/classic/browser/aboutSessionRestore-window-icon.png
   skin/classic/browser/aboutSyncTabs.css
 * skin/classic/browser/syncedtabs/sidebar.css     (syncedtabs/sidebar.css)
-  skin/classic/browser/actionicon-tab.png
 * skin/classic/browser/browser.css
 * skin/classic/browser/devedition.css
 * skin/classic/browser/browser-lightweightTheme.css
@@ -55,9 +54,7 @@ browser.jar:
   skin/classic/browser/feeds/feedIcon.png             (feeds/feedIcon.png)
   skin/classic/browser/feeds/feedIcon16.png           (feeds/feedIcon16.png)
   skin/classic/browser/feeds/subscribe.css            (feeds/subscribe.css)
-  skin/classic/browser/feeds/subscribe-ui.css         (feeds/subscribe-ui.css)
 * skin/classic/browser/newtab/newTab.css              (newtab/newTab.css)
-  skin/classic/browser/places/autocomplete-star.png   (places/autocomplete-star.png)
   skin/classic/browser/places/bookmarksMenu.png       (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png    (places/bookmarksToolbar.png)
   skin/classic/browser/places/bookmarksToolbar-menuPanel.png (places/bookmarksToolbar-menuPanel.png)

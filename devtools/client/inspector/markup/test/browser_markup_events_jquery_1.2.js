@@ -85,7 +85,7 @@ const TEST_DATA = [
           "Bubbling",
           "DOM0"
         ],
-        handler: "handle: function(event) {\n" +
+        handler: "function(event) {\n" +
                  "  if (typeof jQuery == \"undefined\") return false;\n" +
                  "\n" +
                  "  // Empty object is for triggered events with no data\n" +
@@ -129,7 +129,7 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler7 = function divClick1() {\n" +
+        handler: "function divClick1() {\n" +
                  "  alert(7);\n" +
                  "}"
       },
@@ -139,7 +139,7 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler8 = function divClick2() {\n" +
+        handler: "function divClick2() {\n" +
                  "  alert(8);\n" +
                  "}"
       },
@@ -163,7 +163,7 @@ const TEST_DATA = [
         attributes: [
           "jQuery"
         ],
-        handler: "var handler9 = function divKeyDown() {\n" +
+        handler: "function divKeyDown() {\n" +
                  "  alert(9);\n" +
                  "}"
       },
