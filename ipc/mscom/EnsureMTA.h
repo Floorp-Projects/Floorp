@@ -10,7 +10,6 @@
 #include "MainThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Function.h"
 #include "mozilla/mscom/COMApartmentRegion.h"
 #include "mozilla/mscom/Utils.h"
 #include "nsCOMPtr.h"

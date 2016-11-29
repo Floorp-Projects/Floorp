@@ -17,7 +17,6 @@ const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/u
 const {createChild} = require("devtools/client/inspector/shared/utils");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
-const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
 const {
   VIEW_NODE_SELECTOR_TYPE,
   VIEW_NODE_PROPERTY_TYPE,
@@ -152,6 +151,7 @@ UpdateProcess.prototype = {
  */
 function CssComputedView(inspector, document, pageStyle) {
   this.inspector = inspector;
+  this.highlighters = inspector.highlighters;
   this.styleDocument = document;
   this.styleWindow = this.styleDocument.defaultView;
   this.pageStyle = pageStyle;
@@ -216,8 +216,7 @@ function CssComputedView(inspector, document, pageStyle) {
   this.tooltips = new TooltipsOverlay(this);
   this.tooltips.addToView();
 
-  this.highlighters = new HighlightersOverlay(this);
-  this.highlighters.addToView();
+  this.highlighters.addToView(this);
 }
 
 /**
@@ -753,7 +752,7 @@ CssComputedView.prototype = {
     }
 
     this.tooltips.destroy();
-    this.highlighters.destroy();
+    this.highlighters.removeFromView(this);
 
     // Remove bound listeners
     this.styleDocument.removeEventListener("mousedown", this.focusWindow);
@@ -781,6 +780,7 @@ CssComputedView.prototype = {
     this.propertyViews = null;
 
     this.inspector = null;
+    this.highlighters = null;
     this.styleDocument = null;
     this.styleWindow = null;
 

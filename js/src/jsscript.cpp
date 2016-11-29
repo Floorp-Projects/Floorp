@@ -318,6 +318,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
         IsStarGenerator,
         IsAsync,
         HasRest,
+        IsExprBody,
         OwnSource,
         ExplicitUseStrict,
         SelfHosted,
@@ -435,6 +436,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
             scriptBits |= (1 << IsAsync);
         if (script->hasRest())
             scriptBits |= (1 << HasRest);
+        if (script->isExprBody())
+            scriptBits |= (1 << IsExprBody);
         if (script->hasSingletons())
             scriptBits |= (1 << HasSingleton);
         if (script->treatAsRunOnce())
@@ -588,6 +591,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
             script->setAsyncKind(AsyncFunction);
         if (scriptBits & (1 << HasRest))
             script->setHasRest();
+        if (scriptBits & (1 << IsExprBody))
+            script->setIsExprBody();
     }
 
     JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
@@ -2630,6 +2635,8 @@ JSScript::initFromFunctionBox(ExclusiveContext* cx, HandleScript script,
     script->setAsyncKind(funbox->asyncKind());
     if (funbox->hasRest())
         script->setHasRest();
+    if (funbox->isExprBody())
+        script->setIsExprBody();
 
     PositionalFormalParameterIter fi(script);
     while (fi && !fi.closedOver())
@@ -3119,8 +3126,6 @@ Rebase(JSScript* dst, JSScript* src, T* srcp)
 static JSObject*
 CloneInnerInterpretedFunction(JSContext* cx, HandleScope enclosingScope, HandleFunction srcFun)
 {
-    /* async function should not appear as inner function. */
-    MOZ_ASSERT(!srcFun->isAsync());
     /* NB: Keep this in sync with XDRInterpretedFunction. */
     RootedObject cloneProto(cx);
     if (srcFun->isStarGenerator()) {
@@ -3291,6 +3296,7 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     dst->isDefaultClassConstructor_ = src->isDefaultClassConstructor();
     dst->isAsync_ = src->asyncKind() == AsyncFunction;
     dst->hasRest_ = src->hasRest_;
+    dst->isExprBody_ = src->isExprBody_;
 
     if (nconsts != 0) {
         GCPtrValue* vector = Rebase<GCPtrValue>(dst, src, src->consts()->vector);
@@ -4025,6 +4031,7 @@ LazyScript::Create(ExclusiveContext* cx, HandleFunction fun,
     p.hasThisBinding = false;
     p.isAsync = false;
     p.hasRest = false;
+    p.isExprBody = false;
     p.numClosedOverBindings = closedOverBindings.length();
     p.numInnerFunctions = innerFunctions.length();
     p.generatorKindBits = GeneratorKindAsBits(NotGenerator);

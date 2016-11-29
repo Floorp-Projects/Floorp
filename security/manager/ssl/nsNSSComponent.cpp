@@ -1411,6 +1411,11 @@ nsNSSComponent::FillTLSVersionRange(SSLVersionRange& rangeOut,
     return;
   }
 
+  // Clip the defaults by what NSS actually supports to enable
+  // working with a system NSS with different ranges.
+  rangeOut.min = std::max(rangeOut.min, supported.min);
+  rangeOut.max = std::min(rangeOut.max, supported.max);
+
   // convert min/maxFromPrefs to the internal representation
   minFromPrefs += SSL_LIBRARY_VERSION_3_0;
   maxFromPrefs += SSL_LIBRARY_VERSION_3_0;

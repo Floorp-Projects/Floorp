@@ -10,7 +10,6 @@
 #include <stdint.h>
 #include <string>
 #include "mozilla/Assertions.h"
-#include "mozilla/Function.h"
 #include "mozilla/gfx/LoggingConstants.h"
 #include "nsTArray.h"
 

@@ -790,7 +790,7 @@ HttpObserverManager = {
       Cu.reportError(e);
     }
 
-    // Only resume the channel if either it was suspended by this call.
+    // Only resume the channel if it was suspended by this call.
     if (shouldResume) {
       this.maybeResume(channel);
     }
