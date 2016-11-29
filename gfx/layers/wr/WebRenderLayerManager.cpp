@@ -9,6 +9,7 @@
 #include "LayersLogging.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"

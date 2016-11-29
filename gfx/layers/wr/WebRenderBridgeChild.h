@@ -24,7 +24,7 @@ class TextureForwarder;
 class WebRenderBridgeChild final : public PWebRenderBridgeChild
                                  , public KnowsCompositor
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeChild, override)
 
 public:
   explicit WebRenderBridgeChild(const uint64_t& aPipelineId);
@@ -36,8 +36,8 @@ public:
 
   CompositorBridgeChild* GetCompositorBridgeChild();
   // KnowsCompositor
-  TextureForwarder* GetTextureForwarder();
-  LayersIPCActor* GetLayersIPCActor();
+  TextureForwarder* GetTextureForwarder() override;
+  LayersIPCActor* GetLayersIPCActor() override;
 
   uint64_t AllocExternalImageId(uint64_t aAsyncContainerID);
   void DeallocExternalImageId(uint64_t aImageId);
