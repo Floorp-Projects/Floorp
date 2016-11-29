@@ -24,6 +24,15 @@ public:
                       nsLayoutUtils::IntrinsicISizeType);
   virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
+  virtual mozilla::LogicalSize
+  ComputeSize(nsRenderingContext *aRenderingContext,
+              mozilla::WritingMode aWritingMode,
+              const mozilla::LogicalSize& aCBSize,
+              nscoord aAvailableISize,
+              const mozilla::LogicalSize& aMargin,
+              const mozilla::LogicalSize& aBorder,
+              const mozilla::LogicalSize& aPadding,
+              ComputeSizeFlags aFlags) override;
   virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
 
   /**

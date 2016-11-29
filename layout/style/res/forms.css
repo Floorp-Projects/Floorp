@@ -71,7 +71,6 @@ fieldset {
   padding-inline-start: 0.625em;
   padding-inline-end: 0.625em;
   border: 2px groove ThreeDLightShadow;
-  min-width: -moz-min-content;
 }
 
 label {
