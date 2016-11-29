@@ -260,7 +260,7 @@ SourceBuffer::RangeRemoval(double aStart, double aEnd)
   RefPtr<SourceBuffer> self = this;
     mTrackBuffersManager->RangeRemoval(TimeUnit::FromSeconds(aStart),
                                        TimeUnit::FromSeconds(aEnd))
-      ->Then(AbstractThread::MainThread(), __func__,
+      ->Then(mAbstractMainThread, __func__,
              [self] (bool) {
                self->mPendingRemoval.Complete();
                self->StopUpdating();
@@ -301,6 +301,7 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource,
                            const MediaContainerType& aType)
   : DOMEventTargetHelper(aMediaSource->GetParentObject())
   , mMediaSource(aMediaSource)
+  , mAbstractMainThread(aMediaSource->AbstractMainThread())
   , mCurrentAttributes(aType.Type() == MEDIAMIMETYPE("audio/mpeg") ||
                        aType.Type() == MEDIAMIMETYPE("audio/aac"))
   , mUpdating(false)
@@ -417,7 +418,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   StartUpdating();
 
   mTrackBuffersManager->AppendData(data, mCurrentAttributes)
-    ->Then(AbstractThread::MainThread(), __func__, this,
+    ->Then(mAbstractMainThread, __func__, this,
            &SourceBuffer::AppendDataCompletedWithSuccess,
            &SourceBuffer::AppendDataErrored)
     ->Track(mPendingAppend);

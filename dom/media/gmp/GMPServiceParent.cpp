@@ -7,6 +7,7 @@
 #include "GMPService.h"
 #include "prio.h"
 #include "base/task.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/ContentParent.h"
 #include "GMPParent.h"
@@ -614,7 +615,9 @@ GeckoMediaPluginServiceParent::AsyncAddPluginDirectory(const nsAString& aDirecto
   return InvokeAsync<nsString&&>(
            thread, this, __func__,
            &GeckoMediaPluginServiceParent::AddOnGMPThread, dir)
-    ->Then(AbstractThread::MainThread(), __func__,
+    ->Then(
+      AbstractThread::MainThread(), // Non DocGroup-version for the task in parent.
+      __func__,
       [dir, self]() -> void {
         LOGD(("GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s succeeded",
               NS_ConvertUTF16toUTF8(dir).get()));

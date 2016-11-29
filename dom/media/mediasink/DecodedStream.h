@@ -34,6 +34,7 @@ class DecodedStream : public media::MediaSink {
 
 public:
   DecodedStream(AbstractThread* aOwnerThread,
+                AbstractThread* aMainThread,
                 MediaQueue<MediaData>& aAudioQueue,
                 MediaQueue<MediaData>& aVideoQueue,
                 OutputStreamManager* aOutputStreamManager,
@@ -84,6 +85,8 @@ private:
   void DisconnectListener();
 
   const RefPtr<AbstractThread> mOwnerThread;
+
+  const RefPtr<AbstractThread> mAbstractMainThread;
 
   /*
    * Main thread only members.
