@@ -195,7 +195,14 @@ class KintoServer {
 
       const records = this.collections.get(collectionId);
       // Can't JSON a Set directly, so convert to Array
-      const data = Array.from(records);
+      let data = Array.from(records);
+      if (request.queryString.includes("_since=")) {
+        data = data.filter(r => !(r._inPast || false));
+      }
+
+      // Remove records that we only needed to serve once.
+      // FIXME: come up with a more coherent idea of time here.
+      // See bug 1321570.
       for (const record of records) {
         if (record._onlyOnce) {
           records.delete(record);
@@ -254,9 +261,27 @@ class KintoServer {
                      "storage-sync-crypto", keysRecord);
   }
 
+  // Add an already-encrypted record.
+  addRecord(collectionId, record) {
+    this.collections.get(collectionId).add(record);
+  }
+
+  // Add a record that is only served if no `_since` is present.
+  //
+  // Since in real life, Kinto only serves a record as part of a
+  // changes feed if `_since` is before the record's modification
+  // time, this can be helpful to test certain kinds of syncing logic.
+  //
+  // FIXME: tracking of "time" in this mock server really needs to be
+  // implemented correctly rather than these hacks. See bug 1321570.
+  addRecordInPast(collectionId, record) {
+    record._inPast = true;
+    this.addRecord(collectionId, record);
+  }
+
   encryptAndAddRecord(transformer, collectionId, record) {
     return transformer.encode(record).then(encrypted => {
-      this.collections.get(collectionId).add(encrypted);
+      this.addRecord(collectionId, encrypted);
     });
   }
 
@@ -265,10 +290,13 @@ class KintoServer {
   //
   // Since in real life, Kinto only serves a record as part of a changes feed
   // once, this can be useful for testing complicated syncing logic.
+  //
+  // FIXME: This kind of logic really needs to be subsumed into some
+  // more-realistic tracking of "time" (simulated by etags). See bug 1321570.
   encryptAndAddRecordOnlyOnce(transformer, collectionId, record) {
     return transformer.encode(record).then(encrypted => {
       encrypted._onlyOnce = true;
-      this.collections.get(collectionId).add(encrypted);
+      this.addRecord(collectionId, encrypted);
     });
   }
 
@@ -405,7 +433,7 @@ const defaultCollectionId = extensionIdToCollectionId(loggedInUser, defaultExten
 
 function uuid() {
   const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-  return uuidgen.generateUUID();
+  return uuidgen.generateUUID().toString();
 }
 
 add_task(function* test_key_to_id() {
@@ -463,6 +491,29 @@ add_task(function* ensureKeysFor_posts_new_keys() {
       assertPostedNewRecord(post);
       const body = yield assertPostedEncryptedKeys(post);
       ok(body.keys.collections[extensionId], `keys object should have a key for ${extensionId}`);
+
+      // Try adding another key to make sure that the first post was
+      // OK, even on a new profile.
+      yield cryptoCollection._clear();
+      server.clearPosts();
+      // Restore the first posted keyring
+      server.addRecordInPast("storage-sync-crypto", post.body.data);
+      const extensionId2 = uuid();
+      newKeys = yield ExtensionStorageSync.ensureKeysFor([extensionId2]);
+      ok(newKeys.hasKeysFor([extensionId]), `didn't forget key for ${extensionId}`);
+      ok(newKeys.hasKeysFor([extensionId2]), `new key generated for ${extensionId2}`);
+
+      posts = server.getPosts();
+      // FIXME: some kind of bug where we try to repush the
+      // server_wins version multiple times in a single sync. We
+      // actually push 5 times as of this writing.
+      // See bug 1321571.
+      // equal(posts.length, 1);
+      const newPost = posts[posts.length - 1];
+      const newBody = yield assertPostedEncryptedKeys(newPost);
+      ok(newBody.keys.collections[extensionId], `keys object should have a key for ${extensionId}`);
+      ok(newBody.keys.collections[extensionId2], `keys object should have a key for ${extensionId2}`);
+
     });
   });
 });
@@ -668,6 +719,7 @@ add_task(function* checkSyncKeyRing_overwrites_on_conflict() {
 
         let body = yield new KeyRingEncryptionRemoteTransformer().decode(postedKeys.body.data);
         ok(body.uuid, "new keyring should have a UUID");
+        equal(typeof body.uuid, "string", "keyring UUIDs should be strings");
         notEqual(body.uuid, "abcd",
                  "new keyring should not have the same UUID as previous keyring");
         ok(body.keys,
