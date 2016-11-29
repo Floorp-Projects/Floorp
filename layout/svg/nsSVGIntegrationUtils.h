@@ -6,6 +6,7 @@
 #ifndef NSSVGINTEGRATIONUTILS_H_
 #define NSSVGINTEGRATIONUTILS_H_
 
+#include "DrawResult.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "nsRegionFwd.h"

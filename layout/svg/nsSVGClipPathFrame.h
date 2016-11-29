@@ -155,8 +155,8 @@ private:
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM() override;
 
-  already_AddRefed<DrawTarget>
-  CreateClipMask(gfxContext& aReferenceContext, IntPoint& aOffset);
+  already_AddRefed<DrawTarget> CreateClipMask(gfxContext& aReferenceContext,
+                                              mozilla::gfx::IntPoint& aOffset);
 
   DrawResult PaintFrameIntoMask(nsIFrame *aFrame, nsIFrame* aClippedFrame,
                                 gfxContext& aTarget, const gfxMatrix& aMatrix);

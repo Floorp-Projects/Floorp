@@ -7,6 +7,7 @@
 #include "nsSVGClipPathFrame.h"
 
 // Keep others in (case-insensitive) order:
+#include "DrawResult.h"
 #include "gfxContext.h"
 #include "mozilla/dom/SVGClipPathElement.h"
 #include "nsGkAtoms.h"
@@ -18,6 +19,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
+using namespace mozilla::image;
 
 // Arbitrary number
 #define MAX_SVG_CLIP_PATH_REFERENCE_CHAIN_LENGTH int16_t(512)
