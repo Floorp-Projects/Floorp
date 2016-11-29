@@ -23,6 +23,7 @@ function debug(msg) {
  * list at /devtools/client/responsive.html/docs/browser-swap.md.
  */
 const SWAPPED_BROWSER_STATE = [
+  "_remoteFinder",
   "_securityUI",
   "_documentURI",
   "_documentContentType",
