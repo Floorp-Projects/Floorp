@@ -97,6 +97,7 @@ const SplitBox = React.createClass({
     const win = doc.defaultView;
 
     let size;
+    let ratio = win.devicePixelRatio || 1;
     let { endPanelControl } = this.props;
 
     if (this.state.vert) {
@@ -107,7 +108,7 @@ const SplitBox = React.createClass({
         endPanelControl = !endPanelControl;
       }
 
-      let innerOffset = x - win.mozInnerScreenX;
+      let innerOffset = (x / ratio) - win.mozInnerScreenX;
       size = endPanelControl ?
         (node.offsetLeft + node.offsetWidth) - innerOffset :
         innerOffset - node.offsetLeft;
@@ -116,7 +117,7 @@ const SplitBox = React.createClass({
         width: size
       });
     } else {
-      let innerOffset = y - win.mozInnerScreenY;
+      let innerOffset = (y / ratio) - win.mozInnerScreenY;
       size = endPanelControl ?
         (node.offsetTop + node.offsetHeight) - innerOffset :
         innerOffset - node.offsetTop;
