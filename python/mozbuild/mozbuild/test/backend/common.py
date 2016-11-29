@@ -52,6 +52,17 @@ CONFIGS = defaultdict(lambda: {
             'COMPILE_ENVIRONMENT': '1',
         },
     },
+    'rust-programs': {
+        'defines': {},
+        'non_global_defines': [],
+        'substs': {
+            'COMPILE_ENVIRONMENT': '1',
+            'RUST_TARGET': 'i686-pc-windows-msvc',
+            'RUST_HOST_TARGET': 'i686-pc-windows-msvc',
+            'BIN_SUFFIX': '.exe',
+            'HOST_BIN_SUFFIX': '.exe',
+        },
+    },
     'sources': {
         'defines': {},
         'non_global_defines': [],
