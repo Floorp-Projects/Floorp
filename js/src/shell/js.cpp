@@ -2676,7 +2676,7 @@ DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun,
             if (sp->put(" CONSTRUCTOR") < 0)
                 return false;
         }
-        if (fun->isExprBody()) {
+        if (script->isExprBody()) {
             if (sp->put(" EXPRESSION_CLOSURE") < 0)
                 return false;
         }
