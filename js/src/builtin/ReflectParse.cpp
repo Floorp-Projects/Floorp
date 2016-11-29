@@ -3407,12 +3407,7 @@ ASTSerializer::function(ParseNode* pn, ASTType type, MutableHandleValue dst)
         : GeneratorStyle::None;
 
     bool isAsync = pn->pn_funbox->isAsync();
-    bool isExpression =
-#if JS_HAS_EXPR_CLOSURES
-        func->isExprBody();
-#else
-        false;
-#endif
+    bool isExpression = pn->pn_funbox->isExprBody();
 
     RootedValue id(cx);
     RootedAtom funcAtom(cx, func->name());

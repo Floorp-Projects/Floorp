@@ -1020,8 +1020,6 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
             return nullptr;
         }
     } else {
-        MOZ_ASSERT(!fun->isExprBody());
-
         bool derived = fun->infallibleIsDefaultClassConstructor(cx);
         if (derived && fun->isDerivedClassConstructor()) {
             if (!out.append("(...args) {\n    ") ||

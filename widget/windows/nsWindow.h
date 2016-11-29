@@ -646,6 +646,13 @@ protected:
   static void InitMouseWheelScrollData();
 
   double mSizeConstraintsScale; // scale in effect when setting constraints
+
+  // Used to remember the wParam (i.e. currently pressed modifier keys)
+  // and lParam (i.e. last mouse position) in screen coordinates from
+  // the previous mouse-exit.  Static since it is not
+  // associated with a particular widget (since we exited the widget).
+  static WPARAM sMouseExitwParam;
+  static LPARAM sMouseExitlParamScreen;
 };
 
 /**

@@ -160,7 +160,10 @@ parent:
   sync Pause();
   sync Resume();
 
-  async NotifyChildCreated(uint64_t id);
+  // See bug 1316632 comment #33 for why this has to be sync. Otherwise,
+  // there are ordering issues with SendPLayerTransactionConstructor.
+  sync NotifyChildCreated(uint64_t id);
+
   async AdoptChild(uint64_t id);
 
   // Same as NotifyChildCreated, but used when child processes need to

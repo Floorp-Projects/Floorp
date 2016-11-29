@@ -208,3 +208,314 @@
    fun:_ZN6SkOptsL4initEv
    fun:sk_once_no_arg_adaptor
 }
+
+
+###################################################
+#  For valgrind-mochitest ("tc-M-V [tier 2]") runs on taskcluster.
+#  See bug 1248365.
+#  These are specific to Ubuntu 12.04.5, 64-bit.
+###################################################
+
+
+# Not sure what this is.  Is it the well-known
+# Memcheck-being-confused-by-zlib thing?  I suspect so.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xB6154E0: inflateReset2 (in /lib/x86_64-linux-gnu/libz.so.1.2.3.4)
+#    by 0xB6155D8: inflateInit2_ (in /lib/x86_64-linux-gnu/libz.so.1.2.3.4)
+#    by 0xADDE253: png_create_read_struct_2
+#                  (in /lib/x86_64-linux-gnu/libpng12.so.0.46.0)
+#  Uninitialised value was created by a heap allocation
+#    at 0x4C2D027: malloc (coregrind/m_replacemalloc/vg_replace_malloc.c:298)
+#    by 0xADE960F: png_malloc (in /lib/x86_64-linux-gnu/libpng12.so.0.46.0)
+#    by 0xADD1B95: ??? (in /lib/x86_64-linux-gnu/libpng12.so.0.46.0)
+#    by 0xB6155B6: inflateInit2_ (in /lib/x86_64-linux-gnu/libz.so.1.2.3.4)
+#    by 0xADDE253: png_create_read_struct_2
+#                  (in /lib/x86_64-linux-gnu/libpng12.so.0.46.0)
+#    by 0x15707869: ??? (in /usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/
+#                   loaders/libpixbufloader-png.so)
+{
+   Bug 1248365: mochitest-libz-1
+   Memcheck:Cond
+   fun:inflateReset2
+   fun:inflateInit2_
+   fun:png_create_read_struct_2
+}
+
+
+# I don't know what this is.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x39608257: ??? (in /usr/lib/x86_64-linux-gnu/librsvg-2.so.2.36.1)
+#    by 0x39608E96: rsvg_handle_get_pixbuf_sub (in /usr/lib/x86_64-linux-gnu/l
+#    by 0x37D00D2A: ??? (in /usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/lo
+#    by 0x88FF740: gdk_pixbuf_loader_close (in /usr/lib/x86_64-linux-gnu/libgd
+#    by 0x88FBA48: ??? (in /usr/lib/x86_64-linux-gnu/libgdk_pixbuf-2.0.so.0.26
+#    by 0x88FD290: gdk_pixbuf_new_from_stream_at_scale (in /usr/lib/x86_64-lin
+#    by 0x6EF96A7: ??? (in /usr/lib/x86_64-linux-gnu/libgtk-3.so.0.400.2)
+#    by 0x6EFC2B1: gtk_icon_info_load_icon (in /usr/lib/x86_64-linux-gnu/libgt
+#  Uninitialised value was created by a stack allocation
+#    at 0xAB786B0: ??? (in /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.30.2)
+{
+   Bug 1248365: mochitest-librsvg-1
+   Memcheck:Cond
+   obj:/*/librsvg-2.so.2.36*
+   fun:rsvg_handle_get_pixbuf_sub
+   obj:/*/libpixbufloader-svg.so*
+   fun:gdk_pixbuf_loader_close
+}
+
+
+# There now follow some suppressions to do with libpixman.  There are two
+# variants, one for errors in the system libpixman, and one for errors in
+# our in-tree copy.  I suspect that all of these sse2 compositing reports
+# are Memcheck false positives, possibly to do with inaccurate
+# instrumentation of the function combine1() in
+# gfx/cairo/libpixman/src/pixman-sse2.c.
+#
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xAB93A10: ??? (in /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.30.2)
+#    by 0xAB78927: ??? (in /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.30.2)
+#    by 0xAB40B0B: pixman_image_composite32 (in /usr/lib/x86_64-linux-gnu/libp
+#    by 0x865C95C: ??? (in /usr/lib/x86_64-linux-gnu/libcairo.so.2.11000.2)
+#    by 0x865E3CB: ??? (in /usr/lib/x86_64-linux-gnu/libcairo.so.2.11000.2)
+#    by 0x865F6EA: ??? (in /usr/lib/x86_64-linux-gnu/libcairo.so.2.11000.2)
+#    by 0x865F968: ??? (in /usr/lib/x86_64-linux-gnu/libcairo.so.2.11000.2)
+#    by 0x867D7C3: ??? (in /usr/lib/x86_64-linux-gnu/libcairo.so.2.11000.2)
+#  Uninitialised value was created by a stack allocation
+#    at 0xAB786B0: ??? (in /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.30.2)
+{
+   Bug 1248365: mochitest-libpixman-1
+   Memcheck:Cond
+   obj:/*/libpixman-1.so.0.30*
+   obj:/*/libpixman-1.so.0.30*
+   fun:pixman_image_composite32
+}
+
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xF9EA219: sse2_composite_over_8888_8888
+#    by 0xF9F5B5F: _moz_pixman_image_composite32
+#    by 0xF96E29E: _clip_and_composite_boxes
+#    by 0xF96F79D: _cairo_image_surface_fill
+#    by 0xF98790C: _cairo_surface_fill
+#    by 0xF96FE2E: _cairo_gstate_fill
+#    by 0xF98B3D9: _moz_cairo_fill_preserve
+#    by 0xE4CF383: mozilla::gfx::DrawTargetCairo::DrawPattern(mozilla::gfx:
+#  Uninitialised value was created by a stack allocation
+#    at 0xB8E46B0: ??? (in /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.30.2)
+{
+   Bug 1248365: mochitest-libpixman-2
+   Memcheck:Cond
+   fun:sse2_composite_over_8888_8888
+   fun:_moz_pixman_image_composite32
+   fun:_clip_and_composite_boxes
+   fun:_cairo_image_surface_fill
+}
+
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xF9D56AE: sse2_combine_over_u (in /home/worker/workspace/build/applic
+#    by 0xF9D05D4: general_composite_rect (in /home/worker/workspace/build/app
+#    by 0xF9F5B5F: _moz_pixman_image_composite32 (in /home/worker/workspace/bu
+#    by 0xF96CF63: _clip_and_composite (in /home/worker/workspace/build/applic
+#    by 0xF96D656: _clip_and_composite_boxes.part.32 (in /home/worker/workspac
+#    by 0xF96E328: _clip_and_composite_boxes (in /home/worker/workspace/build/
+#    by 0xF96F79D: _cairo_image_surface_fill (in /home/worker/workspace/build/
+#    by 0xF98790C: _cairo_surface_fill (in /home/worker/workspace/build/applic
+#  Uninitialised value was created by a stack allocation
+#    at 0xF9D024D: general_composite_rect (in /home/worker/workspace/build/app
+#
+{
+   Bug 1248365: mochitest-libpixman-3
+   Memcheck:Cond
+   fun:sse2_combine_over_u
+   fun:general_composite_rect
+   fun:_moz_pixman_image_composite32
+   fun:_clip_and_composite*
+}
+
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0xE626A5C: mozilla::image::imgFrame::Optimize() (in /home/worker/work
+#    by 0xE626C68: mozilla::image::imgFrame::UnlockImageData() (in /home/work
+#    by 0xE608E8F: mozilla::image::RawAccessFrameRef::~RawAccessFrameRef() (i
+#    by 0xE61F5E4: mozilla::image::Decoder::~Decoder() (in /home/worker/works
+#    by 0xE630E32: mozilla::image::nsIconDecoder::~nsIconDecoder() (in /home/
+#    by 0xE61A5B2: mozilla::image::Decoder::Release() (in /home/worker/worksp
+#    by 0xE61DD73: mozilla::image::NotifyDecodeCompleteWorker::~NotifyDecodeC
+#    by 0xE61DD8F: mozilla::image::NotifyDecodeCompleteWorker::~NotifyDecodeC
+#  Uninitialised value was created by a stack allocation
+#    at 0xB8E46B0: ??? (in /usr/lib/x86_64-linux-gnu/libpixman-1.so.0.30.2)
+{
+   Bug 1248365: mochitest-libpixman-4
+   Memcheck:Cond
+   fun:_ZN7mozilla5image8imgFrame8OptimizeEv
+   fun:_ZN7mozilla5image8imgFrame15UnlockImageDataEv
+   fun:_ZN7mozilla5image17RawAccessFrameRefD1Ev
+   fun:_ZN7mozilla5image7DecoderD1Ev
+}
+
+
+# Not sure what this.  I can't reproduce it locally despite much trying.
+# Syscall param sendmsg(msg.msg_iov[0]) points to uninitialised byte(s)
+#    at 0x4E4533D: ??? (syscall-template.S:82)
+#    by 0xE12C0A7: IPC::Channel::ChannelImpl::ProcessOutgoingMessages() (in /h
+#    by 0xE142FD0: RunnableMethod<IPC::Channel, bool (IPC::Channel::*)(IPC::Me
+#    by 0xE1240EA: MessageLoop::RunTask(Task*) (in /home/worker/workspace/buil
+#    by 0xE128A46: MessageLoop::DeferOrRunPendingTask(MessageLoop::PendingTask
+#    by 0xE128B6D: MessageLoop::DoWork() (in /home/worker/workspace/build/appl
+#    by 0xE12272C: base::MessagePumpLibevent::Run(base::MessagePump::Delegate*
+#    by 0xE124155: MessageLoop::Run() (in /home/worker/workspace/build/applica
+{
+   Bug 1248365: mochitest-sendmsg-1
+   Memcheck:Param
+   sendmsg(msg.msg_iov[0])
+   obj:/lib/x86_64-linux-gnu/libpthread-2.15.so
+   fun:_ZN3IPC7Channel11ChannelImpl23ProcessOutgoingMessagesEv
+   fun:_ZN14RunnableMethodIN3IPC7ChannelEMS1_FbPNS0_7MessageEEN7mozilla5Tuple*
+}
+
+
+# I can't repro this either.
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x418E7E7C: ??? (in /usr/lib/x86_64-linux-gnu/libavcodec.so.53.35.0)
+#    by 0x4192D620: ??? (in /usr/lib/x86_64-linux-gnu/libavcodec.so.53.35.0)
+#    by 0x4192E717: ??? (in /usr/lib/x86_64-linux-gnu/libavcodec.so.53.35.0)
+#    by 0x41711BC4: ??? (in /usr/lib/x86_64-linux-gnu/libavcodec.so.53.35.0)
+#    by 0x41B08B6A: avcodec_open2 (in /usr/lib/x86_64-linux-gnu/libavcodec.so.
+#    by 0xEEAD89C: mozilla::FFmpegDataDecoder<53>::InitDecoder() (in /home/wor
+#    by 0xEEAE42B: mozilla::FFmpegVideoDecoder<53>::Init() (in /home/worker/wo
+#    by 0xEEA4C07: mozilla::H264Converter::Init() (in /home/worker/workspace/b
+#  Uninitialised value was created by a heap allocation
+#    at 0x4C2D11F: realloc (vg_replace_malloc.c:785)
+#    by 0x406196: moz_xrealloc (in /home/worker/workspace/build/application/fi
+#    by 0xDEB43AC: nsTArrayInfallibleAllocator::ResultTypeProxy nsTArray_base<
+#    by 0xEEAD850: mozilla::FFmpegDataDecoder<53>::InitDecoder() (in /home/wor
+#    by 0xEEAE42B: mozilla::FFmpegVideoDecoder<53>::Init() (in /home/worker/wo
+{
+   Bug 1248365: mochitest-libavcodec-1-c
+   Memcheck:Cond
+   obj:/*/libavcodec.so.53*
+   obj:/*/libavcodec.so.53*
+   obj:/*/libavcodec.so.53*
+   obj:/*/libavcodec.so.53*
+}
+{
+   Bug 1248365: mochitest-libavcodec-1-v8
+   Memcheck:Value8
+   obj:/*/libavcodec.so.53*
+   obj:/*/libavcodec.so.53*
+   obj:/*/libavcodec.so.53*
+   obj:/*/libavcodec.so.53*
+}
+
+
+# Not sure what this is, but I am inclined to think it is also probably a
+# SSE2-induced false positive similar to mochitest-libpixman-2 above.
+# Use of uninitialised value of size 8
+#    at 0xE4F3E89: FastConvertYUVToRGB32Row (in /home/worker/workspace/build/a
+#    by 0xE4F4A6D: mozilla::gfx::ConvertYCbCrToRGB32(unsigned char const*, uns
+#    by 0xE4F4B17: mozilla::gfx::ConvertYCbCrToRGB(mozilla::layers::PlanarYCbC
+#    by 0xE5227CB: mozilla::layers::PlanarYCbCrImage::GetAsSourceSurface() (in
+#    by 0xE5B2465: mozilla::layers::SharedPlanarYCbCrImage::GetAsSourceSurface
+#    by 0xE52FE44: mozilla::layers::BasicImageLayer::Paint(mozilla::gfx::DrawT
+#    by 0xE5618A1: mozilla::layers::BasicLayerManager::PaintSelfOrChildren(moz
+#    by 0xE560F83: mozilla::layers::BasicLayerManager::PaintLayer(gfxContext*,
+#  Uninitialised value was created by a stack allocation
+#    at 0x434B36B2: ??? (in /usr/lib/x86_64-linux-gnu/libavcodec.so.53.35.0)
+{
+   Bug 1248365: FastConvertYUVToRGB32Row-1
+   Memcheck:Value8
+   fun:FastConvertYUVToRGB32Row
+   fun:_ZN7mozilla3gfx19ConvertYCbCrToRGB32*
+   fun:_ZN7mozilla3gfx17ConvertYCbCrToRGB*
+   fun:_ZN7mozilla6layers16PlanarYCbCrImage18GetAsSourceSurface*
+}
+
+
+# This is probably a V false positive, due to an insufficiently accurate
+# description of the ioctl(SIOCETHTOOL) behavior.
+# Syscall param ioctl(SIOCETHTOOL) points to uninitialised byte(s)
+#    at 0x5D5CBF7: ioctl (syscall-template.S:82)
+#    by 0xF58EB67: nr_stun_get_addrs (in /home/worker/workspace/build/applica
+#    by 0xF594791: nr_stun_find_local_addresses (in /home/worker/workspace/bu
+#    by 0xF58A237: nr_ice_get_local_addresses (in /home/worker/workspace/buil
+#    by 0xF58ADDE: nr_ice_gather (in /home/worker/workspace/build/application
+#    by 0xE43F35F: mozilla::NrIceCtx::StartGathering() (in /home/worker/works
+#    by 0xE419560: mozilla::PeerConnectionMedia::EnsureIceGathering_s() (in /
+#    by 0xE41A11C: mozilla::runnable_args_memfn<RefPtr<mozilla::PeerConnectio
+#  Address 0x1cc3fb48 is on thread 6's stack
+#  in frame #1, created by nr_stun_get_addrs (???:)
+{
+   Bug 1248365: mochitest-ioctl(SIOCETHTOOL)-1
+   Memcheck:Param
+   ioctl(SIOCETHTOOL)
+   fun:ioctl
+   fun:nr_stun_get_addrs
+   fun:nr_stun_find_local_addresses
+}
+
+
+# This looks like uninitialised padding bytes in a structure owned
+# by libfontconfig.  So there's nothing we can do about it.
+# Syscall param write(buf) points to uninitialised byte(s)
+#    at 0x4E44CCD: ??? (syscall-template.S:82)
+#    by 0x9F1FF56: ??? (in /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.4.4)
+#    by 0x9F2679B: ??? (in /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.4.4)
+#    by 0x9F22B98: ??? (in /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.4.4)
+#    by 0x9F22C5F: FcConfigAppFontAddDir (in /usr/lib/x86_64-linux-gnu/libfon
+#    by 0xE850173: gfxFcPlatformFontList::ActivateBundledFonts() (in /home/wo
+#    by 0xE852258: gfxFcPlatformFontList::InitFontListForPlatform() (in /home
+#    by 0xE895E21: gfxPlatformFontList::InitFontList() (in /home/worker/works
+#  Address 0x2316663c is 156 bytes inside a block of size 1,448 alloc'd
+#    at 0x4C2CF71: malloc (vg_replace_malloc.c:299)
+#    by 0x9F1FD1D: ??? (in /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.4.4)
+#    by 0x9F26788: ??? (in /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.4.4)
+#    by 0x9F22B98: ??? (in /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.4.4)
+#    by 0x9F22C5F: FcConfigAppFontAddDir (in /usr/lib/x86_64-linux-gnu/libfon
+#    by 0xE850173: gfxFcPlatformFontList::ActivateBundledFonts() (in /home/wo
+#    by 0xE852258: gfxFcPlatformFontList::InitFontListForPlatform() (in /home
+#    by 0xE895E21: gfxPlatformFontList::InitFontList() (in /home/worker/works
+{
+   Bug 1248365: libfontconfig-1
+   Memcheck:Param
+   write(buf)
+   obj:/*/libpthread*.so*
+   obj:/*/libfontconfig.so*
+   ...
+   obj:/*/libfontconfig.so*
+   fun:FcConfigAppFontAddDir
+}
+
+
+# There's nothing we can do about this short of throwing in
+# --show-mismatched-frees=no, but that's a bit drastic, so for now,
+# just suppress it.
+#
+# Mismatched free() / delete / delete []
+#    at 0x4C2BE97: free (vg_replace_malloc.c:530)
+#    by 0xFCD09EC: ots::ots_post_free(ots::Font*) (in /home/worker/workspace/
+#    by 0xFCC600E: ots::Font::~Font() (in /home/worker/workspace/build/applic
+#    by 0xFCCBFA5: ots::OTSContext::Process(ots::OTSStream*, unsigned char co
+#    by 0xE7D7C8D: gfxUserFontEntry::SanitizeOpenTypeData(unsigned char const
+#    by 0xE7E371D: gfxUserFontEntry::LoadPlatformFont(unsigned char const*, u
+#    by 0xE7E48AA: gfxUserFontEntry::FontDataDownloadComplete(unsigned char c
+#    by 0xF49D25B: nsFontFaceLoader::OnStreamComplete(nsIStreamLoader*, nsISu
+#  Address 0x15671f00 is 0 bytes inside a block of size 490 alloc'd
+#    at 0x4C2CAEE: operator new(unsigned long) (vg_replace_malloc.c:332)
+#    by 0xF6AB737: std::vector<unsigned short, std::allocator<unsigned short>
+#    by 0xFCD0FDE: ots::ots_post_parse(ots::Font*, unsigned char const*, unsi
+#    by 0xFCCA3D9: (anonymous namespace)::ProcessGeneric(ots::OpenTypeFile*, 
+#    by 0xFCCB17E: (anonymous namespace)::ProcessTTF(ots::OpenTypeFile*, ots:
+#    by 0xFCCBA54: ots::OTSContext::Process(ots::OTSStream*, unsigned char co
+#    by 0xE7D7C8D: gfxUserFontEntry::SanitizeOpenTypeData(unsigned char const
+#    by 0xE7E371D: gfxUserFontEntry::LoadPlatformFont(unsigned char const*, u
+{
+   Bug 1248365: ots::Font::~Font()-1
+   Memcheck:Free
+   fun:free
+   fun:_ZN3ots13ots_post_free*
+   fun:_ZN3ots4FontD1Ev
+   fun:_ZN3ots10OTSContext7Process*
+}

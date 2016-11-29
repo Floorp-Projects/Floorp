@@ -27,8 +27,8 @@
                 Porting from Aspell to Hunspell using C-like structs
 */
 
-#ifndef PHONET_HXX_
-#define PHONET_HXX_
+#ifndef __PHONETHXX__
+#define __PHONETHXX__
 
 #define HASHSIZE 256
 #define MAXPHONETLEN 256
@@ -38,7 +38,9 @@
 
 struct phonetable {
   char utf8;
-  std::vector<std::string> rules;
+  cs_info* lang;
+  int num;
+  char** rules;
   int hash[HASHSIZE];
 };
 

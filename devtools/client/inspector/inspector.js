@@ -24,14 +24,15 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
-const {CommandUtils} = require("devtools/client/shared/developer-toolbar");
+const {HTMLBreadcrumbs} = require("devtools/client/inspector/breadcrumbs");
 const {ComputedViewTool} = require("devtools/client/inspector/computed/computed");
 const {FontInspector} = require("devtools/client/inspector/fonts/fonts");
-const {HTMLBreadcrumbs} = require("devtools/client/inspector/breadcrumbs");
 const {InspectorSearch} = require("devtools/client/inspector/inspector-search");
-const MarkupView = require("devtools/client/inspector/markup/markup");
 const {RuleViewTool} = require("devtools/client/inspector/rules/rules");
+const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
 const {ToolSidebar} = require("devtools/client/inspector/toolsidebar");
+const MarkupView = require("devtools/client/inspector/markup/markup");
+const {CommandUtils} = require("devtools/client/shared/developer-toolbar");
 const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
@@ -92,6 +93,7 @@ function Inspector(toolbox) {
   this.panelWin = window;
   this.panelWin.inspector = this;
 
+  this.highlighters = new HighlightersOverlay(this);
   this.telemetry = new Telemetry();
 
   this.nodeMenuTriggerInfo = null;
@@ -911,13 +913,19 @@ Inspector.prototype = {
     this.breadcrumbs.destroy();
     this.selection.off("new-node-front", this.onNewSelection);
     this.selection.off("detached-front", this.onDetached);
+
     let markupDestroyer = this._destroyMarkup();
+
     this.panelWin.inspector = null;
     this.target = null;
     this.panelDoc = null;
     this.panelWin = null;
     this.breadcrumbs = null;
     this._toolbox = null;
+
+    this.highlighters.destroy();
+    this.highlighters = null;
+
     this.search.destroy();
     this.search = null;
     this.searchBox = null;

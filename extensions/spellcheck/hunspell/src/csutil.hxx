@@ -71,14 +71,13 @@
  * SUCH DAMAGE.
  */
 
-#ifndef CSUTIL_HXX_
-#define CSUTIL_HXX_
+#ifndef __CSUTILHXX__
+#define __CSUTILHXX__
 
 #include "hunvisapi.h"
 
 // First some base level utility routines
 
-#include <fstream>
 #include <string>
 #include <vector>
 #include <string.h>
@@ -128,9 +127,8 @@
 #define FORBIDDENWORD 65510
 #define ONLYUPCASEFLAG 65511
 
-// fix long pathname problem of WIN32 by using w_char std::fstream::open override
-LIBHUNSPELL_DLL_EXPORTED void myopen(std::ifstream& stream, const char* path,
-                                     std::ios_base::openmode mode);
+// fopen or optional _wfopen to fix long pathname problem of WIN32
+LIBHUNSPELL_DLL_EXPORTED FILE* myfopen(const char* path, const char* mode);
 
 // convert UTF-16 characters to UTF-8
 LIBHUNSPELL_DLL_EXPORTED std::string& u16_u8(std::string& dest,
@@ -141,16 +139,21 @@ LIBHUNSPELL_DLL_EXPORTED int u8_u16(std::vector<w_char>& dest,
                                     const std::string& src);
 
 // remove end of line char(s)
-LIBHUNSPELL_DLL_EXPORTED void mychomp(std::string& s);
+LIBHUNSPELL_DLL_EXPORTED void mychomp(char* s);
 
 // duplicate string
 LIBHUNSPELL_DLL_EXPORTED char* mystrdup(const char* s);
 
+// strcat for limited length destination string
+LIBHUNSPELL_DLL_EXPORTED char* mystrcat(char* dest, const char* st, int max);
+
 // parse into tokens with char delimiter
-LIBHUNSPELL_DLL_EXPORTED std::string::const_iterator mystrsep(const std::string &str,
-                                                              std::string::const_iterator& start);
+LIBHUNSPELL_DLL_EXPORTED char* mystrsep(char** sptr, const char delim);
 
 // replace pat by rep in word and return word
+LIBHUNSPELL_DLL_EXPORTED char* mystrrep(char* word,
+                                        const char* pat,
+                                        const char* rep);
 LIBHUNSPELL_DLL_EXPORTED std::string& mystrrep(std::string& str,
                                                const std::string& search,
                                                const std::string& replace);
@@ -160,13 +163,13 @@ LIBHUNSPELL_DLL_EXPORTED std::string& strlinecat(std::string& str,
                                                  const std::string& apd);
 
 // tokenize into lines with new line
-LIBHUNSPELL_DLL_EXPORTED std::vector<std::string> line_tok(const std::string& text,
-                                                           char breakchar);
+LIBHUNSPELL_DLL_EXPORTED int line_tok(const char* text,
+                                      char*** lines,
+                                      char breakchar);
 
 // tokenize into lines with new line and uniq in place
-LIBHUNSPELL_DLL_EXPORTED void line_uniq(std::string& text, char breakchar);
-
-LIBHUNSPELL_DLL_EXPORTED void line_uniq_app(std::string& text, char breakchar);
+LIBHUNSPELL_DLL_EXPORTED char* line_uniq(char* text, char breakchar);
+LIBHUNSPELL_DLL_EXPORTED char* line_uniq_app(char** text, char breakchar);
 
 // reverse word
 LIBHUNSPELL_DLL_EXPORTED size_t reverseword(std::string& word);
@@ -175,7 +178,10 @@ LIBHUNSPELL_DLL_EXPORTED size_t reverseword(std::string& word);
 LIBHUNSPELL_DLL_EXPORTED size_t reverseword_utf(std::string&);
 
 // remove duplicates
-LIBHUNSPELL_DLL_EXPORTED void uniqlist(std::vector<std::string>& list);
+LIBHUNSPELL_DLL_EXPORTED int uniqlist(char** list, int n);
+
+// free character array list
+LIBHUNSPELL_DLL_EXPORTED void freelist(char*** list, int n);
 
 // character encoding information
 struct cs_info {
@@ -184,7 +190,7 @@ struct cs_info {
   unsigned char cupper;
 };
 
-LIBHUNSPELL_DLL_EXPORTED void initialize_utf_tbl();
+LIBHUNSPELL_DLL_EXPORTED int initialize_utf_tbl();
 LIBHUNSPELL_DLL_EXPORTED void free_utf_tbl();
 LIBHUNSPELL_DLL_EXPORTED unsigned short unicodetoupper(unsigned short c,
                                                        int langnum);
@@ -194,13 +200,13 @@ LIBHUNSPELL_DLL_EXPORTED unsigned short unicodetolower(unsigned short c,
                                                        int langnum);
 LIBHUNSPELL_DLL_EXPORTED int unicodeisalpha(unsigned short c);
 
-LIBHUNSPELL_DLL_EXPORTED struct cs_info* get_current_cs(const std::string& es);
+LIBHUNSPELL_DLL_EXPORTED struct cs_info* get_current_cs(const char* es);
 
 // get language identifiers of language codes
-LIBHUNSPELL_DLL_EXPORTED int get_lang_num(const std::string& lang);
+LIBHUNSPELL_DLL_EXPORTED int get_lang_num(const char* lang);
 
 // get characters of the given 8bit encoding with lower- and uppercase forms
-LIBHUNSPELL_DLL_EXPORTED std::string get_casechars(const char* enc);
+LIBHUNSPELL_DLL_EXPORTED char* get_casechars(const char* enc);
 
 // convert std::string to all caps
 LIBHUNSPELL_DLL_EXPORTED std::string& mkallcap(std::string& s,
@@ -250,12 +256,10 @@ LIBHUNSPELL_DLL_EXPORTED size_t remove_ignored_chars(
     std::string& word,
     const std::string& ignored_chars);
 
-LIBHUNSPELL_DLL_EXPORTED bool parse_string(const std::string& line,
-                                           std::string& out,
-                                           int ln);
+LIBHUNSPELL_DLL_EXPORTED int parse_string(char* line, char** out, int ln);
 
-LIBHUNSPELL_DLL_EXPORTED bool parse_array(const std::string& line,
-                                          std::string& out,
+LIBHUNSPELL_DLL_EXPORTED bool parse_array(char* line,
+                                          char** out,
                                           std::vector<w_char>& out_utf16,
                                           int utf8,
                                           int ln);
@@ -265,6 +269,10 @@ LIBHUNSPELL_DLL_EXPORTED int fieldlen(const char* r);
 LIBHUNSPELL_DLL_EXPORTED bool copy_field(std::string& dest,
                                          const std::string& morph,
                                          const std::string& var);
+
+LIBHUNSPELL_DLL_EXPORTED int morphcmp(const char* s, const char* t);
+
+LIBHUNSPELL_DLL_EXPORTED int get_sfxcount(const char* morph);
 
 // conversion function for protected memory
 LIBHUNSPELL_DLL_EXPORTED void store_pointer(char* dest, char* source);

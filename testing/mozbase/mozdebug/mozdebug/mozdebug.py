@@ -276,7 +276,7 @@ def get_default_valgrind_args():
              ('--trace-children-skip='
               + '/usr/bin/hg,/bin/rm,*/bin/certutil,*/bin/pk12util,'
               + '*/bin/ssltunnel,*/bin/uname,*/bin/which,*/bin/ps,'
-              + '*/bin/grep,*/bin/java'),
+              + '*/bin/grep,*/bin/java,*/bin/lsb_release'),
              ]
             + get_default_valgrind_tool_specific_args())
 
@@ -286,6 +286,6 @@ def get_default_valgrind_args():
 
 def get_default_valgrind_tool_specific_args():
     return ['--partial-loads-ok=yes',
-            '--leak-check=full',
+            '--leak-check=summary',
             '--show-possibly-lost=no',
             ]

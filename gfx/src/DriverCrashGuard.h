@@ -9,7 +9,7 @@
 #include "nsIGfxInfo.h"
 #include "nsIFile.h"
 #include "nsString.h"
-#include "mozilla/Function.h"
+#include <functional>
 #include <string>
 
 namespace mozilla {
@@ -83,7 +83,7 @@ public:
     Proxy
   };
 
-  typedef mozilla::function<void(const char* aName, const char* aPrefName)>
+  typedef std::function<void(const char* aName, const char* aPrefName)>
     CrashGuardCallback;
   static void ForEachActiveCrashGuard(const CrashGuardCallback& aCallback);
 

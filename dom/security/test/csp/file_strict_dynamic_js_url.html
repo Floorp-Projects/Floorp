@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1316826 - 'strict-dynamic' blocking DOM event handlers</title>
+</head>
+<body>
+<div id="testdiv">blocked</div>
+
+<a id="jslink" href='javascript:document.getElementById("testdiv").innerHTML = "allowed"'>click me</a>
+<script nonce="foo">
+  document.getElementById("jslink").click();
+</script>
+
+</body>
+</html>
