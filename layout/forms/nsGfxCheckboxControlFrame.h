@@ -25,11 +25,6 @@ public:
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
-
-protected:
-
-  bool IsChecked();
-  bool IsIndeterminate();
 };
 
 #endif
