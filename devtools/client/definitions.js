@@ -12,7 +12,6 @@ loader.lazyGetter(this, "OptionsPanel", () => require("devtools/client/framework
 loader.lazyGetter(this, "InspectorPanel", () => require("devtools/client/inspector/panel").InspectorPanel);
 loader.lazyGetter(this, "WebConsolePanel", () => require("devtools/client/webconsole/panel").WebConsolePanel);
 loader.lazyGetter(this, "DebuggerPanel", () => require("devtools/client/debugger/panel").DebuggerPanel);
-loader.lazyGetter(this, "NewDebuggerPanel", () => require("devtools/client/debugger/new/panel").DebuggerPanel);
 loader.lazyGetter(this, "StyleEditorPanel", () => require("devtools/client/styleeditor/styleeditor-panel").StyleEditorPanel);
 loader.lazyGetter(this, "ShaderEditorPanel", () => require("devtools/client/shadereditor/panel").ShaderEditorPanel);
 loader.lazyGetter(this, "CanvasDebuggerPanel", () => require("devtools/client/canvasdebugger/panel").CanvasDebuggerPanel);
@@ -156,6 +155,8 @@ Tools.jsdebugger = {
 
 function switchDebugger() {
   if (Services.prefs.getBoolPref("devtools.debugger.new-debugger-frontend")) {
+    const NewDebuggerPanel = require("devtools/client/debugger/new/panel").DebuggerPanel;
+
     Tools.jsdebugger.url = "chrome://devtools/content/debugger/new/index.html";
     Tools.jsdebugger.build = function (iframeWindow, toolbox) {
       return new NewDebuggerPanel(iframeWindow, toolbox);

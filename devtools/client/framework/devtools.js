@@ -18,6 +18,7 @@ const {defaultTools: DefaultTools, defaultThemes: DefaultThemes} =
 const EventEmitter = require("devtools/shared/event-emitter");
 const {JsonView} = require("devtools/client/jsonview/main");
 const AboutDevTools = require("devtools/client/framework/about-devtools-toolbox");
+const {when: unload} = require("sdk/system/unload");
 const {Task} = require("devtools/shared/task");
 
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
@@ -34,12 +35,17 @@ this.DevTools = function DevTools() {
   // List of toolboxes that are still in process of creation
   this._creatingToolboxes = new Map(); // Map<target, toolbox Promise>
 
+  // destroy() is an observer's handler so we need to preserve context.
+  this.destroy = this.destroy.bind(this);
+
   // JSON Viewer for 'application/json' documents.
   JsonView.initialize();
 
   AboutDevTools.register();
 
   EventEmitter.decorate(this);
+
+  Services.obs.addObserver(this.destroy, "quit-application", false);
 
   // This is important step in initialization codepath where we are going to
   // start registering all default tools and themes: create menuitems, keys, emit
@@ -482,23 +488,20 @@ DevTools.prototype = {
   },
 
   /**
-   * Either the SDK Loader has been destroyed by the add-on contribution
-   * workflow, or firefox is shutting down.
-
-   * @param {boolean} shuttingDown
-   *        True if firefox is currently shutting down. We may prevent doing
-   *        some cleanups to speed it up. Otherwise everything need to be
-   *        cleaned up in order to be able to load devtools again.
+   * Called to tear down a tools provider.
    */
-  destroy: function ({ shuttingDown }) {
-    // Do not cleanup everything during firefox shutdown, but only when
-    // devtools are reloaded via the add-on contribution workflow.
-    if (!shuttingDown) {
-      for (let [target, toolbox] of this._toolboxes) {
-        toolbox.destroy();
-      }
-      AboutDevTools.unregister();
+  _teardown: function DT_teardown() {
+    for (let [target, toolbox] of this._toolboxes) {
+      toolbox.destroy();
     }
+    AboutDevTools.unregister();
+  },
+
+  /**
+   * All browser windows have been closed, tidy up remaining objects.
+   */
+  destroy: function () {
+    Services.obs.removeObserver(this.destroy, "quit-application");
 
     for (let [key, tool] of this.getToolDefinitionMap()) {
       this.unregisterTool(key, true);
@@ -524,3 +527,8 @@ DevTools.prototype = {
 };
 
 const gDevTools = exports.gDevTools = new DevTools();
+
+// Watch for module loader unload. Fires when the tools are reloaded.
+unload(function () {
+  gDevTools._teardown();
+});
