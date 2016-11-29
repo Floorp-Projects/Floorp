@@ -18,6 +18,7 @@
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for PlaybackDirection
 #include "mozilla/Likely.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/Unused.h"
 
@@ -1153,6 +1154,46 @@ SetComplexColor(const nsCSSValue& aValue,
       return;
     }
     aResult.mForegroundRatio = 0;
+  }
+}
+
+template<UnsetAction UnsetTo>
+static Maybe<nscoord>
+ComputeLineWidthValue(const nsCSSValue& aValue,
+                      const nscoord aParentCoord,
+                      const nscoord aInitialCoord,
+                      nsStyleContext* aStyleContext,
+                      nsPresContext* aPresContext,
+                      RuleNodeCacheConditions& aConditions)
+{
+  nsCSSUnit unit = aValue.GetUnit();
+  if (unit == eCSSUnit_Initial ||
+      (UnsetTo == eUnsetInitial && unit == eCSSUnit_Unset)) {
+    return Some(aInitialCoord);
+  } else if (unit == eCSSUnit_Inherit ||
+             (UnsetTo == eUnsetInherit && unit == eCSSUnit_Unset)) {
+    aConditions.SetUncacheable();
+    return Some(aParentCoord);
+  } else if (unit == eCSSUnit_Enumerated) {
+    NS_ASSERTION(aValue.GetIntValue() == NS_STYLE_BORDER_WIDTH_THIN ||
+                 aValue.GetIntValue() == NS_STYLE_BORDER_WIDTH_MEDIUM ||
+                 aValue.GetIntValue() == NS_STYLE_BORDER_WIDTH_THICK,
+                 "Unexpected line-width keyword!");
+    return Some(nsPresContext::GetBorderWidthForKeyword(aValue.GetIntValue()));
+  } else if (aValue.IsLengthUnit() ||
+             aValue.IsCalcUnit()) {
+    nscoord len =
+      CalcLength(aValue, aStyleContext, aPresContext, aConditions);
+    if (len < 0) {
+      NS_ASSERTION(aValue.IsCalcUnit(),
+                   "Parser should have rejected negative length!");
+      len = 0;
+    }
+    return Some(len);
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "Missing case handling for line-width computing!");
+    return Maybe<nscoord>(Nothing());
   }
 }
 
