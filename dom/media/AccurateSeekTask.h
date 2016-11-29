@@ -27,8 +27,6 @@ public:
 
   RefPtr<SeekTaskPromise> Seek(const media::TimeUnit& aDuration) override;
 
-  bool NeedToResetMDSM() const override;
-
   int64_t CalculateNewCurrentTime() const override;
 
   void HandleAudioDecoded(MediaData* aAudio) override;
