@@ -2194,18 +2194,27 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
     mControlSelectMode = false;
   }
 
+  // We should not change the selection if the popup is "opened
+  // in the parent process" (even when we're in single-process mode).
+  bool shouldSelectByKey = !mComboboxFrame ||
+                           !mComboboxFrame->IsOpenInParentProcess();
+
   switch (keyEvent->mKeyCode) {
     case NS_VK_UP:
     case NS_VK_LEFT:
-      AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
-                                static_cast<int32_t>(numOptions),
-                                -1, -1);
+      if (shouldSelectByKey) {
+        AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
+                                  static_cast<int32_t>(numOptions),
+                                  -1, -1);
+      }
       break;
     case NS_VK_DOWN:
     case NS_VK_RIGHT:
-      AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
-                                static_cast<int32_t>(numOptions),
-                                1, 1);
+      if (shouldSelectByKey) {
+        AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
+                                  static_cast<int32_t>(numOptions),
+                                  1, 1);
+      }
       break;
     case NS_VK_RETURN:
       if (IsInDropDownMode()) {
@@ -2245,30 +2254,38 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
       return NS_OK;
     }
     case NS_VK_PAGE_UP: {
-      int32_t itemsPerPage =
-        std::max(1, static_cast<int32_t>(mNumDisplayRows - 1));
-      AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
-                                static_cast<int32_t>(numOptions),
-                                -itemsPerPage, -1);
+      if (shouldSelectByKey) {
+        int32_t itemsPerPage =
+          std::max(1, static_cast<int32_t>(mNumDisplayRows - 1));
+        AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
+                                  static_cast<int32_t>(numOptions),
+                                  -itemsPerPage, -1);
+      }
       break;
     }
     case NS_VK_PAGE_DOWN: {
-      int32_t itemsPerPage =
-        std::max(1, static_cast<int32_t>(mNumDisplayRows - 1));
-      AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
-                                static_cast<int32_t>(numOptions),
-                                itemsPerPage, 1);
+      if (shouldSelectByKey) {
+        int32_t itemsPerPage =
+          std::max(1, static_cast<int32_t>(mNumDisplayRows - 1));
+        AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
+                                  static_cast<int32_t>(numOptions),
+                                  itemsPerPage, 1);
+      }
       break;
     }
     case NS_VK_HOME:
-      AdjustIndexForDisabledOpt(0, newIndex,
-                                static_cast<int32_t>(numOptions),
-                                0, 1);
+      if (shouldSelectByKey) {
+        AdjustIndexForDisabledOpt(0, newIndex,
+                                  static_cast<int32_t>(numOptions),
+                                  0, 1);
+      }
       break;
     case NS_VK_END:
-      AdjustIndexForDisabledOpt(static_cast<int32_t>(numOptions) - 1, newIndex,
-                                static_cast<int32_t>(numOptions),
-                                0, -1);
+      if (shouldSelectByKey) {
+        AdjustIndexForDisabledOpt(static_cast<int32_t>(numOptions) - 1, newIndex,
+                                  static_cast<int32_t>(numOptions),
+                                  0, -1);
+      }
       break;
 
 #if defined(XP_WIN)
