@@ -51,6 +51,10 @@ queue.map(task => {
     }
   }
 
+  // Enable TLS 1.3 for every task.
+  task.env = task.env || {};
+  task.env.NSS_ENABLE_TLS_1_3 = "1";
+
   return task;
 });
 
