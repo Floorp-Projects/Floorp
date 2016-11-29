@@ -997,13 +997,18 @@ class MOZ_STACK_CLASS TokenStream
     }
 
     void skipChars(uint8_t n) {
-        while (n-- > 0)
-            getChar();
+        while (n-- > 0) {
+            MOZ_ASSERT(userbuf.hasRawChars());
+            mozilla::DebugOnly<int32_t> c = getCharIgnoreEOL();
+            MOZ_ASSERT(c != '\n');
+        }
     }
 
     void skipCharsIgnoreEOL(uint8_t n) {
-        while (n-- > 0)
+        while (n-- > 0) {
+            MOZ_ASSERT(userbuf.hasRawChars());
             getCharIgnoreEOL();
+        }
     }
 
     void updateLineInfoForEOL();
