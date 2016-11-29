@@ -41,8 +41,6 @@ enum PluginQuirks {
   // NPN_GetValue(NPNVdocumentOrigin) call before trying to dereference
   // its char* output.
   QUIRK_FLASH_RETURN_EMPTY_DOCUMENT_ORIGIN        = 1 << 10,
-  // Win: Addresses a Unity bug with mouse capture.
-  QUIRK_UNITY_FIXUP_MOUSE_CAPTURE                 = 1 << 11,
   // Win: Hook IMM32 API to handle IME event on windowless plugin
   QUIRK_WINLESS_HOOK_IME                          = 1 << 12,
   // Win: Hook GetKeyState to get keyboard state on sandbox process
