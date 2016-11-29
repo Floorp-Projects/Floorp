@@ -24,8 +24,12 @@ public:
                              int32_t          aStartPage,
                              int32_t          aEndPage) override;
     NS_IMETHOD EndDocument() override;
-    NS_IMETHOD BeginPage() override;
-    NS_IMETHOD EndPage() override;
+    NS_IMETHOD BeginPage() override {
+      return NS_OK;
+    };
+    NS_IMETHOD EndPage() override {
+      return NS_OK;
+    };
 
     void GetPaperRect(double* aTop, double* aLeft, double* aBottom, double* aRight);
 
