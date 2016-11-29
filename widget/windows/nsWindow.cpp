@@ -7665,7 +7665,30 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
         break;
       }
       return false;
-
+    case WM_POINTERDOWN:
+      {
+        WinPointerEvents pointerEvents;
+        if (!pointerEvents.ShouldRollupOnPointerEvent(aWParam)) {
+          return false;
+        }
+        if (!GetPopupsToRollup(rollupListener, &popupsToRollup)) {
+          return false;
+        }
+        // Can't use EventIsInsideWindow to check whether the event is inside
+        // the popup window. It's because EventIsInsideWindow gets message
+        // coordinates by GetMessagePos, which returns physical screen
+        // coordinates at WM_POINTERDOWN.
+        POINT pt;
+        pt.x = GET_X_LPARAM(aLParam);
+        pt.y = GET_Y_LPARAM(aLParam);
+        RECT r;
+        ::GetWindowRect(popupWindow->mWnd, &r);
+        if (::PtInRect(&r, pt) != 0) {
+          // Don't roll up if the event is inside the popup window.
+          return false;
+        }
+      }
+      break;
     case WM_MOUSEWHEEL:
     case WM_MOUSEHWHEEL:
       // We need to check if the popup thinks that it should cause closing
@@ -7807,7 +7830,7 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
   // Only need to deal with the last rollup for left mouse down events.
   NS_ASSERTION(!mLastRollup, "mLastRollup is null");
 
-  if (nativeMessage == WM_LBUTTONDOWN) {
+  if (nativeMessage == WM_LBUTTONDOWN || nativeMessage == WM_POINTERDOWN) {
     POINT pt;
     pt.x = GET_X_LPARAM(aLParam);
     pt.y = GET_Y_LPARAM(aLParam);
