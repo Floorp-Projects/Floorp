@@ -15,6 +15,8 @@ class nsIWidget;
 namespace mozilla {
 namespace layers {
 
+class CompositorBridgeChild;
+class PCompositorBridgeChild;
 class WebRenderBridgeChild;
 
 template<class T>
