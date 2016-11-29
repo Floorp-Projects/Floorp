@@ -41,12 +41,6 @@ int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,
 #endif
 
 #ifdef OS_WIN
-    if (specialType == nsPluginHost::eSpecialType_Unity) {
-        quirks |= QUIRK_UNITY_FIXUP_MOUSE_CAPTURE;
-    }
-#endif
-
-#ifdef OS_WIN
     if (specialType == nsPluginHost::eSpecialType_Test) {
         quirks |= QUIRK_WINLESS_HOOK_IME;
     }
