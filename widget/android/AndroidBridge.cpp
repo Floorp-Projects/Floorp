@@ -999,12 +999,12 @@ class AndroidBridge::DelayedTask
     using TimeDuration = mozilla::TimeDuration;
 
 public:
-    DelayedTask(already_AddRefed<Runnable> aTask)
+    DelayedTask(already_AddRefed<nsIRunnable> aTask)
         : mTask(aTask)
         , mRunTime() // Null timestamp representing no delay.
     {}
 
-    DelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs)
+    DelayedTask(already_AddRefed<nsIRunnable> aTask, int aDelayMs)
         : mTask(aTask)
         , mRunTime(TimeStamp::Now() + TimeDuration::FromMilliseconds(aDelayMs))
     {}
@@ -1027,19 +1027,19 @@ public:
         return 0;
     }
 
-    already_AddRefed<Runnable> TakeTask()
+    already_AddRefed<nsIRunnable> TakeTask()
     {
         return mTask.forget();
     }
 
 private:
-    RefPtr<Runnable> mTask;
+    nsCOMPtr<nsIRunnable> mTask;
     const TimeStamp mRunTime;
 };
 
 
 void
-AndroidBridge::PostTaskToUiThread(already_AddRefed<Runnable> aTask, int aDelayMs)
+AndroidBridge::PostTaskToUiThread(already_AddRefed<nsIRunnable> aTask, int aDelayMs)
 {
     // add the new task into the mUiTaskQueue, sorted with
     // the earliest task first in the queue
@@ -1086,7 +1086,7 @@ AndroidBridge::RunDelayedUiThreadTasks()
         }
 
         // Retrieve task before unlocking/running.
-        RefPtr<Runnable> nextTask(mUiTaskQueue[0].TakeTask());
+        nsCOMPtr<nsIRunnable> nextTask(mUiTaskQueue[0].TakeTask());
         mUiTaskQueue.RemoveElementAt(0);
 
         // Unlock to allow posting new tasks reentrantly.
