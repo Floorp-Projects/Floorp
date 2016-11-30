@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for BroadcastChannel in data: URL</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="dataURL">
+var a = new BroadcastChannel('a');
+var b = new BroadcastChannel('a');
+a.onmessage = function(e) { parent.postMessage(e.data, "*"); };
+b.postMessage(42);
+</div>
+
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+onmessage= function(e) {
+  ok(e.data, "42", "BroadcastChannel works with data URLs");
+  SimpleTest.finish();
+}
+
+var url = "data:text/html,<script>" + document.getElementById("dataURL").textContent + "</" + "script>";
+
+var ifr = document.createElement('iframe');
+document.body.appendChild(ifr);
+
+ifr.setAttribute('sandbox', 'allow-scripts');
+ifr.src = url;
+</script>
+</body>
+</html>
+

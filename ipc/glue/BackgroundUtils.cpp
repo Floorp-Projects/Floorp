@@ -62,8 +62,14 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
     case PrincipalInfo::TNullPrincipalInfo: {
       const NullPrincipalInfo& info =
         aPrincipalInfo.get_NullPrincipalInfo();
-      principal = nsNullPrincipal::Create(info.attrs());
 
+      nsCOMPtr<nsIURI> uri;
+      rv = NS_NewURI(getter_AddRefs(uri), info.spec());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return nullptr;
+      }
+
+      principal = nsNullPrincipal::Create(info.attrs(), uri);
       return principal.forget();
     }
 
@@ -131,7 +137,25 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(aPrincipalInfo);
 
   if (aPrincipal->GetIsNullPrincipal()) {
-    *aPrincipalInfo = NullPrincipalInfo(BasePrincipal::Cast(aPrincipal)->OriginAttributesRef());
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (NS_WARN_IF(!uri)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsAutoCString spec;
+    rv = uri->GetSpec(spec);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    *aPrincipalInfo =
+      NullPrincipalInfo(BasePrincipal::Cast(aPrincipal)->OriginAttributesRef(),
+                        spec);
     return NS_OK;
   }
 
@@ -191,7 +215,7 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
     return NS_ERROR_FAILURE;
   }
 
-  nsCString spec;
+  nsAutoCString spec;
   rv = uri->GetSpec(spec);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
