@@ -1,11 +1,5 @@
 "use strict";
 
-Cu.import("resource:///modules/MigrationUtils.jsm");
-Cu.import("resource://gre/modules/LoginHelper.jsm");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
-Cu.import("resource://testing-common/TestUtils.jsm");
-Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 let AutoMigrateBackstage = Cu.import("resource:///modules/AutoMigrate.jsm"); /* globals AutoMigrate */
 
 let gShimmedMigratorKeyPicker = null;
@@ -32,6 +26,22 @@ AutoMigrateBackstage.MigrationUtils = new Proxy({}, {
 do_register_cleanup(function() {
   AutoMigrateBackstage.MigrationUtils = MigrationUtils;
 });
+
+// This should be replaced by using History.fetch with a fetchVisits option,
+// once that becomes available
+function* visitsForURL(url)
+{
+  let visitCount = 0;
+  let db = yield PlacesUtils.promiseDBConnection();
+  visitCount = yield db.execute(
+    `SELECT count(*) FROM moz_historyvisits v
+     JOIN moz_places h ON h.id = v.place_id
+     WHERE url_hash = hash(:url) AND url = :url`,
+     {url});
+  visitCount = visitCount[0].getInt64(0);
+  return visitCount;
+}
+
 
 /**
  * Test automatically picking a browser to migrate from
@@ -438,5 +448,192 @@ add_task(function* testLoginsRemovalByUndo() {
   Assert.equal(1, LoginHelper.searchLoginsWithObject({hostname: "https://example.org", formSubmitURL: "https://example.org/"}).length,
                    "changed example.org entry should have persisted.");
   Services.logins.removeAllLogins();
+});
+
+add_task(function* checkUndoVisitsState() {
+  MigrationUtils.initializeUndoData();
+  yield MigrationUtils.insertVisitsWrapper([{
+    uri: NetUtil.newURI("http://www.example.com/"),
+    title: "Example",
+    visits: [{
+      visitDate: new Date("2015-07-10").getTime() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }, {
+      visitDate: new Date("2015-09-10").getTime() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }, {
+      visitDate: new Date("2015-08-10").getTime() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }],
+  }, {
+    uri: NetUtil.newURI("http://www.example.org/"),
+    title: "Example",
+    visits: [{
+      visitDate: new Date("2016-04-03").getTime() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }, {
+      visitDate: new Date("2015-08-03").getTime() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }],
+  }, {
+    uri: NetUtil.newURI("http://www.example.com/"),
+    title: "Example",
+    visits: [{
+      visitDate: new Date("2015-10-10").getTime() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }],
+  }]);
+  let undoVisitData = (yield MigrationUtils.stopAndRetrieveUndoData()).get("visits");
+  Assert.deepEqual(Array.from(undoVisitData.map(v => v.url)).sort(),
+                   ["http://www.example.com/", "http://www.example.org/"]);
+  Assert.deepEqual(undoVisitData.find(v => v.url == "http://www.example.com/"), {
+    url: "http://www.example.com/",
+    visitCount: 4,
+    first: new Date("2015-07-10").getTime() * 1000,
+    last: new Date("2015-10-10").getTime() * 1000,
+  });
+  Assert.deepEqual(undoVisitData.find(v => v.url == "http://www.example.org/"), {
+    url: "http://www.example.org/",
+    visitCount: 2,
+    first: new Date("2015-08-03").getTime() * 1000,
+    last: new Date("2016-04-03").getTime() * 1000,
+  });
+
+  yield PlacesTestUtils.clearHistory();
+});
+
+add_task(function* checkUndoVisitsState() {
+  MigrationUtils.initializeUndoData();
+  yield MigrationUtils.insertVisitsWrapper([{
+    uri: NetUtil.newURI("http://www.example.com/"),
+    title: "Example",
+    visits: [{
+      visitDate: new Date("2015-07-10").getTime() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }, {
+      visitDate: new Date("2015-09-10").getTime() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }, {
+      visitDate: new Date("2015-08-10").getTime() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }],
+  }, {
+    uri: NetUtil.newURI("http://www.example.org/"),
+    title: "Example",
+    visits: [{
+      visitDate: new Date("2016-04-03").getTime() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }, {
+      visitDate: new Date("2015-08-03").getTime() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }],
+  }, {
+    uri: NetUtil.newURI("http://www.example.com/"),
+    title: "Example",
+    visits: [{
+      visitDate: new Date("2015-10-10").getTime() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }],
+  }, {
+    uri: NetUtil.newURI("http://www.mozilla.org/"),
+    title: "Example",
+    visits: [{
+      visitDate: new Date("2015-01-01").getTime() * 1000,
+      transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+    }],
+  }]);
+
+  // We have to wait until frecency updates have been handled in order
+  // to accurately determine whether we're doing the right thing.
+  let frecencyUpdatesHandled = new Promise(resolve => {
+    PlacesUtils.history.addObserver({
+      onFrecencyChanged(aURI) {
+        if (aURI.spec == "http://www.unrelated.org/") {
+          PlacesUtils.history.removeObserver(this);
+          resolve();
+        }
+      }
+    }, false);
+  });
+  yield PlacesUtils.history.insertMany([{
+    url: "http://www.example.com/",
+    title: "Example",
+    visits: [{
+      date: new Date("2015-08-16"),
+    }],
+  }, {
+    url: "http://www.example.org/",
+    title: "Example",
+    visits: [{
+      date: new Date("2016-01-03"),
+    }, {
+      date: new Date("2015-05-03"),
+    }],
+  }, {
+    url: "http://www.unrelated.org/",
+    title: "Unrelated",
+    visits: [{
+      date: new Date("2015-09-01"),
+    }],
+  }]);
+  yield frecencyUpdatesHandled;
+  let undoVisitData = (yield MigrationUtils.stopAndRetrieveUndoData()).get("visits");
+
+  let frecencyChangesExpected = new Map([
+    ["http://www.example.com/", PromiseUtils.defer()],
+    ["http://www.example.org/", PromiseUtils.defer()]
+  ]);
+  let uriDeletedExpected = new Map([
+    ["http://www.mozilla.org/", PromiseUtils.defer()],
+  ]);
+  let wrongMethodDeferred = PromiseUtils.defer();
+  let observer = {
+    onBeginUpdateBatch: function() {},
+    onEndUpdateBatch: function() {},
+    onVisit: function(uri) {
+      wrongMethodDeferred.reject(new Error("Unexpected call to onVisit " + uri.spec));
+    },
+    onTitleChanged: function(uri) {
+      wrongMethodDeferred.reject(new Error("Unexpected call to onTitleChanged " + uri.spec));
+    },
+    onClearHistory: function() {
+      wrongMethodDeferred.reject("Unexpected call to onClearHistory");
+    },
+    onPageChanged: function(uri) {
+      wrongMethodDeferred.reject(new Error("Unexpected call to onPageChanged " + uri.spec));
+    },
+    onFrecencyChanged: function(aURI) {
+      do_print("frecency change");
+      Assert.ok(frecencyChangesExpected.has(aURI.spec),
+                "Should be expecting frecency change for " + aURI.spec);
+      frecencyChangesExpected.get(aURI.spec).resolve();
+    },
+    onManyFrecenciesChanged: function() {
+      do_print("Many frecencies changed");
+      wrongMethodDeferred.reject(new Error("This test can't deal with onManyFrecenciesChanged to be called"));
+    },
+    onDeleteURI: function(aURI) {
+      do_print("delete uri");
+      Assert.ok(uriDeletedExpected.has(aURI.spec),
+                "Should be expecting uri deletion for " + aURI.spec);
+      uriDeletedExpected.get(aURI.spec).resolve();
+    },
+  };
+  PlacesUtils.history.addObserver(observer, false);
+
+  yield AutoMigrate._removeSomeVisits(undoVisitData);
+  PlacesUtils.history.removeObserver(observer);
+  yield Promise.all(uriDeletedExpected.values());
+  yield Promise.all(frecencyChangesExpected.values());
+
+  Assert.equal(yield visitsForURL("http://www.example.com/"), 1,
+               "1 example.com visit (out of 5) should have persisted despite being within the range, due to limiting");
+  Assert.equal(yield visitsForURL("http://www.mozilla.org/"), 0,
+               "0 mozilla.org visits should have persisted (out of 1).");
+  Assert.equal(yield visitsForURL("http://www.example.org/"), 2,
+               "2 example.org visits should have persisted (out of 4).");
+  Assert.equal(yield visitsForURL("http://www.unrelated.org/"), 1,
+               "1 unrelated.org visits should have persisted as it's not involved in the import.");
+  yield PlacesTestUtils.clearHistory();
 });
 
