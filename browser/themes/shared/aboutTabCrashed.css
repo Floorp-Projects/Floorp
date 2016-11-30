@@ -77,3 +77,25 @@ input[type="checkbox"] {
   margin-top: auto;
   margin-bottom: auto;
 }
+
+/**
+ * Hack alert: the #autoSubmit checkbox has a long label, which means
+ * it often wraps, at least in en-US. Bug 418833 and bug 1317795 allows
+ * us to fix this properly, but bug 418833 didn't uplift in time for this
+ * release. We use some hackery here to make sure that this label wraps
+ * properly, and doesn't end up underneath the checkbox pseudoelement.
+ * We do this by setting a negative margin on the pseudoelement, and then
+ * a positive equivalent margin on the label itself.
+ *
+ * The magic number of 35px is derived from the total width of the checkbox.
+ * The checkbox width is explicitly set at 23px. This, plus the 1px border on either
+ * side gives us 25px. Then there's the 10px margin-inline-end, which gives us 35px.
+ */
+#autoSubmit + label:before {
+  margin-inline-start: -35px;
+}
+
+#autoSubmit + label {
+  margin-inline-start: 35px;
+  line-height: 1.75em;
+}
