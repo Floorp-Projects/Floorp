@@ -83,7 +83,7 @@ WebGLExtensionDisjointTimerQuery::QueryCounterEXT(WebGLQuery& query, GLenum targ
     if (mIsLost)
         return;
 
-    if (!mContext->ValidateObjectRef(funcName, query))
+    if (!mContext->ValidateObject(funcName, query))
         return;
 
     query.QueryCounter(funcName, target);

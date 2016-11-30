@@ -19,7 +19,7 @@ WebGL2Context::GetFragDataLocation(const WebGLProgram& prog, const nsAString& na
     if (IsContextLost())
         return -1;
 
-    if (!ValidateObjectRef("getFragDataLocation: program", prog))
+    if (!ValidateObject("getFragDataLocation: program", prog))
         return -1;
 
     return prog.GetFragDataLocation(name);
