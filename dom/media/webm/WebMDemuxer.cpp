@@ -615,7 +615,9 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
   }
 
   int64_t discardPadding = 0;
-  (void) nestegg_packet_discard_padding(holder->Packet(), &discardPadding);
+  if (aType == TrackInfo::kAudioTrack) {
+    (void) nestegg_packet_discard_padding(holder->Packet(), &discardPadding);
+  }
 
   int packetEncryption = nestegg_packet_encryption(holder->Packet());
 
@@ -691,10 +693,20 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType, MediaRawDataQueue *aSampl
     sample->mOffset = holder->Offset();
     sample->mKeyframe = isKeyframe;
     if (discardPadding && i == count - 1) {
-      uint8_t c[8];
-      BigEndian::writeInt64(&c[0], discardPadding);
-      sample->mExtraData = new MediaByteBuffer;
-      sample->mExtraData->AppendElements(&c[0], 8);
+      CheckedInt64 discardFrames;
+      if (discardPadding < 0) {
+        // This is an invalid value as discard padding should never be negative.
+        // Set to maximum value so that the decoder will reject it as it's
+        // greater than the number of frames available.
+        discardFrames = INT32_MAX;
+        WEBM_DEBUG("Invalid negative discard padding");
+      } else {
+        discardFrames = TimeUnitToFrames(
+          media::TimeUnit::FromNanoseconds(discardPadding), mInfo.mAudio.mRate);
+      }
+      if (discardFrames.isValid()) {
+        sample->mDiscardPadding = discardFrames.value();
+      }
     }
 
     if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_UNENCRYPTED ||
