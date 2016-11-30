@@ -31,6 +31,7 @@ JS::Zone::Zone(JSRuntime* rt)
     types(this),
     compartments(),
     gcGrayRoots(),
+    gcWeakKeys(SystemAllocPolicy(), rt->randomHashCodeScrambler()),
     typeDescrObjects(this, SystemAllocPolicy()),
     gcMallocBytes(0),
     gcMallocGCTriggered(false),
