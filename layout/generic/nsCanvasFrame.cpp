@@ -15,7 +15,6 @@
 #include "nsStyleContext.h"
 #include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
-#include "nsPresShell.h"
 #include "nsIPresShell.h"
 #include "nsDisplayList.h"
 #include "nsCSSFrameConstructor.h"
@@ -23,6 +22,7 @@
 #include "gfxPlatform.h"
 #include "nsPrintfCString.h"
 #include "mozilla/dom/AnonymousContent.h"
+#include "mozilla/PresShell.h"
 // for focus
 #include "nsIScrollableFrame.h"
 #ifdef DEBUG_CANVAS_FOCUS
