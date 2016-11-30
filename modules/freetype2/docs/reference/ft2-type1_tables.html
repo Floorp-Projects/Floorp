@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Type 1 Tables</h1>
+<h1 id="type1_tables">Type 1 Tables</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#PS_FontInfoRec">PS_FontInfoRec</a></td><td><a href="#CID_FaceInfo">CID_FaceInfo</a></td><td><a href="#T1_EncodingType">T1_EncodingType</a></td></tr>
@@ -120,7 +120,7 @@
 
 <div class="section">
 <h3 id="PS_FontInfoRec">PS_FontInfoRec</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  PS_FontInfoRec_
   {
@@ -144,7 +144,7 @@
 
 <div class="section">
 <h3 id="PS_FontInfo">PS_FontInfo</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> PS_FontInfoRec_*  <b>PS_FontInfo</b>;
 </pre>
@@ -156,7 +156,7 @@
 
 <div class="section">
 <h3 id="PS_PrivateRec">PS_PrivateRec</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  PS_PrivateRec_
   {
@@ -206,7 +206,7 @@
 
 <div class="section">
 <h3 id="PS_Private">PS_Private</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> PS_PrivateRec_*  <b>PS_Private</b>;
 </pre>
@@ -218,7 +218,7 @@
 
 <div class="section">
 <h3 id="CID_FaceDictRec">CID_FaceDictRec</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  CID_FaceDictRec_
   {
@@ -248,7 +248,7 @@
 
 <div class="section">
 <h3 id="CID_FaceDict">CID_FaceDict</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> CID_FaceDictRec_*  <b>CID_FaceDict</b>;
 </pre>
@@ -260,7 +260,7 @@
 
 <div class="section">
 <h3 id="CID_FaceInfoRec">CID_FaceInfoRec</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  CID_FaceInfoRec_
   {
@@ -299,7 +299,7 @@
 
 <div class="section">
 <h3 id="CID_FaceInfo">CID_FaceInfo</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> CID_FaceInfoRec_*  <b>CID_FaceInfo</b>;
 </pre>
@@ -311,7 +311,7 @@
 
 <div class="section">
 <h3 id="FT_Has_PS_Glyph_Names">FT_Has_PS_Glyph_Names</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Int">FT_Int</a> )
   <b>FT_Has_PS_Glyph_Names</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>  face );
@@ -335,7 +335,7 @@
 
 <div class="section">
 <h3 id="FT_Get_PS_Font_Info">FT_Get_PS_Font_Info</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Get_PS_Font_Info</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>      face,
@@ -362,7 +362,7 @@
 <p>FreeType error code. 0&nbsp;means success.</p>
 
 <h4>note</h4>
-<p>The string pointers within the font info structure are owned by the face and don't need to be freed by the caller.</p>
+<p>String pointers within the <a href="ft2-type1_tables.html#PS_FontInfoRec">PS_FontInfoRec</a> structure are owned by the face and don't need to be freed by the caller. Missing entries in the font's FontInfo dictionary are represented by NULL pointers.</p>
 <p>If the font's format is not PostScript-based, this function will return the &lsquo;FT_Err_Invalid_Argument&rsquo; error code.</p>
 
 <hr>
@@ -370,7 +370,7 @@
 
 <div class="section">
 <h3 id="FT_Get_PS_Font_Private">FT_Get_PS_Font_Private</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Get_PS_Font_Private</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>     face,
@@ -405,7 +405,7 @@
 
 <div class="section">
 <h3 id="FT_Get_PS_Font_Value">FT_Get_PS_Font_Value</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Long">FT_Long</a> )
   <b>FT_Get_PS_Font_Value</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>       face,
@@ -460,7 +460,7 @@
 
 <div class="section">
 <h3 id="T1_Blend_Flags">T1_Blend_Flags</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">enum</span>  T1_Blend_Flags_
   {
@@ -559,7 +559,7 @@
 
 <div class="section">
 <h3 id="T1_EncodingType">T1_EncodingType</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">enum</span>  T1_EncodingType_
   {
@@ -598,7 +598,7 @@
 
 <div class="section">
 <h3 id="PS_Dict_Keys">PS_Dict_Keys</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">enum</span>  PS_Dict_Keys_
   {
@@ -808,7 +808,7 @@
 
 <div class="section">
 <h3 id="T1_FontInfo">T1_FontInfo</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <a href="ft2-type1_tables.html#PS_FontInfoRec">PS_FontInfoRec</a>  <b>T1_FontInfo</b>;
 </pre>
@@ -820,7 +820,7 @@
 
 <div class="section">
 <h3 id="T1_Private">T1_Private</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <a href="ft2-type1_tables.html#PS_PrivateRec">PS_PrivateRec</a>  <b>T1_Private</b>;
 </pre>
@@ -832,7 +832,7 @@
 
 <div class="section">
 <h3 id="CID_FontDict">CID_FontDict</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <a href="ft2-type1_tables.html#CID_FaceDictRec">CID_FaceDictRec</a>  <b>CID_FontDict</b>;
 </pre>
@@ -844,7 +844,7 @@
 
 <div class="section">
 <h3 id="CID_Info">CID_Info</h3>
-<p>Defined in FT_TYPE1_TABLES_H (t1tables.h).</p>
+<p>Defined in FT_TYPE1_TABLES_H (freetype/t1tables.h).</p>
 <pre>
   <span class="keyword">typedef</span> <a href="ft2-type1_tables.html#CID_FaceInfoRec">CID_FaceInfoRec</a>  <b>CID_Info</b>;
 </pre>

@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Mac Specific Interface</h1>
+<h1 id="mac_specific">Mac Specific Interface</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_New_Face_From_FOND">FT_New_Face_From_FOND</a></td><td><a href="#FT_GetFilePath_From_Mac_ATS_Name">FT_GetFilePath_From_Mac_ATS_Name</a></td></tr>
@@ -115,7 +115,7 @@
 
 <div class="section">
 <h3 id="FT_New_Face_From_FOND">FT_New_Face_From_FOND</h3>
-<p>Defined in FT_MAC_H (ftmac.h).</p>
+<p>Defined in FT_MAC_H (freetype/ftmac.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_New_Face_From_FOND</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>  library,
@@ -157,8 +157,8 @@
 <h4>notes</h4>
 <p>This function can be used to create <a href="ft2-base_interface.html#FT_Face">FT_Face</a> objects from fonts that are installed in the system as follows.</p>
 <pre class="colored">
-  fond = GetResource( 'FOND', fontName );                          
-  error = FT_New_Face_From_FOND( library, fond, 0, &amp;face );        
+  fond = GetResource( 'FOND', fontName );
+  error = FT_New_Face_From_FOND( library, fond, 0, &amp;face );
 </pre>
 
 <hr>
@@ -166,7 +166,7 @@
 
 <div class="section">
 <h3 id="FT_GetFile_From_Mac_Name">FT_GetFile_From_Mac_Name</h3>
-<p>Defined in FT_MAC_H (ftmac.h).</p>
+<p>Defined in FT_MAC_H (freetype/ftmac.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_GetFile_From_Mac_Name</b>( <span class="keyword">const</span> <span class="keyword">char</span>*  fontName,
@@ -202,7 +202,7 @@
 
 <div class="section">
 <h3 id="FT_GetFile_From_Mac_ATS_Name">FT_GetFile_From_Mac_ATS_Name</h3>
-<p>Defined in FT_MAC_H (ftmac.h).</p>
+<p>Defined in FT_MAC_H (freetype/ftmac.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_GetFile_From_Mac_ATS_Name</b>( <span class="keyword">const</span> <span class="keyword">char</span>*  fontName,
@@ -238,7 +238,7 @@
 
 <div class="section">
 <h3 id="FT_GetFilePath_From_Mac_ATS_Name">FT_GetFilePath_From_Mac_ATS_Name</h3>
-<p>Defined in FT_MAC_H (ftmac.h).</p>
+<p>Defined in FT_MAC_H (freetype/ftmac.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_GetFilePath_From_Mac_ATS_Name</b>( <span class="keyword">const</span> <span class="keyword">char</span>*  fontName,
@@ -278,7 +278,7 @@
 
 <div class="section">
 <h3 id="FT_New_Face_From_FSSpec">FT_New_Face_From_FSSpec</h3>
-<p>Defined in FT_MAC_H (ftmac.h).</p>
+<p>Defined in FT_MAC_H (freetype/ftmac.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_New_Face_From_FSSpec</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>     library,
@@ -325,7 +325,7 @@
 
 <div class="section">
 <h3 id="FT_New_Face_From_FSRef">FT_New_Face_From_FSRef</h3>
-<p>Defined in FT_MAC_H (ftmac.h).</p>
+<p>Defined in FT_MAC_H (freetype/ftmac.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_New_Face_From_FSRef</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>    library,

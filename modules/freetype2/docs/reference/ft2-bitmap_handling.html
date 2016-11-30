@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,12 +100,12 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Bitmap Handling</h1>
+<h1 id="bitmap_handling">Bitmap Handling</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
-<tr><td><a href="#FT_Bitmap_New">FT_Bitmap_New</a></td><td><a href="#FT_Bitmap_Embolden">FT_Bitmap_Embolden</a></td><td><a href="#FT_GlyphSlot_Own_Bitmap">FT_GlyphSlot_Own_Bitmap</a></td></tr>
+<tr><td><a href="#FT_Bitmap_Init">FT_Bitmap_Init</a></td><td><a href="#FT_Bitmap_Embolden">FT_Bitmap_Embolden</a></td><td><a href="#FT_GlyphSlot_Own_Bitmap">FT_GlyphSlot_Own_Bitmap</a></td></tr>
 <tr><td><a href="#FT_Bitmap_Copy">FT_Bitmap_Copy</a></td><td><a href="#FT_Bitmap_Convert">FT_Bitmap_Convert</a></td><td><a href="#FT_Bitmap_Done">FT_Bitmap_Done</a></td></tr>
 </table>
 
@@ -113,11 +113,16 @@
 <p>This section contains functions for handling <a href="ft2-basic_types.html#FT_Bitmap">FT_Bitmap</a> objects. Note that none of the functions changes the bitmap's &lsquo;flow&rsquo; (as indicated by the sign of the &lsquo;pitch&rsquo; field in &lsquo;FT_Bitmap&rsquo;).</p>
 
 <div class="section">
-<h3 id="FT_Bitmap_New">FT_Bitmap_New</h3>
-<p>Defined in FT_BITMAP_H (ftbitmap.h).</p>
+<h3 id="FT_Bitmap_Init">FT_Bitmap_Init</h3>
+<p>Defined in FT_BITMAP_H (freetype/ftbitmap.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
-  <b>FT_Bitmap_New</b>( <a href="ft2-basic_types.html#FT_Bitmap">FT_Bitmap</a>  *abitmap );
+  <b>FT_Bitmap_Init</b>( <a href="ft2-basic_types.html#FT_Bitmap">FT_Bitmap</a>  *abitmap );
+
+
+  /* deprecated */
+  FT_EXPORT( <span class="keyword">void</span> )
+  FT_Bitmap_New( <a href="ft2-basic_types.html#FT_Bitmap">FT_Bitmap</a>  *abitmap );
 </pre>
 
 <p>Initialize a pointer to an <a href="ft2-basic_types.html#FT_Bitmap">FT_Bitmap</a> structure.</p>
@@ -129,12 +134,15 @@
 </td></tr>
 </table>
 
+<h4>note</h4>
+<p>A deprecated name for the same function is &lsquo;FT_Bitmap_New&rsquo;.</p>
+
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
 <div class="section">
 <h3 id="FT_Bitmap_Copy">FT_Bitmap_Copy</h3>
-<p>Defined in FT_BITMAP_H (ftbitmap.h).</p>
+<p>Defined in FT_BITMAP_H (freetype/ftbitmap.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Bitmap_Copy</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>        library,
@@ -169,7 +177,7 @@
 
 <div class="section">
 <h3 id="FT_Bitmap_Embolden">FT_Bitmap_Embolden</h3>
-<p>Defined in FT_BITMAP_H (ftbitmap.h).</p>
+<p>Defined in FT_BITMAP_H (freetype/ftbitmap.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Bitmap_Embolden</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>  library,
@@ -213,7 +221,7 @@
 
 <div class="section">
 <h3 id="FT_Bitmap_Convert">FT_Bitmap_Convert</h3>
-<p>Defined in FT_BITMAP_H (ftbitmap.h).</p>
+<p>Defined in FT_BITMAP_H (freetype/ftbitmap.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Bitmap_Convert</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>        library,
@@ -257,7 +265,7 @@
 
 <div class="section">
 <h3 id="FT_GlyphSlot_Own_Bitmap">FT_GlyphSlot_Own_Bitmap</h3>
-<p>Defined in FT_BITMAP_H (ftbitmap.h).</p>
+<p>Defined in FT_BITMAP_H (freetype/ftbitmap.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_GlyphSlot_Own_Bitmap</b>( <a href="ft2-base_interface.html#FT_GlyphSlot">FT_GlyphSlot</a>  slot );
@@ -283,14 +291,14 @@
 
 <div class="section">
 <h3 id="FT_Bitmap_Done">FT_Bitmap_Done</h3>
-<p>Defined in FT_BITMAP_H (ftbitmap.h).</p>
+<p>Defined in FT_BITMAP_H (freetype/ftbitmap.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Bitmap_Done</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>  library,
                   <a href="ft2-basic_types.html#FT_Bitmap">FT_Bitmap</a>  *bitmap );
 </pre>
 
-<p>Destroy a bitmap object created with <a href="ft2-bitmap_handling.html#FT_Bitmap_New">FT_Bitmap_New</a>.</p>
+<p>Destroy a bitmap object initialized with <a href="ft2-bitmap_handling.html#FT_Bitmap_Init">FT_Bitmap_Init</a>.</p>
 
 <h4>input</h4>
 <table class="fields">

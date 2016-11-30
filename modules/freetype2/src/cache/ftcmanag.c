@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache Manager (body).                                       */
 /*                                                                         */
-/*  Copyright 2000-2006, 2008-2010, 2013, 2014 by                          */
+/*  Copyright 2000-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,8 +34,6 @@
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_cache
 
-#define FTC_LRU_GET_MANAGER( lru )  ( (FTC_Manager)(lru)->user_data )
-
 
   static FT_Error
   ftc_scaler_lookup_size( FTC_Manager  manager,
@@ -60,8 +58,11 @@
     if ( scaler->pixel )
       error = FT_Set_Pixel_Sizes( face, scaler->width, scaler->height );
     else
-      error = FT_Set_Char_Size( face, scaler->width, scaler->height,
-                                scaler->x_res, scaler->y_res );
+      error = FT_Set_Char_Size( face,
+                                (FT_F26Dot6)scaler->width,
+                                (FT_F26Dot6)scaler->height,
+                                scaler->x_res,
+                                scaler->y_res );
     if ( error )
     {
       FT_Done_Size( size );
@@ -313,7 +314,7 @@
     FTC_MruNode  mrunode;
 
 
-    if ( !aface || !face_id )
+    if ( !aface )
       return FT_THROW( Invalid_Argument );
 
     *aface = NULL;
@@ -493,7 +494,7 @@
         else
           weight += cache->clazz.node_weight( node, cache );
 
-        node = FTC_NODE__NEXT( node );
+        node = FTC_NODE_NEXT( node );
 
       } while ( node != first );
 
@@ -512,7 +513,7 @@
       do
       {
         count++;
-        node = FTC_NODE__NEXT( node );
+        node = FTC_NODE_NEXT( node );
 
       } while ( node != first );
 
@@ -555,13 +556,13 @@
       return;
 
     /* go to last node -- it's a circular list */
-    node = FTC_NODE__PREV( first );
+    node = FTC_NODE_PREV( first );
     do
     {
       FTC_Node  prev;
 
 
-      prev = ( node == first ) ? NULL : FTC_NODE__PREV( node );
+      prev = ( node == first ) ? NULL : FTC_NODE_PREV( node );
 
       if ( node->ref_count <= 0 )
         ftc_node_destroy( node, manager );
@@ -640,10 +641,10 @@
       return 0;
 
     /* go to last node - it's a circular list */
-    node = FTC_NODE__PREV(first);
+    node = FTC_NODE_PREV(first);
     for ( result = 0; result < count; )
     {
-      FTC_Node  prev = FTC_NODE__PREV( node );
+      FTC_Node  prev = FTC_NODE_PREV( node );
 
 
       /* don't touch locked nodes */
@@ -671,7 +672,7 @@
     FT_UInt  nn;
 
 
-    if ( !manager || !face_id )
+    if ( !manager )
       return;
 
     /* this will remove all FTC_SizeNode that correspond to
