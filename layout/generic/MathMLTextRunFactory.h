@@ -14,7 +14,7 @@
  */
 class MathMLTextRunFactory : public nsTransformingTextRunFactory {
 public:
-  MathMLTextRunFactory(UniquePtr<nsTransformingTextRunFactory> aInnerTransformingTextRunFactory,
+  MathMLTextRunFactory(mozilla::UniquePtr<nsTransformingTextRunFactory> aInnerTransformingTextRunFactory,
                        uint32_t aFlags, uint8_t aSSTYScriptLevel,
                        float aFontInflation)
     : mInnerTransformingTextRunFactory(Move(aInnerTransformingTextRunFactory)),
@@ -33,7 +33,7 @@ public:
   };
 
 protected:
-  UniquePtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;
+  mozilla::UniquePtr<nsTransformingTextRunFactory> mInnerTransformingTextRunFactory;
   uint32_t mFlags;
   float mFontInflation;
   uint8_t mSSTYScriptLevel;

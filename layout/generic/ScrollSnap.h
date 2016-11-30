@@ -27,7 +27,7 @@ struct ScrollSnapUtils {
    *                 not to touch main-thread-only data structures without
    *                 appropriate locking.
    */
-  static Maybe<nsPoint> GetSnapPointForDestination(
+  static mozilla::Maybe<nsPoint> GetSnapPointForDestination(
       const layers::ScrollSnapInfo& aSnapInfo,
       nsIScrollableFrame::ScrollUnit aUnit,
       const nsSize& aScrollPortSize,
