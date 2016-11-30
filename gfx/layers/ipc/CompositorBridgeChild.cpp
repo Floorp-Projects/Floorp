@@ -296,6 +296,24 @@ CompositorBridgeChild::ChildProcessHasCompositorBridge()
   return sCompositorBridge != nullptr;
 }
 
+/* static */ bool
+CompositorBridgeChild::CompositorIsInGPUProcess()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (XRE_IsParentProcess()) {
+    return !!GPUProcessManager::Get()->GetGPUChild();
+  }
+
+  MOZ_ASSERT(XRE_IsContentProcess());
+  CompositorBridgeChild* bridge = CompositorBridgeChild::Get();
+  if (!bridge) {
+    return false;
+  }
+
+  return bridge->OtherPid() != dom::ContentChild::GetSingleton()->OtherPid();
+}
+
 PLayerTransactionChild*
 CompositorBridgeChild::AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBackendHints,
                                                    const uint64_t& aId,

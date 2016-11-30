@@ -25,7 +25,6 @@
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
@@ -482,26 +481,24 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection)
   return NS_OK;
 }
 
-static inline already_AddRefed<nsIDOMNode>
-GetTextNode(Selection* selection,
-            EditorBase* editor)
+static inline already_AddRefed<nsINode>
+GetTextNode(Selection* selection)
 {
   int32_t selOffset;
-  nsCOMPtr<nsIDOMNode> selNode;
+  nsCOMPtr<nsINode> selNode;
   nsresult rv =
-    editor->GetStartNodeAndOffset(selection,
-                                  getter_AddRefs(selNode), &selOffset);
+    EditorBase::GetStartNodeAndOffset(selection,
+                                      getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(rv, nullptr);
-  if (!editor->IsTextNode(selNode)) {
-    // Get an nsINode from the nsIDOMNode
-    nsCOMPtr<nsINode> node = do_QueryInterface(selNode);
-    // if node is null, return it to indicate there's no text
-    NS_ENSURE_TRUE(node, nullptr);
+  if (!EditorBase::IsTextNode(selNode)) {
     // This should be the root node, walk the tree looking for text nodes
     RefPtr<NodeIterator> iter =
-      new NodeIterator(node, nsIDOMNodeFilter::SHOW_TEXT, NodeFilterHolder());
-    while (!editor->IsTextNode(selNode)) {
-      if (NS_FAILED(iter->NextNode(getter_AddRefs(selNode))) || !selNode) {
+      new NodeIterator(selNode, nsIDOMNodeFilter::SHOW_TEXT,
+                       NodeFilterHolder());
+    while (!EditorBase::IsTextNode(selNode)) {
+      IgnoredErrorResult rv;
+      selNode = iter->NextNode(rv);
+      if (!selNode) {
         return nullptr;
       }
     }
@@ -1385,13 +1382,10 @@ TextEditRules::HideLastPWInput()
   nsContentUtils::GetSelectionInTextControl(selection, mTextEditor->GetRoot(),
                                             start, end);
 
-  nsCOMPtr<nsIDOMNode> selNode = GetTextNode(selection, mTextEditor);
+  nsCOMPtr<nsINode> selNode = GetTextNode(selection);
   NS_ENSURE_TRUE(selNode, NS_OK);
 
-  nsCOMPtr<nsIDOMCharacterData> nodeAsText(do_QueryInterface(selNode));
-  NS_ENSURE_TRUE(nodeAsText, NS_OK);
-
-  nodeAsText->ReplaceData(mLastStart, mLastLength, hiddenText);
+  selNode->GetAsText()->ReplaceData(mLastStart, mLastLength, hiddenText);
   selection->Collapse(selNode, start);
   if (start != end) {
     selection->Extend(selNode, end);

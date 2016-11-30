@@ -143,16 +143,18 @@ function checkInvalidWhenValueMissing(element)
   select.add(new Option(), null);
   checkNotSufferingFromBeingMissing(select);
 
+  // The placeholder label can only be the first option, so a selected empty second option is valid
   select.options[1].selected = true;
-  checkSufferingFromBeingMissing(select);
+  checkNotSufferingFromBeingMissing(select);
 
   select.selectedIndex = 0;
   checkNotSufferingFromBeingMissing(select);
 
-  select.selectedIndex = 1;
+  select.add(select.options[0]);
+  select.selectedIndex = 0;
   checkSufferingFromBeingMissing(select);
 
-  select.remove(1);
+  select.remove(0);
   checkNotSufferingFromBeingMissing(select);
 
   select.options[0].disabled = true;
@@ -182,8 +184,13 @@ function checkInvalidWhenValueMissing(element)
   select.size = 4;
   checkSufferingFromBeingMissing(select);
 
+  // Setting defaultSelected to true should not make the option selected
   select.add(new Option("", "", true), null);
-  checkSufferingFromBeingMissing(select);
+  checkSufferingFromBeingMissing(select, true);
+  select.remove(0);
+
+  select.add(new Option("", "", true, true), null);
+  checkNotSufferingFromBeingMissing(select);
 
   select.add(new Option("foo", "foo"), null);
   select.remove(0);
@@ -203,13 +210,13 @@ function checkInvalidWhenValueMissing(element)
   checkSufferingFromBeingMissing(select);
 
   select.add(new Option("", "", true), null);
-  checkSufferingFromBeingMissing(select);
+  checkSufferingFromBeingMissing(select, true);
 
   select.add(new Option("", "", true), null);
-  checkSufferingFromBeingMissing(select);
+  checkSufferingFromBeingMissing(select, true);
 
   select.add(new Option("foo"), null);
-  checkSufferingFromBeingMissing(select);
+  checkSufferingFromBeingMissing(select, true);
 
   select.options[2].selected = true;
   checkNotSufferingFromBeingMissing(select);

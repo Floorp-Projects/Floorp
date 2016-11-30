@@ -105,6 +105,7 @@ add_task(function* test_webnavigation_urlbar_typed_transitions() {
   });
 
   yield extension.startup();
+  yield SimpleTest.promiseFocus(window);
 
   yield extension.awaitMessage("ready");
 
@@ -150,6 +151,7 @@ add_task(function* test_webnavigation_urlbar_bookmark_transitions() {
   });
 
   yield extension.startup();
+  yield SimpleTest.promiseFocus(window);
 
   yield extension.awaitMessage("ready");
 
@@ -195,6 +197,7 @@ add_task(function* test_webnavigation_urlbar_keyword_transition() {
   });
 
   yield extension.startup();
+  yield SimpleTest.promiseFocus(window);
 
   yield extension.awaitMessage("ready");
 
@@ -235,6 +238,7 @@ add_task(function* test_webnavigation_urlbar_search_transitions() {
   });
 
   yield extension.startup();
+  yield SimpleTest.promiseFocus(window);
 
   yield extension.awaitMessage("ready");
 

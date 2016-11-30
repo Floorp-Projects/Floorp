@@ -1894,7 +1894,7 @@ var gCategories = {
         continue;
       // If the priorities are equal and the new type's name is earlier
       // alphabetically then this is the insertion point
-      if (String.localeCompare(aName, node.getAttribute("name")) < 0)
+      if (String(aName).localeCompare(node.getAttribute("name")) < 0)
         break;
     }
 
