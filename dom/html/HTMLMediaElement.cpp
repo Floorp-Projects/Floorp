@@ -953,14 +953,14 @@ private:
   // It's used when we temporary lost platform audio focus. MediaElement can
   // only be resumed when we gain the audio focus again.
   // - SUSPENDED_PAUSE_DISPOSABLE
-  // It's used when user press the pause botton on the remote media-control.
-  // MediaElement can be resumed by reomte media-control or via play().
+  // It's used when user press the pause button on the remote media-control.
+  // MediaElement can be resumed by remote media-control or via play().
   // - SUSPENDED_BLOCK
-  // It's used to reduce the power comsuption, we won't play the auto-play
+  // It's used to reduce the power consumption, we won't play the auto-play
   // audio/video in the page we have never visited before. MediaElement would
   // be resumed when the page is active. See bug647429 for more details.
   // - SUSPENDED_STOP_DISPOSABLE
-  // When we permanently lost platform audio focus, we shuold stop playing
+  // When we permanently lost platform audio focus, we should stop playing
   // and stop the audio channel agent. MediaElement can only be restarted by
   // play().
   SuspendTypes mSuspended;
