@@ -6,11 +6,9 @@ import os
 import time
 import urllib
 
+from marionette import MarionetteTestCase, WindowManagerMixin
 from marionette_driver import By, errors
 from marionette_driver.marionette import HTMLElement
-from marionette_driver.wait import Wait
-
-from marionette import MarionetteTestCase, WindowManagerMixin
 
 
 def inline(doc):
@@ -241,27 +239,27 @@ class TestExecuteContent(MarionetteTestCase):
             "return typeof arguments[0] == 'undefined'"))
 
     def test_window_set_timeout_is_not_cancelled(self):
-        def content_timeout_triggered(mn):
-            return mn.execute_script("return window.n", sandbox=None) > 0
-
-        # subsequent call to execute_script after this
-        # should not cancel the setTimeout event
         self.marionette.navigate(inline("""
             <script>
-            window.n = 0;
-            setTimeout(() => ++window.n, 4000);
+            window.contentTimeoutTriggered = 0;
+            window.contentTimeoutID = setTimeout(
+                () => window.contentTimeoutTriggered++, 1000);
             </script>"""))
 
-        # as debug builds are inherently slow,
-        # we need to assert the event did not already fire
+        # first execute script call should not cancel event
         self.assertEqual(0, self.marionette.execute_script(
-            "return window.n", sandbox=None),
-            "setTimeout already fired")
+            "return window.contentTimeoutTriggered", sandbox=None))
 
-        # if event was cancelled, this will time out
-        Wait(self.marionette).until(content_timeout_triggered,
-                                    timeout=8,
-                                    message="Scheduled setTimeout event was cancelled by call to execute_script")
+        # test that event was not cancelled
+        time.sleep(1)
+        self.assertEqual(1, self.marionette.execute_script(
+            "return window.contentTimeoutTriggered", sandbox=None))
+
+        # ../../../../evaluate.js:/scriptTimeoutID/
+        # sets the script timeout handler using the content frame script
+        # so the in-content setTimeout should always return 2
+        self.assertEqual(2, self.marionette.execute_script(
+            "return window.contentTimeoutID", sandbox=None))
 
 
 class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
