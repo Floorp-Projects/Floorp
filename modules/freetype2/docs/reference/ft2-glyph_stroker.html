@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Glyph Stroker</h1>
+<h1 id="glyph_stroker">Glyph Stroker</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_Stroker">FT_Stroker</a></td><td><a href="#FT_Stroker_ParseOutline">FT_Stroker_ParseOutline</a></td></tr>
@@ -128,7 +128,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker">FT_Stroker</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_StrokerRec_*  <b>FT_Stroker</b>;
 </pre>
@@ -140,7 +140,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_LineJoin">FT_Stroker_LineJoin</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">enum</span>  FT_Stroker_LineJoin_
   {
@@ -179,7 +179,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_LineCap">FT_Stroker_LineCap</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">enum</span>  FT_Stroker_LineCap_
   {
@@ -210,7 +210,7 @@
 
 <div class="section">
 <h3 id="FT_StrokerBorder">FT_StrokerBorder</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">enum</span>  FT_StrokerBorder_
   {
@@ -241,7 +241,7 @@
 
 <div class="section">
 <h3 id="FT_Outline_GetInsideBorder">FT_Outline_GetInsideBorder</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-glyph_stroker.html#FT_StrokerBorder">FT_StrokerBorder</a> )
   <b>FT_Outline_GetInsideBorder</b>( <a href="ft2-outline_processing.html#FT_Outline">FT_Outline</a>*  outline );
@@ -264,7 +264,7 @@
 
 <div class="section">
 <h3 id="FT_Outline_GetOutsideBorder">FT_Outline_GetOutsideBorder</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-glyph_stroker.html#FT_StrokerBorder">FT_StrokerBorder</a> )
   <b>FT_Outline_GetOutsideBorder</b>( <a href="ft2-outline_processing.html#FT_Outline">FT_Outline</a>*  outline );
@@ -287,7 +287,7 @@
 
 <div class="section">
 <h3 id="FT_Glyph_Stroke">FT_Glyph_Stroke</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Glyph_Stroke</b>( <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a>    *pglyph,
@@ -326,7 +326,7 @@
 
 <div class="section">
 <h3 id="FT_Glyph_StrokeBorder">FT_Glyph_StrokeBorder</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Glyph_StrokeBorder</b>( <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a>    *pglyph,
@@ -369,7 +369,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_New">FT_Stroker_New</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Stroker_New</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>   library,
@@ -400,7 +400,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_Set">FT_Stroker_Set</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FT_Stroker_Set</b>( <a href="ft2-glyph_stroker.html#FT_Stroker">FT_Stroker</a>           stroker,
@@ -440,7 +440,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_Rewind">FT_Stroker_Rewind</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FT_Stroker_Rewind</b>( <a href="ft2-glyph_stroker.html#FT_Stroker">FT_Stroker</a>  stroker );
@@ -460,7 +460,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_ParseOutline">FT_Stroker_ParseOutline</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Stroker_ParseOutline</b>( <a href="ft2-glyph_stroker.html#FT_Stroker">FT_Stroker</a>   stroker,
@@ -496,7 +496,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_Done">FT_Stroker_Done</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FT_Stroker_Done</b>( <a href="ft2-glyph_stroker.html#FT_Stroker">FT_Stroker</a>  stroker );
@@ -516,7 +516,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_BeginSubPath">FT_Stroker_BeginSubPath</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Stroker_BeginSubPath</b>( <a href="ft2-glyph_stroker.html#FT_Stroker">FT_Stroker</a>  stroker,
@@ -550,7 +550,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_EndSubPath">FT_Stroker_EndSubPath</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Stroker_EndSubPath</b>( <a href="ft2-glyph_stroker.html#FT_Stroker">FT_Stroker</a>  stroker );
@@ -576,7 +576,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_LineTo">FT_Stroker_LineTo</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Stroker_LineTo</b>( <a href="ft2-glyph_stroker.html#FT_Stroker">FT_Stroker</a>  stroker,
@@ -606,7 +606,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_ConicTo">FT_Stroker_ConicTo</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Stroker_ConicTo</b>( <a href="ft2-glyph_stroker.html#FT_Stroker">FT_Stroker</a>  stroker,
@@ -640,7 +640,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_CubicTo">FT_Stroker_CubicTo</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Stroker_CubicTo</b>( <a href="ft2-glyph_stroker.html#FT_Stroker">FT_Stroker</a>  stroker,
@@ -678,7 +678,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_GetBorderCounts">FT_Stroker_GetBorderCounts</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Stroker_GetBorderCounts</b>( <a href="ft2-glyph_stroker.html#FT_Stroker">FT_Stroker</a>        stroker,
@@ -722,7 +722,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_ExportBorder">FT_Stroker_ExportBorder</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FT_Stroker_ExportBorder</b>( <a href="ft2-glyph_stroker.html#FT_Stroker">FT_Stroker</a>        stroker,
@@ -757,7 +757,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_GetCounts">FT_Stroker_GetCounts</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Stroker_GetCounts</b>( <a href="ft2-glyph_stroker.html#FT_Stroker">FT_Stroker</a>  stroker,
@@ -792,7 +792,7 @@
 
 <div class="section">
 <h3 id="FT_Stroker_Export">FT_Stroker_Export</h3>
-<p>Defined in FT_STROKER_H (ftstroke.h).</p>
+<p>Defined in FT_STROKER_H (freetype/ftstroke.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FT_Stroker_Export</b>( <a href="ft2-glyph_stroker.html#FT_Stroker">FT_Stroker</a>   stroker,

@@ -1,4 +1,4 @@
-#if defined( __GXVALID_H__ )
+#if defined( GXVALID_H_ )
 #pragma warn -aus /* too many unevaluated variables in gxvalid */
 #endif
 
