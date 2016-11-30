@@ -1510,6 +1510,13 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </xul:description>
       </xul:hbox>
     </content>
+    <implementation>
+      <constructor><![CDATA[
+        // Unlike other autocomplete items, the height of the insecure warning
+        // increases by wrapping.
+        this._handleOverflow();
+      ]]></constructor>
+    </implementation>
   </binding>
 
   <binding id="autocomplete-richlistitem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
