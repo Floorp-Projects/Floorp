@@ -1641,18 +1641,44 @@ public:
         return true;
     }
 
-    bool ValidateObject(const char* funcName, const WebGLDeletableObject& object) {
+    bool ValidateObject(const char* funcName, const WebGLDeletableObject& object,
+                        bool isShaderOrProgram = false)
+    {
         if (!ValidateObjectAllowDeleted(funcName, object))
             return false;
 
-        if (object.IsDeleteRequested()) {
-            ErrorInvalidOperation("%s: Object argument cannot be marked for deletion.",
+        if (isShaderOrProgram) {
+            /* GLES 3.0.5 p45:
+             * "Commands that accept shader or program object names will generate the
+             *  error INVALID_VALUE if the provided name is not the name of either a
+             *  shader or program object[.]"
+             * Further, shaders and programs appear to be different from other objects,
+             * in that their lifetimes are better defined. However, they also appear to
+             * allow use of objects marked for deletion, and only reject
+             * actually-destroyed objects.
+             */
+            if (object.IsDeleted()) {
+                ErrorInvalidValue("%s: Shader or program object argument cannot have been"
+                                  " deleted.",
                                   funcName);
-            return false;
+                return false;
+            }
+        } else {
+            if (object.IsDeleteRequested()) {
+                ErrorInvalidOperation("%s: Object argument cannot have been marked for"
+                                      " deletion.",
+                                      funcName);
+                return false;
+            }
         }
 
         return true;
     }
+
+    ////
+
+    bool ValidateObject(const char* funcName, const WebGLProgram& object);
+    bool ValidateObject(const char* funcName, const WebGLShader& object);
 
     ////
 
