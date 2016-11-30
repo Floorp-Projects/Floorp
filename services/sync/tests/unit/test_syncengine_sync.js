@@ -1552,7 +1552,7 @@ add_task(async function test_uploadOutgoing_largeRecords() {
   let collection = new ServerCollection();
 
   let engine = makeRotaryEngine();
-
+  engine.allowSkippedRecord = false;
   engine._store.items["large-item"] = "Y".repeat(MAX_UPLOAD_BYTES*2);
   engine._tracker.addChangedID("large-item", 0);
   collection.insert("large-item");

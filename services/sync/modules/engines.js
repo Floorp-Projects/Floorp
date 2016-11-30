@@ -653,7 +653,7 @@ Engine.prototype = {
   // If this is false, we'll throw, otherwise, we'll ignore the record and
   // continue. This currently can only happen due to the record being larger
   // than the record upload limit.
-  allowSkippedRecord: false,
+  allowSkippedRecord: true,
 
   get prefName() {
     return this.name;
