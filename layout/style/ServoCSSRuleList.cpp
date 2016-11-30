@@ -24,14 +24,9 @@ ServoCSSRuleList::ServoCSSRuleList(ServoStyleSheet* aStyleSheet,
   //     stylesheet goes away.
 }
 
-nsIDOMCSSRule*
-ServoCSSRuleList::IndexedGetter(uint32_t aIndex, bool& aFound)
+css::Rule*
+ServoCSSRuleList::GetRule(uint32_t aIndex)
 {
-  if (aIndex >= mRules.Length()) {
-    aFound = false;
-    return nullptr;
-  }
-  aFound = true;
   uintptr_t rule = mRules[aIndex];
   if (rule <= kMaxRuleType) {
     RefPtr<css::Rule> ruleObj = nullptr;
@@ -54,7 +49,21 @@ ServoCSSRuleList::IndexedGetter(uint32_t aIndex, bool& aFound)
     rule = CastToUint(ruleObj.forget().take());
     mRules[aIndex] = rule;
   }
-  return CastToPtr(rule)->GetDOMRule();
+  return CastToPtr(rule);
+}
+
+nsIDOMCSSRule*
+ServoCSSRuleList::IndexedGetter(uint32_t aIndex, bool& aFound)
+{
+  if (aIndex >= mRules.Length()) {
+    aFound = false;
+    return nullptr;
+  }
+  aFound = true;
+  if (css::Rule* rule = GetRule(aIndex)) {
+    return rule->GetDOMRule();
+  }
+  return nullptr;
 }
 
 template<typename Func>
@@ -75,6 +84,32 @@ ServoCSSRuleList::DropReference()
   EnumerateInstantiatedRules([](css::Rule* rule) {
     rule->SetStyleSheet(nullptr);
   });
+}
+
+nsresult
+ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex)
+{
+  NS_ConvertUTF16toUTF8 rule(aRule);
+  // XXX This needs to actually reflect whether it is nested when we
+  // support using CSSRuleList in CSSGroupingRules.
+  bool nested = false;
+  uint16_t type;
+  nsresult rv = Servo_CssRules_InsertRule(mRawRules, mStyleSheet->RawSheet(),
+                                          &rule, aIndex, nested, &type);
+  if (!NS_FAILED(rv)) {
+    mRules.InsertElementAt(type);
+  }
+  return rv;
+}
+
+nsresult
+ServoCSSRuleList::DeleteRule(uint32_t aIndex)
+{
+  nsresult rv = Servo_CssRules_DeleteRule(mRawRules, aIndex);
+  if (!NS_FAILED(rv)) {
+    mRules.RemoveElementAt(aIndex);
+  }
+  return rv;
 }
 
 ServoCSSRuleList::~ServoCSSRuleList()

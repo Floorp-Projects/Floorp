@@ -39,7 +39,7 @@ add_task(function* () {
   ok(!highlighters.gridHighlighterShown, "No CSS grid highlighter is shown.");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
-  let onHighlighterShown = highlighters.once("highlighter-shown");
+  let onHighlighterShown = highlighters.once("grid-highlighter-shown");
   gridToggle.click();
   yield onHighlighterShown;
 
@@ -52,7 +52,7 @@ add_task(function* () {
   ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
 
   info("Toggling OFF the CSS grid highlighter from the rule-view.");
-  let onHighlighterHidden = highlighters.once("highlighter-hidden");
+  let onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
   gridToggle.click();
   yield onHighlighterHidden;
 
