@@ -573,6 +573,7 @@ class Marionette(object):
         self.instance = None
         self.session = None
         self.session_id = None
+        self.process_id = None
         self.window = None
         self.chrome_window = None
         self.baseurl = baseurl
@@ -1219,11 +1220,11 @@ class Marionette(object):
         # Restore the context as used before the restart
         self.set_context(context)
 
-        if in_app and self.session.get("processId"):
+        if in_app and self.process_id:
             # In some cases Firefox restarts itself by spawning into a new process group.
             # As long as mozprocess cannot track that behavior (bug 1284864) we assist by
             # informing about the new process id.
-            self.instance.runner.process_handler.check_for_detached(self.session["processId"])
+            self.instance.runner.process_handler.check_for_detached(self.process_id)
 
     def absolute_url(self, relative_url):
         '''
@@ -1271,6 +1272,8 @@ class Marionette(object):
 
         self.session_id = resp["sessionId"]
         self.session = resp["value"] if self.protocol == 1 else resp["capabilities"]
+        # fallback to processId can be removed in Firefox 55
+        self.process_id = self.session.get("moz:processID", self.session.get("processId"))
 
         return self.session
 
@@ -1300,6 +1303,7 @@ class Marionette(object):
             if reset_session_id:
                 self.session_id = None
             self.session = None
+            self.process_id = None
             self.window = None
             self.client.close()
 
