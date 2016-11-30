@@ -261,17 +261,17 @@ add_task(function* checkUndoDisablingByBookmarksAndPasswords() {
   Services.prefs.setCharPref("browser.migrate.automigrate.finished", endTime);
   AutoMigrate.maybeInitUndoObserver();
 
-  ok(AutoMigrate.canUndo(), "Should be able to undo.");
+  Assert.ok(AutoMigrate.canUndo(), "Should be able to undo.");
 
   // Insert a login and check that that disabled undo.
   let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
   login.init("www.mozilla.org", "http://www.mozilla.org", null, "user", "pass", "userEl", "passEl");
   Services.logins.addLogin(login);
 
-  ok(!AutoMigrate.canUndo(), "Should no longer be able to undo.");
+  Assert.ok(!AutoMigrate.canUndo(), "Should no longer be able to undo.");
   Services.prefs.setCharPref("browser.migrate.automigrate.started", startTime);
   Services.prefs.setCharPref("browser.migrate.automigrate.finished", endTime);
-  ok(AutoMigrate.canUndo(), "Should be able to undo.");
+  Assert.ok(AutoMigrate.canUndo(), "Should be able to undo.");
   AutoMigrate.maybeInitUndoObserver();
 
   // Insert a bookmark and check that that disabled undo.
@@ -280,7 +280,7 @@ add_task(function* checkUndoDisablingByBookmarksAndPasswords() {
     url: "http://www.example.org/",
     title: "Some example bookmark",
   });
-  ok(!AutoMigrate.canUndo(), "Should no longer be able to undo.");
+  Assert.ok(!AutoMigrate.canUndo(), "Should no longer be able to undo.");
 
   try {
     Services.logins.removeAllLogins();
@@ -288,3 +288,99 @@ add_task(function* checkUndoDisablingByBookmarksAndPasswords() {
   yield PlacesUtils.bookmarks.eraseEverything();
 });
 
+add_task(function* checkUndoBookmarksState() {
+  MigrationUtils.initializeUndoData();
+  const {TYPE_FOLDER, TYPE_BOOKMARK} = PlacesUtils.bookmarks;
+  let title = "Some example bookmark";
+  let url = "http://www.example.com";
+  let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
+  let {guid, lastModified} = yield MigrationUtils.insertBookmarkWrapper({
+    title, url, parentGuid
+  });
+  Assert.deepEqual((yield MigrationUtils.stopAndRetrieveUndoData()).get("bookmarks"),
+      [{lastModified, parentGuid, guid, type: TYPE_BOOKMARK}]);
+
+  MigrationUtils.initializeUndoData();
+  ({guid, lastModified} = yield MigrationUtils.insertBookmarkWrapper({
+    title, parentGuid, type: TYPE_FOLDER
+  }));
+  let folder = {guid, lastModified, parentGuid, type: TYPE_FOLDER};
+  let folderGuid = folder.guid;
+  ({guid, lastModified} = yield MigrationUtils.insertBookmarkWrapper({
+    title, url, parentGuid: folderGuid
+  }));
+  let kid1 = {guid, lastModified, parentGuid: folderGuid, type: TYPE_BOOKMARK};
+  ({guid, lastModified} = yield MigrationUtils.insertBookmarkWrapper({
+    title, url, parentGuid: folderGuid
+  }));
+  let kid2 = {guid, lastModified, parentGuid: folderGuid, type: TYPE_BOOKMARK};
+
+  let bookmarksUndo = (yield MigrationUtils.stopAndRetrieveUndoData()).get("bookmarks");
+  Assert.equal(bookmarksUndo.length, 3);
+  // We expect that the last modified time from first kid #1 and then kid #2
+  // has been propagated to the folder:
+  folder.lastModified = kid2.lastModified;
+  // Not just using deepEqual on the entire array (which should work) because
+  // the failure messages get truncated by xpcshell which is unhelpful.
+  Assert.deepEqual(bookmarksUndo[0], folder);
+  Assert.deepEqual(bookmarksUndo[1], kid1);
+  Assert.deepEqual(bookmarksUndo[2], kid2);
+  yield PlacesUtils.bookmarks.eraseEverything();
+});
+
+add_task(function* testBookmarkRemovalByUndo() {
+  const {TYPE_FOLDER} = PlacesUtils.bookmarks;
+  MigrationUtils.initializeUndoData();
+  let title = "Some example bookmark";
+  let url = "http://www.mymagicaluniqueurl.com";
+  let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
+  let {guid} = yield MigrationUtils.insertBookmarkWrapper({
+    title: "Some folder", parentGuid, type: TYPE_FOLDER
+  });
+  let folderGuid = guid;
+  let itemsToRemove = [];
+  ({guid} = yield MigrationUtils.insertBookmarkWrapper({
+    title: "Inner folder", parentGuid: folderGuid, type: TYPE_FOLDER
+  }));
+  let innerFolderGuid = guid;
+  itemsToRemove.push(innerFolderGuid);
+
+  ({guid} = yield MigrationUtils.insertBookmarkWrapper({
+    title: "Inner inner folder", parentGuid: innerFolderGuid, type: TYPE_FOLDER
+  }));
+  itemsToRemove.push(guid);
+
+  ({guid} = yield MigrationUtils.insertBookmarkWrapper({
+    title: "Inner nested item", url: "http://inner-nested-example.com", parentGuid: guid
+  }));
+  itemsToRemove.push(guid);
+
+  ({guid} = yield MigrationUtils.insertBookmarkWrapper({
+    title, url, parentGuid: folderGuid
+  }));
+  itemsToRemove.push(guid);
+
+  for (let toBeRemovedGuid of itemsToRemove) {
+    let dbResultForGuid = yield PlacesUtils.bookmarks.fetch(toBeRemovedGuid);
+    Assert.ok(dbResultForGuid, "Should be able to find items that will be removed.");
+  }
+  let bookmarkUndoState = (yield MigrationUtils.stopAndRetrieveUndoData()).get("bookmarks");
+  // Now insert a separate item into this folder, not related to the migration.
+  let newItem = yield PlacesUtils.bookmarks.insert(
+    {title: "Not imported", parentGuid: folderGuid, url: "http://www.example.com"}
+  );
+
+  yield AutoMigrate._removeUnchangedBookmarks(bookmarkUndoState);
+  Assert.ok(true, "Successfully removed imported items.");
+
+  let itemFromDB = yield PlacesUtils.bookmarks.fetch(newItem.guid);
+  Assert.ok(itemFromDB, "Item we inserted outside of migration is still there.");
+  itemFromDB = yield PlacesUtils.bookmarks.fetch(folderGuid);
+  Assert.ok(itemFromDB, "Folder we inserted in migration is still there because of new kids.");
+  for (let removedGuid of itemsToRemove) {
+    let dbResultForGuid = yield PlacesUtils.bookmarks.fetch(removedGuid);
+    let dbgStr = dbResultForGuid && dbResultForGuid.title;
+    Assert.equal(null, dbResultForGuid, "Should not be able to find items that should have been removed, but found " + dbgStr);
+  }
+  yield PlacesUtils.bookmarks.eraseEverything();
+});
