@@ -37,6 +37,7 @@
 #include "nsFont.h"
 #include "nsIURI.h"
 #include "mozAutoDocUpdate.h"
+#include "nsCCUncollectableMarker.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -54,6 +55,52 @@ IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_)
 
 namespace mozilla {
 namespace css {
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(Rule)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(Rule)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Rule)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_0(Rule)
+
+bool
+Rule::IsCCLeaf() const
+{
+  return true;
+}
+
+bool
+Rule::IsKnownLive() const
+{
+  StyleSheet* sheet = GetStyleSheet();
+  if (!sheet) {
+    return false;
+  }
+
+  if (!sheet->IsOwnedByDocument()) {
+    return false;
+  }
+
+  return nsCCUncollectableMarker::InGeneration(
+    sheet->GetAssociatedDocument()->GetMarkedCCGeneration());
+}
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Rule)
+  return tmp->IsCCLeaf() || tmp->IsKnownLive();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(Rule)
+  // Note that we can't make use of IsKnownLive() here directly, because we may
+  // be subclassed by something that needs tracing.  Once we have a wrapper
+  // cache we should be able to do better here.
+  return tmp->IsCCLeaf();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(Rule)
+  return tmp->IsCCLeaf() || tmp->IsKnownLive();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 /* virtual */ void
 Rule::SetStyleSheet(StyleSheet* aSheet)
@@ -199,18 +246,24 @@ ImportRule::~ImportRule()
   }
 }
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ImportRule)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ImportRule)
+NS_IMPL_ADDREF_INHERITED(ImportRule, Rule)
+NS_IMPL_RELEASE_INHERITED(ImportRule, Rule)
 
-NS_IMPL_CYCLE_COLLECTION(ImportRule, mMedia, mChildSheet)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ImportRule, Rule, mMedia, mChildSheet)
+
+bool
+ImportRule::IsCCLeaf() const
+{
+  // We're not a leaf.
+  return false;
+}
 
 // QueryInterface implementation for ImportRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ImportRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ImportRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSImportRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSImportRule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(Rule)
 
 IMPL_STYLE_RULE_INHERIT(ImportRule, Rule)
 
@@ -380,11 +433,18 @@ GroupRule::~GroupRule()
   }
 }
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(GroupRule)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(GroupRule)
+NS_IMPL_ADDREF_INHERITED(GroupRule, Rule)
+NS_IMPL_RELEASE_INHERITED(GroupRule, Rule)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GroupRule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(GroupRule)
+NS_INTERFACE_MAP_END_INHERITING(Rule)
+
+bool
+GroupRule::IsCCLeaf() const
+{
+  // Let's not worry for now about sorting out whether we're a leaf or not.
+  return false;
+}
 
 static bool
 SetStyleSheetReference(Rule* aRule, void* aSheet)
@@ -395,7 +455,7 @@ SetStyleSheetReference(Rule* aRule, void* aSheet)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(GroupRule)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(GroupRule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(GroupRule, Rule)
   tmp->mRules.EnumerateForwards(SetParentRuleReference, nullptr);
   // If tmp does not have a stylesheet, neither do its descendants.  In that
   // case, don't try to null out their stylesheet, to avoid O(N^2) behavior in
@@ -413,11 +473,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(GroupRule)
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(GroupRule)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(GroupRule, Rule)
   const nsCOMArray<Rule>& rules = tmp->mRules;
   for (int32_t i = 0, count = rules.Count(); i < count; ++i) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRules[i]");
-    cb.NoteXPCOMChild(rules[i]->GetExistingDOMRule());
+    if (!rules[i]->IsCCLeaf()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRules[i]");
+      cb.NoteXPCOMChild(rules[i]);
+    }
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRuleCollection)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -605,14 +667,16 @@ NS_IMPL_ADDREF_INHERITED(MediaRule, GroupRule)
 NS_IMPL_RELEASE_INHERITED(MediaRule, GroupRule)
 
 // QueryInterface implementation for MediaRule
-NS_INTERFACE_MAP_BEGIN(MediaRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMediaRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSMediaRule)
 NS_INTERFACE_MAP_END_INHERITING(GroupRule)
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaRule, GroupRule,
+                                   mMedia)
 
 /* virtual */ void
 MediaRule::SetStyleSheet(StyleSheet* aSheet)
@@ -1085,10 +1149,12 @@ NameSpaceRule::~NameSpaceRule()
 {
 }
 
-NS_IMPL_ADDREF(NameSpaceRule)
-NS_IMPL_RELEASE(NameSpaceRule)
+NS_IMPL_ADDREF_INHERITED(NameSpaceRule, Rule)
+NS_IMPL_RELEASE_INHERITED(NameSpaceRule, Rule)
 
 // QueryInterface implementation for NameSpaceRule
+// If this ever gets its own cycle-collection bits, reevaluate our IsCCLeaf
+// implementation.
 NS_INTERFACE_MAP_BEGIN(NameSpaceRule)
   if (aIID.Equals(NS_GET_IID(css::NameSpaceRule))) {
     *aInstancePtr = this;
@@ -1097,9 +1163,14 @@ NS_INTERFACE_MAP_BEGIN(NameSpaceRule)
   }
   else
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSNameSpaceRule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(Rule)
+
+bool
+NameSpaceRule::IsCCLeaf() const
+{
+  return Rule::IsCCLeaf();
+}
 
 IMPL_STYLE_RULE_INHERIT(NameSpaceRule, Rule)
 
@@ -1507,35 +1578,52 @@ nsCSSFontFaceRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSFontFaceRule)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSFontFaceRule)
+NS_IMPL_ADDREF_INHERITED(nsCSSFontFaceRule, mozilla::css::Rule)
+NS_IMPL_RELEASE_INHERITED(nsCSSFontFaceRule, mozilla::css::Rule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSFontFaceRule)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsCSSFontFaceRule)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsCSSFontFaceRule,
+                                               mozilla::css::Rule)
+  // Keep this in sync with IsCCLeaf.
+
   // Trace the wrapper for our declaration.  This just expands out
   // NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER which we can't use
   // directly because the wrapper is on the declaration, not on us.
   tmp->mDecl.TraceWrapper(aCallbacks, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSFontFaceRule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsCSSFontFaceRule,
+                                                mozilla::css::Rule)
+  // Keep this in sync with IsCCLeaf.
+
   // Unlink the wrapper for our declaraton.  This just expands out
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER which we can't use
   // directly because the wrapper is on the declaration, not on us.
   tmp->mDecl.ReleaseWrapper(static_cast<nsISupports*>(p));
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSFontFaceRule)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsCSSFontFaceRule,
+                                                  mozilla::css::Rule)
+  // Keep this in sync with IsCCLeaf.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+bool
+nsCSSFontFaceRule::IsCCLeaf() const
+{
+  if (!Rule::IsCCLeaf()) {
+    return false;
+  }
+
+  return !mDecl.PreservingWrapper();
+}
+
 // QueryInterface implementation for nsCSSFontFaceRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSFontFaceRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsCSSFontFaceRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSFontFaceRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSFontFaceRule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(Rule)
 
 IMPL_STYLE_RULE_INHERIT(nsCSSFontFaceRule, Rule)
 
@@ -1670,16 +1758,23 @@ nsCSSFontFeatureValuesRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF(nsCSSFontFeatureValuesRule)
-NS_IMPL_RELEASE(nsCSSFontFeatureValuesRule)
+NS_IMPL_ADDREF_INHERITED(nsCSSFontFeatureValuesRule, mozilla::css::Rule)
+NS_IMPL_RELEASE_INHERITED(nsCSSFontFeatureValuesRule, mozilla::css::Rule)
 
 // QueryInterface implementation for nsCSSFontFeatureValuesRule
+// If this ever gets its own cycle-collection bits, reevaluate our IsCCLeaf
+// implementation.
 NS_INTERFACE_MAP_BEGIN(nsCSSFontFeatureValuesRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSFontFeatureValuesRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSFontFeatureValuesRule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
+
+bool
+nsCSSFontFeatureValuesRule::IsCCLeaf() const
+{
+  return Rule::IsCCLeaf();
+}
 
 IMPL_STYLE_RULE_INHERIT(nsCSSFontFeatureValuesRule, Rule)
 
@@ -1994,28 +2089,36 @@ nsCSSKeyframeRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSKeyframeRule)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSKeyframeRule)
+NS_IMPL_ADDREF_INHERITED(nsCSSKeyframeRule, mozilla::css::Rule)
+NS_IMPL_RELEASE_INHERITED(nsCSSKeyframeRule, mozilla::css::Rule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSKeyframeRule)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSKeyframeRule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsCSSKeyframeRule,
+                                                mozilla::css::Rule)
   if (tmp->mDOMDeclaration) {
     tmp->mDOMDeclaration->DropReference();
     tmp->mDOMDeclaration = nullptr;
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSKeyframeRule)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsCSSKeyframeRule,
+                                                  mozilla::css::Rule)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMDeclaration)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+bool
+nsCSSKeyframeRule::IsCCLeaf() const
+{
+  // Let's not worry about figuring out whether we're a leaf or not.
+  return false;
+}
+
 // QueryInterface implementation for nsCSSKeyframeRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSKeyframeRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsCSSKeyframeRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSKeyframeRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSKeyframeRule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
 
 IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(nsCSSKeyframeRule, Rule)
 
@@ -2216,7 +2319,6 @@ NS_IMPL_RELEASE_INHERITED(nsCSSKeyframesRule, css::GroupRule)
 NS_INTERFACE_MAP_BEGIN(nsCSSKeyframesRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSKeyframesRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSKeyframesRule)
 NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
@@ -2388,7 +2490,7 @@ nsCSSKeyframesRule::DeleteRule(const nsAString& aKey)
     nsIDocument* doc = GetDocument();
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);
 
-    mRules.RemoveObjectAt(index);
+    DeleteStyleRuleAt(index);
 
     if (StyleSheet* sheet = GetStyleSheet()) {
       sheet->AsGecko()->SetModifiedByChildRule();
@@ -2531,28 +2633,36 @@ nsCSSPageRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSPageRule)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSPageRule)
+NS_IMPL_ADDREF_INHERITED(nsCSSPageRule, mozilla::css::Rule)
+NS_IMPL_RELEASE_INHERITED(nsCSSPageRule, mozilla::css::Rule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSPageRule)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSPageRule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsCSSPageRule,
+                                                mozilla::css::Rule)
   if (tmp->mDOMDeclaration) {
     tmp->mDOMDeclaration->DropReference();
     tmp->mDOMDeclaration = nullptr;
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSPageRule)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsCSSPageRule,
+                                                  mozilla::css::Rule)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMDeclaration)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+bool
+nsCSSPageRule::IsCCLeaf() const
+{
+  // Let's not worry about figuring out whether we're a leaf or not.
+  return false;
+}
+
 // QueryInterface implementation for nsCSSPageRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSPageRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsCSSPageRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSPageRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSPageRule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
 
 IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(nsCSSPageRule, Rule)
 
@@ -2722,7 +2832,6 @@ NS_INTERFACE_MAP_BEGIN(CSSSupportsRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSSupportsRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSSupportsRule)
 NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
@@ -2843,16 +2952,23 @@ nsCSSCounterStyleRule::kGetters[] = {
 #undef CSS_COUNTER_DESC
 };
 
-NS_IMPL_ADDREF(nsCSSCounterStyleRule)
-NS_IMPL_RELEASE(nsCSSCounterStyleRule)
+NS_IMPL_ADDREF_INHERITED(nsCSSCounterStyleRule, mozilla::css::Rule)
+NS_IMPL_RELEASE_INHERITED(nsCSSCounterStyleRule, mozilla::css::Rule)
 
 // QueryInterface implementation for nsCSSCounterStyleRule
+// If this ever gets its own cycle-collection bits, reevaluate our IsCCLeaf
+// implementation.
 NS_INTERFACE_MAP_BEGIN(nsCSSCounterStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSCounterStyleRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSCounterStyleRule)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
+
+bool
+nsCSSCounterStyleRule::IsCCLeaf() const
+{
+  return Rule::IsCCLeaf();
+}
 
 IMPL_STYLE_RULE_INHERIT(nsCSSCounterStyleRule, css::Rule)
 
