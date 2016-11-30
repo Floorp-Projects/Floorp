@@ -1,11 +1,91 @@
 "use strict";
 
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+
+Cu.import("resource://gre/modules/Task.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Sanitizer",
                                   "resource:///modules/Sanitizer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
+                                  "resource://gre/modules/Timer.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "cookieMgr",
+                                   "@mozilla.org/cookiemanager;1",
+                                   "nsICookieManager");
+
+/**
+* A number of iterations after which to yield time back
+* to the system.
+*/
+const YIELD_PERIOD = 10;
+
+const PREF_DOMAIN = "privacy.cpd.";
+
+XPCOMUtils.defineLazyGetter(this, "sanitizer", () => {
+  let sanitizer = new Sanitizer();
+  sanitizer.prefDomain = PREF_DOMAIN;
+  return sanitizer;
+});
+
+let clearCookies = Task.async(function* (options) {
+  // This code has been borrowed from sanitize.js.
+  let yieldCounter = 0;
+
+  if (options.since) {
+    // Iterate through the cookies and delete any created after our cutoff.
+    let cookiesEnum = cookieMgr.enumerator;
+    while (cookiesEnum.hasMoreElements()) {
+      let cookie = cookiesEnum.getNext().QueryInterface(Ci.nsICookie2);
+
+      if (cookie.creationTime > PlacesUtils.toPRTime(options.since)) {
+        // This cookie was created after our cutoff, clear it.
+        cookieMgr.remove(cookie.host, cookie.name, cookie.path,
+                         false, cookie.originAttributes);
+
+        if (++yieldCounter % YIELD_PERIOD == 0) {
+          yield new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long.
+        }
+      }
+    }
+  } else {
+    // Remove everything.
+    cookieMgr.removeAll();
+  }
+});
+
+function doRemoval(options, dataToRemove, extension) {
+  if (options.originTypes &&
+      (options.originTypes.protectedWeb || options.originTypes.extension)) {
+    return Promise.reject(
+      {message: "Firefox does not support protectedWeb or extension as originTypes."});
+  }
+
+  let removalPromises = [];
+  let invalidDataTypes = [];
+  for (let dataType in dataToRemove) {
+    if (dataToRemove[dataType]) {
+      switch (dataType) {
+        case "cookies":
+          removalPromises.push(clearCookies(options));
+          break;
+        default:
+          invalidDataTypes.push(dataType);
+      }
+    }
+  }
+  if (extension && invalidDataTypes.length) {
+    extension.logger.warn(
+      `Firefox does not support dataTypes: ${invalidDataTypes.toString()}.`);
+  }
+  return Promise.all(removalPromises);
+}
 
 extensions.registerSchemaAPI("browsingData", "addon_parent", context => {
+  let {extension} = context;
   return {
     browsingData: {
       settings() {
@@ -33,6 +113,12 @@ extensions.registerSchemaAPI("browsingData", "addon_parent", context => {
         dataRemovalPermitted.formData = true;
 
         return Promise.resolve({options, dataToRemove, dataRemovalPermitted});
+      },
+      remove(options, dataToRemove) {
+        return doRemoval(options, dataToRemove, extension);
+      },
+      removeCookies(options) {
+        return doRemoval(options, {cookies: true});
       },
     },
   };
