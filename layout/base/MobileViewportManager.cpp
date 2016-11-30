@@ -7,10 +7,10 @@
 
 #include "gfxPrefs.h"
 #include "LayersLogging.h"
+#include "mozilla/PresShell.h"
 #include "nsIDOMEvent.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
-#include "nsPresShell.h"
 #include "nsViewManager.h"
 #include "nsViewportInfo.h"
 #include "UnitTransforms.h"

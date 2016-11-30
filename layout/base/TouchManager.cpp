@@ -9,7 +9,7 @@
 
 #include "mozilla/dom/EventTarget.h"
 #include "nsIFrame.h"
-#include "nsPresShell.h"
+#include "mozilla/PresShell.h"
 #include "nsView.h"
 
 using namespace mozilla::dom;

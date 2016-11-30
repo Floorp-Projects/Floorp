@@ -18,8 +18,8 @@
 
 /* a presentation of a document, part 2 */
 
-#ifndef nsPresShell_h_
-#define nsPresShell_h_
+#ifndef mozilla_PresShell_h
+#define mozilla_PresShell_h
 
 #include "nsIPresShell.h"
 #include "nsStubDocumentObserver.h"
@@ -955,4 +955,4 @@ protected:
 
 } // namespace mozilla
 
-#endif /* !defined(nsPresShell_h_) */
+#endif // mozilla_PresShell_h
