@@ -1517,6 +1517,7 @@ nsUrlClassifierDBService::ClassifyLocalWithTables(nsIURI *aURI,
     return NS_ERROR_ABORT;
   }
 
+  nsresult rv;
   if (XRE_IsContentProcess()) {
     using namespace mozilla::dom;
     using namespace mozilla::ipc;
@@ -1524,9 +1525,10 @@ nsUrlClassifierDBService::ClassifyLocalWithTables(nsIURI *aURI,
     SerializeURI(aURI, uri);
     nsAutoCString tables(aTables);
     bool result = ContentChild::GetSingleton()->SendClassifyLocal(uri, tables,
+                                                                  &rv,
                                                                   &aTableResults);
     if (result) {
-      return NS_OK;
+      return rv;
     }
     return NS_ERROR_FAILURE;
   }
@@ -1540,7 +1542,7 @@ nsUrlClassifierDBService::ClassifyLocalWithTables(nsIURI *aURI,
   // Canonicalize the url
   nsCOMPtr<nsIUrlClassifierUtils> utilsService =
     do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
-  nsresult rv = utilsService->GetKeyForURI(uri, key);
+  rv = utilsService->GetKeyForURI(uri, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoPtr<LookupResultArray> results(new LookupResultArray());
