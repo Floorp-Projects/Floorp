@@ -57,6 +57,18 @@
 
 namespace mozilla {
 
+bool
+WebGLContext::ValidateObject(const char* funcName, const WebGLProgram& object)
+{
+    return ValidateObject(funcName, object, true);
+}
+
+bool
+WebGLContext::ValidateObject(const char* funcName, const WebGLShader& object)
+{
+    return ValidateObject(funcName, object, true);
+}
+
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
