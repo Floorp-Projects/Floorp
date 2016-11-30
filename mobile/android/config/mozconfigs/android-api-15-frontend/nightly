@@ -13,7 +13,6 @@ NO_CACHE=1
 NO_NDK=1
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
-. "$topsrcdir/build/mozconfig.rust"
 
 ac_add_options --with-gradle="$topsrcdir/gradle-dist/bin/gradle"
 export GRADLE_MAVEN_REPOSITORY="file://$topsrcdir/jcentral"
