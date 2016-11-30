@@ -639,6 +639,10 @@ public:
   // Indicates that this is the last packet of the stream.
   bool mEOS = false;
 
+  // Indicate to the audio decoder that mDiscardPadding frames should be
+  // trimmed.
+  uint32_t mDiscardPadding = 0;
+
   RefPtr<SharedTrackInfo> mTrackInfo;
 
   // Return a deep copy or nullptr if out of memory.
