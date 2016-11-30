@@ -40,7 +40,7 @@ GenQuery(gl::GLContext* gl)
 }
 
 WebGLQuery::WebGLQuery(WebGLContext* webgl)
-    : WebGLContextBoundObject(webgl)
+    : WebGLRefCountedObject(webgl)
     , mGLName(GenQuery(mContext->gl))
     , mTarget(0)
     , mActiveSlot(nullptr)
@@ -211,8 +211,7 @@ WebGLQuery::GetQueryParameter(GLenum pname, JS::MutableHandleValue retval) const
 bool
 WebGLQuery::IsQuery() const
 {
-    if (IsDeleted())
-        return false;
+    MOZ_ASSERT(!IsDeleted());
 
     if (!mTarget)
         return false;
@@ -223,8 +222,7 @@ WebGLQuery::IsQuery() const
 void
 WebGLQuery::DeleteQuery()
 {
-    if (IsDeleted())
-        return;
+    MOZ_ASSERT(!IsDeleteRequested());
 
     if (mActiveSlot) {
         EndQuery();
