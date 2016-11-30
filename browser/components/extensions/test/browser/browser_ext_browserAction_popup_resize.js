@@ -298,6 +298,8 @@ add_task(function* testBrowserActionMenuResizeBottomArrow() {
     yield delay(100);
   }
 
+  yield SimpleTest.promiseFocus(win);
+
   yield testPopupSize(true, win, "bottom");
 
   yield BrowserTestUtils.closeWindow(win);
