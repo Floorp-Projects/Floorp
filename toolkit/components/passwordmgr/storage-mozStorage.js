@@ -276,6 +276,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
     // Send a notification that a login was added.
     LoginHelper.notifyStorageChanged("addLogin", loginClone);
+    return loginClone;
   },
 
 

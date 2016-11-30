@@ -423,7 +423,11 @@ if (this.addMessageListener) {
       return arg;
     });
 
-    return Services.logins[msg.methodName](...recreatedArgs);
+    let rv = Services.logins[msg.methodName](...recreatedArgs);
+    if (rv instanceof Ci.nsILoginInfo) {
+      rv = LoginHelper.loginToVanillaObject(rv);
+    }
+    return rv;
   });
 
   var globalMM = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
