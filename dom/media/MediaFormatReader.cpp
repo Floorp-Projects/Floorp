@@ -164,7 +164,7 @@ MediaFormatReader::InitLayersBackendType()
 }
 
 nsresult
-MediaFormatReader::Init()
+MediaFormatReader::InitInternal()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
 
