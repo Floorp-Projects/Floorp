@@ -2908,11 +2908,13 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   NS_ENSURE_ARG(aPresContext);
   NS_ENSURE_ARG_POINTER(aStatus);
 
-  bool dispatchedToContentProcess = HandleCrossProcessEvent(aEvent,
-                                                            aStatus);
-
   mCurrentTarget = aTargetFrame;
   mCurrentTargetContent = nullptr;
+
+  bool dispatchedToContentProcess = HandleCrossProcessEvent(aEvent, aStatus);
+  // NOTE: the above call may have destroyed aTargetFrame, please use
+  // mCurrentTarget henceforth.  This is to avoid using it accidentally:
+  aTargetFrame = nullptr;
 
   // Most of the events we handle below require a frame.
   // Add special cases here.
@@ -3170,7 +3172,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       ScrollbarsForWheel::MayInactivate();
       WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
       nsIScrollableFrame* scrollTarget =
-        do_QueryFrame(ComputeScrollTarget(aTargetFrame, wheelEvent,
+        do_QueryFrame(ComputeScrollTarget(mCurrentTarget, wheelEvent,
                                           COMPUTE_DEFAULT_ACTION_TARGET));
       if (scrollTarget) {
         scrollTarget->ScrollSnap();
@@ -3193,7 +3195,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       // because if the scroll target is a plugin, the default action should be
       // chosen by the plugin rather than by our prefs.
       nsIFrame* frameToScroll =
-        ComputeScrollTarget(aTargetFrame, wheelEvent,
+        ComputeScrollTarget(mCurrentTarget, wheelEvent,
                             COMPUTE_DEFAULT_ACTION_TARGET);
       nsPluginFrame* pluginFrame = do_QueryFrame(frameToScroll);
 
@@ -3213,7 +3215,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // For scrolling of default action, we should honor the mouse wheel
           // transaction.
 
-          ScrollbarsForWheel::PrepareToScrollText(this, aTargetFrame, wheelEvent);
+          ScrollbarsForWheel::PrepareToScrollText(this, mCurrentTarget, wheelEvent);
 
           if (aEvent->mMessage != eWheel ||
               (!wheelEvent->mDeltaX && !wheelEvent->mDeltaY)) {
@@ -3223,8 +3225,8 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           nsIScrollableFrame* scrollTarget = do_QueryFrame(frameToScroll);
           ScrollbarsForWheel::SetActiveScrollTarget(scrollTarget);
 
-          nsIFrame* rootScrollFrame = !aTargetFrame ? nullptr :
-            aTargetFrame->PresContext()->PresShell()->GetRootScrollFrame();
+          nsIFrame* rootScrollFrame = !mCurrentTarget ? nullptr :
+            mCurrentTarget->PresContext()->PresShell()->GetRootScrollFrame();
           nsIScrollableFrame* rootScrollableFrame = nullptr;
           if (rootScrollFrame) {
             rootScrollableFrame = do_QueryFrame(rootScrollFrame);
@@ -3261,7 +3263,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           if (!intDelta) {
             break;
           }
-          DoScrollZoom(aTargetFrame, intDelta);
+          DoScrollZoom(mCurrentTarget, intDelta);
           break;
         }
         case WheelPrefs::ACTION_SEND_TO_PLUGIN:
@@ -3291,7 +3293,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
               // by looking at the scroll overflow values on mCanTriggerSwipe
               // events after they have been processed.
               allDeltaOverflown =
-                !ComputeScrollTarget(aTargetFrame, wheelEvent,
+                !ComputeScrollTarget(mCurrentTarget, wheelEvent,
                                      COMPUTE_DEFAULT_ACTION_TARGET);
             }
           } else {
