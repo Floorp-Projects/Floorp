@@ -16,6 +16,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+Cu.importGlobalProperties(["URL"]);
+
 XPCOMUtils.defineLazyModuleGetter(this, "AutoMigrate",
                                   "resource:///modules/AutoMigrate.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
@@ -969,6 +971,9 @@ this.MigrationUtils = Object.freeze({
 
   insertVisitsWrapper(places, options) {
     this._importQuantities.history += places.length;
+    if (gKeepUndoData) {
+      this._updateHistoryUndo(places);
+    }
     return PlacesUtils.asyncHistory.updatePlaces(places, options);
   },
 
@@ -987,7 +992,7 @@ this.MigrationUtils = Object.freeze({
 
   initializeUndoData() {
     gKeepUndoData = true;
-    gUndoData = new Map([["bookmarks", []], ["visits", new Map()], ["logins", []]]);
+    gUndoData = new Map([["bookmarks", []], ["visits", []], ["logins", []]]);
   },
 
   _postProcessUndoData: Task.async(function*(state) {
@@ -1020,6 +1025,32 @@ this.MigrationUtils = Object.freeze({
     gUndoData = null;
     gKeepUndoData = false;
     return this._postProcessUndoData(undoData);
+  },
+
+  _updateHistoryUndo(places) {
+    let visits = gUndoData.get("visits");
+    let visitMap = new Map(visits.map(v => [v.url, v]));
+    for (let place of places) {
+      let visitCount = place.visits.length;
+      let first = Math.min.apply(Math, place.visits.map(v => v.visitDate));
+      let last = Math.max.apply(Math, place.visits.map(v => v.visitDate));
+      let url = place.uri.spec;
+      try {
+        new URL(url);
+      } catch (ex) {
+        // This won't save and we won't need to 'undo' it, so ignore this URL.
+        continue;
+      }
+      if (!visitMap.has(url)) {
+        visitMap.set(url, {url, visitCount, first, last});
+      } else {
+        let currentData = visitMap.get(url);
+        currentData.visitCount += visitCount;
+        currentData.first = Math.min(currentData.first, first);
+        currentData.last = Math.max(currentData.last, last);
+      }
+    }
+    gUndoData.set("visits", Array.from(visitMap.values()));
   },
 
   /**
