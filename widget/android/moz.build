@@ -36,6 +36,7 @@ UNIFIED_SOURCES += [
     'AndroidJavaWrappers.cpp',
     'AndroidJNI.cpp',
     'AndroidJNIWrapper.cpp',
+    'AndroidUiThread.cpp',
     'ANRReporter.cpp',
     'EventDispatcher.cpp',
     'GeneratedJNIWrappers.cpp',
@@ -64,6 +65,7 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
     '/netwerk/cache',
     '/widget',
+    '/xpcom/threads',
 ]
 
 CXXFLAGS += ['-Wno-error=shadow']
