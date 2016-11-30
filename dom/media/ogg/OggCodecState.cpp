@@ -228,7 +228,7 @@ OggCodecState::PushFront(OggPacketQueue &&aOther)
   }
 }
 
-RefPtr<MediaRawData>
+already_AddRefed<MediaRawData>
 OggCodecState::PacketOutAsMediaRawData()
 {
   ogg_packet* packet = PacketOut();
@@ -253,7 +253,7 @@ OggCodecState::PacketOutAsMediaRawData()
 
   ReleasePacket(packet);
 
-  return sample;
+  return sample.forget();
 }
 
 nsresult
