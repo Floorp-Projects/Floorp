@@ -488,11 +488,12 @@ class ViewPopup extends BasePopup {
       let browser = this.browser;
       yield this.createBrowser(this.viewNode);
 
+      this.ignoreResizes = false;
+
       this.browser.swapDocShells(browser);
       this.destroyBrowser(browser);
 
-      this.ignoreResizes = false;
-      if (this.dimensions) {
+      if (this.dimensions && !this.fixedWidth) {
         this.resizeBrowser(this.dimensions);
       }
 
