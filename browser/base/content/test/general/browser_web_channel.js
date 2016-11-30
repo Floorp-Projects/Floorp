@@ -37,26 +37,6 @@ var gTests = [
     }
   },
   {
-    desc: "WebChannel generic message in a private window.",
-    run: function* () {
-      let promiseTestDone = new Promise(function(resolve, reject) {
-        let channel = new WebChannel("generic", Services.io.newURI(HTTP_PATH, null, null));
-        channel.listen(function(id, message, target) {
-          is(id, "generic");
-          is(message.something.nested, "hello");
-          channel.stopListening();
-          resolve();
-        });
-      });
-
-      const url = HTTP_PATH + HTTP_ENDPOINT + "?generic";
-      let privateWindow = yield BrowserTestUtils.openNewBrowserWindow({private: true});
-      yield BrowserTestUtils.openNewForegroundTab(privateWindow.gBrowser, url);
-      yield promiseTestDone;
-      yield BrowserTestUtils.closeWindow(privateWindow);
-    }
-  },
-  {
     desc: "WebChannel two way communication",
     run: function* () {
       return new Promise(function(resolve, reject) {
