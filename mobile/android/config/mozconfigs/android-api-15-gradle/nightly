@@ -1,4 +1,5 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
+. "$topsrcdir/build/mozconfig.rust"
 
 ac_add_options --enable-profiling
 
