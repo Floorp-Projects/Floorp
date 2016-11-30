@@ -21,7 +21,6 @@ import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.SiteIdentity.SecurityMode;
@@ -101,7 +100,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     }
 
     void registerListeners() {
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
                                                                   "Doorhanger:Logins",
                                                                   "Permissions:CheckResult");
     }
@@ -561,7 +560,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     }
 
     void unregisterListeners() {
-        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
                                                                     "Doorhanger:Logins",
                                                                     "Permissions:CheckResult");
     }
