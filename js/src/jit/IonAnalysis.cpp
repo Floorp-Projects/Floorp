@@ -551,7 +551,7 @@ SplitCriticalEdgesForBlock(MIRGraph& graph, MBasicBlock* block)
 
         // Create a simple new block which contains a goto and which split the
         // edge between block and target.
-        MBasicBlock* split = MBasicBlock::NewSplitEdge(graph, block->info(), block, i, target);
+        MBasicBlock* split = MBasicBlock::NewSplitEdge(graph, block, i, target);
         if (!split)
             return false;
     }
