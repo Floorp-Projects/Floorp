@@ -237,9 +237,14 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   }
 
   ReaderQueue::Instance().Add(this);
+}
 
+nsresult
+MediaDecoderReader::Init()
+{
   // Dispatch initialization that needs to happen on that task queue.
   mTaskQueue->Dispatch(NewRunnableMethod(this, &MediaDecoderReader::InitializationTask));
+  return InitInternal();
 }
 
 void

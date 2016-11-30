@@ -32,7 +32,6 @@ protected:
   ~OggReader();
 
 public:
-  nsresult Init() override;
   nsresult ResetDecode(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
                                                    TrackInfo::kVideoTrack)) override;
   bool DecodeAudioData() override;
@@ -47,6 +46,8 @@ public:
   media::TimeIntervals GetBuffered() override;
 
 private:
+  nsresult InitInternal() override;
+
   bool HasAudio() {
     return (mVorbisState != 0 && mVorbisState->mActive) ||
            (mOpusState != 0 && mOpusState->mActive);
