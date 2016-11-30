@@ -52,6 +52,10 @@ class HandleValueArray;
 class ObjectOpResult;
 
 struct PropertyDescriptor;
+
+class Symbol;
+enum class SymbolCode: uint32_t;
+
 } // namespace JS
 
 // Do the importing.
@@ -158,6 +162,9 @@ using JS::ObjectOpResult;
 using JS::PropertyDescriptor;
 
 using JS::Zone;
+
+using JS::Symbol;
+using JS::SymbolCode;
 
 } /* namespace js */
 
