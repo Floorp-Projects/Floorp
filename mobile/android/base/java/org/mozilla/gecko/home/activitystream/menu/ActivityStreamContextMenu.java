@@ -189,6 +189,8 @@ public abstract class ActivityStreamContextMenu
 
             case R.id.add_homescreen:
                 GeckoAppShell.createShortcut(title, url);
+
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU, "as_add_to_launcher");
                 break;
 
             case R.id.open_new_tab:
