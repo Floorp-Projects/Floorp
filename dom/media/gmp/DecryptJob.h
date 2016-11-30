@@ -15,21 +15,15 @@ class DecryptJob {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecryptJob)
 
-  explicit DecryptJob(MediaRawData* aSample)
-    : mId(0)
-    , mSample(aSample)
-  {
-  }
+  explicit DecryptJob(MediaRawData* aSample);
 
   void PostResult(DecryptStatus aResult,
                   const nsTArray<uint8_t>& aDecryptedData);
   void PostResult(DecryptStatus aResult);
 
-  RefPtr<DecryptPromise> Ensure() {
-    return mPromise.Ensure(__func__);
-  }
+  RefPtr<DecryptPromise> Ensure();
 
-  uint32_t mId;
+  const uint32_t mId;
   RefPtr<MediaRawData> mSample;
 private:
   ~DecryptJob() {}

@@ -218,13 +218,6 @@ private:
   // GMP thread only.
   nsTArray<RefPtr<DecryptJob>> mDecryptionJobs;
 
-  // Number of buffers we've decrypted. Used to uniquely identify
-  // decryption jobs sent to CDM. Note we can't just use the length of
-  // mDecryptionJobs as that shrinks as jobs are completed and removed
-  // from it.
-  // GMP thread only.
-  uint32_t mDecryptionJobCount;
-
   // True if GMPCDMProxy::gmp_Shutdown was called.
   // GMP thread only.
   bool mShutdownCalled;
