@@ -200,6 +200,8 @@ const RolloutPolicy = {
   "50a": { addons: set50Release, webextensions: true },
   "50b": { addons: set50Release, webextensions: false },
 
+  "51alladdons": { addons: [], webextensions: true, alladdons: true },
+
   "xpcshell-test": { addons: [ADDONS.test1, ADDONS.test2], webextensions: false },
 };
 
@@ -220,6 +222,14 @@ Object.defineProperty(this, "isAddonPartOfE10SRollout", {
     }
 
     let policy = RolloutPolicy[policyId];
+
+    if (policy.alladdons) {
+      if (aAddon.multiprocessCompatible === false) {
+        return false;
+      }
+
+      return true;
+    }
 
     if (policy.webextensions && aAddon.type == "webextension") {
       return true;
