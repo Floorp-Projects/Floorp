@@ -112,6 +112,7 @@ EXPORTS.mozilla += [
     'CSSAlignUtils.h',
     'ReflowInput.h',
     'ReflowOutput.h',
+    'ViewportFrame.h',
     'WritingModes.h',
 ]
 
@@ -174,7 +175,6 @@ UNIFIED_SOURCES += [
     'nsTextFrameUtils.cpp',
     'nsTextRunTransformations.cpp',
     'nsVideoFrame.cpp',
-    'nsViewportFrame.cpp',
     'ReflowInput.cpp',
     'ReflowOutput.cpp',
     'RubyUtils.cpp',
@@ -183,6 +183,7 @@ UNIFIED_SOURCES += [
     'ScrollVelocityQueue.cpp',
     'StickyScrollContainer.cpp',
     'TextOverflow.cpp',
+    'ViewportFrame.cpp',
 ]
 
 # nsLineLayout.cpp needs to be built separately because it uses plarena.h.

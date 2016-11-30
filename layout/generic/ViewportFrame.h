@@ -8,8 +8,8 @@
  * the document's scrollbars and contains fixed-positioned elements
  */
 
-#ifndef nsViewportFrame_h___
-#define nsViewportFrame_h___
+#ifndef mozilla_ViewportFrame_h
+#define mozilla_ViewportFrame_h
 
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
@@ -108,4 +108,4 @@ protected:
 
 } // namespace mozilla
 
-#endif // nsViewportFrame_h___
+#endif // mozilla_ViewportFrame_h
