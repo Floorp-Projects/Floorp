@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Types.h"
 
 typedef int(*LibFuzzerMain)(int, char**);
 typedef int(*LibFuzzerInitFunc)(int*, char***);

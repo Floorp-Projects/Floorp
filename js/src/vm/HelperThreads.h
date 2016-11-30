@@ -13,6 +13,7 @@
 #ifndef vm_HelperThreads_h
 #define vm_HelperThreads_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
@@ -42,8 +43,8 @@ namespace jit {
 namespace wasm {
   class FuncIR;
   class FunctionCompileResults;
-  class IonCompileTask;
-  typedef Vector<IonCompileTask*, 0, SystemAllocPolicy> IonCompileTaskPtrVector;
+  class CompileTask;
+  typedef Vector<CompileTask*, 0, SystemAllocPolicy> CompileTaskPtrVector;
 } // namespace wasm
 
 enum class ParseTaskKind
@@ -84,7 +85,7 @@ class GlobalHelperThreadState
     IonBuilderVector ionWorklist_, ionFinishedList_;
 
     // wasm worklist and finished jobs.
-    wasm::IonCompileTaskPtrVector wasmWorklist_, wasmFinishedList_;
+    wasm::CompileTaskPtrVector wasmWorklist_, wasmFinishedList_;
 
   public:
     // For now, only allow a single parallel wasm compilation to happen at a
@@ -163,10 +164,10 @@ class GlobalHelperThreadState
         return ionFinishedList_;
     }
 
-    wasm::IonCompileTaskPtrVector& wasmWorklist(const AutoLockHelperThreadState&) {
+    wasm::CompileTaskPtrVector& wasmWorklist(const AutoLockHelperThreadState&) {
         return wasmWorklist_;
     }
-    wasm::IonCompileTaskPtrVector& wasmFinishedList(const AutoLockHelperThreadState&) {
+    wasm::CompileTaskPtrVector& wasmFinishedList(const AutoLockHelperThreadState&) {
         return wasmFinishedList_;
     }
 
@@ -308,7 +309,7 @@ struct HelperThread
 
     /* The current task being executed by this thread, if any. */
     mozilla::Maybe<mozilla::Variant<jit::IonBuilder*,
-                                    wasm::IonCompileTask*,
+                                    wasm::CompileTask*,
                                     PromiseTask*,
                                     ParseTask*,
                                     SourceCompressionTask*,
@@ -325,8 +326,8 @@ struct HelperThread
     }
 
     /* Any wasm data currently being optimized on this thread. */
-    wasm::IonCompileTask* wasmTask() {
-        return maybeCurrentTaskAs<wasm::IonCompileTask*>();
+    wasm::CompileTask* wasmTask() {
+        return maybeCurrentTaskAs<wasm::CompileTask*>();
     }
 
     /* Any source being parsed/emitted on this thread. */
@@ -395,9 +396,17 @@ SetFakeCPUCount(size_t count);
 void
 PauseCurrentHelperThread();
 
-/* Perform MIR optimization and LIR generation on a single function. */
+// Enqueues a wasm compilation task.
 bool
-StartOffThreadWasmCompile(wasm::IonCompileTask* task);
+StartOffThreadWasmCompile(wasm::CompileTask* task);
+
+namespace wasm {
+
+// Performs MIR optimization and LIR generation on one or several functions.
+MOZ_MUST_USE bool
+CompileFunction(CompileTask* task);
+
+}
 
 /*
  * If helper threads are available, start executing the given PromiseTask on a

@@ -189,14 +189,13 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
                 GeckoAppShell.notifyObservers("AndroidCastDevice:Removed", route.getId());
             }
 
-            @SuppressWarnings("unused")
-            public void onRouteSelected(MediaRouter router, int type, MediaRouter.RouteInfo route) {
+            @Override
+            public void onRouteSelected(MediaRouter router, MediaRouter.RouteInfo route) {
                 updatePresentation();
             }
 
-            // These methods aren't used by the support version Media Router
-            @SuppressWarnings("unused")
-            public void onRouteUnselected(MediaRouter router, int type, RouteInfo route) {
+            @Override
+            public void onRouteUnselected(MediaRouter router, MediaRouter.RouteInfo route) {
                 updatePresentation();
             }
 

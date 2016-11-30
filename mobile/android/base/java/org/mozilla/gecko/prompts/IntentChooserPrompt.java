@@ -5,6 +5,7 @@
 package org.mozilla.gecko.prompts;
 
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 
@@ -15,9 +16,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.widget.ListView;
 import android.util.Log;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,17 +64,12 @@ public class IntentChooserPrompt {
 
         final Prompt prompt = new Prompt(context, new Prompt.PromptCallback() {
             @Override
-            public void onPromptFinished(String promptServiceResult) {
+            public void onPromptFinished(final GeckoBundle result) {
                 if (handler == null) {
                     return;
                 }
 
-                int itemId = -1;
-                try {
-                    itemId = new JSONObject(promptServiceResult).getInt("button");
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "result from promptservice was invalid: ", e);
-                }
+                final int itemId = result.getInt("button", -1);
 
                 if (itemId == -1) {
                     handler.onCancelled();

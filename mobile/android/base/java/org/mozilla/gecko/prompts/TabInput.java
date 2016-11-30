@@ -7,11 +7,9 @@ package org.mozilla.gecko.prompts;
 
 import java.util.LinkedHashMap;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
@@ -27,25 +25,21 @@ public class TabInput extends PromptInput implements AdapterView.OnItemClickList
     public static final String INPUT_TYPE = "tabs";
     public static final String LOGTAG = "GeckoTabInput";
 
-    /* Keeping the order of this in sync with the JSON is important. */
+    /* Keeping the order of this in sync with the input is important. */
     final private LinkedHashMap<String, PromptListItem[]> mTabs;
 
     private TabHost mHost;
     private int mPosition;
 
-    public TabInput(JSONObject obj) {
+    public TabInput(GeckoBundle obj) {
         super(obj);
         mTabs = new LinkedHashMap<String, PromptListItem[]>();
-        try {
-            JSONArray tabs = obj.getJSONArray("items");
-            for (int i = 0; i < tabs.length(); i++) {
-                JSONObject tab = tabs.getJSONObject(i);
-                String title = tab.getString("label");
-                JSONArray items = tab.getJSONArray("items");
-                mTabs.put(title, PromptListItem.getArray(items));
-            }
-        } catch (JSONException ex) {
-            Log.e(LOGTAG, "Exception", ex);
+        GeckoBundle[] tabs = obj.getBundleArray("items");
+        for (int i = 0; i < (tabs != null ? tabs.length : 0); i++) {
+            GeckoBundle tab = tabs[i];
+            String title = tab.getString("label");
+            GeckoBundle[] items = tab.getBundleArray("items");
+            mTabs.put(title, PromptListItem.getArray(items));
         }
     }
 
@@ -78,12 +72,9 @@ public class TabInput extends PromptInput implements AdapterView.OnItemClickList
 
     @Override
     public Object getValue() {
-        JSONObject obj = new JSONObject();
-        try {
-            obj.put("tab", mHost.getCurrentTab());
-            obj.put("item", mPosition);
-        } catch (JSONException ex) { }
-
+        final GeckoBundle obj = new GeckoBundle(2);
+        obj.putInt("tab", mHost.getCurrentTab());
+        obj.putInt("item", mPosition);
         return obj;
     }
 

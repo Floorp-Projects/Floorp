@@ -95,13 +95,14 @@ BoxArrayPrimitive(JSContext* aCx, JS::HandleObject aData,
     return NS_OK;
 }
 
-template<bool (JS::Value::*IsType)() const,
-         class Type,
-         nsresult (*Box)(JSContext*, JS::HandleValue, jni::Object::LocalRef&)>
+template<class Type,
+         nsresult (*Box)(JSContext*, JS::HandleValue, jni::Object::LocalRef&),
+         typename IsType>
 nsresult
 BoxArrayObject(JSContext* aCx, JS::HandleObject aData,
                jni::Object::LocalRef& aOut, size_t aLength,
-               JS::HandleValue aElement)
+               JS::HandleValue aElement,
+               IsType&& aIsType)
 {
     auto out = jni::ObjectArray::New<Type>(aLength);
     JS::RootedValue element(aCx);
@@ -114,7 +115,7 @@ BoxArrayObject(JSContext* aCx, JS::HandleObject aData,
     for (size_t i = 1; i < aLength; i++) {
         NS_ENSURE_TRUE(CheckJS(aCx, JS_GetElement(aCx, aData, i, &element)),
                        NS_ERROR_FAILURE);
-        NS_ENSURE_TRUE((element.get().*IsType)() || element.isNullOrUndefined(),
+        NS_ENSURE_TRUE(element.isNullOrUndefined() || aIsType(element),
                        NS_ERROR_INVALID_ARG);
 
         rv = (*Box)(aCx, element, jniElement);
@@ -168,19 +169,31 @@ BoxArray(JSContext* aCx, JS::HandleObject aData, jni::Object::LocalRef& aOut)
                                                           length, element);
     }
 
-    if (element.isString() || element.isNullOrUndefined()) {
-        nsresult rv = BoxArrayObject<&JS::Value::isString,
-                                     jni::String, &BoxString>(
-                aCx, aData, aOut, length, element);
+    if (element.isNullOrUndefined() || element.isString()) {
+        const auto isString = [] (JS::HandleValue val) -> bool {
+            return val.isString();
+        };
+        nsresult rv = BoxArrayObject<jni::String, &BoxString>(
+                aCx, aData, aOut, length, element, isString);
         if (element.isString() || rv != NS_ERROR_INVALID_ARG) {
             return rv;
         }
         // First element was null/undefined, so it may still be an object array.
     }
 
-    if (element.isObject() || element.isNullOrUndefined()) {
-        return BoxArrayObject<&JS::Value::isObject, jni::Object, &BoxObject>(
-                aCx, aData, aOut, length, element);
+    const auto isObject = [aCx] (JS::HandleValue val) -> bool {
+        if (!val.isObject()) {
+            return false;
+        }
+        bool array = false;
+        JS::RootedObject obj(aCx, &val.toObject());
+        // We don't support array of arrays.
+        return CheckJS(aCx, JS_IsArrayObject(aCx, obj, &array)) && !array;
+    };
+
+    if (element.isNullOrUndefined() || isObject(element)) {
+        return BoxArrayObject<java::GeckoBundle, &BoxObject>(
+                aCx, aData, aOut, length, element, isObject);
     }
 
     NS_WARNING("Unknown type");
