@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ChromiumCDMProxy.h"
+#include "mozilla/dom/MediaKeySession.h"
 #include "GMPUtils.h"
 #include "nsPrintfCString.h"
 #include "GMPService.h"
@@ -141,6 +142,34 @@ ChromiumCDMProxy::IsOnOwnerThread()
 }
 #endif
 
+static uint32_t
+ToCDMSessionType(dom::MediaKeySessionType aSessionType)
+{
+  switch (aSessionType) {
+    case dom::MediaKeySessionType::Temporary:
+      return static_cast<uint32_t>(cdm::kTemporary);
+    case dom::MediaKeySessionType::Persistent_license:
+      return static_cast<uint32_t>(cdm::kPersistentLicense);
+    default:
+      return static_cast<uint32_t>(cdm::kTemporary);
+  };
+};
+
+static uint32_t
+ToCDMInitDataType(const nsAString& aInitDataType)
+{
+  if (aInitDataType.EqualsLiteral("cenc")) {
+    return static_cast<uint32_t>(cdm::kCenc);
+  }
+  if (aInitDataType.EqualsLiteral("webm")) {
+    return static_cast<uint32_t>(cdm::kWebM);
+  }
+  if (aInitDataType.EqualsLiteral("keyids")) {
+    return static_cast<uint32_t>(cdm::kKeyIds);
+  }
+  return static_cast<uint32_t>(cdm::kCenc);
+}
+
 void
 ChromiumCDMProxy::CreateSession(uint32_t aCreateSessionToken,
                                 dom::MediaKeySessionType aSessionType,
@@ -148,6 +177,23 @@ ChromiumCDMProxy::CreateSession(uint32_t aCreateSessionToken,
                                 const nsAString& aInitDataType,
                                 nsTArray<uint8_t>& aInitData)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  uint32_t sessionType = ToCDMSessionType(aSessionType);
+  uint32_t initDataType = ToCDMInitDataType(aInitDataType);
+
+  mGMPThread->Dispatch(
+    NewRunnableMethod<uint32_t,
+                      uint32_t,
+                      uint32_t,
+                      uint32_t,
+                      nsTArray<uint8_t>>(mCDM,
+                                         &gmp::ChromiumCDMParent::CreateSession,
+                                         aCreateSessionToken,
+                                         sessionType,
+                                         initDataType,
+                                         aPromiseId,
+                                         Move(aInitData)));
 }
 
 void
@@ -260,6 +306,15 @@ void
 ChromiumCDMProxy::OnSetSessionId(uint32_t aCreateSessionToken,
                                  const nsAString& aSessionId)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
+  RefPtr<dom::MediaKeySession> session(
+    mKeys->GetPendingSession(aCreateSessionToken));
+  if (session) {
+    session->SetSessionId(aSessionId);
+  }
 }
 
 void

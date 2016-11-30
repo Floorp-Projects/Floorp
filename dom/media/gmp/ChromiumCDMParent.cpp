@@ -31,6 +31,24 @@ ChromiumCDMParent::Init(ChromiumCDMProxy* aProxy,
 }
 
 void
+ChromiumCDMParent::CreateSession(uint32_t aCreateSessionToken,
+                                 uint32_t aSessionType,
+                                 uint32_t aInitDataType,
+                                 uint32_t aPromiseId,
+                                 const nsTArray<uint8_t>& aInitData)
+{
+  if (!SendCreateSessionAndGenerateRequest(
+        aPromiseId, aSessionType, aInitDataType, aInitData)) {
+    RejectPromise(
+      aPromiseId,
+      NS_ERROR_DOM_INVALID_STATE_ERR,
+      NS_LITERAL_CSTRING("Failed to send generateRequest to CDM process."));
+    return;
+  }
+  mPromiseToCreateSessionToken.Put(aPromiseId, aCreateSessionToken);
+}
+
+void
 ChromiumCDMParent::SetServerCertificate(uint32_t aPromiseId,
                                         const nsTArray<uint8_t>& aCert)
 {
@@ -89,17 +107,44 @@ ipc::IPCResult
 ChromiumCDMParent::RecvOnResolveNewSessionPromise(const uint32_t& aPromiseId,
                                                   const nsCString& aSessionId)
 {
+  if (!mProxy) {
+    return IPC_OK();
+  }
+
+  Maybe<uint32_t> token = mPromiseToCreateSessionToken.GetAndRemove(aPromiseId);
+  if (token.isNothing()) {
+    RejectPromise(aPromiseId,
+                  NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Lost session token for new session."));
+    return IPC_OK();
+  }
+
+  RefPtr<Runnable> task =
+    NewRunnableMethod<uint32_t, nsString>(mProxy,
+                                          &ChromiumCDMProxy::OnSetSessionId,
+                                          token.value(),
+                                          NS_ConvertUTF8toUTF16(aSessionId));
+  NS_DispatchToMainThread(task);
+
+  ResolvePromise(aPromiseId);
+
   return IPC_OK();
+}
+
+void
+ChromiumCDMParent::ResolvePromise(uint32_t aPromiseId)
+{
+  if (!mProxy) {
+    return;
+  }
+  NS_DispatchToMainThread(NewRunnableMethod<uint32_t>(
+    mProxy, &ChromiumCDMProxy::ResolvePromise, aPromiseId));
 }
 
 ipc::IPCResult
 ChromiumCDMParent::RecvOnResolvePromise(const uint32_t& aPromiseId)
 {
-  if (!mProxy) {
-    return IPC_OK();
-  }
-  NS_DispatchToMainThread(NewRunnableMethod<uint32_t>(
-    mProxy, &ChromiumCDMProxy::ResolvePromise, aPromiseId));
+  ResolvePromise(aPromiseId);
   return IPC_OK();
 }
 
