@@ -49,7 +49,7 @@ private:
     explicit WebGLDeletableObject(WebGLContext* webgl)
       : WebGLContextBoundObject(webgl)
       , mDeletionStatus(Default)
-    {}
+    { }
 
     ~WebGLDeletableObject() {
         MOZ_ASSERT(mDeletionStatus == Deleted,
@@ -149,7 +149,7 @@ private:
     nsAutoRefCnt mWebGLRefCnt;
 
 public:
-    WebGLRefCountedObject(WebGLContext* webgl)
+    explicit WebGLRefCountedObject(WebGLContext* webgl)
         : WebGLDeletableObject(webgl)
     { }
 
