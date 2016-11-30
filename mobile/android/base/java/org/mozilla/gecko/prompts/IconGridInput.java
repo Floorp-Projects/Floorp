@@ -8,10 +8,9 @@ package org.mozilla.gecko.prompts;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ResourceDrawableUtils;
 
 import android.content.Context;
@@ -39,11 +38,12 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
     private static int mMaxColumns = -1;  // The maximum number of columns to show
     private static int mIconSize = -1;    // Size of icons in the grid
     private int mSelected;                // Current selection
-    private final JSONArray mArray;
+    private final GeckoBundle[] mArray;
 
-    public IconGridInput(JSONObject obj) {
+    public IconGridInput(GeckoBundle obj) {
         super(obj);
-        mArray = obj.optJSONArray("items");
+        final GeckoBundle[] array = obj.getBundleArray("items");
+        mArray = array != null ? array : new GeckoBundle[0];
     }
 
     @Override
@@ -70,9 +70,9 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
         final GridView view = (GridView) LayoutInflater.from(context).inflate(R.layout.icon_grid, null, false);
         view.setColumnWidth(mColumnWidth);
 
-        final ArrayList<IconGridItem> items = new ArrayList<IconGridItem>(mArray.length());
-        for (int i = 0; i < mArray.length(); i++) {
-            IconGridItem item = new IconGridItem(context, mArray.optJSONObject(i));
+        final ArrayList<IconGridItem> items = new ArrayList<IconGridItem>(mArray.length);
+        for (int i = 0; i < mArray.length; i++) {
+            IconGridItem item = new IconGridItem(context, mArray[i]);
             items.add(item);
             if (item.selected) {
                 mSelected = i;
@@ -151,11 +151,11 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
         final boolean selected;
         Drawable icon;
 
-        public IconGridItem(final Context context, final JSONObject obj) {
-            label = obj.optString("name");
-            final String iconUrl = obj.optString("iconUri");
-            description = obj.optString("description");
-            selected = obj.optBoolean("selected");
+        public IconGridItem(final Context context, final GeckoBundle obj) {
+            label = obj.getString("name");
+            final String iconUrl = obj.getString("iconUri");
+            description = obj.getString("description");
+            selected = obj.getBoolean("selected");
 
             ResourceDrawableUtils.getDrawable(context, iconUrl, new ResourceDrawableUtils.BitmapLoader() {
                 @Override

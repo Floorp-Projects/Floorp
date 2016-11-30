@@ -8,9 +8,15 @@ package org.mozilla.gecko.util;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.support.v4.util.SimpleArrayMap;
 
 import java.lang.reflect.Array;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -138,7 +144,8 @@ public final class GeckoBundle {
      */
     public boolean[] getBooleanArray(final String key) {
         final Object value = mMap.get(key);
-        return Array.getLength(value) == 0 ? EMPTY_BOOLEAN_ARRAY : (boolean[]) value;
+        return value == null ? null :
+                Array.getLength(value) == 0 ? EMPTY_BOOLEAN_ARRAY : (boolean[]) value;
     }
 
     /**
@@ -183,7 +190,7 @@ public final class GeckoBundle {
      */
     public double[] getDoubleArray(final String key) {
         final Object value = mMap.get(key);
-        return Array.getLength(value) == 0 ? EMPTY_DOUBLE_ARRAY :
+        return value == null ? null : Array.getLength(value) == 0 ? EMPTY_DOUBLE_ARRAY :
                value instanceof int[] ? getDoubleArray((int[]) value) : (double[]) value;
     }
 
@@ -229,7 +236,7 @@ public final class GeckoBundle {
      */
     public int[] getIntArray(final String key) {
         final Object value = mMap.get(key);
-        return Array.getLength(value) == 0 ? EMPTY_INT_ARRAY :
+        return value == null ? null : Array.getLength(value) == 0 ? EMPTY_INT_ARRAY :
                value instanceof double[] ? getIntArray((double[]) value) : (int[]) value;
     }
 
@@ -278,7 +285,7 @@ public final class GeckoBundle {
      */
     public String[] getStringArray(final String key) {
         final Object value = mMap.get(key);
-        return Array.getLength(value) == 0 ? EMPTY_STRING_ARRAY :
+        return value == null ? null : Array.getLength(value) == 0 ? EMPTY_STRING_ARRAY :
                !(value instanceof String[]) ? new String[getNullArrayLength(value)] :
                                               (String[]) value;
     }
@@ -303,7 +310,7 @@ public final class GeckoBundle {
      */
     public GeckoBundle[] getBundleArray(final String key) {
         final Object value = mMap.get(key);
-        return Array.getLength(value) == 0 ? EMPTY_BUNDLE_ARRAY :
+        return value == null ? null : Array.getLength(value) == 0 ? EMPTY_BUNDLE_ARRAY :
                !(value instanceof GeckoBundle[]) ? new GeckoBundle[getNullArrayLength(value)] :
                                                    (GeckoBundle[]) value;
     }
@@ -371,6 +378,43 @@ public final class GeckoBundle {
     }
 
     /**
+     * Map a key to a boolean array value.
+     *
+     * @param key Key to map.
+     * @param value Value to map to.
+     */
+    public void putBooleanArray(final String key, final Boolean[] value) {
+        if (value == null) {
+            mMap.put(key, null);
+            return;
+        }
+        final boolean[] array = new boolean[value.length];
+        for (int i = 0; i < value.length; i++) {
+            array[i] = value[i];
+        }
+        mMap.put(key, array);
+    }
+
+    /**
+     * Map a key to a boolean array value.
+     *
+     * @param key Key to map.
+     * @param value Value to map to.
+     */
+    public void putBooleanArray(final String key, final Collection<Boolean> value) {
+        if (value == null) {
+            mMap.put(key, null);
+            return;
+        }
+        final boolean[] array = new boolean[value.size()];
+        int i = 0;
+        for (final Boolean element : value) {
+            array[i++] = element;
+        }
+        mMap.put(key, array);
+    }
+
+    /**
      * Map a key to a double value.
      *
      * @param key Key to map.
@@ -388,6 +432,43 @@ public final class GeckoBundle {
      */
     public void putDoubleArray(final String key, final double[] value) {
         mMap.put(key, value);
+    }
+
+    /**
+     * Map a key to a double array value.
+     *
+     * @param key Key to map.
+     * @param value Value to map to.
+     */
+    public void putDoubleArray(final String key, final Double[] value) {
+        if (value == null) {
+            mMap.put(key, null);
+            return;
+        }
+        final double[] array = new double[value.length];
+        for (int i = 0; i < value.length; i++) {
+            array[i] = value[i];
+        }
+        mMap.put(key, array);
+    }
+
+    /**
+     * Map a key to a double array value.
+     *
+     * @param key Key to map.
+     * @param value Value to map to.
+     */
+    public void putDoubleArray(final String key, final Collection<Double> value) {
+        if (value == null) {
+            mMap.put(key, null);
+            return;
+        }
+        final double[] array = new double[value.size()];
+        int i = 0;
+        for (final Double element : value) {
+            array[i++] = element;
+        }
+        mMap.put(key, array);
     }
 
     /**
@@ -411,6 +492,43 @@ public final class GeckoBundle {
     }
 
     /**
+     * Map a key to a int array value.
+     *
+     * @param key Key to map.
+     * @param value Value to map to.
+     */
+    public void putIntArray(final String key, final Integer[] value) {
+        if (value == null) {
+            mMap.put(key, null);
+            return;
+        }
+        final int[] array = new int[value.length];
+        for (int i = 0; i < value.length; i++) {
+            array[i] = value[i];
+        }
+        mMap.put(key, array);
+    }
+
+    /**
+     * Map a key to a int array value.
+     *
+     * @param key Key to map.
+     * @param value Value to map to.
+     */
+    public void putIntArray(final String key, final Collection<Integer> value) {
+        if (value == null) {
+            mMap.put(key, null);
+            return;
+        }
+        final int[] array = new int[value.size()];
+        int i = 0;
+        for (final Integer element : value) {
+            array[i++] = element;
+        }
+        mMap.put(key, array);
+    }
+
+    /**
      * Map a key to a String value.
      *
      * @param key Key to map.
@@ -428,6 +546,25 @@ public final class GeckoBundle {
      */
     public void putStringArray(final String key, final String[] value) {
         mMap.put(key, value);
+    }
+
+    /**
+     * Map a key to a String array value.
+     *
+     * @param key Key to map.
+     * @param value Value to map to.
+     */
+    public void putStringArray(final String key, final Collection<String> value) {
+        if (value == null) {
+            mMap.put(key, null);
+            return;
+        }
+        final String[] array = new String[value.size()];
+        int i = 0;
+        for (final String element : value) {
+            array[i++] = element;
+        }
+        mMap.put(key, array);
     }
 
     /**
@@ -451,6 +588,25 @@ public final class GeckoBundle {
     }
 
     /**
+     * Map a key to a GeckoBundle array value.
+     *
+     * @param key Key to map.
+     * @param value Value to map to.
+     */
+    public void putBundleArray(final String key, final Collection<GeckoBundle> value) {
+        if (value == null) {
+            mMap.put(key, null);
+            return;
+        }
+        final GeckoBundle[] array = new GeckoBundle[value.size()];
+        int i = 0;
+        for (final GeckoBundle element : value) {
+            array[i++] = element;
+        }
+        mMap.put(key, array);
+    }
+
+    /**
      * Remove a mapping.
      *
      * @param key Key to remove.
@@ -466,5 +622,69 @@ public final class GeckoBundle {
      */
     public int size() {
         return mMap.size();
+    }
+
+    private static Object fromJSONValue(Object value) throws JSONException {
+        if (value instanceof JSONObject || value == JSONObject.NULL) {
+            return fromJSONObject((JSONObject) value);
+        }
+        if (value instanceof JSONArray) {
+            final JSONArray array = (JSONArray) value;
+            final int len = array.length();
+            if (len == 0) {
+                return EMPTY_BOOLEAN_ARRAY;
+            }
+            Object out = null;
+            for (int i = 0; i < len; i++) {
+                final Object element = fromJSONValue(array.opt(0));
+                if (element == null) {
+                    continue;
+                }
+                if (out == null) {
+                    Class<?> type = element.getClass();
+                    if (type == Boolean.class) {
+                        type = boolean.class;
+                    } else if (type == Integer.class) {
+                        type = int.class;
+                    } else if (type == Double.class) {
+                        type = double.class;
+                    }
+                    out = Array.newInstance(type, len);
+                }
+                Array.set(out, i, element);
+            }
+            if (out == null) {
+                // Treat all-null arrays as String arrays.
+                return new String[len];
+            }
+            return out;
+        }
+        if (value instanceof Boolean) {
+            return value;
+        }
+        if (value instanceof Byte || value instanceof Short || value instanceof Integer) {
+            return ((Number) value).intValue();
+        }
+        if (value instanceof Float || value instanceof Double || value instanceof Long) {
+            return ((Number) value).doubleValue();
+        }
+        return value != null ? value.toString() : null;
+    }
+
+    public static GeckoBundle fromJSONObject(final JSONObject obj) throws JSONException {
+        if (obj == null || obj == JSONObject.NULL) {
+            return null;
+        }
+
+        final String[] keys = new String[obj.length()];
+        final Object[] values = new String[obj.length()];
+
+        final Iterator<String> iter = obj.keys();
+        for (int i = 0; iter.hasNext(); i++) {
+            final String key = iter.next();
+            keys[i] = key;
+            values[i] = fromJSONValue(obj.opt(key));
+        }
+        return new GeckoBundle(keys, values);
     }
 }

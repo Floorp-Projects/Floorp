@@ -6,5 +6,6 @@
 
 DevToolsModules(
     'grids.js',
+    'highlighter-settings.js',
     'index.js',
 )

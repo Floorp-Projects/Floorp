@@ -32,6 +32,10 @@ public:
 
   void DropReference();
 
+  css::Rule* GetRule(uint32_t aIndex);
+  nsresult InsertRule(const nsAString& aRule, uint32_t aIndex);
+  nsresult DeleteRule(uint32_t aIndex);
+
 private:
   virtual ~ServoCSSRuleList();
 
