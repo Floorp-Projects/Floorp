@@ -780,7 +780,7 @@
 
 	Move font tweaking tables to...
 
-	* src/truetype/ttsubpic.c: This file and decorate them with `static'
+	* src/truetype/ttsubpix.c: This file and decorate them with `static'
 	and `const' where appropriate.
 
 	(X_SCALING_Rules, X_SCALING_RULES_SIZE): Renamed to...
@@ -978,7 +978,7 @@
 
 	[base] Clean up trigonometric core.
 
-	* src/base/fttrrigon.c (ft_trig_pseudo_polarize): Align algorithm
+	* src/base/fttrigon.c (ft_trig_pseudo_polarize): Align algorithm
 	with `ft_trig_pseudo_rotate'.
 
 2012-12-18  Infinality  <infinality@infinality.net>
@@ -990,7 +990,7 @@
 
 2012-12-17  Infinality  <infinality@infinality.net>
 
-	[truetype] Remove unusued code and variables.
+	[truetype] Remove unused code and variables.
 
 	* src/truetype/ttinterp.c: Updated.
 	(Ins_FDEF): Remove opcode patterns that are not being used.
@@ -1012,7 +1012,7 @@
 
 2012-12-16  Infinality  <infinality@infinality.net>
 
-	[truetype] Remove unusued code and variables.  Add minor fixes.
+	[truetype] Remove unused code and variables.  Add minor fixes.
 
 	* src/truetype/ttsubpix.h: Updated.
 	(SKIP_NONPIXEL_Y_MOVES_Rules_Exceptions): Add Trebuchet MS.
@@ -1037,7 +1037,7 @@
 	(Ins_FDEF): Rework code to fix bugs and add more detection.
 	(Ins_CALL): Remove unused code.
 	(Ins_LOOPCALL): Remove unused code.
-	(TT_RunIns): Remove unusued code.
+	(TT_RunIns): Remove unused code.
 	(Ins_SHPIX): Add logic to handle ttfautohinted fonts.
 	(Ins_MIRP): Don't round x in cut-in calculation.  Add logic to handle
 	ttfautohinted fonts.
@@ -1395,7 +1395,7 @@
 
 	[autofit] Minor optimization.
 
-	* src/autofit/afglobals.c (af_face_globals_compute_script_coverage):
+	* src/autofit/afglobal.c (af_face_globals_compute_script_coverage):
 	Add loop condition.
 
 2012-09-29  Werner Lemberg  <wl@gnu.org>
@@ -1859,7 +1859,7 @@
 
 	Fix `checking if gcc static flag -static works' test.
 
-	On my linux build tree, I receive yes answer in in every package I
+	On my linux build tree, I receive yes answer in every package I
 	build except freetype for this test checking if gcc static flag
 	`-static' works
 
@@ -2014,7 +2014,7 @@
 	(compute_glyph_metrics): Handle `compatible widths' option.
 	(tt_loader_init): Handle ClearType GETINFO information bits.
 
-	* src/truetype/rules.mk (TT_DRC_SRC): Updated.
+	* src/truetype/rules.mk (TT_DRV_SRC): Updated.
 
 	* src/truetype/ttinterp.c: Include `ttsubpix.h'.
 	[Where necessary, changes below are guarded by
@@ -2546,7 +2546,7 @@
 
 	* src/bdf/bdflib.c (_bdf_is_atom): Fix handling of property value.
 
-2012-02-24  Vinnie Falco  <vinnie.falco@gmail.com>
+2012-02-24  Vinnie Falco  <vinnie.falco@gmail.com>
 
 	Prepare source code for amalgamation (6/6).
 
@@ -2556,20 +2556,20 @@
 	s/t1_init_loader/cid_init_loader/.
 	s/t1_done_loader/cid_done_loader/.
 
-	* src/pxaux/t1cmap.c: s/t1_get_glyph_name/psaux_get_glyph_name/.
+	* src/psaux/t1cmap.c: s/t1_get_glyph_name/psaux_get_glyph_name/.
 
 	* src/truetype/ttdriver.c: s/Load_Glyph/tt_glyph_load/.
 
 	* src/type1/t1load.c: s/parse_font_matrix/t1_parse_font_matrix/.
 
-2012-02-24  Vinnie Falco  <vinnie.falco@gmail.com>
+2012-02-24  Vinnie Falco  <vinnie.falco@gmail.com>
 
 	Prepare source code for amalgamation (5/6).
 
 	* include/freetype/fterrors.h: Undefine FT_KEEP_ERR_PREFIX after
 	using it.
 
-2012-02-22  Vinnie Falco  <vinnie.falco@gmail.com>
+2012-02-22  Vinnie Falco  <vinnie.falco@gmail.com>
 
 	Prepare source code for amalgamation (4/6).
 
@@ -2581,7 +2581,7 @@
 	* src/raster/ftraster.c: s/TRaster/gray_TRaster/,
 	s/PRaster/gray_PRaster/.
 
-2012-02-20  Vinnie Falco  <vinnie.falco@gmail.com>
+2012-02-20  Vinnie Falco  <vinnie.falco@gmail.com>
 
 	Prepare source code for amalgamation (3/6).
 
@@ -2590,14 +2590,14 @@
 	* src/raster/ftraster.c: s/TWorker/gray_TWorker/,
 	s/PWorker/gray_PWorker/.
 
-2012-02-20  Vinnie Falco  <vinnie.falco@gmail.com>
+2012-02-20  Vinnie Falco  <vinnie.falco@gmail.com>
 
 	Prepare source code for amalgamation (2/6).
 
 	* src/smooth/ftgrays.c, src/raster/ftraster.c: Undefine FLOOR,
 	CEILING, TRUNC, and SCALED before defining it.
 
-2012-02-20  Vinnie Falco  <vinnie.falco@gmail.com>
+2012-02-20  Vinnie Falco  <vinnie.falco@gmail.com>
 
 	Prepare source code for amalgamation (1/6).
 
@@ -2796,9 +2796,9 @@
 	[base] Fix a dereference of uninitialized variable in PIC mode.
 
 	* src/base/ftglyph.c (FT_Glyph_To_Bitmap): `glyph' must be
-	set before derefering to obtain `library'.  The initialization
+	set before dereferring to obtain `library'.  The initialization
 	of `clazz', `glyph', `library' and NULL pointer check are
-	reordered to minimize PIC conditonals.
+	reordered to minimize PIC conditionals.
 
 2012-01-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
@@ -3261,7 +3261,7 @@
 
 2011-09-17  Alexei Podtelezhnikov  <apodtele@gmail.com>
 
-	[smooth] Slightly optimize conic and cubic flatterners.
+	[smooth] Slightly optimize conic and cubic flatteners.
 
 	* src/smooth/ftgrays.c (gray_render_conic, gray_render_cubic): Move
 	out some code from the main loop to speed it up.
@@ -3621,7 +3621,7 @@
 	* src/base/ftstroke.c: Revised.
 	* include/freetype/ftstroke.h: Updated.
 
-2011-06-30  İsmail Dönmez <ismail@namtrac.org>
+2011-06-30  İsmail Dönmez  <ismail@namtrac.org>
 
 	* builds/toplevel.mk: We use git, not CVS, thus skip `.gitignore'.
 
@@ -3680,7 +3680,7 @@
 
 	[autogen.sh] Reflect environment variable LIBTOOLIZE.
 
-2011-06-18  Werner Lemberg <wl@gnu.org>
+2011-06-18  Werner Lemberg  <wl@gnu.org>
 
 	Update license documentation.
 
@@ -4000,7 +4000,7 @@
 
 	[autofit] Add bluezones for CJK Ideographs.
 
-	To remove extremas of vertical strokes of CJK Ideographs at
+	To remove extrema of vertical strokes of CJK Ideographs at
 	low resolution and make the top and bottom horizontal stems
 	aligned, bluezones for CJK Ideographs are calculated from
 	sample glyphs.  At present, vertical bluezones (bluezones
@@ -4120,7 +4120,7 @@
 	[autofit] Add more Indic scripts with hanging baseline.
 
 	* src/autofit/afindic.c (af_indic_uniranges): Tibetan, Limbu,
-	Sundanese, Meetei Mayak, Syloti Nagri and Sharada scripts are
+	Sundanese, Meetei Mayek, Syloti Nagri and Sharada scripts are
 	added.
 
 2011-04-21  Behdad Esfahbod  <behdad@behdad.org>
@@ -4756,7 +4756,7 @@
 	* src/bzip2/*: New files.
 
 	* src/pcf/pcf.h: s/gzip_/comp_/.
-	* src/pcf/pcfdrvr.c: Include FT_BZIP2_H.
+	* src/pcf/pcfdrivr.c: Include FT_BZIP2_H.
 	s/gzip_/comp_/.
 	(PCF_Face_Init): Handle bzip2 compressed files.
 
@@ -4768,7 +4768,7 @@
 
 	If we encounter a space in a string then the sbit buffer is NULL,
 	height and width are 0s.  So the check in ftc_snode_compare will
-	always pass for spaces (comparision with 255).  Here the comments
+	always pass for spaces (comparison with 255).  Here the comments
 	above the condition are proper but the implementation is not.  When
 	we create an snode I think it is the proper way to initialize the
 	width to 255 and then put a check for being equal to 255 in snode
@@ -5420,7 +5420,7 @@
 	a Kaishu typeface paired with `HuaTianSongTi?' by Huatian
 	Information Industry.
 
-2010-08-17  Teijo Kinnunen <Teijo.Kinnunen@nuance.com>
+2010-08-17  Teijo Kinnunen  <Teijo.Kinnunen@nuance.com>
 
 	[cache] Fix Savannah bug #30788.
 
@@ -5548,7 +5548,7 @@
 	Add reference counters and to FT_Library and FT_Face objects.
 
 	* include/freetype/freetype.h (FT_Reference_Face): New function.
-	* include/freetype/ftmodapi.h (FT_Rererence_Library): New function.
+	* include/freetype/ftmodapi.h (FT_Reference_Library): New function.
 
 	* include/freetype/internal/ftobjs.h (FT_Face_InternalRec,
 	FT_LibraryRec): New field `refcount'.
@@ -6278,8 +6278,8 @@
 	Use real types instead of `void' for `pshinter' and `psnames' fields.
 
 	* src/cff/cffload.c: Don't include PS cmaps service.
-	(cff_index_get_pointers): Add `pool' parameter which allows to
-	insert an extra NUL character for each String INDEX entry.
+	(cff_index_get_pointers): Add `pool' parameter which allows inserting
+	an extra NUL character for each String INDEX entry.
 	(cff_index_get_name): Make it a local function.
 	(cff_index_get_string): New function.
 	(cff_subfont_load): Updated.
@@ -6344,7 +6344,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2010-2013 by
+Copyright 2010-2016 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

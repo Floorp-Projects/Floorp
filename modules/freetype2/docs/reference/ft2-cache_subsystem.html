@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Cache Sub-System</h1>
+<h1 id="cache_subsystem">Cache Sub-System</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FTC_Manager">FTC_Manager</a></td><td>&nbsp;</td></tr>
@@ -141,7 +141,7 @@
 
 <div class="section">
 <h3 id="FTC_Manager">FTC_Manager</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FTC_ManagerRec_*  <b>FTC_Manager</b>;
 </pre>
@@ -156,7 +156,7 @@
 
 <div class="section">
 <h3 id="FTC_FaceID">FTC_FaceID</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   <span class="keyword">typedef</span> <a href="ft2-basic_types.html#FT_Pointer">FT_Pointer</a>  <b>FTC_FaceID</b>;
 </pre>
@@ -175,7 +175,7 @@
 
 <div class="section">
 <h3 id="FTC_Face_Requester">FTC_Face_Requester</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   <span class="keyword">typedef</span> <a href="ft2-basic_types.html#FT_Error">FT_Error</a>
   (*<b>FTC_Face_Requester</b>)( <a href="ft2-cache_subsystem.html#FTC_FaceID">FTC_FaceID</a>  face_id,
@@ -218,7 +218,7 @@
 
 <div class="section">
 <h3 id="FTC_Manager_New">FTC_Manager_New</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FTC_Manager_New</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>          library,
@@ -269,7 +269,7 @@
 
 <div class="section">
 <h3 id="FTC_Manager_Reset">FTC_Manager_Reset</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FTC_Manager_Reset</b>( <a href="ft2-cache_subsystem.html#FTC_Manager">FTC_Manager</a>  manager );
@@ -289,7 +289,7 @@
 
 <div class="section">
 <h3 id="FTC_Manager_Done">FTC_Manager_Done</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FTC_Manager_Done</b>( <a href="ft2-cache_subsystem.html#FTC_Manager">FTC_Manager</a>  manager );
@@ -309,7 +309,7 @@
 
 <div class="section">
 <h3 id="FTC_Manager_LookupFace">FTC_Manager_LookupFace</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FTC_Manager_LookupFace</b>( <a href="ft2-cache_subsystem.html#FTC_Manager">FTC_Manager</a>  manager,
@@ -351,7 +351,7 @@
 
 <div class="section">
 <h3 id="FTC_Manager_LookupSize">FTC_Manager_LookupSize</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FTC_Manager_LookupSize</b>( <a href="ft2-cache_subsystem.html#FTC_Manager">FTC_Manager</a>  manager,
@@ -394,7 +394,7 @@
 
 <div class="section">
 <h3 id="FTC_Manager_RemoveFaceID">FTC_Manager_RemoveFaceID</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FTC_Manager_RemoveFaceID</b>( <a href="ft2-cache_subsystem.html#FTC_Manager">FTC_Manager</a>  manager,
@@ -422,7 +422,7 @@
 
 <div class="section">
 <h3 id="FTC_Node">FTC_Node</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FTC_NodeRec_*  <b>FTC_Node</b>;
 </pre>
@@ -436,7 +436,7 @@
 
 <div class="section">
 <h3 id="FTC_Node_Unref">FTC_Node_Unref</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <span class="keyword">void</span> )
   <b>FTC_Node_Unref</b>( <a href="ft2-cache_subsystem.html#FTC_Node">FTC_Node</a>     node,
@@ -460,7 +460,7 @@
 
 <div class="section">
 <h3 id="FTC_ImageCache">FTC_ImageCache</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FTC_ImageCacheRec_*  <b>FTC_ImageCache</b>;
 </pre>
@@ -472,7 +472,7 @@
 
 <div class="section">
 <h3 id="FTC_ImageCache_New">FTC_ImageCache_New</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FTC_ImageCache_New</b>( <a href="ft2-cache_subsystem.html#FTC_Manager">FTC_Manager</a>      manager,
@@ -503,7 +503,7 @@
 
 <div class="section">
 <h3 id="FTC_ImageCache_Lookup">FTC_ImageCache_Lookup</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FTC_ImageCache_Lookup</b>( <a href="ft2-cache_subsystem.html#FTC_ImageCache">FTC_ImageCache</a>  cache,
@@ -534,7 +534,7 @@
 <p>The corresponding <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a> object. 0&nbsp;in case of failure.</p>
 </td></tr>
 <tr><td class="val" id="anode">anode</td><td class="desc">
-<p>Used to return the address of of the corresponding cache node after incrementing its reference count (see note below).</p>
+<p>Used to return the address of the corresponding cache node after incrementing its reference count (see note below).</p>
 </td></tr>
 </table>
 
@@ -551,7 +551,7 @@
 
 <div class="section">
 <h3 id="FTC_SBit">FTC_SBit</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FTC_SBitRec_*  <b>FTC_SBit</b>;
 </pre>
@@ -563,7 +563,7 @@
 
 <div class="section">
 <h3 id="FTC_SBitCache">FTC_SBitCache</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FTC_SBitCacheRec_*  <b>FTC_SBitCache</b>;
 </pre>
@@ -575,7 +575,7 @@
 
 <div class="section">
 <h3 id="FTC_SBitCache_New">FTC_SBitCache_New</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FTC_SBitCache_New</b>( <a href="ft2-cache_subsystem.html#FTC_Manager">FTC_Manager</a>     manager,
@@ -606,7 +606,7 @@
 
 <div class="section">
 <h3 id="FTC_SBitCache_Lookup">FTC_SBitCache_Lookup</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FTC_SBitCache_Lookup</b>( <a href="ft2-cache_subsystem.html#FTC_SBitCache">FTC_SBitCache</a>    cache,
@@ -637,7 +637,7 @@
 <p>A handle to a small bitmap descriptor.</p>
 </td></tr>
 <tr><td class="val" id="anode">anode</td><td class="desc">
-<p>Used to return the address of of the corresponding cache node after incrementing its reference count (see note below).</p>
+<p>Used to return the address of the corresponding cache node after incrementing its reference count (see note below).</p>
 </td></tr>
 </table>
 
@@ -655,7 +655,7 @@
 
 <div class="section">
 <h3 id="FTC_CMapCache">FTC_CMapCache</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FTC_CMapCacheRec_*  <b>FTC_CMapCache</b>;
 </pre>
@@ -667,7 +667,7 @@
 
 <div class="section">
 <h3 id="FTC_CMapCache_New">FTC_CMapCache_New</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FTC_CMapCache_New</b>( <a href="ft2-cache_subsystem.html#FTC_Manager">FTC_Manager</a>     manager,
@@ -701,7 +701,7 @@
 
 <div class="section">
 <h3 id="FTC_CMapCache_Lookup">FTC_CMapCache_Lookup</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a> )
   <b>FTC_CMapCache_Lookup</b>( <a href="ft2-cache_subsystem.html#FTC_CMapCache">FTC_CMapCache</a>  cache,
@@ -736,7 +736,7 @@
 
 <div class="section">
 <h3 id="FTC_ScalerRec">FTC_ScalerRec</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FTC_ScalerRec_
   {
@@ -782,7 +782,7 @@
 
 <div class="section">
 <h3 id="FTC_Scaler">FTC_Scaler</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FTC_ScalerRec_*  <b>FTC_Scaler</b>;
 </pre>
@@ -794,13 +794,13 @@
 
 <div class="section">
 <h3 id="FTC_ImageTypeRec">FTC_ImageTypeRec</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FTC_ImageTypeRec_
   {
     <a href="ft2-cache_subsystem.html#FTC_FaceID">FTC_FaceID</a>  face_id;
-    <a href="ft2-basic_types.html#FT_Int">FT_Int</a>      width;
-    <a href="ft2-basic_types.html#FT_Int">FT_Int</a>      height;
+    <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a>     width;
+    <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a>     height;
     <a href="ft2-basic_types.html#FT_Int32">FT_Int32</a>    flags;
 
   } <b>FTC_ImageTypeRec</b>;
@@ -829,7 +829,7 @@
 
 <div class="section">
 <h3 id="FTC_ImageType">FTC_ImageType</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span> FTC_ImageTypeRec_*  <b>FTC_ImageType</b>;
 </pre>
@@ -841,7 +841,7 @@
 
 <div class="section">
 <h3 id="FTC_ImageCache_LookupScaler">FTC_ImageCache_LookupScaler</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FTC_ImageCache_LookupScaler</b>( <a href="ft2-cache_subsystem.html#FTC_ImageCache">FTC_ImageCache</a>  cache,
@@ -876,7 +876,7 @@
 <p>The corresponding <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a> object. 0&nbsp;in case of failure.</p>
 </td></tr>
 <tr><td class="val" id="anode">anode</td><td class="desc">
-<p>Used to return the address of of the corresponding cache node after incrementing its reference count (see note below).</p>
+<p>Used to return the address of the corresponding cache node after incrementing its reference count (see note below).</p>
 </td></tr>
 </table>
 
@@ -894,7 +894,7 @@
 
 <div class="section">
 <h3 id="FTC_SBitRec">FTC_SBitRec</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FTC_SBitRec_
   {
@@ -955,7 +955,7 @@
 
 <div class="section">
 <h3 id="FTC_SBitCache_LookupScaler">FTC_SBitCache_LookupScaler</h3>
-<p>Defined in FT_CACHE_H (ftcache.h).</p>
+<p>Defined in FT_CACHE_H (freetype/ftcache.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FTC_SBitCache_LookupScaler</b>( <a href="ft2-cache_subsystem.html#FTC_SBitCache">FTC_SBitCache</a>  cache,
@@ -990,7 +990,7 @@
 <p>A handle to a small bitmap descriptor.</p>
 </td></tr>
 <tr><td class="val" id="anode">anode</td><td class="desc">
-<p>Used to return the address of of the corresponding cache node after incrementing its reference count (see note below).</p>
+<p>Used to return the address of the corresponding cache node after incrementing its reference count (see note below).</p>
 </td></tr>
 </table>
 

@@ -2,7 +2,7 @@
 // FreeType 2 makefile for the symbian platform
 //
 
-// Copyright 2008, 2009 by
+// Copyright 2008-2016 by
 // David Turner, Robert Wilhelm, and Werner Lemberg.
 //
 // This file is part of the FreeType project, and may only be used, modified,
@@ -28,6 +28,7 @@ source ftbbox.c
 source ftbdf.c
 source ftbitmap.c
 source ftcid.c
+source ftfntfmt.c
 source ftfstype.c
 source ftgasp.c
 source ftglyph.c

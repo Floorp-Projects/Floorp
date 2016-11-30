@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Multiple Masters</h1>
+<h1 id="multiple_masters">Multiple Masters</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_MM_Axis">FT_MM_Axis</a></td><td><a href="#FT_Get_MM_Var">FT_Get_MM_Var</a></td></tr>
@@ -119,7 +119,7 @@
 
 <div class="section">
 <h3 id="FT_MM_Axis">FT_MM_Axis</h3>
-<p>Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).</p>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_MM_Axis_
   {
@@ -151,7 +151,7 @@
 
 <div class="section">
 <h3 id="FT_Multi_Master">FT_Multi_Master</h3>
-<p>Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).</p>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Multi_Master_
   {
@@ -183,7 +183,7 @@
 
 <div class="section">
 <h3 id="FT_Var_Axis">FT_Var_Axis</h3>
-<p>Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).</p>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Var_Axis_
   {
@@ -228,7 +228,7 @@
 
 <div class="section">
 <h3 id="FT_Var_Named_Style">FT_Var_Named_Style</h3>
-<p>Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).</p>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_Var_Named_Style_
   {
@@ -256,7 +256,7 @@
 
 <div class="section">
 <h3 id="FT_MM_Var">FT_MM_Var</h3>
-<p>Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).</p>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
 <pre>
   <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_MM_Var_
   {
@@ -281,13 +281,14 @@
 <p>The number of designs; should be normally 2^num_axis for MM fonts. Not meaningful for GX (where every glyph could have a different number of designs).</p>
 </td></tr>
 <tr><td class="val" id="num_namedstyles">num_namedstyles</td><td class="desc">
-<p>The number of named styles; only meaningful for GX that allows certain design coordinates to have a string ID (in the &lsquo;name&rsquo; table) associated with them. The font can tell the user that, for example, Weight=1.5 is &lsquo;Bold&rsquo;.</p>
+<p>The number of named styles; a &lsquo;named style&rsquo; is a tuple of design coordinates that has a string ID (in the &lsquo;name&rsquo; table) associated with it. The font can tell the user that, for example, [Weight=1.5,Width=1.1] is &lsquo;Bold&rsquo;.</p>
+<p>For Type 1 Multiple Masters fonts, this value is always zero because the format does not support named styles.</p>
 </td></tr>
 <tr><td class="val" id="axis">axis</td><td class="desc">
-<p>A table of axis descriptors. GX fonts contain slightly more data than MM.</p>
+<p>An axis descriptor table. GX fonts contain slightly more data than MM. Memory management of this pointer is done internally by FreeType.</p>
 </td></tr>
-<tr><td class="val" id="namedstyles">namedstyles</td><td class="desc">
-<p>A table of named styles. Only meaningful with GX.</p>
+<tr><td class="val" id="namedstyle">namedstyle</td><td class="desc">
+<p>A named style table. Only meaningful with GX. Memory management of this pointer is done internally by FreeType.</p>
 </td></tr>
 </table>
 
@@ -296,7 +297,7 @@
 
 <div class="section">
 <h3 id="FT_Get_Multi_Master">FT_Get_Multi_Master</h3>
-<p>Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).</p>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Get_Multi_Master</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>           face,
@@ -328,7 +329,7 @@
 
 <div class="section">
 <h3 id="FT_Get_MM_Var">FT_Get_MM_Var</h3>
-<p>Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).</p>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Get_MM_Var</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>      face,
@@ -347,7 +348,7 @@
 <h4>output</h4>
 <table class="fields">
 <tr><td class="val" id="amaster">amaster</td><td class="desc">
-<p>The Multiple Masters/GX var descriptor. Allocates a data structure, which the user must free.</p>
+<p>The Multiple Masters/GX var descriptor. Allocates a data structure, which the user must deallocate with &lsquo;free&rsquo; after use.</p>
 </td></tr>
 </table>
 
@@ -359,7 +360,7 @@
 
 <div class="section">
 <h3 id="FT_Set_MM_Design_Coordinates">FT_Set_MM_Design_Coordinates</h3>
-<p>Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).</p>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Set_MM_Design_Coordinates</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>   face,
@@ -380,7 +381,7 @@
 <h4>input</h4>
 <table class="fields">
 <tr><td class="val" id="num_coords">num_coords</td><td class="desc">
-<p>The number of design coordinates (must be equal to the number of axes in the font).</p>
+<p>The number of available design coordinates. If it is larger than the number of axes, ignore the excess values. If it is smaller than the number of axes, use default values for the remaining axes.</p>
 </td></tr>
 <tr><td class="val" id="coords">coords</td><td class="desc">
 <p>An array of design coordinates.</p>
@@ -395,7 +396,7 @@
 
 <div class="section">
 <h3 id="FT_Set_Var_Design_Coordinates">FT_Set_Var_Design_Coordinates</h3>
-<p>Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).</p>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Set_Var_Design_Coordinates</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>    face,
@@ -415,7 +416,7 @@
 <h4>input</h4>
 <table class="fields">
 <tr><td class="val" id="num_coords">num_coords</td><td class="desc">
-<p>The number of design coordinates (must be equal to the number of axes in the font).</p>
+<p>The number of available design coordinates. If it is larger than the number of axes, ignore the excess values. If it is smaller than the number of axes, use default values for the remaining axes.</p>
 </td></tr>
 <tr><td class="val" id="coords">coords</td><td class="desc">
 <p>An array of design coordinates.</p>
@@ -430,7 +431,7 @@
 
 <div class="section">
 <h3 id="FT_Set_MM_Blend_Coordinates">FT_Set_MM_Blend_Coordinates</h3>
-<p>Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).</p>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Set_MM_Blend_Coordinates</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>    face,
@@ -450,7 +451,7 @@
 <h4>input</h4>
 <table class="fields">
 <tr><td class="val" id="num_coords">num_coords</td><td class="desc">
-<p>The number of design coordinates (must be equal to the number of axes in the font).</p>
+<p>The number of available design coordinates. If it is larger than the number of axes, ignore the excess values. If it is smaller than the number of axes, use default values for the remaining axes.</p>
 </td></tr>
 <tr><td class="val" id="coords">coords</td><td class="desc">
 <p>The design coordinates array (each element must be between 0 and 1.0).</p>
@@ -465,7 +466,7 @@
 
 <div class="section">
 <h3 id="FT_Set_Var_Blend_Coordinates">FT_Set_Var_Blend_Coordinates</h3>
-<p>Defined in FT_MULTIPLE_MASTERS_H (ftmm.h).</p>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Set_Var_Blend_Coordinates</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>    face,
