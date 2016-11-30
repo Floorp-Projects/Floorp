@@ -7,7 +7,7 @@
 #ifndef mozilla_layers_WebRenderBridgeChild_h
 #define mozilla_layers_WebRenderBridgeChild_h
 
-#include "mozilla/layers/KnowsCompositor.h"
+#include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/PWebRenderBridgeChild.h"
 
 namespace mozilla {
@@ -22,7 +22,7 @@ class CompositorBridgeChild;
 class TextureForwarder;
 
 class WebRenderBridgeChild final : public PWebRenderBridgeChild
-                                 , public KnowsCompositor
+                                 , public CompositableForwarder
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeChild, override)
 
@@ -35,6 +35,7 @@ public:
   void DPEnd(bool aIsSync = false);
 
   CompositorBridgeChild* GetCompositorBridgeChild();
+
   // KnowsCompositor
   TextureForwarder* GetTextureForwarder() override;
   LayersIPCActor* GetLayersIPCActor() override;
@@ -49,12 +50,39 @@ public:
   void Destroy();
   bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
   bool IsDestroyed() const { return mDestroyed; }
-protected:
+
+private:
   friend class CompositorBridgeChild;
 
   ~WebRenderBridgeChild() {}
 
-  virtual void ActorDestroy(ActorDestroyReason why) override;
+  // manage PCompositable
+  PCompositableChild* AllocPCompositableChild(const TextureInfo& aInfo) override;
+  bool DeallocPCompositableChild(PCompositableChild* aActor) override;
+
+  // CompositableForwarder
+  void Connect(CompositableClient* aCompositable,
+               ImageContainer* aImageContainer = nullptr) override;
+  void UseTiledLayerBuffer(CompositableClient* aCompositable,
+                           const SurfaceDescriptorTiles& aTiledDescriptor) override;
+  void UpdateTextureRegion(CompositableClient* aCompositable,
+                           const ThebesBufferData& aThebesBufferData,
+                           const nsIntRegion& aUpdatedRegion) override;
+  void Destroy(CompositableChild* aCompositable);
+  bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) override;
+  bool DestroyInTransaction(PCompositableChild* aCompositable, bool synchronously) override;
+  void RemoveTextureFromCompositable(CompositableClient* aCompositable,
+                                     TextureClient* aTexture) override;
+  void UseTextures(CompositableClient* aCompositable,
+                   const nsTArray<TimedTextureClient>& aTextures) override;
+  void UseComponentAlphaTextures(CompositableClient* aCompositable,
+                                 TextureClient* aClientOnBlack,
+                                 TextureClient* aClientOnWhite) override;
+  void UpdateFwdTransactionId() override;
+  uint64_t GetFwdTransactionId() override;
+  bool InForwarderThread() override;
+
+  void ActorDestroy(ActorDestroyReason why) override;
 
   void AddIPDLReference() {
     MOZ_ASSERT(mIPCOpen == false);
