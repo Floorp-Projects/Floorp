@@ -19,4 +19,5 @@ config = {
          'geckoview_example:assembleWithoutGeckoBinariesAndroidTest',
         ],
     ],
+    'artifact_flag_build_variant_in_try': None, # There's no artifact equivalent.
 }
