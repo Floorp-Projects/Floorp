@@ -25,6 +25,7 @@ class CompositorWidget;
 namespace layers {
 
 class Compositor;
+class CompositorBridgeParentBase;
 class CompositorVsyncScheduler;
 
 class WebRenderBridgeParent final : public PWebRenderBridgeParent
@@ -33,7 +34,8 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeParent)
 
 public:
-  WebRenderBridgeParent(const uint64_t& aPipelineId,
+  WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
+                        const uint64_t& aPipelineId,
                         widget::CompositorWidget* aWidget,
                         gl::GLContext* aGlContext,
                         wrwindowstate* aWrWindowState,
@@ -70,6 +72,10 @@ public:
                                                  const uint64_t& aAsyncContainerId) override;
   mozilla::ipc::IPCResult RecvRemoveExternalImageId(const uint64_t& aImageId) override;
 
+  mozilla::ipc::IPCResult RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
+
+  mozilla::ipc::IPCResult RecvClearCachedResources() override;
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void Destroy();
@@ -85,8 +91,11 @@ protected:
   void ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& commands);
   void ScheduleComposition();
   void ClearResources();
+  uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
+  bool ShouldParentObserveEpoch();
 
 private:
+  CompositorBridgeParentBase* mCompositorBridge;
   uint64_t mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
   wrstate* mWRState;
@@ -97,8 +106,15 @@ private:
   std::vector<WRImageKey> mKeysToDelete;
   nsDataHashtable<nsUint64HashKey, uint64_t> mExternalImageIds;
 
+  // These fields keep track of the latest layer observer epoch values in the child and the
+  // parent. mChildLayerObserverEpoch is the latest epoch value received from the child.
+  // mParentLayerObserverEpoch is the latest epoch value that we have told TabParent about
+  // (via ObserveLayerUpdate).
+  uint64_t mChildLayerObserverEpoch;
+  uint64_t mParentLayerObserverEpoch;
+
   bool mDestroyed;
-  uint32_t mEpoch;
+  uint32_t mWREpoch;
 };
 
 } // namespace layers

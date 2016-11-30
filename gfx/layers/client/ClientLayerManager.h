@@ -175,9 +175,9 @@ public:
   virtual bool RequestOverfill(mozilla::dom::OverfillCallback* aCallback) override;
   virtual void RunOverfillCallback(const uint32_t aOverfill) override;
 
-  void DidComposite(uint64_t aTransactionId,
-                    const mozilla::TimeStamp& aCompositeStart,
-                    const mozilla::TimeStamp& aCompositeEnd);
+  virtual void DidComposite(uint64_t aTransactionId,
+                            const mozilla::TimeStamp& aCompositeStart,
+                            const mozilla::TimeStamp& aCompositeEnd) override;
 
   virtual bool AreComponentAlphaLayersEnabled() override;
 
@@ -224,7 +224,7 @@ public:
 
   void SetNextPaintSyncId(int32_t aSyncId);
 
-  void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch);
+  virtual void SetLayerObserverEpoch(uint64_t aLayerObserverEpoch) override;
 
   class DidCompositeObserver {
   public:

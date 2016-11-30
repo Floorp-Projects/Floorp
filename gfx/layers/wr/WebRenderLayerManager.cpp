@@ -307,6 +307,26 @@ WebRenderLayerManager::DiscardImages()
 }
 
 void
+WebRenderLayerManager::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
+{
+  WRBridge()->SendSetLayerObserverEpoch(aLayerObserverEpoch);
+}
+
+void
+WebRenderLayerManager::DidComposite(uint64_t aTransactionId,
+                                    const mozilla::TimeStamp& aCompositeStart,
+                                    const mozilla::TimeStamp& aCompositeEnd)
+{
+  // XXX Add DidComposite handling
+}
+
+void
+WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
+{
+  WRBridge()->SendClearCachedResources();
+}
+
+void
 WebRenderLayerManager::SetRoot(Layer* aLayer)
 {
   mRoot = aLayer;

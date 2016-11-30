@@ -37,6 +37,8 @@ parent:
   sync DPGetSnapshot(PTexture texture, IntRect dirtyRect);
   async AddExternalImageId(uint64_t aImageId, uint64_t aAsyncContainerId);
   async RemoveExternalImageId(uint64_t aImageId);
+  async SetLayerObserverEpoch(uint64_t layerObserverEpoch);
+  async ClearCachedResources();
 
   async Shutdown();
 child:
