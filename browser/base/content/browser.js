@@ -5631,7 +5631,12 @@ function middleMousePaste(event) {
 function stripUnsafeProtocolOnPaste(pasteData) {
   // Don't allow pasting javascript URIs since we don't support
   // LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL for those.
-  return pasteData.replace(/\r?\n/g, "").replace(/^(?:\s*javascript:)+/i, "");
+  let changed = false;
+  let pasteDataNoJS = pasteData.replace(/\r?\n/g, "")
+                               .replace(/^(?:\s*javascript:)+/i,
+                                        () => { changed = true;
+                                                return ""; });
+  return changed ? pasteDataNoJS : pasteData;
 }
 
 // handleDroppedLink has the following 2 overloads:

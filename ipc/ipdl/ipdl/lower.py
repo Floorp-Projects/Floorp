@@ -1548,7 +1548,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         stateenum.addId(_deadState().name)
         stateenum.addId(_nullState().name)
         stateenum.addId(_errorState().name)
-        stateenum.addId(_dyingState().name)
+        if self.protocol.decl.type.hasReentrantDelete:
+            stateenum.addId(_dyingState().name)
         for ts in p.transitionStmts:
             stateenum.addId(ts.state.decl.cxxname)
         if len(p.transitionStmts):
@@ -1769,19 +1770,15 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         fromswitch.addcase(CaseLabel(_deadState().name), deadblock)
 
         # special case for Dying
-        dyingblock = Block()
         if ptype.hasReentrantDelete:
+            dyingblock = Block()
             ifdelete = StmtIf(ExprBinary(_deleteReplyId(), '==', msgexpr))
             ifdelete.addifstmt(
                 StmtExpr(ExprAssn(ExprDeref(nextvar), _deadState())))
             dyingblock.addstmt(ifdelete)
             dyingblock.addstmt(
                 StmtReturn(ExprLiteral.TRUE))
-        else:
-            dyingblock.addstmts([
-                _logicError('__delete__()d (and unexpectedly dying) actor'),
-                StmtReturn(ExprLiteral.FALSE) ])
-        fromswitch.addcase(CaseLabel(_dyingState().name), dyingblock)
+            fromswitch.addcase(CaseLabel(_dyingState().name), dyingblock)
 
         unreachedblock = Block()
         unreachedblock.addstmts([

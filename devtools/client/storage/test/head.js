@@ -880,3 +880,19 @@ var focusSearchBoxUsingShortcut = Task.async(function* (panelWin, callback) {
 function getCookieId(name, domain, path) {
   return `${name}${SEPARATOR_GUID}${domain}${SEPARATOR_GUID}${path}`;
 }
+
+function setPermission(url, permission) {
+  const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
+
+  let uri = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService)
+                      .newURI(url, null, null);
+  let ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                      .getService(Ci.nsIScriptSecurityManager);
+  let principal = ssm.createCodebasePrincipal(uri, {});
+
+  Components.classes["@mozilla.org/permissionmanager;1"]
+            .getService(nsIPermissionManager)
+            .addFromPrincipal(principal, permission,
+                              nsIPermissionManager.ALLOW_ACTION);
+}
