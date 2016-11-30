@@ -769,6 +769,15 @@ struct JSRuntime : public JS::shadow::Runtime,
     void addUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
     void removeUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
 
+  private:
+    // Used to generate random keys for hash tables.
+    mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomKeyGenerator_;
+    mozilla::non_crypto::XorShift128PlusRNG& randomKeyGenerator();
+
+  public:
+    mozilla::HashCodeScrambler randomHashCodeScrambler();
+    mozilla::non_crypto::XorShift128PlusRNG forkRandomKeyGenerator();
+
     //-------------------------------------------------------------------------
     // Self-hosting support
     //-------------------------------------------------------------------------
