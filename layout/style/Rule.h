@@ -52,6 +52,12 @@ protected:
 
 public:
 
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS(Rule)
+  // Return true if this rule is known to be a cycle collection leaf, in the
+  // sense that it doesn't have any outgoing owning edges.
+  virtual bool IsCCLeaf() const MOZ_MUST_OVERRIDE;
+
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const = 0;
 #endif
@@ -124,6 +130,9 @@ public:
     const MOZ_MUST_OVERRIDE = 0;
 
 protected:
+  // True if we're known-live for cycle collection purposes.
+  bool IsKnownLive() const;
+
   // This is sometimes null (e.g., for style attributes).
   StyleSheet* mSheet;
   // When the parent GroupRule is destroyed, it will call SetParentRule(nullptr)

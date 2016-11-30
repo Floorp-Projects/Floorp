@@ -46,8 +46,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(dom::CSSRuleList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServoCSSRuleList,
                                                   dom::CSSRuleList)
   tmp->EnumerateInstantiatedRules([&](css::Rule* aRule) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRules[i]");
-    cb.NoteXPCOMChild(aRule->GetExistingDOMRule());
+    if (!aRule->IsCCLeaf()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRules[i]");
+      cb.NoteXPCOMChild(aRule);
+    }
   });
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
