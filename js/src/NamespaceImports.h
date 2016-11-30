@@ -46,6 +46,10 @@ class MOZ_STACK_CLASS SourceBufferHolder;
 class HandleValueArray;
 
 class ObjectOpResult;
+
+class Symbol;
+enum class SymbolCode: uint32_t;
+
 } // namespace JS
 
 // Do the importing.
@@ -153,6 +157,9 @@ using JS::HandleValueArray;
 using JS::ObjectOpResult;
 
 using JS::Zone;
+
+using JS::Symbol;
+using JS::SymbolCode;
 
 } /* namespace js */
 
