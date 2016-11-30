@@ -2049,6 +2049,14 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
     layerClip = StyleGeometryBox::Padding;
   }
 
+  // See the comment of StyleGeometryBox::Margin.
+  // Hitting this assertion means we decide to turn on margin-box support for
+  // positioned mask from CSS parser and style system. In this case, you
+  // should *inflate* mBGClipArea by the margin returning from
+  // aForFrame->GetUsedMargin() in the code chunk bellow.
+  MOZ_ASSERT(layerClip != StyleGeometryBox::Margin,
+             "StyleGeometryBox::Margin rendering is not supported yet.\n");
+
   if (layerClip != StyleGeometryBox::Border &&
       layerClip != StyleGeometryBox::Text) {
     nsMargin border = aForFrame->GetUsedBorder();
@@ -3535,6 +3543,15 @@ nsCSSRendering::ComputeImageLayerPositioningArea(nsPresContext* aPresContext,
   } else {
     positionArea = nsRect(nsPoint(0,0), aBorderArea.Size());
   }
+
+  // See the comment of StyleGeometryBox::Margin.
+  // Hitting this assertion means we decide to turn on margin-box support for
+  // positioned mask from CSS parser and style system. In this case, you
+  // should *inflate* positionArea by the margin returning from
+  // geometryFrame->GetUsedMargin() in the code chunk bellow.
+  MOZ_ASSERT(aLayer.mOrigin != StyleGeometryBox::Margin,
+             "StyleGeometryBox::Margin rendering is not supported yet.\n");
+
   // {background|mask} images are tiled over the '{background|mask}-clip' area
   // but the origin of the tiling is based on the '{background|mask}-origin'
   // area.
