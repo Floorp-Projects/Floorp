@@ -38,6 +38,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
+Cu.importGlobalProperties(["URL"]);
+
 const AutoMigrate = {
   get resourceTypesToUse() {
     let {BOOKMARKS, HISTORY, PASSWORDS} = Ci.nsIBrowserProfileMigrator;
@@ -450,6 +452,23 @@ const AutoMigrate = {
           Services.logins.removeLogin(foundLogin);
         }
       }
+    }
+  }),
+
+  _removeSomeVisits: Task.async(function* (visits) {
+    for (let urlVisits of visits) {
+      let urlObj;
+      try {
+        urlObj = new URL(urlVisits.url);
+      } catch (ex) {
+        continue;
+      }
+      yield PlacesUtils.history.removeVisitsByFilter({
+        url: urlObj,
+        beginDate: PlacesUtils.toDate(urlVisits.first),
+        endDate: PlacesUtils.toDate(urlVisits.last),
+        limit: urlVisits.visitCount,
+      });
     }
   }),
 
