@@ -52,7 +52,7 @@ class BaseCrashTestCase(MarionetteTestCase):
 
         self.mozcrash_mock = MockMozCrash(self.marionette)
         self.crash_count = self.marionette.crashed
-        self.pid = self.marionette.session["processId"]
+        self.pid = self.marionette.process_id
         self.remote_uri = self.marionette.absolute_url("javascriptPage.html")
 
     def tearDown(self):
@@ -98,7 +98,7 @@ class TestCrash(BaseCrashTestCase):
                                 self.marionette.get_url)
 
         self.marionette.start_session()
-        self.assertNotEqual(self.marionette.session['processId'], self.pid)
+        self.assertNotEqual(self.marionette.process_id, self.pid)
 
         # TODO: Bug 1314594 - Causes a hang for the communication between the
         # chrome and frame script.
@@ -117,7 +117,7 @@ class TestCrash(BaseCrashTestCase):
                                 self.marionette.get_url)
 
         self.marionette.start_session()
-        self.assertNotEqual(self.marionette.session['processId'], self.pid)
+        self.assertNotEqual(self.marionette.process_id, self.pid)
         self.marionette.get_url()
 
     @expectedFailure
@@ -137,7 +137,7 @@ class TestCrashInSetUp(BaseCrashTestCase):
 
     def test_crash_in_setup(self):
         self.marionette.start_session()
-        self.assertNotEqual(self.marionette.session['processId'], self.pid)
+        self.assertNotEqual(self.marionette.process_id, self.pid)
 
 
 class TestCrashInTearDown(BaseCrashTestCase):
