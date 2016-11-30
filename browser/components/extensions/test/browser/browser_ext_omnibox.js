@@ -222,6 +222,8 @@ add_task(function* () {
   yield setup();
   yield extension.startup();
 
+  yield SimpleTest.promiseFocus(window);
+
   yield testInputEvents();
 
   // Test the heuristic result with default suggestions.
