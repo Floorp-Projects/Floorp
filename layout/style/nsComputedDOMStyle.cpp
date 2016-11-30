@@ -4064,7 +4064,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetWebkitTextStrokeWidth()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetAppUnits(StyleText()->mWebkitTextStrokeWidth.GetCoordValue());
+  val->SetAppUnits(StyleText()->mWebkitTextStrokeWidth);
   return val.forget();
 }
 

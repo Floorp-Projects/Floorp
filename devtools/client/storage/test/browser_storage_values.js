@@ -124,7 +124,7 @@ const testCases = [
     {name: "ss5.3", value: `${LONG_WORD}&${LONG_WORD}`},
     {name: "ss5.4", value: `${LONG_WORD}&${LONG_WORD}`},
   ], true],
-  [["indexedDB", "http://test1.example.org", "idb1", "obj1"]],
+  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"]],
   [1, [
     {name: 1, value: JSON.stringify({id: 1, name: "foo", email: "foo@bar.com"})}
   ]],
@@ -133,7 +133,7 @@ const testCases = [
     {name: "1.name", value: "foo"},
     {name: "1.email", value: "foo@bar.com"},
   ], true],
-  [["indexedDB", "http://test1.example.org", "idb1", "obj2"]],
+  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj2"]],
   [1, [
     {name: 1, value: JSON.stringify({
       id2: 1, name: "foo", email: "foo@bar.com", extra: "baz"

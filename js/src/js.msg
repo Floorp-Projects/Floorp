@@ -477,6 +477,8 @@ MSG_DEF(JSMSG_INTL_OBJECT_NOT_INITED,  3, JSEXN_TYPEERR, "Intl.{0}.prototype.{1}
 MSG_DEF(JSMSG_INTL_OBJECT_REINITED,    0, JSEXN_TYPEERR, "can't initialize object twice as an object of an Intl constructor")
 MSG_DEF(JSMSG_INVALID_CURRENCY_CODE,   1, JSEXN_RANGEERR, "invalid currency code in NumberFormat(): {0}")
 MSG_DEF(JSMSG_INVALID_DIGITS_VALUE,    1, JSEXN_RANGEERR, "invalid digits value: {0}")
+MSG_DEF(JSMSG_INVALID_KEYS_TYPE,       0, JSEXN_TYPEERR, "calendar info keys must be an object or undefined")
+MSG_DEF(JSMSG_INVALID_KEY,             1, JSEXN_RANGEERR, "invalid key: {0}")
 MSG_DEF(JSMSG_INVALID_LANGUAGE_TAG,    1, JSEXN_RANGEERR, "invalid language tag: {0}")
 MSG_DEF(JSMSG_INVALID_LOCALES_ELEMENT, 0, JSEXN_TYPEERR, "invalid element in locales argument")
 MSG_DEF(JSMSG_INVALID_LOCALE_MATCHER,  1, JSEXN_RANGEERR, "invalid locale matcher in supportedLocalesOf(): {0}")

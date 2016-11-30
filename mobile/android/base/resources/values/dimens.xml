@@ -149,7 +149,9 @@
     <dimen name="tab_thumbnail_height">90dp</dimen>
     <dimen name="tab_panel_item_width">129dp</dimen>
     <dimen name="tab_panel_grid_hpadding">20dp</dimen>
-    <dimen name="tab_panel_grid_vpadding">19dp</dimen>
+    <!-- Top and bottom tab panel grid padding is split between tab_panel_grid_vpadding (the
+         RecyclerView padding) and tab_panel_grid_item_vpadding (individual item padding). -->
+    <dimen name="tab_panel_grid_vpadding">9dp</dimen>
     <dimen name="tab_panel_grid_ideal_item_hspacing">20dp</dimen>
     <dimen name="tab_panel_grid_min_item_hspacing">2dp</dimen>
     <dimen name="tab_panel_grid_item_vpadding">10dp</dimen>
