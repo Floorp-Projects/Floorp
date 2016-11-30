@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2006, 2008, 2013, 2014 by
+# Copyright 1996-2016 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -97,7 +97,7 @@ BASE_DIR := $(SRC_DIR)/base
 
 # Other derived directories.
 #
-PUBLIC_DIR   := $(TOP_DIR)/include
+PUBLIC_DIR   := $(TOP_DIR)/include/freetype
 INTERNAL_DIR := $(PUBLIC_DIR)/internal
 SERVICES_DIR := $(INTERNAL_DIR)/services
 CONFIG_DIR   := $(PUBLIC_DIR)/config
@@ -155,15 +155,13 @@ ifneq ($(wildcard $(OBJ_DIR)/ftoption.h),)
   FTOPTION_FLAG := $DFT_CONFIG_OPTIONS_H="<ftoption.h>"
 endif
 
-# Note that a build with the `configure' script uses $(CFLAGS) only.
+# `CPPFLAGS' might be specified by the user in the environment.
 #
 FT_CFLAGS  = $(CPPFLAGS) \
-             $(INCLUDE_FLAGS) \
              $(CFLAGS) \
              $DFT2_BUILD_LIBRARY \
              $DFT_CONFIG_MODULES_H="<ftmodule.h>" \
              $(FTOPTION_FLAG)
-FT_COMPILE = $(CC) $(ANSIFLAGS) $(FT_CFLAGS)
 
 
 # Include the `exports' rules file.
@@ -194,6 +192,8 @@ DEVEL_H    := $(wildcard $(TOP_DIR)/devel/*.h)
 
 FREETYPE_H := $(PUBLIC_H) $(INTERNAL_H) $(CONFIG_H) $(DEVEL_H)
 
+
+FT_COMPILE := $(CC) $(ANSIFLAGS) $(INCLUDE_FLAGS) $(FT_CFLAGS)
 
 # ftsystem component
 #
@@ -270,32 +270,6 @@ objects: $(OBJECTS_LIST)
 
 library: $(PROJECT_LIBRARY)
 
-.c.$O:
-	$(FT_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $<)
-
-
-ifneq ($(findstring refdoc,$(MAKECMDGOALS)),)
-  # poor man's `sed' emulation with make's built-in string functions
-  work := $(strip $(shell $(CAT) $(PUBLIC_DIR)/freetype.h))
-  work := $(subst |,x,$(work))
-  work := $(subst $(space),|,$(work))
-  work := $(subst \#define|FREETYPE_MAJOR|,$(space),$(work))
-  work := $(word 2,$(work))
-  major := $(subst |,$(space),$(work))
-  major := $(firstword $(major))
-
-  work := $(subst \#define|FREETYPE_MINOR|,$(space),$(work))
-  work := $(word 2,$(work))
-  minor := $(subst |,$(space),$(work))
-  minor := $(firstword $(minor))
-
-  work := $(subst \#define|FREETYPE_PATCH|,$(space),$(work))
-  work := $(word 2,$(work))
-  patch := $(subst |,$(space),$(work))
-  patch := $(firstword $(patch))
-
-  version := $(major).$(minor).$(patch)
-endif
 
 # Option `-B' disables generation of .pyc files (available since python 2.6)
 #

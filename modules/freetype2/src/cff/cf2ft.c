@@ -544,14 +544,17 @@
   /* return 0 on success                                   */
   FT_LOCAL_DEF( CF2_Int )
   cf2_initGlobalRegionBuffer( CFF_Decoder*  decoder,
-                              CF2_UInt      idx,
+                              CF2_Int       subrNum,
                               CF2_Buffer    buf )
   {
+    CF2_UInt  idx;
+
+
     FT_ASSERT( decoder );
 
     FT_ZERO( buf );
 
-    idx += decoder->globals_bias;
+    idx = (CF2_UInt)( subrNum + decoder->globals_bias );
     if ( idx >= decoder->num_globals )
       return TRUE;     /* error */
 
@@ -569,7 +572,7 @@
   /* used for seac component                           */
   FT_LOCAL_DEF( FT_Error )
   cf2_getSeacComponent( CFF_Decoder*  decoder,
-                        CF2_UInt      code,
+                        CF2_Int       code,
                         CF2_Buffer    buf )
   {
     CF2_Int   gid;
@@ -582,12 +585,21 @@
 
     FT_ZERO( buf );
 
-    gid = cff_lookup_glyph_by_stdcharcode( decoder->cff, code );
-    if ( gid < 0 )
-      return FT_THROW( Invalid_Glyph_Format );
+#ifdef FT_CONFIG_OPTION_INCREMENTAL
+    /* Incremental fonts don't necessarily have valid charsets.        */
+    /* They use the character code, not the glyph index, in this case. */
+    if ( decoder->builder.face->root.internal->incremental_interface )
+      gid = code;
+    else
+#endif /* FT_CONFIG_OPTION_INCREMENTAL */
+    {
+      gid = cff_lookup_glyph_by_stdcharcode( decoder->cff, code );
+      if ( gid < 0 )
+        return FT_THROW( Invalid_Glyph_Format );
+    }
 
     error = cff_get_glyph_data( decoder->builder.face,
-                                gid,
+                                (CF2_UInt)gid,
                                 &charstring,
                                 &len );
     /* TODO: for now, just pass the FreeType error through */
@@ -619,14 +631,17 @@
 
   FT_LOCAL_DEF( CF2_Int )
   cf2_initLocalRegionBuffer( CFF_Decoder*  decoder,
-                             CF2_UInt      idx,
+                             CF2_Int       subrNum,
                              CF2_Buffer    buf )
   {
+    CF2_UInt  idx;
+
+
     FT_ASSERT( decoder );
 
     FT_ZERO( buf );
 
-    idx += decoder->locals_bias;
+    idx = (CF2_UInt)( subrNum + decoder->locals_bias );
     if ( idx >= decoder->num_locals )
       return TRUE;     /* error */
 

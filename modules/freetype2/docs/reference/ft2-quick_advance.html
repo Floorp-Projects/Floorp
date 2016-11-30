@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.5 API Reference</title>
+<title>FreeType-2.7 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.5 API Reference</h1>
+<h1>FreeType-2.7 API Reference</h1>
 
-<h1>Quick retrieval of advance values</h1>
+<h1 id="quick_advance">Quick retrieval of advance values</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_Get_Advance">FT_Get_Advance</a></td><td>&nbsp;</td></tr>
@@ -114,7 +114,7 @@
 
 <div class="section">
 <h3 id="FT_Get_Advance">FT_Get_Advance</h3>
-<p>Defined in FT_ADVANCES_H (ftadvanc.h).</p>
+<p>Defined in FT_ADVANCES_H (freetype/ftadvanc.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Get_Advance</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>    face,
@@ -158,7 +158,7 @@
 
 <div class="section">
 <h3 id="FT_Get_Advances">FT_Get_Advances</h3>
-<p>Defined in FT_ADVANCES_H (ftadvanc.h).</p>
+<p>Defined in FT_ADVANCES_H (freetype/ftadvanc.h).</p>
 <pre>
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Get_Advances</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>    face,
@@ -207,9 +207,9 @@
 
 <div class="section">
 <h3 id="FT_ADVANCE_FLAG_FAST_ONLY">FT_ADVANCE_FLAG_FAST_ONLY</h3>
-<p>Defined in FT_ADVANCES_H (ftadvanc.h).</p>
+<p>Defined in FT_ADVANCES_H (freetype/ftadvanc.h).</p>
 <pre>
-#define <b>FT_ADVANCE_FLAG_FAST_ONLY</b>  0x20000000UL
+#define <b>FT_ADVANCE_FLAG_FAST_ONLY</b>  0x20000000L
 </pre>
 
 <p>A bit-flag to be OR-ed with the &lsquo;flags&rsquo; parameter of the <a href="ft2-quick_advance.html#FT_Get_Advance">FT_Get_Advance</a> and <a href="ft2-quick_advance.html#FT_Get_Advances">FT_Get_Advances</a> functions.</p>

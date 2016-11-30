@@ -16,7 +16,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype255.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype27.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -33,7 +33,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype255MT.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype27MT.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -50,7 +50,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype255ST.lib" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype27ST.lib" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -67,7 +67,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype255_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype27_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -84,7 +84,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype255ST_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype27ST_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -101,7 +101,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype255MT_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype27MT_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -346,6 +346,8 @@
       <Filter Name="FT_MODULES">
         <File RelativePath="..\..\..\src\base\ftbbox.c">
         </File>
+        <File RelativePath="..\..\..\src\base\ftfntfmt.c">
+        </File>
         <File RelativePath="..\..\..\src\base\ftmm.c">
           <FileConfiguration Name="Release|Win32">
             <Tool Name="VCCLCompilerTool" Optimization="2" AdditionalIncludeDirectories="" PreprocessorDefinitions="" />
@@ -373,8 +375,6 @@
         <File RelativePath="..\..\..\src\base\fttype1.c">
         </File>
         <File RelativePath="..\..\..\src\base\ftwinfnt.c">
-        </File>
-        <File RelativePath="..\..\..\src\base\ftxf86.c">
         </File>
         <File RelativePath="..\..\..\src\base\ftlcdfil.c">
         </File>
@@ -629,15 +629,15 @@
     <Filter Name="Header Files" Filter="h;hpp;hxx;hm;inl">
       <File RelativePath="..\..\..\include\ft2build.h">
       </File>
-      <File RelativePath="..\..\..\include\config\ftconfig.h">
+      <File RelativePath="..\..\..\include\freetype\config\ftconfig.h">
       </File>
-      <File RelativePath="..\..\..\include\config\ftheader.h">
+      <File RelativePath="..\..\..\include\freetype\config\ftheader.h">
       </File>
-      <File RelativePath="..\..\..\include\config\ftmodule.h">
+      <File RelativePath="..\..\..\include\freetype\config\ftmodule.h">
       </File>
-      <File RelativePath="..\..\..\include\config\ftoption.h">
+      <File RelativePath="..\..\..\include\freetype\config\ftoption.h">
       </File>
-      <File RelativePath="..\..\..\include\config\ftstdlib.h">
+      <File RelativePath="..\..\..\include\freetype\config\ftstdlib.h">
       </File>
     </Filter>
   </Files>

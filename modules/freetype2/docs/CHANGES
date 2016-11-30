@@ -1,4 +1,450 @@
 
+CHANGES BETWEEN 2.6.5 and 2.7
+
+  I. IMPORTANT CHANGES
+
+    - As announced earlier, the 2.7.x series now uses the new subpixel
+      hinting  mode as  the  default, emulating  a  modern version  of
+      ClearType.
+
+      This change inevitably leads to different rendering results, and
+      you   might   change   the   `TT_CONFIG_OPTION_SUBPIXEL_HINTING'
+      configuration option to  adapt it to your taste (or  use the new
+      `FREETYPE_PROPERTIES'    environment    variable).    See    the
+      corresponding entry  below for  version 2.6.4, which  gives more
+      information.
+
+    - A new option  `FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES' has been
+      introduced.   If  set (which  is  the  default), an  environment
+      variable  `FREETYPE_PROPERTIES' can  be used  to control  driver
+      properties.  Example:
+
+        FREETYPE_PROPERTIES=truetype:interpreter-version=35 \
+                            cff:no-stem-darkening=1 \
+                            autofitter:warping=1
+
+      This allows to select, say, the subpixel hinting mode at runtime
+      for a given application.  See file `ftoption.h' for more.
+
+
+  II. IMPORTANT BUG FIXES
+
+    - After  loading a  named instance  of  a GX  variation font,  the
+      `face_index'  value  in  the returned  `FT_Face'  structure  now
+      correctly holds the named instance  index in the upper 16bits as
+      documented.
+
+
+  III. MISCELLANEOUS
+
+    - A new macro `FT_IS_NAMED_INSTANCE' to  test whether a given face
+      is a named instance.
+
+    - More fixes to GX font handling.
+
+    - Apple's   `GETVARIATION'  bytecode   operator  (needed   for  GX
+      variation font support) has been implemented.
+
+    - Another round  of fuzzer fixes,  mainly to reject  invalid fonts
+      faster.
+
+    - Handling of raw CID fonts  was broken (bug introduced in version
+      2.6.4).
+
+    - The smooth rasterizer has been streamlined  to make it faster by
+      approx. 20%.
+
+    - The `ftgrid'  demo program now  understands command  line option
+      `-d' to give start-up design coordinates.
+
+    - The `ftdump' demo program has  a new command line option `-p' to
+      dump TrueType bytecode instructions.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.6.4 and 2.6.5
+
+  I. IMPORTANT BUG FIXES
+
+    - Compilation works again  on Mac OS X (bug introduced  in version
+      2.6.4).
+
+
+  II. IMPORTANT CHANGES
+
+    - The new  subpixel hinting  mode is now  disabled by  default; it
+      will  be enabled  by default  in the  forthcoming 2.7.x  series.
+      Main reason for reverting this feature is the principle of least
+      surprise: a  sudden change in  appearance of all fonts  (even if
+      the rendering improves  for almost all recent  fonts) should not
+      be expected in a new micro version of a series.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.6.3 and 2.6.4
+
+  I. IMPORTANT CHANGES
+
+    - A new  subpixel hinting  mode has  been contributed  by Nikolaus
+      Waxweiler, which is now the  default rendering mode for TrueType
+      fonts.  It implements  (almost everything of) version  40 of the
+      bytecode engine.
+
+      The existing code  base in FreeType (the  `Infinality code') was
+      stripped to the bare minimum  and all configurability removed in
+      the  name  of speed  and  simplicity.   The configurability  was
+      mainly aimed  at legacy  fonts like Arial,  Times New  Roman, or
+      Courier.  [Legacy fonts are fonts  that modify vertical stems to
+      achieve clean black-and-white bitmaps.]  The new mode focuses on
+      applying a minimal set of rules to all fonts indiscriminately so
+      that modern and web fonts  render well while legacy fonts render
+      okay.
+
+      Activation  of the  subpixel hinting  support can  be controlled
+      with   the   `TT_CONFIG_OPTION_SUBPIXEL_HINTING'   configuration
+      option  at compile  time: If  set to  value 1,  you get  the old
+      Infinality  mode  (which  was  never  the  default  due  to  its
+      slowness).  Value 2 activates the new subpixel hinting mode, and
+      value 3 activates both.  The default is value 2.
+
+      At run time,  you can select the subpixel hinting  mode with the
+      `interpreter-version'  property (provided  you have  compiled in
+      the corresponding hinting mode); see `ftttdrv.h' for more.
+
+    - Support  for  the  following  scripts  has  been  added  to  the
+      auto-hinter.
+
+        Armenian, Cherokee, Ethiopic, Georgian, Gujarati, Gurmukhi,
+        Malayalam, Sinhala, Tamil
+
+
+  II. MISCELLANEOUS
+
+    - Type 42 fonts as created by LilyPond are now supported.
+
+    - Minor rendering improvments in the auto-hinter.
+
+    - For experimental  reasons, the old  CFF engine now  supports all
+      CFF operators except `random', including the deprecated Multiple
+      Masters  instructions.  This  allows the  display of  fonts like
+      `ITCGaramondMM-It.otf' (without font variations, though).
+
+    - Another round of fixes to improve handling of invalid fonts.
+
+    - The `ftgrid' demo program now displays the rendered pixels also;
+      this can be switched off with the `b' key.  Selection of various
+      LCD filtering modes can be done with the `L' key.
+
+    - The demo programs  have been extended to allow  selection of all
+      available TrueType bytecode engines.
+
+    - A very early beta version of a new, Qt based demo program called
+      `ftinspect'  is  part  of  the   source  code  bundle;  it  will
+      eventually supersede  the other  demo programs.   Currently, you
+      have to compile  it manually with `qmake; make';  note that many
+      features are still missing.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.6.2 and 2.6.3
+
+  I. IMPORTANT CHANGES
+
+    - Khmer,  Myanmar, Bengali,  and Kannada  script support  has been
+      added to the auto-hinter.
+
+
+  II. MISCELLANEOUS
+
+    - Better  support of  Indic  scripts like  Devanagari  by using  a
+      top-to-bottom hinting flow.
+
+    - All  FreeType macros  starting  with two  underscores have  been
+      renamed to  avoid a violation of  both the C and  C++ standards.
+      Example: Header  macros of the  form `__FOO_H__' are  now called
+      `FOO_H_'.  In most cases,  this should be completely transparent
+      to the user.   The exception to this  is `__FTERRORS_H__', which
+      must be  sometimes undefined by  the user to get  FreeType error
+      strings:  Both this  form and  the new  `FTERRORS_H_' macro  are
+      accepted for backwards compatibility.
+
+    - Minor improvements mainly to the Type 1 driver.
+
+    - The  new CFF  engine now  supports all  Type 2  operators except
+      `random'.
+
+    - The macro `_STANDALONE_', used for  compiling the B/W and smooth
+      rasterizers  as   stand-alone  modules,  has  been   renamed  to
+      `STANDALONE_', since macro names starting with an underscore and
+      followed by an uppercase letter are reserved in both C and C++.
+
+    - Function  `FT_Library_SetLcdFilterWeights'  now  also  activates
+      custom LCD filter weights (instead of just adjusting them).
+
+    - Support for  `unpatented hinting'  has been  completely removed:
+      Consequently,  the two  functions `FT_Face_CheckTrueTypePatents'
+      and  `FT_Face_SetUnpatentedHinting'  now  return  always  false,
+      doing nothing.
+
+    - The `ftgamma' demo  program has been modernized;  the gamma grid
+      display has been moved from `ftview' to this program.
+
+    - In `ftview',  it is now possible to cycle through  the available
+      LCD filtering modes.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.6.1 and 2.6.2
+
+  I. IMPORTANT CHANGES
+
+    - The auto-hinter now supports stem darkening, to be controlled by
+      the    new   `no-stem-darkening'    and   `darkening-parameters'
+      properties.   This is  an  experimental  feature contributed  by
+      Nikolaus Waxweiler, and  the interface might change  in a future
+      release.
+
+    - By default, stem darkening is now switched off (for both the CFF
+      engine and the  auto-hinter).  The main reason is  that you need
+      linear  alpha  blending  and  gamma correction  to  get  correct
+      rendering results, and  the latter is not yet  available in most
+      freely  available  rendering  stacks like  X11.   Applying  stem
+      darkening without proper gamma correction  leads to far too dark
+      rendering results.
+
+    - The   meaning  of   `FT_RENDER_MODE_LIGHT'  has   been  slightly
+      modified.   It  now  essentially  means `no  hinting  along  the
+      horizontal  axis'; in  particular,  no change  of glyph  advance
+      widths.  Consequently, the auto-hinter  is used for all scalable
+      font  formats  except  for  CFF.    It  is  planned  that  other
+      font-specific rendering engines (TrueType, Type 1) will follow.
+
+
+  II. MISCELLANEOUS
+
+    - The default  LCD filter  has been changed  to be  normalized and
+      color-balanced.
+
+    - For    better    compatibility   with    FontConfig,    function
+      `FT_Library_SetLcdFilter'  accepts   a  new   enumeration  value
+      `FT_LCD_FILTER_LEGACY1'   (which  has   the   same  meaning   as
+      `FT_LCD_FILTER_LEGACY').
+
+    - A large number of bugs have been detected by using the libFuzzer
+      framework,  which should  further  improve  handling of  invalid
+      fonts.  Thanks again to Kostya Serebryany and Bungeman!
+
+    - `TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES',  a   new  configuration
+      option, controls the maximum number of executed opcodes within a
+      bytecode program.  You don't want to change this except for very
+      special  situations (e.g.,  making a  library fuzzer  spend less
+      time to handle broken fonts).
+
+    - The smooth renderer has been made faster.
+
+    - The `ftstring'  demo program  now supports  sub-pixel rendering;
+      use key `l' to cycle through the LCD modes.
+
+    - The `ftstring'  demo program now supports  colour rendering; use
+      the `space' key to cycle through various colour combinations.
+
+    - The graphical demo programs now use a default gamma value of 1.8
+      (instead of 1.2).
+
+
+======================================================================
+
+CHANGES BETWEEN 2.6 and 2.6.1
+
+  I. IMPORTANT BUG FIXES
+
+    - It turned  out that for CFFs  only the advance widths  should be
+      taken from the  `htmx' table, not the side  bearings.  This bug,
+      introduced in  version 2.6.0, makes  it necessary to  upgrade if
+      you are using  CFFs; otherwise, you get cropped  glyphs with GUI
+      interfaces like GTK or Qt.
+
+    - Accessing Type 42 fonts returned  incorrect results if the glyph
+      order of the embedded TrueType font differs from the glyph order
+      of the Type 42 charstrings table.
+
+
+  II. IMPORTANT CHANGES
+
+    - The header  file layout  has been  changed (again),  moving  all
+      header files except `ft2build.h' into a subdirectory tree.
+
+      Doing so  reduces the  possibility of  header file  name clashes
+      (e.g., FTGL's  `FTGlyph.h' with FreeType's `ftglyph.h')  on case
+      insensitive file systems like Mac OS X or Windows.
+
+      Applications  that  use  (a)  the  `freetype-config'  script  or
+      FreeType's `freetype2.pc' file for pkg-config to get the include
+      directory  for the  compiler,  and (b)  the  documented way  for
+      header inclusion like
+
+        #include <ft2build.h>
+        #include FT_FREETYPE_H
+        ...
+
+      don't need any change to the source code.
+
+    - Simple access  to named instances  in GX variation fonts  is now
+      available (in addition to the  previous method via FreeType's MM
+      interface).   In  the `FT_Face'  structure,  bits  16-30 of  the
+      `face_index' field hold the current named instance index for the
+      given face  index, and bits  16-30 of `style_flags'  contain the
+      number of  instances for  the given face  index.  `FT_Open_Face'
+      and friends also understand the  extended bits of the face index
+      parameter.
+
+      You need to enable  TT_CONFIG_OPTION_GX_VAR_SUPPORT for this new
+      feature.  Otherwise, bits  16-30 of the two fields  are zero (or
+      are ignored).
+
+    - Lao script support has been added to the auto-hinter.
+
+
+  III. MISCELLANEOUS
+
+    - The auto-hinter's Arabic script support has been enhanced.
+
+    - Superscript-like and  subscript-like glyphs  as used  by various
+      phonetic alphabets like the IPA  are now better supported by the
+      auto-hinter.
+
+    - The TrueType bytecode interpreter now runs slightly faster.
+
+    - Improved support for builds with cmake.
+
+    - The  function  `FT_CeilFix'  now   always  rounds  towards  plus
+      infinity.
+
+    - The  function  `FT_FloorFix'  now always  rounds  towards  minus
+      infinity.
+
+    - A  new load  flag `FT_LOAD_COMPUTE_METRICS'  has been  added; it
+      makes FreeType  ignore pre-computed  metrics, as needed  by font
+      validating  or  font  editing  programs.  Right  now,  only  the
+      TrueType  module supports  it  to ignore  data  from the  `hdmx'
+      table.
+
+    - Another round of bug fixes  to better handle broken fonts, found
+      by Kostya Serebryany <kcc@google.com>.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.5.5 and 2.6
+
+  I. IMPORTANT CHANGES
+
+    - Behdad  Esfahbod contributed  code  for improved  thread-safety,
+      which results in the following model.
+
+      * An `FT_Face' object can only be safely used from one thread at
+        a time.
+
+      * An `FT_Library'  object can  now be used  without modification
+        from multiple threads at the same time.
+
+      * `FT_Face' creation and destruction  with the same `FT_Library'
+        object can only be done from one thread at a time.
+
+      One can use a single  `FT_Library' object across threads as long
+      as a mutex lock is used around `FT_New_Face' and `FT_Done_Face'.
+      Any calls to `FT_Load_Glyph' and similar API are safe and do not
+      need the lock  to be held as  long as the same  `FT_Face' is not
+      used from multiple threads at the same time.
+
+    - Thai script support has been added to the auto-hinter.
+
+    - Arabic script support has been added to the auto-hinter.
+
+    - Following OpenType version 1.7,  advance widths and side bearing
+      values in  CFFs (wrapped  in an SFNT  structure) are  now always
+      taken from the `hmtx' table.
+
+    - Following OpenType  version 1.7, the  PostScript font name  of a
+      CFF font (wrapped in an SFNT structure) is now always taken from
+      the `name'  table.  This is  also true for  OpenType Collections
+      (i.e., TTCs using  CFFs subfonts instead of TTFs),  where it may
+      have a significant difference.
+
+    - Fonts natively hinted for  ClearType are now supported, properly
+      handling selector index 3 of the INSTCTRL bytecode instruction.
+
+    - Major improvements to the GX TrueType variation font handling.
+
+
+  II. MISCELLANEOUS
+
+    - A new auto-hinter  property `warping' can switch on  and off the
+      warping code  if this  experimental feature  is compiled  in (by
+      defining  the AF_CONFIG_OPTION_USE_WARPER  configuration option;
+      by default  this option is  now enabled but warping  is switched
+      off).
+
+      The AF_CONFIG_OPTION_USE_WARPER option itself is an old feature,
+      available   since  2006.    Warping   only   works  in   `light'
+      auto-hinting mode.   The idea of  the code is to  slightly scale
+      and  shift a  glyph  along the  non-hinted  dimension (which  is
+      usually the horizontal axis) so that as much of its segments are
+      aligned  (more or  less) to  the grid.   To find  out a  glyph's
+      optimal   scaling   and   shifting  value,   various   parameter
+      combinations are tried and scored.
+
+      See  file  `ftautoh.h' for  more;  the  demo programs  `ftdiff',
+      `ftview', and `ftgrid' can toggle warping with key `w'.
+
+    - Some  fields  in  the  `FTC_ImageTypeRec'  structure  have  been
+      changed from signed to unsigned  type, which better reflects the
+      actual usage.  It is also an additional means to protect against
+      malformed input.
+
+      This  change doesn't  break  the ABI;  however,  it might  cause
+      compiler warnings.
+
+    - Function `FT_Bitmap_New'  has been renamed  to `FT_Bitmap_Init',
+      since  this name  better reflects  its function.   For backwards
+      compatibility, the old function name is still available.
+
+    - Function   `FT_Get_X11_Font_Format'   has    been   renamed   to
+      `FT_Get_Font_Format',  since  this   name  better  reflects  its
+      function.  For backwards compatibility, the old function name is
+      still available.
+
+      Additionally, the header  file macro for this  function has been
+      renamed to  `FT_FONT_FORMATS_H' (the old name  `FT_XFREE86_H' is
+      retained for backwards compatibility).
+
+    - Various improvements to the `ftgrid' demo program.
+
+      . It  can  now  display  GX and  MM  fonts  while  interactively
+        manipulating the axes (with keys F2, F3, and F4).
+
+      . Anti-aliasing rendering  modes can now be  selected (with keys
+        F5 and F6).
+
+      . The display of point numbers can be toggled with key `D'.
+
+    - Various improvements to the `ftdump' demo program.
+
+      . It now displays information on MM and GX variation axes.
+
+      . New  command line option  `-u' makes  it output data  in utf-8
+        encoding.
+
+    - The `ftmulti'  demo program can  now handle up  to six MM  or GX
+      axes.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.5.4 and 2.5.5
 
   I. IMPORTANT BUG FIXES
@@ -3458,7 +3904,7 @@ BETA-8 (RELEASE CANDIDATE) CHANGES
         automatically when needed.
 
   - Reformatted all  modules source  code in order  to get rid  of the
-    basic data types redifinitions (i.e. `TT_Int' instead of `FT_Int',
+    basic data types redefinitions (i.e. `TT_Int' instead of `FT_Int',
     `T1_Fixed'  instead  of  `FT_Fixed').  Hence  the  format-specific
     prefixes like  `TT_', `T1_',  `T2_' and `CID_'  are only  used for
     relevant structures.
@@ -4159,7 +4605,7 @@ Extensions support:
 
 ------------------------------------------------------------------------
 
-Copyright 2000-2013 by
+Copyright 2000-2016 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file  is  part  of the  FreeType  project, and may  only be  used,
