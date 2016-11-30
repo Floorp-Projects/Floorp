@@ -227,7 +227,7 @@ public:
   uint32_t DisplayId() const { return mDisplayId; }
   void GetDisplayName(nsAString& aDisplayName) const { aDisplayName = mDisplayName; }
 
-  static bool RefreshVRDisplays(uint64_t aWindowId);
+  static bool RefreshVRDisplays(dom::Navigator* aNavigator);
   static void UpdateVRDisplays(nsTArray<RefPtr<VRDisplay> >& aDisplays,
                                nsPIDOMWindowInner* aWindow);
 
