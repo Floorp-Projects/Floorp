@@ -21,14 +21,14 @@
 // storage-secured-iframe.html and storage-unsecured-iframe.html
 const storeItems = [
   [["indexedDB", "http://test1.example.org"],
-   ["idb1", "idb2"]],
-  [["indexedDB", "http://test1.example.org", "idb1"],
+   ["idb1 (default)", "idb2 (default)"]],
+  [["indexedDB", "http://test1.example.org", "idb1 (default)"],
    ["obj1", "obj2"]],
-  [["indexedDB", "http://test1.example.org", "idb2"],
+  [["indexedDB", "http://test1.example.org", "idb2 (default)"],
    []],
-  [["indexedDB", "http://test1.example.org", "idb1", "obj1"],
+  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
    [1, 2, 3]],
-  [["indexedDB", "http://test1.example.org", "idb1", "obj2"],
+  [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj2"],
    [1]]
 ];
 

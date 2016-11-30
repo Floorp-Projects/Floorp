@@ -617,10 +617,6 @@ public class FormHistoryRepositorySession extends
             }
 
             Logger.trace(LOG_TAG, "Remote is older, local is not deleted. Ignoring.");
-            if (!locallyModified) {
-              Logger.warn(LOG_TAG, "Inconsistency: old remote record is deleted, but local record not modified!");
-              // Ensure that this is tracked for upload.
-            }
             return;
           }
           // End deletion logic.
@@ -672,10 +668,6 @@ public class FormHistoryRepositorySession extends
           }
 
           Logger.trace(LOG_TAG, "Remote is older, local is not deleted. Ignoring.");
-          if (!locallyModified) {
-            Logger.warn(LOG_TAG, "Inconsistency: old remote record is not deleted, but local record not modified!");
-          }
-          return;
         } catch (Exception e) {
           Logger.error(LOG_TAG, "Store failed for " + record.guid, e);
           delegate.onRecordStoreFailed(e, record.guid);
