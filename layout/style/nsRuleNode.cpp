@@ -123,12 +123,10 @@ CreateImageRequest(nsPresContext* aPresContext, const nsCSSValue& aValue)
   return req.forget();
 }
 
-static void
-SetStyleImageRequest(std::function<void(nsStyleImageRequest*)> aCallback,
-                     nsPresContext* aPresContext,
-                     const nsCSSValue& aValue,
-                     nsStyleImageRequest::Mode aModeFlags =
-                       nsStyleImageRequest::Mode::Track)
+static already_AddRefed<nsStyleImageRequest>
+CreateStyleImageRequest(nsPresContext* aPresContext, const nsCSSValue& aValue,
+                        nsStyleImageRequest::Mode aModeFlags =
+                          nsStyleImageRequest::Mode::Track)
 {
   css::ImageValue* imageValue = aValue.GetImageStructValue();
   ImageTracker* imageTracker =
@@ -138,7 +136,7 @@ SetStyleImageRequest(std::function<void(nsStyleImageRequest*)> aCallback,
   RefPtr<imgRequestProxy> proxy = CreateImageRequest(aPresContext, aValue);
   RefPtr<nsStyleImageRequest> request =
     new nsStyleImageRequest(aModeFlags, proxy, imageValue, imageTracker);
-  aCallback(request);
+  return request.forget();
 }
 
 template<typename ReferenceBox>
@@ -1312,9 +1310,8 @@ static void SetStyleImageToImageRect(nsStyleContext* aStyleContext,
 
   // <uri>
   if (arr->Item(1).GetUnit() == eCSSUnit_Image) {
-    SetStyleImageRequest([&](nsStyleImageRequest* req) {
-      aResult.SetImageRequest(do_AddRef(req));
-    }, aStyleContext->PresContext(), arr->Item(1));
+    nsPresContext* pc = aStyleContext->PresContext();
+    aResult.SetImageRequest(CreateStyleImageRequest(pc, arr->Item(1)));
   } else {
     NS_WARNING("nsCSSValue::Image::Image() failed?");
   }
@@ -1346,11 +1343,10 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
 
   aResult.SetNull();
 
+  nsPresContext* presContext = aStyleContext->PresContext();
   switch (aValue.GetUnit()) {
     case eCSSUnit_Image:
-      SetStyleImageRequest([&](nsStyleImageRequest* req) {
-        aResult.SetImageRequest(do_AddRef(req));
-      }, aStyleContext->PresContext(), aValue);
+      aResult.SetImageRequest(CreateStyleImageRequest(presContext, aValue));
       break;
     case eCSSUnit_Function:
       if (aValue.EqualsFunction(eCSSKeyword__moz_image_rect)) {
@@ -1362,8 +1358,7 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
     case eCSSUnit_Gradient:
     {
       nsStyleGradient* gradient = new nsStyleGradient();
-      SetGradient(aValue, aStyleContext->PresContext(), aStyleContext,
-                  *gradient, aConditions);
+      SetGradient(aValue, presContext, aStyleContext, *gradient, aConditions);
       aResult.SetGradientData(gradient);
       break;
     }
@@ -1395,7 +1390,7 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
       // Check #3.
       bool isEqualExceptRef = false;
       if (!isLocalRef) {
-        nsIDocument* currentDoc = aStyleContext->PresContext()->Document();
+        nsIDocument* currentDoc = presContext->Document();
         nsIURI* docURI = currentDoc->GetDocumentURI();
         nsIURI* imageURI = aValue.GetURLValue();
         imageURI->EqualsExceptRef(docURI, &isEqualExceptRef);
@@ -5167,16 +5162,15 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
       const nsCSSValueList* list = cursorValue->GetListValue();
       for ( ; list->mValue.GetUnit() == eCSSUnit_Array; list = list->mNext) {
         nsCSSValue::Array* arr = list->mValue.GetArrayValue();
-        SetStyleImageRequest([&](nsStyleImageRequest* req) {
-          nsCursorImage* item = ui->mCursorImages.AppendElement();
-          item->mImage = req;
-          if (arr->Item(1).GetUnit() != eCSSUnit_Null) {
-            item->mHaveHotspot = true;
-            item->mHotspotX = arr->Item(1).GetFloatValue();
-            item->mHotspotY = arr->Item(2).GetFloatValue();
-          }
-        }, aContext->PresContext(), arr->Item(0),
-           nsStyleImageRequest::Mode::Discard);
+        nsCursorImage* item = ui->mCursorImages.AppendElement();
+        item->mImage =
+          CreateStyleImageRequest(aContext->PresContext(), arr->Item(0),
+                                  nsStyleImageRequest::Mode::Discard);
+        if (arr->Item(1).GetUnit() != eCSSUnit_Null) {
+          item->mHaveHotspot = true;
+          item->mHotspotX = arr->Item(1).GetFloatValue();
+          item->mHotspotY = arr->Item(2).GetFloatValue();
+        }
       }
 
       NS_ASSERTION(list, "Must have non-array value at the end");
@@ -8015,9 +8009,8 @@ nsRuleNode::ComputeListData(void* aStartStruct,
   // list-style-image: url, none, inherit
   const nsCSSValue* imageValue = aRuleData->ValueForListStyleImage();
   if (eCSSUnit_Image == imageValue->GetUnit()) {
-    SetStyleImageRequest([&](nsStyleImageRequest* req) {
-      list->mListStyleImage = req;
-    }, mPresContext, *imageValue, nsStyleImageRequest::Mode(0));
+    list->mListStyleImage = CreateStyleImageRequest(
+      mPresContext, *imageValue, nsStyleImageRequest::Mode(0));
   }
   else if (eCSSUnit_None == imageValue->GetUnit() ||
            eCSSUnit_Initial == imageValue->GetUnit()) {
